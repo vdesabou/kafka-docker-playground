@@ -24,6 +24,9 @@ docker-compose exec connect \
                "rotate.interval.ms":"120000",
                "hadoop.home":"/usr/local/hadoop-2.7.1/share/hadoop/common/",
                "logs.dir":"/tmp",
+               "key.converter":"org.apache.kafka.connect.storage.StringConverter",
+               "value.converter":"io.confluent.connect.avro.AvroConverter",
+               "value.converter.schema.registry.url":"http://schema-registry:8081",
                "schema.compatibility":"BACKWARD"
           }}' \
      http://localhost:8083/connectors | jq .
@@ -32,5 +35,14 @@ docker-compose exec connect \
 echo "Sending messages to topic test_hdfs"
 seq -f "{\"f1\": \"value%g\"}" 10 | docker container exec -i schema-registry kafka-avro-console-producer --broker-list broker:9092 --topic test_hdfs --property value.schema='{"type":"record","name":"myrecord","fields":[{"name":"f1","type":"string"}]}'
 
-echo "Verifying content of /topics/test_hdfs in HDFS"
+sleep 10
+
+echo "Listing content of /topics/test_hdfs in HDFS"
 docker-compose exec hadoop bash -c "/usr/local/hadoop/bin/hdfs dfs -ls /topics/test_hdfs"
+
+echo "Getting one of the avro files locally and displaying content with avro-tools"
+docker-compose exec hadoop bash -c "/usr/local/hadoop/bin/hadoop fs -copyToLocal /topics/test_hdfs/f1=value1/test_hdfs+0+0000000000+0000000000.avro /tmp"
+
+docker cp hadoop:/tmp/test_hdfs+0+0000000000+0000000000.avro /tmp/
+
+avro-tools tojson /tmp/test_hdfs+0+0000000000+0000000000.avro 
