@@ -4,6 +4,7 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 
 ${DIR}/reset-cluster.sh
 
+# Note in this simple example, if you get into an issue with permissions at the local HDFS level, it may be easiest to unlock the permissions unless you want to debug that more.
 docker-compose exec hadoop bash -c "/usr/local/hadoop/bin/hdfs dfs -chmod 777  /"
 
 echo "Creating HDFS Sink connector"
@@ -42,7 +43,7 @@ docker-compose exec hadoop bash -c "/usr/local/hadoop/bin/hdfs dfs -ls /topics/t
 
 echo "Getting one of the avro files locally and displaying content with avro-tools"
 docker-compose exec hadoop bash -c "/usr/local/hadoop/bin/hadoop fs -copyToLocal /topics/test_hdfs/f1=value1/test_hdfs+0+0000000000+0000000000.avro /tmp"
-
 docker cp hadoop:/tmp/test_hdfs+0+0000000000+0000000000.avro /tmp/
 
+# brew install avro-tools
 avro-tools tojson /tmp/test_hdfs+0+0000000000+0000000000.avro 
