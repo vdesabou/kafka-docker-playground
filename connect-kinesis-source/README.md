@@ -44,7 +44,19 @@ Simply run:
 $ ./kinesis.sh
 ```
 
-## Details
+## Details of what the script is doing
+
+Create a Kinesis stream `my_kinesis_stream`:
+
+```
+$ aws kinesis create-stream --stream-name my_kinesis_stream --shard-count 1
+```
+
+Insert records in Kinesis stream:
+
+```
+$ aws kinesis put-record --stream-name my_kinesis_stream --partition-key 123 --data test-message-1
+```
 
 The connector is created with:
 
@@ -68,5 +80,16 @@ docker-compose exec connect \
      http://localhost:8083/connectors | jq .
 ```
 
+Verify we have received the data in kinesis_topic topic:
+
+```
+$ docker-compose exec broker kafka-console-consumer --bootstrap-server broker:9092 --topic kinesis_topic --from-beginning --max-messages 1
+```
+
+Delete your stream and clean up resources to avoid incurring any unintended charges:
+
+```
+aws kinesis delete-stream --stream-name my_kinesis_stream
+```
 
 N.B: Control Center is reachable at [http://localhost:9021](http://localhost:9021])

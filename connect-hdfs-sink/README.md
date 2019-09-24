@@ -19,7 +19,7 @@ Simply run:
 $ ./hdfs.sh
 ```
 
-## Details
+## Details of what the script is doing
 
 The connector is created with:
 
