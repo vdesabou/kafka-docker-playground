@@ -3,7 +3,7 @@
 Playground for Kafka/Confluent Docker experimentations
 
 * [HDFS 2 Sink ](connect-hdfs-sink/README.md) connector
-
+* [Kinesis Source ](connect-kinesis-source/README.md) connector
 
 ## Other useful resources
 
