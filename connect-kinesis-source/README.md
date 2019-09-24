@@ -23,19 +23,6 @@ This project assumes `~/.aws/credentials` is set, see `docker-compose.yml`file f
         - $HOME/.aws/credentials:/root/.aws/credentials:ro
 ```
 
-Also this example assumes that you have a default region `region=us-east-1`in your `~/.aws/credentials`:
-
-Example:
-
-```
-$ cat ~/.aws/credentials
-[default]
-aws_access_key_id=XXXX
-aws_secret_access_key=YYYY
-region=us-east-1
-output=json
-```
-
 ## How to run
 
 Simply run:
@@ -46,7 +33,7 @@ $ ./kinesis.sh
 
 ## Details of what the script is doing
 
-Create a Kinesis stream `my_kinesis_stream`:
+Create a Kinesis stream `my_kinesis_stream` in `us-east-1` region as it is default:
 
 ```
 $ aws kinesis create-stream --stream-name my_kinesis_stream --shard-count 1
