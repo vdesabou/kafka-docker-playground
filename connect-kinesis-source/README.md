@@ -8,8 +8,9 @@ Quickly test [Kinesis Connector](https://docs.confluent.io/current/connect/kafka
 
 * `docker-compose` (example `brew cask install docker`)
 * `jq` (example `brew install jq`)
+* `aws cli`(example `brew install awscli`)
 
-## Kinesis Setup
+## AWS Setup
 
 * Make sure you have an [AWS account](https://docs.aws.amazon.com/streams/latest/dev/before-you-begin.html#setting-up-sign-up-for-aws).
 * Set up [AWS Credentials](https://docs.confluent.io/current/connect/kafka-connect-kinesis/quickstart.html#aws-credentials)
