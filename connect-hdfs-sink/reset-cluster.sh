@@ -10,7 +10,6 @@ verify_installed()
 }
 verify_installed "jq"
 verify_installed "docker-compose"
-verify_installed "avro-tools"
 
 docker-compose down -v 
 docker-compose up -d

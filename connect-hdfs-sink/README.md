@@ -68,4 +68,4 @@ drwxr-xr-x   - root supergroup          0 2019-09-23 11:04 /topics/test_hdfs/f1=
 drwxr-xr-x   - root supergroup          0 2019-09-23 11:04 /topics/test_hdfs/f1=value9
 ```
 
-N.B: Control Center is reachable at `http://localhost:9021`
+N.B: Control Center is reachable at [http://localhost:9021](http://localhost:9021])
