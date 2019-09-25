@@ -52,8 +52,10 @@ By default, the demo uses Confluent Schema Registry running in a local Docker co
 * Run with local Docker Schema Registry
 
 ```
-./start.sh 
+./start.sh
+```
 or
+```
 ./start.sh SCHEMA_REGISTRY_DOCKER
 ```
 
@@ -63,42 +65,6 @@ or
 ./start.sh SCHEMA_REGISTRY_CONFLUENT_CLOUD
 ```
 
-
-### Add a connector
-
-```bash
-$ docker-compose exec -e BOOTSTRAP_SERVERS="$BOOTSTRAP_SERVERS" -e CLOUD_KEY="$CLOUD_KEY" -e CLOUD_SECRET="$CLOUD_SECRET" connect \
-     curl -X POST \
-     -H "Content-Type: application/json" \
-     --data '{
-        "name": "duplicate-topic3",
-        "config": {
-          "connector.class":"io.confluent.connect.replicator.ReplicatorSourceConnector",
-          "key.converter": "io.confluent.connect.replicator.util.ByteArrayConverter",
-          "value.converter": "io.confluent.connect.replicator.util.ByteArrayConverter",
-          "header.converter": "io.confluent.connect.replicator.util.ByteArrayConverter",
-          "src.consumer.group.id": "duplicate-topic",
-          "confluent.topic.replication.factor": 1,
-          "provenance.header.enable": true,
-          "topic.whitelist": "customer-avro",
-          "topic.rename.format": "customer-avro-duplicate",
-          "dest.kafka.ssl.endpoint.identification.algorithm" : "https",
-          "dest.kafka.sasl.mechanism" : "PLAIN",
-          "dest.kafka.request.timeout.ms" : "20000",
-          "dest.kafka.bootstrap.servers": "'"$BOOTSTRAP_SERVERS"'",
-          "retry.backoff.ms" : "500",
-          "dest.kafka.sasl.jaas.config" : "org.apache.kafka.common.security.plain.PlainLoginModule required username=\"'$CLOUD_KEY'\" password=\"'$CLOUD_SECRET'\";",
-          "dest.kafka.security.protocol" : "SASL_SSL",
-          "src.kafka.ssl.endpoint.identification.algorithm" : "https",
-          "src.kafka.sasl.mechanism" : "PLAIN",
-          "src.kafka.request.timeout.ms" : "20000",
-          "src.kafka.bootstrap.servers": "'"$BOOTSTRAP_SERVERS"'",
-          "retry.backoff.ms" : "500",
-          "src.kafka.sasl.jaas.config" : "org.apache.kafka.common.security.plain.PlainLoginModule required username=\"'$CLOUD_KEY'\" password=\"'$CLOUD_SECRET'\";",
-          "src.kafka.security.protocol" : "SASL_SSL"
-          }}' \
-     http://localhost:8083/connectors | jq .
-```
 
 ### How to use ksql-cli:
 

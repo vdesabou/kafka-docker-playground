@@ -116,7 +116,8 @@ services:
       # CONTROL_CENTER_MAIL_BOUNCE_ADDRESS: "toto@gmail.com"
 
   connect:
-    image: confluentinc/cp-enterprise-replicator:5.3.1
+    build:
+      context: .
     hostname: connect
     container_name: connect
     depends_on:
@@ -145,7 +146,7 @@ services:
       CONNECT_INTERNAL_KEY_CONVERTER: "org.apache.kafka.connect.json.JsonConverter"
       CONNECT_INTERNAL_VALUE_CONVERTER: "org.apache.kafka.connect.json.JsonConverter"
       CONNECT_REST_ADVERTISED_HOST_NAME: "connect"
-      CONNECT_PLUGIN_PATH: "/usr/share/java"
+      CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components
       CONNECT_LOG4J_ROOT_LOGLEVEL: INFO
       CONNECT_LOG4J_LOGGERS: org.reflections=ERROR
       CLASSPATH: /usr/share/java/monitoring-interceptors/monitoring-interceptors-5.3.1.jar
@@ -172,6 +173,15 @@ services:
       CONNECT_CONSUMER_CONFLUENT_MONITORING_INTERCEPTOR_SECURITY_PROTOCOL: SASL_SSL
       CONNECT_CONSUMER_CONFLUENT_MONITORING_INTERCEPTOR_SASL_JAAS_CONFIG: $SASL_JAAS_CONFIG
       CONNECT_CONSUMER_CONFLUENT_MONITORING_INTERCEPTOR_SASL_MECHANISM: PLAIN
+
+  http-service-basic-auth:
+    image: msschroe3/http-sink-demo
+    hostname: http-service-basic-auth
+    container_name: http-service-basic-auth
+    ports:
+      - "9080:8080"
+    environment:
+      SPRING_PROFILES_ACTIVE: 'basic-auth'
 
   rest-proxy:
     image: confluentinc/cp-kafka-rest:5.3.1

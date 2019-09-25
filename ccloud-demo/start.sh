@@ -42,5 +42,38 @@ set -e
 
 ${DIR}/reset-cluster.sh
 
+echo "-------------------------------------"
+echo "Running Basic Authentication Example"
+echo "-------------------------------------"
+
+echo "Creating HttpSinkBasicAuth connector"
+docker-compose exec -e BOOTSTRAP_SERVERS="$BOOTSTRAP_SERVERS" -e CLOUD_KEY="$CLOUD_KEY" -e CLOUD_SECRET="$CLOUD_SECRET" connect \
+     curl -X POST \
+     -H "Content-Type: application/json" \
+     --data '{
+          "name": "HttpSinkBasicAuth",
+          "config": {
+               "topics": "customer-avro",
+               "tasks.max": "1",
+               "connector.class": "io.confluent.connect.http.HttpSinkConnector",
+               "key.converter": "org.apache.kafka.connect.storage.StringConverter",
+               "value.converter": "org.apache.kafka.connect.storage.StringConverter",
+               "confluent.topic.bootstrap.servers": "pkc-lq8v7.eu-central-1.aws.confluent.cloud:9092",
+               "confluent.topic.sasl.jaas.config": "org.apache.kafka.common.security.plain.PlainLoginModule required username=\"COKYUJ5CUJFDTHQ3\" password=\"M9iSivfMIxvZpOU3gw1RES1X5lQmmPQsq3BsQhjj8MTpg1hlTkviTGhabdF+ojq4\";",
+               "confluent.topic.security.protocol" : "SASL_SSL",
+               "confluent.topic.ssl.endpoint.identification.algorithm": "https",
+               "confluent.topic.replication.factor": "1",
+               "http.api.url": "http://http-service-basic-auth:8080/api/messages",
+               "auth.type": "BASIC",
+               "connection.user": "admin",
+               "connection.password": "password"
+          }}' \
+     http://localhost:8083/connectors | jq .
+
+
+sleep 10
+
+echo "Confirm that the data was sent to the HTTP endpoint."
+curl admin:password@localhost:9080/api/messages | jq .
 
 
