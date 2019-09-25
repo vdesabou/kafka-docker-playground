@@ -2,12 +2,17 @@
 
 Playground for Kafka/Confluent Docker experimentations
 
-* [HDFS 2 Sink ](connect-hdfs-sink/README.md) connector
-* [S3 Sink ](connect-s3-sink/README.md) connector
-* [HTTP Sink ](connect-http-sink/README.md) connector
-* [Kinesis Source ](connect-kinesis-source/README.md) connector
+Connectors:
 
-* 
+* [HDFS 2 Sink](connect-hdfs-sink/README.md)
+* [S3 Sink](connect-s3-sink/README.md)
+* [HTTP Sink](connect-http-sink/README.md)
+* [Kinesis Source](connect-kinesis-source/README.md)
+
+Confluent Cloud:
+
+* [ccloud demo](ccloud-demo/README.md)
+
 ## Other useful resources
 
 * [A Kafka Story](https://github.com/framiere/a-kafka-story): A step by step guide to use Kafka ecosystem (Kafka Connect, KSQL, Java Consumers/Producers, etc..) with Docker
