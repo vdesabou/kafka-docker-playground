@@ -80,4 +80,4 @@ Delete your stream and clean up resources to avoid incurring any unintended char
 aws kinesis delete-stream --stream-name my_kinesis_stream
 ```
 
-N.B: Control Center is reachable at [http://localhost:9021](http://localhost:9021])
+N.B: Control Center is reachable at [http://127.0.0.1:9021](http://127.0.0.1:9021])

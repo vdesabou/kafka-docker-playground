@@ -72,4 +72,4 @@ $ aws s3api list-objects --bucket "your-bucket-name"
 
 ```
 
-N.B: Control Center is reachable at [http://localhost:9021](http://localhost:9021])
+N.B: Control Center is reachable at [http://127.0.0.1:9021](http://127.0.0.1:9021])
