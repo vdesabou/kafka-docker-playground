@@ -11,6 +11,7 @@ Connectors:
 * [HTTP Sink](connect-http-sink/README.md)
 * [Kinesis Source](connect-kinesis-source/README.md)
 * [JDBC Source](connect-jdbc-source/README.md)
+* [Debezium MySQL source](connect-debezium-mysql-source/README.md)
 
 Confluent Cloud:
 
