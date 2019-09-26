@@ -65,7 +65,7 @@ docker-compose exec -e BUCKET_NAME="$BUCKET_NAME" connect \
      http://localhost:8083/connectors | jq .
 ```
 
-FIXTHIS: not working:
+*FIXTHIS*: not working, see https://github.com/confluentinc/kafka-connect-s3-source/pull/45#issuecomment-532587915
 
 ```
 connect            | [2019-09-26 13:00:53,449] ERROR WorkerSourceTask{id=s3-source3-0} Task threw an uncaught and unrecoverable exception (org.apache.kafka.connect.runtime.WorkerTask)
