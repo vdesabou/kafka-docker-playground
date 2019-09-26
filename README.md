@@ -10,6 +10,7 @@ Connectors:
 * [Elasticsearch Sink](connect-elasticsearch-sink/README.md)
 * [HTTP Sink](connect-http-sink/README.md)
 * [Kinesis Source](connect-kinesis-source/README.md)
+* [JDBC Source](connect-jdbc-source/README.md)
 
 Confluent Cloud:
 
