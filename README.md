@@ -7,6 +7,7 @@ Connectors:
 * [HDFS 2 Sink](connect-hdfs-sink/README.md)
 * [S3 Sink](connect-s3-sink/README.md)
 * [S3 Source](connect-s3-source/README.md)
+* [Elasticsearch Sink](connect-elasticsearch-sink/README.md)
 * [HTTP Sink](connect-http-sink/README.md)
 * [Kinesis Source](connect-kinesis-source/README.md)
 
