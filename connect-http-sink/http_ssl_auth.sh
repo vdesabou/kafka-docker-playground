@@ -33,11 +33,11 @@ docker-compose exec connect \
                "ssl.enabled": "true",
                "https.ssl.truststore.location": "/etc/kafka/secrets/localhost-keystore.jks",
                "https.ssl.truststore.type": "JKS",
-               "https.ssl.truststore.password": "changeit",
+               "https.ssl.truststore.password": "confluent",
                "https.ssl.keystore.location": "/etc/kafka/secrets/localhost-keystore.jks",
                "https.ssl.keystore.type": "JKS",
-               "https.ssl.keystore.password": "changeit",
-               "https.ssl.key.password": "changeit",
+               "https.ssl.keystore.password": "confluent",
+               "https.ssl.key.password": "confluent",
                "https.ssl.protocol": "TLSv1.2"
           }}' \
      http://localhost:8083/connectors | jq .

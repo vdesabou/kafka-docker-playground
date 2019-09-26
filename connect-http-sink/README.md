@@ -36,10 +36,6 @@ $ ./http_oauth2_auth.sh
 
 * SSL Authentication
 
-**FIXTHIS** NOT WORKING:
-
-Getting ```org.apache.kafka.connect.errors.RetriableException: javax.net.ssl.SSLPeerUnverifiedException: Certificate for <http-service-ssl-auth> doesn't match any of the subject alternative names: []``` because `http-service-ssl-auth` is using `localhost-keystore.jks` which is using `CN=localhost`, therefore from `connect` we don't have `localhost`CN
-
 ```
 $ ./http_ssl_auth.sh
 ```

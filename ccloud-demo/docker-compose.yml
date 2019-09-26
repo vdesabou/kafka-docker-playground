@@ -175,7 +175,7 @@ services:
       CONNECT_CONSUMER_CONFLUENT_MONITORING_INTERCEPTOR_SASL_MECHANISM: PLAIN
 
   http-service-basic-auth:
-    image: msschroe3/http-sink-demo
+    image: vdesabou/http-sink-demo
     hostname: http-service-basic-auth
     container_name: http-service-basic-auth
     ports:

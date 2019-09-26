@@ -99,7 +99,7 @@ services:
       CONFLUENT_METRICS_TOPIC_REPLICATION: 
 
   http-service-no-auth:
-    image: msschroe3/http-sink-demo
+    image: vdesabou/http-sink-demo
     hostname: http-service-no-auth
     container_name: http-service-no-auth
     ports:
@@ -108,7 +108,7 @@ services:
       SPRING_PROFILES_ACTIVE: 'simple-auth'
 
   http-service-basic-auth:
-    image: msschroe3/http-sink-demo
+    image: vdesabou/http-sink-demo
     hostname: http-service-basic-auth
     container_name: http-service-basic-auth
     ports:
@@ -117,7 +117,7 @@ services:
       SPRING_PROFILES_ACTIVE: 'basic-auth'
 
   http-service-oauth2-auth:
-    image: msschroe3/http-sink-demo
+    image: vdesabou/http-sink-demo
     hostname: http-service-oauth2-auth
     container_name: http-service-oauth2-auth
     ports:
@@ -126,7 +126,7 @@ services:
       SPRING_PROFILES_ACTIVE: 'oauth2'
 
   http-service-ssl-auth:
-    image: msschroe3/http-sink-demo
+    image: vdesabou/http-sink-demo
     hostname: http-service-ssl-auth
     container_name: http-service-ssl-auth
     ports:
