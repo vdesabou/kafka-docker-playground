@@ -17,6 +17,10 @@ Confluent Cloud:
 
 * [ccloud demo](ccloud-demo/README.md)
 
+Other:
+
+* [Confluent Rebalancer](rebalancer/README.md)
+
 ## Other useful resources
 
 * [A Kafka Story](https://github.com/framiere/a-kafka-story): A step by step guide to use Kafka ecosystem (Kafka Connect, KSQL, Java Consumers/Producers, etc..) with Docker
