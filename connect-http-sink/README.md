@@ -39,3 +39,45 @@ $ ./http_oauth2_auth.sh
 ```
 $ ./http_ssl_auth.sh
 ```
+
+* Basic Authentication with JSON
+
+```
+$ ./http_json_basic_auth.sh
+```
+
+Sending using:
+
+```
+docker container exec -i broker kafka-console-producer --broker-list broker:9092 --topic json-topic << EOF
+{"customer_name":"Ed", "complaint_type":"Dirty car", "trip_cost": 29.10, "new_customer": false, "number_of_rides": 22}
+EOF
+```
+
+Json data:
+
+```json
+{
+    "customer_name": "Ed",
+    "complaint_type": "Dirty car",
+    "trip_cost": 29.1,
+    "new_customer": false,
+    "number_of_rides": 22
+}
+```
+
+Getting:
+
+```
+curl admin:password@localhost:9080/api/messages | jq .
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+100   123    0   123    0     0   1294      0 --:--:-- --:--:-- --:--:--  1308
+[
+  {
+    "id": 1,
+    "message": "{complaint_type=Dirty car, new_customer=false, trip_cost=29.1, customer_name=Ed, number_of_rides=22}"
+  }
+]
+```
+
