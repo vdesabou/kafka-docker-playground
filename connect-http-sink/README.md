@@ -18,31 +18,31 @@ The HTTP service is using [Kafka Connect HTTP Sink Demo App](https://github.com/
 
 ### Simple (No) Authentication
 
-```
+```bash
 $ ./http_simple_auth.sh
 ```
 
 ### Basic Authentication
 
-```
+```bash
 $ ./http_basic_auth.sh
 ```
 
 ### Oauth2 Authentication
 
-```
+```bash
 $ ./http_oauth2_auth.sh
 ```
 
 ### SSL Authentication
 
-```
+```bash
 $ ./http_ssl_auth.sh
 ```
 
 ### JSON Converter Example
 
-```
+```bash
 $ ./http_json_basic_auth.sh
 ```
 
@@ -68,7 +68,7 @@ Json data:
 
 Getting:
 
-```
+```bash
 curl admin:password@localhost:9080/api/messages | jq .
 [
   {
@@ -78,5 +78,64 @@ curl admin:password@localhost:9080/api/messages | jq .
 ]
 ```
 
-**FIXTHIS** output message is not valid JSON
+**FIXTHIS** output message is not valid JSON, see https://confluentinc.atlassian.net/browse/CC-6460
 
+### AVRO Converter Example
+
+```
+$ ./http_avro_basic_auth.sh
+```
+
+Sending using:
+
+```bash
+seq -f "{\"f1\": \"value%g\"}" 10 | docker container exec -i schema-registry kafka-avro-console-producer --broker-list broker:9092 --topic avro-topic --property value.schema='{"type":"record","name":"myrecord","fields":[{"name":"f1","type":"string"}]}'
+```
+
+Getting:
+
+```
+curl admin:password@localhost:9080/api/messages | jq .
+[
+  {
+    "id": 1,
+    "message": "Struct{f1=value1}"
+  },
+  {
+    "id": 2,
+    "message": "Struct{f1=value2}"
+  },
+  {
+    "id": 3,
+    "message": "Struct{f1=value3}"
+  },
+  {
+    "id": 4,
+    "message": "Struct{f1=value4}"
+  },
+  {
+    "id": 5,
+    "message": "Struct{f1=value5}"
+  },
+  {
+    "id": 6,
+    "message": "Struct{f1=value6}"
+  },
+  {
+    "id": 7,
+    "message": "Struct{f1=value7}"
+  },
+  {
+    "id": 8,
+    "message": "Struct{f1=value8}"
+  },
+  {
+    "id": 9,
+    "message": "Struct{f1=value9}"
+  },
+  {
+    "id": 10,
+    "message": "Struct{f1=value10}"
+  }
+]
+```
