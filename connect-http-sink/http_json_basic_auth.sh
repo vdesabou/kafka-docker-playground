@@ -11,15 +11,15 @@ docker container exec -i broker kafka-console-producer --broker-list broker:9092
 EOF
 
 echo "-------------------------------------"
-echo "Running Basic Authentication Example with JSON"
+echo "Running JSON Converter Example"
 echo "-------------------------------------"
 
-echo "Creating HttpSinkJsonBasicAuth connector"
+echo "Creating JsonHttpSink connector"
 docker-compose exec connect \
      curl -X POST \
      -H "Content-Type: application/json" \
      --data '{
-          "name": "HttpSinkJsonBasicAuth2",
+          "name": "JsonHttpSink",
           "config": {
                "topics": "json-topic",
                "tasks.max": "1",
