@@ -16,31 +16,31 @@ The HTTP service is using [Kafka Connect HTTP Sink Demo App](https://github.com/
 ## How to run
 
 
-* Simple (No) Authentication
+### Simple (No) Authentication
 
 ```
 $ ./http_simple_auth.sh
 ```
 
-* Basic Authentication
+### Basic Authentication
 
 ```
 $ ./http_basic_auth.sh
 ```
 
-* Oauth2 Authentication
+### Oauth2 Authentication
 
 ```
 $ ./http_oauth2_auth.sh
 ```
 
-* SSL Authentication
+### SSL Authentication
 
 ```
 $ ./http_ssl_auth.sh
 ```
 
-* JSON Converter Example
+### JSON Converter Example
 
 ```
 $ ./http_json_basic_auth.sh
