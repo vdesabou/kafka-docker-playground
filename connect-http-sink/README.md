@@ -40,7 +40,7 @@ $ ./http_oauth2_auth.sh
 $ ./http_ssl_auth.sh
 ```
 
-* Basic Authentication with JSON
+* JSON Converter Example
 
 ```
 $ ./http_json_basic_auth.sh
@@ -70,9 +70,6 @@ Getting:
 
 ```
 curl admin:password@localhost:9080/api/messages | jq .
-  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
-                                 Dload  Upload   Total   Spent    Left  Speed
-100   123    0   123    0     0   1294      0 --:--:-- --:--:-- --:--:--  1308
 [
   {
     "id": 1,
@@ -80,4 +77,6 @@ curl admin:password@localhost:9080/api/messages | jq .
   }
 ]
 ```
+
+**FIXTHIS** output message is not valid JSON
 
