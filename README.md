@@ -12,6 +12,7 @@ Connectors:
 * [Kinesis Source](connect-kinesis-source/README.md)
 * [JDBC Source](connect-jdbc-source/README.md)
 * [Debezium MySQL source](connect-debezium-mysql-source/README.md)
+* [IBM MQ Source](connect-ibm-mq-source/README.md)
 
 Confluent Cloud:
 
