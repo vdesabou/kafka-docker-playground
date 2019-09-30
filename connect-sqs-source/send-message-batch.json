@@ -1,0 +1,56 @@
+[
+    {
+        "Id": "FuelReport-0001-2015-09-16T140731Z",
+        "MessageBody": "Fuel report for account 0001 on 2015-09-16 at 02:07:31 PM.",
+        "DelaySeconds": 10,
+        "MessageAttributes": {
+            "SellerName": {
+                "DataType": "String",
+                "StringValue": "Example Store"
+            },
+            "City": {
+                "DataType": "String",
+                "StringValue": "Any City"
+            },
+            "Region": {
+                "DataType": "String",
+                "StringValue": "WA"
+            },
+            "PostalCode": {
+                "DataType": "String",
+                "StringValue": "99065"
+            },
+            "PricePerGallon": {
+                "DataType": "Number",
+                "StringValue": "1.99"
+            }
+        }
+    },
+    {
+        "Id": "FuelReport-0002-2015-09-16T140930Z",
+        "MessageBody": "Fuel report for account 0002 on 2015-09-16 at 02:09:30 PM.",
+        "DelaySeconds": 10,
+        "MessageAttributes": {
+            "SellerName": {
+                "DataType": "String",
+                "StringValue": "Example Fuels"
+            },
+            "City": {
+                "DataType": "String",
+                "StringValue": "North Town"
+            },
+            "Region": {
+                "DataType": "String",
+                "StringValue": "WA"
+            },
+            "PostalCode": {
+                "DataType": "String",
+                "StringValue": "99123"
+            },
+            "PricePerGallon": {
+                "DataType": "Number",
+                "StringValue": "1.87"
+            }
+        }
+    }
+]
