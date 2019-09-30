@@ -132,6 +132,27 @@ Verify we have received the data in test-sqs-source topic:
 
 ```bash
 $ docker-compose exec schema-registry kafka-avro-console-consumer -bootstrap-server broker:9092 --topic test-sqs-source --from-beginning --max-messages 2 | tail -n 5 | head -n 2 | jq .
+
+{
+  "ApproximateFirstReceiveTimestamp": 1569859344138,
+  "ApproximateReceiveCount": 1,
+  "SenderId": "AIDA6PUJEN7W4EMZQTVNV",
+  "SentTimestamp": 1569858932274,
+  "MessageDeduplicationId": null,
+  "MessageGroupId": null,
+  "SequenceNumber": null,
+  "Body": "Fuel report for account 0001 on 2015-09-16 at 02:07:31 PM."
+}
+{
+  "ApproximateFirstReceiveTimestamp": 1569859344140,
+  "ApproximateReceiveCount": 1,
+  "SenderId": "AIDA6PUJEN7W4EMZQTVNV",
+  "SentTimestamp": 1569858932290,
+  "MessageDeduplicationId": null,
+  "MessageGroupId": null,
+  "SequenceNumber": null,
+  "Body": "Fuel report for account 0002 on 2015-09-16 at 02:09:30 PM."
+}
 ```
 
 N.B: Control Center is reachable at [http://127.0.0.1:9021](http://127.0.0.1:9021])
