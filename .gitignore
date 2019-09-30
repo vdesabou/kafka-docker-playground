@@ -7,3 +7,4 @@ target
 bin
 delta_configs
 connect-gcp-bigquery-sink/keyfile.json
+connect-gcs-sink/keyfile.json
