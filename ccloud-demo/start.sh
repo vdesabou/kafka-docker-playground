@@ -40,7 +40,7 @@ echo "Create topic customer-avro in Confluent Cloud"
 kafka-topics --bootstrap-server `grep "^\s*bootstrap.server" ${CONFIG_FILE} | tail -1` --command-config ${CONFIG_FILE} --topic customer-avro --create --replication-factor 3 --partitions 6
 set -e
 
-${DIR}/reset-cluster.sh
+${DIR}/../reset-cluster.sh
 
 echo "-------------------------------------"
 echo "Running Basic Authentication Example"
