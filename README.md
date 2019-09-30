@@ -2,23 +2,29 @@
 
 Playground for Kafka/Confluent Docker experimentations
 
-Connectors:
+## Connectors:
 
-* [HDFS 2 Sink](connect-hdfs-sink/README.md)
-* [S3 Sink](connect-s3-sink/README.md)
+### Source
+
 * [S3 Source](connect-s3-source/README.md)
-* [Elasticsearch Sink](connect-elasticsearch-sink/README.md)
-* [HTTP Sink](connect-http-sink/README.md)
 * [Kinesis Source](connect-kinesis-source/README.md)
 * [JDBC Source](connect-jdbc-source/README.md)
 * [Debezium MySQL source](connect-debezium-mysql-source/README.md)
 * [IBM MQ Source](connect-ibm-mq-source/README.md)
+  
+### Sink
 
-Confluent Cloud:
+* [HDFS 2 Sink](connect-hdfs-sink/README.md)
+* [S3 Sink](connect-s3-sink/README.md)
+* [Elasticsearch Sink](connect-elasticsearch-sink/README.md)
+* [HTTP Sink](connect-http-sink/README.md)
+* [GCP BigQuery Sink](connect-gcp-bigquery-sink/README.md)
+  
+## Confluent Cloud:
 
 * [ccloud demo](ccloud-demo/README.md)
 
-Other:
+## Other:
 
 * [Confluent Rebalancer](rebalancer/README.md)
 
