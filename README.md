@@ -19,6 +19,7 @@ Playground for Kafka/Confluent Docker experimentations
 * [Elasticsearch Sink](connect-elasticsearch-sink/README.md)
 * [HTTP Sink](connect-http-sink/README.md)
 * [GCP BigQuery Sink](connect-gcp-bigquery-sink/README.md)
+* [GCS Sink](connect-gcs-sink/README.md)
   
 ## Confluent Cloud:
 
