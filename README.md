@@ -7,7 +7,8 @@ Playground for Kafka/Confluent Docker experimentations
 ### Source
 
 * [S3 Source](connect-s3-source/README.md)
-* [Kinesis Source](connect-kinesis-source/README.md)
+* [AWS Kinesis Source](connect-kinesis-source/README.md)
+* [AWS SQS Source](connect-sqs-source/README.md)
 * [JDBC Source](connect-jdbc-source/README.md)
 * [Debezium MySQL source](connect-debezium-mysql-source/README.md)
 * [IBM MQ Source](connect-ibm-mq-source/README.md)
