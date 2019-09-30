@@ -6,3 +6,4 @@ target
 .project
 bin
 delta_configs
+connect-gcp-bigquery-sink/keyfile.json
