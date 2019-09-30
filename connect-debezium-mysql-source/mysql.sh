@@ -2,9 +2,8 @@
 set -e
 
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
-BUCKET_NAME=${1:-kafka-docker-playground} 
 
-${DIR}/reset-cluster.sh
+${DIR}/../reset-cluster.sh
 
 echo "Describing the team table in DB 'mydb':"
 docker-compose exec mysql bash -c "mysql --user=root --password=password --database=mydb -e 'describe team'"

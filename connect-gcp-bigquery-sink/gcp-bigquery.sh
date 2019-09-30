@@ -5,7 +5,7 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 PROJECT=${1:-vincent-de-saboulin-lab} 
 DATASET=${1:-MyDatasetTest} 
 
-${DIR}/reset-cluster.sh
+${DIR}/../reset-cluster.sh
 
 echo "Sending messages to topic kcbq-quickstart1"
 seq -f "{\"f1\": \"value%g\"}" 10 | docker container exec -i schema-registry kafka-avro-console-producer --broker-list broker:9092 --topic kcbq-quickstart1 --property value.schema='{"type":"record","name":"myrecord","fields":[{"name":"f1","type":"string"}]}'
@@ -36,4 +36,4 @@ docker-compose exec -e PROJECT="$PROJECT" -e DATASET="$DATASET" connect \
      http://localhost:8083/connectors | jq .
 
 echo "Verify data is in GCP BigQuery:"
-bq query 'SELECT * FROM $DATASET.kcbq_quickstart1;'
+bq query "SELECT * FROM $DATASET.kcbq_quickstart1;"

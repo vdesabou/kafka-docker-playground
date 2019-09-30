@@ -3,7 +3,7 @@ set -e
 
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 
-${DIR}/reset-cluster.sh
+${DIR}/../reset-cluster.sh
 
 echo "Create a Kinesis stream 'my_kinesis_stream'"
 aws kinesis create-stream --stream-name my_kinesis_stream --shard-count 1
