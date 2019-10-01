@@ -8,3 +8,14 @@ bin
 delta_configs
 connect-gcp-bigquery-sink/keyfile.json
 connect-gcs-sink/keyfile.json
+
+scripts/security/*.crt
+scripts/security/*.csr
+scripts/security/*_creds
+scripts/security/*.jks
+scripts/security/*.srl
+scripts/security/*.key
+scripts/security/*.req
+scripts/security/*.pem
+scripts/security/*.der
+scripts/security/*.p12

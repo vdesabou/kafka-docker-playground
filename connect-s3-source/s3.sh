@@ -4,7 +4,7 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 BUCKET_NAME=${1:-kafka-docker-playground} 
 
-${DIR}/../reset-cluster.sh
+${DIR}/../scripts/reset-cluster.sh
 
 echo "Creating S3 Sink connector with bucket name <$BUCKET_NAME>"
 docker-compose exec -e BUCKET_NAME="$BUCKET_NAME" connect \

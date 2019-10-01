@@ -3,7 +3,7 @@ set -e
 
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 
-${DIR}/../reset-cluster.sh
+${DIR}/../scripts/reset-cluster.sh
 
 echo "Describing the team table in DB 'mydb':"
 docker-compose exec mysql bash -c "mysql --user=root --password=password --database=mydb -e 'describe team'"
