@@ -58,6 +58,8 @@ services:
       - zookeeper
       - broker
       - schema-registry
+    ports:
+      - "8083:8083"
     environment:
       CONNECT_BOOTSTRAP_SERVERS: 'broker:9092'
       CONNECT_REST_ADVERTISED_HOST_NAME: connect
