@@ -78,11 +78,11 @@ curl admin:password@localhost:9080/api/messages | jq .
 ]
 ```
 
-**FIXTHIS** output message is not valid JSON, see https://confluentinc.atlassian.net/browse/CC-6460
+**FIXTHIS** output message is not valid JSON
 
 ### JSON Converter Example with HTTP error 204 (NO_CONTENT)
 
-This is to reproduce NPE seen in ticket #20222
+This is to reproduce NPE seen during testing.
 The HTTP server is returning 204 error.
 
 ```bash
