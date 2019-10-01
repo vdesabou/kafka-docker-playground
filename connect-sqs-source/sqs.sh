@@ -5,7 +5,7 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 
 ${DIR}/../scripts/reset-cluster.sh
 
-echo "Create a FIFO queue `sqs-source-connector-demo`"
+echo "Create a FIFO queue sqs-source-connector-demo"
 aws sqs create-queue --queue-name sqs-source-connector-demo
 
 AWS_REGION=$(aws configure get region)
@@ -19,7 +19,7 @@ echo "Sending messages to $QUEUE_URL"
 aws sqs send-message-batch --queue-url $QUEUE_URL --entries file://send-message-batch.json
 
 echo "Creating SQS Source connector"
-docker-compose exec -e QUEUE_URL="$QUEUE_URL" -e AWS_REGION="$AWS_REGION" connect \
+docker-compose exec -e QUEUE_URL="$QUEUE_URL" connect \
      curl -X POST \
      -H "Content-Type: application/json" \
      --data '{
