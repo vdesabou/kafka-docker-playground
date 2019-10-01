@@ -214,7 +214,7 @@ Verify we have received the data in test-sqs-source topic:
 $ docker-compose exec connect kafka-avro-console-consumer -bootstrap-server kafka1:9091 --topic test-sqs-source-ssl --from-beginning --max-messages 2 --property schema.registry.url=https://schemaregistry:8085 --consumer.config /etc/kafka/secrets/client_without_interceptors.config  | tail -n 3 | head -n 2 | jq .
 ```
 
-### With SSL authentication:
+### With SASL_SSL authentication:
 
 Create a FIFO queue `sqs-source-connector-demo-sasl-sql`:
 
