@@ -3,7 +3,7 @@ set -e
 
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 
-${DIR}/../reset-cluster.sh
+${DIR}/../scripts/reset-cluster.sh
 
 echo "Sending messages to topic http-messages"
 seq 10 | docker container exec -i broker kafka-console-producer --broker-list broker:9092 --topic http-messages

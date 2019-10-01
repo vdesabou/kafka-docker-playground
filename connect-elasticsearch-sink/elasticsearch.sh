@@ -3,7 +3,7 @@ set -e
 
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 
-${DIR}/../reset-cluster.sh
+${DIR}/../scripts/reset-cluster.sh
 
 echo "Creating Elasticsearch Sink connector"
 docker-compose exec connect \

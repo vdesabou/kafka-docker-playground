@@ -4,7 +4,10 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 BUCKET_NAME=${1:-test-gcs-playground} 
 
-${DIR}/../reset-cluster.sh
+${DIR}/../scripts/reset-cluster.sh
+
+echo "Removing existing objects in GCS, if applicable"
+gsutil rm -r gs://$BUCKET_NAME/topics/gcs_topic
 
 echo "Sending messages to topic gcs_topic"
 seq -f "{\"f1\": \"value%g\"}" 10 | docker container exec -i schema-registry kafka-avro-console-producer --broker-list broker:9092 --topic gcs_topic --property value.schema='{"type":"record","name":"myrecord","fields":[{"name":"f1","type":"string"}]}'
