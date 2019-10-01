@@ -30,7 +30,7 @@ docker-compose exec -e BUCKET_NAME="$BUCKET_NAME" connect \
      --cert /etc/kafka/secrets/connect.certificate.pem --key /etc/kafka/secrets/connect.key --tlsv1.2 --cacert /etc/kafka/secrets/snakeoil-ca-1.crt \
      -H "Content-Type: application/json" \
      --data '{
-               "name": "gcs",
+               "name": "gcs-sink-ssl",
                "config": {
                     "connector.class": "io.confluent.connect.gcs.GcsSinkConnector",
                     "tasks.max" : "1",
