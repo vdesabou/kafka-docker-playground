@@ -73,6 +73,7 @@ services:
       CONNECT_PRODUCER_CONFLUENT_MONITORING_INTERCEPTOR_BOOTSTRAP_SERVERS: broker:9092
       CONNECT_CONSUMER_INTERCEPTOR_CLASSES: "io.confluent.monitoring.clients.interceptor.MonitoringConsumerInterceptor"
       CONNECT_CONSUMER_CONFLUENT_MONITORING_INTERCEPTOR_BOOTSTRAP_SERVERS: broker:9092
+      # CONNECT_LOG4J_ROOT_LOGLEVEL: DEBUG
     volumes:
       - ./security:/etc/kafka/secrets
 
@@ -113,6 +114,15 @@ services:
     container_name: http-service-basic-auth
     ports:
       - "9080:8080"
+    environment:
+      SPRING_PROFILES_ACTIVE: 'basic-auth'
+
+  http-service-basic-auth-204:
+    image: vdesabou/http-sink-demo-error-204
+    hostname: http-service-basic-auth-204
+    container_name: http-service-basic-auth-204
+    ports:
+      - "9081:8080"
     environment:
       SPRING_PROFILES_ACTIVE: 'basic-auth'
 
