@@ -14,6 +14,9 @@ topic_name=test2
 echo -e "\n# Create topic $topic_name"
 kafka-topics --bootstrap-server `grep "^\s*bootstrap.server" $CONFIG_FILE | tail -1` --command-config $CONFIG_FILE --topic $topic_name --create --replication-factor 3 --partitions 6 2>/dev/null || true
 
+# describe example
+kafka-consumer-groups --bootstrap-server `grep "^\s*bootstrap.server" $CONFIG_FILE | tail -1` --command-config $CONFIG_FILE --group simple-stream --describe
+
 # Produce messages
 echo -e "\n# Produce messages to $topic_name"
 num_messages=10
