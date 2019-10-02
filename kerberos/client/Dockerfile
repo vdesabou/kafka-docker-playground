@@ -1,5 +1,4 @@
 FROM centos
-MAINTAINER d.gasparina@gmail.com
 ENV container docker
 
 # 1. Adding Confluent repository

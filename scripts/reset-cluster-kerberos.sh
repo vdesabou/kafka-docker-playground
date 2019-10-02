@@ -38,6 +38,7 @@ docker exec -ti kdc kadmin.local -w password -q "add_principal -randkey kafka_pr
 docker exec -ti kdc kadmin.local -w password -q "add_principal -randkey kafka_consumer@TEST.CONFLUENT.IO"  > /dev/null
 docker exec -ti kdc kadmin.local -w password -q "add_principal -randkey connect@TEST.CONFLUENT.IO"  > /dev/null
 docker exec -ti kdc kadmin.local -w password -q "add_principal -randkey schemaregistry@TEST.CONFLUENT.IO"  > /dev/null
+docker exec -ti kdc kadmin.local -w password -q "add_principal -randkey controlcenter@TEST.CONFLUENT.IO"  > /dev/null
 
 
 # Create an admin principal for the cluster, which we'll use to setup ACLs.
@@ -52,6 +53,7 @@ docker exec -ti kdc rm -f /var/lib/secret/kafka-client.key 2>&1 > /dev/null
 docker exec -ti kdc rm -f /var/lib/secret/kafka-admin.key 2>&1 > /dev/null
 docker exec -ti kdc rm -f /var/lib/secret/kafka-connect.key 2>&1 > /dev/null
 docker exec -ti kdc rm -f /var/lib/secret/kafka-schemaregistry.key 2>&1 > /dev/null
+docker exec -ti kdc rm -f /var/lib/secret/kafka-controlcenter.key 2>&1 > /dev/null
 
 docker exec -ti kdc kadmin.local -w password -q "ktadd  -k /var/lib/secret/kafka.key -norandkey kafka/kafka.kerberos-demo.local@TEST.CONFLUENT.IO " > /dev/null
 docker exec -ti kdc kadmin.local -w password -q "ktadd  -k /var/lib/secret/zookeeper.key -norandkey zookeeper/zookeeper.kerberos-demo.local@TEST.CONFLUENT.IO " > /dev/null
@@ -62,6 +64,8 @@ docker exec -ti kdc kadmin.local -w password -q "ktadd  -k /var/lib/secret/kafka
 docker exec -ti kdc kadmin.local -w password -q "ktadd  -k /var/lib/secret/kafka-admin.key -norandkey admin/for-kafka@TEST.CONFLUENT.IO " > /dev/null
 docker exec -ti kdc kadmin.local -w password -q "ktadd  -k /var/lib/secret/kafka-connect.key -norandkey connect@TEST.CONFLUENT.IO " > /dev/null
 docker exec -ti kdc kadmin.local -w password -q "ktadd  -k /var/lib/secret/kafka-schemaregistry.key -norandkey schemaregistry@TEST.CONFLUENT.IO " > /dev/null
+docker exec -ti kdc kadmin.local -w password -q "ktadd  -k /var/lib/secret/kafka-controlcenter.key -norandkey controlcenter@TEST.CONFLUENT.IO " > /dev/null
+
 
 # Starting zookeeper and kafka now that the keytab has been created with the required credentials and services
 docker-compose up -d
@@ -72,7 +76,7 @@ docker exec client bash -c "kinit -k -t /var/lib/secret/kafka-admin.key admin/fo
 # Adding ACLs for connect user:
 docker exec client bash -c "kinit -k -t /var/lib/secret/kafka-admin.key admin/for-kafka && kafka-acls --bootstrap-server kafka:9093 --command-config /etc/kafka/command.properties --add --allow-principal User:connect --consumer --topic=* --group=*"
 docker exec client bash -c "kinit -k -t /var/lib/secret/kafka-admin.key admin/for-kafka && kafka-acls --bootstrap-server kafka:9093 --command-config /etc/kafka/command.properties --add --allow-principal User:connect --producer --topic=*"
-# schemaregistry is super user
+# schemaregistry and controlcenter is super user
 
 # Output example usage:
 echo "Example configuration to access kafka:"
