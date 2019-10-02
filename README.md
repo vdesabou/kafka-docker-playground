@@ -6,7 +6,7 @@ Playground for Kafka/Confluent Docker experimentations
 
 ### Source
 
-* [S3 Source](connect-s3-source/README.md)
+* [AWS S3 Source](connect-s3-source/README.md)
 * [AWS Kinesis Source](connect-kinesis-source/README.md)
 * [AWS SQS Source](connect-sqs-source/README.md) [also with [SASL_SSL](connect-sqs-source/README.md#with-sasl_ssl-authentication) and [SSL](connect-sqs-source/README.md#with-ssl-authentication) authentication]
 * [JDBC Source](connect-jdbc-source/README.md)
@@ -16,7 +16,7 @@ Playground for Kafka/Confluent Docker experimentations
 ### Sink
 
 * [HDFS 2 Sink](connect-hdfs-sink/README.md)
-* [S3 Sink](connect-s3-sink/README.md)
+* [AWS S3 Sink](connect-s3-sink/README.md)
 * [Elasticsearch Sink](connect-elasticsearch-sink/README.md)
 * [HTTP Sink](connect-http-sink/README.md)
 * [GCP BigQuery Sink](connect-gcp-bigquery-sink/README.md)
