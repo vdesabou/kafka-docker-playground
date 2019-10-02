@@ -8,7 +8,7 @@ Playground for Kafka/Confluent Docker experimentations
 
 * [S3 Source](connect-s3-source/README.md)
 * [AWS Kinesis Source](connect-kinesis-source/README.md)
-* [AWS SQS Source](connect-sqs-source/README.md)
+* [AWS SQS Source](connect-sqs-source/README.md) [also with [SASL_SSL](connect-sqs-source/README.md#with-sasl_ssl-authentication) and [SSL](connect-sqs-source/README.md#with-ssl-authentication) authentication]
 * [JDBC Source](connect-jdbc-source/README.md)
 * [Debezium MySQL source](connect-debezium-mysql-source/README.md)
 * [IBM MQ Source](connect-ibm-mq-source/README.md)
@@ -20,7 +20,7 @@ Playground for Kafka/Confluent Docker experimentations
 * [Elasticsearch Sink](connect-elasticsearch-sink/README.md)
 * [HTTP Sink](connect-http-sink/README.md)
 * [GCP BigQuery Sink](connect-gcp-bigquery-sink/README.md)
-* [GCS Sink](connect-gcs-sink/README.md)
+* [GCS Sink](connect-gcs-sink/README.md) [also with [SASL_SSL](connect-gcs-sink/README.md#with-sasl_ssl-authentication) and [SSL](connect-gcs-sink/README.md#with-ssl-authentication) authentication]
   
 ## Confluent Cloud:
 
