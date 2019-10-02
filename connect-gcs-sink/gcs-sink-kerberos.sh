@@ -4,9 +4,10 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 BUCKET_NAME=${1:-test-gcs-playground} 
 
+# Pass the volumes mapping
 export CUSTOM_VOLUME_MAPPING_1="$PWD/keyfile.json:/root/keyfile.json:ro"
 
-${DIR}/../scripts/reset-cluster-kerberos.sh "FALSE" "TRUE"
+${DIR}/../scripts/reset-cluster-kerberos.sh
 
 echo "Removing existing objects in GCS, if applicable"
 set +e

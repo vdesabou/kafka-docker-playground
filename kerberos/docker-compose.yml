@@ -75,7 +75,7 @@ services:
       KAFKA_AUTHORIZER_CLASS_NAME: kafka.security.auth.SimpleAclAuthorizer
       KAFKA_ZOOKEEPER_SET_ACL: "true"
       KAFKA_ALLOW_EVERYONE_IF_NO_ACL_FOUND: "false"
-      KAFKA_SUPER_USERS: User:admin;User:kafka;User:schemaregistry
+      KAFKA_SUPER_USERS: User:admin;User:kafka;User:schemaregistry;User:controlcenter
       KAFKA_OPTS: "-Djava.security.auth.login.config=/etc/kafka/kafka.sasl.jaas.config"
 
 
@@ -204,6 +204,46 @@ services:
         storeKey=true \
         keyTab=\"/var/lib/secret/kafka-schemaregistry.key\" \
         principal=\"schemaregistry@TEST.CONFLUENT.IO\";"
+
+  control-center:
+    image: confluentinc/cp-enterprise-control-center:5.3.1
+    container_name: control-center
+    # Required to wait for the keytab to get generated
+    restart: on-failure
+    depends_on:
+      - zookeeper
+      - kafka
+      - connect
+    ports:
+      - "9021:9021"
+    volumes:
+      - secret:/var/lib/secret
+      - ./kdc/krb5.conf:/etc/krb5.conf
+    environment:
+      CONTROL_CENTER_BOOTSTRAP_SERVERS: "kafka:9093"
+      CONTROL_CENTER_ZOOKEEPER_CONNECT: "zookeeper:2181"
+      CONTROL_CENTER_REPLICATION_FACTOR: 1
+      CONTROL_CENTER_MONITORING_INTERCEPTOR_TOPIC_REPLICATION: 1
+      CONTROL_CENTER_INTERNAL_TOPICS_REPLICATION: 1
+      CONTROL_CENTER_COMMAND_TOPIC_REPLICATION: 1
+      CONTROL_CENTER_METRICS_TOPIC_REPLICATION: 1
+      CONTROL_CENTER_MONITORING_INTERCEPTOR_TOPIC_PARTITIONS: 1
+      CONTROL_CENTER_INTERNAL_TOPICS_PARTITIONS: 1
+      CONTROL_CENTER_METRICS_TOPIC_PARTITIONS: 1
+      CONTROL_CENTER_STREAMS_NUM_STREAM_THREADS: 1
+      # Amount of heap to use for internal caches. Increase for better thoughput
+      CONTROL_CENTER_STREAMS_CACHE_MAX_BYTES_BUFFERING: 100000000
+      CONTROL_CENTER_CONNECT_CLUSTER: "http://connect:8083"
+      CONTROL_CENTER_SCHEMA_REGISTRY_URL: "http://schema-registry:8081"
+      CONTROL_CENTER_STREAMS_CONSUMER_REQUEST_TIMEOUT_MS: "960032"
+      CONTROL_CENTER_STREAMS_SECURITY_PROTOCOL: SASL_PLAINTEXT
+      CONTROL_CENTER_STREAMS_SASL_JAAS_CONFIG: "com.sun.security.auth.module.Krb5LoginModule required \
+        useKeyTab=true \
+        storeKey=true \
+        keyTab=\"/var/lib/secret/kafka-controlcenter.key\" \
+        principal=\"controlcenter@TEST.CONFLUENT.IO\";"
+      CONTROL_CENTER_STREAMS_SASL_MECHANISM: GSSAPI
+      CONTROL_CENTER_STREAMS_SASL_KERBEROS_SERVICE_NAME: kafka
 
 volumes:
   secret: {}
