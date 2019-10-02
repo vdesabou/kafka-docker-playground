@@ -105,6 +105,7 @@ services:
     volumes:
       - secret:/var/lib/secret
       - ./kdc/krb5.conf:/etc/krb5.conf
+      - ${CUSTOM_VOLUME_MAPPING_1}
     ports:
       - "8083:8083"
     environment:
