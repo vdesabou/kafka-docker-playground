@@ -3,9 +3,16 @@ set -e
 
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 
-${DIR}/../nosecurity/start.sh
+${DIR}/../nosecurity/start.sh "${PWD}/docker-compose.nosecurity.yml"
 
-echo "Create a Kinesis stream 'my_kinesis_stream'"
+set +e
+echo "Delete the stream"
+aws kinesis delete-stream --stream-name my_kinesis_stream
+set -e
+
+sleep 5
+
+echo "Create a Kinesis stream my_kinesis_stream"
 aws kinesis create-stream --stream-name my_kinesis_stream --shard-count 1
 
 echo "Sleep 30 seconds to let the Kinesis stream being fully started"
@@ -17,7 +24,7 @@ aws kinesis put-record --stream-name my_kinesis_stream --partition-key 123 --dat
 
 
 echo "Creating Kinesis Source connector"
-docker-compose exec connect \
+docker container exec connect \
      curl -X POST \
      -H "Content-Type: application/json" \
      --data '{
@@ -36,7 +43,7 @@ docker-compose exec connect \
      http://localhost:8083/connectors | jq .
 
 echo "Verify we have received the data in kinesis_topic topic"
-docker-compose exec broker kafka-console-consumer --bootstrap-server broker:9092 --topic kinesis_topic --from-beginning --max-messages 1
+docker container exec broker kafka-console-consumer --bootstrap-server broker:9092 --topic kinesis_topic --from-beginning --max-messages 1
 
-echo "Delete your stream and clean up resources to avoid incurring any unintended charges."
+echo "Delete the stream"
 aws kinesis delete-stream --stream-name my_kinesis_stream

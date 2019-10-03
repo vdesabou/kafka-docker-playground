@@ -4,10 +4,10 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 BUCKET_NAME=${1:-kafka-docker-playground} 
 
-${DIR}/../nosecurity/start.sh
+${DIR}/../nosecurity/start.sh "${PWD}/docker-compose.nosecurity.yml"
 
 echo "Creating S3 Sink connector with bucket name <$BUCKET_NAME>"
-docker-compose exec -e BUCKET_NAME="$BUCKET_NAME" connect \
+docker container exec -e BUCKET_NAME="$BUCKET_NAME" connect \
      curl -X POST \
      -H "Content-Type: application/json" \
      --data '{
@@ -43,7 +43,7 @@ aws s3 cp s3://$BUCKET_NAME/topics/s3_topic/partition=0/s3_topic+0+0000000000.av
 avro-tools tojson /tmp/s3_topic+0+0000000000.avro
 
 echo "Creating S3 Source connector with bucket name <$BUCKET_NAME>"
-docker-compose exec -e BUCKET_NAME="$BUCKET_NAME" connect \
+docker container exec -e BUCKET_NAME="$BUCKET_NAME" connect \
      curl -X POST \
      -H "Content-Type: application/json" \
      --data '{

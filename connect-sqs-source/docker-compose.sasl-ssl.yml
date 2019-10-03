@@ -1,0 +1,8 @@
+---
+version: '3.5'
+services:
+  connect:
+    volumes:
+        - $HOME/.aws/credentials:/root/.aws/credentials:ro
+        - $HOME/.aws/config:/root/.aws/config:ro
+        - ../sasl-ssl/security:/etc/kafka/secrets
