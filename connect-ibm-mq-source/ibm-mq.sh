@@ -3,10 +3,10 @@ set -e
 
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 
-${DIR}/../nosecurity/start.sh
+${DIR}/../nosecurity/start.sh "${PWD}/docker-compose.nosecurity.yml"
 
 echo "Creating IBM MQ source connector"
-docker-compose exec connect \
+docker container exec connect \
      curl -X POST \
      -H "Content-Type: application/json" \
      --data '{
@@ -41,4 +41,4 @@ EOF
 sleep 5
 
 echo "Verify we have received the data in MyKafkaTopicName topic"
-docker-compose exec schema-registry kafka-avro-console-consumer -bootstrap-server broker:9092 --topic MyKafkaTopicName --from-beginning --max-messages 2
+docker container exec schema-registry kafka-avro-console-consumer -bootstrap-server broker:9092 --topic MyKafkaTopicName --from-beginning --max-messages 2

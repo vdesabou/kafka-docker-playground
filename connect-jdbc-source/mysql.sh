@@ -3,16 +3,16 @@ set -e
 
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 
-${DIR}/../nosecurity/start.sh
+${DIR}/../nosecurity/start.sh "${PWD}/docker-compose.nosecurity.yml"
 
 echo "Describing the application table in DB 'db':"
-docker-compose exec mysql bash -c "mysql --user=root --password=password --database=db -e 'describe application'"
+docker container exec mysql bash -c "mysql --user=root --password=password --database=db -e 'describe application'"
 
 echo "Show content of application table:"
-docker-compose exec mysql bash -c "mysql --user=root --password=password --database=db -e 'select * from application'"
+docker container exec mysql bash -c "mysql --user=root --password=password --database=db -e 'select * from application'"
 
 echo "Adding an element to the table"
-docker-compose exec mysql mysql --user=root --password=password --database=db -e "
+docker container exec mysql mysql --user=root --password=password --database=db -e "
 INSERT INTO application (   \
   id,   \
   name, \
@@ -26,10 +26,10 @@ INSERT INTO application (   \
 ); "
 
 echo "Show content of application table:"
-docker-compose exec mysql bash -c "mysql --user=root --password=password --database=db -e 'select * from application'"
+docker container exec mysql bash -c "mysql --user=root --password=password --database=db -e 'select * from application'"
 
 echo "Creating MySQL source connector"
-docker-compose exec connect \
+docker container exec connect \
      curl -X POST \
      -H "Content-Type: application/json" \
      --data '{
@@ -49,6 +49,6 @@ docker-compose exec connect \
 sleep 5
 
 echo "Verifying topic mysql-application"
-docker-compose exec schema-registry kafka-avro-console-consumer -bootstrap-server broker:9092 --topic mysql-application --from-beginning --max-messages 2
+docker container exec schema-registry kafka-avro-console-consumer -bootstrap-server broker:9092 --topic mysql-application --from-beginning --max-messages 2
 
 

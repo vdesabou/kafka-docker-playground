@@ -6,8 +6,8 @@ services:
     hostname: mysql
     container_name: mysql
     volumes:
-      - ../connect-debezium-mysql-source/mysql.cnf:/etc/mysql/conf.d/custom.cnf
-      - ../connect-debezium-mysql-source/mysql-init.sql:/docker-entrypoint-initdb.d/mysql-init.sql
+      - ../connect-jdbc-source/mysql.cnf:/etc/mysql/conf.d/custom.cnf
+      - ../connect-jdbc-source/mysql-init.sql:/docker-entrypoint-initdb.d/mysql-init.sql
     environment:
       MYSQL_ROOT_PASSWORD: password
       MYSQL_DATABASE: db
@@ -22,4 +22,6 @@ services:
       - schema-registry
       - mysql
     volumes:
-      - ../connect-jdbc-source/mysql-connector-java-5.1.45-bin.jar:/usr/share/confluent-hub-components/confluentinc-kafka-connect-jdbc/lib/mysql-connector-java-5.1.45-bin.jar
+        - ../connect-jdbc-source/mysql-connector-java-5.1.45-bin.jar:/usr/share/confluent-hub-components/confluentinc-kafka-connect-jdbc/lib/mysql-connector-java-5.1.45-bin.jar
+
+      
