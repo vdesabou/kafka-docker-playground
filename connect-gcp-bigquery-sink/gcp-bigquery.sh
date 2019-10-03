@@ -13,7 +13,7 @@ then
 fi
 
 ${DIR}/../plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
-${DIR}/../WaitForConnectAndControlCenter.sh
+
 
 echo "Sending messages to topic kcbq-quickstart1"
 seq -f "{\"f1\": \"value%g\"}" 10 | docker container exec -i schema-registry kafka-avro-console-producer --broker-list broker:9092 --topic kcbq-quickstart1 --property value.schema='{"type":"record","name":"myrecord","fields":[{"name":"f1","type":"string"}]}'

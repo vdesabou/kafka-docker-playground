@@ -98,9 +98,11 @@ docker exec client bash -c "kinit -k -t /var/lib/secret/kafka-admin.key admin/fo
 
 # Output example usage:
 echo "-----------------------------------------"
-echo "\tExample configuration to access kafka:"
+echo "Example configuration to access kafka:"
 echo "-----------------------------------------"
 echo "-> docker-compose exec client bash -c 'kinit -k -t /var/lib/secret/kafka-client.key kafka_producer && kafka-console-producer --broker-list kafka:9093 --topic test --producer.config /etc/kafka/producer.properties'"
 echo "-> docker-compose exec client bash -c 'kinit -k -t /var/lib/secret/kafka-client.key kafka_consumer && kafka-console-consumer --bootstrap-server kafka:9093 --topic test --consumer.config /etc/kafka/consumer.properties --from-beginning'"
 
 cd ${OLDDIR}
+
+../WaitForConnectAndControlCenter.sh

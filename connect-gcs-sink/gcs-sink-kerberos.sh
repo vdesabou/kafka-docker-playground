@@ -12,7 +12,7 @@ then
 fi
 
 ${DIR}/../kerberos/start.sh "${PWD}/docker-compose.kerberos.yml"
-${DIR}/../WaitForConnectAndControlCenter.sh
+
 
 echo "Removing existing objects in GCS, if applicable"
 set +e

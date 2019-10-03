@@ -21,3 +21,5 @@ else
   docker-compose down -v 
   docker-compose up -d
 fi
+
+../WaitForConnectAndControlCenter.sh

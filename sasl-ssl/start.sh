@@ -33,3 +33,5 @@ else
 fi
 
 cd ${OLDDIR}
+
+../WaitForConnectAndControlCenter.sh
