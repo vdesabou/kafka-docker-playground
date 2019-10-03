@@ -16,13 +16,17 @@ while getopts "h?ab" opt; do
     esac
 done
 
+OLDDIR=$PWD
+
+cd ${OLDDIR}/../nosecurity
+
 if [ "${IGNORE_CONNECT_STARTUP}" == "FALSE" ]
 then
   # Verify Kafka Connect has started within MAX_WAIT seconds
   MAX_WAIT=120
   CUR_WAIT=0
   echo "Waiting up to $MAX_WAIT seconds for Kafka Connect to start"
-  while [[ ! $(docker container logs connect) =~ "Finished starting connectors and tasks" ]]; do
+  while [[ ! $(docker-compose logs connect) =~ "Finished starting connectors and tasks" ]]; do
     sleep 10
     CUR_WAIT=$(( CUR_WAIT+10 ))
     if [[ "$CUR_WAIT" -gt "$MAX_WAIT" ]]; then
@@ -39,7 +43,7 @@ then
   MAX_WAIT=300
   CUR_WAIT=0
   echo "Waiting up to $MAX_WAIT seconds for Confluent Control Center to start"
-  while [[ ! $(docker container logs control-center) =~ "Started NetworkTrafficServerConnector" ]]; do
+  while [[ ! $(docker-compose logs control-center) =~ "Started NetworkTrafficServerConnector" ]]; do
     sleep 10
     CUR_WAIT=$(( CUR_WAIT+10 ))
     if [[ "$CUR_WAIT" -gt "$MAX_WAIT" ]]; then
@@ -55,3 +59,5 @@ if [[ $(docker container ps) =~ "Exit 137" ]]; then
   echo -e "\nERROR: At least one Docker container did not start properly, see 'docker container ps'. Did you remember to increase the memory available to Docker to at least 8GB (default is 2GB)?\n"
   exit 1
 fi
+
+cd ${OLDDIR}
