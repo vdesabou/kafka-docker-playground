@@ -39,7 +39,7 @@ $ ./s3.sh <your-bucket-name>
 The connector is created with:
 
 ```
-docker-compose exec connect \
+docker container exec connect \
      curl -X POST \
      -H "Content-Type: application/json" \
      --data '{

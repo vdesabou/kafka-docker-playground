@@ -64,7 +64,7 @@ seq -f "{\"f1\": \"value%g\"}" 10 | docker container exec -i schema-registry kaf
 The connector is created with:
 
 ```bash
-docker-compose exec -e BUCKET_NAME="$BUCKET_NAME" connect \
+docker container exec -e BUCKET_NAME="$BUCKET_NAME" connect \
      curl -X POST \
      -H "Content-Type: application/json" \
      --data '{
@@ -120,7 +120,7 @@ seq -f "{\"f1\": \"This is a message sent with SSL authentication %g\"}" 10 | do
 The connector is created with:
 
 ```bash
-docker-compose exec -e BUCKET_NAME="$BUCKET_NAME" connect \
+docker container exec -e BUCKET_NAME="$BUCKET_NAME" connect \
      curl -X POST \
      --cert /etc/kafka/secrets/connect.certificate.pem --key /etc/kafka/secrets/connect.key --tlsv1.2 --cacert /etc/kafka/secrets/snakeoil-ca-1.crt \
      -H "Content-Type: application/json" \
@@ -206,7 +206,7 @@ seq -f "{\"f1\": \"This is a message sent with SASL_SSL authentication %g\"}" 10
 The connector is created with:
 
 ```bash
-docker-compose exec -e BUCKET_NAME="$BUCKET_NAME" connect \
+docker container exec -e BUCKET_NAME="$BUCKET_NAME" connect \
      curl -X POST \
      --cert /etc/kafka/secrets/connect.certificate.pem --key /etc/kafka/secrets/connect.key --tlsv1.2 --cacert /etc/kafka/secrets/snakeoil-ca-1.crt \
      -H "Content-Type: application/json" \

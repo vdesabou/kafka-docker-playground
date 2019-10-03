@@ -57,7 +57,7 @@ seq -f "{\"f1\": \"value%g\"}" 10 | docker container exec -i schema-registry kaf
 The connector is created with:
 
 ```bash
-docker-compose exec -e PROJECT="$PROJECT" -e DATASET="$DATASET" connect \
+docker container exec -e PROJECT="$PROJECT" -e DATASET="$DATASET" connect \
      curl -X POST \
      -H "Content-Type: application/json" \
      --data '{

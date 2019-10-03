@@ -25,7 +25,7 @@ $ ./ibm-mq.sh
 The connector is created with:
 
 ```bash
-$ docker-compose exec connect \
+$ docker container exec connect \
      curl -X POST \
      -H "Content-Type: application/json" \
      --data '{
@@ -62,7 +62,7 @@ EOF
 Verify we have received the data in MyKafkaTopicName topic:
 
 ```bash
-docker-compose exec schema-registry kafka-avro-console-consumer -bootstrap-server broker:9092 --topic MyKafkaTopicName --from-beginning --max-messages 2
+docker container exec schema-registry kafka-avro-console-consumer -bootstrap-server broker:9092 --topic MyKafkaTopicName --from-beginning --max-messages 2
 ```
 
 N.B: Control Center is reachable at [http://127.0.0.1:9021](http://127.0.0.1:9021])

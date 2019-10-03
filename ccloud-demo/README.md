@@ -74,7 +74,7 @@ Login/password is admin/admin (only Producer and Consumer dashboards are availab
 * How to use ksql-cli:
 
 ```bash
-docker-compose exec ksql-cli bash -c \
+docker container exec ksql-cli bash -c \
 'echo -e "\n\n⏳ Waiting for KSQL to be available before launching CLI\n"; while [ $(curl -s -o /dev/null -w %{http_code} http://ksql-server:8089/) -eq 000 ] ; do echo -e $(date) "KSQL Server HTTP state: " $(curl -s -o /dev/null -w %{http_code} http:/ksql-server:8089/) " (waiting for 200)" ; sleep 5 ; done; ksql http://ksql-server:8089'
 ```
 
