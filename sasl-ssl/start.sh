@@ -22,7 +22,7 @@ echo "Generate keys and certificates used for SSL"
 cd ${OLDDIR}/../sasl-ssl
 
 DOCKER_COMPOSE_FILE_OVERRIDE=$1
-if [ -f ${DOCKER_COMPOSE_FILE_OVERRIDE} ]
+if [ -f "${DOCKER_COMPOSE_FILE_OVERRIDE}" ]
 then
   echo "Using ${DOCKER_COMPOSE_FILE_OVERRIDE}"
   docker-compose -f ../sasl-ssl/docker-compose.yml -f ${DOCKER_COMPOSE_FILE_OVERRIDE} down -v 

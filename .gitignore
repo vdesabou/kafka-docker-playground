@@ -19,3 +19,14 @@ sasl-ssl/security/*.req
 sasl-ssl/security/*.pem
 sasl-ssl/security/*.der
 sasl-ssl/security/*.p12
+
+ssl_kerberos/security/*.crt
+ssl_kerberos/security/*.csr
+ssl_kerberos/security/*_creds
+ssl_kerberos/security/*.jks
+ssl_kerberos/security/*.srl
+ssl_kerberos/security/*.key
+ssl_kerberos/security/*.req
+ssl_kerberos/security/*.pem
+ssl_kerberos/security/*.der
+ssl_kerberos/security/*.p12

@@ -12,7 +12,7 @@ verify_installed "jq"
 verify_installed "docker-compose"
 
 DOCKER_COMPOSE_FILE_OVERRIDE=$1
-if [ -f ${DOCKER_COMPOSE_FILE_OVERRIDE} ]
+if [ ${DOCKER_COMPOSE_FILE_OVERRIDE} ne "" && -f ${DOCKER_COMPOSE_FILE_OVERRIDE} ]
 then
   echo "Using ${DOCKER_COMPOSE_FILE_OVERRIDE}"
   docker-compose -f ../plaintext/docker-compose.yml -f ${DOCKER_COMPOSE_FILE_OVERRIDE} down -v 
