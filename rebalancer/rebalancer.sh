@@ -3,7 +3,7 @@ set -e
 
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 
-${DIR}/../scripts/reset-cluster.sh "TRUE" "FALSE"
+${DIR}/../nosecurity/start.sh -a
 
 echo "Create topic adb-test"
 docker-compose exec zookeeper kafka-topics --create --topic adb-test --partitions 20 --replication-factor 3 --if-not-exists --zookeeper zookeeper:2181

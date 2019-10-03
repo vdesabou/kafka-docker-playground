@@ -1,3 +1,4 @@
+---
 version: '3.5'
 services:
   kdc:
@@ -103,10 +104,7 @@ services:
       - schema-registry
     # Required to wait for the keytab to get generated
     restart: on-failure
-    volumes:
-      - secret:/var/lib/secret
-      - ./kdc/krb5.conf:/etc/krb5.conf
-      - ../keyfiles:/root/keyfiles:ro
+    # volumes are overwritten
     ports:
       - "8083:8083"
     environment:

@@ -6,8 +6,8 @@ target
 .project
 bin
 delta_configs
-keyfiles/keyfile_gcs.json
-keyfiles/keyfile_big_query.json
+connect-gcp-bigquery-sink/keyfile.json
+connect-gcc-sink/keyfile.json
 
 sasl-ssl/security/*.crt
 sasl-ssl/security/*.csr
