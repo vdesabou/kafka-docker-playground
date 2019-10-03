@@ -1,0 +1,10 @@
+---
+version: '3.5'
+services:
+  hadoop:
+    image: sequenceiq/hadoop-docker:2.7.1
+    hostname: hadoop
+    container_name: hadoop
+    ports:
+      - "9000:9000"
+      - "50070:50070"

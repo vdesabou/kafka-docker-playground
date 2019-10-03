@@ -3,7 +3,7 @@ set -e
 
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 
-${DIR}/../nosecurity/start.sh
+${DIR}/../nosecurity/start.sh "${PWD}/docker-compose.nosecurity.yml"
 
 echo "Sending messages to topic http-messages"
 seq 10 | docker container exec -i broker kafka-console-producer --broker-list broker:9092 --topic http-messages
@@ -13,7 +13,7 @@ echo "Running Simple (No) Authentication Example"
 echo "-------------------------------------"
 
 echo "Creating HttpSinkNoAuth connector"
-docker-compose exec connect \
+docker container exec connect \
      curl -X POST \
      -H "Content-Type: application/json" \
      --data '{
