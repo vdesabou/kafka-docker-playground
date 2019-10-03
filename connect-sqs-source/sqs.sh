@@ -3,7 +3,7 @@ set -e
 
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 
-${DIR}/../nosecurity/start.sh "${PWD}/docker-compose.nosecurity.yml"
+${DIR}/../plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
 ${DIR}/../WaitForConnectAndControlCenter.sh
 
 QUEUE_NAME="sqs-source-connector-demo"

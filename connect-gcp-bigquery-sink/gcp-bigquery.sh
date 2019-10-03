@@ -12,7 +12,7 @@ then
      exit 1
 fi
 
-${DIR}/../nosecurity/start.sh "${PWD}/docker-compose.nosecurity.yml"
+${DIR}/../plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
 ${DIR}/../WaitForConnectAndControlCenter.sh
 
 echo "Sending messages to topic kcbq-quickstart1"
