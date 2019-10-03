@@ -3,7 +3,7 @@ set -e
 
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 
-${DIR}/../scripts/reset-cluster.sh
+${DIR}/../nosecurity/start.sh
 
 echo "Creating IBM MQ source connector"
 docker-compose exec connect \

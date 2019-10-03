@@ -1,5 +1,5 @@
 ---
-version: '3'
+version: '3.5'
 services:
   zookeeper:
     image: confluentinc/cp-zookeeper:5.3.1
@@ -38,22 +38,11 @@ services:
       SCHEMA_REGISTRY_HOST_NAME: schema-registry
       SCHEMA_REGISTRY_LISTENERS: http://0.0.0.0:8081
       SCHEMA_REGISTRY_KAFKASTORE_BOOTSTRAP_SERVERS: broker:9092
-
-  mysql:
-    image: mysql:5.7
-    volumes:
-      - ./mysql.cnf:/etc/mysql/conf.d/custom.cnf
-      - ./mysql-init.sql:/docker-entrypoint-initdb.d/mysql-init.sql
-    environment:
-      MYSQL_ROOT_PASSWORD: password
-      MYSQL_DATABASE: db
-      MYSQL_USER: user
-      MYSQL_PASSWORD: password
-      MYSQL_ROOT_HOST: 172.%  # Allow docker containers to connect to mysql
       
   connect:
     build:
-      context: .
+      context: ..
+      dockerfile: Dockerfile-Connector-Hub
     hostname: connect
     container_name: connect
     depends_on:
@@ -62,6 +51,7 @@ services:
       - schema-registry
     ports:
       - "8083:8083"
+    # volumes are overwritten
     environment:
       CONNECT_BOOTSTRAP_SERVERS: 'broker:9092'
       CONNECT_REST_ADVERTISED_HOST_NAME: connect
@@ -87,9 +77,6 @@ services:
       CONNECT_PRODUCER_CONFLUENT_MONITORING_INTERCEPTOR_BOOTSTRAP_SERVERS: broker:9092
       CONNECT_CONSUMER_INTERCEPTOR_CLASSES: "io.confluent.monitoring.clients.interceptor.MonitoringConsumerInterceptor"
       CONNECT_CONSUMER_CONFLUENT_MONITORING_INTERCEPTOR_BOOTSTRAP_SERVERS: broker:9092
-    volumes:
-      - ../connect-jdbc-source/mysql-connector-java-5.1.45-bin.jar:/usr/share/confluent-hub-components/confluentinc-kafka-connect-jdbc/lib/mysql-connector-java-5.1.45-bin.jar
-
 
   control-center:
     image: confluentinc/cp-enterprise-control-center:5.3.1

@@ -1,0 +1,18 @@
+---
+version: '3.5'
+services:
+
+  elasticsearch:
+    image: elasticsearch:6.8.3
+    hostname: elasticsearch
+    container_name: elasticsearch
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+    environment:
+      discovery.type: single-node
+
+  connect:
+    depends_on:
+      - elasticsearch
+      

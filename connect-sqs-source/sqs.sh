@@ -3,7 +3,7 @@ set -e
 
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 
-${DIR}/../scripts/reset-cluster.sh
+${DIR}/../nosecurity/start.sh
 
 echo "Create a FIFO queue sqs-source-connector-demo"
 aws sqs create-queue --queue-name sqs-source-connector-demo

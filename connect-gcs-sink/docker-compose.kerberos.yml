@@ -1,0 +1,8 @@
+---
+version: '3.5'
+services:
+  connect:
+    volumes:
+      - secret:/var/lib/secret
+      - ../kerberos/kdc/krb5.conf:/etc/krb5.conf
+      - ../connect-gcs-sink/keyfile.json:/root/keyfiles/keyfile.json:ro

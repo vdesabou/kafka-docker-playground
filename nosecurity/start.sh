@@ -26,23 +26,13 @@ verify_installed()
 }
 verify_installed "jq"
 verify_installed "docker-compose"
-verify_installed "keytool"
-
-OLDDIR=$PWD
-
-cd ${OLDDIR}/../sasl-ssl/security
-
-echo "Generate keys and certificates used for SSL"
-./certs-create.sh > /dev/null 2>&1
-
-cd ${OLDDIR}/../sasl-ssl
 
 DOCKER_COMPOSE_FILE_OVERRIDE=$1
 if [ -f ${DOCKER_COMPOSE_FILE_OVERRIDE} ]
 then
   echo "Using ${DOCKER_COMPOSE_FILE_OVERRIDE}"
-  docker-compose -f ../sasl-ssl/docker-compose.yml -f ${DOCKER_COMPOSE_FILE_OVERRIDE} down -v 
-  docker-compose -f ../sasl-ssl/docker-compose.yml -f ${DOCKER_COMPOSE_FILE_OVERRIDE} up -d
+  docker-compose -f ../nosecurity/docker-compose.yml -f ${DOCKER_COMPOSE_FILE_OVERRIDE} down -v 
+  docker-compose -f ../nosecurity/docker-compose.yml -f ${DOCKER_COMPOSE_FILE_OVERRIDE} up -d
 else 
   docker-compose down -v 
   docker-compose up -d
@@ -87,5 +77,3 @@ if [[ $(docker container ps) =~ "Exit 137" ]]; then
   echo -e "\nERROR: At least one Docker container did not start properly, see 'docker container ps'. Did you remember to increase the memory available to Docker to at least 8GB (default is 2GB)?\n"
   exit 1
 fi
-
-cd ${OLDDIR}

@@ -3,16 +3,16 @@ set -e
 
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 
-${DIR}/../scripts/reset-cluster.sh
+${DIR}/../nosecurity/start.sh "${PWD}/docker-compose.nosecurity.yml"
 
 echo "Describing the team table in DB 'mydb':"
-docker-compose exec mysql bash -c "mysql --user=root --password=password --database=mydb -e 'describe team'"
+docker container exec mysql bash -c "mysql --user=root --password=password --database=mydb -e 'describe team'"
 
 echo "Show content of team table:"
-docker-compose exec mysql bash -c "mysql --user=root --password=password --database=mydb -e 'select * from team'"
+docker container exec mysql bash -c "mysql --user=root --password=password --database=mydb -e 'select * from team'"
 
 echo "Adding an element to the table"
-docker-compose exec mysql mysql --user=root --password=password --database=mydb -e "
+docker container exec mysql mysql --user=root --password=password --database=mydb -e "
 INSERT INTO team (   \
   id,   \
   name, \
@@ -26,10 +26,10 @@ INSERT INTO team (   \
 ); "
 
 echo "Show content of team table:"
-docker-compose exec mysql bash -c "mysql --user=root --password=password --database=mydb -e 'select * from team'"
+docker container exec mysql bash -c "mysql --user=root --password=password --database=mydb -e 'select * from team'"
 
 echo "Creating MySQL source connector"
-docker-compose exec connect \
+docker container exec connect \
      curl -X POST \
      -H "Content-Type: application/json" \
      --data '{
@@ -52,6 +52,6 @@ docker-compose exec connect \
 sleep 5
 
 echo "Verifying topic dbserver1.mydb.team"
-docker-compose exec schema-registry kafka-avro-console-consumer -bootstrap-server broker:9092 --topic dbserver1.mydb.team --from-beginning --max-messages 2 | tail -n 4 | head -n 2 | jq .
+docker container exec schema-registry kafka-avro-console-consumer -bootstrap-server broker:9092 --topic dbserver1.mydb.team --from-beginning --max-messages 2
 
 

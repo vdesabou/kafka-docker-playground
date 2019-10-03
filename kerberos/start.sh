@@ -1,7 +1,20 @@
 #!/bin/bash
 
-IGNORE_CONNECT_STARTUP=${1:-FALSE}
-IGNORE_CONTROL_CENTER_STARTUP=${2:-FALSE}
+IGNORE_CONNECT_STARTUP="FALSE"
+IGNORE_CONTROL_CENTER_STARTUP="FALSE"
+
+while getopts "h?ab" opt; do
+    case "$opt" in
+    h|\?)
+        echo "possible options -a to ignore connect startup and -b to ignore control center"
+        exit 0
+        ;;
+    a)  IGNORE_CONNECT_STARTUP="TRUE"
+        ;;
+    b)  IGNORE_CONTROL_CENTER_STARTUP="TRUE"
+        ;;
+    esac
+done
 
 verify_installed()
 {
@@ -14,12 +27,20 @@ verify_installed()
 verify_installed "jq"
 verify_installed "docker-compose"
 
-
+DOCKER_COMPOSE_FILE_OVERRIDE=$1
 # Starting kerberos,
 # Avoiding starting up all services at the begining to generate the keytab first
-docker-compose down -v
-docker-compose build kdc
-docker-compose up -d kdc
+if [ -f ${DOCKER_COMPOSE_FILE_OVERRIDE} ]
+then
+  echo "Using ${DOCKER_COMPOSE_FILE_OVERRIDE}"
+  docker-compose -f ../kerberos/docker-compose.yml -f ${DOCKER_COMPOSE_FILE_OVERRIDE} down -v 
+  docker-compose -f ../kerberos/docker-compose.yml -f ${DOCKER_COMPOSE_FILE_OVERRIDE} build kdc
+  docker-compose -f ../kerberos/docker-compose.yml -f ${DOCKER_COMPOSE_FILE_OVERRIDE} up -d kdc
+else 
+  docker-compose down -v
+  docker-compose build kdc
+  docker-compose up -d kdc
+fi
 
 ### Create the required identities:
 # Kafka service principal:
@@ -67,7 +88,12 @@ docker exec -ti kdc kadmin.local -w password -q "ktadd  -k /var/lib/secret/kafka
 
 
 # Starting zookeeper and kafka now that the keytab has been created with the required credentials and services
-docker-compose up -d
+if [ -f ${DOCKER_COMPOSE_FILE_OVERRIDE} ]
+then
+  docker-compose -f ../kerberos/docker-compose.yml -f ${DOCKER_COMPOSE_FILE_OVERRIDE} up -d
+else 
+  docker-compose up -d
+fi
 
 # Adding ACLs for consumer and producer user:
 docker exec client bash -c "kinit -k -t /var/lib/secret/kafka-admin.key admin/for-kafka && kafka-acls --bootstrap-server kafka:9093 --command-config /etc/kafka/command.properties --add --allow-principal User:kafka_producer --producer --topic=*"
@@ -78,9 +104,11 @@ docker exec client bash -c "kinit -k -t /var/lib/secret/kafka-admin.key admin/fo
 # schemaregistry and controlcenter is super user
 
 # Output example usage:
-echo "Example configuration to access kafka:"
-echo "-> docker-compose exec client bash -c 'kinit -k -t /var/lib/secret/kafka-client.key kafka_producer && kafka-console-producer --broker-list kafka:9093 --topic test --producer.config /etc/kafka/producer.properties'"
-echo "-> docker-compose exec client bash -c 'kinit -k -t /var/lib/secret/kafka-client.key kafka_consumer && kafka-console-consumer --bootstrap-server kafka:9093 --topic test --consumer.config /etc/kafka/consumer.properties --from-beginning'"
+echo "-----------------------------------------"
+echo "\tExample configuration to access kafka:"
+echo "-----------------------------------------"
+echo "-> docker container exec client bash -c 'kinit -k -t /var/lib/secret/kafka-client.key kafka_producer && kafka-console-producer --broker-list kafka:9093 --topic test --producer.config /etc/kafka/producer.properties'"
+echo "-> docker container exec client bash -c 'kinit -k -t /var/lib/secret/kafka-client.key kafka_consumer && kafka-console-consumer --bootstrap-server kafka:9093 --topic test --consumer.config /etc/kafka/consumer.properties --from-beginning'"
 
 if [ "${IGNORE_CONNECT_STARTUP}" == "FALSE" ]
 then
@@ -88,11 +116,11 @@ then
   MAX_WAIT=120
   CUR_WAIT=0
   echo "Waiting up to $MAX_WAIT seconds for Kafka Connect to start"
-  while [[ ! $(docker-compose logs connect) =~ "Finished starting connectors and tasks" ]]; do
+  while [[ ! $(docker container logs connect) =~ "Finished starting connectors and tasks" ]]; do
     sleep 10
     CUR_WAIT=$(( CUR_WAIT+10 ))
     if [[ "$CUR_WAIT" -gt "$MAX_WAIT" ]]; then
-      echo -e "\nERROR: The logs in connect container do not show 'Finished starting connectors and tasks' after $MAX_WAIT seconds. Please troubleshoot with 'docker-compose ps' and 'docker-compose logs'.\n"
+      echo -e "\nERROR: The logs in connect container do not show 'Finished starting connectors and tasks' after $MAX_WAIT seconds. Please troubleshoot with 'docker container ps' and 'docker container logs'.\n"
       exit 1
     fi
   done
@@ -105,11 +133,11 @@ then
   MAX_WAIT=300
   CUR_WAIT=0
   echo "Waiting up to $MAX_WAIT seconds for Confluent Control Center to start"
-  while [[ ! $(docker-compose logs control-center) =~ "Started NetworkTrafficServerConnector" ]]; do
+  while [[ ! $(docker container logs control-center) =~ "Started NetworkTrafficServerConnector" ]]; do
     sleep 10
     CUR_WAIT=$(( CUR_WAIT+10 ))
     if [[ "$CUR_WAIT" -gt "$MAX_WAIT" ]]; then
-      echo -e "\nERROR: The logs in control-center container do not show 'Started NetworkTrafficServerConnector' after $MAX_WAIT seconds. Please troubleshoot with 'docker-compose ps' and 'docker-compose logs'.\n"
+      echo -e "\nERROR: The logs in control-center container do not show 'Started NetworkTrafficServerConnector' after $MAX_WAIT seconds. Please troubleshoot with 'docker container ps' and 'docker container logs'.\n"
       exit 1
     fi
   done
@@ -117,7 +145,7 @@ then
 fi
 
 # Verify Docker containers started
-if [[ $(docker-compose ps) =~ "Exit 137" ]]; then
-  echo -e "\nERROR: At least one Docker container did not start properly, see 'docker-compose ps'. Did you remember to increase the memory available to Docker to at least 8GB (default is 2GB)?\n"
+if [[ $(docker container ps) =~ "Exit 137" ]]; then
+  echo -e "\nERROR: At least one Docker container did not start properly, see 'docker container ps'. Did you remember to increase the memory available to Docker to at least 8GB (default is 2GB)?\n"
   exit 1
 fi

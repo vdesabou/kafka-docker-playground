@@ -34,7 +34,7 @@ Download it as JSON:
 
 ![Service Account setup](Screenshot4.png)
 
-Rename it to `keyfile_gcs.json`and place it in root directory `keyfiles/keyfile_gcs.json`
+Rename it to `keyfile.json`and place it in `./keyfile.json`
 
 
 ## How to run
@@ -76,7 +76,7 @@ docker-compose exec -e BUCKET_NAME="$BUCKET_NAME" connect \
                     "gcs.bucket.name" : "'"$BUCKET_NAME"'",
                     "gcs.part.size": "5242880",
                     "flush.size": "3",
-                    "gcs.credentials.path": "/root/keyfiles/keyfile_gcs.json",
+                    "gcs.credentials.path": "/root/keyfiles/keyfile.json",
                     "storage.class": "io.confluent.connect.gcs.storage.GcsStorage",
                     "format.class": "io.confluent.connect.gcs.format.avro.AvroFormat",
                     "partitioner.class": "io.confluent.connect.storage.partitioner.DefaultPartitioner",
@@ -133,7 +133,7 @@ docker-compose exec -e BUCKET_NAME="$BUCKET_NAME" connect \
                     "gcs.bucket.name" : "'"$BUCKET_NAME"'",
                     "gcs.part.size": "5242880",
                     "flush.size": "3",
-                    "gcs.credentials.path": "/root/keyfiles/keyfile_gcs.json",
+                    "gcs.credentials.path": "/root/keyfiles/keyfile.json",
                     "storage.class": "io.confluent.connect.gcs.storage.GcsStorage",
                     "format.class": "io.confluent.connect.gcs.format.avro.AvroFormat",
                     "partitioner.class": "io.confluent.connect.storage.partitioner.DefaultPartitioner",
@@ -219,7 +219,7 @@ docker-compose exec -e BUCKET_NAME="$BUCKET_NAME" connect \
                     "gcs.bucket.name" : "'"$BUCKET_NAME"'",
                     "gcs.part.size": "5242880",
                     "flush.size": "3",
-                    "gcs.credentials.path": "/root/keyfiles/keyfile_gcs.json",
+                    "gcs.credentials.path": "/root/keyfiles/keyfile.json",
                     "storage.class": "io.confluent.connect.gcs.storage.GcsStorage",
                     "format.class": "io.confluent.connect.gcs.format.avro.AvroFormat",
                     "partitioner.class": "io.confluent.connect.storage.partitioner.DefaultPartitioner",

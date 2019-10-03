@@ -35,7 +35,7 @@ Download it as JSON:
 
 ![Service Account setup](Screenshot4.png)
 
-Rename it to `keyfile_big_query.json`and place it in root directory `keyfiles/keyfile_big_query.json`
+Rename it to `keyfile.json`and place it in `./keyfile.json`
 
 
 ## How to run
@@ -76,7 +76,7 @@ docker-compose exec -e PROJECT="$PROJECT" -e DATASET="$DATASET" connect \
                     "tableWriteWait": "1000",
                     "project" : "'"$PROJECT"'",
                     "datasets" : ".*='"$DATASET"'",
-                    "keyfile" : "/root/keyfiles/keyfile_big_query.json"
+                    "keyfile" : "/root/keyfiles/keyfile.json"
           }}' \
      http://localhost:8083/connectors | jq .
 ```

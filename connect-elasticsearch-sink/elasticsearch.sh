@@ -3,10 +3,10 @@ set -e
 
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 
-${DIR}/../scripts/reset-cluster.sh
+${DIR}/../nosecurity/start.sh "${PWD}/docker-compose.nosecurity.yml"
 
 echo "Creating Elasticsearch Sink connector"
-docker-compose exec connect \
+docker container exec connect \
      curl -X POST \
      -H "Content-Type: application/json" \
      --data '{
