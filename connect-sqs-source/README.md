@@ -118,7 +118,7 @@ $ aws sqs send-message-batch --queue-url $QUEUE_URL --entries file://send-messag
 The connector is created with:
 
 ```bash
-docker-compose exec -e QUEUE_URL="$QUEUE_URL" -e AWS_REGION="$AWS_REGION" connect \
+docker container exec -e QUEUE_URL="$QUEUE_URL" -e AWS_REGION="$AWS_REGION" connect \
      curl -X POST \
      -H "Content-Type: application/json" \
      --data '{
@@ -139,7 +139,7 @@ docker-compose exec -e QUEUE_URL="$QUEUE_URL" -e AWS_REGION="$AWS_REGION" connec
 Verify we have received the data in test-sqs-source topic:
 
 ```bash
-$ docker-compose exec schema-registry kafka-avro-console-consumer -bootstrap-server broker:9092 --topic test-sqs-source --from-beginning --max-messages 2 | tail -n 5 | head -n 2 | jq .
+$ docker container exec schema-registry kafka-avro-console-consumer -bootstrap-server broker:9092 --topic test-sqs-source --from-beginning --max-messages 2 | tail -n 5 | head -n 2 | jq .
 
 {
   "ApproximateFirstReceiveTimestamp": 1569859344138,
@@ -181,7 +181,7 @@ $ aws sqs send-message-batch --queue-url $QUEUE_URL --entries file://send-messag
 The connector is created with:
 
 ```bash
-docker-compose exec -e QUEUE_URL="$QUEUE_URL" connect \
+docker container exec -e QUEUE_URL="$QUEUE_URL" connect \
      curl -X POST \
      --cert /etc/kafka/secrets/connect.certificate.pem --key /etc/kafka/secrets/connect.key --tlsv1.2 --cacert /etc/kafka/secrets/snakeoil-ca-1.crt \
      -H "Content-Type: application/json" \
@@ -211,7 +211,7 @@ docker-compose exec -e QUEUE_URL="$QUEUE_URL" connect \
 Verify we have received the data in test-sqs-source topic:
 
 ```bash
-$ docker-compose exec connect kafka-avro-console-consumer -bootstrap-server kafka1:9091 --topic test-sqs-source-ssl --from-beginning --max-messages 2 --property schema.registry.url=https://schemaregistry:8085 --consumer.config /etc/kafka/secrets/client_without_interceptors.config  | tail -n 3 | head -n 2 | jq .
+$ docker container exec connect kafka-avro-console-consumer -bootstrap-server kafka1:9091 --topic test-sqs-source-ssl --from-beginning --max-messages 2 --property schema.registry.url=https://schemaregistry:8085 --consumer.config /etc/kafka/secrets/client_without_interceptors.config  | tail -n 3 | head -n 2 | jq .
 ```
 
 ### With SASL_SSL authentication:
@@ -232,7 +232,7 @@ $ aws sqs send-message-batch --queue-url $QUEUE_URL --entries file://send-messag
 The connector is created with:
 
 ```bash
-docker-compose exec -e QUEUE_URL="$QUEUE_URL" connect \
+docker container exec -e QUEUE_URL="$QUEUE_URL" connect \
      curl -X POST \
      --cert /etc/kafka/secrets/connect.certificate.pem --key /etc/kafka/secrets/connect.key --tlsv1.2 --cacert /etc/kafka/secrets/snakeoil-ca-1.crt \
      -H "Content-Type: application/json" \
@@ -262,7 +262,7 @@ docker-compose exec -e QUEUE_URL="$QUEUE_URL" connect \
 Verify we have received the data in test-sqs-source topic:
 
 ```bash
-$ docker-compose exec connect kafka-avro-console-consumer -bootstrap-server kafka1:9091 --topic test-sqs-source-sasl-ssl --from-beginning --max-messages 2 --property schema.registry.url=https://schemaregistry:8085 --consumer.config /etc/kafka/secrets/client_without_interceptors.config  | tail -n 3 | head -n 2 | jq .
+$ docker container exec connect kafka-avro-console-consumer -bootstrap-server kafka1:9091 --topic test-sqs-source-sasl-ssl --from-beginning --max-messages 2 --property schema.registry.url=https://schemaregistry:8085 --consumer.config /etc/kafka/secrets/client_without_interceptors.config  | tail -n 3 | head -n 2 | jq .
 ```
 
 N.B: Control Center is reachable at [http://127.0.0.1:9021](http://127.0.0.1:9021])

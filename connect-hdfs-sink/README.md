@@ -24,7 +24,7 @@ $ ./hdfs.sh
 The connector is created with:
 
 ```
-docker-compose exec connect \
+docker container exec connect \
      curl -X POST \
      -H "Content-Type: application/json" \
      --data '{
@@ -55,7 +55,7 @@ $ seq -f "{\"f1\": \"value%g\"}" 10 | docker container exec -i schema-registry k
 After a few seconds, HDFS should contain files in /topics/test_hdfs:
 
 ```
-$ docker-compose exec hadoop bash -c "/usr/local/hadoop/bin/hdfs dfs -ls /topics/test_hdfs"
+$ docker container exec hadoop bash -c "/usr/local/hadoop/bin/hdfs dfs -ls /topics/test_hdfs"
 
 drwxr-xr-x   - root supergroup          0 2019-09-23 11:04 /topics/test_hdfs/f1=value1
 drwxr-xr-x   - root supergroup          0 2019-09-23 11:04 /topics/test_hdfs/f1=value2
