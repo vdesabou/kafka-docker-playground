@@ -11,7 +11,7 @@ then
      exit 1
 fi
 
-${DIR}/../scripts/reset-cluster-kerberos.sh
+${DIR}/../kerberos/start.sh
 
 echo "Removing existing objects in GCS, if applicable"
 set +e

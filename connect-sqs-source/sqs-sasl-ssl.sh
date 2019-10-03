@@ -3,7 +3,7 @@ set -e
 
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 
-${DIR}/../scripts/reset-cluster-sasl-ssl.sh
+${DIR}/../sasl-ssl/start.sh
 
 echo "########"
 echo "##  SSL authentication"

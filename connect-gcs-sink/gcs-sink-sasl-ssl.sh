@@ -11,7 +11,7 @@ then
      exit 1
 fi
 
-${DIR}/../scripts/reset-cluster-sasl-ssl.sh
+${DIR}/../sasl-ssl/start.sh
 
 echo "Removing existing objects in GCS, if applicable"
 set +e
