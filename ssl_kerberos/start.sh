@@ -11,6 +11,15 @@ verify_installed()
 verify_installed "jq"
 verify_installed "docker-compose"
 
+OLDDIR=$PWD
+
+cd ${OLDDIR}/../ssl_kerberos/security
+
+echo "Generate keys and certificates used for SSL"
+./certs-create.sh > /dev/null 2>&1
+
+cd ${OLDDIR}/../ssl_kerberos
+
 DOCKER_COMPOSE_FILE_OVERRIDE=$1
 # Starting kerberos,
 # Avoiding starting up all services at the begining to generate the keytab first
@@ -72,7 +81,7 @@ docker exec -ti kdc kadmin.local -w password -q "ktadd  -k /var/lib/secret/kafka
 
 
 # Starting zookeeper and kafka now that the keytab has been created with the required credentials and services
-if [ -f ${DOCKER_COMPOSE_FILE_OVERRIDE} ]
+if [ -f "${DOCKER_COMPOSE_FILE_OVERRIDE}" ]
 then
   docker-compose -f ../kerberos/docker-compose.yml -f ${DOCKER_COMPOSE_FILE_OVERRIDE} up -d
 else 
@@ -91,5 +100,7 @@ docker exec client bash -c "kinit -k -t /var/lib/secret/kafka-admin.key admin/fo
 echo "-----------------------------------------"
 echo "\tExample configuration to access kafka:"
 echo "-----------------------------------------"
-echo "-> docker container exec client bash -c 'kinit -k -t /var/lib/secret/kafka-client.key kafka_producer && kafka-console-producer --broker-list kafka:9093 --topic test --producer.config /etc/kafka/producer.properties'"
-echo "-> docker container exec client bash -c 'kinit -k -t /var/lib/secret/kafka-client.key kafka_consumer && kafka-console-consumer --bootstrap-server kafka:9093 --topic test --consumer.config /etc/kafka/consumer.properties --from-beginning'"
+echo "-> docker-compose exec client bash -c 'kinit -k -t /var/lib/secret/kafka-client.key kafka_producer && kafka-console-producer --broker-list kafka:9093 --topic test --producer.config /etc/kafka/producer.properties'"
+echo "-> docker-compose exec client bash -c 'kinit -k -t /var/lib/secret/kafka-client.key kafka_consumer && kafka-console-consumer --bootstrap-server kafka:9093 --topic test --consumer.config /etc/kafka/consumer.properties --from-beginning'"
+
+cd ${OLDDIR}
