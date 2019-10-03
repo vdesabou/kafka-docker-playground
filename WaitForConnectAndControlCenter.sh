@@ -18,7 +18,7 @@ done
 
 OLDDIR=$PWD
 
-cd ${OLDDIR}/../nosecurity
+cd ${OLDDIR}/../plaintext
 
 if [ "${IGNORE_CONNECT_STARTUP}" == "FALSE" ]
 then

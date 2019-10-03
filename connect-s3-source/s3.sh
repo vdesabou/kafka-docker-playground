@@ -4,7 +4,7 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 BUCKET_NAME=${1:-kafka-docker-playground} 
 
-${DIR}/../nosecurity/start.sh "${PWD}/docker-compose.nosecurity.yml"
+${DIR}/../plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
 ${DIR}/../WaitForConnectAndControlCenter.sh
 
 echo "Creating S3 Sink connector with bucket name <$BUCKET_NAME>"
