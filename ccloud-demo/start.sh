@@ -40,14 +40,16 @@ echo "Create topic customer-avro in Confluent Cloud"
 kafka-topics --bootstrap-server `grep "^\s*bootstrap.server" ${CONFIG_FILE} | tail -1` --command-config ${CONFIG_FILE} --topic customer-avro --create --replication-factor 3 --partitions 6
 set -e
 
-${DIR}/../nosecurity/start.sh
+docker-compose down -v 
+docker-compose up -d
+${DIR}/../WaitForConnectAndControlCenter.sh
 
 echo "-------------------------------------"
 echo "Running Basic Authentication Example"
 echo "-------------------------------------"
 
 echo "Creating HttpSinkBasicAuth connector"
-docker-compose exec -e BOOTSTRAP_SERVERS="$BOOTSTRAP_SERVERS" -e CLOUD_KEY="$CLOUD_KEY" -e CLOUD_SECRET="$CLOUD_SECRET" connect \
+docker container exec -e BOOTSTRAP_SERVERS="$BOOTSTRAP_SERVERS" -e CLOUD_KEY="$CLOUD_KEY" -e CLOUD_SECRET="$CLOUD_SECRET" connect \
      curl -X POST \
      -H "Content-Type: application/json" \
      --data '{

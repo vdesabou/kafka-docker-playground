@@ -4,6 +4,7 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 
 ${DIR}/../nosecurity/start.sh "${PWD}/docker-compose.nosecurity.yml"
+${DIR}/../WaitForConnectAndControlCenter.sh
 
 echo "Sending messages to topic avro-topic"
 seq -f "{\"f1\": \"value%g\"}" 10 | docker container exec -i schema-registry kafka-avro-console-producer --broker-list broker:9092 --topic avro-topic --property value.schema='{"type":"record","name":"myrecord","fields":[{"name":"f1","type":"string"}]}'

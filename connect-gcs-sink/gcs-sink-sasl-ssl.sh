@@ -12,6 +12,7 @@ then
 fi
 
 ${DIR}/../sasl-ssl/start.sh "${PWD}/docker-compose.sasl-ssl.yml"
+${DIR}/../WaitForConnectAndControlCenter.sh
 
 echo "Removing existing objects in GCS, if applicable"
 set +e

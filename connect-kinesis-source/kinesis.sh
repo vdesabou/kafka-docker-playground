@@ -4,6 +4,7 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 
 ${DIR}/../nosecurity/start.sh "${PWD}/docker-compose.nosecurity.yml"
+${DIR}/../WaitForConnectAndControlCenter.sh
 
 set +e
 echo "Delete the stream"
