@@ -17,7 +17,6 @@ verify_installed "docker-compose"
 
 # Starting kerberos,
 # Avoiding starting up all services at the begining to generate the keytab first
-cd ../kerberos
 docker-compose down -v
 docker-compose build kdc
 docker-compose up -d kdc
@@ -122,5 +121,3 @@ if [[ $(docker-compose ps) =~ "Exit 137" ]]; then
   echo -e "\nERROR: At least one Docker container did not start properly, see 'docker-compose ps'. Did you remember to increase the memory available to Docker to at least 8GB (default is 2GB)?\n"
   exit 1
 fi
-
-cd -
