@@ -26,7 +26,7 @@ echo "##  SSL authentication"
 echo "########"
 
 echo "Sending messages to topic gcs_topic-ssl"
-seq -f "{\"f1\": \"This is a message sent with SSL authentication %g\"}" 10 | docker container exec -i connect kafka-avro-console-producer --broker-list kafka1:9091 --topic gcs_topic-ssl --property value.schema='{"type":"record","name":"myrecord","fields":[{"name":"f1","type":"string"}]}' --property schema.registry.url=https://schemaregistry:8085 --producer.config /etc/kafka/secrets/client_without_interceptors.config
+seq -f "{\"f1\": \"This is a message sent with SSL authentication %g\"}" 10 | docker container exec -i connect kafka-avro-console-producer --broker-list broker:9091 --topic gcs_topic-ssl --property value.schema='{"type":"record","name":"myrecord","fields":[{"name":"f1","type":"string"}]}' --property schema.registry.url=https://schema-registry:8085 --producer.config /etc/kafka/secrets/client_without_interceptors.config
 
 echo "Creating GCS Sink connector with SSL authentication"
 docker container exec -e BUCKET_NAME="$BUCKET_NAME" connect \
@@ -47,8 +47,8 @@ docker container exec -e BUCKET_NAME="$BUCKET_NAME" connect \
                     "format.class": "io.confluent.connect.gcs.format.avro.AvroFormat",
                     "partitioner.class": "io.confluent.connect.storage.partitioner.DefaultPartitioner",
                     "schema.compatibility": "NONE",
-                    "confluent.topic.bootstrap.servers": "kafka1:11091",
-                    "confluent.topic.replication.factor": "2",
+                    "confluent.topic.bootstrap.servers": "broker:11091",
+                    "confluent.topic.replication.factor": "1",
                     "confluent.topic.ssl.keystore.location" : "/etc/kafka/secrets/kafka.connect.keystore.jks",
                     "confluent.topic.ssl.keystore.password" : "confluent",
                     "confluent.topic.ssl.key.password" : "confluent",
@@ -80,7 +80,7 @@ echo "##  SASL_SSL authentication"
 echo "########"
 
 echo "Sending messages to topic gcs_topic-sasl-ssl"
-seq -f "{\"f1\": \"This is a message sent with SASL_SSL authentication %g\"}" 10 | docker container exec -i connect kafka-avro-console-producer --broker-list kafka1:9091 --topic gcs_topic-sasl-ssl --property value.schema='{"type":"record","name":"myrecord","fields":[{"name":"f1","type":"string"}]}' --property schema.registry.url=https://schemaregistry:8085 --producer.config /etc/kafka/secrets/client_without_interceptors.config
+seq -f "{\"f1\": \"This is a message sent with SASL_SSL authentication %g\"}" 10 | docker container exec -i connect kafka-avro-console-producer --broker-list broker:9091 --topic gcs_topic-sasl-ssl --property value.schema='{"type":"record","name":"myrecord","fields":[{"name":"f1","type":"string"}]}' --property schema.registry.url=https://schema-registry:8085 --producer.config /etc/kafka/secrets/client_without_interceptors.config
 
 echo "Creating GCS Sink connector with SASL_SSL authentication"
 docker container exec -e BUCKET_NAME="$BUCKET_NAME" connect \
@@ -101,8 +101,8 @@ docker container exec -e BUCKET_NAME="$BUCKET_NAME" connect \
                     "format.class": "io.confluent.connect.gcs.format.avro.AvroFormat",
                     "partitioner.class": "io.confluent.connect.storage.partitioner.DefaultPartitioner",
                     "schema.compatibility": "NONE",
-                    "confluent.topic.bootstrap.servers": "kafka1:9091",
-                    "confluent.topic.replication.factor": "2",
+                    "confluent.topic.bootstrap.servers": "broker:9091",
+                    "confluent.topic.replication.factor": "1",
                     "confluent.topic.ssl.keystore.location" : "/etc/kafka/secrets/kafka.connect.keystore.jks",
                     "confluent.topic.ssl.keystore.password" : "confluent",
                     "confluent.topic.ssl.key.password" : "confluent",
