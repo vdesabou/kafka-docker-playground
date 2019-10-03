@@ -26,6 +26,14 @@ Playground for Kafka/Confluent Docker experimentations
 
 * [ccloud demo](ccloud-demo/README.md)
 
+
+## Deployments
+
+* [PLAINTEXT](plaintext/README.md): no security
+* [SASL_SSL](sasl_ssl/README.md): SSL encryption / SASL_SSL or 2 way SSL authentication
+* [Kerberos](kerberos/README.md): no SSL encryption / Kerberos GSSAPI authentication
+* [SSL_Kerberos](ssl_kerberos/README.md) SSL encryption / Kerberos GSSAPI authentication
+
 ## Other:
 
 * [Confluent Rebalancer](rebalancer/README.md)

@@ -12,7 +12,7 @@ then
 fi
 
 ${DIR}/../plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
-${DIR}/../WaitForConnectAndControlCenter.sh
+
 
 echo "Removing existing objects in GCS, if applicable"
 set +e

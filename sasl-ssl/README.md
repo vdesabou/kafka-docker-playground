@@ -1,8 +1,8 @@
-# Kerberos
+# Kerberos with SSL encryption
 
 ## Description
 
-This is a deployment with no SSL encryption, and Kerberos GSSAPI authentication:
+This is a deployment with SSL encryption, and SASL_SSL or 2 way SSL authentication:
 
 * 1 zookeeper
 * 1 broker
