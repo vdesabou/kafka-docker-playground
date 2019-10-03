@@ -4,6 +4,7 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 
 ${DIR}/../nosecurity/start.sh "${PWD}/docker-compose.nosecurity.yml"
+${DIR}/../WaitForConnectAndControlCenter.sh
 
 echo "Sending messages to topic json-topic"
 docker container exec -i broker kafka-console-producer --broker-list broker:9092 --topic json-topic << EOF

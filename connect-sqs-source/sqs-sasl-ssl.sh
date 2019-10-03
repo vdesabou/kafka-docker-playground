@@ -4,6 +4,7 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 
 ${DIR}/../sasl-ssl/start.sh "${PWD}/docker-compose.sasl-ssl.yml"
+${DIR}/../WaitForConnectAndControlCenter.sh
 
 QUEUE_NAME="sqs-source-connector-demo-ssl"
 AWS_REGION=$(aws configure get region)

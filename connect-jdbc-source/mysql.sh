@@ -4,6 +4,7 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 
 ${DIR}/../nosecurity/start.sh "${PWD}/docker-compose.nosecurity.yml"
+${DIR}/../WaitForConnectAndControlCenter.sh
 
 echo "Describing the application table in DB 'db':"
 docker container exec mysql bash -c "mysql --user=root --password=password --database=db -e 'describe application'"

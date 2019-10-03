@@ -12,6 +12,7 @@ then
 fi
 
 ${DIR}/../nosecurity/start.sh "${PWD}/docker-compose.nosecurity.yml"
+${DIR}/../WaitForConnectAndControlCenter.sh
 
 echo "Removing existing objects in GCS, if applicable"
 set +e
