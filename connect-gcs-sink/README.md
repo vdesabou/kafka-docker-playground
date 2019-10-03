@@ -34,7 +34,7 @@ Download it as JSON:
 
 ![Service Account setup](Screenshot4.png)
 
-Rename it to `keyfile.json`and place it in `./connect-gcs-sink/keyfile.json`
+Rename it to `keyfile_gcs.json`and place it in root directory `keyfiles/keyfile_gcs.json`
 
 
 ## How to run
@@ -76,7 +76,7 @@ docker-compose exec -e BUCKET_NAME="$BUCKET_NAME" connect \
                     "gcs.bucket.name" : "'"$BUCKET_NAME"'",
                     "gcs.part.size": "5242880",
                     "flush.size": "3",
-                    "gcs.credentials.path": "/root/keyfile.json",
+                    "gcs.credentials.path": "/root/keyfiles/keyfile_gcs.json",
                     "storage.class": "io.confluent.connect.gcs.storage.GcsStorage",
                     "format.class": "io.confluent.connect.gcs.format.avro.AvroFormat",
                     "partitioner.class": "io.confluent.connect.storage.partitioner.DefaultPartitioner",
@@ -96,7 +96,7 @@ $ gsutil ls gs://$BUCKET_NAME/topics/gcs_topic/partition=0/
 Doing `gsutil` authentication:
 
 ```bash
-$ gcloud auth activate-service-account --key-file ./keyfile.json
+$ gcloud auth activate-service-account --key-file ${KEYFILE}
 ```
 
 Getting one of the avro files locally and displaying content with avro-tools:
@@ -133,7 +133,7 @@ docker-compose exec -e BUCKET_NAME="$BUCKET_NAME" connect \
                     "gcs.bucket.name" : "'"$BUCKET_NAME"'",
                     "gcs.part.size": "5242880",
                     "flush.size": "3",
-                    "gcs.credentials.path": "/root/keyfile.json",
+                    "gcs.credentials.path": "/root/keyfiles/keyfile_gcs.json",
                     "storage.class": "io.confluent.connect.gcs.storage.GcsStorage",
                     "format.class": "io.confluent.connect.gcs.format.avro.AvroFormat",
                     "partitioner.class": "io.confluent.connect.storage.partitioner.DefaultPartitioner",
@@ -219,7 +219,7 @@ docker-compose exec -e BUCKET_NAME="$BUCKET_NAME" connect \
                     "gcs.bucket.name" : "'"$BUCKET_NAME"'",
                     "gcs.part.size": "5242880",
                     "flush.size": "3",
-                    "gcs.credentials.path": "/root/keyfile.json",
+                    "gcs.credentials.path": "/root/keyfiles/keyfile_gcs.json",
                     "storage.class": "io.confluent.connect.gcs.storage.GcsStorage",
                     "format.class": "io.confluent.connect.gcs.format.avro.AvroFormat",
                     "partitioner.class": "io.confluent.connect.storage.partitioner.DefaultPartitioner",

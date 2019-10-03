@@ -13,7 +13,7 @@ services:
                   -Dzookeeper.authProvider.1=org.apache.zookeeper.server.auth.SASLAuthenticationProvider
                   -DrequireClientAuthScheme=sasl
     volumes:
-      - ../scripts/security:/etc/kafka/secrets
+      - ./security:/etc/kafka/secrets
     ports:
       - "2181:2181"
 
@@ -24,7 +24,7 @@ services:
     depends_on:
       - zookeeper
     volumes:
-      - ../scripts/security:/etc/kafka/secrets
+      - ./security:/etc/kafka/secrets
     ports:
       - "9091:9091"
       - "29091:29091"
@@ -79,7 +79,7 @@ services:
     depends_on:
       - zookeeper
     volumes:
-      - ../scripts/security:/etc/kafka/secrets
+      - ./security:/etc/kafka/secrets
     ports:
       - "9092:9092"
       - "29092:29092"
@@ -129,7 +129,8 @@ services:
 
   connect:
     build:
-      context: .
+      context: ..
+      dockerfile: Dockerfile-Connector-Hub
     container_name: connect
     ports:
       - "8083:8083"
@@ -139,8 +140,8 @@ services:
       - kafka2
       - schemaregistry
     volumes:
-      - ../scripts/security:/etc/kafka/secrets
-      - ./keyfile.json:/root/keyfile.json:ro
+      - ./security:/etc/kafka/secrets
+      - ../keyfiles:/root/keyfiles:ro
     environment:
       CONNECT_BOOTSTRAP_SERVERS: "kafka1:9091,kafka2:9092"
       CONNECT_REST_PORT: 8083
@@ -243,7 +244,7 @@ services:
       - "9021:9021"
       - "9022:9022"
     volumes:
-      - ../scripts/security:/etc/kafka/secrets
+      - ./security:/etc/kafka/secrets
     environment:
       CONTROL_CENTER_BOOTSTRAP_SERVERS: "kafka1:9091,kafka2:9092"
       CONTROL_CENTER_ZOOKEEPER_CONNECT: "zookeeper:2181"
@@ -295,7 +296,7 @@ services:
       - kafka1
       - kafka2
     volumes:
-      - ../scripts/security:/etc/kafka/secrets
+      - ./security:/etc/kafka/secrets
     environment:
       SCHEMA_REGISTRY_KAFKASTORE_BOOTSTRAP_SERVERS: "kafka1:9091,kafka2:9092"
       SCHEMA_REGISTRY_HOST_NAME: schemaregistry

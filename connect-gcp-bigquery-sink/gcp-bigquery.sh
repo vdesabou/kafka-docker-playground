@@ -5,6 +5,13 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 PROJECT=${1:-vincent-de-saboulin-lab} 
 DATASET=${1:-MyDatasetTest} 
 
+KEYFILE="${DIR}/../keyfiles/keyfile_big_query.json"
+if [ ! -f ${KEYFILE} ]
+then
+     echo "ERROR: the file ${KEYFILE} file is not present!"
+     exit 1
+fi
+
 ${DIR}/../scripts/reset-cluster.sh
 
 echo "Sending messages to topic kcbq-quickstart1"
@@ -31,7 +38,7 @@ docker-compose exec -e PROJECT="$PROJECT" -e DATASET="$DATASET" connect \
                     "tableWriteWait": "1000",
                     "project" : "'"$PROJECT"'",
                     "datasets" : ".*='"$DATASET"'",
-                    "keyfile" : "/root/keyfile.json"
+                    "keyfile" : "/root/keyfiles/keyfile_big_query.json"
           }}' \
      http://localhost:8083/connectors | jq .
 

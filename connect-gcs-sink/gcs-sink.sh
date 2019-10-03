@@ -4,6 +4,13 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 BUCKET_NAME=${1:-test-gcs-playground} 
 
+KEYFILE="${DIR}/../keyfiles/keyfile_gcs.json"
+if [ ! -f ${KEYFILE} ]
+then
+     echo "ERROR: the file ${KEYFILE} file is not present!"
+     exit 1
+fi
+
 ${DIR}/../scripts/reset-cluster.sh
 
 echo "Removing existing objects in GCS, if applicable"
@@ -26,7 +33,7 @@ docker-compose exec -e BUCKET_NAME="$BUCKET_NAME" connect \
                     "gcs.bucket.name" : "'"$BUCKET_NAME"'",
                     "gcs.part.size": "5242880",
                     "flush.size": "3",
-                    "gcs.credentials.path": "/root/keyfile.json",
+                    "gcs.credentials.path": "/root/keyfiles/keyfile_gcs.json",
                     "storage.class": "io.confluent.connect.gcs.storage.GcsStorage",
                     "format.class": "io.confluent.connect.gcs.format.avro.AvroFormat",
                     "partitioner.class": "io.confluent.connect.storage.partitioner.DefaultPartitioner",
@@ -40,7 +47,7 @@ echo "Listing objects of in GCS"
 gsutil ls gs://$BUCKET_NAME/topics/gcs_topic/partition=0/
 
 echo "Doing gsutil authentication"
-gcloud auth activate-service-account --key-file ./keyfile.json
+gcloud auth activate-service-account --key-file ${KEYFILE}
 
 echo "Getting one of the avro files locally and displaying content with avro-tools"
 gsutil cp gs://$BUCKET_NAME/topics/gcs_topic/partition=0/gcs_topic+0+0000000000.avro /tmp/
