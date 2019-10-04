@@ -13,3 +13,4 @@ RUN   confluent-hub install --no-prompt confluentinc/kafka-connect-ibmmq:latest 
 		&& confluent-hub install --no-prompt confluentinc/kafka-connect-s3:latest \
 		&& confluent-hub install --no-prompt confluentinc/kafka-connect-s3-source:latest \
 		&& confluent-hub install --no-prompt confluentinc/kafka-connect-sqs:latest \
+		&& confluent-hub install --no-prompt confluentinc/kafka-connect-solace-source:latest \
