@@ -6,8 +6,8 @@ services:
     hostname: mysql
     container_name: mysql
     volumes:
-      - ../connect-debezium-mysql-source/mysql.cnf:/etc/mysql/conf.d/custom.cnf
-      - ../connect-debezium-mysql-source/mysql-init.sql:/docker-entrypoint-initdb.d/mysql-init.sql
+      - ../connect-debezium-source/mysql.cnf:/etc/mysql/conf.d/custom.cnf
+      - ../connect-debezium-source/mysql-init.sql:/docker-entrypoint-initdb.d/mysql-init.sql
     environment:
       MYSQL_ROOT_PASSWORD: password
       MYSQL_DATABASE: db
