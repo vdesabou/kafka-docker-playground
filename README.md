@@ -13,6 +13,7 @@ Playground for Kafka/Confluent Docker experimentations
 * [Debezium MySQL source](connect-debezium-source/README.md#MySQL)
 * [Debezium PostgreSQL source](connect-debezium-source/README.md#PostgreSQL)
 * [IBM MQ Source](connect-ibm-mq-source/README.md)
+* [Solace Source](connect-solace-source/README.md)
   
 ### Sink
 
