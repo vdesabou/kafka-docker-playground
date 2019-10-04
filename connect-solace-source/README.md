@@ -18,7 +18,7 @@ Simply run:
 $ ./solace.sh
 ```
 
-Solace UI is available at [127.0.0.1:8080(http://127.0.0.1:8080) `admin/admin`
+Solace UI is available at [127.0.0.1:8080](http://127.0.0.1:8080) `admin/admin`
 
 ## Details of what the script is doing
 
