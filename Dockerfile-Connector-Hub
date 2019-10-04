@@ -3,6 +3,7 @@ FROM confluentinc/cp-kafka-connect-base:5.3.1
 RUN   confluent-hub install --no-prompt confluentinc/kafka-connect-ibmmq:latest \
 		&& confluent-hub install --no-prompt confluentinc/kafka-connect-http:latest \
 		&& confluent-hub install --no-prompt debezium/debezium-connector-mysql:latest \
+		&& confluent-hub install --no-prompt debezium/debezium-connector-postgresql:latest \
 		&& confluent-hub install --no-prompt confluentinc/kafka-connect-elasticsearch:latest \
 		&& confluent-hub install --no-prompt wepay/kafka-connect-bigquery:latest \
 		&& confluent-hub install --no-prompt confluentinc/kafka-connect-gcs:latest \
