@@ -9,29 +9,23 @@ echo "Wait for Solace to be up and running"
 sleep 60
 echo "Solace UI is accessible at http://127.0.0.1:8080 (admin/admin)"
 
-echo "Create the queue connector-quickstart in the default Message VPN using CLI"
-docker container exec solace bash -c "/usr/sw/loads/currentload/bin/cli -A -s cliscripts/create_queue_cmd"
+echo "Sending messages to topic sink-messages"
+seq 10 | docker container exec -i broker kafka-console-producer --broker-list broker:9092 --topic sink-messages
 
-echo "Publish messages to the Solace queue using the REST endpoint"
-
-for i in 1000 1001 1002
-do
-     curl -X POST -d "m1" http://localhost:9000/Queue/connector-quickstart -H "Content-Type: text/plain" -H "Solace-Message-ID: $i"
-done
-
-echo "Creating Solace source connector"
+echo "Creating Solace sink connector"
 docker container exec connect \
      curl -X POST \
      -H "Content-Type: application/json" \
      --data '{
-               "name": "SolaceSourceConnector",
+               "name": "SolaceSinkConnector",
                "config": {
-                    "connector.class": "io.confluent.connect.solace.SolaceSourceConnector",
+                    "connector.class": "io.confluent.connect.jms.SolaceSinkConnector",
                     "tasks.max": "1",
-                    "kafka.topic": "from-solace-messages",
+                    "topics": "sink-messages",
                     "solace.host": "smf://solace:55555",
                     "solace.username": "admin",
                     "solace.password": "admin",
+                    "solace.dynamic.durables": "true",
                     "jms.destination.type": "queue",
                     "jms.destination.name": "connector-quickstart",
                     "key.converter": "org.apache.kafka.connect.storage.StringConverter",
@@ -41,5 +35,7 @@ docker container exec connect \
           }}' \
      http://localhost:8083/connectors | jq .
 
-echo "Verifying topic from-solace-messages"
-docker container exec broker kafka-console-consumer -bootstrap-server broker:9092 --topic from-solace-messages --from-beginning --max-messages 2
+sleep 10
+
+echo "Confirm the messages were delivered to the connector-quickstart queue in the default Message VPN using CLI"
+docker container exec solace bash -c "/usr/sw/loads/currentload/bin/cli -A -s cliscripts/show_queue_cmd"
