@@ -6,8 +6,8 @@ services:
     hostname: mysql
     container_name: mysql
     volumes:
-      - ../connect-debezium-source/mysql.cnf:/etc/mysql/conf.d/custom.cnf
-      - ../connect-debezium-source/mysql-init.sql:/docker-entrypoint-initdb.d/mysql-init.sql
+      - ../connect-debezium-mysql-source/mysql.cnf:/etc/mysql/conf.d/custom.cnf
+      - ../connect-debezium-mysql-source/mysql-init.sql:/docker-entrypoint-initdb.d/mysql-init.sql
     environment:
       MYSQL_ROOT_PASSWORD: password
       MYSQL_DATABASE: db
@@ -15,16 +15,6 @@ services:
       MYSQL_PASSWORD: password
       MYSQL_ROOT_HOST: 172.%  # Allow docker containers to connect to mysql
       
-  postgres:
-    image: debezium/postgres:10.0
-    hostname: postgres
-    container_name: postgres
-    environment:
-     - POSTGRES_USER=postgres
-     - POSTGRES_PASSWORD=postgres
-    volumes:
-     - ../connect-debezium-source/customers.sql:/docker-entrypoint-initdb.d/z99_dump.sql
-
   connect:
     depends_on:
       - zookeeper

@@ -16,7 +16,7 @@ docker container exec postgres psql -U postgres -d postgres -c "insert into cust
 echo "Show content of CUSTOMERS table:"
 docker container exec postgres bash -c "psql -U postgres -d postgres -c 'SELECT * FROM CUSTOMERS'"
 
-echo "Creating PostgreSQL source connector"
+echo "Creating Debezium PostgreSQL source connector"
 docker container exec connect \
      curl -X POST \
      -H "Content-Type: application/json" \
@@ -39,6 +39,7 @@ docker container exec connect \
                     "transforms.addTopicSuffix.replacement":"$1-raw"
           }}' \
      http://localhost:8083/connectors | jq .
+
 
 
 sleep 5

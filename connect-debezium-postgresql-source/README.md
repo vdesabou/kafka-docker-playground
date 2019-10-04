@@ -1,8 +1,8 @@
-# Debezium MySQL source connector
+# Debezium PostgreSQL source connector
 
 ## Objective
 
-Quickly test [Debezium MySQL](https://docs.confluent.io/current/connect/debezium-connect-mysql/index.html#debezium-mysql-source-connector) connector.
+Quickly test [Debezium PostGreSQL](https://docs.confluent.io/current/connect/debezium-connect-postgres/index.html#quick-start) connector.
 
 ## Pre-requisites
 
@@ -11,16 +11,6 @@ Quickly test [Debezium MySQL](https://docs.confluent.io/current/connect/debezium
 
 
 ## How to run
-
-### MySQL
-  
-Simply run:
-
-```
-$ ./mysql.sh
-```
-
-### PostgreSQL
   
 Simply run:
 

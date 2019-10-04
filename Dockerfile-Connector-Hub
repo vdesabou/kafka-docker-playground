@@ -15,3 +15,4 @@ RUN   confluent-hub install --no-prompt confluentinc/kafka-connect-ibmmq:latest 
 		&& confluent-hub install --no-prompt confluentinc/kafka-connect-sqs:latest \
 		&& confluent-hub install --no-prompt confluentinc/kafka-connect-solace-source:latest \
 		&& confluent-hub install --no-prompt confluentinc/kafka-connect-solace-sink:latest \
+		&& confluent-hub install --no-prompt debezium/debezium-connector-mongodb:latest \
