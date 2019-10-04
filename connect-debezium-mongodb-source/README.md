@@ -27,6 +27,8 @@ Initialize MongoDB replica set
 $ docker exec -it mongodb mongo --eval 'rs.initiate({_id: "debezium", members:[{_id: 0, host: "mongodb:27017"}]})'
 ```
 
+Note: `mongodb:27017`is important here
+
 Create a user profile
 
 ```bash
@@ -122,9 +124,5 @@ Result is:
     }
 }
 ```
-
-
-Note: `mongodb:27017`is important here
-
 
 N.B: Control Center is reachable at [http://127.0.0.1:9021](http://127.0.0.1:9021])
