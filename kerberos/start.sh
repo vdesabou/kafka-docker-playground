@@ -74,9 +74,9 @@ docker exec -ti kdc kadmin.local -w password -q "ktadd  -k /var/lib/secret/kafka
 # Starting zookeeper and kafka now that the keytab has been created with the required credentials and services
 if [ -f "${DOCKER_COMPOSE_FILE_OVERRIDE}" ]
 then
-  docker-compose -f ../kerberos/docker-compose.yml -f ${DOCKER_COMPOSE_FILE_OVERRIDE} up -d
+  docker-compose -f ../kerberos/docker-compose.yml -f ${DOCKER_COMPOSE_FILE_OVERRIDE} up -d --build
 else 
-  docker-compose up -d
+  docker-compose up -d --build
 fi
 
 # Adding ACLs for consumer and producer user:
