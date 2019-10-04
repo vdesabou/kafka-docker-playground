@@ -12,11 +12,20 @@ Quickly test [Debezium MySQL](https://docs.confluent.io/current/connect/debezium
 
 ## How to run
 
+### MySQL
+  
 Simply run:
 
 ```
 $ ./mysql.sh
 ```
 
+### PostgreSQL
+  
+Simply run:
+
+```
+$ ./postgres.sh
+```
 
 N.B: Control Center is reachable at [http://127.0.0.1:9021](http://127.0.0.1:9021])

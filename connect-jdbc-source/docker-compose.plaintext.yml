@@ -6,7 +6,6 @@ services:
     hostname: mysql
     container_name: mysql
     volumes:
-      - ../connect-jdbc-source/mysql.cnf:/etc/mysql/conf.d/custom.cnf
       - ../connect-jdbc-source/mysql-init.sql:/docker-entrypoint-initdb.d/mysql-init.sql
     environment:
       MYSQL_ROOT_PASSWORD: password

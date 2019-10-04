@@ -12,7 +12,7 @@ Quickly test [JDBC Source](https://docs.confluent.io/current/connect/kafka-conne
 
 ## How to run
 
-* With MySQL:
+### MySQL
   
 Simply run:
 
