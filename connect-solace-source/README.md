@@ -18,6 +18,8 @@ Simply run:
 $ ./solace.sh
 ```
 
+Solace UI is available at [127.0.0.1:8080(http://127.0.0.1:8080) `admin/admin`
+
 ## Details of what the script is doing
 
 Create the queue `connector-quickstart` in the `default` Message VPN using CLI:
@@ -55,7 +57,7 @@ $ docker container exec connect \
      curl -X POST \
      -H "Content-Type: application/json" \
      --data '{
-               "name": "SolaceSourceConnector1",
+               "name": "SolaceSourceConnector",
                "config": {
                     "connector.class": "io.confluent.connect.solace.SolaceSourceConnector",
                     "tasks.max": "1",
