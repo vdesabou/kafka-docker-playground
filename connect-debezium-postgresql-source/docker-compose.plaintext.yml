@@ -10,7 +10,7 @@ services:
      - POSTGRES_USER=postgres
      - POSTGRES_PASSWORD=postgres
     volumes:
-     - ../connect-debezium-source/customers.sql:/docker-entrypoint-initdb.d/z99_dump.sql
+     - ../connect-debezium-postgresql-source/customers.sql:/docker-entrypoint-initdb.d/z99_dump.sql
 
   connect:
     depends_on:
