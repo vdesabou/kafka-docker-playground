@@ -16,10 +16,10 @@ if [ -f "${DOCKER_COMPOSE_FILE_OVERRIDE}" ]
 then
   echo "Using ${DOCKER_COMPOSE_FILE_OVERRIDE}"
   docker-compose -f ../plaintext/docker-compose.yml -f ${DOCKER_COMPOSE_FILE_OVERRIDE} down -v 
-  docker-compose -f ../plaintext/docker-compose.yml -f ${DOCKER_COMPOSE_FILE_OVERRIDE} up -d
+  docker-compose -f ../plaintext/docker-compose.yml -f ${DOCKER_COMPOSE_FILE_OVERRIDE} up -d --build
 else 
   docker-compose down -v 
-  docker-compose up -d
+  docker-compose up -d --build
 fi
 
 ../WaitForConnectAndControlCenter.sh
