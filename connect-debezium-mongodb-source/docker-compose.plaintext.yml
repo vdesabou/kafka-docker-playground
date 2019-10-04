@@ -1,0 +1,23 @@
+---
+version: '3.5'
+services:
+
+  mongodb:
+    image: mongo:latest
+    hostname: mongodb
+    container_name: mongodb
+    ports:
+      - 27017:27017
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: debezium
+      MONGO_INITDB_ROOT_PASSWORD: dbz
+    entrypoint: [ "/usr/bin/mongod", "--bind_ip_all", "--replSet", "debezium" ]
+
+  connect:
+    depends_on:
+      - zookeeper
+      - broker
+      - schema-registry
+      - mongodb
+    volumes:
+      - ../connect-jdbc-source/mysql-connector-java-5.1.45-bin.jar:/usr/share/confluent-hub-components/confluentinc-kafka-connect-jdbc/lib/mysql-connector-java-5.1.45-bin.jar

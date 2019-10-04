@@ -29,7 +29,7 @@ INSERT INTO team (   \
 echo "Show content of team table:"
 docker container exec mysql bash -c "mysql --user=root --password=password --database=mydb -e 'select * from team'"
 
-echo "Creating MySQL source connector"
+echo "Creating Debezium MySQL source connector"
 docker container exec connect \
      curl -X POST \
      -H "Content-Type: application/json" \
