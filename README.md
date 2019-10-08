@@ -8,7 +8,7 @@ Playground for Kafka/Confluent Docker experimentations
 
 * [AWS S3 Source](connect-s3-source/README.md)
 * [AWS Kinesis Source](connect-kinesis-source/README.md)
-* [AWS SQS Source](connect-sqs-source/README.md) [also with [SASL_SSL](connect-sqs-source/README.md#with-sasl_ssl-authentication) and [SSL](connect-sqs-source/README.md#with-ssl-authentication) authentication]
+* [AWS SQS Source](connect-sqs-source/README.md) [also with [SASL_SSL](connect-sqs-source/README.md#with-sasl_ssl-authentication) and [SSL](connect-sqs-source/README.md#with-ssl-authentication) authentications]
 * [JDBC MySQL Source](connect-jdbc-source/README.md#MySQL)
 * [Debezium MySQL source](connect-debezium-mysql-source/README)
 * [Debezium PostgreSQL source](connect-debezium-postgresql-source/README.md)
@@ -23,7 +23,7 @@ Playground for Kafka/Confluent Docker experimentations
 * [Elasticsearch Sink](connect-elasticsearch-sink/README.md)
 * [HTTP Sink](connect-http-sink/README.md)
 * [GCP BigQuery Sink](connect-gcp-bigquery-sink/README.md)
-* [GCS Sink](connect-gcs-sink/README.md) [also with [SASL_SSL](connect-gcs-sink/README.md#with-sasl_ssl-authentication), [SSL](connect-gcs-sink/README.md#with-ssl-authentication), [Kerberos GSSAPI](connect-gcs-sink/README.md#with-kerberos-gssapi-authentication) authentication] and [LDAP Authorizer SASL/PLAIN](connect-gcs-sink/README.md#with-ldap-authorizer-with-saslplain)  
+* [GCS Sink](connect-gcs-sink/README.md) [also with [SASL_SSL](connect-gcs-sink/README.md#with-sasl_ssl-authentication), [SSL](connect-gcs-sink/README.md#with-ssl-authentication), [Kerberos GSSAPI](connect-gcs-sink/README.md#with-kerberos-gssapi-authentication) and [LDAP Authorizer SASL/PLAIN](connect-gcs-sink/README.md#with-ldap-authorizer-with-saslplain) authentications]  
 * [Solace Sink](connect-solace-sink/README.md)
   
 ## ☁️ Confluent Cloud:
