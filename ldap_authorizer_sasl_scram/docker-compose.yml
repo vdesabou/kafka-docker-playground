@@ -50,7 +50,6 @@ services:
           - ldap
         volumes:
           - $PWD/kafka/users:/service/kafka/users
-          - $PWD/kafka/jks:/etc/kafka/jks
           - $PWD/kafka/kafka.jaas.config:/etc/kafka/kafka_server_jaas.conf
         ports:
             - "9092:9092"
