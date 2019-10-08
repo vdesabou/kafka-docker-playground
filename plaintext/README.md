@@ -9,3 +9,11 @@ This is a deployment with no security:
 * 1 connect
 * 1 schema-registry
 * 1 control-center
+
+## How to run
+  
+Simply run:
+
+```
+$ ./start.sh
+```
