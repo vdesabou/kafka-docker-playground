@@ -1,4 +1,4 @@
-version: '3'
+version: '3.5'
 services:
     ldap:
         image: osixia/openldap:1.2.3
@@ -11,7 +11,7 @@ services:
             - "389:389"
             - "636:636"
         volumes:
-            - "$PWD/ldap/custom:/container/service/slapd/assets/config/bootstrap/ldif/custom"
+            - "./ldap/custom:/container/service/slapd/assets/config/bootstrap/ldif/custom"
         command: "--copy-service"
 
     phpldapadmin-service:
@@ -49,8 +49,8 @@ services:
           - zookeeper
           - ldap
         volumes:
-          - $PWD/kafka/users:/service/kafka/users
-          - $PWD/kafka/kafka.jaas.conf:/etc/kafka/kafka_server_jaas.conf
+          - ./kafka/users:/service/kafka/users
+          - ./kafka/kafka.jaas.conf:/etc/kafka/kafka_server_jaas.conf
         ports:
             - "9092:9092"
         environment:

@@ -23,7 +23,7 @@ Playground for Kafka/Confluent Docker experimentations
 * [Elasticsearch Sink](connect-elasticsearch-sink/README.md)
 * [HTTP Sink](connect-http-sink/README.md)
 * [GCP BigQuery Sink](connect-gcp-bigquery-sink/README.md)
-* [GCS Sink](connect-gcs-sink/README.md) [also with [SASL_SSL](connect-gcs-sink/README.md#with-sasl_ssl-authentication), [SSL](connect-gcs-sink/README.md#with-ssl-authentication) and [Kerberos GSSAPI](connect-gcs-sink/README.md#with-kerberos-gssapi-authentication) authentication]
+* [GCS Sink](connect-gcs-sink/README.md) [also with [SASL_SSL](connect-gcs-sink/README.md#with-sasl_ssl-authentication), [SSL](connect-gcs-sink/README.md#with-ssl-authentication), [Kerberos GSSAPI](connect-gcs-sink/README.md#with-kerberos-gssapi-authentication) authentication] and [LDAP Authorizer SASL/PLAIN](connect-gcs-sink/README.md#with-kerberos-gssapi-authentication) 
 * [Solace Sink](connect-solace-sink/README.md)
   
 ## ☁️ Confluent Cloud:
