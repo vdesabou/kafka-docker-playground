@@ -4,7 +4,7 @@ Playground for Kafka/Confluent Docker experimentations
 
 ## 🔗 Connectors:
 
-### Source
+### ↘️ Source
 
 * [AWS S3 Source](connect-s3-source/README.md)
 * [AWS Kinesis Source](connect-kinesis-source/README.md)
@@ -16,7 +16,7 @@ Playground for Kafka/Confluent Docker experimentations
 * [IBM MQ Source](connect-ibm-mq-source/README.md)
 * [Solace Source](connect-solace-source/README.md)
   
-### Sink
+### ↗️ Sink
 
 * [HDFS 2 Sink](connect-hdfs-sink/README.md)
 * [AWS S3 Sink](connect-s3-sink/README.md)
