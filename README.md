@@ -37,6 +37,7 @@ Playground for Kafka/Confluent Docker experimentations
 * [SASL_SSL](sasl-ssl/README.md): SSL encryption / SASL_SSL or 2 way SSL authentication
 * [Kerberos](kerberos/README.md): no SSL encryption / Kerberos GSSAPI authentication
 * [SSL_Kerberos](ssl_kerberos/README.md) SSL encryption / Kerberos GSSAPI authentication
+* [LDAP Authorizer with SASL/SCRAM-SHA-256](ldap_authorizer_sasl_scram/README.md) no SSL encryption / LDAP authorizer
 
 ## Other:
 
