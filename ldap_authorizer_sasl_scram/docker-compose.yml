@@ -37,9 +37,7 @@ services:
             ZOOKEEPER_TICK_TIME: 2000
             ZOOKEEPER_MAX_CLIENT_CNXNS: 0
             KAFKA_OPTS: -Djava.security.auth.login.config=/etc/kafka/zookeeper_server_jaas.conf
-                -Djava.security.krb5.conf=/etc/krb5.conf
                 -Dzookeeper.authProvider.1=org.apache.zookeeper.server.auth.SASLAuthenticationProvider
-                -Dsun.security.krb5.debug=true
                 -Dzookeeper.allowSaslFailedClients=false
                 -Dzookeeper.requireClientAuthScheme=sasl
 
