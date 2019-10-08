@@ -2,7 +2,7 @@
 
 Playground for Kafka/Confluent Docker experimentations
 
-## Connectors:
+## 🔗 Connectors:
 
 ### Source
 
@@ -26,12 +26,12 @@ Playground for Kafka/Confluent Docker experimentations
 * [GCS Sink](connect-gcs-sink/README.md) [also with [SASL_SSL](connect-gcs-sink/README.md#with-sasl_ssl-authentication), [SSL](connect-gcs-sink/README.md#with-ssl-authentication) and [Kerberos GSSAPI](connect-gcs-sink/README.md#with-kerberos-gssapi-authentication) authentication]
 * [Solace Sink](connect-solace-sink/README.md)
   
-## Confluent Cloud:
+## ☁️ Confluent Cloud:
 
 * [ccloud demo](ccloud-demo/README.md)
 
 
-## Deployments
+## 🔐 Deployments
 
 * [PLAINTEXT](plaintext/README.md): no security
 * [SASL_SSL](sasl-ssl/README.md): SSL encryption / SASL_SSL or 2 way SSL authentication
@@ -44,7 +44,7 @@ Playground for Kafka/Confluent Docker experimentations
 
 * [Confluent Rebalancer](rebalancer/README.md)
 
-## Other useful resources
+## 📚 Other useful resources
 
 * [A Kafka Story](https://github.com/framiere/a-kafka-story): A step by step guide to use Kafka ecosystem (Kafka Connect, KSQL, Java Consumers/Producers, etc..) with Docker
 * [Kafka Security playbook](https://github.com/Dabz/kafka-security-playbook): demonstrates various security configurations with Docker
