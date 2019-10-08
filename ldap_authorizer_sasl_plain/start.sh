@@ -8,25 +8,9 @@ verify_installed()
     exit 1
   fi
 }
-verify_installed "jq"
 verify_installed "docker-compose"
 
 DOCKER_COMPOSE_FILE_OVERRIDE=$1
-# Starting kafka first
-if [ -f "${DOCKER_COMPOSE_FILE_OVERRIDE}" ]
-then
-  docker-compose -f ../ldap_authorizer_sasl_plain/docker-compose.yml -f ${DOCKER_COMPOSE_FILE_OVERRIDE} up -d --build kafka
-else 
-  docker-compose up -d --build kafka
-fi
-
-# Creating the users
-# kafka is configured as a super user
-docker-compose exec kafka kafka-configs --zookeeper zookeeper:2181 --alter --add-config 'SCRAM-SHA-256=[password=kafka],SCRAM-SHA-512=[password=kafka]' --entity-type users --entity-name kafka
-docker-compose exec kafka kafka-configs --zookeeper zookeeper:2181 --alter --add-config 'SCRAM-SHA-256=[password=alice-secret],SCRAM-SHA-512=[password=alice-secret]' --entity-type users --entity-name alice
-docker-compose exec kafka kafka-configs --zookeeper zookeeper:2181 --alter --add-config 'SCRAM-SHA-256=[password=barnie-secret],SCRAM-SHA-512=[password=barnie-secret]' --entity-type users --entity-name barnie
-docker-compose exec kafka kafka-configs --zookeeper zookeeper:2181 --alter --add-config 'SCRAM-SHA-256=[password=charlie-secret],SCRAM-SHA-512=[password=charlie-secret]' --entity-type users --entity-name charlie
-
 if [ -f "${DOCKER_COMPOSE_FILE_OVERRIDE}" ]
 then
   docker-compose -f ../ldap_authorizer_sasl_plain/docker-compose.yml -f ${DOCKER_COMPOSE_FILE_OVERRIDE} up -d
