@@ -1,0 +1,10 @@
+---
+version: '3.5'
+services:
+  activemq:
+    image: rmohr/activemq # https://hub.docker.com/r/rmohr/activemq/
+    hostname: activemq
+    container_name: activemq
+    ports:
+      - '61616:61616'
+      - '8161:8161'
