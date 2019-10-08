@@ -8,7 +8,6 @@ verify_installed()
     exit 1
   fi
 }
-verify_installed "jq"
 verify_installed "docker-compose"
 
 DOCKER_COMPOSE_FILE_OVERRIDE=$1
