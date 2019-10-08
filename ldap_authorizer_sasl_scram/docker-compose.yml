@@ -75,10 +75,6 @@ services:
             KAFKA_SASL_ENABLED_MECHANISMS: SCRAM-SHA-256
             KAFKA_SASL_MECHANISM_INTER_BROKER_PROTOCOL: SCRAM-SHA-256
             KAFKA_SECURITY_INTER_BROKER_PROTOCOL: SASL_PLAINTEXT
-            KAFKA_LISTENER_NAME_SASL_PLAINTEXT_SCRAM-SHA-256_SASL_JAAS_CONFIG: "org.apache.kafka.common.security.scram.ScramLoginModule required \
-                        username=\"kafka\" \
-                        password=\"kafka\";"
-
 
             # Configure authorizer
             KAFKA_AUTHORIZER_CLASS_NAME: io.confluent.kafka.security.ldap.authorizer.LdapAuthorizer
