@@ -15,6 +15,7 @@ Playground for Kafka/Confluent Docker experimentations
 * [Debezium MongoDB source](connect-debezium-mongodb-source/README.md)
 * [IBM MQ Source](connect-ibm-mq-source/README.md)
 * [Solace Source](connect-solace-source/README.md)
+* [ActiveMQ Source](connect-active-mq-source/README.md)
   
 ### ↗️ Sink
 
