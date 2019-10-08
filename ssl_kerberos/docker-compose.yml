@@ -34,7 +34,7 @@ services:
 
 
   kafka:
-    image: confluentinc/cp-enterprise-kafka:5.3.1
+    image: confluentinc/cp-server:5.3.1
     hostname: kafka.kerberos-demo.local
     container_name: kafka
     depends_on:

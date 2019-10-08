@@ -18,7 +18,7 @@ services:
       - "2181:2181"
 
   broker:
-    image: confluentinc/cp-enterprise-kafka:5.3.1
+    image: confluentinc/cp-server:5.3.1
     hostname: broker
     container_name: broker
     depends_on:
