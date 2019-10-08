@@ -9,7 +9,7 @@ services:
       ZOOKEEPER_CLIENT_PORT: 2181
 
   broker1:
-    image: confluentinc/cp-enterprise-kafka:5.3.1
+    image: confluentinc/cp-server:5.3.1
     hostname: broker1
     container_name: broker1
     depends_on:
@@ -24,7 +24,7 @@ services:
       CONFLUENT_METRICS_REPORTER_ZOOKEEPER_CONNECT: zookeeper:2181
 
   broker2:
-    image: confluentinc/cp-enterprise-kafka:5.3.1
+    image: confluentinc/cp-server:5.3.1
     hostname: broker2
     container_name: broker2
     depends_on:
@@ -39,7 +39,7 @@ services:
       CONFLUENT_METRICS_REPORTER_ZOOKEEPER_CONNECT: zookeeper:2181
 
   broker3:
-    image: confluentinc/cp-enterprise-kafka:5.3.1
+    image: confluentinc/cp-server:5.3.1
     hostname: broker3
     container_name: broker3
     depends_on:
@@ -54,7 +54,7 @@ services:
       CONFLUENT_METRICS_REPORTER_ZOOKEEPER_CONNECT: zookeeper:2181
 
   broker4:
-    image: confluentinc/cp-enterprise-kafka:5.3.1
+    image: confluentinc/cp-server:5.3.1
     hostname: broker4
     container_name: broker4
     depends_on:
@@ -69,7 +69,7 @@ services:
       CONFLUENT_METRICS_REPORTER_ZOOKEEPER_CONNECT: zookeeper:2181
 
   broker5:
-    image: confluentinc/cp-enterprise-kafka:5.3.1
+    image: confluentinc/cp-server:5.3.1
     hostname: broker5
     container_name: broker5
     depends_on:
@@ -84,7 +84,7 @@ services:
       CONFLUENT_METRICS_REPORTER_ZOOKEEPER_CONNECT: zookeeper:2181
 
   broker6:
-    image: confluentinc/cp-enterprise-kafka:5.3.1
+    image: confluentinc/cp-server:5.3.1
     hostname: broker6
     container_name: broker6
     depends_on:
