@@ -131,11 +131,14 @@ $ docker container exec broker kafka-console-consumer --bootstrap-server broker:
 
 Sending messages to topic test-topic-sasl-ssl
 
-seq 10 | docker container exec -i broker kafka-console-producer --broker-list broker:9091 --topic test-topic-sasl-ssl --producer.config /etc/kafka/secrets/client_without_interceptors.config
+```bash
+$ seq 10 | docker container exec -i broker kafka-console-producer --broker-list broker:9091 --topic test-topic-sasl-ssl --producer.config /etc/kafka/secrets/client_without_interceptors.config
+```
 
 Creating Confluent Replicator connector with SASL_SSL authentication
 
-docker container exec connect \
+```bash
+$ docker container exec connect \
      curl -X POST \
      --cert /etc/kafka/secrets/connect.certificate.pem --key /etc/kafka/secrets/connect.key --tlsv1.2 --cacert /etc/kafka/secrets/snakeoil-ca-1.crt \
      -H "Content-Type: application/json" \
@@ -174,12 +177,12 @@ docker container exec connect \
                     "src.kafka.sasl.mechanism": "PLAIN"
           }}' \
      https://localhost:8083/connectors | jq .
-
-
-sleep 10
+```
 
 Verify we have received the data in test-topic-sasl-ssl-duplicate topic
 
-docker container exec broker kafka-console-consumer --bootstrap-server broker:9091 --topic test-topic-sasl-ssl-duplicate --from-beginning --max-messages 10 --consumer.config /etc/kafka/secrets/client_without_interceptors.config
+```bash
+$ docker container exec broker kafka-console-consumer --bootstrap-server broker:9091 --topic test-topic-sasl-ssl-duplicate --from-beginning --max-messages 10 --consumer.config /etc/kafka/secrets/client_without_interceptors.config
+```
 
 N.B: Control Center is reachable at [http://127.0.0.1:9021](http://127.0.0.1:9021])
