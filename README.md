@@ -16,6 +16,7 @@ Playground for Kafka/Confluent Docker experimentations
 * [IBM MQ Source](connect-ibm-mq-source/README.md)
 * [Solace Source](connect-solace-source/README.md)
 * [ActiveMQ Source](connect-active-mq-source/README.md)
+* [TIBCO EMS Source](connect-tibco-source/README.md)
   
 ### ↗️ Sink
 

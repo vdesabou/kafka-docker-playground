@@ -30,3 +30,4 @@ ssl_kerberos/security/*.req
 ssl_kerberos/security/*.pem
 ssl_kerberos/security/*.der
 ssl_kerberos/security/*.p12
+connect-tibco-source/tibjms.jar

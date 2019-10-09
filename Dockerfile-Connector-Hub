@@ -17,3 +17,4 @@ RUN   confluent-hub install --no-prompt confluentinc/kafka-connect-ibmmq:latest 
 		&& confluent-hub install --no-prompt confluentinc/kafka-connect-solace-sink:latest \
 		&& confluent-hub install --no-prompt debezium/debezium-connector-mongodb:latest \
 		&& confluent-hub install --no-prompt confluentinc/kafka-connect-activemq:latest \
+		&& confluent-hub install --no-prompt confluentinc/kafka-connect-tibco-source:latest \
