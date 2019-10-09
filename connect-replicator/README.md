@@ -1,4 +1,4 @@
-# Confluent Replicato
+# Confluent Replicator
 
 ## Objective
 
