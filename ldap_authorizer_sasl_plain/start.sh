@@ -14,20 +14,21 @@ DOCKER_COMPOSE_FILE_OVERRIDE=$1
 if [ -f "${DOCKER_COMPOSE_FILE_OVERRIDE}" ]
 then
   echo "Using ${DOCKER_COMPOSE_FILE_OVERRIDE}"
-  docker-compose -f ../ldap_authorizer_sasl_plain/docker-compose.yml -f ${DOCKER_COMPOSE_FILE_OVERRIDE} down -v 
+  docker-compose -f ../ldap_authorizer_sasl_plain/docker-compose.yml -f ${DOCKER_COMPOSE_FILE_OVERRIDE} down -v
   docker-compose -f ../ldap_authorizer_sasl_plain/docker-compose.yml -f ${DOCKER_COMPOSE_FILE_OVERRIDE} up -d --build
-else 
-  docker-compose down -v 
+else
+  docker-compose down -v
   docker-compose up -d --build
 fi
 
 ../WaitForConnectAndControlCenter.sh
 
+# Not required as User:broker is super user
 # SET ACLs
 # Authorize broker user kafka for cluster operations. Note that the example uses user-principal based ACL for brokers, but brokers may also be configured to use group-based ACLs.
-docker container exec broker kafka-acls --authorizer-properties zookeeper.connect=zookeeper:2181 --add --cluster --operation=All --allow-principal=User:broker
+#docker container exec broker kafka-acls --authorizer-properties zookeeper.connect=zookeeper:2181 --add --cluster --operation=All --allow-principal=User:broker
 
-# Test LDAP group-based authorization 
+# Test LDAP group-based authorization
 # https://docs.confluent.io/current/security/ldap-authorizer/quickstart.html#test-ldap-group-based-authorization
 echo "Create topic testtopic"
 docker container exec broker kafka-topics --create --topic testtopic --partitions 10 --replication-factor 1 --zookeeper zookeeper:2181
