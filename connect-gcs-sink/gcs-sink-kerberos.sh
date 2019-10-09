@@ -26,7 +26,7 @@ echo "########"
 
 echo "Sending messages to topic gcs_topic-kerberos"
 docker container exec -i client kinit -k -t /var/lib/secret/kafka-client.key kafka_producer
-seq -f "{\"f1\": \"This is a message sent with Kerberos GSSAPI authentication %g\"}" 10 | docker container exec -i client kafka-avro-console-producer --broker-list kafka:9093 --topic gcs_topic-kerberos --property value.schema='{"type":"record","name":"myrecord","fields":[{"name":"f1","type":"string"}]}' --property schema.registry.url=http://schema-registry:8081 --producer.config /etc/kafka/producer.properties
+seq -f "{\"f1\": \"This is a message sent with Kerberos GSSAPI authentication %g\"}" 10 | docker container exec -i client kafka-avro-console-producer --broker-list broker:9092 --topic gcs_topic-kerberos --property value.schema='{"type":"record","name":"myrecord","fields":[{"name":"f1","type":"string"}]}' --property schema.registry.url=http://schema-registry:8081 --producer.config /etc/kafka/producer.properties
 
 echo "Creating GCS Sink connector with Kerberos GSSAPI authentication"
 docker container exec -e BUCKET_NAME="$BUCKET_NAME" connect \
@@ -46,7 +46,7 @@ docker container exec -e BUCKET_NAME="$BUCKET_NAME" connect \
                     "format.class": "io.confluent.connect.gcs.format.avro.AvroFormat",
                     "partitioner.class": "io.confluent.connect.storage.partitioner.DefaultPartitioner",
                     "schema.compatibility": "NONE",
-                    "confluent.topic.bootstrap.servers": "kafka:9093",
+                    "confluent.topic.bootstrap.servers": "broker:9092",
                     "confluent.topic.replication.factor": "1",
                     "confluent.topic.sasl.mechanism": "GSSAPI",
                     "confluent.topic.sasl.kerberos.service.name": "kafka",
