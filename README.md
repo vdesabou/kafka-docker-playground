@@ -45,7 +45,7 @@ Playground for Kafka/Confluent Docker experimentations
 ## Other:
 
 * [Confluent Rebalancer](rebalancer)
-* [Confluent Replicator](connect-replicator)
+* [Confluent Replicator](connect-replicator) [also with [SASL_SSL](connect-replicator/README.md#with-sasl_ssl-authentication)]
 
 ## 📚 Other useful resources
 

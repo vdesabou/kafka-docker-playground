@@ -15,17 +15,17 @@ docker container exec connect \
       --data '{
          "name": "duplicate-topic",
          "config": {
-           "connector.class":"io.confluent.connect.replicator.ReplicatorSourceConnector",
-           "key.converter": "io.confluent.connect.replicator.util.ByteArrayConverter",
-           "value.converter": "io.confluent.connect.replicator.util.ByteArrayConverter",
-           "header.converter": "io.confluent.connect.replicator.util.ByteArrayConverter",
-           "src.consumer.group.id": "duplicate-topic",
-           "confluent.topic.replication.factor": 1,
-           "provenance.header.enable": true,
-           "topic.whitelist": "test-topic",
-           "topic.rename.format": "test-topic-duplicate",
-           "dest.kafka.bootstrap.servers": "broker:9092",
-           "src.kafka.bootstrap.servers": "broker:9092"
+               "connector.class":"io.confluent.connect.replicator.ReplicatorSourceConnector",
+               "key.converter": "io.confluent.connect.replicator.util.ByteArrayConverter",
+               "value.converter": "io.confluent.connect.replicator.util.ByteArrayConverter",
+               "header.converter": "io.confluent.connect.replicator.util.ByteArrayConverter",
+               "src.consumer.group.id": "duplicate-topic",
+               "confluent.topic.replication.factor": 1,
+               "provenance.header.enable": true,
+               "topic.whitelist": "test-topic",
+               "topic.rename.format": "test-topic-duplicate",
+               "dest.kafka.bootstrap.servers": "broker:9092",
+               "src.kafka.bootstrap.servers": "broker:9092"
            }}' \
       http://localhost:8083/connectors | jq .
 

@@ -45,15 +45,27 @@ Simply run:
 $ ./gcs-sink.sh <BUCKET_NAME>
 ```
 
-Or using security (SASL_SSL and SSL authentications):
+Or using SASL_SSL and SSL authentications:
 
 ```bash
 $ ./gcs-sink-sasl-ssl.sh <BUCKET_NAME>
 ```
 
+Or using kerberos:
+
+```bash
+$ ./gcs-sink-kerberos.sh <BUCKET_NAME>
+```
+
+Or using LDAP Authorizer with SASL/PLAIN:
+
+```bash
+$ ./gcs-sink-ldap-authorizer-sasl-plain.sh <BUCKET_NAME>
+```
+
 ## Details of what the script is doing
 
-### With no security in place:
+### With no security in place (PLAINTEXT):
 
 Messages are sent to `gcs_topic` topic using:
 
