@@ -31,3 +31,4 @@ ssl_kerberos/security/*.pem
 ssl_kerberos/security/*.der
 ssl_kerberos/security/*.p12
 connect-tibco-source/tibjms.jar
+connect-tibco-source/docker-tibco/TIB_ems-ce_8.5.1_linux_x86_64.zip
