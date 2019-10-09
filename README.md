@@ -17,7 +17,7 @@ Playground for Kafka/Confluent Docker experimentations
 * [Solace Source](connect-solace-source/README.md)
 * [ActiveMQ Source](connect-active-mq-source/README.md)
 * [TIBCO EMS Source](connect-tibco-source/README.md)
-  
+
 ### ↗️ Sink
 
 * [HDFS 2 Sink](connect-hdfs-sink/README.md)
@@ -25,9 +25,9 @@ Playground for Kafka/Confluent Docker experimentations
 * [Elasticsearch Sink](connect-elasticsearch-sink/README.md)
 * [HTTP Sink](connect-http-sink/README.md)
 * [GCP BigQuery Sink](connect-gcp-bigquery-sink/README.md)
-* [GCS Sink](connect-gcs-sink/README.md) [also with [SASL_SSL](connect-gcs-sink/README.md#with-sasl_ssl-authentication), [SSL](connect-gcs-sink/README.md#with-ssl-authentication), [Kerberos GSSAPI](connect-gcs-sink/README.md#with-kerberos-gssapi-authentication) and [LDAP Authorizer SASL/PLAIN](connect-gcs-sink/README.md#with-ldap-authorizer-with-saslplain) authentications]  
+* [GCS Sink](connect-gcs-sink/README.md) [also with [SASL_SSL](connect-gcs-sink/README.md#with-sasl_ssl-authentication), [SSL](connect-gcs-sink/README.md#with-ssl-authentication), [Kerberos GSSAPI](connect-gcs-sink/README.md#with-kerberos-gssapi-authentication) and [LDAP Authorizer SASL/PLAIN](connect-gcs-sink/README.md#with-ldap-authorizer-with-saslplain) authentications]
 * [Solace Sink](connect-solace-sink/README.md)
-  
+
 ## ☁️ Confluent Cloud:
 
 * [ccloud demo](ccloud-demo/README.md)
@@ -45,6 +45,7 @@ Playground for Kafka/Confluent Docker experimentations
 ## Other:
 
 * [Confluent Rebalancer](rebalancer/README.md)
+* [Confluent Replicator](connect-replicator/README.md)
 
 ## 📚 Other useful resources
 
