@@ -41,10 +41,10 @@ services:
                 -Dzookeeper.allowSaslFailedClients=false
                 -Dzookeeper.requireClientAuthScheme=sasl
 
-    kafka:
+    broker:
         image: confluentinc/cp-server:5.3.1
-        hostname: kafka
-        container_name: kafka
+        hostname: broker
+        container_name: broker
         depends_on:
           - zookeeper
           - ldap
@@ -57,20 +57,20 @@ services:
             KAFKA_BROKER_ID: 1
             KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
             KAFKA_LISTENERS: SASL_PLAINTEXT://:9092
-            KAFKA_ADVERTISED_LISTENERS: SASL_PLAINTEXT://kafka:9092
+            KAFKA_ADVERTISED_LISTENERS: SASL_PLAINTEXT://broker:9092
             KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
             CONFLUENT_SUPPORT_CUSTOMER_ID: 'anonymous'
             KAFKA_LOG4J_LOGGERS: "kafka.authorizer.logger=INFO"
             # Confluent Metrics Reporter for Control Center Cluster Monitoring
             KAFKA_METRIC_REPORTERS: io.confluent.metrics.reporter.ConfluentMetricsReporter
-            CONFLUENT_METRICS_REPORTER_BOOTSTRAP_SERVERS: kafka:9092
+            CONFLUENT_METRICS_REPORTER_BOOTSTRAP_SERVERS: broker:9092
             CONFLUENT_METRICS_REPORTER_ZOOKEEPER_CONNECT: zookeeper:2181
             CONFLUENT_METRICS_REPORTER_TOPIC_REPLICAS: 1
             CONFLUENT_METRICS_REPORTER_SASL_MECHANISM: SCRAM-SHA-256 
             CONFLUENT_METRICS_REPORTER_SECURITY_PROTOCOL: SASL_PLAINTEXT
             CONFLUENT_METRICS_REPORTER_SASL_JAAS_CONFIG: "org.apache.kafka.common.security.scram.ScramLoginModule required \
-                username=\"kafka\" \
-                password=\"kafka\";"
+                username=\"broker\" \
+                password=\"broker\";"
             CONFLUENT_METRICS_ENABLE: 'true'
             KAFKA_SASL_ENABLED_MECHANISMS: SCRAM-SHA-256
             KAFKA_SASL_MECHANISM_INTER_BROKER_PROTOCOL: SCRAM-SHA-256
@@ -81,7 +81,7 @@ services:
             #KAFKA_ZOOKEEPER_SET_ACL: "true"
             KAFKA_ALLOW_EVERYONE_IF_NO_ACL_FOUND: "false"
             # Set Kafka broker user as super user (alternatively, set ACLs before starting brokers)
-            KAFKA_SUPER_USERS: User:kafka;User:schemaregistry;User:controlcenter
+            KAFKA_SUPER_USERS: User:broker;User:schemaregistry;User:controlcenter
             KAFKA_OPTS: "-Djava.security.auth.login.config=/etc/kafka/kafka_server_jaas.conf"
             
             # LDAP provider URL
@@ -118,7 +118,7 @@ services:
         container_name: connect
         depends_on:
             - zookeeper
-            - kafka
+            - broker
             - schema-registry
         # Required to wait for the keytab to get generated
         restart: on-failure
@@ -126,7 +126,7 @@ services:
         ports:
             - "8083:8083"
         environment:
-            CONNECT_BOOTSTRAP_SERVERS: kafka:9092
+            CONNECT_BOOTSTRAP_SERVERS: broker:9092
             CONNECT_REST_ADVERTISED_HOST_NAME: connect
             CONNECT_GROUP_ID: "connect"
             CONNECT_PRODUCER_CLIENT_ID: "connect-worker-producer"
@@ -149,35 +149,35 @@ services:
             CONNECT_PRODUCER_INTERCEPTOR_CLASSES: "io.confluent.monitoring.clients.interceptor.MonitoringProducerInterceptor"
             CONNECT_PRODUCER_CONFLUENT_MONITORING_INTERCEPTOR_SECURITY_PROTOCOL: SASL_PLAINTEXT
             CONNECT_PRODUCER_CONFLUENT_MONITORING_INTERCEPTOR_SASL_JAAS_CONFIG: "org.apache.kafka.common.security.scram.ScramLoginModule required \
-                username=\"kafka\" \
-                password=\"kafka\";"
+                username=\"broker\" \
+                password=\"broker\";"
             CONNECT_PRODUCER_CONFLUENT_MONITORING_INTERCEPTOR_SASL_MECHANISM: SCRAM-SHA-256
             # consumer
             CONNECT_CONSUMER_INTERCEPTOR_CLASSES: "io.confluent.monitoring.clients.interceptor.MonitoringConsumerInterceptor"
             CONNECT_CONSUMER_CONFLUENT_MONITORING_INTERCEPTOR_SECURITY_PROTOCOL: SASL_PLAINTEXT
             CONNECT_CONSUMER_CONFLUENT_MONITORING_INTERCEPTOR_SASL_JAAS_CONFIG: "org.apache.kafka.common.security.scram.ScramLoginModule required \
-                username=\"kafka\" \
-                password=\"kafka\";"
+                username=\"broker\" \
+                password=\"broker\";"
             CONNECT_CONSUMER_CONFLUENT_MONITORING_INTERCEPTOR_SASL_MECHANISM: SCRAM-SHA-256
             # Configure the Connect workers to use SASL/SCRAM-SHA-256.
             CONNECT_SASL_MECHANISM: SCRAM-SHA-256
             CONNECT_SECURITY_PROTOCOL: SASL_PLAINTEXT
             # JAAS
             CONNECT_SASL_JAAS_CONFIG: "org.apache.kafka.common.security.scram.ScramLoginModule required \
-                username=\"kafka\" \
-                password=\"kafka\";"
+                username=\"broker\" \
+                password=\"broker\";"
             # producer
             CONNECT_PRODUCER_SASL_MECHANISM: SCRAM-SHA-256
             CONNECT_PRODUCER_SECURITY_PROTOCOL: SASL_PLAINTEXT
             CONNECT_PRODUCER_SASL_JAAS_CONFIG: "org.apache.kafka.common.security.scram.ScramLoginModule required \
-                username=\"kafka\" \
-                password=\"kafka\";"
+                username=\"broker\" \
+                password=\"broker\";"
             # consumer
             CONNECT_CONSUMER_SASL_MECHANISM: SCRAM-SHA-256
             CONNECT_CONSUMER_SECURITY_PROTOCOL: SASL_PLAINTEXT
             CONNECT_CONSUMER_SASL_JAAS_CONFIG: "org.apache.kafka.common.security.scram.ScramLoginModule required \
-                username=\"kafka\" \
-                password=\"kafka\";"
+                username=\"broker\" \
+                password=\"broker\";"
 
     schema-registry:
         image: confluentinc/cp-schema-registry:5.3.1
@@ -187,18 +187,18 @@ services:
         restart: on-failure
         depends_on:
             - zookeeper
-            - kafka
+            - broker
         ports:
             - '8081:8081'
         environment:
             SCHEMA_REGISTRY_HOST_NAME: schema-registry
             SCHEMA_REGISTRY_LISTENERS: http://0.0.0.0:8081
-            SCHEMA_REGISTRY_KAFKASTORE_BOOTSTRAP_SERVERS: kafka:9092
+            SCHEMA_REGISTRY_KAFKASTORE_BOOTSTRAP_SERVERS: broker:9092
             SCHEMA_REGISTRY_KAFKASTORE_SECURITY_PROTOCOL: SASL_PLAINTEXT
             SCHEMA_REGISTRY_KAFKASTORE_SASL_MECHANISM: SCRAM-SHA-256
             SCHEMA_REGISTRY_KAFKASTORE_SASL_JAAS_CONFIG: "org.apache.kafka.common.security.scram.ScramLoginModule required \
-                username=\"kafka\" \
-                password=\"kafka\";"
+                username=\"broker\" \
+                password=\"broker\";"
 
     control-center:
         image: confluentinc/cp-enterprise-control-center:5.3.1
@@ -207,12 +207,12 @@ services:
         restart: on-failure
         depends_on:
             - zookeeper
-            - kafka
+            - broker
             - connect
         ports:
             - "9021:9021"
         environment:
-            CONTROL_CENTER_BOOTSTRAP_SERVERS: "kafka:9092"
+            CONTROL_CENTER_BOOTSTRAP_SERVERS: "broker:9092"
             CONTROL_CENTER_ZOOKEEPER_CONNECT: "zookeeper:2181"
             CONTROL_CENTER_REPLICATION_FACTOR: 1
             CONTROL_CENTER_MONITORING_INTERCEPTOR_TOPIC_REPLICATION: 1
@@ -230,6 +230,6 @@ services:
             CONTROL_CENTER_STREAMS_CONSUMER_REQUEST_TIMEOUT_MS: "960032"
             CONTROL_CENTER_STREAMS_SECURITY_PROTOCOL: SASL_PLAINTEXT
             CONTROL_CENTER_STREAMS_SASL_JAAS_CONFIG: "org.apache.kafka.common.security.scram.ScramLoginModule required \
-                username=\"kafka\" \
-                password=\"kafka\";"
+                username=\"broker\" \
+                password=\"broker\";"
             CONTROL_CENTER_STREAMS_SASL_MECHANISM: SCRAM-SHA-256

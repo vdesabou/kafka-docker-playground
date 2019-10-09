@@ -19,10 +19,10 @@ set +e
 gsutil rm -r gs://$BUCKET_NAME/topics/gcs_topic
 set -e
 
-docker container exec kafka kafka-acls --authorizer-properties zookeeper.connect=zookeeper:2181 --add --topic=gcs_topic-ldap-authorizer-sasl-plain --producer --allow-principal="Group:Kafka Developers"
+docker container exec broker kafka-acls --authorizer-properties zookeeper.connect=zookeeper:2181 --add --topic=gcs_topic-ldap-authorizer-sasl-plain --producer --allow-principal="Group:Kafka Developers"
 
 echo "Sending messages to topic gcs_topic-ldap-authorizer-sasl-plain"
-seq -f "{\"f1\": \"This is a message sent with LDAP Authorizer SASL/PLAIN authentication %g\"}" 10 | docker container exec -i connect kafka-avro-console-producer --broker-list kafka:9092 --topic gcs_topic-ldap-authorizer-sasl-plain --property value.schema='{"type":"record","name":"myrecord","fields":[{"name":"f1","type":"string"}]}' --property schema.registry.url=http://schema-registry:8081 --producer.config /service/kafka/users/alice.properties
+seq -f "{\"f1\": \"This is a message sent with LDAP Authorizer SASL/PLAIN authentication %g\"}" 10 | docker container exec -i connect kafka-avro-console-producer --broker-list broker:9092 --topic gcs_topic-ldap-authorizer-sasl-plain --property value.schema='{"type":"record","name":"myrecord","fields":[{"name":"f1","type":"string"}]}' --property schema.registry.url=http://schema-registry:8081 --producer.config /service/kafka/users/alice.properties
 
 echo "Creating GCS Sink connector"
 docker container exec -e BUCKET_NAME="$BUCKET_NAME" connect \
@@ -42,10 +42,10 @@ docker container exec -e BUCKET_NAME="$BUCKET_NAME" connect \
                     "format.class": "io.confluent.connect.gcs.format.avro.AvroFormat",
                     "partitioner.class": "io.confluent.connect.storage.partitioner.DefaultPartitioner",
                     "schema.compatibility": "NONE",
-                    "confluent.topic.bootstrap.servers": "kafka:9092",
+                    "confluent.topic.bootstrap.servers": "broker:9092",
                     "confluent.topic.replication.factor": "1",
                     "confluent.topic.sasl.mechanism": "PLAIN",
-                    "confluent.topic.sasl.jaas.config" : "org.apache.kafka.common.security.plain.PlainLoginModule required username=\"kafka\" password=\"kafka\";",
+                    "confluent.topic.sasl.jaas.config" : "org.apache.kafka.common.security.plain.PlainLoginModule required username=\"broker\" password=\"broker\";",
                     "confluent.topic.security.protocol" : "SASL_PLAINTEXT"
           }}' \
      http://localhost:8083/connectors | jq .
