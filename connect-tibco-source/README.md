@@ -82,6 +82,14 @@ Verify we have received the data in `from-tibco-messages` topic:
 $ docker container exec connect kafka-console-consumer -bootstrap-server broker:9092 --topic from-tibco-messages --from-beginning --max-messages 2
 ```
 
+Results:
+
+```
+Struct{messageID=ID:E4EMS-SERVER.15D9DAA1E3:1,messageType=text,timestamp=1570613846774,deliveryMode=2,destination=Struct{destinationType=queue,name=connector-quickstart},redelivered=false,expiration=0,priority=4,properties={JMSXDeliveryCount=Struct{propertyType=integer,integer=1}},text=m1}
+Struct{messageID=ID:E4EMS-SERVER.15D9DAA1E3:2,messageType=text,timestamp=1570613846775,deliveryMode=2,destination=Struct{destinationType=queue,name=connector-quickstart},redelivered=false,expiration=0,priority=4,properties={JMSXDeliveryCount=Struct{propertyType=integer,integer=1}},text=m2}
+Processed a total of 2 messages
+```
+
 N.B: Control Center is reachable at [http://127.0.0.1:9021](http://127.0.0.1:9021])
 
 ## Credits
