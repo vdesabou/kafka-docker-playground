@@ -66,7 +66,7 @@ services:
             CONFLUENT_METRICS_REPORTER_BOOTSTRAP_SERVERS: broker:9092
             CONFLUENT_METRICS_REPORTER_ZOOKEEPER_CONNECT: zookeeper:2181
             CONFLUENT_METRICS_REPORTER_TOPIC_REPLICAS: 1
-            CONFLUENT_METRICS_REPORTER_SASL_MECHANISM: PLAIN 
+            CONFLUENT_METRICS_REPORTER_SASL_MECHANISM: PLAIN
             CONFLUENT_METRICS_REPORTER_SECURITY_PROTOCOL: SASL_PLAINTEXT
             CONFLUENT_METRICS_REPORTER_SASL_JAAS_CONFIG: "org.apache.kafka.common.security.plain.PlainLoginModule required \
                 username=\"broker\" \
@@ -78,12 +78,12 @@ services:
 
             # Configure authorizer
             KAFKA_AUTHORIZER_CLASS_NAME: io.confluent.kafka.security.ldap.authorizer.LdapAuthorizer
-            #KAFKA_ZOOKEEPER_SET_ACL: "true"
+            KAFKA_ZOOKEEPER_SET_ACL: "true"
             KAFKA_ALLOW_EVERYONE_IF_NO_ACL_FOUND: "false"
             # Set Kafka broker user as super user (alternatively, set ACLs before starting brokers)
             KAFKA_SUPER_USERS: User:broker;User:schemaregistry;User:controlcenter
             KAFKA_OPTS: "-Djava.security.auth.login.config=/etc/kafka/kafka_server_jaas.conf"
-            
+
             # LDAP provider URL
             KAFKA_LDAP_JAVA_NAMING_PROVIDER_URL: ldap://ldap:389/DC=CONFLUENT,DC=IO
             # Refresh interval for LDAP cache. If set to zero, persistent search is used.
@@ -103,8 +103,8 @@ services:
             KAFKA_LDAP_GROUP_SEARCH_SCOPE: 2
             # Name of the attribute from which group name used in ACLs is obtained
             KAFKA_LDAP_GROUP_NAME_ATTRIBUTE: cn
-            # Regex pattern to obtain group name used in ACLs from the attribute   
-            KAFKA_LDAP_GROUP_NAME_ATTRIBUTE_PATTERN: 
+            # Regex pattern to obtain group name used in ACLs from the attribute
+            KAFKA_LDAP_GROUP_NAME_ATTRIBUTE_PATTERN:
             # Name of the attribute from which group members (user principals) are obtained
             KAFKA_LDAP_GROUP_MEMBER_ATTRIBUTE: memberUid
             # Regex pattern to obtain user principal from group member attribute
