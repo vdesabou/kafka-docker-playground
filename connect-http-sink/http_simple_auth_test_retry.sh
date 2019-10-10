@@ -7,7 +7,9 @@ ${DIR}/../plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
 
 
 echo "Sending messages to topic http-messages"
-seq 10 | docker container exec -i broker kafka-console-producer --broker-list broker:9092 --topic http-messages
+docker container exec -i broker kafka-console-producer --broker-list broker:9092 --topic http-messages << EOF
+Message 1
+EOF
 
 echo "-------------------------------------"
 echo "Running Simple (No) Authentication Example"
@@ -37,18 +39,22 @@ docker container exec connect \
      http://localhost:8083/connectors | jq .
 
 
+sleep 5
+docker container exec -i broker kafka-console-producer --broker-list broker:9092 --topic http-messages << EOF
+Message 2
+EOF
+
 # we get:
 
-# 2019-10-10 14:28:04.732  INFO 1 --- [nio-8080-exec-2] i.c.c.http.controller.MessageController  : MESSAGE RECEIVED: 1
-# 2019-10-10 14:28:20.139  INFO 1 --- [nio-8080-exec-4] i.c.c.http.controller.MessageController  : MESSAGE RECEIVED: 1
-# 2019-10-10 14:28:35.154  INFO 1 --- [nio-8080-exec-7] i.c.c.http.controller.MessageController  : MESSAGE RECEIVED: 1
-# 2019-10-10 14:28:50.163  INFO 1 --- [nio-8080-exec-8] i.c.c.http.controller.MessageController  : MESSAGE RECEIVED: 1
+# 2019-10-10 15:02:17.183  INFO 1 --- [nio-8080-exec-2] i.c.c.http.controller.MessageController  : MESSAGE RECEIVED: Message 1
+# 2019-10-10 15:02:32.486  INFO 1 --- [nio-8080-exec-3] i.c.c.http.controller.MessageController  : MESSAGE RECEIVED: Message 1
+# 2019-10-10 15:02:47.505  INFO 1 --- [nio-8080-exec-4] i.c.c.http.controller.MessageController  : MESSAGE RECEIVED: Message 1
+# 2019-10-10 15:03:02.534  INFO 1 --- [nio-8080-exec-5] i.c.c.http.controller.MessageController  : MESSAGE RECEIVED: Message 1
 
 
 
-
-# [2019-10-10 14:28:05,130] WARN Write of 10 records failed, remainingRetries=3 (io.confluent.connect.http.HttpSinkTask)
-# java.io.IOException: HTTP Response code: 500, , Submitted payload: 1, url:http://http-service-no-auth-500:8080/api/messages : {"id":1,"message":"1"}
+# [2019-10-10 15:02:17,476] WARN Write of 1 records failed, remainingRetries=3 (io.confluent.connect.http.HttpSinkTask)
+# java.io.IOException: HTTP Response code: 500, , Submitted payload: Message 1, url:http://http-service-no-auth-500:8080/api/messages : {"id":1,"message":"Message 1"}
 #         at io.confluent.connect.http.writer.HttpWriterImpl.sendBatch(HttpWriterImpl.java:170)
 #         at io.confluent.connect.http.writer.HttpWriterImpl.write(HttpWriterImpl.java:117)
 #         at io.confluent.connect.http.HttpSinkTask.put(HttpSinkTask.java:62)
@@ -63,8 +69,8 @@ docker container exec connect \
 #         at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1149)
 #         at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:624)
 #         at java.lang.Thread.run(Thread.java:748)
-# [2019-10-10 14:28:05,134] ERROR WorkerSinkTask{id=HttpSinkNoAuthTestRetry-0} RetriableException from SinkTask: (org.apache.kafka.connect.runtime.WorkerSinkTask)
-# org.apache.kafka.connect.errors.RetriableException: java.io.IOException: HTTP Response code: 500, , Submitted payload: 1, url:http://http-service-no-auth-500:8080/api/messages : {"id":1,"message":"1"}
+# [2019-10-10 15:02:17,478] ERROR WorkerSinkTask{id=HttpSinkNoAuthTestRetry-0} RetriableException from SinkTask: (org.apache.kafka.connect.runtime.WorkerSinkTask)
+# org.apache.kafka.connect.errors.RetriableException: java.io.IOException: HTTP Response code: 500, , Submitted payload: Message 1, url:http://http-service-no-auth-500:8080/api/messages : {"id":1,"message":"Message 1"}
 #         at io.confluent.connect.http.HttpSinkTask.put(HttpSinkTask.java:79)
 #         at org.apache.kafka.connect.runtime.WorkerSinkTask.deliverMessages(WorkerSinkTask.java:538)
 #         at org.apache.kafka.connect.runtime.WorkerSinkTask.poll(WorkerSinkTask.java:321)
@@ -77,13 +83,13 @@ docker container exec connect \
 #         at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1149)
 #         at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:624)
 #         at java.lang.Thread.run(Thread.java:748)
-# Caused by: java.io.IOException: HTTP Response code: 500, , Submitted payload: 1, url:http://http-service-no-auth-500:8080/api/messages : {"id":1,"message":"1"}
+# Caused by: java.io.IOException: HTTP Response code: 500, , Submitted payload: Message 1, url:http://http-service-no-auth-500:8080/api/messages : {"id":1,"message":"Message 1"}
 #         at io.confluent.connect.http.writer.HttpWriterImpl.sendBatch(HttpWriterImpl.java:170)
 #         at io.confluent.connect.http.writer.HttpWriterImpl.write(HttpWriterImpl.java:117)
 #         at io.confluent.connect.http.HttpSinkTask.put(HttpSinkTask.java:62)
 #         ... 11 more
-# [2019-10-10 14:28:20,146] WARN Write of 10 records failed, remainingRetries=2 (io.confluent.connect.http.HttpSinkTask)
-# java.io.IOException: HTTP Response code: 500, , Submitted payload: 1, url:http://http-service-no-auth-500:8080/api/messages : {"id":2,"message":"1"}
+# [2019-10-10 15:02:32,495] WARN Write of 1 records failed, remainingRetries=2 (io.confluent.connect.http.HttpSinkTask)
+# java.io.IOException: HTTP Response code: 500, , Submitted payload: Message 1, url:http://http-service-no-auth-500:8080/api/messages : {"id":2,"message":"Message 1"}
 #         at io.confluent.connect.http.writer.HttpWriterImpl.sendBatch(HttpWriterImpl.java:170)
 #         at io.confluent.connect.http.writer.HttpWriterImpl.write(HttpWriterImpl.java:117)
 #         at io.confluent.connect.http.HttpSinkTask.put(HttpSinkTask.java:62)
@@ -98,8 +104,8 @@ docker container exec connect \
 #         at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1149)
 #         at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:624)
 #         at java.lang.Thread.run(Thread.java:748)
-# [2019-10-10 14:28:20,146] ERROR WorkerSinkTask{id=HttpSinkNoAuthTestRetry-0} RetriableException from SinkTask: (org.apache.kafka.connect.runtime.WorkerSinkTask)
-# org.apache.kafka.connect.errors.RetriableException: java.io.IOException: HTTP Response code: 500, , Submitted payload: 1, url:http://http-service-no-auth-500:8080/api/messages : {"id":2,"message":"1"}
+# [2019-10-10 15:02:32,496] ERROR WorkerSinkTask{id=HttpSinkNoAuthTestRetry-0} RetriableException from SinkTask: (org.apache.kafka.connect.runtime.WorkerSinkTask)
+# org.apache.kafka.connect.errors.RetriableException: java.io.IOException: HTTP Response code: 500, , Submitted payload: Message 1, url:http://http-service-no-auth-500:8080/api/messages : {"id":2,"message":"Message 1"}
 #         at io.confluent.connect.http.HttpSinkTask.put(HttpSinkTask.java:79)
 #         at org.apache.kafka.connect.runtime.WorkerSinkTask.deliverMessages(WorkerSinkTask.java:538)
 #         at org.apache.kafka.connect.runtime.WorkerSinkTask.poll(WorkerSinkTask.java:321)
@@ -112,13 +118,13 @@ docker container exec connect \
 #         at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1149)
 #         at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:624)
 #         at java.lang.Thread.run(Thread.java:748)
-# Caused by: java.io.IOException: HTTP Response code: 500, , Submitted payload: 1, url:http://http-service-no-auth-500:8080/api/messages : {"id":2,"message":"1"}
+# Caused by: java.io.IOException: HTTP Response code: 500, , Submitted payload: Message 1, url:http://http-service-no-auth-500:8080/api/messages : {"id":2,"message":"Message 1"}
 #         at io.confluent.connect.http.writer.HttpWriterImpl.sendBatch(HttpWriterImpl.java:170)
 #         at io.confluent.connect.http.writer.HttpWriterImpl.write(HttpWriterImpl.java:117)
 #         at io.confluent.connect.http.HttpSinkTask.put(HttpSinkTask.java:62)
 #         ... 11 more
-# [2019-10-10 14:28:35,159] WARN Write of 10 records failed, remainingRetries=1 (io.confluent.connect.http.HttpSinkTask)
-# java.io.IOException: HTTP Response code: 500, , Submitted payload: 1, url:http://http-service-no-auth-500:8080/api/messages : {"id":3,"message":"1"}
+# [2019-10-10 15:02:47,514] WARN Write of 1 records failed, remainingRetries=1 (io.confluent.connect.http.HttpSinkTask)
+# java.io.IOException: HTTP Response code: 500, , Submitted payload: Message 1, url:http://http-service-no-auth-500:8080/api/messages : {"id":3,"message":"Message 1"}
 #         at io.confluent.connect.http.writer.HttpWriterImpl.sendBatch(HttpWriterImpl.java:170)
 #         at io.confluent.connect.http.writer.HttpWriterImpl.write(HttpWriterImpl.java:117)
 #         at io.confluent.connect.http.HttpSinkTask.put(HttpSinkTask.java:62)
@@ -133,8 +139,8 @@ docker container exec connect \
 #         at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1149)
 #         at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:624)
 #         at java.lang.Thread.run(Thread.java:748)
-# [2019-10-10 14:28:35,159] ERROR WorkerSinkTask{id=HttpSinkNoAuthTestRetry-0} RetriableException from SinkTask: (org.apache.kafka.connect.runtime.WorkerSinkTask)
-# org.apache.kafka.connect.errors.RetriableException: java.io.IOException: HTTP Response code: 500, , Submitted payload: 1, url:http://http-service-no-auth-500:8080/api/messages : {"id":3,"message":"1"}
+# [2019-10-10 15:02:47,514] ERROR WorkerSinkTask{id=HttpSinkNoAuthTestRetry-0} RetriableException from SinkTask: (org.apache.kafka.connect.runtime.WorkerSinkTask)
+# org.apache.kafka.connect.errors.RetriableException: java.io.IOException: HTTP Response code: 500, , Submitted payload: Message 1, url:http://http-service-no-auth-500:8080/api/messages : {"id":3,"message":"Message 1"}
 #         at io.confluent.connect.http.HttpSinkTask.put(HttpSinkTask.java:79)
 #         at org.apache.kafka.connect.runtime.WorkerSinkTask.deliverMessages(WorkerSinkTask.java:538)
 #         at org.apache.kafka.connect.runtime.WorkerSinkTask.poll(WorkerSinkTask.java:321)
@@ -147,13 +153,13 @@ docker container exec connect \
 #         at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1149)
 #         at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:624)
 #         at java.lang.Thread.run(Thread.java:748)
-# Caused by: java.io.IOException: HTTP Response code: 500, , Submitted payload: 1, url:http://http-service-no-auth-500:8080/api/messages : {"id":3,"message":"1"}
+# Caused by: java.io.IOException: HTTP Response code: 500, , Submitted payload: Message 1, url:http://http-service-no-auth-500:8080/api/messages : {"id":3,"message":"Message 1"}
 #         at io.confluent.connect.http.writer.HttpWriterImpl.sendBatch(HttpWriterImpl.java:170)
 #         at io.confluent.connect.http.writer.HttpWriterImpl.write(HttpWriterImpl.java:117)
 #         at io.confluent.connect.http.HttpSinkTask.put(HttpSinkTask.java:62)
 #         ... 11 more
-# [2019-10-10 14:28:50,170] WARN Write of 10 records failed, remainingRetries=0 (io.confluent.connect.http.HttpSinkTask)
-# java.io.IOException: HTTP Response code: 500, , Submitted payload: 1, url:http://http-service-no-auth-500:8080/api/messages : {"id":4,"message":"1"}
+# [2019-10-10 15:03:02,557] WARN Write of 1 records failed, remainingRetries=0 (io.confluent.connect.http.HttpSinkTask)
+# java.io.IOException: HTTP Response code: 500, , Submitted payload: Message 1, url:http://http-service-no-auth-500:8080/api/messages : {"id":4,"message":"Message 1"}
 #         at io.confluent.connect.http.writer.HttpWriterImpl.sendBatch(HttpWriterImpl.java:170)
 #         at io.confluent.connect.http.writer.HttpWriterImpl.write(HttpWriterImpl.java:117)
 #         at io.confluent.connect.http.HttpSinkTask.put(HttpSinkTask.java:62)
@@ -168,8 +174,8 @@ docker container exec connect \
 #         at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1149)
 #         at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:624)
 #         at java.lang.Thread.run(Thread.java:748)
-# [2019-10-10 14:28:50,170] ERROR WorkerSinkTask{id=HttpSinkNoAuthTestRetry-0} Task threw an uncaught and unrecoverable exception. Task is being killed and will not recover until manually restarted. (org.apache.kafka.connect.runtime.WorkerSinkTask)
-# org.apache.kafka.connect.errors.ConnectException: java.io.IOException: HTTP Response code: 500, , Submitted payload: 1, url:http://http-service-no-auth-500:8080/api/messages : {"id":4,"message":"1"}
+# [2019-10-10 15:03:02,558] ERROR WorkerSinkTask{id=HttpSinkNoAuthTestRetry-0} Task threw an uncaught and unrecoverable exception. Task is being killed and will not recover until manually restarted. (org.apache.kafka.connect.runtime.WorkerSinkTask)
+# org.apache.kafka.connect.errors.ConnectException: java.io.IOException: HTTP Response code: 500, , Submitted payload: Message 1, url:http://http-service-no-auth-500:8080/api/messages : {"id":4,"message":"Message 1"}
 #         at io.confluent.connect.http.HttpSinkTask.put(HttpSinkTask.java:75)
 #         at org.apache.kafka.connect.runtime.WorkerSinkTask.deliverMessages(WorkerSinkTask.java:538)
 #         at org.apache.kafka.connect.runtime.WorkerSinkTask.poll(WorkerSinkTask.java:321)
@@ -182,12 +188,12 @@ docker container exec connect \
 #         at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1149)
 #         at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:624)
 #         at java.lang.Thread.run(Thread.java:748)
-# Caused by: java.io.IOException: HTTP Response code: 500, , Submitted payload: 1, url:http://http-service-no-auth-500:8080/api/messages : {"id":4,"message":"1"}
+# Caused by: java.io.IOException: HTTP Response code: 500, , Submitted payload: Message 1, url:http://http-service-no-auth-500:8080/api/messages : {"id":4,"message":"Message 1"}
 #         at io.confluent.connect.http.writer.HttpWriterImpl.sendBatch(HttpWriterImpl.java:170)
 #         at io.confluent.connect.http.writer.HttpWriterImpl.write(HttpWriterImpl.java:117)
 #         at io.confluent.connect.http.HttpSinkTask.put(HttpSinkTask.java:62)
 #         ... 11 more
-# [2019-10-10 14:28:50,171] ERROR WorkerSinkTask{id=HttpSinkNoAuthTestRetry-0} Task threw an uncaught and unrecoverable exception (org.apache.kafka.connect.runtime.WorkerTask)
+# [2019-10-10 15:03:02,559] ERROR WorkerSinkTask{id=HttpSinkNoAuthTestRetry-0} Task threw an uncaught and unrecoverable exception (org.apache.kafka.connect.runtime.WorkerTask)
 # org.apache.kafka.connect.errors.ConnectException: Exiting WorkerSinkTask due to unrecoverable exception.
 #         at org.apache.kafka.connect.runtime.WorkerSinkTask.deliverMessages(WorkerSinkTask.java:560)
 #         at org.apache.kafka.connect.runtime.WorkerSinkTask.poll(WorkerSinkTask.java:321)
@@ -200,19 +206,16 @@ docker container exec connect \
 #         at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1149)
 #         at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:624)
 #         at java.lang.Thread.run(Thread.java:748)
-# Caused by: org.apache.kafka.connect.errors.ConnectException: java.io.IOException: HTTP Response code: 500, , Submitted payload: 1, url:http://http-service-no-auth-500:8080/api/messages : {"id":4,"message":"1"}
+# Caused by: org.apache.kafka.connect.errors.ConnectException: java.io.IOException: HTTP Response code: 500, , Submitted payload: Message 1, url:http://http-service-no-auth-500:8080/api/messages : {"id":4,"message":"Message 1"}
 #         at io.confluent.connect.http.HttpSinkTask.put(HttpSinkTask.java:75)
 #         at org.apache.kafka.connect.runtime.WorkerSinkTask.deliverMessages(WorkerSinkTask.java:538)
 #         ... 10 more
-# Caused by: java.io.IOException: HTTP Response code: 500, , Submitted payload: 1, url:http://http-service-no-auth-500:8080/api/messages : {"id":4,"message":"1"}
+# Caused by: java.io.IOException: HTTP Response code: 500, , Submitted payload: Message 1, url:http://http-service-no-auth-500:8080/api/messages : {"id":4,"message":"Message 1"}
 #         at io.confluent.connect.http.writer.HttpWriterImpl.sendBatch(HttpWriterImpl.java:170)
 #         at io.confluent.connect.http.writer.HttpWriterImpl.write(HttpWriterImpl.java:117)
 #         at io.confluent.connect.http.HttpSinkTask.put(HttpSinkTask.java:62)
 #         ... 11 more
-# [2019-10-10 14:28:50,172] ERROR WorkerSinkTask{id=HttpSinkNoAuthTestRetry-0} Task is being killed and will not recover until manually restarted (org.apache.kafka.connect.runtime.WorkerTask)
-# [2019-10-10 14:28:50,172] INFO Stopping task (io.confluent.connect.http.HttpSinkTask)
-
-
+# [2019-10-10 15:03:02,559] ERROR WorkerSinkTask{id=HttpSinkNoAuthTestRetry-0} Task is being killed and will not recover until manually restarted (org.apache.kafka.connect.runtime.WorkerTask)
 
 
 
