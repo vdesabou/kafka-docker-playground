@@ -2,7 +2,7 @@
 set -e
 
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
-BUCKET_NAME=${1:-kafka-docker-playground} 
+BUCKET_NAME=${1:-kafka-docker-playground}
 
 ${DIR}/../plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
 
@@ -48,7 +48,7 @@ docker container exec -e BUCKET_NAME="$BUCKET_NAME" connect \
      curl -X POST \
      -H "Content-Type: application/json" \
      --data '{
-               "name": "s3-source3",
+               "name": "s3-source",
                "config": {
                     "tasks.max": "1",
                     "connector.class": "io.confluent.connect.s3.source.S3SourceConnector",

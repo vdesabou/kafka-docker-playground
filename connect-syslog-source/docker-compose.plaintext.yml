@@ -1,0 +1,7 @@
+---
+version: '3.5'
+services:
+
+  connect:
+    ports:
+      - '5454:5454'
