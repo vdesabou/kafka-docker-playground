@@ -44,7 +44,9 @@ docker container exec -i broker kafka-console-producer --broker-list broker:9092
 Message 2
 EOF
 
-# we get:
+#################################################
+# we get with tasks.max=1:
+#################################################
 
 # 2019-10-10 15:02:17.183  INFO 1 --- [nio-8080-exec-2] i.c.c.http.controller.MessageController  : MESSAGE RECEIVED: Message 1
 # 2019-10-10 15:02:32.486  INFO 1 --- [nio-8080-exec-3] i.c.c.http.controller.MessageController  : MESSAGE RECEIVED: Message 1
@@ -237,5 +239,69 @@ EOF
 #   {
 #     "id": 4,
 #     "message": "1"
+#   }
+# ]
+
+
+#################################################
+# With tasks.max=2
+#################################################
+
+
+# we get:
+
+# 2019-10-10 15:25:25.237  INFO 1 --- [nio-8080-exec-1] i.c.c.http.controller.MessageController  : MESSAGE RECEIVED: Message 1
+# 2019-10-10 15:25:40.969  INFO 1 --- [nio-8080-exec-2] i.c.c.http.controller.MessageController  : MESSAGE RECEIVED: Message 1
+# 2019-10-10 15:25:55.992  INFO 1 --- [nio-8080-exec-3] i.c.c.http.controller.MessageController  : MESSAGE RECEIVED: Message 1
+# 2019-10-10 15:26:11.011  INFO 1 --- [nio-8080-exec-4] i.c.c.http.controller.MessageController  : MESSAGE RECEIVED: Message 1
+# 2019-10-10 15:26:11.129  INFO 1 --- [nio-8080-exec-5] i.c.c.http.controller.MessageController  : MESSAGE RECEIVED: Message 1
+# 2019-10-10 15:26:13.355  INFO 1 --- [nio-8080-exec-6] i.c.c.http.controller.MessageController  : MESSAGE RECEIVED: Message 1
+# 2019-10-10 15:26:28.379  INFO 1 --- [nio-8080-exec-7] i.c.c.http.controller.MessageController  : MESSAGE RECEIVED: Message 1
+
+
+# # task 1
+# [2019-10-10 15:25:25,946] WARN Write of 2 records failed, remainingRetries=3 (io.confluent.connect.http.HttpSinkTask)
+# [2019-10-10 15:25:40,980] WARN Write of 2 records failed, remainingRetries=2 (io.confluent.connect.http.HttpSinkTask)
+# [2019-10-10 15:25:55,998] WARN Write of 2 records failed, remainingRetries=1 (io.confluent.connect.http.HttpSinkTask)
+# [2019-10-10 15:26:11,017] WARN Write of 2 records failed, remainingRetries=0 (io.confluent.connect.http.HttpSinkTask)
+
+# # task 2
+# [2019-10-10 15:26:11,134] WARN Write of 2 records failed, remainingRetries=3 (io.confluent.connect.http.HttpSinkTask)
+# [2019-10-10 15:26:13,367] WARN Write of 2 records failed, remainingRetries=2 (io.confluent.connect.http.HttpSinkTask)
+# [2019-10-10 15:26:28,387] WARN Write of 2 records failed, remainingRetries=1 (io.confluent.connect.http.HttpSinkTask)
+# [2019-10-10 15:26:43,413] WARN Write of 2 records failed, remainingRetries=0 (io.confluent.connect.http.HttpSinkTask)
+
+# [
+#   {
+#     "id": 1,
+#     "message": "Message 1"
+#   },
+#   {
+#     "id": 2,
+#     "message": "Message 1"
+#   },
+#   {
+#     "id": 3,
+#     "message": "Message 1"
+#   },
+#   {
+#     "id": 4,
+#     "message": "Message 1"
+#   },
+#   {
+#     "id": 5,
+#     "message": "Message 1"
+#   },
+#   {
+#     "id": 6,
+#     "message": "Message 1"
+#   },
+#   {
+#     "id": 7,
+#     "message": "Message 1"
+#   },
+#   {
+#     "id": 8,
+#     "message": "Message 1"
 #   }
 # ]
