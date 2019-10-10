@@ -8,7 +8,7 @@ services:
 
 
   http-service-no-auth:
-    image: vdesabou/http-sink-demo # created from https://github.com/vdesabou/kafka-connect-http-demo with mvn clean install -DskipTests && docker build -t vdesabou/http-sink-demo:latest . && docker push vdesabou/http-sink-demo-error:latest
+    image: vdesabou/http-sink-demo # created from https://github.com/vdesabou/kafka-connect-http-demo with mvn clean install -DskipTests && docker build -t vdesabou/http-sink-demo:latest . && docker push vdesabou/http-sink-demo:latest
     hostname: http-service-no-auth
     container_name: http-service-no-auth
     ports:
@@ -25,6 +25,17 @@ services:
     environment:
       SPRING_PROFILES_ACTIVE: 'basic-auth'
 
+  # for testing error 500
+  http-service-no-auth-500:
+    image: vdesabou/http-service-no-auth-500
+    hostname: http-service-no-auth-500
+    container_name: http-service-no-auth-500
+    ports:
+      - "9082:8080"
+    environment:
+      SPRING_PROFILES_ACTIVE: 'simple-auth'
+
+  # for testing error 204
   http-service-basic-auth-204:
     image: vdesabou/http-sink-demo-error-204
     hostname: http-service-basic-auth-204
