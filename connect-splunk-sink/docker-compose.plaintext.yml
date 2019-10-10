@@ -1,0 +1,20 @@
+---
+version: '3.5'
+services:
+  splunk:
+    image: splunk/splunk:7.3.0
+    hostname: splunk
+    container_name: splunk
+    ports:
+      - 8000:8000
+      - 8889:8889
+    environment:
+      SPLUNK_START_ARGS: --accept-license
+      SPLUNK_PASSWORD: password
+
+  connect:
+    depends_on:
+      - zookeeper
+      - broker
+      - schema-registry
+      - splunk
