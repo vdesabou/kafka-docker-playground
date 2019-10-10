@@ -10,13 +10,14 @@ Playground for Kafka/Confluent Docker experimentations
 * [AWS Kinesis Source](connect-kinesis-source)
 * [AWS SQS Source](connect-sqs-source) [also with [SASL_SSL](connect-sqs-source/README.md#with-sasl_ssl-authentication) and [SSL](connect-sqs-source/README.md#with-ssl-authentication) authentications]
 * [JDBC MySQL Source](connect-jdbc-source/README.md#MySQL)
-* [Debezium MySQL source](connect-debezium-mysql-source/README)
-* [Debezium PostgreSQL source](connect-debezium-postgresql-source)
-* [Debezium MongoDB source](connect-debezium-mongodb-source)
+* [Debezium MySQL Source](connect-debezium-mysql-source/README)
+* [Debezium PostgreSQL Source](connect-debezium-postgresql-source)
+* [Debezium MongoDB Source](connect-debezium-mongodb-source)
 * [IBM MQ Source](connect-ibm-mq-source)
 * [Solace Source](connect-solace-source)
 * [ActiveMQ Source](connect-active-mq-source)
 * [TIBCO EMS Source](connect-tibco-source)
+* [Syslog Source](connect-syslog-source)
 
 ### ↗️ Sink
 

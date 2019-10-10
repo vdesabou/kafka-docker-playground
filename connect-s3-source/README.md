@@ -47,7 +47,7 @@ docker container exec -e BUCKET_NAME="$BUCKET_NAME" connect \
      curl -X POST \
      -H "Content-Type: application/json" \
      --data '{
-               "name": "s3-source3",
+               "name": "s3-source",
                "config": {
                     "tasks.max": "1",
                     "connector.class": "io.confluent.connect.s3.source.S3SourceConnector",
