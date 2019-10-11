@@ -5,15 +5,16 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 
 ${DIR}/../plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
 
-echo "Wait for Splunk to be up and running"
-sleep 60
 echo "Splunk UI is accessible at http://127.0.0.1:8000 (admin/password)"
 
-# http://dev.splunk.com/view/event-collector/SP-CAAAE7C#createanhttpeventcollectortokenusingthecli
-docker container exec splunk bash -c 'splunk http-event-collector create new-token "kafka" -index log -uri "http://localhost:8889"'
+# echo "Setting minfreemb to 1Gb (by default 5Gb)"
+# docker container exec splunk bash -c 'sudo /opt/splunk/bin/splunk set minfreemb 1000 -auth "admin:password"'
+# docker container exec splunk bash -c 'sudo /opt/splunk/bin/splunk restart'
+# sleep 60
 
-echo "Sending messages to topic splunk-qs"
-seq 10 | docker container exec -i broker kafka-console-producer --broker-list broker:9092 --topic splunk-qs
+echo "Create topic splunk-qs"
+docker container exec broker kafka-topics --create --topic splunk-qs --partitions 10 --replication-factor 1 --zookeeper zookeeper:2181
+
 
 echo "Creating Splunk sink connector"
 docker container exec connect \
@@ -26,8 +27,8 @@ docker container exec connect \
                     "tasks.max": "1",
                     "topics": "splunk-qs",
                     "splunk.indexes": "main",
-                    "splunk.hec.uri: "http://splunk:8889",
-                    "splunk.hec.token": "todo",
+                    "splunk.hec.uri": "http://splunk:8088",
+                    "splunk.hec.token": "99582090-3ac3-4db1-9487-e17b17a05081",
                     "splunk.sourcetypes": "my_sourcetype",
                     "value.converter": "org.apache.kafka.connect.storage.StringConverter",
                     "confluent.topic.bootstrap.servers": "broker:9092",
@@ -35,7 +36,16 @@ docker container exec connect \
           }}' \
      http://localhost:8083/connectors | jq .
 
-sleep 10
 
-echo "Confirm the messages were delivered to the connector-quickstart queue in the default Message VPN using CLI"
-docker container exec solace bash -c "/usr/sw/loads/currentload/bin/cli -A -s cliscripts/show_queue_cmd"
+echo "Sending messages to topic splunk-qs"
+docker container exec -i broker kafka-console-producer --broker-list broker:9092 --topic splunk-qs << EOF
+This is a test with Splunk 1
+This is a test with Splunk 2
+This is a test with Splunk 3
+EOF
+
+echo "Sleeping 60 seconds"
+sleep 60
+
+echo "Verify data is in splunk"
+docker container exec splunk bash -c 'sudo /opt/splunk/bin/splunk search "source=\"http:splunk_hec_token\"" -auth "admin:password"'

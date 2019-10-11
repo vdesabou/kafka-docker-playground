@@ -1,0 +1,87 @@
+---
+ansible_post_tasks: null
+ansible_pre_tasks: null
+cert_prefix: https
+config:
+  baked: default.yml
+  defaults_dir: /tmp/defaults
+  env:
+    headers: null
+    var: SPLUNK_DEFAULTS_URL
+    verify: true
+  host:
+    headers: null
+    url: null
+    verify: true
+  max_delay: 60
+  max_retries: 3
+  max_timeout: 1200
+hide_password: false
+retry_num: 50
+shc_bootstrap_delay: 30
+splunk:
+  admin_user: admin
+  allow_upgrade: true
+  app_paths:
+    default: /opt/splunk/etc/apps
+    deployment: /opt/splunk/etc/deployment-apps
+    httpinput: /opt/splunk/etc/apps/splunk_httpinput
+    idxc: /opt/splunk/etc/master-apps
+    shc: /opt/splunk/etc/shcluster/apps
+  dfs:
+    dfc_num_slots: 4
+    dfw_num_slots: 10
+    dfw_num_slots_enabled: false
+    enable: false
+    port: 9000
+    spark_master_host: 127.0.0.1
+    spark_master_webui_port: 8080
+  enable_service: false
+  exec: /opt/splunk/bin/splunk
+  group: splunk
+  hec_disabled: 0
+  hec_enableSSL: 0
+  hec_port: 8088
+  hec_token: 99582090-3ac3-4db1-9487-e17b17a05081
+  home: /opt/splunk
+  hostname: splunk
+  http_enableSSL: 0
+  http_enableSSL_cert: null
+  http_enableSSL_privKey: null
+  http_enableSSL_privKey_password: null
+  http_port: 8000
+  idxc:
+    enable: false
+    label: idxc_label
+    replication_factor: 3
+    replication_port: 9887
+    search_factor: 3
+    secret: E8SbhOoUqAExlKVXnz6hB9F/TFxkB3S8
+  ignore_license: false
+  license_download_dest: /tmp/splunk.lic
+  multisite_replication_factor_origin: 3
+  multisite_replication_factor_total: 3
+  multisite_search_factor_origin: 3
+  multisite_search_factor_total: 3
+  nfr_license: /tmp/nfr_enterprise.lic
+  opt: /opt
+  password: bYQqs/bHk6kZRn+qjkcQPzVVO27w8St/
+  pid: /opt/splunk/var/run/splunk/splunkd.pid
+  root_endpoint: null
+  s2s_enable: true
+  s2s_port: 9997
+  search_head_cluster_url: null
+  secret: null
+  shc:
+    enable: false
+    label: shc_label
+    replication_factor: 3
+    replication_port: 9887
+    secret: 9Y56Z3L2Wa0ioq5Z/qNaJl01kWtVrEHU
+  smartstore: null
+  svc_port: 8089
+  tar_dir: splunk
+  user: splunk
+  wildcard_license: false
+splunk_home_ownership_enforcement: true
+
