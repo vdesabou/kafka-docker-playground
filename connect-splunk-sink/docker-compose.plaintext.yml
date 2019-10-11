@@ -7,10 +7,14 @@ services:
     container_name: splunk
     ports:
       - 8000:8000
-      - 8889:8889
+      - 8088:8088
+    volumes:
+      - ../connect-splunk-sink/default.yml:/tmp/defaults/default.yml
     environment:
       SPLUNK_START_ARGS: --accept-license
+      SPLUNK_USERNAME: admin
       SPLUNK_PASSWORD: password
+      DEBUG: "true"
 
   connect:
     depends_on:
