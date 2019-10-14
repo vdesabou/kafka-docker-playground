@@ -6,21 +6,38 @@ services:
     hostname: mysql
     container_name: mysql
     volumes:
-      - ../connect-jdbc-source/mysql-init.sql:/docker-entrypoint-initdb.d/mysql-init.sql
+      - ../connect-jdbc-source/mysql/mysql-init.sql:/docker-entrypoint-initdb.d/mysql-init.sql
     environment:
       MYSQL_ROOT_PASSWORD: password
       MYSQL_DATABASE: db
       MYSQL_USER: user
       MYSQL_PASSWORD: password
       MYSQL_ROOT_HOST: 172.%  # Allow docker containers to connect to mysql
-      
+
+  oracledb:
+    image: wnameless/oracle-xe-11g-r2 # https://github.com/wnameless/docker-oracle-xe-11g
+    hostname: oracledb
+    container_name: oracledb
+    ports:
+      - "1521:1521"
+    volumes:
+      - ../connect-jdbc-source/oracle/00-oracle-init.sql:/docker-entrypoint-initdb.d/00-oracle-init.sql
+      - ../connect-jdbc-source/oracle/01-create-table.sh:/docker-entrypoint-initdb.d/01-create-table.sh
+    environment:
+      ORACLE_ALLOW_REMOTE: "true"
+    # healthcheck:
+    #         test: ["CMD", "if [ ! -z $ORACLE_SID ]", "then echo 'done!' && exit 0", "else echo 'not yet' && exit 1", "fi"]
+    #         interval: 30s
+    #         timeout: 1s
+    #         retries: 1
+
   connect:
     depends_on:
       - zookeeper
       - broker
       - schema-registry
       - mysql
+      - oracledb
     volumes:
-        - ../connect-jdbc-source/mysql-connector-java-5.1.45-bin.jar:/usr/share/confluent-hub-components/confluentinc-kafka-connect-jdbc/lib/mysql-connector-java-5.1.45-bin.jar
-
-      
+        - ../connect-jdbc-source/mysql/mysql-connector-java-5.1.45-bin.jar:/usr/share/confluent-hub-components/confluentinc-kafka-connect-jdbc/lib/mysql-connector-java-5.1.45-bin.jar
+        - ../connect-jdbc-source/oracle/ojdbc6.jar:/usr/share/confluent-hub-components/confluentinc-kafka-connect-jdbc/lib/ojdbc6.jar
