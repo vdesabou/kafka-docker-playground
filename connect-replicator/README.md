@@ -4,7 +4,7 @@
 
 Quickly test [Confluent Replicator](https://docs.confluent.io/5.3.1/connect/kafka-connect-replicator/index.html#crep-full) connector.
 
-N.B: This is just to test security configurations with replicator. A more useful example is [MDC and single views](https://github.com/framiere/mdc-with-replicator-and-regexrouter)
+N.B: This is just to test security configurations with replicator. More useful examples are [MDC and single views](https://github.com/framiere/mdc-with-replicator-and-regexrouter) and [Replicator Tutorial on Docker](https://docs.confluent.io/current/installation/docker/installation/replicator.html)
 
 ## Pre-requisites
 
