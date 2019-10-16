@@ -71,7 +71,6 @@ docker container exec connect \
           }}' \
      http://localhost:8083/connectors | jq .
 
-exit 0
 
 sleep 5
 
