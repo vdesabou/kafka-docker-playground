@@ -19,5 +19,3 @@ services:
       - broker
       - schema-registry
       - mongodb
-    volumes:
-      - ../connect-jdbc-source/mysql-connector-java-5.1.45-bin.jar:/usr/share/confluent-hub-components/confluentinc-kafka-connect-jdbc/lib/mysql-connector-java-5.1.45-bin.jar

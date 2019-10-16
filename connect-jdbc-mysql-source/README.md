@@ -1,8 +1,8 @@
-# JDBC Source connector
+# JDBC MySQL Source connector
 
 ## Objective
 
-Quickly test [JDBC Source](https://docs.confluent.io/current/connect/kafka-connect-jdbc/source-connector/index.html#kconnect-long-jdbc-source-connector) connector.
+Quickly test [JDBC Source](https://docs.confluent.io/current/connect/kafka-connect-jdbc/source-connector/index.html#kconnect-long-jdbc-source-connector) connector with MySQL.
 
 ## Pre-requisites
 
@@ -12,8 +12,6 @@ Quickly test [JDBC Source](https://docs.confluent.io/current/connect/kafka-conne
 
 ## How to run
 
-### MySQL
-  
 Simply run:
 
 ```
