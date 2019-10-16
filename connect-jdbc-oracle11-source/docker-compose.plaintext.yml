@@ -21,3 +21,4 @@ services:
       - oracle
     volumes:
         - ../connect-jdbc-oracle11-source/ojdbc6.jar:/usr/share/confluent-hub-components/confluentinc-kafka-connect-jdbc/lib/ojdbc6.jar
+        - ../connect-jdbc-oracle11-source/instantclient:/root/instantclient
