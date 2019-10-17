@@ -35,6 +35,7 @@ fi
 ${DIR}/../plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
 
 
+echo "Sending EMS messages m1 m2 m3 m4 m5 in queue connector-quickstart"
 docker container exec tibco-ems bash -c '
 cd /opt/tibco/ems/8.5/samples/java
 export TIBEMS_JAVA=/opt/tibco/ems/8.5/lib
