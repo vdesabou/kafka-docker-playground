@@ -2,7 +2,7 @@
 
 ## Objective
 
-Quickly test [JDBC Source](https://docs.confluent.io/current/connect/kafka-connect-jdbc/source-connector/index.html#kconnect-long-jdbc-source-connector) Oracle 11 connector.
+Quickly test [JDBC Source](https://docs.confluent.io/current/connect/kafka-connect-jdbc/source-connector/index.html#kconnect-long-jdbc-source-connector) connector with Oracle 11.
 
 ## Pre-requisites
 
@@ -19,5 +19,46 @@ Simply run:
 $ ./oracle11.sh
 ```
 
+## Details of what the script is doing
+
+Create the source connector with:
+
+```bash
+$ docker container exec connect \
+     curl -X POST \
+     -H "Content-Type: application/json" \
+     --data '{
+               "name": "oracle-source",
+               "config": {
+                    "connector.class":"io.confluent.connect.jdbc.JdbcSourceConnector",
+                    "tasks.max":"1",
+                    "connection.user": "myuser",
+                    "connection.password": "mypassword",
+                    "connection.url": "jdbc:oracle:thin:@oracle:1521/XE",
+                    "numeric.mapping":"best_fit",
+                    "mode":"timestamp",
+                    "poll.interval.ms":"1000",
+                    "validate.non.null":"false",
+                    "table.whitelist":"MYTABLE",
+                    "timestamp.column.name":"UPDATE_TS",
+                    "topic.prefix":"oracle-",
+                    "schema.pattern":"MYUSER",
+                    "errors.log.enable": "true",
+                    "errors.log.include.messages": "true"
+          }}' \
+     http://localhost:8083/connectors | jq .
+```
+
+Verify the topic `oracle-MYTABLE`:
+
+```bash
+$ docker container exec schema-registry kafka-avro-console-consumer -bootstrap-server broker:9092 --topic oracle-MYTABLE --from-beginning --max-messages 1
+```
+
+Results:
+
+```json
+{"ID":1,"DESCRIPTION":"kafka","UPDATE_TS":{"long":1571317782000}}
+```
 
 N.B: Control Center is reachable at [http://127.0.0.1:9021](http://127.0.0.1:9021])

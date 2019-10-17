@@ -18,6 +18,7 @@ Playground for Kafka/Confluent Docker experimentations
 * [TIBCO EMS Source](connect-tibco-source)
 * [Syslog Source](connect-syslog-source)
 * [JDBC MySQL Source](connect-jdbc-mysql-source)
+* [JDBC Oracle 11 Source](connect-jdbc-oracle11-source)
 * [JDBC Oracle 12 Source](connect-jdbc-oracle12-source)
 
 ### ↗️ Sink
