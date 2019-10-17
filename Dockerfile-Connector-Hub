@@ -21,3 +21,4 @@ RUN   confluent-hub install --no-prompt confluentinc/kafka-connect-ibmmq:latest 
 		&& confluent-hub install --no-prompt confluentinc/kafka-connect-replicator:latest \
 		&& confluent-hub install --no-prompt confluentinc/kafka-connect-syslog:latest \
 		&& confluent-hub install --no-prompt splunk/kafka-connect-splunk:latest \
+		&& confluent-hub install --no-prompt confluentinc/kafka-connect-tibco-sink:latest \

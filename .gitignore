@@ -41,3 +41,5 @@ connect-jdbc-oracle11-source/ojdbc6.jar
 connect-jdbc-oracle11-source/instantclient/OracleSample.java
 connect-jdbc-oracle11-source/instantclient/OracleSample.class
 *.class
+connect-tibco-sink/tibjms.jar
+connect-tibco-sink/docker-tibco/TIB_ems-ce_8.5.1_linux_x86_64.zip
