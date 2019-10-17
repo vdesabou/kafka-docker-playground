@@ -40,3 +40,4 @@ connect-jdbc-oracle11-source/ojdbc6.jar
 *.rpm
 connect-jdbc-oracle11-source/instantclient/OracleSample.java
 connect-jdbc-oracle11-source/instantclient/OracleSample.class
+*.class
