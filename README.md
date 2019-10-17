@@ -32,7 +32,9 @@ Playground for Kafka/Confluent Docker experimentations
 * [Solace Sink](connect-solace-sink)
 * [Splunk Sink](connect-splunk-sink)
 * [TIBCO EMS Sink](connect-tibco-sink)
-*
+* [IBM MQ Sink](connect-ibm-mq-sink)
+
+
 ## ☁️ Confluent Cloud:
 
 * [ccloud demo](ccloud-demo)
