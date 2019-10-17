@@ -38,3 +38,5 @@ connect-jdbc-oracle12-source/*.zip
 connect-jdbc-oracle12-source/docker-images
 connect-jdbc-oracle11-source/ojdbc6.jar
 *.rpm
+connect-jdbc-oracle11-source/instantclient/OracleSample.java
+connect-jdbc-oracle11-source/instantclient/OracleSample.class
