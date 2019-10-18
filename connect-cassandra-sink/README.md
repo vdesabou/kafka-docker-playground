@@ -59,4 +59,23 @@ Verify messages are in cassandra table test.topic1
 $ docker container exec cassandra cqlsh -e 'select * from test.topic1;'
 ```
 
+Results:
+
+```bash
+ f1
+---------
+  value7
+  value9
+  value6
+  value1
+  value8
+  value3
+  value5
+  value4
+  value2
+ value10
+
+(10 rows)
+```
+
 N.B: Control Center is reachable at [http://127.0.0.1:9021](http://127.0.0.1:9021])
