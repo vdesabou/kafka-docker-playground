@@ -98,18 +98,6 @@ $ docker container exec connect \
      http://localhost:8083/connectors | jq .
 ```
 
-Messages are sent to TIBCO EMS using:
-
-```bash
-$ docker container exec tibco-ems bash -c '
-cd /opt/tibco/ems/8.5/samples/java
-export TIBEMS_JAVA=/opt/tibco/ems/8.5/lib
-CLASSPATH=${TIBEMS_JAVA}/jms-2.0.jar:${CLASSPATH}
-CLASSPATH=.:${TIBEMS_JAVA}/tibjms.jar:${TIBEMS_JAVA}/tibjmsadmin.jar:${CLASSPATH}
-export CLASSPATH
-javac *.java
-java tibjmsMsgProducer -user admin -queue connector-quickstart m1 m2 m3 m4 m5'
-```
 
 Verify we have received the data in `from-tibco-messages` topic:
 
@@ -120,8 +108,8 @@ $ docker container exec connect kafka-console-consumer -bootstrap-server broker:
 Results:
 
 ```
-Struct{messageID=ID:E4EMS-SERVER.15D9DAA1E3:1,messageType=text,timestamp=1570613846774,deliveryMode=2,destination=Struct{destinationType=queue,name=connector-quickstart},redelivered=false,expiration=0,priority=4,properties={JMSXDeliveryCount=Struct{propertyType=integer,integer=1}},text=m1}
-Struct{messageID=ID:E4EMS-SERVER.15D9DAA1E3:2,messageType=text,timestamp=1570613846775,deliveryMode=2,destination=Struct{destinationType=queue,name=connector-quickstart},redelivered=false,expiration=0,priority=4,properties={JMSXDeliveryCount=Struct{propertyType=integer,integer=1}},text=m2}
+Struct{messageID=ID:E4EMS-SERVER.15DA9975B3:1,messageType=text,timestamp=1571395609724,deliveryMode=2,destination=Struct{destinationType=queue,name=connector-quickstart},redelivered=false,expiration=0,priority=4,properties={JMSXDeliveryCount=Struct{propertyType=integer,integer=1}},text=m1}
+Struct{messageID=ID:E4EMS-SERVER.15DA9975B3:2,messageType=text,timestamp=1571395609736,deliveryMode=2,destination=Struct{destinationType=queue,name=connector-quickstart},redelivered=false,expiration=0,priority=4,properties={JMSXDeliveryCount=Struct{propertyType=integer,integer=1}},text=m2}
 Processed a total of 2 messages
 ```
 
