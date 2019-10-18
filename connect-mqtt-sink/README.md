@@ -1,8 +1,8 @@
-# MQTT Source connector
+# MQTT Sink connector
 
 ## Objective
 
-Quickly test [MQTT Source](https://docs.confluent.io/current/connect/kafka-connect-mqtt/mqtt-source-connector/mqtt_source_connector_quickstart.html#example-configure-mqtt-source-connector-for-eclipse-mosquitto-broker) connector.
+Quickly test [MQTT Sink](https://docs.confluent.io/current/connect/kafka-connect-mqtt/mqtt-sink-connector/mqtt_sink_connector_quickstart.html#example-configure-mqtt-sink-connector-for-eclipse-mosquitto-broker) connector.
 
 ## Pre-requisites
 
@@ -14,7 +14,7 @@ Quickly test [MQTT Source](https://docs.confluent.io/current/connect/kafka-conne
 Simply run:
 
 ```
-$ ./mqtt.sh
+$ ./mqtt-sink.sh
 ```
 
 ## Details of what the script is doing
@@ -25,23 +25,32 @@ Note: The `./password` file was created with (`myuser/mypassword`) and command:
 $ mosquitto_passwd -c password myuser
 ```
 
-Creating MQTT Source connector
+Sending messages to topic sink-messages
+
+```bash
+$ docker container exec -i broker kafka-console-producer --broker-list broker:9092 --topic sink-messages << EOF
+This is my message
+EOF
+```
+
+Creating MQTT Sink connector
 
 ```bash
 $ docker container exec connect \
      curl -X POST \
      -H "Content-Type: application/json" \
      --data '{
-               "name": "source-mqtt",
+               "name": "sink-mqtt",
                "config": {
-                    "connector.class": "io.confluent.connect.mqtt.MqttSourceConnector",
+                    "connector.class": "io.confluent.connect.mqtt.MqttSinkConnector",
                     "tasks.max": "1",
                     "mqtt.server.uri": "tcp://mosquitto:1883",
-                    "mqtt.topics":"my-mqtt-topic",
-                    "kafka.topic":"mqtt-source-1",
+                    "topics":"sink-messages",
                     "mqtt.qos": "2",
                     "mqtt.username": "myuser",
                     "mqtt.password": "mypassword",
+                    "key.converter": "org.apache.kafka.connect.storage.StringConverter",
+                    "value.converter": "org.apache.kafka.connect.storage.StringConverter",
                     "confluent.license": "",
                     "confluent.topic.bootstrap.servers": "broker:9092",
                     "confluent.topic.replication.factor": "1"
@@ -49,18 +58,10 @@ $ docker container exec connect \
      http://localhost:8083/connectors | jq .
 ```
 
-
-
-Send message to MQTT in my-mqtt-topic topic
+Verify we have received messages in MQTT sink-messages topic
 
 ```bash
-$ mosquitto_pub -h localhost -p 1883 -u "myuser" -P "mypassword" -t "my-mqtt-topic" -m "sample-msg-1"
-```
-
-Verify we have received the data in mqtt-source-1 topic
-
-```bash
-$ docker container exec broker kafka-console-consumer -bootstrap-server broker:9092 --topic mqtt-source-1 --from-beginning --max-messages 1
+mosquitto_sub -h localhost -p 1883 -u "myuser" -P "mypassword" -t "sink-messages" -C 1
 ```
 
 N.B: Control Center is reachable at [http://127.0.0.1:9021](http://127.0.0.1:9021])
