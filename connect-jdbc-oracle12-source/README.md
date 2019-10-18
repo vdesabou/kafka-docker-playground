@@ -13,6 +13,10 @@ Quickly test [JDBC Source](https://docs.confluent.io/current/connect/kafka-conne
 
 Note: The first time you'll run the script, it will build (using this [project](https://github.com/oracle/docker-images/blob/master/OracleDatabase/SingleInstance/README.md)) the docker image `oracle/database:12.2.0.1-ee`. It takes about 20 minutes.
 
+**Please make sure to increase Docker disk image size (96Gb is known to be working)**:
+
+![Docker image disk](Screenshot1.png)
+
 ## How to run
 
 Simply run:
