@@ -21,6 +21,7 @@ Playground for Kafka/Confluent Docker experimentations
 * [JDBC Oracle 11 Source](connect-jdbc-oracle11-source)
 * [JDBC Oracle 12 Source](connect-jdbc-oracle12-source)
 * [MQTT Source](connect-mqtt-source)
+* [JMS TIBCO Source](connect-jms-tibco-source)
 
 ### ↗️ Sink
 

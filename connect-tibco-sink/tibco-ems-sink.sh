@@ -19,7 +19,6 @@ then
      tar xvfz /tmp/TIB_ems-ce_8.5.1/tar/TIB_ems-ce_8.5.1_linux_x86_64-java_client.tar.gz opt/tibco/ems/8.5/lib/tibjms.jar
      cp ${DIR}/opt/tibco/ems/8.5/lib/tibjms.jar ${DIR}/
      rm -rf ${DIR}/opt
-     exit 0
 fi
 
 if test -z "$(docker images -q tibems:latest)"
