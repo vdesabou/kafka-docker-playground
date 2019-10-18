@@ -4,7 +4,7 @@
 
 Quickly test [Cassandra Sink](https://docs.confluent.io/current/connect/kafka-connect-cassandra/index.html#kconnect-long-cassandra-sink-connector) connector.
 
-Cassandra 3.0 is used.
+Cassandra `3.0` is used.
 
 ## Pre-requisites
 

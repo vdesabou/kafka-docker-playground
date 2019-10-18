@@ -39,6 +39,7 @@ Playground for Kafka/Confluent Docker experimentations
 * [MQTT Sink](connect-mqtt-sink)
 * [InfluxDB Sink](connect-influxdb-sink)
 * [Cassandra Sink](connect-cassandra-sink)
+* [Google Cloud Functions Sink](connect-google-cloud-functions-sink)
 
 ## ☁️ Confluent Cloud:
 

@@ -27,3 +27,4 @@ RUN   confluent-hub install --no-prompt confluentinc/kafka-connect-ibmmq:latest 
 		&& confluent-hub install --no-prompt confluentinc/kafka-connect-jms:latest \
 		&& confluent-hub install --no-prompt confluentinc/kafka-connect-influxdb:latest \
 		&& confluent-hub install --no-prompt confluentinc/kafka-connect-cassandra:latest \
+		&& confluent-hub install --no-prompt confluentinc/kafka-connect-gcp-functions:latest \
