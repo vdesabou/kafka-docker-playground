@@ -34,6 +34,7 @@ Playground for Kafka/Confluent Docker experimentations
 * [Splunk Sink](connect-splunk-sink)
 * [TIBCO EMS Sink](connect-tibco-sink)
 * [IBM MQ Sink](connect-ibm-mq-sink)
+* [MQTT Sink](connect-mqtt-sink)
 
 
 ## ☁️ Confluent Cloud:
