@@ -1,0 +1,16 @@
+---
+version: '3.5'
+services:
+  influxdb:
+    image: influxdb:1.7.7
+    hostname: influxdb
+    container_name: influxdb
+    ports:
+      - "8086:8086"
+
+  connect:
+    depends_on:
+      - zookeeper
+      - broker
+      - schema-registry
+      - influxdb
