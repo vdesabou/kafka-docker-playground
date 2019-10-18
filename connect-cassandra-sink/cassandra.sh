@@ -31,7 +31,7 @@ docker container exec connect \
           }}' \
      http://localhost:8083/connectors | jq .
 
-sleep 5
+sleep 10
 
 echo "Verify messages are in cassandra table test.topic1"
 docker container exec cassandra cqlsh -e 'select * from test.topic1;'
