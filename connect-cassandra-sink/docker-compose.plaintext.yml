@@ -1,0 +1,7 @@
+---
+version: '3.5'
+services:
+  cassandra:
+    image: cassandra:3.0
+    hostname: cassandra
+    container_name: cassandra

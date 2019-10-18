@@ -38,6 +38,7 @@ Playground for Kafka/Confluent Docker experimentations
 * [IBM MQ Sink](connect-ibm-mq-sink)
 * [MQTT Sink](connect-mqtt-sink)
 * [InfluxDB Sink](connect-influxdb-sink)
+* [Cassandra Sink](connect-cassandra-sink)
 
 ## ☁️ Confluent Cloud:
 
