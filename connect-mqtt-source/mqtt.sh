@@ -36,6 +36,9 @@ docker container exec connect \
           }}' \
      http://localhost:8083/connectors | jq .
 
+
+sleep 5
+
 echo "Send message to MQTT in mqtt-source-1 topic"
 mosquitto_pub -h localhost -p 1883 -u "myuser" -P "mypassword" -t "my-mqtt-topic" -m "sample-msg-1"
 
