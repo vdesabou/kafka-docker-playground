@@ -38,6 +38,33 @@ Verifying data in mydb
 $ curl -G 'http://localhost:8086/query?pretty=true' --data-urlencode "db=mydb" --data-urlencode "q=SELECT \"value\" FROM \"cpu_load_short\" WHERE \"region\"='us-west'"
 ```
 
+Results:
+
+```json
+{
+    "results": [
+        {
+            "statement_id": 0,
+            "series": [
+                {
+                    "name": "cpu_load_short",
+                    "columns": [
+                        "time",
+                        "value"
+                    ],
+                    "values": [
+                        [
+                            "2015-06-11T20:46:02Z",
+                            0.64
+                        ]
+                    ]
+                }
+            ]
+        }
+    ]
+}
+```
+
 Creating InfluxDB source connector
 
 ```bash
@@ -63,6 +90,20 @@ Verifying topic influx_cpu_load_short
 
 ```bash
 $ docker container exec broker kafka-console-consumer --bootstrap-server localhost:9092 --topic influx_cpu_load_short --from-beginning --max-messages 1
+```
+
+Results:
+
+```json
+{
+    "measurement": "cpu_load_short",
+    "tags": {
+        "host": "server01",
+        "region": "us-west"
+    },
+    "time": "2015-06-11T20:46:02Z",
+    "value": 0.64
+}
 ```
 
 N.B: Control Center is reachable at [http://127.0.0.1:9021](http://127.0.0.1:9021])
