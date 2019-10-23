@@ -19,10 +19,11 @@ Playground for Kafka/Confluent Docker experimentations
 * [ActiveMQ](connect-active-mq-source)
 * [TIBCO EMS](connect-tibco-source)
 * [Syslog](connect-syslog-source)
-* [JDBC MySQL](connect-jdbc-mysql-source)
-* [JDBC Oracle 11](connect-jdbc-oracle11-source)
-* [JDBC Oracle 12](connect-jdbc-oracle12-source)
-* [JDBC PostGreSQL](connect-jdbc-postgresql-source)
+* JDBC
+    * using [MySQL](connect-jdbc-mysql-source)
+    * using [Oracle 11](connect-jdbc-oracle11-source)
+    * using [Oracle 12](connect-jdbc-oracle12-source)
+    * using [PostGreSQL](connect-jdbc-postgresql-source)
 * [MQTT](connect-mqtt-source)
 * [JMS TIBCO](connect-jms-tibco-source)
 * [InfluxDB](connect-influxdb-source)
@@ -47,7 +48,9 @@ Playground for Kafka/Confluent Docker experimentations
 * [InfluxDB](connect-influxdb-sink)
 * [Cassandra](connect-cassandra-sink)
 * [Google Cloud Functions](connect-google-cloud-functions-sink)
-* [JDBC MySQL](connect-jdbc-mysql-sink)
+* JDBC
+    * using [MySQL](connect-jdbc-mysql-sink)
+    * using [PostGreSQL](connect-jdbc-postgresql-sink)
 
 ## ☁️ Confluent Cloud:
 
