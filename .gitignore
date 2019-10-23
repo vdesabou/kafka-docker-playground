@@ -32,7 +32,6 @@ ssl_kerberos/security/*.der
 ssl_kerberos/security/*.p12
 connect-tibco-source/tibjms.jar
 connect-tibco-source/docker-tibco/TIB_ems-ce_8.5.1_linux_x86_64.zip
-connect-jdbc-source/oracle/ojdbc6.jar
 connect-jdbc-oracle12-source/ojdbc8.jar
 connect-jdbc-oracle12-source/*.zip
 connect-jdbc-oracle12-source/docker-images
