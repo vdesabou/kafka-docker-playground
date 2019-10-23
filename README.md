@@ -22,6 +22,7 @@ Playground for Kafka/Confluent Docker experimentations
 * [JDBC MySQL](connect-jdbc-mysql-source)
 * [JDBC Oracle 11](connect-jdbc-oracle11-source)
 * [JDBC Oracle 12](connect-jdbc-oracle12-source)
+* [JDBC PostGreSQL](connect-jdbc-postgresql-source)
 * [MQTT](connect-mqtt-source)
 * [JMS TIBCO](connect-jms-tibco-source)
 * [InfluxDB](connect-influxdb-source)
