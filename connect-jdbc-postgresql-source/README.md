@@ -63,7 +63,7 @@ $ docker container exec connect \
      http://localhost:8083/connectors | jq .
 ```
 
-Verifying topic asgard.public.customers-raw
+Verifying topic `postgres-customers`
 
 ```bash
 $ docker container exec schema-registry kafka-avro-console-consumer -bootstrap-server broker:9092 --topic postgres-customers --from-beginning --max-messages 5
