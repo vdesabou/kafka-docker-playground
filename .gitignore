@@ -47,3 +47,4 @@ connect-jms-tibco-source/tibjms.jar
 connect-jms-tibco-source/jms-2.0.jar
 connect-jdbc-oracle11-sink/ojdbc6.jar
 connect-jdbc-oracle12-sink/ojdbc8.jar
+connect-jdbc-sqlserver-source/sqljdbc_7.4
