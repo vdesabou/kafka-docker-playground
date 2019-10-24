@@ -28,3 +28,4 @@ RUN   confluent-hub install --no-prompt confluentinc/kafka-connect-ibmmq:latest 
 		&& confluent-hub install --no-prompt confluentinc/kafka-connect-influxdb:latest \
 		&& confluent-hub install --no-prompt confluentinc/kafka-connect-cassandra:latest \
 		&& confluent-hub install --no-prompt confluentinc/kafka-connect-gcp-functions:latest \
+		&& confluent-hub install --no-prompt debezium/debezium-connector-sqlserver:latest \

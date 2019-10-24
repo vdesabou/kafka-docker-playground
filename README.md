@@ -16,6 +16,7 @@ Playground for Kafka/Confluent Docker experimentations
     * using [MySQL](connect-debezium-mysql-source)
     * using [PostgreSQL](connect-debezium-postgresql-source)
     * using [MongoDB](connect-debezium-mongodb-source)
+    * using [SQL Server](connect-debezium-sqlserver-source)
 * [IBM MQ](connect-ibm-mq-source)
 * [Solace](connect-solace-source)
 * [ActiveMQ](connect-active-mq-source)
