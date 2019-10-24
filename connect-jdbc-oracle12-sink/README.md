@@ -1,27 +1,37 @@
-# JDBC Oracle 11 Sink connector
+# JDBC Oracle 12 Sink connector
 
 ## Objective
 
-Quickly test [JDBC Sink](https://docs.confluent.io/current/connect/kafka-connect-jdbc/sink-connector/index.html#quick-start) connector with Oracle 11.
+Quickly test [JDBC Sink](https://docs.confluent.io/current/connect/kafka-connect-jdbc/sink-connector/index.html#quick-start) connector with Oracle 12.
 
 ## Pre-requisites
 
 * `docker-compose` (example `brew cask install docker`)
 * `jq` (example `brew install jq`)
+* Download Oracle Database 12.2.0.1 JDBC Driver `ojdbc8.jar`from this [page](https://www.oracle.com/database/technologies/jdbc-ucp-122-downloads.html) and place it in `./ojdbc8.jar`
+* Download Oracle Database 12c Release 2 (12.2.0.1.0) for Linux x86-64 `linuxx64_12201_database.zip`from this [page](https://www.oracle.com/database/technologies/oracle12c-linux-12201-downloads.html) and place it in `./linuxx64_12201_database.zip`
 
-* Download Oracle Database 11g Release 2 (11.2.0.4) JDBC driver `ojdbc6.jar`from this [page](https://www.oracle.com/database/technologies/jdbcdriver-ucp-downloads.html) and place it in `./ojdbc6.jar`
+Note: The first time you'll run the script, it will build (using this [project](https://github.com/oracle/docker-images/blob/master/OracleDatabase/SingleInstance/README.md)) the docker image `oracle/database:12.2.0.1-ee`. It takes about 20 minutes.
+
+**Please make sure to increase Docker disk image size (96Gb is known to be working)**:
+
+![Docker image disk](Screenshot1.png)
 
 ## How to run
 
 Simply run:
 
 ```
-$ ./oracle11-sink.sh
+$ ./oracle12-sink.sh
 ```
 
 ## Details of what the script is doing
 
-Create the sink connector with:
+Build `oracle/database:12.2.0.1-ee` Docker image if required.
+
+Wait (up to 15 minutes) that Oracle DB is up
+
+Create the source connector with:
 
 ```bash
 $ docker container exec connect \
@@ -34,7 +44,7 @@ $ docker container exec connect \
                     "tasks.max": "1",
                     "connection.user": "myuser",
                     "connection.password": "mypassword",
-                    "connection.url": "jdbc:oracle:thin:@oracle:1521/XE",
+                    "connection.url": "jdbc:oracle:thin:@oracle:1521/ORCLPDB1",
                     "topics": "ORDERS",
                     "auto.create": "true",
                     "insert.mode":"insert",
@@ -55,7 +65,7 @@ EOF
 Show content of `ORDERS` table:
 
 ```bash
-$ docker container exec oracle bash -c "export ORACLE_HOME=/u01/app/oracle/product/11.2.0/xe/;export ORACLE_SID=xe;echo 'select * from ORDERS;' | /u01/app/oracle/product/11.2.0/xe/bin/sqlplus myuser/mypassword@//localhost:1521/XE"
+$ docker container exec oracle bash -c "echo 'select * from ORDERS;' | sqlplus myuser/mypassword@//localhost:1521/ORCLPDB1"
 ```
 
 Results:
