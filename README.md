@@ -57,6 +57,7 @@ Playground for Kafka/Confluent Docker experimentations
     * using [Oracle 11](connect-jdbc-oracle11-sink)
     * using [Oracle 12](connect-jdbc-oracle12-sink)
     * using [PostGreSQL](connect-jdbc-postgresql-sink)
+    * using [SQL Server](connect-jdbc-sqlserver-sink)
 
 ## ☁️ Confluent Cloud:
 
