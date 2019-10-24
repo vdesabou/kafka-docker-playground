@@ -16,7 +16,7 @@ docker container exec connect \
      curl -X POST \
      -H "Content-Type: application/json" \
      --data '{
-               "name": "oracle-sink2",
+               "name": "oracle-sink",
                "config": {
                     "connector.class": "io.confluent.connect.jdbc.JdbcSinkConnector",
                     "tasks.max": "1",
