@@ -31,6 +31,7 @@ Playground for Kafka/Confluent Docker experimentations
 * [MQTT](connect-mqtt-source)
 * [JMS TIBCO](connect-jms-tibco-source)
 * [InfluxDB](connect-influxdb-source)
+* [Splunk](connect-splunk-source)
 
 ### ↗️ Sink
 
