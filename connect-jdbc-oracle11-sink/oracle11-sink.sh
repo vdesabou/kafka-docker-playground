@@ -11,20 +11,6 @@ fi
 
 ${DIR}/../plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
 
-# select owner,
-#        object_name
-# from dba_objects
-# where object_name = any ('ORDERS','orders');
-
-# SELECT owner
-# FROM all_objects
-# WHERE object_type IN ('TABLE','VIEW')
-# AND object_name = 'orders';
-
-# select orders from all_tables where owner = 'MYUSER';
-
-# grant select on orders to myuser;
-
 echo "Creating JDBC Oracle sink connector"
 docker container exec connect \
      curl -X POST \
@@ -38,13 +24,15 @@ docker container exec connect \
                     "connection.password": "mypassword",
                     "connection.url": "jdbc:oracle:thin:@oracle:1521/XE",
                     "topics": "ORDERS",
-                    "auto.create": "true"
+                    "auto.create": "true",
+                    "insert.mode":"insert",
+                    "auto.evolve":"true"
           }}' \
      http://localhost:8083/connectors | jq .
 
 
-echo "Sending messages to topic orders"
-docker container exec -i schema-registry kafka-avro-console-producer --broker-list broker:9092 --topic orders --property value.schema='{"type":"record","name":"myrecord","fields":[{"name":"id","type":"int"},{"name":"product", "type": "string"}, {"name":"quantity", "type": "int"}, {"name":"price",
+echo "Sending messages to topic ORDERS"
+docker container exec -i schema-registry kafka-avro-console-producer --broker-list broker:9092 --topic ORDERS --property value.schema='{"type":"record","name":"myrecord","fields":[{"name":"id","type":"int"},{"name":"product", "type": "string"}, {"name":"quantity", "type": "int"}, {"name":"price",
 "type": "float"}]}' << EOF
 {"id": 999, "product": "foo", "quantity": 100, "price": 50}
 EOF

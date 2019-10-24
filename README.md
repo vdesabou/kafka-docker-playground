@@ -50,6 +50,7 @@ Playground for Kafka/Confluent Docker experimentations
 * [Google Cloud Functions](connect-google-cloud-functions-sink)
 * JDBC
     * using [MySQL](connect-jdbc-mysql-sink)
+    * using [Oracle 11](connect-jdbc-oracle11-sink)
     * using [PostGreSQL](connect-jdbc-postgresql-sink)
 
 ## ☁️ Confluent Cloud:
