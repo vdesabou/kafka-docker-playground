@@ -31,7 +31,7 @@ $ cat inventory.sql | docker exec -i sqlserver bash -c '/opt/mssql-tools/bin/sql
 Creating Debezium SQL Server source connector
 
 ```bash
-$ docker container exec connect \
+$ docker exec connect \
      curl -X POST \
      -H "Content-Type: application/json" \
      --data '{
@@ -65,7 +65,7 @@ Verifying topic `server1.dbo.customers`
 
 
 ```bash
-$ docker container exec schema-registry kafka-avro-console-consumer -bootstrap-server broker:9092 --topic server1.dbo.customers --from-beginning --max-messages 5
+$ docker exec schema-registry kafka-avro-console-consumer -bootstrap-server broker:9092 --topic server1.dbo.customers --from-beginning --max-messages 5
 ```
 
 Results:

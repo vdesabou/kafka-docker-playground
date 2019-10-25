@@ -49,7 +49,7 @@ $ aws kinesis put-record --stream-name my_kinesis_stream --partition-key 123 --d
 The connector is created with:
 
 ```
-docker container exec connect \
+docker exec connect \
      curl -X POST \
      -H "Content-Type: application/json" \
      --data '{
@@ -71,7 +71,7 @@ docker container exec connect \
 Verify we have received the data in kinesis_topic topic:
 
 ```
-$ docker container exec broker kafka-console-consumer --bootstrap-server broker:9092 --topic kinesis_topic --from-beginning --max-messages 1
+$ docker exec broker kafka-console-consumer --bootstrap-server broker:9092 --topic kinesis_topic --from-beginning --max-messages 1
 ```
 
 Delete your stream and clean up resources to avoid incurring any unintended charges:

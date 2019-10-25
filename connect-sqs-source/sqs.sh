@@ -32,7 +32,7 @@ echo "Sending messages to $QUEUE_URL"
 aws sqs send-message-batch --queue-url $QUEUE_URL --entries file://send-message-batch.json
 
 echo "Creating SQS Source connector"
-docker container exec -e QUEUE_URL="$QUEUE_URL" connect \
+docker exec -e QUEUE_URL="$QUEUE_URL" connect \
      curl -X POST \
      -H "Content-Type: application/json" \
      --data '{
@@ -50,7 +50,7 @@ docker container exec -e QUEUE_URL="$QUEUE_URL" connect \
      http://localhost:8083/connectors | jq .
 
 echo "Verify we have received the data in test-sqs-source topic"
-docker container exec schema-registry kafka-avro-console-consumer -bootstrap-server broker:9092 --topic test-sqs-source --from-beginning --max-messages 2
+docker exec schema-registry kafka-avro-console-consumer -bootstrap-server broker:9092 --topic test-sqs-source --from-beginning --max-messages 2
 
 echo "Delete queue ${QUEUE_URL}"
 aws sqs delete-queue --queue-url ${QUEUE_URL}

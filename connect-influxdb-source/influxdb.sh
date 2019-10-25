@@ -13,7 +13,7 @@ echo "Verifying data in mydb"
 curl -G 'http://localhost:8086/query?pretty=true' --data-urlencode "db=mydb" --data-urlencode "q=SELECT \"value\" FROM \"cpu_load_short\" WHERE \"region\"='us-west'"
 
 echo "Creating InfluxDB source connector"
-docker container exec connect \
+docker exec connect \
      curl -X POST \
      -H "Content-Type: application/json" \
      --data '{
@@ -33,6 +33,6 @@ docker container exec connect \
 sleep 10
 
 echo "Verifying topic influx_cpu_load_short"
-docker container exec broker kafka-console-consumer --bootstrap-server localhost:9092 --topic influx_cpu_load_short --from-beginning --max-messages 1
+docker exec broker kafka-console-consumer --bootstrap-server localhost:9092 --topic influx_cpu_load_short --from-beginning --max-messages 1
 
 

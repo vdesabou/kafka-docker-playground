@@ -2,7 +2,7 @@
 set -e
 
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
-BUCKET_NAME=${1:-test-gcs-playground} 
+BUCKET_NAME=${1:-test-gcs-playground}
 
 KEYFILE="${DIR}/keyfile.json"
 if [ ! -f ${KEYFILE} ]
@@ -25,11 +25,11 @@ echo "##  Kerberos GSSAPI authentication"
 echo "########"
 
 echo "Sending messages to topic gcs_topic-kerberos"
-docker container exec -i client kinit -k -t /var/lib/secret/kafka-client.key kafka_producer
-seq -f "{\"f1\": \"This is a message sent with Kerberos GSSAPI authentication %g\"}" 10 | docker container exec -i client kafka-avro-console-producer --broker-list broker:9092 --topic gcs_topic-kerberos --property value.schema='{"type":"record","name":"myrecord","fields":[{"name":"f1","type":"string"}]}' --property schema.registry.url=http://schema-registry:8081 --producer.config /etc/kafka/producer.properties
+docker exec -i client kinit -k -t /var/lib/secret/kafka-client.key kafka_producer
+seq -f "{\"f1\": \"This is a message sent with Kerberos GSSAPI authentication %g\"}" 10 | docker exec -i client kafka-avro-console-producer --broker-list broker:9092 --topic gcs_topic-kerberos --property value.schema='{"type":"record","name":"myrecord","fields":[{"name":"f1","type":"string"}]}' --property schema.registry.url=http://schema-registry:8081 --producer.config /etc/kafka/producer.properties
 
 echo "Creating GCS Sink connector with Kerberos GSSAPI authentication"
-docker container exec -e BUCKET_NAME="$BUCKET_NAME" connect \
+docker exec -e BUCKET_NAME="$BUCKET_NAME" connect \
      curl -X POST \
      -H "Content-Type: application/json" \
      --data '{

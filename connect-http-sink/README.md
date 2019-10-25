@@ -49,7 +49,7 @@ $ ./http_json_basic_auth.sh
 Sending using:
 
 ```
-docker container exec -i broker kafka-console-producer --broker-list broker:9092 --topic json-topic << EOF
+docker exec -i broker kafka-console-producer --broker-list broker:9092 --topic json-topic << EOF
 {"customer_name":"Ed", "complaint_type":"Dirty car", "trip_cost": 29.10, "new_customer": false, "number_of_rides": 22}
 EOF
 ```
@@ -246,7 +246,7 @@ $ ./http_avro_basic_auth.sh
 Sending using:
 
 ```bash
-seq -f "{\"f1\": \"value%g\"}" 10 | docker container exec -i schema-registry kafka-avro-console-producer --broker-list broker:9092 --topic avro-topic --property value.schema='{"type":"record","name":"myrecord","fields":[{"name":"f1","type":"string"}]}'
+seq -f "{\"f1\": \"value%g\"}" 10 | docker exec -i schema-registry kafka-avro-console-producer --broker-list broker:9092 --topic avro-topic --property value.schema='{"type":"record","name":"myrecord","fields":[{"name":"f1","type":"string"}]}'
 ```
 
 Getting:

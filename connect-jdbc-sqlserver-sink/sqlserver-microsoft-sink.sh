@@ -14,14 +14,14 @@ fi
 ${DIR}/../plaintext/start.sh "${PWD}/docker-compose.plaintext-microsoft.yml"
 
 # Removed pre-installed JTDS driver
-docker container exec connect rm -f /usr/share/confluent-hub-components/confluentinc-kafka-connect-jdbc/lib/jtds-1.3.1.jar
+docker exec connect rm -f /usr/share/confluent-hub-components/confluentinc-kafka-connect-jdbc/lib/jtds-1.3.1.jar
 docker container restart connect
 
 echo "sleeping 60 seconds"
 sleep 60
 
 echo "Creating JDBC SQL Server (with Microsoft driver) sink connector"
-docker container exec connect \
+docker exec connect \
      curl -X POST \
      -H "Content-Type: application/json" \
      --data '{
@@ -38,7 +38,7 @@ docker container exec connect \
      http://localhost:8083/connectors | jq .
 
 echo "Sending messages to topic orders"
-docker container exec -i schema-registry kafka-avro-console-producer --broker-list broker:9092 --topic orders --property value.schema='{"type":"record","name":"myrecord","fields":[{"name":"id","type":"int"},{"name":"product", "type": "string"}, {"name":"quantity", "type": "int"}, {"name":"price",
+docker exec -i schema-registry kafka-avro-console-producer --broker-list broker:9092 --topic orders --property value.schema='{"type":"record","name":"myrecord","fields":[{"name":"id","type":"int"},{"name":"product", "type": "string"}, {"name":"quantity", "type": "int"}, {"name":"price",
 "type": "float"}]}' << EOF
 {"id": 999, "product": "foo", "quantity": 100, "price": 50}
 EOF

@@ -10,7 +10,7 @@ sleep 60
 echo "Solace UI is accessible at http://127.0.0.1:8080 (admin/admin)"
 
 echo "Create the queue connector-quickstart in the default Message VPN using CLI"
-docker container exec solace bash -c "/usr/sw/loads/currentload/bin/cli -A -s cliscripts/create_queue_cmd"
+docker exec solace bash -c "/usr/sw/loads/currentload/bin/cli -A -s cliscripts/create_queue_cmd"
 
 echo "Publish messages to the Solace queue using the REST endpoint"
 
@@ -20,7 +20,7 @@ do
 done
 
 echo "Creating Solace source connector"
-docker container exec connect \
+docker exec connect \
      curl -X POST \
      -H "Content-Type: application/json" \
      --data '{
@@ -42,4 +42,4 @@ docker container exec connect \
      http://localhost:8083/connectors | jq .
 
 echo "Verifying topic from-solace-messages"
-docker container exec broker kafka-console-consumer -bootstrap-server broker:9092 --topic from-solace-messages --from-beginning --max-messages 2
+docker exec broker kafka-console-consumer -bootstrap-server broker:9092 --topic from-solace-messages --from-beginning --max-messages 2

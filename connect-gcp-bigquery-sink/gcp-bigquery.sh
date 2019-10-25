@@ -2,8 +2,8 @@
 set -e
 
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
-PROJECT=${1:-vincent-de-saboulin-lab} 
-DATASET=${1:-MyDatasetTest} 
+PROJECT=${1:-vincent-de-saboulin-lab}
+DATASET=${1:-MyDatasetTest}
 
 KEYFILE="${DIR}/keyfile.json"
 if [ ! -f ${KEYFILE} ]
@@ -16,11 +16,11 @@ ${DIR}/../plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
 
 
 echo "Sending messages to topic kcbq-quickstart1"
-seq -f "{\"f1\": \"value%g\"}" 10 | docker container exec -i schema-registry kafka-avro-console-producer --broker-list broker:9092 --topic kcbq-quickstart1 --property value.schema='{"type":"record","name":"myrecord","fields":[{"name":"f1","type":"string"}]}'
+seq -f "{\"f1\": \"value%g\"}" 10 | docker exec -i schema-registry kafka-avro-console-producer --broker-list broker:9092 --topic kcbq-quickstart1 --property value.schema='{"type":"record","name":"myrecord","fields":[{"name":"f1","type":"string"}]}'
 
 
 echo "Creating GCP BigQuery Sink connector"
-docker container exec -e PROJECT="$PROJECT" -e DATASET="$DATASET" connect \
+docker exec -e PROJECT="$PROJECT" -e DATASET="$DATASET" connect \
      curl -X POST \
      -H "Content-Type: application/json" \
      --data '{

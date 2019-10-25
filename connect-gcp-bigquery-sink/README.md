@@ -51,13 +51,13 @@ $ ./gcp-bigquery.sh <PROJECT> <DATASET>
 Messages are sent to `kcbq-quickstart1` topic using:
 
 ```bash
-seq -f "{\"f1\": \"value%g\"}" 10 | docker container exec -i schema-registry kafka-avro-console-producer --broker-list broker:9092 --topic kcbq-quickstart1 --property value.schema='{"type":"record","name":"myrecord","fields":[{"name":"f1","type":"string"}]}'
+seq -f "{\"f1\": \"value%g\"}" 10 | docker exec -i schema-registry kafka-avro-console-producer --broker-list broker:9092 --topic kcbq-quickstart1 --property value.schema='{"type":"record","name":"myrecord","fields":[{"name":"f1","type":"string"}]}'
 ```
 
 The connector is created with:
 
 ```bash
-docker container exec -e PROJECT="$PROJECT" -e DATASET="$DATASET" connect \
+docker exec -e PROJECT="$PROJECT" -e DATASET="$DATASET" connect \
      curl -X POST \
      -H "Content-Type: application/json" \
      --data '{
@@ -87,7 +87,7 @@ After a few seconds, data should be in GCP BigQuery:
 
 ```bash
 $ bq query "SELECT * FROM $DATASET.kcbq_quickstart1;"
-Waiting on bqjob_r1bbecb24663a3f7c_0000016d825065f1_1 ... (0s) Current status: DONE 
+Waiting on bqjob_r1bbecb24663a3f7c_0000016d825065f1_1 ... (0s) Current status: DONE
 +---------+
 |   f1    |
 +---------+

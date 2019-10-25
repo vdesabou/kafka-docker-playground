@@ -28,7 +28,7 @@ Steps from [connect-hdfs3-sink](../connect-hdfs3-sink/README.md)
 Creating HDFS Source connector:
 
 ```bash
-$ docker container exec connect \
+$ docker exec connect \
      curl -X POST \
      -H "Content-Type: application/json" \
      --data '{
@@ -53,7 +53,7 @@ $ docker container exec connect \
 Verifying topic `copy_of_test_hdfs`:
 
 ```bash
-$ docker container exec schema-registry kafka-avro-console-consumer -bootstrap-server broker:9092 --topic copy_of_test_hdfs --from-beginning --max-messages 9
+$ docker exec schema-registry kafka-avro-console-consumer -bootstrap-server broker:9092 --topic copy_of_test_hdfs --from-beginning --max-messages 9
 ```
 
 Results:

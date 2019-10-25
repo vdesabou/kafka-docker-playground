@@ -23,7 +23,7 @@ $ ./postgres-sink.sh
 Creating JDBC PostgreSQL sink connector
 
 ```bash
-$ docker container exec connect \
+$ docker exec connect \
      curl -X POST \
      -H "Content-Type: application/json" \
      --data '{
@@ -41,7 +41,7 @@ $ docker container exec connect \
 Sending messages to topic orders
 
 ```bash
-$ docker container exec -i schema-registry kafka-avro-console-producer --broker-list broker:9092 --topic orders --property value.schema='{"type":"record","name":"myrecord","fields":[{"name":"id","type":"int"},{"name":"product", "type": "string"}, {"name":"quantity", "type": "int"}, {"name":"price",
+$ docker exec -i schema-registry kafka-avro-console-producer --broker-list broker:9092 --topic orders --property value.schema='{"type":"record","name":"myrecord","fields":[{"name":"id","type":"int"},{"name":"product", "type": "string"}, {"name":"quantity", "type": "int"}, {"name":"price",
 "type": "float"}]}' << EOF
 {"id": 999, "product": "foo", "quantity": 100, "price": 50}
 EOF
@@ -50,7 +50,7 @@ EOF
 Show content of ORDERS table:
 
 ```bash
-$ docker container exec postgres bash -c "psql -U postgres -d postgres -c 'SELECT * FROM ORDERS'"
+$ docker exec postgres bash -c "psql -U postgres -d postgres -c 'SELECT * FROM ORDERS'"
 ```
 
 Results:

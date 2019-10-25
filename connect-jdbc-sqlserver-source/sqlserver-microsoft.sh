@@ -14,7 +14,7 @@ fi
 ${DIR}/../plaintext/start.sh "${PWD}/docker-compose.plaintext-microsoft.yml"
 
 # Removed pre-installed JTDS driver
-docker container exec connect rm -f /usr/share/confluent-hub-components/confluentinc-kafka-connect-jdbc/lib/jtds-1.3.1.jar
+docker exec connect rm -f /usr/share/confluent-hub-components/confluentinc-kafka-connect-jdbc/lib/jtds-1.3.1.jar
 docker container restart connect
 
 echo "sleeping 60 seconds"
@@ -25,7 +25,7 @@ cat inventory.sql | docker exec -i sqlserver bash -c '/opt/mssql-tools/bin/sqlcm
 
 
 echo "Creating JDBC SQL Server (with Microsoft driver) source connector"
-docker container exec connect \
+docker exec connect \
      curl -X POST \
      -H "Content-Type: application/json" \
      --data '{
@@ -55,4 +55,4 @@ GO
 EOF
 
 echo "Verifying topic sqlserver-customers"
-docker container exec schema-registry kafka-avro-console-consumer -bootstrap-server broker:9092 --topic sqlserver-customers --from-beginning --max-messages 5
+docker exec schema-registry kafka-avro-console-consumer -bootstrap-server broker:9092 --topic sqlserver-customers --from-beginning --max-messages 5

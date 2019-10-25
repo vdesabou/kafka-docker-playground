@@ -7,14 +7,14 @@ ${DIR}/../plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
 
 
 echo "Sending messages to topic orders"
-docker container exec -i schema-registry kafka-avro-console-producer --broker-list broker:9092 --topic orders --property value.schema='{"type":"record","name":"myrecord","fields":[{"name":"measurement","type":"string"},{"name":"id","type":"int"},{"name":"product", "type": "string"}, {"name":"quantity", "type": "int"}, {"name":"price",
+docker exec -i schema-registry kafka-avro-console-producer --broker-list broker:9092 --topic orders --property value.schema='{"type":"record","name":"myrecord","fields":[{"name":"measurement","type":"string"},{"name":"id","type":"int"},{"name":"product", "type": "string"}, {"name":"quantity", "type": "int"}, {"name":"price",
 "type": "float"}]}' << EOF
 {"measurement": "orders", "id": 999, "product": "foo", "quantity": 100, "price": 50}
 EOF
 
 
 echo "Creating InfluxDB sink connector"
-docker container exec connect \
+docker exec connect \
      curl -X POST \
      -H "Content-Type: application/json" \
      --data '{

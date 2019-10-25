@@ -23,7 +23,7 @@ $ ./mysql-sink.sh
 Creating MySQL sink connector
 
 ```bash
-$ docker container exec connect \
+$ docker exec connect \
      curl -X POST \
      -H "Content-Type: application/json" \
      --data '{
@@ -41,7 +41,7 @@ $ docker container exec connect \
 Sending messages to topic orders
 
 ```bash
-$ docker container exec -i schema-registry kafka-avro-console-producer --broker-list broker:9092 --topic orders --property value.schema='{"type":"record","name":"myrecord","fields":[{"name":"id","type":"int"},{"name":"product", "type": "string"}, {"name":"quantity", "type": "int"}, {"name":"price",
+$ docker exec -i schema-registry kafka-avro-console-producer --broker-list broker:9092 --topic orders --property value.schema='{"type":"record","name":"myrecord","fields":[{"name":"id","type":"int"},{"name":"product", "type": "string"}, {"name":"quantity", "type": "int"}, {"name":"price",
 "type": "float"}]}' << EOF
 {"id": 999, "product": "foo", "quantity": 100, "price": 50}
 EOF
@@ -51,7 +51,7 @@ EOF
 Describing the `orders` table in DB `db`:
 
 ```bash
-$ docker container exec mysql bash -c "mysql --user=root --password=password --database=db -e 'describe orders'"
+$ docker exec mysql bash -c "mysql --user=root --password=password --database=db -e 'describe orders'"
 ```
 
 Results:
@@ -66,7 +66,7 @@ id      int(11) NO              NULL
 Show content of `orders` table:
 
 ```bash
-$ docker container exec mysql bash -c "mysql --user=root --password=password --database=db -e 'select * from orders'"
+$ docker exec mysql bash -c "mysql --user=root --password=password --database=db -e 'select * from orders'"
 ```
 
 Results:

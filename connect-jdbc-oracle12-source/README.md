@@ -34,7 +34,7 @@ Wait (up to 15 minutes) that Oracle DB is up
 Create the source connector with:
 
 ```bash
-$ docker container exec connect \
+$ docker exec connect \
      curl -X POST \
      -H "Content-Type: application/json" \
      --data '{
@@ -61,7 +61,7 @@ $ docker container exec connect \
 Verify the topic `oracle-CUSTOMERS`:
 
 ```bash
-$ docker container exec schema-registry kafka-avro-console-consumer -bootstrap-server broker:9092 --topic oracle-CUSTOMERS --from-beginning --max-messages 2
+$ docker exec schema-registry kafka-avro-console-consumer -bootstrap-server broker:9092 --topic oracle-CUSTOMERS --from-beginning --max-messages 2
 ```
 
 Results:

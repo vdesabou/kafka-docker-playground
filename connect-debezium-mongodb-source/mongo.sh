@@ -11,7 +11,7 @@ docker exec -it mongodb mongo --eval 'rs.initiate({_id: "debezium", members:[{_i
 sleep 5
 
 echo "Create a user profile"
-docker exec -i mongodb mongo << EOF 
+docker exec -i mongodb mongo << EOF
 use admin
 db.createUser(
 {
@@ -22,10 +22,10 @@ roles: ["dbOwner"]
 )
 EOF
 
-sleep 2 
+sleep 2
 
 echo "Insert a record"
-docker exec -i mongodb mongo << EOF 
+docker exec -i mongodb mongo << EOF
 use inventory
 db.customers.insert([
 { _id : 1006, first_name : 'Bob', last_name : 'Hopper', email : 'thebob@example.com' }
@@ -34,12 +34,12 @@ EOF
 
 echo "View record"
 docker exec -i mongodb mongo << EOF
-use inventory 
+use inventory
 db.customers.find().pretty();
 EOF
 
 echo "Creating Debezium MongoDB source connector"
-docker container exec connect \
+docker exec connect \
      curl -X POST \
      -H "Content-Type: application/json" \
      --data '{
@@ -59,4 +59,4 @@ docker container exec connect \
 sleep 5
 
 echo "Verifying topic dbserver1.inventory.customers"
-docker container exec schema-registry kafka-avro-console-consumer -bootstrap-server broker:9092 --topic dbserver1.inventory.customers --from-beginning --max-messages 1
+docker exec schema-registry kafka-avro-console-consumer -bootstrap-server broker:9092 --topic dbserver1.inventory.customers --from-beginning --max-messages 1

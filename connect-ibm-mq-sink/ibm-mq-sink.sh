@@ -6,12 +6,12 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 ${DIR}/../plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
 
 echo "Sending messages to topic sink-messages"
-docker container exec -i broker kafka-console-producer --broker-list broker:9092 --topic sink-messages << EOF
+docker exec -i broker kafka-console-producer --broker-list broker:9092 --topic sink-messages << EOF
 This is my message
 EOF
 
 echo "Creating IBM MQ source connector"
-docker container exec connect \
+docker exec connect \
      curl -X POST \
      -H "Content-Type: application/json" \
      --data '{
@@ -39,5 +39,5 @@ docker container exec connect \
 sleep 5
 
 echo "Verify message received in DEV.QUEUE.1 queue"
-docker container exec ibmmq bash -c "/opt/mqm/samp/bin/amqsbcg DEV.QUEUE.1"
+docker exec ibmmq bash -c "/opt/mqm/samp/bin/amqsbcg DEV.QUEUE.1"
 

@@ -7,7 +7,7 @@ BUCKET_NAME=${1:-kafka-docker-playground}
 ${DIR}/../plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
 
 echo "Creating Syslog Source connector"
-docker container exec connect \
+docker exec connect \
      curl -X POST \
      -H "Content-Type: application/json" \
      --data '{
@@ -32,4 +32,4 @@ echo "<34>1 2003-10-11T22:14:15.003Z mymachine.example.com su - ID47 - Your refr
 sleep 5
 
 echo "Verify we have received the data in syslog topic"
-docker container exec schema-registry kafka-avro-console-consumer -bootstrap-server broker:9092 --topic syslog --property schema.registry.url=http://schema-registry:8081 --from-beginning --max-messages 1
+docker exec schema-registry kafka-avro-console-consumer -bootstrap-server broker:9092 --topic syslog --property schema.registry.url=http://schema-registry:8081 --from-beginning --max-messages 1

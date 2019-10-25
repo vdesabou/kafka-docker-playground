@@ -11,7 +11,7 @@ Quickly test [Solace Source](https://docs.confluent.io/current/connect/kafka-con
 
 
 ## How to run
-  
+
 Simply run:
 
 ```
@@ -25,7 +25,7 @@ Solace UI is available at [127.0.0.1:8080](http://127.0.0.1:8080) `admin/admin`
 Create the queue `connector-quickstart` in the `default` Message VPN using CLI:
 
 ```bash
-$ docker container exec solace bash -c "/usr/sw/loads/currentload/bin/cli -A -s cliscripts/create_queue_cmd"
+$ docker exec solace bash -c "/usr/sw/loads/currentload/bin/cli -A -s cliscripts/create_queue_cmd"
 ```
 
 Note: this could also be done manually using [Solace UI](http://127.0.0.1:8080)
@@ -53,7 +53,7 @@ done
 The connector is created with:
 
 ```bash
-$ docker container exec connect \
+$ docker exec connect \
      curl -X POST \
      -H "Content-Type: application/json" \
      --data '{
@@ -78,7 +78,7 @@ $ docker container exec connect \
 Verify topic
 
 ```
-$ docker container exec broker kafka-console-consumer -bootstrap-server broker:9092 --topic from-solace-messages --from-beginning --max-messages 2
+$ docker exec broker kafka-console-consumer -bootstrap-server broker:9092 --topic from-solace-messages --from-beginning --max-messages 2
 Struct{messageID=1000,messageType=text,timestamp=0,deliveryMode=2,destination=Struct{destinationType=queue,name=connector-quickstart},redelivered=false,expiration=0,priority=0,properties={JMS_Solace_isXML=Struct{propertyType=boolean,boolean=false}, JMS_Solace_DeliverToOne=Struct{propertyType=boolean,boolean=false}, JMS_Solace_DeadMsgQueueEligible=Struct{propertyType=boolean,boolean=false}, JMS_Solace_ElidingEligible=Struct{propertyType=boolean,boolean=false}, Solace_JMS_Prop_IS_Reply_Message=Struct{propertyType=boolean,boolean=false}, JMS_Solace_HTTPContentType=Struct{propertyType=string,string=text/plain}, JMSXDeliveryCount=Struct{propertyType=integer,integer=1}},text=m1}
 Struct{messageID=1001,messageType=text,timestamp=0,deliveryMode=2,destination=Struct{destinationType=queue,name=connector-quickstart},redelivered=false,expiration=0,priority=0,properties={JMS_Solace_isXML=Struct{propertyType=boolean,boolean=false}, JMS_Solace_DeliverToOne=Struct{propertyType=boolean,boolean=false}, JMS_Solace_DeadMsgQueueEligible=Struct{propertyType=boolean,boolean=false}, JMS_Solace_ElidingEligible=Struct{propertyType=boolean,boolean=false}, Solace_JMS_Prop_IS_Reply_Message=Struct{propertyType=boolean,boolean=false}, JMS_Solace_HTTPContentType=Struct{propertyType=string,string=text/plain}, JMSXDeliveryCount=Struct{propertyType=integer,integer=1}},text=m1}
 Processed a total of 2 messages

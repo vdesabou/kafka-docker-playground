@@ -11,7 +11,7 @@ Quickly test [Solace Sink](https://docs.confluent.io/current/connect/kafka-conne
 
 
 ## How to run
-  
+
 Simply run:
 
 ```
@@ -26,13 +26,13 @@ Solace UI is available at [127.0.0.1:8080](http://127.0.0.1:8080) `admin/admin`
 Sending messages to topic `sink-messages`
 
 ```bash
-$ seq 10 | docker container exec -i broker kafka-console-producer --broker-list broker:9092 --topic sink-messages
+$ seq 10 | docker exec -i broker kafka-console-producer --broker-list broker:9092 --topic sink-messages
 ```
 
 The connector is created with:
 
 ```bash
-$ docker container exec connect \
+$ docker exec connect \
      curl -X POST \
      -H "Content-Type: application/json" \
      --data '{
@@ -59,7 +59,7 @@ Confirm the messages were delivered to the `connector-quickstart` queue in the `
 
 
 ```bash
-$ docker container exec solace bash -c "/usr/sw/loads/currentload/bin/cli -A -s cliscripts/show_queue_cmd"
+$ docker exec solace bash -c "/usr/sw/loads/currentload/bin/cli -A -s cliscripts/show_queue_cmd"
 ```
 
 The solace commands executed in script `show_queue_cmd`are:
@@ -82,7 +82,7 @@ http://www.solace.com/license-software
 
 Copyright 2004-2019 Solace Corporation. All rights reserved.
 
-To purchase product support, please contact Solace at: 
+To purchase product support, please contact Solace at:
 https://solace.com/contact-us/
 
 Operating Mode: Message Routing Node

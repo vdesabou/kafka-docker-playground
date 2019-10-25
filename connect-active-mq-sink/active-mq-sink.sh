@@ -7,12 +7,12 @@ ${DIR}/../plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
 
 
 echo "Sending messages to topic sink-messages"
-docker container exec -i broker kafka-console-producer --broker-list broker:9092 --topic sink-messages << EOF
+docker exec -i broker kafka-console-producer --broker-list broker:9092 --topic sink-messages << EOF
 This is my message
 EOF
 
 echo "Creating ActiveMQ sink connector"
-docker container exec connect \
+docker exec connect \
      curl -X POST \
      -H "Content-Type: application/json" \
      --data '{

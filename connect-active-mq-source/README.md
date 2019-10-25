@@ -13,7 +13,7 @@ Using ActiveMQ Docker [image](https://hub.docker.com/r/rmohr/activemq/)
 
 
 ## How to run
-  
+
 Simply run:
 
 ```
@@ -27,7 +27,7 @@ ActiveMQ UI is reachable at [http://127.0.0.1:8161](http://127.0.0.1:8161]) (`ad
 The connector is created with:
 
 ```bash
-$ docker container exec connect \
+$ docker exec connect \
      curl -X POST \
      -H "Content-Type: application/json" \
      --data '{
@@ -54,7 +54,7 @@ $ curl -XPOST -u admin:admin -d "body=message" http://localhost:8161/api/message
 Verify we have received the data in MyKafkaTopicName topic:
 
 ```bash
-docker container exec schema-registry kafka-avro-console-consumer -bootstrap-server broker:9092 --topic MyKafkaTopicName --from-beginning --max-messages 1
+docker exec schema-registry kafka-avro-console-consumer -bootstrap-server broker:9092 --topic MyKafkaTopicName --from-beginning --max-messages 1
 ```
 
 We get:

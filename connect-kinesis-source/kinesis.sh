@@ -25,7 +25,7 @@ aws kinesis put-record --stream-name my_kinesis_stream --partition-key 123 --dat
 
 
 echo "Creating Kinesis Source connector"
-docker container exec connect \
+docker exec connect \
      curl -X POST \
      -H "Content-Type: application/json" \
      --data '{
@@ -44,7 +44,7 @@ docker container exec connect \
      http://localhost:8083/connectors | jq .
 
 echo "Verify we have received the data in kinesis_topic topic"
-docker container exec broker kafka-console-consumer --bootstrap-server broker:9092 --topic kinesis_topic --from-beginning --max-messages 1
+docker exec broker kafka-console-consumer --bootstrap-server broker:9092 --topic kinesis_topic --from-beginning --max-messages 1
 
 echo "Delete the stream"
 aws kinesis delete-stream --stream-name my_kinesis_stream

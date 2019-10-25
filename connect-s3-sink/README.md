@@ -39,7 +39,7 @@ $ ./s3.sh <your-bucket-name>
 The connector is created with:
 
 ```
-docker container exec connect \
+docker exec connect \
      curl -X POST \
      -H "Content-Type: application/json" \
      --data '{
@@ -62,7 +62,7 @@ docker container exec connect \
 Messages are sent to `s3_topic` topic using:
 
 ```
-seq -f "{\"f1\": \"value%g\"}" 10 | docker container exec -i schema-registry kafka-avro-console-producer --broker-list broker:9092 --topic s3_topic --property value.schema='{"type":"record","name":"myrecord","fields":[{"name":"f1","type":"string"}]}'
+seq -f "{\"f1\": \"value%g\"}" 10 | docker exec -i schema-registry kafka-avro-console-producer --broker-list broker:9092 --topic s3_topic --property value.schema='{"type":"record","name":"myrecord","fields":[{"name":"f1","type":"string"}]}'
 ```
 
 After a few seconds, S3 should contain files in bucket:

@@ -11,7 +11,7 @@ Quickly test [Debezium MySQL](https://docs.confluent.io/current/connect/debezium
 
 
 ## How to run
-  
+
 Simply run:
 
 ```
@@ -24,19 +24,19 @@ $ ./mysql.sh
 Describing the team table in DB `mydb`
 
 ```bash
-$ docker container exec mysql bash -c "mysql --user=root --password=password --database=mydb -e 'describe team'"
+$ docker exec mysql bash -c "mysql --user=root --password=password --database=mydb -e 'describe team'"
 ```
 
 Show content of team table:
 
 ```bash
-$ docker container exec mysql bash -c "mysql --user=root --password=password --database=mydb -e 'select * from team'"
+$ docker exec mysql bash -c "mysql --user=root --password=password --database=mydb -e 'select * from team'"
 ```
 
 Adding an element to the table
 
 ```bash
-docker container exec mysql mysql --user=root --password=password --database=mydb -e "
+docker exec mysql mysql --user=root --password=password --database=mydb -e "
 INSERT INTO team (   \
   id,   \
   name, \
@@ -54,7 +54,7 @@ INSERT INTO team (   \
 Creating Debezium MySQL source connector
 
 ```bash
-docker container exec connect \
+docker exec connect \
      curl -X POST \
      -H "Content-Type: application/json" \
      --data '{
@@ -79,7 +79,7 @@ docker container exec connect \
 Verifying topic `dbserver1.mydb.team`
 
 ```bash
-$ docker container exec schema-registry kafka-avro-console-consumer -bootstrap-server broker:9092 --topic dbserver1.mydb.team --from-beginning --max-messages 2
+$ docker exec schema-registry kafka-avro-console-consumer -bootstrap-server broker:9092 --topic dbserver1.mydb.team --from-beginning --max-messages 2
 ```
 
 Result:

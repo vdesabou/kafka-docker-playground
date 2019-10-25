@@ -43,7 +43,7 @@ Steps from [connect-s3-sink](../connect-s3-sink/README.md)
 The connector is created with:
 
 ```
-docker container exec -e BUCKET_NAME="$BUCKET_NAME" connect \
+docker exec -e BUCKET_NAME="$BUCKET_NAME" connect \
      curl -X POST \
      -H "Content-Type: application/json" \
      --data '{

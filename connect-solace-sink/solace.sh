@@ -10,10 +10,10 @@ sleep 60
 echo "Solace UI is accessible at http://127.0.0.1:8080 (admin/admin)"
 
 echo "Sending messages to topic sink-messages"
-seq 10 | docker container exec -i broker kafka-console-producer --broker-list broker:9092 --topic sink-messages
+seq 10 | docker exec -i broker kafka-console-producer --broker-list broker:9092 --topic sink-messages
 
 echo "Creating Solace sink connector"
-docker container exec connect \
+docker exec connect \
      curl -X POST \
      -H "Content-Type: application/json" \
      --data '{
@@ -38,4 +38,4 @@ docker container exec connect \
 sleep 10
 
 echo "Confirm the messages were delivered to the connector-quickstart queue in the default Message VPN using CLI"
-docker container exec solace bash -c "/usr/sw/loads/currentload/bin/cli -A -s cliscripts/show_queue_cmd"
+docker exec solace bash -c "/usr/sw/loads/currentload/bin/cli -A -s cliscripts/show_queue_cmd"

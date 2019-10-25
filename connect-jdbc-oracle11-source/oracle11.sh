@@ -12,7 +12,7 @@ fi
 ${DIR}/../plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
 
 echo "Creating Oracle source connector"
-docker container exec connect \
+docker exec connect \
      curl -X POST \
      -H "Content-Type: application/json" \
      --data '{
@@ -39,4 +39,4 @@ docker container exec connect \
 sleep 5
 
 echo "Verifying topic oracle-MYTABLE"
-docker container exec schema-registry kafka-avro-console-consumer -bootstrap-server broker:9092 --topic oracle-MYTABLE --from-beginning --max-messages 1
+docker exec schema-registry kafka-avro-console-consumer -bootstrap-server broker:9092 --topic oracle-MYTABLE --from-beginning --max-messages 1

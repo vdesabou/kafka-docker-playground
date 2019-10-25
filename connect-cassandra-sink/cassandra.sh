@@ -7,10 +7,10 @@ ${DIR}/../plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
 
 
 echo "Sending messages to topic topic1"
-seq -f "{\"f1\": \"value%g\"}" 10 | docker container exec -i schema-registry kafka-avro-console-producer --broker-list broker:9092 --topic topic1 --property value.schema='{"type":"record","name":"myrecord","fields":[{"name":"f1","type":"string"}]}'
+seq -f "{\"f1\": \"value%g\"}" 10 | docker exec -i schema-registry kafka-avro-console-producer --broker-list broker:9092 --topic topic1 --property value.schema='{"type":"record","name":"myrecord","fields":[{"name":"f1","type":"string"}]}'
 
 echo "Creating Cassandra Sink connector"
-docker container exec connect \
+docker exec connect \
      curl -X POST \
      -H "Content-Type: application/json" \
      --data '{
@@ -34,4 +34,4 @@ docker container exec connect \
 sleep 10
 
 echo "Verify messages are in cassandra table test.topic1"
-docker container exec cassandra cqlsh -e 'select * from test.topic1;'
+docker exec cassandra cqlsh -e 'select * from test.topic1;'

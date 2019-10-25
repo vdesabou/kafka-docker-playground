@@ -25,13 +25,13 @@ Splunk UI is available at [127.0.0.1:8000](http://127.0.0.1:8000) `admin/passwor
 Create topic `splunk-qs`
 
 ```bash
-docker container exec broker kafka-topics --create --topic splunk-qs --partitions 10 --replication-factor 1 --zookeeper zookeeper:2181
+docker exec broker kafka-topics --create --topic splunk-qs --partitions 10 --replication-factor 1 --zookeeper zookeeper:2181
 ```
 
 Creating Splunk sink connector
 
 ```bash
-$ docker container exec connect \
+$ docker exec connect \
      curl -X POST \
      -H "Content-Type: application/json" \
      --data '{
@@ -62,7 +62,7 @@ If you want to manually create the token using UI, follow steps from [Quick Star
 Sending messages to topic splunk-qs
 
 ```bash
-$ docker container exec -i broker kafka-console-producer --broker-list broker:9092 --topic splunk-qs << EOF
+$ docker exec -i broker kafka-console-producer --broker-list broker:9092 --topic splunk-qs << EOF
 This is a test with Splunk 1
 This is a test with Splunk 2
 This is a test with Splunk 3
@@ -72,7 +72,7 @@ EOF
 Verify data is in splunk (`FIXTHIS: it takes around 60 seconds to appear in Splunk`)
 
 ```bash
-docker container exec splunk bash -c 'sudo /opt/splunk/bin/splunk search "source=\"http:splunk_hec_token\"" -auth "admin:password"'
+docker exec splunk bash -c 'sudo /opt/splunk/bin/splunk search "source=\"http:splunk_hec_token\"" -auth "admin:password"'
 ```
 
 Results:

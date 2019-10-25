@@ -85,13 +85,13 @@ KAFKA_LDAP_GROUP_MEMBER_ATTRIBUTE_PATTERN: cn=(.*),ou=users,dc=confluent,dc=io
 Create topic testtopic
 
 ```bash
-$ docker container exec broker kafka-topics --create --topic testtopic --partitions 10 --replication-factor 1 --zookeeper zookeeper:2181
+$ docker exec broker kafka-topics --create --topic testtopic --partitions 10 --replication-factor 1 --zookeeper zookeeper:2181
 ```
 
 Run console producer without authorizing user `alice`: SHOULD FAIL
 
 ```bash
-$ docker container exec -i broker kafka-console-producer --broker-list broker:9092 --topic testtopic --producer.config /service/kafka/users/alice.properties << EOF
+$ docker exec -i broker kafka-console-producer --broker-list broker:9092 --topic testtopic --producer.config /service/kafka/users/alice.properties << EOF
 message Alice
 EOF
 ```
@@ -108,13 +108,13 @@ org.apache.kafka.common.errors.TopicAuthorizationException: Not authorized to ac
 Authorize group `Group:Kafka Developers`
 
 ```bash
-$ docker container exec broker kafka-acls --authorizer-properties zookeeper.connect=zookeeper:2181 --add --topic=testtopic --producer --allow-principal="Group:Kafka Developers"
+$ docker exec broker kafka-acls --authorizer-properties zookeeper.connect=zookeeper:2181 --add --topic=testtopic --producer --allow-principal="Group:Kafka Developers"
 ```
 
 Rerun producer for `alice`: SHOULD BE SUCCESS
 
 ```bash
-$ docker container exec -i broker kafka-console-producer --broker-list broker:9092 --topic testtopic --producer.config /service/kafka/users/alice.properties << EOF
+$ docker exec -i broker kafka-console-producer --broker-list broker:9092 --topic testtopic --producer.config /service/kafka/users/alice.properties << EOF
 message Alice
 EOF
 ```
@@ -124,7 +124,7 @@ Run console consumer without access to consumer group: SHOULD FAIL
 Note: Consume should fail authorization since neither user alice nor the group Kafka Developers that alice belongs to has authorization to consume using the group test-consumer-group
 
 ```bash
-$ docker container exec broker kafka-console-consumer --bootstrap-server broker:9092 --topic testtopic --from-beginning --group test-consumer-group --consumer.config /service/kafka/users/alice.properties --max-messages 1
+$ docker exec broker kafka-console-consumer --bootstrap-server broker:9092 --topic testtopic --from-beginning --group test-consumer-group --consumer.config /service/kafka/users/alice.properties --max-messages 1
 ```
 
 Results:
@@ -138,15 +138,15 @@ org.apache.kafka.common.errors.GroupAuthorizationException: Not authorized to ac
 Authorize group and rerun consumer
 
 ```bash
-$ docker container exec broker kafka-acls --authorizer-properties zookeeper.connect=zookeeper:2181 --add --topic=testtopic --group test-consumer-group --allow-principal="Group:Kafka Developers"
+$ docker exec broker kafka-acls --authorizer-properties zookeeper.connect=zookeeper:2181 --add --topic=testtopic --group test-consumer-group --allow-principal="Group:Kafka Developers"
 
-$ docker container exec broker kafka-console-consumer --bootstrap-server broker:9092 --topic testtopic --from-beginning --group test-consumer-group --consumer.config /service/kafka/users/alice.properties --max-messages 1
+$ docker exec broker kafka-console-consumer --bootstrap-server broker:9092 --topic testtopic --from-beginning --group test-consumer-group --consumer.config /service/kafka/users/alice.properties --max-messages 1
 ```
 
 Run console producer with authorized user `barnie` (barnie is in group): SHOULD BE SUCCESS
 
 ```bash
-$ docker container exec -i broker kafka-console-producer --broker-list broker:9092 --topic testtopic --producer.config /service/kafka/users/barnie.properties << EOF
+$ docker exec -i broker kafka-console-producer --broker-list broker:9092 --topic testtopic --producer.config /service/kafka/users/barnie.properties << EOF
 message Barnie
 EOF
 ```
@@ -154,7 +154,7 @@ EOF
 Run console producer without authorizing user `charlie` (charlie is NOT in group): SHOULD FAIL
 
 ```bash
-$ docker container exec -i broker kafka-console-producer --broker-list broker:9092 --topic testtopic --producer.config /service/kafka/users/charlie.properties << EOF
+$ docker exec -i broker kafka-console-producer --broker-list broker:9092 --topic testtopic --producer.config /service/kafka/users/charlie.properties << EOF
 message Charlie
 EOF
 ```
@@ -172,7 +172,7 @@ org.apache.kafka.common.errors.TopicAuthorizationException: Not authorized to ac
 For reference, listing ACLs:
 
 ```bash
-$ docker container exec broker kafka-acls --bootstrap-server broker:9092 --list --command-config /service/kafka/users/kafka.properties
+$ docker exec broker kafka-acls --bootstrap-server broker:9092 --list --command-config /service/kafka/users/kafka.properties
 
 Current ACLs for resource `ResourcePattern(resourceType=GROUP, name=test-consumer-group, patternType=LITERAL)`:
         (principal=Group:Kafka Developers, host=*, operation=ALL, permissionType=ALLOW)
