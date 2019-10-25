@@ -35,7 +35,9 @@ Playground for Kafka/Confluent Docker experimentations
 
 ### ↗️ Sink
 
-* [HDFS 2](connect-hdfs-sink)
+* HDFS
+    * [HDFS 2](connect-hdfs-sink)
+    * [HDFS 3](connect-hdfs3-sink)
 * [AWS S3](connect-s3-sink)
 * [Elasticsearch](connect-elasticsearch-sink)
 * [HTTP](connect-http-sink)
