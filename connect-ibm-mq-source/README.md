@@ -13,7 +13,7 @@ Using IBM MQ Docker [image](https://hub.docker.com/r/ibmcom/mq/)
 
 
 ## How to run
-  
+
 Simply run:
 
 ```
@@ -25,7 +25,7 @@ $ ./ibm-mq.sh
 The connector is created with:
 
 ```bash
-$ docker container exec connect \
+$ docker exec connect \
      curl -X POST \
      -H "Content-Type: application/json" \
      --data '{
@@ -52,7 +52,7 @@ $ docker container exec connect \
 Messages are sent to IBM MQ using:
 
 ```bash
-$ docker container exec -i ibmmq /opt/mqm/samp/bin/amqsput DEV.QUEUE.1 << EOF
+$ docker exec -i ibmmq /opt/mqm/samp/bin/amqsput DEV.QUEUE.1 << EOF
 Message 1
 Message 2
 
@@ -62,7 +62,7 @@ EOF
 Verify we have received the data in MyKafkaTopicName topic:
 
 ```bash
-docker container exec schema-registry kafka-avro-console-consumer -bootstrap-server broker:9092 --topic MyKafkaTopicName --from-beginning --max-messages 2
+docker exec schema-registry kafka-avro-console-consumer -bootstrap-server broker:9092 --topic MyKafkaTopicName --from-beginning --max-messages 2
 ```
 
 N.B: Control Center is reachable at [http://127.0.0.1:9021](http://127.0.0.1:9021])

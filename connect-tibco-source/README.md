@@ -13,7 +13,7 @@ Using TIBCO Docker [image](https://hub.docker.com/r/ibmcom/mq/)
 * Download [TIBCO EMS Community Edition](https://www.tibco.com/resources/product-download/tibco-enterprise-message-service-community-edition--free-download) and put `TIB_ems-ce_8.5.1_linux_x86_64.zip`into `docker-file`directory
 
 ## How to run
-  
+
 Simply run:
 
 ```
@@ -29,7 +29,7 @@ The queues is created by providing `./docker-tibco/queues.conf`file in `/home/ti
 This file contains:
 
 ```
-> 
+>
 sample
 
 queue.sample
@@ -40,7 +40,7 @@ connector-quickstart
 The connector is created with:
 
 ```bash
-$ docker container exec connect \
+$ docker exec connect \
      curl -X POST \
      -H "Content-Type: application/json" \
      --data '{
@@ -65,7 +65,7 @@ $ docker container exec connect \
 Messages are sent to TIBCO EMS using:
 
 ```bash
-$ docker container exec tibco-ems bash -c '
+$ docker exec tibco-ems bash -c '
 cd /opt/tibco/ems/8.5/samples/java
 export TIBEMS_JAVA=/opt/tibco/ems/8.5/lib
 CLASSPATH=${TIBEMS_JAVA}/jms-2.0.jar:${CLASSPATH}
@@ -78,7 +78,7 @@ java tibjmsMsgProducer -user admin -queue connector-quickstart m1 m2 m3 m4 m5'
 Verify we have received the data in `from-tibco-messages` topic:
 
 ```bash
-$ docker container exec connect kafka-console-consumer -bootstrap-server broker:9092 --topic from-tibco-messages --from-beginning --max-messages 2
+$ docker exec connect kafka-console-consumer -bootstrap-server broker:9092 --topic from-tibco-messages --from-beginning --max-messages 2
 ```
 
 Results:

@@ -25,7 +25,7 @@ $ ./ibm-mq-sink.sh
 The connector is created with:
 
 ```bash
-$ docker container exec connect \
+$ docker exec connect \
      curl -X POST \
      -H "Content-Type: application/json" \
      --data '{
@@ -54,7 +54,7 @@ $ docker container exec connect \
 Sending messages to topic `sink-messages`:
 
 ```bash
-$ docker container exec -i broker kafka-console-producer --broker-list broker:9092 --topic sink-messages << EOF
+$ docker exec -i broker kafka-console-producer --broker-list broker:9092 --topic sink-messages << EOF
 This is my message
 EOF
 ```
@@ -62,7 +62,7 @@ EOF
 Verify message received in `DEV.QUEUE.1` queue:
 
 ```bash
-$ docker container exec ibmmq bash -c "/opt/mqm/samp/bin/amqsbcg DEV.QUEUE.1"
+$ docker exec ibmmq bash -c "/opt/mqm/samp/bin/amqsbcg DEV.QUEUE.1"
 ```
 
 Results:

@@ -24,7 +24,7 @@ $ ./oracle11.sh
 Create the source connector with:
 
 ```bash
-$ docker container exec connect \
+$ docker exec connect \
      curl -X POST \
      -H "Content-Type: application/json" \
      --data '{
@@ -52,7 +52,7 @@ $ docker container exec connect \
 Verify the topic `oracle-MYTABLE`:
 
 ```bash
-$ docker container exec schema-registry kafka-avro-console-consumer -bootstrap-server broker:9092 --topic oracle-MYTABLE --from-beginning --max-messages 1
+$ docker exec schema-registry kafka-avro-console-consumer -bootstrap-server broker:9092 --topic oracle-MYTABLE --from-beginning --max-messages 1
 ```
 
 Results:

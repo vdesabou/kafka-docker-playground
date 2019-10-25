@@ -68,7 +68,7 @@ Results:
 Creating InfluxDB source connector
 
 ```bash
-$ docker container exec connect \
+$ docker exec connect \
      curl -X POST \
      -H "Content-Type: application/json" \
      --data '{
@@ -89,7 +89,7 @@ $ docker container exec connect \
 Verifying topic influx_cpu_load_short
 
 ```bash
-$ docker container exec broker kafka-console-consumer --bootstrap-server localhost:9092 --topic influx_cpu_load_short --from-beginning --max-messages 1
+$ docker exec broker kafka-console-consumer --bootstrap-server localhost:9092 --topic influx_cpu_load_short --from-beginning --max-messages 1
 ```
 
 Results:

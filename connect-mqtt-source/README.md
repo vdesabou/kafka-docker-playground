@@ -28,7 +28,7 @@ $ mosquitto_passwd -c password myuser
 Creating MQTT Source connector
 
 ```bash
-$ docker container exec connect \
+$ docker exec connect \
      curl -X POST \
      -H "Content-Type: application/json" \
      --data '{
@@ -60,7 +60,7 @@ $ mosquitto_pub -h localhost -p 1883 -u "myuser" -P "mypassword" -t "my-mqtt-top
 Verify we have received the data in mqtt-source-1 topic
 
 ```bash
-$ docker container exec broker kafka-console-consumer -bootstrap-server broker:9092 --topic mqtt-source-1 --from-beginning --max-messages 1
+$ docker exec broker kafka-console-consumer -bootstrap-server broker:9092 --topic mqtt-source-1 --from-beginning --max-messages 1
 ```
 
 N.B: Control Center is reachable at [http://127.0.0.1:9021](http://127.0.0.1:9021])

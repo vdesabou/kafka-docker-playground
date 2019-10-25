@@ -7,7 +7,7 @@ ${DIR}/../plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
 
 
 echo "Creating IBM MQ source connector"
-docker container exec connect \
+docker exec connect \
      curl -X POST \
      -H "Content-Type: application/json" \
      --data '{
@@ -33,7 +33,7 @@ docker container exec connect \
 sleep 5
 
 echo "Sending messages to DEV.QUEUE.1 JMS queue:"
-docker container exec -i ibmmq /opt/mqm/samp/bin/amqsput DEV.QUEUE.1 << EOF
+docker exec -i ibmmq /opt/mqm/samp/bin/amqsput DEV.QUEUE.1 << EOF
 Message 1
 Message 2
 
@@ -42,4 +42,4 @@ EOF
 sleep 5
 
 echo "Verify we have received the data in MyKafkaTopicName topic"
-docker container exec schema-registry kafka-avro-console-consumer -bootstrap-server broker:9092 --topic MyKafkaTopicName --from-beginning --max-messages 2
+docker exec schema-registry kafka-avro-console-consumer -bootstrap-server broker:9092 --topic MyKafkaTopicName --from-beginning --max-messages 2

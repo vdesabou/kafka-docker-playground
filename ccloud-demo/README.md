@@ -52,12 +52,12 @@ By default, the demo uses Confluent Schema Registry running in a local Docker co
 * Run with local Docker Schema Registry
 
 ```
-./start.sh 
+./start.sh
 or
 ./start.sh SCHEMA_REGISTRY_DOCKER
 ```
 
-* Run with Confluent Cloud Schema Registry 
+* Run with Confluent Cloud Schema Registry
 
 ```
 ./start.sh SCHEMA_REGISTRY_CONFLUENT_CLOUD
@@ -68,13 +68,13 @@ or
 
 * Grafana
 
-Open a brower and visit http://localhost:3000 (grafana). 
+Open a brower and visit http://localhost:3000 (grafana).
 Login/password is admin/admin (only Producer and Consumer dashboards are available as it is Confluent Cloud)
 
 * How to use ksql-cli:
 
 ```bash
-docker container exec ksql-cli bash -c \
+docker exec ksql-cli bash -c \
 'echo -e "\n\n⏳ Waiting for KSQL to be available before launching CLI\n"; while [ $(curl -s -o /dev/null -w %{http_code} http://ksql-server:8089/) -eq 000 ] ; do echo -e $(date) "KSQL Server HTTP state: " $(curl -s -o /dev/null -w %{http_code} http:/ksql-server:8089/) " (waiting for 200)" ; sleep 5 ; done; ksql http://ksql-server:8089'
 ```
 

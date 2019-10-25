@@ -40,7 +40,7 @@ connector-quickstart
 The connector is created with:
 
 ```bash
-$ docker container exec connect \
+$ docker exec connect \
      curl -X POST \
      -H "Content-Type: application/json" \
      --data '{
@@ -65,13 +65,13 @@ $ docker container exec connect \
 Sending messages to topic `sink-messages`:
 
 ```bash
-seq 10 | docker container exec -i broker kafka-console-producer --broker-list broker:9092 --topic sink-messages
+seq 10 | docker exec -i broker kafka-console-producer --broker-list broker:9092 --topic sink-messages
 ```
 
 Verify we have received the data in `connector-quickstart` EMS queue:
 
 ```bash
-$ docker container exec tibco-ems bash -c '
+$ docker exec tibco-ems bash -c '
 cd /opt/tibco/ems/8.5/samples/java
 export TIBEMS_JAVA=/opt/tibco/ems/8.5/lib
 CLASSPATH=${TIBEMS_JAVA}/jms-2.0.jar:${CLASSPATH}

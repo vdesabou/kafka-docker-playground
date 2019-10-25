@@ -7,7 +7,7 @@ ${DIR}/../plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
 
 
 echo "Sending messages to topic json-topic"
-docker container exec -i broker kafka-console-producer --broker-list broker:9092 --topic json-topic << EOF
+docker exec -i broker kafka-console-producer --broker-list broker:9092 --topic json-topic << EOF
 {"customer_name":"Ed", "complaint_type":"Dirty car", "trip_cost": 29.10, "new_customer": false, "number_of_rides": 22}
 EOF
 
@@ -16,7 +16,7 @@ echo "Running JSON Converter Example"
 echo "-------------------------------------"
 
 echo "Creating JsonHttpSink connector"
-docker container exec connect \
+docker exec connect \
      curl -X POST \
      -H "Content-Type: application/json" \
      --data '{

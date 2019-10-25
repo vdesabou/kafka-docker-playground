@@ -52,18 +52,18 @@ This file contains:
 TIBCO, IBM MQ and ActiveMQ connectors are installed, this is clashing with JMS connector, hence removing them:
 
 ```bash
-docker container exec connect rm -rf /usr/share/confluent-hub-components/confluentinc-kafka-connect-activemq
-docker container exec connect rm -rf /usr/share/confluent-hub-components/confluentinc-kafka-connect-ibmmq
-docker container exec connect rm -rf /usr/share/confluent-hub-components/confluentinc-kafka-connect-ibmmq-sink
-docker container exec connect rm -rf /usr/share/confluent-hub-components/confluentinc-kafka-connect-tibco-sink
-docker container exec connect rm -rf /usr/share/confluent-hub-components/confluentinc-kafka-connect-tibco-source
+docker exec connect rm -rf /usr/share/confluent-hub-components/confluentinc-kafka-connect-activemq
+docker exec connect rm -rf /usr/share/confluent-hub-components/confluentinc-kafka-connect-ibmmq
+docker exec connect rm -rf /usr/share/confluent-hub-components/confluentinc-kafka-connect-ibmmq-sink
+docker exec connect rm -rf /usr/share/confluent-hub-components/confluentinc-kafka-connect-tibco-sink
+docker exec connect rm -rf /usr/share/confluent-hub-components/confluentinc-kafka-connect-tibco-source
 docker container restart connect
 ```
 
 Sending EMS messages m1 m2 m3 m4 m5 in queue connector-quickstart
 
 ```bash
-docker container exec tibco-ems bash -c '
+docker exec tibco-ems bash -c '
 cd /opt/tibco/ems/8.5/samples/java
 export TIBEMS_JAVA=/opt/tibco/ems/8.5/lib
 CLASSPATH=${TIBEMS_JAVA}/jms-2.0.jar:${CLASSPATH}
@@ -76,7 +76,7 @@ java tibjmsMsgProducer -user admin -queue connector-quickstart m1 m2 m3 m4 m5'
 The connector is created with:
 
 ```bash
-$ docker container exec connect \
+$ docker exec connect \
      curl -X POST \
      -H "Content-Type: application/json" \
      --data '{
@@ -102,7 +102,7 @@ $ docker container exec connect \
 Verify we have received the data in `from-tibco-messages` topic:
 
 ```bash
-$ docker container exec connect kafka-console-consumer -bootstrap-server broker:9092 --topic from-tibco-messages --from-beginning --max-messages 2
+$ docker exec connect kafka-console-consumer -bootstrap-server broker:9092 --topic from-tibco-messages --from-beginning --max-messages 2
 ```
 
 Results:

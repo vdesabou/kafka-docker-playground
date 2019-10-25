@@ -48,7 +48,7 @@ done
 echo "Oracle DB has started!"
 
 echo "Creating Oracle source connector"
-docker container exec connect \
+docker exec connect \
      curl -X POST \
      -H "Content-Type: application/json" \
      --data '{
@@ -75,6 +75,6 @@ docker container exec connect \
 sleep 5
 
 echo "Verifying topic oracle-CUSTOMERS"
-docker container exec schema-registry kafka-avro-console-consumer -bootstrap-server broker:9092 --topic oracle-CUSTOMERS --from-beginning --max-messages 2
+docker exec schema-registry kafka-avro-console-consumer -bootstrap-server broker:9092 --topic oracle-CUSTOMERS --from-beginning --max-messages 2
 
 

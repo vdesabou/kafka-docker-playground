@@ -7,7 +7,7 @@ ${DIR}/../plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
 
 
 echo "Sending messages to topic http-messages"
-docker container exec -i broker kafka-console-producer --broker-list broker:9092 --topic http-messages << EOF
+docker exec -i broker kafka-console-producer --broker-list broker:9092 --topic http-messages << EOF
 Message 1
 EOF
 
@@ -19,7 +19,7 @@ echo "Creating HttpSinkNoAuthTestRetry connector"
 
 # the HTTP server will always reply INTERNAL_SERVER_ERROR(500)
 # we set retry.backoff.ms: 15000 and max.retries: 3
-docker container exec connect \
+docker exec connect \
      curl -X POST \
      -H "Content-Type: application/json" \
      --data '{
@@ -40,7 +40,7 @@ docker container exec connect \
 
 
 sleep 5
-docker container exec -i broker kafka-console-producer --broker-list broker:9092 --topic http-messages << EOF
+docker exec -i broker kafka-console-producer --broker-list broker:9092 --topic http-messages << EOF
 Message 2
 EOF
 

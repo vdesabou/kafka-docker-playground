@@ -11,10 +11,10 @@ echo "##  SSL authentication"
 echo "########"
 
 echo "Sending messages to topic test-topic-ssl"
-seq 10 | docker container exec -i broker kafka-console-producer --broker-list broker:9091 --topic test-topic-ssl --producer.config /etc/kafka/secrets/client_without_interceptors.config
+seq 10 | docker exec -i broker kafka-console-producer --broker-list broker:9091 --topic test-topic-ssl --producer.config /etc/kafka/secrets/client_without_interceptors.config
 
 echo "Creating Confluent Replicator connector with SSL authentication"
-docker container exec connect \
+docker exec connect \
      curl -X POST \
      --cert /etc/kafka/secrets/connect.certificate.pem --key /etc/kafka/secrets/connect.key --tlsv1.2 --cacert /etc/kafka/secrets/snakeoil-ca-1.crt \
      -H "Content-Type: application/json" \
@@ -61,7 +61,7 @@ docker container exec connect \
 sleep 10
 
 echo "Verify we have received the data in test-topic-ssl-duplicate topic"
-docker container exec broker kafka-console-consumer --bootstrap-server broker:9091 --topic test-topic-ssl-duplicate --from-beginning --max-messages 10 --consumer.config /etc/kafka/secrets/client_without_interceptors.config
+docker exec broker kafka-console-consumer --bootstrap-server broker:9091 --topic test-topic-ssl-duplicate --from-beginning --max-messages 10 --consumer.config /etc/kafka/secrets/client_without_interceptors.config
 
 
 echo "########"
@@ -69,10 +69,10 @@ echo "##  SASL_SSL authentication"
 echo "########"
 
 echo "Sending messages to topic test-topic-sasl-ssl"
-seq 10 | docker container exec -i broker kafka-console-producer --broker-list broker:9091 --topic test-topic-sasl-ssl --producer.config /etc/kafka/secrets/client_without_interceptors.config
+seq 10 | docker exec -i broker kafka-console-producer --broker-list broker:9091 --topic test-topic-sasl-ssl --producer.config /etc/kafka/secrets/client_without_interceptors.config
 
 echo "Creating Confluent Replicator connector with SASL_SSL authentication"
-docker container exec connect \
+docker exec connect \
      curl -X POST \
      --cert /etc/kafka/secrets/connect.certificate.pem --key /etc/kafka/secrets/connect.key --tlsv1.2 --cacert /etc/kafka/secrets/snakeoil-ca-1.crt \
      -H "Content-Type: application/json" \
@@ -116,4 +116,4 @@ docker container exec connect \
 sleep 10
 
 echo "Verify we have received the data in test-topic-sasl-ssl-duplicate topic"
-docker container exec broker kafka-console-consumer --bootstrap-server broker:9091 --topic test-topic-sasl-ssl-duplicate --from-beginning --max-messages 10 --consumer.config /etc/kafka/secrets/client_without_interceptors.config
+docker exec broker kafka-console-consumer --bootstrap-server broker:9091 --topic test-topic-sasl-ssl-duplicate --from-beginning --max-messages 10 --consumer.config /etc/kafka/secrets/client_without_interceptors.config

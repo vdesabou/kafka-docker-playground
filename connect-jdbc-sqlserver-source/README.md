@@ -33,7 +33,7 @@ $ cat inventory.sql | docker exec -i sqlserver bash -c '/opt/mssql-tools/bin/sql
 Creating JDBC SQL Server (with JTDS) source connector
 
 ```bash
-$ docker container exec connect \
+$ docker exec connect \
      curl -X POST \
      -H "Content-Type: application/json" \
      --data '{
@@ -58,7 +58,7 @@ $ docker container exec connect \
 ### Microsoft JDBC driver
 
 ```bash
-$ docker container exec connect \
+$ docker exec connect \
      curl -X POST \
      -H "Content-Type: application/json" \
      --data '{
@@ -95,7 +95,7 @@ Verifying topic `sqlserver-customers`
 
 
 ```bash
-$ docker container exec schema-registry kafka-avro-console-consumer -bootstrap-server broker:9092 --topic sqlserver-customers --from-beginning --max-messages 5
+$ docker exec schema-registry kafka-avro-console-consumer -bootstrap-server broker:9092 --topic sqlserver-customers --from-beginning --max-messages 5
 ```
 
 Results:

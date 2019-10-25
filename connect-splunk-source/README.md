@@ -23,7 +23,7 @@ $ ./splunk.sh
 Creating Splunk sink connector
 
 ```bash
-$ docker container exec connect \
+$ docker exec connect \
      curl -X POST \
      -H "Content-Type: application/json" \
      --data '{
@@ -51,7 +51,7 @@ $ curl -k -X POST https://localhost:8889/services/collector/event -d '{"event":"
 Verifying topic `splunk-source`
 
 ```bash
-$ docker container exec schema-registry kafka-avro-console-consumer -bootstrap-server broker:9092 --topic splunk-source --from-beginning --max-messages 1
+$ docker exec schema-registry kafka-avro-console-consumer -bootstrap-server broker:9092 --topic splunk-source --from-beginning --max-messages 1
 ```
 
 Results:

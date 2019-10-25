@@ -7,13 +7,13 @@ ${DIR}/../plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
 
 
 echo "Describing the application table in DB 'db':"
-docker container exec mysql bash -c "mysql --user=root --password=password --database=db -e 'describe application'"
+docker exec mysql bash -c "mysql --user=root --password=password --database=db -e 'describe application'"
 
 echo "Show content of application table:"
-docker container exec mysql bash -c "mysql --user=root --password=password --database=db -e 'select * from application'"
+docker exec mysql bash -c "mysql --user=root --password=password --database=db -e 'select * from application'"
 
 echo "Adding an element to the table"
-docker container exec mysql mysql --user=root --password=password --database=db -e "
+docker exec mysql mysql --user=root --password=password --database=db -e "
 INSERT INTO application (   \
   id,   \
   name, \
@@ -27,10 +27,10 @@ INSERT INTO application (   \
 ); "
 
 echo "Show content of application table:"
-docker container exec mysql bash -c "mysql --user=root --password=password --database=db -e 'select * from application'"
+docker exec mysql bash -c "mysql --user=root --password=password --database=db -e 'select * from application'"
 
 echo "Creating MySQL source connector"
-docker container exec connect \
+docker exec connect \
      curl -X POST \
      -H "Content-Type: application/json" \
      --data '{
@@ -50,6 +50,6 @@ docker container exec connect \
 sleep 5
 
 echo "Verifying topic mysql-application"
-docker container exec schema-registry kafka-avro-console-consumer -bootstrap-server broker:9092 --topic mysql-application --from-beginning --max-messages 2
+docker exec schema-registry kafka-avro-console-consumer -bootstrap-server broker:9092 --topic mysql-application --from-beginning --max-messages 2
 
 

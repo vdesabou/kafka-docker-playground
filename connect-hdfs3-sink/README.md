@@ -24,13 +24,13 @@ $ ./hdfs3.sh
 Note in this simple example, if you get into an issue with permissions at the local HDFS level, it may be easiest to unlock the permissions unless you want to debug that more.
 
 ```bash
-$ docker container exec namenode bash -c "/opt/hadoop-3.1.2/bin/hdfs dfs -chmod 777  /"
+$ docker exec namenode bash -c "/opt/hadoop-3.1.2/bin/hdfs dfs -chmod 777  /"
 ```
 
 The connector is created with:
 
 ```bash
-$ docker container exec connect \
+$ docker exec connect \
      curl -X POST \
      -H "Content-Type: application/json" \
      --data '{
@@ -58,13 +58,13 @@ $ docker container exec connect \
 Messages are sent to `test_hdfs` topic using:
 
 ```
-$ seq -f "{\"f1\": \"value%g\"}" 10 | docker container exec -i schema-registry kafka-avro-console-producer --broker-list broker:9092 --topic test_hdfs --property value.schema='{"type":"record","name":"myrecord","fields":[{"name":"f1","type":"string"}]}'
+$ seq -f "{\"f1\": \"value%g\"}" 10 | docker exec -i schema-registry kafka-avro-console-producer --broker-list broker:9092 --topic test_hdfs --property value.schema='{"type":"record","name":"myrecord","fields":[{"name":"f1","type":"string"}]}'
 ```
 
 After a few seconds, HDFS should contain files in /topics/test_hdfs:
 
 ```
-$ docker container exec namenode bash -c "/opt/hadoop-3.1.2/bin/hdfs dfs -ls /topics/test_hdfs"
+$ docker exec namenode bash -c "/opt/hadoop-3.1.2/bin/hdfs dfs -ls /topics/test_hdfs"
 
 drwxr-xr-x   - root supergroup          0 2019-10-25 08:19 /topics/test_hdfs/f1=value1
 drwxr-xr-x   - root supergroup          0 2019-10-25 08:19 /topics/test_hdfs/f1=value2

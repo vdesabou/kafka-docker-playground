@@ -27,7 +27,7 @@ ActiveMQ UI is reachable at [http://127.0.0.1:8161](http://127.0.0.1:8161]) (`ad
 Sending messages to topic `sink-messages`
 
 ```bash
-$ docker container exec -i broker kafka-console-producer --broker-list broker:9092 --topic sink-messages << EOF
+$ docker exec -i broker kafka-console-producer --broker-list broker:9092 --topic sink-messages << EOF
 This is my message
 EOF
 ```
@@ -35,7 +35,7 @@ EOF
 The connector is created with:
 
 ```bash
-$ docker container exec connect \
+$ docker exec connect \
      curl -X POST \
      -H "Content-Type: application/json" \
      --data '{

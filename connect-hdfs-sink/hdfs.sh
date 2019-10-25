@@ -7,10 +7,10 @@ ${DIR}/../plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
 
 
 # Note in this simple example, if you get into an issue with permissions at the local HDFS level, it may be easiest to unlock the permissions unless you want to debug that more.
-docker container exec hadoop bash -c "/usr/local/hadoop/bin/hdfs dfs -chmod 777  /"
+docker exec hadoop bash -c "/usr/local/hadoop/bin/hdfs dfs -chmod 777  /"
 
 echo "Creating HDFS Sink connector"
-docker container exec connect \
+docker exec connect \
      curl -X POST \
      -H "Content-Type: application/json" \
      --data '{
@@ -36,16 +36,16 @@ docker container exec connect \
 
 
 echo "Sending messages to topic test_hdfs"
-seq -f "{\"f1\": \"value%g\"}" 10 | docker container exec -i schema-registry kafka-avro-console-producer --broker-list broker:9092 --topic test_hdfs --property value.schema='{"type":"record","name":"myrecord","fields":[{"name":"f1","type":"string"}]}'
+seq -f "{\"f1\": \"value%g\"}" 10 | docker exec -i schema-registry kafka-avro-console-producer --broker-list broker:9092 --topic test_hdfs --property value.schema='{"type":"record","name":"myrecord","fields":[{"name":"f1","type":"string"}]}'
 
 sleep 10
 
 echo "Listing content of /topics/test_hdfs in HDFS"
-docker container exec hadoop bash -c "/usr/local/hadoop/bin/hdfs dfs -ls /topics/test_hdfs"
+docker exec hadoop bash -c "/usr/local/hadoop/bin/hdfs dfs -ls /topics/test_hdfs"
 
 echo "Getting one of the avro files locally and displaying content with avro-tools"
-docker container exec hadoop bash -c "/usr/local/hadoop/bin/hadoop fs -copyToLocal /topics/test_hdfs/f1=value1/test_hdfs+0+0000000000+0000000000.avro /tmp"
+docker exec hadoop bash -c "/usr/local/hadoop/bin/hadoop fs -copyToLocal /topics/test_hdfs/f1=value1/test_hdfs+0+0000000000+0000000000.avro /tmp"
 docker cp hadoop:/tmp/test_hdfs+0+0000000000+0000000000.avro /tmp/
 
 # brew install avro-tools
-avro-tools tojson /tmp/test_hdfs+0+0000000000+0000000000.avro 
+avro-tools tojson /tmp/test_hdfs+0+0000000000+0000000000.avro

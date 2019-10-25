@@ -6,7 +6,7 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 ${DIR}/../plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
 
 echo "Creating MySQL sink connector"
-docker container exec connect \
+docker exec connect \
      curl -X POST \
      -H "Content-Type: application/json" \
      --data '{
@@ -22,7 +22,7 @@ docker container exec connect \
 
 
 echo "Sending messages to topic orders"
-docker container exec -i schema-registry kafka-avro-console-producer --broker-list broker:9092 --topic orders --property value.schema='{"type":"record","name":"myrecord","fields":[{"name":"id","type":"int"},{"name":"product", "type": "string"}, {"name":"quantity", "type": "int"}, {"name":"price",
+docker exec -i schema-registry kafka-avro-console-producer --broker-list broker:9092 --topic orders --property value.schema='{"type":"record","name":"myrecord","fields":[{"name":"id","type":"int"},{"name":"product", "type": "string"}, {"name":"quantity", "type": "int"}, {"name":"price",
 "type": "float"}]}' << EOF
 {"id": 999, "product": "foo", "quantity": 100, "price": 50}
 EOF
@@ -31,9 +31,9 @@ sleep 5
 
 
 echo "Describing the orders table in DB 'db':"
-docker container exec mysql bash -c "mysql --user=root --password=password --database=db -e 'describe orders'"
+docker exec mysql bash -c "mysql --user=root --password=password --database=db -e 'describe orders'"
 
 echo "Show content of orders table:"
-docker container exec mysql bash -c "mysql --user=root --password=password --database=db -e 'select * from orders'"
+docker exec mysql bash -c "mysql --user=root --password=password --database=db -e 'select * from orders'"
 
 

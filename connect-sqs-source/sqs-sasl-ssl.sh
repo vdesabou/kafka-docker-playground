@@ -36,7 +36,7 @@ echo "##  SSL authentication"
 echo "########"
 
 echo "Creating SQS Source connector with SSL authentication"
-docker container exec -e QUEUE_URL="$QUEUE_URL" connect \
+docker exec -e QUEUE_URL="$QUEUE_URL" connect \
      curl -X POST \
      --cert /etc/kafka/secrets/connect.certificate.pem --key /etc/kafka/secrets/connect.key --tlsv1.2 --cacert /etc/kafka/secrets/snakeoil-ca-1.crt \
      -H "Content-Type: application/json" \
@@ -66,7 +66,7 @@ docker container exec -e QUEUE_URL="$QUEUE_URL" connect \
 sleep 10
 
 echo "Verify we have received the data in test-sqs-source-ssl topic"
-docker container exec connect kafka-avro-console-consumer -bootstrap-server broker:9091 --topic test-sqs-source-ssl --from-beginning --max-messages 2 --property schema.registry.url=https://schema-registry:8085 --consumer.config /etc/kafka/secrets/client_without_interceptors.config  | tail -n 3 | head -n 2 | jq .
+docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9091 --topic test-sqs-source-ssl --from-beginning --max-messages 2 --property schema.registry.url=https://schema-registry:8085 --consumer.config /etc/kafka/secrets/client_without_interceptors.config  | tail -n 3 | head -n 2 | jq .
 
 ##FIXTHIS: need to delete connector
 # C[36mconnect           |ESC[0m javax.management.InstanceAlreadyExistsException: kafka.producer:type=app-info,id=connect-worker-producer
@@ -89,7 +89,7 @@ docker container exec connect kafka-avro-console-consumer -bootstrap-server brok
 # ESC[36mconnect           |ESC[0m        at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1149)
 # ESC[36mconnect           |ESC[0m        at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:624)
 
-docker container exec connect curl -X DELETE --cert /etc/kafka/secrets/connect.certificate.pem --key /etc/kafka/secrets/connect.key --tlsv1.2 --cacert /etc/kafka/secrets/snakeoil-ca-1.crt https://localhost:8083/connectors/sqs-source-ssl
+docker exec connect curl -X DELETE --cert /etc/kafka/secrets/connect.certificate.pem --key /etc/kafka/secrets/connect.key --tlsv1.2 --cacert /etc/kafka/secrets/snakeoil-ca-1.crt https://localhost:8083/connectors/sqs-source-ssl
 
 echo "Delete queue ${QUEUE_URL}"
 aws sqs delete-queue --queue-url ${QUEUE_URL}
@@ -124,7 +124,7 @@ aws sqs send-message-batch --queue-url $QUEUE_URL --entries file://send-message-
 
 
 echo "Creating SQS Source connector with SASL_SSL authentication"
-docker container exec -e QUEUE_URL="$QUEUE_URL" connect \
+docker exec -e QUEUE_URL="$QUEUE_URL" connect \
      curl -X POST \
      --cert /etc/kafka/secrets/connect.certificate.pem --key /etc/kafka/secrets/connect.key --tlsv1.2 --cacert /etc/kafka/secrets/snakeoil-ca-1.crt \
      -H "Content-Type: application/json" \
@@ -153,7 +153,7 @@ docker container exec -e QUEUE_URL="$QUEUE_URL" connect \
 sleep 10
 
 echo "Verify we have received the data in test-sqs-source-sasl-ssl topic"
-docker container exec connect kafka-avro-console-consumer -bootstrap-server broker:9091 --topic test-sqs-source-sasl-ssl --from-beginning --max-messages 2 --property schema.registry.url=https://schema-registry:8085 --consumer.config /etc/kafka/secrets/client_without_interceptors.config  | tail -n 3 | head -n 2 | jq .
+docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9091 --topic test-sqs-source-sasl-ssl --from-beginning --max-messages 2 --property schema.registry.url=https://schema-registry:8085 --consumer.config /etc/kafka/secrets/client_without_interceptors.config  | tail -n 3 | head -n 2 | jq .
 
 echo "Delete queue ${QUEUE_URL}"
 aws sqs delete-queue --queue-url ${QUEUE_URL}

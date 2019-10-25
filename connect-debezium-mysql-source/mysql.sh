@@ -7,13 +7,13 @@ ${DIR}/../plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
 
 
 echo "Describing the team table in DB 'mydb':"
-docker container exec mysql bash -c "mysql --user=root --password=password --database=mydb -e 'describe team'"
+docker exec mysql bash -c "mysql --user=root --password=password --database=mydb -e 'describe team'"
 
 echo "Show content of team table:"
-docker container exec mysql bash -c "mysql --user=root --password=password --database=mydb -e 'select * from team'"
+docker exec mysql bash -c "mysql --user=root --password=password --database=mydb -e 'select * from team'"
 
 echo "Adding an element to the table"
-docker container exec mysql mysql --user=root --password=password --database=mydb -e "
+docker exec mysql mysql --user=root --password=password --database=mydb -e "
 INSERT INTO team (   \
   id,   \
   name, \
@@ -27,10 +27,10 @@ INSERT INTO team (   \
 ); "
 
 echo "Show content of team table:"
-docker container exec mysql bash -c "mysql --user=root --password=password --database=mydb -e 'select * from team'"
+docker exec mysql bash -c "mysql --user=root --password=password --database=mydb -e 'select * from team'"
 
 echo "Creating Debezium MySQL source connector"
-docker container exec connect \
+docker exec connect \
      curl -X POST \
      -H "Content-Type: application/json" \
      --data '{
@@ -53,6 +53,6 @@ docker container exec connect \
 sleep 5
 
 echo "Verifying topic dbserver1.mydb.team"
-docker container exec schema-registry kafka-avro-console-consumer -bootstrap-server broker:9092 --topic dbserver1.mydb.team --from-beginning --max-messages 2
+docker exec schema-registry kafka-avro-console-consumer -bootstrap-server broker:9092 --topic dbserver1.mydb.team --from-beginning --max-messages 2
 
 
