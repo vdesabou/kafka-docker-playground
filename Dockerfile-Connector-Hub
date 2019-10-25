@@ -31,3 +31,4 @@ RUN   confluent-hub install --no-prompt confluentinc/kafka-connect-ibmmq:latest 
 		&& confluent-hub install --no-prompt debezium/debezium-connector-sqlserver:latest \
 		&& confluent-hub install --no-prompt confluentinc/kafka-connect-activemq-sink:latest \
 		&& confluent-hub install --no-prompt confluentinc/kafka-connect-splunk-source:latest \
+		&& confluent-hub install --no-prompt confluentinc/kafka-connect-hdfs3:latest \
