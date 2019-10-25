@@ -33,3 +33,7 @@ RUN   confluent-hub install --no-prompt confluentinc/kafka-connect-ibmmq:latest 
 		&& confluent-hub install --no-prompt confluentinc/kafka-connect-splunk-source:latest \
 		&& confluent-hub install --no-prompt confluentinc/kafka-connect-hdfs3:latest \
 		&& confluent-hub install --no-prompt confluentinc/kafka-connect-hdfs3-source:latest \
+		&& confluent-hub install --no-prompt confluentinc/kafka-connect-aws-cloudwatch:latest \
+		&& confluent-hub install --no-prompt confluentinc/kafka-connect-aws-dynamodb:latest \
+		&& confluent-hub install --no-prompt confluentinc/kafka-connect-aws-lambda:latest \
+		&& confluent-hub install --no-prompt confluentinc/kafka-connect-aws-redshift:latest \
