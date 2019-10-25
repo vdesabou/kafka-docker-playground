@@ -32,6 +32,7 @@ Playground for Kafka/Confluent Docker experimentations
 * [JMS TIBCO](connect-jms-tibco-source)
 * [InfluxDB](connect-influxdb-source)
 * [Splunk](connect-splunk-source)
+* [HDFS 3](connect-hdfs3-source)
 
 ### ↗️ Sink
 
