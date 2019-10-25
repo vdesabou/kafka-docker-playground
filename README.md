@@ -12,6 +12,7 @@ Playground for Kafka/Confluent Docker experimentations
     * [SQS](connect-sqs-source)
         * using [SASL_SSL](connect-sqs-source/README.md#with-sasl_ssl-authentication)
         * using [SSL](connect-sqs-source/README.md#with-ssl-authentication)
+    * [CloudWatch Logs](connect-aws-cloudwatch-source)
 * Debezium
     * using [MySQL](connect-debezium-mysql-source)
     * using [PostgreSQL](connect-debezium-postgresql-source)
