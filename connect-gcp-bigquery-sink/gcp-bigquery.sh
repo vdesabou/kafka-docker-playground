@@ -16,7 +16,7 @@ ${DIR}/../plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
 
 
 echo "Sending messages to topic kcbq-quickstart1"
-seq -f "{\"f1\": \"value%g\"}" 10 | docker exec -i schema-registry kafka-avro-console-producer --broker-list broker:9092 --topic kcbq-quickstart1 --property value.schema='{"type":"record","name":"myrecord","fields":[{"name":"f1","type":"string"}]}'
+seq -f "{\"f1\": \"value%g-`date`\"}" 10 | docker exec -i schema-registry kafka-avro-console-producer --broker-list broker:9092 --topic kcbq-quickstart1 --property value.schema='{"type":"record","name":"myrecord","fields":[{"name":"f1","type":"string"}]}'
 
 
 echo "Creating GCP BigQuery Sink connector"
@@ -42,6 +42,8 @@ docker exec -e PROJECT="$PROJECT" -e DATASET="$DATASET" connect \
                     "keyfile" : "/root/keyfiles/keyfile.json"
           }}' \
      http://localhost:8083/connectors | jq .
+
+sleep 10
 
 echo "Doing gsutil authentication"
 gcloud auth activate-service-account --key-file ${KEYFILE}
