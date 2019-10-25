@@ -23,7 +23,20 @@ Set `Service account name`:
 ![Service Account setup](Screenshot1.png)
 
 
-Choose permission `BigQuery`->`BigQuery Admin` (probably not required to have all of them):
+Choose permission `BigQuery`->`BigQuery Admin` or create a custom role with:
+
+```
+bigquery.datasets.get
+bigquery.tables.create
+bigquery.tables.get
+bigquery.tables.getData
+bigquery.tables.list
+bigquery.tables.update
+bigquery.tables.updateData
+bigquery.jobs.create
+```
+
+Note that `bigquery.jobs.create`is only required to run command `bq query "SELECT * FROM $DATASET.kcbq_quickstart1;"`
 
 ![Service Account setup](Screenshot2.png)
 
