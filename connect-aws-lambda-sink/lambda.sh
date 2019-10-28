@@ -28,5 +28,3 @@ docker exec connect \
           }}' \
      http://localhost:8083/connectors | jq .
 
-sleep 5
-
