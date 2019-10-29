@@ -3,11 +3,11 @@ set -e
 
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 
-${DIR}/../plaintext/start.sh "${PWD}/docker-compose.plaintext-wal2json-issue2.yml"
+${DIR}/../plaintext/start.sh "${PWD}/docker-compose.plaintext-wal2json-issue.yml"
 
 #################
-# This test is using vdesabou/postgres-wal2json-d2b7fef021c46e0d429f2c1768de361069e58696:latest
-# which is using Postgres 10 (debezium/postgres:10.0) with wal2json version 1.0
+# This test is using debezium/postgres:10.0
+# which is using Postgres 10 (debezium/postgres:10.0) with wal2json dated from 11 Dec 2018
 #################
     # using this image we get:
     # 2019-10-29 13:55:20.052 GMT [113] ERROR:  no known snapshots

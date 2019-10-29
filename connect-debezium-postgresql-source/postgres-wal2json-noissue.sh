@@ -6,8 +6,8 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 ${DIR}/../plaintext/start.sh "${PWD}/docker-compose.plaintext-wal2json-noissue.yml"
 
 #################
-# This test is using vdesabou/postgres-wal2json-da90c76a69966a7dfcf0657acacde916164bd9c0:latest
-# which is using Postgres 10 (debezium/postgres:10.0) with wal2json dated from 7 August 2019 (latest version available)
+# This test is using debezium/postgres:10
+# which is using wal2json dated from 11 Dec 2018 (including fix for https://issues.jboss.org/browse/DBZ-842 / https://github.com/eulerto/wal2json/issues/74)
 #################
     # using this image we get no issue
 
