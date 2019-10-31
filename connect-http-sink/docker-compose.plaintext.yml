@@ -62,3 +62,12 @@ services:
       - "8443:8443"
     environment:
       SPRING_PROFILES_ACTIVE: 'ssl-auth'
+
+  http-service-ssl-auth-no-ssl-endpoint-identification:
+    image: vdesabou/http-sink-demo-wrongssl
+    hostname: http-service-ssl-auth
+    container_name: http-service-ssl-auth
+    ports:
+      - "8543:8443"
+    environment:
+      SPRING_PROFILES_ACTIVE: 'ssl-auth'
