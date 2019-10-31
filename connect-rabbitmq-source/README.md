@@ -7,7 +7,6 @@ Quickly test [RabbitMQ Source](https://docs.confluent.io/current/connect/kafka-c
 ## Pre-requisites
 
 * `docker-compose` (example `brew cask install docker`)
-* `mosquitto` (example `brew install mosquitto`) see [web page](https://mosquitto.org/download/)
 
 ## How to run
 
@@ -19,7 +18,7 @@ $ ./rabbitmq.sh
 
 ## Details of what the script is doing
 
-Send message to RabbitMQ in myqueue
+Send message to RabbitMQ in `myqueue`:
 
 ```bash
 $ docker exec rabbitmq_producer bash -c "python /producer.py myqueue 5"
