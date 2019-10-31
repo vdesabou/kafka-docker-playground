@@ -38,3 +38,4 @@ RUN   confluent-hub install --no-prompt confluentinc/kafka-connect-ibmmq:latest 
 		&& confluent-hub install --no-prompt confluentinc/kafka-connect-aws-lambda:latest \
 		&& confluent-hub install --no-prompt confluentinc/kafka-connect-aws-redshift:latest \
 		&& confluent-hub install --no-prompt confluentinc/kafka-connect-omnisci:latest \
+		&& confluent-hub install --no-prompt confluentinc/kafka-connect-rabbitmq:latest \

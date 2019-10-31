@@ -34,6 +34,7 @@ Playground for Kafka/Confluent Docker experimentations
 * [InfluxDB](connect-influxdb-source)
 * [Splunk](connect-splunk-source)
 * [HDFS 3](connect-hdfs3-source)
+* [RabbitMQ](connect-rabbitmq-source)
 
 ### ↗️ Sink
 
