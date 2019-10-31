@@ -61,4 +61,13 @@ select * from orders;
 EOF
 ```
 
+Results:
+
+```
+User admin connected to database omnisci
+product|quantity|price|id
+foo|100|50|999
+User admin disconnected from database omnisci
+```
+
 N.B: Control Center is reachable at [http://127.0.0.1:9021](http://127.0.0.1:9021])
