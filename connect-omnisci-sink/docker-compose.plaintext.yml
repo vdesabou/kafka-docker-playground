@@ -1,0 +1,16 @@
+---
+version: '3.5'
+services:
+  omnisci:
+    image: omnisci/core-os-cpu:v4.7.0
+    hostname: omnisci
+    container_name: omnisci
+    ports:
+      - "6274:6274"
+
+  connect:
+    depends_on:
+      - zookeeper
+      - broker
+      - schema-registry
+      - omnisci
