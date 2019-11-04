@@ -2,7 +2,6 @@
 set -e
 
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
-BUCKET_NAME=${1:-kafka-docker-playground}
 
 ${DIR}/../plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
 
