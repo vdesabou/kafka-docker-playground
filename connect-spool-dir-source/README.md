@@ -178,4 +178,55 @@ Results:
 {"id":null,"first_name":{"string":"Francoise"},"last_name":{"string":"Pignon"},"email":{"string":"fpignon9@jalbum.net"},"gender":{"string":"Female"},"ip_address":{"string":"74.180.4.54"},"last_login":{"string":"2017-12-16T07:27:45Z"},"account_balance":null,"country":{"string":"AR"},"favorite_color":{"string":"#e24a02"}}
 ```
 
+### JSON Schemaless Source Connector Example
+
+Generating data
+
+```bash
+$ curl "https://api.mockaroo.com/api/17c84440?count=500&key=25fd9c80" > "${DIR}/data/input/json-spooldir-source.json"
+```
+
+Creating JSON Spool Dir Source connector
+
+```bash
+$ docker exec connect \
+     curl -X POST \
+     -H "Content-Type: application/json" \
+     --data '{
+               "name": "SchemaLessJsonSpoolDir",
+               "config": {
+                    "tasks.max": "1",
+                    "connector.class": "com.github.jcustenborder.kafka.connect.spooldir.SpoolDirSchemaLessJsonSourceConnector",
+                    "input.path": "/root/data/input",
+                    "input.file.pattern": "json-spooldir-source.json",
+                    "error.path": "/root/data/error",
+                    "finished.path": "/root/data/finished",
+                    "halt.on.error": "false",
+                    "topic": "spooldir-schemaless-json-topic",
+                    "value.converter": "org.apache.kafka.connect.storage.StringConverter"
+          }}' \
+     http://localhost:8083/connectors | jq .
+```
+
+Verify we have received the data in spooldir-schemaless-json-topic topic
+
+```bash
+$ docker exec broker kafka-console-consumer -bootstrap-server broker:9092 --topic spooldir-schemaless-json-topic --property schema.registry.url=http://schema-registry:8081 --from-beginning --max-messages 10 --topic spooldir-schemaless-json-topic --property schema.registry.url=http://schema-registry:8081 --from-beginning --max-messages 10
+```
+
+Results:
+
+```json
+{"id":1,"first_name":"Richy","last_name":"Slavin","email":"rslavin0@nyu.edu","gender":"Male","ip_address":"111.76.127.178","last_login":"2014-11-16T07:05:01Z","account_balance":291.19,"country":"ID","favorite_color":"#ffe1cb"}
+{"id":2,"first_name":"Sisely","last_name":"Zecchini","email":"szecchini1@w3.org","gender":"Female","ip_address":"144.47.147.144","last_login":"2014-08-25T20:38:35Z","account_balance":4530.98,"country":"ID","favorite_color":"#f1d0bb"}
+{"id":3,"first_name":"Innis","last_name":"Saynor","email":"isaynor2@army.mil","gender":"Male","ip_address":"140.108.208.221","last_login":"2018-09-07T23:24:02Z","account_balance":15682.39,"country":"MX","favorite_color":"#1b1168"}
+{"id":4,"first_name":"Haleigh","last_name":"Blei","email":"hblei3@salon.com","gender":"Female","ip_address":"204.203.123.208","last_login":"2014-12-25T19:40:42Z","account_balance":23466.06,"country":"DO","favorite_color":"#1bdd1a"}
+{"id":5,"first_name":"Teressa","last_name":"Winny","email":"twinny4@addthis.com","gender":"Female","ip_address":"111.125.49.88","last_login":"2017-10-29T00:07:43Z","account_balance":4453.82,"country":"ZW","favorite_color":"#6a7cbd"}
+{"id":6,"first_name":"Michelina","last_name":"Ipsly","email":"mipsly5@hc360.com","gender":"Female","ip_address":"148.34.135.55","last_login":"2019-03-12T02:28:14Z","account_balance":6995.06,"country":"CN","favorite_color":"#bec264"}
+{"id":7,"first_name":"Candida","last_name":"Saddleton","email":"csaddleton6@chronoengine.com","gender":"Female","ip_address":"135.66.188.103","last_login":"2019-03-03T19:28:50Z","account_balance":1024.69,"country":"NG","favorite_color":"#dd93f7"}
+{"id":8,"first_name":"Suzette","last_name":"Pigne","email":"spigne7@reuters.com","gender":"Female","ip_address":"141.44.225.93","last_login":"2016-09-04T18:24:18Z","account_balance":13501.22,"country":"CN","favorite_color":"#b412d1"}
+{"id":9,"first_name":"Imelda","last_name":"Moncarr","email":"imoncarr8@yolasite.com","gender":"Female","ip_address":"128.79.219.67","last_login":"2018-05-01T07:52:45Z","account_balance":2138.31,"country":"TN","favorite_color":"#47cc85"}
+{"id":10,"first_name":"Elisha","last_name":"Stollsteimer","email":"estollsteimer9@odnoklassniki.ru","gender":"Male","ip_address":"132.220.225.250","last_login":"2018-05-12T07:44:07Z","account_balance":17464.43,"country":"MT","favorite_color":"#836ad7"}
+```
+
 N.B: Control Center is reachable at [http://127.0.0.1:9021](http://127.0.0.1:9021])
