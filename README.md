@@ -35,6 +35,7 @@ Playground for Kafka/Confluent Docker experimentations
 * [Splunk](connect-splunk-source)
 * [HDFS 3](connect-hdfs3-source)
 * [RabbitMQ](connect-rabbitmq-source)
+* [Spool Dir](connect-spool-dir-source)
 
 ### ↗️ Sink
 
