@@ -3,7 +3,7 @@ set -e
 
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 PROJECT=${1:-vincent-de-saboulin-lab}
-DATASET=${1:-MyDatasetTest}
+DATASET=${2:-MyDatasetTest}
 
 KEYFILE="${DIR}/keyfile.json"
 if [ ! -f ${KEYFILE} ]
