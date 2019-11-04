@@ -127,4 +127,55 @@ Results:
 {"id":{"string":"10"},"first_name":{"string":"Derward"},"last_name":{"string":"Gibbins"},"email":{"string":"dgibbins9@samsung.com"},"gender":{"string":"Male"},"ip_address":{"string":"39.21.71.73"},"last_login":{"string":"2018-10-28T06:53:51Z"},"account_balance":{"string":"5770.48"},"country":{"string":"PH"},"favorite_color":{"string":"#5ea97b"}}
 ```
 
+### JSON with Schema Example
+
+Generate data
+
+```bash
+$ curl "https://api.mockaroo.com/api/17c84440?count=500&key=25fd9c80" > "${DIR}/data/input/json-spooldir-source.json"
+```
+
+Creating JSON Spool Dir Source connector
+
+```bash
+$ docker exec connect \
+     curl -X POST \
+     -H "Content-Type: application/json" \
+     --data '{
+               "name": "JsonSpoolDir",
+               "config": {
+                    "tasks.max": "1",
+                    "connector.class": "com.github.jcustenborder.kafka.connect.spooldir.SpoolDirJsonSourceConnector",
+                    "input.path": "/root/data/input",
+                    "input.file.pattern": "json-spooldir-source.json",
+                    "error.path": "/root/data/error",
+                    "finished.path": "/root/data/finished",
+                    "halt.on.error": "false",
+                    "topic": "spooldir-json-topic",
+                    "schema.generation.enabled": "true"
+          }}' \
+     http://localhost:8083/connectors | jq .
+```
+
+Verify we have received the data in spooldir-json-topic topic
+
+```bash
+$ docker exec schema-registry kafka-avro-console-consumer -bootstrap-server broker:9092 --topic spooldir-json-topic --property schema.registry.url=http://schema-registry:8081 --from-beginning --max-messages 10
+```
+
+Results:
+
+```json
+{"id":null,"first_name":{"string":"Lindsay"},"last_name":{"string":"Slora"},"email":{"string":"lslora0@live.com"},"gender":{"string":"Male"},"ip_address":{"string":"70.1.124.49"},"last_login":{"string":"2017-07-28T02:57:48Z"},"account_balance":null,"country":{"string":"PT"},"favorite_color":{"string":"#0e285b"}}
+{"id":null,"first_name":{"string":"Abey"},"last_name":{"string":"Ripsher"},"email":{"string":"aripsher1@dailymail.co.uk"},"gender":{"string":"Male"},"ip_address":{"string":"89.17.130.82"},"last_login":{"string":"2016-09-24T06:50:10Z"},"account_balance":null,"country":{"string":"CN"},"favorite_color":{"string":"#6fb84a"}}
+{"id":null,"first_name":{"string":"Florian"},"last_name":{"string":"Glencros"},"email":{"string":"fglencros2@wordpress.org"},"gender":{"string":"Male"},"ip_address":{"string":"219.199.199.249"},"last_login":{"string":"2015-11-15T09:17:27Z"},"account_balance":null,"country":{"string":"CN"},"favorite_color":{"string":"#aad685"}}
+{"id":null,"first_name":{"string":"Reiko"},"last_name":{"string":"Creyke"},"email":{"string":"rcreyke3@ameblo.jp"},"gender":{"string":"Female"},"ip_address":{"string":"16.125.146.26"},"last_login":{"string":"2014-12-14T09:20:38Z"},"account_balance":null,"country":{"string":"SE"},"favorite_color":{"string":"#245371"}}
+{"id":null,"first_name":{"string":"Burk"},"last_name":{"string":"Barrow"},"email":{"string":"bbarrow4@php.net"},"gender":{"string":"Male"},"ip_address":{"string":"49.43.244.34"},"last_login":{"string":"2018-08-01T12:03:20Z"},"account_balance":null,"country":{"string":"AL"},"favorite_color":{"string":"#974749"}}
+{"id":null,"first_name":{"string":"Helena"},"last_name":{"string":"Baldcock"},"email":{"string":"hbaldcock5@zdnet.com"},"gender":{"string":"Female"},"ip_address":{"string":"132.29.208.144"},"last_login":{"string":"2015-12-27T01:59:28Z"},"account_balance":null,"country":{"string":"PH"},"favorite_color":{"string":"#0b815c"}}
+{"id":null,"first_name":{"string":"Ruthy"},"last_name":{"string":"Goodlake"},"email":{"string":"rgoodlake6@guardian.co.uk"},"gender":{"string":"Female"},"ip_address":{"string":"253.45.43.196"},"last_login":{"string":"2016-03-15T09:16:17Z"},"account_balance":null,"country":{"string":"BA"},"favorite_color":{"string":"#e049f8"}}
+{"id":null,"first_name":{"string":"Vivyan"},"last_name":{"string":"Tillard"},"email":{"string":"vtillard7@ow.ly"},"gender":{"string":"Female"},"ip_address":{"string":"104.109.11.216"},"last_login":{"string":"2017-04-27T02:18:12Z"},"account_balance":null,"country":{"string":"AL"},"favorite_color":{"string":"#716157"}}
+{"id":null,"first_name":{"string":"Annabell"},"last_name":{"string":"Flann"},"email":{"string":"aflann8@hud.gov"},"gender":{"string":"Female"},"ip_address":{"string":"215.240.99.223"},"last_login":{"string":"2017-02-11T09:08:22Z"},"account_balance":null,"country":{"string":"JO"},"favorite_color":{"string":"#ee39ce"}}
+{"id":null,"first_name":{"string":"Francoise"},"last_name":{"string":"Pignon"},"email":{"string":"fpignon9@jalbum.net"},"gender":{"string":"Female"},"ip_address":{"string":"74.180.4.54"},"last_login":{"string":"2017-12-16T07:27:45Z"},"account_balance":null,"country":{"string":"AR"},"favorite_color":{"string":"#e24a02"}}
+```
+
 N.B: Control Center is reachable at [http://127.0.0.1:9021](http://127.0.0.1:9021])
