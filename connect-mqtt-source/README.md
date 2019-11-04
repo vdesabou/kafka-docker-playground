@@ -7,7 +7,6 @@ Quickly test [MQTT Source](https://docs.confluent.io/current/connect/kafka-conne
 ## Pre-requisites
 
 * `docker-compose` (example `brew cask install docker`)
-* `mosquitto` (example `brew install mosquitto`) see [web page](https://mosquitto.org/download/)
 
 ## How to run
 
@@ -54,7 +53,7 @@ $ docker exec connect \
 Send message to MQTT in my-mqtt-topic topic
 
 ```bash
-$ mosquitto_pub -h localhost -p 1883 -u "myuser" -P "mypassword" -t "my-mqtt-topic" -m "sample-msg-1"
+$ docker exec mosquitto sh -c 'mosquitto_pub -h localhost -p 1883 -u "myuser" -P "mypassword" -t "my-mqtt-topic" -m "sample-msg-1"'
 ```
 
 Verify we have received the data in mqtt-source-1 topic

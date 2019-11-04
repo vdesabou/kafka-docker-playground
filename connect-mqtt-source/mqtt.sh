@@ -1,15 +1,6 @@
 #!/bin/bash
 set -e
 
-verify_installed()
-{
-  local cmd="$1"
-  if [[ $(type $cmd 2>&1) =~ "not found" ]]; then
-    echo -e "\nERROR: This script requires '$cmd'. Please install '$cmd' and run again.\n"
-    exit 1
-  fi
-}
-verify_installed "mosquitto_sub"
 
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 
@@ -40,7 +31,7 @@ docker exec connect \
 sleep 5
 
 echo "Send message to MQTT in my-mqtt-topic topic"
-mosquitto_pub -h localhost -p 1883 -u "myuser" -P "mypassword" -t "my-mqtt-topic" -m "sample-msg-1"
+docker exec mosquitto sh -c 'mosquitto_pub -h localhost -p 1883 -u "myuser" -P "mypassword" -t "my-mqtt-topic" -m "sample-msg-1"'
 
 sleep 5
 
