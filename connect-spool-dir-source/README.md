@@ -43,7 +43,7 @@ $ docker exec connect \
                     "error.path": "/root/data/error",
                     "finished.path": "/root/data/finished",
                     "halt.on.error": "false",
-                    "topic": "spooldir-testing-topic",
+                    "topic": "spooldir-csv-topic",
                     "csv.first.row.as.header": "true",
                     "key.schema": "{\n  \"name\" : \"com.example.users.UserKey\",\n  \"type\" : \"STRUCT\",\n  \"isOptional\" : false,\n  \"fieldSchemas\" : {\n    \"id\" : {\n      \"type\" : \"INT64\",\n      \"isOptional\" : false\n    }\n  }\n}",
                     "value.schema": "{\n  \"name\" : \"com.example.users.User\",\n  \"type\" : \"STRUCT\",\n  \"isOptional\" : false,\n  \"fieldSchemas\" : {\n    \"id\" : {\n      \"type\" : \"INT64\",\n      \"isOptional\" : false\n    },\n    \"first_name\" : {\n      \"type\" : \"STRING\",\n      \"isOptional\" : true\n    },\n    \"last_name\" : {\n      \"type\" : \"STRING\",\n      \"isOptional\" : true\n    },\n    \"email\" : {\n      \"type\" : \"STRING\",\n      \"isOptional\" : true\n    },\n    \"gender\" : {\n      \"type\" : \"STRING\",\n      \"isOptional\" : true\n    },\n    \"ip_address\" : {\n      \"type\" : \"STRING\",\n      \"isOptional\" : true\n    },\n    \"last_login\" : {\n      \"type\" : \"STRING\",\n      \"isOptional\" : true\n    },\n    \"account_balance\" : {\n      \"name\" : \"org.apache.kafka.connect.data.Decimal\",\n      \"type\" : \"BYTES\",\n      \"version\" : 1,\n      \"parameters\" : {\n        \"scale\" : \"2\"\n      },\n      \"isOptional\" : true\n    },\n    \"country\" : {\n      \"type\" : \"STRING\",\n      \"isOptional\" : true\n    },\n    \"favorite_color\" : {\n      \"type\" : \"STRING\",\n      \"isOptional\" : true\n    }\n  }\n}"
@@ -52,10 +52,10 @@ $ docker exec connect \
 ```
 
 
-Verify we have received the data in `spooldir-testing-topic` topic
+Verify we have received the data in `spooldir-csv-topic` topic
 
 ```bash
-$ docker exec schema-registry kafka-avro-console-consumer -bootstrap-server broker:9092 --topic spooldir-testing-topic --property schema.registry.url=http://schema-registry:8081 --from-beginning --max-messages 10
+$ docker exec schema-registry kafka-avro-console-consumer -bootstrap-server broker:9092 --topic spooldir-csv-topic --property schema.registry.url=http://schema-registry:8081 --from-beginning --max-messages 10
 ```
 
 Results:
@@ -70,6 +70,61 @@ Results:
 {"id":8,"first_name":{"string":"Guglielmo"},"last_name":{"string":"McKag"},"email":{"string":"gmckag7@berkeley.edu"},"gender":{"string":"Male"},"ip_address":{"string":"92.231.50.143"},"last_login":{"string":"2017-05-07T08:37:42Z"},"account_balance":{"bytes":"\u0006Ä¹"},"country":{"string":"CN"},"favorite_color":{"string":"#ffe2fc"}}
 {"id":9,"first_name":{"string":"Israel"},"last_name":{"string":"Lenoir"},"email":{"string":"ilenoir8@weather.com"},"gender":{"string":"Male"},"ip_address":{"string":"189.220.152.49"},"last_login":{"string":"2016-05-16T16:50:29Z"},"account_balance":{"bytes":"\u0014Ô¬"},"country":{"string":"US"},"favorite_color":{"string":"#08858e"}}
 {"id":10,"first_name":{"string":"Roby"},"last_name":{"string":"Meeland"},"email":{"string":"rmeeland9@sitemeter.com"},"gender":{"string":"Female"},"ip_address":{"string":"158.132.62.74"},"last_login":{"string":"2018-11-26T20:28:57Z"},"account_balance":{"bytes":"\u000B=ì"},"country":{"string":"DK"},"favorite_color":{"string":"#0cd765"}}
+```
+
+### TSV with Schema Example
+
+
+Generating data
+
+```bash
+$ curl "https://api.mockaroo.com/api/58605010?count=1000&key=25fd9c80" > "${DIR}/data/input/tsv-spooldir-source.csv"
+```
+
+Creating TSV Spool Dir Source connector
+
+```bash
+$ docker exec connect \
+     curl -X POST \
+     -H "Content-Type: application/json" \
+     --data '{
+               "name": "TsvSpoolDir",
+               "config": {
+                    "tasks.max": "1",
+                    "connector.class": "com.github.jcustenborder.kafka.connect.spooldir.SpoolDirCsvSourceConnector",
+                    "input.path": "/root/data/input",
+                    "input.file.pattern": "tsv-spooldir-source.tsv",
+                    "error.path": "/root/data/error",
+                    "finished.path": "/root/data/finished",
+                    "halt.on.error": "false",
+                    "topic": "spooldir-tsv-topic",
+                    "schema.generation.enabled": "true",
+                    "csv.first.row.as.header": "true",
+                    "csv.separator.char": "9"
+          }}' \
+     http://localhost:8083/connectors | jq .
+```
+
+
+Verify we have received the data in `spooldir-tsv-topic` topic
+
+```bash
+$ docker exec schema-registry kafka-avro-console-consumer -bootstrap-server broker:9092 --topic spooldir-tsv-topic --property schema.registry.url=http://schema-registry:8081 --from-beginning --max-messages 10
+```
+
+Results:
+
+```json
+{"id":{"string":"1"},"first_name":{"string":"Cherin"},"last_name":{"string":"Gouldstone"},"email":{"string":"cgouldstone0@oaic.gov.au"},"gender":{"string":"Female"},"ip_address":{"string":"221.213.199.21"},"last_login":{"string":"2019-02-04T03:12:13Z"},"account_balance":{"string":"14498.95"},"country":{"string":"HN"},"favorite_color":{"string":"#df3147"}}
+{"id":{"string":"2"},"first_name":{"string":"Dominick"},"last_name":{"string":"Shout"},"email":{"string":"dshout1@ted.com"},"gender":{"string":"Male"},"ip_address":{"string":"69.26.30.103"},"last_login":{"string":"2015-05-10T12:06:59Z"},"account_balance":{"string":"2182.89"},"country":{"string":"PH"},"favorite_color":{"string":"#715bf7"}}
+{"id":{"string":"3"},"first_name":{"string":"Quinton"},"last_name":{"string":"Gear"},"email":{"string":"qgear2@reverbnation.com"},"gender":{"string":"Male"},"ip_address":{"string":"6.224.5.89"},"last_login":{"string":"2016-09-19T15:22:03Z"},"account_balance":{"string":"8229.0"},"country":{"string":"LB"},"favorite_color":{"string":"#6c5fb5"}}
+{"id":{"string":"4"},"first_name":{"string":"Alexia"},"last_name":{"string":"Greated"},"email":{"string":"agreated3@bravesites.com"},"gender":{"string":"Female"},"ip_address":{"string":"114.202.205.39"},"last_login":{"string":"2018-01-28T23:50:13Z"},"account_balance":{"string":"14017.36"},"country":{"string":"FR"},"favorite_color":{"string":"#b86d2a"}}
+{"id":{"string":"5"},"first_name":{"string":"Demetris"},"last_name":{"string":"Beddis"},"email":{"string":"dbeddis4@spotify.com"},"gender":{"string":"Male"},"ip_address":{"string":"160.147.197.220"},"last_login":{"string":"2017-09-18T18:30:50Z"},"account_balance":{"string":"11743.29"},"country":{"string":"CN"},"favorite_color":{"string":"#6aba0d"}}
+{"id":{"string":"6"},"first_name":{"string":"Corey"},"last_name":{"string":"Berthod"},"email":{"string":"cberthod5@free.fr"},"gender":{"string":"Female"},"ip_address":{"string":"104.217.93.148"},"last_login":{"string":"2016-07-16T01:31:04Z"},"account_balance":{"string":"9903.04"},"country":{"string":"CN"},"favorite_color":{"string":"#7d2cce"}}
+{"id":{"string":"7"},"first_name":{"string":"John"},"last_name":{"string":"Crown"},"email":{"string":"jcrown6@time.com"},"gender":{"string":"Male"},"ip_address":{"string":"68.35.236.93"},"last_login":{"string":"2015-09-04T13:46:45Z"},"account_balance":{"string":"10531.31"},"country":{"string":"HR"},"favorite_color":{"string":"#2261b0"}}
+{"id":{"string":"8"},"first_name":{"string":"Cross"},"last_name":{"string":"Dicte"},"email":{"string":"cdicte7@cnn.com"},"gender":{"string":"Male"},"ip_address":{"string":"45.252.35.236"},"last_login":{"string":"2016-12-10T13:34:53Z"},"account_balance":{"string":"8571.82"},"country":{"string":"FR"},"favorite_color":{"string":"#05e703"}}
+{"id":{"string":"9"},"first_name":{"string":"Bobbi"},"last_name":{"string":"Marple"},"email":{"string":"bmarple8@quantcast.com"},"gender":{"string":"Female"},"ip_address":{"string":"242.78.128.223"},"last_login":{"string":"2016-11-07T19:22:32Z"},"account_balance":{"string":"13619.37"},"country":{"string":"ET"},"favorite_color":{"string":"#dc11b0"}}
+{"id":{"string":"10"},"first_name":{"string":"Derward"},"last_name":{"string":"Gibbins"},"email":{"string":"dgibbins9@samsung.com"},"gender":{"string":"Male"},"ip_address":{"string":"39.21.71.73"},"last_login":{"string":"2018-10-28T06:53:51Z"},"account_balance":{"string":"5770.48"},"country":{"string":"PH"},"favorite_color":{"string":"#5ea97b"}}
 ```
 
 N.B: Control Center is reachable at [http://127.0.0.1:9021](http://127.0.0.1:9021])
