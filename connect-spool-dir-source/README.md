@@ -229,4 +229,106 @@ Results:
 {"id":10,"first_name":"Elisha","last_name":"Stollsteimer","email":"estollsteimer9@odnoklassniki.ru","gender":"Male","ip_address":"132.220.225.250","last_login":"2018-05-12T07:44:07Z","account_balance":17464.43,"country":"MT","favorite_color":"#836ad7"}
 ```
 
+### FIX Encoded Lines Example
+
+Generating data
+
+```bash
+$ curl "https://raw.githubusercontent.com/jcustenborder/kafka-connect-spooldir/master/src/test/resources/com/github/jcustenborder/kafka/connect/spooldir/SpoolDirLineDelimitedSourceConnector/fix.json" > "${DIR}/data/input/fix.json"
+```
+
+Creating Line Delimited Spool Dir Source connector
+
+```bash
+$ docker exec connect \
+     curl -X POST \
+     -H "Content-Type: application/json" \
+     --data '{
+               "name": "LineDelimitedSpoolDir",
+               "config": {
+                    "tasks.max": "1",
+                    "connector.class": "com.github.jcustenborder.kafka.connect.spooldir.SpoolDirLineDelimitedSourceConnector",
+                    "input.path": "/root/data/input",
+                    "input.file.pattern": "fix.json",
+                    "error.path": "/root/data/error",
+                    "finished.path": "/root/data/finished",
+                    "halt.on.error": "false",
+                    "topic": "fix-topic",
+                    "schema.generation.enabled": "true"
+          }}' \
+     http://localhost:8083/connectors | jq .
+```bash
+
+
+Verify we have received the data in fix-topic topic
+
+```bash
+$ docker exec schema-registry kafka-avro-console-consumer -bootstrap-server broker:9092 --topic fix-topic --property schema.registry.url=http://schema-registry:8081 --from-beginning --max-messages 100
+```
+
+Results:
+
+```
+"{"
+"  \"description\" : \"This example will read files in a directory line by line and parse them using kafka-connect-transform-fix to a FIX representation of the data.\","
+"  \"name\" : \"FIX encoded lines\","
+"  \"config\" : {"
+"    \"topic\" : \"fix\","
+"    \"input.path\" : \"/tmp\","
+"    \"input.file.pattern\" : \"^.+\\\\.fix$\","
+"    \"error.path\" : \"/tmp\","
+"    \"finished.path\" : \"/tmp\""
+"  },"
+"  \"transformations\" : {"
+"    \"fromFix\" : {"
+"      \"type\" : \"com.github.jcustenborder.kafka.connect.transform.fix.FromFIX$Value\""
+"    }"
+"  },"
+"  \"output\" : {"
+"    \"sourcePartition\" : { },"
+"    \"sourceOffset\" : { },"
+"    \"topic\" : \"fix\","
+"    \"kafkaPartition\" : 0,"
+"    \"valueSchema\" : {"
+"      \"name\" : \"fix42.NewOrderSingle\","
+"      \"type\" : \"STRUCT\","
+"      \"isOptional\" : false,"
+"      \"fieldSchemas\" : {"
+"        \"Account\" : {"
+"          \"type\" : \"STRING\","
+"          \"parameters\" : {"
+"            \"fix.field\" : \"1\""
+"          },"
+"          \"isOptional\" : true"
+"        },"
+"        \"CashOrderQty\" : {"
+"          \"type\" : \"FLOAT64\","
+"          \"parameters\" : {"
+"            \"fix.field\" : \"152\""
+"          },"
+"          \"isOptional\" : true"
+"        },"
+"        \"CheckSum\" : {"
+"          \"type\" : \"STRING\","
+"          \"parameters\" : {"
+"            \"fix.field\" : \"10\""
+"          },"
+"          \"isOptional\" : true"
+"        },"
+"        \"ClOrdID\" : {"
+"          \"type\" : \"STRING\","
+"          \"parameters\" : {"
+"            \"fix.field\" : \"11\""
+"          },"
+"          \"isOptional\" : true"
+"        },"
+"        \"ClearingAccount\" : {"
+"          \"type\" : \"STRING\","
+"          \"parameters\" : {"
+"            \"fix.field\" : \"440\""
+"          },"
+"          \"isOptional\" : true"
+"        },"
+```
+
 N.B: Control Center is reachable at [http://127.0.0.1:9021](http://127.0.0.1:9021])
