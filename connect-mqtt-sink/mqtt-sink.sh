@@ -1,16 +1,6 @@
 #!/bin/bash
 set -e
 
-verify_installed()
-{
-  local cmd="$1"
-  if [[ $(type $cmd 2>&1) =~ "not found" ]]; then
-    echo -e "\nERROR: This script requires '$cmd'. Please install '$cmd' and run again.\n"
-    exit 1
-  fi
-}
-verify_installed "mosquitto_sub"
-
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 
 ${DIR}/../plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
@@ -46,5 +36,4 @@ docker exec connect \
 sleep 5
 
 echo "Verify we have received messages in MQTT sink-messages topic"
-
-mosquitto_sub -h localhost -p 1883 -u "myuser" -P "mypassword" -t "sink-messages" -C 1
+docker exec mosquitto sh -c 'mosquitto_sub -h localhost -p 1883 -u "myuser" -P "mypassword" -t "sink-messages" -C 1'
