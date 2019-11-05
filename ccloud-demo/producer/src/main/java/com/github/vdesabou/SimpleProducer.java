@@ -37,12 +37,12 @@ public class SimpleProducer {
 
         props.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, "org.apache.kafka.common.serialization.StringSerializer");
         props.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, KafkaAvroSerializer.class);
-        
+
         // Schema Registry specific settings
         props.put("schema.registry.url", System.getenv("SCHEMA_REGISTRY_URL"));
         props.put("basic.auth.credentials.source", System.getenv("BASIC_AUTH_CREDENTIALS_SOURCE"));
         props.put("schema.registry.basic.auth.user.info", System.getenv("SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO"));
-        
+
          // interceptor for C3
          // https://docs.confluent.io/current/control-center/installation/clients.html#java-producers-and-consumers
         props.put(ProducerConfig.INTERCEPTOR_CLASSES_CONFIG,"io.confluent.monitoring.clients.interceptor.MonitoringProducerInterceptor");
@@ -83,7 +83,7 @@ public class SimpleProducer {
                 });
                 producer.flush();
                 i++;
-                TimeUnit.MILLISECONDS.sleep(1000);
+                TimeUnit.MILLISECONDS.sleep(5000);
             }
         }
     }
