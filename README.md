@@ -74,7 +74,7 @@ Playground for Kafka/Confluent Docker experimentations
 
 ## ☁️ Confluent Cloud:
 
-* [ccloud demo](ccloud-demo)
+* [Confluent Cloud Demo](ccloud-demo)
 
 
 ## 🔐 Deployments
