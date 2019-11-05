@@ -45,7 +45,7 @@ $ docker exec connect \
 ```
 
 
-Verify we have received the data in rabbitmq topic
+Verify we have received the data in `rabbitmq` topic
 
 ```bash
 $ docker exec schema-registry kafka-avro-console-consumer -bootstrap-server broker:9092 --topic rabbitmq --from-beginning --max-messages 5
@@ -63,7 +63,7 @@ Results:
 
 Note:
 
-Run the following command to consume all records in RabbitMQ queue myqueue
+Run the following command to consume all records in RabbitMQ queue `myqueue`
 
 ```bash
 $ docker exec -it rabbitmq_consumer bash -c "python /consumer.py myqueue"
