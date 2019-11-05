@@ -3,6 +3,7 @@
 - [Confluent Cloud Demo](#confluent-cloud-demo)
   - [Objective](#objective)
   - [Pre-requisites](#pre-requisites)
+  - [How to run](#how-to-run)
   - [What it does](#what-it-does)
     - [Java Producer](#java-producer)
     - [Kafka Streams](#kafka-streams)
@@ -25,6 +26,8 @@ Confluent Cloud project based on [cp-all-in-one-cloud](https://github.com/conflu
 * `docker-compose` (example `brew cask install docker`)
 * [Confluent Cloud CLI](https://docs.confluent.io/current/cloud-quickstart.html#step-2-install-ccloud-cli)
 * [An initialized Confluent Cloud cluster used for development only](https://confluent.cloud)
+
+## How to run
 
 1. Create `$HOME/.ccloud/config`
 
