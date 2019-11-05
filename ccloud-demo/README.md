@@ -3,9 +3,6 @@
 - [Confluent Cloud Demo](#confluent-cloud-demo)
   - [Objective](#objective)
   - [Pre-requisites](#pre-requisites)
-    - [Step 1](#step-1)
-    - [Step 2](#step-2)
-    - [Step 3](#step-3)
   - [What it does](#what-it-does)
     - [Java Producer](#java-producer)
     - [Kafka Streams](#kafka-streams)
@@ -21,7 +18,7 @@
 
 ## Objective
 
-Confluent Cloud project based on [cp-all-in-one-cloud](https://github.com/confluentinc/examples/tree/5.3.x/cp-all-in-one-cloud), just adding a few simple components on top of it:
+Confluent Cloud project based on [cp-all-in-one-cloud](https://github.com/confluentinc/examples/tree/5.3.1-post/cp-all-in-one-cloud).
 
 ## Pre-requisites
 
@@ -29,13 +26,13 @@ Confluent Cloud project based on [cp-all-in-one-cloud](https://github.com/conflu
 * [Confluent Cloud CLI](https://docs.confluent.io/current/cloud-quickstart.html#step-2-install-ccloud-cli)
 * [An initialized Confluent Cloud cluster used for development only](https://confluent.cloud)
 
-### Step 1
+1. Create `$HOME/.ccloud/config`
 
 On the host from which you are running Docker, ensure that you have properly initialized Confluent Cloud CLI and have a valid configuration file at `$HOME/.ccloud/config`.
 
 Example:
 
-```
+```bash
 $ cat $HOME/.ccloud/config
 bootstrap.servers=<BROKER ENDPOINT>
 ssl.endpoint.identification.algorithm=https
@@ -47,10 +44,9 @@ sasl.jaas.config=org.apache.kafka.common.security.plain.PlainLoginModule require
 basic.auth.credentials.source=USER_INFO
 schema.registry.basic.auth.user.info=<SR_API_KEY>:<SR_API_SECRET>
 schema.registry.url=<SR ENDPOINT>
-
 ```
 
-### Step 2
+2. (Optional) Enable Confluent Cloud Schema Registry
 
 By default, the demo uses Confluent Schema Registry running in a local Docker container. If you prefer to use Confluent Cloud Schema Registry instead, you need to first set it up:
 
@@ -62,19 +58,19 @@ By default, the demo uses Confluent Schema Registry running in a local Docker co
    $ curl -u $(grep "^schema.registry.basic.auth.user.info" $HOME/.ccloud/config | cut -d'=' -f2) $(grep "^schema.registry.url" $HOME/.ccloud/config | cut -d'=' -f2)/subjects
    ```
 
-### Step 3
+3. Start the demo
 
-* Run with local Docker Schema Registry
+Run with local Docker Schema Registry:
 
-```
+```bash
 ./start.sh
 or
 ./start.sh SCHEMA_REGISTRY_DOCKER
 ```
 
-* Run with Confluent Cloud Schema Registry
+Run with Confluent Cloud Schema Registry:
 
-```
+```bash
 ./start.sh SCHEMA_REGISTRY_CONFLUENT_CLOUD
 ```
 
