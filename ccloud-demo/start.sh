@@ -36,7 +36,7 @@ else
 fi
 
 set +e
-echo "Create topic customer-avro in Confluent Cloud"
+echo "Create topic customer-avro in Confluent Cloud - Might fail if already exists, this is not a problem"
 kafka-topics --bootstrap-server `grep "^\s*bootstrap.server" ${CONFIG_FILE} | tail -1` --command-config ${CONFIG_FILE} --topic customer-avro --create --replication-factor 3 --partitions 6
 set -e
 
@@ -76,7 +76,7 @@ docker exec -e BOOTSTRAP_SERVERS="$BOOTSTRAP_SERVERS" -e CLOUD_KEY="$CLOUD_KEY" 
      http://localhost:8083/connectors | jq .
 
 
-sleep 10
+sleep 20
 
 echo "Confirm that the data was sent to the HTTP endpoint."
 curl admin:password@localhost:9080/api/messages | jq .
