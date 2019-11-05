@@ -32,8 +32,6 @@ if [[ ! -f $CCLOUD_CONFIG ]]; then
   echo "'ccloud' is not initialized. Run 'ccloud init' and try again"
   exit 1
 fi
-PERM=$(gstat -c "%a" $HOME/.ccloud/config)
-
 
 ################################################################################
 # Specify configuration file for Confluent Schema Registry
@@ -85,4 +83,3 @@ export SCHEMA_REGISTRY_URL=$SCHEMA_REGISTRY_URL
 export CLOUD_KEY=$CLOUD_KEY
 export CLOUD_SECRET=$CLOUD_SECRET
 EOF
-chmod $PERM $ENV_CONFIG
