@@ -49,6 +49,9 @@ sasl.jaas.config=org.apache.kafka.common.security.plain.PlainLoginModule require
 basic.auth.credentials.source=USER_INFO
 schema.registry.basic.auth.user.info=<SR_API_KEY>:<SR_API_SECRET>
 schema.registry.url=<SR ENDPOINT>
+
+// license
+confluent.license=<YOUR LICENSE>
 ```
 
 2. (Optional) Enable Confluent Cloud Schema Registry
