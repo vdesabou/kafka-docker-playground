@@ -115,18 +115,34 @@ services:
       # CONTROL_CENTER_MAIL_SSL_CHECKSERVERIDENTITY: "true"
       # CONTROL_CENTER_MAIL_BOUNCE_ADDRESS: "toto@gmail.com"
 
+  mysql:
+    image: mysql:5.7
+    hostname: mysql
+    container_name: mysql
+    volumes:
+      - ../connect-jdbc-mysql-source/mysql-init.sql:/docker-entrypoint-initdb.d/mysql-init.sql
+    environment:
+      MYSQL_ROOT_PASSWORD: password
+      MYSQL_DATABASE: db
+      MYSQL_USER: user
+      MYSQL_PASSWORD: password
+      MYSQL_ROOT_HOST: 172.%  # Allow docker containers to connect to mysql
+
   connect:
     build:
-      context: ..
+      context: .
       dockerfile: Dockerfile-Connector-Hub
     hostname: connect
     container_name: connect
     depends_on:
       - schema-registry
+      - mysql
+      - http-service-basic-auth
     ports:
       - "8083:8083"
     volumes:
       - mi2:/usr/share/java/monitoring-interceptors/
+      - ../connect-jdbc-mysql-source/mysql-connector-java-5.1.45-bin.jar:/usr/share/confluent-hub-components/confluentinc-kafka-connect-jdbc/lib/mysql-connector-java-5.1.45-bin.jar
     environment:
       CONNECT_BOOTSTRAP_SERVERS: $BOOTSTRAP_SERVERS
       CONNECT_REST_PORT: 8083
