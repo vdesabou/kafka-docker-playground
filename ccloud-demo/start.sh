@@ -2,6 +2,9 @@
 set -e
 
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
+
+${DIR}/../ccloud-demo/stop.sh
+
 SR_TYPE=${1:-SCHEMA_REGISTRY_DOCKER}
 CONFIG_FILE=~/.ccloud/config
 
@@ -10,7 +13,6 @@ then
      echo "ERROR: ${CONFIG_FILE} is not set"
      exit 1
 fi
-
 
 echo "The following ccloud config is used:"
 echo "---------------"
@@ -45,7 +47,7 @@ docker-compose up -d
 ${DIR}/../WaitForConnectAndControlCenter.sh
 
 echo "-------------------------------------"
-echo "Running Basic Authentication Example"
+echo "Connector examples"
 echo "-------------------------------------"
 
 echo "Creating HttpSinkBasicAuth connector"
@@ -81,4 +83,44 @@ sleep 20
 echo "Confirm that the data was sent to the HTTP endpoint."
 curl admin:password@localhost:9080/api/messages | jq .
 
+echo "Creating topic mysql-application"
+# Would be better to use ccloud command, but we cannot be sure it's logged in and using correct cluster
+# ccloud kafka topic create mysql-application
+set +e
+kafka-topics --bootstrap-server `grep "^\s*bootstrap.server" ${CONFIG_FILE} | tail -1` --command-config ${CONFIG_FILE} --topic mysql-application --create --replication-factor 3 --partitions 6
+set -e
 
+echo "Creating MySQL source connector"
+docker exec connect \
+     curl -X POST \
+     -H "Content-Type: application/json" \
+     --data '{
+               "name": "mysql-source",
+               "config": {
+                    "connector.class":"io.confluent.connect.jdbc.JdbcSourceConnector",
+                    "tasks.max":"1",
+                    "connection.url":"jdbc:mysql://mysql:3306/db?user=user&password=password&useSSL=false",
+                    "table.whitelist":"application",
+                    "mode":"timestamp+incrementing",
+                    "timestamp.column.name":"last_modified",
+                    "incrementing.column.name":"id",
+                    "topic.prefix":"mysql-"
+          }}' \
+     http://localhost:8083/connectors | jq .
+
+echo "Adding an element to the table"
+docker exec mysql mysql --user=root --password=password --database=db -e "
+INSERT INTO application (   \
+  id,   \
+  name, \
+  team_email,   \
+  last_modified \
+) VALUES (  \
+  2,    \
+  'another',  \
+  'another@apache.org',   \
+  NOW() \
+);"
+
+echo "Verifying topic mysql-application"
+docker-compose exec -e BOOTSTRAP_SERVERS="$BOOTSTRAP_SERVERS" -e SASL_JAAS_CONFIG="$SASL_JAAS_CONFIG" -e BASIC_AUTH_CREDENTIALS_SOURCE="$BASIC_AUTH_CREDENTIALS_SOURCE" -e SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO="$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO" -e SCHEMA_REGISTRY_URL="$SCHEMA_REGISTRY_URL" connect bash -c 'kafka-avro-console-consumer --topic mysql-application --bootstrap-server $BOOTSTRAP_SERVERS --consumer-property ssl.endpoint.identification.algorithm=https --consumer-property sasl.mechanism=PLAIN --consumer-property security.protocol=SASL_SSL --consumer-property sasl.jaas.config="$SASL_JAAS_CONFIG" --property basic.auth.credentials.source=$BASIC_AUTH_CREDENTIALS_SOURCE --property schema.registry.basic.auth.user.info="$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO" --property schema.registry.url=$SCHEMA_REGISTRY_URL --from-beginning --max-messages 1'
