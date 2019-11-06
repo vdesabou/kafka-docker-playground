@@ -10,9 +10,11 @@
     - [Java Consumer](#java-consumer)
     - [Connect](#connect)
       - [HTTP Sink Connector](#http-sink-connector)
+      - [JDBC MySQL Source Connector](#jdbc-mysql-source-connector)
     - [Monitoring](#monitoring)
       - [Control Center](#control-center)
       - [Grafana](#grafana)
+    - [Schema Registry](#schema-registry)
     - [KSQL](#ksql)
     - [REST Proxy](#rest-proxy)
   - [📚 Other useful resources](#%f0%9f%93%9a-other-useful-resources)
@@ -187,6 +189,63 @@ Example:
 ]
 ```
 
+#### JDBC MySQL Source Connector
+
+A JDBC MySQL source connector called `mysql-source` is created and using a MySQL table called `application`:
+
+Note: the topic `mysql-application` used by this connector shall be created before using command:
+
+```bash
+$ ccloud kafka topic create mysql-application --partitions 6
+```
+
+```bash
+$ docker exec connect \
+     curl -X POST \
+     -H "Content-Type: application/json" \
+     --data '{
+               "name": "mysql-source",
+               "config": {
+                    "connector.class":"io.confluent.connect.jdbc.JdbcSourceConnector",
+                    "tasks.max":"1",
+                    "connection.url":"jdbc:mysql://mysql:3306/db?user=user&password=password&useSSL=false",
+                    "table.whitelist":"application",
+                    "mode":"timestamp+incrementing",
+                    "timestamp.column.name":"last_modified",
+                    "incrementing.column.name":"id",
+                    "topic.prefix":"mysql-"
+          }}' \
+     http://localhost:8083/connectors | jq .
+```
+
+
+We can consume messages from topic `mysql-application` using multiple ways:
+
+* Using `kafka-avro-console-consumer`:
+
+```bash
+$ docker-compose exec -e BOOTSTRAP_SERVERS="$BOOTSTRAP_SERVERS" -e SASL_JAAS_CONFIG="$SASL_JAAS_CONFIG" -e BASIC_AUTH_CREDENTIALS_SOURCE="$BASIC_AUTH_CREDENTIALS_SOURCE" -e SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO="$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO" -e SCHEMA_REGISTRY_URL="$SCHEMA_REGISTRY_URL" connect bash -c 'kafka-avro-console-consumer --topic mysql-application --bootstrap-server $BOOTSTRAP_SERVERS --consumer-property ssl.endpoint.identification.algorithm=https --consumer-property sasl.mechanism=PLAIN --consumer-property security.protocol=SASL_SSL --consumer-property sasl.jaas.config="$SASL_JAAS_CONFIG" --property basic.auth.credentials.source=$BASIC_AUTH_CREDENTIALS_SOURCE --property schema.registry.basic.auth.user.info="$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO" --property schema.registry.url=$SCHEMA_REGISTRY_URL --from-beginning --max-messages 2'
+```
+
+* Using `confluent` cli and Docker Schema Registry:
+
+```bash
+$ confluent local consume mysql-application -- --cloud --value-format avro --property schema.registry.url=http://127.0.0.1:8085 --from-beginning --max-messages 2
+```
+
+* Using `confluent` cli and Confluent Cloud Schema Registry:
+
+```bash
+$ confluent local consume mysql-application -- --cloud --value-format avro --property schema.registry.url=$SCHEMA_REGISTRY_URL --property basic.auth.credentials.source=USER_INFO --property schema.registry.basic.auth.user.info="$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO" --from-beginning --max-messages 2
+```
+
+Results:
+
+```json
+{"id":1,"name":"kafka","team_email":"kafka@apache.org","last_modified":1573054234000}
+{"id":2,"name":"another","team_email":"another@apache.org","last_modified":1573054378000}
+```
+
 ### Monitoring
 
 #### Control Center
@@ -207,6 +266,10 @@ This is [expected](https://docs.confluent.io/current/cloud/connect/c3-cloud-conf
 
 ![KSQL overview](Screenshot3.png)
 
+* In the case you're using local schema-registry instance (docker service `schema-registry`), you can see the schemas:
+
+![Schema overview](Screenshot4.png)
+
 #### Grafana
 
 [JMX Exporter](https://github.com/prometheus/jmx_exporter), [Prometheus](https://github.com/prometheus/prometheus) and [Grafana](https://grafana.com) are installed in order to provide a demo of clients monitoring.
@@ -214,6 +277,12 @@ This is [expected](https://docs.confluent.io/current/cloud/connect/c3-cloud-conf
 Open a brower and visit http://127.0.0.1:3000 (login/password is `admin/admin`)
 
 N.B: only Producer and Consumer dashboards are available. Zookeeper and Brokers metrics are not exposed for Confluent Cloud.
+
+### Schema Registry
+
+A local Schema Registry instance (docker service `schema-registry`) is installed and bootstrapping the Confluent Cloud broker.
+
+You can either use it (by running `./start.sh`or `./start.sh SCHEMA_REGISTRY_DOCKER`) or use Confluent Cloud Schema Registry (by running `./start.sh SCHEMA_REGISTRY_CONFLUENT_CLOUD`).
 
 ### KSQL
 
