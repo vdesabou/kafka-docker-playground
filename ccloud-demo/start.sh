@@ -2,17 +2,13 @@
 set -e
 
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
-${DIR}/../ccloud-demo/Utils.sh
+source ${DIR}/../ccloud-demo/Utils.sh
 
-CCLOUD_PROMPT_FMT='You will be using Confluent Cloud config: user={{color "green" "%u"}}, environment={{color "red" "%E"}}, cluster={{color "cyan" "%K"}}, api key={{color "yellow" "%a"}})'
-ccloud prompt -f "$CCLOUD_PROMPT_FMT"
-
-read -p "Continue (y/n)?" choice
-case "$choice" in
-  y|Y ) ;;
-  n|N ) exit 0;;
-  * ) echo "ERROR: invalid response!";exit 1;;
-esac
+verify_installed "ccloud"
+verify_installed "confluent"
+verify_ccloud_login  "ccloud kafka cluster list"
+verify_ccloud_details
+check_if_continue
 
 SR_TYPE=${1:-SCHEMA_REGISTRY_DOCKER}
 CONFIG_FILE=~/.ccloud/config
