@@ -17,30 +17,41 @@ verify_ccloud_login()
     exit 1
   fi
 }
-verify_installed "ccloud"
-verify_installed "confluent"
-verify_ccloud_login  "ccloud kafka cluster list"
+verify_ccloud_details()
+{
+    if [ "$(ccloud prompt -f "%E")" = "(none)" ]
+    then
+        echo "ERROR: ccloud command is badly configured: environment is not set"
+        echo "Example: ccloud kafka environment list"
+        echo "then: ccloud kafka environment use <environment id>"
+        exit 1
+    fi
 
-if [ "$(ccloud prompt -f "%E")" = "(none)" ]
-then
-    echo "ERROR: ccloud command is badly configured: environment is not set"
-    echo "Example: ccloud kafka environment list"
-    echo "then: ccloud kafka environment use <environment id>"
-    exit 1
-fi
+    if [ "$(ccloud prompt -f "%K")" = "(none)" ]
+    then
+        echo "ERROR: ccloud command is badly configured: cluster is not set"
+        echo "Example: ccloud kafka cluster list"
+        echo "then: ccloud kafka cluster use <cluster id>"
+        exit 1
+    fi
 
-if [ "$(ccloud prompt -f "%K")" = "(none)" ]
-then
-    echo "ERROR: ccloud command is badly configured: cluster is not set"
-    echo "Example: ccloud kafka cluster list"
-    echo "then: ccloud kafka cluster use <cluster id>"
-    exit 1
-fi
+    if [ "$(ccloud prompt -f "%a")" = "(none)" ]
+    then
+        echo "ERROR: ccloud command is badly configured: api key is not set"
+        echo "Example: ccloud api-key store <api key> <password>"
+        echo "then: ccloud api-key use <api key>"
+        exit 1
+    fi
 
-if [ "$(ccloud prompt -f "%a")" = "(none)" ]
-then
-    echo "ERROR: ccloud command is badly configured: api key is not set"
-    echo "Example: ccloud api-key store <api key> <password>"
-    echo "then: ccloud api-key use <api key>"
-    exit 1
-fi
+    CCLOUD_PROMPT_FMT='You will be using Confluent Cloud config: user={{color "green" "%u"}}, environment={{color "red" "%E"}}, cluster={{color "cyan" "%K"}}, api key={{color "yellow" "%a"}})'
+    ccloud prompt -f "$CCLOUD_PROMPT_FMT"
+}
+check_if_continue()
+{
+    read -p "Continue (y/n)?" choice
+    case "$choice" in
+    y|Y ) ;;
+    n|N ) exit 0;;
+    * ) echo "ERROR: invalid response!";exit 1;;
+    esac
+}
