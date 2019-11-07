@@ -379,4 +379,4 @@ Result:
 
 * [Other clients example](https://github.com/confluentinc/examples/blob/5.3.1-post/clients/cloud/README.md)
 
-* [ACLs in cloud](https://github.com/confluentinc/examples/blob/5.3.1-post/security/acls/acl.sh))
+* [Beginner Cloud](https://github.com/confluentinc/examples/tree/5.3.1-post/ccloud/beginner-cloud)
