@@ -40,3 +40,6 @@ RUN   confluent-hub install --no-prompt confluentinc/kafka-connect-ibmmq:latest 
 		&& confluent-hub install --no-prompt confluentinc/kafka-connect-omnisci:latest \
 		&& confluent-hub install --no-prompt confluentinc/kafka-connect-rabbitmq:latest \
 		&& confluent-hub install --no-prompt jcustenborder/kafka-connect-spooldir:latest \
+		&& confluent-hub install --no-prompt confluentinc/kafka-connect-gcp-pubsub:latest \
+		&& confluent-hub install --no-prompt confluentinc/kafka-connect-gcp-spanner:latest \
+		&& confluent-hub install --no-prompt confluentinc/kafka-connect-jms-sink:latest \

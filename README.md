@@ -71,6 +71,8 @@ Playground for Kafka/Confluent Docker experimentations
     * using [SQL Server](connect/connect-jdbc-sqlserver-sink)
 * [ActiveMQ](connect/connect-active-mq-sink)
 * [OmniSci](connect/connect-omnisci-sink)
+* JMS
+    * using [ActiveMQ](connect/connect-jms-active-mq-sink)
 
 ## ☁️ Confluent Cloud:
 

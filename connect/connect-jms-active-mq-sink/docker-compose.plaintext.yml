@@ -1,0 +1,19 @@
+---
+version: '3.5'
+services:
+  activemq:
+    image: rmohr/activemq # https://hub.docker.com/r/rmohr/activemq/
+    hostname: activemq
+    container_name: activemq
+    ports:
+      - '61616:61616'
+      - '8161:8161'
+
+  connect:
+    depends_on:
+      - zookeeper
+      - broker
+      - schema-registry
+      - activemq
+    volumes:
+        - ../../connect/connect-jms-active-mq-sink/activemq-all-5.15.4.jar:/usr/share/confluent-hub-components/confluentinc-kafka-connect-jms-sink/lib/activemq-all-5.15.4.jar
