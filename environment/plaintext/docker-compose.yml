@@ -41,7 +41,7 @@ services:
 
   connect:
     build:
-      context: ..
+      context: ../..
       dockerfile: Dockerfile-Connector-Hub
     hostname: connect
     container_name: connect
