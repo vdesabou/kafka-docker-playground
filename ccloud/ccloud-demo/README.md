@@ -2,6 +2,7 @@
 
 - [Confluent Cloud Demo](#confluent-cloud-demo)
   - [Objective](#objective)
+  - [DISCLAIMER](#disclaimer)
   - [Pre-requisites](#pre-requisites)
   - [How to run](#how-to-run)
   - [What it does](#what-it-does)
@@ -24,11 +25,23 @@
 
 Confluent Cloud project based on [cp-all-in-one-cloud](https://github.com/confluentinc/examples/tree/5.3.1-post/cp-all-in-one-cloud).
 
+## DISCLAIMER
+
+This demo is for reference purposes only and should be used to see a sample workflow using Confluent Cloud CLI
+
+If you choose to run it against your Confluent Cloud cluster, be aware that it:
+
+- creates and deletes topics, service accounts, API keys, and ACLs
+- is for demo purposes only
+- should be used only on a non-production cluster
+
 ## Pre-requisites
 
 * `docker-compose` (example `brew cask install docker`)
-* [Confluent Cloud CLI](https://docs.confluent.io/current/cloud-quickstart.html#step-2-install-ccloud-cli)
+* Local install of the new [Confluent Cloud CLI](https://docs.confluent.io/current/cloud/cli/install.html#ccloud-install-cli) v0.192.0 or above
 * [An initialized Confluent Cloud cluster used for development only](https://confluent.cloud)
+* [Confluent CLI](https://docs.confluent.io/current/cli/installing.html) installed on your machine, version `v0.128.0` or higher (note: as of CP 5.3, the Confluent CLI is a separate [download](https://docs.confluent.io/current/cli/installing.html)
+* `mvn` installed on your host
 
 ## How to run
 
