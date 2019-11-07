@@ -11,6 +11,7 @@ fi
 
 source ${DIR}/../../ccloud/ccloud-demo/Utils.sh
 
+verify_installed "mvn"
 verify_installed "ccloud"
 check_ccloud_version 0.192.0 || exit 1
 verify_installed "confluent"
