@@ -1,0 +1,19 @@
+---
+version: '3.5'
+services:
+  tibco-ems:
+    image: tibems:latest
+    hostname: tibco-ems
+    container_name: tibco-ems
+    ports:
+      - '7222:7222'
+
+  connect:
+    depends_on:
+      - zookeeper
+      - broker
+      - schema-registry
+      - tibco-ems
+    volumes:
+        - ../../connect/connect-tibco-source/tibjms.jar:/usr/share/confluent-hub-components/confluentinc-kafka-connect-tibco-source/lib/tibjms.jar
+

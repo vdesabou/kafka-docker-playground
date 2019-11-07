@@ -1,0 +1,8 @@
+---
+version: '3.5'
+services:
+  connect:
+    volumes:
+      - secret:/var/lib/secret
+      - ../../environment/ssl_kerberos/kdc/krb5.conf:/etc/krb5.conf
+      - ../../environment/ssl_kerberos/security:/etc/kafka/secrets

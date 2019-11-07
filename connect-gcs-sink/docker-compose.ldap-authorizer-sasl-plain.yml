@@ -1,8 +1,0 @@
----
-version: '3.5'
-services:
-  connect:
-    volumes:
-        - ../connect-gcs-sink/keyfile.json:/root/keyfiles/keyfile.json:ro
-        - ../ldap_authorizer_sasl_plain/kafka/users:/service/kafka/users
-      

@@ -1,0 +1,31 @@
+---
+version: '3.5'
+services:
+  solace:
+    image: solace/solace-pubsub-standard:9.1.0.77
+    hostname: solace
+    container_name: solace
+    volumes:
+      - ../../connect/connect-solace-source/create_queue_cmd:/usr/sw/jail/cliscripts/create_queue_cmd
+    ports:
+      - 8080:8080
+      - 55555:55555
+      - 9000:9000
+    tmpfs: /dev/shm
+    ulimits:
+      nofile:
+        soft: 2448
+        hard: 38048
+    environment:
+      username_admin_globalaccesslevel: admin
+      username_admin_password: admin
+
+  connect:
+    depends_on:
+      - zookeeper
+      - broker
+      - schema-registry
+      - solace
+    volumes:
+        - ../../connect/connect-solace-source/sol-jms-10.6.3.jar:/usr/share/confluent-hub-components/confluentinc-kafka-connect-solace-source/lib/sol-jms-10.6.3.jar
+

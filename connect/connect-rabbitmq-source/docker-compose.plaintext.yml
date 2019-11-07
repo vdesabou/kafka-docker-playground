@@ -1,0 +1,33 @@
+---
+version: '3.5'
+services:
+
+  rabbitmq:
+    image: rabbitmq:alpine
+    hostname: rabbitmq
+    container_name: rabbitmq
+    ports:
+      - "5672:5672"
+      - "8080:8080"
+    environment:
+      RABBITMQ_DEFAULT_USER: "myuser"
+      RABBITMQ_DEFAULT_PASS: "mypassword"
+
+  rabbitmq_producer:
+    build:
+      context: ../../connect/connect-rabbitmq-source/producer
+    hostname: rabbitmq_producer
+    container_name: rabbitmq_producer
+
+  rabbitmq_consumer:
+    build:
+      context: ../../connect/connect-rabbitmq-source/consumer
+    hostname: rabbitmq_consumer
+    container_name: rabbitmq_consumer
+
+  connect:
+    depends_on:
+      - zookeeper
+      - broker
+      - schema-registry
+      - rabbitmq
