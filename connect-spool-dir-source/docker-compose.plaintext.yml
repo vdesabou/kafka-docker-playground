@@ -1,6 +1,0 @@
----
-version: '3.5'
-services:
-  connect:
-    volumes:
-        - ../connect-spool-dir-source/data:/root/data

@@ -1,0 +1,6 @@
+---
+version: '3.5'
+services:
+  connect:
+    volumes:
+        - ../../connect/connect-aws-redshift-sink/RedshiftJDBC4-1.2.20.1043.jar:/usr/share/confluent-hub-components/confluentinc-kafka-connect-aws-redshift/lib/RedshiftJDBC4-1.2.20.1043.jar

@@ -7,89 +7,89 @@ Playground for Kafka/Confluent Docker experimentations
 ### ↘️ Source
 
 * AWS
-    * [S3](connect-s3-source)
-    * [Kinesis](connect-kinesis-source)
-    * [SQS](connect-sqs-source)
-        * using [SASL_SSL](connect-sqs-source/README.md#with-sasl_ssl-authentication)
-        * using [SSL](connect-sqs-source/README.md#with-ssl-authentication)
-    * [CloudWatch Logs](connect-aws-cloudwatch-source)
+    * [S3](connect/connect-s3-source)
+    * [Kinesis](connect/connect-kinesis-source)
+    * [SQS](connect/connect-sqs-source)
+        * using [SASL_SSL](connect/connect-sqs-source/README.md#with-sasl_ssl-authentication)
+        * using [SSL](connect/connect-sqs-source/README.md#with-ssl-authentication)
+    * [CloudWatch Logs](connect/connect-aws-cloudwatch-source)
 * Debezium
-    * using [MySQL](connect-debezium-mysql-source)
-    * using [PostgreSQL](connect-debezium-postgresql-source)
-    * using [MongoDB](connect-debezium-mongodb-source)
-    * using [SQL Server](connect-debezium-sqlserver-source)
-* [IBM MQ](connect-ibm-mq-source)
-* [Solace](connect-solace-source)
-* [ActiveMQ](connect-active-mq-source)
-* [TIBCO EMS](connect-tibco-source)
-* [Syslog](connect-syslog-source)
+    * using [MySQL](connect/connect-debezium-mysql-source)
+    * using [PostgreSQL](connect/connect-debezium-postgresql-source)
+    * using [MongoDB](connect/connect-debezium-mongodb-source)
+    * using [SQL Server](connect/connect-debezium-sqlserver-source)
+* [IBM MQ](connect/connect-ibm-mq-source)
+* [Solace](connect/connect-solace-source)
+* [ActiveMQ](connect/connect-active-mq-source)
+* [TIBCO EMS](connect/connect-tibco-source)
+* [Syslog](connect/connect-syslog-source)
 * JDBC
-    * using [MySQL](connect-jdbc-mysql-source)
-    * using [Oracle 11](connect-jdbc-oracle11-source)
-    * using [Oracle 12](connect-jdbc-oracle12-source)
-    * using [PostGreSQL](connect-jdbc-postgresql-source)
-    * using [SQL Server](connect-jdbc-sqlserver-source)
-* [MQTT](connect-mqtt-source)
-* [JMS TIBCO](connect-jms-tibco-source)
-* [InfluxDB](connect-influxdb-source)
-* [Splunk](connect-splunk-source)
-* [HDFS 3](connect-hdfs3-source)
-* [RabbitMQ](connect-rabbitmq-source)
-* [Spool Dir](connect-spool-dir-source)
+    * using [MySQL](connect/connect-jdbc-mysql-source)
+    * using [Oracle 11](connect/connect-jdbc-oracle11-source)
+    * using [Oracle 12](connect/connect-jdbc-oracle12-source)
+    * using [PostGreSQL](connect/connect-jdbc-postgresql-source)
+    * using [SQL Server](connect/connect-jdbc-sqlserver-source)
+* [MQTT](connect/connect-mqtt-source)
+* [JMS TIBCO](connect/connect-jms-tibco-source)
+* [InfluxDB](connect/connect-influxdb-source)
+* [Splunk](connect/connect-splunk-source)
+* [HDFS 3](connect/connect-hdfs3-source)
+* [RabbitMQ](connect/connect-rabbitmq-source)
+* [Spool Dir](connect/connect-spool-dir-source)
 
 ### ↗️ Sink
 
 * HDFS
-    * [HDFS 2](connect-hdfs-sink)
-    * [HDFS 3](connect-hdfs3-sink)
+    * [HDFS 2](connect/connect-hdfs-sink)
+    * [HDFS 3](connect/connect-hdfs3-sink)
 * AWS
-    * [S3](connect-s3-sink)
-    * [Redshift](connect-aws-redshift-sink)
-    * [DynamoDB](connect-aws-dynamodb-sink)
-* [Elasticsearch](connect-elasticsearch-sink)
-* [HTTP](connect-http-sink)
+    * [S3](connect/connect-s3-sink)
+    * [Redshift](connect/connect-aws-redshift-sink)
+    * [DynamoDB](connect/connect-aws-dynamodb-sink)
+* [Elasticsearch](connect/connect-elasticsearch-sink)
+* [HTTP](connect/connect-http-sink)
 * Google
-    * [GCP BigQuery](connect-gcp-bigquery-sink)
-    * [Google Cloud Functions](connect-google-cloud-functions-sink)
-    * [GCS](connect-gcs-sink)
-        * using [SASL_SSL](connect-gcs-sink/README.md#with-sasl_ssl-authentication)
-        * using [SSL](connect-gcs-sink/README.md#with-ssl-authentication)
-        * using [Kerberos GSSAPI](connect-gcs-sink/README.md#with-kerberos-gssapi-authentication)
-        * using [LDAP Authorizer SASL/PLAIN](connect-gcs-sink/README.md#with-ldap-authorizer-with-saslplain)
-* [Solace](connect-solace-sink)
-* [Splunk](connect-splunk-sink)
-* [TIBCO EMS](connect-tibco-sink)
-* [IBM MQ](connect-ibm-mq-sink)
-* [MQTT](connect-mqtt-sink)
-* [InfluxDB](connect-influxdb-sink)
-* [Cassandra](connect-cassandra-sink)
+    * [GCP BigQuery](connect/connect-gcp-bigquery-sink)
+    * [Google Cloud Functions](connect/connect-google-cloud-functions-sink)
+    * [GCS](connect/connect-gcs-sink)
+        * using [SASL_SSL](connect/connect-gcs-sink/README.md#with-sasl_ssl-authentication)
+        * using [SSL](connect/connect-gcs-sink/README.md#with-ssl-authentication)
+        * using [Kerberos GSSAPI](connect/connect-gcs-sink/README.md#with-kerberos-gssapi-authentication)
+        * using [LDAP Authorizer SASL/PLAIN](connect/connect-gcs-sink/README.md#with-ldap-authorizer-with-saslplain)
+* [Solace](connect/connect-solace-sink)
+* [Splunk](connect/connect-splunk-sink)
+* [TIBCO EMS](connect/connect-tibco-sink)
+* [IBM MQ](connect/connect-ibm-mq-sink)
+* [MQTT](connect/connect-mqtt-sink)
+* [InfluxDB](connect/connect-influxdb-sink)
+* [Cassandra](connect/connect-cassandra-sink)
 * JDBC
-    * using [MySQL](connect-jdbc-mysql-sink)
-    * using [Oracle 11](connect-jdbc-oracle11-sink)
-    * using [Oracle 12](connect-jdbc-oracle12-sink)
-    * using [PostGreSQL](connect-jdbc-postgresql-sink)
-    * using [SQL Server](connect-jdbc-sqlserver-sink)
-* [ActiveMQ](connect-active-mq-sink)
-* [OmniSci](connect-omnisci-sink)
+    * using [MySQL](connect/connect-jdbc-mysql-sink)
+    * using [Oracle 11](connect/connect-jdbc-oracle11-sink)
+    * using [Oracle 12](connect/connect-jdbc-oracle12-sink)
+    * using [PostGreSQL](connect/connect-jdbc-postgresql-sink)
+    * using [SQL Server](connect/connect-jdbc-sqlserver-sink)
+* [ActiveMQ](connect/connect-active-mq-sink)
+* [OmniSci](connect/connect-omnisci-sink)
 
 ## ☁️ Confluent Cloud:
 
-* [Confluent Cloud Demo](ccloud-demo)
+* [Confluent Cloud Demo](ccloud/ccloud-demo)
 
 
 ## 🔐 Deployments
 
-* [PLAINTEXT](plaintext): no security
-* [SASL_SSL](sasl-ssl): SSL encryption / SASL_SSL or 2 way SSL authentication
-* [Kerberos](kerberos): no SSL encryption / Kerberos GSSAPI authentication
-* [SSL_Kerberos](ssl_kerberos) SSL encryption / Kerberos GSSAPI authentication
-* [LDAP Authorizer with SASL/SCRAM-SHA-256](ldap_authorizer_sasl_scram) no SSL encryption
-* [LDAP Authorizer with SASL/PLAIN](ldap_authorizer_sasl_plain) no SSL encryption
+* [PLAINTEXT](environment/plaintext): no security
+* [SASL_SSL](environment/sasl-ssl): SSL encryption / SASL_SSL or 2 way SSL authentication
+* [Kerberos](environment/kerberos): no SSL encryption / Kerberos GSSAPI authentication
+* [SSL_Kerberos](environment/ssl_kerberos) SSL encryption / Kerberos GSSAPI authentication
+* [LDAP Authorizer with SASL/SCRAM-SHA-256](environment/ldap_authorizer_sasl_scram) no SSL encryption
+* [LDAP Authorizer with SASL/PLAIN](environment/ldap_authorizer_sasl_plain) no SSL encryption
 
 ## Other:
 
-* [Confluent Rebalancer](rebalancer)
-* [Confluent Replicator](connect-replicator) [also with [SASL_SSL](connect-replicator/README.md#with-sasl_ssl-authentication)]
+* [Confluent Rebalancer](other/rebalancer)
+* [Confluent Replicator](connect/connect-replicator) [also with [SASL_SSL](connect/connect-replicator/README.md#with-sasl_ssl-authentication)]
 
 ## 📚 Other useful resources
 

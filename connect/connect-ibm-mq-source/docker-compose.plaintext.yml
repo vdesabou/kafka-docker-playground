@@ -1,0 +1,25 @@
+---
+version: '3.5'
+services:
+  ibmmq:
+    image: ibmcom/mq # https://hub.docker.com/r/ibmcom/mq/
+    hostname: ibmmq
+    container_name: ibmmq
+    environment:
+      LICENSE: accept
+      MQ_QMGR_NAME: QM1
+      MQ_ADMIN_PASSWORD: passw0rd
+      MQ_APP_PASSWORD: passw0rd
+    ports:
+      - '1414:1414'
+      - '9443:9443'
+
+  connect:
+    depends_on:
+      - zookeeper
+      - broker
+      - schema-registry
+      - ibmmq
+    volumes:
+        - ../../connect/connect-ibm-mq-source/com.ibm.mq.allclient.jar:/usr/share/confluent-hub-components/confluentinc-kafka-connect-ibmmq/lib/com.ibm.mq.allclient.jar
+        - ../../connect/connect-ibm-mq-source/jms.jar:/usr/share/confluent-hub-components/confluentinc-kafka-connect-ibmmq/lib/jms.jar

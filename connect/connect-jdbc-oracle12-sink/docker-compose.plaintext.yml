@@ -1,0 +1,25 @@
+---
+version: '3.5'
+services:
+  oracle:
+    # You need to build this image first, following the instructions at
+    # https://github.com/oracle/docker-images/blob/master/OracleDatabase/SingleInstance/README.md
+    image: oracle/database:12.2.0.1-ee
+    hostname: oracle
+    container_name: oracle
+    ports:
+      - "1521:1521"
+    volumes:
+      - ../../connect/connect-jdbc-oracle12-sink/ora-setup-scripts:/opt/oracle/scripts/setup
+      - ../../connect/connect-jdbc-oracle12-sink/ora-startup-scripts:/opt/oracle/scripts/startup
+    environment:
+      ORACLE_PWD: Admin123
+
+  connect:
+    depends_on:
+      - zookeeper
+      - broker
+      - schema-registry
+      - oracle
+    volumes:
+        - ../../connect/connect-jdbc-oracle12-sink/ojdbc8.jar:/usr/share/confluent-hub-components/confluentinc-kafka-connect-jdbc/lib/ojdbc8.jar

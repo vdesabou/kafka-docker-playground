@@ -1,0 +1,7 @@
+---
+version: '3.5'
+services:
+  connect:
+    volumes:
+        - ../../connect/connect-gcs-sink/keyfile.json:/root/keyfiles/keyfile.json:ro
+        - ../../environment/sasl-ssl/security:/etc/kafka/secrets
