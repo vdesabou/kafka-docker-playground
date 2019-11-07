@@ -17,6 +17,7 @@
     - [Schema Registry](#schema-registry)
     - [KSQL](#ksql)
     - [REST Proxy](#rest-proxy)
+    - [Service Account and ACLs](#service-account-and-acls)
   - [📚 Other useful resources](#%f0%9f%93%9a-other-useful-resources)
 
 ## Objective
@@ -371,6 +372,112 @@ Result:
 
 ```json
 {"brokers":[0,5,2,8,4,1,6,7,3]}
+```
+
+### Service Account and ACLs
+
+Create a new service account
+
+```bash
+$ ccloud service-account create demo-app-24353 --description demo-app-24353
++-------------+----------------+
+| Id          |          21280 |
+| Name        | demo-app-24353 |
+| Description | demo-app-24353 |
++-------------+----------------+
+```
+
+Create an API key and secret for the new service account
+
+```bash
+$ ccloud api-key create --service-account-id 21280 --resource lkc-q223m
+Save the API key and secret. The secret is not retrievable later.
++---------+------------------------------------------------------------------+
+| API Key | <API_KEY_SA>                                                 |
+| Secret  | <API_SECRET_SA>                                              |
++---------+------------------------------------------------------------------+
+```
+
+Wait 90 seconds for the user and service account key and secret to propagate
+
+Create a local configuration file `/tmp/client.config` for the client to connect to Confluent Cloud with the newly created API key and secret
+
+Write properties to `/tmp/client.config`:
+
+```
+ssl.endpoint.identification.algorithm=https
+sasl.mechanism=PLAIN
+security.protocol=SASL_SSL
+bootstrap.servers=<BOOTSTRAP_SERVERS>
+sasl.jaas.config=org.apache.kafka.common.security.plain.PlainLoginModule required username\="<API_KEY_SA>" password\="<API_SECRET_SA>";
+```
+
+By default, no ACLs are configured:
+
+```bash
+$ ccloud kafka acl list --service-account-id 21280
+  ServiceAccountId | Permission | Operation | Resource | Name | Type
++------------------+------------+-----------+----------+------+------+
+```
+
+**Run the Java producer to `demo-topic-1`: before ACLs**
+
+Check logs for `org.apache.kafka.common.errors.TopicAuthorizationException`
+
+```
+PASS: Producer failed due to org.apache.kafka.common.errors.TopicAuthorizationException (expected because there are no ACLs to allow this client application)
+```
+
+Create ACLs for the service account
+
+```bash
+$ ccloud kafka acl create --allow --service-account-id 21280 --operation CREATE --topic demo-topic-1
+$ ccloud kafka acl create --allow --service-account-id 21280 --operation WRITE --topic demo-topic-1
+$ ccloud kafka acl list --service-account-id 21280
+```
+
+```
+  ServiceAccountId | Permission | Operation | Resource |     Name     |  Type
++------------------+------------+-----------+----------+--------------+---------+
+  User:21280       | ALLOW      | CREATE    | TOPIC    | demo-topic-1 | LITERAL
+  User:21280       | ALLOW      | WRITE     | TOPIC    | demo-topic-1 | LITERAL
+```
+
+**Run the Java producer to `demo-topic-1`: after ACLs**
+
+Check logs for `10 messages were produced to topic`
+
+```
+PASS: Producer works
+Producing record: alice {"count":1}
+Producing record: alice {"count":2}
+Producing record: alice {"count":3}
+Producing record: alice {"count":4}
+Producing record: alice {"count":5}
+Producing record: alice {"count":6}
+Producing record: alice {"count":7}
+Producing record: alice {"count":8}
+Producing record: alice {"count":9}
+Produced record to topic demo-topic-1 partition [0] @ offset 0
+Produced record to topic demo-topic-1 partition [0] @ offset 1
+Produced record to topic demo-topic-1 partition [0] @ offset 2
+Produced record to topic demo-topic-1 partition [0] @ offset 3
+Produced record to topic demo-topic-1 partition [0] @ offset 4
+Produced record to topic demo-topic-1 partition [0] @ offset 5
+Produced record to topic demo-topic-1 partition [0] @ offset 6
+Produced record to topic demo-topic-1 partition [0] @ offset 7
+Produced record to topic demo-topic-1 partition [0] @ offset 8
+Produced record to topic demo-topic-1 partition [0] @ offset 9
+10 messages were produced to topic demo-topic-1
+```
+
+Delete ACLs
+
+```bash
+$ ccloud kafka acl delete --allow --service-account-id 21280 --operation CREATE --topic demo-topic-1
+$ ccloud kafka acl delete --allow --service-account-id 21280 --operation WRITE --topic demo-topic-1
+$ ccloud service-account delete 21280
+$ ccloud api-key delete <API_KEY_SA>
 ```
 
 ## 📚 Other useful resources

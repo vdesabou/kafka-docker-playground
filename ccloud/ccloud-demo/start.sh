@@ -32,7 +32,6 @@ echo "---------------"
 cat ${CONFIG_FILE}
 echo "---------------"
 
-
 if [ "${SR_TYPE}" == "SCHEMA_REGISTRY_DOCKER" ]
 then
      echo "INFO: Using Docker Schema Registry"
@@ -143,5 +142,116 @@ else
      confluent local consume mysql-application -- --cloud --value-format avro --property schema.registry.url=$SCHEMA_REGISTRY_URL --property basic.auth.credentials.source=USER_INFO --property schema.registry.basic.auth.user.info="$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO" --from-beginning --max-messages 2
 fi
 
+######################
+## Service Account and ACLs
+######################
 
 
+##################################################
+# Create a Service Account and API key and secret
+# - A service account represents an application, and the service account name must be globally unique
+##################################################
+
+echo -e "\n# Create a new service account"
+RANDOM_NUM=$((1 + RANDOM % 1000000))
+SERVICE_NAME="demo-app-$RANDOM_NUM"
+echo "ccloud service-account create $SERVICE_NAME --description $SERVICE_NAME"
+ccloud service-account create $SERVICE_NAME --description $SERVICE_NAME || true
+SERVICE_ACCOUNT_ID=$(ccloud service-account list | grep $SERVICE_NAME | awk '{print $1;}')
+
+CLUSTER=$(ccloud prompt -f "%k")
+echo -e "\n# Create an API key and secret for the new service account"
+echo "ccloud api-key create --service-account-id $SERVICE_ACCOUNT_ID --resource $CLUSTER"
+OUTPUT=$(ccloud api-key create --service-account-id $SERVICE_ACCOUNT_ID --resource $CLUSTER)
+echo "$OUTPUT"
+API_KEY_SA=$(echo "$OUTPUT" | grep '| API Key' | awk '{print $5;}')
+API_SECRET_SA=$(echo "$OUTPUT" | grep '| Secret' | awk '{print $4;}')
+
+echo -e "\n# Wait 90 seconds for the user and service account key and secret to propagate"
+sleep 90
+
+CLIENT_CONFIG="/tmp/client.config"
+echo -e "\n# Create a local configuration file $CLIENT_CONFIG for the client to connect to Confluent Cloud with the newly created API key and secret"
+echo "Write properties to $CLIENT_CONFIG:"
+cat <<EOF > $CLIENT_CONFIG
+ssl.endpoint.identification.algorithm=https
+sasl.mechanism=PLAIN
+security.protocol=SASL_SSL
+bootstrap.servers=${BOOTSTRAP_SERVERS}
+sasl.jaas.config=org.apache.kafka.common.security.plain.PlainLoginModule required username\="${API_KEY_SA}" password\="${API_SECRET_SA}";
+EOF
+cat $CLIENT_CONFIG
+
+##################################################
+# Run a Java client: before and after ACLs
+#
+# When ACLs are enabled on your Confluent Cloud cluster,
+# by default no client applications are authorized.
+#
+# The following steps show the same Java producer failing at first due to
+# 'TopicAuthorizationException' and then passing once the appropriate
+# ACLs are configured
+##################################################
+
+POM=./producer-acl/pom.xml
+TOPIC1="demo-topic-1"
+set +e
+
+echo -e "\n# By default, no ACLs are configured"
+echo "ccloud kafka acl list --service-account-id $SERVICE_ACCOUNT_ID"
+ccloud kafka acl list --service-account-id $SERVICE_ACCOUNT_ID
+
+echo -e "\n# Run the Java producer to $TOPIC1: before ACLs"
+mvn -q -f $POM clean package
+if [[ $? != 0 ]]; then
+  echo "ERROR: There seems to be a build failure error compiling the client code? Please troubleshoot"
+  exit 1
+fi
+LOG1="/tmp/log.1"
+java -jar ./producer-acl/target/producer-acl-1.0.0-jar-with-dependencies.jar $CLIENT_CONFIG $TOPIC1 > $LOG1 2>&1
+echo "# Check logs for 'org.apache.kafka.common.errors.TopicAuthorizationException'"
+OUTPUT=$(grep "org.apache.kafka.common.errors.TopicAuthorizationException" $LOG1)
+if [[ ! -z $OUTPUT ]]; then
+  echo "PASS: Producer failed due to org.apache.kafka.common.errors.TopicAuthorizationException (expected because there are no ACLs to allow this client application)"
+else
+  echo "FAIL: Something went wrong, check $LOG1"
+fi
+
+echo -e "\n# Create ACLs for the service account"
+echo "ccloud kafka acl create --allow --service-account-id $SERVICE_ACCOUNT_ID --operation CREATE --topic $TOPIC1"
+echo "ccloud kafka acl create --allow --service-account-id $SERVICE_ACCOUNT_ID --operation WRITE --topic $TOPIC1"
+ccloud kafka acl create --allow --service-account-id $SERVICE_ACCOUNT_ID --operation CREATE --topic $TOPIC1
+ccloud kafka acl create --allow --service-account-id $SERVICE_ACCOUNT_ID --operation WRITE --topic $TOPIC1
+echo "ccloud kafka acl list --service-account-id $SERVICE_ACCOUNT_ID"
+ccloud kafka acl list --service-account-id $SERVICE_ACCOUNT_ID
+sleep 2
+
+echo -e "\n# Run the Java producer to $TOPIC1: after ACLs"
+LOG2="/tmp/log.2"
+java -jar ./producer-acl/target/producer-acl-1.0.0-jar-with-dependencies.jar $CLIENT_CONFIG $TOPIC1 > $LOG2 2>&1
+echo "# Check logs for '10 messages were produced to topic'"
+OUTPUT=$(grep "10 messages were produced to topic" $LOG2)
+if [[ ! -z $OUTPUT ]]; then
+  echo "PASS: Producer works"
+else
+  echo "FAIL: Something went wrong, check $LOG2"
+fi
+cat $LOG2
+
+##################################################
+# Cleanup
+# - Delete the ACLs, API key, service account
+##################################################
+
+echo -e "\n# Delete ACLs"
+echo "ccloud kafka acl delete --allow --service-account-id $SERVICE_ACCOUNT_ID --operation CREATE --topic $TOPIC1"
+echo "ccloud kafka acl delete --allow --service-account-id $SERVICE_ACCOUNT_ID --operation WRITE --topic $TOPIC1"
+ccloud kafka acl delete --allow --service-account-id $SERVICE_ACCOUNT_ID --operation CREATE --topic $TOPIC1
+ccloud kafka acl delete --allow --service-account-id $SERVICE_ACCOUNT_ID --operation WRITE --topic $TOPIC1
+
+echo "ccloud service-account delete $SERVICE_ACCOUNT_ID"
+ccloud service-account delete $SERVICE_ACCOUNT_ID
+
+echo "ccloud api-key delete $API_KEY_SA"
+ccloud api-key delete $API_KEY_SA 1>/dev/null
+exit 0
