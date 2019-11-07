@@ -1,4 +1,4 @@
-verify_installed()
+function verify_installed()
 {
   local cmd="$1"
   if [[ $(type $cmd 2>&1) =~ "not found" ]]; then
@@ -6,7 +6,7 @@ verify_installed()
     exit 1
   fi
 }
-verify_ccloud_login()
+function verify_ccloud_login()
 {
   local cmd="$1"
   set +e
@@ -17,7 +17,7 @@ verify_ccloud_login()
     exit 1
   fi
 }
-verify_ccloud_details()
+function verify_ccloud_details()
 {
     if [ "$(ccloud prompt -f "%E")" = "(none)" ]
     then
@@ -46,7 +46,7 @@ verify_ccloud_details()
     CCLOUD_PROMPT_FMT='You will be using Confluent Cloud config: user={{color "green" "%u"}}, environment={{color "red" "%E"}}, cluster={{color "cyan" "%K"}}, api key={{color "yellow" "%a"}}'
     ccloud prompt -f "$CCLOUD_PROMPT_FMT"
 }
-check_if_continue()
+function check_if_continue()
 {
     read -p "Continue (y/n)?" choice
     case "$choice" in
@@ -55,7 +55,7 @@ check_if_continue()
     * ) echo "ERROR: invalid response!";exit 1;;
     esac
 }
-create_topic()
+function create_topic()
 {
   local topic="$1"
   echo -e "\n# Check if topic $topic exists"
@@ -68,7 +68,7 @@ create_topic()
     echo "Topic $topic already exists"
   fi
 }
-delete_topic()
+function delete_topic()
 {
   local topic="$1"
   echo -e "\n# Check if topic $topic exists"
@@ -80,4 +80,23 @@ delete_topic()
   else
     echo "Topic $topic does not exist"
   fi
+}
+function version_gt() {
+	test "$(printf '%s\n' "$@" | sort -V | head -n 1)" != "$1";
+}
+
+function get_ccloud_version() {
+  ccloud version | grep "^Version:" | cut -d':' -f2 | cut -d'v' -f2
+}
+
+function check_ccloud_version() {
+
+	REQUIRED_CCLOUD_VER=${1:-"0.185.0"}
+	CCLOUD_VER=$(get_ccloud_version)
+
+	if version_gt $REQUIRED_CCLOUD_VER $CCLOUD_VER; then
+		echo "ccloud version ${REQUIRED_CCLOUD_VER} or greater is required.  Current reported version: ${CCLOUD_VER}"
+		echo 'To update run: ccloud update'
+		exit 1
+	fi
 }

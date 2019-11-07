@@ -12,6 +12,7 @@ fi
 source ${DIR}/../../ccloud/ccloud-demo/Utils.sh
 
 verify_installed "ccloud"
+check_ccloud_version 0.192.0 || exit 1
 verify_installed "confluent"
 verify_ccloud_login  "ccloud kafka cluster list"
 verify_ccloud_details
