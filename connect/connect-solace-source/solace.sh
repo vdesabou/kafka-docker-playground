@@ -11,7 +11,7 @@ fi
 
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
 
-echo "Wait for Solace to be up and running"
+echo "Wait 60 seconds for Solace to be up and running"
 sleep 60
 echo "Solace UI is accessible at http://127.0.0.1:8080 (admin/admin)"
 
