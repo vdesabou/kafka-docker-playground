@@ -22,3 +22,5 @@ services:
       - broker
       - schema-registry
       - splunk
+    environment:
+      CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/splunk-kafka-connect-splunk

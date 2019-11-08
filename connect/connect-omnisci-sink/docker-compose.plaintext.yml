@@ -14,3 +14,5 @@ services:
       - broker
       - schema-registry
       - omnisci
+    environment:
+      CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-omnisci

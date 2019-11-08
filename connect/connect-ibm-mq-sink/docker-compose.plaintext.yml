@@ -23,3 +23,5 @@ services:
     volumes:
         - ../../connect/connect-ibm-mq-sink/com.ibm.mq.allclient.jar:/usr/share/confluent-hub-components/confluentinc-kafka-connect-ibmmq-sink/lib/com.ibm.mq.allclient.jar
         - ../../connect/connect-ibm-mq-sink/jms.jar:/usr/share/confluent-hub-components/confluentinc-kafka-connect-ibmmq-sink/lib/jms.jar
+    environment:
+      CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-ibmmq-sink

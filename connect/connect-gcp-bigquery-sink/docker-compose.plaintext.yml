@@ -4,3 +4,5 @@ services:
   connect:
     volumes:
         - ../../connect/connect-gcp-bigquery-sink/keyfile.json:/root/keyfiles/keyfile.json:ro
+    environment:
+      CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/wepay-kafka-connect-bigquery

@@ -8,3 +8,7 @@ services:
     ports:
       - "9000:9000"
       - "50070:50070"
+
+  connect:
+    environment:
+      CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-hdfs

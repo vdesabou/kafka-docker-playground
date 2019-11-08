@@ -6,3 +6,5 @@ services:
         - $HOME/.aws/credentials:/root/.aws/credentials:ro
         - $HOME/.aws/config:/root/.aws/config:ro
         - ../../environment/sasl-ssl/security:/etc/kafka/secrets
+    environment:
+      CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-sqs

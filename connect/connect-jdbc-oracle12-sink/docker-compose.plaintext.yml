@@ -23,3 +23,5 @@ services:
       - oracle
     volumes:
         - ../../connect/connect-jdbc-oracle12-sink/ojdbc8.jar:/usr/share/confluent-hub-components/confluentinc-kafka-connect-jdbc/lib/ojdbc8.jar
+    environment:
+      CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-jdbc

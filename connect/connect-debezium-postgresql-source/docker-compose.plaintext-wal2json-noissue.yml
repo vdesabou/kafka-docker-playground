@@ -18,3 +18,5 @@ services:
       - broker
       - schema-registry
       - postgres
+    environment:
+      CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/debezium-debezium-connector-postgresql
