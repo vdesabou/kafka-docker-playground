@@ -43,18 +43,6 @@ fi
 
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
 
-
-# This is clashing when TIBCO, IBM MQ and ActiveMQ connectors are installed
-docker exec connect rm -rf /usr/share/confluent-hub-components/confluentinc-kafka-connect-activemq
-docker exec connect rm -rf /usr/share/confluent-hub-components/confluentinc-kafka-connect-ibmmq
-docker exec connect rm -rf /usr/share/confluent-hub-components/confluentinc-kafka-connect-ibmmq-sink
-docker exec connect rm -rf /usr/share/confluent-hub-components/confluentinc-kafka-connect-tibco-sink
-docker exec connect rm -rf /usr/share/confluent-hub-components/confluentinc-kafka-connect-tibco-source
-docker container restart connect
-
-echo "sleeping 60 seconds"
-sleep 60
-
 echo "Sending EMS messages m1 m2 m3 m4 m5 in queue connector-quickstart"
 docker exec tibco-ems bash -c '
 cd /opt/tibco/ems/8.5/samples/java

@@ -47,19 +47,6 @@ This file contains:
   url                   = tcp://7222
 ```
 
-**Important**
-
-TIBCO, IBM MQ and ActiveMQ connectors are installed, this is clashing with JMS connector, hence removing them:
-
-```bash
-docker exec connect rm -rf /usr/share/confluent-hub-components/confluentinc-kafka-connect-activemq
-docker exec connect rm -rf /usr/share/confluent-hub-components/confluentinc-kafka-connect-ibmmq
-docker exec connect rm -rf /usr/share/confluent-hub-components/confluentinc-kafka-connect-ibmmq-sink
-docker exec connect rm -rf /usr/share/confluent-hub-components/confluentinc-kafka-connect-tibco-sink
-docker exec connect rm -rf /usr/share/confluent-hub-components/confluentinc-kafka-connect-tibco-source
-docker container restart connect
-```
-
 Sending EMS messages m1 m2 m3 m4 m5 in queue connector-quickstart
 
 ```bash
