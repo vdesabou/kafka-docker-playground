@@ -6,9 +6,6 @@ target
 .project
 bin
 delta_configs
-connect/connect-gcp-bigquery-sink/keyfile.json
-connect/connect-gcs-sink/keyfile.json
-
 *.crt
 *.csr
 *_creds
@@ -19,6 +16,7 @@ connect/connect-gcs-sink/keyfile.json
 *.pem
 *.der
 *.p12
+keyfile.json
 
 connect/connect-jdbc-oracle12-source/docker-images
 connect/connect-jdbc-oracle11-source/ojdbc6.jar
@@ -30,4 +28,3 @@ connect/connect-jdbc-oracle11-source/instantclient/OracleSample.class
 connect/connect-jdbc-sqlserver-source/sqljdbc_7.4
 connect/connect-jdbc-sqlserver-sink/sqljdbc_7.4
 connect/connect-spool-dir-source/data
-connect/connect-gcp-pubsub-source/keyfile.json
