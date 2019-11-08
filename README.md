@@ -73,6 +73,7 @@ Playground for Kafka/Confluent Docker experimentations
 * [OmniSci](connect/connect-omnisci-sink)
 * JMS
     * using [ActiveMQ](connect/connect-jms-active-mq-sink)
+    * using [Solace](connect/connect-jms-solace-sink)
 
 ## ☁️ Confluent Cloud:
 
