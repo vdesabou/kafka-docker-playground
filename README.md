@@ -38,6 +38,7 @@ Playground for Kafka/Confluent Docker experimentations
 * [Spool Dir](connect/connect-spool-dir-source)
 * GCP
   * [Pub/Sub](connect/connect-gcp-pubsub-source)
+  * [GCS](connect/connect-gcs-source)
 
 ### ↗️ Sink
 
