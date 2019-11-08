@@ -10,6 +10,8 @@ services:
       - '8161:8161'
 
   connect:
+    environment:
+      CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-jms-sink
     depends_on:
       - zookeeper
       - broker
