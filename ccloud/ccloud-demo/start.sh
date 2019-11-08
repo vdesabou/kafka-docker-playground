@@ -255,4 +255,12 @@ ccloud service-account delete $SERVICE_ACCOUNT_ID
 
 echo "ccloud api-key delete $API_KEY_SA"
 ccloud api-key delete $API_KEY_SA 1>/dev/null
-exit 0
+
+# kafka-consumer-groups command for Confluent Cloud
+# https://support.confluent.io/hc/en-us/articles/360022562212-kafka-consumer-groups-command-for-Confluent-Cloud
+if [[ ! $(type kafka-consumer-groups 2>&1) =~ "not found" ]]; then
+     echo "Example showing how to use kafka-consumer-groups command for Confluent Cloud"
+     kafka-consumer-groups --bootstrap-server $BOOTSTRAP_SERVERS --command-config $CONFIG_FILE --list
+     kafka-consumer-groups --bootstrap-server $BOOTSTRAP_SERVERS --command-config $CONFIG_FILE --group simple-stream --describe
+fi
+
