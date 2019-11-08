@@ -1,7 +1,7 @@
 #!/bin/bash
 
 IGNORE_CONNECT_STARTUP="FALSE"
-IGNORE_CONTROL_CENTER_STARTUP="FALSE"
+IGNORE_CONTROL_CENTER_STARTUP="TRUE"
 
 while getopts "h?ab" opt; do
     case "$opt" in
