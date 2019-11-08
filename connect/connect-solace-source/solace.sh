@@ -3,10 +3,10 @@ set -e
 
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 
-if [ ! -f ${DIR}/sol-jms-10.6.3.jar ]
+if [ ! -f ${DIR}/sol-jms-10.6.0.jar ]
 then
-     echo "Downloading sol-jms-10.6.3.jar"
-     wget http://central.maven.org/maven2/com/solacesystems/sol-jms/10.6.3/sol-jms-10.6.3.jar
+     echo "Downloading sol-jms-10.6.0.jar"
+     wget http://central.maven.org/maven2/com/solacesystems/sol-jms/10.6.3/sol-jms-10.6.0.jar
 fi
 
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
