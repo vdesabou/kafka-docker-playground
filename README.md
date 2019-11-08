@@ -36,6 +36,8 @@ Playground for Kafka/Confluent Docker experimentations
 * [HDFS 3](connect/connect-hdfs3-source)
 * [RabbitMQ](connect/connect-rabbitmq-source)
 * [Spool Dir](connect/connect-spool-dir-source)
+* GCP
+  * [Pub/Sub](connect/connect-gcp-pubsub-source)
 
 ### ↗️ Sink
 
@@ -48,9 +50,9 @@ Playground for Kafka/Confluent Docker experimentations
     * [DynamoDB](connect/connect-aws-dynamodb-sink)
 * [Elasticsearch](connect/connect-elasticsearch-sink)
 * [HTTP](connect/connect-http-sink)
-* Google
-    * [GCP BigQuery](connect/connect-gcp-bigquery-sink)
-    * [Google Cloud Functions](connect/connect-google-cloud-functions-sink)
+* GCP
+    * [BigQuery](connect/connect-gcp-bigquery-sink)
+    * [Cloud Functions](connect/connect-google-cloud-functions-sink)
     * [GCS](connect/connect-gcs-sink)
         * using [SASL_SSL](connect/connect-gcs-sink/README.md#with-sasl_ssl-authentication)
         * using [SSL](connect/connect-gcs-sink/README.md#with-ssl-authentication)
