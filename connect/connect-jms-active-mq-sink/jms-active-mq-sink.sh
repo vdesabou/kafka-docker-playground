@@ -30,7 +30,7 @@ docker exec connect \
                     "java.naming.provider.url": "tcp://activemq:61616",
                     "java.naming.security.principal": "admin",
                     "java.naming.security.credentials": "admin",
-                    "jndi.connection.factory": "connectionFactory",
+                    "connection.factory.name": "ConnectionFactory",
                     "jms.destination.type": "queue",
                     "jms.destination.name": "DEV.QUEUE.1",
                     "key.converter": "org.apache.kafka.connect.storage.StringConverter",
