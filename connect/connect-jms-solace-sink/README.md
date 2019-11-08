@@ -22,6 +22,28 @@ Solace UI is available at [127.0.0.1:8080](http://127.0.0.1:8080) `admin/admin`
 
 ## Details of what the script is doing
 
+Create `connector-quickstart` queue in the default Message VPN using CLI
+
+```bash
+$ docker exec solace bash -c "/usr/sw/loads/currentload/bin/cli -A -s cliscripts/create_queue_cmd"
+```
+
+With create_queue_cmd script:
+
+```
+home
+enable
+configure
+message-spool message-vpn "default"
+! pragma:interpreter:ignore-already-exists
+  create queue "connector-quickstart" primary
+! pragma:interpreter:no-ignore-already-exists
+    access-type "exclusive"
+    permission all "delete"
+    no shutdown
+    exit
+  exit
+```
 
 Sending messages to topic `sink-messages`
 
@@ -36,7 +58,7 @@ $ docker exec connect \
      curl -X POST \
      -H "Content-Type: application/json" \
      --data '{
-               "name": "JMSSolaceSinkConnector9",
+               "name": "JMSSolaceSinkConnector",
                "config": {
                     "connector.class": "io.confluent.connect.jms.JmsSinkConnector",
                     "tasks.max": "1",
@@ -45,7 +67,7 @@ $ docker exec connect \
                     "java.naming.provider.url": "smf://solace:55555",
                     "java.naming.security.principal": "admin",
                     "java.naming.security.credentials": "admin",
-                    "jndi.connection.factory": "/jms/cf/default",
+                    "connection.factory.name": "/jms/cf/default",
                     "Solace_JMS_VPN": "default",
                     "jms.destination.type": "queue",
                     "jms.destination.name": "connector-quickstart",
