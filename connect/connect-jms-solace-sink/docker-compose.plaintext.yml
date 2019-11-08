@@ -7,6 +7,7 @@ services:
     container_name: solace
     volumes:
       - ../../connect/connect-jms-solace-sink/show_queue_cmd:/usr/sw/jail/cliscripts/show_queue_cmd
+      - ../../connect/connect-jms-solace-sink/create_queue_cmd:/usr/sw/jail/cliscripts/create_queue_cmd
     ports:
       - 8080:8080
       - 55555:55555
@@ -22,6 +23,8 @@ services:
       system_scaling_maxconnectioncount: 100
 
   connect:
+    environment:
+      CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-jms-sink
     depends_on:
       - zookeeper
       - broker
@@ -29,5 +32,8 @@ services:
       - solace
     volumes:
         - ../../connect/connect-jms-solace-sink/sol-jms-10.6.0.jar:/usr/share/confluent-hub-components/confluentinc-kafka-connect-jms-sink/lib/sol-jms-10.6.0.jar
-        #- ../../connect/connect-jms-solace-sink/commons-lang-2.6.jar:/usr/share/confluent-hub-components/confluentinc-kafka-connect-jms-sink/lib/commons-lang-2.6.jar # bug
-
+        - ../../connect/connect-jms-solace-sink/commons-lang-2.6.jar:/usr/share/confluent-hub-components/confluentinc-kafka-connect-jms-sink/lib/commons-lang-2.6.jar
+        # - ../../connect/connect-jms-solace-sink/commons-logging-1.1.3.jar:/usr/share/confluent-hub-components/confluentinc-kafka-connect-jms-sink/lib/commons-logging-1.1.3.jar
+        # - ../../connect/connect-jms-solace-sink/geronimo-jms_1.1_spec-1.1.1.jar:/usr/share/confluent-hub-components/confluentinc-kafka-connect-jms-sink/lib/geronimo-jms_1.1_spec-1.1.1.jar
+        # - ../../connect/connect-jms-solace-sink/org.apache.servicemix.bundles.jzlib-1.0.7_2.jar:/usr/share/confluent-hub-components/confluentinc-kafka-connect-jms-sink/lib/org.apache.servicemix.bundles.jzlib-1.0.7_2.jar
+        # - ../../connect/connect-jms-solace-sink/org.osgi.annotation-6.0.0.jar:/usr/share/confluent-hub-components/confluentinc-kafka-connect-jms-sink/lib/org.osgi.annotation-6.0.0.jar

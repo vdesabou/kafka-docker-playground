@@ -1,0 +1,12 @@
+home
+enable
+configure
+message-spool message-vpn "default"
+! pragma:interpreter:ignore-already-exists
+  create queue "connector-quickstart" primary
+! pragma:interpreter:no-ignore-already-exists
+    access-type "exclusive"
+    permission all "delete"
+    no shutdown
+    exit
+  exit
