@@ -3,11 +3,41 @@ set -e
 
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 
-if [ ! -f ${DIR}/sol-jms-10.6.3.jar ]
+if [ ! -f ${DIR}/sol-jms-10.6.0.jar ]
 then
-     echo "Downloading sol-jms-10.6.3.jar"
-     wget http://central.maven.org/maven2/com/solacesystems/sol-jms/10.6.3/sol-jms-10.6.3.jar
+     echo "Downloading sol-jms-10.6.0.jar"
+     wget http://central.maven.org/maven2/com/solacesystems/sol-jms/10.6.0/sol-jms-10.6.0.jar
 fi
+
+if [ ! -f ${DIR}/commons-lang-2.6.jar ]
+then
+     echo "Downloading commons-lang-2.6.jar"
+     wget https://repo1.maven.org/maven2/commons-lang/commons-lang/2.6/commons-lang-2.6.jar
+fi
+
+# if [ ! -f ${DIR}/commons-logging-1.1.3.jar ]
+# then
+#      echo "Downloading commons-logging-1.1.3.jar"
+#      wget https://repo1.maven.org/maven2/commons-logging/commons-logging/1.1.3/commons-logging-1.1.3.jar
+# fi
+
+# if [ ! -f ${DIR}/geronimo-jms_1.1_spec-1.1.1.jar ]
+# then
+#      echo "Downloading geronimo-jms_1.1_spec-1.1.1.jar"
+#      wget https://repo1.maven.org/maven2/org/apache/geronimo/specs/geronimo-jms_1.1_spec/1.1.1/geronimo-jms_1.1_spec-1.1.1.jar
+# fi
+
+# if [ ! -f ${DIR}/org.apache.servicemix.bundles.jzlib-1.0.7_2.jar ]
+# then
+#      echo "Downloading org.apache.servicemix.bundles.jzlib-1.0.7_2.jar"
+#      wget https://repo1.maven.org/maven2/org/apache/servicemix/bundles/org.apache.servicemix.bundles.jzlib/1.0.7_2/org.apache.servicemix.bundles.jzlib-1.0.7_2.jar
+# fi
+
+# if [ ! -f ${DIR}/org.osgi.annotation-6.0.0.jar ]
+# then
+#      echo "Downloading org.osgi.annotation-6.0.0.jar"
+#      wget https://repo1.maven.org/maven2/org/osgi/org.osgi.annotation/6.0.0/org.osgi.annotation-6.0.0.jar
+# fi
 
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
 
@@ -18,12 +48,15 @@ echo "Solace UI is accessible at http://127.0.0.1:8080 (admin/admin)"
 echo "Sending messages to topic sink-messages"
 seq 10 | docker exec -i broker kafka-console-producer --broker-list broker:9092 --topic sink-messages
 
+echo "Create connector-quickstart queue in the default Message VPN using CLI"
+docker exec solace bash -c "/usr/sw/loads/currentload/bin/cli -A -s cliscripts/create_queue_cmd"
+
 echo "Creating Solace sink connector"
 docker exec connect \
      curl -X POST \
      -H "Content-Type: application/json" \
      --data '{
-               "name": "JMSSolaceSinkConnector9",
+               "name": "JMSSolaceSinkConnector",
                "config": {
                     "connector.class": "io.confluent.connect.jms.JmsSinkConnector",
                     "tasks.max": "1",
@@ -32,7 +65,7 @@ docker exec connect \
                     "java.naming.provider.url": "smf://solace:55555",
                     "java.naming.security.principal": "admin",
                     "java.naming.security.credentials": "admin",
-                    "jndi.connection.factory": "/jms/cf/default",
+                    "connection.factory.name": "/jms/cf/default",
                     "Solace_JMS_VPN": "default",
                     "jms.destination.type": "queue",
                     "jms.destination.name": "connector-quickstart",
@@ -47,89 +80,3 @@ sleep 10
 
 echo "Confirm the messages were delivered to the connector-quickstart queue in the default Message VPN using CLI"
 docker exec solace bash -c "/usr/sw/loads/currentload/bin/cli -A -s cliscripts/show_queue_cmd"
-
-
-# [2019-11-07 13:18:52,190] ERROR WorkerSinkTask{id=JMSSolaceSinkConnector-0} Task threw an uncaught and unrecoverable exception (org.apache.kafka.connect.runtime.WorkerTask)
-# org.apache.kafka.connect.errors.ConnectException: Unable to open JmsConnection.
-#         at io.confluent.connect.jms.JmsConnection.open(JmsConnection.java:125)
-#         at io.confluent.connect.jms.BaseJmsSinkTask.start(BaseJmsSinkTask.java:79)
-#         at org.apache.kafka.connect.runtime.WorkerSinkTask.initializeAndStart(WorkerSinkTask.java:300)
-#         at org.apache.kafka.connect.runtime.WorkerSinkTask.execute(WorkerSinkTask.java:189)
-#         at org.apache.kafka.connect.runtime.WorkerTask.doRun(WorkerTask.java:177)
-#         at org.apache.kafka.connect.runtime.WorkerTask.run(WorkerTask.java:227)
-#         at java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:511)
-#         at java.util.concurrent.FutureTask.run(FutureTask.java:266)
-#         at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1149)
-#         at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:624)
-#         at java.lang.Thread.run(Thread.java:748)
-# Caused by: java.lang.NoClassDefFoundError: org/apache/commons/lang/exception/NestableException
-#         at java.lang.ClassLoader.defineClass1(Native Method)
-#         at java.lang.ClassLoader.defineClass(ClassLoader.java:763)
-#         at java.security.SecureClassLoader.defineClass(SecureClassLoader.java:142)
-#         at java.net.URLClassLoader.defineClass(URLClassLoader.java:468)
-#         at java.net.URLClassLoader.access$100(URLClassLoader.java:74)
-#         at java.net.URLClassLoader$1.run(URLClassLoader.java:369)
-#         at java.net.URLClassLoader$1.run(URLClassLoader.java:363)
-#         at java.security.AccessController.doPrivileged(Native Method)
-#         at java.net.URLClassLoader.findClass(URLClassLoader.java:362)
-#         at org.apache.kafka.connect.runtime.isolation.PluginClassLoader.loadClass(PluginClassLoader.java:96)
-#         at java.lang.ClassLoader.loadClass(ClassLoader.java:357)
-#         at java.lang.ClassLoader.defineClass1(Native Method)
-#         at java.lang.ClassLoader.defineClass(ClassLoader.java:763)
-#         at java.security.SecureClassLoader.defineClass(SecureClassLoader.java:142)
-#         at java.net.URLClassLoader.defineClass(URLClassLoader.java:468)
-#         at java.net.URLClassLoader.access$100(URLClassLoader.java:74)
-#         at java.net.URLClassLoader$1.run(URLClassLoader.java:369)
-#         at java.net.URLClassLoader$1.run(URLClassLoader.java:363)
-#         at java.security.AccessController.doPrivileged(Native Method)
-#         at java.net.URLClassLoader.findClass(URLClassLoader.java:362)
-#         at org.apache.kafka.connect.runtime.isolation.PluginClassLoader.loadClass(PluginClassLoader.java:96)
-#         at java.lang.ClassLoader.loadClass(ClassLoader.java:357)
-#         at java.lang.ClassLoader.defineClass1(Native Method)
-#         at java.lang.ClassLoader.defineClass(ClassLoader.java:763)
-#         at java.security.SecureClassLoader.defineClass(SecureClassLoader.java:142)
-#         at java.net.URLClassLoader.defineClass(URLClassLoader.java:468)
-#         at java.net.URLClassLoader.access$100(URLClassLoader.java:74)
-#         at java.net.URLClassLoader$1.run(URLClassLoader.java:369)
-#         at java.net.URLClassLoader$1.run(URLClassLoader.java:363)
-#         at java.security.AccessController.doPrivileged(Native Method)
-#         at java.net.URLClassLoader.findClass(URLClassLoader.java:362)
-#         at org.apache.kafka.connect.runtime.isolation.PluginClassLoader.loadClass(PluginClassLoader.java:96)
-#         at java.lang.ClassLoader.loadClass(ClassLoader.java:357)
-#         at java.lang.ClassLoader.defineClass1(Native Method)
-#         at java.lang.ClassLoader.defineClass(ClassLoader.java:763)
-#         at java.security.SecureClassLoader.defineClass(SecureClassLoader.java:142)
-#         at java.net.URLClassLoader.defineClass(URLClassLoader.java:468)
-#         at java.net.URLClassLoader.access$100(URLClassLoader.java:74)
-#         at java.net.URLClassLoader$1.run(URLClassLoader.java:369)
-#         at java.net.URLClassLoader$1.run(URLClassLoader.java:363)
-#         at java.security.AccessController.doPrivileged(Native Method)
-#         at java.net.URLClassLoader.findClass(URLClassLoader.java:362)
-#         at org.apache.kafka.connect.runtime.isolation.PluginClassLoader.loadClass(PluginClassLoader.java:96)
-#         at java.lang.ClassLoader.loadClass(ClassLoader.java:357)
-#         at com.solacesystems.jndi.SolJNDIInitialContextFactory$SolJNDIInitialContext.getDefaultInitCtx(SolJNDIInitialContextFactory.java:745)
-#         at javax.naming.InitialContext.init(InitialContext.java:244)
-#         at javax.naming.InitialContext.<init>(InitialContext.java:216)
-#         at com.solacesystems.jndi.SolJNDIInitialContextFactory$SolJNDIInitialContext.<init>(SolJNDIInitialContextFactory.java:739)
-#         at com.solacesystems.jndi.SolJNDIInitialContextFactory.getInitialContext(SolJNDIInitialContextFactory.java:70)
-#         at javax.naming.spi.NamingManager.getInitialContext(NamingManager.java:684)
-#         at javax.naming.InitialContext.getDefaultInitCtx(InitialContext.java:313)
-#         at javax.naming.InitialContext.init(InitialContext.java:244)
-#         at javax.naming.InitialContext.<init>(InitialContext.java:216)
-#         at io.confluent.connect.jms.DefaultJmsConnection.createInitialContext(DefaultJmsConnection.java:62)
-#         at io.confluent.connect.jms.DefaultJmsConnection.createConnectionFactory(DefaultJmsConnection.java:37)
-#         at io.confluent.connect.jms.JmsConnection.lambda$open$0(JmsConnection.java:111)
-#         at net.jodah.failsafe.Functions.lambda$resultSupplierOf$11(Functions.java:283)
-#         at net.jodah.failsafe.internal.executor.RetryPolicyExecutor.lambda$supply$0(RetryPolicyExecutor.java:67)
-#         at net.jodah.failsafe.Execution.executeSync(Execution.java:117)
-#         at net.jodah.failsafe.FailsafeExecutor.call(FailsafeExecutor.java:319)
-#         at net.jodah.failsafe.FailsafeExecutor.get(FailsafeExecutor.java:71)
-#         at io.confluent.connect.jms.JmsConnection.open(JmsConnection.java:111)
-#         ... 10 more
-# Caused by: java.lang.ClassNotFoundException: org.apache.commons.lang.exception.NestableException
-#         at java.net.URLClassLoader.findClass(URLClassLoader.java:382)
-#         at java.lang.ClassLoader.loadClass(ClassLoader.java:424)
-#         at org.apache.kafka.connect.runtime.isolation.PluginClassLoader.loadClass(PluginClassLoader.java:104)
-#         at java.lang.ClassLoader.loadClass(ClassLoader.java:357)
-#         ... 72 more
-# [2019-11-07 13:18:52,191] ERROR WorkerSinkTask{id=JMSSolaceSinkConnector-0} Task is being killed and will not recover until manually restarted (org.apache.kafka.connect.runtime.WorkerTask)
