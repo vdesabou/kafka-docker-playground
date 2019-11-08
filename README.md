@@ -30,7 +30,7 @@ Playground for Kafka/Confluent Docker experimentations
     * using [PostGreSQL](connect/connect-jdbc-postgresql-source)
     * using [SQL Server](connect/connect-jdbc-sqlserver-source)
 * [MQTT](connect/connect-mqtt-source)
-* [JMS TIBCO](connect/connect-jms-tibco-source)
+* [JMS TIBCO EMS](connect/connect-jms-tibco-source)
 * [InfluxDB](connect/connect-influxdb-source)
 * [Splunk](connect/connect-splunk-source)
 * [HDFS 3](connect/connect-hdfs3-source)
@@ -74,6 +74,7 @@ Playground for Kafka/Confluent Docker experimentations
 * JMS
     * using [ActiveMQ](connect/connect-jms-active-mq-sink)
     * using [Solace](connect/connect-jms-solace-sink)
+    * using [TIBCO EMS](connect/connect-jms-tibco-sink)
 
 ## ☁️ Confluent Cloud:
 
