@@ -6,3 +6,5 @@ services:
       - "8889:8889"
     volumes:
         - ../../connect/connect-splunk-source/keystore.jks:/tmp/keystore.jks
+    environment:
+      CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-splunk-source

@@ -5,3 +5,7 @@ services:
     image: cassandra:3.0
     hostname: cassandra
     container_name: cassandra
+
+  connect:
+    environment:
+      CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-cassandra

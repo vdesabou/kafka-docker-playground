@@ -54,6 +54,10 @@ services:
     env_file:
       - ../../connect/connect-hdfs3-sink/hadoop.env
 
+  connect:
+    environment:
+      CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-hdfs3
+
 volumes:
   datanode:
   namenode:

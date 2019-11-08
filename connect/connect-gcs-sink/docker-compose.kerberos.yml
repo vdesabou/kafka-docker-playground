@@ -6,3 +6,5 @@ services:
       - secret:/var/lib/secret
       - ../../environment/kerberos/kdc/krb5.conf:/etc/krb5.conf
       - ../../connect/connect-gcs-sink/keyfile.json:/root/keyfiles/keyfile.json:ro
+    environment:
+      CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-gcs

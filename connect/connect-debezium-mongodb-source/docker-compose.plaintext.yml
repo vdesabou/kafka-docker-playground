@@ -19,3 +19,5 @@ services:
       - broker
       - schema-registry
       - mongodb
+    environment:
+      CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/debezium-debezium-connector-mongodb

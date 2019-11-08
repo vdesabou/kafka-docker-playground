@@ -4,3 +4,5 @@ services:
   connect:
     volumes:
         - ../../connect/connect-spool-dir-source/data:/root/data
+    environment:
+      CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/jcustenborder-kafka-connect-spooldir
