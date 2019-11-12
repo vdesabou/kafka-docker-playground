@@ -27,7 +27,7 @@ fi
 
 AZURE_STORAGE_ACCOUNT="${1}"
 AZURE_STORAGE_KEY="${2}"
-CONTAINER_NAME=${1:-confluent-kafka-connect-azure-blob-storage-testing}
+CONTAINER_NAME=${3:-blobsink}
 
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
 
@@ -60,4 +60,10 @@ seq -f "{\"f1\": \"value%g\"}" 10 | docker exec -i schema-registry kafka-avro-co
 sleep 10
 
 echo "Listing objects of container ${CONTAINER_NAME} in Azure Blob Storage"
-az storage blob list --account-name "${AZURE_STORAGE_ACCOUNT}" --account-key "${AZURE_STORAGE_KEY}" --container-name "${CONTAINER_NAME}"
+az storage blob list --account-name "${AZURE_STORAGE_ACCOUNT}" --account-key "${AZURE_STORAGE_KEY}" --container-name "${CONTAINER_NAME}" --output table
+
+echo "Getting one of the avro files locally and displaying content with avro-tools"
+az storage blob download --account-name "${AZURE_STORAGE_ACCOUNT}" --account-key "${AZURE_STORAGE_KEY}" --container-name "${CONTAINER_NAME}" --name topics/blob_topic/partition=0/blob_topic+0+0000000000.avro --file /tmp/blob_topic+0+0000000000.avro
+
+# brew install avro-tools
+avro-tools tojson /tmp/blob_topic+0+0000000000.avro

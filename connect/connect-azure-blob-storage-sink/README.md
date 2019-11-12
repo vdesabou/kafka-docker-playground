@@ -8,6 +8,7 @@ Quickly test [Azure Blob Storage Sink](https://docs.confluent.io/current/connect
 
 * `docker-compose` (example `brew cask install docker`)
 * `jq` (example `brew install jq`)
+* `avro-tools` (example `brew install avro-tools`)
 * `az`(example `brew install azure-cli`)
 
 ## Azure Setup
@@ -25,7 +26,7 @@ $ ./azure-blob-storage.sh <AZURE_STORAGE_ACCOUNT> <AZURE_STORAGE_KEY> [<CONTAINE
 Notes:
 
 * You can find storage account name and storage key in `Access keys` menu.
-* Default for `CONTAINER_NAME`is `confluent-kafka-connect-azure-blob-storage-testing`
+* Default for `CONTAINER_NAME`is `blobsink`
 
 ## Details of what the script is doing
 
@@ -67,141 +68,15 @@ $ az storage blob list --account-name "${AZURE_STORAGE_ACCOUNT}" --account-key "
 
 Results:
 
-```json
-[
-  {
-    "content": null,
-    "deleted": false,
-    "metadata": null,
-    "name": "topics/blob_topic/partition=0/blob_topic+0+0000000000.avro",
-    "properties": {
-      "appendBlobCommittedBlockCount": null,
-      "blobTier": "Hot",
-      "blobTierChangeTime": null,
-      "blobTierInferred": true,
-      "blobType": "BlockBlob",
-      "contentLength": 213,
-      "contentRange": null,
-      "contentSettings": {
-        "cacheControl": null,
-        "contentDisposition": null,
-        "contentEncoding": null,
-        "contentLanguage": null,
-        "contentMd5": null,
-        "contentType": "application/octet-stream"
-      },
-      "copy": {
-        "completionTime": null,
-        "id": null,
-        "progress": null,
-        "source": null,
-        "status": null,
-        "statusDescription": null
-      },
-      "creationTime": "2019-11-12T15:05:42+00:00",
-      "deletedTime": null,
-      "etag": "0x8D7678258B055E1",
-      "lastModified": "2019-11-12T15:09:42+00:00",
-      "lease": {
-        "duration": null,
-        "state": "available",
-        "status": "unlocked"
-      },
-      "pageBlobSequenceNumber": null,
-      "remainingRetentionDays": null,
-      "serverEncrypted": true
-    },
-    "snapshot": null
-  },
-  {
-    "content": null,
-    "deleted": false,
-    "metadata": null,
-    "name": "topics/blob_topic/partition=0/blob_topic+0+0000000003.avro",
-    "properties": {
-      "appendBlobCommittedBlockCount": null,
-      "blobTier": "Hot",
-      "blobTierChangeTime": null,
-      "blobTierInferred": true,
-      "blobType": "BlockBlob",
-      "contentLength": 213,
-      "contentRange": null,
-      "contentSettings": {
-        "cacheControl": null,
-        "contentDisposition": null,
-        "contentEncoding": null,
-        "contentLanguage": null,
-        "contentMd5": null,
-        "contentType": "application/octet-stream"
-      },
-      "copy": {
-        "completionTime": null,
-        "id": null,
-        "progress": null,
-        "source": null,
-        "status": null,
-        "statusDescription": null
-      },
-      "creationTime": "2019-11-12T15:05:43+00:00",
-      "deletedTime": null,
-      "etag": "0x8D7678258D549A7",
-      "lastModified": "2019-11-12T15:09:42+00:00",
-      "lease": {
-        "duration": null,
-        "state": "available",
-        "status": "unlocked"
-      },
-      "pageBlobSequenceNumber": null,
-      "remainingRetentionDays": null,
-      "serverEncrypted": true
-    },
-    "snapshot": null
-  },
-  {
-    "content": null,
-    "deleted": false,
-    "metadata": null,
-    "name": "topics/blob_topic/partition=0/blob_topic+0+0000000006.avro",
-    "properties": {
-      "appendBlobCommittedBlockCount": null,
-      "blobTier": "Hot",
-      "blobTierChangeTime": null,
-      "blobTierInferred": true,
-      "blobType": "BlockBlob",
-      "contentLength": 213,
-      "contentRange": null,
-      "contentSettings": {
-        "cacheControl": null,
-        "contentDisposition": null,
-        "contentEncoding": null,
-        "contentLanguage": null,
-        "contentMd5": null,
-        "contentType": "application/octet-stream"
-      },
-      "copy": {
-        "completionTime": null,
-        "id": null,
-        "progress": null,
-        "source": null,
-        "status": null,
-        "statusDescription": null
-      },
-      "creationTime": "2019-11-12T15:05:43+00:00",
-      "deletedTime": null,
-      "etag": "0x8D7678258FFE3CE",
-      "lastModified": "2019-11-12T15:09:43+00:00",
-      "lease": {
-        "duration": null,
-        "state": "available",
-        "status": "unlocked"
-      },
-      "pageBlobSequenceNumber": null,
-      "remainingRetentionDays": null,
-      "serverEncrypted": true
-    },
-    "snapshot": null
-  }
-]
 ```
+Name                                                        Blob Type    Blob Tier    Length    Content Type              Last Modified              Snapshot
+----------------------------------------------------------  -----------  -----------  --------  ------------------------  -------------------------  ----------
+topics/blob_topic/partition=0/blob_topic+0+0000000000.avro  BlockBlob    Hot          213       application/octet-stream  2019-11-12T15:20:39+00:00
+topics/blob_topic/partition=0/blob_topic+0+0000000003.avro  BlockBlob    Hot          213       application/octet-stream  2019-11-12T15:20:40+00:00
+topics/blob_topic/partition=0/blob_topic+0+0000000006.avro  BlockBlob    Hot          213       application/octet-stream  2019-11-12T15:20:40+00:00
+```
+
+echo "Getting one of the avro files locally and displaying content with avro-tools"
+az storage blob download --account-name "${AZURE_STORAGE_ACCOUNT}" --account-key "${AZURE_STORAGE_KEY}" --container-name "${CONTAINER_NAME}" --name topics/blob_topic/partition=0/blob_topic+0+0000000000.avro --file /tmp/blob_topic+0+0000000000.avro
 
 N.B: Control Center is reachable at [http://127.0.0.1:9021](http://127.0.0.1:9021])
