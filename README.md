@@ -78,6 +78,8 @@ Playground for Kafka/Confluent Docker experimentations
     * using [ActiveMQ](connect/connect-jms-active-mq-sink)
     * using [Solace](connect/connect-jms-solace-sink)
     * using [TIBCO EMS](connect/connect-jms-tibco-sink)
+* Azure
+    * [Blob Storage](connect/connect-azure-blob-storage-sink)
 
 ## ☁️ Confluent Cloud:
 

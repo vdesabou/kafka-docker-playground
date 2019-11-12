@@ -44,3 +44,8 @@ RUN   confluent-hub install --no-prompt confluentinc/kafka-connect-ibmmq:latest 
 		&& confluent-hub install --no-prompt confluentinc/kafka-connect-gcp-spanner:latest \
 		&& confluent-hub install --no-prompt confluentinc/kafka-connect-jms-sink:latest \
 		&& confluent-hub install --no-prompt confluentinc/kafka-connect-gcs-source:latest \
+		&& confluent-hub install --no-prompt confluentinc/kafka-connect-azure-blob-storage:latest \
+		&& confluent-hub install --no-prompt confluentinc/kafka-connect-azure-data-lake-gen1-storage:latest \
+		&& confluent-hub install --no-prompt confluentinc/kafka-connect-azure-data-lake-gen2-storage:latest \
+		&& confluent-hub install --no-prompt confluentinc/kafka-connect-azure-event-hubs:latest \
+		&& confluent-hub install --no-prompt confluentinc/kafka-connect-azure-functions:latest \
