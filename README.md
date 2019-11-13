@@ -80,6 +80,7 @@ Playground for Kafka/Confluent Docker experimentations
     * using [TIBCO EMS](connect/connect-jms-tibco-sink)
 * Azure
     * [Blob Storage](connect/connect-azure-blob-storage-sink)
+    * [Data Lake Gen1](connect/connect-azure-data-lake-storage-gen1-sink)
 
 ## ☁️ Confluent Cloud:
 
