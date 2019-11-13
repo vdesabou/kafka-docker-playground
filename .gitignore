@@ -28,3 +28,4 @@ connect/connect-jdbc-oracle11-source/instantclient/OracleSample.class
 connect/connect-jdbc-sqlserver-source/sqljdbc_7.4
 connect/connect-jdbc-sqlserver-sink/sqljdbc_7.4
 connect/connect-spool-dir-source/data
+mycommand.sh
