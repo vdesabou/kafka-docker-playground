@@ -11,29 +11,54 @@ Quickly test [Azure Blob Storage Sink](https://docs.confluent.io/current/connect
 * `avro-tools` (example `brew install avro-tools`)
 * `az`(example `brew install azure-cli`)
 
-## Azure Setup
-
-* [Create a block blob storage account](https://docs.microsoft.com/en-gb/azure/storage/blobs/storage-blob-create-account-block-blob)
-
 ## How to run
 
 Simply run:
 
 ```
-$ ./azure-blob-storage.sh <AZURE_STORAGE_ACCOUNT> <AZURE_STORAGE_KEY> [<CONTAINER_NAME>]
+$ ./azure-blob-storage.sh
 ```
 
-Notes:
-
-* You can find storage account name and storage key in `Access keys` menu.
-* Default for `CONTAINER_NAME`is `blobsink`
-
 ## Details of what the script is doing
+
+Logging to Azure using browser
+
+```bash
+az login
+```
+
+All the blob storage setup is automated:
+
+```bash
+AZURE_RANDOM=$RANDOM
+AZURE_RESOURCE_GROUP=delete$AZURE_RANDOM
+AZURE_ACCOUNT_NAME=delete$AZURE_RANDOM
+AZURE_CONTAINER_NAME=delete$AZURE_RANDOM
+AZURE_REGION=westeurope
+
+az group create \
+    --name $AZURE_RESOURCE_GROUP \
+    --location $AZURE_REGION
+az storage account create \
+    --name $AZURE_ACCOUNT_NAME \
+    --resource-group $AZURE_RESOURCE_GROUP \
+    --location $AZURE_REGION \
+    --sku Standard_LRS \
+    --encryption blob
+az storage container create \
+    --account-name $AZURE_ACCOUNT_NAME \
+    --name $AZURE_CONTAINER_NAME
+AZURE_ACCOUNT_KEY=$(az storage account keys list \
+    --account-name $AZURE_ACCOUNT_NAME \
+    --resource-group $AZURE_RESOURCE_GROUP \
+    --output table \
+    | grep key1 | awk '{print $3}')
+```
 
 The connector is created with:
 
 ```bash
-$ docker exec -e AZURE_STORAGE_ACCOUNT="$AZURE_STORAGE_ACCOUNT" -e AZURE_STORAGE_KEY="$AZURE_STORAGE_KEY" -e CONTAINER_NAME="$CONTAINER_NAME" connect \
+$ docker exec -e AZURE_ACCOUNT_NAME="$AZURE_ACCOUNT_NAME" -e AZURE_ACCOUNT_KEY="$AZURE_ACCOUNT_KEY" -e AZURE_CONTAINER_NAME="$AZURE_CONTAINER_NAME" connect \
      curl -X POST \
      -H "Content-Type: application/json" \
      --data '{
@@ -43,9 +68,9 @@ $ docker exec -e AZURE_STORAGE_ACCOUNT="$AZURE_STORAGE_ACCOUNT" -e AZURE_STORAGE
                     "tasks.max": "1",
                     "topics": "blob_topic",
                     "flush.size": "3",
-                    "azblob.account.name": "'"$AZURE_STORAGE_ACCOUNT"'",
-                    "azblob.account.key": "'"$AZURE_STORAGE_KEY"'",
-                    "azblob.container.name": "'"$CONTAINER_NAME"'",
+                    "azblob.account.name": "'"$AZURE_ACCOUNT_NAME"'",
+                    "azblob.account.key": "'"$AZURE_ACCOUNT_KEY"'",
+                    "azblob.container.name": "'"$AZURE_CONTAINER_NAME"'",
                     "format.class": "io.confluent.connect.azure.blob.format.avro.AvroFormat",
                     "confluent.license": "",
                     "confluent.topic.bootstrap.servers": "broker:9092",
@@ -60,10 +85,10 @@ Messages are sent to `blob_topic` topic using:
 $ seq -f "{\"f1\": \"value%g\"}" 10 | docker exec -i schema-registry kafka-avro-console-producer --broker-list broker:9092 --topic blob_topic --property value.schema='{"type":"record","name":"myrecord","fields":[{"name":"f1","type":"string"}]}'
 ```
 
-Listing objects of container ${CONTAINER_NAME} in Azure Blob Storage:
+Listing objects of container in Azure Blob Storage:
 
 ```bash
-$ az storage blob list --account-name "${AZURE_STORAGE_ACCOUNT}" --account-key "${AZURE_STORAGE_KEY}" --container-name "${CONTAINER_NAME}"
+$ az storage blob list --account-name "${AZURE_ACCOUNT_NAME}" --account-key "${AZURE_ACCOUNT_KEY}" --container-name "${AZURE_CONTAINER_NAME}" --output table
 ```
 
 Results:
@@ -76,7 +101,9 @@ topics/blob_topic/partition=0/blob_topic+0+0000000003.avro  BlockBlob    Hot    
 topics/blob_topic/partition=0/blob_topic+0+0000000006.avro  BlockBlob    Hot          213       application/octet-stream  2019-11-12T15:20:40+00:00
 ```
 
-echo "Getting one of the avro files locally and displaying content with avro-tools"
-az storage blob download --account-name "${AZURE_STORAGE_ACCOUNT}" --account-key "${AZURE_STORAGE_KEY}" --container-name "${CONTAINER_NAME}" --name topics/blob_topic/partition=0/blob_topic+0+0000000000.avro --file /tmp/blob_topic+0+0000000000.avro
+Getting one of the avro files locally and displaying content with avro-tools:
+
+```bash
+az storage blob download --account-name "${AZURE_ACCOUNT_NAME}" --account-key "${AZURE_ACCOUNT_KEY}" --container-name "${AZURE_CONTAINER_NAME}" --name topics/blob_topic/partition=0/blob_topic+0+0000000000.avro --file /tmp/blob_topic+0+0000000000.avro
 
 N.B: Control Center is reachable at [http://127.0.0.1:9021](http://127.0.0.1:9021])

@@ -13,27 +13,41 @@ verify_installed()
 }
 verify_installed "az"
 
-if [ -z "$1" ]
-then
-    echo "ERROR: AZURE_STORAGE_ACCOUNT has not been provided. Usage: azure-blob-storage.sh <AZURE_STORAGE_ACCOUNT> <AZURE_STORAGE_KEY> [<CONTAINER_NAME>]"
-    exit 1
-fi
+echo "Logging to Azure using browser"
+az login
 
-if [ -z "$2" ]
-then
-    echo "ERROR: AZURE_STORAGE_ACCOUNT has not been provided. Usage: azure-blob-storage.sh <AZURE_STORAGE_ACCOUNT> <AZURE_STORAGE_KEY> [<CONTAINER_NAME>]"
-    exit 1
-fi
+AZURE_RANDOM=$RANDOM
+AZURE_RESOURCE_GROUP=delete$AZURE_RANDOM
+AZURE_ACCOUNT_NAME=delete$AZURE_RANDOM
+AZURE_CONTAINER_NAME=delete$AZURE_RANDOM
+AZURE_REGION=westeurope
 
-AZURE_STORAGE_ACCOUNT="${1}"
-AZURE_STORAGE_KEY="${2}"
-CONTAINER_NAME=${3:-blobsink}
+az group create \
+    --name $AZURE_RESOURCE_GROUP \
+    --location $AZURE_REGION
+az storage account create \
+    --name $AZURE_ACCOUNT_NAME \
+    --resource-group $AZURE_RESOURCE_GROUP \
+    --location $AZURE_REGION \
+    --sku Standard_LRS \
+    --encryption blob
+az storage container create \
+    --account-name $AZURE_ACCOUNT_NAME \
+    --name $AZURE_CONTAINER_NAME
+AZURE_ACCOUNT_KEY=$(az storage account keys list \
+    --account-name $AZURE_ACCOUNT_NAME \
+    --resource-group $AZURE_RESOURCE_GROUP \
+    --output table \
+    | grep key1 | awk '{print $3}')
+
+echo AZURE_ACCOUNT_NAME=$AZURE_ACCOUNT_NAME
+echo AZURE_ACCOUNT_KEY=$AZURE_ACCOUNT_KEY
+echo AZURE_CONTAINER_NAME=$AZURE_CONTAINER_NAME
 
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
 
-
 echo "Creating Azure Blob Storage Sink connector"
-docker exec -e AZURE_STORAGE_ACCOUNT="$AZURE_STORAGE_ACCOUNT" -e AZURE_STORAGE_KEY="$AZURE_STORAGE_KEY" -e CONTAINER_NAME="$CONTAINER_NAME" connect \
+docker exec -e AZURE_ACCOUNT_NAME="$AZURE_ACCOUNT_NAME" -e AZURE_ACCOUNT_KEY="$AZURE_ACCOUNT_KEY" -e AZURE_CONTAINER_NAME="$AZURE_CONTAINER_NAME" connect \
      curl -X POST \
      -H "Content-Type: application/json" \
      --data '{
@@ -43,9 +57,9 @@ docker exec -e AZURE_STORAGE_ACCOUNT="$AZURE_STORAGE_ACCOUNT" -e AZURE_STORAGE_K
                     "tasks.max": "1",
                     "topics": "blob_topic",
                     "flush.size": "3",
-                    "azblob.account.name": "'"$AZURE_STORAGE_ACCOUNT"'",
-                    "azblob.account.key": "'"$AZURE_STORAGE_KEY"'",
-                    "azblob.container.name": "'"$CONTAINER_NAME"'",
+                    "azblob.account.name": "'"$AZURE_ACCOUNT_NAME"'",
+                    "azblob.account.key": "'"$AZURE_ACCOUNT_KEY"'",
+                    "azblob.container.name": "'"$AZURE_CONTAINER_NAME"'",
                     "format.class": "io.confluent.connect.azure.blob.format.avro.AvroFormat",
                     "confluent.license": "",
                     "confluent.topic.bootstrap.servers": "broker:9092",
@@ -59,11 +73,11 @@ seq -f "{\"f1\": \"value%g\"}" 10 | docker exec -i schema-registry kafka-avro-co
 
 sleep 10
 
-echo "Listing objects of container ${CONTAINER_NAME} in Azure Blob Storage"
-az storage blob list --account-name "${AZURE_STORAGE_ACCOUNT}" --account-key "${AZURE_STORAGE_KEY}" --container-name "${CONTAINER_NAME}" --output table
+echo "Listing objects of container ${AZURE_CONTAINER_NAME} in Azure Blob Storage"
+az storage blob list --account-name "${AZURE_ACCOUNT_NAME}" --account-key "${AZURE_ACCOUNT_KEY}" --container-name "${AZURE_CONTAINER_NAME}" --output table
 
 echo "Getting one of the avro files locally and displaying content with avro-tools"
-az storage blob download --account-name "${AZURE_STORAGE_ACCOUNT}" --account-key "${AZURE_STORAGE_KEY}" --container-name "${CONTAINER_NAME}" --name topics/blob_topic/partition=0/blob_topic+0+0000000000.avro --file /tmp/blob_topic+0+0000000000.avro
+az storage blob download --account-name "${AZURE_ACCOUNT_NAME}" --account-key "${AZURE_ACCOUNT_KEY}" --container-name "${AZURE_CONTAINER_NAME}" --name topics/blob_topic/partition=0/blob_topic+0+0000000000.avro --file /tmp/blob_topic+0+0000000000.avro
 
 # brew install avro-tools
 avro-tools tojson /tmp/blob_topic+0+0000000000.avro
