@@ -13,41 +13,45 @@ verify_installed()
 }
 verify_installed "az"
 
-if [ -z "$1" ]
-then
-    echo "ERROR: AZURE_DATALAKE_CLIENT_ID has not been provided. Usage: azure-data-lake-storage-gen1.sh <AZURE_DATALAKE_CLIENT_ID> <AZURE_DATALAKE_CLIENT_KEY> <AZURE_DATALAKE_ACCOUNT_NAME> <AZURE_DATALAKE_TOKEN_ENDPOINT>"
-    exit 1
-fi
-
-if [ -z "$2" ]
-then
-    echo "ERROR: AZURE_DATALAKE_CLIENT_KEY has not been provided. Usage: azure-data-lake-storage-gen1.sh <AZURE_DATALAKE_CLIENT_ID> <AZURE_DATALAKE_CLIENT_KEY> <AZURE_DATALAKE_ACCOUNT_NAME> <AZURE_DATALAKE_TOKEN_ENDPOINT>"
-    exit 1
-fi
-
-if [ -z "$3" ]
-then
-    echo "ERROR: AZURE_DATALAKE_ACCOUNT_NAME has not been provided. Usage: azure-data-lake-storage-gen1.sh <AZURE_DATALAKE_CLIENT_ID> <AZURE_DATALAKE_CLIENT_KEY> <AZURE_DATALAKE_ACCOUNT_NAME> <AZURE_DATALAKE_TOKEN_ENDPOINT>"
-    exit 1
-fi
-
-if [ -z "$4" ]
-then
-    echo "ERROR: AZURE_DATALAKE_TOKEN_ENDPOINT has not been provided. Usage: azure-data-lake-storage-gen1.sh <AZURE_DATALAKE_CLIENT_ID> <AZURE_DATALAKE_CLIENT_KEY> <AZURE_DATALAKE_ACCOUNT_NAME> <AZURE_DATALAKE_TOKEN_ENDPOINT>"
-    exit 1
-fi
-
 az login
 
-AZURE_DATALAKE_CLIENT_ID="${1}"
-AZURE_DATALAKE_CLIENT_KEY="${2}"
-AZURE_DATALAKE_ACCOUNT_NAME="${3}"
-AZURE_DATALAKE_TOKEN_ENDPOINT="${4}"
+AZURE_RANDOM=$RANDOM
+AZURE_RESOURCE_GROUP=delete$AZURE_RANDOM
+AZURE_DATALAKE_ACCOUNT_NAME=delete$AZURE_RANDOM
+AZURE_AD_APP_NAME=delete$AZURE_RANDOM
+AZURE_REGION=westeurope
+
+echo "Creating resource $AZURE_RESOURCE_GROUP in $AZURE_REGION"
+az group create \
+    --name $AZURE_RESOURCE_GROUP \
+    --location $AZURE_REGION
+
+echo "Registering active directory App $AZURE_AD_APP_NAME"
+AZURE_DATALAKE_CLIENT_ID=$(az ad app create --display-name "$AZURE_AD_APP_NAME" --password mypassword --native-app false --available-to-other-tenants false --query appId -o tsv)
+
+echo "Creating Service Principal associated to the App"
+az ad sp create --id $AZURE_DATALAKE_CLIENT_ID
+
+AZURE_TENANT_ID=$(az account list | jq -r '.[].tenantId')
+AZURE_DATALAKE_TOKEN_ENDPOINT="https://login.microsoftonline.com/$AZURE_TENANT_ID/oauth2/token"
+
+
+echo "Creating data lake $AZURE_DATALAKE_ACCOUNT_NAME in resource $AZURE_RESOURCE_GROUP"
+az dls account create --account $AZURE_DATALAKE_ACCOUNT_NAME --resource-group $AZURE_RESOURCE_GROUP
+
+PRINCIPAL_ID=$(az dls account show --account $AZURE_DATALAKE_ACCOUNT_NAME --resource-group $AZURE_RESOURCE_GROUP | jq -r '.identity.principalId')
+
+echo "Giving permission to app $AZURE_AD_APP_NAME to get access to data lake $AZURE_DATALAKE_ACCOUNT_NAME"
+az dls fs access set-entry --path / --account $AZURE_DATALAKE_ACCOUNT_NAME  --acl-spec user:$PRINCIPAL_ID:rwx
+
+echo AZURE_DATALAKE_CLIENT_ID="$AZURE_DATALAKE_CLIENT_ID"
+echo AZURE_DATALAKE_ACCOUNT_NAME="$AZURE_DATALAKE_ACCOUNT_NAME"
+echo AZURE_DATALAKE_TOKEN_ENDPOINT="$AZURE_DATALAKE_TOKEN_ENDPOINT"
 
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
 
 echo "Creating Data Lake Storage Gen1 Sink connector"
-docker exec -e AZURE_DATALAKE_CLIENT_ID="$AZURE_DATALAKE_CLIENT_ID" -e AZURE_DATALAKE_CLIENT_KEY="$AZURE_DATALAKE_CLIENT_KEY" -e AZURE_DATALAKE_ACCOUNT_NAME="$AZURE_DATALAKE_ACCOUNT_NAME" -e AZURE_DATALAKE_TOKEN_ENDPOINT="$AZURE_DATALAKE_TOKEN_ENDPOINT" connect \
+docker exec -e AZURE_DATALAKE_CLIENT_ID="$AZURE_DATALAKE_CLIENT_ID" -e AZURE_DATALAKE_ACCOUNT_NAME="$AZURE_DATALAKE_ACCOUNT_NAME" -e AZURE_DATALAKE_TOKEN_ENDPOINT="$AZURE_DATALAKE_TOKEN_ENDPOINT" connect \
      curl -X POST \
      -H "Content-Type: application/json" \
      --data '{
@@ -58,7 +62,7 @@ docker exec -e AZURE_DATALAKE_CLIENT_ID="$AZURE_DATALAKE_CLIENT_ID" -e AZURE_DAT
                     "topics": "datalake_topic",
                     "flush.size": "3",
                     "azure.datalake.client.id": "'"$AZURE_DATALAKE_CLIENT_ID"'",
-                    "azure.datalake.client.key": "'"$AZURE_DATALAKE_CLIENT_KEY"'",
+                    "azure.datalake.client.key": "mypassword",
                     "azure.datalake.account.name": "'"$AZURE_DATALAKE_ACCOUNT_NAME"'",
                     "azure.datalake.token.endpoint": "'"$AZURE_DATALAKE_TOKEN_ENDPOINT"'",
                     "format.class": "io.confluent.connect.azure.storage.format.avro.AvroFormat",
