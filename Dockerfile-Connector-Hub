@@ -49,3 +49,4 @@ RUN   confluent-hub install --no-prompt confluentinc/kafka-connect-ibmmq:latest 
 		&& confluent-hub install --no-prompt confluentinc/kafka-connect-azure-data-lake-gen2-storage:latest \
 		&& confluent-hub install --no-prompt confluentinc/kafka-connect-azure-event-hubs:latest \
 		&& confluent-hub install --no-prompt confluentinc/kafka-connect-azure-functions:latest \
+		&& confluent-hub install --no-prompt neo4j/kafka-connect-neo4j:latest \
