@@ -37,7 +37,7 @@ then
     exit 1
 fi
 
-read -p "Azure account: " AZ_USER && read -sp "Azure password: " AZ_PASS && echo && az login -u "$AZ_USER" -p "$AZ_PASS"
+az login
 
 AZURE_DATALAKE_CLIENT_ID="${1}"
 AZURE_DATALAKE_CLIENT_KEY="${2}"
@@ -51,7 +51,7 @@ docker exec -e AZURE_DATALAKE_CLIENT_ID="$AZURE_DATALAKE_CLIENT_ID" -e AZURE_DAT
      curl -X POST \
      -H "Content-Type: application/json" \
      --data '{
-               "name": "azure-datalake-gen1-sink3",
+               "name": "azure-datalake-gen1-sink",
                "config": {
                     "connector.class": "io.confluent.connect.azure.datalake.gen1.AzureDataLakeGen1StorageSinkConnector",
                     "tasks.max": "1",
