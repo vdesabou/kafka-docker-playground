@@ -11,38 +11,69 @@ Quickly test [Azure Data Lake Storage Gen1 Sink](https://docs.confluent.io/curre
 * `avro-tools` (example `brew install avro-tools`)
 * `az`(example `brew install azure-cli`)
 
-## Azure Setup
-
-* [Create a Data Lake Storage Gen1 account](https://docs.microsoft.com/en-us/azure/data-lake-store/data-lake-store-get-started-portal#create-a-data-lake-storage-gen1-account). For `Encryption Seetings`, use `Use keys managed by Data Lake Storage Gen1`
-
-* Follow [Service-to-service authentication with Azure Data Lake Storage Gen1 using Azure Active Directory](https://docs.microsoft.com/en-us/azure/data-lake-store/data-lake-store-service-to-service-authenticate-using-active-directory)
-
-
 ## How to run
 
 Simply run:
 
 ```
-$ ./azure-data-lake-storage-gen1.sh <AZURE_DATALAKE_CLIENT_ID> <AZURE_DATALAKE_CLIENT_KEY> <AZURE_DATALAKE_ACCOUNT_NAME> <AZURE_DATALAKE_TOKEN_ENDPOINT>
+$ ./azure-data-lake-storage-gen1.sh
 ```
 
 ## Details of what the script is doing
 
+Logging to Azure using browser
+
+```bash
+az login
+```
+
+Creating resource $AZURE_RESOURCE_GROUP in $AZURE_REGION
+
+```bash
+$ az group create \
+    --name $AZURE_RESOURCE_GROUP \
+    --location $AZURE_REGION
+```
+
+Registering active directory App $AZURE_AD_APP_NAME
+
+```bash
+$ AZURE_DATALAKE_CLIENT_ID=$(az ad app create --display-name "$AZURE_AD_APP_NAME" --password mypassword --native-app false --available-to-other-tenants false --query appId -o tsv)
+```
+
+Creating Service Principal associated to the App
+
+```bash
+$ SERVICE_PRINCIPAL_ID=$(az ad sp create --id $AZURE_DATALAKE_CLIENT_ID | jq -r '.objectId')
+```
+
+Creating data lake $AZURE_DATALAKE_ACCOUNT_NAME in resource $AZURE_RESOURCE_GROUP
+
+```bash
+$ az dls account create --account $AZURE_DATALAKE_ACCOUNT_NAME --resource-group $AZURE_RESOURCE_GROUP
+```
+
+Giving permission to app $AZURE_AD_APP_NAME to get access to data lake $AZURE_DATALAKE_ACCOUNT_NAME
+
+```bash
+$ az dls fs access set-entry --account $AZURE_DATALAKE_ACCOUNT_NAME  --acl-spec user:$SERVICE_PRINCIPAL_ID:rwx --path /
+```
+
 The connector is created with:
 
 ```bash
-$ docker exec -e AZURE_DATALAKE_CLIENT_ID="$AZURE_DATALAKE_CLIENT_ID" -e AZURE_DATALAKE_CLIENT_KEY="$AZURE_DATALAKE_CLIENT_KEY" -e AZURE_DATALAKE_ACCOUNT_NAME="$AZURE_DATALAKE_ACCOUNT_NAME" -e AZURE_DATALAKE_TOKEN_ENDPOINT="$AZURE_DATALAKE_TOKEN_ENDPOINT" connect \
+$ docker exec -e AZURE_DATALAKE_CLIENT_ID="$AZURE_DATALAKE_CLIENT_ID" -e AZURE_DATALAKE_ACCOUNT_NAME="$AZURE_DATALAKE_ACCOUNT_NAME" -e AZURE_DATALAKE_TOKEN_ENDPOINT="$AZURE_DATALAKE_TOKEN_ENDPOINT" connect \
      curl -X POST \
      -H "Content-Type: application/json" \
      --data '{
-               "name": "azure-datalake-gen1-sink3",
+               "name": "azure-datalake-gen1-sink",
                "config": {
                     "connector.class": "io.confluent.connect.azure.datalake.gen1.AzureDataLakeGen1StorageSinkConnector",
                     "tasks.max": "1",
                     "topics": "datalake_topic",
                     "flush.size": "3",
                     "azure.datalake.client.id": "'"$AZURE_DATALAKE_CLIENT_ID"'",
-                    "azure.datalake.client.key": "'"$AZURE_DATALAKE_CLIENT_KEY"'",
+                    "azure.datalake.client.key": "mypassword",
                     "azure.datalake.account.name": "'"$AZURE_DATALAKE_ACCOUNT_NAME"'",
                     "azure.datalake.token.endpoint": "'"$AZURE_DATALAKE_TOKEN_ENDPOINT"'",
                     "format.class": "io.confluent.connect.azure.storage.format.avro.AvroFormat",
