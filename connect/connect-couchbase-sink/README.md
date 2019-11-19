@@ -81,4 +81,9 @@ docker exec couchbase bash -c "cbc cat LHR -U couchbase://localhost/travel-data 
 {"degreesF":58,"airport":"LHR","timestamp":1574176924817}LHR                  CAS=0x15d899953dd60000, Flags=0x2000000, Size=57, Datatype=0x01(JSON)
 ```
 
+In UI:
+
+![Security group](Screenshot1.png)
+
+
 N.B: Control Center is reachable at [http://127.0.0.1:9021](http://127.0.0.1:9021])
