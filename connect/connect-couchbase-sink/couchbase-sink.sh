@@ -18,7 +18,7 @@ docker exec connect \
      curl -X POST \
      -H "Content-Type: application/json" \
      --data '{
-               "name": "couchbase-sink2",
+               "name": "couchbase-sink",
                "config": {
                     "connector.class": "com.couchbase.connect.kafka.CouchbaseSinkConnector",
                     "tasks.max": "2",
