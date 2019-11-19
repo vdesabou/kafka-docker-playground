@@ -2,7 +2,7 @@
 
 ## Objective
 
-Quickly test [Couchbase Sink](https://www.confluent.io/hub/couchbase/couchbase-connector) connector.
+Quickly test [Couchbase Sink](https://docs.couchbase.com/kafka-connector/3.4/index.html) connector.
 
 ## Pre-requisites
 
