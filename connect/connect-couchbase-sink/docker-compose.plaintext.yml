@@ -1,0 +1,24 @@
+---
+version: '3.5'
+services:
+  couchbase:
+    image: couchbase # https://hub.docker.com/_/couchbase
+    hostname: couchbase
+    container_name: couchbase
+    ports:
+      - "8091-8094:8091-8094"
+      - "11210:11210"
+
+  connect:
+    depends_on:
+      - zookeeper
+      - broker
+      - schema-registry
+      - couchbase
+    environment:
+      CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/kafka-connect-couchbase
+
+  json-producer:
+    build: ../../connect/connect-couchbase-sink/json-producer/
+    hostname: json-producer
+    container_name: json-producer
