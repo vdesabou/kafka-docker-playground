@@ -269,7 +269,7 @@ Results:
 
 A local Control Center instance (docker service `control-center`) is installed and reachable at [http://127.0.0.1:9021](http://127.0.0.1:9021]).
 
-See the [differences between Confluent Cloud UI and local Control Center connected to Confluent Cloud](./ccloud_control_center_comparison.md)
+See the [differences between Confluent Cloud UI and local Control Center connected to Confluent Cloud](./ccloud_control_center_comparison)
 
 #### Grafana
 
