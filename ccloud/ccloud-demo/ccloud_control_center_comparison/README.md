@@ -24,9 +24,9 @@
 |Consumer Group /<br> Consumption| not available  | ![Consumer Consumption](../images/23.jpg)  |
 |Consumer Group /<br> Alerts| not available  | ![Consumer Alerts](../images/24.jpg)  |
 |Cluster settings tab| ![Cluster settings tab](../images/25.jpg)  | ![Cluster settings tab](../images/26.jpg)  |
-|Cluster settings tab /<br> API access| ![Cluster settings tab](../images/29.jpg)  | not available |
-|CLI @ client configuration tab| ![CLI @ client configuration tab](../images/27.jpg)  | not available  |
-|CLI @ client configuration tab (2)| ![CLI @ client configuration tab](../images/27.jpg)  | not available  |
+|Cluster settings tab /<br> API access| ![Cluster settings tab](../images/29.jpg)  | not applicable |
+|CLI @ client configuration tab| ![CLI @ client configuration tab](../images/27.jpg)  | not applicable  |
+|CLI @ client configuration tab (2)| ![CLI @ client configuration tab](../images/27.jpg)  | not applicable  |
 |Schema Registry tab| ![Schema Registry](../images/30.jpg)  | not applicable <br>(this is only for Confluent Cloud Schema Registry) |
 |Schema Registry tab /<br> API access| ![Schema Registry](../images/31.jpg)  | not applicable <br>(this is only for Confluent Cloud Schema Registry)  |
 |Schema Registry tab /<br> Allowed Usage| ![Schema Registry](../images/32.jpg)  | not applicable <br>(this is only for Confluent Cloud Schema Registry)  |
