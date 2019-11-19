@@ -269,23 +269,7 @@ Results:
 
 A local Control Center instance (docker service `control-center`) is installed and reachable at [http://127.0.0.1:9021](http://127.0.0.1:9021]).
 
-* Brokers overview section will report error ***Please set up Confluent Metrics Reporter***
-
-![Brokers overview](Screenshot1.png)
-
-This is [expected](https://docs.confluent.io/current/cloud/connect/c3-cloud-config.html#limitations) as Confluent Cloud does not provide the instrumentation from Confluent Metrics Reporter outside of the Confluent Cloud.
-
-* You can access your local Connect cluster:
-
-![Connect overview](Screenshot2.png)
-
-* You can access your local KSQL instance:
-
-![KSQL overview](Screenshot3.png)
-
-* In the case you're using local schema-registry instance (docker service `schema-registry`), you can see the schemas:
-
-![Schema overview](Screenshot4.png)
+See the [differences between Confluent Cloud UI and local Control Center connected to Confluent Cloud](./ccloud_control_center_comparison.md)
 
 #### Grafana
 
@@ -500,3 +484,5 @@ $ ccloud api-key delete <API_KEY_SA>
 * [Other clients example](https://github.com/confluentinc/examples/blob/5.3.1-post/clients/cloud/README.md)
 
 * [Beginner Cloud](https://github.com/confluentinc/examples/tree/5.3.1-post/ccloud/beginner-cloud)
+
+* [A Confluent Cloud Story](https://github.com/framiere/a-confluent-cloud-story)
