@@ -21,7 +21,7 @@
 |KSQL tab| ![KSQL tab](../images/17.jpg) <br> This is only showing _managed_ KSQL Cloud (in Preview) | ![KSQL tab](../images/18.jpg) <br> This is showing _local_ KSQL clusters |
 |Consumers tab| ![Consumers tab](../images/19.jpg)  | ![Consumers tab](../images/20.jpg)  |
 |Consumer Group /<br> Consumer lag| ![Consumer group](../images/21.jpg)  | ![Consumer lag](../images/22.jpg)  |
-|Consumer Group /<br> Consumption| not available  | ![Consumer Consumption].(./images/23.jpg)  |
+|Consumer Group /<br> Consumption| not available  | ![Consumer Consumption](../images/23.jpg)  |
 |Consumer Group /<br> Alerts| not available  | ![Consumer Alerts](../images/24.jpg)  |
 |Cluster settings tab| ![Cluster settings tab](../images/25.jpg)  | ![Cluster settings tab](../images/26.jpg)  |
 |Cluster settings tab /<br> API access| ![Cluster settings tab](../images/29.jpg)  | not available |
