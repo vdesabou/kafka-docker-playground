@@ -15,7 +15,7 @@
 |Topic overview| not available | ![Topic overview](../images/12.jpg)  |
 |Topic configuration| ![Topic configuration](../images/6.jpg)  | ![Topic configuration](../images/7.jpg)  |
 |Topic messages| ![Topic messages](../images/8.jpg)  | ![Topic messages](../images/9.jpg)  |
-|Topic schema <br>(using Confluent Cloud Schema Registry)| ![Topic schema].(./images/10.jpg)  | ![Topic schema](../images/11.jpg)  |
+|Topic schema <br>(using Confluent Cloud Schema Registry)| ![Topic schema](../images/10.jpg)  | ![Topic schema](../images/11.jpg)  |
 |Connectors tab| ![Connectors tab](../images/13.jpg) <br> This is only showing _managed_ connectors | ![Connectors tab](../images/14.jpg) <br> This is showing _local_ Connect clusters |
 |Connectors tab (2)| ![Connectors tab](../images/15.jpg) <br> This is only showing _managed_ connectors | ![Connectors tab](../images/16.jpg) <br> This is showing _local_ connectots |
 |KSQL tab| ![KSQL tab](../images/17.jpg) <br> This is only showing _managed_ KSQL Cloud (in Preview) | ![KSQL tab](../images/18.jpg) <br> This is showing _local_ KSQL clusters |
