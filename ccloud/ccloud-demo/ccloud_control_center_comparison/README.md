@@ -27,6 +27,6 @@
 |Cluster settings tab /<br> API access| ![Cluster settings tab](../images/29.jpg)  | not available |
 |CLI @ client configuration tab| ![CLI @ client configuration tab](../images/27.jpg)  | not available  |
 |CLI @ client configuration tab (2)| ![CLI @ client configuration tab](../images/27.jpg)  | not available  |
-|Schema Registry tab| ![Schema Registry](../images/30.jpg)  | not available <br>(this is only for Confluent Cloud Schema Registry) |
-|Schema Registry tab /<br> API access| ![Schema Registry](../images/31.jpg)  | not available <br>(this is only for Confluent Cloud Schema Registry)  |
-|Schema Registry tab /<br> Allowed Usage| ![Schema Registry](../images/32.jpg)  | not available <br>(this is only for Confluent Cloud Schema Registry)  |
+|Schema Registry tab| ![Schema Registry](../images/30.jpg)  | not applicable <br>(this is only for Confluent Cloud Schema Registry) |
+|Schema Registry tab /<br> API access| ![Schema Registry](../images/31.jpg)  | not applicable <br>(this is only for Confluent Cloud Schema Registry)  |
+|Schema Registry tab /<br> Allowed Usage| ![Schema Registry](../images/32.jpg)  | not applicable <br>(this is only for Confluent Cloud Schema Registry)  |
