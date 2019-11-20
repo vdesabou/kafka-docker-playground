@@ -18,6 +18,14 @@ Simply run:
 $ ./couchbase.sh
 ```
 
+Note: if you want to test with a custom `event.filter.class` class, use:
+
+```
+$ ./couchbase-with-key-filter.sh
+```
+
+It will filter using key starting with `airline`
+
 Couchbase UI is available at [127.0.0.1:8091](http://127.0.0.1:8091) `Administrator/password`
 
 ## Details of what the script is doing
@@ -126,4 +134,63 @@ Results:
     }
 }
 ```
+
+Results with `event.filter.class=example.KeyFilter`:
+
+```json
+{
+    "bucket": {
+        "string": "travel-sample"
+    },
+    "bySeqno": 1,
+    "cas": 1574238314779770880,
+    "content": {
+        "bytes": "{\"callsign\":\"HORIZON AIR\",\"country\":\"United States\",\"iata\":\"QX\",\"icao\":\"QXE\",\"id\":2778,\"name\":\"Horizon Air\",\"type\":\"airline\"}"
+    },
+    "event": "mutation",
+    "expiration": {
+        "int": 0
+    },
+    "flags": {
+        "int": 33554432
+    },
+    "key": "airline_2778",
+    "lockTime": {
+        "int": 0
+    },
+    "partition": 516,
+    "revSeqno": 1,
+    "vBucketUuid": {
+        "long": 6995549830315
+    }
+}
+
+{
+    "bucket": {
+        "string": "travel-sample"
+    },
+    "bySeqno": 1,
+    "cas": 1574238314803691520,
+    "content": {
+        "bytes": "{\"callsign\":\"US-HELI\",\"country\":\"United States\",\"iata\":null,\"icao\":\"USH\",\"id\":5268,\"name\":\"US Helicopter\",\"type\":\"airline\"}"
+    },
+    "event": "mutation",
+    "expiration": {
+        "int": 0
+    },
+    "flags": {
+        "int": 33554432
+    },
+    "key": "airline_5268",
+    "lockTime": {
+        "int": 0
+    },
+    "partition": 3,
+    "revSeqno": 1,
+    "vBucketUuid": {
+        "long": 201263331966714
+    }
+}
+```
+
 N.B: Control Center is reachable at [http://127.0.0.1:9021](http://127.0.0.1:9021])
