@@ -277,7 +277,34 @@ See the [differences between Confluent Cloud UI and local Control Center connect
 
 Open a brower and visit http://127.0.0.1:3000 (login/password is `admin/admin`)
 
-N.B: only Producer and Consumer dashboards are available. Zookeeper and Brokers metrics are not exposed for Confluent Cloud.
+You should see 3 dashboards:
+
+1. Producer Dashboard
+
+![System](./images/33.jpg)
+
+![Throughput](./images/34.jpg)
+
+![Performance](./images/35.jpg)
+
+![Produce Request Metrics](./images/36.jpg)
+
+![Connections](./images/37.jpg)
+
+![Errors & Retries and Misc](./images/38.jpg)
+
+
+2. Consumer Dashboard
+
+![Consumer](./images/39.jpg)
+
+3. Consumer Lag Dashboard
+
+This demo is using [kafka-lag-exporter](https://github.com/lightbend/kafka-lag-exporter) in order to pull consumer lags metrics from Confluent Cloud cluster and be exported to Prometheus.
+
+![Consumer Lag 1](./images/40.jpg)
+
+![Consumer Lag 2](./images/41.jpg)
 
 ### Schema Registry
 
