@@ -4,6 +4,8 @@ services:
 
   jmx-exporter:
     build: ./jmx-exporter
+    hostname: jmx-exporter
+    container_name: jmx-exporter
     tty: true
     volumes:
     - jmx-exporter-vol:/usr/share/jmx_exporter/
@@ -268,20 +270,31 @@ services:
       - jmx-exporter
       - stream
 
-  prometheus:
-    image: prom/prometheus:v2.11.1
+
+  kafka-lag-exporter:
+    image: lightbend/kafka-lag-exporter:0.5.5
+    hostname: kafka-lag-exporter
+    container_name: kafka-lag-exporter
+    environment:
+      config.file: /opt/docker/conf/application.conf
+      logback.configurationFile: /opt/docker/conf/logback.xml
     ports:
-      - 9090:9090
+      - 9999:9999
     volumes:
-      - ./prometheus/:/etc/prometheus/
+      - ./kafka-lag-exporter/application.conf:/opt/docker/conf/application.conf
+      - ./kafka-lag-exporter/logback.xml:/opt/docker/conf/logback.xml
 
   alertmanager:
     image: prom/alertmanager:v0.18.0
+    hostname: alertmanager
+    container_name: alertmanager
     ports:
       - 9093:9093
 
   node-exporter:
     image: prom/node-exporter:v0.18.1
+    hostname: node-exporter
+    container_name: node-exporter
     volumes:
       - /proc:/host/proc:ro
       - /sys:/host/sys:ro
@@ -292,14 +305,32 @@ services:
       - '--collector.filesystem.ignored-mount-points'
       - '^(aufs|proc|nsfs|shm|cgroup|tmpfs|binfmt_misc|debugfs|devpts|fusectl|hugetlbfs|fuse.lxcfs|mqueue|pstore|securityfs|sysfs|autofs|devtmpfs|configfs)'
 
+  prometheus:
+    image: prom/prometheus:v2.11.1
+    hostname: prometheus
+    container_name: prometheus
+    ports:
+      - 9090:9090
+    volumes:
+      - ./prometheus/:/etc/prometheus/
+    depends_on:
+      - jmx-exporter
+      - node-exporter
+      - kafka-lag-exporter
+      - alertmanager
+
   grafana:
     image: grafana/grafana:6.3.0
+    hostname: grafana
+    container_name: grafana
     environment:
       GF_INSTALL_PLUGINS: grafana-piechart-panel
     ports:
       - 3000:3000
     volumes:
       - ./grafana/provisioning/:/etc/grafana/provisioning/
+    depends_on:
+      - prometheus
 
 volumes:
     mi2: {}
