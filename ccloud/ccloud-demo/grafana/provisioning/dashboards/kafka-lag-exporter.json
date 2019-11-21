@@ -715,10 +715,10 @@
 		"steppedLine": false,
 		"targets": [
 		  {
-			"expr": "sum(rate(jvm_memory_bytes_used{app_kubernetes_io_instance=\"Prometheus\"}[5m])) by (kubernetes_pod_name)",
+			"expr": "sum(rate(jvm_memory_bytes_used[5m]))",
 			"format": "time_series",
 			"intervalFactor": 1,
-			"legendFormat": "{{kubernetes_pod_name}}",
+			"legendFormat": "localhost",
 			"refId": "A"
 		  }
 		],
@@ -799,10 +799,10 @@
 		"steppedLine": false,
 		"targets": [
 		  {
-			"expr": "sum(rate(jvm_gc_collection_seconds_sum{app_kubernetes_io_instance=\"Prometheus\"}[5m])) by (kubernetes_pod_name)",
+			"expr": "sum(rate(jvm_gc_collection_seconds_sum[5m]))",
 			"format": "time_series",
 			"intervalFactor": 1,
-			"legendFormat": "{{kubernetes_pod_name}}",
+			"legendFormat": "localhost",
 			"refId": "A"
 		  }
 		],
@@ -883,10 +883,10 @@
 		"steppedLine": false,
 		"targets": [
 		  {
-			"expr": "sum(rate(jvm_gc_collection_seconds_count{app_kubernetes_io_instance=\"Prometheus\"}[5m])) by (kubernetes_pod_name)",
+			"expr": "sum(rate(jvm_gc_collection_seconds_count[5m]))",
 			"format": "time_series",
 			"intervalFactor": 1,
-			"legendFormat": "{{kubernetes_pod_name}}",
+			"legendFormat": "localhost",
 			"refId": "A"
 		  }
 		],
