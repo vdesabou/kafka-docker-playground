@@ -50,13 +50,22 @@ else
      exit 1
 fi
 
+# generate kafka-lag-exporter config
+sed -e "s|:BOOTSTRAP_SERVERS:|$BOOTSTRAP_SERVERS|g" \
+    -e "s|:CLOUD_KEY:|$CLOUD_KEY|g" \
+    -e "s|:CLOUD_SECRET:|$CLOUD_SECRET|g" \
+    ${DIR}/kafka-lag-exporter/application.template.conf > ${DIR}/kafka-lag-exporter/application.conf
+
 # kafka-topics --bootstrap-server `grep "^\s*bootstrap.server" ${CONFIG_FILE} | tail -1` --command-config ${CONFIG_FILE} --topic customer-avro --create --replication-factor 3 --partitions 6
 
+set +e
 create_topic customer-avro
+set -e
 
 docker-compose down -v
 docker-compose up -d
 ${DIR}/../../WaitForConnectAndControlCenter.sh
+
 
 echo "-------------------------------------"
 echo "Connector examples"
@@ -95,7 +104,9 @@ sleep 20
 echo "Confirm that the data was sent to the HTTP endpoint."
 curl admin:password@localhost:9080/api/messages | jq .
 
+set +e
 create_topic mysql-application
+set -e
 
 echo "Creating MySQL source connector"
 docker exec connect \
@@ -142,6 +153,9 @@ else
      # using https://github.com/confluentinc/examples/tree/5.3.1-post/clients/cloud/confluent-cli#example-2-avro-and-confluent-cloud-schema-registry
      confluent local consume mysql-application -- --cloud --value-format avro --property schema.registry.url=$SCHEMA_REGISTRY_URL --property basic.auth.credentials.source=USER_INFO --property schema.registry.basic.auth.user.info="$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO" --from-beginning --max-messages 2
 fi
+
+echo "Now we will test Service Account and ACLs"
+check_if_continue
 
 ######################
 ## Service Account and ACLs
@@ -263,4 +277,3 @@ if [[ ! $(type kafka-consumer-groups 2>&1) =~ "not found" ]]; then
      kafka-consumer-groups --bootstrap-server $BOOTSTRAP_SERVERS --command-config $CONFIG_FILE --list
      kafka-consumer-groups --bootstrap-server $BOOTSTRAP_SERVERS --command-config $CONFIG_FILE --group simple-stream --describe
 fi
-
