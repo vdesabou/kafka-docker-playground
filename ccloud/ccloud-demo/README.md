@@ -18,6 +18,7 @@
     - [Schema Registry](#schema-registry)
     - [KSQL](#ksql)
     - [REST Proxy](#rest-proxy)
+    - [Restrict access to Confluent Cloud](#restrict-access-to-confluent-cloud)
     - [Service Account and ACLs](#service-account-and-acls)
   - [📚 Other useful resources](#%f0%9f%93%9a-other-useful-resources)
 
@@ -398,9 +399,37 @@ Result:
 {"brokers":[0,5,2,8,4,1,6,7,3]}
 ```
 
+### Restrict access to Confluent Cloud
+
+Things to know:
+
+* Anyone with access to Confluent Cloud web browser (i.e having a login/password) has full access to all the resources (i.e. a SuperUser).
+
+* If you want to [restrict access](https://docs.confluent.io/current/cloud/access-management/restrict-access.html#restrict-access-to-ccloud) to a user, a superuser can provide an API key/secret pair.
+
+  * Either by creating API key/secret using UI, in `Cluster settings->API access` ![API key/secret](./images/42.jpg)
+
+  * Or by using `ccloud` CLI (you need to be logged to use the CLI, hence being a superuser)
+
+       ```bash
+       ccloud api-key create --resource <cluster id>
+       ```
+
+Then a *restricted* user (i.e with no login/password but with API key) will be able to use Confluent Platform commands like kafka-topics, kafka-console-producer, kafka-console-consumer, kafka-consumer-groups, etc..
+
+Follow this [link](https://docs.confluent.io/current/cloud/access-management/restrict-access.html#restrict-access-to-ccloud) for examples
+
+Note that a *restricted* user, even if he's not a superuser, will still be able to create, read, delete topics.
+
+If you want to restrict this, then you need to setup ACLs.
+
+
 ### Service Account and ACLs
 
-Create a new service account
+You can setup ACLs by using [Service Accounts](https://docs.confluent.io/current/cloud/access-management/service-account.html#service-accounts).
+This is done by a *superuser* using `ccloud`cli:
+
+* Create a new service account:
 
 ```bash
 $ ccloud service-account create demo-app-24353 --description demo-app-24353
@@ -411,7 +440,7 @@ $ ccloud service-account create demo-app-24353 --description demo-app-24353
 +-------------+----------------+
 ```
 
-Create an API key and secret for the new service account
+* Create an API key and secret for the new service account:
 
 ```bash
 $ ccloud api-key create --service-account-id 21280 --resource lkc-q223m
@@ -422,11 +451,9 @@ Save the API key and secret. The secret is not retrievable later.
 +---------+------------------------------------------------------------------+
 ```
 
-Wait 90 seconds for the user and service account key and secret to propagate
+Note: wait 90 seconds for the user and service account key and secret to propagate
 
-Create a local configuration file `/tmp/client.config` for the client to connect to Confluent Cloud with the newly created API key and secret
-
-Write properties to `/tmp/client.config`:
+* Create a local configuration file `/tmp/client.config` for the client to connect to Confluent Cloud with the newly created API key and secret
 
 ```
 ssl.endpoint.identification.algorithm=https
@@ -436,7 +463,7 @@ bootstrap.servers=<BOOTSTRAP_SERVERS>
 sasl.jaas.config=org.apache.kafka.common.security.plain.PlainLoginModule required username\="<API_KEY_SA>" password\="<API_SECRET_SA>";
 ```
 
-By default, no ACLs are configured:
+**Important:** by default, no ACLs are configured, so if the client use an API key linked to a sevice account, it will have access to nothing:
 
 ```bash
 $ ccloud kafka acl list --service-account-id 21280
@@ -444,15 +471,17 @@ $ ccloud kafka acl list --service-account-id 21280
 +------------------+------------+-----------+----------+------+------+
 ```
 
-**Run the Java producer to `demo-topic-1`: before ACLs**
+Example before ACLs are set:
 
-Check logs for `org.apache.kafka.common.errors.TopicAuthorizationException`
+* Run the Java producer to `demo-topic-1`
+
+Check logs for `org.apache.kafka.common.errors.TopicAuthorizationException`:
 
 ```
 PASS: Producer failed due to org.apache.kafka.common.errors.TopicAuthorizationException (expected because there are no ACLs to allow this client application)
 ```
 
-Create ACLs for the service account
+* Create ACLs for the service account:
 
 ```bash
 $ ccloud kafka acl create --allow --service-account-id 21280 --operation CREATE --topic demo-topic-1
@@ -467,7 +496,9 @@ $ ccloud kafka acl list --service-account-id 21280
   User:21280       | ALLOW      | WRITE     | TOPIC    | demo-topic-1 | LITERAL
 ```
 
-**Run the Java producer to `demo-topic-1`: after ACLs**
+Example after ACLs are set:
+
+* Run the Java producer to `demo-topic-1`
 
 Check logs for `10 messages were produced to topic`
 
