@@ -282,7 +282,7 @@ Here is a table indicating which triggers are available when Control Center is c
 Note: All Broker, Cluster and Topic triggers are not available because Confluent Cloud [does not expose](https://docs.confluent.io/current/cloud/connect/c3-cloud-config.html#limitations) those metrics.
 
 |  Component type | Criteria  | Available | Appear in History
-|---|---|---|---|---|
+|---|---|---|---|
 |  Broker  | Bytes in  | no  |   |
 |  Broker  | Bytes out  | no  |   |
 |  Broker  | Fetch request latency  | no  |   |
