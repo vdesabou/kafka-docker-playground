@@ -270,7 +270,48 @@ Results:
 
 A local Control Center instance (docker service `control-center`) is installed and reachable at [http://127.0.0.1:9021](http://127.0.0.1:9021]).
 
+* Screenshots
+
 See the [differences between Confluent Cloud UI and local Control Center connected to Confluent Cloud](./ccloud_control_center_comparison)
+
+* Alerts
+
+You can setup [alerts](https://docs.confluent.io/current/control-center/alerts/index.html) in Control Center.
+Here is a table indicating which triggers are available when Control Center is connected to a Confluent Cloud cluster:
+
+Note: All Broker, Cluster and Topic triggers are not available because Confluent Cloud [does not expose](https://docs.confluent.io/current/cloud/connect/c3-cloud-config.html#limitations) those metrics.
+
+|  Component type | Criteria  | Available | Appear in History
+|---|---|---|---|---|
+|  Broker  | Bytes in  | no  |   |
+|  Broker  | Bytes out  | no  |   |
+|  Broker  | Fetch request latency  | no  |   |
+|  Broker  | Production request count | no  |   |
+|  Broker  | Production request latency  | no  |   |
+|  Cluster  | Active Controller count  | no  |   |
+|  Cluster  | Cluster down  | no  |   |
+|  Cluster  | Leader election rate | no  |   |
+|  Cluster  | Offline topic partitions | no  |   |
+|  Cluster  | Unclean election count  | no  |   |
+|  Cluster  | Under replicated topic partitions  | no  |   |
+|  Cluster  | ZK Disconnected  | no  |   |
+|  Cluster  | Zookeeper expiration rate  | no  |   |
+|  Consumer group  | Average latency (ms)  | yes  | yes  |
+|  Consumer group  | Consumer lag  | yes  |  no * |
+|  Consumer group  | Consumer lead | yes  | yes  |
+|  Consumer group  | Consumption difference  | yes  |  yes |
+|  Consumer group  | Maximum latency (ms)  | yes  |  yes |
+|  Topic  | Bytes in  | no  |   |
+|  Topic  | Bytes out  | no  |   |
+|  Topic  | Out of sync replica count | no  |   |
+|  Topic  | Production request count | no  |   |
+|  Topic  | Under replicated topic partitions  | no  |   |
+
+\* Expected, as per the [docs](https://docs.confluent.io/current/control-center/alerts/navigate.html#alerts-history):
+
+```
+Any alerts triggered by consumer lag, cluster status, or broker status events do not populate history. Alert emails sent do not contain an email link to alerts history.
+```
 
 #### Grafana
 
