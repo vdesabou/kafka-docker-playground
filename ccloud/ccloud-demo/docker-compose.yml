@@ -78,6 +78,10 @@ services:
     image: confluentinc/cp-enterprise-control-center:5.3.1
     hostname: control-center
     container_name: control-center
+    # Add parameters for restricted (read only) access logins: admin/admin_pw and monitor/monitor
+    # volumes:
+    #   - ../../ccloud/ccloud-demo/testing/restricted-access/login.properties:/tmp/login.properties
+    #   - ../../ccloud/ccloud-demo/testing/restricted-access/propertyfile.jaas:/tmp/propertyfile.jaas
     depends_on:
       - schema-registry
     ports:
@@ -106,7 +110,7 @@ services:
       CONTROL_CENTER_METRICS_TOPIC_MAX_MESSAGE_BYTES: 8388608
       CONTROL_CENTER_LICENSE: "$CONTROL_CENTER_LICENSE"
       PORT: 9021
-      #CONTROL_CENTER_LOG4J_ROOT_LOGLEVEL: DEBUG
+      # CONTROL_CENTER_LOG4J_ROOT_LOGLEVEL: DEBUG
       # Email settings
       # CONTROL_CENTER_MAIL_ENABLED: "true"
       # CONTROL_CENTER_MAIL_HOST_NAME: "smtp.gmail.com"
@@ -117,6 +121,12 @@ services:
       # CONTROL_CENTER_MAIL_STARTTLS_REQUIRED: "true"
       # CONTROL_CENTER_MAIL_SSL_CHECKSERVERIDENTITY: "true"
       # CONTROL_CENTER_MAIL_BOUNCE_ADDRESS: "toto@gmail.com"
+      # Add parameters for restricted (read only) access logins: admin/admin_pw and monitor/monitor
+      # CONTROL_CENTER_REST_AUTHENTICATION_ROLES: Administrators,Restricted
+      # CONTROL_CENTER_AUTH_RESTRICTED_ROLES: Restricted
+      # CONTROL_CENTER_REST_AUTHENTICATION_METHOD: BASIC
+      # CONTROL_CENTER_REST_AUTHENTICATION_REALM: c3
+      # CONTROL_CENTER_OPTS: -Djava.security.auth.login.config=/tmp/propertyfile.jaas
 
   mysql:
     image: mysql:5.7
