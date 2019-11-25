@@ -64,3 +64,7 @@ docker exec -e BUCKET_NAME="$BUCKET_NAME" connect \
                     "transforms.AddPrefix.replacement": "copy_of_$0"
           }}' \
      http://localhost:8083/connectors | jq .
+
+
+echo "Verifying topic copy_of_s3_topic"
+docker exec broker kafka-console-consumer -bootstrap-server broker:9092 --topic copy_of_s3_topic --from-beginning --max-messages 9
