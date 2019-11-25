@@ -11,7 +11,7 @@ RUN   confluent-hub install --no-prompt confluentinc/kafka-connect-ibmmq:latest 
 		&& confluent-hub install --no-prompt confluentinc/kafka-connect-jdbc:latest \
 		&& confluent-hub install --no-prompt confluentinc/kafka-connect-kinesis:latest \
 		&& confluent-hub install --no-prompt confluentinc/kafka-connect-s3:latest \
-		&& confluent-hub install --no-prompt confluentinc/kafka-connect-s3-source:latest \
+		&& confluent-hub install --no-prompt confluentinc/kafka-connect-s3-source:1.1.1-preview \
 		&& confluent-hub install --no-prompt confluentinc/kafka-connect-sqs:latest \
 		&& confluent-hub install --no-prompt confluentinc/kafka-connect-solace-source:latest \
 		&& confluent-hub install --no-prompt confluentinc/kafka-connect-solace-sink:latest \
@@ -33,7 +33,8 @@ RUN   confluent-hub install --no-prompt confluentinc/kafka-connect-ibmmq:latest 
 		&& confluent-hub install --no-prompt confluentinc/kafka-connect-splunk-source:latest \
 		&& confluent-hub install --no-prompt confluentinc/kafka-connect-hdfs3:latest \
 		&& confluent-hub install --no-prompt confluentinc/kafka-connect-hdfs3-source:latest \
-		&& confluent-hub install --no-prompt confluentinc/kafka-connect-aws-cloudwatch:latest \
+		&& confluent-hub install --no-prompt confluentinc/kafka-connect-aws-cloudwatch-logs:latest \
+		&& confluent-hub install --no-prompt confluentinc/kafka-connect-aws-cloudwatch-metrics:latest \
 		&& confluent-hub install --no-prompt confluentinc/kafka-connect-aws-dynamodb:latest \
 		&& confluent-hub install --no-prompt confluentinc/kafka-connect-aws-lambda:latest \
 		&& confluent-hub install --no-prompt confluentinc/kafka-connect-aws-redshift:latest \
