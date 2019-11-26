@@ -15,6 +15,10 @@
     - [Monitoring](#monitoring)
       - [Control Center](#control-center)
       - [Grafana](#grafana)
+        - [Producer Dashboard](#producer-dashboard)
+        - [Consumer Dashboard](#consumer-dashboard)
+        - [Consumer Lag Dashboard](#consumer-lag-dashboard)
+      - [How to monitor consumer lag](#how-to-monitor-consumer-lag)
     - [Schema Registry](#schema-registry)
     - [KSQL](#ksql)
     - [REST Proxy](#rest-proxy)
@@ -321,7 +325,7 @@ Open a brower and visit http://127.0.0.1:3000 (login/password is `admin/admin`)
 
 You should see 3 dashboards:
 
-1. Producer Dashboard
+##### Producer Dashboard
 
 ![System](./images/33.jpg)
 
@@ -336,17 +340,95 @@ You should see 3 dashboards:
 ![Errors & Retries and Misc](./images/38.jpg)
 
 
-2. Consumer Dashboard
+##### Consumer Dashboard
 
 ![Consumer](./images/39.jpg)
 
-3. Consumer Lag Dashboard
+##### Consumer Lag Dashboard
 
 This demo is using [kafka-lag-exporter](https://github.com/lightbend/kafka-lag-exporter) in order to pull consumer lags metrics from Confluent Cloud cluster and be exported to Prometheus.
 
 ![Consumer Lag 1](./images/40.jpg)
 
 ![Consumer Lag 2](./images/41.jpg)
+
+#### How to monitor consumer lag
+
+You have several ways to monitor consumer lag:
+
+1. [Monitor Consumer Lag via the Confluent Cloud Interface](https://docs.confluent.io/current/cloud/using/monitor-lag.html#monitor-consumer-lag-via-the-ccloud-interface)
+
+![Example](./images/43.jpg)
+
+Note: if the cluster is [VPC peered](https://docs.confluent.io/current/cloud/vpc.html), you need to follow [Configuring Access to the UI Dashboard](https://docs.confluent.io/current/cloud/vpc.html#configuring-access-to-the-ui-dashboard) in order to have access to consumer interface.
+
+2. Monitor Consumer Lag via Control Center connected to your Confluent Cloud cluster
+
+If you have a Control Center connected to your Confluent Cloud cluster, as explained [above](#control-center), then you can see consumer lag:
+
+![Example](./images/44.jpg)
+
+3. [Monitor Offset Lag via Java Client Metrics](https://docs.confluent.io/current/cloud/using/monitor-lag.html#monitor-offset-lag-via-java-client-metrics)
+
+This requires to monitor JMX metric `records-lag-max`from your Java consumer
+
+4. Using kafka-consumer-groups CLI for Confluent Cloud
+
+
+Basically, the --command-config should point to a file that you created which looks like:
+
+You need to create a file with:
+
+```
+ssl.endpoint.identification.algorithm=https
+sasl.mechanism=PLAIN
+request.timeout.ms=20000
+retry.backoff.ms=500
+sasl.jaas.config=org.apache.kafka.common.security.plain.PlainLoginModulerequired username="<API_KEY>" password="<API_SECRET>";
+security.protocol=SASL_SSL
+```
+
+Then you can call `kafka-consumer-groups` command:
+
+```bash
+./kafka-consumer-groups --bootstrap-server ${BOOTSTRAP_SERVERS} --command-config /path/to/your/client.properties --list
+```
+
+```bash
+./kafka-consumer-groups --bootstrap-server ${BOOTSTRAP_SERVERS} --command-config /path/to/your/client.properties --group <your consumer group> --describe
+```
+
+Example:
+
+```bash
+$ kafka-consumer-groups --bootstrap-server $BOOTSTRAP_SERVERS --command-config /tmp/client.properties --list
+
+_confluent-controlcenter-5-3-1-1
+customer-avro-app
+connect-HttpSinkBasicAuth
+simple-stream
+_confluent-controlcenter-5-4-0-1
+_confluent-controlcenter-5-4-0-1-command
+_confluent-controlcenter-5-3-1-1-command
+```
+
+```bash
+$ kafka-consumer-groups --bootstrap-server $BOOTSTRAP_SERVERS --command-config /tmp/client.properties --group customer-avro-app --describe
+
+GROUP             TOPIC           PARTITION  CURRENT-OFFSET  LOG-END-OFFSET  LAG             CONSUMER-ID                                     HOST                                      CLIENT-ID
+customer-avro-app customer-avro   2          0               0               0               consumer-1-c0b84633-8bdf-452c-ab69-387726e4234b 152.227.102.84.rev.sfr.net/84.102.227.152 consumer-1
+customer-avro-app customer-avro   3          1366            1366            0               consumer-1-c0b84633-8bdf-452c-ab69-387726e4234b 152.227.102.84.rev.sfr.net/84.102.227.152 consumer-1
+customer-avro-app customer-avro   1          0               0               0               consumer-1-c0b84633-8bdf-452c-ab69-387726e4234b 152.227.102.84.rev.sfr.net/84.102.227.152 consumer-1
+customer-avro-app customer-avro   5          0               0               0               consumer-1-c0b84633-8bdf-452c-ab69-387726e4234b 152.227.102.84.rev.sfr.net/84.102.227.152 consumer-1
+customer-avro-app customer-avro   0          0               0               0               consumer-1-c0b84633-8bdf-452c-ab69-387726e4234b 152.227.102.84.rev.sfr.net/84.102.227.152 consumer-1
+customer-avro-app customer-avro   4          0               0               0               consumer-1-c0b84633-8bdf-452c-ab69-387726e4234b 152.227.102.84.rev.sfr.net/84.102.227.152 consumer-1
+```
+
+Note: for Confluent customers, you can refer to this Knowledge Base [article](https://support.confluent.io/hc/en-us/articles/360022562212-kafka-consumer-groups-command-for-Confluent-Cloud)
+
+5. Using [kafka-lag-exporter](https://github.com/lightbend/kafka-lag-exporter) and Prometheus
+
+This is explained [above](#consumer-lag-dashboard).
 
 ### Schema Registry
 
