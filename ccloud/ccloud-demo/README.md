@@ -374,12 +374,13 @@ This requires to monitor JMX metric `records-lag-max`from your Java consumer
 
 4. Using kafka-consumer-groups CLI for Confluent Cloud
 
+You need to create a file like this:
 
-Basically, the --command-config should point to a file that you created which looks like:
-
-You need to create a file with:
+Example:
 
 ```
+$ cat client.properties
+
 ssl.endpoint.identification.algorithm=https
 sasl.mechanism=PLAIN
 request.timeout.ms=20000
