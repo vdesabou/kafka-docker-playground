@@ -82,6 +82,7 @@ Playground for Kafka/Confluent Docker experimentations
 * Azure
     * [Blob Storage](connect/connect-azure-blob-storage-sink)
     * [Data Lake Gen1](connect/connect-azure-data-lake-storage-gen1-sink)
+    * [Data Lake Gen2](connect/connect-azure-data-lake-storage-gen2-sink)
 * [Neo4j](connect/connect-neo4j-sink)
 * [Couchbase](connect/connect-couchbase-sink)
 
