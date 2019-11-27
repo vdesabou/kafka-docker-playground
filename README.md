@@ -50,6 +50,7 @@ Playground for Kafka/Confluent Docker experimentations
     * [S3](connect/connect-s3-sink)
     * [Redshift](connect/connect-aws-redshift-sink)
     * [DynamoDB](connect/connect-aws-dynamodb-sink)
+    * [Lambda](connect/connect-aws-lambda-sink)
 * [Elasticsearch](connect/connect-elasticsearch-sink)
 * [HTTP](connect/connect-http-sink)
 * GCP
