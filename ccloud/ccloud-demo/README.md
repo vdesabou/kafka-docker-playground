@@ -1,7 +1,8 @@
 # Confluent Cloud Demo
 
+![Diagram](./images/diagram.png)
+
 - [Confluent Cloud Demo](#confluent-cloud-demo)
-  - [Diagram](#diagram)
   - [Disclaimer](#disclaimer)
   - [Pre-requisites](#pre-requisites)
   - [How to run](#how-to-run)
@@ -26,11 +27,6 @@
     - [Restrict access to Confluent Cloud](#restrict-access-to-confluent-cloud)
     - [Service Account and ACLs](#service-account-and-acls)
   - [📚 Other useful resources](#%f0%9f%93%9a-other-useful-resources)
-
-## Diagram
-
-![Diagram](./images/diagram.png)
-
 
 ## Disclaimer
 
