@@ -1,8 +1,8 @@
 # Confluent Cloud Demo
 
 - [Confluent Cloud Demo](#confluent-cloud-demo)
-  - [Objective](#objective)
-  - [DISCLAIMER](#disclaimer)
+  - [Diagram](#diagram)
+  - [Disclaimer](#disclaimer)
   - [Pre-requisites](#pre-requisites)
   - [How to run](#how-to-run)
   - [What it does](#what-it-does)
@@ -10,8 +10,9 @@
     - [Kafka Streams](#kafka-streams)
     - [Java Consumer](#java-consumer)
     - [Connect](#connect)
-      - [HTTP Sink Connector](#http-sink-connector)
       - [JDBC MySQL Source Connector](#jdbc-mysql-source-connector)
+      - [HTTP Sink Connector](#http-sink-connector)
+      - [Elasticsearch Sink Connector](#elasticsearch-sink-connector)
     - [Monitoring](#monitoring)
       - [Control Center](#control-center)
       - [Grafana](#grafana)
@@ -26,11 +27,12 @@
     - [Service Account and ACLs](#service-account-and-acls)
   - [📚 Other useful resources](#%f0%9f%93%9a-other-useful-resources)
 
-## Objective
+## Diagram
 
-Confluent Cloud project based on [cp-all-in-one-cloud](https://github.com/confluentinc/examples/tree/5.3.1-post/cp-all-in-one-cloud).
+![Diagram](./images/diagram.png)
 
-## DISCLAIMER
+
+## Disclaimer
 
 This demo is for reference purposes only and should be used to see a sample workflow using Confluent Cloud CLI
 
@@ -153,64 +155,6 @@ N.B:
 - [Interceptors](https://docs.confluent.io/current/control-center/installation/clients.html#kconnect-long) for Kafka Connect are set
 
 
-#### HTTP Sink Connector
-
-An HTTP sink connector called `HttpSinkBasicAuth` is created and listening on topic `customer-avro`:
-
-```bash
-$ docker exec -e BOOTSTRAP_SERVERS="$BOOTSTRAP_SERVERS" -e CLOUD_KEY="$CLOUD_KEY" -e CLOUD_SECRET="$CLOUD_SECRET" connect \
-     curl -X POST \
-     -H "Content-Type: application/json" \
-     --data '{
-          "name": "HttpSinkBasicAuth",
-          "config": {
-               "topics": "customer-avro",
-               "tasks.max": "1",
-               "connector.class": "io.confluent.connect.http.HttpSinkConnector",
-               "key.converter": "org.apache.kafka.connect.storage.StringConverter",
-               "value.converter": "org.apache.kafka.connect.storage.StringConverter",
-               "confluent.topic.ssl.endpoint.identification.algorithm" : "https",
-               "confluent.topic.sasl.mechanism" : "PLAIN",
-               "confluent.topic.request.timeout.ms" : "20000",
-               "confluent.topic.bootstrap.servers": "'"$BOOTSTRAP_SERVERS"'",
-               "retry.backoff.ms" : "500",
-               "confluent.topic.sasl.jaas.config" : "org.apache.kafka.common.security.plain.PlainLoginModule required username=\"'$CLOUD_KEY'\" password=\"'$CLOUD_SECRET'\";",
-               "confluent.topic.security.protocol" : "SASL_SSL",
-               "confluent.topic.replication.factor": "1",
-               "http.api.url": "http://http-service-basic-auth:8080/api/messages",
-               "auth.type": "BASIC",
-               "connection.user": "admin",
-               "connection.password": "password"
-          }}' \
-     http://localhost:8083/connectors | jq .
-```
-
-
-Messages are published on HTTP server listening on port `8080`
-
-```bash
-$ curl admin:password@localhost:9080/api/messages | jq .
-```
-
-Example:
-
-```json
-[
-  {
-    "id": 1,
-    "message": "\u0000\u0000\u0001???\u0001\u000eDevante\fHickle\u001c122 Hiram Fork"
-  },
-  {
-    "id": 2,
-    "message": "\u0000\u0000\u0001???\u0001\fErnest\nSipes*4276 Luettgen Squares"
-  },
-  {
-    "id": 3,
-    "message": "\u0000\u0000\u0001???\u0001\fRickey\u0014Williamson*50825 Mozelle Freeway"
-  }
-]
-```
-
 #### JDBC MySQL Source Connector
 
 A JDBC MySQL source connector called `mysql-source` is created and using a MySQL table called `application`:
@@ -266,6 +210,133 @@ Results:
 ```json
 {"id":1,"name":"kafka","team_email":"kafka@apache.org","last_modified":1573054234000}
 {"id":2,"name":"another","team_email":"another@apache.org","last_modified":1573054378000}
+```
+
+#### HTTP Sink Connector
+
+An HTTP sink connector called `http-sink` is created and listening on topic `mysql-application`:
+
+```bash
+$ docker exec -e BOOTSTRAP_SERVERS="$BOOTSTRAP_SERVERS" -e CLOUD_KEY="$CLOUD_KEY" -e CLOUD_SECRET="$CLOUD_SECRET" connect \
+     curl -X POST \
+     -H "Content-Type: application/json" \
+     --data '{
+          "name": "http-sink",
+          "config": {
+               "topics": "mysql-application",
+               "tasks.max": "1",
+               "connector.class": "io.confluent.connect.http.HttpSinkConnector",
+               "key.converter": "org.apache.kafka.connect.storage.StringConverter",
+               "value.converter": "org.apache.kafka.connect.storage.StringConverter",
+               "confluent.topic.ssl.endpoint.identification.algorithm" : "https",
+               "confluent.topic.sasl.mechanism" : "PLAIN",
+               "confluent.topic.request.timeout.ms" : "20000",
+               "confluent.topic.bootstrap.servers": "'"$BOOTSTRAP_SERVERS"'",
+               "retry.backoff.ms" : "500",
+               "confluent.topic.sasl.jaas.config" : "org.apache.kafka.common.security.plain.PlainLoginModule required username=\"'$CLOUD_KEY'\" password=\"'$CLOUD_SECRET'\";",
+               "confluent.topic.security.protocol" : "SASL_SSL",
+               "confluent.topic.replication.factor": "1",
+               "http.api.url": "http://http-service-basic-auth:8080/api/messages",
+               "auth.type": "BASIC",
+               "connection.user": "admin",
+               "connection.password": "password"
+          }}' \
+     http://localhost:8083/connectors | jq .
+```
+
+
+Messages are published on HTTP server listening on port `8080`
+
+```bash
+$ curl admin:password@localhost:9080/api/messages | jq .
+```
+
+Example:
+
+```json
+[
+  {
+    "id": 1,
+    "message": "\u0000\u0000\u0000\u0000\u0002\u0002\nkafka kafka@apache.org?????["
+  },
+  {
+    "id": 2,
+    "message": "\u0000\u0000\u0000\u0000\u0002\u0004\u000eanother$another@apache.org?????["
+  }
+]
+```
+
+#### Elasticsearch Sink Connector
+
+An Elasticsearch sink connector called `elasticsearch-sink` is created and listening on topic `mysql-application`:
+
+```bash
+$ docker exec connect \
+     curl -X POST \
+     -H "Content-Type: application/json" \
+     --data '{
+        "name": "elasticsearch-sink",
+        "config": {
+          "connector.class": "io.confluent.connect.elasticsearch.ElasticsearchSinkConnector",
+          "tasks.max": "1",
+          "topics": "mysql-application",
+          "key.ignore": "true",
+          "connection.url": "http://elasticsearch:9200",
+          "type.name": "kafka-connect",
+          "name": "elasticsearch-sink"
+          }}' \
+     http://localhost:8083/connectors | jq .
+```
+
+We check that the data is available in Elasticsearch using:
+
+```bash
+$ curl -XGET 'http://localhost:9200/mysql-application/_search?pretty'
+```
+
+Result:
+
+```json
+{
+  "took" : 296,
+  "timed_out" : false,
+  "_shards" : {
+    "total" : 5,
+    "successful" : 5,
+    "skipped" : 0,
+    "failed" : 0
+  },
+  "hits" : {
+    "total" : 2,
+    "max_score" : 1.0,
+    "hits" : [
+      {
+        "_index" : "mysql-application",
+        "_type" : "kafka-connect",
+        "_id" : "mysql-application+3+0",
+        "_score" : 1.0,
+        "_source" : {
+          "id" : 2,
+          "name" : "another",
+          "team_email" : "another@apache.org",
+          "last_modified" : 1574932446000
+        }
+      },
+      {
+        "_index" : "mysql-application",
+        "_type" : "kafka-connect",
+        "_id" : "mysql-application+4+0",
+        "_score" : 1.0,
+        "_source" : {
+          "id" : 1,
+          "name" : "kafka",
+          "team_email" : "kafka@apache.org",
+          "last_modified" : 1574932363000
+        }
+      }
+    ]
+  }
+}
 ```
 
 ### Monitoring
@@ -406,7 +477,7 @@ $ kafka-consumer-groups --bootstrap-server $BOOTSTRAP_SERVERS --command-config /
 
 _confluent-controlcenter-5-3-1-1
 customer-avro-app
-connect-HttpSinkBasicAuth
+connect-http-sink
 simple-stream
 _confluent-controlcenter-5-4-0-1
 _confluent-controlcenter-5-4-0-1-command
@@ -660,6 +731,8 @@ $ ccloud api-key delete <API_KEY_SA>
 ```
 
 ## 📚 Other useful resources
+
+* [cp-all-in-one-cloud](https://github.com/confluentinc/examples/tree/5.3.1-post/cp-all-in-one-cloud)
 
 * [Using Confluent CLI with Avro And Confluent Cloud Schema Registry](https://github.com/confluentinc/examples/tree/5.3.1-post/clients/cloud/confluent-cli#example-2-avro-and-confluent-cloud-schema-registry)
 

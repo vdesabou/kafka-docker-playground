@@ -71,39 +71,6 @@ echo "-------------------------------------"
 echo "Connector examples"
 echo "-------------------------------------"
 
-echo "Creating HttpSinkBasicAuth connector"
-docker exec -e BOOTSTRAP_SERVERS="$BOOTSTRAP_SERVERS" -e CLOUD_KEY="$CLOUD_KEY" -e CLOUD_SECRET="$CLOUD_SECRET" connect \
-     curl -X POST \
-     -H "Content-Type: application/json" \
-     --data '{
-          "name": "HttpSinkBasicAuth",
-          "config": {
-               "topics": "customer-avro",
-               "tasks.max": "1",
-               "connector.class": "io.confluent.connect.http.HttpSinkConnector",
-               "key.converter": "org.apache.kafka.connect.storage.StringConverter",
-               "value.converter": "org.apache.kafka.connect.storage.StringConverter",
-               "confluent.topic.ssl.endpoint.identification.algorithm" : "https",
-               "confluent.topic.sasl.mechanism" : "PLAIN",
-               "confluent.topic.request.timeout.ms" : "20000",
-               "confluent.topic.bootstrap.servers": "'"$BOOTSTRAP_SERVERS"'",
-               "retry.backoff.ms" : "500",
-               "confluent.topic.sasl.jaas.config" : "org.apache.kafka.common.security.plain.PlainLoginModule required username=\"'$CLOUD_KEY'\" password=\"'$CLOUD_SECRET'\";",
-               "confluent.topic.security.protocol" : "SASL_SSL",
-               "confluent.topic.replication.factor": "1",
-               "http.api.url": "http://http-service-basic-auth:8080/api/messages",
-               "auth.type": "BASIC",
-               "connection.user": "admin",
-               "connection.password": "password"
-          }}' \
-     http://localhost:8083/connectors | jq .
-
-
-sleep 20
-
-echo "Confirm that the data was sent to the HTTP endpoint."
-curl admin:password@localhost:9080/api/messages | jq .
-
 set +e
 create_topic mysql-application
 set -e
@@ -153,6 +120,61 @@ else
      # using https://github.com/confluentinc/examples/tree/5.3.1-post/clients/cloud/confluent-cli#example-2-avro-and-confluent-cloud-schema-registry
      confluent local consume mysql-application -- --cloud --value-format avro --property schema.registry.url=$SCHEMA_REGISTRY_URL --property basic.auth.credentials.source=USER_INFO --property schema.registry.basic.auth.user.info="$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO" --from-beginning --max-messages 2
 fi
+
+echo "Creating http-sink connector"
+docker exec -e BOOTSTRAP_SERVERS="$BOOTSTRAP_SERVERS" -e CLOUD_KEY="$CLOUD_KEY" -e CLOUD_SECRET="$CLOUD_SECRET" connect \
+     curl -X POST \
+     -H "Content-Type: application/json" \
+     --data '{
+          "name": "http-sink",
+          "config": {
+               "topics": "mysql-application",
+               "tasks.max": "1",
+               "connector.class": "io.confluent.connect.http.HttpSinkConnector",
+               "key.converter": "org.apache.kafka.connect.storage.StringConverter",
+               "value.converter": "org.apache.kafka.connect.storage.StringConverter",
+               "confluent.topic.ssl.endpoint.identification.algorithm" : "https",
+               "confluent.topic.sasl.mechanism" : "PLAIN",
+               "confluent.topic.request.timeout.ms" : "20000",
+               "confluent.topic.bootstrap.servers": "'"$BOOTSTRAP_SERVERS"'",
+               "retry.backoff.ms" : "500",
+               "confluent.topic.sasl.jaas.config" : "org.apache.kafka.common.security.plain.PlainLoginModule required username=\"'$CLOUD_KEY'\" password=\"'$CLOUD_SECRET'\";",
+               "confluent.topic.security.protocol" : "SASL_SSL",
+               "confluent.topic.replication.factor": "1",
+               "http.api.url": "http://http-service-basic-auth:8080/api/messages",
+               "auth.type": "BASIC",
+               "connection.user": "admin",
+               "connection.password": "password"
+          }}' \
+     http://localhost:8083/connectors | jq .
+
+sleep 5
+
+echo "Confirm that the data was sent to the HTTP endpoint."
+curl admin:password@localhost:9080/api/messages | jq .
+
+echo "Creating Elasticsearch Sink connector"
+docker exec connect \
+     curl -X POST \
+     -H "Content-Type: application/json" \
+     --data '{
+        "name": "elasticsearch-sink",
+        "config": {
+          "connector.class": "io.confluent.connect.elasticsearch.ElasticsearchSinkConnector",
+          "tasks.max": "1",
+          "topics": "mysql-application",
+          "key.ignore": "true",
+          "connection.url": "http://elasticsearch:9200",
+          "type.name": "kafka-connect",
+          "name": "elasticsearch-sink"
+          }}' \
+     http://localhost:8083/connectors | jq .
+
+sleep 10
+
+echo "Check that the data is available in Elasticsearch"
+
+curl -XGET 'http://localhost:9200/mysql-application/_search?pretty'
 
 echo "Now we will test Service Account and ACLs"
 check_if_continue
