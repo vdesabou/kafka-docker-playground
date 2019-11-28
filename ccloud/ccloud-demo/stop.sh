@@ -16,7 +16,9 @@ delete_topic mysql-application
 
 echo "Delete connector mysql-source"
 curl -X DELETE localhost:8083/connectors/mysql-source
-echo "Delete connector HttpSinkBasicAuth"
-curl -X DELETE localhost:8083/connectors/HttpSinkBasicAuth
+echo "Delete connector http-sink"
+curl -X DELETE localhost:8083/connectors/http-sink
+echo "Delete connector elasticsearch-sink"
+curl -X DELETE localhost:8083/connectors/elasticsearch-sink
 
 docker-compose down -v
