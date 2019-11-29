@@ -95,6 +95,7 @@ Playground for Kafka/Confluent Docker experimentations
 ## 🔐 Deployments
 
 * [PLAINTEXT](environment/plaintext): no security
+* [SASL_PLAIN](environment/sasl-plain): no SSL encryption / SASL/PLAIN authentication
 * [SASL_SSL](environment/sasl-ssl): SSL encryption / SASL_SSL or 2 way SSL authentication
 * [Kerberos](environment/kerberos): no SSL encryption / Kerberos GSSAPI authentication
 * [SSL_Kerberos](environment/ssl_kerberos) SSL encryption / Kerberos GSSAPI authentication
