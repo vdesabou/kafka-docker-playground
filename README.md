@@ -86,6 +86,7 @@ Playground for Kafka/Confluent Docker experimentations
     * [Data Lake Gen2](connect/connect-azure-data-lake-storage-gen2-sink)
 * [Neo4j](connect/connect-neo4j-sink)
 * [Couchbase](connect/connect-couchbase-sink)
+* [SFTP](connect/connect-sftp-sink)
 
 ## ☁️ Confluent Cloud:
 
