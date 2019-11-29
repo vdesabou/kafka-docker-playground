@@ -69,8 +69,8 @@ services:
             CONFLUENT_METRICS_REPORTER_SASL_MECHANISM: PLAIN
             CONFLUENT_METRICS_REPORTER_SECURITY_PROTOCOL: SASL_PLAINTEXT
             CONFLUENT_METRICS_REPORTER_SASL_JAAS_CONFIG: "org.apache.kafka.common.security.plain.PlainLoginModule required \
-                username=\"broker\" \
-                password=\"broker\";"
+                username=\"client\" \
+                password=\"client-secret\";"
             CONFLUENT_METRICS_ENABLE: 'true'
             KAFKA_SASL_ENABLED_MECHANISMS: PLAIN
             KAFKA_SASL_MECHANISM_INTER_BROKER_PROTOCOL: PLAIN
@@ -81,7 +81,7 @@ services:
             KAFKA_ZOOKEEPER_SET_ACL: "true"
             KAFKA_ALLOW_EVERYONE_IF_NO_ACL_FOUND: "false"
             # Set Kafka broker user as super user (alternatively, set ACLs before starting brokers)
-            KAFKA_SUPER_USERS: User:broker;User:schemaregistry;User:controlcenter
+            KAFKA_SUPER_USERS: User:broker;User:schemaregistry;User:controlcenter;User:client
             KAFKA_OPTS: "-Djava.security.auth.login.config=/etc/kafka/kafka_server_jaas.conf"
 
             # LDAP provider URL
@@ -149,35 +149,35 @@ services:
             CONNECT_PRODUCER_INTERCEPTOR_CLASSES: "io.confluent.monitoring.clients.interceptor.MonitoringProducerInterceptor"
             CONNECT_PRODUCER_CONFLUENT_MONITORING_INTERCEPTOR_SECURITY_PROTOCOL: SASL_PLAINTEXT
             CONNECT_PRODUCER_CONFLUENT_MONITORING_INTERCEPTOR_SASL_JAAS_CONFIG: "org.apache.kafka.common.security.plain.PlainLoginModule required \
-                username=\"broker\" \
-                password=\"broker\";"
+                username=\"client\" \
+                password=\"client-secret\";"
             CONNECT_PRODUCER_CONFLUENT_MONITORING_INTERCEPTOR_SASL_MECHANISM: PLAIN
             # consumer
             CONNECT_CONSUMER_INTERCEPTOR_CLASSES: "io.confluent.monitoring.clients.interceptor.MonitoringConsumerInterceptor"
             CONNECT_CONSUMER_CONFLUENT_MONITORING_INTERCEPTOR_SECURITY_PROTOCOL: SASL_PLAINTEXT
             CONNECT_CONSUMER_CONFLUENT_MONITORING_INTERCEPTOR_SASL_JAAS_CONFIG: "org.apache.kafka.common.security.plain.PlainLoginModule required \
-                username=\"broker\" \
-                password=\"broker\";"
+                username=\"client\" \
+                password=\"client-secret\";"
             CONNECT_CONSUMER_CONFLUENT_MONITORING_INTERCEPTOR_SASL_MECHANISM: PLAIN
             # Configure the Connect workers to use SASL/PLAIN.
             CONNECT_SASL_MECHANISM: PLAIN
             CONNECT_SECURITY_PROTOCOL: SASL_PLAINTEXT
             # JAAS
             CONNECT_SASL_JAAS_CONFIG: "org.apache.kafka.common.security.plain.PlainLoginModule required \
-                username=\"broker\" \
-                password=\"broker\";"
+                username=\"client\" \
+                password=\"client-secret\";"
             # producer
             CONNECT_PRODUCER_SASL_MECHANISM: PLAIN
             CONNECT_PRODUCER_SECURITY_PROTOCOL: SASL_PLAINTEXT
             CONNECT_PRODUCER_SASL_JAAS_CONFIG: "org.apache.kafka.common.security.plain.PlainLoginModule required \
-                username=\"broker\" \
-                password=\"broker\";"
+                username=\"client\" \
+                password=\"client-secret\";"
             # consumer
             CONNECT_CONSUMER_SASL_MECHANISM: PLAIN
             CONNECT_CONSUMER_SECURITY_PROTOCOL: SASL_PLAINTEXT
             CONNECT_CONSUMER_SASL_JAAS_CONFIG: "org.apache.kafka.common.security.plain.PlainLoginModule required \
-                username=\"broker\" \
-                password=\"broker\";"
+                username=\"client\" \
+                password=\"client-secret\";"
 
     schema-registry:
         image: confluentinc/cp-schema-registry:5.3.1
@@ -197,8 +197,8 @@ services:
             SCHEMA_REGISTRY_KAFKASTORE_SECURITY_PROTOCOL: SASL_PLAINTEXT
             SCHEMA_REGISTRY_KAFKASTORE_SASL_MECHANISM: PLAIN
             SCHEMA_REGISTRY_KAFKASTORE_SASL_JAAS_CONFIG: "org.apache.kafka.common.security.plain.PlainLoginModule required \
-                username=\"broker\" \
-                password=\"broker\";"
+                username=\"client\" \
+                password=\"client-secret\";"
 
     control-center:
         image: confluentinc/cp-enterprise-control-center:5.3.1
@@ -230,6 +230,6 @@ services:
             CONTROL_CENTER_STREAMS_CONSUMER_REQUEST_TIMEOUT_MS: "960032"
             CONTROL_CENTER_STREAMS_SECURITY_PROTOCOL: SASL_PLAINTEXT
             CONTROL_CENTER_STREAMS_SASL_JAAS_CONFIG: "org.apache.kafka.common.security.plain.PlainLoginModule required \
-                username=\"broker\" \
-                password=\"broker\";"
+                username=\"client\" \
+                password=\"client-secret\";"
             CONTROL_CENTER_STREAMS_SASL_MECHANISM: PLAIN
