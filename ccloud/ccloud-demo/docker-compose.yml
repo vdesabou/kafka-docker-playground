@@ -295,9 +295,7 @@ services:
     image: lightbend/kafka-lag-exporter:0.5.5
     hostname: kafka-lag-exporter
     container_name: kafka-lag-exporter
-    environment:
-      config.file: /opt/docker/conf/application.conf
-      logback.configurationFile: /opt/docker/conf/logback.xml
+    restart: always
     ports:
       - 9999:9999
     volumes:
