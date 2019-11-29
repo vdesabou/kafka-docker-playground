@@ -40,6 +40,7 @@ Playground for Kafka/Confluent Docker experimentations
   * [Pub/Sub](connect/connect-gcp-pubsub-source)
   * [GCS](connect/connect-gcs-source)
 * [Couchbase](connect/connect-couchbase-source)
+* [SFTP](connect/connect-sftp-source)
 
 ### ↗️ Sink
 
