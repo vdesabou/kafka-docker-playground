@@ -20,6 +20,39 @@ Simply run:
 $ ./sftp-source-csv.sh
 ```
 
+* With CSV (with schema)
+
+Simply run:
+
+```bash
+$ ./sftp-source-csv-with-schema.sh
+```
+
+* With TSV
+
+Simply run:
+
+```bash
+$ ./sftp-source-tsv.sh
+```
+
+* With JSON (no schema)
+
+Simply run:
+
+```bash
+$ ./sftp-source-json.sh
+```
+
+* With JSON (with schema)
+
+Simply run:
+
+```bash
+$ ./sftp-source-json-with-schema.sh
+```
+
+
 ## Details of what the script is doing
 
 Creating CSV SFTP Source connector
