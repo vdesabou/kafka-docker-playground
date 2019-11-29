@@ -56,3 +56,5 @@ RUN   confluent-hub install --no-prompt confluentinc/kafka-connect-ibmmq:latest 
 		&& unzip kafka-connect-couchbase-3.4.5.zip \
 		&& mv kafka-connect-couchbase-3.4.5 /usr/share/confluent-hub-components/kafka-connect-couchbase \
 		&& confluent-hub install --no-prompt confluentinc/connect-transforms:latest \
+		&& confluent-hub install --no-prompt confluentinc/kafka-connect-sftp:latest \
+		&& confluent-hub install --no-prompt confluentinc/kafka-connect-hbase:latest \
