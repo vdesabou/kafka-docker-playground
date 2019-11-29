@@ -31,3 +31,4 @@ connect/connect-spool-dir-source/data
 mycommand.sh
 ccloud/ccloud-demo/kafka-lag-exporter/application.conf
 connect/connect-sftp-sink/upload/
+connect/connect-sftp-source/upload/
