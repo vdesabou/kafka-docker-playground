@@ -74,7 +74,7 @@ services:
 
   connect:
     build:
-      context: ..
+      context: ../..
       dockerfile: Dockerfile-Connector-Hub
     container_name: connect
     ports:
