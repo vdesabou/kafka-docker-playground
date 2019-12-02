@@ -2,7 +2,7 @@
 
 ## Description
 
-This is a deployment with no security:
+This is a deployment with no encryption but with SASL/PLAIN authentication:
 
 * 1 zookeeper
 * 1 broker
