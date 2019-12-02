@@ -81,7 +81,7 @@ services:
             KAFKA_ZOOKEEPER_SET_ACL: "true"
             KAFKA_ALLOW_EVERYONE_IF_NO_ACL_FOUND: "false"
             # Set Kafka broker user as super user (alternatively, set ACLs before starting brokers)
-            KAFKA_SUPER_USERS: User:broker;User:schemaregistry;User:controlcenter;User:client
+            KAFKA_SUPER_USERS: User:broker;User:client
             KAFKA_OPTS: "-Djava.security.auth.login.config=/etc/kafka/kafka_server_jaas.conf"
 
             # LDAP provider URL
