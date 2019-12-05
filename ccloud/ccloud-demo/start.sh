@@ -170,7 +170,7 @@ docker exec connect \
           }}' \
      http://localhost:8083/connectors | jq .
 
-sleep 10
+sleep 20
 
 echo "Check that the data is available in Elasticsearch"
 
