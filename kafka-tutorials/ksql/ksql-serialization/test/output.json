@@ -1,0 +1,31 @@
+{
+	"outputs": [
+	  {
+		"topic": "avro-movies",
+		"key": null,
+		"value": {
+		  "TITLE": "Lethal Weapon",
+		  "movie_id": 1,
+		  "release_year": 1992
+		}
+	  },
+	  {
+		"topic": "avro-movies",
+		"key": null,
+		"value": {
+		  "TITLE": "Die Hard",
+		  "movie_id": 2,
+		  "release_year": 1988
+		}
+	  },
+	  {
+		"topic": "avro-movies",
+		"key": null,
+		"value": {
+		  "TITLE": "Predator",
+		  "movie_id": 3,
+		  "release_year": 1997
+		}
+	  }
+	]
+  }

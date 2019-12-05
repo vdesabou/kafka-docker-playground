@@ -94,6 +94,8 @@ Playground for Kafka/Confluent Docker experimentations
 * [Confluent Cloud Demo](ccloud/ccloud-demo)
 
 
+
+
 ## 🔐 Deployments
 
 * [PLAINTEXT](environment/plaintext): no security
@@ -103,6 +105,48 @@ Playground for Kafka/Confluent Docker experimentations
 * [SSL_Kerberos](environment/ssl_kerberos) SSL encryption / Kerberos GSSAPI authentication
 * [LDAP Authorizer with SASL/SCRAM-SHA-256](environment/ldap_authorizer_sasl_scram) no SSL encryption
 * [LDAP Authorizer with SASL/PLAIN](environment/ldap_authorizer_sasl_plain) no SSL encryption
+
+## 🎓 Kafka Tutorials
+
+This is just the excellent examples in [Kafka tutorial](https://kafka-tutorials.confluent.io) but in Docker version for ease of use.
+
+* Apply a function to data
+   * KSQL
+     * [Transform a stream of events](kafka-tutorials/ksql/transform-stream)
+     * [Filter a stream of events](kafka-tutorials/ksql/filter-events)
+     * [Rekey a stream with a value](kafka-tutorials/ksql/rekey-a-stream)
+     * [Rekey a stream with a function](kafka-tutorials/ksql/rekey-with-function)
+     * [Convert a stream's serialization format](kafka-tutorials/ksql/ksql-serialization)
+     * [Split a stream of events into substreams](kafka-tutorials/ksql/split-stream)
+     * [Merge many streams into one stream](kafka-tutorials/ksql/merge-streams)
+  * Kafka Streams
+     * [Transform a stream of events](kafka-tutorials/ksql/transform-stream)
+     * [Filter a stream of events](kafka-tutorials/kafka-streams/filter-events)
+     * [Convert a stream's serialization format](kafka-tutorials/kafka-streams/ksql-serialization)
+     * [Split a stream of events into substreams](kafka-tutorials/kafka-streams/split-stream)
+     * [Merge many streams into one stream](kafka-tutorials/kafka-streams/merge-streams)
+     * [Finding distinct events](kafka-tutorials/kafka-streams/distinct-events)
+* Aggregate data
+   * KSQL
+     * [Count a stream of events](kafka-tutorials/ksql/aggregate-count)
+     * [Sum a stream of events](kafka-tutorials/ksql/aggregate-sum)
+     * [Find the min/max in a stream of events](kafka-tutorials/ksql/aggregate-minmax)
+  * Kafka Streams
+     * [Sum a stream of events](kafka-tutorials/kafka-streams/aggregate-sum)
+* Join data
+   * KSQL
+     * [Join a stream and a table together](kafka-tutorials/ksql/join-stream-and-table)
+     * [Join a stream and a stream together](kafka-tutorials/ksql/join-stream-and-stream)
+     * [Join a table and a table together](kafka-tutorials/ksql/join-table-and-table)
+  * Kafka Streams
+     * [Join a stream and a table together](kafka-tutorials/kafka-streams/join-stream-and-table)
+* Collect data over time
+   * KSQL
+     * [Create tumbling windows](kafka-tutorials/ksql/tumbling-windows)
+  * Kafka Streams
+     * [Create tumbling windows](kafka-tutorials/kafka-streams/tumbling-windows)
+
+
 
 ## Other:
 
