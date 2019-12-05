@@ -93,7 +93,13 @@ Playground for Kafka/Confluent Docker experimentations
 
 * [Confluent Cloud Demo](ccloud/ccloud-demo)
 
-![Diagram](./ccloud/ccloud-demo/images/diagram.png =250x)
+  * How to connect your components to Confluent Cloud
+  * How to monitor your Confluent Cloud cluster
+  * How to restrict access
+  * etc...
+
+![Diagram](./ccloud/ccloud-demo/images/diagram.png)
+
 
 ## 🔐 Deployments
 
