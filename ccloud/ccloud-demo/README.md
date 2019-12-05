@@ -720,7 +720,6 @@ Produced record to topic demo-topic-1 partition [0] @ offset 9
 Delete ACLs
 
 ```bash
-$ ccloud kafka acl delete --allow --service-account-id 21280 --operation CREATE --topic demo-topic-1
 $ ccloud kafka acl delete --allow --service-account-id 21280 --operation WRITE --topic demo-topic-1
 $ ccloud service-account delete 21280
 $ ccloud api-key delete <API_KEY_SA>

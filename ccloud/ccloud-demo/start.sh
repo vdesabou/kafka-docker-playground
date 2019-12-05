@@ -233,6 +233,7 @@ cat $CLIENT_CONFIG
 POM=./producer-acl/pom.xml
 TOPIC1="demo-topic-1"
 set +e
+create_topic $TOPIC1
 
 echo -e "\n# By default, no ACLs are configured"
 echo "ccloud kafka acl list --service-account-id $SERVICE_ACCOUNT_ID"
@@ -255,9 +256,7 @@ else
 fi
 
 echo -e "\n# Create ACLs for the service account"
-echo "ccloud kafka acl create --allow --service-account-id $SERVICE_ACCOUNT_ID --operation CREATE --topic $TOPIC1"
 echo "ccloud kafka acl create --allow --service-account-id $SERVICE_ACCOUNT_ID --operation WRITE --topic $TOPIC1"
-ccloud kafka acl create --allow --service-account-id $SERVICE_ACCOUNT_ID --operation CREATE --topic $TOPIC1
 ccloud kafka acl create --allow --service-account-id $SERVICE_ACCOUNT_ID --operation WRITE --topic $TOPIC1
 echo "ccloud kafka acl list --service-account-id $SERVICE_ACCOUNT_ID"
 ccloud kafka acl list --service-account-id $SERVICE_ACCOUNT_ID
@@ -281,9 +280,7 @@ cat $LOG2
 ##################################################
 
 echo -e "\n# Delete ACLs"
-echo "ccloud kafka acl delete --allow --service-account-id $SERVICE_ACCOUNT_ID --operation CREATE --topic $TOPIC1"
 echo "ccloud kafka acl delete --allow --service-account-id $SERVICE_ACCOUNT_ID --operation WRITE --topic $TOPIC1"
-ccloud kafka acl delete --allow --service-account-id $SERVICE_ACCOUNT_ID --operation CREATE --topic $TOPIC1
 ccloud kafka acl delete --allow --service-account-id $SERVICE_ACCOUNT_ID --operation WRITE --topic $TOPIC1
 
 echo "ccloud service-account delete $SERVICE_ACCOUNT_ID"
