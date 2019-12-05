@@ -93,8 +93,7 @@ Playground for Kafka/Confluent Docker experimentations
 
 * [Confluent Cloud Demo](ccloud/ccloud-demo)
 
-
-
+![Diagram](./ccloud/ccloud-demo/images/diagram.png =250x)
 
 ## 🔐 Deployments
 
