@@ -1,0 +1,49 @@
+{
+	"outputs": [
+	  {
+		"topic": "SHIPPED_ORDERS",
+		"timestamp": 1554056019000,
+		"key": 1,
+		"value": {
+		  "ORDER_ID": 1,
+		  "ORDER_TS": "2019-03-29 06:01:18",
+		  "TOTAL_AMOUNT": 133548.84,
+		  "CUSTOMER_NAME": "Ricardo Ferreira",
+		  "SHIPMENT_ID": "ship-ch83360",
+		  "SHIPMENT_TS": "2019-03-31 18:13:39",
+		  "WAREHOUSE": "UPS",
+		  "SHIP_TIME": 3612
+		}
+	  },
+	  {
+		"topic": "SHIPPED_ORDERS",
+		"timestamp": 1553997853000,
+		"key": 2,
+		"value": {
+		  "ORDER_ID": 2,
+		  "ORDER_TS": "2019-03-29 17:02:20",
+		  "TOTAL_AMOUNT": 164839.31,
+		  "CUSTOMER_NAME": "Tim Berglund",
+		  "SHIPMENT_ID": "ship-xf72808",
+		  "SHIPMENT_TS": "2019-03-31 02:04:13",
+		  "WAREHOUSE": "UPS",
+		  "SHIP_TIME": 1981
+		}
+	  },
+	  {
+		"topic": "SHIPPED_ORDERS",
+		"timestamp": 1554065229000,
+		"key": 3,
+		"value": {
+		  "ORDER_ID": 3,
+		  "ORDER_TS": "2019-03-29 13:44:10",
+		  "TOTAL_AMOUNT": 90427.66,
+		  "CUSTOMER_NAME": "Robin Moffatt",
+		  "SHIPMENT_ID": "ship-kr47454",
+		  "SHIPMENT_TS": "2019-03-31 20:47:09",
+		  "WAREHOUSE": "DHL",
+		  "SHIP_TIME": 3302
+		}
+	  }
+	]
+  }

@@ -1,0 +1,180 @@
+{
+	"outputs": [
+	  {
+		"topic": "rating_count",
+		"key": "Die Hard",
+		"window": {
+		  "start": 1562630400000,
+		  "end": 1562652000000,
+		  "type": "time"
+		},
+		"value": {
+		  "TITLE": "Die Hard",
+		  "RATING_COUNT": 1,
+		  "WINDOW_START": 1562630400000,
+		  "WINDOW_END": 1562652000000
+		},
+		"timestamp": 1562634000000
+	  },
+	  {
+		"topic": "rating_count",
+		"key": "Die Hard",
+		"window": {
+		  "start": 1562630400000,
+		  "end": 1562652000000,
+		  "type": "time"
+		},
+		"value": {
+		  "TITLE": "Die Hard",
+		  "RATING_COUNT": 2,
+		  "WINDOW_START": 1562630400000,
+		  "WINDOW_END": 1562652000000
+		},
+		"timestamp": 1562648400000
+	  },
+	  {
+		"topic": "rating_count",
+		"key": "Die Hard",
+		"window": {
+		  "start": 1562652000000,
+		  "end": 1562673600000,
+		  "type": "time"
+		},
+		"value": {
+		  "TITLE": "Die Hard",
+		  "RATING_COUNT": 1,
+		  "WINDOW_START": 1562652000000,
+		  "WINDOW_END": 1562673600000
+		},
+		"timestamp": 1562655600000
+	  },
+	  {
+		"topic": "rating_count",
+		"key": "Tree of Life",
+		"window": {
+		  "start": 1562652000000,
+		  "end": 1562673600000,
+		  "type": "time"
+		},
+		"value": {
+		  "TITLE": "Tree of Life",
+		  "RATING_COUNT": 1,
+		  "WINDOW_START": 1562652000000,
+		  "WINDOW_END": 1562673600000
+		},
+		"timestamp": 1562662800000
+	  },
+	  {
+		"topic": "rating_count",
+		"key": "Tree of Life",
+		"window": {
+		  "start": 1562652000000,
+		  "end": 1562673600000,
+		  "type": "time"
+		},
+		"value": {
+		  "TITLE": "Tree of Life",
+		  "RATING_COUNT": 2,
+		  "WINDOW_START": 1562652000000,
+		  "WINDOW_END": 1562673600000
+		},
+		"timestamp": 1562662800000
+	  },
+	  {
+		"topic": "rating_count",
+		"key": "A Walk in the Clouds",
+		"window": {
+		  "start": 1562673600000,
+		  "end": 1562695200000,
+		  "type": "time"
+		},
+		"value": {
+		  "TITLE": "A Walk in the Clouds",
+		  "RATING_COUNT": 1,
+		  "WINDOW_START": 1562673600000,
+		  "WINDOW_END": 1562695200000
+		},
+		"timestamp": 1562673600000
+	  },
+	  {
+		"topic": "rating_count",
+		"key": "A Walk in the Clouds",
+		"window": {
+		  "start": 1562673600000,
+		  "end": 1562695200000,
+		  "type": "time"
+		},
+		"value": {
+		  "TITLE": "A Walk in the Clouds",
+		  "RATING_COUNT": 2,
+		  "WINDOW_START": 1562673600000,
+		  "WINDOW_END": 1562695200000
+		},
+		"timestamp": 1562684400000
+	  },
+	  {
+		"topic": "rating_count",
+		"key": "A Walk in the Clouds",
+		"window": {
+		  "start": 1562695200000,
+		  "end": 1562716800000,
+		  "type": "time"
+		},
+		"value": {
+		  "TITLE": "A Walk in the Clouds",
+		  "RATING_COUNT": 1,
+		  "WINDOW_START": 1562695200000,
+		  "WINDOW_END": 1562716800000
+		},
+		"timestamp": 1562709600000
+	  },
+	  {
+		"topic": "rating_count",
+		"key": "The Big Lebowski",
+		"window": {
+		  "start": 1562630400000,
+		  "end": 1562652000000,
+		  "type": "time"
+		},
+		"value": {
+		  "TITLE": "The Big Lebowski",
+		  "RATING_COUNT": 1,
+		  "WINDOW_START": 1562630400000,
+		  "WINDOW_END": 1562652000000
+		},
+		"timestamp": 1562648400000
+	  },
+	  {
+		"topic": "rating_count",
+		"key": "The Big Lebowski",
+		"window": {
+		  "start": 1562630400000,
+		  "end": 1562652000000,
+		  "type": "time"
+		},
+		"value": {
+		  "TITLE": "The Big Lebowski",
+		  "RATING_COUNT": 2,
+		  "WINDOW_START": 1562630400000,
+		  "WINDOW_END": 1562652000000
+		},
+		"timestamp": 1562648400000
+	  },
+	  {
+		"topic": "rating_count",
+		"key": "Super Mario Bros.",
+		"window": {
+		  "start": 1562695200000,
+		  "end": 1562716800000,
+		  "type": "time"
+		},
+		"value": {
+		  "TITLE": "Super Mario Bros.",
+		  "RATING_COUNT": 1,
+		  "WINDOW_START": 1562695200000,
+		  "WINDOW_END": 1562716800000
+		},
+		"timestamp": 1562695200000
+	  }
+	]
+  }
