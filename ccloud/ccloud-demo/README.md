@@ -14,6 +14,9 @@
       - [JDBC MySQL Source Connector](#jdbc-mysql-source-connector)
       - [HTTP Sink Connector](#http-sink-connector)
       - [Elasticsearch Sink Connector](#elasticsearch-sink-connector)
+    - [Schema Registry](#schema-registry)
+    - [KSQL](#ksql)
+    - [REST Proxy](#rest-proxy)
     - [Monitoring](#monitoring)
       - [Control Center](#control-center)
       - [Grafana](#grafana)
@@ -21,9 +24,6 @@
         - [Consumer Dashboard](#consumer-dashboard)
         - [Consumer Lag Dashboard](#consumer-lag-dashboard)
       - [How to monitor consumer lag](#how-to-monitor-consumer-lag)
-    - [Schema Registry](#schema-registry)
-    - [KSQL](#ksql)
-    - [REST Proxy](#rest-proxy)
     - [Restrict access to Confluent Cloud](#restrict-access-to-confluent-cloud)
     - [Service Account and ACLs](#service-account-and-acls)
   - [📚 Other useful resources](#%f0%9f%93%9a-other-useful-resources)
@@ -335,6 +335,98 @@ Result:
 }
 ```
 
+### Schema Registry
+
+A local Schema Registry instance (docker service `schema-registry`) is installed and bootstrapping the Confluent Cloud broker.
+
+You can either use it (by running `./start.sh`or `./start.sh SCHEMA_REGISTRY_DOCKER`) or use Confluent Cloud Schema Registry (by running `./start.sh SCHEMA_REGISTRY_CONFLUENT_CLOUD`).
+
+### KSQL
+
+As [Confluent Cloud KSQL](https://docs.confluent.io/current/cloud/limits.html#ccloud-ksql-preview) is still in preview, you can instead install local KSQL instance (docker service `ksql-server`) which is bootstrapping the Confluent Cloud broker.
+
+You can access KSQL CLI using this command:
+
+```bash
+$ docker exec -i ksql-cli bash -c 'echo -e "\n\n⏳ Waiting for KSQL to be available before launching CLI\n"; while [ $(curl -s -o /dev/null -w %{http_code} http://ksql-server:8089/) -eq 000 ] ; do echo -e $(date) "KSQL Server HTTP state: " $(curl -s -o /dev/null -w %{http_code} http:/ksql-server:8089/) " (waiting for 200)" ; sleep 5 ; done; ksql http://ksql-server:8089'
+```
+
+Example:
+
+```
+ksql> show topics;
+
+ Kafka Topic                                                                                   | Registered | Partitions | Partition Replicas | Consumers | ConsumerGroups
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ _confluent-monitoring                                                                         | false      | 1          | 3                  | 1         | 1
+ _schemas                                                                                      | false      | 1          | 3                  | 0         | 0
+ connect-configs                                                                               | false      | 1          | 3                  | 0         | 0
+ connect-offsets                                                                               | false      | 25         | 3                  | 0         | 0
+ connect-status                                                                                | false      | 5          | 3                  | 0         | 0
+ customer-avro                                                                                 | false      | 6          | 3                  | 18        | 3
+ simple-stream-KSTREAM-REDUCE-STATE-STORE-0000000003-changelog                                 | false      | 6          | 3                  | 0         | 0
+ simple-stream-KSTREAM-REDUCE-STATE-STORE-0000000003-repartition                               | false      | 6          | 3                  | 6         | 1
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+```
+
+### REST Proxy
+
+A local REST Proxy instance (docker service `rest-proxy`) is installed and reachable on port `8082`.
+
+Make REST calls using `v2` of the REST API (e.g. `application/vnd.kafka.v2+json`) because `v2` has no ZooKeeper dependency. Using `v1` of the API (e.g. `application/vnd.kafka.v1+json`) will not work because v1 has a ZooKeeper dependency that does not work with Confluent Cloud.
+
+Examples:
+
+```bash
+$ curl "http://localhost:8082/topics/customer-avro"
+```
+
+```json
+{
+    "configs": {
+        "cleanup.policy": "delete",
+        "compression.type": "producer",
+        "delete.retention.ms": "86400000",
+        "file.delete.delay.ms": "60000",
+        "flush.messages": "9223372036854775807",
+        "flush.ms": "9223372036854775807",
+        "follower.replication.throttled.replicas": "",
+        "index.interval.bytes": "4096",
+        "leader.replication.throttled.replicas": "",
+        "max.compaction.lag.ms": "9223372036854775807",
+        "max.message.bytes": "2097164",
+        "message.downconversion.enable": "true",
+        "message.format.version": "2.1-IV2",
+        "message.timestamp.difference.max.ms": "9223372036854775807",
+        "message.timestamp.type": "CreateTime",
+        "min.cleanable.dirty.ratio": "0.5",
+        "min.compaction.lag.ms": "0",
+        "min.insync.replicas": "2",
+        "preallocate": "false",
+        "retention.bytes": "-1",
+        "retention.ms": "604800000",
+        "segment.bytes": "1073741824",
+        "segment.index.bytes": "10485760",
+        "segment.jitter.ms": "0",
+        "segment.ms": "604800000",
+        "unclean.leader.election.enable": "false"
+    },
+    "name": "customer-avro"
+}
+```
+
+Get broker ids:
+
+```bash
+$ curl "http://localhost:8082/brokers"
+```
+
+Result:
+
+```json
+{"brokers":[0,5,2,8,4,1,6,7,3]}
+```
+
 ### Monitoring
 
 #### Control Center
@@ -498,97 +590,6 @@ Note: for Confluent customers, you can refer to this Knowledge Base [article](ht
 
 This is explained [above](#consumer-lag-dashboard).
 
-### Schema Registry
-
-A local Schema Registry instance (docker service `schema-registry`) is installed and bootstrapping the Confluent Cloud broker.
-
-You can either use it (by running `./start.sh`or `./start.sh SCHEMA_REGISTRY_DOCKER`) or use Confluent Cloud Schema Registry (by running `./start.sh SCHEMA_REGISTRY_CONFLUENT_CLOUD`).
-
-### KSQL
-
-As [Confluent Cloud KSQL](https://docs.confluent.io/current/cloud/limits.html#ccloud-ksql-preview) is still in preview, you can instead install local KSQL instance (docker service `ksql-server`) which is bootstrapping the Confluent Cloud broker.
-
-You can access KSQL CLI using this command:
-
-```bash
-$ docker exec -i ksql-cli bash -c 'echo -e "\n\n⏳ Waiting for KSQL to be available before launching CLI\n"; while [ $(curl -s -o /dev/null -w %{http_code} http://ksql-server:8089/) -eq 000 ] ; do echo -e $(date) "KSQL Server HTTP state: " $(curl -s -o /dev/null -w %{http_code} http:/ksql-server:8089/) " (waiting for 200)" ; sleep 5 ; done; ksql http://ksql-server:8089'
-```
-
-Example:
-
-```
-ksql> show topics;
-
- Kafka Topic                                                                                   | Registered | Partitions | Partition Replicas | Consumers | ConsumerGroups
----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
- _confluent-monitoring                                                                         | false      | 1          | 3                  | 1         | 1
- _schemas                                                                                      | false      | 1          | 3                  | 0         | 0
- connect-configs                                                                               | false      | 1          | 3                  | 0         | 0
- connect-offsets                                                                               | false      | 25         | 3                  | 0         | 0
- connect-status                                                                                | false      | 5          | 3                  | 0         | 0
- customer-avro                                                                                 | false      | 6          | 3                  | 18        | 3
- simple-stream-KSTREAM-REDUCE-STATE-STORE-0000000003-changelog                                 | false      | 6          | 3                  | 0         | 0
- simple-stream-KSTREAM-REDUCE-STATE-STORE-0000000003-repartition                               | false      | 6          | 3                  | 6         | 1
----------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-```
-
-### REST Proxy
-
-A local REST Proxy instance (docker service `rest-proxy`) is installed and reachable on port `8082`.
-
-Make REST calls using `v2` of the REST API (e.g. `application/vnd.kafka.v2+json`) because `v2` has no ZooKeeper dependency. Using `v1` of the API (e.g. `application/vnd.kafka.v1+json`) will not work because v1 has a ZooKeeper dependency that does not work with Confluent Cloud.
-
-Examples:
-
-```bash
-$ curl "http://localhost:8082/topics/customer-avro"
-```
-
-```json
-{
-    "configs": {
-        "cleanup.policy": "delete",
-        "compression.type": "producer",
-        "delete.retention.ms": "86400000",
-        "file.delete.delay.ms": "60000",
-        "flush.messages": "9223372036854775807",
-        "flush.ms": "9223372036854775807",
-        "follower.replication.throttled.replicas": "",
-        "index.interval.bytes": "4096",
-        "leader.replication.throttled.replicas": "",
-        "max.compaction.lag.ms": "9223372036854775807",
-        "max.message.bytes": "2097164",
-        "message.downconversion.enable": "true",
-        "message.format.version": "2.1-IV2",
-        "message.timestamp.difference.max.ms": "9223372036854775807",
-        "message.timestamp.type": "CreateTime",
-        "min.cleanable.dirty.ratio": "0.5",
-        "min.compaction.lag.ms": "0",
-        "min.insync.replicas": "2",
-        "preallocate": "false",
-        "retention.bytes": "-1",
-        "retention.ms": "604800000",
-        "segment.bytes": "1073741824",
-        "segment.index.bytes": "10485760",
-        "segment.jitter.ms": "0",
-        "segment.ms": "604800000",
-        "unclean.leader.election.enable": "false"
-    },
-    "name": "customer-avro"
-}
-```
-
-Get broker ids:
-
-```bash
-$ curl "http://localhost:8082/brokers"
-```
-
-Result:
-
-```json
-{"brokers":[0,5,2,8,4,1,6,7,3]}
-```
 
 ### Restrict access to Confluent Cloud
 
