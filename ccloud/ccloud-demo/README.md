@@ -675,7 +675,6 @@ PASS: Producer failed due to org.apache.kafka.common.errors.TopicAuthorizationEx
 * Create ACLs for the service account:
 
 ```bash
-$ ccloud kafka acl create --allow --service-account-id 21280 --operation CREATE --topic demo-topic-1
 $ ccloud kafka acl create --allow --service-account-id 21280 --operation WRITE --topic demo-topic-1
 $ ccloud kafka acl list --service-account-id 21280
 ```
@@ -683,7 +682,6 @@ $ ccloud kafka acl list --service-account-id 21280
 ```
   ServiceAccountId | Permission | Operation | Resource |     Name     |  Type
 +------------------+------------+-----------+----------+--------------+---------+
-  User:21280       | ALLOW      | CREATE    | TOPIC    | demo-topic-1 | LITERAL
   User:21280       | ALLOW      | WRITE     | TOPIC    | demo-topic-1 | LITERAL
 ```
 
