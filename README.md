@@ -156,7 +156,9 @@ This is just the excellent examples in [Kafka tutorial](https://kafka-tutorials.
 ## Other:
 
 * [Confluent Rebalancer](other/rebalancer)
-* [Confluent Replicator](connect/connect-replicator) [also with [SASL_SSL](connect/connect-replicator/README.md#with-sasl_ssl-authentication)]
+* [Confluent Replicator](connect/connect-replicator) [also with [SASL_SSL](connect/connect-replicator/README.md#with-sasl_ssl-authentication)]`
+* Testing [Separate principals](https://docs.confluent.io/current/connect/security.html#separate-principals) (`connector.client.config.override.policy`) for [Source connector (SFTP source)](other/connect-override-policy-sftp-source)
+* Testing [Separate principals](https://docs.confluent.io/current/connect/security.html#separate-principals) (`connector.client.config.override.policy`) for [Source connector (SFTP sink)](other/connect-override-policy-sftp-sink)
 
 ## 📚 Other useful resources
 
