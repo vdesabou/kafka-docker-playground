@@ -29,3 +29,18 @@ services:
     environment:
       CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-sftp
       CONNECT_CONNECTOR_CLIENT_CONFIG_OVERRIDE_POLICY: Principal
+      # CONNECT_ADMIN_SASL_MECHANISM: PLAIN
+      # CONNECT_ADMIN_SECURITY_PROTOCOL: SASL_PLAINTEXT
+      # CONNECT_ADMIN_SASL_JAAS_CONFIG: "org.apache.kafka.common.security.plain.PlainLoginModule required \
+      #           username=\"connect\" \
+      #           password=\"connect-secret\";"
+      # CONNECT_PRODUCER_SASL_MECHANISM: PLAIN
+      # CONNECT_PRODUCER_SECURITY_PROTOCOL: SASL_PLAINTEXT
+      # CONNECT_PRODUCER_SASL_JAAS_CONFIG: "org.apache.kafka.common.security.plain.PlainLoginModule required \
+      #           username=\"connect\" \
+      #           password=\"connect-secret\";"
+      # CONNECT_CONSUMER_SASL_MECHANISM: PLAIN
+      # CONNECT_CONSUMER_SECURITY_PROTOCOL: SASL_PLAINTEXT
+      # CONNECT_CONSUMER_SASL_JAAS_CONFIG: "org.apache.kafka.common.security.plain.PlainLoginModule required \
+      #           username=\"connect\" \
+      #           password=\"connect-secret\";"
