@@ -1,0 +1,31 @@
+---
+version: '3.5'
+services:
+
+  broker:
+    environment:
+      KAFKA_AUTHORIZER_CLASS_NAME: kafka.security.auth.SimpleAclAuthorizer
+      KAFKA_ZOOKEEPER_SET_ACL: "true"
+      KAFKA_ALLOW_EVERYONE_IF_NO_ACL_FOUND: "false"
+      KAFKA_SUPER_USERS: User:broker;User:schemaregistry;User:client;User:connect
+
+  schema-registry:
+    volumes:
+        - ../../other/connect-override-policy-sftp-sink/client.properties:/tmp/client.properties
+
+  sftp-server:
+    image: atmoz/sftp
+    hostname: sftp-server
+    container_name: sftp-server
+    volumes:
+        - ../../other/connect-override-policy-sftp-sink/upload/:/home/foo/upload
+    ports:
+      - "2222:22"
+    command: foo:pass:1001
+
+  connect:
+    volumes:
+        - ../../other/connect-override-policy-sftp-sink/client.properties:/tmp/client.properties
+    environment:
+      CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-sftp
+      CONNECT_CONNECTOR_CLIENT_CONFIG_OVERRIDE_POLICY: Principal
