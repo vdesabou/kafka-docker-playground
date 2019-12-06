@@ -32,3 +32,4 @@ mycommand.sh
 ccloud/ccloud-demo/kafka-lag-exporter/application.conf
 connect/connect-sftp-sink/upload/
 connect/connect-sftp-source/upload/
+other/connect-override-policy-sftp-source/upload/
