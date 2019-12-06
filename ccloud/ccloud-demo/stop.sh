@@ -13,7 +13,7 @@ check_if_continue
 set +e
 delete_topic customer-avro
 delete_topic mysql-application
-delete_topic demo-topic-1
+delete_topic demo-acl-topic
 
 echo "Delete connector mysql-source"
 curl -X DELETE localhost:8083/connectors/mysql-source
