@@ -2,14 +2,6 @@
 version: '3.5'
 services:
 
-  jmx-exporter:
-    build: ./jmx-exporter
-    hostname: jmx-exporter
-    container_name: jmx-exporter
-    tty: true
-    volumes:
-    - jmx-exporter-vol:/usr/share/jmx_exporter/
-
   schema-registry:
     image: confluentinc/cp-schema-registry:5.3.1
     hostname: schema-registry
@@ -190,7 +182,7 @@ services:
       CONNECT_LOG4J_ROOT_LOGLEVEL: INFO
       CONNECT_LOG4J_LOGGERS: org.reflections=ERROR
       CLASSPATH: /usr/share/java/monitoring-interceptors/monitoring-interceptors-5.3.1.jar
-      CONNECT_REQUEST_TIMEOUT_MS: 20000
+      CONNECT_REQUEST_TIMEOUT_MS: 60000
       CONNECT_RETRY_BACKOFF_MS: 500
       # Connect worker
       CONNECT_SECURITY_PROTOCOL: SASL_SSL
@@ -290,6 +282,13 @@ services:
       - jmx-exporter
       - stream
 
+  jmx-exporter:
+    build: ./jmx-exporter
+    hostname: jmx-exporter
+    container_name: jmx-exporter
+    tty: true
+    volumes:
+    - jmx-exporter-vol:/usr/share/jmx_exporter/
 
   kafka-lag-exporter:
     image: lightbend/kafka-lag-exporter:0.5.5

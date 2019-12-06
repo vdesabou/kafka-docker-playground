@@ -170,7 +170,7 @@ docker exec connect \
           }}' \
      http://localhost:8083/connectors | jq .
 
-sleep 20
+sleep 40
 
 echo "Check that the data is available in Elasticsearch"
 
@@ -191,7 +191,7 @@ check_if_continue
 
 echo -e "\n# Create a new service account"
 RANDOM_NUM=$((1 + RANDOM % 1000000))
-SERVICE_NAME="demo-app-$RANDOM_NUM"
+SERVICE_NAME="my-java-producer-app-$RANDOM_NUM"
 echo "ccloud service-account create $SERVICE_NAME --description $SERVICE_NAME"
 ccloud service-account create $SERVICE_NAME --description $SERVICE_NAME || true
 SERVICE_ACCOUNT_ID=$(ccloud service-account list | grep $SERVICE_NAME | awk '{print $1;}')
@@ -231,22 +231,22 @@ cat $CLIENT_CONFIG
 ##################################################
 
 POM=./producer-acl/pom.xml
-TOPIC1="demo-topic-1"
+TOPIC_ACL="demo-acl-topic"
 set +e
-create_topic $TOPIC1
+create_topic $TOPIC_ACL
 
 echo -e "\n# By default, no ACLs are configured"
 echo "ccloud kafka acl list --service-account-id $SERVICE_ACCOUNT_ID"
 ccloud kafka acl list --service-account-id $SERVICE_ACCOUNT_ID
 
-echo -e "\n# Run the Java producer to $TOPIC1: before ACLs"
+echo -e "\n# Run the Java producer to $TOPIC_ACL: before ACLs"
 mvn -q -f $POM clean package
 if [[ $? != 0 ]]; then
   echo "ERROR: There seems to be a build failure error compiling the client code? Please troubleshoot"
   exit 1
 fi
 LOG1="/tmp/log.1"
-java -jar ./producer-acl/target/producer-acl-1.0.0-jar-with-dependencies.jar $CLIENT_CONFIG $TOPIC1 > $LOG1 2>&1
+java -jar ./producer-acl/target/producer-acl-1.0.0-jar-with-dependencies.jar $CLIENT_CONFIG $TOPIC_ACL > $LOG1 2>&1
 echo "# Check logs for 'org.apache.kafka.common.errors.TopicAuthorizationException'"
 OUTPUT=$(grep "org.apache.kafka.common.errors.TopicAuthorizationException" $LOG1)
 if [[ ! -z $OUTPUT ]]; then
@@ -256,15 +256,16 @@ else
 fi
 
 echo -e "\n# Create ACLs for the service account"
-echo "ccloud kafka acl create --allow --service-account-id $SERVICE_ACCOUNT_ID --operation WRITE --topic $TOPIC1"
-ccloud kafka acl create --allow --service-account-id $SERVICE_ACCOUNT_ID --operation WRITE --topic $TOPIC1
+echo "ccloud kafka acl create --allow --service-account-id $SERVICE_ACCOUNT_ID --operation WRITE --topic $TOPIC_ACL"
+ccloud kafka acl create --allow --service-account-id $SERVICE_ACCOUNT_ID --operation WRITE --topic $TOPIC_ACL
 echo "ccloud kafka acl list --service-account-id $SERVICE_ACCOUNT_ID"
 ccloud kafka acl list --service-account-id $SERVICE_ACCOUNT_ID
-sleep 2
 
-echo -e "\n# Run the Java producer to $TOPIC1: after ACLs"
+sleep 20
+
+echo -e "\n# Run the Java producer to $TOPIC_ACL: after ACLs"
 LOG2="/tmp/log.2"
-java -jar ./producer-acl/target/producer-acl-1.0.0-jar-with-dependencies.jar $CLIENT_CONFIG $TOPIC1 > $LOG2 2>&1
+java -jar ./producer-acl/target/producer-acl-1.0.0-jar-with-dependencies.jar $CLIENT_CONFIG $TOPIC_ACL > $LOG2 2>&1
 echo "# Check logs for '10 messages were produced to topic'"
 OUTPUT=$(grep "10 messages were produced to topic" $LOG2)
 if [[ ! -z $OUTPUT ]]; then
@@ -280,8 +281,8 @@ cat $LOG2
 ##################################################
 
 echo -e "\n# Delete ACLs"
-echo "ccloud kafka acl delete --allow --service-account-id $SERVICE_ACCOUNT_ID --operation WRITE --topic $TOPIC1"
-ccloud kafka acl delete --allow --service-account-id $SERVICE_ACCOUNT_ID --operation WRITE --topic $TOPIC1
+echo "ccloud kafka acl delete --allow --service-account-id $SERVICE_ACCOUNT_ID --operation WRITE --topic $TOPIC_ACL"
+ccloud kafka acl delete --allow --service-account-id $SERVICE_ACCOUNT_ID --operation WRITE --topic $TOPIC_ACL
 
 echo "ccloud service-account delete $SERVICE_ACCOUNT_ID"
 ccloud service-account delete $SERVICE_ACCOUNT_ID

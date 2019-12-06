@@ -120,36 +120,170 @@ The Java [producer](https://github.com/vdesabou/kafka-docker-playground/blob/mas
 }
 ```
 
+Specific properties to connect to Confluent Cloud:
+
+```java
+props.put("bootstrap.servers", "<BOOTSTRAP_SERVERS>");
+props.put("ssl.endpoint.identification.algorithm", "https");
+props.put("sasl.mechanism", "PLAIN");
+props.put("sasl.jaas.config", "org.apache.kafka.common.security.plain.PlainLoginModule required username=\"<API KEY>\" password=\"<API SECRET>\";");
+props.put("security.protocol", "SASL_SSL");
+
+// Schema Registry specific settings
+props.put("schema.registry.url", "<SCHEMA_REGISTRY_URL>");
+// Required if using Confluent Cloud Schema Registry
+props.put("basic.auth.credentials.source", "USER_INFO");
+props.put("schema.registry.basic.auth.user.info", "<SR_API_KEY>:<SR_API_SECRET>");
+```
+
 N.B:
 
 - The key is fixed and set with `alice`
-- [Interceptors](https://docs.confluent.io/current/control-center/installation/clients.html#java-producers-and-consumers) for Java producer are set
+- [Interceptors](https://docs.confluent.io/current/control-center/installation/clients.html#java-producers-and-consumers) for Java producer are set:
+
+```java
+props.put("interceptor.classes","io.confluent.monitoring.clients.interceptor.MonitoringProducerInterceptor");
+props.put("confluent.monitoring.interceptor.bootstrap.servers","<BOOTSTRAP_SERVERS>");
+props.put("confluent.monitoring.interceptor.security.protocol", "SASL_SSL");
+props.put("confluent.monitoring.interceptor.sasl.jaas.config", "org.apache.kafka.common.security.plain.PlainLoginModule required username=\"<API KEY>\" password=\"<API SECRET>\";");
+props.put("confluent.monitoring.interceptor.sasl.mechanism", "PLAIN");
+```
 
 ### Kafka Streams
 
 The Kafka Streams [application](https://github.com/vdesabou/kafka-docker-playground/blob/master/ccloud-demo/streams/src/main/java/com/github/vdesabou/SimpleStream.java) (docker service `streams`) called `simple-stream` is listening topic `customer-avro` and is just counting the number of messages received.
 
+Specific properties to connect to Confluent Cloud:
+
+```java
+props.put("bootstrap.servers", "<BOOTSTRAP_SERVERS>");
+props.put("sasl.mechanism", "PLAIN");
+props.put("sasl.jaas.config", "org.apache.kafka.common.security.plain.PlainLoginModule required username=\"<API KEY>\" password=\"<API SECRET>\";");
+props.put("security.protocol", "SASL_SSL");
+
+// Schema Registry specific settings
+props.put("schema.registry.url", "<SCHEMA_REGISTRY_URL>");
+// Required if using Confluent Cloud Schema Registry
+props.put("basic.auth.credentials.source", "USER_INFO");
+props.put("schema.registry.basic.auth.user.info", "<SR_API_KEY>:<SR_API_SECRET>");
+```
+
 N.B:
 
 - [Interceptors](https://docs.confluent.io/current/control-center/installation/clients.html#kstreams) for Kafka Streams are set
+
+
+```java
+props.put("producer.interceptor.classes","io.confluent.monitoring.clients.interceptor.MonitoringProducerInterceptor");
+props.put("consumer.interceptor.classes","io.confluent.monitoring.clients.interceptor.MonitoringConsumerInterceptor");
+props.put("confluent.monitoring.interceptor.bootstrap.servers","<BOOTSTRAP_SERVERS>");
+props.put("confluent.monitoring.interceptor.security.protocol", "SASL_SSL");
+props.put("confluent.monitoring.interceptor.sasl.jaas.config", "org.apache.kafka.common.security.plain.PlainLoginModule required username=\"<API KEY>\" password=\"<API SECRET>\";");
+props.put("confluent.monitoring.interceptor.sasl.mechanism", "PLAIN");
+```
+
 
 ### Java Consumer
 
 The Java [consumer](https://github.com/vdesabou/kafka-docker-playground/blob/master/ccloud-demo/consumer/src/main/java/com/github/vdesabou/SimpleConsumer.java) (docker service `consumer`) is listening on topic `customer-avro` and it just printing the records.
 
+Specific properties to connect to Confluent Cloud:
+
+```java
+props.put("bootstrap.servers", "<BOOTSTRAP_SERVERS>");
+props.put("ssl.endpoint.identification.algorithm", "https");
+props.put("sasl.mechanism", "PLAIN");
+props.put("sasl.jaas.config", "org.apache.kafka.common.security.plain.PlainLoginModule required username=\"<API KEY>\" password=\"<API SECRET>\";");
+props.put("security.protocol", "SASL_SSL");
+
+// Schema Registry specific settings
+props.put("schema.registry.url", "<SCHEMA_REGISTRY_URL>");
+// Required if using Confluent Cloud Schema Registry
+props.put("basic.auth.credentials.source", "USER_INFO");
+props.put("schema.registry.basic.auth.user.info", "<SR_API_KEY>:<SR_API_SECRET>");
+```
+
 N.B:
 
 - [Interceptors](https://docs.confluent.io/current/control-center/installation/clients.html#java-producers-and-consumers) for Java consumer are set
+
+```java
+props.put("interceptor.classes","io.confluent.monitoring.clients.interceptor.MonitoringConsumerInterceptor");
+props.put("confluent.monitoring.interceptor.bootstrap.servers","<BOOTSTRAP_SERVERS>");
+props.put("confluent.monitoring.interceptor.security.protocol", "SASL_SSL");
+props.put("confluent.monitoring.interceptor.sasl.jaas.config", "org.apache.kafka.common.security.plain.PlainLoginModule required username=\"<API KEY>\" password=\"<API SECRET>\";");
+props.put("confluent.monitoring.interceptor.sasl.mechanism", "PLAIN");
+```
 
 
 ### Connect
 
 A local Connect instance (docker service `connect`) is installed and bootstrapping the Confluent Cloud broker.
 
+* Docker configuration:
+
+```yml
+connect:
+  build:
+    context: .
+    dockerfile: Dockerfile-Connector-Hub
+  hostname: connect
+  container_name: connect
+  environment:
+    CONNECT_BOOTSTRAP_SERVERS: <BOOTSTRAP_SERVERS>
+    CONNECT_REST_PORT: 8083
+    CONNECT_GROUP_ID: "connect"
+    CONNECT_CONFIG_STORAGE_TOPIC: connect-configs
+    CONNECT_OFFSET_STORAGE_TOPIC: connect-offsets
+    CONNECT_STATUS_STORAGE_TOPIC: connect-status
+    CONNECT_REPLICATION_FACTOR: 3
+    CONNECT_CONFIG_STORAGE_REPLICATION_FACTOR: 3
+    CONNECT_OFFSET_STORAGE_REPLICATION_FACTOR: 3
+    CONNECT_STATUS_STORAGE_REPLICATION_FACTOR: 3
+    CONNECT_KEY_CONVERTER: "org.apache.kafka.connect.storage.StringConverter"
+    CONNECT_VALUE_CONVERTER: "io.confluent.connect.avro.AvroConverter"
+    CONNECT_VALUE_CONVERTER_SCHEMAS_ENABLE: "true"
+    CONNECT_VALUE_CONVERTER_SCHEMA_REGISTRY_URL: <SCHEMA_REGISTRY_URL>
+    CONNECT_VALUE_CONVERTER_BASIC_AUTH_CREDENTIALS_SOURCE: USER_INFO
+    CONNECT_VALUE_CONVERTER_SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO: <SR_API_KEY>:<SR_API_SECRET>
+    CONNECT_INTERNAL_KEY_CONVERTER: "org.apache.kafka.connect.json.JsonConverter"
+    CONNECT_INTERNAL_VALUE_CONVERTER: "org.apache.kafka.connect.json.JsonConverter"
+    CONNECT_REST_ADVERTISED_HOST_NAME: "connect"
+    CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-elasticsearch,/usr/share/confluent-hub-components/confluentinc-kafka-connect-http,/usr/share/confluent-hub-components/confluentinc-kafka-connect-jdbc
+    CONNECT_LOG4J_ROOT_LOGLEVEL: INFO
+    CONNECT_LOG4J_LOGGERS: org.reflections=ERROR
+    CLASSPATH: /usr/share/java/monitoring-interceptors/monitoring-interceptors-5.3.1.jar
+    CONNECT_REQUEST_TIMEOUT_MS: 20000
+    CONNECT_RETRY_BACKOFF_MS: 500
+    # Connect worker
+    CONNECT_SECURITY_PROTOCOL: SASL_SSL
+    CONNECT_SASL_JAAS_CONFIG: org.apache.kafka.common.security.plain.PlainLoginModule required username="<API KEY>" password="<API SECRET>";
+    CONNECT_SASL_MECHANISM: PLAIN
+    CONNECT_SSL_ENDPOINT_IDENTIFICATION_ALGORITHM: "HTTPS"
+    # Connect producer
+    CONNECT_PRODUCER_SECURITY_PROTOCOL: SASL_SSL
+    CONNECT_PRODUCER_SASL_JAAS_CONFIG: org.apache.kafka.common.security.plain.PlainLoginModule required username="<API KEY>" password="<API SECRET>";
+    CONNECT_PRODUCER_SASL_MECHANISM: PLAIN
+```
+
 N.B:
 
 - [Interceptors](https://docs.confluent.io/current/control-center/installation/clients.html#kconnect-long) for Kafka Connect are set
 
+```yml
+    CONNECT_PRODUCER_INTERCEPTOR_CLASSES: "io.confluent.monitoring.clients.interceptor.MonitoringProducerInterceptor"
+    CONNECT_PRODUCER_CONFLUENT_MONITORING_INTERCEPTOR_SECURITY_PROTOCOL: SASL_SSL
+    CONNECT_PRODUCER_CONFLUENT_MONITORING_INTERCEPTOR_SASL_JAAS_CONFIG: org.apache.kafka.common.security.plain.PlainLoginModule required username="<API KEY>" password="<API SECRET>";
+    CONNECT_PRODUCER_CONFLUENT_MONITORING_INTERCEPTOR_SASL_MECHANISM: PLAIN
+    # Connect consumer
+    CONNECT_CONSUMER_SECURITY_PROTOCOL: SASL_SSL
+    CONNECT_CONSUMER_SASL_JAAS_CONFIG: org.apache.kafka.common.security.plain.PlainLoginModule required username="<API KEY>" password="<API SECRET>";
+    CONNECT_CONSUMER_SASL_MECHANISM: PLAIN
+    CONNECT_CONSUMER_INTERCEPTOR_CLASSES: "io.confluent.monitoring.clients.interceptor.MonitoringConsumerInterceptor"
+    CONNECT_CONSUMER_CONFLUENT_MONITORING_INTERCEPTOR_SECURITY_PROTOCOL: SASL_SSL
+    CONNECT_CONSUMER_CONFLUENT_MONITORING_INTERCEPTOR_SASL_JAAS_CONFIG: org.apache.kafka.common.security.plain.PlainLoginModule required username="<API KEY>" password="<API SECRET>";
+    CONNECT_CONSUMER_CONFLUENT_MONITORING_INTERCEPTOR_SASL_MECHANISM: PLAIN
+```
 
 #### JDBC MySQL Source Connector
 
@@ -186,7 +320,7 @@ We can consume messages from topic `mysql-application` using multiple ways:
 * Using `kafka-avro-console-consumer`:
 
 ```bash
-$ docker-compose exec -e BOOTSTRAP_SERVERS="$BOOTSTRAP_SERVERS" -e SASL_JAAS_CONFIG="$SASL_JAAS_CONFIG" -e BASIC_AUTH_CREDENTIALS_SOURCE="$BASIC_AUTH_CREDENTIALS_SOURCE" -e SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO="$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO" -e SCHEMA_REGISTRY_URL="$SCHEMA_REGISTRY_URL" connect bash -c 'kafka-avro-console-consumer --topic mysql-application --bootstrap-server $BOOTSTRAP_SERVERS --consumer-property ssl.endpoint.identification.algorithm=https --consumer-property sasl.mechanism=PLAIN --consumer-property security.protocol=SASL_SSL --consumer-property sasl.jaas.config="$SASL_JAAS_CONFIG" --property basic.auth.credentials.source=$BASIC_AUTH_CREDENTIALS_SOURCE --property schema.registry.basic.auth.user.info="$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO" --property schema.registry.url=$SCHEMA_REGISTRY_URL --from-beginning --max-messages 2'
+$ docker-compose exec -e BOOTSTRAP_SERVERS="<BOOTSTRAP_SERVERS" -e >SASL_JAAS_CONFIG="org.apache.kafka.common.security.plain.PlainLoginModule required username="<API KEY>" password="<API SECRET>";" -e BASIC_AUTH_CREDENTIALS_SOURCE="USER_INFO" -e SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO="<SR_API_KEY>:<SR_API_SECRET>" -e SCHEMA_REGISTRY_URL="<SCHEMA_REGISTRY_URL" connect bash -c >'kafka-avro-console-consumer --topic mysql-application --bootstrap-server <BOOTSTRAP_SERVERS --consumer-property >ssl.endpoint.identification.algorithm=https --consumer-property sasl.mechanism=PLAIN --consumer-property security.protocol=SASL_SSL --consumer-property sasl.jaas.config="org.apache.kafka.common.security.plain.PlainLoginModule required username="<API KEY>" password="<API SECRET>";" --property basic.auth.credentials.source=USER_INFO --property schema.registry.basic.auth.user.info="<SR_API_KEY>:<SR_API_SECRET>" --property schema.registry.url=<SCHEMA_REGISTRY_URL --from-beginning >--max-messages 2'
 ```
 
 * Using `confluent` cli and Docker Schema Registry:
@@ -198,7 +332,7 @@ $ confluent local consume mysql-application -- --cloud --value-format avro --pro
 * Using `confluent` cli and Confluent Cloud Schema Registry:
 
 ```bash
-$ confluent local consume mysql-application -- --cloud --value-format avro --property schema.registry.url=$SCHEMA_REGISTRY_URL --property basic.auth.credentials.source=USER_INFO --property schema.registry.basic.auth.user.info="$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO" --from-beginning --max-messages 2
+$ confluent local consume mysql-application -- --cloud --value-format avro --property schema.registry.url=<SCHEMA_REGISTRY_URL --property >basic.auth.credentials.source=USER_INFO --property schema.registry.basic.auth.user.info="<SR_API_KEY>:<SR_API_SECRET>" --from-beginning --max-messages 2
 ```
 
 Results:
@@ -213,7 +347,7 @@ Results:
 An HTTP sink connector called `http-sink` is created and listening on topic `mysql-application`:
 
 ```bash
-$ docker exec -e BOOTSTRAP_SERVERS="$BOOTSTRAP_SERVERS" -e CLOUD_KEY="$CLOUD_KEY" -e CLOUD_SECRET="$CLOUD_SECRET" connect \
+$ docker exec -e BOOTSTRAP_SERVERS="<BOOTSTRAP_SERVERS" -e >CLOUD_KEY="$CLOUD_KEY" -e CLOUD_SECRET="$CLOUD_SECRET" connect \
      curl -X POST \
      -H "Content-Type: application/json" \
      --data '{
@@ -227,7 +361,7 @@ $ docker exec -e BOOTSTRAP_SERVERS="$BOOTSTRAP_SERVERS" -e CLOUD_KEY="$CLOUD_KEY
                "confluent.topic.ssl.endpoint.identification.algorithm" : "https",
                "confluent.topic.sasl.mechanism" : "PLAIN",
                "confluent.topic.request.timeout.ms" : "20000",
-               "confluent.topic.bootstrap.servers": "'"$BOOTSTRAP_SERVERS"'",
+               "confluent.topic.bootstrap.servers": "'"<BOOTSTRAP_SERVERS"'",>
                "retry.backoff.ms" : "500",
                "confluent.topic.sasl.jaas.config" : "org.apache.kafka.common.security.plain.PlainLoginModule required username=\"'$CLOUD_KEY'\" password=\"'$CLOUD_SECRET'\";",
                "confluent.topic.security.protocol" : "SASL_SSL",
@@ -341,14 +475,90 @@ A local Schema Registry instance (docker service `schema-registry`) is installed
 
 You can either use it (by running `./start.sh`or `./start.sh SCHEMA_REGISTRY_DOCKER`) or use Confluent Cloud Schema Registry (by running `./start.sh SCHEMA_REGISTRY_CONFLUENT_CLOUD`).
 
+* Docker configuration:
+
+```yml
+schema-registry:
+  image: confluentinc/cp-schema-registry:5.3.1
+  hostname: schema-registry
+  container_name: schema-registry
+  ports:
+    - '8085:8085'
+  environment:
+    SCHEMA_REGISTRY_HOST_NAME: schema-registry
+    SCHEMA_REGISTRY_LISTENERS: http://0.0.0.0:8085
+    SCHEMA_REGISTRY_KAFKASTORE_SSL_ENDPOINT_IDENTIFIED_ALGORITHM: "https"
+    SCHEMA_REGISTRY_KAFKASTORE_REQUEST_TIMEOUT_MS: 20000
+    SCHEMA_REGISTRY_KAFKASTORE_RETRY_BACKOFF_MS: 500
+    SCHEMA_REGISTRY_KAFKASTORE_SECURITY_PROTOCOL: SASL_SSL
+    SCHEMA_REGISTRY_KAFKASTORE_BOOTSTRAP_SERVERS: <BOOTSTRAP_SERVERS>
+    SCHEMA_REGISTRY_KAFKASTORE_SASL_JAAS_CONFIG: org.apache.kafka.common.security.plain.PlainLoginModule required username="<API KEY>" password="<API SECRET>";
+    SCHEMA_REGISTRY_KAFKASTORE_SASL_MECHANISM: "PLAIN"
+```
+
 ### KSQL
 
 As [Confluent Cloud KSQL](https://docs.confluent.io/current/cloud/limits.html#ccloud-ksql-preview) is still in preview, you can instead install local KSQL instance (docker service `ksql-server`) which is bootstrapping the Confluent Cloud broker.
+
+* Docker configuration:
+
+```yml
+ksql-server:
+  image: confluentinc/cp-ksql-server:5.3.1
+  hostname: ksql-server
+  container_name: ksql-server
+  ports:
+    - "8089:8089"
+  environment:
+    KSQL_HOST_NAME: ksql-server
+    KSQL_CONFIG_DIR: "/etc/ksql"
+    KSQL_LOG4J_OPTS: "-Dlog4j.configuration=file:/etc/ksql/log4j-rolling.properties"
+    KSQL_LISTENERS: "http://0.0.0.0:8089"
+    KSQL_AUTO_OFFSET_RESET: "earliest"
+    KSQL_COMMIT_INTERVAL_MS: 0
+    KSQL_CACHE_MAX_BYTES_BUFFERING: 0
+    KSQL_KSQL_SCHEMA_REGISTRY_URL: <SCHEMA_REGISTRY_URL>
+    KSQL_KSQL_SCHEMA_REGISTRY_BASIC_AUTH_CREDENTIALS_SOURCE: USER_INFO
+    KSQL_KSQL_SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO: <SR_API_KEY>:<SR_API_SECRET>
+    KSQL_BOOTSTRAP_SERVERS: <BOOTSTRAP_SERVERS>
+    KSQL_SECURITY_PROTOCOL: SASL_SSL
+    KSQL_SASL_JAAS_CONFIG: org.apache.kafka.common.security.plain.PlainLoginModule required username="<API KEY>" password="<API SECRET>";
+    KSQL_SASL_MECHANISM: "PLAIN"
+    KSQL_SSL_ENDPOINT_IDENTIFICATION_ALGORITHM: "HTTPS"
+    KSQL_KSQL_STREAMS_PRODUCER_RETRIES: 2147483647
+    KSQL_KSQL_STREAMS_PRODUCER_CONFLUENT_BATCH_EXPIRE_MS: 9223372036854775807
+    KSQL_KSQL_STREAMS_PRODUCER_REQUEST_TIMEOUT_MS: 300000
+    KSQL_KSQL_STREAMS_PRODUCER_MAX_BLOCK_MS: 9223372036854775807
+    KSQL_KSQL_STREAMS_PRODUCER_DELIVERY_TIMEOUT_MS: 2147483647
+    KSQL_KSQL_STREAMS_REPLICATION_FACTOR: 3
+    KSQL_KSQL_INTERNAL_TOPIC_REPLICAS: 3
+    KSQL_KSQL_SINK_REPLICAS: 3
+    # Producer Confluent Monitoring Interceptors for Control Center streams monitoring
+    KSQL_PRODUCER_INTERCEPTOR_CLASSES: "io.confluent.monitoring.clients.interceptor.MonitoringProducerInterceptor"
+    KSQL_PRODUCER_CONFLUENT_MONITORING_INTERCEPTOR_SASL_MECHANISM: PLAIN
+    KSQL_PRODUCER_CONFLUENT_MONITORING_INTERCEPTOR_SECURITY_PROTOCOL: SASL_SSL
+    KSQL_PRODUCER_CONFLUENT_MONITORING_INTERCEPTOR_SASL_JAAS_CONFIG: org.apache.kafka.common.security.plain.PlainLoginModule required username="<API KEY>" password="<API SECRET>";
+    # Consumer Confluent Monitoring Interceptors for Control Center streams monitoring
+    KSQL_CONSUMER_INTERCEPTOR_CLASSES: "io.confluent.monitoring.clients.interceptor.MonitoringConsumerInterceptor"
+    KSQL_CONSUMER_CONFLUENT_MONITORING_INTERCEPTOR_SASL_MECHANISM: PLAIN
+    KSQL_CONSUMER_CONFLUENT_MONITORING_INTERCEPTOR_SECURITY_PROTOCOL: SASL_SSL
+    KSQL_CONSUMER_CONFLUENT_MONITORING_INTERCEPTOR_SASL_JAAS_CONFIG: org.apache.kafka.common.security.plain.PlainLoginModule required username="<API KEY>" password="<API SECRET>";
+```
 
 You can access KSQL CLI using this command:
 
 ```bash
 $ docker exec -i ksql-cli bash -c 'echo -e "\n\n⏳ Waiting for KSQL to be available before launching CLI\n"; while [ $(curl -s -o /dev/null -w %{http_code} http://ksql-server:8089/) -eq 000 ] ; do echo -e $(date) "KSQL Server HTTP state: " $(curl -s -o /dev/null -w %{http_code} http:/ksql-server:8089/) " (waiting for 200)" ; sleep 5 ; done; ksql http://ksql-server:8089'
+```
+
+Note: KSQL CLI * Docker configuration:
+
+```yml
+ksql-cli:
+  image: confluentinc/cp-ksql-cli:5.3.1
+  container_name: ksql-cli
+  entrypoint: /bin/sh
+  tty: true
 ```
 
 Example:
@@ -372,6 +582,35 @@ ksql> show topics;
 ### REST Proxy
 
 A local REST Proxy instance (docker service `rest-proxy`) is installed and reachable on port `8082`.
+
+* Docker configuration:
+
+```yml
+rest-proxy:
+  image: confluentinc/cp-kafka-rest:5.3.1
+  depends_on:
+    - schema-registry
+  ports:
+    - 8082:8082
+  hostname: rest-proxy
+  container_name: rest-proxy
+  environment:
+    KAFKA_REST_HOST_NAME: rest-proxy
+    KAFKA_REST_LISTENERS: "http://0.0.0.0:8082"
+    KAFKA_REST_SCHEMA_REGISTRY_URL: <SCHEMA_REGISTRY_URL>
+    KAFKA_REST_CLIENT_BASIC_AUTH_CREDENTIALS_SOURCE: USER_INFO
+    KAFKA_REST_CLIENT_SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO: <SR_API_KEY>:<SR_API_SECRET>
+    KAFKA_REST_BOOTSTRAP_SERVERS: <BOOTSTRAP_SERVERS>
+    KAFKA_REST_SSL_ENDPOINT_IDENTIFIED_ALGORITHM: "https"
+    KAFKA_REST_SECURITY_PROTOCOL: SASL_SSL
+    KAFKA_REST_SASL_JAAS_CONFIG: org.apache.kafka.common.security.plain.PlainLoginModule required username="<API KEY>" password="<API SECRET>";
+    KAFKA_REST_SASL_MECHANISM: "PLAIN"
+    KAFKA_REST_CLIENT_BOOTSTRAP_SERVERS: <BOOTSTRAP_SERVERS>
+    KAFKA_REST_CLIENT_SSL_ENDPOINT_IDENTIFIED_ALGORITHM: "https"
+    KAFKA_REST_CLIENT_SECURITY_PROTOCOL: SASL_SSL
+    KAFKA_REST_CLIENT_SASL_JAAS_CONFIG: org.apache.kafka.common.security.plain.PlainLoginModule required username="<API KEY>" password="<API SECRET>";
+    KAFKA_REST_CLIENT_SASL_MECHANISM: "PLAIN"
+```
 
 Make REST calls using `v2` of the REST API (e.g. `application/vnd.kafka.v2+json`) because `v2` has no ZooKeeper dependency. Using `v1` of the API (e.g. `application/vnd.kafka.v1+json`) will not work because v1 has a ZooKeeper dependency that does not work with Confluent Cloud.
 
@@ -433,6 +672,42 @@ Result:
 
 A local Control Center instance (docker service `control-center`) is installed and reachable at [http://127.0.0.1:9021](http://127.0.0.1:9021]).
 
+* Docker configuration:
+
+```yml
+control-center:
+  image: confluentinc/cp-enterprise-control-center:5.3.1
+  hostname: control-center
+  container_name: control-center
+  depends_on:
+    - schema-registry
+  ports:
+    - "9021:9021"
+  environment:
+    CONTROL_CENTER_BOOTSTRAP_SERVERS: <BOOTSTRAP_SERVERS>
+    CONTROL_CENTER_KSQL_URL: "http://ksql-server:8089"
+    CONTROL_CENTER_KSQL_ADVERTISED_URL: "http://localhost:8089"
+    CONTROL_CENTER_SCHEMA_REGISTRY_URL: <SCHEMA_REGISTRY_URL>
+    CONTROL_CENTER_SCHEMA_REGISTRY_BASIC_AUTH_CREDENTIALS_SOURCE: USER_INFO
+    CONTROL_CENTER_SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO: <SR_API_KEY>:<SR_API_SECRET>
+    CONTROL_CENTER_CONNECT_CLUSTER: "connect:8083"
+    CONTROL_CENTER_STREAMS_SECURITY_PROTOCOL: SASL_SSL
+    CONTROL_CENTER_STREAMS_SASL_JAAS_CONFIG: org.apache.kafka.common.security.plain.PlainLoginModule required username="<API KEY>" password="<API SECRET>";
+    CONTROL_CENTER_STREAMS_SASL_MECHANISM: PLAIN
+    CONTROL_CENTER_REPLICATION_FACTOR: 3
+    CONTROL_CENTER_MONITORING_INTERCEPTOR_TOPIC_REPLICATION: 3
+    CONTROL_CENTER_INTERNAL_TOPICS_REPLICATION: 3
+    CONTROL_CENTER_COMMAND_TOPIC_REPLICATION: 3
+    CONTROL_CENTER_METRICS_TOPIC_REPLICATION: 3
+    CONFLUENT_METRICS_TOPIC_REPLICATION: 3
+    CONTROL_CENTER_STREAMS_NUM_STREAM_THREADS: 3
+    CONTROL_CENTER_INTERNAL_TOPICS_PARTITIONS: 1
+    CONTROL_CENTER_MONITORING_INTERCEPTOR_TOPIC_PARTITIONS: 1
+    CONTROL_CENTER_METRICS_TOPIC_MAX_MESSAGE_BYTES: 8388608
+    CONTROL_CENTER_LICENSE: "$CONTROL_CENTER_LICENSE"
+    PORT: 9021
+```
+
 * Screenshots
 
 See the [differences between Confluent Cloud UI and local Control Center connected to Confluent Cloud](./ccloud_control_center_comparison)
@@ -479,6 +754,76 @@ Any alerts triggered by consumer lag, cluster status, or broker status events do
 #### Grafana
 
 [JMX Exporter](https://github.com/prometheus/jmx_exporter), [Prometheus](https://github.com/prometheus/prometheus) and [Grafana](https://grafana.com) are installed in order to provide a demo of clients monitoring.
+
+* Docker configuration:
+
+```yml
+jmx-exporter:
+  build: ./jmx-exporter
+  hostname: jmx-exporter
+  container_name: jmx-exporter
+  tty: true
+  volumes:
+  - jmx-exporter-vol:/usr/share/jmx_exporter/
+alertmanager:
+  image: prom/alertmanager:v0.18.0
+  hostname: alertmanager
+  container_name: alertmanager
+  ports:
+    - 9093:9093
+
+node-exporter:
+  image: prom/node-exporter:v0.18.1
+  hostname: node-exporter
+  container_name: node-exporter
+  volumes:
+    - /proc:/host/proc:ro
+    - /sys:/host/sys:ro
+    - /:/rootfs:ro
+  command:
+    - '--path.procfs=/host/proc'
+    - '--path.sysfs=/host/sys'
+    - '--collector.filesystem.ignored-mount-points'
+    - '^(aufs|proc|nsfs|shm|cgroup|tmpfs|binfmt_misc|debugfs|devpts|fusectl|hugetlbfs|fuse.lxcfs|mqueue|pstore|securityfs|sysfs|autofs|devtmpfs|configfs)'
+
+prometheus:
+  image: prom/prometheus:v2.11.1
+  hostname: prometheus
+  container_name: prometheus
+  ports:
+    - 9090:9090
+  volumes:
+    - ./prometheus/:/etc/prometheus/
+  depends_on:
+    - jmx-exporter
+    - node-exporter
+    - kafka-lag-exporter
+    - alertmanager
+
+kafka-lag-exporter:
+  image: lightbend/kafka-lag-exporter:0.5.5
+  hostname: kafka-lag-exporter
+  container_name: kafka-lag-exporter
+  restart: always
+  ports:
+    - 9999:9999
+  volumes:
+    - ./kafka-lag-exporter/application.conf:/opt/docker/conf/application.conf
+    - ./kafka-lag-exporter/logback.xml:/opt/docker/conf/logback.xml
+
+grafana:
+  image: grafana/grafana:6.3.0
+  hostname: grafana
+  container_name: grafana
+  environment:
+    GF_INSTALL_PLUGINS: grafana-piechart-panel
+  ports:
+    - 3000:3000
+  volumes:
+    - ./grafana/provisioning/:/etc/grafana/provisioning/
+  depends_on:
+    - prometheus
+```
 
 Open a brower and visit http://127.0.0.1:3000 (login/password is `admin/admin`)
 
@@ -561,7 +906,7 @@ Then you can call `kafka-consumer-groups` command:
 Example:
 
 ```bash
-$ kafka-consumer-groups --bootstrap-server $BOOTSTRAP_SERVERS --command-config /tmp/client.properties --list
+$ kafka-consumer-groups --bootstrap-server <BOOTSTRAP_SERVERS >--command-config /tmp/client.properties --list
 
 _confluent-controlcenter-5-3-1-1
 customer-avro-app
@@ -573,7 +918,7 @@ _confluent-controlcenter-5-3-1-1-command
 ```
 
 ```bash
-$ kafka-consumer-groups --bootstrap-server $BOOTSTRAP_SERVERS --command-config /tmp/client.properties --group customer-avro-app --describe
+$ kafka-consumer-groups --bootstrap-server <BOOTSTRAP_SERVERS >--command-config /tmp/client.properties --group customer-avro-app --describe
 
 GROUP             TOPIC           PARTITION  CURRENT-OFFSET  LOG-END-OFFSET  LAG             CONSUMER-ID                                     HOST                                      CLIENT-ID
 customer-avro-app customer-avro   2          0               0               0               consumer-1-c0b84633-8bdf-452c-ab69-387726e4234b 152.227.102.84.rev.sfr.net/84.102.227.152 consumer-1
@@ -593,11 +938,9 @@ This is explained [above](#consumer-lag-dashboard).
 
 ### Restrict access to Confluent Cloud
 
-Things to know:
+* Anyone with access to Confluent Cloud UI (i.e having a login/password) has **full access** to all the resources (i.e. it is a superuser).
 
-* Anyone with access to Confluent Cloud web browser (i.e having a login/password) has full access to all the resources (i.e. a SuperUser).
-
-* If you want to [restrict access](https://docs.confluent.io/current/cloud/access-management/restrict-access.html#restrict-access-to-ccloud) to a user, a superuser can provide an API key/secret pair.
+* If you want to [restrict access](https://docs.confluent.io/current/cloud/access-management/restrict-access.html#restrict-access-to-ccloud) to a user, do not create him a login/password on Confluent Cloud UI, but instead a superuser can create for him an API key/secret pair:
 
   * Either by creating API key/secret using UI, in `Cluster settings->API access` ![API key/secret](./images/42.jpg)
 
@@ -607,28 +950,32 @@ Things to know:
        ccloud api-key create --resource <cluster id>
        ```
 
-Then a *restricted* user (i.e with no login/password but with API key) will be able to use Confluent Platform commands like kafka-topics, kafka-console-producer, kafka-console-consumer, kafka-consumer-groups, etc..
+This *restricted* user (i.e with no login/password but with API key) will then not be able to use ccloud as it requires to login with login/password, however he will be able to use Confluent Platform commands like `kafka-topics`, `kafka-console-producer`, `kafka-console-consumer`, `kafka-consumer-groups`, etc..
 
-Follow this [link](https://docs.confluent.io/current/cloud/access-management/restrict-access.html#restrict-access-to-ccloud) for examples
+Follow this [link](https://docs.confluent.io/current/cloud/access-management/restrict-access.html#restrict-access-to-ccloud) for examples.
 
-Note that a *restricted* user, even if he's not a superuser, will still be able to create, read, delete topics.
+⚠️ a *restricted* user, even if he's not a *superuser*, will still be able to create, read and delete topics.
 
-If you want to restrict this, then you need to setup ACLs.
-
+If you want to restrict this, then you need to setup ACLs ⤵️
 
 ### Service Account and ACLs
 
 You can setup ACLs by using [Service Accounts](https://docs.confluent.io/current/cloud/access-management/service-account.html#service-accounts).
-This is done by a *superuser* using `ccloud`cli:
+
+Note: you can also refer to Confluent documentation: [Tutorial: User Management in Confluent Cloud](https://docs.confluent.io/current/cloud/access-management/user-service-example.html)
+
+This should be setup by a *superuser* using `ccloud`cli (not available in Confluent Cloud UI):
+
+This is how it works:
 
 * Create a new service account:
 
 ```bash
-$ ccloud service-account create demo-app-24353 --description demo-app-24353
+$ ccloud service-account create my-java-producer-app --description my-java-producer-app
 +-------------+----------------+
 | Id          |          21280 |
-| Name        | demo-app-24353 |
-| Description | demo-app-24353 |
+| Name        | my-java-producer-app |
+| Description | my-java-producer-app |
 +-------------+----------------+
 ```
 
@@ -643,7 +990,7 @@ Save the API key and secret. The secret is not retrievable later.
 +---------+------------------------------------------------------------------+
 ```
 
-Note: wait 90 seconds for the user and service account key and secret to propagate
+Note: ⏳ wait 90 seconds for the user and service account key and secret to propagate
 
 * Create a local configuration file `/tmp/client.config` for the client to connect to Confluent Cloud with the newly created API key and secret
 
@@ -663,34 +1010,31 @@ $ ccloud kafka acl list --service-account-id 21280
 +------------------+------------+-----------+----------+------+------+
 ```
 
+Here is an example using a Java producer using the service account created above `my-java-producer-app`
+
 Example before ACLs are set:
 
-* Run the Java producer to `demo-topic-1`
+* Run the Java producer to `demo-acl-topic`
 
-Check logs for `org.apache.kafka.common.errors.TopicAuthorizationException`:
-
-```
-PASS: Producer failed due to org.apache.kafka.common.errors.TopicAuthorizationException (expected because there are no ACLs to allow this client application)
-```
+It's failing with `org.apache.kafka.common.errors.TopicAuthorizationException`exception.
+This is expected because there are no ACLs to allow this service account application.
 
 * Create ACLs for the service account:
 
 ```bash
-$ ccloud kafka acl create --allow --service-account-id 21280 --operation WRITE --topic demo-topic-1
+$ ccloud kafka acl create --allow --service-account-id 21280 --operation WRITE --topic demo-acl-topic
 $ ccloud kafka acl list --service-account-id 21280
 ```
 
 ```
   ServiceAccountId | Permission | Operation | Resource |     Name     |  Type
 +------------------+------------+-----------+----------+--------------+---------+
-  User:21280       | ALLOW      | WRITE     | TOPIC    | demo-topic-1 | LITERAL
+  User:21280       | ALLOW      | WRITE     | TOPIC    | demo-acl-topic | LITERAL
 ```
 
 Example after ACLs are set:
 
-* Run the Java producer to `demo-topic-1`
-
-Check logs for `10 messages were produced to topic`
+* Run the Java producer to `demo-acl-topic`
 
 ```
 PASS: Producer works
@@ -703,23 +1047,23 @@ Producing record: alice {"count":6}
 Producing record: alice {"count":7}
 Producing record: alice {"count":8}
 Producing record: alice {"count":9}
-Produced record to topic demo-topic-1 partition [0] @ offset 0
-Produced record to topic demo-topic-1 partition [0] @ offset 1
-Produced record to topic demo-topic-1 partition [0] @ offset 2
-Produced record to topic demo-topic-1 partition [0] @ offset 3
-Produced record to topic demo-topic-1 partition [0] @ offset 4
-Produced record to topic demo-topic-1 partition [0] @ offset 5
-Produced record to topic demo-topic-1 partition [0] @ offset 6
-Produced record to topic demo-topic-1 partition [0] @ offset 7
-Produced record to topic demo-topic-1 partition [0] @ offset 8
-Produced record to topic demo-topic-1 partition [0] @ offset 9
-10 messages were produced to topic demo-topic-1
+Produced record to topic demo-acl-topic partition [0] @ offset 0
+Produced record to topic demo-acl-topic partition [0] @ offset 1
+Produced record to topic demo-acl-topic partition [0] @ offset 2
+Produced record to topic demo-acl-topic partition [0] @ offset 3
+Produced record to topic demo-acl-topic partition [0] @ offset 4
+Produced record to topic demo-acl-topic partition [0] @ offset 5
+Produced record to topic demo-acl-topic partition [0] @ offset 6
+Produced record to topic demo-acl-topic partition [0] @ offset 7
+Produced record to topic demo-acl-topic partition [0] @ offset 8
+Produced record to topic demo-acl-topic partition [0] @ offset 9
+10 messages were produced to topic demo-acl-topic
 ```
 
-Delete ACLs
+Delete ACLs, service account and api key:
 
 ```bash
-$ ccloud kafka acl delete --allow --service-account-id 21280 --operation WRITE --topic demo-topic-1
+$ ccloud kafka acl delete --allow --service-account-id 21280 --operation WRITE --topic demo-acl-topic
 $ ccloud service-account delete 21280
 $ ccloud api-key delete <API_KEY_SA>
 ```
