@@ -3,6 +3,8 @@ set -e
 
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 
+rm -rf ${DIR}/upload/
+
 ${DIR}/../../environment/sasl-plain/start.sh "${PWD}/docker-compose.sasl-plain.yml"
 
 mkdir -p ${DIR}/upload/input
