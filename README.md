@@ -14,7 +14,7 @@ Playground for Kafka/Confluent Docker experimentations
         * using [SSL](connect/connect-sqs-source/README.md#with-ssl-authentication)
     * <img src="https://cdn.worldvectorlogo.com/logos/aws-cloudwatch.svg" width="15"> [CloudWatch Logs](connect/connect-aws-cloudwatch-source)
 * <img src="https://avatars3.githubusercontent.com/u/11964329?s=400&v=4" width="15"> Debezium
-    * using <img src="https://www.stickpng.com/assets/images/5848104fcef1014c0b5e4950.png" width="15"> [MySQL](connect/connect-debezium-mysql-source)
+    * using <img src="https://banner2.cleanpng.com/20180803/abq/kisspng-mysql-cluster-database-management-system-专-题-咖-啡-与-代-码-5b640d8b2a2e53.6067051415332837231728.jpg" width="15"> [MySQL](connect/connect-debezium-mysql-source)
     * using <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/2/29/Postgresql_elephant.svg/1080px-Postgresql_elephant.svg.png" width="15"> [PostgreSQL](connect/connect-debezium-postgresql-source)
     * using <img src="https://res.cloudinary.com/practicaldev/image/fetch/s--HWZDLotH--/c_fill,f_auto,fl_progressive,h_320,q_auto,w_320/https://thepracticaldev.s3.amazonaws.com/uploads/user/profile_image/56177/3a0504e3-1139-4110-b903-08949636010a.jpg" width="15"> [MongoDB](connect/connect-debezium-mongodb-source)
     * using <img src="https://myrealdomain.com/images/sql-server-logo-clipart-4.jpg" width="15"> [SQL Server](connect/connect-debezium-sqlserver-source)
@@ -24,7 +24,7 @@ Playground for Kafka/Confluent Docker experimentations
 * <img src="https://media.glassdoor.com/sql/6280/tibco-software-squarelogo-1432805681756.png" width="15"> [TIBCO EMS](connect/connect-tibco-source)
 * <img src="https://phelepjeremy.files.wordpress.com/2017/06/syslog-ng-logo.png?w=200" width="15"> [Syslog](connect/connect-syslog-source)
 * <img src="https://opendistro.github.io/for-elasticsearch/assets/media/icons/javajdbc.png" width="15"> JDBC
-    * using <img src="https://www.stickpng.com/assets/images/5848104fcef1014c0b5e4950.png" width="15"> [MySQL](connect/connect-jdbc-mysql-source)
+    * using <img src="https://banner2.cleanpng.com/20180803/abq/kisspng-mysql-cluster-database-management-system-专-题-咖-啡-与-代-码-5b640d8b2a2e53.6067051415332837231728.jpg" width="15"> [MySQL](connect/connect-jdbc-mysql-source)
     * using <img src="https://www.stickee.co.uk/wp-content/uploads/2016/11/oracle-logo.jpg" width="15"> [Oracle 11](connect/connect-jdbc-oracle11-source)
     * using <img src="https://www.stickee.co.uk/wp-content/uploads/2016/11/oracle-logo.jpg" width="15"> [Oracle 12](connect/connect-jdbc-oracle12-source)
     * using <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/2/29/Postgresql_elephant.svg/1080px-Postgresql_elephant.svg.png" width="15"> [PostGreSQL](connect/connect-jdbc-postgresql-source)
@@ -70,7 +70,7 @@ Playground for Kafka/Confluent Docker experimentations
 * <img src="https://influxdata.github.io/branding/img/downloads/influxdata-logo--symbol--pool.svg" width="15"> [InfluxDB](connect/connect-influxdb-sink)
 * <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/5/5e/Cassandra_logo.svg/1280px-Cassandra_logo.svg.png" width="15"> [Cassandra](connect/connect-cassandra-sink)
 * <img src="https://opendistro.github.io/for-elasticsearch/assets/media/icons/javajdbc.png" width="15"> JDBC
-    * using <img src="https://www.stickpng.com/assets/images/5848104fcef1014c0b5e4950.png" width="15"> [MySQL](connect/connect-jdbc-mysql-sink)
+    * using <img src="https://banner2.cleanpng.com/20180803/abq/kisspng-mysql-cluster-database-management-system-专-题-咖-啡-与-代-码-5b640d8b2a2e53.6067051415332837231728.jpg" width="15"> [MySQL](connect/connect-jdbc-mysql-sink)
     * using <img src="https://www.stickee.co.uk/wp-content/uploads/2016/11/oracle-logo.jpg" width="15"> [Oracle 11](connect/connect-jdbc-oracle11-sink)
     * using <img src="https://www.stickee.co.uk/wp-content/uploads/2016/11/oracle-logo.jpg" width="15"> [Oracle 12](connect/connect-jdbc-oracle12-sink)
     * using <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/2/29/Postgresql_elephant.svg/1080px-Postgresql_elephant.svg.png" width="15"> [PostGreSQL](connect/connect-jdbc-postgresql-sink)
