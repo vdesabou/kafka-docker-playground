@@ -39,7 +39,7 @@ Playground for Kafka/Confluent Docker experimentations
 * <img src="https://library.kissclipart.com/20181208/the/kissclipart-google-cloud-storage-clipart-google-cloud-platform-196ffd87fde25da8.jpg" width="15"> GCP
   * <img src="https://miro.medium.com/max/512/1*LXO5TpyB1GnCAE5-pz6L6Q.png" width="15"> [Pub/Sub](connect/connect-gcp-pubsub-source)
   * <img src="https://miro.medium.com/max/256/1*lcRm2muyWDct3FW2drmptA.png" width="15"> [GCS](connect/connect-gcs-source)
-* <img src="https://www.stickpng.com/assets/images/5847f246cef1014c0b5e4865.png" width="15"> [Couchbase](connect/connect-couchbase-source)
+* <img src="https://cdn.worldvectorlogo.com/logos/couchbase-1.svg" width="15"> [Couchbase](connect/connect-couchbase-source)
 * <img src="https://cdn.iconscout.com/icon/free/png-512/sftp-1758329-1496548.png" width="15"> [SFTP](connect/connect-sftp-source)
 
 ### ↗️ Sink
@@ -86,7 +86,7 @@ Playground for Kafka/Confluent Docker experimentations
     * <img src="https://2.bp.blogspot.com/-491wbRLWQAQ/WXZVyGJ0kaI/AAAAAAAAE3g/Cedi8ujEAWYJjgWILvvke6lwqUtqg665gCLcBGAs/s1600/azuredatalake.png" width="15"> [Data Lake Gen1](connect/connect-azure-data-lake-storage-gen1-sink)
     * <img src="https://2.bp.blogspot.com/-491wbRLWQAQ/WXZVyGJ0kaI/AAAAAAAAE3g/Cedi8ujEAWYJjgWILvvke6lwqUtqg665gCLcBGAs/s1600/azuredatalake.png" width="15"> [Data Lake Gen2](connect/connect-azure-data-lake-storage-gen2-sink)
 * <img src="https://go.neo4j.com/rs/710-RRC-335/images/neo4j_logo_globe.png" width="15"> [Neo4j](connect/connect-neo4j-sink)
-* <img src="https://www.stickpng.com/assets/images/5847f246cef1014c0b5e4865.png" width="15"> [Couchbase](connect/connect-couchbase-sink)
+* <img src="https://cdn.worldvectorlogo.com/logos/couchbase-1.svg" width="15"> [Couchbase](connect/connect-couchbase-sink)
 * <img src="https://cdn.iconscout.com/icon/free/png-512/sftp-1758329-1496548.png" width="15"> [SFTP](connect/connect-sftp-sink)
 
 ## ☁️ Confluent Cloud:
