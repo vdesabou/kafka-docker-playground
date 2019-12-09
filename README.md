@@ -1,8 +1,21 @@
+<!-- omit in toc -->
 # <img src="https://www.docker.com/sites/default/files/d8/2019-07/vertical-logo-monochromatic.png" width="24"> <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/0/05/Apache_kafka.svg/1200px-Apache_kafka.svg.png" width="16"> <img src="https://res.cloudinary.com/dcvaxfika/image/upload/v1543961808/6.png" width="24"> kafka-docker-playground
 
-Playground for Kafka/Confluent Docker experimentations
+Playground for Kafka/Confluent Docker experimentations...
 
-## <img src="https://cdn.confluent.io/wp-content/themes/confluent/assets/images/connect-icon.png" width="36"> Kafka Connectors:
+<!-- omit in toc -->
+## Table of Contents
+- [<img src="https://cdn.confluent.io/wp-content/themes/confluent/assets/images/connect-icon.png" width="36"> Kafka Connectors](#img-srchttpscdnconfluentiowp-contentthemesconfluentassetsimagesconnect-iconpng-width36-kafka-connectors)
+  - [↘️ Source](#️-source)
+  - [↗️ Sink](#️-sink)
+- [<img src="https://pbs.twimg.com/profile_images/979058850207641601/cLCehePZ.jpg" width="36"> Confluent Cloud](#img-srchttpspbstwimgcomprofile_images979058850207641601clcehepzjpg-width36-confluent-cloud)
+- [🔐 Environments](#-environments)
+- [🎓 Kafka Tutorials](#-kafka-tutorials)
+- [<img src="https://upload.wikimedia.org/wikipedia/commons/thumb/0/05/Apache_kafka.svg/440px-Apache_kafka.svg.png" width="15"> Other Playgrounds](#img-srchttpsuploadwikimediaorgwikipediacommonsthumb005apache_kafkasvg440px-apache_kafkasvgpng-width15-other-playgrounds)
+- [📚 Useful Resources](#-useful-resources)
+
+
+## <img src="https://cdn.confluent.io/wp-content/themes/confluent/assets/images/connect-icon.png" width="36"> Kafka Connectors
 
 ### ↘️ Source
 
@@ -89,7 +102,7 @@ Playground for Kafka/Confluent Docker experimentations
 * <img src="https://cdn.worldvectorlogo.com/logos/couchbase-1.svg" width="15"> [Couchbase](connect/connect-couchbase-sink)
 * <img src="https://cdn.iconscout.com/icon/free/png-512/sftp-1758329-1496548.png" width="15"> [SFTP](connect/connect-sftp-sink)
 
-## <img src="https://pbs.twimg.com/profile_images/979058850207641601/cLCehePZ.jpg" width="36">  Confluent Cloud:
+## <img src="https://pbs.twimg.com/profile_images/979058850207641601/cLCehePZ.jpg" width="36">  Confluent Cloud
 
 * <img src="https://pbs.twimg.com/profile_images/979058850207641601/cLCehePZ.jpg" width="15"> [Confluent Cloud Demo](ccloud/ccloud-demo)
 
@@ -153,14 +166,14 @@ This is just the excellent examples in [Kafka tutorial](https://kafka-tutorials.
 
 
 
-## Other:
+## <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/0/05/Apache_kafka.svg/440px-Apache_kafka.svg.png" width="15"> Other Playgrounds
 
 * [Confluent Rebalancer](other/rebalancer)
 * [Confluent Replicator](connect/connect-replicator) [also with [SASL_SSL](connect/connect-replicator/README.md#with-sasl_ssl-authentication)]`
 * Testing [Separate principals](https://docs.confluent.io/current/connect/security.html#separate-principals) (`connector.client.config.override.policy`) for [Source connector (SFTP source)](other/connect-override-policy-sftp-source)
 * Testing [Separate principals](https://docs.confluent.io/current/connect/security.html#separate-principals) (`connector.client.config.override.policy`) for [Source connector (SFTP sink)](other/connect-override-policy-sftp-sink)
 
-## 📚 Other useful resources
+## 📚 Useful Resources
 
 * [A Kafka Story 📖](https://github.com/framiere/a-kafka-story): A step by step guide to use Kafka ecosystem (Kafka Connect, KSQL, Java Consumers/Producers, etc..) with Docker
 * [Kafka Boom Boom 💥](https://github.com/Dabz/kafka-boom-boom): An attempt to break kafka
