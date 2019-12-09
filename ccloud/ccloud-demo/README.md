@@ -1070,12 +1070,6 @@ $ ccloud api-key delete <API_KEY_SA>
 
 ## 📚 Other useful resources
 
-* [cp-all-in-one-cloud](https://github.com/confluentinc/examples/tree/5.3.1-post/cp-all-in-one-cloud)
-
-* [Using Confluent CLI with Avro And Confluent Cloud Schema Registry](https://github.com/confluentinc/examples/tree/5.3.1-post/clients/cloud/confluent-cli#example-2-avro-and-confluent-cloud-schema-registry)
-
-* [Other clients example](https://github.com/confluentinc/examples/blob/5.3.1-post/clients/cloud/README.md)
-
-* [Beginner Cloud](https://github.com/confluentinc/examples/tree/5.3.1-post/ccloud/beginner-cloud)
+* [Confluent Examples](https://github.com/confluentinc/examples/tree/master/ccloud)
 
 * [A Confluent Cloud Story](https://github.com/framiere/a-confluent-cloud-story)
