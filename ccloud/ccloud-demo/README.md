@@ -1,7 +1,5 @@
 # Confluent Cloud Demo
 
-![Diagram](./images/diagram.png)
-
 - [Confluent Cloud Demo](#confluent-cloud-demo)
   - [⚠️ Disclaimer](#️-disclaimer)
   - [Pre-requisites](#pre-requisites)
@@ -100,6 +98,8 @@ Run with Confluent Cloud Schema Registry:
 ```
 
 ## Connecting components to Confluent Cloud
+
+![Diagram](./images/diagram.png)
 
 Connecting your components to your Confluent Cloud cluster is easy. This is described in Confluent [documentation](https://docs.confluent.io/current/cloud/connect/index.html).
 
