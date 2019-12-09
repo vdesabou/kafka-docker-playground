@@ -5,17 +5,17 @@ Playground for Kafka/Confluent Docker experimentations...
 
 <!-- omit in toc -->
 ## Table of Contents
-- [<img src="https://cdn.confluent.io/wp-content/themes/confluent/assets/images/connect-icon.png" width="36"> Kafka Connectors](#img-srchttpscdnconfluentiowp-contentthemesconfluentassetsimagesconnect-iconpng-width36-kafka-connectors)
+- [🔗 Kafka Connectors](#-kafka-connectors)
   - [↘️ Source](#️-source)
   - [↗️ Sink](#️-sink)
-- [<img src="https://pbs.twimg.com/profile_images/979058850207641601/cLCehePZ.jpg" width="36"> Confluent Cloud](#img-srchttpspbstwimgcomprofile_images979058850207641601clcehepzjpg-width36-confluent-cloud)
+- [☁️ Confluent Cloud](#️-confluent-cloud)
 - [🔐 Environments](#-environments)
 - [🎓 Kafka Tutorials](#-kafka-tutorials)
-- [<img src="https://upload.wikimedia.org/wikipedia/commons/thumb/0/05/Apache_kafka.svg/440px-Apache_kafka.svg.png" width="15"> Other Playgrounds](#img-srchttpsuploadwikimediaorgwikipediacommonsthumb005apache_kafkasvg440px-apache_kafkasvgpng-width15-other-playgrounds)
+- [👾 Other Playgrounds](#-other-playgrounds)
 - [📚 Useful Resources](#-useful-resources)
 
 
-## <img src="https://cdn.confluent.io/wp-content/themes/confluent/assets/images/connect-icon.png" width="36"> Kafka Connectors
+## 🔗 Kafka Connectors
 
 ### ↘️ Source
 
@@ -102,7 +102,7 @@ Playground for Kafka/Confluent Docker experimentations...
 * <img src="https://cdn.worldvectorlogo.com/logos/couchbase-1.svg" width="15"> [Couchbase](connect/connect-couchbase-sink)
 * <img src="https://cdn.iconscout.com/icon/free/png-512/sftp-1758329-1496548.png" width="15"> [SFTP](connect/connect-sftp-sink)
 
-## <img src="https://pbs.twimg.com/profile_images/979058850207641601/cLCehePZ.jpg" width="36">  Confluent Cloud
+## ☁️ Confluent Cloud
 
 * <img src="https://pbs.twimg.com/profile_images/979058850207641601/cLCehePZ.jpg" width="15"> [Confluent Cloud Demo](ccloud/ccloud-demo)
 
@@ -166,7 +166,7 @@ This is just the excellent examples in [Kafka tutorial](https://kafka-tutorials.
 
 
 
-## <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/0/05/Apache_kafka.svg/440px-Apache_kafka.svg.png" width="15"> Other Playgrounds
+## 👾 Other Playgrounds
 
 * [Confluent Rebalancer](other/rebalancer)
 * [Confluent Replicator](connect/connect-replicator) [also with [SASL_SSL](connect/connect-replicator/README.md#with-sasl_ssl-authentication)]`
