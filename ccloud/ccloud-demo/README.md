@@ -140,8 +140,6 @@ props.put("basic.auth.credentials.source", "USER_INFO");
 props.put("schema.registry.basic.auth.user.info", "<SR_API_KEY>:<SR_API_SECRET>");
 ```
 
-Link to Confluent [documentation](https://github.com/confluentinc/examples/tree/5.3.1-post/clients/cloud/java)
-
 N.B:
 
 - The key is fixed and set with `alice`
@@ -564,16 +562,6 @@ You can access KSQL CLI using this command:
 $ docker exec -i ksql-cli bash -c 'echo -e "\n\n⏳ Waiting for KSQL to be available before launching CLI\n"; while [ $(curl -s -o /dev/null -w %{http_code} http://ksql-server:8089/) -eq 000 ] ; do echo -e $(date) "KSQL Server HTTP state: " $(curl -s -o /dev/null -w %{http_code} http:/ksql-server:8089/) " (waiting for 200)" ; sleep 5 ; done; ksql http://ksql-server:8089'
 ```
 
-Note: KSQL CLI * Docker configuration:
-
-```yml
-ksql-cli:
-  image: confluentinc/cp-ksql-cli:5.3.1
-  container_name: ksql-cli
-  entrypoint: /bin/sh
-  tty: true
-```
-
 Example:
 
 ```
@@ -590,6 +578,16 @@ ksql> show topics;
  simple-stream-KSTREAM-REDUCE-STATE-STORE-0000000003-changelog                                 | false      | 6          | 3                  | 0         | 0
  simple-stream-KSTREAM-REDUCE-STATE-STORE-0000000003-repartition                               | false      | 6          | 3                  | 6         | 1
 ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+```
+
+* KSQL CLI Docker configuration:
+
+```yml
+ksql-cli:
+  image: confluentinc/cp-ksql-cli:5.3.1
+  container_name: ksql-cli
+  entrypoint: /bin/sh
+  tty: true
 ```
 
 Link to Confluent [documentation](https://docs.confluent.io/current/cloud/connect/ksql-cloud-config.html)
