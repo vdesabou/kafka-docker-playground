@@ -101,7 +101,7 @@ Playground for Kafka/Confluent Docker experimentations
 ![Diagram](./ccloud/ccloud-demo/images/diagram.png)
 
 
-## 🔐 Deployments
+## 🔐 Environments
 
 * [PLAINTEXT](environment/plaintext): no security
 * [SASL_PLAIN](environment/sasl-plain): no SSL encryption / SASL/PLAIN authentication
