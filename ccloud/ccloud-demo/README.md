@@ -3,10 +3,10 @@
 ![Diagram](./images/diagram.png)
 
 - [Confluent Cloud Demo](#confluent-cloud-demo)
-  - [Disclaimer](#disclaimer)
+  - [⚠️ Disclaimer](#️-disclaimer)
   - [Pre-requisites](#pre-requisites)
   - [How to run](#how-to-run)
-  - [What it does](#what-it-does)
+  - [Connecting components to Confluent Cloud](#connecting-components-to-confluent-cloud)
     - [Java Producer](#java-producer)
     - [Kafka Streams](#kafka-streams)
     - [Java Consumer](#java-consumer)
@@ -26,9 +26,9 @@
       - [How to monitor consumer lag](#how-to-monitor-consumer-lag)
     - [Restrict access to Confluent Cloud](#restrict-access-to-confluent-cloud)
     - [Service Account and ACLs](#service-account-and-acls)
-  - [📚 Other useful resources](#%f0%9f%93%9a-other-useful-resources)
+  - [📚 Other useful resources](#-other-useful-resources)
 
-## Disclaimer
+## ⚠️ Disclaimer
 
 This demo is for reference purposes only and should be used to see a sample workflow using Confluent Cloud CLI
 
@@ -99,7 +99,11 @@ Run with Confluent Cloud Schema Registry:
 ./start.sh SCHEMA_REGISTRY_CONFLUENT_CLOUD
 ```
 
-## What it does
+## Connecting components to Confluent Cloud
+
+Connecting your components to your Confluent Cloud cluster is easy. This is described in Confluent [documentation](https://docs.confluent.io/current/cloud/connect/index.html).
+
+In this demo, we're deploying the following components in our local machine (using Docker) and connecting them to our Confluent Cloud cluster:
 
 ### Java Producer
 
@@ -136,6 +140,8 @@ props.put("basic.auth.credentials.source", "USER_INFO");
 props.put("schema.registry.basic.auth.user.info", "<SR_API_KEY>:<SR_API_SECRET>");
 ```
 
+Link to Confluent [documentation](https://github.com/confluentinc/examples/tree/5.3.1-post/clients/cloud/java)
+
 N.B:
 
 - The key is fixed and set with `alice`
@@ -148,6 +154,8 @@ props.put("confluent.monitoring.interceptor.security.protocol", "SASL_SSL");
 props.put("confluent.monitoring.interceptor.sasl.jaas.config", "org.apache.kafka.common.security.plain.PlainLoginModule required username=\"<API KEY>\" password=\"<API SECRET>\";");
 props.put("confluent.monitoring.interceptor.sasl.mechanism", "PLAIN");
 ```
+
+Link to Confluent [documentation](https://github.com/confluentinc/examples/tree/5.3.1-post/clients/cloud/java)
 
 ### Kafka Streams
 
@@ -172,7 +180,6 @@ N.B:
 
 - [Interceptors](https://docs.confluent.io/current/control-center/installation/clients.html#kstreams) for Kafka Streams are set
 
-
 ```java
 props.put("producer.interceptor.classes","io.confluent.monitoring.clients.interceptor.MonitoringProducerInterceptor");
 props.put("consumer.interceptor.classes","io.confluent.monitoring.clients.interceptor.MonitoringConsumerInterceptor");
@@ -182,6 +189,7 @@ props.put("confluent.monitoring.interceptor.sasl.jaas.config", "org.apache.kafka
 props.put("confluent.monitoring.interceptor.sasl.mechanism", "PLAIN");
 ```
 
+Link to Confluent [documentation](https://docs.confluent.io/current/cloud/connect/streams-cloud-config.html)
 
 ### Java Consumer
 
@@ -215,6 +223,7 @@ props.put("confluent.monitoring.interceptor.sasl.jaas.config", "org.apache.kafka
 props.put("confluent.monitoring.interceptor.sasl.mechanism", "PLAIN");
 ```
 
+Link to Confluent [documentation](https://github.com/confluentinc/examples/tree/5.3.1-post/clients/cloud/java)
 
 ### Connect
 
@@ -284,6 +293,8 @@ N.B:
     CONNECT_CONSUMER_CONFLUENT_MONITORING_INTERCEPTOR_SASL_JAAS_CONFIG: org.apache.kafka.common.security.plain.PlainLoginModule required username="<API KEY>" password="<API SECRET>";
     CONNECT_CONSUMER_CONFLUENT_MONITORING_INTERCEPTOR_SASL_MECHANISM: PLAIN
 ```
+
+Link to Confluent [documentation](https://docs.confluent.io/current/cloud/connect/connect-cloud-config.html)
 
 #### JDBC MySQL Source Connector
 
@@ -496,6 +507,8 @@ schema-registry:
     SCHEMA_REGISTRY_KAFKASTORE_SASL_MECHANISM: "PLAIN"
 ```
 
+Link to Confluent [documentation](https://docs.confluent.io/current/cloud/connect/schema-reg-cloud-config.html)
+
 ### KSQL
 
 As [Confluent Cloud KSQL](https://docs.confluent.io/current/cloud/limits.html#ccloud-ksql-preview) is still in preview, you can instead install local KSQL instance (docker service `ksql-server`) which is bootstrapping the Confluent Cloud broker.
@@ -578,6 +591,8 @@ ksql> show topics;
  simple-stream-KSTREAM-REDUCE-STATE-STORE-0000000003-repartition                               | false      | 6          | 3                  | 6         | 1
 ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 ```
+
+Link to Confluent [documentation](https://docs.confluent.io/current/cloud/connect/ksql-cloud-config.html)
 
 ### REST Proxy
 
@@ -666,11 +681,15 @@ Result:
 {"brokers":[0,5,2,8,4,1,6,7,3]}
 ```
 
+Link to Confluent [documentation](https://docs.confluent.io/current/cloud/connect/ksql-cloud-config.html)
+
 ### Monitoring
 
 #### Control Center
 
 A local Control Center instance (docker service `control-center`) is installed and reachable at [http://127.0.0.1:9021](http://127.0.0.1:9021]).
+
+Link to Confluent [documentation](https://docs.confluent.io/current/cloud/connect/c3-cloud-config.html)
 
 * Docker configuration:
 
@@ -1070,6 +1089,6 @@ $ ccloud api-key delete <API_KEY_SA>
 
 ## 📚 Other useful resources
 
-* [Confluent Examples](https://github.com/confluentinc/examples/tree/master/ccloud)
+* [Confluent Examples](https://github.com/confluentinc/examples/tree/master/ccloud) Github repository
 
 * [A Confluent Cloud Story](https://github.com/framiere/a-confluent-cloud-story)
