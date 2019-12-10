@@ -1,0 +1,16 @@
+---
+version: '3.5'
+services:
+  hbase:
+    image: aaionap/hbase:1.2.0
+    hostname: hbase
+    container_name: hbase
+
+  connect:
+    depends_on:
+      - zookeeper
+      - broker
+      - schema-registry
+      - hbase
+    environment:
+      CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-hbase
