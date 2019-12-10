@@ -27,18 +27,14 @@ services:
       - ../../environment/sasl-ssl/security:/etc/kafka/secrets
     ports:
       - "9091:9091"
-      - "29091:29091"
     environment:
       KAFKA_ZOOKEEPER_CONNECT: "zookeeper:2181"
-      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: SASL_SSL:SASL_SSL,SSL:SSL,SASL_SSL_HOST:SASL_SSL,PLAINTEXT:PLAINTEXT
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: SASL_SSL:SASL_SSL,SSL:SSL
       KAFKA_INTER_BROKER_LISTENER_NAME: SASL_SSL
-      KAFKA_ADVERTISED_LISTENERS: SASL_SSL://broker:9091,SASL_SSL_HOST://localhost:29091,PLAINTEXT://broker:10091,SSL://broker:11091
-      KAFKA_AUTHORIZER_CLASS_NAME: kafka.security.auth.SimpleAclAuthorizer
-      KAFKA_SUPER_USERS: User:client;User:schema-registry;User:restproxy;User:broker;User:connect;User:ANONYMOUS
+      KAFKA_ADVERTISED_LISTENERS: SASL_SSL://broker:9091,SSL://broker:11091
       KAFKA_LOG4J_LOGGERS: "kafka.authorizer.logger=INFO"
       KAFKA_METRIC_REPORTERS: "io.confluent.metrics.reporter.ConfluentMetricsReporter"
       KAFKA_BROKER_ID: 1
-      KAFKA_BROKER_RACK: "r1"
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
       CONFLUENT_METRICS_REPORTER_BOOTSTRAP_SERVERS: "broker:9091"
       CONFLUENT_METRICS_REPORTER_SECURITY_PROTOCOL: SASL_SSL
@@ -55,9 +51,6 @@ services:
       CONFLUENT_METRICS_REPORTER_MAX_REQUEST_SIZE: 10485760
       # To avoid race condition with control-center
       CONFLUENT_METRICS_REPORTER_TOPIC_CREATE: "false"
-      KAFKA_DELETE_TOPIC_ENABLE: "true"
-      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "true"
-      KAFKA_JMX_PORT: 9991
       KAFKA_SASL_ENABLED_MECHANISMS: PLAIN
       KAFKA_SASL_MECHANISM_INTER_BROKER_PROTOCOL: PLAIN
       KAFKA_SSL_KEYSTORE_FILENAME: kafka.broker.keystore.jks
@@ -68,7 +61,6 @@ services:
       # enables 2-way authentication
       KAFKA_SSL_CLIENT_AUTH: "required"
       KAFKA_SSL_ENDPOINT_IDENTIFICATION_ALGORITHM: "HTTPS"
-      KAFKA_ZOOKEEPER_SET_ACL: "true"
       KAFKA_OPTS: -Djava.security.auth.login.config=/etc/kafka/secrets/broker_jaas.conf
       KAFKA_SSL_PRINCIPAL_MAPPING_RULES: RULE:^CN=(.*?),OU=TEST.*$$/$$1/,DEFAULT
 
