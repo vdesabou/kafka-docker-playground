@@ -54,6 +54,7 @@ Playground for Kafka/Confluent Docker experimentations...
   * <img src="https://miro.medium.com/max/256/1*lcRm2muyWDct3FW2drmptA.png" width="15"> [GCS](connect/connect-gcs-source)
 * <img src="https://cdn.worldvectorlogo.com/logos/couchbase-1.svg" width="15"> [Couchbase](connect/connect-couchbase-source)
 * <img src="https://cdn.iconscout.com/icon/free/png-512/sftp-1758329-1496548.png" width="15"> [SFTP](connect/connect-sftp-source)
+* <img src="https://res.cloudinary.com/practicaldev/image/fetch/s--HWZDLotH--/c_fill,f_auto,fl_progressive,h_320,q_auto,w_320/https://thepracticaldev.s3.amazonaws.com/uploads/user/profile_image/56177/3a0504e3-1139-4110-b903-08949636010a.jpg" width="15"> [MongoDB](connect/connect-mongodb-source)
 
 ### ↗️ Sink
 
