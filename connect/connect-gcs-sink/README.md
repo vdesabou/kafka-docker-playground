@@ -45,11 +45,18 @@ Simply run:
 $ ./gcs-sink.sh <BUCKET_NAME>
 ```
 
-Or using SASL_SSL and SSL authentications:
+Or using SASL_SSL:
 
 ```bash
 $ ./gcs-sink-sasl-ssl.sh <BUCKET_NAME>
 ```
+
+Or using 2 way SSL authentication:
+
+```bash
+$ ./gcs-sink-2way-ssl.sh <BUCKET_NAME>
+```
+
 
 Or using kerberos:
 
@@ -126,18 +133,18 @@ $ avro-tools tojson /tmp/gcs_topic+0+0000000000.avro
 Messages are sent to `gcs_topic-ssl` topic using:
 
 ```bash
-seq -f "{\"f1\": \"This is a message sent with SSL authentication %g\"}" 10 | docker exec -i connect kafka-avro-console-producer --broker-list broker:9091 --topic gcs_topic-ssl --property value.schema='{"type":"record","name":"myrecord","fields":[{"name":"f1","type":"string"}]}' --property schema.registry.url=https://schema-registry:8085 --producer.config /etc/kafka/secrets/client_without_interceptors.config
+$ seq -f "{\"f1\": \"This is a message sent with SSL authentication %g\"}" 10 | docker exec -i connect kafka-avro-console-producer --broker-list broker:11091 --topic gcs_topic-ssl --property value.schema='{"type":"record","name":"myrecord","fields":[{"name":"f1","type":"string"}]}' --property schema.registry.url=https://schema-registry:8085 --producer.config /etc/kafka/secrets/client_without_interceptors_2way_ssl.config
 ```
 
 The connector is created with:
 
 ```bash
-docker exec -e BUCKET_NAME="$BUCKET_NAME" connect \
+$ docker exec -e BUCKET_NAME="$BUCKET_NAME" connect \
      curl -X POST \
      --cert /etc/kafka/secrets/connect.certificate.pem --key /etc/kafka/secrets/connect.key --tlsv1.2 --cacert /etc/kafka/secrets/snakeoil-ca-1.crt \
      -H "Content-Type: application/json" \
      --data '{
-               "name": "gcs",
+               "name": "gcs-sink-ssl",
                "config": {
                     "connector.class": "io.confluent.connect.gcs.GcsSinkConnector",
                     "tasks.max" : "1",

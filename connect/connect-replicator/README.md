@@ -20,10 +20,16 @@ Simply run:
 $ ./replicator.sh
 ```
 
-Or using SASL_SSL and SSL authentications:
+Or using SASL_SSL authentications:
 
 ```bash
 $ ./replicator-sasl-ssl.sh
+```
+
+Or using 2 way SSL authentications:
+
+```bash
+$ ./replicator-2way-ssl.sh
 ```
 
 ## Details of what the script is doing
@@ -71,7 +77,7 @@ docker exec broker kafka-console-consumer --bootstrap-server broker:9092 --topic
 Sending messages to topic test-topic-ssl
 
 ```bash
-$ seq 10 | docker exec -i broker kafka-console-producer --broker-list broker:9091 --topic test-topic-ssl --producer.config /etc/kafka/secrets/client_without_interceptors.config
+$ seq 10 | docker exec -i broker kafka-console-producer --broker-list broker:11091 --topic test-topic-ssl --producer.config /etc/kafka/secrets/client_without_interceptors_2way_ssl.config
 ```
 
 Creating Confluent Replicator connector with SSL authentication
@@ -123,7 +129,7 @@ $ docker exec connect \
 Verify we have received the data in test-topic-ssl-duplicate topic
 
 ```bash
-$ docker exec broker kafka-console-consumer --bootstrap-server broker:9091 --topic test-topic-ssl-duplicate --from-beginning --max-messages 10 --consumer.config /etc/kafka/secrets/client_without_interceptors.config
+$ docker exec broker kafka-console-consumer --bootstrap-server broker:11091 --topic test-topic-ssl-duplicate --from-beginning --max-messages 10 --consumer.config /etc/kafka/secrets/client_without_interceptors_2way_ssl.config
 ```
 
 ### With SASL_SSL authentication:

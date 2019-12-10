@@ -1,8 +1,8 @@
-# SASL/PLAIN with SSL encryption
+# SSL encryption and SSL authentication
 
 ## Description
 
-This is a deployment with SSL encryption, and SASL/PLAIN authentication:
+This is a deployment with SSL encryption, and SSL authentication:
 
 * 1 zookeeper
 * 1 broker

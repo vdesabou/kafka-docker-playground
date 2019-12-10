@@ -1,0 +1,10 @@
+---
+version: '3.5'
+services:
+  connect:
+    volumes:
+        - $HOME/.aws/credentials:/root/.aws/credentials:ro
+        - $HOME/.aws/config:/root/.aws/config:ro
+        - ../../environment/2way-ssl/security:/etc/kafka/secrets
+    environment:
+      CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-sqs

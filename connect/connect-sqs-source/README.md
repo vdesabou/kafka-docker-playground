@@ -33,10 +33,16 @@ Simply run:
 $ ./sqs.sh
 ```
 
-Or using security (SASL_SSL and SSL authentications):
+Or using SASL_SSL authentication:
 
 ```bash
 $ ./sqs-sasl-ssl.sh
+```
+
+Or using 2 way SSL authentication:
+
+```bash
+$ ./sqs-2way-ssl.sh
 ```
 
 ## Details of what the script is doing
@@ -211,7 +217,7 @@ docker exec -e QUEUE_URL="$QUEUE_URL" connect \
 Verify we have received the data in test-sqs-source topic:
 
 ```bash
-$ docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9091 --topic test-sqs-source-ssl --from-beginning --max-messages 2 --property schema.registry.url=https://schema-registry:8085 --consumer.config /etc/kafka/secrets/client_without_interceptors.config  | tail -n 3 | head -n 2 | jq .
+$ docker exec connect kafka-avro-console-consumer -bootstrap-server broker:11091 --topic test-sqs-source-ssl --from-beginning --max-messages 2 --property schema.registry.url=https://schema-registry:8085 --consumer.config /etc/kafka/secrets/client_without_interceptors_2way_ssl.config  | tail -n 3 | head -n 2 | jq .
 ```
 
 ### With SASL_SSL authentication:
