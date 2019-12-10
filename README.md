@@ -23,7 +23,7 @@ Playground for Kafka/Confluent Docker experimentations...
     * <img src="https://cdn.worldvectorlogo.com/logos/aws-s3.svg" width="15"> [S3](connect/connect-s3-source)
     * <img src="https://cdn.worldvectorlogo.com/logos/aws-kinesis.svg" width="15"> [Kinesis](connect/connect-kinesis-source)
     * <img src="https://cdn.worldvectorlogo.com/logos/aws-sqs.svg" width="15"> [SQS](connect/connect-sqs-source)
-        * using [SASL_SSL](connect/connect-sqs-source/README.md#with-sasl_ssl-authentication)
+        * using [SASL_SSL](connect/connect-sqs-source/README.md#with-sasl-ssl-authentication)
         * using [SSL](connect/connect-sqs-source/README.md#with-ssl-authentication)
     * <img src="https://cdn.worldvectorlogo.com/logos/aws-cloudwatch.svg" width="15"> [CloudWatch Logs](connect/connect-aws-cloudwatch-source)
 * <img src="https://avatars3.githubusercontent.com/u/11964329?s=400&v=4" width="15"> Debezium
@@ -71,7 +71,7 @@ Playground for Kafka/Confluent Docker experimentations...
     * <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/8/89/Google-BigQuery-Logo.svg/1200px-Google-BigQuery-Logo.svg.png" width="15"> [BigQuery](connect/connect-gcp-bigquery-sink)
     * <img src="https://img.stackshare.io/service/6672/google-cloud-functions.png" width="15"> [Cloud Functions](connect/connect-google-cloud-functions-sink)
     * <img src="https://miro.medium.com/max/256/1*lcRm2muyWDct3FW2drmptA.png" width="15"> [GCS](connect/connect-gcs-sink)
-        * using [SASL_SSL](connect/connect-gcs-sink/README.md#with-sasl_ssl-authentication)
+        * using [SASL_SSL](connect/connect-gcs-sink/README.md#with-sasl-ssl-authentication)
         * using [SSL](connect/connect-gcs-sink/README.md#with-ssl-authentication)
         * using [Kerberos GSSAPI](connect/connect-gcs-sink/README.md#with-kerberos-gssapi-authentication)
         * using [LDAP Authorizer SASL/PLAIN](connect/connect-gcs-sink/README.md#with-ldap-authorizer-with-saslplain)
@@ -170,7 +170,7 @@ This is just the excellent examples in [Kafka tutorial](https://kafka-tutorials.
 ## 👾 Other Playgrounds
 
 * [Confluent Rebalancer](other/rebalancer)
-* [Confluent Replicator](connect/connect-replicator) [also with [SASL_SSL](connect/connect-replicator/README.md#with-sasl_ssl-authentication)]`
+* [Confluent Replicator](connect/connect-replicator) [also with [SASL_SSL](connect/connect-replicator/README.md#with-sasl-ssl-authentication) and [2WAY_SSL](connect/connect-replicator/README.md#with-ssl-authentication)]
 * Testing [Separate principals](https://docs.confluent.io/current/connect/security.html#separate-principals) (`connector.client.config.override.policy`) for [Source connector (SFTP source)](other/connect-override-policy-sftp-source)
 * Testing [Separate principals](https://docs.confluent.io/current/connect/security.html#separate-principals) (`connector.client.config.override.policy`) for [Source connector (SFTP sink)](other/connect-override-policy-sftp-sink)
 
