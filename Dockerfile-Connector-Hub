@@ -58,3 +58,4 @@ RUN   confluent-hub install --no-prompt confluentinc/kafka-connect-ibmmq:latest 
 		&& confluent-hub install --no-prompt confluentinc/connect-transforms:latest \
 		&& confluent-hub install --no-prompt confluentinc/kafka-connect-sftp:latest \
 		&& confluent-hub install --no-prompt confluentinc/kafka-connect-hbase:latest \
+		&& confluent-hub install --no-prompt mongodb/kafka-connect-mongodb:0.2 \
