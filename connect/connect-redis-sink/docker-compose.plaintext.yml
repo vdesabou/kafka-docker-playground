@@ -1,0 +1,16 @@
+---
+version: '3.5'
+services:
+  redis:
+    image: redis:5.0.7
+    hostname: redis
+    container_name: redis
+
+  connect:
+    depends_on:
+      - zookeeper
+      - broker
+      - schema-registry
+      - redis
+    environment:
+      CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/jcustenborder-kafka-connect-redis
