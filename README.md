@@ -104,6 +104,7 @@ Playground for Kafka/Confluent Docker experimentations...
 * <img src="https://cdn.iconscout.com/icon/free/png-512/sftp-1758329-1496548.png" width="15"> [SFTP](connect/connect-sftp-sink)
 * <img src="https://res.cloudinary.com/practicaldev/image/fetch/s--HWZDLotH--/c_fill,f_auto,fl_progressive,h_320,q_auto,w_320/https://thepracticaldev.s3.amazonaws.com/uploads/user/profile_image/56177/3a0504e3-1139-4110-b903-08949636010a.jpg" width="15"> [MongoDB](connect/connect-mongodb-sink)
 * <img src="https://cdn.freebiesupply.com/logos/thumbs/2x/hbase-logo.png" width="15"> [HBase](connect/connect-hbase-sink)
+* <img src="https://banner2.cleanpng.com/20180907/ska/kisspng-redis-memcached-database-caching-key-value-databas-redis-logo-svg-vector-amp-png-transparent-vect-5b9313b86aa329.3173207815363654964368.jpg" width="15"> [Redis](connect/connect-redis-sink)
 
 ## ☁️ Confluent Cloud
 
