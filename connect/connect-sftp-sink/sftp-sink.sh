@@ -8,12 +8,10 @@ ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml
 
 echo "Creating SFTP Sink connector"
 docker exec connect \
-     curl -X POST \
+     curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
-        "name": "sftp-sink",
-        "config": {
-               "topics": "test_sftp_sink",
+        "topics": "test_sftp_sink",
                "tasks.max": "1",
                "connector.class": "io.confluent.connect.sftp.SftpSinkConnector",
                "partitioner.class": "io.confluent.connect.storage.partitioner.DefaultPartitioner",
@@ -30,8 +28,8 @@ docker exec connect \
                "confluent.license": "",
                "confluent.topic.bootstrap.servers": "broker:9092",
                "confluent.topic.replication.factor": "1"
-          }}' \
-     http://localhost:8083/connectors | jq .
+          }' \
+     http://localhost:8083/connectors/sftp-sink/config | jq .
 
 
 echo "Sending messages to topic test_sftp_sink"

@@ -84,12 +84,10 @@ The connector is created with:
 
 ```bash
 docker exec -e BUCKET_NAME="$BUCKET_NAME" connect \
-     curl -X POST \
+     curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
-               "name": "gcs",
-               "config": {
-                    "connector.class": "io.confluent.connect.gcs.GcsSinkConnector",
+               "connector.class": "io.confluent.connect.gcs.GcsSinkConnector",
                     "tasks.max" : "1",
                     "topics" : "gcs_topic",
                     "gcs.bucket.name" : "'"$BUCKET_NAME"'",
@@ -102,8 +100,8 @@ docker exec -e BUCKET_NAME="$BUCKET_NAME" connect \
                     "schema.compatibility": "NONE",
                     "confluent.topic.bootstrap.servers": "broker:9092",
                     "confluent.topic.replication.factor": "1"
-          }}' \
-     http://localhost:8083/connectors | jq .
+          }' \
+     http://localhost:8083/connectors/gcs-sink/config | jq .
 ```
 
 After a few seconds, data should be in GCS:
@@ -140,12 +138,10 @@ The connector is created with:
 
 ```bash
 $ docker exec -e BUCKET_NAME="$BUCKET_NAME" connect \
-     curl -X POST \
+     curl -X PUT \
      --cert /etc/kafka/secrets/connect.certificate.pem --key /etc/kafka/secrets/connect.key --tlsv1.2 --cacert /etc/kafka/secrets/snakeoil-ca-1.crt \
      -H "Content-Type: application/json" \
      --data '{
-               "name": "gcs-sink-ssl",
-               "config": {
                     "connector.class": "io.confluent.connect.gcs.GcsSinkConnector",
                     "tasks.max" : "1",
                     "topics" : "gcs_topic-ssl",
@@ -167,8 +163,8 @@ $ docker exec -e BUCKET_NAME="$BUCKET_NAME" connect \
                     "confluent.topic.ssl.keystore.type" : "JKS",
                     "confluent.topic.ssl.truststore.type" : "JKS",
                     "confluent.topic.security.protocol" : "SSL"
-          }}' \
-     https://localhost:8083/connectors | jq .
+          }' \
+     https://localhost:8083/connectors/gcs-sink/config | jq .
 ```
 
 Notes:
@@ -225,13 +221,11 @@ seq -f "{\"f1\": \"This is a message sent with SASL_SSL authentication %g\"}" 10
 The connector is created with:
 
 ```bash
-docker exec -e BUCKET_NAME="$BUCKET_NAME" connect \
-     curl -X POST \
+$ docker exec -e BUCKET_NAME="$BUCKET_NAME" connect \
+     curl -X PUT \
      --cert /etc/kafka/secrets/connect.certificate.pem --key /etc/kafka/secrets/connect.key --tlsv1.2 --cacert /etc/kafka/secrets/snakeoil-ca-1.crt \
      -H "Content-Type: application/json" \
      --data '{
-               "name": "gcs-sink-sasl-ssl",
-               "config": {
                     "connector.class": "io.confluent.connect.gcs.GcsSinkConnector",
                     "tasks.max" : "1",
                     "topics" : "gcs_topic-sasl-ssl",
@@ -248,13 +242,11 @@ docker exec -e BUCKET_NAME="$BUCKET_NAME" connect \
                     "confluent.topic.ssl.keystore.location" : "/etc/kafka/secrets/kafka.connect.keystore.jks",
                     "confluent.topic.ssl.keystore.password" : "confluent",
                     "confluent.topic.ssl.key.password" : "confluent",
-                    "confluent.topic.ssl.truststore.location" : "/etc/kafka/secrets/kafka.connect.truststore.jks",
-                    "confluent.topic.ssl.truststore.password" : "confluent",
                     "confluent.topic.security.protocol" : "SASL_SSL",
                     "confluent.topic.sasl.mechanism": "PLAIN",
                     "confluent.topic.sasl.jaas.config": "org.apache.kafka.common.security.plain.PlainLoginModule required  username=\"client\" password=\"client-secret\";"
-          }}' \
-     https://localhost:8083/connectors | jq .
+          }' \
+     https://localhost:8083/connectors/gcs-sink/config | jq .
 ```
 
 After a few seconds, data should be in GCS:
@@ -289,12 +281,10 @@ The connector is created with:
 
 ```bash
 docker exec -e BUCKET_NAME="$BUCKET_NAME" connect \
-     curl -X POST \
+     curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
-               "name": "gcs-sink-kerberos",
-               "config": {
-                    "connector.class": "io.confluent.connect.gcs.GcsSinkConnector",
+               "connector.class": "io.confluent.connect.gcs.GcsSinkConnector",
                     "tasks.max" : "1",
                     "topics" : "gcs_topic-kerberos",
                     "gcs.bucket.name" : "'"$BUCKET_NAME"'",
@@ -311,8 +301,8 @@ docker exec -e BUCKET_NAME="$BUCKET_NAME" connect \
                     "confluent.topic.sasl.kerberos.service.name": "kafka",
                     "confluent.topic.sasl.jaas.config" : "com.sun.security.auth.module.Krb5LoginModule required useKeyTab=true storeKey=true keyTab=\"/var/lib/secret/kafka-connect.key\" principal=\"connect@TEST.CONFLUENT.IO\";",
                     "confluent.topic.security.protocol" : "SASL_PLAINTEXT"
-          }}' \
-     http://localhost:8083/connectors | jq .
+          }' \
+     http://localhost:8083/connectors/gcs-sink/config | jq .
 ```
 
 After a few seconds, data should be in GCS:
@@ -352,12 +342,10 @@ The connector is created with:
 
 ```bash
 docker exec -e BUCKET_NAME="$BUCKET_NAME" connect \
-     curl -X POST \
+     curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
-               "name": "gcs-ldap-authorizer-sasl-plain",
-               "config": {
-                    "connector.class": "io.confluent.connect.gcs.GcsSinkConnector",
+               "connector.class": "io.confluent.connect.gcs.GcsSinkConnector",
                     "tasks.max" : "1",
                     "topics" : "gcs_topic-ldap-authorizer-sasl-plain",
                     "gcs.bucket.name" : "'"$BUCKET_NAME"'",
@@ -373,8 +361,8 @@ docker exec -e BUCKET_NAME="$BUCKET_NAME" connect \
                     "confluent.topic.sasl.mechanism": "PLAIN",
                     "confluent.topic.sasl.jaas.config" : "org.apache.kafka.common.security.plain.PlainLoginModule required username=\"broker\" password=\"broker\";",
                     "confluent.topic.security.protocol" : "SASL_PLAINTEXT"
-          }}' \
-     http://localhost:8083/connectors | jq .
+          }' \
+     http://localhost:8083/connectors/gcs-sink/config | jq .
 ```
 
 After a few seconds, data should be in GCS:

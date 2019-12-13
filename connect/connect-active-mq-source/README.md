@@ -28,12 +28,10 @@ The connector is created with:
 
 ```bash
 $ docker exec connect \
-     curl -X POST \
+     curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
-               "name": "active-mq-source",
-               "config": {
-                    "connector.class": "io.confluent.connect.activemq.ActiveMQSourceConnector",
+               "connector.class": "io.confluent.connect.activemq.ActiveMQSourceConnector",
                     "kafka.topic": "MyKafkaTopicName",
                     "activemq.url": "tcp://activemq:61616",
                     "jms.destination.name": "DEV.QUEUE.1",
@@ -41,8 +39,8 @@ $ docker exec connect \
                     "confluent.license": "",
                     "confluent.topic.bootstrap.servers": "broker:9092",
                     "confluent.topic.replication.factor": "1"
-          }}' \
-     http://localhost:8083/connectors | jq .
+          }' \
+     http://localhost:8083/connectors/active-mq-source/config | jq .
 ```
 
 Messages are sent to IBM MQ using curl:

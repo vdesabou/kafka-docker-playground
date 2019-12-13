@@ -24,18 +24,16 @@ Creating JDBC PostgreSQL sink connector
 
 ```bash
 $ docker exec connect \
-     curl -X POST \
+     curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
-               "name": "postgres-sink",
-               "config": {
-                    "connector.class": "io.confluent.connect.jdbc.JdbcSinkConnector",
+               "connector.class": "io.confluent.connect.jdbc.JdbcSinkConnector",
                     "tasks.max": "1",
                     "connection.url": "jdbc:postgresql://postgres/postgres?user=postgres&password=postgres&ssl=false",
                     "topics": "orders",
                     "auto.create": "true"
-          }}' \
-     http://localhost:8083/connectors | jq .
+          }' \
+     http://localhost:8083/connectors/postgres-sink/config | jq .
 ```
 
 Sending messages to topic orders

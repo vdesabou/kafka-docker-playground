@@ -35,12 +35,10 @@ Create the source connector with:
 
 ```bash
 $ docker exec connect \
-     curl -X POST \
+     curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
-               "name": "oracle-sink",
-               "config": {
-                    "connector.class": "io.confluent.connect.jdbc.JdbcSinkConnector",
+               "connector.class": "io.confluent.connect.jdbc.JdbcSinkConnector",
                     "tasks.max": "1",
                     "connection.user": "myuser",
                     "connection.password": "mypassword",
@@ -49,8 +47,8 @@ $ docker exec connect \
                     "auto.create": "true",
                     "insert.mode":"insert",
                     "auto.evolve":"true"
-          }}' \
-     http://localhost:8083/connectors | jq .
+          }' \
+     http://localhost:8083/connectors/oracle-sink/config | jq .
 ```
 
 Sending messages to topic `ORDERS`:

@@ -45,12 +45,10 @@ Creating AWS DynamoDB Sink connector
 
 ```bash
 $ docker exec connect \
-     curl -X POST \
+     curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
-               "name": "dynamodb-sink",
-               "config": {
-                    "connector.class": "io.confluent.connect.aws.dynamodb.DynamoDbSinkConnector",
+               "connector.class": "io.confluent.connect.aws.dynamodb.DynamoDbSinkConnector",
                     "tasks.max": "1",
                     "topics": "topic1",
                     "aws.dynamodb.region": "us-east-1",
@@ -58,8 +56,8 @@ $ docker exec connect \
                     "confluent.license": "",
                     "confluent.topic.bootstrap.servers": "broker:9092",
                     "confluent.topic.replication.factor": "1"
-          }}' \
-     http://localhost:8083/connectors | jq .
+          }' \
+     http://localhost:8083/connectors/dynamodb-sink/config | jq .
 ```
 
 Verify data is in DynamoDB

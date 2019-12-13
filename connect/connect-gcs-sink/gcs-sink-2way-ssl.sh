@@ -39,12 +39,10 @@ seq -f "{\"f1\": \"This is a message sent with SSL authentication %g\"}" 10 | do
 
 echo "Creating GCS Sink connector with SSL authentication"
 docker exec -e BUCKET_NAME="$BUCKET_NAME" connect \
-     curl -X POST \
+     curl -X PUT \
      --cert /etc/kafka/secrets/connect.certificate.pem --key /etc/kafka/secrets/connect.key --tlsv1.2 --cacert /etc/kafka/secrets/snakeoil-ca-1.crt \
      -H "Content-Type: application/json" \
      --data '{
-               "name": "gcs-sink-ssl",
-               "config": {
                     "connector.class": "io.confluent.connect.gcs.GcsSinkConnector",
                     "tasks.max" : "1",
                     "topics" : "gcs_topic-ssl",
@@ -66,8 +64,8 @@ docker exec -e BUCKET_NAME="$BUCKET_NAME" connect \
                     "confluent.topic.ssl.keystore.type" : "JKS",
                     "confluent.topic.ssl.truststore.type" : "JKS",
                     "confluent.topic.security.protocol" : "SSL"
-          }}' \
-     https://localhost:8083/connectors | jq .
+          }' \
+     https://localhost:8083/connectors/gcs-sink/config | jq .
 
 
 sleep 10

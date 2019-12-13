@@ -69,12 +69,10 @@ Creating InfluxDB source connector
 
 ```bash
 $ docker exec connect \
-     curl -X POST \
+     curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
-               "name": "InfluxDBSourceConnector",
-               "config": {
-                    "connector.class": "io.confluent.influxdb.source.InfluxdbSourceConnector",
+               "connector.class": "io.confluent.influxdb.source.InfluxdbSourceConnector",
                     "tasks.max": "1",
                     "influxdb.url": "http://influxdb:8086",
                     "influxdb.db": "mydb",
@@ -82,8 +80,8 @@ $ docker exec connect \
                     "topic.prefix": "influx_",
                     "value.converter": "org.apache.kafka.connect.json.JsonConverter",
                     "value.converter.schemas.enable": "false"
-          }}' \
-     http://localhost:8083/connectors | jq .
+          }' \
+     http://localhost:8083/connectors/influxdb-source/config | jq .
 ```
 
 Verifying topic influx_cpu_load_short

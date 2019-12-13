@@ -51,12 +51,10 @@ ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml
 
 echo "Creating Data Lake Storage Gen1 Sink connector"
 docker exec -e AZURE_DATALAKE_CLIENT_ID="$AZURE_DATALAKE_CLIENT_ID" -e AZURE_DATALAKE_ACCOUNT_NAME="$AZURE_DATALAKE_ACCOUNT_NAME" -e AZURE_DATALAKE_TOKEN_ENDPOINT="$AZURE_DATALAKE_TOKEN_ENDPOINT" connect \
-     curl -X POST \
+     curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
-               "name": "azure-datalake-gen1-sink",
-               "config": {
-                    "connector.class": "io.confluent.connect.azure.datalake.gen1.AzureDataLakeGen1StorageSinkConnector",
+               "connector.class": "io.confluent.connect.azure.datalake.gen1.AzureDataLakeGen1StorageSinkConnector",
                     "tasks.max": "1",
                     "topics": "datalake_topic",
                     "flush.size": "3",
@@ -68,8 +66,8 @@ docker exec -e AZURE_DATALAKE_CLIENT_ID="$AZURE_DATALAKE_CLIENT_ID" -e AZURE_DAT
                     "confluent.license": "",
                     "confluent.topic.bootstrap.servers": "broker:9092",
                     "confluent.topic.replication.factor": "1"
-          }}' \
-     http://localhost:8083/connectors | jq .
+          }' \
+     http://localhost:8083/connectors/azure-datalake-gen1-sink/config | jq .
 
 
 echo "Sending messages to topic datalake_topic"

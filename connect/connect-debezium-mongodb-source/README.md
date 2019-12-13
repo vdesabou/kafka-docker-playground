@@ -67,20 +67,18 @@ Create the connector:
 
 ```bash
 $ docker exec connect \
-     curl -X POST \
+     curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
-               "name": "debezium-mongodb-source",
-               "config": {
-                    "connector.class" : "io.debezium.connector.mongodb.MongoDbConnector",
+               "connector.class" : "io.debezium.connector.mongodb.MongoDbConnector",
                     "tasks.max" : "1",
                     "mongodb.hosts" : "debezium/mongodb:27017",
                     "mongodb.name" : "dbserver1",
                     "mongodb.user" : "debezium",
                     "mongodb.password" : "dbz",
                     "database.history.kafka.bootstrap.servers" : "broker:9092"
-          }}' \
-     http://localhost:8083/connectors | jq .
+          }' \
+     http://localhost:8083/connectors/debezium-mongodb-source/config | jq .
 ```
 
 Verifying topic dbserver1.inventory.customers

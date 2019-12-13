@@ -31,12 +31,10 @@ seq -f "{\"f1\": \"value%g-`date`\"}" 10 | docker exec -i schema-registry kafka-
 
 echo "Creating GCP BigQuery Sink connector"
 docker exec -e PROJECT="$PROJECT" -e DATASET="$DATASET" connect \
-     curl -X POST \
+     curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
-               "name": "kcbq-connect",
-               "config": {
-                    "connector.class": "com.wepay.kafka.connect.bigquery.BigQuerySinkConnector",
+               "connector.class": "com.wepay.kafka.connect.bigquery.BigQuerySinkConnector",
                     "tasks.max" : "1",
                     "topics" : "kcbq-quickstart1",
                     "sanitizeTopics" : "true",
@@ -50,8 +48,8 @@ docker exec -e PROJECT="$PROJECT" -e DATASET="$DATASET" connect \
                     "project" : "'"$PROJECT"'",
                     "datasets" : ".*='"$DATASET"'",
                     "keyfile" : "/root/keyfiles/keyfile.json"
-          }}' \
-     http://localhost:8083/connectors | jq .
+          }' \
+     http://localhost:8083/connectors/kcbq-connect/config | jq .
 
 sleep 10
 

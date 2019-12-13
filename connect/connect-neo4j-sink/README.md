@@ -30,7 +30,7 @@ Creating Neo4j Sink connector
 
 ```bash
 $ docker exec connect \
-     curl -X POST \
+     curl -X PUT \
      -H "Content-Type: application/json" \
      --data @/tmp/contrib.sink.avro.neo4j.json \
      http://localhost:8083/connectors | jq .
@@ -40,21 +40,18 @@ With `contrib.sink.avro.neo4j.json`:
 
 ```json
 {
-    "name": "Neo4jSinkConnector",
-    "config": {
-        "topics": "my-topic",
-        "connector.class": "streams.kafka.connect.sink.Neo4jSinkConnector",
-        "errors.retry.timeout": "-1",
-        "errors.retry.delay.max.ms": "1000",
-        "errors.tolerance": "all",
-        "errors.log.enable": true,
-        "errors.log.include.messages": true,
-        "neo4j.server.uri": "bolt://neo4j:7687",
-        "neo4j.authentication.basic.username": "neo4j",
-        "neo4j.authentication.basic.password": "connect",
-        "neo4j.encryption.enabled": false,
-        "neo4j.topic.cypher.my-topic": "MERGE (p:Person{name: event.name, surname: event.surname, from: 'AVRO'}) MERGE (f:Family{name: event.surname}) MERGE (p)-[:BELONGS_TO]->(f)"
-    }
+    "topics": "my-topic",
+    "connector.class": "streams.kafka.connect.sink.Neo4jSinkConnector",
+    "errors.retry.timeout": "-1",
+    "errors.retry.delay.max.ms": "1000",
+    "errors.tolerance": "all",
+    "errors.log.enable": true,
+    "errors.log.include.messages": true,
+    "neo4j.server.uri": "bolt://neo4j:7687",
+    "neo4j.authentication.basic.username": "neo4j",
+    "neo4j.authentication.basic.password": "connect",
+    "neo4j.encryption.enabled": false,
+    "neo4j.topic.cypher.my-topic": "MERGE (p:Person{name: event.name, surname: event.surname, from: 'AVRO'}) MERGE (f:Family{name: event.surname}) MERGE (p)-[:BELONGS_TO]->(f)"
 }
 ```
 

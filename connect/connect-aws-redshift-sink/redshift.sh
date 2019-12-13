@@ -22,12 +22,10 @@ EOF
 
 echo "Creating AWS Redshift Logs Source connector"
 docker exec -e PROJECT="$DOMAIN" -e DATASET="$PASSWORD" connect \
-     curl -X POST \
+     curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
-               "name": "redshift-sink",
-               "config": {
-                    "connector.class": "io.confluent.connect.aws.redshift.RedshiftSinkConnector",
+               "connector.class": "io.confluent.connect.aws.redshift.RedshiftSinkConnector",
                     "tasks.max": "1",
                     "topics": "orders",
                     "aws.redshift.domain": "'"$DOMAIN"'",
@@ -40,8 +38,8 @@ docker exec -e PROJECT="$DOMAIN" -e DATASET="$PASSWORD" connect \
                     "confluent.license": "",
                     "confluent.topic.bootstrap.servers": "broker:9092",
                     "confluent.topic.replication.factor": "1"
-          }}' \
-     http://localhost:8083/connectors | jq .
+          }' \
+     http://localhost:8083/connectors/redshift-sink/config | jq .
 
 sleep 5
 

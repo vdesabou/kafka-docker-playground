@@ -53,12 +53,10 @@ docker exec solace bash -c "/usr/sw/loads/currentload/bin/cli -A -s cliscripts/c
 
 echo "Creating Solace sink connector"
 docker exec connect \
-     curl -X POST \
+     curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
-               "name": "JMSSolaceSinkConnector",
-               "config": {
-                    "connector.class": "io.confluent.connect.jms.JmsSinkConnector",
+               "connector.class": "io.confluent.connect.jms.JmsSinkConnector",
                     "tasks.max": "1",
                     "topics": "sink-messages",
                     "java.naming.factory.initial": "com.solacesystems.jndi.SolJNDIInitialContextFactory",
@@ -73,8 +71,8 @@ docker exec connect \
                     "value.converter": "org.apache.kafka.connect.storage.StringConverter",
                     "confluent.topic.bootstrap.servers": "broker:9092",
                     "confluent.topic.replication.factor": "1"
-          }}' \
-     http://localhost:8083/connectors | jq .
+          }' \
+     http://localhost:8083/connectors/jms-solace-sink/config | jq .
 
 sleep 10
 

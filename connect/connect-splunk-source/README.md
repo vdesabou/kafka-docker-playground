@@ -24,12 +24,10 @@ Creating Splunk sink connector
 
 ```bash
 $ docker exec connect \
-     curl -X POST \
+     curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
-               "name": "SplunkSink",
-               "config": {
-                    "connector.class": "io.confluent.connect.SplunkHttpSourceConnector",
+               "connector.class": "io.confluent.connect.SplunkHttpSourceConnector",
                     "tasks.max": "1",
                     "kafka.topic": "splunk-source",
                     "splunk.collector.index.default": "default-index",
@@ -38,8 +36,8 @@ $ docker exec connect \
                     "splunk.ssl.key.store.password": "confluent",
                     "confluent.topic.bootstrap.servers": "broker:9092",
                     "confluent.topic.replication.factor": "1"
-          }}' \
-     http://localhost:8083/connectors | jq .
+          }' \
+     http://localhost:8083/connectors/splunk-sink/config | jq .
 ```
 
 Simulate an application sending data to the connector

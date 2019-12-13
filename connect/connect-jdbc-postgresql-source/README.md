@@ -43,12 +43,10 @@ Creating JDBC PostgreSQL source connector
 
 ```bash
 $ docker exec connect \
-     curl -X POST \
+     curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
-               "name": "postgres-source",
-               "config": {
-                    "connector.class": "io.confluent.connect.jdbc.JdbcSourceConnector",
+               "connector.class": "io.confluent.connect.jdbc.JdbcSourceConnector",
                     "tasks.max": "1",
                     "connection.url": "jdbc:postgresql://postgres/postgres?user=postgres&password=postgres&ssl=false",
                     "table.whitelist": "customers",
@@ -59,8 +57,8 @@ $ docker exec connect \
                     "validate.non.null":"false",
                     "errors.log.enable": "true",
                     "errors.log.include.messages": "true"
-          }}' \
-     http://localhost:8083/connectors | jq .
+          }' \
+     http://localhost:8083/connectors/postgres-source/config | jq .
 ```
 
 Verifying topic `postgres-customers`

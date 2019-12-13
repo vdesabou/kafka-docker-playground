@@ -15,12 +15,10 @@ EOF
 
 echo "Creating OmniSci sink connector"
 docker exec connect \
-     curl -X POST \
+     curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
-               "name": "OmnisciSinkConnector",
-               "config": {
-                    "connector.class": "io.confluent.connect.omnisci.OmnisciSinkConnector",
+               "connector.class": "io.confluent.connect.omnisci.OmnisciSinkConnector",
                     "tasks.max" : "1",
                     "topics": "orders",
                     "connection.database": "omnisci",
@@ -31,8 +29,8 @@ docker exec connect \
                     "confluent.topic.bootstrap.servers": "broker:9092",
                     "confluent.topic.replication.factor": "1",
                     "auto.create": "true"
-          }}' \
-     http://localhost:8083/connectors | jq .
+          }' \
+     http://localhost:8083/connectors/omnisci-sink/config | jq .
 
 sleep 10
 

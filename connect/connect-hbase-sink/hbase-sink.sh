@@ -15,12 +15,10 @@ EOF
 
 echo "Creating HBase sink connector"
 docker exec connect \
-     curl -X POST \
+     curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
-               "name": "hbase-sink",
-               "config": {
-                    "connector.class": "io.confluent.connect.hbase.HBaseSinkConnector",
+               "connector.class": "io.confluent.connect.hbase.HBaseSinkConnector",
                     "tasks.max": "1",
                     "key.converter":"org.apache.kafka.connect.storage.StringConverter",
                     "value.converter":"org.apache.kafka.connect.storage.StringConverter",
@@ -32,8 +30,8 @@ docker exec connect \
                     "auto.create.column.families": "true",
                     "table.name.format": "example_table",
                     "topics": "hbase-test"
-          }}' \
-     http://localhost:8083/connectors | jq .
+          }' \
+     http://localhost:8083/connectors/hbase-sink/config | jq .
 
 sleep 10
 

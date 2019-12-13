@@ -13,12 +13,10 @@ echo $'id,first_name,last_name,email,gender,ip_address,last_login,account_balanc
 
 echo "Creating CSV SFTP Source connector"
 docker exec connect \
-     curl -X POST \
+     curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
-        "name": "sftp-source-csv",
-        "config": {
-               "topics": "test_sftp_sink",
+        "topics": "test_sftp_sink",
                "tasks.max": "1",
                "connector.class": "io.confluent.connect.sftp.SftpCsvSourceConnector",
                "cleanup.policy":"NONE",
@@ -34,8 +32,8 @@ docker exec connect \
                "kafka.topic": "sftp-testing-topic",
                "csv.first.row.as.header": "true",
                "schema.generation.enabled": "true"
-          }}' \
-     http://localhost:8083/connectors | jq .
+          }' \
+     http://localhost:8083/connectors/sftp-source-csv/config | jq .
 
 sleep 5
 

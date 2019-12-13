@@ -10,12 +10,10 @@ seq 10 | docker exec -i broker kafka-console-producer --broker-list broker:9092 
 
 echo "Creating Replicator connector"
 docker exec connect \
-      curl -X POST \
+      curl -X PUT \
       -H "Content-Type: application/json" \
       --data '{
-         "name": "duplicate-topic",
-         "config": {
-               "connector.class":"io.confluent.connect.replicator.ReplicatorSourceConnector",
+         "connector.class":"io.confluent.connect.replicator.ReplicatorSourceConnector",
                "key.converter": "io.confluent.connect.replicator.util.ByteArrayConverter",
                "value.converter": "io.confluent.connect.replicator.util.ByteArrayConverter",
                "header.converter": "io.confluent.connect.replicator.util.ByteArrayConverter",
@@ -26,8 +24,8 @@ docker exec connect \
                "topic.rename.format": "test-topic-duplicate",
                "dest.kafka.bootstrap.servers": "broker:9092",
                "src.kafka.bootstrap.servers": "broker:9092"
-           }}' \
-      http://localhost:8083/connectors | jq .
+           }' \
+      http://localhost:8083/connectors/duplicate-topic/config | jq .
 
 sleep 10
 

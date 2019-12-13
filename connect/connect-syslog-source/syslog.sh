@@ -7,20 +7,18 @@ ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml
 
 echo "Creating Syslog Source connector"
 docker exec connect \
-     curl -X POST \
+     curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
-               "name": "syslog-source",
-               "config": {
-                    "tasks.max": "1",
+               "tasks.max": "1",
                     "connector.class": "io.confluent.connect.syslog.SyslogSourceConnector",
                     "syslog.port": "5454",
                     "syslog.listener": "TCP",
                     "confluent.license": "",
                     "confluent.topic.bootstrap.servers": "broker:9092",
                     "confluent.topic.replication.factor": "1"
-          }}' \
-     http://localhost:8083/connectors | jq .
+          }' \
+     http://localhost:8083/connectors/syslog-source/config | jq .
 
 
 sleep 5

@@ -37,12 +37,10 @@ docker exec mysql bash -c "mysql --user=root --password=password --database=mydb
 
 echo "Creating Debezium MySQL source connector"
 docker exec connect \
-     curl -X POST \
+     curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
-               "name": "debezium-mysql-source",
-               "config": {
-                    "connector.class": "io.debezium.connector.mysql.MySqlConnector",
+               "connector.class": "io.debezium.connector.mysql.MySqlConnector",
                     "tasks.max": "1",
                     "database.hostname": "mysql",
                     "database.port": "3306",
@@ -53,8 +51,8 @@ docker exec connect \
                     "database.whitelist": "mydb",
                     "database.history.kafka.bootstrap.servers": "broker:9092",
                     "database.history.kafka.topic": "schema-changes.mydb"
-          }}' \
-     http://localhost:8083/connectors | jq .
+          }' \
+     http://localhost:8083/connectors/debezium-mysql-source/config | jq .
 
 sleep 5
 

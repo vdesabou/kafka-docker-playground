@@ -15,17 +15,15 @@ echo "-------------------------------------"
 echo "Running Simple (No) Authentication Example"
 echo "-------------------------------------"
 
-echo "Creating HttpSinkNoAuthTestRetry connector"
+echo "Creating http-sink connector"
 
 # the HTTP server will always reply INTERNAL_SERVER_ERROR(500)
 # we set retry.backoff.ms: 15000 and max.retries: 3
 docker exec connect \
-     curl -X POST \
+     curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
-          "name": "HttpSinkNoAuthTestRetry",
-          "config": {
-               "topics": "http-messages",
+          "topics": "http-messages",
                "tasks.max": "1",
                "connector.class": "io.confluent.connect.http.HttpSinkConnector",
                "key.converter": "org.apache.kafka.connect.storage.StringConverter",
@@ -35,8 +33,8 @@ docker exec connect \
                "http.api.url": "http://http-service-no-auth-500:8080/api/messages",
                "retry.backoff.ms": 15000,
                "max.retries": 3
-          }}' \
-     http://localhost:8083/connectors | jq .
+          }' \
+     http://localhost:8083/connectors/http-sink/config | jq .
 
 
 sleep 5
@@ -71,7 +69,7 @@ EOF
 #         at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1149)
 #         at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:624)
 #         at java.lang.Thread.run(Thread.java:748)
-# [2019-10-10 15:02:17,478] ERROR WorkerSinkTask{id=HttpSinkNoAuthTestRetry-0} RetriableException from SinkTask: (org.apache.kafka.connect.runtime.WorkerSinkTask)
+# [2019-10-10 15:02:17,478] ERROR WorkerSinkTask{id=http-sink-0} RetriableException from SinkTask: (org.apache.kafka.connect.runtime.WorkerSinkTask)
 # org.apache.kafka.connect.errors.RetriableException: java.io.IOException: HTTP Response code: 500, , Submitted payload: Message 1, url:http://http-service-no-auth-500:8080/api/messages : {"id":1,"message":"Message 1"}
 #         at io.confluent.connect.http.HttpSinkTask.put(HttpSinkTask.java:79)
 #         at org.apache.kafka.connect.runtime.WorkerSinkTask.deliverMessages(WorkerSinkTask.java:538)
@@ -106,7 +104,7 @@ EOF
 #         at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1149)
 #         at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:624)
 #         at java.lang.Thread.run(Thread.java:748)
-# [2019-10-10 15:02:32,496] ERROR WorkerSinkTask{id=HttpSinkNoAuthTestRetry-0} RetriableException from SinkTask: (org.apache.kafka.connect.runtime.WorkerSinkTask)
+# [2019-10-10 15:02:32,496] ERROR WorkerSinkTask{id=http-sink-0} RetriableException from SinkTask: (org.apache.kafka.connect.runtime.WorkerSinkTask)
 # org.apache.kafka.connect.errors.RetriableException: java.io.IOException: HTTP Response code: 500, , Submitted payload: Message 1, url:http://http-service-no-auth-500:8080/api/messages : {"id":2,"message":"Message 1"}
 #         at io.confluent.connect.http.HttpSinkTask.put(HttpSinkTask.java:79)
 #         at org.apache.kafka.connect.runtime.WorkerSinkTask.deliverMessages(WorkerSinkTask.java:538)
@@ -141,7 +139,7 @@ EOF
 #         at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1149)
 #         at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:624)
 #         at java.lang.Thread.run(Thread.java:748)
-# [2019-10-10 15:02:47,514] ERROR WorkerSinkTask{id=HttpSinkNoAuthTestRetry-0} RetriableException from SinkTask: (org.apache.kafka.connect.runtime.WorkerSinkTask)
+# [2019-10-10 15:02:47,514] ERROR WorkerSinkTask{id=http-sink-0} RetriableException from SinkTask: (org.apache.kafka.connect.runtime.WorkerSinkTask)
 # org.apache.kafka.connect.errors.RetriableException: java.io.IOException: HTTP Response code: 500, , Submitted payload: Message 1, url:http://http-service-no-auth-500:8080/api/messages : {"id":3,"message":"Message 1"}
 #         at io.confluent.connect.http.HttpSinkTask.put(HttpSinkTask.java:79)
 #         at org.apache.kafka.connect.runtime.WorkerSinkTask.deliverMessages(WorkerSinkTask.java:538)
@@ -176,7 +174,7 @@ EOF
 #         at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1149)
 #         at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:624)
 #         at java.lang.Thread.run(Thread.java:748)
-# [2019-10-10 15:03:02,558] ERROR WorkerSinkTask{id=HttpSinkNoAuthTestRetry-0} Task threw an uncaught and unrecoverable exception. Task is being killed and will not recover until manually restarted. (org.apache.kafka.connect.runtime.WorkerSinkTask)
+# [2019-10-10 15:03:02,558] ERROR WorkerSinkTask{id=http-sink-0} Task threw an uncaught and unrecoverable exception. Task is being killed and will not recover until manually restarted. (org.apache.kafka.connect.runtime.WorkerSinkTask)
 # org.apache.kafka.connect.errors.ConnectException: java.io.IOException: HTTP Response code: 500, , Submitted payload: Message 1, url:http://http-service-no-auth-500:8080/api/messages : {"id":4,"message":"Message 1"}
 #         at io.confluent.connect.http.HttpSinkTask.put(HttpSinkTask.java:75)
 #         at org.apache.kafka.connect.runtime.WorkerSinkTask.deliverMessages(WorkerSinkTask.java:538)
@@ -195,7 +193,7 @@ EOF
 #         at io.confluent.connect.http.writer.HttpWriterImpl.write(HttpWriterImpl.java:117)
 #         at io.confluent.connect.http.HttpSinkTask.put(HttpSinkTask.java:62)
 #         ... 11 more
-# [2019-10-10 15:03:02,559] ERROR WorkerSinkTask{id=HttpSinkNoAuthTestRetry-0} Task threw an uncaught and unrecoverable exception (org.apache.kafka.connect.runtime.WorkerTask)
+# [2019-10-10 15:03:02,559] ERROR WorkerSinkTask{id=http-sink-0} Task threw an uncaught and unrecoverable exception (org.apache.kafka.connect.runtime.WorkerTask)
 # org.apache.kafka.connect.errors.ConnectException: Exiting WorkerSinkTask due to unrecoverable exception.
 #         at org.apache.kafka.connect.runtime.WorkerSinkTask.deliverMessages(WorkerSinkTask.java:560)
 #         at org.apache.kafka.connect.runtime.WorkerSinkTask.poll(WorkerSinkTask.java:321)
@@ -217,7 +215,7 @@ EOF
 #         at io.confluent.connect.http.writer.HttpWriterImpl.write(HttpWriterImpl.java:117)
 #         at io.confluent.connect.http.HttpSinkTask.put(HttpSinkTask.java:62)
 #         ... 11 more
-# [2019-10-10 15:03:02,559] ERROR WorkerSinkTask{id=HttpSinkNoAuthTestRetry-0} Task is being killed and will not recover until manually restarted (org.apache.kafka.connect.runtime.WorkerTask)
+# [2019-10-10 15:03:02,559] ERROR WorkerSinkTask{id=http-sink-0} Task is being killed and will not recover until manually restarted (org.apache.kafka.connect.runtime.WorkerTask)
 
 
 

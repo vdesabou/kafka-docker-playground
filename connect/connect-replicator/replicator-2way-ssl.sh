@@ -15,12 +15,10 @@ seq 10 | docker exec -i broker kafka-console-producer --broker-list broker:11091
 
 echo "Creating Confluent Replicator connector with SSL authentication"
 docker exec connect \
-     curl -X POST \
+     curl -X PUT \
      --cert /etc/kafka/secrets/connect.certificate.pem --key /etc/kafka/secrets/connect.key --tlsv1.2 --cacert /etc/kafka/secrets/snakeoil-ca-1.crt \
      -H "Content-Type: application/json" \
      --data '{
-          "name": "duplicate-topic-ssl",
-          "config": {
                     "connector.class":"io.confluent.connect.replicator.ReplicatorSourceConnector",
                     "key.converter": "io.confluent.connect.replicator.util.ByteArrayConverter",
                     "value.converter": "io.confluent.connect.replicator.util.ByteArrayConverter",
@@ -53,8 +51,8 @@ docker exec connect \
                     "src.kafka.ssl.truststore.location" : "/etc/kafka/secrets/kafka.connect.truststore.jks",
                     "src.kafka.ssl.truststore.password" : "confluent",
                     "src.kafka.security.protocol" : "SSL"
-          }}' \
-     https://localhost:8083/connectors | jq .
+          }' \
+     https://localhost:8083/connectors/duplicate-topic-ssl/config | jq .
 
 
 

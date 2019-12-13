@@ -8,12 +8,10 @@ ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml
 
 echo "Creating Elasticsearch Sink connector"
 docker exec connect \
-     curl -X POST \
+     curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
-        "name": "elasticsearch-sink",
-        "config": {
-          "connector.class": "io.confluent.connect.elasticsearch.ElasticsearchSinkConnector",
+        "connector.class": "io.confluent.connect.elasticsearch.ElasticsearchSinkConnector",
           "tasks.max": "1",
           "topics": "test-elasticsearch-sink",
           "connection.url": "http://elasticsearch:9200",
@@ -24,8 +22,8 @@ docker exec connect \
           "schema.ignore":"true",
           "key.converter.schemas.enable": "false",
           "value.converter.schemas.enable": "false"
-          }}' \
-     http://localhost:8083/connectors | jq .
+          }' \
+     http://localhost:8083/connectors/elasticsearch-sink/config | jq .
 
 
 docker exec -i broker kafka-console-producer --broker-list broker:9092 --topic test-elasticsearch-sink << EOF

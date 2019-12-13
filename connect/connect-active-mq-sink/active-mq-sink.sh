@@ -13,12 +13,10 @@ EOF
 
 echo "Creating ActiveMQ sink connector"
 docker exec connect \
-     curl -X POST \
+     curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
-               "name": "active-mq-sink",
-               "config": {
-                    "connector.class": "io.confluent.connect.jms.ActiveMqSinkConnector",
+               "connector.class": "io.confluent.connect.jms.ActiveMqSinkConnector",
                     "topics": "sink-messages",
                     "activemq.url": "tcp://activemq:61616",
                     "activemq.username": "admin",
@@ -30,8 +28,8 @@ docker exec connect \
                     "confluent.license": "",
                     "confluent.topic.bootstrap.servers": "broker:9092",
                     "confluent.topic.replication.factor": "1"
-          }}' \
-     http://localhost:8083/connectors | jq .
+          }' \
+     http://localhost:8083/connectors/active-mq-sink/config | jq .
 
 sleep 5
 

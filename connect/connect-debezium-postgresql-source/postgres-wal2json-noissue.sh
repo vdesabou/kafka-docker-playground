@@ -23,12 +23,10 @@ docker exec postgres bash -c "psql -U postgres -d postgres -c 'SELECT * FROM CUS
 
 echo "Creating Debezium PostgreSQL source connector"
 docker exec connect \
-     curl -X POST \
+     curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
-               "name": "debezium-postgres-source",
-               "config": {
-                    "connector.class": "io.debezium.connector.postgresql.PostgresConnector",
+               "connector.class": "io.debezium.connector.postgresql.PostgresConnector",
                     "plugin.name": "wal2json",
                     "tasks.max": "1",
                     "database.hostname": "postgres",
@@ -43,8 +41,8 @@ docker exec connect \
                     "transforms.addTopicSuffix.type":"org.apache.kafka.connect.transforms.RegexRouter",
                     "transforms.addTopicSuffix.regex":"(.*)",
                     "transforms.addTopicSuffix.replacement":"$1-raw"
-          }}' \
-     http://localhost:8083/connectors | jq .
+          }' \
+     http://localhost:8083/connectors/debezium-postgres-source/config | jq .
 
 
 

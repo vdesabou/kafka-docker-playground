@@ -17,7 +17,7 @@ docker exec connect java -jar /tmp/neo4j-streams-sink-tester-1.0.jar -f AVRO -e 
 
 echo "Creating NEO4J Sink connector"
 docker exec connect \
-     curl -X POST \
+     curl -X PUT \
      -H "Content-Type: application/json" \
      --data @/tmp/contrib.sink.avro.neo4j.json \
      http://localhost:8083/connectors | jq .

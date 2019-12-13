@@ -29,12 +29,10 @@ Creating HDFS Source connector:
 
 ```bash
 $ docker exec connect \
-     curl -X POST \
+     curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
-        "name": "hdfs3-source",
-        "config": {
-               "connector.class":"io.confluent.connect.hdfs3.Hdfs3SourceConnector",
+        "connector.class":"io.confluent.connect.hdfs3.Hdfs3SourceConnector",
                "tasks.max":"1",
                "hdfs.url":"hdfs://namenode:9000",
                "hadoop.conf.dir":"/etc/hadoop/",
@@ -46,8 +44,8 @@ $ docker exec connect \
                "transforms.AddPrefix.type" : "org.apache.kafka.connect.transforms.RegexRouter",
                "transforms.AddPrefix.regex" : ".*",
                "transforms.AddPrefix.replacement" : "copy_of_$0"
-          }}' \
-     http://localhost:8083/connectors | jq .
+          }' \
+     http://localhost:8083/connectors/hdfs3-source/config | jq .
 ```
 
 Verifying topic `copy_of_test_hdfs`:

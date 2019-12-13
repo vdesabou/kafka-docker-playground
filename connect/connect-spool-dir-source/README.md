@@ -31,11 +31,9 @@ Creating CSV Spool Dir Source connector
 
 ```bash
 $ docker exec connect \
-     curl -X POST \
+     curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
-               "name": "CsvSchemaSpoolDir5",
-               "config": {
                     "tasks.max": "1",
                     "connector.class": "com.github.jcustenborder.kafka.connect.spooldir.SpoolDirCsvSourceConnector",
                     "input.path": "/root/data/input",
@@ -48,7 +46,7 @@ $ docker exec connect \
                     "key.schema": "{\n  \"name\" : \"com.example.users.UserKey\",\n  \"type\" : \"STRUCT\",\n  \"isOptional\" : false,\n  \"fieldSchemas\" : {\n    \"id\" : {\n      \"type\" : \"INT64\",\n      \"isOptional\" : false\n    }\n  }\n}",
                     "value.schema": "{\n  \"name\" : \"com.example.users.User\",\n  \"type\" : \"STRUCT\",\n  \"isOptional\" : false,\n  \"fieldSchemas\" : {\n    \"id\" : {\n      \"type\" : \"INT64\",\n      \"isOptional\" : false\n    },\n    \"first_name\" : {\n      \"type\" : \"STRING\",\n      \"isOptional\" : true\n    },\n    \"last_name\" : {\n      \"type\" : \"STRING\",\n      \"isOptional\" : true\n    },\n    \"email\" : {\n      \"type\" : \"STRING\",\n      \"isOptional\" : true\n    },\n    \"gender\" : {\n      \"type\" : \"STRING\",\n      \"isOptional\" : true\n    },\n    \"ip_address\" : {\n      \"type\" : \"STRING\",\n      \"isOptional\" : true\n    },\n    \"last_login\" : {\n      \"type\" : \"STRING\",\n      \"isOptional\" : true\n    },\n    \"account_balance\" : {\n      \"name\" : \"org.apache.kafka.connect.data.Decimal\",\n      \"type\" : \"BYTES\",\n      \"version\" : 1,\n      \"parameters\" : {\n        \"scale\" : \"2\"\n      },\n      \"isOptional\" : true\n    },\n    \"country\" : {\n      \"type\" : \"STRING\",\n      \"isOptional\" : true\n    },\n    \"favorite_color\" : {\n      \"type\" : \"STRING\",\n      \"isOptional\" : true\n    }\n  }\n}"
           }}' \
-     http://localhost:8083/connectors | jq .
+     http://localhost:8083/connectors/spool-dir/config | jq .
 ```
 
 
@@ -85,12 +83,10 @@ Creating TSV Spool Dir Source connector
 
 ```bash
 $ docker exec connect \
-     curl -X POST \
+     curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
-               "name": "TsvSpoolDir",
-               "config": {
-                    "tasks.max": "1",
+               "tasks.max": "1",
                     "connector.class": "com.github.jcustenborder.kafka.connect.spooldir.SpoolDirCsvSourceConnector",
                     "input.path": "/root/data/input",
                     "input.file.pattern": "tsv-spooldir-source.tsv",
@@ -101,8 +97,8 @@ $ docker exec connect \
                     "schema.generation.enabled": "true",
                     "csv.first.row.as.header": "true",
                     "csv.separator.char": "9"
-          }}' \
-     http://localhost:8083/connectors | jq .
+          }' \
+     http://localhost:8083/connectors/TsvSpoolDir/config | jq .
 ```
 
 
@@ -139,12 +135,10 @@ Creating JSON Spool Dir Source connector
 
 ```bash
 $ docker exec connect \
-     curl -X POST \
+     curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
-               "name": "JsonSpoolDir",
-               "config": {
-                    "tasks.max": "1",
+               "tasks.max": "1",
                     "connector.class": "com.github.jcustenborder.kafka.connect.spooldir.SpoolDirJsonSourceConnector",
                     "input.path": "/root/data/input",
                     "input.file.pattern": "json-spooldir-source.json",
@@ -153,8 +147,8 @@ $ docker exec connect \
                     "halt.on.error": "false",
                     "topic": "spooldir-json-topic",
                     "schema.generation.enabled": "true"
-          }}' \
-     http://localhost:8083/connectors | jq .
+          }' \
+     http://localhost:8083/connectors/spool-dir/config | jq .
 ```
 
 Verify we have received the data in spooldir-json-topic topic
@@ -190,12 +184,10 @@ Creating JSON Spool Dir Source connector
 
 ```bash
 $ docker exec connect \
-     curl -X POST \
+     curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
-               "name": "SchemaLessJsonSpoolDir",
-               "config": {
-                    "tasks.max": "1",
+               "tasks.max": "1",
                     "connector.class": "com.github.jcustenborder.kafka.connect.spooldir.SpoolDirSchemaLessJsonSourceConnector",
                     "input.path": "/root/data/input",
                     "input.file.pattern": "json-spooldir-source.json",
@@ -204,8 +196,8 @@ $ docker exec connect \
                     "halt.on.error": "false",
                     "topic": "spooldir-schemaless-json-topic",
                     "value.converter": "org.apache.kafka.connect.storage.StringConverter"
-          }}' \
-     http://localhost:8083/connectors | jq .
+          }' \
+     http://localhost:8083/connectors/spool-dir/config | jq .
 ```
 
 Verify we have received the data in spooldir-schemaless-json-topic topic
@@ -241,12 +233,10 @@ Creating Line Delimited Spool Dir Source connector
 
 ```bash
 $ docker exec connect \
-     curl -X POST \
+     curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
-               "name": "LineDelimitedSpoolDir",
-               "config": {
-                    "tasks.max": "1",
+               "tasks.max": "1",
                     "connector.class": "com.github.jcustenborder.kafka.connect.spooldir.SpoolDirLineDelimitedSourceConnector",
                     "input.path": "/root/data/input",
                     "input.file.pattern": "fix.json",
@@ -255,8 +245,8 @@ $ docker exec connect \
                     "halt.on.error": "false",
                     "topic": "fix-topic",
                     "schema.generation.enabled": "true"
-          }}' \
-     http://localhost:8083/connectors | jq .
+          }' \
+     http://localhost:8083/connectors/spool-dir/config | jq .
 ```bash
 
 

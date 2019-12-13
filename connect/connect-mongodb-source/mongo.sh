@@ -26,19 +26,17 @@ sleep 2
 
 echo "Creating MongoDB source connector"
 docker exec connect \
-     curl -X POST \
+     curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
-               "name": "mongodb-source",
-               "config": {
-                    "connector.class" : "com.mongodb.kafka.connect.MongoSourceConnector",
+               "connector.class" : "com.mongodb.kafka.connect.MongoSourceConnector",
                     "tasks.max" : "1",
                     "connection.uri" : "mongodb://myuser:mypassword@mongodb:27017",
                     "database":"inventory",
                     "collection":"customers",
                     "topic.prefix":"mongo"
-          }}' \
-     http://localhost:8083/connectors | jq .
+          }' \
+     http://localhost:8083/connectors/mongodb-source/config | jq .
 
 sleep 5
 

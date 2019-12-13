@@ -40,12 +40,10 @@ The connector is created with:
 
 ```bash
 $ docker exec connect \
-      curl -X POST \
+      curl -X PUT \
       -H "Content-Type: application/json" \
       --data '{
-         "name": "duplicate-topic",
-         "config": {
-           "connector.class":"io.confluent.connect.replicator.ReplicatorSourceConnector",
+         "connector.class":"io.confluent.connect.replicator.ReplicatorSourceConnector",
            "key.converter": "io.confluent.connect.replicator.util.ByteArrayConverter",
            "value.converter": "io.confluent.connect.replicator.util.ByteArrayConverter",
            "header.converter": "io.confluent.connect.replicator.util.ByteArrayConverter",
@@ -56,8 +54,8 @@ $ docker exec connect \
            "topic.rename.format": "test-topic-duplicate",
            "dest.kafka.bootstrap.servers": "broker:9092",
            "src.kafka.bootstrap.servers": "broker:9092"
-           }}' \
-      http://localhost:8083/connectors | jq .
+           }' \
+      http://localhost:8083/connectors/duplicate-topic/config | jq .
 ```
 
 Messages are sent to `test-topic` topic using:
@@ -84,12 +82,10 @@ Creating Confluent Replicator connector with SSL authentication
 
 ```bash
 $ docker exec connect \
-     curl -X POST \
+     curl -X PUT \
      --cert /etc/kafka/secrets/connect.certificate.pem --key /etc/kafka/secrets/connect.key --tlsv1.2 --cacert /etc/kafka/secrets/snakeoil-ca-1.crt \
      -H "Content-Type: application/json" \
      --data '{
-          "name": "duplicate-topic-ssl",
-          "config": {
                     "connector.class":"io.confluent.connect.replicator.ReplicatorSourceConnector",
                     "key.converter": "io.confluent.connect.replicator.util.ByteArrayConverter",
                     "value.converter": "io.confluent.connect.replicator.util.ByteArrayConverter",
@@ -122,8 +118,8 @@ $ docker exec connect \
                     "src.kafka.ssl.truststore.location" : "/etc/kafka/secrets/kafka.connect.truststore.jks",
                     "src.kafka.ssl.truststore.password" : "confluent",
                     "src.kafka.security.protocol" : "SSL"
-          }}' \
-     https://localhost:8083/connectors | jq .
+          }' \
+     https://localhost:8083/connectors/duplicate-topic-ssl/config | jq .
 ```
 
 Verify we have received the data in test-topic-ssl-duplicate topic
@@ -145,12 +141,10 @@ Creating Confluent Replicator connector with SASL_SSL authentication
 
 ```bash
 $ docker exec connect \
-     curl -X POST \
+     curl -X PUT \
      --cert /etc/kafka/secrets/connect.certificate.pem --key /etc/kafka/secrets/connect.key --tlsv1.2 --cacert /etc/kafka/secrets/snakeoil-ca-1.crt \
      -H "Content-Type: application/json" \
      --data '{
-          "name": "duplicate-topic-sasl-ssl",
-          "config": {
                     "connector.class":"io.confluent.connect.replicator.ReplicatorSourceConnector",
                     "key.converter": "io.confluent.connect.replicator.util.ByteArrayConverter",
                     "value.converter": "io.confluent.connect.replicator.util.ByteArrayConverter",
@@ -181,8 +175,8 @@ $ docker exec connect \
                     "src.kafka.security.protocol" : "SASL_SSL",
                     "src.kafka.sasl.jaas.config": "org.apache.kafka.common.security.plain.PlainLoginModule required  username=\"client\" password=\"client-secret\";",
                     "src.kafka.sasl.mechanism": "PLAIN"
-          }}' \
-     https://localhost:8083/connectors | jq .
+          }' \
+     https://localhost:8083/connectors/replicator-sasl-ssl/config | jq .
 ```
 
 Verify we have received the data in test-topic-sasl-ssl-duplicate topic

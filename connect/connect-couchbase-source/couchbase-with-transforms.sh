@@ -14,12 +14,10 @@ set -e
 
 echo "Creating Couchbase sink connector with transforms"
 docker exec connect \
-     curl -X POST \
+     curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
-               "name": "couchbase-source",
-               "config": {
-                    "connector.class": "com.couchbase.connect.kafka.CouchbaseSourceConnector",
+               "connector.class": "com.couchbase.connect.kafka.CouchbaseSourceConnector",
                     "tasks.max": "2",
                     "topic.name": "default-topic",
                     "connection.cluster_address": "couchbase",
@@ -40,8 +38,8 @@ docker exec connect \
                     "transforms.dropSufffix.type": "org.apache.kafka.connect.transforms.RegexRouter",
                     "transforms.dropSufffix.regex": "(.*)_.*",
                     "transforms.dropSufffix.replacement": "$1"
-          }}' \
-     http://localhost:8083/connectors | jq .
+          }' \
+     http://localhost:8083/connectors/couchbase-source/config | jq .
 
 sleep 10
 

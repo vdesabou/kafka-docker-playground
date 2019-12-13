@@ -40,12 +40,10 @@ seq -f "{\"f1\": \"This is a message sent with Kerberos GSSAPI authentication %g
 
 echo "Creating GCS Sink connector with Kerberos GSSAPI authentication"
 docker exec -e BUCKET_NAME="$BUCKET_NAME" connect \
-     curl -X POST \
+     curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
-               "name": "gcs-sink-kerberos",
-               "config": {
-                    "connector.class": "io.confluent.connect.gcs.GcsSinkConnector",
+               "connector.class": "io.confluent.connect.gcs.GcsSinkConnector",
                     "tasks.max" : "1",
                     "topics" : "gcs_topic-kerberos",
                     "gcs.bucket.name" : "'"$BUCKET_NAME"'",
@@ -62,8 +60,8 @@ docker exec -e BUCKET_NAME="$BUCKET_NAME" connect \
                     "confluent.topic.sasl.kerberos.service.name": "kafka",
                     "confluent.topic.sasl.jaas.config" : "com.sun.security.auth.module.Krb5LoginModule required useKeyTab=true storeKey=true keyTab=\"/var/lib/secret/kafka-connect.key\" principal=\"connect@TEST.CONFLUENT.IO\";",
                     "confluent.topic.security.protocol" : "SASL_PLAINTEXT"
-          }}' \
-     http://localhost:8083/connectors | jq .
+          }' \
+     http://localhost:8083/connectors/gcs-sink/config | jq .
 
 sleep 10
 

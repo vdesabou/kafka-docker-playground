@@ -40,12 +40,10 @@ seq -f "{\"f1\": \"value%g\"}" 10 | docker exec -i schema-registry kafka-avro-co
 
 echo "Creating GCS Sink connector"
 docker exec -e BUCKET_NAME="$BUCKET_NAME" connect \
-     curl -X POST \
+     curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
-               "name": "GCSSinkConnector",
-               "config": {
-                    "connector.class": "io.confluent.connect.gcs.GcsSinkConnector",
+               "connector.class": "io.confluent.connect.gcs.GcsSinkConnector",
                     "tasks.max" : "1",
                     "topics" : "gcs_topic",
                     "gcs.bucket.name" : "'"$BUCKET_NAME"'",
@@ -58,8 +56,8 @@ docker exec -e BUCKET_NAME="$BUCKET_NAME" connect \
                     "schema.compatibility": "NONE",
                     "confluent.topic.bootstrap.servers": "broker:9092",
                     "confluent.topic.replication.factor": "1"
-          }}' \
-     http://localhost:8083/connectors | jq .
+          }' \
+     http://localhost:8083/connectors/GCSSinkConnector/config | jq .
 
 sleep 10
 
@@ -81,12 +79,10 @@ avro-tools tojson /tmp/gcs_topic+0+0000000000.avro
 ##########################
 echo "Creating GCS Source connector"
 docker exec -e BUCKET_NAME="$BUCKET_NAME" connect \
-     curl -X POST \
+     curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
-               "name": "GCSSourceConnector",
-               "config": {
-                    "connector.class": "io.confluent.connect.gcs.GcsSourceConnector",
+               "connector.class": "io.confluent.connect.gcs.GcsSourceConnector",
                     "gcs.bucket.name" : "'"$BUCKET_NAME"'",
                     "gcs.credentials.path" : "/root/keyfiles/keyfile.json",
                     "format.class": "io.confluent.connect.gcs.format.avro.AvroFormat",
@@ -97,8 +93,8 @@ docker exec -e BUCKET_NAME="$BUCKET_NAME" connect \
                     "transforms.AddPrefix.type" : "org.apache.kafka.connect.transforms.RegexRouter",
                     "transforms.AddPrefix.regex" : ".*",
                     "transforms.AddPrefix.replacement" : "copy_of_$0"
-          }}' \
-     http://localhost:8083/connectors | jq .
+          }' \
+     http://localhost:8083/connectors/GCSSourceConnector/config | jq .
 
 sleep 10
 

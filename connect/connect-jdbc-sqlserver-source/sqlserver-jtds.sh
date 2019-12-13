@@ -12,12 +12,10 @@ cat inventory.sql | docker exec -i sqlserver bash -c '/opt/mssql-tools/bin/sqlcm
 
 echo "Creating JDBC SQL Server (with JTDS driver) source connector"
 docker exec connect \
-     curl -X POST \
+     curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
-               "name": "sqlserver-source",
-               "config": {
-                    "connector.class": "io.confluent.connect.jdbc.JdbcSourceConnector",
+               "connector.class": "io.confluent.connect.jdbc.JdbcSourceConnector",
                     "tasks.max": "1",
                     "connection.url": "jdbc:jtds:sqlserver://sqlserver:1433/testDB",
                     "connection.user": "sa",
@@ -29,8 +27,8 @@ docker exec connect \
                     "validate.non.null":"false",
                     "errors.log.enable": "true",
                     "errors.log.include.messages": "true"
-          }}' \
-     http://localhost:8083/connectors | jq .
+          }' \
+     http://localhost:8083/connectors/sqlserver-source/config | jq .
 
 sleep 5
 

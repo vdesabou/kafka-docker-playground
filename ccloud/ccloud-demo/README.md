@@ -306,12 +306,10 @@ $ ccloud kafka topic create mysql-application --partitions 6
 
 ```bash
 $ docker exec connect \
-     curl -X POST \
+     curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
-               "name": "mysql-source",
-               "config": {
-                    "connector.class":"io.confluent.connect.jdbc.JdbcSourceConnector",
+               "connector.class":"io.confluent.connect.jdbc.JdbcSourceConnector",
                     "tasks.max":"1",
                     "connection.url":"jdbc:mysql://mysql:3306/db?user=user&password=password&useSSL=false",
                     "table.whitelist":"application",
@@ -319,8 +317,8 @@ $ docker exec connect \
                     "timestamp.column.name":"last_modified",
                     "incrementing.column.name":"id",
                     "topic.prefix":"mysql-"
-          }}' \
-     http://localhost:8083/connectors | jq .
+          }' \
+     http://localhost:8083/connectors/mysql-source/config | jq .
 ```
 
 
@@ -357,12 +355,10 @@ An HTTP sink connector called `http-sink` is created and listening on topic `mys
 
 ```bash
 $ docker exec -e BOOTSTRAP_SERVERS="<BOOTSTRAP_SERVERS" -e >CLOUD_KEY="$CLOUD_KEY" -e CLOUD_SECRET="$CLOUD_SECRET" connect \
-     curl -X POST \
+     curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
-          "name": "http-sink",
-          "config": {
-               "topics": "mysql-application",
+          "topics": "mysql-application",
                "tasks.max": "1",
                "connector.class": "io.confluent.connect.http.HttpSinkConnector",
                "key.converter": "org.apache.kafka.connect.storage.StringConverter",
@@ -379,8 +375,8 @@ $ docker exec -e BOOTSTRAP_SERVERS="<BOOTSTRAP_SERVERS" -e >CLOUD_KEY="$CLOUD_KE
                "auth.type": "BASIC",
                "connection.user": "admin",
                "connection.password": "password"
-          }}' \
-     http://localhost:8083/connectors | jq .
+          }' \
+     http://localhost:8083/connectors/http-sink/config | jq .
 ```
 
 
@@ -411,20 +407,18 @@ An Elasticsearch sink connector called `elasticsearch-sink` is created and liste
 
 ```bash
 $ docker exec connect \
-     curl -X POST \
+     curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
-        "name": "elasticsearch-sink",
-        "config": {
-          "connector.class": "io.confluent.connect.elasticsearch.ElasticsearchSinkConnector",
+        "connector.class": "io.confluent.connect.elasticsearch.ElasticsearchSinkConnector",
           "tasks.max": "1",
           "topics": "mysql-application",
           "key.ignore": "true",
           "connection.url": "http://elasticsearch:9200",
           "type.name": "kafka-connect",
           "name": "elasticsearch-sink"
-          }}' \
-     http://localhost:8083/connectors | jq .
+          }' \
+     http://localhost:8083/connectors/elasticsearch-sink/config | jq .
 ```
 
 We check that the data is available in Elasticsearch using:

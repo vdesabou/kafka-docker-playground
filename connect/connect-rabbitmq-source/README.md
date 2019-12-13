@@ -28,20 +28,18 @@ Creating RabbitMQ Source connector
 
 ```bash
 $ docker exec connect \
-     curl -X POST \
+     curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
-               "name": "RabbitMQSourceConnector2",
-               "config": {
-                  "connector.class" : "io.confluent.connect.rabbitmq.RabbitMQSourceConnector",
+               "connector.class" : "io.confluent.connect.rabbitmq.RabbitMQSourceConnector",
                   "tasks.max" : "1",
                   "kafka.topic" : "rabbitmq",
                   "rabbitmq.queue" : "myqueue",
                   "rabbitmq.host" : "rabbitmq",
                   "rabbitmq.username" : "myuser",
                   "rabbitmq.password" : "mypassword"
-          }}' \
-     http://localhost:8083/connectors | jq .
+          }' \
+     http://localhost:8083/connectors/rabbitmq-source/config | jq .
 ```
 
 

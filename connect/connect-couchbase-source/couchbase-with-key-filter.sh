@@ -31,12 +31,10 @@ set -e
 
 echo "Creating Couchbase sink connector using event.filter.class=example.KeyFilter"
 docker exec connect \
-     curl -X POST \
+     curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
-               "name": "couchbase-source",
-               "config": {
-                    "connector.class": "com.couchbase.connect.kafka.CouchbaseSourceConnector",
+               "connector.class": "com.couchbase.connect.kafka.CouchbaseSourceConnector",
                     "tasks.max": "2",
                     "topic.name": "test-travel-sample",
                     "connection.cluster_address": "couchbase",
@@ -51,8 +49,8 @@ docker exec connect \
                     "couchbase.compression": "ENABLED",
                     "couchbase.flow_control_buffer": "128m",
                     "couchbase.persistence_polling_interval": "100ms"
-          }}' \
-     http://localhost:8083/connectors | jq .
+          }' \
+     http://localhost:8083/connectors/couchbase-source/config | jq .
 
 sleep 10
 

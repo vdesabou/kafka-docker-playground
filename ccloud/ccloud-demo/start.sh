@@ -77,12 +77,10 @@ set -e
 
 echo "Creating MySQL source connector"
 docker exec connect \
-     curl -X POST \
+     curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
-               "name": "mysql-source",
-               "config": {
-                    "connector.class":"io.confluent.connect.jdbc.JdbcSourceConnector",
+               "connector.class":"io.confluent.connect.jdbc.JdbcSourceConnector",
                     "tasks.max":"1",
                     "connection.url":"jdbc:mysql://mysql:3306/db?user=user&password=password&useSSL=false",
                     "table.whitelist":"application",
@@ -90,8 +88,8 @@ docker exec connect \
                     "timestamp.column.name":"last_modified",
                     "incrementing.column.name":"id",
                     "topic.prefix":"mysql-"
-          }}' \
-     http://localhost:8083/connectors | jq .
+          }' \
+     http://localhost:8083/connectors/mysql-source/config | jq .
 
 echo "Adding an element to the table"
 docker exec mysql mysql --user=root --password=password --database=db -e "
@@ -123,12 +121,10 @@ fi
 
 echo "Creating http-sink connector"
 docker exec -e BOOTSTRAP_SERVERS="$BOOTSTRAP_SERVERS" -e CLOUD_KEY="$CLOUD_KEY" -e CLOUD_SECRET="$CLOUD_SECRET" connect \
-     curl -X POST \
+     curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
-          "name": "http-sink",
-          "config": {
-               "topics": "mysql-application",
+          "topics": "mysql-application",
                "tasks.max": "1",
                "connector.class": "io.confluent.connect.http.HttpSinkConnector",
                "key.converter": "org.apache.kafka.connect.storage.StringConverter",
@@ -145,8 +141,8 @@ docker exec -e BOOTSTRAP_SERVERS="$BOOTSTRAP_SERVERS" -e CLOUD_KEY="$CLOUD_KEY" 
                "auth.type": "BASIC",
                "connection.user": "admin",
                "connection.password": "password"
-          }}' \
-     http://localhost:8083/connectors | jq .
+          }' \
+     http://localhost:8083/connectors/http-sink/config | jq .
 
 sleep 5
 
@@ -155,20 +151,18 @@ curl admin:password@localhost:9080/api/messages | jq .
 
 echo "Creating Elasticsearch Sink connector"
 docker exec connect \
-     curl -X POST \
+     curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
-        "name": "elasticsearch-sink",
-        "config": {
-          "connector.class": "io.confluent.connect.elasticsearch.ElasticsearchSinkConnector",
+        "connector.class": "io.confluent.connect.elasticsearch.ElasticsearchSinkConnector",
           "tasks.max": "1",
           "topics": "mysql-application",
           "key.ignore": "true",
           "connection.url": "http://elasticsearch:9200",
           "type.name": "kafka-connect",
           "name": "elasticsearch-sink"
-          }}' \
-     http://localhost:8083/connectors | jq .
+          }' \
+     http://localhost:8083/connectors/elasticsearch-sink/config | jq .
 
 sleep 40
 

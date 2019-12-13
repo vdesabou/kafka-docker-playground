@@ -13,14 +13,12 @@ echo "-------------------------------------"
 echo "Running SSL Authentication Example"
 echo "-------------------------------------"
 
-echo "Creating HttpSinkSSL connector"
+echo "Creating http-sink connector"
 docker exec connect \
-     curl -X POST \
+     curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
-          "name": "HttpSinkSSL",
-          "config": {
-               "topics": "http-messages",
+          "topics": "http-messages",
                "tasks.max": "1",
                "connector.class": "io.confluent.connect.http.HttpSinkConnector",
                "key.converter": "org.apache.kafka.connect.storage.StringConverter",
@@ -41,8 +39,8 @@ docker exec connect \
                "https.ssl.keystore.password": "changeit",
                "https.ssl.key.password": "changeit",
                "https.ssl.protocol": "TLSv1.2"
-          }}' \
-     http://localhost:8083/connectors | jq .
+          }' \
+     http://localhost:8083/connectors/http-sink/config | jq .
 
 
 sleep 10

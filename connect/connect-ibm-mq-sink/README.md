@@ -26,12 +26,10 @@ The connector is created with:
 
 ```bash
 $ docker exec connect \
-     curl -X POST \
+     curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
-               "name": "ibm-mq-sink",
-               "config": {
-                    "connector.class": "io.confluent.connect.jms.IbmMqSinkConnector",
+               "connector.class": "io.confluent.connect.jms.IbmMqSinkConnector",
                     "topics": "sink-messages",
                     "mq.hostname": "ibmmq",
                     "mq.port": "1414",
@@ -47,8 +45,8 @@ $ docker exec connect \
                     "confluent.license": "",
                     "confluent.topic.bootstrap.servers": "broker:9092",
                     "confluent.topic.replication.factor": "1"
-          }}' \
-     http://localhost:8083/connectors | jq .
+          }' \
+     http://localhost:8083/connectors/ibm-mq-sink/config | jq .
 ```
 
 Sending messages to topic `sink-messages`:

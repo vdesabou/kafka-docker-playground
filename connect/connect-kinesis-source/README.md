@@ -50,12 +50,10 @@ The connector is created with:
 
 ```
 docker exec connect \
-     curl -X POST \
+     curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
-        "name": "kinesis-source",
-        "config": {
-               "connector.class":"io.confluent.connect.kinesis.KinesisSourceConnector",
+        "connector.class":"io.confluent.connect.kinesis.KinesisSourceConnector",
                "tasks.max": "1",
                "kafka.topic": "kinesis_topic",
                "kinesis.region": "US_EAST_1",
@@ -64,8 +62,8 @@ docker exec connect \
                "name": "kinesis-source",
                "confluent.topic.bootstrap.servers": "broker:9092",
                "confluent.topic.replication.factor": "1"
-          }}' \
-     http://localhost:8083/connectors | jq .
+          }' \
+     http://localhost:8083/connectors/kinesis-source/config | jq .
 ```
 
 Verify we have received the data in kinesis_topic topic:
