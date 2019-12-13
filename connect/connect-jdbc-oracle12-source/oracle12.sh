@@ -49,12 +49,10 @@ echo "Oracle DB has started!"
 
 echo "Creating Oracle source connector"
 docker exec connect \
-     curl -X POST \
+     curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
-               "name": "oracle-source",
-               "config": {
-                    "connector.class":"io.confluent.connect.jdbc.JdbcSourceConnector",
+               "connector.class":"io.confluent.connect.jdbc.JdbcSourceConnector",
                     "tasks.max":"1",
                     "connection.user": "myuser",
                     "connection.password": "mypassword",
@@ -68,8 +66,8 @@ docker exec connect \
                     "topic.prefix":"oracle-",
                     "errors.log.enable": "true",
                     "errors.log.include.messages": "true"
-          }}' \
-     http://localhost:8083/connectors | jq .
+          }' \
+     http://localhost:8083/connectors/oracle-source/config | jq .
 
 
 sleep 5

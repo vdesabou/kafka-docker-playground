@@ -18,12 +18,10 @@ EOF
 
 echo "Creating Google Cloud Functions Sink connector"
 docker exec -e PROJECT="$PROJECT" -e REGION="$REGION" -e FUNCTION="$FUNCTION" connect \
-     curl -X POST \
+     curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
-               "name": "gcp-functions",
-               "config": {
-                    "connector.class": "io.confluent.connect.gcp.functions.GoogleCloudFunctionsSinkConnector",
+               "connector.class": "io.confluent.connect.gcp.functions.GoogleCloudFunctionsSinkConnector",
                     "tasks.max" : "1",
                     "topics" : "functions-messages",
                     "key.converter":"org.apache.kafka.connect.storage.StringConverter",
@@ -42,8 +40,8 @@ docker exec -e PROJECT="$PROJECT" -e REGION="$REGION" -e FUNCTION="$FUNCTION" co
                     "reporter.result.topic.key.format": "string",
                     "reporter.result.topic.value.format": "string",
                     "reporter.result.topic.replication.factor": 1
-          }}' \
-     http://localhost:8083/connectors | jq .
+          }' \
+     http://localhost:8083/connectors/gcp-functions/config | jq .
 
 sleep 10
 

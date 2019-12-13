@@ -39,12 +39,10 @@ seq 10 | docker exec -i broker kafka-console-producer --broker-list broker:9092 
 
 echo "Creating JMS TIBCO EMS sink connector"
 docker exec connect \
-     curl -X POST \
+     curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
-               "name": "jms-tibco-ems-sink",
-               "config": {
-                    "connector.class": "io.confluent.connect.jms.JmsSinkConnector",
+               "connector.class": "io.confluent.connect.jms.JmsSinkConnector",
                     "tasks.max": "1",
                     "topics": "sink-messages",
                     "java.naming.provider.url": "tibjmsnaming://tibco-ems:7222",
@@ -58,8 +56,8 @@ docker exec connect \
                     "value.converter": "org.apache.kafka.connect.storage.StringConverter",
                     "confluent.topic.bootstrap.servers": "broker:9092",
                     "confluent.topic.replication.factor": "1"
-          }}' \
-     http://localhost:8083/connectors | jq .
+          }' \
+     http://localhost:8083/connectors/jms-tibco-ems-sink/config | jq .
 
 sleep 5
 

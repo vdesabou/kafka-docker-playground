@@ -13,12 +13,10 @@ echo $'id\tfirst_name\tlast_name\temail\tgender\tip_address\tlast_login\taccount
 
 echo "Creating TSV SFTP Source connector"
 docker exec connect \
-     curl -X POST \
+     curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
-        "name": "sftp-source-tsv",
-        "config": {
-               "topics": "test_sftp_sink",
+        "topics": "test_sftp_sink",
                "tasks.max": "1",
                "connector.class": "io.confluent.connect.sftp.SftpCsvSourceConnector",
                "cleanup.policy":"NONE",
@@ -35,8 +33,8 @@ docker exec connect \
                "csv.first.row.as.header": "true",
                "schema.generation.enabled": "true",
                "csv.separator.char": "9"
-          }}' \
-     http://localhost:8083/connectors | jq .
+          }' \
+     http://localhost:8083/connectors/sftp-source-tsv/config | jq .
 
 sleep 5
 

@@ -39,12 +39,10 @@ seq -f "{\"f1\": \"This is a message sent with SASL_SSL authentication %g\"}" 10
 
 echo "Creating GCS Sink connector with SASL_SSL authentication"
 docker exec -e BUCKET_NAME="$BUCKET_NAME" connect \
-     curl -X POST \
+     curl -X PUT \
      --cert /etc/kafka/secrets/connect.certificate.pem --key /etc/kafka/secrets/connect.key --tlsv1.2 --cacert /etc/kafka/secrets/snakeoil-ca-1.crt \
      -H "Content-Type: application/json" \
      --data '{
-               "name": "gcs-sink-sasl-ssl",
-               "config": {
                     "connector.class": "io.confluent.connect.gcs.GcsSinkConnector",
                     "tasks.max" : "1",
                     "topics" : "gcs_topic-sasl-ssl",
@@ -64,8 +62,8 @@ docker exec -e BUCKET_NAME="$BUCKET_NAME" connect \
                     "confluent.topic.security.protocol" : "SASL_SSL",
                     "confluent.topic.sasl.mechanism": "PLAIN",
                     "confluent.topic.sasl.jaas.config": "org.apache.kafka.common.security.plain.PlainLoginModule required  username=\"client\" password=\"client-secret\";"
-          }}' \
-     https://localhost:8083/connectors | jq .
+          }' \
+     https://localhost:8083/connectors/gcs-sink/config | jq .
 
 sleep 10
 

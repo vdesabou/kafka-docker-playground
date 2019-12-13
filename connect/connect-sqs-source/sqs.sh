@@ -33,12 +33,10 @@ aws sqs send-message-batch --queue-url $QUEUE_URL --entries file://send-message-
 
 echo "Creating SQS Source connector"
 docker exec -e QUEUE_URL="$QUEUE_URL" connect \
-     curl -X POST \
+     curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
-        "name": "sqs-source",
-        "config": {
-               "connector.class": "io.confluent.connect.sqs.source.SqsSourceConnector",
+        "connector.class": "io.confluent.connect.sqs.source.SqsSourceConnector",
                "tasks.max": "1",
                "kafka.topic": "test-sqs-source",
                "sqs.url": "'"$QUEUE_URL"'",
@@ -46,8 +44,8 @@ docker exec -e QUEUE_URL="$QUEUE_URL" connect \
                "name": "sqs-source",
                "confluent.topic.bootstrap.servers": "broker:9092",
                "confluent.topic.replication.factor": "1"
-          }}' \
-     http://localhost:8083/connectors | jq .
+          }' \
+     http://localhost:8083/connectors/sqs-source/config | jq .
 
 echo "Verify we have received the data in test-sqs-source topic"
 docker exec schema-registry kafka-avro-console-consumer -bootstrap-server broker:9092 --topic test-sqs-source --from-beginning --max-messages 2

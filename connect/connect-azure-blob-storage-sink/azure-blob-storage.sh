@@ -48,12 +48,10 @@ ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml
 
 echo "Creating Azure Blob Storage Sink connector"
 docker exec -e AZURE_ACCOUNT_NAME="$AZURE_ACCOUNT_NAME" -e AZURE_ACCOUNT_KEY="$AZURE_ACCOUNT_KEY" -e AZURE_CONTAINER_NAME="$AZURE_CONTAINER_NAME" connect \
-     curl -X POST \
+     curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
-               "name": "azure-blob-sink",
-               "config": {
-                    "connector.class": "io.confluent.connect.azure.blob.AzureBlobStorageSinkConnector",
+               "connector.class": "io.confluent.connect.azure.blob.AzureBlobStorageSinkConnector",
                     "tasks.max": "1",
                     "topics": "blob_topic",
                     "flush.size": "3",
@@ -64,8 +62,8 @@ docker exec -e AZURE_ACCOUNT_NAME="$AZURE_ACCOUNT_NAME" -e AZURE_ACCOUNT_KEY="$A
                     "confluent.license": "",
                     "confluent.topic.bootstrap.servers": "broker:9092",
                     "confluent.topic.replication.factor": "1"
-          }}' \
-     http://localhost:8083/connectors | jq .
+          }' \
+     http://localhost:8083/connectors/azure-blob-sink/config | jq .
 
 
 echo "Sending messages to topic blob_topic"

@@ -163,7 +163,7 @@ connect                        |        at java.util.concurrent.FutureTask.run(F
 connect                        |        at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1149)
 connect                        |        at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:624)
 connect                        |        at java.lang.Thread.run(Thread.java:748)
-connect                        | [2019-10-01 06:58:37,131] ERROR WorkerSinkTask{id=JsonHttpSink-0} RetriableException from SinkTask: (org.apache.kafka.connect.runtime.WorkerSinkTask)
+connect                        | [2019-10-01 06:58:37,131] ERROR WorkerSinkTask{id=http-sink-0} RetriableException from SinkTask: (org.apache.kafka.connect.runtime.WorkerSinkTask)
 connect                        | org.apache.kafka.connect.errors.RetriableException: java.lang.NullPointerException
 connect                        |        at io.confluent.connect.http.HttpSinkTask.put(HttpSinkTask.java:79)
 connect                        |        at org.apache.kafka.connect.runtime.WorkerSinkTask.deliverMessages(WorkerSinkTask.java:538)
@@ -198,7 +198,7 @@ connect                        |        at java.util.concurrent.FutureTask.run(F
 connect                        |        at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1149)
 connect                        |        at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:624)
 connect                        |        at java.lang.Thread.run(Thread.java:748)
-connect                        | [2019-10-01 06:58:40,156] ERROR WorkerSinkTask{id=JsonHttpSink-0} RetriableException from SinkTask: (org.apache.kafka.connect.runtime.WorkerSinkTask)
+connect                        | [2019-10-01 06:58:40,156] ERROR WorkerSinkTask{id=http-sink-0} RetriableException from SinkTask: (org.apache.kafka.connect.runtime.WorkerSinkTask)
 connect                        | org.apache.kafka.connect.errors.RetriableException: java.lang.NullPointerException
 connect                        |        at io.confluent.connect.http.HttpSinkTask.put(HttpSinkTask.java:79)
 connect                        |        at org.apache.kafka.connect.runtime.WorkerSinkTask.deliverMessages(WorkerSinkTask.java:538)

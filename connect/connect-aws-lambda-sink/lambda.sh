@@ -10,12 +10,10 @@ seq -f "{\"a\": %g,\"b\": 1}" 10 | docker exec -i schema-registry kafka-avro-con
 
 echo "Creating AWS Lambda Sink connector"
 docker exec connect \
-     curl -X POST \
+     curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
-               "name": "aws-lambda",
-               "config": {
-                    "connector.class" : "io.confluent.connect.aws.lambda.AwsLambdaSinkConnector",
+               "connector.class" : "io.confluent.connect.aws.lambda.AwsLambdaSinkConnector",
                     "tasks.max": "1",
                     "topics" : "add-topic",
                     "aws.lambda.function.name" : "Add",
@@ -28,8 +26,8 @@ docker exec connect \
                     "confluent.license": "",
                     "confluent.topic.bootstrap.servers": "broker:9092",
                     "confluent.topic.replication.factor": "1"
-          }}' \
-     http://localhost:8083/connectors | jq .
+          }' \
+     http://localhost:8083/connectors/aws-lambda/config | jq .
 
 
 sleep 10

@@ -37,12 +37,10 @@ docker exec mysql bash -c "mysql --user=root --password=password --database=db -
 
 echo "Creating MySQL source connector"
 docker exec connect \
-     curl -X POST \
+     curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
-               "name": "mysql-source",
-               "config": {
-                    "connector.class":"io.confluent.connect.jdbc.JdbcSourceConnector",
+               "connector.class":"io.confluent.connect.jdbc.JdbcSourceConnector",
                     "tasks.max":"10",
                     "connection.url":"jdbc:mysql://mysql:3306/db?user=user&password=password&useSSL=false",
                     "table.whitelist":"application",
@@ -50,8 +48,8 @@ docker exec connect \
                     "timestamp.column.name":"last_modified",
                     "incrementing.column.name":"id",
                     "topic.prefix":"mysql-"
-          }}' \
-     http://localhost:8083/connectors | jq .
+          }' \
+     http://localhost:8083/connectors/mysql-source/config | jq .
 
 sleep 5
 

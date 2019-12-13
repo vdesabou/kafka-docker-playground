@@ -70,12 +70,10 @@ Creating AWS CloudWatch Logs Source connector
 
 ```bash
 docker exec connect \
-     curl -X POST \
+     curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
-               "name": "aws-cloudwatch-logs-source",
-               "config": {
-                    "connector.class": "io.confluent.connect.aws.cloudwatch.AwsCloudWatchSourceConnector",
+               "connector.class": "io.confluent.connect.aws.cloudwatch.AwsCloudWatchSourceConnector",
                     "tasks.max": "1",
                     "aws.cloudwatch.logs.url": "https://logs.us-east-1.amazonaws.com",
                     "aws.cloudwatch.log.group": "my-log-group",
@@ -83,8 +81,8 @@ docker exec connect \
                     "confluent.license": "",
                     "confluent.topic.bootstrap.servers": "broker:9092",
                     "confluent.topic.replication.factor": "1"
-          }}' \
-     http://localhost:8083/connectors | jq .
+          }' \
+     http://localhost:8083/connectors/aws-cloudwatch-logs-source/config | jq .
 ```
 
 Verify we have received the data in `my-log-group.my-log-stream` topic

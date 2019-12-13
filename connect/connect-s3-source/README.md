@@ -44,12 +44,10 @@ The connector is created with:
 
 ```bash
 $ docker exec -e BUCKET_NAME="$BUCKET_NAME" connect \
-     curl -X POST \
+     curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
-               "name": "s3-source",
-               "config": {
-                    "tasks.max": "1",
+               "tasks.max": "1",
                     "connector.class": "io.confluent.connect.s3.source.S3SourceConnector",
                     "s3.region": "us-east-1",
                     "s3.bucket.name": "'"$BUCKET_NAME"'",
@@ -61,8 +59,8 @@ $ docker exec -e BUCKET_NAME="$BUCKET_NAME" connect \
                     "transforms.AddPrefix.type": "org.apache.kafka.connect.transforms.RegexRouter",
                     "transforms.AddPrefix.regex": ".*",
                     "transforms.AddPrefix.replacement": "copy_of_$0"
-          }}' \
-     http://localhost:8083/connectors | jq .
+          }' \
+     http://localhost:8083/connectors/s3-source/config | jq .
 ```
 
 Verifying topic `copy_of_s3_topic`

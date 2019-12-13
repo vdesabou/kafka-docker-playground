@@ -26,12 +26,10 @@ docker exec broker kafka-acls --authorizer-properties zookeeper.connect=zookeepe
 
 echo "Creating CSV SFTP Source connector"
 docker exec connect \
-     curl -X POST \
+     curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
-        "name": "sftp-source-csv2",
-        "config": {
-               "topics": "test_sftp_sink",
+        "topics": "test_sftp_sink",
                "tasks.max": "1",
                "connector.class": "io.confluent.connect.sftp.SftpCsvSourceConnector",
                "cleanup.policy":"NONE",
@@ -50,8 +48,8 @@ docker exec connect \
                "producer.override.sasl.mechanism": "PLAIN",
                "producer.override.security.protocol": "SASL_PLAINTEXT",
                "producer.override.sasl.jaas.config" : "org.apache.kafka.common.security.plain.PlainLoginModule required username=\"sftp\" password=\"sftp-secret\";"
-          }}' \
-     http://localhost:8083/connectors | jq .
+          }' \
+     http://localhost:8083/connectors/sftp-source/config | jq .
 
 sleep 5
 

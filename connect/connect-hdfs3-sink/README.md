@@ -31,12 +31,10 @@ The connector is created with:
 
 ```bash
 $ docker exec connect \
-     curl -X POST \
+     curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
-        "name": "hdfs3-sink",
-        "config": {
-               "connector.class":"io.confluent.connect.hdfs3.Hdfs3SinkConnector",
+        "connector.class":"io.confluent.connect.hdfs3.Hdfs3SinkConnector",
                "tasks.max":"1",
                "topics":"test_hdfs",
                "hdfs.url":"hdfs://namenode:9000",
@@ -51,8 +49,8 @@ $ docker exec connect \
                "value.converter":"io.confluent.connect.avro.AvroConverter",
                "value.converter.schema.registry.url":"http://schema-registry:8081",
                "schema.compatibility":"BACKWARD"
-          }}' \
-     http://localhost:8083/connectors | jq .
+          }' \
+     http://localhost:8083/connectors/hdfs3-sink/config | jq .
 ```
 
 Messages are sent to `test_hdfs` topic using:

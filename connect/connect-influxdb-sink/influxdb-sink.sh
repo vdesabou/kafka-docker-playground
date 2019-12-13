@@ -15,17 +15,15 @@ EOF
 
 echo "Creating InfluxDB sink connector"
 docker exec connect \
-     curl -X POST \
+     curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
-               "name": "InfluxDBSinkConnector",
-               "config": {
-                    "connector.class": "io.confluent.influxdb.InfluxDBSinkConnector",
+               "connector.class": "io.confluent.influxdb.InfluxDBSinkConnector",
                     "tasks.max": "1",
                     "influxdb.url": "http://influxdb:8086",
                     "topics": "orders"
-          }}' \
-     http://localhost:8083/connectors | jq .
+          }' \
+     http://localhost:8083/connectors/influxdb-sink/config | jq .
 
 sleep 10
 

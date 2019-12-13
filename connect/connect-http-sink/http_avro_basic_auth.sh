@@ -13,14 +13,12 @@ echo "-------------------------------------"
 echo "Running AVRO Converter Example"
 echo "-------------------------------------"
 
-echo "Creating AvroHttpSink connector"
+echo "Creating http-sink connector"
 docker exec connect \
-     curl -X POST \
+     curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
-          "name": "AvroHttpSink",
-          "config": {
-               "topics": "avro-topic",
+          "topics": "avro-topic",
                "tasks.max": "1",
                "connector.class": "io.confluent.connect.http.HttpSinkConnector",
                "key.converter": "org.apache.kafka.connect.storage.StringConverter",
@@ -32,8 +30,8 @@ docker exec connect \
                "auth.type": "BASIC",
                "connection.user": "admin",
                "connection.password": "password"
-          }}' \
-     http://localhost:8083/connectors | jq .
+          }' \
+     http://localhost:8083/connectors/http-sink/config | jq .
 
 
 sleep 10

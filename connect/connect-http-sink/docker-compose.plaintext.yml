@@ -66,8 +66,8 @@ services:
 
   http-service-ssl-auth-no-ssl-endpoint-identification:
     image: vdesabou/http-sink-demo-wrongssl
-    hostname: http-service-ssl-auth
-    container_name: http-service-ssl-auth
+    hostname: http-service-ssl-auth-no-ssl-endpoint-identification
+    container_name: http-service-ssl-auth-no-ssl-endpoint-identification
     ports:
       - "8543:8443"
     environment:

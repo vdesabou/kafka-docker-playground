@@ -13,18 +13,16 @@ ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml
 
 echo "Creating MySQL sink connector"
 docker exec connect \
-     curl -X POST \
+     curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
-               "name": "mysql-sink",
-               "config": {
-                    "connector.class": "io.confluent.connect.jdbc.JdbcSinkConnector",
+               "connector.class": "io.confluent.connect.jdbc.JdbcSinkConnector",
                     "tasks.max": "1",
                     "connection.url": "jdbc:mysql://mysql:3306/db?user=user&password=password&useSSL=false",
                     "topics": "orders",
                     "auto.create": "true"
-          }}' \
-     http://localhost:8083/connectors | jq .
+          }' \
+     http://localhost:8083/connectors/mysql-sink/config | jq .
 
 
 echo "Sending messages to topic orders"

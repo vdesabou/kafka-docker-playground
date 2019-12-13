@@ -20,12 +20,10 @@ seq 10 | docker exec -i broker kafka-console-producer --broker-list broker:9092 
 
 echo "Creating Solace sink connector"
 docker exec connect \
-     curl -X POST \
+     curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
-               "name": "SolaceSinkConnector",
-               "config": {
-                    "connector.class": "io.confluent.connect.jms.SolaceSinkConnector",
+               "connector.class": "io.confluent.connect.jms.SolaceSinkConnector",
                     "tasks.max": "1",
                     "topics": "sink-messages",
                     "solace.host": "smf://solace:55555",
@@ -38,8 +36,8 @@ docker exec connect \
                     "value.converter": "org.apache.kafka.connect.storage.StringConverter",
                     "confluent.topic.bootstrap.servers": "broker:9092",
                     "confluent.topic.replication.factor": "1"
-          }}' \
-     http://localhost:8083/connectors | jq .
+          }' \
+     http://localhost:8083/connectors/SolaceSinkConnector/config | jq .
 
 sleep 10
 

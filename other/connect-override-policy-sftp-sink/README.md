@@ -57,12 +57,10 @@ Creating SFTP Sink connector with Dead Letter Queue (notice the `consumer.overri
 
 ```bash
 $ docker exec connect \
-     curl -X POST \
+     curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
-        "name": "sftp-sink",
-        "config": {
-               "topics": "test_sftp_sink",
+        "topics": "test_sftp_sink",
                "tasks.max": "1",
                "connector.class": "io.confluent.connect.sftp.SftpSinkConnector",
                "partitioner.class": "io.confluent.connect.storage.partitioner.DefaultPartitioner",
@@ -85,8 +83,8 @@ $ docker exec connect \
                "errors.tolerance": "all",
                "errors.deadletterqueue.topic.name": "dlq",
                "errors.deadletterqueue.topic.replication.factor": "1"
-          }}' \
-     http://localhost:8083/connectors | jq .
+          }' \
+     http://localhost:8083/connectors/sftp-sink/config | jq .
 ```
 
 Sending messages to topic `test_sftp_sink`

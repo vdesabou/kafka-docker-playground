@@ -25,12 +25,10 @@ The connector is created with:
 
 ```
 docker exec connect \
-     curl -X POST \
+     curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
-        "name": "hdfs-sink",
-        "config": {
-               "connector.class":"io.confluent.connect.hdfs.HdfsSinkConnector",
+        "connector.class":"io.confluent.connect.hdfs.HdfsSinkConnector",
                "tasks.max":"1",
                "topics":"test_hdfs",
                "hdfs.url":"hdfs://hadoop:9000",
@@ -42,8 +40,8 @@ docker exec connect \
                "hadoop.home":"/usr/local/hadoop-2.7.1/share/hadoop/common/",
                "logs.dir":"/tmp",
                "schema.compatibility":"BACKWARD"
-          }}' \
-     http://localhost:8083/connectors | jq .
+          }' \
+     http://localhost:8083/connectors/hdfs-sink/config | jq .
 ```
 
 Messages are sent to `test_hdfs` topic using:

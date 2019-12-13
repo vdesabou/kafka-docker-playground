@@ -53,12 +53,10 @@ Creating GCS Source connector
 
 ```bash
 $ docker exec -e BUCKET_NAME="$BUCKET_NAME" connect \
-     curl -X POST \
+     curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
-               "name": "GCSSourceConnector",
-               "config": {
-                    "connector.class": "io.confluent.connect.gcs.GcsSourceConnector",
+               "connector.class": "io.confluent.connect.gcs.GcsSourceConnector",
                     "gcs.bucket.name" : "'"$BUCKET_NAME"'",
                     "gcs.credentials.path" : "/root/keyfiles/keyfile.json",
                     "format.class": "io.confluent.connect.gcs.format.avro.AvroFormat",
@@ -69,8 +67,8 @@ $ docker exec -e BUCKET_NAME="$BUCKET_NAME" connect \
                     "transforms.AddPrefix.type" : "org.apache.kafka.connect.transforms.RegexRouter",
                     "transforms.AddPrefix.regex" : ".*",
                     "transforms.AddPrefix.replacement" : "copy_of_$0"
-          }}' \
-     http://localhost:8083/connectors | jq .
+          }' \
+     http://localhost:8083/connectors/GCSSourceConnector/config | jq .
 ```
 
 Verify messages are in topic `copy_of_gcs_topic`

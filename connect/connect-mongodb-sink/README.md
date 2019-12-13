@@ -47,19 +47,17 @@ Create the connector:
 
 ```bash
 $ docker exec connect \
-     curl -X POST \
+     curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
-               "name": "mongodb-sink",
-               "config": {
-                    "connector.class" : "com.mongodb.kafka.connect.MongoSinkConnector",
+               "connector.class" : "com.mongodb.kafka.connect.MongoSinkConnector",
                     "tasks.max" : "1",
                     "connection.uri" : "mongodb://myuser:mypassword@mongodb:27017",
                     "database":"inventory",
                     "collection":"customers",
                     "topics":"orders"
-          }}' \
-     http://localhost:8083/connectors | jq .
+          }' \
+     http://localhost:8083/connectors/mongodb-sink/config | jq .
 ```
 
 Sending messages to topic `orders`

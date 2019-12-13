@@ -12,12 +12,10 @@ cat inventory.sql | docker exec -i sqlserver bash -c '/opt/mssql-tools/bin/sqlcm
 
 echo "Creating Debezium SQL Server source connector"
 docker exec connect \
-     curl -X POST \
+     curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
-               "name": "debezium-sqlserver-source",
-               "config": {
-                    "connector.class": "io.debezium.connector.sqlserver.SqlServerConnector",
+               "connector.class": "io.debezium.connector.sqlserver.SqlServerConnector",
                     "tasks.max": "1",
                     "database.hostname": "sqlserver",
                     "database.port": "1433",
@@ -27,8 +25,8 @@ docker exec connect \
                     "database.dbname" : "testDB",
                     "database.history.kafka.bootstrap.servers": "broker:9092",
                     "database.history.kafka.topic": "schema-changes.inventory"
-          }}' \
-     http://localhost:8083/connectors | jq .
+          }' \
+     http://localhost:8083/connectors/debezium-sqlserver-source/config | jq .
 
 sleep 5
 

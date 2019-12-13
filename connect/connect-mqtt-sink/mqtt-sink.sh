@@ -12,12 +12,10 @@ EOF
 
 echo "Creating MQTT Sink connector"
 docker exec connect \
-     curl -X POST \
+     curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
-               "name": "sink-mqtt",
-               "config": {
-                    "connector.class": "io.confluent.connect.mqtt.MqttSinkConnector",
+               "connector.class": "io.confluent.connect.mqtt.MqttSinkConnector",
                     "tasks.max": "1",
                     "mqtt.server.uri": "tcp://mosquitto:1883",
                     "topics":"sink-messages",
@@ -29,8 +27,8 @@ docker exec connect \
                     "confluent.license": "",
                     "confluent.topic.bootstrap.servers": "broker:9092",
                     "confluent.topic.replication.factor": "1"
-          }}' \
-     http://localhost:8083/connectors | jq .
+          }' \
+     http://localhost:8083/connectors/sink-mqtt/config | jq .
 
 
 sleep 5

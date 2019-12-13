@@ -13,14 +13,12 @@ echo "-------------------------------------"
 echo "Running Simple (No) Authentication Example"
 echo "-------------------------------------"
 
-echo "Creating HttpSinkNoAuth connector"
+echo "Creating http-sink connector"
 docker exec connect \
-     curl -X POST \
+     curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
-          "name": "HttpSinkNoAuth",
-          "config": {
-               "topics": "http-messages",
+          "topics": "http-messages",
                "tasks.max": "1",
                "connector.class": "io.confluent.connect.http.HttpSinkConnector",
                "key.converter": "org.apache.kafka.connect.storage.StringConverter",
@@ -28,8 +26,8 @@ docker exec connect \
                "confluent.topic.bootstrap.servers": "broker:9092",
                "confluent.topic.replication.factor": "1",
                "http.api.url": "http://http-service-no-auth:8080/api/messages"
-          }}' \
-     http://localhost:8083/connectors | jq .
+          }' \
+     http://localhost:8083/connectors/http-sink/config | jq .
 
 
 sleep 10

@@ -32,12 +32,10 @@ Creating Splunk sink connector
 
 ```bash
 $ docker exec connect \
-     curl -X POST \
+     curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
-               "name": "SplunkSink",
-               "config": {
-                    "connector.class": "com.splunk.kafka.connect.SplunkSinkConnector",
+               "connector.class": "com.splunk.kafka.connect.SplunkSinkConnector",
                     "tasks.max": "1",
                     "topics": "splunk-qs",
                     "splunk.indexes": "main",
@@ -47,8 +45,8 @@ $ docker exec connect \
                     "value.converter": "org.apache.kafka.connect.storage.StringConverter",
                     "confluent.topic.bootstrap.servers": "broker:9092",
                     "confluent.topic.replication.factor": "1"
-          }}' \
-     http://localhost:8083/connectors | jq .
+          }' \
+     http://localhost:8083/connectors/splunk-sink/config | jq .
 ```
 
 Note: The token `99582090-3ac3-4db1-9487-e17b17a05081` is coming from `./default.yml`:

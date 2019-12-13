@@ -9,12 +9,10 @@ ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml
 
 echo "Creating S3 Sink connector with bucket name <$BUCKET_NAME>"
 docker exec -e BUCKET_NAME="$BUCKET_NAME" connect \
-     curl -X POST \
+     curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
-               "name": "s3-sink",
-               "config": {
-                    "connector.class": "io.confluent.connect.s3.S3SinkConnector",
+               "connector.class": "io.confluent.connect.s3.S3SinkConnector",
                     "tasks.max": "1",
                     "topics": "s3_topic",
                     "s3.region": "us-east-1",
@@ -25,8 +23,8 @@ docker exec -e BUCKET_NAME="$BUCKET_NAME" connect \
                     "format.class": "io.confluent.connect.s3.format.avro.AvroFormat",
                     "partitioner.class": "io.confluent.connect.storage.partitioner.DefaultPartitioner",
                     "schema.compatibility": "NONE"
-          }}' \
-     http://localhost:8083/connectors | jq .
+          }' \
+     http://localhost:8083/connectors/s3-sink/config | jq .
 
 
 echo "Sending messages to topic s3_topic"
@@ -45,12 +43,10 @@ avro-tools tojson /tmp/s3_topic+0+0000000000.avro
 
 echo "Creating S3 Source connector with bucket name <$BUCKET_NAME>"
 docker exec -e BUCKET_NAME="$BUCKET_NAME" connect \
-     curl -X POST \
+     curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
-               "name": "s3-source",
-               "config": {
-                    "tasks.max": "1",
+               "tasks.max": "1",
                     "connector.class": "io.confluent.connect.s3.source.S3SourceConnector",
                     "s3.region": "us-east-1",
                     "s3.bucket.name": "'"$BUCKET_NAME"'",
@@ -62,8 +58,8 @@ docker exec -e BUCKET_NAME="$BUCKET_NAME" connect \
                     "transforms.AddPrefix.type": "org.apache.kafka.connect.transforms.RegexRouter",
                     "transforms.AddPrefix.regex": ".*",
                     "transforms.AddPrefix.replacement": "copy_of_$0"
-          }}' \
-     http://localhost:8083/connectors | jq .
+          }' \
+     http://localhost:8083/connectors/s3-source/config | jq .
 
 
 echo "Verifying topic copy_of_s3_topic"

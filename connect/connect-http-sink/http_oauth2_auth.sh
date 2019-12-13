@@ -13,14 +13,12 @@ echo "-------------------------------------"
 echo "Running OAuth2 Authentication Example"
 echo "-------------------------------------"
 
-echo "Creating HttpSinkOAuth2 connector"
+echo "Creating http-sink connector"
 docker exec connect \
-     curl -X POST \
+     curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
-          "name": "HttpSinkOAuth2",
-          "config": {
-               "topics": "http-messages",
+          "topics": "http-messages",
                "tasks.max": "1",
                "connector.class": "io.confluent.connect.http.HttpSinkConnector",
                "key.converter": "org.apache.kafka.connect.storage.StringConverter",
@@ -32,14 +30,14 @@ docker exec connect \
                "oauth2.token.url": "http://http-service-oauth2-auth:8080/oauth/token",
                "oauth2.client.id": "kc-client",
                "oauth2.client.secret": "kc-secret"
-          }}' \
-     http://localhost:8083/connectors | jq .
+          }' \
+     http://localhost:8083/connectors/http-sink/config | jq .
 
 
 sleep 10
 
 # create token, see https://github.com/confluentinc/kafka-connect-http-demo#oauth2
-token=$(curl -X POST \
+token=$(curl -X PUT \
   http://localhost:10080/oauth/token \
   -H 'Content-Type: application/x-www-form-urlencoded' \
   -H 'Authorization: Basic a2MtY2xpZW50OmtjLXNlY3JldA==' \

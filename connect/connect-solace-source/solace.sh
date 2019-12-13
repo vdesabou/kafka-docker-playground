@@ -27,12 +27,10 @@ done
 
 echo "Creating Solace source connector"
 docker exec connect \
-     curl -X POST \
+     curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
-               "name": "SolaceSourceConnector",
-               "config": {
-                    "connector.class": "io.confluent.connect.solace.SolaceSourceConnector",
+               "connector.class": "io.confluent.connect.solace.SolaceSourceConnector",
                     "tasks.max": "1",
                     "kafka.topic": "from-solace-messages",
                     "solace.host": "smf://solace:55555",
@@ -44,8 +42,8 @@ docker exec connect \
                     "value.converter": "org.apache.kafka.connect.storage.StringConverter",
                     "confluent.topic.bootstrap.servers": "broker:9092",
                     "confluent.topic.replication.factor": "1"
-          }}' \
-     http://localhost:8083/connectors | jq .
+          }' \
+     http://localhost:8083/connectors/solace-source/config | jq .
 
 echo "Verifying topic from-solace-messages"
 docker exec broker kafka-console-consumer -bootstrap-server broker:9092 --topic from-solace-messages --from-beginning --max-messages 2

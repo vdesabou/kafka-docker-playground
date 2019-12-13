@@ -125,12 +125,10 @@ The connector is created with:
 
 ```bash
 docker exec -e QUEUE_URL="$QUEUE_URL" -e AWS_REGION="$AWS_REGION" connect \
-     curl -X POST \
+     curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
-        "name": "sqs-source",
-        "config": {
-               "connector.class": "io.confluent.connect.sqs.source.SqsSourceConnector",
+        "connector.class": "io.confluent.connect.sqs.source.SqsSourceConnector",
                "tasks.max": "1",
                "kafka.topic": "test-sqs-source",
                "sqs.url": "'"$QUEUE_URL"'",
@@ -138,8 +136,8 @@ docker exec -e QUEUE_URL="$QUEUE_URL" -e AWS_REGION="$AWS_REGION" connect \
                "name": "sqs-source",
                "confluent.topic.bootstrap.servers": "broker:9092",
                "confluent.topic.replication.factor": "1"
-          }}' \
-     http://localhost:8083/connectors | jq .
+          }' \
+     http://localhost:8083/connectors/sqs-source/config | jq .
 ```
 
 Verify we have received the data in test-sqs-source topic:
@@ -188,12 +186,10 @@ The connector is created with:
 
 ```bash
 docker exec -e QUEUE_URL="$QUEUE_URL" connect \
-     curl -X POST \
+     curl -X PUT \
      --cert /etc/kafka/secrets/connect.certificate.pem --key /etc/kafka/secrets/connect.key --tlsv1.2 --cacert /etc/kafka/secrets/snakeoil-ca-1.crt \
      -H "Content-Type: application/json" \
      --data '{
-               "name": "sqs-source-ssl",
-               "config": {
                     "connector.class": "io.confluent.connect.sqs.source.SqsSourceConnector",
                     "tasks.max": "1",
                     "kafka.topic": "test-sqs-source-ssl",
@@ -210,8 +206,8 @@ docker exec -e QUEUE_URL="$QUEUE_URL" connect \
                     "confluent.topic.ssl.keystore.type" : "JKS",
                     "confluent.topic.ssl.truststore.type" : "JKS",
                     "confluent.topic.security.protocol" : "SSL"
-          }}' \
-     https://localhost:8083/connectors | jq .
+          }' \
+     https://localhost:8083/connectors/sqs-source/config | jq .
 ```
 
 Verify we have received the data in test-sqs-source topic:
@@ -239,12 +235,10 @@ The connector is created with:
 
 ```bash
 docker exec -e QUEUE_URL="$QUEUE_URL" connect \
-     curl -X POST \
+     curl -X PUT \
      --cert /etc/kafka/secrets/connect.certificate.pem --key /etc/kafka/secrets/connect.key --tlsv1.2 --cacert /etc/kafka/secrets/snakeoil-ca-1.crt \
      -H "Content-Type: application/json" \
      --data '{
-               "name": "sqs-source-sasl-ssl",
-               "config": {
                     "connector.class": "io.confluent.connect.sqs.source.SqsSourceConnector",
                     "tasks.max": "1",
                     "kafka.topic": "test-sqs-source-sasl-ssl",
@@ -261,8 +255,8 @@ docker exec -e QUEUE_URL="$QUEUE_URL" connect \
                     "confluent.topic.security.protocol" : "SASL_SSL",
                     "confluent.topic.sasl.mechanism": "PLAIN",
                     "confluent.topic.sasl.jaas.config": "org.apache.kafka.common.security.plain.PlainLoginModule required  username=\"client\" password=\"client-secret\";"
-          }}' \
-     https://localhost:8083/connectors | jq .
+          }' \
+     https://localhost:8083/connectors/sqs-source/config | jq .
 ```
 
 Verify we have received the data in test-sqs-source topic:

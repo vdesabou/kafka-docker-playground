@@ -34,19 +34,17 @@ Creating Redis sink connector
 
 ```bash
 $ docker exec connect \
-     curl -X POST \
+     curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
-               "name": "redis-sink",
-               "config": {
-                    "connector.class": "com.github.jcustenborder.kafka.connect.redis.RedisSinkConnector",
+               "connector.class": "com.github.jcustenborder.kafka.connect.redis.RedisSinkConnector",
                     "redis.hosts": "redis:6379",
                     "tasks.max": "1",
                     "key.converter":"org.apache.kafka.connect.storage.StringConverter",
                     "value.converter":"org.apache.kafka.connect.storage.StringConverter",
                     "topics": "users"
-          }}' \
-     http://localhost:8083/connectors | jq .
+          }' \
+     http://localhost:8083/connectors/redis-sink/config | jq .
 ```
 
 Verify data is in Redis:

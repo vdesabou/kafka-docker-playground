@@ -8,12 +8,10 @@ ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml
 
 echo "Creating IBM MQ source connector"
 docker exec connect \
-     curl -X POST \
+     curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
-               "name": "ibm-mq-source",
-               "config": {
-                    "connector.class": "io.confluent.connect.ibm.mq.IbmMQSourceConnector",
+               "connector.class": "io.confluent.connect.ibm.mq.IbmMQSourceConnector",
                     "kafka.topic": "MyKafkaTopicName",
                     "mq.hostname": "ibmmq",
                     "mq.port": "1414",
@@ -27,8 +25,8 @@ docker exec connect \
                     "confluent.license": "",
                     "confluent.topic.bootstrap.servers": "broker:9092",
                     "confluent.topic.replication.factor": "1"
-          }}' \
-     http://localhost:8083/connectors | jq .
+          }' \
+     http://localhost:8083/connectors/ibm-mq-source/config | jq .
 
 sleep 5
 

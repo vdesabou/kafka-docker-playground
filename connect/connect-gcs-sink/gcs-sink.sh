@@ -35,12 +35,10 @@ seq -f "{\"f1\": \"value%g\"}" 10 | docker exec -i schema-registry kafka-avro-co
 
 echo "Creating GCS Sink connector"
 docker exec -e BUCKET_NAME="$BUCKET_NAME" connect \
-     curl -X POST \
+     curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
-               "name": "gcs",
-               "config": {
-                    "connector.class": "io.confluent.connect.gcs.GcsSinkConnector",
+               "connector.class": "io.confluent.connect.gcs.GcsSinkConnector",
                     "tasks.max" : "1",
                     "topics" : "gcs_topic",
                     "gcs.bucket.name" : "'"$BUCKET_NAME"'",
@@ -53,8 +51,8 @@ docker exec -e BUCKET_NAME="$BUCKET_NAME" connect \
                     "schema.compatibility": "NONE",
                     "confluent.topic.bootstrap.servers": "broker:9092",
                     "confluent.topic.replication.factor": "1"
-          }}' \
-     http://localhost:8083/connectors | jq .
+          }' \
+     http://localhost:8083/connectors/gcs-sink/config | jq .
 
 sleep 10
 

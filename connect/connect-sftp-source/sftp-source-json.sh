@@ -13,12 +13,10 @@ echo $'{"id":1,"first_name":"Roscoe","last_name":"Brentnall","email":"rbrentnall
 
 echo "Creating JSON (no schema) SFTP Source connector"
 docker exec connect \
-     curl -X POST \
+     curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
-        "name": "sftp-source-json",
-        "config": {
-               "topics": "test_sftp_sink",
+        "topics": "test_sftp_sink",
                "tasks.max": "1",
                "connector.class": "io.confluent.connect.sftp.SftpSchemaLessJsonSourceConnector",
                "behavior.on.error":"IGNORE",
@@ -32,8 +30,8 @@ docker exec connect \
                "sftp.port":"22",
                "kafka.topic": "sftp-testing-topic",
                "value.converter": "org.apache.kafka.connect.storage.StringConverter"
-          }}' \
-     http://localhost:8083/connectors | jq .
+          }' \
+     http://localhost:8083/connectors/sftp-source-json/config | jq .
 
 sleep 5
 

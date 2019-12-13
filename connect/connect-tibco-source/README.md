@@ -41,12 +41,10 @@ The connector is created with:
 
 ```bash
 $ docker exec connect \
-     curl -X POST \
+     curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
-               "name": "tibco-ems-source",
-               "config": {
-                    "connector.class": "io.confluent.connect.tibco.TibcoSourceConnector",
+               "connector.class": "io.confluent.connect.tibco.TibcoSourceConnector",
                     "tasks.max": "1",
                     "kafka.topic": "from-tibco-messages",
                     "tibco.url": "tcp://tibco-ems:7222",
@@ -58,8 +56,8 @@ $ docker exec connect \
                     "value.converter": "org.apache.kafka.connect.storage.StringConverter",
                     "confluent.topic.bootstrap.servers": "broker:9092",
                     "confluent.topic.replication.factor": "1"
-          }}' \
-     http://localhost:8083/connectors | jq .
+          }' \
+     http://localhost:8083/connectors/tibco-ems-source/config | jq .
 ```
 
 Messages are sent to TIBCO EMS using:

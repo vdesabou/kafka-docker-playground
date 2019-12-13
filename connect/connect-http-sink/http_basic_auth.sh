@@ -15,12 +15,10 @@ echo "-------------------------------------"
 
 echo "Creating HttpSinkBasicAuth connector"
 docker exec connect \
-     curl -X POST \
+     curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
-          "name": "HttpSinkBasicAuth",
-          "config": {
-               "topics": "http-messages",
+          "topics": "http-messages",
                "tasks.max": "1",
                "connector.class": "io.confluent.connect.http.HttpSinkConnector",
                "key.converter": "org.apache.kafka.connect.storage.StringConverter",
@@ -31,8 +29,8 @@ docker exec connect \
                "auth.type": "BASIC",
                "connection.user": "admin",
                "connection.password": "password"
-          }}' \
-     http://localhost:8083/connectors | jq .
+          }' \
+     http://localhost:8083/connectors/HttpSinkBasicAuth/config | jq .
 
 
 sleep 10

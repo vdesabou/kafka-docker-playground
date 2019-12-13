@@ -56,12 +56,10 @@ java tibjmsMsgProducer -user admin -queue connector-quickstart m1 m2 m3 m4 m5'
 
 echo "Creating JMS TIBCO source connector"
 docker exec connect \
-     curl -X POST \
+     curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
-               "name": "jms-tibco-source",
-               "config": {
-                    "connector.class": "io.confluent.connect.jms.JmsSourceConnector",
+               "connector.class": "io.confluent.connect.jms.JmsSourceConnector",
                     "tasks.max": "1",
                     "kafka.topic": "from-tibco-messages",
                     "java.naming.factory.initial": "com.tibco.tibjms.naming.TibjmsInitialContextFactory",
@@ -73,8 +71,8 @@ docker exec connect \
                     "confluent.license": "",
                     "confluent.topic.bootstrap.servers": "broker:9092",
                     "confluent.topic.replication.factor": "1"
-          }}' \
-     http://localhost:8083/connectors | jq .
+          }' \
+     http://localhost:8083/connectors/jms-tibco-source/config | jq .
 
 sleep 5
 

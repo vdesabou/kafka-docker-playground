@@ -15,12 +15,10 @@ docker exec json-producer bash -c "java -jar json-producer-example-1.0-SNAPSHOT-
 
 echo "Creating Couchbase sink connector"
 docker exec connect \
-     curl -X POST \
+     curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
-               "name": "couchbase-sink",
-               "config": {
-                    "connector.class": "com.couchbase.connect.kafka.CouchbaseSinkConnector",
+               "connector.class": "com.couchbase.connect.kafka.CouchbaseSinkConnector",
                     "tasks.max": "2",
                     "topics": "couchbase-sink-example",
                     "connection.cluster_address": "couchbase",
@@ -34,8 +32,8 @@ docker exec connect \
                     "key.converter": "org.apache.kafka.connect.storage.StringConverter",
                     "value.converter": "org.apache.kafka.connect.json.JsonConverter",
                     "value.converter.schemas.enable": "false"
-          }}' \
-     http://localhost:8083/connectors | jq .
+          }' \
+     http://localhost:8083/connectors/couchbase-sink/config | jq .
 
 sleep 10
 

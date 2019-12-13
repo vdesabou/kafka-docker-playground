@@ -37,12 +37,10 @@ echo "########"
 
 echo "Creating SQS Source connector with SSL authentication"
 docker exec -e QUEUE_URL="$QUEUE_URL" connect \
-     curl -X POST \
+     curl -X PUT \
      --cert /etc/kafka/secrets/connect.certificate.pem --key /etc/kafka/secrets/connect.key --tlsv1.2 --cacert /etc/kafka/secrets/snakeoil-ca-1.crt \
      -H "Content-Type: application/json" \
      --data '{
-               "name": "sqs-source-ssl",
-               "config": {
                     "connector.class": "io.confluent.connect.sqs.source.SqsSourceConnector",
                     "tasks.max": "1",
                     "kafka.topic": "test-sqs-source-ssl",
@@ -59,8 +57,8 @@ docker exec -e QUEUE_URL="$QUEUE_URL" connect \
                     "confluent.topic.ssl.keystore.type" : "JKS",
                     "confluent.topic.ssl.truststore.type" : "JKS",
                     "confluent.topic.security.protocol" : "SSL"
-          }}' \
-     https://localhost:8083/connectors | jq .
+          }' \
+     https://localhost:8083/connectors/sqs-source/config | jq .
 
 
 sleep 10

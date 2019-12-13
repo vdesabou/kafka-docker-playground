@@ -11,12 +11,10 @@ seq -f "{\"f1\": \"value%g\"}" 10 | docker exec -i schema-registry kafka-avro-co
 
 echo "Creating Cassandra Sink connector"
 docker exec connect \
-     curl -X POST \
+     curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
-               "name": "cassandra-sink",
-               "config": {
-                    "connector.class": "io.confluent.connect.cassandra.CassandraSinkConnector",
+               "connector.class": "io.confluent.connect.cassandra.CassandraSinkConnector",
                     "tasks.max": "1",
                     "topics" : "topic1",
                     "cassandra.contact.points" : "cassandra",
@@ -28,8 +26,8 @@ docker exec connect \
                     "transforms": "createKey",
                     "transforms.createKey.fields": "f1",
                     "transforms.createKey.type": "org.apache.kafka.connect.transforms.ValueToKey"
-          }}' \
-     http://localhost:8083/connectors | jq .
+          }' \
+     http://localhost:8083/connectors/cassandra-sink/config | jq .
 
 sleep 10
 
