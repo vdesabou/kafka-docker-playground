@@ -20,7 +20,7 @@ docker exec connect \
      curl -X PUT \
      -H "Content-Type: application/json" \
      --data @/tmp/contrib.sink.avro.neo4j.json \
-     http://localhost:8083/connectors | jq .
+     http://localhost:8083/connectors/neo4j-sink/config | jq .
 
 
 sleep 5
