@@ -1,0 +1,9 @@
+dn: uid=kudu,{{ LDAP_BASE_DN }}
+objectClass: organizationalPerson
+objectClass: person
+objectClass: inetOrgPerson
+objectClass: top
+cn: kudu
+sn: kudu
+uid: kudu
+userPassword: secret
