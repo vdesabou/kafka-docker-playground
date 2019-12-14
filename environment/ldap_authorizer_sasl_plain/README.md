@@ -22,7 +22,7 @@ $ ./start.sh
 
 ## Explanations
 
-LDAP server (using docker image `osixia/openldap:1.2.3`) is loading at startup `.ldif`files in `./custom`directory:
+LDAP server (using docker image `osixia/openldap:1.3.0`) is loading at startup `.ldif`files in `./custom`directory:
 
 The users in the example are:
 

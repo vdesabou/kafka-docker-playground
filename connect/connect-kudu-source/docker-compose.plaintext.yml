@@ -1,0 +1,38 @@
+---
+version: '3.5'
+services:
+
+  ldap:
+      image: osixia/openldap:1.3.0
+      hostname: ldap
+      container_name: ldap
+      environment:
+          LDAP_ORGANISATION: "kudu"
+          LDAP_DOMAIN: "example.com"
+          LDAP_TLS_VERIFY_CLIENT: "try"
+      ports:
+          - "3890:389"
+          - "10636:636"
+      volumes:
+          - ../../connect/connect-kudu-source/ldap/custom:/container/service/slapd/assets/config/bootstrap/ldif/custom
+      command: "--copy-service --loglevel debug"
+
+
+  kudu:
+    image: nathannam/kudu-impala-with-ldap
+    hostname: kudu
+    container_name: kudu
+    restart: always
+    depends_on:
+      - ldap
+
+  connect:
+    depends_on:
+      - zookeeper
+      - broker
+      - schema-registry
+      - kudu
+    volumes:
+        - ../../connect/connect-kudu-source/ImpalaJDBC42.jar:/usr/share/confluent-hub-components/confluentinc-kafka-connect-kudu/lib/ImpalaJDBC42.jar
+    environment:
+      CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-kudu

@@ -60,3 +60,5 @@ RUN   confluent-hub install --no-prompt confluentinc/kafka-connect-ibmmq:latest 
 		&& confluent-hub install --no-prompt confluentinc/kafka-connect-hbase:latest \
 		&& confluent-hub install --no-prompt mongodb/kafka-connect-mongodb:0.2 \
 		&& confluent-hub install --no-prompt jcustenborder/kafka-connect-redis:latest \
+		&& confluent-hub install --no-prompt confluentinc/kafka-connect-firebase:latest \
+		&& confluent-hub install --no-prompt confluentinc/kafka-connect-kudu:latest \
