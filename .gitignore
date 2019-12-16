@@ -24,7 +24,6 @@ connect/connect-jdbc-oracle11-source/ojdbc6.jar
 connect/connect-jdbc-oracle11-source/instantclient/OracleSample.java
 connect/connect-jdbc-oracle11-source/instantclient/OracleSample.class
 *.class
-*.zip
 connect/connect-jdbc-sqlserver-source/sqljdbc_7.4
 connect/connect-jdbc-sqlserver-sink/sqljdbc_7.4
 connect/connect-spool-dir-source/data
@@ -34,3 +33,4 @@ connect/connect-sftp-sink/upload/
 connect/connect-sftp-source/upload/
 other/connect-override-policy-sftp-source/upload/
 other/connect-override-policy-sftp-sink/upload/
+connect/connect-hdfs-sink/confluentinc-kafka-connect-hdfs-5.0.4-SNAPSHOT
