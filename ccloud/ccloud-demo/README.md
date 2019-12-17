@@ -15,14 +15,16 @@
     - [Schema Registry](#schema-registry)
     - [KSQL](#ksql)
     - [REST Proxy](#rest-proxy)
-    - [Monitoring](#monitoring)
-      - [Control Center](#control-center)
+    - [Control Center](#control-center)
+  - [Monitoring](#monitoring)
+    - [Control Center](#control-center-1)
       - [Grafana](#grafana)
         - [Producer Dashboard](#producer-dashboard)
         - [Consumer Dashboard](#consumer-dashboard)
         - [Consumer Lag Dashboard](#consumer-lag-dashboard)
       - [How to monitor consumer lag](#how-to-monitor-consumer-lag)
-    - [Restrict access to Confluent Cloud](#restrict-access-to-confluent-cloud)
+  - [Restrict access to Confluent Cloud](#restrict-access-to-confluent-cloud)
+    - [Restricted users](#restricted-users)
     - [Service Account and ACLs](#service-account-and-acls)
   - [📚 Other useful resources](#-other-useful-resources)
 
@@ -675,9 +677,8 @@ Result:
 
 Link to Confluent [documentation](https://docs.confluent.io/current/cloud/connect/ksql-cloud-config.html)
 
-### Monitoring
 
-#### Control Center
+### Control Center
 
 A local Control Center instance (docker service `control-center`) is installed and reachable at [http://127.0.0.1:9021](http://127.0.0.1:9021]).
 
@@ -719,9 +720,13 @@ control-center:
     PORT: 9021
 ```
 
-* Screenshots
+## Monitoring
 
-See the [differences between Confluent Cloud UI and local Control Center connected to Confluent Cloud](./ccloud_control_center_comparison)
+### Control Center
+
+* Differences between Confluent Cloud UI and local Control Center connected to Confluent Cloud
+
+See the [screenshots](./ccloud_control_center_comparison) on this page.
 
 * Alerts
 
@@ -761,6 +766,10 @@ Note: All Broker, Cluster and Topic triggers are not available because Confluent
 ```
 Any alerts triggered by consumer lag, cluster status, or broker status events do not populate history. Alert emails sent do not contain an email link to alerts history.
 ```
+
+* Read-Only mode
+
+You can setup Control Center in read-only mode, using UI HTTP Basic Authentication, see example [here](../../other/control-center-readonly-mode/README.md).
 
 #### Grafana
 
@@ -946,8 +955,9 @@ Note: for Confluent customers, you can refer to this Knowledge Base [article](ht
 
 This is explained [above](#consumer-lag-dashboard).
 
+## Restrict access to Confluent Cloud
 
-### Restrict access to Confluent Cloud
+### Restricted users
 
 * Anyone with access to Confluent Cloud UI (i.e having a login/password) has **full access** to all the resources (i.e. it is a superuser).
 
