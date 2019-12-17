@@ -1,0 +1,33 @@
+{
+   "musicBlog":{
+      "artists":{
+         "artistId1":{
+            "name":"Michael Jackson",
+            "genre":"Pop"
+         },
+         "artistId2":{
+            "name":"Bob Dylan",
+            "genre":"American folk"
+         },
+         "artistId3":{
+            "name":"Freddie Mercury",
+            "genre":"Rock"
+         }
+      },
+      "songs":{
+         "songId1":{
+            "title":"billie jean",
+            "artist":"Michael Jackson"
+         },
+         "songId2":{
+            "title":"hurricane",
+            "artist":"Bob Dylan"
+         },
+         "songId3":{
+            "title":"bohemian rhapsody",
+            "artist":"Freddie Mercury"
+         }
+      }
+   }
+}
+
