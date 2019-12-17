@@ -74,7 +74,7 @@ $ ./gcp-firebase-source.sh <PROJECT>
 ## Details of what the script is doing
 
 
-Creating GCP PubSub Source connector
+Creating GCP Firebase Source connector
 
 ```bash
 $ docker exec -e PROJECT="$PROJECT" connect \

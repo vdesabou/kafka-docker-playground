@@ -78,6 +78,7 @@ Playground for Kafka/Confluent Docker experimentations...
         * using [SSL](connect/connect-gcs-sink/README.md#with-ssl-authentication)
         * using [Kerberos GSSAPI](connect/connect-gcs-sink/README.md#with-kerberos-gssapi-authentication)
         * using [LDAP Authorizer SASL/PLAIN](connect/connect-gcs-sink/README.md#with-ldap-authorizer-with-saslplain)
+    * <img src="https://www.stickpng.com/assets/images/5847f40ecef1014c0b5e488a.png" width="15"> [Firebase](connect/connect-gcp-firebase-sink)
 * <img src="https://pbs.twimg.com/profile_images/999017305869697024/eHwBaQtB_400x400.jpg" width="15"> [Solace](connect/connect-solace-sink)
 * <img src="http://www.pharmajournalist.com/wp-content/uploads/2017/11/splunk-logo.jpg" width="15"> [Splunk](connect/connect-splunk-sink)
 * <img src="https://media.glassdoor.com/sql/6280/tibco-software-squarelogo-1432805681756.png" width="15"> [TIBCO EMS](connect/connect-tibco-sink)
