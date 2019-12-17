@@ -1,0 +1,28 @@
+---
+version: '3.5'
+services:
+
+  ldap:
+      image: osixia/openldap:1.3.0
+      hostname: ldap
+      container_name: ldap
+      environment:
+          LDAP_ORGANISATION: "Confluent"
+          LDAP_DOMAIN: "confluent.io"
+          LDAP_ADMIN_PASSWORD: "password"
+      ports:
+          - "389:389"
+          - "636:636"
+      volumes:
+          - ../../other/control-center-ldap-auth/ldap/custom:/container/service/slapd/assets/config/bootstrap/ldif/custom
+      command: "--copy-service --loglevel debug"
+
+  control-center:
+    volumes:
+      - ../../other/control-center-ldap-auth/propertyfile.jaas:/tmp/propertyfile.jaas
+    environment:
+      CONTROL_CENTER_REST_AUTHENTICATION_ROLES: c3users,readonlyusers
+      CONTROL_CENTER_AUTH_RESTRICTED_ROLES: readonlyusers
+      CONTROL_CENTER_REST_AUTHENTICATION_METHOD: BASIC
+      CONTROL_CENTER_REST_AUTHENTICATION_REALM: c3
+      CONTROL_CENTER_OPTS: -Djava.security.auth.login.config=/tmp/propertyfile.jaas

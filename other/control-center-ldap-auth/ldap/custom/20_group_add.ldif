@@ -1,0 +1,14 @@
+dn: cn=c3users,ou=groups,{{ LDAP_BASE_DN }}
+changetype: modify
+add: memberuid
+memberuid: cn=alice,ou=users,{{ LDAP_BASE_DN }}
+
+dn: cn=c3users,ou=groups,{{ LDAP_BASE_DN }}
+changetype: modify
+add: memberuid
+memberuid: cn=barnie,ou=users,{{ LDAP_BASE_DN }}
+
+dn: cn=readonlyusers,ou=groups,{{ LDAP_BASE_DN }}
+changetype: modify
+add: memberuid
+memberuid: cn=john,ou=users,{{ LDAP_BASE_DN }}

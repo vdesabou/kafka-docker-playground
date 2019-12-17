@@ -1,0 +1,6 @@
+dn: cn=readonlyusers,ou=groups,{{ LDAP_BASE_DN }}
+objectClass: top
+objectClass: posixGroup
+cn: readonlyusers
+gidNumber: 5000
+

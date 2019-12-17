@@ -182,6 +182,7 @@ This is just the excellent examples in [Kafka tutorial](https://kafka-tutorials.
 * Testing [Separate principals](https://docs.confluent.io/current/connect/security.html#separate-principals) (`connector.client.config.override.policy`) for [Source connector (SFTP source)](other/connect-override-policy-sftp-source)
 * Testing [Separate principals](https://docs.confluent.io/current/connect/security.html#separate-principals) (`connector.client.config.override.policy`) for [Source connector (SFTP sink)](other/connect-override-policy-sftp-sink)
 * [Control Center in "Read-Only" mode](other/control-center-readonly-mode/)
+* [Configuring Control Center with LDAP authentication](other/control-center-ldap-auth)
 
 ## 📚 Useful Resources
 
