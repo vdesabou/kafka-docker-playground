@@ -18,11 +18,11 @@
     - [Control Center](#control-center)
   - [Monitoring](#monitoring)
     - [Control Center](#control-center-1)
-      - [Grafana](#grafana)
-        - [Producer Dashboard](#producer-dashboard)
-        - [Consumer Dashboard](#consumer-dashboard)
-        - [Consumer Lag Dashboard](#consumer-lag-dashboard)
-      - [How to monitor consumer lag](#how-to-monitor-consumer-lag)
+    - [Grafana](#grafana)
+      - [Producer Dashboard](#producer-dashboard)
+      - [Consumer Dashboard](#consumer-dashboard)
+      - [Consumer Lag Dashboard](#consumer-lag-dashboard)
+    - [How to monitor consumer lag](#how-to-monitor-consumer-lag)
   - [Restrict access to Confluent Cloud](#restrict-access-to-confluent-cloud)
     - [Restricted users](#restricted-users)
     - [Service Account and ACLs](#service-account-and-acls)
@@ -771,7 +771,7 @@ Any alerts triggered by consumer lag, cluster status, or broker status events do
 
 You can setup Control Center in read-only mode, using UI HTTP Basic Authentication, see example [here](../../other/control-center-readonly-mode/README.md).
 
-#### Grafana
+### Grafana
 
 [JMX Exporter](https://github.com/prometheus/jmx_exporter), [Prometheus](https://github.com/prometheus/prometheus) and [Grafana](https://grafana.com) are installed in order to provide a demo of clients monitoring.
 
@@ -849,7 +849,7 @@ Open a brower and visit http://127.0.0.1:3000 (login/password is `admin/admin`)
 
 You should see 3 dashboards:
 
-##### Producer Dashboard
+#### Producer Dashboard
 
 ![System](./images/33.jpg)
 
@@ -864,11 +864,11 @@ You should see 3 dashboards:
 ![Errors & Retries and Misc](./images/38.jpg)
 
 
-##### Consumer Dashboard
+#### Consumer Dashboard
 
 ![Consumer](./images/39.jpg)
 
-##### Consumer Lag Dashboard
+#### Consumer Lag Dashboard
 
 This demo is using [kafka-lag-exporter](https://github.com/lightbend/kafka-lag-exporter) in order to pull consumer lags metrics from Confluent Cloud cluster and be exported to Prometheus.
 
@@ -876,7 +876,7 @@ This demo is using [kafka-lag-exporter](https://github.com/lightbend/kafka-lag-e
 
 ![Consumer Lag 2](./images/41.jpg)
 
-#### How to monitor consumer lag
+### How to monitor consumer lag
 
 You have several ways to monitor consumer lag:
 
