@@ -29,6 +29,7 @@ fi
 ### Create the required identities:
 # Kafka service principal:
 docker exec -ti kdc kadmin.local -w password -q "add_principal -randkey broker/broker.kerberos-demo.local@TEST.CONFLUENT.IO"  > /dev/null
+docker exec -ti kdc kadmin.local -w password -q "add_principal -randkey broker2/broker2.kerberos-demo.local@TEST.CONFLUENT.IO"  > /dev/null
 
 # Zookeeper service principal:
 docker exec -ti kdc kadmin.local -w password -q "add_principal -randkey zookeeper/zookeeper.kerberos-demo.local@TEST.CONFLUENT.IO"  > /dev/null
@@ -50,7 +51,8 @@ docker exec -ti kdc kadmin.local -w password -q "add_principal -randkey controlc
 docker exec -ti kdc kadmin.local -w password -q "add_principal -randkey admin/for-kafka@TEST.CONFLUENT.IO"  > /dev/null
 
 # Create keytabs to use for Kafka
-docker exec -ti kdc rm -f /var/lib/secret/kafka.key 2>&1 > /dev/null
+docker exec -ti kdc rm -f /var/lib/secret/broker.key 2>&1 > /dev/null
+docker exec -ti kdc rm -f /var/lib/secret/broker2.key 2>&1 > /dev/null
 docker exec -ti kdc rm -f /var/lib/secret/zookeeper.key 2>&1 > /dev/null
 docker exec -ti kdc rm -f /var/lib/secret/zookeeper-client.key 2>&1 > /dev/null
 docker exec -ti kdc rm -f /var/lib/secret/kafka-client.key 2>&1 > /dev/null
@@ -59,7 +61,8 @@ docker exec -ti kdc rm -f /var/lib/secret/kafka-connect.key 2>&1 > /dev/null
 docker exec -ti kdc rm -f /var/lib/secret/kafka-schemaregistry.key 2>&1 > /dev/null
 docker exec -ti kdc rm -f /var/lib/secret/kafka-controlcenter.key 2>&1 > /dev/null
 
-docker exec -ti kdc kadmin.local -w password -q "ktadd  -k /var/lib/secret/kafka.key -norandkey broker/broker.kerberos-demo.local@TEST.CONFLUENT.IO " > /dev/null
+docker exec -ti kdc kadmin.local -w password -q "ktadd  -k /var/lib/secret/broker.key -norandkey broker/broker.kerberos-demo.local@TEST.CONFLUENT.IO " > /dev/null
+docker exec -ti kdc kadmin.local -w password -q "ktadd  -k /var/lib/secret/broker2.key -norandkey broker2/broker2.kerberos-demo.local@TEST.CONFLUENT.IO " > /dev/null
 docker exec -ti kdc kadmin.local -w password -q "ktadd  -k /var/lib/secret/zookeeper.key -norandkey zookeeper/zookeeper.kerberos-demo.local@TEST.CONFLUENT.IO " > /dev/null
 docker exec -ti kdc kadmin.local -w password -q "ktadd  -k /var/lib/secret/zookeeper-client.key -norandkey zkclient@TEST.CONFLUENT.IO " > /dev/null
 docker exec -ti kdc kadmin.local -w password -q "ktadd  -k /var/lib/secret/kafka-client.key -norandkey kafka_producer@TEST.CONFLUENT.IO " > /dev/null

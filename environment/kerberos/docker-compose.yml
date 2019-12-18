@@ -79,6 +79,51 @@ services:
       KAFKA_SUPER_USERS: User:admin;User:broker;User:schemaregistry;User:controlcenter
       KAFKA_OPTS: "-Djava.security.auth.login.config=/etc/kafka/kafka.sasl.jaas.config"
 
+  broker2:
+    image: confluentinc/cp-server:5.3.1
+    hostname: broker2.kerberos-demo.local
+    container_name: broker2
+    depends_on:
+      - zookeeper
+      - kdc
+    # Required to wait for the keytab to get generated
+    restart: on-failure
+    volumes:
+      - secret:/var/lib/secret
+      - ../../environment/kerberos/kdc/krb5.conf:/etc/krb5.conf
+      - ../../environment/kerberos/kafka/kafka.sasl.jaas2.config:/etc/kafka/kafka.sasl.jaas.config
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: 'zookeeper.kerberos-demo.local:2181'
+      KAFKA_ADVERTISED_LISTENERS: SASL_PLAINTEXT://broker2.kerberos-demo.local:19092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      CONFLUENT_SUPPORT_CUSTOMER_ID: 'anonymous'
+      # Confluent Metrics Reporter for Control Center Cluster Monitoring
+      KAFKA_METRIC_REPORTERS: io.confluent.metrics.reporter.ConfluentMetricsReporter
+      CONFLUENT_METRICS_REPORTER_BOOTSTRAP_SERVERS: broker2:19092
+      CONFLUENT_METRICS_REPORTER_ZOOKEEPER_CONNECT: zookeeper.kerberos-demo.local:2181
+      CONFLUENT_METRICS_REPORTER_TOPIC_REPLICAS: 1
+      CONFLUENT_METRICS_REPORTER_SASL_MECHANISM: GSSAPI
+      CONFLUENT_METRICS_REPORTER_SECURITY_PROTOCOL: SASL_PLAINTEXT
+      CONFLUENT_METRICS_REPORTER_SASL_KERBEROS_SERVICE_NAME: broker
+      CONFLUENT_METRICS_REPORTER_SASL_JAAS_CONFIG: "com.sun.security.auth.module.Krb5LoginModule required \
+        useKeyTab=true \
+        storeKey=true \
+        keyTab=\"/var/lib/secret/kafka-admin.key\" \
+        principal=\"admin/for-kafka@TEST.CONFLUENT.IO\";"
+      CONFLUENT_METRICS_ENABLE: 'true'
+      # Kerberos / GSSAPI Authentication mechanism
+      KAFKA_SASL_ENABLED_MECHANISMS: GSSAPI
+      KAFKA_SASL_KERBEROS_SERVICE_NAME: broker
+      # Configure replication to require Kerberos:
+      KAFKA_SASL_MECHANISM_INTER_BROKER_PROTOCOL: GSSAPI
+      KAFKA_INTER_BROKER_LISTENER_NAME: SASL_PLAINTEXT
+      # Authorization config:
+      KAFKA_AUTHORIZER_CLASS_NAME: kafka.security.auth.SimpleAclAuthorizer
+      KAFKA_ZOOKEEPER_SET_ACL: "true"
+      KAFKA_ALLOW_EVERYONE_IF_NO_ACL_FOUND: "false"
+      KAFKA_SUPER_USERS: User:admin;User:broker;User:schemaregistry;User:controlcenter
+      KAFKA_OPTS: "-Djava.security.auth.login.config=/etc/kafka/kafka.sasl.jaas.config"
 
   client:
     build: client/
