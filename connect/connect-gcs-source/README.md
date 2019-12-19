@@ -8,7 +8,6 @@ Quickly test [GCS Source](https://docs.confluent.io/current/connect/kafka-connec
 
 * `docker-compose` (example `brew cask install docker`)
 * `jq` (example `brew install jq`)
-* `avro-tools` (example `brew install avro-tools`)
 * `google-cloud-sdk` (example `brew cask install google-cloud-sdk`)
 * Active Google Cloud Platform (GCP) account with authorization to create resources
 

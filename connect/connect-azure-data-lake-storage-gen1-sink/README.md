@@ -8,7 +8,6 @@ Quickly test [Azure Data Lake Storage Gen1 Sink](https://docs.confluent.io/curre
 
 * `docker-compose` (example `brew cask install docker`)
 * `jq` (example `brew install jq`)
-* `avro-tools` (example `brew install avro-tools`)
 * `az`(example `brew install azure-cli`)
 
 ## How to run

@@ -38,8 +38,8 @@ aws s3api list-objects --bucket "$BUCKET_NAME"
 echo -e "\033[0;33mGetting one of the avro files locally and displaying content with avro-tools\033[0m"
 aws s3 cp s3://$BUCKET_NAME/topics/s3_topic/partition=0/s3_topic+0+0000000000.avro /tmp/
 
-# brew install avro-tools
-avro-tools tojson /tmp/s3_topic+0+0000000000.avro
+
+docker run -v /tmp:/tmp actions/avro-tools tojson /tmp/s3_topic+0+0000000000.avro
 
 echo -e "\033[0;33mCreating S3 Source connector with bucket name <$BUCKET_NAME>\033[0m"
 docker exec -e BUCKET_NAME="$BUCKET_NAME" connect \

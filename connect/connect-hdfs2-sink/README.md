@@ -10,8 +10,6 @@ Quickly test [HDFS 2 Sink](https://docs.confluent.io/current/connect/kafka-conne
 
 * `docker-compose` (example `brew cask install docker`)
 * `jq` (example `brew install jq`)
-* `avro-tools` (example `brew install avro-tools`)
-
 
 ## How to run
 
