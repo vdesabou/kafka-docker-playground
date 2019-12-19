@@ -8,7 +8,6 @@ Quickly test [Azure Blob Storage Sink](https://docs.confluent.io/current/connect
 
 * `docker-compose` (example `brew cask install docker`)
 * `jq` (example `brew install jq`)
-* `avro-tools` (example `brew install avro-tools`)
 * `az`(example `brew install azure-cli`)
 
 ## How to run

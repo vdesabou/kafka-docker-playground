@@ -8,8 +8,6 @@ Quickly test [HDFS 3 Source](https://docs.confluent.io/current/connect/kafka-con
 
 * `docker-compose` (example `brew cask install docker`)
 * `jq` (example `brew install jq`)
-* `avro-tools` (example `brew install avro-tools`)
-
 
 ## How to run
 

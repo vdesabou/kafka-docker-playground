@@ -45,8 +45,8 @@ echo -e "\033[0;33mGetting one of the avro files locally and displaying content 
 docker exec namenode bash -c "/opt/hadoop-3.1.2/bin/hadoop fs -copyToLocal /topics/test_hdfs/f1=value1/test_hdfs+0+0000000000+0000000000.avro /tmp"
 docker cp namenode:/tmp/test_hdfs+0+0000000000+0000000000.avro /tmp/
 
-# brew install avro-tools
-avro-tools tojson /tmp/test_hdfs+0+0000000000+0000000000.avro
+
+docker run -v /tmp:/tmp actions/avro-tools tojson /tmp/test_hdfs+0+0000000000+0000000000.avro
 
 
 echo -e "\033[0;33mCreating HDFS Source connector\033[0m"

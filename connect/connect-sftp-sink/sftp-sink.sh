@@ -40,5 +40,5 @@ sleep 10
 echo -e "\033[0;33mListing content of ./upload/topics/test_sftp_sink/partition\=0/\033[0m"
 ls ./upload/topics/test_sftp_sink/partition\=0/
 
-# brew install avro-tools
-avro-tools tojson ./upload/topics/test_sftp_sink/partition\=0/test_sftp_sink+0+0000000000.avro
+
+docker run -v /tmp:/tmp actions/avro-tools tojson ./upload/topics/test_sftp_sink/partition\=0/test_sftp_sink+0+0000000000.avro
