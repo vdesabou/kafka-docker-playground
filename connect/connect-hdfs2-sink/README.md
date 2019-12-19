@@ -16,7 +16,7 @@ Quickly test [HDFS 2 Sink](https://docs.confluent.io/current/connect/kafka-conne
 Simply run:
 
 ```
-$ ./hdfs.sh
+$ ./hdfs2.sh
 ```
 
 ## Details of what the script is doing

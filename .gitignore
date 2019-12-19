@@ -33,4 +33,4 @@ connect/connect-sftp-sink/upload/
 connect/connect-sftp-source/upload/
 other/connect-override-policy-sftp-source/upload/
 other/connect-override-policy-sftp-sink/upload/
-connect/connect-hdfs-sink/confluentinc-kafka-connect-hdfs-5.0.4-SNAPSHOT
+connect/connect-hdfs2-sink/confluentinc-kafka-connect-hdfs-5.0.4-SNAPSHOT

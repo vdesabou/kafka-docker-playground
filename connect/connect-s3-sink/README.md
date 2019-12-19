@@ -31,7 +31,7 @@ This project assumes `~/.aws/credentials` is set, see `docker-compose.yml`file f
 Simply run:
 
 ```
-$ ./s3.sh <your-bucket-name>
+$ ./s3-sink.sh <your-bucket-name>
 ```
 
 ## Details of what the script is doing

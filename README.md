@@ -61,7 +61,7 @@ Playground for Kafka/Confluent Docker experimentations...
 ### ↗️ Sink
 
 * <img src="https://mpng.pngfly.com/20190128/xso/kisspng-apache-hadoop-big-data-computer-software-data-scie-hadoop-and-tyrone-5c4f4554d98c79.8384600315486989648911.jpg" width="15"> Hadoop
-    * <img src="https://cdn.worldvectorlogo.com/logos/hadoop.svg" width="15"> [HDFS 2](connect/connect-hdfs-sink)
+    * <img src="https://cdn.worldvectorlogo.com/logos/hadoop.svg" width="15"> [HDFS 2](connect/connect-hdfs2-sink)
     * <img src="https://cdn.worldvectorlogo.com/logos/hadoop.svg" width="15"> [HDFS 3](connect/connect-hdfs3-sink)
 * <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/9/93/Amazon_Web_Services_Logo.svg/1200px-Amazon_Web_Services_Logo.svg.png" width="15"> AWS
     * <img src="https://cdn.worldvectorlogo.com/logos/aws-s3.svg" width="15"> [S3](connect/connect-s3-sink)
