@@ -6,7 +6,7 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
 
 
-echo "Creating IBM MQ source connector"
+echo -e "\033[0;33mCreating IBM MQ source connector\033[0m"
 docker exec connect \
      curl -X PUT \
      -H "Content-Type: application/json" \
@@ -30,7 +30,7 @@ docker exec connect \
 
 sleep 5
 
-echo "Sending messages to DEV.QUEUE.1 JMS queue:"
+echo -e "\033[0;33mSending messages to DEV.QUEUE.1 JMS queue:\033[0m"
 docker exec -i ibmmq /opt/mqm/samp/bin/amqsput DEV.QUEUE.1 << EOF
 Message 1
 Message 2
@@ -39,5 +39,5 @@ EOF
 
 sleep 5
 
-echo "Verify we have received the data in MyKafkaTopicName topic"
+echo -e "\033[0;33mVerify we have received the data in MyKafkaTopicName topic\033[0m"
 docker exec schema-registry kafka-avro-console-consumer -bootstrap-server broker:9092 --topic MyKafkaTopicName --from-beginning --max-messages 2

@@ -24,7 +24,7 @@ docker exec broker kafka-acls --authorizer-properties zookeeper.connect=zookeepe
 #         User:sftp has Allow permission for operations: Describe from hosts: *
 #         User:sftp has Allow permission for operations: Write from hosts: *
 
-echo "Creating CSV SFTP Source connector"
+echo -e "\033[0;33mCreating CSV SFTP Source connector\033[0m"
 docker exec connect \
      curl -X PUT \
      -H "Content-Type: application/json" \
@@ -53,5 +53,5 @@ docker exec connect \
 
 sleep 5
 
-echo "Verifying topic sftp-testing-topic"
+echo -e "\033[0;33mVerifying topic sftp-testing-topic\033[0m"
 docker exec schema-registry kafka-avro-console-consumer -bootstrap-server broker:9092 --topic sftp-testing-topic --consumer.config /tmp/client.properties --from-beginning --max-messages 2

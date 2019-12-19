@@ -6,17 +6,17 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
 
 
-echo "Show content of CUSTOMERS table:"
+echo -e "\033[0;33mShow content of CUSTOMERS table:\033[0m"
 docker exec postgres bash -c "psql -U postgres -d postgres -c 'SELECT * FROM CUSTOMERS'"
 
-echo "Adding an element to the table"
+echo -e "\033[0;33mAdding an element to the table\033[0m"
 
 docker exec postgres psql -U postgres -d postgres -c "insert into customers (id, first_name, last_name, email, gender, comments) values (21, 'Bernardo', 'Dudman', 'bdudmanb@lulu.com', 'Male', 'Robust bandwidth-monitored budgetary management');"
 
-echo "Show content of CUSTOMERS table:"
+echo -e "\033[0;33mShow content of CUSTOMERS table:\033[0m"
 docker exec postgres bash -c "psql -U postgres -d postgres -c 'SELECT * FROM CUSTOMERS'"
 
-echo "Creating Debezium PostgreSQL source connector"
+echo -e "\033[0;33mCreating Debezium PostgreSQL source connector\033[0m"
 docker exec connect \
      curl -X PUT \
      -H "Content-Type: application/json" \
@@ -42,7 +42,7 @@ docker exec connect \
 
 sleep 5
 
-echo "Verifying topic asgard.public.customers-raw"
+echo -e "\033[0;33mVerifying topic asgard.public.customers-raw\033[0m"
 docker exec schema-registry kafka-avro-console-consumer -bootstrap-server broker:9092 --topic asgard.public.customers-raw --from-beginning --max-messages 5
 
 

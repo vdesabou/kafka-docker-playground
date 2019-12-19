@@ -6,14 +6,14 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 ${DIR}/../../environment/2way-ssl/start.sh "${PWD}/docker-compose.2way-ssl.yml"
 
 
-echo "########"
-echo "##  SSL authentication"
-echo "########"
+echo -e "\033[0;33m########\033[0m"
+echo -e "\033[0;33m##  SSL authentication\033[0m"
+echo -e "\033[0;33m########\033[0m"
 
-echo "Sending messages to topic test-topic-ssl"
+echo -e "\033[0;33mSending messages to topic test-topic-ssl\033[0m"
 seq 10 | docker exec -i broker kafka-console-producer --broker-list broker:11091 --topic test-topic-ssl --producer.config /etc/kafka/secrets/client_without_interceptors_2way_ssl.config
 
-echo "Creating Confluent Replicator connector with SSL authentication"
+echo -e "\033[0;33mCreating Confluent Replicator connector with SSL authentication\033[0m"
 docker exec connect \
      curl -X PUT \
      --cert /etc/kafka/secrets/connect.certificate.pem --key /etc/kafka/secrets/connect.key --tlsv1.2 --cacert /etc/kafka/secrets/snakeoil-ca-1.crt \
@@ -58,5 +58,5 @@ docker exec connect \
 
 sleep 10
 
-echo "Verify we have received the data in test-topic-ssl-duplicate topic"
+echo -e "\033[0;33mVerify we have received the data in test-topic-ssl-duplicate topic\033[0m"
 docker exec broker kafka-console-consumer --bootstrap-server broker:11091 --topic test-topic-ssl-duplicate --from-beginning --max-messages 10 --consumer.config /etc/kafka/secrets/client_without_interceptors_2way_ssl.config

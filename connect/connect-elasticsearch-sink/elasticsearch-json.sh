@@ -6,7 +6,7 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
 
 
-echo "Creating Elasticsearch Sink connector"
+echo -e "\033[0;33mCreating Elasticsearch Sink connector\033[0m"
 docker exec connect \
      curl -X PUT \
      -H "Content-Type: application/json" \
@@ -32,7 +32,7 @@ EOF
 
 sleep 10
 
-echo "Check that the data is available in Elasticsearch"
+echo -e "\033[0;33mCheck that the data is available in Elasticsearch\033[0m"
 
 curl -XGET 'http://localhost:9200/test-elasticsearch-sink/_search?pretty'
 

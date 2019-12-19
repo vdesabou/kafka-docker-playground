@@ -13,7 +13,7 @@ verify_installed()
 }
 verify_installed "az"
 
-echo "Logging to Azure using browser"
+echo -e "\033[0;33mLogging to Azure using browser\033[0m"
 az login
 
 AZURE_RANDOM=$RANDOM
@@ -46,7 +46,7 @@ echo AZURE_CONTAINER_NAME=$AZURE_CONTAINER_NAME
 
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
 
-echo "Creating Azure Blob Storage Sink connector"
+echo -e "\033[0;33mCreating Azure Blob Storage Sink connector\033[0m"
 docker exec -e AZURE_ACCOUNT_NAME="$AZURE_ACCOUNT_NAME" -e AZURE_ACCOUNT_KEY="$AZURE_ACCOUNT_KEY" -e AZURE_CONTAINER_NAME="$AZURE_CONTAINER_NAME" connect \
      curl -X PUT \
      -H "Content-Type: application/json" \
@@ -66,15 +66,15 @@ docker exec -e AZURE_ACCOUNT_NAME="$AZURE_ACCOUNT_NAME" -e AZURE_ACCOUNT_KEY="$A
      http://localhost:8083/connectors/azure-blob-sink/config | jq .
 
 
-echo "Sending messages to topic blob_topic"
+echo -e "\033[0;33mSending messages to topic blob_topic\033[0m"
 seq -f "{\"f1\": \"value%g\"}" 10 | docker exec -i schema-registry kafka-avro-console-producer --broker-list broker:9092 --topic blob_topic --property value.schema='{"type":"record","name":"myrecord","fields":[{"name":"f1","type":"string"}]}'
 
 sleep 10
 
-echo "Listing objects of container ${AZURE_CONTAINER_NAME} in Azure Blob Storage"
+echo -e "\033[0;33mListing objects of container ${AZURE_CONTAINER_NAME} in Azure Blob Storage\033[0m"
 az storage blob list --account-name "${AZURE_ACCOUNT_NAME}" --account-key "${AZURE_ACCOUNT_KEY}" --container-name "${AZURE_CONTAINER_NAME}" --output table
 
-echo "Getting one of the avro files locally and displaying content with avro-tools"
+echo -e "\033[0;33mGetting one of the avro files locally and displaying content with avro-tools\033[0m"
 az storage blob download --account-name "${AZURE_ACCOUNT_NAME}" --account-key "${AZURE_ACCOUNT_KEY}" --container-name "${AZURE_CONTAINER_NAME}" --name topics/blob_topic/partition=0/blob_topic+0+0000000000.avro --file /tmp/blob_topic+0+0000000000.avro
 
 # brew install avro-tools

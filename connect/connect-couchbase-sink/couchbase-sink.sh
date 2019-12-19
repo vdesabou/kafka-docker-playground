@@ -5,15 +5,15 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
 
-echo "Creating Couchbase cluster"
+echo -e "\033[0;33mCreating Couchbase cluster\033[0m"
 docker exec couchbase bash -c "/opt/couchbase/bin/couchbase-cli cluster-init --cluster-username Administrator --cluster-password password --services=data,index,query"
-echo "Creating Couchbase bucket travel-data"
+echo -e "\033[0;33mCreating Couchbase bucket travel-data\033[0m"
 docker exec couchbase bash -c "/opt/couchbase/bin/couchbase-cli bucket-create --cluster localhost:8091 --username Administrator --password password --bucket travel-data --bucket-type couchbase --bucket-ramsize 100"
 
-echo "Sending messages to topic couchbase-sink-example"
+echo -e "\033[0;33mSending messages to topic couchbase-sink-example\033[0m"
 docker exec json-producer bash -c "java -jar json-producer-example-1.0-SNAPSHOT-jar-with-dependencies.jar"
 
-echo "Creating Couchbase sink connector"
+echo -e "\033[0;33mCreating Couchbase sink connector\033[0m"
 docker exec connect \
      curl -X PUT \
      -H "Content-Type: application/json" \
@@ -37,6 +37,6 @@ docker exec connect \
 
 sleep 10
 
-echo "Verify data is in Couchbase"
+echo -e "\033[0;33mVerify data is in Couchbase\033[0m"
 docker exec couchbase bash -c "cbc cat CDG -U couchbase://localhost/travel-data -u Administrator -P password"
 docker exec couchbase bash -c "cbc cat LHR -U couchbase://localhost/travel-data -u Administrator -P password"

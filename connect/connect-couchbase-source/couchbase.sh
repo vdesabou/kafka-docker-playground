@@ -5,14 +5,14 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
 
-echo "Creating Couchbase cluster"
+echo -e "\033[0;33mCreating Couchbase cluster\033[0m"
 docker exec couchbase bash -c "/opt/couchbase/bin/couchbase-cli cluster-init --cluster-username Administrator --cluster-password password --services=data,index,query"
-echo "Install Couchbase bucket example travel-sample"
+echo -e "\033[0;33mInstall Couchbase bucket example travel-sample\033[0m"
 set +e
 docker exec couchbase bash -c "/opt/couchbase/bin/cbdocloader -c localhost:8091 -u Administrator -p password -b travel-sample -m 100 /opt/couchbase/samples/travel-sample.zip"
 set -e
 
-echo "Creating Couchbase sink connector"
+echo -e "\033[0;33mCreating Couchbase sink connector\033[0m"
 docker exec connect \
      curl -X PUT \
      -H "Content-Type: application/json" \
@@ -37,5 +37,5 @@ docker exec connect \
 
 sleep 10
 
-echo "Verifying topic test-travel-sample"
+echo -e "\033[0;33mVerifying topic test-travel-sample\033[0m"
 docker exec schema-registry kafka-avro-console-consumer -bootstrap-server broker:9092 --topic test-travel-sample --from-beginning --max-messages 2

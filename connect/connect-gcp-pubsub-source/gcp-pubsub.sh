@@ -17,37 +17,37 @@ PROJECT=${1:-vincent-de-saboulin-lab}
 KEYFILE="${DIR}/keyfile.json"
 if [ ! -f ${KEYFILE} ]
 then
-     echo "ERROR: the file ${KEYFILE} file is not present!"
+     echo -e "\033[0;33mERROR: the file ${KEYFILE} file is not present!\033[0m"
      exit 1
 fi
 
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
 
-echo "Doing gsutil authentication"
+echo -e "\033[0;33mDoing gsutil authentication\033[0m"
 gcloud auth activate-service-account --key-file ${KEYFILE}
 
 
 # cleanup if required
 set +e
-echo "Delete topic and subscription, if required"
+echo -e "\033[0;33mDelete topic and subscription, if required\033[0m"
 gcloud pubsub topics delete topic-1
 gcloud pubsub subscriptions delete subscription-1
 set - e
 
-echo "Create a Pub/Sub topic called topic-1"
+echo -e "\033[0;33mCreate a Pub/Sub topic called topic-1\033[0m"
 gcloud pubsub topics create topic-1
 
-echo "Create a Pub/Sub subscription called subscription-1"
+echo -e "\033[0;33mCreate a Pub/Sub subscription called subscription-1\033[0m"
 gcloud pubsub subscriptions create --topic topic-1 subscription-1
 
-echo "Publish three messages to topic-1"
+echo -e "\033[0;33mPublish three messages to topic-1\033[0m"
 gcloud pubsub topics publish topic-1 --message "Peter"
 gcloud pubsub topics publish topic-1 --message "Megan"
 gcloud pubsub topics publish topic-1 --message "Erin"
 
 sleep 10
 
-echo "Creating GCP PubSub Source connector"
+echo -e "\033[0;33mCreating GCP PubSub Source connector\033[0m"
 docker exec -e PROJECT="$PROJECT" connect \
      curl -X PUT \
      -H "Content-Type: application/json" \
@@ -66,9 +66,9 @@ docker exec -e PROJECT="$PROJECT" connect \
 
 sleep 10
 
-echo "Verify messages are in topic pubsub-topic"
+echo -e "\033[0;33mVerify messages are in topic pubsub-topic\033[0m"
 docker exec schema-registry kafka-avro-console-consumer -bootstrap-server broker:9092 --topic pubsub-topic --from-beginning --max-messages 3
 
-echo "Delete topic and subscription"
+echo -e "\033[0;33mDelete topic and subscription\033[0m"
 gcloud pubsub topics delete topic-1
 gcloud pubsub subscriptions delete subscription-1

@@ -5,12 +5,12 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
 
-echo "Initialize MongoDB replica set"
+echo -e "\033[0;33mInitialize MongoDB replica set\033[0m"
 docker exec -it mongodb mongo --eval 'rs.initiate({_id: "myuser", members:[{_id: 0, host: "mongodb:27017"}]})'
 
 sleep 5
 
-echo "Create a user profile"
+echo -e "\033[0;33mCreate a user profile\033[0m"
 docker exec -i mongodb mongo << EOF
 use admin
 db.createUser(
@@ -24,13 +24,13 @@ EOF
 
 sleep 2
 
-echo "Sending messages to topic orders"
+echo -e "\033[0;33mSending messages to topic orders\033[0m"
 docker exec -i schema-registry kafka-avro-console-producer --broker-list broker:9092 --topic orders --property value.schema='{"type":"record","name":"myrecord","fields":[{"name":"id","type":"int"},{"name":"product", "type": "string"}, {"name":"quantity", "type": "int"}, {"name":"price",
 "type": "float"}]}' << EOF
 {"id": 999, "product": "foo", "quantity": 100, "price": 50}
 EOF
 
-echo "Creating MongoDB sink connector"
+echo -e "\033[0;33mCreating MongoDB sink connector\033[0m"
 docker exec connect \
      curl -X PUT \
      -H "Content-Type: application/json" \
@@ -46,7 +46,7 @@ docker exec connect \
 
 sleep 10
 
-echo "View record"
+echo -e "\033[0;33mView record\033[0m"
 docker exec -i mongodb mongo << EOF
 use inventory
 db.customers.find().pretty();

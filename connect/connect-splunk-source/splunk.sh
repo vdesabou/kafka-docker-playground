@@ -5,7 +5,7 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
 
-echo "Creating Splunk sink connector"
+echo -e "\033[0;33mCreating Splunk sink connector\033[0m"
 docker exec connect \
      curl -X PUT \
      -H "Content-Type: application/json" \
@@ -24,11 +24,11 @@ docker exec connect \
 
 sleep 5
 
-echo "Simulate an application sending data to the connector"
+echo -e "\033[0;33mSimulate an application sending data to the connector\033[0m"
 curl -k -X POST https://localhost:8889/services/collector/event -d '{"event":"from curl"}'
 
 sleep 5
 
-echo "Verifying topic splunk-source"
+echo -e "\033[0;33mVerifying topic splunk-source\033[0m"
 docker exec schema-registry kafka-avro-console-consumer -bootstrap-server broker:9092 --topic splunk-source --from-beginning --max-messages 1
 

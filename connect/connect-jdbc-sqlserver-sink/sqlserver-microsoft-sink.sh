@@ -5,7 +5,7 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 
 if [ ! -f ${DIR}/sqljdbc_7.4/enu/mssql-jdbc-7.4.1.jre8.jar ]
 then
-     echo "Downloading Microsoft JDBC driver mssql-jdbc-7.4.1.jre8.jar"
+     echo -e "\033[0;33mDownloading Microsoft JDBC driver mssql-jdbc-7.4.1.jre8.jar\033[0m"
      wget https://download.microsoft.com/download/6/9/9/699205CA-F1F1-4DE9-9335-18546C5C8CBD/sqljdbc_7.4.1.0_enu.tar.gz
      tar xvfz sqljdbc_7.4.1.0_enu.tar.gz
      rm sqljdbc_7.4.1.0_enu.tar.gz
@@ -17,10 +17,10 @@ ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext-mic
 docker exec connect rm -f /usr/share/confluent-hub-components/confluentinc-kafka-connect-jdbc/lib/jtds-1.3.1.jar
 docker container restart connect
 
-echo "sleeping 60 seconds"
+echo -e "\033[0;33msleeping 60 seconds\033[0m"
 sleep 60
 
-echo "Creating JDBC SQL Server (with Microsoft driver) sink connector"
+echo -e "\033[0;33mCreating JDBC SQL Server (with Microsoft driver) sink connector\033[0m"
 docker exec connect \
      curl -X PUT \
      -H "Content-Type: application/json" \
@@ -35,7 +35,7 @@ docker exec connect \
           }' \
      http://localhost:8083/connectors/sqlserver-sink/config | jq .
 
-echo "Sending messages to topic orders"
+echo -e "\033[0;33mSending messages to topic orders\033[0m"
 docker exec -i schema-registry kafka-avro-console-producer --broker-list broker:9092 --topic orders --property value.schema='{"type":"record","name":"myrecord","fields":[{"name":"id","type":"int"},{"name":"product", "type": "string"}, {"name":"quantity", "type": "int"}, {"name":"price",
 "type": "float"}]}' << EOF
 {"id": 999, "product": "foo", "quantity": 100, "price": 50}
@@ -43,7 +43,7 @@ EOF
 
 sleep 5
 
-echo "Show content of orders table:"
+echo -e "\033[0;33mShow content of orders table:\033[0m"
 docker exec -i sqlserver /opt/mssql-tools/bin/sqlcmd -U sa -P Password! << EOF
 select * from orders
 GO

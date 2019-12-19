@@ -5,7 +5,7 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 
 if [ ! -f ${DIR}/ImpalaJDBC42.jar ]
 then
-     echo "ERROR: ${DIR}/ImpalaJDBC42.jar is missing. It must be downloaded manually in order to acknowledge user agreement"
+     echo -e "\033[0;33mERROR: ${DIR}/ImpalaJDBC42.jar is missing. It must be downloaded manually in order to acknowledge user agreement\033[0m"
      exit 1
 fi
 
@@ -13,7 +13,7 @@ ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml
 
 sleep 30
 
-echo "Create Database test and table accounts in kudu"
+echo -e "\033[0;33mCreate Database test and table accounts in kudu\033[0m"
 docker exec -i kudu impala-shell -i localhost:21000 -l -u kudu --ldap_password_cmd="echo -n secret" --auth_creds_ok_in_clear << EOF
 CREATE DATABASE test;
 USE test;
@@ -28,7 +28,7 @@ EOF
 
 sleep 5
 
-echo "Creating Kudu source connector"
+echo -e "\033[0;33mCreating Kudu source connector\033[0m"
 docker exec connect \
      curl -X PUT \
      -H "Content-Type: application/json" \
@@ -56,5 +56,5 @@ docker exec connect \
 
 sleep 5
 
-echo "Verify we have received the data in test-kudu-accounts topic"
+echo -e "\033[0;33mVerify we have received the data in test-kudu-accounts topic\033[0m"
 docker exec schema-registry kafka-avro-console-consumer -bootstrap-server broker:9092 --topic test-kudu-accounts --from-beginning --max-messages 2

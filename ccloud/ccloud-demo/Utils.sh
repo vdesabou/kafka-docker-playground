@@ -13,7 +13,7 @@ function verify_ccloud_login()
   output=$($cmd 2>&1)
   set -e
   if [ "${output}" = "Error: You must login to run that command." ] || [ "${output}" = "Error: Your session has expired. Please login again." ]; then
-    echo "ERROR: This script requires ccloud to be logged in. Please execute 'ccloud login' and run again."
+    echo -e "\033[0;33mERROR: This script requires ccloud to be logged in. Please execute 'ccloud login' and run again.\033[0m"
     exit 1
   fi
 }
@@ -21,25 +21,25 @@ function verify_ccloud_details()
 {
     if [ "$(ccloud prompt -f "%E")" = "(none)" ]
     then
-        echo "ERROR: ccloud command is badly configured: environment is not set"
-        echo "Example: ccloud kafka environment list"
-        echo "then: ccloud kafka environment use <environment id>"
+        echo -e "\033[0;33mERROR: ccloud command is badly configured: environment is not set\033[0m"
+        echo -e "\033[0;33mExample: ccloud kafka environment list\033[0m"
+        echo -e "\033[0;33mthen: ccloud kafka environment use <environment id>\033[0m"
         exit 1
     fi
 
     if [ "$(ccloud prompt -f "%K")" = "(none)" ]
     then
-        echo "ERROR: ccloud command is badly configured: cluster is not set"
-        echo "Example: ccloud kafka cluster list"
-        echo "then: ccloud kafka cluster use <cluster id>"
+        echo -e "\033[0;33mERROR: ccloud command is badly configured: cluster is not set\033[0m"
+        echo -e "\033[0;33mExample: ccloud kafka cluster list\033[0m"
+        echo -e "\033[0;33mthen: ccloud kafka cluster use <cluster id>\033[0m"
         exit 1
     fi
 
     if [ "$(ccloud prompt -f "%a")" = "(none)" ]
     then
-        echo "ERROR: ccloud command is badly configured: api key is not set"
-        echo "Example: ccloud api-key store <api key> <password>"
-        echo "then: ccloud api-key use <api key>"
+        echo -e "\033[0;33mERROR: ccloud command is badly configured: api key is not set\033[0m"
+        echo -e "\033[0;33mExample: ccloud api-key store <api key> <password>\033[0m"
+        echo -e "\033[0;33mthen: ccloud api-key use <api key>\033[0m"
         exit 1
     fi
 
@@ -52,7 +52,7 @@ function check_if_continue()
     case "$choice" in
     y|Y ) ;;
     n|N ) exit 0;;
-    * ) echo "ERROR: invalid response!";exit 1;;
+    * ) echo -e "\033[0;33mERROR: invalid response!\033[0m";exit 1;;
     esac
 }
 function create_topic()
@@ -62,10 +62,10 @@ function create_topic()
   ccloud kafka topic create $topic --dry-run 2>/dev/null
   if [[ $? == 0 ]]; then
     echo -e "\n# Create topic $topic"
-    echo "ccloud kafka topic create $topic"
+    echo -e "\033[0;33mccloud kafka topic create $topic\033[0m"
     ccloud kafka topic create $topic || true
   else
-    echo "Topic $topic already exists"
+    echo -e "\033[0;33mTopic $topic already exists\033[0m"
   fi
 }
 function delete_topic()
@@ -75,10 +75,10 @@ function delete_topic()
   ccloud kafka topic create $topic --dry-run 2>/dev/null
   if [[ $? != 0 ]]; then
     echo -e "\n# Delete topic $topic"
-    echo "ccloud kafka topic delete $topic"
+    echo -e "\033[0;33mccloud kafka topic delete $topic\033[0m"
     ccloud kafka topic delete $topic || true
   else
-    echo "Topic $topic does not exist"
+    echo -e "\033[0;33mTopic $topic does not exist\033[0m"
   fi
 }
 function version_gt() {
@@ -95,7 +95,7 @@ function check_ccloud_version() {
 	CCLOUD_VER=$(get_ccloud_version)
 
 	if version_gt $REQUIRED_CCLOUD_VER $CCLOUD_VER; then
-		echo "ccloud version ${REQUIRED_CCLOUD_VER} or greater is required.  Current reported version: ${CCLOUD_VER}"
+		echo -e "\033[0;33mccloud version ${REQUIRED_CCLOUD_VER} or greater is required.  Current reported version: ${CCLOUD_VER}\033[0m"
 		echo 'To update run: ccloud update'
 		exit 1
 	fi

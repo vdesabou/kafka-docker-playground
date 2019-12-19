@@ -5,7 +5,7 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 
 if [ ! -f ${DIR}/sqljdbc_7.4/enu/mssql-jdbc-7.4.1.jre8.jar ]
 then
-     echo "Downloading Microsoft JDBC driver mssql-jdbc-7.4.1.jre8.jar"
+     echo -e "\033[0;33mDownloading Microsoft JDBC driver mssql-jdbc-7.4.1.jre8.jar\033[0m"
      wget https://download.microsoft.com/download/6/9/9/699205CA-F1F1-4DE9-9335-18546C5C8CBD/sqljdbc_7.4.1.0_enu.tar.gz
      tar xvfz sqljdbc_7.4.1.0_enu.tar.gz
      rm sqljdbc_7.4.1.0_enu.tar.gz
@@ -17,14 +17,14 @@ ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext-mic
 docker exec connect rm -f /usr/share/confluent-hub-components/confluentinc-kafka-connect-jdbc/lib/jtds-1.3.1.jar
 docker container restart connect
 
-echo "sleeping 60 seconds"
+echo -e "\033[0;33msleeping 60 seconds\033[0m"
 sleep 60
 
-echo "Load inventory.sql to SQL Server"
+echo -e "\033[0;33mLoad inventory.sql to SQL Server\033[0m"
 cat inventory.sql | docker exec -i sqlserver bash -c '/opt/mssql-tools/bin/sqlcmd -U sa -P Password!'
 
 
-echo "Creating JDBC SQL Server (with Microsoft driver) source connector"
+echo -e "\033[0;33mCreating JDBC SQL Server (with Microsoft driver) source connector\033[0m"
 docker exec connect \
      curl -X PUT \
      -H "Content-Type: application/json" \
@@ -52,5 +52,5 @@ INSERT INTO customers(first_name,last_name,email) VALUES ('Pam','Thomas','pam@of
 GO
 EOF
 
-echo "Verifying topic sqlserver-customers"
+echo -e "\033[0;33mVerifying topic sqlserver-customers\033[0m"
 docker exec schema-registry kafka-avro-console-consumer -bootstrap-server broker:9092 --topic sqlserver-customers --from-beginning --max-messages 5

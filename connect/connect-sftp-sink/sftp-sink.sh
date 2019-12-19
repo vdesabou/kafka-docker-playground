@@ -6,7 +6,7 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
 
 
-echo "Creating SFTP Sink connector"
+echo -e "\033[0;33mCreating SFTP Sink connector\033[0m"
 docker exec connect \
      curl -X PUT \
      -H "Content-Type: application/json" \
@@ -32,12 +32,12 @@ docker exec connect \
      http://localhost:8083/connectors/sftp-sink/config | jq .
 
 
-echo "Sending messages to topic test_sftp_sink"
+echo -e "\033[0;33mSending messages to topic test_sftp_sink\033[0m"
 seq -f "{\"f1\": \"value%g\"}" 10 | docker exec -i schema-registry kafka-avro-console-producer --broker-list broker:9092 --topic test_sftp_sink --property value.schema='{"type":"record","name":"myrecord","fields":[{"name":"f1","type":"string"}]}'
 
 sleep 10
 
-echo "Listing content of ./upload/topics/test_sftp_sink/partition\=0/"
+echo -e "\033[0;33mListing content of ./upload/topics/test_sftp_sink/partition\=0/\033[0m"
 ls ./upload/topics/test_sftp_sink/partition\=0/
 
 # brew install avro-tools

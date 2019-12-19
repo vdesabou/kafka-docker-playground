@@ -18,18 +18,18 @@ DATASET=${2:-MyDatasetTest}
 KEYFILE="${DIR}/keyfile.json"
 if [ ! -f ${KEYFILE} ]
 then
-     echo "ERROR: the file ${KEYFILE} file is not present!"
+     echo -e "\033[0;33mERROR: the file ${KEYFILE} file is not present!\033[0m"
      exit 1
 fi
 
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
 
 
-echo "Sending messages to topic kcbq-quickstart1"
+echo -e "\033[0;33mSending messages to topic kcbq-quickstart1\033[0m"
 seq -f "{\"f1\": \"value%g-`date`\"}" 10 | docker exec -i schema-registry kafka-avro-console-producer --broker-list broker:9092 --topic kcbq-quickstart1 --property value.schema='{"type":"record","name":"myrecord","fields":[{"name":"f1","type":"string"}]}'
 
 
-echo "Creating GCP BigQuery Sink connector"
+echo -e "\033[0;33mCreating GCP BigQuery Sink connector\033[0m"
 docker exec -e PROJECT="$PROJECT" -e DATASET="$DATASET" connect \
      curl -X PUT \
      -H "Content-Type: application/json" \
@@ -53,8 +53,8 @@ docker exec -e PROJECT="$PROJECT" -e DATASET="$DATASET" connect \
 
 sleep 10
 
-echo "Doing gsutil authentication"
+echo -e "\033[0;33mDoing gsutil authentication\033[0m"
 gcloud auth activate-service-account --key-file ${KEYFILE}
 
-echo "Verify data is in GCP BigQuery:"
+echo -e "\033[0;33mVerify data is in GCP BigQuery:\033[0m"
 bq query "SELECT * FROM $DATASET.kcbq_quickstart1;"

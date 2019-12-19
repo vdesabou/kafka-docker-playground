@@ -6,7 +6,7 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
 
-echo "Creating MQTT Source connector"
+echo -e "\033[0;33mCreating MQTT Source connector\033[0m"
 docker exec connect \
      curl -X PUT \
      -H "Content-Type: application/json" \
@@ -28,10 +28,10 @@ docker exec connect \
 
 sleep 5
 
-echo "Send message to MQTT in my-mqtt-topic topic"
+echo -e "\033[0;33mSend message to MQTT in my-mqtt-topic topic\033[0m"
 docker exec mosquitto sh -c 'mosquitto_pub -h localhost -p 1883 -u "myuser" -P "mypassword" -t "my-mqtt-topic" -m "sample-msg-1"'
 
 sleep 5
 
-echo "Verify we have received the data in mqtt-source-1 topic"
+echo -e "\033[0;33mVerify we have received the data in mqtt-source-1 topic\033[0m"
 docker exec broker kafka-console-consumer -bootstrap-server broker:9092 --topic mqtt-source-1 --from-beginning --max-messages 1

@@ -10,25 +10,25 @@ set +e
 aws logs delete-log-group --log-group my-log-group
 set -e
 
-echo "Create a log group in AWS CloudWatch Logs."
+echo -e "\033[0;33mCreate a log group in AWS CloudWatch Logs.\033[0m"
 aws logs create-log-group --log-group my-log-group
 
-echo "Create a log stream in AWS CloudWatch Logs."
+echo -e "\033[0;33mCreate a log stream in AWS CloudWatch Logs.\033[0m"
 aws logs create-log-stream --log-group my-log-group --log-stream my-log-stream
 
-echo "Insert Records into your log stream."
+echo -e "\033[0;33mInsert Records into your log stream.\033[0m"
 # If this is the first time inserting logs into a new log stream, then no sequence token is needed.
 # However, after the first put, there will be a sequence token returned that will be needed as a parameter in the next put.
 aws logs put-log-events --log-group my-log-group --log-stream my-log-stream --log-events timestamp=`date +%s000`,message="This is a log #0"
 
-echo "Injecting more messages"
+echo -e "\033[0;33mInjecting more messages\033[0m"
 for i in $(seq 1 10)
 do
      token=$(aws logs describe-log-streams --log-group my-log-group | jq -r .logStreams[0].uploadSequenceToken)
      aws logs put-log-events --log-group my-log-group --log-stream my-log-stream --log-events timestamp=`date +%s000`,message="This is a log #${i}" --sequence-token ${token}
 done
 
-echo "Creating AWS CloudWatch Logs Source connector"
+echo -e "\033[0;33mCreating AWS CloudWatch Logs Source connector\033[0m"
 docker exec connect \
      curl -X PUT \
      -H "Content-Type: application/json" \
@@ -46,5 +46,5 @@ docker exec connect \
 
 sleep 5
 
-echo "Verify we have received the data in my-log-group.my-log-stream topic"
+echo -e "\033[0;33mVerify we have received the data in my-log-group.my-log-stream topic\033[0m"
 docker exec broker kafka-console-consumer -bootstrap-server broker:9092 --topic my-log-group.my-log-stream --from-beginning --max-messages 10

@@ -6,12 +6,12 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
 
 
-echo "Sending messages to topic sink-messages"
+echo -e "\033[0;33mSending messages to topic sink-messages\033[0m"
 docker exec -i broker kafka-console-producer --broker-list broker:9092 --topic sink-messages << EOF
 This is my message
 EOF
 
-echo "Creating ActiveMQ sink connector"
+echo -e "\033[0;33mCreating ActiveMQ sink connector\033[0m"
 docker exec connect \
      curl -X PUT \
      -H "Content-Type: application/json" \
@@ -33,6 +33,6 @@ docker exec connect \
 
 sleep 5
 
-echo "Get messages from DEV.QUEUE.1 JMS queue:"
+echo -e "\033[0;33mGet messages from DEV.QUEUE.1 JMS queue:\033[0m"
 curl -XGET -u admin:admin -d "body=message" http://localhost:8161/api/message/DEV.QUEUE.1?type=queue
 

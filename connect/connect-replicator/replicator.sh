@@ -5,10 +5,10 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
 
-echo "Sending messages to topic test-topic"
+echo -e "\033[0;33mSending messages to topic test-topic\033[0m"
 seq 10 | docker exec -i broker kafka-console-producer --broker-list broker:9092 --topic test-topic
 
-echo "Creating Replicator connector"
+echo -e "\033[0;33mCreating Replicator connector\033[0m"
 docker exec connect \
       curl -X PUT \
       -H "Content-Type: application/json" \
@@ -29,5 +29,5 @@ docker exec connect \
 
 sleep 10
 
-echo "Verify we have received the data in test-topic-duplicate topic"
+echo -e "\033[0;33mVerify we have received the data in test-topic-duplicate topic\033[0m"
 docker exec broker kafka-console-consumer --bootstrap-server broker:9092 --topic test-topic-duplicate --from-beginning --max-messages 10

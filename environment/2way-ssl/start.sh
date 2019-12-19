@@ -16,7 +16,7 @@ OLDDIR=$PWD
 
 cd ${OLDDIR}/../../environment/2way-ssl/security
 
-echo "Generate keys and certificates used for SSL"
+echo -e "\033[0;33mGenerate keys and certificates used for SSL\033[0m"
 ./certs-create.sh > /dev/null 2>&1
 
 cd ${OLDDIR}/../../environment/2way-ssl
@@ -24,7 +24,7 @@ cd ${OLDDIR}/../../environment/2way-ssl
 DOCKER_COMPOSE_FILE_OVERRIDE=$1
 if [ -f "${DOCKER_COMPOSE_FILE_OVERRIDE}" ]
 then
-  echo "Using ${DOCKER_COMPOSE_FILE_OVERRIDE}"
+  
   docker-compose -f ../../environment/2way-ssl/docker-compose.yml -f ${DOCKER_COMPOSE_FILE_OVERRIDE} down -v
   docker-compose -f ../../environment/2way-ssl/docker-compose.yml -f ${DOCKER_COMPOSE_FILE_OVERRIDE} up -d
 else

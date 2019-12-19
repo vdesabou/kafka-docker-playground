@@ -6,14 +6,14 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
 
 
-echo "Sending messages to topic http-messages"
+echo -e "\033[0;33mSending messages to topic http-messages\033[0m"
 seq 10 | docker exec -i broker kafka-console-producer --broker-list broker:9092 --topic http-messages
 
-echo "-------------------------------------"
-echo "Running Basic Authentication Example"
-echo "-------------------------------------"
+echo -e "\033[0;33m-------------------------------------\033[0m"
+echo -e "\033[0;33mRunning Basic Authentication Example\033[0m"
+echo -e "\033[0;33m-------------------------------------\033[0m"
 
-echo "Creating HttpSinkBasicAuth connector"
+echo -e "\033[0;33mCreating HttpSinkBasicAuth connector\033[0m"
 docker exec connect \
      curl -X PUT \
      -H "Content-Type: application/json" \
@@ -35,5 +35,5 @@ docker exec connect \
 
 sleep 10
 
-echo "Confirm that the data was sent to the HTTP endpoint."
+echo -e "\033[0;33mConfirm that the data was sent to the HTTP endpoint.\033[0m"
 curl admin:password@localhost:9080/api/messages | jq .

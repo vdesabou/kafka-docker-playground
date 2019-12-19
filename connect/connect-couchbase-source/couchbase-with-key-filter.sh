@@ -16,20 +16,20 @@ verify_installed "mvn"
 # based on https://github.com/couchbaselabs/kafka-example-filter
 if [ ! -f ${DIR}/../../connect/connect-couchbase-source/event_filter_class_example/target/key-filter-1.0-SNAPSHOT-jar-with-dependencies.jar ]
 then
-     echo "Building KeyFilter"
+     echo -e "\033[0;33mBuilding KeyFilter\033[0m"
      mvn package -f ${DIR}/../../connect/connect-couchbase-source/event_filter_class_example/pom.xml
 fi
 
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext-with-key-filter.yml"
 
-echo "Creating Couchbase cluster"
+echo -e "\033[0;33mCreating Couchbase cluster\033[0m"
 docker exec couchbase bash -c "/opt/couchbase/bin/couchbase-cli cluster-init --cluster-username Administrator --cluster-password password --services=data,index,query"
-echo "Install Couchbase bucket example travel-sample"
+echo -e "\033[0;33mInstall Couchbase bucket example travel-sample\033[0m"
 set +e
 docker exec couchbase bash -c "/opt/couchbase/bin/cbdocloader -c localhost:8091 -u Administrator -p password -b travel-sample -m 100 /opt/couchbase/samples/travel-sample.zip"
 set -e
 
-echo "Creating Couchbase sink connector using event.filter.class=example.KeyFilter"
+echo -e "\033[0;33mCreating Couchbase sink connector using event.filter.class=example.KeyFilter\033[0m"
 docker exec connect \
      curl -X PUT \
      -H "Content-Type: application/json" \
@@ -54,5 +54,5 @@ docker exec connect \
 
 sleep 10
 
-echo "Verifying topic test-travel-sample"
+echo -e "\033[0;33mVerifying topic test-travel-sample\033[0m"
 docker exec schema-registry kafka-avro-console-consumer -bootstrap-server broker:9092 --topic test-travel-sample --from-beginning --max-messages 2

@@ -17,24 +17,24 @@ BUCKET_NAME=${1:-test-gcs-playground}
 KEYFILE="${DIR}/keyfile.json"
 if [ ! -f ${KEYFILE} ]
 then
-     echo "ERROR: the file ${KEYFILE} file is not present!"
+     echo -e "\033[0;33mERROR: the file ${KEYFILE} file is not present!\033[0m"
      exit 1
 fi
 
 ${DIR}/../../environment/ldap_authorizer_sasl_plain/start.sh "${PWD}/docker-compose.ldap-authorizer-sasl-plain.yml"
 
 
-echo "Removing existing objects in GCS, if applicable"
+echo -e "\033[0;33mRemoving existing objects in GCS, if applicable\033[0m"
 set +e
 gsutil rm -r gs://$BUCKET_NAME/topics/gcs_topic
 set -e
 
 docker exec broker kafka-acls --authorizer-properties zookeeper.connect=zookeeper:2181 --add --topic=gcs_topic-ldap-authorizer-sasl-plain --producer --allow-principal="Group:Kafka Developers"
 
-echo "Sending messages to topic gcs_topic-ldap-authorizer-sasl-plain"
+echo -e "\033[0;33mSending messages to topic gcs_topic-ldap-authorizer-sasl-plain\033[0m"
 seq -f "{\"f1\": \"This is a message sent with LDAP Authorizer SASL/PLAIN authentication %g\"}" 10 | docker exec -i connect kafka-avro-console-producer --broker-list broker:9092 --topic gcs_topic-ldap-authorizer-sasl-plain --property value.schema='{"type":"record","name":"myrecord","fields":[{"name":"f1","type":"string"}]}' --property schema.registry.url=http://schema-registry:8081 --producer.config /service/kafka/users/alice.properties
 
-echo "Creating GCS Sink connector"
+echo -e "\033[0;33mCreating GCS Sink connector\033[0m"
 docker exec -e BUCKET_NAME="$BUCKET_NAME" connect \
      curl -X PUT \
      -H "Content-Type: application/json" \
@@ -60,13 +60,13 @@ docker exec -e BUCKET_NAME="$BUCKET_NAME" connect \
 
 sleep 10
 
-echo "Doing gsutil authentication"
+echo -e "\033[0;33mDoing gsutil authentication\033[0m"
 gcloud auth activate-service-account --key-file ${KEYFILE}
 
-echo "Listing objects of in GCS"
+echo -e "\033[0;33mListing objects of in GCS\033[0m"
 gsutil ls gs://$BUCKET_NAME/topics/gcs_topic-ldap-authorizer-sasl-plain/partition=0/
 
-echo "Getting one of the avro files locally and displaying content with avro-tools"
+echo -e "\033[0;33mGetting one of the avro files locally and displaying content with avro-tools\033[0m"
 gsutil cp gs://$BUCKET_NAME/topics/gcs_topic-ldap-authorizer-sasl-plain/partition=0/gcs_topic-ldap-authorizer-sasl-plain+0+0000000000.avro /tmp/
 
 # brew install avro-tools
