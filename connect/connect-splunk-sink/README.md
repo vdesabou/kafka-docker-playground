@@ -15,7 +15,7 @@ Quickly test [Splunk Sink](https://docs.confluent.io/current/connect/kafka-conne
 Simply run:
 
 ```
-$ ./splunk.sh
+$ ./splunk-sink.sh
 ```
 
 Splunk UI is available at [127.0.0.1:8000](http://127.0.0.1:8000) `admin/password`
