@@ -45,7 +45,7 @@ services:
     volumes:
       - secret:/var/lib/secret
       - ../../environment/kerberos/kdc/krb5.conf:/etc/krb5.conf
-      - ../../environment/kerberos/kafka/kafka.sasl.jaas.config:/etc/kafka/kafka.sasl.jaas.config
+      - ../../environment/kerberos/kafka/broker.sasl.jaas.config:/etc/kafka/broker.sasl.jaas.config
     environment:
       KAFKA_BROKER_ID: 0
       KAFKA_ZOOKEEPER_CONNECT: 'zookeeper.kerberos-demo.local:2181'
@@ -72,12 +72,19 @@ services:
       # Configure replication to require Kerberos:
       KAFKA_SASL_MECHANISM_INTER_BROKER_PROTOCOL: GSSAPI
       KAFKA_INTER_BROKER_LISTENER_NAME: SASL_PLAINTEXT
+
+      # LISTENER_NAME_SASL_PLAINTEXT_GSSAPI_SASL_JAAS_CONFIG: "com.sun.security.auth.module.Krb5LoginModule required \
+      #   useKeyTab=true \
+      #   storeKey=true \
+      #   keyTab=\"/var/lib/secret/broker.key\" \
+      #   principal=\"broker@TEST.CONFLUENT.IO\";"
+
       # Authorization config:
       KAFKA_AUTHORIZER_CLASS_NAME: kafka.security.auth.SimpleAclAuthorizer
       KAFKA_ZOOKEEPER_SET_ACL: "true"
       KAFKA_ALLOW_EVERYONE_IF_NO_ACL_FOUND: "false"
       KAFKA_SUPER_USERS: User:admin;User:broker;User:schemaregistry;User:controlcenter
-      KAFKA_OPTS: "-Djava.security.auth.login.config=/etc/kafka/kafka.sasl.jaas.config"
+      KAFKA_OPTS: "-Djava.security.auth.login.config=/etc/kafka/broker.sasl.jaas.config"
 
   broker2:
     image: confluentinc/cp-server:5.3.1
@@ -91,7 +98,7 @@ services:
     volumes:
       - secret:/var/lib/secret
       - ../../environment/kerberos/kdc/krb5.conf:/etc/krb5.conf
-      - ../../environment/kerberos/kafka/kafka.sasl.jaas2.config:/etc/kafka/kafka.sasl.jaas.config
+      - ../../environment/kerberos/kafka/broker2.sasl.jaas.config:/etc/kafka/broker.sasl.jaas.config
     environment:
       KAFKA_BROKER_ID: 1
       KAFKA_ZOOKEEPER_CONNECT: 'zookeeper.kerberos-demo.local:2181'
@@ -123,7 +130,7 @@ services:
       KAFKA_ZOOKEEPER_SET_ACL: "true"
       KAFKA_ALLOW_EVERYONE_IF_NO_ACL_FOUND: "false"
       KAFKA_SUPER_USERS: User:admin;User:broker;User:schemaregistry;User:controlcenter
-      KAFKA_OPTS: "-Djava.security.auth.login.config=/etc/kafka/kafka.sasl.jaas.config"
+      KAFKA_OPTS: "-Djava.security.auth.login.config=/etc/kafka/broker.sasl.jaas.config"
 
   client:
     build: client/
@@ -131,6 +138,7 @@ services:
     hostname: client.kerberos-demo.local
     depends_on:
       - broker
+      - broker2
       - kdc
     # Required to wait for the keytab to get generated
     volumes:
@@ -146,6 +154,7 @@ services:
     depends_on:
       - zookeeper
       - broker
+      - broker2
       - schema-registry
     # Required to wait for the keytab to get generated
     restart: on-failure
