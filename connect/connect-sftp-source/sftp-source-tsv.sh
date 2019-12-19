@@ -11,7 +11,7 @@ mkdir -p ${DIR}/upload/finished
 
 echo $'id\tfirst_name\tlast_name\temail\tgender\tip_address\tlast_login\taccount_balance\tcountry\tfavorite_color\n1\tPadraig\tOxshott\tpoxshott0@dion.ne.jp\tMale\t47.243.121.95\t2016-06-24T22:43:42Z\t15274.22\tJP\t#06708f\n2\tEdi\tOrrah\teorrah1@cafepress.com\tFemale\t158.229.234.101\t2017-03-01T17:52:47Z\t12947.6\tCN\t#5f2aa2' > ${DIR}/upload/input/tsv-sftp-source.tsv
 
-echo "Creating TSV SFTP Source connector"
+echo -e "\033[0;33mCreating TSV SFTP Source connector\033[0m"
 docker exec connect \
      curl -X PUT \
      -H "Content-Type: application/json" \
@@ -38,5 +38,5 @@ docker exec connect \
 
 sleep 5
 
-echo "Verifying topic sftp-testing-topic"
+echo -e "\033[0;33mVerifying topic sftp-testing-topic\033[0m"
 docker exec schema-registry kafka-avro-console-consumer -bootstrap-server broker:9092 --topic sftp-testing-topic --from-beginning --max-messages 2

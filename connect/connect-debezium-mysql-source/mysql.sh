@@ -5,20 +5,20 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 
 if [ ! -f ${DIR}/mysql-connector-java-5.1.45.jar ]
 then
-     echo "Downloading mysql-connector-java-5.1.45.jar"
+     echo -e "\033[0;33mDownloading mysql-connector-java-5.1.45.jar\033[0m"
      wget https://repo1.maven.org/maven2/mysql/mysql-connector-java/5.1.45/mysql-connector-java-5.1.45.jar
 fi
 
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
 
 
-echo "Describing the team table in DB 'mydb':"
+echo -e "\033[0;33mDescribing the team table in DB 'mydb':\033[0m"
 docker exec mysql bash -c "mysql --user=root --password=password --database=mydb -e 'describe team'"
 
-echo "Show content of team table:"
+echo -e "\033[0;33mShow content of team table:\033[0m"
 docker exec mysql bash -c "mysql --user=root --password=password --database=mydb -e 'select * from team'"
 
-echo "Adding an element to the table"
+echo -e "\033[0;33mAdding an element to the table\033[0m"
 docker exec mysql mysql --user=root --password=password --database=mydb -e "
 INSERT INTO team (   \
   id,   \
@@ -32,10 +32,10 @@ INSERT INTO team (   \
   NOW() \
 ); "
 
-echo "Show content of team table:"
+echo -e "\033[0;33mShow content of team table:\033[0m"
 docker exec mysql bash -c "mysql --user=root --password=password --database=mydb -e 'select * from team'"
 
-echo "Creating Debezium MySQL source connector"
+echo -e "\033[0;33mCreating Debezium MySQL source connector\033[0m"
 docker exec connect \
      curl -X PUT \
      -H "Content-Type: application/json" \
@@ -56,7 +56,7 @@ docker exec connect \
 
 sleep 5
 
-echo "Verifying topic dbserver1.mydb.team"
+echo -e "\033[0;33mVerifying topic dbserver1.mydb.team\033[0m"
 docker exec schema-registry kafka-avro-console-consumer -bootstrap-server broker:9092 --topic dbserver1.mydb.team --from-beginning --max-messages 2
 
 

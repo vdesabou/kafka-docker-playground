@@ -6,7 +6,7 @@ IGNORE_CONTROL_CENTER_STARTUP="TRUE"
 while getopts "h?ab" opt; do
     case "$opt" in
     h|\?)
-        echo "possible options -a to ignore connect startup and -b to ignore control center"
+        echo -e "\033[0;33mpossible options -a to ignore connect startup and -b to ignore control center\033[0m"
         exit 0
         ;;
     a)  IGNORE_CONNECT_STARTUP="TRUE"
@@ -22,7 +22,7 @@ then
   # Verify Kafka Connect has started within MAX_WAIT seconds
   MAX_WAIT=120
   CUR_WAIT=0
-  echo "Waiting up to $MAX_WAIT seconds for Kafka Connect to start"
+  echo -e "\033[0;33mWaiting up to $MAX_WAIT seconds for Kafka Connect to start\033[0m"
   docker container logs connect > /tmp/out.txt 2>&1
   while [[ ! $(cat /tmp/out.txt) =~ "Finished starting connectors and tasks" ]]; do
     sleep 10
@@ -33,7 +33,7 @@ then
       exit 1
     fi
   done
-  echo "Connect has started!"
+  echo -e "\033[0;33mConnect has started!\033[0m"
 fi
 
 
@@ -42,7 +42,7 @@ then
   # Verify Confluent Control Center has started within MAX_WAIT seconds
   MAX_WAIT=300
   CUR_WAIT=0
-  echo "Waiting up to $MAX_WAIT seconds for Confluent Control Center to start"
+  echo -e "\033[0;33mWaiting up to $MAX_WAIT seconds for Confluent Control Center to start\033[0m"
   docker container logs control-center > /tmp/out.txt 2>&1
   while [[ ! $(cat /tmp/out.txt) =~ "Started NetworkTrafficServerConnector" ]]; do
     sleep 10
@@ -53,7 +53,7 @@ then
       exit 1
     fi
   done
-  echo "Control Center has started!"
+  echo -e "\033[0;33mControl Center has started!\033[0m"
 fi
 
 # Verify Docker containers started

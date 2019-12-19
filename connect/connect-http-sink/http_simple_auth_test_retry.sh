@@ -6,16 +6,16 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
 
 
-echo "Sending messages to topic http-messages"
+echo -e "\033[0;33mSending messages to topic http-messages\033[0m"
 docker exec -i broker kafka-console-producer --broker-list broker:9092 --topic http-messages << EOF
 Message 1
 EOF
 
-echo "-------------------------------------"
-echo "Running Simple (No) Authentication Example"
-echo "-------------------------------------"
+echo -e "\033[0;33m-------------------------------------\033[0m"
+echo -e "\033[0;33mRunning Simple (No) Authentication Example\033[0m"
+echo -e "\033[0;33m-------------------------------------\033[0m"
 
-echo "Creating http-sink connector"
+echo -e "\033[0;33mCreating http-sink connector\033[0m"
 
 # the HTTP server will always reply INTERNAL_SERVER_ERROR(500)
 # we set retry.backoff.ms: 15000 and max.retries: 3

@@ -29,7 +29,7 @@ set -eu
 # Confluent Cloud configuration
 CCLOUD_CONFIG=$HOME/.ccloud/config
 if [[ ! -f $CCLOUD_CONFIG ]]; then
-  echo "'ccloud' is not initialized. Run 'ccloud init' and try again"
+  echo -e "\033[0;33m'ccloud' is not initialized. Run 'ccloud init' and try again\033[0m"
   exit 1
 fi
 
@@ -53,22 +53,22 @@ BOOTSTRAP_SERVERS=${BOOTSTRAP_SERVERS/\\/}
 SASL_JAAS_CONFIG=$( grep "^sasl.jaas.config" $CCLOUD_CONFIG | cut -d'=' -f2- )
 CLOUD_KEY=$( echo $SASL_JAAS_CONFIG | awk '{print $3}' | awk -F'"' '$0=$2' )
 CLOUD_SECRET=$( echo $SASL_JAAS_CONFIG | awk '{print $4}' | awk -F'"' '$0=$2' )
-#echo "bootstrap.servers: $BOOTSTRAP_SERVERS"
-#echo "sasl.jaas.config: $SASL_JAAS_CONFIG"
-#echo "key: $CLOUD_KEY"
-#echo "secret: $CLOUD_SECRET"
+#echo -e "\033[0;33mbootstrap.servers: $BOOTSTRAP_SERVERS\033[0m"
+#echo -e "\033[0;33msasl.jaas.config: $SASL_JAAS_CONFIG\033[0m"
+#echo -e "\033[0;33mkey: $CLOUD_KEY\033[0m"
+#echo -e "\033[0;33msecret: $CLOUD_SECRET\033[0m"
 
 BASIC_AUTH_CREDENTIALS_SOURCE=$( grep "^basic.auth.credentials.source" $SR_CONFIG_FILE | awk -F'=' '{print $2;}' )
 SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO=$( grep "^schema.registry.basic.auth.user.info" $SR_CONFIG_FILE | awk -F'=' '{print $2;}' )
 SCHEMA_REGISTRY_URL=$( grep "^schema.registry.url" $SR_CONFIG_FILE | awk -F'=' '{print $2;}' )
-#echo "basic.auth.credentials.source: $BASIC_AUTH_CREDENTIALS_SOURCE"
-#echo "schema.registry.basic.auth.user.info: $SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO"
-#echo "schema.registry.url: $SCHEMA_REGISTRY_URL"
+#echo -e "\033[0;33mbasic.auth.credentials.source: $BASIC_AUTH_CREDENTIALS_SOURCE\033[0m"
+#echo -e "\033[0;33mschema.registry.basic.auth.user.info: $SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO\033[0m"
+#echo -e "\033[0;33mschema.registry.url: $SCHEMA_REGISTRY_URL\033[0m"
 
 CONTROL_CENTER_LICENSE=$( grep "^confluent.license" $CCLOUD_CONFIG | cut -d'=' -f2- )
 
 ENV_CONFIG=$DEST/env.delta
-echo "$ENV_CONFIG"
+echo -e "\033[0;33m$ENV_CONFIG\033[0m"
 rm -f $ENV_CONFIG
 
 cat <<EOF >> $ENV_CONFIG

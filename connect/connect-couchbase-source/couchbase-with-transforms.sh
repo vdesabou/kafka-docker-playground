@@ -5,14 +5,14 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext-with-transforms.yml"
 
-echo "Creating Couchbase cluster"
+echo -e "\033[0;33mCreating Couchbase cluster\033[0m"
 docker exec couchbase bash -c "/opt/couchbase/bin/couchbase-cli cluster-init --cluster-username Administrator --cluster-password password --services=data,index,query"
-echo "Install Couchbase bucket example travel-sample"
+echo -e "\033[0;33mInstall Couchbase bucket example travel-sample\033[0m"
 set +e
 docker exec couchbase bash -c "/opt/couchbase/bin/cbdocloader -c localhost:8091 -u Administrator -p password -b travel-sample -m 100 /opt/couchbase/samples/travel-sample.zip"
 set -e
 
-echo "Creating Couchbase sink connector with transforms"
+echo -e "\033[0;33mCreating Couchbase sink connector with transforms\033[0m"
 docker exec connect \
      curl -X PUT \
      -H "Content-Type: application/json" \
@@ -43,13 +43,13 @@ docker exec connect \
 
 sleep 10
 
-echo "Verifying topic airline"
+echo -e "\033[0;33mVerifying topic airline\033[0m"
 docker exec schema-registry kafka-avro-console-consumer -bootstrap-server broker:9092 --topic airline --from-beginning --max-messages 1
-echo "Verifying topic airport"
+echo -e "\033[0;33mVerifying topic airport\033[0m"
 docker exec schema-registry kafka-avro-console-consumer -bootstrap-server broker:9092 --topic airport --from-beginning --max-messages 1
-echo "Verifying topic hotel"
+echo -e "\033[0;33mVerifying topic hotel\033[0m"
 docker exec schema-registry kafka-avro-console-consumer -bootstrap-server broker:9092 --topic hotel --from-beginning --max-messages 1
-echo "Verifying topic landmark"
+echo -e "\033[0;33mVerifying topic landmark\033[0m"
 docker exec schema-registry kafka-avro-console-consumer -bootstrap-server broker:9092 --topic landmark --from-beginning --max-messages 1
-echo "Verifying topic route"
+echo -e "\033[0;33mVerifying topic route\033[0m"
 docker exec schema-registry kafka-avro-console-consumer -bootstrap-server broker:9092 --topic route --from-beginning --max-messages 1

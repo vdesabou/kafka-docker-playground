@@ -6,14 +6,14 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
 
 
-echo "Sending messages to topic hbase-test"
+echo -e "\033[0;33mSending messages to topic hbase-test\033[0m"
 docker exec -i broker kafka-console-producer --broker-list broker:9092 --topic hbase-test --property parse.key=true --property key.separator=, << EOF
 key1,value1
 key2,value2
 key3,value3
 EOF
 
-echo "Creating HBase sink connector"
+echo -e "\033[0;33mCreating HBase sink connector\033[0m"
 docker exec connect \
      curl -X PUT \
      -H "Content-Type: application/json" \
@@ -35,6 +35,6 @@ docker exec connect \
 
 sleep 10
 
-echo "Verify data is in HBase: type scan 'example_table' and then exit"
+echo -e "\033[0;33mVerify data is in HBase: type scan 'example_table' and then exit\033[0m"
 docker exec -it hbase /bin/bash entrypoint.sh
 

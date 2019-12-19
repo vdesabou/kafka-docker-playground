@@ -5,12 +5,12 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
 
-echo "Initialize MongoDB replica set"
+echo -e "\033[0;33mInitialize MongoDB replica set\033[0m"
 docker exec -it mongodb mongo --eval 'rs.initiate({_id: "debezium", members:[{_id: 0, host: "mongodb:27017"}]})'
 
 sleep 5
 
-echo "Create a user profile"
+echo -e "\033[0;33mCreate a user profile\033[0m"
 docker exec -i mongodb mongo << EOF
 use admin
 db.createUser(
@@ -24,7 +24,7 @@ EOF
 
 sleep 2
 
-echo "Insert a record"
+echo -e "\033[0;33mInsert a record\033[0m"
 docker exec -i mongodb mongo << EOF
 use inventory
 db.customers.insert([
@@ -32,13 +32,13 @@ db.customers.insert([
 ]);
 EOF
 
-echo "View record"
+echo -e "\033[0;33mView record\033[0m"
 docker exec -i mongodb mongo << EOF
 use inventory
 db.customers.find().pretty();
 EOF
 
-echo "Creating Debezium MongoDB source connector"
+echo -e "\033[0;33mCreating Debezium MongoDB source connector\033[0m"
 docker exec connect \
      curl -X PUT \
      -H "Content-Type: application/json" \
@@ -56,5 +56,5 @@ docker exec connect \
 
 sleep 5
 
-echo "Verifying topic dbserver1.inventory.customers"
+echo -e "\033[0;33mVerifying topic dbserver1.inventory.customers\033[0m"
 docker exec schema-registry kafka-avro-console-consumer -bootstrap-server broker:9092 --topic dbserver1.inventory.customers --from-beginning --max-messages 1

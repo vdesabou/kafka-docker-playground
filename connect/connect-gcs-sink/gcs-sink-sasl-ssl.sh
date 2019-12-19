@@ -17,27 +17,27 @@ BUCKET_NAME=${1:-test-gcs-playground}
 KEYFILE="${DIR}/keyfile.json"
 if [ ! -f ${KEYFILE} ]
 then
-     echo "ERROR: the file ${KEYFILE} file is not present!"
+     echo -e "\033[0;33mERROR: the file ${KEYFILE} file is not present!\033[0m"
      exit 1
 fi
 
 ${DIR}/../../environment/sasl-ssl/start.sh "${PWD}/docker-compose.sasl-ssl.yml"
 
 
-echo "Removing existing objects in GCS, if applicable"
+echo -e "\033[0;33mRemoving existing objects in GCS, if applicable\033[0m"
 set +e
 gsutil rm -r gs://$BUCKET_NAME/topics/gcs_topic-ssl
 gsutil rm -r gs://$BUCKET_NAME/topics/gcs_topic-sasl-ssl
 set -e
 
-echo "########"
-echo "##  SASL_SSL authentication"
-echo "########"
+echo -e "\033[0;33m########\033[0m"
+echo -e "\033[0;33m##  SASL_SSL authentication\033[0m"
+echo -e "\033[0;33m########\033[0m"
 
-echo "Sending messages to topic gcs_topic-sasl-ssl"
+echo -e "\033[0;33mSending messages to topic gcs_topic-sasl-ssl\033[0m"
 seq -f "{\"f1\": \"This is a message sent with SASL_SSL authentication %g\"}" 10 | docker exec -i connect kafka-avro-console-producer --broker-list broker:9091 --topic gcs_topic-sasl-ssl --property value.schema='{"type":"record","name":"myrecord","fields":[{"name":"f1","type":"string"}]}' --property schema.registry.url=https://schema-registry:8085 --producer.config /etc/kafka/secrets/client_without_interceptors.config
 
-echo "Creating GCS Sink connector with SASL_SSL authentication"
+echo -e "\033[0;33mCreating GCS Sink connector with SASL_SSL authentication\033[0m"
 docker exec -e BUCKET_NAME="$BUCKET_NAME" connect \
      curl -X PUT \
      --cert /etc/kafka/secrets/connect.certificate.pem --key /etc/kafka/secrets/connect.key --tlsv1.2 --cacert /etc/kafka/secrets/snakeoil-ca-1.crt \
@@ -67,13 +67,13 @@ docker exec -e BUCKET_NAME="$BUCKET_NAME" connect \
 
 sleep 10
 
-echo "Doing gsutil authentication"
+echo -e "\033[0;33mDoing gsutil authentication\033[0m"
 gcloud auth activate-service-account --key-file ${KEYFILE}
 
-echo "Listing objects of in GCS"
+echo -e "\033[0;33mListing objects of in GCS\033[0m"
 gsutil ls gs://$BUCKET_NAME/topics/gcs_topic-sasl-ssl/partition=0/
 
-echo "Getting one of the avro files locally and displaying content with avro-tools"
+echo -e "\033[0;33mGetting one of the avro files locally and displaying content with avro-tools\033[0m"
 gsutil cp gs://$BUCKET_NAME/topics/gcs_topic-sasl-ssl/partition=0/gcs_topic-sasl-ssl+0+0000000000.avro /tmp/
 
 # brew install avro-tools

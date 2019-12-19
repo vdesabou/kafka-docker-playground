@@ -11,7 +11,7 @@ mkdir -p ${DIR}/upload/finished
 
 echo $'{"id":1,"first_name":"Roscoe","last_name":"Brentnall","email":"rbrentnall0@mediafire.com","gender":"Male","ip_address":"202.84.142.254","last_login":"2018-02-12T06:26:23Z","account_balance":1450.68,"country":"CZ","favorite_color":"#4eaefa"}\n{"id":2,"first_name":"Gregoire","last_name":"Fentem","email":"gfentem1@nsw.gov.au","gender":"Male","ip_address":"221.159.106.63","last_login":"2015-03-27T00:29:56Z","account_balance":1392.37,"country":"ID","favorite_color":"#e8f686"}' > ${DIR}/upload/input/json-sftp-source.json
 
-echo "Creating JSON (no schema) SFTP Source connector"
+echo -e "\033[0;33mCreating JSON (no schema) SFTP Source connector\033[0m"
 docker exec connect \
      curl -X PUT \
      -H "Content-Type: application/json" \
@@ -35,5 +35,5 @@ docker exec connect \
 
 sleep 5
 
-echo "Verifying topic sftp-testing-topic"
+echo -e "\033[0;33mVerifying topic sftp-testing-topic\033[0m"
 docker exec broker kafka-console-consumer -bootstrap-server broker:9092 --topic sftp-testing-topic --from-beginning --max-messages 2

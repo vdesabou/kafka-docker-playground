@@ -22,7 +22,7 @@ do
   sleep 5
 done
 
-echo "Produce events to the input topic"
+echo -e "\033[0;33mProduce events to the input topic\033[0m"
 docker exec -i schema-registry /usr/bin/kafka-avro-console-producer --topic movie-ticket-sales --broker-list broker:9092 --property value.schema="$(< src/main/avro/ticket-sale.avsc)" << EOF
 {"title":"Die Hard","sale_ts":"2019-07-18T10:00:00Z","ticket_total_value":12}
 {"title":"Die Hard","sale_ts":"2019-07-18T10:01:00Z","ticket_total_value":12}
@@ -35,5 +35,5 @@ docker exec -i schema-registry /usr/bin/kafka-avro-console-producer --topic movi
 {"title":"The Godfather","sale_ts":"2019-07-18T11:40:09Z","ticket_total_value":18}
 EOF
 
-echo "Consume aggregated sum from the output topic"
+echo -e "\033[0;33mConsume aggregated sum from the output topic\033[0m"
 docker exec -it broker /usr/bin/kafka-console-consumer --topic movie-revenue --bootstrap-server broker:9092 --from-beginning --property print.key=true --property value.deserializer=org.apache.kafka.common.serialization.IntegerDeserializer --max-messages 9

@@ -22,12 +22,12 @@ do
   sleep 5
 done
 
-echo "Produce some JSON-formatted movies to the input topic"
+echo -e "\033[0;33mProduce some JSON-formatted movies to the input topic\033[0m"
 docker exec -i broker /usr/bin/kafka-console-producer --topic json-movies --broker-list broker:9092 << EOF
 {"movie_id":1,"title":"Lethal Weapon","release_year":1992}
 {"movie_id":2,"title":"Die Hard","release_year":1988}
 {"movie_id":3,"title":"Predator","release_year":1987}
 EOF
 
-echo "Observe the Avro-formatted movies in the output topic"
+echo -e "\033[0;33mObserve the Avro-formatted movies in the output topic\033[0m"
 docker exec -it schema-registry /usr/bin/kafka-avro-console-consumer --topic avro-movies --bootstrap-server broker:9092 --from-beginning --property value.schema="$(< src/main/avro/movie.avsc)" --max-messages 3

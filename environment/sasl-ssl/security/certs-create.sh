@@ -13,7 +13,7 @@ openssl req -new -x509 -keyout snakeoil-ca-1.key -out snakeoil-ca-1.crt -days 36
 
 for i in broker broker2 client schema-registry connect control-center
 do
-    echo "------------------------------- $i -------------------------------"
+    echo -e "\033[0;33m------------------------------- $i -------------------------------\033[0m"
 
     # Create host keystore
     keytool -genkey -noprompt \
@@ -59,14 +59,14 @@ EOF
     keytool -noprompt -keystore kafka.$i.truststore.jks -alias CARoot -import -file snakeoil-ca-1.crt -storepass confluent -keypass confluent
 
     # Save creds
-      echo "confluent" > ${i}_sslkey_creds
-      echo "confluent" > ${i}_keystore_creds
-      echo "confluent" > ${i}_truststore_creds
+      echo -e "\033[0;33mconfluent\033[0m" > ${i}_sslkey_creds
+      echo -e "\033[0;33mconfluent\033[0m" > ${i}_keystore_creds
+      echo -e "\033[0;33mconfluent\033[0m" > ${i}_truststore_creds
 
     # Create pem files and keys used for Schema Registry HTTPS testing
     #   openssl x509 -noout -modulus -in client.certificate.pem | openssl md5
     #   openssl rsa -noout -modulus -in client.key | openssl md5
-    #   echo "GET /" | openssl s_client -connect localhost:8085/subjects -cert client.certificate.pem -key client.key -tls1
+    #   echo -e "\033[0;33mGET /\033[0m" | openssl s_client -connect localhost:8085/subjects -cert client.certificate.pem -key client.key -tls1
     keytool -export -alias $i -file $i.der -keystore kafka.$i.keystore.jks -storepass confluent
     openssl x509 -inform der -in $i.der -out $i.certificate.pem
     keytool -importkeystore -srckeystore kafka.$i.keystore.jks -destkeystore $i.keystore.p12 -deststoretype PKCS12 -deststorepass confluent -srcstorepass confluent -noprompt

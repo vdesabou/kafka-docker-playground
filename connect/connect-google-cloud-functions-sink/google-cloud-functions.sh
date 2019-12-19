@@ -9,14 +9,14 @@ FUNCTION=${3:-function-1}
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
 
 
-echo "Produce test data to the functions-messages topic in Kafka"
+echo -e "\033[0;33mProduce test data to the functions-messages topic in Kafka\033[0m"
 docker exec -i broker kafka-console-producer --broker-list broker:9092 --topic functions-messages --property parse.key=true --property key.separator=, << EOF
 key1,value1
 key2,value2
 key3,value3
 EOF
 
-echo "Creating Google Cloud Functions Sink connector"
+echo -e "\033[0;33mCreating Google Cloud Functions Sink connector\033[0m"
 docker exec -e PROJECT="$PROJECT" -e REGION="$REGION" -e FUNCTION="$FUNCTION" connect \
      curl -X PUT \
      -H "Content-Type: application/json" \
@@ -45,5 +45,5 @@ docker exec -e PROJECT="$PROJECT" -e REGION="$REGION" -e FUNCTION="$FUNCTION" co
 
 sleep 10
 
-echo "Confirm that the messages were delivered to the result topic in Kafka"
+echo -e "\033[0;33mConfirm that the messages were delivered to the result topic in Kafka\033[0m"
 docker exec broker kafka-console-consumer --bootstrap-server broker:9092 --topic test-result --from-beginning --max-messages 3

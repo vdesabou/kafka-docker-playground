@@ -15,7 +15,7 @@ OLDDIR=$PWD
 
 cd ${OLDDIR}/../../environment/ssl_kerberos/security
 
-echo "Generate keys and certificates used for SSL"
+echo -e "\033[0;33mGenerate keys and certificates used for SSL\033[0m"
 ./certs-create.sh > /dev/null 2>&1
 
 cd ${OLDDIR}/../../environment/ssl_kerberos
@@ -25,7 +25,7 @@ DOCKER_COMPOSE_FILE_OVERRIDE=$1
 # Avoiding starting up all services at the begining to generate the keytab first
 if [ -f "${DOCKER_COMPOSE_FILE_OVERRIDE}" ]
 then
-  echo "Using ${DOCKER_COMPOSE_FILE_OVERRIDE}"
+  
   docker-compose -f ../../environment/kerberos/docker-compose.yml -f ${DOCKER_COMPOSE_FILE_OVERRIDE} down -v
   docker-compose -f ../../environment/kerberos/docker-compose.yml -f ${DOCKER_COMPOSE_FILE_OVERRIDE} build kdc
   docker-compose -f ../../environment/kerberos/docker-compose.yml -f ${DOCKER_COMPOSE_FILE_OVERRIDE} up -d kdc
@@ -97,11 +97,11 @@ docker exec client bash -c "kinit -k -t /var/lib/secret/kafka-admin.key admin/fo
 # schemaregistry and controlcenter is super user
 
 # Output example usage:
-echo "-----------------------------------------"
-echo "Example configuration to access kafka:"
-echo "-----------------------------------------"
-echo "-> docker-compose exec client bash -c 'kinit -k -t /var/lib/secret/kafka-client.key kafka_producer && kafka-console-producer --broker-list broker:9092 --topic test --producer.config /etc/kafka/producer.properties'"
-echo "-> docker-compose exec client bash -c 'kinit -k -t /var/lib/secret/kafka-client.key kafka_consumer && kafka-console-consumer --bootstrap-server broker:9092 --topic test --consumer.config /etc/kafka/consumer.properties --from-beginning'"
+echo -e "\033[0;33m-----------------------------------------\033[0m"
+echo -e "\033[0;33mExample configuration to access kafka:\033[0m"
+echo -e "\033[0;33m-----------------------------------------\033[0m"
+echo -e "\033[0;33m-> docker-compose exec client bash -c 'kinit -k -t /var/lib/secret/kafka-client.key kafka_producer && kafka-console-producer --broker-list broker:9092 --topic test --producer.config /etc/kafka/producer.properties'\033[0m"
+echo -e "\033[0;33m-> docker-compose exec client bash -c 'kinit -k -t /var/lib/secret/kafka-client.key kafka_consumer && kafka-console-consumer --bootstrap-server broker:9092 --topic test --consumer.config /etc/kafka/consumer.properties --from-beginning'\033[0m"
 
 cd ${OLDDIR}
 

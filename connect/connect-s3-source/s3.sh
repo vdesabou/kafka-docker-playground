@@ -7,7 +7,7 @@ BUCKET_NAME=${1:-kafka-docker-playground}
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
 
 
-echo "Creating S3 Sink connector with bucket name <$BUCKET_NAME>"
+echo -e "\033[0;33mCreating S3 Sink connector with bucket name <$BUCKET_NAME>\033[0m"
 docker exec -e BUCKET_NAME="$BUCKET_NAME" connect \
      curl -X PUT \
      -H "Content-Type: application/json" \
@@ -27,21 +27,21 @@ docker exec -e BUCKET_NAME="$BUCKET_NAME" connect \
      http://localhost:8083/connectors/s3-sink/config | jq .
 
 
-echo "Sending messages to topic s3_topic"
+echo -e "\033[0;33mSending messages to topic s3_topic\033[0m"
 seq -f "{\"f1\": \"value%g\"}" 10 | docker exec -i schema-registry kafka-avro-console-producer --broker-list broker:9092 --topic s3_topic --property value.schema='{"type":"record","name":"myrecord","fields":[{"name":"f1","type":"string"}]}'
 
 sleep 10
 
-echo "Listing objects of in S3"
+echo -e "\033[0;33mListing objects of in S3\033[0m"
 aws s3api list-objects --bucket "$BUCKET_NAME"
 
-echo "Getting one of the avro files locally and displaying content with avro-tools"
+echo -e "\033[0;33mGetting one of the avro files locally and displaying content with avro-tools\033[0m"
 aws s3 cp s3://$BUCKET_NAME/topics/s3_topic/partition=0/s3_topic+0+0000000000.avro /tmp/
 
 # brew install avro-tools
 avro-tools tojson /tmp/s3_topic+0+0000000000.avro
 
-echo "Creating S3 Source connector with bucket name <$BUCKET_NAME>"
+echo -e "\033[0;33mCreating S3 Source connector with bucket name <$BUCKET_NAME>\033[0m"
 docker exec -e BUCKET_NAME="$BUCKET_NAME" connect \
      curl -X PUT \
      -H "Content-Type: application/json" \
@@ -62,5 +62,5 @@ docker exec -e BUCKET_NAME="$BUCKET_NAME" connect \
      http://localhost:8083/connectors/s3-source/config | jq .
 
 
-echo "Verifying topic copy_of_s3_topic"
+echo -e "\033[0;33mVerifying topic copy_of_s3_topic\033[0m"
 docker exec broker kafka-console-consumer -bootstrap-server broker:9092 --topic copy_of_s3_topic --from-beginning --max-messages 9

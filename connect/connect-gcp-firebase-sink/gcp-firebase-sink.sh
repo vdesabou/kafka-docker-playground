@@ -7,13 +7,13 @@ PROJECT=${1:-vincent-de-saboulin-lab}
 KEYFILE="${DIR}/keyfile.json"
 if [ ! -f ${KEYFILE} ]
 then
-     echo "ERROR: the file ${KEYFILE} file is not present!"
+     echo -e "\033[0;33mERROR: the file ${KEYFILE} file is not present!\033[0m"
      exit 1
 fi
 
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
 
-echo "Creating GCP Firebase Sink connector"
+echo -e "\033[0;33mCreating GCP Firebase Sink connector\033[0m"
 docker exec -e PROJECT="$PROJECT" connect \
      curl -X PUT \
      -H "Content-Type: application/json" \
@@ -34,18 +34,18 @@ docker exec -e PROJECT="$PROJECT" connect \
      http://localhost:8083/connectors/firebase-sink/config | jq .
 
 
-echo "Produce Avro data to topic artists"
+echo -e "\033[0;33mProduce Avro data to topic artists\033[0m"
 docker exec -i schema-registry kafka-avro-console-producer --broker-list broker:9092 --topic artists --property parse.key=true --property key.schema='{"type":"string"}' --property "key.separator=:" --property value.schema='{"type":"record","name":"artists","fields":[{"name":"name","type":"string"},{"name":"genre","type":"string"}]}' << EOF
 "artistId1":{"name":"Michael Jackson","genre":"Pop"}
 "artistId2":{"name":"Bob Dylan","genre":"American folk"}
 "artistId3":{"name":"Freddie Mercury","genre":"Rock"}
 EOF
 
-echo "Produce Avro data to topic songs"
+echo -e "\033[0;33mProduce Avro data to topic songs\033[0m"
 docker exec -i schema-registry kafka-avro-console-producer --broker-list broker:9092 --topic songs --property parse.key=true --property key.schema='{"type":"string"}' --property "key.separator=:" --property value.schema='{"type":"record","name":"songs","fields":[{"name":"title","type":"string"},{"name":"artist","type":"string"}]}' << EOF
 "songId1":{"title":"billie jean","artist":"Michael Jackson"}
 "songId2":{"title":"hurricane","artist":"Bob Dylan"}
 "songId3":{"title":"bohemian rhapsody","artist":"Freddie Mercury"}
 EOF
 
-echo "Follow README to verify data is in Firebase"
+echo -e "\033[0;33mFollow README to verify data is in Firebase\033[0m"

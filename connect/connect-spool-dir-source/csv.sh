@@ -11,11 +11,11 @@ mkdir -p ${DIR}/data/finished
 
 if [ ! -f "${DIR}/data/input/csv-spooldir-source.csv" ]
 then
-     echo "Generating data"
+     echo -e "\033[0;33mGenerating data\033[0m"
      curl "https://api.mockaroo.com/api/58605010?count=1000&key=25fd9c80" > "${DIR}/data/input/csv-spooldir-source.csv"
 fi
 
-echo "Creating CSV Spool Dir Source connector"
+echo -e "\033[0;33mCreating CSV Spool Dir Source connector\033[0m"
 docker exec connect \
      curl -X PUT \
      -H "Content-Type: application/json" \
@@ -37,5 +37,5 @@ docker exec connect \
 
 sleep 5
 
-echo "Verify we have received the data in spooldir-csv-topic topic"
+echo -e "\033[0;33mVerify we have received the data in spooldir-csv-topic topic\033[0m"
 docker exec schema-registry kafka-avro-console-consumer -bootstrap-server broker:9092 --topic spooldir-csv-topic --property schema.registry.url=http://schema-registry:8081 --from-beginning --max-messages 10
