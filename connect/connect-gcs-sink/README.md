@@ -8,7 +8,6 @@ Quickly test [GCS Sink](https://docs.confluent.io/current/connect/kafka-connect-
 
 * `docker-compose` (example `brew cask install docker`)
 * `jq` (example `brew install jq`)
-* `avro-tools` (example `brew install avro-tools`)
 * `google-cloud-sdk` (example `brew cask install google-cloud-sdk`)
 * Active Google Cloud Platform (GCP) account with authorization to create resources
 
@@ -120,7 +119,7 @@ Getting one of the avro files locally and displaying content with avro-tools:
 
 ```bash
 $ gsutil cp gs://$BUCKET_NAME/topics/gcs_topic/partition=0/gcs_topic+0+0000000000.avro /tmp/
-$ avro-tools tojson /tmp/gcs_topic+0+0000000000.avro
+$ docker run -v /tmp:/tmp actions/avro-tools tojson /tmp/gcs_topic+0+0000000000.avro
 19/09/30 16:48:13 WARN util.NativeCodeLoader: Unable to load native-hadoop library for your platform... using builtin-java classes where applicable
 {"f1":"value1"}
 {"f1":"value2"}
@@ -203,7 +202,7 @@ Getting one of the avro files locally and displaying content with avro-tools:
 
 ```bash
 $ gsutil cp gs://$BUCKET_NAME/topics/gcs_topic-ssl/partition=0/gcs_topic-ssl+0+0000000000.avro /tmp/
-$ avro-tools tojson /tmp/gcs_topic-ssl+0+0000000000.avro
+$ docker run -v /tmp:/tmp actions/avro-tools tojson /tmp/gcs_topic-ssl+0+0000000000.avro
 19/09/30 16:48:13 WARN util.NativeCodeLoader: Unable to load native-hadoop library for your platform... using builtin-java classes where applicable
 {"f1":"This is a message sent with SSL authentication 1"}
 {"f1":"This is a message sent with SSL authentication 2"}
@@ -260,7 +259,7 @@ Getting one of the avro files locally and displaying content with avro-tools:
 
 ```bash
 $ gsutil cp gs://$BUCKET_NAME/topics/gcs_topic-sasl-ssl/partition=0/gcs_topic-sasl-ssl+0+0000000000.avro /tmp/
-$ avro-tools tojson /tmp/gcs_topic-sasl-ssl+0+0000000000.avro
+$ docker run -v /tmp:/tmp actions/avro-tools tojson /tmp/gcs_topic-sasl-ssl+0+0000000000.avro
 19/09/30 16:48:13 WARN util.NativeCodeLoader: Unable to load native-hadoop library for your platform... using builtin-java classes where applicable
 {"f1":"This is a message sent with SASL_SSL authentication 1"}
 {"f1":"This is a message sent with SASL_SSL authentication 2"}
@@ -316,7 +315,7 @@ Getting one of the avro files locally and displaying content with avro-tools:
 
 ```bash
 $ gsutil cp gs://$BUCKET_NAME/topics/gcs_topic-kerberos/partition=0/gcs_topic-kerberos+0+0000000000.avro /tmp/
-$ avro-tools tojson /tmp/gcs_topic-kerberos+0+0000000000.avro
+$ docker run -v /tmp:/tmp actions/avro-tools tojson /tmp/gcs_topic-kerberos+0+0000000000.avro
 {"f1":"This is a message sent with Kerberos GSSAPI authentication 1"}
 {"f1":"This is a message sent with Kerberos GSSAPI authentication 2"}
 {"f1":"This is a message sent with Kerberos GSSAPI authentication 3"}
@@ -376,7 +375,7 @@ Getting one of the avro files locally and displaying content with avro-tools:
 
 ```bash
 $ gsutil cp gs://$BUCKET_NAME/topics/gcs_topic-kerberos/partition=0/gcs_topic-kerberos+0+0000000000.avro /tmp/
-$ avro-tools tojson /tmp/gcs_topic-kerberos+0+0000000000.avro
+$ docker run -v /tmp:/tmp actions/avro-tools tojson /tmp/gcs_topic-kerberos+0+0000000000.avro
 {"f1":"This is a message sent with LDAP Authorizer SASL/PLAIN authentication 1"}
 {"f1":"This is a message sent with LDAP Authorizer SASL/PLAIN authentication 2"}
 {"f1":"This is a message sent with LDAP Authorizer SASL/PLAIN authentication 3"}

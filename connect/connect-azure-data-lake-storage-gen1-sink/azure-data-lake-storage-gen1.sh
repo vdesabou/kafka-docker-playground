@@ -82,5 +82,5 @@ rm -f /tmp/datalake_topic+0+0000000000.avro
 echo -e "\033[0;33mGetting one of the avro files locally and displaying content with avro-tools\033[0m"
 az dls fs download --account "${AZURE_DATALAKE_ACCOUNT_NAME}" --source-path /topics/datalake_topic/partition=0/datalake_topic+0+0000000000.avro --destination-path /tmp/datalake_topic+0+0000000000.avro
 
-# brew install avro-tools
-avro-tools tojson /tmp/datalake_topic+0+0000000000.avro
+
+docker run -v /tmp:/tmp actions/avro-tools tojson /tmp/datalake_topic+0+0000000000.avro

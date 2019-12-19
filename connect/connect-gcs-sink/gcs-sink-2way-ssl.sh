@@ -79,5 +79,5 @@ gcloud auth activate-service-account --key-file ${KEYFILE}
 echo -e "\033[0;33mGetting one of the avro files locally and displaying content with avro-tools\033[0m"
 gsutil cp gs://$BUCKET_NAME/topics/gcs_topic-ssl/partition=0/gcs_topic-ssl+0+0000000000.avro /tmp/
 
-# brew install avro-tools
-avro-tools tojson /tmp/gcs_topic-ssl+0+0000000000.avro
+
+docker run -v /tmp:/tmp actions/avro-tools tojson /tmp/gcs_topic-ssl+0+0000000000.avro

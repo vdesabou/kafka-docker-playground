@@ -8,7 +8,6 @@ Quickly test [S3 Sink](https://docs.confluent.io/current/connect/kafka-connect-s
 
 * `docker-compose` (example `brew cask install docker`)
 * `jq` (example `brew install jq`)
-* `avro-tools` (example `brew install avro-tools`)
 * `aws cli`(example `brew install awscli`)
 
 ## AWS Setup
