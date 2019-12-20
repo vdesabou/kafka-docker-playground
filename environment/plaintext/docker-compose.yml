@@ -43,6 +43,8 @@ services:
     build:
       context: ../..
       dockerfile: Dockerfile-Connector-Hub
+      cache_from:
+        - plaintext_connect:latest
     hostname: connect
     container_name: connect
     depends_on:
