@@ -21,7 +21,8 @@ else
   docker-compose up -d
 fi
 
-../../WaitForConnectAndControlCenter.sh
+shift
+../../WaitForConnectAndControlCenter.sh $@
 
 # Not required as User:broker is super user
 # SET ACLs

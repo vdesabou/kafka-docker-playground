@@ -36,7 +36,8 @@ else
   docker-compose up -d
 fi
 
-../../WaitForConnectAndControlCenter.sh
+shift
+../../WaitForConnectAndControlCenter.sh $@
 
 # SET ACLs
 # Authorize broker user kafka for cluster operations. Note that the example uses user-principal based ACL for brokers, but brokers may also be configured to use group-based ACLs.
