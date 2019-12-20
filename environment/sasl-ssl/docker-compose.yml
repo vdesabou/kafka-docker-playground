@@ -12,6 +12,7 @@ services:
       KAFKA_OPTS: -Djava.security.auth.login.config=/etc/kafka/secrets/zookeeper_jaas.conf
                   -Dzookeeper.authProvider.1=org.apache.zookeeper.server.auth.SASLAuthenticationProvider
                   -DrequireClientAuthScheme=sasl
+                  -Dzookeeper.allowSaslFailedClients=false
     volumes:
       - ../../environment/sasl-ssl/security:/etc/kafka/secrets
     ports:
