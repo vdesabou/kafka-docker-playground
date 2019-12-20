@@ -34,4 +34,5 @@ fi
 
 cd ${OLDDIR}
 
-../../WaitForConnectAndControlCenter.sh
+shift
+../../WaitForConnectAndControlCenter.sh $@

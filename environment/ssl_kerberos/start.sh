@@ -105,4 +105,5 @@ echo -e "\033[0;33m-> docker-compose exec client bash -c 'kinit -k -t /var/lib/s
 
 cd ${OLDDIR}
 
-../../WaitForConnectAndControlCenter.sh
+shift
+../../WaitForConnectAndControlCenter.sh $@

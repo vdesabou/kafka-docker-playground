@@ -21,4 +21,5 @@ else
   docker-compose up -d
 fi
 
-../../WaitForConnectAndControlCenter.sh
+shift
+../../WaitForConnectAndControlCenter.sh $@
