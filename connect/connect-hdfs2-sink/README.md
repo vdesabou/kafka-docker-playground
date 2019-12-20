@@ -1,6 +1,6 @@
 # HDFS 2 Sink connector
 
-![asciinema](asciinema.gif)
+[![asciinema](asciinema.gif)](https://asciinema.org/a/289272)
 
 ## Objective
 
