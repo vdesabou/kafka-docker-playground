@@ -14,7 +14,6 @@ verify_installed "docker-compose"
 DOCKER_COMPOSE_FILE_OVERRIDE=$1
 if [ -f "${DOCKER_COMPOSE_FILE_OVERRIDE}" ]
 then
-  
   docker-compose -f ../../environment/plaintext/docker-compose.yml -f ${DOCKER_COMPOSE_FILE_OVERRIDE} down -v
   docker-compose -f ../../environment/plaintext/docker-compose.yml -f ${DOCKER_COMPOSE_FILE_OVERRIDE} up -d
 else
@@ -22,4 +21,5 @@ else
   docker-compose up -d
 fi
 
-../../WaitForConnectAndControlCenter.sh
+shift
+../../WaitForConnectAndControlCenter.sh $@
