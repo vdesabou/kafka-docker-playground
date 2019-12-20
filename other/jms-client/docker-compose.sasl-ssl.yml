@@ -1,0 +1,15 @@
+---
+version: '3.5'
+services:
+
+  jms-client:
+    build: ../../other/jms-client/jms-client/
+    hostname: jms-client
+    container_name: jms-client
+    volumes:
+      - ../../environment/sasl-ssl/security:/etc/kafka/secrets
+    depends_on:
+      - broker
+
+  connect:
+    entrypoint: ["echo", "Service connect disabled"]
