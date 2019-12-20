@@ -11,7 +11,7 @@ while getopts "h?ab" opt; do
         ;;
     a)  IGNORE_CONNECT_STARTUP="TRUE"
         ;;
-    b)  IGNORE_CONTROL_CENTER_STARTUP="TRUE"
+    b)  IGNORE_CONTROL_CENTER_STARTUP="FALSE"
         ;;
     esac
 done
