@@ -48,12 +48,10 @@ public class App {
             producer.send(message);
         }
 
-        int counter = 1;
         MessageConsumer consumer = session.createConsumer(testQueue);
-        while (counter <= 40) {
+        while (true) {
             TextMessage message = (TextMessage)consumer.receive();
             System.out.println(message.getText());
-            counter++;
         }
     }
 }
