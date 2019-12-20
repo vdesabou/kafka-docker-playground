@@ -59,9 +59,9 @@ EOF
     keytool -noprompt -keystore kafka.$i.truststore.jks -alias CARoot -import -file snakeoil-ca-1.crt -storepass confluent -keypass confluent
 
     # Save creds
-      echo -e "\033[0;33mconfluent\033[0m" > ${i}_sslkey_creds
-      echo -e "\033[0;33mconfluent\033[0m" > ${i}_keystore_creds
-      echo -e "\033[0;33mconfluent\033[0m" > ${i}_truststore_creds
+      echo  "confluent" > ${i}_sslkey_creds
+      echo  "confluent" > ${i}_keystore_creds
+      echo  "confluent" > ${i}_truststore_creds
 
     # Create pem files and keys used for Schema Registry HTTPS testing
     #   openssl x509 -noout -modulus -in client.certificate.pem | openssl md5
