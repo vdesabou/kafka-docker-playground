@@ -17,6 +17,8 @@ Playground for Kafka/Confluent Docker experimentations...
 
 ## 🔗 Kafka Connectors
 
+Quick start examples from Confluent [docs](https://docs.confluent.io/current/connect/managing/index.html) but in Docker version for ease of use.
+
 ### ↘️ Source
 
 * <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/9/93/Amazon_Web_Services_Logo.svg/1200px-Amazon_Web_Services_Logo.svg.png" width="15"> AWS
