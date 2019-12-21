@@ -27,10 +27,10 @@ remove_partition() {
 	done
 }
 
+${DIR}/../../environment/sasl-ssl/start.sh "${PWD}/docker-compose.sasl-ssl.yml" -a -b
+
 ZOOKEEPER_IP=$(container_to_ip zookeeper)
 interface=eth0
-
-${DIR}/../../environment/sasl-ssl/start.sh "${PWD}/docker-compose.sasl-ssl.yml" -a -b
 
 echo -e "\033[0;33mBlocking communication between jms-client and zookeeper\033[0m"
 block_host jms-client $ZOOKEEPER_IP
