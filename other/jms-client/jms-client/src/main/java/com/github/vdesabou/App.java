@@ -19,7 +19,13 @@ public class App {
         Properties settings = new Properties();
         settings.put(JMSClientConfig.CLIENT_ID_CONFIG, "jms-client");
         settings.put(JMSClientConfig.BOOTSTRAP_SERVERS_CONFIG, System.getenv("BOOTSTRAP_SERVERS"));
-        settings.put(JMSClientConfig.ZOOKEEPER_CONNECT_CONF, System.getenv("ZOOKEEPER_CONNECT"));
+
+        if(!System.getenv("CONFLUENT_LICENSE").equals("")) {
+            settings.put("confluent.license", System.getenv("CONFLUENT_LICENSE"));
+        } else {
+            // if we don't have a license, we need to set zookeeper.connect
+            settings.put(JMSClientConfig.ZOOKEEPER_CONNECT_CONF, System.getenv("ZOOKEEPER_CONNECT"));
+        }
 
         if(!System.getenv("USERNAME").equals("")) {
             // SASL_SSL environment is used
