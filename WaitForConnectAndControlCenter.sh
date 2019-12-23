@@ -20,7 +20,7 @@ done
 if [ "${IGNORE_CONNECT_STARTUP}" == "FALSE" ]
 then
   # Verify Kafka Connect has started within MAX_WAIT seconds
-  MAX_WAIT=120
+  MAX_WAIT=240
   CUR_WAIT=0
   echo -e "\033[0;33mWaiting up to $MAX_WAIT seconds for Kafka Connect to start\033[0m"
   docker container logs connect > /tmp/out.txt 2>&1
