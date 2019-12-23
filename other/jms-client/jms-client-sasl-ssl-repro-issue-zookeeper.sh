@@ -48,33 +48,20 @@ docker exec -e BOOTSTRAP_SERVERS="broker:9091" -e ZOOKEEPER_CONNECT="zookeeper:2
 echo -e "\033[0;33mRemoving network partition between jms-client and zookeeper\033[0m"
 remove_partition jms-client zookeeper
 
-# [2019-12-21 11:39:07,442] INFO Opening socket connection to server zookeeper.sasl-ssl_default/192.168.160.2:2181. Will not attempt to authenticate using SASL (unknown error) (org.apache.zookeeper.ClientCnxn)
-# [2019-12-21 11:39:10,640] WARN Session 0x0 for server null, unexpected error, closing socket connection and attempting reconnect (org.apache.zookeeper.ClientCnxn)
-# java.net.NoRouteToHostException: No route to host
-#         at sun.nio.ch.SocketChannelImpl.checkConnect(Native Method)
-#         at sun.nio.ch.SocketChannelImpl.finishConnect(SocketChannelImpl.java:717)
-#         at org.apache.zookeeper.ClientCnxnSocketNIO.doTransport(ClientCnxnSocketNIO.java:361)
-#         at org.apache.zookeeper.ClientCnxn$SendThread.run(ClientCnxn.java:1141)
-# [2019-12-21 11:39:11,715] INFO Opening socket connection to server zookeeper.sasl-ssl_default/192.168.160.2:2181. Will not attempt to authenticate using SASL (unknown error) (org.apache.zookeeper.ClientCnxn)
-# [2019-12-21 11:39:13,720] WARN Session 0x0 for server null, unexpected error, closing socket connection and attempting reconnect (org.apache.zookeeper.ClientCnxn)
-# java.net.NoRouteToHostException: No route to host
-#         at sun.nio.ch.SocketChannelImpl.checkConnect(Native Method)
-#         at sun.nio.ch.SocketChannelImpl.finishConnect(SocketChannelImpl.java:717)
-#         at org.apache.zookeeper.ClientCnxnSocketNIO.doTransport(ClientCnxnSocketNIO.java:361)
-#         at org.apache.zookeeper.ClientCnxn$SendThread.run(ClientCnxn.java:1141)
-# [2019-12-21 11:39:14,438] INFO Terminate ZkClient event thread. (org.I0Itec.zkclient.ZkEventThread)
-# [2019-12-21 11:39:14,822] INFO Opening socket connection to server zookeeper.sasl-ssl_default/192.168.160.2:2181. Will not attempt to authenticate using SASL (unknown error) (org.apache.zookeeper.ClientCnxn)
-# [2019-12-21 11:39:16,948] INFO Session: 0x0 closed (org.apache.zookeeper.ZooKeeper)
-# Exception in thread "main" org.I0Itec.zkclient.exception.ZkTimeoutException: Unable to connect to zookeeper server 'zookeeper:2181' with timeout of 7000 ms
+# [2019-12-23 13:08:13,379] INFO Opening socket connection to server zookeeper.sasl-ssl_default/172.24.0.2:2181. Will not attempt to authenticate using SASL (unknown error) (org.apache.zookeeper.ClientCnxn)
+# [2019-12-23 13:08:20,375] INFO Terminate ZkClient event thread. (org.I0Itec.zkclient.ZkEventThread)
+# [2019-12-23 13:08:43,375] WARN Client session timed out, have not heard from server in 30001ms for sessionid 0x0 (org.apache.zookeeper.ClientCnxn)
+# [2019-12-23 13:08:43,482] INFO Session: 0x0 closed (org.apache.zookeeper.ZooKeeper)
+# Exception in thread "main" org.I0Itec.zkclient.exception.ZkTimeoutException: Unable to connect to zookeeper server 'zookeeper:2181' with timeout of 7000 ms[2019-12-23 13:08:43,486] INFO EventThread shut down for session: 0x0 (org.apache.zookeeper.ClientCnxn)
+
 #         at org.I0Itec.zkclient.ZkClient.connect(ZkClient.java:1233)
 #         at org.I0Itec.zkclient.ZkClient.<init>(ZkClient.java:157)
 #         at org.I0Itec.zkclient.ZkClient.<init>(ZkClient.java:131)
 #         at kafka.utils.ZkUtils$.createZkClientAndConnection(ZkUtils.scala:95)
 #         at kafka.utils.ZkUtils$.apply(ZkUtils.scala:77)
-# [2019-12-21 11:39:16,951] INFO EventThread shut down for session: 0x0 (org.apache.zookeeper.ClientCnxn)
 #         at kafka.utils.ZkUtils.apply(ZkUtils.scala)
 #         at io.confluent.kafka.jms.ZkTrialPeriod.startOrVerify(ZkTrialPeriod.java:38)
 #         at io.confluent.kafka.jms.DefaultLicenseValidator.validateTrialPeriod(DefaultLicenseValidator.java:63)
 #         at io.confluent.kafka.jms.KafkaConnectionFactory.validateLicense(KafkaConnectionFactory.java:81)
 #         at io.confluent.kafka.jms.KafkaConnectionFactory.createConnection(KafkaConnectionFactory.java:109)
-#         at com.github.vdesabou.App.main(App.java:39)
+#         at com.github.vdesabou.App.main(App.java:47)
