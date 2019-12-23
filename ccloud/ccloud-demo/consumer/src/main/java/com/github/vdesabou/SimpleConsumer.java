@@ -30,21 +30,23 @@ public class SimpleConsumer {
         props.put(SaslConfigs.SASL_MECHANISM, "PLAIN");
         props.put(SaslConfigs.SASL_JAAS_CONFIG, "org.apache.kafka.common.security.plain.PlainLoginModule required username=\"" + System.getenv("CLOUD_KEY") + "\" password=\"" + System.getenv("CLOUD_SECRET") + "\";");
         props.put(CommonClientConfigs.SECURITY_PROTOCOL_CONFIG, "SASL_SSL");
-        
+
         props.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, "org.apache.kafka.common.serialization.StringDeserializer");
         props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, KafkaAvroDeserializer.class);
-        props.put(KafkaAvroDeserializerConfig.SPECIFIC_AVRO_READER_CONFIG, true); 
+        props.put(KafkaAvroDeserializerConfig.SPECIFIC_AVRO_READER_CONFIG, true);
 
 
         // Schema Registry specific settings
         props.put("schema.registry.url", System.getenv("SCHEMA_REGISTRY_URL"));
-        if(!System.getenv("BASIC_AUTH_CREDENTIALS_SOURCE").equals("")) {
+        if(System.getenv("BASIC_AUTH_CREDENTIALS_SOURCE") != null &&
+            !System.getenv("BASIC_AUTH_CREDENTIALS_SOURCE").equals("")) {
             props.put("basic.auth.credentials.source", System.getenv("BASIC_AUTH_CREDENTIALS_SOURCE"));
         }
-        if(!System.getenv("SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO").equals("")) {
+        if(System.getenv("SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO") != null &&
+            !System.getenv("SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO").equals("")) {
             props.put("schema.registry.basic.auth.user.info", System.getenv("SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO"));
-        }       
-        
+        }
+
          // interceptor for C3
          // https://docs.confluent.io/current/control-center/installation/clients.html#java-producers-and-consumers
         props.put(ConsumerConfig.INTERCEPTOR_CLASSES_CONFIG,"io.confluent.monitoring.clients.interceptor.MonitoringConsumerInterceptor");
