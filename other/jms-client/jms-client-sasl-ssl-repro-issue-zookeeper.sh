@@ -14,17 +14,24 @@ container_to_ip() {
 block_host() {
     name=$1
     shift 1
+
+    # https://serverfault.com/a/906499
     docker exec --privileged -t $name bash -c "tc qdisc add dev $interface root handle 1: prio" 2>&1
-    docker exec --privileged -t $name bash -c "tc qdisc add dev $interface parent 1:1 handle 2: netem loss 100%" 2>&1
+
     for ip in $@; do
-        docker exec --privileged -t $name bash -c "tc filter add dev $interface parent 1:0 protocol ip prio 1 u32 match ip dst $ip flowid 2:1" 2>&1
+        docker exec --privileged -t $name bash -c "tc filter add dev $interface protocol ip parent 1: prio 1 u32 match ip dst $ip flowid 1:1" 2>&1
     done
+
+    docker exec --privileged -t $name bash -c "tc filter add dev $interface protocol all parent 1: prio 2 u32 match ip dst 0.0.0.0/0 flowid 1:2" 2>&1
+    docker exec --privileged -t $name bash -c "tc filter add dev $interface protocol all parent 1: prio 2 u32 match ip protocol 1 0xff flowid 1:2" 2>&1
+    docker exec --privileged -t $name bash -c "tc qdisc add dev $interface parent 1:1 handle 10: netem loss 100%" 2>&1
+    docker exec --privileged -t $name bash -c "tc qdisc add dev $interface parent 1:2 handle 20: sfq" 2>&1
 }
 
 remove_partition() {
-	for name in $@; do
-		docker exec --privileged -t $name bash -c "tc qdisc del dev $interface root" 2>&1 > /dev/null
-	done
+    for name in $@; do
+        docker exec --privileged -t $name bash -c "tc qdisc del dev eth0 root" 2>&1 > /dev/null
+    done
 }
 
 ${DIR}/../../environment/sasl-ssl/start.sh "${PWD}/docker-compose.sasl-ssl.yml" -a -b
