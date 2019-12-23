@@ -17,6 +17,7 @@
     - [REST Proxy](#rest-proxy)
     - [Control Center](#control-center)
   - [Monitoring](#monitoring)
+    - [Metrics API](#metrics-api)
     - [Control Center](#control-center-1)
     - [Grafana](#grafana)
       - [Producer Dashboard](#producer-dashboard)
@@ -721,6 +722,10 @@ control-center:
 ```
 
 ## Monitoring
+
+### Metrics API
+
+See Confluent [docs](https://docs.confluent.io/current/cloud/metrics-api.html)
 
 ### Control Center
 
