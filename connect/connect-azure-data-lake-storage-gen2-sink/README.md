@@ -17,6 +17,12 @@ Simply run:
 $ ./azure-data-lake-storage-gen2.sh
 ```
 
+Or using 2 way SSL authentication:
+
+```bash
+$ ./azure-data-lake-storage-gen2-2way-ssl.sh
+```
+
 ## Details of what the script is doing
 
 Logging to Azure using browser
@@ -71,6 +77,8 @@ Assigning Storage Blob Data Owner role to Service Principal $SERVICE_PRINCIPAL_I
 $ az role assignment create --assignee $SERVICE_PRINCIPAL_ID --role "Storage Blob Data Owner"
 ```
 
+### With no security in place (PLAINTEXT):
+
 The connector is created with:
 
 ```bash
@@ -118,6 +126,72 @@ Results:
 {"f1":"value1"}
 {"f1":"value2"}
 {"f1":"value3"}
+```
+
+### With SSL authentication:
+
+The connector is created with:
+
+```bash
+$ docker exec -e AZURE_DATALAKE_CLIENT_ID="$AZURE_DATALAKE_CLIENT_ID" -e AZURE_DATALAKE_ACCOUNT_NAME="$AZURE_DATALAKE_ACCOUNT_NAME" -e AZURE_DATALAKE_TOKEN_ENDPOINT="$AZURE_DATALAKE_TOKEN_ENDPOINT" connect \
+     curl -X PUT \
+     --cert /etc/kafka/secrets/connect.certificate.pem --key /etc/kafka/secrets/connect.key --tlsv1.2 --cacert /etc/kafka/secrets/snakeoil-ca-1.crt \
+     -H "Content-Type: application/json" \
+     --data '{
+               "connector.class": "io.confluent.connect.azure.datalake.gen2.AzureDataLakeGen2SinkConnector",
+                    "tasks.max": "1",
+                    "topics": "datalake_topic",
+                    "flush.size": "3",
+                    "azure.datalake.gen2.client.id": "'"$AZURE_DATALAKE_CLIENT_ID"'",
+                    "azure.datalake.gen2.client.key": "mypassword",
+                    "azure.datalake.gen2.account.name": "'"$AZURE_DATALAKE_ACCOUNT_NAME"'",
+                    "azure.datalake.gen2.token.endpoint": "'"$AZURE_DATALAKE_TOKEN_ENDPOINT"'",
+                    "format.class": "io.confluent.connect.azure.storage.format.avro.AvroFormat",
+                    "confluent.license": "",
+                    "confluent.topic.bootstrap.servers": "broker:11091",
+                    "confluent.topic.replication.factor": "1",
+                    "confluent.topic.ssl.keystore.location" : "/etc/kafka/secrets/kafka.connect.keystore.jks",
+                    "confluent.topic.ssl.keystore.password" : "confluent",
+                    "confluent.topic.ssl.key.password" : "confluent",
+                    "confluent.topic.ssl.truststore.location" : "/etc/kafka/secrets/kafka.connect.truststore.jks",
+                    "confluent.topic.ssl.truststore.password" : "confluent",
+                    "confluent.topic.ssl.keystore.type" : "JKS",
+                    "confluent.topic.ssl.truststore.type" : "JKS",
+                    "confluent.topic.security.protocol" : "SSL"
+          }' \
+     https://localhost:8083/connectors/azure-datalake-gen2-sink/config | jq .
+```
+
+Notes:
+
+Broker config has `KAFKA_SSL_PRINCIPAL_MAPPING_RULES: RULE:^CN=(.*?),OU=TEST.*$$/$$1/,DEFAULT`. This is because we don't want to set user `CN=connect,OU=TEST,O=CONFLUENT,L=PaloAlto,ST=Ca,C=US`as super user. Documentation for `ssl.principal.mapping.rules`is [here](https://docs.confluent.io/current/kafka/authorization.html#user-names)
+
+Script `certs-create.sh` has:
+
+```
+keytool -noprompt -destkeystore kafka.$i.truststore.jks -importkeystore -srckeystore $JAVA_HOME/jre/lib/security/cacerts -srcstorepass changeit -deststorepass confluent
+```
+
+This is because we set for `connect`service:
+
+```yaml
+KAFKA_OPTS: -Djavax.net.ssl.trustStore=/etc/kafka/secrets/kafka.connect.truststore.jks
+            -Djavax.net.ssl.trustStorePassword=confluent
+            -Djavax.net.ssl.keyStore=/etc/kafka/secrets/kafka.connect.keystore.jks
+            -Djavax.net.ssl.keyStorePassword=confluent
+```
+
+It applies to every java component ran on that JVM, and for instance on Connect every connector will then use the given truststore
+
+One example here is that if you use an AWS connector (S3, Kinesis etc) or GCP connector (GCS, SQS, etc..) and do not have AWS cert chain in the given truststore, the connector won't work and raise exception.
+The workaround is to import in our truststore the regular JAVA certificates.
+
+Results:
+
+```json
+{"f1":"This is a message sent with SSL authentication 1"}
+{"f1":"This is a message sent with SSL authentication 2"}
+{"f1":"This is a message sent with SSL authentication 3"}
 ```
 
 N.B: Control Center is reachable at [http://127.0.0.1:9021](http://127.0.0.1:9021])
