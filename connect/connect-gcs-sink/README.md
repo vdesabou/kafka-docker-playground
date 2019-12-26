@@ -187,7 +187,7 @@ KAFKA_OPTS: -Djavax.net.ssl.trustStore=/etc/kafka/secrets/kafka.connect.truststo
 
 It applies to every java component ran on that JVM, and for instance on Connect every connector will then use the given truststore
 
-One example here is that if you use an AWS connector (S3, Kinesis etc) or GCP connecot (GCS, SQS, etc..) and do not have AWS cert chain in the given truststore, the connector won't work and raise exception.
+One example here is that if you use an AWS connector (S3, Kinesis etc) or GCP connector (GCS, SQS, etc..) and do not have AWS cert chain in the given truststore, the connector won't work and raise exception.
 The workaround is to import in our truststore the regular JAVA certificates.
 
 
