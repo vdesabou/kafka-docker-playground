@@ -232,6 +232,8 @@ services:
 
   stream:
     build: streams/
+    hostname: stream
+    container_name: stream
     environment:
       BOOTSTRAP_SERVERS: $BOOTSTRAP_SERVERS
       SCHEMA_REGISTRY_URL: $SCHEMA_REGISTRY_URL
@@ -242,6 +244,8 @@ services:
 
   producer:
     build: producer/
+    hostname: producer
+    container_name: producer
     environment:
       BOOTSTRAP_SERVERS: $BOOTSTRAP_SERVERS
       SCHEMA_REGISTRY_URL: $SCHEMA_REGISTRY_URL
@@ -258,6 +262,8 @@ services:
 
   consumer:
     build: consumer/
+    hostname: consumer
+    container_name: consumer
     environment:
       BOOTSTRAP_SERVERS: $BOOTSTRAP_SERVERS
       SCHEMA_REGISTRY_URL: $SCHEMA_REGISTRY_URL
@@ -271,6 +277,11 @@ services:
     depends_on:
       - jmx-exporter
       - stream
+
+  producer-acl:
+    build: producer-acl/
+    hostname: producer-acl
+    container_name: producer-acl
 
   jmx-exporter:
     build: ./jmx-exporter
