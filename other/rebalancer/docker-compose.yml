@@ -21,7 +21,7 @@ services:
       KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://broker1:9092
       KAFKA_METRIC_REPORTERS: io.confluent.metrics.reporter.ConfluentMetricsReporter
       CONFLUENT_METRICS_REPORTER_BOOTSTRAP_SERVERS: broker1:9092
-      CONFLUENT_METRICS_REPORTER_ZOOKEEPER_CONNECT: zookeeper:2181
+
 
   broker2:
     image: confluentinc/cp-server:5.3.1
@@ -36,7 +36,7 @@ services:
       KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://broker2:9192
       KAFKA_METRIC_REPORTERS: io.confluent.metrics.reporter.ConfluentMetricsReporter
       CONFLUENT_METRICS_REPORTER_BOOTSTRAP_SERVERS: broker2:9192
-      CONFLUENT_METRICS_REPORTER_ZOOKEEPER_CONNECT: zookeeper:2181
+
 
   broker3:
     image: confluentinc/cp-server:5.3.1
@@ -51,7 +51,7 @@ services:
       KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://broker3:9292
       KAFKA_METRIC_REPORTERS: io.confluent.metrics.reporter.ConfluentMetricsReporter
       CONFLUENT_METRICS_REPORTER_BOOTSTRAP_SERVERS: broker3:9292
-      CONFLUENT_METRICS_REPORTER_ZOOKEEPER_CONNECT: zookeeper:2181
+
 
   broker4:
     image: confluentinc/cp-server:5.3.1
@@ -66,7 +66,7 @@ services:
       KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://broker4:10092
       KAFKA_METRIC_REPORTERS: io.confluent.metrics.reporter.ConfluentMetricsReporter
       CONFLUENT_METRICS_REPORTER_BOOTSTRAP_SERVERS: broker4:10092
-      CONFLUENT_METRICS_REPORTER_ZOOKEEPER_CONNECT: zookeeper:2181
+
 
   broker5:
     image: confluentinc/cp-server:5.3.1
@@ -81,7 +81,7 @@ services:
       KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://broker5:11092
       KAFKA_METRIC_REPORTERS: io.confluent.metrics.reporter.ConfluentMetricsReporter
       CONFLUENT_METRICS_REPORTER_BOOTSTRAP_SERVERS: broker5:11092
-      CONFLUENT_METRICS_REPORTER_ZOOKEEPER_CONNECT: zookeeper:2181
+
 
   broker6:
     image: confluentinc/cp-server:5.3.1
@@ -96,7 +96,7 @@ services:
       KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://broker6:12092
       KAFKA_METRIC_REPORTERS: io.confluent.metrics.reporter.ConfluentMetricsReporter
       CONFLUENT_METRICS_REPORTER_BOOTSTRAP_SERVERS: broker6:12092
-      CONFLUENT_METRICS_REPORTER_ZOOKEEPER_CONNECT: zookeeper:2181
+
 
   control-center:
     image: confluentinc/cp-enterprise-control-center:5.3.1
@@ -119,4 +119,4 @@ services:
       CONTROL_CENTER_REPLICATION_FACTOR: 1
       CONTROL_CENTER_INTERNAL_TOPICS_PARTITIONS: 1
       CONTROL_CENTER_MONITORING_INTERCEPTOR_TOPIC_PARTITIONS: 1
-      CONFLUENT_METRICS_TOPIC_REPLICATION: 
+      CONFLUENT_METRICS_TOPIC_REPLICATION:
