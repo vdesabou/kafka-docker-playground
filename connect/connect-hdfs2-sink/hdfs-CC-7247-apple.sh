@@ -26,7 +26,7 @@ docker exec connect \
                "hadoop.home":"/usr/local/hadoop-2.7.1/share/hadoop/common/",
                "logs.dir":"/tmp",
                "topics.dir":"${topic}/${2}/some/path/${1}pie",
-               "topic.regex.capture.group": "[a-zA-Z]*",
+               "topic.capture.groups.regex": "^([a-zA-Z]*)[-._]([a-zA-Z]*)$",
                "key.converter":"org.apache.kafka.connect.storage.StringConverter",
                "value.converter":"io.confluent.connect.avro.AvroConverter",
                "value.converter.schema.registry.url":"http://schema-registry:8081",
@@ -43,5 +43,5 @@ sleep 10
 echo -e "\033[0;33mListing content of /apple.pie/pie/some/path/applepie/ in HDFS\033[0m"
 docker exec hadoop bash -c "/usr/local/hadoop/bin/hdfs dfs -ls /apple.pie/pie/some/path/applepie/"
 
-# drwxrwxrwx   - root supergroup          0 2019-12-16 07:21 /apple.pie/pie/some/path/applepie/+tmp
-# drwxr-xr-x   - root supergroup          0 2019-12-16 07:21 /apple.pie/pie/some/path/applepie/apple.pie
+# drwxrwxrwx   - root supergroup          0 2019-12-27 10:27 /apple.pie/pie/some/path/applepie/+tmp
+# drwxr-xr-x   - root supergroup          0 2019-12-27 10:27 /apple.pie/pie/some/path/applepie/apple.pie
