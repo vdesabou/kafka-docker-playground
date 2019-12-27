@@ -11,7 +11,6 @@ fi
 
 source ${DIR}/../../ccloud/ccloud-demo/Utils.sh
 
-verify_installed "mvn"
 verify_installed "ccloud"
 check_ccloud_version 0.192.0 || exit 1
 verify_installed "confluent"
@@ -56,11 +55,12 @@ sed -e "s|:BOOTSTRAP_SERVERS:|$BOOTSTRAP_SERVERS|g" \
     -e "s|:CLOUD_SECRET:|$CLOUD_SECRET|g" \
     ${DIR}/kafka-lag-exporter/application.template.conf > ${DIR}/kafka-lag-exporter/application.conf
 
+
 # kafka-topics --bootstrap-server `grep "^\s*bootstrap.server" ${CONFIG_FILE} | tail -1` --command-config ${CONFIG_FILE} --topic customer-avro --create --replication-factor 3 --partitions 6
 
-set +e
-create_topic customer-avro
-set -e
+# set +e
+# create_topic customer-avro
+# set -e
 
 docker-compose down -v
 docker-compose up -d
@@ -236,7 +236,6 @@ cat $CLIENT_CONFIG
 # ACLs are configured
 ##################################################
 
-POM=./producer-acl/pom.xml
 TOPIC_ACL="demo-acl-topic"
 set +e
 create_topic $TOPIC_ACL
@@ -246,13 +245,9 @@ echo -e "\033[0;33mccloud kafka acl list --service-account-id $SERVICE_ACCOUNT_I
 ccloud kafka acl list --service-account-id $SERVICE_ACCOUNT_ID
 
 echo -e "\n# Run the Java producer to $TOPIC_ACL: before ACLs"
-mvn -q -f $POM clean package
-if [[ $? != 0 ]]; then
-  echo -e "\033[0;33mERROR: There seems to be a build failure error compiling the client code? Please troubleshoot\033[0m"
-  exit 1
-fi
 LOG1="/tmp/log.1"
-java -jar ./producer-acl/target/producer-acl-1.0.0-jar-with-dependencies.jar $CLIENT_CONFIG $TOPIC_ACL > $LOG1 2>&1
+docker cp $CLIENT_CONFIG producer-acl:/tmp/
+docker exec producer-acl bash -c "java -jar producer-acl-1.0.0-jar-with-dependencies.jar $CLIENT_CONFIG $TOPIC_ACL" > $LOG1 2>&1
 echo -e "\033[0;33m# Check logs for 'org.apache.kafka.common.errors.TopicAuthorizationException'\033[0m"
 OUTPUT=$(grep "org.apache.kafka.common.errors.TopicAuthorizationException" $LOG1)
 if [[ ! -z $OUTPUT ]]; then
@@ -271,7 +266,7 @@ sleep 20
 
 echo -e "\n# Run the Java producer to $TOPIC_ACL: after ACLs"
 LOG2="/tmp/log.2"
-java -jar ./producer-acl/target/producer-acl-1.0.0-jar-with-dependencies.jar $CLIENT_CONFIG $TOPIC_ACL > $LOG2 2>&1
+docker exec producer-acl bash -c "java -jar producer-acl-1.0.0-jar-with-dependencies.jar $CLIENT_CONFIG $TOPIC_ACL" > $LOG2 2>&1
 echo -e "\033[0;33m# Check logs for '10 messages were produced to topic'\033[0m"
 OUTPUT=$(grep "10 messages were produced to topic" $LOG2)
 if [[ ! -z $OUTPUT ]]; then
