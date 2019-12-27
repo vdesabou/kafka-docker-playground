@@ -123,11 +123,11 @@ echo -e "\033[0;33mVerifying topic mysql-application\033[0m"
 if [ "${SR_TYPE}" == "SCHEMA_REGISTRY_DOCKER" ]
 then
      echo -e "\033[0;33mINFO: Using Docker Schema Registry\033[0m"
-     # using https://github.com/confluentinc/examples/blob/5.3.1-post/clients/cloud/confluent-cli/confluent-cli-example.sh
+     # using https://github.com/confluentinc/examples/blob/5.3.2-post/clients/cloud/confluent-cli/confluent-cli-example.sh
      confluent local consume mysql-application -- --cloud --value-format avro --property schema.registry.url=http://127.0.0.1:8085 --from-beginning --max-messages 2
 else
      echo -e "\033[0;33mINFO: Using Confluent Cloud Schema Registry\033[0m"
-     # using https://github.com/confluentinc/examples/tree/5.3.1-post/clients/cloud/confluent-cli#example-2-avro-and-confluent-cloud-schema-registry
+     # using https://github.com/confluentinc/examples/tree/5.3.2-post/clients/cloud/confluent-cli#example-2-avro-and-confluent-cloud-schema-registry
      confluent local consume mysql-application -- --cloud --value-format avro --property schema.registry.url=$SCHEMA_REGISTRY_URL --property basic.auth.credentials.source=USER_INFO --property schema.registry.basic.auth.user.info="$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO" --from-beginning --max-messages 2
 fi
 
