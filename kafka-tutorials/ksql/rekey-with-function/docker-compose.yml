@@ -11,7 +11,7 @@ services:
       - extensions:/home/gradle/extensions
 
   zookeeper:
-    image: confluentinc/cp-zookeeper:5.3.1
+    image: confluentinc/cp-zookeeper:5.3.2
     hostname: zookeeper
     container_name: zookeeper
     ports:
@@ -21,7 +21,7 @@ services:
       ZOOKEEPER_TICK_TIME: 2000
 
   broker:
-    image: confluentinc/cp-server:5.3.1
+    image: confluentinc/cp-server:5.3.2
     hostname: broker
     container_name: broker
     depends_on:
@@ -43,7 +43,7 @@ services:
       CONFLUENT_SUPPORT_CUSTOMER_ID: 'anonymous'
 
   schema-registry:
-    image: confluentinc/cp-schema-registry:5.3.1
+    image: confluentinc/cp-schema-registry:5.3.2
     hostname: schema-registry
     container_name: schema-registry
     depends_on:
@@ -56,7 +56,7 @@ services:
       SCHEMA_REGISTRY_KAFKASTORE_CONNECTION_URL: 'zookeeper:2181'
 
   ksql-server:
-    image: confluentinc/cp-ksql-server:5.3.1
+    image: confluentinc/cp-ksql-server:5.3.2
     hostname: ksql-server
     container_name: ksql-server
     depends_on:
@@ -80,7 +80,7 @@ services:
       KSQL_CONSUMER_INTERCEPTOR_CLASSES: "io.confluent.monitoring.clients.interceptor.MonitoringConsumerInterceptor"
 
   ksql-cli:
-    image: confluentinc/cp-ksql-cli:5.3.1
+    image: confluentinc/cp-ksql-cli:5.3.2
     container_name: ksql-cli
     depends_on:
       - broker

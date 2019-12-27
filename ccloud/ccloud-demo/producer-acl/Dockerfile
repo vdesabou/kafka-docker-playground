@@ -3,7 +3,7 @@ COPY pom.xml pom.xml
 COPY src src
 RUN ["mvn", "install"]
 
-FROM confluentinc/cp-base:5.3.1
+FROM confluentinc/cp-base:5.3.2
 COPY --from=mavenBuild ./target/*.jar ./
 ENV JAVA_OPTS ""
 CMD sleep infinity
