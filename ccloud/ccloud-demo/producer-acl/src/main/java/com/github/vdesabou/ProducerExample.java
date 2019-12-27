@@ -21,22 +21,6 @@ import java.util.Collections;
 
 public class ProducerExample {
 
-  // Create topic in Confluent Cloud
-  public static void createTopic(final String topic,
-                          final int partitions,
-                          final int replication,
-                          final Properties cloudConfig) {
-      final NewTopic newTopic = new NewTopic(topic, partitions, (short) replication);
-      try (final AdminClient adminClient = AdminClient.create(cloudConfig)) {
-          adminClient.createTopics(Collections.singletonList(newTopic)).all().get();
-      } catch (final InterruptedException | ExecutionException e) {
-          // Ignore if TopicExistsException, which may be valid if topic exists
-          if (!(e.getCause() instanceof TopicExistsException)) {
-              throw new RuntimeException(e);
-          }
-      }
-  }
-
   public static void main(final String[] args) throws IOException {
     if (args.length != 2) {
       System.out.println("Please provide command line arguments: configPath topic");
@@ -51,10 +35,7 @@ public class ProducerExample {
     //   sasl.jaas.config=org.apache.kafka.common.security.plain.PlainLoginModule required username="<CLUSTER_API_KEY>" password="<CLUSTER_API_SECRET>";
     //   security.protocol=SASL_SSL
     final Properties props = loadConfig(args[0]);
-
-    // Create topic if needed
     final String topic = args[1];
-    createTopic(topic, 1, 3, props);
 
     // Add additional properties.
     props.put(ProducerConfig.ACKS_CONFIG, "all");

@@ -45,7 +45,6 @@ If you choose to run it against your Confluent Cloud cluster, be aware that it:
 * Local install of the new [Confluent Cloud CLI](https://docs.confluent.io/current/cloud/cli/install.html#ccloud-install-cli) v0.192.0 or above
 * [An initialized Confluent Cloud cluster used for development only](https://confluent.cloud)
 * [Confluent CLI](https://docs.confluent.io/current/cli/installing.html) installed on your machine, version `v0.128.0` or higher (note: as of CP 5.3, the Confluent CLI is a separate [download](https://docs.confluent.io/current/cli/installing.html)
-* `mvn` installed on your host
 
 ## How to run
 
