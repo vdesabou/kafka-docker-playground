@@ -7,6 +7,10 @@ services:
     container_name: zookeeper1
     ports:
       - "2220:22"
+      - "2181:2181"
+      - "2888:2888"
+      - "3888:3888"
+
 
   broker1:
     build: .
@@ -14,6 +18,7 @@ services:
     container_name: broker1
     ports:
       - "2230:22"
+      - "9092:9092"
 
   broker2:
     build: .
@@ -21,6 +26,7 @@ services:
     container_name: broker2
     ports:
       - "2231:22"
+      - "9192:9092"
 
   schema-registry:
     build: .
@@ -28,6 +34,7 @@ services:
     container_name: schema-registry
     ports:
       - "2240:22"
+      - "8081:8081"
 
   connect:
     build: .
@@ -35,6 +42,7 @@ services:
     container_name: connect
     ports:
       - "2250:22"
+      - "8083:8083"
 
   rest-proxy:
     build: .
@@ -42,6 +50,7 @@ services:
     container_name: rest-proxy
     ports:
       - "2260:22"
+      - "8082:8082"
 
   ksql-server:
     build: .
@@ -49,6 +58,7 @@ services:
     container_name: ksql-server
     ports:
       - "2270:22"
+      - "8088:8088"
 
   control-center:
     build: .
@@ -56,3 +66,4 @@ services:
     container_name: control-center
     ports:
       - "2280:22"
+      - "9021:9021"
