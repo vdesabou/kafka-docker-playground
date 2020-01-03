@@ -24,6 +24,13 @@ services:
     ports:
       - "9192:9092"
 
+  broker3:
+    image: cp-ansible-ubuntu:latest
+    hostname: broker3
+    container_name: broker3
+    ports:
+      - "9292:9092"
+
   schema-registry:
     image: cp-ansible-ubuntu:latest
     hostname: schema-registry
