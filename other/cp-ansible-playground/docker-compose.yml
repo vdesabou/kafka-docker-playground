@@ -2,68 +2,59 @@
 version: '3.5'
 services:
   zookeeper1:
-    build: .
+    image: cp-ansible-ubuntu:latest
     hostname: zookeeper1
     container_name: zookeeper1
     ports:
-      - "2220:22"
       - "2181:2181"
       - "2888:2888"
       - "3888:3888"
 
-
   broker1:
-    build: .
+    image: cp-ansible-ubuntu:latest
     hostname: broker1
     container_name: broker1
     ports:
-      - "2230:22"
       - "9092:9092"
 
   broker2:
-    build: .
+    image: cp-ansible-ubuntu:latest
     hostname: broker2
     container_name: broker2
     ports:
-      - "2231:22"
       - "9192:9092"
 
   schema-registry:
-    build: .
+    image: cp-ansible-ubuntu:latest
     hostname: schema-registry
     container_name: schema-registry
     ports:
-      - "2240:22"
       - "8081:8081"
 
   connect:
-    build: .
+    image: cp-ansible-ubuntu:latest
     hostname: connect
     container_name: connect
     ports:
-      - "2250:22"
       - "8083:8083"
 
   rest-proxy:
-    build: .
+    image: cp-ansible-ubuntu:latest
     hostname: rest-proxy
     container_name: rest-proxy
     ports:
-      - "2260:22"
       - "8082:8082"
 
   ksql-server:
-    build: .
+    image: cp-ansible-ubuntu:latest
     hostname: ksql-server
     container_name: ksql-server
     ports:
-      - "2270:22"
       - "8088:8088"
 
   control-center:
-    build: .
+    image: cp-ansible-ubuntu:latest
     hostname: control-center
     container_name: control-center
     ports:
-      - "2280:22"
       - "9021:9021"
