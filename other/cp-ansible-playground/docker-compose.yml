@@ -1,0 +1,58 @@
+---
+version: '3.5'
+services:
+  zookeeper1:
+    build: .
+    hostname: zookeeper1
+    container_name: zookeeper1
+    ports:
+      - "2220:22"
+
+  broker1:
+    build: .
+    hostname: broker1
+    container_name: broker1
+    ports:
+      - "2230:22"
+
+  broker2:
+    build: .
+    hostname: broker2
+    container_name: broker2
+    ports:
+      - "2231:22"
+
+  schema-registry:
+    build: .
+    hostname: schema-registry
+    container_name: schema-registry
+    ports:
+      - "2240:22"
+
+  connect:
+    build: .
+    hostname: connect
+    container_name: connect
+    ports:
+      - "2250:22"
+
+  rest-proxy:
+    build: .
+    hostname: rest-proxy
+    container_name: rest-proxy
+    ports:
+      - "2260:22"
+
+  ksql-server:
+    build: .
+    hostname: ksql-server
+    container_name: ksql-server
+    ports:
+      - "2270:22"
+
+  control-center:
+    build: .
+    hostname: control-center
+    container_name: control-center
+    ports:
+      - "2280:22"
