@@ -24,6 +24,4 @@ $ ./start.sh
 
 It takes about 50 minutes to run.
 
-## Credits
-
-See [article](https://medium.com/@dcarrascal75/a-simple-ansible-playground-using-docker-eeb458cbba32)
+N.B: Control Center is reachable at [http://127.0.0.1:9021](http://127.0.0.1:9021])
