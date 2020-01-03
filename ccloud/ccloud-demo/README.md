@@ -771,6 +771,20 @@ Note: All Broker, Cluster and Topic triggers are not available because Confluent
 Any alerts triggered by consumer lag, cluster status, or broker status events do not populate history. Alert emails sent do not contain an email link to alerts history.
 ```
 
+To setup email alerts, here is an example:
+
+```yml
+CONTROL_CENTER_MAIL_ENABLED: "true"
+CONTROL_CENTER_MAIL_HOST_NAME: "smtp.gmail.com"
+CONTROL_CENTER_MAIL_PORT: 587
+CONTROL_CENTER_MAIL_FROM: "john.doe@gmail.com"
+CONTROL_CENTER_MAIL_USERNAME: "john.doe@gmail.com"
+CONTROL_CENTER_MAIL_PASSWORD: "xxxx"
+CONTROL_CENTER_MAIL_STARTTLS_REQUIRED: "true"
+CONTROL_CENTER_MAIL_SSL_CHECKSERVERIDENTITY: "true"
+CONTROL_CENTER_MAIL_BOUNCE_ADDRESS: "john.doe@gmail.com"
+```
+
 * Read-Only mode
 
 You can setup Control Center in read-only mode, using UI HTTP Basic Authentication, see example [here](../../other/control-center-readonly-mode/README.md).
@@ -957,7 +971,7 @@ Note: for Confluent customers, you can refer to this Knowledge Base [article](ht
 
 5. Using [kafka-lag-exporter](https://github.com/lightbend/kafka-lag-exporter) and Prometheus
 
-This is explained [above](#consumer-lag-dashboard).
+This is explained [above](#consumer-lag-dashboard). This is using Kafka's Admin API [describeConsumerGroups()](https://kafka.apache.org/24/javadoc/org/apache/kafka/clients/admin/Admin.html#describeConsumerGroups-java.util.Collection-) method.
 
 ## Restrict access to Confluent Cloud
 
