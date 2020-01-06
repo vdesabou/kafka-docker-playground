@@ -30,6 +30,6 @@ To start an environment (using plaintext):
 $ ./start.sh
 ```
 
-
+Then you can do your modifications and run `ansible-playbook -i hosts.yml all.yml`
 
 N.B: Control Center is reachable at [http://127.0.0.1:9021](http://127.0.0.1:9021])
