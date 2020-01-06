@@ -73,8 +73,8 @@ docker commit control-center vdesabou/cp-ansible-playground-control-center:5.3.1
 # docker push vdesabou/cp-ansible-playground-broker1:5.3.1
 # docker push vdesabou/cp-ansible-playground-broker2:5.3.1
 # docker push vdesabou/cp-ansible-playground-broker3:5.3.1
-# docker push vdesabou/schema-registry cp-ansible-playground-schema-registry:5.3.1
-# docker push vdesabou/ksql-server cp-ansible-playground-ksql-server:5.3.1
-# docker push vdesabou/rest-proxy cp-ansible-playground-rest-proxy:5.3.1
-# docker push vdesabou/connect cp-ansible-playground-connect:5.3.1
-# docker push vdesabou/control-center cp-ansible-playground-control-center:5.3.1
+# docker push vdesabou/cp-ansible-playground-schema-registry:5.3.1
+# docker push vdesabou/cp-ansible-playground-ksql-server:5.3.1
+# docker push vdesabou/cp-ansible-playground-rest-proxy:5.3.1
+# docker push vdesabou/cp-ansible-playground-connect:5.3.1
+# docker push vdesabou/cp-ansible-playground-control-center:5.3.1

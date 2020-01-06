@@ -27,10 +27,10 @@ cp ${DIR}/hosts.yml ${DIR}/cp-ansible/
 docker-compose down -v
 docker-compose up -d
 
-cd ${DIR}/cp-ansible
-
 echo -e "\033[0;33mINFO: Checking Ansible can connect over DOCKER.\033[0m"
+cd ${DIR}/cp-ansible
 ansible -i hosts.yml all -m ping
+cd ${DIR}
 
 # ls /etc/systemd/system/
 echo -e "\033[0;33mINFO: Restarting everything.\033[0m"
@@ -44,7 +44,9 @@ docker exec ksql-server systemctl restart confluent-ksql
 docker exec rest-proxy systemctl restart confluent-kafka-rest
 docker exec control-center systemctl restart confluent-control-center
 
-#echo -e "\033[0;33mINFO: Run the all.yml playbook.\033[0m"
+../../WaitForConnectAndControlCenter.sh -b
+
+echo -e "\033[0;33mINFO: Now you can modify the playbooks and run ansible-playbook -i hosts.yml all.yml\033[0m"
 #ansible-playbook -i hosts.yml all.yml
 
 # if it fails, try to re-run this command
