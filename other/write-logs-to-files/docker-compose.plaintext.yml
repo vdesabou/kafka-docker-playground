@@ -1,0 +1,38 @@
+---
+version: '3.5'
+services:
+
+  zookeeper:
+    volumes:
+      - ../../other/write-logs-to-files/zookeeper/log4j-rolling.properties:/opt/zookeeper/log4j-rolling.properties
+      - ../../other/write-logs-to-files/zookeeper/logs:/log/zookeeper/
+    environment:
+      KAFKA_LOG4J_OPTS: "-Dlog4j.configuration=file:/opt/zookeeper/log4j-rolling.properties"
+
+  broker:
+    volumes:
+      - ../../other/write-logs-to-files/broker/log4j-rolling.properties:/opt/broker/log4j-rolling.properties
+      - ../../other/write-logs-to-files/broker/logs:/log/broker/
+    environment:
+      KAFKA_LOG4J_OPTS: "-Dlog4j.configuration=file:/opt/broker/log4j-rolling.properties"
+
+  schema-registry:
+    volumes:
+      - ../../other/write-logs-to-files/schema-registry/log4j-rolling.properties:/opt/schema-registry/log4j-rolling.properties
+      - ../../other/write-logs-to-files/schema-registry/logs:/log/schema-registry/
+    environment:
+      SCHEMA_REGISTRY_LOG4J_OPTS: "-Dlog4j.configuration=file:/opt/schema-registry/log4j-rolling.properties"
+
+  connect:
+    volumes:
+      - ../../other/write-logs-to-files/connect/log4j-rolling.properties:/opt/connect/log4j-rolling.properties
+      - ../../other/write-logs-to-files/connect/logs:/log/connect/
+    environment:
+      KAFKA_LOG4J_OPTS: "-Dlog4j.configuration=file:/opt/connect/log4j-rolling.properties"
+
+  control-center:
+    volumes:
+      - ../../other/write-logs-to-files/control-center/log4j-rolling.properties:/opt/control-center/log4j-rolling.properties
+      - ../../other/write-logs-to-files/control-center/logs:/log/control-center/
+    environment:
+      CONTROL_CENTER_LOG4J_OPTS: "-Dlog4j.configuration=file:/opt/control-center/log4j-rolling.properties"
