@@ -186,6 +186,7 @@ This is just the excellent examples in [Kafka tutorial](https://kafka-tutorials.
 * [Control Center in "Read-Only" mode](other/control-center-readonly-mode/)
 * [Configuring Control Center with LDAP authentication](other/control-center-ldap-auth)
 * [JMS Client](other/jms-client)
+* [How to write logs to files when using docker-compose](other/write-logs-to-files)
 
 ## 📚 Useful Resources
 
