@@ -19,6 +19,9 @@ RUN pip install --upgrade pip \
  virtualenv \
  requests
 RUN ln -sf /usr/share/zoneinfo/Europe/Paris /etc/localtime
+RUN mkdir /var/run/sshd
+RUN sed -ri 's/^PermitRootLogin\s+.*/PermitRootLogin yes/' /etc/ssh/sshd_config
+RUN sed -ri 's/UsePAM yes/#UsePAM yes/g' /etc/ssh/sshd_config
 # using https://github.com/gdraheim/docker-systemctl-replacement
 RUN wget https://raw.githubusercontent.com/gdraheim/docker-systemctl-replacement/master/files/docker/systemctl.py -O /usr/bin/systemctl
 RUN chmod u+rwx /usr/bin/systemctl
