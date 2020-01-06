@@ -1,3 +1,3 @@
 #!/bin/bash
 
-docker-compose stop
+docker-compose -f docker-compose-create-images.yml down -v

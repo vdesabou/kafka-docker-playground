@@ -16,12 +16,20 @@ It using Ubuntu 18.04
 
 ## How to run
 
-Simply run:
+To create images (otherwise they get downloaded from Docker hub):
+
+```
+$ ./create-images.sh
+```
+
+N.B: It takes about 50 minutes to run.
+
+To start an environment (using plaintext):
 
 ```
 $ ./start.sh
 ```
 
-It takes about 50 minutes to run.
+
 
 N.B: Control Center is reachable at [http://127.0.0.1:9021](http://127.0.0.1:9021])

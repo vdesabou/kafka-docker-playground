@@ -2,7 +2,7 @@
 version: '3.5'
 services:
   zookeeper1:
-    image: vdesabou/cp-ansible-playground-zookeeper1:5.3.1
+    image: cp-ansible-ubuntu:latest
     hostname: zookeeper1
     container_name: zookeeper1
     ports:
@@ -11,56 +11,56 @@ services:
       - "3888:3888"
 
   broker1:
-    image: vdesabou/cp-ansible-playground-broker1:5.3.1
+    image: cp-ansible-ubuntu:latest
     hostname: broker1
     container_name: broker1
     ports:
       - "9092:9092"
 
   broker2:
-    image: vdesabou/cp-ansible-playground-broker2:5.3.1
+    image: cp-ansible-ubuntu:latest
     hostname: broker2
     container_name: broker2
     ports:
       - "9192:9092"
 
   broker3:
-    image: vdesabou/cp-ansible-playground-broker3:5.3.1
+    image: cp-ansible-ubuntu:latest
     hostname: broker3
     container_name: broker3
     ports:
       - "9292:9092"
 
   schema-registry:
-    image: vdesabou/cp-ansible-playground-schema-registry:5.3.1
+    image: cp-ansible-ubuntu:latest
     hostname: schema-registry
     container_name: schema-registry
     ports:
       - "8081:8081"
 
   connect:
-    image: vdesabou/cp-ansible-playground-connect:5.3.1
+    image: cp-ansible-ubuntu:latest
     hostname: connect
     container_name: connect
     ports:
       - "8083:8083"
 
   rest-proxy:
-    image: vdesabou/cp-ansible-playground-rest-proxy:5.3.1
+    image: cp-ansible-ubuntu:latest
     hostname: rest-proxy
     container_name: rest-proxy
     ports:
       - "8082:8082"
 
   ksql-server:
-    image: vdesabou/cp-ansible-playground-ksql-server:5.3.1
+    image: cp-ansible-ubuntu:latest
     hostname: ksql-server
     container_name: ksql-server
     ports:
       - "8088:8088"
 
   control-center:
-    image: vdesabou/cp-ansible-playground-control-center:5.3.1
+    image: cp-ansible-ubuntu:latest
     hostname: control-center
     container_name: control-center
     ports:
