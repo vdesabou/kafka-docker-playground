@@ -209,7 +209,7 @@ services:
     # Required to wait for the keytab to get generated
     restart: on-failure
     environment:
-        CONTROL_CENTER_KAFKA_EUROPE_BOOTSTRAP_SERVERS: 'broker-europe:9092'
+        CONTROL_CENTER_KAFKA_EUROPE_BOOTSTRAP_SERVERS: 'broker-europe.kerberos-demo.local:9092'
         CONTROL_CENTER_KAFKA_EUROPE_SECURITY_PROTOCOL: SASL_PLAINTEXT
         CONTROL_CENTER_KAFKA_EUROPE_SASL_JAAS_CONFIG: "com.sun.security.auth.module.Krb5LoginModule required \
             useKeyTab=true \
@@ -219,7 +219,7 @@ services:
         CONTROL_CENTER_KAFKA_EUROPE_SASL_MECHANISM: GSSAPI
         CONTROL_CENTER_KAFKA_EUROPE_SASL_KERBEROS_SERVICE_NAME: kafka
 
-        CONTROL_CENTER_KAFKA_US_BOOTSTRAP_SERVERS: 'broker-us:9092'
+        CONTROL_CENTER_KAFKA_US_BOOTSTRAP_SERVERS: 'broker-us.kerberos-demo.local:9092'
         CONTROL_CENTER_KAFKA_US_SECURITY_PROTOCOL: SASL_PLAINTEXT
         CONTROL_CENTER_KAFKA_US_SASL_JAAS_CONFIG: "com.sun.security.auth.module.Krb5LoginModule required \
             useKeyTab=true \
