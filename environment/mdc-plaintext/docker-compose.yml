@@ -1,6 +1,15 @@
 ---
 version: '3.5'
 services:
+
+  kdc:
+    hostname: kdc.kerberos-demo.local
+    build: kdc/
+    container_name: kdc
+    volumes:
+      - secret:/var/lib/secret
+      - ../../environment/mdc-kerberos/kdc/krb5.conf:/etc/kdc/krb5.conf
+
   zookeeper-europe:
     image: confluentinc/cp-zookeeper:5.3.2
     hostname: zookeeper-europe

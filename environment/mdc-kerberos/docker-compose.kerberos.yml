@@ -1,0 +1,237 @@
+---
+version: '3.5'
+services:
+
+  kdc:
+    hostname: kdc.kerberos-demo.local
+    build: kdc/
+    container_name: kdc
+    volumes:
+      - secret:/var/lib/secret
+      - ../../environment/mdc-kerberos/kdc/krb5.conf:/etc/kdc/krb5.conf
+
+  zookeeper-us:
+    restart: always
+    hostname: zookeeper-us.kerberos-demo.local
+    depends_on:
+      - kdc
+    volumes:
+      - secret:/var/lib/secret
+      - ../../environment/mdc-kerberos/kdc/krb5.conf:/etc/krb5.conf
+      - ../../environment/mdc-kerberos/zookeeper/zookeeper-us.sasl.jaas.config:/etc/kafka/zookeeper.sasl.jaas.config
+    environment:
+      KAFKA_OPTS: -Djava.security.auth.login.config=/etc/kafka/zookeeper.sasl.jaas.config
+        -Djava.security.krb5.conf=/etc/krb5.conf
+        -Dzookeeper.authProvider.1=org.apache.zookeeper.server.auth.SASLAuthenticationProvider
+        -Dsun.security.krb5.debug=true
+        -Dzookeeper.allowSaslFailedClients=false
+        -Dzookeeper.requireClientAuthScheme=sasl
+
+  zookeeper-europe:
+    restart: always
+    hostname: zookeeper-europe.kerberos-demo.local
+    depends_on:
+      - kdc
+    volumes:
+      - secret:/var/lib/secret
+      - ../../environment/mdc-kerberos/kdc/krb5.conf:/etc/krb5.conf
+      - ../../environment/mdc-kerberos/zookeeper/zookeeper-europe.sasl.jaas.config:/etc/kafka/zookeeper.sasl.jaas.config
+    environment:
+      KAFKA_OPTS: -Djava.security.auth.login.config=/etc/kafka/zookeeper.sasl.jaas.config
+        -Djava.security.krb5.conf=/etc/krb5.conf
+        -Dzookeeper.authProvider.1=org.apache.zookeeper.server.auth.SASLAuthenticationProvider
+        -Dsun.security.krb5.debug=true
+        -Dzookeeper.allowSaslFailedClients=false
+        -Dzookeeper.requireClientAuthScheme=sasl
+
+  broker-us:
+    hostname: broker-us.kerberos-demo.local
+    volumes:
+        - secret:/var/lib/secret
+        - ../../environment/mdc-kerberos/kdc/krb5.conf:/etc/krb5.conf
+        - ../../environment/mdc-kerberos/kafka/broker-us.sasl.jaas.config:/etc/kafka/broker.sasl.jaas.config
+    environment:
+      KAFKA_ZOOKEEPER_CONNECT: 'zookeeper-us.kerberos-demo.local:2181'
+      KAFKA_LISTENERS: SASL_PLAINTEXT://:9092
+      KAFKA_ADVERTISED_LISTENERS: SASL_PLAINTEXT://broker-us.kerberos-demo.local:9092
+      # Kerberos / GSSAPI Authentication mechanism
+      KAFKA_SASL_ENABLED_MECHANISMS: GSSAPI
+      KAFKA_SASL_KERBEROS_SERVICE_NAME: kafka
+      # Configure replication to require Kerberos:
+      KAFKA_SASL_MECHANISM_INTER_BROKER_PROTOCOL: GSSAPI
+      KAFKA_INTER_BROKER_LISTENER_NAME: SASL_PLAINTEXT
+      # Authorization config:
+      KAFKA_AUTHORIZER_CLASS_NAME: kafka.security.auth.SimpleAclAuthorizer
+      KAFKA_ZOOKEEPER_SET_ACL: "true"
+      KAFKA_ALLOW_EVERYONE_IF_NO_ACL_FOUND: "false"
+      KAFKA_SUPER_USERS: User:admin;User:kafka;User:connect;User:controlcenter
+      KAFKA_OPTS: "-Djava.security.auth.login.config=/etc/kafka/broker.sasl.jaas.config"
+
+  broker-europe:
+    hostname: broker-europe.kerberos-demo.local
+    volumes:
+        - secret:/var/lib/secret
+        - ../../environment/mdc-kerberos/kdc/krb5.conf:/etc/krb5.conf
+        - ../../environment/mdc-kerberos/kafka/broker-europe.sasl.jaas.config:/etc/kafka/broker.sasl.jaas.config
+    environment:
+      KAFKA_ZOOKEEPER_CONNECT: 'zookeeper-europe.kerberos-demo.local:2181'
+      KAFKA_LISTENERS: SASL_PLAINTEXT://:9092
+      KAFKA_ADVERTISED_LISTENERS: SASL_PLAINTEXT://broker-europe.kerberos-demo.local:9092
+      # Kerberos / GSSAPI Authentication mechanism
+      KAFKA_SASL_ENABLED_MECHANISMS: GSSAPI
+      KAFKA_SASL_KERBEROS_SERVICE_NAME: kafka
+      # Configure replication to require Kerberos:
+      KAFKA_SASL_MECHANISM_INTER_BROKER_PROTOCOL: GSSAPI
+      KAFKA_INTER_BROKER_LISTENER_NAME: SASL_PLAINTEXT
+      # Authorization config:
+      KAFKA_AUTHORIZER_CLASS_NAME: kafka.security.auth.SimpleAclAuthorizer
+      KAFKA_ZOOKEEPER_SET_ACL: "true"
+      KAFKA_ALLOW_EVERYONE_IF_NO_ACL_FOUND: "false"
+      KAFKA_SUPER_USERS: User:admin;User:kafka;User:connect;User:controlcenter
+      KAFKA_OPTS: "-Djava.security.auth.login.config=/etc/kafka/broker.sasl.jaas.config"
+
+  connect-us:
+    volumes:
+        - secret:/var/lib/secret
+        - ../../environment/mdc-kerberos/kdc/krb5.conf:/etc/krb5.conf
+    environment:
+      # Confluent Monitoring Interceptors for Control Center Streams Monitoring
+      # producer
+      CONNECT_CONFLUENT_MONITORING_INTERCEPTOR_SASL_KERBEROS_SERVICE_NAME: kafka
+      CONNECT_PRODUCER_INTERCEPTOR_CLASSES: "io.confluent.monitoring.clients.interceptor.MonitoringProducerInterceptor"
+      CONNECT_PRODUCER_CONFLUENT_MONITORING_INTERCEPTOR_SECURITY_PROTOCOL: SASL_PLAINTEXT
+      CONNECT_PRODUCER_CONFLUENT_MONITORING_INTERCEPTOR_SASL_JAAS_CONFIG: "com.sun.security.auth.module.Krb5LoginModule required \
+        useKeyTab=true \
+        storeKey=true \
+        keyTab=\"/var/lib/secret/kafka-connect.key\" \
+        principal=\"connect@TEST.CONFLUENT.IO\";"
+      CONNECT_PRODUCER_CONFLUENT_MONITORING_INTERCEPTOR_SASL_MECHANISM: GSSAPI
+      CONNECT_PRODUCER_CONFLUENT_MONITORING_INTERCEPTOR_SASL_KERBEROS_SERVICE_NAME: kafka
+      # consumer
+      CONNECT_CONSUMER_INTERCEPTOR_CLASSES: "io.confluent.monitoring.clients.interceptor.MonitoringConsumerInterceptor"
+      CONNECT_CONSUMER_CONFLUENT_MONITORING_INTERCEPTOR_SECURITY_PROTOCOL: SASL_PLAINTEXT
+      CONNECT_CONSUMER_CONFLUENT_MONITORING_INTERCEPTOR_SASL_JAAS_CONFIG: "com.sun.security.auth.module.Krb5LoginModule required \
+        useKeyTab=true \
+        storeKey=true \
+        keyTab=\"/var/lib/secret/kafka-connect.key\" \
+        principal=\"connect@TEST.CONFLUENT.IO\";"
+      CONNECT_CONSUMER_CONFLUENT_MONITORING_INTERCEPTOR_SASL_MECHANISM: GSSAPI
+      CONNECT_CONSUMER_CONFLUENT_MONITORING_INTERCEPTOR_SASL_KERBEROS_SERVICE_NAME: kafka
+      # Configure the Connect workers to use SASL/GSSAPI.
+      CONNECT_SASL_MECHANISM: GSSAPI
+      CONNECT_SASL_KERBEROS_SERVICE_NAME: kafka
+      CONNECT_SECURITY_PROTOCOL: SASL_PLAINTEXT
+      # JAAS
+      CONNECT_SASL_JAAS_CONFIG: "com.sun.security.auth.module.Krb5LoginModule required \
+        useKeyTab=true \
+        storeKey=true \
+        keyTab=\"/var/lib/secret/kafka-connect.key\" \
+        principal=\"connect@TEST.CONFLUENT.IO\";"
+      # producer
+      CONNECT_PRODUCER_SASL_MECHANISM: GSSAPI
+      CONNECT_PRODUCER_SASL_KERBEROS_SERVICE_NAME: kafka
+      CONNECT_PRODUCER_SECURITY_PROTOCOL: SASL_PLAINTEXT
+      CONNECT_PRODUCER_SASL_JAAS_CONFIG: "com.sun.security.auth.module.Krb5LoginModule required \
+        useKeyTab=true \
+        storeKey=true \
+        keyTab=\"/var/lib/secret/kafka-connect.key\" \
+        principal=\"connect@TEST.CONFLUENT.IO\";"
+      # consumer
+      CONNECT_CONSUMER_SASL_MECHANISM: GSSAPI
+      CONNECT_CONSUMER_SASL_KERBEROS_SERVICE_NAME: kafka
+      CONNECT_CONSUMER_SECURITY_PROTOCOL: SASL_PLAINTEXT
+      CONNECT_CONSUMER_SASL_JAAS_CONFIG: "com.sun.security.auth.module.Krb5LoginModule required \
+        useKeyTab=true \
+        storeKey=true \
+        keyTab=\"/var/lib/secret/kafka-connect.key\" \
+        principal=\"connect@TEST.CONFLUENT.IO\";"
+
+  connect-europe:
+    volumes:
+        - secret:/var/lib/secret
+        - ../../environment/mdc-kerberos/kdc/krb5.conf:/etc/krb5.conf
+    environment:
+      # Confluent Monitoring Interceptors for Control Center Streams Monitoring
+      # producer
+      CONNECT_CONFLUENT_MONITORING_INTERCEPTOR_SASL_KERBEROS_SERVICE_NAME: kafka
+      CONNECT_PRODUCER_INTERCEPTOR_CLASSES: "io.confluent.monitoring.clients.interceptor.MonitoringProducerInterceptor"
+      CONNECT_PRODUCER_CONFLUENT_MONITORING_INTERCEPTOR_SECURITY_PROTOCOL: SASL_PLAINTEXT
+      CONNECT_PRODUCER_CONFLUENT_MONITORING_INTERCEPTOR_SASL_JAAS_CONFIG: "com.sun.security.auth.module.Krb5LoginModule required \
+        useKeyTab=true \
+        storeKey=true \
+        keyTab=\"/var/lib/secret/kafka-connect.key\" \
+        principal=\"connect@TEST.CONFLUENT.IO\";"
+      CONNECT_PRODUCER_CONFLUENT_MONITORING_INTERCEPTOR_SASL_MECHANISM: GSSAPI
+      CONNECT_PRODUCER_CONFLUENT_MONITORING_INTERCEPTOR_SASL_KERBEROS_SERVICE_NAME: kafka
+      # consumer
+      CONNECT_CONSUMER_INTERCEPTOR_CLASSES: "io.confluent.monitoring.clients.interceptor.MonitoringConsumerInterceptor"
+      CONNECT_CONSUMER_CONFLUENT_MONITORING_INTERCEPTOR_SECURITY_PROTOCOL: SASL_PLAINTEXT
+      CONNECT_CONSUMER_CONFLUENT_MONITORING_INTERCEPTOR_SASL_JAAS_CONFIG: "com.sun.security.auth.module.Krb5LoginModule required \
+        useKeyTab=true \
+        storeKey=true \
+        keyTab=\"/var/lib/secret/kafka-connect.key\" \
+        principal=\"connect@TEST.CONFLUENT.IO\";"
+      CONNECT_CONSUMER_CONFLUENT_MONITORING_INTERCEPTOR_SASL_MECHANISM: GSSAPI
+      CONNECT_CONSUMER_CONFLUENT_MONITORING_INTERCEPTOR_SASL_KERBEROS_SERVICE_NAME: kafka
+      # Configure the Connect workers to use SASL/GSSAPI.
+      CONNECT_SASL_MECHANISM: GSSAPI
+      CONNECT_SASL_KERBEROS_SERVICE_NAME: kafka
+      CONNECT_SECURITY_PROTOCOL: SASL_PLAINTEXT
+      # JAAS
+      CONNECT_SASL_JAAS_CONFIG: "com.sun.security.auth.module.Krb5LoginModule required \
+        useKeyTab=true \
+        storeKey=true \
+        keyTab=\"/var/lib/secret/kafka-connect.key\" \
+        principal=\"connect@TEST.CONFLUENT.IO\";"
+      # producer
+      CONNECT_PRODUCER_SASL_MECHANISM: GSSAPI
+      CONNECT_PRODUCER_SASL_KERBEROS_SERVICE_NAME: kafka
+      CONNECT_PRODUCER_SECURITY_PROTOCOL: SASL_PLAINTEXT
+      CONNECT_PRODUCER_SASL_JAAS_CONFIG: "com.sun.security.auth.module.Krb5LoginModule required \
+        useKeyTab=true \
+        storeKey=true \
+        keyTab=\"/var/lib/secret/kafka-connect.key\" \
+        principal=\"connect@TEST.CONFLUENT.IO\";"
+      # consumer
+      CONNECT_CONSUMER_SASL_MECHANISM: GSSAPI
+      CONNECT_CONSUMER_SASL_KERBEROS_SERVICE_NAME: kafka
+      CONNECT_CONSUMER_SECURITY_PROTOCOL: SASL_PLAINTEXT
+      CONNECT_CONSUMER_SASL_JAAS_CONFIG: "com.sun.security.auth.module.Krb5LoginModule required \
+        useKeyTab=true \
+        storeKey=true \
+        keyTab=\"/var/lib/secret/kafka-connect.key\" \
+        principal=\"connect@TEST.CONFLUENT.IO\";"
+
+  control-center:
+    volumes:
+        - secret:/var/lib/secret
+        - ../../environment/mdc-kerberos/kdc/krb5.conf:/etc/krb5.conf
+    # Required to wait for the keytab to get generated
+    restart: on-failure
+    environment:
+        CONTROL_CENTER_KAFKA_EUROPE_BOOTSTRAP_SERVERS: 'broker-europe:9092'
+        CONTROL_CENTER_KAFKA_EUROPE_SECURITY_PROTOCOL: SASL_PLAINTEXT
+        CONTROL_CENTER_KAFKA_EUROPE_SASL_JAAS_CONFIG: "com.sun.security.auth.module.Krb5LoginModule required \
+            useKeyTab=true \
+            storeKey=true \
+            keyTab=\"/var/lib/secret/kafka-controlcenter.key\" \
+            principal=\"controlcenter@TEST.CONFLUENT.IO\";"
+        CONTROL_CENTER_KAFKA_EUROPE_SASL_MECHANISM: GSSAPI
+        CONTROL_CENTER_KAFKA_EUROPE_SASL_KERBEROS_SERVICE_NAME: kafka
+
+        CONTROL_CENTER_KAFKA_US_BOOTSTRAP_SERVERS: 'broker-us:9092'
+        CONTROL_CENTER_KAFKA_US_SECURITY_PROTOCOL: SASL_PLAINTEXT
+        CONTROL_CENTER_KAFKA_US_SASL_JAAS_CONFIG: "com.sun.security.auth.module.Krb5LoginModule required \
+            useKeyTab=true \
+            storeKey=true \
+            keyTab=\"/var/lib/secret/kafka-controlcenter.key\" \
+            principal=\"controlcenter@TEST.CONFLUENT.IO\";"
+        CONTROL_CENTER_KAFKA_US_SASL_MECHANISM: GSSAPI
+        CONTROL_CENTER_KAFKA_US_SASL_KERBEROS_SERVICE_NAME: kafka
+
+volumes:
+  secret: {}
+
+networks:
+  default:
+    name: kerberos-demo.local

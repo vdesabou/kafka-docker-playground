@@ -33,6 +33,7 @@ then
 else
   docker-compose down -v
   docker-compose build kdc
+  docker-compose build client
   docker-compose up -d kdc
 fi
 
