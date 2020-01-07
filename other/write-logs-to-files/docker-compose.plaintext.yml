@@ -5,34 +5,57 @@ services:
   zookeeper:
     volumes:
       - ../../other/write-logs-to-files/zookeeper/log4j-rolling.properties:/opt/zookeeper/log4j-rolling.properties
-      - ../../other/write-logs-to-files/zookeeper/logs:/log/zookeeper/
+      - ../../other/write-logs-to-files/zookeeper/logs:/var/log/zookeeper/
     environment:
       KAFKA_LOG4J_OPTS: "-Dlog4j.configuration=file:/opt/zookeeper/log4j-rolling.properties"
 
   broker:
     volumes:
       - ../../other/write-logs-to-files/broker/log4j-rolling.properties:/opt/broker/log4j-rolling.properties
-      - ../../other/write-logs-to-files/broker/logs:/log/broker/
+      - ../../other/write-logs-to-files/broker/logs:/var/log/broker/
     environment:
       KAFKA_LOG4J_OPTS: "-Dlog4j.configuration=file:/opt/broker/log4j-rolling.properties"
 
   schema-registry:
     volumes:
       - ../../other/write-logs-to-files/schema-registry/log4j-rolling.properties:/opt/schema-registry/log4j-rolling.properties
-      - ../../other/write-logs-to-files/schema-registry/logs:/log/schema-registry/
+      - ../../other/write-logs-to-files/schema-registry/logs:/var/log/schema-registry/
     environment:
       SCHEMA_REGISTRY_LOG4J_OPTS: "-Dlog4j.configuration=file:/opt/schema-registry/log4j-rolling.properties"
 
   connect:
     volumes:
       - ../../other/write-logs-to-files/connect/log4j-rolling.properties:/opt/connect/log4j-rolling.properties
-      - ../../other/write-logs-to-files/connect/logs:/log/connect/
+      - ../../other/write-logs-to-files/connect/logs:/var/log/connect/
     environment:
       KAFKA_LOG4J_OPTS: "-Dlog4j.configuration=file:/opt/connect/log4j-rolling.properties"
 
   control-center:
     volumes:
       - ../../other/write-logs-to-files/control-center/log4j-rolling.properties:/opt/control-center/log4j-rolling.properties
-      - ../../other/write-logs-to-files/control-center/logs:/log/control-center/
+      - ../../other/write-logs-to-files/control-center/logs:/var/log/control-center/
     environment:
       CONTROL_CENTER_LOG4J_OPTS: "-Dlog4j.configuration=file:/opt/control-center/log4j-rolling.properties"
+
+  ksql-server:
+    image: confluentinc/cp-ksql-server:5.3.2
+    hostname: ksql-server
+    container_name: ksql-server
+    depends_on:
+      - broker
+      - schema-registry
+    ports:
+      - "8088:8088"
+    volumes:
+      - ../../other/write-logs-to-files/ksql-server/log4j-rolling.properties:/opt/ksql-server/log4j-rolling.properties
+      - ../../other/write-logs-to-files/ksql-server/logs:/var/log/ksql-server/
+    environment:
+      KSQL_CONFIG_DIR: "/etc/ksql"
+      KSQL_LOG4J_OPTS: "-Dlog4j.configuration=file:/opt/ksql-server/log4j-rolling.properties"
+      KSQL_BOOTSTRAP_SERVERS: "broker:9092"
+      KSQL_HOST_NAME: ksql-server
+      KSQL_LISTENERS: "http://0.0.0.0:8088"
+      KSQL_CACHE_MAX_BYTES_BUFFERING: 0
+      KSQL_KSQL_SCHEMA_REGISTRY_URL: "http://schema-registry:8081"
+      KSQL_PRODUCER_INTERCEPTOR_CLASSES: "io.confluent.monitoring.clients.interceptor.MonitoringProducerInterceptor"
+      KSQL_CONSUMER_INTERCEPTOR_CLASSES: "io.confluent.monitoring.clients.interceptor.MonitoringConsumerInterceptor"
