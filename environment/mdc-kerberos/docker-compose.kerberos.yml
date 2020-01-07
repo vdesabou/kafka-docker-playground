@@ -4,11 +4,23 @@ services:
 
   kdc:
     hostname: kdc.kerberos-demo.local
-    build: kdc/
+    build: ../../environment/mdc-kerberos/kdc
     container_name: kdc
     volumes:
       - secret:/var/lib/secret
       - ../../environment/mdc-kerberos/kdc/krb5.conf:/etc/kdc/krb5.conf
+
+  client:
+    hostname: client.kerberos-demo.local
+    build: ../../environment/mdc-kerberos/client
+    depends_on:
+      - broker-us
+      - broker-europe
+      - kdc
+    # Required to wait for the keytab to get generated
+    volumes:
+      - secret:/var/lib/secret
+      - ../../environment/mdc-kerberos/kdc/krb5.conf:/etc/krb5.conf
 
   zookeeper-us:
     restart: always
@@ -209,6 +221,8 @@ services:
     # Required to wait for the keytab to get generated
     restart: on-failure
     environment:
+        CONTROL_CENTER_BOOTSTRAP_SERVERS: 'broker-metrics.kerberos-demo.local:9092'
+        CONTROL_CENTER_ZOOKEEPER_CONNECT: 'zookeeper-metrics.kerberos-demo.local:2181'
         CONTROL_CENTER_KAFKA_EUROPE_BOOTSTRAP_SERVERS: 'broker-europe.kerberos-demo.local:9092'
         CONTROL_CENTER_KAFKA_EUROPE_SECURITY_PROTOCOL: SASL_PLAINTEXT
         CONTROL_CENTER_KAFKA_EUROPE_SASL_JAAS_CONFIG: "com.sun.security.auth.module.Krb5LoginModule required \
