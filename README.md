@@ -126,6 +126,8 @@ Quick start examples from Confluent [docs](https://docs.confluent.io/current/con
 
 ## 🔐 Environments
 
+Single cluster:
+
 * [PLAINTEXT](environment/plaintext): no security
 * [SASL_PLAIN](environment/sasl-plain): no SSL encryption, SASL/PLAIN authentication
 * [SASL_SSL](environment/sasl-ssl): SSL encryption, SASL/PLAIN authentication
@@ -134,6 +136,12 @@ Quick start examples from Confluent [docs](https://docs.confluent.io/current/con
 * [SSL_Kerberos](environment/ssl_kerberos) SSL encryption, Kerberos GSSAPI authentication
 * [LDAP Authorizer with SASL/PLAIN](environment/ldap_authorizer_sasl_plain) no SSL encryption, SASL/PLAIN authentication, LDAP Authorizer for ACL authorization
 * [LDAP Authorizer with SASL/SCRAM-SHA-256](environment/ldap_authorizer_sasl_scram) no SSL encryption, SASL/SCRAM-SHA-256 authentication, LDAP Authorizer for ACL authorization
+
+Multi-Data-Center setup:
+
+* [PLAINTEXT](environment/mdc-plaintext): no security
+* [SASL_PLAIN](environment/mdc-sasl-plain): no SSL encryption, SASL/PLAIN authentication
+* [Kerberos](environment/mdc-kerberos): no SSL encryption, Kerberos GSSAPI authentication
 
 ## 🎓 Kafka Tutorials
 
