@@ -1,0 +1,136 @@
+---
+version: '3.5'
+services:
+  zookeeper-us:
+    volumes:
+      - ../../environment/mdc-sasl-plain/zookeeper/zookeeper.sasl.jaas.config:/etc/kafka/zookeeper_server_jaas.conf
+    environment:
+        KAFKA_OPTS: -Djava.security.auth.login.config=/etc/kafka/zookeeper_server_jaas.conf
+            -Dzookeeper.authProvider.1=org.apache.zookeeper.server.auth.SASLAuthenticationProvider
+            -Dzookeeper.allowSaslFailedClients=false
+            -Dzookeeper.requireClientAuthScheme=sasl
+
+  zookeeper-europe:
+    volumes:
+      - ../../environment/mdc-sasl-plain/zookeeper/zookeeper.sasl.jaas.config:/etc/kafka/zookeeper_server_jaas.conf
+    environment:
+        KAFKA_OPTS: -Djava.security.auth.login.config=/etc/kafka/zookeeper_server_jaas.conf
+            -Dzookeeper.authProvider.1=org.apache.zookeeper.server.auth.SASLAuthenticationProvider
+            -Dzookeeper.allowSaslFailedClients=false
+            -Dzookeeper.requireClientAuthScheme=sasl
+
+  broker-us:
+      volumes:
+        - ../../environment/mdc-sasl-plain/kafka/kafka.jaas.conf:/etc/kafka/kafka_server_jaas.conf
+      environment:
+          KAFKA_LISTENERS: SASL_PLAINTEXT://:9092
+          KAFKA_ADVERTISED_LISTENERS: SASL_PLAINTEXT://broker-us:9092
+          CONFLUENT_METRICS_REPORTER_SASL_MECHANISM: PLAIN
+          CONFLUENT_METRICS_REPORTER_SECURITY_PROTOCOL: SASL_PLAINTEXT
+          CONFLUENT_METRICS_REPORTER_SASL_JAAS_CONFIG: "org.apache.kafka.common.security.plain.PlainLoginModule required \
+              username=\"client\" \
+              password=\"client-secret\";"
+          KAFKA_SASL_ENABLED_MECHANISMS: PLAIN
+          KAFKA_SASL_MECHANISM_INTER_BROKER_PROTOCOL: PLAIN
+          KAFKA_SECURITY_INTER_BROKER_PROTOCOL: SASL_PLAINTEXT
+          KAFKA_OPTS: "-Djava.security.auth.login.config=/etc/kafka/kafka_server_jaas.conf"
+
+  broker-europe:
+      volumes:
+        - ../../environment/mdc-sasl-plain/kafka/kafka.jaas.conf:/etc/kafka/kafka_server_jaas.conf
+      environment:
+          KAFKA_LISTENERS: SASL_PLAINTEXT://:9092
+          KAFKA_ADVERTISED_LISTENERS: SASL_PLAINTEXT://broker-europe:9092
+          CONFLUENT_METRICS_REPORTER_SASL_MECHANISM: PLAIN
+          CONFLUENT_METRICS_REPORTER_SECURITY_PROTOCOL: SASL_PLAINTEXT
+          CONFLUENT_METRICS_REPORTER_SASL_JAAS_CONFIG: "org.apache.kafka.common.security.plain.PlainLoginModule required \
+              username=\"client\" \
+              password=\"client-secret\";"
+          KAFKA_SASL_ENABLED_MECHANISMS: PLAIN
+          KAFKA_SASL_MECHANISM_INTER_BROKER_PROTOCOL: PLAIN
+          KAFKA_SECURITY_INTER_BROKER_PROTOCOL: SASL_PLAINTEXT
+          KAFKA_OPTS: "-Djava.security.auth.login.config=/etc/kafka/kafka_server_jaas.conf"
+
+  connect-us:
+      environment:
+          # Confluent Monitoring Interceptors for Control Center Streams Monitoring
+          # producer
+          CONNECT_PRODUCER_CONFLUENT_MONITORING_INTERCEPTOR_SECURITY_PROTOCOL: SASL_PLAINTEXT
+          CONNECT_PRODUCER_CONFLUENT_MONITORING_INTERCEPTOR_SASL_JAAS_CONFIG: "org.apache.kafka.common.security.plain.PlainLoginModule required \
+              username=\"connect\" \
+              password=\"connect-secret\";"
+          CONNECT_PRODUCER_CONFLUENT_MONITORING_INTERCEPTOR_SASL_MECHANISM: PLAIN
+          # consumer
+          CONNECT_CONSUMER_CONFLUENT_MONITORING_INTERCEPTOR_SECURITY_PROTOCOL: SASL_PLAINTEXT
+          CONNECT_CONSUMER_CONFLUENT_MONITORING_INTERCEPTOR_SASL_JAAS_CONFIG: "org.apache.kafka.common.security.plain.PlainLoginModule required \
+              username=\"connect\" \
+              password=\"connect-secret\";"
+          CONNECT_CONSUMER_CONFLUENT_MONITORING_INTERCEPTOR_SASL_MECHANISM: PLAIN
+          # Configure the Connect workers to use SASL/PLAIN.
+          CONNECT_SASL_MECHANISM: PLAIN
+          CONNECT_SECURITY_PROTOCOL: SASL_PLAINTEXT
+          # JAAS
+          CONNECT_SASL_JAAS_CONFIG: "org.apache.kafka.common.security.plain.PlainLoginModule required \
+              username=\"connect\" \
+              password=\"connect-secret\";"
+          # producer
+          CONNECT_PRODUCER_SASL_MECHANISM: PLAIN
+          CONNECT_PRODUCER_SECURITY_PROTOCOL: SASL_PLAINTEXT
+          CONNECT_PRODUCER_SASL_JAAS_CONFIG: "org.apache.kafka.common.security.plain.PlainLoginModule required \
+              username=\"connect\" \
+              password=\"connect-secret\";"
+          # consumer
+          CONNECT_CONSUMER_SASL_MECHANISM: PLAIN
+          CONNECT_CONSUMER_SECURITY_PROTOCOL: SASL_PLAINTEXT
+          CONNECT_CONSUMER_SASL_JAAS_CONFIG: "org.apache.kafka.common.security.plain.PlainLoginModule required \
+              username=\"connect\" \
+              password=\"connect-secret\";"
+
+  connect-europe:
+      environment:
+          # Confluent Monitoring Interceptors for Control Center Streams Monitoring
+          # producer
+          CONNECT_PRODUCER_CONFLUENT_MONITORING_INTERCEPTOR_SECURITY_PROTOCOL: SASL_PLAINTEXT
+          CONNECT_PRODUCER_CONFLUENT_MONITORING_INTERCEPTOR_SASL_JAAS_CONFIG: "org.apache.kafka.common.security.plain.PlainLoginModule required \
+              username=\"connect\" \
+              password=\"connect-secret\";"
+          CONNECT_PRODUCER_CONFLUENT_MONITORING_INTERCEPTOR_SASL_MECHANISM: PLAIN
+          # consumer
+          CONNECT_CONSUMER_CONFLUENT_MONITORING_INTERCEPTOR_SECURITY_PROTOCOL: SASL_PLAINTEXT
+          CONNECT_CONSUMER_CONFLUENT_MONITORING_INTERCEPTOR_SASL_JAAS_CONFIG: "org.apache.kafka.common.security.plain.PlainLoginModule required \
+              username=\"connect\" \
+              password=\"connect-secret\";"
+          CONNECT_CONSUMER_CONFLUENT_MONITORING_INTERCEPTOR_SASL_MECHANISM: PLAIN
+          # Configure the Connect workers to use SASL/PLAIN.
+          CONNECT_SASL_MECHANISM: PLAIN
+          CONNECT_SECURITY_PROTOCOL: SASL_PLAINTEXT
+          # JAAS
+          CONNECT_SASL_JAAS_CONFIG: "org.apache.kafka.common.security.plain.PlainLoginModule required \
+              username=\"connect\" \
+              password=\"connect-secret\";"
+          # producer
+          CONNECT_PRODUCER_SASL_MECHANISM: PLAIN
+          CONNECT_PRODUCER_SECURITY_PROTOCOL: SASL_PLAINTEXT
+          CONNECT_PRODUCER_SASL_JAAS_CONFIG: "org.apache.kafka.common.security.plain.PlainLoginModule required \
+              username=\"connect\" \
+              password=\"connect-secret\";"
+          # consumer
+          CONNECT_CONSUMER_SASL_MECHANISM: PLAIN
+          CONNECT_CONSUMER_SECURITY_PROTOCOL: SASL_PLAINTEXT
+          CONNECT_CONSUMER_SASL_JAAS_CONFIG: "org.apache.kafka.common.security.plain.PlainLoginModule required \
+              username=\"connect\" \
+              password=\"connect-secret\";"
+
+  control-center:
+      environment:
+          CONTROL_CENTER_KAFKA_US_BOOTSTRAP_SERVERS: 'broker-us:9092'
+          CONTROL_CENTER_KAFKA_EUROPE_SECURITY_PROTOCOL: SASL_PLAINTEXT
+          CONTROL_CENTER_KAFKA_EUROPE_SASL_JAAS_CONFIG: "org.apache.kafka.common.security.plain.PlainLoginModule required \
+              username=\"client\" \
+              password=\"client-secret\";"
+          CONTROL_CENTER_KAFKA_EUROPE_SASL_MECHANISM: PLAIN
+          CONTROL_CENTER_KAFKA_US_SECURITY_PROTOCOL: SASL_PLAINTEXT
+          CONTROL_CENTER_KAFKA_US_SASL_JAAS_CONFIG: "org.apache.kafka.common.security.plain.PlainLoginModule required \
+              username=\"client\" \
+              password=\"client-secret\";"
+          CONTROL_CENTER_KAFKA_US_SASL_MECHANISM: PLAIN
