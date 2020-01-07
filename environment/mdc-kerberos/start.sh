@@ -19,12 +19,12 @@ then
 
   docker-compose -f ../../environment/mdc-plaintext/docker-compose.yml -f ../../environment/mdc-kerberos/docker-compose.kerberos.yml -f ${DOCKER_COMPOSE_FILE_OVERRIDE} down -v
   docker-compose -f ../../environment/mdc-plaintext/docker-compose.yml -f ../../environment/mdc-kerberos/docker-compose.kerberos.yml -f ${DOCKER_COMPOSE_FILE_OVERRIDE} build kdc
-  # docker-compose -f ../../environment/mdc-plaintext/docker-compose.yml -f ../../environment/mdc-kerberos/docker-compose.kerberos.yml -f ${DOCKER_COMPOSE_FILE_OVERRIDE} build client
+  docker-compose -f ../../environment/mdc-plaintext/docker-compose.yml -f ../../environment/mdc-kerberos/docker-compose.kerberos.yml -f ${DOCKER_COMPOSE_FILE_OVERRIDE} build client
   docker-compose -f ../../environment/mdc-plaintext/docker-compose.yml -f ../../environment/mdc-kerberos/docker-compose.kerberos.yml -f ${DOCKER_COMPOSE_FILE_OVERRIDE} up -d kdc
 else
   docker-compose -f ../../environment/mdc-plaintext/docker-compose.yml -f ../../environment/mdc-kerberos/docker-compose.kerberos.yml down -v
   docker-compose -f ../../environment/mdc-plaintext/docker-compose.yml -f ../../environment/mdc-kerberos/docker-compose.kerberos.yml build kdc
-  # docker-compose -f ../../environment/mdc-plaintext/docker-compose.yml -f ../../environment/mdc-kerberos/docker-compose.kerberos.yml build client
+  docker-compose -f ../../environment/mdc-plaintext/docker-compose.yml -f ../../environment/mdc-kerberos/docker-compose.kerberos.yml build client
   docker-compose -f ../../environment/mdc-plaintext/docker-compose.yml -f ../../environment/mdc-kerberos/docker-compose.kerberos.yml up -d kdc
 fi
 
@@ -41,11 +41,16 @@ docker exec -ti kdc kadmin.local -w password -q "add_principal -randkey zookeepe
 docker exec -ti kdc kadmin.local -w password -q "add_principal -randkey zkclient@TEST.CONFLUENT.IO"  > /dev/null
 
 # Create client principals to connect in to the cluster:
+docker exec -ti kdc kadmin.local -w password -q "add_principal -randkey kafka_producer@TEST.CONFLUENT.IO"  > /dev/null
+docker exec -ti kdc kadmin.local -w password -q "add_principal -randkey kafka_producer/instance_demo@TEST.CONFLUENT.IO"  > /dev/null
+docker exec -ti kdc kadmin.local -w password -q "add_principal -randkey kafka_consumer@TEST.CONFLUENT.IO"  > /dev/null
 docker exec -ti kdc kadmin.local -w password -q "add_principal -randkey connect@TEST.CONFLUENT.IO"  > /dev/null
+docker exec -ti kdc kadmin.local -w password -q "add_principal -randkey controlcenter@TEST.CONFLUENT.IO"  > /dev/null
 
 # Create an admin principal for the cluster, which we'll use to setup ACLs.
 # Look after this - its also declared a super user in broker config.
 docker exec -ti kdc kadmin.local -w password -q "add_principal -randkey admin/for-kafka@TEST.CONFLUENT.IO"  > /dev/null
+
 
 # Create keytabs to use for Kafka
 echo -e "\033[0;33mCreate keytabs\033[0m"
@@ -57,14 +62,19 @@ docker exec -ti kdc rm -f /var/lib/secret/zookeeper-client.key 2>&1 > /dev/null
 docker exec -ti kdc rm -f /var/lib/secret/kafka-client.key 2>&1 > /dev/null
 docker exec -ti kdc rm -f /var/lib/secret/kafka-admin.key 2>&1 > /dev/null
 docker exec -ti kdc rm -f /var/lib/secret/kafka-connect.key 2>&1 > /dev/null
+docker exec -ti kdc rm -f /var/lib/secret/kafka-controlcenter.key 2>&1 > /dev/null
 
 docker exec -ti kdc kadmin.local -w password -q "ktadd  -k /var/lib/secret/broker-us.key -norandkey kafka/broker-us.kerberos-demo.local@TEST.CONFLUENT.IO " > /dev/null
 docker exec -ti kdc kadmin.local -w password -q "ktadd  -k /var/lib/secret/broker-europe.key -norandkey kafka/broker-europe.kerberos-demo.local@TEST.CONFLUENT.IO " > /dev/null
 docker exec -ti kdc kadmin.local -w password -q "ktadd  -k /var/lib/secret/zookeeper-us.key -norandkey zookeeper/zookeeper-us.kerberos-demo.local@TEST.CONFLUENT.IO " > /dev/null
 docker exec -ti kdc kadmin.local -w password -q "ktadd  -k /var/lib/secret/zookeeper-europe.key -norandkey zookeeper/zookeeper-europe.kerberos-demo.local@TEST.CONFLUENT.IO " > /dev/null
 docker exec -ti kdc kadmin.local -w password -q "ktadd  -k /var/lib/secret/zookeeper-client.key -norandkey zkclient@TEST.CONFLUENT.IO " > /dev/null
+docker exec -ti kdc kadmin.local -w password -q "ktadd  -k /var/lib/secret/kafka-client.key -norandkey kafka_producer@TEST.CONFLUENT.IO " > /dev/null
+docker exec -ti kdc kadmin.local -w password -q "ktadd  -k /var/lib/secret/kafka-client.key -norandkey kafka_producer/instance_demo@TEST.CONFLUENT.IO " > /dev/null
+docker exec -ti kdc kadmin.local -w password -q "ktadd  -k /var/lib/secret/kafka-client.key -norandkey kafka_consumer@TEST.CONFLUENT.IO " > /dev/null
 docker exec -ti kdc kadmin.local -w password -q "ktadd  -k /var/lib/secret/kafka-admin.key -norandkey admin/for-kafka@TEST.CONFLUENT.IO " > /dev/null
 docker exec -ti kdc kadmin.local -w password -q "ktadd  -k /var/lib/secret/kafka-connect.key -norandkey connect@TEST.CONFLUENT.IO " > /dev/null
+docker exec -ti kdc kadmin.local -w password -q "ktadd  -k /var/lib/secret/kafka-controlcenter.key -norandkey controlcenter@TEST.CONFLUENT.IO " > /dev/null
 
 DOCKER_COMPOSE_FILE_OVERRIDE=$1
 if [ -f "${DOCKER_COMPOSE_FILE_OVERRIDE}" ]
@@ -78,3 +88,31 @@ shift
 
 ../../WaitForConnectAndControlCenter.sh connect-us $@
 ../../WaitForConnectAndControlCenter.sh connect-europe $@
+
+
+# Adding ACLs for consumer and producer user:
+docker exec client bash -c "kinit -k -t /var/lib/secret/kafka-admin.key admin/for-kafka && kafka-acls --bootstrap-server broker-us:9092 --command-config /etc/kafka/command-us.properties --add --allow-principal User:kafka_producer --producer --topic=*"
+docker exec client bash -c "kinit -k -t /var/lib/secret/kafka-admin.key admin/for-kafka && kafka-acls --bootstrap-server broker-us:9092 --command-config /etc/kafka/command-us.properties --add --allow-principal User:kafka_consumer --consumer --topic=* --group=*"
+# Adding ACLs for connect user:
+docker exec client bash -c "kinit -k -t /var/lib/secret/kafka-admin.key admin/for-kafka && kafka-acls --bootstrap-server broker-us:9092 --command-config /etc/kafka/command-us.properties --add --allow-principal User:connect --consumer --topic=* --group=*"
+docker exec client bash -c "kinit -k -t /var/lib/secret/kafka-admin.key admin/for-kafka && kafka-acls --bootstrap-server broker-us:9092 --command-config /etc/kafka/command-us.properties --add --allow-principal User:connect --producer --topic=*"
+# Adding ACLs for consumer and producer user:
+docker exec client bash -c "kinit -k -t /var/lib/secret/kafka-admin.key admin/for-kafka && kafka-acls --bootstrap-server broker-europe:9092 --command-config /etc/kafka/command-europe.properties --add --allow-principal User:kafka_producer --producer --topic=*"
+docker exec client bash -c "kinit -k -t /var/lib/secret/kafka-admin.key admin/for-kafka && kafka-acls --bootstrap-server broker-europe:9092 --command-config /etc/kafka/command-europe.properties --add --allow-principal User:kafka_consumer --consumer --topic=* --group=*"
+# Adding ACLs for connect user:
+docker exec client bash -c "kinit -k -t /var/lib/secret/kafka-admin.key admin/for-kafka && kafka-acls --bootstrap-server broker-europe:9092 --command-config /etc/kafka/command-europe.properties --add --allow-principal User:connect --consumer --topic=* --group=*"
+docker exec client bash -c "kinit -k -t /var/lib/secret/kafka-admin.key admin/for-kafka && kafka-acls --bootstrap-server broker-europe:9092 --command-config /etc/kafka/command-europe.properties --add --allow-principal User:connect --producer --topic=*"
+# controlcenter is super user
+
+# Output example usage:
+echo -e "\033[0;33m-----------------------------------------\033[0m"
+echo -e "\033[0;33mExample configuration to access kafka on US cluster:\033[0m"
+echo -e "\033[0;33m-----------------------------------------\033[0m"
+echo -e "\033[0;33m-> docker exec client bash -c 'kinit -k -t /var/lib/secret/kafka-client.key kafka_producer && kafka-console-producer --broker-list broker-us:9092 --topic test --producer.config /etc/kafka/producer-us.properties'\033[0m"
+echo -e "\033[0;33m-> docker exec client bash -c 'kinit -k -t /var/lib/secret/kafka-client.key kafka_consumer && kafka-console-consumer --bootstrap-server broker-us:9092 --topic test --consumer.config /etc/kafka/consumer-us.properties --from-beginning'\033[0m"
+
+echo -e "\033[0;33m-----------------------------------------\033[0m"
+echo -e "\033[0;33mExample configuration to access kafka on EUROPE cluster:\033[0m"
+echo -e "\033[0;33m-----------------------------------------\033[0m"
+echo -e "\033[0;33m-> docker exec client bash -c 'kinit -k -t /var/lib/secret/kafka-client.key kafka_producer && kafka-console-producer --broker-list broker-europe:9092 --topic test --producer.config /etc/kafka/producer-europe.properties'\033[0m"
+echo -e "\033[0;33m-> docker exec client bash -c 'kinit -k -t /var/lib/secret/kafka-client.key kafka_consumer && kafka-console-consumer --bootstrap-server broker-europe:9092 --topic test --consumer.config /etc/kafka/consumer-europe.properties --from-beginning'\033[0m"
