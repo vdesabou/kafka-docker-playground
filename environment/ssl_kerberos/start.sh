@@ -25,9 +25,10 @@ DOCKER_COMPOSE_FILE_OVERRIDE=$1
 # Avoiding starting up all services at the begining to generate the keytab first
 if [ -f "${DOCKER_COMPOSE_FILE_OVERRIDE}" ]
 then
-  
+
   docker-compose -f ../../environment/kerberos/docker-compose.yml -f ${DOCKER_COMPOSE_FILE_OVERRIDE} down -v
   docker-compose -f ../../environment/kerberos/docker-compose.yml -f ${DOCKER_COMPOSE_FILE_OVERRIDE} build kdc
+  docker-compose -f ../../environment/kerberos/docker-compose.yml -f ${DOCKER_COMPOSE_FILE_OVERRIDE} build client
   docker-compose -f ../../environment/kerberos/docker-compose.yml -f ${DOCKER_COMPOSE_FILE_OVERRIDE} up -d kdc
 else
   docker-compose down -v
@@ -37,7 +38,7 @@ fi
 
 ### Create the required identities:
 # Kafka service principal:
-docker exec -ti kdc kadmin.local -w password -q "add_principal -randkey broker/broker.kerberos-demo.local@TEST.CONFLUENT.IO"  > /dev/null
+docker exec -ti kdc kadmin.local -w password -q "add_principal -randkey kafka/broker.kerberos-demo.local@TEST.CONFLUENT.IO"  > /dev/null
 
 # Zookeeper service principal:
 docker exec -ti kdc kadmin.local -w password -q "add_principal -randkey zookeeper/zookeeper.kerberos-demo.local@TEST.CONFLUENT.IO"  > /dev/null
@@ -68,7 +69,7 @@ docker exec -ti kdc rm -f /var/lib/secret/kafka-connect.key 2>&1 > /dev/null
 docker exec -ti kdc rm -f /var/lib/secret/kafka-schemaregistry.key 2>&1 > /dev/null
 docker exec -ti kdc rm -f /var/lib/secret/kafka-controlcenter.key 2>&1 > /dev/null
 
-docker exec -ti kdc kadmin.local -w password -q "ktadd  -k /var/lib/secret/broker.key -norandkey broker/broker.kerberos-demo.local@TEST.CONFLUENT.IO " > /dev/null
+docker exec -ti kdc kadmin.local -w password -q "ktadd  -k /var/lib/secret/broker.key -norandkey kafka/broker.kerberos-demo.local@TEST.CONFLUENT.IO " > /dev/null
 docker exec -ti kdc kadmin.local -w password -q "ktadd  -k /var/lib/secret/zookeeper.key -norandkey zookeeper/zookeeper.kerberos-demo.local@TEST.CONFLUENT.IO " > /dev/null
 docker exec -ti kdc kadmin.local -w password -q "ktadd  -k /var/lib/secret/zookeeper-client.key -norandkey zkclient@TEST.CONFLUENT.IO " > /dev/null
 docker exec -ti kdc kadmin.local -w password -q "ktadd  -k /var/lib/secret/kafka-client.key -norandkey kafka_producer@TEST.CONFLUENT.IO " > /dev/null
@@ -88,6 +89,11 @@ else
   docker-compose up -d
 fi
 
+cd ${OLDDIR}
+
+shift
+../../WaitForConnectAndControlCenter.sh $@
+
 # Adding ACLs for consumer and producer user:
 docker exec client bash -c "kinit -k -t /var/lib/secret/kafka-admin.key admin/for-kafka && kafka-acls --bootstrap-server broker:9092 --command-config /etc/kafka/command.properties --add --allow-principal User:kafka_producer --producer --topic=*"
 docker exec client bash -c "kinit -k -t /var/lib/secret/kafka-admin.key admin/for-kafka && kafka-acls --bootstrap-server broker:9092 --command-config /etc/kafka/command.properties --add --allow-principal User:kafka_consumer --consumer --topic=* --group=*"
@@ -103,7 +109,3 @@ echo -e "\033[0;33m-----------------------------------------\033[0m"
 echo -e "\033[0;33m-> docker-compose exec client bash -c 'kinit -k -t /var/lib/secret/kafka-client.key kafka_producer && kafka-console-producer --broker-list broker:9092 --topic test --producer.config /etc/kafka/producer.properties'\033[0m"
 echo -e "\033[0;33m-> docker-compose exec client bash -c 'kinit -k -t /var/lib/secret/kafka-client.key kafka_consumer && kafka-console-consumer --bootstrap-server broker:9092 --topic test --consumer.config /etc/kafka/consumer.properties --from-beginning'\033[0m"
 
-cd ${OLDDIR}
-
-shift
-../../WaitForConnectAndControlCenter.sh $@
