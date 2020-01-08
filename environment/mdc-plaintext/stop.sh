@@ -6,5 +6,5 @@ then
 
   docker-compose -f ../../environment/mdc-plaintext/docker-compose.yml -f ${DOCKER_COMPOSE_FILE_OVERRIDE} down -v
 else
-  docker-compose down -v
+  docker-compose -f ../../environment/mdc-plaintext/docker-compose.yml down -v
 fi

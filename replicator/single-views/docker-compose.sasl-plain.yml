@@ -1,0 +1,10 @@
+---
+version: '3.5'
+services:
+  broker-us:
+      volumes:
+        - ../../environment/mdc-sasl-plain/client/client.properties:/etc/kafka/client.properties
+
+  broker-europe:
+      volumes:
+        - ../../environment/mdc-sasl-plain/client/client.properties:/etc/kafka/client.properties
