@@ -53,7 +53,7 @@ docker container exec connect-europe \
           "key.converter": "io.confluent.connect.replicator.util.ByteArrayConverter",
           "value.converter": "io.confluent.connect.replicator.util.ByteArrayConverter",
           "header.converter": "io.confluent.connect.replicator.util.ByteArrayConverter",
-          "src.consumer.group.id": "replicate-us",
+          "src.consumer.group.id": "replicate-us-to-europe",
           "src.kafka.bootstrap.servers": "broker-us:9092",
           "src.kafka.security.protocol" : "SASL_PLAINTEXT",
           "src.kafka.sasl.jaas.config": "org.apache.kafka.common.security.plain.PlainLoginModule required  username=\"client\" password=\"client-secret\";",
