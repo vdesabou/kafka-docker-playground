@@ -9,8 +9,20 @@ We want on each region to have a way to see **all** sales in **all** regions.
 
 ## How to run
 
-In plaintext mode (no security)
+With no security in place (PLAINTEXT):
 
 ```
-$ ./plaintext.sh
+$ ./single-views-plaintext.sh
+```
+
+With no SSL encryption, SASL/PLAIN authentication:
+
+```
+$ ./single-views-sasl-plain.sh
+```
+
+With no SSL encryption, Kerberos GSSAPI authentication:
+
+```
+$ ./single-views-kerberos.sh
 ```
