@@ -1,4 +1,4 @@
-# Multi Data Center and single views
+# Using Confluent Replicator as connector
 
 ## Description
 
@@ -12,17 +12,17 @@ We want on each region to have a way to see **all** sales in **all** regions.
 With no security in place (PLAINTEXT):
 
 ```
-$ ./single-views-plaintext.sh
+$ ./connect-plaintext.sh
 ```
 
 With no SSL encryption, SASL/PLAIN authentication:
 
 ```
-$ ./single-views-sasl-plain.sh
+$ ./connect-sasl-plain.sh
 ```
 
 With no SSL encryption, Kerberos GSSAPI authentication:
 
 ```
-$ ./single-views-kerberos.sh
+$ ./connect-kerberos.sh
 ```
