@@ -14,11 +14,9 @@ seq -f "us_sale_%g ${RANDOM}" 10 | docker container exec -i broker-us kafka-cons
 echo Consolidating all sales in the US
 
 docker container exec connect-us \
-     curl -X POST \
+     curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
-        "name": "replicate-europe-to-us",
-        "config": {
           "connector.class":"io.confluent.connect.replicator.ReplicatorSourceConnector",
           "key.converter": "io.confluent.connect.replicator.util.ByteArrayConverter",
           "value.converter": "io.confluent.connect.replicator.util.ByteArrayConverter",
@@ -41,18 +39,16 @@ docker container exec connect-us \
           "topic.auto.create": false,
           "topic.preserve.partitions": false,
           "topic.whitelist": "sales_EUROPE"
-          }}' \
-     http://localhost:8083/connectors | jq .
+          }' \
+     http://localhost:8083/connectors/replicate-europe-to-us/config | jq .
 
 
 echo Consolidating all sales in Europe
 
 docker container exec connect-europe \
-     curl -X POST \
+     curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
-        "name": "replicate-us-to-europe",
-        "config": {
           "connector.class":"io.confluent.connect.replicator.ReplicatorSourceConnector",
           "key.converter": "io.confluent.connect.replicator.util.ByteArrayConverter",
           "value.converter": "io.confluent.connect.replicator.util.ByteArrayConverter",
@@ -72,8 +68,8 @@ docker container exec connect-europe \
           "confluent.topic.sasl.mechanism": "PLAIN",
           "provenance.header.enable": true,
           "topic.whitelist": "sales_US"
-          }}' \
-     http://localhost:8083/connectors | jq .
+          }' \
+     http://localhost:8083/connectors/replicate-us-to-europe/config | jq .
 
 
 echo "Verify we have received the data in all the sales_ topics in EUROPE"
