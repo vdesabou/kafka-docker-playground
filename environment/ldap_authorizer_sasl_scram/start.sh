@@ -14,12 +14,12 @@ DOCKER_COMPOSE_FILE_OVERRIDE=$1
 # Starting broker first
 if [ -f "${DOCKER_COMPOSE_FILE_OVERRIDE}" ]
 then
-  
+
   docker-compose -f ../../environment/ldap_authorizer_sasl_scram/docker-compose.yml -f ${DOCKER_COMPOSE_FILE_OVERRIDE} down -v
   docker-compose -f ../../environment/ldap_authorizer_sasl_scram/docker-compose.yml -f ${DOCKER_COMPOSE_FILE_OVERRIDE} up -d --build broker
 else
-  docker-compose down -v
-  docker-compose up -d --build broker
+  docker-compose -f ../../environment/ldap_authorizer_sasl_scram/docker-compose.yml down -v
+  docker-compose -f ../../environment/ldap_authorizer_sasl_scram/docker-compose.yml up -d --build broker
 fi
 
 # Creating the users
@@ -33,7 +33,7 @@ if [ -f "${DOCKER_COMPOSE_FILE_OVERRIDE}" ]
 then
   docker-compose -f ../../environment/ldap_authorizer_sasl_scram/docker-compose.yml -f ${DOCKER_COMPOSE_FILE_OVERRIDE} up -d
 else
-  docker-compose up -d
+  docker-compose -f ../../environment/ldap_authorizer_sasl_scram/docker-compose.yml up -d
 fi
 
 shift
