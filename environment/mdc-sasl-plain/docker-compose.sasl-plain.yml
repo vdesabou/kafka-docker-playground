@@ -43,19 +43,6 @@ services:
 
   connect-us:
       environment:
-          # Confluent Monitoring Interceptors for Control Center Streams Monitoring
-          # producer
-          CONNECT_PRODUCER_CONFLUENT_MONITORING_INTERCEPTOR_SECURITY_PROTOCOL: SASL_PLAINTEXT
-          CONNECT_PRODUCER_CONFLUENT_MONITORING_INTERCEPTOR_SASL_JAAS_CONFIG: "org.apache.kafka.common.security.plain.PlainLoginModule required \
-              username=\"connect\" \
-              password=\"connect-secret\";"
-          CONNECT_PRODUCER_CONFLUENT_MONITORING_INTERCEPTOR_SASL_MECHANISM: PLAIN
-          # consumer
-          CONNECT_CONSUMER_CONFLUENT_MONITORING_INTERCEPTOR_SECURITY_PROTOCOL: SASL_PLAINTEXT
-          CONNECT_CONSUMER_CONFLUENT_MONITORING_INTERCEPTOR_SASL_JAAS_CONFIG: "org.apache.kafka.common.security.plain.PlainLoginModule required \
-              username=\"connect\" \
-              password=\"connect-secret\";"
-          CONNECT_CONSUMER_CONFLUENT_MONITORING_INTERCEPTOR_SASL_MECHANISM: PLAIN
           # Configure the Connect workers to use SASL/PLAIN.
           CONNECT_SASL_MECHANISM: PLAIN
           CONNECT_SECURITY_PROTOCOL: SASL_PLAINTEXT
@@ -78,19 +65,6 @@ services:
 
   connect-europe:
       environment:
-          # Confluent Monitoring Interceptors for Control Center Streams Monitoring
-          # producer
-          CONNECT_PRODUCER_CONFLUENT_MONITORING_INTERCEPTOR_SECURITY_PROTOCOL: SASL_PLAINTEXT
-          CONNECT_PRODUCER_CONFLUENT_MONITORING_INTERCEPTOR_SASL_JAAS_CONFIG: "org.apache.kafka.common.security.plain.PlainLoginModule required \
-              username=\"connect\" \
-              password=\"connect-secret\";"
-          CONNECT_PRODUCER_CONFLUENT_MONITORING_INTERCEPTOR_SASL_MECHANISM: PLAIN
-          # consumer
-          CONNECT_CONSUMER_CONFLUENT_MONITORING_INTERCEPTOR_SECURITY_PROTOCOL: SASL_PLAINTEXT
-          CONNECT_CONSUMER_CONFLUENT_MONITORING_INTERCEPTOR_SASL_JAAS_CONFIG: "org.apache.kafka.common.security.plain.PlainLoginModule required \
-              username=\"connect\" \
-              password=\"connect-secret\";"
-          CONNECT_CONSUMER_CONFLUENT_MONITORING_INTERCEPTOR_SASL_MECHANISM: PLAIN
           # Configure the Connect workers to use SASL/PLAIN.
           CONNECT_SASL_MECHANISM: PLAIN
           CONNECT_SECURITY_PROTOCOL: SASL_PLAINTEXT

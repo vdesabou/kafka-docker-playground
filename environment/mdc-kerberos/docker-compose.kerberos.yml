@@ -107,28 +107,6 @@ services:
         - secret:/var/lib/secret
         - ../../environment/mdc-kerberos/kdc/krb5.conf:/etc/krb5.conf
     environment:
-      # Confluent Monitoring Interceptors for Control Center Streams Monitoring
-      # producer
-      CONNECT_CONFLUENT_MONITORING_INTERCEPTOR_SASL_KERBEROS_SERVICE_NAME: kafka
-      CONNECT_PRODUCER_INTERCEPTOR_CLASSES: "io.confluent.monitoring.clients.interceptor.MonitoringProducerInterceptor"
-      CONNECT_PRODUCER_CONFLUENT_MONITORING_INTERCEPTOR_SECURITY_PROTOCOL: SASL_PLAINTEXT
-      CONNECT_PRODUCER_CONFLUENT_MONITORING_INTERCEPTOR_SASL_JAAS_CONFIG: "com.sun.security.auth.module.Krb5LoginModule required \
-        useKeyTab=true \
-        storeKey=true \
-        keyTab=\"/var/lib/secret/kafka-connect.key\" \
-        principal=\"connect@TEST.CONFLUENT.IO\";"
-      CONNECT_PRODUCER_CONFLUENT_MONITORING_INTERCEPTOR_SASL_MECHANISM: GSSAPI
-      CONNECT_PRODUCER_CONFLUENT_MONITORING_INTERCEPTOR_SASL_KERBEROS_SERVICE_NAME: kafka
-      # consumer
-      CONNECT_CONSUMER_INTERCEPTOR_CLASSES: "io.confluent.monitoring.clients.interceptor.MonitoringConsumerInterceptor"
-      CONNECT_CONSUMER_CONFLUENT_MONITORING_INTERCEPTOR_SECURITY_PROTOCOL: SASL_PLAINTEXT
-      CONNECT_CONSUMER_CONFLUENT_MONITORING_INTERCEPTOR_SASL_JAAS_CONFIG: "com.sun.security.auth.module.Krb5LoginModule required \
-        useKeyTab=true \
-        storeKey=true \
-        keyTab=\"/var/lib/secret/kafka-connect.key\" \
-        principal=\"connect@TEST.CONFLUENT.IO\";"
-      CONNECT_CONSUMER_CONFLUENT_MONITORING_INTERCEPTOR_SASL_MECHANISM: GSSAPI
-      CONNECT_CONSUMER_CONFLUENT_MONITORING_INTERCEPTOR_SASL_KERBEROS_SERVICE_NAME: kafka
       # Configure the Connect workers to use SASL/GSSAPI.
       CONNECT_SASL_MECHANISM: GSSAPI
       CONNECT_SASL_KERBEROS_SERVICE_NAME: kafka
@@ -163,28 +141,6 @@ services:
         - secret:/var/lib/secret
         - ../../environment/mdc-kerberos/kdc/krb5.conf:/etc/krb5.conf
     environment:
-      # Confluent Monitoring Interceptors for Control Center Streams Monitoring
-      # producer
-      CONNECT_CONFLUENT_MONITORING_INTERCEPTOR_SASL_KERBEROS_SERVICE_NAME: kafka
-      CONNECT_PRODUCER_INTERCEPTOR_CLASSES: "io.confluent.monitoring.clients.interceptor.MonitoringProducerInterceptor"
-      CONNECT_PRODUCER_CONFLUENT_MONITORING_INTERCEPTOR_SECURITY_PROTOCOL: SASL_PLAINTEXT
-      CONNECT_PRODUCER_CONFLUENT_MONITORING_INTERCEPTOR_SASL_JAAS_CONFIG: "com.sun.security.auth.module.Krb5LoginModule required \
-        useKeyTab=true \
-        storeKey=true \
-        keyTab=\"/var/lib/secret/kafka-connect.key\" \
-        principal=\"connect@TEST.CONFLUENT.IO\";"
-      CONNECT_PRODUCER_CONFLUENT_MONITORING_INTERCEPTOR_SASL_MECHANISM: GSSAPI
-      CONNECT_PRODUCER_CONFLUENT_MONITORING_INTERCEPTOR_SASL_KERBEROS_SERVICE_NAME: kafka
-      # consumer
-      CONNECT_CONSUMER_INTERCEPTOR_CLASSES: "io.confluent.monitoring.clients.interceptor.MonitoringConsumerInterceptor"
-      CONNECT_CONSUMER_CONFLUENT_MONITORING_INTERCEPTOR_SECURITY_PROTOCOL: SASL_PLAINTEXT
-      CONNECT_CONSUMER_CONFLUENT_MONITORING_INTERCEPTOR_SASL_JAAS_CONFIG: "com.sun.security.auth.module.Krb5LoginModule required \
-        useKeyTab=true \
-        storeKey=true \
-        keyTab=\"/var/lib/secret/kafka-connect.key\" \
-        principal=\"connect@TEST.CONFLUENT.IO\";"
-      CONNECT_CONSUMER_CONFLUENT_MONITORING_INTERCEPTOR_SASL_MECHANISM: GSSAPI
-      CONNECT_CONSUMER_CONFLUENT_MONITORING_INTERCEPTOR_SASL_KERBEROS_SERVICE_NAME: kafka
       # Configure the Connect workers to use SASL/GSSAPI.
       CONNECT_SASL_MECHANISM: GSSAPI
       CONNECT_SASL_KERBEROS_SERVICE_NAME: kafka
