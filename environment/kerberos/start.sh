@@ -22,10 +22,10 @@ then
   docker-compose -f ../../environment/kerberos/docker-compose.yml -f ${DOCKER_COMPOSE_FILE_OVERRIDE} build client
   docker-compose -f ../../environment/kerberos/docker-compose.yml -f ${DOCKER_COMPOSE_FILE_OVERRIDE} up -d kdc
 else
-  docker-compose down -v
-  docker-compose build kdc
-  docker-compose build client
-  docker-compose up -d kdc
+  docker-compose -f ../../environment/kerberos/docker-compose.yml down -v
+  docker-compose -f ../../environment/kerberos/docker-compose.yml build kdc
+  docker-compose -f ../../environment/kerberos/docker-compose.yml build client
+  docker-compose -f ../../environment/kerberos/docker-compose.yml up -d kdc
 fi
 
 ### Create the required identities:
@@ -82,7 +82,7 @@ if [ -f "${DOCKER_COMPOSE_FILE_OVERRIDE}" ]
 then
   docker-compose -f ../../environment/kerberos/docker-compose.yml -f ${DOCKER_COMPOSE_FILE_OVERRIDE} up -d
 else
-  docker-compose up -d
+  docker-compose -f ../../environment/kerberos/docker-compose.yml up -d
 fi
 
 shift
