@@ -17,8 +17,8 @@ then
   docker-compose -f ../../environment/plaintext/docker-compose.yml -f ${DOCKER_COMPOSE_FILE_OVERRIDE} down -v
   docker-compose -f ../../environment/plaintext/docker-compose.yml -f ${DOCKER_COMPOSE_FILE_OVERRIDE} up -d
 else
-  docker-compose down -v
-  docker-compose up -d
+  docker-compose -f ../../environment/plaintext/docker-compose.yml down -v
+  docker-compose -f ../../environment/plaintext/docker-compose.yml up -d
 fi
 
 shift

@@ -24,12 +24,12 @@ cd ${OLDDIR}/../../environment/sasl-ssl
 DOCKER_COMPOSE_FILE_OVERRIDE=$1
 if [ -f "${DOCKER_COMPOSE_FILE_OVERRIDE}" ]
 then
-  
+
   docker-compose -f ../../environment/sasl-ssl/docker-compose.yml -f ${DOCKER_COMPOSE_FILE_OVERRIDE} down -v
   docker-compose -f ../../environment/sasl-ssl/docker-compose.yml -f ${DOCKER_COMPOSE_FILE_OVERRIDE} up -d
 else
-  docker-compose down -v
-  docker-compose up -d
+  docker-compose -f ../../environment/sasl-ssl/docker-compose.yml down -v
+  docker-compose -f ../../environment/sasl-ssl/docker-compose.yml up -d
 fi
 
 cd ${OLDDIR}
