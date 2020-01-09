@@ -2,14 +2,13 @@
 set -e
 
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
+source ${DIR}/../../scripts/utils.sh
 
 if [ ! -f ${DIR}/mysql-connector-java-5.1.45.jar ]
 then
      echo -e "\033[0;33mDownloading mysql-connector-java-5.1.45.jar\033[0m"
      wget https://repo1.maven.org/maven2/mysql/mysql-connector-java/5.1.45/mysql-connector-java-5.1.45.jar
 fi
-
-source ${DIR}/../../ccloud/ccloud-demo/Utils.sh
 
 verify_installed "ccloud"
 check_ccloud_version 0.192.0 || exit 1
