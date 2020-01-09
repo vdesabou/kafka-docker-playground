@@ -3,18 +3,18 @@ version: '3.5'
 services:
   connect-us:
     volumes:
-        - ../../replicator/executable/consumer-europe.properties:/etc/kafka/consumer-europe.properties
-        - ../../replicator/executable/producer-europe.properties:/etc/kafka/producer-europe.properties
+        - ../../replicator/executable/consumer-europe-plaintext.properties:/etc/kafka/consumer-europe.properties
+        - ../../replicator/executable/producer-europe-plaintext.properties:/etc/kafka/producer-europe.properties
         - ../../replicator/executable/replication-europe.properties:/etc/kafka/replication-europe.properties
-        - ../../replicator/executable/consumer-us.properties:/etc/kafka/consumer-us.properties
-        - ../../replicator/executable/producer-us.properties:/etc/kafka/producer-us.properties
+        - ../../replicator/executable/consumer-us-plaintext.properties:/etc/kafka/consumer-us.properties
+        - ../../replicator/executable/producer-us-plaintext.properties:/etc/kafka/producer-us.properties
         - ../../replicator/executable/replication-us.properties:/etc/kafka/replication-us.properties
 
   connect-europe:
     volumes:
-        - ../../replicator/executable/consumer-europe.properties:/etc/kafka/consumer-europe.properties
-        - ../../replicator/executable/producer-europe.properties:/etc/kafka/producer-europe.properties
+        - ../../replicator/executable/consumer-europe-plaintext.properties:/etc/kafka/consumer-europe.properties
+        - ../../replicator/executable/producer-europe-plaintext.properties:/etc/kafka/producer-europe.properties
         - ../../replicator/executable/replication-europe.properties:/etc/kafka/replication-europe.properties
-        - ../../replicator/executable/consumer-us.properties:/etc/kafka/consumer-us.properties
-        - ../../replicator/executable/producer-us.properties:/etc/kafka/producer-us.properties
+        - ../../replicator/executable/consumer-us-plaintext.properties:/etc/kafka/consumer-us.properties
+        - ../../replicator/executable/producer-us-plaintext.properties:/etc/kafka/producer-us.properties
         - ../../replicator/executable/replication-us.properties:/etc/kafka/replication-us.properties
