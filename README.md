@@ -1,7 +1,7 @@
 <!-- omit in toc -->
 # <img src="https://www.docker.com/sites/default/files/d8/2019-07/vertical-logo-monochromatic.png" width="24"> <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/0/05/Apache_kafka.svg/1200px-Apache_kafka.svg.png" width="16"> <img src="https://res.cloudinary.com/dcvaxfika/image/upload/v1543961808/6.png" width="24"> kafka-docker-playground
 
-Playground for Kafka/Confluent Docker experimentations...
+Playground for Kafka/Confluent Docker experimentations... [![Build Status](https://travis-ci.org/vdesabou/kafka-docker-playground.svg?branch=master)](https://travis-ci.org/vdesabou/kafka-docker-playground)
 
 <!-- omit in toc -->
 ## Table of Contents
