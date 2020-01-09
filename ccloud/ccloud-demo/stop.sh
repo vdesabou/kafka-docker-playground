@@ -15,11 +15,11 @@ delete_topic customer-avro
 delete_topic mysql-application
 delete_topic demo-acl-topic
 
-echo -e "\033[0;33mDelete connector mysql-source\033[0m"
+log "Delete connector mysql-source"
 curl -X DELETE localhost:8083/connectors/mysql-source
-echo -e "\033[0;33mDelete connector http-sink\033[0m"
+log "Delete connector http-sink"
 curl -X DELETE localhost:8083/connectors/http-sink
-echo -e "\033[0;33mDelete connector elasticsearch-sink\033[0m"
+log "Delete connector elasticsearch-sink"
 curl -X DELETE localhost:8083/connectors/elasticsearch-sink
 
 docker-compose down -v

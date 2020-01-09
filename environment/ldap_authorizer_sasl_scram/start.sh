@@ -39,15 +39,15 @@ docker exec broker kafka-acls --authorizer-properties zookeeper.connect=zookeepe
 
 # Test LDAP group-based authorization
 # https://docs.confluent.io/current/security/ldap-authorizer/quickstart.html#test-ldap-group-based-authorization
-echo -e "\033[0;33mCreate topic testtopic\033[0m"
+log "Create topic testtopic"
 docker exec broker kafka-topics --create --topic testtopic --partitions 10 --replication-factor 1 --zookeeper zookeeper:2181
 
-echo -e "\033[0;33mRun console producer without authorizing user alice: SHOULD FAIL\033[0m"
+log "Run console producer without authorizing user alice: SHOULD FAIL"
 docker exec -i broker kafka-console-producer --broker-list broker:9092 --topic testtopic --producer.config /service/kafka/users/alice.properties << EOF
 message Alice
 EOF
 
-echo -e "\033[0;33mAuthorize group Group:Kafka Developers and rerun producer for alice: SHOULD BE SUCCESS\033[0m"
+log "Authorize group Group:Kafka Developers and rerun producer for alice: SHOULD BE SUCCESS"
 docker exec broker kafka-acls --authorizer-properties zookeeper.connect=zookeeper:2181 --add --topic=testtopic --producer --allow-principal="Group:Kafka Developers"
 
 sleep 1
@@ -56,23 +56,23 @@ docker exec -i broker kafka-console-producer --broker-list broker:9092 --topic t
 message Alice
 EOF
 
-echo -e "\033[0;33mRun console consumer without access to consumer group: SHOULD FAIL\033[0m"
+log "Run console consumer without access to consumer group: SHOULD FAIL"
 # Consume should fail authorization since neither user alice nor the group Kafka Developers that alice belongs to has authorization to consume using the group test-consumer-group
 docker exec broker kafka-console-consumer --bootstrap-server broker:9092 --topic testtopic --from-beginning --group test-consumer-group --consumer.config /service/kafka/users/alice.properties --max-messages 1
 
-echo -e "\033[0;33mAuthorize group and rerun consumer\033[0m"
+log "Authorize group and rerun consumer"
 docker exec broker kafka-acls --authorizer-properties zookeeper.connect=zookeeper:2181 --add --topic=testtopic --group test-consumer-group --allow-principal="Group:Kafka Developers"
 docker exec broker kafka-console-consumer --bootstrap-server broker:9092 --topic testtopic --from-beginning --group test-consumer-group --consumer.config /service/kafka/users/alice.properties --max-messages 1
 
-echo -e "\033[0;33mRun console producer with authorized user barnie (barnie is in group): SHOULD BE SUCCESS\033[0m"
+log "Run console producer with authorized user barnie (barnie is in group): SHOULD BE SUCCESS"
 docker exec -i broker kafka-console-producer --broker-list broker:9092 --topic testtopic --producer.config /service/kafka/users/barnie.properties << EOF
 message Barnie
 EOF
 
-echo -e "\033[0;33mRun console producer without authorizing user (charlie is NOT in group): SHOULD FAIL\033[0m"
+log "Run console producer without authorizing user (charlie is NOT in group): SHOULD FAIL"
 docker exec -i broker kafka-console-producer --broker-list broker:9092 --topic testtopic --producer.config /service/kafka/users/charlie.properties << EOF
 message Charlie
 EOF
 
-echo -e "\033[0;33mListing ACLs\033[0m"
+log "Listing ACLs"
 docker exec broker kafka-acls --bootstrap-server broker:9092 --list --command-config /service/kafka/users/kafka.properties

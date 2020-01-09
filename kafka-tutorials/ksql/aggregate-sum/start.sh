@@ -7,7 +7,7 @@ verify_installed "docker-compose"
 docker-compose down -v
 docker-compose up -d
 
-echo -e "\033[0;33mInvoke manual steps\033[0m"
+log "Invoke manual steps"
 docker exec -i ksql-cli bash -c 'echo -e "\n\n⏳ Waiting for KSQL to be available before launching CLI\n"; while [ $(curl -s -o /dev/null -w %{http_code} http://ksql-server:8088/) -eq 000 ] ; do echo -e $(date) "KSQL Server HTTP state: " $(curl -s -o /dev/null -w %{http_code} http:/ksql-server:8088/) " (waiting for 200)" ; sleep 10 ; done; ksql http://ksql-server:8088' << EOF
 
 CREATE STREAM MOVIE_TICKET_SALES (title VARCHAR, sale_ts VARCHAR, ticket_total_value INT)
@@ -46,5 +46,5 @@ PRINT 'MOVIE_REVENUE' FROM BEGINNING LIMIT 3;
 EOF
 
 
-echo -e "\033[0;33mInvoke the tests\033[0m"
+log "Invoke the tests"
 docker exec ksql-cli ksql-test-runner -i /opt/app/test/input.json -s opt/app/src/statements.sql -o /opt/app/test/output.json

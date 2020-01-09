@@ -40,13 +40,13 @@ ${DIR}/../../environment/sasl-ssl/start.sh "${PWD}/docker-compose.sasl-ssl.yml" 
 ZOOKEEPER_IP=$(container_to_ip zookeeper)
 interface=eth0
 
-echo -e "\033[0;33mBlocking communication between jms-client and zookeeper\033[0m"
+log "Blocking communication between jms-client and zookeeper"
 block_host jms-client $ZOOKEEPER_IP
 
-echo -e "\033[0;33mSending messages to topic test-queue using JMS client\033[0m"
+log "Sending messages to topic test-queue using JMS client"
 docker exec -e BOOTSTRAP_SERVERS="broker:9091" -e ZOOKEEPER_CONNECT="zookeeper:2181" -e USERNAME="client" -e PASSWORD="client-secret" jms-client bash -c "java -jar jms-client-1.0.0-jar-with-dependencies.jar"
 
-echo -e "\033[0;33mRemoving network partition between jms-client and zookeeper\033[0m"
+log "Removing network partition between jms-client and zookeeper"
 remove_partition jms-client zookeeper
 
 # [2019-12-23 13:08:13,379] INFO Opening socket connection to server zookeeper.sasl-ssl_default/172.24.0.2:2181. Will not attempt to authenticate using SASL (unknown error) (org.apache.zookeeper.ClientCnxn)

@@ -40,11 +40,11 @@ ${DIR}/../../environment/sasl-ssl/start.sh "${PWD}/docker-compose.sasl-ssl.yml" 
 interface=eth0
 ZOOKEEPER_IP=$(container_to_ip zookeeper)
 
-echo -e "\033[0;33mBlocking communication between jms-client and zookeeper\033[0m"
+log "Blocking communication between jms-client and zookeeper"
 block_host jms-client $ZOOKEEPER_IP
 
-echo -e "\033[0;33mSending messages to topic test-queue using JMS client\033[0m"
+log "Sending messages to topic test-queue using JMS client"
 docker exec -e BOOTSTRAP_SERVERS="broker:9091" -e USERNAME="client" -e PASSWORD="client-secret" -e CONFLUENT_LICENSE="put your license here" jms-client bash -c "java -jar jms-client-1.0.0-jar-with-dependencies.jar"
 
-echo -e "\033[0;33mRemoving network partition between jms-client and zookeeper\033[0m"
+log "Removing network partition between jms-client and zookeeper"
 remove_partition jms-client zookeeper

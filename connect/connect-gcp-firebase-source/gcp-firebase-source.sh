@@ -8,13 +8,13 @@ PROJECT=${1:-vincent-de-saboulin-lab}
 KEYFILE="${DIR}/keyfile.json"
 if [ ! -f ${KEYFILE} ]
 then
-     echo -e "\033[0;33mERROR: the file ${KEYFILE} file is not present!\033[0m"
+     log "ERROR: the file ${KEYFILE} file is not present!"
      exit 1
 fi
 
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
 
-echo -e "\033[0;33mCreating GCP Firebase Source connector\033[0m"
+log "Creating GCP Firebase Source connector"
 docker exec -e PROJECT="$PROJECT" connect \
      curl -X PUT \
      -H "Content-Type: application/json" \
@@ -31,8 +31,8 @@ docker exec -e PROJECT="$PROJECT" connect \
 
 sleep 10
 
-echo -e "\033[0;33mVerify messages are in topic artists\033[0m"
+log "Verify messages are in topic artists"
 docker exec schema-registry kafka-avro-console-consumer -bootstrap-server broker:9092 --topic artists --from-beginning --max-messages 3
 
-echo -e "\033[0;33mVerify messages are in topic songs\033[0m"
+log "Verify messages are in topic songs"
 docker exec schema-registry kafka-avro-console-consumer -bootstrap-server broker:9092 --topic songs --from-beginning --max-messages 3

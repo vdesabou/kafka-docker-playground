@@ -16,7 +16,7 @@ do
   sleep 5
 done
 
-echo -e "\033[0;33mProduce sample clicks\033[0m"
+log "Produce sample clicks"
 docker exec -i schema-registry /usr/bin/kafka-avro-console-producer --topic clicks --broker-list broker:9092 --property value.schema="$(< src/main/avro/click.avsc)" << EOF
 {"ip":"10.0.0.1","url":"https://docs.confluent.io/current/tutorials/examples/kubernetes/gke-base/docs/index.html","timestamp":"2019-09-16T14:53:43+00:00"}
 {"ip":"10.0.0.2","url":"https://www.confluent.io/hub/confluentinc/kafka-connect-datagen","timestamp":"2019-09-16T14:53:43+00:01"}
@@ -26,5 +26,5 @@ docker exec -i schema-registry /usr/bin/kafka-avro-console-producer --topic clic
 {"ip":"10.0.0.3","url":"https://www.confluent.io/hub/confluentinc/kafka-connect-datagen","timestamp":"2019-09-16T14:53:43+00:03"}
 EOF
 
-echo -e "\033[0;33mConsume distinct events from the output topic\033[0m"
+log "Consume distinct events from the output topic"
 docker exec -it schema-registry /usr/bin/kafka-avro-console-consumer --topic distinct-clicks --bootstrap-server broker:9092 --from-beginning --max-messages 3

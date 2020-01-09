@@ -6,14 +6,14 @@ source ${DIR}/../../scripts/utils.sh
 
 ${DIR}/../../environment/sasl-ssl/start.sh "${PWD}/docker-compose.sasl-ssl.yml"
 
-echo -e "\033[0;33m########\033[0m"
-echo -e "\033[0;33m##  SASL_SSL authentication\033[0m"
-echo -e "\033[0;33m########\033[0m"
+log "########"
+log "##  SASL_SSL authentication"
+log "########"
 
-echo -e "\033[0;33mSending messages to topic test-topic-sasl-ssl\033[0m"
+log "Sending messages to topic test-topic-sasl-ssl"
 seq 10 | docker exec -i broker kafka-console-producer --broker-list broker:9091 --topic test-topic-sasl-ssl --producer.config /etc/kafka/secrets/client_without_interceptors.config
 
-echo -e "\033[0;33mCreating Confluent Replicator connector with SASL_SSL authentication\033[0m"
+log "Creating Confluent Replicator connector with SASL_SSL authentication"
 docker exec connect \
      curl -X PUT \
      --cert /etc/kafka/secrets/connect.certificate.pem --key /etc/kafka/secrets/connect.key --tlsv1.2 --cacert /etc/kafka/secrets/snakeoil-ca-1.crt \
@@ -55,5 +55,5 @@ docker exec connect \
 
 sleep 10
 
-echo -e "\033[0;33mVerify we have received the data in test-topic-sasl-ssl-duplicate topic\033[0m"
+log "Verify we have received the data in test-topic-sasl-ssl-duplicate topic"
 docker exec broker kafka-console-consumer --bootstrap-server broker:9091 --topic test-topic-sasl-ssl-duplicate --from-beginning --max-messages 10 --consumer.config /etc/kafka/secrets/client_without_interceptors.config

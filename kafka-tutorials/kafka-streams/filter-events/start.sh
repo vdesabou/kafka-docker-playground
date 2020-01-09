@@ -16,7 +16,7 @@ do
   sleep 5
 done
 
-echo -e "\033[0;33mProduce events to the input topic\033[0m"
+log "Produce events to the input topic"
 docker exec -i schema-registry /usr/bin/kafka-avro-console-producer --topic publications --broker-list broker:9092 --property value.schema="$(< src/main/avro/publication.avsc)" << EOF
 {"name": "George R. R. Martin", "title": "A Song of Ice and Fire"}
 {"name": "C.S. Lewis", "title": "The Silver Chair"}
@@ -29,5 +29,5 @@ docker exec -i schema-registry /usr/bin/kafka-avro-console-producer --topic publ
 {"name": "George R. R. Martin", "title": "The Ice Dragon"}
 EOF
 
-echo -e "\033[0;33mConsume filtered events from the output topic\033[0m"
+log "Consume filtered events from the output topic"
 docker exec -it schema-registry /usr/bin/kafka-avro-console-consumer --topic filtered-publications --bootstrap-server broker:9092 --from-beginning --max-messages 4

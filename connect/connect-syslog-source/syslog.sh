@@ -6,7 +6,7 @@ source ${DIR}/../../scripts/utils.sh
 
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
 
-echo -e "\033[0;33mCreating Syslog Source connector\033[0m"
+log "Creating Syslog Source connector"
 docker exec connect \
      curl -X PUT \
      -H "Content-Type: application/json" \
@@ -24,10 +24,10 @@ docker exec connect \
 
 sleep 5
 
-echo -e "\033[0;33mTest with sample syslog-formatted message sent via netcat\033[0m"
-echo -e "\033[0;33m<34>1 2003-10-11T22:14:15.003Z mymachine.example.com su - ID47 - Your refrigerator is running\033[0m" | nc -v -w 0 localhost 5454
+log "Test with sample syslog-formatted message sent via netcat"
+log "<34>1 2003-10-11T22:14:15.003Z mymachine.example.com su - ID47 - Your refrigerator is running" | nc -v -w 0 localhost 5454
 
 sleep 5
 
-echo -e "\033[0;33mVerify we have received the data in syslog topic\033[0m"
+log "Verify we have received the data in syslog topic"
 docker exec schema-registry kafka-avro-console-consumer -bootstrap-server broker:9092 --topic syslog --property schema.registry.url=http://schema-registry:8081 --from-beginning --max-messages 1

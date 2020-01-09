@@ -7,7 +7,7 @@ source ${DIR}/../../scripts/utils.sh
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
 
 
-echo -e "\033[0;33mCreating Elasticsearch Sink connector\033[0m"
+log "Creating Elasticsearch Sink connector"
 docker exec connect \
      curl -X PUT \
      -H "Content-Type: application/json" \
@@ -33,7 +33,7 @@ EOF
 
 sleep 10
 
-echo -e "\033[0;33mCheck that the data is available in Elasticsearch\033[0m"
+log "Check that the data is available in Elasticsearch"
 
 curl -XGET 'http://localhost:9200/test-elasticsearch-sink/_search?pretty'
 

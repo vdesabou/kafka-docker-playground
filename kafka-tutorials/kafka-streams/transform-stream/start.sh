@@ -16,7 +16,7 @@ do
   sleep 5
 done
 
-echo -e "\033[0;33mProduce events to the input topic\033[0m"
+log "Produce events to the input topic"
 docker exec -i schema-registry /usr/bin/kafka-avro-console-producer --topic raw-movies --broker-list broker:9092 --property value.schema="$(< src/main/avro/input_movie_event.avsc)" << EOF
 {"id": 294, "title": "Die Hard::1988", "genre": "action"}
 {"id": 354, "title": "Tree of Life::2011", "genre": "drama"}
@@ -24,5 +24,5 @@ docker exec -i schema-registry /usr/bin/kafka-avro-console-producer --topic raw-
 {"id": 128, "title": "The Big Lebowski::1998", "genre": "comedy"}
 EOF
 
-echo -e "\033[0;33mObserve the transformed movies in the output topic\033[0m"
+log "Observe the transformed movies in the output topic"
 docker exec -it schema-registry /usr/bin/kafka-avro-console-consumer --topic movies --bootstrap-server broker:9092 --from-beginning --max-messages 4

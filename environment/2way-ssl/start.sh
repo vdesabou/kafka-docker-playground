@@ -10,7 +10,7 @@ OLDDIR=$PWD
 
 cd ${OLDDIR}/../../environment/2way-ssl/security
 
-echo -e "\033[0;33mGenerate keys and certificates used for SSL\033[0m"
+log "Generate keys and certificates used for SSL"
 ./certs-create.sh > /dev/null 2>&1
 
 cd ${OLDDIR}/../../environment/2way-ssl

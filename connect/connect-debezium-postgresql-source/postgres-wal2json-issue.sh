@@ -97,17 +97,17 @@ ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext-wal
 #         at io.debezium.pipeline.ChangeEventSourceCoordinator.lambda$start$0(ChangeEventSourceCoordinator.java:91)
 #         ... 5 more
 
-echo -e "\033[0;33mShow content of CUSTOMERS table:\033[0m"
+log "Show content of CUSTOMERS table:"
 docker exec postgres bash -c "psql -U postgres -d postgres -c 'SELECT * FROM CUSTOMERS'"
 
-echo -e "\033[0;33mAdding an element to the table\033[0m"
+log "Adding an element to the table"
 
 docker exec postgres psql -U postgres -d postgres -c "insert into customers (id, first_name, last_name, email, gender, comments) values (21, 'Bernardo', 'Dudman', 'bdudmanb@lulu.com', 'Male', 'Robust bandwidth-monitored budgetary management');"
 
-echo -e "\033[0;33mShow content of CUSTOMERS table:\033[0m"
+log "Show content of CUSTOMERS table:"
 docker exec postgres bash -c "psql -U postgres -d postgres -c 'SELECT * FROM CUSTOMERS'"
 
-echo -e "\033[0;33mCreating Debezium PostgreSQL source connector\033[0m"
+log "Creating Debezium PostgreSQL source connector"
 docker exec connect \
      curl -X PUT \
      -H "Content-Type: application/json" \
@@ -134,13 +134,13 @@ docker exec connect \
 
 sleep 5
 
-echo -e "\033[0;33mUpdating elements to the table\033[0m"
+log "Updating elements to the table"
 
 docker exec postgres psql -U postgres -d postgres -c "update customers set first_name = 'vinc';"
 docker exec postgres psql -U postgres -d postgres -c "update customers set first_name = 'vinc2';"
 docker exec postgres psql -U postgres -d postgres -c "update customers set first_name = 'vinc3';"
 
-echo -e "\033[0;33mVerifying topic asgard.public.customers-raw\033[0m"
+log "Verifying topic asgard.public.customers-raw"
 docker exec schema-registry kafka-avro-console-consumer -bootstrap-server broker:9092 --topic asgard.public.customers-raw --from-beginning --max-messages 5
 
 

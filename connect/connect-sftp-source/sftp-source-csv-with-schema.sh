@@ -12,7 +12,7 @@ mkdir -p ${DIR}/upload/finished
 
 echo $'id,first_name,last_name,email,gender,ip_address,last_login,account_balance,country,favorite_color\n1,Salmon,Baitman,sbaitman0@feedburner.com,Male,120.181.75.98,2015-03-01T06:01:15Z,17462.66,IT,#f09bc0\n2,Debby,Brea,dbrea1@icio.us,Female,153.239.187.49,2018-10-21T12:27:12Z,14693.49,CZ,#73893a' > ${DIR}/upload/input/csv-sftp-source.csv
 
-echo -e "\033[0;33mCreating CSV SFTP Source connector\033[0m"
+log "Creating CSV SFTP Source connector"
 docker exec connect \
      curl -X PUT \
      -H "Content-Type: application/json" \
@@ -39,5 +39,5 @@ docker exec connect \
 
 sleep 5
 
-echo -e "\033[0;33mVerifying topic sftp-testing-topic\033[0m"
+log "Verifying topic sftp-testing-topic"
 docker exec schema-registry kafka-avro-console-consumer -bootstrap-server broker:9092 --topic sftp-testing-topic --from-beginning --max-messages 2

@@ -6,12 +6,12 @@ source ${DIR}/../../scripts/utils.sh
 
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
 
-echo -e "\033[0;33mInitialize MongoDB replica set\033[0m"
+log "Initialize MongoDB replica set"
 docker exec -it mongodb mongo --eval 'rs.initiate({_id: "myuser", members:[{_id: 0, host: "mongodb:27017"}]})'
 
 sleep 5
 
-echo -e "\033[0;33mCreate a user profile\033[0m"
+log "Create a user profile"
 docker exec -i mongodb mongo << EOF
 use admin
 db.createUser(
@@ -25,7 +25,7 @@ EOF
 
 sleep 2
 
-echo -e "\033[0;33mCreating MongoDB source connector\033[0m"
+log "Creating MongoDB source connector"
 docker exec connect \
      curl -X PUT \
      -H "Content-Type: application/json" \
@@ -41,7 +41,7 @@ docker exec connect \
 
 sleep 5
 
-echo -e "\033[0;33mInsert a record\033[0m"
+log "Insert a record"
 docker exec -i mongodb mongo << EOF
 use inventory
 db.customers.insert([
@@ -49,7 +49,7 @@ db.customers.insert([
 ]);
 EOF
 
-echo -e "\033[0;33mView record\033[0m"
+log "View record"
 docker exec -i mongodb mongo << EOF
 use inventory
 db.customers.find().pretty();
@@ -57,5 +57,5 @@ EOF
 
 sleep 5
 
-echo -e "\033[0;33mVerifying topic mongo.inventory.customers\033[0m"
+log "Verifying topic mongo.inventory.customers"
 docker exec schema-registry kafka-avro-console-consumer -bootstrap-server broker:9092 --topic mongo.inventory.customers --from-beginning --max-messages 1

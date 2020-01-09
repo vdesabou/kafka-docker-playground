@@ -10,24 +10,24 @@ ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml
 
 
 set +e
-echo -e "\033[0;33mDelete the stream\033[0m"
+log "Delete the stream"
 aws kinesis delete-stream --stream-name my_kinesis_stream
 set -e
 
 sleep 5
 
-echo -e "\033[0;33mCreate a Kinesis stream my_kinesis_stream\033[0m"
+log "Create a Kinesis stream my_kinesis_stream"
 aws kinesis create-stream --stream-name my_kinesis_stream --shard-count 1
 
-echo -e "\033[0;33mSleep 30 seconds to let the Kinesis stream being fully started\033[0m"
+log "Sleep 30 seconds to let the Kinesis stream being fully started"
 sleep 30
 
-echo -e "\033[0;33mInsert records in Kinesis stream\033[0m"
+log "Insert records in Kinesis stream"
 # The example shows that a record containing partition key 123 and data "test-message-1" is inserted into my_kinesis_stream.
 aws kinesis put-record --stream-name my_kinesis_stream --partition-key 123 --data test-message-1
 
 
-echo -e "\033[0;33mCreating Kinesis Source connector\033[0m"
+log "Creating Kinesis Source connector"
 docker exec connect \
      curl -X PUT \
      -H "Content-Type: application/json" \
@@ -44,8 +44,8 @@ docker exec connect \
           }' \
      http://localhost:8083/connectors/kinesis-source/config | jq .
 
-echo -e "\033[0;33mVerify we have received the data in kinesis_topic topic\033[0m"
+log "Verify we have received the data in kinesis_topic topic"
 docker exec broker kafka-console-consumer --bootstrap-server broker:9092 --topic kinesis_topic --from-beginning --max-messages 1
 
-echo -e "\033[0;33mDelete the stream\033[0m"
+log "Delete the stream"
 aws kinesis delete-stream --stream-name my_kinesis_stream
