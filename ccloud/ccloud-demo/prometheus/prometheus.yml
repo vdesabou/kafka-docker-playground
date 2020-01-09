@@ -43,3 +43,8 @@ scrape_configs:
     scrape_interval: 5s
     static_configs:
     - targets: ['kafka-lag-exporter:9999']
+
+  - job_name: 'ccloudexporter'
+    scrape_interval: 15s
+    static_configs:
+      - targets: ['ccloud_exporter:2112']

@@ -323,6 +323,16 @@ services:
       - '--collector.filesystem.ignored-mount-points'
       - '^(aufs|proc|nsfs|shm|cgroup|tmpfs|binfmt_misc|debugfs|devpts|fusectl|hugetlbfs|fuse.lxcfs|mqueue|pstore|securityfs|sysfs|autofs|devtmpfs|configfs)'
 
+  ccloud_exporter:
+    image: dabz/ccloudexporter
+    hostname: ccloud_exporter
+    container_name: ccloud_exporter
+    environment:
+      CCLOUD_USER: ${CCLOUD_USER}
+      CCLOUD_PASSWORD: ${CCLOUD_PASSWORD}
+      CCLOUD_CLUSTER: ${CCLOUD_CLUSTER}
+    command: ccloudexporter ${CCLOUD_CLUSTER}
+
   prometheus:
     image: prom/prometheus:v2.11.1
     hostname: prometheus
