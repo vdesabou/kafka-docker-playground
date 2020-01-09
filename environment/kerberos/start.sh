@@ -102,3 +102,6 @@ echo -e "\033[0;33mExample configuration to access kafka:\033[0m"
 echo -e "\033[0;33m-----------------------------------------\033[0m"
 echo -e "\033[0;33m-> docker-compose exec client bash -c 'kinit -k -t /var/lib/secret/kafka-client.key kafka_producer && kafka-console-producer --broker-list broker:9092 --topic test --producer.config /etc/kafka/producer.properties'\033[0m"
 echo -e "\033[0;33m-> docker-compose exec client bash -c 'kinit -k -t /var/lib/secret/kafka-client.key kafka_consumer && kafka-console-consumer --bootstrap-server broker:9092 --topic test --consumer.config /etc/kafka/consumer.properties --from-beginning'\033[0m"
+
+shift
+../../scripts/wait-for-connect-and-controlcenter.sh $@

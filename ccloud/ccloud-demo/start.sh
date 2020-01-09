@@ -64,7 +64,7 @@ sed -e "s|:BOOTSTRAP_SERVERS:|$BOOTSTRAP_SERVERS|g" \
 
 docker-compose down -v
 docker-compose up -d
-${DIR}/../../WaitForConnectAndControlCenter.sh
+${DIR}/../../scripts/wait-for-connect-and-controlcenter.sh
 
 
 echo -e "\033[0;33m-------------------------------------\033[0m"
