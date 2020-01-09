@@ -1,11 +1,4 @@
 connect-active-mq-source
-connect-aws-cloudwatch-source
-connect-aws-dynamodb-sink
-connect-aws-lambda-sink
-connect-aws-redshift-sink
-connect-azure-blob-storage-sink
-connect-azure-data-lake-storage-gen1-sink
-connect-azure-data-lake-storage-gen2-sink
 connect-cassandra-sink
 connect-couchbase-sink
 connect-couchbase-source
@@ -14,13 +7,6 @@ connect-debezium-mysql-source
 connect-debezium-postgresql-source
 connect-debezium-sqlserver-source
 connect-elasticsearch-sink
-connect-gcp-bigquery-sink
-connect-gcp-firebase-sink
-connect-gcp-firebase-source
-connect-gcp-pubsub-source
-connect-gcs-sink
-connect-gcs-source
-connect-google-cloud-functions-sink
 connect-hbase-sink
 connect-hdfs-sink
 connect-hdfs2-sink
