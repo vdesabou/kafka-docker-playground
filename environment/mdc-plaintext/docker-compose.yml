@@ -8,14 +8,10 @@ services:
     build: ../../environment/mdc-kerberos/kdc
     container_name: kdc
 
-
+  # not used in plaintext but required because docker override is used for other env
   client:
     build: ../../environment/mdc-kerberos/client
     container_name: client
-    # Required to wait for the keytab to get generated
-    # volumes:
-    #   - secret:/var/lib/secret
-    #   - ../../environment/mdc-kerberos/kdc/krb5.conf:/etc/krb5.conf
 
   zookeeper-europe:
     image: confluentinc/cp-zookeeper:5.3.2
