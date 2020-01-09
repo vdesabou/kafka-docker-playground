@@ -1,3 +1,5 @@
+# connectors to ignore
+
 connect-aws-cloudwatch-source
 connect-aws-dynamodb-sink
 connect-aws-lambda-sink
@@ -22,3 +24,6 @@ connect-jdbc-oracle11-sink
 connect-jdbc-oracle11-source
 connect-jdbc-oracle12-sink
 connect-jdbc-oracle12-source
+
+# scripts to ignore
+postgres-wal2json-issue
