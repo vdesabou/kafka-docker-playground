@@ -32,8 +32,8 @@ do
         ####
         ##
         echo "Executing $script in dir $dir"
-        sh $script
-        sh stop.sh
+        bash $script
+        bash stop.sh
     done
     cd - > /dev/null
 done
