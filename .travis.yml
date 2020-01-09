@@ -1,18 +1,15 @@
 language: bash
 
 os:
-  - osx
+  - linux
 
-addons:
-  homebrew:
-    packages:
-    - jq
-    - mosquitto
-    - awscli
-    - azurecli
-    casks:
-    - docker
+services:
+  - docker
+
+before_install:
+  - sudo apt-get -y install jq
+  - sudo apt-get -y install mosquitto-clients
 
 script:
-    - sh scripts/run-tests.sh
+    - bash scripts/run-tests.sh
 
