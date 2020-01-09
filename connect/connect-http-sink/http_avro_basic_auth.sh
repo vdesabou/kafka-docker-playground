@@ -7,14 +7,14 @@ source ${DIR}/../../scripts/utils.sh
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
 
 
-echo -e "\033[0;33mSending messages to topic avro-topic\033[0m"
+log "Sending messages to topic avro-topic"
 seq -f "{\"f1\": \"value%g\"}" 10 | docker exec -i schema-registry kafka-avro-console-producer --broker-list broker:9092 --topic avro-topic --property value.schema='{"type":"record","name":"myrecord","fields":[{"name":"f1","type":"string"}]}'
 
-echo -e "\033[0;33m-------------------------------------\033[0m"
-echo -e "\033[0;33mRunning AVRO Converter Example\033[0m"
-echo -e "\033[0;33m-------------------------------------\033[0m"
+log "-------------------------------------"
+log "Running AVRO Converter Example"
+log "-------------------------------------"
 
-echo -e "\033[0;33mCreating http-sink connector\033[0m"
+log "Creating http-sink connector"
 docker exec connect \
      curl -X PUT \
      -H "Content-Type: application/json" \
@@ -37,5 +37,5 @@ docker exec connect \
 
 sleep 10
 
-echo -e "\033[0;33mConfirm that the data was sent to the HTTP endpoint.\033[0m"
+log "Confirm that the data was sent to the HTTP endpoint."
 curl admin:password@localhost:9080/api/messages | jq .

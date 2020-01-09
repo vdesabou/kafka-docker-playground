@@ -16,7 +16,7 @@ do
   sleep 5
 done
 
-echo -e "\033[0;33mProduce some ratings to the input topic\033[0m"
+log "Produce some ratings to the input topic"
 docker exec -i schema-registry /usr/bin/kafka-avro-console-producer --topic ratings --broker-list broker:9092 --property value.schema="$(< src/main/avro/rating.avsc)" << EOF
 {"title": "Die Hard", "release_year": 1998, "rating": 8.2, "timestamp": "2019-04-25T18:00:00-0700"}
 {"title": "Die Hard", "release_year": 1998, "rating": 4.5, "timestamp": "2019-04-25T18:03:00-0700"}
@@ -48,5 +48,5 @@ docker exec -i schema-registry /usr/bin/kafka-avro-console-producer --topic rati
 {"title": "Super Mario Bros.", "release_year": 1993, "rating": 2.0, "timestamp": "2019-04-25T13:34:00-0700"}
 EOF
 
-echo -e "\033[0;33mobserve the counted ratings in the output topic\033[0m"
+log "observe the counted ratings in the output topic"
 docker exec -it broker /usr/bin/kafka-console-consumer --topic rating-counts --bootstrap-server broker:9092 --from-beginning --property print.key=true --max-messages 13

@@ -7,11 +7,11 @@ source ${DIR}/../../scripts/utils.sh
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext-jtds.yml"
 
 
-echo -e "\033[0;33mLoad inventory.sql to SQL Server\033[0m"
+log "Load inventory.sql to SQL Server"
 cat inventory.sql | docker exec -i sqlserver bash -c '/opt/mssql-tools/bin/sqlcmd -U sa -P Password!'
 
 
-echo -e "\033[0;33mCreating JDBC SQL Server (with JTDS driver) source connector\033[0m"
+log "Creating JDBC SQL Server (with JTDS driver) source connector"
 docker exec connect \
      curl -X PUT \
      -H "Content-Type: application/json" \
@@ -39,5 +39,5 @@ INSERT INTO customers(first_name,last_name,email) VALUES ('Pam','Thomas','pam@of
 GO
 EOF
 
-echo -e "\033[0;33mVerifying topic sqlserver-customers\033[0m"
+log "Verifying topic sqlserver-customers"
 docker exec schema-registry kafka-avro-console-consumer -bootstrap-server broker:9092 --topic sqlserver-customers --from-beginning --max-messages 5

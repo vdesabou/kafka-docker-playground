@@ -10,7 +10,7 @@ verify_installed "aws"
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
 
 
-echo -e "\033[0;33mCreating S3 Sink connector with bucket name <$BUCKET_NAME>\033[0m"
+log "Creating S3 Sink connector with bucket name <$BUCKET_NAME>"
 docker exec -e BUCKET_NAME="$BUCKET_NAME" connect \
      curl -X PUT \
      -H "Content-Type: application/json" \
@@ -29,15 +29,15 @@ docker exec -e BUCKET_NAME="$BUCKET_NAME" connect \
      http://localhost:8083/connectors/s3-sink/config | jq .
 
 
-echo -e "\033[0;33mSending messages to topic s3_topic\033[0m"
+log "Sending messages to topic s3_topic"
 seq -f "{\"f1\": \"value%g\"}" 10 | docker exec -i schema-registry kafka-avro-console-producer --broker-list broker:9092 --topic s3_topic --property value.schema='{"type":"record","name":"myrecord","fields":[{"name":"f1","type":"string"}]}'
 
 sleep 10
 
-echo -e "\033[0;33mListing objects of in S3\033[0m"
+log "Listing objects of in S3"
 aws s3api list-objects --bucket "$BUCKET_NAME"
 
-echo -e "\033[0;33mGetting one of the avro files locally and displaying content with avro-tools\033[0m"
+log "Getting one of the avro files locally and displaying content with avro-tools"
 aws s3 cp s3://$BUCKET_NAME/topics/s3_topic/partition=0/s3_topic+0+0000000000.avro /tmp/
 
 

@@ -8,7 +8,7 @@ docker-compose down -v
 docker-compose up -d
 
 # notice the "EOF" -> https://unix.stackexchange.com/a/490970
-echo -e "\033[0;33mInvoke manual steps\033[0m"
+log "Invoke manual steps"
 docker exec -i ksql-cli bash -c 'echo -e "\n\n⏳ Waiting for KSQL to be available before launching CLI\n"; while [ $(curl -s -o /dev/null -w %{http_code} http://ksql-server:8088/) -eq 000 ] ; do echo -e $(date) "KSQL Server HTTP state: " $(curl -s -o /dev/null -w %{http_code} http:/ksql-server:8088/) " (waiting for 200)" ; sleep 10 ; done; ksql http://ksql-server:8088' << "EOF"
 
 SHOW FUNCTIONS;

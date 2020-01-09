@@ -10,7 +10,7 @@ verify_installed "ansible-playbook"
 
 if [ ! -d ${DIR}/cp-ansible ]
 then
-    echo -e "\033[0;33mINFO: Getting cp-ansible from Github.\033[0m"
+    log "INFO: Getting cp-ansible from Github."
     git clone https://github.com/confluentinc/cp-ansible
 fi
 
@@ -20,13 +20,13 @@ cp ${DIR}/hosts.yml ${DIR}/cp-ansible/
 docker-compose down -v
 docker-compose up -d
 
-echo -e "\033[0;33mINFO: Checking Ansible can connect over DOCKER.\033[0m"
+log "INFO: Checking Ansible can connect over DOCKER."
 cd ${DIR}/cp-ansible
 ansible -i hosts.yml all -m ping
 cd ${DIR}
 
 # ls /etc/systemd/system/
-echo -e "\033[0;33mINFO: Restarting everything.\033[0m"
+log "INFO: Restarting everything."
 docker exec zookeeper1 systemctl restart confluent-zookeeper
 docker exec broker1 systemctl restart confluent-kafka
 docker exec broker2 systemctl restart confluent-kafka
@@ -39,7 +39,7 @@ docker exec control-center systemctl restart confluent-control-center
 
 ../../scripts/wait-for-connect-and-controlcenter.sh -b
 
-echo -e "\033[0;33mINFO: Now you can modify the playbooks and run ansible-playbook -i hosts.yml all.yml\033[0m"
+log "INFO: Now you can modify the playbooks and run ansible-playbook -i hosts.yml all.yml"
 #ansible-playbook -i hosts.yml all.yml
 
 # if it fails, try to re-run this command

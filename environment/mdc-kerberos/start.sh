@@ -47,7 +47,7 @@ docker exec -ti kdc kadmin.local -w password -q "add_principal -randkey admin/fo
 
 
 # Create keytabs to use for Kafka
-echo -e "\033[0;33mCreate keytabs\033[0m"
+log "Create keytabs"
 docker exec -ti kdc rm -f /var/lib/secret/broker-us.key 2>&1 > /dev/null
 docker exec -ti kdc rm -f /var/lib/secret/broker-europe.key 2>&1 > /dev/null
 docker exec -ti kdc rm -f /var/lib/secret/zookeeper-us.key 2>&1 > /dev/null
@@ -99,14 +99,14 @@ docker exec client bash -c "kinit -k -t /var/lib/secret/kafka-admin.key admin/fo
 # controlcenter is super user
 
 # Output example usage:
-echo -e "\033[0;33m-----------------------------------------\033[0m"
-echo -e "\033[0;33mExample configuration to access kafka on US cluster:\033[0m"
-echo -e "\033[0;33m-----------------------------------------\033[0m"
-echo -e "\033[0;33m-> docker exec -i client bash -c 'kinit -k -t /var/lib/secret/kafka-client.key kafka_producer && kafka-console-producer --broker-list broker-us:9092 --topic test --producer.config /etc/kafka/producer-us.properties'\033[0m"
-echo -e "\033[0;33m-> docker exec -i client bash -c 'kinit -k -t /var/lib/secret/kafka-client.key kafka_consumer && kafka-console-consumer --bootstrap-server broker-us:9092 --topic test --consumer.config /etc/kafka/consumer-us.properties --from-beginning'\033[0m"
+log "-----------------------------------------"
+log "Example configuration to access kafka on US cluster:"
+log "-----------------------------------------"
+log "-> docker exec -i client bash -c 'kinit -k -t /var/lib/secret/kafka-client.key kafka_producer && kafka-console-producer --broker-list broker-us:9092 --topic test --producer.config /etc/kafka/producer-us.properties'"
+log "-> docker exec -i client bash -c 'kinit -k -t /var/lib/secret/kafka-client.key kafka_consumer && kafka-console-consumer --bootstrap-server broker-us:9092 --topic test --consumer.config /etc/kafka/consumer-us.properties --from-beginning'"
 
-echo -e "\033[0;33m-----------------------------------------\033[0m"
-echo -e "\033[0;33mExample configuration to access kafka on EUROPE cluster:\033[0m"
-echo -e "\033[0;33m-----------------------------------------\033[0m"
-echo -e "\033[0;33m-> docker exec -i client bash -c 'kinit -k -t /var/lib/secret/kafka-client.key kafka_producer && kafka-console-producer --broker-list broker-europe:9092 --topic test --producer.config /etc/kafka/producer-europe.properties'\033[0m"
-echo -e "\033[0;33m-> docker exec -i client bash -c 'kinit -k -t /var/lib/secret/kafka-client.key kafka_consumer && kafka-console-consumer --bootstrap-server broker-europe:9092 --topic test --consumer.config /etc/kafka/consumer-europe.properties --from-beginning'\033[0m"
+log "-----------------------------------------"
+log "Example configuration to access kafka on EUROPE cluster:"
+log "-----------------------------------------"
+log "-> docker exec -i client bash -c 'kinit -k -t /var/lib/secret/kafka-client.key kafka_producer && kafka-console-producer --broker-list broker-europe:9092 --topic test --producer.config /etc/kafka/producer-europe.properties'"
+log "-> docker exec -i client bash -c 'kinit -k -t /var/lib/secret/kafka-client.key kafka_consumer && kafka-console-consumer --bootstrap-server broker-europe:9092 --topic test --consumer.config /etc/kafka/consumer-europe.properties --from-beginning'"

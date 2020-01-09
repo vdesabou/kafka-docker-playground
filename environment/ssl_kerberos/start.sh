@@ -9,7 +9,7 @@ OLDDIR=$PWD
 
 cd ${OLDDIR}/../../environment/ssl_kerberos/security
 
-echo -e "\033[0;33mGenerate keys and certificates used for SSL\033[0m"
+log "Generate keys and certificates used for SSL"
 ./certs-create.sh > /dev/null 2>&1
 
 cd ${OLDDIR}/../../environment/ssl_kerberos
@@ -98,11 +98,11 @@ docker exec client bash -c "kinit -k -t /var/lib/secret/kafka-admin.key admin/fo
 # schemaregistry and controlcenter is super user
 
 # Output example usage:
-echo -e "\033[0;33m-----------------------------------------\033[0m"
-echo -e "\033[0;33mExample configuration to access kafka:\033[0m"
-echo -e "\033[0;33m-----------------------------------------\033[0m"
-echo -e "\033[0;33m-> docker-compose exec client bash -c 'kinit -k -t /var/lib/secret/kafka-client.key kafka_producer && kafka-console-producer --broker-list broker:9092 --topic test --producer.config /etc/kafka/producer.properties'\033[0m"
-echo -e "\033[0;33m-> docker-compose exec client bash -c 'kinit -k -t /var/lib/secret/kafka-client.key kafka_consumer && kafka-console-consumer --bootstrap-server broker:9092 --topic test --consumer.config /etc/kafka/consumer.properties --from-beginning'\033[0m"
+log "-----------------------------------------"
+log "Example configuration to access kafka:"
+log "-----------------------------------------"
+log "-> docker-compose exec client bash -c 'kinit -k -t /var/lib/secret/kafka-client.key kafka_producer && kafka-console-producer --broker-list broker:9092 --topic test --producer.config /etc/kafka/producer.properties'"
+log "-> docker-compose exec client bash -c 'kinit -k -t /var/lib/secret/kafka-client.key kafka_consumer && kafka-console-consumer --bootstrap-server broker:9092 --topic test --consumer.config /etc/kafka/consumer.properties --from-beginning'"
 
 cd ${OLDDIR}
 

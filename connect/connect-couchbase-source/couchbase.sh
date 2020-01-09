@@ -6,14 +6,14 @@ source ${DIR}/../../scripts/utils.sh
 
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
 
-echo -e "\033[0;33mCreating Couchbase cluster\033[0m"
+log "Creating Couchbase cluster"
 docker exec couchbase bash -c "/opt/couchbase/bin/couchbase-cli cluster-init --cluster-username Administrator --cluster-password password --services=data,index,query"
-echo -e "\033[0;33mInstall Couchbase bucket example travel-sample\033[0m"
+log "Install Couchbase bucket example travel-sample"
 set +e
 docker exec couchbase bash -c "/opt/couchbase/bin/cbdocloader -c localhost:8091 -u Administrator -p password -b travel-sample -m 100 /opt/couchbase/samples/travel-sample.zip"
 set -e
 
-echo -e "\033[0;33mCreating Couchbase sink connector\033[0m"
+log "Creating Couchbase sink connector"
 docker exec connect \
      curl -X PUT \
      -H "Content-Type: application/json" \
@@ -38,5 +38,5 @@ docker exec connect \
 
 sleep 10
 
-echo -e "\033[0;33mVerifying topic test-travel-sample\033[0m"
+log "Verifying topic test-travel-sample"
 docker exec schema-registry kafka-avro-console-consumer -bootstrap-server broker:9092 --topic test-travel-sample --from-beginning --max-messages 2

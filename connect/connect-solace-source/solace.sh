@@ -6,27 +6,27 @@ source ${DIR}/../../scripts/utils.sh
 
 if [ ! -f ${DIR}/sol-jms-10.6.0.jar ]
 then
-     echo -e "\033[0;33mDownloading sol-jms-10.6.0.jar\033[0m"
+     log "Downloading sol-jms-10.6.0.jar"
      wget http://central.maven.org/maven2/com/solacesystems/sol-jms/10.6.3/sol-jms-10.6.0.jar
 fi
 
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
 
-echo -e "\033[0;33mWait 60 seconds for Solace to be up and running\033[0m"
+log "Wait 60 seconds for Solace to be up and running"
 sleep 60
-echo -e "\033[0;33mSolace UI is accessible at http://127.0.0.1:8080 (admin/admin)\033[0m"
+log "Solace UI is accessible at http://127.0.0.1:8080 (admin/admin)"
 
-echo -e "\033[0;33mCreate the queue connector-quickstart in the default Message VPN using CLI\033[0m"
+log "Create the queue connector-quickstart in the default Message VPN using CLI"
 docker exec solace bash -c "/usr/sw/loads/currentload/bin/cli -A -s cliscripts/create_queue_cmd"
 
-echo -e "\033[0;33mPublish messages to the Solace queue using the REST endpoint\033[0m"
+log "Publish messages to the Solace queue using the REST endpoint"
 
 for i in 1000 1001 1002
 do
      curl -X POST -d "m1" http://localhost:9000/Queue/connector-quickstart -H "Content-Type: text/plain" -H "Solace-Message-ID: $i"
 done
 
-echo -e "\033[0;33mCreating Solace source connector\033[0m"
+log "Creating Solace source connector"
 docker exec connect \
      curl -X PUT \
      -H "Content-Type: application/json" \
@@ -46,5 +46,5 @@ docker exec connect \
           }' \
      http://localhost:8083/connectors/solace-source/config | jq .
 
-echo -e "\033[0;33mVerifying topic from-solace-messages\033[0m"
+log "Verifying topic from-solace-messages"
 docker exec broker kafka-console-consumer -bootstrap-server broker:9092 --topic from-solace-messages --from-beginning --max-messages 2

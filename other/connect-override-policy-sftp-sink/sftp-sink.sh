@@ -24,7 +24,7 @@ docker exec broker kafka-acls --authorizer-properties zookeeper.connect=zookeepe
 # [2019-12-06 11:17:45,759] INFO Principal = User:sftp is Denied Operation = Create from host = 172.18.0.6 on resource = Topic:LITERAL:test_sftp_sink (kafka.authorizer.logger)
 docker exec broker kafka-acls --authorizer-properties zookeeper.connect=zookeeper:2181 --add --allow-principal User:sftp --operation CREATE --topic test_sftp_sink
 
-echo -e "\033[0;33mCreating SFTP Sink connector\033[0m"
+log "Creating SFTP Sink connector"
 docker exec connect \
      curl -X PUT \
      -H "Content-Type: application/json" \
@@ -56,12 +56,12 @@ docker exec connect \
      http://localhost:8083/connectors/sftp-sink/config | jq .
 
 
-echo -e "\033[0;33mSending messages to topic test_sftp_sink\033[0m"
+log "Sending messages to topic test_sftp_sink"
 seq -f "{\"f1\": \"value%g\"}" 10 | docker exec -i schema-registry kafka-avro-console-producer --broker-list broker:9092 --topic test_sftp_sink --property value.schema='{"type":"record","name":"myrecord","fields":[{"name":"f1","type":"string"}]}' --producer.config /tmp/client.properties
 
 sleep 10
 
-echo -e "\033[0;33mListing content of ./upload/topics/test_sftp_sink/partition\=0/\033[0m"
+log "Listing content of ./upload/topics/test_sftp_sink/partition\=0/"
 ls ./upload/topics/test_sftp_sink/partition\=0/
 
 

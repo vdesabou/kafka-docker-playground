@@ -6,7 +6,7 @@ source ${DIR}/../../scripts/utils.sh
 
 if [ ! -f ${DIR}/ojdbc8.jar ]
 then
-     echo -e "\033[0;33mERROR: ${DIR}/ojdbc8.jar is missing. It must be downloaded manually in order to acknowledge user agreement\033[0m"
+     log "ERROR: ${DIR}/ojdbc8.jar is missing. It must be downloaded manually in order to acknowledge user agreement"
      exit 1
 fi
 
@@ -14,10 +14,10 @@ if test -z "$(docker images -q oracle/database:12.2.0.1-ee)"
 then
      if [ ! -f ${DIR}/linuxx64_12201_database.zip ]
      then
-          echo -e "\033[0;33mERROR: ${DIR}/linuxx64_12201_database.zip is missing. It must be downloaded manually in order to acknowledge user agreement\033[0m"
+          log "ERROR: ${DIR}/linuxx64_12201_database.zip is missing. It must be downloaded manually in order to acknowledge user agreement"
           exit 1
      fi
-     echo -e "\033[0;33mBuilding oracle/database:12.2.0.1-ee docker image..it can take a while...(more than 15 minutes!)\033[0m"
+     log "Building oracle/database:12.2.0.1-ee docker image..it can take a while...(more than 15 minutes!)"
      OLDDIR=$PWD
      rm -rf ${DIR}/docker-images
      git clone https://github.com/oracle/docker-images.git
@@ -35,7 +35,7 @@ ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml
 # Verify Oracle DB has started within MAX_WAIT seconds
 MAX_WAIT=900
 CUR_WAIT=0
-echo -e "\033[0;33mWaiting up to $MAX_WAIT seconds for Oracle DB to start\033[0m"
+log "Waiting up to $MAX_WAIT seconds for Oracle DB to start"
 docker container logs oracle > /tmp/out.txt 2>&1
 while [[ ! $(cat /tmp/out.txt) =~ "DONE: Executing user defined scripts" ]]; do
 sleep 10
@@ -46,9 +46,9 @@ if [[ "$CUR_WAIT" -gt "$MAX_WAIT" ]]; then
      exit 1
 fi
 done
-echo -e "\033[0;33mOracle DB has started!\033[0m"
+log "Oracle DB has started!"
 
-echo -e "\033[0;33mCreating Oracle source connector\033[0m"
+log "Creating Oracle source connector"
 docker exec connect \
      curl -X PUT \
      -H "Content-Type: application/json" \
@@ -73,7 +73,7 @@ docker exec connect \
 
 sleep 5
 
-echo -e "\033[0;33mVerifying topic oracle-CUSTOMERS\033[0m"
+log "Verifying topic oracle-CUSTOMERS"
 docker exec schema-registry kafka-avro-console-consumer -bootstrap-server broker:9092 --topic oracle-CUSTOMERS --from-beginning --max-messages 2
 
 

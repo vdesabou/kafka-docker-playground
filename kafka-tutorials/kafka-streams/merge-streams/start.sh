@@ -16,7 +16,7 @@ do
   sleep 5
 done
 
-echo -e "\033[0;33mProduce rock songs\033[0m"
+log "Produce rock songs"
 docker exec -i schema-registry /usr/bin/kafka-avro-console-producer --topic rock-song-events --broker-list broker:9092 --property value.schema="$(< src/main/avro/song_event.avsc)" << EOF
 {"artist": "Metallica", "title": "Fade to Black"}
 {"artist": "Smashing Pumpkins", "title": "Today"}
@@ -25,7 +25,7 @@ docker exec -i schema-registry /usr/bin/kafka-avro-console-producer --topic rock
 {"artist": "Led Zeppelin", "title": "Kashmir"}
 EOF
 
-echo -e "\033[0;33mProduce classical songs\033[0m"
+log "Produce classical songs"
 docker exec -i schema-registry /usr/bin/kafka-avro-console-producer --topic classical-song-events --broker-list broker:9092 --property value.schema="$(< src/main/avro/song_event.avsc)"  << EOF
 {"artist": "Wolfgang Amadeus Mozart", "title": "The Magic Flute"}
 {"artist": "Johann Pachelbel", "title": "Canon"}
@@ -33,5 +33,5 @@ docker exec -i schema-registry /usr/bin/kafka-avro-console-producer --topic clas
 {"artist": "Edward Elgar", "title": "Pomp and Circumstance"}
 EOF
 
-echo -e "\033[0;33mConsume all songs\033[0m"
+log "Consume all songs"
 docker exec -it schema-registry /usr/bin/kafka-avro-console-consumer --topic all-song-events --bootstrap-server broker:9092 --from-beginning --max-messages 9

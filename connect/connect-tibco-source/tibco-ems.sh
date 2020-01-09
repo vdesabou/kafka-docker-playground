@@ -8,13 +8,13 @@ source ${DIR}/../../scripts/utils.sh
 
 if [ ! -f ${DIR}/docker-tibco/TIB_ems-ce_8.5.1_linux_x86_64.zip ]
 then
-     echo -e "\033[0;33mERROR: ${DIR}/docker-tibco/ does not contain TIBCO EMS zip file TIB_ems-ce_8.5.1_linux_x86_64.zip\033[0m"
+     log "ERROR: ${DIR}/docker-tibco/ does not contain TIBCO EMS zip file TIB_ems-ce_8.5.1_linux_x86_64.zip"
      exit 1
 fi
 
 if [ ! -f ${DIR}/tibjms.jar ]
 then
-     echo -e "\033[0;33m${DIR}/tibjms.jar missing, will get it from ${DIR}/docker-tibco/TIB_ems-ce_8.5.1_linux_x86_64.zip\033[0m"
+     log "${DIR}/tibjms.jar missing, will get it from ${DIR}/docker-tibco/TIB_ems-ce_8.5.1_linux_x86_64.zip"
      rm -rf /tmp/TIB_ems-ce_8.5.1
      unzip ${DIR}/docker-tibco/TIB_ems-ce_8.5.1_linux_x86_64.zip -d /tmp/
      tar xvfz /tmp/TIB_ems-ce_8.5.1/tar/TIB_ems-ce_8.5.1_linux_x86_64-java_client.tar.gz opt/tibco/ems/8.5/lib/tibjms.jar
@@ -24,7 +24,7 @@ fi
 
 if test -z "$(docker images -q tibems:latest)"
 then
-     echo -e "\033[0;33mBuilding TIBCO EMS docker image..it can take a while...\033[0m"
+     log "Building TIBCO EMS docker image..it can take a while..."
      OLDDIR=$PWD
      cd ${DIR}/docker-tibco
      docker build -t tibbase:1.0.0 ./tibbase
@@ -35,7 +35,7 @@ fi
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
 
 
-echo -e "\033[0;33mSending EMS messages m1 m2 m3 m4 m5 in queue connector-quickstart\033[0m"
+log "Sending EMS messages m1 m2 m3 m4 m5 in queue connector-quickstart"
 docker exec tibco-ems bash -c '
 cd /opt/tibco/ems/8.5/samples/java
 export TIBEMS_JAVA=/opt/tibco/ems/8.5/lib
@@ -46,7 +46,7 @@ javac *.java
 java tibjmsMsgProducer -user admin -queue connector-quickstart m1 m2 m3 m4 m5'
 
 
-echo -e "\033[0;33mCreating TIBCO EMS source connector\033[0m"
+log "Creating TIBCO EMS source connector"
 docker exec connect \
      curl -X PUT \
      -H "Content-Type: application/json" \
@@ -69,5 +69,5 @@ docker exec connect \
 sleep 5
 
 
-echo -e "\033[0;33mVerify we have received the data in from-tibco-messages topic\033[0m"
+log "Verify we have received the data in from-tibco-messages topic"
 docker exec connect kafka-console-consumer -bootstrap-server broker:9092 --topic from-tibco-messages --from-beginning --max-messages 2

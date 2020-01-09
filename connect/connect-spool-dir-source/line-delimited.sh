@@ -12,11 +12,11 @@ mkdir -p ${DIR}/data/finished
 
 if [ ! -f "${DIR}/data/input/fix.json" ]
 then
-     echo -e "\033[0;33mGenerating data\033[0m"
+     log "Generating data"
      curl "https://raw.githubusercontent.com/jcustenborder/kafka-connect-spooldir/master/src/test/resources/com/github/jcustenborder/kafka/connect/spooldir/SpoolDirLineDelimitedSourceConnector/fix.json" > "${DIR}/data/input/fix.json"
 fi
 
-echo -e "\033[0;33mCreating Line Delimited Spool Dir Source connector\033[0m"
+log "Creating Line Delimited Spool Dir Source connector"
 docker exec connect \
      curl -X PUT \
      -H "Content-Type: application/json" \
@@ -36,5 +36,5 @@ docker exec connect \
 
 sleep 5
 
-echo -e "\033[0;33mVerify we have received the data in fix-topic topic\033[0m"
+log "Verify we have received the data in fix-topic topic"
 docker exec schema-registry kafka-avro-console-consumer -bootstrap-server broker:9092 --topic fix-topic --property schema.registry.url=http://schema-registry:8081 --from-beginning --max-messages 10

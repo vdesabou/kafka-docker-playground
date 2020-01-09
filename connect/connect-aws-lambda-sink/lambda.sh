@@ -6,10 +6,10 @@ source ${DIR}/../../scripts/utils.sh
 
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
 
-echo -e "\033[0;33mSending messages to topic add-topic\033[0m"
+log "Sending messages to topic add-topic"
 seq -f "{\"a\": %g,\"b\": 1}" 10 | docker exec -i schema-registry kafka-avro-console-producer --broker-list broker:9092 --topic add-topic --property value.schema='{"type":"record","name":"myrecord","fields":[{"name":"a","type":"int"},{"name":"b","type":"int"}]}'
 
-echo -e "\033[0;33mCreating AWS Lambda Sink connector\033[0m"
+log "Creating AWS Lambda Sink connector"
 docker exec connect \
      curl -X PUT \
      -H "Content-Type: application/json" \
@@ -33,5 +33,5 @@ docker exec connect \
 
 sleep 10
 
-echo -e "\033[0;33mVerifying topic add-topic-response\033[0m"
+log "Verifying topic add-topic-response"
 docker exec broker kafka-console-consumer -bootstrap-server broker:9092 --topic add-topic-response --from-beginning --max-messages 10
