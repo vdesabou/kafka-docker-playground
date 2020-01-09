@@ -22,7 +22,7 @@ else
 fi
 
 shift
-../../WaitForConnectAndControlCenter.sh $@
+../../scripts/wait-for-connect-and-controlcenter.sh $@
 
 # Not required as User:broker is super user
 # SET ACLs

@@ -5,7 +5,7 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 
 docker-compose down -v
 docker-compose up -d
-${DIR}/../../WaitForConnectAndControlCenter.sh -a
+${DIR}/../../scripts/wait-for-connect-and-controlcenter.sh -a
 
 echo -e "\033[0;33mCreate topic adb-test\033[0m"
 docker-compose exec zookeeper kafka-topics --create --topic adb-test --partitions 20 --replication-factor 3 --if-not-exists --zookeeper zookeeper:2181
