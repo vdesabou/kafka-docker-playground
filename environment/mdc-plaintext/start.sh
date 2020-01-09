@@ -22,5 +22,5 @@ else
 fi
 
 shift
-../../WaitForConnectAndControlCenter.sh connect-us $@
-../../WaitForConnectAndControlCenter.sh connect-europe $@
+../../scripts/wait-for-connect-and-controlcenter.sh connect-us $@
+../../scripts/wait-for-connect-and-controlcenter.sh connect-europe $@
