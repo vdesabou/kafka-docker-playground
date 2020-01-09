@@ -66,6 +66,8 @@ SCHEMA_REGISTRY_URL=$( grep "^schema.registry.url" $SR_CONFIG_FILE | awk -F'=' '
 #echo -e "\033[0;33mschema.registry.url: $SCHEMA_REGISTRY_URL\033[0m"
 
 CONTROL_CENTER_LICENSE=$( grep "^confluent.license" $CCLOUD_CONFIG | cut -d'=' -f2- )
+CCLOUD_USER=$( grep "^ccloud.user" $CCLOUD_CONFIG | cut -d'=' -f2- )
+CCLOUD_PASSWORD=$( grep "^ccloud.password" $CCLOUD_CONFIG | cut -d'=' -f2- )
 
 ENV_CONFIG=$DEST/env.delta
 echo -e "\033[0;33m$ENV_CONFIG\033[0m"
@@ -80,4 +82,6 @@ export SCHEMA_REGISTRY_URL=$SCHEMA_REGISTRY_URL
 export CLOUD_KEY=$CLOUD_KEY
 export CLOUD_SECRET=$CLOUD_SECRET
 export CONTROL_CENTER_LICENSE='$CONTROL_CENTER_LICENSE'
+export CCLOUD_USER='$CCLOUD_USER'
+export CCLOUD_PASSWORD='$CCLOUD_PASSWORD'
 EOF
