@@ -2,6 +2,7 @@
 set -e
 
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
+source ${DIR}/../../scripts/utils.sh
 
 # Need to create the TIBCO EMS image using https://github.com/mikeschippers/docker-tibco
 

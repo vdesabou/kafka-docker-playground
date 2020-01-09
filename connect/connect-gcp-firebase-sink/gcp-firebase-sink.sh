@@ -2,6 +2,7 @@
 set -e
 
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
+source ${DIR}/../../scripts/utils.sh
 PROJECT=${1:-vincent-de-saboulin-lab}
 
 KEYFILE="${DIR}/keyfile.json"
