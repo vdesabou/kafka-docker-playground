@@ -22,4 +22,4 @@ else
 fi
 
 shift
-../../WaitForConnectAndControlCenter.sh $@
+../../scripts/wait-for-connect-and-controlcenter.sh $@
