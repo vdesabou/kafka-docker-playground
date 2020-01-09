@@ -49,6 +49,9 @@ else
      exit 1
 fi
 
+# required for dabz/ccloudexporter
+export CCLOUD_CLUSTER=$(ccloud prompt -f "%k")
+
 # generate kafka-lag-exporter config
 sed -e "s|:BOOTSTRAP_SERVERS:|$BOOTSTRAP_SERVERS|g" \
     -e "s|:CLOUD_KEY:|$CLOUD_KEY|g" \
@@ -58,9 +61,9 @@ sed -e "s|:BOOTSTRAP_SERVERS:|$BOOTSTRAP_SERVERS|g" \
 
 # kafka-topics --bootstrap-server `grep "^\s*bootstrap.server" ${CONFIG_FILE} | tail -1` --command-config ${CONFIG_FILE} --topic customer-avro --create --replication-factor 3 --partitions 6
 
-# set +e
-# create_topic customer-avro
-# set -e
+set +e
+create_topic customer-avro
+set -e
 
 docker-compose down -v
 docker-compose up -d
