@@ -93,7 +93,7 @@ fi
 cd ${OLDDIR}
 
 shift
-../../WaitForConnectAndControlCenter.sh $@
+../../scripts/wait-for-connect-and-controlcenter.sh $@
 
 # Adding ACLs for consumer and producer user:
 docker exec client bash -c "kinit -k -t /var/lib/secret/kafka-admin.key admin/for-kafka && kafka-acls --bootstrap-server broker:9092 --command-config /etc/kafka/command.properties --add --allow-principal User:kafka_producer --producer --topic=*"

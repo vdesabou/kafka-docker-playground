@@ -44,7 +44,7 @@ docker exec ksql-server systemctl restart confluent-ksql
 docker exec rest-proxy systemctl restart confluent-kafka-rest
 docker exec control-center systemctl restart confluent-control-center
 
-../../WaitForConnectAndControlCenter.sh -b
+../../scripts/wait-for-connect-and-controlcenter.sh -b
 
 echo -e "\033[0;33mINFO: Now you can modify the playbooks and run ansible-playbook -i hosts.yml all.yml\033[0m"
 #ansible-playbook -i hosts.yml all.yml
