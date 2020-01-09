@@ -6,10 +6,10 @@ source ${DIR}/../../scripts/utils.sh
 
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
 
-echo -e "\033[0;33mSending messages to topic test-topic\033[0m"
+log "Sending messages to topic test-topic"
 seq 10 | docker exec -i broker kafka-console-producer --broker-list broker:9092 --topic test-topic
 
-echo -e "\033[0;33mCreating Replicator connector\033[0m"
+log "Creating Replicator connector"
 docker exec connect \
       curl -X PUT \
       -H "Content-Type: application/json" \
@@ -30,5 +30,5 @@ docker exec connect \
 
 sleep 10
 
-echo -e "\033[0;33mVerify we have received the data in test-topic-duplicate topic\033[0m"
+log "Verify we have received the data in test-topic-duplicate topic"
 docker exec broker kafka-console-consumer --bootstrap-server broker:9092 --topic test-topic-duplicate --from-beginning --max-messages 10

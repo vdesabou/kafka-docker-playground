@@ -11,28 +11,28 @@ BUCKET_NAME=${1:-test-gcs-playground}
 KEYFILE="${DIR}/keyfile.json"
 if [ ! -f ${KEYFILE} ]
 then
-     echo -e "\033[0;33mERROR: the file ${KEYFILE} file is not present!\033[0m"
+     log "ERROR: the file ${KEYFILE} file is not present!"
      exit 1
 fi
 
 ${DIR}/../../environment/kerberos/start.sh "${PWD}/docker-compose.kerberos.yml"
 
 
-echo -e "\033[0;33mRemoving existing objects in GCS, if applicable\033[0m"
+log "Removing existing objects in GCS, if applicable"
 set +e
 gsutil rm -r gs://$BUCKET_NAME/topics/gcs_topic-kerberos
 set -e
 
 
-echo -e "\033[0;33m########\033[0m"
-echo -e "\033[0;33m##  Kerberos GSSAPI authentication\033[0m"
-echo -e "\033[0;33m########\033[0m"
+log "########"
+log "##  Kerberos GSSAPI authentication"
+log "########"
 
-echo -e "\033[0;33mSending messages to topic gcs_topic-kerberos\033[0m"
+log "Sending messages to topic gcs_topic-kerberos"
 docker exec -i client kinit -k -t /var/lib/secret/kafka-client.key kafka_producer
 seq -f "{\"f1\": \"This is a message sent with Kerberos GSSAPI authentication %g\"}" 10 | docker exec -i client kafka-avro-console-producer --broker-list broker:9092 --topic gcs_topic-kerberos --property value.schema='{"type":"record","name":"myrecord","fields":[{"name":"f1","type":"string"}]}' --property schema.registry.url=http://schema-registry:8081 --producer.config /etc/kafka/producer.properties
 
-echo -e "\033[0;33mCreating GCS Sink connector with Kerberos GSSAPI authentication\033[0m"
+log "Creating GCS Sink connector with Kerberos GSSAPI authentication"
 docker exec -e BUCKET_NAME="$BUCKET_NAME" connect \
      curl -X PUT \
      -H "Content-Type: application/json" \
@@ -59,13 +59,13 @@ docker exec -e BUCKET_NAME="$BUCKET_NAME" connect \
 
 sleep 10
 
-echo -e "\033[0;33mDoing gsutil authentication\033[0m"
+log "Doing gsutil authentication"
 gcloud auth activate-service-account --key-file ${KEYFILE}
 
-echo -e "\033[0;33mListing objects of in GCS\033[0m"
+log "Listing objects of in GCS"
 gsutil ls gs://$BUCKET_NAME/topics/gcs_topic-kerberos/partition=0/
 
-echo -e "\033[0;33mGetting one of the avro files locally and displaying content with avro-tools\033[0m"
+log "Getting one of the avro files locally and displaying content with avro-tools"
 gsutil cp gs://$BUCKET_NAME/topics/gcs_topic-kerberos/partition=0/gcs_topic-kerberos+0+0000000000.avro /tmp/
 
 

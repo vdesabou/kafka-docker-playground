@@ -7,14 +7,14 @@ source ${DIR}/../../scripts/utils.sh
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
 
 
-echo -e "\033[0;33mSending messages to topic http-messages\033[0m"
+log "Sending messages to topic http-messages"
 seq 10 | docker exec -i broker kafka-console-producer --broker-list broker:9092 --topic http-messages
 
-echo -e "\033[0;33m-------------------------------------\033[0m"
-echo -e "\033[0;33mRunning Simple (No) Authentication Example\033[0m"
-echo -e "\033[0;33m-------------------------------------\033[0m"
+log "-------------------------------------"
+log "Running Simple (No) Authentication Example"
+log "-------------------------------------"
 
-echo -e "\033[0;33mCreating http-sink connector\033[0m"
+log "Creating http-sink connector"
 docker exec connect \
      curl -X PUT \
      -H "Content-Type: application/json" \
@@ -33,5 +33,5 @@ docker exec connect \
 
 sleep 10
 
-echo -e "\033[0;33mConfirm that the data was sent to the HTTP endpoint.\033[0m"
+log "Confirm that the data was sent to the HTTP endpoint."
 curl localhost:8080/api/messages | jq .

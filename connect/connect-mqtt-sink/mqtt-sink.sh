@@ -6,12 +6,12 @@ source ${DIR}/../../scripts/utils.sh
 
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
 
-echo -e "\033[0;33mSending messages to topic sink-messages\033[0m"
+log "Sending messages to topic sink-messages"
 docker exec -i broker kafka-console-producer --broker-list broker:9092 --topic sink-messages << EOF
 This is my message
 EOF
 
-echo -e "\033[0;33mCreating MQTT Sink connector\033[0m"
+log "Creating MQTT Sink connector"
 docker exec connect \
      curl -X PUT \
      -H "Content-Type: application/json" \
@@ -34,5 +34,5 @@ docker exec connect \
 
 sleep 5
 
-echo -e "\033[0;33mVerify we have received messages in MQTT sink-messages topic\033[0m"
+log "Verify we have received messages in MQTT sink-messages topic"
 docker exec mosquitto sh -c 'mosquitto_sub -h localhost -p 1883 -u "myuser" -P "mypassword" -t "sink-messages" -C 1'

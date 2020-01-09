@@ -16,7 +16,7 @@ do
   sleep 5
 done
 
-echo -e "\033[0;33mProduce events to the input topic\033[0m"
+log "Produce events to the input topic"
 docker exec -i schema-registry /usr/bin/kafka-avro-console-producer --topic acting-events --broker-list broker:9092 --property value.schema="$(< src/main/avro/acting_event.avsc)" << EOF
 {"name": "Meryl Streep", "title": "The Iron Lady", "genre": "drama"}
 {"name": "Will Smith", "title": "Men in Black", "genre": "comedy"}
@@ -31,11 +31,11 @@ docker exec -i schema-registry /usr/bin/kafka-avro-console-producer --topic acti
 {"name": "Diane Keaton", "title": "The Godfather: Part II", "genre": "crime"}
 EOF
 
-echo -e "\033[0;33mConsume the events of drama films\033[0m"
+log "Consume the events of drama films"
 docker exec -it schema-registry /usr/bin/kafka-avro-console-consumer --topic drama-acting-events --bootstrap-server broker:9092 --from-beginning --max-messages 3
 
-echo -e "\033[0;33mConsume the events of fantasy films\033[0m"
+log "Consume the events of fantasy films"
 docker exec -it schema-registry /usr/bin/kafka-avro-console-consumer --topic fantasy-acting-events --bootstrap-server broker:9092 --from-beginning --max-messages 4
 
-echo -e "\033[0;33mConsume all other events\033[0m"
+log "Consume all other events"
 docker exec -it schema-registry /usr/bin/kafka-avro-console-consumer --topic other-acting-events --bootstrap-server broker:9092 --from-beginning --max-messages 4

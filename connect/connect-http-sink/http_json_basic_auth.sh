@@ -7,16 +7,16 @@ source ${DIR}/../../scripts/utils.sh
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
 
 
-echo -e "\033[0;33mSending messages to topic json-topic\033[0m"
+log "Sending messages to topic json-topic"
 docker exec -i broker kafka-console-producer --broker-list broker:9092 --topic json-topic << EOF
 {"customer_name":"Ed", "complaint_type":"Dirty car", "trip_cost": 29.10, "new_customer": false, "number_of_rides": 22}
 EOF
 
-echo -e "\033[0;33m-------------------------------------\033[0m"
-echo -e "\033[0;33mRunning JSON Converter Example\033[0m"
-echo -e "\033[0;33m-------------------------------------\033[0m"
+log "-------------------------------------"
+log "Running JSON Converter Example"
+log "-------------------------------------"
 
-echo -e "\033[0;33mCreating http-sink connector\033[0m"
+log "Creating http-sink connector"
 docker exec connect \
      curl -X PUT \
      -H "Content-Type: application/json" \
@@ -39,5 +39,5 @@ docker exec connect \
 
 sleep 10
 
-echo -e "\033[0;33mConfirm that the data was sent to the HTTP endpoint.\033[0m"
+log "Confirm that the data was sent to the HTTP endpoint."
 curl admin:password@localhost:9080/api/messages | jq .

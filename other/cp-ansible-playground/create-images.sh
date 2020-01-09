@@ -10,13 +10,13 @@ verify_installed "ansible-playbook"
 
 if test -z "$(docker images -q cp-ansible-ubuntu:orig)"
 then
-     echo -e "\033[0;33mBuilding cp-ansible-ubuntu:orig docker image..it can take a while...\033[0m"
+     log "Building cp-ansible-ubuntu:orig docker image..it can take a while..."
      docker build -t cp-ansible-ubuntu:orig .
 fi
 
 if [ ! -d ${DIR}/cp-ansible ]
 then
-    echo -e "\033[0;33mINFO: Getting cp-ansible from Github.\033[0m"
+    log "INFO: Getting cp-ansible from Github."
     git clone https://github.com/confluentinc/cp-ansible
 fi
 
@@ -28,10 +28,10 @@ docker-compose -f docker-compose-create-images.yml up -d
 
 cd ${DIR}/cp-ansible
 
-echo -e "\033[0;33mINFO: Checking Ansible can connect over DOCKER.\033[0m"
+log "INFO: Checking Ansible can connect over DOCKER."
 ansible -i hosts.yml all -m ping
 
-echo -e "\033[0;33mINFO: Run the all.yml playbook.\033[0m"
+log "INFO: Run the all.yml playbook."
 ansible-playbook -i hosts.yml all.yml
 
 # if it fails, try to re-run this command
@@ -39,7 +39,7 @@ ansible-playbook -i hosts.yml all.yml
 
 
 # ls /etc/systemd/system/
-echo -e "\033[0;33mINFO: Stopping all services.\033[0m"
+log "INFO: Stopping all services."
 docker exec control-center systemctl stop confluent-control-center
 docker exec ksql-server systemctl stop confluent-ksql
 docker exec rest-proxy systemctl stop confluent-kafka-rest
@@ -50,7 +50,7 @@ docker exec broker2 systemctl stop confluent-kafka
 docker exec broker3 systemctl stop confluent-kafka
 docker exec zookeeper1 systemctl stop confluent-zookeeper
 
-echo -e "\033[0;33mINFO: Creating new images from snapshot.\033[0m"
+log "INFO: Creating new images from snapshot."
 docker commit zookeeper1 vdesabou/cp-ansible-playground-zookeeper1:5.3.1
 docker commit broker1 vdesabou/cp-ansible-playground-broker1:5.3.1
 docker commit broker2 vdesabou/cp-ansible-playground-broker2:5.3.1

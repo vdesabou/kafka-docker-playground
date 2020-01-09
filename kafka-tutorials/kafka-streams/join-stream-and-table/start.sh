@@ -16,7 +16,7 @@ do
   sleep 5
 done
 
-echo -e "\033[0;33mLoad in some movie reference data\033[0m"
+log "Load in some movie reference data"
 docker exec -i schema-registry /usr/bin/kafka-avro-console-producer --topic movies --broker-list broker:9092 --property value.schema="$(< src/main/avro/movie.avsc)" << EOF
 {"id": 294, "title": "Die Hard", "release_year": 1988}
 {"id": 354, "title": "Tree of Life", "release_year": 2011}
@@ -25,7 +25,7 @@ docker exec -i schema-registry /usr/bin/kafka-avro-console-producer --topic movi
 {"id": 780, "title": "Super Mario Bros.", "release_year": 1993}
 EOF
 
-echo -e "\033[0;33mProduce some ratings to the input topic\033[0m"
+log "Produce some ratings to the input topic"
 docker exec -i schema-registry /usr/bin/kafka-avro-console-producer --topic ratings --broker-list broker:9092 --property value.schema="$(< src/main/avro/rating.avsc)" << EOF
 {"id": 294, "rating": 8.2}
 {"id": 294, "rating": 8.5}
@@ -38,5 +38,5 @@ docker exec -i schema-registry /usr/bin/kafka-avro-console-producer --topic rati
 {"id": 780, "rating": 2.1}
 EOF
 
-echo -e "\033[0;33mObserve the rated movies in the output topic\033[0m"
+log "Observe the rated movies in the output topic"
 docker exec -it schema-registry /usr/bin/kafka-avro-console-consumer --topic rated-movies --bootstrap-server broker:9092 --from-beginning --max-messages 9

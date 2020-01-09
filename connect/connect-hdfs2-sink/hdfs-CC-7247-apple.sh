@@ -10,7 +10,7 @@ ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext-CC-
 # Note in this simple example, if you get into an issue with permissions at the local HDFS level, it may be easiest to unlock the permissions unless you want to debug that more.
 docker exec hadoop bash -c "/usr/local/hadoop/bin/hdfs dfs -chmod 777  /"
 
-echo -e "\033[0;33mCreating HDFS Sink connector\033[0m"
+log "Creating HDFS Sink connector"
 docker exec connect \
      curl -X PUT \
      -H "Content-Type: application/json" \
@@ -36,12 +36,12 @@ docker exec connect \
      http://localhost:8083/connectors/hdfs-sink/config | jq .
 
 
-echo -e "\033[0;33mSending messages to topic apple.pie \033[0m"
+log "Sending messages to topic apple.pie "
 seq -f "{\"f1\": \"value%g\"}" 10 | docker exec -i schema-registry kafka-avro-console-producer --broker-list broker:9092 --topic apple.pie --property value.schema='{"type":"record","name":"myrecord","fields":[{"name":"f1","type":"string"}]}'
 
 sleep 10
 
-echo -e "\033[0;33mListing content of /apple.pie/pie/some/path/applepie/ in HDFS\033[0m"
+log "Listing content of /apple.pie/pie/some/path/applepie/ in HDFS"
 docker exec hadoop bash -c "/usr/local/hadoop/bin/hdfs dfs -ls /apple.pie/pie/some/path/applepie/"
 
 # drwxrwxrwx   - root supergroup          0 2019-12-27 10:27 /apple.pie/pie/some/path/applepie/+tmp

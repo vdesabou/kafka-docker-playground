@@ -6,10 +6,10 @@ source ${DIR}/../../scripts/utils.sh
 
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
 
-echo -e "\033[0;33mSend message to RabbitMQ in myqueue\033[0m"
+log "Send message to RabbitMQ in myqueue"
 docker exec rabbitmq_producer bash -c "python /producer.py myqueue 5"
 
-echo -e "\033[0;33mCreating RabbitMQ Source connector\033[0m"
+log "Creating RabbitMQ Source connector"
 docker exec connect \
      curl -X PUT \
      -H "Content-Type: application/json" \
@@ -27,8 +27,8 @@ docker exec connect \
 
 sleep 5
 
-echo -e "\033[0;33mVerify we have received the data in rabbitmq topic\033[0m"
+log "Verify we have received the data in rabbitmq topic"
 docker exec schema-registry kafka-avro-console-consumer -bootstrap-server broker:9092 --topic rabbitmq --from-beginning --max-messages 5
 
-#echo -e "\033[0;33mConsume messages in RabbitMQ\033[0m"
+#log "Consume messages in RabbitMQ"
 #docker exec -it rabbitmq_consumer bash -c "python /consumer.py myqueue"

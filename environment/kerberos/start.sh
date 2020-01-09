@@ -47,7 +47,7 @@ docker exec -ti kdc kadmin.local -w password -q "add_principal -randkey controlc
 docker exec -ti kdc kadmin.local -w password -q "add_principal -randkey admin/for-kafka@TEST.CONFLUENT.IO"  > /dev/null
 
 # Create keytabs to use for Kafka
-echo -e "\033[0;33mCreate keytabs\033[0m"
+log "Create keytabs"
 docker exec -ti kdc rm -f /var/lib/secret/broker.key 2>&1 > /dev/null
 docker exec -ti kdc rm -f /var/lib/secret/broker2.key 2>&1 > /dev/null
 docker exec -ti kdc rm -f /var/lib/secret/zookeeper.key 2>&1 > /dev/null
@@ -91,11 +91,11 @@ docker exec client bash -c "kinit -k -t /var/lib/secret/kafka-admin.key admin/fo
 # schemaregistry and controlcenter is super user
 
 # Output example usage:
-echo -e "\033[0;33m-----------------------------------------\033[0m"
-echo -e "\033[0;33mExample configuration to access kafka:\033[0m"
-echo -e "\033[0;33m-----------------------------------------\033[0m"
-echo -e "\033[0;33m-> docker-compose exec client bash -c 'kinit -k -t /var/lib/secret/kafka-client.key kafka_producer && kafka-console-producer --broker-list broker:9092 --topic test --producer.config /etc/kafka/producer.properties'\033[0m"
-echo -e "\033[0;33m-> docker-compose exec client bash -c 'kinit -k -t /var/lib/secret/kafka-client.key kafka_consumer && kafka-console-consumer --bootstrap-server broker:9092 --topic test --consumer.config /etc/kafka/consumer.properties --from-beginning'\033[0m"
+log "-----------------------------------------"
+log "Example configuration to access kafka:"
+log "-----------------------------------------"
+log "-> docker-compose exec client bash -c 'kinit -k -t /var/lib/secret/kafka-client.key kafka_producer && kafka-console-producer --broker-list broker:9092 --topic test --producer.config /etc/kafka/producer.properties'"
+log "-> docker-compose exec client bash -c 'kinit -k -t /var/lib/secret/kafka-client.key kafka_consumer && kafka-console-consumer --bootstrap-server broker:9092 --topic test --consumer.config /etc/kafka/consumer.properties --from-beginning'"
 
 shift
 ../../scripts/wait-for-connect-and-controlcenter.sh $@

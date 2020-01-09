@@ -7,14 +7,14 @@ source ${DIR}/../../scripts/utils.sh
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
 
 
-echo -e "\033[0;33mSending messages to topic hbase-test\033[0m"
+log "Sending messages to topic hbase-test"
 docker exec -i broker kafka-console-producer --broker-list broker:9092 --topic hbase-test --property parse.key=true --property key.separator=, << EOF
 key1,value1
 key2,value2
 key3,value3
 EOF
 
-echo -e "\033[0;33mCreating HBase sink connector\033[0m"
+log "Creating HBase sink connector"
 docker exec connect \
      curl -X PUT \
      -H "Content-Type: application/json" \
@@ -34,7 +34,7 @@ docker exec connect \
           }' \
      http://localhost:8083/connectors/hbase-sink/config | jq .
 
-echo -e "\033[0;33mVerify data is in HBase: type scan 'example_table' and then exit\033[0m"
+log "Verify data is in HBase: type scan 'example_table' and then exit"
 echo -e "\033[0;33m> docker exec -it hbase /bin/bash entrypoint.sh"
-echo -e "\033[0;33m> type command: scan 'example_table' and then exit\033[0m"
+log "> type command: scan 'example_table' and then exit"
 

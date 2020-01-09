@@ -7,7 +7,7 @@ source ${DIR}/../../scripts/utils.sh
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
 
 
-echo -e "\033[0;33mCreating ActiveMQ source connector\033[0m"
+log "Creating ActiveMQ source connector"
 docker exec connect \
      curl -X PUT \
      -H "Content-Type: application/json" \
@@ -25,10 +25,10 @@ docker exec connect \
 
 sleep 5
 
-echo -e "\033[0;33mSending messages to DEV.QUEUE.1 JMS queue:\033[0m"
+log "Sending messages to DEV.QUEUE.1 JMS queue:"
 curl -XPOST -u admin:admin -d "body=message" http://localhost:8161/api/message/DEV.QUEUE.1?type=queue
 
 sleep 5
 
-echo -e "\033[0;33mVerify we have received the data in MyKafkaTopicName topic\033[0m"
+log "Verify we have received the data in MyKafkaTopicName topic"
 docker exec schema-registry kafka-avro-console-consumer -bootstrap-server broker:9092 --topic MyKafkaTopicName --from-beginning --max-messages 1
