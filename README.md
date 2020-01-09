@@ -9,6 +9,7 @@ Playground for Kafka/Confluent Docker experimentations... [![Build Status](https
   - [↘️ Source](#️-source)
   - [↗️ Sink](#️-sink)
 - [☁️ Confluent Cloud](#️-confluent-cloud)
+- [🔄 Confluent Replicator](#-confluent-replicator)
 - [🔐 Environments](#-environments)
 - [🎓 Kafka Tutorials](#-kafka-tutorials)
 - [👾 Other Playgrounds](#-other-playgrounds)
@@ -123,6 +124,18 @@ Quick start examples from Confluent [docs](https://docs.confluent.io/current/con
 
 ![Diagram](./ccloud/ccloud-demo/images/diagram.png)
 
+## 🔄 Confluent Replicator
+
+Using Multi-Data-Center setup with `US` 🇺🇸 and `EUROPE` 🇪🇺 clusters.
+
+* <img src="https://cdn.confluent.io/wp-content/themes/confluent/assets/images/connect-icon.png" width="15"> [Using Confluent Replicator as connector](replicator/connect)
+  * Using [PLAINTEXT](environment/mdc-plaintext)
+  * Using [SASL_PLAIN](environment/mdc-sasl-plain)
+  * Using [Kerberos](environment/mdc-kerberos)
+* 👾 [Using Confluent Replicator as executable](replicator/executable)
+  * Using [PLAINTEXT](environment/mdc-plaintext)
+  * Using [SASL_PLAIN](environment/mdc-sasl-plain)
+  * Using [Kerberos](environment/mdc-kerberos)
 
 ## 🔐 Environments
 

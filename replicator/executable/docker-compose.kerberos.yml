@@ -1,0 +1,20 @@
+---
+version: '3.5'
+services:
+  connect-us:
+    volumes:
+        - ../../replicator/executable/consumer-europe-kerberos.properties:/etc/kafka/consumer-europe.properties
+        - ../../replicator/executable/producer-europe-kerberos.properties:/etc/kafka/producer-europe.properties
+        - ../../replicator/executable/replication-europe.properties:/etc/kafka/replication-europe.properties
+        - ../../replicator/executable/consumer-us-kerberos.properties:/etc/kafka/consumer-us.properties
+        - ../../replicator/executable/producer-us-kerberos.properties:/etc/kafka/producer-us.properties
+        - ../../replicator/executable/replication-us.properties:/etc/kafka/replication-us.properties
+
+  connect-europe:
+    volumes:
+        - ../../replicator/executable/consumer-europe-kerberos.properties:/etc/kafka/consumer-europe.properties
+        - ../../replicator/executable/producer-europe-kerberos.properties:/etc/kafka/producer-europe.properties
+        - ../../replicator/executable/replication-europe.properties:/etc/kafka/replication-europe.properties
+        - ../../replicator/executable/consumer-us-kerberos.properties:/etc/kafka/consumer-us.properties
+        - ../../replicator/executable/producer-us-kerberos.properties:/etc/kafka/producer-us.properties
+        - ../../replicator/executable/replication-us.properties:/etc/kafka/replication-us.properties

@@ -26,9 +26,6 @@ docker container exec connect-us \
           "dest.kafka.bootstrap.servers": "broker-us:9092",
           "confluent.topic.replication.factor": 1,
           "provenance.header.enable": true,
-          "topic.config.sync": false,
-          "topic.auto.create": false,
-          "topic.preserve.partitions": false,
           "topic.whitelist": "sales_EUROPE"
           }' \
      http://localhost:8083/connectors/replicate-europe-to-us/config | jq .
