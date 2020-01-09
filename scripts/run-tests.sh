@@ -1,11 +1,12 @@
 #!/bin/bash
 
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
-source ${DIR}/../../scripts/utils.sh
+source ${DIR}/../scripts/utils.sh
 
-cd ${DIR}/../connect
-echo $PWD
-for dir in $(ls -d *)
+# go to root folder
+cd ${DIR}/..
+
+for dir in $@
 do
     if [ ! -d $dir ]
     then
@@ -41,9 +42,6 @@ do
             continue
         fi
 
-        #filename="${script%.*}"
-        ####
-        ##
         log "####################################################"
         log "Executing $script in dir $dir"
         log "####################################################"
