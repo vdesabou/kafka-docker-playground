@@ -35,9 +35,6 @@ docker container exec connect-us \
           "confluent.topic.sasl.jaas.config": "org.apache.kafka.common.security.plain.PlainLoginModule required  username=\"client\" password=\"client-secret\";",
           "confluent.topic.sasl.mechanism": "PLAIN",
           "provenance.header.enable": true,
-          "topic.config.sync": false,
-          "topic.auto.create": false,
-          "topic.preserve.partitions": false,
           "topic.whitelist": "sales_EUROPE"
           }' \
      http://localhost:8083/connectors/replicate-europe-to-us/config | jq .

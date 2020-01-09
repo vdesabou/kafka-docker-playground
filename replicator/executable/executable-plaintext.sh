@@ -21,8 +21,8 @@ echo "Consolidating all sales in Europe (logs are in /tmp/replicator.log):"
 # run in detach mode -d
 docker exec -d connect-europe bash -c 'replicator --consumer.config /etc/kafka/consumer-europe.properties --producer.config /etc/kafka/producer-europe.properties  --replication.config /etc/kafka/replication-europe.properties  --cluster.id replicate-us-to-europe --whitelist sales_US  > /tmp/replicator.log 2>&1'
 
-echo "sleeping 120 seconds"
-sleep 120
+echo "sleeping 240 seconds"
+sleep 240
 
 echo "Verify we have received the data in all the sales_ topics in EUROPE"
 docker container exec broker-europe kafka-console-consumer --bootstrap-server localhost:9092 --whitelist "sales_.*" --from-beginning --max-messages 20 --property metadata.max.age.ms 30000
@@ -30,6 +30,6 @@ docker container exec broker-europe kafka-console-consumer --bootstrap-server lo
 echo "Verify we have received the data in all the sales_ topics in the US"
 docker container exec broker-us kafka-console-consumer --bootstrap-server localhost:9092 --whitelist "sales_.*" --from-beginning --max-messages 20 --property metadata.max.age.ms 30000
 
-echo "Copying replicator logs to /tmp"
+echo "Copying replicator logs to /tmp/replicator-europe.log and /tmp/replicator-us.log"
 docker cp connect-europe:/tmp/replicator.log /tmp/replicator-europe.log
 docker cp connect-us:/tmp/replicator.log /tmp/replicator-us.log
