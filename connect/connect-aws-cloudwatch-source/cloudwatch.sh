@@ -3,6 +3,16 @@ set -e
 
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 
+verify_installed()
+{
+  local cmd="$1"
+  if [[ $(type $cmd 2>&1) =~ "not found" ]]; then
+    echo -e "\nERROR: This script requires '$cmd'. Please install '$cmd' and run again.\n"
+    exit 1
+  fi
+}
+verify_installed "aws"
+
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
 
 # cleanup
