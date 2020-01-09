@@ -3,6 +3,18 @@ set -e
 
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 
+if [ ! -f ${DIR}/jms.jar ]
+then
+     echo -e "\033[0;33mERROR: ${DIR}/jms.jar is missing. It must be downloaded manually in order to acknowledge user agreement\033[0m"
+     exit 1
+fi
+
+if [ ! -f ${DIR}/com.ibm.mq.allclient.jar ]
+then
+     echo -e "\033[0;33mERROR: ${DIR}/com.ibm.mq.allclient.jar is missing. It must be downloaded manually in order to acknowledge user agreement\033[0m"
+     exit 1
+fi
+
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
 
 
