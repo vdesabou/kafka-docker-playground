@@ -728,6 +728,31 @@ See Confluent [docs](https://docs.confluent.io/current/cloud/metrics-api.html)
 
 ### Control Center
 
+* Monitoring multiple clusters
+
+You can monitor multiple Confluent Cloud clusters in Control Center:
+
+![Monitoring multiple clusters](./images/Screenshot1.png)
+
+The configuration will look like:
+
+```yml
+CONTROL_CENTER_KAFKA_CLUSTER1_BOOTSTRAP_SERVERS: <CLUSTER 1 BOOTSTRAP_SERVERS>
+CONTROL_CENTER_KAFKA_CLUSTER1_SECURITY_PROTOCOL: SASL_SSL
+CONTROL_CENTER_KAFKA_CLUSTER1_SASL_JAAS_CONFIG: 'org.apache.kafka.common.security.plain.PlainLoginModule required username="<CLUSTER 1 API KEY>" password="<CLUSTER 1 SECRET>";'
+CONTROL_CENTER_KAFKA_CLUSTER1_SASL_MECHANISM: PLAIN
+
+CONTROL_CENTER_KAFKA_CLUSTER2_BOOTSTRAP_SERVERS: <CLUSTER 2 BOOTSTRAP_SERVERS>
+CONTROL_CENTER_KAFKA_CLUSTER2_SECURITY_PROTOCOL: SASL_SSL
+CONTROL_CENTER_KAFKA_CLUSTER2_SASL_JAAS_CONFIG: 'org.apache.kafka.common.security.plain.PlainLoginModule required username="<CLUSTER 2 API KEY>" password="<CLUSTER 2 SECRET>";'
+CONTROL_CENTER_KAFKA_CLUSTER2_SASL_MECHANISM: PLAIN
+
+CONTROL_CENTER_KAFKA_CLUSTER3_BOOTSTRAP_SERVERS: <CLUSTER 3 BOOTSTRAP_SERVERS>
+CONTROL_CENTER_KAFKA_CLUSTER3_SECURITY_PROTOCOL: SASL_SSL
+CONTROL_CENTER_KAFKA_CLUSTER3_SASL_JAAS_CONFIG: 'org.apache.kafka.common.security.plain.PlainLoginModule required username="<CLUSTER 3 API KEY>" password="<CLUSTER 3 SECRET>";'
+CONTROL_CENTER_KAFKA_CLUSTER3_SASL_MECHANISM: PLAIN
+```
+
 * Differences between Confluent Cloud UI and local Control Center connected to Confluent Cloud
 
 See the [screenshots](./ccloud_control_center_comparison) on this page.
