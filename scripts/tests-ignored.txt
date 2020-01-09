@@ -26,4 +26,4 @@ connect-jdbc-oracle12-sink
 connect-jdbc-oracle12-source
 
 # scripts to ignore
-postgres-wal2json-issue
+postgres-wal2json-issue.sh
