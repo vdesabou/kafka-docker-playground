@@ -28,6 +28,14 @@ do
             continue
         fi
 
+        # check for ignored scripts in scripts/tests-ignored.txt
+        grep "$script" ${DIR}/tests-ignored.txt > /dev/null
+        if [ $? = 0 ]
+        then
+            echo "skipping $script in dir $dir"
+            continue
+        fi
+
         #filename="${script%.*}"
         ####
         ##
