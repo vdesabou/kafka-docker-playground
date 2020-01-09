@@ -10,7 +10,7 @@ Using IBM MQ Docker [image](https://hub.docker.com/r/ibmcom/mq/)
 
 * `docker-compose` (example `brew cask install docker`)
 * `jq` (example `brew install jq`)
-
+* Follow [Installing IBM MQ Client Library](https://docs.confluent.io/current/connect/kafka-connect-ibmmq/sink/index.html#installing-ibm-mq-client-library) and place them in `./jms.jar` and `./com.ibm.mq.allclient.jar`
 
 ## How to run
 
