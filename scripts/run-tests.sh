@@ -16,7 +16,9 @@ do
     grep "$dir" ${DIR}/tests-ignored.txt > /dev/null
     if [ $? = 0 ]
     then
-        echo "skipping $dir"
+        log "####################################################"
+        log "skipping $dir"
+        log "####################################################"
         continue
     fi
 
@@ -33,14 +35,18 @@ do
         grep "$script" ${DIR}/tests-ignored.txt > /dev/null
         if [ $? = 0 ]
         then
-            echo "skipping $script in dir $dir"
+            log "####################################################"
+            log "skipping $script in dir $dir"
+            log "####################################################"
             continue
         fi
 
         #filename="${script%.*}"
         ####
         ##
-        echo "Executing $script in dir $dir"
+        log "####################################################"
+        log "Executing $script in dir $dir"
+        log "####################################################"
         bash $script
         bash stop.sh
     done
