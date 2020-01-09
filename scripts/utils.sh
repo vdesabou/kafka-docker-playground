@@ -90,7 +90,6 @@ function get_ccloud_version() {
 }
 
 function check_ccloud_version() {
-
 	REQUIRED_CCLOUD_VER=${1:-"0.185.0"}
 	CCLOUD_VER=$(get_ccloud_version)
 

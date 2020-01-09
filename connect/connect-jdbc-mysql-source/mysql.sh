@@ -2,6 +2,7 @@
 set -e
 
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
+source ${DIR}/../../scripts/utils.sh
 
 if [ ! -f ${DIR}/mysql-connector-java-5.1.45.jar ]
 then
