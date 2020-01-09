@@ -71,4 +71,3 @@ RUN confluent-hub install --no-prompt mongodb/kafka-connect-mongodb:0.2
 RUN confluent-hub install --no-prompt jcustenborder/kafka-connect-redis:latest
 RUN confluent-hub install --no-prompt confluentinc/kafka-connect-firebase:latest
 RUN confluent-hub install --no-prompt confluentinc/kafka-connect-kudu:latest
-RUN confluent-hub install --no-prompt confluentinc/kafka-connect-kudu2:latest
