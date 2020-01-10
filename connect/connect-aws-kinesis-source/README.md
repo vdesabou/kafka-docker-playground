@@ -8,7 +8,6 @@ Quickly test [Kinesis Connector](https://docs.confluent.io/current/connect/kafka
 
 * `docker-compose` (example `brew cask install docker`)
 * `jq` (example `brew install jq`)
-* `aws cli`(example `brew install awscli`)
 
 ## AWS Setup
 
@@ -37,13 +36,13 @@ $ ./kinesis.sh
 Create a Kinesis stream `my_kinesis_stream` in `us-east-1` region as it is default:
 
 ```
-$ aws kinesis create-stream --stream-name my_kinesis_stream --shard-count 1
+$ aws_docker_cli kinesis create-stream --stream-name my_kinesis_stream --shard-count 1
 ```
 
 Insert records in Kinesis stream:
 
 ```
-$ aws kinesis put-record --stream-name my_kinesis_stream --partition-key 123 --data test-message-1
+$ aws_docker_cli kinesis put-record --stream-name my_kinesis_stream --partition-key 123 --data test-message-1
 ```
 
 The connector is created with:
@@ -75,7 +74,7 @@ $ docker exec broker kafka-console-consumer --bootstrap-server broker:9092 --top
 Delete your stream and clean up resources to avoid incurring any unintended charges:
 
 ```
-aws kinesis delete-stream --stream-name my_kinesis_stream
+aws_docker_cli kinesis delete-stream --stream-name my_kinesis_stream
 ```
 
 N.B: Control Center is reachable at [http://127.0.0.1:9021](http://127.0.0.1:9021])

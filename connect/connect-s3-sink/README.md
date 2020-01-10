@@ -8,7 +8,6 @@ Quickly test [S3 Sink](https://docs.confluent.io/current/connect/kafka-connect-s
 
 * `docker-compose` (example `brew cask install docker`)
 * `jq` (example `brew install jq`)
-* `aws cli`(example `brew install awscli`)
 
 ## AWS Setup
 
@@ -65,8 +64,7 @@ seq -f "{\"f1\": \"value%g\"}" 10 | docker exec -i schema-registry kafka-avro-co
 After a few seconds, S3 should contain files in bucket:
 
 ```
-$ aws s3api list-objects --bucket "your-bucket-name"
-
+$ aws_docker_cli s3api list-objects --bucket "your-bucket-name"
 ```
 
 N.B: Control Center is reachable at [http://127.0.0.1:9021](http://127.0.0.1:9021])
