@@ -40,9 +40,7 @@ services:
       SCHEMA_REGISTRY_KAFKASTORE_BOOTSTRAP_SERVERS: broker:9092
 
   connect:
-    build:
-      context: ../..
-      dockerfile: Dockerfile-Connector-Hub
+    image: vdesabou/kafka-docker-playground-connect:5.3.2
       cache_from:
         - plaintext_connect:latest
     hostname: connect
