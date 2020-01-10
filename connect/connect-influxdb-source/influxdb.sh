@@ -6,12 +6,12 @@ source ${DIR}/../../scripts/utils.sh
 
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
 
-log "Creating mydb database"
-curl -i -XPOST 'http://localhost:8086/query' --data-urlencode "q=CREATE DATABASE mydb"
-log "Inserting data in database"
-curl -i -XPOST 'http://localhost:8086/write?db=mydb' --data-binary 'cpu_load_short,host=server01,region=us-west value=0.64 1434055562000000000'
-log "Verifying data in mydb"
-curl -G 'http://localhost:8086/query?pretty=true' --data-urlencode "db=mydb" --data-urlencode "q=SELECT \"value\" FROM \"cpu_load_short\" WHERE \"region\"='us-west'"
+log "Creating testdb database and inserting into coin table"
+docker exec -i influxdb bash -c "influx -execute 'create database testdb'"
+docker exec -i influxdb bash -c "influx -execute 'INSERT coin,id=1 value=100' -database testdb"
+
+log "Verifying data in testdb"
+docker exec -i influxdb bash -c "influx -execute 'SELECT * from coin' -database testdb"
 
 log "Creating InfluxDB source connector"
 docker exec connect \
@@ -21,7 +21,7 @@ docker exec connect \
                "connector.class": "io.confluent.influxdb.source.InfluxdbSourceConnector",
                     "tasks.max": "1",
                     "influxdb.url": "http://influxdb:8086",
-                    "influxdb.db": "mydb",
+                    "influxdb.db": "testdb",
                     "mode": "timestamp",
                     "topic.prefix": "influx_",
                     "value.converter": "org.apache.kafka.connect.json.JsonConverter",
@@ -31,7 +31,7 @@ docker exec connect \
 
 sleep 10
 
-log "Verifying topic influx_cpu_load_short"
-docker exec broker kafka-console-consumer --bootstrap-server localhost:9092 --topic influx_cpu_load_short --from-beginning --max-messages 1
+log "Verifying topic influx_testdb"
+docker exec broker kafka-console-consumer --bootstrap-server localhost:9092 --topic influx_testdb --from-beginning --max-messages 1
 
 
