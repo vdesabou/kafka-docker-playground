@@ -57,7 +57,6 @@ docker exec -e QUEUE_URL="$QUEUE_URL" connect \
                     "kafka.topic": "test-sqs-source-ssl",
                     "sqs.url": "'"$QUEUE_URL"'",
                     "confluent.license": "",
-                    "name": "sqs-source-ssl",
                     "confluent.topic.bootstrap.servers": "broker:11091",
                     "confluent.topic.replication.factor": "1",
                     "confluent.topic.ssl.keystore.location" : "/etc/kafka/secrets/kafka.connect.keystore.jks",
@@ -69,7 +68,7 @@ docker exec -e QUEUE_URL="$QUEUE_URL" connect \
                     "confluent.topic.ssl.truststore.type" : "JKS",
                     "confluent.topic.security.protocol" : "SSL"
           }' \
-     https://localhost:8083/connectors/sqs-source/config | jq .
+     https://localhost:8083/connectors/sqs-source-ssl/config | jq .
 
 
 sleep 10

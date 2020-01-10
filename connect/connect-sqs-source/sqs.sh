@@ -53,7 +53,6 @@ docker exec -e QUEUE_URL="$QUEUE_URL" connect \
                "kafka.topic": "test-sqs-source",
                "sqs.url": "'"$QUEUE_URL"'",
                "confluent.license": "",
-               "name": "sqs-source",
                "confluent.topic.bootstrap.servers": "broker:9092",
                "confluent.topic.replication.factor": "1"
           }' \
