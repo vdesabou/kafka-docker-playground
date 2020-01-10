@@ -10,23 +10,65 @@ before_install:
   - sudo apt-get -y install jq
   - sudo apt-get -y install mosquitto-clients
 
+# Skipped tests:
+
+# connect-aws-cloudwatch-source
+# connect-aws-dynamodb-sink
+# connect-aws-lambda-sink
+# connect-aws-redshift-sink
+# connect-azure-blob-storage-sink
+# connect-azure-data-lake-storage-gen1-sink
+# connect-azure-data-lake-storage-gen2-sink
+# connect-gcp-bigquery-sink
+# connect-gcp-firebase-sink
+# connect-gcp-firebase-source
+# connect-gcp-pubsub-source
+# connect-gcs-sink
+# connect-gcs-source
+# connect-google-cloud-functions-sink
+# connect-jms-tibco-sink
+# connect-jms-tibco-source
+# connect-kinesis-source
+# connect-sqs-source
+# connect-tibco-sink
+# connect-tibco-source
+# connect-jdbc-oracle11-sink
+# connect-jdbc-oracle11-source
+# connect-jdbc-oracle12-sink
+# connect-jdbc-oracle12-source
+
+
 jobs:
   include:
-  # tips: in vs code ctrl j
-  - name: "Connect tests #1"
-    env: TEST_LIST="connect/connect-active-mq-source connect/connect-aws-cloudwatch-source connect/connect-aws-dynamodb-sink connect/connect-aws-lambda-sink connect/connect-aws-redshift-sink connect/connect-azure-blob-storage-sink connect/connect-azure-data-lake-storage-gen1-sink connect/connect-cassandra-sink connect/connect-couchbase-sink connect/connect-couchbase-source"
-  - name: "Connect tests #2"
-    env: TEST_LIST="connect/connect-debezium-mongodb-source connect/connect-debezium-mysql-source connect/connect-debezium-postgresql-source connect/connect-debezium-sqlserver-source connect/connect-elasticsearch-sink connect/connect-gcp-bigquery-sink connect/connect-gcp-pubsub-source connect/connect-gcs-sink connect/connect-gcs-source connect/connect-google-cloud-functions-sink connect/connect-hbase-sink"
-  - name: "Connect tests #3"
-    env: TEST_LIST="connect/connect-hdfs3-source connect/connect-http-sink connect/connect-ibm-mq-sink connect/connect-ibm-mq-source connect/connect-influxdb-sink connect/connect-influxdb-source connect/connect-jdbc-mysql-sink connect/connect-jdbc-mysql-source connect/connect-jdbc-oracle11-sink connect/connect-jdbc-oracle11-source connect/connect-jdbc-postgresql-sink"
-  - name: "Connect tests #4"
-    env: TEST_LIST="connect/connect-jdbc-postgresql-source connect/connect-jdbc-sqlserver-sink connect/connect-jdbc-sqlserver-source connect/connect-jms-active-mq-sink connect/connect-jms-solace-sink connect/connect-jms-tibco-sink connect/connect-jms-tibco-source connect/connect-kinesis-source connect/connect-mongodb-sink connect/connect-mongodb-source connect/connect-mqtt-sink"
-  - name: "Connect tests #5"
-    env: TEST_LIST="connect/connect-mqtt-source connect/connect-neo4j-sink connect/connect-omnisci-sink connect/connect-rabbitmq-source connect/connect-redis-sink connect/connect-replicator connect/connect-s3-source connect/connect-sftp-sink connect/connect-sftp-source connect/connect-solace-source connect/connect-splunk-source"
-  - name: "Connect tests #6"
-    env: TEST_LIST="connect/connect-sqs-source connect/connect-syslog-source connect/connect-kudu-source connect/connect-kudu-sink connect/connect-spool-dir-source connect/connect-gcp-firebase-source connect/connect-gcp-firebase-sink connect/connect-hdfs3-sink connect/connect-s3-sink connect/connect-solace-sink connect/connect-splunk-sink"
-  - name: "Connect tests #7"
-    env: TEST_LIST="connect/connect-active-mq-sink connect/connect-hdfs2-sink connect/connect-azure-data-lake-storage-gen2-sink connect/connect-jdbc-oracle12-sink connect/connect-jdbc-oracle12-source connect/connect-tibco-sink connect/connect-tibco-source"
+  - name: "connect-active-mq-sink connect-active-mq-source connect-cassandra-sink connect-couchbase-sink connect-couchbase-source"
+    env: TEST_LIST="connect/connect-active-mq-sink connect/connect-active-mq-source connect/connect-cassandra-sink connect/connect-couchbase-sink connect/connect-couchbase-source"
+
+  - name: "connect-debezium-mongodb-source connect-debezium-mysql-source connect-debezium-postgresql-source connect-debezium-sqlserver-source connect-elasticsearch-sink"
+    env: TEST_LIST="connect/connect-debezium-mongodb-source connect/connect-debezium-mysql-source connect/connect-debezium-postgresql-source connect/connect-debezium-sqlserver-source connect/connect-elasticsearch-sink"
+
+  - name: "connect-hbase-sink connect-hdfs2-sink connect-hdfs3-sink connect-hdfs3-source connect-http-sink"
+    env: TEST_LIST="connect/connect-hbase-sink connect/connect-hdfs2-sink connect/connect-hdfs3-sink connect/connect-hdfs3-source connect/connect-http-sink"
+
+  - name: "connect-ibm-mq-sink connect-ibm-mq-source connect-influxdb-sink connect-influxdb-source connect-jdbc-mysql-sink"
+    env: TEST_LIST="connect/connect-ibm-mq-sink connect/connect-ibm-mq-source connect/connect-influxdb-sink connect/connect-influxdb-source connect/connect-jdbc-mysql-sink"
+
+  - name: "connect-jdbc-mysql-source connect-jdbc-postgresql-sink connect-jdbc-postgresql-source connect-jdbc-sqlserver-sink connect-jdbc-sqlserver-source"
+    env: TEST_LIST="connect/connect-jdbc-mysql-source connect/connect-jdbc-postgresql-sink connect/connect-jdbc-postgresql-source connect/connect-jdbc-sqlserver-sink connect/connect-jdbc-sqlserver-source"
+
+  - name: "connect-jms-active-mq-sink connect-jms-solace-sink connect-kudu-sink connect-kudu-source connect-mongodb-sink"
+    env: TEST_LIST="connect/connect-jms-active-mq-sink connect/connect-jms-solace-sink connect/connect-kudu-sink connect/connect-kudu-source connect/connect-mongodb-sink"
+
+  - name: "connect-mongodb-source connect-mqtt-sink connect-mqtt-source connect-neo4j-sink connect-omnisci-sink"
+    env: TEST_LIST="connect/connect-mongodb-source connect/connect-mqtt-sink connect/connect-mqtt-source connect/connect-neo4j-sink connect/connect-omnisci-sink"
+
+  - name: "connect-rabbitmq-source connect-redis-sink connect-replicator connect-s3-sink connect-s3-source"
+    env: TEST_LIST="connect/connect-rabbitmq-source connect/connect-redis-sink connect/connect-replicator connect/connect-s3-sink connect/connect-s3-source"
+
+  - name: "connect-sftp-sink connect-sftp-source connect-solace-sink connect-solace-source connect-splunk-sink"
+    env: TEST_LIST="connect/connect-sftp-sink connect/connect-sftp-source connect/connect-solace-sink connect/connect-solace-source connect/connect-splunk-sink"
+
+  - name: "connect-splunk-source connect-spool-dir-source connect-syslog-source"
+    env: TEST_LIST="connect/connect-splunk-source connect/connect-spool-dir-source connect/connect-syslog-source"
 
 script:
     - bash scripts/run-tests.sh "$TEST_LIST"
