@@ -13,7 +13,7 @@ openssl req -new -x509 -keyout snakeoil-ca-1.key -out snakeoil-ca-1.crt -days 36
 
 for i in broker client schema-registry connect control-center
 do
-    log "------------------------------- $i -------------------------------"
+    echo "------------------------------- $i -------------------------------"
 
     # Create host keystore
     keytool -genkey -noprompt \
