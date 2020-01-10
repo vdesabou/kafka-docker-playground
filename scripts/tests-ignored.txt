@@ -1,29 +1,2 @@
-# connectors to ignore
-
-connect-aws-cloudwatch-source
-connect-aws-dynamodb-sink
-connect-aws-lambda-sink
-connect-aws-redshift-sink
-connect-azure-blob-storage-sink
-connect-azure-data-lake-storage-gen1-sink
-connect-azure-data-lake-storage-gen2-sink
-connect-gcp-bigquery-sink
-connect-gcp-firebase-sink
-connect-gcp-firebase-source
-connect-gcp-pubsub-source
-connect-gcs-sink
-connect-gcs-source
-connect-google-cloud-functions-sink
-connect-jms-tibco-sink
-connect-jms-tibco-source
-connect-replicator
-connect-sqs-source
-connect-tibco-sink
-connect-tibco-source
-connect-jdbc-oracle11-sink
-connect-jdbc-oracle11-source
-connect-jdbc-oracle12-sink
-connect-jdbc-oracle12-source
-
 # scripts to ignore
 postgres-wal2json-issue.sh

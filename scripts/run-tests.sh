@@ -13,16 +13,6 @@ do
         continue
     fi
 
-    # check for ignored folders in scripts/tests-ignored.txt
-    grep "$dir" ${DIR}/tests-ignored.txt > /dev/null
-    if [ $? = 0 ]
-    then
-        log "####################################################"
-        log "skipping $dir"
-        log "####################################################"
-        continue
-    fi
-
     cd $dir > /dev/null
 
     for script in *.sh
