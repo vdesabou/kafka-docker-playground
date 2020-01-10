@@ -141,5 +141,5 @@ function remove_partition() {
 }
 
 function aws_docker_cli() {
-    docker run --rm -tiv $HOME/.aws:/root/.aws -v $(pwd):/aws mikesir87/aws-cli aws $@ | tr '\r' '\n'
+    docker run --rm -tiv $HOME/.aws:/root/.aws -v $(pwd):/aws mikesir87/aws-cli aws "$@" | tr '\r' '\n'
 }
