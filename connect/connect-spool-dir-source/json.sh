@@ -6,9 +6,12 @@ source ${DIR}/../../scripts/utils.sh
 
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
 
-mkdir -p ${DIR}/data/input
-mkdir -p ${DIR}/data/error
-mkdir -p ${DIR}/data/finished
+set -x
+mkdir -pv ${DIR}/data
+mkdir -pv ${DIR}/data/input
+mkdir -pv ${DIR}/data/error
+mkdir -pv ${DIR}/data/finished
+set +x
 
 if [ ! -f "${DIR}/data/input/json-spooldir-source.json" ]
 then
