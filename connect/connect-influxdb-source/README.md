@@ -20,49 +20,28 @@ $ ./influxdb.sh
 
 ## Details of what the script is doing
 
-Creating mydb database
+log "Creating testdb database and inserting into coin table"
 
 ```bash
-$ curl -i -XPOST 'http://localhost:8086/query' --data-urlencode "q=CREATE DATABASE mydb"
+
+$ docker exec -i influxdb bash -c "influx -execute 'create database testdb'"
+$ docker exec -i influxdb bash -c "influx -execute 'INSERT coin,id=1 value=100' -database testdb"
 ```
 
-Inserting data in database
+Verifying data in `testdb`
 
 ```bash
-$ curl -i -XPOST 'http://localhost:8086/write?db=mydb' --data-binary 'cpu_load_short,host=server01,region=us-west value=0.64 1434055562000000000'
-```
-
-Verifying data in mydb
-
-```bash
-$ curl -G 'http://localhost:8086/query?pretty=true' --data-urlencode "db=mydb" --data-urlencode "q=SELECT \"value\" FROM \"cpu_load_short\" WHERE \"region\"='us-west'"
+$ docker exec -i influxdb bash -c "influx -execute 'SELECT * from coin' -database testdb"
 ```
 
 Results:
 
-```json
-{
-    "results": [
-        {
-            "statement_id": 0,
-            "series": [
-                {
-                    "name": "cpu_load_short",
-                    "columns": [
-                        "time",
-                        "value"
-                    ],
-                    "values": [
-                        [
-                            "2015-06-11T20:46:02Z",
-                            0.64
-                        ]
-                    ]
-                }
-            ]
-        }
-    ]
-}
+```
+name: coin
+time                id value
+----                -- -----
+1578663954475848300 1  100
+1578663969811495300 1  100
 ```
 
 Creating InfluxDB source connector
@@ -75,7 +54,7 @@ $ docker exec connect \
                "connector.class": "io.confluent.influxdb.source.InfluxdbSourceConnector",
                     "tasks.max": "1",
                     "influxdb.url": "http://influxdb:8086",
-                    "influxdb.db": "mydb",
+                    "influxdb.db": "testdb",
                     "mode": "timestamp",
                     "topic.prefix": "influx_",
                     "value.converter": "org.apache.kafka.connect.json.JsonConverter",
@@ -84,23 +63,22 @@ $ docker exec connect \
      http://localhost:8083/connectors/influxdb-source/config | jq .
 ```
 
-Verifying topic influx_cpu_load_short
+Verifying topic `influx_testdb`
 
 ```bash
-$ docker exec broker kafka-console-consumer --bootstrap-server localhost:9092 --topic influx_cpu_load_short --from-beginning --max-messages 1
+$ docker exec broker kafka-console-consumer --bootstrap-server localhost:9092 --topic influx_testdb --from-beginning --max-messages 1
 ```
 
 Results:
 
 ```json
 {
-    "measurement": "cpu_load_short",
+    "measurement": "coin",
     "tags": {
-        "host": "server01",
-        "region": "us-west"
+        "id": "1"
     },
-    "time": "2015-06-11T20:46:02Z",
-    "value": 0.64
+    "time": "2020-01-10T13:48:37.0833919Z",
+    "value": 100.0
 }
 ```
 
