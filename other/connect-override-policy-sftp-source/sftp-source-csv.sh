@@ -6,11 +6,11 @@ source ${DIR}/../../scripts/utils.sh
 
 rm -rf ${DIR}/upload/
 
-${DIR}/../../environment/sasl-plain/start.sh "${PWD}/docker-compose.sasl-plain.yml"
-
 mkdir -p ${DIR}/upload/input
 mkdir -p ${DIR}/upload/error
 mkdir -p ${DIR}/upload/finished
+
+${DIR}/../../environment/sasl-plain/start.sh "${PWD}/docker-compose.sasl-plain.yml"
 
 echo $'id,first_name,last_name,email,gender,ip_address,last_login,account_balance,country,favorite_color\n1,Salmon,Baitman,sbaitman0@feedburner.com,Male,120.181.75.98,2015-03-01T06:01:15Z,17462.66,IT,#f09bc0\n2,Debby,Brea,dbrea1@icio.us,Female,153.239.187.49,2018-10-21T12:27:12Z,14693.49,CZ,#73893a' > ${DIR}/upload/input/csv-sftp-source.csv
 
