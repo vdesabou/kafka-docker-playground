@@ -7,6 +7,9 @@ source ${DIR}/../../scripts/utils.sh
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
 
 set -x
+whoami
+pwd
+ls -lrt `pwd`
 mkdir -pv ${DIR}/data
 mkdir -pv ${DIR}/data/input
 mkdir -pv ${DIR}/data/error
