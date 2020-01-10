@@ -51,9 +51,7 @@ services:
             KAFKA_OPTS: "-Djava.security.auth.login.config=/etc/kafka/kafka_server_jaas.conf"
 
     connect:
-        build:
-            context: ../..
-            dockerfile: Dockerfile-Connector-Hub
+        image: vdesabou/kafka-docker-playground-connect:5.3.2
         hostname: connect
         container_name: connect
         depends_on:
