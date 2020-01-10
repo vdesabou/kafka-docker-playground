@@ -24,7 +24,7 @@ Quick start examples from Confluent [docs](https://docs.confluent.io/current/con
 
 * <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/9/93/Amazon_Web_Services_Logo.svg/1200px-Amazon_Web_Services_Logo.svg.png" width="15"> AWS
     * <img src="https://cdn.worldvectorlogo.com/logos/aws-s3.svg" width="15"> [S3](connect/connect-s3-source)
-    * <img src="https://cdn.worldvectorlogo.com/logos/aws-kinesis.svg" width="15"> [Kinesis](connect/connect-kinesis-source)
+    * <img src="https://cdn.worldvectorlogo.com/logos/aws-kinesis.svg" width="15"> [Kinesis](connect/connect-aws-kinesis-source)
     * <img src="https://cdn.worldvectorlogo.com/logos/aws-sqs.svg" width="15"> [SQS](connect/connect-sqs-source)
         * using [SASL_SSL](connect/connect-sqs-source/README.md#with-sasl-ssl-authentication)
         * using [SSL](connect/connect-sqs-source/README.md#with-ssl-authentication)
