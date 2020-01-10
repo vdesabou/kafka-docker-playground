@@ -755,6 +755,14 @@ CONTROL_CENTER_KAFKA_CLUSTER3_SASL_MECHANISM: PLAIN
 
 See the [screenshots](./ccloud_control_center_comparison) on this page.
 
+In summary, the main benefits to have a local Control Center connected to Confluent Cloud are:
+
+* Being able to access your local Connect cluster in Control Center UI
+* Being able to access your local KSQL cluster in Control Center UI
+* Being able to setup [Alerts], see below
+
+Other than that, Confluent Cloud UI is very similar (assuming that [Configuring Access to the UI Dashboard](https://docs.confluent.io/current/cloud/vpc.html#configuring-access-to-the-ui-dashboard) has been setup, otherwise Topics, Consumers and KSQL tabs will be empty and show a banner to setup proxy)
+
 * Alerts
 
 You can setup [alerts](https://docs.confluent.io/current/control-center/alerts/index.html) in Control Center.
