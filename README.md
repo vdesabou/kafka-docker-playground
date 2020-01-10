@@ -25,9 +25,9 @@ Quick start examples from Confluent [docs](https://docs.confluent.io/current/con
 * <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/9/93/Amazon_Web_Services_Logo.svg/1200px-Amazon_Web_Services_Logo.svg.png" width="15"> AWS
     * <img src="https://cdn.worldvectorlogo.com/logos/aws-s3.svg" width="15"> [S3](connect/connect-s3-source)
     * <img src="https://cdn.worldvectorlogo.com/logos/aws-kinesis.svg" width="15"> [Kinesis](connect/connect-aws-kinesis-source)
-    * <img src="https://cdn.worldvectorlogo.com/logos/aws-sqs.svg" width="15"> [SQS](connect/connect-sqs-source)
-        * using [SASL_SSL](connect/connect-sqs-source/README.md#with-sasl-ssl-authentication)
-        * using [SSL](connect/connect-sqs-source/README.md#with-ssl-authentication)
+    * <img src="https://cdn.worldvectorlogo.com/logos/aws-sqs.svg" width="15"> [SQS](connect/connect-aws-sqs-source)
+        * using [SASL_SSL](connect/connect-aws-sqs-source/README.md#with-sasl-ssl-authentication)
+        * using [SSL](connect/connect-aws-sqs-source/README.md#with-ssl-authentication)
     * <img src="https://cdn.worldvectorlogo.com/logos/aws-cloudwatch.svg" width="15"> [CloudWatch Logs](connect/connect-aws-cloudwatch-source)
 * <img src="https://avatars3.githubusercontent.com/u/11964329?s=400&v=4" width="15"> Debezium
     * <img src="https://banner2.cleanpng.com/20180803/abq/kisspng-mysql-cluster-database-management-system-专-题-咖-啡-与-代-码-5b640d8b2a2e53.6067051415332837231728.jpg" width="15"> [MySQL](connect/connect-debezium-mysql-source)
