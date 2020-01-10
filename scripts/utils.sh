@@ -68,10 +68,10 @@ function check_if_continue()
 function create_topic()
 {
   local topic="$1"
-  echo -e "\n# Check if topic $topic exists"
+  log "Check if topic $topic exists"
   ccloud kafka topic create $topic --dry-run 2>/dev/null
   if [[ $? == 0 ]]; then
-    echo -e "\n# Create topic $topic"
+    log "Create topic $topic"
     log "ccloud kafka topic create $topic"
     ccloud kafka topic create $topic || true
   else
@@ -82,10 +82,10 @@ function create_topic()
 function delete_topic()
 {
   local topic="$1"
-  echo -e "\n# Check if topic $topic exists"
+  log "Check if topic $topic exists"
   ccloud kafka topic create $topic --dry-run 2>/dev/null
   if [[ $? != 0 ]]; then
-    echo -e "\n# Delete topic $topic"
+    log "Delete topic $topic"
     log "ccloud kafka topic delete $topic"
     ccloud kafka topic delete $topic || true
   else
