@@ -7,7 +7,7 @@ services:
   - docker
 
 before_install:
-  - sudo apt-get -y install jq
+  - sudo apt-get -y install jq netcat
   - sudo apt-get -y install mosquitto-clients
 
 # Skipped tests:
