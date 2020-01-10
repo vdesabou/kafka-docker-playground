@@ -4,6 +4,19 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
+KEYSTORE="${DIR}/keystore.jks"
+if [ ! -f ${KEYSTORE} ]
+then
+     log "INFO: the file ${KEYSTORE} file is not present, generating it..."
+     cd ${DIR}/../../environment/sasl-ssl/security
+
+     log "Generate keys and certificates used for SSL"
+     ./certs-create.sh > /dev/null 2>&1
+
+     cd ${DIR}
+     cp ${DIR}/../../environment/sasl-ssl/security/kafka.broker.keystore.jks ${DIR}/keystore.jks
+fi
+
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
 
 log "Creating Splunk sink connector"
