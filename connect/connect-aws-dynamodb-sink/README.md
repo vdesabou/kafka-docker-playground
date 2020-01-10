@@ -8,7 +8,6 @@ Quickly test [AWS DynamoDB](https://docs.confluent.io/current/connect/kafka-conn
 
 * `docker-compose` (example `brew cask install docker`)
 * `jq` (example `brew install jq`)
-* `aws cli`(example `brew install awscli`)
 
 ## AWS Setup
 
@@ -63,7 +62,7 @@ $ docker exec connect \
 Verify data is in DynamoDB
 
 ```bash
-$ aws dynamodb scan --table-name topic1 --region us-east-1
+$ aws_docker_cli dynamodb scan --table-name topic1 --region us-east-1
 ```
 
 Results:

@@ -4,7 +4,16 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
-verify_installed "aws"
+if [ ! -f $HOME/.aws/config ]
+then
+     log "ERROR: $HOME/.aws/config is not set"
+     exit 1
+fi
+if [ ! -f $HOME/.aws/credentials ]
+then
+     log "ERROR: $HOME/.aws/credentials is not set"
+     exit 1
+fi
 
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
 
@@ -31,4 +40,4 @@ log "Sleeping 60 seconds, waiting for table to be created"
 sleep 60
 
 log "Verify data is in DynamoDB"
-aws dynamodb scan --table-name topic1 --region us-east-1
+aws_docker_cli dynamodb scan --table-name topic1 --region us-east-1

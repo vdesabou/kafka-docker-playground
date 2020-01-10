@@ -5,7 +5,16 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 BUCKET_NAME=${1:-kafka-docker-playground}
 
-verify_installed "aws"
+if [ ! -f $HOME/.aws/config ]
+then
+     log "ERROR: $HOME/.aws/config is not set"
+     exit 1
+fi
+if [ ! -f $HOME/.aws/credentials ]
+then
+     log "ERROR: $HOME/.aws/credentials is not set"
+     exit 1
+fi
 
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
 
@@ -36,10 +45,10 @@ seq -f "{\"f1\": \"value%g\"}" 10 | docker exec -i schema-registry kafka-avro-co
 sleep 10
 
 log "Listing objects of in S3"
-aws s3api list-objects --bucket "$BUCKET_NAME"
+aws_docker_cli s3api list-objects --bucket "$BUCKET_NAME"
 
 log "Getting one of the avro files locally and displaying content with avro-tools"
-aws s3 cp s3://$BUCKET_NAME/topics/s3_topic/partition=0/s3_topic+0+0000000000.avro /tmp/
+aws_docker_cli s3 cp s3://$BUCKET_NAME/topics/s3_topic/partition=0/s3_topic+0+0000000000.avro /tmp/
 
 
 docker run -v /tmp:/tmp actions/avro-tools tojson /tmp/s3_topic+0+0000000000.avro

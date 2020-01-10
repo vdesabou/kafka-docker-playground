@@ -139,3 +139,7 @@ function remove_partition() {
         docker exec --privileged -t $name bash -c "tc qdisc del dev eth0 root" 2>&1 > /dev/null
     done
 }
+
+function aws_docker_cli() {
+    docker run --rm -tiv $HOME/.aws:/root/.aws -v $(pwd):/aws mikesir87/aws-cli aws $@ | tr '\r' '\n'
+}
