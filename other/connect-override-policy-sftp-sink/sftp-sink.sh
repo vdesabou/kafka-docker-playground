@@ -64,5 +64,6 @@ sleep 10
 log "Listing content of ./upload/topics/test_sftp_sink/partition\=0/"
 ls ./upload/topics/test_sftp_sink/partition\=0/
 
+cp ./upload/topics/test_sftp_sink/partition\=0/test_sftp_sink+0+0000000000.avro /tmp/
 
-docker run -v /tmp:/tmp actions/avro-tools tojson ./upload/topics/test_sftp_sink/partition\=0/test_sftp_sink+0+0000000000.avro
+docker run -v /tmp:/tmp actions/avro-tools tojson /tmp/test_sftp_sink+0+0000000000.avro
