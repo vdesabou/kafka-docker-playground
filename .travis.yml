@@ -31,7 +31,7 @@ before_install:
 # connect-google-cloud-functions-sink
 # connect-jms-tibco-sink
 # connect-jms-tibco-source
-# connect-kinesis-source
+# connect-aws-kinesis-source
 # connect-sqs-source
 # connect-tibco-sink
 # connect-tibco-source
