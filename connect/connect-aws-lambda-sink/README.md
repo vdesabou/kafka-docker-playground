@@ -8,7 +8,6 @@ Quickly test [AWS Lambda](https://docs.confluent.io/current/connect/kafka-connec
 
 * `docker-compose` (example `brew cask install docker`)
 * `jq` (example `brew install jq`)
-* `aws cli`(example `brew install awscli`)
 
 ## AWS Setup
 
