@@ -77,7 +77,6 @@ docker exec -e QUEUE_URL="$QUEUE_URL" connect \
                     "kafka.topic": "test-sqs-source-sasl-ssl",
                     "sqs.url": "'"$QUEUE_URL"'",
                     "confluent.license": "",
-                    "name": "sqs-source-sasl-ssl",
                     "confluent.topic.bootstrap.servers": "broker:9091",
                     "confluent.topic.replication.factor": "1",
                     "confluent.topic.ssl.keystore.location" : "/etc/kafka/secrets/kafka.connect.keystore.jks",
@@ -89,7 +88,7 @@ docker exec -e QUEUE_URL="$QUEUE_URL" connect \
                     "confluent.topic.sasl.mechanism": "PLAIN",
                     "confluent.topic.sasl.jaas.config": "org.apache.kafka.common.security.plain.PlainLoginModule required  username=\"client\" password=\"client-secret\";"
           }' \
-     https://localhost:8083/connectors/sqs-source/config | jq .
+     https://localhost:8083/connectors/sqs-source-sasl-ssl/config | jq .
 
 sleep 10
 
