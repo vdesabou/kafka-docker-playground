@@ -4,17 +4,11 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
-${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
+mkdir -p ${DIR}/data/input
+mkdir -p ${DIR}/data/error
+mkdir -p ${DIR}/data/finished
 
-set -x
-whoami
-pwd
-ls -lrt `pwd`
-mkdir -pv ${DIR}/data
-mkdir -pv ${DIR}/data/input
-mkdir -pv ${DIR}/data/error
-mkdir -pv ${DIR}/data/finished
-set +x
+${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
 
 if [ ! -f "${DIR}/data/input/json-spooldir-source.json" ]
 then
