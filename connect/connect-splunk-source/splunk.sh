@@ -7,18 +7,16 @@ source ${DIR}/../../scripts/utils.sh
 KEYSTORE="${DIR}/keystore.jks"
 if [ ! -f ${KEYSTORE} ]
 then
-     set -x
      OLDDIR=$PWD
 
      log "INFO: the file ${KEYSTORE} file is not present, generating it..."
      cd ${DIR}/../../environment/sasl-ssl/security
 
      log "Generate keys and certificates used for SSL"
-     ./certs-create.sh
+     ./certs-create.sh  > /dev/null 2>&1
 
      cd ${OLDDIR}
      cp ${DIR}/../../environment/sasl-ssl/security/kafka.broker.keystore.jks ${DIR}/keystore.jks
-     set +x
 fi
 
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
