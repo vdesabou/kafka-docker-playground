@@ -12,6 +12,10 @@ services:
 before_install:
   - sudo apt-get -y install jq netcat
   - sudo apt-get -y install mosquitto-clients
+  # aws cli
+  - curl "https://d1vvhvl2y92vvt.cloudfront.net/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+  - unzip awscliv2.zip
+  - sudo ./aws/install
   - openssl aes-256-cbc -K $encrypted_e1b0a72f7201_key -iv $encrypted_e1b0a72f7201_iv -in secrets.tar.enc -out secrets.tar -d
   - tar xvf secrets.tar
   - mkdir -p $HOME/.aws
@@ -86,8 +90,8 @@ jobs:
   # - name: "CONNECT: connect-splunk-source connect-spool-dir-source connect-syslog-source"
   #   env: TEST_LIST="connect/connect-splunk-source connect/connect-spool-dir-source connect/connect-syslog-source"
 
-  - name: "CONNECT (AWS): connect-aws-cloudwatch-source connect-aws-dynamodb-sink connect-aws-kinesis-source connect-aws-lambda-sink connect-aws-redshift-sink"
-    env: TEST_LIST="connect/connect-aws-cloudwatch-source connect/connect-aws-dynamodb-sink connect/connect-aws-kinesis-source connect/connect-aws-lambda-sink connect/connect-aws-redshift-sink"
+  - name: "CONNECT (AWS): connect-aws-cloudwatch-source connect-aws-dynamodb-sink connect-aws-kinesis-source connect-aws-lambda-sink"
+    env: TEST_LIST="connect/connect-aws-cloudwatch-source connect/connect-aws-dynamodb-sink connect/connect-aws-kinesis-source connect/connect-aws-lambda-sink"
 
   - name: "CONNECT (GCP): connect-gcp-bigquery-sink connect-gcp-firebase-sink connect-gcp-firebase-source connect-gcp-pubsub-source connect-gcs-sink connect-gcs-source connect-google-cloud-functions-sink connect-sqs-source"
     env: TEST_LIST="connect/connect-gcp-bigquery-sink connect/connect-gcp-firebase-sink connect/connect-gcp-firebase-source connect/connect-gcp-pubsub-source connect/connect-gcs-sink connect/connect-gcs-source connect/connect-google-cloud-functions-sink connect/connect-sqs-source"

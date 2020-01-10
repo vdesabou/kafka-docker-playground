@@ -6,6 +6,8 @@ source ${DIR}/../scripts/utils.sh
 # go to root folder
 cd ${DIR}/..
 
+nb_test_failed=0
+
 for dir in $@
 do
     if [ ! -d $dir ]
@@ -36,7 +38,32 @@ do
         log "Executing $script in dir $dir"
         log "####################################################"
         bash $script
+        if [ $? -eq 0 ]
+        then
+            log "####################################################"
+            log "RESULT: SUCCESS for $script in dir $dir"
+            log "####################################################"
+        else
+            log "####################################################"
+            log "RESULT: FAILURE for $script in dir $dir"
+            log "####################################################"
+            let "nb_test_failed++"
+        fi
         bash stop.sh
     done
     cd - > /dev/null
 done
+
+
+if [ $nb_test_failed -eq 0 ]
+then
+    log "####################################################"
+    log "RESULT: SUCCESS"
+    log "####################################################"
+    exit 0
+else
+    log "####################################################"
+    log "RESULT: FAILED $nb_test_failed tests failed"
+    log "####################################################"
+    exit $nb_test_failed
+fi
