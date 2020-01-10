@@ -7,7 +7,6 @@ Quickly test [MQTT Sink](https://docs.confluent.io/current/connect/kafka-connect
 ## Pre-requisites
 
 * `docker-compose` (example `brew cask install docker`)
-* `mosquitto` (example `brew install mosquitto`) see [web page](https://mosquitto.org/download/)
 
 ## How to run
 
