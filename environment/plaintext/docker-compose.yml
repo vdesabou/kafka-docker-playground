@@ -41,8 +41,6 @@ services:
 
   connect:
     image: vdesabou/kafka-docker-playground-connect:5.3.2
-      cache_from:
-        - plaintext_connect:latest
     hostname: connect
     container_name: connect
     depends_on:
