@@ -113,9 +113,7 @@ services:
       KAFKA_SSL_PRINCIPAL_MAPPING_RULES: RULE:^CN=(.*?),OU=TEST.*$$/$$1/,DEFAULT
 
   connect:
-    build:
-      context: ../..
-      dockerfile: Dockerfile-Connector-Hub
+    image: vdesabou/kafka-docker-playground-connect:5.3.2
     container_name: connect
     ports:
       - "8083:8083"
