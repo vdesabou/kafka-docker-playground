@@ -7,6 +7,7 @@ source ${DIR}/../scripts/utils.sh
 cd ${DIR}/..
 
 nb_test_failed=0
+failed_tests=""
 
 for dir in $@
 do
@@ -38,6 +39,7 @@ do
         log "Executing $script in dir $dir"
         log "####################################################"
         bash $script
+        ecd
         if [ $? -eq 0 ]
         then
             log "####################################################"
@@ -47,6 +49,7 @@ do
             log "####################################################"
             log "RESULT: FAILURE for $script in dir $dir"
             log "####################################################"
+            failed_tests=$failed_tests"$dir[$script]\n"
             let "nb_test_failed++"
         fi
         bash stop.sh
@@ -63,7 +66,7 @@ then
     exit 0
 else
     log "####################################################"
-    log "RESULT: FAILED $nb_test_failed tests failed"
+    log "RESULT: FAILED $nb_test_failed tests failed:\n $failed_tests"
     log "####################################################"
     exit $nb_test_failed
 fi
