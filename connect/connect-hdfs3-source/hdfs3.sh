@@ -6,6 +6,7 @@ source ${DIR}/../../scripts/utils.sh
 
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
 
+sleep 10
 
 # Note in this simple example, if you get into an issue with permissions at the local HDFS level, it may be easiest to unlock the permissions unless you want to debug that more.
 docker exec namenode bash -c "/opt/hadoop-3.1.2/bin/hdfs dfs -chmod 777  /"
@@ -70,6 +71,7 @@ docker exec connect \
           }' \
      http://localhost:8083/connectors/hdfs3-source/config | jq .
 
+sleep 10
 
 log "Verifying topic copy_of_test_hdfs"
 docker exec schema-registry kafka-avro-console-consumer -bootstrap-server broker:9092 --topic copy_of_test_hdfs --from-beginning --max-messages 9
