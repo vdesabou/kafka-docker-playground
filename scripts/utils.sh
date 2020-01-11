@@ -1,7 +1,7 @@
 function log() {
   YELLOW='\033[0;33m'
   NC='\033[0m' # No Color
-  echo -e "$YELLOW $@$NC"
+  echo -e "$YELLOW$@$NC"
 }
 
 function verify_installed()
