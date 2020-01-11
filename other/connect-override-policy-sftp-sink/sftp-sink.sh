@@ -61,6 +61,11 @@ log "Sending messages to topic test_sftp_sink"
 seq -f "{\"f1\": \"value%g\"}" 10 | docker exec -i schema-registry kafka-avro-console-producer --broker-list broker:9092 --topic test_sftp_sink --property value.schema='{"type":"record","name":"myrecord","fields":[{"name":"f1","type":"string"}]}' --producer.config /tmp/client.properties
 
 sleep 10
+docker container logs --tail=300 connect
+docker container logs --tail=300 sftp-server
+pwd
+ls -lrt
+whoami
 
 log "Listing content of ./upload/topics/test_sftp_sink/partition\=0/"
 ls ./upload/topics/test_sftp_sink/partition\=0/
