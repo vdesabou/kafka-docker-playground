@@ -55,10 +55,10 @@ Sending messages to topic `test_sftp_sink`
 $ seq -f "{\"f1\": \"value%g\"}" 10 | docker exec -i schema-registry kafka-avro-console-producer --broker-list broker:9092 --topic test_sftp_sink --property value.schema='{"type":"record","name":"myrecord","fields":[{"name":"f1","type":"string"}]}'
 ```
 
-Listing content of `./upload/topics/test_sftp_sink/partition\=0/`
+Listing content of `/home/foo/upload/topics/test_sftp_sink/partition\=0/`
 
 ```bash
-$ ls ./upload/topics/test_sftp_sink/partition\=0/
+$ docker exec sftp-server bash -c "ls /home/foo/upload/topics/test_sftp_sink/partition\=0/"
 test_sftp_sink+0+0000000000.avro  test_sftp_sink+0+0000000003.avro  test_sftp_sink+0+0000000006.avro  test_sftp_sink+0+0000000009.avro
 ```
 
