@@ -7,7 +7,7 @@ Quickly test [Debezium PostGreSQL](https://docs.confluent.io/current/connect/deb
 ## Pre-requisites
 
 * `docker-compose` (example `brew cask install docker`)
-* `jq` (example `brew install jq`)
+
 
 
 ## How to run
@@ -61,7 +61,7 @@ docker exec connect \
                     "transforms.addTopicSuffix.regex":"(.*)",
                     "transforms.addTopicSuffix.replacement":"$1-raw"
           }' \
-     http://localhost:8083/connectors/debezium-postgres-source/config | jq .
+     http://localhost:8083/connectors/debezium-postgres-source/config | jq_docker_cli .
 ```
 
 Verifying topic asgard.public.customers-raw

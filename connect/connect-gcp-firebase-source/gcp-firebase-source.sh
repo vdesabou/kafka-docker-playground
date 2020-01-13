@@ -27,7 +27,7 @@ docker exec -e PROJECT="$PROJECT" connect \
                     "confluent.topic.bootstrap.servers": "broker:9092",
                     "confluent.topic.replication.factor": "1"
           }' \
-     http://localhost:8083/connectors/firebase-source/config | jq .
+     http://localhost:8083/connectors/firebase-source/config | jq_docker_cli .
 
 sleep 10
 

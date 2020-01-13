@@ -7,7 +7,7 @@ Quickly test [GCP Pub/Sub Source](https://docs.confluent.io/current/connect/kafk
 ## Pre-requisites
 
 * `docker-compose` (example `brew cask install docker`)
-* `jq` (example `brew install jq`)
+
 * `google-cloud-sdk` (example `brew cask install google-cloud-sdk`)
 * Active Google Cloud Platform (GCP) account with authorization to create resources
 
@@ -88,7 +88,7 @@ $ docker exec -e PROJECT="$PROJECT" connect \
                     "confluent.topic.bootstrap.servers": "broker:9092",
                     "confluent.topic.replication.factor": "1"
           }' \
-     http://localhost:8083/connectors/pubsub-source/config | jq .
+     http://localhost:8083/connectors/pubsub-source/config | jq_docker_cli .
 ```
 
 Verify messages are in topic `pubsub-topic`

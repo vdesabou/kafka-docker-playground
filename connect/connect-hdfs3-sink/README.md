@@ -7,7 +7,7 @@ Quickly test [HDFS 3 Sink](https://docs.confluent.io/current/connect/kafka-conne
 ## Pre-requisites
 
 * `docker-compose` (example `brew cask install docker`)
-* `jq` (example `brew install jq`)
+
 
 ## How to run
 
@@ -48,7 +48,7 @@ $ docker exec connect \
                "value.converter.schema.registry.url":"http://schema-registry:8081",
                "schema.compatibility":"BACKWARD"
           }' \
-     http://localhost:8083/connectors/hdfs3-sink/config | jq .
+     http://localhost:8083/connectors/hdfs3-sink/config | jq_docker_cli .
 ```
 
 Messages are sent to `test_hdfs` topic using:

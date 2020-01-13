@@ -35,7 +35,7 @@ docker exec connect \
                "retry.backoff.ms": 15000,
                "max.retries": 3
           }' \
-     http://localhost:8083/connectors/http-sink/config | jq .
+     http://localhost:8083/connectors/http-sink/config | jq_docker_cli .
 
 
 sleep 5
@@ -221,7 +221,7 @@ EOF
 
 
 # at the end
-# curl localhost:9082/api/messages | jq .
+# curl localhost:9082/api/messages | jq_docker_cli .
 # [
 #   {
 #     "id": 1,

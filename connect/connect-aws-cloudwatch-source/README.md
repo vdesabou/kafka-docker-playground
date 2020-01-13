@@ -7,7 +7,7 @@ Quickly test [AWS CloudWatch Logs](https://docs.confluent.io/current/connect/kaf
 ## Pre-requisites
 
 * `docker-compose` (example `brew cask install docker`)
-* `jq` (example `brew install jq`)
+
 
 ## AWS Setup
 
@@ -60,7 +60,7 @@ Injecting more messages
 ```bash
 for i in $(seq 1 10)
 do
-     token=$($ aws_docker_cli logs describe-log-streams --log-group my-log-group | jq -r .logStreams[0].uploadSequenceToken)
+     token=$($ aws_docker_cli logs describe-log-streams --log-group my-log-group | jq_docker_cli -r .logStreams[0].uploadSequenceToken)
      $ aws_docker_cli logs put-log-events --log-group my-log-group --log-stream my-log-stream --log-events timestamp=`date +%s000`,message="This is a log #${i}" --sequence-token ${token}
 done
 ```
@@ -81,7 +81,7 @@ docker exec connect \
                     "confluent.topic.bootstrap.servers": "broker:9092",
                     "confluent.topic.replication.factor": "1"
           }' \
-     http://localhost:8083/connectors/aws-cloudwatch-logs-source/config | jq .
+     http://localhost:8083/connectors/aws-cloudwatch-logs-source/config | jq_docker_cli .
 ```
 
 Verify we have received the data in `my-log-group.my-log-stream` topic

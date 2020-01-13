@@ -7,7 +7,7 @@ Quickly test [Azure Data Lake Storage Gen1 Sink](https://docs.confluent.io/curre
 ## Pre-requisites
 
 * `docker-compose` (example `brew cask install docker`)
-* `jq` (example `brew install jq`)
+
 * `az`(example `brew install azure-cli`)
 
 ## How to run
@@ -43,7 +43,7 @@ $ AZURE_DATALAKE_CLIENT_ID=$(az ad app create --display-name "$AZURE_AD_APP_NAME
 Creating Service Principal associated to the App
 
 ```bash
-$ SERVICE_PRINCIPAL_ID=$(az ad sp create --id $AZURE_DATALAKE_CLIENT_ID | jq -r '.objectId')
+$ SERVICE_PRINCIPAL_ID=$(az ad sp create --id $AZURE_DATALAKE_CLIENT_ID | jq_docker_cli -r '.objectId')
 ```
 
 Creating data lake $AZURE_DATALAKE_ACCOUNT_NAME in resource $AZURE_RESOURCE_GROUP
@@ -78,7 +78,7 @@ $ docker exec -e AZURE_DATALAKE_CLIENT_ID="$AZURE_DATALAKE_CLIENT_ID" -e AZURE_D
                     "confluent.topic.bootstrap.servers": "broker:9092",
                     "confluent.topic.replication.factor": "1"
           }' \
-     http://localhost:8083/connectors/azure-datalake-gen1-sink/config | jq .
+     http://localhost:8083/connectors/azure-datalake-gen1-sink/config | jq_docker_cli .
 ```
 
 Sending messages to topic datalake_topic

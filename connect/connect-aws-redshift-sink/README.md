@@ -7,7 +7,7 @@ Quickly test [AWS Redshift](https://docs.confluent.io/current/connect/kafka-conn
 ## Pre-requisites
 
 * `docker-compose` (example `brew cask install docker`)
-* `jq` (example `brew install jq`)
+
 
 ## AWS Redshift instance setup
 
@@ -59,7 +59,7 @@ $ docker exec -e PROJECT="$DOMAIN" -e DATASET="$PASSWORD" connect \
                     "confluent.topic.bootstrap.servers": "broker:9092",
                     "confluent.topic.replication.factor": "1"
           }' \
-     http://localhost:8083/connectors/redshift-sink/config | jq .
+     http://localhost:8083/connectors/redshift-sink/config | jq_docker_cli .
 ```
 
 Verify data is in Redshift

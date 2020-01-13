@@ -7,7 +7,7 @@ Quickly test [InfluxDB Sink](https://docs.confluent.io/current/connect/kafka-con
 ## Pre-requisites
 
 * `docker-compose` (example `brew cask install docker`)
-* `jq` (example `brew install jq`)
+
 
 
 ## How to run
@@ -41,7 +41,7 @@ $ docker exec connect \
                     "influxdb.url": "http://influxdb:8086",
                     "topics": "orders"
           }' \
-     http://localhost:8083/connectors/influxdb-sink/config | jq .
+     http://localhost:8083/connectors/influxdb-sink/config | jq_docker_cli .
 ```
 
 Verify data is in InfluxDB

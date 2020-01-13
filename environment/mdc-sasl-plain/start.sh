@@ -2,7 +2,7 @@
 
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
-verify_installed "jq"
+
 verify_installed "docker-compose"
 
 DOCKER_COMPOSE_FILE_OVERRIDE=$1

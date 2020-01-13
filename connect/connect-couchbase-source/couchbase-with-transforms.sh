@@ -40,7 +40,7 @@ docker exec connect \
                     "transforms.dropSufffix.regex": "(.*)_.*",
                     "transforms.dropSufffix.replacement": "$1"
           }' \
-     http://localhost:8083/connectors/couchbase-source/config | jq .
+     http://localhost:8083/connectors/couchbase-source/config | jq_docker_cli .
 
 sleep 10
 

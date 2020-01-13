@@ -7,7 +7,7 @@ Quickly test [SQS Connector](https://docs.confluent.io/current/connect/kafka-con
 ## Pre-requisites
 
 * `docker-compose` (example `brew cask install docker`)
-* `jq` (example `brew install jq`)
+
 
 ## AWS Setup
 
@@ -136,13 +136,13 @@ docker exec -e QUEUE_URL="$QUEUE_URL" -e AWS_REGION="$AWS_REGION" connect \
                "confluent.topic.bootstrap.servers": "broker:9092",
                "confluent.topic.replication.factor": "1"
           }' \
-     http://localhost:8083/connectors/sqs-source/config | jq .
+     http://localhost:8083/connectors/sqs-source/config | jq_docker_cli .
 ```
 
 Verify we have received the data in test-sqs-source topic:
 
 ```bash
-$ docker exec schema-registry kafka-avro-console-consumer -bootstrap-server broker:9092 --topic test-sqs-source --from-beginning --max-messages 2 | tail -n 5 | head -n 2 | jq .
+$ docker exec schema-registry kafka-avro-console-consumer -bootstrap-server broker:9092 --topic test-sqs-source --from-beginning --max-messages 2 | tail -n 5 | head -n 2 | jq_docker_cli .
 
 {
   "ApproximateFirstReceiveTimestamp": 1569859344138,
@@ -206,13 +206,13 @@ docker exec -e QUEUE_URL="$QUEUE_URL" connect \
                     "confluent.topic.ssl.truststore.type" : "JKS",
                     "confluent.topic.security.protocol" : "SSL"
           }' \
-     https://localhost:8083/connectors/sqs-source/config | jq .
+     https://localhost:8083/connectors/sqs-source/config | jq_docker_cli .
 ```
 
 Verify we have received the data in test-sqs-source topic:
 
 ```bash
-$ docker exec connect kafka-avro-console-consumer -bootstrap-server broker:11091 --topic test-sqs-source-ssl --from-beginning --max-messages 2 --property schema.registry.url=https://schema-registry:8085 --consumer.config /etc/kafka/secrets/client_without_interceptors_2way_ssl.config  | tail -n 3 | head -n 2 | jq .
+$ docker exec connect kafka-avro-console-consumer -bootstrap-server broker:11091 --topic test-sqs-source-ssl --from-beginning --max-messages 2 --property schema.registry.url=https://schema-registry:8085 --consumer.config /etc/kafka/secrets/client_without_interceptors_2way_ssl.config  | tail -n 3 | head -n 2 | jq_docker_cli .
 ```
 
 ### With SASL_SSL authentication:
@@ -255,13 +255,13 @@ docker exec -e QUEUE_URL="$QUEUE_URL" connect \
                     "confluent.topic.sasl.mechanism": "PLAIN",
                     "confluent.topic.sasl.jaas.config": "org.apache.kafka.common.security.plain.PlainLoginModule required  username=\"client\" password=\"client-secret\";"
           }' \
-     https://localhost:8083/connectors/sqs-source/config | jq .
+     https://localhost:8083/connectors/sqs-source/config | jq_docker_cli .
 ```
 
 Verify we have received the data in test-sqs-source topic:
 
 ```bash
-$ docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9091 --topic test-sqs-source-sasl-ssl --from-beginning --max-messages 2 --property schema.registry.url=https://schema-registry:8085 --consumer.config /etc/kafka/secrets/client_without_interceptors.config  | tail -n 3 | head -n 2 | jq .
+$ docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9091 --topic test-sqs-source-sasl-ssl --from-beginning --max-messages 2 --property schema.registry.url=https://schema-registry:8085 --consumer.config /etc/kafka/secrets/client_without_interceptors.config  | tail -n 3 | head -n 2 | jq_docker_cli .
 ```
 
 N.B: Control Center is reachable at [http://127.0.0.1:9021](http://127.0.0.1:9021])

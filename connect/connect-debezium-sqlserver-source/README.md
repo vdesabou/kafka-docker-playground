@@ -7,7 +7,7 @@ Quickly test [Debezium SQL Server](https://docs.confluent.io/current/connect/deb
 ## Pre-requisites
 
 * `docker-compose` (example `brew cask install docker`)
-* `jq` (example `brew install jq`)
+
 
 
 ## How to run
@@ -46,7 +46,7 @@ $ docker exec connect \
                     "database.history.kafka.bootstrap.servers": "broker:9092",
                     "database.history.kafka.topic": "schema-changes.inventory"
           }' \
-     http://localhost:8083/connectors/debezium-sqlserver-source/config | jq .
+     http://localhost:8083/connectors/debezium-sqlserver-source/config | jq_docker_cli .
 ```
 
 Insert one more row:

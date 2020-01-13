@@ -7,7 +7,7 @@ Quickly test [AWS DynamoDB](https://docs.confluent.io/current/connect/kafka-conn
 ## Pre-requisites
 
 * `docker-compose` (example `brew cask install docker`)
-* `jq` (example `brew install jq`)
+
 
 ## AWS Setup
 
@@ -56,7 +56,7 @@ $ docker exec connect \
                     "confluent.topic.bootstrap.servers": "broker:9092",
                     "confluent.topic.replication.factor": "1"
           }' \
-     http://localhost:8083/connectors/dynamodb-sink/config | jq .
+     http://localhost:8083/connectors/dynamodb-sink/config | jq_docker_cli .
 ```
 
 Verify data is in DynamoDB

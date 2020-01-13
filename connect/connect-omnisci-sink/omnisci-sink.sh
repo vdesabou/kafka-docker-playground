@@ -31,7 +31,7 @@ docker exec connect \
                     "confluent.topic.replication.factor": "1",
                     "auto.create": "true"
           }' \
-     http://localhost:8083/connectors/omnisci-sink/config | jq .
+     http://localhost:8083/connectors/omnisci-sink/config | jq_docker_cli .
 
 sleep 10
 

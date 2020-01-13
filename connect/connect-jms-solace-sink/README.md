@@ -7,7 +7,7 @@ Quickly test [Solace Sink](https://docs.confluent.io/current/connect/kafka-conne
 ## Pre-requisites
 
 * `docker-compose` (example `brew cask install docker`)
-* `jq` (example `brew install jq`)
+
 
 
 ## How to run
@@ -74,7 +74,7 @@ $ docker exec connect \
                     "confluent.topic.bootstrap.servers": "broker:9092",
                     "confluent.topic.replication.factor": "1"
           }' \
-     http://localhost:8083/connectors/jms-solace-sink/config | jq .
+     http://localhost:8083/connectors/jms-solace-sink/config | jq_docker_cli .
 ```
 
 Confirm the messages were delivered to the `connector-quickstart` queue in the `default` Message VPN using CLI:

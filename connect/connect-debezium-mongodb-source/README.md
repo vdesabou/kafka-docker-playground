@@ -7,7 +7,7 @@ Quickly test [Debezium MongoDB](https://docs.confluent.io/current/connect/debezi
 ## Pre-requisites
 
 * `docker-compose` (example `brew cask install docker`)
-* `jq` (example `brew install jq`)
+
 
 
 ## How to run
@@ -78,7 +78,7 @@ $ docker exec connect \
                     "mongodb.password" : "dbz",
                     "database.history.kafka.bootstrap.servers" : "broker:9092"
           }' \
-     http://localhost:8083/connectors/debezium-mongodb-source/config | jq .
+     http://localhost:8083/connectors/debezium-mongodb-source/config | jq_docker_cli .
 ```
 
 Verifying topic dbserver1.inventory.customers

@@ -7,7 +7,7 @@ Quickly test [Azure Blob Storage Sink](https://docs.confluent.io/current/connect
 ## Pre-requisites
 
 * `docker-compose` (example `brew cask install docker`)
-* `jq` (example `brew install jq`)
+
 * `az`(example `brew install azure-cli`)
 
 ## How to run
@@ -73,7 +73,7 @@ $ docker exec -e AZURE_ACCOUNT_NAME="$AZURE_ACCOUNT_NAME" -e AZURE_ACCOUNT_KEY="
                     "confluent.topic.bootstrap.servers": "broker:9092",
                     "confluent.topic.replication.factor": "1"
           }' \
-     http://localhost:8083/connectors/azure-blob-sink/config | jq .
+     http://localhost:8083/connectors/azure-blob-sink/config | jq_docker_cli .
 ```
 
 Messages are sent to `blob_topic` topic using:

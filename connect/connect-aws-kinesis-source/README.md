@@ -7,7 +7,7 @@ Quickly test [Kinesis Connector](https://docs.confluent.io/current/connect/kafka
 ## Pre-requisites
 
 * `docker-compose` (example `brew cask install docker`)
-* `jq` (example `brew install jq`)
+
 
 ## AWS Setup
 
@@ -62,7 +62,7 @@ docker exec connect \
                "confluent.topic.bootstrap.servers": "broker:9092",
                "confluent.topic.replication.factor": "1"
           }' \
-     http://localhost:8083/connectors/kinesis-source/config | jq .
+     http://localhost:8083/connectors/kinesis-source/config | jq_docker_cli .
 ```
 
 Verify we have received the data in kinesis_topic topic:

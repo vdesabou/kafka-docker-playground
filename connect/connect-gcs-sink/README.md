@@ -7,7 +7,7 @@ Quickly test [GCS Sink](https://docs.confluent.io/current/connect/kafka-connect-
 ## Pre-requisites
 
 * `docker-compose` (example `brew cask install docker`)
-* `jq` (example `brew install jq`)
+
 * `google-cloud-sdk` (example `brew cask install google-cloud-sdk`)
 * Active Google Cloud Platform (GCP) account with authorization to create resources
 
@@ -100,7 +100,7 @@ docker exec -e BUCKET_NAME="$BUCKET_NAME" connect \
                     "confluent.topic.bootstrap.servers": "broker:9092",
                     "confluent.topic.replication.factor": "1"
           }' \
-     http://localhost:8083/connectors/gcs-sink/config | jq .
+     http://localhost:8083/connectors/gcs-sink/config | jq_docker_cli .
 ```
 
 After a few seconds, data should be in GCS:
@@ -163,7 +163,7 @@ $ docker exec -e BUCKET_NAME="$BUCKET_NAME" connect \
                     "confluent.topic.ssl.truststore.type" : "JKS",
                     "confluent.topic.security.protocol" : "SSL"
           }' \
-     https://localhost:8083/connectors/gcs-sink/config | jq .
+     https://localhost:8083/connectors/gcs-sink/config | jq_docker_cli .
 ```
 
 Notes:
@@ -245,7 +245,7 @@ $ docker exec -e BUCKET_NAME="$BUCKET_NAME" connect \
                     "confluent.topic.sasl.mechanism": "PLAIN",
                     "confluent.topic.sasl.jaas.config": "org.apache.kafka.common.security.plain.PlainLoginModule required  username=\"client\" password=\"client-secret\";"
           }' \
-     https://localhost:8083/connectors/gcs-sink/config | jq .
+     https://localhost:8083/connectors/gcs-sink/config | jq_docker_cli .
 ```
 
 After a few seconds, data should be in GCS:
@@ -301,7 +301,7 @@ docker exec -e BUCKET_NAME="$BUCKET_NAME" connect \
                     "confluent.topic.sasl.jaas.config" : "com.sun.security.auth.module.Krb5LoginModule required useKeyTab=true storeKey=true keyTab=\"/var/lib/secret/kafka-connect.key\" principal=\"connect@TEST.CONFLUENT.IO\";",
                     "confluent.topic.security.protocol" : "SASL_PLAINTEXT"
           }' \
-     http://localhost:8083/connectors/gcs-sink/config | jq .
+     http://localhost:8083/connectors/gcs-sink/config | jq_docker_cli .
 ```
 
 After a few seconds, data should be in GCS:
@@ -361,7 +361,7 @@ docker exec -e BUCKET_NAME="$BUCKET_NAME" connect \
                     "confluent.topic.sasl.jaas.config" : "org.apache.kafka.common.security.plain.PlainLoginModule required username=\"broker\" password=\"broker\";",
                     "confluent.topic.security.protocol" : "SASL_PLAINTEXT"
           }' \
-     http://localhost:8083/connectors/gcs-sink/config | jq .
+     http://localhost:8083/connectors/gcs-sink/config | jq_docker_cli .
 ```
 
 After a few seconds, data should be in GCS:

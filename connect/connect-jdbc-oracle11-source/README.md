@@ -7,7 +7,7 @@ Quickly test [JDBC Source](https://docs.confluent.io/current/connect/kafka-conne
 ## Pre-requisites
 
 * `docker-compose` (example `brew cask install docker`)
-* `jq` (example `brew install jq`)
+
 
 * Download Oracle Database 11g Release 2 (11.2.0.4) JDBC driver `ojdbc6.jar`from this [page](https://www.oracle.com/database/technologies/jdbcdriver-ucp-downloads.html) and place it in `./ojdbc6.jar`
 
@@ -44,7 +44,7 @@ $ docker exec connect \
                     "errors.log.enable": "true",
                     "errors.log.include.messages": "true"
           }' \
-     http://localhost:8083/connectors/oracle-source/config | jq .
+     http://localhost:8083/connectors/oracle-source/config | jq_docker_cli .
 ```
 
 Verify the topic `oracle-MYTABLE`:

@@ -7,7 +7,7 @@ Quickly test [JDBC Sink](https://docs.confluent.io/current/connect/kafka-connect
 ## Pre-requisites
 
 * `docker-compose` (example `brew cask install docker`)
-* `jq` (example `brew install jq`)
+
 
 
 ## How to run
@@ -33,7 +33,7 @@ $ docker exec connect \
                     "topics": "orders",
                     "auto.create": "true"
           }' \
-     http://localhost:8083/connectors/mysql-sink/config | jq .
+     http://localhost:8083/connectors/mysql-sink/config | jq_docker_cli .
 ```
 
 Sending messages to topic orders

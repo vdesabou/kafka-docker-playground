@@ -32,7 +32,7 @@ docker exec connect \
                "kafka.topic": "sftp-testing-topic",
                "value.converter": "org.apache.kafka.connect.storage.StringConverter"
           }' \
-     http://localhost:8083/connectors/sftp-source-json/config | jq .
+     http://localhost:8083/connectors/sftp-source-json/config | jq_docker_cli .
 
 sleep 5
 

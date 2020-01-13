@@ -7,7 +7,7 @@ Quickly test [Couchbase Sink](https://docs.couchbase.com/kafka-connector/3.4/ind
 ## Pre-requisites
 
 * `docker-compose` (example `brew cask install docker`)
-* `jq` (example `brew install jq`)
+
 
 
 ## How to run
@@ -62,7 +62,7 @@ $ docker exec connect \
                     "value.converter": "org.apache.kafka.connect.json.JsonConverter",
                     "value.converter.schemas.enable": "false"
           }' \
-     http://localhost:8083/connectors/couchbase-sink/config | jq .
+     http://localhost:8083/connectors/couchbase-sink/config | jq_docker_cli .
 ```
 
 Verify data is in Couchbase

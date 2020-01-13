@@ -7,7 +7,7 @@ Quickly test [MongoDB](https://docs.mongodb.com/ecosystem/connectors/kafka/) con
 ## Pre-requisites
 
 * `docker-compose` (example `brew cask install docker`)
-* `jq` (example `brew install jq`)
+
 
 
 ## How to run
@@ -57,7 +57,7 @@ $ docker exec connect \
                     "collection":"customers",
                     "topics":"orders"
           }' \
-     http://localhost:8083/connectors/mongodb-sink/config | jq .
+     http://localhost:8083/connectors/mongodb-sink/config | jq_docker_cli .
 ```
 
 Sending messages to topic `orders`

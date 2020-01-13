@@ -50,7 +50,7 @@ docker exec connect \
                     "incrementing.column.name":"id",
                     "topic.prefix":"mysql-"
           }' \
-     http://localhost:8083/connectors/mysql-source/config | jq .
+     http://localhost:8083/connectors/mysql-source/config | jq_docker_cli .
 
 sleep 5
 

@@ -53,7 +53,7 @@ docker exec connect \
                     "database.history.kafka.bootstrap.servers": "broker:9092",
                     "database.history.kafka.topic": "schema-changes.mydb"
           }' \
-     http://localhost:8083/connectors/debezium-mysql-source/config | jq .
+     http://localhost:8083/connectors/debezium-mysql-source/config | jq_docker_cli .
 
 sleep 5
 

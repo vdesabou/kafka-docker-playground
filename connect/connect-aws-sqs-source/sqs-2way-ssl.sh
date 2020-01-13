@@ -19,7 +19,7 @@ ${DIR}/../../environment/2way-ssl/start.sh "${PWD}/docker-compose.2way-ssl.yml"
 
 QUEUE_NAME="sqs-source-connector-demo-ssl"
 AWS_REGION=`aws_docker_cli configure get region`
-QUEUE_URL_RAW=$(aws_docker_cli sqs create-queue --queue-name $QUEUE_NAME | jq .QueueUrl)
+QUEUE_URL_RAW=$(aws_docker_cli sqs create-queue --queue-name $QUEUE_NAME | jq_docker_cli .QueueUrl)
 AWS_ACCOUNT_NUMBER=$(echo "$QUEUE_URL_RAW" | cut -d "/" -f 4)
 # https://docs.amazonaws.cn/sdk-for-net/v3/developer-guide/how-to/sqs/QueueURL.html
 # https://{REGION_ENDPOINT}/queue.|api-domain|/{YOUR_ACCOUNT_NUMBER}/{YOUR_QUEUE_NAME}
@@ -68,13 +68,13 @@ docker exec -e QUEUE_URL="$QUEUE_URL" connect \
                     "confluent.topic.ssl.truststore.type" : "JKS",
                     "confluent.topic.security.protocol" : "SSL"
           }' \
-     https://localhost:8083/connectors/sqs-source-ssl/config | jq .
+     https://localhost:8083/connectors/sqs-source-ssl/config | jq_docker_cli .
 
 
 sleep 10
 
 log "Verify we have received the data in test-sqs-source-ssl topic"
-docker exec connect kafka-avro-console-consumer -bootstrap-server broker:11091 --topic test-sqs-source-ssl --from-beginning --max-messages 2 --property schema.registry.url=https://schema-registry:8085 --consumer.config /etc/kafka/secrets/client_without_interceptors_2way_ssl.config  | tail -n 3 | head -n 2 | jq .
+docker exec connect kafka-avro-console-consumer -bootstrap-server broker:11091 --topic test-sqs-source-ssl --from-beginning --max-messages 2 --property schema.registry.url=https://schema-registry:8085 --consumer.config /etc/kafka/secrets/client_without_interceptors_2way_ssl.config  | tail -n 3 | head -n 2 | jq_docker_cli .
 
 log "Delete queue ${QUEUE_URL}"
 aws_docker_cli sqs delete-queue --queue-url ${QUEUE_URL}

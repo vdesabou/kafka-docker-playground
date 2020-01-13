@@ -43,7 +43,7 @@ docker exec connect \
                     "collection":"customers",
                     "topics":"orders"
           }' \
-     http://localhost:8083/connectors/mongodb-sink/config | jq .
+     http://localhost:8083/connectors/mongodb-sink/config | jq_docker_cli .
 
 sleep 10
 
