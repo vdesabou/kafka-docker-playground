@@ -6,7 +6,7 @@ source ${DIR}/../../scripts/utils.sh
 
 if [ ! -f ${DIR}/ojdbc8.jar ]
 then
-     log "ERROR: ${DIR}/ojdbc8.jar is missing. It must be downloaded manually in order to acknowledge user agreement"
+     logerror "ERROR: ${DIR}/ojdbc8.jar is missing. It must be downloaded manually in order to acknowledge user agreement"
      exit 1
 fi
 
@@ -14,7 +14,7 @@ if test -z "$(docker images -q oracle/database:12.2.0.1-ee)"
 then
      if [ ! -f ${DIR}/linuxx64_12201_database.zip ]
      then
-          log "ERROR: ${DIR}/linuxx64_12201_database.zip is missing. It must be downloaded manually in order to acknowledge user agreement"
+          logerror "ERROR: ${DIR}/linuxx64_12201_database.zip is missing. It must be downloaded manually in order to acknowledge user agreement"
           exit 1
      fi
      log "Building oracle/database:12.2.0.1-ee docker image..it can take a while...(more than 15 minutes!)"

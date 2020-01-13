@@ -22,7 +22,7 @@ CONFIG_FILE=~/.ccloud/config
 
 if [ ! -f ${CONFIG_FILE} ]
 then
-     log "ERROR: ${CONFIG_FILE} is not set"
+     logerror "ERROR: ${CONFIG_FILE} is not set"
      exit 1
 fi
 
@@ -44,7 +44,7 @@ if [ -f ./delta_configs/env.delta ]
 then
      source ./delta_configs/env.delta
 else
-     log "ERROR: delta_configs/env.delta has not been generated"
+     logerror "ERROR: delta_configs/env.delta has not been generated"
      exit 1
 fi
 
