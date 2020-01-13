@@ -141,7 +141,22 @@ function remove_partition() {
 }
 
 function aws_docker_cli() {
-    docker run --rm -tiv $HOME/.aws:/root/.aws -v $(pwd):/aws mikesir87/aws-cli aws "$@" | tr '\r' '\n'
+    if [ ! -d $HOME/.aws ]
+    then
+      log 'ERROR: $HOME/.aws does now exist. AWS credentials must be set !'
+      return 1
+    fi
+    if [ ! -f $HOME/.aws/config ]
+    then
+      log 'ERROR: $HOME/.aws/config does now exist. AWS credentials must be set !'
+      return 1
+    fi
+    if [ ! -f $HOME/.aws/credentials ]
+    then
+      log 'ERROR: $HOME/.aws/credentials does now exist. AWS credentials must be set !'
+      return 1
+    fi
+    docker run --rm -tiv $HOME/.aws:/root/.aws -v $(pwd):/aws mikesir87/aws-cli aws "$@"
 }
 
 function jq_docker_cli() {
