@@ -22,7 +22,7 @@ $ ./hdfs3-sink.sh
 Note in this simple example, if you get into an issue with permissions at the local HDFS level, it may be easiest to unlock the permissions unless you want to debug that more.
 
 ```bash
-$ docker exec namenode bash -c "/opt/hadoop-3.1.2/bin/hdfs dfs -chmod 777  /"
+$ docker exec namenode bash -c "/opt/hadoop-3.1.3/bin/hdfs dfs -chmod 777  /"
 ```
 
 The connector is created with:
@@ -41,7 +41,7 @@ $ docker exec connect \
                "partitioner.class":"io.confluent.connect.storage.partitioner.FieldPartitioner",
                "partition.field.name":"f1",
                "rotate.interval.ms":"120000",
-               "hadoop.home":"/opt/hadoop-3.1.2/share/hadoop/common",
+               "hadoop.home":"/opt/hadoop-3.1.3/share/hadoop/common",
                "logs.dir":"/tmp",
                "key.converter":"org.apache.kafka.connect.storage.StringConverter",
                "value.converter":"io.confluent.connect.avro.AvroConverter",
@@ -60,7 +60,7 @@ $ seq -f "{\"f1\": \"value%g\"}" 10 | docker exec -i schema-registry kafka-avro-
 After a few seconds, HDFS should contain files in /topics/test_hdfs:
 
 ```
-$ docker exec namenode bash -c "/opt/hadoop-3.1.2/bin/hdfs dfs -ls /topics/test_hdfs"
+$ docker exec namenode bash -c "/opt/hadoop-3.1.3/bin/hdfs dfs -ls /topics/test_hdfs"
 
 drwxr-xr-x   - root supergroup          0 2019-10-25 08:19 /topics/test_hdfs/f1=value1
 drwxr-xr-x   - root supergroup          0 2019-10-25 08:19 /topics/test_hdfs/f1=value2
