@@ -49,4 +49,4 @@ log "Getting one of the avro files locally and displaying content with avro-tool
 aws_docker_cli s3 cp s3://$BUCKET_NAME/topics/s3_topic/partition=0/s3_topic+0+0000000000.avro s3_topic+0+0000000000.avro
 
 docker run -v ${DIR}:/tmp actions/avro-tools tojson /tmp/s3_topic+0+0000000000.avro
-rm s3_topic+0+0000000000.avro
+rm -f s3_topic+0+0000000000.avro
