@@ -6,7 +6,7 @@ source ${DIR}/../../scripts/utils.sh
 
 if [ ! -f ${DIR}/ojdbc6.jar ]
 then
-     log "ERROR: ${DIR}/ojdbc6.jar is missing. It must be downloaded manually in order to acknowledge user agreement"
+     logerror "ERROR: ${DIR}/ojdbc6.jar is missing. It must be downloaded manually in order to acknowledge user agreement"
      exit 1
 fi
 

@@ -1,7 +1,13 @@
 function log() {
   YELLOW='\033[0;33m'
   NC='\033[0m' # No Color
-  echo -e "$YELLOW$@$NC"
+  echo -e "$YELLOW$@1$NC"
+}
+
+function logerror() {
+  RED='\033[0;31m'
+  NC='\033[0m' # No Color
+  echo -e "$RED$@1$NC"
 }
 
 function verify_installed()
@@ -20,7 +26,7 @@ function verify_ccloud_login()
   output=$($cmd 2>&1)
   set -e
   if [ "${output}" = "Error: You must login to run that command." ] || [ "${output}" = "Error: Your session has expired. Please login again." ]; then
-    log "ERROR: This script requires ccloud to be logged in. Please execute 'ccloud login' and run again."
+    logerror "ERROR: This script requires ccloud to be logged in. Please execute 'ccloud login' and run again."
     exit 1
   fi
 }
@@ -29,7 +35,7 @@ function verify_ccloud_details()
 {
     if [ "$(ccloud prompt -f "%E")" = "(none)" ]
     then
-        log "ERROR: ccloud command is badly configured: environment is not set"
+        logerror "ERROR: ccloud command is badly configured: environment is not set"
         log "Example: ccloud kafka environment list"
         log "then: ccloud kafka environment use <environment id>"
         exit 1
@@ -37,7 +43,7 @@ function verify_ccloud_details()
 
     if [ "$(ccloud prompt -f "%K")" = "(none)" ]
     then
-        log "ERROR: ccloud command is badly configured: cluster is not set"
+        logerror "ERROR: ccloud command is badly configured: cluster is not set"
         log "Example: ccloud kafka cluster list"
         log "then: ccloud kafka cluster use <cluster id>"
         exit 1
@@ -45,7 +51,7 @@ function verify_ccloud_details()
 
     if [ "$(ccloud prompt -f "%a")" = "(none)" ]
     then
-        log "ERROR: ccloud command is badly configured: api key is not set"
+        logerror "ERROR: ccloud command is badly configured: api key is not set"
         log "Example: ccloud api-key store <api key> <password>"
         log "then: ccloud api-key use <api key>"
         exit 1
@@ -61,7 +67,7 @@ function check_if_continue()
     case "$choice" in
     y|Y ) ;;
     n|N ) exit 0;;
-    * ) log "ERROR: invalid response!";exit 1;;
+    * ) logerror "ERROR: invalid response!";exit 1;;
     esac
 }
 

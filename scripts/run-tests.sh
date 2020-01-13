@@ -45,9 +45,9 @@ do
             log "RESULT: SUCCESS for $script in dir $dir"
             log "####################################################"
         else
-            log "####################################################"
-            log "RESULT: FAILURE for $script in dir $dir"
-            log "####################################################"
+            logerror "####################################################"
+            logerror "RESULT: FAILURE for $script in dir $dir"
+            logerror "####################################################"
             failed_tests=$failed_tests"$dir[$script]\n"
             let "nb_test_failed++"
         fi
@@ -64,8 +64,8 @@ then
     log "####################################################"
     exit 0
 else
-    log "####################################################"
-    log "RESULT: FAILED $nb_test_failed tests failed:\n $failed_tests"
-    log "####################################################"
+    logerror "####################################################"
+    logerror "RESULT: FAILED $nb_test_failed tests failed:\n$failed_tests"
+    logerror "####################################################"
     exit $nb_test_failed
 fi
