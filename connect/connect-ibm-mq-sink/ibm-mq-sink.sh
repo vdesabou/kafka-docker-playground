@@ -6,13 +6,13 @@ source ${DIR}/../../scripts/utils.sh
 
 if [ ! -f ${DIR}/jms.jar ]
 then
-     log "ERROR: ${DIR}/jms.jar is missing. It must be downloaded manually in order to acknowledge user agreement"
+     logerror "ERROR: ${DIR}/jms.jar is missing. It must be downloaded manually in order to acknowledge user agreement"
      exit 1
 fi
 
 if [ ! -f ${DIR}/com.ibm.mq.allclient.jar ]
 then
-     log "ERROR: ${DIR}/com.ibm.mq.allclient.jar is missing. It must be downloaded manually in order to acknowledge user agreement"
+     logerror "ERROR: ${DIR}/com.ibm.mq.allclient.jar is missing. It must be downloaded manually in order to acknowledge user agreement"
      exit 1
 fi
 

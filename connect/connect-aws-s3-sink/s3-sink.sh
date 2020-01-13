@@ -7,12 +7,12 @@ BUCKET_NAME=${1:-kafka-docker-playground}
 
 if [ ! -f $HOME/.aws/config ]
 then
-     log "ERROR: $HOME/.aws/config is not set"
+     logerror "ERROR: $HOME/.aws/config is not set"
      exit 1
 fi
 if [ ! -f $HOME/.aws/credentials ]
 then
-     log "ERROR: $HOME/.aws/credentials is not set"
+     logerror "ERROR: $HOME/.aws/credentials is not set"
      exit 1
 fi
 

@@ -8,7 +8,7 @@ BUCKET_NAME=${1:-test-gcs-playground}
 KEYFILE="${DIR}/keyfile.json"
 if [ ! -f ${KEYFILE} ]
 then
-     log "ERROR: the file ${KEYFILE} file is not present!"
+     logerror "ERROR: the file ${KEYFILE} file is not present!"
      exit 1
 fi
 
