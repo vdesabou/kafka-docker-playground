@@ -2,7 +2,7 @@
 
 ## Objective
 
-Quickly test [S3 Source](https://docs.confluent.io/current/connect/kafka-connect-s3-source/index.html) connector.
+Quickly test [S3 Source](https://docs.confluent.io/current/connect/kafka-connect-aws-s3-source/index.html) connector.
 
 ## Pre-requisites
 
@@ -35,7 +35,7 @@ $ ./s3.sh <your-bucket-name>
 ## Details of what the script is doing
 
 
-Steps from [connect-s3-sink](connect/connect-s3-sink/README.md)
+Steps from [connect-aws-s3-sink](connect/connect-aws-s3-sink/README.md)
 
 
 The connector is created with:
