@@ -12,7 +12,10 @@ fi
 
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
 
-sleep 30
+sleep 60
+
+docker container logs --tail=300 ldap
+docker container logs --tail=300 kudu
 
 log "Create Database test and table accounts in kudu"
 docker exec -i kudu impala-shell -i localhost:21000 -l -u kudu --ldap_password_cmd="echo -n secret" --auth_creds_ok_in_clear << EOF
