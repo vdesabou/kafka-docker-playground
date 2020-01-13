@@ -26,5 +26,11 @@ docker exec connect \
 
 sleep 5
 
-log "Verify data is present in Neo4j http://127.0.0.1:7474 (neo4j/connect)"
-open "http://neo4j:connect@127.0.0.1:7474/"
+log "Verify data is present in Neo4j http://127.0.0.1:7474 (neo4j/connect) by opening http://neo4j:connect@127.0.0.1:7474/ in your browser"
+if [ -z "$TRAVIS" ]
+then
+     open "http://neo4j:connect@127.0.0.1:7474/"
+fi
+
+
+
