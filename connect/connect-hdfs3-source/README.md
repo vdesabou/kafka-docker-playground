@@ -34,7 +34,7 @@ $ docker exec connect \
                "tasks.max":"1",
                "hdfs.url":"hdfs://namenode:9000",
                "hadoop.conf.dir":"/etc/hadoop/",
-               "hadoop.home":"/opt/hadoop-3.1.2/share/hadoop/common",
+               "hadoop.home":"/opt/hadoop-3.1.3/share/hadoop/common",
                "format.class" : "io.confluent.connect.hdfs3.format.avro.AvroFormat",
                "confluent.topic.bootstrap.servers": "broker:9092",
                "confluent.topic.replication.factor": "1",
