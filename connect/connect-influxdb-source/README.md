@@ -7,7 +7,7 @@ Quickly test [InfluxDB Source](https://docs.confluent.io/current/connect/kafka-c
 ## Pre-requisites
 
 * `docker-compose` (example `brew cask install docker`)
-* `jq` (example `brew install jq`)
+
 
 
 ## How to run
@@ -60,7 +60,7 @@ $ docker exec connect \
                     "value.converter": "org.apache.kafka.connect.json.JsonConverter",
                     "value.converter.schemas.enable": "false"
           }' \
-     http://localhost:8083/connectors/influxdb-source/config | jq .
+     http://localhost:8083/connectors/influxdb-source/config | jq_docker_cli .
 ```
 
 Verifying topic `influx_testdb`

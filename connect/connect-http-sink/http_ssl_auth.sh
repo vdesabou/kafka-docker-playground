@@ -40,12 +40,12 @@ docker exec connect \
                "https.ssl.key.password": "confluent",
                "https.ssl.protocol": "TLSv1.2"
           }' \
-     http://localhost:8083/connectors/http-sink/config | jq .
+     http://localhost:8083/connectors/http-sink/config | jq_docker_cli .
 
 
 sleep 10
 
 log "Confirm that the data was sent to the HTTP endpoint."
-curl -k --cacert ./security/myCertificate.crt -X GET https://admin:password@localhost:8443/api/messages | jq .
+curl -k --cacert ./security/myCertificate.crt -X GET https://admin:password@localhost:8443/api/messages | jq_docker_cli .
 
 

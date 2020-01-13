@@ -36,7 +36,7 @@ aws_docker_cli logs put-log-events --log-group my-log-group --log-stream my-log-
 log "Injecting more messages"
 for i in $(seq 1 10)
 do
-     token=$(aws_docker_cli logs describe-log-streams --log-group my-log-group | jq -r .logStreams[0].uploadSequenceToken)
+     token=$(aws_docker_cli logs describe-log-streams --log-group my-log-group | jq_docker_cli -r .logStreams[0].uploadSequenceToken)
      aws_docker_cli logs put-log-events --log-group my-log-group --log-stream my-log-stream --log-events timestamp=`date +%s000`,message="This is a log #${i}" --sequence-token ${token}
 done
 
@@ -54,7 +54,7 @@ docker exec connect \
                     "confluent.topic.bootstrap.servers": "broker:9092",
                     "confluent.topic.replication.factor": "1"
           }' \
-     http://localhost:8083/connectors/aws-cloudwatch-logs-source/config | jq .
+     http://localhost:8083/connectors/aws-cloudwatch-logs-source/config | jq_docker_cli .
 
 sleep 5
 

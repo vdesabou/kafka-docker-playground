@@ -7,7 +7,7 @@ Quickly test [Google Cloud Functions Sink](https://docs.confluent.io/current/con
 ## Pre-requisites
 
 * `docker-compose` (example `brew cask install docker`)
-* `jq` (example `brew install jq`)
+
 * Active Google Cloud Platform (GCP) account with authorization to create resources
 
 ## Google Cloud Functions Setup
@@ -72,7 +72,7 @@ $ docker exec -e PROJECT="$PROJECT" -e REGION="$REGION" -e FUNCTION="$FUNCTION" 
                     "reporter.result.topic.value.format": "string",
                     "reporter.result.topic.replication.factor": 1
           }' \
-     http://localhost:8083/connectors/gcp-functions/config | jq .
+     http://localhost:8083/connectors/gcp-functions/config | jq_docker_cli .
 ```
 
 Confirm that the messages were delivered to the result topic in Kafka

@@ -19,7 +19,7 @@ docker exec connect \
                     "topics": "orders",
                     "auto.create": "true"
           }' \
-     http://localhost:8083/connectors/sqlserver-sink/config | jq .
+     http://localhost:8083/connectors/sqlserver-sink/config | jq_docker_cli .
 
 log "Sending messages to topic orders"
 docker exec -i schema-registry kafka-avro-console-producer --broker-list broker:9092 --topic orders --property value.schema='{"type":"record","name":"myrecord","fields":[{"name":"id","type":"int"},{"name":"product", "type": "string"}, {"name":"quantity", "type": "int"}, {"name":"price",

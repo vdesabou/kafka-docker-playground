@@ -9,7 +9,7 @@ N.B: This is just to test security configurations with replicator. More useful e
 ## Pre-requisites
 
 * `docker-compose` (example `brew cask install docker`)
-* `jq` (example `brew install jq`)
+
 
 
 ## How to run
@@ -55,7 +55,7 @@ $ docker exec connect \
            "dest.kafka.bootstrap.servers": "broker:9092",
            "src.kafka.bootstrap.servers": "broker:9092"
            }' \
-      http://localhost:8083/connectors/duplicate-topic/config | jq .
+      http://localhost:8083/connectors/duplicate-topic/config | jq_docker_cli .
 ```
 
 Messages are sent to `test-topic` topic using:
@@ -119,7 +119,7 @@ $ docker exec connect \
                     "src.kafka.ssl.truststore.password" : "confluent",
                     "src.kafka.security.protocol" : "SSL"
           }' \
-     https://localhost:8083/connectors/duplicate-topic-ssl/config | jq .
+     https://localhost:8083/connectors/duplicate-topic-ssl/config | jq_docker_cli .
 ```
 
 Verify we have received the data in test-topic-ssl-duplicate topic
@@ -176,7 +176,7 @@ $ docker exec connect \
                     "src.kafka.sasl.jaas.config": "org.apache.kafka.common.security.plain.PlainLoginModule required  username=\"client\" password=\"client-secret\";",
                     "src.kafka.sasl.mechanism": "PLAIN"
           }' \
-     https://localhost:8083/connectors/replicator-sasl-ssl/config | jq .
+     https://localhost:8083/connectors/replicator-sasl-ssl/config | jq_docker_cli .
 ```
 
 Verify we have received the data in test-topic-sasl-ssl-duplicate topic

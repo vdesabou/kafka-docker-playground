@@ -36,7 +36,7 @@ docker exec -e BUCKET_NAME="$BUCKET_NAME" connect \
                     "partitioner.class": "io.confluent.connect.storage.partitioner.DefaultPartitioner",
                     "schema.compatibility": "NONE"
           }' \
-     http://localhost:8083/connectors/s3-sink/config | jq .
+     http://localhost:8083/connectors/s3-sink/config | jq_docker_cli .
 
 
 log "Sending messages to topic s3_topic"
@@ -71,7 +71,7 @@ docker exec -e BUCKET_NAME="$BUCKET_NAME" connect \
                     "transforms.AddPrefix.regex": ".*",
                     "transforms.AddPrefix.replacement": "copy_of_$0"
           }' \
-     http://localhost:8083/connectors/s3-source/config | jq .
+     http://localhost:8083/connectors/s3-source/config | jq_docker_cli .
 
 
 log "Verifying topic copy_of_s3_topic"

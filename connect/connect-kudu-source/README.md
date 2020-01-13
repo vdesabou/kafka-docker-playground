@@ -7,7 +7,7 @@ Quickly test [Kudu Source](https://docs.confluent.io/current/connect/kafka-conne
 ## Pre-requisites
 
 * `docker-compose` (example `brew cask install docker`)
-* `jq` (example `brew install jq`)
+
 * Download Impala JDBC Driver `ImpalaJDBC42.jar`from this [page](https://www.oracle.com/technetwork/java/javase/jdbc/index.html) and place it in `./ImpalaJDBC42.jar`
 
 ## How to run
@@ -62,7 +62,7 @@ $ docker exec connect \
                     "confluent.topic.bootstrap.servers": "broker:9092",
                     "confluent.topic.replication.factor": "1"
           }' \
-     http://localhost:8083/connectors/kudu-source/config | jq .
+     http://localhost:8083/connectors/kudu-source/config | jq_docker_cli .
 ```
 
 Verify we have received the data in `test-kudu-accounts` topic:

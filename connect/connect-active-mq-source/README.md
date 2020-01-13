@@ -9,7 +9,7 @@ Using ActiveMQ Docker [image](https://hub.docker.com/r/rmohr/activemq/)
 ## Pre-requisites
 
 * `docker-compose` (example `brew cask install docker`)
-* `jq` (example `brew install jq`)
+
 
 
 ## How to run
@@ -40,7 +40,7 @@ $ docker exec connect \
                     "confluent.topic.bootstrap.servers": "broker:9092",
                     "confluent.topic.replication.factor": "1"
           }' \
-     http://localhost:8083/connectors/active-mq-source/config | jq .
+     http://localhost:8083/connectors/active-mq-source/config | jq_docker_cli .
 ```
 
 Messages are sent to IBM MQ using curl:

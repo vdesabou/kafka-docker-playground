@@ -20,7 +20,7 @@ ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml
 
 QUEUE_NAME="sqs-source-connector-demo"
 AWS_REGION=`aws_docker_cli configure get region`
-QUEUE_URL_RAW=$(aws_docker_cli sqs create-queue --queue-name $QUEUE_NAME | jq .QueueUrl)
+QUEUE_URL_RAW=$(aws_docker_cli sqs create-queue --queue-name $QUEUE_NAME | jq_docker_cli .QueueUrl)
 AWS_ACCOUNT_NUMBER=$(echo "$QUEUE_URL_RAW" | cut -d "/" -f 4)
 # https://docs.amazonaws.cn/sdk-for-net/v3/developer-guide/how-to/sqs/QueueURL.html
 # https://{REGION_ENDPOINT}/queue.|api-domain|/{YOUR_ACCOUNT_NUMBER}/{YOUR_QUEUE_NAME}
@@ -56,7 +56,7 @@ docker exec -e QUEUE_URL="$QUEUE_URL" connect \
                "confluent.topic.bootstrap.servers": "broker:9092",
                "confluent.topic.replication.factor": "1"
           }' \
-     http://localhost:8083/connectors/sqs-source/config | jq .
+     http://localhost:8083/connectors/sqs-source/config | jq_docker_cli .
 
 log "Verify we have received the data in test-sqs-source topic"
 docker exec schema-registry kafka-avro-console-consumer -bootstrap-server broker:9092 --topic test-sqs-source --from-beginning --max-messages 2

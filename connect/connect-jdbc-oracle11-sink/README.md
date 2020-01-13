@@ -7,7 +7,7 @@ Quickly test [JDBC Sink](https://docs.confluent.io/current/connect/kafka-connect
 ## Pre-requisites
 
 * `docker-compose` (example `brew cask install docker`)
-* `jq` (example `brew install jq`)
+
 
 * Download Oracle Database 11g Release 2 (11.2.0.4) JDBC driver `ojdbc6.jar`from this [page](https://www.oracle.com/database/technologies/jdbcdriver-ucp-downloads.html) and place it in `./ojdbc6.jar`
 
@@ -38,7 +38,7 @@ $ docker exec connect \
                     "insert.mode":"insert",
                     "auto.evolve":"true"
           }' \
-     http://localhost:8083/connectors/oracle-sink/config | jq .
+     http://localhost:8083/connectors/oracle-sink/config | jq_docker_cli .
 ```
 
 Sending messages to topic `ORDERS`:

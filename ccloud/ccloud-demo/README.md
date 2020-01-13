@@ -318,7 +318,7 @@ $ docker exec connect \
                     "incrementing.column.name":"id",
                     "topic.prefix":"mysql-"
           }' \
-     http://localhost:8083/connectors/mysql-source/config | jq .
+     http://localhost:8083/connectors/mysql-source/config | jq_docker_cli .
 ```
 
 
@@ -376,14 +376,14 @@ $ docker exec -e BOOTSTRAP_SERVERS="<BOOTSTRAP_SERVERS" -e >CLOUD_KEY="$CLOUD_KE
                "connection.user": "admin",
                "connection.password": "password"
           }' \
-     http://localhost:8083/connectors/http-sink/config | jq .
+     http://localhost:8083/connectors/http-sink/config | jq_docker_cli .
 ```
 
 
 Messages are published on HTTP server listening on port `8080`
 
 ```bash
-$ curl admin:password@localhost:9080/api/messages | jq .
+$ curl admin:password@localhost:9080/api/messages | jq_docker_cli .
 ```
 
 Example:
@@ -418,7 +418,7 @@ $ docker exec connect \
           "type.name": "kafka-connect",
           "name": "elasticsearch-sink"
           }' \
-     http://localhost:8083/connectors/elasticsearch-sink/config | jq .
+     http://localhost:8083/connectors/elasticsearch-sink/config | jq_docker_cli .
 ```
 
 We check that the data is available in Elasticsearch using:

@@ -7,7 +7,7 @@ Quickly test [Couchbase Source](https://docs.couchbase.com/kafka-connector/3.4/i
 ## Pre-requisites
 
 * `docker-compose` (example `brew cask install docker`)
-* `jq` (example `brew install jq`)
+
 
 
 ## How to run
@@ -85,7 +85,7 @@ $ docker exec connect \
                     "couchbase.flow_control_buffer": "128m",
                     "couchbase.persistence_polling_interval": "100ms"
           }' \
-     http://localhost:8083/connectors/couchbase-source/config | jq .
+     http://localhost:8083/connectors/couchbase-source/config | jq_docker_cli .
 ```
 
 Verifying topic `test-travel-sample`

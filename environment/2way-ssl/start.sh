@@ -2,7 +2,7 @@
 
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
-verify_installed "jq"
+
 verify_installed "docker-compose"
 verify_installed "keytool"
 

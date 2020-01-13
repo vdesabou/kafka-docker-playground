@@ -23,7 +23,7 @@ docker exec connect \
                     "topics": "orders",
                     "auto.create": "true"
           }' \
-     http://localhost:8083/connectors/mysql-sink/config | jq .
+     http://localhost:8083/connectors/mysql-sink/config | jq_docker_cli .
 
 
 log "Sending messages to topic orders"

@@ -7,7 +7,7 @@ Quickly test [Redis Sink](https://docs.confluent.io/current/connect/kafka-connec
 ## Pre-requisites
 
 * `docker-compose` (example `brew cask install docker`)
-* `jq` (example `brew install jq`)
+
 
 
 ## How to run
@@ -44,7 +44,7 @@ $ docker exec connect \
                     "value.converter":"org.apache.kafka.connect.storage.StringConverter",
                     "topics": "users"
           }' \
-     http://localhost:8083/connectors/redis-sink/config | jq .
+     http://localhost:8083/connectors/redis-sink/config | jq_docker_cli .
 ```
 
 Verify data is in Redis:

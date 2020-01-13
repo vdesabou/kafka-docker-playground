@@ -32,7 +32,7 @@ docker exec -e PROJECT="$PROJECT" connect \
                     "confluent.topic.bootstrap.servers": "broker:9092",
                     "confluent.topic.replication.factor": "1"
           }' \
-     http://localhost:8083/connectors/firebase-sink/config | jq .
+     http://localhost:8083/connectors/firebase-sink/config | jq_docker_cli .
 
 
 log "Produce Avro data to topic artists"

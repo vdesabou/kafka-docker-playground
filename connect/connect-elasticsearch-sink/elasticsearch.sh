@@ -20,7 +20,7 @@ docker exec connect \
           "type.name": "kafka-connect",
           "name": "elasticsearch-sink"
           }' \
-     http://localhost:8083/connectors/elasticsearch-sink/config | jq .
+     http://localhost:8083/connectors/elasticsearch-sink/config | jq_docker_cli .
 
 
 log "Sending messages to topic test-elasticsearch-sink"

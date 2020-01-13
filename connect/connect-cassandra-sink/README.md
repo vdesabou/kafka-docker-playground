@@ -9,7 +9,7 @@ Cassandra `3.0` is used.
 ## Pre-requisites
 
 * `docker-compose` (example `brew cask install docker`)
-* `jq` (example `brew install jq`)
+
 
 
 ## How to run
@@ -48,7 +48,7 @@ $ docker exec connect \
                     "transforms.createKey.fields": "f1",
                     "transforms.createKey.type": "org.apache.kafka.connect.transforms.ValueToKey"
           }' \
-     http://localhost:8083/connectors/cassandra-sink/config | jq .
+     http://localhost:8083/connectors/cassandra-sink/config | jq_docker_cli .
 ```
 
 Verify messages are in cassandra table test.topic1

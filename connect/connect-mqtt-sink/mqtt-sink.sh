@@ -29,7 +29,7 @@ docker exec connect \
                     "confluent.topic.bootstrap.servers": "broker:9092",
                     "confluent.topic.replication.factor": "1"
           }' \
-     http://localhost:8083/connectors/sink-mqtt/config | jq .
+     http://localhost:8083/connectors/sink-mqtt/config | jq_docker_cli .
 
 
 sleep 5

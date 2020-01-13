@@ -7,7 +7,7 @@ Quickly test [SFTP Source](https://docs.confluent.io/current/connect/kafka-conne
 ## Pre-requisites
 
 * `docker-compose` (example `brew cask install docker`)
-* `jq` (example `brew install jq`)
+
 
 
 ## How to run
@@ -79,7 +79,7 @@ $ docker exec connect \
                "csv.first.row.as.header": "true",
                "schema.generation.enabled": "true"
           }' \
-     http://localhost:8083/connectors/sftp-source-csv/config | jq .
+     http://localhost:8083/connectors/sftp-source-csv/config | jq_docker_cli .
 ```
 
 Verifying topic `sftp-testing-topic`

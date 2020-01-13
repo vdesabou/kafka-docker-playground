@@ -22,7 +22,7 @@ docker exec connect \
                   "rabbitmq.username" : "myuser",
                   "rabbitmq.password" : "mypassword"
           }' \
-     http://localhost:8083/connectors/rabbitmq-source/config | jq .
+     http://localhost:8083/connectors/rabbitmq-source/config | jq_docker_cli .
 
 
 sleep 5

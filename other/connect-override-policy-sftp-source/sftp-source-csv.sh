@@ -50,7 +50,7 @@ docker exec connect \
                "producer.override.security.protocol": "SASL_PLAINTEXT",
                "producer.override.sasl.jaas.config" : "org.apache.kafka.common.security.plain.PlainLoginModule required username=\"sftp\" password=\"sftp-secret\";"
           }' \
-     http://localhost:8083/connectors/sftp-source/config | jq .
+     http://localhost:8083/connectors/sftp-source/config | jq_docker_cli .
 
 sleep 5
 

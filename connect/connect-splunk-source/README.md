@@ -7,7 +7,7 @@ Quickly test [Splunk Source](https://docs.confluent.io/current/connect/kafka-con
 ## Pre-requisites
 
 * `docker-compose` (example `brew cask install docker`)
-* `jq` (example `brew install jq`)
+
 
 
 ## How to run
@@ -37,7 +37,7 @@ $ docker exec connect \
                     "confluent.topic.bootstrap.servers": "broker:9092",
                     "confluent.topic.replication.factor": "1"
           }' \
-     http://localhost:8083/connectors/splunk-sink/config | jq .
+     http://localhost:8083/connectors/splunk-sink/config | jq_docker_cli .
 ```
 
 Simulate an application sending data to the connector

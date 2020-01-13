@@ -7,7 +7,7 @@ Quickly test [JDBC SQL Server](https://docs.confluent.io/current/connect/kafka-c
 ## Pre-requisites
 
 * `docker-compose` (example `brew cask install docker`)
-* `jq` (example `brew install jq`)
+
 
 
 ## How to run
@@ -50,7 +50,7 @@ $ docker exec connect \
                     "errors.log.enable": "true",
                     "errors.log.include.messages": "true"
           }' \
-     http://localhost:8083/connectors/sqlserver-source/config | jq .
+     http://localhost:8083/connectors/sqlserver-source/config | jq_docker_cli .
 ```
 
 ### Microsoft JDBC driver
@@ -73,7 +73,7 @@ $ docker exec connect \
                     "errors.log.enable": "true",
                     "errors.log.include.messages": "true"
           }' \
-     http://localhost:8083/connectors/sqlserver-source/config | jq .
+     http://localhost:8083/connectors/sqlserver-source/config | jq_docker_cli .
 
 ```
 

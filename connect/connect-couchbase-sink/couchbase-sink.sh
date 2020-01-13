@@ -34,7 +34,7 @@ docker exec connect \
                     "value.converter": "org.apache.kafka.connect.json.JsonConverter",
                     "value.converter.schemas.enable": "false"
           }' \
-     http://localhost:8083/connectors/couchbase-sink/config | jq .
+     http://localhost:8083/connectors/couchbase-sink/config | jq_docker_cli .
 
 sleep 10
 

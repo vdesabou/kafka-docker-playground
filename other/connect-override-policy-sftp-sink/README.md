@@ -25,7 +25,7 @@ ACLs are setup:
 ## Pre-requisites
 
 * `docker-compose` (example `brew cask install docker`)
-* `jq` (example `brew install jq`)
+
 
 ## How to run
 
@@ -82,7 +82,7 @@ $ docker exec connect \
                "errors.deadletterqueue.topic.name": "dlq",
                "errors.deadletterqueue.topic.replication.factor": "1"
           }' \
-     http://localhost:8083/connectors/sftp-sink/config | jq .
+     http://localhost:8083/connectors/sftp-sink/config | jq_docker_cli .
 ```
 
 Sending messages to topic `test_sftp_sink`

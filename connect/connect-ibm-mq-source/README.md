@@ -9,7 +9,7 @@ Using IBM MQ Docker [image](https://hub.docker.com/r/ibmcom/mq/)
 ## Pre-requisites
 
 * `docker-compose` (example `brew cask install docker`)
-* `jq` (example `brew install jq`)
+
 * Follow [Installing IBM MQ Client Library](https://docs.confluent.io/current/connect/kafka-connect-ibmmq/sink/index.html#installing-ibm-mq-client-library) and place them in `./jms.jar` and `./com.ibm.mq.allclient.jar`
 
 ## How to run
@@ -44,7 +44,7 @@ $ docker exec connect \
                     "confluent.topic.bootstrap.servers": "broker:9092",
                     "confluent.topic.replication.factor": "1"
           }' \
-     http://localhost:8083/connectors/ibm-mq-source/config | jq .
+     http://localhost:8083/connectors/ibm-mq-source/config | jq_docker_cli .
 ```
 
 Messages are sent to IBM MQ using:

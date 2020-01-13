@@ -9,7 +9,7 @@ Using TIBCO Docker [image](https://hub.docker.com/r/ibmcom/mq/)
 ## Pre-requisites
 
 * `docker-compose` (example `brew cask install docker`)
-* `jq` (example `brew install jq`)
+
 * Download [TIBCO EMS Community Edition](https://www.tibco.com/resources/product-download/tibco-enterprise-message-service-community-edition--free-download) and put `TIB_ems-ce_8.5.1_linux_x86_64.zip`into `docker-file`directory
 
 ## How to run
@@ -57,7 +57,7 @@ $ docker exec connect \
                     "confluent.topic.bootstrap.servers": "broker:9092",
                     "confluent.topic.replication.factor": "1"
           }' \
-     http://localhost:8083/connectors/tibco-ems-source/config | jq .
+     http://localhost:8083/connectors/tibco-ems-source/config | jq_docker_cli .
 ```
 
 Messages are sent to TIBCO EMS using:

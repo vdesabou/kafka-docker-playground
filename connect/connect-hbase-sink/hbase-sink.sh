@@ -32,7 +32,7 @@ docker exec connect \
                     "table.name.format": "example_table",
                     "topics": "hbase-test"
           }' \
-     http://localhost:8083/connectors/hbase-sink/config | jq .
+     http://localhost:8083/connectors/hbase-sink/config | jq_docker_cli .
 
 log "Verify data is in HBase: type scan 'example_table' and then exit"
 echo -e "\033[0;33m> docker exec -it hbase /bin/bash entrypoint.sh"
