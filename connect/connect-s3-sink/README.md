@@ -64,7 +64,7 @@ seq -f "{\"f1\": \"value%g\"}" 10 | docker exec -i schema-registry kafka-avro-co
 After a few seconds, S3 should contain files in bucket:
 
 ```
-$ aws_docker_cli s3api list-objects --bucket "your-bucket-name"
+$ aws s3api list-objects --bucket "your-bucket-name"
 ```
 
 N.B: Control Center is reachable at [http://127.0.0.1:9021](http://127.0.0.1:9021])
