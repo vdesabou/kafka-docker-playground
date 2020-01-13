@@ -41,7 +41,7 @@ before_install:
 
 # Not reliable
 # replicator/executable
-# kudu-sink kudu-source
+# kudu-sink kudu-source ("Error connecting: TTransportException, TSocket read 0 bytes")
 
 jobs:
   include:
@@ -60,11 +60,11 @@ jobs:
   - name: "CONNECT: sftp-sink sftp-source solace-sink solace-source splunk-sink splunk-source spool-dir-source syslog-source OTHER: override-policy-sftp-sink override-policy-sftp-source REPLICATOR: connect"
     env: TEST_LIST="connect/connect-sftp-sink connect/connect-sftp-source connect/connect-solace-sink connect/connect-solace-source connect/connect-splunk-sink connect/connect-splunk-source connect/connect-spool-dir-source connect/connect-syslog-source other/connect-override-policy-sftp-sink other/connect-override-policy-sftp-source replicator/connect"
 
-  - name: "CONNECT (AWS): aws-cloudwatch-source aws-dynamodb-sink aws-kinesis-source aws-lambda-sink"
-    env: TEST_LIST="connect/connect-aws-cloudwatch-source connect/connect-aws-dynamodb-sink connect/connect-aws-kinesis-source connect/connect-aws-lambda-sink"
+  - name: "CONNECT (AWS): aws-cloudwatch-source aws-dynamodb-sink aws-kinesis-source aws-lambda-sink connect-aws-sqs-source"
+    env: TEST_LIST="connect/connect-aws-cloudwatch-source connect/connect-aws-dynamodb-sink connect/connect-aws-kinesis-source connect/connect-aws-lambda-sink connect/connect-aws-sqs-source"
 
   - name: "CONNECT (GCP): gcp-bigquery-sink gcp-firebase-sink gcp-firebase-source gcp-pubsub-source gcs-sink gcs-source google-cloud-functions-sink aws-sqs-source"
-    env: TEST_LIST="connect/connect-gcp-bigquery-sink connect/connect-gcp-firebase-sink connect/connect-gcp-firebase-source connect/connect-gcp-pubsub-source connect/connect-gcp-gcs-sink connect/connect-gcp-gcs-source connect/connect-gcp-cloud-functions-sink connect/connect-aws-sqs-source"
+    env: TEST_LIST="connect/connect-gcp-bigquery-sink connect/connect-gcp-firebase-sink connect/connect-gcp-firebase-source connect/connect-gcp-pubsub-source connect/connect-gcp-gcs-sink connect/connect-gcp-gcs-source connect/connect-gcp-cloud-functions-sink"
 
 script:
     - bash scripts/run-tests.sh "$TEST_LIST"
