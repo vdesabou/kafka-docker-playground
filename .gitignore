@@ -38,3 +38,5 @@ other/cp-ansible-playground/cp-ansible/
 other/cp-ansible-playground/id_rsa.pub
 other/cp-ansible-playground/cp_ansible_playground_id_rsa
 other/cp-ansible-playground/cp_ansible_playground_id_rsa.pub
+aws_credentials
+aws_config
