@@ -9,7 +9,7 @@ then
      log "Downloading Microsoft JDBC driver mssql-jdbc-7.4.1.jre8.jar"
      wget https://download.microsoft.com/download/6/9/9/699205CA-F1F1-4DE9-9335-18546C5C8CBD/sqljdbc_7.4.1.0_enu.tar.gz
      tar xvfz sqljdbc_7.4.1.0_enu.tar.gz
-     rm sqljdbc_7.4.1.0_enu.tar.gz
+     rm -f sqljdbc_7.4.1.0_enu.tar.gz
 fi
 
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext-microsoft.yml"
