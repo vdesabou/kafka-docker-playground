@@ -70,7 +70,7 @@ CCLOUD_USER=$( grep "^ccloud.user" $CCLOUD_CONFIG | cut -d'=' -f2- )
 CCLOUD_PASSWORD=$( grep "^ccloud.password" $CCLOUD_CONFIG | cut -d'=' -f2- )
 
 ENV_CONFIG=$DEST/env.delta
-log "$ENV_CONFIG"
+echo "$ENV_CONFIG"
 rm -f $ENV_CONFIG
 
 cat <<EOF >> $ENV_CONFIG
