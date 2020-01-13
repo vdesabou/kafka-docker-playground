@@ -3,7 +3,6 @@ set -e
 
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
-verify_installed "gcloud"
 
 PROJECT=${1:-vincent-de-saboulin-lab}
 
@@ -17,26 +16,29 @@ fi
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
 
 log "Doing gsutil authentication"
-gcloud auth activate-service-account --key-file ${KEYFILE}
+set +e
+docker rm -f gcloud-config
+docker run -ti -v ${KEYFILE}:/tmp/keyfile.json --name gcloud-config google/cloud-sdk:latest gcloud auth activate-service-account --key-file /tmp/keyfile.json
+set -e
 
 
 # cleanup if required
 set +e
 log "Delete topic and subscription, if required"
-gcloud pubsub topics delete topic-1
-gcloud pubsub subscriptions delete subscription-1
+docker run -ti --volumes-from gcloud-config google/cloud-sdk:latest gcloud pubsub --project ${PROJECT} topics delete topic-1
+docker run -ti --volumes-from gcloud-config google/cloud-sdk:latest gcloud pubsub --project ${PROJECT} subscriptions delete subscription-1
 set - e
 
 log "Create a Pub/Sub topic called topic-1"
-gcloud pubsub topics create topic-1
+docker run -ti --volumes-from gcloud-config google/cloud-sdk:latest gcloud pubsub --project ${PROJECT} topics create topic-1
 
 log "Create a Pub/Sub subscription called subscription-1"
-gcloud pubsub subscriptions create --topic topic-1 subscription-1
+docker run -ti --volumes-from gcloud-config google/cloud-sdk:latest gcloud pubsub --project ${PROJECT} subscriptions create --topic topic-1 subscription-1
 
 log "Publish three messages to topic-1"
-gcloud pubsub topics publish topic-1 --message "Peter"
-gcloud pubsub topics publish topic-1 --message "Megan"
-gcloud pubsub topics publish topic-1 --message "Erin"
+docker run -ti --volumes-from gcloud-config google/cloud-sdk:latest gcloud pubsub --project ${PROJECT} topics publish topic-1 --message "Peter"
+docker run -ti --volumes-from gcloud-config google/cloud-sdk:latest gcloud pubsub --project ${PROJECT} topics publish topic-1 --message "Megan"
+docker run -ti --volumes-from gcloud-config google/cloud-sdk:latest gcloud pubsub --project ${PROJECT} topics publish topic-1 --message "Erin"
 
 sleep 10
 
@@ -63,5 +65,7 @@ log "Verify messages are in topic pubsub-topic"
 docker exec schema-registry kafka-avro-console-consumer -bootstrap-server broker:9092 --topic pubsub-topic --from-beginning --max-messages 3
 
 log "Delete topic and subscription"
-gcloud pubsub topics delete topic-1
-gcloud pubsub subscriptions delete subscription-1
+docker run -ti --volumes-from gcloud-config google/cloud-sdk:latest gcloud pubsub --project ${PROJECT} topics delete topic-1
+docker run -ti --volumes-from gcloud-config google/cloud-sdk:latest gcloud pubsub --project ${PROJECT} subscriptions delete subscription-1
+
+docker rm -f gcloud-config
