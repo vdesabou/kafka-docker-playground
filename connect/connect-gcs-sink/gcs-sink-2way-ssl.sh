@@ -4,8 +4,6 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
-verify_installed "gcloud"
-
 BUCKET_NAME=${1:-test-gcs-playground}
 
 KEYFILE="${DIR}/keyfile.json"
@@ -17,10 +15,15 @@ fi
 
 ${DIR}/../../environment/2way-ssl/start.sh "${PWD}/docker-compose.2way-ssl.yml"
 
+log "Doing gsutil authentication"
+set +e
+docker rm -f gcloud-config
+docker run -ti -v ${KEYFILE}:/tmp/keyfile.json --name gcloud-config google/cloud-sdk:latest gcloud auth activate-service-account --key-file /tmp/keyfile.json
+set -e
 
 log "Removing existing objects in GCS, if applicable"
 set +e
-gsutil rm -r gs://$BUCKET_NAME/topics/gcs_topic-ssl
+docker run -ti --volumes-from gcloud-config google/cloud-sdk:latest gsutil rm -r gs://$BUCKET_NAME/topics/gcs_topic
 set -e
 
 
@@ -28,8 +31,8 @@ log "########"
 log "##  SSL authentication"
 log "########"
 
-log "Sending messages to topic gcs_topic-ssl"
-seq -f "{\"f1\": \"This is a message sent with SSL authentication %g\"}" 10 | docker exec -i connect kafka-avro-console-producer --broker-list broker:11091 --topic gcs_topic-ssl --property value.schema='{"type":"record","name":"myrecord","fields":[{"name":"f1","type":"string"}]}' --property schema.registry.url=https://schema-registry:8085 --producer.config /etc/kafka/secrets/client_without_interceptors_2way_ssl.config
+log "Sending messages to topic gcs_topic"
+seq -f "{\"f1\": \"This is a message sent with SSL authentication %g\"}" 10 | docker exec -i connect kafka-avro-console-producer --broker-list broker:11091 --topic gcs_topic --property value.schema='{"type":"record","name":"myrecord","fields":[{"name":"f1","type":"string"}]}' --property schema.registry.url=https://schema-registry:8085 --producer.config /etc/kafka/secrets/client_without_interceptors_2way_ssl.config
 
 log "Creating GCS Sink connector with SSL authentication"
 docker exec -e BUCKET_NAME="$BUCKET_NAME" connect \
@@ -39,7 +42,7 @@ docker exec -e BUCKET_NAME="$BUCKET_NAME" connect \
      --data '{
                     "connector.class": "io.confluent.connect.gcs.GcsSinkConnector",
                     "tasks.max" : "1",
-                    "topics" : "gcs_topic-ssl",
+                    "topics" : "gcs_topic",
                     "gcs.bucket.name" : "'"$BUCKET_NAME"'",
                     "gcs.part.size": "5242880",
                     "flush.size": "3",
@@ -65,13 +68,11 @@ docker exec -e BUCKET_NAME="$BUCKET_NAME" connect \
 sleep 10
 
 log "Listing objects of in GCS"
-gsutil ls gs://$BUCKET_NAME/topics/gcs_topic-ssl/partition=0/
-
-log "Doing gsutil authentication"
-gcloud auth activate-service-account --key-file ${KEYFILE}
+docker run -ti --volumes-from gcloud-config google/cloud-sdk:latest gsutil ls gs://$BUCKET_NAME/topics/gcs_topic/partition=0/
 
 log "Getting one of the avro files locally and displaying content with avro-tools"
-gsutil cp gs://$BUCKET_NAME/topics/gcs_topic-ssl/partition=0/gcs_topic-ssl+0+0000000000.avro /tmp/
+docker run -ti --volumes-from gcloud-config -v /tmp:/tmp/ google/cloud-sdk:latest gsutil cp gs://$BUCKET_NAME/topics/gcs_topic/partition=0/gcs_topic+0+0000000000.avro /tmp/gcs_topic+0+0000000000.avro
 
+docker run -v /tmp:/tmp actions/avro-tools tojson /tmp/gcs_topic+0+0000000000.avro
 
-docker run -v /tmp:/tmp actions/avro-tools tojson /tmp/gcs_topic-ssl+0+0000000000.avro
+docker rm -f gcloud-config
