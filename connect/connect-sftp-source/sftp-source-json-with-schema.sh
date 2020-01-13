@@ -21,7 +21,7 @@ echo $'{"id":1,"first_name":"Roscoe","last_name":"Brentnall","email":"rbrentnall
 docker cp json-sftp-source.json sftp-server:/home/foo/upload/input/
 rm -f json-sftp-source.json
 
-log "Creating JSON (with shema) SFTP Source connector"
+log "Creating JSON (with schema) SFTP Source connector"
 docker exec connect \
      curl -X PUT \
      -H "Content-Type: application/json" \
@@ -43,7 +43,7 @@ docker exec connect \
                "key.schema": "{\"name\" : \"com.example.users.UserKey\",\"type\" : \"STRUCT\",\"isOptional\" : false,\"fieldSchemas\" : {\"id\" : {\"type\" : \"INT64\",\"isOptional\" : false}}}",
                "value.schema": "{\"name\" : \"com.example.users.User\",\"type\" : \"STRUCT\",\"isOptional\" : false,\"fieldSchemas\" : {\"id\" : {\"type\" : \"INT64\",\"isOptional\" : false},\"first_name\" : {\"type\" : \"STRING\",\"isOptional\" : true},\"last_name\" : {\"type\" : \"STRING\",\"isOptional\" : true},\"email\" : {\"type\" : \"STRING\",\"isOptional\" : true},\"gender\" : {\"type\" : \"STRING\",\"isOptional\" : true},\"ip_address\" : {\"type\" : \"STRING\",\"isOptional\" : true},\"last_login\" : {\"type\" : \"STRING\",\"isOptional\" : true},\"account_balance\" : {\"name\" : \"org.apache.kafka.connect.data.Decimal\",\"type\" : \"BYTES\",\"version\" : 1,\"parameters\" : {\"scale\" : \"2\"},\"isOptional\" : true},\"country\" : {\"type\" : \"STRING\",\"isOptional\" : true},\"favorite_color\" : {\"type\" : \"STRING\",\"isOptional\" : true}}}"
           }' \
-     http://localhost:8083/connectors/sftp-source | jq_docker_cli .
+     http://localhost:8083/connectors/sftp-source/config | jq_docker_cli .
 
 sleep 5
 
