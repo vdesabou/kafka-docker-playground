@@ -1,8 +1,0 @@
----
-version: '3.5'
-services:
-  connect:
-    volumes:
-        - $HOME/.aws/credentials:/root/.aws/credentials:ro
-    environment:
-      CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-s3-source,/usr/share/confluent-hub-components/confluentinc-kafka-connect-s3

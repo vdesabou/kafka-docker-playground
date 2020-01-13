@@ -23,7 +23,7 @@ Quick start examples from Confluent [docs](https://docs.confluent.io/current/con
 ### ↘️ Source
 
 * <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/9/93/Amazon_Web_Services_Logo.svg/1200px-Amazon_Web_Services_Logo.svg.png" width="15"> AWS
-    * <img src="https://cdn.worldvectorlogo.com/logos/aws-s3.svg" width="15"> [S3](connect/connect-s3-source)
+    * <img src="https://cdn.worldvectorlogo.com/logos/aws-s3.svg" width="15"> [S3](connect/connect-aws-s3-source)
     * <img src="https://cdn.worldvectorlogo.com/logos/aws-kinesis.svg" width="15"> [Kinesis](connect/connect-aws-kinesis-source)
     * <img src="https://cdn.worldvectorlogo.com/logos/aws-sqs.svg" width="15"> [SQS](connect/connect-aws-sqs-source)
         * using [SASL_SSL](connect/connect-aws-sqs-source/README.md#with-sasl-ssl-authentication)
@@ -54,7 +54,7 @@ Quick start examples from Confluent [docs](https://docs.confluent.io/current/con
 * <img src="https://www.pinclipart.com/picdir/middle/23-237671_document-clipart-stack-papers-file-stack-icon-png.png" width="15"> [Spool Dir](connect/connect-spool-dir-source)
 * <img src="https://www.pnglot.com/pngfile/detail/5-58270_gcp-logo-cloud-google-cloud-logo-png.png" width="15"> GCP
   * <img src="https://miro.medium.com/max/512/1*LXO5TpyB1GnCAE5-pz6L6Q.png" width="15"> [Pub/Sub](connect/connect-gcp-pubsub-source)
-  * <img src="https://miro.medium.com/max/256/1*lcRm2muyWDct3FW2drmptA.png" width="15"> [GCS](connect/connect-gcs-source)
+  * <img src="https://miro.medium.com/max/256/1*lcRm2muyWDct3FW2drmptA.png" width="15"> [GCS](connect/connect-gcp-gcs-source)
   * <img src="https://cdn.worldvectorlogo.com/logos/firebase-1.svg" width="15"> [Firebase](connect/connect-gcp-firebase-source)
 * <img src="https://cdn.worldvectorlogo.com/logos/couchbase-1.svg" width="15"> [Couchbase](connect/connect-couchbase-source)
 * <img src="https://cdn.iconscout.com/icon/free/png-512/sftp-1758329-1496548.png" width="15"> [SFTP](connect/connect-sftp-source)
@@ -67,7 +67,7 @@ Quick start examples from Confluent [docs](https://docs.confluent.io/current/con
     * <img src="https://cdn.worldvectorlogo.com/logos/hadoop.svg" width="15"> [HDFS 2](connect/connect-hdfs2-sink)
     * <img src="https://cdn.worldvectorlogo.com/logos/hadoop.svg" width="15"> [HDFS 3](connect/connect-hdfs3-sink)
 * <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/9/93/Amazon_Web_Services_Logo.svg/1200px-Amazon_Web_Services_Logo.svg.png" width="15"> AWS
-    * <img src="https://cdn.worldvectorlogo.com/logos/aws-s3.svg" width="15"> [S3](connect/connect-s3-sink)
+    * <img src="https://cdn.worldvectorlogo.com/logos/aws-s3.svg" width="15"> [S3](connect/connect-aws-s3-sink)
     * <img src="https://cdn.worldvectorlogo.com/logos/aws-redshift-logo.svg" width="15"> [Redshift](connect/connect-aws-redshift-sink)
     * <img src="https://cdn.worldvectorlogo.com/logos/aws-dynamodb.svg" width="15"> [DynamoDB](connect/connect-aws-dynamodb-sink)
     * <img src="https://cdn.worldvectorlogo.com/logos/aws-lambda.svg" width="15"> [Lambda](connect/connect-aws-lambda-sink)
@@ -75,12 +75,12 @@ Quick start examples from Confluent [docs](https://docs.confluent.io/current/con
 * <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/5/5b/HTTP_logo.svg/440px-HTTP_logo.svg.png" width="15"> [HTTP](connect/connect-http-sink)
 * <img src="https://www.pnglot.com/pngfile/detail/5-58270_gcp-logo-cloud-google-cloud-logo-png.png" width="15"> GCP
     * <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/8/89/Google-BigQuery-Logo.svg/1200px-Google-BigQuery-Logo.svg.png" width="15"> [BigQuery](connect/connect-gcp-bigquery-sink)
-    * <img src="https://img.stackshare.io/service/6672/google-cloud-functions.png" width="15"> [Cloud Functions](connect/connect-google-cloud-functions-sink)
-    * <img src="https://miro.medium.com/max/256/1*lcRm2muyWDct3FW2drmptA.png" width="15"> [GCS](connect/connect-gcs-sink)
-        * using [SASL_SSL](connect/connect-gcs-sink/README.md#with-sasl-ssl-authentication)
-        * using [SSL](connect/connect-gcs-sink/README.md#with-ssl-authentication)
-        * using [Kerberos GSSAPI](connect/connect-gcs-sink/README.md#with-kerberos-gssapi-authentication)
-        * using [LDAP Authorizer SASL/PLAIN](connect/connect-gcs-sink/README.md#with-ldap-authorizer-with-saslplain)
+    * <img src="https://img.stackshare.io/service/6672/google-cloud-functions.png" width="15"> [Cloud Functions](connect/connect-gcp-cloud-functions-sink)
+    * <img src="https://miro.medium.com/max/256/1*lcRm2muyWDct3FW2drmptA.png" width="15"> [GCS](connect/connect-gcp-gcs-sink)
+        * using [SASL_SSL](connect/connect-gcp-gcs-sink/README.md#with-sasl-ssl-authentication)
+        * using [SSL](connect/connect-gcp-gcs-sink/README.md#with-ssl-authentication)
+        * using [Kerberos GSSAPI](connect/connect-gcp-gcs-sink/README.md#with-kerberos-gssapi-authentication)
+        * using [LDAP Authorizer SASL/PLAIN](connect/connect-gcp-gcs-sink/README.md#with-ldap-authorizer-with-saslplain)
     * <img src="https://cdn.worldvectorlogo.com/logos/firebase-1.svg" width="15"> [Firebase](connect/connect-gcp-firebase-sink)
 * <img src="https://pbs.twimg.com/profile_images/999017305869697024/eHwBaQtB_400x400.jpg" width="15"> [Solace](connect/connect-solace-sink)
 * <img src="http://www.pharmajournalist.com/wp-content/uploads/2017/11/splunk-logo.jpg" width="15"> [Splunk](connect/connect-splunk-sink)
