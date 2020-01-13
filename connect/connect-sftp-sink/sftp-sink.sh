@@ -4,8 +4,6 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
-mkdir -p ${DIR}/upload
-
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
 
 log "Creating SFTP Sink connector"
@@ -40,8 +38,8 @@ seq -f "{\"f1\": \"value%g\"}" 10 | docker exec -i schema-registry kafka-avro-co
 sleep 10
 
 log "Listing content of ./upload/topics/test_sftp_sink/partition\=0/"
-ls ./upload/topics/test_sftp_sink/partition\=0/
+docker exec sftp-server bash -c "ls /home/foo/upload/topics/test_sftp_sink/partition\=0/"
 
-cp ./upload/topics/test_sftp_sink/partition\=0/test_sftp_sink+0+0000000000.avro /tmp/
+docker cp sftp-server:/home/foo/upload/topics/test_sftp_sink/partition\=0/test_sftp_sink+0+0000000000.avro /tmp/
 
 docker run -v /tmp:/tmp actions/avro-tools tojson /tmp/test_sftp_sink+0+0000000000.avro

@@ -17,11 +17,9 @@ services:
     image: atmoz/sftp
     hostname: sftp-server
     container_name: sftp-server
-    volumes:
-        - ../../other/connect-override-policy-sftp-source/upload/:/home/foo/upload
     ports:
       - "2222:22"
-    command: foo:pass:1001
+    command: foo:pass:::upload
 
   connect:
     volumes:
