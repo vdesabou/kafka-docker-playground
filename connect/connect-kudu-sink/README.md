@@ -7,7 +7,7 @@ Quickly test [Kudu Sink](https://docs.confluent.io/current/connect/kafka-connect
 ## Pre-requisites
 
 * `docker-compose` (example `brew cask install docker`)
-* `jq` (example `brew install jq`)
+
 * Download Impala JDBC Driver `ImpalaJDBC42.jar`from this [page](https://www.oracle.com/technetwork/java/javase/jdbc/index.html) and place it in `./ImpalaJDBC42.jar`
 
 ## How to run
@@ -55,7 +55,7 @@ $ docker exec connect \
                     "confluent.topic.bootstrap.servers": "broker:9092",
                     "confluent.topic.replication.factor": "1"
           }' \
-     http://localhost:8083/connectors/kudu-sink/config | jq .
+     http://localhost:8083/connectors/kudu-sink/config | jq_docker_cli .
 ```
 
 Sending messages to topic orders:

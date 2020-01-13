@@ -7,7 +7,7 @@ Quickly test [Elasticsearch Sink](https://docs.confluent.io/current/connect/kafk
 ## Pre-requisites
 
 * `docker-compose` (example `brew cask install docker`)
-* `jq` (example `brew install jq`)
+
 
 
 ## How to run
@@ -35,7 +35,7 @@ docker exec connect \
           "type.name": "kafka-connect",
           "name": "elasticsearch-sink"
           }' \
-     http://localhost:8083/connectors/elasticsearch-sink/config | jq .
+     http://localhost:8083/connectors/elasticsearch-sink/config | jq_docker_cli .
 ```
 
 Messages are sent to `test-elasticsearch-sink` topic using:

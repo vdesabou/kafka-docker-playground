@@ -7,7 +7,7 @@ Quickly test [HDFS 3 Source](https://docs.confluent.io/current/connect/kafka-con
 ## Pre-requisites
 
 * `docker-compose` (example `brew cask install docker`)
-* `jq` (example `brew install jq`)
+
 
 ## How to run
 
@@ -43,7 +43,7 @@ $ docker exec connect \
                "transforms.AddPrefix.regex" : ".*",
                "transforms.AddPrefix.replacement" : "copy_of_$0"
           }' \
-     http://localhost:8083/connectors/hdfs3-source/config | jq .
+     http://localhost:8083/connectors/hdfs3-source/config | jq_docker_cli .
 ```
 
 Verifying topic `copy_of_test_hdfs`:

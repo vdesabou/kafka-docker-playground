@@ -7,7 +7,7 @@ Quickly test [S3 Sink](https://docs.confluent.io/current/connect/kafka-connect-s
 ## Pre-requisites
 
 * `docker-compose` (example `brew cask install docker`)
-* `jq` (example `brew install jq`)
+
 
 ## AWS Setup
 
@@ -52,7 +52,7 @@ docker exec connect \
                "format.class": "io.confluent.connect.s3.format.avro.AvroFormat",
                "schema.compatibility": "NONE"
           }' \
-     http://localhost:8083/connectors/s3-sink/config | jq .
+     http://localhost:8083/connectors/s3-sink/config | jq_docker_cli .
 ```
 
 Messages are sent to `s3_topic` topic using:

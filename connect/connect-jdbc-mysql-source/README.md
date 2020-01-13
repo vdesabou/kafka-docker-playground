@@ -7,7 +7,7 @@ Quickly test [JDBC Source](https://docs.confluent.io/current/connect/kafka-conne
 ## Pre-requisites
 
 * `docker-compose` (example `brew cask install docker`)
-* `jq` (example `brew install jq`)
+
 
 
 ## How to run

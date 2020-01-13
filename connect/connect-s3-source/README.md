@@ -7,7 +7,7 @@ Quickly test [S3 Source](https://docs.confluent.io/current/connect/kafka-connect
 ## Pre-requisites
 
 * `docker-compose` (example `brew cask install docker`)
-* `jq` (example `brew install jq`)
+
 
 ## AWS Setup
 
@@ -58,7 +58,7 @@ $ docker exec -e BUCKET_NAME="$BUCKET_NAME" connect \
                     "transforms.AddPrefix.regex": ".*",
                     "transforms.AddPrefix.replacement": "copy_of_$0"
           }' \
-     http://localhost:8083/connectors/s3-source/config | jq .
+     http://localhost:8083/connectors/s3-source/config | jq_docker_cli .
 ```
 
 Verifying topic `copy_of_s3_topic`

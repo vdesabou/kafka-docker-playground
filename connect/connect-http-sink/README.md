@@ -11,7 +11,7 @@ The HTTP service is using [Kafka Connect HTTP Sink Demo App](https://github.com/
 ## Pre-requisites
 
 * `docker-compose` (example `brew cask install docker`)
-* `jq` (example `brew install jq`)
+
 
 ## How to run
 
@@ -69,7 +69,7 @@ Json data:
 Getting:
 
 ```bash
-curl admin:password@localhost:9080/api/messages | jq .
+curl admin:password@localhost:9080/api/messages | jq_docker_cli .
 [
   {
     "id": 1,
@@ -93,7 +93,7 @@ $ ./http_json_basic_auth_error_204.sh
 Getting:
 
 ```bash
-curl admin:password@localhost:9081/api/messages | jq .
+curl admin:password@localhost:9081/api/messages | jq_docker_cli .
 [
   {
     "id": 1,
@@ -252,7 +252,7 @@ seq -f "{\"f1\": \"value%g\"}" 10 | docker exec -i schema-registry kafka-avro-co
 Getting:
 
 ```
-curl admin:password@localhost:9080/api/messages | jq .
+curl admin:password@localhost:9080/api/messages | jq_docker_cli .
 [
   {
     "id": 1,

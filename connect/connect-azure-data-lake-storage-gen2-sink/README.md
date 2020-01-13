@@ -6,7 +6,7 @@ Quickly test [Azure Data Lake Storage Gen2 Sink](https://docs.confluent.io/curre
 ## Pre-requisites
 
 * `docker-compose` (example `brew cask install docker`)
-* `jq` (example `brew install jq`)
+
 * `az`(example `brew install azure-cli`)
 
 ## How to run
@@ -54,8 +54,8 @@ $ AZURE_DATALAKE_CLIENT_ID=$(az ad app create --display-name "$AZURE_AD_APP_NAME
 Creating Service Principal associated to the App
 
 ```bash
-$ SERVICE_PRINCIPAL_ID=$(az ad sp create --id $AZURE_DATALAKE_CLIENT_ID | jq -r '.objectId')
-$ AZURE_TENANT_ID=$(az account list | jq -r '.[].tenantId')
+$ SERVICE_PRINCIPAL_ID=$(az ad sp create --id $AZURE_DATALAKE_CLIENT_ID | jq_docker_cli -r '.objectId')
+$ AZURE_TENANT_ID=$(az account list | jq_docker_cli -r '.[].tenantId')
 $ AZURE_DATALAKE_TOKEN_ENDPOINT="https://login.microsoftonline.com/$AZURE_TENANT_ID/oauth2/token"
 ```
 
@@ -99,7 +99,7 @@ $ docker exec -e AZURE_DATALAKE_CLIENT_ID="$AZURE_DATALAKE_CLIENT_ID" -e AZURE_D
                     "confluent.topic.bootstrap.servers": "broker:9092",
                     "confluent.topic.replication.factor": "1"
           }' \
-     http://localhost:8083/connectors/azure-datalake-gen2-sink/config | jq .
+     http://localhost:8083/connectors/azure-datalake-gen2-sink/config | jq_docker_cli .
 ```
 
 Sending messages to topic datalake_topic
@@ -159,7 +159,7 @@ $ docker exec -e AZURE_DATALAKE_CLIENT_ID="$AZURE_DATALAKE_CLIENT_ID" -e AZURE_D
                     "confluent.topic.ssl.truststore.type" : "JKS",
                     "confluent.topic.security.protocol" : "SSL"
           }' \
-     https://localhost:8083/connectors/azure-datalake-gen2-sink/config | jq .
+     https://localhost:8083/connectors/azure-datalake-gen2-sink/config | jq_docker_cli .
 ```
 
 Notes:

@@ -7,7 +7,7 @@ Quickly test [GCP Firebase Source](https://docs.confluent.io/current/connect/kaf
 ## Pre-requisites
 
 * `docker-compose` (example `brew cask install docker`)
-* `jq` (example `brew install jq`)
+
 * Active Google Cloud Platform (GCP) account with authorization to create resources
 
 ## GCP Firebase Setup
@@ -89,7 +89,7 @@ $ docker exec -e PROJECT="$PROJECT" connect \
                     "confluent.topic.bootstrap.servers": "broker:9092",
                     "confluent.topic.replication.factor": "1"
           }' \
-     http://localhost:8083/connectors/firebase-source/config | jq .
+     http://localhost:8083/connectors/firebase-source/config | jq_docker_cli .
 ```
 
 Verify messages are in topic `artists`

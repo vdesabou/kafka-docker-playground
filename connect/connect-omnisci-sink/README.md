@@ -7,7 +7,7 @@ Quickly test [OmniSci Sink](https://docs.confluent.io/current/connect/kafka-conn
 ## Pre-requisites
 
 * `docker-compose` (example `brew cask install docker`)
-* `jq` (example `brew install jq`)
+
 
 
 ## How to run
@@ -48,7 +48,7 @@ $ docker exec connect \
                     "confluent.topic.replication.factor": "1",
                     "auto.create": "true"
           }' \
-     http://localhost:8083/connectors/omnisci-sink/config | jq .
+     http://localhost:8083/connectors/omnisci-sink/config | jq_docker_cli .
 ```
 
 Verify data is in OmniSci

@@ -20,7 +20,7 @@ ${DIR}/../../environment/sasl-ssl/start.sh "${PWD}/docker-compose.sasl-ssl.yml"
 
 QUEUE_NAME="sqs-source-connector-demo-ssl"
 AWS_REGION=`aws_docker_cli configure get region`
-QUEUE_URL_RAW=$(aws_docker_cli sqs create-queue --queue-name $QUEUE_NAME | jq .QueueUrl)
+QUEUE_URL_RAW=$(aws_docker_cli sqs create-queue --queue-name $QUEUE_NAME | jq_docker_cli .QueueUrl)
 AWS_ACCOUNT_NUMBER=$(echo "$QUEUE_URL_RAW" | cut -d "/" -f 4)
 # https://docs.amazonaws.cn/sdk-for-net/v3/developer-guide/how-to/sqs/QueueURL.html
 # https://{REGION_ENDPOINT}/queue.|api-domain|/{YOUR_ACCOUNT_NUMBER}/{YOUR_QUEUE_NAME}
@@ -42,7 +42,7 @@ log "##  SASL_SSL authentication"
 log "########"
 
 QUEUE_NAME="sqs-source-connector-demo-sasl-ssl"
-QUEUE_URL_RAW=$(aws_docker_cli sqs create-queue --queue-name $QUEUE_NAME | jq .QueueUrl)
+QUEUE_URL_RAW=$(aws_docker_cli sqs create-queue --queue-name $QUEUE_NAME | jq_docker_cli .QueueUrl)
 AWS_ACCOUNT_NUMBER=$(echo "$QUEUE_URL_RAW" | cut -d "/" -f 4)
 # https://docs.amazonaws.cn/sdk-for-net/v3/developer-guide/how-to/sqs/QueueURL.html
 # https://{REGION_ENDPOINT}/queue.|api-domain|/{YOUR_ACCOUNT_NUMBER}/{YOUR_QUEUE_NAME}
@@ -88,12 +88,12 @@ docker exec -e QUEUE_URL="$QUEUE_URL" connect \
                     "confluent.topic.sasl.mechanism": "PLAIN",
                     "confluent.topic.sasl.jaas.config": "org.apache.kafka.common.security.plain.PlainLoginModule required  username=\"client\" password=\"client-secret\";"
           }' \
-     https://localhost:8083/connectors/sqs-source-sasl-ssl/config | jq .
+     https://localhost:8083/connectors/sqs-source-sasl-ssl/config | jq_docker_cli .
 
 sleep 10
 
 log "Verify we have received the data in test-sqs-source-sasl-ssl topic"
-docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9091 --topic test-sqs-source-sasl-ssl --from-beginning --max-messages 2 --property schema.registry.url=https://schema-registry:8085 --consumer.config /etc/kafka/secrets/client_without_interceptors.config  | tail -n 3 | head -n 2 | jq .
+docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9091 --topic test-sqs-source-sasl-ssl --from-beginning --max-messages 2 --property schema.registry.url=https://schema-registry:8085 --consumer.config /etc/kafka/secrets/client_without_interceptors.config  | tail -n 3 | head -n 2 | jq_docker_cli .
 
 log "Delete queue ${QUEUE_URL}"
 aws_docker_cli sqs delete-queue --queue-url ${QUEUE_URL}

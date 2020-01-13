@@ -26,7 +26,7 @@ ACLs are setup:
 ## Pre-requisites
 
 * `docker-compose` (example `brew cask install docker`)
-* `jq` (example `brew install jq`)
+
 
 ## How to run
 
@@ -69,7 +69,7 @@ $ docker exec connect \
                "producer.override.security.protocol": "SASL_PLAINTEXT",
                "producer.override.sasl.jaas.config" : "org.apache.kafka.common.security.plain.PlainLoginModule required username=\"sftp\" password=\"sftp-secret\";"
           }' \
-     http://localhost:8083/connectors/sftp-source/config | jq .
+     http://localhost:8083/connectors/sftp-source/config | jq_docker_cli .
 ```
 
 Verifying topic `sftp-testing-topic`

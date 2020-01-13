@@ -7,7 +7,7 @@ Quickly test [AWS Lambda](https://docs.confluent.io/current/connect/kafka-connec
 ## Pre-requisites
 
 * `docker-compose` (example `brew cask install docker`)
-* `jq` (example `brew install jq`)
+
 
 ## AWS Setup
 
@@ -108,7 +108,7 @@ $ docker exec connect \
                     "confluent.topic.bootstrap.servers": "broker:9092",
                     "confluent.topic.replication.factor": "1"
           }' \
-     http://localhost:8083/connectors/aws-lambda/config | jq .
+     http://localhost:8083/connectors/aws-lambda/config | jq_docker_cli .
 ```
 
 Verifying topic `add-topic-response`

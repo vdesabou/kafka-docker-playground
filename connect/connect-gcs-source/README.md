@@ -7,7 +7,7 @@ Quickly test [GCS Source](https://docs.confluent.io/current/connect/kafka-connec
 ## Pre-requisites
 
 * `docker-compose` (example `brew cask install docker`)
-* `jq` (example `brew install jq`)
+
 * `google-cloud-sdk` (example `brew cask install google-cloud-sdk`)
 * Active Google Cloud Platform (GCP) account with authorization to create resources
 
@@ -67,7 +67,7 @@ $ docker exec -e BUCKET_NAME="$BUCKET_NAME" connect \
                     "transforms.AddPrefix.regex" : ".*",
                     "transforms.AddPrefix.replacement" : "copy_of_$0"
           }' \
-     http://localhost:8083/connectors/GCSSourceConnector/config | jq .
+     http://localhost:8083/connectors/GCSSourceConnector/config | jq_docker_cli .
 ```
 
 Verify messages are in topic `copy_of_gcs_topic`

@@ -7,7 +7,7 @@ Quickly test [HBase Sink](https://docs.confluent.io/current/connect/kafka-connec
 ## Pre-requisites
 
 * `docker-compose` (example `brew cask install docker`)
-* `jq` (example `brew install jq`)
+
 
 
 ## How to run
@@ -50,7 +50,7 @@ $ docker exec connect \
                     "table.name.format": "example_table",
                     "topics": "hbase-test"
           }' \
-     http://localhost:8083/connectors/hbase-sink/config | jq .
+     http://localhost:8083/connectors/hbase-sink/config | jq_docker_cli .
 ```
 
 Verify data is in HBase:

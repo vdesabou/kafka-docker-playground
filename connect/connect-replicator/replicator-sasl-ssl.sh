@@ -50,7 +50,7 @@ docker exec connect \
                     "src.kafka.sasl.jaas.config": "org.apache.kafka.common.security.plain.PlainLoginModule required  username=\"client\" password=\"client-secret\";",
                     "src.kafka.sasl.mechanism": "PLAIN"
           }' \
-     https://localhost:8083/connectors/replicator-sasl-ssl/config | jq .
+     https://localhost:8083/connectors/replicator-sasl-ssl/config | jq_docker_cli .
 
 
 sleep 10

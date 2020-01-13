@@ -31,7 +31,7 @@ docker exec connect \
                     "topic": "spooldir-schemaless-json-topic",
                     "value.converter": "org.apache.kafka.connect.storage.StringConverter"
           }' \
-     http://localhost:8083/connectors/spool-dir/config | jq .
+     http://localhost:8083/connectors/spool-dir/config | jq_docker_cli .
 
 
 sleep 5

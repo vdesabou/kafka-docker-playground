@@ -128,7 +128,7 @@ docker exec connect \
                     "transforms.addTopicSuffix.regex":"(.*)",
                     "transforms.addTopicSuffix.replacement":"$1-raw"
           }' \
-     http://localhost:8083/connectors/debezium-postgres-source/config | jq .
+     http://localhost:8083/connectors/debezium-postgres-source/config | jq_docker_cli .
 
 
 

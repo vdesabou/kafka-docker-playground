@@ -7,7 +7,7 @@ Quickly test [GCP Firebase Sink](https://docs.confluent.io/current/connect/kafka
 ## Pre-requisites
 
 * `docker-compose` (example `brew cask install docker`)
-* `jq` (example `brew install jq`)
+
 * Active Google Cloud Platform (GCP) account with authorization to create resources
 
 ## GCP Firebase Setup
@@ -97,7 +97,7 @@ $ docker exec -e PROJECT="$PROJECT" connect \
                     "confluent.topic.bootstrap.servers": "broker:9092",
                     "confluent.topic.replication.factor": "1"
           }' \
-     http://localhost:8083/connectors/firebase-sink/config | jq .
+     http://localhost:8083/connectors/firebase-sink/config | jq_docker_cli .
 ```
 
 Produce Avro data to topic artists

@@ -7,7 +7,7 @@ Quickly test [GCP BigQuery Sink](https://docs.confluent.io/current/connect/kafka
 ## Pre-requisites
 
 * `docker-compose` (example `brew cask install docker`)
-* `jq` (example `brew install jq`)
+
 * `google-cloud-sdk` (example `brew cask install google-cloud-sdk`)
 * Setup `bq`command (installed with `google-cloud-sdk`) with your project id
 * Active Google Cloud Platform (GCP) account with authorization to create resources
@@ -89,7 +89,7 @@ docker exec -e PROJECT="$PROJECT" -e DATASET="$DATASET" connect \
                     "datasets" : ".*='"$DATASET"'",
                     "keyfile" : "/root/keyfiles/keyfile.json"
           }' \
-     http://localhost:8083/connectors/kcbq-connect/config | jq .
+     http://localhost:8083/connectors/kcbq-connect/config | jq_docker_cli .
 ```
 
 

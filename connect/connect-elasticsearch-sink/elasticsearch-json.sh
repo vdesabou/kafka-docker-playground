@@ -24,7 +24,7 @@ docker exec connect \
           "key.converter.schemas.enable": "false",
           "value.converter.schemas.enable": "false"
           }' \
-     http://localhost:8083/connectors/elasticsearch-sink/config | jq .
+     http://localhost:8083/connectors/elasticsearch-sink/config | jq_docker_cli .
 
 
 docker exec -i broker kafka-console-producer --broker-list broker:9092 --topic test-elasticsearch-sink << EOF

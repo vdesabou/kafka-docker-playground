@@ -35,7 +35,7 @@ docker exec connect \
                "schema.generation.enabled": "true",
                "csv.separator.char": "9"
           }' \
-     http://localhost:8083/connectors/sftp-source-tsv/config | jq .
+     http://localhost:8083/connectors/sftp-source-tsv/config | jq_docker_cli .
 
 sleep 5
 

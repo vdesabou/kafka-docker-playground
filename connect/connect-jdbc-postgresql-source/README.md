@@ -7,7 +7,7 @@ Quickly test [JDBC PostGreSQL](https://docs.confluent.io/current/connect/kafka-c
 ## Pre-requisites
 
 * `docker-compose` (example `brew cask install docker`)
-* `jq` (example `brew install jq`)
+
 
 
 ## How to run
@@ -58,7 +58,7 @@ $ docker exec connect \
                     "errors.log.enable": "true",
                     "errors.log.include.messages": "true"
           }' \
-     http://localhost:8083/connectors/postgres-source/config | jq .
+     http://localhost:8083/connectors/postgres-source/config | jq_docker_cli .
 ```
 
 Verifying topic `postgres-customers`
