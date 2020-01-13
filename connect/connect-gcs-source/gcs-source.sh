@@ -4,8 +4,6 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
-verify_installed "gcloud"
-
 BUCKET_NAME=${1:-test-gcs-playground}
 KEYFILE="${DIR}/keyfile.json"
 if [ ! -f ${KEYFILE} ]
@@ -16,10 +14,15 @@ fi
 
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
 
+log "Doing gsutil authentication"
+set +e
+docker rm -f gcloud-config
+docker run -ti -v ${KEYFILE}:/tmp/keyfile.json --name gcloud-config google/cloud-sdk:latest gcloud auth activate-service-account --key-file /tmp/keyfile.json
+set -e
 
 log "Removing existing objects in GCS, if applicable"
 set +e
-gsutil rm -r gs://$BUCKET_NAME/topics/gcs_topic
+docker run -ti --volumes-from gcloud-config google/cloud-sdk:latest gsutil rm -r gs://$BUCKET_NAME/topics/gcs_topic
 set -e
 
 
@@ -54,18 +57,15 @@ docker exec -e BUCKET_NAME="$BUCKET_NAME" connect \
 
 sleep 10
 
-log "Doing gsutil authentication"
-gcloud auth activate-service-account --key-file ${KEYFILE}
-
 log "Listing objects of in GCS"
-gsutil ls gs://$BUCKET_NAME/topics/gcs_topic/partition=0/
+docker run -ti --volumes-from gcloud-config google/cloud-sdk:latest gsutil ls gs://$BUCKET_NAME/topics/gcs_topic/partition=0/
 
 log "Getting one of the avro files locally and displaying content with avro-tools"
-gsutil cp gs://$BUCKET_NAME/topics/gcs_topic/partition=0/gcs_topic+0+0000000000.avro /tmp/
-
+docker run -ti --volumes-from gcloud-config -v /tmp:/tmp/ google/cloud-sdk:latest gsutil cp gs://$BUCKET_NAME/topics/gcs_topic/partition=0/gcs_topic+0+0000000000.avro /tmp/gcs_topic+0+0000000000.avro
 
 docker run -v /tmp:/tmp actions/avro-tools tojson /tmp/gcs_topic+0+0000000000.avro
 
+docker rm -f gcloud-config
 
 ##########################
 ## SOURCE

@@ -4,8 +4,6 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
-verify_installed "gcloud"
-
 BUCKET_NAME=${1:-test-gcs-playground}
 
 KEYFILE="${DIR}/keyfile.json"
@@ -17,16 +15,21 @@ fi
 
 ${DIR}/../../environment/ldap_authorizer_sasl_plain/start.sh "${PWD}/docker-compose.ldap-authorizer-sasl-plain.yml"
 
+log "Doing gsutil authentication"
+set +e
+docker rm -f gcloud-config
+docker run -ti -v ${KEYFILE}:/tmp/keyfile.json --name gcloud-config google/cloud-sdk:latest gcloud auth activate-service-account --key-file /tmp/keyfile.json
+set -e
 
 log "Removing existing objects in GCS, if applicable"
 set +e
-gsutil rm -r gs://$BUCKET_NAME/topics/gcs_topic
+docker run -ti --volumes-from gcloud-config google/cloud-sdk:latest gsutil rm -r gs://$BUCKET_NAME/topics/gcs_topic
 set -e
 
-docker exec broker kafka-acls --authorizer-properties zookeeper.connect=zookeeper:2181 --add --topic=gcs_topic-ldap-authorizer-sasl-plain --producer --allow-principal="Group:Kafka Developers"
+docker exec broker kafka-acls --authorizer-properties zookeeper.connect=zookeeper:2181 --add --topic=gcs_topic --producer --allow-principal="Group:Kafka Developers"
 
-log "Sending messages to topic gcs_topic-ldap-authorizer-sasl-plain"
-seq -f "{\"f1\": \"This is a message sent with LDAP Authorizer SASL/PLAIN authentication %g\"}" 10 | docker exec -i connect kafka-avro-console-producer --broker-list broker:9092 --topic gcs_topic-ldap-authorizer-sasl-plain --property value.schema='{"type":"record","name":"myrecord","fields":[{"name":"f1","type":"string"}]}' --property schema.registry.url=http://schema-registry:8081 --producer.config /service/kafka/users/alice.properties
+log "Sending messages to topic gcs_topic"
+seq -f "{\"f1\": \"This is a message sent with LDAP Authorizer SASL/PLAIN authentication %g\"}" 10 | docker exec -i connect kafka-avro-console-producer --broker-list broker:9092 --topic gcs_topic --property value.schema='{"type":"record","name":"myrecord","fields":[{"name":"f1","type":"string"}]}' --property schema.registry.url=http://schema-registry:8081 --producer.config /service/kafka/users/alice.properties
 
 log "Creating GCS Sink connector"
 docker exec -e BUCKET_NAME="$BUCKET_NAME" connect \
@@ -35,7 +38,7 @@ docker exec -e BUCKET_NAME="$BUCKET_NAME" connect \
      --data '{
                "connector.class": "io.confluent.connect.gcs.GcsSinkConnector",
                     "tasks.max" : "1",
-                    "topics" : "gcs_topic-ldap-authorizer-sasl-plain",
+                    "topics" : "gcs_topic",
                     "gcs.bucket.name" : "'"$BUCKET_NAME"'",
                     "gcs.part.size": "5242880",
                     "flush.size": "3",
@@ -54,14 +57,12 @@ docker exec -e BUCKET_NAME="$BUCKET_NAME" connect \
 
 sleep 10
 
-log "Doing gsutil authentication"
-gcloud auth activate-service-account --key-file ${KEYFILE}
-
 log "Listing objects of in GCS"
-gsutil ls gs://$BUCKET_NAME/topics/gcs_topic-ldap-authorizer-sasl-plain/partition=0/
+docker run -ti --volumes-from gcloud-config google/cloud-sdk:latest gsutil ls gs://$BUCKET_NAME/topics/gcs_topic/partition=0/
 
 log "Getting one of the avro files locally and displaying content with avro-tools"
-gsutil cp gs://$BUCKET_NAME/topics/gcs_topic-ldap-authorizer-sasl-plain/partition=0/gcs_topic-ldap-authorizer-sasl-plain+0+0000000000.avro /tmp/
+docker run -ti --volumes-from gcloud-config -v /tmp:/tmp/ google/cloud-sdk:latest gsutil cp gs://$BUCKET_NAME/topics/gcs_topic/partition=0/gcs_topic+0+0000000000.avro /tmp/gcs_topic+0+0000000000.avro
 
+docker run -v /tmp:/tmp actions/avro-tools tojson /tmp/gcs_topic+0+0000000000.avro
 
-docker run -v /tmp:/tmp actions/avro-tools tojson /tmp/gcs_topic-ldap-authorizer-sasl-plain+0+0000000000.avro
+docker rm -f gcloud-config
