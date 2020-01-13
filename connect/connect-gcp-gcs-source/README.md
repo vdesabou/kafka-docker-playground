@@ -46,7 +46,7 @@ $ ./gcs-source.sh <BUCKET_NAME>
 
 ## Details of what the script is doing
 
-Steps from [connect-gcs-sink](../connect/connect-gcs-sink/README.md)
+Steps from [connect-gcp-gcs-sink](../connect/connect-gcp-gcs-sink/README.md)
 
 Creating GCS Source connector
 

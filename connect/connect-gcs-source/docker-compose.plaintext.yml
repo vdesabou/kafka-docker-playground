@@ -1,8 +1,0 @@
----
-version: '3.5'
-services:
-  connect:
-    volumes:
-        - ../../connect/connect-gcs-source/keyfile.json:/root/keyfiles/keyfile.json:ro
-    environment:
-      CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-gcs,/usr/share/confluent-hub-components/confluentinc-kafka-connect-gcs-source
