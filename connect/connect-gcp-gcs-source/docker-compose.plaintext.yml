@@ -5,4 +5,4 @@ services:
     volumes:
         - ../../connect/connect-gcp-gcs-source/keyfile.json:/root/keyfiles/keyfile.json:ro
     environment:
-      CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-gcs,/usr/share/confluent-hub-components/confluentinc-kafka-connect-gcp-gcs-source
+      CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-gcs,/usr/share/confluent-hub-components/confluentinc-kafka-connect-gcs-source
