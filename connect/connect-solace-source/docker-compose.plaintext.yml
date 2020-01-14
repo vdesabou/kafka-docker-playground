@@ -27,6 +27,6 @@ services:
       - schema-registry
       - solace
     volumes:
-        - ../../connect/connect-solace-source/sol-jms-10.6.0.jar:/usr/share/confluent-hub-components/confluentinc-kafka-connect-solace-source/lib/sol-jms-10.6.0.jar
+        - ../../connect/connect-solace-source/sol-jms-10.6.4.jar:/usr/share/confluent-hub-components/confluentinc-kafka-connect-solace-source/lib/sol-jms-10.6.4.jar
     environment:
       CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-solace-source
