@@ -63,7 +63,7 @@ function verify_ccloud_details()
 
 function check_if_continue()
 {
-    if [ -z "$TRAVIS" ]
+    if [ ! -z "$TRAVIS" ]
     then
         # if this is travis build, continue.
         return
