@@ -29,7 +29,7 @@ services:
       - schema-registry
       - solace
     volumes:
-        - ../../connect/connect-jms-solace-sink/sol-jms-10.6.0.jar:/usr/share/confluent-hub-components/confluentinc-kafka-connect-jms-sink/lib/sol-jms-10.6.0.jar
+        - ../../connect/connect-jms-solace-sink/sol-jms-10.6.4.jar:/usr/share/confluent-hub-components/confluentinc-kafka-connect-jms-sink/lib/sol-jms-10.6.4.jar
         - ../../connect/connect-jms-solace-sink/commons-lang-2.6.jar:/usr/share/confluent-hub-components/confluentinc-kafka-connect-jms-sink/lib/commons-lang-2.6.jar
         # - ../../connect/connect-jms-solace-sink/commons-logging-1.1.3.jar:/usr/share/confluent-hub-components/confluentinc-kafka-connect-jms-sink/lib/commons-logging-1.1.3.jar
         # - ../../connect/connect-jms-solace-sink/geronimo-jms_1.1_spec-1.1.1.jar:/usr/share/confluent-hub-components/confluentinc-kafka-connect-jms-sink/lib/geronimo-jms_1.1_spec-1.1.1.jar
