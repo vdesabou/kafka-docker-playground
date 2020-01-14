@@ -1,7 +1,7 @@
 version: '3.5'
 services:
     zookeeper:
-        image: confluentinc/cp-zookeeper:5.3.2
+        image: confluentinc/cp-zookeeper:${TAG}
         hostname: zookeeper
         container_name: zookeeper
         restart: on-failure
@@ -17,7 +17,7 @@ services:
                 -Dzookeeper.requireClientAuthScheme=sasl
 
     broker:
-        image: confluentinc/cp-server:5.3.2
+        image: confluentinc/${CP_KAFKA_IMAGE}:${TAG}
         hostname: broker
         container_name: broker
         depends_on:
@@ -51,7 +51,7 @@ services:
             KAFKA_OPTS: "-Djava.security.auth.login.config=/etc/kafka/kafka_server_jaas.conf"
 
     connect:
-        image: vdesabou/kafka-docker-playground-connect:5.3.2
+        image: vdesabou/kafka-docker-playground-connect:${TAG}
         hostname: connect
         container_name: connect
         depends_on:
@@ -118,7 +118,7 @@ services:
                 password=\"connect-secret\";"
 
     schema-registry:
-        image: confluentinc/cp-schema-registry:5.3.2
+        image: confluentinc/cp-schema-registry:${TAG}
         hostname: schema-registry
         container_name: schema-registry
         # Required to wait for the keytab to get generated
@@ -139,7 +139,7 @@ services:
                 password=\"schemaregistry-secret\";"
 
     control-center:
-        image: confluentinc/cp-enterprise-control-center:5.3.2
+        image: confluentinc/cp-enterprise-control-center:${TAG}
         container_name: control-center
         restart: on-failure
         depends_on:
