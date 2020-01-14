@@ -236,7 +236,7 @@ A local Connect instance (docker service `connect`) is installed and bootstrappi
 
 ```yml
 connect:
-  image: vdesabou/kafka-docker-playground-connect:5.3.2
+  image: vdesabou/kafka-docker-playground-connect:${TAG}
   hostname: connect
   container_name: connect
   environment:
@@ -485,7 +485,7 @@ You can either use it (by running `./start.sh`or `./start.sh SCHEMA_REGISTRY_DOC
 
 ```yml
 schema-registry:
-  image: confluentinc/cp-schema-registry:5.3.2
+  image: confluentinc/cp-schema-registry:${TAG}
   hostname: schema-registry
   container_name: schema-registry
   ports:
@@ -512,7 +512,7 @@ As [Confluent Cloud KSQL](https://docs.confluent.io/current/cloud/limits.html#cc
 
 ```yml
 ksql-server:
-  image: confluentinc/cp-ksql-server:5.3.2
+  image: confluentinc/cp-ksql-server:${TAG}
   hostname: ksql-server
   container_name: ksql-server
   ports:
@@ -581,7 +581,7 @@ ksql> show topics;
 
 ```yml
 ksql-cli:
-  image: confluentinc/cp-ksql-cli:5.3.2
+  image: confluentinc/cp-ksql-cli:${TAG}
   container_name: ksql-cli
   entrypoint: /bin/sh
   tty: true
@@ -597,7 +597,7 @@ A local REST Proxy instance (docker service `rest-proxy`) is installed and reach
 
 ```yml
 rest-proxy:
-  image: confluentinc/cp-kafka-rest:5.3.2
+  image: confluentinc/cp-kafka-rest:${TAG}
   depends_on:
     - schema-registry
   ports:
@@ -689,7 +689,7 @@ Link to Confluent [documentation](https://docs.confluent.io/current/cloud/connec
 
 ```yml
 control-center:
-  image: confluentinc/cp-enterprise-control-center:5.3.2
+  image: confluentinc/cp-enterprise-control-center:${TAG}
   hostname: control-center
   container_name: control-center
   depends_on:

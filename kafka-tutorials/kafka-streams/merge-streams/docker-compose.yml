@@ -3,7 +3,7 @@ version: '2'
 
 services:
   zookeeper:
-    image: confluentinc/cp-zookeeper:5.3.2
+    image: confluentinc/cp-zookeeper:${TAG}
     hostname: zookeeper
     container_name: zookeeper
     ports:
@@ -13,7 +13,7 @@ services:
       ZOOKEEPER_TICK_TIME: 2000
 
   broker:
-    image: confluentinc/cp-server:5.3.2
+    image: confluentinc/${CP_KAFKA_IMAGE}:${TAG}
     hostname: broker
     container_name: broker
     depends_on:
@@ -35,7 +35,7 @@ services:
       CONFLUENT_SUPPORT_CUSTOMER_ID: 'anonymous'
 
   schema-registry:
-    image: confluentinc/cp-schema-registry:5.3.2
+    image: confluentinc/cp-schema-registry:${TAG}
     hostname: schema-registry
     container_name: schema-registry
     depends_on:

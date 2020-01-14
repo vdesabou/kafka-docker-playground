@@ -25,7 +25,7 @@ services:
           - ldap
 
     zookeeper:
-        image: confluentinc/cp-zookeeper:5.3.2
+        image: confluentinc/cp-zookeeper:${TAG}
         hostname: zookeeper
         container_name: zookeeper
         # Required to wait for the keytab to get generated
@@ -42,7 +42,7 @@ services:
                 -Dzookeeper.requireClientAuthScheme=sasl
 
     broker:
-        image: confluentinc/cp-server:5.3.2
+        image: confluentinc/${CP_KAFKA_IMAGE}:${TAG}
         hostname: broker
         container_name: broker
         depends_on:
@@ -111,7 +111,7 @@ services:
             KAFKA_LDAP_GROUP_MEMBER_ATTRIBUTE_PATTERN: cn=(.*),ou=users,dc=confluent,dc=io
 
     connect:
-        image: vdesabou/kafka-docker-playground-connect:5.3.2
+        image: vdesabou/kafka-docker-playground-connect:${TAG}
         hostname: connect
         container_name: connect
         depends_on:
@@ -178,7 +178,7 @@ services:
                 password=\"broker\";"
 
     schema-registry:
-        image: confluentinc/cp-schema-registry:5.3.2
+        image: confluentinc/cp-schema-registry:${TAG}
         hostname: schema-registry
         container_name: schema-registry
         # Required to wait for the keytab to get generated
@@ -199,7 +199,7 @@ services:
                 password=\"broker\";"
 
     control-center:
-        image: confluentinc/cp-enterprise-control-center:5.3.2
+        image: confluentinc/cp-enterprise-control-center:${TAG}
         container_name: control-center
         # Required to wait for the keytab to get generated
         restart: on-failure

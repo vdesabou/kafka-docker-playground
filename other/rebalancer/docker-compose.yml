@@ -2,14 +2,14 @@
 version: '3.5'
 services:
   zookeeper:
-    image: confluentinc/cp-zookeeper:5.3.2
+    image: confluentinc/cp-zookeeper:${TAG}
     hostname: zookeeper
     container_name: zookeeper
     environment:
       ZOOKEEPER_CLIENT_PORT: 2181
 
   broker1:
-    image: confluentinc/cp-server:5.3.2
+    image: confluentinc/${CP_KAFKA_IMAGE}:${TAG}
     hostname: broker1
     container_name: broker1
     depends_on:
@@ -24,7 +24,7 @@ services:
 
 
   broker2:
-    image: confluentinc/cp-server:5.3.2
+    image: confluentinc/${CP_KAFKA_IMAGE}:${TAG}
     hostname: broker2
     container_name: broker2
     depends_on:
@@ -39,7 +39,7 @@ services:
 
 
   broker3:
-    image: confluentinc/cp-server:5.3.2
+    image: confluentinc/${CP_KAFKA_IMAGE}:${TAG}
     hostname: broker3
     container_name: broker3
     depends_on:
@@ -54,7 +54,7 @@ services:
 
 
   broker4:
-    image: confluentinc/cp-server:5.3.2
+    image: confluentinc/${CP_KAFKA_IMAGE}:${TAG}
     hostname: broker4
     container_name: broker4
     depends_on:
@@ -69,7 +69,7 @@ services:
 
 
   broker5:
-    image: confluentinc/cp-server:5.3.2
+    image: confluentinc/${CP_KAFKA_IMAGE}:${TAG}
     hostname: broker5
     container_name: broker5
     depends_on:
@@ -84,7 +84,7 @@ services:
 
 
   broker6:
-    image: confluentinc/cp-server:5.3.2
+    image: confluentinc/${CP_KAFKA_IMAGE}:${TAG}
     hostname: broker6
     container_name: broker6
     depends_on:
@@ -99,7 +99,7 @@ services:
 
 
   control-center:
-    image: confluentinc/cp-enterprise-control-center:5.3.2
+    image: confluentinc/cp-enterprise-control-center:${TAG}
     hostname: control-center
     container_name: control-center
     depends_on:

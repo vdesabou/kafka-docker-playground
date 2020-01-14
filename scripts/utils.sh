@@ -10,6 +10,34 @@ function logerror() {
   echo -e "$RED$@$NC"
 }
 
+# https://stackoverflow.com/a/24067243
+function version_gt() { test "$(printf '%s\n' "$@" | sort -V | head -n 1)" != "$1"; }
+
+# Setting up TAG environment variable
+#
+if [ -z "$TAG" ]
+then
+    # TAG is not set, use defaults:
+    export TAG=5.3.2
+    if [ -z "$CP_KAFKA_IMAGE" ]
+    then
+      log "Using Confluent Platform version default tag $TAG, you can use other version by exporting TAG environment variable, example export TAG=5.0.0"
+    fi
+    export CP_KAFKA_IMAGE=cp-server
+else
+    if [ -z "$CP_KAFKA_IMAGE" ]
+    then
+      log "Using Confluent Platform version tag $TAG"
+    fi
+    first_version=${TAG}
+    second_version=5.3.0
+    if version_gt $first_version $second_version; then
+        export CP_KAFKA_IMAGE=cp-server
+    else
+        export CP_KAFKA_IMAGE=cp-enterprise-kafka
+    fi
+fi
+
 function verify_installed()
 {
   local cmd="$1"
