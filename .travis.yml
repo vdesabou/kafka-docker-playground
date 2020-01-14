@@ -19,7 +19,6 @@ before_install:
   - mkdir -p $HOME/.ccloud
   - cp config.cc.vsaboulin.travis $HOME/.ccloud/config
   - curl -L https://cnfl.io/ccloud-cli | sudo sh -s -- -b /usr/local/bin
-  - curl -L https://cnfl.io/cli | sudo sh -s -- -b /usr/local/bin
 
 # Skipped tests:
 
