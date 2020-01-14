@@ -18,8 +18,8 @@ ${DIR}/../../environment/ldap_authorizer_sasl_plain/start.sh "${PWD}/docker-comp
 log "Doing gsutil authentication"
 set +e
 docker rm -f gcloud-config
-docker run -ti -v ${KEYFILE}:/tmp/keyfile.json --name gcloud-config google/cloud-sdk:latest gcloud auth activate-service-account --key-file /tmp/keyfile.json
 set -e
+docker run -ti -v ${KEYFILE}:/tmp/keyfile.json --name gcloud-config google/cloud-sdk:latest gcloud auth activate-service-account --key-file /tmp/keyfile.json
 
 log "Removing existing objects in GCS, if applicable"
 set +e

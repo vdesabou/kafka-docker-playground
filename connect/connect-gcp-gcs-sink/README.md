@@ -7,8 +7,6 @@ Quickly test [GCS Sink](https://docs.confluent.io/current/connect/kafka-connect-
 ## Pre-requisites
 
 * `docker-compose` (example `brew cask install docker`)
-
-* `google-cloud-sdk` (example `brew cask install google-cloud-sdk`)
 * Active Google Cloud Platform (GCP) account with authorization to create resources
 
 ## Prepare a Bucket
