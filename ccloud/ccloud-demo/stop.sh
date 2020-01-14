@@ -4,10 +4,13 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
 verify_installed "ccloud"
-verify_installed "confluent"
-verify_ccloud_login  "ccloud kafka cluster list"
-verify_ccloud_details
-check_if_continue
+if [ -z "$TRAVIS" ]
+then
+     # not running with TRAVIS
+     verify_ccloud_login  "ccloud kafka cluster list"
+     verify_ccloud_details
+     check_if_continue
+fi
 
 # Delete topic in Confluent Cloud
 set +e
