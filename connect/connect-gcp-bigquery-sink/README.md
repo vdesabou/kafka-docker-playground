@@ -7,9 +7,6 @@ Quickly test [GCP BigQuery Sink](https://docs.confluent.io/current/connect/kafka
 ## Pre-requisites
 
 * `docker-compose` (example `brew cask install docker`)
-
-* `google-cloud-sdk` (example `brew cask install google-cloud-sdk`)
-* Setup `bq`command (installed with `google-cloud-sdk`) with your project id
 * Active Google Cloud Platform (GCP) account with authorization to create resources
 
 ## GCP BigQuery Setup
@@ -97,7 +94,7 @@ docker exec -e PROJECT="$PROJECT" -e DATASET="$DATASET" connect \
 After a few seconds, data should be in GCP BigQuery:
 
 ```bash
-$ bq query "SELECT * FROM $DATASET.kcbq_quickstart1;"
+$ bq --project_id "$PROJECT" query "SELECT * FROM $DATASET.kcbq_quickstart1;"
 Waiting on bqjob_r1bbecb24663a3f7c_0000016d825065f1_1 ... (0s) Current status: DONE
 +---------+
 |   f1    |
