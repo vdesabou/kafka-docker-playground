@@ -10,7 +10,7 @@ services:
   - docker
 
 before_install:
-  - sudo apt-get -y install netcat
+  - sudo apt-get -y install netcat expect
   - openssl aes-256-cbc -K $encrypted_e1b0a72f7201_key -iv $encrypted_e1b0a72f7201_iv -in secrets.tar.enc -out secrets.tar -d
   - tar xvf secrets.tar
   - mkdir -p $HOME/.aws
