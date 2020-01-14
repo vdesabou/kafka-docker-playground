@@ -69,6 +69,10 @@ schema.registry.url=<SR ENDPOINT>
 
 // license
 confluent.license=<YOUR LICENSE>
+
+// ccloud login password
+ccloud.user=<ccloud login>
+ccloud.password=<ccloud password>
 ```
 
 2. (Optional) Enable Confluent Cloud Schema Registry
