@@ -4,16 +4,20 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
-if [ ! -f ${DIR}/jms.jar ]
+if [ ! -f ${DIR}/9.0.0.8-IBM-MQ-Install-Java-All.jar ]
 then
-     logerror "ERROR: ${DIR}/jms.jar is missing. It must be downloaded manually in order to acknowledge user agreement"
+     logerror "ERROR: ${DIR}/9.0.0.8-IBM-MQ-Install-Java-All.jar is missing. It must be downloaded manually in order to acknowledge user agreement"
      exit 1
 fi
 
 if [ ! -f ${DIR}/com.ibm.mq.allclient.jar ]
 then
-     logerror "ERROR: ${DIR}/com.ibm.mq.allclient.jar is missing. It must be downloaded manually in order to acknowledge user agreement"
-     exit 1
+     # install deps
+     log "Getting com.ibm.mq.allclient.jar and jms.jar from 9.0.0.8-IBM-MQ-Install-Java-All.jar"
+     docker run --rm -v ${DIR}/9.0.0.8-IBM-MQ-Install-Java-All.jar:/tmp/9.0.0.8-IBM-MQ-Install-Java-All.jar -v ${DIR}/install:/tmp/install openjdk:8 java -jar /tmp/9.0.0.8-IBM-MQ-Install-Java-All.jar --acceptLicense /tmp/install
+     cp ${DIR}/install/wmq/JavaSE/jms.jar ${DIR}/
+     cp ${DIR}/install/wmq/JavaSE/com.ibm.mq.allclient.jar ${DIR}/
+     rm -rf ${DIR}/install
 fi
 
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
