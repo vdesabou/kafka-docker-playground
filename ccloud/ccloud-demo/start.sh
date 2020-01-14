@@ -69,6 +69,9 @@ END
           logerror "Failed to log into your cluster.  Please check all parameters and run again"
           exit 1
      fi
+
+     log "Using travis cluster"
+     ccloud kafka cluster use lkc-6kv2j
 fi
 
 # required for dabz/ccloudexporter
@@ -144,8 +147,6 @@ INSERT INTO application (   \
 # kafka-console-consumer --topic kriscompact --bootstrap-server $BOOTSTRAP_SERVERS --consumer-property ssl.endpoint.identification.algorithm=https --consumer-property sasl.mechanism=PLAIN --consumer-property security.protocol=SASL_SSL --consumer-property sasl.jaas.config="$SASL_JAAS_CONFIG" --property basic.auth.credentials.source=$BASIC_AUTH_CREDENTIALS_SOURCE --from-beginning --max-messages 2
 
 sleep 10
-
-docker container logs --tail=500 connect
 
 log "Verifying topic mysql-application"
 # this command works for both cases (with local schema registry and Confluent Cloud Schema Registry)
@@ -233,11 +234,10 @@ log "ccloud service-account create $SERVICE_NAME --description $SERVICE_NAME"
 ccloud service-account create $SERVICE_NAME --description $SERVICE_NAME || true
 SERVICE_ACCOUNT_ID=$(ccloud service-account list | grep $SERVICE_NAME | awk '{print $1;}')
 
-CLUSTER=$(ccloud prompt -f "%k")
+CCLOUD_CLUSTER=$(ccloud prompt -f "%k")
 log "Create an API key and secret for the new service account"
-log "ccloud api-key create --service-account-id $SERVICE_ACCOUNT_ID --resource $CLUSTER"
-OUTPUT=$(ccloud api-key create --service-account-id $SERVICE_ACCOUNT_ID --resource $CLUSTER)
-log "$OUTPUT"
+log "ccloud api-key create --service-account-id $SERVICE_ACCOUNT_ID --resource $CCLOUD_CLUSTER"
+OUTPUT=$(ccloud api-key create --service-account-id $SERVICE_ACCOUNT_ID --resource $CCLOUD_CLUSTER)
 API_KEY_SA=$(echo "$OUTPUT" | grep '| API Key' | awk '{print $5;}')
 API_SECRET_SA=$(echo "$OUTPUT" | grep '| Secret' | awk '{print $4;}')
 
@@ -254,7 +254,6 @@ security.protocol=SASL_SSL
 bootstrap.servers=${BOOTSTRAP_SERVERS}
 sasl.jaas.config=org.apache.kafka.common.security.plain.PlainLoginModule required username\="${API_KEY_SA}" password\="${API_SECRET_SA}";
 EOF
-cat $CLIENT_CONFIG
 
 ##################################################
 # Run a Java client: before and after ACLs
@@ -284,7 +283,7 @@ OUTPUT=$(grep "org.apache.kafka.common.errors.TopicAuthorizationException" $LOG1
 if [[ ! -z $OUTPUT ]]; then
   log "PASS: Producer failed due to org.apache.kafka.common.errors.TopicAuthorizationException (expected because there are no ACLs to allow this client application)"
 else
-  log "FAIL: Something went wrong, check $LOG1"
+  logerror "FAIL: Something went wrong, check $LOG1"
 fi
 
 log "Create ACLs for the service account"
@@ -303,7 +302,7 @@ OUTPUT=$(grep "10 messages were produced to topic" $LOG2)
 if [[ ! -z $OUTPUT ]]; then
   log "PASS: Producer works"
 else
-  log "FAIL: Something went wrong, check $LOG2"
+  logerror "FAIL: Something went wrong, check $LOG2"
 fi
 cat $LOG2
 
@@ -328,4 +327,13 @@ if [[ ! $(type kafka-consumer-groups 2>&1) =~ "not found" ]]; then
      log "Example showing how to use kafka-consumer-groups command for Confluent Cloud"
      kafka-consumer-groups --bootstrap-server $BOOTSTRAP_SERVERS --command-config $CONFIG_FILE --list
      kafka-consumer-groups --bootstrap-server $BOOTSTRAP_SERVERS --command-config $CONFIG_FILE --group simple-stream --describe
+fi
+
+if [ ! -z "$TRAVIS" ]
+then
+     # running with travis
+     log "##################################################"
+     log "Stopping everything"
+     log "##################################################"
+     bash ${DIR}/stop.sh
 fi
