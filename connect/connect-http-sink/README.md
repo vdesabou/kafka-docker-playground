@@ -69,7 +69,7 @@ Json data:
 Getting:
 
 ```bash
-curl admin:password@localhost:9080/api/messages | jq_docker_cli .
+curl admin:password@localhost:9083/api/messages | jq_docker_cli .
 [
   {
     "id": 1,
@@ -252,7 +252,7 @@ seq -f "{\"f1\": \"value%g\"}" 10 | docker exec -i schema-registry kafka-avro-co
 Getting:
 
 ```
-curl admin:password@localhost:9080/api/messages | jq_docker_cli .
+curl admin:password@localhost:9083/api/messages | jq_docker_cli .
 [
   {
     "id": 1,

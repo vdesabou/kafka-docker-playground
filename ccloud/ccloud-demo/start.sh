@@ -161,7 +161,7 @@ docker exec -e BOOTSTRAP_SERVERS="$BOOTSTRAP_SERVERS" -e CLOUD_KEY="$CLOUD_KEY" 
 sleep 5
 
 log "Confirm that the data was sent to the HTTP endpoint."
-curl admin:password@localhost:9080/api/messages | jq_docker_cli .
+curl admin:password@localhost:9083/api/messages | jq_docker_cli .
 
 log "Creating Elasticsearch Sink connector"
 docker exec connect \
