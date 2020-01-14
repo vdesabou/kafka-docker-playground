@@ -16,6 +16,10 @@ before_install:
   - mkdir -p $HOME/.aws
   - cp aws_config $HOME/.aws/config
   - cp aws_credentials $HOME/.aws/credentials
+  - mkdir -p $HOME/.ccloud
+  - cp config.cc.vsaboulin.travis $HOME/.ccloud/config
+  - curl -L https://cnfl.io/ccloud-cli | sudo sh -s -- -b /usr/local/bin
+  - curl -L https://cnfl.io/cli | sudo sh -s -- -b /usr/local/bin
 
 # Skipped tests:
 
@@ -51,8 +55,8 @@ jobs:
   - name: "CONNECT: hdfs3-sink hdfs3-source http-sink ibm-mq-sink ibm-mq-source influxdb-sink influxdb-source jdbc-mysql-sink jdbc-mysql-source jdbc-postgresql-sink jdbc-postgresql-source jdbc-sqlserver-sink"
     env: TEST_LIST="connect/connect-hdfs3-sink connect/connect-hdfs3-source connect/connect-http-sink connect/connect-ibm-mq-sink connect/connect-ibm-mq-source connect/connect-influxdb-sink connect/connect-influxdb-source connect/connect-jdbc-mysql-sink connect/connect-jdbc-mysql-source connect/connect-jdbc-postgresql-sink connect/connect-jdbc-postgresql-source connect/connect-jdbc-sqlserver-sink"
 
-  - name: "CONNECT: jdbc-sqlserver-source jms-active-mq-sink jms-solace-sink mongodb-sink mongodb-source mqtt-sink mqtt-source neo4j-sink omnisci-sink rabbitmq-source redis-sink replicator"
-    env: TEST_LIST="connect/connect-jdbc-sqlserver-source connect/connect-jms-active-mq-sink connect/connect-jms-solace-sink connect/connect-mongodb-sink connect/connect-mongodb-source connect/connect-mqtt-sink connect/connect-mqtt-source connect/connect-neo4j-sink connect/connect-omnisci-sink connect/connect-rabbitmq-source connect/connect-redis-sink connect/connect-replicator"
+  - name: "CCLOUD ccloud-demo CONNECT: jdbc-sqlserver-source jms-active-mq-sink jms-solace-sink mongodb-sink mongodb-source mqtt-sink mqtt-source neo4j-sink omnisci-sink rabbitmq-source redis-sink replicator"
+    env: TEST_LIST="ccloud/ccloud-demo connect/connect-jdbc-sqlserver-source connect/connect-jms-active-mq-sink connect/connect-jms-solace-sink connect/connect-mongodb-sink connect/connect-mongodb-source connect/connect-mqtt-sink connect/connect-mqtt-source connect/connect-neo4j-sink connect/connect-omnisci-sink connect/connect-rabbitmq-source connect/connect-redis-sink connect/connect-replicator"
 
   - name: "CONNECT: sftp-sink sftp-source solace-sink solace-source splunk-sink splunk-source spool-dir-source syslog-source OTHER: override-policy-sftp-sink override-policy-sftp-source aws-cloudwatch-source aws-dynamodb-sink aws-kinesis-source aws-lambda-sink connect/connect-aws-cloudwatch-source connect/connect-aws-dynamodb-sink connect/connect-aws-kinesis-source connect/connect-aws-lambda-sink"
     env: TEST_LIST="connect/connect-sftp-sink connect/connect-sftp-source connect/connect-solace-sink connect/connect-solace-source connect/connect-splunk-sink connect/connect-splunk-source connect/connect-spool-dir-source connect/connect-syslog-source other/connect-override-policy-sftp-sink other/connect-override-policy-sftp-source"
