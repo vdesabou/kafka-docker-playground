@@ -6,8 +6,11 @@ source ${DIR}/../../scripts/utils.sh
 
 if [ ! -f ${DIR}/9.0.0.8-IBM-MQ-Install-Java-All.jar ]
 then
-     logerror "ERROR: ${DIR}/9.0.0.8-IBM-MQ-Install-Java-All.jar is missing. It must be downloaded manually in order to acknowledge user agreement"
-     exit 1
+     if [ -z "$TRAVIS" ]
+     then
+          logerror "ERROR: ${DIR}/9.0.0.8-IBM-MQ-Install-Java-All.jar is missing. It must be downloaded manually in order to acknowledge user agreement"
+          exit 1
+     fi
 fi
 
 if [ ! -f ${DIR}/com.ibm.mq.allclient.jar ]
