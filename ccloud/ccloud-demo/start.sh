@@ -48,6 +48,7 @@ fi
 
 if [ ! -z "$TRAVIS" ]
 then
+     # running with travis
      log "##################################################"
      log "Log in to Confluent Cloud"
      log "##################################################"
@@ -141,6 +142,8 @@ INSERT INTO application (   \
 
 # # without avro
 # kafka-console-consumer --topic kriscompact --bootstrap-server $BOOTSTRAP_SERVERS --consumer-property ssl.endpoint.identification.algorithm=https --consumer-property sasl.mechanism=PLAIN --consumer-property security.protocol=SASL_SSL --consumer-property sasl.jaas.config="$SASL_JAAS_CONFIG" --property basic.auth.credentials.source=$BASIC_AUTH_CREDENTIALS_SOURCE --from-beginning --max-messages 2
+
+sleep 10
 
 log "Verifying topic mysql-application"
 # this command works for both cases (with local schema registry and Confluent Cloud Schema Registry)
