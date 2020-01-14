@@ -2,7 +2,7 @@
 version: '3.5'
 services:
   zookeeper:
-    image: confluentinc/cp-zookeeper:5.3.2
+    image: confluentinc/cp-zookeeper:${TAG}
     hostname: zookeeper
     container_name: zookeeper
     environment:
@@ -10,7 +10,7 @@ services:
       ZOOKEEPER_TICK_TIME: 2000
 
   broker:
-    image: confluentinc/cp-server:5.3.2
+    image: confluentinc/${CP_KAFKA_IMAGE}:${TAG}
     hostname: broker
     container_name: broker
     depends_on:
@@ -29,7 +29,7 @@ services:
       CONFLUENT_METRICS_ENABLE: 'true'
 
   schema-registry:
-    image: confluentinc/cp-schema-registry:5.3.2
+    image: confluentinc/cp-schema-registry:${TAG}
     hostname: schema-registry
     container_name: schema-registry
     ports:
@@ -40,7 +40,7 @@ services:
       SCHEMA_REGISTRY_KAFKASTORE_BOOTSTRAP_SERVERS: broker:9092
 
   connect:
-    image: vdesabou/kafka-docker-playground-connect:5.3.2
+    image: vdesabou/kafka-docker-playground-connect:${TAG}
     hostname: connect
     container_name: connect
     depends_on:
@@ -77,7 +77,7 @@ services:
       # CONNECT_LOG4J_ROOT_LOGLEVEL: DEBUG
 
   control-center:
-    image: confluentinc/cp-enterprise-control-center:5.3.2
+    image: confluentinc/cp-enterprise-control-center:${TAG}
     hostname: control-center
     container_name: control-center
     depends_on:

@@ -14,7 +14,7 @@ services:
     container_name: client
 
   zookeeper-europe:
-    image: confluentinc/cp-zookeeper:5.3.2
+    image: confluentinc/cp-zookeeper:${TAG}
     hostname: zookeeper-europe
     container_name: zookeeper-europe
     environment:
@@ -22,7 +22,7 @@ services:
       ZOOKEEPER_TICK_TIME: 2000
 
   zookeeper-us:
-    image: confluentinc/cp-zookeeper:5.3.2
+    image: confluentinc/cp-zookeeper:${TAG}
     hostname: zookeeper-us
     container_name: zookeeper-us
     environment:
@@ -30,7 +30,7 @@ services:
       ZOOKEEPER_TICK_TIME: 2000
 
   zookeeper-metrics:
-    image: confluentinc/cp-zookeeper:5.3.2
+    image: confluentinc/cp-zookeeper:${TAG}
     hostname: zookeeper-metrics
     container_name: zookeeper-metrics
     environment:
@@ -38,7 +38,7 @@ services:
       ZOOKEEPER_TICK_TIME: 2000
 
   broker-europe:
-    image: confluentinc/cp-server:5.3.2
+    image: confluentinc/${CP_KAFKA_IMAGE}:${TAG}
     hostname: broker-europe
     container_name: broker-europe
     depends_on:
@@ -59,7 +59,7 @@ services:
       CONFLUENT_METRICS_ENABLE: 'true'
 
   broker-us:
-    image: confluentinc/cp-server:5.3.2
+    image: confluentinc/${CP_KAFKA_IMAGE}:${TAG}
     hostname: broker-us
     container_name: broker-us
     depends_on:
@@ -80,7 +80,7 @@ services:
       CONFLUENT_METRICS_ENABLE: 'true'
 
   broker-metrics:
-    image: confluentinc/cp-server:5.3.2
+    image: confluentinc/${CP_KAFKA_IMAGE}:${TAG}
     hostname: broker-metrics
     container_name: broker-metrics
     depends_on:
@@ -93,7 +93,7 @@ services:
       CONFLUENT_SUPPORT_CUSTOMER_ID: 'anonymous'
 
   connect-us:
-    image: confluentinc/cp-enterprise-replicator:5.3.2
+    image: confluentinc/cp-enterprise-replicator:${TAG}
     hostname: connect-us
     container_name: connect-us
     depends_on:
@@ -125,7 +125,7 @@ services:
       CONNECT_CONSUMER_CONFLUENT_MONITORING_INTERCEPTOR_BOOTSTRAP_SERVERS: broker-metrics:9092
 
   connect-europe:
-    image: confluentinc/cp-enterprise-replicator:5.3.2
+    image: confluentinc/cp-enterprise-replicator:${TAG}
     hostname: connect-europe
     container_name: connect-europe
     depends_on:
@@ -157,7 +157,7 @@ services:
       CONNECT_CONSUMER_CONFLUENT_MONITORING_INTERCEPTOR_BOOTSTRAP_SERVERS: broker-metrics:9092
 
   control-center:
-    image: confluentinc/cp-enterprise-control-center:5.3.2
+    image: confluentinc/cp-enterprise-control-center:${TAG}
     hostname: control-center
     container_name: control-center
     depends_on:

@@ -3,6 +3,19 @@
 
 Playground for Kafka/Confluent Docker experimentations... [![Build Status](https://travis-ci.org/vdesabou/kafka-docker-playground.svg?branch=master)](https://travis-ci.org/vdesabou/kafka-docker-playground)
 
+
+----
+
+ℹ️ By default Confluent Platform version 5.2.3 is used, but you can test with another version (greater or equal to 5.0.0) simply by exporting `TAG` environment variable:
+
+Example:
+
+```bash
+export TAG=5.2.3
+```
+
+----
+
 <!-- omit in toc -->
 ## Table of Contents
 - [🔗 Kafka Connectors](#-kafka-connectors)

@@ -38,7 +38,7 @@ services:
       CONTROL_CENTER_LOG4J_OPTS: "-Dlog4j.configuration=file:/opt/control-center/log4j-rolling.properties"
 
   ksql-server:
-    image: confluentinc/cp-ksql-server:5.3.2
+    image: confluentinc/cp-ksql-server:${TAG}
     hostname: ksql-server
     container_name: ksql-server
     depends_on:
