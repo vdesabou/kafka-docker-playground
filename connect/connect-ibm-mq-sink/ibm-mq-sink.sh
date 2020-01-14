@@ -8,6 +8,7 @@ if [ ! -f ${DIR}/9.0.0.8-IBM-MQ-Install-Java-All.jar ]
 then
      if [ -z "$TRAVIS" ]
      then
+          # not running with travis
           logerror "ERROR: ${DIR}/9.0.0.8-IBM-MQ-Install-Java-All.jar is missing. It must be downloaded manually in order to acknowledge user agreement"
           exit 1
      fi
