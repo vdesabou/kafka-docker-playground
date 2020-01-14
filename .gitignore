@@ -40,3 +40,4 @@ other/cp-ansible-playground/cp_ansible_playground_id_rsa
 other/cp-ansible-playground/cp_ansible_playground_id_rsa.pub
 aws_credentials
 aws_config
+config.cc.vsaboulin.travis

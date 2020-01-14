@@ -63,6 +63,11 @@ function verify_ccloud_details()
 
 function check_if_continue()
 {
+    if [ -z "$TRAVIS" ]
+    then
+        # if this is travis build, continue.
+        return
+    fi
     read -p "Continue (y/n)?" choice
     case "$choice" in
     y|Y ) ;;

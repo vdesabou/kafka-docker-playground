@@ -13,9 +13,13 @@ fi
 verify_installed "ccloud"
 check_ccloud_version 0.192.0 || exit 1
 verify_installed "confluent"
-verify_ccloud_login  "ccloud kafka cluster list"
-verify_ccloud_details
-check_if_continue
+if [ -z "$TRAVIS" ]
+then
+     # not running with TRAVIS
+     verify_ccloud_login  "ccloud kafka cluster list"
+     verify_ccloud_details
+     check_if_continue
+fi
 
 SR_TYPE=${1:-SCHEMA_REGISTRY_DOCKER}
 CONFIG_FILE=~/.ccloud/config
@@ -25,11 +29,6 @@ then
      logerror "ERROR: ${CONFIG_FILE} is not set"
      exit 1
 fi
-
-log "The following ccloud config is used:"
-log "---------------"
-cat ${CONFIG_FILE}
-log "---------------"
 
 if [ "${SR_TYPE}" == "SCHEMA_REGISTRY_DOCKER" ]
 then
@@ -46,6 +45,30 @@ then
 else
      logerror "ERROR: delta_configs/env.delta has not been generated"
      exit 1
+fi
+
+if [ ! -z "$TRAVIS" ]
+then
+     log "##################################################"
+     log "Log in to Confluent Cloud"
+     log "##################################################"
+
+OUTPUT=$(
+expect <<END
+log_user 1
+spawn ccloud login
+expect "Email: "
+send "$CCLOUD_USER\r";
+expect "Password: "
+send "$CCLOUD_PASSWORD\r";
+expect "Logged in as "
+set result $expect_out(buffer)
+END
+)
+     if [[ ! "$OUTPUT" =~ "Logged in as" ]]; then
+          logerror "Failed to log into your cluster.  Please check all parameters and run again"
+          exit 1
+     fi
 fi
 
 # required for dabz/ccloudexporter

@@ -2,3 +2,4 @@
 postgres-wal2json-issue.sh
 hdfs-CC-7247-apple.sh
 hdfs-CC-7247-client.sh
+ccloud-generate-env-vars.sh
