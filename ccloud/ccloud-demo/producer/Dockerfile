@@ -1,3 +1,5 @@
+ARG TAG
+
 FROM maven:3.6.1-jdk-8 as mavenBuild
 COPY pom.xml pom.xml
 COPY src src
