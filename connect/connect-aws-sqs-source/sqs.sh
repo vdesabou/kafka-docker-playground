@@ -15,11 +15,10 @@ then
      exit 1
 fi
 
-${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
-
+#${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
 
 QUEUE_NAME="sqs-source-connector-demo"
-AWS_REGION=`aws_docker_cli configure get region`
+AWS_REGION=$(aws_docker_cli configure get region | tr '\r' '\n')
 QUEUE_URL_RAW=$(aws_docker_cli sqs create-queue --queue-name $QUEUE_NAME | jq_docker_cli .QueueUrl)
 AWS_ACCOUNT_NUMBER=$(echo "$QUEUE_URL_RAW" | cut -d "/" -f 4)
 # https://docs.amazonaws.cn/sdk-for-net/v3/developer-guide/how-to/sqs/QueueURL.html
