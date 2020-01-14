@@ -383,7 +383,7 @@ $ docker exec -e BOOTSTRAP_SERVERS="<BOOTSTRAP_SERVERS" -e >CLOUD_KEY="$CLOUD_KE
 Messages are published on HTTP server listening on port `8080`
 
 ```bash
-$ curl admin:password@localhost:9080/api/messages | jq_docker_cli .
+$ curl admin:password@localhost:9083/api/messages | jq_docker_cli .
 ```
 
 Example:

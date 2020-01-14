@@ -22,7 +22,7 @@ services:
     hostname: http-service-basic-auth
     container_name: http-service-basic-auth
     ports:
-      - "9080:8080"
+      - "9083:8080"
     environment:
       SPRING_PROFILES_ACTIVE: 'basic-auth'
 
