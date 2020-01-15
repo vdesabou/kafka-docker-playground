@@ -1,6 +1,13 @@
 ---
 version: '3.5'
 services:
+
+    ####
+    #
+    # This file overrides values from environment/plaintext/docker-compose.yml
+    #
+    ####
+
   kdc:
     hostname: kdc.kerberos-demo.local
     build: ../../environment/ssl_kerberos/kdc
