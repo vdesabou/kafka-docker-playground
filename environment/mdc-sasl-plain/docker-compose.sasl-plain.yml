@@ -1,6 +1,13 @@
 ---
 version: '3.5'
 services:
+
+    ####
+    #
+    # This file overrides values from environment/mdc-plaintext/docker-compose.yml
+    #
+    ####
+
   zookeeper-us:
     volumes:
       - ../../environment/mdc-sasl-plain/zookeeper/zookeeper.sasl.jaas.config:/etc/kafka/zookeeper_server_jaas.conf

@@ -9,11 +9,11 @@ DOCKER_COMPOSE_FILE_OVERRIDE=$1
 if [ -f "${DOCKER_COMPOSE_FILE_OVERRIDE}" ]
 then
 
-  docker-compose -f ../../environment/ldap_authorizer_sasl_scram/docker-compose.yml -f ${DOCKER_COMPOSE_FILE_OVERRIDE} down -v
-  docker-compose -f ../../environment/ldap_authorizer_sasl_scram/docker-compose.yml -f ${DOCKER_COMPOSE_FILE_OVERRIDE} up -d --build broker
+  docker-compose -f ../../environment/plaintext/docker-compose.yml -f ../../environment/ldap_authorizer_sasl_scram/docker-compose.yml -f ${DOCKER_COMPOSE_FILE_OVERRIDE} down -v
+  docker-compose -f ../../environment/plaintext/docker-compose.yml -f ../../environment/ldap_authorizer_sasl_scram/docker-compose.yml -f ${DOCKER_COMPOSE_FILE_OVERRIDE} up -d --build broker
 else
-  docker-compose -f ../../environment/ldap_authorizer_sasl_scram/docker-compose.yml down -v
-  docker-compose -f ../../environment/ldap_authorizer_sasl_scram/docker-compose.yml up -d --build broker
+  docker-compose -f ../../environment/plaintext/docker-compose.yml -f ../../environment/ldap_authorizer_sasl_scram/docker-compose.yml down -v
+  docker-compose -f ../../environment/plaintext/docker-compose.yml -f ../../environment/ldap_authorizer_sasl_scram/docker-compose.yml up -d --build broker
 fi
 
 # Creating the users
@@ -25,9 +25,9 @@ docker exec broker kafka-configs --zookeeper zookeeper:2181 --alter --add-config
 
 if [ -f "${DOCKER_COMPOSE_FILE_OVERRIDE}" ]
 then
-  docker-compose -f ../../environment/ldap_authorizer_sasl_scram/docker-compose.yml -f ${DOCKER_COMPOSE_FILE_OVERRIDE} up -d
+  docker-compose -f ../../environment/plaintext/docker-compose.yml -f ../../environment/ldap_authorizer_sasl_scram/docker-compose.yml -f ${DOCKER_COMPOSE_FILE_OVERRIDE} up -d
 else
-  docker-compose -f ../../environment/ldap_authorizer_sasl_scram/docker-compose.yml up -d
+  docker-compose -f ../../environment/plaintext/docker-compose.yml -f ../../environment/ldap_authorizer_sasl_scram/docker-compose.yml up -d
 fi
 
 shift
