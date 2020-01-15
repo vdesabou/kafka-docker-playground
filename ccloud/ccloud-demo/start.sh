@@ -148,14 +148,18 @@ INSERT INTO application (   \
 
 sleep 10
 
-
+docker ps
 docker container logs --tail=500 connect
+docker container logs --tail=500 schema-registry
+# Caused by: org.apache.kafka.common.errors.SerializationException: Error serializing Avro message
+# 1093Caused by: java.net.UnknownHostException: schema-registry
 
-set -x
+echo "$SCHEMA_REGISTRY_URL"
+
 log "Verifying topic mysql-application"
 # this command works for both cases (with local schema registry and Confluent Cloud Schema Registry)
 docker-compose exec -e BOOTSTRAP_SERVERS="$BOOTSTRAP_SERVERS" -e SASL_JAAS_CONFIG="$SASL_JAAS_CONFIG" -e BASIC_AUTH_CREDENTIALS_SOURCE="$BASIC_AUTH_CREDENTIALS_SOURCE" -e SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO="$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO" -e SCHEMA_REGISTRY_URL="$SCHEMA_REGISTRY_URL" connect bash -c 'kafka-avro-console-consumer --topic mysql-application --bootstrap-server $BOOTSTRAP_SERVERS --consumer-property ssl.endpoint.identification.algorithm=https --consumer-property sasl.mechanism=PLAIN --consumer-property security.protocol=SASL_SSL --consumer-property sasl.jaas.config="$SASL_JAAS_CONFIG" --property basic.auth.credentials.source=$BASIC_AUTH_CREDENTIALS_SOURCE --property schema.registry.basic.auth.user.info="$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO" --property schema.registry.url=$SCHEMA_REGISTRY_URL --from-beginning --max-messages 2'
-set +x
+
 
 # Example using confluent CLI:
 # if [ "${SR_TYPE}" == "SCHEMA_REGISTRY_DOCKER" ]
