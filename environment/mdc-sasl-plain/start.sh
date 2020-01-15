@@ -17,7 +17,9 @@ else
   docker-compose -f ../../environment/mdc-plaintext/docker-compose.yml -f ../../environment/mdc-sasl-plain/docker-compose.sasl-plain.yml up -d
 fi
 
-shift
-
+if [ "$#" -ne 0 ]
+then
+    shift
+fi
 ../../scripts/wait-for-connect-and-controlcenter.sh connect-us $@
 ../../scripts/wait-for-connect-and-controlcenter.sh connect-europe $@
