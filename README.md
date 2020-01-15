@@ -125,6 +125,7 @@ Quick start examples from Confluent [docs](https://docs.confluent.io/current/con
 * <img src="https://cdn.freebiesupply.com/logos/thumbs/2x/hbase-logo.png" width="15"> [HBase](connect/connect-hbase-sink)
 * <img src="https://banner2.cleanpng.com/20180907/ska/kisspng-redis-memcached-database-caching-key-value-databas-redis-logo-svg-vector-amp-png-transparent-vect-5b9313b86aa329.3173207815363654964368.jpg" width="15"> [Redis](connect/connect-redis-sink)
 * <img src="https://d3dr9sfxru4sde.cloudfront.net/i/k/apachekudu_logo_0716_345px.png" width="15"> [Kudu](connect/connect-kudu-sink)
+* <img src="https://s3.amazonaws.com/awsmp-logos/vertica600x400.png" width="15"> [Vertica](connect/connect-vertica-sink)
 
 ## ☁️ Confluent Cloud
 

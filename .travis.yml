@@ -74,8 +74,8 @@ jobs:
   # - name: "CONNECT: gcp-bigquery-sink gcp-firebase-sink gcp-firebase-source gcp-pubsub-source gcs-sink"
   #   env: TEST_LIST="connect/connect-gcp-bigquery-sink connect/connect-gcp-firebase-sink connect/connect-gcp-firebase-source connect/connect-gcp-pubsub-source"
 
-  # - name: "CONNECT: gcs-source google-cloud-functions-sink REPLICATOR: connect"
-  #   env: TEST_LIST="connect/connect-gcp-gcs-sink connect/connect-gcp-gcs-source connect/connect-gcp-cloud-functions-sink replicator/connect"
+  # - name: "CONNECT: gcs-source google-cloud-functions-sink vertica-sink REPLICATOR: connect"
+  #   env: TEST_LIST="connect/connect-gcp-gcs-sink connect/connect-gcp-gcs-source connect/connect-gcp-cloud-functions-sink connect/vertica-sink replicator/connect"
 
   # - name: "CONNECT: kafka-streams"
   #   env: TEST_LIST="kafka-tutorials/kafka-streams/aggregate-sum kafka-tutorials/kafka-streams/filter-events kafka-tutorials/kafka-streams/ksql-serialization kafka-tutorials/kafka-streams/split-stream kafka-tutorials/kafka-streams/tumbling-windows kafka-tutorials/kafka-streams/distinct-events kafka-tutorials/kafka-streams/join-stream-and-table kafka-tutorials/kafka-streams/merge-streams kafka-tutorials/kafka-streams/transform-stream"
