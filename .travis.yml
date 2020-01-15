@@ -77,5 +77,13 @@ jobs:
   # - name: "CONNECT: gcs-source google-cloud-functions-sink REPLICATOR: connect"
   #   env: TEST_LIST="connect/connect-gcp-gcs-sink connect/connect-gcp-gcs-source connect/connect-gcp-cloud-functions-sink replicator/connect"
 
+  # - name: "CONNECT: kafka-streams"
+  #   env: TEST_LIST="kafka-tutorials/kafka-streams/aggregate-sum kafka-tutorials/kafka-streams/filter-events kafka-tutorials/kafka-streams/ksql-serialization kafka-tutorials/kafka-streams/split-stream kafka-tutorials/kafka-streams/tumbling-windows kafka-tutorials/kafka-streams/distinct-events kafka-tutorials/kafka-streams/join-stream-and-table kafka-tutorials/kafka-streams/merge-streams kafka-tutorials/kafka-streams/transform-stream"
+
+  # - name: "CONNECT: ksql"
+  #   env: TEST_LIST="kafka-tutorials/ksql/aggregate-count kafka-tutorials/ksql/aggregate-sum kafka-tutorials/ksql/join-stream-and-stream kafka-tutorials/ksql/join-table-and-table kafka-tutorials/ksql/merge-streams kafka-tutorials/ksql/rekey-with-function kafka-tutorials/ksql/transform-stream kafka-tutorials/ksql/aggregate-minmax kafka-tutorials/ksql/filter-events kafka-tutorials/ksql/join-stream-and-table kafka-tutorials/ksql/ksql-serialization kafka-tutorials/ksql/rekey-a-stream  kafka-tutorials/ksql/split-stream kafka-tutorials/ksql/tumbling-windows"
+
+
+
 script:
     - bash scripts/run-tests.sh "$TEST_LIST"
