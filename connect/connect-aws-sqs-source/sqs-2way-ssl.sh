@@ -57,7 +57,7 @@ docker exec -e QUEUE_URL="$QUEUE_URL" connect \
                     "kafka.topic": "test-sqs-source-ssl",
                     "sqs.url": "'"$QUEUE_URL"'",
                     "confluent.license": "",
-                    "confluent.topic.bootstrap.servers": "broker:11091",
+                    "confluent.topic.bootstrap.servers": "broker:9092",
                     "confluent.topic.replication.factor": "1",
                     "confluent.topic.ssl.keystore.location" : "/etc/kafka/secrets/kafka.connect.keystore.jks",
                     "confluent.topic.ssl.keystore.password" : "confluent",
@@ -74,7 +74,7 @@ docker exec -e QUEUE_URL="$QUEUE_URL" connect \
 sleep 10
 
 log "Verify we have received the data in test-sqs-source-ssl topic"
-docker exec connect kafka-avro-console-consumer -bootstrap-server broker:11091 --topic test-sqs-source-ssl --from-beginning --max-messages 2 --property schema.registry.url=https://schema-registry:8085 --consumer.config /etc/kafka/secrets/client_without_interceptors_2way_ssl.config  | tail -n 3 | head -n 2 | jq_docker_cli .
+docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --topic test-sqs-source-ssl --from-beginning --max-messages 2 --property schema.registry.url=https://schema-registry:8085 --consumer.config /etc/kafka/secrets/client_without_interceptors_2way_ssl.config  | tail -n 3 | head -n 2 | jq_docker_cli .
 
 log "Delete queue ${QUEUE_URL}"
 aws_docker_cli sqs delete-queue --queue-url ${QUEUE_URL}

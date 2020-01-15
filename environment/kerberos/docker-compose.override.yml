@@ -1,7 +1,0 @@
----
-version: '3.5'
-services:
-  connect:
-    volumes:
-      - secret:/var/lib/secret
-      - ../../environment/kerberos/kdc/krb5.conf:/etc/krb5.conf

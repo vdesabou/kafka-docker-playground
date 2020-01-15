@@ -75,7 +75,7 @@ docker exec broker kafka-console-consumer --bootstrap-server broker:9092 --topic
 Sending messages to topic test-topic-ssl
 
 ```bash
-$ seq 10 | docker exec -i broker kafka-console-producer --broker-list broker:11091 --topic test-topic-ssl --producer.config /etc/kafka/secrets/client_without_interceptors_2way_ssl.config
+$ seq 10 | docker exec -i broker kafka-console-producer --broker-list broker:9092 --topic test-topic-ssl --producer.config /etc/kafka/secrets/client_without_interceptors_2way_ssl.config
 ```
 
 Creating Confluent Replicator connector with SSL authentication
@@ -91,7 +91,7 @@ $ docker exec connect \
                     "value.converter": "io.confluent.connect.replicator.util.ByteArrayConverter",
                     "header.converter": "io.confluent.connect.replicator.util.ByteArrayConverter",
                     "src.consumer.group.id": "duplicate-topic",
-                    "confluent.topic.bootstrap.servers": "broker:11091",
+                    "confluent.topic.bootstrap.servers": "broker:9092",
                     "confluent.topic.replication.factor": "1",
                     "confluent.topic.ssl.keystore.location" : "/etc/kafka/secrets/kafka.connect.keystore.jks",
                     "confluent.topic.ssl.keystore.password" : "confluent",
@@ -104,14 +104,14 @@ $ docker exec connect \
                     "provenance.header.enable": true,
                     "topic.whitelist": "test-topic-ssl",
                     "topic.rename.format": "test-topic-ssl-duplicate",
-                    "dest.kafka.bootstrap.servers": "broker:11091",
+                    "dest.kafka.bootstrap.servers": "broker:9092",
                     "dest.kafka.ssl.keystore.location" : "/etc/kafka/secrets/kafka.connect.keystore.jks",
                     "dest.kafka.ssl.keystore.password" : "confluent",
                     "dest.kafka.ssl.key.password" : "confluent",
                     "dest.kafka.ssl.truststore.location" : "/etc/kafka/secrets/kafka.connect.truststore.jks",
                     "dest.kafka.ssl.truststore.password" : "confluent",
                     "dest.kafka.security.protocol" : "SSL",
-                    "src.kafka.bootstrap.servers": "broker:11091",
+                    "src.kafka.bootstrap.servers": "broker:9092",
                     "src.kafka.ssl.keystore.location" : "/etc/kafka/secrets/kafka.connect.keystore.jks",
                     "src.kafka.ssl.keystore.password" : "confluent",
                     "src.kafka.ssl.key.password" : "confluent",
@@ -125,7 +125,7 @@ $ docker exec connect \
 Verify we have received the data in test-topic-ssl-duplicate topic
 
 ```bash
-$ docker exec broker kafka-console-consumer --bootstrap-server broker:11091 --topic test-topic-ssl-duplicate --from-beginning --max-messages 10 --consumer.config /etc/kafka/secrets/client_without_interceptors_2way_ssl.config
+$ docker exec broker kafka-console-consumer --bootstrap-server broker:9092 --topic test-topic-ssl-duplicate --from-beginning --max-messages 10 --consumer.config /etc/kafka/secrets/client_without_interceptors_2way_ssl.config
 ```
 
 ### With SASL_SSL authentication:
@@ -134,7 +134,7 @@ $ docker exec broker kafka-console-consumer --bootstrap-server broker:11091 --to
 Sending messages to topic test-topic-sasl-ssl
 
 ```bash
-$ seq 10 | docker exec -i broker kafka-console-producer --broker-list broker:9091 --topic test-topic-sasl-ssl --producer.config /etc/kafka/secrets/client_without_interceptors.config
+$ seq 10 | docker exec -i broker kafka-console-producer --broker-list broker:9092 --topic test-topic-sasl-ssl --producer.config /etc/kafka/secrets/client_without_interceptors.config
 ```
 
 Creating Confluent Replicator connector with SASL_SSL authentication
@@ -150,7 +150,7 @@ $ docker exec connect \
                     "value.converter": "io.confluent.connect.replicator.util.ByteArrayConverter",
                     "header.converter": "io.confluent.connect.replicator.util.ByteArrayConverter",
                     "src.consumer.group.id": "duplicate-topic",
-                    "confluent.topic.bootstrap.servers": "broker:9091",
+                    "confluent.topic.bootstrap.servers": "broker:9092",
                     "confluent.topic.replication.factor": "1",
                     "confluent.topic.ssl.keystore.location" : "/etc/kafka/secrets/kafka.connect.keystore.jks",
                     "confluent.topic.ssl.keystore.password" : "confluent",
@@ -161,14 +161,14 @@ $ docker exec connect \
                     "provenance.header.enable": true,
                     "topic.whitelist": "test-topic-sasl-ssl",
                     "topic.rename.format": "test-topic-sasl-ssl-duplicate",
-                    "dest.kafka.bootstrap.servers": "broker:9091",
+                    "dest.kafka.bootstrap.servers": "broker:9092",
                     "dest.kafka.ssl.keystore.location" : "/etc/kafka/secrets/kafka.connect.keystore.jks",
                     "dest.kafka.ssl.keystore.password" : "confluent",
                     "dest.kafka.ssl.key.password" : "confluent",
                     "dest.kafka.security.protocol" : "SASL_SSL",
                     "dest.kafka.sasl.jaas.config": "org.apache.kafka.common.security.plain.PlainLoginModule required  username=\"client\" password=\"client-secret\";",
                     "dest.kafka.sasl.mechanism": "PLAIN",
-                    "src.kafka.bootstrap.servers": "broker:9091",
+                    "src.kafka.bootstrap.servers": "broker:9092",
                     "src.kafka.ssl.keystore.location" : "/etc/kafka/secrets/kafka.connect.keystore.jks",
                     "src.kafka.ssl.keystore.password" : "confluent",
                     "src.kafka.ssl.key.password" : "confluent",
@@ -182,7 +182,7 @@ $ docker exec connect \
 Verify we have received the data in test-topic-sasl-ssl-duplicate topic
 
 ```bash
-$ docker exec broker kafka-console-consumer --bootstrap-server broker:9091 --topic test-topic-sasl-ssl-duplicate --from-beginning --max-messages 10 --consumer.config /etc/kafka/secrets/client_without_interceptors.config
+$ docker exec broker kafka-console-consumer --bootstrap-server broker:9092 --topic test-topic-sasl-ssl-duplicate --from-beginning --max-messages 10 --consumer.config /etc/kafka/secrets/client_without_interceptors.config
 ```
 
 N.B: Control Center is reachable at [http://127.0.0.1:9021](http://127.0.0.1:9021])

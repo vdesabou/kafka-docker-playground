@@ -2,6 +2,12 @@
 version: '3.5'
 services:
 
+    ####
+    #
+    # This file overrides values from environment/mdc-plaintext/docker-compose.yml
+    #
+    ####
+
   # not used in plaintext but required because docker override is used for other env
   kdc:
     hostname: kdc
