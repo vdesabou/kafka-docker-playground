@@ -125,9 +125,8 @@ services:
       - broker
       - broker2
       - schema-registry
-    connect:
-      volumes:
-          - ../../environment/sasl-ssl/security:/etc/kafka/secrets
+    volumes:
+        - ../../environment/sasl-ssl/security:/etc/kafka/secrets
     environment:
       CONNECT_BOOTSTRAP_SERVERS: "broker:9092,broker2:9092"
       CONNECT_LISTENERS: "https://0.0.0.0:8083"
