@@ -1,5 +1,12 @@
 version: '3.5'
 services:
+
+    ####
+    #
+    # This file overrides values from environment/plaintext/docker-compose.yml
+    #
+    ####
+
     ldap:
         image: osixia/openldap:1.3.0
         hostname: ldap
