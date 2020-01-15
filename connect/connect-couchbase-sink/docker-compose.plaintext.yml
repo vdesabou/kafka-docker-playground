@@ -19,6 +19,9 @@ services:
       CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/kafka-connect-couchbase
 
   json-producer:
-    build: ../../connect/connect-couchbase-sink/json-producer/
+    build:
+      context: ../../connect/connect-couchbase-sink/json-producer/
+      args:
+        TAG: ${TAG}
     hostname: json-producer
     container_name: json-producer

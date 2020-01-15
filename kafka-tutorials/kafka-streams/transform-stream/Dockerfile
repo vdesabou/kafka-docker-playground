@@ -5,6 +5,7 @@ COPY build.gradle build.gradle
 COPY src src
 RUN gradle build && gradle shadowJar
 
+ARG TAG
 FROM confluentinc/cp-base:${TAG}
 COPY --from=gradleBuild /home/gradle/build/libs/kstreams-standalone*.jar ./
 COPY configuration configuration

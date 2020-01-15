@@ -3,7 +3,10 @@ version: '3.5'
 services:
 
   jms-client:
-    build: ../../other/jms-client/jms-client/
+    build:
+      context: ../../other/jms-client/jms-client/
+      args:
+        TAG: ${TAG}
     hostname: jms-client
     container_name: jms-client
     depends_on:
