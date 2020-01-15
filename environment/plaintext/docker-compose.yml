@@ -1,6 +1,24 @@
 ---
 version: '3.5'
 services:
+
+    ####
+    #
+    # This file overrides values from environment/plaintext/docker-compose.yml
+    #
+    ####
+
+  # not used in plaintext but required because docker override is used for other env
+  kdc:
+    hostname: kdc
+    build: ../../environment/kerberos/kdc
+    container_name: kdc
+
+  # not used in plaintext but required because docker override is used for other env
+  client:
+    build: ../../environment/kerberos/client
+    container_name: client
+
   zookeeper:
     image: confluentinc/cp-zookeeper:${TAG}
     hostname: zookeeper
@@ -49,7 +67,6 @@ services:
       - schema-registry
     ports:
       - "8083:8083"
-    # volumes are overwritten
     environment:
       CONNECT_BOOTSTRAP_SERVERS: 'broker:9092'
       CONNECT_REST_ADVERTISED_HOST_NAME: connect
