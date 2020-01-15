@@ -1,0 +1,21 @@
+---
+version: '3.5'
+services:
+
+  vertica:
+    image: dataplatform/docker-vertica
+    hostname: vertica
+    container_name: vertica
+    ports:
+      - 5433:5433
+
+  connect:
+    depends_on:
+      - zookeeper
+      - broker
+      - schema-registry
+      - vertica
+    volumes:
+        - ../../connect/connect-vertica-sink/vertica-jdbc.jar:/usr/share/confluent-hub-components/confluentinc-kafka-connect-vertica/lib/vertica-jdbc.jar
+    environment:
+      CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-vertica
