@@ -32,7 +32,10 @@ else
   docker-compose -f ../../environment/plaintext/docker-compose.yml -f ../../environment/ldap_authorizer_sasl_scram/docker-compose.yml up -d
 fi
 
-shift
+if [ "$#" -ne 0 ]
+then
+    shift
+fi
 ../../scripts/wait-for-connect-and-controlcenter.sh $@
 
 # SET ACLs
