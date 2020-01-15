@@ -1,5 +1,7 @@
 #!/bin/bash
 
+set -e
+
 # https://kafka-tutorials.confluent.io/filter-a-stream-of-events/kstreams.html
 
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
