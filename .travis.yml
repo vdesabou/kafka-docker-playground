@@ -41,22 +41,41 @@ before_install:
 # replicator/executable
 # kudu-sink kudu-source ("Error connecting: TTransportException, TSocket read 0 bytes")
 
+# job limit is 50 minutes
 jobs:
   include:
-  - name: "CONNECT: active-mq-sink active-mq-source cassandra-sink couchbase-sink couchbase-source debezium-mongodb-source debezium-mysql-source debezium-postgresql-source debezium-sqlserver-source elasticsearch-sink hbase-sink hdfs2-sink"
-    env: TEST_LIST="connect/connect-active-mq-sink connect/connect-active-mq-source connect/connect-cassandra-sink connect/connect-couchbase-sink connect/connect-couchbase-source connect/connect-debezium-mongodb-source connect/connect-debezium-mysql-source connect/connect-debezium-postgresql-source connect/connect-debezium-sqlserver-source connect/connect-elasticsearch-sink connect/connect-hbase-sink connect/connect-hdfs2-sink"
+  # - name: "CONNECT: active-mq-sink active-mq-source cassandra-sink couchbase-sink couchbase-source"
+  #   env: TEST_LIST="connect/connect-active-mq-sink connect/connect-active-mq-source connect/connect-cassandra-sink connect/connect-couchbase-sink connect/connect-couchbase-source  connect/connect-hbase-sink"
 
-  - name: "CONNECT: hdfs3-sink hdfs3-source http-sink ibm-mq-sink ibm-mq-source influxdb-sink influxdb-source jdbc-mysql-sink jdbc-mysql-source jdbc-postgresql-sink jdbc-postgresql-source jdbc-sqlserver-sink"
-    env: TEST_LIST="connect/connect-hdfs3-sink connect/connect-hdfs3-source connect/connect-http-sink connect/connect-ibm-mq-sink connect/connect-ibm-mq-source connect/connect-influxdb-sink connect/connect-influxdb-source connect/connect-jdbc-mysql-sink connect/connect-jdbc-mysql-source connect/connect-jdbc-postgresql-sink connect/connect-jdbc-postgresql-source connect/connect-jdbc-sqlserver-sink"
+  # - name: "CONNECT: debezium-mongodb-source debezium-mysql-source debezium-postgresql-source debezium-sqlserver-source elasticsearch-sink"
+  #   env: TEST_LIST="connect/connect-debezium-mongodb-source connect/connect-debezium-mysql-source connect/connect-debezium-postgresql-source connect/connect-debezium-sqlserver-source connect/connect-elasticsearch-sink"
 
-  - name: "CCLOUD ccloud-demo CONNECT: jdbc-sqlserver-source jms-active-mq-sink jms-solace-sink mongodb-sink mongodb-source mqtt-sink mqtt-source neo4j-sink omnisci-sink rabbitmq-source redis-sink replicator"
-    env: TEST_LIST="ccloud/ccloud-demo connect/connect-jdbc-sqlserver-source connect/connect-jms-active-mq-sink connect/connect-jms-solace-sink connect/connect-mongodb-sink connect/connect-mongodb-source connect/connect-mqtt-sink connect/connect-mqtt-source connect/connect-neo4j-sink connect/connect-omnisci-sink connect/connect-rabbitmq-source connect/connect-redis-sink connect/connect-replicator"
+  # - name: "CONNECT: hbase-sink hdfs2-sink hdfs3-sink hdfs3-source http-sink ibm-mq-sink ibm-mq-source"
+  #   env: TEST_LIST="connect/connect-hdfs2-sink connect/connect-hdfs3-sink connect/connect-hdfs3-source connect/connect-http-sink connect/connect-ibm-mq-sink connect/connect-ibm-mq-source"
 
-  - name: "CONNECT: sftp-sink sftp-source solace-sink solace-source splunk-sink splunk-source spool-dir-source syslog-source OTHER: override-policy-sftp-sink override-policy-sftp-source aws-cloudwatch-source aws-dynamodb-sink aws-kinesis-source aws-lambda-sink connect/connect-aws-cloudwatch-source connect/connect-aws-dynamodb-sink connect/connect-aws-kinesis-source connect/connect-aws-lambda-sink"
-    env: TEST_LIST="connect/connect-sftp-sink connect/connect-sftp-source connect/connect-solace-sink connect/connect-solace-source connect/connect-splunk-sink connect/connect-splunk-source connect/connect-spool-dir-source connect/connect-syslog-source other/connect-override-policy-sftp-sink other/connect-override-policy-sftp-source"
+  # - name: "CONNECT: influxdb-sink influxdb-source jdbc-mysql-sink jdbc-mysql-source jdbc-postgresql-sink jdbc-postgresql-source jdbc-sqlserver-sink"
+  #   env: TEST_LIST="connect/connect-influxdb-sink connect/connect-influxdb-source connect/connect-jdbc-mysql-sink connect/connect-jdbc-mysql-source connect/connect-jdbc-postgresql-sink connect/connect-jdbc-postgresql-source connect/connect-jdbc-sqlserver-sink"
 
-  - name: "CONNECT: aws-sqs-source aws-s3-sink aws-s3-source gcp-bigquery-sink gcp-firebase-sink gcp-firebase-source gcp-pubsub-source gcs-sink gcs-source google-cloud-functions-sink REPLICATOR: connect"
-    env: TEST_LIST="connect/connect-aws-sqs-source connect/connect-aws-s3-sink connect/connect-aws-s3-source connect/connect-gcp-bigquery-sink connect/connect-gcp-firebase-sink connect/connect-gcp-firebase-source connect/connect-gcp-pubsub-source connect/connect-gcp-gcs-sink connect/connect-gcp-gcs-source connect/connect-gcp-cloud-functions-sink replicator/connect"
+  - name: "CCLOUD ccloud-demo CONNECT: jdbc-sqlserver-source jms-active-mq-sink jms-solace-sink "
+    env: TEST_LIST="ccloud/ccloud-demo connect/connect-jdbc-sqlserver-source connect/connect-jms-active-mq-sink connect/connect-jms-solace-sink"
+
+  # - name: "CONNECT: mongodb-sink mongodb-source mqtt-sink mqtt-source neo4j-sink omnisci-sink"
+  #   env: TEST_LIST="connect/connect-mongodb-sink connect/connect-mongodb-source connect/connect-mqtt-sink connect/connect-mqtt-source connect/connect-neo4j-sink connect/connect-omnisci-sink"
+
+  # - name: "CONNECT: rabbitmq-source redis-sink replicator sftp-sink sftp-source solace-sink solace-source"
+  #   env: TEST_LIST="connect/connect-rabbitmq-source connect/connect-redis-sink connect/connect-replicator connect/connect-sftp-sink connect/connect-sftp-source connect/connect-solace-sink connect/connect-solace-source"
+
+  # - name: "CONNECT: splunk-sink splunk-source spool-dir-source syslog-source OTHER: override-policy-sftp-sink override-policy-sftp-source "
+  #   env: TEST_LIST="connect/connect-splunk-sink connect/connect-splunk-source connect/connect-spool-dir-source connect/connect-syslog-source other/connect-override-policy-sftp-sink other/connect-override-policy-sftp-source"
+
+  # - name: "CONNECT: aws-cloudwatch-source aws-dynamodb-sink aws-kinesis-source aws-lambda-sink aws-sqs-source aws-s3-sink aws-s3-source"
+  #   env: TEST_LIST="connect/connect-aws-cloudwatch-source connect/connect-aws-dynamodb-sink connect/connect-aws-kinesis-source connect/connect-aws-lambda-sink connect/connect-aws-sqs-source connect/connect-aws-s3-sink connect/connect-aws-s3-source"
+
+  # - name: "CONNECT: gcp-bigquery-sink gcp-firebase-sink gcp-firebase-source gcp-pubsub-source gcs-sink"
+  #   env: TEST_LIST="connect/connect-gcp-bigquery-sink connect/connect-gcp-firebase-sink connect/connect-gcp-firebase-source connect/connect-gcp-pubsub-source"
+
+  # - name: "CONNECT: gcs-source google-cloud-functions-sink REPLICATOR: connect"
+  #   env: TEST_LIST="connect/connect-gcp-gcs-sink connect/connect-gcp-gcs-source connect/connect-gcp-cloud-functions-sink replicator/connect"
 
 script:
     - bash scripts/run-tests.sh "$TEST_LIST"
