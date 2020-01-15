@@ -83,6 +83,8 @@ jobs:
   - name: "CONNECT: ksql"
     env: TEST_LIST="kafka-tutorials/ksql/aggregate-count kafka-tutorials/ksql/aggregate-sum kafka-tutorials/ksql/join-stream-and-stream kafka-tutorials/ksql/join-table-and-table kafka-tutorials/ksql/merge-streams kafka-tutorials/ksql/rekey-with-function kafka-tutorials/ksql/transform-stream kafka-tutorials/ksql/aggregate-minmax kafka-tutorials/ksql/filter-events kafka-tutorials/ksql/join-stream-and-table kafka-tutorials/ksql/ksql-serialization kafka-tutorials/ksql/rekey-a-stream  kafka-tutorials/ksql/split-stream kafka-tutorials/ksql/tumbling-windows"
 
+  - name: "ENVIRONMENTS"
+    env: TEST_LIST="environment/mdc-kerberos environment/mdc-plaintext environment/mdc-sasl-plain environment/sasl-plain environment/ldap_authorizer_sasl_scram environment/ldap_authorizer_sasl_plain environment/plaintext environment/2way-ssl environment/kerberos environment/ssl_kerberos environment/sasl-ssl"
 
 
 script:
