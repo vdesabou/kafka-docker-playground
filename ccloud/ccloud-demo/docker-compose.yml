@@ -229,7 +229,10 @@ services:
       KAFKA_REST_CLIENT_SASL_MECHANISM: "PLAIN"
 
   stream:
-    build: streams/
+    build:
+      context: streams/
+      args:
+        TAG: ${TAG}
     hostname: stream
     container_name: stream
     environment:
@@ -241,7 +244,10 @@ services:
       CLOUD_SECRET: $CLOUD_SECRET
 
   producer:
-    build: producer/
+    build:
+      context: producer/
+      args:
+        TAG: ${TAG}
     hostname: producer
     container_name: producer
     environment:
@@ -259,7 +265,10 @@ services:
       - stream
 
   consumer:
-    build: consumer/
+    build:
+      context: consumer/
+      args:
+        TAG: ${TAG}
     hostname: consumer
     container_name: consumer
     environment:
@@ -277,7 +286,10 @@ services:
       - stream
 
   producer-acl:
-    build: producer-acl/
+    build:
+      context: producer-acl/
+      args:
+        TAG: ${TAG}
     hostname: producer-acl
     container_name: producer-acl
 

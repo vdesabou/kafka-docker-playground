@@ -5,6 +5,7 @@ COPY pom.xml pom.xml
 COPY src src
 RUN ["mvn", "install", "-q"]
 
+ARG TAG
 FROM confluentinc/cp-base:${TAG}
 COPY --from=mavenBuild ./target/*.jar ./
 ENV JAVA_OPTS ""
