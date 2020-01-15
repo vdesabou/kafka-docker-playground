@@ -30,5 +30,8 @@ fi
 
 cd ${OLDDIR}
 
-shift
+if [ "$#" -ne 0 ]
+then
+    shift
+fi
 ../../scripts/wait-for-connect-and-controlcenter.sh $@
