@@ -96,7 +96,7 @@ services:
       - ../../environment/kerberos/kdc/krb5.conf:/etc/krb5.conf
       - ../../environment/kerberos/kafka/broker2.sasl.jaas.config:/etc/kafka/broker.sasl.jaas.config
     environment:
-      KAFKA_BROKER_ID: 1
+      KAFKA_BROKER_ID: 2
       KAFKA_ZOOKEEPER_CONNECT: 'zookeeper.kerberos-demo.local:2181'
       KAFKA_ADVERTISED_LISTENERS: SASL_PLAINTEXT://broker2.kerberos-demo.local:19092
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
