@@ -56,8 +56,8 @@ jobs:
   - name: "CONNECT: influxdb-sink influxdb-source jdbc-mysql-sink jdbc-mysql-source jdbc-postgresql-sink jdbc-postgresql-source jdbc-sqlserver-sink"
     env: TEST_LIST="connect/connect-influxdb-sink connect/connect-influxdb-source connect/connect-jdbc-mysql-sink connect/connect-jdbc-mysql-source connect/connect-jdbc-postgresql-sink connect/connect-jdbc-postgresql-source connect/connect-jdbc-sqlserver-sink"
 
-  - name: "CCLOUD ccloud-demo CONNECT: jdbc-sqlserver-source jms-active-mq-sink jms-solace-sink "
-    env: TEST_LIST="ccloud/ccloud-demo connect/connect-jdbc-sqlserver-source connect/connect-jms-active-mq-sink connect/connect-jms-solace-sink"
+  - name: "CCLOUD ccloud-demo CONNECT: jdbc-sqlserver-source jdbc-vertica-sink jms-active-mq-sink jms-solace-sink"
+    env: TEST_LIST="ccloud/ccloud-demo connect/connect-jdbc-sqlserver-source connect/connect-jdbc-vertica-sink connect/connect-jms-active-mq-sink connect/connect-jms-solace-sink"
 
   - name: "CONNECT: mongodb-sink mongodb-source mqtt-sink mqtt-source neo4j-sink omnisci-sink"
     env: TEST_LIST="connect/connect-mongodb-sink connect/connect-mongodb-source connect/connect-mqtt-sink connect/connect-mqtt-source connect/connect-neo4j-sink connect/connect-omnisci-sink"
