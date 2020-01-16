@@ -38,15 +38,18 @@ do
         log "####################################################"
         log "Executing $script in dir $dir"
         log "####################################################"
+        SECONDS=0
         bash $script
-        if [ $? -eq 0 ]
+        ret=$?
+        ELAPSED="took: $((($SECONDS / 60) % 60))min $(($SECONDS % 60))sec"
+        if [ $ret -eq 0 ]
         then
             log "####################################################"
-            log "RESULT: SUCCESS for $script in dir $dir"
+            log "RESULT: SUCCESS for $script in dir $dir ($ELAPSED)"
             log "####################################################"
         else
             logerror "####################################################"
-            logerror "RESULT: FAILURE for $script in dir $dir"
+            logerror "RESULT: FAILURE for $script in dir $dir ($ELAPSED)"
             logerror "####################################################"
             failed_tests=$failed_tests"$dir[$script]\n"
             let "nb_test_failed++"
