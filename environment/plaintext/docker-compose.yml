@@ -11,12 +11,12 @@ services:
   # not used in plaintext but required because docker override is used for other env
   kdc:
     hostname: kdc
-    build: ../../environment/kerberos/kdc
+    build: ../../environment/plaintext
     container_name: kdc
 
   # not used in plaintext but required because docker override is used for other env
   client:
-    build: ../../environment/kerberos/client
+    build: ../../environment/plaintext
     container_name: client
 
   zookeeper:
