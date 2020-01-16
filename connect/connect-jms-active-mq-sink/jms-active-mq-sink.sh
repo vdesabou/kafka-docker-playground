@@ -7,7 +7,7 @@ source ${DIR}/../../scripts/utils.sh
 if [ ! -f ${DIR}/activemq-all-5.15.4.jar ]
 then
      log "Downloading activemq-all-5.15.4.jar"
-     wget http://central.maven.org/maven2/org/apache/activemq/activemq-all/5.15.4/activemq-all-5.15.4.jar
+     wget https://repo1.maven.org/maven2/org/apache/activemq/activemq-all/5.15.4/activemq-all-5.15.4.jar
 fi
 
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
