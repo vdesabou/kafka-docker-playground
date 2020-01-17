@@ -10,6 +10,12 @@ function logerror() {
   echo -e "$RED$@$NC"
 }
 
+function logwarn() {
+  PURPLE='\033[0;35m'
+  NC='\033[0m' # No Color
+  echo -e "$PURPLE$@$NC"
+}
+
 # https://stackoverflow.com/a/24067243
 function version_gt() { test "$(printf '%s\n' "$@" | sort -V | head -n 1)" != "$1"; }
 
@@ -200,4 +206,20 @@ function aws_docker_cli() {
 
 function jq_docker_cli() {
     docker run --rm -i imega/jq "$@"
+}
+
+function retry() {
+  local n=1
+  local max=2
+  while true; do
+    "$@" && break || {
+      if [[ $n -lt $max ]]; then
+        ((n++))
+        logwarn "Command failed. Attempt $n/$max:"
+      else
+        logerror "The command has failed after $n attempts."
+        return 1
+      fi
+    }
+  done
 }
