@@ -39,7 +39,7 @@ do
         log "Executing $script in dir $dir"
         log "####################################################"
         SECONDS=0
-        bash $script
+        retry bash $script
         ret=$?
         ELAPSED="took: $((($SECONDS / 60) % 60))min $(($SECONDS % 60))sec"
         if [ $ret -eq 0 ]
