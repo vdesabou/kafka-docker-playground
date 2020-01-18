@@ -42,14 +42,16 @@ do
         retry bash $script
         ret=$?
         ELAPSED="took: $((($SECONDS / 60) % 60))min $(($SECONDS % 60))sec"
+        let ELAPSED_TOTAL+=$SECONDS
+        CUMULATED="cumulated time: $((($ELAPSED_TOTAL / 60) % 60))min $(($ELAPSED_TOTAL % 60))sec"
         if [ $ret -eq 0 ]
         then
             log "####################################################"
-            log "RESULT: SUCCESS for $script in dir $dir ($ELAPSED)"
+            log "RESULT: SUCCESS for $script in dir $dir ($ELAPSED - $CUMULATED)"
             log "####################################################"
         else
             logerror "####################################################"
-            logerror "RESULT: FAILURE for $script in dir $dir ($ELAPSED)"
+            logerror "RESULT: FAILURE for $script in dir $dir ($ELAPSED - $CUMULATED)"
             logerror "####################################################"
             failed_tests=$failed_tests"$dir[$script]\n"
             let "nb_test_failed++"

@@ -1,19 +1,19 @@
 function log() {
   YELLOW='\033[0;33m'
   NC='\033[0m' # No Color
-  echo -e "$YELLOW$@$NC"
+  echo -e "$YELLOW`date +"%H:%M:%S"` $@$NC"
 }
 
 function logerror() {
   RED='\033[0;31m'
   NC='\033[0m' # No Color
-  echo -e "$RED$@$NC"
+  echo -e "$RED`date +"%H:%M:%S"` $@$NC"
 }
 
 function logwarn() {
   PURPLE='\033[0;35m'
   NC='\033[0m' # No Color
-  echo -e "$PURPLE$@$NC"
+  echo -e "$PURPLE`date +"%H:%M:%S"` $@$NC"
 }
 
 # https://stackoverflow.com/a/24067243
@@ -210,7 +210,7 @@ function jq_docker_cli() {
 
 function retry() {
   local n=1
-  local max=2
+  local max=3
   while true; do
     "$@" && break || {
       if [[ $n -lt $max ]]; then
