@@ -7,3 +7,4 @@ http_avro_basic_auth.sh
 vertica-sink-testing-batch-size-error.sh
 vertica-sink-testing-batch-size.sh
 vertica-sink-testing-batch-size-error
+01-create-table.sh
