@@ -15,19 +15,19 @@ before_install:
   - cp config.cc.vsaboulin.travis $HOME/.ccloud/config
   - curl -L https://cnfl.io/ccloud-cli | sudo sh -s -- -b /usr/local/bin
   - aws s3 cp s3://kafka-docker-playground/3rdparty/3rdparty.tgz .
-  - tar xvfzh 3rdparty.tgz
-  - ln -s 3rdparty/TIB_ems-ce_8.5.1_linux_x86_64.zip ./connect/connect-tibco-source/docker-tibco/TIB_ems-ce_8.5.1_linux_x86_64.zip
-  - ln -s 3rdparty/TIB_ems-ce_8.5.1_linux_x86_64.zip ./connect/connect-jms-tibco-sink/docker-tibco/TIB_ems-ce_8.5.1_linux_x86_64.zip
-  - ln -s 3rdparty/TIB_ems-ce_8.5.1_linux_x86_64.zip ./connect/connect-tibco-sink/docker-tibco/TIB_ems-ce_8.5.1_linux_x86_64.zip
-  - ln -s 3rdparty/TIB_ems-ce_8.5.1_linux_x86_64.zip ./connect/connect-jms-tibco-source/docker-tibco/TIB_ems-ce_8.5.1_linux_x86_64.zip
-  - ln -s 3rdparty/ojdbc6.jar ./connect/connect-jdbc-oracle11-sink/ojdbc6.jar
-  - ln -s 3rdparty/ojdbc6.jar ./connect/connect-jdbc-oracle11-source/ojdbc6.jar
-  - ln -s 3rdparty/ImpalaJDBC42.jar ./connect/connect-kudu-source/ImpalaJDBC42.jar
-  - ln -s 3rdparty/ImpalaJDBC42.jar ./connect/connect-kudu-sink/ImpalaJDBC42.jar
-  - ln -s 3rdparty/jms.jar ./connect/connect-ibm-mq-sink/jms.jar
-  - ln -s 3rdparty/jms.jar ./connect/connect-ibm-mq-source/jms.jar
-  - ln -s 3rdparty/com.ibm.mq.allclient.jar ./connect/connect-ibm-mq-sink/com.ibm.mq.allclient.jar
-  - ln -s 3rdparty/com.ibm.mq.allclient.jar ./connect/connect-ibm-mq-source/com.ibm.mq.allclient.jar
+  - tar xvfz 3rdparty.tgz
+  - cp ./3rdparty/TIB_ems-ce_8.5.1_linux_x86_64.zip ./connect/connect-tibco-source/docker-tibco/TIB_ems-ce_8.5.1_linux_x86_64.zip
+  - cp ./3rdparty/TIB_ems-ce_8.5.1_linux_x86_64.zip ./connect/connect-jms-tibco-sink/docker-tibco/TIB_ems-ce_8.5.1_linux_x86_64.zip
+  - cp ./3rdparty/TIB_ems-ce_8.5.1_linux_x86_64.zip ./connect/connect-tibco-sink/docker-tibco/TIB_ems-ce_8.5.1_linux_x86_64.zip
+  - cp ./3rdparty/TIB_ems-ce_8.5.1_linux_x86_64.zip ./connect/connect-jms-tibco-source/docker-tibco/TIB_ems-ce_8.5.1_linux_x86_64.zip
+  - cp ./3rdparty/ojdbc6.jar ./connect/connect-jdbc-oracle11-sink/ojdbc6.jar
+  - cp ./3rdparty/ojdbc6.jar ./connect/connect-jdbc-oracle11-source/ojdbc6.jar
+  - cp ./3rdparty/ImpalaJDBC42.jar ./connect/connect-kudu-source/ImpalaJDBC42.jar
+  - cp ./3rdparty/ImpalaJDBC42.jar ./connect/connect-kudu-sink/ImpalaJDBC42.jar
+  - cp ./3rdparty/jms.jar ./connect/connect-ibm-mq-sink/jms.jar
+  - cp ./3rdparty/jms.jar ./connect/connect-ibm-mq-source/jms.jar
+  - cp ./3rdparty/com.ibm.mq.allclient.jar ./connect/connect-ibm-mq-sink/com.ibm.mq.allclient.jar
+  - cp ./3rdparty/com.ibm.mq.allclient.jar ./connect/connect-ibm-mq-source/com.ibm.mq.allclient.jar
 
 # Skipped tests:
 
@@ -54,14 +54,14 @@ jobs:
   - name: "CONNECT: active-mq-sink active-mq-source cassandra-sink couchbase-sink couchbase-source"
     env: TEST_LIST="connect/connect-active-mq-sink connect/connect-active-mq-source connect/connect-cassandra-sink connect/connect-couchbase-sink connect/connect-couchbase-source  connect/connect-hbase-sink"
 
-  - name: "CONNECT: debezium-mongodb-source debezium-mysql-source debezium-postgresql-source debezium-sqlserver-source elasticsearch-sink jms-tibco-sink jms-tibco-source"
-    env: TEST_LIST="connect/connect-debezium-mongodb-source connect/connect-debezium-mysql-source connect/connect-debezium-postgresql-source connect/connect-debezium-sqlserver-source connect/connect-elasticsearch-sink connect/connect-jms-tibco-sink connect/connect-jms-tibco-source"
+  - name: "CONNECT: jms-tibco-sink jms-tibco-source debezium-mongodb-source debezium-mysql-source debezium-postgresql-source debezium-sqlserver-source elasticsearch-sink"
+    env: TEST_LIST="connect/connect-jms-tibco-sink connect/connect-jms-tibco-source connect/connect-debezium-mongodb-source connect/connect-debezium-mysql-source connect/connect-debezium-postgresql-source connect/connect-debezium-sqlserver-source connect/connect-elasticsearch-sink"
 
   - name: "CONNECT: hbase-sink hdfs2-sink hdfs3-sink hdfs3-source http-sink ibm-mq-sink ibm-mq-source"
     env: TEST_LIST="connect/connect-hdfs2-sink connect/connect-hdfs3-sink connect/connect-hdfs3-source connect/connect-http-sink connect/connect-ibm-mq-sink connect/connect-ibm-mq-source"
 
-  - name: "CONNECT: influxdb-sink influxdb-source jdbc-mysql-sink jdbc-mysql-source jdbc-postgresql-sink jdbc-postgresql-source jdbc-sqlserver-sink jdbc-oracle11-sink jdbc-oracle11-source"
-    env: TEST_LIST="connect/connect-influxdb-sink connect/connect-influxdb-source connect/connect-jdbc-mysql-sink connect/connect-jdbc-mysql-source connect/connect-jdbc-postgresql-sink connect/connect-jdbc-postgresql-source connect/connect-jdbc-sqlserver-sink connect/connect-jdbc-oracle11-sink connect/connect-jdbc-oracle11-source"
+  - name: "CONNECT: jdbc-oracle11-sink jdbc-oracle11-source influxdb-sink influxdb-source jdbc-mysql-sink jdbc-mysql-source jdbc-postgresql-sink jdbc-postgresql-source jdbc-sqlserver-sink"
+    env: TEST_LIST="connect/connect-jdbc-oracle11-sink connect/connect-jdbc-oracle11-source connect/connect-influxdb-sink connect/connect-influxdb-source connect/connect-jdbc-mysql-sink connect/connect-jdbc-mysql-source connect/connect-jdbc-postgresql-sink connect/connect-jdbc-postgresql-source connect/connect-jdbc-sqlserver-sink"
 
   - name: "CCLOUD ccloud-demo CONNECT: jdbc-sqlserver-source jdbc-vertica-sink jms-active-mq-sink jms-solace-sink"
     env: TEST_LIST="ccloud/ccloud-demo connect/connect-jdbc-sqlserver-source connect/connect-jdbc-vertica-sink connect/connect-jms-active-mq-sink connect/connect-jms-solace-sink"
