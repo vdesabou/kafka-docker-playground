@@ -5,7 +5,7 @@ os: 'linux'
 services: 'docker'
 
 before_install:
-  - sudo apt-get -y install netcat expect
+  - sudo apt-get -y install netcat expect awscli
   - openssl aes-256-cbc -K $encrypted_e1b0a72f7201_key -iv $encrypted_e1b0a72f7201_iv -in secrets.tar.enc -out secrets.tar -d
   - tar xvf secrets.tar
   - mkdir -p $HOME/.aws
@@ -14,6 +14,20 @@ before_install:
   - mkdir -p $HOME/.ccloud
   - cp config.cc.vsaboulin.travis $HOME/.ccloud/config
   - curl -L https://cnfl.io/ccloud-cli | sudo sh -s -- -b /usr/local/bin
+  - aws s3 cp s3://kafka-docker-playground/3rdparty/3rdparty.tgz .
+  - tar xvfzh 3rdparty.tgz
+  - ln -s 3rdparty/TIB_ems-ce_8.5.1_linux_x86_64.zip ./connect/connect-tibco-source/docker-tibco/TIB_ems-ce_8.5.1_linux_x86_64.zip
+  - ln -s 3rdparty/TIB_ems-ce_8.5.1_linux_x86_64.zip ./connect/connect-jms-tibco-sink/docker-tibco/TIB_ems-ce_8.5.1_linux_x86_64.zip
+  - ln -s 3rdparty/TIB_ems-ce_8.5.1_linux_x86_64.zip ./connect/connect-tibco-sink/docker-tibco/TIB_ems-ce_8.5.1_linux_x86_64.zip
+  - ln -s 3rdparty/TIB_ems-ce_8.5.1_linux_x86_64.zip ./connect/connect-jms-tibco-source/docker-tibco/TIB_ems-ce_8.5.1_linux_x86_64.zip
+  - ln -s 3rdparty/ojdbc6.jar ./connect/connect-jdbc-oracle11-sink/ojdbc6.jar
+  - ln -s 3rdparty/ojdbc6.jar ./connect/connect-jdbc-oracle11-source/ojdbc6.jar
+  - ln -s 3rdparty/ImpalaJDBC42.jar ./connect/connect-kudu-source/ImpalaJDBC42.jar
+  - ln -s 3rdparty/ImpalaJDBC42.jar ./connect/connect-kudu-sink/ImpalaJDBC42.jar
+  - ln -s 3rdparty/jms.jar ./connect/connect-ibm-mq-sink/jms.jar
+  - ln -s 3rdparty/jms.jar ./connect/connect-ibm-mq-source/jms.jar
+  - ln -s 3rdparty/com.ibm.mq.allclient.jar ./connect/connect-ibm-mq-sink/com.ibm.mq.allclient.jar
+  - ln -s 3rdparty/com.ibm.mq.allclient.jar ./connect/connect-ibm-mq-source/com.ibm.mq.allclient.jar
 
 # Skipped tests:
 
@@ -25,15 +39,8 @@ before_install:
 # connect-azure-data-lake-storage-gen1-sink
 # connect-azure-data-lake-storage-gen2-sink
 
-# Require to download TIB_ems-ce_8.5.1_linux_x86_64.zip
-# connect-tibco-sink
-# connect-tibco-source
-# connect-jms-tibco-sink
-# connect-jms-tibco-source
 
 # Require to download and build images
-# connect-jdbc-oracle11-sink
-# connect-jdbc-oracle11-source
 # connect-jdbc-oracle12-sink
 # connect-jdbc-oracle12-source
 
@@ -47,20 +54,20 @@ jobs:
   - name: "CONNECT: active-mq-sink active-mq-source cassandra-sink couchbase-sink couchbase-source"
     env: TEST_LIST="connect/connect-active-mq-sink connect/connect-active-mq-source connect/connect-cassandra-sink connect/connect-couchbase-sink connect/connect-couchbase-source  connect/connect-hbase-sink"
 
-  - name: "CONNECT: debezium-mongodb-source debezium-mysql-source debezium-postgresql-source debezium-sqlserver-source elasticsearch-sink"
-    env: TEST_LIST="connect/connect-debezium-mongodb-source connect/connect-debezium-mysql-source connect/connect-debezium-postgresql-source connect/connect-debezium-sqlserver-source connect/connect-elasticsearch-sink"
+  - name: "CONNECT: debezium-mongodb-source debezium-mysql-source debezium-postgresql-source debezium-sqlserver-source elasticsearch-sink jms-tibco-sink jms-tibco-source"
+    env: TEST_LIST="connect/connect-debezium-mongodb-source connect/connect-debezium-mysql-source connect/connect-debezium-postgresql-source connect/connect-debezium-sqlserver-source connect/connect-elasticsearch-sink connect/connect-jms-tibco-sink connect/connect-jms-tibco-source"
 
   - name: "CONNECT: hbase-sink hdfs2-sink hdfs3-sink hdfs3-source http-sink ibm-mq-sink ibm-mq-source"
     env: TEST_LIST="connect/connect-hdfs2-sink connect/connect-hdfs3-sink connect/connect-hdfs3-source connect/connect-http-sink connect/connect-ibm-mq-sink connect/connect-ibm-mq-source"
 
-  - name: "CONNECT: influxdb-sink influxdb-source jdbc-mysql-sink jdbc-mysql-source jdbc-postgresql-sink jdbc-postgresql-source jdbc-sqlserver-sink"
-    env: TEST_LIST="connect/connect-influxdb-sink connect/connect-influxdb-source connect/connect-jdbc-mysql-sink connect/connect-jdbc-mysql-source connect/connect-jdbc-postgresql-sink connect/connect-jdbc-postgresql-source connect/connect-jdbc-sqlserver-sink"
+  - name: "CONNECT: influxdb-sink influxdb-source jdbc-mysql-sink jdbc-mysql-source jdbc-postgresql-sink jdbc-postgresql-source jdbc-sqlserver-sink jdbc-oracle11-sink jdbc-oracle11-source"
+    env: TEST_LIST="connect/connect-influxdb-sink connect/connect-influxdb-source connect/connect-jdbc-mysql-sink connect/connect-jdbc-mysql-source connect/connect-jdbc-postgresql-sink connect/connect-jdbc-postgresql-source connect/connect-jdbc-sqlserver-sink connect/connect-jdbc-oracle11-sink connect/connect-jdbc-oracle11-source"
 
   - name: "CCLOUD ccloud-demo CONNECT: jdbc-sqlserver-source jdbc-vertica-sink jms-active-mq-sink jms-solace-sink"
     env: TEST_LIST="ccloud/ccloud-demo connect/connect-jdbc-sqlserver-source connect/connect-jdbc-vertica-sink connect/connect-jms-active-mq-sink connect/connect-jms-solace-sink"
 
-  - name: "CONNECT: mongodb-sink mongodb-source mqtt-sink mqtt-source neo4j-sink omnisci-sink"
-    env: TEST_LIST="connect/connect-mongodb-sink connect/connect-mongodb-source connect/connect-mqtt-sink connect/connect-mqtt-source connect/connect-neo4j-sink connect/connect-omnisci-sink"
+  - name: "CONNECT: mongodb-sink mongodb-source mqtt-sink mqtt-source neo4j-sink omnisci-sink connect-tibco-sink connect-tibco-source"
+    env: TEST_LIST="connect/connect-mongodb-sink connect/connect-mongodb-source connect/connect-mqtt-sink connect/connect-mqtt-source connect/connect-neo4j-sink connect/connect-omnisci-sink connect/connect-tibco-sink connect/connect-tibco-source"
 
   - name: "CONNECT: rabbitmq-source redis-sink replicator sftp-sink sftp-source solace-sink solace-source"
     env: TEST_LIST="connect/connect-rabbitmq-source connect/connect-redis-sink connect/connect-replicator connect/connect-sftp-sink connect/connect-sftp-source connect/connect-solace-sink connect/connect-solace-source"
@@ -71,11 +78,8 @@ jobs:
   - name: "CONNECT: aws-cloudwatch-source aws-dynamodb-sink aws-kinesis-source aws-lambda-sink aws-sqs-source aws-s3-sink aws-s3-source"
     env: TEST_LIST="connect/connect-aws-cloudwatch-source connect/connect-aws-dynamodb-sink connect/connect-aws-kinesis-source connect/connect-aws-lambda-sink connect/connect-aws-sqs-source connect/connect-aws-s3-sink connect/connect-aws-s3-source"
 
-  - name: "CONNECT: gcp-bigquery-sink gcp-firebase-sink gcp-firebase-source gcp-pubsub-source gcs-sink"
-    env: TEST_LIST="connect/connect-gcp-bigquery-sink connect/connect-gcp-firebase-sink connect/connect-gcp-firebase-source connect/connect-gcp-pubsub-source"
-
-  - name: "CONNECT: gcs-source google-cloud-functions-sink vertica-sink REPLICATOR: connect"
-    env: TEST_LIST="connect/connect-gcp-gcs-sink connect/connect-gcp-gcs-source connect/connect-gcp-cloud-functions-sink connect/vertica-sink replicator/connect"
+  - name: "CONNECT: gcp-bigquery-sink gcp-firebase-sink gcp-firebase-source gcp-pubsub-source gcs-sink gcs-source google-cloud-functions-sink vertica-sink REPLICATOR: connect"
+    env: TEST_LIST="connect/connect-gcp-bigquery-sink connect/connect-gcp-firebase-sink connect/connect-gcp-firebase-source connect/connect-gcp-pubsub-source connect/connect-gcp-gcs-sink connect/connect-gcp-gcs-source connect/connect-gcp-cloud-functions-sink connect/vertica-sink replicator/connect"
 
   - name: "CONNECT: kafka-streams"
     env: TEST_LIST="kafka-tutorials/kafka-streams/aggregate-sum kafka-tutorials/kafka-streams/filter-events kafka-tutorials/kafka-streams/ksql-serialization kafka-tutorials/kafka-streams/split-stream kafka-tutorials/kafka-streams/tumbling-windows kafka-tutorials/kafka-streams/distinct-events kafka-tutorials/kafka-streams/join-stream-and-table kafka-tutorials/kafka-streams/merge-streams kafka-tutorials/kafka-streams/transform-stream"
