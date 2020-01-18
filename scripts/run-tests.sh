@@ -29,9 +29,9 @@ do
         grep "$script" ${DIR}/tests-ignored.txt > /dev/null
         if [ $? = 0 ]
         then
-            log "####################################################"
-            log "skipping $script in dir $dir"
-            log "####################################################"
+            logwarn "####################################################"
+            logwarn "skipping $script in dir $dir"
+            logwarn "####################################################"
             continue
         fi
 
