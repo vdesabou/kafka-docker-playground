@@ -5,6 +5,8 @@ services:
     image: tibems:latest
     hostname: tibco-ems
     container_name: tibco-ems
+    volumes:
+        - ../../connect/connect-tibco-sink/tibjmsMsgConsumer.java:/opt/tibco/ems/8.5/samples/java/tibjmsMsgConsumer.java
     ports:
       - '7222:7222'
 
