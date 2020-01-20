@@ -91,7 +91,7 @@ $ docker exec connect \
 Verifying topic `test-travel-sample`
 
 ```bash
-$ docker exec schema-registry kafka-avro-console-consumer -bootstrap-server broker:9092 --topic test-travel-sample --from-beginning --max-messages 2
+$ docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic test-travel-sample --from-beginning --max-messages 2
 ```
 
 Results:
@@ -216,7 +216,7 @@ Results with `SMTs`:
 Verifying topic `airline`
 
 ```bash
-$ docker exec schema-registry kafka-avro-console-consumer -bootstrap-server broker:9092 --topic airline --from-beginning --max-messages 1
+$ docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic airline --from-beginning --max-messages 1
 ```
 
 ```json
@@ -251,7 +251,7 @@ $ docker exec schema-registry kafka-avro-console-consumer -bootstrap-server brok
 Verifying topic `airport`
 
 ```bash
-$ docker exec schema-registry kafka-avro-console-consumer -bootstrap-server broker:9092 --topic airport --from-beginning --max-messages 1
+$ docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic airport --from-beginning --max-messages 1
 ```
 
 ```json
@@ -286,7 +286,7 @@ $ docker exec schema-registry kafka-avro-console-consumer -bootstrap-server brok
 Verifying topic `hotel`
 
 ```bash
-$ docker exec schema-registry kafka-avro-console-consumer -bootstrap-server broker:9092 --topic hotel --from-beginning --max-messages 1
+$ docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic hotel --from-beginning --max-messages 1
 ```
 
 ```json
@@ -296,7 +296,7 @@ $ docker exec schema-registry kafka-avro-console-consumer -bootstrap-server brok
 Verifying topic `landmark`
 
 ```bash
-$ docker exec schema-registry kafka-avro-console-consumer -bootstrap-server broker:9092 --topic landmark --from-beginning --max-messages 1
+$ docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic landmark --from-beginning --max-messages 1
 ```
 
 ```json
@@ -306,7 +306,7 @@ $ docker exec schema-registry kafka-avro-console-consumer -bootstrap-server brok
 Verifying topic `route`
 
 ```bash
-$ docker exec schema-registry kafka-avro-console-consumer -bootstrap-server broker:9092 --topic route --from-beginning --max-messages 1
+$ docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic route --from-beginning --max-messages 1
 ```
 
 ```

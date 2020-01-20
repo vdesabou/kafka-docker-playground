@@ -49,7 +49,7 @@ $ curl -k -X POST https://localhost:8889/services/collector/event -d '{"event":"
 Verifying topic `splunk-source`
 
 ```bash
-$ docker exec schema-registry kafka-avro-console-consumer -bootstrap-server broker:9092 --topic splunk-source --from-beginning --max-messages 1
+$ docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic splunk-source --from-beginning --max-messages 1
 ```
 
 Results:

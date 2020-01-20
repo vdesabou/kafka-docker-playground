@@ -58,7 +58,7 @@ docker exec -e QUEUE_URL="$QUEUE_URL" connect \
      http://localhost:8083/connectors/sqs-source/config | jq_docker_cli .
 
 log "Verify we have received the data in test-sqs-source topic"
-docker exec schema-registry kafka-avro-console-consumer -bootstrap-server broker:9092 --topic test-sqs-source --from-beginning --max-messages 2
+docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic test-sqs-source --from-beginning --max-messages 2
 
 log "Delete queue ${QUEUE_URL}"
 aws_docker_cli sqs delete-queue --queue-url ${QUEUE_URL}

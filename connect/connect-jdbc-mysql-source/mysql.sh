@@ -55,6 +55,6 @@ docker exec connect \
 sleep 5
 
 log "Verifying topic mysql-application"
-docker exec schema-registry kafka-avro-console-consumer -bootstrap-server broker:9092 --topic mysql-application --from-beginning --max-messages 2
+docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic mysql-application --from-beginning --max-messages 2
 
 
