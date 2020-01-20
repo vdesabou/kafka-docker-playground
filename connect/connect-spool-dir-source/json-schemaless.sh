@@ -37,5 +37,5 @@ docker exec connect \
 sleep 5
 
 log "Verify we have received the data in spooldir-schemaless-json-topic topic"
-docker exec broker kafka-console-consumer -bootstrap-server broker:9092 --topic spooldir-schemaless-json-topic --property schema.registry.url=http://schema-registry:8081 --from-beginning --max-messages 10
+docker exec broker kafka-console-consumer -bootstrap-server broker:9092 --topic spooldir-schemaless-json-topic --from-beginning --max-messages 10
 

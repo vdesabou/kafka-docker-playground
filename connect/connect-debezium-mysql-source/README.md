@@ -77,7 +77,7 @@ docker exec connect \
 Verifying topic `dbserver1.mydb.team`
 
 ```bash
-$ docker exec schema-registry kafka-avro-console-consumer -bootstrap-server broker:9092 --topic dbserver1.mydb.team --from-beginning --max-messages 2
+$ docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic dbserver1.mydb.team --from-beginning --max-messages 2
 ```
 
 Result:

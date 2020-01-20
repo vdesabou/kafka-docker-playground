@@ -31,7 +31,7 @@ set -e
 ##########################
 
 log "Sending messages to topic gcs_topic"
-seq -f "{\"f1\": \"value%g\"}" 10 | docker exec -i schema-registry kafka-avro-console-producer --broker-list broker:9092 --topic gcs_topic --property value.schema='{"type":"record","name":"myrecord","fields":[{"name":"f1","type":"string"}]}'
+seq -f "{\"f1\": \"value%g\"}" 10 | docker exec -i connect kafka-avro-console-producer --broker-list broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic gcs_topic --property value.schema='{"type":"record","name":"myrecord","fields":[{"name":"f1","type":"string"}]}'
 
 
 log "Creating GCS Sink connector"
@@ -92,4 +92,4 @@ docker exec -e BUCKET_NAME="$BUCKET_NAME" connect \
 sleep 10
 
 log "Verify messages are in topic copy_of_gcs_topic"
-docker exec schema-registry kafka-avro-console-consumer -bootstrap-server broker:9092 --topic copy_of_gcs_topic --from-beginning --max-messages 9
+docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic copy_of_gcs_topic --from-beginning --max-messages 9

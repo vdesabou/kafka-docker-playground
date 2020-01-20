@@ -38,4 +38,4 @@ docker exec connect \
 sleep 5
 
 log "Verifying topic oracle-MYTABLE"
-docker exec schema-registry kafka-avro-console-consumer -bootstrap-server broker:9092 --topic oracle-MYTABLE --from-beginning --max-messages 1
+docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic oracle-MYTABLE --from-beginning --max-messages 1

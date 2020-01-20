@@ -36,14 +36,14 @@ docker exec -e PROJECT="$PROJECT" connect \
 
 
 log "Produce Avro data to topic artists"
-docker exec -i schema-registry kafka-avro-console-producer --broker-list broker:9092 --topic artists --property parse.key=true --property key.schema='{"type":"string"}' --property "key.separator=:" --property value.schema='{"type":"record","name":"artists","fields":[{"name":"name","type":"string"},{"name":"genre","type":"string"}]}' << EOF
+docker exec -i connect kafka-avro-console-producer --broker-list broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic artists --property parse.key=true --property key.schema='{"type":"string"}' --property "key.separator=:" --property value.schema='{"type":"record","name":"artists","fields":[{"name":"name","type":"string"},{"name":"genre","type":"string"}]}' << EOF
 "artistId1":{"name":"Michael Jackson","genre":"Pop"}
 "artistId2":{"name":"Bob Dylan","genre":"American folk"}
 "artistId3":{"name":"Freddie Mercury","genre":"Rock"}
 EOF
 
 log "Produce Avro data to topic songs"
-docker exec -i schema-registry kafka-avro-console-producer --broker-list broker:9092 --topic songs --property parse.key=true --property key.schema='{"type":"string"}' --property "key.separator=:" --property value.schema='{"type":"record","name":"songs","fields":[{"name":"title","type":"string"},{"name":"artist","type":"string"}]}' << EOF
+docker exec -i connect kafka-avro-console-producer --broker-list broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic songs --property parse.key=true --property key.schema='{"type":"string"}' --property "key.separator=:" --property value.schema='{"type":"record","name":"songs","fields":[{"name":"title","type":"string"},{"name":"artist","type":"string"}]}' << EOF
 "songId1":{"title":"billie jean","artist":"Michael Jackson"}
 "songId2":{"title":"hurricane","artist":"Bob Dylan"}
 "songId3":{"title":"bohemian rhapsody","artist":"Freddie Mercury"}

@@ -68,7 +68,7 @@ $ docker exec connect \
 Verify we have received the data in `test-kudu-accounts` topic:
 
 ```bash
-$ docker exec schema-registry kafka-avro-console-consumer -bootstrap-server broker:9092 --topic test-kudu-accounts --from-beginning --max-messages 2
+$ docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic test-kudu-accounts --from-beginning --max-messages 2
 ```
 
 Results:

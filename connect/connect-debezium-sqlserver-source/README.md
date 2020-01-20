@@ -63,7 +63,7 @@ Verifying topic `server1.dbo.customers`
 
 
 ```bash
-$ docker exec schema-registry kafka-avro-console-consumer -bootstrap-server broker:9092 --topic server1.dbo.customers --from-beginning --max-messages 5
+$ docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic server1.dbo.customers --from-beginning --max-messages 5
 ```
 
 Results:

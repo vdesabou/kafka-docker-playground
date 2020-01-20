@@ -7,7 +7,7 @@ source ${DIR}/../../scripts/utils.sh
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
 
 log "Sending messages to topic add-topic"
-seq -f "{\"a\": %g,\"b\": 1}" 10 | docker exec -i schema-registry kafka-avro-console-producer --broker-list broker:9092 --topic add-topic --property value.schema='{"type":"record","name":"myrecord","fields":[{"name":"a","type":"int"},{"name":"b","type":"int"}]}'
+seq -f "{\"a\": %g,\"b\": 1}" 10 | docker exec -i connect kafka-avro-console-producer --broker-list broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic add-topic --property value.schema='{"type":"record","name":"myrecord","fields":[{"name":"a","type":"int"},{"name":"b","type":"int"}]}'
 
 log "Creating AWS Lambda Sink connector"
 docker exec connect \
