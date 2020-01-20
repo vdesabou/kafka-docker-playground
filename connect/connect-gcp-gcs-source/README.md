@@ -71,7 +71,7 @@ $ docker exec -e BUCKET_NAME="$BUCKET_NAME" connect \
 Verify messages are in topic `copy_of_gcs_topic`
 
 ```bash
-$ docker exec schema-registry kafka-avro-console-consumer -bootstrap-server broker:9092 --topic copy_of_gcs_topic --from-beginning --max-messages 9
+$ docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic copy_of_gcs_topic --from-beginning --max-messages 9
 ```
 
 Results:

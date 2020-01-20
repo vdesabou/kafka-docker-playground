@@ -29,7 +29,7 @@ EOF
 sleep 2
 
 log "Sending messages to topic mytabledefaultbatchsize"
-seq -f "{\"f1\": \"value%g\"}" 10 | docker exec -i schema-registry kafka-avro-console-producer --broker-list broker:9092 --topic mytabledefaultbatchsize --property value.schema='{"type":"record","name":"myrecord","fields":[{"name":"f1","type":"string"}]}'
+seq -f "{\"f1\": \"value%g\"}" 10 | docker exec -i connect kafka-avro-console-producer --broker-list broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic mytabledefaultbatchsize --property value.schema='{"type":"record","name":"myrecord","fields":[{"name":"f1","type":"string"}]}'
 
 log "Creating JDBC Vertica sink connector - default batch.size (3000)"
 docker exec connect \
@@ -78,7 +78,7 @@ EOF
 sleep 2
 
 log "Sending messages to topic mytablebatchsizeone"
-seq -f "{\"f1\": \"value%g\"}" 10 | docker exec -i schema-registry kafka-avro-console-producer --broker-list broker:9092 --topic mytablebatchsizeone --property value.schema='{"type":"record","name":"myrecord","fields":[{"name":"f1","type":"string"}]}'
+seq -f "{\"f1\": \"value%g\"}" 10 | docker exec -i connect kafka-avro-console-producer --broker-list broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic mytablebatchsizeone --property value.schema='{"type":"record","name":"myrecord","fields":[{"name":"f1","type":"string"}]}'
 
 log "Creating JDBC Vertica sink connector - batch.size (1)"
 docker exec connect \

@@ -59,6 +59,6 @@ docker container logs --tail=500 postgres
 docker container logs --tail=500 connect
 
 log "Verifying topic asgard.public.customers-raw"
-docker exec schema-registry kafka-avro-console-consumer -bootstrap-server broker:9092 --topic asgard.public.customers-raw --from-beginning --max-messages 5
+docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic asgard.public.customers-raw --from-beginning --max-messages 5
 
 

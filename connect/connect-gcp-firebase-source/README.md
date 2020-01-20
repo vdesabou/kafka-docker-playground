@@ -95,7 +95,7 @@ $ docker exec -e PROJECT="$PROJECT" connect \
 Verify messages are in topic `artists`
 
 ```bash
-$ docker exec schema-registry kafka-avro-console-consumer -bootstrap-server broker:9092 --topic artists --from-beginning --max-messages 3
+$ docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic artists --from-beginning --max-messages 3
 ```
 
 Results:
@@ -109,7 +109,7 @@ Results:
 Verify messages are in topic `songs`
 
 ```bash
-$ docker exec schema-registry kafka-avro-console-consumer -bootstrap-server broker:9092 --topic songs --from-beginning --max-messages 3
+$ docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic songs --from-beginning --max-messages 3
 ```
 
 Results:

@@ -88,7 +88,7 @@ $ docker exec connect \
 Sending messages to topic `test_sftp_sink`
 
 ```bash
-$ seq -f "{\"f1\": \"value%g\"}" 10 | docker exec -i schema-registry kafka-avro-console-producer --broker-list broker:9092 --topic test_sftp_sink --property value.schema='{"type":"record","name":"myrecord","fields":[{"name":"f1","type":"string"}]}' --producer.config /tmp/client.properties
+$ seq -f "{\"f1\": \"value%g\"}" 10 | docker exec -i connect kafka-avro-console-producer --broker-list broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic test_sftp_sink --property value.schema='{"type":"record","name":"myrecord","fields":[{"name":"f1","type":"string"}]}' --producer.config /tmp/client.properties
 ```
 
 Listing content of `./upload/topics/test_sftp_sink/partition\=0/`

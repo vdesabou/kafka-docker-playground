@@ -49,7 +49,7 @@ $ docker exec connect \
 Verifying topic `copy_of_test_hdfs`:
 
 ```bash
-$ docker exec schema-registry kafka-avro-console-consumer -bootstrap-server broker:9092 --topic copy_of_test_hdfs --from-beginning --max-messages 9
+$ docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic copy_of_test_hdfs --from-beginning --max-messages 9
 ```
 
 Results:

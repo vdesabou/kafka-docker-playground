@@ -52,7 +52,7 @@ $ curl -XPOST -u admin:admin -d "body=message" http://localhost:8161/api/message
 Verify we have received the data in MyKafkaTopicName topic:
 
 ```bash
-docker exec schema-registry kafka-avro-console-consumer -bootstrap-server broker:9092 --topic MyKafkaTopicName --from-beginning --max-messages 1
+docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic MyKafkaTopicName --from-beginning --max-messages 1
 ```
 
 We get:

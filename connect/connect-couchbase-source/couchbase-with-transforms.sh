@@ -45,12 +45,12 @@ docker exec connect \
 sleep 10
 
 log "Verifying topic airline"
-docker exec schema-registry kafka-avro-console-consumer -bootstrap-server broker:9092 --topic airline --from-beginning --max-messages 1
+docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic airline --from-beginning --max-messages 1
 log "Verifying topic airport"
-docker exec schema-registry kafka-avro-console-consumer -bootstrap-server broker:9092 --topic airport --from-beginning --max-messages 1
+docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic airport --from-beginning --max-messages 1
 log "Verifying topic hotel"
-docker exec schema-registry kafka-avro-console-consumer -bootstrap-server broker:9092 --topic hotel --from-beginning --max-messages 1
+docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic hotel --from-beginning --max-messages 1
 log "Verifying topic landmark"
-docker exec schema-registry kafka-avro-console-consumer -bootstrap-server broker:9092 --topic landmark --from-beginning --max-messages 1
+docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic landmark --from-beginning --max-messages 1
 log "Verifying topic route"
-docker exec schema-registry kafka-avro-console-consumer -bootstrap-server broker:9092 --topic route --from-beginning --max-messages 1
+docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic route --from-beginning --max-messages 1

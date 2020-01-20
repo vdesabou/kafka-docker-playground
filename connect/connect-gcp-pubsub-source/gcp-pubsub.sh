@@ -62,7 +62,7 @@ docker exec -e PROJECT="$PROJECT" connect \
 sleep 10
 
 log "Verify messages are in topic pubsub-topic"
-docker exec schema-registry kafka-avro-console-consumer -bootstrap-server broker:9092 --topic pubsub-topic --from-beginning --max-messages 3
+docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic pubsub-topic --from-beginning --max-messages 3
 
 log "Delete topic and subscription"
 docker run -ti --volumes-from gcloud-config google/cloud-sdk:latest gcloud pubsub --project ${PROJECT} topics delete topic-1
