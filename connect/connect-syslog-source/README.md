@@ -39,7 +39,7 @@ $ docker exec connect \
 Test with sample syslog-formatted message sent via netcat
 
 ```bash
-$ <34>1 2003-10-11T22:14:15.003Z mymachine.example.com su - ID47 - Your refrigerator is running" | nc -v -w 0 localhost 545
+$ <34>1 2003-10-11T22:14:15.003Z mymachine.example.com su - ID47 - Your refrigerator is running" | docker run -i --rm --network=host subfuzion/netcat -v -w 0 localhost 545
 ```
 
 Verify we have received the data in syslog topic
