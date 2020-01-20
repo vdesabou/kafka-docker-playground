@@ -216,7 +216,6 @@ function retry() {
       if [[ $n -lt $max ]]; then
         ((n++))
         logwarn "Command failed. Attempt $n/$max:"
-        set +e
         logwarn "####################################################"
         logwarn "docker ps"
         docker ps
@@ -230,7 +229,6 @@ function retry() {
         logwarn "connect logs"
         docker container logs --tail=500 connect
         logwarn "####################################################"
-        set -e
       else
         logerror "The command has failed after $n attempts."
         return 1
