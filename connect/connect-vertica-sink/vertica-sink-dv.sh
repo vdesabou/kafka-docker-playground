@@ -55,14 +55,15 @@ docker exec connect \
                     "topics": "url_override_normalized",
                     "pk.mode": "record_key",
                     "pk.fields": "kafkaId",
-                    "transforms": "insert,castboolean,insertcreationdate",
-                    "transforms.insert.type": "org.apache.kafka.connect.transforms.InsertField$Value",
-                    "transforms.insert.static.field": "KafkaKeyIsDeleted",
-                    "transforms.insert.static.value": "0",
-                    "transforms.castboolean.type": "org.apache.kafka.connect.transforms.Cast$Value",
-                    "transforms.castboolean.spec": "KafkaKeyIsDeleted:boolean",
-                    "transforms.insertcreationdate.type": "org.apache.kafka.connect.transforms.InsertField$Value",
-                    "transforms.insertcreationdate.timestamp.field": "dwhCreationDate",
+                    "enable.auto.commit": "false",
+                    "transforms": "insert_isKafkaDeleted, cast_isKafkaDeleted_toBoolean, insert_dwhCreateDate",
+                    "transforms.insert_isKafkaDeleted.type": "org.apache.kafka.connect.transforms.InsertField$Value",
+                    "transforms.insert_isKafkaDeleted.static.field": "KafkaKeyIsDeleted",
+                    "transforms.insert_isKafkaDeleted.static.value": "0",
+                    "transforms.cast_isKafkaDeleted_toBoolean.type": "org.apache.kafka.connect.transforms.Cast$Value",
+                    "transforms.cast_isKafkaDeleted_toBoolean.spec": "KafkaKeyIsDeleted:boolean",
+                    "transforms.insert_dwhCreateDate.type": "org.apache.kafka.connect.transforms.InsertField$Value",
+                    "transforms.insert_dwhCreateDate.timestamp.field": "dwhCreationDate",
                     "key.converter": "org.apache.kafka.connect.storage.StringConverter",
                     "value.converter" : "Avro",
                     "value.converter.schema.registry.url":"http://schema-registry:8081",
@@ -95,3 +96,20 @@ EOF
 #  2020-01-17 16:26:53.104 |       1 |      1 | f
 #  2020-01-17 16:26:53.104 |       1 |      1 | f
 # (10 rows)
+
+# Without trace logs:
+
+# [2020-01-17 17:01:39,840] INFO Wrote 10 record(s) to stream (io.confluent.vertica.VerticaSinkTask)
+# [2020-01-17 17:01:39,840] INFO Waiting for import to complete. (io.confluent.vertica.VerticaSinkTask)
+# [2020-01-17 17:01:39,850] INFO put() - Imported 10 record(s) in 42 millisecond(s). (io.confluent.vertica.VerticaSinkTask)
+# [2020-01-17 17:01:39,851] WARN put() - Rejected 10 record(s). (io.confluent.vertica.VerticaSinkTask)
+# [2020-01-17 17:01:39,851] WARN Rejected row 1 (io.confluent.vertica.VerticaSinkTask)
+# [2020-01-17 17:01:39,851] WARN Rejected row 2 (io.confluent.vertica.VerticaSinkTask)
+# [2020-01-17 17:01:39,851] WARN Rejected row 3 (io.confluent.vertica.VerticaSinkTask)
+# [2020-01-17 17:01:39,851] WARN Rejected row 4 (io.confluent.vertica.VerticaSinkTask)
+# [2020-01-17 17:01:39,851] WARN Rejected row 5 (io.confluent.vertica.VerticaSinkTask)
+# [2020-01-17 17:01:39,851] WARN Rejected row 6 (io.confluent.vertica.VerticaSinkTask)
+# [2020-01-17 17:01:39,851] WARN Rejected row 7 (io.confluent.vertica.VerticaSinkTask)
+# [2020-01-17 17:01:39,851] WARN Rejected row 8 (io.confluent.vertica.VerticaSinkTask)
+# [2020-01-17 17:01:39,851] WARN Rejected row 9 (io.confluent.vertica.VerticaSinkTask)
+# [2020-01-17 17:01:39,851] WARN Rejected row 10 (io.confluent.vertica.VerticaSinkTask)
