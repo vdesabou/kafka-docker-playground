@@ -47,4 +47,4 @@ docker exec -e PROJECT="$PROJECT" -e REGION="$REGION" -e FUNCTION="$FUNCTION" co
 sleep 10
 
 log "Confirm that the messages were delivered to the result topic in Kafka"
-docker exec broker kafka-console-consumer --bootstrap-server broker:9092 --topic test-result --from-beginning --max-messages 3
+timeout 60 docker exec broker kafka-console-consumer --bootstrap-server broker:9092 --topic test-result --from-beginning --max-messages 3

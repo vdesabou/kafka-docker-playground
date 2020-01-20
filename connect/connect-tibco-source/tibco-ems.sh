@@ -70,4 +70,4 @@ sleep 5
 
 
 log "Verify we have received the data in from-tibco-messages topic"
-docker exec connect kafka-console-consumer -bootstrap-server broker:9092 --topic from-tibco-messages --from-beginning --max-messages 2
+timeout 60 docker exec connect kafka-console-consumer -bootstrap-server broker:9092 --topic from-tibco-messages --from-beginning --max-messages 2

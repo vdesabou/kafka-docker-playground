@@ -34,4 +34,4 @@ docker exec connect \
 sleep 10
 
 log "Verifying topic add-topic-response"
-docker exec broker kafka-console-consumer -bootstrap-server broker:9092 --topic add-topic-response --from-beginning --max-messages 10
+timeout 60 docker exec broker kafka-console-consumer -bootstrap-server broker:9092 --topic add-topic-response --from-beginning --max-messages 10

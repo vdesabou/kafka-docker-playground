@@ -32,6 +32,6 @@ docker exec connect \
 sleep 10
 
 log "Verifying topic influx_testdb"
-docker exec broker kafka-console-consumer --bootstrap-server localhost:9092 --topic influx_testdb --from-beginning --max-messages 1
+timeout 60 docker exec broker kafka-console-consumer --bootstrap-server localhost:9092 --topic influx_testdb --from-beginning --max-messages 1
 
 

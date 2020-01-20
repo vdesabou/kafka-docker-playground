@@ -54,7 +54,7 @@ docker exec connect \
      http://localhost:8083/connectors/kinesis-source/config | jq_docker_cli .
 
 log "Verify we have received the data in kinesis_topic topic"
-docker exec broker kafka-console-consumer --bootstrap-server broker:9092 --topic kinesis_topic --from-beginning --max-messages 1
+timeout 60 docker exec broker kafka-console-consumer --bootstrap-server broker:9092 --topic kinesis_topic --from-beginning --max-messages 1
 
 log "Delete the stream"
 aws_docker_cli kinesis delete-stream --stream-name my_kinesis_stream

@@ -47,4 +47,4 @@ docker exec connect \
      http://localhost:8083/connectors/solace-source/config | jq_docker_cli .
 
 log "Verifying topic from-solace-messages"
-docker exec broker kafka-console-consumer -bootstrap-server broker:9092 --topic from-solace-messages --from-beginning --max-messages 2
+timeout 60 docker exec broker kafka-console-consumer -bootstrap-server broker:9092 --topic from-solace-messages --from-beginning --max-messages 2
