@@ -39,11 +39,6 @@ before_install:
 # connect-azure-data-lake-storage-gen1-sink
 # connect-azure-data-lake-storage-gen2-sink
 
-
-# Require to download and build images
-# connect-jdbc-oracle12-sink
-# connect-jdbc-oracle12-source
-
 # Not reliable
 # replicator/executable
 # kudu-sink kudu-source ("Error connecting: TTransportException, TSocket read 0 bytes")
@@ -66,8 +61,8 @@ jobs:
   - name: "CCLOUD ccloud-demo CONNECT: jdbc-sqlserver-source jdbc-vertica-sink jms-active-mq-sink jms-solace-sink"
     env: TEST_LIST="ccloud/ccloud-demo connect/connect-jdbc-sqlserver-source connect/connect-jdbc-vertica-sink connect/connect-jms-active-mq-sink connect/connect-jms-solace-sink"
 
-  - name: "CONNECT: mongodb-sink mongodb-source mqtt-sink mqtt-source neo4j-sink omnisci-sink connect-tibco-sink connect-tibco-source"
-    env: TEST_LIST="connect/connect-mongodb-sink connect/connect-mongodb-source connect/connect-mqtt-sink connect/connect-mqtt-source connect/connect-neo4j-sink connect/connect-omnisci-sink connect/connect-tibco-sink connect/connect-tibco-source"
+  - name: "CONNECT: mongodb-sink mongodb-source mqtt-sink mqtt-source neo4j-sink omnisci-sink tibco-sink tibco-source jdbc-oracle12-sink jdbc-oracle12-source"
+    env: TEST_LIST="connect/connect-mongodb-sink connect/connect-mongodb-source connect/connect-mqtt-sink connect/connect-mqtt-source connect/connect-neo4j-sink connect/connect-omnisci-sink connect/connect-tibco-sink connect/connect-tibco-source connect/jdbc-oracle12-sink connect/jdbc-oracle12-source"
 
   - name: "CONNECT: rabbitmq-source redis-sink replicator sftp-sink sftp-source solace-sink solace-source"
     env: TEST_LIST="connect/connect-rabbitmq-source connect/connect-redis-sink connect/connect-replicator connect/connect-sftp-sink connect/connect-sftp-source connect/connect-solace-sink connect/connect-solace-source"

@@ -4,7 +4,7 @@ services:
   oracle:
     # You need to build this image first, following the instructions at
     # https://github.com/oracle/docker-images/blob/master/OracleDatabase/SingleInstance/README.md
-    image: oracle/database:12.2.0.1-ee
+    image: ${ORACLE_IMAGE}
     hostname: oracle
     container_name: oracle
     ports:
