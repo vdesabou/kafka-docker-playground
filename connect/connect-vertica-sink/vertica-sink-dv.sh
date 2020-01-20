@@ -35,7 +35,10 @@ sleep 2
 
 log "Sending messages to topic url_override_normalized"
 
-seq -f "{\"ListID\": 1,\"kafkaId\": 1}" 10 | docker exec -i connect kafka-avro-console-producer --broker-list broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic url_override_normalized --property value.schema='{"type":"record","name":"myrecord","fields":[{"name":"ListID","type":"int"},{"name":"kafkaId","type":"int"}]}'
+# seq -f "{\"ListID\": 1,\"kafkaId\": 1}" 10 | docker exec -i connect kafka-avro-console-producer --broker-list broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic url_override_normalized --property value.schema='{"type":"record","name":"myrecord","fields":[{"name":"ListID","type":"int"},{"name":"kafkaId","type":"int"}]}'
+
+# to reproduce some rejected messages
+seq -f "{\"ListID\": null,\"kafkaId\": 1}" 10 | docker exec -i connect kafka-avro-console-producer --broker-list broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic url_override_normalized --property value.schema='{"type":"record","name":"myrecord","fields":[{"name":"ListID", "type": ["null", "long"], "default": null},{"name":"kafkaId","type":"int"}]}'
 
 log "Creating Vertica sink connector"
 docker exec connect \
