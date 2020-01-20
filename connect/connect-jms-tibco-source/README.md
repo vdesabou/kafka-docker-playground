@@ -4,7 +4,7 @@
 
 Quickly test [JMS TIBCO Source](https://docs.confluent.io/current/connect/kafka-connect-jms/index.html#using-with-tibco-ems) connector.
 
-Using TIBCO Docker [image](https://hub.docker.com/r/ibmcom/mq/)
+Using TIBCO Docker [image](https://github.com/mikeschippers/docker-tibco)
 
 ## Pre-requisites
 

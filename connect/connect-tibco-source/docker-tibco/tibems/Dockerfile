@@ -13,6 +13,7 @@ rm -rf /tmp/install/tibems /tmp/install/TIB_ems*.zip
 EXPOSE 7222
 
 ADD ./queues.conf /home/tibusr/
+ADD ./factories.conf /home/tibusr/
 
 WORKDIR /home/tibusr
 ENTRYPOINT ["/opt/tibco/ems/8.5/bin/tibemsd"]
