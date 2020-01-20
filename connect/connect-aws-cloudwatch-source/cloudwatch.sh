@@ -59,4 +59,4 @@ docker exec connect \
 sleep 5
 
 log "Verify we have received the data in my-log-group.my-log-stream topic"
-docker exec broker kafka-console-consumer -bootstrap-server broker:9092 --topic my-log-group.my-log-stream --from-beginning --max-messages 10
+timeout 60 docker exec broker kafka-console-consumer -bootstrap-server broker:9092 --topic my-log-group.my-log-stream --from-beginning --max-messages 10

@@ -75,4 +75,4 @@ docker exec -e BUCKET_NAME="$BUCKET_NAME" connect \
 
 
 log "Verifying topic copy_of_s3_topic"
-docker exec broker kafka-console-consumer -bootstrap-server broker:9092 --topic copy_of_s3_topic --from-beginning --max-messages 9
+timeout 60 docker exec broker kafka-console-consumer -bootstrap-server broker:9092 --topic copy_of_s3_topic --from-beginning --max-messages 9
