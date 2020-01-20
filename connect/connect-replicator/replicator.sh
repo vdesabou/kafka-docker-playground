@@ -31,4 +31,4 @@ docker exec connect \
 sleep 10
 
 log "Verify we have received the data in test-topic-duplicate topic"
-docker exec broker kafka-console-consumer --bootstrap-server broker:9092 --topic test-topic-duplicate --from-beginning --max-messages 10
+timeout 60 docker exec broker kafka-console-consumer --bootstrap-server broker:9092 --topic test-topic-duplicate --from-beginning --max-messages 10

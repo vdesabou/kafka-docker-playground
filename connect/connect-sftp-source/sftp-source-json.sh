@@ -46,4 +46,4 @@ docker exec connect \
 sleep 5
 
 log "Verifying topic sftp-testing-topic"
-docker exec broker kafka-console-consumer -bootstrap-server broker:9092 --topic sftp-testing-topic --from-beginning --max-messages 2
+timeout 60 docker exec broker kafka-console-consumer -bootstrap-server broker:9092 --topic sftp-testing-topic --from-beginning --max-messages 2
