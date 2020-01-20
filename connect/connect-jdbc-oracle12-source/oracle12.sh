@@ -29,6 +29,13 @@ then
      cd ${OLDDIR}
 fi
 
+export ORACLE_IMAGE="oracle/database:12.2.0.1-ee"
+if [ ! -z "$TRAVIS" ]
+then
+     # if this is travis build, use private image.
+     export ORACLE_IMAGE="vdesabou/oracle12"
+fi
+
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
 
 
