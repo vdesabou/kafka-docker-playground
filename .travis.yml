@@ -22,6 +22,8 @@ before_install:
   - cp ./3rdparty/TIB_ems-ce_8.5.1_linux_x86_64.zip ./connect/connect-jms-tibco-source/docker-tibco/TIB_ems-ce_8.5.1_linux_x86_64.zip
   - cp ./3rdparty/ojdbc6.jar ./connect/connect-jdbc-oracle11-sink/ojdbc6.jar
   - cp ./3rdparty/ojdbc6.jar ./connect/connect-jdbc-oracle11-source/ojdbc6.jar
+  - cp ./3rdparty/ojdbc8.jar ./connect/connect-jdbc-oracle12-sink/ojdbc8.jar
+  - cp ./3rdparty/ojdbc8.jar ./connect/connect-jdbc-oracle12-source/ojdbc8.jar
   - cp ./3rdparty/ImpalaJDBC42.jar ./connect/connect-kudu-source/ImpalaJDBC42.jar
   - cp ./3rdparty/ImpalaJDBC42.jar ./connect/connect-kudu-sink/ImpalaJDBC42.jar
   - cp ./3rdparty/jms.jar ./connect/connect-ibm-mq-sink/jms.jar
