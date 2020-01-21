@@ -61,7 +61,8 @@ docker exec connect \
                     "errors.log.include.messages": "true",
                     "topics": "customer",
                     "enable.auto.commit": "false",
-                    "transforms": "insert_isKafkaDeleted, cast_isKafkaDeleted_toBoolean, insert_dwhCreateDate, KeyToValue, cast_kafkaId_toInt",
+                    "transforms": "tombstoneHandlerExample,insert_isKafkaDeleted, cast_isKafkaDeleted_toBoolean, insert_dwhCreateDate, KeyToValue, cast_kafkaId_toInt",
+                    "transforms.tombstoneHandlerExample.type": "io.confluent.connect.transforms.TombstoneHandler",
                     "transforms.insert_isKafkaDeleted.type": "org.apache.kafka.connect.transforms.InsertField$Value",
                     "transforms.insert_isKafkaDeleted.static.field": "KafkaKeyIsDeleted",
                     "transforms.insert_isKafkaDeleted.static.value": "0",
@@ -74,7 +75,7 @@ docker exec connect \
                     "transforms.cast_kafkaId_toInt.type": "org.apache.kafka.connect.transforms.Cast$Value",
                     "transforms.cast_kafkaId_toInt.spec": "kafkaId:int16",
                     "key.converter": "org.apache.kafka.connect.storage.StringConverter",
-                    "value.converter" : "Avro",
+                    "value.converter" : "io.confluent.connect.avro.AvroConverter",
                     "value.converter.schema.registry.url":"http://schema-registry:8081",
                     "confluent.topic.bootstrap.servers": "broker:9092",
                     "confluent.topic.replication.factor": "1"
