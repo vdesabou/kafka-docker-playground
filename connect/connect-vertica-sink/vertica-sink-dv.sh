@@ -24,6 +24,13 @@ then
      mvn -f ${DIR}/KeyToValue/pom.xml install -DskipTests
 fi
 
+if [ ! -f ${DIR}/TombstoneToNull/target/TombstoneToNull-1.0-SNAPSHOT.jar ]
+then
+     # build TombstoneToNull transform
+     log "Build TombstoneToNull transform"
+     mvn -f ${DIR}/TombstoneToNull/pom.xml install -DskipTests
+fi
+
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext-dv.yml"
 
 
@@ -61,8 +68,9 @@ docker exec connect \
                     "errors.log.include.messages": "true",
                     "topics": "customer",
                     "enable.auto.commit": "false",
-                    "transforms": "tombstoneHandlerExample,insert_isKafkaDeleted, cast_isKafkaDeleted_toBoolean, insert_dwhCreateDate, KeyToValue, cast_kafkaId_toInt",
-                    "transforms.tombstoneHandlerExample.type": "io.confluent.connect.transforms.TombstoneHandler",
+                    "consumer.override.max.poll.records": "501",
+                    "transforms": "TombstoneToNull, insert_isKafkaDeleted, cast_isKafkaDeleted_toBoolean, insert_dwhCreateDate, KeyToValue, cast_kafkaId_toInt",
+                    "transforms.TombstoneToNull.type": "com.github.vdesabou.kafka.connect.transforms.TombstoneToNull",
                     "transforms.insert_isKafkaDeleted.type": "org.apache.kafka.connect.transforms.InsertField$Value",
                     "transforms.insert_isKafkaDeleted.static.field": "KafkaKeyIsDeleted",
                     "transforms.insert_isKafkaDeleted.static.value": "0",
@@ -73,7 +81,7 @@ docker exec connect \
                     "transforms.KeyToValue.type": "com.github.vdesabou.kafka.connect.transforms.KeyToValue",
                     "transforms.KeyToValue.key.field.name":"kafkaId",
                     "transforms.cast_kafkaId_toInt.type": "org.apache.kafka.connect.transforms.Cast$Value",
-                    "transforms.cast_kafkaId_toInt.spec": "kafkaId:int16",
+                    "transforms.cast_kafkaId_toInt.spec": "kafkaId:int64",
                     "key.converter": "org.apache.kafka.connect.storage.StringConverter",
                     "value.converter" : "io.confluent.connect.avro.AvroConverter",
                     "value.converter.schema.registry.url":"http://schema-registry:8081",
@@ -82,7 +90,6 @@ docker exec connect \
           }' \
      http://localhost:8083/connectors/vertica-sink/config | jq_docker_cli .
 
-
 sleep 10
 
 log "Check data is in Vertica"
@@ -90,13 +97,15 @@ docker exec -i vertica /opt/vertica/bin/vsql -hlocalhost -Udbadmin << EOF
 select * from public.customer;
 EOF
 
-#      dwhCreationDate     | kafkaId | ListID | NormalizedHashItemID | URL | KafkaKeyIsDeleted
-# -------------------------+---------+--------+----------------------+-----+-------------------
-#  2020-01-21 10:02:40.877 |       0 |      0 |                    0 | url | f
-#  2020-01-21 10:02:45.954 |       1 |      1 |                    1 | url | f
-#  2020-01-21 10:02:50.958 |       2 |      2 |                    2 | url | f
-#  2020-01-21 10:02:55.963 |       3 |      3 |                    3 | url | f
-# (4 rows)
+#      dwhCreationDate     | kafkaId | ListID | NormalizedHashItemID | URL  | KafkaKeyIsDeleted
+# -------------------------+---------+--------+----------------------+------+-------------------
+#  2020-01-21 16:22:31.784 |       0 |      0 |                    0 | url  | f
+#  2020-01-21 16:22:31.886 |       1 |      1 |                    1 | url  | f
+#  2020-01-21 16:22:31.941 |       2 |      0 |                    0 | null | f     <----- tombstone
+#  2020-01-21 16:22:32.001 |       3 |      3 |                    3 | url  | f
+#  2020-01-21 16:22:32.058 |       4 |      4 |                    4 | url  | f
+#  2020-01-21 16:22:32.116 |       5 |      5 |                    5 | url  | f
+#  2020-01-21 16:22:32.173 |       6 |      6 |                    6 | url  | f
 
 
 # Without trace logs:
