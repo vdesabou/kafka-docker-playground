@@ -52,8 +52,8 @@ jobs:
   - name: "CONNECT: jms-tibco-sink jms-tibco-source debezium-mongodb-source debezium-mysql-source debezium-postgresql-source debezium-sqlserver-source elasticsearch-sink"
     env: TEST_LIST="connect/connect-jms-tibco-sink connect/connect-jms-tibco-source connect/connect-debezium-mongodb-source connect/connect-debezium-mysql-source connect/connect-debezium-postgresql-source connect/connect-debezium-sqlserver-source connect/connect-elasticsearch-sink"
 
-  - name: "CONNECT: hbase-sink hdfs2-sink hdfs3-sink hdfs3-source http-sink ibm-mq-sink ibm-mq-source"
-    env: TEST_LIST="connect/connect-hdfs2-sink connect/connect-hdfs3-sink connect/connect-hdfs3-source connect/connect-http-sink connect/connect-ibm-mq-sink connect/connect-ibm-mq-source"
+  - name: "CONNECT: hbase-sink hdfs2-sink hdfs3-sink hdfs3-source ibm-mq-sink ibm-mq-source"
+    env: TEST_LIST="connect/connect-hdfs2-sink connect/connect-hdfs3-sink connect/connect-hdfs3-source connect/connect-ibm-mq-sink connect/connect-ibm-mq-source"
 
   - name: "CONNECT: jdbc-oracle11-sink jdbc-oracle11-source influxdb-sink influxdb-source jdbc-mysql-sink jdbc-mysql-source jdbc-postgresql-sink jdbc-postgresql-source jdbc-sqlserver-sink"
     env: TEST_LIST="connect/connect-jdbc-oracle11-sink connect/connect-jdbc-oracle11-source connect/connect-influxdb-sink connect/connect-influxdb-source connect/connect-jdbc-mysql-sink connect/connect-jdbc-mysql-source connect/connect-jdbc-postgresql-sink connect/connect-jdbc-postgresql-source connect/connect-jdbc-sqlserver-sink"
@@ -76,10 +76,10 @@ jobs:
   - name: "CONNECT: gcp-bigquery-sink gcp-firebase-sink gcp-firebase-source gcp-pubsub-source gcs-sink gcs-source google-cloud-functions-sink vertica-sink REPLICATOR: connect"
     env: TEST_LIST="connect/connect-gcp-bigquery-sink connect/connect-gcp-firebase-sink connect/connect-gcp-firebase-source connect/connect-gcp-pubsub-source connect/connect-gcp-gcs-sink connect/connect-gcp-gcs-source connect/connect-gcp-cloud-functions-sink connect/vertica-sink replicator/connect"
 
-  - name: "CONNECT: kafka-streams"
-    env: TEST_LIST="kafka-tutorials/kafka-streams/aggregate-sum kafka-tutorials/kafka-streams/filter-events kafka-tutorials/kafka-streams/ksql-serialization kafka-tutorials/kafka-streams/split-stream kafka-tutorials/kafka-streams/tumbling-windows kafka-tutorials/kafka-streams/distinct-events kafka-tutorials/kafka-streams/join-stream-and-table kafka-tutorials/kafka-streams/merge-streams kafka-tutorials/kafka-streams/transform-stream"
+  - name: "CONNECT: http-sink STREAMS:kafka-streams"
+    env: TEST_LIST="connect/connect-http-sink kafka-tutorials/kafka-streams/aggregate-sum kafka-tutorials/kafka-streams/filter-events kafka-tutorials/kafka-streams/ksql-serialization kafka-tutorials/kafka-streams/split-stream kafka-tutorials/kafka-streams/tumbling-windows kafka-tutorials/kafka-streams/distinct-events kafka-tutorials/kafka-streams/join-stream-and-table kafka-tutorials/kafka-streams/merge-streams kafka-tutorials/kafka-streams/transform-stream"
 
-  - name: "CONNECT: ksql"
+  - name: "KSQL: ksql"
     env: TEST_LIST="kafka-tutorials/ksql/aggregate-count kafka-tutorials/ksql/aggregate-sum kafka-tutorials/ksql/join-stream-and-stream kafka-tutorials/ksql/join-table-and-table kafka-tutorials/ksql/merge-streams kafka-tutorials/ksql/rekey-with-function kafka-tutorials/ksql/transform-stream kafka-tutorials/ksql/aggregate-minmax kafka-tutorials/ksql/filter-events kafka-tutorials/ksql/join-stream-and-table kafka-tutorials/ksql/ksql-serialization kafka-tutorials/ksql/rekey-a-stream  kafka-tutorials/ksql/split-stream kafka-tutorials/ksql/tumbling-windows"
 
   # - name: "ENVIRONMENTS"
