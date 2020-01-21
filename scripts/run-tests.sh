@@ -9,7 +9,13 @@ cd ${DIR}/..
 nb_test_failed=0
 failed_tests=""
 
-for dir in $@
+test_list="$1"
+if [ "$1" = "ALL" ]
+then
+    test_list=$(grep "env: TEST_LIST" ${DIR}/../.travis.yml | cut -d '"' -f 2 | tr '\n' ' ')
+fi
+
+for dir in $test_list
 do
     if [ ! -d $dir ]
     then
