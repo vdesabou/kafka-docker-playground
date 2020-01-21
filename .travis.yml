@@ -64,7 +64,7 @@ jobs:
     env: TEST_LIST="ccloud/ccloud-demo connect/connect-jdbc-sqlserver-source connect/connect-jdbc-vertica-sink connect/connect-jms-active-mq-sink connect/connect-jms-solace-sink"
 
   - name: "CONNECT: mongodb-sink mongodb-source mqtt-sink mqtt-source neo4j-sink omnisci-sink tibco-sink tibco-source jdbc-oracle12-sink jdbc-oracle12-source"
-    env: TEST_LIST="connect/connect-mongodb-sink connect/connect-mongodb-source connect/connect-mqtt-sink connect/connect-mqtt-source connect/connect-neo4j-sink connect/connect-omnisci-sink connect/connect-tibco-sink connect/connect-tibco-source connect/jdbc-oracle12-sink connect/jdbc-oracle12-source"
+    env: TEST_LIST="connect/connect-mongodb-sink connect/connect-mongodb-source connect/connect-mqtt-sink connect/connect-mqtt-source connect/connect-neo4j-sink connect/connect-omnisci-sink connect/connect-tibco-sink connect/connect-tibco-source connect/connect-jdbc-oracle12-sink connect/connect-jdbc-oracle12-source"
 
   - name: "CONNECT: rabbitmq-source redis-sink replicator sftp-sink sftp-source solace-sink solace-source"
     env: TEST_LIST="connect/connect-rabbitmq-source connect/connect-redis-sink connect/connect-replicator connect/connect-sftp-sink connect/connect-sftp-source connect/connect-solace-sink connect/connect-solace-source"
