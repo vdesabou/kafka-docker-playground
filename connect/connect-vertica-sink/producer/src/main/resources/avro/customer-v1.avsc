@@ -1,0 +1,19 @@
+{
+    "type": "record",
+    "name": "Customer",
+    "namespace": "com.github.vdesabou",
+    "fields": [
+        {
+            "name": "ListID",
+            "type": "long"
+        },
+        {
+            "name": "NormalizedHashItemID",
+            "type": "long"
+        },
+        {
+            "name": "URL",
+            "type": "string"
+        }
+    ]
+}

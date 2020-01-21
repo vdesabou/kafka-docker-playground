@@ -4,6 +4,8 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
+verify_installed "mvn"
+
 if [ ! -f ${DIR}/vertica-jdbc.jar ]
 then
      # install deps
@@ -15,30 +17,32 @@ then
      rm -f ${DIR}/vertica-client-9.3.1-0.x86_64.tar.gz
 fi
 
-${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
+if [ ! -f ${DIR}/KeyToValue/target/KeyToValue-1.0-SNAPSHOT.jar ]
+then
+     # build KeyToValue transform
+     log "Build KeyToValue transform"
+     mvn -f ${DIR}/KeyToValue/pom.xml install -DskipTests
+fi
+
+${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext-dv.yml"
 
 
 log "Create the table and insert data."
 docker exec -i vertica /opt/vertica/bin/vsql -hlocalhost -Udbadmin << EOF
-CREATE TABLE url_override_normalized
+CREATE TABLE customer
 (
     dwhCreationDate timestamp DEFAULT (statement_timestamp())::timestamp,
     kafkaId int NOT NULL,
     ListID int,
+    NormalizedHashItemID int,
+    URL varchar(80),
     KafkaKeyIsDeleted boolean DEFAULT true
 );
 EOF
 
-#     NormalizedUrlHash int,
-#     URL varchar(80),
 sleep 2
 
-log "Sending messages to topic url_override_normalized"
-
-# seq -f "{\"ListID\": 1,\"kafkaId\": 1}" 10 | docker exec -i connect kafka-avro-console-producer --broker-list broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic url_override_normalized --property value.schema='{"type":"record","name":"myrecord","fields":[{"name":"ListID","type":"int"},{"name":"kafkaId","type":"int"}]}'
-
-# to reproduce some rejected messages
-seq -f "{\"ListID\": null,\"kafkaId\": 1}" 10 | docker exec -i connect kafka-avro-console-producer --broker-list broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic url_override_normalized --property value.schema='{"type":"record","name":"myrecord","fields":[{"name":"ListID", "type": ["null", "long"], "default": null},{"name":"kafkaId","type":"int"}]}'
+log "Sending messages to topic customer (done using JAVA producer)"
 
 log "Creating Vertica sink connector"
 docker exec connect \
@@ -55,11 +59,9 @@ docker exec connect \
                     "vertica.load.method": "DIRECT",
                     "errors.log.enable": "true",
                     "errors.log.include.messages": "true",
-                    "topics": "url_override_normalized",
-                    "pk.mode": "record_key",
-                    "pk.fields": "kafkaId",
+                    "topics": "customer",
                     "enable.auto.commit": "false",
-                    "transforms": "insert_isKafkaDeleted, cast_isKafkaDeleted_toBoolean, insert_dwhCreateDate",
+                    "transforms": "insert_isKafkaDeleted, cast_isKafkaDeleted_toBoolean, insert_dwhCreateDate, KeyToValue, cast_kafkaId_toInt",
                     "transforms.insert_isKafkaDeleted.type": "org.apache.kafka.connect.transforms.InsertField$Value",
                     "transforms.insert_isKafkaDeleted.static.field": "KafkaKeyIsDeleted",
                     "transforms.insert_isKafkaDeleted.static.value": "0",
@@ -67,6 +69,10 @@ docker exec connect \
                     "transforms.cast_isKafkaDeleted_toBoolean.spec": "KafkaKeyIsDeleted:boolean",
                     "transforms.insert_dwhCreateDate.type": "org.apache.kafka.connect.transforms.InsertField$Value",
                     "transforms.insert_dwhCreateDate.timestamp.field": "dwhCreationDate",
+                    "transforms.KeyToValue.type": "com.github.vdesabou.kafka.connect.transforms.KeyToValue",
+                    "transforms.KeyToValue.key.field.name":"kafkaId",
+                    "transforms.cast_kafkaId_toInt.type": "org.apache.kafka.connect.transforms.Cast$Value",
+                    "transforms.cast_kafkaId_toInt.spec": "kafkaId:int16",
                     "key.converter": "org.apache.kafka.connect.storage.StringConverter",
                     "value.converter" : "Avro",
                     "value.converter.schema.registry.url":"http://schema-registry:8081",
@@ -75,30 +81,22 @@ docker exec connect \
           }' \
      http://localhost:8083/connectors/vertica-sink/config | jq_docker_cli .
 
-                    # "transforms.timestampconverter.type": "org.apache.kafka.connect.transforms.TimestampConverter$Value",
-                    # "transforms.timestampconverter.field": "dwhCreationDate",
-                    # "transforms.timestampconverter.target.type": "Timestamp",
 
 sleep 10
 
 log "Check data is in Vertica"
 docker exec -i vertica /opt/vertica/bin/vsql -hlocalhost -Udbadmin << EOF
-select * from public.url_override_normalized;
+select * from public.customer;
 EOF
 
-#      dwhCreationDate     | kafkaId | ListID | KafkaKeyIsDeleted
-# -------------------------+---------+--------+-------------------
-#  2020-01-17 16:26:53.087 |       1 |      1 | f
-#  2020-01-17 16:26:53.102 |       1 |      1 | f
-#  2020-01-17 16:26:53.103 |       1 |      1 | f
-#  2020-01-17 16:26:53.103 |       1 |      1 | f
-#  2020-01-17 16:26:53.103 |       1 |      1 | f
-#  2020-01-17 16:26:53.103 |       1 |      1 | f
-#  2020-01-17 16:26:53.103 |       1 |      1 | f
-#  2020-01-17 16:26:53.104 |       1 |      1 | f
-#  2020-01-17 16:26:53.104 |       1 |      1 | f
-#  2020-01-17 16:26:53.104 |       1 |      1 | f
-# (10 rows)
+#      dwhCreationDate     | kafkaId | ListID | NormalizedHashItemID | URL | KafkaKeyIsDeleted
+# -------------------------+---------+--------+----------------------+-----+-------------------
+#  2020-01-21 10:02:40.877 |       0 |      0 |                    0 | url | f
+#  2020-01-21 10:02:45.954 |       1 |      1 |                    1 | url | f
+#  2020-01-21 10:02:50.958 |       2 |      2 |                    2 | url | f
+#  2020-01-21 10:02:55.963 |       3 |      3 |                    3 | url | f
+# (4 rows)
+
 
 # Without trace logs:
 
