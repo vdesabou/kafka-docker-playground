@@ -1,0 +1,40 @@
+---
+version: '3.5'
+services:
+
+  vertica:
+    image: dataplatform/docker-vertica
+    hostname: vertica
+    container_name: vertica
+    ports:
+      - 5433:5433
+
+  producer:
+    build:
+      context: ../../connect/connect-vertica-sink/producer/
+      args:
+        TAG: ${TAG}
+    hostname: producer
+    container_name: producer
+    environment:
+      BOOTSTRAP_SERVERS: "broker:9092"
+      SCHEMA_REGISTRY_URL: "http://schema-registry:8081"
+    depends_on:
+      - zookeeper
+      - broker
+      - schema-registry
+      - vertica
+
+  connect:
+    depends_on:
+      - zookeeper
+      - broker
+      - schema-registry
+      - vertica
+    volumes:
+        - ../../connect/connect-vertica-sink/vertica-jdbc.jar:/usr/share/confluent-hub-components/confluentinc-kafka-connect-vertica/lib/vertica-jdbc.jar
+        - ../../connect/connect-vertica-sink/KeyToValue/target/KeyToValue-1.0-SNAPSHOT.jar:/usr/share/confluent-hub-components/confluentinc-kafka-connect-vertica/lib/KeyToValue-1.0-SNAPSHOT.jar
+        # - ../../connect/connect-vertica-sink/vertica-stream-writer-0.0.1-SNAPSHOT.jar:/usr/share/confluent-hub-components/confluentinc-kafka-connect-vertica/lib/vertica-stream-writer-0.0.1.12.jar
+    environment:
+      CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-vertica
+      # CONNECT_LOG4J_ROOT_LOGLEVEL: TRACE
