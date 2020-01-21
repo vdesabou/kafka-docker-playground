@@ -1,92 +1,104 @@
 language: java
-
-jdk: 'openjdk8'
-os: 'linux'
-services: 'docker'
-
+jdk: openjdk8
+os: linux
+services: docker
 before_install:
-  - sudo apt-get -y install expect awscli
-  - openssl aes-256-cbc -K $encrypted_e1b0a72f7201_key -iv $encrypted_e1b0a72f7201_iv -in secrets.tar.enc -out secrets.tar -d
-  - tar xvf secrets.tar
-  - mkdir -p $HOME/.aws
-  - cp aws_config $HOME/.aws/config
-  - cp aws_credentials $HOME/.aws/credentials
-  - mkdir -p $HOME/.ccloud
-  - cp config.cc.vsaboulin.travis $HOME/.ccloud/config
-  - curl -L https://cnfl.io/ccloud-cli | sudo sh -s -- -b /usr/local/bin
-  - aws s3 cp s3://kafka-docker-playground/3rdparty/3rdparty.tgz .
-  - tar xvfz 3rdparty.tgz
-  - cp ./3rdparty/TIB_ems-ce_8.5.1_linux_x86_64.zip ./connect/connect-tibco-source/docker-tibco/TIB_ems-ce_8.5.1_linux_x86_64.zip
-  - cp ./3rdparty/TIB_ems-ce_8.5.1_linux_x86_64.zip ./connect/connect-jms-tibco-sink/docker-tibco/TIB_ems-ce_8.5.1_linux_x86_64.zip
-  - cp ./3rdparty/TIB_ems-ce_8.5.1_linux_x86_64.zip ./connect/connect-tibco-sink/docker-tibco/TIB_ems-ce_8.5.1_linux_x86_64.zip
-  - cp ./3rdparty/TIB_ems-ce_8.5.1_linux_x86_64.zip ./connect/connect-jms-tibco-source/docker-tibco/TIB_ems-ce_8.5.1_linux_x86_64.zip
-  - cp ./3rdparty/ojdbc6.jar ./connect/connect-jdbc-oracle11-sink/ojdbc6.jar
-  - cp ./3rdparty/ojdbc6.jar ./connect/connect-jdbc-oracle11-source/ojdbc6.jar
-  - cp ./3rdparty/ojdbc8.jar ./connect/connect-jdbc-oracle12-sink/ojdbc8.jar
-  - cp ./3rdparty/ojdbc8.jar ./connect/connect-jdbc-oracle12-source/ojdbc8.jar
-  - cp ./3rdparty/ImpalaJDBC42.jar ./connect/connect-kudu-source/ImpalaJDBC42.jar
-  - cp ./3rdparty/ImpalaJDBC42.jar ./connect/connect-kudu-sink/ImpalaJDBC42.jar
-  - cp ./3rdparty/jms.jar ./connect/connect-ibm-mq-sink/jms.jar
-  - cp ./3rdparty/jms.jar ./connect/connect-ibm-mq-source/jms.jar
-  - cp ./3rdparty/com.ibm.mq.allclient.jar ./connect/connect-ibm-mq-sink/com.ibm.mq.allclient.jar
-  - cp ./3rdparty/com.ibm.mq.allclient.jar ./connect/connect-ibm-mq-source/com.ibm.mq.allclient.jar
-
-# Skipped tests:
-
-# Reason: Need to manually create a redshift cluster
-# connect-aws-redshift-sink
-
-# Reason: Require azure cli to login
-# connect-azure-blob-storage-sink
-# connect-azure-data-lake-storage-gen1-sink
-# connect-azure-data-lake-storage-gen2-sink
-
-# Not reliable
-# replicator/executable
-# kudu-sink kudu-source ("Error connecting: TTransportException, TSocket read 0 bytes")
-
-# job limit is 50 minutes
+- sudo apt-get -y install expect awscli
+- openssl aes-256-cbc -K $encrypted_e1b0a72f7201_key -iv $encrypted_e1b0a72f7201_iv
+  -in secrets.tar.enc -out secrets.tar -d
+- tar xvf secrets.tar
+- mkdir -p $HOME/.aws
+- cp aws_config $HOME/.aws/config
+- cp aws_credentials $HOME/.aws/credentials
+- mkdir -p $HOME/.ccloud
+- cp config.cc.vsaboulin.travis $HOME/.ccloud/config
+- curl -L https://cnfl.io/ccloud-cli | sudo sh -s -- -b /usr/local/bin
+- aws s3 cp s3://kafka-docker-playground/3rdparty/3rdparty.tgz .
+- tar xvfz 3rdparty.tgz
+- cp ./3rdparty/TIB_ems-ce_8.5.1_linux_x86_64.zip ./connect/connect-tibco-source/docker-tibco/TIB_ems-ce_8.5.1_linux_x86_64.zip
+- cp ./3rdparty/TIB_ems-ce_8.5.1_linux_x86_64.zip ./connect/connect-jms-tibco-sink/docker-tibco/TIB_ems-ce_8.5.1_linux_x86_64.zip
+- cp ./3rdparty/TIB_ems-ce_8.5.1_linux_x86_64.zip ./connect/connect-tibco-sink/docker-tibco/TIB_ems-ce_8.5.1_linux_x86_64.zip
+- cp ./3rdparty/TIB_ems-ce_8.5.1_linux_x86_64.zip ./connect/connect-jms-tibco-source/docker-tibco/TIB_ems-ce_8.5.1_linux_x86_64.zip
+- cp ./3rdparty/ojdbc6.jar ./connect/connect-jdbc-oracle11-sink/ojdbc6.jar
+- cp ./3rdparty/ojdbc6.jar ./connect/connect-jdbc-oracle11-source/ojdbc6.jar
+- cp ./3rdparty/ojdbc8.jar ./connect/connect-jdbc-oracle12-sink/ojdbc8.jar
+- cp ./3rdparty/ojdbc8.jar ./connect/connect-jdbc-oracle12-source/ojdbc8.jar
+- cp ./3rdparty/ImpalaJDBC42.jar ./connect/connect-kudu-source/ImpalaJDBC42.jar
+- cp ./3rdparty/ImpalaJDBC42.jar ./connect/connect-kudu-sink/ImpalaJDBC42.jar
+- cp ./3rdparty/jms.jar ./connect/connect-ibm-mq-sink/jms.jar
+- cp ./3rdparty/jms.jar ./connect/connect-ibm-mq-source/jms.jar
+- cp ./3rdparty/com.ibm.mq.allclient.jar ./connect/connect-ibm-mq-sink/com.ibm.mq.allclient.jar
+- cp ./3rdparty/com.ibm.mq.allclient.jar ./connect/connect-ibm-mq-source/com.ibm.mq.allclient.jar
+- echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
 jobs:
   include:
-  - name: "CONNECT: active-mq-sink active-mq-source cassandra-sink couchbase-sink couchbase-source"
-    env: TEST_LIST="connect/connect-active-mq-sink connect/connect-active-mq-source connect/connect-cassandra-sink connect/connect-couchbase-sink connect/connect-couchbase-source  connect/connect-hbase-sink"
-
-  - name: "CONNECT: jms-tibco-sink jms-tibco-source debezium-mongodb-source debezium-mysql-source debezium-postgresql-source debezium-sqlserver-source elasticsearch-sink"
-    env: TEST_LIST="connect/connect-jms-tibco-sink connect/connect-jms-tibco-source connect/connect-debezium-mongodb-source connect/connect-debezium-mysql-source connect/connect-debezium-postgresql-source connect/connect-debezium-sqlserver-source connect/connect-elasticsearch-sink"
-
-  - name: "CONNECT: hbase-sink hdfs2-sink hdfs3-sink hdfs3-source ibm-mq-sink ibm-mq-source"
-    env: TEST_LIST="connect/connect-hdfs2-sink connect/connect-hdfs3-sink connect/connect-hdfs3-source connect/connect-ibm-mq-sink connect/connect-ibm-mq-source"
-
-  - name: "CONNECT: jdbc-oracle11-sink jdbc-oracle11-source influxdb-sink influxdb-source jdbc-mysql-sink jdbc-mysql-source jdbc-postgresql-sink jdbc-postgresql-source jdbc-sqlserver-sink"
-    env: TEST_LIST="connect/connect-jdbc-oracle11-sink connect/connect-jdbc-oracle11-source connect/connect-influxdb-sink connect/connect-influxdb-source connect/connect-jdbc-mysql-sink connect/connect-jdbc-mysql-source connect/connect-jdbc-postgresql-sink connect/connect-jdbc-postgresql-source connect/connect-jdbc-sqlserver-sink"
-
-  - name: "CCLOUD ccloud-demo CONNECT: jdbc-sqlserver-source jdbc-vertica-sink jms-active-mq-sink jms-solace-sink"
-    env: TEST_LIST="ccloud/ccloud-demo connect/connect-jdbc-sqlserver-source connect/connect-jdbc-vertica-sink connect/connect-jms-active-mq-sink connect/connect-jms-solace-sink"
-
-  - name: "CONNECT: mongodb-sink mongodb-source mqtt-sink mqtt-source neo4j-sink omnisci-sink tibco-sink tibco-source jdbc-oracle12-sink jdbc-oracle12-source"
-    env: TEST_LIST="connect/connect-mongodb-sink connect/connect-mongodb-source connect/connect-mqtt-sink connect/connect-mqtt-source connect/connect-neo4j-sink connect/connect-omnisci-sink connect/connect-tibco-sink connect/connect-tibco-source connect/connect-jdbc-oracle12-sink connect/connect-jdbc-oracle12-source"
-
-  - name: "CONNECT: rabbitmq-source redis-sink replicator sftp-sink sftp-source solace-sink solace-source"
-    env: TEST_LIST="connect/connect-rabbitmq-source connect/connect-redis-sink connect/connect-replicator connect/connect-sftp-sink connect/connect-sftp-source connect/connect-solace-sink connect/connect-solace-source"
-
-  - name: "CONNECT: splunk-sink splunk-source spool-dir-source syslog-source OTHER: override-policy-sftp-sink override-policy-sftp-source "
-    env: TEST_LIST="connect/connect-splunk-sink connect/connect-splunk-source connect/connect-spool-dir-source connect/connect-syslog-source other/connect-override-policy-sftp-sink other/connect-override-policy-sftp-source"
-
-  - name: "CONNECT: aws-cloudwatch-source aws-dynamodb-sink aws-kinesis-source aws-lambda-sink aws-sqs-source aws-s3-sink aws-s3-source"
-    env: TEST_LIST="connect/connect-aws-cloudwatch-source connect/connect-aws-dynamodb-sink connect/connect-aws-kinesis-source connect/connect-aws-lambda-sink connect/connect-aws-sqs-source connect/connect-aws-s3-sink connect/connect-aws-s3-source"
-
-  - name: "CONNECT: gcp-bigquery-sink gcp-firebase-sink gcp-firebase-source gcp-pubsub-source gcs-sink gcs-source google-cloud-functions-sink vertica-sink REPLICATOR: connect"
-    env: TEST_LIST="connect/connect-gcp-bigquery-sink connect/connect-gcp-firebase-sink connect/connect-gcp-firebase-source connect/connect-gcp-pubsub-source connect/connect-gcp-gcs-sink connect/connect-gcp-gcs-source connect/connect-gcp-cloud-functions-sink connect/vertica-sink replicator/connect"
-
-  - name: "CONNECT: http-sink STREAMS:kafka-streams"
-    env: TEST_LIST="connect/connect-http-sink kafka-tutorials/kafka-streams/aggregate-sum kafka-tutorials/kafka-streams/filter-events kafka-tutorials/kafka-streams/ksql-serialization kafka-tutorials/kafka-streams/split-stream kafka-tutorials/kafka-streams/tumbling-windows kafka-tutorials/kafka-streams/distinct-events kafka-tutorials/kafka-streams/join-stream-and-table kafka-tutorials/kafka-streams/merge-streams kafka-tutorials/kafka-streams/transform-stream"
-
-  - name: "KSQL: ksql"
-    env: TEST_LIST="kafka-tutorials/ksql/aggregate-count kafka-tutorials/ksql/aggregate-sum kafka-tutorials/ksql/join-stream-and-stream kafka-tutorials/ksql/join-table-and-table kafka-tutorials/ksql/merge-streams kafka-tutorials/ksql/rekey-with-function kafka-tutorials/ksql/transform-stream kafka-tutorials/ksql/aggregate-minmax kafka-tutorials/ksql/filter-events kafka-tutorials/ksql/join-stream-and-table kafka-tutorials/ksql/ksql-serialization kafka-tutorials/ksql/rekey-a-stream  kafka-tutorials/ksql/split-stream kafka-tutorials/ksql/tumbling-windows"
-
-  # - name: "ENVIRONMENTS"
-  #   env: TEST_LIST="environment/mdc-kerberos environment/mdc-plaintext environment/mdc-sasl-plain environment/sasl-plain environment/ldap_authorizer_sasl_scram environment/ldap_authorizer_sasl_plain environment/plaintext environment/2way-ssl environment/kerberos environment/ssl_kerberos environment/sasl-ssl"
-
-
+  - name: 'CONNECT: active-mq-sink active-mq-source cassandra-sink couchbase-sink
+      couchbase-source'
+    env: TEST_LIST="connect/connect-active-mq-sink connect/connect-active-mq-source
+      connect/connect-cassandra-sink connect/connect-couchbase-sink connect/connect-couchbase-source  connect/connect-hbase-sink"
+  - name: 'CONNECT: jms-tibco-sink jms-tibco-source debezium-mongodb-source debezium-mysql-source
+      debezium-postgresql-source debezium-sqlserver-source elasticsearch-sink'
+    env: TEST_LIST="connect/connect-jms-tibco-sink connect/connect-jms-tibco-source
+      connect/connect-debezium-mongodb-source connect/connect-debezium-mysql-source
+      connect/connect-debezium-postgresql-source connect/connect-debezium-sqlserver-source
+      connect/connect-elasticsearch-sink"
+  - name: 'CONNECT: hbase-sink hdfs2-sink hdfs3-sink hdfs3-source ibm-mq-sink ibm-mq-source'
+    env: TEST_LIST="connect/connect-hdfs2-sink connect/connect-hdfs3-sink connect/connect-hdfs3-source
+      connect/connect-ibm-mq-sink connect/connect-ibm-mq-source"
+  - name: 'CONNECT: jdbc-oracle11-sink jdbc-oracle11-source influxdb-sink influxdb-source
+      jdbc-mysql-sink jdbc-mysql-source jdbc-postgresql-sink jdbc-postgresql-source
+      jdbc-sqlserver-sink'
+    env: TEST_LIST="connect/connect-jdbc-oracle11-sink connect/connect-jdbc-oracle11-source
+      connect/connect-influxdb-sink connect/connect-influxdb-source connect/connect-jdbc-mysql-sink
+      connect/connect-jdbc-mysql-source connect/connect-jdbc-postgresql-sink connect/connect-jdbc-postgresql-source
+      connect/connect-jdbc-sqlserver-sink"
+  - name: 'CCLOUD ccloud-demo CONNECT: jdbc-sqlserver-source jdbc-vertica-sink jms-active-mq-sink
+      jms-solace-sink'
+    env: TEST_LIST="ccloud/ccloud-demo connect/connect-jdbc-sqlserver-source connect/connect-jdbc-vertica-sink
+      connect/connect-jms-active-mq-sink connect/connect-jms-solace-sink"
+  - name: 'CONNECT: mongodb-sink mongodb-source mqtt-sink mqtt-source neo4j-sink omnisci-sink
+      tibco-sink tibco-source jdbc-oracle12-sink jdbc-oracle12-source'
+    env: TEST_LIST="connect/connect-mongodb-sink connect/connect-mongodb-source connect/connect-mqtt-sink
+      connect/connect-mqtt-source connect/connect-neo4j-sink connect/connect-omnisci-sink
+      connect/connect-tibco-sink connect/connect-tibco-source connect/connect-jdbc-oracle12-sink
+      connect/connect-jdbc-oracle12-source"
+  - name: 'CONNECT: rabbitmq-source redis-sink replicator sftp-sink sftp-source solace-sink
+      solace-source'
+    env: TEST_LIST="connect/connect-rabbitmq-source connect/connect-redis-sink connect/connect-replicator
+      connect/connect-sftp-sink connect/connect-sftp-source connect/connect-solace-sink
+      connect/connect-solace-source"
+  - name: 'CONNECT: splunk-sink splunk-source spool-dir-source syslog-source OTHER:
+      override-policy-sftp-sink override-policy-sftp-source '
+    env: TEST_LIST="connect/connect-splunk-sink connect/connect-splunk-source connect/connect-spool-dir-source
+      connect/connect-syslog-source other/connect-override-policy-sftp-sink other/connect-override-policy-sftp-source"
+  - name: 'CONNECT: aws-cloudwatch-source aws-dynamodb-sink aws-kinesis-source aws-lambda-sink
+      aws-sqs-source aws-s3-sink aws-s3-source'
+    env: TEST_LIST="connect/connect-aws-cloudwatch-source connect/connect-aws-dynamodb-sink
+      connect/connect-aws-kinesis-source connect/connect-aws-lambda-sink connect/connect-aws-sqs-source
+      connect/connect-aws-s3-sink connect/connect-aws-s3-source"
+  - name: 'CONNECT: gcp-bigquery-sink gcp-firebase-sink gcp-firebase-source gcp-pubsub-source
+      gcs-sink gcs-source google-cloud-functions-sink vertica-sink REPLICATOR: connect'
+    env: TEST_LIST="connect/connect-gcp-bigquery-sink connect/connect-gcp-firebase-sink
+      connect/connect-gcp-firebase-source connect/connect-gcp-pubsub-source connect/connect-gcp-gcs-sink
+      connect/connect-gcp-gcs-source connect/connect-gcp-cloud-functions-sink connect/vertica-sink
+      replicator/connect"
+  - name: 'CONNECT: http-sink STREAMS:kafka-streams'
+    env: TEST_LIST="connect/connect-http-sink kafka-tutorials/kafka-streams/aggregate-sum
+      kafka-tutorials/kafka-streams/filter-events kafka-tutorials/kafka-streams/ksql-serialization
+      kafka-tutorials/kafka-streams/split-stream kafka-tutorials/kafka-streams/tumbling-windows
+      kafka-tutorials/kafka-streams/distinct-events kafka-tutorials/kafka-streams/join-stream-and-table
+      kafka-tutorials/kafka-streams/merge-streams kafka-tutorials/kafka-streams/transform-stream"
+  - name: 'KSQL: ksql'
+    env: TEST_LIST="kafka-tutorials/ksql/aggregate-count kafka-tutorials/ksql/aggregate-sum
+      kafka-tutorials/ksql/join-stream-and-stream kafka-tutorials/ksql/join-table-and-table
+      kafka-tutorials/ksql/merge-streams kafka-tutorials/ksql/rekey-with-function
+      kafka-tutorials/ksql/transform-stream kafka-tutorials/ksql/aggregate-minmax
+      kafka-tutorials/ksql/filter-events kafka-tutorials/ksql/join-stream-and-table
+      kafka-tutorials/ksql/ksql-serialization kafka-tutorials/ksql/rekey-a-stream  kafka-tutorials/ksql/split-stream
+      kafka-tutorials/ksql/tumbling-windows"
 script:
-    - bash scripts/run-tests.sh "$TEST_LIST"
+- bash scripts/run-tests.sh "$TEST_LIST"
+env:
+  global:
+  - secure: MxiEqV65Nfky5XzyOyElr7hTo7IaAiXTjyRkFg+h+EdaaVRpu+WrGy4dLtxKcbjJJKXB2hIVoLPbnm/RLyFIJKc06zV+EMfbXqGJ9kw5qtKnCO1xf9uqw8RsY54Szyz4JgV3Q8AvgM9wN2k/53SOQCEqMV3o5jQMLzyU6AxosR/H28Zu9359mCxjzq8S2w3Gt7PXeNCInc8HS7UeWWftLvq/SJWWb6v8WFYWSYzUmb5kAnz/JwSvW4hUv7ubSE27GbFO4KA/7nNkHsCI3zEnSMI2g0rDmbvoknD0BF/g6gChFnc8hmIp0KGkguAFog0YhLOZbXtMllbhjDpeKMHDKwd0cd0laQjsesMIq4TcSAcQlid4lmBpJA5FibNWB6gMUKjVfjlcfRpT8aMmAYXfzHGgMTpWLUQgs6FXiCFx+L8SK3cxyFHHjkvaBlkdDfVjkSSoKmBP3pcZR4c4pm4k8EKKJulsEghYh3Gjd+117SkJJeW0CtuzxBXaUOyE6yIElLWKNZdYYI52EFaFJwWBsuhKwkqJ4bT0lb9LdMofgSMvz/KVGaXua5/bdAQo3RZyDJsyf5sZC6aMroX/B09erW5Y8gt96Iptn6VSqF1mGt6KDCG7Vto2yeUflSxx/1UC/VPfG7BP0Sz00tVnoDKmHZESTi0slMR1TtKhr5EC2kU=
+  - secure: K48g2ABWlEpkd8y37BT/8E6S2f2qbiwuYYKdm7v9RL7Uo0Lcp9cxXISBP7J8pWfWx626iYF2wqQ5n0Dpjd/eHjbxv4Zmfg2fX7m8nVGhezfZg3KwEyGYv2KxPbhCneoX7FxpYAMljJk+BpZxIJ+MF8uh5A9gMlglM4O1tk7b0I+hypOmScu0EOV1tAklWlgZr/D8hVxyrOLEeZ9MIwpTsw8sHImt4JX5iTP95aCkEzzPODkkgKCWgG6Gt8tQHlOMyy/VgaijxSx0X8s9vy9SWTvlOGnnWekaRE4bP8mP45pWBeSRhP1n3InFUMJVD3aC6V7Ftdcl9f/L10/D9ld7rM7sxnJCF0RKcxK7L02J6puEI+PEhDjNYXrwDBLIO3rZqhfG7v7h2RYvHCh4zbizcex10dc9qYw3RzjmZBIsvxcu2LpYFaYHIq4vqD0+a6V0DjGIUnaQYgbIAFV/YtZGZnkvBbF11hzLtUg51Ud0QzY5nyAj9lCv5W01BXbdU8/bydJKm8vvnUeGz3qIg3xdsQG4OkZTBPqt7v14PXYPwqgkUwgxyh0ihwUVD8HAHjDrEu3pfgYAcEB7IEwdYu3aWvpEqSkCESvPS9NgJYV4mr+gR4saDH3f2Ev3hb0jpYTmN8yJ6I/1grRXR4+x+0mfjXv7UP5SxAP6LcDL6mvDQBo=
