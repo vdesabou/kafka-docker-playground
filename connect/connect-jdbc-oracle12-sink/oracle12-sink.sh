@@ -10,23 +10,27 @@ then
      exit 1
 fi
 
-if test -z "$(docker images -q oracle/database:12.2.0.1-ee)"
+if [ -z "$TRAVIS" ]
 then
-     if [ ! -f ${DIR}/linuxx64_12201_database.zip ]
+     # not running with travis
+     if test -z "$(docker images -q oracle/database:12.2.0.1-ee)"
      then
-          logerror "ERROR: ${DIR}/linuxx64_12201_database.zip is missing. It must be downloaded manually in order to acknowledge user agreement"
-          exit 1
-     fi
-     log "Building oracle/database:12.2.0.1-ee docker image..it can take a while...(more than 15 minutes!)"
-     OLDDIR=$PWD
-     rm -rf ${DIR}/docker-images
-     git clone https://github.com/oracle/docker-images.git
+          if [ ! -f ${DIR}/linuxx64_12201_database.zip ]
+          then
+               logerror "ERROR: ${DIR}/linuxx64_12201_database.zip is missing. It must be downloaded manually in order to acknowledge user agreement"
+               exit 1
+          fi
+          log "Building oracle/database:12.2.0.1-ee docker image..it can take a while...(more than 15 minutes!)"
+          OLDDIR=$PWD
+          rm -rf ${DIR}/docker-images
+          git clone https://github.com/oracle/docker-images.git
 
-     cp ${DIR}/linuxx64_12201_database.zip ${DIR}/docker-images/OracleDatabase/SingleInstance/dockerfiles/12.2.0.1/linuxx64_12201_database.zip
-     cd ${DIR}/docker-images/OracleDatabase/SingleInstance/dockerfiles
-     ./buildDockerImage.sh -v 12.2.0.1 -e
-     rm -rf ${DIR}/docker-images
-     cd ${OLDDIR}
+          cp ${DIR}/linuxx64_12201_database.zip ${DIR}/docker-images/OracleDatabase/SingleInstance/dockerfiles/12.2.0.1/linuxx64_12201_database.zip
+          cd ${DIR}/docker-images/OracleDatabase/SingleInstance/dockerfiles
+          ./buildDockerImage.sh -v 12.2.0.1 -e
+          rm -rf ${DIR}/docker-images
+          cd ${OLDDIR}
+     fi
 fi
 
 export ORACLE_IMAGE="oracle/database:12.2.0.1-ee"
