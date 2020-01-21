@@ -34,6 +34,8 @@ services:
     volumes:
         - ../../connect/connect-vertica-sink/vertica-jdbc.jar:/usr/share/confluent-hub-components/confluentinc-kafka-connect-vertica/lib/vertica-jdbc.jar
         - ../../connect/connect-vertica-sink/KeyToValue/target/KeyToValue-1.0-SNAPSHOT.jar:/usr/share/confluent-hub-components/confluentinc-kafka-connect-vertica/lib/KeyToValue-1.0-SNAPSHOT.jar
+        - ../../connect/connect-vertica-sink/TombstoneToNull/target/TombstoneToNull-1.0-SNAPSHOT.jar:/usr/share/confluent-hub-components/confluentinc-kafka-connect-vertica/lib/TombstoneToNull-1.0-SNAPSHOT.jar
     environment:
       CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-vertica,/usr/share/confluent-hub-components/confluentinc-connect-transforms
+      CONNECT_CONNECTOR_CLIENT_CONFIG_OVERRIDE_POLICY: All
       # CONNECT_LOG4J_ROOT_LOGLEVEL: TRACE

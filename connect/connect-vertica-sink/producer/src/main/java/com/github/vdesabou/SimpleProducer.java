@@ -49,7 +49,13 @@ public class SimpleProducer {
                 .setURL("url")
                 .build();
 
-                ProducerRecord<String, Customer> record = new ProducerRecord<>(TOPIC, key, customer);
+                ProducerRecord<String, Customer> record;
+                if(i!=2) {
+                    record = new ProducerRecord<>(TOPIC, key, customer);
+                } else {
+                    record = new ProducerRecord<>(TOPIC, key, null);
+                }
+
                 System.out.println("Sending " + record.key() + " " + record.value());
                 producer.send(record, new Callback() {
                     @Override
@@ -63,7 +69,7 @@ public class SimpleProducer {
                 });
                 producer.flush();
                 i++;
-                TimeUnit.MILLISECONDS.sleep(5000);
+                TimeUnit.MILLISECONDS.sleep(500);
             }
         }
     }
