@@ -10,7 +10,7 @@ verify_installed "mvn"
 if [ ! -f ${DIR}/../../connect/connect-couchbase-source/event_filter_class_example/target/key-filter-1.0-SNAPSHOT-jar-with-dependencies.jar ]
 then
      log "Building KeyFilter"
-     mvn package -f ${DIR}/../../connect/connect-couchbase-source/event_filter_class_example/pom.xml
+     mvn package -q -f ${DIR}/../../connect/connect-couchbase-source/event_filter_class_example/pom.xml
 fi
 
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext-with-key-filter.yml"
