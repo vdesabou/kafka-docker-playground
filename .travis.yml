@@ -81,7 +81,7 @@ jobs:
       gcs-sink gcs-source google-cloud-functions-sink vertica-sink REPLICATOR: connect'
     env: TEST_LIST="connect/connect-gcp-bigquery-sink connect/connect-gcp-firebase-sink
       connect/connect-gcp-firebase-source connect/connect-gcp-pubsub-source connect/connect-gcp-gcs-sink
-      connect/connect-gcp-gcs-source connect/connect-gcp-cloud-functions-sink connect/vertica-sink
+      connect/connect-gcp-gcs-source connect/connect-gcp-cloud-functions-sink connect/connect-vertica-sink
       replicator/connect"
   - name: 'CONNECT: http-sink STREAMS:kafka-streams'
     env: TEST_LIST="connect/connect-http-sink kafka-tutorials/kafka-streams/aggregate-sum
