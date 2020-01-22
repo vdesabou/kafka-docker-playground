@@ -83,7 +83,7 @@ then
       log "Using Confluent Platform version default tag $TAG, you can use other version by exporting TAG environment variable, example export TAG=5.3.2"
     fi
     export CP_KAFKA_IMAGE=cp-server
-    export CP_BASE_IMAGE=cp-base
+    export CP_BASE_IMAGE=cp-base-new
     set_kafka_client_tag
 else
     if [ -z "$CP_KAFKA_IMAGE" ]
