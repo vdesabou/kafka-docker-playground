@@ -93,8 +93,29 @@ $ docker exec connect kafka-console-consumer -bootstrap-server broker:9092 --top
 Results:
 
 ```
-Struct{messageID=ID:E4EMS-SERVER.15DA9975B3:1,messageType=text,timestamp=1571395609724,deliveryMode=2,destination=Struct{destinationType=queue,name=connector-quickstart},redelivered=false,expiration=0,priority=4,properties={JMSXDeliveryCount=Struct{propertyType=integer,integer=1}},text=m1}
-Struct{messageID=ID:E4EMS-SERVER.15DA9975B3:2,messageType=text,timestamp=1571395609736,deliveryMode=2,destination=Struct{destinationType=queue,name=connector-quickstart},redelivered=false,expiration=0,priority=4,properties={JMSXDeliveryCount=Struct{propertyType=integer,integer=1}},text=m2}
+Struct
+{
+    messageID=ID:E4EMS-SERVER.15DA9975B3:1,
+    messageType=text,
+    timestamp=1571395609724,
+    deliveryMode=2,
+    destination=
+    Struct
+    {
+        destinationType=queue,name=connector-quickstart
+    }
+    ,redelivered=false,
+    expiration=0,
+    priority=4,
+    properties=
+    {
+        JMSXDeliveryCount=Struct
+        {
+            propertyType=integer,integer=1
+        }
+    },
+    text=m1
+}
 Processed a total of 2 messages
 ```
 
