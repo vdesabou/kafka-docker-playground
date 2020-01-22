@@ -1,4 +1,5 @@
 ARG TAG
+ARG CP_BASE_IMAGE
 
 FROM gradle:6.0.1-jdk8 as gradleBuild
 COPY build.gradle build.gradle
@@ -6,7 +7,8 @@ COPY src src
 RUN gradle build && gradle shadowJar
 
 ARG TAG
-FROM confluentinc/cp-base:${TAG}
+ARG CP_BASE_IMAGE
+FROM confluentinc/${CP_BASE_IMAGE}:${TAG}
 COPY --from=gradleBuild /home/gradle/build/libs/kstreams-standalone*.jar ./
 COPY configuration configuration
 ENV JAVA_OPTS ""

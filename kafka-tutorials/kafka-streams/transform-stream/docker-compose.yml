@@ -53,6 +53,7 @@ services:
       context: .
       args:
         TAG: ${TAG}
+        CP_BASE_IMAGE: ${CP_BASE_IMAGE}
     hostname: stream
     container_name: stream
     depends_on:
