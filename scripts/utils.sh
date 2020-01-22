@@ -77,10 +77,10 @@ function set_kafka_client_tag()
 if [ -z "$TAG" ]
 then
     # TAG is not set, use defaults:
-    export TAG=5.3.2
+    export TAG=5.4.0
     if [ -z "$CP_KAFKA_IMAGE" ]
     then
-      log "Using Confluent Platform version default tag $TAG, you can use other version by exporting TAG environment variable, example export TAG=5.0.0"
+      log "Using Confluent Platform version default tag $TAG, you can use other version by exporting TAG environment variable, example export TAG=5.3.2"
     fi
     export CP_KAFKA_IMAGE=cp-server
     export CP_BASE_IMAGE=cp-base
