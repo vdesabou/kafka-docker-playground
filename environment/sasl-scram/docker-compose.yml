@@ -18,7 +18,6 @@ services:
 
     broker:
         volumes:
-          - ../../environment/sasl-scram/kafka/users:/service/kafka/users
           - ../../environment/sasl-scram/kafka/kafka.jaas.conf:/etc/kafka/kafka_server_jaas.conf
         environment:
             KAFKA_LISTENERS: SASL_PLAINTEXT://:9092
