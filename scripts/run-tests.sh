@@ -19,6 +19,9 @@ for dir in $test_list
 do
     if [ ! -d $dir ]
     then
+        logwarn "####################################################"
+        logwarn "skipping dir $dir, not a directory"
+        logwarn "####################################################"
         continue
     fi
 
