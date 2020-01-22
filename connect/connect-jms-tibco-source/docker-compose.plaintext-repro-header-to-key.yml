@@ -20,5 +20,5 @@ services:
         - ../../connect/connect-jms-tibco-source/tibjms.jar:/usr/share/confluent-hub-components/confluentinc-kafka-connect-jms/lib/tibjms.jar
         - ../../connect/connect-jms-tibco-source/jms-2.0.jar:/usr/share/confluent-hub-components/confluentinc-kafka-connect-jms/lib/jms-2.0.jar
     environment:
-      CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-jms
+      CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-jms,/usr/share/confluent-hub-components/confluentinc-connect-transforms
       # CONNECT_LOG4J_ROOT_LOGLEVEL: TRACE

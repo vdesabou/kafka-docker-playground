@@ -106,9 +106,11 @@ docker exec connect \
                     "errors.log.include.messages": "true",
                     "errors.retry.timeout": "600000",
                     "errors.retry.delay.max.ms": "30000",
-                    "transforms": "FlattenJson",
-                    "transforms.FlattenJson.type":"org.apache.kafka.connect.transforms.Flatten$Value",
-                    "transforms.FlattenJson.delimiter": ".",
+                    "transforms": "filterExample1",
+                    "transforms.filterExample1.type": "io.confluent.connect.transforms.Filter$Value",
+                    "transforms.filterExample1.filter.condition": "$.properties.titi.string",
+                    "transforms.filterExample1.filter.type": "include",
+                    "transforms.filterExample1.missing.or.null.behavior": "include",
                     "confluent.license": "",
                     "confluent.topic.bootstrap.servers": "broker:9092",
                     "confluent.topic.replication.factor": "1"
@@ -116,6 +118,9 @@ docker exec connect \
      http://localhost:8083/connectors/jms-tibco-source/config | jq_docker_cli .
 
 sleep 5
+
+
+
 
 # [2020-01-22 16:05:37,670] ERROR Error encountered in task jms-tibco-source-0. Executing stage 'TRANSFORMATION' with class 'org.apache.kafka.connect.transforms.Flatten$Value', where source record is = SourceRecord{sourcePartition={}, sourceOffset={}} ConnectRecord{topic='from-tibco-messages', kafkaPartition=null, key=Struct{messageID=ID:E4EMS-SERVER.15E2872A63:5}, keySchema=Schema{io.confluent.connect.jms.Key:STRUCT}, value=Struct{messageID=ID:E4EMS-SERVER.15E2872A63:5,messageType=text,timestamp=1579709133001,deliveryMode=2,destination=Struct{destinationType=queue,name=connector-quickstart},redelivered=false,expiration=0,priority=4,properties={JMSXDeliveryCount=Struct{propertyType=integer,integer=1}, titi=Struct{propertyType=string,string=toto}},text=m5}, valueSchema=Schema{io.confluent.connect.jms.Value:STRUCT}, timestamp=1579709133001, headers=ConnectHeaders(headers=)}. (org.apache.kafka.connect.runtime.errors.LogReporter)
 # org.apache.kafka.connect.errors.DataException: Flatten transformation does not support MAP for record without schemas (for field properties).
@@ -128,5 +133,56 @@ sleep 5
 #         at org.apache.kafka.connect.runtime.errors.RetryWithToleranceOperator.execute(RetryWithToleranceOperator.java:104)
 #         at org.apache.kafka.connect.runtime.TransformationChain.apply(TransformationChain.java:50)
 
+# {
+#     "messageID": "ID:E4EMS-SERVER.15E2881F43:5",
+#     "messageType": "text",
+#     "timestamp": 1579713049782,
+#     "deliveryMode": 2,
+#     "correlationID": null,
+#     "replyTo": null,
+#     "destination": {
+#         "io.confluent.connect.jms.Destination": {
+#             "destinationType": "queue",
+#             "name": "connector-quickstart"
+#         }
+#     },
+#     "redelivered": false,
+#     "type": null,
+#     "expiration": 0,
+#     "priority": 4,
+#     "properties": {
+#         "titi": {
+#             "propertyType": "string",
+#             "boolean": null,
+#             "byte": null,
+#             "short": null,
+#             "integer": null,
+#             "long": null,
+#             "float": null,
+#             "double": null,
+#             "string": {
+#                 "string": "toto"
+#             }
+#         },
+#         "JMSXDeliveryCount": {
+#             "propertyType": "integer",
+#             "boolean": null,
+#             "byte": null,
+#             "short": null,
+#             "integer": {
+#                 "int": 1
+#             },
+#             "long": null,
+#             "float": null,
+#             "double": null,
+#             "string": null
+#         }
+#     },
+#     "bytes": null,
+#     "map": null,
+#     "text": {
+#         "string": "m5"
+#     }
+# }
 log "Verify we have received the data in from-tibco-messages topic"
 timeout 60 docker exec connect kafka-console-consumer -bootstrap-server broker:9092 --topic from-tibco-messages --from-beginning --max-messages 1
