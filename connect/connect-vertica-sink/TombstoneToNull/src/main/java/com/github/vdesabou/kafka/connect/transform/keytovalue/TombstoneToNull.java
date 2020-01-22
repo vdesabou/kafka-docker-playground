@@ -20,6 +20,7 @@ public class TombstoneToNull<R extends ConnectRecord<R>> implements Transformati
             "If this is a tombstone, set record's values to specific values";
 
     private static final ConfigDef CONFIG_DEF = new ConfigDef();
+    private static final String PURPOSE = "insert key into value struct";
 
     @Override
     public void configure(Map<String, ?> props) {
@@ -29,22 +30,33 @@ public class TombstoneToNull<R extends ConnectRecord<R>> implements Transformati
     @Override
     public R apply(R record) {
 
-        if (record.value() != null) {
-            return record;
-        }
-
         Schema dvSchema = SchemaBuilder.struct()
         .name("com.github.vdesabou.Customer").version(1).doc("Some doc.")
         .field("ListID", Schema.INT64_SCHEMA)
         .field("NormalizedHashItemID", Schema.INT64_SCHEMA)
         .field("URL", Schema.STRING_SCHEMA)
+        .field("KafkaKeyIsDeleted", Schema.BOOLEAN_SCHEMA)
         .build();
 
         final Struct updatedValue = new Struct(dvSchema);
-        updatedValue.put("ListID", 0L);
-        updatedValue.put("NormalizedHashItemID", 0L);
-        updatedValue.put("URL", "null");
 
+        if (record.value() != null) {
+            // not a tombstone, need to add KafkaKeyIsDeleted to false
+            final Struct value = requireStruct(record.value(), PURPOSE);
+
+            for (Field field: record.valueSchema().fields()) {
+                // copy initial values
+                updatedValue.put(field.name(), value.get(field));
+            }
+            // Add KafkaKeyIsDeleted
+            updatedValue.put("KafkaKeyIsDeleted", false);
+        } else {
+            // tombstone
+            updatedValue.put("ListID", 0L);
+            updatedValue.put("NormalizedHashItemID", 0L);
+            updatedValue.put("URL", "null");
+            updatedValue.put("KafkaKeyIsDeleted", true);
+        }
         return record.newRecord(
                 record.topic(),
                 record.kafkaPartition(),
