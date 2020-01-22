@@ -6,5 +6,5 @@ ccloud-generate-env-vars.sh
 http_avro_basic_auth.sh
 vertica-sink-testing-batch-size-error.sh
 vertica-sink-testing-batch-size.sh
-vertica-sink-testing-batch-size-error
+vertica-sink-dv.sh
 01-create-table.sh
