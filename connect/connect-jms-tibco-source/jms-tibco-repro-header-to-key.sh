@@ -42,7 +42,7 @@ then
      cd ${OLDDIR}
 fi
 
-${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
+${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext-repro-header-to-key.yml"
 
 log "Sending EMS JSON message in queue connector-quickstart"
 docker exec tibco-ems bash -c '
@@ -108,7 +108,7 @@ docker exec connect \
                     "errors.retry.delay.max.ms": "30000",
                     "transforms": "FlattenJson",
                     "transforms.FlattenJson.type":"org.apache.kafka.connect.transforms.Flatten$Value",
-                    "transforms.flatten.delimiter": ".",
+                    "transforms.FlattenJson.delimiter": ".",
                     "confluent.license": "",
                     "confluent.topic.bootstrap.servers": "broker:9092",
                     "confluent.topic.replication.factor": "1"
