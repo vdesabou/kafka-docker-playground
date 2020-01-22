@@ -21,14 +21,14 @@ if [ ! -f ${DIR}/KeyToValue/target/KeyToValue-1.0-SNAPSHOT.jar ]
 then
      # build KeyToValue transform
      log "Build KeyToValue transform"
-     mvn -f ${DIR}/KeyToValue/pom.xml install -DskipTests
+     mvn -q -f ${DIR}/KeyToValue/pom.xml install -DskipTests
 fi
 
 if [ ! -f ${DIR}/TombstoneToNull/target/TombstoneToNull-1.0-SNAPSHOT.jar ]
 then
      # build TombstoneToNull transform
      log "Build TombstoneToNull transform"
-     mvn -f ${DIR}/TombstoneToNull/pom.xml install -DskipTests
+     mvn -q -f ${DIR}/TombstoneToNull/pom.xml install -DskipTests
 fi
 
 if [ ! -f ${DIR}/vertica-stream-writer/target/vertica-stream-writer-0.0.1-SNAPSHOT.jar ]
@@ -36,7 +36,7 @@ then
      log "Build vertica-stream-writer-0.0.1-SNAPSHOT.jar"
      git clone https://github.com/jcustenborder/vertica-stream-writer.git
      cp ${DIR}/QueryBuilder.java vertica-stream-writer/src/main/java/com/github/jcustenborder/vertica/QueryBuilder.java
-     mvn -f ${DIR}/vertica-stream-writer/pom.xml install -DskipTests
+     mvn -q -f ${DIR}/vertica-stream-writer/pom.xml install -DskipTests
 fi
 
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext-dv.yml"
