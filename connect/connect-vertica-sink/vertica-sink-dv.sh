@@ -77,13 +77,8 @@ docker exec connect \
                     "topics": "customer",
                     "enable.auto.commit": "false",
                     "consumer.override.max.poll.records": "501",
-                    "transforms": "TombstoneToNull, insert_isKafkaDeleted, cast_isKafkaDeleted_toBoolean, insert_dwhCreateDate, KeyToValue, cast_kafkaId_toInt",
+                    "transforms": "TombstoneToNull, insert_dwhCreateDate, KeyToValue, cast_kafkaId_toInt",
                     "transforms.TombstoneToNull.type": "com.github.vdesabou.kafka.connect.transforms.TombstoneToNull",
-                    "transforms.insert_isKafkaDeleted.type": "org.apache.kafka.connect.transforms.InsertField$Value",
-                    "transforms.insert_isKafkaDeleted.static.field": "KafkaKeyIsDeleted",
-                    "transforms.insert_isKafkaDeleted.static.value": "0",
-                    "transforms.cast_isKafkaDeleted_toBoolean.type": "org.apache.kafka.connect.transforms.Cast$Value",
-                    "transforms.cast_isKafkaDeleted_toBoolean.spec": "KafkaKeyIsDeleted:boolean",
                     "transforms.insert_dwhCreateDate.type": "org.apache.kafka.connect.transforms.InsertField$Value",
                     "transforms.insert_dwhCreateDate.timestamp.field": "dwhCreationDate",
                     "transforms.KeyToValue.type": "com.github.vdesabou.kafka.connect.transforms.KeyToValue",
@@ -107,13 +102,12 @@ EOF
 
 #      dwhCreationDate     | kafkaId | ListID | NormalizedHashItemID | URL  | KafkaKeyIsDeleted
 # -------------------------+---------+--------+----------------------+------+-------------------
-#  2020-01-21 16:22:31.784 |       0 |      0 |                    0 | url  | f
-#  2020-01-21 16:22:31.886 |       1 |      1 |                    1 | url  | f
-#  2020-01-21 16:22:31.941 |       2 |      0 |                    0 | null | f     <----- tombstone
-#  2020-01-21 16:22:32.001 |       3 |      3 |                    3 | url  | f
-#  2020-01-21 16:22:32.058 |       4 |      4 |                    4 | url  | f
-#  2020-01-21 16:22:32.116 |       5 |      5 |                    5 | url  | f
-#  2020-01-21 16:22:32.173 |       6 |      6 |                    6 | url  | f
+#  2020-01-22 14:41:36.121 |       0 |      0 |                    0 | url  | f
+#  2020-01-22 14:41:36.667 |       1 |      1 |                    1 | url  | f
+#  2020-01-22 14:41:37.172 |       2 |      0 |                    0 | null | t    <--- tombstone
+#  2020-01-22 14:41:37.679 |       3 |      3 |                    3 | url  | f
+#  2020-01-22 14:41:38.185 |       4 |      4 |                    4 | url  | f
+#  2020-01-22 14:41:38.69  |       5 |      5 |                    5 | url  | f
 
 
 # Without trace logs:
