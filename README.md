@@ -6,12 +6,12 @@ Playground for Kafka/Confluent Docker experimentations...
 
 ----
 
-ℹ️ By default Confluent Platform version 5.2.3 is used, but you can test with another version (greater or equal to 5.0.0) simply by exporting `TAG` environment variable:
+ℹ️ By default Confluent Platform version 5.4.0 is used, but you can test with another version (greater or equal to 5.0.0) simply by exporting `TAG` environment variable:
 
 Example:
 
 ```bash
-export TAG=5.2.3
+export TAG=5.3.2
 ```
 
 ----
