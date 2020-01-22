@@ -14,6 +14,8 @@ services:
       context: ../../connect/connect-vertica-sink/producer/
       args:
         TAG: ${TAG}
+        CP_BASE_IMAGE: ${CP_BASE_IMAGE}
+        KAFKA_CLIENT_TAG: ${KAFKA_CLIENT_TAG}
     hostname: producer
     container_name: producer
     environment:

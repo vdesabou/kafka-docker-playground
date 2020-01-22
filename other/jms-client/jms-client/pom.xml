@@ -24,7 +24,7 @@
         <dependency>
             <groupId>io.confluent</groupId>
             <artifactId>kafka-jms-client</artifactId>
-            <version>5.3.2</version>
+            <version>${env.TAG}</version>
         </dependency>
         <dependency>
             <groupId>org.apache.geronimo.specs</groupId>
@@ -35,7 +35,7 @@
         <!-- <dependency>
             <groupId>io.confluent</groupId>
             <artifactId>monitoring-interceptors</artifactId>
-            <version>5.3.2</version>
+            <version>${env.TAG}</version>
         </dependency> -->
 
         <!--for logging purposes-->

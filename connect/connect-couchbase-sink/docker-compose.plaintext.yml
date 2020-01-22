@@ -23,5 +23,7 @@ services:
       context: ../../connect/connect-couchbase-sink/json-producer/
       args:
         TAG: ${TAG}
+        CP_BASE_IMAGE: ${CP_BASE_IMAGE}
+        KAFKA_CLIENT_TAG: ${KAFKA_CLIENT_TAG}
     hostname: json-producer
     container_name: json-producer
