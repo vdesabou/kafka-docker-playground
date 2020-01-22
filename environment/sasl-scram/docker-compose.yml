@@ -9,7 +9,7 @@ services:
 
     zookeeper:
         volumes:
-        - ../../environment/sasl-plain/zookeeper/zookeeper.sasl.jaas.config:/etc/kafka/zookeeper_server_jaas.conf
+        - ../../environment/sasl-scram/zookeeper/zookeeper.sasl.jaas.config:/etc/kafka/zookeeper_server_jaas.conf
         environment:
             KAFKA_OPTS: -Djava.security.auth.login.config=/etc/kafka/zookeeper_server_jaas.conf
                 -Dzookeeper.authProvider.1=org.apache.zookeeper.server.auth.SASLAuthenticationProvider
@@ -18,66 +18,67 @@ services:
 
     broker:
         volumes:
-          - ../../environment/sasl-plain/kafka/kafka.jaas.conf:/etc/kafka/kafka_server_jaas.conf
+          - ../../environment/sasl-scram/kafka/users:/service/kafka/users
+          - ../../environment/sasl-scram/kafka/kafka.jaas.conf:/etc/kafka/kafka_server_jaas.conf
         environment:
             KAFKA_LISTENERS: SASL_PLAINTEXT://:9092
             KAFKA_ADVERTISED_LISTENERS: SASL_PLAINTEXT://broker:9092
-            KAFKA_SASL_ENABLED_MECHANISMS: PLAIN
-            KAFKA_SASL_MECHANISM_INTER_BROKER_PROTOCOL: PLAIN
+            KAFKA_SASL_ENABLED_MECHANISMS: SCRAM-SHA-256
+            KAFKA_SASL_MECHANISM_INTER_BROKER_PROTOCOL: SCRAM-SHA-256
             KAFKA_SECURITY_INTER_BROKER_PROTOCOL: SASL_PLAINTEXT
-            CONFLUENT_METRICS_REPORTER_SASL_MECHANISM: PLAIN
+            CONFLUENT_METRICS_REPORTER_SASL_MECHANISM: SCRAM-SHA-256
             CONFLUENT_METRICS_REPORTER_SECURITY_PROTOCOL: SASL_PLAINTEXT
-            CONFLUENT_METRICS_REPORTER_SASL_JAAS_CONFIG: "org.apache.kafka.common.security.plain.PlainLoginModule required \
+            CONFLUENT_METRICS_REPORTER_SASL_JAAS_CONFIG: "org.apache.kafka.common.security.scram.ScramLoginModule required \
                 username=\"client\" \
                 password=\"client-secret\";"
             KAFKA_OPTS: "-Djava.security.auth.login.config=/etc/kafka/kafka_server_jaas.conf"
 
     connect:
         environment:
-            # Configure the Connect workers to use SASL/PLAIN.
-            CONNECT_SASL_MECHANISM: PLAIN
+            # Configure the Connect workers to use SASL/SCRAM-SHA-256.
+            CONNECT_SASL_MECHANISM: SCRAM-SHA-256
             CONNECT_SECURITY_PROTOCOL: SASL_PLAINTEXT
             # JAAS
-            CONNECT_SASL_JAAS_CONFIG: "org.apache.kafka.common.security.plain.PlainLoginModule required \
+            CONNECT_SASL_JAAS_CONFIG: "org.apache.kafka.common.security.scram.ScramLoginModule required \
                 username=\"connect\" \
                 password=\"connect-secret\";"
             # producer
             CONNECT_PRODUCER_CONFLUENT_MONITORING_INTERCEPTOR_SECURITY_PROTOCOL: SASL_PLAINTEXT
-            CONNECT_PRODUCER_CONFLUENT_MONITORING_INTERCEPTOR_SASL_JAAS_CONFIG: "org.apache.kafka.common.security.plain.PlainLoginModule required \
+            CONNECT_PRODUCER_CONFLUENT_MONITORING_INTERCEPTOR_SASL_JAAS_CONFIG: "org.apache.kafka.common.security.scram.ScramLoginModule required \
                 username=\"connect\" \
                 password=\"connect-secret\";"
-            CONNECT_PRODUCER_CONFLUENT_MONITORING_INTERCEPTOR_SASL_MECHANISM: PLAIN
+            CONNECT_PRODUCER_CONFLUENT_MONITORING_INTERCEPTOR_SASL_MECHANISM: SCRAM-SHA-256
             # consumer
             CONNECT_CONSUMER_CONFLUENT_MONITORING_INTERCEPTOR_SECURITY_PROTOCOL: SASL_PLAINTEXT
-            CONNECT_CONSUMER_CONFLUENT_MONITORING_INTERCEPTOR_SASL_JAAS_CONFIG: "org.apache.kafka.common.security.plain.PlainLoginModule required \
+            CONNECT_CONSUMER_CONFLUENT_MONITORING_INTERCEPTOR_SASL_JAAS_CONFIG: "org.apache.kafka.common.security.scram.ScramLoginModule required \
                 username=\"connect\" \
                 password=\"connect-secret\";"
-            CONNECT_CONSUMER_CONFLUENT_MONITORING_INTERCEPTOR_SASL_MECHANISM: PLAIN
+            CONNECT_CONSUMER_CONFLUENT_MONITORING_INTERCEPTOR_SASL_MECHANISM: SCRAM-SHA-256
             # producer
-            CONNECT_PRODUCER_SASL_MECHANISM: PLAIN
+            CONNECT_PRODUCER_SASL_MECHANISM: SCRAM-SHA-256
             CONNECT_PRODUCER_SECURITY_PROTOCOL: SASL_PLAINTEXT
-            CONNECT_PRODUCER_SASL_JAAS_CONFIG: "org.apache.kafka.common.security.plain.PlainLoginModule required \
+            CONNECT_PRODUCER_SASL_JAAS_CONFIG: "org.apache.kafka.common.security.scram.ScramLoginModule required \
                 username=\"connect\" \
                 password=\"connect-secret\";"
             # consumer
-            CONNECT_CONSUMER_SASL_MECHANISM: PLAIN
+            CONNECT_CONSUMER_SASL_MECHANISM: SCRAM-SHA-256
             CONNECT_CONSUMER_SECURITY_PROTOCOL: SASL_PLAINTEXT
-            CONNECT_CONSUMER_SASL_JAAS_CONFIG: "org.apache.kafka.common.security.plain.PlainLoginModule required \
+            CONNECT_CONSUMER_SASL_JAAS_CONFIG: "org.apache.kafka.common.security.scram.ScramLoginModule required \
                 username=\"connect\" \
                 password=\"connect-secret\";"
 
     schema-registry:
         environment:
             SCHEMA_REGISTRY_KAFKASTORE_SECURITY_PROTOCOL: SASL_PLAINTEXT
-            SCHEMA_REGISTRY_KAFKASTORE_SASL_MECHANISM: PLAIN
-            SCHEMA_REGISTRY_KAFKASTORE_SASL_JAAS_CONFIG: "org.apache.kafka.common.security.plain.PlainLoginModule required \
+            SCHEMA_REGISTRY_KAFKASTORE_SASL_MECHANISM: SCRAM-SHA-256
+            SCHEMA_REGISTRY_KAFKASTORE_SASL_JAAS_CONFIG: "org.apache.kafka.common.security.scram.ScramLoginModule required \
                 username=\"schemaregistry\" \
                 password=\"schemaregistry-secret\";"
 
     control-center:
         environment:
             CONTROL_CENTER_STREAMS_SECURITY_PROTOCOL: SASL_PLAINTEXT
-            CONTROL_CENTER_STREAMS_SASL_JAAS_CONFIG: "org.apache.kafka.common.security.plain.PlainLoginModule required \
+            CONTROL_CENTER_STREAMS_SASL_JAAS_CONFIG: "org.apache.kafka.common.security.scram.ScramLoginModule required \
                 username=\"client\" \
                 password=\"client-secret\";"
-            CONTROL_CENTER_STREAMS_SASL_MECHANISM: PLAIN
+            CONTROL_CENTER_STREAMS_SASL_MECHANISM: SCRAM-SHA-256
