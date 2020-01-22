@@ -36,7 +36,7 @@ jobs:
   - name: 'CONNECT: active-mq-sink active-mq-source cassandra-sink couchbase-sink
       couchbase-source'
     env: TEST_LIST="connect/connect-active-mq-sink connect/connect-active-mq-source
-      connect/connect-cassandra-sink connect/connect-couchbase-sink connect/connect-couchbase-source  connect/connect-hbase-sink"
+      connect/connect-cassandra-sink connect/connect-couchbase-sink connect/connect-couchbase-source connect/connect-hbase-sink"
   - name: 'CONNECT: jms-tibco-sink jms-tibco-source debezium-mongodb-source debezium-mysql-source
       debezium-postgresql-source debezium-sqlserver-source elasticsearch-sink'
     env: TEST_LIST="connect/connect-jms-tibco-sink connect/connect-jms-tibco-source
