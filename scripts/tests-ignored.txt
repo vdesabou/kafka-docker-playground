@@ -8,3 +8,4 @@ vertica-sink-testing-batch-size-error.sh
 vertica-sink-testing-batch-size.sh
 vertica-sink-dv.sh
 01-create-table.sh
+jms-tibco-repro-header-to-key.sh
