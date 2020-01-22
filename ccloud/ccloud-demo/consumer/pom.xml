@@ -24,19 +24,19 @@
         <dependency>
             <groupId>org.apache.kafka</groupId>
             <artifactId>kafka-clients</artifactId>
-            <version>2.3.0</version>
+            <version>${env.KAFKA_CLIENT_TAG}</version>
         </dependency>
 
         <dependency>
             <groupId>io.confluent</groupId>
             <artifactId>kafka-avro-serializer</artifactId>
-            <version>5.3.2</version>
+            <version>${env.TAG}</version>
         </dependency>
 
         <dependency>
             <groupId>io.confluent</groupId>
             <artifactId>monitoring-interceptors</artifactId>
-            <version>5.3.2</version>
+            <version>${env.TAG}</version>
         </dependency>
 
         <!--Only dependency needed for the avro part-->
