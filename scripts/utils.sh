@@ -97,7 +97,7 @@ else
     else
         export CP_KAFKA_IMAGE=cp-enterprise-kafka
     fi
-    second_version=5.4.0
+    second_version=5.3.2
     if version_gt $first_version $second_version; then
         export CP_BASE_IMAGE=cp-base-new
     else
