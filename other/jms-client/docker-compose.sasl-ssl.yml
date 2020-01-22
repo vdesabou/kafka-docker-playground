@@ -7,6 +7,8 @@ services:
       context: ../../other/jms-client/jms-client/
       args:
         TAG: ${TAG}
+        CP_BASE_IMAGE: ${CP_BASE_IMAGE}
+        KAFKA_CLIENT_TAG: ${KAFKA_CLIENT_TAG}
     hostname: jms-client
     container_name: jms-clients
     volumes:
