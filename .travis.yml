@@ -29,6 +29,17 @@ before_install:
 - cp ./3rdparty/jms.jar ./connect/connect-ibm-mq-source/jms.jar
 - cp ./3rdparty/com.ibm.mq.allclient.jar ./connect/connect-ibm-mq-sink/com.ibm.mq.allclient.jar
 - cp ./3rdparty/com.ibm.mq.allclient.jar ./connect/connect-ibm-mq-source/com.ibm.mq.allclient.jar
+- cp ./3rdparty/mysql-connector-java-5.1.45.jar ./ccloud/ccloud-demo/mysql-connector-java-5.1.45.jar
+- cp ./3rdparty/mysql-connector-java-5.1.45.jar ./connect/connect-debezium-mysql-source/mysql-connector-java-5.1.45.jar
+- cp ./3rdparty/mysql-connector-java-5.1.45.jar ./connect/connect-jdbc-mysql-sink/mysql-connector-java-5.1.45.jar
+- cp ./3rdparty/mysql-connector-java-5.1.45.jar ./connect/connect-jdbc-mysql-source/mysql-connector-java-5.1.45.jar
+- cp ./3rdparty/RedshiftJDBC4-1.2.20.1043.jar ./connect/connect-aws-redshift-sink/RedshiftJDBC4-1.2.20.1043.jar
+- cp ./3rdparty/activemq-all-5.15.4.jar ./connect/connect-jms-active-mq-sink/activemq-all-5.15.4.jar
+- cp ./3rdparty/commons-lang-2.6.jar ./connect/connect-jms-solace-sink/commons-lang-2.6.jar
+- cp ./3rdparty/sol-jms-10.6.4.jar ./connect/connect-jms-solace-sink/sol-jms-10.6.4.jar
+- cp ./3rdparty/sol-jms-10.6.4.jar ./connect/connect-solace-sink/sol-jms-10.6.4.jar
+- cp ./3rdparty/sol-jms-10.6.4.jar ./connect/connect-solace-source/sol-jms-10.6.4.jar
+
 - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
 jobs:
   include:

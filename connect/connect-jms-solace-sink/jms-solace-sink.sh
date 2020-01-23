@@ -16,30 +16,6 @@ then
      wget https://repo1.maven.org/maven2/commons-lang/commons-lang/2.6/commons-lang-2.6.jar
 fi
 
-# if [ ! -f ${DIR}/commons-logging-1.1.3.jar ]
-# then
-#      log "Downloading commons-logging-1.1.3.jar"
-#      wget https://repo1.maven.org/maven2/commons-logging/commons-logging/1.1.3/commons-logging-1.1.3.jar
-# fi
-
-# if [ ! -f ${DIR}/geronimo-jms_1.1_spec-1.1.1.jar ]
-# then
-#      log "Downloading geronimo-jms_1.1_spec-1.1.1.jar"
-#      wget https://repo1.maven.org/maven2/org/apache/geronimo/specs/geronimo-jms_1.1_spec/1.1.1/geronimo-jms_1.1_spec-1.1.1.jar
-# fi
-
-# if [ ! -f ${DIR}/org.apache.servicemix.bundles.jzlib-1.0.7_2.jar ]
-# then
-#      log "Downloading org.apache.servicemix.bundles.jzlib-1.0.7_2.jar"
-#      wget https://repo1.maven.org/maven2/org/apache/servicemix/bundles/org.apache.servicemix.bundles.jzlib/1.0.7_2/org.apache.servicemix.bundles.jzlib-1.0.7_2.jar
-# fi
-
-# if [ ! -f ${DIR}/org.osgi.annotation-6.0.0.jar ]
-# then
-#      log "Downloading org.osgi.annotation-6.0.0.jar"
-#      wget https://repo1.maven.org/maven2/org/osgi/org.osgi.annotation/6.0.0/org.osgi.annotation-6.0.0.jar
-# fi
-
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
 
 log "Wait 60 seconds for Solace to be up and running"
