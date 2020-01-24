@@ -2,6 +2,9 @@ language: java
 jdk: openjdk8
 os: linux
 services: docker
+cache:
+  directories:
+  - $HOME/.m2
 before_install:
 - sudo apt-get -y install expect awscli
 - openssl aes-256-cbc -K $encrypted_e1b0a72f7201_key -iv $encrypted_e1b0a72f7201_iv
