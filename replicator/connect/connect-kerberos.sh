@@ -79,7 +79,7 @@ docker container exec connect-europe \
           }' \
      http://localhost:8083/connectors/replicate-us-to-europe/config | jq_docker_cli .
 
-sleep 120
+sleep 240
 
 log "Verify we have received the data in all the sales_ topics in EUROPE"
 timeout 60 docker container exec -i client bash -c 'kinit -k -t /var/lib/secret/kafka-client.key kafka_consumer'
