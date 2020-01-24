@@ -6,13 +6,13 @@ source ${DIR}/../../scripts/utils.sh
 
 ${DIR}/../../environment/mdc-plaintext/start.sh
 
-echo "Sending sales in Europe cluster"
+log "Sending sales in Europe cluster"
 seq -f "european_sale_%g ${RANDOM}" 10 | docker container exec -i broker-europe kafka-console-producer --broker-list localhost:9092 --topic sales_EUROPE
 
-echo "Sending sales in US cluster"
+log "Sending sales in US cluster"
 seq -f "us_sale_%g ${RANDOM}" 10 | docker container exec -i broker-us kafka-console-producer --broker-list localhost:9092 --topic sales_US
 
-echo Consolidating all sales in the US
+log "Consolidating all sales in the US"
 
 docker container exec connect-us \
      curl -X PUT \
@@ -32,7 +32,7 @@ docker container exec connect-us \
      http://localhost:8083/connectors/replicate-europe-to-us/config | jq_docker_cli .
 
 
-echo Consolidating all sales in Europe
+log "Consolidating all sales in Europe"
 
 docker container exec connect-europe \
      curl -X PUT \
@@ -52,9 +52,9 @@ docker container exec connect-europe \
      http://localhost:8083/connectors/replicate-us-to-europe/config | jq_docker_cli .
 
 
-echo "Verify we have received the data in all the sales_ topics in EUROPE"
+log "Verify we have received the data in all the sales_ topics in EUROPE"
 timeout 60 docker container exec broker-europe kafka-console-consumer --bootstrap-server localhost:9092 --whitelist "sales_.*" --from-beginning --max-messages 20 --property metadata.max.age.ms 30000
 
-echo "Verify we have received the data in all the sales_ topics in the US"
+log "Verify we have received the data in all the sales_ topics in the US"
 timeout 60 docker container exec broker-us kafka-console-consumer --bootstrap-server localhost:9092 --whitelist "sales_.*" --from-beginning --max-messages 20 --property metadata.max.age.ms 30000
 
