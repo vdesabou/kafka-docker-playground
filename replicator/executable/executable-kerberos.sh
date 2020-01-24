@@ -6,31 +6,31 @@ source ${DIR}/../../scripts/utils.sh
 
 ${DIR}/../../environment/mdc-kerberos/start.sh "${PWD}/docker-compose.kerberos.yml"
 
-echo "Sending sales in Europe cluster"
+log "Sending sales in Europe cluster"
 seq -f "european_sale_%g ${RANDOM}" 10 | docker container exec -i client bash -c 'kinit -k -t /var/lib/secret/kafka-client.key kafka_producer && kafka-console-producer --broker-list broker-europe:9092 --topic sales_EUROPE --producer.config /etc/kafka/producer-europe.properties'
 
-echo "Sending sales in US cluster"
+log "Sending sales in US cluster"
 seq -f "us_sale_%g ${RANDOM}" 10 | docker container exec -i client bash -c 'kinit -k -t /var/lib/secret/kafka-client.key kafka_producer && kafka-console-producer --broker-list broker-us:9092 --topic sales_US --producer.config /etc/kafka/producer-us.properties'
 
-echo "Consolidating all sales in the US (logs are in /tmp/replicator.log):"
+log "Consolidating all sales in the US (logs are in /tmp/replicator.log):"
 docker container exec -i connect-us bash -c 'kinit -k -t /var/lib/secret/kafka-connect.key connect'
 # run in detach mode -d
 docker exec -d connect-us bash -c 'replicator --consumer.config /etc/kafka/consumer-us.properties --producer.config /etc/kafka/producer-us.properties  --replication.config /etc/kafka/replication-us.properties  --cluster.id replicate-europe-to-us --whitelist sales_EUROPE > /tmp/replicator.log 2>&1'
 
-echo "Consolidating all sales in Europe (logs are in /tmp/replicator.log):"
+log "Consolidating all sales in Europe (logs are in /tmp/replicator.log):"
 docker container exec -i connect-europe bash -c 'kinit -k -t /var/lib/secret/kafka-connect.key connect'
 # run in detach mode -d
 docker exec -d connect-europe bash -c 'replicator --consumer.config /etc/kafka/consumer-europe.properties --producer.config /etc/kafka/producer-europe.properties  --replication.config /etc/kafka/replication-europe.properties  --cluster.id replicate-us-to-europe --whitelist sales_US > /tmp/replicator.log 2>&1'
 
-echo "sleeping 240 seconds"
+log "sleeping 240 seconds"
 sleep 240
 
-echo "Verify we have received the data in all the sales_ topics in EUROPE"
+log "Verify we have received the data in all the sales_ topics in EUROPE"
 timeout 60 docker container exec -i client bash -c 'kinit -k -t /var/lib/secret/kafka-client.key kafka_consumer && kafka-console-consumer --bootstrap-server broker-europe:9092 --whitelist "sales_.*" --from-beginning --max-messages 20 --property metadata.max.age.ms 30000 --consumer.config /etc/kafka/consumer-europe.properties'
 
-echo "Verify we have received the data in all the sales_ topics in the US"
+log "Verify we have received the data in all the sales_ topics in the US"
 timeout 60 docker container exec -i client bash -c 'kinit -k -t /var/lib/secret/kafka-client.key kafka_consumer && kafka-console-consumer --bootstrap-server broker-us:9092 --whitelist "sales_.*" --from-beginning --max-messages 20 --property metadata.max.age.ms 30000 --consumer.config /etc/kafka/consumer-us.properties'
 
-echo "Copying replicator logs to /tmp/replicator-europe.log and /tmp/replicator-us.log"
+log "Copying replicator logs to /tmp/replicator-europe.log and /tmp/replicator-us.log"
 docker cp connect-europe:/tmp/replicator.log /tmp/replicator-europe.log
 docker cp connect-us:/tmp/replicator.log /tmp/replicator-us.log
