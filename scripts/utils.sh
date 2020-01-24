@@ -282,15 +282,16 @@ function retry() {
         logwarn "docker ps"
         docker ps
         logwarn "####################################################"
-        logwarn "broker logs"
-        docker container logs --tail=500 connect
-        logwarn "####################################################"
-        logwarn "schema-registry logs"
-        docker container logs --tail=500 schema-registry
-        logwarn "####################################################"
-        logwarn "connect logs"
-        docker container logs --tail=500 connect
-        logwarn "####################################################"
+        for container in broker schema-registry connect broker-us broker-europe connect-us connect-europe
+        do
+          if [[ $(docker ps -f "name=$container" --format '{{.Names}}') == $container ]]
+          then
+            logwarn "####################################################"
+            logwarn "$container logs"
+            docker container logs --tail=500 $container
+            logwarn "####################################################"
+          fi
+        done
       else
         logerror "The command has failed after $n attempts."
         return 1
