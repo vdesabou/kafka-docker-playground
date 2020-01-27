@@ -18,7 +18,7 @@ log "Creating Couchbase bucket travel-data"
 docker exec couchbase bash -c "/opt/couchbase/bin/couchbase-cli bucket-create --cluster localhost:8091 --username Administrator --password password --bucket travel-data --bucket-type couchbase --bucket-ramsize 100"
 
 log "Sending messages to topic couchbase-sink-example"
-docker exec json-producer bash -c "java -jar json-producer-example-1.0-SNAPSHOT-jar-with-dependencies.jar"
+docker exec json-producer bash -c "java -jar json-producer-1.0.0-SNAPSHOT-jar-with-dependencies.jar"
 
 log "Creating Couchbase sink connector"
 docker exec connect \
