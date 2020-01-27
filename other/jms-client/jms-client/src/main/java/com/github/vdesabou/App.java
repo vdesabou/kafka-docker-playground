@@ -25,7 +25,7 @@ public class App {
             settings.put("confluent.license", System.getenv("CONFLUENT_LICENSE"));
         } else {
             // if we don't have a license, we need to set zookeeper.connect
-            settings.put(JMSClientConfig.ZOOKEEPER_CONNECT_CONF, System.getenv("ZOOKEEPER_CONNECT"));
+            settings.put("zookeeper.connect", System.getenv("ZOOKEEPER_CONNECT"));
         }
 
         if( System.getenv("USERNAME") != null &&
