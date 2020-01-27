@@ -18,6 +18,7 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Properties;
 import java.util.Collections;
+import io.confluent.kafka.serializers.KafkaAvroSerializer;
 
 public class ProducerExample {
 
@@ -40,7 +41,7 @@ public class ProducerExample {
     // Add additional properties.
     props.put(ProducerConfig.ACKS_CONFIG, "all");
     props.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, "org.apache.kafka.common.serialization.StringSerializer");
-    props.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, "io.confluent.kafka.serializers.KafkaJsonSerializer");
+    props.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, KafkaAvroSerializer.class);
 
     Producer<String, DataRecord> producer = new KafkaProducer<String, DataRecord>(props);
 
