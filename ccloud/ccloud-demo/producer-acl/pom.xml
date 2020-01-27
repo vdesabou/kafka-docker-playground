@@ -33,12 +33,6 @@
             <version>${env.TAG}</version>
         </dependency>
 
-        <dependency>
-            <groupId>io.confluent</groupId>
-            <artifactId>kafka-json-serializer</artifactId>
-            <version>${env.TAG}</version>
-        </dependency>
-
         <!--Only dependency needed for the avro part-->
         <!-- https://mvnrepository.com/artifact/org.apache.avro/avro -->
         <dependency>
