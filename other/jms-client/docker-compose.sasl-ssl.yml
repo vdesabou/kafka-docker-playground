@@ -8,9 +8,8 @@ services:
       args:
         TAG: ${TAG}
         CP_BASE_IMAGE: ${CP_BASE_IMAGE}
-        KAFKA_CLIENT_TAG: ${KAFKA_CLIENT_TAG}
     hostname: jms-client
-    container_name: jms-clients
+    container_name: jms-client
     volumes:
       - ../../environment/sasl-ssl/security:/etc/kafka/secrets
     depends_on:
