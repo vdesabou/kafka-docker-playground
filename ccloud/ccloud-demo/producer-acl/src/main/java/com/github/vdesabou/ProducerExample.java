@@ -8,7 +8,6 @@ import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.clients.producer.Producer;
 import org.apache.kafka.clients.admin.AdminClient;
 import org.apache.kafka.clients.admin.NewTopic;
-import com.github.vdesabou.model.DataRecord;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.concurrent.ExecutionException;
@@ -18,7 +17,6 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Properties;
 import java.util.Collections;
-import io.confluent.kafka.serializers.KafkaAvroSerializer;
 
 public class ProducerExample {
 
@@ -41,18 +39,18 @@ public class ProducerExample {
     // Add additional properties.
     props.put(ProducerConfig.ACKS_CONFIG, "all");
     props.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, "org.apache.kafka.common.serialization.StringSerializer");
-    props.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, KafkaAvroSerializer.class);
+    props.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, "org.apache.kafka.common.serialization.StringSerializer");
 
-    Producer<String, DataRecord> producer = new KafkaProducer<String, DataRecord>(props);
+    Producer<String, String> producer = new KafkaProducer<String, String>(props);
 
     // Produce sample data
     final Long numMessages = 10L;
     for (Long i = 0L; i < numMessages; i++) {
       String key = "alice";
-      DataRecord record = new DataRecord(i);
+      String record = "alice"+i;
 
       System.out.printf("Producing record: %s\t%s%n", key, record);
-      producer.send(new ProducerRecord<String, DataRecord>(topic, key, record), new Callback() {
+      producer.send(new ProducerRecord<String, String>(topic, key, record), new Callback() {
           @Override
           public void onCompletion(RecordMetadata m, Exception e) {
             if (e != null) {
