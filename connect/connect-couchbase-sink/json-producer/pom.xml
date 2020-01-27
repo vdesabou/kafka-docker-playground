@@ -6,8 +6,8 @@
     <packaging>jar</packaging>
 
     <groupId>com.couchbase.connect.kafka.example</groupId>
-    <artifactId>json-producer-example</artifactId>
-    <version>1.0-SNAPSHOT</version>
+    <artifactId>json-producer</artifactId>
+    <version>1.0.0-SNAPSHOT</version>
 
     <dependencies>
         <dependency>

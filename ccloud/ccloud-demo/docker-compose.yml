@@ -234,8 +234,6 @@ services:
       args:
         TAG: ${TAG}
         CP_BASE_IMAGE: ${CP_BASE_IMAGE}
-        KAFKA_CLIENT_TAG: ${KAFKA_CLIENT_TAG}
-
     hostname: stream
     container_name: stream
     environment:
@@ -252,7 +250,6 @@ services:
       args:
         TAG: ${TAG}
         CP_BASE_IMAGE: ${CP_BASE_IMAGE}
-        KAFKA_CLIENT_TAG: ${KAFKA_CLIENT_TAG}
     hostname: producer
     container_name: producer
     environment:
@@ -275,7 +272,6 @@ services:
       args:
         TAG: ${TAG}
         CP_BASE_IMAGE: ${CP_BASE_IMAGE}
-        KAFKA_CLIENT_TAG: ${KAFKA_CLIENT_TAG}
     hostname: consumer
     container_name: consumer
     environment:
@@ -298,7 +294,6 @@ services:
       args:
         TAG: ${TAG}
         CP_BASE_IMAGE: ${CP_BASE_IMAGE}
-        KAFKA_CLIENT_TAG: ${KAFKA_CLIENT_TAG}
     hostname: producer-acl
     container_name: producer-acl
 
