@@ -16,6 +16,6 @@ services:
       - schema-registry
       - couchbase
     volumes:
-        - ../../connect/connect-couchbase-source/event_filter_class_example/target/key-filter-1.0-SNAPSHOT-jar-with-dependencies.jar:/usr/share/confluent-hub-components/kafka-connect-couchbase/key-filter-1.0-SNAPSHOT-jar-with-dependencies.jar
+        - ../../connect/connect-couchbase-source/event_filter_class_example/target/key-filter-1.0.0-SNAPSHOT-jar-with-dependencies.jar:/usr/share/confluent-hub-components/kafka-connect-couchbase/key-filter-1.0.0-SNAPSHOT-jar-with-dependencies.jar
     environment:
       CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/kafka-connect-couchbase
