@@ -3,7 +3,7 @@ set -e
 
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
-DOMAIN=${1:-cluster-name.cluster-id.region.redshift.amazonaws.com}
+CLUSTER=${1:-cluster-name.cluster-id.region.redshift.amazonaws.com}
 PASSWORD=${2:-myPassword1}
 
 if [ ! -f ${DIR}/RedshiftJDBC4-1.2.20.1043.jar ]
@@ -22,14 +22,14 @@ docker exec -i connect kafka-avro-console-producer --broker-list broker:9092 --p
 EOF
 
 log "Creating AWS Redshift Logs Source connector"
-docker exec -e PROJECT="$DOMAIN" -e DATASET="$PASSWORD" connect \
+docker exec -e PROJECT="$CLUSTER" -e DATASET="$PASSWORD" connect \
      curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
                "connector.class": "io.confluent.connect.aws.redshift.RedshiftSinkConnector",
                     "tasks.max": "1",
                     "topics": "orders",
-                    "aws.redshift.domain": "'"$DOMAIN"'",
+                    "aws.redshift.domain": "'"$CLUSTER"'",
                     "aws.redshift.port": "5439",
                     "aws.redshift.database": "dev",
                     "aws.redshift.user": "awsuser",
