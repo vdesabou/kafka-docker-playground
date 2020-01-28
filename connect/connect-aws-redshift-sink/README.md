@@ -22,10 +22,10 @@ Follow steps from [here](https://docs.confluent.io/current/connect/kafka-connect
 Simply run:
 
 ```bash
-$ ./redshift.sh <DOMAIN> <PASSWORD>
+$ ./redshift.sh <CLUSTER> <PASSWORD>
 ```
 
-With DOMAIN set with your Redshift cluster endpoint (`cluster-name.cluster-id.region.redshift.amazonaws.com`)
+With CLUSTER set with your Redshift cluster endpoint (`cluster-name.cluster-id.region.redshift.amazonaws.com`)
 
 ## Details of what the script is doing
 
