@@ -15,8 +15,11 @@ then
      rm -f ${DIR}/vertica-client-9.3.1-0.x86_64.tar.gz
 fi
 
-log "Building jar for producer"
-docker run -it --rm -e KAFKA_CLIENT_TAG=$KAFKA_CLIENT_TAG -v "${DIR}/producer":/usr/src/mymaven -v "$HOME/.m2":/root/.m2 -v "${DIR}/producer/target:/usr/src/mymaven/target" -w /usr/src/mymaven maven:3.6.1-jdk-8 mvn package
+if [ ! -f ${DIR}/producer/target/producer-1.0.0-jar-with-dependencies.jar ]
+then
+     log "Building jar for producer"
+     docker run -it --rm -e TAG=$TAG -e KAFKA_CLIENT_TAG=$KAFKA_CLIENT_TAG -v "${DIR}/producer":/usr/src/mymaven -v "$HOME/.m2":/root/.m2 -v "${DIR}/producer/target:/usr/src/mymaven/target" -w /usr/src/mymaven maven:3.6.1-jdk-8 mvn package
+fi
 
 if [ ! -f ${DIR}/KeyToValue/target/KeyToValue-1.0.0-SNAPSHOT.jar ]
 then
@@ -77,7 +80,6 @@ docker exec connect \
                     "errors.log.include.messages": "true",
                     "topics": "customer",
                     "enable.auto.commit": "false",
-                    "consumer.override.max.poll.records": "501",
                     "transforms": "TombstoneToNull, insert_dwhCreateDate, KeyToValue, cast_kafkaId_toInt",
                     "transforms.TombstoneToNull.type": "com.github.vdesabou.kafka.connect.transforms.TombstoneToNull",
                     "transforms.insert_dwhCreateDate.type": "org.apache.kafka.connect.transforms.InsertField$Value",
