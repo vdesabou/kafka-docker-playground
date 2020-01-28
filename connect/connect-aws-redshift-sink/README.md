@@ -38,7 +38,7 @@ $ docker exec -i connect kafka-avro-console-producer --broker-list broker:9092 -
 EOF
 ```
 
-Creating AWS Redshift Logs Source connector
+Creating AWS Redshift Source connector
 
 ```bash
 $ docker exec -e PROJECT="$DOMAIN" -e DATASET="$PASSWORD" connect \
