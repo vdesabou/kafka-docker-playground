@@ -42,6 +42,7 @@ Quick start examples from Confluent [docs](https://docs.confluent.io/current/con
         * using [SASL_SSL](connect/connect-aws-sqs-source/README.md#with-sasl-ssl-authentication)
         * using [SSL](connect/connect-aws-sqs-source/README.md#with-ssl-authentication)
     * <img src="https://cdn.worldvectorlogo.com/logos/aws-cloudwatch.svg" width="15"> [CloudWatch Logs](connect/connect-aws-cloudwatch-source)
+    * <img src="https://cdn.worldvectorlogo.com/logos/aws-redshift-logo.svg" width="15"> [AWS Redshift](connect/connect-jdbc-aws-redshift-source) (using JDBC)
 * <img src="https://avatars3.githubusercontent.com/u/11964329?s=400&v=4" width="15"> Debezium
     * <img src="https://banner2.cleanpng.com/20180803/abq/kisspng-mysql-cluster-database-management-system-专-题-咖-啡-与-代-码-5b640d8b2a2e53.6067051415332837231728.jpg" width="15"> [MySQL](connect/connect-debezium-mysql-source)
     * <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/2/29/Postgresql_elephant.svg/1080px-Postgresql_elephant.svg.png" width="15"> [PostgreSQL](connect/connect-debezium-postgresql-source)
@@ -58,6 +59,7 @@ Quick start examples from Confluent [docs](https://docs.confluent.io/current/con
     * <img src="https://www.stickee.co.uk/wp-content/uploads/2016/11/oracle-logo.jpg" width="15"> [Oracle 12](connect/connect-jdbc-oracle12-source)
     * <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/2/29/Postgresql_elephant.svg/1080px-Postgresql_elephant.svg.png" width="15"> [PostGreSQL](connect/connect-jdbc-postgresql-source)
     * <img src="https://www.netclipart.com/pp/m/39-396469_sql-server-logo-png.png" width="15"> [SQL Server](connect/connect-jdbc-sqlserver-source)
+    * <img src="https://cdn.worldvectorlogo.com/logos/aws-redshift-logo.svg" width="15"> [AWS Redshift](connect/connect-jdbc-aws-redshift-source)
 * <img src="https://avatars1.githubusercontent.com/u/1544528?s=400&v=4" width="15"> [MQTT](connect/connect-mqtt-source)
 * <img src="https://media.glassdoor.com/sql/6280/tibco-software-squarelogo-1432805681756.png" width="15"> [JMS TIBCO EMS](connect/connect-jms-tibco-source)
 * <img src="https://influxdata.github.io/branding/img/downloads/influxdata-logo--symbol--pool.svg" width="15"> [InfluxDB](connect/connect-influxdb-source)
