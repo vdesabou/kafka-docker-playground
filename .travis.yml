@@ -111,7 +111,9 @@ jobs:
       kafka-tutorials/ksql/ksql-serialization kafka-tutorials/ksql/rekey-a-stream  kafka-tutorials/ksql/split-stream
       kafka-tutorials/ksql/tumbling-windows"
 script:
-- bash scripts/run-tests.sh "$TEST_LIST"
+- export TAG=5.4.0 && bash scripts/run-tests.sh "$TEST_LIST"
+- export TAG=5.3.2 && bash scripts/run-tests.sh "$TEST_LIST"
+
 env:
   global:
   - secure: MxiEqV65Nfky5XzyOyElr7hTo7IaAiXTjyRkFg+h+EdaaVRpu+WrGy4dLtxKcbjJJKXB2hIVoLPbnm/RLyFIJKc06zV+EMfbXqGJ9kw5qtKnCO1xf9uqw8RsY54Szyz4JgV3Q8AvgM9wN2k/53SOQCEqMV3o5jQMLzyU6AxosR/H28Zu9359mCxjzq8S2w3Gt7PXeNCInc8HS7UeWWftLvq/SJWWb6v8WFYWSYzUmb5kAnz/JwSvW4hUv7ubSE27GbFO4KA/7nNkHsCI3zEnSMI2g0rDmbvoknD0BF/g6gChFnc8hmIp0KGkguAFog0YhLOZbXtMllbhjDpeKMHDKwd0cd0laQjsesMIq4TcSAcQlid4lmBpJA5FibNWB6gMUKjVfjlcfRpT8aMmAYXfzHGgMTpWLUQgs6FXiCFx+L8SK3cxyFHHjkvaBlkdDfVjkSSoKmBP3pcZR4c4pm4k8EKKJulsEghYh3Gjd+117SkJJeW0CtuzxBXaUOyE6yIElLWKNZdYYI52EFaFJwWBsuhKwkqJ4bT0lb9LdMofgSMvz/KVGaXua5/bdAQo3RZyDJsyf5sZC6aMroX/B09erW5Y8gt96Iptn6VSqF1mGt6KDCG7Vto2yeUflSxx/1UC/VPfG7BP0Sz00tVnoDKmHZESTi0slMR1TtKhr5EC2kU=
