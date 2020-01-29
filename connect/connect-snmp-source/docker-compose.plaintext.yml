@@ -1,0 +1,12 @@
+---
+version: '3.5'
+services:
+
+  snmptrap:
+    image: lidaheemc/docker-snmp
+    hostname: snmptrap
+    container_name: snmptrap
+
+  connect:
+    environment:
+      CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-snmp
