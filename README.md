@@ -77,6 +77,7 @@ Quick start examples from Confluent [docs](https://docs.confluent.io/current/con
 * <img src="https://cdn.iconscout.com/icon/free/png-512/sftp-1758329-1496548.png" width="15"> [SFTP](connect/connect-sftp-source)
 * <img src="https://res.cloudinary.com/practicaldev/image/fetch/s--HWZDLotH--/c_fill,f_auto,fl_progressive,h_320,q_auto,w_320/https://thepracticaldev.s3.amazonaws.com/uploads/user/profile_image/56177/3a0504e3-1139-4110-b903-08949636010a.jpg" width="15"> [MongoDB](connect/connect-mongodb-source)
 * <img src="https://d3dr9sfxru4sde.cloudfront.net/i/k/apachekudu_logo_0716_345px.png" width="15"> [Kudu](connect/connect-kudu-source)
+* <img src="https://coservit.com/servicenav/wp-content/uploads/sites/3/2019/05/SNMP_blue.png" width="15"> [SNMP](connect/connect-snmp-source)
 
 ### ↗️ Sink
 
