@@ -35,6 +35,9 @@ Quick start examples from Confluent [docs](https://docs.confluent.io/current/con
 
 ### ↘️ Source
 
+* <img src="https://mpng.pngfly.com/20190128/xso/kisspng-apache-hadoop-big-data-computer-software-data-scie-hadoop-and-tyrone-5c4f4554d98c79.8384600315486989648911.jpg" width="15"> Hadoop
+    * <img src="https://cdn.worldvectorlogo.com/logos/hadoop.svg" width="15"> [HDFS 2](connect/connect-hdfs2-source)
+    * <img src="https://cdn.worldvectorlogo.com/logos/hadoop.svg" width="15"> [HDFS 3](connect/connect-hdfs3-source)
 * <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/9/93/Amazon_Web_Services_Logo.svg/1200px-Amazon_Web_Services_Logo.svg.png" width="15"> AWS
     * <img src="https://cdn.worldvectorlogo.com/logos/aws-s3.svg" width="15"> [S3](connect/connect-aws-s3-source)
     * <img src="https://cdn.worldvectorlogo.com/logos/aws-kinesis.svg" width="15"> [Kinesis](connect/connect-aws-kinesis-source)
@@ -64,7 +67,6 @@ Quick start examples from Confluent [docs](https://docs.confluent.io/current/con
 * <img src="https://media.glassdoor.com/sql/6280/tibco-software-squarelogo-1432805681756.png" width="15"> [JMS TIBCO EMS](connect/connect-jms-tibco-source)
 * <img src="https://influxdata.github.io/branding/img/downloads/influxdata-logo--symbol--pool.svg" width="15"> [InfluxDB](connect/connect-influxdb-source)
 * <img src="http://www.pharmajournalist.com/wp-content/uploads/2017/11/splunk-logo.jpg" width="15"> [Splunk](connect/connect-splunk-source)
-* <img src="https://cdn.worldvectorlogo.com/logos/hadoop.svg" width="15"> [HDFS 3](connect/connect-hdfs3-source)
 * <img src="https://cdn.worldvectorlogo.com/logos/rabbitmq.svg" width="15">  [RabbitMQ](connect/connect-rabbitmq-source)
 * <img src="https://www.pinclipart.com/picdir/middle/23-237671_document-clipart-stack-papers-file-stack-icon-png.png" width="15"> [Spool Dir](connect/connect-spool-dir-source)
 * <img src="https://www.pnglot.com/pngfile/detail/5-58270_gcp-logo-cloud-google-cloud-logo-png.png" width="15"> GCP
