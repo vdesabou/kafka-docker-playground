@@ -56,8 +56,8 @@ jobs:
       connect/connect-debezium-mongodb-source connect/connect-debezium-mysql-source
       connect/connect-debezium-postgresql-source connect/connect-debezium-sqlserver-source
       connect/connect-elasticsearch-sink"
-  - name: 'CONNECT: hbase-sink hdfs2-sink hdfs3-sink hdfs3-source ibm-mq-sink ibm-mq-source'
-    env: TEST_LIST="connect/connect-hdfs2-sink connect/connect-hdfs3-sink connect/connect-hdfs3-source
+  - name: 'CONNECT: hbase-sink hdfs2-sink hdfs3-sink hdfs3-source hdfs2-source ibm-mq-sink ibm-mq-source'
+    env: TEST_LIST="connect/connect-hdfs2-sink connect/connect-hdfs2-source connect/connect-hdfs3-sink connect/connect-hdfs3-source
       connect/connect-ibm-mq-sink connect/connect-ibm-mq-source"
   - name: 'CONNECT: jdbc-oracle11-sink jdbc-oracle11-source influxdb-sink influxdb-source
       jdbc-mysql-sink jdbc-mysql-source jdbc-postgresql-sink jdbc-postgresql-source
