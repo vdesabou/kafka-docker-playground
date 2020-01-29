@@ -1,0 +1,14 @@
+---
+version: '3.5'
+services:
+  hadoop:
+    image: sequenceiq/hadoop-docker:2.7.1
+    hostname: hadoop
+    container_name: hadoop
+    ports:
+      - "9000:9000"
+      - "50070:50070"
+
+  connect:
+    environment:
+      CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-hdfs,/usr/share/confluent-hub-components/confluentinc-kafka-connect-hdfs2-source
