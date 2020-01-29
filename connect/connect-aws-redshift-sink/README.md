@@ -17,6 +17,10 @@ Follow steps from [here](https://docs.confluent.io/current/connect/kafka-connect
 
 ![Security group](Screenshot1.png)
 
+**Make sure to make it Publicly accessible**
+
+![Security group](Screenshot2.png)
+
 ## How to run
 
 Simply run:
