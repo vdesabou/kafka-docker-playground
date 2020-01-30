@@ -15,6 +15,12 @@ then
     test_list=$(grep "env: TEST_LIST" ${DIR}/../.travis.yml | cut -d '"' -f 2 | tr '\n' ' ')
 fi
 
+tag="$2"
+if [ "$tag" != "" ]
+then
+    export TAG=$tag
+fi
+
 for dir in $test_list
 do
     if [ ! -d $dir ]
