@@ -46,12 +46,15 @@ before_install:
 - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
 jobs:
   include:
-  - name: 'CONNECT: active-mq-sink active-mq-source cassandra-sink couchbase-sink
+  - name: '5.4.0: CONNECT: active-mq-sink active-mq-source cassandra-sink couchbase-sink
       couchbase-source'
     env:
-      - TEST_LIST="connect/connect-active-mq-sink connect/connect-active-mq-source connect/connect-cassandra-sink connect/connect-couchbase-sink connect/connect-couchbase-source connect/connect-hbase-sink"
-      - TAG="5.4.0"
-      - TAG="5.3.2"
+      - TEST_LIST="connect/connect-active-mq-sink connect/connect-active-mq-source connect/connect-cassandra-sink connect/connect-couchbase-sink connect/connect-couchbase-source connect/connect-hbase-sink" TAG="5.4.0"
+
+  - name: '5.3.2: CONNECT: active-mq-sink active-mq-source cassandra-sink couchbase-sink
+      couchbase-source'
+    env:
+      - TEST_LIST="connect/connect-active-mq-sink connect/connect-active-mq-source connect/connect-cassandra-sink connect/connect-couchbase-sink connect/connect-couchbase-source connect/connect-hbase-sink" TAG="5.3.2"
 
   # - name: 'CONNECT: jms-tibco-sink jms-tibco-source debezium-mongodb-source debezium-mysql-source
   #     debezium-postgresql-source debezium-sqlserver-source elasticsearch-sink'
@@ -59,6 +62,7 @@ jobs:
   #     connect/connect-debezium-mongodb-source connect/connect-debezium-mysql-source
   #     connect/connect-debezium-postgresql-source connect/connect-debezium-sqlserver-source
   #     connect/connect-elasticsearch-sink"
+
   # - name: 'CONNECT: hbase-sink hdfs2-sink hdfs3-sink hdfs3-source hdfs2-source ibm-mq-sink ibm-mq-source snmp-source'
   #   env: TEST_LIST="connect/connect-hdfs2-sink connect/connect-hdfs2-source connect/connect-hdfs3-sink connect/connect-hdfs3-source
   #     connect/connect-ibm-mq-sink connect/connect-ibm-mq-source connect/connect-snmp-source"
