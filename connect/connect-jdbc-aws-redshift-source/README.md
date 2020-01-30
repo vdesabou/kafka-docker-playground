@@ -31,6 +31,12 @@ $ ./redshift.sh <CLUSTER> <PASSWORD>
 
 With CLUSTER set with your Redshift cluster endpoint (`cluster-name.cluster-id.region.redshift.amazonaws.com`)
 
+If you want to use IAM credentials:
+
+```bash
+$ ./redshift-iam.sh <CLUSTER> <PASSWORD> <AccessKeyID> <SecretAccessKey>
+```
+
 ## Details of what the script is doing
 
 Create database in Redshift
