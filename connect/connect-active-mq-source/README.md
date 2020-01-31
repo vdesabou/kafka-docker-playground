@@ -40,7 +40,7 @@ $ docker exec connect \
                     "confluent.topic.bootstrap.servers": "broker:9092",
                     "confluent.topic.replication.factor": "1"
           }' \
-     http://localhost:8083/connectors/active-mq-source/config | jq_docker_cli .
+     http://localhost:8083/connectors/active-mq-source/config | jq .
 ```
 
 Messages are sent to IBM MQ using curl:

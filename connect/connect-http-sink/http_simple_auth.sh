@@ -28,10 +28,10 @@ docker exec connect \
                "confluent.topic.replication.factor": "1",
                "http.api.url": "http://http-service-no-auth:8080/api/messages"
           }' \
-     http://localhost:8083/connectors/http-sink/config | jq_docker_cli .
+     http://localhost:8083/connectors/http-sink/config | jq .
 
 
 sleep 10
 
 log "Confirm that the data was sent to the HTTP endpoint."
-curl localhost:8080/api/messages | jq_docker_cli .
+curl localhost:8080/api/messages | jq .

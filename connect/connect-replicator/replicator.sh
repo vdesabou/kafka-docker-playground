@@ -26,7 +26,7 @@ docker exec connect \
                "dest.kafka.bootstrap.servers": "broker:9092",
                "src.kafka.bootstrap.servers": "broker:9092"
            }' \
-      http://localhost:8083/connectors/duplicate-topic/config | jq_docker_cli .
+      http://localhost:8083/connectors/duplicate-topic/config | jq .
 
 sleep 10
 

@@ -62,7 +62,7 @@ $ docker exec connect \
                     "value.converter": "org.apache.kafka.connect.json.JsonConverter",
                     "value.converter.schemas.enable": "false"
           }' \
-     http://localhost:8083/connectors/couchbase-sink/config | jq_docker_cli .
+     http://localhost:8083/connectors/couchbase-sink/config | jq .
 ```
 
 Verify data is in Couchbase

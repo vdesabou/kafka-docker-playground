@@ -30,7 +30,7 @@ docker exec connect \
                "value.converter.schema.registry.url":"http://schema-registry:8081",
                "schema.compatibility":"BACKWARD"
           }' \
-     http://localhost:8083/connectors/hdfs2-sink/config | jq_docker_cli .
+     http://localhost:8083/connectors/hdfs2-sink/config | jq .
 
 
 log "Sending messages to topic test_hdfs"
@@ -65,7 +65,7 @@ docker exec connect \
                "transforms.AddPrefix.regex" : ".*",
                "transforms.AddPrefix.replacement" : "copy_of_$0"
           }' \
-     http://localhost:8083/connectors/hdfs2-source/config | jq_docker_cli .
+     http://localhost:8083/connectors/hdfs2-source/config | jq .
 
 sleep 10
 

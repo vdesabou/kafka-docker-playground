@@ -57,7 +57,7 @@ $ docker exec connect \
                     "collection":"customers",
                     "topics":"orders"
           }' \
-     http://localhost:8083/connectors/mongodb-sink/config | jq_docker_cli .
+     http://localhost:8083/connectors/mongodb-sink/config | jq .
 ```
 
 Sending messages to topic `orders`

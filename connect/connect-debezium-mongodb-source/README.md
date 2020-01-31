@@ -78,7 +78,7 @@ $ docker exec connect \
                     "mongodb.password" : "dbz",
                     "database.history.kafka.bootstrap.servers" : "broker:9092"
           }' \
-     http://localhost:8083/connectors/debezium-mongodb-source/config | jq_docker_cli .
+     http://localhost:8083/connectors/debezium-mongodb-source/config | jq .
 ```
 
 Verifying topic dbserver1.inventory.customers

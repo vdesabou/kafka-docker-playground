@@ -44,7 +44,7 @@ $ docker exec connect \
                     "errors.log.enable": "true",
                     "errors.log.include.messages": "true"
           }' \
-     http://localhost:8083/connectors/sqlserver-source/config | jq_docker_cli .
+     http://localhost:8083/connectors/sqlserver-source/config | jq .
 ```
 
 ### Microsoft JDBC driver
@@ -67,7 +67,7 @@ $ docker exec connect \
                     "errors.log.enable": "true",
                     "errors.log.include.messages": "true"
           }' \
-     http://localhost:8083/connectors/sqlserver-source/config | jq_docker_cli .
+     http://localhost:8083/connectors/sqlserver-source/config | jq .
 
 ```
 

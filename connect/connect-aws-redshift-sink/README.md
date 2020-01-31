@@ -63,7 +63,7 @@ $ docker exec -e PROJECT="$DOMAIN" -e DATASET="$PASSWORD" connect \
                     "confluent.topic.bootstrap.servers": "broker:9092",
                     "confluent.topic.replication.factor": "1"
           }' \
-     http://localhost:8083/connectors/redshift-sink/config | jq_docker_cli .
+     http://localhost:8083/connectors/redshift-sink/config | jq .
 ```
 
 Verify data is in Redshift

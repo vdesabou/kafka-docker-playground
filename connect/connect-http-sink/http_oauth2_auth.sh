@@ -32,7 +32,7 @@ docker exec connect \
                "oauth2.client.id": "kc-client",
                "oauth2.client.secret": "kc-secret"
           }' \
-     http://localhost:8083/connectors/http-sink/config | jq_docker_cli .
+     http://localhost:8083/connectors/http-sink/config | jq .
 
 
 sleep 10
@@ -42,10 +42,10 @@ token=$(curl -X PUT \
   http://localhost:10080/oauth/token \
   -H 'Content-Type: application/x-www-form-urlencoded' \
   -H 'Authorization: Basic a2MtY2xpZW50OmtjLXNlY3JldA==' \
-  -d 'grant_type=client_credentials&scope=any' | jq_docker_cli -r '.access_token')
+  -d 'grant_type=client_credentials&scope=any' | jq -r '.access_token')
 
 
 log "Confirm that the data was sent to the HTTP endpoint."
 curl -X GET \
     http://localhost:10080/api/messages \
-    -H "Authorization: Bearer ${token}" | jq_docker_cli .
+    -H "Authorization: Bearer ${token}" | jq .

@@ -62,7 +62,7 @@ $ docker exec connect \
                     "confluent.topic.bootstrap.servers": "broker:9092",
                     "confluent.topic.replication.factor": "1"
           }' \
-     http://localhost:8083/connectors/kudu-source/config | jq_docker_cli .
+     http://localhost:8083/connectors/kudu-source/config | jq .
 ```
 
 Verify we have received the data in `test-kudu-accounts` topic:

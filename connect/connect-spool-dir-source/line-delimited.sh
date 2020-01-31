@@ -31,7 +31,7 @@ docker exec connect \
                     "topic": "fix-topic",
                     "schema.generation.enabled": "true"
           }' \
-     http://localhost:8083/connectors/spool-dir/config | jq_docker_cli .
+     http://localhost:8083/connectors/spool-dir/config | jq .
 
 
 sleep 5
