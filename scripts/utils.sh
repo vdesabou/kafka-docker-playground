@@ -267,7 +267,6 @@ function aws() {
 }
 
 function jq() {
-    echo "test"
     docker run --rm -i imega/jq "$@"
 }
 
