@@ -143,15 +143,15 @@ jobs:
       connect/connect-syslog-source other/connect-override-policy-sftp-sink other/connect-override-policy-sftp-source" TAG="5.3.2"
 
 
-  - name: '5.4.0: CONNECT: aws-cloudwatch-source aws-dynamodb-sink aws-kinesis-source aws-lambda-sink
+  - name: '5.4.0: CONNECT: aws-cloudwatch-logs-source aws-dynamodb-sink aws-kinesis-source aws-lambda-sink
       aws-sqs-source aws-s3-sink aws-s3-source'
-    env: TEST_LIST="connect/connect-aws-cloudwatch-source connect/connect-aws-dynamodb-sink
+    env: TEST_LIST="connect/connect-aws-cloudwatch-logs-source connect/connect-aws-dynamodb-sink
       connect/connect-aws-kinesis-source connect/connect-aws-lambda-sink connect/connect-aws-sqs-source
       connect/connect-aws-s3-sink connect/connect-aws-s3-source" TAG="5.4.0"
 
-  - name: '5.3.2: CONNECT: aws-cloudwatch-source aws-dynamodb-sink aws-kinesis-source aws-lambda-sink
+  - name: '5.3.2: CONNECT: aws-cloudwatch-logs-source aws-dynamodb-sink aws-kinesis-source aws-lambda-sink
       aws-sqs-source aws-s3-sink aws-s3-source'
-    env: TEST_LIST="connect/connect-aws-cloudwatch-source connect/connect-aws-dynamodb-sink
+    env: TEST_LIST="connect/connect-aws-cloudwatch-logs-source connect/connect-aws-dynamodb-sink
       connect/connect-aws-kinesis-source connect/connect-aws-lambda-sink connect/connect-aws-sqs-source
       connect/connect-aws-s3-sink connect/connect-aws-s3-source" TAG="5.3.2"
 
