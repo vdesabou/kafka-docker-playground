@@ -46,16 +46,16 @@ before_install:
 jobs:
   include:
   - name: '5.4.0: CONNECT: active-mq-sink active-mq-source cassandra-sink couchbase-sink
-      couchbase-source servicenow-source'
+      couchbase-source servicenow-source servicenow-sink'
     env:
     - TEST_LIST="connect/connect-active-mq-sink connect/connect-active-mq-source connect/connect-cassandra-sink
-      connect/connect-couchbase-sink connect/connect-couchbase-source connect/connect-hbase-sink connect/connect-servicenow-source"
+      connect/connect-couchbase-sink connect/connect-couchbase-source connect/connect-hbase-sink connect/connect-servicenow-source connect/connect-servicenow-sink"
       TAG="5.4.0"
   # - name: '5.3.2: CONNECT: active-mq-sink active-mq-source cassandra-sink couchbase-sink
-  #     couchbase-source servicenow-source'
+  #     couchbase-source servicenow-source servicenow-sink'
   #   env:
   #   - TEST_LIST="connect/connect-active-mq-sink connect/connect-active-mq-source connect/connect-cassandra-sink
-  #     connect/connect-couchbase-sink connect/connect-couchbase-source connect/connect-hbase-sink connect/connect-servicenow-source"
+  #     connect/connect-couchbase-sink connect/connect-couchbase-source connect/connect-hbase-sink connect/connect-servicenow-source connect/connect-servicenow-sink"
   #     TAG="5.3.2"
   - name: '5.4.0: CONNECT: jms-tibco-sink jms-tibco-source debezium-mongodb-source
       debezium-mysql-source debezium-postgresql-source debezium-sqlserver-source elasticsearch-sink'
