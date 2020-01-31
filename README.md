@@ -69,7 +69,7 @@ Quick start examples from Confluent [docs](https://docs.confluent.io/current/con
 * <img src="http://www.pharmajournalist.com/wp-content/uploads/2017/11/splunk-logo.jpg" width="15"> [Splunk](connect/connect-splunk-source)
 * <img src="https://cdn.worldvectorlogo.com/logos/rabbitmq.svg" width="15">  [RabbitMQ](connect/connect-rabbitmq-source)
 * <img src="https://www.pinclipart.com/picdir/middle/23-237671_document-clipart-stack-papers-file-stack-icon-png.png" width="15"> [Spool Dir](connect/connect-spool-dir-source)
-* <img src="https://www.pnglot.com/pngfile/detail/5-58270_gcp-logo-cloud-google-cloud-logo-png.png" width="15"> GCP
+* <img src="https://cloud.google.com/images/social-icon-google-cloud-1200-630.png" width="15"> GCP
   * <img src="https://miro.medium.com/max/512/1*LXO5TpyB1GnCAE5-pz6L6Q.png" width="15"> [Pub/Sub](connect/connect-gcp-pubsub-source)
   * <img src="https://miro.medium.com/max/256/1*lcRm2muyWDct3FW2drmptA.png" width="15"> [GCS](connect/connect-gcp-gcs-source)
   * <img src="https://cdn.worldvectorlogo.com/logos/firebase-1.svg" width="15"> [Firebase](connect/connect-gcp-firebase-source)
@@ -92,7 +92,7 @@ Quick start examples from Confluent [docs](https://docs.confluent.io/current/con
     * <img src="https://cdn.worldvectorlogo.com/logos/aws-lambda.svg" width="15"> [Lambda](connect/connect-aws-lambda-sink)
 * <img src="https://cdn.shortpixel.ai/client/q_lossless,ret_img,w_600/https://spiraldatagroup.com.au/wp-content/uploads/2019/04/elastic-elasticsearch-logo-png-transparent-600x600.png" width="15"> [Elasticsearch](connect/connect-elasticsearch-sink)
 * <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/5/5b/HTTP_logo.svg/440px-HTTP_logo.svg.png" width="15"> [HTTP](connect/connect-http-sink)
-* <img src="https://www.pnglot.com/pngfile/detail/5-58270_gcp-logo-cloud-google-cloud-logo-png.png" width="15"> GCP
+* <img src="https://clipartart.com/images/gcp-logo-clipart-6.png" width="15"> GCP
     * <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/8/89/Google-BigQuery-Logo.svg/1200px-Google-BigQuery-Logo.svg.png" width="15"> [BigQuery](connect/connect-gcp-bigquery-sink)
     * <img src="https://img.stackshare.io/service/6672/google-cloud-functions.png" width="15"> [Cloud Functions](connect/connect-gcp-cloud-functions-sink)
     * <img src="https://miro.medium.com/max/256/1*lcRm2muyWDct3FW2drmptA.png" width="15"> [GCS](connect/connect-gcp-gcs-sink)
@@ -135,7 +135,7 @@ Quick start examples from Confluent [docs](https://docs.confluent.io/current/con
 * <img src="https://d3dr9sfxru4sde.cloudfront.net/i/k/apachekudu_logo_0716_345px.png" width="15"> [Kudu](connect/connect-kudu-sink)
 * <img src="https://s3.amazonaws.com/awsmp-logos/vertica600x400.png" width="15"> [Vertica](connect/connect-vertica-sink)
 * <img src="https://perspectium.mystagingwebsite.com/wp-content/uploads/2019/08/servicenow_logo_v2.png" width="15"> [ServiceNow](connect/connect-servicenow-sink)
-*
+
 ## ☁️ Confluent Cloud
 
 * <img src="https://pbs.twimg.com/profile_images/979058850207641601/cLCehePZ.jpg" width="15"> [Confluent Cloud Demo](ccloud/ccloud-demo)
