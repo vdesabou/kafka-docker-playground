@@ -72,7 +72,7 @@ $ docker exec -e PROJECT="$PROJECT" -e REGION="$REGION" -e FUNCTION="$FUNCTION" 
                     "reporter.result.topic.value.format": "string",
                     "reporter.result.topic.replication.factor": 1
           }' \
-     http://localhost:8083/connectors/gcp-functions/config | jq_docker_cli .
+     http://localhost:8083/connectors/gcp-functions/config | jq .
 ```
 
 Confirm that the messages were delivered to the result topic in Kafka

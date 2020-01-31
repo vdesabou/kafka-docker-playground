@@ -43,7 +43,7 @@ docker container exec connect-us \
           "provenance.header.enable": true,
           "topic.whitelist": "sales_EUROPE"
           }' \
-     http://localhost:8083/connectors/replicate-europe-to-us/config | jq_docker_cli .
+     http://localhost:8083/connectors/replicate-europe-to-us/config | jq .
 
 
 log "Consolidating all sales in Europe"
@@ -77,7 +77,7 @@ docker container exec connect-europe \
           "provenance.header.enable": true,
           "topic.whitelist": "sales_US"
           }' \
-     http://localhost:8083/connectors/replicate-us-to-europe/config | jq_docker_cli .
+     http://localhost:8083/connectors/replicate-us-to-europe/config | jq .
 
 sleep 480
 

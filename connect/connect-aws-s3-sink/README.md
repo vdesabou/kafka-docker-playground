@@ -52,7 +52,7 @@ docker exec connect \
                "format.class": "io.confluent.connect.s3.format.avro.AvroFormat",
                "schema.compatibility": "NONE"
           }' \
-     http://localhost:8083/connectors/s3-sink/config | jq_docker_cli .
+     http://localhost:8083/connectors/s3-sink/config | jq .
 ```
 
 Messages are sent to `s3_topic` topic using:

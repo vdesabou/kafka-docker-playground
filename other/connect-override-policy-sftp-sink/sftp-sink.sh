@@ -51,7 +51,7 @@ docker exec connect \
                "errors.deadletterqueue.topic.name": "dlq",
                "errors.deadletterqueue.topic.replication.factor": "1"
           }' \
-     http://localhost:8083/connectors/sftp-sink/config | jq_docker_cli .
+     http://localhost:8083/connectors/sftp-sink/config | jq .
 
 
 log "Sending messages to topic test_sftp_sink"

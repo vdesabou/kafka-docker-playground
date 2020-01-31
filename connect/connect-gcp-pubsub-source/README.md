@@ -86,7 +86,7 @@ $ docker exec -e PROJECT="$PROJECT" connect \
                     "confluent.topic.bootstrap.servers": "broker:9092",
                     "confluent.topic.replication.factor": "1"
           }' \
-     http://localhost:8083/connectors/pubsub-source/config | jq_docker_cli .
+     http://localhost:8083/connectors/pubsub-source/config | jq .
 ```
 
 Verify messages are in topic `pubsub-topic`

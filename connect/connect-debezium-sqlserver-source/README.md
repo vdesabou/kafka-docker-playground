@@ -46,7 +46,7 @@ $ docker exec connect \
                     "database.history.kafka.bootstrap.servers": "broker:9092",
                     "database.history.kafka.topic": "schema-changes.inventory"
           }' \
-     http://localhost:8083/connectors/debezium-sqlserver-source/config | jq_docker_cli .
+     http://localhost:8083/connectors/debezium-sqlserver-source/config | jq .
 ```
 
 Insert one more row:

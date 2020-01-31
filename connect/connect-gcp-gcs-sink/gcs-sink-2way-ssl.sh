@@ -62,7 +62,7 @@ docker exec -e BUCKET_NAME="$BUCKET_NAME" connect \
                     "confluent.topic.ssl.truststore.type" : "JKS",
                     "confluent.topic.security.protocol" : "SSL"
           }' \
-     https://localhost:8083/connectors/gcs-sink/config | jq_docker_cli .
+     https://localhost:8083/connectors/gcs-sink/config | jq .
 
 
 sleep 10

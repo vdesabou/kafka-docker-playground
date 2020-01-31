@@ -18,8 +18,8 @@ fi
 ${DIR}/../../environment/sasl-ssl/start.sh "${PWD}/docker-compose.sasl-ssl.yml"
 
 QUEUE_NAME="sqs-source-connector-demo-ssl"
-AWS_REGION=$(aws_docker_cli configure get region | tr '\r' '\n')
-QUEUE_URL_RAW=$(aws_docker_cli sqs create-queue --queue-name $QUEUE_NAME | jq_docker_cli .QueueUrl)
+AWS_REGION=$(aws configure get region | tr '\r' '\n')
+QUEUE_URL_RAW=$(aws sqs create-queue --queue-name $QUEUE_NAME | jq .QueueUrl)
 AWS_ACCOUNT_NUMBER=$(echo "$QUEUE_URL_RAW" | cut -d "/" -f 4)
 # https://docs.amazonaws.cn/sdk-for-net/v3/developer-guide/how-to/sqs/QueueURL.html
 # https://{REGION_ENDPOINT}/queue.|api-domain|/{YOUR_ACCOUNT_NUMBER}/{YOUR_QUEUE_NAME}
@@ -27,7 +27,7 @@ QUEUE_URL="https://sqs.$AWS_REGION.amazonaws.com/$AWS_ACCOUNT_NUMBER/$QUEUE_NAME
 
 set +e
 log "Delete queue ${QUEUE_URL}"
-aws_docker_cli sqs delete-queue --queue-url ${QUEUE_URL}
+aws sqs delete-queue --queue-url ${QUEUE_URL}
 if [ $? -eq 0 ]
 then
      # You must wait 60 seconds after deleting a queue before you can create another with the same name
@@ -41,7 +41,7 @@ log "##  SASL_SSL authentication"
 log "########"
 
 QUEUE_NAME="sqs-source-connector-demo-sasl-ssl"
-QUEUE_URL_RAW=$(aws_docker_cli sqs create-queue --queue-name $QUEUE_NAME | jq_docker_cli .QueueUrl)
+QUEUE_URL_RAW=$(aws sqs create-queue --queue-name $QUEUE_NAME | jq .QueueUrl)
 AWS_ACCOUNT_NUMBER=$(echo "$QUEUE_URL_RAW" | cut -d "/" -f 4)
 # https://docs.amazonaws.cn/sdk-for-net/v3/developer-guide/how-to/sqs/QueueURL.html
 # https://{REGION_ENDPOINT}/queue.|api-domain|/{YOUR_ACCOUNT_NUMBER}/{YOUR_QUEUE_NAME}
@@ -49,7 +49,7 @@ QUEUE_URL="https://sqs.$AWS_REGION.amazonaws.com/$AWS_ACCOUNT_NUMBER/$QUEUE_NAME
 
 set +e
 log "Delete queue ${QUEUE_URL}"
-aws_docker_cli sqs delete-queue --queue-url ${QUEUE_URL}
+aws sqs delete-queue --queue-url ${QUEUE_URL}
 if [ $? -eq 0 ]
 then
      # You must wait 60 seconds after deleting a queue before you can create another with the same name
@@ -59,10 +59,10 @@ fi
 set -e
 
 log "Create a FIFO queue $QUEUE_NAME"
-aws_docker_cli sqs create-queue --queue-name $QUEUE_NAME
+aws sqs create-queue --queue-name $QUEUE_NAME
 
 log "Sending messages to $QUEUE_URL"
-aws_docker_cli sqs send-message-batch --queue-url $QUEUE_URL --entries file://send-message-batch.json
+aws sqs send-message-batch --queue-url $QUEUE_URL --entries file://send-message-batch.json
 
 
 log "Creating SQS Source connector with SASL_SSL authentication"
@@ -87,12 +87,12 @@ docker exec -e QUEUE_URL="$QUEUE_URL" connect \
                     "confluent.topic.sasl.mechanism": "PLAIN",
                     "confluent.topic.sasl.jaas.config": "org.apache.kafka.common.security.plain.PlainLoginModule required  username=\"client\" password=\"client-secret\";"
           }' \
-     https://localhost:8083/connectors/sqs-source-sasl-ssl/config | jq_docker_cli .
+     https://localhost:8083/connectors/sqs-source-sasl-ssl/config | jq .
 
 sleep 10
 
 log "Verify we have received the data in test-sqs-source-sasl-ssl topic"
-timeout 60 docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic test-sqs-source-sasl-ssl --from-beginning --max-messages 2 --property schema.registry.url=https://schema-registry:8085 --consumer.config /etc/kafka/secrets/client_without_interceptors.config  | tail -n 3 | head -n 2 | jq_docker_cli .
+timeout 60 docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic test-sqs-source-sasl-ssl --from-beginning --max-messages 2 --property schema.registry.url=https://schema-registry:8085 --consumer.config /etc/kafka/secrets/client_without_interceptors.config  | tail -n 3 | head -n 2 | jq .
 
 log "Delete queue ${QUEUE_URL}"
-aws_docker_cli sqs delete-queue --queue-url ${QUEUE_URL}
+aws sqs delete-queue --queue-url ${QUEUE_URL}

@@ -60,7 +60,7 @@ $ docker exec connect \
                     "value.converter": "org.apache.kafka.connect.json.JsonConverter",
                     "value.converter.schemas.enable": "false"
           }' \
-     http://localhost:8083/connectors/influxdb-source/config | jq_docker_cli .
+     http://localhost:8083/connectors/influxdb-source/config | jq .
 ```
 
 Verifying topic `influx_testdb`

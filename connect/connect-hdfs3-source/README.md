@@ -43,7 +43,7 @@ $ docker exec connect \
                "transforms.AddPrefix.regex" : ".*",
                "transforms.AddPrefix.replacement" : "copy_of_$0"
           }' \
-     http://localhost:8083/connectors/hdfs3-source/config | jq_docker_cli .
+     http://localhost:8083/connectors/hdfs3-source/config | jq .
 ```
 
 Verifying topic `copy_of_test_hdfs`:

@@ -42,7 +42,7 @@ docker exec -e PROJECT="$PROJECT" -e REGION="$REGION" -e FUNCTION="$FUNCTION" co
                     "reporter.result.topic.value.format": "string",
                     "reporter.result.topic.replication.factor": 1
           }' \
-     http://localhost:8083/connectors/gcp-functions/config | jq_docker_cli .
+     http://localhost:8083/connectors/gcp-functions/config | jq .
 
 sleep 10
 

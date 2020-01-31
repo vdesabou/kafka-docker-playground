@@ -56,7 +56,7 @@ docker exec -e AZURE_ACCOUNT_NAME="$AZURE_ACCOUNT_NAME" -e AZURE_ACCOUNT_KEY="$A
                     "confluent.topic.bootstrap.servers": "broker:9092",
                     "confluent.topic.replication.factor": "1"
           }' \
-     http://localhost:8083/connectors/azure-blob-sink/config | jq_docker_cli .
+     http://localhost:8083/connectors/azure-blob-sink/config | jq .
 
 
 log "Sending messages to topic blob_topic"

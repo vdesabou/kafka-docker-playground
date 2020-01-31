@@ -53,7 +53,7 @@ docker exec -e BUCKET_NAME="$BUCKET_NAME" connect \
                     "confluent.topic.bootstrap.servers": "broker:9092",
                     "confluent.topic.replication.factor": "1"
           }' \
-     http://localhost:8083/connectors/GCSSinkConnector/config | jq_docker_cli .
+     http://localhost:8083/connectors/GCSSinkConnector/config | jq .
 
 sleep 10
 
@@ -87,7 +87,7 @@ docker exec -e BUCKET_NAME="$BUCKET_NAME" connect \
                     "transforms.AddPrefix.regex" : ".*",
                     "transforms.AddPrefix.replacement" : "copy_of_$0"
           }' \
-     http://localhost:8083/connectors/GCSSourceConnector/config | jq_docker_cli .
+     http://localhost:8083/connectors/GCSSourceConnector/config | jq .
 
 sleep 10
 

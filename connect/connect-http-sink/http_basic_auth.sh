@@ -31,10 +31,10 @@ docker exec connect \
                "connection.user": "admin",
                "connection.password": "password"
           }' \
-     http://localhost:8083/connectors/HttpSinkBasicAuth/config | jq_docker_cli .
+     http://localhost:8083/connectors/HttpSinkBasicAuth/config | jq .
 
 
 sleep 10
 
 log "Confirm that the data was sent to the HTTP endpoint."
-curl admin:password@localhost:9083/api/messages | jq_docker_cli .
+curl admin:password@localhost:9083/api/messages | jq .

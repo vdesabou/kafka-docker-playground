@@ -36,7 +36,7 @@ docker exec -e BUCKET_NAME="$BUCKET_NAME" connect \
                     "partitioner.class": "io.confluent.connect.storage.partitioner.DefaultPartitioner",
                     "schema.compatibility": "NONE"
           }' \
-     http://localhost:8083/connectors/s3-sink/config | jq_docker_cli .
+     http://localhost:8083/connectors/s3-sink/config | jq .
 
 
 log "Sending messages to topic s3_topic"
@@ -45,10 +45,10 @@ seq -f "{\"f1\": \"value%g\"}" 10 | docker exec -i connect kafka-avro-console-pr
 sleep 10
 
 log "Listing objects of in S3"
-aws_docker_cli s3api list-objects --bucket "$BUCKET_NAME"
+aws s3api list-objects --bucket "$BUCKET_NAME"
 
 log "Getting one of the avro files locally and displaying content with avro-tools"
-aws_docker_cli s3 cp s3://$BUCKET_NAME/topics/s3_topic/partition=0/s3_topic+0+0000000000.avro s3_topic+0+0000000000.avro
+aws s3 cp s3://$BUCKET_NAME/topics/s3_topic/partition=0/s3_topic+0+0000000000.avro s3_topic+0+0000000000.avro
 
 docker run -v ${DIR}:/tmp actions/avro-tools tojson /tmp/s3_topic+0+0000000000.avro
 rm -f s3_topic+0+0000000000.avro
@@ -71,7 +71,7 @@ docker exec -e BUCKET_NAME="$BUCKET_NAME" connect \
                     "transforms.AddPrefix.regex": ".*",
                     "transforms.AddPrefix.replacement": "copy_of_$0"
           }' \
-     http://localhost:8083/connectors/s3-source/config | jq_docker_cli .
+     http://localhost:8083/connectors/s3-source/config | jq .
 
 
 log "Verifying topic copy_of_s3_topic"

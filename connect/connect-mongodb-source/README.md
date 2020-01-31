@@ -57,7 +57,7 @@ $ docker exec connect \
                     "collection":"customers",
                     "topic.prefix":"mongo"
           }' \
-     http://localhost:8083/connectors/mongodb-source/config | jq_docker_cli .
+     http://localhost:8083/connectors/mongodb-source/config | jq .
 ```
 
 Insert a record

@@ -48,7 +48,7 @@ docker exec connect \
                     "errors.log.enable":true,
                     "errors.log.include.messages":true
           }' \
-     http://localhost:8083/connectors/jdbc-vertica-sink/config | jq_docker_cli .
+     http://localhost:8083/connectors/jdbc-vertica-sink/config | jq .
 
 sleep 10
 
@@ -139,7 +139,7 @@ docker exec connect \
                     "errors.log.enable":true,
                     "errors.log.include.messages":true
           }' \
-     http://localhost:8083/connectors/jdbc-vertica-sink/config | jq_docker_cli .
+     http://localhost:8083/connectors/jdbc-vertica-sink/config | jq .
 
 sleep 10
 

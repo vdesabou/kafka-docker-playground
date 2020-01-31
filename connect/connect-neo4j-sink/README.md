@@ -33,7 +33,7 @@ $ docker exec connect \
      curl -X PUT \
      -H "Content-Type: application/json" \
      --data @/tmp/contrib.sink.avro.neo4j.json \
-     http://localhost:8083/connectors | jq_docker_cli .
+     http://localhost:8083/connectors | jq .
 ```
 
 With `contrib.sink.avro.neo4j.json`:

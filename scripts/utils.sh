@@ -247,7 +247,7 @@ function remove_partition() {
     done
 }
 
-function aws_docker_cli() {
+function aws() {
     if [ ! -d $HOME/.aws ]
     then
       log 'ERROR: $HOME/.aws does now exist. AWS credentials must be set !'
@@ -266,7 +266,8 @@ function aws_docker_cli() {
     docker run --rm -tiv $HOME/.aws:/root/.aws -v $(pwd):/aws mikesir87/aws-cli aws "$@"
 }
 
-function jq_docker_cli() {
+function jq() {
+    echo "test"
     docker run --rm -i imega/jq "$@"
 }
 

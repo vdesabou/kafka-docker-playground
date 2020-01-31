@@ -59,7 +59,7 @@ docker exec -e BUCKET_NAME="$BUCKET_NAME" connect \
                     "confluent.topic.sasl.jaas.config" : "com.sun.security.auth.module.Krb5LoginModule required useKeyTab=true storeKey=true keyTab=\"/var/lib/secret/kafka-connect.key\" principal=\"connect@TEST.CONFLUENT.IO\";",
                     "confluent.topic.security.protocol" : "SASL_PLAINTEXT"
           }' \
-     http://localhost:8083/connectors/gcs-sink/config | jq_docker_cli .
+     http://localhost:8083/connectors/gcs-sink/config | jq .
 
 sleep 10
 
