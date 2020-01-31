@@ -37,7 +37,7 @@ $ docker exec connect \
                     "confluent.topic.bootstrap.servers": "broker:9092",
                     "confluent.topic.replication.factor": "1"
           }' \
-     http://localhost:8083/connectors/splunk-sink/config | jq_docker_cli .
+     http://localhost:8083/connectors/splunk-sink/config | jq .
 ```
 
 Simulate an application sending data to the connector

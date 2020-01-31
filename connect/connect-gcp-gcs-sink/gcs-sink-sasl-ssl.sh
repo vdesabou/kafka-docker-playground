@@ -60,7 +60,7 @@ docker exec -e BUCKET_NAME="$BUCKET_NAME" connect \
                     "confluent.topic.sasl.mechanism": "PLAIN",
                     "confluent.topic.sasl.jaas.config": "org.apache.kafka.common.security.plain.PlainLoginModule required  username=\"client\" password=\"client-secret\";"
           }' \
-     https://localhost:8083/connectors/gcs-sink/config | jq_docker_cli .
+     https://localhost:8083/connectors/gcs-sink/config | jq .
 
 sleep 10
 

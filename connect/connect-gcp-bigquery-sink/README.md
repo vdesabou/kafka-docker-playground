@@ -86,7 +86,7 @@ docker exec -e PROJECT="$PROJECT" -e DATASET="$DATASET" connect \
                     "datasets" : ".*='"$DATASET"'",
                     "keyfile" : "/root/keyfiles/keyfile.json"
           }' \
-     http://localhost:8083/connectors/kcbq-connect/config | jq_docker_cli .
+     http://localhost:8083/connectors/kcbq-connect/config | jq .
 ```
 
 

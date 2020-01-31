@@ -42,7 +42,7 @@ docker exec connect \
                "csv.first.row.as.header": "true",
                "schema.generation.enabled": "true"
           }' \
-     http://localhost:8083/connectors/sftp-source-csv/config | jq_docker_cli .
+     http://localhost:8083/connectors/sftp-source-csv/config | jq .
 
 sleep 5
 

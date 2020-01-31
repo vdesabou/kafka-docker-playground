@@ -69,7 +69,7 @@ Json data:
 Getting:
 
 ```bash
-curl admin:password@localhost:9083/api/messages | jq_docker_cli .
+curl admin:password@localhost:9083/api/messages | jq .
 [
   {
     "id": 1,
@@ -93,7 +93,7 @@ $ ./http_json_basic_auth_error_204.sh
 Getting:
 
 ```bash
-curl admin:password@localhost:9081/api/messages | jq_docker_cli .
+curl admin:password@localhost:9081/api/messages | jq .
 [
   {
     "id": 1,
@@ -252,7 +252,7 @@ seq -f "{\"f1\": \"value%g\"}" 10 | docker exec -i connect kafka-avro-console-pr
 Getting:
 
 ```
-curl admin:password@localhost:9083/api/messages | jq_docker_cli .
+curl admin:password@localhost:9083/api/messages | jq .
 [
   {
     "id": 1,

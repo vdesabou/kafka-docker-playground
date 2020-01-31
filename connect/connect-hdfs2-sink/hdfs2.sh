@@ -31,7 +31,7 @@ docker exec connect \
                "value.converter.schema.registry.url":"http://schema-registry:8081",
                "schema.compatibility":"BACKWARD"
           }' \
-     http://localhost:8083/connectors/hdfs-sink/config | jq_docker_cli .
+     http://localhost:8083/connectors/hdfs-sink/config | jq .
 
 
 log "Sending messages to topic test_hdfs"

@@ -65,7 +65,7 @@ $ docker exec -e BUCKET_NAME="$BUCKET_NAME" connect \
                     "transforms.AddPrefix.regex" : ".*",
                     "transforms.AddPrefix.replacement" : "copy_of_$0"
           }' \
-     http://localhost:8083/connectors/GCSSourceConnector/config | jq_docker_cli .
+     http://localhost:8083/connectors/GCSSourceConnector/config | jq .
 ```
 
 Verify messages are in topic `copy_of_gcs_topic`

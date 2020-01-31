@@ -42,7 +42,7 @@ docker exec connect \
                     "couchbase.flow_control_buffer": "128m",
                     "couchbase.persistence_polling_interval": "100ms"
           }' \
-     http://localhost:8083/connectors/couchbase-source/config | jq_docker_cli .
+     http://localhost:8083/connectors/couchbase-source/config | jq .
 
 sleep 10
 

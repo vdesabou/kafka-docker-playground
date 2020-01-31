@@ -56,13 +56,13 @@ $ docker exec connect \
                     "confluent.topic.bootstrap.servers": "broker:9092",
                     "confluent.topic.replication.factor": "1"
           }' \
-     http://localhost:8083/connectors/dynamodb-sink/config | jq_docker_cli .
+     http://localhost:8083/connectors/dynamodb-sink/config | jq .
 ```
 
 Verify data is in DynamoDB
 
 ```bash
-$ aws_docker_cli dynamodb scan --table-name topic1 --region us-east-1
+$ aws dynamodb scan --table-name topic1 --region us-east-1
 ```
 
 Results:

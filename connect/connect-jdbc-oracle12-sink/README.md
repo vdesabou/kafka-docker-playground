@@ -48,7 +48,7 @@ $ docker exec connect \
                     "insert.mode":"insert",
                     "auto.evolve":"true"
           }' \
-     http://localhost:8083/connectors/oracle-sink/config | jq_docker_cli .
+     http://localhost:8083/connectors/oracle-sink/config | jq .
 ```
 
 Sending messages to topic `ORDERS`:

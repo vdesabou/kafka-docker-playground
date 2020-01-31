@@ -33,7 +33,7 @@ docker exec connect \
                     "csv.first.row.as.header": "true",
                     "csv.separator.char": "9"
           }' \
-     http://localhost:8083/connectors/TsvSpoolDir/config | jq_docker_cli .
+     http://localhost:8083/connectors/TsvSpoolDir/config | jq .
 
 
 sleep 5

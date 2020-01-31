@@ -53,7 +53,7 @@ docker exec connect \
                     "src.kafka.ssl.truststore.password" : "confluent",
                     "src.kafka.security.protocol" : "SSL"
           }' \
-     https://localhost:8083/connectors/duplicate-topic-ssl/config | jq_docker_cli .
+     https://localhost:8083/connectors/duplicate-topic-ssl/config | jq .
 
 
 

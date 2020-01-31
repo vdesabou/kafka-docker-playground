@@ -50,7 +50,7 @@ $ docker exec connect \
                     "table.name.format": "example_table",
                     "topics": "hbase-test"
           }' \
-     http://localhost:8083/connectors/hbase-sink/config | jq_docker_cli .
+     http://localhost:8083/connectors/hbase-sink/config | jq .
 ```
 
 Verify data is in HBase:

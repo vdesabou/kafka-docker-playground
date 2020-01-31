@@ -24,7 +24,7 @@ docker exec connect \
                     "influxdb.url": "http://influxdb:8086",
                     "topics": "orders"
           }' \
-     http://localhost:8083/connectors/influxdb-sink/config | jq_docker_cli .
+     http://localhost:8083/connectors/influxdb-sink/config | jq .
 
 sleep 10
 

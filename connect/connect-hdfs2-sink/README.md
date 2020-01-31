@@ -41,7 +41,7 @@ docker exec connect \
                "logs.dir":"/tmp",
                "schema.compatibility":"BACKWARD"
           }' \
-     http://localhost:8083/connectors/hdfs-sink/config | jq_docker_cli .
+     http://localhost:8083/connectors/hdfs-sink/config | jq .
 ```
 
 Messages are sent to `test_hdfs` topic using:
