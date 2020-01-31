@@ -9,7 +9,6 @@ vertica-sink-testing-batch-size.sh
 vertica-sink-dv.sh
 01-create-table.sh
 jms-tibco-repro-header-to-key.sh
-connect-kerberos.sh
 jms-client-sasl-ssl-repro-issue-zookeeper.sh
 jms-client-sasl-ssl-with-a-valid-license.sh
 jms-client-sasl-ssl.sh
