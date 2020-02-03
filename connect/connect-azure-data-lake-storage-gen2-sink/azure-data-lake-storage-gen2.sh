@@ -4,9 +4,6 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
-verify_installed "az"
-
-
 if [ ! -z "$AZ_USER" ] && [ ! -z "$AZ_PASS" ]
 then
     log "Logging to Azure using environment variables AZ_USER and AZ_PASS"
@@ -53,11 +50,6 @@ sleep 20
 log "Assigning Storage Blob Data Owner role to Service Principal $SERVICE_PRINCIPAL_ID"
 az role assignment create --assignee $SERVICE_PRINCIPAL_ID --role "Storage Blob Data Owner"
 
-echo AZURE_DATALAKE_CLIENT_ID="$AZURE_DATALAKE_CLIENT_ID"
-echo AZURE_DATALAKE_ACCOUNT_NAME="$AZURE_DATALAKE_ACCOUNT_NAME"
-echo AZURE_DATALAKE_TOKEN_ENDPOINT="$AZURE_DATALAKE_TOKEN_ENDPOINT"
-echo SERVICE_PRINCIPAL_ID="$SERVICE_PRINCIPAL_ID"
-
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
 
 log "Creating Data Lake Storage Gen2 Sink connector"
@@ -92,6 +84,5 @@ az storage blob list --account-name "${AZURE_DATALAKE_ACCOUNT_NAME}" --container
 rm -f /tmp/datalake_topic+0+0000000000.avro
 log "Getting one of the avro files locally and displaying content with avro-tools"
 az storage blob download  --container-name topics --name datalake_topic/partition=0/datalake_topic+0+0000000000.avro --file /tmp/datalake_topic+0+0000000000.avro --account-name "${AZURE_DATALAKE_ACCOUNT_NAME}"
-
 
 docker run -v /tmp:/tmp actions/avro-tools tojson /tmp/datalake_topic+0+0000000000.avro
