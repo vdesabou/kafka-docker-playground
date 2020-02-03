@@ -20,7 +20,7 @@ $ ./azure-data-lake-storage-gen1.sh
 
 ## Details of what the script is doing
 
-Logging to Azure using browser
+Logging to Azure using browser (or using environment variables `AZ_USER` and `AZ_PASS` if set)
 
 ```bash
 az login

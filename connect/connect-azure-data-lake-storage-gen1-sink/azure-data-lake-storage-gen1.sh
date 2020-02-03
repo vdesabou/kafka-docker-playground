@@ -6,7 +6,14 @@ source ${DIR}/../../scripts/utils.sh
 
 verify_installed "az"
 
-az login
+if [ ! -z "$AZ_USER" ] && [ ! -z "$AZ_PASS" ]
+then
+    log "Logging to Azure using environment variables AZ_USER and AZ_PASS"
+    az login -u "$AZ_USER" -p "$AZ_PASS"
+else
+    log "Logging to Azure using browser"
+    az login
+fi
 
 AZURE_RANDOM=$RANDOM
 AZURE_RESOURCE_GROUP=delete$AZURE_RANDOM
