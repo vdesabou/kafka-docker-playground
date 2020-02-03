@@ -4,8 +4,6 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
-verify_installed "az"
-
 if [ ! -z "$AZ_USER" ] && [ ! -z "$AZ_PASS" ]
 then
     log "Logging to Azure using environment variables AZ_USER and AZ_PASS"
@@ -39,9 +37,6 @@ AZURE_ACCOUNT_KEY=$(az storage account keys list \
     --output table \
     | grep key1 | awk '{print $3}')
 
-echo AZURE_ACCOUNT_NAME=$AZURE_ACCOUNT_NAME
-echo AZURE_ACCOUNT_KEY=$AZURE_ACCOUNT_KEY
-echo AZURE_CONTAINER_NAME=$AZURE_CONTAINER_NAME
 
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
 
