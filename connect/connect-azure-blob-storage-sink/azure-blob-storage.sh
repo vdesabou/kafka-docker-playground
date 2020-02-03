@@ -7,7 +7,9 @@ source ${DIR}/../../scripts/utils.sh
 if [ ! -z "$AZ_USER" ] && [ ! -z "$AZ_PASS" ]
 then
     log "Logging to Azure using environment variables AZ_USER and AZ_PASS"
+    set +e
     az logout
+    set -e
     az login -u "$AZ_USER" -p "$AZ_PASS"
 else
     log "Logging to Azure using browser"
