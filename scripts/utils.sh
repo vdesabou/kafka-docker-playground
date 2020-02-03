@@ -270,6 +270,10 @@ function jq() {
     docker run --rm -i imega/jq "$@"
 }
 
+function az() {
+    docker run -v /tmp:/tmp -v $HOME/.azure:/home/az/.azure -e HOME=/home/az --rm -i mcr.microsoft.com/azure-cli az "$@"
+}
+
 function retry() {
   local n=1
   local max=3
