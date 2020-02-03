@@ -86,3 +86,6 @@ log "Getting one of the avro files locally and displaying content with avro-tool
 az storage blob download  --container-name topics --name datalake_topic/partition=0/datalake_topic+0+0000000000.avro --file /tmp/datalake_topic+0+0000000000.avro --account-name "${AZURE_DATALAKE_ACCOUNT_NAME}"
 
 docker run -v /tmp:/tmp actions/avro-tools tojson /tmp/datalake_topic+0+0000000000.avro
+
+log "Deleting resource group"
+az group delete --name $AZURE_RESOURCE_GROUP --yes
