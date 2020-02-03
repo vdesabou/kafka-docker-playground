@@ -96,7 +96,7 @@ $ az dls fs list --account "${AZURE_DATALAKE_ACCOUNT_NAME}" --path /topics
 Getting one of the avro files locally and displaying content with avro-tools
 
 ```bash
-$ az dls fs download --account "${AZURE_DATALAKE_ACCOUNT_NAME}" --source-path /topics/datalake_topic/partition=0/datalake_topic+0+0000000000.avro --destination-path /tmp/datalake_topic+0+0000000000.avro
+$ az dls fs download --account "${AZURE_DATALAKE_ACCOUNT_NAME}" --overwrite --source-path /topics/datalake_topic/partition=0/datalake_topic+0+0000000000.avro --destination-path /tmp/datalake_topic+0+0000000000.avro
 ```
 
 Results:
