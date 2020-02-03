@@ -90,6 +90,7 @@ Quick start examples from Confluent [docs](https://docs.confluent.io/current/con
     * <img src="https://cdn.worldvectorlogo.com/logos/aws-redshift-logo.svg" width="15"> [Redshift](connect/connect-aws-redshift-sink)
     * <img src="https://cdn.worldvectorlogo.com/logos/aws-dynamodb.svg" width="15"> [DynamoDB](connect/connect-aws-dynamodb-sink)
     * <img src="https://cdn.worldvectorlogo.com/logos/aws-lambda.svg" width="15"> [Lambda](connect/connect-aws-lambda-sink)
+    * <img src="https://cdn.worldvectorlogo.com/logos/aws-cloudwatch.svg" width="15"> [CloudWatch Metrics](connect/connect-aws-cloudwatch-metrics-sink)
 * <img src="https://cdn.shortpixel.ai/client/q_lossless,ret_img,w_600/https://spiraldatagroup.com.au/wp-content/uploads/2019/04/elastic-elasticsearch-logo-png-transparent-600x600.png" width="15"> [Elasticsearch](connect/connect-elasticsearch-sink)
 * <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/5/5b/HTTP_logo.svg/440px-HTTP_logo.svg.png" width="15"> [HTTP](connect/connect-http-sink)
 * <img src="https://clipartart.com/images/gcp-logo-clipart-6.png" width="15"> GCP
