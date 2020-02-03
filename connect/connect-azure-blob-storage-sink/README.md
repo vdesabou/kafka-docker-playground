@@ -43,7 +43,7 @@ az storage account create \
     --resource-group $AZURE_RESOURCE_GROUP \
     --location $AZURE_REGION \
     --sku Standard_LRS \
-    --encryption blob
+    --encryption-services blob
 az storage container create \
     --account-name $AZURE_ACCOUNT_NAME \
     --name $AZURE_CONTAINER_NAME
@@ -102,6 +102,12 @@ Getting one of the avro files locally and displaying content with avro-tools:
 
 ```bash
 $ az storage blob download --account-name "${AZURE_ACCOUNT_NAME}" --account-key "${AZURE_ACCOUNT_KEY}" --container-name "${AZURE_CONTAINER_NAME}" --name topics/blob_topic/partition=0/blob_topic+0+0000000000.avro --file /tmp/blob_topic+0+0000000000.avro
+```
+
+Deleting resource group:
+
+```bash
+$ az group delete --name $AZURE_RESOURCE_GROUP --yes
 ```
 
 N.B: Control Center is reachable at [http://127.0.0.1:9021](http://127.0.0.1:9021])
