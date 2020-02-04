@@ -1,5 +1,7 @@
 # AWS Lambda Sink connector
 
+![asciinema](asciinema.gif)
+
 ## Objective
 
 Quickly test [AWS Lambda](https://docs.confluent.io/current/connect/kafka-connect-aws-lambda/index.html#kconnect-long-lambda-sink-connector) connector.
