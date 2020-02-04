@@ -44,3 +44,4 @@ config.cc.vsaboulin.travis
 3rdparty.tgz
 3rdparty/TIB_ems-ce_8.5.1_linux_x86_64.zip
 connect/connect-vertica-sink/vertica-stream-writer/
+*.cast
