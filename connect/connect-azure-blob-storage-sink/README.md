@@ -1,5 +1,7 @@
 # Azure Blob Storage Sink connector
 
+![asciinema](asciinema.gif)
+
 ## Objective
 
 Quickly test [Azure Blob Storage Sink](https://docs.confluent.io/current/connect/kafka-connect-azure-blob-storage/index.html#quick-start) connector.
