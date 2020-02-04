@@ -1,0 +1,15 @@
+title: MYDIR
+options:
+  width: 80
+  height: 24
+  wait: true
+  typing_delay_s: 0.1
+  reading_delay_s: 1
+pre-run:
+  - command: clear
+  - pause: 1
+post-run:
+  - delete_env: 'exit'
+  - pause: 1
+scenes:
+  - command: ./MYSCRIPT'

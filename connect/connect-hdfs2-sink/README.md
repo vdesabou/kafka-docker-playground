@@ -1,7 +1,5 @@
 # HDFS 2 Sink connector
 
-[![asciinema](asciinema.gif)](https://asciinema.org/a/289272)
-
 ## Objective
 
 Quickly test [HDFS 2 Sink](https://docs.confluent.io/current/connect/kafka-connect-hdfs/index.html) connector.
