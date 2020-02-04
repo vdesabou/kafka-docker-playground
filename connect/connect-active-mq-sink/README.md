@@ -1,5 +1,7 @@
 # ActiveMQ Sink connector
 
+![asciinema](asciinema.gif)
+
 ## Objective
 
 Quickly test [ActiveMQ Sink](https://docs.confluent.io/current/connect/kafka-connect-activemq/sink/index.html#kconnect-long-activemq-sink-connector) connector.
