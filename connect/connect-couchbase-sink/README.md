@@ -1,5 +1,7 @@
 # Couchbase Sink connector
 
+![asciinema](asciinema.gif)
+
 ## Objective
 
 Quickly test [Couchbase Sink](https://docs.couchbase.com/kafka-connector/3.4/index.html) connector.
@@ -37,7 +39,7 @@ $ docker exec couchbase bash -c "/opt/couchbase/bin/couchbase-cli bucket-create 
 Sending messages to topic `couchbase-sink-example`
 
 ```bash
-$ docker exec json-producer bash -c "java -jar json-producer-example-1.0-SNAPSHOT-jar-with-dependencies.jar"
+$ docker exec json-producer bash -c "java -jar json-producer-example-1.0.0-SNAPSHOT-jar-with-dependencies.jar"
 ```
 
 Creating Couchbase sink connector
