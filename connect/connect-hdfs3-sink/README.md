@@ -1,5 +1,7 @@
 # HDFS 3 Sink connector
 
+![asciinema](asciinema.gif)
+
 ## Objective
 
 Quickly test [HDFS 3 Sink](https://docs.confluent.io/current/connect/kafka-connect-hdfs/hdfs3/index.html#kconnect-long-hdfs-3-sink-connector) connector.

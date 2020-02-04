@@ -1,5 +1,7 @@
 # GCP Pub/Sub Source connector
 
+![asciinema](asciinema.gif)
+
 ## Objective
 
 Quickly test [GCP Pub/Sub Source](https://docs.confluent.io/current/connect/kafka-connect-gcp-pubsub/index.html#quick-start) connector.

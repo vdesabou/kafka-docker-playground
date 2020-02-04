@@ -232,6 +232,7 @@ This is just the excellent examples in [Kafka tutorial](https://kafka-tutorials.
 * [Configuring Control Center with LDAP authentication](other/control-center-ldap-auth)
 * [JMS Client](other/jms-client)
 * [How to write logs to files when using docker-compose](other/write-logs-to-files)
+* [Publish logs to kafka with Elastic Filebeat](other/filebeat-to-kafka)
 
 ## 📚 Useful Resources
 
