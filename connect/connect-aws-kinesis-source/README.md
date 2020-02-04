@@ -1,5 +1,7 @@
 # AWS Kinesis Source connector
 
+![asciinema](asciinema.gif)
+
 ## Objective
 
 Quickly test [Kinesis Connector](https://docs.confluent.io/current/connect/kafka-connect-kinesis/quickstart.html) connector.
