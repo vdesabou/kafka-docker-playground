@@ -73,7 +73,7 @@ do
 
         spielbash record --script=/tmp/asciinema-script.yml --output=$TMP_DIR/$dir/asciinema.cast
         bash stop.sh
-        asciicast2gif -w 80 -h 50 $TMP_DIR/$dir/asciinema.cast $PWD/asciinema.gif
+        asciicast2gif -w 80 $TMP_DIR/$dir/asciinema.cast $PWD/asciinema.gif
     done
     cd - > /dev/null
 done

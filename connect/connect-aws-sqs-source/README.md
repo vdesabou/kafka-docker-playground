@@ -1,5 +1,7 @@
 # AWS SQS Source connector
 
+![asciinema](asciinema.gif)
+
 ## Objective
 
 Quickly test [SQS Connector](https://docs.confluent.io/current/connect/kafka-connect-sqs/index.html#quick-start) connector.
