@@ -1,0 +1,18 @@
+---
+version: '3.5'
+services:
+
+  connect:
+    entrypoint: ["echo", "Service connect disabled"]
+
+  filebeat:
+    image: docker.elastic.co/beats/filebeat:6.6.0
+    container_name: filebeat
+    user: root
+    environment:
+        - strict.perms=false
+    depends_on:
+      - broker
+    volumes:
+        - ../../other/filebeat-to-kafka/filebeat.yml:/usr/share/filebeat/filebeat.yml:ro
+        - ../../other/filebeat-to-kafka/control-center.txt:/usr/share/services/control-center/logs/control-center.log
