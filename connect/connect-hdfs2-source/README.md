@@ -1,5 +1,7 @@
 # HDFS 2 Source connector
 
+![asciinema](asciinema.gif)
+
 ## Objective
 
 Quickly test [HDFS 2 Source](https://docs.confluent.io/current/connect/kafka-connect-hdfs/hdfs2/source/index.html#kconnect-long-hdfs-2-source-connector-for-cp) connector.

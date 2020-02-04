@@ -1,5 +1,7 @@
 # GCS Source connector
 
+![asciinema](asciinema.gif)
+
 ## Objective
 
 Quickly test [GCS Source](https://docs.confluent.io/current/connect/kafka-connect-gcs/source/index.html#quick-start) connector.

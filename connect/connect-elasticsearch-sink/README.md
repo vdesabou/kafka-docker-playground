@@ -1,5 +1,7 @@
 # Elasticsearch Sink connector
 
+![asciinema](asciinema.gif)
+
 ## Objective
 
 Quickly test [Elasticsearch Sink](https://docs.confluent.io/current/connect/kafka-connect-elasticsearch/index.html) connector.

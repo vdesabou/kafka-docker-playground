@@ -1,5 +1,7 @@
 # Google Cloud Functions Sink connector
 
+![asciinema](asciinema.gif)
+
 ## Objective
 
 Quickly test [Google Cloud Functions Sink](https://docs.confluent.io/current/connect/kafka-connect-gcp-functions/index.html#quick-start) connector.

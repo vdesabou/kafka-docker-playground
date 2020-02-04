@@ -1,5 +1,7 @@
 # GCP BigQuery Sink connector
 
+![asciinema](asciinema.gif)
+
 ## Objective
 
 Quickly test [GCP BigQuery Sink](https://docs.confluent.io/current/connect/kafka-connect-bigquery/index.html#kconnect-long-gcp-bigquery-sink-connector) connector.
