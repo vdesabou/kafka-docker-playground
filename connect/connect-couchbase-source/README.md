@@ -1,5 +1,7 @@
 # Couchbase Source connector
 
+![asciinema](asciinema.gif)
+
 ## Objective
 
 Quickly test [Couchbase Source](https://docs.couchbase.com/kafka-connector/3.4/index.html) connector.
