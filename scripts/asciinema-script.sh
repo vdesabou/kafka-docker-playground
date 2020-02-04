@@ -13,7 +13,7 @@ cd ${DIR}/..
 test_list="$1"
 if [ "$1" = "ALL" ]
 then
-    test_list=$(grep "env: TEST_LIST" ${DIR}/../.travis.yml | cut -d '"' -f 2 | tr '\n' ' ')
+    test_list="connect/* environment/* replicator/* other/* kafka-tutorials/kafka-streams/* kafka-tutorials/ksql/*"
 fi
 
 for dir in $test_list
@@ -43,14 +43,6 @@ do
             continue
         fi
 
-        if [ -d $TMP_DIR/$dir ]
-        then
-            # we want only one script
-            break
-        fi
-
-        mkdir -p $TMP_DIR/$dir
-
         # check for ignored scripts in scripts/tests-ignored.txt
         grep "$script" ${DIR}/tests-ignored.txt > /dev/null
         if [ $? = 0 ]
@@ -60,6 +52,14 @@ do
             logwarn "####################################################"
             continue
         fi
+
+        if [ -d $TMP_DIR/$dir ]
+        then
+            # we want to execute only one script
+            break
+        fi
+
+        mkdir -p $TMP_DIR/$dir
 
         log "####################################################"
         log "Executing $script in dir $dir"
@@ -73,7 +73,7 @@ do
 
         spielbash record --script=/tmp/asciinema-script.yml --output=$TMP_DIR/$dir/asciinema.cast
         bash stop.sh
-        asciicast2gif -w 80 -h 24 $TMP_DIR/$dir/asciinema.cast $PWD/asciinema.gif
+        asciicast2gif -w 80 -h 50 $TMP_DIR/$dir/asciinema.cast $PWD/asciinema.gif
     done
     cd - > /dev/null
 done
