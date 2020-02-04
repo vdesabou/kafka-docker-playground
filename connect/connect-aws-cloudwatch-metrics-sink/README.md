@@ -1,5 +1,7 @@
 # AWS CloudWatch Metrics Sink connector
 
+![asciinema](asciinema.gif)
+
 ## Objective
 
 Quickly test [AWS CloudWatch Metrics](https://docs.confluent.io/current/connect/kafka-connect-aws-cloudwatch-metrics/index.html#quick-start) connector.
