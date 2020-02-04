@@ -1,5 +1,7 @@
 # Debezium SQL Server source connector
 
+![asciinema](asciinema.gif)
+
 ## Objective
 
 Quickly test [Debezium SQL Server](https://docs.confluent.io/current/connect/debezium-connect-sqlserver/index.html#quick-start) connector.
