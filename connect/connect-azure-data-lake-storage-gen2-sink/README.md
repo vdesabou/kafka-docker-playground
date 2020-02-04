@@ -1,5 +1,7 @@
 # Azure Data Lake Storage Gen2 Sink connector
 
+![asciinema](asciinema.gif)
+
 ## Objective
 
 Quickly test [Azure Data Lake Storage Gen2 Sink](https://docs.confluent.io/current/connect/kafka-connect-azure-data-lake-gen2-storage/index.html#quick-start) connector.

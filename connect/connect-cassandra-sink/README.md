@@ -1,5 +1,7 @@
 # Cassandra Sink connector
 
+![asciinema](asciinema.gif)
+
 ## Objective
 
 Quickly test [Cassandra Sink](https://docs.confluent.io/current/connect/kafka-connect-cassandra/index.html#kconnect-long-cassandra-sink-connector) connector.
