@@ -12,6 +12,21 @@ then
      check_if_continue
 else
      # running with travis
+     CONFIG_FILE=~/.ccloud/config
+
+     if [ ! -f ${CONFIG_FILE} ]
+     then
+          logerror "ERROR: ${CONFIG_FILE} is not set"
+          exit 1
+     fi
+
+     if [ -f ./delta_configs/env.delta ]
+     then
+          source ./delta_configs/env.delta
+     else
+          logerror "ERROR: delta_configs/env.delta has not been generated"
+          exit 1
+     fi
      log "##################################################"
      log "Log in to Confluent Cloud"
      log "##################################################"
