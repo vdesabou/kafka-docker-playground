@@ -1,5 +1,7 @@
 # AWS CloudWatch Logs Source connector
 
+![asciinema](asciinema.gif)
+
 ## Objective
 
 Quickly test [AWS CloudWatch Logs](https://docs.confluent.io/current/connect/kafka-connect-aws-cloudwatch-logs/index.html#kconnect-long-aws-cloudwatch-logs-source-connector) connector.

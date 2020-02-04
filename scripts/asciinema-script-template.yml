@@ -4,7 +4,7 @@ options:
   height: 50
   wait: true
   typing_delay_s: 0.1
-  reading_delay_s: 2
+  reading_delay_s: 1.5
 pre-run:
   - command: clear
   - pause: 1
