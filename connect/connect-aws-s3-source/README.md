@@ -1,5 +1,7 @@
 # S3 Source connector
 
+![asciinema](asciinema.gif)
+
 ## Objective
 
 Quickly test [S3 Source](https://docs.confluent.io/current/connect/kafka-connect-aws-s3-source/index.html) connector.
