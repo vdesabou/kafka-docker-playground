@@ -67,13 +67,21 @@ do
 
         ####
         ##
-        sed -e "s|MYDIR|$dir|g" \
-            -e "s|MYSCRIPT|$script|g" \
-            ${DIR}/asciinema-script-template.yml > /tmp/asciinema-script.yml
+        # sed -e "s|MYDIR|$dir|g" \
+        #     -e "s|MYSCRIPT|$script|g" \
+        #     ${DIR}/asciinema-script-template.yml > /tmp/asciinema-script.yml
 
-        spielbash record --script=/tmp/asciinema-script.yml --output=$TMP_DIR/$dir/asciinema.cast
-        bash stop.sh
-        asciicast2gif -w 80 -h 50 $TMP_DIR/$dir/asciinema.cast $PWD/asciinema.gif
+        # spielbash record --script=/tmp/asciinema-script.yml --output=$TMP_DIR/$dir/asciinema.cast
+        # bash stop.sh
+
+        echo "cd $dir"
+        echo "clear"
+        echo "asciinema rec $TMP_DIR/$dir/asciinema.cast -t "$dir" --overwrite"
+        echo "./$script"
+        echo "exit"
+        echo "./stop.sh"
+        echo "asciicast2gif -w 80 -h 50 $TMP_DIR/$dir/asciinema.cast $PWD/asciinema.gif"
+        echo "cd -"
     done
     cd - > /dev/null
 done
