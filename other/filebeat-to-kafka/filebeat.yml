@@ -1,0 +1,24 @@
+filebeat.prospectors:
+- type: log
+  enabled: true
+  tags:
+    - control-center
+  paths:
+    - /usr/share/services/control-center/logs/control-center.log
+
+# https://www.elastic.co/guide/en/beats/filebeat/master/kafka-output.html
+output.kafka:
+  # specifying filebeat to take timestamp and message fields, other wise it
+  # take the lines as json and publish to kafka
+  codec.format:
+    string: '%{[@timestamp]} %{[message]}'
+
+  # kafka
+  # publishing to 'topic-log' topic
+  hosts: ["broker:9092"]
+  topic: 'topic-log'
+  partition.round_robin:
+    reachable_only: false
+  required_acks: 1
+  compression: gzip
+  max_message_bytes: 1000000
