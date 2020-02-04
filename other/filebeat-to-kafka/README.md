@@ -112,6 +112,21 @@ Example using `docker-compose` on how to write logs to Kafka using Elastic Fileb
 Processed a total of 100 messages
 ```
 
+## Using Confluent Cloud
+
+Create the topic `topic-log` and edit file `filebeat.yml` with:
+
+```yml
+  # kafka
+  # publishing to 'topic-log' topic
+  hosts: ["<BOOTSTRAP SERVER>"]
+  username: '<API KEY>'
+  password: '<API SECRET>'
+  ssl:
+    enabled: true
+    certificate_authorities: /etc/ssl/certs/ca-bundle.crt
+```
+
 ## Credits
 
 This is based on this [article](https://medium.com/rahasak/publish-logs-to-kafka-with-filebeat-74497ef7dafe)
