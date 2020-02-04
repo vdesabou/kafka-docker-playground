@@ -1,5 +1,7 @@
 # ActiveMQ Source connector
 
+![asciinema](asciinema.gif)
+
 ## Objective
 
 Quickly test [ActiveMQ Source](https://docs.confluent.io/current/connect/kafka-connect-activemq/index.html#kconnect-long-activemq-source-connector) connector.
