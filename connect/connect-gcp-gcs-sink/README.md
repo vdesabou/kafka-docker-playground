@@ -1,5 +1,7 @@
 # GCS Sink connector
 
+![asciinema](asciinema.gif)
+
 ## Objective
 
 Quickly test [GCS Sink](https://docs.confluent.io/current/connect/kafka-connect-gcs/index.html#quick-start) connector.

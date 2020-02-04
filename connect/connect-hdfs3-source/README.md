@@ -1,5 +1,7 @@
 # HDFS 3 Source connector
 
+![asciinema](asciinema.gif)
+
 ## Objective
 
 Quickly test [HDFS 3 Source](https://docs.confluent.io/current/connect/kafka-connect-hdfs/hdfs3/source/index.html#kconnect-long-hdfs-3-source-connector) connector.

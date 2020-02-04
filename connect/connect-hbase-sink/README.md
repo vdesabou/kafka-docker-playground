@@ -1,5 +1,7 @@
 # HBase Sink connector
 
+![asciinema](asciinema.gif)
+
 ## Objective
 
 Quickly test [HBase Sink](https://docs.confluent.io/current/connect/kafka-connect-hbase/index.html#quick-start) connector.
