@@ -1,5 +1,7 @@
 # Debezium MongoDB source connector
 
+![asciinema](asciinema.gif)
+
 ## Objective
 
 Quickly test [Debezium MongoDB](https://docs.confluent.io/current/connect/debezium-connect-mongodb/index.html#quick-start) connector.

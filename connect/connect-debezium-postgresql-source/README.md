@@ -1,5 +1,7 @@
 # Debezium PostgreSQL source connector
 
+![asciinema](asciinema.gif)
+
 ## Objective
 
 Quickly test [Debezium PostGreSQL](https://docs.confluent.io/current/connect/debezium-connect-postgres/index.html#quick-start) connector.
