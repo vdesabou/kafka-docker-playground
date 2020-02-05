@@ -1,5 +1,7 @@
 # InfluxDB Source connector
 
+![asciinema](asciinema.gif)
+
 ## Objective
 
 Quickly test [InfluxDB Source](https://docs.confluent.io/current/connect/kafka-connect-influxdb/influx-db-source-connector/index.html#quick-start) connector.

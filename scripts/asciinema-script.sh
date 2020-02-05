@@ -4,8 +4,8 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../scripts/utils.sh
 
 TMP_DIR=/tmp/asciinema
+rm -rf $TMP_DIR/
 mkdir -p $TMP_DIR
-rm -rf $TMP_DIR/*
 
 # go to root folder
 cd ${DIR}/..
@@ -71,7 +71,8 @@ do
             -e "s|MYSCRIPT|$script|g" \
             ${DIR}/asciinema-script-template.yml > /tmp/asciinema-script.yml
 
-        spielbash record --script=/tmp/asciinema-script.yml --output=$TMP_DIR/$dir/asciinema.cast
+        spielbash -v record --script=/tmp/asciinema-script.yml --output=$TMP_DIR/$dir/asciinema.cast
+        sleep 1
         bash stop.sh
         asciicast2gif -w 80 $TMP_DIR/$dir/asciinema.cast $PWD/asciinema.gif
     done
