@@ -1,5 +1,7 @@
 # JDBC MySQL Sink connector
 
+![asciinema](asciinema.gif)
+
 ## Objective
 
 Quickly test [JDBC Sink](https://docs.confluent.io/current/connect/kafka-connect-jdbc/sink-connector/index.html#quick-start) connector with MySQL.
