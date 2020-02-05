@@ -6,6 +6,13 @@
 
 Quickly test [Tiered Storage](https://docs.confluent.io/current/kafka/tiered-storage-preview.html#tiered-storage) with [Minio](https://min.io).
 
+## Disclaimer
+
+[Tiered Storage](https://docs.confluent.io/current/kafka/tiered-storage-preview.html#tiered-storage) is a preview feature and only currently supported with AWS.
+
+**⚠️ Minio is not supported**
+
+
 ## Pre-requisites
 
 * `docker-compose` (example `brew cask install docker`)
@@ -60,14 +67,45 @@ $ docker container logs broker | grep "Uploaded"
 ```
 
 ```log
-[2020-02-05 14:41:40,972] INFO Uploaded segment for NolqVXePTAGo3NdXJ0d0-g-TieredStorage-3 in 389ms (kafka.tier.tasks.archive.ArchiveTask)
-[2020-02-05 14:41:40,976] INFO Uploaded segment for NolqVXePTAGo3NdXJ0d0-g-TieredStorage-2 in 342ms (kafka.tier.tasks.archive.ArchiveTask)
-[2020-02-05 14:41:42,072] INFO Uploaded segment for NolqVXePTAGo3NdXJ0d0-g-TieredStorage-0 in 63ms (kafka.tier.tasks.archive.ArchiveTask)
-[2020-02-05 14:46:07,165] INFO Uploaded segment for 7-5PbXoAS1WpPa62CVfvKQ-_confluent-controlcenter-5-4-0-1-MetricsAggregateStore-repartition-0 in 66ms (kafka.tier.tasks.archive.ArchiveTask)
-[2020-02-05 14:51:07,263] INFO Uploaded segment for 7-5PbXoAS1WpPa62CVfvKQ-_confluent-controlcenter-5-4-0-1-MetricsAggregateStore-repartition-0 in 63ms (kafka.tier.tasks.archive.ArchiveTask)
+[2020-02-05 16:16:51,092] INFO Uploaded segment for e-RG-7KYTD22ym0zvWaCDA-TieredStorage-2 in 406ms (kafka.tier.tasks.archive.ArchiveTask)
+[2020-02-05 16:16:51,109] INFO Uploaded segment for e-RG-7KYTD22ym0zvWaCDA-TieredStorage-1 in 475ms (kafka.tier.tasks.archive.ArchiveTask)
+[2020-02-05 16:16:51,427] INFO Uploaded segment for e-RG-7KYTD22ym0zvWaCDA-TieredStorage-0 in 187ms (kafka.tier.tasks.archive.ArchiveTask)
+[2020-02-05 16:16:51,520] INFO Uploaded segment for e-RG-7KYTD22ym0zvWaCDA-TieredStorage-3 in 229ms (kafka.tier.tasks.archive.ArchiveTask)
 ```
 
 ![Minio](Screenshot1.png)
+
+Listing objects of bucket `minio-tiered-storage` in Minio:
+
+```bash
+$ docker container restart list-buckets
+$ docker container logs --tail=100 list-buckets
+```
+
+```log
+Added `myminio` successfully.
+Added `myminio` successfully.
+[2020-02-05 16:16:51 UTC]      8B 0/-9twBPT1TWmFRZr_cKeDTA/e-RG-7KYTD22ym0zvWaCDA/1/00000000000000000000_0_v0.epoch-state
+[2020-02-05 16:16:51 UTC]    512B 0/-9twBPT1TWmFRZr_cKeDTA/e-RG-7KYTD22ym0zvWaCDA/1/00000000000000000000_0_v0.offset-index
+[2020-02-05 16:16:51 UTC]     10B 0/-9twBPT1TWmFRZr_cKeDTA/e-RG-7KYTD22ym0zvWaCDA/1/00000000000000000000_0_v0.producer-state
+[2020-02-05 16:16:51 UTC] 1020KiB 0/-9twBPT1TWmFRZr_cKeDTA/e-RG-7KYTD22ym0zvWaCDA/1/00000000000000000000_0_v0.segment
+[2020-02-05 16:16:51 UTC]    768B 0/-9twBPT1TWmFRZr_cKeDTA/e-RG-7KYTD22ym0zvWaCDA/1/00000000000000000000_0_v0.timestamp-index
+[2020-02-05 16:16:51 UTC]      8B 0/5LYG6KkBTwa-_cPTur3Zsg/e-RG-7KYTD22ym0zvWaCDA/3/00000000000000000000_0_v0.epoch-state
+[2020-02-05 16:16:51 UTC]    512B 0/5LYG6KkBTwa-_cPTur3Zsg/e-RG-7KYTD22ym0zvWaCDA/3/00000000000000000000_0_v0.offset-index
+[2020-02-05 16:16:51 UTC]     10B 0/5LYG6KkBTwa-_cPTur3Zsg/e-RG-7KYTD22ym0zvWaCDA/3/00000000000000000000_0_v0.producer-state
+[2020-02-05 16:16:51 UTC] 1024KiB 0/5LYG6KkBTwa-_cPTur3Zsg/e-RG-7KYTD22ym0zvWaCDA/3/00000000000000000000_0_v0.segment
+[2020-02-05 16:16:51 UTC]    768B 0/5LYG6KkBTwa-_cPTur3Zsg/e-RG-7KYTD22ym0zvWaCDA/3/00000000000000000000_0_v0.timestamp-index
+[2020-02-05 16:16:51 UTC]      8B 0/ntTwI5g9Q1W7ZcdXYDstCw/e-RG-7KYTD22ym0zvWaCDA/0/00000000000000000000_0_v0.epoch-state
+[2020-02-05 16:16:51 UTC]    504B 0/ntTwI5g9Q1W7ZcdXYDstCw/e-RG-7KYTD22ym0zvWaCDA/0/00000000000000000000_0_v0.offset-index
+[2020-02-05 16:16:51 UTC]     10B 0/ntTwI5g9Q1W7ZcdXYDstCw/e-RG-7KYTD22ym0zvWaCDA/0/00000000000000000000_0_v0.producer-state
+[2020-02-05 16:16:51 UTC] 1024KiB 0/ntTwI5g9Q1W7ZcdXYDstCw/e-RG-7KYTD22ym0zvWaCDA/0/00000000000000000000_0_v0.segment
+[2020-02-05 16:16:51 UTC]    768B 0/ntTwI5g9Q1W7ZcdXYDstCw/e-RG-7KYTD22ym0zvWaCDA/0/00000000000000000000_0_v0.timestamp-index
+[2020-02-05 16:16:51 UTC]      8B 0/rhJILwoVSI2U6T3CWxAA4g/e-RG-7KYTD22ym0zvWaCDA/2/00000000000000000000_0_v0.epoch-state
+[2020-02-05 16:16:51 UTC]    496B 0/rhJILwoVSI2U6T3CWxAA4g/e-RG-7KYTD22ym0zvWaCDA/2/00000000000000000000_0_v0.offset-index
+[2020-02-05 16:16:51 UTC]     10B 0/rhJILwoVSI2U6T3CWxAA4g/e-RG-7KYTD22ym0zvWaCDA/2/00000000000000000000_0_v0.producer-state
+[2020-02-05 16:16:50 UTC] 1008KiB 0/rhJILwoVSI2U6T3CWxAA4g/e-RG-7KYTD22ym0zvWaCDA/2/00000000000000000000_0_v0.segment
+[2020-02-05 16:16:51 UTC]    756B 0/rhJILwoVSI2U6T3CWxAA4g/e-RG-7KYTD22ym0zvWaCDA/2/00000000000000000000_0_v0.timestamp-index
+```
 
 Sleep 5 minutes (confluent.tier.local.hotset.ms=60000)
 
