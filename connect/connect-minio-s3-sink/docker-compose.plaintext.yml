@@ -1,0 +1,66 @@
+---
+version: '3.5'
+services:
+  connect:
+    volumes:
+        - ../../connect/connect-minio-s3-sink/credentials:/root/.aws/credentials:ro
+    environment:
+      CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-s3
+
+  minio:
+    image: minio/minio
+    hostname: minio
+    container_name: minio
+    ports:
+      - "9000:9000"
+    environment:
+      MINIO_ACCESS_KEY: AKIAIOSFODNN7EXAMPLE
+      MINIO_SECRET_KEY: wJalrXUtnFEMI7K7MDENG8bPxRfiCYEXAMPLEKEY
+    command: server /data
+
+  create-buckets:
+    image: minio/mc
+    hostname: create-buckets
+    container_name: create-buckets
+    depends_on:
+      - minio
+    entrypoint: >
+      /bin/sh -c "
+        /usr/bin/mc config host add myminio http://minio:9000 AKIAIOSFODNN7EXAMPLE wJalrXUtnFEMI7K7MDENG8bPxRfiCYEXAMPLEKEY;
+        while ! /usr/bin/mc mb myminio/mybucket; do
+          sleep 5
+        done
+        exit 0;
+      "
+
+  list-buckets:
+    image: minio/mc
+    hostname: list-buckets
+    container_name: list-buckets
+    depends_on:
+      - minio
+    entrypoint: >
+      /bin/sh -c "
+        /usr/bin/mc config host add myminio http://minio:9000 AKIAIOSFODNN7EXAMPLE wJalrXUtnFEMI7K7MDENG8bPxRfiCYEXAMPLEKEY;
+        while ! /usr/bin/mc ls -r myminio/mybucket; do
+          sleep 5
+        done
+        exit 0;
+      "
+
+  copy-files:
+    image: minio/mc
+    hostname: copy-files
+    container_name: copy-files
+    depends_on:
+      - minio
+    volumes:
+        - /tmp:/tmp
+    entrypoint: >
+      /bin/sh -c "
+        /usr/bin/mc config host add myminio http://minio:9000 AKIAIOSFODNN7EXAMPLE wJalrXUtnFEMI7K7MDENG8bPxRfiCYEXAMPLEKEY;
+        while ! /usr/bin/mc cp myminio/mybucket/topics/minio_topic/partition\=0/minio_topic+0+0000000000.avro /tmp/; do
+          sleep 5
+        done
+        exit 0;
+      "
