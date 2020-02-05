@@ -1,5 +1,7 @@
 # HTTP Sink connector
 
+![asciinema](asciinema.gif)
+
 ## Objective
 
 Quickly test [HTTP Sink](https://docs.confluent.io/current/connect/kafka-connect-http/index.html#kconnect-long-http-sink-connector) connector.

@@ -1,5 +1,7 @@
 # IBM MQ Sink connector
 
+![asciinema](asciinema.gif)
+
 ## Objective
 
 Quickly test [IBM MQ Sink](https://docs.confluent.io/current/connect/kafka-connect-ibmmq/sink/index.html#quick-start) connector.

@@ -1,5 +1,7 @@
 # IBM MQ Source connector
 
+![asciinema](asciinema.gif)
+
 ## Objective
 
 Quickly test [IBM MQ Source](https://docs.confluent.io/current/connect/kafka-connect-ibmmq/index.html) connector.
