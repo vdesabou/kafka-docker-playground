@@ -25,6 +25,7 @@ export TAG=5.3.2
 - [🔄 Confluent Replicator](#-confluent-replicator)
 - [🔐 Environments](#-environments)
 - [🎓 Kafka Tutorials](#-kafka-tutorials)
+- [Confluent Commercial](#confluent-commercial)
 - [👾 Other Playgrounds](#-other-playgrounds)
 - [📚 Useful Resources](#-useful-resources)
 
@@ -221,6 +222,10 @@ This is just the excellent examples in [Kafka tutorial](https://kafka-tutorials.
   * <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/0/05/Apache_kafka.svg/440px-Apache_kafka.svg.png" width="15"> Kafka Streams
      * [Create tumbling windows](kafka-tutorials/kafka-streams/tumbling-windows)
 
+## Confluent Commercial
+
+* [Tiered storage with AWS S3](other/tiered-storage-with-aws)
+* [Tiered storage with Minio](other/tiered-storage-with-minio) (unsupported)
 
 
 ## 👾 Other Playgrounds
@@ -234,7 +239,6 @@ This is just the excellent examples in [Kafka tutorial](https://kafka-tutorials.
 * [JMS Client](other/jms-client)
 * [How to write logs to files when using docker-compose](other/write-logs-to-files)
 * [Publish logs to kafka with Elastic Filebeat](other/filebeat-to-kafka)
-* [Tiered storage with Minio](other/tiered-storage-with-minio)
 
 ## 📚 Useful Resources
 
