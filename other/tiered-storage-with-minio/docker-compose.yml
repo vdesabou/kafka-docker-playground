@@ -1,0 +1,49 @@
+---
+version: '3.5'
+services:
+
+  broker:
+    depends_on:
+      - minio
+    environment:
+      # Tiered Storage Configuration Parameters (v5.4.0)
+      KAFKA_CONFLUENT_TIER_FEATURE: "true"
+      KAFKA_CONFLUENT_TIER_ENABLE: "true"
+      KAFKA_CONFLUENT_TIER_BACKEND: "S3"
+      KAFKA_CONFLUENT_TIER_S3_AWS_ENDPOINT_OVERRIDE: "http://minio:9000"
+      KAFKA_CONFLUENT_TIER_S3_SSE_ALGORITHM: "none"
+      KAFKA_CONFLUENT_TIER_S3_BUCKET: "minio-tiered-storage"
+      KAFKA_CONFLUENT_TIER_S3_REGION: "us-west-1"
+      KAFKA_CONFLUENT_TIER_METADATA_REPLICATION_FACTOR: 1
+      KAFKA_CONFLUENT_TIER_S3_AWS_ACCESS_KEY_ID: "AKIAIOSFODNN7EXAMPLE"
+      KAFKA_CONFLUENT_TIER_S3_AWS_SECRET_ACCESS_KEY: "wJalrXUtnFEMI7K7MDENG8bPxRfiCYEXAMPLEKEY"
+      KAFKA_LOG_SEGMENT_BYTES: 1048576 #1Mb
+
+  connect:
+    entrypoint: ["echo", "Service connect disabled"]
+
+  minio:
+    image: minio/minio
+    hostname: minio
+    container_name: minio
+    ports:
+      - "9000:9000"
+    environment:
+      MINIO_ACCESS_KEY: AKIAIOSFODNN7EXAMPLE
+      MINIO_SECRET_KEY: wJalrXUtnFEMI7K7MDENG8bPxRfiCYEXAMPLEKEY
+    command: server /data
+
+  create-buckets:
+    image: minio/mc
+    hostname: create-buckets
+    container_name: create-buckets
+    depends_on:
+      - minio
+    entrypoint: >
+      /bin/sh -c "
+        /usr/bin/mc config host add myminio http://minio:9000 AKIAIOSFODNN7EXAMPLE wJalrXUtnFEMI7K7MDENG8bPxRfiCYEXAMPLEKEY;
+        while ! /usr/bin/mc mb myminio/minio-tiered-storage --region=us-west-1; do
+          sleep 5
+        done
+        exit 0;
+      "
