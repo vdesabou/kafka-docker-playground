@@ -5,21 +5,32 @@ source ${DIR}/../scripts/utils.sh
 
 IGNORE_CONNECT_STARTUP="FALSE"
 IGNORE_CONTROL_CENTER_STARTUP="TRUE"
+shiftconnect=0
+shiftcontrolcenter=0
 
 while getopts "h?ab" opt; do
     case "$opt" in
     h|\?)
-        log "possible options -a to ignore connect startup and -b to ignore control center"
+        log "possible options -a to ignore connect startup and -b to not ignore control center"
         exit 0
         ;;
     a)  IGNORE_CONNECT_STARTUP="TRUE"
-        shift
+        shiftconnect=1
         ;;
     b)  IGNORE_CONTROL_CENTER_STARTUP="FALSE"
-        shift
+        shiftcontrolcenter=1
         ;;
     esac
 done
+
+if [ $shiftconnect -eq 1 ]
+then
+  shift
+fi
+if [ $shiftcontrolcenter -eq 1 ]
+then
+  shift
+fi
 
 CONNECT_CONTAINER=${1:-connect}
 CONTROL_CENTER_CONTAINER=${1:-"control-center"}
