@@ -6,6 +6,8 @@ options:
   typing_delay_s: 0.1
   reading_delay_s: 1
 pre-run:
+  - pause: 1
   - command: clear
 scenes:
+  - pause: 1
   - command: './MYSCRIPT'

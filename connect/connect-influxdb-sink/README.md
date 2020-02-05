@@ -1,5 +1,7 @@
 # InfluxDB Sink connector
 
+![asciinema](asciinema.gif)
+
 ## Objective
 
 Quickly test [InfluxDB Sink](https://docs.confluent.io/current/connect/kafka-connect-influxdb/influx-db-sink-connector/index.html#quick-start) connector.
