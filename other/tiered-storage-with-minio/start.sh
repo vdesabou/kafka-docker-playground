@@ -50,6 +50,11 @@ seq -f "This is a message %g" 200000 | docker exec -i broker kafka-console-produ
 log "Check for uploaded log segments"
 docker container logs broker | grep "Uploaded"
 
+log "Listing objects of bucket minio-tiered-storage in Minio"
+docker container restart list-buckets
+sleep 3
+docker container logs --tail=100 list-buckets
+
 log "Sleep 5 minutes (confluent.tier.local.hotset.ms=60000)"
 sleep 300
 

@@ -47,3 +47,18 @@ services:
         done
         exit 0;
       "
+
+  list-buckets:
+    image: minio/mc
+    hostname: list-buckets
+    container_name: list-buckets
+    depends_on:
+      - minio
+    entrypoint: >
+      /bin/sh -c "
+        /usr/bin/mc config host add myminio http://minio:9000 AKIAIOSFODNN7EXAMPLE wJalrXUtnFEMI7K7MDENG8bPxRfiCYEXAMPLEKEY;
+        while ! /usr/bin/mc ls -r myminio/minio-tiered-storage; do
+          sleep 5
+        done
+        exit 0;
+      "
