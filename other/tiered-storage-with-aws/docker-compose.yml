@@ -1,0 +1,19 @@
+---
+version: '3.5'
+services:
+
+  broker:
+    environment:
+      # Tiered Storage Configuration Parameters (v5.4.0)
+      KAFKA_CONFLUENT_TIER_FEATURE: "true"
+      KAFKA_CONFLUENT_TIER_ENABLE: "true"
+      KAFKA_CONFLUENT_TIER_BACKEND: "S3"
+      KAFKA_CONFLUENT_TIER_S3_BUCKET: "aws-playground-tiered-storage"
+      KAFKA_CONFLUENT_TIER_S3_REGION: "$AWS_REGION"
+      KAFKA_CONFLUENT_TIER_METADATA_REPLICATION_FACTOR: 1
+      KAFKA_CONFLUENT_TIER_S3_AWS_ACCESS_KEY_ID: "$AWS_ACCESS_KEY_ID"
+      KAFKA_CONFLUENT_TIER_S3_AWS_SECRET_ACCESS_KEY: "$AWS_SECRET_ACCESS_KEY"
+      KAFKA_LOG_SEGMENT_BYTES: 1048576 #1Mb
+
+  connect:
+    entrypoint: ["echo", "Service connect disabled"]
