@@ -234,6 +234,7 @@ This is just the excellent examples in [Kafka tutorial](https://kafka-tutorials.
 * [JMS Client](other/jms-client)
 * [How to write logs to files when using docker-compose](other/write-logs-to-files)
 * [Publish logs to kafka with Elastic Filebeat](other/filebeat-to-kafka)
+* [Tiered storage with Minio](other/tiered-storage-with-minio)
 
 ## 📚 Useful Resources
 
