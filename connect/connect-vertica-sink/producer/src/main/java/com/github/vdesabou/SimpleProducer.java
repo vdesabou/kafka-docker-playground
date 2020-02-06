@@ -43,17 +43,26 @@ public class SimpleProducer {
 
             while (true) {
                 String key = "" + i;
-                Customer customer = Customer.newBuilder()
-                .setListID(i)
-                .setNormalizedHashItemID(i)
-                .setURL("url")
-                .build();
 
                 ProducerRecord<String, Customer> record;
-                if(i!=2) {
-                    record = new ProducerRecord<>(TOPIC, key, customer);
-                } else {
+                if(i==2) {
                     record = new ProducerRecord<>(TOPIC, key, null);
+
+                } else if(i==4) {
+                    Customer customer = Customer.newBuilder()
+                    .setListID(i)
+                    .setNormalizedHashItemID(i)
+                    .setURL("ultralongurlultralongurlultralongurlultralongurlultralongurlultralongurlultralongurultralongurl")
+                    .build();
+                    record = new ProducerRecord<>(TOPIC, key, customer);
+
+                } else {
+                    Customer customer = Customer.newBuilder()
+                    .setListID(i)
+                    .setNormalizedHashItemID(i)
+                    .setURL("url")
+                    .build();
+                    record = new ProducerRecord<>(TOPIC, key, customer);
                 }
 
                 System.out.println("Sending " + record.key() + " " + record.value());
