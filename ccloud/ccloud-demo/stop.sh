@@ -53,7 +53,6 @@ END
 fi
 
 # Delete topic in Confluent Cloud
-set +e
 delete_topic customer-avro
 delete_topic mysql-application
 delete_topic demo-acl-topic
