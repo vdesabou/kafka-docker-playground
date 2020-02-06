@@ -15,6 +15,17 @@ then
      rm -f ${DIR}/vertica-client-9.3.1-0.x86_64.tar.gz
 fi
 
+# if [ ! -f ${DIR}/vertica-jdbc.jar ]
+# then
+#      # install deps
+#      log "Getting vertica-jdbc.jar from vertica-client-9.2.1-0.x86_64.tar.gz"
+#      wget https://www.vertica.com/client_drivers/9.2.x/9.2.1-0/vertica-client-9.2.1-0.x86_64.tar.gz
+#      tar xvfz ${DIR}/vertica-client-9.2.1-0.x86_64.tar.gz
+#      cp ${DIR}/opt/vertica/java/lib/vertica-jdbc.jar ${DIR}/
+#      rm -rf ${DIR}/opt
+#      rm -f ${DIR}/vertica-client-9.2.1-0.x86_64.tar.gz
+# fi
+
 if [ ! -f ${DIR}/producer/target/producer-1.0.0-jar-with-dependencies.jar ]
 then
      log "Building jar for producer"
@@ -112,6 +123,16 @@ EOF
 #  2020-01-22 14:41:38.185 |       4 |      4 |                    4 | url  | f
 #  2020-01-22 14:41:38.69  |       5 |      5 |                    5 | url  | f
 
+
+log "Check for rejected data"
+docker exec -i vertica /opt/vertica/bin/vsql -hlocalhost -Udbadmin << EOF
+select * from public.customer_rej;
+EOF
+
+#      node_name     |      file_name      |         session_id         |  transaction_id   | statement_id | batch_number | row_number |                                              rejected_data                                              | rejected_data_orig_length |                          rejected_reason
+# -------------------+---------------------+----------------------------+-------------------+--------------+--------------+------------+---------------------------------------------------------------------------------------------------------+---------------------------+--------------------------------------------------------------------
+#  v_docker_node0001 | STDIN (Batch No. 1) | v_docker_node0001-109:0x17 | 45035996273705370 |           10 |            0 |         12 | ����@_ultralongurlultralongurlultralongurlultralongurlultralongurlultralongurlultralongurultralongurl |                       132 | The 95-byte value is too long for type Varchar(80), column 5 (URL)
+# (1 row)
 
 # Without trace logs:
 
