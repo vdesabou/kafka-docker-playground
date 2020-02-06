@@ -22,6 +22,7 @@ public class QueryBuilder {
 
   public QueryBuilder(VerticaStreamWriterBuilder streamWriterBuilder) {
     this.streamWriterBuilder = streamWriterBuilder;
+    this.streamWriterBuilder.schema = "public";
   }
 
   @Override
@@ -29,6 +30,7 @@ public class QueryBuilder {
     StringBuilder builder = new StringBuilder();
     builder.append("COPY");
     builder.append(" ");
+
 
     if (!Strings.isNullOrEmpty(this.streamWriterBuilder.schema())) {
       builder.append('"');
@@ -53,9 +55,11 @@ public class QueryBuilder {
 
     builder.append(' ');
     builder.append(this.streamWriterBuilder.loadMethod());
-
-    builder.append(" REJECTED DATA '/tmp/copyLocal.rejected' EXCEPTIONS '/tmp/copyLocal.exceptions'");
-
+    builder.append(" ENFORCELENGTH REJECTED DATA AS TABLE public.");
+    builder.append('"');
+    builder.append(this.streamWriterBuilder.table());
+    builder.append("_rej");
+    builder.append('"');
     return builder.toString();
   }
 }
