@@ -1,0 +1,15 @@
+topics:
+  topic:
+    name: kafka-admin-acl-topic
+    replication.factor: 3
+    partitions: 6
+
+acls:
+  demo:
+    resource-type: topic
+    resource-name: kafka-admin-acl-topic
+    resource-pattern: LITERAL
+    principal: <PRINCIPAL>
+    operation: READ, WRITE
+    permission: ALLOW
+    host: '*'
