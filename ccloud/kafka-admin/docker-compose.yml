@@ -1,0 +1,12 @@
+---
+version: '3.5'
+services:
+
+  producer-acl:
+    build:
+      context: ../ccloud-demo/producer-acl/
+      args:
+        TAG: ${TAG}
+        CP_BASE_IMAGE: ${CP_BASE_IMAGE}
+    hostname: producer-acl
+    container_name: producer-acl

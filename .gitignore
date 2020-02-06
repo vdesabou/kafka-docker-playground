@@ -45,3 +45,7 @@ config.cc.vsaboulin.travis
 3rdparty/TIB_ems-ce_8.5.1_linux_x86_64.zip
 connect/connect-vertica-sink/vertica-stream-writer/
 *.cast
+ccloud/kafka-admin/before.yml
+ccloud/kafka-admin/config.yml
+ccloud/kafka-admin/kafka-admin.properties
+ccloud/kafka-admin/kafka-admin/
