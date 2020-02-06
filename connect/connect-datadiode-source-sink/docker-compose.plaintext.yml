@@ -1,0 +1,9 @@
+---
+version: '3.5'
+services:
+
+  connect:
+    ports:
+      - '5454:5454'
+    environment:
+      CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-data-diode
