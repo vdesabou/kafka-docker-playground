@@ -1,5 +1,7 @@
 # MQTT Sink connector
 
+![asciinema](asciinema.gif)
+
 ## Objective
 
 Quickly test [MQTT Sink](https://docs.confluent.io/current/connect/kafka-connect-mqtt/mqtt-sink-connector/mqtt_sink_connector_quickstart.html#example-configure-mqtt-sink-connector-for-eclipse-mosquitto-broker) connector.

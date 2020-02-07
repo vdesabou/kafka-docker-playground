@@ -1,5 +1,7 @@
 # OmniSci Sink connector
 
+![asciinema](asciinema.gif)
+
 ## Objective
 
 Quickly test [OmniSci Sink](https://docs.confluent.io/current/connect/kafka-connect-omnisci/index.html#kconnect-long-omnisci-sink-connector)) connector.
