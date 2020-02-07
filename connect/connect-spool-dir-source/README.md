@@ -1,5 +1,7 @@
 # Spool Dir Source connector
 
+![asciinema](asciinema.gif)
+
 ## Objective
 
 Quickly test [Spool Dir Source](https://docs.confluent.io/current/connect/kafka-connect-spooldir/index.html#kconnect-long-spool-dir-connectors) connector.
