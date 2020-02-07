@@ -1,5 +1,7 @@
 # JDBC Vertica sink connector
 
+![asciinema](asciinema.gif)
+
 ## Objective
 
 Quickly test [JDBC Sink](https://docs.confluent.io/current/connect/kafka-connect-jdbc/sink-connector/index.html#jdbc-sink-connector-for-cp) connector with Vertica.
