@@ -15,7 +15,8 @@ OUT_FILE=${DIR}/../out.sh
 test_list="$1"
 if [ "$1" = "ALL" ]
 then
-    test_list="connect/* environment/* replicator/* other/* kafka-tutorials/kafka-streams/* kafka-tutorials/ksql/*"
+    # test_list="connect/* replicator/* other/* kafka-tutorials/kafka-streams/* kafka-tutorials/ksql/*"
+    test_list="connect/* replicator/*"
 fi
 
 for dir in $test_list
@@ -68,17 +69,9 @@ do
 
         ####
         ##
-        sed -e "s|MYDIR|$dir|g" \
-            -e "s|MYSCRIPT|$script|g" \
-            ${DIR}/asciinema-script-template.yml > $TMP_DIR/$dir/asciinema-script.yml
-
         echo "cd $dir;clear"  >> $OUT_FILE
-
         echo "asciinema rec $TMP_DIR/$dir/asciinema.cast --overwrite" >> $OUT_FILE
         echo "./$script"  >> $OUT_FILE
-        #echo "spielbash -v record --script=$TMP_DIR/$dir/asciinema-script.yml --output=$TMP_DIR/$dir/asciinema.cast" >> $OUT_FILE
-        #sleep 1
-        #echo "bash stop.sh"  >> $OUT_FILE
         echo 'exit'  >> $OUT_FILE
         echo 'docker rm -f $(docker ps -a -q)'  >> $OUT_FILE
         echo "asciicast2gif -w 80 $TMP_DIR/$dir/asciinema.cast $PWD/asciinema.gif" >> $OUT_FILE

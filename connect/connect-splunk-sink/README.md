@@ -1,5 +1,7 @@
 # Splunk Sink connector
 
+![asciinema](asciinema.gif)
+
 ## Objective
 
 Quickly test [Splunk Sink](https://docs.confluent.io/current/connect/kafka-connect-solace/sink/index.html#quick-start) connector.

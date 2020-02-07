@@ -1,5 +1,7 @@
 # Vertica sink connector
 
+![asciinema](asciinema.gif)
+
 ## Objective
 
 Quickly test [Vertica](https://docs.confluent.io/current/connect/kafka-connect-vertica/sink/index.html#quick-start) connector.
