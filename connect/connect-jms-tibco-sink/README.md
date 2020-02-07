@@ -1,5 +1,7 @@
 # JMS TIBCO Sink connector
 
+![asciinema](asciinema.gif)
+
 ## Objective
 
 Quickly test [JMS TIBCO Sink](https://docs.confluent.io/current/connect/kafka-connect-jms/sink/index.html#tibco-ems-quick-start) connector.
