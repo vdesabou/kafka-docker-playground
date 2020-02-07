@@ -1,5 +1,7 @@
 # JDBC SQL Server source connector
 
+![asciinema](asciinema.gif)
+
 ## Objective
 
 Quickly test [JDBC SQL Server](https://docs.confluent.io/current/connect/kafka-connect-jdbc/source-connector/index.html#kconnect-long-jdbc-source-connector) connector.
