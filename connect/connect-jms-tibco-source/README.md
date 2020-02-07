@@ -1,5 +1,7 @@
 # JMS TIBCO Source connector
 
+![asciinema](asciinema.gif)
+
 ## Objective
 
 Quickly test [JMS TIBCO Source](https://docs.confluent.io/current/connect/kafka-connect-jms/index.html#using-with-tibco-ems) connector.

@@ -1,5 +1,7 @@
 # JMS Solace Sink connector
 
+![asciinema](asciinema.gif)
+
 ## Objective
 
 Quickly test [Solace Sink](https://docs.confluent.io/current/connect/kafka-connect-jms/sink/index.html#solace-quick-start) connector.
