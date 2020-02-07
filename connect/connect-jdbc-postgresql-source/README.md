@@ -1,5 +1,7 @@
 # JDBC PostgreSQL source connector
 
+![asciinema](asciinema.gif)
+
 ## Objective
 
 Quickly test [JDBC PostGreSQL](https://docs.confluent.io/current/connect/kafka-connect-jdbc/source-connector/index.html#kconnect-long-jdbc-source-connector) connector.
