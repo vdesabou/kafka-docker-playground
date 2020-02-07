@@ -6,9 +6,6 @@
 
 Quickly test [HDFS 2 Source](https://docs.confluent.io/current/connect/kafka-connect-hdfs/hdfs2/source/index.html#kconnect-long-hdfs-2-source-connector-for-cp) connector.
 
-## Pre-requisites
-
-* `docker-compose` (example `brew cask install docker`)
 
 
 ## How to run

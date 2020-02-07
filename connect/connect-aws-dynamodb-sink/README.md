@@ -6,9 +6,6 @@
 
 Quickly test [AWS DynamoDB](https://docs.confluent.io/current/connect/kafka-connect-aws-dynamodb/index.html#kconnect-long-aws-dynamodb-sink-connector) connector.
 
-## Pre-requisites
-
-* `docker-compose` (example `brew cask install docker`)
 
 
 ## AWS Setup

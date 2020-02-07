@@ -9,9 +9,6 @@ Connector must be deployed on a VM on same GCP subnet as the Dataproc cluster. H
 
 Quickly test [GCP Dataproc Sink](https://docs.confluent.io/current/connect/kafka-connect-gcp-dataproc/sink/index.html#quick-start) connector.
 
-## Pre-requisites
-
-* `docker-compose` (example `brew cask install docker`)
 * Active Google Cloud Platform (GCP) account with authorization to create resources
 
 ## GCP Dataproc Setup

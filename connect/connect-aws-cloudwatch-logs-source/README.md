@@ -6,9 +6,6 @@
 
 Quickly test [AWS CloudWatch Logs](https://docs.confluent.io/current/connect/kafka-connect-aws-cloudwatch-logs/index.html#kconnect-long-aws-cloudwatch-logs-source-connector) connector.
 
-## Pre-requisites
-
-* `docker-compose` (example `brew cask install docker`)
 
 
 ## AWS Setup

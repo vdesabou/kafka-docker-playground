@@ -6,9 +6,6 @@
 
 Quickly test [ata Diode (Source & Sink)](https://docs.confluent.io/current/connect/kafka-connect-data-diode/index.html#data-diode-connector-source-and-sink-for-cp) connector.
 
-## Pre-requisites
-
-* `docker-compose` (example `brew cask install docker`)
 
 ## How to run
 

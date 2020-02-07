@@ -6,9 +6,6 @@
 
 Quickly test [JDBC PostGreSQL](https://docs.confluent.io/current/connect/kafka-connect-jdbc/sink-connector/index.html#kconnect-long-jdbc-sink-connector) connector.
 
-## Pre-requisites
-
-* `docker-compose` (example `brew cask install docker`)
 
 
 

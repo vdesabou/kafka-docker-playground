@@ -6,9 +6,6 @@ Quickly test [Confluent Replicator](https://docs.confluent.io/5.3.2/connect/kafk
 
 N.B: This is just to test security configurations with replicator. More useful examples are [MDC and single views](https://github.com/framiere/mdc-with-replicator-and-regexrouter) and [Replicator Tutorial on Docker](https://docs.confluent.io/current/installation/docker/installation/replicator.html)
 
-## Pre-requisites
-
-* `docker-compose` (example `brew cask install docker`)
 
 
 

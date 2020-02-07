@@ -4,9 +4,6 @@
 
 Quickly test [GCP Spanner Sink](https://docs.confluent.io/current/connect/kafka-connect-gcp-spanner/index.html#quick-start) connector.
 
-## Pre-requisites
-
-* `docker-compose` (example `brew cask install docker`)
 * Active Google Cloud Platform (GCP) account with authorization to create resources
 
 ## GCP Spanner Setup

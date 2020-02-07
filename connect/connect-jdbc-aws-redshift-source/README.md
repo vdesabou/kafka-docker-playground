@@ -4,9 +4,6 @@
 
 Quickly test [JDBC Source](https://docs.confluent.io/current/connect/kafka-connect-jdbc/source-connector/index.html) connector with AWS Redshift.
 
-## Pre-requisites
-
-* `docker-compose` (example `brew cask install docker`)
 
 
 ## AWS Redshift instance setup

@@ -6,9 +6,6 @@
 
 Quickly test [Spool Dir Source](https://docs.confluent.io/current/connect/kafka-connect-spooldir/index.html#kconnect-long-spool-dir-connectors) connector.
 
-## Pre-requisites
-
-* `docker-compose` (example `brew cask install docker`)
 
 ## How to run
 

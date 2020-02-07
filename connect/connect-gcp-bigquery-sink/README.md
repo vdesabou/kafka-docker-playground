@@ -6,9 +6,6 @@
 
 Quickly test [GCP BigQuery Sink](https://docs.confluent.io/current/connect/kafka-connect-bigquery/index.html#kconnect-long-gcp-bigquery-sink-connector) connector.
 
-## Pre-requisites
-
-* `docker-compose` (example `brew cask install docker`)
 * Active Google Cloud Platform (GCP) account with authorization to create resources
 
 ## GCP BigQuery Setup

@@ -8,9 +8,6 @@ Quickly test [JMS ActiveMQ Sink](https://docs.confluent.io/current/connect/kafka
 
 Using ActiveMQ Docker [image](https://hub.docker.com/r/rmohr/activemq/)
 
-## Pre-requisites
-
-* `docker-compose` (example `brew cask install docker`)
 
 
 

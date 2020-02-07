@@ -6,9 +6,6 @@
 
 Quickly test [S3 Sink](https://docs.confluent.io/current/connect/kafka-connect-s3/index.html#kconnect-long-amazon-s3-sink-connector) connector with [Minio](https://min.io).
 
-## Pre-requisites
-
-* `docker-compose` (example `brew cask install docker`)
 
 
 ## How to run

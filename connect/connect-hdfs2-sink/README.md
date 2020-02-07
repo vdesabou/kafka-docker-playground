@@ -6,9 +6,6 @@
 
 Quickly test [HDFS 2 Sink](https://docs.confluent.io/current/connect/kafka-connect-hdfs/index.html) connector.
 
-## Pre-requisites
-
-* `docker-compose` (example `brew cask install docker`)
 
 
 ## How to run

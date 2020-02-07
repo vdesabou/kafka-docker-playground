@@ -6,11 +6,6 @@
 
 Quickly test [Splunk Source](https://docs.confluent.io/current/connect/kafka-connect-splunk/splunk-source/index.html#quick-start) connector.
 
-## Pre-requisites
-
-* `docker-compose` (example `brew cask install docker`)
-
-
 
 ## How to run
 

@@ -6,9 +6,6 @@
 
 Quickly test [HDFS 3 Sink](https://docs.confluent.io/current/connect/kafka-connect-hdfs/hdfs3/index.html#kconnect-long-hdfs-3-sink-connector) connector.
 
-## Pre-requisites
-
-* `docker-compose` (example `brew cask install docker`)
 
 
 ## How to run

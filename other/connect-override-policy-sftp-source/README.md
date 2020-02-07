@@ -23,9 +23,6 @@ ACLs are setup:
       CONNECT_CONNECTOR_CLIENT_CONFIG_OVERRIDE_POLICY: Principal
 ```
 
-## Pre-requisites
-
-* `docker-compose` (example `brew cask install docker`)
 
 
 ## How to run

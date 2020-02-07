@@ -6,9 +6,6 @@
 
 Quickly test [Elasticsearch Sink](https://docs.confluent.io/current/connect/kafka-connect-elasticsearch/index.html) connector.
 
-## Pre-requisites
-
-* `docker-compose` (example `brew cask install docker`)
 
 
 

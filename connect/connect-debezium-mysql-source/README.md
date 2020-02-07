@@ -6,9 +6,6 @@
 
 Quickly test [Debezium MySQL](https://docs.confluent.io/current/connect/debezium-connect-mysql/index.html#debezium-mysql-source-connector) connector.
 
-## Pre-requisites
-
-* `docker-compose` (example `brew cask install docker`)
 
 
 
