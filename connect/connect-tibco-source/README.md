@@ -1,5 +1,7 @@
 # TIBCO Source connector
 
+![asciinema](asciinema.gif)
+
 ## Objective
 
 Quickly test [TIBCO Source](https://docs.confluent.io/current/connect/kafka-connect-tibco/source/index.html#quick-start) connector.

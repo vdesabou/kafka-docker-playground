@@ -1,5 +1,7 @@
 # Syslog Source connector
 
+![asciinema](asciinema.gif)
+
 ## Objective
 
 Quickly test [Syslog Source](https://docs.confluent.io/current/connect/kafka-connect-syslog/index.html#quick-start) connector.

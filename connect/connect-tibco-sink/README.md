@@ -1,5 +1,7 @@
 # TIBCO Sink connector
 
+![asciinema](asciinema.gif)
+
 ## Objective
 
 Quickly test [TIBCO Sink](https://docs.confluent.io/current/connect/kafka-connect-tibco/sink/index.html#quick-start) connector.

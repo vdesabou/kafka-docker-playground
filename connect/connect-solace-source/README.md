@@ -1,5 +1,7 @@
 # Solace Source connector
 
+![asciinema](asciinema.gif)
+
 ## Objective
 
 Quickly test [Solace Source](https://docs.confluent.io/current/connect/kafka-connect-solace/source/index.html#quick-start) connector.
