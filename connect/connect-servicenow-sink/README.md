@@ -1,5 +1,7 @@
 # ServiceNow Sink connector
 
+![asciinema](asciinema.gif)
+
 ## Objective
 
 Quickly test [ServiceNow Sink](https://docs.confluent.io/current/connect/kafka-connect-servicenow/sink-connector/index.html#quick-start) connector.

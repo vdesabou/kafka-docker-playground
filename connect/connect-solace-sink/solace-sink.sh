@@ -40,7 +40,7 @@ docker exec connect \
           }' \
      http://localhost:8083/connectors/SolaceSinkConnector/config | jq .
 
-sleep 10
+sleep 30
 
 log "Confirm the messages were delivered to the connector-quickstart queue in the default Message VPN using CLI"
 docker exec solace bash -c "/usr/sw/loads/currentload/bin/cli -A -s cliscripts/show_queue_cmd"

@@ -1,5 +1,7 @@
 # Neo4j Sink connector
 
+![asciinema](asciinema.gif)
+
 ## Objective
 
 Quickly test [Neo4j Sink](https://www.confluent.jp/blog/kafka-connect-neo4j-sink-plugin) connector.

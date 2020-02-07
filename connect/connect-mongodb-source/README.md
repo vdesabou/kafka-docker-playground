@@ -1,5 +1,7 @@
 # MongoDB source connector
 
+![asciinema](asciinema.gif)
+
 ## Objective
 
 Quickly test [MongoDB](https://docs.mongodb.com/ecosystem/connectors/kafka/) connector.

@@ -1,5 +1,7 @@
 # SFTP Sink connector
 
+![asciinema](asciinema.gif)
+
 ## Objective
 
 Quickly test [SFTP Sink](https://docs.confluent.io/current/connect/kafka-connect-sftp/sink-connector/index.html#quick-start) connector.
