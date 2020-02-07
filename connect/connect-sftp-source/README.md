@@ -1,5 +1,7 @@
 # SFTP Source connector
 
+![asciinema](asciinema.gif)
+
 ## Objective
 
 Quickly test [SFTP Source](https://docs.confluent.io/current/connect/kafka-connect-sftp/source-connector/index.html#quick-start) connector.

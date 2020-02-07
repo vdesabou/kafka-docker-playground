@@ -1,5 +1,7 @@
 # RabbitMQ Source connector
 
+![asciinema](asciinema.gif)
+
 ## Objective
 
 Quickly test [RabbitMQ Source](https://docs.confluent.io/current/connect/kafka-connect-rabbitmq/index.html#quick-start) connector.

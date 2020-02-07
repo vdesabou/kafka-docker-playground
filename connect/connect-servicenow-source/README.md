@@ -1,5 +1,7 @@
 # ServiceNow Source connector
 
+![asciinema](asciinema.gif)
+
 ## Objective
 
 Quickly test [ServiceNow Source](https://docs.confluent.io/current/connect/kafka-connect-servicenow/source-connector/index.html#servicenow-source-connector-for-cp) connector.

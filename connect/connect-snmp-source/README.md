@@ -1,5 +1,7 @@
 # SNMP Source connector
 
+![asciinema](asciinema.gif)
+
 ## Objective
 
 Quickly test [SNMP Source](https://docs.confluent.io/current/connect/kafka-connect-snmp/index.html#quick-start) connector.

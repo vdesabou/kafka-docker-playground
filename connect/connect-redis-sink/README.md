@@ -1,5 +1,7 @@
 # Redis Sink connector
 
+![asciinema](asciinema.gif)
+
 ## Objective
 
 Quickly test [Redis Sink](https://docs.confluent.io/current/connect/kafka-connect-hbase/index.html#quick-start) connector.
