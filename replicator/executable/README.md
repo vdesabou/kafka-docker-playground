@@ -1,5 +1,7 @@
 # Using Confluent Replicator as executable
 
+![asciinema](asciinema.gif)
+
 ## Objective
 
 [Run Replicator as an Executable](https://docs.confluent.io/current/multi-dc-replicator/replicator-run.html#run-crep-as-an-executable)
