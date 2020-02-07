@@ -1,5 +1,7 @@
 # Kudu Sink connector
 
+![asciinema](asciinema.gif)
+
 ## Objective
 
 Quickly test [Kudu Sink](https://docs.confluent.io/current/connect/kafka-connect-kudu/sink-connector/index.html#quick-start) connector.
