@@ -6,9 +6,6 @@
 
 Quickly test [S3 Source](https://docs.confluent.io/current/connect/kafka-connect-aws-s3-source/index.html) connector.
 
-## Pre-requisites
-
-* `docker-compose` (example `brew cask install docker`)
 
 
 ## AWS Setup

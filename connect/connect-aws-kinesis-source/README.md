@@ -6,9 +6,6 @@
 
 Quickly test [Kinesis Connector](https://docs.confluent.io/current/connect/kafka-connect-kinesis/quickstart.html) connector.
 
-## Pre-requisites
-
-* `docker-compose` (example `brew cask install docker`)
 
 
 ## AWS Setup

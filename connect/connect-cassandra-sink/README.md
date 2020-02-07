@@ -8,9 +8,6 @@ Quickly test [Cassandra Sink](https://docs.confluent.io/current/connect/kafka-co
 
 Cassandra `3.0` is used.
 
-## Pre-requisites
-
-* `docker-compose` (example `brew cask install docker`)
 
 
 

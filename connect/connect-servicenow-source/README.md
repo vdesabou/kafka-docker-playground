@@ -6,9 +6,6 @@
 
 Quickly test [ServiceNow Source](https://docs.confluent.io/current/connect/kafka-connect-servicenow/source-connector/index.html#servicenow-source-connector-for-cp) connector.
 
-## Pre-requisites
-
-* `docker-compose` (example `brew cask install docker`)
 
 
 ## Register a test account

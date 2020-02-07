@@ -6,9 +6,6 @@
 
 Quickly test [Google Cloud Functions Sink](https://docs.confluent.io/current/connect/kafka-connect-gcp-functions/index.html#quick-start) connector.
 
-## Pre-requisites
-
-* `docker-compose` (example `brew cask install docker`)
 
 * Active Google Cloud Platform (GCP) account with authorization to create resources
 

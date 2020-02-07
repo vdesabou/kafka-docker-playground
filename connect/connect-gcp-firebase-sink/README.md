@@ -4,9 +4,6 @@
 
 Quickly test [GCP Firebase Sink](https://docs.confluent.io/current/connect/kafka-connect-firebase/sink/index.html#quick-start) connector.
 
-## Pre-requisites
-
-* `docker-compose` (example `brew cask install docker`)
 
 * Active Google Cloud Platform (GCP) account with authorization to create resources
 

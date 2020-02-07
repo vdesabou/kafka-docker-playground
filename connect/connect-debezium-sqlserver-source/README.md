@@ -6,9 +6,6 @@
 
 Quickly test [Debezium SQL Server](https://docs.confluent.io/current/connect/debezium-connect-sqlserver/index.html#quick-start) connector.
 
-## Pre-requisites
-
-* `docker-compose` (example `brew cask install docker`)
 
 
 

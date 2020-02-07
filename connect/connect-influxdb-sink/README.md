@@ -6,9 +6,6 @@
 
 Quickly test [InfluxDB Sink](https://docs.confluent.io/current/connect/kafka-connect-influxdb/influx-db-sink-connector/index.html#quick-start) connector.
 
-## Pre-requisites
-
-* `docker-compose` (example `brew cask install docker`)
 
 
 

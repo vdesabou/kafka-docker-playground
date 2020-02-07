@@ -6,9 +6,6 @@
 
 Quickly test [Splunk Sink](https://docs.confluent.io/current/connect/kafka-connect-solace/sink/index.html#quick-start) connector.
 
-## Pre-requisites
-
-* `docker-compose` (example `brew cask install docker`)
 
 
 
