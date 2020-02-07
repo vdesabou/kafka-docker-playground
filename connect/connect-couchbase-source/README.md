@@ -6,9 +6,6 @@
 
 Quickly test [Couchbase Source](https://docs.couchbase.com/kafka-connector/3.4/index.html) connector.
 
-## Pre-requisites
-
-* `docker-compose` (example `brew cask install docker`)
 
 
 

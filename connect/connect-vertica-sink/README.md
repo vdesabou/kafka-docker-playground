@@ -6,9 +6,6 @@
 
 Quickly test [Vertica](https://docs.confluent.io/current/connect/kafka-connect-vertica/sink/index.html#quick-start) connector.
 
-## Pre-requisites
-
-* `docker-compose` (example `brew cask install docker`)
 
 
 

@@ -6,9 +6,6 @@
 
 Quickly test [MQTT Sink](https://docs.confluent.io/current/connect/kafka-connect-mqtt/mqtt-sink-connector/mqtt_sink_connector_quickstart.html#example-configure-mqtt-sink-connector-for-eclipse-mosquitto-broker) connector.
 
-## Pre-requisites
-
-* `docker-compose` (example `brew cask install docker`)
 
 ## How to run
 

@@ -8,9 +8,6 @@ Quickly test [ActiveMQ Source](https://docs.confluent.io/current/connect/kafka-c
 
 Using ActiveMQ Docker [image](https://hub.docker.com/r/rmohr/activemq/)
 
-## Pre-requisites
-
-* `docker-compose` (example `brew cask install docker`)
 
 
 

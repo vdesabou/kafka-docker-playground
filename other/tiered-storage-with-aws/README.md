@@ -10,9 +10,6 @@ Quickly test [Tiered Storage](https://docs.confluent.io/current/kafka/tiered-sto
 
 [Tiered Storage](https://docs.confluent.io/current/kafka/tiered-storage-preview.html#tiered-storage) is a preview feature
 
-## Pre-requisites
-
-* `docker-compose` (example `brew cask install docker`)
 
 ## AWS Setup
 

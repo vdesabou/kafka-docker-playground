@@ -6,9 +6,6 @@
 
 Quickly test [Neo4j Sink](https://www.confluent.jp/blog/kafka-connect-neo4j-sink-plugin) connector.
 
-## Pre-requisites
-
-* `docker-compose` (example `brew cask install docker`)
 
 ## How to run
 

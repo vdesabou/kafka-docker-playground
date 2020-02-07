@@ -10,9 +10,6 @@ This is based on [Kafka Connect HTTP Connector Quick Start](https://docs.conflue
 
 The HTTP service is using [Kafka Connect HTTP Sink Demo App](https://github.com/confluentinc/kafka-connect-http-demo)
 
-## Pre-requisites
-
-* `docker-compose` (example `brew cask install docker`)
 
 
 ## How to run

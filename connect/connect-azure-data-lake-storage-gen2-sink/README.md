@@ -5,9 +5,6 @@
 ## Objective
 
 Quickly test [Azure Data Lake Storage Gen2 Sink](https://docs.confluent.io/current/connect/kafka-connect-azure-data-lake-gen2-storage/index.html#quick-start) connector.
-## Pre-requisites
-
-* `docker-compose` (example `brew cask install docker`)
 
 * `az`(example `brew install azure-cli`)
 

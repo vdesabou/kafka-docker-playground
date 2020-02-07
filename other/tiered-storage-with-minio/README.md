@@ -13,9 +13,6 @@ Quickly test [Tiered Storage](https://docs.confluent.io/current/kafka/tiered-sto
 **⚠️ Minio is not supported**
 
 
-## Pre-requisites
-
-* `docker-compose` (example `brew cask install docker`)
 
 
 ## How to run

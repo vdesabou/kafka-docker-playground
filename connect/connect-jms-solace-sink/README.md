@@ -6,9 +6,6 @@
 
 Quickly test [Solace Sink](https://docs.confluent.io/current/connect/kafka-connect-jms/sink/index.html#solace-quick-start) connector.
 
-## Pre-requisites
-
-* `docker-compose` (example `brew cask install docker`)
 
 
 

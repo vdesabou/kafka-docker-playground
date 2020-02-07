@@ -6,9 +6,6 @@
 
 Quickly test [OmniSci Sink](https://docs.confluent.io/current/connect/kafka-connect-omnisci/index.html#kconnect-long-omnisci-sink-connector)) connector.
 
-## Pre-requisites
-
-* `docker-compose` (example `brew cask install docker`)
 
 
 
