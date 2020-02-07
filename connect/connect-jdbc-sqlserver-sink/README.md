@@ -1,5 +1,7 @@
 # JDBC SQL Server sink connector
 
+![asciinema](asciinema.gif)
+
 ## Objective
 
 Quickly test [JDBC SQL Server](https://docs.confluent.io/current/connect/kafka-connect-jdbc/sink-connector/index.html#kconnect-long-jdbc-sink-connector) sink connector.

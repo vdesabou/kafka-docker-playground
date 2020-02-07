@@ -1,5 +1,7 @@
 # JMS ActiveMQ Sink connector
 
+![asciinema](asciinema.gif)
+
 ## Objective
 
 Quickly test [JMS ActiveMQ Sink](https://docs.confluent.io/current/connect/kafka-connect-jms/sink/index.html#actvemq-quick-start) connector.
