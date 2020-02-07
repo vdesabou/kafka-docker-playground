@@ -10,6 +10,8 @@ mkdir -p $TMP_DIR
 # go to root folder
 cd ${DIR}/..
 
+OUT_FILE=${DIR}/../out.sh
+
 test_list="$1"
 if [ "$1" = "ALL" ]
 then
@@ -27,7 +29,6 @@ do
     fi
 
     cd $dir > /dev/null
-
     for script in *.sh
     do
         if [[ "$script" = "stop.sh" ]]
@@ -69,12 +70,19 @@ do
         ##
         sed -e "s|MYDIR|$dir|g" \
             -e "s|MYSCRIPT|$script|g" \
-            ${DIR}/asciinema-script-template.yml > /tmp/asciinema-script.yml
+            ${DIR}/asciinema-script-template.yml > $TMP_DIR/$dir/asciinema-script.yml
 
-        spielbash -v record --script=/tmp/asciinema-script.yml --output=$TMP_DIR/$dir/asciinema.cast
-        sleep 1
-        bash stop.sh
-        asciicast2gif -w 80 $TMP_DIR/$dir/asciinema.cast $PWD/asciinema.gif
+        echo "cd $dir;clear"  >> $OUT_FILE
+
+        echo "asciinema rec $TMP_DIR/$dir/asciinema.cast --overwrite" >> $OUT_FILE
+        echo "./$script"  >> $OUT_FILE
+        #echo "spielbash -v record --script=$TMP_DIR/$dir/asciinema-script.yml --output=$TMP_DIR/$dir/asciinema.cast" >> $OUT_FILE
+        #sleep 1
+        #echo "bash stop.sh"  >> $OUT_FILE
+        echo 'exit'  >> $OUT_FILE
+        echo 'docker rm -f $(docker ps -a -q)'  >> $OUT_FILE
+        echo "asciicast2gif -w 80 $TMP_DIR/$dir/asciinema.cast $PWD/asciinema.gif" >> $OUT_FILE
+        echo "cd -"  >> $OUT_FILE
     done
     cd - > /dev/null
 done
