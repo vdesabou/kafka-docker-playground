@@ -1,5 +1,7 @@
 # Kudu Source connector
 
+![asciinema](asciinema.gif)
+
 ## Objective
 
 Quickly test [Kudu Source](https://docs.confluent.io/current/connect/kafka-connect-kudu/source-connector/index.html#quick-start) connector.
