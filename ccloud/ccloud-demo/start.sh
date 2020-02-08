@@ -58,6 +58,8 @@ done
 if [ ! -z "$TRAVIS" ]
 then
      # running with travis
+     log "Installing ccloud CLI"
+     curl -L https://cnfl.io/ccloud-cli | sudo sh -s -- -b /usr/local/bin
      log "##################################################"
      log "Log in to Confluent Cloud"
      log "##################################################"
