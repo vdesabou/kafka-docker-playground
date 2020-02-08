@@ -15,7 +15,6 @@ before_install:
 - cp aws_credentials $HOME/.aws/credentials
 - mkdir -p $HOME/.ccloud
 - cp config.cc.vsaboulin.travis $HOME/.ccloud/config
-- curl -L https://cnfl.io/ccloud-cli | sudo sh -s -- -b /usr/local/bin
 - aws s3 cp s3://kafka-docker-playground/3rdparty/3rdparty.tgz .
 - tar xvfz 3rdparty.tgz
 - cp ./3rdparty/TIB_ems-ce_8.5.1_linux_x86_64.zip ./connect/connect-tibco-source/docker-tibco/TIB_ems-ce_8.5.1_linux_x86_64.zip
