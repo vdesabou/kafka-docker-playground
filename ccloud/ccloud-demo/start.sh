@@ -10,11 +10,11 @@ then
      wget https://repo1.maven.org/maven2/mysql/mysql-connector-java/5.1.45/mysql-connector-java-5.1.45.jar
 fi
 
-verify_installed "ccloud"
-check_ccloud_version 0.192.0 || exit 1
 if [ -z "$TRAVIS" ]
 then
      # not running with TRAVIS
+     verify_installed "ccloud"
+     check_ccloud_version 0.192.0 || exit 1
      verify_ccloud_login  "ccloud kafka cluster list"
      verify_ccloud_details
      check_if_continue
