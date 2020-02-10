@@ -26,6 +26,17 @@ fi
 #      rm -f ${DIR}/vertica-client-9.2.1-0.x86_64.tar.gz
 # fi
 
+# if [ ! -f ${DIR}/vertica-jdbc.jar ]
+# then
+#      # install deps
+#      log "Getting vertica-jdbc.jar from vertica-client-7.2.3-0.x86_64.tar.gz"
+#      wget https://www.vertica.com/client_drivers/7.2.x/7.2.3-0/vertica-client-7.2.3-0.x86_64.tar.gz
+#      tar xvfz ${DIR}/vertica-client-7.2.3-0.x86_64.tar.gz
+#      cp ${DIR}/opt/vertica/java/lib/vertica-jdbc.jar ${DIR}/
+#      rm -rf ${DIR}/opt
+#      rm -f ${DIR}/vertica-client-7.2.3-0.x86_64.tar.gz
+# fi
+
 if [ ! -f ${DIR}/producer/target/producer-1.0.0-jar-with-dependencies.jar ]
 then
      log "Building jar for producer"
@@ -59,7 +70,7 @@ ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext-dv.
 
 log "Create the table and insert data."
 docker exec -i vertica /opt/vertica/bin/vsql -hlocalhost -Udbadmin << EOF
-CREATE TABLE customer
+CREATE TABLE public.customer
 (
     dwhCreationDate timestamp DEFAULT (statement_timestamp())::timestamp,
     kafkaId int NOT NULL,
@@ -102,6 +113,7 @@ docker exec connect \
                     "key.converter": "org.apache.kafka.connect.storage.StringConverter",
                     "value.converter" : "io.confluent.connect.avro.AvroConverter",
                     "value.converter.schema.registry.url":"http://schema-registry:8081",
+                    "vertica.load.method": "DIRECT",
                     "confluent.topic.bootstrap.servers": "broker:9092",
                     "confluent.topic.replication.factor": "1"
           }' \
