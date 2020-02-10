@@ -76,7 +76,6 @@ CREATE TABLE public.customer
     kafkaId int NOT NULL,
     ListID int,
     NormalizedHashItemID int,
-    URL varchar(80),
     KafkaKeyIsDeleted boolean DEFAULT true
 );
 EOF
@@ -139,6 +138,18 @@ EOF
 log "Check for rejected data"
 docker exec -i vertica /opt/vertica/bin/vsql -hlocalhost -Udbadmin << EOF
 select * from public.customer_rej;
+EOF
+
+docker exec -i vertica /opt/vertica/bin/vsql -hlocalhost -Udbadmin << EOF
+select * from columns;
+EOF
+
+docker exec -i vertica /opt/vertica/bin/vsql -hlocalhost -Udbadmin << EOF
+select * from tables;
+EOF
+
+docker exec -i vertica /opt/vertica/bin/vsql -hlocalhost -Udbadmin << EOF
+SELECT c.column_name, c.data_type, c.data_type_length, c.numeric_precision, c.numeric_scale FROM columns c INNER JOIN tables t ON c.table_id = t.table_id WHERE upper(t.table_name) = upper('customer') ORDER BY c.ordinal_position;
 EOF
 
 #      node_name     |      file_name      |         session_id         |  transaction_id   | statement_id | batch_number | row_number |                                              rejected_data                                              | rejected_data_orig_length |                          rejected_reason
