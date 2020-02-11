@@ -14,10 +14,6 @@
         {
             "name": "URL",
             "type": "string"
-        },
-        {
-            "name": "MyTable",
-            "type": "string"
         }
     ]
 }
