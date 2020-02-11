@@ -53,14 +53,22 @@ public class SimpleProducer {
                     .setListID(i)
                     .setNormalizedHashItemID(i)
                     .setURL("ultralongurlultralongurlultralongurlultralongurlultralongurlultralongurlultralongurultralongurl")
+                    .setMyTable("customer1")
                     .build();
                     record = new ProducerRecord<>(TOPIC, key, customer);
-
                 } else {
+                    String tableName;
+                    if(i % 2 == 0) {
+                        tableName = "customer1";
+                    } else {
+                        tableName = "customer2";
+                    }
+
                     Customer customer = Customer.newBuilder()
                     .setListID(i)
                     .setNormalizedHashItemID(i)
                     .setURL("url")
+                    .setMyTable(tableName)
                     .build();
                     record = new ProducerRecord<>(TOPIC, key, customer);
                 }
