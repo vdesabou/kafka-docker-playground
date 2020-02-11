@@ -15,6 +15,8 @@ import com.github.vdesabou.Customer;
 
 public class SimpleProducer {
 
+    private static final String TOPIC = "customer";
+
     public static void main(String[] args) throws InterruptedException {
 
 
@@ -33,6 +35,7 @@ public class SimpleProducer {
         // Schema Registry specific settings
         props.put("schema.registry.url", System.getenv("SCHEMA_REGISTRY_URL"));
 
+
         System.out.println("Sending data to `customer` topic. Properties: " + props.toString());
 
         try (Producer<String, Customer> producer = new KafkaProducer<>(props)) {
@@ -43,29 +46,31 @@ public class SimpleProducer {
 
                 ProducerRecord<String, Customer> record;
                 if(i==2) {
-                    record = new ProducerRecord<>("customer1", key, null);
+                    record = new ProducerRecord<>(TOPIC, key, null);
 
                 } else if(i==4) {
                     Customer customer = Customer.newBuilder()
                     .setListID(i)
                     .setNormalizedHashItemID(i)
                     .setURL("ultralongurlultralongurlultralongurlultralongurlultralongurlultralongurlultralongurultralongurl")
+                    .setMyTable("customer1")
                     .build();
-                    record = new ProducerRecord<>("customer1", key, customer);
+                    record = new ProducerRecord<>(TOPIC, key, customer);
                 } else {
-                    String topicName;
+                    String tableName;
                     if(i % 2 == 0) {
-                        topicName = "customer1";
+                        tableName = "customer1";
                     } else {
-                        topicName = "customer2";
+                        tableName = "customer2";
                     }
 
                     Customer customer = Customer.newBuilder()
                     .setListID(i)
                     .setNormalizedHashItemID(i)
                     .setURL("url")
+                    .setMyTable(tableName)
                     .build();
-                    record = new ProducerRecord<>(topicName, key, customer);
+                    record = new ProducerRecord<>(TOPIC, key, customer);
                 }
 
                 System.out.println("Sending " + record.key() + " " + record.value());

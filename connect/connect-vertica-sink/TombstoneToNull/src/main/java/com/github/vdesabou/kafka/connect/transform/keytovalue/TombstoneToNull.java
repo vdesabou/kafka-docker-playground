@@ -35,6 +35,7 @@ public class TombstoneToNull<R extends ConnectRecord<R>> implements Transformati
         .field("ListID", Schema.INT64_SCHEMA)
         .field("NormalizedHashItemID", Schema.INT64_SCHEMA)
         .field("URL", Schema.STRING_SCHEMA)
+        .field("MyTable", Schema.STRING_SCHEMA)
         .field("KafkaKeyIsDeleted", Schema.BOOLEAN_SCHEMA)
         .build();
 
@@ -55,6 +56,7 @@ public class TombstoneToNull<R extends ConnectRecord<R>> implements Transformati
             updatedValue.put("ListID", 0L);
             updatedValue.put("NormalizedHashItemID", 0L);
             updatedValue.put("URL", "null");
+            updatedValue.put("MyTable", "null");
             updatedValue.put("KafkaKeyIsDeleted", true);
         }
         return record.newRecord(
