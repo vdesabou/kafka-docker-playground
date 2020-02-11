@@ -68,9 +68,21 @@ fi
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext-dv.yml"
 
 
-log "Create the table and insert data."
+log "Create the table customer1"
 docker exec -i vertica /opt/vertica/bin/vsql -hlocalhost -Udbadmin << EOF
-CREATE TABLE public.customer
+CREATE TABLE public.customer1
+(
+    dwhCreationDate timestamp DEFAULT (statement_timestamp())::timestamp,
+    kafkaId int NOT NULL,
+    ListID int,
+    NormalizedHashItemID int,
+    KafkaKeyIsDeleted boolean DEFAULT true
+);
+EOF
+
+log "Create the table customer2"
+docker exec -i vertica /opt/vertica/bin/vsql -hlocalhost -Udbadmin << EOF
+CREATE TABLE public.customer2
 (
     dwhCreationDate timestamp DEFAULT (statement_timestamp())::timestamp,
     kafkaId int NOT NULL,
@@ -101,7 +113,7 @@ docker exec connect \
                     "errors.log.include.messages": "true",
                     "topics": "customer",
                     "enable.auto.commit": "false",
-                    "transforms": "TombstoneToNull, insert_dwhCreateDate, KeyToValue, cast_kafkaId_toInt",
+                    "transforms": "TombstoneToNull, insert_dwhCreateDate, KeyToValue, cast_kafkaId_toInt, mapMyTableFieldToTopic",
                     "transforms.TombstoneToNull.type": "com.github.vdesabou.kafka.connect.transforms.TombstoneToNull",
                     "transforms.insert_dwhCreateDate.type": "org.apache.kafka.connect.transforms.InsertField$Value",
                     "transforms.insert_dwhCreateDate.timestamp.field": "dwhCreationDate",
@@ -109,6 +121,8 @@ docker exec connect \
                     "transforms.KeyToValue.key.field.name":"kafkaId",
                     "transforms.cast_kafkaId_toInt.type": "org.apache.kafka.connect.transforms.Cast$Value",
                     "transforms.cast_kafkaId_toInt.spec": "kafkaId:int64",
+                    "transforms.mapMyTableFieldToTopic.type": "io.confluent.connect.transforms.ExtractTopic$Value",
+                    "transforms.mapMyTableFieldToTopic.field": "MyTable",
                     "key.converter": "org.apache.kafka.connect.storage.StringConverter",
                     "value.converter" : "io.confluent.connect.avro.AvroConverter",
                     "value.converter.schema.registry.url":"http://schema-registry:8081",
@@ -120,9 +134,14 @@ docker exec connect \
 
 sleep 10
 
-log "Check data is in Vertica"
+log "Check data is in Vertica for customer1"
 docker exec -i vertica /opt/vertica/bin/vsql -hlocalhost -Udbadmin << EOF
-select * from public.customer;
+select * from public.customer1;
+EOF
+
+log "Check data is in Vertica for customer2"
+docker exec -i vertica /opt/vertica/bin/vsql -hlocalhost -Udbadmin << EOF
+select * from public.customer2;
 EOF
 
 #      dwhCreationDate     | kafkaId | ListID | NormalizedHashItemID | URL  | KafkaKeyIsDeleted
@@ -135,9 +154,14 @@ EOF
 #  2020-01-22 14:41:38.69  |       5 |      5 |                    5 | url  | f
 
 
-log "Check for rejected data"
+log "Check for rejected data for customer1"
 docker exec -i vertica /opt/vertica/bin/vsql -hlocalhost -Udbadmin << EOF
-select * from public.customer_rej;
+select * from public.customer1_rej;
+EOF
+
+log "Check for rejected data for customer2"
+docker exec -i vertica /opt/vertica/bin/vsql -hlocalhost -Udbadmin << EOF
+select * from public.customer2_rej;
 EOF
 
 docker exec -i vertica /opt/vertica/bin/vsql -hlocalhost -Udbadmin << EOF
@@ -149,7 +173,7 @@ select * from tables;
 EOF
 
 docker exec -i vertica /opt/vertica/bin/vsql -hlocalhost -Udbadmin << EOF
-SELECT c.column_name, c.data_type, c.data_type_length, c.numeric_precision, c.numeric_scale FROM columns c INNER JOIN tables t ON c.table_id = t.table_id WHERE upper(t.table_name) = upper('customer') ORDER BY c.ordinal_position;
+SELECT c.column_name, c.data_type, c.data_type_length, c.numeric_precision, c.numeric_scale FROM columns c INNER JOIN tables t ON c.table_id = t.table_id WHERE upper(t.table_name) = upper('customer1') ORDER BY c.ordinal_position;
 EOF
 
 #      node_name     |      file_name      |         session_id         |  transaction_id   | statement_id | batch_number | row_number |                                              rejected_data                                              | rejected_data_orig_length |                          rejected_reason
