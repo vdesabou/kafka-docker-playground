@@ -1,0 +1,115 @@
+topics:
+  connect-configs:
+    name: connect-configs
+    partitions: 1
+    replication.factor: 3
+    min.insync.replicas: 2
+    cleanup.policy: compact
+    max.message.bytes: 2097164
+  mysql-application:
+    name: mysql-application
+    partitions: 6
+    replication.factor: 3
+    min.insync.replicas: 2
+    max.message.bytes: 2097164
+  demo-perf-topic:
+    name: demo-perf-topic
+    partitions: 6
+    replication.factor: 3
+    min.insync.replicas: 2
+    cleanup.policy: delete
+    retention.ms: 604800000
+    max.message.bytes: 2097164
+    retention.bytes: -1
+    delete.retention.ms: 86400000
+  connect-offsets:
+    name: connect-offsets
+    partitions: 25
+    replication.factor: 3
+    min.insync.replicas: 2
+    cleanup.policy: compact
+    max.message.bytes: 2097164
+  matt-topic-B:
+    name: matt-topic-B
+    partitions: 5
+    replication.factor: 3
+    min.insync.replicas: 2
+    max.message.bytes: 2097164
+  matt-topic-A:
+    name: matt-topic-A
+    partitions: 6
+    replication.factor: 3
+    min.insync.replicas: 2
+    max.message.bytes: 2097164
+  test-topic-A:
+    name: test-topic-A
+    partitions: 6
+    replication.factor: 3
+    min.insync.replicas: 2
+    max.message.bytes: 2097164
+  test-topic-B:
+    name: test-topic-B
+    partitions: 5
+    replication.factor: 3
+    min.insync.replicas: 2
+    max.message.bytes: 2097164
+  customer-avro:
+    name: customer-avro
+    partitions: 6
+    replication.factor: 3
+    min.insync.replicas: 2
+    max.message.bytes: 2097164
+  simple-stream-KSTREAM-REDUCE-STATE-STORE-0000000003-repartition:
+    name: simple-stream-KSTREAM-REDUCE-STATE-STORE-0000000003-repartition
+    partitions: 6
+    replication.factor: 3
+    min.insync.replicas: 2
+    cleanup.policy: delete
+    segment.bytes: 52428800
+    retention.ms: -1
+    max.message.bytes: 2097164
+  connect-status:
+    name: connect-status
+    partitions: 5
+    replication.factor: 3
+    min.insync.replicas: 2
+    cleanup.policy: compact
+    max.message.bytes: 2097164
+  kafka-admin-acl-topic:
+    name: kafka-admin-acl-topic
+    partitions: 6
+    replication.factor: 3
+    min.insync.replicas: 2
+    max.message.bytes: 2097164
+  simple-stream-KSTREAM-REDUCE-STATE-STORE-0000000003-changelog:
+    name: simple-stream-KSTREAM-REDUCE-STATE-STORE-0000000003-changelog
+    partitions: 6
+    replication.factor: 3
+    min.insync.replicas: 2
+    cleanup.policy: compact
+    max.message.bytes: 2097164
+  test-vincent:
+    name: test-vincent
+    partitions: 6
+    replication.factor: 3
+    min.insync.replicas: 2
+    max.message.bytes: 2097164
+
+acls:
+  Acl-1:
+    principal: User:43327
+    resource-pattern: LITERAL
+    host: '*'
+    resource-type: TOPIC
+    resource-name: kafka-admin-acl-topic
+    permission: ALLOW
+    operation: WRITE
+  Acl-2:
+    principal: User:43327
+    resource-pattern: LITERAL
+    host: '*'
+    resource-type: TOPIC
+    resource-name: kafka-admin-acl-topic
+    permission: ALLOW
+    operation: READ
+
