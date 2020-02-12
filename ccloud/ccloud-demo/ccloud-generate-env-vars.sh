@@ -41,7 +41,7 @@ if [[ $# -ne 0 ]] && [[ ! -z "$1" ]]; then
   SR_CONFIG_FILE=$1
 fi
 # Make destination
-DEST="delta_configs"
+DEST="/tmp/delta_configs"
 mkdir -p $DEST
 
 

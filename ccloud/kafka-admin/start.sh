@@ -12,38 +12,24 @@ then
      docker run -it --rm -v "${DIR}/kafka-admin":/usr/src/mymaven -v "$HOME/.m2":/root/.m2 -v "${DIR}/kafka-admin/target:/usr/src/mymaven/target" -w /usr/src/mymaven maven:3.6.1-jdk-8 mvn package
 fi
 
-verify_installed "ccloud"
-# not running with TRAVIS
-verify_ccloud_login  "ccloud kafka cluster list"
-verify_ccloud_details
-check_if_continue
+#############
+${DIR}/../../ccloud/environment/start.sh "${PWD}/docker-compose.yml"
 
-CONFIG_FILE=~/.ccloud/config
-
-if [ ! -f ${CONFIG_FILE} ]
+if [ -f /tmp/delta_configs/env.delta ]
 then
-     logerror "ERROR: ${CONFIG_FILE} is not set"
-     exit 1
-fi
-
-${DIR}/../ccloud-demo/ccloud-generate-env-vars.sh ${CONFIG_FILE}
-
-if [ -f ${DIR}/delta_configs/env.delta ]
-then
-     source ${DIR}/delta_configs/env.delta
+     source /tmp/delta_configs/env.delta
 else
-     logerror "ERROR: ${DIR}/delta_configs/env.delta has not been generated"
+     logerror "ERROR: /tmp/delta_configs/env.delta has not been generated"
      exit 1
 fi
+#############
+
 
 # generate kafka-admin.properties config
 sed -e "s|:BOOTSTRAP_SERVERS:|$BOOTSTRAP_SERVERS|g" \
     -e "s|:CLOUD_KEY:|$CLOUD_KEY|g" \
     -e "s|:CLOUD_SECRET:|$CLOUD_SECRET|g" \
     ${DIR}/kafka-admin-template.properties > ${DIR}/kafka-admin.properties
-
-docker-compose down -v
-docker-compose up -d
 
 #log "Pull the configured topics & ACLs from a cluster and print to stdout"
 #java -jar ${DIR}/kafka-admin/target/kafka-admin-1.0-SNAPSHOT-jar-with-dependencies.jar -properties ${DIR}/kafka-admin.properties -dump
