@@ -19,6 +19,12 @@ then
      docker run -it --rm -e TAG=$TAG -e KAFKA_CLIENT_TAG=$KAFKA_CLIENT_TAG -v "${DIR}/consumer":/usr/src/mymaven -v "$HOME/.m2":/root/.m2 -v "${DIR}/consumer/target:/usr/src/mymaven/target" -w /usr/src/mymaven maven:3.6.1-jdk-8 mvn package
 fi
 
+if [ ! -f ${DIR}/spring/target/spring-kafka-hello-world-0.0.1-SNAPSHOT.jar ]
+then
+     log "Building jar for spring"
+     docker run -it --rm -e TAG=$TAG -e KAFKA_CLIENT_TAG=$KAFKA_CLIENT_TAG -v "${DIR}/spring":/usr/src/mymaven -v "$HOME/.m2":/root/.m2 -v "${DIR}/spring/target:/usr/src/mymaven/target" -w /usr/src/mymaven maven:3.6.1-jdk-8 mvn package -DskipTests
+fi
+
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.yml"
 
 
@@ -40,7 +46,9 @@ sleep 1
 log "Run the Java producer, logs are in producer.log."
 docker exec producer bash -c "java -jar producer-1.0.0-jar-with-dependencies.jar" > producer.log 2>&1 &
 
-log "Run the Java consumer"
-docker exec consumer bash -c "java -jar consumer-1.0.0-jar-with-dependencies.jar"
+# log "Run the Java consumer"
+# docker exec consumer bash -c "java -jar consumer-1.0.0-jar-with-dependencies.jar"
+log "Run the Spring consumer"
+docker exec spring bash -c "java -jar spring-kafka-hello-world-0.0.1-SNAPSHOT.jar"
 
 # docker exec broker kafka-console-consumer --bootstrap-server broker:9092 --topic outputtesttopic --from-beginning --property print.key=true --property print.timestamp=true

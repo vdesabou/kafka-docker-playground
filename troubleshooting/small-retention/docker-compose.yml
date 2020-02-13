@@ -29,3 +29,15 @@ services:
     container_name: consumer
     depends_on:
       - broker
+
+  spring:
+    build:
+      context: ../../troubleshooting/small-retention/spring/
+      args:
+        TAG: ${TAG}
+        CP_BASE_IMAGE: ${CP_BASE_IMAGE}
+        KAFKA_CLIENT_TAG: ${KAFKA_CLIENT_TAG}
+    hostname: spring
+    container_name: spring
+    depends_on:
+      - broker
