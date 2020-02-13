@@ -13,6 +13,12 @@ then
      exit 1
 fi
 
+if [[ "$SERVICENOW_URL" != */ ]]
+then
+    logerror "SERVICENOW_URL does not end with "/" Example: https://dev12345.service-now.com/ "
+    exit 1
+fi
+
 if [ -z "$SERVICENOW_PASSWORD" ]
 then
      logerror "SERVICENOW_PASSWORD is not set. Export it as environment variable or pass it as argument"
