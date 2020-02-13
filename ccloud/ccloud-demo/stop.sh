@@ -20,11 +20,11 @@ else
           exit 1
      fi
 
-     if [ -f ./delta_configs/env.delta ]
+     if [ -f /tmp/delta_configs/env.delta ]
      then
-          source ./delta_configs/env.delta
+          source /tmp/delta_configs/env.delta
      else
-          logerror "ERROR: delta_configs/env.delta has not been generated"
+          logerror "ERROR: /tmp/delta_configs/env.delta has not been generated"
           exit 1
      fi
      log "##################################################"
