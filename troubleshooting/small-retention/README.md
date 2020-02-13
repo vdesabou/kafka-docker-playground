@@ -3,7 +3,8 @@
 
 ## Objective
 
-Reproduce an issue
+
+Producer --> topic testtopic --> Consumer (with Producer) --> topic outputtesttopic
 
 
 ## How to run
@@ -32,17 +33,18 @@ Note: `message.timestamp.type`=`CreateTime` is default.
 With 5.3.1, we get errors in broker:
 
 ```log
-[2020-02-13 10:13:22,756] ERROR [ReplicaManager broker=1] Error processing append operation on partition testtopic-0 (kafka.server.ReplicaManager)
-org.apache.kafka.common.errors.UnknownProducerIdException: Found no record of producerId=0 on the broker at offset 536in partition testtopic-0. It is possible that the last message with the producerId=0 has been removed due to hitting the retention limit.
+[2020-02-13 16:10:24,167] ERROR [ReplicaManager broker=1] Error processing append operation on partition outputtesttopic-0 (kafka.server.ReplicaManager)
+org.apache.kafka.common.errors.UnknownProducerIdException: Found no record of producerId=0 on the broker at offset 57in partition outputtesttopic-0. It is possible that the last message with the producerId=0 has been removed due to hitting the retention limit.
 ```
 
 and in producer:
 
 ```log
-[2020-02-13 10:08:23,413] INFO [Producer clientId=producer-1] Resetting sequence number of batch with current sequence 30 for partition testtopic-0 to 0 (org.apache.kafka.clients.producer.internals.TransactionManager)
-[2020-02-13 10:08:23,413] WARN [Producer clientId=producer-1] Got error produce response with correlation id 253 on topic-partition testtopic-0, retrying (2147483646 attempts left). Error: UNKNOWN_PRODUCER_ID (org.apache.kafka.clients.producer.internals.Sender)
-Produced record to topic testtopic partition [0] @ offset 239
- and timestamp 1581583089003Sending key=null value=message 240
+Processing key null value message 57
+[2020-02-13 16:10:24,168] INFO [Producer clientId=producer-1] Resetting sequence number of batch with current sequence 30 for partition outputtesttopic-0 to 0 (org.apache.kafka.clients.producer.internals.TransactionManager)
+[2020-02-13 16:10:24,168] WARN [Producer clientId=producer-1] Got error produce response with correlation id 63 on topic-partition outputtesttopic-0, retrying (2147483646 attempts left). Error: UNKNOWN_PRODUCER_ID (org.apache.kafka.clients.producer.internals.Sender)
+Produced record to topic outputtesttopic partition [0] @ offset 57
+ and timestamp 1581583089003
 ```
 
 But no duplicate in topic
