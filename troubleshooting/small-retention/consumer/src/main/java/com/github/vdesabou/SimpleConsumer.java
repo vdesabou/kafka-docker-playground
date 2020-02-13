@@ -16,6 +16,8 @@ import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.clients.producer.RecordMetadata;
 import java.util.Properties;
 import java.util.concurrent.TimeUnit;
+import org.apache.kafka.common.errors.OutOfOrderSequenceException;
+import org.apache.kafka.common.errors.UnknownProducerIdException;
 
 public class SimpleConsumer {
 
@@ -58,11 +60,26 @@ public class SimpleConsumer {
 
                 producer.send(prodrecord, new Callback() {
                     @Override
-                    public void onCompletion(RecordMetadata metadata, Exception exception) {
-                        if (exception == null) {
+                    public void onCompletion(RecordMetadata metadata, Exception e) {
+
+                        // executes every time a record is successfully sent or an exception is thrown
+                        if (e == null) {
+                            // the record was successfully sent
                             System.out.printf("Produced record to topic %s partition [%d] @ offset %d%n and timestamp %d\n", metadata.topic(), metadata.partition(), metadata.offset(), metadata.timestamp());
+                        } else if (e.getClass().getName() == OutOfOrderSequenceException.class.getName()) {
+                            // we can't recover
+                            producer.close();
+                            System.out.printf("Calling close OutOfOrderSequenceException ");
+                            e.printStackTrace();
+                        } else if (e.getClass().getName() == UnknownProducerIdException.class.getName()) {
+                            // we can't recover
+                            producer.close();
+                            System.out.printf("Calling close UnknownProducerIdException ");
+                            e.printStackTrace();
                         } else {
-                            exception.printStackTrace();
+                            // For all other exceptions, just try again.
+                            System.out.printf("other exception ");
+                            e.printStackTrace();
                         }
                     }
                 });
