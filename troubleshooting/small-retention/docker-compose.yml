@@ -17,3 +17,15 @@ services:
     container_name: producer
     depends_on:
       - broker
+
+  consumer:
+    build:
+      context: ../../troubleshooting/small-retention/consumer/
+      args:
+        TAG: ${TAG}
+        CP_BASE_IMAGE: ${CP_BASE_IMAGE}
+        KAFKA_CLIENT_TAG: ${KAFKA_CLIENT_TAG}
+    hostname: consumer
+    container_name: consumer
+    depends_on:
+      - broker
