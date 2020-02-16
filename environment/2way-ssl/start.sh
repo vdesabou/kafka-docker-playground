@@ -13,6 +13,13 @@ OLDDIR=$PWD
 cd ${OLDDIR}/../../environment/2way-ssl/security
 
 log "Generate keys and certificates used for SSL"
+verify_installed "keytool"
+if [ ! -f $JAVA_HOME/jre/lib/security/cacerts ]
+then
+  logerror "ERROR: $JAVA_HOME/jre/lib/security/cacerts is not set"
+  exit 1
+fi
+
 ./certs-create.sh > /dev/null 2>&1
 
 cd ${OLDDIR}/../../environment/2way-ssl
