@@ -13,7 +13,14 @@ then
      cd ${DIR}/../../environment/sasl-ssl/security
 
      log "Generate keys and certificates used for SSL"
-     ./certs-create.sh  > /dev/null 2>&1
+     verify_installed "keytool"
+     if [ ! -f $JAVA_HOME/jre/lib/security/cacerts ]
+     then
+     logerror "ERROR: $JAVA_HOME/jre/lib/security/cacerts is not set"
+     exit 1
+     fi
+
+     ./certs-create.sh > /dev/null 2>&1
 
      cd ${OLDDIR}
      cp ${DIR}/../../environment/sasl-ssl/security/kafka.broker.keystore.jks ${DIR}/keystore.jks
