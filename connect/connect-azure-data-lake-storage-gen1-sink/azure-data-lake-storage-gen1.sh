@@ -81,3 +81,6 @@ docker run -v /tmp:/tmp actions/avro-tools tojson /tmp/datalake_topic+0+00000000
 
 log "Deleting resource group"
 az group delete --name $AZURE_RESOURCE_GROUP --yes
+
+log "Deleting active directory app"
+az ad sp delete --id $AZURE_DATALAKE_CLIENT_ID
