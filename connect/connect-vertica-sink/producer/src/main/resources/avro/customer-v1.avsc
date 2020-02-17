@@ -18,6 +18,10 @@
         {
             "name": "MyTable",
             "type": "string"
+        },
+        {
+            "name": "RelevanceScore",
+            "type": "double"
         }
     ]
 }

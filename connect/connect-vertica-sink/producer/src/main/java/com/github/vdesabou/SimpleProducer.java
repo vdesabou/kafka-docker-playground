@@ -54,6 +54,7 @@ public class SimpleProducer {
                     .setNormalizedHashItemID(i)
                     .setURL("ultralongurlultralongurlultralongurlultralongurlultralongurlultralongurlultralongurultralongurl")
                     .setMyTable("customer1")
+                    .setRelevanceScore(0.28226356681351483)
                     .build();
                     record = new ProducerRecord<>(TOPIC, key, customer);
                 } else {
@@ -69,6 +70,7 @@ public class SimpleProducer {
                     .setNormalizedHashItemID(i)
                     .setURL("url")
                     .setMyTable(tableName)
+                    .setRelevanceScore(0.28226356681351483)
                     .build();
                     record = new ProducerRecord<>(TOPIC, key, customer);
                 }
