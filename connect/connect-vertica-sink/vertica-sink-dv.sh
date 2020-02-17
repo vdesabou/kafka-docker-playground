@@ -77,7 +77,7 @@ CREATE TABLE public.customer1
     ListID int,
     NormalizedHashItemID int,
     KafkaKeyIsDeleted boolean DEFAULT true,
-    RelevanceScore numeric(18,3)
+    RelevanceScore float
 );
 EOF
 
@@ -90,7 +90,7 @@ CREATE TABLE public.customer2
     ListID int,
     NormalizedHashItemID int,
     KafkaKeyIsDeleted boolean DEFAULT true,
-    RelevanceScore numeric(18,3)
+    RelevanceScore float
 );
 EOF
 
