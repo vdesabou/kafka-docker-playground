@@ -49,23 +49,22 @@ docker exec -e BOOTSTRAP_SERVERS="$BOOTSTRAP_SERVERS" -e CLOUD_KEY="$CLOUD_KEY" 
      curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
+               "connector.class": "io.confluent.connect.servicenow.ServiceNowSourceConnector",
+               "kafka.topic": "topic-servicenow",
+               "servicenow.url": "'"$SERVICENOW_URL"'",
                "tasks.max": "1",
-                    "connector.class": "io.confluent.connect.servicenow.ServiceNowSourceConnector",
-                    "kafka.topic": "topic-servicenow",
-                    "servicenow.url": "'"$SERVICENOW_URL"'",
-                    "tasks.max": "1",
-                    "servicenow.table": "incident",
-                    "servicenow.user": "admin",
-                    "servicenow.password": "'"$SERVICENOW_PASSWORD"'",
-                    "servicenow.since": "'"$TODAY"'",
-                    "key.converter": "org.apache.kafka.connect.json.JsonConverter",
-                    "value.converter": "org.apache.kafka.connect.json.JsonConverter",
-                    "confluent.topic.ssl.endpoint.identification.algorithm" : "https",
-                    "confluent.topic.sasl.mechanism" : "PLAIN",
-                    "confluent.topic.bootstrap.servers": "'"$BOOTSTRAP_SERVERS"'",
-                    "confluent.topic.sasl.jaas.config" : "org.apache.kafka.common.security.plain.PlainLoginModule required username=\"'$CLOUD_KEY'\" password=\"'$CLOUD_SECRET'\";",
-                    "confluent.topic.security.protocol" : "SASL_SSL",
-                    "confluent.topic.replication.factor": "3"
+               "servicenow.table": "incident",
+               "servicenow.user": "admin",
+               "servicenow.password": "'"$SERVICENOW_PASSWORD"'",
+               "servicenow.since": "'"$TODAY"'",
+               "key.converter": "org.apache.kafka.connect.json.JsonConverter",
+               "value.converter": "org.apache.kafka.connect.json.JsonConverter",
+               "confluent.topic.ssl.endpoint.identification.algorithm" : "https",
+               "confluent.topic.sasl.mechanism" : "PLAIN",
+               "confluent.topic.bootstrap.servers": "'"$BOOTSTRAP_SERVERS"'",
+               "confluent.topic.sasl.jaas.config" : "org.apache.kafka.common.security.plain.PlainLoginModule required username=\"'$CLOUD_KEY'\" password=\"'$CLOUD_SECRET'\";",
+               "confluent.topic.security.protocol" : "SASL_SSL",
+               "confluent.topic.replication.factor": "3"
           }' \
      http://localhost:8083/connectors/servicenow-source/config | jq .
 
