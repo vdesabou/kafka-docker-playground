@@ -1,6 +1,5 @@
 # ServiceNow Sink connector (using Confluent Cloud)
 
-![asciinema](asciinema.gif)
 
 ## Objective
 
@@ -44,37 +43,36 @@ $ docker exec -e BOOTSTRAP_SERVERS="$BOOTSTRAP_SERVERS" -e CLOUD_KEY="$CLOUD_KEY
      curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
-               "tasks.max": "1",
-                    "connector.class": "io.confluent.connect.servicenow.ServiceNowSinkConnector",
-                    "topics": "test_table",
-                    "servicenow.url": "'"$SERVICENOW_URL"'",
-                    "tasks.max": "1",
-                    "servicenow.table": "u_test_table",
-                    "servicenow.user": "admin",
-                    "servicenow.password": "'"$SERVICENOW_PASSWORD"'",
-                    "key.converter": "io.confluent.connect.avro.AvroConverter",
-                    "key.converter.schema.registry.url": "http://schema-registry:8081",
-                    "value.converter": "io.confluent.connect.avro.AvroConverter",
-                    "value.converter.schema.registry.url": "http://schema-registry:8081",
-                    "reporter.bootstrap.servers": "'"$BOOTSTRAP_SERVERS"'",
-                    "reporter.ssl.endpoint.identification.algorithm" : "https",
-                    "reporter.sasl.mechanism" : "PLAIN",
-                    "reporter.sasl.jaas.config" : "org.apache.kafka.common.security.plain.PlainLoginModule required username=\"'$CLOUD_KEY'\" password=\"'$CLOUD_SECRET'\";",
-                    "reporter.security.protocol" : "SASL_SSL",
-                    "reporter.error.topic.name": "test-error",
-                    "reporter.error.topic.replication.factor": 3,
-                    "reporter.error.topic.key.format": "string",
-                    "reporter.error.topic.value.format": "string",
-                    "reporter.result.topic.name": "test-result",
-                    "reporter.result.topic.key.format": "string",
-                    "reporter.result.topic.value.format": "string",
-                    "reporter.result.topic.replication.factor": 3,
-                    "confluent.topic.ssl.endpoint.identification.algorithm" : "https",
-                    "confluent.topic.sasl.mechanism" : "PLAIN",
-                    "confluent.topic.bootstrap.servers": "'"$BOOTSTRAP_SERVERS"'",
-                    "confluent.topic.sasl.jaas.config" : "org.apache.kafka.common.security.plain.PlainLoginModule required username=\"'$CLOUD_KEY'\" password=\"'$CLOUD_SECRET'\";",
-                    "confluent.topic.security.protocol" : "SASL_SSL",
-                    "confluent.topic.replication.factor": "3"
+               "connector.class": "io.confluent.connect.servicenow.ServiceNowSinkConnector",
+                "topics": "test_table",
+                "servicenow.url": "'"$SERVICENOW_URL"'",
+                "tasks.max": "1",
+                "servicenow.table": "u_test_table",
+                "servicenow.user": "admin",
+                "servicenow.password": "'"$SERVICENOW_PASSWORD"'",
+                "key.converter": "io.confluent.connect.avro.AvroConverter",
+                "key.converter.schema.registry.url": "http://schema-registry:8081",
+                "value.converter": "io.confluent.connect.avro.AvroConverter",
+                "value.converter.schema.registry.url": "http://schema-registry:8081",
+                "reporter.bootstrap.servers": "'"$BOOTSTRAP_SERVERS"'",
+                "reporter.ssl.endpoint.identification.algorithm" : "https",
+                "reporter.sasl.mechanism" : "PLAIN",
+                "reporter.sasl.jaas.config" : "org.apache.kafka.common.security.plain.PlainLoginModule required username=\"'$CLOUD_KEY'\" password=\"'$CLOUD_SECRET'\";",
+                "reporter.security.protocol" : "SASL_SSL",
+                "reporter.error.topic.name": "test-error",
+                "reporter.error.topic.replication.factor": 3,
+                "reporter.error.topic.key.format": "string",
+                "reporter.error.topic.value.format": "string",
+                "reporter.result.topic.name": "test-result",
+                "reporter.result.topic.key.format": "string",
+                "reporter.result.topic.value.format": "string",
+                "reporter.result.topic.replication.factor": 3,
+                "confluent.topic.ssl.endpoint.identification.algorithm" : "https",
+                "confluent.topic.sasl.mechanism" : "PLAIN",
+                "confluent.topic.bootstrap.servers": "'"$BOOTSTRAP_SERVERS"'",
+                "confluent.topic.sasl.jaas.config" : "org.apache.kafka.common.security.plain.PlainLoginModule required username=\"'$CLOUD_KEY'\" password=\"'$CLOUD_SECRET'\";",
+                "confluent.topic.security.protocol" : "SASL_SSL",
+                "confluent.topic.replication.factor": "3"
           }' \
      http://localhost:8083/connectors/servicenow-sink/config | jq .
 ```
