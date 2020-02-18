@@ -73,12 +73,12 @@ docker exec -i vertica /opt/vertica/bin/vsql -hlocalhost -Udbadmin << EOF
 CREATE TABLE public.customer1
 (
     dwhCreationDate timestamp DEFAULT (statement_timestamp())::timestamp,
-    kafkaId int NOT NULL,
+    kafkaId int,
     ListID int,
     NormalizedHashItemID int,
     KafkaKeyIsDeleted boolean DEFAULT true,
     MyFloatValue float,
-    MyTimestamp timestamp NOT NULL
+    MyTimestamp timestamp
 );
 EOF
 
@@ -87,12 +87,12 @@ docker exec -i vertica /opt/vertica/bin/vsql -hlocalhost -Udbadmin << EOF
 CREATE TABLE public.customer2
 (
     dwhCreationDate timestamp DEFAULT (statement_timestamp())::timestamp,
-    kafkaId int NOT NULL,
+    kafkaId int,
     ListID int,
     NormalizedHashItemID int,
     KafkaKeyIsDeleted boolean DEFAULT true,
     MyFloatValue float,
-    MyTimestamp timestamp NOT NULL
+    MyTimestamp timestamp
 );
 EOF
 
@@ -151,16 +151,6 @@ docker exec -i vertica /opt/vertica/bin/vsql -hlocalhost -Udbadmin << EOF
 select * from public.customer2;
 EOF
 
-#      dwhCreationDate     | kafkaId | ListID | NormalizedHashItemID | URL  | KafkaKeyIsDeleted
-# -------------------------+---------+--------+----------------------+------+-------------------
-#  2020-01-22 14:41:36.121 |       0 |      0 |                    0 | url  | f
-#  2020-01-22 14:41:36.667 |       1 |      1 |                    1 | url  | f
-#  2020-01-22 14:41:37.172 |       2 |      0 |                    0 | null | t    <--- tombstone
-#  2020-01-22 14:41:37.679 |       3 |      3 |                    3 | url  | f
-#  2020-01-22 14:41:38.185 |       4 |      4 |                    4 | url  | f
-#  2020-01-22 14:41:38.69  |       5 |      5 |                    5 | url  | f
-
-
 log "Check for rejected data for customer1"
 docker exec -i vertica /opt/vertica/bin/vsql -hlocalhost -Udbadmin << EOF
 select * from public.customer1_rej;
@@ -171,36 +161,30 @@ docker exec -i vertica /opt/vertica/bin/vsql -hlocalhost -Udbadmin << EOF
 select * from public.customer2_rej;
 EOF
 
-docker exec -i vertica /opt/vertica/bin/vsql -hlocalhost -Udbadmin << EOF
-select * from columns;
-EOF
+# docker exec -i vertica /opt/vertica/bin/vsql -hlocalhost -Udbadmin << EOF
+# select * from columns;
+# EOF
 
-docker exec -i vertica /opt/vertica/bin/vsql -hlocalhost -Udbadmin << EOF
-select * from tables;
-EOF
+# docker exec -i vertica /opt/vertica/bin/vsql -hlocalhost -Udbadmin << EOF
+# select * from tables;
+# EOF
 
-docker exec -i vertica /opt/vertica/bin/vsql -hlocalhost -Udbadmin << EOF
-SELECT c.column_name, c.data_type, c.data_type_length, c.numeric_precision, c.numeric_scale FROM columns c INNER JOIN tables t ON c.table_id = t.table_id WHERE upper(t.table_name) = upper('customer1') ORDER BY c.ordinal_position;
-EOF
+# docker exec -i vertica /opt/vertica/bin/vsql -hlocalhost -Udbadmin << EOF
+# SELECT c.column_name, c.data_type, c.data_type_length, c.numeric_precision, c.numeric_scale FROM columns c INNER JOIN tables t ON c.table_id = t.table_id WHERE upper(t.table_name) = upper('customer1') ORDER BY c.ordinal_position;
+# EOF
 
 #      node_name     |      file_name      |         session_id         |  transaction_id   | statement_id | batch_number | row_number |                                              rejected_data                                              | rejected_data_orig_length |                          rejected_reason
 # -------------------+---------------------+----------------------------+-------------------+--------------+--------------+------------+---------------------------------------------------------------------------------------------------------+---------------------------+--------------------------------------------------------------------
 #  v_docker_node0001 | STDIN (Batch No. 1) | v_docker_node0001-109:0x17 | 45035996273705370 |           10 |            0 |         12 | ����@_ultralongurlultralongurlultralongurlultralongurlultralongurlultralongurlultralongurultralongurl |                       132 | The 95-byte value is too long for type Varchar(80), column 5 (URL)
 # (1 row)
 
-# Without trace logs:
 
-# [2020-01-17 17:01:39,840] INFO Wrote 10 record(s) to stream (io.confluent.vertica.VerticaSinkTask)
-# [2020-01-17 17:01:39,840] INFO Waiting for import to complete. (io.confluent.vertica.VerticaSinkTask)
-# [2020-01-17 17:01:39,850] INFO put() - Imported 10 record(s) in 42 millisecond(s). (io.confluent.vertica.VerticaSinkTask)
-# [2020-01-17 17:01:39,851] WARN put() - Rejected 10 record(s). (io.confluent.vertica.VerticaSinkTask)
-# [2020-01-17 17:01:39,851] WARN Rejected row 1 (io.confluent.vertica.VerticaSinkTask)
-# [2020-01-17 17:01:39,851] WARN Rejected row 2 (io.confluent.vertica.VerticaSinkTask)
-# [2020-01-17 17:01:39,851] WARN Rejected row 3 (io.confluent.vertica.VerticaSinkTask)
-# [2020-01-17 17:01:39,851] WARN Rejected row 4 (io.confluent.vertica.VerticaSinkTask)
-# [2020-01-17 17:01:39,851] WARN Rejected row 5 (io.confluent.vertica.VerticaSinkTask)
-# [2020-01-17 17:01:39,851] WARN Rejected row 6 (io.confluent.vertica.VerticaSinkTask)
-# [2020-01-17 17:01:39,851] WARN Rejected row 7 (io.confluent.vertica.VerticaSinkTask)
-# [2020-01-17 17:01:39,851] WARN Rejected row 8 (io.confluent.vertica.VerticaSinkTask)
-# [2020-01-17 17:01:39,851] WARN Rejected row 9 (io.confluent.vertica.VerticaSinkTask)
-# [2020-01-17 17:01:39,851] WARN Rejected row 10 (io.confluent.vertica.VerticaSinkTask)
+
+
+# getting for 3 & 4
+
+#      node_name     |      file_name      |         session_id         |  transaction_id   | statement_id | batch_number | row_number | rejected_data | rejected_data_orig_length |                                    rejected_reason
+# -------------------+---------------------+----------------------------+-------------------+--------------+--------------+------------+---------------+---------------------------+----------------------------------------------------------------------------------------
+#  v_docker_node0001 | STDIN (Batch No. 1) | v_docker_node0001-109:0x22 | 45035996273705393 |           10 |            0 |          3 | h�P~�Ap��~�A |                        25 | Field size (8) is corrupted for column 7 (MyTimestamp). It does not fit within the row
+#  v_docker_node0001 | STDIN (Batch No. 1) | v_docker_node0001-109:0x22 | 45035996273705393 |           10 |            0 |          4 | �`~�A�`~�A |                        25 | Field size (8) is corrupted for column 7 (MyTimestamp). It does not fit within the row
+# (2 rows)

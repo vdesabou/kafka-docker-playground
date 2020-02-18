@@ -49,6 +49,17 @@ public class SimpleProducer {
                 if(i==2) {
                     record = new ProducerRecord<>(TOPIC, key, null);
 
+                } else if(i==3) {
+                    // test with default values
+                    Customer customer = Customer.newBuilder()
+                    .setListID(null)
+                    .setNormalizedHashItemID(null)
+                    .setURL(null)
+                    .setMyTable("customer1")
+                    .setMyFloatValue(null)
+                    .setMyTimestamp(new Date().getTime())
+                    .build();
+                    record = new ProducerRecord<>(TOPIC, key, customer);
                 } else if(i==4) {
                     Customer customer = Customer.newBuilder()
                     .setListID(i)
@@ -91,7 +102,7 @@ public class SimpleProducer {
                 });
                 producer.flush();
                 i++;
-                TimeUnit.MILLISECONDS.sleep(500);
+                TimeUnit.MILLISECONDS.sleep(1000);
             }
         }
     }
