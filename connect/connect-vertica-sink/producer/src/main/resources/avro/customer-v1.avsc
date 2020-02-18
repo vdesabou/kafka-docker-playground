@@ -5,27 +5,51 @@
     "fields": [
         {
             "name": "ListID",
-            "type": "long"
+            "type": [
+              "null",
+              "long"
+            ],
+            "default": null
         },
         {
             "name": "NormalizedHashItemID",
-            "type": "long"
+            "type": [
+              "null",
+              "long"
+            ],
+            "default": null
         },
         {
             "name": "URL",
-            "type": "string"
+            "type": [
+              "null",
+              "string"
+            ],
+            "default": null
         },
         {
             "name": "MyTable",
-            "type": "string"
+            "type": [
+              "null",
+              "string"
+            ],
+            "default": "null"
         },
         {
             "name": "MyFloatValue",
-            "type": "double"
+            "type": [
+              "null",
+              "double"
+            ],
+            "default": null
         },
         {
             "name": "MyTimestamp",
-            "type": "long"
+            "type": [
+              "null",
+              "long"
+            ],
+            "default": null
         }
     ]
 }

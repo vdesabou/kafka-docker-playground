@@ -11,7 +11,7 @@ import org.apache.kafka.connect.transforms.util.SchemaUtil;
 import org.apache.kafka.connect.transforms.util.SimpleConfig;
 
 import static org.apache.kafka.connect.transforms.util.Requirements.requireStruct;
-
+import java.util.Date;
 import java.util.Map;
 
 public class TombstoneToNull<R extends ConnectRecord<R>> implements Transformation<R> {
@@ -32,13 +32,13 @@ public class TombstoneToNull<R extends ConnectRecord<R>> implements Transformati
 
         Schema dvSchema = SchemaBuilder.struct()
         .name("com.github.vdesabou.Customer").version(1).doc("Some doc.")
-        .field("ListID", Schema.INT64_SCHEMA)
-        .field("NormalizedHashItemID", Schema.INT64_SCHEMA)
-        .field("URL", Schema.STRING_SCHEMA)
+        .field("ListID", Schema.OPTIONAL_INT64_SCHEMA)
+        .field("NormalizedHashItemID", Schema.OPTIONAL_INT64_SCHEMA)
+        .field("URL", Schema.OPTIONAL_STRING_SCHEMA)
         .field("MyTable", Schema.STRING_SCHEMA)
         .field("KafkaKeyIsDeleted", Schema.BOOLEAN_SCHEMA)
         .field("MyFloatValue", Schema.OPTIONAL_FLOAT64_SCHEMA)
-        .field("MyTimestamp", Schema.INT64_SCHEMA)
+        .field("MyTimestamp", Schema.OPTIONAL_INT64_SCHEMA)
         .build();
 
         final Struct updatedValue = new Struct(dvSchema);
@@ -55,13 +55,13 @@ public class TombstoneToNull<R extends ConnectRecord<R>> implements Transformati
             updatedValue.put("KafkaKeyIsDeleted", false);
         } else {
             // tombstone
-            updatedValue.put("ListID", 0L);
-            updatedValue.put("NormalizedHashItemID", 0L);
-            updatedValue.put("URL", "null");
-            updatedValue.put("MyTable", "null");
+            updatedValue.put("ListID", null);
+            updatedValue.put("NormalizedHashItemID", null);
+            updatedValue.put("URL", null);
+            updatedValue.put("MyTable", "customer1");
             updatedValue.put("KafkaKeyIsDeleted", true);
-            updatedValue.put("MyFloatValue", 0d);
-            updatedValue.put("MyTimestamp", 0L);
+            updatedValue.put("MyFloatValue", null);
+            updatedValue.put("MyTimestamp", new Date().getTime());
         }
         return record.newRecord(
                 record.topic(),
