@@ -22,6 +22,8 @@ export TAG=5.3.2
   - [↘️ Source](#️-source)
   - [↗️ Sink](#️-sink)
 - [☁️ Confluent Cloud](#️-confluent-cloud)
+  - [<img src="https://pbs.twimg.com/profile_images/979058850207641601/cLCehePZ.jpg" width="15"> Confluent Cloud Demo](#img-srchttpspbstwimgcomprofile_images979058850207641601clcehepzjpg-width15-confluent-cloud-demo)
+  - [🔗 Kafka Connectors connected to Confluent Cloud](#-kafka-connectors-connected-to-confluent-cloud)
 - [🔄 Confluent Replicator](#-confluent-replicator)
 - [🔐 Environments](#-environments)
 - [🎓 Kafka Tutorials](#-kafka-tutorials)
@@ -142,7 +144,7 @@ Quick start examples from Confluent [docs](https://docs.confluent.io/current/con
 
 ## ☁️ Confluent Cloud
 
-* <img src="https://pbs.twimg.com/profile_images/979058850207641601/cLCehePZ.jpg" width="15"> [Confluent Cloud Demo](ccloud/ccloud-demo)
+### <img src="https://pbs.twimg.com/profile_images/979058850207641601/cLCehePZ.jpg" width="15"> [Confluent Cloud Demo](ccloud/ccloud-demo)
 
   * How to connect your components to Confluent Cloud
   * How to monitor your Confluent Cloud cluster
@@ -150,6 +152,12 @@ Quick start examples from Confluent [docs](https://docs.confluent.io/current/con
   * etc...
 
 ![Diagram](./ccloud/ccloud-demo/images/diagram.png)
+
+### 🔗 Kafka Connectors connected to Confluent Cloud
+
+  * <img src="https://perspectium.mystagingwebsite.com/wp-content/uploads/2019/08/servicenow_logo_v2.png" width="15"> [ServiceNow](ccloud/connect-servicenow-source) source
+  * <img src="https://perspectium.mystagingwebsite.com/wp-content/uploads/2019/08/servicenow_logo_v2.png" width="15"> [ServiceNow](ccloud/connect-servicenow-sink) sink
+
 
 ## 🔄 Confluent Replicator
 
