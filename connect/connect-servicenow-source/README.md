@@ -33,7 +33,6 @@ $ docker exec -e SERVICENOW_URL="$SERVICENOW_URL" -e SERVICENOW_PASSWORD="$SERVI
      curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
-               "tasks.max": "1",
                     "connector.class": "io.confluent.connect.servicenow.ServiceNowSourceConnector",
                     "kafka.topic": "topic-servicenow",
                     "servicenow.url": "'"$SERVICENOW_URL"'",
