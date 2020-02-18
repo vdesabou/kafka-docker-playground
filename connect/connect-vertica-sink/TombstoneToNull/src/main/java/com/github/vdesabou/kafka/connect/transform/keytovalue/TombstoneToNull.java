@@ -37,7 +37,8 @@ public class TombstoneToNull<R extends ConnectRecord<R>> implements Transformati
         .field("URL", Schema.STRING_SCHEMA)
         .field("MyTable", Schema.STRING_SCHEMA)
         .field("KafkaKeyIsDeleted", Schema.BOOLEAN_SCHEMA)
-        .field("RelevanceScore", Schema.OPTIONAL_FLOAT64_SCHEMA)
+        .field("MyFloatValue", Schema.OPTIONAL_FLOAT64_SCHEMA)
+        .field("MyTimestamp", Schema.INT64_SCHEMA)
         .build();
 
         final Struct updatedValue = new Struct(dvSchema);
@@ -59,7 +60,8 @@ public class TombstoneToNull<R extends ConnectRecord<R>> implements Transformati
             updatedValue.put("URL", "null");
             updatedValue.put("MyTable", "null");
             updatedValue.put("KafkaKeyIsDeleted", true);
-            updatedValue.put("RelevanceScore", 0d);
+            updatedValue.put("MyFloatValue", 0d);
+            updatedValue.put("MyTimestamp", 0L);
         }
         return record.newRecord(
                 record.topic(),
