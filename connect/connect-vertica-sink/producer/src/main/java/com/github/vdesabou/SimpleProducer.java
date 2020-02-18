@@ -12,6 +12,7 @@ import io.confluent.kafka.serializers.KafkaAvroSerializer;
 import java.util.Properties;
 import java.util.concurrent.TimeUnit;
 import com.github.vdesabou.Customer;
+import java.util.Date;
 
 public class SimpleProducer {
 
@@ -54,7 +55,8 @@ public class SimpleProducer {
                     .setNormalizedHashItemID(i)
                     .setURL("ultralongurlultralongurlultralongurlultralongurlultralongurlultralongurlultralongurultralongurl")
                     .setMyTable("customer1")
-                    .setRelevanceScore(0.28226356681351483)
+                    .setMyFloatValue(0.28226356681351483)
+                    .setMyTimestamp(new Date().getTime())
                     .build();
                     record = new ProducerRecord<>(TOPIC, key, customer);
                 } else {
@@ -70,7 +72,8 @@ public class SimpleProducer {
                     .setNormalizedHashItemID(i)
                     .setURL("url")
                     .setMyTable(tableName)
-                    .setRelevanceScore(0.28226356681351483)
+                    .setMyFloatValue(0.28226356681351483)
+                    .setMyTimestamp(new Date().getTime())
                     .build();
                     record = new ProducerRecord<>(TOPIC, key, customer);
                 }

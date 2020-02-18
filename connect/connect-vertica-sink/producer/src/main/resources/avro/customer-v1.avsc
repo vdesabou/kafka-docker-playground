@@ -20,8 +20,12 @@
             "type": "string"
         },
         {
-            "name": "RelevanceScore",
+            "name": "MyFloatValue",
             "type": "double"
+        },
+        {
+            "name": "MyTimestamp",
+            "type": "long"
         }
     ]
 }

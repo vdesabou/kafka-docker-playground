@@ -77,7 +77,8 @@ CREATE TABLE public.customer1
     ListID int,
     NormalizedHashItemID int,
     KafkaKeyIsDeleted boolean DEFAULT true,
-    RelevanceScore float
+    MyFloatValue float,
+    MyTimestamp timestamp NOT NULL
 );
 EOF
 
@@ -90,7 +91,8 @@ CREATE TABLE public.customer2
     ListID int,
     NormalizedHashItemID int,
     KafkaKeyIsDeleted boolean DEFAULT true,
-    RelevanceScore float
+    MyFloatValue float,
+    MyTimestamp timestamp NOT NULL
 );
 EOF
 
@@ -115,7 +117,7 @@ docker exec connect \
                     "errors.log.include.messages": "true",
                     "topics": "customer",
                     "enable.auto.commit": "false",
-                    "transforms": "TombstoneToNull, insert_dwhCreateDate, KeyToValue, cast_kafkaId_toInt, mapMyTableFieldToTopic",
+                    "transforms": "TombstoneToNull, insert_dwhCreateDate, KeyToValue, cast_kafkaId_toInt, mapMyTableFieldToTopic,MyTimestamp_convert",
                     "transforms.TombstoneToNull.type": "com.github.vdesabou.kafka.connect.transforms.TombstoneToNull",
                     "transforms.insert_dwhCreateDate.type": "org.apache.kafka.connect.transforms.InsertField$Value",
                     "transforms.insert_dwhCreateDate.timestamp.field": "dwhCreationDate",
@@ -125,6 +127,9 @@ docker exec connect \
                     "transforms.cast_kafkaId_toInt.spec": "kafkaId:int64",
                     "transforms.mapMyTableFieldToTopic.type": "io.confluent.connect.transforms.ExtractTopic$Value",
                     "transforms.mapMyTableFieldToTopic.field": "MyTable",
+                    "transforms.MyTimestamp_convert.type": "org.apache.kafka.connect.transforms.TimestampConverter$Value",
+                    "transforms.MyTimestamp_convert.field": "MyTimestamp",
+                    "transforms.MyTimestamp_convert.target.type": "Timestamp",
                     "key.converter": "org.apache.kafka.connect.storage.StringConverter",
                     "value.converter" : "io.confluent.connect.avro.AvroConverter",
                     "value.converter.schema.registry.url":"http://schema-registry:8081",
