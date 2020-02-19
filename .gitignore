@@ -49,3 +49,4 @@ ccloud/kafka-admin/before.yml
 ccloud/kafka-admin/config.yml
 ccloud/kafka-admin/kafka-admin.properties
 ccloud/kafka-admin/kafka-admin/
+*.tgz
