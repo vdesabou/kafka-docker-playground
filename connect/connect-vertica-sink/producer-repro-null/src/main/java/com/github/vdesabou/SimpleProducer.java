@@ -47,7 +47,9 @@ public class SimpleProducer {
 
                 ProducerRecord<String, Customer> record;
                 Customer customer = Customer.newBuilder()
-                .setF1(null)
+                .setF1("f1")
+                .setF2(null)
+                .setF3("f3")
                 .build();
                 record = new ProducerRecord<>(TOPIC, key, customer);
 
