@@ -10,6 +10,22 @@
               "string"
             ],
             "default": null
-        }
+        },
+        {
+          "name": "f2",
+          "type": [
+            "null",
+            "string"
+          ],
+          "default": null
+      },
+      {
+        "name": "f3",
+        "type": [
+          "null",
+          "string"
+        ],
+        "default": null
+    }
     ]
 }
