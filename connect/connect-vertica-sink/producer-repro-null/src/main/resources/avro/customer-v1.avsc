@@ -7,7 +7,7 @@
             "name": "f1",
             "type": [
               "null",
-              "string"
+              "int"
             ],
             "default": null
         },
@@ -15,7 +15,7 @@
           "name": "f2",
           "type": [
             "null",
-            "string"
+            "int"
           ],
           "default": null
       },
@@ -23,7 +23,7 @@
         "name": "f3",
         "type": [
           "null",
-          "string"
+          "int"
         ],
         "default": null
     }
