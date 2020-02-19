@@ -51,6 +51,8 @@ echo $'id,first_name,last_name,email,gender,ip_address,last_login,account_balanc
 docker cp csv-sftp-source.csv sftp-server:/home/foo/upload/
 rm -f csv-sftp-source.csv
 
+sleep 5
+
 docker container logs --tail=300 connect
 
 
