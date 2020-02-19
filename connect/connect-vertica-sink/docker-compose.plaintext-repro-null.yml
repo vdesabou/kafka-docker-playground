@@ -1,0 +1,41 @@
+---
+version: '3.5'
+services:
+
+  vertica:
+    image: jbfavre/vertica:latest
+    hostname: vertica
+    container_name: vertica
+    ports:
+      - 5433:5433
+
+  producer-repro-null:
+    build:
+      context: ../../connect/connect-vertica-sink/producer-repro-null/
+      args:
+        TAG: ${TAG}
+        CP_BASE_IMAGE: ${CP_BASE_IMAGE}
+        KAFKA_CLIENT_TAG: ${KAFKA_CLIENT_TAG}
+    hostname: producer-repro-null
+    container_name: producer-repro-null
+    environment:
+      BOOTSTRAP_SERVERS: "broker:9092"
+      SCHEMA_REGISTRY_URL: "http://schema-registry:8081"
+    depends_on:
+      - zookeeper
+      - broker
+      - schema-registry
+      - vertica
+
+  connect:
+    depends_on:
+      - zookeeper
+      - broker
+      - schema-registry
+      - vertica
+    volumes:
+        - ../../connect/connect-vertica-sink/vertica-jdbc.jar:/usr/share/confluent-hub-components/confluentinc-kafka-connect-vertica/lib/vertica-jdbc.jar
+
+    environment:
+      CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-vertica,/usr/share/confluent-hub-components/confluentinc-connect-transforms
+      # CONNECT_LOG4J_ROOT_LOGLEVEL: TRACE
