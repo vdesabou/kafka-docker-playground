@@ -1,0 +1,15 @@
+{
+    "type": "record",
+    "name": "Customer",
+    "namespace": "com.github.vdesabou",
+    "fields": [
+        {
+            "name": "f1",
+            "type": [
+              "null",
+              "string"
+            ],
+            "default": null
+        }
+    ]
+}
