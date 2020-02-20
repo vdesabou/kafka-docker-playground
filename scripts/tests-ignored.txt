@@ -1,14 +1,7 @@
 # scripts to ignore
-postgres-wal2json-issue.sh
-hdfs-CC-7247-apple.sh
-hdfs-CC-7247-client.sh
 ccloud-generate-env-vars.sh
 http_avro_basic_auth.sh
-vertica-sink-testing-batch-size-error.sh
-vertica-sink-testing-batch-size.sh
-vertica-sink-dv.sh
 01-create-table.sh
-jms-client-sasl-ssl-with-a-valid-license.sh
 jms-client-sasl-ssl.sh
 redshift.sh
 gcp-dataproc.sh
@@ -16,4 +9,3 @@ gcp-firebase-sink.sh
 gcp-firebase-source.sh
 gcp-spanner.sh
 redshift-iam.sh
-repro
