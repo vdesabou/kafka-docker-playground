@@ -50,11 +50,19 @@ do
             continue
         fi
 
+        # check for scripts containing "repro"
+        if [[ "$script" == *"repro"* ]]; then
+            logwarn "####################################################"
+            logwarn "skipping reproduction model $script in dir $dir"
+            logwarn "####################################################"
+            continue
+        fi
+
         log "####################################################"
         log "Executing $script in dir $dir"
         log "####################################################"
         SECONDS=0
-        retry bash $script
+        #retry bash $script
         ret=$?
         ELAPSED="took: $((($SECONDS / 60) % 60))min $(($SECONDS % 60))sec"
         let ELAPSED_TOTAL+=$SECONDS
@@ -71,7 +79,7 @@ do
             failed_tests=$failed_tests"$dir[$script]\n"
             let "nb_test_failed++"
         fi
-        bash stop.sh
+        #bash stop.sh
     done
     cd - > /dev/null
 done
