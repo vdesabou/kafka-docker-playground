@@ -1,5 +1,13 @@
+<!-- omit in toc -->
 # Test with very small retention (30 seconds)
 
+- [Objective](#objective)
+- [TL;DR](#tldr)
+- [TESTING](#testing)
+  - [Test with no activity on topic](#test-with-no-activity-on-topic)
+  - [Test with activity on topic](#test-with-activity-on-topic)
+  - [Test with activity on topic and segment.ms=15000](#test-with-activity-on-topic-and-segmentms15000)
+  - [Impact of message timestamp](#impact-of-message-timestamp)
 
 ## Objective
 
@@ -16,9 +24,10 @@ data for five days because we can’t delete the data before the segment is clos
 
 ## TL;DR
 
-The definitive guide is correct, you need to have `segment.ms` lower than `retention.ms` otherwise cleanup will not happen before `segment.ms` is reached, but there is one exception: if the segment is *inactive* when the log cleaner happens, then the `retention.ms` will take precedence over the `segment.ms`.
+The definitive guide is correct, you need to have `segment.ms` lower than `retention.ms` otherwise cleanup will not happen before `segment.ms` is reached.
+But there is one exception: if the segment is *inactive* when the log cleaner happens, then the `retention.ms` will take precedence over the `segment.ms`.
 
-Message timestamps are used to check a segment as "inactive" so a producer sendiing old timestamps can have an impact on retention.
+Message timestamps are used in order to check if a segment is "inactive", so a producer sending old timestamps can have an impact on retention.
 
 ## TESTING
 
