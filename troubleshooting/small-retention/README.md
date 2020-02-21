@@ -3,53 +3,137 @@
 
 ## Objective
 
+Better understand what the link between `retention.ms` and `segment.ms`
 
-Producer --> topic testtopic --> Consumer (with Producer) --> topic outputtesttopic
 
+Important: `log.retention.check.interval.ms` should be reduced otherwise cleanup only happens after 5 minutes (default):
 
-## How to run
+```yml
+  broker:
+    environment:
+      KAFKA_LOG_RETENTION_CHECK_INTERVAL_MS: 30000
+```
+
+## Test with no activity on topic
 
 Simply run:
 
 ```
-$ ./start.sh
+$ ./no-activity.sh
 ```
 
-## Details of what the script is doing
-
-**The issue does not happen with CP 5.4.0**
-
-The producer is using old timestamp. In our case hard-coded to `02/13/2020 @ 8:38am (UTC)`. It is configured with acks=all and enable.idempotence=true.
-
-Create a topic `testtopic` with 30 seconds retention and 15 seconds segment:
+Create a topic `testtopic` with 30 seconds retention:
 
 ```bash
-$ docker exec broker kafka-topics --create --topic testtopic --partitions 1 --replication-factor 1 --zookeeper zookeeper:2181 --config segment.ms=15000 --config retention.ms=30000 --config message.timestamp.type=CreateTime
+$ docker exec broker kafka-topics --create --topic testtopic --partitions 1 --replication-factor 1 --zookeeper zookeeper:2181 --config segment.ms=15000 --config retention.ms=30000
 ```
 
-Note: `message.timestamp.type`=`CreateTime` is default.
+Sending message to topic testtopic
 
-
-With 5.3.1, we get errors in broker:
-
-```log
-[2020-02-13 16:10:24,167] ERROR [ReplicaManager broker=1] Error processing append operation on partition outputtesttopic-0 (kafka.server.ReplicaManager)
-org.apache.kafka.common.errors.UnknownProducerIdException: Found no record of producerId=0 on the broker at offset 57in partition outputtesttopic-0. It is possible that the last message with the producerId=0 has been removed due to hitting the retention limit.
+```bash
+$ docker exec -i broker kafka-console-producer --broker-list broker:9092 --topic testtopic << EOF
+This is my message
+EOF
 ```
 
-and in producer:
-
-```log
-Processing key null value message 57
-[2020-02-13 16:10:24,168] INFO [Producer clientId=producer-1] Resetting sequence number of batch with current sequence 30 for partition outputtesttopic-0 to 0 (org.apache.kafka.clients.producer.internals.TransactionManager)
-[2020-02-13 16:10:24,168] WARN [Producer clientId=producer-1] Got error produce response with correlation id 63 on topic-partition outputtesttopic-0, retrying (2147483646 attempts left). Error: UNKNOWN_PRODUCER_ID (org.apache.kafka.clients.producer.internals.Sender)
-Produced record to topic outputtesttopic partition [0] @ offset 57
- and timestamp 1581583089003
+```bash
+$ docker exec broker ls -lrt /var/lib/kafka/data/testtopic-0/
 ```
 
-But no duplicate in topic
+Result:
 
-To fix these errors, we can set `message.timestamp.type`=`LogAppendTime`at topic level
+```
+12:24:55 Sending message to topic testtopic
+>>total 8
+-rw-r--r-- 1 root root 10485756 Feb 21 11:24 00000000000000000000.timeindex
+-rw-r--r-- 1 root root 10485760 Feb 21 11:24 00000000000000000000.index
+-rw-r--r-- 1 root root        8 Feb 21 11:24 leader-epoch-checkpoint
+-rw-r--r-- 1 root root       86 Feb 21 11:24 00000000000000000000.log
+```
 
+sleep 60
+
+
+Sending message to topic testtopic
+
+```bash
+docker exec -i broker kafka-console-producer --broker-list broker:9092 --topic testtopic << EOF
+This is my message 2
+EOF
+```
+
+```bash
+docker exec broker ls -lrt /var/lib/kafka/data/testtopic-0/
+```
+
+Result (cleanup):
+
+```
+12:25:57 Sending message to topic testtopic
+>>total 20
+-rw-r--r-- 1 root root       86 Feb 21 11:24 00000000000000000000.log.deleted
+-rw-r--r-- 1 root root        0 Feb 21 11:25 00000000000000000000.index.deleted
+-rw-r--r-- 1 root root       12 Feb 21 11:25 00000000000000000000.timeindex.deleted
+-rw-r--r-- 1 root root       10 Feb 21 11:25 00000000000000000001.snapshot
+-rw-r--r-- 1 root root        8 Feb 21 11:25 leader-epoch-checkpoint
+-rw-r--r-- 1 root root 10485756 Feb 21 11:26 00000000000000000001.timeindex
+-rw-r--r-- 1 root root 10485760 Feb 21 11:26 00000000000000000001.index
+-rw-r--r-- 1 root root       88 Feb 21 11:26 00000000000000000001.log
+```
+
+
+## Test with activity on topic
+
+Simply run:
+
+```
+$ ./activity.sh
+```
+
+Create a topic `testtopic` with 30 seconds retention:
+
+```bash
+$ docker exec broker kafka-topics --create --topic testtopic --partitions 1 --replication-factor 1 --zookeeper zookeeper:2181 --config segment.ms=15000 --config retention.ms=30000
+```
+
+Sending message to topic testtopic every second for 50 seconds
+
+```bash
+$ i=0
+while [ $i -le 50 ]
+do
+  log "Sending message $i to topic testtopic"
+docker exec -i broker kafka-console-producer --broker-list broker:9092 --topic testtopic << EOF
+This is my message
+EOF
+  sleep 1
+  ((i++))
+done
+```
+
+```bash
+$ docker exec broker ls -lrt /var/lib/kafka/data/testtopic-0/
+```
+
+Result (no cleanup):
+
+```
+-rw-r--r-- 1 root root        8 Feb 21 11:46 leader-epoch-checkpoint
+-rw-r--r-- 1 root root 10485756 Feb 21 11:49 00000000000000000000.timeindex
+-rw-r--r-- 1 root root 10485760 Feb 21 11:49 00000000000000000000.index
+-rw-r--r-- 1 root root     4386 Feb 21 11:49 00000000000000000000.log
+```
+
+One minute after last message (no activity), cleanup is done:
+
+```
+-rw-r--r-- 1 root root     4386 Feb 21 11:49 00000000000000000000.log.deleted
+-rw-r--r-- 1 root root        8 Feb 21 11:50 00000000000000000000.index.deleted
+-rw-r--r-- 1 root root       24 Feb 21 11:50 00000000000000000000.timeindex.deleted
+-rw-r--r-- 1 root root       10 Feb 21 11:50 00000000000000000051.snapshot
+-rw-r--r-- 1 root root        0 Feb 21 11:50 00000000000000000051.log
+-rw-r--r-- 1 root root        9 Feb 21 11:50 leader-epoch-checkpoint
+-rw-r--r-- 1 root root 10485756 Feb 21 11:51 00000000000000000051.timeindex
+```
 
 N.B: Control Center is reachable at [http://127.0.0.1:9021](http://127.0.0.1:9021])
