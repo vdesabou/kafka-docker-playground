@@ -102,7 +102,7 @@ Sending message to topic testtopic every second for 50 seconds
 $ i=0
 while [ $i -le 50 ]
 do
-  log "Sending message $i to topic testtopic"
+  Sending message $i to topic testtopic
 docker exec -i broker kafka-console-producer --broker-list broker:9092 --topic testtopic << EOF
 This is my message
 EOF
@@ -141,7 +141,7 @@ One minute after last message (no activity), cleanup is done:
 Simply run:
 
 ```
-$ ./activity.sh
+$ ./activity-small-segment-ms.sh
 ```
 
 Create a topic `testtopic` with 30 seconds retention and `segment.ms` 15000:
@@ -156,7 +156,7 @@ Sending message to topic testtopic every second for 50 seconds
 $ i=0
 while [ $i -le 50 ]
 do
-  log "Sending message $i to topic testtopic"
+  Sending message $i to topic testtopic
 docker exec -i broker kafka-console-producer --broker-list broker:9092 --topic testtopic << EOF
 This is my message
 EOF
@@ -194,6 +194,70 @@ Result (cleanup):
 -rw-r--r-- 1 root root        0 Feb 21 12:03 00000000000000000046.index
 -rw-r--r-- 1 root root 10485756 Feb 21 12:03 00000000000000000050.timeindex
 -rw-r--r-- 1 root root        9 Feb 21 12:03 leader-epoch-checkpoint
+```
+
+## Impact of message timestamp
+
+In order to detect "activity", the log cleaner is looking at message timestamps.
+If you have a producer that is sending messages with old timestamps, then the log cleaner will remove the segments as it will consider the segment as inactive (due to old timestamps).
+
+If you can't fix the producer timestamps, you can set at topic level the config `message.timestamp.type=LogAppendTime` (by default it is `CreateTime`).
+
+If you want to test, simply run:
+
+```
+$ ./old-timestamp.sh
+```
+
+* Test with `message.timestamp.type=CreateTime` (default)
+
+Create a topic testtopic with 30 seconds retention
+
+```bash
+docker exec broker kafka-topics --create --topic testtopic --partitions 1 --replication-factor 1 --zookeeper zookeeper:2181 --config retention.ms=30000
+```
+
+Run a Java producer, it sends one request per second and uses old timestamps
+
+```bash
+docker exec producer bash -c "java -jar producer-1.0.0-jar-with-dependencies.jar" > producer.log 2>&1 &
+```
+
+sleep 60
+
+docker exec broker ls -lrt /var/lib/kafka/data/testtopic-0/
+
+Result (cleanup):
+
+```
+-rw-r--r-- 1 root root     2370 Feb 21 12:53 00000000000000000258.log.deleted
+-rw-r--r-- 1 root root       12 Feb 21 12:53 00000000000000000258.timeindex.deleted
+-rw-r--r-- 1 root root        0 Feb 21 12:53 00000000000000000258.index.deleted
+-rw-r--r-- 1 root root     2370 Feb 21 12:53 00000000000000000288.log.deleted
+-rw-r--r-- 1 root root        0 Feb 21 12:53 00000000000000000288.index.deleted
+-rw-r--r-- 1 root root       10 Feb 21 12:53 00000000000000000318.snapshot
+-rw-r--r-- 1 root root       12 Feb 21 12:53 00000000000000000288.timeindex.deleted
+-rw-r--r-- 1 root root       10 Feb 21 12:53 leader-epoch-checkpoint
+-rw-r--r-- 1 root root 10485756 Feb 21 12:53 00000000000000000318.timeindex
+-rw-r--r-- 1 root root 10485760 Feb 21 12:53 00000000000000000318.index
+-rw-r--r-- 1 root root     1659 Feb 21 12:54 00000000000000000318.log
+```
+
+* Test with `message.timestamp.type=LogAppendTime`
+
+create a topic testtopic with 30 seconds retention and message.timestamp.type=LogAppendTime
+
+```bash
+docker exec broker kafka-topics --create --topic testtopic --partitions 1 --replication-factor 1 --zookeeper zookeeper:2181 --config retention.ms=30000 --config message.timestamp.type=LogAppendTime
+```
+
+Result (no cleanup):
+
+```
+-rw-r--r-- 1 root root        8 Feb 21 12:55 leader-epoch-checkpoint
+-rw-r--r-- 1 root root 10485756 Feb 21 12:56 00000000000000000000.timeindex
+-rw-r--r-- 1 root root 10485760 Feb 21 12:56 00000000000000000000.index
+-rw-r--r-- 1 root root     4514 Feb 21 12:56 00000000000000000000.log
 ```
 
 N.B: Control Center is reachable at [http://127.0.0.1:9021](http://127.0.0.1:9021])
