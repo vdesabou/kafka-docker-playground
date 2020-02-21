@@ -7,14 +7,13 @@ source ${DIR}/../../scripts/utils.sh
 
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.yml"
 
-log "create a topic testtopic with 30 seconds retention"
-docker exec broker kafka-topics --create --topic testtopic --partitions 1 --replication-factor 1 --zookeeper zookeeper:2181 --config retention.ms=30000
+log "create a topic testtopic with 30 seconds retention and 15 segment.ms"
+docker exec broker kafka-topics --create --topic testtopic --partitions 1 --replication-factor 1 --zookeeper zookeeper:2181 --config retention.ms=30000 --config segment.ms=15000
 
 log "Describe new topic testtopic"
 docker exec zookeeper kafka-topics --describe --topic testtopic --zookeeper zookeeper:2181
 
 sleep 1
-
 
 i=0
 while [ $i -le 50 ]
