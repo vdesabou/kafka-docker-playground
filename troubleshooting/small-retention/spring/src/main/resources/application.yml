@@ -1,2 +1,0 @@
-kafka:
-  bootstrap-servers: broker:9092
