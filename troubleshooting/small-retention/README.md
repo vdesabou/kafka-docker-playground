@@ -25,9 +25,9 @@ data for five days because we can’t delete the data before the segment is clos
 ## TL;DR
 
 The definitive guide is correct, you need to have `segment.ms` lower than `retention.ms` otherwise cleanup will not happen before `segment.ms` is reached.
-But there is one exception: if the segment is *inactive* when the log cleaner happens, then the `retention.ms` will take precedence over the `segment.ms`.
+But there is one exception: if all the messages in the segment are *expired*, i.e they are older than the `retention.ms`. In that case, when the log cleaner is triggered, then the `retention.ms` will take precedence over the `segment.ms`, and the segment will be marked for deletion (and removed after `log.segment.delete.delay.ms` (default 60000))
 
-Message timestamps are used in order to check if a segment is "inactive", so a producer sending old timestamps can have an impact on retention.
+Message timestamps are used in order to check if it is *expired*, so a producer sending old timestamps can have an impact on retention, see [Impact of message timestamp](#impact-of-message-timestamp)
 
 ## TESTING
 
@@ -250,7 +250,9 @@ docker exec producer bash -c "java -jar producer-1.0.0-jar-with-dependencies.jar
 
 sleep 60
 
+```bash
 docker exec broker ls -lrt /var/lib/kafka/data/testtopic-0/
+```
 
 Result: **CLEANUP**
 
@@ -270,7 +272,7 @@ Result: **CLEANUP**
 
 * Test with `message.timestamp.type=LogAppendTime`
 
-create a topic testtopic with 30 seconds retention and message.timestamp.type=LogAppendTime
+Create a topic testtopic with 30 seconds retention and message.timestamp.type=LogAppendTime
 
 ```bash
 docker exec broker kafka-topics --create --topic testtopic --partitions 1 --replication-factor 1 --zookeeper zookeeper:2181 --config retention.ms=30000 --config message.timestamp.type=LogAppendTime
