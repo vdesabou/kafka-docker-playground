@@ -3,10 +3,26 @@
 
 ## Objective
 
-Better understand what the link between `retention.ms` and `segment.ms`
+Better understand what the link between topic configuration `retention.ms` and `segment.ms`
 
+Definitive guide says:
 
-Important: `log.retention.check.interval.ms` should be reduced otherwise cleanup only happens after 5 minutes (default):
+```
+The segment we are currently writing to is called an active segment.
+The active segment is never deleted, so if you set log retention to only store a day
+of data but each segment contains five days of data, you will really keep
+data for five days because we can’t delete the data before the segment is closed.
+```
+
+## TL;DR
+
+The definitive guide is correct, you need to have `segment.ms` lower than `retention.ms` otherwise cleanup will not happen before `segment.ms` is reached, but there is one exception: if the segment is *inactive* when the log cleaner happens, then the `retention.ms` will take precedence over the `segment.ms`.
+
+Message timestamps are used to check a segment as "inactive" so a producer sendiing old timestamps can have an impact on retention.
+
+## TESTING
+
+**Important:** `log.retention.check.interval.ms` should be reduced otherwise cleanup only happens after 5 minutes (default):
 
 ```yml
   broker:
@@ -14,7 +30,7 @@ Important: `log.retention.check.interval.ms` should be reduced otherwise cleanup
       KAFKA_LOG_RETENTION_CHECK_INTERVAL_MS: 30000
 ```
 
-## Test with no activity on topic
+### Test with no activity on topic
 
 Simply run:
 
@@ -66,7 +82,7 @@ EOF
 docker exec broker ls -lrt /var/lib/kafka/data/testtopic-0/
 ```
 
-Result (cleanup):
+Result: **CLEANUP**
 
 ```
 12:25:57 Sending message to topic testtopic
@@ -82,7 +98,7 @@ Result (cleanup):
 ```
 
 
-## Test with activity on topic
+### Test with activity on topic
 
 Simply run:
 
@@ -115,7 +131,7 @@ done
 $ docker exec broker ls -lrt /var/lib/kafka/data/testtopic-0/
 ```
 
-Result (no cleanup):
+Result: **NO CLEANUP**
 
 ```
 -rw-r--r-- 1 root root        8 Feb 21 11:46 leader-epoch-checkpoint
@@ -136,7 +152,7 @@ One minute after last message (no activity), cleanup is done:
 -rw-r--r-- 1 root root 10485756 Feb 21 11:51 00000000000000000051.timeindex
 ```
 
-## Test with activity on topic and segment.ms=15000
+### Test with activity on topic and segment.ms=15000
 
 Simply run:
 
@@ -169,7 +185,7 @@ done
 $ docker exec broker ls -lrt /var/lib/kafka/data/testtopic-0/
 ```
 
-Result (cleanup):
+Result: **CLEANUP**
 
 ```
 -rw-r--r-- 1 root root      344 Feb 21 12:02 00000000000000000030.log.deleted
@@ -196,7 +212,7 @@ Result (cleanup):
 -rw-r--r-- 1 root root        9 Feb 21 12:03 leader-epoch-checkpoint
 ```
 
-## Impact of message timestamp
+### Impact of message timestamp
 
 In order to detect "activity", the log cleaner is looking at message timestamps.
 If you have a producer that is sending messages with old timestamps, then the log cleaner will remove the segments as it will consider the segment as inactive (due to old timestamps).
@@ -227,7 +243,7 @@ sleep 60
 
 docker exec broker ls -lrt /var/lib/kafka/data/testtopic-0/
 
-Result (cleanup):
+Result: **CLEANUP**
 
 ```
 -rw-r--r-- 1 root root     2370 Feb 21 12:53 00000000000000000258.log.deleted
@@ -251,7 +267,7 @@ create a topic testtopic with 30 seconds retention and message.timestamp.type=Lo
 docker exec broker kafka-topics --create --topic testtopic --partitions 1 --replication-factor 1 --zookeeper zookeeper:2181 --config retention.ms=30000 --config message.timestamp.type=LogAppendTime
 ```
 
-Result (no cleanup):
+Result: **NO CLEANUP**
 
 ```
 -rw-r--r-- 1 root root        8 Feb 21 12:55 leader-epoch-checkpoint
