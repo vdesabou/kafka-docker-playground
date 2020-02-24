@@ -74,8 +74,7 @@ $ docker exec connect \
                     "mongodb.hosts" : "debezium/mongodb:27017",
                     "mongodb.name" : "dbserver1",
                     "mongodb.user" : "debezium",
-                    "mongodb.password" : "dbz",
-                    "database.history.kafka.bootstrap.servers" : "broker:9092"
+                    "mongodb.password" : "dbz"
           }' \
      http://localhost:8083/connectors/debezium-mongodb-source/config | jq .
 ```

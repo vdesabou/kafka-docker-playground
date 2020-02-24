@@ -30,8 +30,6 @@ docker exec connect \
                     "database.password": "postgres",
                     "database.dbname" : "postgres",
                     "database.server.name": "asgard",
-                    "database.history.kafka.bootstrap.servers": "broker:9092",
-                    "database.history.kafka.topic": "schema-changes.postgres",
                     "transforms": "addTopicSuffix",
                     "transforms.addTopicSuffix.type":"org.apache.kafka.connect.transforms.RegexRouter",
                     "transforms.addTopicSuffix.regex":"(.*)",
