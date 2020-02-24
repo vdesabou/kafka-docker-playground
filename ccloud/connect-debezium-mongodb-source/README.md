@@ -71,12 +71,7 @@ $ docker exec connect \
                "mongodb.hosts" : "debezium/mongodb:27017",
                "mongodb.name" : "dbserver1",
                "mongodb.user" : "debezium",
-               "mongodb.password" : "dbz",
-               "database.history.kafka.bootstrap.servers": "'"$BOOTSTRAP_SERVERS"'",
-               "database.history.kafka.ssl.endpoint.identification.algorithm" : "https",
-               "database.history.kafka.sasl.mechanism" : "PLAIN",
-               "database.history.kafka.sasl.jaas.config" : "org.apache.kafka.common.security.plain.PlainLoginModule required username=\"'$CLOUD_KEY'\" password=\"'$CLOUD_SECRET'\";",
-               "database.history.kafka.security.protocol" : "SASL_SSL"
+               "mongodb.password" : "dbz"
           }' \
      http://localhost:8083/connectors/debezium-mongodb-source/config | jq .
 ```
