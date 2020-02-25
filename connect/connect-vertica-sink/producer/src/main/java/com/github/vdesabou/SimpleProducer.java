@@ -102,7 +102,7 @@ public class SimpleProducer {
                 });
                 producer.flush();
                 i++;
-                TimeUnit.MILLISECONDS.sleep(1000);
+                //TimeUnit.MILLISECONDS.sleep(1);
             }
         }
     }
