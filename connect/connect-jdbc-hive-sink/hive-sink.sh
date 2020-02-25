@@ -28,6 +28,8 @@ docker exec -i hive-server /opt/hive/bin/beeline -u jdbc:hive2://localhost:10000
 CREATE TABLE pokes (foo INT, bar STRING);
 EOF
 # LOAD DATA LOCAL INPATH '/opt/hive/examples/files/kv1.txt' OVERWRITE INTO TABLE pokes;
+
+
 docker exec -i hive-server /opt/hive/bin/beeline -u jdbc:hive2://localhost:10000 << EOF
 show databases
 EOF
@@ -44,13 +46,17 @@ docker exec connect \
      --data '{
                "connector.class" : "io.confluent.connect.jdbc.JdbcSinkConnector",
                "tasks.max" : "1",
-               "connection.url": "jdbc:hive2://hive-server:10000",
+               "connection.url": "jdbc:hive2://hive-server:10000/default;LogLevel=6",
                "auto.create": "true",
-               "topics": "pokes"
+               "auto.evolve": "true",
+               "topics": "pokes",
+               "pk.mode": "record_value",
+               "pk.fields": "foo",
+               "table.name.format": "default.${topic}"
           }' \
      http://localhost:8083/connectors/jdbc-hive-sink/config | jq .
 
-
+#
 
 sleep 10
 
