@@ -39,8 +39,6 @@ EOF
 log "Sending messages to topic pokes"
 seq -f "{\"foo\": %g,\"bar\": \"a string\"}" 10 | docker exec -i connect kafka-avro-console-producer --broker-list broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic pokes --property value.schema='{"type":"record","name":"myrecord","fields":[{"name":"foo","type":"int"},{"name":"bar","type":"string"}]}'
 
-
-
 log "Creating JDBC Hive (with Datadirect) sink connector"
 docker exec connect \
      curl -X PUT \
@@ -64,17 +62,3 @@ log "Check data is in hive"
 ${DIR}/presto.jar --server localhost:18080 --catalog hive --schema default << EOF
 select * from pokes;
 EOF
-
-#  foo |   bar
-# -----+----------
-#    1 | a string
-#    2 | a string
-#    3 | a string
-#    4 | a string
-#    5 | a string
-#    6 | a string
-#    7 | a string
-#    8 | a string
-#    9 | a string
-#   10 | a string
-# (10 rows)

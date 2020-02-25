@@ -9,3 +9,5 @@ gcp-firebase-sink.sh
 gcp-firebase-source.sh
 gcp-spanner.sh
 redshift-iam.sh
+hive-sink.sh
+hive-sink-datadirect.sh
