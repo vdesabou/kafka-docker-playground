@@ -15,12 +15,14 @@ docker exec connect \
      -H "Content-Type: application/json" \
      --data '{
                "connector.class" : "io.confluent.connect.rabbitmq.RabbitMQSourceConnector",
-                  "tasks.max" : "1",
-                  "kafka.topic" : "rabbitmq",
-                  "rabbitmq.queue" : "myqueue",
-                  "rabbitmq.host" : "rabbitmq",
-                  "rabbitmq.username" : "myuser",
-                  "rabbitmq.password" : "mypassword"
+               "tasks.max" : "1",
+               "kafka.topic" : "rabbitmq",
+               "rabbitmq.queue" : "myqueue",
+               "rabbitmq.host" : "rabbitmq",
+               "rabbitmq.username" : "myuser",
+               "rabbitmq.password" : "mypassword",
+               "confluent.topic.bootstrap.servers": "broker:9092",
+               "confluent.topic.replication.factor": "1"
           }' \
      http://localhost:8083/connectors/rabbitmq-source/config | jq .
 
