@@ -67,7 +67,6 @@ fi
 
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext-dv.yml"
 
-
 log "Create the table customer1"
 docker exec -i vertica /opt/vertica/bin/vsql -hlocalhost -Udbadmin << EOF
 CREATE TABLE public.customer1
@@ -100,13 +99,15 @@ sleep 2
 
 log "Sending messages to topic customer (done using JAVA producer)"
 
+sleep 60
+
 log "Creating Vertica sink connector"
 docker exec connect \
      curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
                "connector.class" : "io.confluent.vertica.VerticaSinkConnector",
-                    "tasks.max" : "1",
+                    "tasks.max" : "10",
                     "vertica.database": "docker",
                     "vertica.host": "vertica",
                     "vertica.port": "5433",
@@ -116,7 +117,6 @@ docker exec connect \
                     "errors.log.enable": "true",
                     "errors.log.include.messages": "true",
                     "topics": "customer",
-                    "enable.auto.commit": "false",
                     "transforms": "TombstoneToNull, insert_dwhCreateDate, KeyToValue, cast_kafkaId_toInt, mapMyTableFieldToTopic,MyTimestamp_convert",
                     "transforms.TombstoneToNull.type": "com.github.vdesabou.kafka.connect.transforms.TombstoneToNull",
                     "transforms.insert_dwhCreateDate.type": "org.apache.kafka.connect.transforms.InsertField$Value",
@@ -135,7 +135,12 @@ docker exec connect \
                     "value.converter.schema.registry.url":"http://schema-registry:8081",
                     "vertica.load.method": "DIRECT",
                     "confluent.topic.bootstrap.servers": "broker:9092",
-                    "confluent.topic.replication.factor": "1"
+                    "confluent.topic.replication.factor": "1",
+                    "consumer.override.max.poll.records": "10000",
+                    "consumer.override.fetch.max.wait.ms": "30000",
+                    "consumer.override.fetch.min.bytes": "10000000",
+                    "consumer.override.fetch.max.bytes": "100000000",
+                    "consumer.override.request.timeout.ms": "60000"
           }' \
      http://localhost:8083/connectors/vertica-sink/config | jq .
 
@@ -188,3 +193,11 @@ EOF
 #  v_docker_node0001 | STDIN (Batch No. 1) | v_docker_node0001-109:0x22 | 45035996273705393 |           10 |            0 |          3 | h�P~�Ap��~�A |                        25 | Field size (8) is corrupted for column 7 (MyTimestamp). It does not fit within the row
 #  v_docker_node0001 | STDIN (Batch No. 1) | v_docker_node0001-109:0x22 | 45035996273705393 |           10 |            0 |          4 | �`~�A�`~�A |                        25 | Field size (8) is corrupted for column 7 (MyTimestamp). It does not fit within the row
 # (2 rows)
+
+exit 0
+
+
+docker exec broker kafka-consumer-groups --bootstrap-server broker:9092 --group connect-vertica-sink --describe
+
+docker exec broker kafka-consumer-groups --bootstrap-server broker:9092 --group connect-vertica-sink --to-earliest --topic customer --reset-offsets --dry-run
+docker exec broker kafka-consumer-groups --bootstrap-server broker:9092 --group connect-vertica-sink --to-earliest --topic customer --reset-offsets --execute
