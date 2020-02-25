@@ -1,0 +1,87 @@
+---
+version: '3.5'
+services:
+
+  # using https://github.com/big-data-europe/docker-hive
+
+  namenode:
+    hostname: namenode
+    container_name: namenode
+    image: bde2020/hadoop-namenode:2.0.0-hadoop2.7.4-java8
+    volumes:
+      - namenode:/hadoop/dfs/name
+    environment:
+      - CLUSTER_NAME=test
+    env_file:
+      - ../../connect/connect-jdbc-hive-sink/hadoop-hive.env
+    ports:
+      - "50070:50070"
+
+  datanode:
+    hostname: datanode
+    container_name: datanode
+    image: bde2020/hadoop-datanode:2.0.0-hadoop2.7.4-java8
+    volumes:
+      - datanode:/hadoop/dfs/data
+    env_file:
+      - ../../connect/connect-jdbc-hive-sink/hadoop-hive.env
+    environment:
+      SERVICE_PRECONDITION: "namenode:50070"
+    ports:
+      - "50075:50075"
+
+  hive-server:
+    hostname: hive-server
+    container_name: hive-server
+    image: bde2020/hive:2.3.2-postgresql-metastore
+    env_file:
+      - ../../connect/connect-jdbc-hive-sink/hadoop-hive.env
+    environment:
+      HIVE_CORE_CONF_javax_jdo_option_ConnectionURL: "jdbc:postgresql://hive-metastore/metastore"
+      SERVICE_PRECONDITION: "hive-metastore:9083"
+    ports:
+      - "10000:10000"
+
+  hive-metastore:
+    hostname: hive-metastore
+    container_name: hive-metastore
+    image: bde2020/hive:2.3.2-postgresql-metastore
+    env_file:
+      - ../../connect/connect-jdbc-hive-sink/hadoop-hive.env
+    command: /opt/hive/bin/hive --service metastore
+    environment:
+      SERVICE_PRECONDITION: "namenode:50070 datanode:50075 hive-metastore-postgresql:5432"
+    ports:
+      - "9083:9083"
+
+  hive-metastore-postgresql:
+    hostname: hive-metastore-postgresql
+    container_name: hive-metastore-postgresql
+    image: bde2020/hive-metastore-postgresql:2.3.0
+
+  presto-coordinator:
+    hostname: presto-coordinator
+    container_name: presto-coordinator
+    image: shawnzhu/prestodb:0.181
+    ports:
+      - "18080:8080"
+
+  connect:
+    depends_on:
+      - zookeeper
+      - broker
+      - schema-registry
+      - hive-server
+      - presto-coordinator
+    volumes:
+        - ../../connect/connect-jdbc-hive-sink/hive-jdbc-3.1.2-standalone.jar:/usr/share/confluent-hub-components/confluentinc-kafka-connect-jdbc/lib/hive-jdbc-3.1.2-standalone.jar
+    environment:
+      CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-jdbc
+
+volumes:
+  namenode:
+  datanode:
+
+networks:
+  common-network:
+    driver: overlay
