@@ -4,13 +4,14 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
-if [ ! -f ${DIR}/hive-jdbc-3.1.2-standalone.jar ]
+if [ ! -f ${DIR}/hive.jar ]
 then
-     log "Getting hive-jdbc-3.1.2-standalone.jar"
-     wget https://repo1.maven.org/maven2/org/apache/hive/hive-jdbc/3.1.2/hive-jdbc-3.1.2-standalone.jar
+     log "hive.jar is missing. Follow https://documentation.progress.com/output/DataDirect/jdbcquickstarts/hivejdbc_quickstart/index.html#page/jdbchivequick%2Fquick-start-3a-progress-datadirect-for-jdbc-for-ap.html%23 to install it"
+     exit 1
 fi
 
 # https://documentation.progress.com/output/DataDirect/jdbcquickstarts/hivejdbc_quickstart/index.html#page/jdbchivequick%2Fdownloading-the-driver.html%23wwID0EB2AG
+# https://documentation.progress.com/output/DataDirect/jdbchivehelp/index.html#page/jdbchive%2Fwelcome-to-the-progress-datadirect-for-jdbc-for.html%23
 
 if [ ! -f ${DIR}/presto.jar ]
 then
@@ -21,7 +22,7 @@ then
 fi
 
 
-${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
+${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.datadirect.yml"
 
 sleep 30
 
@@ -29,7 +30,6 @@ log "Create table in hive"
 docker exec -i hive-server /opt/hive/bin/beeline -u jdbc:hive2://localhost:10000 << EOF
 CREATE TABLE pokes (foo INT, bar STRING);
 EOF
-# LOAD DATA LOCAL INPATH '/opt/hive/examples/files/kv1.txt' OVERWRITE INTO TABLE pokes;
 
 
 docker exec -i hive-server /opt/hive/bin/beeline -u jdbc:hive2://localhost:10000 << EOF
@@ -41,14 +41,14 @@ seq -f "{\"foo\": %g,\"bar\": \"a string\"}" 10 | docker exec -i connect kafka-a
 
 
 
-log "Creating JDBC Hive sink connector"
+log "Creating JDBC Hive (with Datadirect) sink connector"
 docker exec connect \
      curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
                "connector.class" : "io.confluent.connect.jdbc.JdbcSinkConnector",
                "tasks.max" : "1",
-               "connection.url": "jdbc:hive2://hive-server:10000/default",
+               "connection.url": "jdbc:datadirect:hive://hive-server:10000;DatabaseName=default;User=hive;Password=hive;TransactionMode=ignore",
                "auto.create": "true",
                "auto.evolve": "true",
                "topics": "pokes",
@@ -58,11 +58,23 @@ docker exec connect \
           }' \
      http://localhost:8083/connectors/jdbc-hive-sink/config | jq .
 
-#
-
 sleep 10
 
 log "Check data is in hive"
 ${DIR}/presto.jar --server localhost:18080 --catalog hive --schema default << EOF
 select * from pokes;
 EOF
+
+#  foo |   bar
+# -----+----------
+#    1 | a string
+#    2 | a string
+#    3 | a string
+#    4 | a string
+#    5 | a string
+#    6 | a string
+#    7 | a string
+#    8 | a string
+#    9 | a string
+#   10 | a string
+# (10 rows)
