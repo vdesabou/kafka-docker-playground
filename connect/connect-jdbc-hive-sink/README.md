@@ -6,7 +6,7 @@
 
 * Using [Progress DataDirect JDBC driver](https://documentation.progress.com/output/DataDirect/jdbcquickstarts/hivejdbc_quickstart/index.html#page/jdbchivequick%2Fquick-start-3a-progress-datadirect-for-jdbc-for-ap.html%23)
 
-A working version is available with [Progress DataDirect JDBC driver](https://documentation.progress.com/output/DataDirect/jdbcquickstarts/hivejdbc_quickstart/index.html#page/jdbchivequick%2Fquick-start-3a-progress-datadirect-for-jdbc-for-ap.html%23)
+A working version is available with [Progress DataDirect JDBC driver](https://documentation.progress.com/output/DataDirect/jdbcquickstarts/hivejdbc_quickstart/index.html#page/jdbchivequick%2Fquick-start-3a-progress-datadirect-for-jdbc-for-ap.html%23), you must download install the driver manually and place it in `./hive.jar`
 
 ## Objective
 
@@ -48,8 +48,7 @@ $ seq -f "{\"foo\": %g,\"bar\": \"a string\"}" 10 | docker exec -i connect kafka
 ```
 
 
-Creating JDBC Vertica sink connector
-
+Using Apache Hive JDBC driver:
 
 ```bash
 $ docker exec connect \
@@ -70,7 +69,6 @@ $ docker exec connect \
 ```
 
 Using DataDirect JDBC driver:
-
 
 Check data is in hive
 ```bash
