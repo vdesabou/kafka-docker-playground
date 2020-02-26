@@ -1,15 +1,9 @@
 ---
 version: '3.5'
 services:
-  sftp-server:
-    image: atmoz/sftp
-    hostname: sftp-server
-    container_name: sftp-server
-    ports:
-      - "2222:22"
-    command: foo:pass:::upload
-
   connect:
+    # volumes:
+    #     - ../../connect/connect-sftp-source/kafka-connect-sftp-1.0.4-SNAPSHOT.jar:/usr/share/confluent-hub-components/confluentinc-kafka-connect-sftp/lib/kafka-connect-sftp-1.0.3.jar
     environment:
       CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-sftp
       # CONNECT_LOG4J_LOGGERS: org.reflections=ERROR,io.confluent.connect.sftp.source=TRACE
