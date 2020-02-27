@@ -1,0 +1,74 @@
+---
+version: '3.5'
+services:
+
+  zookeeper:
+    volumes:
+      - ../../other/write-logs-to-files/zookeeper/log4j.template.properties:/etc/confluent/docker/log4j.properties.template
+      - ../../other/write-logs-to-files/zookeeper/logs:/var/log/zookeeper/
+    environment:
+      ZOOKEEPER_LOG4J_ROOT_LOGLEVEL: "DEBUG"
+      # ZOOKEEPER_LOG4J_LOGGERS: ""
+
+  broker:
+    volumes:
+      - ../../other/write-logs-to-files/broker/log4j.template.properties:/etc/confluent/docker/log4j.properties.template
+      - ../../other/write-logs-to-files/broker/logs:/var/log/broker/
+    environment:
+      # KAFKA_LOG4J_ROOT_LOGLEVEL: "TRACE"
+      KAFKA_LOG4J_LOGGERS: "org.I0Itec.zkclient.ZkClient=INFO,org.apache.zookeeper=INFO,kafka.network.Processor=TRACE"
+
+  schema-registry:
+    volumes:
+      - ../../other/write-logs-to-files/schema-registry/log4j.template.properties:/etc/confluent/docker/log4j.properties.template
+      - ../../other/write-logs-to-files/schema-registry/logs:/var/log/schema-registry/
+    environment:
+      SCHEMA_REGISTRY_LOG4J_ROOT_LOGLEVEL: "DEBUG"
+      # SCHEMA_REGISTRY_LOG4J_LOGGERS: ""
+
+  connect:
+    volumes:
+      - ../../other/write-logs-to-files/connect/log4j.template.properties:/etc/confluent/docker/log4j.properties.template
+      - ../../other/write-logs-to-files/connect/logs:/var/log/connect/
+    environment:
+      CONNECT_LOG4J_ROOT_LOGLEVEL: "TRACE"
+      CONNECT_LOG4J_LOGGERS: "org.apache.zookeeper=ERROR,org.I0Itec.zkclient=ERROR,org.reflections=ERROR"
+      # CONNECT_LOG4J_APPENDER_STDOUT_LAYOUT_CONVERSIONPATTERN: "[%d] %p %m (%c)%n'"
+
+  control-center:
+    volumes:
+      - ../../other/write-logs-to-files/control-center/log4j.template.properties:/etc/confluent/docker/log4j.properties.template
+      - ../../other/write-logs-to-files/control-center/logs:/var/log/control-center/
+    environment:
+      CONTROL_CENTER_LOG4J_ROOT_LOGLEVEL: "DEBUG"
+      # CONTROL_CENTER_LOG4J_LOGGERS: ""
+
+  ksql-server:
+    image: confluentinc/cp-ksql-server:${TAG}
+    hostname: ksql-server
+    container_name: ksql-server
+    depends_on:
+      - broker
+      - schema-registry
+    ports:
+      - "8088:8088"
+    volumes:
+      - ../../other/write-logs-to-files/ksql-server/log4j.template.properties:/etc/confluent/docker/log4j.properties.template
+      - ../../other/write-logs-to-files/ksql-server/logs:/var/log/ksql-server/
+    environment:
+      KSQL_CONFIG_DIR: "/etc/ksql"
+      KSQL_BOOTSTRAP_SERVERS: "broker:9092"
+      KSQL_HOST_NAME: ksql-server
+      KSQL_LISTENERS: "http://0.0.0.0:8088"
+      KSQL_CACHE_MAX_BYTES_BUFFERING: 0
+      KSQL_KSQL_SCHEMA_REGISTRY_URL: "http://schema-registry:8081"
+      KSQL_PRODUCER_INTERCEPTOR_CLASSES: "io.confluent.monitoring.clients.interceptor.MonitoringProducerInterceptor"
+      KSQL_CONSUMER_INTERCEPTOR_CLASSES: "io.confluent.monitoring.clients.interceptor.MonitoringConsumerInterceptor"
+      KSQL_LOG4J_ROOT_LOGLEVEL: "DEBUG"
+      KSQL_LOG4J_LOGGERS: "org.reflections=ERROR"
+      # — Processing log config —
+      KSQL_LOG4J_PROCESSING_LOG_BROKERLIST: broker:9092
+      KSQL_LOG4J_PROCESSING_LOG_TOPIC: demo_processing_log
+      KSQL_KSQL_LOGGING_PROCESSING_TOPIC_NAME: demo_processing_log
+      KSQL_KSQL_LOGGING_PROCESSING_TOPIC_AUTO_CREATE: "true"
+      KSQL_KSQL_LOGGING_PROCESSING_STREAM_AUTO_CREATE: "true"
