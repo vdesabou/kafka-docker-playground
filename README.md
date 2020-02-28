@@ -22,7 +22,7 @@ export TAG=5.3.2
   - [↘️ Source](#️-source)
   - [↗️ Sink](#️-sink)
 - [☁️ Confluent Cloud](#️-confluent-cloud)
-  - [<img src="https://pbs.twimg.com/profile_images/979058850207641601/cLCehePZ.jpg" width="15"> Confluent Cloud Demo](#img-srchttpspbstwimgcomprofile_images979058850207641601clcehepzjpg-width15-confluent-cloud-demo)
+  - [Confluent Cloud Demo](#confluent-cloud-demo)
   - [🔗 Kafka Connectors connected to Confluent Cloud](#-kafka-connectors-connected-to-confluent-cloud)
 - [🔄 Confluent Replicator](#-confluent-replicator)
 - [🔐 Environments](#-environments)
@@ -55,7 +55,7 @@ Quick start examples from Confluent [docs](https://docs.confluent.io/current/con
     * <img src="https://res.cloudinary.com/practicaldev/image/fetch/s--HWZDLotH--/c_fill,f_auto,fl_progressive,h_320,q_auto,w_320/https://thepracticaldev.s3.amazonaws.com/uploads/user/profile_image/56177/3a0504e3-1139-4110-b903-08949636010a.jpg" width="15"> [MongoDB](connect/connect-debezium-mongodb-source)
     * <img src="https://www.netclipart.com/pp/m/39-396469_sql-server-logo-png.png" width="15"> [SQL Server](connect/connect-debezium-sqlserver-source)
 * <img src="https://developer.ibm.com/messaging/wp-content/uploads/sites/18/2017/09/IBM-MQ-Sticker-300x260.png" width="15"> [IBM MQ](connect/connect-ibm-mq-source)
-* <img src="https://pbs.twimg.com/profile_images/999017305869697024/eHwBaQtB_400x400.jpg" width="15"> [Solace](connect/connect-solace-source)
+* <img src="https://cdn.solace.com/wp-content/uploads/2014/05/solace-featured-image_logo-on-white.jpg" width="15"> [Solace](connect/connect-solace-source)
 * <img src="https://img.stackshare.io/service/1062/vlz__1_.png" width="15"> [ActiveMQ](connect/connect-active-mq-source)
 * <img src="https://media.glassdoor.com/sql/6280/tibco-software-squarelogo-1432805681756.png" width="15"> [TIBCO EMS](connect/connect-tibco-source)
 * <img src="https://phelepjeremy.files.wordpress.com/2017/06/syslog-ng-logo.png?w=200" width="15"> [Syslog](connect/connect-syslog-source)
@@ -107,7 +107,7 @@ Quick start examples from Confluent [docs](https://docs.confluent.io/current/con
         * using [LDAP Authorizer SASL/PLAIN](connect/connect-gcp-gcs-sink/README.md#with-ldap-authorizer-with-saslplain)
     * <img src="https://cdn.worldvectorlogo.com/logos/firebase-1.svg" width="15"> [Firebase](connect/connect-gcp-firebase-sink)
     * <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/8/84/Cloud-Spanner-Logo.svg/1200px-Cloud-Spanner-Logo.svg.png" width="15"> [Spanner](connect/connect-gcp-spanner-sink)
-* <img src="https://pbs.twimg.com/profile_images/999017305869697024/eHwBaQtB_400x400.jpg" width="15"> [Solace](connect/connect-solace-sink)
+* <img src="https://cdn.solace.com/wp-content/uploads/2014/05/solace-featured-image_logo-on-white.jpg" width="15"> [Solace](connect/connect-solace-sink)
 * <img src="http://www.pharmajournalist.com/wp-content/uploads/2017/11/splunk-logo.jpg" width="15"> [Splunk](connect/connect-splunk-sink)
 * <img src="https://media.glassdoor.com/sql/6280/tibco-software-squarelogo-1432805681756.png" width="15"> [TIBCO EMS](connect/connect-tibco-sink)
 * <img src="https://developer.ibm.com/messaging/wp-content/uploads/sites/18/2017/09/IBM-MQ-Sticker-300x260.png" width="15"> [IBM MQ](connect/connect-ibm-mq-sink)
@@ -121,13 +121,14 @@ Quick start examples from Confluent [docs](https://docs.confluent.io/current/con
     * <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/2/29/Postgresql_elephant.svg/1080px-Postgresql_elephant.svg.png" width="15"> [PostGreSQL](connect/connect-jdbc-postgresql-sink)
     * <img src="https://www.netclipart.com/pp/m/39-396469_sql-server-logo-png.png" width="15"> [SQL Server](connect/connect-jdbc-sqlserver-sink)
     * <img src="https://s3.amazonaws.com/awsmp-logos/vertica600x400.png" width="15"> [Vertica](connect/connect-jdbc-vertica-sink)
+    * <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/b/bb/Apache_Hive_logo.svg/1200px-Apache_Hive_logo.svg.png" width="15"> [Hive](connect/connect-jdbc-hive-sink)
 * <img src="https://img.stackshare.io/service/1062/vlz__1_.png" width="15"> [ActiveMQ](connect/connect-active-mq-sink)
 * <img src="https://res-2.cloudinary.com/crunchbase-production/image/upload/c_lpad,h_256,w_256,f_auto,q_auto:eco/esdppsq3l6aqw0jdkpv3" width="15"> [OmniSci](connect/connect-omnisci-sink)
 * <img src="http://logodesignfx.com/wp-content/uploads/2019/04/jms-logo-1.png" width="15"> JMS
     * <img src="https://img.stackshare.io/service/1062/vlz__1_.png" width="15"> [ActiveMQ](connect/connect-jms-active-mq-sink)
-    * <img src="https://pbs.twimg.com/profile_images/999017305869697024/eHwBaQtB_400x400.jpg" width="15"> [Solace](connect/connect-jms-solace-sink)
+    * <img src="https://cdn.solace.com/wp-content/uploads/2014/05/solace-featured-image_logo-on-white.jpg" width="15"> [Solace](connect/connect-jms-solace-sink)
     * <img src="https://media.glassdoor.com/sql/6280/tibco-software-squarelogo-1432805681756.png" width="15"> [TIBCO EMS](connect/connect-jms-tibco-sink)
-* <img src="https://carlisletheacarlisletheatre.org/images/azure-logo-transparent-3.png" width="15"> Azure
+* <img src="https://cdn.worldvectorlogo.com/logos/azure-1.svg" width="15"> Azure
     * <img src="https://dellenny.com/wp-content/uploads/2019/04/azure-storage-blob.png" width="15"> [Blob Storage](connect/connect-azure-blob-storage-sink)
     * <img src="https://2.bp.blogspot.com/-491wbRLWQAQ/WXZVyGJ0kaI/AAAAAAAAE3g/Cedi8ujEAWYJjgWILvvke6lwqUtqg665gCLcBGAs/s1600/azuredatalake.png" width="15"> [Data Lake Gen1](connect/connect-azure-data-lake-storage-gen1-sink)
     * <img src="https://2.bp.blogspot.com/-491wbRLWQAQ/WXZVyGJ0kaI/AAAAAAAAE3g/Cedi8ujEAWYJjgWILvvke6lwqUtqg665gCLcBGAs/s1600/azuredatalake.png" width="15"> [Data Lake Gen2](connect/connect-azure-data-lake-storage-gen2-sink)
@@ -144,7 +145,7 @@ Quick start examples from Confluent [docs](https://docs.confluent.io/current/con
 
 ## ☁️ Confluent Cloud
 
-### <img src="https://pbs.twimg.com/profile_images/979058850207641601/cLCehePZ.jpg" width="15"> [Confluent Cloud Demo](ccloud/ccloud-demo)
+### [Confluent Cloud Demo](ccloud/ccloud-demo)
 
   * How to connect your components to Confluent Cloud
   * How to monitor your Confluent Cloud cluster
