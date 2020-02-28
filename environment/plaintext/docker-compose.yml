@@ -20,6 +20,8 @@ services:
     environment:
       ZOOKEEPER_CLIENT_PORT: 2181
       ZOOKEEPER_TICK_TIME: 2000
+      # for 5.4.x:
+      KAFKA_OPTS: -Dzookeeper.4lw.commands.whitelist=*
 
   broker:
     image: confluentinc/${CP_KAFKA_IMAGE}:${TAG}
