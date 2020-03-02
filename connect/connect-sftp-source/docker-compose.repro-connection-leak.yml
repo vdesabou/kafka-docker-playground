@@ -12,4 +12,4 @@ services:
   connect:
     environment:
       CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-sftp
-      # CONNECT_LOG4J_LOGGERS: org.reflections=ERROR,io.confluent.connect.sftp=TRACE
+      CONNECT_LOG4J_LOGGERS: org.reflections=ERROR,io.confluent.connect.sftp=TRACE
