@@ -4,7 +4,7 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
-if ! version_gt $TAG "5.3.2"; then
+if ! version_gt $TAG_BASE "5.3.2"; then
     logwarn "WARN: Tiered storage is only available from Confluent Platform 5.4.0"
     exit 0
 fi

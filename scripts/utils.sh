@@ -21,52 +21,52 @@ function version_gt() { test "$(printf '%s\n' "$@" | sort -V | head -n 1)" != "$
 
 function set_kafka_client_tag()
 {
-    if [ "$TAG" = "5.4.0" ]
+    if [ "$TAG_BASE" = "5.4.0" ]
     then
       export KAFKA_CLIENT_TAG="2.4.0"
     fi
 
-    if [ "$TAG" = "5.3.2" ] || [ "$TAG" = "5.3.1" ]
+    if [ "$TAG_BASE" = "5.3.2" ] || [ "$TAG_BASE" = "5.3.1" ]
     then
       export KAFKA_CLIENT_TAG="2.3.1"
     fi
 
-    if [ "$TAG" = "5.3.0" ]
+    if [ "$TAG_BASE" = "5.3.0" ]
     then
       export KAFKA_CLIENT_TAG="2.3.0"
     fi
 
-    if [ "$TAG" = "5.2.3" ] || [ "$TAG" = "5.2.2" ]
+    if [ "$TAG_BASE" = "5.2.3" ] || [ "$TAG_BASE" = "5.2.2" ]
     then
       export KAFKA_CLIENT_TAG="2.2.2"
     fi
 
-    if [ "$TAG" = "5.2.1" ]
+    if [ "$TAG_BASE" = "5.2.1" ]
     then
       export KAFKA_CLIENT_TAG="2.2.1"
     fi
 
-    if [ "$TAG" = "5.2.0" ]
+    if [ "$TAG_BASE" = "5.2.0" ]
     then
       export KAFKA_CLIENT_TAG="2.2.0"
     fi
 
-    if [ "$TAG" = "5.1.3" ] || [ "$TAG" = "5.1.2" ] || [ "$TAG" = "5.1.1" ]
+    if [ "$TAG_BASE" = "5.1.3" ] || [ "$TAG_BASE" = "5.1.2" ] || [ "$TAG_BASE" = "5.1.1" ]
     then
       export KAFKA_CLIENT_TAG="2.1.1"
     fi
 
-    if [ "$TAG" = "5.1.0" ]
+    if [ "$TAG_BASE" = "5.1.0" ]
     then
       export KAFKA_CLIENT_TAG="2.1.0"
     fi
 
-    if [ "$TAG" = "5.0.3" ] || [ "$TAG" = "5.0.2" ] || [ "$TAG" = "5.0.1" ]
+    if [ "$TAG_BASE" = "5.0.3" ] || [ "$TAG_BASE" = "5.0.2" ] || [ "$TAG_BASE" = "5.0.1" ]
     then
       export KAFKA_CLIENT_TAG="2.0.1"
     fi
 
-    if [ "$TAG" = "5.0.0" ]
+    if [ "$TAG_BASE" = "5.0.0" ]
     then
       export KAFKA_CLIENT_TAG="2.0.0"
     fi
@@ -78,6 +78,8 @@ if [ -z "$TAG" ]
 then
     # TAG is not set, use defaults:
     export TAG=5.4.0
+    # to handle ubi8 images
+    export TAG_BASE=$TAG
     if [ -z "$CP_KAFKA_IMAGE" ]
     then
       log "Using Confluent Platform version default tag $TAG, you can use other version by exporting TAG environment variable, example export TAG=5.3.2"
@@ -90,7 +92,9 @@ else
     then
       log "Using Confluent Platform version tag $TAG"
     fi
-    first_version=${TAG}
+    # to handle ubi8 images
+    export TAG_BASE=$(echo $TAG | cut -d "-" -f1)
+    first_version=${TAG_BASE}
     second_version=5.3.0
     if version_gt $first_version $second_version; then
         export CP_KAFKA_IMAGE=cp-server

@@ -10,19 +10,19 @@ log "Using CP 5.3.1"
 if [ ! -f ${DIR}/producer/target/producer-1.0.0-jar-with-dependencies.jar ]
 then
      log "Building jar for producer"
-     docker run -it --rm -e TAG=$TAG -e KAFKA_CLIENT_TAG=$KAFKA_CLIENT_TAG -v "${DIR}/producer":/usr/src/mymaven -v "$HOME/.m2":/root/.m2 -v "${DIR}/producer/target:/usr/src/mymaven/target" -w /usr/src/mymaven maven:3.6.1-jdk-8 mvn package
+     docker run -it --rm -e TAG=$TAG_BASE -e KAFKA_CLIENT_TAG=$KAFKA_CLIENT_TAG -v "${DIR}/producer":/usr/src/mymaven -v "$HOME/.m2":/root/.m2 -v "${DIR}/producer/target:/usr/src/mymaven/target" -w /usr/src/mymaven maven:3.6.1-jdk-8 mvn package
 fi
 
 if [ ! -f ${DIR}/consumer/target/consumer-1.0.0-jar-with-dependencies.jar ]
 then
      log "Building jar for consumer"
-     docker run -it --rm -e TAG=$TAG -e KAFKA_CLIENT_TAG=$KAFKA_CLIENT_TAG -v "${DIR}/consumer":/usr/src/mymaven -v "$HOME/.m2":/root/.m2 -v "${DIR}/consumer/target:/usr/src/mymaven/target" -w /usr/src/mymaven maven:3.6.1-jdk-8 mvn package
+     docker run -it --rm -e TAG=$TAG_BASE -e KAFKA_CLIENT_TAG=$KAFKA_CLIENT_TAG -v "${DIR}/consumer":/usr/src/mymaven -v "$HOME/.m2":/root/.m2 -v "${DIR}/consumer/target:/usr/src/mymaven/target" -w /usr/src/mymaven maven:3.6.1-jdk-8 mvn package
 fi
 
 if [ ! -f ${DIR}/spring/target/spring-kafka-hello-world-0.0.1-SNAPSHOT.jar ]
 then
      log "Building jar for spring"
-     docker run -it --rm -e TAG=$TAG -e KAFKA_CLIENT_TAG=$KAFKA_CLIENT_TAG -v "${DIR}/spring":/usr/src/mymaven -v "$HOME/.m2":/root/.m2 -v "${DIR}/spring/target:/usr/src/mymaven/target" -w /usr/src/mymaven maven:3.6.1-jdk-8 mvn package -DskipTests
+     docker run -it --rm -e TAG=$TAG_BASE -e KAFKA_CLIENT_TAG=$KAFKA_CLIENT_TAG -v "${DIR}/spring":/usr/src/mymaven -v "$HOME/.m2":/root/.m2 -v "${DIR}/spring/target:/usr/src/mymaven/target" -w /usr/src/mymaven maven:3.6.1-jdk-8 mvn package -DskipTests
 fi
 
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.yml"
