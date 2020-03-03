@@ -26,6 +26,11 @@ docker exec connect \
                "value.converter": "org.apache.kafka.connect.storage.StringConverter",
                "confluent.topic.bootstrap.servers": "broker:9092",
                "confluent.topic.replication.factor": "1",
+               "reporter.bootstrap.servers": "broker:9092",
+               "reporter.error.topic.name": "error-responses",
+               "reporter.error.topic.replication.factor": 1,
+               "reporter.result.topic.name": "success-responses",
+               "reporter.result.topic.replication.factor": 1,
                "http.api.url": "http://http-service-no-auth:8080/api/messages"
           }' \
      http://localhost:8083/connectors/http-sink/config | jq .
