@@ -72,7 +72,7 @@ Creating ACLs...Done!
 ACLs are correctly applied:
 
 ```bash
-ccloud kafka acl list --service-account-id 41839
+ccloud kafka acl list --service-account 41839
   ServiceAccountId | Permission | Operation | Resource |         Name          |  Type
 +------------------+------------+-----------+----------+-----------------------+---------+
   User:41839       | ALLOW      | READ      | TOPIC    | kafka-admin-acl-topic | LITERAL

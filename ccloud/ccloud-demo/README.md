@@ -1064,7 +1064,7 @@ $ ccloud service-account create my-java-producer-app --description my-java-produ
 * Create an API key and secret for the new service account:
 
 ```bash
-$ ccloud api-key create --service-account-id 21280 --resource lkc-q223m
+$ ccloud api-key create --service-account 21280 --resource lkc-q223m
 Save the API key and secret. The secret is not retrievable later.
 +---------+------------------------------------------------------------------+
 | API Key | <API_KEY_SA>                                                 |
@@ -1087,7 +1087,7 @@ sasl.jaas.config=org.apache.kafka.common.security.plain.PlainLoginModule require
 **Important:** by default, no ACLs are configured, so if the client use an API key linked to a sevice account, it will have access to nothing:
 
 ```bash
-$ ccloud kafka acl list --service-account-id 21280
+$ ccloud kafka acl list --service-account 21280
   ServiceAccountId | Permission | Operation | Resource | Name | Type
 +------------------+------------+-----------+----------+------+------+
 ```
@@ -1104,8 +1104,8 @@ This is expected because there are no ACLs to allow this service account applica
 * Create ACLs for the service account:
 
 ```bash
-$ ccloud kafka acl create --allow --service-account-id 21280 --operation WRITE --topic demo-acl-topic
-$ ccloud kafka acl list --service-account-id 21280
+$ ccloud kafka acl create --allow --service-account 21280 --operation WRITE --topic demo-acl-topic
+$ ccloud kafka acl list --service-account 21280
 ```
 
 ```
@@ -1145,7 +1145,7 @@ Produced record to topic demo-acl-topic partition [0] @ offset 9
 Delete ACLs, service account and api key:
 
 ```bash
-$ ccloud kafka acl delete --allow --service-account-id 21280 --operation WRITE --topic demo-acl-topic
+$ ccloud kafka acl delete --allow --service-account 21280 --operation WRITE --topic demo-acl-topic
 $ ccloud service-account delete 21280
 $ ccloud api-key delete <API_KEY_SA>
 ```
