@@ -12,6 +12,12 @@ topics:
     replication.factor: 3
     min.insync.replicas: 2
     max.message.bytes: 2097164
+  topic-servicenow:
+    name: topic-servicenow
+    partitions: 6
+    replication.factor: 3
+    min.insync.replicas: 2
+    max.message.bytes: 2097164
   demo-perf-topic:
     name: demo-perf-topic
     partitions: 6
@@ -20,14 +26,20 @@ topics:
     cleanup.policy: delete
     retention.ms: 604800000
     max.message.bytes: 2097164
-    retention.bytes: -1
     delete.retention.ms: 86400000
+    retention.bytes: -1
   connect-offsets:
     name: connect-offsets
     partitions: 25
     replication.factor: 3
     min.insync.replicas: 2
     cleanup.policy: compact
+    max.message.bytes: 2097164
+  dbserver1.inventory.customers:
+    name: dbserver1.inventory.customers
+    partitions: 6
+    replication.factor: 3
+    min.insync.replicas: 2
     max.message.bytes: 2097164
   matt-topic-B:
     name: matt-topic-B
@@ -37,6 +49,12 @@ topics:
     max.message.bytes: 2097164
   matt-topic-A:
     name: matt-topic-A
+    partitions: 6
+    replication.factor: 3
+    min.insync.replicas: 2
+    max.message.bytes: 2097164
+  test_table:
+    name: test_table
     partitions: 6
     replication.factor: 3
     min.insync.replicas: 2
@@ -65,8 +83,8 @@ topics:
     replication.factor: 3
     min.insync.replicas: 2
     cleanup.policy: delete
-    segment.bytes: 52428800
     retention.ms: -1
+    segment.bytes: 52428800
     max.message.bytes: 2097164
   connect-status:
     name: connect-status
@@ -97,19 +115,19 @@ topics:
 
 acls:
   Acl-1:
-    principal: User:43327
-    resource-pattern: LITERAL
-    host: '*'
-    resource-type: TOPIC
-    resource-name: kafka-admin-acl-topic
-    permission: ALLOW
-    operation: WRITE
-  Acl-2:
-    principal: User:43327
+    principal: User:48502
     resource-pattern: LITERAL
     host: '*'
     resource-type: TOPIC
     resource-name: kafka-admin-acl-topic
     permission: ALLOW
     operation: READ
+  Acl-2:
+    principal: User:48502
+    resource-pattern: LITERAL
+    host: '*'
+    resource-type: TOPIC
+    resource-name: kafka-admin-acl-topic
+    permission: ALLOW
+    operation: WRITE
 

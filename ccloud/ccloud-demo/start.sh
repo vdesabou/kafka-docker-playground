@@ -257,8 +257,8 @@ SERVICE_ACCOUNT_ID=$(ccloud service-account list | grep $SERVICE_NAME | awk '{pr
 
 CCLOUD_CLUSTER=$(ccloud prompt -f "%k")
 log "Create an API key and secret for the new service account"
-log "ccloud api-key create --service-account-id $SERVICE_ACCOUNT_ID --resource $CCLOUD_CLUSTER"
-OUTPUT=$(ccloud api-key create --service-account-id $SERVICE_ACCOUNT_ID --resource $CCLOUD_CLUSTER)
+log "ccloud api-key create --service-account $SERVICE_ACCOUNT_ID --resource $CCLOUD_CLUSTER"
+OUTPUT=$(ccloud api-key create --service-account $SERVICE_ACCOUNT_ID --resource $CCLOUD_CLUSTER)
 API_KEY_SA=$(echo "$OUTPUT" | grep '| API Key' | awk '{print $5;}')
 API_SECRET_SA=$(echo "$OUTPUT" | grep '| Secret' | awk '{print $4;}')
 
@@ -292,8 +292,8 @@ set +e
 create_topic $TOPIC_ACL
 
 log "By default, no ACLs are configured"
-log "ccloud kafka acl list --service-account-id $SERVICE_ACCOUNT_ID"
-ccloud kafka acl list --service-account-id $SERVICE_ACCOUNT_ID
+log "ccloud kafka acl list --service-account $SERVICE_ACCOUNT_ID"
+ccloud kafka acl list --service-account $SERVICE_ACCOUNT_ID
 
 log "Run the Java producer to $TOPIC_ACL: before ACLs"
 LOG1="/tmp/log.1"
@@ -308,10 +308,10 @@ else
 fi
 
 log "Create ACLs for the service account"
-log "ccloud kafka acl create --allow --service-account-id $SERVICE_ACCOUNT_ID --operation WRITE --topic $TOPIC_ACL"
-ccloud kafka acl create --allow --service-account-id $SERVICE_ACCOUNT_ID --operation WRITE --topic $TOPIC_ACL
-log "ccloud kafka acl list --service-account-id $SERVICE_ACCOUNT_ID"
-ccloud kafka acl list --service-account-id $SERVICE_ACCOUNT_ID
+log "ccloud kafka acl create --allow --service-account $SERVICE_ACCOUNT_ID --operation WRITE --topic $TOPIC_ACL"
+ccloud kafka acl create --allow --service-account $SERVICE_ACCOUNT_ID --operation WRITE --topic $TOPIC_ACL
+log "ccloud kafka acl list --service-account $SERVICE_ACCOUNT_ID"
+ccloud kafka acl list --service-account $SERVICE_ACCOUNT_ID
 
 sleep 20
 
@@ -333,8 +333,8 @@ cat $LOG2
 ##################################################
 
 log "Delete ACLs"
-log "ccloud kafka acl delete --allow --service-account-id $SERVICE_ACCOUNT_ID --operation WRITE --topic $TOPIC_ACL"
-ccloud kafka acl delete --allow --service-account-id $SERVICE_ACCOUNT_ID --operation WRITE --topic $TOPIC_ACL
+log "ccloud kafka acl delete --allow --service-account $SERVICE_ACCOUNT_ID --operation WRITE --topic $TOPIC_ACL"
+ccloud kafka acl delete --allow --service-account $SERVICE_ACCOUNT_ID --operation WRITE --topic $TOPIC_ACL
 
 log "ccloud service-account delete $SERVICE_ACCOUNT_ID"
 ccloud service-account delete $SERVICE_ACCOUNT_ID
