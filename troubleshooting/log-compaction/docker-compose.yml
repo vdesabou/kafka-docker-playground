@@ -1,0 +1,7 @@
+---
+version: '3.5'
+services:
+
+  broker:
+    environment:
+      KAFKA_LOG_RETENTION_CHECK_INTERVAL_MS: 30000
