@@ -1,0 +1,13 @@
+---
+version: '3.5'
+services:
+
+  kafkacat:
+    image: confluentinc/cp-kafkacat
+    hostname: kafkacat
+    container_name: kafkacat
+    depends_on:
+      - broker
+    volumes:
+    - ../../tools/kafkacat:/data
+    command: "bash -c 'sleep infinity'"
