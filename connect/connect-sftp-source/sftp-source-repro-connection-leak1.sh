@@ -4,7 +4,7 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
-${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.repro-connection-leak.yml"
+${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.repro.yml"
 
 docker exec -t sftp-server bash -c "
 mkdir -p /home/foo/upload/input
