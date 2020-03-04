@@ -956,6 +956,8 @@ This demo is using [dabz/ccloudexporter](https://github.com/Dabz/ccloudexporter)
 
 ![CCloud exporter](./images/45.jpg)
 
+![CCloud exporter](./images/46.jpg)
+
 ### How to monitor consumer lag
 
 You have several ways to monitor consumer lag:
