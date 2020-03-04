@@ -338,7 +338,7 @@ services:
       - '^(aufs|proc|nsfs|shm|cgroup|tmpfs|binfmt_misc|debugfs|devpts|fusectl|hugetlbfs|fuse.lxcfs|mqueue|pstore|securityfs|sysfs|autofs|devtmpfs|configfs)'
 
   ccloud_exporter:
-    image: dabz/ccloudexporter
+    image: dabz/ccloudexporter:latest
     hostname: ccloud_exporter
     container_name: ccloud_exporter
     environment:
