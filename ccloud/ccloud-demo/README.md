@@ -23,6 +23,7 @@
       - [Producer Dashboard](#producer-dashboard)
       - [Consumer Dashboard](#consumer-dashboard)
       - [Consumer Lag Dashboard](#consumer-lag-dashboard)
+      - [CCloud Exporter Metrics API Dashboard](#ccloud-exporter-metrics-api-dashboard)
     - [How to monitor consumer lag](#how-to-monitor-consumer-lag)
   - [Restrict access to Confluent Cloud](#restrict-access-to-confluent-cloud)
     - [Restricted users](#restricted-users)
@@ -734,7 +735,9 @@ control-center:
 
 ### Metrics API
 
-See Confluent [docs](https://docs.confluent.io/current/cloud/metrics-api.html)
+See Confluent [docs](https://docs.confluent.io/current/cloud/metrics-api.html).
+
+This demo is using [dabz/ccloudexporter](https://github.com/Dabz/ccloudexporter) in order to pull Metrics API data from Confluent Cloud cluster and be exported to Prometheus. A Grafana dashboard is also available, see [below](#ccloud-exporter-metrics-api-dashboard).
 
 ### Control Center
 
@@ -892,6 +895,16 @@ kafka-lag-exporter:
     - ./kafka-lag-exporter/application.conf:/opt/docker/conf/application.conf
     - ./kafka-lag-exporter/logback.xml:/opt/docker/conf/logback.xml
 
+ccloud_exporter:
+  image: dabz/ccloudexporter:latest
+  hostname: ccloud_exporter
+  container_name: ccloud_exporter
+  environment:
+    CCLOUD_USER: ${CCLOUD_USER}
+    CCLOUD_PASSWORD: ${CCLOUD_PASSWORD}
+    CCLOUD_CLUSTER: ${CCLOUD_CLUSTER}
+  command: ccloudexporter ${CCLOUD_CLUSTER}
+
 grafana:
   image: grafana/grafana:6.3.0
   hostname: grafana
@@ -931,11 +944,17 @@ You should see 3 dashboards:
 
 #### Consumer Lag Dashboard
 
-This demo is using [kafka-lag-exporter](https://github.com/lightbend/kafka-lag-exporter) in order to pull consumer lags metrics from Confluent Cloud cluster and be exported to Prometheus.
+This demo is using [lightbend/kafka-lag-exporter](https://github.com/lightbend/kafka-lag-exporter) in order to pull consumer lags metrics from Confluent Cloud cluster and be exported to Prometheus.
 
 ![Consumer Lag 1](./images/40.jpg)
 
 ![Consumer Lag 2](./images/41.jpg)
+
+#### CCloud Exporter Metrics API Dashboard
+
+This demo is using [dabz/ccloudexporter](https://github.com/Dabz/ccloudexporter) in order to pull Metrics API data from Confluent Cloud cluster and be exported to Prometheus.
+
+![CCloud exporter](./images/45.jpg)
 
 ### How to monitor consumer lag
 
@@ -1012,7 +1031,7 @@ customer-avro-app customer-avro   4          0               0               0  
 
 Note: for Confluent customers, you can refer to this Knowledge Base [article](https://support.confluent.io/hc/en-us/articles/360022562212-kafka-consumer-groups-command-for-Confluent-Cloud)
 
-5. Using [kafka-lag-exporter](https://github.com/lightbend/kafka-lag-exporter) and Prometheus
+5. Using [lightbend/kafka-lag-exporter](https://github.com/lightbend/kafka-lag-exporter) and Prometheus
 
 This is explained [above](#consumer-lag-dashboard). This is using Kafka's Admin API [describeConsumerGroups()](https://kafka.apache.org/24/javadoc/org/apache/kafka/clients/admin/Admin.html#describeConsumerGroups-java.util.Collection-) method.
 
