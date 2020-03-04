@@ -44,6 +44,8 @@ services:
         -Dsun.security.krb5.debug=true
         -Dzookeeper.allowSaslFailedClients=false
         -Dzookeeper.requireClientAuthScheme=sasl
+        -Djdk.security.allowNonCaAnchor=true
+        -Dsun.security.krb5.disableReferrals=true
 
   zookeeper-europe:
     restart: always
@@ -61,6 +63,8 @@ services:
         -Dsun.security.krb5.debug=true
         -Dzookeeper.allowSaslFailedClients=false
         -Dzookeeper.requireClientAuthScheme=sasl
+        -Djdk.security.allowNonCaAnchor=true
+        -Dsun.security.krb5.disableReferrals=true
 
   broker-us:
     hostname: broker-us.kerberos-demo.local
@@ -83,7 +87,9 @@ services:
       KAFKA_ZOOKEEPER_SET_ACL: "true"
       KAFKA_ALLOW_EVERYONE_IF_NO_ACL_FOUND: "false"
       KAFKA_SUPER_USERS: User:admin;User:kafka;User:connect;User:controlcenter
-      KAFKA_OPTS: "-Djava.security.auth.login.config=/etc/kafka/broker.sasl.jaas.config"
+      KAFKA_OPTS: -Djava.security.auth.login.config=/etc/kafka/broker.sasl.jaas.config
+                  -Djdk.security.allowNonCaAnchor=true
+                  -Dsun.security.krb5.disableReferrals=true
 
   broker-europe:
     hostname: broker-europe.kerberos-demo.local
@@ -106,7 +112,9 @@ services:
       KAFKA_ZOOKEEPER_SET_ACL: "true"
       KAFKA_ALLOW_EVERYONE_IF_NO_ACL_FOUND: "false"
       KAFKA_SUPER_USERS: User:admin;User:kafka;User:connect;User:controlcenter
-      KAFKA_OPTS: "-Djava.security.auth.login.config=/etc/kafka/broker.sasl.jaas.config"
+      KAFKA_OPTS: -Djava.security.auth.login.config=/etc/kafka/broker.sasl.jaas.config
+                  -Djdk.security.allowNonCaAnchor=true
+                  -Dsun.security.krb5.disableReferrals=true
 
   connect-us:
     volumes:

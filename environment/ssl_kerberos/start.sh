@@ -85,6 +85,21 @@ docker exec -ti kdc kadmin.local -w password -q "ktadd  -k /var/lib/secret/kafka
 docker exec -ti kdc kadmin.local -w password -q "ktadd  -k /var/lib/secret/kafka-schemaregistry.key -norandkey schemaregistry@TEST.CONFLUENT.IO " > /dev/null
 docker exec -ti kdc kadmin.local -w password -q "ktadd  -k /var/lib/secret/kafka-controlcenter.key -norandkey controlcenter@TEST.CONFLUENT.IO " > /dev/null
 
+if [ "$TAG" = "5.4.0-1-ubi8" ]
+then
+  # https://github.com/vdesabou/kafka-docker-playground/issues/10
+  # keytabs are created on kdc with root user
+  # ubi8 images are using appuser user
+  docker exec -ti kdc chmod a+r /var/lib/secret/broker.key
+  docker exec -ti kdc chmod a+r /var/lib/secret/broker2.key
+  docker exec -ti kdc chmod a+r /var/lib/secret/zookeeper.key
+  docker exec -ti kdc chmod a+r /var/lib/secret/zookeeper-client.key
+  docker exec -ti kdc chmod a+r /var/lib/secret/kafka-client.key
+  docker exec -ti kdc chmod a+r /var/lib/secret/kafka-admin.key
+  docker exec -ti kdc chmod a+r /var/lib/secret/kafka-connect.key
+  docker exec -ti kdc chmod a+r /var/lib/secret/kafka-schemaregistry.key
+  docker exec -ti kdc chmod a+r /var/lib/secret/kafka-controlcenter.key
+fi
 
 # Starting zookeeper and kafka now that the keytab has been created with the required credentials and services
 if [ -f "${DOCKER_COMPOSE_FILE_OVERRIDE}" ]
