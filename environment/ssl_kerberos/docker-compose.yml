@@ -45,6 +45,8 @@ services:
         -Dsun.security.krb5.debug=true
         -Dzookeeper.allowSaslFailedClients=false
         -Dzookeeper.requireClientAuthScheme=sasl
+        -Djdk.security.allowNonCaAnchor=true
+        -Dsun.security.krb5.disableReferrals=true
 
   broker:
     hostname: broker.kerberos-demo.local
@@ -71,7 +73,9 @@ services:
       KAFKA_ZOOKEEPER_SET_ACL: "true"
       KAFKA_ALLOW_EVERYONE_IF_NO_ACL_FOUND: "false"
       KAFKA_SUPER_USERS: User:admin;User:kafka;User:schemaregistry;User:connect;User:controlcenter
-      KAFKA_OPTS: "-Djava.security.auth.login.config=/etc/kafka/broker.sasl.jaas.config"
+      KAFKA_OPTS: -Djava.security.auth.login.config=/etc/kafka/broker.sasl.jaas.config
+                  -Djdk.security.allowNonCaAnchor=true
+                  -Dsun.security.krb5.disableReferrals=true
       # SSL Additions
       CONFLUENT_METRICS_REPORTER_SSL_TRUSTSTORE_LOCATION: /etc/kafka/secrets/kafka.client.truststore.jks
       CONFLUENT_METRICS_REPORTER_SSL_TRUSTSTORE_PASSWORD: confluent
