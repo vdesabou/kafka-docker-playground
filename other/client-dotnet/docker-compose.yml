@@ -1,0 +1,14 @@
+---
+version: '3.5'
+services:
+
+  client-dotnet:
+    build:
+      context: ../../other/client-dotnet/
+    hostname: client-dotnet
+    container_name: client-dotnet
+    depends_on:
+      - broker
+
+  connect:
+    entrypoint: ["echo", "Service connect disabled"]
