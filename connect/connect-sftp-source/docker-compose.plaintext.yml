@@ -1,8 +1,13 @@
 ---
 version: '3.5'
 services:
+
+  # getting weird "Couldn't create directory: Failure", so created image from this PR https://github.com/atmoz/sftp/pull/164
+  # https://github.com/amaysim-au/docker-sftp/tree/chroot-user
+  # docker build -t vdesabou/sftp .
+  # docker push vdesabou/sftp
   sftp-server:
-    image: atmoz/sftp
+    image: vdesabou/sftp
     hostname: sftp-server
     container_name: sftp-server
     ports:
