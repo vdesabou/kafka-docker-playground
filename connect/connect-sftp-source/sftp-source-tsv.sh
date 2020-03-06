@@ -7,18 +7,16 @@ source ${DIR}/../../scripts/utils.sh
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
 
 docker exec -t sftp-server bash -c "
-mkdir -p /home/foo/upload/input
-mkdir -p /home/foo/upload/error
-mkdir -p /home/foo/upload/finished
+mkdir -p /chroot/home/foo/upload/input
+mkdir -p /chroot/home/foo/upload/error
+mkdir -p /chroot/home/foo/upload/finished
 
-chown -R foo /home/foo/upload/input
-chown -R foo /home/foo/upload/error
-chown -R foo /home/foo/upload/finished
+chown -R foo /chroot/home/foo/upload
 "
 
 echo $'id\tfirst_name\tlast_name\temail\tgender\tip_address\tlast_login\taccount_balance\tcountry\tfavorite_color\n1\tPadraig\tOxshott\tpoxshott0@dion.ne.jp\tMale\t47.243.121.95\t2016-06-24T22:43:42Z\t15274.22\tJP\t#06708f\n2\tEdi\tOrrah\teorrah1@cafepress.com\tFemale\t158.229.234.101\t2017-03-01T17:52:47Z\t12947.6\tCN\t#5f2aa2' > tsv-sftp-source.tsv
 
-docker cp tsv-sftp-source.tsv sftp-server:/home/foo/upload/input/
+docker cp tsv-sftp-source.tsv sftp-server:/chroot/home/foo/upload/input/
 rm -f tsv-sftp-source.tsv
 
 log "Creating TSV SFTP Source connector"
@@ -31,9 +29,9 @@ docker exec connect \
                "connector.class": "io.confluent.connect.sftp.SftpCsvSourceConnector",
                "cleanup.policy":"NONE",
                "behavior.on.error":"IGNORE",
-               "input.path": "/upload/input",
-               "error.path": "/upload/error",
-               "finished.path": "/upload/finished",
+               "input.path": "/home/foo/upload/input",
+               "error.path": "/home/foo/upload/error",
+               "finished.path": "/home/foo/upload/finished",
                "input.file.pattern": "tsv-sftp-source.tsv",
                "sftp.username":"foo",
                "sftp.password":"pass",
