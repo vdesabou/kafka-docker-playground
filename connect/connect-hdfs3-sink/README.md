@@ -31,7 +31,7 @@ $ docker exec connect \
      curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
-        "connector.class":"io.confluent.connect.hdfs3.Hdfs3SinkConnector",
+               "connector.class":"io.confluent.connect.hdfs3.Hdfs3SinkConnector",
                "tasks.max":"1",
                "topics":"test_hdfs",
                "hdfs.url":"hdfs://namenode:9000",
@@ -42,6 +42,9 @@ $ docker exec connect \
                "rotate.interval.ms":"120000",
                "hadoop.home":"/opt/hadoop-3.1.3/share/hadoop/common",
                "logs.dir":"/tmp",
+               "confluent.license": "",
+               "confluent.topic.bootstrap.servers": "broker:9092",
+               "confluent.topic.replication.factor": "1",
                "key.converter":"org.apache.kafka.connect.storage.StringConverter",
                "value.converter":"io.confluent.connect.avro.AvroConverter",
                "value.converter.schema.registry.url":"http://schema-registry:8081",

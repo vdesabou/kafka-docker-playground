@@ -29,7 +29,7 @@ $ docker exec connect \
      curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
-        "connector.class":"io.confluent.connect.hdfs3.Hdfs3SourceConnector",
+               "connector.class":"io.confluent.connect.hdfs3.Hdfs3SourceConnector",
                "tasks.max":"1",
                "hdfs.url":"hdfs://namenode:9000",
                "hadoop.conf.dir":"/etc/hadoop/",
