@@ -1,4 +1,4 @@
-# ServiceNow Source connector (using Confluent Cloud)
+# .NET client (producer/consumer) (using Confluent Cloud)
 
 ## Objective
 
