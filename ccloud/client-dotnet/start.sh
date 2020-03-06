@@ -30,10 +30,10 @@ sed -e "s|:BOOTSTRAP_SERVERS:|$BOOTSTRAP_SERVERS|g" \
     ${DIR}/librdkafka.config.template > ${DIR}/librdkafka.config
 
 log "Building docker image"
-docker build -t vdesabou/dotnet-example-docker .
+docker build -t vdesabou/dotnet-ccloud-example-docker .
 
 log "Starting producer"
-docker run -v ${DIR}/librdkafka.config:/tmp/librdkafka.config vdesabou/dotnet-example-docker produce test1 /tmp/librdkafka.config
+docker run -v ${DIR}/librdkafka.config:/tmp/librdkafka.config vdesabou/dotnet-ccloud-example-docker produce test1 /tmp/librdkafka.config
 
 log "Starting consumer"
-docker run -v ${DIR}/librdkafka.config:/tmp/librdkafka.config vdesabou/dotnet-example-docker consume test1 /tmp/librdkafka.config
+docker run -v ${DIR}/librdkafka.config:/tmp/librdkafka.config vdesabou/dotnet-ccloud-example-docker consume test1 /tmp/librdkafka.config
