@@ -50,3 +50,4 @@ ccloud/kafka-admin/config.yml
 ccloud/kafka-admin/kafka-admin.properties
 ccloud/kafka-admin/kafka-admin/
 *.tgz
+ccloud/client-dotnet/librdkafka.config
