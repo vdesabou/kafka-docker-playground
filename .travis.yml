@@ -71,7 +71,7 @@ jobs:
   - name: '5.4.1: CONNECT: hbase-sink hdfs2-sink hdfs3-sink hdfs3-source hdfs2-source
       ibm-mq-sink ibm-mq-source snmp-source'
     env: TEST_LIST="connect/connect-hdfs2-sink connect/connect-hdfs2-source connect/connect-hdfs3-sink
-      connect/connect-hdfs3-source connect/connect-ibm-mq-sink connect/connect-ibm-mq-source
+      connect/connect-hdfs3-source connect/connect-ibm-mq-sink connect/connect-ibm-mq-source" TAG="5.4.1"
       # connect/connect-snmp-source"  TAG="5.4.1"
   # - name: '5.3.2: CONNECT: hbase-sink hdfs2-sink hdfs3-sink hdfs3-source hdfs2-source
   #     ibm-mq-sink ibm-mq-source snmp-source'
