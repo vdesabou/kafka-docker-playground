@@ -24,7 +24,7 @@ export TAG=5.3.2
 - [☁️ Confluent Cloud](#️-confluent-cloud)
   - [Confluent Cloud Demo](#confluent-cloud-demo)
   - [🔗 Kafka Connectors connected to Confluent Cloud](#-kafka-connectors-connected-to-confluent-cloud)
-  - [Other clients](#other-clients)
+  - [Other](#other)
 - [🔄 Confluent Replicator](#-confluent-replicator)
 - [🔐 Environments](#-environments)
 - [🎓 Kafka Tutorials](#-kafka-tutorials)
@@ -161,9 +161,10 @@ Quick start examples from Confluent [docs](https://docs.confluent.io/current/con
   * <img src="https://perspectium.mystagingwebsite.com/wp-content/uploads/2019/08/servicenow_logo_v2.png" width="15"> [ServiceNow](ccloud/connect-servicenow-sink) sink
   * <img src="https://res.cloudinary.com/practicaldev/image/fetch/s--HWZDLotH--/c_fill,f_auto,fl_progressive,h_320,q_auto,w_320/https://thepracticaldev.s3.amazonaws.com/uploads/user/profile_image/56177/3a0504e3-1139-4110-b903-08949636010a.jpg" width="15"> [MongoDB](ccloud/connect-debezium-mongodb-source) source
 
-### Other clients
+### Other
 
   * <img src="https://www.pngitem.com/pimgs/m/33-335825_-net-core-logo-png-transparent-png.png" width="15"> [.NET](ccloud/client-dotnet) client (producer/consumer)
+  * ⚙ [kafka-admin](ccloud/kafka-admin) Managing topics and ACLs using [matt-mangia/kafka-admin](https://github.com/matt-mangia/kafka-admin)
 
 ## 🔄 Confluent Replicator
 
@@ -254,6 +255,7 @@ This is just the excellent examples in [Kafka tutorial](https://kafka-tutorials.
 * [JMS Client](other/jms-client)
 * [How to write logs to files when using docker-compose](other/write-logs-to-files)
 * [Publish logs to kafka with Elastic Filebeat](other/filebeat-to-kafka)
+* <img src="https://www.pngitem.com/pimgs/m/33-335825_-net-core-logo-png-transparent-png.png" width="15"> [.NET](other/client-dotnet) basic producer
 
 ## 📚 Useful Resources
 
