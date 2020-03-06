@@ -2,7 +2,7 @@
 
 ## Objective
 
-Quickly test [kafka admin](https://github.com/matt-mangia/kafka-admin).
+Quickly test [matt-mangia/kafka-admin](https://github.com/matt-mangia/kafka-admin).
 
 ## How to run
 
