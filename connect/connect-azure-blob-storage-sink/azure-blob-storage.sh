@@ -16,11 +16,15 @@ else
     az login
 fi
 
-AZURE_RANDOM=$RANDOM
-AZURE_RESOURCE_GROUP=delete$AZURE_RANDOM
-AZURE_ACCOUNT_NAME=delete$AZURE_RANDOM
-AZURE_CONTAINER_NAME=delete$AZURE_RANDOM
+
+AZURE_RESOURCE_GROUP=playground_$USER
+AZURE_ACCOUNT_NAME=playground_$USER
+AZURE_CONTAINER_NAME=playground_$USER
 AZURE_REGION=westeurope
+
+set +e
+az group delete --name $AZURE_RESOURCE_GROUP --yes
+set -e
 
 az group create \
     --name $AZURE_RESOURCE_GROUP \
