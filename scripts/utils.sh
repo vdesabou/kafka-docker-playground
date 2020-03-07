@@ -296,7 +296,7 @@ function retry() {
           then
             logwarn "####################################################"
             logwarn "$container logs"
-            docker container logs --tail=500 $container
+            docker container logs --tail=200 $container
             logwarn "####################################################"
           fi
         done
