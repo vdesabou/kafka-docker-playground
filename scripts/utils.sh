@@ -77,7 +77,7 @@ function set_kafka_client_tag()
 if [ -z "$TAG" ]
 then
     # TAG is not set, use defaults:
-    export TAG=5.4.0
+    export TAG=5.4.1
     # to handle ubi8 images
     export TAG_BASE=$TAG
     if [ -z "$CP_KAFKA_IMAGE" ]
