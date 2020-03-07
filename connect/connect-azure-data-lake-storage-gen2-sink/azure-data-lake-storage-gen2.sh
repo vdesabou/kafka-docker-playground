@@ -16,11 +16,16 @@ else
     az login
 fi
 
-AZURE_RANDOM=$RANDOM
-AZURE_RESOURCE_GROUP=delete$AZURE_RANDOM
-AZURE_DATALAKE_ACCOUNT_NAME=delete$AZURE_RANDOM
-AZURE_AD_APP_NAME=delete$AZURE_RANDOM
+
+AZURE_RESOURCE_GROUP=playground_$USER
+AZURE_DATALAKE_ACCOUNT_NAME=playground_$USER
+AZURE_AD_APP_NAME=playground_$USER
 AZURE_REGION=westeurope
+
+set +e
+az group delete --name $AZURE_RESOURCE_GROUP --yes
+az ad sp delete --id $AZURE_DATALAKE_CLIENT_ID
+set -e
 
 log "Add the CLI extension for Azure Data Lake Gen 2"
 az extension add --name storage-preview

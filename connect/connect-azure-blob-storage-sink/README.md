@@ -28,10 +28,10 @@ az login
 All the blob storage setup is automated:
 
 ```bash
-AZURE_RANDOM=$RANDOM
-AZURE_RESOURCE_GROUP=delete$AZURE_RANDOM
-AZURE_ACCOUNT_NAME=delete$AZURE_RANDOM
-AZURE_CONTAINER_NAME=delete$AZURE_RANDOM
+
+AZURE_RESOURCE_GROUP=playground_$USER
+AZURE_ACCOUNT_NAME=playground_$USER
+AZURE_CONTAINER_NAME=playground_$USER
 AZURE_REGION=westeurope
 
 az group create \
