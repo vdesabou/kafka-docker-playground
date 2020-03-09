@@ -26,7 +26,7 @@ sasl.jaas.config=org.apache.kafka.common.security.plain.PlainLoginModule require
 2. Simply run:
 
 ```
-$ ./start.sh
+$ ./start.sh <2.2 or 3.1> (Core .NET version, default is 2.1)
 ```
 
 ## Details of what the script is doing
