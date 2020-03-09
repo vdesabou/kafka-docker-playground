@@ -131,7 +131,22 @@ namespace CCloud
                 cts.Cancel();
             };
 
-            using (var consumer = new ConsumerBuilder<string, string>(consumerConfig).Build())
+            using (var consumer = new ConsumerBuilder<string, string>(consumerConfig)
+                // Note: All handlers are called on the main .Consume thread.
+                .SetErrorHandler((_, e) => Console.WriteLine($"Error: {e.Reason}"))
+                .SetStatisticsHandler((_, json) => Console.WriteLine($"Statistics: {json}"))
+                .SetPartitionsAssignedHandler((c, partitions) =>
+                {
+                    Console.WriteLine($"Assigned partitions: [{string.Join(", ", partitions)}]");
+                    // possibly manually specify start offsets or override the partition assignment provided by
+                    // the consumer group by returning a list of topic/partition/offsets to assign to, e.g.:
+                    //
+                    // return partitions.Select(tp => new TopicPartitionOffset(tp, externalOffsets[tp]));
+                })
+                .SetPartitionsRevokedHandler((c, partitions) =>
+                {
+                    Console.WriteLine($"Revoking assignment: [{string.Join(", ", partitions)}]");
+                }).Build())
             {
                 consumer.Subscribe(topic);
                 var totalCount = 0;
@@ -140,6 +155,14 @@ namespace CCloud
                     while (true)
                     {
                         var cr = consumer.Consume(cts.Token);
+
+                        if (cr.IsPartitionEOF)
+                        {
+                            Console.WriteLine(
+                                $"Reached end of topic {cr.Topic}, partition {cr.Partition}, offset {cr.Offset}.");
+
+                            continue;
+                        }
                         totalCount += JObject.Parse(cr.Value).Value<int>("count");
                         Console.WriteLine($"Consumed record with key {cr.Key} and value {cr.Value}, and updated total count to {totalCount}");
                     }
@@ -147,6 +170,10 @@ namespace CCloud
                 catch (OperationCanceledException)
                 {
                     // Ctrl-C was pressed.
+                }
+                catch (ConsumeException e)
+                {
+                    Console.WriteLine($"Consume error: {e.Error.Reason}");
                 }
                 finally
                 {
