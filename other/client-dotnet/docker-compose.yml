@@ -5,6 +5,11 @@ services:
   client-dotnet:
     build:
       context: ../../other/client-dotnet/
+      args:
+        CORE_RUNTIME_TAG: ${CORE_RUNTIME_TAG}
+        CORE_SDK_TAG: ${CORE_SDK_TAG}
+        CSPROJ_FILE: ${CSPROJ_FILE}
+
     hostname: client-dotnet
     container_name: client-dotnet
     depends_on:
