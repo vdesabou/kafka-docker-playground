@@ -13,7 +13,7 @@ then
      exit 1
 fi
 
-CORE_DOT_VERSION=${1:-2.1}
+CORE_DOT_VERSION=${1:-2.2}
 
 ${DIR}/../ccloud-demo/ccloud-generate-env-vars.sh ${CONFIG_FILE}
 
@@ -42,7 +42,7 @@ else
      log "Using .NET Core version 2.2"
      CORE_RUNTIME_TAG="2.2-stretch-slim"
      CORE_SDK_TAG="2.2-stretch"
-     CSPROJ_FILE="CCloud2.1.csproj"
+     CSPROJ_FILE="CCloud2.2.csproj"
 fi
 
 log "Building docker image"

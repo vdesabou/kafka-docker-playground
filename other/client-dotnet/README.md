@@ -11,7 +11,7 @@ Quickly test basic producer [.NET example](https://github.com/confluentinc/confl
 Simply run:
 
 ```
-$ ./start.sh
+$ ./start.sh  <2.2 or 3.1> (Core .NET version, default is 2.1)
 ```
 
 ## Details of what the script is doing

@@ -34,7 +34,7 @@ $ ./start.sh <2.2 or 3.1> (Core .NET version, default is 2.1)
 Building docker image
 
 ```bash
-$ docker build -t vdesabou/dotnet-example-docker .
+$ docker build --build-arg CORE_RUNTIME_TAG=$CORE_RUNTIME_TAG --build-arg CORE_SDK_TAG=$CORE_SDK_TAG --build-arg CSPROJ_FILE=$CSPROJ_FILE -t vdesabou/dotnet-ccloud-example-docker .
 ```
 
 Starting producer

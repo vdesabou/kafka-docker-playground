@@ -1,9 +1,15 @@
-FROM mcr.microsoft.com/dotnet/core/runtime:2.2-stretch-slim AS base
+ARG CORE_RUNTIME_TAG
+ARG CORE_SDK_TAG
+ARG CSPROJ_FILE
+FROM mcr.microsoft.com/dotnet/core/runtime:${CORE_RUNTIME_TAG} AS base
 WORKDIR /app
 
-FROM mcr.microsoft.com/dotnet/core/sdk:2.2-stretch AS build
+ARG CORE_SDK_TAG
+ARG CSPROJ_FILE
+FROM mcr.microsoft.com/dotnet/core/sdk:${CORE_SDK_TAG} AS build
 WORKDIR /src
-COPY ["DotNet.csproj", "DotNet/"]
+ARG CSPROJ_FILE
+COPY ["${CSPROJ_FILE}", "DotNet/DotNet.csproj"]
 COPY ["Program.cs", "DotNet/"]
 RUN dotnet restore "DotNet/DotNet.csproj"
 COPY . .
