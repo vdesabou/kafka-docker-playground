@@ -124,6 +124,8 @@ namespace CCloud
             consumerConfig.GroupId = "dotnet-example-group-1";
             consumerConfig.AutoOffsetReset = AutoOffsetReset.Earliest;
             consumerConfig.EnableAutoCommit = false;
+            consumerConfig.BrokerVersionFallback = "0.10.0.0";
+            consumerConfig.ApiVersionFallbackMs = 0;
 
             CancellationTokenSource cts = new CancellationTokenSource();
             Console.CancelKeyPress += (_, e) => {
