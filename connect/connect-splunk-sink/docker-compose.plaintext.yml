@@ -2,7 +2,7 @@
 version: '3.5'
 services:
   splunk:
-    image: splunk/splunk:7.3.0
+    image: splunk/splunk:latest
     hostname: splunk
     container_name: splunk
     ports:
