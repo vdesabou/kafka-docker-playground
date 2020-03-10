@@ -26,15 +26,18 @@ set +e
 az group delete --name $AZURE_RESOURCE_GROUP --yes
 set -e
 
+log "Creating Azure Resource Group $AZURE_RESOURCE_GROUP"
 az group create \
     --name $AZURE_RESOURCE_GROUP \
     --location $AZURE_REGION
+log "Creating Azure Storage Account $AZURE_ACCOUNT_NAME"
 az storage account create \
     --name $AZURE_ACCOUNT_NAME \
     --resource-group $AZURE_RESOURCE_GROUP \
     --location $AZURE_REGION \
     --sku Standard_LRS \
     --encryption-services blob
+log "Creating Azure Storage Container $AZURE_CONTAINER_NAME"
 az storage container create \
     --account-name $AZURE_ACCOUNT_NAME \
     --name $AZURE_CONTAINER_NAME
