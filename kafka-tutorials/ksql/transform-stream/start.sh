@@ -10,7 +10,7 @@ docker-compose down -v
 docker-compose up -d
 
 log "Invoke manual steps"
-timeout 120 docker exec -i ksqldb-cli bash -c 'echo -e "\n\n⏳ Waiting for KSQLDB to be available before launching CLI\n"; while [ $(curl -s -o /dev/null -w %{http_code} http://ksqldb-server:8088/) -eq 000 ] ; do echo -e $(date) "KSQL Server HTTP state: " $(curl -s -o /dev/null -w %{http_code} http:/ksqldb-server:8088/) " (waiting for 200)" ; sleep 10 ; done; ksql http://ksqldb-server:8088' << EOF
+timeout 120 docker exec -i ksqldb-cli bash -c 'echo -e "\n\n⏳ Waiting for ksqlDB to be available before launching CLI\n"; while [ $(curl -s -o /dev/null -w %{http_code} http://ksqldb-server:8088/) -eq 000 ] ; do echo -e $(date) "KSQL Server HTTP state: " $(curl -s -o /dev/null -w %{http_code} http:/ksqldb-server:8088/) " (waiting for 200)" ; sleep 10 ; done; ksql http://ksqldb-server:8088' << EOF
 
 CREATE STREAM raw_movies (ROWKEY INT KEY, id INT, title VARCHAR, genre VARCHAR)
     WITH (kafka_topic='movies', partitions=1, key='id', value_format = 'avro');
