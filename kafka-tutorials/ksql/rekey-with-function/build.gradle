@@ -22,7 +22,7 @@ repositories {
 }
 
 dependencies {
-    compile 'io.confluent.ksql:ksql-udf:5.3.0'
+    compile 'io.confluent.ksql:ksql-udf:5.4.0'
     testCompile 'junit:junit:4.12'
 }
 
