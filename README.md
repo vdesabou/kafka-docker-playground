@@ -205,12 +205,14 @@ This is just the excellent examples in [Kafka tutorial](https://kafka-tutorials.
 * <img src="https://kafka-tutorials.confluent.io/assets/img/icon-function.svg" width="15"> Apply a function to data
    * <img src="https://cdn.confluent.io/wp-content/uploads/ksq-lrocket.jpg" width="15"> KSQL
      * [Transform a stream of events](kafka-tutorials/ksql/transform-stream)
+     * [Flatten deeply nested events](kafka-tutorials/ksql/flatten-nested-data)
      * [Filter a stream of events](kafka-tutorials/ksql/filter-events)
      * [Rekey a stream with a value](kafka-tutorials/ksql/rekey-a-stream)
      * [Rekey a stream with a function](kafka-tutorials/ksql/rekey-with-function)
      * [Convert a stream's serialization format](kafka-tutorials/ksql/ksql-serialization)
      * [Split a stream of events into substreams](kafka-tutorials/ksql/split-stream)
      * [Merge many streams into one stream](kafka-tutorials/ksql/merge-streams)
+     * [Apply a custom, User-Defined Function](kafka-tutorials/ksql/udf)
   * <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/0/05/Apache_kafka.svg/440px-Apache_kafka.svg.png" width="15"> Kafka Streams
      * [Transform a stream of events](kafka-tutorials/ksql/transform-stream)
      * [Filter a stream of events](kafka-tutorials/kafka-streams/filter-events)
