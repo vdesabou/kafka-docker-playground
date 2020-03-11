@@ -205,12 +205,14 @@ This is just the excellent examples in [Kafka tutorial](https://kafka-tutorials.
 * <img src="https://kafka-tutorials.confluent.io/assets/img/icon-function.svg" width="15"> Apply a function to data
    * <img src="https://cdn.confluent.io/wp-content/uploads/ksq-lrocket.jpg" width="15"> KSQL
      * [Transform a stream of events](kafka-tutorials/ksql/transform-stream)
+     * [Flatten deeply nested events](kafka-tutorials/ksql/flatten-nested-data)
      * [Filter a stream of events](kafka-tutorials/ksql/filter-events)
      * [Rekey a stream with a value](kafka-tutorials/ksql/rekey-a-stream)
      * [Rekey a stream with a function](kafka-tutorials/ksql/rekey-with-function)
      * [Convert a stream's serialization format](kafka-tutorials/ksql/ksql-serialization)
      * [Split a stream of events into substreams](kafka-tutorials/ksql/split-stream)
      * [Merge many streams into one stream](kafka-tutorials/ksql/merge-streams)
+     * [Apply a custom, User-Defined Function](kafka-tutorials/ksql/udf)
   * <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/0/05/Apache_kafka.svg/440px-Apache_kafka.svg.png" width="15"> Kafka Streams
      * [Transform a stream of events](kafka-tutorials/ksql/transform-stream)
      * [Filter a stream of events](kafka-tutorials/kafka-streams/filter-events)
@@ -224,7 +226,9 @@ This is just the excellent examples in [Kafka tutorial](https://kafka-tutorials.
      * [Sum a stream of events](kafka-tutorials/ksql/aggregate-sum)
      * [Find the min/max in a stream of events](kafka-tutorials/ksql/aggregate-minmax)
   * <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/0/05/Apache_kafka.svg/440px-Apache_kafka.svg.png" width="15"> Kafka Streams
+     * [Count a stream of events](kafka-tutorials/kafka-streams/aggregate-count)
      * [Sum a stream of events](kafka-tutorials/kafka-streams/aggregate-sum)
+     * [Find the min/max in a stream of events](kafka-tutorials/kafka-streams/aggregate-minmax)
 * <img src="https://kafka-tutorials.confluent.io/assets/img/icon-join.svg" width="15"> Join data
    * <img src="https://cdn.confluent.io/wp-content/uploads/ksq-lrocket.jpg" width="15"> KSQL
      * [Join a stream and a table together](kafka-tutorials/ksql/join-stream-and-table)
@@ -232,11 +236,16 @@ This is just the excellent examples in [Kafka tutorial](https://kafka-tutorials.
      * [Join a table and a table together](kafka-tutorials/ksql/join-table-and-table)
   * <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/0/05/Apache_kafka.svg/440px-Apache_kafka.svg.png" width="15"> Kafka Streams
      * [Join a stream and a table together](kafka-tutorials/kafka-streams/join-stream-and-table)
+     * [Join two tables with a foreign key](kafka-tutorials/kafka-streams/fk-joins)
 * <img src="https://kafka-tutorials.confluent.io/assets/img/icon-time.svg" width="15"> Collect data over time
    * <img src="https://cdn.confluent.io/wp-content/uploads/ksq-lrocket.jpg" width="15"> KSQL
      * [Create tumbling windows](kafka-tutorials/ksql/tumbling-windows)
+     * [Create hopping windows](kafka-tutorials/ksql/hopping-windows)
   * <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/0/05/Apache_kafka.svg/440px-Apache_kafka.svg.png" width="15"> Kafka Streams
      * [Create tumbling windows](kafka-tutorials/kafka-streams/tumbling-windows)
+* <img src="https://kafka-tutorials.confluent.io/assets/img/icon-connect.svg" width="15"> Connect data sources & sinks.
+   * <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/0/05/Apache_kafka.svg/440px-Apache_kafka.svg.png" width="15"> Kafka Streams
+     * [Add a key to a stream from a JDBC source](kafka-tutorials/ksql/connect-jdbc-kstreams-rekey-specificavro)
 
 ## Confluent Commercial
 

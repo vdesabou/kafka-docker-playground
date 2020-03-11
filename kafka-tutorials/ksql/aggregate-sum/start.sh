@@ -10,7 +10,7 @@ docker-compose down -v
 docker-compose up -d
 
 log "Invoke manual steps"
-timeout 120 docker exec -i ksql-cli bash -c 'echo -e "\n\n⏳ Waiting for KSQL to be available before launching CLI\n"; while [ $(curl -s -o /dev/null -w %{http_code} http://ksql-server:8088/) -eq 000 ] ; do echo -e $(date) "KSQL Server HTTP state: " $(curl -s -o /dev/null -w %{http_code} http:/ksql-server:8088/) " (waiting for 200)" ; sleep 10 ; done; ksql http://ksql-server:8088' << EOF
+timeout 120 docker exec -i ksqldb-cli bash -c 'echo -e "\n\n⏳ Waiting for ksqlDB to be available before launching CLI\n"; while [ $(curl -s -o /dev/null -w %{http_code} http://ksqldb-server:8088/) -eq 000 ] ; do echo -e $(date) "KSQL Server HTTP state: " $(curl -s -o /dev/null -w %{http_code} http:/ksqldb-server:8088/) " (waiting for 200)" ; sleep 10 ; done; ksql http://ksqldb-server:8088' << EOF
 
 CREATE STREAM MOVIE_TICKET_SALES (title VARCHAR, sale_ts VARCHAR, ticket_total_value INT)
     WITH (KAFKA_TOPIC='movie-ticket-sales',
@@ -36,6 +36,7 @@ SELECT TITLE,
        SUM(TICKET_TOTAL_VALUE) AS TOTAL_VALUE
 FROM MOVIE_TICKET_SALES
 GROUP BY TITLE
+EMIT CHANGES
 LIMIT 3;
 
 CREATE TABLE MOVIE_REVENUE AS
@@ -49,4 +50,4 @@ EOF
 
 
 log "Invoke the tests"
-docker exec ksql-cli ksql-test-runner -i /opt/app/test/input.json -s opt/app/src/statements.sql -o /opt/app/test/output.json
+docker exec ksqldb-cli ksql-test-runner -i /opt/app/test/input.json -s opt/app/src/statements.sql -o /opt/app/test/output.json | grep "Test passed!"

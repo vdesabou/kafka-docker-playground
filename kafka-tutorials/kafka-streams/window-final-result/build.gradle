@@ -1,0 +1,68 @@
+plugins {
+    id "java"
+    id "application"
+    id "com.google.cloud.tools.jib" version "1.5.0"
+    id "com.github.johnrengelman.shadow" version "4.0.4"
+    id "com.commercehub.gradle.plugin.avro" version "0.9.1"
+}
+
+sourceCompatibility = "1.8"
+targetCompatibility = "1.8"
+version = '0.0.1'
+
+
+mainClassName = "io.confluent.developer.WindowFinalResult"
+
+repositories {
+    mavenCentral()
+    jcenter()
+
+    maven {
+        url 'http://packages.confluent.io/maven'
+    }
+}
+
+dependencies {
+    compile "org.apache.avro:avro:1.9.0"
+
+    compile group: 'com.typesafe', name: 'config', version: '1.3.4'
+    compile group: 'ch.qos.logback', name: 'logback-classic', version: '1.2.3'
+
+    implementation group: 'org.apache.kafka', name: 'kafka-streams', version: '2.3.1'
+    implementation group: 'io.confluent', name: 'kafka-streams-avro-serde', version: '5.3.1'
+
+    testCompile "junit:junit:4.12"
+    testCompile "org.apache.kafka:kafka-streams-test-utils:2.3.1"
+    testCompile "com.github.grantwest.eventually:hamcrest-eventually-matchers:0.0.3"
+
+    // helpers
+    compile group: 'com.jason-goodwin', name: 'better-monads', version: '0.4.1'
+    compile group: 'com.typesafe.akka', name: 'akka-stream-kafka_2.13', version: '1.0.5'
+}
+
+shadowJar {
+    archiveName = "kstreams-standalone-${version}.${extension}"
+}
+
+task createTopics(type: JavaExec) {
+    main = 'io.confluent.developer.helper.TopicCreation'
+    classpath = sourceSets.main.runtimeClasspath
+}
+
+task publishSchemas(type: JavaExec) {
+    main = 'io.confluent.developer.helper.SchemaPublication'
+    classpath = sourceSets.main.runtimeClasspath
+}
+
+task consumeResult(type: JavaExec) {
+    main = 'io.confluent.developer.helper.ResultConsumer'
+    classpath = sourceSets.main.runtimeClasspath
+}
+
+run.dependsOn {
+    [createTopics, publishSchemas]
+}
+
+jib {
+    container.mainClass = mainClassName
+}

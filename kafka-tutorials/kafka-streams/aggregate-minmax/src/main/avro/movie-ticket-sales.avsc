@@ -1,0 +1,10 @@
+{
+	"namespace": "io.confluent.developer.avro",
+	"type": "record",
+	"name": "MovieTicketSales",
+	"fields": [
+	  {"name": "title", "type": "string"},
+	  {"name": "release_year", "type": "int"},
+	  {"name": "total_sales", "type": "int"}
+	]
+  }
