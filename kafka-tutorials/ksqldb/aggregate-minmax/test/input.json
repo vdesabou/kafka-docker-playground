@@ -1,0 +1,14 @@
+{
+	"inputs": [
+	  {"topic": "movie-ticket-sales", "key": null, "value": {"TITLE": "Avengers: Endgame", "RELEASE_YEAR": 2019, "TOTAL_SALES": 856980506}},
+	  {"topic": "movie-ticket-sales", "key": null, "value": {"TITLE": "Captain Marvel", "RELEASE_YEAR": 2019, "TOTAL_SALES": 426829839}},
+	  {"topic": "movie-ticket-sales", "key": null, "value": {"TITLE": "Toy Story 4", "RELEASE_YEAR": 2019, "TOTAL_SALES": 401486230}},
+	  {"topic": "movie-ticket-sales", "key": null, "value": {"TITLE": "The Lion King", "RELEASE_YEAR": 2019, "TOTAL_SALES": 385082142}},
+	  {"topic": "movie-ticket-sales", "key": null, "value": {"TITLE": "Black Panther", "RELEASE_YEAR": 2018, "TOTAL_SALES": 700059566}},
+	  {"topic": "movie-ticket-sales", "key": null, "value": {"TITLE": "Avengers: Infinity War", "RELEASE_YEAR": 2018, "TOTAL_SALES": 678815482}},
+	  {"topic": "movie-ticket-sales", "key": null, "value": {"TITLE": "Deadpool 2", "RELEASE_YEAR": 2018, "TOTAL_SALES": 324512774}},
+	  {"topic": "movie-ticket-sales", "key": null, "value": {"TITLE": "Beauty and the Beast", "RELEASE_YEAR": 2017, "TOTAL_SALES": 517218368}},
+	  {"topic": "movie-ticket-sales", "key": null, "value": {"TITLE": "Wonder Woman", "RELEASE_YEAR": 2017, "TOTAL_SALES": 412563408}},
+	  {"topic": "movie-ticket-sales", "key": null, "value": {"TITLE": "Star Wars Ep. VIII: The Last Jedi", "RELEASE_YEAR": 2017, "TOTAL_SALES": 517218368}}
+	]
+  }

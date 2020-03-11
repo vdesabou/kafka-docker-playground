@@ -1,0 +1,13 @@
+{
+	"inputs": [
+	  {"topic": "movie-ticket-sales" ,"key": null, "value": {"TITLE": "Die Hard", "SALE_TS": "2019-07-18T10:00:00Z", "TICKET_TOTAL_VALUE": 12}},
+	  {"topic": "movie-ticket-sales" ,"key": null, "value": {"TITLE": "Die Hard", "SALE_TS": "2019-07-18T10:01:00Z", "TICKET_TOTAL_VALUE": 12}},
+	  {"topic": "movie-ticket-sales" ,"key": null, "value": {"TITLE": "The Godfather", "SALE_TS": "2019-07-18T10:01:31Z", "TICKET_TOTAL_VALUE": 12}},
+	  {"topic": "movie-ticket-sales" ,"key": null, "value": {"TITLE": "Die Hard", "SALE_TS": "2019-07-18T10:01:36Z", "TICKET_TOTAL_VALUE": 24}},
+	  {"topic": "movie-ticket-sales" ,"key": null, "value": {"TITLE": "The Godfather", "SALE_TS": "2019-07-18T10:02:00Z", "TICKET_TOTAL_VALUE": 18}},
+	  {"topic": "movie-ticket-sales" ,"key": null, "value": {"TITLE": "The Big Lebowski", "SALE_TS": "2019-07-18T11:03:21Z", "TICKET_TOTAL_VALUE": 12}},
+	  {"topic": "movie-ticket-sales" ,"key": null, "value": {"TITLE": "The Big Lebowski", "SALE_TS": "2019-07-18T11:03:50Z", "TICKET_TOTAL_VALUE": 12}},
+	  {"topic": "movie-ticket-sales" ,"key": null, "value": {"TITLE": "The Godfather", "SALE_TS": "2019-07-18T11:40:00Z", "TICKET_TOTAL_VALUE": 36}},
+	  {"topic": "movie-ticket-sales" ,"key": null, "value": {"TITLE": "The Godfather", "SALE_TS": "2019-07-18T11:40:09Z", "TICKET_TOTAL_VALUE": 18}}
+	]
+  }

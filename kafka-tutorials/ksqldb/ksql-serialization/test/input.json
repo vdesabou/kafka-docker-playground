@@ -1,0 +1,28 @@
+{
+	"inputs": [
+	  {
+		"topic": "json-movies",
+		"key": 1,
+		"value": {
+		  "TITLE": "Lethal Weapon",
+		  "release_year": 1992
+		}
+	  },
+	  {
+		"topic": "json-movies",
+		"key": 2,
+		"value": {
+		  "TITLE": "Die Hard",
+		  "release_year": 1988
+		}
+	  },
+	  {
+		"topic": "json-movies",
+		"key": 3,
+		"value": {
+		  "TITLE": "Predator",
+		  "release_year": 1997
+		}
+	  }
+	]
+  }
