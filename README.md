@@ -245,7 +245,7 @@ This is just the excellent examples in [Kafka tutorial](https://kafka-tutorials.
      * [Create tumbling windows](kafka-tutorials/kafka-streams/tumbling-windows)
 * <img src="https://kafka-tutorials.confluent.io/assets/img/icon-connect.svg" width="15"> Connect data sources & sinks.
    * <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/0/05/Apache_kafka.svg/440px-Apache_kafka.svg.png" width="15"> Kafka Streams
-     * [Add a key to a stream from a JDBC source](kafka-tutorials/ksql/connect-jdbc-kstreams-rekey-specificavro)
+     * [Add a key to a stream from a JDBC source](kafka-tutorials/kafka-streams/connect-jdbc-kstreams-rekey-specificavro)
 
 ## Confluent Commercial
 
