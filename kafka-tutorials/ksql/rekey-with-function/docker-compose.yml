@@ -35,6 +35,8 @@ services:
       KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://broker:9092,PLAINTEXT_HOST://localhost:29092
       KAFKA_METRIC_REPORTERS: io.confluent.metrics.reporter.ConfluentMetricsReporter
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
       KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
       CONFLUENT_METRICS_REPORTER_BOOTSTRAP_SERVERS: broker:9092
       CONFLUENT_METRICS_REPORTER_TOPIC_REPLICAS: 1
@@ -56,10 +58,10 @@ services:
       SCHEMA_REGISTRY_HOST_NAME: schema-registry
       SCHEMA_REGISTRY_KAFKASTORE_CONNECTION_URL: 'zookeeper:2181'
 
-  ksql-server:
-    image: confluentinc/cp-ksql-server:${TAG}
-    hostname: ksql-server
-    container_name: ksql-server
+  ksqldb-server:
+    image: confluentinc/ksqldb-server:0.7.1
+    hostname: ksqldb-server
+    container_name: ksqldb-server
     depends_on:
       - broker
       - schema-registry
@@ -73,19 +75,18 @@ services:
       KSQL_KSQL_EXTENSION_DIR: "/etc/ksql/ext/"
       KSQL_LOG4J_OPTS: "-Dlog4j.configuration=file:/etc/ksql/log4j-rolling.properties"
       KSQL_BOOTSTRAP_SERVERS: "broker:9092"
-      KSQL_HOST_NAME: ksql-server
+      KSQL_HOST_NAME: ksqldb-server
       KSQL_LISTENERS: "http://0.0.0.0:8088"
       KSQL_CACHE_MAX_BYTES_BUFFERING: 0
       KSQL_KSQL_SCHEMA_REGISTRY_URL: "http://schema-registry:8081"
-      KSQL_PRODUCER_INTERCEPTOR_CLASSES: "io.confluent.monitoring.clients.interceptor.MonitoringProducerInterceptor"
-      KSQL_CONSUMER_INTERCEPTOR_CLASSES: "io.confluent.monitoring.clients.interceptor.MonitoringConsumerInterceptor"
 
-  ksql-cli:
-    image: confluentinc/cp-ksql-cli:${TAG}
-    container_name: ksql-cli
+
+  ksqldb-cli:
+    image: confluentinc/ksqldb-cli:0.7.1
+    container_name: ksqldb-cli
     depends_on:
       - broker
-      - ksql-server
+      - ksqldb-server
     entrypoint: /bin/sh
     tty: true
     volumes:
