@@ -226,7 +226,9 @@ This is just the excellent examples in [Kafka tutorial](https://kafka-tutorials.
      * [Sum a stream of events](kafka-tutorials/ksql/aggregate-sum)
      * [Find the min/max in a stream of events](kafka-tutorials/ksql/aggregate-minmax)
   * <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/0/05/Apache_kafka.svg/440px-Apache_kafka.svg.png" width="15"> Kafka Streams
+     * [Count a stream of events](kafka-tutorials/kafka-streams/aggregate-count)
      * [Sum a stream of events](kafka-tutorials/kafka-streams/aggregate-sum)
+     * [Find the min/max in a stream of events](kafka-tutorials/kafka-streams/aggregate-minmax)
 * <img src="https://kafka-tutorials.confluent.io/assets/img/icon-join.svg" width="15"> Join data
    * <img src="https://cdn.confluent.io/wp-content/uploads/ksq-lrocket.jpg" width="15"> KSQL
      * [Join a stream and a table together](kafka-tutorials/ksql/join-stream-and-table)
