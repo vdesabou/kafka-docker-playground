@@ -109,7 +109,9 @@ jobs:
       connect/connect-gcp-gcs-source connect/connect-gcp-cloud-functions-sink connect/connect-vertica-sink" TAG="5.4.1"
 
   - name: '5.4.1: CONNECT: http-sink STREAMS:kafka-streams'
-    env: TEST_LIST="connect/connect-http-sink kafka-tutorials/kafka-streams/aggregate-sum
+    env: TEST_LIST="connect/connect-http-sink kafka-tutorials/kafka-streams/aggregate-count
+      kafka-tutorials/kafka-streams/aggregate-sum kafka-tutorials/kafka-streams/aggregate-minmax
+      kafka-tutorials/kafka-streams/connect-jdbc-kstreams-rekey-specificavro kafka-tutorials/kafka-streams/fk-joins
       kafka-tutorials/kafka-streams/filter-events kafka-tutorials/kafka-streams/ksql-serialization
       kafka-tutorials/kafka-streams/split-stream kafka-tutorials/kafka-streams/tumbling-windows
       kafka-tutorials/kafka-streams/distinct-events kafka-tutorials/kafka-streams/join-stream-and-table
@@ -120,10 +122,10 @@ jobs:
     env: TEST_LIST="kafka-tutorials/ksql/aggregate-count kafka-tutorials/ksql/aggregate-sum
       kafka-tutorials/ksql/join-stream-and-stream kafka-tutorials/ksql/join-table-and-table
       kafka-tutorials/ksql/merge-streams kafka-tutorials/ksql/rekey-with-function
-      kafka-tutorials/ksql/transform-stream kafka-tutorials/ksql/aggregate-minmax
-      kafka-tutorials/ksql/filter-events kafka-tutorials/ksql/join-stream-and-table
+      kafka-tutorials/ksql/transform-stream kafka-tutorials/ksql/aggregate-minmax kafka-tutorials/ksql/hopping-windows
+      kafka-tutorials/ksql/filter-events kafka-tutorials/ksql/join-stream-and-table kafka-tutorials/ksql/udf
       kafka-tutorials/ksql/ksql-serialization kafka-tutorials/ksql/rekey-a-stream  kafka-tutorials/ksql/split-stream
-      kafka-tutorials/ksql/tumbling-windows replicator/connect" TAG="5.4.1"
+      kafka-tutorials/ksql/tumbling-windows kafka-tutorials/ksql/flatten-nested-data replicator/connect" TAG="5.4.1"
 
 script:
 - bash scripts/run-tests.sh "$TEST_LIST" "$TAG"
