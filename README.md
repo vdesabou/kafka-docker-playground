@@ -236,6 +236,7 @@ This is just the excellent examples in [Kafka tutorial](https://kafka-tutorials.
      * [Join a table and a table together](kafka-tutorials/ksql/join-table-and-table)
   * <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/0/05/Apache_kafka.svg/440px-Apache_kafka.svg.png" width="15"> Kafka Streams
      * [Join a stream and a table together](kafka-tutorials/kafka-streams/join-stream-and-table)
+     * [Join two tables with a foreign key](kafka-tutorials/kafka-streams/fk-joins)
 * <img src="https://kafka-tutorials.confluent.io/assets/img/icon-time.svg" width="15"> Collect data over time
    * <img src="https://cdn.confluent.io/wp-content/uploads/ksq-lrocket.jpg" width="15"> KSQL
      * [Create tumbling windows](kafka-tutorials/ksql/tumbling-windows)
