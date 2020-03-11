@@ -10,7 +10,7 @@ docker-compose down -v
 docker-compose up -d
 
 log "Invoke manual steps"
-timeout 120 docker exec -i ksql-cli bash -c 'echo -e "\n\n⏳ Waiting for KSQL to be available before launching CLI\n"; while [ $(curl -s -o /dev/null -w %{http_code} http://ksql-server:8088/) -eq 000 ] ; do echo -e $(date) "KSQL Server HTTP state: " $(curl -s -o /dev/null -w %{http_code} http:/ksql-server:8088/) " (waiting for 200)" ; sleep 10 ; done; ksql http://ksql-server:8088' << EOF
+timeout 120 docker exec -i ksqldb-cli bash -c 'echo -e "\n\n⏳ Waiting for ksqlDB to be available before launching CLI\n"; while [ $(curl -s -o /dev/null -w %{http_code} http://ksqldb-server:8088/) -eq 000 ] ; do echo -e $(date) "KSQL Server HTTP state: " $(curl -s -o /dev/null -w %{http_code} http:/ksqldb-server:8088/) " (waiting for 200)" ; sleep 10 ; done; ksql http://ksqldb-server:8088' << EOF
 
 CREATE TABLE movies (id INT, title VARCHAR, release_year INT)
              WITH (KAFKA_TOPIC='movies',
@@ -36,17 +36,19 @@ SELECT M.ID, M.TITLE, M.RELEASE_YEAR, L.ACTOR_NAME
 FROM MOVIES M
 INNER JOIN LEAD_ACTOR L
 ON M.ROWKEY=L.ROWKEY
+EMIT CHANGES
 LIMIT 3;
 
 CREATE TABLE MOVIES_ENRICHED AS
-    SELECT M.ID, M.TITLE, M.RELEASE_YEAR, L.ACTOR_NAME
+    SELECT M.ROWKEY, M.TITLE, M.RELEASE_YEAR, L.ACTOR_NAME
     FROM MOVIES M
     INNER JOIN LEAD_ACTOR L
-    ON M.ROWKEY=L.ROWKEY;
+    ON M.ROWKEY=L.ROWKEY
+    EMIT CHANGES;
 
 PRINT MOVIES_ENRICHED FROM BEGINNING LIMIT 3;
 EOF
 
 
 log "Invoke the tests"
-docker exec ksql-cli ksql-test-runner -i /opt/app/test/input.json -s opt/app/src/statements.sql -o /opt/app/test/output.json
+docker exec ksqldb-cli ksql-test-runner -i /opt/app/test/input.json -s opt/app/src/statements.sql -o /opt/app/test/output.json | grep "Test passed!"
