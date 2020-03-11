@@ -10,7 +10,7 @@ docker-compose down -v
 docker-compose up -d
 
 log "Invoke manual steps"
-timeout 120 docker exec -i ksql-cli bash -c 'echo -e "\n\n⏳ Waiting for KSQL to be available before launching CLI\n"; while [ $(curl -s -o /dev/null -w %{http_code} http://ksql-server:8088/) -eq 000 ] ; do echo -e $(date) "KSQL Server HTTP state: " $(curl -s -o /dev/null -w %{http_code} http:/ksql-server:8088/) " (waiting for 200)" ; sleep 10 ; done; ksql http://ksql-server:8088' << EOF
+timeout 120 docker exec -i ksqldb-cli bash -c 'echo -e "\n\n⏳ Waiting for ksqlDB to be available before launching CLI\n"; while [ $(curl -s -o /dev/null -w %{http_code} http://ksqldb-server:8088/) -eq 000 ] ; do echo -e $(date) "KSQL Server HTTP state: " $(curl -s -o /dev/null -w %{http_code} http:/ksqldb-server:8088/) " (waiting for 200)" ; sleep 10 ; done; ksql http://ksqldb-server:8088' << EOF
 
 CREATE STREAM ratings (id INT, rating DOUBLE)
     WITH (kafka_topic='ratings',
@@ -31,6 +31,7 @@ SET 'auto.offset.reset' = 'earliest';
 
 SELECT ROWKEY, ID, RATING
 FROM RATINGS
+EMIT CHANGES
 LIMIT 9;
 
 CREATE STREAM RATINGS_REKEYED
@@ -41,6 +42,7 @@ CREATE STREAM RATINGS_REKEYED
 
 SELECT ROWKEY, ID, RATING
 FROM RATINGS_REKEYED
+EMIT CHANGES
 LIMIT 9;
 
 PRINT 'ratings_keyed_by_id' FROM BEGINNING LIMIT 9;
@@ -49,4 +51,4 @@ EOF
 
 
 log "Invoke the tests"
-docker exec ksql-cli ksql-test-runner -i /opt/app/test/input.json -s opt/app/src/statements.sql -o /opt/app/test/output.json
+docker exec ksqldb-cli ksql-test-runner -i /opt/app/test/input.json -s opt/app/src/statements.sql -o /opt/app/test/output.json | grep "Test passed!"

@@ -4,72 +4,72 @@
 		"topic": "ratings_keyed_by_id",
 		"key": 294,
 		"value": {
-		  "id": 294,
-		  "rating": 8.2
+		  "ID": 294,
+		  "RATING": 8.2
 		}
 	  },
 	  {
 		"topic": "ratings_keyed_by_id",
 		"key": 294,
 		"value": {
-		  "id": 294,
-		  "rating": 8.5
+		  "ID": 294,
+		  "RATING": 8.5
 		}
 	  },
 	  {
 		"topic": "ratings_keyed_by_id",
 		"key": 354,
 		"value": {
-		  "id": 354,
-		  "rating": 9.9
+		  "ID": 354,
+		  "RATING": 9.9
 		}
 	  },
 	  {
 		"topic": "ratings_keyed_by_id",
 		"key": 354,
 		"value": {
-		  "id": 354,
-		  "rating": 9.7
+		  "ID": 354,
+		  "RATING": 9.7
 		}
 	  },
 	  {
 		"topic": "ratings_keyed_by_id",
 		"key": 782,
 		"value": {
-		  "id": 782,
-		  "rating": 7.8
+		  "ID": 782,
+		  "RATING": 7.8
 		}
 	  },
 	  {
 		"topic": "ratings_keyed_by_id",
 		"key": 782,
 		"value": {
-		  "id": 782,
-		  "rating": 7.7
+		  "ID": 782,
+		  "RATING": 7.7
 		}
 	  },
 	  {
 		"topic": "ratings_keyed_by_id",
 		"key": 128,
 		"value": {
-		  "id": 128,
-		  "rating": 8.7
+		  "ID": 128,
+		  "RATING": 8.7
 		}
 	  },
 	  {
 		"topic": "ratings_keyed_by_id",
 		"key": 128,
 		"value": {
-		  "id": 128,
-		  "rating": 8.4
+		  "ID": 128,
+		  "RATING": 8.4
 		}
 	  },
 	  {
 		"topic": "ratings_keyed_by_id",
 		"key": 780,
 		"value": {
-		  "id": 780,
-		  "rating": 2.1
+		  "ID": 780,
+		  "RATING": 2.1
 		}
 	  }
 	]
