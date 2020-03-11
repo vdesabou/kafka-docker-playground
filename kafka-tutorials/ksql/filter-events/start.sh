@@ -10,7 +10,7 @@ docker-compose down -v
 docker-compose up -d
 
 log "Invoke manual steps"
-timeout 120 docker exec -i ksql-cli bash -c 'echo -e "\n\n⏳ Waiting for KSQL to be available before launching CLI\n"; while [ $(curl -s -o /dev/null -w %{http_code} http://ksql-server:8088/) -eq 000 ] ; do echo -e $(date) "KSQL Server HTTP state: " $(curl -s -o /dev/null -w %{http_code} http:/ksql-server:8088/) " (waiting for 200)" ; sleep 10 ; done; ksql http://ksql-server:8088' << EOF
+timeout 120 docker exec -i ksqldb-cli bash -c 'echo -e "\n\n⏳ Waiting for ksqlDB to be available before launching CLI\n"; while [ $(curl -s -o /dev/null -w %{http_code} http://ksqldb-server:8088/) -eq 000 ] ; do echo -e $(date) "KSQL Server HTTP state: " $(curl -s -o /dev/null -w %{http_code} http:/ksqldb-server:8088/) " (waiting for 200)" ; sleep 10 ; done; ksql http://ksqldb-server:8088' << EOF
 
 CREATE STREAM all_publications (author VARCHAR, title VARCHAR)
     WITH (kafka_topic = 'publication_events', partitions = 1, key = 'author', value_format = 'avro');
@@ -27,7 +27,7 @@ INSERT INTO all_publications (author, title) VALUES ('George R. R. Martin', 'The
 
 SET 'auto.offset.reset' = 'earliest';
 
-SELECT author, title FROM all_publications WHERE author = 'George R. R. Martin' LIMIT 4;
+SELECT author, title FROM all_publications WHERE author = 'George R. R. Martin' EMIT CHANGES LIMIT 4;
 
 CREATE STREAM george_martin WITH (kafka_topic = 'george_martin_books', partitions = 1) AS
     SELECT author, title
@@ -39,4 +39,4 @@ EOF
 
 
 log "Invoke the tests"
-docker exec ksql-cli ksql-test-runner -i /opt/app/test/input.json -s opt/app/src/statements.sql -o /opt/app/test/output.json
+docker exec ksqldb-cli ksql-test-runner -i /opt/app/test/input.json -s opt/app/src/statements.sql -o /opt/app/test/output.json | grep "Test passed!"

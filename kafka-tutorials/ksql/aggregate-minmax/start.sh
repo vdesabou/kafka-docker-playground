@@ -10,7 +10,7 @@ docker-compose down -v
 docker-compose up -d
 
 log "Invoke manual steps"
-timeout 120 docker exec -i ksql-cli bash -c 'echo -e "\n\n⏳ Waiting for KSQL to be available before launching CLI\n"; while [ $(curl -s -o /dev/null -w %{http_code} http://ksql-server:8088/) -eq 000 ] ; do echo -e $(date) "KSQL Server HTTP state: " $(curl -s -o /dev/null -w %{http_code} http:/ksql-server:8088/) " (waiting for 200)" ; sleep 10 ; done; ksql http://ksql-server:8088' << EOF
+timeout 120 docker exec -i ksqldb-cli bash -c 'echo -e "\n\n⏳ Waiting for ksqlDB to be available before launching CLI\n"; while [ $(curl -s -o /dev/null -w %{http_code} http://ksqldb-server:8088/) -eq 000 ] ; do echo -e $(date) "KSQL Server HTTP state: " $(curl -s -o /dev/null -w %{http_code} http:/ksqldb-server:8088/) " (waiting for 200)" ; sleep 10 ; done; ksql http://ksqldb-server:8088' << EOF
 
 CREATE STREAM MOVIE_SALES (title VARCHAR, release_year INT, total_sales INT)
     WITH (KAFKA_TOPIC='movie-ticket-sales',
@@ -36,6 +36,7 @@ SELECT RELEASE_YEAR,
        MAX(TOTAL_SALES) AS MAX__TOTAL_SALES
 FROM MOVIE_SALES
 GROUP BY RELEASE_YEAR
+EMIT CHANGES
 LIMIT 2;
 
 CREATE TABLE MOVIE_FIGURES_BY_YEAR AS
@@ -43,11 +44,12 @@ CREATE TABLE MOVIE_FIGURES_BY_YEAR AS
            MIN(TOTAL_SALES) AS MIN__TOTAL_SALES,
            MAX(TOTAL_SALES) AS MAX__TOTAL_SALES
     FROM MOVIE_SALES
-    GROUP BY RELEASE_YEAR;
+    GROUP BY RELEASE_YEAR
+    EMIT CHANGES;
 
 PRINT 'MOVIE_FIGURES_BY_YEAR' FROM BEGINNING LIMIT 2;
 EOF
 
 
 log "Invoke the tests"
-docker exec ksql-cli ksql-test-runner -i /opt/app/test/input.json -s opt/app/src/statements.sql -o /opt/app/test/output.json
+docker exec ksqldb-cli ksql-test-runner -i /opt/app/test/input.json -s opt/app/src/statements.sql -o /opt/app/test/output.json | grep "Test passed!"
