@@ -1,0 +1,19 @@
+{
+  "namespace": "io.confluent.developer.avro",
+  "type": "record",
+  "name": "City",
+  "fields": [
+    {
+      "name": "city_id",
+      "type": "long"
+    },
+    {
+      "name": "name",
+      "type": "string"
+    },
+    {
+      "name": "state",
+      "type": "string"
+    }
+  ]
+}
