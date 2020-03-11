@@ -1,0 +1,11 @@
+{
+	"namespace": "io.confluent.developer.avro",
+	"type": "record",
+	"name": "Album",
+	"fields": [
+	  {"name": "id", "type": "long"},
+	  {"name": "title", "type": "string"},
+	  {"name": "genre", "type": "string"},
+	  {"name": "artist", "type": "string"}
+	]
+  }
