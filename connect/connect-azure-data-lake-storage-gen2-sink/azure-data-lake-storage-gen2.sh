@@ -24,7 +24,9 @@ AZURE_REGION=westeurope
 
 set +e
 az group delete --name $AZURE_RESOURCE_GROUP --yes
-az ad sp delete --id $AZURE_DATALAKE_CLIENT_ID
+AZURE_DATALAKE_CLIENT_ID=$(az ad app list --display-name $AZURE_AD_APP_NAME | jq -r '.[].objectId')
+az ad app delete --id $AZURE_DATALAKE_CLIENT_ID
+az ad sp delete --id $(az ad sp list --display-name $AZURE_AD_APP_NAME | jq -r '.[].objectId')
 set -e
 
 log "Add the CLI extension for Azure Data Lake Gen 2"
@@ -98,4 +100,7 @@ log "Deleting resource group"
 az group delete --name $AZURE_RESOURCE_GROUP --yes
 
 log "Deleting active directory app"
-az ad sp delete --id $AZURE_DATALAKE_CLIENT_ID
+az ad app delete --id $AZURE_DATALAKE_CLIENT_ID
+
+log "Deleting active directory service principal"
+az ad sp delete --id $SERVICE_PRINCIPAL_ID
