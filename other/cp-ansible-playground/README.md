@@ -9,13 +9,13 @@
 
 This is a deployment using Confluent [cp-ansible](https://docs.confluent.io/current/installation/installing_cp/cp-ansible.html) Ansible playbooks:
 
-* 1 zookeeper
-* 2 broker
-* 1 connect
-* 1 schema-registry
-* 1 ksql
-* 1 rest-proxy
-* 1 control-center
+* 1 zookeeper (`zookeeper1`)
+* 3 broker (`broker1`, `broker2` and `broker3`)
+* 1 connect (`connect`)
+* 1 schema-registry (`schema-registry`)
+* 1 ksql (`ksql-server`)
+* 1 rest-proxy (`rest-proxy`)
+* 1 control-center (`control-center`)
 
 The plaintext Docker images (based on Ubuntu 18.04) are build daily using [vdesabou/cp-ansible-playground](https://github.com/vdesabou/cp-ansible-playground) repository.
 
