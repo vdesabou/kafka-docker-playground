@@ -45,7 +45,7 @@ $ docker exec -e BOOTSTRAP_SERVERS="$BOOTSTRAP_SERVERS" -e CLOUD_KEY="$CLOUD_KEY
                 "confluent.topic.bootstrap.servers": "'"$BOOTSTRAP_SERVERS"'",
                 "confluent.topic.sasl.jaas.config" : "org.apache.kafka.common.security.plain.PlainLoginModule required username=\"'$CLOUD_KEY'\" password=\"'$CLOUD_SECRET'\";",
                 "confluent.topic.security.protocol" : "SASL_SSL",
-                "confluent.topic.replication.factor": "1"
+                "confluent.topic.replication.factor": "3"
           }' \
      http://localhost:8083/connectors/servicenow-source/config | jq .
 ```
