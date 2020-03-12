@@ -45,8 +45,8 @@ docker-compose up -d
 
 log "INFO: Checking Ansible can connect over DOCKER."
 cd ${DIR}/cp-ansible
-ansible -i hosts.yml all -m ping
+ansible -i ${HOSTS_FILE} all -m ping
 
-log "INFO: Now you can modify the playbooks and run ansible-playbook -i hosts.yml all.yml"
-ansible-playbook -i hosts.yml all.yml
+log "INFO: Now you can modify the playbooks and run ansible-playbook -i ${HOSTS_FILE} all.yml"
+ansible-playbook -i ${HOSTS_FILE} all.yml
 cd ${DIR}
