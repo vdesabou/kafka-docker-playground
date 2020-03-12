@@ -1,4 +1,9 @@
-# cp-ansible playground
+# cp-ansible playground [![Build Status](https://travis-ci.com/vdesabou/cp-ansible-playground.svg?branch=master)](https://travis-ci.com/vdesabou/cp-ansible-playground)
+
+## Pre-requisites
+
+* `git` is installed
+* `ansible` and `ansible-playbook` installed
 
 ## Description
 
@@ -22,6 +27,6 @@ To start an environment (using plaintext):
 $ ./start-plaintext.sh
 ```
 
-Then you can do your modifications and run `ansible-playbook -i hosts.yml all.yml` to apply your changes.$
+Then you can do your modifications and run `ansible-playbook -i hosts.yml all.yml` to apply your changes.
 
 N.B: Control Center is reachable at [http://127.0.0.1:9021](http://127.0.0.1:9021])
