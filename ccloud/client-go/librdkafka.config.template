@@ -1,0 +1,5 @@
+bootstrap.servers=:BOOTSTRAP_SERVERS:
+security.protocol=SASL_SSL
+sasl.mechanisms=PLAIN
+sasl.username=:CLOUD_KEY:
+sasl.password=:CLOUD_SECRET:
