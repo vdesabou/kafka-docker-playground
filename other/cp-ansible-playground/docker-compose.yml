@@ -5,6 +5,7 @@ services:
     image: vdesabou/cp-ansible-playground-zookeeper1:${TAG}
     hostname: zookeeper1
     container_name: zookeeper1
+    privileged: true
     ports:
       - "2181:2181"
       - "2888:2888"
@@ -14,6 +15,7 @@ services:
     image: vdesabou/cp-ansible-playground-broker1:${TAG}
     hostname: broker1
     container_name: broker1
+    privileged: true
     ports:
       - "9092:9092"
 
@@ -21,6 +23,7 @@ services:
     image: vdesabou/cp-ansible-playground-broker2:${TAG}
     hostname: broker2
     container_name: broker2
+    privileged: true
     ports:
       - "9192:9092"
 
@@ -28,6 +31,7 @@ services:
     image: vdesabou/cp-ansible-playground-broker3:${TAG}
     hostname: broker3
     container_name: broker3
+    privileged: true
     ports:
       - "9292:9092"
 
@@ -35,6 +39,7 @@ services:
     image: vdesabou/cp-ansible-playground-schema-registry:${TAG}
     hostname: schema-registry
     container_name: schema-registry
+    privileged: true
     ports:
       - "8081:8081"
 
@@ -42,6 +47,7 @@ services:
     image: vdesabou/cp-ansible-playground-connect:${TAG}
     hostname: connect
     container_name: connect
+    privileged: true
     ports:
       - "8083:8083"
 
@@ -49,6 +55,7 @@ services:
     image: vdesabou/cp-ansible-playground-rest-proxy:${TAG}
     hostname: rest-proxy
     container_name: rest-proxy
+    privileged: true
     ports:
       - "8082:8082"
 
@@ -56,6 +63,7 @@ services:
     image: vdesabou/cp-ansible-playground-ksql-server:${TAG}
     hostname: ksql-server
     container_name: ksql-server
+    privileged: true
     ports:
       - "8088:8088"
 
@@ -63,5 +71,6 @@ services:
     image: vdesabou/cp-ansible-playground-control-center:${TAG}
     hostname: control-center
     container_name: control-center
+    privileged: true
     ports:
       - "9021:9021"
