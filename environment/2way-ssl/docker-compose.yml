@@ -99,6 +99,8 @@ services:
       SCHEMA_REGISTRY_SSL_KEY_PASSWORD: confluent
       SCHEMA_REGISTRY_SSL_CLIENT_AUTH: "true"
       SCHEMA_REGISTRY_SCHEMA_REGISTRY_INTER_INSTANCE_PROTOCOL: "https"
+      # https://github.com/vdesabou/kafka-docker-playground/issues/18
+      SCHEMA_REGISTRY_SSL_CIPHER_SUITES: "TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256"
 
   connect:
     depends_on:
@@ -146,6 +148,8 @@ services:
       CONNECT_CONSUMER_CONFLUENT_MONITORING_INTERCEPTOR_SSL_KEYSTORE_LOCATION: /etc/kafka/secrets/kafka.connect.keystore.jks
       CONNECT_CONSUMER_CONFLUENT_MONITORING_INTERCEPTOR_SSL_KEYSTORE_PASSWORD: confluent
       CONNECT_CONSUMER_CONFLUENT_MONITORING_INTERCEPTOR_SSL_KEY_PASSWORD: confluent
+      # https://github.com/vdesabou/kafka-docker-playground/issues/18
+      CONNECT_SSL_CIPHER_SUITES: "TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256"
       # Required for Schema Registry HTTPS
       KAFKA_OPTS: -Djavax.net.ssl.trustStore=/etc/kafka/secrets/kafka.connect.truststore.jks
                   -Djavax.net.ssl.trustStorePassword=confluent
@@ -185,6 +189,8 @@ services:
       CONTROL_CENTER_REST_SSL_KEYSTORE_LOCATION: /etc/kafka/secrets/kafka.control-center.keystore.jks
       CONTROL_CENTER_REST_SSL_KEYSTORE_PASSWORD: confluent
       CONTROL_CENTER_REST_SSL_KEY_PASSWORD: confluent
+      # https://github.com/vdesabou/kafka-docker-playground/issues/18
+      CONTROL_CENTER_SSL_CIPHER_SUITES: "TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256"
       CONTROL_CENTER_OPTS: -Djavax.net.ssl.trustStore=/etc/kafka/secrets/kafka.control-center.truststore.jks
                   -Djavax.net.ssl.trustStorePassword=confluent
                   -Djavax.net.ssl.keyStore=/etc/kafka/secrets/kafka.control-center.keystore.jks
