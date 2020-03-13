@@ -8,6 +8,29 @@ verify_installed "git"
 verify_installed "ansible"
 verify_installed "ansible-playbook"
 
+# Offer to refresh images
+ret=$(docker images --format "{{.Repository}}|{{.Tag}}|{{.CreatedSince}}" | grep vdesabou/cp-ansible-playground-zookeeper1 | grep "$TAG" | cut -d "|" -f 3)
+if [ "$ret" != "" ]
+then
+  log "Your vdesabou/cp-ansible-playground Docker images were pulled $ret"
+  read -p "Do you want to download new ones? (y/n)?" choice
+  case "$choice" in
+  y|Y )
+    docker pull vdesabou/cp-ansible-playground-zookeeper1:$TAG
+    docker pull vdesabou/cp-ansible-playground-broker1:$TAG
+    docker pull vdesabou/cp-ansible-playground-broker2:$TAG
+    docker pull vdesabou/cp-ansible-playground-broker3:$TAG
+    docker pull vdesabou/cp-ansible-playground-schema-registry:$TAG
+    docker pull vdesabou/cp-ansible-playground-connect:$TAG
+    docker pull vdesabou/cp-ansible-playground-rest-proxy:$TAG
+    docker pull vdesabou/cp-ansible-playground-ksql-server:$TAG
+    docker pull vdesabou/cp-ansible-playground-control-center:$TAG
+  ;;
+  n|N ) ;;
+  * ) logerror "ERROR: invalid response!";exit 1;;
+  esac
+fi
+
 HOSTS_FILE="hosts-plaintext.yml"
 
 if [ "$TAG" = "5.3.1" ]
@@ -39,6 +62,9 @@ git checkout "${GIT_BRANCH}"
 
 # copy custom files
 cp ${DIR}/${HOSTS_FILE} ${DIR}/cp-ansible/
+
+
+
 
 docker-compose down -v
 docker-compose up -d
