@@ -32,29 +32,21 @@ AZURE_EVENT_HUBS_NAMESPACE=playground$USER
 AZURE_EVENT_HUBS_NAME=playground$USER
 AZURE_REGION=westeurope
 
-Creating Azure Resource Group $AZURE_RESOURCE_GROUP
-
-```bash
+# Creating Azure Resource Group $AZURE_RESOURCE_GROUP
 az group create \
     --name $AZURE_RESOURCE_GROUP \
     --location $AZURE_REGION
-Creating Azure Event Hubs namespace
-
-```bash
+# Creating Azure Event Hubs namespace
 az eventhubs namespace create \
     --name $AZURE_EVENT_HUBS_NAMESPACE \
     --resource-group $AZURE_RESOURCE_GROUP \
     --enable-kafka true
-Creating Azure Event Hubs
-
-```bash
+# Creating Azure Event Hubs
 az eventhubs eventhub create \
     --name $AZURE_EVENT_HUBS_NAME \
     --resource-group $AZURE_RESOURCE_GROUP \
     --namespace-name $AZURE_EVENT_HUBS_NAMESPACE
-Get SAS key for RootManageSharedAccessKey
-
-```bash
+# Get SAS key for RootManageSharedAccessKey
 AZURE_SAS_KEY=$(az eventhubs namespace authorization-rule keys list \
     --resource-group $AZURE_RESOURCE_GROUP \
     --namespace-name $AZURE_EVENT_HUBS_NAMESPACE \
