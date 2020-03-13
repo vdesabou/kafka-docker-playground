@@ -7,7 +7,7 @@
 Quickly test [Azure Blob Storage Sink](https://docs.confluent.io/current/connect/kafka-connect-azure-blob-storage/index.html#quick-start) connector.
 
 
-* `az`(example `brew install azure-cli`)
+
 
 ## How to run
 

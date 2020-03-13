@@ -6,7 +6,7 @@
 
 Quickly test [Azure Data Lake Storage Gen2 Sink](https://docs.confluent.io/current/connect/kafka-connect-azure-data-lake-gen2-storage/index.html#quick-start) connector.
 
-* `az`(example `brew install azure-cli`)
+
 
 ## How to run
 
