@@ -91,9 +91,9 @@ jobs:
       connect/connect-solace-source connect/connect-datadiode-source-sink" TAG="5.4.1-1-ubi8"
 
   - name: '5.4.1-1-ubi8: CONNECT: splunk-sink splunk-source spool-dir-source syslog-source
-      OTHER: override-policy-sftp-sink override-policy-sftp-source azure-blob-storage-sink azure-blob-storage-source azure-data-lake-storage-gen1-sink azure-data-lake-storage-gen2-sink'
+      OTHER: override-policy-sftp-sink override-policy-sftp-source azure-blob-storage-sink azure-blob-storage-source azure-data-lake-storage-gen1-sink azure-data-lake-storage-gen2-sink azure-event-hubs-source'
     env: TEST_LIST="connect/connect-splunk-sink connect/connect-splunk-source connect/connect-spool-dir-source
-      connect/connect-syslog-source other/connect-override-policy-sftp-sink other/connect-override-policy-sftp-source connect/connect-azure-blob-storage-sink connect/connect-azure-blob-storage-source connect/connect-azure-data-lake-storage-gen1-sink connect/connect-azure-data-lake-storage-gen2-sink"
+      connect/connect-syslog-source other/connect-override-policy-sftp-sink other/connect-override-policy-sftp-source connect/connect-azure-blob-storage-sink connect/connect-azure-blob-storage-source connect/connect-azure-data-lake-storage-gen1-sink connect/connect-azure-data-lake-storage-gen2-sink connect/connect-azure-event-hubs-source"
       TAG="5.4.1-1-ubi8"
 
   - name: '5.4.1-1-ubi8: CONNECT: aws-cloudwatch-logs-source aws-cloudwatch-metrics-sink aws-dynamodb-sink aws-kinesis-source
