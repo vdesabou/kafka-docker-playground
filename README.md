@@ -84,6 +84,8 @@ Quick start examples from Confluent [docs](https://docs.confluent.io/current/con
 * <img src="https://coservit.com/servicenav/wp-content/uploads/sites/3/2019/05/SNMP_blue.png" width="15"> [SNMP](connect/connect-snmp-source)
 * <img src="https://perspectium.mystagingwebsite.com/wp-content/uploads/2019/08/servicenow_logo_v2.png" width="15"> [ServiceNow](connect/connect-servicenow-source)
 * <img src="https://i7.pngguru.com/preview/604/568/971/logo-brand-design.jpg" width="15"> [Data Diode](connect/connect-datadiode-source-sink)
+* <img src="https://cdn.worldvectorlogo.com/logos/azure-1.svg" width="15"> Azure
+    * <img src="https://dellenny.com/wp-content/uploads/2019/04/azure-storage-blob.png" width="15"> [Blob Storage](connect/connect-azure-blob-storage-source)
 
 ### ↗️ Sink
 
