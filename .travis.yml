@@ -89,8 +89,8 @@ jobs:
       connect/connect-tibco-sink connect/connect-tibco-source connect/connect-jdbc-oracle12-sink
       connect/connect-jdbc-oracle12-source" TAG="5.4.1-1-ubi8"
 
-  - name: '5.4.1-1-ubi8: CONNECT: azure-sql-data-warehouse-sink azure-search-sink'
-    env: TEST_LIST="connect/connect-azure-sql-data-warehouse-sink connect/connect-azure-search-sink"
+  - name: '5.4.1-1-ubi8: CONNECT: azure-sql-data-warehouse-sink azure-search-sink azure-service-bus-source'
+    env: TEST_LIST="connect/connect-azure-sql-data-warehouse-sink connect/connect-azure-search-sink connect/connect-azure-service-bus-source"
       TAG="5.4.1-1-ubi8"
 
   - name: '5.4.1-1-ubi8: CONNECT: rabbitmq-source redis-sink replicator sftp-sink sftp-source
