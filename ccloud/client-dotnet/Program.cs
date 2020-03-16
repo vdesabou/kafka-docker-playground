@@ -44,6 +44,7 @@ namespace CCloud
                     SecurityProtocol = SecurityProtocol.SaslSsl,
                     SaslUsername = cloudConfig["sasl.username"],
                     SaslPassword = cloudConfig["sasl.password"],
+                    // Debug = "broker,topic,msg"
                 };
 
                 if (certDir != null)
@@ -126,6 +127,7 @@ namespace CCloud
             consumerConfig.EnableAutoCommit = false;
             consumerConfig.BrokerVersionFallback = "0.10.0.0";
             consumerConfig.ApiVersionFallbackMs = 0;
+            // consumerConfig.Debug = "consumer, cgrp, protocol";
 
             CancellationTokenSource cts = new CancellationTokenSource();
             Console.CancelKeyPress += (_, e) => {
