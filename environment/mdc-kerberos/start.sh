@@ -77,14 +77,14 @@ then
   # https://github.com/vdesabou/kafka-docker-playground/issues/10
   # keytabs are created on kdc with root user
   # ubi8 images are using appuser user
-  docker exec -ti kdc chmod a+r /var/lib/secret/broker.key
-  docker exec -ti kdc chmod a+r /var/lib/secret/broker2.key
-  docker exec -ti kdc chmod a+r /var/lib/secret/zookeeper.key
+  docker exec -ti kdc chmod a+r /var/lib/secret/broker-us.key
+  docker exec -ti kdc chmod a+r /var/lib/secret/broker-europe.key
+  docker exec -ti kdc chmod a+r /var/lib/secret/zookeeper-us.key
+  docker exec -ti kdc chmod a+r /var/lib/secret/zookeeper-europe.key
   docker exec -ti kdc chmod a+r /var/lib/secret/zookeeper-client.key
   docker exec -ti kdc chmod a+r /var/lib/secret/kafka-client.key
   docker exec -ti kdc chmod a+r /var/lib/secret/kafka-admin.key
   docker exec -ti kdc chmod a+r /var/lib/secret/kafka-connect.key
-  docker exec -ti kdc chmod a+r /var/lib/secret/kafka-schemaregistry.key
   docker exec -ti kdc chmod a+r /var/lib/secret/kafka-controlcenter.key
 fi
 
