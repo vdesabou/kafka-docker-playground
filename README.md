@@ -87,6 +87,7 @@ Quick start examples from Confluent [docs](https://docs.confluent.io/current/con
 * <img src="https://cdn.worldvectorlogo.com/logos/azure-1.svg" width="15"> Azure
     * <img src="https://dellenny.com/wp-content/uploads/2019/04/azure-storage-blob.png" width="15"> [Blob Storage](connect/connect-azure-blob-storage-source)
     * <img src="https://www.element61.be/sites/default/files/competence/Microsoft%20Azure%20Event%20Hubs/1.png" width="15"> [Event Hubs](connect/connect-azure-event-hubs-source)
+    * <img src="https://www.ciraltos.com/wp-content/uploads/2019/03/Service-Bus.png" width="15"> [Service Bus](connect/connect-azure-service-bus-source)
 
 ### ↗️ Sink
 
