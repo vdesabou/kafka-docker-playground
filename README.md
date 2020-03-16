@@ -137,6 +137,7 @@ Quick start examples from Confluent [docs](https://docs.confluent.io/current/con
     * <img src="https://2.bp.blogspot.com/-491wbRLWQAQ/WXZVyGJ0kaI/AAAAAAAAE3g/Cedi8ujEAWYJjgWILvvke6lwqUtqg665gCLcBGAs/s1600/azuredatalake.png" width="15"> [Data Lake Gen1](connect/connect-azure-data-lake-storage-gen1-sink)
     * <img src="https://2.bp.blogspot.com/-491wbRLWQAQ/WXZVyGJ0kaI/AAAAAAAAE3g/Cedi8ujEAWYJjgWILvvke6lwqUtqg665gCLcBGAs/s1600/azuredatalake.png" width="15"> [Data Lake Gen2](connect/connect-azure-data-lake-storage-gen2-sink)
     * <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn%3AANd9GcSxw29wF6Zg3Re21ZCQGsaanMqOhEoLpul4yngctq13BNcg2BNc" width="15"> [SQL Data Warehouse](connect/connect-azure-sql-data-warehouse-sink)
+    * <img src="https://acom.azurecomcdn.net/80C57D/blogmedia/blogmedia/2015/03/03/Azure-Search.png" width="15"> [Search](connect/connect-azure-search-sink)
 * <img src="https://go.neo4j.com/rs/710-RRC-335/images/neo4j_logo_globe.png" width="15"> [Neo4j](connect/connect-neo4j-sink)
 * <img src="https://cdn.worldvectorlogo.com/logos/couchbase-1.svg" width="15"> [Couchbase](connect/connect-couchbase-sink)
 * <img src="https://cdn.iconscout.com/icon/free/png-512/sftp-1758329-1496548.png" width="15"> [SFTP](connect/connect-sftp-sink)
