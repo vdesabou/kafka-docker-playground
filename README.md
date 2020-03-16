@@ -256,19 +256,21 @@ This is just the excellent examples in [Kafka tutorial](https://kafka-tutorials.
 
 ## Confluent Commercial
 
-* [Tiered storage with AWS S3](other/tiered-storage-with-aws)
-* [Tiered storage with Minio](other/tiered-storage-with-minio) (unsupported)
-
+* Control Center
+  * [Control Center in "Read-Only" mode](other/control-center-readonly-mode/)
+  * [Configuring Control Center with LDAP authentication](other/control-center-ldap-auth)
+* Tiered Storage
+  * [Tiered storage with AWS S3](other/tiered-storage-with-aws)
+  * [Tiered storage with Minio](other/tiered-storage-with-minio) (unsupported)
+* [Confluent Rebalancer](other/rebalancer)
+* [JMS Client](other/jms-client)
 
 ## 👾 Other Playgrounds
 
-* [Confluent Rebalancer](other/rebalancer)
+
 * [Confluent Replicator](connect/connect-replicator) [also with [SASL_SSL](connect/connect-replicator/README.md#with-sasl-ssl-authentication) and [2WAY_SSL](connect/connect-replicator/README.md#with-ssl-authentication)]
 * Testing [Separate principals](https://docs.confluent.io/current/connect/security.html#separate-principals) (`connector.client.config.override.policy`) for [Source connector (SFTP source)](other/connect-override-policy-sftp-source)
 * Testing [Separate principals](https://docs.confluent.io/current/connect/security.html#separate-principals) (`connector.client.config.override.policy`) for [Source connector (SFTP sink)](other/connect-override-policy-sftp-sink)
-* [Control Center in "Read-Only" mode](other/control-center-readonly-mode/)
-* [Configuring Control Center with LDAP authentication](other/control-center-ldap-auth)
-* [JMS Client](other/jms-client)
 * [How to write logs to files when using docker-compose](other/write-logs-to-files)
 * [Publish logs to kafka with Elastic Filebeat](other/filebeat-to-kafka)
 * <img src="https://www.pngitem.com/pimgs/m/33-335825_-net-core-logo-png-transparent-png.png" width="15"> [.NET](other/client-dotnet) basic producer
