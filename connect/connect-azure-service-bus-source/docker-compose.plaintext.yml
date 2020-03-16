@@ -1,0 +1,18 @@
+---
+version: '3.5'
+services:
+  connect:
+    environment:
+      CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-azure-service-bus
+
+  simple-send:
+    build:
+      context: ../../connect/connect-azure-service-bus-source/QueuesGettingStarted/
+      args:
+        TAG: ${TAG}
+        CP_BASE_IMAGE: ${CP_BASE_IMAGE}
+        KAFKA_CLIENT_TAG: ${KAFKA_CLIENT_TAG}
+    hostname: simple-send
+    container_name: simple-send
+    depends_on:
+      - broker
