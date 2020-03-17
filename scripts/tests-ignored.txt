@@ -11,3 +11,4 @@ gcp-spanner.sh
 redshift-iam.sh
 hive-sink.sh
 hive-sink-datadirect.sh
+azure-data-lake-storage-gen2-2way-ssl
