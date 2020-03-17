@@ -29,8 +29,8 @@ All the blob storage setup is automated:
 
 ```bash
 
-AZURE_RESOURCE_GROUP=playground$USER
-AZURE_SEARCH_SERVICE_NAME=playground$USER
+AZURE_RESOURCE_GROUP=playground$USER$TRAVIS_BUILD_NUMBER
+AZURE_SEARCH_SERVICE_NAME=playground$USER$TRAVIS_BUILD_NUMBER
 AZURE_REGION=westeurope
 
 # Creating Azure Resource Group $AZURE_RESOURCE_GROUP
