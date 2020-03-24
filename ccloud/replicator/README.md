@@ -155,6 +155,91 @@ $ docker container exec -e BOOTSTRAP_SERVERS="$BOOTSTRAP_SERVERS" -e SASL_JAAS_C
 
 The two example above are using default `value.converter`=`io.confluent.connect.replicator.util.ByteArrayConverter` which does not preserve the schemas.
 
-There are two scripts ending with `-repro-avro.sh`that are using `value.converter`=`io.confluent.connect.avro.AvroConverter` that preserve schemas.
+There are two scripts ending with `-repro-avro.sh`that are using `value.converter`=`io.confluent.connect.avro.AvroConverter` that preserve schemas:
+
+### Cloud to Cloud example
+
+```bash
+docker container exec -e BOOTSTRAP_SERVERS="$BOOTSTRAP_SERVERS" -e CLOUD_KEY="$CLOUD_KEY" -e CLOUD_SECRET="$CLOUD_SECRET" -e BOOTSTRAP_SERVERS_SRC="$BOOTSTRAP_SERVERS_SRC" -e CLOUD_KEY_SRC="$CLOUD_KEY_SRC" -e CLOUD_SECRET_SRC="$CLOUD_SECRET_SRC" -e SCHEMA_REGISTRY_URL_SRC="$SCHEMA_REGISTRY_URL_SRC" -e SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO_SRC="$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO_SRC" -e SCHEMA_REGISTRY_URL="$SCHEMA_REGISTRY_URL" -e SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO="$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO" connect \
+     curl -X PUT \
+     -H "Content-Type: application/json" \
+     --data '{
+          "connector.class":"io.confluent.connect.replicator.ReplicatorSourceConnector",
+          "src.consumer.group.id": "replicate-demo-to-travis",
+          "src.value.converter": "io.confluent.connect.avro.AvroConverter",
+          "src.value.converter.schema.registry.url": "'"$SCHEMA_REGISTRY_URL_SRC"'",
+          "src.value.converter.basic.auth.user.info": "'"$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO_SRC"'",
+          "src.value.converter.basic.auth.credentials.source": "USER_INFO",
+
+          "src.kafka.ssl.endpoint.identification.algorithm":"https",
+          "src.kafka.bootstrap.servers": "'"$BOOTSTRAP_SERVERS_SRC"'",
+          "src.kafka.security.protocol" : "SASL_SSL",
+          "src.kafka.sasl.jaas.config": "org.apache.kafka.common.security.plain.PlainLoginModule required username=\"'$CLOUD_KEY_SRC'\" password=\"'$CLOUD_SECRET_SRC'\";",
+          "src.kafka.sasl.mechanism":"PLAIN",
+          "src.request.timeout.ms": "20000",
+          "src.retry.backoff.ms": "500",
+
+          "value.converter": "io.confluent.connect.avro.AvroConverter",
+          "value.converter.schema.registry.url": "'"$SCHEMA_REGISTRY_URL"'",
+          "value.converter.basic.auth.user.info": "'"$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO"'",
+          "value.converter.basic.auth.credentials.source": "USER_INFO",
+
+          "dest.kafka.ssl.endpoint.identification.algorithm":"https",
+          "dest.kafka.bootstrap.servers": "'"$BOOTSTRAP_SERVERS"'",
+          "dest.kafka.security.protocol" : "SASL_SSL",
+          "dest.kafka.sasl.jaas.config": "org.apache.kafka.common.security.plain.PlainLoginModule required username=\"'$CLOUD_KEY'\" password=\"'$CLOUD_SECRET'\";",
+          "dest.kafka.sasl.mechanism":"PLAIN",
+          "dest.kafka.request.timeout.ms":"20000",
+          "dest.kafka.retry.backoff.ms":"500",
+          "confluent.topic.ssl.endpoint.identification.algorithm" : "https",
+          "confluent.topic.sasl.mechanism" : "PLAIN",
+          "confluent.topic.bootstrap.servers": "'"$BOOTSTRAP_SERVERS_SRC"'",
+          "confluent.topic.sasl.jaas.config" : "org.apache.kafka.common.security.plain.PlainLoginModule required username=\"'$CLOUD_KEY_SRC'\" password=\"'$CLOUD_SECRET_SRC'\";",
+          "confluent.topic.security.protocol" : "SASL_SSL",
+          "confluent.topic.replication.factor": "3",
+          "provenance.header.enable": true,
+          "topic.whitelist": "topic-replicator-avro"
+          }' \
+     http://localhost:8083/connectors/replicate-demo-to-travis/config | jq .
+```
+
+## OnPrem to Cloud example
+
+```bash
+docker container exec -e BOOTSTRAP_SERVERS="$BOOTSTRAP_SERVERS" -e CLOUD_KEY="$CLOUD_KEY" -e CLOUD_SECRET="$CLOUD_SECRET" -e BOOTSTRAP_SERVERS_SRC="$BOOTSTRAP_SERVERS_SRC" -e CLOUD_KEY_SRC="$CLOUD_KEY_SRC" -e CLOUD_SECRET_SRC="$CLOUD_SECRET_SRC" -e SCHEMA_REGISTRY_URL="$SCHEMA_REGISTRY_URL" -e SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO="$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO" connect \
+     curl -X PUT \
+     -H "Content-Type: application/json" \
+     --data '{
+          "connector.class":"io.confluent.connect.replicator.ReplicatorSourceConnector",
+          "src.consumer.group.id": "replicate-onprem-to-cloud",
+          "src.value.converter": "io.confluent.connect.avro.AvroConverter",
+          "src.value.converter.schema.registry.url": "http://schema-registry:8081",
+          "src.kafka.bootstrap.servers": "broker:9092",
+
+          "value.converter": "io.confluent.connect.avro.AvroConverter",
+          "value.converter.schema.registry.url": "'"$SCHEMA_REGISTRY_URL"'",
+          "value.converter.basic.auth.user.info": "'"$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO"'",
+          "value.converter.basic.auth.credentials.source": "USER_INFO",
+
+          "dest.kafka.ssl.endpoint.identification.algorithm":"https",
+          "dest.kafka.bootstrap.servers": "'"$BOOTSTRAP_SERVERS"'",
+          "dest.kafka.security.protocol" : "SASL_SSL",
+          "dest.kafka.sasl.jaas.config": "org.apache.kafka.common.security.plain.PlainLoginModule required username=\"'$CLOUD_KEY'\" password=\"'$CLOUD_SECRET'\";",
+          "dest.kafka.sasl.mechanism":"PLAIN",
+          "dest.kafka.request.timeout.ms":"20000",
+          "dest.kafka.retry.backoff.ms":"500",
+          "confluent.topic.ssl.endpoint.identification.algorithm" : "https",
+          "confluent.topic.sasl.mechanism" : "PLAIN",
+          "confluent.topic.bootstrap.servers": "'"$BOOTSTRAP_SERVERS"'",
+          "confluent.topic.sasl.jaas.config" : "org.apache.kafka.common.security.plain.PlainLoginModule required username=\"'$CLOUD_KEY'\" password=\"'$CLOUD_SECRET'\";",
+          "confluent.topic.security.protocol" : "SASL_SSL",
+          "confluent.topic.replication.factor": "3",
+          "provenance.header.enable": true,
+          "topic.whitelist": "products-avro",
+          "topic.config.sync": false,
+          "topic.auto.create": false
+          }' \
+     http://localhost:8083/connectors/replicate-onprem-to-cloud/config | jq .
+```
 
 N.B: Control Center is reachable at [http://127.0.0.1:9021](http://127.0.0.1:9021])
