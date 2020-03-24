@@ -783,7 +783,7 @@ Other than that, Confluent Cloud UI is very similar (assuming that [Configuring 
 You can setup [alerts](https://docs.confluent.io/current/control-center/alerts/index.html) in Control Center.
 Here is a table indicating which triggers are available when Control Center is connected to a Confluent Cloud cluster:
 
-Note: All Broker, Cluster and Topic triggers are not available because Confluent Cloud [does not expose](https://docs.confluent.io/current/cloud/connect/c3-cloud-config.html#limitations) those metrics.
+Note: Most of Broker, Cluster and Topic triggers are not available because Confluent Cloud [does not expose](https://docs.confluent.io/current/cloud/connect/c3-cloud-config.html#limitations) those metrics.
 
 |  Component type | Criteria  | Available | Appear in History
 |---|---|---|---|
@@ -793,7 +793,7 @@ Note: All Broker, Cluster and Topic triggers are not available because Confluent
 |  Broker  | Production request count | no  |   |
 |  Broker  | Production request latency  | no  |   |
 |  Cluster  | Active Controller count  | no  |   |
-|  Cluster  | Cluster down  | no  |   |
+|  Cluster  | Cluster down  | yes  |   |
 |  Cluster  | Leader election rate | no  |   |
 |  Cluster  | Offline topic partitions | no  |   |
 |  Cluster  | Unclean election count  | no  |   |
