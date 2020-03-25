@@ -32,6 +32,9 @@ mv ${DIR}/tmp ${DIR}/executable-onprem-to-cloud-replicator-repro-avro.properties
 log "Creating topic in Confluent Cloud (auto.create.topics.enable=false)"
 set +e
 create_topic executable-products-avro
+delete_topic connect-onprem-to-cloud-avro.offsets
+delete_topic connect-onprem-to-cloud-avro.status
+delete_topic connect-onprem-to-cloud-avro.config
 set -e
 
 log "Sending messages to topic executable-products-avro on source OnPREM cluster"
