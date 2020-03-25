@@ -46,6 +46,10 @@ services:
   connect:
     image: confluentinc/cp-enterprise-replicator:${TAG}
     command: "bash -c 'cp /usr/share/java/kafka-connect-replicator/replicator-rest-extension-*.jar /etc/kafka-connect/jars/; /etc/confluent/docker/run'"
+    volumes:
+        - ../../ccloud/replicator/executable-onprem-to-cloud-consumer.properties:/etc/kafka/executable-onprem-to-cloud-consumer.properties
+        - ../../ccloud/replicator/executable-onprem-to-cloud-producer.properties:/etc/kafka/executable-onprem-to-cloud-producer.properties
+        - ../../ccloud/replicator/executable-onprem-to-cloud-replicator.properties:/etc/kafka/executable-onprem-to-cloud-replicator.properties
     environment:
       CONNECT_PLUGIN_PATH: /usr/share/java/
       CONNECT_REST_EXTENSION_CLASSES: io.confluent.connect.replicator.monitoring.ReplicatorMonitoringExtension
