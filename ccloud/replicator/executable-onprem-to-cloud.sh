@@ -26,7 +26,14 @@ mv ${DIR}/tmp ${DIR}/executable-onprem-to-cloud-producer.properties
 log "Creating topic in Confluent Cloud (auto.create.topics.enable=false)"
 set +e
 create_topic executable-products
+delete_topic connect-onprem-to-cloud.offsets
+delete_topic connect-onprem-to-cloud.status
+delete_topic connect-onprem-to-cloud.config
 set -e
+
+offset.storage.topic=connect-onprem-to-cloud.offsets
+status.storage.topic=connect-onprem-to-cloud.status
+config.storage.topic=connect-onprem-to-cloud.config
 
 log "Sending messages to topic executable-products on source OnPREM cluster"
 docker exec -i connect kafka-avro-console-producer --broker-list broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic executable-products --property value.schema='{"type":"record","name":"myrecord","fields":[{"name":"name","type":"string"},
