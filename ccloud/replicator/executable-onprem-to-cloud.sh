@@ -20,7 +20,8 @@ fi
 sed -e "s|:BOOTSTRAP_SERVERS:|$BOOTSTRAP_SERVERS|g" \
     -e "s|:CLOUD_KEY:|$CLOUD_KEY|g" \
     -e "s|:CLOUD_SECRET:|$CLOUD_SECRET|g" \
-    ${DIR}/executable-onprem-to-cloud-producer.properties > ${DIR}/executable-onprem-to-cloud-producer.properties
+    ${DIR}/executable-onprem-to-cloud-producer.properties > ${DIR}/tmp
+mv ${DIR}/tmp ${DIR}/executable-onprem-to-cloud-producer.properties
 
 log "Creating topic in Confluent Cloud (auto.create.topics.enable=false)"
 set +e
