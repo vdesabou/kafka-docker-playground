@@ -24,7 +24,7 @@ The `topic-replicator`in the source cluster should be created manually
 ### How to run
 
 ```
-$ ./cloud-to-cloud.sh
+$ ./connect-cloud-to-cloud.sh
 ```
 
 ### Details of what the script is doing
@@ -87,7 +87,7 @@ $ docker container exec -e BOOTSTRAP_SERVERS="$BOOTSTRAP_SERVERS" -e SASL_JAAS_C
 ### How to run
 
 ```
-$ ./onprem-to-cloud.sh
+$ ./connect-onprem-to-cloud.sh
 ```
 
 ### Details of what the script is doing
