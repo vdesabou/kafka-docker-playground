@@ -50,6 +50,31 @@ services:
         - ../../ccloud/replicator/executable-onprem-to-cloud-consumer.properties:/etc/kafka/executable-onprem-to-cloud-consumer.properties
         - ../../ccloud/replicator/executable-onprem-to-cloud-producer.properties:/etc/kafka/executable-onprem-to-cloud-producer.properties
         - ../../ccloud/replicator/executable-onprem-to-cloud-replicator.properties:/etc/kafka/executable-onprem-to-cloud-replicator.properties
+        - ../../ccloud/replicator/executable-onprem-to-cloud-consumer-repro-avro.properties:/etc/kafka/executable-onprem-to-cloud-consumer-repro-avro.properties
+        - ../../ccloud/replicator/executable-onprem-to-cloud-producer-repro-avro.properties:/etc/kafka/executable-onprem-to-cloud-producer-repro-avro.properties
+        - ../../ccloud/replicator/executable-onprem-to-cloud-replicator-repro-avro.properties:/etc/kafka/executable-onprem-to-cloud-replicator-repro-avro.properties
     environment:
       CONNECT_PLUGIN_PATH: /usr/share/java/
       CONNECT_REST_EXTENSION_CLASSES: io.confluent.connect.replicator.monitoring.ReplicatorMonitoringExtension
+
+  control-center:
+    image: confluentinc/cp-enterprise-control-center:${TAG}
+    hostname: control-center
+    container_name: control-center
+    depends_on:
+      - zookeeper
+      - broker
+      - schema-registry
+      - connect
+    ports:
+      - "9021:9021"
+    environment:
+      CONTROL_CENTER_BOOTSTRAP_SERVERS: 'broker:9092'
+      CONTROL_CENTER_ZOOKEEPER_CONNECT: 'zookeeper:2181'
+      CONTROL_CENTER_CONNECT_CLUSTER: http://connect:8083
+      CONTROL_CENTER_KAFKA_BOOTSTRAP_SERVERS: 'broker:9092'
+      CONTROL_CENTER_REPLICATION_FACTOR: 1
+      CONTROL_CENTER_INTERNAL_TOPICS_PARTITIONS: 1
+      CONTROL_CENTER_MONITORING_INTERCEPTOR_TOPIC_PARTITIONS: 1
+      CONTROL_CENTER_SCHEMA_REGISTRY_URL: "http://schema-registry:8081"
+      CONFLUENT_METRICS_TOPIC_REPLICATION:
