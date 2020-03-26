@@ -5,7 +5,7 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
 #############
-${DIR}/../../ccloud/environment/start.sh "${PWD}/docker-compose-onprem-to-cloud.yml"
+${DIR}/../../ccloud/environment/start.sh "${PWD}/docker-compose-executable-onprem-to-cloud.yml" -a -b
 
 if [ -f /tmp/delta_configs/env.delta ]
 then
@@ -25,15 +25,22 @@ mv ${DIR}/tmp ${DIR}/executable-onprem-to-cloud-producer.properties
 
 log "Creating topic in Confluent Cloud (auto.create.topics.enable=false)"
 set +e
-create_topic executable-products
-delete_topic connect-onprem-to-cloud.offsets
-delete_topic connect-onprem-to-cloud.status
-delete_topic connect-onprem-to-cloud.config
+delete_topic executable-products-avro
+sleep 3
+create_topic executable-products-avro
+delete_topic connect-onprem-to-cloud-avro.offsets
+delete_topic connect-onprem-to-cloud-avro.status
+delete_topic connect-onprem-to-cloud-avro.config
 set -e
 
-offset.storage.topic=connect-onprem-to-cloud.offsets
-status.storage.topic=connect-onprem-to-cloud.status
-config.storage.topic=connect-onprem-to-cloud.config
+log "Delete schema for topic"
+set +e
+ccloud schema-registry schema delete --subject executable-products-avro-value --version latest
+set -e
+
+# Avoid java.lang.OutOfMemoryError: Java heap space
+docker container restart connect
+sleep 5
 
 log "Sending messages to topic executable-products on source OnPREM cluster"
 docker exec -i connect kafka-avro-console-producer --broker-list broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic executable-products --property value.schema='{"type":"record","name":"myrecord","fields":[{"name":"name","type":"string"},
@@ -42,6 +49,9 @@ docker exec -i connect kafka-avro-console-producer --broker-list broker:9092 --p
 {"name": "tape", "price": 0.99, "quantity": 10}
 {"name": "notebooks", "price": 1.99, "quantity": 5}
 EOF
+
+docker container restart connect
+sleep 5
 
 log "Starting replicator executable (logs are in /tmp/replicator.log):"
 # run in detach mode -d
