@@ -58,9 +58,9 @@ log "Sending messages to topic executable-products-avro (done using JAVA produce
 
 log "Starting replicator executable (logs are in /tmp/replicator.log):"
 # run in detach mode -d
-docker exec -d connect bash -c 'replicator --consumer.config /etc/kafka/executable-onprem-to-cloud-consumer-repro-avro.properties --producer.config /etc/kafka/executable-onprem-to-cloud-producer-repro-avro.properties  --replication.config /etc/kafka/executable-onprem-to-cloud-replicator-repro-avro-topicrecordnamestrategy.properties  --cluster.id executable-onprem-to-cloud --whitelist executable-products-avro > /tmp/replicator.log 2>&1'
+docker exec -d connect bash -c 'replicator --consumer.config /etc/kafka/executable-onprem-to-cloud-consumer-repro-avro.properties --producer.config /etc/kafka/executable-onprem-to-cloud-producer-repro-avro.properties  --replication.config /etc/kafka/executable-onprem-to-cloud-replicator-repro-avro.properties  --cluster.id executable-onprem-to-cloud --whitelist executable-products-avro > /tmp/replicator.log 2>&1'
 
-# docker exec connect bash -c 'replicator --consumer.config /etc/kafka/executable-onprem-to-cloud-consumer-repro-avro.properties --producer.config /etc/kafka/executable-onprem-to-cloud-producer-repro-avro.properties  --replication.config /etc/kafka/executable-onprem-to-cloud-replicator-repro-avro-topicrecordnamestrategy.properties  --cluster.id executable-onprem-to-cloud --whitelist executable-products-avro'
+# docker exec connect bash -c 'replicator --consumer.config /etc/kafka/executable-onprem-to-cloud-consumer-repro-avro.properties --producer.config /etc/kafka/executable-onprem-to-cloud-producer-repro-avro.properties  --replication.config /etc/kafka/executable-onprem-to-cloud-replicator-repro-avro.properties  --cluster.id executable-onprem-to-cloud --whitelist executable-products-avro'
 
 sleep 50
 log "Verify we have received the data in executable-products-avro topic"
