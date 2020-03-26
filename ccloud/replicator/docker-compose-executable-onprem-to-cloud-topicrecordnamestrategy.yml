@@ -55,18 +55,30 @@ services:
     entrypoint: ["sh", "-c", "sleep 2073600"]
 
 
-  producer:
+  producer-onprem:
     build:
-      context: ../../ccloud/replicator/producer/
+      context: ../../ccloud/replicator/producer-onprem/
       args:
         TAG: ${TAG}
         CP_BASE_IMAGE: ${CP_BASE_IMAGE}
         KAFKA_CLIENT_TAG: ${KAFKA_CLIENT_TAG}
-    hostname: producer
-    container_name: producer
-    environment:
-      BOOTSTRAP_SERVERS: "broker:9092"
-      SCHEMA_REGISTRY_URL: "http://schema-registry:8081"
+    hostname: producer-onprem
+    container_name: producer-onprem
+    depends_on:
+      - zookeeper
+      - broker
+      - schema-registry
+
+
+  producer-cloud:
+    build:
+      context: ../../ccloud/replicator/producer-cloud/
+      args:
+        TAG: ${TAG}
+        CP_BASE_IMAGE: ${CP_BASE_IMAGE}
+        KAFKA_CLIENT_TAG: ${KAFKA_CLIENT_TAG}
+    hostname: producer-cloud
+    container_name: producer-cloud
     depends_on:
       - zookeeper
       - broker

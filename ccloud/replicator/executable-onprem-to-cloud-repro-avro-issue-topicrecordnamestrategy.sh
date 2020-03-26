@@ -4,10 +4,16 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
-if [ ! -f ${DIR}/producer/target/producer-1.0.0-jar-with-dependencies.jar ]
+if [ ! -f ${DIR}/producer-onprem/target/producer-1.0.0-jar-with-dependencies.jar ]
 then
-     log "Building jar for producer"
-     docker run -it --rm -e TAG=$TAG_BASE -e KAFKA_CLIENT_TAG=$KAFKA_CLIENT_TAG -v "${DIR}/producer":/usr/src/mymaven -v "$HOME/.m2":/root/.m2 -v "${DIR}/producer/target:/usr/src/mymaven/target" -w /usr/src/mymaven maven:3.6.1-jdk-8 mvn package
+     log "Building jar for producer-onprem"
+     docker run -it --rm -e TAG=$TAG_BASE -e KAFKA_CLIENT_TAG=$KAFKA_CLIENT_TAG -v "${DIR}/producer-onprem":/usr/src/mymaven -v "$HOME/.m2":/root/.m2 -v "${DIR}/producer-onprem/target:/usr/src/mymaven/target" -w /usr/src/mymaven maven:3.6.1-jdk-8 mvn package
+fi
+
+if [ ! -f ${DIR}/producer-cloud/target/producer-1.0.0-jar-with-dependencies.jar ]
+then
+     log "Building jar for producer-cloud"
+     docker run -it --rm -e TAG=$TAG_BASE -e KAFKA_CLIENT_TAG=$KAFKA_CLIENT_TAG -v "${DIR}/producer-cloud":/usr/src/mymaven -v "$HOME/.m2":/root/.m2 -v "${DIR}/producer-cloud/target:/usr/src/mymaven/target" -w /usr/src/mymaven maven:3.6.1-jdk-8 mvn package
 fi
 
 #############
@@ -47,14 +53,21 @@ set -e
 
 log "Delete schema for topic"
 set +e
-ccloud schema-registry schema delete --subject executable-products-avro-value --version latest
+ccloud schema-registry schema delete --subject executable-products-avro-com.github.vdesabou.Customer --version latest
 set -e
 
 # Avoid java.lang.OutOfMemoryError: Java heap space
 docker container restart connect
 sleep 5
 
-log "Sending messages to topic executable-products-avro (done using JAVA producer)"
+log "Run the Java producer-onprem, it sends one request every 5 seconds and use TopicRecordNameStrategy. Logs are in producer-onprem.log."
+docker exec producer-onprem bash -c "java -jar producer-1.0.0-jar-with-dependencies.jar" > producer-onprem.log 2>&1 &
+
+
+log "Run the Java producer-cloud, it sends one request every 5 seconds and use TopicRecordNameStrategy. Logs are in producer-cloud.log."
+docker exec -e BOOTSTRAP_SERVERS="$BOOTSTRAP_SERVERS" -e CLOUD_KEY="$CLOUD_KEY" -e CLOUD_SECRET="$CLOUD_SECRET" -e SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO="$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO" -e SCHEMA_REGISTRY_URL="$SCHEMA_REGISTRY_URL" producer-cloud bash -c "java -jar producer-1.0.0-jar-with-dependencies.jar" > producer-cloud.log 2>&1 &
+
+sleep 15
 
 log "Starting replicator executable (logs are in /tmp/replicator.log):"
 # run in detach mode -d

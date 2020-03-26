@@ -12,7 +12,7 @@ import io.confluent.kafka.serializers.KafkaAvroSerializer;
 import java.util.Properties;
 import java.util.concurrent.TimeUnit;
 import com.github.vdesabou.Customer;
-import java.util.Date;
+import com.github.javafaker.Faker;
 
 public class SimpleProducer {
 
@@ -23,7 +23,7 @@ public class SimpleProducer {
 
         Properties props = new Properties();
 
-        props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, System.getenv("BOOTSTRAP_SERVERS"));
+        props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, "broker:9092");
 
         props.put(ProducerConfig.ACKS_CONFIG, "all");
         props.put(ProducerConfig.REQUEST_TIMEOUT_MS_CONFIG, 20000);
@@ -34,62 +34,29 @@ public class SimpleProducer {
         props.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, KafkaAvroSerializer.class);
 
         // Schema Registry specific settings
-        props.put("schema.registry.url", System.getenv("SCHEMA_REGISTRY_URL"));
+        props.put("schema.registry.url", "http://schema-registry:8081");
 
         props.put("value.subject.name.strategy", "io.confluent.kafka.serializers.subject.TopicRecordNameStrategy");
 
-        System.out.println("Sending data to `customer` topic. Properties: " + props.toString());
 
+        System.out.println("Sending data to `executable-products-avro` topic. Properties: " + props.toString());
+
+        Faker faker = new Faker();
+
+        String key = "alice";
         try (Producer<String, Customer> producer = new KafkaProducer<>(props)) {
             long i = 0;
 
             while (true) {
-                String key = "" + i;
 
-                ProducerRecord<String, Customer> record;
-                if(i==2) {
-                    record = new ProducerRecord<>(TOPIC, key, null);
+                Customer customer = Customer.newBuilder()
+                .setCount(i)
+                .setFirstName(faker.name().firstName())
+                .setLastName(faker.name().lastName())
+                .setAddress(faker.address().streetAddress())
+                .build();
 
-                } else if(i==3) {
-                    // test with default values
-                    Customer customer = Customer.newBuilder()
-                    .setListID(null)
-                    .setNormalizedHashItemID(null)
-                    .setURL(null)
-                    .setMyTable("customer1")
-                    .setMyFloatValue(null)
-                    .setMyTimestamp(new Date().getTime())
-                    .build();
-                    record = new ProducerRecord<>(TOPIC, key, customer);
-                } else if(i==4) {
-                    Customer customer = Customer.newBuilder()
-                    .setListID(i)
-                    .setNormalizedHashItemID(i)
-                    .setURL("ultralongurlultralongurlultralongurlultralongurlultralongurlultralongurlultralongurultralongurl")
-                    .setMyTable("customer1")
-                    .setMyFloatValue(0.28226356681351483)
-                    .setMyTimestamp(new Date().getTime())
-                    .build();
-                    record = new ProducerRecord<>(TOPIC, key, customer);
-                } else {
-                    String tableName;
-                    if(i % 2 == 0) {
-                        tableName = "customer1";
-                    } else {
-                        tableName = "customer2";
-                    }
-
-                    Customer customer = Customer.newBuilder()
-                    .setListID(i)
-                    .setNormalizedHashItemID(i)
-                    .setURL("url")
-                    .setMyTable(tableName)
-                    .setMyFloatValue(0.28226356681351483)
-                    .setMyTimestamp(new Date().getTime())
-                    .build();
-                    record = new ProducerRecord<>(TOPIC, key, customer);
-                }
-
+                ProducerRecord<String, Customer> record = new ProducerRecord<>(TOPIC, key, customer);
                 System.out.println("Sending " + record.key() + " " + record.value());
                 producer.send(record, new Callback() {
                     @Override
@@ -103,8 +70,9 @@ public class SimpleProducer {
                 });
                 producer.flush();
                 i++;
-                //TimeUnit.MILLISECONDS.sleep(1);
+                TimeUnit.MILLISECONDS.sleep(5000);
             }
         }
     }
 }
+
