@@ -1,0 +1,12 @@
+---
+version: '3.5'
+services:
+  connect:
+    volumes:
+        - ../../connect/connect-gcp-gcs-sink/keyfile.json:/root/keyfiles/keyfile.json:ro
+        - ../../environment/rbac-sasl-plain/scripts/security/client_sasl_plain.config:/etc/kafka/secrets/client_sasl_plain.config
+    environment:
+      CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-gcs
+
+      # Allow overriding configs on the connector level
+      CONNECT_CONNECTOR_CLIENT_CONFIG_OVERRIDE_POLICY: 'All'
