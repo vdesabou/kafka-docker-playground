@@ -1,0 +1,15 @@
+dn: cn=clientListen,ou=users,{{ LDAP_BASE_DN }}
+objectClass: inetOrgPerson
+objectClass: posixAccount
+objectClass: shadowAccount
+uid: clientListen
+sn: Sheen
+givenName: ClientListen
+cn: clientListen
+displayName: ClientListen Sheen
+uidNumber: 10020
+gidNumber: 5000
+userPassword: clientListen
+gecos: clientListen
+loginShell: /bin/bash
+homeDirectory: /home/clientListen

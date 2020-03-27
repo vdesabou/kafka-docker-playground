@@ -1,0 +1,274 @@
+version: '3.5'
+services:
+
+    ####
+    #
+    # This file overrides values from environment/plaintext/docker-compose.yml
+    #
+    ####
+
+    tools:
+        image: cnfltraining/training-tools:5.4
+        hostname: tools
+        container_name: tools
+        depends_on:
+          - zookeeper
+          - broker
+        volumes:
+          - ../../environment/rbac-sasl-plain/scripts/helper:/tmp/helper
+        entrypoint: /bin/bash
+        tty: true
+
+    openldap:
+        image: osixia/openldap:1.3.0
+        hostname: openldap
+        container_name: openldap
+        ports:
+            - 389:389
+        environment:
+            LDAP_ORGANISATION: "ConfluentDemo"
+            LDAP_DOMAIN: "confluentdemo.io"
+            LDAP_BASE_DN: "dc=confluentdemo,dc=io"
+        volumes:
+          - ../../environment/rbac-sasl-plain/scripts/security/ldap_users:/container/service/slapd/assets/config/bootstrap/ldif/custom
+        command: "--copy-service --loglevel debug"
+
+    zookeeper:
+        volumes:
+        - ../../environment/sasl-plain/zookeeper/zookeeper.sasl.jaas.config:/etc/kafka/zookeeper_server_jaas.conf
+        environment:
+            KAFKA_OPTS: -Djava.security.auth.login.config=/etc/kafka/zookeeper_server_jaas.conf
+                -Dzookeeper.authProvider.1=org.apache.zookeeper.server.auth.SASLAuthenticationProvider
+                -Dzookeeper.allowSaslFailedClients=false
+                -Dzookeeper.requireClientAuthScheme=sasl
+
+    broker:
+        ports:
+          - 8091:8091
+          - 10091:10091
+        volumes:
+          - ../../environment/rbac-sasl-plain/kafka/kafka.jaas.conf:/etc/kafka/kafka_server_jaas.conf
+          - ../../environment/rbac-sasl-plain/conf:/tmp/conf
+          - ../../environment/rbac-sasl-plain/scripts/helper:/tmp/helper
+        environment:
+            KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INTERNAL:SASL_PLAINTEXT,TOKEN:SASL_PLAINTEXT
+            KAFKA_LISTENERS: INTERNAL://:9092,TOKEN://:10091
+            KAFKA_ADVERTISED_LISTENERS: INTERNAL://broker:9092,TOKEN://broker:10091
+            KAFKA_SASL_ENABLED_MECHANISMS: PLAIN, OAUTHBEARER
+            KAFKA_SASL_MECHANISM_INTER_BROKER_PROTOCOL: PLAIN
+            KAFKA_INTER_BROKER_LISTENER_NAME: INTERNAL
+            CONFLUENT_METRICS_REPORTER_SASL_MECHANISM: PLAIN
+            CONFLUENT_METRICS_REPORTER_SECURITY_PROTOCOL: SASL_PLAINTEXT
+            CONFLUENT_METRICS_REPORTER_SASL_JAAS_CONFIG: "org.apache.kafka.common.security.plain.PlainLoginModule required \
+                username=\"admin\" \
+                password=\"admin-secret\";"
+            KAFKA_OPTS: "-Djava.security.auth.login.config=/etc/kafka/kafka_server_jaas.conf"
+
+            KAFKA_SUPER_USERS: User:admin;User:mds;User:superUser;User:ANONYMOUS
+            KAFKA_LOG4J_LOGGERS: "kafka.authorizer.logger=INFO"
+            KAFKA_LOG4J_ROOT_LOGLEVEL: INFO
+
+            KAFKA_LISTENER_NAME_INTERNAL_PLAIN_SASL_JAAS_CONFIG: |
+                    org.apache.kafka.common.security.plain.PlainLoginModule required \
+                    username="admin" \
+                    password="admin-secret" \
+                    user_admin="admin-secret" \
+                    user_mds="mds-secret";
+
+            # Configure TOKEN listener for Confluent Platform components and impersonation
+            KAFKA_LISTENER_NAME_TOKEN_OAUTHBEARER_SASL_SERVER_CALLBACK_HANDLER_CLASS: io.confluent.kafka.server.plugins.auth.token.TokenBearerValidatorCallbackHandler
+            KAFKA_LISTENER_NAME_TOKEN_OAUTHBEARER_SASL_LOGIN_CALLBACK_HANDLER_CLASS: io.confluent.kafka.server.plugins.auth.token.TokenBearerServerLoginCallbackHandler
+            KAFKA_LISTENER_NAME_TOKEN_OAUTHBEARER_SASL_JAAS_CONFIG: |
+                    org.apache.kafka.common.security.oauthbearer.OAuthBearerLoginModule required \
+                    publicKeyPath="/tmp/conf/public.pem";
+
+            # MDS
+            KAFKA_CONFLUENT_METADATA_TOPIC_REPLICATION_FACTOR: 1
+            KAFKA_CONFLUENT_METADATA_SERVER_AUTHENTICATION_METHOD: BEARER
+            KAFKA_CONFLUENT_METADATA_SERVER_LISTENERS: http://0.0.0.0:8091
+            KAFKA_CONFLUENT_METADATA_SERVER_ADVERTISED_LISTENERS: http://broker:8091
+
+            # Configure RBAC token server (authentication)
+            KAFKA_CONFLUENT_METADATA_SERVER_TOKEN_AUTH_ENABLE: 'true'
+            KAFKA_CONFLUENT_METADATA_SERVER_TOKEN_MAX_LIFETIME_MS: 3600000
+            KAFKA_CONFLUENT_METADATA_SERVER_TOKEN_SIGNATURE_ALGORITHM: RS256
+            KAFKA_CONFLUENT_METADATA_SERVER_TOKEN_KEY_PATH: /tmp/conf/keypair.pem
+            KAFKA_CONFLUENT_METADATA_SERVER_PUBLIC_KEY_PATH: /tmp/conf/public.pem
+
+            # Configure Confluent Server Authorizer
+            KAFKA_AUTHORIZER_CLASS_NAME: io.confluent.kafka.security.authorizer.ConfluentServerAuthorizer
+            KAFKA_CONFLUENT_AUTHORIZER_ACCESS_RULE_PROVIDERS: CONFLUENT,ZK_ACL
+            KAFKA_CONFLUENT_AUTHORIZER_GROUP_PROVIDER: RBAC
+
+            # Configure MDS to talk to AD/LDAP
+            KAFKA_LDAP_JAVA_NAMING_FACTORY_INITIAL: com.sun.jndi.ldap.LdapCtxFactory
+            KAFKA_LDAP_COM_SUN_JNDI_LDAP_READ_TIMEOUT: 3000
+            KAFKA_LDAP_JAVA_NAMING_PROVIDER_URL: ldap://openldap:389
+            # How to authenticate to LDAP
+            KAFKA_LDAP_JAVA_NAMING_SECURITY_PRINCIPAL: cn=admin,dc=confluentdemo,dc=io
+            KAFKA_LDAP_JAVA_NAMING_SECURITY_CREDENTIALS: admin
+            KAFKA_LDAP_JAVA_NAMING_SECURITY_AUTHENTICATION: simple
+            # How to locate users and groups
+            KAFKA_LDAP_SEARCH_MODE: USERS
+            KAFKA_LDAP_USER_SEARCH_BASE: ou=users,dc=confluentdemo,dc=io
+            KAFKA_LDAP_GROUP_SEARCH_BASE: ou=users,dc=confluentdemo,dc=io
+            KAFKA_LDAP_USER_NAME_ATTRIBUTE: uid
+            KAFKA_LDAP_USER_OBJECT_CLASS: inetOrgPerson
+            KAFKA_LDAP_USER_MEMBEROF_ATTRIBUTE: ou
+            KAFKA_LDAP_GROUP_NAME_ATTRIBUTE: cn
+            KAFKA_LDAP_GROUP_OBJECT_CLASS: group
+
+
+    schema-registry:
+        volumes:
+          - ../../environment/rbac-sasl-plain/conf:/tmp/conf
+          - ../../environment/rbac-sasl-plain/scripts/helper:/tmp/helper
+        environment:
+            CUB_CLASSPATH: '/etc/confluent/docker/docker-utils.jar:/usr/share/java/confluent-security/schema-registry/*:/usr/share/java/schema-registry/*'
+            SCHEMA_REGISTRY_KAFKASTORE_BOOTSTRAP_SERVERS: broker:10091
+            SCHEMA_REGISTRY_KAFKASTORE_CONNECTION_URL: zookeeper:2181
+            SCHEMA_REGISTRY_KAFKASTORE_SECURITY_PROTOCOL: SASL_PLAINTEXT
+
+            SCHEMA_REGISTRY_KAFKASTORE_SASL_MECHANISM: OAUTHBEARER
+            SCHEMA_REGISTRY_KAFKASTORE_SASL_LOGIN_CALLBACK_HANDLER_CLASS: io.confluent.kafka.clients.plugins.auth.token.TokenUserLoginCallbackHandler
+            SCHEMA_REGISTRY_KAFKASTORE_SASL_JAAS_CONFIG: |
+                    org.apache.kafka.common.security.oauthbearer.OAuthBearerLoginModule required \
+                    username="schemaregistryUser" \
+                    password="schemaregistryUser" \
+                    metadataServerUrls="http://broker:8091";
+
+            # RBAC and MDS
+            SCHEMA_REGISTRY_SCHEMA_REGISTRY_RESOURCE_EXTENSION_CLASS: io.confluent.kafka.schemaregistry.security.SchemaRegistrySecurityResourceExtension
+            SCHEMA_REGISTRY_CONFLUENT_SCHEMA_REGISTRY_AUTHORIZER_CLASS: io.confluent.kafka.schemaregistry.security.authorizer.rbac.RbacAuthorizer
+            SCHEMA_REGISTRY_REST_SERVLET_INITIALIZOR_CLASSES: io.confluent.common.security.jetty.initializer.InstallBearerOrBasicSecurityHandler
+            SCHEMA_REGISTRY_CONFLUENT_METADATA_BOOTSTRAP_SERVER_URLS: http://broker:8091
+            SCHEMA_REGISTRY_CONFLUENT_METADATA_HTTP_AUTH_CREDENTIALS_PROVIDER: BASIC
+            SCHEMA_REGISTRY_CONFLUENT_METADATA_BASIC_AUTH_USER_INFO: schemaregistryUser:schemaregistryUser
+            # public key to verify tokens during authentication
+            SCHEMA_REGISTRY_PUBLIC_KEY_PATH: /tmp/conf/public.pem
+
+    connect:
+        volumes:
+          - ../../environment/rbac-sasl-plain/conf:/tmp/conf
+          - ../../environment/rbac-sasl-plain/scripts/helper:/tmp/helper
+          - mi3:/usr/share/java/kafka-connect-replicator/
+        depends_on:
+          - zookeeper
+          - broker
+          - schema-registry
+          - replicator-for-jar-transfer
+        command: "bash -c 'sleep 10 && \
+                  cp /usr/share/java/kafka-connect-replicator/replicator-rest-extension-*.jar /etc/kafka-connect/jars/ && \
+                  /etc/confluent/docker/run'"
+        environment:
+            CUB_CLASSPATH: '/etc/confluent/docker/docker-utils.jar:/usr/share/java/confluent-security/connect/*:/usr/share/java/kafka/*'
+            CONNECT_BOOTSTRAP_SERVERS: broker:10091
+
+            CONNECT_SECURITY_PROTOCOL: SASL_PLAINTEXT
+            CONNECT_PRODUCER_CONFLUENT_MONITORING_INTERCEPTOR_SECURITY_PROTOCOL: SASL_PLAINTEXT
+            CONNECT_CONSUMER_CONFLUENT_MONITORING_INTERCEPTOR_SECURITY_PROTOCOL: SASL_PLAINTEXT
+            CONNECT_PRODUCER_SECURITY_PROTOCOL: SASL_PLAINTEXT
+            CONNECT_CONSUMER_SECURITY_PROTOCOL: SASL_PLAINTEXT
+
+            # RBAC
+            CONNECT_SASL_MECHANISM: 'OAUTHBEARER'
+            CONNECT_SASL_LOGIN_CALLBACK_HANDLER_CLASS: 'io.confluent.kafka.clients.plugins.auth.token.TokenUserLoginCallbackHandler'
+            CONNECT_SASL_JAAS_CONFIG: |
+                    org.apache.kafka.common.security.oauthbearer.OAuthBearerLoginModule required \
+                    username="connectAdmin" \
+                    password="connectAdmin" \
+                    metadataServerUrls="http://broker:8091";
+            # Allow overriding configs on the connector level
+            CONNECT_CONNECTOR_CLIENT_CONFIG_OVERRIDE_POLICY: 'All'
+
+            # Producer
+            CONNECT_PRODUCER_SASL_MECHANISM: 'OAUTHBEARER'
+            CONNECT_PRODUCER_SASL_LOGIN_CALLBACK_HANDLER_CLASS: 'io.confluent.kafka.clients.plugins.auth.token.TokenUserLoginCallbackHandler'
+            CONNECT_PRODUCER_SASL_JAAS_CONFIG: |
+                    org.apache.kafka.common.security.oauthbearer.OAuthBearerLoginModule required \
+                    username="connectAdmin" \
+                    password="connectAdmin" \
+                    metadataServerUrls="http://broker:8091";
+            CONNECT_PRODUCER_CONFLUENT_MONITORING_INTERCEPTOR_SASL_MECHANISM: 'OAUTHBEARER'
+            CONNECT_PRODUCER_CONFLUENT_MONITORING_INTERCEPTOR_SASL_LOGIN_CALLBACK_HANDLER_CLASS: 'io.confluent.kafka.clients.plugins.auth.token.TokenUserLoginCallbackHandler'
+            CONNECT_PRODUCER_CONFLUENT_MONITORING_INTERCEPTOR_SASL_JAAS_CONFIG: |
+                    org.apache.kafka.common.security.oauthbearer.OAuthBearerLoginModule required \
+                    username="connectAdmin" \
+                    password="connectAdmin" \
+                    metadataServerUrls="http://broker:8091";
+            # Consumer
+            CONNECT_CONSUMER_SASL_MECHANISM: 'OAUTHBEARER'
+            CONNECT_CONSUMER_SASL_LOGIN_CALLBACK_HANDLER_CLASS: 'io.confluent.kafka.clients.plugins.auth.token.TokenUserLoginCallbackHandler'
+            CONNECT_CONSUMER_SASL_JAAS_CONFIG: |
+                    org.apache.kafka.common.security.oauthbearer.OAuthBearerLoginModule required \
+                    username="connectAdmin" \
+                    password="connectAdmin" \
+                    metadataServerUrls="http://broker:8091";
+            CONNECT_CONSUMER_CONFLUENT_MONITORING_INTERCEPTOR_SASL_MECHANISM: 'OAUTHBEARER'
+            CONNECT_CONSUMER_CONFLUENT_MONITORING_INTERCEPTOR_SASL_LOGIN_CALLBACK_HANDLER_CLASS: 'io.confluent.kafka.clients.plugins.auth.token.TokenUserLoginCallbackHandler'
+            CONNECT_CONSUMER_CONFLUENT_MONITORING_INTERCEPTOR_SASL_JAAS_CONFIG: |
+                    org.apache.kafka.common.security.oauthbearer.OAuthBearerLoginModule required \
+                    username="connectAdmin" \
+                    password="connectAdmin" \
+                    metadataServerUrls="http://broker:8091";
+            # Default admin config
+            CONNECT_ADMIN_SECURITY_PROTOCOL: SASL_PLAINTEXT
+            CONNECT_ADMIN_SASL_MECHANISM: 'OAUTHBEARER'
+            CONNECT_ADMIN_SASL_LOGIN_CALLBACK_HANDLER_CLASS: 'io.confluent.kafka.clients.plugins.auth.token.TokenUserLoginCallbackHandler'
+            CONNECT_ADMIN_SASL_JAAS_CONFIG: |
+                    org.apache.kafka.common.security.oauthbearer.OAuthBearerLoginModule required \
+                    username="connectAdmin" \
+                    password="connectAdmin" \
+                    metadataServerUrls="http://broker:8091";
+
+            # io.confluent.connect.replicator.monitoring.ReplicatorMonitoringExtension - Confluent Replicator
+            # io.confluent.connect.security.ConnectSecurityExtension - RBAC
+            CONNECT_REST_EXTENSION_CLASSES: io.confluent.connect.replicator.monitoring.ReplicatorMonitoringExtension,io.confluent.connect.security.ConnectSecurityExtension
+            CONNECT_REST_SERVLET_INITIALIZOR_CLASSES: 'io.confluent.common.security.jetty.initializer.InstallBearerOrBasicSecurityHandler'
+            CONNECT_PUBLIC_KEY_PATH: /tmp/conf/public.pem
+            CONNECT_CONFLUENT_METADATA_BOOTSTRAP_SERVER_URLS: http://broker:8091
+            CONNECT_CONFLUENT_METADATA_BASIC_AUTH_USER_INFO: 'connectAdmin:connectAdmin'
+            CONNECT_CONFLUENT_METADATA_HTTP_AUTH_CREDENTIALS_PROVIDER: 'BASIC'
+
+    # This container is just to transfer Replicator jars to the Connect worker
+    # It is not used as a Connect worker
+    replicator-for-jar-transfer:
+      image: confluentinc/cp-enterprise-replicator:${TAG}
+      hostname: replicator-for-jar-transfer
+      container_name: replicator-for-jar-transfer
+      volumes:
+        - mi3:/usr/share/java/kafka-connect-replicator/
+      command: "sleep infinity"
+
+    control-center:
+        volumes:
+          - ../../environment/rbac-sasl-plain/conf:/tmp/conf
+          - ../../environment/rbac-sasl-plain/scripts/helper:/tmp/helper
+        environment:
+            CUB_CLASSPATH: '/etc/confluent/docker/docker-utils.jar:/usr/share/java/confluent-control-center/*:/usr/share/java/rest-utils/*:/usr/share/java/confluent-common/*'
+
+            CONTROL_CENTER_BOOTSTRAP_SERVERS: broker:10091
+
+            # Connect
+            CONTROL_CENTER_CONNECT_CONNECT1_CLUSTER: http://connect:8083
+
+            # RBAC
+            CONTROL_CENTER_REST_AUTHENTICATION_METHOD: BEARER
+            PUBLIC_KEY_PATH: /tmp/conf/public.pem
+
+            CONFLUENT_METADATA_BASIC_AUTH_USER_INFO: controlcenterAdmin:controlcenterAdmin
+            CONFLUENT_METADATA_BOOTSTRAP_SERVER_URLS: http://broker:8091
+
+            CONTROL_CENTER_STREAMS_SECURITY_PROTOCOL: SASL_PLAINTEXT
+            # The following configs are not required by C3 itself, but are required by cub to be able to connect to kafka to check if its ready
+            # Seems like C3 would generate these configs when started, but cub runs before C3 starts, so it doesn't have access to these configs
+            CONTROL_CENTER_STREAMS_SASL_MECHANISM: OAUTHBEARER
+            CONTROL_CENTER_STREAMS_SASL_LOGIN_CALLBACK_HANDLER_CLASS: io.confluent.kafka.clients.plugins.auth.token.TokenUserLoginCallbackHandler
+            CONTROL_CENTER_STREAMS_SASL_JAAS_CONFIG: |
+                    org.apache.kafka.common.security.oauthbearer.OAuthBearerLoginModule required \
+                    username="controlcenterAdmin" \
+                    password="controlcenterAdmin" \
+                    metadataServerUrls="http://broker:8091";
+
+volumes:
+    mi3: {}

@@ -1,0 +1,15 @@
+dn: cn=connectorSubmitter,ou=users,{{ LDAP_BASE_DN }}
+objectClass: inetOrgPerson
+objectClass: posixAccount
+objectClass: shadowAccount
+uid: connectorSubmitter
+sn: Sheen
+givenName: ConnectorSubmitter
+cn: connectorSubmitter
+displayName: ConnectorSubmitter Sheen
+uidNumber: 10024
+gidNumber: 5000
+userPassword: connectorSubmitter
+gecos: connectorSubmitter
+loginShell: /bin/bash
+homeDirectory: /home/connectorSubmitter
