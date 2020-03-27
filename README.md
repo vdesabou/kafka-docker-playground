@@ -110,6 +110,7 @@ Quick start examples from Confluent [docs](https://docs.confluent.io/current/con
         * using [SSL](connect/connect-gcp-gcs-sink/README.md#with-ssl-authentication)
         * using [Kerberos GSSAPI](connect/connect-gcp-gcs-sink/README.md#with-kerberos-gssapi-authentication)
         * using [LDAP Authorizer SASL/PLAIN](connect/connect-gcp-gcs-sink/README.md#with-ldap-authorizer-with-saslplain)
+        * using [RBAC environment SASL/PLAIN](connect/connect-gcp-gcs-sink/README.md#with-rbac-environment-with-saslplain)
     * <img src="https://cdn.worldvectorlogo.com/logos/firebase-1.svg" width="15"> [Firebase](connect/connect-gcp-firebase-sink)
     * <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/8/84/Cloud-Spanner-Logo.svg/1200px-Cloud-Spanner-Logo.svg.png" width="15"> [Spanner](connect/connect-gcp-spanner-sink)
 * <img src="https://cdn.solace.com/wp-content/uploads/2014/05/solace-featured-image_logo-on-white.jpg" width="15"> [Solace](connect/connect-solace-sink)
@@ -199,6 +200,7 @@ Single cluster:
 * [Kerberos](environment/kerberos): no SSL encryption, Kerberos GSSAPI authentication
 * [SSL_Kerberos](environment/ssl_kerberos) SSL encryption, Kerberos GSSAPI authentication
 * [LDAP Authorizer with SASL/PLAIN](environment/ldap_authorizer_sasl_plain) no SSL encryption, SASL/PLAIN authentication, LDAP Authorizer for ACL authorization
+* [RBAC with SASL/PLAIN](environment/rbac-sasl-plain) RBAC with no SSL encryption, SASL/PLAIN authentication
 
 Multi-Data-Center setup:
 
@@ -265,6 +267,7 @@ This is just the excellent examples in [Kafka tutorial](https://kafka-tutorials.
   * [Tiered storage with Minio](other/tiered-storage-with-minio) (unsupported)
 * [Confluent Rebalancer](other/rebalancer)
 * [JMS Client](other/jms-client)
+* [RBAC with SASL/PLAIN](environment/rbac-sasl-plain) RBAC with no SSL encryption, SASL/PLAIN authentication
 
 ## 👾 Other Playgrounds
 

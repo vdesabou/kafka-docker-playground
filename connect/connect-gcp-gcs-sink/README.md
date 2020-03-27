@@ -66,6 +66,12 @@ Or using LDAP Authorizer with SASL/PLAIN:
 $ ./gcs-sink-ldap-authorizer-sasl-plain.sh <BUCKET_NAME>
 ```
 
+Or using RBAC environment with SASL/PLAIN:
+
+```bash
+$ ./gcs-sink-rbac-sasl-plain.sh <BUCKET_NAME>
+```
+
 ## Details of what the script is doing
 
 ### With no security in place (PLAINTEXT):
@@ -265,24 +271,24 @@ $ docker run -v /tmp:/tmp actions/avro-tools tojson /tmp/gcs_topic-sasl-ssl+0+00
 
 ### With Kerberos GSSAPI authentication:
 
-Messages are sent to `gcs_topic-kerberos` topic using:
+Messages are sent to `rbac_gcs_topic` topic using:
 
 ```bash
 $ docker exec -i client kinit -k -t /var/lib/secret/kafka-client.key kafka_producer
 
-$ seq -f "{\"f1\": \"This is a message sent with Kerberos GSSAPI authentication %g\"}" 10 | docker exec -i client kafka-avro-console-producer --broker-list broker:9092 --topic gcs_topic-kerberos --property value.schema='{"type":"record","name":"myrecord","fields":[{"name":"f1","type":"string"}]}' --property schema.registry.url=http://schema-registry:8081 --producer.config /etc/kafka/producer.properties
+$ seq -f "{\"f1\": \"This is a message sent with Kerberos GSSAPI authentication %g\"}" 10 | docker exec -i client kafka-avro-console-producer --broker-list broker:9092 --topic rbac_gcs_topic --property value.schema='{"type":"record","name":"myrecord","fields":[{"name":"f1","type":"string"}]}' --property schema.registry.url=http://schema-registry:8081 --producer.config /etc/kafka/producer.properties
 ```
 
 The connector is created with:
 
 ```bash
-docker exec -e BUCKET_NAME="$BUCKET_NAME" connect \
+$ docker exec -e BUCKET_NAME="$BUCKET_NAME" connect \
      curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
                "connector.class": "io.confluent.connect.gcs.GcsSinkConnector",
                     "tasks.max" : "1",
-                    "topics" : "gcs_topic-kerberos",
+                    "topics" : "rbac_gcs_topic",
                     "gcs.bucket.name" : "'"$BUCKET_NAME"'",
                     "gcs.part.size": "5242880",
                     "flush.size": "3",
@@ -304,15 +310,15 @@ docker exec -e BUCKET_NAME="$BUCKET_NAME" connect \
 After a few seconds, data should be in GCS:
 
 ```bash
-$ gsutil ls gs://$BUCKET_NAME/topics/gcs_topic-kerberos/partition=0/
+$ gsutil ls gs://$BUCKET_NAME/topics/rbac_gcs_topic/partition=0/
 ```
 
 
 Getting one of the avro files locally and displaying content with avro-tools:
 
 ```bash
-$ gsutil cp gs://$BUCKET_NAME/topics/gcs_topic-kerberos/partition=0/gcs_topic-kerberos+0+0000000000.avro /tmp/
-$ docker run -v /tmp:/tmp actions/avro-tools tojson /tmp/gcs_topic-kerberos+0+0000000000.avro
+$ gsutil cp gs://$BUCKET_NAME/topics/rbac_gcs_topic/partition=0/rbac_gcs_topic+0+0000000000.avro /tmp/
+$ docker run -v /tmp:/tmp actions/avro-tools tojson /tmp/rbac_gcs_topic+0+0000000000.avro
 {"f1":"This is a message sent with Kerberos GSSAPI authentication 1"}
 {"f1":"This is a message sent with Kerberos GSSAPI authentication 2"}
 {"f1":"This is a message sent with Kerberos GSSAPI authentication 3"}
@@ -337,7 +343,7 @@ $ seq -f "{\"f1\": \"This is a message sent with LDAP Authorizer SASL/PLAIN auth
 The connector is created with:
 
 ```bash
-docker exec -e BUCKET_NAME="$BUCKET_NAME" connect \
+$ docker exec -e BUCKET_NAME="$BUCKET_NAME" connect \
      curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
@@ -364,18 +370,77 @@ docker exec -e BUCKET_NAME="$BUCKET_NAME" connect \
 After a few seconds, data should be in GCS:
 
 ```bash
-$ gsutil ls gs://$BUCKET_NAME/topics/gcs_topic-kerberos/partition=0/
+$ gsutil ls gs://$BUCKET_NAME/topics/rbac_gcs_topic/partition=0/
 ```
 
 
 Getting one of the avro files locally and displaying content with avro-tools:
 
 ```bash
-$ gsutil cp gs://$BUCKET_NAME/topics/gcs_topic-kerberos/partition=0/gcs_topic-kerberos+0+0000000000.avro /tmp/
-$ docker run -v /tmp:/tmp actions/avro-tools tojson /tmp/gcs_topic-kerberos+0+0000000000.avro
+$ gsutil cp gs://$BUCKET_NAME/topics/rbac_gcs_topic/partition=0/rbac_gcs_topic+0+0000000000.avro /tmp/
+$ docker run -v /tmp:/tmp actions/avro-tools tojson /tmp/rbac_gcs_topic+0+0000000000.avro
 {"f1":"This is a message sent with LDAP Authorizer SASL/PLAIN authentication 1"}
 {"f1":"This is a message sent with LDAP Authorizer SASL/PLAIN authentication 2"}
 {"f1":"This is a message sent with LDAP Authorizer SASL/PLAIN authentication 3"}
+```
+
+### With RBAC environment with SASL/PLAIN:
+
+Messages are sent to `rbac_gcs_topic` topic using:
+
+```bash
+$ seq -f "{\"f1\": \"This is a message sent with RBAC SASL/PLAIN authentication %g\"}" 10 | docker exec -i connect kafka-avro-console-producer --broker-list broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic rbac_gcs_topic --property value.schema='{"type":"record","name":"myrecord","fields":[{"name":"f1","type":"string"}]}' --property schema.registry.url=http://schema-registry:8081 --property basic.auth.credentials.source=USER_INFO --property schema.registry.basic.auth.user.info=clientAvroCli:clientAvroCli --producer.config /etc/kafka/secrets/client_sasl_plain.config
+```
+
+The connector is created with:
+
+```bash
+$ docker exec -e BUCKET_NAME="$BUCKET_NAME" connect \
+     curl -X PUT \
+     -H "Content-Type: application/json" \
+     -u connectorSubmitter:connectorSubmitter \
+     --data '{
+               "connector.class": "io.confluent.connect.gcs.GcsSinkConnector",
+                    "tasks.max" : "1",
+                    "topics" : "rbac_gcs_topic",
+                    "gcs.bucket.name" : "'"$BUCKET_NAME"'",
+                    "gcs.part.size": "5242880",
+                    "flush.size": "3",
+                    "gcs.credentials.path": "/root/keyfiles/keyfile.json",
+                    "storage.class": "io.confluent.connect.gcs.storage.GcsStorage",
+                    "format.class": "io.confluent.connect.gcs.format.avro.AvroFormat",
+                    "partitioner.class": "io.confluent.connect.storage.partitioner.DefaultPartitioner",
+                    "schema.compatibility": "NONE",
+                    "confluent.topic.bootstrap.servers": "broker:9092",
+                    "confluent.topic.replication.factor": "1",
+                    "confluent.topic.sasl.mechanism": "PLAIN",
+                    "confluent.topic.sasl.jaas.config" : "org.apache.kafka.common.security.plain.PlainLoginModule required username=\"admin\" password=\"admin-secret\";",
+                    "confluent.topic.security.protocol" : "SASL_PLAINTEXT",
+                    "value.converter": "io.confluent.connect.avro.AvroConverter",
+                    "value.converter.schema.registry.url": "http://schema-registry:8081",
+                    "value.converter.basic.auth.credentials.source": "USER_INFO",
+                    "value.converter.basic.auth.user.info": "connectorSA:connectorSA",
+                    "consumer.override.sasl.jaas.config": "org.apache.kafka.common.security.oauthbearer.OAuthBearerLoginModule required username=\"connectorSA\" password=\"connectorSA\" metadataServerUrls=\"http://broker:8091\";"
+          }' \
+     http://localhost:8083/connectors/gcs-rbac-sink/config | jq .
+```
+
+After a few seconds, data should be in GCS:
+
+```bash
+$ gsutil ls gs://$BUCKET_NAME/topics/rbac_gcs_topic/partition=0/
+```
+
+
+Getting one of the avro files locally and displaying content with avro-tools:
+
+```bash
+$ gsutil cp gs://$BUCKET_NAME/topics/rbac_gcs_topic/partition=0/rbac_gcs_topic+0+0000000000.avro /tmp/
+$ docker run -v /tmp:/tmp actions/avro-tools tojson /tmp/rbac_gcs_topic+0+0000000000.avro
+{"f1":"This is a message sent with RBAC SASL/PLAIN authentication 1"}
+{"f1":"This is a message sent with RBAC SASL/PLAIN authentication 2"}
+{"f1":"This is a message sent with RBAC SASL/PLAIN authentication 3"}
+
 
 N.B: Control Center is reachable at [http://127.0.0.1:9021](http://127.0.0.1:9021])
 

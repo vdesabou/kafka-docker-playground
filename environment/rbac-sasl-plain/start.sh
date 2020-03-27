@@ -12,9 +12,9 @@ DOCKER_COMPOSE_FILE_OVERRIDE=$1
 
 # Generating public and private keys for token signing
 echo "Generating public and private keys for token signing"
-mkdir -p ./conf
-openssl genrsa -out ./conf/keypair.pem 2048
-openssl rsa -in ./conf/keypair.pem -outform PEM -pubout -out ./conf/public.pem
+mkdir -p ../../environment/rbac-sasl-plain/conf
+openssl genrsa -out ../../environment/rbac-sasl-plain/conf/keypair.pem 2048
+openssl rsa -in ../../environment/rbac-sasl-plain/conf/keypair.pem -outform PEM -pubout -out ../../environment/rbac-sasl-plain/conf/public.pem
 
 # Bring up base cluster and Confluent CLI
 if [ -f "${DOCKER_COMPOSE_FILE_OVERRIDE}" ]
