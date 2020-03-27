@@ -1,0 +1,15 @@
+dn: cn=appSA,ou=users,{{ LDAP_BASE_DN }}
+objectClass: inetOrgPerson
+objectClass: posixAccount
+objectClass: shadowAccount
+uid: appSA
+sn: Sheen
+givenName: App
+cn: appSA
+displayName: App Sheen
+uidNumber: 10018
+gidNumber: 5000
+userPassword: appSA
+gecos: appSA
+loginShell: /bin/bash
+homeDirectory: /home/appSA
