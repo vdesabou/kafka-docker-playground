@@ -267,7 +267,7 @@ function aws() {
       log 'ERROR: $HOME/.aws/credentials does now exist. AWS credentials must be set !'
       return 1
     fi
-    docker run --rm -tiv $HOME/.aws:/root/.aws -v $(pwd):/aws mikesir87/aws-cli aws "$@"
+    docker run --rm -tiv $HOME/.aws:/root/.aws -v $(pwd):/aws mikesir87/aws-cli:v1 aws "$@"
 }
 
 function jq() {
