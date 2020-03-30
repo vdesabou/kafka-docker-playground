@@ -49,8 +49,12 @@ jobs:
     env: TEST_LIST="connect/connect-azure-data-lake-storage-gen1-sink connect/connect-azure-data-lake-storage-gen2-sink connect/connect-azure-event-hubs-source"
       TAG="5.4.1-1-ubi8"
 
-  - name: '5.4.1-1-ubi8: CONNECT: azure-sql-data-warehouse-sink azure-search-sink azure-service-bus-source azure-blob-storage-sink azure-blob-storage-source'
-    env: TEST_LIST="connect/connect-azure-sql-data-warehouse-sink connect/connect-azure-search-sink connect/connect-azure-service-bus-source connect/connect-azure-blob-storage-sink connect/connect-azure-blob-storage-source"
+  - name: '5.4.1-1-ubi8: CONNECT: azure-sql-data-warehouse-sink azure-search-sink'
+    env: TEST_LIST="connect/connect-azure-sql-data-warehouse-sink connect/connect-azure-search-sink"
+      TAG="5.4.1-1-ubi8"
+
+  - name: '5.4.1-1-ubi8: CONNECT: azure-service-bus-source azure-blob-storage-sink azure-blob-storage-source'
+    env: TEST_LIST="connect/connect-azure-service-bus-source connect/connect-azure-blob-storage-sink connect/connect-azure-blob-storage-source"
       TAG="5.4.1-1-ubi8"
 
   - name: '5.4.1-1-ubi8: CONNECT: splunk-sink splunk-source spool-dir-source syslog-source
@@ -111,11 +115,12 @@ jobs:
       connect/connect-aws-kinesis-source connect/connect-aws-lambda-sink connect/connect-aws-sqs-source
       connect/connect-aws-s3-sink connect/connect-aws-s3-source" TAG="5.4.1-1-ubi8"
 
-  - name: '5.4.1-1-ubi8: CONNECT: gcp-bigquery-sink gcp-firebase-sink gcp-firebase-source
-      gcp-pubsub-source gcs-sink gcs-source google-cloud-functions-sink vertica-sink'
-    env: TEST_LIST="connect/connect-gcp-bigquery-sink connect/connect-gcp-firebase-sink
-      connect/connect-gcp-firebase-source connect/connect-gcp-pubsub-source connect/connect-gcp-gcs-sink
-      connect/connect-gcp-gcs-source connect/connect-gcp-cloud-functions-sink connect/connect-vertica-sink" TAG="5.4.1-1-ubi8"
+  - name: '5.4.1-1-ubi8: CONNECT: gcp-bigquery-sink google-cloud-functions-sink vertica-sink prometheus-sink'
+    env: TEST_LIST="connect/connect-gcp-bigquery-sink connect/connect-gcp-cloud-functions-sink connect/connect-vertica-sink connect/connect-prometheus-sink" TAG="5.4.1-1-ubi8"
+
+  - name: '5.4.1-1-ubi8: CONNECT: gcp-pubsub-source gcs-sink gcs-source'
+    env: TEST_LIST="connect/connect-gcp-pubsub-source connect/connect-gcp-gcs-sink
+      connect/connect-gcp-gcs-source" TAG="5.4.1-1-ubi8"
 
   - name: '5.4.1-1-ubi8: CONNECT: http-sink STREAMS:kafka-streams'
     env: TEST_LIST="connect/connect-http-sink kafka-tutorials/kafka-streams/aggregate-count
