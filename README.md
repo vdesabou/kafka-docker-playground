@@ -28,7 +28,7 @@ export TAG=5.3.2
 - [🔄 Confluent Replicator](#-confluent-replicator)
 - [🔐 Environments](#-environments)
 - [🎓 Kafka Tutorials](#-kafka-tutorials)
-- [<img src="https://avatars3.githubusercontent.com/u/9439498?s=60&v=4" width="24"> Confluent Commercial](#img-srchttpsavatars3githubusercontentcomu9439498s60v4-width24-confluent-commercial)
+- [Confluent Commercial](#confluent-commercial)
 - [👾 Other Playgrounds](#-other-playgrounds)
 - [📚 Useful Resources](#-useful-resources)
 
@@ -258,7 +258,7 @@ This is just the excellent examples in [Kafka tutorial](https://kafka-tutorials.
    * <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/0/05/Apache_kafka.svg/440px-Apache_kafka.svg.png" width="15"> Kafka Streams
      * [Add a key to a stream from a JDBC source](kafka-tutorials/kafka-streams/connect-jdbc-kstreams-rekey-specificavro)
 
-## <img src="https://avatars3.githubusercontent.com/u/9439498?s=60&v=4" width="24"> Confluent Commercial
+## Confluent Commercial
 
 * Control Center
   * [Control Center in "Read-Only" mode](other/control-center-readonly-mode/)
