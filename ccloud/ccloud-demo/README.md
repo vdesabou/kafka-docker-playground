@@ -19,6 +19,10 @@
   - [Monitoring](#monitoring)
     - [Metrics API](#metrics-api)
     - [Control Center](#control-center-1)
+      - [Monitoring multiple clusters](#monitoring-multiple-clusters)
+      - [Differences between Confluent Cloud UI and local Control Center connected to Confluent Cloud](#differences-between-confluent-cloud-ui-and-local-control-center-connected-to-confluent-cloud)
+      - [Alerts](#alerts)
+      - [Read-Only mode](#read-only-mode)
     - [Grafana](#grafana)
       - [Producer Dashboard](#producer-dashboard)
       - [Consumer Dashboard](#consumer-dashboard)
@@ -741,7 +745,7 @@ This demo is using [dabz/ccloudexporter](https://github.com/Dabz/ccloudexporter)
 
 ### Control Center
 
-* Monitoring multiple clusters
+#### Monitoring multiple clusters
 
 You can monitor multiple Confluent Cloud clusters in Control Center:
 
@@ -766,7 +770,7 @@ CONTROL_CENTER_KAFKA_CLUSTER3_SASL_JAAS_CONFIG: 'org.apache.kafka.common.securit
 CONTROL_CENTER_KAFKA_CLUSTER3_SASL_MECHANISM: PLAIN
 ```
 
-* Differences between Confluent Cloud UI and local Control Center connected to Confluent Cloud
+#### Differences between Confluent Cloud UI and local Control Center connected to Confluent Cloud
 
 See the [screenshots](./ccloud_control_center_comparison) on this page.
 
@@ -778,7 +782,7 @@ In summary, the main benefits to have a local Control Center connected to Conflu
 
 Other than that, Confluent Cloud UI is very similar (assuming that [Configuring Access to the UI Dashboard](https://docs.confluent.io/current/cloud/vpc.html#configuring-access-to-the-ui-dashboard) has been setup, otherwise Topics, Consumers and KSQL tabs will be empty and show a banner to setup proxy)
 
-* Alerts
+#### Alerts
 
 You can setup [alerts](https://docs.confluent.io/current/control-center/alerts/index.html) in Control Center.
 Here is a table indicating which triggers are available when Control Center is connected to a Confluent Cloud cluster:
@@ -831,7 +835,7 @@ CONTROL_CENTER_MAIL_SSL_CHECKSERVERIDENTITY: "true"
 CONTROL_CENTER_MAIL_BOUNCE_ADDRESS: "john.doe@gmail.com"
 ```
 
-* Read-Only mode
+#### Read-Only mode
 
 You can setup Control Center in read-only mode, using UI HTTP Basic Authentication, see example [here](../../other/control-center-readonly-mode/README.md).
 
