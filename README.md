@@ -150,6 +150,7 @@ Quick start examples from Confluent [docs](https://docs.confluent.io/current/con
 * <img src="https://s3.amazonaws.com/awsmp-logos/vertica600x400.png" width="15"> [Vertica](connect/connect-vertica-sink)
 * <img src="https://perspectium.mystagingwebsite.com/wp-content/uploads/2019/08/servicenow_logo_v2.png" width="15"> [ServiceNow](connect/connect-servicenow-sink)
 * <img src="https://min.io/resources/img/logo/MINIO_Bird.png" height="15">  [Minio](connect/connect-minio-s3-sink)
+* <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/3/38/Prometheus_software_logo.svg/1200px-Prometheus_software_logo.svg.png" height="15">  [Prometheus](connect/connect-prometheus-sink)
 
 ## ☁️ Confluent Cloud
 
