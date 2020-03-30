@@ -280,7 +280,7 @@ function az() {
 
 function retry() {
   local n=1
-  local max=3
+  local max=2
   while true; do
     "$@" && break || {
       if [[ $n -lt $max ]]; then
