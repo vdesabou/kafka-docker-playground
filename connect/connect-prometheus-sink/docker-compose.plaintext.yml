@@ -1,0 +1,20 @@
+---
+version: '3.5'
+services:
+  prometheus:
+    image: prom/prometheus:v2.11.1
+    hostname: prometheus
+    container_name: prometheus
+    ports:
+      - 9090:9090
+    volumes:
+      - ../../connect/connect-prometheus-sink/prometheus:/etc/prometheus/
+
+  connect:
+    depends_on:
+      - zookeeper
+      - broker
+      - schema-registry
+      - prometheus
+    environment:
+      CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-prometheus-metrics
