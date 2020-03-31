@@ -110,13 +110,12 @@ jobs:
       connect/connect-solace-source connect/connect-datadiode-source-sink" TAG="5.4.1-1-ubi8"
 
   - name: '5.4.1-1-ubi8: CONNECT: aws-cloudwatch-logs-source aws-cloudwatch-metrics-sink aws-dynamodb-sink aws-kinesis-source
-      aws-lambda-sink aws-sqs-source aws-s3-sink aws-s3-source'
+      aws-lambda-sink'
     env: TEST_LIST="connect/connect-aws-cloudwatch-logs-source connect/connect-aws-cloudwatch-metrics-sink connect/connect-aws-dynamodb-sink
-      connect/connect-aws-kinesis-source connect/connect-aws-lambda-sink connect/connect-aws-sqs-source
-      connect/connect-aws-s3-sink connect/connect-aws-s3-source" TAG="5.4.1-1-ubi8"
+      connect/connect-aws-kinesis-source connect/connect-aws-lambda-sink" TAG="5.4.1-1-ubi8"
 
-  - name: '5.4.1-1-ubi8: CONNECT: gcp-bigquery-sink google-cloud-functions-sink vertica-sink prometheus-sink'
-    env: TEST_LIST="connect/connect-gcp-bigquery-sink connect/connect-gcp-cloud-functions-sink connect/connect-vertica-sink connect/connect-prometheus-sink" TAG="5.4.1-1-ubi8"
+  - name: '5.4.1-1-ubi8: CONNECT: gcp-bigquery-sink google-cloud-functions-sink vertica-sink prometheus-sink aws-sqs-source aws-s3-sink aws-s3-source'
+    env: TEST_LIST="connect/connect-gcp-bigquery-sink connect/connect-gcp-cloud-functions-sink connect/connect-vertica-sink connect/connect-prometheus-sink connect/connect-aws-sqs-source connect/connect-aws-s3-sink connect/connect-aws-s3-source" TAG="5.4.1-1-ubi8"
 
   - name: '5.4.1-1-ubi8: CONNECT: gcp-pubsub-source gcs-sink gcs-source'
     env: TEST_LIST="connect/connect-gcp-pubsub-source connect/connect-gcp-gcs-sink
