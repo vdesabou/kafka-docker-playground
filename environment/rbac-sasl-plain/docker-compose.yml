@@ -126,7 +126,7 @@ services:
           - ../../environment/rbac-sasl-plain/conf:/tmp/conf
           - ../../environment/rbac-sasl-plain/scripts/helper:/tmp/helper
         environment:
-            CUB_CLASSPATH: '/etc/confluent/docker/docker-utils.jar:/usr/share/java/confluent-security/schema-registry/*:/usr/share/java/schema-registry/*'
+            CUB_CLASSPATH: '/etc/confluent/docker/docker-utils.jar:/usr/share/java/cp-base-new/*:/usr/share/java/confluent-security/schema-registry/*:/usr/share/java/schema-registry/*'
             SCHEMA_REGISTRY_KAFKASTORE_BOOTSTRAP_SERVERS: broker:10091
             SCHEMA_REGISTRY_KAFKASTORE_CONNECTION_URL: zookeeper:2181
             SCHEMA_REGISTRY_KAFKASTORE_SECURITY_PROTOCOL: SASL_PLAINTEXT
@@ -163,7 +163,7 @@ services:
                   cp /usr/share/java/kafka-connect-replicator/replicator-rest-extension-*.jar /etc/kafka-connect/jars/ && \
                   /etc/confluent/docker/run'"
         environment:
-            CUB_CLASSPATH: '/etc/confluent/docker/docker-utils.jar:/usr/share/java/confluent-security/connect/*:/usr/share/java/kafka/*'
+            CUB_CLASSPATH: '/etc/confluent/docker/docker-utils.jar:/usr/share/java/cp-base-new/*:/usr/share/java/confluent-security/connect/*:/usr/share/java/kafka/*'
             CONNECT_BOOTSTRAP_SERVERS: broker:10091
 
             CONNECT_SECURITY_PROTOCOL: SASL_PLAINTEXT
@@ -249,7 +249,7 @@ services:
           - ../../environment/rbac-sasl-plain/conf:/tmp/conf
           - ../../environment/rbac-sasl-plain/scripts/helper:/tmp/helper
         environment:
-            CUB_CLASSPATH: '/etc/confluent/docker/docker-utils.jar:/usr/share/java/confluent-control-center/*:/usr/share/java/rest-utils/*:/usr/share/java/confluent-common/*'
+            CUB_CLASSPATH: '/etc/confluent/docker/docker-utils.jar:/usr/share/java/cp-base-new/*:/usr/share/java/confluent-control-center/*:/usr/share/java/rest-utils/*:/usr/share/java/confluent-common/*'
 
             CONTROL_CENTER_BOOTSTRAP_SERVERS: broker:10091
 
