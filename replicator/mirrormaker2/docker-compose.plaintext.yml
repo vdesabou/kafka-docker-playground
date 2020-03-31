@@ -1,0 +1,10 @@
+---
+version: '3.5'
+services:
+  # connect-us is used to launch mirrormaker 2 executable
+  connect-us:
+    volumes:
+        - ../../replicator/mirrormaker2/connect-mirror-maker.properties:/etc/kafka/connect-mirror-maker.properties
+        - ../../replicator/mirrormaker2/connect-log4j.properties:/etc/kafka/connect-log4j.properties
+    environment:
+      KAFKA_LOG4J_OPTS: "-Dlog4j.configuration=file:/etc/kafka/connect-log4j.properties"
