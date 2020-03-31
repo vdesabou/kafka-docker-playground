@@ -25,7 +25,7 @@ export TAG=5.3.2
   - [Confluent Cloud Demo](#confluent-cloud-demo)
   - [🔗 Kafka Connectors connected to Confluent Cloud](#-kafka-connectors-connected-to-confluent-cloud)
   - [Other](#other)
-- [🔄 Confluent Replicator](#-confluent-replicator)
+- [🔄 Confluent Replicator and Mirror Maker 2](#-confluent-replicator-and-mirror-maker-2)
 - [🔐 Environments](#-environments)
 - [🎓 Kafka Tutorials](#-kafka-tutorials)
 - [Confluent Commercial](#confluent-commercial)
@@ -176,7 +176,7 @@ Quick start examples from Confluent [docs](https://docs.confluent.io/current/con
   * ⚙ [kafka-admin](ccloud/kafka-admin) Managing topics and ACLs using [matt-mangia/kafka-admin](https://github.com/matt-mangia/kafka-admin)
   * 🔄 Confluent Replicator [OnPrem to cloud and Cloud to Cloud examples](ccloud/replicator)
 
-## 🔄 Confluent Replicator
+## 🔄 Confluent Replicator and Mirror Maker 2
 
 Using Multi-Data-Center setup with `US` 🇺🇸 and `EUROPE` 🇪🇺 clusters.
 
@@ -188,6 +188,8 @@ Using Multi-Data-Center setup with `US` 🇺🇸 and `EUROPE` 🇪🇺 clusters.
   * Using [PLAINTEXT](environment/mdc-plaintext)
   * Using [SASL_PLAIN](environment/mdc-sasl-plain)
   * Using [Kerberos](environment/mdc-kerberos)
+* 👾 [Using Mirror Maker 2](replicator/mirrormaker2)
+  * Using [PLAINTEXT](environment/mdc-plaintext)
 
 ## 🔐 Environments
 
