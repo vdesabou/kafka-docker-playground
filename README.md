@@ -269,6 +269,7 @@ This is just the excellent examples in [Kafka tutorial](https://kafka-tutorials.
 * [Confluent Rebalancer](other/rebalancer)
 * [JMS Client](other/jms-client)
 * [RBAC with SASL/PLAIN](environment/rbac-sasl-plain) RBAC with no SSL encryption, SASL/PLAIN authentication
+* [Audit Logs](other/audit-logs)
 
 ## 👾 Other Playgrounds
 
