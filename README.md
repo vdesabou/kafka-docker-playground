@@ -188,7 +188,7 @@ Using Multi-Data-Center setup with `US` 🇺🇸 and `EUROPE` 🇪🇺 clusters.
   * Using [PLAINTEXT](environment/mdc-plaintext)
   * Using [SASL_PLAIN](environment/mdc-sasl-plain)
   * Using [Kerberos](environment/mdc-kerberos)
-* 👾 [Using Mirror Maker 2](replicator/mirrormaker2)
+* <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/0/05/Apache_kafka.svg/1200px-Apache_kafka.svg.png" width="16"> [Using Mirror Maker 2](replicator/mirrormaker2)
   * Using [PLAINTEXT](environment/mdc-plaintext)
 
 ## 🔐 Environments
