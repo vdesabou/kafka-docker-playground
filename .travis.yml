@@ -142,10 +142,10 @@ jobs:
       kafka-tutorials/ksql/transform-stream kafka-tutorials/ksql/aggregate-minmax kafka-tutorials/ksql/hopping-windows
       kafka-tutorials/ksql/filter-events kafka-tutorials/ksql/join-stream-and-table" TAG="5.4.1-1-ubi8"
 
-  - name: '5.4.1-1-ubi8: KSQL: ksql REPLICATOR: connect'
+  - name: '5.4.1-1-ubi8: KSQL: ksql REPLICATOR: connect and mirrormaker2'
     env: TEST_LIST="kafka-tutorials/ksql/udf
       kafka-tutorials/ksql/ksql-serialization kafka-tutorials/ksql/rekey-a-stream  kafka-tutorials/ksql/split-stream
-      kafka-tutorials/ksql/tumbling-windows kafka-tutorials/ksql/flatten-nested-data replicator/connect" TAG="5.4.1-1-ubi8"
+      kafka-tutorials/ksql/tumbling-windows kafka-tutorials/ksql/flatten-nested-data replicator/connect replicator/mirrormaker2" TAG="5.4.1-1-ubi8"
 
 script:
 - bash scripts/run-tests.sh "$TEST_LIST" "$TAG"
