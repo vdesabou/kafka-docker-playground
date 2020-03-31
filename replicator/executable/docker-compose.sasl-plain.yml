@@ -17,7 +17,6 @@ services:
         - ../../replicator/executable/consumer-us-sasl-plain.properties:/etc/kafka/consumer-us.properties
         - ../../replicator/executable/producer-us-sasl-plain.properties:/etc/kafka/producer-us.properties
         - ../../replicator/executable/replication-us.properties:/etc/kafka/replication-us.properties
-    entrypoint: ["sh", "-c", "sleep 2073600"]
 
   connect-europe:
     volumes:
@@ -27,4 +26,3 @@ services:
         - ../../replicator/executable/consumer-us-sasl-plain.properties:/etc/kafka/consumer-us.properties
         - ../../replicator/executable/producer-us-sasl-plain.properties:/etc/kafka/producer-us.properties
         - ../../replicator/executable/replication-us.properties:/etc/kafka/replication-us.properties
-    entrypoint: ["sh", "-c", "sleep 2073600"]
