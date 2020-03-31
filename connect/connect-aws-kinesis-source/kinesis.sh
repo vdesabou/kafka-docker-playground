@@ -28,8 +28,8 @@ sleep 5
 log "Create a Kinesis stream my_kinesis_stream"
 aws kinesis create-stream --stream-name my_kinesis_stream --shard-count 1
 
-log "Sleep 30 seconds to let the Kinesis stream being fully started"
-sleep 30
+log "Sleep 60 seconds to let the Kinesis stream being fully started"
+sleep 60
 
 log "Insert records in Kinesis stream"
 # The example shows that a record containing partition key 123 and data "test-message-1" is inserted into my_kinesis_stream.
