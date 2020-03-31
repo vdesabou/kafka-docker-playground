@@ -4,7 +4,7 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
-${DIR}/../../environment/mdc-sasl-plain/start.sh "${PWD}/docker-compose.sasl-plain.yml" -a -b
+${DIR}/../../environment/mdc-sasl-plain/start.sh "${PWD}/docker-compose.sasl-plain.yml"
 
 log "Sending sales in Europe cluster"
 seq -f "european_sale_%g ${RANDOM}" 10 | docker container exec -i broker-europe kafka-console-producer --broker-list localhost:9092 --topic sales_EUROPE --producer.config /etc/kafka/client.properties
