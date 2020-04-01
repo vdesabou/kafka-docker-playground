@@ -53,3 +53,5 @@ ccloud/kafka-admin/kafka-admin/
 ccloud/client-dotnet/librdkafka.config
 ccloud/client-go/librdkafka.config
 ccloud/replicator/env.source
+connect/connect-snowflake-sink/snowflake_key.p8
+connect/connect-snowflake-sink/snowflake_key.pub
