@@ -49,6 +49,8 @@ log "Building docker image"
 docker build --build-arg CORE_RUNTIME_TAG=$CORE_RUNTIME_TAG --build-arg CORE_SDK_TAG=$CORE_SDK_TAG --build-arg CSPROJ_FILE=$CSPROJ_FILE -t vdesabou/dotnet-ccloud-example-docker .
 
 log "Starting producer"
+#docker run --sysctl net.ipv4.tcp_keepalive_time=60 --sysctl net.ipv4.tcp_keepalive_intvl=30 --name producer -v ${DIR}/librdkafka.config:/tmp/librdkafka.config vdesabou/dotnet-ccloud-example-docker produce test1 /tmp/librdkafka.config
+
 docker run -v ${DIR}/librdkafka.config:/tmp/librdkafka.config vdesabou/dotnet-ccloud-example-docker produce test1 /tmp/librdkafka.config
 
 # log "Starting producer with curl certificate https://curl.haxx.se/ca/cacert.pem"
@@ -57,4 +59,6 @@ docker run -v ${DIR}/librdkafka.config:/tmp/librdkafka.config vdesabou/dotnet-cc
 # docker run -v ${DIR}/librdkafka.config:/tmp/librdkafka.config -v ${DIR}/letsencrypt-cacert.txt:/tmp/cacert.pem vdesabou/dotnet-ccloud-example-docker produce test1 /tmp/librdkafka.config /tmp/cacert.pem
 
 log "Starting consumer"
+# docker run --sysctl net.ipv4.tcp_keepalive_time=60 --sysctl net.ipv4.tcp_keepalive_intvl=30 --name consumer -v ${DIR}/librdkafka.config:/tmp/librdkafka.config vdesabou/dotnet-ccloud-example-docker consume test1 /tmp/librdkafka.config
+
 docker run -v ${DIR}/librdkafka.config:/tmp/librdkafka.config vdesabou/dotnet-ccloud-example-docker consume test1 /tmp/librdkafka.config
