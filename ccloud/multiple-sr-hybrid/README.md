@@ -39,7 +39,7 @@ Here is the container:
 
 It is running on port 1500 and will reply to curl command by sending back content of `sr.json` file (which is auto-generated):
 
-Note: httpd.sh is based on [jdoleczek/Bash-NetCat-HTTPD](https://github.com/jdoleczek/Bash-NetCat-HTTPD)
+Note: `httpd.sh` is based on [jdoleczek/Bash-NetCat-HTTPD](https://github.com/jdoleczek/Bash-NetCat-HTTPD)
 
 ```
 $ cat sr.json
