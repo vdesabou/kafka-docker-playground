@@ -17,6 +17,12 @@ Simply run:
 $ ./sqlserver.sh
 ```
 
+or with standalone mode:
+
+```
+$ ./sqlserver-standalone.sh
+```
+
 ## Details of what the script is doing
 
 
