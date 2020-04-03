@@ -56,3 +56,4 @@ ccloud/replicator/env.source
 connect/connect-snowflake-sink/snowflake_key.p8
 connect/connect-snowflake-sink/snowflake_key.pub
 troubleshooting/multiple-sr-hybrid/docker-compose.local.yml
+ccloud/multiple-sr-hybrid/sr.json
