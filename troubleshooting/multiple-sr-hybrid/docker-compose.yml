@@ -1,0 +1,52 @@
+---
+version: '3.5'
+services:
+
+  broker:
+    environment:
+      # CONFLUENT_HTTP_SERVER_LISTENERS: "http://0.0.0.0:8090"
+      KAFKA_CONFLUENT_SCHEMA_REGISTRY_URL: http://schema-registry:8081
+
+  webserver:
+    image: vdesabou/kafka-docker-playground-connect:${TAG}
+    hostname: webserver
+    container_name: webserver
+    depends_on:
+      - zookeeper
+      - broker
+      - schema-registry
+    ports:
+      - "1500:1500"
+    volumes:
+        - ../../troubleshooting/multiple-sr-hybrid/webserver.sh:/tmp/webserver.sh
+    command: bash -c "bash /tmp/webserver.sh & sleep 5 && tail -F /dev/null"
+
+  control-center:
+    environment:
+      CONTROL_CENTER_SCHEMA_REGISTRY_URL: "http://schema-registry:8081"
+      CONTROL_CENTER_STREAMS_CPREST_URL: "http://broker:8090"
+
+      CONTROL_CENTER_KAFKA_CLUSTER1_BOOTSTRAP_SERVERS: pkc-bootstrap-server.confluent.cloud:9092
+      CONTROL_CENTER_KAFKA_CLUSTER1_SECURITY_PROTOCOL: SASL_SSL
+      CONTROL_CENTER_KAFKA_CLUSTER1_SASL_JAAS_CONFIG: 'org.apache.kafka.common.security.plain.PlainLoginModule required username="xxx" password="xxx";'
+      CONTROL_CENTER_KAFKA_CLUSTER1_SASL_MECHANISM: PLAIN
+
+      CONTROL_CENTER_KAFKA_CLUSTER1_CPREST_URL: http://webserver:1500
+      CONTROL_CENTER_SCHEMA_REGISTRY_CLUSTER1_URL: https://psrc-schema-registry.confluent.cloud
+      CONTROL_CENTER_SCHEMA_REGISTRY_CLUSTER1_BASIC_AUTH_CREDENTIALS_SOURCE: USER_INFO
+      CONTROL_CENTER_SCHEMA_REGISTRY_CLUSTER1_BASIC_AUTH_USER_INFO: xxx:xxx
+
+
+
+# what I get in /etc/confluent-control-center/control-center.properties:
+
+# confluent.controlcenter.schema.registry.cluster1.basic.auth.user.info=xxx:xxx
+# confluent.controlcenter.kafka.cluster1.sasl.jaas.config=org.apache.kafka.common.security.plain.PlainLoginModule required username="xxx" password="xxx";
+# confluent.controlcenter.kafka.cluster1.bootstrap.servers=pkc-bootstrap-server.confluent.cloud:9092
+# confluent.controlcenter.streams.cprest.url=http://broker:8090
+# confluent.controlcenter.kafka.bootstrap.servers=broker:9092
+# confluent.controlcenter.schema.registry.cluster1.url=https://psrc-schema-registry.confluent.cloud
+# confluent.controlcenter.schema.registry.url=http://schema-registry:8081
+# confluent.controlcenter.connect.cluster=http://connect:8083
+# confluent.controlcenter.schema.registry.cluster1.basic.auth.credentials.source=USER_INFO
+# confluent.controlcenter.kafka.cluster1.cprest.url=http://webserver:1500
