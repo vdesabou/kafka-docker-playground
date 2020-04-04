@@ -43,9 +43,9 @@ namespace CCloud
                     SaslMechanism = SaslMechanism.Plain,
                     SecurityProtocol = SecurityProtocol.SaslSsl,
                     SaslUsername = cloudConfig["sasl.username"],
-                    SaslPassword = cloudConfig["sasl.password"]
-                    // Debug = "broker,topic,msg",
-                    // SocketKeepaliveEnable = true
+                    SaslPassword = cloudConfig["sasl.password"],
+                    SocketKeepaliveEnable = true
+                    // Debug = "broker,topic,msg"
                 };
 
                 if (certDir != null)
@@ -117,6 +117,7 @@ namespace CCloud
                 producer.Flush(TimeSpan.FromSeconds(10));
 
                 Console.WriteLine($"{numProduced} messages were produced to topic {topic}");
+                // Thread.Sleep(TimeSpan.FromSeconds(86400));
             }
         }
 
@@ -128,7 +129,7 @@ namespace CCloud
             consumerConfig.EnableAutoCommit = false;
             consumerConfig.BrokerVersionFallback = "0.10.0.0";
             consumerConfig.ApiVersionFallbackMs = 0;
-            // consumerConfig.SocketKeepaliveEnable = true;
+            consumerConfig.SocketKeepaliveEnable = true;
             // consumerConfig.Debug = "consumer, cgrp, protocol";
 
             CancellationTokenSource cts = new CancellationTokenSource();
