@@ -44,6 +44,10 @@ namespace CCloud
                     SecurityProtocol = SecurityProtocol.SaslSsl,
                     SaslUsername = cloudConfig["sasl.username"],
                     SaslPassword = cloudConfig["sasl.password"],
+                    // MetadataRequestTimeoutMs = 30000,
+                    // TopicMetadataRefreshIntervalMs = 210000,
+                    // MetadataMaxAgeMs = 210000,
+                    // SocketTimeoutMs = 60000,
                     SocketKeepaliveEnable = true
                     // Debug = "broker,topic,msg"
                 };
