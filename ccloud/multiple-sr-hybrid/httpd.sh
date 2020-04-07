@@ -32,8 +32,8 @@ while true; do (
         echo "Connection: close"
         echo "Pragma: public"
         echo "Content-Type: application/json; charset=UTF-8"
-        FILESIZE=$(wc -c < "/tmp/json/sr.json")
+        FILESIZE=$(wc -c < "$FILES")
         echo -e "Content-Length: $FILESIZE\n"
-        cat "/tmp/json/sr.json"
+        cat "$FILES"
         >&2 echo "[ ok ]"
 ) | nc -l -k -w 1 -p $PORT > $FIFO; done;
