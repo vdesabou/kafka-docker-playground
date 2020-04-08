@@ -1,34 +1,17 @@
 #!/bin/bash
-# promyk.doleczek.pl
-# LICENSE MIT
+# https://stackoverflow.com/a/24342101
 
 PORT=${1:-8080}
 FILES=${2:-"./"}
 
-NS=$(netstat -taupen 2>/dev/null | grep ":$PORT ")
-test -n "$NS" && echo "Port $PORT is already taken" && exit 1
+rm -f out
+mkfifo out
+trap "rm -f out" EXIT
 
-echo -e "\n\tHTTPD started for files in $FILES:"
-
-for IP in $(ifconfig | grep "inet addr" | cut -d ':' -f 2 | cut -d ' ' -f 1) ; do
-    echo -e "\tlistening at $IP:$PORT"
-done
-
-echo -e "\n"
-FIFO="/tmp/httpd$PORT"
-rm -f $FIFO
-mkfifo $FIFO
-trap ctrl_c INT
-
-function ctrl_c() {
-    rm -f $FIFO && echo -e "\n\tServer shut down.\n" && exit
-}
-
-while true; do (
-    read req < $FIFO;
+function echoResponse() {
         echo "HTTP/1.1 200 OK"
         echo "Date: $(LC_TIME=en_US date -u)"
-        echo "Server: promyk.doleczek.pl"
+        echo "Server: a server"
         echo "Connection: close"
         echo "Pragma: public"
         echo "Content-Type: application/json; charset=UTF-8"
@@ -36,4 +19,24 @@ while true; do (
         echo -e "Content-Length: $FILESIZE\n"
         cat "$FILES"
         >&2 echo "[ ok ]"
-) | nc -l -k -w 1 -p $PORT > $FIFO; done;
+}
+while true
+do
+  cat out | nc -l $PORT > >( # parse the netcat output, to build the answer redirected to the pipe "out".
+    export REQUEST=
+    while read -r line
+    do
+      line=$(echo "$line" | tr -d '\r\n')
+
+      if echo "$line" | grep -qE '^GET /' # if line starts with "GET /"
+      then
+        REQUEST=$(echo "$line" | cut -d ' ' -f2) # extract the request
+      elif [ -z "$line" ] # empty line / end of request
+      then
+        # call a script here
+        # Note: REQUEST is exported, so the script can parse it (to answer 200/403/404 status code + content)
+        echoResponse > out
+      fi
+    done
+  )
+done
