@@ -342,8 +342,8 @@ services:
     hostname: ccloud_exporter
     container_name: ccloud_exporter
     environment:
-      CCLOUD_USER: ${CCLOUD_USER}
-      CCLOUD_PASSWORD: ${CCLOUD_PASSWORD}
+      CCLOUD_USER: ${CCLOUD_USER} # This could also be a cloud resource ccloud api-key create --resource cloud
+      CCLOUD_PASSWORD: ${CCLOUD_PASSWORD} # This could also be a cloud resource ccloud api-key create --resource cloud
       CCLOUD_CLUSTER: ${CCLOUD_CLUSTER}
     command: ccloudexporter ${CCLOUD_CLUSTER}
 
