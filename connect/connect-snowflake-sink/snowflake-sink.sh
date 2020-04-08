@@ -47,7 +47,10 @@ set -e
 
 log "Setting up Snowflake account and key pair"
 docker run --rm -i -e SNOWSQL_PWD="$SNOWFLAKE_PASSWORD" -e RSA_PUBLIC_KEY="$RSA_PUBLIC_KEY" snowsql:latest --username $SNOWFLAKE_USERNAME -a $SNOWFLAKE_ACCOUNT_NAME << EOF
+USE ROLE ACCOUNTADMIN;
+ALTER ACCOUNT SET TIMEZONE = 'Etc/UTC';
 USE ROLE SECURITYADMIN;
+ALTER SESSION SET TIMEZONE = 'Etc/UTC';
 CREATE USER kafka RSA_PUBLIC_KEY='$RSA_PUBLIC_KEY';
 GRANT ROLE SYSADMIN TO USER kafka;
 EOF
@@ -81,14 +84,14 @@ docker exec -e SNOWFLAKE_URL="$SNOWFLAKE_URL" -e SNOWFLAKE_USERNAME="$SNOWFLAKE_
                "snowflake.user.name":"'"$SNOWFLAKE_USERNAME"'",
                "snowflake.user.role":"SYSADMIN",
                "snowflake.private.key":"'"$RSA_PRIVATE_KEY"'",
-               "snowflake.private.key.passphrase": "confluent",
+               "snowflake.private.key.passphrase": "jkladu098jfd089adsq4r",
                "snowflake.database.name":"DEMO_DB",
                "snowflake.schema.name":"PUBLIC",
                "key.converter":"org.apache.kafka.connect.storage.StringConverter",
                "value.converter": "com.snowflake.kafka.connector.records.SnowflakeAvroConverter",
                "value.converter.schema.registry.url": "http://schema-registry:8081"
           }' \
-     http://localhost:8083/connectors/snowflake_sink/config | jq .
+     http://localhost:8083/connectors/snowflake-sink/config | jq .
 
 
 sleep 5
