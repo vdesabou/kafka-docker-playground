@@ -8,3 +8,8 @@ services:
         - ../../replicator/mirrormaker2/connect-log4j.properties:/etc/kafka/connect-log4j.properties
     environment:
       KAFKA_LOG4J_OPTS: "-Dlog4j.configuration=file:/etc/kafka/connect-log4j.properties"
+      CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-s3 # this is not used but decrease test time
+
+  connect-europe:
+    environment:
+      CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-s3 # this is not used but decrease test time
