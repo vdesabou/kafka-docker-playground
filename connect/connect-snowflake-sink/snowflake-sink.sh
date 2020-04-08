@@ -38,23 +38,59 @@ openssl rsa -in snowflake_key.p8  -pubout -out snowflake_key.pub -passin pass:co
 RSA_PUBLIC_KEY=$(grep -v "BEGIN PUBLIC" snowflake_key.pub | grep -v "END PUBLIC"|tr -d '\n')
 RSA_PRIVATE_KEY=$(grep -v "BEGIN ENCRYPTED PRIVATE KEY" snowflake_key.p8 | grep -v "END ENCRYPTED PRIVATE KEY"|tr -d '\n')
 
-set +e
-docker run --rm -i -e SNOWSQL_PWD="$SNOWFLAKE_PASSWORD" snowsql:latest --username $SNOWFLAKE_USERNAME -a $SNOWFLAKE_ACCOUNT_NAME << EOF
-USE ROLE SECURITYADMIN;
-DROP USER kafka;
-EOF
-set -e
 
-log "Setting up Snowflake account and key pair"
+log "Create a Snowflake DB"
+docker run --rm -i -e SNOWSQL_PWD="$SNOWFLAKE_PASSWORD" -e RSA_PUBLIC_KEY="$RSA_PUBLIC_KEY" snowsql:latest --username $SNOWFLAKE_USERNAME -a $SNOWFLAKE_ACCOUNT_NAME << EOF
+DROP DATABASE IF EXISTS KAFKA_DB;
+CREATE OR REPLACE DATABASE KAFKA_DB COMMENT = 'Database for KafkaConnect demo';
+EOF
+
+log "Create a Snowflake ROLE"
+docker run --rm -i -e SNOWSQL_PWD="$SNOWFLAKE_PASSWORD" -e RSA_PUBLIC_KEY="$RSA_PUBLIC_KEY" snowsql:latest --username $SNOWFLAKE_USERNAME -a $SNOWFLAKE_ACCOUNT_NAME << EOF
+USE ROLE SECURITYADMIN;
+DROP ROLE IF EXISTS KAFKA_CONNECTOR_ROLE;
+CREATE ROLE KAFKA_CONNECTOR_ROLE;
+GRANT USAGE ON DATABASE KAFKA_DB TO ROLE KAFKA_CONNECTOR_ROLE;
+GRANT USAGE ON DATABASE KAFKA_DB TO ACCOUNTADMIN;
+GRANT USAGE ON SCHEMA KAFKA_DB.PUBLIC TO ROLE KAFKA_CONNECTOR_ROLE;
+GRANT ALL ON FUTURE TABLES IN SCHEMA KAFKA_DB.PUBLIC TO KAFKA_CONNECTOR_ROLE;
+GRANT USAGE ON SCHEMA KAFKA_DB.PUBLIC TO ROLE ACCOUNTADMIN;
+GRANT CREATE TABLE ON SCHEMA KAFKA_DB.PUBLIC TO ROLE KAFKA_CONNECTOR_ROLE;
+GRANT CREATE STAGE ON SCHEMA KAFKA_DB.PUBLIC TO ROLE KAFKA_CONNECTOR_ROLE;
+GRANT CREATE PIPE ON SCHEMA KAFKA_DB.PUBLIC TO ROLE KAFKA_CONNECTOR_ROLE;
+EOF
+
+log "Create a Snowflake WAREHOUSE (for admin purpose as KafkaConnect is Serverless)"
 docker run --rm -i -e SNOWSQL_PWD="$SNOWFLAKE_PASSWORD" -e RSA_PUBLIC_KEY="$RSA_PUBLIC_KEY" snowsql:latest --username $SNOWFLAKE_USERNAME -a $SNOWFLAKE_ACCOUNT_NAME << EOF
 USE ROLE ACCOUNTADMIN;
-ALTER ACCOUNT SET TIMEZONE = 'Etc/UTC';
-USE ROLE SECURITYADMIN;
-ALTER SESSION SET TIMEZONE = 'Etc/UTC';
-CREATE USER kafka RSA_PUBLIC_KEY='$RSA_PUBLIC_KEY';
-GRANT ROLE SYSADMIN TO USER kafka;
+CREATE OR REPLACE WAREHOUSE KAFKA_ADMIN_WAREHOUSE
+  WAREHOUSE_SIZE = 'XSMALL'
+  WAREHOUSE_TYPE = 'STANDARD'
+  AUTO_SUSPEND = 60
+  AUTO_RESUME = TRUE
+  MIN_CLUSTER_COUNT = 1
+  MAX_CLUSTER_COUNT = 1
+  SCALING_POLICY = 'STANDARD'
+  INITIALLY_SUSPENDED = TRUE
+  COMMENT = 'Warehouse for Kafka admin activities';
+GRANT USAGE ON WAREHOUSE KAFKA_ADMIN_WAREHOUSE TO ROLE KAFKA_CONNECTOR_ROLE;
 EOF
 
+log "Create a Snowflake USER"
+docker run --rm -i -e SNOWSQL_PWD="$SNOWFLAKE_PASSWORD" -e RSA_PUBLIC_KEY="$RSA_PUBLIC_KEY" snowsql:latest --username $SNOWFLAKE_USERNAME -a $SNOWFLAKE_ACCOUNT_NAME << EOF
+USE ROLE ACCOUNTADMIN;
+DROP USER IF EXISTS KAFKA_DEMO;
+CREATE USER KAFKA_DEMO
+ PASSWORD = 'Password123!'
+ LOGIN_NAME = KAFKA_DEMO
+ DISPLAY_NAME = KAFKA_DEMO
+ DEFAULT_WAREHOUSE = KAFKA_ADMIN_WAREHOUSE
+ DEFAULT_ROLE = KAFKA_CONNECTOR_ROLE
+ DEFAULT_NAMESPACE = KAFKA_DB
+ MUST_CHANGE_PASSWORD = FALSE
+ RSA_PUBLIC_KEY="$RSA_PUBLIC_KEY";
+GRANT ROLE KAFKA_CONNECTOR_ROLE TO USER KAFKA_DEMO;
+EOF
 
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
 
@@ -66,14 +102,8 @@ docker exec -i connect kafka-avro-console-producer --broker-list broker:9092 --p
 {"u_name": "notebooks", "u_price": 1.99, "u_quantity": 5}
 EOF
 
-# to avoid https://support.snowflake.net/s/article/ERROR-JWT-token-is-invalid
-# docker exec connect apt-get update
-# docker exec connect apt-get install -y ntpdate
-# docker exec --privileged --user root -t connect bash -c "ntpdate 1.ro.pool.ntp.org"
-
-
 log "Creating Snowflake Sink connector"
-docker exec -e SNOWFLAKE_URL="$SNOWFLAKE_URL" -e SNOWFLAKE_USERNAME="$SNOWFLAKE_USERNAME" -e RSA_PRIVATE_KEY="$RSA_PRIVATE_KEY" connect \
+docker exec -e SNOWFLAKE_URL="$SNOWFLAKE_URL" -e RSA_PRIVATE_KEY="$RSA_PRIVATE_KEY" connect \
      curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
@@ -81,11 +111,11 @@ docker exec -e SNOWFLAKE_URL="$SNOWFLAKE_URL" -e SNOWFLAKE_USERNAME="$SNOWFLAKE_
                "topics": "test_table",
                "tasks.max": "1",
                "snowflake.url.name":"'"$SNOWFLAKE_URL"'",
-               "snowflake.user.name":"'"$SNOWFLAKE_USERNAME"'",
-               "snowflake.user.role":"SYSADMIN",
+               "snowflake.user.name":"KAFKA_DEMO",
+               "snowflake.user.role":"KAFKA_CONNECTOR_ROLE",
                "snowflake.private.key":"'"$RSA_PRIVATE_KEY"'",
-               "snowflake.private.key.passphrase": "jkladu098jfd089adsq4r",
-               "snowflake.database.name":"DEMO_DB",
+               "snowflake.private.key.passphrase": "confluent",
+               "snowflake.database.name":"KAFKA_DB",
                "snowflake.schema.name":"PUBLIC",
                "key.converter":"org.apache.kafka.connect.storage.StringConverter",
                "value.converter": "com.snowflake.kafka.connector.records.SnowflakeAvroConverter",
@@ -96,4 +126,16 @@ docker exec -e SNOWFLAKE_URL="$SNOWFLAKE_URL" -e SNOWFLAKE_USERNAME="$SNOWFLAKE_
 
 sleep 5
 
-log "Confirm that the messages were delivered to the Snowflake table"
+docker run --rm -i -v $PWD/snowflake_key.p8:/tmp/rsa_key.p8 -e SNOWSQL_PRIVATE_KEY_PASSPHRASE=confluent snowsql:latest --username KAFKA_DEMO -a $SNOWFLAKE_ACCOUNT_NAME --private-key-path /tmp/rsa_key.p8 -o log_level=DEBUG << EOF
+USE ROLE SECURITYADMIN;
+EOF
+
+
+log "Confirm that the messages were delivered to the Snowflake table (logged as KAFKA_DEMO user)"
+docker run --rm -i -v $PWD/snowflake_key.p8:/tmp/rsa_key.p8 -e SNOWSQL_PRIVATE_KEY_PASSPHRASE=confluent snowsql:latest --username KAFKA_DEMO -a $SNOWFLAKE_ACCOUNT_NAME --private-key-path /tmp/rsa_key.p8 << EOF
+USE ROLE KAFKA_CONNECTOR_ROLE;
+USE DATABASE KAFKA_DB;
+USE SCHEMA PUBLIC;
+USE WAREHOUSE KAFKA_ADMIN_WAREHOUSE;
+SELECT * FROM KAFKA_DB.PUBLIC.TEST_TABLE;
+EOF
