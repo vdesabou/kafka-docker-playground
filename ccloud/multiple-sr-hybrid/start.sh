@@ -45,7 +45,19 @@ sed -e "s|:SCHEMA_REGISTRY_URL:|$SCHEMA_REGISTRY_URL|g" \
 
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.yml"
 
-sleep 30
+# results a re inconsistent depending on RHEL or DEBIAN
+if [[ "$TAG" == *ubi8 ]]
+then
+     # RHEL
+     docker exec -i --privileged --user root -t webserver  bash -c "yum update && yum install -y nc"
+     docker exec -d -t webserver bash -c "bash /tmp/httpd_rhel.sh 1500 /tmp/json/sr.json"
+else
+     # debian
+     docker exec -i --privileged --user root -t webserver  bash -c "apt-get update && apt-get install net-tools"
+     docker exec -d -t webserver bash -c "bash /tmp/httpd_debian.sh 1500 /tmp/json/sr.json"
+fi
+
+sleep 5
 
 log "Executing curl http://localhost:1500/v1/metadata/schemaRegistryUrls"
 curl http://localhost:1500/v1/metadata/schemaRegistryUrls

@@ -17,9 +17,10 @@ services:
     ports:
       - "1500:1500"
     volumes:
-        - ../../ccloud/multiple-sr-hybrid/httpd.sh:/tmp/httpd.sh
+        - ../../ccloud/multiple-sr-hybrid/httpd_rhel.sh:/tmp/httpd_rhel.sh
+        - ../../ccloud/multiple-sr-hybrid/httpd_debian.sh:/tmp/httpd_debian.sh
         - ../../ccloud/multiple-sr-hybrid/sr.json:/tmp/json/sr.json
-    command: bash -c "apt-get update && apt-get install net-tools && bash /tmp/httpd.sh 1500 /tmp/json/ & sleep 5 && tail -F /dev/null"
+    command: "sleep infinity"
 
   control-center:
     environment:
