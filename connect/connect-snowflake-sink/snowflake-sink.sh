@@ -126,10 +126,6 @@ docker exec -e SNOWFLAKE_URL="$SNOWFLAKE_URL" -e RSA_PRIVATE_KEY="$RSA_PRIVATE_K
 
 sleep 5
 
-docker run --rm -i -v $PWD/snowflake_key.p8:/tmp/rsa_key.p8 -e SNOWSQL_PRIVATE_KEY_PASSPHRASE=confluent snowsql:latest --username KAFKA_DEMO -a $SNOWFLAKE_ACCOUNT_NAME --private-key-path /tmp/rsa_key.p8 -o log_level=DEBUG << EOF
-USE ROLE SECURITYADMIN;
-EOF
-
 
 log "Confirm that the messages were delivered to the Snowflake table (logged as KAFKA_DEMO user)"
 docker run --rm -i -v $PWD/snowflake_key.p8:/tmp/rsa_key.p8 -e SNOWSQL_PRIVATE_KEY_PASSPHRASE=confluent snowsql:latest --username KAFKA_DEMO -a $SNOWFLAKE_ACCOUNT_NAME --private-key-path /tmp/rsa_key.p8 << EOF
