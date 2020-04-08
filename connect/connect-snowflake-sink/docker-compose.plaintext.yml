@@ -6,4 +6,4 @@ services:
     environment:
       CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/snowflakeinc-snowflake-kafka-connector
       # CONNECT_LOG4J_ROOT_LOGLEVEL: DEBUG
-      # CONNECT_LOG4J_LOGGERS: org.reflections=ERROR,com.snowflake.kafka.connector=TRACE
+      # CONNECT_LOG4J_LOGGERS: org.reflections=ERROR,com.snowflake.kafka.connector=TRACE,net.snowflake.client.jdbc=TRACE
