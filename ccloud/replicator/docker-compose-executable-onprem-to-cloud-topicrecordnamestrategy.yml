@@ -52,6 +52,8 @@ services:
         - ../../ccloud/replicator/executable-onprem-to-cloud-consumer-repro-avro.properties:/etc/kafka/executable-onprem-to-cloud-consumer-repro-avro.properties
         - ../../ccloud/replicator/executable-onprem-to-cloud-producer-repro-avro.properties:/etc/kafka/executable-onprem-to-cloud-producer-repro-avro.properties
         - ../../ccloud/replicator/executable-onprem-to-cloud-replicator-repro-avro-topicrecordnamestrategy.properties:/etc/kafka/executable-onprem-to-cloud-replicator-repro-avro.properties
+    environment:
+      CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-s3 # this is not used but decrease test time
     entrypoint: ["sh", "-c", "sleep 2073600"]
 
 
