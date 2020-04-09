@@ -15,12 +15,12 @@ seq -f "us_sale_%g ${RANDOM}" 10 | docker container exec -i broker-us kafka-cons
 log "Consolidating all sales in the US (logs are in /tmp/replicator.log):"
 
 # run in detach mode -d
-docker exec -d connect-us bash -c 'replicator --consumer.config /etc/kafka/consumer-us.properties --producer.config /etc/kafka/producer-us.properties  --replication.config /etc/kafka/replication-us.properties  --cluster.id replicate-europe-to-us --whitelist sales_EUROPE > /tmp/replicator.log 2>&1'
+docker exec -d connect-us bash -c 'export CLASSPATH=/etc/kafka-connect/jars/replicator-rest-extension-*.jar; replicator --consumer.config /etc/kafka/consumer-us.properties --producer.config /etc/kafka/producer-us.properties  --replication.config /etc/kafka/replication-us.properties  --cluster.id replicate-europe-to-us --whitelist sales_EUROPE > /tmp/replicator.log 2>&1'
 
 log "Consolidating all sales in Europe (logs are in /tmp/replicator.log):"
 
 # run in detach mode -d
-docker exec -d connect-europe bash -c 'replicator --consumer.config /etc/kafka/consumer-europe.properties --producer.config /etc/kafka/producer-europe.properties  --replication.config /etc/kafka/replication-europe.properties  --cluster.id replicate-us-to-europe --whitelist sales_US  > /tmp/replicator.log 2>&1'
+docker exec -d connect-europe bash -c 'export CLASSPATH=/etc/kafka-connect/jars/replicator-rest-extension-*.jar; replicator --consumer.config /etc/kafka/consumer-europe.properties --producer.config /etc/kafka/producer-europe.properties  --replication.config /etc/kafka/replication-europe.properties  --cluster.id replicate-us-to-europe --whitelist sales_US  > /tmp/replicator.log 2>&1'
 
 log "sleeping 240 seconds"
 sleep 240
