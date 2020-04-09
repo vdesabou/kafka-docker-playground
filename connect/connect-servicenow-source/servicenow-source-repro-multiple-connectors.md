@@ -420,3 +420,84 @@ whereas normally we should get:
     }
 }
 ```
+
+
+**With the fix:**
+
+```
+{
+    "payload": {
+        "acquisition_method": "",
+        "asset_tag": "",
+        "assigned": "",
+        "assigned_to": "",
+        "beneficiary": "",
+        "checked_in": "",
+        "checked_out": "",
+        "ci": "",
+        "comments": "This is test",
+        "company": "",
+        "cost": "0",
+        "cost_center": "",
+        "delivery_date": "",
+        "department": "",
+        "depreciated_amount": "0",
+        "depreciation": "",
+        "depreciation_date": "",
+        "display_name": "",
+        "disposal_reason": "",
+        "due": "",
+        "due_in": "",
+        "expenditure_type": "",
+        "gl_account": "",
+        "install_date": "",
+        "install_status": "1",
+        "invoice_number": "",
+        "justification": "",
+        "lease_id": "",
+        "location": "",
+        "managed_by": "",
+        "model": "",
+        "model_category": "",
+        "old_status": "",
+        "old_substatus": "",
+        "order_date": "",
+        "owned_by": "",
+        "parent": "",
+        "po_number": "",
+        "pre_allocated": "false",
+        "purchase_date": "",
+        "quantity": "1",
+        "request_line": "",
+        "resale_price": "0",
+        "reserved_for": "",
+        "residual": "0",
+        "residual_date": "",
+        "retired": "",
+        "retirement_date": "",
+        "salvage_value": "0",
+        "serial_number": "",
+        "skip_sync": "false",
+        "stockroom": "",
+        "substatus": "",
+        "support_group": "",
+        "supported_by": "",
+        "sys_class_name": "alm_facility",
+        "sys_created_by": "admin",
+        "sys_created_on": "2020-04-09 09:42:22",
+        "sys_domain": {
+            "link": "https://dev97797.service-now.com/api/now/table/sys_user_group/global",
+            "value": "global"
+        },
+        "sys_domain_path": "/",
+        "sys_id": "c08cdbb92fcc1010774cd7492799b6b2",
+        "sys_mod_count": "0",
+        "sys_tags": "",
+        "sys_updated_by": "admin",
+        "sys_updated_on": "2020-04-09 09:42:22",
+        "vendor": "",
+        "warranty_expiration": "",
+        "work_notes": ""
+    }
+}
+```
