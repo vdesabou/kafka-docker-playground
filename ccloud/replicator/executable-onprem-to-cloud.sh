@@ -55,7 +55,7 @@ sleep 5
 
 log "Starting replicator executable (logs are in /tmp/replicator.log):"
 # run in detach mode -d
-docker exec -d connect bash -c 'replicator --consumer.config /etc/kafka/executable-onprem-to-cloud-consumer.properties --producer.config /etc/kafka/executable-onprem-to-cloud-producer.properties  --replication.config /etc/kafka/executable-onprem-to-cloud-replicator.properties  --cluster.id executable-onprem-to-cloud --whitelist executable-products > /tmp/replicator.log 2>&1'
+docker exec -d connect bash -c 'export CLASSPATH=/etc/kafka-connect/jars/replicator-rest-extension-*.jar; replicator --consumer.config /etc/kafka/executable-onprem-to-cloud-consumer.properties --producer.config /etc/kafka/executable-onprem-to-cloud-producer.properties  --replication.config /etc/kafka/executable-onprem-to-cloud-replicator.properties  --cluster.id executable-onprem-to-cloud --whitelist executable-products > /tmp/replicator.log 2>&1'
 
 
 sleep 50
