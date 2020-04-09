@@ -648,6 +648,10 @@ Verify we have received the data in topic-servicenow2 topic:
 $ timeout 60 docker exec connect kafka-console-consumer -bootstrap-server broker:9092 --topic topic-servicenow2 --from-beginning --max-messages 1
 ```
 
+See the screenshot below: on the left is when there is only one connector running, on the right, it's when there are two. The extra fields are coming from the table loaded by first connector
+
+![repro](servicenow-source-repro-multiple-connectors.png)
+
 We get:
 
 ```json
@@ -1959,5 +1963,3 @@ whereas normally we should get:
     }
 }
 ```
-
-![repro](servicenow-source-repro-multiple-connectors.png)
