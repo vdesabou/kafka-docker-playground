@@ -5,9 +5,9 @@ services:
   connect-us:
     volumes:
         - ../../replicator/mirrormaker2/connect-mirror-maker.properties:/etc/kafka/connect-mirror-maker.properties
-        - ../../replicator/mirrormaker2/connect-log4j.properties:/etc/kafka/connect-log4j.properties
+        - ../../replicator/mirrormaker2/connect-log4j.properties:/tmp/connect-log4j.properties
     environment:
-      KAFKA_LOG4J_OPTS: "-Dlog4j.configuration=file:/etc/kafka/connect-log4j.properties"
+      KAFKA_LOG4J_OPTS: "-Dlog4j.configuration=file:/tmp/connect-log4j.properties"
       CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-s3 # this is not used but decrease test time
 
   connect-europe:
