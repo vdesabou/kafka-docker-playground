@@ -38,7 +38,7 @@ CONTROL_CENTER_CONTAINER=${1:-"control-center"}
 if [ "${IGNORE_CONNECT_STARTUP}" == "FALSE" ]
 then
   # Verify Kafka Connect has started within MAX_WAIT seconds
-  MAX_WAIT=240
+  MAX_WAIT=300
   CUR_WAIT=0
   log "Waiting up to $MAX_WAIT seconds for Kafka Connect ${CONNECT_CONTAINER} to start"
   docker container logs ${CONNECT_CONTAINER} > /tmp/out.txt 2>&1
@@ -48,6 +48,8 @@ then
     CUR_WAIT=$(( CUR_WAIT+10 ))
     if [[ "$CUR_WAIT" -gt "$MAX_WAIT" ]]; then
       echo -e "\nERROR: The logs in ${CONNECT_CONTAINER} container do not show 'Finished starting connectors and tasks' after $MAX_WAIT seconds. Please troubleshoot with 'docker container ps' and 'docker container logs'.\n"
+      # TOREMOVE
+      cat /tmp/out.txt
       exit 1
     fi
   done
