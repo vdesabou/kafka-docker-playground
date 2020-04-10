@@ -4,10 +4,6 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
-log "TOREMOVE: showing docker versions"
-docker -v
-docker-compose -v
-
 ${DIR}/../../environment/mdc-plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
 
 log "Sending sales in Europe cluster"
