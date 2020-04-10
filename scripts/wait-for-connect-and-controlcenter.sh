@@ -48,8 +48,6 @@ then
     CUR_WAIT=$(( CUR_WAIT+10 ))
     if [[ "$CUR_WAIT" -gt "$MAX_WAIT" ]]; then
       echo -e "\nERROR: The logs in ${CONNECT_CONTAINER} container do not show 'Finished starting connectors and tasks' after $MAX_WAIT seconds. Please troubleshoot with 'docker container ps' and 'docker container logs'.\n"
-      # TOREMOVE
-      cat /tmp/out.txt
       exit 1
     fi
   done
