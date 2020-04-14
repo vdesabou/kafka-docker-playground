@@ -1,0 +1,13 @@
+[maprtech]
+name=MapR Technologies
+baseurl=https://package.mapr.com/releases/v6.1.0/redhat/
+enabled=1
+gpgcheck=1
+protect=1
+
+[maprecosystem]
+name=MapR Technologies
+baseurl=https://package.mapr.com/releases/MEP/MEP-6.1.0/redhat
+enabled=1
+gpgcheck=1
+protect=1
