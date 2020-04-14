@@ -1,0 +1,26 @@
+---
+version: '3.5'
+services:
+
+  mapr:
+    image: maprtech/dev-sandbox-container:latest
+    hostname: mapr
+    container_name: mapr
+    privileged: true
+    ports:
+      - "8443:8443"
+    environment:
+      MAPR_EXTERNAL: connect
+      isSecure: "true"
+
+  connect:
+    depends_on:
+      - zookeeper
+      - broker
+      - schema-registry
+      - mapr
+    volumes:
+      - ../../connect/connect-mapr-sink/mapr.repo:/etc/yum.repos.d/mapr_core.repo
+    environment:
+      CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-maprdb
+      KAFKA_OPTS: "-Dmapr.home.dir=/opt/mapr -Dmapr.library.flatclass"
