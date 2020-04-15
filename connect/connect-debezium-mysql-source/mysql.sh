@@ -51,13 +51,17 @@ docker exec connect \
                     "database.server.name": "dbserver1",
                     "database.whitelist": "mydb",
                     "database.history.kafka.bootstrap.servers": "broker:9092",
-                    "database.history.kafka.topic": "schema-changes.mydb"
+                    "database.history.kafka.topic": "schema-changes.mydb",
+                    "transforms": "RemoveDots",
+                    "transforms.RemoveDots.type": "org.apache.kafka.connect.transforms.RegexRouter",
+                    "transforms.RemoveDots.regex": "(.*)\\.(.*)\\.(.*)",
+                    "transforms.RemoveDots.replacement": "$1_$2_$3"
           }' \
      http://localhost:8083/connectors/debezium-mysql-source/config | jq .
 
 sleep 5
 
-log "Verifying topic dbserver1.mydb.team"
-timeout 60 docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic dbserver1.mydb.team --from-beginning --max-messages 2
+log "Verifying topic dbserver1_mydb_team"
+timeout 60 docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic dbserver1_mydb_team --from-beginning --max-messages 2
 
 
