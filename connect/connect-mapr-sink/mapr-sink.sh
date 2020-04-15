@@ -4,8 +4,6 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
-export MAPR_EXTERNAL=$(ipconfig getifaddr en0)
-
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
 
 log "Installing Mapr Client"
@@ -24,20 +22,28 @@ else
      exit 1
 fi
 
+CONNECT_IP=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' connect)
+MAPR_IP=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' mapr)
+
 log "Login with maprlogin"
-docker exec -i mapr  bash -c "maprlogin password -user mapr" << EOF
+docker exec -i mapr bash -c "maprlogin password -user mapr" << EOF
 mapr
 EOF
 
 log "Create table /mapr/maprdemo.mapr.io/maprtopic"
-docker exec -i mapr  bash -c "mapr dbshell" << EOF
+docker exec -i mapr bash -c "mapr dbshell" << EOF
 create /mapr/maprdemo.mapr.io/maprtopic
 EOF
 
-# docker exec -i -t mapr  bash -c "groupadd -g 5000 appuser && useradd -m -u 5001 -gappuser appuser"
+log "Set MAPR_EXTERNAL on mapr"
+docker exec -i mapr bash -c "sed -i \"s/MAPR_EXTERNAL=.*/MAPR_EXTERNAL=${MAPR_IP}/\" /opt/mapr/conf/env.sh"
+docker exec -i mapr bash -c "service mapr-warden restart"
+
+sleep 30
 
 log "Configure Mapr Client"
-docker exec -i --privileged --user root -t connect  bash -c "/opt/mapr/server/configure.sh -N maprdemo.mapr.io -secure -c -C mapr:7222 -H mapr -u root -g root"
+docker exec -i -t connect bash -c "/opt/mapr/server/configure.sh -N maprdemo.mapr.io -c -C $MAPR_IP:7222 -H mapr -u appuser -g appuser"
+
 
 log "Sending messages to topic maprtopic"
 docker exec -i broker kafka-console-producer --broker-list broker:9092 --topic maprtopic --property parse.key=true --property key.separator=, << EOF
