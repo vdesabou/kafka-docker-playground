@@ -10,7 +10,6 @@ services:
     ports:
       - "8443:8443"
     environment:
-      MAPR_EXTERNAL: connect
       isSecure: "true"
 
   connect:
