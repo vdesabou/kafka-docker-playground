@@ -30,7 +30,6 @@ docker exec connect \
                     "database.password": "postgres",
                     "database.dbname" : "postgres",
                     "database.server.name": "asgard",
-
                     "key.converter" : "io.confluent.connect.avro.AvroConverter",
                     "key.converter.schema.registry.url": "http://schema-registry:8081",
                     "value.converter" : "io.confluent.connect.avro.AvroConverter",
@@ -47,6 +46,6 @@ docker exec connect \
 sleep 5
 
 log "Verifying topic asgard.public.customers-raw"
-timeout 60 docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic asgard.public.customers-raw --from-beginning  --property print.key=true --max-messages 5
+timeout 60 docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic asgard.public.customers-raw --from-beginning --property print.key=true --max-messages 5
 
 
