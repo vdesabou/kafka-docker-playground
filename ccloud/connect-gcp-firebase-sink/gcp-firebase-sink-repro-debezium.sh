@@ -107,7 +107,4 @@ docker exec -e PROJECT="$PROJECT" -e SCHEMA_REGISTRY_URL="$SCHEMA_REGISTRY_URL" 
           }' \
      http://localhost:8083/connectors/firebase-sink/config | jq .
 
-# [2020-04-16 13:39:42,827] ERROR WorkerSinkTask{id=firebase-sink-0} Task threw an uncaught and unrecoverable exception. Task is being killed and will not recover until manually restarted. (org.apache.kafka.connect.runtime.WorkerSinkTask)
-# com.google.firebase.database.DatabaseException: Invalid Firebase Database path: {"id":"1007.0"}. Firebase Database paths must not contain '.', '#', '$', '[', or ']'
-
 log "Follow README to verify data is in Firebase"
