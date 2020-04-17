@@ -2,8 +2,8 @@
 version: '3.5'
 services:
   connect:
-    # volumes:
-    #     - ../../connect/connect-sftp-source/kafka-connect-sftp-1.0.4-SNAPSHOT.jar:/usr/share/confluent-hub-components/confluentinc-kafka-connect-sftp/lib/kafka-connect-sftp-1.0.3.jar
+    volumes:
+        - ../../connect/connect-sftp-source/kafka-connect-sftp-1.1.0-SNAPSHOT-53350f17.jar:/usr/share/confluent-hub-components/confluentinc-kafka-connect-sftp/lib/kafka-connect-sftp-1.0.4.jar
     environment:
       CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-sftp
       # CONNECT_LOG4J_LOGGERS: org.reflections=ERROR,io.confluent.connect.sftp=TRACE
