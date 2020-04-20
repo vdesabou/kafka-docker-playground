@@ -4,7 +4,7 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
-HOSTS_FILE=${hosts-plaintext.yml:-$1}
+HOSTS_FILE=${1:-hosts-plaintext.yml}
 if [ ! -f ${HOSTS_FILE} ]
 then
      logerror "ERROR: ${HOSTS_FILE} is not set"
