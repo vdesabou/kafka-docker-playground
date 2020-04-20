@@ -54,22 +54,24 @@ fi
 
 if [ -d ${DIR}/cp-ansible ]
 then
-  logwarn "${DIR}/cp-ansible already exists ! It will be deleted !"
-  check_if_continue
+  log "cp-ansible repository already exists"
+  read -p "Do you want to get the latest version? (y/n)?" choice
+  case "$choice" in
+  y|Y )
+    rm -rf ${DIR}/cp-ansible
+    log "Getting cp-ansible from Github (branch $GIT_BRANCH)"
+    cd ${DIR}
+    git clone https://github.com/confluentinc/cp-ansible
+    cd ${DIR}/cp-ansible
+    git checkout "${GIT_BRANCH}"
+  ;;
+  n|N ) ;;
+  * ) logerror "ERROR: invalid response!";exit 1;;
+  esac
 fi
-
-rm -rf ${DIR}/cp-ansible
-log "Getting cp-ansible from Github (branch $GIT_BRANCH)"
-cd ${DIR}
-git clone https://github.com/confluentinc/cp-ansible
-cd ${DIR}/cp-ansible
-git checkout "${GIT_BRANCH}"
 
 # copy custom files
 cp ${DIR}/${HOSTS_FILE} ${DIR}/cp-ansible/
-
-
-
 
 docker-compose down -v
 docker-compose up -d
