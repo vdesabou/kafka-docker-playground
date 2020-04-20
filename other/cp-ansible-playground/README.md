@@ -21,10 +21,14 @@ The plaintext Docker images (based on Ubuntu 18.04) are build daily using [vdesa
 
 ## How to run
 
-To start an environment (using plaintext):
+```
+$ ./start.sh <host yml file>
+```
+
+Example: to start an environment using plaintext:
 
 ```
-$ ./start-plaintext.sh
+$ ./start.sh hosts-plaintext.yml
 ```
 
 Then you can do your modifications and run `ansible-playbook -i hosts.yml all.yml` to apply your changes.
