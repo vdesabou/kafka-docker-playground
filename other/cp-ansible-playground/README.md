@@ -1,4 +1,6 @@
-# cp-ansible playground [![Build Status](https://travis-ci.com/vdesabou/cp-ansible-playground.svg?branch=master)](https://travis-ci.com/vdesabou/cp-ansible-playground)
+# Using cp-ansible playground [![Build Status](https://travis-ci.com/vdesabou/cp-ansible-playground.svg?branch=master)](https://travis-ci.com/vdesabou/cp-ansible-playground)
+
+![asciinema](https://github.com/vdesabou/cp-ansible-playground/blob/master/asciinema.gif?raw=true)
 
 ## Pre-requisites
 
@@ -7,7 +9,11 @@
 
 ## Description
 
-This is a deployment using Confluent [cp-ansible](https://docs.confluent.io/current/installation/installing_cp/cp-ansible.html) Ansible playbooks:
+Some plaintext Docker images (based on Ubuntu 18.04) are built daily using [vdesabou/cp-ansible-playground](https://github.com/vdesabou/cp-ansible-playground) repository.
+
+Those images can then be used to easily test different configurations by providing updated host inventory yaml file.
+
+This is deploying the following containers using Confluent [cp-ansible](https://docs.confluent.io/current/installation/installing_cp/cp-ansible.html) Ansible playbooks:
 
 * 1 zookeeper (`zookeeper1`)
 * 3 broker (`broker1`, `broker2` and `broker3`)
@@ -16,8 +22,6 @@ This is a deployment using Confluent [cp-ansible](https://docs.confluent.io/curr
 * 1 ksql (`ksql-server`)
 * 1 rest-proxy (`rest-proxy`)
 * 1 control-center (`control-center`)
-
-The plaintext Docker images (based on Ubuntu 18.04) are build daily using [vdesabou/cp-ansible-playground](https://github.com/vdesabou/cp-ansible-playground) repository.
 
 ## Tags
 
