@@ -29,6 +29,7 @@ export TAG=5.3.2
 - [🔐 Environments](#-environments)
 - [🎓 Kafka Tutorials](#-kafka-tutorials)
 - [Confluent Commercial](#confluent-commercial)
+- [CP-Ansible Playground](#cp-ansible-playground)
 - [👾 Other Playgrounds](#-other-playgrounds)
 - [📚 Useful Resources](#-useful-resources)
 
@@ -275,6 +276,10 @@ This is just the excellent examples in [Kafka tutorial](https://kafka-tutorials.
 * [JMS Client](other/jms-client)
 * [RBAC with SASL/PLAIN](environment/rbac-sasl-plain) RBAC with no SSL encryption, SASL/PLAIN authentication
 * [Audit Logs](other/audit-logs)
+
+## [CP-Ansible Playground](other/cp-ansible-playground)
+
+Easily play with Confluent Platform Ansible playbooks by using Ubuntu based Docker images generated daily from this [cp-ansible-playground](https://github.com/vdesabou/cp-ansible-playground) repository
 
 ## 👾 Other Playgrounds
 
