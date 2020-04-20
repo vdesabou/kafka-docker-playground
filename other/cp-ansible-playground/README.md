@@ -33,24 +33,38 @@ Available tags are `5.3.1`, `5.4.0` and `5.4.1`
 $ ./start.sh <host yml file>
 ```
 
-Example: to start an environment using plaintext:
+`hosts-plaintext.yml` host file should be used as the base file, then you can modify it to include your changes:
 
 ```bash
-$ ./start.sh hosts-plaintext.yml
+$ cp hosts-plaintext.yml hosts-custom.yml
+
+# modify hosts-custom.yml as you want, for example uncomment:
+
+ssl_enabled: true
+sasl_protocol: plain
+
+# run the script
+$ ./start.sh hosts-custom.yml
 ```
 
-Then you can do your modifications and run `ansible-playbook -i <host yml file> all.yml` to apply your changes.
+Once the script has been run, you will have all the docker container running with your changes.
 
-You can also use ansible tags as explain in [Confluent docs](https://docs.confluent.io/current/installation/cp-ansible/ansible-install.html#installing-cp):
+If you want to test additional modifications, you can update your `hosts-custom.yml` file and apply the changes:
 
 ```bash
-$ ansible-playbook -i <host yml file> all.yml --tags=zookeeper
-$ ansible-playbook -i <host yml file> all.yml --tags=kafka_broker
-$ ansible-playbook -i <host yml file> all.yml --tags=schema_registry
-$ ansible-playbook -i <host yml file> all.yml --tags=kafka_rest
-$ ansible-playbook -i <host yml file> all.yml --tags=kafka_connect
-$ ansible-playbook -i <host yml file> all.yml --tags=ksql
-$ ansible-playbook -i <host yml file> all.yml --tags=control_center
+$ ansible-playbook -i hosts-custom.yml all.yml
+```
+
+Or use ansible tags as explain in [Confluent docs](https://docs.confluent.io/current/installation/cp-ansible/ansible-install.html#installing-cp):
+
+```bash
+$ ansible-playbook -i hosts-custom.yml all.yml --tags=zookeeper
+$ ansible-playbook -i hosts-custom.yml all.yml --tags=kafka_broker
+$ ansible-playbook -i hosts-custom.yml all.yml --tags=schema_registry
+$ ansible-playbook -i hosts-custom.yml all.yml --tags=kafka_rest
+$ ansible-playbook -i hosts-custom.yml all.yml --tags=kafka_connect
+$ ansible-playbook -i hosts-custom.yml all.yml --tags=ksql
+$ ansible-playbook -i hosts-custom.yml all.yml --tags=control_center
 ```
 
 ## Upgrade test
