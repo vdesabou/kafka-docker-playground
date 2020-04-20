@@ -275,7 +275,6 @@ ksql:
 #     ksql2:
 
 kafka_connect:
-  hosts:
   ## To configure Connect to run as a custom user, uncomment below
   # vars:
   #   kafka_connect_user: custom-user
@@ -285,10 +284,10 @@ kafka_connect:
   #
   ## Adding Connector Paths.
   ## NOTE: This variable is mapped to the `plugin.path` Kafka Connect property.
-  #   kafka_connect_plugins_path: 
+  #   kafka_connect_plugins_path:
   #   - /usr/share/java
   #   - /my/connectors/dir
-  # 
+  #
   ## Installing Connectors From Confluent Hub
   #   kafka_connect_confluent_hub_plugins:
   #   - jcustenborder/kafka-connect-spooldir:2.0.43
