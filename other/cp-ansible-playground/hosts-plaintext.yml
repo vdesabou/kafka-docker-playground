@@ -4,6 +4,14 @@ all:
     ansible_user: root
     ansible_become: true
     ansible_python_interpreter: /usr/bin/python3
+    ansible_ssh_private_key_file: /tmp/certs/ssh_priv.pem
+
+    #### Setting Proxy Environment variables ####
+    ## To set proxy env vars for the duration of playbook run, uncomment below block and set as necessary
+    # proxy_env:
+    #   http_proxy: http://proxy.example.com:8080
+    #   https_proxy: http://proxy.example.com:8080
+    #   no_proxy: http://proxy.example.com:8080
 
     #### SASL Authentication Configuration ####
     ## By default there will be no SASL Authentication
@@ -38,6 +46,7 @@ all:
     # ssl_ca_cert_filepath: "/tmp/certs/ca.crt"
     # ssl_signed_cert_filepath: "/tmp/certs/{{inventory_hostname}}-signed.crt"
     # ssl_key_filepath: "/tmp/certs/{{inventory_hostname}}-key.pem"
+    # ssl_key_password: <password for key for each host, will be inputting in the form -passin pass:{{ssl_key_password}} >
     ## Option 2: Custom Keystores and Truststores
     ## CP-Ansible can move keystores/truststores to their corresponding hosts and configure the components to use them. Set These vars
     # ssl_provided_keystore_and_truststore: true
@@ -46,6 +55,13 @@ all:
     # ssl_keystore_store_password: mystorepassword
     # ssl_truststore_filepath: "/tmp/certs/truststore.jks"
     # ssl_truststore_password: truststorepass
+
+    #### Certificate Regeneration ####
+    ## When using self signed certificates, each playbook run will regenerate the CA, to turn this off, uncomment this line:
+    # regenerate_ca: false
+    ## By default, if keystore/truststore files exists for a component, the playbook will not recreate them
+    ## To recreate the keystores and truststores uncomment this line:
+    # regenerate_keystore_and_truststore: true
 
     #### Monitoring Configuration ####
     ## Jolokia is enabled by default. The Jolokia jar gets pulled from the internet and enabled on all the components
@@ -114,6 +130,18 @@ all:
     #     ssl_mutual_auth_enabled: true
     #     sasl_protocol: scram
 
+    #### Creating Connectors ####
+    ## To manage the connector configs from Ansible, set the following list of connector objects:
+    ## one per connector, must have `name` and `config` properties
+    ## make sure to provide the numeric values as strings
+    # kafka_connect_connectors:
+    #   - name: sample-connector
+    #     config:
+    #       connector.class: "FileStreamSinkConnector"
+    #       tasks.max: "1"
+    #       file: "path/to/file.txt"
+    #       topics: "test_topic"
+
     ## To set custom properties for each service
     ## Find property options in the Confluent Documentation
     # zookeeper:
@@ -140,6 +168,10 @@ all:
     #     key: val
 
 zookeeper:
+  ## To configure Zookeeper to run as a custom user, uncomment below
+  # vars:
+  #   zookeeper_user: custom-user
+  #   zookeeper_group: custom-group
   hosts:
     zookeeper1:
       zookeeper_id: 1
@@ -153,10 +185,28 @@ zookeeper:
       # zookeeper_id: 3
     # ip-172-31-34-231.us-east-2.compute.internal:
       # zookeeper_id: 1
+
 kafka_broker:
+  ## To apply variables specifically to the hosts within kafka_broker group, you can add a vars block like below
+  # vars:
+  #   ## To configure Kafka to run as a custom user, uncomment below
+  #   kafka_broker_user: custom-user
+  #   kafka_broker_group: custom-group
+  #   # To update the log.dirs property within the kafka server.properties, uncomment below
+  #   # By default the log directory is /var/lib/kafka/data
+  #   kafka_broker:
+  #     datadir:
+  #       - /var/lib/kafka/my-data
   hosts:
       ## By default the first host will get broker id=1, second gets id=2. Set broker_id to customize
       # broker_id: 3
+
+      ## Properties can also be applied on a host by host basis.
+      ## In the below example we configure a Multi-Region Clusters by setting the following properties on each host:
+      # kafka_broker:
+      #   properties:
+      #     broker.rack: us-east-1d
+      #     replica.selector.class: org.apache.kafka.common.replica.RackAwareReplicaSelector
 
       ## For kerberos sasl protocol, EACH host will need these two variables:
       # kafka_broker_kerberos_keytab_path: <The path on ansible host to keytab file, eg. /tmp/keytabs/ip-172-31-34-246.us-east-2.compute.internal>
@@ -168,32 +218,132 @@ kafka_broker:
     broker3:
       broker_id: 3
 schema_registry:
+  ## To configure Schema Registry to run as a custom user, uncomment below
+  # vars:
+  #   schema_registry_user: custom-user
+  #   schema_registry_group: custom-group
   hosts:
     schema-registry:2240:
       ## For kerberos sasl protocol, EACH host will need these two variables:
       # schema_registry_kerberos_keytab_path: <The path on ansible host to keytab file, eg. /tmp/keytabs/schemaregistry-ip-172-31-34-246.us-east-2.compute.internal
       # schema_registry_kerberos_principal: The principal configured in kdc server ex: schemaregistry/ip-172-31-34-246.us-east-2.compute.internal@REALM.EXAMPLE.COM>
-kafka_connect:
-  hosts:
-    connect:
-      ## For kerberos sasl protocol, EACH host will need these two variables:
-      # kafka_connect_kerberos_keytab_path: <The path on ansible host to keytab file, eg. /tmp/keytabs/connect-ip-172-31-34-246.us-east-2.compute.internal
-      # kafka_connect_kerberos_principal: The principal configured in kdc server ex: connect/ip-172-31-34-246.us-east-2.compute.internal@REALM.EXAMPLE.COM>
+
 kafka_rest:
+  ## To configure Rest Proxy to run as a custom user, uncomment below
+  # vars:
+  #   kafka_rest_user: custom-user
+  #   kafka_rest_group: custom-group
   hosts:
     rest-proxy:
       ## For kerberos sasl protocol, EACH host will need these two variables:
       # kafka_rest_kerberos_keytab_path: <The path on ansible host to keytab file, eg. /tmp/keytabs/restproxy-ip-172-31-34-246.us-east-2.compute.internal
       # kafka_rest_kerberos_principal: The principal configured in kdc server ex: restproxy/ip-172-31-34-246.us-east-2.compute.internal@REALM.EXAMPLE.COM>
+
 ksql:
+  ## To configure KSQL to run as a custom user, uncomment below
+  # vars:
+  #   ksql_user: custom-user
+  #   ksql_group: custom-group
   hosts:
     ksql-server:
       ## For kerberos sasl protocol, EACH host will need these two variables:
       # ksql_kerberos_keytab_path: <The path on ansible host to keytab file, eg. /tmp/keytabs/ksql-ip-172-31-37-15.us-east-2.compute.internal
       # ksql_kerberos_principal: The principal configured in kdc server ex: ksql/ip-172-31-37-15.us-east-2.compute.internal@REALM.EXAMPLE.COM>
+
+#### To configure multiple ksql clusters, make use of child groups and follow the example below
+## Note: There can only be one ksql group, so comment out above section, if configuring multiple ksql clusters
+## Decide on a name each ksql cluster (that is not 'ksql') and use that as ansible group name, this is how the cluster will be named in c3
+# ksql1:
+#   vars:
+#     # The below is a mandatory variable that must be unique for each ksql cluster.
+#     # The service id should end in an underscore by convention
+#     ksql_service_id: ksql1_
+#   hosts:
+#     ip-172-31-34-15.us-east-2.compute.internal:
+#     ip-172-31-37-16.us-east-2.compute.internal:
+#
+# ksql2:
+#   vars:
+#     ksql_service_id: ksql2_
+#   hosts:
+#     ip-172-31-34-17.us-east-2.compute.internal:
+#     ip-172-31-37-18.us-east-2.compute.internal:
+#
+# ksql:
+#   children:
+#     ksql1:
+#     ksql2:
+
+kafka_connect:
+  hosts:
+  ## To configure Connect to run as a custom user, uncomment below
+  # vars:
+  #   kafka_connect_user: custom-user
+  #   kafka_connect_group: custom-group
+  #
+  #### Connectors and the Confluent Hub
+  #
+  ## Adding Connector Paths.
+  ## NOTE: This variable is mapped to the `plugin.path` Kafka Connect property.
+  #   kafka_connect_plugins_path: 
+  #   - /usr/share/java
+  #   - /my/connectors/dir
+  # 
+  ## Installing Connectors From Confluent Hub
+  #   kafka_connect_confluent_hub_plugins:
+  #   - jcustenborder/kafka-connect-spooldir:2.0.43
+  #
+  ## Installing Connectors from Archive files local to Ansible host
+  #   kafka_connect_plugins:
+  #   - local/path/to/connect_archive.zip
+  #
+  ## Installing Connectors from Archive files in remote server (ie Nexus)
+  #   kafka_connect_plugins_remote:
+  #   - http://myhost.com/connect_archive.zip
+  hosts:
+    connect:
+      ## For kerberos sasl protocol, EACH host will need these two variables:
+      # kafka_connect_kerberos_keytab_path: <The path on ansible host to keytab file, eg. /tmp/keytabs/connect-ip-172-31-34-246.us-east-2.compute.internal
+      # kafka_connect_kerberos_principal: The principal configured in kdc server ex: connect/ip-172-31-34-246.us-east-2.compute.internal@REALM.EXAMPLE.COM>
+
+#### To configure multiple connect clusters, make use of child groups and follow the example below
+## Note: There can only be one kafka_connect group, so comment out above section, if configuring multiple connect clusters
+## Decide on a name for each connect cluster (that is not 'kafka_connect') and use that as ansible group name
+# syslog:
+#   vars:
+#     # Decide on a group id for each connect cluster. This is a mandatory variable, and must be unique for each cluster
+#     # The group id will be the name of the connect cluster within c3
+#     kafka_connect_group_id: connect_syslog
+#   hosts:
+#     ip-172-31-34-246.us-east-2.compute.internal:
+#
+# elastic:
+#   vars:
+#     kafka_connect_group_id: connect-elastic
+#   hosts:
+#     ip-172-31-34-246.us-east-2.compute.internal:
+#
+# kafka_connect:
+#   children:
+#     syslog:
+#     elastic:
+
 control_center:
+  ## To configure Control Center to run as a custom user, uncomment below
+  # vars:
+  #   control_center_user: custom-user
+  #   control_center_group: custom-group
   hosts:
     control-center:
       ## For kerberos sasl protocol, EACH host will need these two variables:
       # control_center_kerberos_keytab_path: <The path on ansible host to keytab file, eg. /tmp/keytabs/controlcenter-ip-172-31-37-15.us-east-2.compute.internal
       # control_center_kerberos_principal: The principal configured in kdc server ex: controlcenter/ip-172-31-37-15.us-east-2.compute.internal@REALM.EXAMPLE.COM>
+  # ## If you are configuring multiple connect or ksql clusters, the below variables are mandatory.
+  # # The group names must match the group names as they are in your inventory
+  # vars:
+  #   ksql_cluster_ansible_group_names:
+  #     - ksql1
+  #     - ksql2
+  #   kafka_connect_cluster_ansible_group_names:
+  #     - syslog
+  #     - elastic
