@@ -4,6 +4,13 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
+HOSTS_FILE=${hosts-plaintext.yml:-$1}
+if [ ! -f ${HOSTS_FILE} ]
+then
+     logerror "ERROR: ${HOSTS_FILE} is not set"
+     exit 1
+fi
+
 verify_installed "git"
 verify_installed "ansible"
 verify_installed "ansible-playbook"
@@ -30,8 +37,6 @@ then
   * ) logerror "ERROR: invalid response!";exit 1;;
   esac
 fi
-
-HOSTS_FILE="hosts-plaintext.yml"
 
 if [ "$TAG" = "5.3.1" ]
 then
