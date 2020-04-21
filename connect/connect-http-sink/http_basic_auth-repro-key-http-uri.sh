@@ -9,9 +9,9 @@ ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml
 
 log "Sending messages to topic http-messages"
 docker exec -i broker kafka-console-producer --broker-list broker:9092 --topic http-messages --property parse.key=true --property key.separator=, << EOF
-messages,value1
-messages,value2
-messages,value3
+api/messages,value1
+api/messages,value2
+api/messages,value3
 EOF
 
 
@@ -36,7 +36,7 @@ docker exec connect \
                "reporter.error.topic.replication.factor": 1,
                "reporter.result.topic.name": "success-responses",
                "reporter.result.topic.replication.factor": 1,
-               "http.api.url": "http://http-service-basic-auth:8080/api/${key}",
+               "http.api.url": "http://http-service-basic-auth:8080/${key}",
                "auth.type": "BASIC",
                "connection.user": "admin",
                "connection.password": "password"
