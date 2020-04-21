@@ -11,6 +11,7 @@ mkdir -p $TMP_DIR
 cd ${DIR}/..
 
 OUT_FILE=${DIR}/../out.sh
+rm $OUT_FILE
 
 test_list="$1"
 if [ "$1" = "ALL" ]
@@ -28,6 +29,7 @@ do
         logwarn "####################################################"
         continue
     fi
+    GIF_DIR=${DIR}/../../gifs/$dir
 
     cd $dir > /dev/null
     for script in *.sh
@@ -37,7 +39,7 @@ do
             continue
         fi
 
-        if [ -f asciinema.gif ]
+        if [ -f ${GIF_DIR}/asciinema.gif ]
         then
             logwarn "####################################################"
             logwarn "asciinema.gif already exists, skipping dir $dir"
@@ -69,12 +71,13 @@ do
 
         ####
         ##
+        mkdir -p ${GIF_DIR}
         echo "cd $dir;clear"  >> $OUT_FILE
         echo "asciinema rec $TMP_DIR/$dir/asciinema.cast --overwrite" >> $OUT_FILE
         echo "./$script"  >> $OUT_FILE
         echo 'exit'  >> $OUT_FILE
         echo 'docker rm -f $(docker ps -a -q)'  >> $OUT_FILE
-        echo "asciicast2gif -w 80 $TMP_DIR/$dir/asciinema.cast $PWD/asciinema.gif" >> $OUT_FILE
+        echo "asciicast2gif -w 80 $TMP_DIR/$dir/asciinema.cast ${GIF_DIR}/asciinema.gif" >> $OUT_FILE
         echo "cd -"  >> $OUT_FILE
     done
     cd - > /dev/null
