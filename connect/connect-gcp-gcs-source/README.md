@@ -1,6 +1,6 @@
 # GCS Source connector
 
-![asciinema](asciinema.gif)
+![asciinema](https://github.com/vdesabou/gifs/blob/master/connect/connect-gcp-gcs-source/asciinema.gif?raw=true)
 
 ## Objective
 

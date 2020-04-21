@@ -1,6 +1,6 @@
 # RabbitMQ Source connector
 
-![asciinema](asciinema.gif)
+![asciinema](https://github.com/vdesabou/gifs/blob/master/connect/connect-rabbitmq-source/asciinema.gif?raw=true)
 
 ## Objective
 

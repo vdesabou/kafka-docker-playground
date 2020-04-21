@@ -1,6 +1,6 @@
 # JMS ActiveMQ Sink connector
 
-![asciinema](asciinema.gif)
+![asciinema](https://github.com/vdesabou/gifs/blob/master/connect/connect-jms-active-mq-sink/asciinema.gif?raw=true)
 
 ## Objective
 

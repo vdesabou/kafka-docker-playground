@@ -1,6 +1,6 @@
 # SFTP Sink connector
 
-![asciinema](asciinema.gif)
+![asciinema](https://github.com/vdesabou/gifs/blob/master/connect/connect-sftp-sink/asciinema.gif?raw=true)
 
 ## Objective
 

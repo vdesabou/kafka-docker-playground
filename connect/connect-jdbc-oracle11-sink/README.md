@@ -1,6 +1,6 @@
 # JDBC Oracle 11 Sink connector
 
-![asciinema](asciinema.gif)
+![asciinema](https://github.com/vdesabou/gifs/blob/master/connect/connect-jdbc-oracle11-sink/asciinema.gif?raw=true)
 
 ## Objective
 

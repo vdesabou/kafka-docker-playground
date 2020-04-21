@@ -1,6 +1,6 @@
 # JDBC PostgreSQL sink connector
 
-![asciinema](asciinema.gif)
+![asciinema](https://github.com/vdesabou/gifs/blob/master/connect/connect-jdbc-postgresql-sink/asciinema.gif?raw=true)
 
 ## Objective
 

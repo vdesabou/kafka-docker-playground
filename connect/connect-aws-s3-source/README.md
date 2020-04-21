@@ -1,6 +1,6 @@
 # S3 Source connector
 
-![asciinema](asciinema.gif)
+![asciinema](https://github.com/vdesabou/gifs/blob/master/connect/connect-aws-s3-source/asciinema.gif?raw=true)
 
 ## Objective
 

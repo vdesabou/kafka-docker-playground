@@ -1,6 +1,6 @@
 # Azure Blob Storage Sink connector
 
-![asciinema](asciinema.gif)
+![asciinema](https://github.com/vdesabou/gifs/blob/master/connect/connect-azure-blob-storage-sink/asciinema.gif?raw=true)
 
 ## Objective
 

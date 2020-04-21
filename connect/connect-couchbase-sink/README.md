@@ -1,6 +1,6 @@
 # Couchbase Sink connector
 
-![asciinema](asciinema.gif)
+![asciinema](https://github.com/vdesabou/gifs/blob/master/connect/connect-couchbase-sink/asciinema.gif?raw=true)
 
 ## Objective
 

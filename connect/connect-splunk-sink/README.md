@@ -1,6 +1,6 @@
 # Splunk Sink connector
 
-![asciinema](asciinema.gif)
+![asciinema](https://github.com/vdesabou/gifs/blob/master/connect/connect-splunk-sink/asciinema.gif?raw=true)
 
 ## Objective
 
