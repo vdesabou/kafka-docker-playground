@@ -770,6 +770,8 @@ CONTROL_CENTER_KAFKA_CLUSTER3_SASL_JAAS_CONFIG: 'org.apache.kafka.common.securit
 CONTROL_CENTER_KAFKA_CLUSTER3_SASL_MECHANISM: PLAIN
 ```
 
+However, if you want to connect to multiple Confluent Cloud Schema Registrie or a mix of OnPrem and Confluent Cloud Schema Registries, then you will have to implement a workaround, see [Multi-Cluster Schema Registry](../../ccloud/multiple-sr-hybrid/README.md) with hybrid configuration (onprem/confluent cloud)
+
 #### Differences between Confluent Cloud UI and local Control Center connected to Confluent Cloud
 
 See the [screenshots](./ccloud_control_center_comparison) on this page.
