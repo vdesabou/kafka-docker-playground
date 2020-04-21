@@ -1,6 +1,6 @@
 # S3 Sink connector
 
-![asciinema](asciinema.gif)
+![asciinema](https://github.com/vdesabou/gifs/blob/master/connect/connect-aws-s3-sink/asciinema.gif?raw=true)
 
 ## Objective
 

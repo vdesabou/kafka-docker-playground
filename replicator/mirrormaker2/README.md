@@ -1,6 +1,6 @@
 # Using Mirror Maker 2
 
-![asciinema](asciinema.gif)
+![asciinema](https://github.com/vdesabou/gifs/blob/master/replicator/mirrormaker2/asciinema.gif?raw=true)
 
 ## Objective
 

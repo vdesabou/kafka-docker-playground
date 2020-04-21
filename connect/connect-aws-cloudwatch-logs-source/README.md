@@ -1,6 +1,6 @@
 # AWS CloudWatch Logs Source connector
 
-![asciinema](asciinema.gif)
+![asciinema](https://github.com/vdesabou/gifs/blob/master/connect/connect-aws-cloudwatch-logs-source/asciinema.gif?raw=true)
 
 ## Objective
 

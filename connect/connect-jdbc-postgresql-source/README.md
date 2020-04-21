@@ -1,6 +1,6 @@
 # JDBC PostgreSQL source connector
 
-![asciinema](asciinema.gif)
+![asciinema](https://github.com/vdesabou/gifs/blob/master/connect/connect-jdbc-postgresql-source/asciinema.gif?raw=true)
 
 ## Objective
 

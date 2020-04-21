@@ -1,6 +1,6 @@
 # AWS SQS Source connector
 
-![asciinema](asciinema.gif)
+![asciinema](https://github.com/vdesabou/gifs/blob/master/connect/connect-aws-sqs-source/asciinema.gif?raw=true)
 
 ## Objective
 

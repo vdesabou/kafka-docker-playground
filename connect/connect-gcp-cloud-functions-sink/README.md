@@ -1,6 +1,6 @@
 # Google Cloud Functions Sink connector
 
-![asciinema](asciinema.gif)
+![asciinema](https://github.com/vdesabou/gifs/blob/master/connect/connect-gcp-cloud-functions-sink/asciinema.gif?raw=true)
 
 ## Objective
 

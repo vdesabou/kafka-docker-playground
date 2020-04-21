@@ -1,6 +1,6 @@
 # Azure Service Bus Source connector
 
-![asciinema](asciinema.gif)
+![asciinema](https://github.com/vdesabou/gifs/blob/master/connect/connect-azure-service-bus-source/asciinema.gif?raw=true)
 
 ## Objective
 

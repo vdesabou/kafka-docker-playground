@@ -1,6 +1,6 @@
 # S3 Sink connector with Minio
 
-![asciinema](asciinema.gif)
+![asciinema](https://github.com/vdesabou/gifs/blob/master/connect/connect-minio-s3-sink/asciinema.gif?raw=true)
 
 ## Objective
 

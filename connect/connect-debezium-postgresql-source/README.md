@@ -1,6 +1,6 @@
 # Debezium PostgreSQL source connector
 
-![asciinema](asciinema.gif)
+![asciinema](https://github.com/vdesabou/gifs/blob/master/connect/connect-debezium-postgresql-source/asciinema.gif?raw=true)
 
 ## Objective
 

@@ -1,6 +1,6 @@
 # Azure Data Lake Storage Gen1 Sink connector
 
-![asciinema](asciinema.gif)
+![asciinema](https://github.com/vdesabou/gifs/blob/master/connect/connect-azure-data-lake-storage-gen1-sink/asciinema.gif?raw=true)
 
 ## Objective
 

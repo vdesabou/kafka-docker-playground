@@ -1,6 +1,6 @@
 # JDBC Oracle 11 Source connector
 
-![asciinema](asciinema.gif)
+![asciinema](https://github.com/vdesabou/gifs/blob/master/connect/connect-jdbc-oracle11-source/asciinema.gif?raw=true)
 
 ## Objective
 

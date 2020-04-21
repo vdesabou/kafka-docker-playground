@@ -1,6 +1,6 @@
 # Tiered storage with AWS S3
 
-![asciinema](asciinema.gif)
+![asciinema](https://github.com/vdesabou/gifs/blob/master/other/tiered-storage-with-aws/asciinema.gif?raw=true)
 
 ## Objective
 

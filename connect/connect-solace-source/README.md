@@ -1,6 +1,6 @@
 # Solace Source connector
 
-![asciinema](asciinema.gif)
+![asciinema](https://github.com/vdesabou/gifs/blob/master/connect/connect-solace-source/asciinema.gif?raw=true)
 
 ## Objective
 

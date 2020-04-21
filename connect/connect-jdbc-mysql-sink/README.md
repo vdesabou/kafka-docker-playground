@@ -1,6 +1,6 @@
 # JDBC MySQL Sink connector
 
-![asciinema](asciinema.gif)
+![asciinema](https://github.com/vdesabou/gifs/blob/master/connect/connect-jdbc-mysql-sink/asciinema.gif?raw=true)
 
 ## Objective
 
