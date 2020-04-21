@@ -1,6 +1,6 @@
 # Tiered storage with Minio
 
-![asciinema](asciinema.gif)
+![asciinema](https://github.com/vdesabou/gifs/blob/master/other/tiered-storage-with-minio/asciinema.gif?raw=true)
 
 ## Objective
 

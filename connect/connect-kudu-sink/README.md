@@ -1,6 +1,6 @@
 # Kudu Sink connector
 
-![asciinema](asciinema.gif)
+![asciinema](https://github.com/vdesabou/gifs/blob/master/connect/connect-kudu-sink/asciinema.gif?raw=true)
 
 ## Objective
 

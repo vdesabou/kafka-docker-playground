@@ -1,6 +1,6 @@
 # Cassandra Sink connector
 
-![asciinema](asciinema.gif)
+![asciinema](https://github.com/vdesabou/gifs/blob/master/connect/connect-cassandra-sink/asciinema.gif?raw=true)
 
 ## Objective
 

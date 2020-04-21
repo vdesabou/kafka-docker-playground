@@ -1,6 +1,6 @@
 # InfluxDB Source connector
 
-![asciinema](asciinema.gif)
+![asciinema](https://github.com/vdesabou/gifs/blob/master/connect/connect-influxdb-source/asciinema.gif?raw=true)
 
 ## Objective
 

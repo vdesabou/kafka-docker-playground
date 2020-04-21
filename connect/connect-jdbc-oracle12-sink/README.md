@@ -1,6 +1,6 @@
 # JDBC Oracle 12 Sink connector
 
-![asciinema](asciinema.gif)
+![asciinema](https://github.com/vdesabou/gifs/blob/master/connect/connect-jdbc-oracle12-sink/asciinema.gif?raw=true)
 
 ## Objective
 

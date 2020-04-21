@@ -1,6 +1,6 @@
 # HDFS 2 Source connector
 
-![asciinema](asciinema.gif)
+![asciinema](https://github.com/vdesabou/gifs/blob/master/connect/connect-hdfs2-source/asciinema.gif?raw=true)
 
 ## Objective
 

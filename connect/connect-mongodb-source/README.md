@@ -1,6 +1,6 @@
 # MongoDB source connector
 
-![asciinema](asciinema.gif)
+![asciinema](https://github.com/vdesabou/gifs/blob/master/connect/connect-mongodb-source/asciinema.gif?raw=true)
 
 ## Objective
 

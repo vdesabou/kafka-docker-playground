@@ -1,6 +1,6 @@
 # Kudu Source connector
 
-![asciinema](asciinema.gif)
+![asciinema](https://github.com/vdesabou/gifs/blob/master/connect/connect-kudu-source/asciinema.gif?raw=true)
 
 ## Objective
 

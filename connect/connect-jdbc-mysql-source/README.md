@@ -1,6 +1,6 @@
 # JDBC MySQL Source connector
 
-![asciinema](asciinema.gif)
+![asciinema](https://github.com/vdesabou/gifs/blob/master/connect/connect-jdbc-mysql-source/asciinema.gif?raw=true)
 
 ## Objective
 

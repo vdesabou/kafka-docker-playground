@@ -1,6 +1,6 @@
 # Spool Dir Source connector
 
-![asciinema](asciinema.gif)
+![asciinema](https://github.com/vdesabou/gifs/blob/master/connect/connect-spool-dir-source/asciinema.gif?raw=true)
 
 ## Objective
 

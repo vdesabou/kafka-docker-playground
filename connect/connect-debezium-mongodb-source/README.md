@@ -1,6 +1,6 @@
 # Debezium MongoDB source connector
 
-![asciinema](asciinema.gif)
+![asciinema](https://github.com/vdesabou/gifs/blob/master/connect/connect-debezium-mongodb-source/asciinema.gif?raw=true)
 
 ## Objective
 

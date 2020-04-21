@@ -1,6 +1,6 @@
 # Using Confluent Replicator as executable
 
-![asciinema](asciinema.gif)
+![asciinema](https://github.com/vdesabou/gifs/blob/master/replicator/executable/asciinema.gif?raw=true)
 
 ## Objective
 

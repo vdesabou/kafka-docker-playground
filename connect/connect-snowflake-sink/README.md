@@ -1,6 +1,6 @@
 # Snowflake Sink connector
 
-![asciinema](asciinema.gif)
+![asciinema](https://github.com/vdesabou/gifs/blob/master/connect/connect-snowflake-sink/asciinema.gif?raw=true)
 
 ## Objective
 

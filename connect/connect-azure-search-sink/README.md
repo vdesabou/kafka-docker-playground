@@ -1,6 +1,6 @@
 # Azure Search Sink connector
 
-![asciinema](asciinema.gif)
+![asciinema](https://github.com/vdesabou/gifs/blob/master/connect/connect-azure-search-sink/asciinema.gif?raw=true)
 
 ## Objective
 

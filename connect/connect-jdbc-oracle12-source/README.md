@@ -1,6 +1,6 @@
 # JDBC Oracle 12 Source connector
 
-![asciinema](asciinema.gif)
+![asciinema](https://github.com/vdesabou/gifs/blob/master/connect/connect-jdbc-oracle12-source/asciinema.gif?raw=true)
 
 ## Objective
 

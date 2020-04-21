@@ -1,6 +1,6 @@
 # MQTT Source connector
 
-![asciinema](asciinema.gif)
+![asciinema](https://github.com/vdesabou/gifs/blob/master/connect/connect-mqtt-source/asciinema.gif?raw=true)
 
 ## Objective
 
