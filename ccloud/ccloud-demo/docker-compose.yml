@@ -348,7 +348,7 @@ services:
     command: ccloudexporter ${CCLOUD_CLUSTER}
 
   prometheus:
-    image: prom/prometheus:v2.11.1
+    image: prom/prometheus
     hostname: prometheus
     container_name: prometheus
     ports:
@@ -362,7 +362,7 @@ services:
       - alertmanager
 
   grafana:
-    image: grafana/grafana:6.3.0
+    image: grafana/grafanas
     hostname: grafana
     container_name: grafana
     environment:
