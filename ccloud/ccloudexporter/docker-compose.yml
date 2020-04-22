@@ -1,0 +1,55 @@
+---
+version: '3.5'
+services:
+
+  # in order to run kafka-producer-perf-test
+  tools:
+    image: cnfltraining/training-tools:5.4
+    hostname: tools
+    container_name: tools
+    volumes:
+      - ~/.ccloud/config:/tmp/config
+    entrypoint: /bin/bash
+    tty: true
+
+  # alertmanager:
+  #   image: prom/alertmanager:v0.18.0
+  #   hostname: alertmanager
+  #   container_name: alertmanager
+  #   ports:
+  #     - 9093:9093
+
+  ccloud_exporter:
+    image: dabz/ccloudexporter:latest
+    hostname: ccloud_exporter
+    container_name: ccloud_exporter
+    environment:
+      CCLOUD_USER: ${API_KEY_CLOUD}
+      CCLOUD_PASSWORD: ${API_SECRET_CLOUD}
+      CCLOUD_CLUSTER: ${CCLOUD_CLUSTER}
+    command: ccloudexporter ${CCLOUD_CLUSTER}
+
+  prometheus:
+    image: prom/prometheus
+    hostname: prometheus
+    container_name: prometheus
+    ports:
+      - 9090:9090
+    restart: always
+    volumes:
+      - ./prometheus/:/etc/prometheus/
+    depends_on:
+      - ccloud_exporter
+
+  grafana:
+    image: grafana/grafana
+    hostname: grafana
+    container_name: grafana
+    environment:
+      GF_INSTALL_PLUGINS: grafana-piechart-panel
+    ports:
+      - 3000:3000
+    volumes:
+      - ./grafana/provisioning/:/etc/grafana/provisioning/
+    depends_on:
+      - prometheus
