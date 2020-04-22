@@ -58,7 +58,7 @@
   "panels": [
     {
       "collapsed": false,
-      "datasource": "${DS_PROMETHEUS-FAR}",
+      "datasource": "Prometheus",
       "gridPos": {
         "h": 1,
         "w": 24,
@@ -71,7 +71,7 @@
       "type": "row"
     },
     {
-      "datasource": "${DS_PROMETHEUS-FAR}",
+      "datasource": "Prometheus",
       "gridPos": {
         "h": 5,
         "w": 3,
@@ -133,7 +133,7 @@
       "type": "stat"
     },
     {
-      "datasource": "${DS_PROMETHEUS-FAR}",
+      "datasource": "Prometheus",
       "gridPos": {
         "h": 5,
         "w": 3,
@@ -195,7 +195,7 @@
       "type": "stat"
     },
     {
-      "datasource": "${DS_PROMETHEUS-FAR}",
+      "datasource": "Prometheus",
       "gridPos": {
         "h": 5,
         "w": 3,
@@ -258,7 +258,7 @@
       "type": "stat"
     },
     {
-      "datasource": "${DS_PROMETHEUS-FAR}",
+      "datasource": "Prometheus",
       "description": "",
       "gridPos": {
         "h": 5,
@@ -320,7 +320,7 @@
       "type": "stat"
     },
     {
-      "datasource": "${DS_PROMETHEUS-FAR}",
+      "datasource": "Prometheus",
       "gridPos": {
         "h": 5,
         "w": 3,
@@ -382,7 +382,7 @@
       "type": "stat"
     },
     {
-      "datasource": "${DS_PROMETHEUS-FAR}",
+      "datasource": "Prometheus",
       "gridPos": {
         "h": 5,
         "w": 3,
@@ -445,7 +445,7 @@
       "type": "stat"
     },
     {
-      "datasource": "${DS_PROMETHEUS-FAR}",
+      "datasource": "Prometheus",
       "gridPos": {
         "h": 5,
         "w": 3,
@@ -508,7 +508,7 @@
       "type": "stat"
     },
     {
-      "datasource": "${DS_PROMETHEUS-FAR}",
+      "datasource": "Prometheus",
       "gridPos": {
         "h": 5,
         "w": 3,
@@ -572,7 +572,7 @@
     },
     {
       "collapsed": false,
-      "datasource": "${DS_PROMETHEUS-FAR}",
+      "datasource": "Prometheus",
       "gridPos": {
         "h": 1,
         "w": 24,
@@ -589,7 +589,7 @@
       "bars": false,
       "dashLength": 10,
       "dashes": false,
-      "datasource": "${DS_PROMETHEUS-FAR}",
+      "datasource": "Prometheus",
       "description": "The delta count of bytes received from the network. Each sample is the number of bytes received since the previous data sample. The count is sampled every 60 seconds.",
       "fill": 1,
       "fillGradient": 0,
@@ -680,7 +680,7 @@
       "bars": false,
       "dashLength": 10,
       "dashes": false,
-      "datasource": "${DS_PROMETHEUS-FAR}",
+      "datasource": "Prometheus",
       "description": "The delta count of bytes sent over the network. Each sample is the number of bytes sent since the previous data point. The count is sampled every 60 seconds.",
       "fill": 1,
       "fillGradient": 0,
@@ -772,7 +772,7 @@
       "bars": false,
       "dashLength": 10,
       "dashes": false,
-      "datasource": "${DS_PROMETHEUS-FAR}",
+      "datasource": "Prometheus",
       "description": "The current count of bytes retained by the cluster, summed across all partitions. The count is sampled every 60 seconds.",
       "fill": 1,
       "fillGradient": 0,
@@ -864,7 +864,7 @@
     },
     {
       "collapsed": false,
-      "datasource": "${DS_PROMETHEUS-FAR}",
+      "datasource": "Prometheus",
       "gridPos": {
         "h": 1,
         "w": 24,
@@ -916,7 +916,7 @@
       "bars": false,
       "dashLength": 10,
       "dashes": false,
-      "datasource": "${DS_PROMETHEUS-FAR}",
+      "datasource": "Prometheus",
       "fill": 1,
       "fillGradient": 0,
       "gridPos": {
@@ -1049,7 +1049,7 @@
       "bars": false,
       "dashLength": 10,
       "dashes": false,
-      "datasource": "${DS_PROMETHEUS-FAR}",
+      "datasource": "Prometheus",
       "fill": 1,
       "fillGradient": 0,
       "gridPos": {
@@ -1154,7 +1154,7 @@
       {
         "allValue": "",
         "current": {},
-        "datasource": "${DS_PROMETHEUS-FAR}",
+        "datasource": "Prometheus",
         "definition": "label_values(ccloud_metric_retained_bytes, topic)",
         "hide": 0,
         "includeAll": true,
