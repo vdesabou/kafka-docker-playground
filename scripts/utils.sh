@@ -21,7 +21,7 @@ function version_gt() { test "$(printf '%s\n' "$@" | sort -V | head -n 1)" != "$
 
 function set_kafka_client_tag()
 {
-    if [ "$TAG_BASE" = "5.5.0" ] ]
+    if [ "$TAG_BASE" = "5.5.0" ]
     then
       export KAFKA_CLIENT_TAG="2.5.0"
     fi
