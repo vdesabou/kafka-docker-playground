@@ -595,7 +595,7 @@ ksql> show topics;
 
 ```yml
 ksql-cli:
-  image: confluentinc/cp-ksql-cli:${TAG}
+  image: confluentinc/${CP_KSQL_CLI_IMAGE}
   container_name: ksql-cli
   entrypoint: /bin/sh
   tty: true

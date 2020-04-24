@@ -61,7 +61,7 @@ services:
       KSQL_CONSUMER_CONFLUENT_MONITORING_INTERCEPTOR_SASL_JAAS_CONFIG: $SASL_JAAS_CONFIG
 
   ksql-cli:
-    image: confluentinc/cp-ksql-cli:${TAG}
+    image: confluentinc/${CP_KSQL_CLI_IMAGE}
     container_name: ksql-cli
     entrypoint: /bin/sh
     tty: true
@@ -253,12 +253,36 @@ services:
     hostname: producer
     container_name: producer
     environment:
-      BOOTSTRAP_SERVERS: $BOOTSTRAP_SERVERS
-      SCHEMA_REGISTRY_URL: $SCHEMA_REGISTRY_URL
-      BASIC_AUTH_CREDENTIALS_SOURCE: $BASIC_AUTH_CREDENTIALS_SOURCE
-      SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO: $SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO
-      CLOUD_KEY: $CLOUD_KEY
-      CLOUD_SECRET: $CLOUD_SECRET
+      KAFKA_BOOTSTRAP_SERVERS: $BOOTSTRAP_SERVERS
+      TOPIC: "customer-avro"
+      REPLICATION_FACTOR: 3
+      NUMBER_OF_PARTITIONS: 2
+      MESSAGE_BACKOFF: 5000 # Frequency of message injection
+      KAFKA_ACKS: "all" # default: "1"
+      KAFKA_REQUEST_TIMEOUT_MS: 20000
+      KAFKA_RETRY_BACKOFF_MS: 500
+
+      KAFKA_SSL_ENDPOINT_IDENTIFICATION_ALGORITHM: "https"
+      KAFKA_SASL_MECHANISM: "PLAIN"
+      KAFKA_SASL_JAAS_CONFIG: $SASL_JAAS_CONFIG
+      KAFKA_SECURITY_PROTOCOL: "SASL_SSL"
+
+      KAFKA_SCHEMA_REGISTRY_URL: $SCHEMA_REGISTRY_URL
+      KAFKA_BASIC_AUTH_CREDENTIALS_SOURCE: $BASIC_AUTH_CREDENTIALS_SOURCE
+      KAFKA_SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO: $SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO
+
+      KAFKA_INTERCEPTOR_CLASSES: "io.confluent.monitoring.clients.interceptor.MonitoringProducerInterceptor"
+      KAFKA_CONFLUENT_MONITORING_INTERCEPTOR_BOOTSTRAP_SERVERS: $BOOTSTRAP_SERVERS
+      KAFKA_CONFLUENT_MONITORING_INTERCEPTOR_SASL_MECHANISM: "PLAIN"
+      KAFKA_CONFLUENT_MONITORING_INTERCEPTOR_SASL_JAAS_CONFIG: $SASL_JAAS_CONFIG
+      KAFKA_CONFLUENT_MONITORING_INTERCEPTOR_SECURITY_PROTOCOL: "SASL_SSL"
+
+      #KAFKA_ENABLE_IDEMPOTENCE: "true"
+      #KAFKA_MAX_IN_FLIGHT_REQUESTS_PER_CONNECTION: "5" # default: 5
+      #KAFKA_RETRIES: "10" # default: Integer.MAX_VALUE
+      #KAFKA_REQUEST_TIMEOUT_MS: "900" # default: 30000
+      #KAFKA_DELIVERY_TIMEOUT_MS: "1000" # default: 120000
+      #KAFKA_TRANSACTIONAL_ID: "prod-1"
       JAVA_OPTS: -javaagent:/usr/share/jmx_exporter/jmx_prometheus_javaagent-0.12.0.jar=1234:/usr/share/jmx_exporter/kafka-producer.yml -Xmx256M -Xms256M
     volumes:
       - jmx-exporter-vol:/usr/share/jmx_exporter/
@@ -275,12 +299,30 @@ services:
     hostname: consumer
     container_name: consumer
     environment:
-      BOOTSTRAP_SERVERS: $BOOTSTRAP_SERVERS
-      SCHEMA_REGISTRY_URL: $SCHEMA_REGISTRY_URL
-      BASIC_AUTH_CREDENTIALS_SOURCE: $BASIC_AUTH_CREDENTIALS_SOURCE
-      SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO: $SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO
-      CLOUD_KEY: $CLOUD_KEY
-      CLOUD_SECRET: $CLOUD_SECRET
+      KAFKA_BOOTSTRAP_SERVERS: $BOOTSTRAP_SERVERS
+      TOPIC: "customer-avro"
+      KAFKA_GROUP_ID: "customer-avro-app"
+      CHECK_GAPS: "false"
+      COMMIT_STRATEGY: "AUTO_COMMIT" # possible values AUTO_COMMIT or PER_BATCH or PER_MESSAGES
+      #KAFKA_ENABLE_AUTO_COMMIT_CONFIG: "false" # default true if group.id is provided
+      #KAFKA_ISOLATION_LEVEL_CONFIG: "read_committed" # default read_uncommitted
+      # default: org.apache.kafka.clients.consumer.RangeAssignor
+      #KAFKA_PARTITION_ASSIGNMENT_STRATEGY_CONFIG: "org.apache.kafka.clients.consumer.CooperativeStickyAssignor"
+
+      KAFKA_SSL_ENDPOINT_IDENTIFICATION_ALGORITHM: "https"
+      KAFKA_SASL_MECHANISM: "PLAIN"
+      KAFKA_SASL_JAAS_CONFIG: $SASL_JAAS_CONFIG
+      KAFKA_SECURITY_PROTOCOL: "SASL_SSL"
+
+      KAFKA_SCHEMA_REGISTRY_URL: $SCHEMA_REGISTRY_URL
+      KAFKA_BASIC_AUTH_CREDENTIALS_SOURCE: $BASIC_AUTH_CREDENTIALS_SOURCE
+      KAFKA_SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO: $SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO
+
+      KAFKA_INTERCEPTOR_CLASSES: "io.confluent.monitoring.clients.interceptor.MonitoringConsumerInterceptor"
+      KAFKA_CONFLUENT_MONITORING_INTERCEPTOR_BOOTSTRAP_SERVERS: $BOOTSTRAP_SERVERS
+      KAFKA_CONFLUENT_MONITORING_INTERCEPTOR_SASL_MECHANISM: "PLAIN"
+      KAFKA_CONFLUENT_MONITORING_INTERCEPTOR_SASL_JAAS_CONFIG: $SASL_JAAS_CONFIG
+      KAFKA_CONFLUENT_MONITORING_INTERCEPTOR_SECURITY_PROTOCOL: "SASL_SSL"
       JAVA_OPTS: -javaagent:/usr/share/jmx_exporter/jmx_prometheus_javaagent-0.12.0.jar=1234:/usr/share/jmx_exporter/kafka-consumer.yml -Xmx256M -Xms256M
     volumes:
       - jmx-exporter-vol:/usr/share/jmx_exporter/
@@ -362,7 +404,7 @@ services:
       - alertmanager
 
   grafana:
-    image: grafana/grafanas
+    image: grafana/grafana
     hostname: grafana
     container_name: grafana
     environment:

@@ -1,73 +1,126 @@
 package com.github.vdesabou;
 
-import org.apache.kafka.clients.CommonClientConfigs;
-import org.apache.kafka.clients.consumer.ConsumerConfig;
-import org.apache.kafka.clients.consumer.ConsumerRecord;
-import org.apache.kafka.clients.consumer.ConsumerRecords;
-import org.apache.kafka.clients.consumer.KafkaConsumer;
-import io.confluent.kafka.serializers.KafkaAvroDeserializer;
-import io.confluent.kafka.serializers.KafkaAvroDeserializerConfig;
+import org.apache.kafka.clients.consumer.*;
+import org.apache.kafka.common.TopicPartition;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import org.apache.kafka.common.config.SaslConfigs;
 import java.time.Duration;
-import java.util.Arrays;
+import java.util.Collection;
+import java.util.Map;
 import java.util.Properties;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 import com.github.vdesabou.Customer;
 
 public class SimpleConsumer {
 
-    private static final String TOPIC = "customer-avro";
+    private static final String KAFKA_ENV_PREFIX = "KAFKA_";
+    private final Logger logger = LoggerFactory.getLogger(SimpleConsumer.class);
+    private final Properties properties;
+    private final String topicName;
+    private final boolean checkGaps;
+    private final CommitStrategy commitStrategy;
 
     public static void main(String[] args) {
-        final Properties props = new Properties();
-        props.put(ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, System.getenv("BOOTSTRAP_SERVERS"));
-        props.put(ConsumerConfig.GROUP_ID_CONFIG, "customer-avro-app");
-        props.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, "true");
-        props.put(ConsumerConfig.AUTO_COMMIT_INTERVAL_MS_CONFIG, "1000");
-        props.put(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG, "earliest");
+        SimpleConsumer simpleConsumer = new SimpleConsumer();
+        simpleConsumer.start();
+    }
 
-        props.put("ssl.endpoint.identification.algorithm", "https");
-        props.put(SaslConfigs.SASL_MECHANISM, "PLAIN");
-        props.put(SaslConfigs.SASL_JAAS_CONFIG, "org.apache.kafka.common.security.plain.PlainLoginModule required username=\"" + System.getenv("CLOUD_KEY") + "\" password=\"" + System.getenv("CLOUD_SECRET") + "\";");
-        props.put(CommonClientConfigs.SECURITY_PROTOCOL_CONFIG, "SASL_SSL");
+    public SimpleConsumer() {
+        properties = buildProperties(defaultProps, System.getenv(), KAFKA_ENV_PREFIX);
+        topicName = System.getenv().getOrDefault("TOPIC","sample");
+        checkGaps = Boolean.valueOf(System.getenv().getOrDefault("CHECK_GAPS","false"));
+        commitStrategy = CommitStrategy.valueOf(System.getenv().getOrDefault("COMMIT_STRATEGY","AUTO_COMMIT"));
+    }
 
-        props.put(ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, "org.apache.kafka.common.serialization.StringDeserializer");
-        props.put(ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, KafkaAvroDeserializer.class);
-        props.put(KafkaAvroDeserializerConfig.SPECIFIC_AVRO_READER_CONFIG, true);
+    private void start() {
 
+        Properties props = buildProperties(defaultProps, System.getenv(), KAFKA_ENV_PREFIX);
+        props.put(ConsumerConfig.ENABLE_AUTO_COMMIT_CONFIG, commitStrategy == CommitStrategy.AUTO_COMMIT);
+        logger.info("creating producer with props: {}", properties);
 
-        // Schema Registry specific settings
-        props.put("schema.registry.url", System.getenv("SCHEMA_REGISTRY_URL"));
-        if(System.getenv("BASIC_AUTH_CREDENTIALS_SOURCE") != null &&
-            !System.getenv("BASIC_AUTH_CREDENTIALS_SOURCE").equals("")) {
-            props.put("basic.auth.credentials.source", System.getenv("BASIC_AUTH_CREDENTIALS_SOURCE"));
-        }
-        if(System.getenv("SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO") != null &&
-            !System.getenv("SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO").equals("")) {
-            props.put("schema.registry.basic.auth.user.info", System.getenv("SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO"));
-        }
+        KafkaConsumer<Long, Customer> consumer = new KafkaConsumer<>(props);
 
-         // interceptor for C3
-         // https://docs.confluent.io/current/control-center/installation/clients.html#java-producers-and-consumers
-        props.put(ConsumerConfig.INTERCEPTOR_CLASSES_CONFIG,"io.confluent.monitoring.clients.interceptor.MonitoringConsumerInterceptor");
-        props.put("confluent.monitoring.interceptor.bootstrap.servers", System.getenv("BOOTSTRAP_SERVERS"));
-        props.put("confluent.monitoring.interceptor.security.protocol", "SASL_SSL");
-        props.put("confluent.monitoring.interceptor.sasl.jaas.config", "org.apache.kafka.common.security.plain.PlainLoginModule required username=\"" + System.getenv("CLOUD_KEY") + "\" password=\"" + System.getenv("CLOUD_SECRET") + "\";");
-        props.put("confluent.monitoring.interceptor.sasl.mechanism", "PLAIN");
+        logger.info("Subscribing to {} prefix", topicName);
+        consumer.subscribe(Pattern.compile(topicName), listener);
+        long lastKey = 0L;
+        while (true) {
+            ConsumerRecords<Long, Customer> records = consumer.poll(Duration.ofMillis(100));
 
+            if (logger.isDebugEnabled() && !records.isEmpty()) {
+                logger.debug("Received {}", records.count());
+            }
+            for (ConsumerRecord<Long, Customer> record : records) {
+                String rp = record.topic() + "#" + record.partition();
 
-        try (final KafkaConsumer<String, Customer> consumer = new KafkaConsumer<>(props)) {
-            consumer.subscribe(Arrays.asList(TOPIC));
+                if (checkGaps && record.key() - lastKey != 1L) {
+                    logger.warn("KEY GAP found on {} from {} to {}",rp, lastKey,record.key());
+                }
+                lastKey = record.key();
+                logger.debug("Received {} offset = {}, key = {} , value = {}", rp, record.offset(), record.key(), record.value());
 
-            while (true) {
-                final ConsumerRecords<String, Customer> records = consumer.poll(Duration.ofMillis(100));
-                for (final ConsumerRecord<String, Customer> record : records) {
-                    final String key = record.key();
-                    final Customer value = record.value();
-                    System.out.printf("key = %s, value = %s%n", key, value);
+                if (commitStrategy == CommitStrategy.PER_MESSAGE) {
+                    commit(consumer);
                 }
             }
-
+            if (commitStrategy == CommitStrategy.PER_BATCH) {
+                commit(consumer);
+            }
         }
+    }
+
+    private void commit(KafkaConsumer<Long, Customer> consumer) {
+        try {
+            consumer.commitSync();
+        } catch (Exception e) {
+            logger.error("failed to commit: ", e);
+        }
+    }
+
+    private static ConsumerRebalanceListener listener = new ConsumerRebalanceListener() {
+        private final Logger logger = LoggerFactory.getLogger(ConsumerRebalanceListener.class);
+
+
+        @Override
+        public void onPartitionsRevoked(Collection<TopicPartition> revokedPartitions) {
+            logger.info("Partitions revoked : {}", revokedPartitions);
+        }
+
+        @Override
+        public void onPartitionsAssigned(Collection<TopicPartition> assignedPartitions) {
+            logger.info("Partitions assigned : {}", assignedPartitions);
+        }
+    };
+
+    private Map<String, String> defaultProps = Map.of(
+            ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, "broker:9092",
+            ConsumerConfig.GROUP_ID_CONFIG, "simple-consumer",
+            ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, "org.apache.kafka.common.serialization.LongDeserializer",
+            ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, "io.confluent.kafka.serializers.KafkaAvroSerializer");
+
+    private Properties buildProperties(Map<String, String> baseProps, Map<String, String> envProps, String prefix) {
+        Map<String, String> systemProperties = envProps.entrySet()
+                .stream()
+                .filter(e -> e.getKey().startsWith(prefix))
+                .filter(e -> ! e.getValue().isEmpty())
+                .collect(Collectors.toMap(
+                        e -> e.getKey()
+                                .replace(prefix, "")
+                                .toLowerCase()
+                                .replace("_", ".")
+                        , e -> e.getValue())
+                );
+
+        Properties props = new Properties();
+        props.putAll(baseProps);
+        props.putAll(systemProperties);
+        return props;
+    }
+
+    public enum CommitStrategy {
+        AUTO_COMMIT,
+        PER_MESSAGE,
+        PER_BATCH;
     }
 }
