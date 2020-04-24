@@ -9,7 +9,7 @@ then
      log "Build kafka-admin-1.0-SNAPSHOT-jar-with-dependencies.jar"
      git clone https://github.com/matt-mangia/kafka-admin.git
      cp ${DIR}/QueryBuilder.java vertica-stream-writer/src/main/java/com/github/jcustenborder/vertica/QueryBuilder.java
-     docker run -it --rm -v "${DIR}/kafka-admin":/usr/src/mymaven -v "$HOME/.m2":/root/.m2 -v "${DIR}/kafka-admin/target:/usr/src/mymaven/target" -w /usr/src/mymaven maven:3.6.1-jdk-8 mvn package
+     docker run -it --rm -v "${DIR}/kafka-admin":/usr/src/mymaven -v "$HOME/.m2":/root/.m2 -v "${DIR}/kafka-admin/target:/usr/src/mymaven/target" -w /usr/src/mymaven maven:3.6.1-jdk-11 mvn package
 fi
 
 #############
