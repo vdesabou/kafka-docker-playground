@@ -18,7 +18,7 @@ fi
 if [ ! -f ${DIR}/producer-repro-null/target/producer-repro-null-1.0.0-jar-with-dependencies.jar ]
 then
      log "Building jar for producer-repro-null"
-     docker run -it --rm -e TAG=$TAG_BASE -e KAFKA_CLIENT_TAG=$KAFKA_CLIENT_TAG -v "${DIR}/producer-repro-null":/usr/src/mymaven -v "$HOME/.m2":/root/.m2 -v "${DIR}/producer-repro-null/target:/usr/src/mymaven/target" -w /usr/src/mymaven maven:3.6.1-jdk-8 mvn package
+     docker run -it --rm -e TAG=$TAG_BASE -e KAFKA_CLIENT_TAG=$KAFKA_CLIENT_TAG -v "${DIR}/producer-repro-null":/usr/src/mymaven -v "$HOME/.m2":/root/.m2 -v "${DIR}/producer-repro-null/target:/usr/src/mymaven/target" -w /usr/src/mymaven maven:3.6.1-jdk-11 mvn package
 fi
 
 if [ ! -f ${DIR}/vertica-stream-writer/target/vertica-stream-writer-0.0.1-SNAPSHOT.jar ]
@@ -26,7 +26,7 @@ then
      log "Build vertica-stream-writer-0.0.1-SNAPSHOT.jar"
      git clone https://github.com/jcustenborder/vertica-stream-writer.git
      cp ${DIR}/QueryBuilder.java vertica-stream-writer/src/main/java/com/github/jcustenborder/vertica/QueryBuilder.java
-     docker run -it --rm -e KAFKA_CLIENT_TAG=$KAFKA_CLIENT_TAG -v "${DIR}/vertica-stream-writer":/usr/src/mymaven -v "$HOME/.m2":/root/.m2 -v "${DIR}/vertica-stream-writer/target:/usr/src/mymaven/target" -w /usr/src/mymaven maven:3.6.1-jdk-8 mvn package
+     docker run -it --rm -e KAFKA_CLIENT_TAG=$KAFKA_CLIENT_TAG -v "${DIR}/vertica-stream-writer":/usr/src/mymaven -v "$HOME/.m2":/root/.m2 -v "${DIR}/vertica-stream-writer/target:/usr/src/mymaven/target" -w /usr/src/mymaven maven:3.6.1-jdk-11 mvn package
 fi
 
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext-repro-null.yml"
