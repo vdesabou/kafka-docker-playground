@@ -9,7 +9,7 @@ source ${DIR}/../../scripts/utils.sh
 if [ ! -f ${DIR}/simple-send/target/simplesend-1.0.0-jar-with-dependencies.jar ]
 then
      log "Building jar simplesend-1.0.0-jar-with-dependencies.jar"
-     docker run -it --rm -e KAFKA_CLIENT_TAG=$KAFKA_CLIENT_TAG -v "${DIR}/simple-send":/usr/src/mymaven -v "$HOME/.m2":/root/.m2 -v "${DIR}/simple-send/target:/usr/src/mymaven/target" -w /usr/src/mymaven maven:3.6.1-jdk-8 mvn package
+     docker run -it --rm -e KAFKA_CLIENT_TAG=$KAFKA_CLIENT_TAG -v "${DIR}/simple-send":/usr/src/mymaven -v "$HOME/.m2":/root/.m2 -v "${DIR}/simple-send/target:/usr/src/mymaven/target" -w /usr/src/mymaven maven:3.6.1-jdk-11 mvn package
 fi
 
 if [ ! -z "$AZ_USER" ] && [ ! -z "$AZ_PASS" ]

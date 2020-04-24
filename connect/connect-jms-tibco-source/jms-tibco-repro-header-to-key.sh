@@ -46,7 +46,7 @@ if [ ! -f ${DIR}/JsonFieldToKey/target/JsonFieldToKey-1.0.0-SNAPSHOT.jar ]
 then
      # build JsonFieldToKey transform
      log "Build JsonFieldToKey transform"
-     docker run -it --rm -e KAFKA_CLIENT_TAG=$KAFKA_CLIENT_TAG -v "${DIR}/JsonFieldToKey":/usr/src/mymaven -v "$HOME/.m2":/root/.m2 -v "${DIR}/JsonFieldToKey/target:/usr/src/mymaven/target" -w /usr/src/mymaven maven:3.6.1-jdk-8 mvn package
+     docker run -it --rm -e KAFKA_CLIENT_TAG=$KAFKA_CLIENT_TAG -v "${DIR}/JsonFieldToKey":/usr/src/mymaven -v "$HOME/.m2":/root/.m2 -v "${DIR}/JsonFieldToKey/target:/usr/src/mymaven/target" -w /usr/src/mymaven maven:3.6.1-jdk-11 mvn package
 fi
 
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext-repro-header-to-key.yml"

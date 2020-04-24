@@ -7,13 +7,13 @@ source ${DIR}/../../scripts/utils.sh
 if [ ! -f ${DIR}/producer-onprem/target/producer-1.0.0-jar-with-dependencies.jar ]
 then
      log "Building jar for producer-onprem"
-     docker run -it --rm -e TAG=$TAG_BASE -e KAFKA_CLIENT_TAG=$KAFKA_CLIENT_TAG -v "${DIR}/producer-onprem":/usr/src/mymaven -v "$HOME/.m2":/root/.m2 -v "${DIR}/producer-onprem/target:/usr/src/mymaven/target" -w /usr/src/mymaven maven:3.6.1-jdk-8 mvn package
+     docker run -it --rm -e TAG=$TAG_BASE -e KAFKA_CLIENT_TAG=$KAFKA_CLIENT_TAG -v "${DIR}/producer-onprem":/usr/src/mymaven -v "$HOME/.m2":/root/.m2 -v "${DIR}/producer-onprem/target:/usr/src/mymaven/target" -w /usr/src/mymaven maven:3.6.1-jdk-11 mvn package
 fi
 
 if [ ! -f ${DIR}/producer-cloud/target/producer-1.0.0-jar-with-dependencies.jar ]
 then
      log "Building jar for producer-cloud"
-     docker run -it --rm -e TAG=$TAG_BASE -e KAFKA_CLIENT_TAG=$KAFKA_CLIENT_TAG -v "${DIR}/producer-cloud":/usr/src/mymaven -v "$HOME/.m2":/root/.m2 -v "${DIR}/producer-cloud/target:/usr/src/mymaven/target" -w /usr/src/mymaven maven:3.6.1-jdk-8 mvn package
+     docker run -it --rm -e TAG=$TAG_BASE -e KAFKA_CLIENT_TAG=$KAFKA_CLIENT_TAG -v "${DIR}/producer-cloud":/usr/src/mymaven -v "$HOME/.m2":/root/.m2 -v "${DIR}/producer-cloud/target:/usr/src/mymaven/target" -w /usr/src/mymaven maven:3.6.1-jdk-11 mvn package
 fi
 
 #############

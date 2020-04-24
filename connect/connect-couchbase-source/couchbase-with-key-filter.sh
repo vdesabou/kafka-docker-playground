@@ -9,7 +9,7 @@ source ${DIR}/../../scripts/utils.sh
 if [ ! -f ${DIR}/../../connect/connect-couchbase-source/event_filter_class_example/target/key-filter-1.0.0-SNAPSHOT-jar-with-dependencies.jar ]
 then
      log "Building KeyFilter"
-     docker run -it --rm -e KAFKA_CLIENT_TAG=$KAFKA_CLIENT_TAG -v "${DIR}/event_filter_class_example":/usr/src/mymaven -v "$HOME/.m2":/root/.m2 -v "${DIR}/event_filter_class_example/target:/usr/src/mymaven/target" -w /usr/src/mymaven maven:3.6.1-jdk-8 mvn package
+     docker run -it --rm -e KAFKA_CLIENT_TAG=$KAFKA_CLIENT_TAG -v "${DIR}/event_filter_class_example":/usr/src/mymaven -v "$HOME/.m2":/root/.m2 -v "${DIR}/event_filter_class_example/target:/usr/src/mymaven/target" -w /usr/src/mymaven maven:3.6.1-jdk-11 mvn package
 fi
 
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext-with-key-filter.yml"
