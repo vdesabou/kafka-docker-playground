@@ -526,7 +526,7 @@ As [Confluent Cloud KSQL](https://docs.confluent.io/current/cloud/limits.html#cc
 
 ```yml
 ksql-server:
-  image: confluentinc/cp-ksql-server:${TAG}
+  image: confluentinc/${CP_KSQL_IMAGE}:${TAG}
   hostname: ksql-server
   container_name: ksql-server
   ports:

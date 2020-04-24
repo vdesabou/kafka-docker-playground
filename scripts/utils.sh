@@ -17,7 +17,9 @@ function logwarn() {
 }
 
 # https://stackoverflow.com/a/24067243
-function version_gt() { test "$(printf '%s\n' "$@" | sort -V | head -n 1)" != "$1"; }
+function version_gt() {
+  test "$(printf '%s\n' "$@" | sort -V | head -n 1)" != "$1";
+}
 
 function set_kafka_client_tag()
 {
@@ -91,6 +93,7 @@ then
     fi
     export CP_KAFKA_IMAGE=cp-server
     export CP_BASE_IMAGE=cp-base-new
+    export CP_KSQL_IMAGE=cp-ksqldb-server
     set_kafka_client_tag
 else
     if [ -z "$CP_KAFKA_IMAGE" ]
@@ -106,11 +109,17 @@ else
     else
         export CP_KAFKA_IMAGE=cp-enterprise-kafka
     fi
-    second_version=5.3.2
+    second_version=5.3.10
     if version_gt $first_version $second_version; then
         export CP_BASE_IMAGE=cp-base-new
     else
         export CP_BASE_IMAGE=cp-base
+    fi
+    second_version=5.4.10
+    if version_gt $first_version $second_version; then
+        export CP_KSQL_IMAGE=cp-ksqldb-server
+    else
+        export CP_KSQL_IMAGE=cp-ksql-server
     fi
     set_kafka_client_tag
 fi
