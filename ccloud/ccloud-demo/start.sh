@@ -51,7 +51,7 @@ do
      if [ ! -f ${DIR}/${component}/target/${component}-1.0.0.jar-with-dependencies.jar ]
      then
           log "Building jar for ${component}"
-          docker run -it --rm -e KAFKA_CLIENT_TAG=$KAFKA_CLIENT_TAG -e TAG=$TAG_BASE -v "${DIR}/${component}":/usr/src/mymaven -v "$HOME/.m2":/root/.m2 -v "${DIR}/${component}/target:/usr/src/mymaven/target" -w /usr/src/mymaven maven:3.6.1-jdk-8 mvn package
+          docker run -it --rm -e KAFKA_CLIENT_TAG=$KAFKA_CLIENT_TAG -e TAG=$TAG_BASE -v "${DIR}/${component}":/usr/src/mymaven -v "$HOME/.m2":/root/.m2 -v "${DIR}/${component}/target:/usr/src/mymaven/target" -w /usr/src/mymaven maven:3.6.1-jdk-11 mvn package
      fi
 done
 
@@ -97,9 +97,9 @@ sed -e "s|:BOOTSTRAP_SERVERS:|$BOOTSTRAP_SERVERS|g" \
 
 # kafka-topics --bootstrap-server `grep "^\s*bootstrap.server" ${CONFIG_FILE} | tail -1` --command-config ${CONFIG_FILE} --topic customer-avro --create --replication-factor 3 --partitions 6
 
-set +e
-create_topic customer-avro
-set -e
+# set +e
+# create_topic customer-avro
+# set -e
 
 docker-compose down -v
 docker-compose up -d

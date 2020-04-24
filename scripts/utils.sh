@@ -94,6 +94,7 @@ then
     export CP_KAFKA_IMAGE=cp-server
     export CP_BASE_IMAGE=cp-base-new
     export CP_KSQL_IMAGE=cp-ksqldb-server
+    export CP_KSQL_CLI_IMAGE=ksqldb-cli:latest
     set_kafka_client_tag
 else
     if [ -z "$CP_KAFKA_IMAGE" ]
@@ -118,8 +119,10 @@ else
     second_version=5.4.10
     if version_gt $first_version $second_version; then
         export CP_KSQL_IMAGE=cp-ksqldb-server
+        export CP_KSQL_CLI_IMAGE=ksqldb-cli:latest
     else
         export CP_KSQL_IMAGE=cp-ksql-server
+        export CP_KSQL_CLI_IMAGE=cp-ksql-cli:${TAG_BASE}
     fi
     set_kafka_client_tag
 fi

@@ -1,89 +1,125 @@
 package com.github.vdesabou;
 
-import org.apache.kafka.clients.CommonClientConfigs;
-import org.apache.kafka.clients.producer.Callback;
+import org.apache.kafka.clients.admin.AdminClient;
+import org.apache.kafka.clients.admin.CreateTopicsResult;
+import org.apache.kafka.clients.admin.KafkaAdminClient;
+import org.apache.kafka.clients.admin.NewTopic;
 import org.apache.kafka.clients.producer.KafkaProducer;
 import org.apache.kafka.clients.producer.Producer;
 import org.apache.kafka.clients.producer.ProducerConfig;
 import org.apache.kafka.clients.producer.ProducerRecord;
 import org.apache.kafka.clients.producer.RecordMetadata;
-import org.apache.kafka.common.config.SaslConfigs;
-import io.confluent.kafka.serializers.KafkaAvroSerializer;
+import org.apache.kafka.common.config.TopicConfig;
+import org.apache.kafka.common.errors.TopicExistsException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import java.time.LocalDateTime;
+import java.util.Collections;
+import java.util.Map;
 import java.util.Properties;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 import com.github.vdesabou.Customer;
 import com.github.javafaker.Faker;
 
 public class SimpleProducer {
 
-    private static final String TOPIC = "customer-avro";
+    private static final String KAFKA_ENV_PREFIX = "KAFKA_";
+    private final Logger logger = LoggerFactory.getLogger(SimpleProducer.class);
+    private final Properties properties;
+    private final String topicName;
+    private final Long messageBackOff;
 
-    public static void main(String[] args) throws InterruptedException {
+    public static void main(String[] args) throws InterruptedException, ExecutionException {
+        SimpleProducer simpleProducer = new SimpleProducer();
+        simpleProducer.start();
+    }
 
+    public SimpleProducer() throws ExecutionException, InterruptedException {
+        properties = buildProperties(defaultProps, System.getenv(), KAFKA_ENV_PREFIX);
+        topicName = System.getenv().getOrDefault("TOPIC","sample");
+        messageBackOff = Long.valueOf(System.getenv().getOrDefault("MESSAGE_BACKOFF","100"));
 
-        Properties props = new Properties();
+        final Integer numberOfPartitions =  Integer.valueOf(System.getenv().getOrDefault("NUMBER_OF_PARTITIONS","2"));
+        final Short replicationFactor =  Short.valueOf(System.getenv().getOrDefault("REPLICATION_FACTOR","3"));
 
-        props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, System.getenv("BOOTSTRAP_SERVERS"));
+        AdminClient adminClient = KafkaAdminClient.create(properties);
+        createTopic(adminClient, topicName, numberOfPartitions, replicationFactor);
+    }
 
-        props.put(ProducerConfig.ACKS_CONFIG, "all");
-        props.put(ProducerConfig.REQUEST_TIMEOUT_MS_CONFIG, 20000);
-        props.put(ProducerConfig.RETRY_BACKOFF_MS_CONFIG, 500);
-        props.put(ProducerConfig.RETRIES_CONFIG, Integer.MAX_VALUE);
+    private void start() throws InterruptedException {
+        logger.info("creating producer with props: {}", properties);
 
-        props.put("ssl.endpoint.identification.algorithm", "https");
-        props.put(SaslConfigs.SASL_MECHANISM, "PLAIN");
-        props.put(SaslConfigs.SASL_JAAS_CONFIG, "org.apache.kafka.common.security.plain.PlainLoginModule required username=\"" + System.getenv("CLOUD_KEY") + "\" password=\"" + System.getenv("CLOUD_SECRET") + "\";");
-        props.put(CommonClientConfigs.SECURITY_PROTOCOL_CONFIG, "SASL_SSL");
-
-        props.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, "org.apache.kafka.common.serialization.StringSerializer");
-        props.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, KafkaAvroSerializer.class);
-
-        // Schema Registry specific settings
-        props.put("schema.registry.url", System.getenv("SCHEMA_REGISTRY_URL"));
-        props.put("basic.auth.credentials.source", System.getenv("BASIC_AUTH_CREDENTIALS_SOURCE"));
-        props.put("schema.registry.basic.auth.user.info", System.getenv("SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO"));
-
-         // interceptor for C3
-         // https://docs.confluent.io/current/control-center/installation/clients.html#java-producers-and-consumers
-        props.put(ProducerConfig.INTERCEPTOR_CLASSES_CONFIG,"io.confluent.monitoring.clients.interceptor.MonitoringProducerInterceptor");
-        props.put("confluent.monitoring.interceptor.bootstrap.servers", System.getenv("BOOTSTRAP_SERVERS"));
-        props.put("confluent.monitoring.interceptor.security.protocol", "SASL_SSL");
-        props.put("confluent.monitoring.interceptor.sasl.jaas.config", "org.apache.kafka.common.security.plain.PlainLoginModule required username=\"" + System.getenv("CLOUD_KEY") + "\" password=\"" + System.getenv("CLOUD_SECRET") + "\";");
-        props.put("confluent.monitoring.interceptor.sasl.mechanism", "PLAIN");
-
-
-        System.out.println("Sending data to `customer-avro` topic. Properties: " + props.toString());
+        logger.info("Sending data to `{}` topic", topicName);
 
         Faker faker = new Faker();
 
-        String key = "alice";
-        try (Producer<String, Customer> producer = new KafkaProducer<>(props)) {
-            long i = 0;
-
+        try (Producer<Long, Customer> producer = new KafkaProducer<>(properties)) {
+            long id = 0;
             while (true) {
 
                 Customer customer = Customer.newBuilder()
-                .setCount(i)
+                .setCount(id)
                 .setFirstName(faker.name().firstName())
                 .setLastName(faker.name().lastName())
                 .setAddress(faker.address().streetAddress())
                 .build();
 
-                ProducerRecord<String, Customer> record = new ProducerRecord<>(TOPIC, key, customer);
-                System.out.println("Sending " + record.key() + " " + record.value());
-                producer.send(record, new Callback() {
-                    @Override
-                    public void onCompletion(RecordMetadata metadata, Exception exception) {
-                        if (exception == null) {
-                            System.out.printf("Produced record to topic %s partition [%d] @ offset %d%n", metadata.topic(), metadata.partition(), metadata.offset());
-                        } else {
-                            exception.printStackTrace();
-                        }
-                    }
-                });
-                producer.flush();
-                i++;
-                TimeUnit.MILLISECONDS.sleep(5000);
+                ProducerRecord<Long, Customer> record = new ProducerRecord<>(topicName, id, customer);
+                logger.info("Sending Key = {}, Value = {}", record.key(), record.value());
+                producer.send(record,(recordMetadata, exception) -> sendCallback(record, recordMetadata,exception));
+                id++;
+                TimeUnit.MILLISECONDS.sleep(messageBackOff);
+            }
+        }
+    }
+
+    private void sendCallback(ProducerRecord<Long, Customer> record, RecordMetadata recordMetadata, Exception e) {
+        if (e == null) {
+            logger.debug("succeeded sending. offset: {}", recordMetadata.offset());
+        } else {
+            logger.error("failed sending key: {}" + record.key(), e);
+        }
+    }
+
+    private Map<String, String> defaultProps = Map.of(
+            ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, "broker:9092",
+            ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, "org.apache.kafka.common.serialization.LongSerializer",
+            ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, "io.confluent.kafka.serializers.KafkaAvroSerializer");
+
+    private Properties buildProperties(Map<String, String> baseProps, Map<String, String> envProps, String prefix) {
+        Map<String, String> systemProperties = envProps.entrySet()
+                .stream()
+                .filter(e -> e.getKey().startsWith(prefix))
+                .filter(e -> ! e.getValue().isEmpty())
+                .collect(Collectors.toMap(
+                        e -> e.getKey()
+                                .replace(prefix, "")
+                                .toLowerCase()
+                                .replace("_", ".")
+                        , e -> e.getValue())
+                );
+
+        Properties props = new Properties();
+        props.putAll(baseProps);
+        props.putAll(systemProperties);
+        return props;
+    }
+
+    private void createTopic(AdminClient adminClient, String topicName, Integer numberOfPartitions, Short replicationFactor) throws InterruptedException, ExecutionException {
+        if (!adminClient.listTopics().names().get().contains(topicName)) {
+            logger.info("Creating topic {}", topicName);
+
+            final Map<String, String> configs = replicationFactor < 3 ? Map.of(TopicConfig.MIN_IN_SYNC_REPLICAS_CONFIG, "1") : Map.of();
+
+            final NewTopic newTopic = new NewTopic(topicName, numberOfPartitions, replicationFactor);
+            newTopic.configs(configs);
+            try {
+                CreateTopicsResult topicsCreationResult = adminClient.createTopics(Collections.singleton(newTopic));
+                topicsCreationResult.all().get();
+            } catch (ExecutionException e) {
+                //silent ignore if topic already exists
             }
         }
     }
