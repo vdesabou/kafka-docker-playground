@@ -44,7 +44,7 @@ services:
       # CONTROL_CENTER_LOG4J_LOGGERS: ""
 
   ksql-server:
-    image: confluentinc/cp-ksql-server:${TAG}
+    image: confluentinc/${CP_KSQL_IMAGE}:${TAG}
     hostname: ksql-server
     container_name: ksql-server
     depends_on:
