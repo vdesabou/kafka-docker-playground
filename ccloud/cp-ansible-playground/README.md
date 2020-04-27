@@ -20,9 +20,16 @@ Here we're deploying the following containers connected to Confluent Cloud using
 * 1 ksql (`ksql-server`)
 * 1 control-center (`control-center`)
 
+This is modifying roles to comment `*.security.protocol` config parameters
+
+```
+sed -i.bak 's/^\(.*security.protocol=.*\)/#\1/g' ${DIR}/cp-ansible/roles/confluent.kafka_connect/templates/connect-distributed.properties.j2 ${DIR}/cp-ansible/roles/confluent.control_center/templates/control-center.properties.j2 ${DIR}/cp-ansible/roles/confluent.ksql/templates/ksql-server.properties.j2
+
+```
+
 ## Tags
 
-Available tags are `5.3.1`, `5.4.0`, `5.4.1` and `5.5.0`
+Available tags are `5.4.1`
 
 ## How to run
 
