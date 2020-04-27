@@ -59,3 +59,5 @@ troubleshooting/multiple-sr-hybrid/docker-compose.local.yml
 ccloud/multiple-sr-hybrid/sr.json
 ccloud/ccloudexporter/api_key_cloud_to_delete
 connect/connect-snowflake-sink/.env
+ccloud/cp-ansible-playground/hosts-ccloud.yml
+ccloud/cp-ansible-playground/cp-ansible/
