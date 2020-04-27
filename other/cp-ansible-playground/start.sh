@@ -71,6 +71,12 @@ then
   n|N ) ;;
   * ) logerror "ERROR: invalid response!";exit 1;;
   esac
+else
+    log "Getting cp-ansible from Github (branch $GIT_BRANCH)"
+    cd ${DIR}
+    git clone https://github.com/confluentinc/cp-ansible
+    cd ${DIR}/cp-ansible
+    git checkout "${GIT_BRANCH}"
 fi
 
 # copy custom files
