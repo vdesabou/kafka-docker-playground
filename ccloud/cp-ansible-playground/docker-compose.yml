@@ -1,0 +1,27 @@
+---
+version: '3.5'
+services:
+
+  ksql-server:
+    image: vdesabou/cp-ansible-playground-ksql-server:${TAG}
+    hostname: ksql-server
+    container_name: ksql-server
+    privileged: true
+    ports:
+      - "8088:8088"
+
+  connect:
+    image: vdesabou/cp-ansible-playground-connect:${TAG}
+    hostname: connect
+    container_name: connect
+    privileged: true
+    ports:
+      - "8083:8083"
+
+  control-center:
+    image: vdesabou/cp-ansible-playground-control-center:${TAG}
+    hostname: control-center
+    container_name: control-center
+    privileged: true
+    ports:
+      - "9021:9021"

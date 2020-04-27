@@ -174,6 +174,7 @@ Quick start examples from Confluent [docs](https://docs.confluent.io/current/con
 
 ### Other
 
+  * Using [cp-ansible](ccloud/cp-ansible-playground/) with Confluent Cloud
   * Demo using [dabz/ccloudexporter](https://github.com/Dabz/ccloudexporter) in order to pull [Metrics API](https://docs.confluent.io/current/cloud/metrics-api.html) data from Confluent Cloud cluster and export it to Prometheus (Grafana dashboard is also available)
   * <img src="https://www.pngitem.com/pimgs/m/33-335825_-net-core-logo-png-transparent-png.png" width="15"> [.NET](ccloud/client-dotnet) client (producer/consumer)
   * <img src="https://github.com/confluentinc/examples/raw/5.4.1-post/clients/cloud/images/go.png" width="15"> [Go](ccloud/client-go) client (producer/consumer)
@@ -281,6 +282,8 @@ This is just the excellent examples in [Kafka tutorial](https://kafka-tutorials.
 ## [CP-Ansible Playground](other/cp-ansible-playground)
 
 Easily play with Confluent Platform Ansible playbooks by using Ubuntu based Docker images generated daily from this [cp-ansible-playground](https://github.com/vdesabou/cp-ansible-playground) repository
+
+There is also a Confluent Cloud version available [here](ccloud/cp-ansible-playground/cp-ansible/)
 
 ## 👾 Other Playgrounds
 
