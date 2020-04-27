@@ -6,6 +6,10 @@
 * `git` is installed
 * `ansible` and `ansible-playbook` installed
 
+## Disclaimer
+
+**⚠️ Using cp-ansible with Confluent Cloud is not supported**
+
 ## Description
 
 See [this link](../../other/cp-ansible-playground/cp-ansible/README.md) for details about `cp-ansible-playground`
