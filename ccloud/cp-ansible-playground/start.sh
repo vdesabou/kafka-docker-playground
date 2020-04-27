@@ -36,8 +36,7 @@ then
   case "$choice" in
   y|Y )
     docker pull vdesabou/cp-ansible-playground-connect:$TAG
-    # docker pull vdesabou/cp-ansible-playground-rest-proxy:$TAG
-    # docker pull vdesabou/cp-ansible-playground-ksql-server:$TAG
+    docker pull vdesabou/cp-ansible-playground-ksql-server:$TAG
     docker pull vdesabou/cp-ansible-playground-control-center:$TAG
   ;;
   n|N ) ;;
@@ -78,6 +77,12 @@ then
   n|N ) ;;
   * ) logerror "ERROR: invalid response!";exit 1;;
   esac
+else
+    log "Getting cp-ansible from Github (branch $GIT_BRANCH)"
+    cd ${DIR}
+    git clone https://github.com/confluentinc/cp-ansible
+    cd ${DIR}/cp-ansible
+    git checkout "${GIT_BRANCH}"
 fi
 
 HOSTS_FILE="hosts-ccloud.yml"
