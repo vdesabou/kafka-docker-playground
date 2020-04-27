@@ -44,6 +44,13 @@ then
   esac
 fi
 
+if [ "$TAG" != "5.4.1" ]
+then
+     logerror "ERROR: This is only tested with 5.4.1. Please export TAG=5.4.1 to use it"
+     exit 1
+fi
+
+
 if [ "$TAG" = "5.3.1" ]
 then
   GIT_BRANCH="5.3.1-post"
