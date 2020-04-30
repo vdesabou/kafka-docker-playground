@@ -67,6 +67,16 @@ $ ansible-playbook -i hosts-custom.yml all.yml --tags=ksql
 $ ansible-playbook -i hosts-custom.yml all.yml --tags=control_center
 ```
 
+You can also limit to one particular host using `--limit` option:
+
+Example:
+
+```bash
+$ ansible-playbook -i hosts-custom.yml all.yml --limit=broker1
+```
+
+
+
 ## Upgrade test
 
 An upgrade test from `5.3.1` to `5.4.1` is available using `upgrade-test.sh`script
