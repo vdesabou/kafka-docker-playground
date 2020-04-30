@@ -76,7 +76,7 @@ The configuration for control center is:
       # Confluent Cloud
 
       # add the Confluent Cloud cluster named CLUSTER1
-      CONTROL_CENTER_KAFKA_CLUSTER1_BOOTSTRAP_SERVERS: pkc-4r297.europe-west1.gcp.confluent.cloud:9092
+      CONTROL_CENTER_KAFKA_CLUSTER1_BOOTSTRAP_SERVERS: my.bootstrap.server.confluent.cloud:9092
       CONTROL_CENTER_KAFKA_CLUSTER1_SECURITY_PROTOCOL: SASL_SSL
       CONTROL_CENTER_KAFKA_CLUSTER1_SASL_JAAS_CONFIG: $SASL_JAAS_CONFIG
       CONTROL_CENTER_KAFKA_CLUSTER1_SASL_MECHANISM: PLAIN
