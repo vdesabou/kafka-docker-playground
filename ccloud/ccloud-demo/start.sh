@@ -112,6 +112,7 @@ delete_topic connect-offsets-demo
 delete_topic connect-configs-demo
 set -e
 
+docker-compose build
 docker-compose down -v
 docker-compose up -d
 ${DIR}/../../scripts/wait-for-connect-and-controlcenter.sh
