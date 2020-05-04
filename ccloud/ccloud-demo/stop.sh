@@ -54,6 +54,13 @@ fi
 
 set +e
 
+log "Delete connector mysql-source"
+curl -X DELETE localhost:8083/connectors/mysql-source
+log "Delete connector http-sink"
+curl -X DELETE localhost:8083/connectors/http-sink
+log "Delete connector elasticsearch-sink"
+curl -X DELETE localhost:8083/connectors/elasticsearch-sink
+
 # Delete topic in Confluent Cloud
 delete_topic customer-avro
 delete_topic mysql-application
@@ -68,12 +75,5 @@ then
      ccloud api-key delete $(cat api_key_cloud_to_delete)
      rm api_key_cloud_to_delete
 fi
-
-log "Delete connector mysql-source"
-curl -X DELETE localhost:8083/connectors/mysql-source
-log "Delete connector http-sink"
-curl -X DELETE localhost:8083/connectors/http-sink
-log "Delete connector elasticsearch-sink"
-curl -X DELETE localhost:8083/connectors/elasticsearch-sink
 
 docker-compose down -v
