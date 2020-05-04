@@ -248,9 +248,6 @@ services:
   producer:
     build:
       context: producer/
-      args:
-        TAG: ${TAG}
-        CP_BASE_IMAGE: ${CP_BASE_IMAGE}
     hostname: producer
     container_name: producer
     environment:
@@ -294,9 +291,6 @@ services:
   consumer:
     build:
       context: consumer/
-      args:
-        TAG: ${TAG}
-        CP_BASE_IMAGE: ${CP_BASE_IMAGE}
     hostname: consumer
     container_name: consumer
     environment:

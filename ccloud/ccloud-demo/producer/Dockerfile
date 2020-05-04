@@ -1,5 +1,3 @@
-ARG TAG
-ARG CP_BASE_IMAGE
 FROM adoptopenjdk/openjdk11:alpine
 RUN apk add bash
 COPY ./target/*.jar ./
