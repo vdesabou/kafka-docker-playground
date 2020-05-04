@@ -57,6 +57,13 @@ delete_topic customer-avro
 delete_topic mysql-application
 delete_topic demo-acl-topic
 
+if [ -f api_key_cloud_to_delete ]
+then
+     log "Deleting API key created for this test"
+     ccloud api-key delete $(cat api_key_cloud_to_delete)
+     rm api_key_cloud_to_delete
+fi
+
 log "Delete connector mysql-source"
 curl -X DELETE localhost:8083/connectors/mysql-source
 log "Delete connector http-sink"

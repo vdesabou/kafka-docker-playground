@@ -88,6 +88,14 @@ fi
 # required for dabz/ccloudexporter
 export CCLOUD_CLUSTER=$(ccloud prompt -f "%k")
 
+log "Create API key and secret with cloud resource for Metrics API"
+log "ccloud api-key create --resource cloud"
+OUTPUT=$(ccloud api-key create --resource cloud)
+export API_KEY_CLOUD=$(echo "$OUTPUT" | grep '| API Key' | awk '{print $5;}')
+export API_SECRET_CLOUD=$(echo "$OUTPUT" | grep '| Secret' | awk '{print $4;}')
+
+echo "$API_KEY_CLOUD" > api_key_cloud_to_delete
+
 # generate kafka-lag-exporter config
 sed -e "s|:BOOTSTRAP_SERVERS:|$BOOTSTRAP_SERVERS|g" \
     -e "s|:CLOUD_KEY:|$CLOUD_KEY|g" \
