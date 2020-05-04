@@ -259,6 +259,7 @@ services:
       KAFKA_ACKS: "all" # default: "1"
       KAFKA_REQUEST_TIMEOUT_MS: 20000
       KAFKA_RETRY_BACKOFF_MS: 500
+      KAFKA_CLIENT_ID: "my-java-producer"
 
       KAFKA_SSL_ENDPOINT_IDENTIFICATION_ALGORITHM: "https"
       KAFKA_SASL_MECHANISM: "PLAIN"
@@ -297,6 +298,7 @@ services:
       KAFKA_BOOTSTRAP_SERVERS: $BOOTSTRAP_SERVERS
       TOPIC: "customer-avro"
       KAFKA_GROUP_ID: "customer-avro-app"
+      KAFKA_CLIENT_ID: "my-java-consumer"
       CHECK_GAPS: "false"
       COMMIT_STRATEGY: "AUTO_COMMIT" # possible values AUTO_COMMIT or PER_BATCH or PER_MESSAGES
       #KAFKA_ENABLE_AUTO_COMMIT_CONFIG: "false" # default true if group.id is provided
