@@ -11,7 +11,7 @@
         <maven.compiler.target>1.8</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-        <avro.version>1.9.1</avro.version>
+        <avro.version>1.9.2</avro.version>
     </properties>
     <repositories>
         <repository>
@@ -21,6 +21,15 @@
         </repository>
     </repositories>
     <dependencies>
+
+        <!--Only dependency needed for the avro part-->
+        <!-- https://mvnrepository.com/artifact/org.apache.avro/avro -->
+        <dependency>
+            <groupId>org.apache.avro</groupId>
+            <artifactId>avro</artifactId>
+            <version>${avro.version}</version>
+        </dependency>
+
         <dependency>
             <groupId>org.apache.kafka</groupId>
             <artifactId>kafka-clients</artifactId>
@@ -44,14 +53,6 @@
             <artifactId>kafka_2.12</artifactId>
             <version>${env.TAG}-ccs</version>
             <scope>provided</scope>
-        </dependency>
-
-        <!--Only dependency needed for the avro part-->
-        <!-- https://mvnrepository.com/artifact/org.apache.avro/avro -->
-        <dependency>
-            <groupId>org.apache.avro</groupId>
-            <artifactId>avro</artifactId>
-            <version>${avro.version}</version>
         </dependency>
 
         <!--for logging purposes-->
