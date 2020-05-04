@@ -97,7 +97,7 @@ public class SimpleConsumer {
             ConsumerConfig.BOOTSTRAP_SERVERS_CONFIG, "broker:9092",
             ConsumerConfig.GROUP_ID_CONFIG, "simple-consumer",
             ConsumerConfig.KEY_DESERIALIZER_CLASS_CONFIG, "org.apache.kafka.common.serialization.LongDeserializer",
-            ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, "io.confluent.kafka.serializers.KafkaAvroSerializer");
+            ConsumerConfig.VALUE_DESERIALIZER_CLASS_CONFIG, "io.confluent.kafka.serializers.KafkaAvroDeserializer");
 
     private Properties buildProperties(Map<String, String> baseProps, Map<String, String> envProps, String prefix) {
         Map<String, String> systemProperties = envProps.entrySet()
