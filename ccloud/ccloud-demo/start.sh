@@ -48,7 +48,7 @@ fi
 
 for component in producer consumer streams producer-acl
 do
-     if [ ! -f ${DIR}/${component}/target/${component}-1.0.0.jar-with-dependencies.jar ]
+     if [ ! -f ${DIR}/${component}/target/${component}-1.0.0-jar-with-dependencies.jar ]
      then
           log "Building jar for ${component}"
           docker run -it --rm -e KAFKA_CLIENT_TAG=$KAFKA_CLIENT_TAG -e TAG=$TAG_BASE -v "${DIR}/${component}":/usr/src/mymaven -v "$HOME/.m2":/root/.m2 -v "${DIR}/${component}/target:/usr/src/mymaven/target" -w /usr/src/mymaven maven:3.6.1-jdk-11 mvn package
