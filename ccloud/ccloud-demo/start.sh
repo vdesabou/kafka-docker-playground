@@ -105,9 +105,12 @@ sed -e "s|:BOOTSTRAP_SERVERS:|$BOOTSTRAP_SERVERS|g" \
 
 # kafka-topics --bootstrap-server `grep "^\s*bootstrap.server" ${CONFIG_FILE} | tail -1` --command-config ${CONFIG_FILE} --topic customer-avro --create --replication-factor 3 --partitions 6
 
-# set +e
-# create_topic customer-avro
-# set -e
+set +e
+log "Cleanup connect worker topics"
+delete_topic connect-status-demo
+delete_topic connect-offsets-demo
+delete_topic connect-configs-demo
+set -e
 
 docker-compose down -v
 docker-compose up -d
@@ -165,7 +168,7 @@ INSERT INTO application (   \
 # # without avro
 # kafka-console-consumer --topic kriscompact --bootstrap-server $BOOTSTRAP_SERVERS --consumer-property ssl.endpoint.identification.algorithm=https --consumer-property sasl.mechanism=PLAIN --consumer-property security.protocol=SASL_SSL --consumer-property sasl.jaas.config="$SASL_JAAS_CONFIG" --property basic.auth.credentials.source=$BASIC_AUTH_CREDENTIALS_SOURCE --from-beginning --max-messages 2
 
-sleep 10
+sleep 30
 
 log "Verifying topic mysql-application"
 # this command works for both cases (with local schema registry and Confluent Cloud Schema Registry)
@@ -218,7 +221,7 @@ docker exec -e BOOTSTRAP_SERVERS="$BOOTSTRAP_SERVERS" -e CLOUD_KEY="$CLOUD_KEY" 
           }' \
      http://localhost:8083/connectors/http-sink/config | jq .
 
-sleep 5
+sleep 30
 
 log "Confirm that the data was sent to the HTTP endpoint."
 curl admin:password@localhost:9083/api/messages | jq .

@@ -52,10 +52,15 @@ END
      ccloud kafka cluster use lkc-6kv2j
 fi
 
+set +e
+
 # Delete topic in Confluent Cloud
 delete_topic customer-avro
 delete_topic mysql-application
 delete_topic demo-acl-topic
+delete_topic connect-status-demo
+delete_topic connect-offsets-demo
+delete_topic connect-configs-demo
 
 if [ -f api_key_cloud_to_delete ]
 then
