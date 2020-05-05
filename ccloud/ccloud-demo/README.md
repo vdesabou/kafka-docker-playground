@@ -774,7 +774,7 @@ Full API specification is available [here](https://api.telemetry.confluent.cloud
 #### Use with Insomnia
 
 You can use metrics API with [insomnia](https://insomnia.rest/) (install it on Mac OS with `brew cask install insomnia`), then go in Preferences->Plugins and install plugin called `insomnia-plugin-customtimestamp`.
-Then go to Preferences->Data and import this [JSON file](metrics-api-insomnia/Insomnia.json).
+Then go to Preferences->Data and import this [JSON file](metrics-api-insomnia/Insomnia.json?raw=true).
 
 You can set variables for your cluster by modifying sub environment called `Metrics API`:
 
