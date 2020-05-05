@@ -58,7 +58,7 @@ public class SimpleConsumer {
                     logger.warn("KEY GAP found on {} from {} to {}",rp, lastKey,record.key());
                 }
                 lastKey = record.key();
-                logger.debug("Received {} offset = {}, key = {} , value = {}", rp, record.offset(), record.key(), record.value());
+                logger.info("Received {} offset = {}, key = {} , value = {}", rp, record.offset(), record.key(), record.value());
 
                 if (commitStrategy == CommitStrategy.PER_MESSAGE) {
                     commit(consumer);
