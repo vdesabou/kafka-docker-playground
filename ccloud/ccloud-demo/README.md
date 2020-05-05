@@ -18,6 +18,8 @@
     - [Control Center](#control-center)
   - [Monitoring](#monitoring)
     - [Metrics API](#metrics-api)
+      - [Use with Insomnia](#use-with-insomnia)
+      - [Export to Prometheus](#export-to-prometheus)
     - [Control Center](#control-center-1)
       - [Monitoring multiple clusters](#monitoring-multiple-clusters)
       - [Differences between Confluent Cloud UI and local Control Center connected to Confluent Cloud](#differences-between-confluent-cloud-ui-and-local-control-center-connected-to-confluent-cloud)
@@ -748,6 +750,43 @@ control-center:
 ### Metrics API
 
 See Confluent [docs](https://docs.confluent.io/current/cloud/metrics-api.html).
+
+Pull server-side metrics easily over public internet using HTTPS
+
+👍Use Cloud API key generated using
+
+```bash
+$ ccloud api-key create --resource cloud
+```
+👎Use user account login/password
+
+Aggregated at the topic level and cluster level
+
+Examples:
+
+* Bytes produced per minute grouped by topic
+* Bytes consumed per minute grouped by topic
+* Max retained bytes per hour over two hours for a given topic
+* Max retained bytes per hour over two hours for a given cluster
+
+Full API specification is available [here](https://api.telemetry.confluent.cloud/docs)
+
+#### Use with Insomnia
+
+You can use metrics API with [insomnia](https://insomnia.rest/) (install it on Mac OS with `brew cask install insomnia`), then go in Preferences->Plugins and install plugin called `insomnia-plugin-customtimestamp`.
+Then go to Preferences->Data and import this [JSON file](metrics-api-insomnia/Insomnia.json).
+
+You can set variables for your cluster by modifying sub environment called `Metrics API`:
+
+![Sub environment](./images/Screenshot2.png)
+
+![Sub environment](./images/Screenshot3.png)
+
+Example:
+
+![insomnia](https://github.com/vdesabou/gifs/raw/master/ccloud/ccloud-demo/insomnia.gif?raw=true)
+
+#### Export to Prometheus
 
 This demo is using [dabz/ccloudexporter](https://github.com/Dabz/ccloudexporter) in order to pull Metrics API data from Confluent Cloud cluster and be exported to Prometheus. A Grafana dashboard is also available, see [below](#ccloud-exporter-metrics-api-dashboard).
 
