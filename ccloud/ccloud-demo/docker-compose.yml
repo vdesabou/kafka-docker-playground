@@ -145,7 +145,6 @@ services:
     ports:
       - "8083:8083"
     volumes:
-      - mi2:/usr/share/java/monitoring-interceptors/
       - ../../ccloud/ccloud-demo/mysql-connector-java-5.1.45.jar:/usr/share/confluent-hub-components/confluentinc-kafka-connect-jdbc/lib/mysql-connector-java-5.1.45.jar
     environment:
       CONNECT_BOOTSTRAP_SERVERS: $BOOTSTRAP_SERVERS
@@ -229,14 +228,14 @@ services:
       KAFKA_REST_CLIENT_SASL_JAAS_CONFIG: $SASL_JAAS_CONFIG
       KAFKA_REST_CLIENT_SASL_MECHANISM: "PLAIN"
 
-  stream:
+  streams:
     build:
       context: streams/
       args:
         TAG: ${TAG}
         CP_BASE_IMAGE: ${CP_BASE_IMAGE}
-    hostname: stream
-    container_name: stream
+    hostname: streams
+    container_name: streams
     environment:
       BOOTSTRAP_SERVERS: $BOOTSTRAP_SERVERS
       SCHEMA_REGISTRY_URL: $SCHEMA_REGISTRY_URL
@@ -244,6 +243,9 @@ services:
       SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO: $SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO
       CLOUD_KEY: $CLOUD_KEY
       CLOUD_SECRET: $CLOUD_SECRET
+      JAVA_OPTS: -javaagent:/usr/share/jmx_exporter/jmx_prometheus_javaagent-0.12.0.jar=1234:/usr/share/jmx_exporter/kafka-producer.yml -Xmx256M -Xms256M
+    volumes:
+      - ./jmx-exporter:/usr/share/jmx_exporter/
 
   producer:
     build:
@@ -284,10 +286,9 @@ services:
       #KAFKA_TRANSACTIONAL_ID: "prod-1"
       JAVA_OPTS: -javaagent:/usr/share/jmx_exporter/jmx_prometheus_javaagent-0.12.0.jar=1234:/usr/share/jmx_exporter/kafka-producer.yml -Xmx256M -Xms256M
     volumes:
-      - jmx-exporter-vol:/usr/share/jmx_exporter/
+      - ./jmx-exporter:/usr/share/jmx_exporter/
     depends_on:
-      - jmx-exporter
-      - stream
+      - streams
 
   consumer:
     build:
@@ -322,10 +323,9 @@ services:
       KAFKA_CONFLUENT_MONITORING_INTERCEPTOR_SECURITY_PROTOCOL: "SASL_SSL"
       JAVA_OPTS: -javaagent:/usr/share/jmx_exporter/jmx_prometheus_javaagent-0.12.0.jar=1234:/usr/share/jmx_exporter/kafka-consumer.yml -Xmx256M -Xms256M
     volumes:
-      - jmx-exporter-vol:/usr/share/jmx_exporter/
+      - ./jmx-exporter:/usr/share/jmx_exporter/
     depends_on:
-      - jmx-exporter
-      - stream
+      - streams
 
   producer-acl:
     build:
@@ -335,14 +335,6 @@ services:
         CP_BASE_IMAGE: ${CP_BASE_IMAGE}
     hostname: producer-acl
     container_name: producer-acl
-
-  jmx-exporter:
-    build: ./jmx-exporter
-    hostname: jmx-exporter
-    container_name: jmx-exporter
-    tty: true
-    volumes:
-    - jmx-exporter-vol:/usr/share/jmx_exporter/
 
   kafka-lag-exporter:
     image: lightbend/kafka-lag-exporter:0.5.5
@@ -395,7 +387,6 @@ services:
     volumes:
       - ./prometheus/:/etc/prometheus/
     depends_on:
-      - jmx-exporter
       - node-exporter
       - kafka-lag-exporter
       - alertmanager
@@ -412,7 +403,3 @@ services:
       - ./grafana/provisioning/:/etc/grafana/provisioning/
     depends_on:
       - prometheus
-
-volumes:
-    mi2: {}
-    jmx-exporter-vol: {}

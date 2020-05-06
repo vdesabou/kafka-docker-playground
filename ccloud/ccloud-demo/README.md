@@ -250,9 +250,9 @@ connect:
     CONNECT_BOOTSTRAP_SERVERS: <BOOTSTRAP_SERVERS>
     CONNECT_REST_PORT: 8083
     CONNECT_GROUP_ID: "connect"
-    CONNECT_CONFIG_STORAGE_TOPIC: connect-configs
-    CONNECT_OFFSET_STORAGE_TOPIC: connect-offsets
-    CONNECT_STATUS_STORAGE_TOPIC: connect-status
+    CONNECT_CONFIG_STORAGE_TOPIC: connect-configs-cloud
+    CONNECT_OFFSET_STORAGE_TOPIC: connect-offsets-cloud
+    CONNECT_STATUS_STORAGE_TOPIC: connect-status-cloud
     CONNECT_REPLICATION_FACTOR: 3
     CONNECT_CONFIG_STORAGE_REPLICATION_FACTOR: 3
     CONNECT_OFFSET_STORAGE_REPLICATION_FACTOR: 3
@@ -895,13 +895,6 @@ You can setup Control Center in read-only mode, using UI HTTP Basic Authenticati
 * Docker configuration:
 
 ```yml
-jmx-exporter:
-  build: ./jmx-exporter
-  hostname: jmx-exporter
-  container_name: jmx-exporter
-  tty: true
-  volumes:
-  - jmx-exporter-vol:/usr/share/jmx_exporter/
 alertmanager:
   image: prom/alertmanager:v0.18.0
   hostname: alertmanager
@@ -932,7 +925,6 @@ prometheus:
   volumes:
     - ./prometheus/:/etc/prometheus/
   depends_on:
-    - jmx-exporter
     - node-exporter
     - kafka-lag-exporter
     - alertmanager
@@ -959,7 +951,7 @@ ccloud_exporter:
   command: ccloudexporter ${CCLOUD_CLUSTER}
 
 grafana:
-  image: grafana/grafana:6.3.0
+  image: grafana/grafana
   hostname: grafana
   container_name: grafana
   environment:
