@@ -312,9 +312,9 @@
       "stack": false,
       "steppedLine": false,
       "targets": [{
-        "expr": "rate(kafka_consumer_consumer_fetch_manager_metrics_records_consumed_total{job=\"consumer\", topic!=\"\"}[1m])",
+        "expr": "sum by (topic, instance) (rate(kafka_consumer_consumer_fetch_manager_metrics_records_consumed_total{job=\"consumer\", topic!=\"\"}[1m]))",
         "instant": false,
-        "legendFormat": "{{client_id}}-{{topic}}",
+        "legendFormat": "{{instance}}-{{topic}}",
         "refId": "B"
       }],
       "thresholds": [],
@@ -399,14 +399,14 @@
       "targets": [{
         "expr": "kafka_consumer_consumer_fetch_manager_metrics_records_lag_avg{job=\"consumer\"}",
         "hide": false,
-        "legendFormat": "{{client_id}}-{{topic}}-{{partition}}",
+        "legendFormat": "{{instance}}-{{topic}}-{{partition}}",
         "refId": "A"
       }],
       "thresholds": [],
       "timeFrom": null,
       "timeRegions": [],
       "timeShift": null,
-      "title": "Average lag per topic",
+      "title": "Average lag per client and partition",
       "tooltip": {
         "shared": true,
         "sort": 0,
@@ -1130,7 +1130,7 @@
       }
     }
   ],
-  "refresh": "",
+  "refresh": "10s",
   "schemaVersion": 19,
   "style": "dark",
   "tags": [],
@@ -1139,10 +1139,9 @@
       "allValue": null,
       "current": {
         "tags": [],
-        "text": "consumer-1 + producer-1",
+        "text": "All",
         "value": [
-          "consumer-1",
-          "producer-1"
+          "$__all"
         ]
       },
       "datasource": "Prometheus",
@@ -1153,88 +1152,13 @@
       "multi": true,
       "name": "client_id",
       "options": [{
-          "selected": false,
+          "selected": true,
           "text": "All",
           "value": "$__all"
-        },
-        {
-          "selected": true,
-          "text": "consumer-1",
-          "value": "consumer-1"
-        },
-        {
-          "selected": false,
-          "text": "consumer-1, node-id=node--1",
-          "value": "consumer-1, node-id=node--1"
-        },
-        {
-          "selected": false,
-          "text": "consumer-1, node-id=node--2",
-          "value": "consumer-1, node-id=node--2"
-        },
-        {
-          "selected": false,
-          "text": "consumer-1, node-id=node--3",
-          "value": "consumer-1, node-id=node--3"
-        },
-        {
-          "selected": false,
-          "text": "consumer-1, node-id=node-1",
-          "value": "consumer-1, node-id=node-1"
-        },
-        {
-          "selected": false,
-          "text": "consumer-1, node-id=node-2",
-          "value": "consumer-1, node-id=node-2"
-        },
-        {
-          "selected": false,
-          "text": "consumer-1, node-id=node-2147483646",
-          "value": "consumer-1, node-id=node-2147483646"
-        },
-        {
-          "selected": false,
-          "text": "consumer-1, node-id=node-3",
-          "value": "consumer-1, node-id=node-3"
-        },
-        {
-          "selected": true,
-          "text": "producer-1",
-          "value": "producer-1"
-        },
-        {
-          "selected": false,
-          "text": "producer-1, node-id=node--1",
-          "value": "producer-1, node-id=node--1"
-        },
-        {
-          "selected": false,
-          "text": "producer-1, node-id=node--2",
-          "value": "producer-1, node-id=node--2"
-        },
-        {
-          "selected": false,
-          "text": "producer-1, node-id=node--3",
-          "value": "producer-1, node-id=node--3"
-        },
-        {
-          "selected": false,
-          "text": "producer-1, node-id=node-1",
-          "value": "producer-1, node-id=node-1"
-        },
-        {
-          "selected": false,
-          "text": "producer-1, node-id=node-2",
-          "value": "producer-1, node-id=node-2"
-        },
-        {
-          "selected": false,
-          "text": "producer-1, node-id=node-3",
-          "value": "producer-1, node-id=node-3"
         }
       ],
       "query": "label_values(client_id)",
-      "refresh": 0,
+      "refresh": 1,
       "regex": "",
       "skipUrlSync": false,
       "sort": 0,
@@ -1246,7 +1170,7 @@
     }]
   },
   "time": {
-    "from": "now-5m",
+    "from": "now-15m",
     "to": "now"
   },
   "timepicker": {
