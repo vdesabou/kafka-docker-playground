@@ -2858,7 +2858,7 @@
       "type": "row"
     }
   ],
-  "refresh": false,
+  "refresh": "10s",
   "schemaVersion": 19,
   "style": "dark",
   "tags": [],
@@ -2877,15 +2877,9 @@
         "label": null,
         "multi": false,
         "name": "env",
-        "options": [
-          {
-            "selected": true,
-            "text": "dev",
-            "value": "dev"
-          }
-        ],
+        "options": [],
         "query": "label_values(env)",
-        "refresh": 0,
+        "refresh": 1,
         "regex": "",
         "skipUrlSync": false,
         "sort": 0,
@@ -2916,15 +2910,10 @@
             "selected": true,
             "text": "All",
             "value": "$__all"
-          },
-          {
-            "selected": false,
-            "text": "producer-1",
-            "value": "producer-1"
           }
         ],
         "query": "label_values(kafka_producer_app_info, client_id)",
-        "refresh": 0,
+        "refresh": 1,
         "regex": "",
         "skipUrlSync": false,
         "sort": 0,
@@ -2955,15 +2944,10 @@
             "selected": true,
             "text": "All",
             "value": "$__all"
-          },
-          {
-            "selected": false,
-            "text": "sample",
-            "value": "sample"
           }
         ],
         "query": "label_values(kafka_producer_producer_topic_metrics_byte_total{job=\"producer\"}, topic)",
-        "refresh": 0,
+        "refresh": 1,
         "regex": "",
         "skipUrlSync": false,
         "sort": 0,
@@ -2976,7 +2960,7 @@
     ]
   },
   "time": {
-    "from": "now-5m",
+    "from": "now-15m",
     "to": "now"
   },
   "timepicker": {
