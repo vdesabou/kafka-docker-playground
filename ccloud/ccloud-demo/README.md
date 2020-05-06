@@ -1060,7 +1060,7 @@ Then you can call `kafka-consumer-groups` command:
 Example:
 
 ```bash
-$ kafka-consumer-groups --bootstrap-server <BOOTSTRAP_SERVERS >--command-config /tmp/client.properties --list
+$ kafka-consumer-groups --bootstrap-server <BOOTSTRAP_SERVERS> --command-config /tmp/client.properties --list
 
 _confluent-controlcenter-5-3-1-1
 customer-avro-app
@@ -1072,7 +1072,7 @@ _confluent-controlcenter-5-3-1-1-command
 ```
 
 ```bash
-$ kafka-consumer-groups --bootstrap-server <BOOTSTRAP_SERVERS >--command-config /tmp/client.properties --group customer-avro-app --describe
+$ kafka-consumer-groups --bootstrap-server <BOOTSTRAP_SERVERS> --command-config /tmp/client.properties --group customer-avro-app --describe
 
 GROUP             TOPIC           PARTITION  CURRENT-OFFSET  LOG-END-OFFSET  LAG             CONSUMER-ID                                     HOST                                      CLIENT-ID
 customer-avro-app customer-avro   2          0               0               0               consumer-1-c0b84633-8bdf-452c-ab69-387726e4234b 152.227.102.84.rev.sfr.net/84.102.227.152 consumer-1
