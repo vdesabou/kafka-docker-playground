@@ -60,6 +60,7 @@ then
      # running with travis or cloudformation
      log "Installing ccloud CLI"
      curl -L https://cnfl.io/ccloud-cli | sudo sh -s -- -b /usr/local/bin
+     export PATH=$PATH:/usr/local/bin
      log "##################################################"
      log "Log in to Confluent Cloud"
      log "##################################################"
@@ -67,7 +68,7 @@ then
 OUTPUT=$(
 expect <<END
 log_user 1
-spawn ccloud login
+spawn ccloud login --save
 expect "Email: "
 send "$CCLOUD_USER\r";
 expect "Password: "
