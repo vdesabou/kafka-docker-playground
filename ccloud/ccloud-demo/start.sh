@@ -57,7 +57,7 @@ done
 
 if [ ! -z "$TRAVIS" ]
 then
-     # running with travis
+     # running with travis or cloudformation
      log "Installing ccloud CLI"
      curl -L https://cnfl.io/ccloud-cli | sudo sh -s -- -b /usr/local/bin
      log "##################################################"
@@ -81,8 +81,14 @@ END
           exit 1
      fi
 
-     log "Using travis cluster"
-     ccloud kafka cluster use lkc-6kv2j
+     log "Use environment $ENVIRONMENT"
+     ccloud environment use $ENVIRONMENT
+     log "Use cluster $CLUSTER_LKC"
+     ccloud kafka cluster use $CLUSTER_LKC
+     log "Store api key $CLOUD_KEY"
+     ccloud api-key store $CLOUD_KEY $CLOUD_SECRET --resource $CLUSTER_LKC
+     log "Use api key $CLOUD_KEY"
+     ccloud api-key use $CLOUD_KEY --resource $CLUSTER_LKC
 fi
 
 # required for dabz/ccloudexporter
