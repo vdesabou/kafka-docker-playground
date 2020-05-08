@@ -178,10 +178,12 @@ INSERT INTO application (   \
 
 sleep 30
 
-log "Verifying topic mysql-application"
-# this command works for both cases (with local schema registry and Confluent Cloud Schema Registry)
-docker-compose exec -e BOOTSTRAP_SERVERS="$BOOTSTRAP_SERVERS" -e SASL_JAAS_CONFIG="$SASL_JAAS_CONFIG" -e BASIC_AUTH_CREDENTIALS_SOURCE="$BASIC_AUTH_CREDENTIALS_SOURCE" -e SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO="$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO" -e SCHEMA_REGISTRY_URL="$SCHEMA_REGISTRY_URL" connect bash -c 'kafka-avro-console-consumer --topic mysql-application --bootstrap-server $BOOTSTRAP_SERVERS --consumer-property ssl.endpoint.identification.algorithm=https --consumer-property sasl.mechanism=PLAIN --consumer-property security.protocol=SASL_SSL --consumer-property sasl.jaas.config="$SASL_JAAS_CONFIG" --property basic.auth.credentials.source=$BASIC_AUTH_CREDENTIALS_SOURCE --property schema.registry.basic.auth.user.info="$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO" --property schema.registry.url=$SCHEMA_REGISTRY_URL --from-beginning --max-messages 2'
-
+if [ ! -z "$PS1" ]
+then
+     log "Verifying topic mysql-application"
+     # this command works for both cases (with local schema registry and Confluent Cloud Schema Registry)
+     docker-compose exec -e BOOTSTRAP_SERVERS="$BOOTSTRAP_SERVERS" -e SASL_JAAS_CONFIG="$SASL_JAAS_CONFIG" -e BASIC_AUTH_CREDENTIALS_SOURCE="$BASIC_AUTH_CREDENTIALS_SOURCE" -e SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO="$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO" -e SCHEMA_REGISTRY_URL="$SCHEMA_REGISTRY_URL" connect bash -c 'kafka-avro-console-consumer --topic mysql-application --bootstrap-server $BOOTSTRAP_SERVERS --consumer-property ssl.endpoint.identification.algorithm=https --consumer-property sasl.mechanism=PLAIN --consumer-property security.protocol=SASL_SSL --consumer-property sasl.jaas.config="$SASL_JAAS_CONFIG" --property basic.auth.credentials.source=$BASIC_AUTH_CREDENTIALS_SOURCE --property schema.registry.basic.auth.user.info="$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO" --property schema.registry.url=$SCHEMA_REGISTRY_URL --from-beginning --max-messages 2'
+fi
 
 # Example using confluent CLI:
 # if [ "${SR_TYPE}" == "SCHEMA_REGISTRY_DOCKER" ]
@@ -239,8 +241,11 @@ docker exec -e BOOTSTRAP_SERVERS="$BOOTSTRAP_SERVERS" -e CLOUD_KEY="$CLOUD_KEY" 
 
 sleep 30
 
-log "Confirm that the data was sent to the HTTP endpoint."
-curl admin:password@localhost:9083/api/messages | jq .
+if [ ! -z "$PS1" ]
+then
+     log "Confirm that the data was sent to the HTTP endpoint."
+     curl admin:password@localhost:9083/api/messages | jq .
+fi
 
 log "Creating Elasticsearch Sink connector"
 docker exec connect \
@@ -259,10 +264,11 @@ docker exec connect \
 
 sleep 40
 
-log "Check that the data is available in Elasticsearch"
-
-curl -XGET 'http://localhost:9200/mysql-application/_search?pretty'
-
+if [ ! -z "$PS1" ]
+then
+     log "Check that the data is available in Elasticsearch"
+     curl -XGET 'http://localhost:9200/mysql-application/_search?pretty'
+fi
 log "Now we will test Service Account and ACLs"
 check_if_continue
 
