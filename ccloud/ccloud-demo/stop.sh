@@ -6,7 +6,7 @@ source ${DIR}/../../scripts/utils.sh
 verify_installed "ccloud"
 if [ -z "$TRAVIS" ]
 then
-     # not running with TRAVIS
+     # not running with travis
      verify_ccloud_login  "ccloud kafka cluster list"
      verify_ccloud_details
      check_if_continue
