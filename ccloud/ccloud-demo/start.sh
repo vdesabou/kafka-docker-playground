@@ -55,7 +55,7 @@ do
      fi
 done
 
-if [ ! -z "$TRAVIS" ]
+if [ ! -z "$TRAVIS" ] || [ ! -z "$CLOUDFORMATION" ]
 then
      # running with travis or cloudformation
      log "Installing ccloud CLI"
@@ -178,7 +178,7 @@ INSERT INTO application (   \
 
 sleep 30
 
-if [ ! -z "$PS1" ]
+if [ -z "$CLOUDFORMATION" ]
 then
      log "Verifying topic mysql-application"
      # this command works for both cases (with local schema registry and Confluent Cloud Schema Registry)
@@ -241,7 +241,7 @@ docker exec -e BOOTSTRAP_SERVERS="$BOOTSTRAP_SERVERS" -e CLOUD_KEY="$CLOUD_KEY" 
 
 sleep 30
 
-if [ ! -z "$PS1" ]
+if [ -z "$CLOUDFORMATION" ]
 then
      log "Confirm that the data was sent to the HTTP endpoint."
      curl admin:password@localhost:9083/api/messages | jq .
@@ -264,7 +264,7 @@ docker exec connect \
 
 sleep 40
 
-if [ ! -z "$PS1" ]
+if [ -z "$CLOUDFORMATION" ]
 then
      log "Check that the data is available in Elasticsearch"
      curl -XGET 'http://localhost:9200/mysql-application/_search?pretty'
