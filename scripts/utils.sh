@@ -180,9 +180,9 @@ function verify_ccloud_details()
 
 function check_if_continue()
 {
-    if [ ! -z "$TRAVIS" ]
+    if [ ! -z "$TRAVIS" ] || [ ! -z "$CLOUDFORMATION" ]
     then
-        # if this is travis build, continue.
+        # running with travis or cloudformation, continue
         return
     fi
     read -p "Continue (y/n)?" choice
