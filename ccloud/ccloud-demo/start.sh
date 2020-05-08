@@ -10,7 +10,7 @@ then
      wget https://repo1.maven.org/maven2/mysql/mysql-connector-java/5.1.45/mysql-connector-java-5.1.45.jar
 fi
 
-if [ -z "$TRAVIS" ]
+if [ -z "$TRAVIS" ] && [ -z "$CLOUDFORMATION" ]
 then
      # not running with TRAVIS
      verify_installed "ccloud"
