@@ -3,7 +3,8 @@
 - [Confluent Cloud Demo](#confluent-cloud-demo)
   - [⚠️ Disclaimer](#️-disclaimer)
   - [Pre-requisites](#pre-requisites)
-  - [How to run](#how-to-run)
+  - [How to run locally](#how-to-run-locally)
+  - [How to run with AWS CloudFormation](#how-to-run-with-aws-cloudformation)
   - [Connecting components to Confluent Cloud](#connecting-components-to-confluent-cloud)
     - [Java Producer](#java-producer)
     - [Kafka Streams](#kafka-streams)
@@ -52,7 +53,7 @@ If you choose to run it against your Confluent Cloud cluster, be aware that it:
 * Local install of the new [Confluent Cloud CLI](https://docs.confluent.io/current/cloud/cli/install.html#ccloud-install-cli) v0.192.0 or above
 * [An initialized Confluent Cloud cluster used for development only](https://confluent.cloud)
 
-## How to run
+## How to run locally
 
 1. Create `$HOME/.ccloud/config`
 
@@ -108,6 +109,20 @@ Run with Confluent Cloud Schema Registry:
 ```bash
 ./start.sh SCHEMA_REGISTRY_CONFLUENT_CLOUD
 ```
+
+## How to run with AWS CloudFormation
+
+* Create stack in AWS CloudFormation and upload [this](cloudformation/kafka-docker-playground-ccloud-demo.json?raw=true) template file:
+
+![AWS CloudFormation](./images/Screenshot4.png)
+
+* Fill informtion as requested (default EC2 instance type and root volume are recommended):
+
+![AWS CloudFormation](./images/Screenshot5.png)
+
+* After about 15 minutes, the stack will be created and you can see in *outputs* tab the URLs for connecting to Control Center and Grafana (`admin`/`admin`)
+
+![AWS CloudFormation](./images/Screenshot6.png)
 
 ## Connecting components to Confluent Cloud
 
