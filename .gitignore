@@ -63,3 +63,4 @@ ccloud/cp-ansible-playground/hosts-ccloud.yml
 ccloud/cp-ansible-playground/cp-ansible/
 ccloud/ccloud-demo/api_key_cloud_to_delete
 ccloud/ccloud-demo/cloudformation/kafka-docker-playground-ccloud-demo-vincent.json
+ccloud/ccloud-demo/cloudformation/kafka-docker-playground-ccloud-demo-copstam.json
