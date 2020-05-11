@@ -70,7 +70,23 @@
       "NoEcho": "true"
     },
 
-    "06SchemaRegistryUrl": {
+    "06CCloudEnvironment": {
+      "Default": "t12345",
+      "Description" : "Confluent Cloud environment",
+      "Type": "String",
+      "MinLength": "1",
+      "MaxLength": "12"
+    },
+
+    "07ClusterLkc": {
+      "Default": "lkc-xxxxx",
+      "Description" : "Cluster LKC",
+      "Type": "String",
+      "MinLength": "1",
+      "MaxLength": "12"
+    },
+
+    "08SchemaRegistryUrl": {
       "Default": "https://your.schema.registry.confluent.cloud",
       "Description" : "Confluent Cloud Schema Registry URL",
       "Type": "String",
@@ -78,7 +94,7 @@
       "MaxLength": "128"
     },
 
-    "07SchemaRegistryBasicAuthUserInfo": {
+    "09SchemaRegistryBasicAuthUserInfo": {
       "Default": "your sr api key:your sr api secret",
       "Description" : "Confluent Cloud Schema Registry Basic Auth Info",
       "Type": "String",
@@ -87,7 +103,7 @@
       "NoEcho": "true"
     },
 
-    "08ConfluentLicense": {
+    "10ConfluentLicense": {
       "Default": "your license",
       "Description" : "Confluent License",
       "Type": "String"
@@ -269,13 +285,13 @@
                   "bootstrap.servers=" , {"Ref" : "03BootstrapServers"}, "\n",
                   "sasl.jaas.config=org.apache.kafka.common.security.plain.PlainLoginModule required username=\"" , {"Ref" : "04ApiKey"}, "\" password=\"" , {"Ref" : "05ApiSecret"}, "\";\n",
                   "security.protocol=SASL_SSL\n",
-                  "confluent.license=" , {"Ref" : "08ConfluentLicense"}, "\n",
+                  "confluent.license=" , {"Ref" : "10ConfluentLicense"}, "\n",
                   "ccloud.user=" , {"Ref" : "01CCloudUser"}, "\n",
                   "ccloud.password=" , {"Ref" : "02CCloudPassword"}, "\n",
                   "\n\n// Schema Registry specific settings\n",
                   "basic.auth.credentials.source=USER_INFO\n",
-                  "schema.registry.basic.auth.user.info=" , {"Ref" : "07SchemaRegistryBasicAuthUserInfo"}, "\n",
-                  "schema.registry.url=" , {"Ref" : "06SchemaRegistryUrl"}, "\n"
+                  "schema.registry.basic.auth.user.info=" , {"Ref" : "09SchemaRegistryBasicAuthUserInfo"}, "\n",
+                  "schema.registry.url=" , {"Ref" : "08SchemaRegistryUrl"}, "\n"
                 ]]},
                 "mode"  : "000664",
                 "owner" : "ec2-user",
@@ -284,7 +300,7 @@
 
               "/home/ec2-user/start.sh" : {
                 "content" : { "Fn::Join" : [ "", [
-                  "#!/bin/bash\nset -e\n\n# run as ec2-user\ncat << EOF | su ec2-user\n\ncd \ngit clone https://github.com/vdesabou/kafka-docker-playground.git\n\nexport CLOUDFORMATION=1\nexport ENVIRONMENT=t39219\nexport CLUSTER_LKC=lkc-z39k0\n\ncd ~/kafka-docker-playground/ccloud/ccloud-demo/\n./start.sh SCHEMA_REGISTRY_CONFLUENT_CLOUD\nEOF"
+                  "#!/bin/bash\nset -e\n\n# run as ec2-user\ncat << EOF | su ec2-user\n\ncd \ngit clone https://github.com/vdesabou/kafka-docker-playground.git\n\nexport CLOUDFORMATION=1\nexport ENVIRONMENT=", {"Ref" : "06CCloudEnvironment"}, "\nexport CLUSTER_LKC=", {"Ref" : "07ClusterLkc"}, "\n\ncd ~/kafka-docker-playground/ccloud/ccloud-demo/\n./start.sh SCHEMA_REGISTRY_CONFLUENT_CLOUD\nEOF"
                 ]]},
                 "mode"  : "000744",
                 "owner" : "ec2-user",
