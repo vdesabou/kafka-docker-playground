@@ -52,13 +52,13 @@ JAAS file
       KAFKAREST_OPTS: -Djava.security.auth.login.config=/etc/kafka/kafka-rest.jaas.conf
 ```
 
-`restproxy` will be the principal used by HTTP client and propagated to broker:
+`clientrestproxy` will be the principal used by HTTP client and propagated to broker:
 
 ```
 KafkaClient {
   org.apache.kafka.common.security.plain.PlainLoginModule required
-  username="restproxy"
-  password="restproxy-secret";
+  username="clientrestproxy"
+  password="clientrestproxy-secret";
 };
 ```
 
@@ -66,22 +66,22 @@ Security extension configuration
 
 ```yml
       # Security extension configuration
-      KAFKA_REST_SSL_CLIENT_AUTH: "true"
+      KAFKA_REST_SSL_CLIENT_AUTHENTICATION: "REQUIRED"
       KAFKA_REST_KAFKA_REST_RESOURCE_EXTENSION_CLASS: io.confluent.kafkarest.security.KafkaRestSecurityResourceExtension
       KAFKA_REST_CONFLUENT_REST_AUTH_SSL_PRINCIPAL_MAPPING_RULES: RULE:^CN=(.*?),OU=TEST.*$$/$$1/,DEFAULT
       KAFKA_REST_CONFLUENT_LICENSE: "your license"
 ```
 
-HTTP client using `restproxy` principal:
+HTTP client using `clientrestproxy` principal:
 
 ```bash
-$ docker exec restproxy curl -X POST --cert /etc/kafka/secrets/restproxy.certificate.pem --key /etc/kafka/secrets/restproxy.key --tlsv1.2 --cacert /etc/kafka/secrets/snakeoil-ca-1.crt -H "Content-Type: application/vnd.kafka.json.v2+json" -H "Accept: application/vnd.kafka.v2+json" --data '{"records":[{"value":{"foo":"bar"}}]}' "https://localhost:8086/topics/jsontest"
+$ docker exec restproxy curl -X POST --cert /etc/kafka/secrets/clientrestproxy.certificate.pem --key /etc/kafka/secrets/clientrestproxy.key --tlsv1.2 --cacert /etc/kafka/secrets/snakeoil-ca-1.crt -H "Content-Type: application/vnd.kafka.json.v2+json" -H "Accept: application/vnd.kafka.v2+json" --data '{"records":[{"value":{"foo":"bar"}}]}' "https://localhost:8086/topics/jsontest"
 ```
 
-We can verify principal `restproxy`is used:
+We can verify principal `clientrestproxy`is used:
 
 ```log
-[2020-05-12 13:46:43,292] DEBUG Principal = User:restproxy is Allowed Operation = Write from host = 192.168.16.6 on resource = Topic:LITERAL:jsontest (kafka.authorizer.logger)
+[2020-05-12 13:46:43,292] DEBUG Principal = User:clientrestproxy is Allowed Operation = Write from host = 192.168.16.6 on resource = Topic:LITERAL:jsontest (kafka.authorizer.logger)
 ```
 
 If Confluent REST Proxy Security Plugin is not configured, then principal used would be `client`.
