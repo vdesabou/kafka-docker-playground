@@ -78,4 +78,11 @@ HTTP client using `restproxy` principal:
 $ docker exec restproxy curl -X POST --cert /etc/kafka/secrets/restproxy.certificate.pem --key /etc/kafka/secrets/restproxy.key --tlsv1.2 --cacert /etc/kafka/secrets/snakeoil-ca-1.crt -H "Content-Type: application/vnd.kafka.json.v2+json" -H "Accept: application/vnd.kafka.v2+json" --data '{"records":[{"value":{"foo":"bar"}}]}' "https://localhost:8086/topics/jsontest"
 ```
 
+We can verify principal `restproxy`is used:
+
+```log
+[2020-05-12 13:46:43,292] DEBUG Principal = User:restproxy is Allowed Operation = Write from host = 192.168.16.6 on resource = Topic:LITERAL:jsontest (kafka.authorizer.logger)
+```
+
+If Confluent REST Proxy Security Plugin is not configured, then principal used would be `client`.
 
