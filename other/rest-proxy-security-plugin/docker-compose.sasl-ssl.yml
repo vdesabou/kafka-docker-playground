@@ -1,6 +1,19 @@
 ---
 version: '3.5'
 services:
+
+  broker:
+    environment:
+      KAFKA_LOG4J_LOGGERS: "kafka.authorizer.logger=DEBUG"
+      KAFKA_AUTHORIZER_CLASS_NAME: kafka.security.auth.SimpleAclAuthorizer
+      KAFKA_ALLOW_EVERYONE_IF_NO_ACL_FOUND: "true"
+
+  broker2:
+    environment:
+      KAFKA_LOG4J_LOGGERS: "kafka.authorizer.logger=DEBUG"
+      KAFKA_AUTHORIZER_CLASS_NAME: kafka.security.auth.SimpleAclAuthorizer
+      KAFKA_ALLOW_EVERYONE_IF_NO_ACL_FOUND: "true"
+
   restproxy:
     image: confluentinc/cp-kafka-rest:${TAG}
     restart: always
