@@ -58,7 +58,7 @@ services:
                   -Djavax.net.ssl.keyStore=/etc/kafka/secrets/kafka.client.keystore.jks
                   -Djavax.net.ssl.keyStorePassword=confluent
       # Security extension configuration
-      KAFKA_REST_SSL_CLIENT_AUTH: "true"
+      KAFKA_REST_SSL_CLIENT_AUTHENTICATION: "REQUIRED"
       KAFKA_REST_KAFKA_REST_RESOURCE_EXTENSION_CLASS: io.confluent.kafkarest.security.KafkaRestSecurityResourceExtension
       KAFKA_REST_CONFLUENT_REST_AUTH_SSL_PRINCIPAL_MAPPING_RULES: RULE:^CN=(.*?),OU=TEST.*$$/$$1/,DEFAULT
       KAFKA_REST_CONFLUENT_LICENSE: ""
