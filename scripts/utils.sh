@@ -264,7 +264,7 @@ function block_host() {
 
 function remove_partition() {
     for name in $@; do
-        docker exec --privileged -t $name bash -c "tc qdisc del dev eth0 root" 2>&1 > /dev/null
+        docker exec --privileged -t $name bash -c "tc qdisc del dev eth0 root"
     done
 }
 
