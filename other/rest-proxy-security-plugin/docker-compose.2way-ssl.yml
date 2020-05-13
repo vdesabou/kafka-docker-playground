@@ -1,0 +1,60 @@
+---
+version: '3.5'
+services:
+
+  broker:
+    environment:
+      KAFKA_LOG4J_LOGGERS: "kafka.authorizer.logger=DEBUG"
+      KAFKA_AUTHORIZER_CLASS_NAME: kafka.security.auth.SimpleAclAuthorizer
+      KAFKA_ALLOW_EVERYONE_IF_NO_ACL_FOUND: "true"
+
+  broker2:
+    environment:
+      KAFKA_LOG4J_LOGGERS: "kafka.authorizer.logger=DEBUG"
+      KAFKA_AUTHORIZER_CLASS_NAME: kafka.security.auth.SimpleAclAuthorizer
+      KAFKA_ALLOW_EVERYONE_IF_NO_ACL_FOUND: "true"
+
+  restproxy:
+    image: confluentinc/cp-kafka-rest:${TAG}
+    restart: always
+    depends_on:
+      - zookeeper
+      - broker
+      - broker2
+      - schema-registry
+    hostname: restproxy
+    container_name: restproxy
+    volumes:
+      - ../../environment/2way-ssl/security:/etc/kafka/secrets
+    environment:
+      KAFKA_REST_HOST_NAME: restproxy
+      KAFKA_REST_BOOTSTRAP_SERVERS: "SSL://broker:9092,SSL://broker2:9092"
+      KAFKA_REST_LISTENERS: "https://0.0.0.0:8086"
+      KAFKA_REST_SCHEMA_REGISTRY_URL: "https://schema-registry:8085"
+
+      # Security configurations between REST Proxy and HTTP client
+      KAFKA_REST_SSL_TRUSTSTORE_LOCATION: /etc/kafka/secrets/kafka.restproxy.truststore.jks
+      KAFKA_REST_SSL_TRUSTSTORE_PASSWORD: confluent
+      KAFKA_REST_SSL_KEYSTORE_LOCATION: /etc/kafka/secrets/kafka.restproxy.keystore.jks
+      KAFKA_REST_SSL_KEYSTORE_PASSWORD: confluent
+      KAFKA_REST_SSL_KEY_PASSWORD: confluent
+
+      # Security configurations between REST Proxy and broker
+      KAFKA_REST_CLIENT_SECURITY_PROTOCOL: SSL
+      KAFKA_REST_CLIENT_SSL_TRUSTSTORE_LOCATION: /etc/kafka/secrets/kafka.restproxy.truststore.jks
+      KAFKA_REST_CLIENT_SSL_TRUSTSTORE_PASSWORD: confluent
+      KAFKA_REST_CLIENT_SSL_KEYSTORE_LOCATION: /etc/kafka/secrets/kafka.restproxy.keystore.jks
+      KAFKA_REST_CLIENT_SSL_KEYSTORE_PASSWORD: confluent
+      KAFKA_REST_CLIENT_SSL_KEY_PASSWORD: confluent
+      KAFKA_REST_CLIENT_ENDPOINT_IDENTIFICATION_ALGORITHM: "https"
+      SCHEMA_REGISTRY_OPTS: -Djavax.net.ssl.trustStore=/etc/kafka/secrets/kafka.client.truststore.jks
+                  -Djavax.net.ssl.trustStorePassword=confluent
+                  -Djavax.net.ssl.keyStore=/etc/kafka/secrets/kafka.client.keystore.jks
+                  -Djavax.net.ssl.keyStorePassword=confluent
+      # Security extension configuration
+      KAFKA_REST_SSL_CLIENT_AUTHENTICATION: "REQUIRED"
+      KAFKA_REST_KAFKA_REST_RESOURCE_EXTENSION_CLASS: io.confluent.kafkarest.security.KafkaRestSecurityResourceExtension
+      KAFKA_REST_CONFLUENT_LICENSE: ""
+
+    ports:
+      - 8086:8086
