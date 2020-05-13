@@ -36,8 +36,8 @@ services:
       # enables 2-way authentication
       KAFKA_SSL_CLIENT_AUTH: "required"
       KAFKA_SSL_ENDPOINT_IDENTIFICATION_ALGORITHM: "HTTPS"
-      KAFKA_OPTS: -Djava.security.auth.login.config=/etc/kafka/secrets/broker_jaas.conf
       KAFKA_SSL_PRINCIPAL_MAPPING_RULES: RULE:^CN=(.*?),OU=TEST.*$$/$$1/,DEFAULT
+      # KAFKA_OPTS: -Djavax.net.debug=all
 
   broker2:
     image: confluentinc/${CP_KAFKA_IMAGE}:${TAG}
@@ -75,6 +75,7 @@ services:
       KAFKA_SSL_CLIENT_AUTH: "required"
       KAFKA_SSL_ENDPOINT_IDENTIFICATION_ALGORITHM: "HTTPS"
       KAFKA_SSL_PRINCIPAL_MAPPING_RULES: RULE:^CN=(.*?),OU=TEST.*$$/$$1/,DEFAULT
+      # KAFKA_OPTS: -Djavax.net.debug=all
 
   schema-registry:
     depends_on:
