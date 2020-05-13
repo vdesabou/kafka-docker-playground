@@ -76,3 +76,7 @@ EOF
     keytool -noprompt -destkeystore kafka.$i.truststore.jks -importkeystore -srckeystore $JAVA_HOME/jre/lib/security/cacerts -srcstorepass changeit -deststorepass confluent
 
 done
+
+# used for other/rest-proxy-security-plugin test
+keytool -noprompt -keystore kafka.restproxy.keystore.jks -alias clientrestproxy -import -file clientrestproxy-ca1-signed.crt -storepass confluent -keypass confluent
+
