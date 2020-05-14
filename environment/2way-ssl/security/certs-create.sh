@@ -78,5 +78,12 @@ EOF
 done
 
 # used for other/rest-proxy-security-plugin test
-keytool -noprompt -keystore kafka.restproxy.keystore.jks -alias clientrestproxy -import -file clientrestproxy-ca1-signed.crt -storepass confluent -keypass confluent
+# https://stackoverflow.com/a/8224863
+openssl pkcs12 -export -in clientrestproxy-ca1-signed.crt -inkey clientrestproxy.key \
+               -out clientrestproxy.p12 -name clientrestproxy \
+               -CAfile snakeoil-ca-1.crt -caname CARoot -passout pass:confluent
 
+keytool -importkeystore \
+        -deststorepass confluent -destkeypass confluent -destkeystore kafka.restproxy.keystore.jks \
+        -srckeystore clientrestproxy.p12 -srcstoretype PKCS12 -srcstorepass confluent \
+        -alias clientrestproxy
