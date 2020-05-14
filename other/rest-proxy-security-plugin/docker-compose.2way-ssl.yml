@@ -52,9 +52,13 @@ services:
                   -Djavax.net.ssl.keyStore=/etc/kafka/secrets/kafka.client.keystore.jks
                   -Djavax.net.ssl.keyStorePassword=confluent
       # Security extension configuration
-      KAFKA_REST_SSL_CLIENT_AUTHENTICATION: "REQUIRED"
+      # ZooKeeper required to validate trial license
+      KAFKA_REST_ZOOKEEPER_CONNECT: zookeeper:2181
+      # KAFKA_REST_SSL_CLIENT_AUTHENTICATION: "REQUIRED"
+      KAFKA_REST_SSL_CLIENT_AUTH: "true" # deprecated, KAFKA_REST_SSL_CLIENT_AUTHENTICATION: "REQUIRED"
       KAFKA_REST_KAFKA_REST_RESOURCE_EXTENSION_CLASS: io.confluent.kafkarest.security.KafkaRestSecurityResourceExtension
-      KAFKA_REST_CONFLUENT_LICENSE: ""
+      KAFKA_REST_SSL_CIPHER_SUITES: "TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256"
+      # KAFKAREST_OPTS: -Djavax.net.debug=all
 
     ports:
       - 8086:8086
