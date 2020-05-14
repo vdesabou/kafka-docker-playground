@@ -285,6 +285,7 @@ This is just the excellent examples in [Kafka tutorial](https://kafka-tutorials.
 * [JMS Client](other/jms-client)
 * [RBAC with SASL/PLAIN](environment/rbac-sasl-plain) RBAC with no SSL encryption, SASL/PLAIN authentication
 * [Audit Logs](other/audit-logs)
+* [Confluent REST Proxy Security Plugin](other/rest-proxy-security-plugin) with SASL_SSL and 2WAY_SSL Principal Propagation
 
 ## [CP-Ansible Playground](other/cp-ansible-playground)
 
