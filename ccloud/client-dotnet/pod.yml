@@ -1,0 +1,17 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: dotnet-ccloud-example-docker
+  namespace: dotnet-ccloud-example-docker
+spec:
+  containers:
+  - name: dotnet-ccloud-example-docker
+    image: vdesabou/dotnet-ccloud-example-docker
+    imagePullPolicy: Never
+  securityContext:
+    sysctls:
+    - name: net.ipv4.tcp_keepalive_time
+      value: "60"
+    - name: net.ipv4.tcp_keepalive_intvl
+      value: "30"
+
