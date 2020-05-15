@@ -9,24 +9,26 @@
 
 |   |  Confluent Cloud UI | Control Center UI |
 |---|---|---|
-|Landing Page| ![Landing Page](../images/1.jpg)  | ![Landing Page](../images/2.jpg)  |
-|Brokers tab| not available  | ![Brokers](../images/3.jpg) <br> Warning is [expected](https://docs.confluent.io/current/cloud/connect/c3-cloud-config.html#limitations) as Confluent Cloud does not provide the instrumentation from Confluent Metrics Reporter outside of the Confluent Cloud. |
-|Topics tab| ![Topics tab](../images/4.jpg)  | ![Topics tab](../images/5.jpg)  |
-|Topic overview| not available | ![Topic overview](../images/12.jpg)  |
-|Topic configuration| ![Topic configuration](../images/6.jpg)  | ![Topic configuration](../images/7.jpg)  |
-|Topic messages| ![Topic messages](../images/8.jpg)  | ![Topic messages](../images/9.jpg)  |
-|Topic schema <br>(using Confluent Cloud Schema Registry)| ![Topic schema](../images/10.jpg)  | ![Topic schema](../images/11.jpg)  |
-|Connectors tab| ![Connectors tab](../images/13.jpg) <br> This is only showing _managed_ connectors | ![Connectors tab](../images/14.jpg) <br> This is showing _local_ Connect clusters |
-|Connectors tab (2)| ![Connectors tab](../images/15.jpg) <br> This is only showing _managed_ connectors | ![Connectors tab](../images/16.jpg) <br> This is showing _local_ connectors |
-|KSQL tab| ![KSQL tab](../images/17.jpg) <br> This is only showing _managed_ KSQL Cloud (in Preview) | ![KSQL tab](../images/18.jpg) <br> This is showing _local_ KSQL clusters |
-|Consumers tab| ![Consumers tab](../images/19.jpg)  | ![Consumers tab](../images/20.jpg)  |
-|Consumer Group /<br> Consumer lag| ![Consumer group](../images/21.jpg)  | ![Consumer lag](../images/22.jpg)  |
-|Consumer Group /<br> Consumption| not available  | ![Consumer Consumption](../images/23.jpg)  |
-|Consumer Group /<br> Alerts| not available  | ![Consumer Alerts](../images/24.jpg)  |
-|Cluster settings tab| ![Cluster settings tab](../images/25.jpg)  | ![Cluster settings tab](../images/26.jpg)  |
-|Cluster settings tab /<br> API access| ![Cluster settings tab](../images/29.jpg)  | not applicable |
-|CLI @ client configuration tab| ![CLI @ client configuration tab](../images/27.jpg)  | not applicable  |
-|CLI @ client configuration tab (2)| ![CLI @ client configuration tab](../images/27.jpg)  | not applicable  |
-|Schema Registry tab| ![Schema Registry](../images/30.jpg)  | not applicable <br>(this is only for Confluent Cloud Schema Registry) |
-|Schema Registry tab /<br> API access| ![Schema Registry](../images/31.jpg)  | not applicable <br>(this is only for Confluent Cloud Schema Registry)  |
-|Schema Registry tab /<br> Allowed Usage| ![Schema Registry](../images/32.jpg)  | not applicable <br>(this is only for Confluent Cloud Schema Registry)  |
+|Cluster Overview| ![Cluster Overview](../images/cluster_ccloud.png)  | ![Cluster Overview](../images/cluster_c3.png)  |
+|Brokers tab| not available  | ![Brokers](../images/brokers_c3.png) <br> Warning is [expected](https://docs.confluent.io/current/cloud/connect/c3-cloud-config.html#limitations) as Confluent Cloud does not provide the instrumentation from Confluent Metrics Reporter outside of the Confluent Cloud. |
+|Data Flow tab| ![Data flow tab](../images/data_flow_cloud.png)| not available |
+|Topics tab| ![Topics tab](../images/topics_cloud.png)  | ![Topics tab](../images/topics_c3.png)  |
+|Topic overview| ![Topic overview](../images/topic_overview_cloud.png) | ![Topic overview](../images/topic_overview_c3.png)  |
+|Topic configuration| ![Topic configuration](../images/topic_config_cloud.png)  | ![Topic configuration](../images/topic_config_c3.png)  |
+|Topic messages| ![Topic messages](../images/topic_messages_cloud.png)  | ![Topic messages](../images/topic_messages_c3.png)  |
+|Topic schema <br>(using Confluent Cloud Schema Registry)| ![Topic schema](../images/topic_schema_cloud.png)  | ![Topic schema](../images/topic_schema_c3.png)  |
+|Connectors tab| ![Connectors tab](../images/connectors_cloud.png) <br> This is only showing _managed_ connectors | ![Connectors tab](../images/connectors_c3.png) <br> This is showing _local_ Connect clusters |
+|KSQL tab| ![KSQL tab](../images/ksql_cloud.png) <br> This is only showing _managed_ KSQL Cloud (in Preview) | ![KSQL tab](../images/ksql_c3.png) <br> This is showing _local_ KSQL clusters |
+|Consumers tab| ![Consumers tab](../images/consumers_cloud.png)  | ![Consumers tab](../images/consumers_c3.png)  |
+|Consumer Group /<br> Consumer lag| ![Consumer group](../images/consumer_group_cloud.png)  | ![Consumer lag](../images/consumer_group_c3.png)  |
+|Consumer Group /<br> Consumption| not available  | ![Consumer Consumption](../images/consumption_c3.png)  |
+|Consumer Group /<br> Alerts| not available  | ![Consumer Alerts](../images/consumer_group_alerts.png)  |
+|Cluster API Keys| ![API Keys](../images/api_keys_cloud.png)  | not available |
+|Cluster settings tab| ![Cluster settings tab](../images/cluster_settings_cloud.png)  | ![Cluster settings tab](../images/cluster_settings_c3.png)  |
+|Cluster settings tab /<br> capacity | ![Cluster settings tab](../images/cluster_settings_capacity_cloud.png)  | not applicable |
+|Tools & client configuration tab| ![CLI @ client configuration tab](../images/tools_cloud.png)  | not applicable  |
+|Tools & client configuration tab (2)| ![CLI @ client configuration tab](../images/tools_cloud_1.png)  | not applicable  |
+|Tools & client configuration tab (3)| ![CLI @ client configuration tab](../images/tools_cloud_2.png)  | not applicable  |
+|Schema Registry tab| ![Schema Registry](../images/sr_cloud_1.png)  | not applicable <br>(this is only for Confluent Cloud Schema Registry) |
+|Schema Registry tab /<br> API access| ![Schema Registry](../images/sr_cloud_2.png)  | not applicable <br>(this is only for Confluent Cloud Schema Registry)  |
+|Schema Registry tab /<br> Allowed Usage| ![Schema Registry](../images/sr_cloud_3.png)  | not applicable <br>(this is only for Confluent Cloud Schema Registry)  |
