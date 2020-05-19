@@ -92,7 +92,7 @@ namespace CCloud
 
         static void Produce(string topic, ClientConfig config)
         {
-            using (var producer = new ProducerBuilder<string, string>(config).Build())
+            using (var producer = new ProducerBuilder<string, string>(config).SetErrorHandler((_, e) => Console.WriteLine($"Error: {e.Reason}")).Build())
             {
                 int numProduced = 0;
                 int numMessages = 10;
