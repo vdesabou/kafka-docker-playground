@@ -22,6 +22,7 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using Prometheus;
 
 
 namespace CCloud
@@ -90,7 +91,7 @@ namespace CCloud
             }
         }
 
-        static void Produce(string topic, ClientConfig config)
+        static async Task Produce(string topic, ClientConfig config)
         {
             using (var producer = new ProducerBuilder<string, string>(config).SetErrorHandler((_, e) => Console.WriteLine($"Error: {e.Reason}")).Build())
             {
@@ -116,6 +117,7 @@ namespace CCloud
                                 numProduced += 1;
                             }
                         });
+                    //Thread.Sleep(new Random().Next(1000));
                 }
 
                 producer.Flush(TimeSpan.FromSeconds(10));
@@ -125,15 +127,17 @@ namespace CCloud
             }
         }
 
-        static void Consume(string topic, ClientConfig config)
+
+        static async Task Consume(string topic, ClientConfig config)
         {
             var consumerConfig = new ConsumerConfig(config);
-            consumerConfig.GroupId = "dotnet-example-group-1";
+            consumerConfig.GroupId = "dotnet-consumer-group-1";
             consumerConfig.AutoOffsetReset = AutoOffsetReset.Earliest;
             consumerConfig.EnableAutoCommit = false;
             consumerConfig.BrokerVersionFallback = "0.10.0.0";
             consumerConfig.ApiVersionFallbackMs = 0;
             consumerConfig.SocketKeepaliveEnable = true;
+            consumerConfig.StatisticsIntervalMs = 1000;
             // consumerConfig.Debug = "consumer, cgrp, protocol";
 
             CancellationTokenSource cts = new CancellationTokenSource();
@@ -145,7 +149,23 @@ namespace CCloud
             using (var consumer = new ConsumerBuilder<string, string>(consumerConfig)
                 // Note: All handlers are called on the main .Consume thread.
                 .SetErrorHandler((_, e) => Console.WriteLine($"Error: {e.Reason}"))
-                .SetStatisticsHandler((_, json) => Console.WriteLine($"Statistics: {json}"))
+                .SetStatisticsHandler((_, json) =>
+                {
+                    Console.WriteLine($"Statistics: {json}");
+                    var statistics = JsonConvert.DeserializeObject<ConsumerStatistics>(json);
+
+                    foreach(var mytopic in statistics.Topics)
+                    {
+                        foreach(var partition in mytopic.Value.Partitions)
+                        {
+                            var gauge = Metrics.CreateGauge("librdkafka_consumer_lag", "store consumer lags", new GaugeConfiguration{
+                                LabelNames = new []{"topic", "partition", "consumerGroup"}
+                            });
+
+                            gauge.WithLabels(mytopic.Key, partition.Key, "dotnet-consumer-group-1").Set(partition.Value.ConsumerLag);
+                        }
+                    }
+                })
                 .SetPartitionsAssignedHandler((c, partitions) =>
                 {
                     Console.WriteLine($"Assigned partitions: [{string.Join(", ", partitions)}]");
@@ -161,11 +181,13 @@ namespace CCloud
             {
                 consumer.Subscribe(topic);
                 var totalCount = 0;
+
                 try
                 {
                     while (true)
                     {
                         var cr = consumer.Consume(cts.Token);
+                        Thread.Sleep(new Random().Next(100));
 
                         if (cr.IsPartitionEOF)
                         {
@@ -214,15 +236,19 @@ namespace CCloud
             {
                 case "produce":
                     await CreateTopicMaybe(topic, 1, 3, config);
-                    Produce(topic, config);
+                    await Produce(topic, config);
                     break;
                 case "consume":
-                    Consume(topic, config);
+                    await Consume(topic, config);
                     break;
                 default:
                     PrintUsage();
                     break;
             }
+
+            var metricServer = new MetricServer(port: 7075);
+            metricServer.Start();
+            Console.ReadLine();
         }
     }
 }
