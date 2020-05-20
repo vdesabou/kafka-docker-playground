@@ -11,6 +11,7 @@ WORKDIR /src
 ARG CSPROJ_FILE
 COPY [ "${CSPROJ_FILE}", "CCloud/CCloud.csproj"]
 COPY ["Program.cs", "CCloud/"]
+COPY ["ConsumerStatistics.cs", "CCloud/"]
 RUN dotnet restore "CCloud/CCloud.csproj"
 COPY . .
 WORKDIR "/src/CCloud"
