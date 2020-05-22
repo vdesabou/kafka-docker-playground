@@ -29,5 +29,17 @@ namespace CCloud
     {
         [JsonProperty(PropertyName="consumer_lag")]
         public long ConsumerLag { get; set; }
+
+        [JsonProperty(PropertyName="fetchq_cnt")]
+        public long FetchQueueCount { get; set; }
+
+        [JsonProperty(PropertyName="fetchq_size")]
+        public long FetchQueueSize { get; set; }
+
+        [JsonProperty(PropertyName="rxmsgs")]
+        public long MessagesConsumed { get; set; }
+
+        [JsonProperty(PropertyName="rxbytes")]
+        public long BytesConsumed { get; set; }
     }
 }
