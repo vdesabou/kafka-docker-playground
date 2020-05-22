@@ -3,12 +3,12 @@ using Newtonsoft.Json;
 
 namespace CCloud
 {
-    public class ConsumerStatistics
+    public class Statistics
     {
         [JsonProperty(PropertyName="topics")]
         public Dictionary<string, TopicStatistic> Topics { get; set; }
 
-        public ConsumerStatistics()
+        public Statistics()
         {
             Topics = new Dictionary<string, TopicStatistic>();
         }
@@ -27,6 +27,14 @@ namespace CCloud
 
     public class PartitionStatistic
     {
+        //producer
+        [JsonProperty(PropertyName="txmsgs")]
+        public long MessagesProduced { get; set; }
+
+        [JsonProperty(PropertyName="txbytes")]
+        public long BytesProduced { get; set; }
+
+        // consumer
         [JsonProperty(PropertyName="consumer_lag")]
         public long ConsumerLag { get; set; }
 
