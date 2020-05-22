@@ -49,7 +49,8 @@ namespace CCloud
                     // TopicMetadataRefreshIntervalMs = 210000,
                     // MetadataMaxAgeMs = 210000,
                     // SocketTimeoutMs = 60000,
-                    SocketKeepaliveEnable = true
+                    SocketKeepaliveEnable = true,
+                    StatisticsIntervalMs = 1000
                     // Debug = "broker,topic,msg"
                 };
 
@@ -93,7 +94,26 @@ namespace CCloud
 
         static async Task Produce(string topic, ClientConfig config)
         {
-            using (var producer = new ProducerBuilder<string, string>(config).SetErrorHandler((_, e) => Console.WriteLine($"Error: {e.Reason}")).Build())
+            using (var producer = new ProducerBuilder<string, string>(config)
+            // Note: All handlers are called on the main .Consume thread.
+            .SetErrorHandler((_, e) => Console.WriteLine($"Error: {e.Reason}"))
+            .SetStatisticsHandler((_, json) =>
+            {
+                // Console.WriteLine($"Statistics: {json}");
+                var statistics = JsonConvert.DeserializeObject<ConsumerStatistics>(json);
+
+                foreach(var mytopic in statistics.Topics)
+                {
+                    foreach(var partition in mytopic.Value.Partitions)
+                    {
+                        // var gauge = Metrics.CreateGauge("librdkafka_consumer_lag", "store consumer lags", new GaugeConfiguration{
+                        //     LabelNames = new []{"topic", "partition", "consumerGroup"}
+                        // });
+
+                        // gauge.WithLabels(mytopic.Key, partition.Key, "dotnet-consumer-group-1").Set(partition.Value.ConsumerLag);
+                    }
+                }
+            }).Build())
             {
                 int numProduced = 0;
                 while(true)
@@ -148,18 +168,42 @@ namespace CCloud
                 .SetErrorHandler((_, e) => Console.WriteLine($"Error: {e.Reason}"))
                 .SetStatisticsHandler((_, json) =>
                 {
-                    Console.WriteLine($"Statistics: {json}");
+                    // Console.WriteLine($"Statistics: {json}");
                     var statistics = JsonConvert.DeserializeObject<ConsumerStatistics>(json);
 
                     foreach(var mytopic in statistics.Topics)
                     {
                         foreach(var partition in mytopic.Value.Partitions)
                         {
-                            var gauge = Metrics.CreateGauge("librdkafka_consumer_lag", "store consumer lags", new GaugeConfiguration{
+                            var gaugeConsumerLag = Metrics.CreateGauge("librdkafka_consumer_lag", "store consumer lags", new GaugeConfiguration{
                                 LabelNames = new []{"topic", "partition", "consumerGroup"}
                             });
 
-                            gauge.WithLabels(mytopic.Key, partition.Key, "dotnet-consumer-group-1").Set(partition.Value.ConsumerLag);
+                            gaugeConsumerLag.WithLabels(mytopic.Key, partition.Key, "dotnet-consumer-group-1").Set(partition.Value.ConsumerLag);
+
+                            var gaugeFetchQueueCount = Metrics.CreateGauge("librdkafka_fetch_queue_count", "Number of pre-fetched messages in fetch queue", new GaugeConfiguration{
+                                LabelNames = new []{"topic", "partition", "consumerGroup"}
+                            });
+
+                            gaugeFetchQueueCount.WithLabels(mytopic.Key, partition.Key, "dotnet-consumer-group-1").Set(partition.Value.FetchQueueCount);
+
+                            var gaugeFetchQueueSize = Metrics.CreateGauge("librdkafka_fetch_queue_size", "Size of fetch queue", new GaugeConfiguration{
+                                LabelNames = new []{"topic", "partition", "consumerGroup"}
+                            });
+
+                            gaugeFetchQueueSize.WithLabels(mytopic.Key, partition.Key, "dotnet-consumer-group-1").Set(partition.Value.FetchQueueSize);
+
+                            var gaugeMessagesConsumed = Metrics.CreateGauge("librdkafka_messages_consumed", "Total number of messages consumed, not including ignored messages (due to offset, etc)", new GaugeConfiguration{
+                                LabelNames = new []{"topic", "partition", "consumerGroup"}
+                            });
+
+                            gaugeMessagesConsumed.WithLabels(mytopic.Key, partition.Key, "dotnet-consumer-group-1").Set(partition.Value.MessagesConsumed);
+
+                            var gaugeBytesConsumed = Metrics.CreateGauge("librdkafka_bytes_consumed", "Total number of bytes received for rxmsgs", new GaugeConfiguration{
+                                LabelNames = new []{"topic", "partition", "consumerGroup"}
+                            });
+
+                            gaugeBytesConsumed.WithLabels(mytopic.Key, partition.Key, "dotnet-consumer-group-1").Set(partition.Value.BytesConsumed);
                         }
                     }
                 })
