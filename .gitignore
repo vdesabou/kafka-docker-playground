@@ -65,3 +65,4 @@ ccloud/ccloud-demo/api_key_cloud_to_delete
 ccloud/ccloud-demo/cloudformation/kafka-docker-playground-ccloud-demo-vincent.json
 ccloud/ccloud-demo/cloudformation/kafka-docker-playground-ccloud-demo-copstam.json
 ccloud/rest-proxy-security-plugin/kafka-rest.jaas.conf
+ccloud/ccloud-demo/client-dotnet/librdkafka.config

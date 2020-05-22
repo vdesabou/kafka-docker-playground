@@ -39,12 +39,30 @@ scrape_configs:
         labels:
           env: 'dev'
 
+  - job_name: 'dotnet-producer'
+    scrape_interval: 5s
+    static_configs:
+      - targets: ['client-dotnet:7074']
+        labels:
+          env: 'dev'
+
+  - job_name: 'dotnet-consumer'
+    scrape_interval: 5s
+    static_configs:
+      - targets: ['client-dotnet:7075']
+        labels:
+          env: 'dev'
+
   - job_name: 'kafka-lag-exporter'
     scrape_interval: 5s
     static_configs:
-    - targets: ['kafka-lag-exporter:9999']
+      - targets: ['kafka-lag-exporter:9999']
+        labels:
+          env: 'dev'
 
   - job_name: 'ccloudexporter'
     scrape_interval: 15s
     static_configs:
       - targets: ['ccloud_exporter:2112']
+        labels:
+          env: 'dev'
