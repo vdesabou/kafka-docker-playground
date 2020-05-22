@@ -103,6 +103,12 @@ export API_SECRET_CLOUD=$(echo "$OUTPUT" | grep '| Secret' | awk '{print $4;}')
 
 echo "$API_KEY_CLOUD" > api_key_cloud_to_delete
 
+# generate librdkafka.config config
+sed -e "s|:BOOTSTRAP_SERVERS:|$BOOTSTRAP_SERVERS|g" \
+    -e "s|:CLOUD_KEY:|$CLOUD_KEY|g" \
+    -e "s|:CLOUD_SECRET:|$CLOUD_SECRET|g" \
+    ${DIR}/client-dotnet/librdkafka.config.template > ${DIR}/client-dotnet/librdkafka.config
+
 # generate kafka-lag-exporter config
 sed -e "s|:BOOTSTRAP_SERVERS:|$BOOTSTRAP_SERVERS|g" \
     -e "s|:CLOUD_KEY:|$CLOUD_KEY|g" \
@@ -124,6 +130,18 @@ docker-compose down -v
 docker-compose up -d
 ${DIR}/../../scripts/wait-for-connect-and-controlcenter.sh
 
+log "-------------------------------------"
+log "Dotnet client examples"
+log "-------------------------------------"
+set +e
+create_topic topic-dotnet
+set -e
+
+log "Starting dotnet producer"
+docker exec -d client-dotnet dotnet CCloud.dll produce topic-dotnet /tmp/librdkafka.config
+
+log "Starting dotnet consume"
+docker exec -d client-dotnet dotnet CCloud.dll consume topic-dotnet /tmp/librdkafka.config
 
 log "-------------------------------------"
 log "Connector examples"
