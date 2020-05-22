@@ -13,7 +13,7 @@ then
      exit 1
 fi
 
-CORE_DOT_VERSION=${1:-2.2}
+CORE_DOT_VERSION=${1:-3.1}
 
 ${DIR}/../ccloud-demo/ccloud-generate-env-vars.sh ${CONFIG_FILE}
 
@@ -25,7 +25,7 @@ else
      exit 1
 fi
 
-# generate kafka-admin.properties config
+# generate librdkafka.config config
 sed -e "s|:BOOTSTRAP_SERVERS:|$BOOTSTRAP_SERVERS|g" \
     -e "s|:CLOUD_KEY:|$CLOUD_KEY|g" \
     -e "s|:CLOUD_SECRET:|$CLOUD_SECRET|g" \
