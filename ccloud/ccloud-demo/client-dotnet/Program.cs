@@ -100,17 +100,23 @@ namespace CCloud
             .SetStatisticsHandler((_, json) =>
             {
                 // Console.WriteLine($"Statistics: {json}");
-                var statistics = JsonConvert.DeserializeObject<ConsumerStatistics>(json);
+                var statistics = JsonConvert.DeserializeObject<Statistics>(json);
 
                 foreach(var mytopic in statistics.Topics)
                 {
                     foreach(var partition in mytopic.Value.Partitions)
                     {
-                        // var gauge = Metrics.CreateGauge("librdkafka_consumer_lag", "store consumer lags", new GaugeConfiguration{
-                        //     LabelNames = new []{"topic", "partition", "consumerGroup"}
-                        // });
+                        var gaugeMessagesProduced = Metrics.CreateGauge("librdkafka_messages_produced", "Total number of messages transmitted (produced)", new GaugeConfiguration{
+                            LabelNames = new []{"topic", "partition", "producer_name"}
+                        });
 
-                        // gauge.WithLabels(mytopic.Key, partition.Key, "dotnet-consumer-group-1").Set(partition.Value.ConsumerLag);
+                        gaugeMessagesProduced.WithLabels(mytopic.Key, partition.Key, "dotnet-producer").Set(partition.Value.MessagesProduced);
+
+                        var gaugeBytesProduced = Metrics.CreateGauge("librdkafka_bytes_produced", "	Total number of bytes transmitted for txmsgs", new GaugeConfiguration{
+                            LabelNames = new []{"topic", "partition", "producer_name"}
+                        });
+
+                        gaugeBytesProduced.WithLabels(mytopic.Key, partition.Key, "dotnet-producer").Set(partition.Value.BytesProduced);
                     }
                 }
             }).Build())
@@ -138,7 +144,7 @@ namespace CCloud
                         });
 
                     producer.Flush(TimeSpan.FromSeconds(10));
-                    Thread.Sleep(new Random().Next(1000));
+                    Thread.Sleep(2000);
 
                 }
             }
@@ -169,7 +175,7 @@ namespace CCloud
                 .SetStatisticsHandler((_, json) =>
                 {
                     // Console.WriteLine($"Statistics: {json}");
-                    var statistics = JsonConvert.DeserializeObject<ConsumerStatistics>(json);
+                    var statistics = JsonConvert.DeserializeObject<Statistics>(json);
 
                     foreach(var mytopic in statistics.Topics)
                     {
