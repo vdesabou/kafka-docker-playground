@@ -247,6 +247,21 @@ services:
     volumes:
       - ./jmx-exporter:/usr/share/jmx_exporter/
 
+  client-dotnet:
+    build:
+      context: client-dotnet/
+      args:
+        CORE_RUNTIME_TAG: "3.1.2-bionic"
+        CORE_SDK_TAG: "3.1.102-bionic"
+        CSPROJ_FILE: "CCloud3.1.csproj"
+    hostname: client-dotnet
+    container_name: client-dotnet
+    ports:
+      - 7074:7074
+      - 7075:7075
+    volumes:
+      - ./client-dotnet/librdkafka.config:/tmp/librdkafka.config
+
   producer:
     build:
       context: producer/
