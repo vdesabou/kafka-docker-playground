@@ -66,3 +66,4 @@ ccloud/ccloud-demo/cloudformation/kafka-docker-playground-ccloud-demo-vincent.js
 ccloud/ccloud-demo/cloudformation/kafka-docker-playground-ccloud-demo-copstam.json
 ccloud/rest-proxy-security-plugin/kafka-rest.jaas.conf
 ccloud/ccloud-demo/client-dotnet/librdkafka.config
+tools/datadog/myenv

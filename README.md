@@ -303,6 +303,7 @@ There is also a Confluent Cloud version available [here](ccloud/cp-ansible-playg
 * [How to write logs to files when using docker-compose](other/write-logs-to-files)
 * [Publish logs to kafka with Elastic Filebeat](other/filebeat-to-kafka)
 * <img src="https://www.pngitem.com/pimgs/m/33-335825_-net-core-logo-png-transparent-png.png" width="15"> [.NET](other/client-dotnet) basic producer
+* <img src="https://datadog-docs.imgix.net/images/dd-docs-meta-image.png" width="15"> [Monitor Confluent Platform with Datadog](tools/datadog)
 
 ## 📚 Useful Resources
 
