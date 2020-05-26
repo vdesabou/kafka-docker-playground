@@ -30,7 +30,7 @@ Go to `Confluent Platform Overview` dashboard:
 There is one replicator connector running
 
 
-FIXTHIS:
+**FIXTHIS**: need to specify JMX metrics are there are truncated to 350:
 
 ```log
 ========
