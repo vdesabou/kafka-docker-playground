@@ -1,0 +1,41 @@
+---
+version: '3.5'
+services:
+
+  zookeeper:
+    environment:
+      KAFKA_JMX_PORT: 9999
+      KAFKA_JMX_HOSTNAME: zoookeeper
+
+  broker:
+    environment:
+      KAFKA_JMX_PORT: 10000
+      KAFKA_JMX_HOSTNAME: broker
+
+  schema-registry:
+    environment:
+      SCHEMA_REGISTRY_JMX_PORT: 10001
+      SCHEMA_REGISTRY_JMX_HOSTNAME: schema-registry
+
+  connect:
+    environment:
+      CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-replicator
+      KAFKA_JMX_PORT: 10002
+      KAFKA_JMX_HOSTNAME: connect
+
+  datadog:
+    build: ../../tools/datadog/datadog
+    hostname: datadog
+    container_name: datadog
+    links:
+     - zookeeper
+     - broker
+     - schema-registry
+     - connect
+    environment:
+     - DD_API_KEY=$DD_API_KEY
+     - DD_SITE=$DD_SITE
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /proc/:/host/proc/:ro
+      - /sys/fs/cgroup:/host/sys/fs/cgroup:ro
