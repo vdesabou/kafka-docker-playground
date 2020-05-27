@@ -33,7 +33,7 @@ sed -e "s|:SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO:|$SCHEMA_REGISTRY_BASIC_AUTH_USE
     ${DIR}/executable-onprem-to-cloud-replicator.properties > ${DIR}/tmp
 mv ${DIR}/tmp ${DIR}/executable-onprem-to-cloud-replicator.properties
 
-log "Verify there is no subject defined on destination SR: output should be empty []"
+log "Verify there is no subject defined on destination SR: WARNING: output should be empty []"
 curl -u $SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO $SCHEMA_REGISTRY_URL/subjects
 
 check_if_continue
@@ -45,16 +45,15 @@ check_if_continue
 log "Set the destination Schema Registry to IMPORT mode"
 curl -u $SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO -X PUT -H "Content-Type: application/json" "$SCHEMA_REGISTRY_URL/mode" --data '{"mode": "IMPORT"}'
 
+log "Creating topic in Confluent Cloud (auto.create.topics.enable=false)"
 set +e
+delete_topic executable-products
+sleep 3
+create_topic executable-products
 delete_topic connect-onprem-to-cloud.offsets
 delete_topic connect-onprem-to-cloud.status
 delete_topic connect-onprem-to-cloud.config
 set -e
-
-# log "Delete schema for topic"
-# set +e
-# ccloud schema-registry schema delete --subject executable-products-value --version latest
-# set -e
 
 # Avoid java.lang.OutOfMemoryError: Java heap space
 docker container restart connect
@@ -70,13 +69,18 @@ EOF
 
 log "Starting replicator executable (logs are in /tmp/replicator.log):"
 # run in detach mode -d
-docker exec -d connect bash -c 'export CLASSPATH=/etc/kafka-connect/jars/replicator-rest-extension-*.jar; replicator --consumer.config /etc/kafka/executable-onprem-to-cloud-consumer.properties --producer.config /etc/kafka/executable-onprem-to-cloud-producer.properties  --replication.config /etc/kafka/executable-onprem-to-cloud-replicator.properties  --cluster.id executable-onprem-to-cloud --whitelist executable-products > /tmp/replicator.log 2>&1'
-
+docker exec -d connect bash -c 'export CLASSPATH=/etc/kafka-connect/jars/replicator-rest-extension-*.jar; replicator --consumer.config /etc/kafka/executable-onprem-to-cloud-consumer.properties --producer.config /etc/kafka/executable-onprem-to-cloud-producer.properties  --replication.config /etc/kafka/executable-onprem-to-cloud-replicator.properties  --cluster.id executable-onprem-to-cloud --whitelist _schemas > /tmp/replicator.log 2>&1'
 
 sleep 50
 
 log "Verify we have the schema"
 curl -u $SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO $SCHEMA_REGISTRY_URL/subjects
+
+log "Set the source Schema Registry to READONLY mode"
+curl -X PUT -H "Content-Type: application/json" "http://localhost:8081/mode" --data '{"mode": "READONLY"}'
+
+log "Set the destination Schema Registry to READWRITE mode"
+curl -u $SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO -X PUT -H "Content-Type: application/json" "$SCHEMA_REGISTRY_URL/mode" --data '{"mode": "READWRITE"}'
 
 log "Copying replicator logs to /tmp/replicator.log"
 docker cp connect:/tmp/replicator.log /tmp/replicator.log
