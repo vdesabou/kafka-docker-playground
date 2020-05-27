@@ -33,6 +33,10 @@ sed -e "s|:SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO:|$SCHEMA_REGISTRY_BASIC_AUTH_USE
     ${DIR}/executable-onprem-to-cloud-replicator.properties > ${DIR}/tmp
 mv ${DIR}/tmp ${DIR}/executable-onprem-to-cloud-replicator.properties
 
+set +e
+curl -X DELETE -u $SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO $SCHEMA_REGISTRY_URL/subjects/executable-products-value
+set -e
+
 log "Verify there is no subject defined on destination SR: WARNING: output should be empty []"
 curl -u $SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO $SCHEMA_REGISTRY_URL/subjects
 
