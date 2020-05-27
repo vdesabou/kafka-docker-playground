@@ -25,17 +25,17 @@ mv ${DIR}/tmp ${DIR}/executable-onprem-to-cloud-producer.properties
 
 log "Creating topic in Confluent Cloud (auto.create.topics.enable=false)"
 set +e
-delete_topic executable-products-avro
+delete_topic executable-products
 sleep 3
-create_topic executable-products-avro
-delete_topic connect-onprem-to-cloud-avro.offsets
-delete_topic connect-onprem-to-cloud-avro.status
-delete_topic connect-onprem-to-cloud-avro.config
+create_topic executable-products
+delete_topic connect-onprem-to-cloud.offsets
+delete_topic connect-onprem-to-cloud.status
+delete_topic connect-onprem-to-cloud.config
 set -e
 
 log "Delete schema for topic"
 set +e
-ccloud schema-registry schema delete --subject executable-products-avro-value --version latest
+ccloud schema-registry schema delete --subject executable-products-value --version latest
 set -e
 
 # Avoid java.lang.OutOfMemoryError: Java heap space
