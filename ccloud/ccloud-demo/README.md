@@ -14,12 +14,13 @@
       - [HTTP Sink Connector](#http-sink-connector)
       - [Elasticsearch Sink Connector](#elasticsearch-sink-connector)
     - [Schema Registry](#schema-registry)
+      - [Use with Insomnia](#use-with-insomnia)
     - [KSQL](#ksql)
     - [REST Proxy](#rest-proxy)
     - [Control Center](#control-center)
   - [Monitoring](#monitoring)
     - [Metrics API](#metrics-api)
-      - [Use with Insomnia](#use-with-insomnia)
+      - [Use with Insomnia](#use-with-insomnia-1)
       - [Export to Prometheus](#export-to-prometheus)
     - [Control Center](#control-center-1)
       - [Monitoring multiple clusters](#monitoring-multiple-clusters)
@@ -543,6 +544,15 @@ schema-registry:
 
 Link to Confluent [documentation](https://docs.confluent.io/current/cloud/connect/schema-reg-cloud-config.html)
 
+#### Use with Insomnia
+
+You can use [Schema Registry HTTP API](https://docs.confluent.io/current/schema-registry/develop/api.html#sr-api-reference) with [insomnia](https://insomnia.rest/) (install it on Mac OS with `brew cask install insomnia`).
+Then go to Preferences->Data and import this [JSON file](insomnia/schema-registry.json?raw=true).
+
+You can set variables for your cluster by modifying sub environment called `Confluent Cloud Schema Registry`:
+
+![Sub environment](./images/Screenshot7.png)
+
 ### KSQL
 
 As [Confluent Cloud KSQL](https://docs.confluent.io/current/cloud/limits.html#ccloud-ksql-preview) is still in preview, you can instead install local KSQL instance (docker service `ksql-server`) which is bootstrapping the Confluent Cloud broker.
@@ -789,7 +799,7 @@ Full API specification is available [here](https://api.telemetry.confluent.cloud
 #### Use with Insomnia
 
 You can use metrics API with [insomnia](https://insomnia.rest/) (install it on Mac OS with `brew cask install insomnia`), then go in Preferences->Plugins and install plugin called `insomnia-plugin-customtimestamp`.
-Then go to Preferences->Data and import this [JSON file](metrics-api-insomnia/Insomnia.json?raw=true).
+Then go to Preferences->Data and import this [JSON file](insomnia/metrics-api.json?raw=true).
 
 You can set variables for your cluster by modifying sub environment called `Metrics API`:
 
