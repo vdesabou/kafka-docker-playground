@@ -323,7 +323,7 @@ Link to Confluent [documentation](https://docs.confluent.io/current/cloud/connec
 You can use [Connect REST API](https://docs.confluent.io/current/connect/references/restapi.html#kconnect-long-rest-interface) with [insomnia](https://insomnia.rest/) (install it on Mac OS with `brew cask install insomnia`).
 Then go to Preferences->Data and import this [JSON file](insomnia/connect-rest-api.json?raw=true).
 
-You can set variables for your cluster by modifying sub environment called `Connect REST API`:
+You can set variables for your cluster by modifying sub environment called `Ccloud Demo Connect REST API`:
 
 ![Sub environment](./images/Screenshot9.png)
 

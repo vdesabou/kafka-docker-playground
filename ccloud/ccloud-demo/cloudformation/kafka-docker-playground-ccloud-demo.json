@@ -434,6 +434,10 @@
     "PrometheusURL" : {
       "Description" : "URL for Prometheus",
       "Value" : { "Fn::Join" : ["", ["http://", { "Fn::GetAtt" : [ "CcloudDemoInstance", "PublicDnsName" ]}, ":9090"]] }
+    },
+    "ConnectAPIURL" : {
+      "Description" : "URL for Connect API",
+      "Value" : { "Fn::Join" : ["", ["http://", { "Fn::GetAtt" : [ "CcloudDemoInstance", "PublicDnsName" ]}, ":8083"]] }
     }
   }
 }

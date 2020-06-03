@@ -157,13 +157,13 @@ docker exec connect \
      -H "Content-Type: application/json" \
      --data '{
                "connector.class":"io.confluent.connect.jdbc.JdbcSourceConnector",
-                    "tasks.max":"1",
-                    "connection.url":"jdbc:mysql://mysql:3306/db?user=user&password=password&useSSL=false",
-                    "table.whitelist":"application",
-                    "mode":"timestamp+incrementing",
-                    "timestamp.column.name":"last_modified",
-                    "incrementing.column.name":"id",
-                    "topic.prefix":"mysql-"
+               "tasks.max":"1",
+               "connection.url":"jdbc:mysql://mysql:3306/db?user=user&password=password&useSSL=false",
+               "table.whitelist":"application",
+               "mode":"timestamp+incrementing",
+               "timestamp.column.name":"last_modified",
+               "incrementing.column.name":"id",
+               "topic.prefix":"mysql-"
           }' \
      http://localhost:8083/connectors/mysql-source/config | jq .
 
