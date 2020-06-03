@@ -286,9 +286,6 @@ connect:
     CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-elasticsearch,/usr/share/confluent-hub-components/confluentinc-kafka-connect-http,/usr/share/confluent-hub-components/confluentinc-kafka-connect-jdbc
     CONNECT_LOG4J_ROOT_LOGLEVEL: INFO
     CONNECT_LOG4J_LOGGERS: org.reflections=ERROR
-    CLASSPATH: /usr/share/java/monitoring-interceptors/monitoring-interceptors-5.3.2.jar
-    CONNECT_REQUEST_TIMEOUT_MS: 20000
-    CONNECT_RETRY_BACKOFF_MS: 500
     # Connect worker
     CONNECT_SECURITY_PROTOCOL: SASL_SSL
     CONNECT_SASL_JAAS_CONFIG: org.apache.kafka.common.security.plain.PlainLoginModule required username="<API KEY>" password="<API SECRET>";
