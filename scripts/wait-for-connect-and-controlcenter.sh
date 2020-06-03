@@ -38,7 +38,7 @@ CONTROL_CENTER_CONTAINER=${1:-"control-center"}
 if [ "${IGNORE_CONNECT_STARTUP}" == "FALSE" ]
 then
   # Verify Kafka Connect has started within MAX_WAIT seconds
-  MAX_WAIT=300
+  MAX_WAIT=480
   CUR_WAIT=0
   log "Waiting up to $MAX_WAIT seconds for Kafka Connect ${CONNECT_CONTAINER} to start"
   docker container logs ${CONNECT_CONTAINER} > /tmp/out.txt 2>&1
@@ -58,7 +58,7 @@ fi
 if [ "${IGNORE_CONTROL_CENTER_STARTUP}" == "FALSE" ]
 then
   # Verify Confluent Control Center has started within MAX_WAIT seconds
-  MAX_WAIT=300
+  MAX_WAIT=480
   CUR_WAIT=0
   log "Waiting up to $MAX_WAIT seconds for Confluent Control Center ${CONTROL_CENTER_CONTAINER} to start"
   docker container logs ${CONTROL_CENTER_CONTAINER} > /tmp/out.txt 2>&1
