@@ -10,17 +10,18 @@
     - [Kafka Streams](#kafka-streams)
     - [Java Consumer](#java-consumer)
     - [Connect](#connect)
+      - [Use with Insomnia](#use-with-insomnia)
       - [JDBC MySQL Source Connector](#jdbc-mysql-source-connector)
       - [HTTP Sink Connector](#http-sink-connector)
       - [Elasticsearch Sink Connector](#elasticsearch-sink-connector)
     - [Schema Registry](#schema-registry)
-      - [Use with Insomnia](#use-with-insomnia)
+      - [Use with Insomnia](#use-with-insomnia-1)
     - [KSQL](#ksql)
     - [REST Proxy](#rest-proxy)
     - [Control Center](#control-center)
   - [Monitoring](#monitoring)
     - [Metrics API](#metrics-api)
-      - [Use with Insomnia](#use-with-insomnia-1)
+      - [Use with Insomnia](#use-with-insomnia-2)
       - [Export to Prometheus](#export-to-prometheus)
     - [Control Center](#control-center-1)
       - [Monitoring multiple clusters](#monitoring-multiple-clusters)
@@ -319,6 +320,17 @@ N.B:
 ```
 
 Link to Confluent [documentation](https://docs.confluent.io/current/cloud/connect/connect-cloud-config.html)
+
+#### Use with Insomnia
+
+You can use [Connect REST API](https://docs.confluent.io/current/connect/references/restapi.html#kconnect-long-rest-interface) with [insomnia](https://insomnia.rest/) (install it on Mac OS with `brew cask install insomnia`).
+Then go to Preferences->Data and import this [JSON file](insomnia/connect-rest-api.json?raw=true).
+
+You can set variables for your cluster by modifying sub environment called `Connect REST API`:
+
+![Sub environment](./images/Screenshot9.png)
+
+![Sub environment](./images/Screenshot10.png)
 
 #### JDBC MySQL Source Connector
 
