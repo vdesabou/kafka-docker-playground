@@ -358,7 +358,10 @@
               "04fix-dir-permission": {
                   "command": "chown ec2-user:ec2-user /home/ec2-user/.ccloud"
               },
-              "05start_demo": {
+              "05increase-ulimit": {
+                "command": "echo '* hard nofile 100000' | tee -a /etc/security/limits.conf;echo '* soft nofile 100000' | tee -a /etc/security/limits.conf;ulimit -n 100000"
+              },
+              "06start_demo": {
                   "command": "/home/ec2-user/start.sh > /home/ec2-user/output.log 2>&1"
               }
             }
