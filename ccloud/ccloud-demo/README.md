@@ -31,6 +31,7 @@
     - [Grafana](#grafana)
       - [Producer Dashboard](#producer-dashboard)
       - [Consumer Dashboard](#consumer-dashboard)
+      - [Connect Dashboard](#connect-dashboard)
       - [Consumer Lag Dashboard](#consumer-lag-dashboard)
       - [CCloud Exporter Metrics API Dashboard](#ccloud-exporter-metrics-api-dashboard)
     - [How to monitor consumer lag](#how-to-monitor-consumer-lag)
@@ -1020,6 +1021,10 @@ You should see 3 dashboards:
 #### Consumer Dashboard
 
 ![Consumer](./images/39.jpg)
+
+#### Connect Dashboard
+
+![Connect](./images/Screenshot11.png)
 
 #### Consumer Lag Dashboard
 
