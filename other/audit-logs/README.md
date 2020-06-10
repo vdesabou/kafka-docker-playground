@@ -10,7 +10,7 @@ Quickly test [Audit logs](https://docs.confluent.io/current/security/audit-logs.
 Simply run:
 
 ```
-$ ./start.sh
+$ ./start-rbac-sasl-plain.sh
 ```
 
 ## Details of what the script is doing
