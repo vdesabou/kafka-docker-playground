@@ -6,7 +6,7 @@ source ${DIR}/../../scripts/utils.sh
 
 docker-compose down -v
 docker-compose up -d
-${DIR}/../../scripts/wait-for-connect-and-controlcenter.sh -a
+${DIR}/../../scripts/wait-for-connect-and-controlcenter.sh -a -b
 
 log "Create topic adb-test"
 docker-compose exec zookeeper kafka-topics --create --topic adb-test --partitions 20 --replication-factor 3 --if-not-exists --zookeeper zookeeper:2181
