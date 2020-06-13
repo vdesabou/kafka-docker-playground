@@ -13,9 +13,9 @@ cd ${OLDDIR}/../../environment/ssl_kerberos/security
 
 log "Generate keys and certificates used for SSL"
 verify_installed "keytool"
-if [ ! -f $JAVA_HOME/jre/lib/security/cacerts ]
+if [ ! -f $(find JAVA_HOME -name cacerts) ]
 then
-  logerror "ERROR: $JAVA_HOME/jre/lib/security/cacerts is not set"
+  logerror "ERROR: $(find JAVA_HOME -name cacerts) is not set"
   exit 1
 fi
 
