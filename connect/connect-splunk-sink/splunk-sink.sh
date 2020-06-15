@@ -4,6 +4,7 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
+
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
 
 log "Splunk UI is accessible at http://127.0.0.1:8000 (admin/password)"
@@ -52,3 +53,5 @@ if [[ ! $output == "This is a test with Splunk"* ]]; then
   logerror "Fail: something is wrong !"
   exit 1
 fi
+
+echo "$output"
