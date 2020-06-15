@@ -39,10 +39,11 @@ splunk:
   enable_service: false
   exec: /opt/splunk/bin/splunk
   group: splunk
-  hec_disabled: 0
-  hec_enableSSL: 0
-  hec_port: 8088
-  hec_token: 99582090-3ac3-4db1-9487-e17b17a05081
+  hec:
+      enable: True
+      ssl: False
+      token: 99582090-3ac3-4db1-9487-e17b17a05081
+      port: 8088
   home: /opt/splunk
   hostname: splunk
   http_enableSSL: 0
