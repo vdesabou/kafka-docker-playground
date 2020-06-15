@@ -25,6 +25,8 @@ docker container exec connect-us \
           "value.converter": "io.confluent.connect.replicator.util.ByteArrayConverter",
           "header.converter": "io.confluent.connect.replicator.util.ByteArrayConverter",
           "src.consumer.group.id": "replicate-europe-to-us",
+          "src.consumer.interceptor.classes": "io.confluent.monitoring.clients.interceptor.MonitoringConsumerInterceptor",
+          "src.consumer.confluent.monitoring.interceptor.bootstrap.servers": "broker-metrics:9092",
           "src.kafka.bootstrap.servers": "broker-europe:9092",
           "dest.kafka.bootstrap.servers": "broker-us:9092",
           "confluent.topic.replication.factor": 1,
@@ -45,6 +47,8 @@ docker container exec connect-europe \
           "value.converter": "io.confluent.connect.replicator.util.ByteArrayConverter",
           "header.converter": "io.confluent.connect.replicator.util.ByteArrayConverter",
           "src.consumer.group.id": "replicate-us-to-europe",
+          "src.consumer.interceptor.classes": "io.confluent.monitoring.clients.interceptor.MonitoringConsumerInterceptor",
+          "src.consumer.confluent.monitoring.interceptor.bootstrap.servers": "broker-metrics:9092",
           "src.kafka.bootstrap.servers": "broker-us:9092",
           "dest.kafka.bootstrap.servers": "broker-europe:9092",
           "confluent.topic.replication.factor": 1,
@@ -60,4 +64,8 @@ docker container exec -i connect-europe bash -c "export CLASSPATH=/usr/share/jav
 
 log "Verify we have received the data in all the sales_ topics in the US"
 docker container exec -i connect-us bash -c "export CLASSPATH=/usr/share/java/monitoring-interceptors/monitoring-interceptors-${TAG_BASE}.jar;  kafka-console-consumer --bootstrap-server broker-us:9092 --whitelist 'sales_.*' --from-beginning --max-messages 20 --property metadata.max.age.ms 30000 --consumer-property interceptor.classes=io.confluent.monitoring.clients.interceptor.MonitoringConsumerInterceptor --consumer-property confluent.monitoring.interceptor.bootstrap.servers=broker-metrics:9092"
+
+
+
+# docker container exec -i control-center bash -c "control-center-console-consumer /etc/confluent-control-center/control-center.properties --topic --from-beginning _confluent-monitoring"
 
