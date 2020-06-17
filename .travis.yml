@@ -64,8 +64,9 @@ jobs:
       TAG="5.5.0-1-ubi8"
 
   - name: '5.5.0-1-ubi8: CONNECT: azure-service-bus-source azure-blob-storage-sink azure-blob-storage-source'
-    env: TEST_LIST="connect/connect-azure-service-bus-source connect/connect-azure-blob-storage-sink connect/connect-azure-blob-storage-source"
+    env: TEST_LIST="connect/connect-azure-service-bus-source connect/connect-azure-blob-storage-sink"
       TAG="5.5.0-1-ubi8"
+#connect/connect-azure-blob-storage-source
 
   - name: '5.5.0-1-ubi8: CONNECT: splunk-sink splunk-source spool-dir-source syslog-source
       OTHER: override-policy-sftp-sink override-policy-sftp-source'
