@@ -28,14 +28,6 @@
             "default": null
         },
         {
-            "name": "MyTable",
-            "type": [
-              "null",
-              "string"
-            ],
-            "default": "null"
-        },
-        {
             "name": "MyFloatValue",
             "type": [
               "null",

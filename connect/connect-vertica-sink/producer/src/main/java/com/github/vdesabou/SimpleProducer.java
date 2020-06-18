@@ -23,7 +23,7 @@ public class SimpleProducer {
 
         Properties props = new Properties();
 
-        props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, System.getenv("BOOTSTRAP_SERVERS"));
+        props.put(ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, "broker:9092");
 
         props.put(ProducerConfig.ACKS_CONFIG, "all");
         props.put(ProducerConfig.REQUEST_TIMEOUT_MS_CONFIG, 20000);
@@ -34,7 +34,7 @@ public class SimpleProducer {
         props.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, KafkaAvroSerializer.class);
 
         // Schema Registry specific settings
-        props.put("schema.registry.url", System.getenv("SCHEMA_REGISTRY_URL"));
+        props.put("schema.registry.url", "http://schema-registry:8081");
 
 
         System.out.println("Sending data to `customer` topic. Properties: " + props.toString());
@@ -55,7 +55,6 @@ public class SimpleProducer {
                     .setListID(null)
                     .setNormalizedHashItemID(null)
                     .setURL(null)
-                    .setMyTable("customer1")
                     .setMyFloatValue(null)
                     .setMyTimestamp(new Date().getTime())
                     .build();
@@ -65,24 +64,15 @@ public class SimpleProducer {
                     .setListID(i)
                     .setNormalizedHashItemID(i)
                     .setURL("ultralongurlultralongurlultralongurlultralongurlultralongurlultralongurlultralongurultralongurl")
-                    .setMyTable("customer1")
                     .setMyFloatValue(0.28226356681351483)
                     .setMyTimestamp(new Date().getTime())
                     .build();
                     record = new ProducerRecord<>(TOPIC, key, customer);
                 } else {
-                    String tableName;
-                    if(i % 2 == 0) {
-                        tableName = "customer1";
-                    } else {
-                        tableName = "customer2";
-                    }
-
                     Customer customer = Customer.newBuilder()
                     .setListID(i)
                     .setNormalizedHashItemID(i)
                     .setURL("url")
-                    .setMyTable(tableName)
                     .setMyFloatValue(0.28226356681351483)
                     .setMyTimestamp(new Date().getTime())
                     .build();
@@ -102,7 +92,7 @@ public class SimpleProducer {
                 });
                 producer.flush();
                 i++;
-                //TimeUnit.MILLISECONDS.sleep(1);
+                TimeUnit.MILLISECONDS.sleep(100);
             }
         }
     }
