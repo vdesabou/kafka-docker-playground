@@ -46,9 +46,8 @@ docker exec connect \
                     "errors.log.enable": "true",
                     "errors.log.include.messages": "true",
                     "topics": "customer",
-                    "rejected.record.logging.mode": "table",
-                    "rejected.record.table.schema": "public",
-                    "table.name.format": "customer1",
+                    "rejected.record.logging.mode": "log",
+                    "table.name.format": "public.customer1",
                     "pk.mode": "record_key",
                     "pk.fields": "ID",
                     "auto.create": true,
@@ -67,17 +66,17 @@ docker exec connect \
                     # "consumer.override.fetch.min.bytes": "10000000",
                     # "consumer.override.fetch.max.bytes": "100000000",
                     # "consumer.override.request.timeout.ms": "60000"
-sleep 10
+sleep 30
 
 log "Check data is in Vertica for customer1"
 docker exec -i vertica /opt/vertica/bin/vsql -hlocalhost -Udbadmin << EOF
 select * from public.customer1;
 EOF
 
-log "Check for rejected data for customer1"
-docker exec -i vertica /opt/vertica/bin/vsql -hlocalhost -Udbadmin << EOF
-select * from public.customer1_rejected;
-EOF
+# log "Check for rejected data for customer1"
+# docker exec -i vertica /opt/vertica/bin/vsql -hlocalhost -Udbadmin << EOF
+# select * from public.customer1_rejected;
+# EOF
 
 # docker exec -i vertica /opt/vertica/bin/vsql -hlocalhost -Udbadmin << EOF
 # select * from columns;
