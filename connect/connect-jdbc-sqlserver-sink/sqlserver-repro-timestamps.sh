@@ -36,14 +36,16 @@ docker exec connect \
                     "transforms": "timestampconversion",
                     "transforms.timestampconversion.type": "org.apache.kafka.connect.transforms.TimestampConverter$Value",
                     "transforms.timestampconversion.target.type": "Timestamp",
+                    "transforms.timestampconversion.format": "yyyy-MM-dd HH:mm:ss.SSS",
                     "transforms.timestampconversion.field": "tsm"
           }' \
      http://localhost:8083/connectors/sqlserver-sink/config | jq .
 
 log "Sending messages to topic orders"
-docker exec -i connect kafka-avro-console-producer --broker-list broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic orders --property value.schema='{"fields":[{"type":"int","name":"id"},{"type":"string","name":"product"},{"type":"int","name":"quantity"},{"type":"float","name":"price"},{"type":{"logicalType":"timestamp-millis","type":"long"},"name":"tsm"}],"type":"record","name":"myrecord"}' << EOF
-{"id": 999, "product": "foo", "quantity": 100, "price": 50, "tsm": 1592432807}
+docker exec -i connect kafka-avro-console-producer --broker-list broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic orders --property value.schema='{"fields":[{"type":"int","name":"id"},{"type":"string","name":"product"},{"type":"int","name":"quantity"},{"type":"float","name":"price"},{"type":"string","name":"tsm"}],"type":"record","name":"myrecord"}' << EOF
+{"id": 999, "product": "foo", "quantity": 100, "price": 50, "tsm": "2019-07-11 17:57:06.750"}
 EOF
+
 
 docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic orders --from-beginning --max-messages 1
 
