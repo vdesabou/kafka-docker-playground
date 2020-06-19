@@ -119,7 +119,7 @@ Run with Confluent Cloud Schema Registry:
 
 ![AWS CloudFormation](./images/Screenshot4.png)
 
-* Fill informtion as requested (default EC2 instance type and root volume are recommended):
+* Fill information as requested (default EC2 instance type and root volume are recommended):
 
 ![AWS CloudFormation](./images/Screenshot5.jpg)
 
