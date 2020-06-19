@@ -176,7 +176,7 @@
 
   "Resources" : {
 
-    "MonitoringDemoInstance": {
+    "AWSInstance": {
       "Type": "AWS::EC2::Instance",
       "Metadata" : {
         "AWS::CloudFormation::Init" : {
@@ -198,7 +198,7 @@
 
               "/home/ec2-user/start.sh" : {
                 "content" : { "Fn::Join" : [ "", [
-                  "#!/bin/bash\nset -e\n\n# run as ec2-user\ncat << EOF | su ec2-user\n\ncd \ngit clone https://github.com/vdesabou/kafka-docker-playground.git\n\nexport CLOUDFORMATION=1\ncd ~/kafka-docker-playground/other/monitoring-demo/\n./start.sh\nEOF"
+                  "#!/bin/bash\nset -e\n\n# run as ec2-user\ncat << EOF | su ec2-user\n\ncd \ngit clone https://github.com/vdesabou/kafka-docker-playground.git\n\nexport CLOUDFORMATION=1\ncd ~/kafka-docker-playground/other/monitoring-demo/\n./start.sh\n\n\nEOF"
                 ]]},
                 "mode"  : "000744",
                 "owner" : "ec2-user",
@@ -220,10 +220,10 @@
                 "content": { "Fn::Join" : ["", [
                   "[cfn-auto-reloader-hook]\n",
                   "triggers=post.update\n",
-                  "path=Resources.MonitoringDemoInstance.Metadata.AWS::CloudFormation::Init\n",
+                  "path=Resources.AWSInstance.Metadata.AWS::CloudFormation::Init\n",
                   "action=/opt/aws/bin/cfn-init -v ",
                   "         --stack ", { "Ref" : "AWS::StackName" },
-                  "         --resource MonitoringDemoInstance ",
+                  "         --resource AWSInstance ",
                   "         --configsets InstallAndRun ",
                   "         --region ", { "Ref" : "AWS::Region" }, "\n",
                   "runas=root\n"
@@ -267,7 +267,7 @@
         "ImageId" : { "Fn::FindInMap" : [ "AWSRegionArch2AMI", { "Ref" : "AWS::Region" },
                           { "Fn::FindInMap" : [ "AWSInstanceType2Arch", { "Ref" : "InstanceType" }, "Arch" ] } ] },
         "InstanceType"   : { "Ref" : "InstanceType" },
-        "SecurityGroups" : [ {"Ref" : "MonitoringDemoSecurityGroup"} ],
+        "SecurityGroups" : [ {"Ref" : "KafkaDockerPlaygroundSecurityGroup"} ],
         "KeyName"        : { "Ref" : "KeyName" },
         "BlockDeviceMappings": [
             {
@@ -287,14 +287,14 @@
              "# Install the files and packages from the metadata\n",
              "/opt/aws/bin/cfn-init -v ",
              "         --stack ", { "Ref" : "AWS::StackName" },
-             "         --resource MonitoringDemoInstance ",
+             "         --resource AWSInstance ",
              "         --configsets InstallAndRun ",
              "         --region ", { "Ref" : "AWS::Region" }, "\n",
 
              "# Signal the status from cfn-init\n",
              "/opt/aws/bin/cfn-signal -e $? ",
              "         --stack ", { "Ref" : "AWS::StackName" },
-             "         --resource MonitoringDemoInstance ",
+             "         --resource AWSInstance ",
              "         --region ", { "Ref" : "AWS::Region" }, "\n"
         ]]}}
       },
@@ -305,7 +305,7 @@
       }
     },
 
-    "MonitoringDemoSecurityGroup" : {
+    "KafkaDockerPlaygroundSecurityGroup" : {
       "Type" : "AWS::EC2::SecurityGroup",
       "Properties" : {
         "GroupDescription" : "Enable SSH, Connect API, C3, Grafana and Prometheus access",
@@ -323,19 +323,19 @@
   "Outputs" : {
     "ControlCenterURL" : {
       "Description" : "URL for Control Center",
-      "Value" : { "Fn::Join" : ["", ["http://", { "Fn::GetAtt" : [ "MonitoringDemoInstance", "PublicDnsName" ]}, ":9021"]] }
+      "Value" : { "Fn::Join" : ["", ["http://", { "Fn::GetAtt" : [ "AWSInstance", "PublicDnsName" ]}, ":9021"]] }
     },
     "GrafanaURL" : {
       "Description" : "URL for Grafana",
-      "Value" : { "Fn::Join" : ["", ["http://", { "Fn::GetAtt" : [ "MonitoringDemoInstance", "PublicDnsName" ]}, ":3000"]] }
+      "Value" : { "Fn::Join" : ["", ["http://", { "Fn::GetAtt" : [ "AWSInstance", "PublicDnsName" ]}, ":3000"]] }
     },
     "PrometheusURL" : {
       "Description" : "URL for Prometheus",
-      "Value" : { "Fn::Join" : ["", ["http://", { "Fn::GetAtt" : [ "MonitoringDemoInstance", "PublicDnsName" ]}, ":9090"]] }
+      "Value" : { "Fn::Join" : ["", ["http://", { "Fn::GetAtt" : [ "AWSInstance", "PublicDnsName" ]}, ":9090"]] }
     },
     "ConnectAPIURL" : {
       "Description" : "URL for Connect API",
-      "Value" : { "Fn::Join" : ["", ["http://", { "Fn::GetAtt" : [ "MonitoringDemoInstance", "PublicDnsName" ]}, ":8083"]] }
+      "Value" : { "Fn::Join" : ["", ["http://", { "Fn::GetAtt" : [ "AWSInstance", "PublicDnsName" ]}, ":8083"]] }
     }
   }
 }
