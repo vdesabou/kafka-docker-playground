@@ -1,0 +1,26 @@
+lowercaseOutputName: true
+lowercaseOutputLabelNames: true
+rules:
+    - pattern : "kafka.connect<type=connect-worker-metrics>([^:]+):"
+      name: "kafka_connect_connect_worker_metrics_$1"
+    - pattern : "kafka.connect<type=connect-worker-rebalance-metrics>([^:]+):"
+      name: "kafka_connect_connect_worker_rebalance_metrics_$1"
+    - pattern : "kafka.connect<type=connect-metrics, client-id=([^:]+)><>([^:]+)"
+      name: "kafka_connect_connect_metrics_$2"
+      labels:
+        client-id: "$1"
+    - pattern: kafka.connect<type=connector-task-metrics, connector=([-.\w]+), task=(\d+)><>([^:]+)
+      name: kafka_connect_connector_task_metrics_$3
+      labels:
+        connector: "$1"
+        task: "$2"
+    - pattern: kafka.connect<type=source-task-metrics, connector=([-.\w]+), task=(\d+)><>([^:]+)
+      name: kafka_connect_source_task_metrics_$3
+      labels:
+        connector: "$1"
+        task: "$2"
+    - pattern: kafka.connect<type=sink-task-metrics, connector=([-.\w]+), task=(\d+)><>([^:]+)
+      name: kafka_connect_sink_task_metrics_$3
+      labels:
+        connector: "$1"
+        task: "$2"
