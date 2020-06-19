@@ -304,10 +304,11 @@
     "KafkaDockerPlaygroundSecurityGroup" : {
       "Type" : "AWS::EC2::SecurityGroup",
       "Properties" : {
-        "GroupDescription" : "Enable SSH, C3, Grafana and Prometheus access",
+        "GroupDescription" : "Enable SSH, Connect API, C3, Grafana and Prometheus access",
         "SecurityGroupIngress" : [
           {"IpProtocol" : "tcp", "FromPort" : "9021", "ToPort" : "9021", "CidrIp" : { "Ref" : "IPAddressRange"}},
           {"IpProtocol" : "tcp", "FromPort" : "3000", "ToPort" : "3000", "CidrIp" : { "Ref" : "IPAddressRange"}},
+          {"IpProtocol" : "tcp", "FromPort" : "8083", "ToPort" : "8083", "CidrIp" : { "Ref" : "IPAddressRange"}},
           {"IpProtocol" : "tcp", "FromPort" : "9090", "ToPort" : "9090", "CidrIp" : { "Ref" : "IPAddressRange"}},
           {"IpProtocol" : "tcp", "FromPort" : "22", "ToPort" : "22", "CidrIp" : { "Ref" : "IPAddressRange"}}
         ]
@@ -320,9 +321,17 @@
       "Description" : "URL for Control Center",
       "Value" : { "Fn::Join" : ["", ["http://", { "Fn::GetAtt" : [ "AWSInstance", "PublicDnsName" ]}, ":9021"]] }
     },
-    "AWSInstance" : {
-      "Description" : "Public IP for EC2 instance",
-      "Value" : { "Fn::Join" : ["", ["", { "Fn::GetAtt" : [ "AWSInstance", "PublicDnsName" ]}]] }
+    "GrafanaURL" : {
+      "Description" : "URL for Grafana",
+      "Value" : { "Fn::Join" : ["", ["http://", { "Fn::GetAtt" : [ "AWSInstance", "PublicDnsName" ]}, ":3000"]] }
+    },
+    "PrometheusURL" : {
+      "Description" : "URL for Prometheus",
+      "Value" : { "Fn::Join" : ["", ["http://", { "Fn::GetAtt" : [ "AWSInstance", "PublicDnsName" ]}, ":9090"]] }
+    },
+    "ConnectAPIURL" : {
+      "Description" : "URL for Connect API",
+      "Value" : { "Fn::Join" : ["", ["http://", { "Fn::GetAtt" : [ "AWSInstance", "PublicDnsName" ]}, ":8083"]] }
     }
   }
 }
