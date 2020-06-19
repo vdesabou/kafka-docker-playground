@@ -1,0 +1,237 @@
+---
+version: '3.5'
+services:
+  zookeeper:
+    environment:
+      ZOOKEEPER_SERVER_ID: "1"
+      ZOOKEEPER_SERVERS: zookeeper:2888:3888
+      EXTRA_ARGS: -javaagent:/usr/share/jmx_exporter/jmx_prometheus_javaagent-0.12.0.jar=1234:/usr/share/jmx_exporter/zookeeper.yml
+    volumes:
+    - ../../other/monitoring-demo/jmx-exporter:/usr/share/jmx_exporter/
+
+  broker:
+    environment:
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_OPTS: -javaagent:/usr/share/jmx_exporter/jmx_prometheus_javaagent-0.12.0.jar=1234:/usr/share/jmx_exporter/kafka-broker.yml
+    volumes:
+    - ../../other/monitoring-demo/jmx-exporter:/usr/share/jmx_exporter/
+
+  ksqldb-server:
+    image: confluentinc/ksqldb-server:0.9.0
+    hostname: ksqldb-server
+    container_name: ksqldb-server
+    ports:
+      - "8088:8088"
+    environment:
+      KSQL_LISTENERS: http://0.0.0.0:8088
+      KSQL_BOOTSTRAP_SERVERS: broker:9092
+      KSQL_KSQL_LOGGING_PROCESSING_STREAM_AUTO_CREATE: "true"
+      KSQL_KSQL_LOGGING_PROCESSING_TOPIC_AUTO_CREATE: "true"
+      KSQL_CACHE_MAX_BYTES_BUFFERING: 0
+      KSQL_KSQL_SCHEMA_REGISTRY_URL: "http://schema-registry:8081"
+      KSQL_KSQL_CONNECT_URL: "http://connect:8083"
+
+  ksqldb-cli:
+    image: confluentinc/ksqldb-cli:0.9.0
+    container_name: ksqldb-cli
+    depends_on:
+      - ksqldb-server
+    entrypoint: /bin/sh
+    tty: true
+
+  control-center:
+    environment:
+      CONTROL_CENTER_KSQL_URL: "http://ksqldb-server:8088"
+      CONTROL_CENTER_KSQL_ADVERTISED_URL: "http://127.0.0.1:8088"
+      CONTROL_CENTER_COMMAND_TOPIC_REPLICATION: 1
+      CONTROL_CENTER_METRICS_TOPIC_REPLICATION: 1
+
+  mysql:
+    image: mysql:5.7
+    hostname: mysql
+    container_name: mysql
+    volumes:
+      - ../../connect/connect-jdbc-mysql-source/mysql-init.sql:/docker-entrypoint-initdb.d/mysql-init.sql
+    environment:
+      MYSQL_ROOT_PASSWORD: password
+      MYSQL_DATABASE: db
+      MYSQL_USER: user
+      MYSQL_PASSWORD: password
+      MYSQL_ROOT_HOST: 172.%  # Allow docker containers to connect to mysql
+
+  elasticsearch:
+    image: elasticsearch:6.8.3
+    hostname: elasticsearch
+    container_name: elasticsearch
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+    environment:
+      discovery.type: single-node
+
+  connect:
+    depends_on:
+      - schema-registry
+      - mysql
+      - http-service-basic-auth
+    volumes:
+      - ../../other/monitoring-demo/mysql-connector-java-5.1.45.jar:/usr/share/confluent-hub-components/confluentinc-kafka-connect-jdbc/lib/mysql-connector-java-5.1.45.jar
+      - ../../other/monitoring-demo/jmx-exporter:/usr/share/jmx_exporter/
+    environment:
+      CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-elasticsearch,/usr/share/confluent-hub-components/confluentinc-kafka-connect-http,/usr/share/confluent-hub-components/confluentinc-kafka-connect-jdbc
+      KAFKA_OPTS: -javaagent:/usr/share/jmx_exporter/jmx_prometheus_javaagent-0.12.0.jar=1234:/usr/share/jmx_exporter/kafka-connect.yml -Xmx256M -Xms256M
+
+  http-service-basic-auth:
+    image: vdesabou/http-sink-demo
+    hostname: http-service-basic-auth
+    container_name: http-service-basic-auth
+    ports:
+      - "9083:8080"
+    environment:
+      SPRING_PROFILES_ACTIVE: 'basic-auth'
+
+  streams:
+    build:
+      context: ../../other/monitoring-demo/streams/
+      args:
+        TAG: ${TAG}
+        CP_BASE_IMAGE: ${CP_BASE_IMAGE}
+    hostname: streams
+    container_name: streams
+    environment:
+      JAVA_OPTS: -javaagent:/usr/share/jmx_exporter/jmx_prometheus_javaagent-0.12.0.jar=1234:/usr/share/jmx_exporter/kafka-producer.yml -Xmx256M -Xms256M
+    volumes:
+      - ../../other/monitoring-demo/jmx-exporter:/usr/share/jmx_exporter/
+
+  client-dotnet:
+    build:
+      context: ../../other/monitoring-demo/client-dotnet/
+      args:
+        CORE_RUNTIME_TAG: "3.1.2-bionic"
+        CORE_SDK_TAG: "3.1.102-bionic"
+        CSPROJ_FILE: "Monitoring.csproj"
+    hostname: client-dotnet
+    container_name: client-dotnet
+    ports:
+      - 7074:7074
+      - 7075:7075
+
+  producer:
+    build:
+      context: ../../other/monitoring-demo/producer/
+    hostname: producer
+    container_name: producer
+    environment:
+      KAFKA_BOOTSTRAP_SERVERS: "broker:9092"
+      TOPIC: "customer-avro"
+      REPLICATION_FACTOR: 3
+      NUMBER_OF_PARTITIONS: 2
+      MESSAGE_BACKOFF: 5000 # Frequency of message injection
+      KAFKA_ACKS: "all" # default: "1"
+      KAFKA_REQUEST_TIMEOUT_MS: 20000
+      KAFKA_RETRY_BACKOFF_MS: 500
+      KAFKA_CLIENT_ID: "my-java-producer"
+
+      KAFKA_SCHEMA_REGISTRY_URL: "http://schema-registry:8081"
+
+      KAFKA_INTERCEPTOR_CLASSES: "io.confluent.monitoring.clients.interceptor.MonitoringProducerInterceptor"
+      KAFKA_CONFLUENT_MONITORING_INTERCEPTOR_BOOTSTRAP_SERVERS: "broker:9092"
+
+      #KAFKA_ENABLE_IDEMPOTENCE: "true"
+      #KAFKA_MAX_IN_FLIGHT_REQUESTS_PER_CONNECTION: "5" # default: 5
+      #KAFKA_RETRIES: "10" # default: Integer.MAX_VALUE
+      #KAFKA_REQUEST_TIMEOUT_MS: "900" # default: 30000
+      #KAFKA_DELIVERY_TIMEOUT_MS: "1000" # default: 120000
+      #KAFKA_TRANSACTIONAL_ID: "prod-1"
+      JAVA_OPTS: -javaagent:/usr/share/jmx_exporter/jmx_prometheus_javaagent-0.12.0.jar=1234:/usr/share/jmx_exporter/kafka-producer.yml -Xmx256M -Xms256M
+    volumes:
+      - ../../other/monitoring-demo/jmx-exporter:/usr/share/jmx_exporter/
+    depends_on:
+      - streams
+
+  consumer:
+    build:
+      context: ../../other/monitoring-demo/consumer/
+    hostname: consumer
+    container_name: consumer
+    environment:
+      KAFKA_BOOTSTRAP_SERVERS: "broker:9092"
+      TOPIC: "customer-avro"
+      KAFKA_GROUP_ID: "customer-avro-app"
+      KAFKA_CLIENT_ID: "my-java-consumer"
+      CHECK_GAPS: "false"
+      COMMIT_STRATEGY: "AUTO_COMMIT" # possible values AUTO_COMMIT or PER_BATCH or PER_MESSAGES
+      #KAFKA_ENABLE_AUTO_COMMIT_CONFIG: "false" # default true if group.id is provided
+      #KAFKA_ISOLATION_LEVEL_CONFIG: "read_committed" # default read_uncommitted
+      # default: org.apache.kafka.clients.consumer.RangeAssignor
+      #KAFKA_PARTITION_ASSIGNMENT_STRATEGY_CONFIG: "org.apache.kafka.clients.consumer.CooperativeStickyAssignor"
+
+      KAFKA_SCHEMA_REGISTRY_URL: "http://schema-registry:8081"
+
+      KAFKA_INTERCEPTOR_CLASSES: "io.confluent.monitoring.clients.interceptor.MonitoringConsumerInterceptor"
+      KAFKA_CONFLUENT_MONITORING_INTERCEPTOR_BOOTSTRAP_SERVERS: "broker:9092"
+      JAVA_OPTS: -javaagent:/usr/share/jmx_exporter/jmx_prometheus_javaagent-0.12.0.jar=1234:/usr/share/jmx_exporter/kafka-consumer.yml -Xmx256M -Xms256M
+    volumes:
+      - ../../other/monitoring-demo/jmx-exporter:/usr/share/jmx_exporter/
+    depends_on:
+      - streams
+
+  kafka-lag-exporter:
+    image: lightbend/kafka-lag-exporter:0.5.5
+    hostname: kafka-lag-exporter
+    container_name: kafka-lag-exporter
+    restart: always
+    ports:
+      - 9999:9999
+    volumes:
+      - ../../other/monitoring-demo/kafka-lag-exporter/application.conf:/opt/docker/conf/application.conf
+      - ../../other/monitoring-demo/kafka-lag-exporter/logback.xml:/opt/docker/conf/logback.xml
+
+  alertmanager:
+    image: prom/alertmanager:v0.18.0
+    hostname: alertmanager
+    container_name: alertmanager
+    ports:
+      - 9093:9093
+
+  node-exporter:
+    image: prom/node-exporter:v0.18.1
+    hostname: node-exporter
+    container_name: node-exporter
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/rootfs:ro
+    command:
+      - '--path.procfs=/host/proc'
+      - '--path.sysfs=/host/sys'
+      - '--collector.filesystem.ignored-mount-points'
+      - '^(aufs|proc|nsfs|shm|cgroup|tmpfs|binfmt_misc|debugfs|devpts|fusectl|hugetlbfs|fuse.lxcfs|mqueue|pstore|securityfs|sysfs|autofs|devtmpfs|configfs)'
+
+  prometheus:
+    image: prom/prometheus
+    hostname: prometheus
+    container_name: prometheus
+    ports:
+      - 9090:9090
+    volumes:
+      - ../../other/monitoring-demo/prometheus/:/etc/prometheus/
+    depends_on:
+      - node-exporter
+      - kafka-lag-exporter
+      - alertmanager
+
+  grafana:
+    image: grafana/grafana
+    hostname: grafana
+    container_name: grafana
+    environment:
+      GF_INSTALL_PLUGINS: grafana-piechart-panel
+    ports:
+      - 3000:3000
+    volumes:
+      - ../../other/monitoring-demo/grafana/provisioning/:/etc/grafana/provisioning/
+    depends_on:
+      - prometheus
