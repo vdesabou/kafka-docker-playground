@@ -6,7 +6,7 @@ If you don't want to run the playground locally, you can run it easily  on a EC2
 
 ![AWS CloudFormation](./Screenshot1.png)
 
-* Fill informtion as requested (default EC2 instance type and root volume are recommended):
+* Fill information as requested (default EC2 instance type and root volume are recommended):
 
 ![AWS CloudFormation](./Screenshot2.png)
 

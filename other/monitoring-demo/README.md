@@ -13,7 +13,7 @@ This is OnPrem version of [Confluent Cloud Demo](../../ccloud/ccloud-demo/README
 
 ![AWS CloudFormation](../../ccloud/ccloud-demo/images/Screenshot4.png)
 
-* Fill informtion as requested (default EC2 instance type and root volume are recommended):
+* Fill information as requested (default EC2 instance type and root volume are recommended):
 
 ![AWS CloudFormation](./images/Screenshot1.png)
 
