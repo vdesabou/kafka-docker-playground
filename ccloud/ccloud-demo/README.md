@@ -121,7 +121,7 @@ Run with Confluent Cloud Schema Registry:
 
 * Fill informtion as requested (default EC2 instance type and root volume are recommended):
 
-![AWS CloudFormation](./images/Screenshot5.png)
+![AWS CloudFormation](./images/Screenshot5.jpg)
 
 * After about 15 minutes, the stack will be created and you can see in *outputs* tab the URLs for connecting to Control Center and Grafana (`admin`/`admin`)
 
