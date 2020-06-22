@@ -4,13 +4,51 @@ services:
   zookeeper:
     environment:
       ZOOKEEPER_SERVER_ID: "1"
-      ZOOKEEPER_SERVERS: zookeeper:2888:3888
+      ZOOKEEPER_SERVERS: zookeeper:2888:3888;zookeeper2:2888:3888;zookeeper3:2888:3888
       EXTRA_ARGS: -javaagent:/usr/share/jmx_exporter/jmx_prometheus_javaagent-0.12.0.jar=1234:/usr/share/jmx_exporter/zookeeper.yml
+      KAFKA_HEAP_OPTS: "-Xmx512M -Xms512M"
+    volumes:
+    - ../../other/monitoring-demo/jmx-exporter:/usr/share/jmx_exporter/
+
+  zookeeper2:
+    image: confluentinc/cp-zookeeper:${TAG}
+    hostname: zookeeper2
+    container_name: zookeeper2
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+      # for 5.4.x:
+      KAFKA_OPTS: -Dzookeeper.4lw.commands.whitelist=*
+      ZOOKEEPER_SERVER_ID: "2"
+      ZOOKEEPER_SERVERS: zookeeper:2888:3888;zookeeper2:2888:3888;zookeeper3:2888:3888
+      EXTRA_ARGS: -javaagent:/usr/share/jmx_exporter/jmx_prometheus_javaagent-0.12.0.jar=1234:/usr/share/jmx_exporter/zookeeper.yml
+      KAFKA_HEAP_OPTS: "-Xmx512M -Xms512M"
+    volumes:
+    - ../../other/monitoring-demo/jmx-exporter:/usr/share/jmx_exporter/
+
+  zookeeper3:
+    image: confluentinc/cp-zookeeper:${TAG}
+    hostname: zookeeper3
+    container_name: zookeeper3
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+      # for 5.4.x:
+      KAFKA_OPTS: -Dzookeeper.4lw.commands.whitelist=*
+      ZOOKEEPER_SERVER_ID: "3"
+      ZOOKEEPER_SERVERS: zookeeper:2888:3888;zookeeper2:2888:3888;zookeeper3:2888:3888
+      EXTRA_ARGS: -javaagent:/usr/share/jmx_exporter/jmx_prometheus_javaagent-0.12.0.jar=1234:/usr/share/jmx_exporter/zookeeper.yml
+      KAFKA_HEAP_OPTS: "-Xmx512M -Xms512M"
     volumes:
     - ../../other/monitoring-demo/jmx-exporter:/usr/share/jmx_exporter/
 
   broker:
+    depends_on:
+      - zookeeper
+      - zookeeper2
+      - zookeeper3
     environment:
+      KAFKA_ZOOKEEPER_CONNECT: 'zookeeper:2181,zookeeper2:2181,zookeeper3:2181'
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
       KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
       KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
