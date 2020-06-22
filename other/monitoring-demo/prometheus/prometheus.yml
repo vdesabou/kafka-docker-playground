@@ -32,6 +32,8 @@ scrape_configs:
     static_configs:
     - targets:
       - 'zookeeper:1234'
+      - 'zookeeper2:1234'
+      - 'zookeeper3:1234'
       labels:
         env: 'dev'
 
