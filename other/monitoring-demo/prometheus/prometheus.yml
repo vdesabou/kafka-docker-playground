@@ -14,12 +14,10 @@ alerting:
 
 scrape_configs:
   - job_name: 'prometheus'
-    scrape_interval: 5s
     static_configs:
     - targets: ['localhost:9090']
 
   - job_name: 'node-exporter'
-    scrape_interval: 5s
     static_configs:
     - targets: ['node-exporter:9100']
 
@@ -38,7 +36,6 @@ scrape_configs:
         env: 'dev'
 
   - job_name: 'producer'
-    scrape_interval: 5s
     static_configs:
       - targets:
           - 'producer:1234'
@@ -46,7 +43,6 @@ scrape_configs:
           env: 'dev'
 
   - job_name: 'consumer'
-    scrape_interval: 5s
     static_configs:
       - targets:
           - 'consumer:1234'
@@ -61,28 +57,24 @@ scrape_configs:
           env: 'dev'
 
   - job_name: 'dotnet-producer'
-    scrape_interval: 5s
     static_configs:
       - targets: ['client-dotnet:7074']
         labels:
           env: 'dev'
 
   - job_name: 'dotnet-consumer'
-    scrape_interval: 5s
     static_configs:
       - targets: ['client-dotnet:7075']
         labels:
           env: 'dev'
 
   - job_name: 'kafka-lag-exporter'
-    scrape_interval: 5s
     static_configs:
       - targets: ['kafka-lag-exporter:9999']
         labels:
           env: 'dev'
 
   - job_name: 'connect'
-    scrape_interval: 5s
     static_configs:
       - targets: ['connect:1234']
         labels:
