@@ -84,7 +84,7 @@ public class SimpleProducer {
     }
 
     private Map<String, String> defaultProps = Map.of(
-            ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, "broker:9092",
+            ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, "broker-europe:9092",
             ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, "org.apache.kafka.common.serialization.LongSerializer",
             ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, "io.confluent.kafka.serializers.KafkaAvroSerializer");
 

@@ -1,90 +1,150 @@
 ---
 version: '3.5'
 services:
-  zookeeper:
+  zookeeper-europe:
     environment:
       ZOOKEEPER_SERVER_ID: "1"
-      ZOOKEEPER_SERVERS: zookeeper:2888:3888;zookeeper2:2888:3888;zookeeper3:2888:3888
+      ZOOKEEPER_SERVERS: zookeeper-europe:2888:3888;zookeeper-europe2:2888:3888
       EXTRA_ARGS: -javaagent:/usr/share/jmx_exporter/jmx_prometheus_javaagent-0.12.0.jar=1234:/usr/share/jmx_exporter/zookeeper.yml
       KAFKA_HEAP_OPTS: "-Xmx512M -Xms512M"
     volumes:
     - ../../other/monitoring-demo/jmx-exporter:/usr/share/jmx_exporter/
 
-  zookeeper2:
+  zookeeper-europe2:
     image: confluentinc/cp-zookeeper:${TAG}
-    hostname: zookeeper2
-    container_name: zookeeper2
+    hostname: zookeeper-europe2
+    container_name: zookeeper-europe2
     environment:
       ZOOKEEPER_CLIENT_PORT: 2181
       ZOOKEEPER_TICK_TIME: 2000
       # for 5.4.x:
       KAFKA_OPTS: -Dzookeeper.4lw.commands.whitelist=*
       ZOOKEEPER_SERVER_ID: "2"
-      ZOOKEEPER_SERVERS: zookeeper:2888:3888;zookeeper2:2888:3888;zookeeper3:2888:3888
+      ZOOKEEPER_SERVERS: zookeeper-europe:2888:3888;zookeeper-europe2:2888:3888
       EXTRA_ARGS: -javaagent:/usr/share/jmx_exporter/jmx_prometheus_javaagent-0.12.0.jar=1234:/usr/share/jmx_exporter/zookeeper.yml
       KAFKA_HEAP_OPTS: "-Xmx512M -Xms512M"
     volumes:
     - ../../other/monitoring-demo/jmx-exporter:/usr/share/jmx_exporter/
 
-  zookeeper3:
+  zookeeper-us:
+    environment:
+      ZOOKEEPER_SERVER_ID: "1"
+      ZOOKEEPER_SERVERS: zookeeper-us:2888:3888;zookeeper-us2:2888:3888
+      EXTRA_ARGS: -javaagent:/usr/share/jmx_exporter/jmx_prometheus_javaagent-0.12.0.jar=1234:/usr/share/jmx_exporter/zookeeper.yml
+      KAFKA_HEAP_OPTS: "-Xmx512M -Xms512M"
+    volumes:
+    - ../../other/monitoring-demo/jmx-exporter:/usr/share/jmx_exporter/
+
+  zookeeper-us2:
     image: confluentinc/cp-zookeeper:${TAG}
-    hostname: zookeeper3
-    container_name: zookeeper3
+    hostname: zookeeper-us2
+    container_name: zookeeper-us2
     environment:
       ZOOKEEPER_CLIENT_PORT: 2181
       ZOOKEEPER_TICK_TIME: 2000
       # for 5.4.x:
       KAFKA_OPTS: -Dzookeeper.4lw.commands.whitelist=*
-      ZOOKEEPER_SERVER_ID: "3"
-      ZOOKEEPER_SERVERS: zookeeper:2888:3888;zookeeper2:2888:3888;zookeeper3:2888:3888
+      ZOOKEEPER_SERVER_ID: "2"
+      ZOOKEEPER_SERVERS: zookeeper-us:2888:3888;zookeeper-us2:2888:3888
       EXTRA_ARGS: -javaagent:/usr/share/jmx_exporter/jmx_prometheus_javaagent-0.12.0.jar=1234:/usr/share/jmx_exporter/zookeeper.yml
       KAFKA_HEAP_OPTS: "-Xmx512M -Xms512M"
     volumes:
     - ../../other/monitoring-demo/jmx-exporter:/usr/share/jmx_exporter/
 
-  broker:
+  broker-europe:
     depends_on:
-      - zookeeper
-      - zookeeper2
-      - zookeeper3
+      - zookeeper-europe
+      - zookeeper-europe2
     environment:
-      KAFKA_ZOOKEEPER_CONNECT: 'zookeeper:2181,zookeeper2:2181,zookeeper3:2181'
+      KAFKA_ZOOKEEPER_CONNECT: 'zookeeper-europe:2181,zookeeper-europe2:2181'
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
       KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
       KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
       KAFKA_OPTS: -javaagent:/usr/share/jmx_exporter/jmx_prometheus_javaagent-0.12.0.jar=1234:/usr/share/jmx_exporter/kafka-broker.yml
+      KAFKA_CONFLUENT_SCHEMA_REGISTRY_URL: http://schema-registry-europe:8081
     volumes:
     - ../../other/monitoring-demo/jmx-exporter:/usr/share/jmx_exporter/
 
-  ksqldb-server:
+  broker-us:
+    depends_on:
+      - zookeeper-us
+      - zookeeper-us2
+    environment:
+      KAFKA_ZOOKEEPER_CONNECT: 'zookeeper-us:2181,zookeeper-us2:2181'
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_OPTS: -javaagent:/usr/share/jmx_exporter/jmx_prometheus_javaagent-0.12.0.jar=1234:/usr/share/jmx_exporter/kafka-broker.yml
+      KAFKA_CONFLUENT_SCHEMA_REGISTRY_URL: http://schema-registry-us:8081
+    volumes:
+    - ../../other/monitoring-demo/jmx-exporter:/usr/share/jmx_exporter/
+
+  schema-registry-europe:
+    depends_on:
+      - broker-europe
+    image: confluentinc/cp-schema-registry:${TAG}
+    hostname: schema-registry-europe
+    container_name: schema-registry-europe
+    restart: always
+    ports:
+      - '8081:8081'
+    environment:
+      SCHEMA_REGISTRY_HOST_NAME: schema-registry-europe
+      SCHEMA_REGISTRY_LISTENERS: http://0.0.0.0:8081
+      SCHEMA_REGISTRY_KAFKASTORE_BOOTSTRAP_SERVERS: broker-europe:9092
+
+  schema-registry-us:
+    depends_on:
+      - broker-us
+    image: confluentinc/cp-schema-registry:${TAG}
+    hostname: schema-registry-us
+    container_name: schema-registry-us
+    restart: always
+    ports:
+      - '18081:8081'
+    environment:
+      SCHEMA_REGISTRY_HOST_NAME: schema-registry-us
+      SCHEMA_REGISTRY_LISTENERS: http://0.0.0.0:8081
+      SCHEMA_REGISTRY_KAFKASTORE_BOOTSTRAP_SERVERS: broker-us:9092
+
+  ksqldb-server-europe:
     image: confluentinc/ksqldb-server:0.9.0
-    hostname: ksqldb-server
-    container_name: ksqldb-server
+    hostname: ksqldb-server-europe
+    container_name: ksqldb-server-europe
     ports:
       - "8088:8088"
     environment:
       KSQL_LISTENERS: http://0.0.0.0:8088
-      KSQL_BOOTSTRAP_SERVERS: broker:9092
+      KSQL_BOOTSTRAP_SERVERS: broker-europe:9092
       KSQL_KSQL_LOGGING_PROCESSING_STREAM_AUTO_CREATE: "true"
       KSQL_KSQL_LOGGING_PROCESSING_TOPIC_AUTO_CREATE: "true"
       KSQL_CACHE_MAX_BYTES_BUFFERING: 0
-      KSQL_KSQL_SCHEMA_REGISTRY_URL: "http://schema-registry:8081"
-      KSQL_KSQL_CONNECT_URL: "http://connect:8083"
+      KSQL_KSQL_SCHEMA_REGISTRY_URL: "http://schema-registry-europe:8081"
+      KSQL_KSQL_CONNECT_URL: "http://connect-europe:8083"
 
   ksqldb-cli:
     image: confluentinc/ksqldb-cli:0.9.0
     container_name: ksqldb-cli
     depends_on:
-      - ksqldb-server
+      - ksqldb-server-europe
     entrypoint: /bin/sh
     tty: true
 
   control-center:
     environment:
-      CONTROL_CENTER_KSQL_URL: "http://ksqldb-server:8088"
+      CONTROL_CENTER_KSQL_URL: "http://ksqldb-server-europe:8088"
       CONTROL_CENTER_KSQL_ADVERTISED_URL: "http://127.0.0.1:8088"
       CONTROL_CENTER_COMMAND_TOPIC_REPLICATION: 1
       CONTROL_CENTER_METRICS_TOPIC_REPLICATION: 1
+
+#      CONTROL_CENTER_SCHEMA_REGISTRY_URL: "http://schema-registry-europe:8081"
+#      CONTROL_CENTER_STREAMS_CPREST_URL: "http://broker:8090"
+
+      CONTROL_CENTER_KAFKA_US_CPREST_URL: "http://broker-us:8090"
+      CONTROL_CENTER_SCHEMA_REGISTRY_US_URL: "http://schema-registry-us:8081"
+
+      CONTROL_CENTER_KAFKA_EUROPE_CPREST_URL: "http://broker-europe:8090"
+      CONTROL_CENTER_SCHEMA_REGISTRY_EUROPE_URL: "http://schema-registry-europe:8081"
 
   mysql:
     image: mysql:5.7
@@ -109,16 +169,34 @@ services:
     environment:
       discovery.type: single-node
 
-  connect:
+  connect-europe:
     depends_on:
-      - schema-registry
+      - schema-registry-europe
       - mysql
       - http-service-basic-auth
+    restart: always
     volumes:
       - ../../other/monitoring-demo/mysql-connector-java-5.1.45.jar:/usr/share/confluent-hub-components/confluentinc-kafka-connect-jdbc/lib/mysql-connector-java-5.1.45.jar
       - ../../other/monitoring-demo/jmx-exporter:/usr/share/jmx_exporter/
     environment:
-      CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-elasticsearch,/usr/share/confluent-hub-components/confluentinc-kafka-connect-http,/usr/share/confluent-hub-components/confluentinc-kafka-connect-jdbc
+      CONNECT_KEY_CONVERTER: "org.apache.kafka.connect.storage.StringConverter"
+      CONNECT_VALUE_CONVERTER: "io.confluent.connect.avro.AvroConverter"
+      CONNECT_VALUE_CONVERTER_SCHEMAS_ENABLE: "false"
+      CONNECT_VALUE_CONVERTER_SCHEMA_REGISTRY_URL: "http://schema-registry-europe:8081"
+      CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-elasticsearch,/usr/share/confluent-hub-components/confluentinc-kafka-connect-http,/usr/share/confluent-hub-components/confluentinc-kafka-connect-jdbc,/usr/share/confluent-hub-components/confluentinc-kafka-connect-replicator
+      KAFKA_OPTS: -javaagent:/usr/share/jmx_exporter/jmx_prometheus_javaagent-0.12.0.jar=1234:/usr/share/jmx_exporter/kafka-connect.yml -Xmx256M -Xms256M
+
+  connect-us:
+    depends_on:
+      - schema-registry-us
+    restart: always
+    volumes:
+      - ../../other/monitoring-demo/jmx-exporter:/usr/share/jmx_exporter/
+    environment:
+      CONNECT_KEY_CONVERTER: "org.apache.kafka.connect.storage.StringConverter"
+      CONNECT_VALUE_CONVERTER: "io.confluent.connect.avro.AvroConverter"
+      CONNECT_VALUE_CONVERTER_SCHEMAS_ENABLE: "false"
+      CONNECT_VALUE_CONVERTER_SCHEMA_REGISTRY_URL: "http://schema-registry-us:8081"
       KAFKA_OPTS: -javaagent:/usr/share/jmx_exporter/jmx_prometheus_javaagent-0.12.0.jar=1234:/usr/share/jmx_exporter/kafka-connect.yml -Xmx256M -Xms256M
 
   http-service-basic-auth:
@@ -162,7 +240,7 @@ services:
     hostname: producer
     container_name: producer
     environment:
-      KAFKA_BOOTSTRAP_SERVERS: "broker:9092"
+      KAFKA_BOOTSTRAP_SERVERS: "broker-europe:9092"
       TOPIC: "customer-avro"
       REPLICATION_FACTOR: 3
       NUMBER_OF_PARTITIONS: 2
@@ -172,10 +250,10 @@ services:
       KAFKA_RETRY_BACKOFF_MS: 500
       KAFKA_CLIENT_ID: "my-java-producer"
 
-      KAFKA_SCHEMA_REGISTRY_URL: "http://schema-registry:8081"
+      KAFKA_SCHEMA_REGISTRY_URL: "http://schema-registry-europe:8081"
 
       KAFKA_INTERCEPTOR_CLASSES: "io.confluent.monitoring.clients.interceptor.MonitoringProducerInterceptor"
-      KAFKA_CONFLUENT_MONITORING_INTERCEPTOR_BOOTSTRAP_SERVERS: "broker:9092"
+      KAFKA_CONFLUENT_MONITORING_INTERCEPTOR_BOOTSTRAP_SERVERS: "broker-europe:9092"
 
       #KAFKA_ENABLE_IDEMPOTENCE: "true"
       #KAFKA_MAX_IN_FLIGHT_REQUESTS_PER_CONNECTION: "5" # default: 5
@@ -195,7 +273,7 @@ services:
     hostname: consumer
     container_name: consumer
     environment:
-      KAFKA_BOOTSTRAP_SERVERS: "broker:9092"
+      KAFKA_BOOTSTRAP_SERVERS: "broker-europe:9092"
       TOPIC: "customer-avro"
       KAFKA_GROUP_ID: "customer-avro-app"
       KAFKA_CLIENT_ID: "my-java-consumer"
@@ -206,10 +284,10 @@ services:
       # default: org.apache.kafka.clients.consumer.RangeAssignor
       #KAFKA_PARTITION_ASSIGNMENT_STRATEGY_CONFIG: "org.apache.kafka.clients.consumer.CooperativeStickyAssignor"
 
-      KAFKA_SCHEMA_REGISTRY_URL: "http://schema-registry:8081"
+      KAFKA_SCHEMA_REGISTRY_URL: "http://schema-registry-europe:8081"
 
       KAFKA_INTERCEPTOR_CLASSES: "io.confluent.monitoring.clients.interceptor.MonitoringConsumerInterceptor"
-      KAFKA_CONFLUENT_MONITORING_INTERCEPTOR_BOOTSTRAP_SERVERS: "broker:9092"
+      KAFKA_CONFLUENT_MONITORING_INTERCEPTOR_BOOTSTRAP_SERVERS: "broker-europe:9092"
       JAVA_OPTS: -javaagent:/usr/share/jmx_exporter/jmx_prometheus_javaagent-0.12.0.jar=1234:/usr/share/jmx_exporter/kafka-consumer.yml -Xmx256M -Xms256M
     volumes:
       - ../../other/monitoring-demo/jmx-exporter:/usr/share/jmx_exporter/
