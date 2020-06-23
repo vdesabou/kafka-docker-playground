@@ -4584,8 +4584,8 @@
       {
         "allValue": null,
         "current": {
-          "text": "dev",
-          "value": "dev"
+          "text": "europe",
+          "value": "europe"
         },
         "datasource": "Prometheus",
         "definition": "label_values(env)",
