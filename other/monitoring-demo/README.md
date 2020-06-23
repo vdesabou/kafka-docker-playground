@@ -1,6 +1,18 @@
 # Monitoring Demo
 
-This is OnPrem version of [Confluent Cloud Demo](../../ccloud/ccloud-demo/README.md)
+This is OnPrem version of [Confluent Cloud Demo](../../ccloud/ccloud-demo/README.md), with 2 data centers `europe` and `us`:
+
+For each cluster, we have:
+
+* 2 zookeeper
+* 1 broker
+* 1 connect
+
+control-center is monitoring the two clusters
+
+The clients are connected to `europe` cluster.
+
+N.B: we have dedicated zookepper and broker for metrics.
 
 * Control Center is reachable at [http://127.0.0.1:9021](http://127.0.0.1:9021])
 * Grafana is reachable at [http://127.0.0.1:3000](http://127.0.0.1:3000]) (login/password is `admin/admin`)

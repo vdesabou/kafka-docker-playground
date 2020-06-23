@@ -24,16 +24,18 @@ scrape_configs:
   - job_name: 'kafka'
     static_configs:
     - targets:
-      - 'broker:1234'
+      - 'broker-us:1234'
+      - 'broker-europe:1234'
       labels:
         env: 'dev'
 
   - job_name: 'zookeeper'
     static_configs:
     - targets:
-      - 'zookeeper:1234'
-      - 'zookeeper2:1234'
-      - 'zookeeper3:1234'
+      - 'zookeeper-europe:1234'
+      - 'zookeeper-europe2:1234'
+      - 'zookeeper-us:1234'
+      - 'zookeeper-us2:1234'
       labels:
         env: 'dev'
 
@@ -78,6 +80,8 @@ scrape_configs:
 
   - job_name: 'connect'
     static_configs:
-      - targets: ['connect:1234']
+      - targets:
+          - "connect-europe:1234"
+          - "connect-us:1234"
         labels:
           env: 'dev'

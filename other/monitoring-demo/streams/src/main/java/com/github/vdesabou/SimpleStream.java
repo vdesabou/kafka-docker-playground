@@ -23,7 +23,7 @@ public class SimpleStream {
 
     public static void main(String[] args) {
         Properties props = new Properties();
-        props.put(StreamsConfig.BOOTSTRAP_SERVERS_CONFIG, "broker:9092");
+        props.put(StreamsConfig.BOOTSTRAP_SERVERS_CONFIG, "broker-europe:9092");
         props.put(StreamsConfig.NUM_STREAM_THREADS_CONFIG, 3);
         props.put(StreamsConfig.APPLICATION_ID_CONFIG, "simple-stream");
         props.put(StreamsConfig.COMMIT_INTERVAL_MS_CONFIG, 5 * 1000);
@@ -43,7 +43,7 @@ public class SimpleStream {
         // interceptors for C3
         props.put(StreamsConfig.PRODUCER_PREFIX + ProducerConfig.INTERCEPTOR_CLASSES_CONFIG,"io.confluent.monitoring.clients.interceptor.MonitoringProducerInterceptor");
         props.put(StreamsConfig.CONSUMER_PREFIX + ConsumerConfig.INTERCEPTOR_CLASSES_CONFIG,"io.confluent.monitoring.clients.interceptor.MonitoringConsumerInterceptor");
-        props.put("confluent.monitoring.interceptor.bootstrap.servers", "broker:9092");
+        props.put("confluent.monitoring.interceptor.bootstrap.servers", "broker-europe:9092");
         props.put(StreamsConfig.DEFAULT_DESERIALIZATION_EXCEPTION_HANDLER_CLASS_CONFIG,LogAndContinueExceptionHandler.class.getName());
 
         final Serde<String> stringSerde = Serdes.String();
