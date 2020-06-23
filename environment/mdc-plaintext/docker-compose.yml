@@ -105,14 +105,14 @@ services:
       KAFKA_CONFLUENT_LICENSE_TOPIC_REPLICATION_FACTOR: 1
 
   connect-us:
-    image: confluentinc/cp-enterprise-replicator:${TAG}
+    image: vdesabou/kafka-docker-playground-connect:${TAG}
     hostname: connect-us
     container_name: connect-us
     depends_on:
       - zookeeper-us
       - broker-us
       - broker-metrics
-    command: "bash -c 'cp /usr/share/java/kafka-connect-replicator/replicator-rest-extension-*.jar /etc/kafka-connect/jars/; /etc/confluent/docker/run'"
+    command: "bash -c 'cp /usr/share/confluent-hub-components/confluentinc-kafka-connect-replicator/lib/replicator-rest-extension-*.jar /etc/kafka-connect/jars/; /etc/confluent/docker/run'"
     environment:
       CONNECT_BOOTSTRAP_SERVERS: 'broker-us:9092'
       CONNECT_REST_ADVERTISED_HOST_NAME: connect-us
@@ -128,8 +128,7 @@ services:
       CONNECT_VALUE_CONVERTER: org.apache.kafka.connect.json.JsonConverter
       CONNECT_INTERNAL_KEY_CONVERTER: org.apache.kafka.connect.json.JsonConverter
       CONNECT_INTERNAL_VALUE_CONVERTER: org.apache.kafka.connect.json.JsonConverter
-      # Adding kafka-connect-replicator to make bootstrap faster, as KConnect will analyze the only connector I'll be using
-      CONNECT_PLUGIN_PATH: /usr/share/java/
+      CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-replicator
       CONNECT_LOG4J_LOGGERS: org.apache.zookeeper=ERROR,org.I0Itec.zkclient=ERROR,org.reflections=ERROR
       # Confluent Monitoring Interceptors for Control Center Streams Monitoring
       CONNECT_PRODUCER_INTERCEPTOR_CLASSES: "io.confluent.monitoring.clients.interceptor.MonitoringProducerInterceptor"
@@ -139,14 +138,14 @@ services:
       CONNECT_REST_EXTENSION_CLASSES: io.confluent.connect.replicator.monitoring.ReplicatorMonitoringExtension
 
   connect-europe:
-    image: confluentinc/cp-enterprise-replicator:${TAG}
+    image: vdesabou/kafka-docker-playground-connect:${TAG}
     hostname: connect-europe
     container_name: connect-europe
     depends_on:
       - zookeeper-europe
       - broker-europe
       - broker-metrics
-    command: "bash -c 'cp /usr/share/java/kafka-connect-replicator/replicator-rest-extension-*.jar /etc/kafka-connect/jars/; /etc/confluent/docker/run'"
+    command: "bash -c 'cp /usr/share/confluent-hub-components/confluentinc-kafka-connect-replicator/lib/replicator-rest-extension-*.jar /etc/kafka-connect/jars/; /etc/confluent/docker/run'"
     environment:
       CONNECT_BOOTSTRAP_SERVERS: 'broker-europe:9092'
       CONNECT_REST_ADVERTISED_HOST_NAME: connect-europe
@@ -162,8 +161,7 @@ services:
       CONNECT_VALUE_CONVERTER: org.apache.kafka.connect.json.JsonConverter
       CONNECT_INTERNAL_KEY_CONVERTER: org.apache.kafka.connect.json.JsonConverter
       CONNECT_INTERNAL_VALUE_CONVERTER: org.apache.kafka.connect.json.JsonConverter
-      # Need /usr/share/java/ for replicator
-      CONNECT_PLUGIN_PATH: /usr/share/java/
+      CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-replicator
       CONNECT_LOG4J_LOGGERS: org.apache.zookeeper=ERROR,org.I0Itec.zkclient=ERROR,org.reflections=ERROR
       # Confluent Monitoring Interceptors for Control Center Streams Monitoring
       CONNECT_PRODUCER_INTERCEPTOR_CLASSES: "io.confluent.monitoring.clients.interceptor.MonitoringProducerInterceptor"
