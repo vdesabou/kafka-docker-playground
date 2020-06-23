@@ -35,7 +35,7 @@ namespace Monitoring
             {
                 var clientConfig = new ClientConfig
                 {
-                    BootstrapServers = "broker:9092",
+                    BootstrapServers = "broker-europe:9092",
                     // MetadataRequestTimeoutMs = 30000,
                     // TopicMetadataRefreshIntervalMs = 210000,
                     // MetadataMaxAgeMs = 210000,
