@@ -45,7 +45,7 @@ services:
       SCHEMA_REGISTRY_MODE_MUTABILITY: "true"
 
   connect:
-    image: confluentinc/cp-enterprise-replicator:${TAG}
+    image: vdesabou/kafka-docker-playground-connect:${TAG}
     volumes:
         - ../../ccloud/migrate-schemas-to-confluent-cloud/executable-onprem-to-cloud-consumer.properties:/etc/kafka/executable-onprem-to-cloud-consumer.properties
         - ../../ccloud/migrate-schemas-to-confluent-cloud/executable-onprem-to-cloud-producer.properties:/etc/kafka/executable-onprem-to-cloud-producer.properties

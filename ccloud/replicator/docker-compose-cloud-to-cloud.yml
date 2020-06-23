@@ -3,7 +3,7 @@ version: '3.5'
 services:
 
   connect:
-    image: confluentinc/cp-enterprise-replicator:${TAG}
+    image: vdesabou/kafka-docker-playground-connect:${TAG}
     command: "bash -c 'cp /usr/share/java/kafka-connect-replicator/replicator-rest-extension-*.jar /etc/kafka-connect/jars/; /etc/confluent/docker/run'"
     environment:
       CONNECT_PLUGIN_PATH: /usr/share/java/

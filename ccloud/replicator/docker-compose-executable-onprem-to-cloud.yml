@@ -44,7 +44,7 @@ services:
       SCHEMA_REGISTRY_KAFKASTORE_BOOTSTRAP_SERVERS: broker:9092
 
   connect:
-    image: confluentinc/cp-enterprise-replicator:${TAG}
+    image: vdesabou/kafka-docker-playground-connect:${TAG}
     volumes:
         - ../../ccloud/replicator/executable-onprem-to-cloud-consumer.properties:/etc/kafka/executable-onprem-to-cloud-consumer.properties
         - ../../ccloud/replicator/executable-onprem-to-cloud-producer.properties:/etc/kafka/executable-onprem-to-cloud-producer.properties
