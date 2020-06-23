@@ -25,19 +25,25 @@ scrape_configs:
     static_configs:
     - targets:
       - 'broker-us:1234'
+      labels:
+        env: 'us'
+    - targets:
       - 'broker-europe:1234'
       labels:
-        env: 'dev'
+        env: 'europe'
 
   - job_name: 'zookeeper'
     static_configs:
     - targets:
-      - 'zookeeper-europe:1234'
-      - 'zookeeper-europe2:1234'
       - 'zookeeper-us:1234'
       - 'zookeeper-us2:1234'
       labels:
-        env: 'dev'
+        env: 'us'
+    - targets:
+      - 'europe-us:1234'
+      - 'europe-us2:1234'
+      labels:
+        env: 'europe'
 
   - job_name: 'producer'
     static_configs:
@@ -81,7 +87,10 @@ scrape_configs:
   - job_name: 'connect'
     static_configs:
       - targets:
-          - "connect-europe:1234"
           - "connect-us:1234"
         labels:
-          env: 'dev'
+          env: 'us'
+      - targets:
+          - "connect-europe:1234"
+        labels:
+          env: 'europe'
