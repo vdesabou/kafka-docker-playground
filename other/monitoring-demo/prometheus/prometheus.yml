@@ -40,8 +40,8 @@ scrape_configs:
       labels:
         env: 'us'
     - targets:
-      - 'europe-us:1234'
-      - 'europe-us2:1234'
+      - 'zookeeper-europe:1234'
+      - 'zookeeper-europe2:1234'
       labels:
         env: 'europe'
 
