@@ -12,13 +12,13 @@ services:
       - ../../ccloud/replicator/haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg:ro
 
   connect:
-    image: confluentinc/cp-enterprise-replicator:${TAG}
+    image: vdesabou/kafka-docker-playground-connect:${TAG}
     volumes:
       - ../../ccloud/replicator/kafka-schema-registry-client-5.4.1-cp1.jar:/usr/share/java/kafka-connect-replicator/kafka-schema-registry-client-5.4.1.jar
       - ../../ccloud/replicator/kafka-schema-registry-5.4.1-cp1.jar:/usr/share/java/kafka-connect-replicator/kafka-schema-registry-5.4.1.jar
       - ../../ccloud/replicator/kafka-schema-registry-client-5.4.1-cp1.jar:/usr/share/java/schema-registry/kafka-schema-registry-client-5.4.1.jar
       - ../../ccloud/replicator/kafka-schema-registry-5.4.1-cp1.jar:/usr/share/java/schema-registry/kafka-schema-registry-5.4.1.jar
-    command: "bash -c 'cp /usr/share/java/kafka-connect-replicator/replicator-rest-extension-*.jar /etc/kafka-connect/jars/; /etc/confluent/docker/run'"
+    command: "bash -c 'cp /usr/share/confluent-hub-components/confluentinc-kafka-connect-replicator/lib/replicator-rest-extension-*.jar /etc/kafka-connect/jars/; /etc/confluent/docker/run'"
     environment:
-      CONNECT_PLUGIN_PATH: /usr/share/java/
+      CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-replicator
       CONNECT_REST_EXTENSION_CLASSES: io.confluent.connect.replicator.monitoring.ReplicatorMonitoringExtension
