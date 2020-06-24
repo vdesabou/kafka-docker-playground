@@ -16,7 +16,7 @@ rm $OUT_FILE
 test_list="$1"
 if [ "$1" = "ALL" ]
 then
-    # test_list="connect/* replicator/* other/* kafka-tutorials/kafka-streams/* kafka-tutorials/ksql/*"
+    # test_list="connect/* replicator/* other/*"
     test_list="connect/* replicator/*"
 fi
 
