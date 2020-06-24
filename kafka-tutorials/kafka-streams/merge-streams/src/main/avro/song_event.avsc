@@ -1,9 +1,0 @@
-{
-	"namespace": "io.confluent.developer.avro",
-	"type": "record",
-	"name": "SongEvent",
-	"fields": [
-	  {"name": "artist", "type": "string"},
-	  {"name": "title", "type": "string"}
-	]
-  }

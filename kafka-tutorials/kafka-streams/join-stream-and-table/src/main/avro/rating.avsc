@@ -1,9 +1,0 @@
-{
-	"namespace": "io.confluent.developer.avro",
-	"type": "record",
-	"name": "Rating",
-	"fields": [
-	  {"name": "id", "type": "long"},
-	  {"name": "rating", "type": "double"}
-	]
-  }
