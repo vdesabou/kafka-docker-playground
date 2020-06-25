@@ -1,0 +1,21 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: dotnet-ccloud-example-docker
+  namespace: dotnet-ccloud-example-docker
+spec:
+  containers:
+  - name: dotnet-ccloud-example-docker
+    image: vdesabou/dotnet-ccloud-example-docker
+    imagePullPolicy: Never
+  initContainers:
+  - name: init-sysctl
+    image: busybox
+    command:
+    - /bin/sh
+    - -c
+    - |
+      sysctl -w net.ipv4.tcp_keepalive_time=60
+      sysctl -w net.ipv4.tcp_keepalive_intvl=30
+    securityContext:
+      privileged: true
