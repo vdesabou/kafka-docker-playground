@@ -39,4 +39,4 @@ docker exec connect \
 sleep 10
 
 log "Verify that order is in InfluxDB"
-curl -G 'http://localhost:8086/query?pretty=true' --data-urlencode "db=orders" --data-urlencode "q=SELECT \"price\" FROM \"orders\""
+docker exec influxdb influx -database orders -execute 'select * from orders'
