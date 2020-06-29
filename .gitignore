@@ -33,7 +33,6 @@ connect/connect-sftp-sink/upload/
 connect/connect-sftp-source/upload/
 other/connect-override-policy-sftp-source/upload/
 other/connect-override-policy-sftp-sink/upload/
-connect/connect-hdfs2-sink/confluentinc-kafka-connect-hdfs-5.5.0-SNAPSHOT
 other/cp-ansible-playground/cp-ansible/
 other/cp-ansible-playground/id_rsa.pub
 other/cp-ansible-playground/cp_ansible_playground_id_rsa
