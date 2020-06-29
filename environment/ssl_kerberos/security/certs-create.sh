@@ -74,6 +74,6 @@ EOF
     openssl pkcs12 -in $i.keystore.p12 -nodes -nocerts -out $i.key -passin pass:confluent
 
     # https://confluentinc.atlassian.net/browse/DOCS-2541
-    keytool -noprompt -destkeystore kafka.$i.truststore.jks -importkeystore -srckeystore $JAVA_HOME/jre/lib/security/cacerts -srcstorepass changeit -deststorepass confluent
+    keytool -noprompt -destkeystore kafka.$i.truststore.jks -importkeystore -srckeystore $(find $JAVA_HOME -name cacerts) -srcstorepass changeit -deststorepass confluent
 
 done

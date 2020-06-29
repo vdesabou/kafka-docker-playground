@@ -176,7 +176,7 @@ Broker config has `KAFKA_SSL_PRINCIPAL_MAPPING_RULES: RULE:^CN=(.*?),OU=TEST.*$$
 Script `certs-create.sh` has:
 
 ```
-keytool -noprompt -destkeystore kafka.$i.truststore.jks -importkeystore -srckeystore $JAVA_HOME/jre/lib/security/cacerts -srcstorepass changeit -deststorepass confluent
+keytool -noprompt -destkeystore kafka.$i.truststore.jks -importkeystore -srckeystore $(find $JAVA_HOME -name cacerts) -srcstorepass changeit -deststorepass confluent
 ```
 
 This is because we set for `connect`service:
