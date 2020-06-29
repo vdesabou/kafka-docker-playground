@@ -158,6 +158,7 @@ Quick start examples from Confluent [docs](https://docs.confluent.io/current/con
 - <img src="https://min.io/resources/img/logo/MINIO_Bird.png" height="15">  [Minio](connect/connect-minio-s3-sink)
 - <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/3/38/Prometheus_software_logo.svg/1200px-Prometheus_software_logo.svg.png" height="15">  [Prometheus](connect/connect-prometheus-sink)
 - <img src="https://docs.snowflake.com/fr/_images/logo-snowflake-sans-text.png" height="15">  [Snowflake](connect/connect-snowflake-sink)
+- <img src="https://imgix.datadoghq.com/img/about/presskit/logo-v/logo_vertical_purple.png" height="15">  [Datadog Metrics](connect-datadog-metrics-sink)
 
 ## ☁️ Confluent Cloud
 
