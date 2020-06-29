@@ -11,7 +11,7 @@ You just need to have [docker](https://docs.docker.com/get-docker/) and [docker-
 
 If you want to run it on EC2 Instance, you can use the AWS CloudFormation template provided [here](cloudformation/README.md).
 
-ℹ️ By default Confluent Platform version 5.5.0 is used, but you can test with another version (greater or equal to 5.0.0) simply by exporting `TAG` environment variable:
+ℹ️ By default Confluent Platform version 5.5.1 is used, but you can test with another version (greater or equal to 5.0.0) simply by exporting `TAG` environment variable:
 
 Example:
 
