@@ -84,17 +84,3 @@ PRINT 'rating_count' FROM BEGINNING LIMIT 11;
 
 EOF
 
-log "Invoke manual steps"
-timeout 120 docker exec -i ksql-cli bash -c 'echo -e "\n\n⏳ Waiting for ksqlDB to be available before launching CLI\n"; while [ $(curl -s -o /dev/null -w %{http_code} http://ksql-server:8089/) -eq 000 ] ; do echo -e $(date) "KSQL Server HTTP state: " $(curl -s -o /dev/null -w %{http_code} http:/ksql-server:8089/) " (waiting for 200)" ; sleep 10 ; done; ksql http://ksql-server:8089' << EOF
-
-SELECT title,
-       rating_count,
-       TIMESTAMPTOSTRING(window_start, 'yyy-MM-dd HH:mm:ss') as window_start,
-       TIMESTAMPTOSTRING(window_end, 'yyy-MM-dd HH:mm:ss') as window_end
-FROM rating_count
-EMIT CHANGES
-LIMIT 11;
-
-PRINT 'rating_count' FROM BEGINNING LIMIT 11;
-
-EOF
