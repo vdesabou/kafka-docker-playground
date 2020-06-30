@@ -67,3 +67,5 @@ ccloud/rest-proxy-security-plugin/kafka-rest.jaas.conf
 ccloud/ccloud-demo/client-dotnet/librdkafka.config
 tools/datadog/myenv
 connect/connect-datadog-metrics-sink/myenv
+ccloud/ccloudexporter/config.yml
+ccloud/ccloud-demo/config.yml
