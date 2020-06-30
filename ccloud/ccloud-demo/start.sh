@@ -95,6 +95,10 @@ fi
 # required for dabz/ccloudexporter
 export CCLOUD_CLUSTER=$(ccloud prompt -f "%k")
 
+# generate config.yml
+sed -e "s|:CCLOUD_CLUSTER:|$CCLOUD_CLUSTER|g" \
+    ${DIR}/config-template.yml > ${DIR}/config.yml
+
 log "Create API key and secret with cloud resource for Metrics API"
 log "ccloud api-key create --resource cloud"
 OUTPUT=$(ccloud api-key create --resource cloud)

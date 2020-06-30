@@ -12,13 +12,6 @@ services:
     entrypoint: /bin/bash
     tty: true
 
-  # alertmanager:
-  #   image: prom/alertmanager:v0.18.0
-  #   hostname: alertmanager
-  #   container_name: alertmanager
-  #   ports:
-  #     - 9093:9093
-
   ccloud_exporter:
     image: dabz/ccloudexporter:latest
     hostname: ccloud_exporter
@@ -26,8 +19,9 @@ services:
     environment:
       CCLOUD_USER: ${API_KEY_CLOUD}
       CCLOUD_PASSWORD: ${API_SECRET_CLOUD}
-      CCLOUD_CLUSTER: ${CCLOUD_CLUSTER}
-    command: ccloudexporter ${CCLOUD_CLUSTER}
+    command: -config /conf/config.yml
+    volumes:
+        - ./config.yml:/conf/config.yml
 
   prometheus:
     image: prom/prometheus
