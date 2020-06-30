@@ -1,8 +1,8 @@
 {
   "__inputs": [
     {
-      "name": "DS_PROMETHEUS-1",
-      "label": "Prometheus-1",
+      "name": "DS_PROMETHEUS-CCLOUD",
+      "label": "Prometheus",
       "description": "",
       "type": "datasource",
       "pluginId": "prometheus",
@@ -52,7 +52,7 @@
   "gnetId": null,
   "graphTooltip": 0,
   "id": null,
-  "iteration": 1588607648030,
+  "iteration": 1589557541338,
   "links": [],
   "panels": [
     {
@@ -77,19 +77,19 @@
         "x": 0,
         "y": 1
       },
-      "id": 12,
+      "id": 19,
       "options": {
         "colorMode": "value",
         "fieldOptions": {
           "calcs": [
-            "lastNotNull"
+            "last"
           ],
           "defaults": {
             "color": {
               "mode": "thresholds"
             },
             "mappings": [],
-            "max": 25000000,
+            "max": 10000,
             "min": 0,
             "thresholds": {
               "mode": "absolute",
@@ -100,15 +100,15 @@
                 },
                 {
                   "color": "#EAB839",
-                  "value": 1000000
+                  "value": 4000
                 },
                 {
                   "color": "red",
-                  "value": 2500000
+                  "value": 10000
                 }
               ]
             },
-            "unit": "decbytes"
+            "unit": "none"
           },
           "overrides": [],
           "values": false
@@ -120,7 +120,8 @@
       "pluginVersion": "6.7.3",
       "targets": [
         {
-          "expr": "sum(ccloud_metric_received_bytes{topic=~\"$topic\"})",
+          "expr": "sum(ccloud_metric_partition_count{cluster_id=~\"$cluster\"})",
+          "hide": false,
           "interval": "",
           "legendFormat": "{{cluster}}",
           "refId": "A"
@@ -128,7 +129,7 @@
       ],
       "timeFrom": null,
       "timeShift": null,
-      "title": "Current write on topics",
+      "title": "Partition count",
       "type": "stat"
     },
     {
@@ -137,68 +138,6 @@
         "h": 5,
         "w": 3,
         "x": 3,
-        "y": 1
-      },
-      "id": 10,
-      "options": {
-        "colorMode": "value",
-        "fieldOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
-          "defaults": {
-            "color": {
-              "mode": "thresholds"
-            },
-            "mappings": [],
-            "max": 25000000,
-            "min": 0,
-            "thresholds": {
-              "mode": "absolute",
-              "steps": [
-                {
-                  "color": "green",
-                  "value": null
-                },
-                {
-                  "color": "#EAB839",
-                  "value": 1000000
-                },
-                {
-                  "color": "red",
-                  "value": 2500000
-                }
-              ]
-            },
-            "unit": "decbytes"
-          },
-          "overrides": [],
-          "values": false
-        },
-        "graphMode": "area",
-        "justifyMode": "auto",
-        "orientation": "auto"
-      },
-      "pluginVersion": "6.7.3",
-      "targets": [
-        {
-          "expr": "sum(ccloud_metric_sent_bytes{topic=~\"$topic\"})",
-          "interval": "",
-          "legendFormat": "{{cluster}}",
-          "refId": "A"
-        }
-      ],
-      "timeFrom": null,
-      "timeShift": null,
-      "title": "Current read of topics ",
-      "type": "stat"
-    },
-    {
-      "datasource": "Prometheus",
-      "gridPos": {
-        "h": 5,
-        "w": 3,
-        "x": 6,
         "y": 1
       },
       "id": 8,
@@ -244,7 +183,7 @@
       "pluginVersion": "6.7.3",
       "targets": [
         {
-          "expr": "sum(ccloud_metric_retained_bytes{topic=~\"$topic\"})",
+          "expr": "sum(ccloud_metric_retained_bytes{topic=~\"$topic\", cluster_id=~\"$cluster\"})",
           "hide": false,
           "interval": "",
           "legendFormat": "{{cluster}}",
@@ -254,6 +193,68 @@
       "timeFrom": null,
       "timeShift": null,
       "title": "Current topic bytes retained",
+      "type": "stat"
+    },
+    {
+      "datasource": "Prometheus",
+      "gridPos": {
+        "h": 5,
+        "w": 3,
+        "x": 6,
+        "y": 1
+      },
+      "id": 10,
+      "options": {
+        "colorMode": "value",
+        "fieldOptions": {
+          "calcs": [
+            "lastNotNull"
+          ],
+          "defaults": {
+            "color": {
+              "mode": "thresholds"
+            },
+            "mappings": [],
+            "max": 25000000,
+            "min": 0,
+            "thresholds": {
+              "mode": "absolute",
+              "steps": [
+                {
+                  "color": "green",
+                  "value": null
+                },
+                {
+                  "color": "#EAB839",
+                  "value": 1000000
+                },
+                {
+                  "color": "red",
+                  "value": 2500000
+                }
+              ]
+            },
+            "unit": "decbytes"
+          },
+          "overrides": [],
+          "values": false
+        },
+        "graphMode": "area",
+        "justifyMode": "auto",
+        "orientation": "auto"
+      },
+      "pluginVersion": "6.7.3",
+      "targets": [
+        {
+          "expr": "sum(ccloud_metric_sent_bytes{topic=~\"$topic\", cluster_id=~\"$cluster\"})",
+          "interval": "",
+          "legendFormat": "{{cluster}}",
+          "refId": "A"
+        }
+      ],
+      "timeFrom": null,
+      "timeShift": null,
+      "title": "Current read of topics ",
       "type": "stat"
     },
     {
@@ -308,7 +309,8 @@
       "pluginVersion": "6.7.3",
       "targets": [
         {
-          "expr": "sum(ccloud_metric_received_bytes)",
+          "expr": "sum(ccloud_metric_received_bytes{topic=~\"$topic\", cluster_id=~\"$cluster\"})",
+          "interval": "",
           "legendFormat": "{{cluster}}",
           "refId": "A"
         }
@@ -369,7 +371,7 @@
       "pluginVersion": "6.7.3",
       "targets": [
         {
-          "expr": "sum(ccloud_metric_sent_bytes{topic=~\"$topic\"})",
+          "expr": "sum(ccloud_metric_sent_bytes{topic=~\"$topic\", cluster_id=~\"$cluster\"})",
           "interval": "",
           "legendFormat": "{{cluster}}",
           "refId": "A"
@@ -388,19 +390,19 @@
         "x": 15,
         "y": 1
       },
-      "id": 19,
+      "id": 12,
       "options": {
         "colorMode": "value",
         "fieldOptions": {
           "calcs": [
-            "mean"
+            "lastNotNull"
           ],
           "defaults": {
             "color": {
               "mode": "thresholds"
             },
             "mappings": [],
-            "max": 5000000000,
+            "max": 25000000,
             "min": 0,
             "thresholds": {
               "mode": "absolute",
@@ -411,11 +413,11 @@
                 },
                 {
                   "color": "#EAB839",
-                  "value": 4000000000
+                  "value": 1000000
                 },
                 {
                   "color": "red",
-                  "value": 5000000000
+                  "value": 2500000
                 }
               ]
             },
@@ -431,8 +433,7 @@
       "pluginVersion": "6.7.3",
       "targets": [
         {
-          "expr": "sum(ccloud_metric_retained_bytes{topic=~\"$topic\"})",
-          "hide": false,
+          "expr": "sum(ccloud_metric_received_bytes{topic=~\"$topic\", cluster_id=~\"$cluster\"})",
           "interval": "",
           "legendFormat": "{{cluster}}",
           "refId": "A"
@@ -440,7 +441,7 @@
       ],
       "timeFrom": null,
       "timeShift": null,
-      "title": "Topic bytes retained (avg)",
+      "title": "Current write on topics",
       "type": "stat"
     },
     {
@@ -495,7 +496,7 @@
       "pluginVersion": "6.7.3",
       "targets": [
         {
-          "expr": "avg(ccloud_metric_active_connection_count)",
+          "expr": "avg(ccloud_metric_active_connection_count{cluster_id=~\"$cluster\"})",
           "hide": false,
           "interval": "",
           "legendFormat": "{{cluster}}",
@@ -590,189 +591,6 @@
       "dashLength": 10,
       "dashes": false,
       "datasource": "Prometheus",
-      "description": "The delta count of bytes received from the network. Each sample is the number of bytes received since the previous data sample. The count is sampled every 60 seconds.",
-      "fill": 1,
-      "fillGradient": 0,
-      "gridPos": {
-        "h": 9,
-        "w": 12,
-        "x": 0,
-        "y": 7
-      },
-      "hiddenSeries": false,
-      "id": 4,
-      "legend": {
-        "avg": false,
-        "current": false,
-        "max": false,
-        "min": false,
-        "show": true,
-        "total": false,
-        "values": false
-      },
-      "lines": true,
-      "linewidth": 1,
-      "nullPointMode": "null",
-      "options": {
-        "dataLinks": []
-      },
-      "percentage": false,
-      "pointradius": 2,
-      "points": false,
-      "renderer": "flot",
-      "seriesOverrides": [],
-      "spaceLength": 10,
-      "stack": false,
-      "steppedLine": false,
-      "targets": [
-        {
-          "expr": "ccloud_metric_received_bytes{topic=~\"$topic\"}",
-          "hide": false,
-          "interval": "",
-          "legendFormat": "{{topic}} - {{cluster_id}}",
-          "refId": "A"
-        }
-      ],
-      "thresholds": [],
-      "timeFrom": null,
-      "timeRegions": [],
-      "timeShift": null,
-      "title": "Topic received bytes from the network",
-      "tooltip": {
-        "shared": true,
-        "sort": 2,
-        "value_type": "individual"
-      },
-      "type": "graph",
-      "xaxis": {
-        "buckets": null,
-        "mode": "time",
-        "name": null,
-        "show": true,
-        "values": []
-      },
-      "yaxes": [
-        {
-          "decimals": null,
-          "format": "decbytes",
-          "label": null,
-          "logBase": 1,
-          "max": null,
-          "min": null,
-          "show": true
-        },
-        {
-          "format": "short",
-          "label": null,
-          "logBase": 1,
-          "max": null,
-          "min": null,
-          "show": true
-        }
-      ],
-      "yaxis": {
-        "align": false,
-        "alignLevel": null
-      }
-    },
-    {
-      "aliasColors": {},
-      "bars": false,
-      "dashLength": 10,
-      "dashes": false,
-      "datasource": "Prometheus",
-      "description": "The delta count of bytes sent over the network. Each sample is the number of bytes sent since the previous data point. The count is sampled every 60 seconds.",
-      "fill": 1,
-      "fillGradient": 0,
-      "gridPos": {
-        "h": 9,
-        "w": 12,
-        "x": 12,
-        "y": 7
-      },
-      "hiddenSeries": false,
-      "id": 2,
-      "legend": {
-        "avg": false,
-        "current": false,
-        "hideEmpty": false,
-        "hideZero": false,
-        "max": false,
-        "min": false,
-        "show": true,
-        "total": false,
-        "values": false
-      },
-      "lines": true,
-      "linewidth": 1,
-      "nullPointMode": "null",
-      "options": {
-        "dataLinks": []
-      },
-      "percentage": false,
-      "pointradius": 2,
-      "points": false,
-      "renderer": "flot",
-      "seriesOverrides": [],
-      "spaceLength": 10,
-      "stack": false,
-      "steppedLine": false,
-      "targets": [
-        {
-          "expr": "ccloud_metric_sent_bytes{topic=~\"$topic\"}",
-          "hide": false,
-          "interval": "",
-          "legendFormat": "{{topic}} - {{cluster_id}}",
-          "refId": "A"
-        }
-      ],
-      "thresholds": [],
-      "timeFrom": null,
-      "timeRegions": [],
-      "timeShift": null,
-      "title": "Topic Sent bytes over the network",
-      "tooltip": {
-        "shared": true,
-        "sort": 2,
-        "value_type": "individual"
-      },
-      "type": "graph",
-      "xaxis": {
-        "buckets": null,
-        "mode": "time",
-        "name": null,
-        "show": true,
-        "values": []
-      },
-      "yaxes": [
-        {
-          "format": "decbytes",
-          "label": null,
-          "logBase": 1,
-          "max": null,
-          "min": null,
-          "show": true
-        },
-        {
-          "format": "short",
-          "label": null,
-          "logBase": 1,
-          "max": null,
-          "min": null,
-          "show": true
-        }
-      ],
-      "yaxis": {
-        "align": false,
-        "alignLevel": null
-      }
-    },
-    {
-      "aliasColors": {},
-      "bars": false,
-      "dashLength": 10,
-      "dashes": false,
-      "datasource": "Prometheus",
       "description": "The current count of bytes retained by the cluster, summed across all partitions. The count is sampled every 60 seconds.",
       "fill": 1,
       "fillGradient": 0,
@@ -780,7 +598,7 @@
         "h": 9,
         "w": 24,
         "x": 0,
-        "y": 16
+        "y": 7
       },
       "hiddenSeries": false,
       "id": 6,
@@ -813,7 +631,7 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "sum by (cluster_id, topic) (ccloud_metric_retained_bytes{topic=~\"$topic\"})",
+          "expr": "sum by (cluster_id, topic) (ccloud_metric_retained_bytes{topic=~\"$topic\", cluster_id=~\"$cluster\"})",
           "hide": false,
           "interval": "",
           "legendFormat": "{{cluster_id}}-{{topic}}",
@@ -864,6 +682,371 @@
     },
     {
       "aliasColors": {},
+      "bars": false,
+      "dashLength": 10,
+      "dashes": false,
+      "datasource": "Prometheus",
+      "description": "The delta count of bytes received from the network. Each sample is the number of bytes received since the previous data sample. The count is sampled every 60 seconds.",
+      "fill": 1,
+      "fillGradient": 0,
+      "gridPos": {
+        "h": 6,
+        "w": 12,
+        "x": 0,
+        "y": 16
+      },
+      "hiddenSeries": false,
+      "id": 4,
+      "legend": {
+        "avg": false,
+        "current": false,
+        "max": false,
+        "min": false,
+        "show": true,
+        "total": false,
+        "values": false
+      },
+      "lines": true,
+      "linewidth": 1,
+      "nullPointMode": "null",
+      "options": {
+        "dataLinks": []
+      },
+      "percentage": false,
+      "pointradius": 2,
+      "points": false,
+      "renderer": "flot",
+      "seriesOverrides": [],
+      "spaceLength": 10,
+      "stack": false,
+      "steppedLine": false,
+      "targets": [
+        {
+          "expr": "sum by (topic, cluster_id) (ccloud_metric_received_bytes{topic=~\"$topic\", cluster_id=~\"$cluster\"})",
+          "hide": false,
+          "interval": "",
+          "legendFormat": "{{topic}} - {{cluster_id}}",
+          "refId": "A"
+        }
+      ],
+      "thresholds": [],
+      "timeFrom": null,
+      "timeRegions": [],
+      "timeShift": null,
+      "title": "Topic received bytes",
+      "tooltip": {
+        "shared": true,
+        "sort": 2,
+        "value_type": "individual"
+      },
+      "type": "graph",
+      "xaxis": {
+        "buckets": null,
+        "mode": "time",
+        "name": null,
+        "show": true,
+        "values": []
+      },
+      "yaxes": [
+        {
+          "decimals": null,
+          "format": "decbytes",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        },
+        {
+          "format": "short",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        }
+      ],
+      "yaxis": {
+        "align": false,
+        "alignLevel": null
+      }
+    },
+    {
+      "aliasColors": {},
+      "bars": false,
+      "dashLength": 10,
+      "dashes": false,
+      "datasource": "Prometheus",
+      "description": "The delta count of bytes sent over the network. Each sample is the number of bytes sent since the previous data point. The count is sampled every 60 seconds.",
+      "fill": 1,
+      "fillGradient": 0,
+      "gridPos": {
+        "h": 6,
+        "w": 12,
+        "x": 12,
+        "y": 16
+      },
+      "hiddenSeries": false,
+      "id": 2,
+      "legend": {
+        "avg": false,
+        "current": false,
+        "hideEmpty": false,
+        "hideZero": false,
+        "max": false,
+        "min": false,
+        "show": true,
+        "total": false,
+        "values": false
+      },
+      "lines": true,
+      "linewidth": 1,
+      "nullPointMode": "null",
+      "options": {
+        "dataLinks": []
+      },
+      "percentage": false,
+      "pointradius": 2,
+      "points": false,
+      "renderer": "flot",
+      "seriesOverrides": [],
+      "spaceLength": 10,
+      "stack": false,
+      "steppedLine": false,
+      "targets": [
+        {
+          "expr": "sum by (topic, cluster_id) (ccloud_metric_sent_bytes{topic=~\"$topic\", cluster_id=~\"$cluster\"})",
+          "hide": false,
+          "interval": "",
+          "legendFormat": "{{topic}} - {{cluster_id}}",
+          "refId": "A"
+        }
+      ],
+      "thresholds": [],
+      "timeFrom": null,
+      "timeRegions": [],
+      "timeShift": null,
+      "title": "Topic Sent bytes",
+      "tooltip": {
+        "shared": true,
+        "sort": 2,
+        "value_type": "individual"
+      },
+      "type": "graph",
+      "xaxis": {
+        "buckets": null,
+        "mode": "time",
+        "name": null,
+        "show": true,
+        "values": []
+      },
+      "yaxes": [
+        {
+          "format": "decbytes",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        },
+        {
+          "format": "short",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        }
+      ],
+      "yaxis": {
+        "align": false,
+        "alignLevel": null
+      }
+    },
+    {
+      "aliasColors": {},
+      "bars": false,
+      "dashLength": 10,
+      "dashes": false,
+      "datasource": "Prometheus",
+      "description": "The delta count of records received. Each sample is the number of records received since the previous data sample. The count is sampled every 60 seconds.",
+      "fill": 1,
+      "fillGradient": 0,
+      "gridPos": {
+        "h": 5,
+        "w": 12,
+        "x": 0,
+        "y": 22
+      },
+      "hiddenSeries": false,
+      "id": 31,
+      "legend": {
+        "avg": false,
+        "current": false,
+        "max": false,
+        "min": false,
+        "show": true,
+        "total": false,
+        "values": false
+      },
+      "lines": true,
+      "linewidth": 1,
+      "nullPointMode": "null",
+      "options": {
+        "dataLinks": []
+      },
+      "percentage": false,
+      "pointradius": 2,
+      "points": false,
+      "renderer": "flot",
+      "seriesOverrides": [],
+      "spaceLength": 10,
+      "stack": false,
+      "steppedLine": false,
+      "targets": [
+        {
+          "expr": "sum by (topic, cluster_id) (ccloud_metric_received_records{topic=~\"$topic\", cluster_id=~\"$cluster\"})",
+          "hide": false,
+          "interval": "",
+          "legendFormat": "{{topic}} - {{cluster_id}}",
+          "refId": "A"
+        }
+      ],
+      "thresholds": [],
+      "timeFrom": null,
+      "timeRegions": [],
+      "timeShift": null,
+      "title": "Topic received record",
+      "tooltip": {
+        "shared": true,
+        "sort": 2,
+        "value_type": "individual"
+      },
+      "type": "graph",
+      "xaxis": {
+        "buckets": null,
+        "mode": "time",
+        "name": null,
+        "show": true,
+        "values": []
+      },
+      "yaxes": [
+        {
+          "decimals": null,
+          "format": "none",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        },
+        {
+          "format": "none",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        }
+      ],
+      "yaxis": {
+        "align": false,
+        "alignLevel": null
+      }
+    },
+    {
+      "aliasColors": {},
+      "bars": false,
+      "dashLength": 10,
+      "dashes": false,
+      "datasource": "Prometheus",
+      "description": "The delta count of records sent. Each sample is the number of records sent since the previous data point. The count is sampled every 60 seconds.",
+      "fill": 1,
+      "fillGradient": 0,
+      "gridPos": {
+        "h": 5,
+        "w": 12,
+        "x": 12,
+        "y": 22
+      },
+      "hiddenSeries": false,
+      "id": 30,
+      "legend": {
+        "avg": false,
+        "current": false,
+        "max": false,
+        "min": false,
+        "show": true,
+        "total": false,
+        "values": false
+      },
+      "lines": true,
+      "linewidth": 1,
+      "nullPointMode": "null",
+      "options": {
+        "dataLinks": []
+      },
+      "percentage": false,
+      "pointradius": 2,
+      "points": false,
+      "renderer": "flot",
+      "seriesOverrides": [],
+      "spaceLength": 10,
+      "stack": false,
+      "steppedLine": false,
+      "targets": [
+        {
+          "expr": "sum by (topic, cluster_id) (ccloud_metric_sent_records{topic=~\"$topic\", cluster_id=~\"$cluster\"})",
+          "hide": false,
+          "interval": "",
+          "legendFormat": "{{topic}} - {{cluster_id}}",
+          "refId": "A"
+        }
+      ],
+      "thresholds": [],
+      "timeFrom": null,
+      "timeRegions": [],
+      "timeShift": null,
+      "title": "Topic sent records",
+      "tooltip": {
+        "shared": true,
+        "sort": 2,
+        "value_type": "individual"
+      },
+      "type": "graph",
+      "xaxis": {
+        "buckets": null,
+        "mode": "time",
+        "name": null,
+        "show": true,
+        "values": []
+      },
+      "yaxes": [
+        {
+          "decimals": null,
+          "format": "none",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        },
+        {
+          "format": "none",
+          "label": null,
+          "logBase": 1,
+          "max": null,
+          "min": null,
+          "show": true
+        }
+      ],
+      "yaxis": {
+        "align": false,
+        "alignLevel": null
+      }
+    },
+    {
+      "aliasColors": {},
       "bars": true,
       "dashLength": 10,
       "dashes": false,
@@ -875,7 +1058,7 @@
         "h": 9,
         "w": 24,
         "x": 0,
-        "y": 25
+        "y": 27
       },
       "hiddenSeries": false,
       "id": 29,
@@ -908,7 +1091,7 @@
       "steppedLine": false,
       "targets": [
         {
-          "expr": "ccloud_metric_request_count",
+          "expr": "ccloud_metric_request_count{cluster_id=~\"$cluster\"}",
           "hide": false,
           "interval": "",
           "legendFormat": "{{cluster_id}}-{{type}}",
@@ -964,7 +1147,7 @@
         "h": 1,
         "w": 24,
         "x": 0,
-        "y": 34
+        "y": 36
       },
       "id": 25,
       "panels": [],
@@ -1018,7 +1201,7 @@
         "h": 8,
         "w": 12,
         "x": 0,
-        "y": 35
+        "y": 37
       },
       "hiddenSeries": false,
       "id": 27,
@@ -1149,7 +1332,7 @@
         "h": 8,
         "w": 12,
         "x": 12,
-        "y": 35
+        "y": 37
       },
       "hiddenSeries": false,
       "id": 28,
@@ -1245,6 +1428,29 @@
         "allValue": "",
         "current": {},
         "datasource": "Prometheus",
+        "definition": "label_values(ccloud_metric_retained_bytes, cluster_id)",
+        "hide": 0,
+        "includeAll": true,
+        "index": -1,
+        "label": "Cluster",
+        "multi": true,
+        "name": "cluster",
+        "options": [],
+        "query": "label_values(ccloud_metric_retained_bytes, cluster_id)",
+        "refresh": 1,
+        "regex": "",
+        "skipUrlSync": false,
+        "sort": 0,
+        "tagValuesQuery": "",
+        "tags": [],
+        "tagsQuery": "",
+        "type": "query",
+        "useTags": false
+      },
+      {
+        "allValue": "",
+        "current": {},
+        "datasource": "Prometheus",
         "definition": "label_values(ccloud_metric_retained_bytes, topic)",
         "hide": 0,
         "includeAll": true,
@@ -1290,5 +1496,5 @@
   "variables": {
     "list": []
   },
-  "version": 3
+  "version": 12
 }

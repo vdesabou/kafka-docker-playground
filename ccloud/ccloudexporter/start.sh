@@ -46,6 +46,10 @@ fi
 
 export CCLOUD_CLUSTER=$(ccloud prompt -f "%k")
 
+# generate config.yml
+sed -e "s|:CCLOUD_CLUSTER:|$CCLOUD_CLUSTER|g" \
+    ${DIR}/config-template.yml > ${DIR}/config.yml
+
 set +e
 create_topic ccloudexporter
 set -e

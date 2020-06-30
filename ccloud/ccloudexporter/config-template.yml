@@ -1,0 +1,24 @@
+config:
+  http:
+    baseurl: https://api.telemetry.confluent.cloud/
+    timeout: 60
+  listener: 0.0.0.0:2112
+  noTimestamp: false
+  delay: 60
+  granularity: PT1M
+rules:
+  - clusters:
+      - :CCLOUD_CLUSTER:
+    metrics:
+      - io.confluent.kafka.server/received_bytes
+      - io.confluent.kafka.server/sent_bytes
+      - io.confluent.kafka.server/received_records
+      - io.confluent.kafka.server/sent_records
+      - io.confluent.kafka.server/retained_bytes
+      - io.confluent.kafka.server/active_connection_count
+      - io.confluent.kafka.server/request_count
+      - io.confluent.kafka.server/partition_count
+    labels:
+      - cluster_id
+      - topic
+      - type
