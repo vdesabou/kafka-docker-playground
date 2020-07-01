@@ -16,11 +16,11 @@ then
      verify_installed "keytool"
      if [ ! -f $(find $JAVA_HOME -name cacerts) ]
      then
-     logerror "ERROR: Cannot find JAVA cacerts"
-     exit 1
+          logerror "ERROR: Cannot find JAVA cacerts"
+          exit 1
      fi
 
-     ./certs-create.sh > /dev/null 2>&1
+     ./certs-create.sh
 
      cd ${OLDDIR}
      cp ${DIR}/../../environment/sasl-ssl/security/kafka.broker.keystore.jks ${DIR}/keystore.jks
