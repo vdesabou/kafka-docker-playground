@@ -13,7 +13,7 @@ cd ${OLDDIR}/../../environment/ssl_kerberos/security
 
 log "Generate keys and certificates used for SSL"
 verify_installed "keytool"
-if [ ! -f $(find $JAVA_HOME -name cacerts) ]
+if [ ! -f $(find $JAVA_HOME -follow -name cacerts) ]
 then
   logerror "ERROR: Cannot find JAVA cacerts"
   exit 1

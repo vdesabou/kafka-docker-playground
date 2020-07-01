@@ -14,13 +14,13 @@ then
 
      log "Generate keys and certificates used for SSL"
      verify_installed "keytool"
-     if [ ! -f $(find $JAVA_HOME -name cacerts) ]
+     if [ ! -f $(find $JAVA_HOME -follow -name cacerts) ]
      then
           logerror "ERROR: Cannot find JAVA cacerts"
           exit 1
      fi
 
-     ./certs-create.sh
+     ./certs-create.sh > /dev/null 2>&1
 
      cd ${OLDDIR}
      cp ${DIR}/../../environment/sasl-ssl/security/kafka.broker.keystore.jks ${DIR}/keystore.jks
