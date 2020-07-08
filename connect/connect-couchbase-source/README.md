@@ -17,7 +17,7 @@ Simply run:
 $ ./couchbase.sh
 ```
 
-Note: if you want to test with a custom `event.filter.class` class, use:
+Note: if you want to test with a custom `couchbase.event.filter` class, use:
 
 ```
 $ ./couchbase-with-key-filter.sh
@@ -78,7 +78,7 @@ $ docker exec connect \
                     "connection.password": "password",
                     "use_snapshots": "false",
                     "dcp.message.converter.class": "com.couchbase.connect.kafka.handler.source.DefaultSchemaSourceHandler",
-                    "event.filter.class": "com.couchbase.connect.kafka.filter.AllPassFilter",
+                    "couchbase.event.filter": "com.couchbase.connect.kafka.filter.AllPassFilter",
                     "couchbase.stream_from": "SAVED_OFFSET_OR_BEGINNING",
                     "couchbase.compression": "ENABLED",
                     "couchbase.flow_control_buffer": "128m",
@@ -152,7 +152,7 @@ Results:
 }
 ```
 
-Results with `event.filter.class=example.KeyFilter`:
+Results with `couchbase.event.filter=example.KeyFilter`:
 
 ```json
 {

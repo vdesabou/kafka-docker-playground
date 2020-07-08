@@ -21,7 +21,7 @@ set +e
 docker exec couchbase bash -c "/opt/couchbase/bin/cbdocloader -c localhost:8091 -u Administrator -p password -b travel-sample -m 100 /opt/couchbase/samples/travel-sample.zip"
 set -e
 
-log "Creating Couchbase sink connector using event.filter.class=example.KeyFilter"
+log "Creating Couchbase sink connector using couchbase.event.filter=example.KeyFilter"
 docker exec connect \
      curl -X PUT \
      -H "Content-Type: application/json" \
@@ -36,7 +36,7 @@ docker exec connect \
                     "connection.password": "password",
                     "use_snapshots": "false",
                     "dcp.message.converter.class": "com.couchbase.connect.kafka.handler.source.DefaultSchemaSourceHandler",
-                    "event.filter.class": "example.KeyFilter",
+                    "couchbase.event.filter": "example.KeyFilter",
                     "couchbase.stream_from": "SAVED_OFFSET_OR_BEGINNING",
                     "couchbase.compression": "ENABLED",
                     "couchbase.flow_control_buffer": "128m",
