@@ -28,7 +28,7 @@ docker exec connect \
                     "connection.password": "password",
                     "use_snapshots": "false",
                     "dcp.message.converter.class": "com.couchbase.connect.kafka.handler.source.DefaultSchemaSourceHandler",
-                    "event.filter.class": "com.couchbase.connect.kafka.filter.AllPassFilter",
+                    "couchbase.event.filter": "com.couchbase.connect.kafka.filter.AllPassFilter",
                     "couchbase.stream_from": "SAVED_OFFSET_OR_BEGINNING",
                     "couchbase.compression": "ENABLED",
                     "couchbase.flow_control_buffer": "128m",
