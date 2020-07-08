@@ -89,8 +89,10 @@ scrape_configs:
       - targets:
           - "connect-us:1234"
         labels:
-          env: 'us'
+          env: 'dev'
+          cluster: 'cluster-us'
       - targets:
           - "connect-europe:1234"
         labels:
-          env: 'europe'
+          env: 'dev'
+          cluster: 'cluster-europe'
