@@ -175,6 +175,8 @@ services:
       - mysql
       - http-service-basic-auth
     restart: always
+    ports:
+      - "8083:8083"
     volumes:
       - ../../other/monitoring-demo/mysql-connector-java-5.1.45.jar:/usr/share/confluent-hub-components/confluentinc-kafka-connect-jdbc/lib/mysql-connector-java-5.1.45.jar
       - ../../other/monitoring-demo/jmx-exporter:/usr/share/jmx_exporter/
@@ -187,6 +189,8 @@ services:
       KAFKA_OPTS: -javaagent:/usr/share/jmx_exporter/jmx_prometheus_javaagent-0.12.0.jar=1234:/usr/share/jmx_exporter/kafka-connect.yml -Xmx256M -Xms256M
 
   connect-us:
+    ports:
+      - "8084:8083"
     depends_on:
       - schema-registry-us
     restart: always
