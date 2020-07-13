@@ -1020,6 +1020,8 @@ You should see 3 dashboards:
 
 ![Connect](./images/Screenshot11.png)
 
+![Connect](./images/Screenshot12.png)
+
 #### Consumer Lag Dashboard
 
 This demo is using [lightbend/kafka-lag-exporter](https://github.com/lightbend/kafka-lag-exporter) in order to pull consumer lags metrics from Confluent Cloud cluster and be exported to Prometheus.
