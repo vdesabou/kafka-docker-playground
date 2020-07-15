@@ -3,7 +3,7 @@ version: '3.5'
 services:
 
   vertica:
-    image: dataplatform/docker-vertica
+    image: jbfavre/vertica:latest
     hostname: vertica
     container_name: vertica
     ports:
