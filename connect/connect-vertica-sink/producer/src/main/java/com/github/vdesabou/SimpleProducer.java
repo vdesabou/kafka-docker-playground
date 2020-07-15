@@ -30,7 +30,7 @@ public class SimpleProducer {
         props.put(ProducerConfig.RETRY_BACKOFF_MS_CONFIG, 500);
         props.put(ProducerConfig.RETRIES_CONFIG, Integer.MAX_VALUE);
 
-        props.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, "org.apache.kafka.common.serialization.StringSerializer");
+        props.put(ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, "org.apache.kafka.common.serialization.LongSerializer");
         props.put(ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, KafkaAvroSerializer.class);
 
         // Schema Registry specific settings
@@ -39,13 +39,13 @@ public class SimpleProducer {
 
         System.out.println("Sending data to `customer` topic. Properties: " + props.toString());
 
-        try (Producer<String, Customer> producer = new KafkaProducer<>(props)) {
+        try (Producer<Long, Customer> producer = new KafkaProducer<>(props)) {
             long i = 0;
 
             while (true) {
-                String key = "" + i;
+                Long key = i;
 
-                ProducerRecord<String, Customer> record;
+                ProducerRecord<Long, Customer> record;
                 if(i==2) {
                     record = new ProducerRecord<>(TOPIC, key, null);
 
