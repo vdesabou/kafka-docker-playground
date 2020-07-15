@@ -38,7 +38,7 @@ docker exec connect \
      -H "Content-Type: application/json" \
      --data '{
                "connector.class" : "io.confluent.vertica.VerticaSinkConnector",
-                    "tasks.max" : "10",
+                    "tasks.max" : "1",
                     "vertica.database": "docker",
                     "vertica.host": "vertica",
                     "vertica.port": "5433",
@@ -54,20 +54,15 @@ docker exec connect \
                     "pk.fields": "ID",
                     "auto.create": true,
                     "auto.evolve": false,
-                    "delete.enabled": true,
-                    "key.converter": "org.apache.kafka.connect.storage.StringConverter",
-                    "value.converter" : "io.confluent.connect.avro.AvroConverter",
+                    "key.converter": "org.apache.kafka.connect.converters.LongConverter",
+                    "value.converter" : "Avro",
                     "value.converter.schema.registry.url":"http://schema-registry:8081",
                     "confluent.topic.bootstrap.servers": "broker:9092",
                     "confluent.topic.replication.factor": "1"
           }' \
      http://localhost:8083/connectors/vertica-sink/config | jq .
 
-                    # "consumer.override.max.poll.records": "10000",
-                    # "consumer.override.fetch.max.wait.ms": "30000",
-                    # "consumer.override.fetch.min.bytes": "10000000",
-                    # "consumer.override.fetch.max.bytes": "100000000",
-                    # "consumer.override.request.timeout.ms": "60000"
+
 sleep 30
 
 log "Check data is in Vertica for customer1"
