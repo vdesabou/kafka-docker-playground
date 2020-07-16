@@ -1,0 +1,38 @@
+---
+version: '3.5'
+services:
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2017-latest
+    hostname: sqlserver
+    container_name: sqlserver
+    ports:
+      - "1433:1433"
+    environment:
+      ACCEPT_EULA: "Y"
+      MSSQL_AGENT_ENABLED: "true"
+      MSSQL_PID: "Standard"
+      SA_PASSWORD: "Password!"
+
+  producer:
+    build:
+      context: ../../connect/connect-jdbc-vertica-sink/producer/
+      args:
+        TAG: ${TAG}
+        CP_BASE_IMAGE: ${CP_BASE_IMAGE}
+        KAFKA_CLIENT_TAG: ${KAFKA_CLIENT_TAG}
+    hostname: producer
+    container_name: producer
+    depends_on:
+      - zookeeper
+      - broker
+      - schema-registry
+      - sqlserver
+
+  connect:
+    depends_on:
+      - zookeeper
+      - broker
+      - schema-registry
+      - sqlserver
+    environment:
+      CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-jdbc

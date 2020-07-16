@@ -1,0 +1,47 @@
+{
+    "type": "record",
+    "name": "Customer",
+    "namespace": "com.github.vdesabou",
+    "fields": [
+        {
+            "name": "ListID",
+            "type": [
+              "null",
+              "long"
+            ],
+            "default": null
+        },
+        {
+            "name": "NormalizedHashItemID",
+            "type": [
+              "null",
+              "long"
+            ],
+            "default": null
+        },
+        {
+            "name": "URL",
+            "type": [
+              "null",
+              "string"
+            ],
+            "default": null
+        },
+        {
+            "name": "MyFloatValue",
+            "type": [
+              "null",
+              "double"
+            ],
+            "default": null
+        },
+        {
+            "name": "MyTimestamp",
+            "type": [
+              "null",
+              "long"
+            ],
+            "default": null
+        }
+    ]
+}
