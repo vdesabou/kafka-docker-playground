@@ -7,16 +7,6 @@ cache:
   - "$HOME/.m2"
 before_install:
 - sudo apt-get -y install expect awscli
-# # update to latest docker version
-# - curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
-# - sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
-# - sudo apt-get update
-# - sudo apt-get -y -o Dpkg::Options::="--force-confnew" install docker-ce
-# - sudo rm /usr/local/bin/docker-compose
-# # update docker-compose
-# - curl -L https://github.com/docker/compose/releases/download/1.25.0/docker-compose-`uname -s`-`uname -m` > docker-compose
-# - chmod +x docker-compose
-# - sudo mv docker-compose /usr/local/bin
 - openssl aes-256-cbc -K $encrypted_e1b0a72f7201_key -iv $encrypted_e1b0a72f7201_iv
   -in secrets.tar.enc -out secrets.tar -d
 - tar xvf secrets.tar
@@ -54,93 +44,80 @@ before_install:
 - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
 jobs:
   include:
-
-  - name: '5.5.1-1-ubi8: CONNECT: azure-data-lake-storage-gen1-sink azure-data-lake-storage-gen2-sink azure-event-hubs-source'
-    env: TEST_LIST="connect/connect-azure-data-lake-storage-gen1-sink connect/connect-azure-data-lake-storage-gen2-sink connect/connect-azure-event-hubs-source"
-      TAG="5.5.1-1-ubi8"
-
+  - name: '5.5.1-1-ubi8: CONNECT: azure-data-lake-storage-gen1-sink azure-data-lake-storage-gen2-sink
+      azure-event-hubs-source'
+    env: TEST_LIST="connect/connect-azure-data-lake-storage-gen1-sink connect/connect-azure-data-lake-storage-gen2-sink
+      connect/connect-azure-event-hubs-source" TAG="5.5.1-1-ubi8"
   - name: '5.5.1-1-ubi8: CONNECT: azure-sql-data-warehouse-sink azure-search-sink'
     env: TEST_LIST="connect/connect-azure-sql-data-warehouse-sink connect/connect-azure-search-sink"
       TAG="5.5.1-1-ubi8"
-
-  - name: '5.5.1-1-ubi8: CONNECT: azure-service-bus-source azure-blob-storage-sink azure-blob-storage-source'
-    env: TEST_LIST="connect/connect-azure-service-bus-source connect/connect-azure-blob-storage-sink connect/connect-azure-blob-storage-source"
-      TAG="5.5.1-1-ubi8"
-
+  - name: '5.5.1-1-ubi8: CONNECT: azure-service-bus-source azure-blob-storage-sink
+      azure-blob-storage-source'
+    env: TEST_LIST="connect/connect-azure-service-bus-source connect/connect-azure-blob-storage-sink
+      connect/connect-azure-blob-storage-source" TAG="5.5.1-1-ubi8"
   - name: '5.5.1-1-ubi8: CONNECT: splunk-sink splunk-source spool-dir-source syslog-source
       OTHER: override-policy-sftp-sink override-policy-sftp-source'
     env: TEST_LIST="connect/connect-splunk-sink connect/connect-splunk-source connect/connect-spool-dir-source
       connect/connect-syslog-source other/connect-override-policy-sftp-sink other/connect-override-policy-sftp-source"
       TAG="5.5.1-1-ubi8"
-
   - name: '5.5.1-1-ubi8: CONNECT: active-mq-sink active-mq-source cassandra-sink couchbase-sink
       couchbase-source'
     env:
     - TEST_LIST="connect/connect-active-mq-sink connect/connect-active-mq-source connect/connect-cassandra-sink
       connect/connect-couchbase-sink connect/connect-couchbase-source connect/connect-hbase-sink"
       TAG="5.5.1-1-ubi8"
-
   - name: '5.5.1-1-ubi8: CONNECT: jms-tibco-sink jms-tibco-source debezium-mongodb-source
       debezium-mysql-source debezium-postgresql-source debezium-sqlserver-source elasticsearch-sink'
     env: TEST_LIST="connect/connect-jms-tibco-sink connect/connect-jms-tibco-source
       connect/connect-debezium-mongodb-source connect/connect-debezium-mysql-source
       connect/connect-debezium-postgresql-source connect/connect-debezium-sqlserver-source
       connect/connect-elasticsearch-sink" TAG="5.5.1-1-ubi8"
-
   - name: '5.5.1-1-ubi8: CONNECT: hbase-sink hdfs2-sink hdfs3-sink hdfs3-source hdfs2-source
       ibm-mq-sink ibm-mq-source snmp-source'
     env: TEST_LIST="connect/connect-hdfs2-sink connect/connect-hdfs2-source connect/connect-hdfs3-sink
-      connect/connect-hdfs3-source connect/connect-ibm-mq-sink connect/connect-ibm-mq-source" TAG="5.5.1-1-ubi8"
-      # connect/connect-snmp-source"  TAG="5.5.1-1-ubi8"
-
-  - name: '5.5.1-1-ubi8: CONNECT: jdbc-oracle11-sink jdbc-oracle11-source influxdb-sink influxdb-source
-      jdbc-mysql-sink jdbc-mysql-source jdbc-postgresql-sink jdbc-postgresql-source
+      connect/connect-hdfs3-source connect/connect-ibm-mq-sink connect/connect-ibm-mq-source"
+      TAG="5.5.1-1-ubi8"
+  - name: '5.5.1-1-ubi8: CONNECT: jdbc-oracle11-sink jdbc-oracle11-source influxdb-sink
+      influxdb-source jdbc-mysql-sink jdbc-mysql-source jdbc-postgresql-sink jdbc-postgresql-source
       jdbc-sqlserver-sink'
     env: TEST_LIST="connect/connect-jdbc-oracle11-sink connect/connect-jdbc-oracle11-source
       connect/connect-influxdb-sink connect/connect-influxdb-source connect/connect-jdbc-mysql-sink
       connect/connect-jdbc-mysql-source connect/connect-jdbc-postgresql-sink connect/connect-jdbc-postgresql-source
       connect/connect-jdbc-sqlserver-sink" TAG="5.5.1-1-ubi8"
-
   - name: '5.5.1-1-ubi8: CCLOUD ccloud-demo CONNECT: jdbc-sqlserver-source jdbc-vertica-sink
       jms-active-mq-sink jms-solace-sink'
     env: TEST_LIST="ccloud/ccloud-demo connect/connect-jdbc-sqlserver-source connect/connect-jdbc-vertica-sink
       connect/connect-jms-active-mq-sink connect/connect-jms-solace-sink" TAG="5.5.1-1-ubi8"
-
-  - name: '5.5.1-1-ubi8: CONNECT: mongodb-sink mongodb-source mqtt-sink mqtt-source neo4j-sink
-      omnisci-sink tibco-sink tibco-source jdbc-oracle12-sink jdbc-oracle12-source'
+  - name: '5.5.1-1-ubi8: CONNECT: mongodb-sink mongodb-source mqtt-sink mqtt-source
+      neo4j-sink omnisci-sink tibco-sink tibco-source jdbc-oracle12-sink jdbc-oracle12-source'
     env: TEST_LIST="connect/connect-mongodb-sink connect/connect-mongodb-source connect/connect-mqtt-sink
       connect/connect-mqtt-source connect/connect-neo4j-sink connect/connect-omnisci-sink
       connect/connect-tibco-sink connect/connect-tibco-source connect/connect-jdbc-oracle12-sink
       connect/connect-jdbc-oracle12-source" TAG="5.5.1-1-ubi8"
-
-  - name: '5.5.1-1-ubi8: CONNECT: rabbitmq-source redis-sink replicator sftp-sink sftp-source
-      solace-sink solace-source datadiode'
+  - name: '5.5.1-1-ubi8: CONNECT: rabbitmq-source redis-sink replicator sftp-sink
+      sftp-source solace-sink solace-source datadiode'
     env: TEST_LIST="connect/connect-rabbitmq-source connect/connect-redis-sink connect/connect-replicator
       connect/connect-sftp-sink connect/connect-sftp-source connect/connect-solace-sink
       connect/connect-solace-source connect/connect-datadiode-source-sink" TAG="5.5.1-1-ubi8"
-
-  - name: '5.5.1-1-ubi8: CONNECT: aws-cloudwatch-logs-source aws-cloudwatch-metrics-sink aws-dynamodb-sink aws-kinesis-source
-      aws-lambda-sink'
-    env: TEST_LIST="connect/connect-aws-cloudwatch-logs-source connect/connect-aws-cloudwatch-metrics-sink connect/connect-aws-dynamodb-sink
-      connect/connect-aws-kinesis-source connect/connect-aws-lambda-sink" TAG="5.5.1-1-ubi8"
-
-  - name: '5.5.1-1-ubi8: CONNECT: gcp-bigquery-sink google-cloud-functions-sink vertica-sink prometheus-sink aws-sqs-source aws-s3-sink aws-s3-source'
-    env: TEST_LIST="connect/connect-gcp-bigquery-sink connect/connect-gcp-cloud-functions-sink connect/connect-vertica-sink connect/connect-prometheus-sink connect/connect-aws-sqs-source connect/connect-aws-s3-sink connect/connect-aws-s3-source" TAG="5.5.1-1-ubi8"
-
+  - name: '5.5.1-1-ubi8: CONNECT: aws-cloudwatch-logs-source aws-cloudwatch-metrics-sink
+      aws-dynamodb-sink aws-kinesis-source aws-lambda-sink'
+    env: TEST_LIST="connect/connect-aws-cloudwatch-logs-source connect/connect-aws-cloudwatch-metrics-sink
+      connect/connect-aws-dynamodb-sink connect/connect-aws-kinesis-source connect/connect-aws-lambda-sink"
+      TAG="5.5.1-1-ubi8"
+  - name: '5.5.1-1-ubi8: CONNECT: gcp-bigquery-sink google-cloud-functions-sink vertica-sink
+      prometheus-sink aws-sqs-source aws-s3-sink aws-s3-source'
+    env: TEST_LIST="connect/connect-gcp-bigquery-sink connect/connect-gcp-cloud-functions-sink
+      connect/connect-vertica-sink connect/connect-prometheus-sink connect/connect-aws-sqs-source
+      connect/connect-aws-s3-sink connect/connect-aws-s3-source" TAG="5.5.1-1-ubi8"
   - name: '5.5.1-1-ubi8: CONNECT: gcp-pubsub-source gcs-sink gcs-source'
     env: TEST_LIST="connect/connect-gcp-pubsub-source connect/connect-gcp-gcs-sink
       connect/connect-gcp-gcs-source" TAG="5.5.1-1-ubi8"
-
   - name: '5.5.1-1-ubi8: CONNECT: http-sink'
-    env: TEST_LIST="connect/connect-http-sink"
-      TAG="5.5.1-1-ubi8"
-
+    env: TEST_LIST="connect/connect-http-sink" TAG="5.5.1-1-ubi8"
   - name: '5.5.1-1-ubi8: REPLICATOR: connect'
     env: TEST_LIST="replicator/connect" TAG="5.5.1-1-ubi8"
-
   - name: '5.5.1-1-ubi8: mirrormaker2'
     env: TEST_LIST="replicator/mirrormaker2" TAG="5.5.1-1-ubi8"
-
 script:
 - bash scripts/run-tests.sh "$TEST_LIST" "$TAG"
 env:
@@ -151,3 +128,4 @@ env:
   - secure: v8GlSk/ibIDCgUJIHmhx8PtmvW9PCsPe8zShgS8Fj8Cd4Sc4OsxAkm45L/PXg7fKyNgo+MdCAo4foTdcvuDMychEAqCRDurcvRJ/aBKH65goS1tD8I/FpprJmSOpCirIMSz8NV4dKPyIXj8L/xpkALpavLBj252lIrCC9xWRttetuNuNxZcU8G9m5ww8jjwjMGRWYOSq9lOMn/d5txxafsxLFGvCrmrrAVfjCHrjuJbI9AfydfOhKsvd58UByESSvEPzoxNxntZE600Gr9g9RFSIDIJ4aRvybIKTI/eOZzQBxVwrAXpNAMCRwioAzMLk0ZCtmmu7tmBofthx2FEvCF0VNEvmfAdM6treazXsUjXBMc1DWeZATuEtcTcVvKgsiTZxW5VbMGiRL2pWDRmkhS26vGm8jxB+D751q+AiMFWhLX1zbmcnkBCAD8p5rNlc2t9++8euwh7EarJIZjt8N3R0mkjqWzYrCcS6DxoAdg7Y7cydvXKkY7IIqfHs28bvZqp0ARLcSMuqCvQEFfjETBQoipeadPfby/57K42lAymyqK4hDBxJWPcv7cuFUgTgiwT3rmy32mteZxuH7wl7T00YietsVgaxeKgjuKTNhQTytUJILwBBEIKOr08/i8Y9wtnJxwniLLCnbpRdW6Gj74J3BzgoaWtj6seG/NyCWXw=
   - secure: V1+uY5YZ0NQXKtHweTnYwkl9FrMFWjsr148Eno2Bjddx6nxLE33/2b2Z6iqGcv+QiphC/J+zgEAJsxk9KU25vTSurPh2w5BDDeJiGPOusrnZGqJHclhMocVGXCQ0ePWNTBHNN5xjX8PsWcGq64AEO4h4fFuhJprlFk2ZCc4gmUBX8jVNFh/hNbgFrPFSiITY+6tCe/+7bdJELuW4a5a+hw3TaDzWKodS6kXDZbn9fk1+hlRTDFQUCpLKEakAuNmEb9go3fKfxUZFlZZ9qeHP1l712IW9t58nijZidCdMMPtXRNY2Ew7pjT7gmImStEfwQIw5AdPK9WeBsXWuMBfyQOZQ4ocdIwCv4dQcROpqsJ/TkKhBF6ZJHD1Hx0534xmbrZDZMvoRZJ+7HySblF1yb6z5r94/9SV5MchjAmHbtlpSzSrK5XwyImPm1NdslgoaQPb/IeVieAtls98PSuYJ9nKMcrqQ8hDDhbEW1DWBafS+5sFpSx2GaBImNizN7nvGtUXTICom1sPukaXgf3UEt2HAl7hk6SaCH+S3sp4xWXGBe7uuIP8WLLh/cWRNjpQFWR4/wE8LCIsPLB2mrPknLBZgUMmPJfsPzRPN1FX2chp4ZwFi3eUzZwk3txzQCTyBlhcEDKYIcQ8ozNmj1CP0wwjAKC9B0B6M6/kKEqAh7cw=
   - secure: fogkEP4Rs11ruhJlwl9Rq7zInBnG4ul80EM0r2Z1Ua5C3jc3q8A8CFcH3CzpLK9NEjjG80BT2g3vY0ec+w3jkE/O3yUJV0moCC5QK9nn8WH9IOIioI+d4xwR8lMS0U8VVbwU1DoyC88nhsDlXOIr6On8EKzgWmseiZXA3SAezGuOxwXBzlnmIQOxg5YkCYIpyzCfuvC/uOlYfeiwOzRg4mTuy0+Cvoyd4CV7dRG+CpT1EhskckJShqVRfdY9BHqIQ9gir62/+0gDN43WocBEvC+Fo84I1OvhbFzIsupY89+E8GsbzxgXZXs/JU7TLpkYQDhNvMHuNlNGtTJ81kB5wlfIKIMXWky+UHCM+PyqyRP0xhIY9u8G4WaNHojxXD/21Q9ofYdPhzcG3LDjR9twV8jcSZKmlbUY8Zo7Qm4hVZVHL/HYzdiCVWDLqozbnCD4WUUGnMd3WVNohoCdInUUNZoMchn1hAr8CFf7x3s6z1sK7wtmLS/Bbok5k7B2MpFPYl75FRR9PZeG0/pnMzn82HzkyqmD/9bNNMl963DbpGymZLFYWUertA+t2GrPRUKcvUKCAmWViY2WPAbzzX/GpWJ5prgqW+dTGs/BBFkgwliYfM0YA6uxcr3JaXShjOYgUMlM8TKIZCqYfCej57shDzLwgn05eKnlHhoH44r9Ca4=
+  - secure: VhbKd0bk+fAqRW06GIlpgkQpU/iHE5ObQqZ25aEBuFv+APuYTQPQ3UXr8aRKy6i4a6TSFWlWRb++oEwrjwJYDhxCM2bu0ynAGQcnFhDolnz2MX1IARdZeravP9GqRMjNUNfs9Gij62CUhPCS8P/VZRZK1mKUAx7j5g9bTw+tQUL1rMtA4jCrxFgRuIPRHlINupz4C2YvwbaofT/4bf4Ycb4BXHiy1t9keB8YNONRqKaxMMflsxCmHDqi4ZAEoeEnKL9mIiJVuvYZm+TlkqbC1kSfWActujKy6/9l43iOZ+uE229FaKnMhvPTlY9OnqX7qu8imkRoowRfTL4jyRJnOp+RHRocVrZfVD+Ofp7DuQBJ5//0pramoVEie0dlqPo4uA2ptceV2fNJe5NR8rP/BuCC4Nlhf1xVAFgEn81GNr4WR+8OVIO6cN5pGu/Zr/ff310EmR2Ozfcudkr9TzQNvmHKdbJaRWnsqWaJGjqxeg+i38jCM9yYxyhauOZ1FZ4w2r6Z0kLA2efcrwOw29KtSWEjLKdLpNNMKJJ0noJ8Er2lCe4Yw9/4zfnuW8hO3rkIj6q+BDJfZ09GMF7m+/96ea52w7XJTaiSWcShHuCXbDB2rUc8b4vvQ/Ga+7NH9YSRbJ13iGZOXfiWWHi73SrVGOHL1NYBR418Ni1/ELWKK/Q=
