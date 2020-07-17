@@ -39,60 +39,43 @@ public class SimpleProducer {
 
         System.out.println("Sending data to `customer` topic. Properties: " + props.toString());
 
+        long counter = 0L;
         try (Producer<Long, Customer> producer = new KafkaProducer<>(props)) {
-            long i = 0;
 
             while (true) {
-                Long key = i;
 
-                ProducerRecord<Long, Customer> record;
-                if(i==2) {
-                    record = new ProducerRecord<>(TOPIC, key, null);
+                for(long i=0;i<10;i++) {
+                    Long key = counter;
 
-                } else if(i==3) {
-                    // test with default values
-                    Customer customer = Customer.newBuilder()
-                    .setListID(null)
-                    .setNormalizedHashItemID(null)
-                    .setURL(null)
-                    .setMyFloatValue(null)
-                    .setMyTimestamp(new Date().getTime())
-                    .build();
-                    record = new ProducerRecord<>(TOPIC, key, customer);
-                } else if(i==4) {
-                    Customer customer = Customer.newBuilder()
-                    .setListID(i)
-                    .setNormalizedHashItemID(i)
-                    .setURL("ultralongurlultralongurlultralongurlultralongurlultralongurlultralongurlultralongurultralongurl")
-                    .setMyFloatValue(0.28226356681351483)
-                    .setMyTimestamp(new Date().getTime())
-                    .build();
-                    record = new ProducerRecord<>(TOPIC, key, customer);
-                } else {
-                    Customer customer = Customer.newBuilder()
-                    .setListID(i)
-                    .setNormalizedHashItemID(i)
-                    .setURL("url")
-                    .setMyFloatValue(0.28226356681351483)
-                    .setMyTimestamp(new Date().getTime())
-                    .build();
-                    record = new ProducerRecord<>(TOPIC, key, customer);
-                }
-
-                System.out.println("Sending " + record.key() + " " + record.value());
-                producer.send(record, new Callback() {
-                    @Override
-                    public void onCompletion(RecordMetadata metadata, Exception exception) {
-                        if (exception == null) {
-                            System.out.printf("Produced record to topic %s partition [%d] @ offset %d%n", metadata.topic(), metadata.partition(), metadata.offset());
-                        } else {
-                            exception.printStackTrace();
-                        }
+                    ProducerRecord<Long, Customer> record;
+                    if(i==20000) {
+                        record = new ProducerRecord<>(TOPIC, key, null);
+                    } else {
+                        Customer customer = Customer.newBuilder()
+                        .setListID(i)
+                        .setNormalizedHashItemID(i)
+                        .setURL("url"+i)
+                        .setMyFloatValue(0.28226356681351483)
+                        .setMyTimestamp(new Date().getTime())
+                        .build();
+                        record = new ProducerRecord<>(TOPIC, key, customer);
                     }
-                });
-                producer.flush();
-                i++;
-                TimeUnit.MILLISECONDS.sleep(100);
+
+                    System.out.println("Sending " + record.key() + " " + record.value());
+                    producer.send(record, new Callback() {
+                        @Override
+                        public void onCompletion(RecordMetadata metadata, Exception exception) {
+                            if (exception == null) {
+                                System.out.printf("Produced record to topic %s partition [%d] @ offset %d%n", metadata.topic(), metadata.partition(), metadata.offset());
+                            } else {
+                                exception.printStackTrace();
+                            }
+                        }
+                    });
+                    producer.flush();
+                    counter++;
+                    TimeUnit.MILLISECONDS.sleep(100);
+                }
             }
         }
     }
