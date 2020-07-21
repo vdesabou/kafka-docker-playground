@@ -1,0 +1,45 @@
+---
+version: '3.5'
+services:
+  # ftps-server:
+  #   image: fauria/vsftpd
+  #   hostname: ftps-server
+  #   container_name: ftps-server
+  #   restart: always
+  #   ports:
+  #     - "220:220"
+  #     - "22100-22110:22100-22110"
+  #   volumes:
+  #     - ../../connect/connect-ftps-source/security/vsftpd.pem:/etc/ssl/private/vsftpd.pem
+  #     - ../../connect/connect-ftps-source/config/vsftpd.conf:/etc/vsftpd/vsftpd.conf
+  #   environment:
+  #     - FTP_USER=myuser
+  #     - FTP_PASS=mypass
+  #     - PASV_ADDRESS=ftps-server
+  #     - PASV_MIN_PORT=22100
+  #     - PASV_MAX_PORT=22110
+
+  ftps-server:
+    image: phpstorm/ftps
+    hostname: ftps-server
+    container_name: ftps-server
+    restart: always
+    ports:
+      - "2221:21"
+      - "30010-30019:30010-30019"
+    volumes:
+      - ../../connect/connect-ftps-source/security/vsftpd.pem:/etc/vsftpd/vsftpd.pem
+     # - ../../connect/connect-ftps-source/config/vsftpd.conf:/etc/vsftpd/vsftpd.conf
+    environment:
+      VSFTPD_USER_1: "myuser:mypassword::"
+      PASV_ADDRESS: ftps-server
+      PASV_MIN_PORT: 30010
+      PASV_MAX_PORT: 30019
+
+  connect:
+    volumes:
+      - ../../connect/connect-ftps-source/security:/etc/kafka/secrets
+    environment:
+      CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-ftps
+      # CONNECT_LOG4J_LOGGERS: org.reflections=ERROR,io.confluent.connect.ftps=TRACE
+      KAFKA_OPTS: -Djavax.net.debug=all
