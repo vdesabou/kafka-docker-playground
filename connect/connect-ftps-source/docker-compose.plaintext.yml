@@ -2,99 +2,29 @@
 version: '3.5'
 services:
 
-  # ftps-server:
-  #   image: stilliard/pure-ftpd:hardened
-  #   hostname: ftps-server
-  #   container_name: ftps-server
-  #   restart: always
-  #   ports:
-  #     - "2221:21"
-  #     - "30000-30009:30000-30009"
-  #   environment:
-  #     FTP_USER_NAME: "bob"
-  #     FTP_USER_PASS: "test"
-  #     FTP_USER_HOME: /home/ftpusers/bob
-  #     PUBLICHOST: "localhost"
-  #     ADDED_FLAGS: -d -d --tls 2
-  #     #ADDED_FLAGS: --tls 2
-  #     TLS_CN: ftps-server
-  #     TLS_ORG: Demo
-  #     TLS_C: UK
-  #     TLS_USE_DSAPRAM: "true"
+  ftps-server:
+    image: fauria/vsftpd
+    hostname: ftps-server
+    container_name: ftps-server
+    restart: always
+    volumes:
+      - ../../connect/connect-ftps-source/security/vsftpd.pem:/etc/ssl/private/vsftpd.pem
+      - ../../connect/connect-ftps-source/config/vsftpd.conf:/etc/vsftpd/vsftpd.conf
+    ports:
+      - "220:220"
+      - "22100-22110:22100-22110"
+    environment:
+      - FTP_USER=bob
+      - FTP_PASS=test
+      - PASV_ADDRESS=ftps-server
+      - PASV_ADDR_RESOLVE=YES
+      - PASV_MIN_PORT=22100
+      - PASV_MAX_PORT=22110
 
   connect:
     volumes:
       - ../../connect/connect-ftps-source/security:/etc/kafka/secrets
     environment:
       CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-ftps
-      CONNECT_LOG4J_LOGGERS: org.reflections=ERROR,io.confluent.connect.ftps=TRACE
+      # CONNECT_LOG4J_LOGGERS: org.reflections=ERROR,io.confluent.connect.ftps=TRACE
       # KAFKA_OPTS: -Djavax.net.debug=all
-
-      #  apt-get install lftp
-      #lftp -u bob,test -e "set ssl:ca-file '/etc/kafka/secrets/pure-ftpd.pem'" ftps-server 21
-
-# root@connect:/# lftp -u bob,test -e "set ssl:ca-file /etc/kafka/secrets/pure-ftpd.pem" ftps-server 21
-# ---- Resolving host address...
-# ---- 1 address found: 192.168.128.6
-# lftp bob@ftps-server:~> ls
-# ---- Connecting to ftps-server (192.168.128.6) port 21
-# <--- 220---------- Welcome to Pure-FTPd [privsep] [TLS] ----------
-# <--- 220-You are user number 2 of 5 allowed.
-# <--- 220-Local time is now 10:09. Server port: 21.
-# <--- 220-This is a private system - No anonymous login
-# <--- 220 You will be disconnected after 15 minutes of inactivity.
-# ---> FEAT
-# <--- 211-Extensions supported:
-# <---  EPRT
-# <---  IDLE
-# <---  MDTM
-# <---  SIZE
-# <---  MFMT
-# <---  REST STREAM
-# <---  MLST type*;size*;sizd*;modify*;UNIX.mode*;UNIX.uid*;UNIX.gid*;unique*;
-# <---  MLSD
-# <---  AUTH TLS
-# <---  PBSZ
-# <---  PROT
-# <---  UTF8
-# <---  TVFS
-# <---  ESTA
-# <---  PASV
-# <---  EPSV
-# <---  SPSV
-# <--- 211 End.
-# ---> AUTH TLS
-# <--- 234 AUTH TLS OK.
-# ---> OPTS UTF8 ON
-# Certificate: CN=ftps-server,O=Demo,C=UK
-#  Issued by: CN=ftps-server,O=Demo,C=UK
-#   Trusted
-# <--- 200 OK, UTF-8 enabled
-# ---> OPTS MLST type;size;modify;UNIX.mode;UNIX.uid;UNIX.gid;
-# <--- 200  MLST OPTS type;size;sizd;modify;UNIX.mode;UNIX.uid;UNIX.gid;unique;
-# ---> USER bob
-# <--- 331 User bob OK. Password required
-# ---> PASS test
-# <--- 230 OK. Current directory is /
-# ---> PWD
-# <--- 257 "/" is your current location
-# ---> PBSZ 0
-# <--- 200 PBSZ=0
-# ---> PROT P
-# <--- 200 Data protection level set to "private"
-# ---> PASV
-# <--- 227 Entering Passive Mode (127,0,0,1,117,54)
-# ---- Address returned by PASV seemed to be incorrect and has been fixed
-# ---- Connecting data socket to (192.168.128.6) port 30006
-# ---- Data connection established
-# ---> LIST
-# <--- 150 Accepted data connection
-# Certificate: CN=ftps-server,O=Demo,C=UK
-#  Issued by: CN=ftps-server,O=Demo,C=UK
-#   Trusted
-# gnutls_record_recv: The TLS connection was non-properly terminated. Assuming EOF.
-# ---- Got EOF on data connection
-# ---- Closing data socket
-# gnutls_record_recv: The TLS connection was non-properly terminated. Assuming EOF.
-# **** Peer closed connection
-# ---- Closing control socket
