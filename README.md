@@ -155,10 +155,11 @@ Quick start examples from Confluent [docs](https://docs.confluent.io/current/con
 - <img src="https://d3dr9sfxru4sde.cloudfront.net/i/k/apachekudu_logo_0716_345px.png" width="15"> [Kudu](connect/connect-kudu-sink)
 - <img src="https://s3.amazonaws.com/awsmp-logos/vertica600x400.png" width="15"> [Vertica](connect/connect-vertica-sink)
 - <img src="https://perspectium.mystagingwebsite.com/wp-content/uploads/2019/08/servicenow_logo_v2.png" width="15"> [ServiceNow](connect/connect-servicenow-sink)
-- <img src="https://min.io/resources/img/logo/MINIO_Bird.png" height="15">  [Minio](connect/connect-minio-s3-sink)
+- <img src="https://min.io/resources/img/logo/MINIO_Bird.png" height="15"> [Minio](connect/connect-minio-s3-sink)
 - <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/3/38/Prometheus_software_logo.svg/1200px-Prometheus_software_logo.svg.png" height="15">  [Prometheus](connect/connect-prometheus-sink)
 - <img src="https://docs.snowflake.com/fr/_images/logo-snowflake-sans-text.png" height="15">  [Snowflake](connect/connect-snowflake-sink)
-- <img src="https://static-dotconferences-com.s3.amazonaws.com/editionpartnerships/datadog.png" height="15">  [Datadog Metrics](connect/connect-datadog-metrics-sink)
+- <img src="https://static-dotconferences-com.s3.amazonaws.com/editionpartnerships/datadog.png" height="15"> [Datadog Metrics](connect/connect-datadog-metrics-sink)
+- <img src="https://www.cleo.com/sites/default/files/2018-10/logo_ftps-mod-11%20%281%29.svg" height="15"> [FTPS](connect/connect-ftps-source)
 
 ## ☁️ Confluent Cloud
 
