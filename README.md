@@ -161,6 +161,8 @@ Quick start examples from Confluent [docs](https://docs.confluent.io/current/con
 - <img src="https://docs.snowflake.com/fr/_images/logo-snowflake-sans-text.png" height="15">  [Snowflake](connect/connect-snowflake-sink)
 - <img src="https://static-dotconferences-com.s3.amazonaws.com/editionpartnerships/datadog.png" height="15"> [Datadog Metrics](connect/connect-datadog-metrics-sink)
 - <img src="https://www.cleo.com/sites/default/files/2018-10/logo_ftps-mod-11%20%281%29.svg" height="15"> [FTPS](connect/connect-ftps-sink)
+- <img src="https://cdn.worldvectorlogo.com/logos/rabbitmq.svg" width="15">  [RabbitMQ](connect/connect-rabbitmq-sink)
+
 
 ## ☁️ Confluent Cloud
 
