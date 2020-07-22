@@ -48,8 +48,8 @@ jobs:
       azure-event-hubs-source'
     env: TEST_LIST="connect/connect-azure-data-lake-storage-gen1-sink connect/connect-azure-data-lake-storage-gen2-sink
       connect/connect-azure-event-hubs-source" TAG="5.5.1-1-ubi8"
-  - name: '5.5.1-1-ubi8: CONNECT: azure-sql-data-warehouse-sink azure-search-sink'
-    env: TEST_LIST="connect/connect-azure-sql-data-warehouse-sink connect/connect-azure-search-sink"
+  - name: '5.5.1-1-ubi8: CONNECT: azure-sql-data-warehouse-sink azure-search-sink ftps-source ftps-sink'
+    env: TEST_LIST="connect/connect-azure-sql-data-warehouse-sink connect/connect-azure-search-sink connect/connect-ftps-source connect/connect-ftps-sink"
       TAG="5.5.1-1-ubi8"
   - name: '5.5.1-1-ubi8: CONNECT: azure-service-bus-source azure-blob-storage-sink
       azure-blob-storage-source'
