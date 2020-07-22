@@ -1,0 +1,23 @@
+---
+version: '3.5'
+services:
+
+  rabbitmq:
+    image: rabbitmq:3.8.4-management
+    hostname: rabbitmq
+    container_name: rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      RABBITMQ_DEFAULT_USER: "myuser"
+      RABBITMQ_DEFAULT_PASS: "mypassword"
+
+  connect:
+    depends_on:
+      - zookeeper
+      - broker
+      - schema-registry
+      - rabbitmq
+    environment:
+      CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-rabbitmq-sink
