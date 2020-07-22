@@ -16,16 +16,16 @@ cd ${DIR}
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
 
 docker exec -t ftps-server bash -c "
-mkdir -p /home/virtual/myuser/input
-mkdir -p /home/virtual/myuser/error
-mkdir -p /home/virtual/myuser/finished
+mkdir -p /home/ftpusers/bob/input
+mkdir -p /home/ftpusers/bob/error
+mkdir -p /home/ftpusers/bob/finished
 
-chown -R ftp /home/virtual/myuser
+chown -R ftpuser /home/ftpusers/bob
 "
 
 echo $'{"id":1,"first_name":"Roscoe","last_name":"Brentnall","email":"rbrentnall0@mediafire.com","gender":"Male","ip_address":"202.84.142.254","last_login":"2018-02-12T06:26:23Z","account_balance":1450.68,"country":"CZ","favorite_color":"#4eaefa"}\n{"id":2,"first_name":"Gregoire","last_name":"Fentem","email":"gfentem1@nsw.gov.au","gender":"Male","ip_address":"221.159.106.63","last_login":"2015-03-27T00:29:56Z","account_balance":1392.37,"country":"ID","favorite_color":"#e8f686"}' > json-ftps-source.json
 
-docker cp json-ftps-source.json ftps-server:/home/virtual/myuser/input/
+docker cp json-ftps-source.json ftps-server:/home/ftpusers/bob/input/
 rm -f json-ftps-source.json
 
 log "Creating JSON (no schema) SFTP Source connector"
@@ -40,8 +40,8 @@ docker exec connect \
                "ftps.error.path": "/error",
                "ftps.finished.path": "/finished",
                "ftps.input.file.pattern": "json-ftps-source.json",
-               "ftps.username":"myuser",
-               "ftps.password":"mypassword",
+               "ftps.username":"bob",
+               "ftps.password":"test",
                "ftps.host":"ftps-server",
                "ftps.port":"21",
                "ftps.security.mode": "EXPLICIT",
