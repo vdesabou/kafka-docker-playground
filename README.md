@@ -94,6 +94,7 @@ Quick start examples from Confluent [docs](https://docs.confluent.io/current/con
     - <img src="https://dellenny.com/wp-content/uploads/2019/04/azure-storage-blob.png" width="15"> [Blob Storage](connect/connect-azure-blob-storage-source)
     - <img src="https://www.element61.be/sites/default/files/competence/Microsoft%20Azure%20Event%20Hubs/1.png" width="15"> [Event Hubs](connect/connect-azure-event-hubs-source)
     - <img src="https://www.ciraltos.com/wp-content/uploads/2019/03/Service-Bus.png" width="15"> [Service Bus](connect/connect-azure-service-bus-source)
+- <img src="https://www.cleo.com/sites/default/files/2018-10/logo_ftps-mod-11%20%281%29.svg" height="15"> [FTPS](connect/connect-ftps-sink)
 
 ### ↗️ Sink
 
@@ -159,7 +160,7 @@ Quick start examples from Confluent [docs](https://docs.confluent.io/current/con
 - <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/3/38/Prometheus_software_logo.svg/1200px-Prometheus_software_logo.svg.png" height="15">  [Prometheus](connect/connect-prometheus-sink)
 - <img src="https://docs.snowflake.com/fr/_images/logo-snowflake-sans-text.png" height="15">  [Snowflake](connect/connect-snowflake-sink)
 - <img src="https://static-dotconferences-com.s3.amazonaws.com/editionpartnerships/datadog.png" height="15"> [Datadog Metrics](connect/connect-datadog-metrics-sink)
-- <img src="https://www.cleo.com/sites/default/files/2018-10/logo_ftps-mod-11%20%281%29.svg" height="15"> [FTPS](connect/connect-ftps-source)
+- <img src="https://www.cleo.com/sites/default/files/2018-10/logo_ftps-mod-11%20%281%29.svg" height="15"> [FTPS](connect/connect-ftps-sink)
 
 ## ☁️ Confluent Cloud
 
