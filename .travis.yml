@@ -94,9 +94,9 @@ jobs:
       connect/connect-mqtt-source connect/connect-neo4j-sink connect/connect-omnisci-sink
       connect/connect-tibco-sink connect/connect-tibco-source connect/connect-jdbc-oracle12-sink
       connect/connect-jdbc-oracle12-source" TAG="5.5.1-1-ubi8"
-  - name: '5.5.1-1-ubi8: CONNECT: rabbitmq-source redis-sink replicator sftp-sink
+  - name: '5.5.1-1-ubi8: CONNECT: rabbitmq-source rabbitmq-sink redis-sink replicator sftp-sink
       sftp-source solace-sink solace-source datadiode'
-    env: TEST_LIST="connect/connect-rabbitmq-source connect/connect-redis-sink connect/connect-replicator
+    env: TEST_LIST="connect/connect-rabbitmq-source connect/connect-rabbitmq-sink connect/connect-redis-sink connect/connect-replicator
       connect/connect-sftp-sink connect/connect-sftp-source connect/connect-solace-sink
       connect/connect-solace-source connect/connect-datadiode-source-sink" TAG="5.5.1-1-ubi8"
   - name: '5.5.1-1-ubi8: CONNECT: aws-cloudwatch-logs-source aws-cloudwatch-metrics-sink
