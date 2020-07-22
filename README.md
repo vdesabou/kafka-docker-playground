@@ -94,7 +94,7 @@ Quick start examples from Confluent [docs](https://docs.confluent.io/current/con
     - <img src="https://dellenny.com/wp-content/uploads/2019/04/azure-storage-blob.png" width="15"> [Blob Storage](connect/connect-azure-blob-storage-source)
     - <img src="https://www.element61.be/sites/default/files/competence/Microsoft%20Azure%20Event%20Hubs/1.png" width="15"> [Event Hubs](connect/connect-azure-event-hubs-source)
     - <img src="https://www.ciraltos.com/wp-content/uploads/2019/03/Service-Bus.png" width="15"> [Service Bus](connect/connect-azure-service-bus-source)
-- <img src="https://www.cleo.com/sites/default/files/2018-10/logo_ftps-mod-11%20%281%29.svg" height="15"> [FTPS](connect/connect-ftps-sink)
+- <img src="https://www.cleo.com/sites/default/files/2018-10/logo_ftps-mod-11%20%281%29.svg" height="15"> [FTPS](connect/connect-ftps-source)
 
 ### ↗️ Sink
 
