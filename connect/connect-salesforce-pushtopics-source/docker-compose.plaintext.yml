@@ -1,0 +1,9 @@
+---
+version: '3.5'
+services:
+
+  connect:
+    # volumes:
+    # - ../../connect/connect-salesforce-pushtopics-source/kafka-connect-salesforce-1.4.1.jar:/usr/share/confluent-hub-components/confluentinc-kafka-connect-salesforce/lib/kafka-connect-salesforce-1.6.0.jar
+    environment:
+      CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-salesforce

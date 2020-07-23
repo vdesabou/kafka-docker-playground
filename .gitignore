@@ -69,3 +69,4 @@ tools/datadog/myenv
 connect/connect-datadog-metrics-sink/myenv
 ccloud/ccloudexporter/config.yml
 ccloud/ccloud-demo/config.yml
+connect/connect-salesforce-pushtopics-source/myenv
