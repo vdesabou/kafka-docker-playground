@@ -48,8 +48,8 @@ jobs:
       azure-event-hubs-source'
     env: TEST_LIST="connect/connect-azure-data-lake-storage-gen1-sink connect/connect-azure-data-lake-storage-gen2-sink
       connect/connect-azure-event-hubs-source" TAG="5.5.1-1-ubi8"
-  - name: '5.5.1-1-ubi8: CONNECT: azure-sql-data-warehouse-sink azure-search-sink ftps-source ftps-sink'
-    env: TEST_LIST="connect/connect-azure-sql-data-warehouse-sink connect/connect-azure-search-sink connect/connect-ftps-source connect/connect-ftps-sink"
+  - name: '5.5.1-1-ubi8: CONNECT: azure-sql-data-warehouse-sink azure-search-sink ftps-source ftps-sink rabbitmq-sink'
+    env: TEST_LIST="connect/connect-azure-sql-data-warehouse-sink connect/connect-azure-search-sink connect/connect-ftps-source connect/connect-ftps-sink connect/connect-rabbitmq-sink"
       TAG="5.5.1-1-ubi8"
   - name: '5.5.1-1-ubi8: CONNECT: azure-service-bus-source azure-blob-storage-sink
       azure-blob-storage-source'
@@ -94,9 +94,9 @@ jobs:
       connect/connect-mqtt-source connect/connect-neo4j-sink connect/connect-omnisci-sink
       connect/connect-tibco-sink connect/connect-tibco-source connect/connect-jdbc-oracle12-sink
       connect/connect-jdbc-oracle12-source" TAG="5.5.1-1-ubi8"
-  - name: '5.5.1-1-ubi8: CONNECT: rabbitmq-source rabbitmq-sink redis-sink replicator sftp-sink
+  - name: '5.5.1-1-ubi8: CONNECT: rabbitmq-source redis-sink replicator sftp-sink
       sftp-source solace-sink solace-source datadiode'
-    env: TEST_LIST="connect/connect-rabbitmq-source connect/connect-rabbitmq-sink connect/connect-redis-sink connect/connect-replicator
+    env: TEST_LIST="connect/connect-rabbitmq-source connect/connect-redis-sink connect/connect-replicator
       connect/connect-sftp-sink connect/connect-sftp-source connect/connect-solace-sink
       connect/connect-solace-source connect/connect-datadiode-source-sink" TAG="5.5.1-1-ubi8"
   - name: '5.5.1-1-ubi8: CONNECT: aws-cloudwatch-logs-source aws-cloudwatch-metrics-sink
