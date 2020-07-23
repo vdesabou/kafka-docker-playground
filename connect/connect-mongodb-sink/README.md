@@ -4,7 +4,7 @@
 
 ## Objective
 
-Quickly test [MongoDB](https://docs.mongodb.com/ecosystem/connectors/kafka/) connector.
+Quickly test [MongoDB](https://docs.mongodb.com/kafka-connector/current/) connector.
 
 
 
