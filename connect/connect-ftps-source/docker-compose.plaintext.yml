@@ -8,8 +8,8 @@ services:
     container_name: ftps-server
     restart: always
     volumes:
-      - ../../connect/connect-ftps-sink/security/vsftpd.pem:/etc/ssl/private/vsftpd.pem
-      - ../../connect/connect-ftps-sink/config/vsftpd.conf:/etc/vsftpd/vsftpd.conf
+      - ../../connect/connect-ftps-source/security/vsftpd.pem:/etc/ssl/private/vsftpd.pem
+      - ../../connect/connect-ftps-source/config/vsftpd.conf:/etc/vsftpd/vsftpd.conf
     ports:
       - "220:220"
       - "22100-22110:22100-22110"
@@ -23,7 +23,7 @@ services:
 
   connect:
     volumes:
-      - ../../connect/connect-ftps-sink/security:/etc/kafka/secrets
+      - ../../connect/connect-ftps-source/security:/etc/kafka/secrets
     environment:
       CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-ftps
       # CONNECT_LOG4J_LOGGERS: org.reflections=ERROR,io.confluent.connect.ftps=TRACE
