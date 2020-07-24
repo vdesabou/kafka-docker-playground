@@ -22,19 +22,6 @@ then
      exit 1
 fi
 
-
-if [ -z "$CONSUMER_KEY" ]
-then
-     logerror "CONSUMER_KEY is not set. Export it as environment variable or pass it as argument"
-     exit 1
-fi
-
-if [ -z "$CONSUMER_PASSWORD" ]
-then
-     logerror "CONSUMER_PASSWORD is not set. Export it as environment variable or pass it as argument"
-     exit 1
-fi
-
 if [ -z "$SECURITY_TOKEN" ]
 then
      logerror "SECURITY_TOKEN is not set. Export it as environment variable or pass it as argument"
@@ -44,7 +31,7 @@ fi
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
 
 log "Creating Salesforce Bulk API Source connector"
-docker exec -e SALESFORCE_USERNAME="$SALESFORCE_USERNAME" -e SALESFORCE_PASSWORD="$SALESFORCE_PASSWORD" -e CONSUMER_KEY="$CONSUMER_KEY" -e CONSUMER_PASSWORD="$CONSUMER_PASSWORD" -e SECURITY_TOKEN="$SECURITY_TOKEN" connect \
+docker exec -e SALESFORCE_USERNAME="$SALESFORCE_USERNAME" -e SALESFORCE_PASSWORD="$SALESFORCE_PASSWORD" -e SECURITY_TOKEN="$SECURITY_TOKEN" connect \
      curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
@@ -56,8 +43,6 @@ docker exec -e SALESFORCE_USERNAME="$SALESFORCE_USERNAME" -e SALESFORCE_PASSWORD
                     "salesforce.username" : "'"$SALESFORCE_USERNAME"'",
                     "salesforce.password" : "'"$SALESFORCE_PASSWORD"'",
                     "salesforce.password.token" : "'"$SECURITY_TOKEN"'",
-                    "salesforce.consumer.key" : "'"$CONSUMER_KEY"'",
-                    "salesforce.consumer.secret" : "'"$CONSUMER_PASSWORD"'",
                     "key.converter": "org.apache.kafka.connect.json.JsonConverter",
                     "value.converter": "org.apache.kafka.connect.json.JsonConverter",
                     "confluent.license": "",
