@@ -29,6 +29,10 @@ $ ./salesforce-pushtopic-source.sh <SALESFORCE_USERNAME> <SALESFORCE_PASSWORD> <
 
 Note: you can also export these values as environment variable
 
+<SECURITY_TOKEN>: you can get it from `Settings->My Personal Information->Reset My Security Token`:
+
+![security token](Screenshot1.png)
+
 ## Details of what the script is doing
 
 Creating Salesforce PushTopics Source connector
