@@ -71,3 +71,4 @@ ccloud/ccloudexporter/config.yml
 ccloud/ccloud-demo/config.yml
 connect/connect-salesforce-pushtopics-source/myenv
 connect/connect-salesforce-bulkapi-source/myenv
+connect/connect-salesforce-bulkapi-sink/myenv
