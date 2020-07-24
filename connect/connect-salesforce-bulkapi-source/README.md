@@ -24,7 +24,7 @@ Go to [Salesforce developer portal](https://developer.salesforce.com/signup/) an
 Simply run:
 
 ```
-$ ./salesforce-bukapi-source.sh <SALESFORCE_USERNAME> <SALESFORCE_PASSWORD> <CONSUMER_KEY> <CONSUMER_PASSWORD> <SECURITY_TOKEN>
+$ ./salesforce-bukapi-source.sh <SALESFORCE_USERNAME> <SALESFORCE_PASSWORD> <SECURITY_TOKEN>
 ```
 
 Note: you can also export these values as environment variable
@@ -39,7 +39,7 @@ Note: you can also export these values as environment variable
 Creating Salesforce Bulk API Source connector
 
 ```bash
-$ docker exec -e SALESFORCE_USERNAME="$SALESFORCE_USERNAME" -e SALESFORCE_PASSWORD="$SALESFORCE_PASSWORD" -e CONSUMER_KEY="$CONSUMER_KEY" -e CONSUMER_PASSWORD="$CONSUMER_PASSWORD" -e SECURITY_TOKEN="$SECURITY_TOKEN" connect \
+$ docker exec -e SALESFORCE_USERNAME="$SALESFORCE_USERNAME" -e SALESFORCE_PASSWORD="$SALESFORCE_PASSWORD" -e SECURITY_TOKEN="$SECURITY_TOKEN" connect \
      curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
@@ -51,9 +51,6 @@ $ docker exec -e SALESFORCE_USERNAME="$SALESFORCE_USERNAME" -e SALESFORCE_PASSWO
                     "salesforce.username" : "'"$SALESFORCE_USERNAME"'",
                     "salesforce.password" : "'"$SALESFORCE_PASSWORD"'",
                     "salesforce.password.token" : "'"$SECURITY_TOKEN"'",
-                    "salesforce.consumer.key" : "'"$CONSUMER_KEY"'",
-                    "salesforce.consumer.secret" : "'"$CONSUMER_PASSWORD"'",
-                    "salesforce.initial.start" : "all",
                     "key.converter": "org.apache.kafka.connect.json.JsonConverter",
                     "value.converter": "org.apache.kafka.connect.json.JsonConverter",
                     "confluent.license": "",
