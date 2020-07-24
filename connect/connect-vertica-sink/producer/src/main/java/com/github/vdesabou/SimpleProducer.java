@@ -48,7 +48,7 @@ public class SimpleProducer {
                     Long key = counter;
 
                     ProducerRecord<Long, Customer> record;
-                    if(i==20000) {
+                    if(i==2) {
                         record = new ProducerRecord<>(TOPIC, key, null);
                     } else {
                         Customer customer = Customer.newBuilder()
@@ -74,7 +74,10 @@ public class SimpleProducer {
                     });
                     producer.flush();
                     counter++;
-                    TimeUnit.MILLISECONDS.sleep(100);
+                    if(counter==60) {
+                        counter=0;
+                    }
+                    TimeUnit.MILLISECONDS.sleep(1000);
                 }
             }
         }
