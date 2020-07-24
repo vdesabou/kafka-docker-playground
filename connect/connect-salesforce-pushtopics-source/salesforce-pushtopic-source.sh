@@ -53,7 +53,6 @@ docker exec -e SALESFORCE_USERNAME="$SALESFORCE_USERNAME" -e SALESFORCE_PASSWORD
                     "tasks.max": "1",
                     "curl.logging": "true",
                     "salesforce.object" : "Lead",
-                    "salesforce.instance" : "https://test.salesforce.com",
                     "salesforce.push.topic.name" : "LeadsPushTopic",
                     "salesforce.username" : "'"$SALESFORCE_USERNAME"'",
                     "salesforce.password" : "'"$SALESFORCE_PASSWORD"'",
@@ -68,6 +67,7 @@ docker exec -e SALESFORCE_USERNAME="$SALESFORCE_USERNAME" -e SALESFORCE_PASSWORD
                     "confluent.topic.replication.factor": "1"
           }' \
      http://localhost:8083/connectors/salesforce-pushtopic-source/config | jq .
+
 
 
 sleep 10
