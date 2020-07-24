@@ -15,6 +15,13 @@ then
      rm -f ${DIR}/vertica-client-9.3.1-0.x86_64.tar.gz
 fi
 
+if [ ! -f ${DIR}/EmptySchema/target/EmptySchema-1.0.0-SNAPSHOT.jar ]
+then
+     # build EmptySchema transform
+     log "Build EmptySchema transform"
+     docker run -it --rm -e KAFKA_CLIENT_TAG=$KAFKA_CLIENT_TAG -v "${DIR}/EmptySchema":/usr/src/mymaven -v "$HOME/.m2":/root/.m2 -v "${DIR}/EmptySchema/target:/usr/src/mymaven/target" -w /usr/src/mymaven maven:3.6.1-jdk-11 mvn package
+fi
+
 if [ ! -f ${DIR}/producer/target/producer-1.0.0-jar-with-dependencies.jar ]
 then
      log "Building jar for producer"
@@ -52,10 +59,14 @@ docker exec connect \
                     "table.name.format": "public.customer1",
                     "pk.mode": "record_key",
                     "pk.fields": "ID",
-                    "auto.create": true,
-                    "auto.evolve": false,
+                    "auto.create": "true",
+                    "auto.evolve": "false",
                     "key.converter": "org.apache.kafka.connect.converters.LongConverter",
                     "value.converter" : "Avro",
+                    "transforms": "EmptySchema,flatten",
+                    "transforms.flatten.type": "org.apache.kafka.connect.transforms.Flatten$Value",
+                    "transforms.flatten.delimiter": "_",
+                    "transforms.EmptySchema.type": "com.github.vdesabou.kafka.connect.transforms.EmptySchema$Value",
                     "value.converter.schema.registry.url":"http://schema-registry:8081",
                     "confluent.topic.bootstrap.servers": "broker:9092",
                     "confluent.topic.replication.factor": "1"
