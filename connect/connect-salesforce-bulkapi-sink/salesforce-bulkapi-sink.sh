@@ -115,8 +115,6 @@ docker exec -e SALESFORCE_USERNAME_ACCOUNT2="$SALESFORCE_USERNAME_ACCOUNT2" -e S
                     "salesforce.username" : "'"$SALESFORCE_USERNAME_ACCOUNT2"'",
                     "salesforce.password" : "'"$SALESFORCE_PASSWORD_ACCOUNT2"'",
                     "salesforce.password.token" : "'"$SECURITY_TOKEN_ACCOUNT2"'",
-                    "salesforce.ignore.fields": "CleanStatus",
-                    "salesforce.ignore.reference.fields": "true",
                     "key.converter": "org.apache.kafka.connect.json.JsonConverter",
                     "value.converter": "org.apache.kafka.connect.json.JsonConverter",
                     "reporter.bootstrap.servers": "broker:9092",
@@ -139,5 +137,10 @@ timeout 60 docker exec broker kafka-console-consumer -bootstrap-server broker:90
 
 # log "Verify topic error-responses"
 # timeout 20 docker exec broker kafka-console-consumer -bootstrap-server broker:9092 --topic error-responses --from-beginning --max-messages 1
+
+# FIXTHIS: Getting
+
+#  docker exec broker kafka-console-consumer -bootstrap-server broker:9092 --topic error-responses --from-beginning --max-messages 2
+# "[{message:Statut de mise à jour: valeur incorrecte pour le champ de liste de sélection restreinte : 5, fields:[CleanStatus], code:INVALID_OR_NULL_FOR_RESTRICTED_PICKLIST}]"
 
 log "Login to your SFDC account for account #2 to check that Lead has been added"
