@@ -73,4 +73,4 @@ docker exec -e SALESFORCE_USERNAME="$SALESFORCE_USERNAME" -e SALESFORCE_PASSWORD
 sleep 10
 
 log "Verify we have received the data in sfdc-pushtopic-leads topic"
-timeout 60 docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic sfdc-pushtopic-leads --from-beginning --max-messages 1
+timeout 60 docker exec broker kafka-console-consumer -bootstrap-server broker:9092 --topic sfdc-pushtopic-leads --from-beginning --max-messages 1
