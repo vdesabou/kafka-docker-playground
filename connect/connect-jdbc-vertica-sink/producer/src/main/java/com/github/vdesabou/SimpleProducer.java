@@ -74,6 +74,9 @@ public class SimpleProducer {
                     });
                     producer.flush();
                     counter++;
+                    if(counter==60) {
+                        counter=0;
+                    }
                     TimeUnit.MILLISECONDS.sleep(1000);
                 }
             }
