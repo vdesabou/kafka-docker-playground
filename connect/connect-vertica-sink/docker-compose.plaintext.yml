@@ -4,6 +4,7 @@ services:
 
   vertica:
     image: jbfavre/vertica:latest
+    #image: cjonesy/docker-vertica # in order to use vertica db 10, build your own docker image as described here https://github.com/cjonesy/docker-vertica
     hostname: vertica
     container_name: vertica
     ports:
@@ -17,5 +18,6 @@ services:
       - vertica
     volumes:
         - ../../connect/connect-vertica-sink/vertica-jdbc.jar:/usr/share/confluent-hub-components/confluentinc-kafka-connect-vertica/lib/vertica-jdbc.jar
+        #- ../../connect/connect-vertica-sink/vertica-jdbc-10.0.0-0.jar:/usr/share/confluent-hub-components/confluentinc-kafka-connect-vertica/lib/vertica-jdbc-10.0.0-0.jar
     environment:
       CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-vertica

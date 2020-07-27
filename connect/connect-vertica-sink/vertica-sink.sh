@@ -18,13 +18,6 @@ fi
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
 
 
-log "Create the table and insert data."
-docker exec -i vertica /opt/vertica/bin/vsql -hlocalhost -Udbadmin << EOF
-create table mytable(f1 varchar(20));
-EOF
-
-sleep 2
-
 log "Sending messages to topic mytable"
 seq -f "{\"f1\": \"value%g\"}" 10 | docker exec -i connect kafka-avro-console-producer --broker-list broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic mytable --property value.schema='{"type":"record","name":"myrecord","fields":[{"name":"f1","type":"string"}]}'
 
@@ -40,6 +33,8 @@ docker exec connect \
                     "vertica.port": "5433",
                     "vertica.username": "dbadmin",
                     "vertica.password": "",
+                    "auto.create": "true",
+                    "auto.evolve": "false",
                     "topics": "mytable",
                     "confluent.topic.bootstrap.servers": "broker:9092",
                     "confluent.topic.replication.factor": "1"
