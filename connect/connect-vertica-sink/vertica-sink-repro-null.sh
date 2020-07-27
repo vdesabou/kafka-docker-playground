@@ -7,12 +7,12 @@ source ${DIR}/../../scripts/utils.sh
 if [ ! -f ${DIR}/vertica-jdbc.jar ]
 then
      # install deps
-     log "Getting vertica-jdbc.jar from vertica-client-9.3.1-0.x86_64.tar.gz"
-     wget https://www.vertica.com/client_drivers/9.3.x/9.3.1-0/vertica-client-9.3.1-0.x86_64.tar.gz
-     tar xvfz ${DIR}/vertica-client-9.3.1-0.x86_64.tar.gz
+     log "Getting vertica-jdbc.jar from vertica-client-10.0.0-0.x86_64.tar.gz"
+     wget https://www.vertica.com/client_drivers/10.0.x/10.0.0-0/vertica-client-10.0.0-0.x86_64.tar.gz
+     tar xvfz ${DIR}/vertica-client-10.0.0-0.x86_64.tar.gz
      cp ${DIR}/opt/vertica/java/lib/vertica-jdbc.jar ${DIR}/
      rm -rf ${DIR}/opt
-     rm -f ${DIR}/vertica-client-9.3.1-0.x86_64.tar.gz
+     rm -f ${DIR}/vertica-client-10.0.0-0.x86_64.tar.gz
 fi
 
 if [ ! -f ${DIR}/producer-repro-null/target/producer-repro-null-1.0.0-jar-with-dependencies.jar ]
