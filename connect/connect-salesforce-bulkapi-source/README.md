@@ -17,7 +17,17 @@ Go to [Salesforce developer portal](https://developer.salesforce.com/signup/) an
 
 ## Add a Lead to Salesforce
 
-[Link](https://docs.confluent.io/current/connect/kafka-connect-salesforce/bukapis/salesforce_bukapi_source_connector_quickstart.html#add-a-lead-to-salesforce)
+Full details available [here](https://docs.confluent.io/current/connect/kafka-connect-salesforce/pushtopics/salesforce_pushtopic_source_connector_quickstart.html#add-a-lead-to-salesforce)
+
+* Clic the + button in top right corner:
+
+![Add a lead](Screenshot4.png)
+
+* Fill the lead details and click save:
+
+![Add a lead](Screenshot5.png)
+
+N.B: The connector will only get the leads for the last 24 hours.
 
 ## How to run
 
