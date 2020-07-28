@@ -62,6 +62,33 @@ Full details available [here](https://docs.confluent.io/current/connect/kafka-co
 
 N.B: The connector will only get the leads for the last 24 hours.
 
+## Create custom PushTopic
+
+Follow instructions [here](https://developer.salesforce.com/docs/atlas.en-us.api_streaming.meta/api_streaming/code_sample_java_create_pushtopic.htm), otherwise we get with default PushTopic:
+
+```
+"[{message:Statut de mise à jour: valeur incorrecte pour le champ de liste de sélection restreinte : 5, fields:[CleanStatus], code:INVALID_OR_NULL_FOR_RESTRICTED_PICKLIST}]"
+```
+
+![custom PushTopic](Screenshot6.png)
+
+
+`CleanStatus` was removed from default PushTopic:
+
+```java
+PushTopic pushTopic = new PushTopic();
+pushTopic.Name = 'MyCustomLeadsPushTopic';
+pushTopic.Query = 'SELECT Id,IsDeleted,MasterRecordId,LastName,FirstName,Salutation,Name,Title,Company,City,State,PostalCode,Country,Latitude,Longitude,GeocodeAccuracy,Address,Phone,MobilePhone,Fax,Email,Website,PhotoUrl,LeadSource,Status,Industry,Rating,AnnualRevenue,NumberOfEmployees,OwnerId,IsConverted,ConvertedDate,ConvertedAccountId,ConvertedContactId,ConvertedOpportunityId,IsUnreadByOwner,CreatedDate,CreatedById,LastModifiedDate,LastModifiedById,SystemModstamp,LastActivityDate,LastViewedDate,LastReferencedDate,Jigsaw,JigsawContactId,CompanyDunsNumber,DandbCompanyId,EmailBouncedReason,EmailBouncedDate,IndividualId,SICCode__c,ProductInterest__c,Primary__c,CurrentGenerators__c,NumberofLocations__c FROM Lead';
+pushTopic.ApiVersion = 49.0;
+pushTopic.NotifyForOperationCreate = true;
+pushTopic.NotifyForOperationUpdate = true;
+pushTopic.NotifyForOperationUndelete = true;
+pushTopic.NotifyForOperationDelete = true;
+pushTopic.NotifyForFields = 'Referenced';
+insert pushTopic;
+```
+![custom PushTopic](Screenshot7.png)
+
 ## How to run
 
 Simply run:
@@ -89,7 +116,7 @@ $ docker exec -e SALESFORCE_USERNAME="$SALESFORCE_USERNAME" -e SALESFORCE_PASSWO
                     "tasks.max": "1",
                     "curl.logging": "true",
                     "salesforce.object" : "Lead",
-                    "salesforce.push.topic.name" : "LeadsPushTopic",
+                    "salesforce.push.topic.name" : "MyCustomLeadsPushTopic",
                     "salesforce.username" : "'"$SALESFORCE_USERNAME"'",
                     "salesforce.password" : "'"$SALESFORCE_PASSWORD"'",
                     "salesforce.password.token" : "'"$SECURITY_TOKEN"'",
