@@ -1,4 +1,4 @@
-# Salesforce Bulk API Sink connector
+# Salesforce SObject Sink connector
 
 
 ## Objective
