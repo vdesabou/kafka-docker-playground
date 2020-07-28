@@ -14,13 +14,53 @@ Go to [Salesforce developer portal](https://developer.salesforce.com/signup/) an
 
 Go to [Salesforce developer portal](https://developer.salesforce.com/signup/) and register an account.
 
-## Follow instructions to create a Connected App
+## Salesforce Account
 
-[Link](https://docs.confluent.io/current/connect/kafka-connect-salesforce/bukapis/salesforce_bukapi_source_connector_quickstart.html#salesforce-account)
+### Create a new Connected App
+
+Full details available [here](https://docs.confluent.io/current/connect/kafka-connect-salesforce/pushtopics/salesforce_pushtopic_source_connector_quickstart.html#salesforce-account)
+
+Steps are:
+
+* Select the gear icon in the upper right hand corner and choose Setup.
+
+* Enter App in the Quick Find search box, and choose *App Manager* in the filtered results.
+
+* Click the *New Connected App* button in the upper right corner of the Setup panel.
+
+![Create a connected app](Screenshot2.png)
+
+* Supply a Connected App Name, API Name, and Contact Email.
+
+* Select *Enable OAuth Settings* checkbox and select the *Enable for Device Flow* checkbox. These selections enable the connector to use the Salesforce API.
+* Under the *Select OAuth Scopes* field, select all of the items under Available OAuth scopes and add them to the *Selected OAuth Scopes*.
+
+Example:
+
+![Create a connected app](Screenshot3.png)
+
+* Save the new app and press Continue at the prompt.
+* Look for the Consumer Key and Consumer Secret in the displayed form. Save these so you can put them in the configuration properties file for the Salesforce connect worker.
+
+### Find your Security token
+
+Find your Security Token (emailed to you from Salesforce.com). If you need to reset your token or view your profile on Salesforce.com, select `Settings->My Personal Information->Reset My Security Token` and follow the instructions.
+
+![security token](Screenshot1.png)
 
 ## Add a Lead to Salesforce
 
-[Link](https://docs.confluent.io/current/connect/kafka-connect-salesforce/bukapis/salesforce_bukapi_source_connector_quickstart.html#add-a-lead-to-salesforce)
+Full details available [here](https://docs.confluent.io/current/connect/kafka-connect-salesforce/pushtopics/salesforce_pushtopic_source_connector_quickstart.html#add-a-lead-to-salesforce)
+
+* Clic the + button in top right corner:
+
+![Add a lead](Screenshot4.png)
+
+* Fill the lead details and click save:
+
+![Add a lead](Screenshot5.png)
+
+N.B: The connector will only get the leads for the last 24 hours.
 
 ## How to run
 
@@ -31,10 +71,6 @@ $ ./salesforce-bukapi-sink.sh <SALESFORCE_USERNAME> <SALESFORCE_PASSWORD> <CONSU
 ```
 
 Note: you can also export these values as environment variable
-
-<SECURITY_TOKEN>: you can get it from `Settings->My Personal Information->Reset My Security Token`:
-
-![security token](Screenshot1.png)
 
 
 ## Details of what the script is doing
