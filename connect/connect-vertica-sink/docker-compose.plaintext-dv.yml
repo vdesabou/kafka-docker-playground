@@ -9,7 +9,7 @@ services:
 
 
   vertica:
-    image: jbfavre/vertica:latest
+    image: cjonesy/docker-vertica
     hostname: vertica
     container_name: vertica
     ports:
@@ -31,6 +31,7 @@ services:
       - vertica
 
   connect:
+    privileged: true
     depends_on:
       - zookeeper
       - broker
