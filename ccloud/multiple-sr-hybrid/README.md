@@ -111,3 +111,5 @@ EOF
 Then you can verify in Control Center [http://127.0.0.1:9021](http://127.0.0.1:9021]) that avro data is readable:
 
 ![Avro messages](Screenshot1.png)
+
+![Schema viewer](Screenshot2.png)
