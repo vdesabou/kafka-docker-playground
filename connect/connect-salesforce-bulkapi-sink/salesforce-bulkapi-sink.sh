@@ -79,7 +79,7 @@ docker exec -e SALESFORCE_USERNAME="$SALESFORCE_USERNAME" -e SALESFORCE_PASSWORD
                     "tasks.max": "1",
                     "curl.logging": "true",
                     "salesforce.object" : "Lead",
-                    "salesforce.push.topic.name" : "LeadsPushTopic",
+                    "salesforce.push.topic.name" : "MyCustomLeadsPushTopic",
                     "salesforce.username" : "'"$SALESFORCE_USERNAME"'",
                     "salesforce.password" : "'"$SALESFORCE_PASSWORD"'",
                     "salesforce.password.token" : "'"$SECURITY_TOKEN"'",
