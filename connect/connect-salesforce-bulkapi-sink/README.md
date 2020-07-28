@@ -78,7 +78,7 @@ Follow instructions [here](https://developer.salesforce.com/docs/atlas.en-us.api
 ```java
 PushTopic pushTopic = new PushTopic();
 pushTopic.Name = 'MyCustomLeadsPushTopic';
-pushTopic.Query = 'SELECT Id,IsDeleted,MasterRecordId,LastName,FirstName,Salutation,Name,Title,Company,City,State,PostalCode,Country,Latitude,Longitude,GeocodeAccuracy,Address,Phone,MobilePhone,Fax,Email,Website,PhotoUrl,LeadSource,Status,Industry,Rating,AnnualRevenue,NumberOfEmployees,OwnerId,IsConverted,ConvertedDate,ConvertedAccountId,ConvertedContactId,ConvertedOpportunityId,IsUnreadByOwner,CreatedDate,CreatedById,LastModifiedDate,LastModifiedById,SystemModstamp,LastActivityDate,LastViewedDate,LastReferencedDate,Jigsaw,JigsawContactId,CompanyDunsNumber,DandbCompanyId,EmailBouncedReason,EmailBouncedDate,IndividualId,SICCode__c,ProductInterest__c,Primary__c,CurrentGenerators__c,NumberofLocations__c FROM Lead';
+pushTopic.Query = 'SELECT Id,IsDeleted,CustomId__c,MasterRecordId,LastName,FirstName,Salutation,Name,Title,Company,City,State,PostalCode,Country,Latitude,Longitude,GeocodeAccuracy,Address,Phone,MobilePhone,Fax,Email,Website,PhotoUrl,LeadSource,Status,Industry,Rating,AnnualRevenue,NumberOfEmployees,OwnerId,IsConverted,ConvertedDate,ConvertedAccountId,ConvertedContactId,ConvertedOpportunityId,IsUnreadByOwner,CreatedDate,CreatedById,LastModifiedDate,LastModifiedById,SystemModstamp,LastActivityDate,LastViewedDate,LastReferencedDate,Jigsaw,JigsawContactId,CompanyDunsNumber,DandbCompanyId,EmailBouncedReason,EmailBouncedDate,IndividualId,SICCode__c,ProductInterest__c,Primary__c,CurrentGenerators__c,NumberofLocations__c FROM Lead';
 pushTopic.ApiVersion = 49.0;
 pushTopic.NotifyForOperationCreate = true;
 pushTopic.NotifyForOperationUpdate = true;
@@ -87,7 +87,15 @@ pushTopic.NotifyForOperationDelete = true;
 pushTopic.NotifyForFields = 'Referenced';
 insert pushTopic;
 ```
+
 ![custom PushTopic](Screenshot7.png)
+
+
+## Create CustomId External ID
+
+Follow instructions [here](https://docs.confluent.io/current/connect/kafka-connect-salesforce/sobjects_sink/index.html#external-id), **for both accounts**.
+
+![custom PushTopic](Screenshot8.png)
 
 ## How to run
 
@@ -182,17 +190,7 @@ docker exec broker kafka-console-consumer -bootstrap-server broker:9092 --topic 
 **FIXTHIS**: Salesforce Bulk API sink is broken [#42](https://github.com/vdesabou/kafka-docker-playground/issues/42)
 
 ```
-"[{message:Clean Status: bad value for restricted picklist field: 5, fields:[CleanStatus], code:INVALID_OR_NULL_FOR_RESTRICTED_PICKLIST}]"
-"[{message:Clean Status: bad value for restricted picklist field: 5, fields:[CleanStatus], code:INVALID_OR_NULL_FOR_RESTRICTED_PICKLIST}]"
-"[{message:invalid cross reference id, fields:[], code:INVALID_CROSS_REFERENCE_KEY}]"
-"[{message:invalid cross reference id, fields:[], code:INVALID_CROSS_REFERENCE_KEY}]"
-"[{message:invalid cross reference id, fields:[], code:INVALID_CROSS_REFERENCE_KEY}]"
-"[{message:invalid cross reference id, fields:[], code:INVALID_CROSS_REFERENCE_KEY}]"
-"[{message:invalid cross reference id, fields:[], code:INVALID_CROSS_REFERENCE_KEY}]"
-"[{message:invalid cross reference id, fields:[], code:INVALID_CROSS_REFERENCE_KEY}]"
-"[{message:invalid cross reference id, fields:[], code:INVALID_CROSS_REFERENCE_KEY}]"
-"[{message:invalid cross reference id, fields:[], code:INVALID_CROSS_REFERENCE_KEY}]"
-"[{message:invalid cross reference id, fields:[], code:INVALID_CROSS_REFERENCE_KEY}]"
+"[{message:Unable to create/update fields: EmailBouncedDate, EmailBouncedReason. Please check the security settings of this field and verify that it is read/write for your profile or permission set., fields:[EmailBouncedDate, EmailBouncedReason], code:INVALID_FIELD_FOR_INSERT_UPDATE}]"
 ```
 
 Login to your SFDC account for account #2 to check that Lead has been added
