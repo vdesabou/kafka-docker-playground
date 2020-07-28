@@ -115,6 +115,8 @@ docker exec -e SALESFORCE_USERNAME_ACCOUNT2="$SALESFORCE_USERNAME_ACCOUNT2" -e S
                     "salesforce.username" : "'"$SALESFORCE_USERNAME_ACCOUNT2"'",
                     "salesforce.password" : "'"$SALESFORCE_PASSWORD_ACCOUNT2"'",
                     "salesforce.password.token" : "'"$SECURITY_TOKEN_ACCOUNT2"'",
+                    "salesforce.use.custom.id.field" : "true",
+                    "salesforce.custom.id.field.name" : "CustomId__c",
                     "key.converter": "org.apache.kafka.connect.json.JsonConverter",
                     "value.converter": "org.apache.kafka.connect.json.JsonConverter",
                     "reporter.bootstrap.servers": "broker:9092",
@@ -140,7 +142,6 @@ timeout 60 docker exec broker kafka-console-consumer -bootstrap-server broker:90
 
 # FIXTHIS: Getting
 
-#  docker exec broker kafka-console-consumer -bootstrap-server broker:9092 --topic error-responses --from-beginning --max-messages 2
-# "[{message:Statut de mise à jour: valeur incorrecte pour le champ de liste de sélection restreinte : 5, fields:[CleanStatus], code:INVALID_OR_NULL_FOR_RESTRICTED_PICKLIST}]"
+# "[{message:Unable to create/update fields: EmailBouncedDate, EmailBouncedReason. Please check the security settings of this field and verify that it is read/write for your profile or permission set., fields:[EmailBouncedDate, EmailBouncedReason], code:INVALID_FIELD_FOR_INSERT_UPDATE}]"
 
 log "Login to your SFDC account for account #2 to check that Lead has been added"
