@@ -73,3 +73,4 @@ connect/connect-salesforce-pushtopics-source/myenv
 connect/connect-salesforce-bulkapi-source/myenv
 connect/connect-salesforce-bulkapi-sink/myenv
 connect/connect-vertica-sink/vertica_10.0.0-0_amd64.deb
+connect/connect-salesforce-sobject-sink/myenv
