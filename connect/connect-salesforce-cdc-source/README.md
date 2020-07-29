@@ -57,6 +57,12 @@ Find your Security Token (emailed to you from Salesforce.com). If you need to re
 
 N.B: The connector will only get the contacts for the last 72 hours (Change events are published to the event bus, where they are stored temporarily for 72 hours)
 
+## Enable Change Data Capture
+
+Search for "Change Data Capture" in Settings and then select `Contact`:
+
+![Change Data Capture](Screenshot6.png)
+
 ## How to run
 
 Simply run:
