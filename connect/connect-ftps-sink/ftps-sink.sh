@@ -12,6 +12,12 @@ verify_installed "keytool"
 
 cd ${DIR}
 
+if [ ! -z "$TRAVIS" ]
+then
+     # running with travis
+     sudo chown root ${DIR}/config/vsftpd.conf
+     sudo chown root ${DIR}/security/vsftpd.pem
+fi
 
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
 
