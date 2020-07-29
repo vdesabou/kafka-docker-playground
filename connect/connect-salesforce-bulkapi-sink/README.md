@@ -78,7 +78,7 @@ Follow instructions [here](https://developer.salesforce.com/docs/atlas.en-us.api
 ```java
 PushTopic pushTopic = new PushTopic();
 pushTopic.Name = 'MyCustomLeadsPushTopic';
-pushTopic.Query = 'SELECT Id,IsDeleted,CustomId__c,MasterRecordId,LastName,FirstName,Salutation,Name,Title,Company,City,State,PostalCode,Country,Latitude,Longitude,GeocodeAccuracy,Address,Phone,MobilePhone,Fax,Email,Website,PhotoUrl,LeadSource,Status,Industry,Rating,AnnualRevenue,NumberOfEmployees,OwnerId,IsConverted,ConvertedDate,ConvertedAccountId,ConvertedContactId,ConvertedOpportunityId,IsUnreadByOwner,CreatedDate,CreatedById,LastModifiedDate,LastModifiedById,SystemModstamp,LastActivityDate,LastViewedDate,LastReferencedDate,Jigsaw,JigsawContactId,CompanyDunsNumber,DandbCompanyId,EmailBouncedReason,EmailBouncedDate,IndividualId,SICCode__c,ProductInterest__c,Primary__c,CurrentGenerators__c,NumberofLocations__c FROM Lead';
+pushTopic.Query = 'SELECT Id,CustomId__c,IsDeleted,MasterRecordId,LastName,FirstName,Salutation,Name,Title,Company,City,State,PostalCode,Country,Latitude,Longitude,GeocodeAccuracy,Address,Phone,MobilePhone,Fax,Email,Website,PhotoUrl,LeadSource,Status,Industry,Rating,AnnualRevenue,NumberOfEmployees,OwnerId,IsConverted,ConvertedDate,ConvertedAccountId,ConvertedContactId,ConvertedOpportunityId,IsUnreadByOwner,CreatedDate,CreatedById,LastModifiedDate,LastModifiedById,SystemModstamp,LastActivityDate,LastViewedDate,LastReferencedDate,Jigsaw,JigsawContactId,CompanyDunsNumber,DandbCompanyId,IndividualId,SICCode__c,ProductInterest__c,Primary__c,CurrentGenerators__c,NumberofLocations__c FROM Lead';
 pushTopic.ApiVersion = 49.0;
 pushTopic.NotifyForOperationCreate = true;
 pushTopic.NotifyForOperationUpdate = true;
@@ -90,6 +90,12 @@ insert pushTopic;
 
 ![custom PushTopic](Screenshot7.png)
 
+Note: to delete a PushTopic:
+
+```java
+List<PushTopic> pts = [SELECT Id FROM PushTopic WHERE Name = 'MyCustomLeadsPushTopic'];
+Database.delete(pts);
+```
 
 ## Create CustomId External ID
 
