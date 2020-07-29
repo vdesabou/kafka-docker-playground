@@ -73,3 +73,44 @@ sleep 10
 
 log "Verify we have received the data in sfdc-platform-events topic"
 timeout 60 docker exec broker kafka-console-consumer -bootstrap-server broker:9092 --topic sfdc-platform-events --from-beginning --max-messages 2
+
+log "Creating Salesforce Platform Events Sink connector"
+docker exec -e SALESFORCE_USERNAME="$SALESFORCE_USERNAME" -e SALESFORCE_PASSWORD="$SALESFORCE_PASSWORD" -e CONSUMER_KEY="$CONSUMER_KEY" -e CONSUMER_PASSWORD="$CONSUMER_PASSWORD" -e SECURITY_TOKEN="$SECURITY_TOKEN" connect \
+     curl -X PUT \
+     -H "Content-Type: application/json" \
+     --data '{
+                    "connector.class": "io.confluent.salesforce.SalesforcePlatformEventSinkConnector",
+                    "topics": "sfdc-platform-events",
+                    "tasks.max": "1",
+                    "curl.logging": "true",
+                    "salesforce.platform.event.name" : "MyPlatformEvent__e",
+                    "salesforce.username" : "'"$SALESFORCE_USERNAME"'",
+                    "salesforce.password" : "'"$SALESFORCE_PASSWORD"'",
+                    "salesforce.password.token" : "'"$SECURITY_TOKEN"'",
+                    "salesforce.consumer.key" : "'"$CONSUMER_KEY"'",
+                    "salesforce.consumer.secret" : "'"$CONSUMER_PASSWORD"'",
+                    "salesforce.initial.start" : "all",
+                    "key.converter": "org.apache.kafka.connect.json.JsonConverter",
+                    "value.converter": "org.apache.kafka.connect.json.JsonConverter",
+                    "reporter.bootstrap.servers": "broker:9092",
+                    "reporter.error.topic.name": "error-responses",
+                    "reporter.error.topic.replication.factor": 1,
+                    "reporter.result.topic.name": "success-responses",
+                    "reporter.result.topic.replication.factor": 1,
+                    "transforms": "MaskField",
+                    "transforms.MaskField.type": "org.apache.kafka.connect.transforms.MaskField$Value",
+                    "transforms.MaskField.fields": "Message__c",
+                    "confluent.license": "",
+                    "confluent.topic.bootstrap.servers": "broker:9092",
+                    "confluent.topic.replication.factor": "1"
+          }' \
+     http://localhost:8083/connectors/salesforce-platform-events-sink/config | jq .
+
+
+sleep 10
+
+log "Verify topic success-responses"
+timeout 60 docker exec broker kafka-console-consumer -bootstrap-server broker:9092 --topic success-responses --from-beginning --max-messages 1
+
+# log "Verify topic error-responses"
+# timeout 20 docker exec broker kafka-console-consumer -bootstrap-server broker:9092 --topic error-responses --from-beginning --max-messages 1
