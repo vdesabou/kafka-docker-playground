@@ -2,6 +2,12 @@
 version: '3.5'
 services:
 
+  sfdx-cli:
+    image: vdesabou/sfdx-cli:latest # forked from salestrip/sfdx-cli to add plugin sfpowerkit
+    hostname: sfdx-cli
+    container_name: sfdx-cli
+    command: "sleep infinity"
+
   connect:
     volumes:
     # FIXTHIS: to remove when connector is published on confluebt-hub
