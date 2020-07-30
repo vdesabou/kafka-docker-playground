@@ -48,9 +48,9 @@ public class SimpleProducer {
                     Long key = counter;
 
                     ProducerRecord<Long, Customer> record;
-                    if(i==2) {
-                        record = new ProducerRecord<>(TOPIC, key, null);
-                    } else {
+                    // if(counter==120) {
+                    //     record = new ProducerRecord<>(TOPIC, key, null);
+                    // } else {
                         Customer customer = Customer.newBuilder()
                         .setListID(i)
                         .setNormalizedHashItemID(i)
@@ -59,7 +59,7 @@ public class SimpleProducer {
                         .setMyTimestamp(new Date().getTime())
                         .build();
                         record = new ProducerRecord<>(TOPIC, key, customer);
-                    }
+                    // }
 
                     System.out.println("Sending " + record.key() + " " + record.value());
                     producer.send(record, new Callback() {
@@ -74,9 +74,6 @@ public class SimpleProducer {
                     });
                     producer.flush();
                     counter++;
-                    if(counter==60) {
-                        counter=0;
-                    }
                     TimeUnit.MILLISECONDS.sleep(1000);
                 }
             }
