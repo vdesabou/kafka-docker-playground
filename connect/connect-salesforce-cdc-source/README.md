@@ -45,18 +45,6 @@ Find your Security Token (emailed to you from Salesforce.com). If you need to re
 
 ![security token](Screenshot1.png)
 
-## Add a Contact to Salesforce
-
-* Clic the + button in top right corner:
-
-![Add a Contact](Screenshot4.png)
-
-* Fill the Contact details and click save:
-
-![Add a Contact](Screenshot5.png)
-
-N.B: The connector will only get the contacts for the last 72 hours (Change events are published to the event bus, where they are stored temporarily for 72 hours)
-
 ## Enable Change Data Capture
 
 Search for "Change Data Capture" in Settings and then select `Contact`:
@@ -75,6 +63,18 @@ Note: you can also export these values as environment variable
 
 
 ## Details of what the script is doing
+
+Login with sfdx CLI
+
+```bash
+$ docker exec sfdx-cli sh -c "sfdx sfpowerkit:auth:login -u \"$SALESFORCE_USERNAME\" -p \"$SALESFORCE_PASSWORD\" -r \"https://login.salesforce.com\" -s \"$SECURITY_TOKEN\""
+```
+
+Add a Contact to Salesforce
+
+```bash
+$ docker exec sfdx-cli sh -c "sfdx force:data:record:create  -u \"$SALESFORCE_USERNAME\" -s Lead -v \"FirstName='John_$RANDOM' LastName='Doe_$RANDOM'\""
+```
 
 Creating Salesforce CDC Source connector
 
@@ -120,31 +120,31 @@ Results:
         "AssistantPhone": null,
         "Birthdate": null,
         "ChangeEventHeader": {
-            "changeOrigin": "com/salesforce/api/soap/49.0;client=SfdcInternalAPI/",
+            "changeOrigin": "com/salesforce/api/rest/49.0;client=sfdx toolbelt",
             "changeType": "CREATE",
             "changedFields": [],
-            "commitNumber": 10831265770557,
-            "commitTimestamp": 1596002921000,
+            "commitNumber": 10832042834831,
+            "commitTimestamp": 1596116025000,
             "commitUser": "0052X00000AJGNCQA5",
             "entityName": "Contact",
             "recordIds": [
-                "0032X00002QTqF9QAL"
+                "0032X00002QU10JQAT"
             ],
             "sequenceNumber": 1,
-            "transactionKey": "0000fed7-3998-fba2-f491-f7210b5b2ffe"
+            "transactionKey": "000162ba-13b5-6862-79f9-0805a616799d"
         },
         "CleanStatus": "Pending",
         "CreatedById": "0052X00000AJGNCQA5",
-        "CreatedDate": 1596002921000,
+        "CreatedDate": 1596116025000,
         "Department": null,
         "Description": null,
         "Email": null,
         "EmailBouncedDate": null,
         "EmailBouncedReason": null,
         "Fax": null,
-        "FirstName": null,
+        "FirstName": "John_1241",
         "HomePhone": null,
-        "Id": "0032X00002QTqF9QAL",
+        "Id": "0032X00002QU10JQAT",
         "IndividualId": null,
         "Jigsaw": null,
         "JigsawContactId": null,
@@ -152,8 +152,8 @@ Results:
         "LastCURequestDate": null,
         "LastCUUpdateDate": null,
         "LastModifiedById": "0052X00000AJGNCQA5",
-        "LastModifiedDate": 1596002921000,
-        "LastName": "ccc",
+        "LastModifiedDate": 1596116025000,
+        "LastName": "Doe_19419",
         "LeadSource": null,
         "Level__c": null,
         "MailingAddress": null,
@@ -179,9 +179,9 @@ Results:
         "OtherStreet": null,
         "OwnerId": "0052X00000AJGNCQA5",
         "Phone": null,
-        "ReplayId": "1292102",
+        "ReplayId": "1305887",
         "ReportsToId": null,
-        "Salutation": "Ms.",
+        "Salutation": null,
         "Title": null,
         "_EventType": "R1-FSrKj5SMSfaXy7QNdEw",
         "_ObjectType": "ContactChangeEvent"
