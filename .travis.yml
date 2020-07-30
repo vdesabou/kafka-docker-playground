@@ -46,7 +46,7 @@ jobs:
   include:
   - name: '5.5.1-1-ubi8: CONNECT: salesforce-bulkapi-sink salesforce-bulkapi-sink salesforce-cdc-source
       salesforce-platform-events-sink salesforce-platform-events-source salesforce-pushtopics-source salesforce-sobject-sink'
-    env: TEST_LIST="connect/connect-connect-salesforce-bulkapi-sink connect/connect-salesforce-bulkapi-source connect/connect-salesforce-cdc-source connect/connect-salesforce-platform-events-sink connect/connect-salesforce-platform-events-source connect/connect-salesforce-pushtopics-source connect/connect-salesforce-sobject-sink" TAG="5.5.1-1-ubi8"
+    env: TEST_LIST="connect/connect-salesforce-bulkapi-sink connect/connect-salesforce-bulkapi-source connect/connect-salesforce-cdc-source connect/connect-salesforce-platform-events-sink connect/connect-salesforce-platform-events-source connect/connect-salesforce-pushtopics-source connect/connect-salesforce-sobject-sink" TAG="5.5.1-1-ubi8"
   # - name: '5.5.1-1-ubi8: CONNECT: azure-data-lake-storage-gen1-sink azure-data-lake-storage-gen2-sink
   #     azure-event-hubs-source'
   #   env: TEST_LIST="connect/connect-azure-data-lake-storage-gen1-sink connect/connect-azure-data-lake-storage-gen2-sink
