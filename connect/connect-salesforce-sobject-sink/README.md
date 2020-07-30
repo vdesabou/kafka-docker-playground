@@ -72,7 +72,7 @@ $ docker exec sfdx-cli sh -c "sfdx sfpowerkit:auth:login -u \"$SALESFORCE_USERNA
 Add a Lead to Salesforce
 
 ```bash
-$ docker exec sfdx-cli sh -c "sfdx force:data:record:create  -u \"$SALESFORCE_USERNAME\" -s Lead -v \"FirstName='John_$RANDOM' LastName='Doe_$RANDOM' Company=Confluent\""
+$ docker exec sfdx-cli sh -c "sfdx force:data:record:create  -u \"$SALESFORCE_USERNAME\" -s Lead -v \"FirstName='$LEAD_FIRSTNAME' LastName='$LEAD_LASTNAME' Company=Confluent\""
 ```
 
 Creating Salesforce PushTopics Source connector
@@ -155,7 +155,84 @@ Results:
 ```
 
 
-Login to your SFDC account for account #2 to check that Lead has been added
+Login with sfdx CLI on the account #2
+
+```bash
+$ docker exec sfdx-cli sh -c "sfdx sfpowerkit:auth:login -u \"$SALESFORCE_USERNAME_ACCOUNT2\" -p \"$SALESFORCE_PASSWORD_ACCOUNT2\" -r \"https://login.salesforce.com\" -s \"$SECURITY_TOKEN_ACCOUNT2\""
+```
+
+Get the Lead created on account #2
+
+```bash
+docker exec sfdx-cli sh -c "sfdx force:data:record:get  -u \"$SALESFORCE_USERNAME_ACCOUNT2\" -s Lead -w \"FirstName='$LEAD_FIRSTNAME' LastName='$LEAD_LASTNAME' Company=Confluent\""
+```
+
+Results:
+
+```
+attributes:
+  type: "Lead"
+  url: "/services/data/v49.0/sobjects/Lead/00Q2X00001OUd8RUAT"
+Id: "00Q2X00001OUd8RUAT"
+IsDeleted: null
+MasterRecordId: null
+LastName: "Doe_20857"
+FirstName: "John_64"
+Salutation: null
+Name: "John_64 Doe_20857"
+Title: null
+Company: "Confluent"
+Street: null
+City: null
+State: null
+PostalCode: null
+Country: null
+Latitude: null
+Longitude: null
+GeocodeAccuracy: null
+Address: null
+Phone: null
+MobilePhone: null
+Fax: null
+Email: null
+Website: null
+PhotoUrl: "/services/images/photo/00Q2X00001OUd8RUAT"
+Description: null
+LeadSource: null
+Status: "Open - Not Contacted"
+Industry: null
+Rating: null
+AnnualRevenue: null
+NumberOfEmployees: null
+OwnerId: "0052X00000ANeP4QAL"
+IsConverted: null
+ConvertedDate: null
+ConvertedAccountId: null
+ConvertedContactId: null
+ConvertedOpportunityId: null
+IsUnreadByOwner: true
+CreatedDate: "2020-07-30T14:31:22.000+0000"
+CreatedById: "0052X00000ANeP4QAL"
+LastModifiedDate: "2020-07-30T14:31:22.000+0000"
+LastModifiedById: "0052X00000ANeP4QAL"
+SystemModstamp: "2020-07-30T14:31:22.000+0000"
+LastActivityDate: null
+LastViewedDate: null
+LastReferencedDate: null
+Jigsaw: null
+JigsawContactId: null
+CleanStatus: "Pending"
+CompanyDunsNumber: null
+DandbCompanyId: null
+EmailBouncedReason: null
+EmailBouncedDate: null
+IndividualId: null
+SICCode__c: null
+ProductInterest__c: null
+Primary__c: null
+CurrentGenerators__c: null
+NumberofLocations__c: null
+```
 
 
 N.B: Control Center is reachable at [http://127.0.0.1:9021](http://127.0.0.1:9021])

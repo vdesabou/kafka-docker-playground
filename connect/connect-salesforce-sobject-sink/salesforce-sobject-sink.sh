@@ -85,8 +85,10 @@ ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml
 log "Login with sfdx CLI"
 docker exec sfdx-cli sh -c "sfdx sfpowerkit:auth:login -u \"$SALESFORCE_USERNAME\" -p \"$SALESFORCE_PASSWORD\" -r \"https://login.salesforce.com\" -s \"$SECURITY_TOKEN\""
 
-log "Add a Lead to Salesforce"
-docker exec sfdx-cli sh -c "sfdx force:data:record:create  -u \"$SALESFORCE_USERNAME\" -s Lead -v \"FirstName='John_$RANDOM' LastName='Doe_$RANDOM' Company=Confluent\""
+LEAD_FIRSTNAME=John_$RANDOM
+LEAD_LASTNAME=Doe_$RANDOM
+log "Add a Lead to Salesforce: $LEAD_FIRSTNAME $LEAD_LASTNAME"
+docker exec sfdx-cli sh -c "sfdx force:data:record:create  -u \"$SALESFORCE_USERNAME\" -s Lead -v \"FirstName='$LEAD_FIRSTNAME' LastName='$LEAD_LASTNAME' Company=Confluent\""
 
 log "Creating Salesforce PushTopics Source connector"
 docker exec -e SALESFORCE_USERNAME="$SALESFORCE_USERNAME" -e SALESFORCE_PASSWORD="$SALESFORCE_PASSWORD" -e CONSUMER_KEY="$CONSUMER_KEY" -e CONSUMER_PASSWORD="$CONSUMER_PASSWORD" -e SECURITY_TOKEN="$SECURITY_TOKEN" connect \
@@ -161,4 +163,8 @@ timeout 60 docker exec broker kafka-console-consumer -bootstrap-server broker:90
 # log "Verify topic error-responses"
 # timeout 20 docker exec broker kafka-console-consumer -bootstrap-server broker:9092 --topic error-responses --from-beginning --max-messages 1
 
-log "Login to your SFDC account for account #2 to check that Lead has been added"
+log "Login with sfdx CLI on the account #2"
+docker exec sfdx-cli sh -c "sfdx sfpowerkit:auth:login -u \"$SALESFORCE_USERNAME_ACCOUNT2\" -p \"$SALESFORCE_PASSWORD_ACCOUNT2\" -r \"https://login.salesforce.com\" -s \"$SECURITY_TOKEN_ACCOUNT2\""
+
+log "Get the Lead created on account #2"
+docker exec sfdx-cli sh -c "sfdx force:data:record:get  -u \"$SALESFORCE_USERNAME_ACCOUNT2\" -s Lead -w \"FirstName='$LEAD_FIRSTNAME' LastName='$LEAD_LASTNAME' Company=Confluent\""
