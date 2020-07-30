@@ -59,7 +59,7 @@ Add a text field *Message*:
 
 ![Platform Event](Screenshot8.png)
 
-## Send a Platform Event using debug
+## Send a Platform Event using Developer Console (NOT REQUIRED - AUTOMATICALLY DONE)
 
 Select *Developer Console* in upper right menu:
 
@@ -107,6 +107,18 @@ Note: you can also export these values as environment variable
 
 
 ## Details of what the script is doing
+
+Login with sfdx CLI
+
+```bash
+$ docker exec sfdx-cli sh -c "sfdx sfpowerkit:auth:login -u \"$SALESFORCE_USERNAME\" -p \"$SALESFORCE_PASSWORD\" -r \"https://login.salesforce.com\" -s \"$SECURITY_TOKEN\""
+```
+
+Send Platform Events
+
+```bash
+$ docker exec sfdx-cli sh -c "sfdx force:apex:execute  -u \"$SALESFORCE_USERNAME\" -f \"/tmp/event.apex\""
+```
 
 Creating Salesforce Platform Events Source connector
 
