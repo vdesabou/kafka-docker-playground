@@ -62,47 +62,6 @@ Full details available [here](https://docs.confluent.io/current/connect/kafka-co
 
 N.B: The connector will only get the leads for the last 24 hours.
 
-## Create custom PushTopic
-
-Follow instructions [here](https://developer.salesforce.com/docs/atlas.en-us.api_streaming.meta/api_streaming/code_sample_java_create_pushtopic.htm), otherwise we get with default PushTopic:
-
-```
-"[{message:Statut de mise à jour: valeur incorrecte pour le champ de liste de sélection restreinte : 5, fields:[CleanStatus], code:INVALID_OR_NULL_FOR_RESTRICTED_PICKLIST}]"
-```
-
-![custom PushTopic](Screenshot6.png)
-
-
-`CleanStatus` was removed from default PushTopic:
-
-```java
-PushTopic pushTopic = new PushTopic();
-pushTopic.Name = 'MyCustomLeadsPushTopic';
-pushTopic.Query = 'SELECT Id,CustomId__c,IsDeleted,MasterRecordId,LastName,FirstName,Salutation,Name,Title,Company,City,State,PostalCode,Country,Latitude,Longitude,GeocodeAccuracy,Address,Phone,MobilePhone,Fax,Email,Website,PhotoUrl,LeadSource,Status,Industry,Rating,AnnualRevenue,NumberOfEmployees,OwnerId,IsConverted,ConvertedDate,ConvertedAccountId,ConvertedContactId,ConvertedOpportunityId,IsUnreadByOwner,CreatedDate,CreatedById,LastModifiedDate,LastModifiedById,SystemModstamp,LastActivityDate,LastViewedDate,LastReferencedDate,Jigsaw,JigsawContactId,CompanyDunsNumber,DandbCompanyId,IndividualId,SICCode__c,ProductInterest__c,Primary__c,CurrentGenerators__c,NumberofLocations__c FROM Lead';
-pushTopic.ApiVersion = 49.0;
-pushTopic.NotifyForOperationCreate = true;
-pushTopic.NotifyForOperationUpdate = true;
-pushTopic.NotifyForOperationUndelete = true;
-pushTopic.NotifyForOperationDelete = true;
-pushTopic.NotifyForFields = 'Referenced';
-insert pushTopic;
-```
-
-![custom PushTopic](Screenshot7.png)
-
-Note: to delete a PushTopic:
-
-```java
-List<PushTopic> pts = [SELECT Id FROM PushTopic WHERE Name = 'MyCustomLeadsPushTopic'];
-Database.delete(pts);
-```
-
-## Create CustomId External ID
-
-Follow instructions [here](https://docs.confluent.io/current/connect/kafka-connect-salesforce/sobjects_sink/index.html#external-id), **for both accounts**.
-
-![custom PushTopic](Screenshot8.png)
-
 ## How to run
 
 Simply run:
@@ -187,16 +146,9 @@ Verify topic `success-responses`
 docker exec broker kafka-console-consumer -bootstrap-server broker:9092 --topic success-responses --from-beginning --max-messages 1
 ```
 
-Verify topic `error-responses`
-
-```bash
-docker exec broker kafka-console-consumer -bootstrap-server broker:9092 --topic error-responses --from-beginning --max-messages 1
 ```
-
-**FIXTHIS**: Salesforce Bulk API sink is broken [#42](https://github.com/vdesabou/kafka-docker-playground/issues/42)
-
-```
-"[{message:Unable to create/update fields: EmailBouncedDate, EmailBouncedReason. Please check the security settings of this field and verify that it is read/write for your profile or permission set., fields:[EmailBouncedDate, EmailBouncedReason], code:INVALID_FIELD_FOR_INSERT_UPDATE}]"
+"{Id: 00Q2X00001OUcZgUAL ,Success: true ,Created: true}"
+Processed a total of 1 messages
 ```
 
 Login to your SFDC account for account #2 to check that Lead has been added
