@@ -15,20 +15,6 @@ Go to [Salesforce developer portal](https://developer.salesforce.com/signup/) an
 
 [Link](https://docs.confluent.io/current/connect/kafka-connect-salesforce/bukapis/salesforce_bukapi_source_connector_quickstart.html#salesforce-account)
 
-## Add a Lead to Salesforce
-
-Full details available [here](https://docs.confluent.io/current/connect/kafka-connect-salesforce/pushtopics/salesforce_pushtopic_source_connector_quickstart.html#add-a-lead-to-salesforce)
-
-* Clic the + button in top right corner:
-
-![Add a lead](Screenshot4.png)
-
-* Fill the lead details and click save:
-
-![Add a lead](Screenshot5.png)
-
-N.B: The connector will only get the leads for the last 24 hours.
-
 ## How to run
 
 Simply run:
@@ -45,6 +31,18 @@ Note: you can also export these values as environment variable
 
 
 ## Details of what the script is doing
+
+Login with sfdx CLI
+
+```bash
+$ docker exec sfdx-cli sh -c "sfdx sfpowerkit:auth:login -u \"$SALESFORCE_USERNAME\" -p \"$SALESFORCE_PASSWORD\" -r \"https://login.salesforce.com\" -s \"$SECURITY_TOKEN\""
+```
+
+Add a Lead to Salesforce
+
+```bash
+$ docker exec sfdx-cli sh -c "sfdx force:data:record:create  -u \"$SALESFORCE_USERNAME\" -s Lead -v \"FirstName='John_$RANDOM' LastName='Doe_$RANDOM' Company=Confluent\""
+```
 
 Creating Salesforce Bulk API Source connector
 
