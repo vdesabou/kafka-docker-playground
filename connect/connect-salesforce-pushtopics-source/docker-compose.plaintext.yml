@@ -9,10 +9,5 @@ services:
     command: "sleep infinity"
 
   connect:
-    volumes:
-    # FIXTHIS
-    - ../../connect/connect-salesforce-pushtopics-source/kafka-connect-salesforce-common-1.6.1-SNAPSHOT.jar:/usr/share/confluent-hub-components/confluentinc-kafka-connect-salesforce/lib/kafka-connect-salesforce-common-1.6.0.jar
-    - ../../connect/connect-salesforce-pushtopics-source/kafka-connect-salesforce-push-topic-1.6.1-SNAPSHOT.jar:/usr/share/confluent-hub-components/confluentinc-kafka-connect-salesforce/lib/kafka-connect-salesforce-push-topic-1.6.0.jar
-    - ../../connect/connect-salesforce-pushtopics-source/kafka-connect-salesforce-sobject-1.6.1-SNAPSHOT.jar:/usr/share/confluent-hub-components/confluentinc-kafka-connect-salesforce/lib/kafka-connect-salesforce-sobject-1.6.0.jar
     environment:
       CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-salesforce
