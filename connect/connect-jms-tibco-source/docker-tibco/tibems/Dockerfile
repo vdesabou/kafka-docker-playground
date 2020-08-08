@@ -1,6 +1,6 @@
 FROM tibbase:1.0.0
 
-ADD ./TIB_ems-ce_8.5.1_linux_x86_64.zip /tmp/install/
+ADD --chown=tibusr:tibgrp ./TIB_ems-ce_8.5.1_linux_x86_64.zip /tmp/install/
 
 RUN unzip /tmp/install/TIB_ems*.zip -d /tmp/install/tibems/ && \
 cd / && \
@@ -12,8 +12,8 @@ rm -rf /tmp/install/tibems /tmp/install/TIB_ems*.zip
 
 EXPOSE 7222
 
-ADD ./queues.conf /home/tibusr/
-ADD ./factories.conf /home/tibusr/
+ADD --chown=tibusr:tibgrp ./queues.conf /home/tibusr/
+ADD --chown=tibusr:tibgrp ./factories.conf /home/tibusr/
 
 WORKDIR /home/tibusr
 ENTRYPOINT ["/opt/tibco/ems/8.5/bin/tibemsd"]
