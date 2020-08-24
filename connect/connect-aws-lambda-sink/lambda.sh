@@ -36,7 +36,7 @@ docker exec connect \
      http://localhost:8083/connectors/aws-lambda/config | jq .
 
 
-sleep 10
+sleep 15
 
 log "Verifying topic add-topic-response"
 timeout 60 docker exec broker kafka-console-consumer -bootstrap-server broker:9092 --topic add-topic-response --from-beginning --max-messages 10
