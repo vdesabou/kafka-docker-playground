@@ -103,6 +103,11 @@ $ docker exec connect \
                     "aws.lambda.response.topic": "add-topic-response",
                     "aws.lambda.response.bootstrap.servers": "broker:9092",
                     "aws.lambda.response.client.id": "add-topic-response-client",
+                    "reporter.bootstrap.servers": "broker:9092",
+                    "reporter.error.topic.name": "error-responses",
+                    "reporter.error.topic.replication.factor": 1,
+                    "reporter.result.topic.name": "success-responses",
+                    "reporter.result.topic.replication.factor": 1,
                     "confluent.license": "",
                     "confluent.topic.bootstrap.servers": "broker:9092",
                     "confluent.topic.replication.factor": "1"
