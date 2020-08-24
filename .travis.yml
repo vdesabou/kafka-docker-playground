@@ -44,84 +44,88 @@ before_install:
 - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
 jobs:
   include:
-  - name: '5.5.1-1-ubi8: CONNECT: salesforce-bulkapi-sink salesforce-bulkapi-sink salesforce-cdc-source
-      salesforce-platform-events-sink salesforce-platform-events-source salesforce-pushtopics-source salesforce-sobject-sink'
-    env: TEST_LIST="connect/connect-salesforce-bulkapi-sink connect/connect-salesforce-bulkapi-source connect/connect-salesforce-pushtopics-source connect/connect-salesforce-sobject-sink" TAG="5.5.1-1-ubi8"
-    #connect/connect-salesforce-cdc-source connect/connect-salesforce-platform-events-sink connect/connect-salesforce-platform-events-source
-  - name: '5.5.1-1-ubi8: CONNECT: azure-data-lake-storage-gen1-sink azure-data-lake-storage-gen2-sink
-      azure-event-hubs-source'
-    env: TEST_LIST="connect/connect-azure-data-lake-storage-gen1-sink connect/connect-azure-data-lake-storage-gen2-sink
-      connect/connect-azure-event-hubs-source" TAG="5.5.1-1-ubi8"
-  - name: '5.5.1-1-ubi8: CONNECT: azure-sql-data-warehouse-sink azure-search-sink ftps-source ftps-sink rabbitmq-sink'
-    env: TEST_LIST="connect/connect-azure-sql-data-warehouse-sink connect/connect-azure-search-sink connect/connect-ftps-source connect/connect-ftps-sink connect/connect-rabbitmq-sink"
+  # - name: '5.5.1-1-ubi8: CONNECT: salesforce-bulkapi-sink salesforce-bulkapi-sink salesforce-cdc-source
+  #     salesforce-platform-events-sink salesforce-platform-events-source salesforce-pushtopics-source salesforce-sobject-sink'
+  #   env: TEST_LIST="connect/connect-salesforce-bulkapi-sink connect/connect-salesforce-bulkapi-source connect/connect-salesforce-pushtopics-source connect/connect-salesforce-sobject-sink" TAG="5.5.1-1-ubi8"
+  #   #connect/connect-salesforce-cdc-source connect/connect-salesforce-platform-events-sink connect/connect-salesforce-platform-events-source
+  # - name: '5.5.1-1-ubi8: CONNECT: azure-data-lake-storage-gen1-sink azure-data-lake-storage-gen2-sink
+  #     azure-event-hubs-source'
+  #   env: TEST_LIST="connect/connect-azure-data-lake-storage-gen1-sink connect/connect-azure-data-lake-storage-gen2-sink
+  #     connect/connect-azure-event-hubs-source" TAG="5.5.1-1-ubi8"
+  # - name: '5.5.1-1-ubi8: CONNECT: azure-sql-data-warehouse-sink azure-search-sink ftps-source ftps-sink rabbitmq-sink'
+  #   env: TEST_LIST="connect/connect-azure-sql-data-warehouse-sink connect/connect-azure-search-sink connect/connect-ftps-source connect/connect-ftps-sink connect/connect-rabbitmq-sink"
+  #     TAG="5.5.1-1-ubi8"
+  # - name: '5.5.1-1-ubi8: CONNECT: azure-service-bus-source azure-blob-storage-sink
+  #     azure-blob-storage-source'
+  #   env: TEST_LIST="connect/connect-azure-service-bus-source connect/connect-azure-blob-storage-sink
+  #     connect/connect-azure-blob-storage-source" TAG="5.5.1-1-ubi8"
+  # - name: '5.5.1-1-ubi8: CONNECT: splunk-sink splunk-source spool-dir-source syslog-source
+  #     OTHER: override-policy-sftp-sink override-policy-sftp-source'
+  #   env: TEST_LIST="connect/connect-splunk-sink connect/connect-splunk-source connect/connect-spool-dir-source
+  #     connect/connect-syslog-source other/connect-override-policy-sftp-sink other/connect-override-policy-sftp-source"
+  #     TAG="5.5.1-1-ubi8"
+  # - name: '5.5.1-1-ubi8: CONNECT: active-mq-sink active-mq-source cassandra-sink couchbase-sink
+  #     couchbase-source'
+  #   env:
+  #   - TEST_LIST="connect/connect-active-mq-sink connect/connect-active-mq-source connect/connect-cassandra-sink
+  #     connect/connect-couchbase-sink connect/connect-couchbase-source connect/connect-hbase-sink"
+  #     TAG="5.5.1-1-ubi8"
+  # - name: '5.5.1-1-ubi8: CONNECT: jms-tibco-sink jms-tibco-source debezium-mongodb-source
+  #     debezium-mysql-source debezium-postgresql-source debezium-sqlserver-source elasticsearch-sink'
+  #   env: TEST_LIST="connect/connect-jms-tibco-sink connect/connect-jms-tibco-source
+  #     connect/connect-debezium-mongodb-source connect/connect-debezium-mysql-source
+  #     connect/connect-debezium-postgresql-source connect/connect-debezium-sqlserver-source
+  #     connect/connect-elasticsearch-sink" TAG="5.5.1-1-ubi8"
+  # - name: '5.5.1-1-ubi8: CONNECT: hbase-sink hdfs2-sink hdfs3-sink hdfs3-source hdfs2-source
+  #     ibm-mq-sink ibm-mq-source snmp-source'
+  #   env: TEST_LIST="connect/connect-hdfs2-sink connect/connect-hdfs2-source connect/connect-hdfs3-sink
+  #     connect/connect-hdfs3-source connect/connect-ibm-mq-sink connect/connect-ibm-mq-source"
+  #     TAG="5.5.1-1-ubi8"
+  # - name: '5.5.1-1-ubi8: CONNECT: jdbc-oracle11-sink jdbc-oracle11-source influxdb-sink
+  #     influxdb-source jdbc-mysql-sink jdbc-mysql-source jdbc-postgresql-sink jdbc-postgresql-source
+  #     jdbc-sqlserver-sink'
+  #   env: TEST_LIST="connect/connect-jdbc-oracle11-sink connect/connect-jdbc-oracle11-source
+  #     connect/connect-influxdb-sink connect/connect-influxdb-source connect/connect-jdbc-mysql-sink
+  #     connect/connect-jdbc-mysql-source connect/connect-jdbc-postgresql-sink connect/connect-jdbc-postgresql-source
+  #     connect/connect-jdbc-sqlserver-sink" TAG="5.5.1-1-ubi8"
+  # - name: '5.5.1-1-ubi8: CCLOUD ccloud-demo CONNECT: jdbc-sqlserver-source jdbc-vertica-sink
+  #     jms-active-mq-sink jms-solace-sink'
+  #   env: TEST_LIST="ccloud/ccloud-demo connect/connect-jdbc-sqlserver-source connect/connect-jdbc-vertica-sink
+  #     connect/connect-jms-active-mq-sink connect/connect-jms-solace-sink" TAG="5.5.1-1-ubi8"
+  # - name: '5.5.1-1-ubi8: CONNECT: mongodb-sink mongodb-source mqtt-sink mqtt-source
+  #     neo4j-sink omnisci-sink tibco-sink tibco-source jdbc-oracle12-sink jdbc-oracle12-source'
+  #   env: TEST_LIST="connect/connect-mongodb-sink connect/connect-mongodb-source connect/connect-mqtt-sink
+  #     connect/connect-mqtt-source connect/connect-neo4j-sink connect/connect-omnisci-sink
+  #     connect/connect-tibco-sink connect/connect-tibco-source connect/connect-jdbc-oracle12-sink
+  #     connect/connect-jdbc-oracle12-source" TAG="5.5.1-1-ubi8"
+  # - name: '5.5.1-1-ubi8: CONNECT: rabbitmq-source redis-sink replicator sftp-sink
+  #     sftp-source solace-sink solace-source datadiode'
+  #   env: TEST_LIST="connect/connect-rabbitmq-source connect/connect-redis-sink connect/connect-replicator
+  #     connect/connect-sftp-sink connect/connect-sftp-source connect/connect-solace-sink
+  #     connect/connect-solace-source connect/connect-datadiode-source-sink" TAG="5.5.1-1-ubi8"
+  # - name: '5.5.1-1-ubi8: CONNECT: aws-cloudwatch-logs-source aws-cloudwatch-metrics-sink
+  #     aws-dynamodb-sink aws-kinesis-source aws-lambda-sink'
+  #   env: TEST_LIST="connect/connect-aws-cloudwatch-logs-source connect/connect-aws-cloudwatch-metrics-sink
+  #     connect/connect-aws-dynamodb-sink connect/connect-aws-kinesis-source connect/connect-aws-lambda-sink"
+  #     TAG="5.5.1-1-ubi8"
+  # - name: '5.5.1-1-ubi8: CONNECT: gcp-bigquery-sink google-cloud-functions-sink vertica-sink
+  #     prometheus-sink aws-sqs-source aws-s3-sink aws-s3-source'
+  #   env: TEST_LIST="connect/connect-gcp-bigquery-sink connect/connect-gcp-cloud-functions-sink
+  #     connect/connect-vertica-sink connect/connect-prometheus-sink connect/connect-aws-sqs-source
+  #     connect/connect-aws-s3-sink connect/connect-aws-s3-source" TAG="5.5.1-1-ubi8"
+  # - name: '5.5.1-1-ubi8: CONNECT: gcp-pubsub-source gcs-sink gcs-source'
+  #   env: TEST_LIST="connect/connect-gcp-pubsub-source connect/connect-gcp-gcs-sink
+  #     connect/connect-gcp-gcs-source" TAG="5.5.1-1-ubi8"
+  # - name: '5.5.1-1-ubi8: CONNECT: http-sink'
+  #   env: TEST_LIST="connect/connect-http-sink" TAG="5.5.1-1-ubi8"
+  # - name: '5.5.1-1-ubi8: REPLICATOR: connect'
+  #   env: TEST_LIST="replicator/connect" TAG="5.5.1-1-ubi8"
+  # - name: '5.5.1-1-ubi8: mirrormaker2'
+  #   env: TEST_LIST="replicator/mirrormaker2" TAG="5.5.1-1-ubi8"
+
+  - name: '5.5.1-1-ubi8: CONNECT: aws-lambda-sink'
+    env: TEST_LIST="connect/connect-aws-lambda-sink"
       TAG="5.5.1-1-ubi8"
-  - name: '5.5.1-1-ubi8: CONNECT: azure-service-bus-source azure-blob-storage-sink
-      azure-blob-storage-source'
-    env: TEST_LIST="connect/connect-azure-service-bus-source connect/connect-azure-blob-storage-sink
-      connect/connect-azure-blob-storage-source" TAG="5.5.1-1-ubi8"
-  - name: '5.5.1-1-ubi8: CONNECT: splunk-sink splunk-source spool-dir-source syslog-source
-      OTHER: override-policy-sftp-sink override-policy-sftp-source'
-    env: TEST_LIST="connect/connect-splunk-sink connect/connect-splunk-source connect/connect-spool-dir-source
-      connect/connect-syslog-source other/connect-override-policy-sftp-sink other/connect-override-policy-sftp-source"
-      TAG="5.5.1-1-ubi8"
-  - name: '5.5.1-1-ubi8: CONNECT: active-mq-sink active-mq-source cassandra-sink couchbase-sink
-      couchbase-source'
-    env:
-    - TEST_LIST="connect/connect-active-mq-sink connect/connect-active-mq-source connect/connect-cassandra-sink
-      connect/connect-couchbase-sink connect/connect-couchbase-source connect/connect-hbase-sink"
-      TAG="5.5.1-1-ubi8"
-  - name: '5.5.1-1-ubi8: CONNECT: jms-tibco-sink jms-tibco-source debezium-mongodb-source
-      debezium-mysql-source debezium-postgresql-source debezium-sqlserver-source elasticsearch-sink'
-    env: TEST_LIST="connect/connect-jms-tibco-sink connect/connect-jms-tibco-source
-      connect/connect-debezium-mongodb-source connect/connect-debezium-mysql-source
-      connect/connect-debezium-postgresql-source connect/connect-debezium-sqlserver-source
-      connect/connect-elasticsearch-sink" TAG="5.5.1-1-ubi8"
-  - name: '5.5.1-1-ubi8: CONNECT: hbase-sink hdfs2-sink hdfs3-sink hdfs3-source hdfs2-source
-      ibm-mq-sink ibm-mq-source snmp-source'
-    env: TEST_LIST="connect/connect-hdfs2-sink connect/connect-hdfs2-source connect/connect-hdfs3-sink
-      connect/connect-hdfs3-source connect/connect-ibm-mq-sink connect/connect-ibm-mq-source"
-      TAG="5.5.1-1-ubi8"
-  - name: '5.5.1-1-ubi8: CONNECT: jdbc-oracle11-sink jdbc-oracle11-source influxdb-sink
-      influxdb-source jdbc-mysql-sink jdbc-mysql-source jdbc-postgresql-sink jdbc-postgresql-source
-      jdbc-sqlserver-sink'
-    env: TEST_LIST="connect/connect-jdbc-oracle11-sink connect/connect-jdbc-oracle11-source
-      connect/connect-influxdb-sink connect/connect-influxdb-source connect/connect-jdbc-mysql-sink
-      connect/connect-jdbc-mysql-source connect/connect-jdbc-postgresql-sink connect/connect-jdbc-postgresql-source
-      connect/connect-jdbc-sqlserver-sink" TAG="5.5.1-1-ubi8"
-  - name: '5.5.1-1-ubi8: CCLOUD ccloud-demo CONNECT: jdbc-sqlserver-source jdbc-vertica-sink
-      jms-active-mq-sink jms-solace-sink'
-    env: TEST_LIST="ccloud/ccloud-demo connect/connect-jdbc-sqlserver-source connect/connect-jdbc-vertica-sink
-      connect/connect-jms-active-mq-sink connect/connect-jms-solace-sink" TAG="5.5.1-1-ubi8"
-  - name: '5.5.1-1-ubi8: CONNECT: mongodb-sink mongodb-source mqtt-sink mqtt-source
-      neo4j-sink omnisci-sink tibco-sink tibco-source jdbc-oracle12-sink jdbc-oracle12-source'
-    env: TEST_LIST="connect/connect-mongodb-sink connect/connect-mongodb-source connect/connect-mqtt-sink
-      connect/connect-mqtt-source connect/connect-neo4j-sink connect/connect-omnisci-sink
-      connect/connect-tibco-sink connect/connect-tibco-source connect/connect-jdbc-oracle12-sink
-      connect/connect-jdbc-oracle12-source" TAG="5.5.1-1-ubi8"
-  - name: '5.5.1-1-ubi8: CONNECT: rabbitmq-source redis-sink replicator sftp-sink
-      sftp-source solace-sink solace-source datadiode'
-    env: TEST_LIST="connect/connect-rabbitmq-source connect/connect-redis-sink connect/connect-replicator
-      connect/connect-sftp-sink connect/connect-sftp-source connect/connect-solace-sink
-      connect/connect-solace-source connect/connect-datadiode-source-sink" TAG="5.5.1-1-ubi8"
-  - name: '5.5.1-1-ubi8: CONNECT: aws-cloudwatch-logs-source aws-cloudwatch-metrics-sink
-      aws-dynamodb-sink aws-kinesis-source aws-lambda-sink'
-    env: TEST_LIST="connect/connect-aws-cloudwatch-logs-source connect/connect-aws-cloudwatch-metrics-sink
-      connect/connect-aws-dynamodb-sink connect/connect-aws-kinesis-source connect/connect-aws-lambda-sink"
-      TAG="5.5.1-1-ubi8"
-  - name: '5.5.1-1-ubi8: CONNECT: gcp-bigquery-sink google-cloud-functions-sink vertica-sink
-      prometheus-sink aws-sqs-source aws-s3-sink aws-s3-source'
-    env: TEST_LIST="connect/connect-gcp-bigquery-sink connect/connect-gcp-cloud-functions-sink
-      connect/connect-vertica-sink connect/connect-prometheus-sink connect/connect-aws-sqs-source
-      connect/connect-aws-s3-sink connect/connect-aws-s3-source" TAG="5.5.1-1-ubi8"
-  - name: '5.5.1-1-ubi8: CONNECT: gcp-pubsub-source gcs-sink gcs-source'
-    env: TEST_LIST="connect/connect-gcp-pubsub-source connect/connect-gcp-gcs-sink
-      connect/connect-gcp-gcs-source" TAG="5.5.1-1-ubi8"
-  - name: '5.5.1-1-ubi8: CONNECT: http-sink'
-    env: TEST_LIST="connect/connect-http-sink" TAG="5.5.1-1-ubi8"
-  - name: '5.5.1-1-ubi8: REPLICATOR: connect'
-    env: TEST_LIST="replicator/connect" TAG="5.5.1-1-ubi8"
-  - name: '5.5.1-1-ubi8: mirrormaker2'
-    env: TEST_LIST="replicator/mirrormaker2" TAG="5.5.1-1-ubi8"
 script:
 - bash scripts/run-tests.sh "$TEST_LIST" "$TAG"
 env:
