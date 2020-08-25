@@ -21,9 +21,6 @@ docker exec connect \
                     "aws.lambda.invocation.type" : "sync",
                     "aws.lambda.batch.size" : "50",
                     "behavior.on.error" : "fail",
-                    "aws.lambda.response.topic": "add-topic-response",
-                    "aws.lambda.response.bootstrap.servers": "broker:9092",
-                    "aws.lambda.response.client.id": "add-topic-response-client",
                     "reporter.bootstrap.servers": "broker:9092",
                     "reporter.error.topic.name": "error-responses",
                     "reporter.error.topic.replication.factor": 1,
@@ -36,14 +33,10 @@ docker exec connect \
      http://localhost:8083/connectors/aws-lambda/config | jq .
 
 
-sleep 20
-
-set +e
-log "Verifying topic add-topic-response"
-timeout 60 docker exec broker kafka-console-consumer -bootstrap-server broker:9092 --topic add-topic-response --from-beginning --max-messages 10
+sleep 10
 
 log "Verify topic success-responses"
-timeout 60 docker exec broker kafka-console-consumer -bootstrap-server broker:9092 --topic success-responses --from-beginning --max-messages 1
+timeout 60 docker exec broker kafka-console-consumer -bootstrap-server broker:9092 --topic success-responses --from-beginning --max-messages 10
 
-log "Verify topic error-responses"
-timeout 20 docker exec broker kafka-console-consumer -bootstrap-server broker:9092 --topic error-responses --from-beginning --max-messages 1
+# log "Verify topic error-responses"
+# timeout 20 docker exec broker kafka-console-consumer -bootstrap-server broker:9092 --topic error-responses --from-beginning --max-messages 1
