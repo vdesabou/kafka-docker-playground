@@ -7,7 +7,11 @@ Playground for Kafka/Confluent Docker experimentations...
 
 ## How to run
 
-You just need to have [docker](https://docs.docker.com/get-docker/) and [docker-compose](https://docs.docker.com/compose/install/)
+You just need to have [docker](https://docs.docker.com/get-docker/) and [docker-compose](https://docs.docker.com/compose/install/).
+
+Recommended Docker settings are:
+
+![Diagram](./ccloud/ccloud-demo/images/docker-settings.jpg)
 
 If you want to run it on EC2 Instance, you can use the AWS CloudFormation template provided [here](cloudformation/README.md).
 
