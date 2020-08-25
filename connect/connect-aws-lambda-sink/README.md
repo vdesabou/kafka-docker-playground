@@ -100,9 +100,6 @@ $ docker exec connect \
                     "aws.lambda.invocation.type" : "sync",
                     "aws.lambda.batch.size" : "50",
                     "behavior.on.error" : "fail",
-                    "aws.lambda.response.topic": "add-topic-response",
-                    "aws.lambda.response.bootstrap.servers": "broker:9092",
-                    "aws.lambda.response.client.id": "add-topic-response-client",
                     "reporter.bootstrap.servers": "broker:9092",
                     "reporter.error.topic.name": "error-responses",
                     "reporter.error.topic.replication.factor": 1,
@@ -118,21 +115,22 @@ $ docker exec connect \
 Verifying topic `add-topic-response`
 
 ```bash
-$ docker exec broker kafka-console-consumer -bootstrap-server broker:9092 --topic add-topic-response --from-beginning --max-messages 1
+$ docker exec broker kafka-console-consumer -bootstrap-server broker:9092 --topic success-responses --from-beginning --max-messages 10
 ```
 
 Results:
 
 ```json
-{
-    "offset": 0,
-    "partition": 0,
-    "result": {
-        "sum": 2
-    },
-    "timestamp": 1574851464813,
-    "topic": "add-topic"
-}
+"{\"timestamp\":1598334450575,\"offset\":0,\"partition\":0,\"topic\":\"add-topic\",\"result\":{\"sum\":2}}"
+"{\"timestamp\":1598334450609,\"offset\":1,\"partition\":0,\"topic\":\"add-topic\",\"result\":{\"sum\":3}}"
+"{\"timestamp\":1598334450609,\"offset\":2,\"partition\":0,\"topic\":\"add-topic\",\"result\":{\"sum\":4}}"
+"{\"timestamp\":1598334450609,\"offset\":3,\"partition\":0,\"topic\":\"add-topic\",\"result\":{\"sum\":5}}"
+"{\"timestamp\":1598334450610,\"offset\":4,\"partition\":0,\"topic\":\"add-topic\",\"result\":{\"sum\":6}}"
+"{\"timestamp\":1598334450610,\"offset\":5,\"partition\":0,\"topic\":\"add-topic\",\"result\":{\"sum\":7}}"
+"{\"timestamp\":1598334450610,\"offset\":6,\"partition\":0,\"topic\":\"add-topic\",\"result\":{\"sum\":8}}"
+"{\"timestamp\":1598334450611,\"offset\":7,\"partition\":0,\"topic\":\"add-topic\",\"result\":{\"sum\":9}}"
+"{\"timestamp\":1598334450611,\"offset\":8,\"partition\":0,\"topic\":\"add-topic\",\"result\":{\"sum\":10}}"
+"{\"timestamp\":1598334450611,\"offset\":9,\"partition\":0,\"topic\":\"add-topic\",\"result\":{\"sum\":11}}"
 ```
 
 N.B: Control Center is reachable at [http://127.0.0.1:9021](http://127.0.0.1:9021])
