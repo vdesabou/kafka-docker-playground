@@ -54,11 +54,12 @@ Find your Security Token (emailed to you from Salesforce.com). If you need to re
 Simply run:
 
 ```
-$ ./salesforce-bukapi-sink.sh <SALESFORCE_USERNAME> <SALESFORCE_PASSWORD> <CONSUMER_KEY> <CONSUMER_PASSWORD> <SECURITY_TOKEN> <SALESFORCE_USERNAME_ACCOUNT2> <SALESFORCE_PASSWORD_ACCOUNT2> <SECURITY_TOKEN_ACCOUNT2>
+$ ./salesforce-bulkapi-sink-with-bulkapi-source.sh <SALESFORCE_USERNAME> <SALESFORCE_PASSWORD> <CONSUMER_KEY> <CONSUMER_PASSWORD> <SECURITY_TOKEN> <SALESFORCE_USERNAME_ACCOUNT2> <SALESFORCE_PASSWORD_ACCOUNT2> <SECURITY_TOKEN_ACCOUNT2>
 ```
 
 Note: you can also export these values as environment variable
 
+Note: There is also an example with PushTopics source in `salesforce-bulkapi-sink-with-pushtopics-source.sh`
 
 ## Details of what the script is doing
 
@@ -76,38 +77,34 @@ Add a Lead to Salesforce
 $ docker exec sfdx-cli sh -c "sfdx force:data:record:create  -u \"$SALESFORCE_USERNAME\" -s Lead -v \"FirstName='$LEAD_FIRSTNAME' LastName='$LEAD_LASTNAME' Company=Confluent\""
 ```
 
-Creating Salesforce PushTopics Source connector
+Creating Salesforce Bulk API Source connector
 
 ```bash
-$ docker exec -e SALESFORCE_USERNAME="$SALESFORCE_USERNAME" -e SALESFORCE_PASSWORD="$SALESFORCE_PASSWORD" -e CONSUMER_KEY="$CONSUMER_KEY" -e CONSUMER_PASSWORD="$CONSUMER_PASSWORD" -e SECURITY_TOKEN="$SECURITY_TOKEN" connect \
+$ docker exec -e SALESFORCE_USERNAME="$SALESFORCE_USERNAME" -e SALESFORCE_PASSWORD="$SALESFORCE_PASSWORD" -e SECURITY_TOKEN="$SECURITY_TOKEN" connect \
      curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
-                    "connector.class": "io.confluent.salesforce.SalesforcePushTopicSourceConnector",
-                    "kafka.topic": "sfdc-pushtopic-leads",
+                    "connector.class": "io.confluent.connect.salesforce.SalesforceBulkApiSourceConnector",
+                    "kafka.topic": "sfdc-bulkapi-leads",
                     "tasks.max": "1",
                     "curl.logging": "true",
                     "salesforce.object" : "Lead",
-                    "salesforce.push.topic.name" : "MyCustomLeadsPushTopic",
                     "salesforce.username" : "'"$SALESFORCE_USERNAME"'",
                     "salesforce.password" : "'"$SALESFORCE_PASSWORD"'",
                     "salesforce.password.token" : "'"$SECURITY_TOKEN"'",
-                    "salesforce.consumer.key" : "'"$CONSUMER_KEY"'",
-                    "salesforce.consumer.secret" : "'"$CONSUMER_PASSWORD"'",
-                    "salesforce.initial.start" : "all",
                     "key.converter": "org.apache.kafka.connect.json.JsonConverter",
                     "value.converter": "org.apache.kafka.connect.json.JsonConverter",
                     "confluent.license": "",
                     "confluent.topic.bootstrap.servers": "broker:9092",
                     "confluent.topic.replication.factor": "1"
           }' \
-     http://localhost:8083/connectors/salesforce-pushtopic-source/config | jq .
+     http://localhost:8083/connectors/salesforce-bulkapi-source/config | jq .
 ```
 
-Verify we have received the data in `sfdc-pushtopic-leads` topic
+Verify we have received the data in `sfdc-bulkapi-leads` topic
 
 ```bash
-$ docker exec broker kafka-console-consumer -bootstrap-server broker:9092 --topic sfdc-pushtopic-leads --from-beginning --max-messages 1
+$ docker exec broker kafka-console-consumer -bootstrap-server broker:9092 --topic sfdc-bulkapi-leads --from-beginning --max-messages 1
 ```
 
 Creating Salesforce Bulk API Sink connector
@@ -118,13 +115,15 @@ $ docker exec -e SALESFORCE_USERNAME_ACCOUNT2="$SALESFORCE_USERNAME_ACCOUNT2" -e
      -H "Content-Type: application/json" \
      --data '{
                     "connector.class": "io.confluent.connect.salesforce.SalesforceBulkApiSinkConnector",
-                    "topics": "sfdc-pushtopic-leads",
+                    "topics": "sfdc-bulkapi-leads",
                     "tasks.max": "1",
                     "curl.logging": "true",
                     "salesforce.object" : "Lead",
                     "salesforce.username" : "'"$SALESFORCE_USERNAME_ACCOUNT2"'",
                     "salesforce.password" : "'"$SALESFORCE_PASSWORD_ACCOUNT2"'",
                     "salesforce.password.token" : "'"$SECURITY_TOKEN_ACCOUNT2"'",
+                    "salesforce.ignore.fields" : "CleanStatus",
+                    "salesforce.ignore.reference.fields" : "true",
                     "key.converter": "org.apache.kafka.connect.json.JsonConverter",
                     "value.converter": "org.apache.kafka.connect.json.JsonConverter",
                     "reporter.bootstrap.servers": "broker:9092",
@@ -132,6 +131,10 @@ $ docker exec -e SALESFORCE_USERNAME_ACCOUNT2="$SALESFORCE_USERNAME_ACCOUNT2" -e
                     "reporter.error.topic.replication.factor": 1,
                     "reporter.result.topic.name": "success-responses",
                     "reporter.result.topic.replication.factor": 1,
+                    "transforms" : "InsertField",
+                    "transforms.InsertField.type" : "org.apache.kafka.connect.transforms.InsertField$Value",
+                    "transforms.InsertField.static.field" : "_EventType",
+                    "transforms.InsertField.static.value" : "created",
                     "confluent.license": "",
                     "confluent.topic.bootstrap.servers": "broker:9092",
                     "confluent.topic.replication.factor": "1"
