@@ -62,7 +62,7 @@ services:
       - resourcemanager
       - namenode
     environment:
-      CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-hdfs3,/usr/share/confluent-hub-components/confluentinc-kafka-connect-hdfs3-source
+      CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-hdfs3-source,/usr/share/confluent-hub-components/confluentinc-kafka-connect-hdfs3
 
 volumes:
   datanode:

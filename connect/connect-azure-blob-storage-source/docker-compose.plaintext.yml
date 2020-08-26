@@ -3,4 +3,4 @@ version: '3.5'
 services:
   connect:
     environment:
-      CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-azure-blob-storage,/usr/share/confluent-hub-components/confluentinc-kafka-connect-azure-blob-storage-source
+      CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-azure-blob-storage-source,/usr/share/confluent-hub-components/confluentinc-kafka-connect-azure-blob-storage
