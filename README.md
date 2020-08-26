@@ -23,6 +23,14 @@ Example:
 export TAG=5.3.2
 ```
 
+ℹ️ By default, latest version of connectors is used (see the versions used [here](https://github.com/vdesabou/kafka-docker-playground-connect)), but you can test with another version (except for CouchBase connector) simply by exporting `CONNECTOR_TAG` environment variable:
+
+Example:
+
+```bash
+export CONNECTOR_TAG=1.2.1
+```
+
 ----
 
 <!-- omit in toc -->
