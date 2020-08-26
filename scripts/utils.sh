@@ -149,7 +149,6 @@ then
       connector=$(cat ${TMP_DIR}/connector)
       log "Installing connector $connector on container connect"
       docker cp ${TMP_DIR}/${connector_path} connect:/usr/share/confluent-hub-components/
-      rm -rf ${TMP_DIR}
       log "Verifying connector version installed in /usr/share/confluent-hub-components/${connector_path}"
       docker exec connect cat /usr/share/confluent-hub-components/${connector_path}/manifest.json | jq -r '.version'
       log "Restarting container connect"
@@ -173,10 +172,18 @@ then
     if [ "${docker_compose_file}" != "" ] && [ -f "${docker_compose_file}" ]
     then
       set +e
-      chmod -R u+w ${TMP_DIR}
-      rm -rf ${TMP_DIR}
+      if [ ! -z "$TRAVIS" ]
+      then
+          # running with travis
+          sudo rm -rf ${TMP_DIR}
+          sudo mkdir -p ${TMP_DIR}
+          sudo chown travis ${TMP_DIR}
+      else
+          rm -rf -p ${TMP_DIR}
+          mkdir -p ${TMP_DIR}
+      fi
       set -e
-      mkdir -p ${TMP_DIR}
+
       connector_path=$(grep "CONNECT_PLUGIN_PATH" "${docker_compose_file}" | cut -d "/" -f 5)
       # remove any extra comma at the end (when there are multiple connectors used, example S3 source)
       connector_path=$(echo "$connector_path" | cut -d "," -f 1)
