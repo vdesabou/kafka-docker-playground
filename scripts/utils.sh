@@ -136,6 +136,62 @@ function verify_installed()
   fi
 }
 
+if [ ! -z "$CONNECTOR_TAG" ]
+then
+  # log "DEBUG: called from $PWD $0"
+  TMP_DIR=/tmp/playground_connector_tag
+  if [[ $0 == *"wait-for-connect-and-controlcenter.sh"* ]]
+  then
+    if [ -f ${TMP_DIR}/connector_path ]
+    then
+      connector_path=$(cat ${TMP_DIR}/connector_path)
+      connector=$(cat ${TMP_DIR}/connector)
+      log "Installing connector $connector on container connect"
+      docker cp ${TMP_DIR}/${connector_path} connect:/usr/share/confluent-hub-components/
+      log "Verifying connector version installed in /usr/share/confluent-hub-components/${connector_path}"
+      docker exec connect cat /usr/share/confluent-hub-components/${connector_path}/manifest.json | jq -r '.version'
+      log "Restarting container connect"
+      docker container restart connect
+    else
+      logerror "ERROR: ${TMP_DIR}/connector_path does not exist !"
+    fi
+  elif [[ $0 == *"environment"* ]]
+  then
+    # log "DEBUG: start.sh from environment folder. Skipping..."
+    # noop
+    :
+  elif [[ $0 == *"stop"* ]]
+  then
+    # log "DEBUG: stop.sh. Skipping..."
+    # noop
+    :
+  else
+    docker_compose_file=$(grep "environment" "$PWD/$0" | grep DIR | grep start.sh | cut -d "/" -f 7 | cut -d '"' -f 1)
+    if [ "${docker_compose_file}" != "" ] || [ ! -f "${docker_compose_file}" ]
+    then
+      rm -rf ${TMP_DIR}
+      mkdir -p ${TMP_DIR}
+      connector_path=$(grep "CONNECT_PLUGIN_PATH" "${docker_compose_file}" | cut -d "/" -f 5)
+      # save it
+      echo "${connector_path}" > ${TMP_DIR}/connector_path
+      owner=$(echo "$connector_path" | cut -d "-" -f 1)
+      name=$(echo "$connector_path" | cut -d "-" -f 2-)
+      # save it
+      echo "$owner/$name:$CONNECTOR_TAG" > ${TMP_DIR}/connector
+      log "Downloading connector $owner/$name:$CONNECTOR_TAG"
+      docker run -v ${TMP_DIR}/${connector_path}:/usr/share/confluent-hub-components/$connector_path vdesabou/kafka-docker-playground-connect:$TAG confluent-hub install --no-prompt "$owner/$name:$CONNECTOR_TAG"
+      if [ $? -ne 0 ]
+      then
+          logerror "ERROR: connector $owner/$name:$CONNECTOR_TAG is not available on Confluent Hub"
+          exit 1
+      fi
+    else
+      logerror "ERROR: could not determine docker-compose override file from $PWD/$0 !"
+      logerror "ERROR: please check you're running a connector test"
+    fi
+  fi
+fi
+
 function verify_ccloud_login()
 {
   local cmd="$1"
