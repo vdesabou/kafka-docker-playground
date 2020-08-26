@@ -140,7 +140,7 @@ if [ ! -z "$CONNECTOR_TAG" ]
 then
   log "CONNECTOR_TAG is set"
   # log "DEBUG: called from $PWD $0"
-  TMP_DIR=/tmp/playground_connector_tag
+  TMP_DIR=/tmp/playground_connector_tag$TRAVIS_JOB_NUMBER
   if [[ $0 == *"wait-for-connect-and-controlcenter.sh"* ]]
   then
     if [ -f ${TMP_DIR}/connector_path ]
@@ -172,6 +172,7 @@ then
     docker_compose_file=$(grep "environment" "$PWD/$0" | grep DIR | grep start.sh | cut -d "/" -f 7 | cut -d '"' -f 1)
     if [ "${docker_compose_file}" != "" ] && [ -f "${docker_compose_file}" ]
     then
+      chmod -R u+w ${TMP_DIR}
       rm -rf ${TMP_DIR}
       mkdir -p ${TMP_DIR}
       connector_path=$(grep "CONNECT_PLUGIN_PATH" "${docker_compose_file}" | cut -d "/" -f 5)
