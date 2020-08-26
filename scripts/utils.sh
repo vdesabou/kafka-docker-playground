@@ -163,9 +163,9 @@ then
     # log "DEBUG: start.sh from environment folder. Skipping..."
     # noop
     :
-  elif [[ $0 == *"stop"* ]]
+  elif [[ $0 == *"stop"* ]] || [[ $0 == *"run-tests"* ]]
   then
-    # log "DEBUG: stop.sh. Skipping..."
+    # log "DEBUG: stop.sh or run-tests.sh. Skipping..."
     # noop
     :
   else
