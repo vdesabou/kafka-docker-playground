@@ -162,6 +162,10 @@ then
     # log "DEBUG: start.sh from environment folder. Skipping..."
     # noop
     :
+  elif [[ $0 == *"couchbase"* ]]
+  then
+    log "Setting CONNECTOR_TAG with couchbase is not supported as it is not available on Confluent Hub"
+    exit 0
   elif [[ $0 == *"stop"* ]] || [[ $0 == *"run-tests"* ]]
   then
     # log "DEBUG: stop.sh or run-tests.sh. Skipping..."
