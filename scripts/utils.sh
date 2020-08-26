@@ -138,6 +138,7 @@ function verify_installed()
 
 if [ ! -z "$CONNECTOR_TAG" ]
 then
+  log "CONNECTOR_TAG is set"
   # log "DEBUG: called from $PWD $0"
   TMP_DIR=/tmp/playground_connector_tag
   if [[ $0 == *"wait-for-connect-and-controlcenter.sh"* ]]
@@ -148,12 +149,14 @@ then
       connector=$(cat ${TMP_DIR}/connector)
       log "Installing connector $connector on container connect"
       docker cp ${TMP_DIR}/${connector_path} connect:/usr/share/confluent-hub-components/
+      rm -rf ${TMP_DIR}
       log "Verifying connector version installed in /usr/share/confluent-hub-components/${connector_path}"
       docker exec connect cat /usr/share/confluent-hub-components/${connector_path}/manifest.json | jq -r '.version'
       log "Restarting container connect"
       docker container restart connect
     else
       logerror "ERROR: ${TMP_DIR}/connector_path does not exist !"
+      exit 1
     fi
   elif [[ $0 == *"environment"* ]]
   then
@@ -167,11 +170,13 @@ then
     :
   else
     docker_compose_file=$(grep "environment" "$PWD/$0" | grep DIR | grep start.sh | cut -d "/" -f 7 | cut -d '"' -f 1)
-    if [ "${docker_compose_file}" != "" ] || [ ! -f "${docker_compose_file}" ]
+    if [ "${docker_compose_file}" != "" ] && [ -f "${docker_compose_file}" ]
     then
       rm -rf ${TMP_DIR}
       mkdir -p ${TMP_DIR}
       connector_path=$(grep "CONNECT_PLUGIN_PATH" "${docker_compose_file}" | cut -d "/" -f 5)
+      # remove any extra comma at the end (when there are multiple connectors used, example S3 source)
+      connector_path=$(echo "$connector_path" | cut -d "," -f 1)
       # save it
       echo "${connector_path}" > ${TMP_DIR}/connector_path
       owner=$(echo "$connector_path" | cut -d "-" -f 1)
@@ -188,6 +193,7 @@ then
     else
       logerror "ERROR: could not determine docker-compose override file from $PWD/$0 !"
       logerror "ERROR: please check you're running a connector test"
+      exit 1
     fi
   fi
 fi

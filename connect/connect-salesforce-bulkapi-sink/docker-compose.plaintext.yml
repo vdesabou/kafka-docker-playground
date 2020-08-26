@@ -10,4 +10,4 @@ services:
 
   connect:
     environment:
-      CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-salesforce,/usr/share/confluent-hub-components/confluentinc-kafka-connect-salesforce-bulk-api
+      CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-salesforce-bulk-api,/usr/share/confluent-hub-components/confluentinc-kafka-connect-salesforce
