@@ -11,4 +11,4 @@ services:
 
   connect:
     environment:
-      CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-hdfs,/usr/share/confluent-hub-components/confluentinc-kafka-connect-hdfs2-source
+      CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-hdfs2-source,/usr/share/confluent-hub-components/confluentinc-kafka-connect-hdfs
