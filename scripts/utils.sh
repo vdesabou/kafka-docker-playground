@@ -172,8 +172,10 @@ then
     docker_compose_file=$(grep "environment" "$PWD/$0" | grep DIR | grep start.sh | cut -d "/" -f 7 | cut -d '"' -f 1)
     if [ "${docker_compose_file}" != "" ] && [ -f "${docker_compose_file}" ]
     then
+      set +e
       chmod -R u+w ${TMP_DIR}
       rm -rf ${TMP_DIR}
+      set -e
       mkdir -p ${TMP_DIR}
       connector_path=$(grep "CONNECT_PLUGIN_PATH" "${docker_compose_file}" | cut -d "/" -f 5)
       # remove any extra comma at the end (when there are multiple connectors used, example S3 source)
