@@ -119,6 +119,11 @@ sed -e "s|:BOOTSTRAP_SERVERS:|$BOOTSTRAP_SERVERS|g" \
     -e "s|:CLOUD_SECRET:|$CLOUD_SECRET|g" \
     ${DIR}/kafka-lag-exporter/application.template.conf > ${DIR}/kafka-lag-exporter/application.conf
 
+# generate data file for externalizing secrets
+sed -e "s|:BOOTSTRAP_SERVERS:|$BOOTSTRAP_SERVERS|g" \
+    -e "s|:CLOUD_KEY:|$CLOUD_KEY|g" \
+    -e "s|:CLOUD_SECRET:|$CLOUD_SECRET|g" \
+    ${DIR}/data.template > ${DIR}/data
 
 # kafka-topics --bootstrap-server `grep "^\s*bootstrap.server" ${CONFIG_FILE} | tail -1` --command-config ${CONFIG_FILE} --topic customer-avro --create --replication-factor 3 --partitions 6
 
@@ -220,7 +225,7 @@ fi
 # fi
 
 log "Creating http-sink connector"
-docker exec -e BOOTSTRAP_SERVERS="$BOOTSTRAP_SERVERS" -e CLOUD_KEY="$CLOUD_KEY" -e CLOUD_SECRET="$CLOUD_SECRET" connect \
+docker exec connect \
      curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
@@ -232,16 +237,16 @@ docker exec -e BOOTSTRAP_SERVERS="$BOOTSTRAP_SERVERS" -e CLOUD_KEY="$CLOUD_KEY" 
                "confluent.topic.ssl.endpoint.identification.algorithm" : "https",
                "confluent.topic.sasl.mechanism" : "PLAIN",
                "confluent.topic.request.timeout.ms" : "20000",
-               "confluent.topic.bootstrap.servers": "'"$BOOTSTRAP_SERVERS"'",
-               "confluent.topic.sasl.jaas.config" : "org.apache.kafka.common.security.plain.PlainLoginModule required username=\"'$CLOUD_KEY'\" password=\"'$CLOUD_SECRET'\";",
+               "confluent.topic.bootstrap.servers": "${file:/data/bootstrap.servers:BOOTSTRAP_SERVERS}",
+               "confluent.topic.sasl.jaas.config" : "org.apache.kafka.common.security.plain.PlainLoginModule required username=\"${file:/data/sasl.username:CLOUD_KEY}\" password=\"${file:/data/sasl.password:CLOUD_SECRET}\";",
                "confluent.topic.security.protocol" : "SASL_SSL",
                "confluent.topic.replication.factor": "3",
-               "reporter.bootstrap.servers": "'"$BOOTSTRAP_SERVERS"'",
+               "reporter.bootstrap.servers": "${file:/data/bootstrap.servers:BOOTSTRAP_SERVERS}",
                "reporter.admin.sasl.mechanism" : "PLAIN",
-               "reporter.admin.sasl.jaas.config" : "org.apache.kafka.common.security.plain.PlainLoginModule required username=\"'$CLOUD_KEY'\" password=\"'$CLOUD_SECRET'\";",
+               "reporter.admin.sasl.jaas.config" : "org.apache.kafka.common.security.plain.PlainLoginModule required username=\"${file:/data/sasl.username:CLOUD_KEY}\" password=\"${file:/data/sasl.password:CLOUD_SECRET}\";",
                "reporter.admin.security.protocol" : "SASL_SSL",
                "reporter.producer.sasl.mechanism" : "PLAIN",
-               "reporter.producer.sasl.jaas.config" : "org.apache.kafka.common.security.plain.PlainLoginModule required username=\"'$CLOUD_KEY'\" password=\"'$CLOUD_SECRET'\";",
+               "reporter.producer.sasl.jaas.config" : "org.apache.kafka.common.security.plain.PlainLoginModule required username=\"${file:/data/sasl.username:CLOUD_KEY}\" password=\"${file:/data/sasl.password:CLOUD_SECRET}\";",
                "reporter.producer.security.protocol" : "SASL_SSL",
                "reporter.error.topic.name": "error-responses",
                "reporter.error.topic.replication.factor": 3,

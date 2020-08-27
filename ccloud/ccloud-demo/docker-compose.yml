@@ -151,6 +151,8 @@ services:
     volumes:
       - ../../ccloud/ccloud-demo/mysql-connector-java-5.1.45.jar:/usr/share/confluent-hub-components/confluentinc-kafka-connect-jdbc/lib/mysql-connector-java-5.1.45.jar
       - ./jmx-exporter:/usr/share/jmx_exporter/
+      - ./data:/data
+
     environment:
       CONNECT_BOOTSTRAP_SERVERS: $BOOTSTRAP_SERVERS
       CONNECT_REST_PORT: 8083
@@ -197,6 +199,9 @@ services:
       CONNECT_CONSUMER_CONFLUENT_MONITORING_INTERCEPTOR_SECURITY_PROTOCOL: SASL_SSL
       CONNECT_CONSUMER_CONFLUENT_MONITORING_INTERCEPTOR_SASL_JAAS_CONFIG: $SASL_JAAS_CONFIG
       CONNECT_CONSUMER_CONFLUENT_MONITORING_INTERCEPTOR_SASL_MECHANISM: PLAIN
+      # Externalizing Secrets
+      CONNECT_CONFIG_PROVIDERS: 'file'
+      CONNECT_CONFIG_PROVIDERS_FILE_CLASS: 'org.apache.kafka.common.config.provider.FileConfigProvider'
       KAFKA_OPTS: -javaagent:/usr/share/jmx_exporter/jmx_prometheus_javaagent-0.12.0.jar=1234:/usr/share/jmx_exporter/kafka-connect.yml -Xmx256M -Xms256M
 
   http-service-basic-auth:
