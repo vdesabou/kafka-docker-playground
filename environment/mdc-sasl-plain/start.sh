@@ -5,6 +5,7 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
+verify_memory
 verify_installed "docker-compose"
 
 DOCKER_COMPOSE_FILE_OVERRIDE=$1
