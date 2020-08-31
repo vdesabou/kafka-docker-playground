@@ -114,6 +114,7 @@ Quick start examples from Confluent [docs](https://docs.confluent.io/current/con
     - <img src="https://seeklogo.com/images/S/salesforce-logo-273F95FE60-seeklogo.com.png" height="15"> [Platform Events](connect/connect-salesforce-platform-events-source)
 - <img src="https://devnull.crankuptheamps.com/documentation/html/develop/user-guide/html/_static/flag_logo.png" width="15"> [AMPS](connect/connect-amps-source)
 - <img src="https://www.solarwinds.com/-/media/solarwinds/swdcv2/licensed-products/service-desk/integrations/sd-integrations-logo-jira.ashx?la=fr&rev=ff4cb2c5bd9543b78caa93f227f51638&hash=87CBE89D6B703C2C396B75F60E886105E069D156" width="15"> [JIRA](connect/connect-jira-source)
+- <img src="https://github.githubassets.com/images/modules/logos_page/GitHub-Mark.png" width="15"> [Github](connect/connect-github-source)
 
 ### ↗️ Sink
 
