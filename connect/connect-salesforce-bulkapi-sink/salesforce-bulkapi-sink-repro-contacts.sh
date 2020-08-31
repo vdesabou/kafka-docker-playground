@@ -77,7 +77,7 @@ docker exec sfdx-cli sh -c "sfdx force:data:record:create  -u \"$SALESFORCE_USER
 
 log "Creating Salesforce PushTopics Source connector"
 docker exec -e SALESFORCE_USERNAME="$SALESFORCE_USERNAME" -e SALESFORCE_PASSWORD="$SALESFORCE_PASSWORD" -e CONSUMER_KEY="$CONSUMER_KEY" -e CONSUMER_PASSWORD="$CONSUMER_PASSWORD" -e SECURITY_TOKEN="$SECURITY_TOKEN" connect \
-     curl -X PUT \
+curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
                     "connector.class": "io.confluent.salesforce.SalesforcePushTopicSourceConnector",
@@ -154,7 +154,7 @@ timeout 60 docker exec broker kafka-console-consumer -bootstrap-server broker:90
 
 log "Creating Salesforce Bulk API Sink connector"
 docker exec -e SALESFORCE_USERNAME_ACCOUNT2="$SALESFORCE_USERNAME_ACCOUNT2" -e SALESFORCE_PASSWORD_ACCOUNT2="$SALESFORCE_PASSWORD_ACCOUNT2" -e SECURITY_TOKEN_ACCOUNT2="$SECURITY_TOKEN_ACCOUNT2" connect \
-     curl -X PUT \
+curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
                     "connector.class": "io.confluent.connect.salesforce.SalesforceBulkApiSinkConnector",

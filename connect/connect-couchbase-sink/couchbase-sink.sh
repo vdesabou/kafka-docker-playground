@@ -21,8 +21,7 @@ log "Sending messages to topic couchbase-sink-example"
 docker exec json-producer bash -c "java -jar json-producer-1.0.0-SNAPSHOT-jar-with-dependencies.jar"
 
 log "Creating Couchbase sink connector"
-docker exec connect \
-     curl -X PUT \
+curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
                "connector.class": "com.couchbase.connect.kafka.CouchbaseSinkConnector",

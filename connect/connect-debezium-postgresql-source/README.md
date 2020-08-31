@@ -41,8 +41,7 @@ $ docker exec postgres bash -c "psql -U postgres -d postgres -c 'SELECT * FROM C
 Creating Debezium PostgreSQL source connector
 
 ```bash
-docker exec connect \
-     curl -X PUT \
+curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
                "connector.class": "io.debezium.connector.postgresql.PostgresConnector",

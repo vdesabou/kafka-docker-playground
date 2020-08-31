@@ -29,8 +29,7 @@ docker exec broker kafka-acls --authorizer-properties zookeeper.connect=zookeepe
 #         User:sftp has Allow permission for operations: Write from hosts: *
 
 log "Creating CSV SFTP Source connector"
-docker exec connect \
-     curl -X PUT \
+curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
         "topics": "test_sftp_sink",

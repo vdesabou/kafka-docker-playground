@@ -25,8 +25,7 @@ docker exec -i connect kafka-avro-console-consumer \
      --max-messages=1
 
 log "Creating orders InfluxDB sink connector"
-docker exec connect \
-     curl -s -X PUT \
+curl -s -X PUT \
      -H "Content-Type: application/json" \
      --data '{
                "connector.class": "io.confluent.influxdb.InfluxDBSinkConnector",

@@ -22,8 +22,7 @@ EOF
 sleep 5
 
 log "Creating Kudu sink connector"
-docker exec connect \
-     curl -X PUT \
+curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
                     "connector.class": "io.confluent.connect.kudu.KuduSinkConnector",

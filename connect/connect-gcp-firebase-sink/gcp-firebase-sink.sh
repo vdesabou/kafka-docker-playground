@@ -16,7 +16,7 @@ ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml
 
 log "Creating GCP Firebase Sink connector"
 docker exec -e PROJECT="$PROJECT" connect \
-     curl -X PUT \
+curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
                "connector.class" : "io.confluent.connect.firebase.FirebaseSinkConnector",

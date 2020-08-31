@@ -14,8 +14,7 @@ log "Verifying data in testdb"
 docker exec -i influxdb bash -c "influx -execute 'SELECT * from coin' -database testdb"
 
 log "Creating InfluxDB source connector"
-docker exec connect \
-     curl -X PUT \
+curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
                "connector.class": "io.confluent.influxdb.source.InfluxdbSourceConnector",

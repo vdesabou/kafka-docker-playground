@@ -15,8 +15,7 @@ log "Running SSL Authentication Example"
 log "-------------------------------------"
 
 log "Creating http-sink connector"
-docker exec connect \
-     curl -X PUT \
+curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
           "topics": "http-messages",

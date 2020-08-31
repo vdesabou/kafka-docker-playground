@@ -23,8 +23,7 @@ $ ./ftps-source-json.sh
 Creating JSON file with schema FTPS Source connector
 
 ```bash
-$ docker exec connect \
-     curl -X PUT \
+$ curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
                "tasks.max": "1",

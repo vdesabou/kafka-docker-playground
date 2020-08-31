@@ -17,8 +17,7 @@ log "Sending messages to topic rabbitmq-messages"
 seq 10 | docker exec -i broker kafka-console-producer --broker-list broker:9092 --topic rabbitmq-messages
 
 log "Creating RabbitMQ Source connector"
-docker exec connect \
-     curl -X PUT \
+curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
                "connector.class" : "io.confluent.connect.rabbitmq.sink.RabbitMQSinkConnector",

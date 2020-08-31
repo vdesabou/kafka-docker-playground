@@ -20,8 +20,7 @@ docker cp json-sftp-source.json sftp-server:/chroot/home/foo/upload/input/
 rm -f json-sftp-source.json
 
 log "Creating JSON (no schema) SFTP Source connector"
-docker exec connect \
-     curl -X PUT \
+curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
         "topics": "test_sftp_sink",

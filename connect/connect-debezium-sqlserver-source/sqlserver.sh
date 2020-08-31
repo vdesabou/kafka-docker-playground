@@ -12,8 +12,7 @@ cat inventory.sql | docker exec -i sqlserver bash -c '/opt/mssql-tools/bin/sqlcm
 
 
 log "Creating Debezium SQL Server source connector"
-docker exec connect \
-     curl -X PUT \
+curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
                "connector.class": "io.debezium.connector.sqlserver.SqlServerConnector",

@@ -10,8 +10,7 @@ ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml
 docker exec hadoop bash -c "/usr/local/hadoop/bin/hdfs dfs -chmod 777  /"
 
 log "Creating HDFS Sink connector"
-docker exec connect \
-     curl -X PUT \
+curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
         "connector.class":"io.confluent.connect.hdfs.HdfsSinkConnector",
@@ -49,8 +48,7 @@ docker cp hadoop:/tmp/test_hdfs+0+0000000000+0000000000.avro /tmp/
 docker run -v /tmp:/tmp actions/avro-tools tojson /tmp/test_hdfs+0+0000000000+0000000000.avro
 
 log "Creating HDFS Source connector"
-docker exec connect \
-     curl -X PUT \
+curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
         "connector.class":"io.confluent.connect.hdfs2.Hdfs2SourceConnector",

@@ -41,7 +41,7 @@ docker exec broker kafka-topics --create --topic topic1 --partitions 1 --replica
 
 log "Creating Cassandra Sink connector"
 docker exec -e CASSANDRA_HOSTNAME="$CASSANDRA_HOSTNAME" -e KEYSPACE="$KEYSPACE" -e MCS_USERNAME="$MCS_USERNAME" -e MCS_PASSWORD="$MCS_PASSWORD" connect \
-     curl -X PUT \
+curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
                "connector.class": "io.confluent.connect.cassandra.CassandraSinkConnector",

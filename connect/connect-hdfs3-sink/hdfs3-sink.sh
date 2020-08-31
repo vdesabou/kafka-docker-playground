@@ -12,8 +12,7 @@ sleep 10
 docker exec namenode bash -c "/opt/hadoop-3.1.3/bin/hdfs dfs -chmod 777  /"
 
 log "Creating HDFS Sink connector"
-docker exec connect \
-     curl -X PUT \
+curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
                "connector.class":"io.confluent.connect.hdfs3.Hdfs3SinkConnector",

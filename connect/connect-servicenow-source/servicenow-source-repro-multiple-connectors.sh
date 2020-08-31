@@ -31,7 +31,7 @@ TODAY=$(date '+%Y-%m-%d')
 
 log "Creating ServiceNow Source connector 1"
 docker exec -e SERVICENOW_URL="$SERVICENOW_URL" -e SERVICENOW_PASSWORD="$SERVICENOW_PASSWORD" -e TODAY="$TODAY" connect \
-     curl -X PUT \
+curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
                     "connector.class": "io.confluent.connect.servicenow.ServiceNowSourceConnector",
@@ -630,7 +630,7 @@ timeout 60 docker exec connect kafka-console-consumer -bootstrap-server broker:9
 TODAY=$(date '+%Y-%m-%d')
 log "Creating ServiceNow Source connector 2"
 docker exec -e SERVICENOW_URL="$SERVICENOW_URL" -e SERVICENOW_PASSWORD="$SERVICENOW_PASSWORD" -e TODAY="$TODAY" connect \
-     curl -X PUT \
+curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
                     "connector.class": "io.confluent.connect.servicenow.ServiceNowSourceConnector",

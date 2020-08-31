@@ -29,8 +29,7 @@ $ curl "https://api.mockaroo.com/api/58605010?count=1000&key=25fd9c80" > "${DIR}
 Creating CSV Spool Dir Source connector
 
 ```bash
-$ docker exec connect \
-     curl -X PUT \
+$ curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
                     "tasks.max": "1",
@@ -81,8 +80,7 @@ $ curl "https://api.mockaroo.com/api/58605010?count=1000&key=25fd9c80" > "${DIR}
 Creating TSV Spool Dir Source connector
 
 ```bash
-$ docker exec connect \
-     curl -X PUT \
+$ curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
                "tasks.max": "1",
@@ -133,8 +131,7 @@ $ curl "https://api.mockaroo.com/api/17c84440?count=500&key=25fd9c80" > "${DIR}/
 Creating JSON Spool Dir Source connector
 
 ```bash
-$ docker exec connect \
-     curl -X PUT \
+$ curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
                "tasks.max": "1",
@@ -182,8 +179,7 @@ $ curl "https://api.mockaroo.com/api/17c84440?count=500&key=25fd9c80" > "${DIR}/
 Creating JSON Spool Dir Source connector
 
 ```bash
-$ docker exec connect \
-     curl -X PUT \
+$ curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
                "tasks.max": "1",
@@ -231,8 +227,7 @@ $ curl "https://raw.githubusercontent.com/jcustenborder/kafka-connect-spooldir/m
 Creating Line Delimited Spool Dir Source connector
 
 ```bash
-$ docker exec connect \
-     curl -X PUT \
+$ curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
                "tasks.max": "1",

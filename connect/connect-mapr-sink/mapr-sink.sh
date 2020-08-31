@@ -53,8 +53,7 @@ docker exec -i broker kafka-console-producer --broker-list broker:9092 --topic m
 EOF
 
 log "Creating Mapr sink connector"
-docker exec connect \
-     curl -X PUT \
+curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
                "connector.class": "io.confluent.connect.mapr.db.MapRDbSinkConnector",

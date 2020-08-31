@@ -37,8 +37,7 @@ log "Show content of team table:"
 docker exec mysql bash -c "mysql --user=root --password=password --database=mydb -e 'select * from team'"
 
 log "Creating Debezium MySQL source connector"
-docker exec connect \
-     curl -X PUT \
+curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
                "connector.class": "io.debezium.connector.mysql.MySqlConnector",

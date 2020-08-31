@@ -20,8 +20,7 @@ $ ./snmp.sh
 Creating SNMP Source connector
 
 ```bash
-$ docker exec connect \
-     curl -X PUT \
+$ curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
                "tasks.max": "1",

@@ -86,7 +86,7 @@ The connector is created with:
 
 ```bash
 docker exec -e BUCKET_NAME="$BUCKET_NAME" connect \
-     curl -X PUT \
+curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
                "connector.class": "io.confluent.connect.gcs.GcsSinkConnector",
@@ -140,7 +140,7 @@ The connector is created with:
 
 ```bash
 $ docker exec -e BUCKET_NAME="$BUCKET_NAME" connect \
-     curl -X PUT \
+curl -X PUT \
      --cert /etc/kafka/secrets/connect.certificate.pem --key /etc/kafka/secrets/connect.key --tlsv1.2 --cacert /etc/kafka/secrets/snakeoil-ca-1.crt \
      -H "Content-Type: application/json" \
      --data '{
@@ -224,7 +224,7 @@ The connector is created with:
 
 ```bash
 $ docker exec -e BUCKET_NAME="$BUCKET_NAME" connect \
-     curl -X PUT \
+curl -X PUT \
      --cert /etc/kafka/secrets/connect.certificate.pem --key /etc/kafka/secrets/connect.key --tlsv1.2 --cacert /etc/kafka/secrets/snakeoil-ca-1.crt \
      -H "Content-Type: application/json" \
      --data '{
@@ -283,7 +283,7 @@ The connector is created with:
 
 ```bash
 $ docker exec -e BUCKET_NAME="$BUCKET_NAME" connect \
-     curl -X PUT \
+curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
                "connector.class": "io.confluent.connect.gcs.GcsSinkConnector",
@@ -344,7 +344,7 @@ The connector is created with:
 
 ```bash
 $ docker exec -e BUCKET_NAME="$BUCKET_NAME" connect \
-     curl -X PUT \
+curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
                "connector.class": "io.confluent.connect.gcs.GcsSinkConnector",
@@ -396,7 +396,7 @@ The connector is created with:
 
 ```bash
 $ docker exec -e BUCKET_NAME="$BUCKET_NAME" connect \
-     curl -X PUT \
+curl -X PUT \
      -H "Content-Type: application/json" \
      -u connectorSubmitter:connectorSubmitter \
      --data '{

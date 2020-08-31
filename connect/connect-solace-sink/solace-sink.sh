@@ -20,8 +20,7 @@ log "Sending messages to topic sink-messages"
 seq 10 | docker exec -i broker kafka-console-producer --broker-list broker:9092 --topic sink-messages
 
 log "Creating Solace sink connector"
-docker exec connect \
-     curl -X PUT \
+curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
                "connector.class": "io.confluent.connect.jms.SolaceSinkConnector",

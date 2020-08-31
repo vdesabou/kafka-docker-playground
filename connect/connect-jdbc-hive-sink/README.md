@@ -51,8 +51,7 @@ $ seq -f "{\"foo\": %g,\"bar\": \"a string\"}" 10 | docker exec -i connect kafka
 Using Apache Hive JDBC driver:
 
 ```bash
-$ docker exec connect \
-     curl -X PUT \
+$ curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
                "connector.class" : "io.confluent.connect.jdbc.JdbcSinkConnector",
@@ -72,8 +71,7 @@ Using DataDirect JDBC driver:
 
 Check data is in hive
 ```bash
-$ docker exec connect \
-     curl -X PUT \
+$ curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
                "connector.class" : "io.confluent.connect.jdbc.JdbcSinkConnector",

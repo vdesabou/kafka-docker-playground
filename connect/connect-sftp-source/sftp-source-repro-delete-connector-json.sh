@@ -18,8 +18,7 @@ for i in $(seq 1 5)
 do
      log "(Re-)creating connector sftp-source-json"
 
-     docker exec connect \
-          curl -X PUT \
+     curl -X PUT \
           -H "Content-Type: application/json" \
           --data '{
                "topics": "test_sftp_sink",

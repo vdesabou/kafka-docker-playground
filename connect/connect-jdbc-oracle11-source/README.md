@@ -23,8 +23,7 @@ $ ./oracle11.sh
 Create the source connector with:
 
 ```bash
-$ docker exec connect \
-     curl -X PUT \
+$ curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
                "connector.class":"io.confluent.connect.jdbc.JdbcSourceConnector",

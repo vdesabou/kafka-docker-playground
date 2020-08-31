@@ -32,7 +32,7 @@ seq -f "{\"f1\": \"value%g\"}" 10 | docker exec -i connect kafka-avro-console-pr
 
 log "Creating GCS Sink connector"
 docker exec -e BUCKET_NAME="$BUCKET_NAME" connect \
-     curl -X PUT \
+curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
                "connector.class": "io.confluent.connect.gcs.GcsSinkConnector",

@@ -67,7 +67,7 @@ The connector is created with:
 
 ```bash
 docker exec -e PROJECT="$PROJECT" -e DATASET="$DATASET" connect \
-     curl -X PUT \
+curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
                "connector.class": "com.wepay.kafka.connect.bigquery.BigQuerySinkConnector",

@@ -24,7 +24,7 @@ Creating Azure Blob Storage Source connector
 
 ```bash
 $ docker exec -e AZURE_ACCOUNT_NAME="$AZURE_ACCOUNT_NAME" -e AZURE_ACCOUNT_KEY="$AZURE_ACCOUNT_KEY" -e AZURE_CONTAINER_NAME="$AZURE_CONTAINER_NAME" connect \
-     curl -X PUT \
+curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
                 "connector.class": "io.confluent.connect.azure.blob.storage.AzureBlobStorageSourceConnector",

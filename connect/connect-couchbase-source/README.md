@@ -64,8 +64,7 @@ $ docker exec couchbase bash -c "/opt/couchbase/bin/cbdocloader -c localhost:809
 Creating Couchbase sink connector
 
 ```bash
-$ docker exec connect \
-     curl -X PUT \
+$ curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
                "connector.class": "com.couchbase.connect.kafka.CouchbaseSourceConnector",
