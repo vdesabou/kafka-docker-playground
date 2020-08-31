@@ -14,6 +14,7 @@ log "Sending messages to topic test-topic-sasl-ssl"
 seq 10 | docker exec -i broker kafka-console-producer --broker-list broker:9092 --topic test-topic-sasl-ssl --producer.config /etc/kafka/secrets/client_without_interceptors.config
 
 log "Creating Confluent Replicator connector with SASL_SSL authentication"
+docker exec connect \
 curl -X PUT \
      --cert /etc/kafka/secrets/connect.certificate.pem --key /etc/kafka/secrets/connect.key --tlsv1.2 --cacert /etc/kafka/secrets/snakeoil-ca-1.crt \
      -H "Content-Type: application/json" \
