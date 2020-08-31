@@ -78,3 +78,4 @@ connect/connect-salesforce-cdc-source/myenv
 connect/connect-salesforce-platform-events-source/myenv
 connect/connect-salesforce-platform-events-sink/myenv
 ccloud/ccloud-demo/data
+connect/connect-jira-source/myenv
