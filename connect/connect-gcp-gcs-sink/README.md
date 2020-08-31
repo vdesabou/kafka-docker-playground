@@ -85,7 +85,6 @@ seq -f "{\"f1\": \"value%g\"}" 10 | docker exec -i connect kafka-avro-console-pr
 The connector is created with:
 
 ```bash
-docker exec -e BUCKET_NAME="$BUCKET_NAME" connect \
 curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
@@ -282,8 +281,7 @@ $ seq -f "{\"f1\": \"This is a message sent with Kerberos GSSAPI authentication 
 The connector is created with:
 
 ```bash
-$ docker exec -e BUCKET_NAME="$BUCKET_NAME" connect \
-curl -X PUT \
+$ curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
                "connector.class": "io.confluent.connect.gcs.GcsSinkConnector",
@@ -343,8 +341,7 @@ $ seq -f "{\"f1\": \"This is a message sent with LDAP Authorizer SASL/PLAIN auth
 The connector is created with:
 
 ```bash
-$ docker exec -e BUCKET_NAME="$BUCKET_NAME" connect \
-curl -X PUT \
+$ curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
                "connector.class": "io.confluent.connect.gcs.GcsSinkConnector",
@@ -395,8 +392,7 @@ $ seq -f "{\"f1\": \"This is a message sent with RBAC SASL/PLAIN authentication 
 The connector is created with:
 
 ```bash
-$ docker exec -e BUCKET_NAME="$BUCKET_NAME" connect \
-curl -X PUT \
+$ curl -X PUT \
      -H "Content-Type: application/json" \
      -u connectorSubmitter:connectorSubmitter \
      --data '{

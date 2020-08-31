@@ -31,7 +31,6 @@ create_topic songs
 set -e
 
 log "Creating GCP Firebase Sink connector"
-docker exec -e PROJECT="$PROJECT" -e SCHEMA_REGISTRY_URL="$SCHEMA_REGISTRY_URL" -e SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO="$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO" connect \
 curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{

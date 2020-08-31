@@ -30,7 +30,6 @@ ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml
 TODAY=$(date '+%Y-%m-%d')
 
 log "Creating ServiceNow Source connector 1"
-docker exec -e SERVICENOW_URL="$SERVICENOW_URL" -e SERVICENOW_PASSWORD="$SERVICENOW_PASSWORD" -e TODAY="$TODAY" connect \
 curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
@@ -629,7 +628,6 @@ timeout 60 docker exec connect kafka-console-consumer -bootstrap-server broker:9
 
 TODAY=$(date '+%Y-%m-%d')
 log "Creating ServiceNow Source connector 2"
-docker exec -e SERVICENOW_URL="$SERVICENOW_URL" -e SERVICENOW_PASSWORD="$SERVICENOW_PASSWORD" -e TODAY="$TODAY" connect \
 curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{

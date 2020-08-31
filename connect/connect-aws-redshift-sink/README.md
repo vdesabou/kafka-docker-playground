@@ -42,8 +42,7 @@ EOF
 Creating AWS Redshift Source connector
 
 ```bash
-$ docker exec -e PROJECT="$DOMAIN" -e DATASET="$PASSWORD" connect \
-curl -X PUT \
+$ curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
                "connector.class": "io.confluent.connect.aws.redshift.RedshiftSinkConnector",

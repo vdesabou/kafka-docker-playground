@@ -32,7 +32,6 @@ log "Sending messages to topic gcs_topic"
 seq -f "{\"f1\": \"This is a message sent with LDAP Authorizer SASL/PLAIN authentication %g\"}" 10 | docker exec -i connect kafka-avro-console-producer --broker-list broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic gcs_topic --property value.schema='{"type":"record","name":"myrecord","fields":[{"name":"f1","type":"string"}]}' --property schema.registry.url=http://schema-registry:8081 --producer.config /service/kafka/users/alice.properties
 
 log "Creating GCS Sink connector"
-docker exec -e BUCKET_NAME="$BUCKET_NAME" connect \
 curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{

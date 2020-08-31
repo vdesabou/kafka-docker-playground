@@ -29,7 +29,6 @@ docker exec -i connect kafka-avro-console-producer --broker-list broker:9092 --p
 EOF
 
 log "Creating Datadog metrics sink connector"
-docker exec -e DD_API_KEY=$DD_API_KEY -e DD_DOMAIN=$DOMAIN connect \
 curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{

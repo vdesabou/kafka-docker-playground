@@ -66,7 +66,6 @@ seq -f "{\"f1\": \"value%g\"}" 10 | docker exec -i connect kafka-avro-console-pr
 The connector is created with:
 
 ```bash
-docker exec -e PROJECT="$PROJECT" -e DATASET="$DATASET" connect \
 curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{

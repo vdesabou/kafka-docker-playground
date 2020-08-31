@@ -77,8 +77,7 @@ You should see:
 Creating GCP Firebase Sink connector
 
 ```bash
-$ docker exec -e PROJECT="$PROJECT" connect \
-curl -X PUT \
+$ curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
                "connector.class" : "io.confluent.connect.firebase.FirebaseSinkConnector",

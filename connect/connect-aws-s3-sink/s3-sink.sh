@@ -19,7 +19,6 @@ fi
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
 
 log "Creating S3 Sink connector with bucket name <$BUCKET_NAME>"
-docker exec -e BUCKET_NAME="$BUCKET_NAME" connect \
 curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
