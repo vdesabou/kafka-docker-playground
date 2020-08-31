@@ -87,7 +87,7 @@ END
      log "Use cluster $CLUSTER_LKC"
      ccloud kafka cluster use $CLUSTER_LKC
      log "Store api key $CLOUD_KEY"
-     ccloud api-key store $CLOUD_KEY $CLOUD_SECRET --resource $CLUSTER_LKC
+     ccloud api-key store $CLOUD_KEY $CLOUD_SECRET --resource $CLUSTER_LKC --force
      log "Use api key $CLOUD_KEY"
      ccloud api-key use $CLOUD_KEY --resource $CLUSTER_LKC
 fi
