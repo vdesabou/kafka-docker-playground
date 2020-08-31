@@ -30,7 +30,6 @@ ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml
 TODAY=$(date '+%Y-%m-%d')
 
 log "Creating ServiceNow Source connector"
-docker exec -e SERVICENOW_URL="$SERVICENOW_URL" -e SERVICENOW_PASSWORD="$SERVICENOW_PASSWORD" -e TODAY="$TODAY" connect \
 curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{

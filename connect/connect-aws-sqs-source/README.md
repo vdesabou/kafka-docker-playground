@@ -122,7 +122,6 @@ $ aws sqs send-message-batch --queue-url $QUEUE_URL --entries file://send-messag
 The connector is created with:
 
 ```bash
-docker exec -e QUEUE_URL="$QUEUE_URL" -e AWS_REGION="$AWS_REGION" connect \
 curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
@@ -183,7 +182,6 @@ $ aws sqs send-message-batch --queue-url $QUEUE_URL --entries file://send-messag
 The connector is created with:
 
 ```bash
-docker exec -e QUEUE_URL="$QUEUE_URL" connect \
 curl -X PUT \
      --cert /etc/kafka/secrets/connect.certificate.pem --key /etc/kafka/secrets/connect.key --tlsv1.2 --cacert /etc/kafka/secrets/snakeoil-ca-1.crt \
      -H "Content-Type: application/json" \
@@ -232,7 +230,6 @@ $ aws sqs send-message-batch --queue-url $QUEUE_URL --entries file://send-messag
 The connector is created with:
 
 ```bash
-docker exec -e QUEUE_URL="$QUEUE_URL" connect \
 curl -X PUT \
      --cert /etc/kafka/secrets/connect.certificate.pem --key /etc/kafka/secrets/connect.key --tlsv1.2 --cacert /etc/kafka/secrets/snakeoil-ca-1.crt \
      -H "Content-Type: application/json" \

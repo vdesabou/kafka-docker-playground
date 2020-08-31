@@ -43,7 +43,6 @@ log "Sending messages to $QUEUE_URL"
 aws sqs send-message-batch --queue-url $QUEUE_URL --entries file://send-message-batch.json
 
 log "Creating SQS Source connector"
-docker exec -e QUEUE_URL="$QUEUE_URL" connect \
 curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{

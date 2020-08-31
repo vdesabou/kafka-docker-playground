@@ -66,7 +66,6 @@ docker exec -i connect kafka-avro-console-producer --broker-list broker:9092 --p
 EOF
 
 log "Creating Azure SQL Data Warehouse Sink connector"
-docker exec -e AZURE_SQL_NAME="$AZURE_SQL_NAME" -e AZURE_DATA_WAREHOUSE_NAME="$AZURE_DATA_WAREHOUSE_NAME" -e AZURE_SQL_URL="$AZURE_SQL_URL" -e PASSWORD="$PASSWORD" connect \
 curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{

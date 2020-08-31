@@ -35,7 +35,6 @@ seq -f "{\"f1\": \"value%g\"}" 10 | docker exec -i connect kafka-avro-console-pr
 
 
 log "Creating GCS Sink connector"
-docker exec -e BUCKET_NAME="$BUCKET_NAME" connect \
 curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
@@ -71,7 +70,6 @@ docker rm -f gcloud-config
 ## SOURCE
 ##########################
 log "Creating GCS Source connector"
-docker exec -e BUCKET_NAME="$BUCKET_NAME" connect \
 curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{

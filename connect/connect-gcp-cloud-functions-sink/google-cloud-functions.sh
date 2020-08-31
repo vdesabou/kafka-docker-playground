@@ -18,7 +18,6 @@ key3,value3
 EOF
 
 log "Creating Google Cloud Functions Sink connector"
-docker exec -e PROJECT="$PROJECT" -e REGION="$REGION" -e FUNCTION="$FUNCTION" connect \
 curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{

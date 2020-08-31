@@ -22,7 +22,6 @@ docker exec -i connect kafka-avro-console-producer --broker-list broker:9092 --p
 EOF
 
 log "Creating AWS Redshift Logs Source connector"
-docker exec -e PROJECT="$CLUSTER" -e DATASET="$PASSWORD" connect \
 curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{

@@ -57,8 +57,7 @@ AZURE_SAS_KEY=$(az eventhubs namespace authorization-rule keys list \
 The connector is created with:
 
 ```bash
-$ docker exec -e AZURE_EVENT_HUBS_NAME="$AZURE_EVENT_HUBS_NAME" -e AZURE_EVENT_HUBS_NAMESPACE="$AZURE_EVENT_HUBS_NAMESPACE" -e AZURE_SAS_KEY="$AZURE_SAS_KEY" connect \
-curl -X PUT \
+$ curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
                 "connector.class": "io.confluent.connect.azure.eventhubs.EventHubsSourceConnector",

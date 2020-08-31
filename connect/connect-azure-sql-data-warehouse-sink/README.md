@@ -65,8 +65,7 @@ az sql dw create \
 The connector is created with:
 
 ```bash
-$ docker exec -e AZURE_SQL_NAME="$AZURE_SQL_NAME" -e AZURE_DATA_WAREHOUSE_NAME="$AZURE_DATA_WAREHOUSE_NAME" -e AZURE_SQL_URL="$AZURE_SQL_URL" -e PASSWORD="$PASSWORD" connect \
-curl -X PUT \
+$ curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
                "connector.class": "io.confluent.connect.azuresqldw.AzureSqlDwSinkConnector",
