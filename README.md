@@ -112,7 +112,7 @@ Quick start examples from Confluent [docs](https://docs.confluent.io/current/con
     - <img src="https://seeklogo.com/images/S/salesforce-logo-273F95FE60-seeklogo.com.png" height="15"> [Bulk API](connect/connect-salesforce-bulkapi-source)
     - <img src="https://seeklogo.com/images/S/salesforce-logo-273F95FE60-seeklogo.com.png" height="15"> [CDC](connect/connect-salesforce-cdc-source)
     - <img src="https://seeklogo.com/images/S/salesforce-logo-273F95FE60-seeklogo.com.png" height="15"> [Platform Events](connect/connect-salesforce-platform-events-source)
-
+- <img src="https://devnull.crankuptheamps.com/documentation/html/develop/user-guide/html/_static/flag_logo.png" width="15"> [AMPS](connect/connect-amps-source)
 
 ### ↗️ Sink
 
