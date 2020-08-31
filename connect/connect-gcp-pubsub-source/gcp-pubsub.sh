@@ -43,7 +43,6 @@ docker run -ti --volumes-from gcloud-config google/cloud-sdk:latest gcloud pubsu
 sleep 10
 
 log "Creating GCP PubSub Source connector"
-docker exec -e PROJECT="$PROJECT" connect \
 curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{

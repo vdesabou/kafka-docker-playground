@@ -3,8 +3,7 @@
 Create connector 1 (called `servicenow-source1`) reading table `incident`:
 
 ```bash
-$ docker exec -e SERVICENOW_URL="$SERVICENOW_URL" -e SERVICENOW_PASSWORD="$SERVICENOW_PASSWORD" -e TODAY="$TODAY" connect \
-curl -X PUT \
+$ curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
                     "connector.class": "io.confluent.connect.servicenow.ServiceNowSourceConnector",
@@ -147,8 +146,7 @@ Now if we create another connector `servicenow-source2`reading table `alm_facili
 Creating ServiceNow Source connector 2
 
 ```bash
-$ docker exec -e SERVICENOW_URL="$SERVICENOW_URL" -e SERVICENOW_PASSWORD="$SERVICENOW_PASSWORD" -e TODAY="$TODAY" connect \
-curl -X PUT \
+$ curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
                     "connector.class": "io.confluent.connect.servicenow.ServiceNowSourceConnector",

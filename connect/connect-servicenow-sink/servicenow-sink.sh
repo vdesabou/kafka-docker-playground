@@ -36,7 +36,6 @@ docker exec -i connect kafka-avro-console-producer --broker-list broker:9092 --p
 EOF
 
 log "Creating ServiceNow Sink connector"
-docker exec -e SERVICENOW_URL="$SERVICENOW_URL" -e SERVICENOW_PASSWORD="$SERVICENOW_PASSWORD" -e TODAY="$TODAY" connect \
 curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{

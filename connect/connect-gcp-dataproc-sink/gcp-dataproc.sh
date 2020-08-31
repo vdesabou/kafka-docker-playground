@@ -36,7 +36,6 @@ seq -f "{\"f1\": \"value%g-`date`\"}" 10 | docker exec -i connect kafka-avro-con
 
 
 log "Creating GCP Dataproc Sink connector"
-docker exec -e CLUSTER_NAME="$CLUSTER_NAME" -e PROJECT="$PROJECT" connect \
 curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{

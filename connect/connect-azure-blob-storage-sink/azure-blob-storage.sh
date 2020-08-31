@@ -52,7 +52,6 @@ AZURE_ACCOUNT_KEY=$(az storage account keys list \
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
 
 log "Creating Azure Blob Storage Sink connector"
-docker exec -e AZURE_ACCOUNT_NAME="$AZURE_ACCOUNT_NAME" -e AZURE_ACCOUNT_KEY="$AZURE_ACCOUNT_KEY" -e AZURE_CONTAINER_NAME="$AZURE_CONTAINER_NAME" connect \
 curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{

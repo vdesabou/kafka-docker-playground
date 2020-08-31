@@ -37,7 +37,6 @@ docker exec -i client kinit -k -t /var/lib/secret/kafka-client.key kafka_produce
 seq -f "{\"f1\": \"This is a message sent with Kerberos GSSAPI authentication %g\"}" 10 | docker exec -i client kafka-avro-console-producer --broker-list broker:9092 --topic gcs_topic --property value.schema='{"type":"record","name":"myrecord","fields":[{"name":"f1","type":"string"}]}' --property schema.registry.url=http://schema-registry:8081 --producer.config /etc/kafka/producer.properties
 
 log "Creating GCS Sink connector with Kerberos GSSAPI authentication"
-docker exec -e BUCKET_NAME="$BUCKET_NAME" connect \
 curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{

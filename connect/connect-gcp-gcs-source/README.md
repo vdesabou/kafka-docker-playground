@@ -48,8 +48,7 @@ Steps from [connect-gcp-gcs-sink](../connect/connect-gcp-gcs-sink/README.md)
 Creating GCS Source connector
 
 ```bash
-$ docker exec -e BUCKET_NAME="$BUCKET_NAME" connect \
-curl -X PUT \
+$ curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
                "connector.class": "io.confluent.connect.gcs.GcsSourceConnector",

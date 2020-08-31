@@ -74,8 +74,7 @@ $ ./gcp-firebase-source.sh <PROJECT>
 Creating GCP Firebase Source connector
 
 ```bash
-$ docker exec -e PROJECT="$PROJECT" connect \
-curl -X PUT \
+$ curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
                "connector.class" : "io.confluent.connect.firebase.FirebaseSourceConnector",

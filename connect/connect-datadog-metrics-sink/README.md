@@ -35,8 +35,7 @@ EOF
 Creating Datadog metrics sink connector:
 
 ```bash
-$ docker exec -e DD_API_KEY=$DD_API_KEY -e DD_DOMAIN=$DOMAIN connect \
-curl -X PUT \
+$ curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
                "connector.class": "io.confluent.connect.datadog.metrics.DatadogMetricsSinkConnector",

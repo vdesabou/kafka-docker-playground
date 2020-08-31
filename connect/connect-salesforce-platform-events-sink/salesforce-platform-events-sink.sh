@@ -50,7 +50,6 @@ log "Send Platform Events"
 docker exec sfdx-cli sh -c "sfdx force:apex:execute  -u \"$SALESFORCE_USERNAME\" -f \"/tmp/event.apex\""
 
 log "Creating Salesforce Platform Events Source connector"
-docker exec -e SALESFORCE_USERNAME="$SALESFORCE_USERNAME" -e SALESFORCE_PASSWORD="$SALESFORCE_PASSWORD" -e CONSUMER_KEY="$CONSUMER_KEY" -e CONSUMER_PASSWORD="$CONSUMER_PASSWORD" -e SECURITY_TOKEN="$SECURITY_TOKEN" connect \
 curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
@@ -81,7 +80,6 @@ log "Verify we have received the data in sfdc-platform-events topic"
 timeout 60 docker exec broker kafka-console-consumer -bootstrap-server broker:9092 --topic sfdc-platform-events --from-beginning --max-messages 2
 
 log "Creating Salesforce Platform Events Sink connector"
-docker exec -e SALESFORCE_USERNAME="$SALESFORCE_USERNAME" -e SALESFORCE_PASSWORD="$SALESFORCE_PASSWORD" -e CONSUMER_KEY="$CONSUMER_KEY" -e CONSUMER_PASSWORD="$CONSUMER_PASSWORD" -e SECURITY_TOKEN="$SECURITY_TOKEN" connect \
 curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{

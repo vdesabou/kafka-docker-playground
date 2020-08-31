@@ -389,8 +389,7 @@ Results:
 An HTTP sink connector called `http-sink` is created and listening on topic `mysql-application`:
 
 ```bash
-$ docker exec -e BOOTSTRAP_SERVERS="<BOOTSTRAP_SERVERS" -e >CLOUD_KEY="$CLOUD_KEY" -e CLOUD_SECRET="$CLOUD_SECRET" connect \
-curl -X PUT \
+$ curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
           "topics": "mysql-application",

@@ -27,7 +27,6 @@ seq -f "{\"f1\": \"value%g-`date`\"}" 10 | docker exec -i connect kafka-avro-con
 
 
 log "Creating GCP BigQuery Sink connector"
-docker exec -e PROJECT="$PROJECT" -e DATASET="$DATASET" connect \
 curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{

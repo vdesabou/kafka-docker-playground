@@ -39,7 +39,6 @@ log "Add a Lead to Salesforce: $LEAD_FIRSTNAME $LEAD_LASTNAME"
 docker exec sfdx-cli sh -c "sfdx force:data:record:create  -u \"$SALESFORCE_USERNAME\" -s Lead -v \"FirstName='$LEAD_FIRSTNAME' LastName='$LEAD_LASTNAME' Company=Confluent\""
 
 log "Creating Salesforce Bulk API Source connector"
-docker exec -e SALESFORCE_USERNAME="$SALESFORCE_USERNAME" -e SALESFORCE_PASSWORD="$SALESFORCE_PASSWORD" -e SECURITY_TOKEN="$SECURITY_TOKEN" connect \
 curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{

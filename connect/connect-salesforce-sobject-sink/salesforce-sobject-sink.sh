@@ -91,7 +91,6 @@ log "Add a Lead to Salesforce: $LEAD_FIRSTNAME $LEAD_LASTNAME"
 docker exec sfdx-cli sh -c "sfdx force:data:record:create  -u \"$SALESFORCE_USERNAME\" -s Lead -v \"FirstName='$LEAD_FIRSTNAME' LastName='$LEAD_LASTNAME' Company=Confluent\""
 
 log "Creating Salesforce PushTopics Source connector"
-docker exec -e SALESFORCE_USERNAME="$SALESFORCE_USERNAME" -e SALESFORCE_PASSWORD="$SALESFORCE_PASSWORD" -e CONSUMER_KEY="$CONSUMER_KEY" -e CONSUMER_PASSWORD="$CONSUMER_PASSWORD" -e SECURITY_TOKEN="$SECURITY_TOKEN" connect \
 curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
@@ -124,7 +123,6 @@ timeout 60 docker exec broker kafka-console-consumer -bootstrap-server broker:90
 
 
 log "Creating Salesforce SObject Sink connector"
-docker exec -e SALESFORCE_USERNAME_ACCOUNT2="$SALESFORCE_USERNAME_ACCOUNT2" -e SALESFORCE_PASSWORD_ACCOUNT2="$SALESFORCE_PASSWORD_ACCOUNT2" -e SECURITY_TOKEN_ACCOUNT2="$SECURITY_TOKEN_ACCOUNT2" -e CONSUMER_KEY_ACCOUNT2="$CONSUMER_KEY_ACCOUNT2" -e CONSUMER_PASSWORD_ACCOUNT2="$CONSUMER_PASSWORD_ACCOUNT2" connect \
 curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
