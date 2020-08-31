@@ -30,8 +30,7 @@ sleep 60
 log "Sending messages to topic customer using java producer from connect-vertica-sink/producer"
 
 log "Creating JDBC Vertica sink connector"
-docker exec connect \
-     curl -X PUT \
+curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
                "connector.class" : "io.confluent.connect.jdbc.JdbcSinkConnector",

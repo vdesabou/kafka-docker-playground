@@ -42,8 +42,7 @@ docker exec broker kafka-acls --authorizer-properties zookeeper.connect=zookeepe
 Creating CSV SFTP Source connector (notice the `producer.override`)
 
 ```bash
-$ docker exec connect \
-     curl -X PUT \
+$ curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
         "topics": "test_sftp_sink",

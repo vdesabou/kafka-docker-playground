@@ -23,8 +23,7 @@ Minio UI is accessible at [http://127.0.0.1:9000](http://127.0.0.1:9000]) (`AKIA
 The connector is created with:
 
 ```bash
-$ docker exec connect \
-     curl -X PUT \
+$ curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
                "connector.class": "io.confluent.connect.s3.S3SinkConnector",

@@ -41,7 +41,7 @@ The connector is created with:
 
 ```bash
 $ docker exec -e BUCKET_NAME="$BUCKET_NAME" connect \
-     curl -X PUT \
+curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
                "tasks.max": "1",

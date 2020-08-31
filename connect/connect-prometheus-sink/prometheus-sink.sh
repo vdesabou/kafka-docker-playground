@@ -15,8 +15,7 @@ docker exec -i -e NOW=$NOW connect kafka-avro-console-producer --broker-list bro
 EOF
 
 log "Creating Prometheus sink connector"
-docker exec connect \
-     curl -X PUT \
+curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
                "connector.class": "io.confluent.connect.prometheus.PrometheusMetricsSinkConnector",

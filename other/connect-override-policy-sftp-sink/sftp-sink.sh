@@ -23,8 +23,7 @@ docker exec broker kafka-acls --authorizer-properties zookeeper.connect=zookeepe
 docker exec broker kafka-acls --authorizer-properties zookeeper.connect=zookeeper:2181 --add --allow-principal User:sftp --operation CREATE --topic test_sftp_sink
 
 log "Creating SFTP Sink connector"
-docker exec connect \
-     curl -X PUT \
+curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
         "topics": "test_sftp_sink",

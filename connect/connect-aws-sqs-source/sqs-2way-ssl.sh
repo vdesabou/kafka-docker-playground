@@ -48,7 +48,7 @@ log "########"
 
 log "Creating SQS Source connector with SSL authentication"
 docker exec -e QUEUE_URL="$QUEUE_URL" connect \
-     curl -X PUT \
+curl -X PUT \
      --cert /etc/kafka/secrets/connect.certificate.pem --key /etc/kafka/secrets/connect.key --tlsv1.2 --cacert /etc/kafka/secrets/snakeoil-ca-1.crt \
      -H "Content-Type: application/json" \
      --data '{

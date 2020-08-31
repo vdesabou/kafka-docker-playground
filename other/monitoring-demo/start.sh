@@ -38,8 +38,7 @@ log "-------------------------------------"
 
 
 log "Creating MySQL source connector"
-docker exec connect-europe \
-     curl -X PUT \
+curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
                "connector.class":"io.confluent.connect.jdbc.JdbcSourceConnector",
@@ -81,8 +80,7 @@ fi
 
 
 log "Creating http-sink connector"
-docker exec connect-europe \
-     curl -X PUT \
+curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
                "topics": "mysql-application",
@@ -113,8 +111,7 @@ then
 fi
 
 log "Creating Elasticsearch Sink connector"
-docker exec connect-europe \
-     curl -X PUT \
+curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
         "connector.class": "io.confluent.connect.elasticsearch.ElasticsearchSinkConnector",
@@ -153,7 +150,7 @@ seq -f "us_sale_%g ${RANDOM}" 10 | docker container exec -i connect-us bash -c "
 log "Consolidating all sales in the US"
 
 docker container exec connect-us \
-     curl -X PUT \
+curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
           "connector.class":"io.confluent.connect.replicator.ReplicatorSourceConnector",
@@ -175,7 +172,7 @@ docker container exec connect-us \
 log "Consolidating all sales in Europe"
 
 docker container exec connect-europe \
-     curl -X PUT \
+curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
           "connector.class":"io.confluent.connect.replicator.ReplicatorSourceConnector",

@@ -53,8 +53,7 @@ INSERT INTO team (   \
 Creating Debezium MySQL source connector
 
 ```bash
-docker exec connect \
-     curl -X PUT \
+curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
                "connector.class": "io.debezium.connector.mysql.MySqlConnector",

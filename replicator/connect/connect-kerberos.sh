@@ -16,7 +16,7 @@ log "Consolidating all sales in the US"
 
 docker container exec -i connect-us bash -c 'kinit -k -t /var/lib/secret/kafka-connect.key connect'
 docker container exec connect-us \
-     curl -X PUT \
+curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
           "connector.class":"io.confluent.connect.replicator.ReplicatorSourceConnector",
@@ -50,7 +50,7 @@ log "Consolidating all sales in Europe"
 
 docker container exec -i connect-europe bash -c 'kinit -k -t /var/lib/secret/kafka-connect.key connect'
 docker container exec connect-europe \
-     curl -X PUT \
+curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
           "connector.class":"io.confluent.connect.replicator.ReplicatorSourceConnector",

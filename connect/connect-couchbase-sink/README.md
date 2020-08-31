@@ -42,8 +42,7 @@ $ docker exec json-producer bash -c "java -jar json-producer-example-1.0.0-SNAPS
 Creating Couchbase sink connector
 
 ```bash
-$ docker exec connect \
-     curl -X PUT \
+$ curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
                "connector.class": "com.couchbase.connect.kafka.CouchbaseSinkConnector",

@@ -35,7 +35,7 @@ docker exec -i connect kafka-avro-console-consumer --bootstrap-server broker:909
 
 log "Creating GCS Sink connector"
 docker exec -e BUCKET_NAME="$BUCKET_NAME" connect \
-     curl -X PUT \
+curl -X PUT \
      -H "Content-Type: application/json" \
      -u connectorSubmitter:connectorSubmitter \
      --data '{

@@ -35,8 +35,7 @@ docker cp json-ftps-source.json ftps-server:/home/vsftpd/bob/input/
 rm -f json-ftps-source.json
 
 log "Creating JSON file with schema FTPS Source connector"
-docker exec connect \
-     curl -X PUT \
+curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
                "tasks.max": "1",

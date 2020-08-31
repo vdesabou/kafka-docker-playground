@@ -161,8 +161,7 @@ create_topic mysql-application
 set -e
 
 log "Creating MySQL source connector"
-docker exec connect \
-     curl -X PUT \
+curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
                "connector.class":"io.confluent.connect.jdbc.JdbcSourceConnector",
@@ -225,8 +224,7 @@ fi
 # fi
 
 log "Creating http-sink connector"
-docker exec connect \
-     curl -X PUT \
+curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
                "topics": "mysql-application",
@@ -269,8 +267,7 @@ then
 fi
 
 log "Creating Elasticsearch Sink connector"
-docker exec connect \
-     curl -X PUT \
+curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
         "connector.class": "io.confluent.connect.elasticsearch.ElasticsearchSinkConnector",

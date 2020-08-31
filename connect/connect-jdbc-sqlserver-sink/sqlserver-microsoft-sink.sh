@@ -22,8 +22,7 @@ log "sleeping 60 seconds"
 sleep 60
 
 log "Creating JDBC SQL Server (with Microsoft driver) sink connector"
-docker exec connect \
-     curl -X PUT \
+curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
                "connector.class": "io.confluent.connect.jdbc.JdbcSinkConnector",

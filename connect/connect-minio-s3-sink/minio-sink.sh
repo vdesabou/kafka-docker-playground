@@ -12,8 +12,7 @@ log "Creating bucket in Minio"
 docker container restart create-buckets
 
 log "Creating S3 Sink connector with Minio"
-docker exec connect \
-     curl -X PUT \
+curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
                "connector.class": "io.confluent.connect.s3.S3SinkConnector",

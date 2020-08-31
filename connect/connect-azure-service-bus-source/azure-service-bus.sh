@@ -59,7 +59,7 @@ ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml
 
 log "Creating Azure Service Bus Source connector"
 docker exec -e AZURE_SERVICE_BUS_QUEUE_NAME="$AZURE_SERVICE_BUS_QUEUE_NAME" -e AZURE_SERVICE_BUS_NAMESPACE="$AZURE_SERVICE_BUS_NAMESPACE" -e AZURE_SAS_KEY="$AZURE_SAS_KEY" connect \
-     curl -X PUT \
+curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
                 "connector.class": "io.confluent.connect.azure.servicebus.ServiceBusSourceConnector",

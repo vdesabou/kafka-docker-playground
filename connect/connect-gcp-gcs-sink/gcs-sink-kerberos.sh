@@ -38,7 +38,7 @@ seq -f "{\"f1\": \"This is a message sent with Kerberos GSSAPI authentication %g
 
 log "Creating GCS Sink connector with Kerberos GSSAPI authentication"
 docker exec -e BUCKET_NAME="$BUCKET_NAME" connect \
-     curl -X PUT \
+curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
                "connector.class": "io.confluent.connect.gcs.GcsSinkConnector",

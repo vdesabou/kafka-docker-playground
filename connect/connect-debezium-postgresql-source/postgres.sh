@@ -18,8 +18,7 @@ log "Show content of CUSTOMERS table:"
 docker exec postgres bash -c "psql -U postgres -d postgres -c 'SELECT * FROM CUSTOMERS'"
 
 log "Creating Debezium PostgreSQL source connector"
-docker exec connect \
-     curl -X PUT \
+curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
                "connector.class": "io.debezium.connector.postgresql.PostgresConnector",

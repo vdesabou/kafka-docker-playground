@@ -30,8 +30,7 @@ log "Sending messages to topic test-topic"
 seq 10 | docker exec -i broker kafka-console-producer --broker-list broker:9092 --topic test-topic
 
 log "Creating Replicator connector"
-docker exec connect \
-      curl -X PUT \
+curl -X PUT \
       -H "Content-Type: application/json" \
       --data '{
          "connector.class":"io.confluent.connect.replicator.ReplicatorSourceConnector",

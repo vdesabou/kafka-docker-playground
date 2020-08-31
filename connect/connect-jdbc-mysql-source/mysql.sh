@@ -37,8 +37,7 @@ log "Show content of application table:"
 docker exec mysql bash -c "mysql --user=root --password=password --database=db -e 'select * from application'"
 
 log "Creating MySQL source connector"
-docker exec connect \
-     curl -X PUT \
+curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
                "connector.class":"io.confluent.connect.jdbc.JdbcSourceConnector",

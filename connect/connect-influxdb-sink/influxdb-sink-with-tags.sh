@@ -23,8 +23,7 @@ docker exec -i connect kafka-avro-console-consumer \
      --max-messages=1
 
 log "Creating product InfluxDB sink connector using SMT for fun"
-docker exec connect \
-     curl -s -X PUT \
+curl -s -X PUT \
      -H "Content-Type: application/json" \
      --data '{
                "connector.class": "io.confluent.influxdb.InfluxDBSinkConnector",
@@ -36,7 +35,7 @@ docker exec connect \
                     "transforms.InsertField.static.field": "measurement",
                     "transforms.InsertField.static.value": "product",
                     "transforms.RenameField.type": "org.apache.kafka.connect.transforms.ReplaceField$Value",
-                    "transforms.RenameField.renames": "product:name"                   
+                    "transforms.RenameField.renames": "product:name"
                }
           }' \
      http://localhost:8083/connectors/influxdb-sink/config | jq .

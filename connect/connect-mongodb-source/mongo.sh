@@ -26,8 +26,7 @@ EOF
 sleep 2
 
 log "Creating MongoDB source connector"
-docker exec connect \
-     curl -X PUT \
+curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
                "connector.class" : "com.mongodb.kafka.connect.MongoSourceConnector",

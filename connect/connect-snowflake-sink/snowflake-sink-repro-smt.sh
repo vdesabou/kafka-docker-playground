@@ -104,7 +104,7 @@ EOF
 
 log "Creating Snowflake Sink connector"
 docker exec -e SNOWFLAKE_URL="$SNOWFLAKE_URL" -e RSA_PRIVATE_KEY="$RSA_PRIVATE_KEY" connect \
-     curl -X PUT \
+curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
                "connector.class": "com.snowflake.kafka.connector.SnowflakeSinkConnector",

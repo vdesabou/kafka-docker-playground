@@ -7,8 +7,7 @@ source ${DIR}/../../scripts/utils.sh
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
 
 log "Creating DataDiode Source connector"
-docker exec connect \
-     curl -X PUT \
+curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
                "tasks.max": "1",
@@ -27,8 +26,7 @@ docker exec connect \
      http://localhost:8083/connectors/datadiode-source/config | jq .
 
 log "Creating DataDiode Sink connector"
-docker exec connect \
-     curl -X PUT \
+curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
                "connector.class": "io.confluent.connect.diode.sink.DataDiodeSinkConnector",

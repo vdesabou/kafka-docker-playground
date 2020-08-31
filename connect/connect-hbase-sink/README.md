@@ -32,8 +32,7 @@ EOF
 Creating HBase sink connector
 
 ```bash
-$ docker exec connect \
-     curl -X PUT \
+$ curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
                "connector.class": "io.confluent.connect.hbase.HBaseSinkConnector",

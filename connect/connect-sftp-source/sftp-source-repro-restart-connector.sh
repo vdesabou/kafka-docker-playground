@@ -16,8 +16,7 @@ chown -R foo /chroot/home/foo/upload
 
 log "Creating connector sftp-source-csv"
 
-docker exec connect \
-     curl -X PUT \
+curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
      "topics": "test_sftp_sink",

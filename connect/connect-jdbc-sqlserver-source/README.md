@@ -32,8 +32,7 @@ $ cat inventory.sql | docker exec -i sqlserver bash -c '/opt/mssql-tools/bin/sql
 Creating JDBC SQL Server (with JTDS) source connector
 
 ```bash
-$ docker exec connect \
-     curl -X PUT \
+$ curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
                "connector.class": "io.confluent.connect.jdbc.JdbcSourceConnector",
@@ -55,8 +54,7 @@ $ docker exec connect \
 ### Microsoft JDBC driver
 
 ```bash
-$ docker exec connect \
-     curl -X PUT \
+$ curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
                "connector.class": "io.confluent.connect.jdbc.JdbcSourceConnector",

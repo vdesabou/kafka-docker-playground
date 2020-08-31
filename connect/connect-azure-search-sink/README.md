@@ -71,7 +71,7 @@ The connector is created with:
 
 ```bash
 $ docker exec -e AZURE_SEARCH_SERVICE_NAME="$AZURE_SEARCH_SERVICE_NAME" -e AZURE_SEARCH_ADMIN_PRIMARY_KEY="$AZURE_SEARCH_ADMIN_PRIMARY_KEY" connect \
-     curl -X PUT \
+curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
                "connector.class": "io.confluent.connect.azure.search.AzureSearchSinkConnector",
