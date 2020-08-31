@@ -1,0 +1,22 @@
+---
+version: '3.5'
+services:
+  amps:
+    image: amps:latest
+    hostname: amps
+    container_name: amps
+    ports:
+      - '8085:8085'
+      - '9007:9007'
+      - '9008:9008'
+
+  connect:
+    depends_on:
+      - zookeeper
+      - broker
+      - schema-registry
+      - amps
+    volumes:
+        - ../../connect/connect-amps-source/amps_client.jar:/usr/share/confluent-hub-components/confluentinc-kafka-connect-amps/lib/amps_client.jar
+    environment:
+      CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-amps

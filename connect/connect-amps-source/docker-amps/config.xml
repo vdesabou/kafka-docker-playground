@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<AMPSConfig>
+
+  <Name>AMPS-Quick-Start</Name>
+
+  <Admin>
+    <InetAddr>localhost:8085</InetAddr>
+  </Admin>
+
+  <Transports>
+    <Transport>
+      <Name>any-tcp</Name>
+      <Type>tcp</Type>
+      <InetAddr>9007</InetAddr>
+      <Protocol>amps</Protocol>
+    </Transport>
+  </Transports>
+
+  <SOW>
+    <Topic>
+      <Name>Orders</Name>
+      <FileName>./sow/%n.sow</FileName>
+      <MessageType>json</MessageType>
+      <Key>/id</Key>
+    </Topic>
+  </SOW>
+
+</AMPSConfig>
