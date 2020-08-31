@@ -47,8 +47,7 @@ $ aws kinesis put-record --stream-name my_kinesis_stream --partition-key 123 --d
 The connector is created with:
 
 ```
-docker exec connect \
-     curl -X PUT \
+curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
         "connector.class":"io.confluent.connect.kinesis.KinesisSourceConnector",

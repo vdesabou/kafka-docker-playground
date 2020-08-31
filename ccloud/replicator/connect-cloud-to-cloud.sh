@@ -47,7 +47,7 @@ docker exec -i -e BOOTSTRAP_SERVERS_SRC="$BOOTSTRAP_SERVERS_SRC" -e SASL_JAAS_CO
 EOF
 
 docker container exec -e BOOTSTRAP_SERVERS="$BOOTSTRAP_SERVERS" -e CLOUD_KEY="$CLOUD_KEY" -e CLOUD_SECRET="$CLOUD_SECRET" -e BOOTSTRAP_SERVERS_SRC="$BOOTSTRAP_SERVERS_SRC" -e CLOUD_KEY_SRC="$CLOUD_KEY_SRC" -e CLOUD_SECRET_SRC="$CLOUD_SECRET_SRC" connect \
-     curl -X PUT \
+curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
           "connector.class":"io.confluent.connect.replicator.ReplicatorSourceConnector",

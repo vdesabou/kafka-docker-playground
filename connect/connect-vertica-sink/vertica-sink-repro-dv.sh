@@ -40,8 +40,7 @@ sleep 60
 docker exec broker kafka-console-consumer -bootstrap-server broker:9092 --topic customer --partition 0 --offset 3 --property print.key=true print.value=false --max-messages 1
 
 log "Creating Vertica sink connector"
-docker exec connect \
-     curl -X PUT \
+curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
                "connector.class" : "io.confluent.vertica.VerticaSinkConnector",

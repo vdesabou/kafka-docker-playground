@@ -7,8 +7,7 @@ source ${DIR}/../../scripts/utils.sh
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
 
 log "Creating JDBC PostgreSQL sink connector"
-docker exec connect \
-     curl -X PUT \
+curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
                "connector.class": "io.confluent.connect.jdbc.JdbcSinkConnector",

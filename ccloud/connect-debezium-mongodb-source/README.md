@@ -62,8 +62,7 @@ EOF
 Create the connector:
 
 ```bash
-$ docker exec connect \
-     curl -X PUT \
+$ curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
                "connector.class" : "io.debezium.connector.mongodb.MongoDbConnector",

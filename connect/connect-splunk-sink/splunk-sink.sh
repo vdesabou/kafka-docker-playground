@@ -19,8 +19,7 @@ docker exec broker kafka-topics --create --topic splunk-qs --partitions 10 --rep
 
 
 log "Creating Splunk sink connector"
-docker exec connect \
-     curl -X PUT \
+curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
                "connector.class": "com.splunk.kafka.connect.SplunkSinkConnector",

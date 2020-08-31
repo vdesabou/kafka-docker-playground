@@ -55,8 +55,7 @@ db.customers.find().pretty();
 EOF
 
 log "Creating Debezium MongoDB source connector"
-docker exec connect \
-     curl -X PUT \
+curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
                "connector.class" : "io.debezium.connector.mongodb.MongoDbConnector",

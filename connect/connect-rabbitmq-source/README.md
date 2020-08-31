@@ -26,8 +26,7 @@ $ docker exec rabbitmq_producer bash -c "python /producer.py myqueue 5"
 Creating RabbitMQ Source connector
 
 ```bash
-$ docker exec connect \
-     curl -X PUT \
+$ curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
                "connector.class" : "io.confluent.connect.rabbitmq.RabbitMQSourceConnector",

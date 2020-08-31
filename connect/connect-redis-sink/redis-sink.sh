@@ -15,8 +15,7 @@ key3,value3
 EOF
 
 log "Creating Redis sink connector"
-docker exec connect \
-     curl -X PUT \
+curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
                "connector.class": "com.github.jcustenborder.kafka.connect.redis.RedisSinkConnector",

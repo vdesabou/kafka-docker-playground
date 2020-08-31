@@ -341,8 +341,7 @@ $ ccloud kafka topic create mysql-application --partitions 6
 ```
 
 ```bash
-$ docker exec connect \
-     curl -X PUT \
+$ curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
                "connector.class":"io.confluent.connect.jdbc.JdbcSourceConnector",
@@ -391,7 +390,7 @@ An HTTP sink connector called `http-sink` is created and listening on topic `mys
 
 ```bash
 $ docker exec -e BOOTSTRAP_SERVERS="<BOOTSTRAP_SERVERS" -e >CLOUD_KEY="$CLOUD_KEY" -e CLOUD_SECRET="$CLOUD_SECRET" connect \
-     curl -X PUT \
+curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
           "topics": "mysql-application",
@@ -453,8 +452,7 @@ Example:
 An Elasticsearch sink connector called `elasticsearch-sink` is created and listening on topic `mysql-application`:
 
 ```bash
-$ docker exec connect \
-     curl -X PUT \
+$ curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
         "connector.class": "io.confluent.connect.elasticsearch.ElasticsearchSinkConnector",

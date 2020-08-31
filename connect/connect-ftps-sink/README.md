@@ -25,8 +25,7 @@ The connector is created with:
 Creating FTPS Sink connector
 
 ```bash
-$ docker exec connect \
-     curl -X PUT \
+$ curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
                "tasks.max": "3",

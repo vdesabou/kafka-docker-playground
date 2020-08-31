@@ -26,8 +26,7 @@ $ ./sqlserver-microsoft-sink.sh (with [Microsoft](https://docs.microsoft.com/en-
 Creating JDBC SQL Server (with JTDS) source connector
 
 ```bash
-$ docker exec connect \
-     curl -X PUT \
+$ curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
                "connector.class": "io.confluent.connect.jdbc.JdbcSourceConnector",
@@ -49,8 +48,7 @@ $ docker exec connect \
 ### Microsoft JDBC driver
 
 ```bash
-$ docker exec connect \
-     curl -X PUT \
+$ curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
                "connector.class": "io.confluent.connect.jdbc.JdbcSourceConnector",

@@ -38,8 +38,7 @@ $ seq -f "{\"f1\": \"value%g\"}" 10 | docker exec -i connect kafka-avro-console-
 Creating Vertica sink connector
 
 ```bash
-$ docker exec connect \
-     curl -X PUT \
+$ curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
                "connector.class" : "io.confluent.vertica.VerticaSinkConnector",

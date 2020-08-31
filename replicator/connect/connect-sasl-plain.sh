@@ -15,7 +15,7 @@ seq -f "us_sale_%g ${RANDOM}" 10 | docker container exec -i broker-us kafka-cons
 log "Consolidating all sales in the US"
 
 docker container exec connect-us \
-     curl -X PUT \
+curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
           "connector.class":"io.confluent.connect.replicator.ReplicatorSourceConnector",
@@ -44,7 +44,7 @@ docker container exec connect-us \
 log "Consolidating all sales in Europe"
 
 docker container exec connect-europe \
-     curl -X PUT \
+curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
           "connector.class":"io.confluent.connect.replicator.ReplicatorSourceConnector",

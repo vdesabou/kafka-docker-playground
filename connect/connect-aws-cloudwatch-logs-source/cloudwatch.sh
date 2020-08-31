@@ -41,8 +41,7 @@ do
 done
 
 log "Creating AWS CloudWatch Logs Source connector"
-docker exec connect \
-     curl -X PUT \
+curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
                "connector.class": "io.confluent.connect.aws.cloudwatch.AwsCloudWatchSourceConnector",

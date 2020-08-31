@@ -89,8 +89,7 @@ $ seq -f "{\"a\": %g,\"b\": 1}" 10 | docker exec -i connect kafka-avro-console-p
 Creating AWS Lambda Sink connector
 
 ```bash
-$ docker exec connect \
-     curl -X PUT \
+$ curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
                "connector.class" : "io.confluent.connect.aws.lambda.AwsLambdaSinkConnector",

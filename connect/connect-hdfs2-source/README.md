@@ -25,8 +25,7 @@ Steps from [connect-hdfs2-sink](../connect/connect-hdfs2-sink/README.md)
 Creating HDFS Source connector:
 
 ```bash
-$ docker exec connect \
-     curl -X PUT \
+$ curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
         "connector.class":"io.confluent.connect.hdfs2.Hdfs2SourceConnector",

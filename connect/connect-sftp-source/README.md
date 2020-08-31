@@ -57,8 +57,7 @@ $ ./sftp-source-json-with-schema.sh
 Creating CSV SFTP Source connector
 
 ```bash
-$ docker exec connect \
-     curl -X PUT \
+$ curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
         "topics": "test_sftp_sink",

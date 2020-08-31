@@ -20,8 +20,7 @@ $ ./datadiode.sh
 Creating DataDiode Source connector
 
 ```bash
-$ docker exec connect \
-     curl -X PUT \
+$ curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
                "tasks.max": "1",
@@ -43,8 +42,7 @@ $ docker exec connect \
 Creating DataDiode Sink connector
 
 ```bash
-$ docker exec connect \
-     curl -X PUT \
+$ curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
                "connector.class": "io.confluent.connect.diode.sink.DataDiodeSinkConnector",

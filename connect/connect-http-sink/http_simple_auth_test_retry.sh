@@ -20,8 +20,7 @@ log "Creating http-sink connector"
 
 # the HTTP server will always reply INTERNAL_SERVER_ERROR(500)
 # we set retry.backoff.ms: 15000 and max.retries: 3
-docker exec connect \
-     curl -X PUT \
+curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
           "topics": "http-messages",

@@ -23,7 +23,7 @@ EOF
 
 log "Creating AWS Redshift Logs Source connector"
 docker exec -e PROJECT="$CLUSTER" -e DATASET="$PASSWORD" connect \
-     curl -X PUT \
+curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
                "connector.class": "io.confluent.connect.aws.redshift.RedshiftSinkConnector",

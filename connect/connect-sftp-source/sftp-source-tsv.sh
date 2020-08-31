@@ -20,8 +20,7 @@ docker cp tsv-sftp-source.tsv sftp-server:/chroot/home/foo/upload/input/
 rm -f tsv-sftp-source.tsv
 
 log "Creating TSV SFTP Source connector"
-docker exec connect \
-     curl -X PUT \
+curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
         "topics": "test_sftp_sink",

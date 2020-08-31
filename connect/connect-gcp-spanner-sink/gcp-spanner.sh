@@ -35,7 +35,7 @@ EOF
 
 log "Creating GCP Spanner Sink connector"
 docker exec -e INSTANCE="$INSTANCE" -e DATABASE="$DATABASE" connect \
-     curl -X PUT \
+curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
                "connector.class": "io.confluent.connect.gcp.spanner.SpannerSinkConnector",

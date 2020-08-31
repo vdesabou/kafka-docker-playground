@@ -17,8 +17,7 @@ then
 fi
 
 log "Creating CSV Spool Dir Source connector"
-docker exec connect \
-     curl -X PUT \
+curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
                     "tasks.max": "1",

@@ -31,8 +31,7 @@ $ seq 10 | docker exec -i broker kafka-console-producer --broker-list broker:909
 The connector is created with:
 
 ```bash
-$ docker exec connect \
-     curl -X PUT \
+$ curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
                "connector.class": "io.confluent.connect.jms.SolaceSinkConnector",

@@ -36,8 +36,7 @@ $ ./s3-sink.sh <your-bucket-name>
 The connector is created with:
 
 ```
-docker exec connect \
-     curl -X PUT \
+curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
                "connector.class": "io.confluent.connect.s3.S3SinkConnector",

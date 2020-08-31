@@ -19,7 +19,7 @@ EOF
 
 log "Creating Google Cloud Functions Sink connector"
 docker exec -e PROJECT="$PROJECT" -e REGION="$REGION" -e FUNCTION="$FUNCTION" connect \
-     curl -X PUT \
+curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
                "connector.class": "io.confluent.connect.gcp.functions.GoogleCloudFunctionsSinkConnector",

@@ -30,7 +30,7 @@ Creating ServiceNow Source connector
 
 ```bash
 $ docker exec -e SERVICENOW_URL="$SERVICENOW_URL" -e SERVICENOW_PASSWORD="$SERVICENOW_PASSWORD" connect \
-     curl -X PUT \
+curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
                     "connector.class": "io.confluent.connect.servicenow.ServiceNowSourceConnector",

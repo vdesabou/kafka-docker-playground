@@ -20,8 +20,7 @@ docker cp csv-sftp-source.csv sftp-server:/chroot/home/foo/upload/input/
 rm -f csv-sftp-source.csv
 
 log "Creating CSV SFTP Source connector"
-docker exec connect \
-     curl -X PUT \
+curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
                "topics": "test_sftp_sink",

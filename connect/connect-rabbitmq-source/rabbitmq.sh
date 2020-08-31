@@ -10,8 +10,7 @@ log "Send message to RabbitMQ in myqueue"
 docker exec rabbitmq_producer bash -c "python /producer.py myqueue 5"
 
 log "Creating RabbitMQ Source connector"
-docker exec connect \
-     curl -X PUT \
+curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
                "connector.class" : "io.confluent.connect.rabbitmq.RabbitMQSourceConnector",

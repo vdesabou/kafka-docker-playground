@@ -23,8 +23,7 @@ The connector is created with:
 Creating SFTP Sink connector
 
 ```bash
-$ docker exec connect \
-     curl -X PUT \
+$ curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
         "topics": "test_sftp_sink",
