@@ -32,11 +32,6 @@ Note: you can also export these values as environment variable
 
 ## Details of what the script is doing
 
-
-```bash
-SINCE=$(date -v-4320H "+%Y-%m-%d %H:%M")
-```
-
 Creating Jira Source connector
 
 ```bash
