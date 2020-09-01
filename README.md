@@ -186,6 +186,8 @@ Quick start examples from Confluent [docs](https://docs.confluent.io/current/con
     - <img src="https://seeklogo.com/images/S/salesforce-logo-273F95FE60-seeklogo.com.png" height="15"> [Bulk API](connect/connect-salesforce-bulkapi-sink)
     - <img src="https://seeklogo.com/images/S/salesforce-logo-273F95FE60-seeklogo.com.png" height="15"> [SObject](connect/connect-salesforce-sobject-sink)
     - <img src="https://seeklogo.com/images/S/salesforce-logo-273F95FE60-seeklogo.com.png" height="15"> [Platform Events](connect/connect-salesforce-platform-events-source)
+- <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn%3AANd9GcRb1Q95SZihbClmXO6x2HlvCnLCr0six_gJgIWLcupSsw&usqp=CAU&ec=45695923" width="15"> [PagerDuty](connect/connect-pagerduty-sink)
+
 
 ## ☁️ Confluent Cloud
 
