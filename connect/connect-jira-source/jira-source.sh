@@ -29,7 +29,8 @@ fi
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
 
 # take since last 6 months
-SINCE=$(date -v-4320H "+%Y-%m-%d %H:%M")
+#SINCE=$(date -v-4320H "+%Y-%m-%d %H:%M")
+SINCE="2020-03-05 00:00"
 
 log "Creating Jira Source connector"
 curl -X PUT \
