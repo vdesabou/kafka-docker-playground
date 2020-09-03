@@ -5,7 +5,7 @@
 Quickly test [AMPS Source](https://docs.confluent.io/current/connect/kafka-connect-amps/index.html#quick-start) connector.
 
 
-* Create an account [here](https://www.crankuptheamps.com/developer) and download `AMPS Server v5.3.0.208 / Linux (64 bit)`, then put `AMPS-5.3.0.208-Release-Linux.tar.gz` into `docker-amps` directory
+* Create an account [here](https://www.crankuptheamps.com/developer) and download `AMPS Server v5.x.x / Linux (64 bit)`, then rename it to `AMPS.tar.gz` and put it into `docker-amps` directory
 
 ![Download](Screenshot1.png)
 
