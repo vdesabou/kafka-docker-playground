@@ -81,3 +81,4 @@ ccloud/ccloud-demo/data
 connect/connect-jira-source/myenv
 connect/connect-github-source/myenv
 connect/connect-pagerduty-sink/myenv
+connect/connect-appdynamics-metrics-sink/docker-appdynamics-metrics/machine-agent.zip
