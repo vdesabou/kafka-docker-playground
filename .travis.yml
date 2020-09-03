@@ -41,7 +41,7 @@ before_install:
 - cp ./3rdparty/sol-jms-10.6.4.jar ./connect/connect-jms-solace-sink/sol-jms-10.6.4.jar
 - cp ./3rdparty/sol-jms-10.6.4.jar ./connect/connect-solace-sink/sol-jms-10.6.4.jar
 - cp ./3rdparty/sol-jms-10.6.4.jar ./connect/connect-solace-source/sol-jms-10.6.4.jar
-- cp ./3rdparty/AMPS-5.3.0.208-Release-Linux.tar.gz ./connect/connect-amps-source/docker-amps/AMPS-5.3.0.208-Release-Linux.tar.gz
+- cp ./3rdparty/AMPS.tar.gz ./connect/connect-amps-source/docker-amps/AMPS.tar.gz
 - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
 jobs:
   include:
