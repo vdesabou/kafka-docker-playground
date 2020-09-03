@@ -2,7 +2,7 @@ FROM ubuntu
 RUN apt-get update && \
     apt-get install -y openjdk-8-jdk && \
     apt-get clean all
-COPY AMPS-5.3.0.208-Release-Linux.tar /binaries/AMPS.tar
+COPY AMPS.tar /binaries/AMPS.tar
 COPY config.xml /
 RUN ls -l /
 RUN ls -l /binaries

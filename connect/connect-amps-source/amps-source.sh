@@ -6,9 +6,9 @@ source ${DIR}/../../scripts/utils.sh
 
 # Need to create the AMPS image using https://support.crankuptheamps.com/hc/en-us/articles/360047510833-How-do-I-run-AMPS-in-a-Docker-container-
 
-if [ ! -f ${DIR}/docker-amps/AMPS-5.3.0.208-Release-Linux.tar.gz ]
+if [ ! -f ${DIR}/docker-amps/AMPS.tar.gz ]
 then
-     logerror "ERROR: ${DIR}/docker-amps/ does not contain AMPS tgz file AMPS-5.3.0.208-Release-Linux.tar.gz"
+     logerror "ERROR: ${DIR}/docker-amps/ does not contain AMPS tgz file AMPS.tar.gz"
      exit 1
 fi
 
@@ -27,7 +27,7 @@ then
      log "Building AMPS docker image..it can take a while..."
      OLDDIR=$PWD
      cd ${DIR}/docker-amps
-     gunzip -k -f AMPS-5.3.0.208-Release-Linux.tar.gz
+     gunzip -k -f AMPS.tar.gz
      docker build -t amps:latest .
      cd ${OLDDIR}
 fi
