@@ -1,0 +1,23 @@
+#!bin/bash
+
+# Sample Docker start script for the AppDynamics Standalone Machine Agent
+# This is provided for illustration purposes only, for full details
+# please consult the product documentation: https://docs.appdynamics.com/
+
+# See the AppDynamics Product Docs (Standalone Machine Agent Configuration Reference)
+# In this example, APPD_* environment variables are passed to the container at runtime
+MA_PROPERTIES="-Dappdynamics.controller.hostName=${APPD_HOST}"
+MA_PROPERTIES+=" -Dappdynamics.controller.port=${APPD_PORT}"
+MA_PROPERTIES+=" -Dappdynamics.agent.accountName=${APPD_ACCOUNT_NAME%%_*}"
+MA_PROPERTIES+=" -Dappdynamics.agent.accountAccessKey=${APPD_ACCESS_KEY}"
+MA_PROPERTIES+=" -Dappdynamics.controller.ssl.enabled=${APPD_SSL_ENABLED}"
+MA_PROPERTIES+=" -Dmetric.http.listener=${APPD_METRIC_HTTP_LISTENER_ENABLED}"
+MA_PROPERTIES+=" -Dmetric.http.listener.host=${APPD_METRIC_HTTP_LISTENER_HOST}"
+MA_PROPERTIES+=" -Dmetric.http.listener.port=${APPD_METRIC_HTTP_LISTENER_PORT}"
+
+
+# Enable SIM and Docker Monitoring
+MA_PROPERTIES+=" -Dappdynamics.sim.enabled=true -Dappdynamics.docker.enabled=true"
+
+# Start Machine Agent
+${MACHINE_AGENT_HOME}/jre/bin/java ${MA_PROPERTIES} -jar ${MACHINE_AGENT_HOME}/machineagent.jar
