@@ -17,7 +17,7 @@ then
      log "Building appdynamics-metrics docker image..it can take a while..."
      OLDDIR=$PWD
      cd ${DIR}/docker-appdynamics-metrics
-     docker build - t appdynamics-metrics:latest .
+     docker build -t appdynamics-metrics:latest .
      cd ${OLDDIR}
 fi
 
@@ -39,7 +39,7 @@ curl -X PUT \
                "tasks.max": "1",
                "topics": "appdynamics-metrics-topic",
                "machine.agent.host": "http://appdynamics-metrics",
-               "machine.agent.port": "8293",
+               "machine.agent.port": "8090",
                "key.converter": "io.confluent.connect.avro.AvroConverter",
                "key.converter.schema.registry.url":"http://schema-registry:8081",
                "value.converter": "io.confluent.connect.avro.AvroConverter",
