@@ -14,7 +14,7 @@ Quickly test [InfluxDB Sink](https://docs.confluent.io/current/connect/kafka-con
 Simply run:
 
 ```
-$ ./influxdb.sh
+$ ./influxdb-sink.sh
 ```
 
 ## Details of what the script is doing
