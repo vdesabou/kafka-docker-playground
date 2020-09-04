@@ -7,16 +7,19 @@ services:
     container_name: appdynamics-metrics
     environment:
       # https://docs.appdynamics.com/display/PRO45/Standalone+Machine+Agent+Configuration+Properties
-      - APPD_HOST=127.0.0.1
+      - APPD_HOST=appdynamics-metrics
       - APPD_PORT=8090
       - APPD_ACCESS_KEY=165e65645-95c1-40e3-9576-6a1424de9625
       - APPD_SSL_ENABLED=false
       - APPD_METRIC_HTTP_LISTENER_ENABLED=true
-      - APPD_METRIC_HTTP_LISTENER_HOST=0.0.0.0
+      - APPD_METRIC_HTTP_LISTENER_HOST=appdynamics-metrics
       - APPD_METRIC_HTTP_LISTENER_PORT=8293
     volumes:
       - /:/hostroot:ro
       - /var/run/docker.sock:/var/run/docker.sock
+    ports:
+      - '8090:8090'
+      - '8293:8293'
 
   connect:
     depends_on:
