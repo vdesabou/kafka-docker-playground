@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<cache xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://geode.apache.org/schema/cache" xsi:schemaLocation="http://geode.apache.org/schema/cache http://geode.apache.org/schema/cache/cache-1.0.xsd" version="1.0" lock-lease="120" lock-timeout="60" search-timeout="300" is-server="false" copy-on-read="false">
+
+
+   <async-event-queue 
+    id="sampleQueue" 
+    persistent="true"
+    disk-store-name="DEFAULT" 
+    parallel="false">
+      <async-event-listener>
+         <class-name>MyAsyncEventListener</class-name>
+      </async-event-listener>
+   </async-event-queue>
+
+    <disk-store name="DEFAULT">
+        <disk-dirs>
+            <disk-dir>/opt/pivotal/workdir/storage/server2</disk-dir>
+        </disk-dirs>
+    </disk-store>
+
+
+    <region name="exampleRegion">
+      <region-attributes refid="PARTITION" concurrency-checks-enabled="false" async-event-queue-ids="sampleQueue">
+              <entry-idle-time>
+                 <expiration-attributes timeout="20" action="invalidate" />
+              </entry-idle-time>
+        <!--
+        <cache-loader>
+          <class-name>SimpleCacheLoader</class-name>
+        </cache-loader>
+        -->
+      </region-attributes>
+    </region>
+
+    <region name="exampleRegion_previous">
+      <region-attributes refid="REPLICATE">
+        
+      </region-attributes>
+    </region>
+
+
+    <region name="exampleRegionRep1">
+      <region-attributes refid="REPLICATE">
+      </region-attributes>
+    </region>
+
+    <region name="exampleRegionPar1">
+      <region-attributes refid="PARTITION">
+      </region-attributes>
+    </region>
+
+
+</cache>
