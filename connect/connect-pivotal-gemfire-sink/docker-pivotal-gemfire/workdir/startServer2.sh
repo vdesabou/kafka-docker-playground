@@ -1,0 +1,1 @@
+gfsh start server --name=server2 --server-port=40405 --mcast-port=0 --locators=pivhdsne.localdomain[10334] --cache-xml-file=server2/Server.xml --statistic-archive-file=server2.gfs --include-system-classpath=true
