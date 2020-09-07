@@ -42,6 +42,7 @@ before_install:
 - cp ./3rdparty/sol-jms-10.6.4.jar ./connect/connect-solace-sink/sol-jms-10.6.4.jar
 - cp ./3rdparty/sol-jms-10.6.4.jar ./connect/connect-solace-source/sol-jms-10.6.4.jar
 - cp ./3rdparty/AMPS.tar.gz ./connect/connect-amps-source/docker-amps/AMPS.tar.gz
+- cp ./3rdparty/pivotal-gemfire.tgz ./connect/connect-pivotal-gemfire-sink/docker-pivotal-gemfire/pivotal-gemfire.tgz
 - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
 jobs:
   include:
@@ -53,8 +54,8 @@ jobs:
       azure-event-hubs-source'
     env: TEST_LIST="connect/connect-azure-data-lake-storage-gen1-sink connect/connect-azure-data-lake-storage-gen2-sink
       connect/connect-azure-event-hubs-source" TAG="5.5.1-1-ubi8"
-  - name: '5.5.1-1-ubi8: CONNECT: azure-sql-data-warehouse-sink azure-search-sink ftps-source ftps-sink rabbitmq-sink amps-source jira-source github-source'
-    env: TEST_LIST="connect/connect-azure-sql-data-warehouse-sink connect/connect-azure-search-sink connect/connect-ftps-source connect/connect-ftps-sink connect/connect-rabbitmq-sink connect/connect-amps-source connect/connect-jira-source connect/connect-github-source"
+  - name: '5.5.1-1-ubi8: CONNECT: azure-sql-data-warehouse-sink azure-search-sink ftps-source ftps-sink rabbitmq-sink amps-source jira-source github-source pivotal-gemfire-sink'
+    env: TEST_LIST="connect/connect-azure-sql-data-warehouse-sink connect/connect-azure-search-sink connect/connect-ftps-source connect/connect-ftps-sink connect/connect-rabbitmq-sink connect/connect-amps-source connect/connect-jira-source connect/connect-github-source connect/connect-pivotal-gemfire-sink"
       TAG="5.5.1-1-ubi8"
   - name: '5.5.1-1-ubi8: CONNECT: azure-service-bus-source azure-blob-storage-sink
       azure-blob-storage-source'

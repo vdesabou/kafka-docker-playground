@@ -181,13 +181,13 @@ Quick start examples from Confluent [docs](https://docs.confluent.io/current/con
 - <img src="https://docs.snowflake.com/fr/_images/logo-snowflake-sans-text.png" height="15">  [Snowflake](connect/connect-snowflake-sink)
 - <img src="https://static-dotconferences-com.s3.amazonaws.com/editionpartnerships/datadog.png" height="15"> [Datadog Metrics](connect/connect-datadog-metrics-sink)
 - <img src="https://www.cleo.com/sites/default/files/2018-10/logo_ftps-mod-11%20%281%29.svg" height="15"> [FTPS](connect/connect-ftps-sink)
-- <img src="https://cdn.worldvectorlogo.com/logos/rabbitmq.svg" width="15">  [RabbitMQ](connect/connect-rabbitmq-sink)
+- <img src="https://cdn.worldvectorlogo.com/logos/rabbitmq.svg" width="15"> [RabbitMQ](connect/connect-rabbitmq-sink)
 - <img src="https://seeklogo.com/images/S/salesforce-logo-273F95FE60-seeklogo.com.png" width="15"> Salesforce
     - <img src="https://seeklogo.com/images/S/salesforce-logo-273F95FE60-seeklogo.com.png" height="15"> [Bulk API](connect/connect-salesforce-bulkapi-sink)
     - <img src="https://seeklogo.com/images/S/salesforce-logo-273F95FE60-seeklogo.com.png" height="15"> [SObject](connect/connect-salesforce-sobject-sink)
     - <img src="https://seeklogo.com/images/S/salesforce-logo-273F95FE60-seeklogo.com.png" height="15"> [Platform Events](connect/connect-salesforce-platform-events-source)
 - <img src="https://encrypted-tbn0.gstatic.com/images?q=tbn%3AANd9GcRb1Q95SZihbClmXO6x2HlvCnLCr0six_gJgIWLcupSsw&usqp=CAU&ec=45695923" width="15"> [PagerDuty](connect/connect-pagerduty-sink)
-
+- <img src="https://dtb5pzswcit1e.cloudfront.net/assets/images/product_logos/icon_pivotal-gemfire_1596410637.png" width="15"> [Pivotal Gemfire](connect/connect-pivotal-gemfire-sink)
 
 ## ☁️ Confluent Cloud
 

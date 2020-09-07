@@ -1,0 +1,1 @@
+gfsh start server --name=server1 --server-port=40404 --mcast-port=0 --locators=$HOSTNAME[10334] --cache-xml-file=server1/Server.xml --statistic-archive-file=server1.gfs --include-system-classpath=true

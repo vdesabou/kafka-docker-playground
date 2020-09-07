@@ -1,0 +1,18 @@
+---
+version: '3.5'
+services:
+  pivotal-gemfire:
+    image: pivotal-gemfire:latest
+    hostname: pivotal-gemfire
+    container_name: pivotal-gemfire
+    ports:
+      - '7070:7070'
+
+  connect:
+    depends_on:
+      - zookeeper
+      - broker
+      - schema-registry
+      - pivotal-gemfire
+    environment:
+      CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-pivotal-gemfire
