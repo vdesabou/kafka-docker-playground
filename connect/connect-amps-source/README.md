@@ -1,5 +1,7 @@
 # AMPS Source connector
 
+![asciinema](https://github.com/vdesabou/gifs/blob/master/connect/connect-amps-source/asciinema.gif?raw=true)
+
 ## Objective
 
 Quickly test [AMPS Source](https://docs.confluent.io/current/connect/kafka-connect-amps/index.html#quick-start) connector.
