@@ -49,7 +49,7 @@ Find your Security Token (emailed to you from Salesforce.com). If you need to re
 
 Search for "Change Data Capture" in Settings and then select `Contact`:
 
-![Change Data Capture](Screenshot6.png)
+![Change Data Capture](Screenshot5.png)
 
 ## How to run
 
