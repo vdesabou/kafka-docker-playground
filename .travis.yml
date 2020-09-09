@@ -73,11 +73,11 @@ jobs:
       connect/connect-couchbase-sink connect/connect-couchbase-source connect/connect-hbase-sink"
       TAG="5.5.1-1-ubi8"
   - name: '5.5.1-1-ubi8: CONNECT: jms-tibco-sink jms-tibco-source debezium-mongodb-source
-      debezium-mysql-source debezium-postgresql-source debezium-sqlserver-source elasticsearch-sink'
+      debezium-mysql-source debezium-postgresql-source debezium-sqlserver-source elasticsearch-sink datadiode'
     env: TEST_LIST="connect/connect-jms-tibco-sink connect/connect-jms-tibco-source
       connect/connect-debezium-mongodb-source connect/connect-debezium-mysql-source
       connect/connect-debezium-postgresql-source connect/connect-debezium-sqlserver-source
-      connect/connect-elasticsearch-sink" TAG="5.5.1-1-ubi8"
+      connect/connect-elasticsearch-sink connect/connect-datadiode-source-sink" TAG="5.5.1-1-ubi8"
   - name: '5.5.1-1-ubi8: CONNECT: hbase-sink hdfs2-sink hdfs3-sink hdfs3-source hdfs2-source
       ibm-mq-sink ibm-mq-source snmp-source'
     env: TEST_LIST="connect/connect-hdfs2-sink connect/connect-hdfs2-source connect/connect-hdfs3-sink
@@ -101,10 +101,10 @@ jobs:
       connect/connect-tibco-sink connect/connect-tibco-source connect/connect-jdbc-oracle12-sink
       connect/connect-jdbc-oracle12-source" TAG="5.5.1-1-ubi8"
   - name: '5.5.1-1-ubi8: CONNECT: rabbitmq-source redis-sink replicator sftp-sink
-      sftp-source solace-sink solace-source datadiode'
+      sftp-source solace-sink solace-source'
     env: TEST_LIST="connect/connect-rabbitmq-source connect/connect-redis-sink connect/connect-replicator
       connect/connect-sftp-sink connect/connect-sftp-source connect/connect-solace-sink
-      connect/connect-solace-source connect/connect-datadiode-source-sink" TAG="5.5.1-1-ubi8"
+      connect/connect-solace-source" TAG="5.5.1-1-ubi8"
   - name: '5.5.1-1-ubi8: CONNECT: aws-cloudwatch-logs-source aws-cloudwatch-metrics-sink
       aws-dynamodb-sink aws-kinesis-source aws-lambda-sink'
     env: TEST_LIST="connect/connect-aws-cloudwatch-logs-source connect/connect-aws-cloudwatch-metrics-sink
