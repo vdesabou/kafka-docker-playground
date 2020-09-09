@@ -35,7 +35,7 @@ Note: you can also export these values as environment variable
 
 ## Details of what the script is doing
 
-Creating bucket name <$AWS_BUCKET_NAME>
+Creating bucket name <$AWS_BUCKET_NAME>, if required
 
 ```bash
 $ aws s3api create-bucket --bucket $AWS_BUCKET_NAME --region us-east-1
