@@ -3,7 +3,13 @@ set -e
 
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
-BUCKET_NAME=${1:-kafka-docker-playground}
+AWS_BUCKET_NAME=${AWS_BUCKET_NAME:-$1}
+
+if [ -z "$AWS_BUCKET_NAME" ]
+then
+     logerror "AWS_BUCKET_NAME is not set. Export it as environment variable or pass it as argument"
+     exit 1
+fi
 
 if [ ! -f $HOME/.aws/config ]
 then
@@ -18,8 +24,10 @@ fi
 
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
 
+log "Creating bucket name <$AWS_BUCKET_NAME>"
+aws s3api create-bucket --bucket $AWS_BUCKET_NAME --region us-east-1
 
-log "Creating S3 Sink connector with bucket name <$BUCKET_NAME>"
+log "Creating S3 Sink connector with bucket name <$AWS_BUCKET_NAME>"
 curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
@@ -27,7 +35,7 @@ curl -X PUT \
                     "tasks.max": "1",
                     "topics": "s3_topic",
                     "s3.region": "us-east-1",
-                    "s3.bucket.name": "'"$BUCKET_NAME"'",
+                    "s3.bucket.name": "'"$AWS_BUCKET_NAME"'",
                     "s3.part.size": 5242880,
                     "flush.size": "3",
                     "storage.class": "io.confluent.connect.s3.storage.S3Storage",
@@ -44,22 +52,22 @@ seq -f "{\"f1\": \"value%g\"}" 10 | docker exec -i connect kafka-avro-console-pr
 sleep 10
 
 log "Listing objects of in S3"
-aws s3api list-objects --bucket "$BUCKET_NAME"
+aws s3api list-objects --bucket "$AWS_BUCKET_NAME"
 
 log "Getting one of the avro files locally and displaying content with avro-tools"
-aws s3 cp s3://$BUCKET_NAME/topics/s3_topic/partition=0/s3_topic+0+0000000000.avro s3_topic+0+0000000000.avro
+aws s3 cp s3://$AWS_BUCKET_NAME/topics/s3_topic/partition=0/s3_topic+0+0000000000.avro s3_topic+0+0000000000.avro
 
 docker run -v ${DIR}:/tmp actions/avro-tools tojson /tmp/s3_topic+0+0000000000.avro
 rm -f s3_topic+0+0000000000.avro
 
-log "Creating S3 Source connector with bucket name <$BUCKET_NAME>"
+log "Creating S3 Source connector with bucket name <$AWS_BUCKET_NAME>"
 curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
                "tasks.max": "1",
                     "connector.class": "io.confluent.connect.s3.source.S3SourceConnector",
                     "s3.region": "us-east-1",
-                    "s3.bucket.name": "'"$BUCKET_NAME"'",
+                    "s3.bucket.name": "'"$AWS_BUCKET_NAME"'",
                     "format.class": "io.confluent.connect.s3.format.avro.AvroFormat",
                     "confluent.license": "",
                     "confluent.topic.bootstrap.servers": "broker:9092",

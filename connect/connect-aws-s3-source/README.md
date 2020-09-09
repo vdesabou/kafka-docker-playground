@@ -28,8 +28,10 @@ This project assumes `~/.aws/credentials` is set, see `docker-compose.yml`file f
 Simply run:
 
 ```bash
-$ ./s3.sh <your-bucket-name>
+$ ./s3-source.sh <AWS_BUCKET_NAME>
 ```
+
+Note: you can also export these values as environment variable
 
 ## Details of what the script is doing
 
@@ -46,7 +48,7 @@ $ curl -X PUT \
                "tasks.max": "1",
                     "connector.class": "io.confluent.connect.s3.source.S3SourceConnector",
                     "s3.region": "us-east-1",
-                    "s3.bucket.name": "'"$BUCKET_NAME"'",
+                    "s3.bucket.name": "'"$AWS_BUCKET_NAME"'",
                     "format.class": "io.confluent.connect.s3.format.avro.AvroFormat",
                     "confluent.license": "",
                     "confluent.topic.bootstrap.servers": "broker:9092",
