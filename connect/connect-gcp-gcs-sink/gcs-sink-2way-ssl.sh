@@ -12,6 +12,13 @@ then
      exit 1
 fi
 
+KEYFILE="${DIR}/keyfile.json"
+if [ ! -f ${KEYFILE} ]
+then
+     logerror "ERROR: the file ${KEYFILE} file is not present!"
+     exit 1
+fi
+
 ${DIR}/../../environment/2way-ssl/start.sh "${PWD}/docker-compose.2way-ssl.yml"
 
 log "Doing gsutil authentication"
@@ -22,7 +29,7 @@ docker run -ti -v ${KEYFILE}:/tmp/keyfile.json --name gcloud-config google/cloud
 
 log "Creating bucket name <$GCS_BUCKET_NAME>, if required"
 set +e
-docker run -ti --volumes-from gcloud-config google/cloud-sdk:latest docker run -ti -v ${KEYFILE}:/tmp/keyfile.json --name gcloud-config google/cloud-sdk:latest gsutil mb gs://$GCS_BUCKET_NAME
+docker run -ti --volumes-from gcloud-config google/cloud-sdk:latest gsutil mb gs://$GCS_BUCKET_NAME
 set -e
 
 log "Removing existing objects in GCS, if applicable"

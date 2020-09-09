@@ -29,7 +29,7 @@ docker run -ti -v ${KEYFILE}:/tmp/keyfile.json --name gcloud-config google/cloud
 
 log "Creating bucket name <$GCS_BUCKET_NAME>, if required"
 set +e
-docker run -ti --volumes-from gcloud-config google/cloud-sdk:latest docker run -ti -v ${KEYFILE}:/tmp/keyfile.json --name gcloud-config google/cloud-sdk:latest gsutil mb gs://$GCS_BUCKET_NAME
+docker run -ti --volumes-from gcloud-config google/cloud-sdk:latest gsutil mb gs://$GCS_BUCKET_NAME
 set -e
 
 log "Removing existing objects in GCS, if applicable"
