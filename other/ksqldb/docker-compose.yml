@@ -9,7 +9,7 @@ services:
       KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
 
   ksqldb-server:
-    image: confluentinc/ksqldb-server:0.9.0
+    image: confluentinc/ksqldb-server:latest
     hostname: ksqldb-server
     container_name: ksqldb-server
     ports:
@@ -24,7 +24,7 @@ services:
       KSQL_KSQL_CONNECT_URL: "http://connect:8083"
 
   ksqldb-cli:
-    image: confluentinc/ksqldb-cli:0.9.0
+    image: confluentinc/ksqldb-cli:latest
     container_name: ksqldb-cli
     depends_on:
       - ksqldb-server
