@@ -38,39 +38,41 @@ Rename it to `keyfile.json`and place it in `./keyfile.json`
 Simply run:
 
 ```bash
-$ ./gcs-sink.sh <BUCKET_NAME>
+$ ./gcs-sink.sh <GCS_BUCKET_NAME>
 ```
 
 Or using SASL_SSL:
 
 ```bash
-$ ./gcs-sink-sasl-ssl.sh <BUCKET_NAME>
+$ ./gcs-sink-sasl-ssl.sh <GCS_BUCKET_NAME>
 ```
 
 Or using 2 way SSL authentication:
 
 ```bash
-$ ./gcs-sink-2way-ssl.sh <BUCKET_NAME>
+$ ./gcs-sink-2way-ssl.sh <GCS_BUCKET_NAME>
 ```
 
 
 Or using kerberos:
 
 ```bash
-$ ./gcs-sink-kerberos.sh <BUCKET_NAME>
+$ ./gcs-sink-kerberos.sh <GCS_BUCKET_NAME>
 ```
 
 Or using LDAP Authorizer with SASL/PLAIN:
 
 ```bash
-$ ./gcs-sink-ldap-authorizer-sasl-plain.sh <BUCKET_NAME>
+$ ./gcs-sink-ldap-authorizer-sasl-plain.sh <GCS_BUCKET_NAME>
 ```
 
 Or using RBAC environment with SASL/PLAIN:
 
 ```bash
-$ ./gcs-sink-rbac-sasl-plain.sh <BUCKET_NAME>
+$ ./gcs-sink-rbac-sasl-plain.sh <GCS_BUCKET_NAME>
 ```
+
+Note: you can also export these values as environment variable
 
 ## Details of what the script is doing
 
@@ -91,7 +93,7 @@ curl -X PUT \
                "connector.class": "io.confluent.connect.gcs.GcsSinkConnector",
                     "tasks.max" : "1",
                     "topics" : "gcs_topic",
-                    "gcs.bucket.name" : "'"$BUCKET_NAME"'",
+                    "gcs.bucket.name" : "'"$GCS_BUCKET_NAME"'",
                     "gcs.part.size": "5242880",
                     "flush.size": "3",
                     "gcs.credentials.path": "/root/keyfiles/keyfile.json",
@@ -108,7 +110,7 @@ curl -X PUT \
 After a few seconds, data should be in GCS:
 
 ```bash
-$ gsutil ls gs://$BUCKET_NAME/topics/gcs_topic/partition=0/
+$ gsutil ls gs://$GCS_BUCKET_NAME/topics/gcs_topic/partition=0/
 ```
 
 Doing `gsutil` authentication:
@@ -120,7 +122,7 @@ $ gcloud auth activate-service-account --key-file ${KEYFILE}
 Getting one of the avro files locally and displaying content with avro-tools:
 
 ```bash
-$ gsutil cp gs://$BUCKET_NAME/topics/gcs_topic/partition=0/gcs_topic+0+0000000000.avro /tmp/
+$ gsutil cp gs://$GCS_BUCKET_NAME/topics/gcs_topic/partition=0/gcs_topic+0+0000000000.avro /tmp/
 $ docker run -v /tmp:/tmp actions/avro-tools tojson /tmp/gcs_topic+0+0000000000.avro
 19/09/30 16:48:13 WARN util.NativeCodeLoader: Unable to load native-hadoop library for your platform... using builtin-java classes where applicable
 {"f1":"value1"}
@@ -138,7 +140,7 @@ $ seq -f "{\"f1\": \"This is a message sent with SSL authentication %g\"}" 10 | 
 The connector is created with:
 
 ```bash
-$ docker exec -e BUCKET_NAME="$BUCKET_NAME" connect \
+$ docker exec -e GCS_BUCKET_NAME="$GCS_BUCKET_NAME" connect \
 curl -X PUT \
      --cert /etc/kafka/secrets/connect.certificate.pem --key /etc/kafka/secrets/connect.key --tlsv1.2 --cacert /etc/kafka/secrets/snakeoil-ca-1.crt \
      -H "Content-Type: application/json" \
@@ -146,7 +148,7 @@ curl -X PUT \
                     "connector.class": "io.confluent.connect.gcs.GcsSinkConnector",
                     "tasks.max" : "1",
                     "topics" : "gcs_topic-ssl",
-                    "gcs.bucket.name" : "'"$BUCKET_NAME"'",
+                    "gcs.bucket.name" : "'"$GCS_BUCKET_NAME"'",
                     "gcs.part.size": "5242880",
                     "flush.size": "3",
                     "gcs.credentials.path": "/root/keyfiles/keyfile.json",
@@ -196,14 +198,14 @@ The workaround is to import in our truststore the regular JAVA certificates.
 After a few seconds, data should be in GCS:
 
 ```bash
-$ gsutil ls gs://$BUCKET_NAME/topics/gcs_topic-ssl/partition=0/
+$ gsutil ls gs://$GCS_BUCKET_NAME/topics/gcs_topic-ssl/partition=0/
 ```
 
 
 Getting one of the avro files locally and displaying content with avro-tools:
 
 ```bash
-$ gsutil cp gs://$BUCKET_NAME/topics/gcs_topic-ssl/partition=0/gcs_topic-ssl+0+0000000000.avro /tmp/
+$ gsutil cp gs://$GCS_BUCKET_NAME/topics/gcs_topic-ssl/partition=0/gcs_topic-ssl+0+0000000000.avro /tmp/
 $ docker run -v /tmp:/tmp actions/avro-tools tojson /tmp/gcs_topic-ssl+0+0000000000.avro
 19/09/30 16:48:13 WARN util.NativeCodeLoader: Unable to load native-hadoop library for your platform... using builtin-java classes where applicable
 {"f1":"This is a message sent with SSL authentication 1"}
@@ -222,7 +224,7 @@ seq -f "{\"f1\": \"This is a message sent with SASL_SSL authentication %g\"}" 10
 The connector is created with:
 
 ```bash
-$ docker exec -e BUCKET_NAME="$BUCKET_NAME" connect \
+$ docker exec -e GCS_BUCKET_NAME="$GCS_BUCKET_NAME" connect \
 curl -X PUT \
      --cert /etc/kafka/secrets/connect.certificate.pem --key /etc/kafka/secrets/connect.key --tlsv1.2 --cacert /etc/kafka/secrets/snakeoil-ca-1.crt \
      -H "Content-Type: application/json" \
@@ -230,7 +232,7 @@ curl -X PUT \
                     "connector.class": "io.confluent.connect.gcs.GcsSinkConnector",
                     "tasks.max" : "1",
                     "topics" : "gcs_topic-sasl-ssl",
-                    "gcs.bucket.name" : "'"$BUCKET_NAME"'",
+                    "gcs.bucket.name" : "'"$GCS_BUCKET_NAME"'",
                     "gcs.part.size": "5242880",
                     "flush.size": "3",
                     "gcs.credentials.path": "/root/keyfiles/keyfile.json",
@@ -253,14 +255,14 @@ curl -X PUT \
 After a few seconds, data should be in GCS:
 
 ```bash
-$ gsutil ls gs://$BUCKET_NAME/topics/gcs_topic-sasl-ssl/partition=0/
+$ gsutil ls gs://$GCS_BUCKET_NAME/topics/gcs_topic-sasl-ssl/partition=0/
 ```
 
 
 Getting one of the avro files locally and displaying content with avro-tools:
 
 ```bash
-$ gsutil cp gs://$BUCKET_NAME/topics/gcs_topic-sasl-ssl/partition=0/gcs_topic-sasl-ssl+0+0000000000.avro /tmp/
+$ gsutil cp gs://$GCS_BUCKET_NAME/topics/gcs_topic-sasl-ssl/partition=0/gcs_topic-sasl-ssl+0+0000000000.avro /tmp/
 $ docker run -v /tmp:/tmp actions/avro-tools tojson /tmp/gcs_topic-sasl-ssl+0+0000000000.avro
 19/09/30 16:48:13 WARN util.NativeCodeLoader: Unable to load native-hadoop library for your platform... using builtin-java classes where applicable
 {"f1":"This is a message sent with SASL_SSL authentication 1"}
@@ -287,7 +289,7 @@ $ curl -X PUT \
                "connector.class": "io.confluent.connect.gcs.GcsSinkConnector",
                     "tasks.max" : "1",
                     "topics" : "rbac_gcs_topic",
-                    "gcs.bucket.name" : "'"$BUCKET_NAME"'",
+                    "gcs.bucket.name" : "'"$GCS_BUCKET_NAME"'",
                     "gcs.part.size": "5242880",
                     "flush.size": "3",
                     "gcs.credentials.path": "/root/keyfiles/keyfile.json",
@@ -308,14 +310,14 @@ $ curl -X PUT \
 After a few seconds, data should be in GCS:
 
 ```bash
-$ gsutil ls gs://$BUCKET_NAME/topics/rbac_gcs_topic/partition=0/
+$ gsutil ls gs://$GCS_BUCKET_NAME/topics/rbac_gcs_topic/partition=0/
 ```
 
 
 Getting one of the avro files locally and displaying content with avro-tools:
 
 ```bash
-$ gsutil cp gs://$BUCKET_NAME/topics/rbac_gcs_topic/partition=0/rbac_gcs_topic+0+0000000000.avro /tmp/
+$ gsutil cp gs://$GCS_BUCKET_NAME/topics/rbac_gcs_topic/partition=0/rbac_gcs_topic+0+0000000000.avro /tmp/
 $ docker run -v /tmp:/tmp actions/avro-tools tojson /tmp/rbac_gcs_topic+0+0000000000.avro
 {"f1":"This is a message sent with Kerberos GSSAPI authentication 1"}
 {"f1":"This is a message sent with Kerberos GSSAPI authentication 2"}
@@ -347,7 +349,7 @@ $ curl -X PUT \
                "connector.class": "io.confluent.connect.gcs.GcsSinkConnector",
                     "tasks.max" : "1",
                     "topics" : "gcs_topic-ldap-authorizer-sasl-plain",
-                    "gcs.bucket.name" : "'"$BUCKET_NAME"'",
+                    "gcs.bucket.name" : "'"$GCS_BUCKET_NAME"'",
                     "gcs.part.size": "5242880",
                     "flush.size": "3",
                     "gcs.credentials.path": "/root/keyfiles/keyfile.json",
@@ -367,14 +369,14 @@ $ curl -X PUT \
 After a few seconds, data should be in GCS:
 
 ```bash
-$ gsutil ls gs://$BUCKET_NAME/topics/rbac_gcs_topic/partition=0/
+$ gsutil ls gs://$GCS_BUCKET_NAME/topics/rbac_gcs_topic/partition=0/
 ```
 
 
 Getting one of the avro files locally and displaying content with avro-tools:
 
 ```bash
-$ gsutil cp gs://$BUCKET_NAME/topics/rbac_gcs_topic/partition=0/rbac_gcs_topic+0+0000000000.avro /tmp/
+$ gsutil cp gs://$GCS_BUCKET_NAME/topics/rbac_gcs_topic/partition=0/rbac_gcs_topic+0+0000000000.avro /tmp/
 $ docker run -v /tmp:/tmp actions/avro-tools tojson /tmp/rbac_gcs_topic+0+0000000000.avro
 {"f1":"This is a message sent with LDAP Authorizer SASL/PLAIN authentication 1"}
 {"f1":"This is a message sent with LDAP Authorizer SASL/PLAIN authentication 2"}
@@ -399,7 +401,7 @@ $ curl -X PUT \
                "connector.class": "io.confluent.connect.gcs.GcsSinkConnector",
                     "tasks.max" : "1",
                     "topics" : "rbac_gcs_topic",
-                    "gcs.bucket.name" : "'"$BUCKET_NAME"'",
+                    "gcs.bucket.name" : "'"$GCS_BUCKET_NAME"'",
                     "gcs.part.size": "5242880",
                     "flush.size": "3",
                     "gcs.credentials.path": "/root/keyfiles/keyfile.json",
@@ -424,14 +426,14 @@ $ curl -X PUT \
 After a few seconds, data should be in GCS:
 
 ```bash
-$ gsutil ls gs://$BUCKET_NAME/topics/rbac_gcs_topic/partition=0/
+$ gsutil ls gs://$GCS_BUCKET_NAME/topics/rbac_gcs_topic/partition=0/
 ```
 
 
 Getting one of the avro files locally and displaying content with avro-tools:
 
 ```bash
-$ gsutil cp gs://$BUCKET_NAME/topics/rbac_gcs_topic/partition=0/rbac_gcs_topic+0+0000000000.avro /tmp/
+$ gsutil cp gs://$GCS_BUCKET_NAME/topics/rbac_gcs_topic/partition=0/rbac_gcs_topic+0+0000000000.avro /tmp/
 $ docker run -v /tmp:/tmp actions/avro-tools tojson /tmp/rbac_gcs_topic+0+0000000000.avro
 {"f1":"This is a message sent with RBAC SASL/PLAIN authentication 1"}
 {"f1":"This is a message sent with RBAC SASL/PLAIN authentication 2"}

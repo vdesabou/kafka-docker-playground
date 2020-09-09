@@ -38,8 +38,10 @@ Rename it to `keyfile.json`and place it in `./keyfile.json`
 Simply run:
 
 ```bash
-$ ./gcs-source.sh <BUCKET_NAME>
+$ ./gcs-source.sh <GCS_BUCKET_NAME>
 ```
+
+Note: you can also export these values as environment variable
 
 ## Details of what the script is doing
 
@@ -52,7 +54,7 @@ $ curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
                "connector.class": "io.confluent.connect.gcs.GcsSourceConnector",
-                    "gcs.bucket.name" : "'"$BUCKET_NAME"'",
+                    "gcs.bucket.name" : "'"$GCS_BUCKET_NAME"'",
                     "gcs.credentials.path" : "/root/keyfiles/keyfile.json",
                     "format.class": "io.confluent.connect.gcs.format.avro.AvroFormat",
                     "tasks.max" : "1",
