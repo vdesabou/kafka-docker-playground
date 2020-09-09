@@ -24,7 +24,7 @@ fi
 
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
 
-log "Creating bucket name <$AWS_BUCKET_NAME>"
+log "Creating bucket name <$AWS_BUCKET_NAME>, if required"
 aws s3api create-bucket --bucket $AWS_BUCKET_NAME --region us-east-1
 
 log "Creating S3 Sink connector with bucket name <$AWS_BUCKET_NAME>"
