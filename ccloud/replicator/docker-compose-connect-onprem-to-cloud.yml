@@ -45,7 +45,7 @@ services:
 
   connect:
     image: vdesabou/kafka-docker-playground-connect:${TAG}
-    command: "bash -c 'cp /usr/share/confluent-hub-components/confluentinc-kafka-connect-replicator/lib/replicator-rest-extension-*.jar /etc/kafka-connect/jars/; /etc/confluent/docker/run'"
     environment:
       CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-replicator
       CONNECT_REST_EXTENSION_CLASSES: io.confluent.connect.replicator.monitoring.ReplicatorMonitoringExtension
+      CLASSPATH: "/usr/share/confluent-hub-components/confluentinc-kafka-connect-replicator/lib/replicator-rest-extension-${TAG}.jar:/usr/share/java/monitoring-interceptors/*"
