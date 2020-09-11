@@ -42,9 +42,9 @@ public class SimpleProducer {
         long counter = 0L;
         try (Producer<Long, Customer> producer = new KafkaProducer<>(props)) {
 
-            while (true) {
+            //while (true) {
 
-                for(long i=0;i<10;i++) {
+                for(long i=0;i<20000;i++) {
                     Long key = counter;
 
                     ProducerRecord<Long, Customer> record;
@@ -74,9 +74,9 @@ public class SimpleProducer {
                     });
                     producer.flush();
                     counter++;
-                    TimeUnit.MILLISECONDS.sleep(1000);
+                    //TimeUnit.MILLISECONDS.sleep(1000);
                 }
-            }
+           // }
         }
     }
 }
