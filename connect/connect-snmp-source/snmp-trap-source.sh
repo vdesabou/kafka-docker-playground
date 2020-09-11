@@ -11,7 +11,7 @@ curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
                "tasks.max": "1",
-                    "connector.class": "io.confluent.connect.snmp.SnmpSourceConnector",
+                    "connector.class": "io.confluent.connect.snmp.SnmpTrapSourceConnector",
                     "kafka.topic": "snmp-kafka-topic",
                     "snmp.v3.enabled": "true",
                     "snmp.batch.size": "50",
