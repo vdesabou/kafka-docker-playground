@@ -64,6 +64,13 @@ END
      ccloud kafka cluster use lkc-6kv2j
 fi
 
+set +e
+log "Cleanup connect worker topics"
+delete_topic connect-status
+delete_topic connect-offsets
+delete_topic connect-configs
+set -e
+
 DOCKER_COMPOSE_FILE_OVERRIDE=$1
 if [ -f "${DOCKER_COMPOSE_FILE_OVERRIDE}" ]
 then
