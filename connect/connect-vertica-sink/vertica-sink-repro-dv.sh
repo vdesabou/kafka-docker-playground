@@ -37,7 +37,7 @@ log "Sending messages to topic customer (done using JAVA producer)"
 
 sleep 60
 
-docker exec broker kafka-console-consumer -bootstrap-server broker:9092 --topic customer --partition 0 --offset 3 --property print.key=true print.value=false --max-messages 1
+# docker exec broker kafka-console-consumer -bootstrap-server broker:9092 --topic customer --partition 0 --offset 3 --property print.key=true print.value=false --max-messages 1
 
 log "Creating Vertica sink connector"
 curl -X PUT \
@@ -62,10 +62,6 @@ curl -X PUT \
                     "auto.evolve": "false",
                     "key.converter": "org.apache.kafka.connect.converters.LongConverter",
                     "value.converter" : "Avro",
-                    "transforms": "EmptySchema,flatten",
-                    "transforms.flatten.type": "org.apache.kafka.connect.transforms.Flatten$Value",
-                    "transforms.flatten.delimiter": "_",
-                    "transforms.EmptySchema.type": "com.github.vdesabou.kafka.connect.transforms.EmptySchema$Value",
                     "value.converter.schema.registry.url":"http://schema-registry:8081",
                     "confluent.topic.bootstrap.servers": "broker:9092",
                     "confluent.topic.replication.factor": "1"
