@@ -1,10 +1,10 @@
-# SNMP Source connector
+# SNMP Trap Source connector
 
 ![asciinema](https://github.com/vdesabou/gifs/blob/master/connect/connect-snmp-source/asciinema.gif?raw=true)
 
 ## Objective
 
-Quickly test [SNMP Source](https://docs.confluent.io/current/connect/kafka-connect-snmp/index.html#quick-start) connector.
+Quickly test [SNMP Trap Source](https://docs.confluent.io/current/connect/kafka-connect-snmp-trap/index.html#snmp-trap-source-connector-for-cp) connector.
 
 
 ## How to run
@@ -12,19 +12,19 @@ Quickly test [SNMP Source](https://docs.confluent.io/current/connect/kafka-conne
 Simply run:
 
 ```
-$ ./snmp.sh
+$ ./snmp-trap-source.sh
 ```
 
 ## Details of what the script is doing
 
-Creating SNMP Source connector
+Creating SNMP Trap Source connector
 
 ```bash
 $ curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
                "tasks.max": "1",
-                    "connector.class": "io.confluent.connect.snmp.SnmpSourceConnector",
+                    "connector.class": "io.confluent.connect.snmp.SnmpTrapSourceConnector",
                     "kafka.topic": "snmp-kafka-topic",
                     "snmp.v3.enabled": "true",
                     "snmp.batch.size": "50",

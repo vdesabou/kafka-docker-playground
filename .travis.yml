@@ -81,7 +81,7 @@ jobs:
   - name: '5.5.1-1-ubi8: CONNECT: hbase-sink hdfs2-sink hdfs3-sink hdfs3-source hdfs2-source
       ibm-mq-sink ibm-mq-source snmp-source'
     env: TEST_LIST="connect/connect-hdfs2-sink connect/connect-hdfs2-source connect/connect-hdfs3-sink
-      connect/connect-hdfs3-source connect/connect-ibm-mq-sink connect/connect-ibm-mq-source"
+      connect/connect-hdfs3-source connect/connect-ibm-mq-sink connect/connect-ibm-mq-source connect/connect-snmp-source"
       TAG="5.5.1-1-ubi8"
   - name: '5.5.1-1-ubi8: CONNECT: jdbc-oracle11-sink jdbc-oracle11-source influxdb-sink
       influxdb-source jdbc-mysql-sink jdbc-mysql-source jdbc-postgresql-sink jdbc-postgresql-source
