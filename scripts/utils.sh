@@ -216,7 +216,7 @@ function verify_memory()
 {
   # Verify Docker memory is increased to at least 8GB
   DOCKER_MEMORY=$(docker system info | grep Memory | grep -o "[0-9\.]\+")
-  if (( $(echo "$DOCKER_MEMORY 7.0" | awk '{print ($1 < $2)}') )); then
+  if (( $(echo "$DOCKER_MEMORY 7.0" | awk '{print ($1 -lt $2)}') )); then
       logerror "WARNING: Did you remember to increase the memory available to Docker to at least 8GB (default is 2GB)? Demo may otherwise not work properly"
       exit 1
   fi
