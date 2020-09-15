@@ -25,5 +25,5 @@ then
 fi
 ../../scripts/wait-for-connect-and-controlcenter.sh $@
 
-# log "Login with CLI"
-# docker exec -it ksqldb-cli ksql http://ksqldb-server:8088
+log "Login with CLI using"
+log "docker exec -it ksqldb-cli ksql http://ksqldb-server:8088"

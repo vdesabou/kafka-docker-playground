@@ -17,7 +17,7 @@ test_list="$1"
 if [ "$1" = "ALL" ]
 then
     # test_list="connect/* replicator/* other/*"
-    test_list="connect/* replicator/*"
+    test_list="connect/* replicator/* ksqldb/*"
 fi
 
 for dir in $test_list

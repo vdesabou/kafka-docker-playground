@@ -1,0 +1,42 @@
+---
+version: '3.5'
+services:
+  mysql:
+    image: mysql:5.7
+    hostname: mysql
+    container_name: mysql
+    volumes:
+      - ../../ksqldb/materialized-view/mysql.cnf:/etc/mysql/conf.d/custom.cnf
+      - ../../ksqldb/materialized-view/mysql-init.sql:/docker-entrypoint-initdb.d/mysql-init.sql
+    environment:
+      MYSQL_ROOT_PASSWORD: password
+      MYSQL_DATABASE: db
+      MYSQL_USER: user
+      MYSQL_PASSWORD: password
+      MYSQL_ROOT_HOST: 172.%  # Allow docker containers to connect to mysql
+
+  ksqldb-server:
+    depends_on:
+      - zookeeper
+      - broker
+      - schema-registry
+      - mysql
+    volumes:
+      - ../../ksqldb/materialized-view/confluent-hub-components/debezium-debezium-connector-mysql:/usr/share/kafka/plugins/debezium-debezium-connector-mysql
+    environment:
+     # Configuration to embed Kafka Connect support.
+      KSQL_KSQL_CONNECT_URL: "http://localhost:8083"
+      KSQL_CONNECT_GROUP_ID: "ksql-connect-cluster"
+      KSQL_CONNECT_BOOTSTRAP_SERVERS: "broker:9092"
+      KSQL_CONNECT_KEY_CONVERTER: "io.confluent.connect.avro.AvroConverter"
+      KSQL_CONNECT_VALUE_CONVERTER: "io.confluent.connect.avro.AvroConverter"
+      KSQL_CONNECT_KEY_CONVERTER_SCHEMA_REGISTRY_URL: "http://schema-registry:8081"
+      KSQL_CONNECT_VALUE_CONVERTER_SCHEMA_REGISTRY_URL: "http://schema-registry:8081"
+      KSQL_CONNECT_VALUE_CONVERTER_SCHEMAS_ENABLE: "false"
+      KSQL_CONNECT_CONFIG_STORAGE_TOPIC: "ksql-connect-configs"
+      KSQL_CONNECT_OFFSET_STORAGE_TOPIC: "ksql-connect-offsets"
+      KSQL_CONNECT_STATUS_STORAGE_TOPIC: "ksql-connect-statuses"
+      KSQL_CONNECT_CONFIG_STORAGE_REPLICATION_FACTOR: 1
+      KSQL_CONNECT_OFFSET_STORAGE_REPLICATION_FACTOR: 1
+      KSQL_CONNECT_STATUS_STORAGE_REPLICATION_FACTOR: 1
+      KSQL_CONNECT_PLUGIN_PATH: "/usr/share/kafka/plugins"
