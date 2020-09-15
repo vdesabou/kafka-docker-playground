@@ -2,10 +2,10 @@
 version: '3.5'
 services:
 
-  broker:
-    environment:
-      # KAFKA_MESSAGE_MAX_BYTES: 10485760
-      KAFKA_NUM_PARTITIONS: 100
+  # broker:
+  #   environment:
+  #     # KAFKA_MESSAGE_MAX_BYTES: 10485760
+  #     KAFKA_NUM_PARTITIONS: 100
 
 
   vertica:
