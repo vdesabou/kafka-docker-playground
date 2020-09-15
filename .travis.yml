@@ -121,8 +121,8 @@ jobs:
     env: TEST_LIST="connect/connect-http-sink" TAG="5.5.1-1-ubi8"
   - name: '5.5.1-1-ubi8: REPLICATOR: connect'
     env: TEST_LIST="replicator/connect" TAG="5.5.1-1-ubi8"
-  - name: '5.5.1-1-ubi8: mirrormaker2'
-    env: TEST_LIST="replicator/mirrormaker2" TAG="5.5.1-1-ubi8"
+  - name: '5.5.1-1-ubi8: mirrormaker2 ksqldb/materialized-view'
+    env: TEST_LIST="replicator/mirrormaker2 ksqldb/materialized-view" TAG="5.5.1-1-ubi8"
 script:
 - bash scripts/run-tests.sh "$TEST_LIST" "$TAG"
 env:
