@@ -24,7 +24,8 @@ services:
     volumes:
       - ../../ksqldb/materialized-view/confluent-hub-components/debezium-debezium-connector-mysql:/usr/share/kafka/plugins/debezium-debezium-connector-mysql
     environment:
-     # Configuration to embed Kafka Connect support.
+      # Configuration to embed Kafka Connect support.
+      # https://docs.ksqldb.io/en/latest/how-to-guides/use-connector-management/#configuring-ksqldb
       KSQL_KSQL_CONNECT_URL: "http://localhost:8083"
       KSQL_CONNECT_GROUP_ID: "ksql-connect-cluster"
       KSQL_CONNECT_BOOTSTRAP_SERVERS: "broker:9092"
