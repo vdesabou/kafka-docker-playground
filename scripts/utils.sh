@@ -183,7 +183,7 @@ then
           sudo mkdir -p ${TMP_DIR}
           sudo chown travis ${TMP_DIR}
       else
-          rm -rf -p ${TMP_DIR}
+          rm -rf ${TMP_DIR}
           mkdir -p ${TMP_DIR}
       fi
       set -e
