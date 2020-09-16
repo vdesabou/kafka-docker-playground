@@ -45,7 +45,6 @@ then
   while [[ ! $(cat /tmp/out.txt) =~ "Finished starting connectors and tasks" ]]; do
     sleep 10
     docker container logs ${CONNECT_CONTAINER} > /tmp/out.txt 2>&1
-    tail -300 /tmp/out.txt
     CUR_WAIT=$(( CUR_WAIT+10 ))
     if [[ "$CUR_WAIT" -gt "$MAX_WAIT" ]]; then
       echo -e "\nERROR: The logs in ${CONNECT_CONTAINER} container do not show 'Finished starting connectors and tasks' after $MAX_WAIT seconds. Please troubleshoot with 'docker container ps' and 'docker container logs'.\n"
