@@ -68,7 +68,7 @@ The Salesforce PushTopic source connector is used to get data into Kafka and the
 Login with sfdx CLI
 
 ```bash
-$ docker exec sfdx-cli sh -c "sfdx sfpowerkit:auth:login -u \"$SALESFORCE_USERNAME\" -p \"$SALESFORCE_PASSWORD\" -r \"https://login.salesforce.com\" -s \"$SECURITY_TOKEN\""
+$ docker exec sfdx-cli sh -c "sfdx sfpowerkit:auth:login -u \"$SALESFORCE_USERNAME\" -p \"$SALESFORCE_PASSWORD\" -r \"$SALESFORCE_INSTANCE\" -s \"$SECURITY_TOKEN\""
 ```
 
 Add a Lead to Salesforce
@@ -88,6 +88,7 @@ $ curl -X PUT \
                     "tasks.max": "1",
                     "curl.logging": "true",
                     "salesforce.object" : "Lead",
+                    "salesforce.instance" : "'"$SALESFORCE_INSTANCE"'",
                     "salesforce.username" : "'"$SALESFORCE_USERNAME"'",
                     "salesforce.password" : "'"$SALESFORCE_PASSWORD"'",
                     "salesforce.password.token" : "'"$SECURITY_TOKEN"'",
@@ -117,6 +118,7 @@ $ curl -X PUT \
                     "tasks.max": "1",
                     "curl.logging": "true",
                     "salesforce.object" : "Lead",
+                    "salesforce.instance" : "'"$SALESFORCE_INSTANCE_ACCOUNT2"'",
                     "salesforce.username" : "'"$SALESFORCE_USERNAME_ACCOUNT2"'",
                     "salesforce.password" : "'"$SALESFORCE_PASSWORD_ACCOUNT2"'",
                     "salesforce.password.token" : "'"$SECURITY_TOKEN_ACCOUNT2"'",
@@ -154,7 +156,7 @@ Processed a total of 1 messages
 Login with sfdx CLI on the account #2
 
 ```bash
-$ docker exec sfdx-cli sh -c "sfdx sfpowerkit:auth:login -u \"$SALESFORCE_USERNAME_ACCOUNT2\" -p \"$SALESFORCE_PASSWORD_ACCOUNT2\" -r \"https://login.salesforce.com\" -s \"$SECURITY_TOKEN_ACCOUNT2\""
+$ docker exec sfdx-cli sh -c "sfdx sfpowerkit:auth:login -u \"$SALESFORCE_USERNAME_ACCOUNT2\" -p \"$SALESFORCE_PASSWORD_ACCOUNT2\" -r \"$SALESFORCE_INSTANCE_ACCOUNT2\" -s \"$SECURITY_TOKEN_ACCOUNT2\""
 ```
 
 Get the Lead created on account #2
