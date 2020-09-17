@@ -9,6 +9,7 @@ SALESFORCE_PASSWORD=${SALESFORCE_PASSWORD:-$2}
 CONSUMER_KEY=${CONSUMER_KEY:-$3}
 CONSUMER_PASSWORD=${CONSUMER_PASSWORD:-$4}
 SECURITY_TOKEN=${SECURITY_TOKEN:-$5}
+SALESFORCE_INSTANCE=${SALESFORCE_INSTANCE:-"https://login.salesforce.com"}
 
 if [ -z "$SALESFORCE_USERNAME" ]
 then
@@ -31,7 +32,7 @@ fi
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
 
 log "Login with sfdx CLI"
-docker exec sfdx-cli sh -c "sfdx sfpowerkit:auth:login -u \"$SALESFORCE_USERNAME\" -p \"$SALESFORCE_PASSWORD\" -r \"https://login.salesforce.com\" -s \"$SECURITY_TOKEN\""
+docker exec sfdx-cli sh -c "sfdx sfpowerkit:auth:login -u \"$SALESFORCE_USERNAME\" -p \"$SALESFORCE_PASSWORD\" -r \"$SALESFORCE_INSTANCE\" -s \"$SECURITY_TOKEN\""
 
 LEAD_FIRSTNAME=John_$RANDOM
 LEAD_LASTNAME=Doe_$RANDOM
@@ -47,6 +48,7 @@ curl -X PUT \
                     "tasks.max": "1",
                     "curl.logging": "true",
                     "salesforce.object" : "Lead",
+                    "salesforce.instance" : "'"$SALESFORCE_INSTANCE"'",
                     "salesforce.username" : "'"$SALESFORCE_USERNAME"'",
                     "salesforce.password" : "'"$SALESFORCE_PASSWORD"'",
                     "salesforce.password.token" : "'"$SECURITY_TOKEN"'",

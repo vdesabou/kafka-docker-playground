@@ -61,7 +61,7 @@ Note: you can also export these values as environment variable
 Login with sfdx CLI
 
 ```bash
-$ docker exec sfdx-cli sh -c "sfdx sfpowerkit:auth:login -u \"$SALESFORCE_USERNAME\" -p \"$SALESFORCE_PASSWORD\" -r \"https://login.salesforce.com\" -s \"$SECURITY_TOKEN\""
+$ docker exec sfdx-cli sh -c "sfdx sfpowerkit:auth:login -u \"$SALESFORCE_USERNAME\" -p \"$SALESFORCE_PASSWORD\" -r \"$SALESFORCE_INSTANCE\" -s \"$SECURITY_TOKEN\""
 ```
 
 Add a Lead to Salesforce
@@ -82,6 +82,7 @@ $ curl -X PUT \
                     "curl.logging": "true",
                     "salesforce.object" : "Lead",
                     "salesforce.push.topic.name" : "LeadsPushTopic",
+                    "salesforce.instance" : "'"$SALESFORCE_INSTANCE"'",
                     "salesforce.username" : "'"$SALESFORCE_USERNAME"'",
                     "salesforce.password" : "'"$SALESFORCE_PASSWORD"'",
                     "salesforce.password.token" : "'"$SECURITY_TOKEN"'",
