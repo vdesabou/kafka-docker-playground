@@ -32,6 +32,15 @@ fi
 
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext-dv.yml"
 
+docker exec -i vertica /opt/vertica/bin/vsql -hlocalhost -Udbadmin << EOF
+CREATE TABLE public.customer
+(
+    ListID int,
+    NormalizedHashItemID int,
+    URL varchar,
+    MyFloatValue float
+);
+EOF
 
 log "Sending messages to topic customer (done using JAVA producer)"
 
@@ -61,12 +70,11 @@ curl -X PUT \
                "vertica.password": "",
                "vertica.buffer.size.bytes" : 10285760,
                "vertica.timeout.ms" : 60000,
-               "vertica.load.method": "auto",
                "expected.records": 1000000,
                "expected.topics":1,
                "config.action.reload": "restart",
                "rejected.record.logging.mode": "log",
-               "table.name.format": "public.customer1",
+               "table.name.format": "public.${topic}",
                "auto.create": "true",
                "auto.evolve": "false",
                "delete.enabled": "true",
@@ -86,8 +94,20 @@ sleep 30
 
 log "Check data is in Vertica for customer1"
 docker exec -i vertica /opt/vertica/bin/vsql -hlocalhost -Udbadmin << EOF
-select * from public.customer1;
+select * from public.customer;
 EOF
+
+# docker exec -i vertica /opt/vertica/bin/vsql -hlocalhost -Udbadmin << EOF
+# SELECT c.column_name,c.data_type,c.data_type_length,c.numeric_precision,c.numeric_scale,c.is_nullable,c.column_default FROM columns c INNER JOIN tables t ON c.table_id = t.table_id WHERE c.table_schema = 'public' AND t.table_name = 'customer'  ORDER BY c.ordinal_position;
+# EOF
+
+# 1.0.2
+
+# 11 SECONDS
+
+# 1.2.0
+
+# 2800 SECONDS
 
 # log "Check for rejected data for customer1"
 # docker exec -i vertica /opt/vertica/bin/vsql -hlocalhost -Udbadmin << EOF
@@ -103,7 +123,7 @@ EOF
 # EOF
 
 # docker exec -i vertica /opt/vertica/bin/vsql -hlocalhost -Udbadmin << EOF
-# SELECT c.column_name, c.data_type, c.data_type_length, c.numeric_precision, c.numeric_scale FROM columns c INNER JOIN tables t ON c.table_id = t.table_id WHERE upper(t.table_name) = upper('customer1') ORDER BY c.ordinal_position;
+# SELECT c.column_name, c.data_type, c.data_type_length, c.numeric_precision, c.numeric_scale FROM columns c INNER JOIN tables t ON c.table_id = t.table_id WHERE upper(t.table_name) = upper('customer') ORDER BY c.ordinal_position;
 # EOF
 
 #      node_name     |      file_name      |         session_id         |  transaction_id   | statement_id | batch_number | row_number |                                              rejected_data                                              | rejected_data_orig_length |                          rejected_reason
