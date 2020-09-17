@@ -56,7 +56,6 @@ public class SimpleProducer {
                         .setNormalizedHashItemID(i)
                         .setURL("url"+i)
                         .setMyFloatValue(0.28226356681351483)
-                        .setMyTimestamp(new Date().getTime())
                         .build();
                         record = new ProducerRecord<>(TOPIC, key, customer);
                     // }
