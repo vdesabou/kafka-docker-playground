@@ -34,14 +34,6 @@
               "double"
             ],
             "default": null
-        },
-        {
-            "name": "MyTimestamp",
-            "type": [
-              "null",
-              "long"
-            ],
-            "default": null
         }
     ]
 }
