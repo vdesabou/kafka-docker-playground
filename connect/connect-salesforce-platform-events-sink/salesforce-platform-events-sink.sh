@@ -9,6 +9,7 @@ SALESFORCE_PASSWORD=${SALESFORCE_PASSWORD:-$2}
 CONSUMER_KEY=${CONSUMER_KEY:-$3}
 CONSUMER_PASSWORD=${CONSUMER_PASSWORD:-$4}
 SECURITY_TOKEN=${SECURITY_TOKEN:-$5}
+SALESFORCE_INSTANCE=${SALESFORCE_INSTANCE:-"https://login.salesforce.com"}
 
 if [ -z "$SALESFORCE_USERNAME" ]
 then
@@ -58,6 +59,7 @@ curl -X PUT \
                     "tasks.max": "1",
                     "curl.logging": "true",
                     "salesforce.platform.event.name" : "MyPlatformEvent__e",
+                    "salesforce.instance" : "'"$SALESFORCE_INSTANCE"'",
                     "salesforce.username" : "'"$SALESFORCE_USERNAME"'",
                     "salesforce.password" : "'"$SALESFORCE_PASSWORD"'",
                     "salesforce.password.token" : "'"$SECURITY_TOKEN"'",
@@ -88,6 +90,7 @@ curl -X PUT \
                     "tasks.max": "1",
                     "curl.logging": "true",
                     "salesforce.platform.event.name" : "MyPlatformEvent__e",
+                    "salesforce.instance" : "'"$SALESFORCE_INSTANCE"'",
                     "salesforce.username" : "'"$SALESFORCE_USERNAME"'",
                     "salesforce.password" : "'"$SALESFORCE_PASSWORD"'",
                     "salesforce.password.token" : "'"$SECURITY_TOKEN"'",
