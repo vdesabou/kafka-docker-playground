@@ -113,7 +113,7 @@ curl -X PUT \
                     "tasks.max": "1",
                     "curl.logging": "true",
                     "salesforce.object" : "Lead",
-                    "salesforce.username" : "'"$SALESFORCE_USERNAME"'",
+                    "salesforce.instance" : "'"$SALESFORCE_INSTANCE_ACCOUNT2"'",
                     "salesforce.username" : "'"$SALESFORCE_USERNAME_ACCOUNT2"'",
                     "salesforce.password" : "'"$SALESFORCE_PASSWORD_ACCOUNT2"'",
                     "salesforce.password.token" : "'"$SECURITY_TOKEN_ACCOUNT2"'",
