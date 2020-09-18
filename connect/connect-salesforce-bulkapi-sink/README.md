@@ -71,6 +71,12 @@ Login with sfdx CLI
 $ docker exec sfdx-cli sh -c "sfdx sfpowerkit:auth:login -u \"$SALESFORCE_USERNAME\" -p \"$SALESFORCE_PASSWORD\" -r \"$SALESFORCE_INSTANCE\" -s \"$SECURITY_TOKEN\""
 ```
 
+Create MyLeadPushTopics
+
+```bash
+$ docker exec sfdx-cli sh -c "sfdx force:apex:execute  -u \"$SALESFORCE_USERNAME\" -f \"/tmp/MyLeadPushTopics.apex\""
+```
+
 Add a Lead to Salesforce
 
 ```bash
