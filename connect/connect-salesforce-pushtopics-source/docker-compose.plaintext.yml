@@ -7,6 +7,8 @@ services:
     hostname: sfdx-cli
     container_name: sfdx-cli
     command: "sleep infinity"
+    volumes:
+    - ../../connect/connect-salesforce-pushtopics-source/MyLeadPushTopics.apex:/tmp/MyLeadPushTopics.apex
 
   connect:
     environment:

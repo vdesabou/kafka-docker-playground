@@ -1,0 +1,10 @@
+PushTopic pushTopic = new PushTopic();
+pushTopic.Name = 'MyLeadPushTopics';
+pushTopic.Query = 'SELECT Id,IsDeleted,MasterRecordId,LastName,FirstName,Salutation,Name,Title,Company,City,State,PostalCode,Country,StateCode,CountryCode,Latitude,Longitude,GeocodeAccuracy,Address,Phone,MobilePhone,Email,Website,PhotoUrl,LeadSource,Status,Industry,Rating,CurrencyIsoCode,AnnualRevenue,NumberOfEmployees,OwnerId,HasOptedOutOfEmail,IsConverted,ConvertedDate,ConvertedAccountId,ConvertedContactId,ConvertedOpportunityId,IsUnreadByOwner,CreatedDate,CreatedById,LastModifiedDate,LastModifiedById,SystemModstamp,LastActivityDate,DoNotCall,LastViewedDate,LastReferencedDate,JigsawContactId,EmailBouncedReason,EmailBouncedDate,IndividualId FROM Lead';
+pushTopic.ApiVersion = 49.0;
+pushTopic.NotifyForOperationCreate = true;
+pushTopic.NotifyForOperationUpdate = true;
+pushTopic.NotifyForOperationUndelete = true;
+pushTopic.NotifyForOperationDelete = true;
+pushTopic.NotifyForFields = 'Referenced';
+insert pushTopic;
