@@ -69,6 +69,21 @@ Login with sfdx CLI
 $ docker exec sfdx-cli sh -c "sfdx sfpowerkit:auth:login -u \"$SALESFORCE_USERNAME\" -p \"$SALESFORCE_PASSWORD\" -r \"$SALESFORCE_INSTANCE\" -s \"$SECURITY_TOKEN\""
 ```
 
+Delete MyLeadPushTopics, if required
+
+```bash
+$ docker exec -i sfdx-cli sh -c "sfdx force:apex:execute  -u \"$SALESFORCE_USERNAME\"" << EOF
+List<PushTopic> pts = [SELECT Id FROM PushTopic WHERE Name = 'MyLeadPushTopics'];
+Database.delete(pts);
+EOF
+```
+
+Create MyLeadPushTopics
+
+```bash
+$ docker exec sfdx-cli sh -c "sfdx force:apex:execute  -u \"$SALESFORCE_USERNAME\" -f \"/tmp/MyLeadPushTopics.apex\""
+```
+
 Add a Lead to Salesforce
 
 ```bash
@@ -86,7 +101,7 @@ $ curl -X PUT \
                     "tasks.max": "1",
                     "curl.logging": "true",
                     "salesforce.object" : "Lead",
-                    "salesforce.push.topic.name" : "LeadsPushTopic",
+                    "salesforce.push.topic.name" : "MyLeadPushTopics",
                     "salesforce.instance" : "'"$SALESFORCE_INSTANCE"'",
                     "salesforce.username" : "'"$SALESFORCE_USERNAME"'",
                     "salesforce.password" : "'"$SALESFORCE_PASSWORD"'",
