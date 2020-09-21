@@ -48,6 +48,12 @@ Find your Security Token (emailed to you from Salesforce.com). If you need to re
 
 ![security token](Screenshot1.png)
 
+## Create CustomId External ID
+
+Follow instructions [here](https://docs.confluent.io/current/connect/kafka-connect-salesforce/sobjects_sink/index.html#external-id), **for both accounts**.
+
+![custom PushTopic](Screenshot4.png)
+
 ## How to run
 
 Simply run:
