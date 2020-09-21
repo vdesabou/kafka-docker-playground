@@ -3,40 +3,11 @@
 
 Playground for Kafka/Confluent Docker experimentations...
 
-----
-
-## How to run
-
-You just need to have [docker](https://docs.docker.com/get-docker/) and [docker-compose](https://docs.docker.com/compose/install/).
-
-Recommended Docker settings are:
-
-![Diagram](./ccloud/ccloud-demo/images/docker-settings.jpg)
-
-If you want to run it on EC2 Instance, you can use the AWS CloudFormation template provided [here](cloudformation/README.md).
-
-ℹ️ By default Confluent Platform version 5.5.1 is used, but you can test with another version (greater or equal to 5.0.0) simply by exporting `TAG` environment variable:
-
-Example:
-
-```bash
-export TAG=5.3.2
-```
-
-ℹ️ By default, latest version of connectors is used (see the versions used [here](https://github.com/vdesabou/kafka-docker-playground-connect)), but you can test with another version (except for CouchBase connector) simply by exporting `CONNECTOR_TAG` environment variable:
-
-Example:
-
-```bash
-export CONNECTOR_TAG=1.2.1
-```
-
-----
+ℹ️ [How to run](https://github.com/vdesabou/kafka-docker-playground/wiki/How-to-run)
 
 <!-- omit in toc -->
 ## Table of Contents
 
-- [How to run](#how-to-run)
 - [🔗 Kafka Connectors](#-kafka-connectors)
   - [↘️ Source](#️-source)
   - [↗️ Sink](#️-sink)
