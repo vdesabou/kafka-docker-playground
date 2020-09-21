@@ -156,6 +156,8 @@ curl -X PUT \
                     "value.converter": "org.apache.kafka.connect.json.JsonConverter",
                     "salesforce.ignore.fields" : "CleanStatus",
                     "salesforce.ignore.reference.fields" : "true",
+                    "override.event.type": "true",
+                    "salesforce.sink.object.operation": "upsert",
                     "reporter.bootstrap.servers": "broker:9092",
                     "reporter.error.topic.name": "error-responses",
                     "reporter.error.topic.replication.factor": 1,
