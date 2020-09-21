@@ -150,6 +150,8 @@ curl -X PUT \
                     "salesforce.password.token" : "'"$SECURITY_TOKEN_ACCOUNT2"'",
                     "salesforce.consumer.key" : "'"$CONSUMER_KEY_ACCOUNT2"'",
                     "salesforce.consumer.secret" : "'"$CONSUMER_PASSWORD_ACCOUNT2"'",
+                    "salesforce.use.custom.id.field" : "true",
+                    "salesforce.custom.id.field.name" : "CustomId__c",
                     "key.converter": "org.apache.kafka.connect.json.JsonConverter",
                     "value.converter": "org.apache.kafka.connect.json.JsonConverter",
                     "salesforce.ignore.fields" : "CleanStatus",
