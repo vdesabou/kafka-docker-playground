@@ -24,7 +24,7 @@ Playground for Kafka/Confluent Docker experimentations...
 
 Quick start examples from Confluent [docs](https://docs.confluent.io/current/connect/managing/index.html) but in Docker version for ease of use.
 
-| Connector  | Product Category  | Version |
+| Connector  | Product Category  | Default Version (*) |
 |---|---|---|
 | <img src="./images/icons/activemq.png" width="15"> [ActiveMQ Sink](connect/connect-active-mq-sink)  | Message Queue  | :confluentinc-kafka-connect-activemq-sink:
 | <img src="./images/icons/activemq.png" width="15"> [ActiveMQ Source](connect/connect-active-mq-source)  | Message Queue  | :confluentinc-kafka-connect-activemq:
@@ -133,6 +133,8 @@ Quick start examples from Confluent [docs](https://docs.confluent.io/current/con
 | <img src="./images/icons/tibco_ems.png" width="15"> [TIBCO EMS Sink](connect/connect-tibco-sink) |  Message Queue | :confluentinc-kafka-connect-tibco-sink:
 | <img src="./images/icons/tibco_ems.png" width="15"> [TIBCO EMS Source](connect/connect-tibco-source) |  Message Queue | :confluentinc-kafka-connect-tibco-source:
 | <img src="./images/icons/vertica.png" width="15"> [Vertica Sink](connect/connect-vertica-sink) |  Database | :confluentinc-kafka-connect-vertica:
+
+\* You can change default connector version by setting `CONNECTOR_TAG` environment variable before starting a test, get more details [here](https://github.com/vdesabou/kafka-docker-playground/wiki/How-to-run#default-connector-version)
 
 ## ☁️ Confluent Cloud
 
