@@ -9,8 +9,6 @@ Playground for Kafka/Confluent Docker experimentations...
 ## Table of Contents
 
 - [🔗 Kafka Connectors](#-kafka-connectors)
-  - [↘️ Source](#️-source)
-  - [↗️ Sink](#️-sink)
 - [☁️ Confluent Cloud](#️-confluent-cloud)
   - [Confluent Cloud Demo](#confluent-cloud-demo)
   - [🔗 Kafka Connectors connected to Confluent Cloud](#-kafka-connectors-connected-to-confluent-cloud)
@@ -26,139 +24,115 @@ Playground for Kafka/Confluent Docker experimentations...
 
 Quick start examples from Confluent [docs](https://docs.confluent.io/current/connect/managing/index.html) but in Docker version for ease of use.
 
-### ↘️ Source
-
-- <img src="./images/icons/hdfs_2.svg" width="15"> Hadoop
-    - <img src="./images/icons/hdfs_2.svg" width="15"> [HDFS 2](connect/connect-hdfs2-source)
-    - <img src="./images/icons/hdfs_2.svg" width="15"> [HDFS 3](connect/connect-hdfs3-source)
-- <img src="./images/icons/aws.png" width="15"> AWS
-    - <img src="./images/icons/s3.png" width="15"> [S3](connect/connect-aws-s3-source)
-    - <img src="./images/icons/kinesis.svg" width="15"> [Kinesis](connect/connect-aws-kinesis-source)
-    - <img src="./images/icons/sqs.svg" width="15"> [SQS](connect/connect-aws-sqs-source)
-        - using [SASL_SSL](connect/connect-aws-sqs-source/README.md#with-sasl-ssl-authentication)
-        - using [SSL](connect/connect-aws-sqs-source/README.md#with-ssl-authentication)
-    - <img src="./images/icons/cloudwatch_logs.svg" width="15"> [CloudWatch Logs](connect/connect-aws-cloudwatch-logs-source)
-    - <img src="./images/icons/aws_redshift.png" width="15"> [AWS Redshift](connect/connect-jdbc-aws-redshift-source) (using JDBC)
-- <img src="./images/icons/debezium.png" width="15"> Debezium
-    - <img src="./images/icons/mysql.jpg" width="15"> [MySQL](connect/connect-debezium-mysql-source)
-    - <img src="./images/icons/postgresql.png" width="15"> [PostgreSQL](connect/connect-debezium-postgresql-source)
-    - <img src="./images/icons/mongodb.jpg" width="15"> [MongoDB](connect/connect-debezium-mongodb-source)
-    - <img src="./images/icons/sql_server.png" width="15"> [SQL Server](connect/connect-debezium-sqlserver-source)
-- <img src="./images/icons/ibm_mq.png" width="15"> [IBM MQ](connect/connect-ibm-mq-source)
-- <img src="./images/icons/solace.jpg" width="15"> [Solace](connect/connect-solace-source)
-- <img src="./images/icons/activemq.png" width="15"> [ActiveMQ](connect/connect-active-mq-source)
-- <img src="./images/icons/tibco_ems.png" width="15"> [TIBCO EMS](connect/connect-tibco-source)
-- <img src="./images/icons/syslog.png?w=200" width="15"> [Syslog](connect/connect-syslog-source)
-- <img src="./images/icons/jdbc.png" width="15"> JDBC
-    - <img src="./images/icons/mysql.jpg" width="15"> [MySQL](connect/connect-jdbc-mysql-source)
-    - <img src="./images/icons/oracle_11.jpg" width="15"> [Oracle 11](connect/connect-jdbc-oracle11-source)
-    - <img src="./images/icons/oracle_11.jpg" width="15"> [Oracle 12](connect/connect-jdbc-oracle12-source)
-    - <img src="./images/icons/postgresql.png" width="15"> [PostGreSQL](connect/connect-jdbc-postgresql-source)
-    - <img src="./images/icons/sql_server.png" width="15"> [SQL Server](connect/connect-jdbc-sqlserver-source)
-    - <img src="./images/icons/aws_redshift.png" width="15"> [AWS Redshift](connect/connect-jdbc-aws-redshift-source)
-- <img src="./images/icons/mqtt.png" width="15"> [MQTT](connect/connect-mqtt-source)
-- <img src="./images/icons/tibco_ems.png" width="15"> [JMS TIBCO EMS](connect/connect-jms-tibco-source)
-- <img src="./images/icons/influxdb.svg" width="15"> [InfluxDB](connect/connect-influxdb-source)
-- <img src="./images/icons/splunk.jpg" width="15"> [Splunk](connect/connect-splunk-source)
-- <img src="./images/icons/rabbitmq.svg" width="15">  [RabbitMQ](connect/connect-rabbitmq-source)
-- <img src="./images/icons/spool_dir.png" width="15"> [Spool Dir](connect/connect-spool-dir-source)
-- <img src="https://cloud.google.com/images/social-icon-google-cloud-1200-630.png" width="15"> GCP
-  - <img src="https://miro.medium.com/max/512/1*LXO5TpyB1GnCAE5-pz6L6Q.png" width="15"> [Pub/Sub](connect/connect-gcp-pubsub-source)
-  - <img src="https://miro.medium.com/max/256/1*lcRm2muyWDct3FW2drmptA.png" width="15"> [GCS](connect/connect-gcp-gcs-source)
-  - <img src="./images/icons/firebase.svg" width="15"> [Firebase](connect/connect-gcp-firebase-source)
-- <img src="./images/icons/couchbase.svg" width="15"> [Couchbase](connect/connect-couchbase-source)
-- <img src="./images/icons/sftp.png" width="15"> [SFTP](connect/connect-sftp-source)
-- <img src="./images/icons/mongodb.jpg" width="15"> [MongoDB](connect/connect-mongodb-source)
-- <img src="./images/icons/kudu.png" width="15"> [Kudu](connect/connect-kudu-source)
-- <img src="./images/icons/snmp_trap.png" width="15"> [SNMP Trap](connect/connect-snmp-source)
-- <img src="./images/icons/servicenow.png" width="15"> [ServiceNow](connect/connect-servicenow-source)
-- <img src="./images/icons/data_diode.jpg" width="15"> [Data Diode](connect/connect-datadiode-source-sink)
-- <img src="./images/icons/azure.png" width="15"> Azure
-    - <img src="./images/icons/blob_storage.png" width="15"> [Blob Storage](connect/connect-azure-blob-storage-source)
-    - <img src="./images/icons/event_hubs.png" width="15"> [Event Hubs](connect/connect-azure-event-hubs-source)
-    - <img src="./images/icons/service_bus.png" width="15"> [Service Bus](connect/connect-azure-service-bus-source)
-- <img src="https://www.cleo.com/sites/default/files/2018-10/logo_ftps-mod-11%20%281%29.svg" height="15"> [FTPS](connect/connect-ftps-source)
-- <img src="./images/icons/salesforce.png" width="15"> Salesforce
-    - <img src="./images/icons/salesforce.png" height="15"> [PushTopics](connect/connect-salesforce-pushtopics-source)
-    - <img src="./images/icons/salesforce.png" height="15"> [Bulk API](connect/connect-salesforce-bulkapi-source)
-    - <img src="./images/icons/salesforce.png" height="15"> [CDC](connect/connect-salesforce-cdc-source)
-    - <img src="./images/icons/salesforce.png" height="15"> [Platform Events](connect/connect-salesforce-platform-events-source)
-- <img src="./images/icons/amps.png" width="15"> [AMPS](connect/connect-amps-source)
-- <img src="./images/icons/jira.png" width="15"> [JIRA](connect/connect-jira-source)
-- <img src="./images/icons/github.png" width="15"> [Github](connect/connect-github-source)
-
-### ↗️ Sink
-
-- <img src="./images/icons/hdfs_2.svg" width="15"> Hadoop
-    - <img src="./images/icons/hdfs_2.svg" width="15"> [HDFS 2](connect/connect-hdfs2-sink)
-    - <img src="./images/icons/hdfs_2.svg" width="15"> [HDFS 3](connect/connect-hdfs3-sink)
-- <img src="./images/icons/aws.png" width="15"> AWS
-    - <img src="./images/icons/s3.png" width="15"> [S3](connect/connect-aws-s3-sink)
-    - <img src="./images/icons/aws_redshift.png" width="15"> [Redshift](connect/connect-aws-redshift-sink)
-    - <img src="./images/icons/dynamodb.svg" width="15"> [DynamoDB](connect/connect-aws-dynamodb-sink)
-    - <img src="./images/icons/lambda.svg" width="15"> [Lambda](connect/connect-aws-lambda-sink)
-    - <img src="./images/icons/cloudwatch_logs.svg" width="15"> [CloudWatch Metrics](connect/connect-aws-cloudwatch-metrics-sink)
-- <img src="./images/icons/elasticsearch.png" width="15"> [Elasticsearch](connect/connect-elasticsearch-sink)
-- <img src="./images/icons/http.png" width="15"> [HTTP](connect/connect-http-sink)
-- <img src="./images/icons/gcp.png" width="15"> GCP
-    - <img src="./images/icons/bigquery.png" width="15"> [BigQuery](connect/connect-gcp-bigquery-sink)
-    - <img src="./images/icons/cloud_functions.png" width="15"> [Cloud Functions](connect/connect-gcp-cloud-functions-sink)
-    - <img src="https://miro.medium.com/max/256/1*lcRm2muyWDct3FW2drmptA.png" width="15"> [GCS](connect/connect-gcp-gcs-sink)
-        - using [SASL_SSL](connect/connect-gcp-gcs-sink/README.md#with-sasl-ssl-authentication)
-        - using [SSL](connect/connect-gcp-gcs-sink/README.md#with-ssl-authentication)
-        - using [Kerberos GSSAPI](connect/connect-gcp-gcs-sink/README.md#with-kerberos-gssapi-authentication)
-        - using [LDAP Authorizer SASL/PLAIN](connect/connect-gcp-gcs-sink/README.md#with-ldap-authorizer-with-saslplain)
-        - using [RBAC environment SASL/PLAIN](connect/connect-gcp-gcs-sink/README.md#with-rbac-environment-with-saslplain)
-    - <img src="./images/icons/firebase.svg" width="15"> [Firebase](connect/connect-gcp-firebase-sink)
-    - <img src="./images/icons/spanner.png" width="15"> [Spanner](connect/connect-gcp-spanner-sink)
-- <img src="./images/icons/solace.jpg" width="15"> [Solace](connect/connect-solace-sink)
-- <img src="./images/icons/splunk.jpg" width="15"> [Splunk](connect/connect-splunk-sink)
-- <img src="./images/icons/tibco_ems.png" width="15"> [TIBCO EMS](connect/connect-tibco-sink)
-- <img src="./images/icons/ibm_mq.png" width="15"> [IBM MQ](connect/connect-ibm-mq-sink)
-- <img src="./images/icons/mqtt.png" width="15"> [MQTT](connect/connect-mqtt-sink)
-- <img src="./images/icons/influxdb.svg" width="15"> [InfluxDB](connect/connect-influxdb-sink)
-- <img src="./images/icons/cassandra.png" width="15"> [Cassandra](connect/connect-cassandra-sink)
-- <img src="./images/icons/jdbc.png" width="15"> JDBC
-    - <img src="./images/icons/mysql.jpg" width="15"> [MySQL](connect/connect-jdbc-mysql-sink)
-    - <img src="./images/icons/oracle_11.jpg" width="15"> [Oracle 11](connect/connect-jdbc-oracle11-sink)
-    - <img src="./images/icons/oracle_11.jpg" width="15"> [Oracle 12](connect/connect-jdbc-oracle12-sink)
-    - <img src="./images/icons/postgresql.png" width="15"> [PostGreSQL](connect/connect-jdbc-postgresql-sink)
-    - <img src="./images/icons/sql_server.png" width="15"> [SQL Server](connect/connect-jdbc-sqlserver-sink)
-    - <img src="./images/icons/vertica.png" width="15"> [Vertica](connect/connect-jdbc-vertica-sink)
-    - <img src="./images/icons/hive.png" width="15"> [Hive](connect/connect-jdbc-hive-sink)
-- <img src="./images/icons/activemq.png" width="15"> [ActiveMQ](connect/connect-active-mq-sink)
-- <img src="./images/icons/omnisci.png" width="15"> [OmniSci](connect/connect-omnisci-sink)
-- <img src="./images/icons/jms.jpg" width="15"> JMS
-    - <img src="./images/icons/activemq.png" width="15"> [ActiveMQ](connect/connect-jms-active-mq-sink)
-    - <img src="./images/icons/solace.jpg" width="15"> [Solace](connect/connect-jms-solace-sink)
-    - <img src="./images/icons/tibco_ems.png" width="15"> [TIBCO EMS](connect/connect-jms-tibco-sink)
-- <img src="./images/icons/azure.png" width="15"> Azure
-    - <img src="./images/icons/blob_storage.png" width="15"> [Blob Storage](connect/connect-azure-blob-storage-sink)
-    - <img src="./images/icons/data_lake_gen1.png" width="15"> [Data Lake Gen1](connect/connect-azure-data-lake-storage-gen1-sink)
-    - <img src="./images/icons/data_lake_gen1.png" width="15"> [Data Lake Gen2](connect/connect-azure-data-lake-storage-gen2-sink)
-    - <img src="./images/icons/sql_data_warehouse.png" width="15"> [SQL Data Warehouse](connect/connect-azure-sql-data-warehouse-sink)
-    - <img src="./images/icons/search.png" width="15"> [Search](connect/connect-azure-search-sink)
-- <img src="./images/icons/neo4j.png" width="15"> [Neo4j](connect/connect-neo4j-sink)
-- <img src="./images/icons/couchbase.svg" width="15"> [Couchbase](connect/connect-couchbase-sink)
-- <img src="./images/icons/sftp.png" width="15"> [SFTP](connect/connect-sftp-sink)
-- <img src="./images/icons/mongodb.jpg" width="15"> [MongoDB](connect/connect-mongodb-sink)
-- <img src="./images/icons/hbase.png" width="15"> [HBase](connect/connect-hbase-sink)
-- <img src="./images/icons/redis.jpg" width="15"> [Redis](connect/connect-redis-sink)
-- <img src="./images/icons/kudu.png" width="15"> [Kudu](connect/connect-kudu-sink)
-- <img src="./images/icons/vertica.png" width="15"> [Vertica](connect/connect-vertica-sink)
-- <img src="./images/icons/servicenow.png" width="15"> [ServiceNow](connect/connect-servicenow-sink)
-- <img src="https://min.io/resources/img/logo/MINIO_Bird.png" height="15"> [Minio](connect/connect-minio-s3-sink)
-- <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/3/38/Prometheus_software_logo.svg/1200px-Prometheus_software_logo.svg.png" height="15">  [Prometheus](connect/connect-prometheus-sink)
-- <img src="https://docs.snowflake.com/fr/_images/logo-snowflake-sans-text.png" height="15">  [Snowflake](connect/connect-snowflake-sink)
-- <img src="https://static-dotconferences-com.s3.amazonaws.com/editionpartnerships/datadog.png" height="15"> [Datadog Metrics](connect/connect-datadog-metrics-sink)
-- <img src="https://www.cleo.com/sites/default/files/2018-10/logo_ftps-mod-11%20%281%29.svg" height="15"> [FTPS](connect/connect-ftps-sink)
-- <img src="./images/icons/rabbitmq.svg" width="15"> [RabbitMQ](connect/connect-rabbitmq-sink)
-- <img src="./images/icons/salesforce.png" width="15"> Salesforce
-    - <img src="./images/icons/salesforce.png" height="15"> [Bulk API](connect/connect-salesforce-bulkapi-sink)
-    - <img src="./images/icons/salesforce.png" height="15"> [SObject](connect/connect-salesforce-sobject-sink)
-    - <img src="./images/icons/salesforce.png" height="15"> [Platform Events](connect/connect-salesforce-platform-events-source)
-- <img src="./images/icons/pagerduty.png" width="15"> [PagerDuty](connect/connect-pagerduty-sink)
-- <img src="./images/icons/pivotal_gemfire.png" width="15"> [Pivotal Gemfire](connect/connect-pivotal-gemfire-sink)
+| Connector  | Product Category  | Version |
+|---|---|---|
+| <img src="./images/icons/activemq.png" width="15"> [ActiveMQ Sink](connect/connect-active-mq-sink)  | Message Queue  | 1.1.6
+| <img src="./images/icons/activemq.png" width="15"> [ActiveMQ Source](connect/connect-active-mq-source)  | Message Queue  | 5.5.1
+| <img src="./images/icons/cloudwatch_logs.svg" width="15"> [Amazon CloudWatch Logs Source](connect/connect-aws-cloudwatch-logs-source)  | Analytics  | 1.0.4
+| <img src="./images/icons/cloudwatch_logs.svg" width="15"> [Amazon CloudWatch Metrics Sink](connect/connect-aws-cloudwatch-metrics-sink)  | Analytics  | 1.1.2
+| <img src="./images/icons/dynamodb.svg" width="15"> [Amazon DynamoDB Sink](connect/connect-aws-dynamodb-sink) | Database  | 1.1.1
+| <img src="./images/icons/kinesis.svg" width="15"> [Amazon Kinesis Source](connect/connect-aws-kinesis-source) | Message Queue  | 1.1.10
+| <img src="./images/icons/aws_redshift.png" width="15"> [Amazon Redshift Sink](connect/connect-aws-redshift-sink) | Data Warehouse  | 1.0.2
+| <img src="./images/icons/aws_redshift.png" width="15"> [Amazon Redshift Source](connect/connect-jdbc-aws-redshift-source) (using JDBC) | Data Warehouse  | 5.5.1
+| <img src="./images/icons/s3.png" width="15"> [Amazon S3 Sink](connect/connect-aws-s3-sink) | Datastore  | 5.5.1
+| <img src="./images/icons/s3.png" width="15"> [Amazon S3 Source](connect/connect-aws-s3-source)  | Datastore  | 1.3.2
+| <img src="./images/icons/sqs.svg" width="15"> [Amazon SQS Source](connect/connect-aws-sqs-source)  | Message Queue  | 1.0.5
+| <img src="./images/icons/amps.png" width="15"> [AMPS Source](connect/connect-amps-source)  | Message Queue  | 1.0.0-preview
+| <img src="./images/icons/kudu.png" width="15"> [Apache Kudu Source](connect/connect-kudu-source)  | Database  | 1.0.1
+| <img src="./images/icons/kudu.png" width="15"> [Apache Kudu Sink](connect/connect-kudu-sink)  | Database  | 1.0.1
+| <img src="./images/icons/lambda.svg" width="15"> [AWS Lambda Sink](connect/connect-aws-lambda-sink)  | SaaS Apps  | 1.0.3
+| <img src="./images/icons/blob_storage.png" width="15"> [Azure Blob Storage Sink](connect/connect-azure-blob-storage-sink)  | Datastore | 1.4.0
+| <img src="./images/icons/blob_storage.png" width="15"> [Azure Blob Storage Source](connect/connect-azure-blob-storage-source)  | Datastore | 1.3.2
+| <img src="./images/icons/data_lake_gen1.png" width="15"> [Azure Data Lake Storage Sink (Gen1)](connect/connect-azure-data-lake-storage-gen1-sink)  | Datastore | 1.4.0
+| <img src="./images/icons/data_lake_gen1.png" width="15"> [Azure Data Lake Storage Sink (Gen2)](connect/connect-azure-data-lake-storage-gen2-sink)  | Datastore | 1.4.0
+| <img src="./images/icons/event_hubs.png" width="15"> [Azure Event Hubs Source](connect/connect-azure-event-hubs-source)  | Message Queue | 1.0.3
+| <img src="./images/icons/search.png" width="15"> [Azure Search Sink](connect/connect-azure-search-sink)  | Analytics | 1.0.1
+| <img src="./images/icons/service_bus.png" width="15"> [Azure Service Bus Source](connect/connect-azure-service-bus-source)  | Message Queue | 1.1.0
+| <img src="./images/icons/sql_data_warehouse.png" width="15"> [Azure SQL Data Warehouse Sink](connect/connect-azure-sql-data-warehouse-sink)  | Data Warehouse | 1.0.3
+| <img src="./images/icons/cassandra.png" width="15"> [Cassandra Sink](connect/connect-cassandra-sink)  | Database | 1.2.2
+| <img src="./images/icons/couchbase.svg" width="15"> [Couchbase Sink](connect/connect-couchbase-sink)  | Database | 3.4.8
+| <img src="./images/icons/couchbase.svg" width="15"> [Couchbase Source](connect/connect-couchbase-source)  | Database | 3.4.8
+| <img src="./images/icons/sql_server.png" width="15"> [Debezium CDC Microsoft SQL Server Source](connect/connect-debezium-sqlserver-source)  | CDC | 1.2.2
+| <img src="./images/icons/mysql.jpg" width="15"> [Debezium CDC MySQL Source](connect/connect-debezium-mysql-source)  | CDC | 1.2.2
+| <img src="./images/icons/postgresql.png" width="15"> [Debezium CDC PostgreSQL Source](connect/connect-debezium-postgresql-source)  | :CDC | 1.2.2
+| <img src="./images/icons/mongodb.jpg" width="15"> [Debezium CDC MongoDB Source](connect/connect-debezium-mongodb-source)  | CDC | 1.2.2
+| <img src="./images/icons/data_diode.jpg" width="15"> [Data Diode Sink](connect/connect-datadiode-source-sink) | Logs | 1.1.1
+| <img src="./images/icons/data_diode.jpg" width="15"> [Data Diode Source](connect/connect-datadiode-source-sink) | Logs | 1.1.1
+| <img src="https://static-dotconferences-com.s3.amazonaws.com/editionpartnerships/datadog.png" height="15"> [Datadog Metrics Sink](connect/connect-datadog-metrics-sink) | Analytics | 1.1.2
+| <img src="./images/icons/elasticsearch.png" width="15"> [ElasticSearch Sink](connect/connect-elasticsearch-sink) | Analytics | 5.5.1
+| <img src="./images/icons/ftps.png" height="15"> [FTPS Sink](connect/connect-ftps-sink) | Datastore |1.0.1-preview
+| <img src="./images/icons/ftps.png" height="15"> [FTPS Source](connect/connect-ftps-source) | Datastore |1.0.1-preview
+| <img src="./images/icons/pivotal_gemfire.png" width="15"> [Gemfire](connect/connect-pivotal-gemfire-sink) | Database | 1.0.1
+| <img src="./images/icons/github.png" width="15"> [Github](connect/connect-github-source) | SaaS Apps | 1.0.1
+| <img src="./images/icons/bigquery.png" width="15"> [Google BigQuery Sink](connect/connect-gcp-bigquery-sink) | Data Warehouse | 1.6.1
+| <img src="./images/icons/cloud_functions.png" width="15"> [Google Cloud Functions](connect/connect-gcp-cloud-functions-sink) | SaaS Apps | 1.0.6
+| <img src="./images/icons/gcp_pubsub.png" width="15"> [Google Cloud Pub/Sub Source](connect/connect-gcp-pubsub-source) |  Message Queue | 1.0.2
+| <img src="./images/icons/spanner.png" width="15"> [Google Cloud Spanner Sink](connect/connect-gcp-spanner-sink) |  Database | 1.0.2
+| <img src="./images/icons/gcs.png" width="15"> [Google Cloud Storage Sink](connect/connect-gcp-gcs-sink) |  Datastore | 5.5.2
+| <img src="./images/icons/gcs.png" width="15"> [Google Cloud Storage Source](connect/connect-gcp-gcs-source) |  Datastore | 1.3.2
+| <img src="./images/icons/firebase.svg" width="15"> [Google Firebase Realtime Database Sink](connect/connect-gcp-firebase-sink) |  Database | 1.1.1
+| <img src="./images/icons/firebase.svg" width="15"> [Google Firebase Realtime Database Source](connect/connect-gcp-firebase-source) |  Database | 1.1.1
+| <img src="./images/icons/hbase.png" width="15"> [HBase Sink](connect/connect-hbase-sink) |  Database | 1.0.5
+| <img src="./images/icons/hdfs_2.svg" width="15"> [HDFS 2 Source](connect/connect-hdfs2-source) |  Datastore | 1.3.2
+| <img src="./images/icons/hdfs_2.svg" width="15"> [HDFS 3 Source](connect/connect-hdfs3-source) |  Datastore | 1.3.2
+| <img src="./images/icons/hdfs_2.svg" width="15"> [HDFS 2 Sink](connect/connect-hdfs2-sink) |  Datastore | 5.5.1
+| <img src="./images/icons/hdfs_2.svg" width="15"> [HDFS 3 Sink](connect/connect-hdfs3-sink) |  Datastore | 1.0.5
+| <img src="./images/icons/http.png" width="15"> [HTTP Sink](connect/connect-http-sink) |  SaaS Apps | 1.0.16
+| <img src="./images/icons/ibm_mq.png" width="15"> [IBM MQ Sink](connect/connect-ibm-mq-sink) |  Message Queue | 1.2.0
+| <img src="./images/icons/ibm_mq.png" width="15"> [IBM MQ Source](connect/connect-ibm-mq-source) |  Message Queue | 5.5.1
+| <img src="./images/icons/influxdb.svg" width="15"> [InfluxDB Sink](connect/connect-influxdb-sink) |  Database | 1.2.0
+| <img src="./images/icons/influxdb.svg" width="15"> [InfluxDB Source](connect/connect-influxdb-source) |  Database | 1.2.0
+| <img src="./images/icons/hive.png" width="15"> [JDBC Hive Sink](connect/connect-jdbc-hive-sink) |  Database | 5.5.1
+| <img src="./images/icons/mysql.jpg" width="15"> [JDBC MySQL Sink](connect/connect-jdbc-mysql-sink) |  Database | 5.5.1
+| <img src="./images/icons/oracle_11.jpg" width="15"> [JDBC Oracle 11 Sink](connect/connect-jdbc-oracle11-sink) |  Database | 5.5.1
+| <img src="./images/icons/oracle_12.jpg" width="15"> [JDBC Oracle 12 Sink](connect/connect-jdbc-oracle11-sink) |  Database | 5.5.1
+| <img src="./images/icons/postgresql.png" width="15"> [JDBC PostGreSQL Sink](connect/connect-jdbc-postgresql-sink) |  Database | 5.5.1
+| <img src="./images/icons/sql_server.png" width="15"> [JDBC SQL Server Sink](connect/connect-jdbc-sqlserver-sink) |  Database | 5.5.1
+| <img src="./images/icons/vertica.png" width="15"> [JDBC Vertica Sink](connect/connect-jdbc-vertica-sink) |  Database | 5.5.1
+| <img src="./images/icons/mysql.jpg" width="15"> [JDBC MySQL Source](connect/connect-jdbc-mysql-source) |  Database | 5.5.1
+| <img src="./images/icons/oracle_11.jpg" width="15"> [JDBC Oracle 11 Source](connect/connect-jdbc-oracle11-source) |  Database | 5.5.1
+| <img src="./images/icons/oracle_12.jpg" width="15"> [JDBC Oracle 12 Source](connect/connect-jdbc-oracle11-source) |  Database | 5.5.1
+| <img src="./images/icons/postgresql.png" width="15"> [JDBC PostGreSQL Source](connect/connect-jdbc-postgresql-source) |  Database | 5.5.1
+| <img src="./images/icons/sql_server.png" width="15"> [JDBC SQL Server Source](connect/connect-jdbc-sqlserver-source) |  Database | 5.5.1
+| <img src="./images/icons/jira.png" width="15"> [JIRA Source](connect/connect-jira-source) |  SaaS Apps | 1.0.0-preview
+| <img src="./images/icons/activemq.png" width="15"> [JMS ActiveMQ Sink](connect/connect-jms-active-mq-sink) |  Message Queue | 1.2.0
+| <img src="./images/icons/solace.jpg" width="15"> [JMS Solace Sink](connect/connect-jms-solace-sink) |  Message Queue | 1.2.0
+| <img src="./images/icons/tibco_ems.png" width="15"> [JMS TIBCO EMS Sink](connect/connect-jms-tibco-sink) |  Message Queue | 1.2.0
+| <img src="./images/icons/tibco_ems.png" width="15"> [JMS TIBCO EMS Source](connect/connect-jms-tibco-source) |  Message Queue | 5.5.1
+| <img src="./images/icons/minio.png" height="15"> [Minio Sink](connect/connect-minio-s3-sink) |  Datastore | 5.5.1
+| <img src="./images/icons/mongodb.jpg" width="15"> [MongoDB Sink](connect/connect-mongodb-sink) |  Database | 1.2.0
+| <img src="./images/icons/mongodb.jpg" width="15"> [MongoDB Source](connect/connect-mongodb-source) |  Database | 1.2.0
+| <img src="./images/icons/mqtt.png" width="15"> [MQTT Sink](connect/connect-mqtt-sink) |  IoT | 1.3.0
+| <img src="./images/icons/mqtt.png" width="15"> [MQTT Source](connect/connect-mqtt-source) |  IoT | 1.3.0
+| <img src="./images/icons/neo4j.png" width="15"> [Neo4j Sink](connect/connect-neo4j-sink) |  Database | 1.0.7
+| <img src="./images/icons/omnisci.png" width="15"> [OmniSci Sink](connect/connect-omnisci-sink) |  Database | 1.0.2
+| <img src="./images/icons/pagerduty.png" width="15"> [PagerDuty Sink](connect/connect-pagerduty-sink) |  SaaS Apps | 1.0.1
+| <img src="./images/icons/prometheus.png" height="15">  [Prometheus Sink](connect/connect-prometheus-sink) |  Analytics | 1.1.2-preview
+| <img src="./images/icons/rabbitmq.svg" width="15"> [RabbitMQ Sink](connect/connect-rabbitmq-sink) |  Message Queue | 1.3.0-preview
+| <img src="./images/icons/rabbitmq.svg" width="15">  [RabbitMQ Source](connect/connect-rabbitmq-source) |  Message Queue | 1.3.0
+| <img src="./images/icons/redis.jpg" width="15"> [Redis](connect/connect-redis-sink) |  Database | 0.0.2.11
+| <img src="./images/icons/salesforce.png" height="15"> [SalesForce Bulk API Sink](connect/connect-salesforce-bulkapi-sink) |  SaaS Apps | 1.6.5
+| <img src="./images/icons/salesforce.png" height="15"> [SalesForce Bulk API Source](connect/connect-salesforce-bulkapi-source) |  SaaS Apps | 1.6.5
+| <img src="./images/icons/salesforce.png" height="15"> [SalesForce CDC Source](connect/connect-salesforce-cdc-source) |  SaaS Apps | 1.6.5
+| <img src="./images/icons/salesforce.png" height="15"> [SalesForce Platform Events Sink](connect/connect-salesforce-platform-events-sink) |  SaaS Apps | 1.6.5
+| <img src="./images/icons/salesforce.png" height="15"> [SalesForce Platform Events Source](connect/connect-salesforce-platform-events-source) |  SaaS Apps | 1.6.5
+| <img src="./images/icons/salesforce.png" height="15"> [SalesForce PushTopics Source](connect/connect-salesforce-pushtopics-source) |  SaaS Apps | 1.6.5
+| <img src="./images/icons/salesforce.png" height="15"> [SalesForce SObject Sink](connect/connect-salesforce-sobject-sink) |  SaaS Apps | 1.6.5
+| <img src="./images/icons/servicenow.png" width="15"> [ServiceNow Sink](connect/connect-servicenow-sink) |  SaaS Apps | 2.0.1
+| <img src="./images/icons/servicenow.png" width="15"> [ServiceNow Source](connect/connect-servicenow-source) |  SaaS Apps | 2.0.1
+| <img src="./images/icons/sftp.png" width="15"> [SFTP Sink](connect/connect-sftp-sink) |  Datastore | 2.1.0
+| <img src="./images/icons/sftp.png" width="15"> [SFTP Sink](connect/connect-sftp-source) |  Datastore | 2.1.0
+| <img src="./images/icons/snmp_trap.png" width="15"> [SNMP Trap](connect/connect-snmp-source) |  IoT | 1.1.2
+| <img src="./images/icons/snowflake.png" height="15">  [Snowflake](connect/connect-snowflake-sink) |  Data Warehouse | snowflakeinc-snowflake-kafka-connector
+| <img src="./images/icons/solace.jpg" width="15"> [Solace Sink](connect/connect-solace-sink) |  Message Queue | 1.2.0
+| <img src="./images/icons/solace.jpg" width="15"> [Solace Source](connect/connect-solace-source) |  Message Queue | 1.2.0
+| <img src="./images/icons/splunk.jpg" width="15"> [Splunk Sink](connect/connect-splunk-sink) |  Analytics | 1.2.0
+| <img src="./images/icons/splunk.jpg" width="15"> [Splunk Source](connect/connect-splunk-source) |  Analytics | 1.0.2
+| <img src="./images/icons/spool_dir.png" width="15"> [Spool Dir Source](connect/connect-spool-dir-source) |  Datastore | 2.0.46
+| <img src="./images/icons/syslog.png" width="15"> [Syslog Source](connect/connect-syslog-source) |  Logs | 1.3.1
+| <img src="./images/icons/tibco_ems.png" width="15"> [TIBCO EMS Sink](connect/connect-tibco-sink) |  Message Queue | 1.2.0
+| <img src="./images/icons/tibco_ems.png" width="15"> [TIBCO EMS Source](connect/connect-tibco-source) |  Message Queue | 1.2.0
+| <img src="./images/icons/vertica.png" width="15"> [Vertica Sink](connect/connect-vertica-sink) |  Databse | 1.2.1
 
 ## ☁️ Confluent Cloud
 
