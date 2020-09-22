@@ -45,6 +45,8 @@ before_install:
 - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
 jobs:
   include:
+  - name: Update README
+    script: bash scripts/launch-github-action.sh
   - name: '5.5.1-1-ubi8: CONNECT: salesforce-bulkapi-sink salesforce-bulkapi-sink salesforce-cdc-source
       salesforce-platform-events-sink salesforce-platform-events-source salesforce-pushtopics-source salesforce-sobject-sink salesforce-cdc-source salesforce-platform-events-sink salesforce-platform-events-source'
     env: TEST_LIST="connect/connect-salesforce-bulkapi-sink connect/connect-salesforce-bulkapi-source connect/connect-salesforce-pushtopics-source connect/connect-salesforce-sobject-sink connect/connect-salesforce-cdc-source connect/connect-salesforce-platform-events-sink connect/connect-salesforce-platform-events-source" TAG="5.5.1-1-ubi8"
