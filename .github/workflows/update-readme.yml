@@ -1,0 +1,26 @@
+
+name: Update README
+
+on: repository_dispatch
+
+jobs:
+  build:
+    name: Update README
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+      - name: Update README
+        run: |
+          ./scripts/get-versions.sh "5.5.1"
+      - name: push
+        uses: github-actions-x/commit@v2.6
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          push-branch: 'master'
+          commit-message: 'updating with latest versions'
+          files: ./README.md
+          name: Vincent de Saboulin
+
