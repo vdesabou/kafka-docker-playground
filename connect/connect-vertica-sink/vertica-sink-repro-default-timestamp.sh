@@ -19,7 +19,7 @@ ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml
 
 log "Create the table and insert data."
 docker exec -i vertica /opt/vertica/bin/vsql -hlocalhost -Udbadmin << EOF
-create table mytable(f1 varchar(20),DwhCreationDate timestamp default sysdate);
+create table mytable(f1 varchar(20),dwhCreationDate timestamp DEFAULT (statement_timestamp())::timestamp);
 EOF
 
 
@@ -52,14 +52,10 @@ docker exec -i vertica /opt/vertica/bin/vsql -hlocalhost -Udbadmin << EOF
 select * from mytable;
 EOF
 
-# [2020-07-30 15:21:23,809] ERROR WorkerSinkTask{id=vertica-sink-0} Task threw an uncaught and unrecoverable exception. Task is being killed and will not recover until manually restarted. Error: For input string: ""sysdate"()" (org.apache.kafka.connect.runtime.WorkerSinkTask)
-# java.lang.NumberFormatException: For input string: ""sysdate"()"
-#         at java.lang.NumberFormatException.forInputString(NumberFormatException.java:65)
-#         at java.lang.Integer.parseInt(Integer.java:569)
-#         at java.lang.Byte.parseByte(Byte.java:149)
-#         at java.lang.Byte.valueOf(Byte.java:205)
-#         at java.lang.Byte.valueOf(Byte.java:231)
-#         at io.confluent.vertica.VerticaMapperUtil.getDefaultValueOfColumn(VerticaMapperUtil.java:93)
+# [2020-09-22 14:41:33,169] ERROR Error occurred while parsing date:(statement_timestamp())::timestamp. (io.confluent.vertica.VerticaMapperUtil)
+# java.text.ParseException: Unparseable date: "(statement_timestamp())::timestamp"
+#         at java.text.DateFormat.parse(DateFormat.java:366)
+#         at io.confluent.vertica.VerticaMapperUtil.getDefaultValueOfColumn(VerticaMapperUtil.java:94)
 #         at io.confluent.vertica.VerticaDbStructure.getDefaultColumnValue(VerticaDbStructure.java:492)
 #         at io.confluent.vertica.VerticaSinkTask.put(VerticaSinkTask.java:156)
 #         at org.apache.kafka.connect.runtime.WorkerSinkTask.deliverMessages(WorkerSinkTask.java:545)
@@ -73,9 +69,12 @@ EOF
 #         at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1149)
 #         at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:624)
 #         at java.lang.Thread.run(Thread.java:748)
-# [2020-07-30 15:21:23,811] ERROR WorkerSinkTask{id=vertica-sink-0} Task threw an uncaught and unrecoverable exception (org.apache.kafka.connect.runtime.WorkerTask)
-# org.apache.kafka.connect.errors.ConnectException: Exiting WorkerSinkTask due to unrecoverable exception.
-#         at org.apache.kafka.connect.runtime.WorkerSinkTask.deliverMessages(WorkerSinkTask.java:567)
+# [2020-09-22 14:41:33,179] ERROR WorkerSinkTask{id=vertica-sink-0} Task threw an uncaught and unrecoverable exception. Task is being killed and will not recover until manually restarted. Error: Failed to parse default value: (statement_timestamp())::timestamp (org.apache.kafka.connect.runtime.WorkerSinkTask)
+# org.apache.kafka.connect.errors.ConnectException: Failed to parse default value: (statement_timestamp())::timestamp
+#         at io.confluent.vertica.VerticaMapperUtil.getDefaultValueOfColumn(VerticaMapperUtil.java:99)
+#         at io.confluent.vertica.VerticaDbStructure.getDefaultColumnValue(VerticaDbStructure.java:492)
+#         at io.confluent.vertica.VerticaSinkTask.put(VerticaSinkTask.java:156)
+#         at org.apache.kafka.connect.runtime.WorkerSinkTask.deliverMessages(WorkerSinkTask.java:545)
 #         at org.apache.kafka.connect.runtime.WorkerSinkTask.poll(WorkerSinkTask.java:325)
 #         at org.apache.kafka.connect.runtime.WorkerSinkTask.iteration(WorkerSinkTask.java:228)
 #         at org.apache.kafka.connect.runtime.WorkerSinkTask.execute(WorkerSinkTask.java:200)
@@ -86,14 +85,3 @@ EOF
 #         at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1149)
 #         at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:624)
 #         at java.lang.Thread.run(Thread.java:748)
-# Caused by: java.lang.NumberFormatException: For input string: ""sysdate"()"
-#         at java.lang.NumberFormatException.forInputString(NumberFormatException.java:65)
-#         at java.lang.Integer.parseInt(Integer.java:569)
-#         at java.lang.Byte.parseByte(Byte.java:149)
-#         at java.lang.Byte.valueOf(Byte.java:205)
-#         at java.lang.Byte.valueOf(Byte.java:231)
-#         at io.confluent.vertica.VerticaMapperUtil.getDefaultValueOfColumn(VerticaMapperUtil.java:93)
-#         at io.confluent.vertica.VerticaDbStructure.getDefaultColumnValue(VerticaDbStructure.java:492)
-#         at io.confluent.vertica.VerticaSinkTask.put(VerticaSinkTask.java:156)
-#         at org.apache.kafka.connect.runtime.WorkerSinkTask.deliverMessages(WorkerSinkTask.java:545)
-#         ... 10 more
