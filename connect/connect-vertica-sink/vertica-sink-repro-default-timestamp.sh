@@ -19,7 +19,7 @@ ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml
 
 log "Create the table and insert data."
 docker exec -i vertica /opt/vertica/bin/vsql -hlocalhost -Udbadmin << EOF
-create table mytable(f1 varchar(20),dwhCreationDate timestamp NOT NULL default(sysdate));
+create table mytable(f1 varchar(20),DwhCreationDate timestamp default sysdate);
 EOF
 
 
