@@ -132,7 +132,7 @@ Quick start examples from Confluent [docs](https://docs.confluent.io/current/con
 | <img src="./images/icons/syslog.png" width="15"> [Syslog Source](connect/connect-syslog-source) |  Logs | :confluentinc-kafka-connect-syslog:
 | <img src="./images/icons/tibco_ems.png" width="15"> [TIBCO EMS Sink](connect/connect-tibco-sink) |  Message Queue | :confluentinc-kafka-connect-tibco-sink:
 | <img src="./images/icons/tibco_ems.png" width="15"> [TIBCO EMS Source](connect/connect-tibco-source) |  Message Queue | :confluentinc-kafka-connect-tibco-source:
-| <img src="./images/icons/vertica.png" width="15"> [Vertica Sink](connect/connect-vertica-sink) |  Databse | :confluentinc-kafka-connect-vertica:
+| <img src="./images/icons/vertica.png" width="15"> [Vertica Sink](connect/connect-vertica-sink) |  Database | :confluentinc-kafka-connect-vertica:
 
 ## ☁️ Confluent Cloud
 
