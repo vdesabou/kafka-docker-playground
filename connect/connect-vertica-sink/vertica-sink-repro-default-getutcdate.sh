@@ -19,7 +19,7 @@ ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml
 
 log "Create the table and insert data."
 docker exec -i vertica /opt/vertica/bin/vsql -hlocalhost -Udbadmin << EOF
-create table mytable(f1 varchar(20),DwhCreationDate timestamp default sysdate);
+create table mytable(f1 varchar(20),DwhCreationDate timestamp default getutcdate());
 EOF
 
 
@@ -52,8 +52,10 @@ docker exec -i vertica /opt/vertica/bin/vsql -hlocalhost -Udbadmin << EOF
 select * from mytable;
 EOF
 
-# [2020-09-23 06:40:58,921] ERROR Error occurred while parsing date:(statement_timestamp())::timestamp. (io.confluent.vertica.VerticaMapperUtil)
-# java.text.ParseException: Unparseable date: "(statement_timestamp())::timestamp"
+# With vertica 9:
+
+# [2020-09-23 05:41:52,271] ERROR Error occurred while parsing date:getutcdate(). (io.confluent.vertica.VerticaMapperUtil)
+# java.text.ParseException: Unparseable date: "getutcdate()"
 #         at java.text.DateFormat.parse(DateFormat.java:366)
 #         at io.confluent.vertica.VerticaMapperUtil.getDefaultValueOfColumn(VerticaMapperUtil.java:94)
 #         at io.confluent.vertica.VerticaDbStructure.getDefaultColumnValue(VerticaDbStructure.java:492)
@@ -69,8 +71,8 @@ EOF
 #         at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1149)
 #         at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:624)
 #         at java.lang.Thread.run(Thread.java:748)
-# [2020-09-23 06:40:58,930] ERROR WorkerSinkTask{id=vertica-sink-0} Task threw an uncaught and unrecoverable exception. Task is being killed and will not recover until manually restarted. Error: Failed to parse default value: (statement_timestamp())::timestamp (org.apache.kafka.connect.runtime.WorkerSinkTask)
-# org.apache.kafka.connect.errors.ConnectException: Failed to parse default value: (statement_timestamp())::timestamp
+# [2020-09-23 05:41:52,280] ERROR WorkerSinkTask{id=vertica-sink-0} Task threw an uncaught and unrecoverable exception. Task is being killed and will not recover until manually restarted. Error: Failed to parse default value: getutcdate() (org.apache.kafka.connect.runtime.WorkerSinkTask)
+# org.apache.kafka.connect.errors.ConnectException: Failed to parse default value: getutcdate()
 #         at io.confluent.vertica.VerticaMapperUtil.getDefaultValueOfColumn(VerticaMapperUtil.java:99)
 #         at io.confluent.vertica.VerticaDbStructure.getDefaultColumnValue(VerticaDbStructure.java:492)
 #         at io.confluent.vertica.VerticaSinkTask.put(VerticaSinkTask.java:156)
@@ -85,7 +87,7 @@ EOF
 #         at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1149)
 #         at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:624)
 #         at java.lang.Thread.run(Thread.java:748)
-# [2020-09-23 06:40:58,931] ERROR WorkerSinkTask{id=vertica-sink-0} Task threw an uncaught and unrecoverable exception (org.apache.kafka.connect.runtime.WorkerTask)
+# [2020-09-23 05:41:52,281] ERROR WorkerSinkTask{id=vertica-sink-0} Task threw an uncaught and unrecoverable exception (org.apache.kafka.connect.runtime.WorkerTask)
 # org.apache.kafka.connect.errors.ConnectException: Exiting WorkerSinkTask due to unrecoverable exception.
 #         at org.apache.kafka.connect.runtime.WorkerSinkTask.deliverMessages(WorkerSinkTask.java:567)
 #         at org.apache.kafka.connect.runtime.WorkerSinkTask.poll(WorkerSinkTask.java:325)
@@ -98,7 +100,62 @@ EOF
 #         at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1149)
 #         at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:624)
 #         at java.lang.Thread.run(Thread.java:748)
-# Caused by: org.apache.kafka.connect.errors.ConnectException: Failed to parse default value: (statement_timestamp())::timestamp
+# Caused by: org.apache.kafka.connect.errors.ConnectException: Failed to parse default value: getutcdate()
+#         at io.confluent.vertica.VerticaMapperUtil.getDefaultValueOfColumn(VerticaMapperUtil.java:99)
+#         at io.confluent.vertica.VerticaDbStructure.getDefaultColumnValue(VerticaDbStructure.java:492)
+#         at io.confluent.vertica.VerticaSinkTask.put(VerticaSinkTask.java:156)
+#         at org.apache.kafka.connect.runtime.WorkerSinkTask.deliverMessages(WorkerSinkTask.java:545)
+#         ... 10 more
+
+# With Vertica 10:
+
+# [2020-09-23 06:36:41,486] ERROR Error occurred while parsing date:"timezone"('utc', statement_timestamp()). (io.confluent.vertica.VerticaMapperUtil)
+# java.text.ParseException: Unparseable date: ""timezone"('utc', statement_timestamp())"
+#         at java.text.DateFormat.parse(DateFormat.java:366)
+#         at io.confluent.vertica.VerticaMapperUtil.getDefaultValueOfColumn(VerticaMapperUtil.java:94)
+#         at io.confluent.vertica.VerticaDbStructure.getDefaultColumnValue(VerticaDbStructure.java:492)
+#         at io.confluent.vertica.VerticaSinkTask.put(VerticaSinkTask.java:156)
+#         at org.apache.kafka.connect.runtime.WorkerSinkTask.deliverMessages(WorkerSinkTask.java:545)
+#         at org.apache.kafka.connect.runtime.WorkerSinkTask.poll(WorkerSinkTask.java:325)
+#         at org.apache.kafka.connect.runtime.WorkerSinkTask.iteration(WorkerSinkTask.java:228)
+#         at org.apache.kafka.connect.runtime.WorkerSinkTask.execute(WorkerSinkTask.java:200)
+#         at org.apache.kafka.connect.runtime.WorkerTask.doRun(WorkerTask.java:184)
+#         at org.apache.kafka.connect.runtime.WorkerTask.run(WorkerTask.java:234)
+#         at java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:511)
+#         at java.util.concurrent.FutureTask.run(FutureTask.java:266)
+#         at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1149)
+#         at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:624)
+#         at java.lang.Thread.run(Thread.java:748)
+# [2020-09-23 06:36:41,498] ERROR WorkerSinkTask{id=vertica-sink-0} Task threw an uncaught and unrecoverable exception. Task is being killed and will not recover until manually restarted. Error: Failed to parse default value: "timezone"('utc', statement_timestamp()) (org.apache.kafka.connect.runtime.WorkerSinkTask)
+# org.apache.kafka.connect.errors.ConnectException: Failed to parse default value: "timezone"('utc', statement_timestamp())
+#         at io.confluent.vertica.VerticaMapperUtil.getDefaultValueOfColumn(VerticaMapperUtil.java:99)
+#         at io.confluent.vertica.VerticaDbStructure.getDefaultColumnValue(VerticaDbStructure.java:492)
+#         at io.confluent.vertica.VerticaSinkTask.put(VerticaSinkTask.java:156)
+#         at org.apache.kafka.connect.runtime.WorkerSinkTask.deliverMessages(WorkerSinkTask.java:545)
+#         at org.apache.kafka.connect.runtime.WorkerSinkTask.poll(WorkerSinkTask.java:325)
+#         at org.apache.kafka.connect.runtime.WorkerSinkTask.iteration(WorkerSinkTask.java:228)
+#         at org.apache.kafka.connect.runtime.WorkerSinkTask.execute(WorkerSinkTask.java:200)
+#         at org.apache.kafka.connect.runtime.WorkerTask.doRun(WorkerTask.java:184)
+#         at org.apache.kafka.connect.runtime.WorkerTask.run(WorkerTask.java:234)
+#         at java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:511)
+#         at java.util.concurrent.FutureTask.run(FutureTask.java:266)
+#         at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1149)
+#         at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:624)
+#         at java.lang.Thread.run(Thread.java:748)
+# [2020-09-23 06:36:41,498] ERROR WorkerSinkTask{id=vertica-sink-0} Task threw an uncaught and unrecoverable exception (org.apache.kafka.connect.runtime.WorkerTask)
+# org.apache.kafka.connect.errors.ConnectException: Exiting WorkerSinkTask due to unrecoverable exception.
+#         at org.apache.kafka.connect.runtime.WorkerSinkTask.deliverMessages(WorkerSinkTask.java:567)
+#         at org.apache.kafka.connect.runtime.WorkerSinkTask.poll(WorkerSinkTask.java:325)
+#         at org.apache.kafka.connect.runtime.WorkerSinkTask.iteration(WorkerSinkTask.java:228)
+#         at org.apache.kafka.connect.runtime.WorkerSinkTask.execute(WorkerSinkTask.java:200)
+#         at org.apache.kafka.connect.runtime.WorkerTask.doRun(WorkerTask.java:184)
+#         at org.apache.kafka.connect.runtime.WorkerTask.run(WorkerTask.java:234)
+#         at java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:511)
+#         at java.util.concurrent.FutureTask.run(FutureTask.java:266)
+#         at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1149)
+#         at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:624)
+#         at java.lang.Thread.run(Thread.java:748)
+# Caused by: org.apache.kafka.connect.errors.ConnectException: Failed to parse default value: "timezone"('utc', statement_timestamp())
 #         at io.confluent.vertica.VerticaMapperUtil.getDefaultValueOfColumn(VerticaMapperUtil.java:99)
 #         at io.confluent.vertica.VerticaDbStructure.getDefaultColumnValue(VerticaDbStructure.java:492)
 #         at io.confluent.vertica.VerticaSinkTask.put(VerticaSinkTask.java:156)
