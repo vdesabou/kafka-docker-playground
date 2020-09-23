@@ -33,12 +33,28 @@ do
     log "processing $dir"
     if [ "$dir" = "kafka-connect-couchbase" ]
     then
-        sed -e "s|:${dir}:|3.4.8|g" \
+        sed -e "s|:${dir}:|3.4.8 \| Open Source (Couchbase) \||g" \
             $readme_file > $readme_tmp_file
     else
         version=$(docker run vdesabou/kafka-docker-playground-connect:${image_version} cat /usr/share/confluent-hub-components/${dir}/manifest.json | jq -r '.version')
 
-        sed -e "s|:${dir}:|${version}|g" \
+        license=$(docker run vdesabou/kafka-docker-playground-connect:${image_version} cat /usr/share/confluent-hub-components/${dir}/manifest.json | jq -r '.license[0].name')
+
+        owner=$(docker run vdesabou/kafka-docker-playground-connect:${image_version} cat /usr/share/confluent-hub-components/${dir}/manifest.json | jq -r '.owner.name')
+
+        release_date=$(docker run vdesabou/kafka-docker-playground-connect:${image_version} cat /usr/share/confluent-hub-components/${dir}/manifest.json | jq -r '.release_date')
+
+        if [ "$license" = "Confluent Software Evaluation License" ]
+        then
+          type="Confluent Subscription"
+        elif [ "$license" = "Apache License 2.0" ] || [ "$license" = "Apache 2.0" ] || [ "$license" = "Apache License, Version 2.0" ] || [ "$license" = "The Apache License, Version 2.0" ]
+        then
+          type="Open Source ($owner)"
+        else
+          type="$license"
+        fi
+
+        sed -e "s|:${dir}:|${version} \| $type \| $release_date |g" \
             $readme_file > $readme_tmp_file
     fi
     cp $readme_tmp_file $readme_file
