@@ -24,8 +24,8 @@ Playground for Kafka/Confluent Docker experimentations...
 
 Quick start examples from Confluent [docs](https://docs.confluent.io/current/connect/managing/index.html) but in Docker version for ease of use.
 
-| Connector  | Product Category  | Default Version (*) |
-|---|---|---|
+| Connector  | Product Category  | Latest Version (*) | Type | Release Date|
+|---|---|---|---|---|
 | <img src="./images/icons/activemq.png" width="15"> [ActiveMQ Sink](connect/connect-active-mq-sink)  | Message Queue  | :confluentinc-kafka-connect-activemq-sink:
 | <img src="./images/icons/activemq.png" width="15"> [ActiveMQ Source](connect/connect-active-mq-source)  | Message Queue  | :confluentinc-kafka-connect-activemq:
 | <img src="./images/icons/cloudwatch_logs.svg" width="15"> [Amazon CloudWatch Logs Source](connect/connect-aws-cloudwatch-logs-source)  | Analytics  | :confluentinc-kafka-connect-aws-cloudwatch-logs:
@@ -87,13 +87,13 @@ Quick start examples from Confluent [docs](https://docs.confluent.io/current/con
 | <img src="./images/icons/oracle_11.jpg" width="15"> [JDBC Oracle 11 Sink](connect/connect-jdbc-oracle11-sink) |  Database | :confluentinc-kafka-connect-jdbc:
 | <img src="./images/icons/oracle_12.jpg" width="15"> [JDBC Oracle 12 Sink](connect/connect-jdbc-oracle11-sink) |  Database | :confluentinc-kafka-connect-jdbc:
 | <img src="./images/icons/postgresql.png" width="15"> [JDBC PostGreSQL Sink](connect/connect-jdbc-postgresql-sink) |  Database | :confluentinc-kafka-connect-jdbc:
-| <img src="./images/icons/sql_server.png" width="15"> [JDBC SQL Server Sink](connect/connect-jdbc-sqlserver-sink) |  Database | :confluentinc-kafka-connect-jdbc:
+| <img src="./images/icons/sql_server.png" width="15"> [JDBC Microsoft SQL Server Sink](connect/connect-jdbc-sqlserver-sink) |  Database | :confluentinc-kafka-connect-jdbc:
 | <img src="./images/icons/vertica.png" width="15"> [JDBC Vertica Sink](connect/connect-jdbc-vertica-sink) |  Database | :confluentinc-kafka-connect-jdbc:
 | <img src="./images/icons/mysql.jpg" width="15"> [JDBC MySQL Source](connect/connect-jdbc-mysql-source) |  Database | :confluentinc-kafka-connect-jdbc:
 | <img src="./images/icons/oracle_11.jpg" width="15"> [JDBC Oracle 11 Source](connect/connect-jdbc-oracle11-source) |  Database | :confluentinc-kafka-connect-jdbc:
 | <img src="./images/icons/oracle_12.jpg" width="15"> [JDBC Oracle 12 Source](connect/connect-jdbc-oracle11-source) |  Database | :confluentinc-kafka-connect-jdbc:
 | <img src="./images/icons/postgresql.png" width="15"> [JDBC PostGreSQL Source](connect/connect-jdbc-postgresql-source) |  Database | :confluentinc-kafka-connect-jdbc:
-| <img src="./images/icons/sql_server.png" width="15"> [JDBC SQL Server Source](connect/connect-jdbc-sqlserver-source) |  Database | :confluentinc-kafka-connect-jdbc:
+| <img src="./images/icons/sql_server.png" width="15"> [JDBC Microsoft SQL Server Source](connect/connect-jdbc-sqlserver-source) |  Database | :confluentinc-kafka-connect-jdbc:
 | <img src="./images/icons/jira.png" width="15"> [JIRA Source](connect/connect-jira-source) |  SaaS Apps | :confluentinc-kafka-connect-jira:
 | <img src="./images/icons/activemq.png" width="15"> [JMS ActiveMQ Sink](connect/connect-jms-active-mq-sink) |  Message Queue | :confluentinc-kafka-connect-jms-sink:
 | <img src="./images/icons/solace.jpg" width="15"> [JMS Solace Sink](connect/connect-jms-solace-sink) |  Message Queue | :confluentinc-kafka-connect-jms-sink:
