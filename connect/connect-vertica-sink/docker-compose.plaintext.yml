@@ -3,7 +3,7 @@ version: '3.5'
 services:
 
   vertica:
-    image: jbfavre/vertica:latest
+    image: cjonesy/docker-vertica
     #image: cjonesy/docker-vertica # in order to use vertica db 10, build your own docker image as described here https://github.com/cjonesy/docker-vertica
     hostname: vertica
     container_name: vertica
