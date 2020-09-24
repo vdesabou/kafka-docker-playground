@@ -1,6 +1,6 @@
 # Mapr Sink connector
 
-![asciinema](asciinema.gif)
+**WARNING** this is not a working example !
 
 ## Objective
 
