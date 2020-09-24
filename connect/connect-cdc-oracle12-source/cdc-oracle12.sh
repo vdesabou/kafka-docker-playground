@@ -79,6 +79,7 @@ curl -X PUT \
                "oracle.password": "mypassword",
                "start.from":"snapshot",
                "log.topic.name": "redo-log-topic",
+               "redo.log.consumer.bootstrap.servers":"broker:9092",
                "table.inclusion.regex": ".*CUSTOMERS.*",
                "_table.topic.name.template_":"Using template vars to set change event topic for each table",
                "table.topic.name.template": "${databaseName}.${tableName}",
