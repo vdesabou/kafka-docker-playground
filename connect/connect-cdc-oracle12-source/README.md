@@ -32,19 +32,46 @@ Wait (up to 15 minutes) that Oracle DB is up
 Create the source connector with:
 
 ```bash
-$
+$ curl -X PUT \
+     -H "Content-Type: application/json" \
+     --data '{
+               "connector.class": "io.confluent.connect.oracle.cdc.OracleCdcSourceConnector",
+               "tasks.max":1,
+               "key.converter": "io.confluent.connect.avro.AvroConverter",
+               "key.converter.schema.registry.url": "http://schema-registry:8081",
+               "value.converter": "io.confluent.connect.avro.AvroConverter",
+               "value.converter.schema.registry.url": "http://schema-registry:8081",
+               "confluent.license": "",
+               "confluent.topic.bootstrap.servers": "broker:9092",
+               "confluent.topic.replication.factor": "1",
+               "oracle.server": "oracle",
+               "oracle.port": 1521,
+               "oracle.database": "ORCLCDB",
+               "oracle.username": "C##MYUSER",
+               "oracle.password": "mypassword",
+               "start.from":"snapshot",
+               "log.topic.name": "redo-log-topic",
+               "redo.log.consumer.bootstrap.servers":"broker:9092",
+               "table.inclusion.regex": ".*CUSTOMERS.*",
+               "_table.topic.name.template_":"Using template vars to set change event topic for each table",
+               "table.topic.name.template": "${databaseName}.${tableName}",
+               "connection.pool.max.size": 20,
+               "confluent.topic.replication.factor":1
+          }' \
+     http://localhost:8083/connectors/cdc-oracle-source/config | jq .
 ```
 
 Verify the topic `FIXTHIS`:
 
 ```bash
-$
+$ ocker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic ORCLCDB.CUSTOMERS --from-beginning --max-messages 2
 ```
 
 Results:
 
 ```json
-
+{"ID":"\u0001","FIRST_NAME":{"string":"Rica"},"LAST_NAME":{"string":"Blaisdell"},"EMAIL":{"string":"rblaisdell0@rambler.ru"},"GENDER":{"string":"Female"},"CLUB_STATUS":{"string":"bronze"},"COMMENTS":{"string":"Universal optimal hierarchy"},"CREATE_TS":{"long":1600969027396},"UPDATE_TS":{"long":1600969027000},"op_type":"R","table":"C##MYUSER.CUSTOMERS","scn":"1450294"}
+{"ID":"\u0002","FIRST_NAME":{"string":"Ruthie"},"LAST_NAME":{"string":"Brockherst"},"EMAIL":{"string":"rbrockherst1@ow.ly"},"GENDER":{"string":"Female"},"CLUB_STATUS":{"string":"platinum"},"COMMENTS":{"string":"Reverse-engineered tangible interface"},"CREATE_TS":{"long":1600969027402},"UPDATE_TS":{"long":1600969027000},"op_type":"R","table":"C##MYUSER.CUSTOMERS","scn":"1450294"}
 ```
 
 N.B: Control Center is reachable at [http://127.0.0.1:9021](http://127.0.0.1:9021])
