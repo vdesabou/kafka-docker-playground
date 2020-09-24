@@ -75,11 +75,11 @@ curl -X PUT \
                "oracle.server": "oracle",
                "oracle.port": 1521,
                "oracle.database": "ORCLCDB",
-               "oracle.username": "myuser",
+               "oracle.username": "C##MYUSER",
                "oracle.password": "mypassword",
                "start.from":"snapshot",
                "log.topic.name": "redo-log-topic",
-               "table.inclusion.regex":"users[.]CUSTOMER.*",
+               "table.inclusion.regex": "USERS[.]CUSTOMERS.*",
                "_table.topic.name.template_":"Using template vars to set change event topic for each table",
                "table.topic.name.template": "${databaseName}.${schemaName}.${tableName}",
                "connection.pool.max.size": 20,
@@ -87,6 +87,12 @@ curl -X PUT \
           }' \
      http://localhost:8083/connectors/cdc-oracle-source/config | jq .
 
+# FIXTHIS:
+
+# {
+#   "error_code": 400,
+#   "message": "Connector configuration is invalid and contains the following 1 error(s):\nInclusion pattern matches no tables in 'ORCLCDB' database at oracle:1521 with user 'C##MYUSER' (pool=oracle-cdc-source:cdc-oracle-source9).\nYou can also find the above list of errors at the endpoint `/connector-plugins/{connectorType}/config/validate`"
+# }
 
 sleep 5
 
