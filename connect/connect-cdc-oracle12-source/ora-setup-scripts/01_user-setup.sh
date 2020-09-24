@@ -8,6 +8,7 @@ export ORACLE_SID
 
 sqlplus /nolog <<- EOF
 	CONNECT sys/Admin123 AS SYSDBA
+        -- Turn on Archivelog Mode
 	shutdown immediate
 	startup mount
 	alter database archivelog;
@@ -45,6 +46,7 @@ sqlplus / as sysdba <<- EOF
 	GRANT CREATE SEQUENCE TO C##MYUSER container=all;
 	GRANT CREATE TRIGGER TO C##MYUSER container=all;
 
+        -- Enable Supplemental Logging for All Columns
 	ALTER SESSION SET CONTAINER=cdb\$root;
 	ALTER DATABASE ADD SUPPLEMENTAL LOG DATA;
 	ALTER DATABASE ADD SUPPLEMENTAL LOG DATA (ALL) COLUMNS;
