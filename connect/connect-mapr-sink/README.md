@@ -9,7 +9,7 @@ Quickly test [Mapr Sink](https://docs.confluent.io/current/connect/kafka-connect
 **WARNING**: It only works with UBI 8 image, make sure to set environment variable `TAG`:
 
 ```bash
-export TAG=5.5.1-1-ubi8
+export TAG=6.0.0-1-ubi8
 ```
 
 Simply run:

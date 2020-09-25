@@ -23,6 +23,11 @@ function version_gt() {
 
 function set_kafka_client_tag()
 {
+    if [ "$TAG_BASE" = "6.0.0" ]
+    then
+      export KAFKA_CLIENT_TAG="2.6.0"
+    fi
+
     if [ "$TAG_BASE" = "5.5.1" ] || [ "$TAG_BASE" = "5.5.0" ]
     then
       export KAFKA_CLIENT_TAG="2.5.0"
@@ -84,7 +89,7 @@ function set_kafka_client_tag()
 if [ -z "$TAG" ]
 then
     # TAG is not set, use defaults:
-    export TAG=5.5.1
+    export TAG=6.0.0
     # to handle ubi8 images
     export TAG_BASE=$TAG
     if [ -z "$CP_KAFKA_IMAGE" ]
