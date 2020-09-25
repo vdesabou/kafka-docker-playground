@@ -6,6 +6,7 @@ source ${DIR}/../../scripts/utils.sh
 
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
 
+# useful script
 # https://raw.githubusercontent.com/mapr-demos/mapr-db-60-getting-started/master/mapr_devsandbox_container_setup.sh
 
 log "Installing Mapr Client"
@@ -27,7 +28,7 @@ fi
 CONNECT_IP=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' connect)
 MAPR_IP=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' mapr)
 
-log "Login with maprlogin"
+log "Login with maprlogin on mapr side (mapr)"
 docker exec -i mapr bash -c "maprlogin password -user mapr" << EOF
 mapr
 EOF
@@ -37,17 +38,18 @@ docker exec -i mapr bash -c "mapr dbshell" << EOF
 create /mapr/maprdemo.mapr.io/maprtopic
 EOF
 
-
-# log "Set MAPR_EXTERNAL on mapr"
-# docker exec -i --privileged --user root mapr bash -c "sed -i \"s/MAPR_EXTERNAL=.*/MAPR_EXTERNAL=${CONNECT_IP}/\" /opt/mapr/conf/env.sh"
-# docker exec -i --privileged --user root mapr bash -c "service mapr-warden restart"
-
-sleep 30
+sleep 60
 
 log "Configure Mapr Client"
-docker exec -i --privileged --user root -t connect bash -c "/opt/mapr/server/configure.sh -secure  -N maprdemo.mapr.io -c -C $MAPR_IP:7222 -H mapr -u appuser -g appuser"
-#docker exec -i --privileged --user root -t connect bash -c "/opt/mapr/server/configure.sh -N maprdemo.mapr.io -c -C $CONNECT_IP -H mapr -u appuser -g appuser"
+docker exec -i --privileged --user root -t connect bash -c "/opt/mapr/server/configure.sh -secure -N maprdemo.mapr.io -c -C $MAPR_IP:7222 -H mapr -u appuser -g appuser"
 
+docker cp mapr:/opt/mapr/conf/ssl_truststore /tmp/ssl_truststore
+docker cp /tmp/ssl_truststore connect:/opt/mapr/conf/ssl_truststore
+
+log "Login with maprlogin on client side (connect)"
+docker exec -i connect bash -c "maprlogin password -user mapr" << EOF
+mapr
+EOF
 
 log "Sending messages to topic maprtopic"
 docker exec -i broker kafka-console-producer --broker-list broker:9092 --topic maprtopic --property parse.key=true --property key.separator=, << EOF
@@ -71,88 +73,7 @@ curl -X PUT \
 
 sleep 10
 
-# [2020-09-25 09:53:23,765] ERROR WorkerSinkTask{id=mapr-sink-0} Task threw an uncaught and unrecoverable exception. Task is being killed and will not recover until manually restarted. Error: com.mapr.db.exceptions.DBException: tableExists() failed., (org.apache.kafka.connect.runtime.WorkerSinkTask)
-# com.google.common.util.concurrent.UncheckedExecutionException: com.mapr.db.exceptions.DBException: tableExists() failed.,
-#         at com.google.common.cache.LocalCache$Segment.get(LocalCache.java:2052)
-#         at com.google.common.cache.LocalCache.get(LocalCache.java:3963)
-#         at com.google.common.cache.LocalCache$LocalManualCache.get(LocalCache.java:4865)
-#         at io.confluent.connect.mapr.db.MapRDbSinkTask.put(MapRDbSinkTask.java:72)
-#         at org.apache.kafka.connect.runtime.WorkerSinkTask.deliverMessages(WorkerSinkTask.java:545)
-#         at org.apache.kafka.connect.runtime.WorkerSinkTask.poll(WorkerSinkTask.java:325)
-#         at org.apache.kafka.connect.runtime.WorkerSinkTask.iteration(WorkerSinkTask.java:228)
-#         at org.apache.kafka.connect.runtime.WorkerSinkTask.execute(WorkerSinkTask.java:200)
-#         at org.apache.kafka.connect.runtime.WorkerTask.doRun(WorkerTask.java:184)
-#         at org.apache.kafka.connect.runtime.WorkerTask.run(WorkerTask.java:234)
-#         at java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:511)
-#         at java.util.concurrent.FutureTask.run(FutureTask.java:266)
-#         at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1149)
-#         at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:624)
-#         at java.lang.Thread.run(Thread.java:748)
-# Caused by: com.mapr.db.exceptions.DBException: tableExists() failed.,
-#         at com.mapr.db.exceptions.ExceptionHandler.handle(ExceptionHandler.java:65)
-#         at com.mapr.db.impl.AdminImpl.tableExists(AdminImpl.java:318)
-#         at com.mapr.db.impl.AdminImpl.tableExists(AdminImpl.java:307)
-#         at com.mapr.db.impl.MapRDBImpl.tableExists(MapRDBImpl.java:55)
-#         at com.mapr.db.MapRDB.tableExists(MapRDB.java:45)
-#         at io.confluent.connect.mapr.db.MapRDbSinkTask.lambda$put$1(MapRDbSinkTask.java:83)
-#         at com.google.common.cache.LocalCache$LocalManualCache$1.load(LocalCache.java:4870)
-#         at com.google.common.cache.LocalCache$LoadingValueReference.loadFuture(LocalCache.java:3524)
-#         at com.google.common.cache.LocalCache$Segment.loadSync(LocalCache.java:2250)
-#         at com.google.common.cache.LocalCache$Segment.lockedGetOrLoad(LocalCache.java:2133)
-#         at com.google.common.cache.LocalCache$Segment.get(LocalCache.java:2046)
-#         ... 14 more
-# Caused by: java.io.IOException: Could not create FileClient
-#         at com.mapr.fs.MapRFileSystem.lookupClient(MapRFileSystem.java:656)
-#         at com.mapr.fs.MapRFileSystem.lookupClient(MapRFileSystem.java:709)
-#         at com.mapr.fs.MapRFileSystem.getTableProperties(MapRFileSystem.java:4088)
-#         at com.mapr.db.impl.AdminImpl.tableExists(AdminImpl.java:313)
-#         ... 23 more
-# Caused by: java.io.IOException: Could not create FileClient
-#         at com.mapr.fs.MapRClientImpl.<init>(MapRClientImpl.java:137)
-#         at com.mapr.fs.MapRFileSystem.lookupClient(MapRFileSystem.java:650)
-#         ... 26 more
-# [2020-09-25 09:53:23,765] ERROR WorkerSinkTask{id=mapr-sink-0} Task threw an uncaught and unrecoverable exception (org.apache.kafka.connect.runtime.WorkerTask)
-# org.apache.kafka.connect.errors.ConnectException: Exiting WorkerSinkTask due to unrecoverable exception.
-#         at org.apache.kafka.connect.runtime.WorkerSinkTask.deliverMessages(WorkerSinkTask.java:567)
-#         at org.apache.kafka.connect.runtime.WorkerSinkTask.poll(WorkerSinkTask.java:325)
-#         at org.apache.kafka.connect.runtime.WorkerSinkTask.iteration(WorkerSinkTask.java:228)
-#         at org.apache.kafka.connect.runtime.WorkerSinkTask.execute(WorkerSinkTask.java:200)
-#         at org.apache.kafka.connect.runtime.WorkerTask.doRun(WorkerTask.java:184)
-#         at org.apache.kafka.connect.runtime.WorkerTask.run(WorkerTask.java:234)
-#         at java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:511)
-#         at java.util.concurrent.FutureTask.run(FutureTask.java:266)
-#         at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1149)
-#         at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:624)
-#         at java.lang.Thread.run(Thread.java:748)
-# Caused by: com.google.common.util.concurrent.UncheckedExecutionException: com.mapr.db.exceptions.DBException: tableExists() failed.,
-#         at com.google.common.cache.LocalCache$Segment.get(LocalCache.java:2052)
-#         at com.google.common.cache.LocalCache.get(LocalCache.java:3963)
-#         at com.google.common.cache.LocalCache$LocalManualCache.get(LocalCache.java:4865)
-#         at io.confluent.connect.mapr.db.MapRDbSinkTask.put(MapRDbSinkTask.java:72)
-#         at org.apache.kafka.connect.runtime.WorkerSinkTask.deliverMessages(WorkerSinkTask.java:545)
-#         ... 10 more
-# Caused by: com.mapr.db.exceptions.DBException: tableExists() failed.,
-#         at com.mapr.db.exceptions.ExceptionHandler.handle(ExceptionHandler.java:65)
-#         at com.mapr.db.impl.AdminImpl.tableExists(AdminImpl.java:318)
-#         at com.mapr.db.impl.AdminImpl.tableExists(AdminImpl.java:307)
-#         at com.mapr.db.impl.MapRDBImpl.tableExists(MapRDBImpl.java:55)
-#         at com.mapr.db.MapRDB.tableExists(MapRDB.java:45)
-#         at io.confluent.connect.mapr.db.MapRDbSinkTask.lambda$put$1(MapRDbSinkTask.java:83)
-#         at com.google.common.cache.LocalCache$LocalManualCache$1.load(LocalCache.java:4870)
-#         at com.google.common.cache.LocalCache$LoadingValueReference.loadFuture(LocalCache.java:3524)
-#         at com.google.common.cache.LocalCache$Segment.loadSync(LocalCache.java:2250)
-#         at com.google.common.cache.LocalCache$Segment.lockedGetOrLoad(LocalCache.java:2133)
-#         at com.google.common.cache.LocalCache$Segment.get(LocalCache.java:2046)
-#         ... 14 more
-# Caused by: java.io.IOException: Could not create FileClient
-#         at com.mapr.fs.MapRFileSystem.lookupClient(MapRFileSystem.java:656)
-#         at com.mapr.fs.MapRFileSystem.lookupClient(MapRFileSystem.java:709)
-#         at com.mapr.fs.MapRFileSystem.getTableProperties(MapRFileSystem.java:4088)
-#         at com.mapr.db.impl.AdminImpl.tableExists(AdminImpl.java:313)
-#         ... 23 more
-# Caused by: java.io.IOException: Could not create FileClient
-#         at com.mapr.fs.MapRClientImpl.<init>(MapRClientImpl.java:137)
-#         at com.mapr.fs.MapRFileSystem.lookupClient(MapRFileSystem.java:650)
-#         ... 26 more
-# [2020-09-25 09:53:23,766] ERROR WorkerSinkTask{id=mapr-sink-0} Task is being killed and will not recover until manually restarted (org.apache.kafka.connect.runtime.WorkerTask)
 log "Verify data is in Mapr"
+docker exec -i mapr bash -c "mapr dbshell" << EOF
+find /mapr/maprdemo.mapr.io/maprtopic
+EOF
