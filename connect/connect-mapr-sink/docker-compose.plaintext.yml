@@ -4,13 +4,18 @@ services:
 
   mapr:
     image: maprtech/dev-sandbox-container:latest
-    hostname: mapr
+    hostname: maprdemo
     container_name: mapr
     privileged: true
     ports:
       - "8443:8443"
+    networks:
+      testing_net:
+        ipv4_address: 172.28.1.1
     environment:
       isSecure: "true"
+      clusterName: "maprdemo.mapr.io"
+      MAPR_EXTERNAL: "172.28.1.2"
 
   connect:
     depends_on:
@@ -18,8 +23,38 @@ services:
       - broker
       - schema-registry
       - mapr
+    networks:
+      testing_net:
+        ipv4_address: 172.28.1.2
     volumes:
       - ../../connect/connect-mapr-sink/mapr.repo:/etc/yum.repos.d/mapr_core.repo
     environment:
       CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-maprdb
       KAFKA_OPTS: "-Dmapr.home.dir=/opt/mapr -Dmapr.library.flatclass"
+
+  broker:
+    networks:
+      testing_net:
+        ipv4_address: 172.28.1.3
+
+  zookeeper:
+    networks:
+      testing_net:
+        ipv4_address: 172.28.1.4
+
+  schema-registry:
+    networks:
+      testing_net:
+        ipv4_address: 172.28.1.5
+
+  control-center:
+    networks:
+      testing_net:
+        ipv4_address: 172.28.1.6
+
+networks:
+  testing_net:
+    ipam:
+      driver: default
+      config:
+          - subnet: 172.28.0.0/16
