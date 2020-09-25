@@ -41,7 +41,7 @@ EOF
 sleep 60
 
 log "Configure Mapr Client"
-docker exec -i --privileged --user root -t connect bash -c "/opt/mapr/server/configure.sh -secure -N maprdemo.mapr.io -c -C $MAPR_IP:7222 -H mapr -u appuser -g appuser"
+docker exec -i --privileged --user root -t connect bash -c "/opt/mapr/server/configure.sh -secure -N maprdemo.mapr.io -c -C $MAPR_IP -u appuser -g appuser"
 
 docker cp mapr:/opt/mapr/conf/ssl_truststore /tmp/ssl_truststore
 docker cp /tmp/ssl_truststore connect:/opt/mapr/conf/ssl_truststore
