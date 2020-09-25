@@ -11,8 +11,8 @@ if [[ "$TAG" == *ubi8 ]]
 then
      # RHEL
      # required deps for mapr-client
-     docker exec -i --privileged --user root -t connect  bash -c "rpm -i https://rpmfind.net/linux/centos/7.7.1908/os/x86_64/Packages/mtools-4.0.18-5.el7.x86_64.rpm"
-     docker exec -i --privileged --user root -t connect  bash -c "rpm -i https://rpmfind.net/linux/centos/7.7.1908/os/x86_64/Packages/syslinux-4.05-15.el7.x86_64.rpm"
+     docker exec -i --privileged --user root -t connect  bash -c "rpm -i ftp://ftp.ntua.gr/pub/linux/centos/7.8.2003/os/x86_64/Packages/mtools-4.0.18-5.el7.x86_64.rpm"
+     docker exec -i --privileged --user root -t connect  bash -c "rpm -i http://mirror.centos.org/centos/7/os/x86_64/Packages/syslinux-4.05-15.el7.x86_64.rpm"
 
      docker exec -i --privileged --user root -t connect  bash -c "yum -y install hostname findutils net-tools"
 
