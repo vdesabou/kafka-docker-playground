@@ -3,7 +3,7 @@ version: '3.5'
 services:
 
   mapr:
-    image: maprtech/dev-sandbox-container:latest
+    image: maprtech/dev-sandbox-container:latest # https://mapr.com/docs/60/MapRContainerDevelopers/RunMapRContainerDevelopers.html
     hostname: maprdemo
     container_name: mapr
     privileged: true
