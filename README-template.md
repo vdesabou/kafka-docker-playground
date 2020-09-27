@@ -62,10 +62,10 @@ Quick start examples from Confluent [docs](https://docs.confluent.io/current/con
 | <img src="./images/icons/elasticsearch.png" width="15"> [ElasticSearch Sink](connect/connect-elasticsearch-sink) | Analytics | :confluentinc-kafka-connect-elasticsearch:
 | <img src="./images/icons/ftps.png" height="15"> [FTPS Sink](connect/connect-ftps-sink) | Datastore |:confluentinc-kafka-connect-ftps:
 | <img src="./images/icons/ftps.png" height="15"> [FTPS Source](connect/connect-ftps-source) | Datastore |:confluentinc-kafka-connect-ftps:
-| <img src="./images/icons/pivotal_gemfire.png" width="15"> [Gemfire](connect/connect-pivotal-gemfire-sink) | Database | :confluentinc-kafka-connect-pivotal-gemfire:
-| <img src="./images/icons/github.png" width="15"> [Github](connect/connect-github-source) | SaaS Apps | :confluentinc-kafka-connect-github:
+| <img src="./images/icons/pivotal_gemfire.png" width="15"> [Gemfire Sink](connect/connect-pivotal-gemfire-sink) | Database | :confluentinc-kafka-connect-pivotal-gemfire:
+| <img src="./images/icons/github.png" width="15"> [Github Source](connect/connect-github-source) | SaaS Apps | :confluentinc-kafka-connect-github:
 | <img src="./images/icons/bigquery.png" width="15"> [Google BigQuery Sink](connect/connect-gcp-bigquery-sink) | Data Warehouse | :wepay-kafka-connect-bigquery:
-| <img src="./images/icons/cloud_functions.png" width="15"> [Google Cloud Functions](connect/connect-gcp-cloud-functions-sink) | SaaS Apps | :confluentinc-kafka-connect-gcp-functions:
+| <img src="./images/icons/cloud_functions.png" width="15"> [Google Cloud Functions Sink](connect/connect-gcp-cloud-functions-sink) | SaaS Apps | :confluentinc-kafka-connect-gcp-functions:
 | <img src="./images/icons/gcp_pubsub.png" width="15"> [Google Cloud Pub/Sub Source](connect/connect-gcp-pubsub-source) |  Message Queue | :confluentinc-kafka-connect-gcp-pubsub:
 | <img src="./images/icons/spanner.png" width="15"> [Google Cloud Spanner Sink](connect/connect-gcp-spanner-sink) |  Database | :confluentinc-kafka-connect-gcp-spanner:
 | <img src="./images/icons/gcs.png" width="15"> [Google Cloud Storage Sink](connect/connect-gcp-gcs-sink) |  Datastore | :confluentinc-kafka-connect-gcs:
@@ -111,7 +111,7 @@ Quick start examples from Confluent [docs](https://docs.confluent.io/current/con
 | <img src="./images/icons/prometheus.png" height="15">  [Prometheus Sink](connect/connect-prometheus-sink) |  Analytics | :confluentinc-kafka-connect-prometheus-metrics:
 | <img src="./images/icons/rabbitmq.svg" width="15"> [RabbitMQ Sink](connect/connect-rabbitmq-sink) |  Message Queue | :confluentinc-kafka-connect-rabbitmq-sink:
 | <img src="./images/icons/rabbitmq.svg" width="15">  [RabbitMQ Source](connect/connect-rabbitmq-source) |  Message Queue | :confluentinc-kafka-connect-rabbitmq:
-| <img src="./images/icons/redis.jpg" width="15"> [Redis](connect/connect-redis-sink) |  Database | :jcustenborder-kafka-connect-redis:
+| <img src="./images/icons/redis.jpg" width="15"> [Redis Sink](connect/connect-redis-sink) |  Database | :jcustenborder-kafka-connect-redis:
 | <img src="./images/icons/salesforce.png" height="15"> [SalesForce Bulk API Sink](connect/connect-salesforce-bulkapi-sink) |  SaaS Apps | :confluentinc-kafka-connect-salesforce-bulk-api:
 | <img src="./images/icons/salesforce.png" height="15"> [SalesForce Bulk API Source](connect/connect-salesforce-bulkapi-source) |  SaaS Apps | :confluentinc-kafka-connect-salesforce-bulk-api:
 | <img src="./images/icons/salesforce.png" height="15"> [SalesForce CDC Source](connect/connect-salesforce-cdc-source) |  SaaS Apps | :confluentinc-kafka-connect-salesforce:
@@ -123,8 +123,8 @@ Quick start examples from Confluent [docs](https://docs.confluent.io/current/con
 | <img src="./images/icons/servicenow.png" width="15"> [ServiceNow Source](connect/connect-servicenow-source) |  SaaS Apps | :confluentinc-kafka-connect-servicenow:
 | <img src="./images/icons/sftp.png" width="15"> [SFTP Sink](connect/connect-sftp-sink) |  Datastore | :confluentinc-kafka-connect-sftp:
 | <img src="./images/icons/sftp.png" width="15"> [SFTP Sink](connect/connect-sftp-source) |  Datastore | :confluentinc-kafka-connect-sftp:
-| <img src="./images/icons/snmp_trap.png" width="15"> [SNMP Trap](connect/connect-snmp-source) |  IoT | :confluentinc-kafka-connect-snmp:
-| <img src="./images/icons/snowflake.png" height="15">  [Snowflake](connect/connect-snowflake-sink) |  Data Warehouse | :snowflakeinc-snowflake-kafka-connector:
+| <img src="./images/icons/snmp_trap.png" width="15"> [SNMP Trap Source](connect/connect-snmp-source) |  IoT | :confluentinc-kafka-connect-snmp:
+| <img src="./images/icons/snowflake.png" height="15">  [Snowflake Sink](connect/connect-snowflake-sink) |  Data Warehouse | :snowflakeinc-snowflake-kafka-connector:
 | <img src="./images/icons/solace.jpg" width="15"> [Solace Sink](connect/connect-solace-sink) |  Message Queue | :confluentinc-kafka-connect-solace-sink:
 | <img src="./images/icons/solace.jpg" width="15"> [Solace Source](connect/connect-solace-source) |  Message Queue | :confluentinc-kafka-connect-solace-source:
 | <img src="./images/icons/splunk.jpg" width="15"> [Splunk Sink](connect/connect-splunk-sink) |  Analytics | :splunk-kafka-connect-splunk:
