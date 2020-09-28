@@ -400,7 +400,7 @@ function retry() {
         logwarn "docker ps"
         docker ps
         logwarn "####################################################"
-        for container in broker schema-registry connect broker-us broker-europe connect-us connect-europe
+        for container in broker broker2 schema-registry connect broker-us broker-europe connect-us connect-europe
         do
           if [[ $(docker ps -f "name=$container" --format '{{.Names}}') == $container ]]
           then
