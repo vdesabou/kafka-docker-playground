@@ -39,7 +39,7 @@ EOF
 Configure Mapr Client
 
 ```bash
-$ docker exec -i --privileged --user root -t connect bash -c "/opt/mapr/server/configure.sh -secure -N maprdemo.mapr.io -c -C $MAPR_IP:7222 -H mapr -u appuser -g appuser"
+$ docker exec -i --privileged --user root -t connect bash -c "/opt/mapr/server/configure.sh -secure -N maprdemo.mapr.io -c -C $MAPR_IP:7222 -u appuser -g appuser"
 ```
 
 ```bash
