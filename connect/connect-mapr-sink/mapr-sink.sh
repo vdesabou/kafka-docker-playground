@@ -72,7 +72,7 @@ curl -X PUT \
           }' \
      http://localhost:8083/connectors/mapr-sink/config | jq .
 
-sleep 10
+sleep 20
 
 log "Verify data is in Mapr"
 docker exec -i mapr bash -c "mapr dbshell" << EOF
