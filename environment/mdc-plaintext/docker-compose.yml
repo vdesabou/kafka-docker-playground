@@ -65,7 +65,9 @@ services:
       CONFLUENT_METRICS_ENABLE: 'true'
       # for 5.4.x:
       KAFKA_CONFLUENT_LICENSE_TOPIC_REPLICATION_FACTOR: 1
-
+      # for 6.0.0
+      KAFKA_CONFLUENT_BALANCER_TOPIC_REPLICATION_FACTOR: 1
+  
   broker-us:
     image: confluentinc/${CP_KAFKA_IMAGE}:${TAG}
     hostname: broker-us
@@ -88,7 +90,9 @@ services:
       CONFLUENT_METRICS_ENABLE: 'true'
       # for 5.4.x:
       KAFKA_CONFLUENT_LICENSE_TOPIC_REPLICATION_FACTOR: 1
-
+      # for 6.0.0
+      KAFKA_CONFLUENT_BALANCER_TOPIC_REPLICATION_FACTOR: 1
+  
   broker-metrics:
     image: confluentinc/${CP_KAFKA_IMAGE}:${TAG}
     hostname: broker-metrics
@@ -103,7 +107,9 @@ services:
       CONFLUENT_SUPPORT_CUSTOMER_ID: 'anonymous'
       # for 5.4.x:
       KAFKA_CONFLUENT_LICENSE_TOPIC_REPLICATION_FACTOR: 1
-
+      # for 6.0.0
+      KAFKA_CONFLUENT_BALANCER_TOPIC_REPLICATION_FACTOR: 1
+  
   connect-us:
     image: vdesabou/kafka-docker-playground-connect:${TAG}
     hostname: connect-us
