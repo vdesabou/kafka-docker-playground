@@ -31,7 +31,5 @@ curl -X PUT \
 
 sleep 10
 
-docker container logs --tail=300 cassandra
-
 log "Verify messages are in cassandra table test.topic1"
 docker exec cassandra cqlsh -e 'select * from test.topic1;'
