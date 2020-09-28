@@ -45,9 +45,9 @@ before_install:
 - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
 jobs:
   include:
-  - name: '6.0.0-1-ubi8: CONNECT: http-sink'
+  - name: '6.0.0-1-ubi8: CONNECT: gcs-sink'
     env:
-    - TEST_LIST="connect/connect-http-sink"
+    - TEST_LIST="connect/connect-gcp-gcs-sink"
 
 
 
