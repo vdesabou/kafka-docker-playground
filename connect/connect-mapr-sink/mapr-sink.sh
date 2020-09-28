@@ -4,26 +4,27 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
+if [[ "$TAG" != *ubi8 ]]
+then
+     logerror "This can only be run with UBI image"
+     exit 1
+fi
+
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
 
 # useful script
 # https://raw.githubusercontent.com/mapr-demos/mapr-db-60-getting-started/master/mapr_devsandbox_container_setup.sh
 
 log "Installing Mapr Client"
-if [[ "$TAG" == *ubi8 ]]
-then
-     # RHEL
-     # required deps for mapr-client
-     docker exec -i --privileged --user root -t connect  bash -c "rpm -i http://mirror.centos.org/centos/7/os/x86_64/Packages/mtools-4.0.18-5.el7.x86_64.rpm"
-     docker exec -i --privileged --user root -t connect  bash -c "rpm -i http://mirror.centos.org/centos/7/os/x86_64/Packages/syslinux-4.05-15.el7.x86_64.rpm"
 
-     docker exec -i --privileged --user root -t connect  bash -c "yum -y install hostname findutils net-tools"
+# RHEL
+# required deps for mapr-client
+docker exec -i --privileged --user root -t connect  bash -c "rpm -i http://mirror.centos.org/centos/7/os/x86_64/Packages/mtools-4.0.18-5.el7.x86_64.rpm"
+docker exec -i --privileged --user root -t connect  bash -c "rpm -i http://mirror.centos.org/centos/7/os/x86_64/Packages/syslinux-4.05-15.el7.x86_64.rpm"
 
-     docker exec -i --privileged --user root -t connect  bash -c "rpm --import https://package.mapr.com/releases/pub/maprgpg.key && yum -y update && yum -y install mapr-client.x86_64"
-else
-     logerror "This can only be run with UBI image"
-     exit 1
-fi
+docker exec -i --privileged --user root -t connect  bash -c "yum -y install hostname findutils net-tools"
+
+docker exec -i --privileged --user root -t connect  bash -c "rpm --import https://package.mapr.com/releases/pub/maprgpg.key && yum -y update && yum -y install mapr-client.x86_64"
 
 CONNECT_IP=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' connect)
 MAPR_IP=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' mapr)
