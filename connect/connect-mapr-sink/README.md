@@ -1,5 +1,7 @@
 # Mapr Sink connector
 
+![asciinema](https://github.com/vdesabou/gifs/blob/master/connect/connect-mapr-sink/asciinema.gif?raw=true)
+
 ## Objective
 
 Quickly test [Mapr Sink](https://docs.confluent.io/current/connect/kafka-connect-maprdb/index.html#mapr-db-sink-connector-for-cp) connector.
