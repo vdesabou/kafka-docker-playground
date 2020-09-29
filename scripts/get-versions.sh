@@ -31,9 +31,23 @@ cp $template_file $readme_file
 for dir in $(docker run vdesabou/kafka-docker-playground-connect:${image_version} ls /usr/share/confluent-hub-components/)
 do
     log "processing $dir"
+
+    test_folder=$(grep ":${dir}:" $template_file | cut -d "(" -f 2 | cut -d ")" -f 1)
+    travis="❌"
+    if [ "$test_folder" != "" ]
+    then
+      set +e
+      grep "$test_folder" .travis.yml > /dev/null
+      if [ $? = 0 ]
+      then
+        travis="✅"
+      fi
+      set -e
+    fi
+
     if [ "$dir" = "kafka-connect-couchbase" ]
     then
-        sed -e "s|:${dir}:|3.4.8 \| Open Source (Couchbase) \||g" \
+        sed -e "s|:${dir}:|3.4.8 \| Open Source (Couchbase) \| \| $travis |g" \
             $readme_file > $readme_tmp_file
     else
         version=$(docker run vdesabou/kafka-docker-playground-connect:${image_version} cat /usr/share/confluent-hub-components/${dir}/manifest.json | jq -r '.version')
@@ -43,6 +57,10 @@ do
         owner=$(docker run vdesabou/kafka-docker-playground-connect:${image_version} cat /usr/share/confluent-hub-components/${dir}/manifest.json | jq -r '.owner.name')
 
         release_date=$(docker run vdesabou/kafka-docker-playground-connect:${image_version} cat /usr/share/confluent-hub-components/${dir}/manifest.json | jq -r '.release_date')
+        if [ "$release_date" = "null" ]
+        then
+          release_date=""
+        fi
 
         if [ "$license" = "Confluent Software Evaluation License" ]
         then
@@ -54,7 +72,7 @@ do
           type="$license"
         fi
 
-        sed -e "s|:${dir}:|${version} \| $type \| $release_date |g" \
+        sed -e "s|:${dir}:|${version} \| $type \| $release_date \| $travis |g" \
             $readme_file > $readme_tmp_file
     fi
     cp $readme_tmp_file $readme_file
