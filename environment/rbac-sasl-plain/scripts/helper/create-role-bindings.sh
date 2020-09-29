@@ -23,6 +23,7 @@ CONNECTOR_PRINCIPAL="User:connectorSA"
 SR_PRINCIPAL="User:schemaregistryUser"
 C3_ADMIN="User:controlcenterAdmin"
 CLIENT_AVRO_PRINCIPAL="User:clientAvroCli"
+LICENSE_RESOURCE="Topic:_confluent-license"
 
 mds_login $MDS_URL ${SUPER_USER} ${SUPER_USER_PASSWORD} || exit 1
 
@@ -63,6 +64,15 @@ do
         --principal $SR_PRINCIPAL \
         --role ResourceOwner \
         --resource $resource \
+        --kafka-cluster-id $KAFKA_CLUSTER_ID
+done
+
+for role in DeveloperRead DeveloperWrite
+do
+    confluent iam rolebinding create \
+        --principal $SR_PRINCIPAL \
+        --role $role \
+        --resource $LICENSE_RESOURCE \
         --kafka-cluster-id $KAFKA_CLUSTER_ID
 done
 
