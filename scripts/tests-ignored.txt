@@ -13,3 +13,8 @@ hive-sink.sh
 hive-sink-datadirect.sh
 azure-data-lake-storage-gen2-2way-ssl.sh
 azure-sql-data-warehouse-sink.sh
+gcs-sink.sh
+gcs-sink-sasl-ssl.sh
+gcs-sink-2way-ssl.sh
+gcs-sink-ldap-authorizer-sasl-plain.sh
+gcs-sink-rbac-sasl-plain.sh
