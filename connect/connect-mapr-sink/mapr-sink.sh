@@ -4,7 +4,7 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
-if [[ "$TAG" != *ubi8 ]]
+if [[ "$TAG" == *ubi8 ]]  || version_gt $TAG_BASE "5.9.0" # starting from 6.0, all images are ubi8
 then
      logerror "This can only be run with UBI image"
      exit 1
