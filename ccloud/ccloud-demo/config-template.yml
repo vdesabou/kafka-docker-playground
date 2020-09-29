@@ -4,7 +4,7 @@ config:
     timeout: 60
   listener: 0.0.0.0:2112
   noTimestamp: false
-  delay: 60
+  delay: 120
   granularity: PT1M
 rules:
   - clusters:
