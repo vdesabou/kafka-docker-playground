@@ -24,8 +24,8 @@ Playground for Kafka/Confluent Docker experimentations...
 
 Quick start examples from Confluent [docs](https://docs.confluent.io/current/connect/managing/index.html) but in Docker version for ease of use.
 
-| Connector  | Product Category  | Latest Version (*) | Type | Release Date|
-|---|---|---|---|---|
+| Connector  | Product Category  | Latest Version (*) | Type | Release Date| Travis
+|---|---|---|---|---|---|
 | <img src="./images/icons/activemq.png" width="15"> [ActiveMQ Sink](connect/connect-active-mq-sink)  | Message Queue  | :confluentinc-kafka-connect-activemq-sink:
 | <img src="./images/icons/activemq.png" width="15"> [ActiveMQ Source](connect/connect-active-mq-source)  | Message Queue  | :confluentinc-kafka-connect-activemq:
 | <img src="./images/icons/cloudwatch_logs.svg" width="15"> [Amazon CloudWatch Logs Source](connect/connect-aws-cloudwatch-logs-source)  | Analytics  | :confluentinc-kafka-connect-aws-cloudwatch-logs:
@@ -43,8 +43,8 @@ Quick start examples from Confluent [docs](https://docs.confluent.io/current/con
 | <img src="./images/icons/lambda.svg" width="15"> [AWS Lambda Sink](connect/connect-aws-lambda-sink)  | SaaS Apps  | :confluentinc-kafka-connect-aws-lambda:
 | <img src="./images/icons/blob_storage.png" width="15"> [Azure Blob Storage Sink](connect/connect-azure-blob-storage-sink)  | Datastore | :confluentinc-kafka-connect-azure-blob-storage:
 | <img src="./images/icons/blob_storage.png" width="15"> [Azure Blob Storage Source](connect/connect-azure-blob-storage-source)  | Datastore | :confluentinc-kafka-connect-azure-blob-storage-source:
-| <img src="./images/icons/data_lake_gen1.png" width="15"> [Azure Data Lake Storage Sink (Gen1)](connect/connect-azure-data-lake-storage-gen1-sink)  | Datastore | :confluentinc-kafka-connect-azure-data-lake-gen1-storage:
-| <img src="./images/icons/data_lake_gen1.png" width="15"> [Azure Data Lake Storage Sink (Gen2)](connect/connect-azure-data-lake-storage-gen2-sink)  | Datastore | :confluentinc-kafka-connect-azure-data-lake-gen2-storage:
+| <img src="./images/icons/data_lake_gen1.png" width="15"> [Azure Data Lake Storage Gen1 Sink](connect/connect-azure-data-lake-storage-gen1-sink)  | Datastore | :confluentinc-kafka-connect-azure-data-lake-gen1-storage:
+| <img src="./images/icons/data_lake_gen1.png" width="15"> [Azure Data Lake Storage Gen2 Sink](connect/connect-azure-data-lake-storage-gen2-sink)  | Datastore | :confluentinc-kafka-connect-azure-data-lake-gen2-storage:
 | <img src="./images/icons/event_hubs.png" width="15"> [Azure Event Hubs Source](connect/connect-azure-event-hubs-source)  | Message Queue | :confluentinc-kafka-connect-azure-event-hubs:
 | <img src="./images/icons/search.png" width="15"> [Azure Search Sink](connect/connect-azure-search-sink)  | Analytics | :confluentinc-kafka-connect-azure-search:
 | <img src="./images/icons/service_bus.png" width="15"> [Azure Service Bus Source](connect/connect-azure-service-bus-source)  | Message Queue | :confluentinc-kafka-connect-azure-service-bus:
@@ -58,7 +58,7 @@ Quick start examples from Confluent [docs](https://docs.confluent.io/current/con
 | <img src="./images/icons/mongodb.jpg" width="15"> [Debezium CDC MongoDB Source](connect/connect-debezium-mongodb-source)  | CDC | :debezium-debezium-connector-mongodb:
 | <img src="./images/icons/data_diode.jpg" width="15"> [Data Diode Sink](connect/connect-datadiode-source-sink) | Logs | :confluentinc-kafka-connect-data-diode:
 | <img src="./images/icons/data_diode.jpg" width="15"> [Data Diode Source](connect/connect-datadiode-source-sink) | Logs | :confluentinc-kafka-connect-data-diode:
-| <img src="https://static-dotconferences-com.s3.amazonaws.com/editionpartnerships/datadog.png" height="15"> [Datadog Metrics Sink](connect/connect-datadog-metrics-sink) | Analytics | :confluentinc-kafka-connect-datadog-metrics:
+| <img src="./images/icons/datadog.png" height="15"> [Datadog Metrics Sink](connect/connect-datadog-metrics-sink) | Analytics | :confluentinc-kafka-connect-datadog-metrics:
 | <img src="./images/icons/elasticsearch.png" width="15"> [ElasticSearch Sink](connect/connect-elasticsearch-sink) | Analytics | :confluentinc-kafka-connect-elasticsearch:
 | <img src="./images/icons/ftps.png" height="15"> [FTPS Sink](connect/connect-ftps-sink) | Datastore |:confluentinc-kafka-connect-ftps:
 | <img src="./images/icons/ftps.png" height="15"> [FTPS Source](connect/connect-ftps-source) | Datastore |:confluentinc-kafka-connect-ftps:
