@@ -54,8 +54,8 @@ jobs:
       azure-event-hubs-source'
     env: TEST_LIST="connect/connect-azure-data-lake-storage-gen1-sink connect/connect-azure-data-lake-storage-gen2-sink
       connect/connect-azure-event-hubs-source" TAG="6.0.0"
-  - name: '6.0.0: CONNECT: azure-sql-data-warehouse-sink azure-search-sink ftps-source ftps-sink rabbitmq-sink amps-source jira-source github-source pivotal-gemfire-sink'
-    env: TEST_LIST="connect/connect-azure-sql-data-warehouse-sink connect/connect-azure-search-sink connect/connect-ftps-source connect/connect-ftps-sink connect/connect-rabbitmq-sink connect/connect-amps-source connect/connect-jira-source connect/connect-github-source connect/connect-pivotal-gemfire-sink"
+  - name: '6.0.0: CONNECT: azure-search-sink ftps-source ftps-sink rabbitmq-sink amps-source jira-source github-source pivotal-gemfire-sink'
+    env: TEST_LIST="connect/connect-azure-search-sink connect/connect-ftps-source connect/connect-ftps-sink connect/connect-rabbitmq-sink connect/connect-amps-source connect/connect-jira-source connect/connect-github-source connect/connect-pivotal-gemfire-sink"
       TAG="6.0.0"
   - name: '6.0.0: CONNECT: azure-service-bus-source azure-blob-storage-sink
       azure-blob-storage-source mapr-sink'
