@@ -46,7 +46,7 @@ sed -e "s|:SCHEMA_REGISTRY_URL:|$SCHEMA_REGISTRY_URL|g" \
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.yml"
 
 # results a re inconsistent depending on RHEL or DEBIAN
-if [[ "$TAG" == *ubi8 ]]
+if [[ "$TAG" == *ubi8 ]]  || version_gt $TAG_BASE "5.9.0" #starting from 6.0, all images are ubi8
 then
      # RHEL
      docker exec -i --privileged --user root -t webserver  bash -c "yum update && yum install -y nc"
