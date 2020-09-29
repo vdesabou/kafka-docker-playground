@@ -73,7 +73,7 @@ docker exec -ti kdc kadmin.local -w password -q "ktadd  -k /var/lib/secret/kafka
 docker exec -ti kdc kadmin.local -w password -q "ktadd  -k /var/lib/secret/kafka-connect.key -norandkey connect@TEST.CONFLUENT.IO " > /dev/null
 docker exec -ti kdc kadmin.local -w password -q "ktadd  -k /var/lib/secret/kafka-controlcenter.key -norandkey controlcenter@TEST.CONFLUENT.IO " > /dev/null
 
-if [[ "$TAG" == *ubi8 ]]
+if [[ "$TAG" == *ubi8 ]]  || version_gt $TAG_BASE "5.9.0"
 then
   # https://github.com/vdesabou/kafka-docker-playground/issues/10
   # keytabs are created on kdc with root user
