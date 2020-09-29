@@ -73,11 +73,12 @@ docker exec -ti kdc kadmin.local -w password -q "ktadd  -k /var/lib/secret/kafka
 docker exec -ti kdc kadmin.local -w password -q "ktadd  -k /var/lib/secret/kafka-schemaregistry.key -norandkey schemaregistry@TEST.CONFLUENT.IO " > /dev/null
 docker exec -ti kdc kadmin.local -w password -q "ktadd  -k /var/lib/secret/kafka-controlcenter.key -norandkey controlcenter@TEST.CONFLUENT.IO " > /dev/null
 
-if [[ "$TAG" == *ubi8 ]]
+if [[ "$TAG" == *ubi8 ]] || version_gt $TAG_BASE "5.9.0"
 then
   # https://github.com/vdesabou/kafka-docker-playground/issues/10
   # keytabs are created on kdc with root user
   # ubi8 images are using appuser user
+  # starting from 6.0, all images are ubi8
   docker exec -ti kdc chmod a+r /var/lib/secret/broker.key
   docker exec -ti kdc chmod a+r /var/lib/secret/broker2.key
   docker exec -ti kdc chmod a+r /var/lib/secret/zookeeper.key
