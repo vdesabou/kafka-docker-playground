@@ -4,10 +4,12 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
-if [[ "$TAG" == *ubi8 ]]  || version_gt $TAG_BASE "5.9.0" # starting from 6.0, all images are ubi8
-then
-     logerror "This can only be run with UBI image"
-     exit 1
+if ! version_gt $TAG_BASE "5.9.0"; then
+    if [[ "$TAG" != *ubi8 ]]
+    then
+          logwarn "WARN: This can only be run with UBI image or version greater than 6.0.0"
+          exit 0
+    fi
 fi
 
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
