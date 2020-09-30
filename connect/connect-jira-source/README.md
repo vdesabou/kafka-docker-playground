@@ -1,5 +1,6 @@
 # Jira Source connector
 
+![asciinema](https://github.com/vdesabou/gifs/blob/master/connect/connect-jira-source/asciinema.gif?raw=true)
 
 ## Objective
 
