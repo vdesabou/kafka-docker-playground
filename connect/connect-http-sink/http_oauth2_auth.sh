@@ -42,7 +42,7 @@ curl -X PUT \
 sleep 10
 
 # create token, see https://github.com/confluentinc/kafka-connect-http-demo#oauth2
-token=$(curl -X PUT \
+token=$(curl -X POST \
   http://localhost:10080/oauth/token \
   -H 'Content-Type: application/x-www-form-urlencoded' \
   -H 'Authorization: Basic a2MtY2xpZW50OmtjLXNlY3JldA==' \
