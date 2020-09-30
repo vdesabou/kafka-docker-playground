@@ -122,8 +122,8 @@ jobs:
     env: TEST_LIST="connect/connect-http-sink" TAG="6.0.0"
   - name: '6.0.0: REPLICATOR: connect'
     env: TEST_LIST="replicator/connect" TAG="6.0.0"
-  - name: '6.0.0: mirrormaker2 ksqldb/materialized-view pagerduty-sink'
-    env: TEST_LIST="replicator/mirrormaker2 ksqldb/materialized-view connect/connect-pagerduty-sink" TAG="6.0.0"
+  - name: '6.0.0: mirrormaker2 ksqldb/materialized-view pagerduty-sink zendesk-source'
+    env: TEST_LIST="replicator/mirrormaker2 ksqldb/materialized-view connect/connect-pagerduty-sink connect/connect-zendesk-source" TAG="6.0.0"
 script:
 - bash scripts/run-tests.sh "$TEST_LIST" "$TAG"
 env:
