@@ -1,5 +1,6 @@
 # Salesforce CDC Source connector
 
+![asciinema](https://github.com/vdesabou/gifs/blob/master/connect/connect-salesforce-cdc-source/asciinema.gif?raw=true)
 
 ## Objective
 
