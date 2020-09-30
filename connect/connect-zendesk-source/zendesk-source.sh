@@ -60,4 +60,4 @@ curl -X PUT \
 sleep 10
 
 log "Verify we have received the data in zendesk-topic-tickets topic"
-timeout 60 docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic zendesk-topic-tickets --from-beginning --property print.key=true --max-messages 1
+timeout 60 docker exec broker kafka-console-consumer -bootstrap-server broker:9092 --topic zendesk-topic-tickets --from-beginning --max-messages 1
