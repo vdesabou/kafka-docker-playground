@@ -1,5 +1,6 @@
 # Salesforce PushTopics Source connector
 
+![asciinema](https://github.com/vdesabou/gifs/blob/master/connect/connect-salesforce-pushtopics-source/asciinema.gif?raw=true)
 
 ## Objective
 
