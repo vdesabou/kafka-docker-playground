@@ -1,5 +1,6 @@
 # Github Source connector
 
+![asciinema](https://github.com/vdesabou/gifs/blob/master/connect/connect-github-source/asciinema.gif?raw=true)
 
 ## Objective
 
