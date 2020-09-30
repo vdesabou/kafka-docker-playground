@@ -1,5 +1,6 @@
 # Salesforce Bulk API Source connector
 
+![asciinema](https://github.com/vdesabou/gifs/blob/master/connect/connect-salesforce-bulkapi-source/asciinema.gif?raw=true)
 
 ## Objective
 

@@ -1,5 +1,6 @@
 # Salesforce SObject Sink connector
 
+![asciinema](https://github.com/vdesabou/gifs/blob/master/connect/connect-salesforce-sobject-sink/asciinema.gif?raw=true)
 
 ## Objective
 
