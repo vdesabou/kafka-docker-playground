@@ -23,7 +23,7 @@ $ ./zendesk-source.sh <ZENDESK_URL> <ZENDESK_USERNAME> <ZENDESK_PASSWORD>
 
 Note: you can also export these values as environment variable
 
-P.S: ZENDESK_USERNAME should have format `email/token`
+P.S: `ZENDESK_USERNAME` should have format `email/token`
 
 ## Details of what the script is doing
 
