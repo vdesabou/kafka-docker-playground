@@ -1,8 +1,3 @@
 # scripts to ignore
 ccloud-generate-env-vars.sh
 01-create-table.sh
-http_ssl_auth.sh
-http_simple_auth.sh
-http_oauth2_auth.sh
-http_json_basic_auth.sh
-http_basic_auth.sh
