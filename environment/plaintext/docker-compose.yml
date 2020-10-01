@@ -17,6 +17,7 @@ services:
     image: confluentinc/cp-zookeeper:${TAG}
     hostname: zookeeper
     container_name: zookeeper
+    restart: always
     environment:
       ZOOKEEPER_CLIENT_PORT: 2181
       ZOOKEEPER_TICK_TIME: 2000
@@ -27,6 +28,7 @@ services:
     image: confluentinc/${CP_KAFKA_IMAGE}:${TAG}
     hostname: broker
     container_name: broker
+    restart: always
     depends_on:
       - zookeeper
     environment:
@@ -49,6 +51,7 @@ services:
     image: confluentinc/cp-schema-registry:${TAG}
     hostname: schema-registry
     container_name: schema-registry
+    restart: always
     depends_on:
       - broker
     ports:
@@ -62,6 +65,7 @@ services:
     image: vdesabou/kafka-docker-playground-connect:${TAG}
     hostname: connect
     container_name: connect
+    restart: always
     depends_on:
       - zookeeper
       - broker
@@ -98,6 +102,7 @@ services:
     image: confluentinc/cp-enterprise-control-center:${TAG}
     hostname: control-center
     container_name: control-center
+    restart: always
     depends_on:
       - zookeeper
       - broker
