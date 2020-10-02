@@ -15,6 +15,10 @@ services:
       MYSQL_PASSWORD: password
       MYSQL_ROOT_HOST: 172.%  # Allow docker containers to connect to mysql
 
+  connect:
+    volumes:
+      - confluent-hub-components:/usr/share/confluent-hub-components/debezium-debezium-connector-mysql
+
   ksqldb-server:
     depends_on:
       - zookeeper
@@ -22,7 +26,7 @@ services:
       - schema-registry
       - mysql
     volumes:
-      - ../../ksqldb/materialized-view/confluent-hub-components/debezium-debezium-connector-mysql:/usr/share/kafka/plugins/debezium-debezium-connector-mysql
+      - confluent-hub-components:/usr/share/kafka/plugins/debezium-debezium-connector-mysql
     environment:
       # Configuration to embed Kafka Connect support.
       # https://docs.ksqldb.io/en/latest/how-to-guides/use-connector-management/#configuring-ksqldb
@@ -41,3 +45,6 @@ services:
       KSQL_CONNECT_OFFSET_STORAGE_REPLICATION_FACTOR: 1
       KSQL_CONNECT_STATUS_STORAGE_REPLICATION_FACTOR: 1
       KSQL_CONNECT_PLUGIN_PATH: "/usr/share/kafka/plugins"
+
+volumes:
+  confluent-hub-components: {}
