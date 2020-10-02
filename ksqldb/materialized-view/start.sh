@@ -4,14 +4,7 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
-if [ ! -d confluent-hub-components ]
-then
-     mkdir -p confluent-hub-components
-     confluent-hub install --component-dir confluent-hub-components --no-prompt debezium/debezium-connector-mysql:1.1.0
-fi
-
 ${DIR}/../../ksqldb/environment/start.sh "${PWD}/docker-compose.plaintext.yml"
-
 
 log "Describing the calls table in DB 'mydb':"
 docker exec mysql bash -c "mysql --user=root --password=password --database=mydb -e 'describe calls'"
