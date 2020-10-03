@@ -380,6 +380,16 @@ function aws() {
     docker run --rm -tiv $HOME/.aws:/root/.aws -v $(pwd):/aws mikesir87/aws-cli:v1 aws "$@"
 }
 
+function timeout() {
+  if [[ $(type -f timeout 2>&1) =~ "not found" ]]; then
+    # ignore
+    shift
+    eval "$@"
+  else
+    $(which timeout) "$@"
+  fi
+}
+
 function jq() {
     docker run --rm -i imega/jq "$@"
 }
