@@ -40,7 +40,7 @@ Quick start examples from Confluent [docs](https://docs.confluent.io/current/con
 | <img src="./images/icons/amps.png" width="15"> [AMPS Source](connect/connect-amps-source)  | Message Queue  | 1.0.0-preview | Confluent Subscription | 2020-07-08 | ✅ 
 | <img src="./images/icons/kudu.png" width="15"> [Apache Kudu Source](connect/connect-kudu-source)  | Database  | 1.0.1 | Confluent Subscription | 2020-01-07 | ✅ 
 | <img src="./images/icons/kudu.png" width="15"> [Apache Kudu Sink](connect/connect-kudu-sink)  | Database  | 1.0.1 | Confluent Subscription | 2020-01-07 | ✅ 
-| <img src="./images/icons/lambda.svg" width="15"> [AWS Lambda Sink](connect/connect-aws-lambda-sink)  | SaaS Apps  | 1.0.3 | Confluent Subscription | 2020-08-20 | ✅ 
+| <img src="./images/icons/lambda.svg" width="15"> [AWS Lambda Sink](connect/connect-aws-lambda-sink)  | SaaS Apps  | 1.0.4 | Confluent Subscription | 2020-10-01 | ✅ 
 | <img src="./images/icons/blob_storage.png" width="15"> [Azure Blob Storage Sink](connect/connect-azure-blob-storage-sink)  | Datastore | 1.4.0 | Confluent Subscription | 2020-07-24 | ✅ 
 | <img src="./images/icons/blob_storage.png" width="15"> [Azure Blob Storage Source](connect/connect-azure-blob-storage-source)  | Datastore | 1.3.2 | Confluent Subscription | 2020-06-26 | ✅ 
 | <img src="./images/icons/data_lake_gen1.png" width="15"> [Azure Data Lake Storage Gen1 Sink](connect/connect-azure-data-lake-storage-gen1-sink)  | Datastore | 1.4.0 | Confluent Subscription | 2020-07-24 | ✅ 
@@ -60,15 +60,15 @@ Quick start examples from Confluent [docs](https://docs.confluent.io/current/con
 | <img src="./images/icons/data_diode.jpg" width="15"> [Data Diode Source](connect/connect-datadiode-source-sink) | Logs | 1.1.1 | Confluent Subscription | 2019-10-18 | ✅ 
 | <img src="./images/icons/datadog.png" height="15"> [Datadog Metrics Sink](connect/connect-datadog-metrics-sink) | Analytics | 1.1.2 | Confluent Subscription | 2020-06-08 | ❌ 
 | <img src="./images/icons/elasticsearch.png" width="15"> [ElasticSearch Sink](connect/connect-elasticsearch-sink) | Analytics | 10.0.0 | Confluent Community License | 2020-09-24 | ✅ 
-| <img src="./images/icons/ftps.png" height="15"> [FTPS Sink](connect/connect-ftps-sink) | Datastore |1.0.2-preview | Confluent Subscription | 2020-09-22 | ✅ 
-| <img src="./images/icons/ftps.png" height="15"> [FTPS Source](connect/connect-ftps-source) | Datastore |1.0.2-preview | Confluent Subscription | 2020-09-22 | ✅ 
+| <img src="./images/icons/ftps.png" height="15"> [FTPS Sink](connect/connect-ftps-sink) | Datastore |1.0.3-preview | Confluent Subscription | 2020-10-01 | ✅ 
+| <img src="./images/icons/ftps.png" height="15"> [FTPS Source](connect/connect-ftps-source) | Datastore |1.0.3-preview | Confluent Subscription | 2020-10-01 | ✅ 
 | <img src="./images/icons/pivotal_gemfire.png" width="15"> [Gemfire Sink](connect/connect-pivotal-gemfire-sink) | Database | 1.0.1 | Confluent Subscription | 2019-11-19 | ✅ 
 | <img src="./images/icons/github.png" width="15"> [Github Source](connect/connect-github-source) | SaaS Apps | 1.0.1 | Confluent Subscription | 2020-06-05 | ✅ 
 | <img src="./images/icons/bigquery.png" width="15"> [Google BigQuery Sink](connect/connect-gcp-bigquery-sink) | Data Warehouse | 1.6.1 | Open Source (WePay) |  | ✅ 
 | <img src="./images/icons/cloud_functions.png" width="15"> [Google Cloud Functions Sink](connect/connect-gcp-cloud-functions-sink) | SaaS Apps | 1.1.1 | Confluent Subscription | 2020-09-22 | ✅ 
 | <img src="./images/icons/gcp_pubsub.png" width="15"> [Google Cloud Pub/Sub Source](connect/connect-gcp-pubsub-source) |  Message Queue | 1.0.2 | Confluent Subscription | 2020-01-07 | ✅ 
 | <img src="./images/icons/spanner.png" width="15"> [Google Cloud Spanner Sink](connect/connect-gcp-spanner-sink) |  Database | 1.0.2 | Confluent Subscription | 2019-10-30 | ❌ 
-| <img src="./images/icons/gcs.png" width="15"> [Google Cloud Storage Sink](connect/connect-gcp-gcs-sink) |  Datastore | 5.5.2 | Confluent Subscription | 2020-04-30 | ✅ 
+| <img src="./images/icons/gcs.png" width="15"> [Google Cloud Storage Sink](connect/connect-gcp-gcs-sink) |  Datastore | 5.5.3 | Confluent Subscription | 2020-10-01 | ✅ 
 | <img src="./images/icons/gcs.png" width="15"> [Google Cloud Storage Source](connect/connect-gcp-gcs-source) |  Datastore | 1.3.2 | Confluent Subscription | 2020-06-26 | ✅ 
 | <img src="./images/icons/firebase.svg" width="15"> [Google Firebase Realtime Database Sink](connect/connect-gcp-firebase-sink) |  Database | 1.1.1 | Confluent Subscription | 2020-01-07 | ❌ 
 | <img src="./images/icons/firebase.svg" width="15"> [Google Firebase Realtime Database Source](connect/connect-gcp-firebase-source) |  Database | 1.1.1 | Confluent Subscription | 2020-01-07 | ❌ 
