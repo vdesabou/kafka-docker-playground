@@ -75,22 +75,3 @@ Results:
 ```
 
 N.B: Control Center is reachable at [http://127.0.0.1:9021](http://127.0.0.1:9021])
-
-## Troubleshooting
-
-You might see the following timeout error on Mac OS
-
-```
-08:56:16 Verifying topic ORCLCDB.CUSTOMERS
-./cdc-oracle12.sh: line 94: timeout: command not found
-```
-
-Please install ``coreutils`` with the following commands
-
-```bash
-brew install coreutils
-sudo ln -s /usr/local/bin/gtimeout /usr/local/bin/timeout
-```
-
-
-
