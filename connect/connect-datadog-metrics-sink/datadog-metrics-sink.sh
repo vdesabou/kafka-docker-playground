@@ -4,10 +4,8 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
-${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
-
 DD_API_KEY=${DD_API_KEY:-$1}
-DD_DOMAIN=${DD_DOMAIN:-$2}
+DD_APP_KEY=${DD_APP_KEY:-$2}
 
 if [ -z "$DD_API_KEY" ]
 then
@@ -15,12 +13,22 @@ then
      exit 1
 fi
 
-if [ -z "$DD_DOMAIN" ]
+if [ -z "$DD_APP_KEY" ]
 then
-     logerror "DD_DOMAIN is not set. Export it as environment variable or pass it as argument"
+     logerror "DD_APP_KEY is not set. Export it as environment variable or pass it as argument"
      exit 1
 fi
 
+if test -z "$(docker images -q dogshell:latest)"
+then
+     log "Building dogshell docker image.."
+     OLDDIR=$PWD
+     cd ${DIR}/docker-dogshell
+     docker build -t dogshell:latest .
+     cd ${OLDDIR}
+fi
+
+${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
 
 log "Sending messages to topic datadog-metrics-topic"
 TIMESTAMP=`date +%s`
@@ -40,7 +48,7 @@ curl -X PUT \
                "confluent.topic.bootstrap.servers": "broker:9092",
                "confluent.topic.replication.factor":1,
                "datadog.api.key": "'"$DD_API_KEY"'",
-               "datadog.domain": "'"$DD_DOMAIN"'",
+               "datadog.domain": "COM",
                "reporter.bootstrap.servers": "broker:9092",
                "reporter.error.topic.name": "error-responses",
                "reporter.error.topic.replication.factor": 1,
@@ -51,5 +59,7 @@ curl -X PUT \
           }' \
      http://localhost:8083/connectors/datadog-metrics-sink/config | jq .
 
+sleep 20
 
-
+log "Make sure perf.metric is present in Datadog"
+docker run -e DOGSHELL_API_KEY=$DD_API_KEY -e DOGSHELL_APP_KEY=$DD_APP_KEY dogshell:latest search query perf.metric
