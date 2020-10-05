@@ -10,7 +10,7 @@ Quickly test [Snowflake Sink](https://docs.snowflake.com/en/user-guide/kafka-con
 
 ## Register a trial account
 
-Go to [Snowflakel](https://www.snowflake.com) and register an account. You'll receive an email to setup your account and access to a 30 day trial instance.
+Go to [Snowflake](https://www.snowflake.com) and register an account. You'll receive an email to setup your account and access to a 30 day trial instance.
 
 ## How to run
 
