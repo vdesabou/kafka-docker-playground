@@ -7,15 +7,21 @@ Quickly test [Datadog Metrics Sink](https://docs.confluent.io/current/connect/ka
 
 ## Prerequisites
 
-Register for a Datadog trial if you don't already have an account.
-Get your DD_API_KEY and DD_DOMAIN (`COM` or `EU`).
+Register for a [Datadog trial](https://app.datadoghq.com) if you don't already have an account (you can convert it to *Free plan* after the trial expires).
+
+Create an API key (`DD_API_KEY`) and an Application key (`DD_APP_KEY`):
+
+![Datadog metrics](Screenshot2.png)
+
+
+**Important**: `COM` domain must be used
 
 ## How to run
 
 Simply run:
 
 ```
-$ ./datadog-metrics-sink-sink.sh <DD_API_KEY> <DD_DOMAIN>
+$ ./datadog-metrics-sink-sink.sh <DD_API_KEY> <DD_APP_KEY>
 
 Note: you can also export these values as environment variable
 
@@ -46,7 +52,7 @@ $ curl -X PUT \
                "confluent.topic.bootstrap.servers": "broker:9092",
                "confluent.topic.replication.factor":1,
                "datadog.api.key": "'"$DD_API_KEY"'",
-               "datadog.domain": "'"$DD_DOMAIN"'",
+               "datadog.domain": "COM",
                "reporter.bootstrap.servers": "broker:9092",
                "reporter.error.topic.name": "error-responses",
                "reporter.error.topic.replication.factor": 1,
@@ -56,6 +62,12 @@ $ curl -X PUT \
                "topics": "datadog-metrics-topic"
           }' \
      http://localhost:8083/connectors/datadog-metrics-sink/config | jq .
+```
+
+Make sure `perf.metric` is present in Datadog
+```
+$ docker run -e DOGSHELL_API_KEY=$DD_API_KEY -e DOGSHELL_APP_KEY=$DD_APP_KEY dogshell:latest search query perf.metric
+metrics perf.metric
 ```
 
 Check the data is in Datadog:
