@@ -124,8 +124,8 @@ jobs:
     env: TEST_LIST="connect/connect-kudu-source connect/connect-kudu-sink" TAG="6.0.0"
   - name: '6.0.0: REPLICATOR: connect OTHER: tiered-storage-with-minio'
     env: TEST_LIST="replicator/connect other/tiered-storage-with-minio" TAG="6.0.0"
-  - name: '6.0.0: mirrormaker2 ksqldb/materialized-view pagerduty-sink zendesk-source datadog-metrics-sink gcp-spanner-sink'
-    env: TEST_LIST="replicator/mirrormaker2 ksqldb/materialized-view connect/connect-pagerduty-sink connect/connect-zendesk-source connect/connect-datadog-metrics-sink connect/connect-gcp-spanner-sink" TAG="6.0.0"
+  - name: '6.0.0: mirrormaker2 ksqldb/materialized-view pagerduty-sink zendesk-source datadog-metrics-sink gcp-spanner-sink aws-redshift-sink'
+    env: TEST_LIST="replicator/mirrormaker2 ksqldb/materialized-view connect/connect-pagerduty-sink connect/connect-zendesk-source connect/connect-datadog-metrics-sink connect/connect-gcp-spanner-sink connect/connect-aws-redshift-sink" TAG="6.0.0"
 script:
 - bash scripts/run-tests.sh "$TEST_LIST" "$TAG"
 env:
