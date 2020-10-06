@@ -48,7 +48,7 @@ Quick start examples from Confluent [docs](https://docs.confluent.io/current/con
 | <img src="./images/icons/event_hubs.png" width="15"> [Azure Event Hubs Source](connect/connect-azure-event-hubs-source)  | Message Queue | 1.0.3 | Confluent Subscription | 2020-03-28 | ✅ 
 | <img src="./images/icons/search.png" width="15"> [Azure Search Sink](connect/connect-azure-search-sink)  | Analytics | 1.0.1 | Confluent Subscription | 2020-01-07 | ✅ 
 | <img src="./images/icons/service_bus.png" width="15"> [Azure Service Bus Source](connect/connect-azure-service-bus-source)  | Message Queue | 1.1.0 | Confluent Subscription | 2020-03-13 | ✅ 
-| <img src="./images/icons/sql_data_warehouse.png" width="15"> [Azure SQL Data Warehouse Sink](connect/connect-azure-sql-data-warehouse-sink)  | Data Warehouse | 1.0.3 | Confluent Subscription | 2020-04-24 | ❌ 
+| <img src="./images/icons/sql_data_warehouse.png" width="15"> [Azure SQL Data Warehouse Sink](connect/connect-azure-sql-data-warehouse-sink)  | Data Warehouse | 1.0.3 | Confluent Subscription | 2020-04-24 | ✅ 
 | <img src="./images/icons/cassandra.png" width="15"> [Cassandra Sink](connect/connect-cassandra-sink)  | Database | 1.2.2 | Confluent Subscription | 2020-06-19 | ✅ 
 | <img src="./images/icons/couchbase.svg" width="15"> [Couchbase Sink](connect/connect-couchbase-sink)  | Database | 3.4.8 | Open Source (Couchbase) | | ✅ 
 | <img src="./images/icons/couchbase.svg" width="15"> [Couchbase Source](connect/connect-couchbase-source)  | Database | 3.4.8 | Open Source (Couchbase) | | ✅ 
@@ -124,7 +124,7 @@ Quick start examples from Confluent [docs](https://docs.confluent.io/current/con
 | <img src="./images/icons/sftp.png" width="15"> [SFTP Sink](connect/connect-sftp-sink) |  Datastore | 2.1.1 | Confluent Subscription | 2020-09-02 | ✅ 
 | <img src="./images/icons/sftp.png" width="15"> [SFTP Sink](connect/connect-sftp-source) |  Datastore | 2.1.1 | Confluent Subscription | 2020-09-02 | ✅ 
 | <img src="./images/icons/snmp_trap.png" width="15"> [SNMP Trap Source](connect/connect-snmp-source) |  IoT | 1.1.2 | Confluent Subscription | 2020-04-09 | ✅ 
-| <img src="./images/icons/snowflake.png" height="15">  [Snowflake Sink](connect/connect-snowflake-sink) |  Data Warehouse | 1.4.3 | Open Source (Snowflake, Inc.) | 2020-08-05 | ❌ 
+| <img src="./images/icons/snowflake.png" height="15">  [Snowflake Sink](connect/connect-snowflake-sink) |  Data Warehouse | 1.5.0 | Open Source (Snowflake, Inc.) | 2020-09-30 | ❌ 
 | <img src="./images/icons/solace.jpg" width="15"> [Solace Sink](connect/connect-solace-sink) |  Message Queue | 1.3.0 | Confluent Subscription | 2020-09-15 | ✅ 
 | <img src="./images/icons/solace.jpg" width="15"> [Solace Source](connect/connect-solace-source) |  Message Queue | 1.2.0 | Confluent Subscription | 2020-08-26 | ✅ 
 | <img src="./images/icons/splunk.jpg" width="15"> [Splunk Sink](connect/connect-splunk-sink) |  Analytics | 2.0 | Open Source (Splunk) |  | ✅ 
