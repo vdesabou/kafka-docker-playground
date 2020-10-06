@@ -18,6 +18,10 @@ services:
       KAFKA_CONFLUENT_TIER_S3_AWS_ACCESS_KEY_ID: "AKIAIOSFODNN7EXAMPLE"
       KAFKA_CONFLUENT_TIER_S3_AWS_SECRET_ACCESS_KEY: "wJalrXUtnFEMI7K7MDENG8bPxRfiCYEXAMPLEKEY"
       KAFKA_LOG_SEGMENT_BYTES: 1048576 #1Mb
+      # for CP 6.x
+      # See https://github.com/vdesabou/kafka-docker-playground/issues/120
+      AWS_ACCESS_KEY_ID: "AKIAIOSFODNN7EXAMPLE"
+      AWS_SECRET_ACCESS_KEY: "wJalrXUtnFEMI7K7MDENG8bPxRfiCYEXAMPLEKEY"
 
   connect:
     entrypoint: ["echo", "Service connect disabled"]
