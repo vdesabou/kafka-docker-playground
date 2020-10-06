@@ -37,7 +37,7 @@ do
     if [ "$test_folder" != "" ]
     then
       set +e
-      grep "$test_folder" .travis.yml > /dev/null
+      grep "$test_folder" .travis.yml | grep -v jar > /dev/null
       if [ $? = 0 ]
       then
         travis="✅"
