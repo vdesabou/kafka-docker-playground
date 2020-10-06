@@ -72,6 +72,9 @@ do
         ####
         ##
         mkdir -p ${GIF_DIR}
+        echo "####################################################"  >> $OUT_FILE
+        echo "# $dir "  >> $OUT_FILE
+        echo "####################################################"  >> $OUT_FILE
         echo "cd $dir;clear"  >> $OUT_FILE
         echo "asciinema rec $TMP_DIR/$dir/asciinema.cast --overwrite" >> $OUT_FILE
         echo "./$script"  >> $OUT_FILE
