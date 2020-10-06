@@ -13,7 +13,7 @@ before_install:
 - cp aws_config $HOME/.aws/config
 - cp aws_credentials $HOME/.aws/credentials
 - mkdir -p $HOME/.ccloud
-- cp config.cc.vsaboulin.travis $HOME/.ccloud/config
+- cp config.cc.travis $HOME/.ccloud/config
 - aws s3 cp s3://kafka-docker-playground/3rdparty/3rdparty.tgz .
 - tar xvfz 3rdparty.tgz
 - cp ./3rdparty/TIB_ems-ce_8.5.1_linux_x86_64.zip ./connect/connect-tibco-source/docker-tibco/TIB_ems-ce_8.5.1_linux_x86_64.zip
@@ -122,8 +122,8 @@ jobs:
     env: TEST_LIST="connect/connect-http-sink" TAG="6.0.0"
   - name: '6.0.0: REPLICATOR: connect OTHER: tiered-storage-with-minio'
     env: TEST_LIST="replicator/connect other/tiered-storage-with-minio" TAG="6.0.0"
-  - name: '6.0.0: mirrormaker2 ksqldb/materialized-view pagerduty-sink zendesk-source datadog-metrics-sink'
-    env: TEST_LIST="replicator/mirrormaker2 ksqldb/materialized-view connect/connect-pagerduty-sink connect/connect-zendesk-source connect/connect-datadog-metrics-sink" TAG="6.0.0"
+  - name: '6.0.0: mirrormaker2 ksqldb/materialized-view pagerduty-sink zendesk-source datadog-metrics-sink gcp-spanner-sink'
+    env: TEST_LIST="replicator/mirrormaker2 ksqldb/materialized-view connect/connect-pagerduty-sink connect/connect-zendesk-source connect/connect-datadog-metrics-sink connect/connect-gcp-spanner-sink" TAG="6.0.0"
 script:
 - bash scripts/run-tests.sh "$TEST_LIST" "$TAG"
 env:

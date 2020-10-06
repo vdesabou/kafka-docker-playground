@@ -1,5 +1,7 @@
 # GCP Spanner Sink connector
 
+![asciinema](https://github.com/vdesabou/gifs/blob/master/connect/connect-gcp-spanner-sink/asciinema.gif?raw=true)
+
 ## Objective
 
 Quickly test [GCP Spanner Sink](https://docs.confluent.io/current/connect/kafka-connect-gcp-spanner/index.html#quick-start) connector.
@@ -7,12 +9,6 @@ Quickly test [GCP Spanner Sink](https://docs.confluent.io/current/connect/kafka-
 * Active Google Cloud Platform (GCP) account with authorization to create resources
 
 ## GCP Spanner Setup
-
-### Create a Spanner Instance and Database
-
-* Create a test instance named `test-instance` in Spanner using the console. See the [Cloud Spanner Quickstart](https://cloud.google.com/spanner/docs/quickstart-console#create_an_instance) for instructions.
-* Create a database named `example-db` under the `test-instance`. See the [Cloud Spanner Quickstart](https://cloud.google.com/spanner/docs/quickstart-console#create_an_instance) for instructions.
-
 
 ### Setup Credentials
 
@@ -22,7 +18,7 @@ Set `Service account name`:
 
 ![Service Account setup](Screenshot1.png)
 
-Choose permission `Cloud Spanner`->`Cloud Spanner Database Admin`
+Choose permission `Cloud Spanner`->`Cloud Spanner Admin`
 
 ![Service Account setup](Screenshot2.png)
 
@@ -46,6 +42,13 @@ $ ./gcp-spanner.sh <PROJECT> <INSTANCE> <DATABASE>
 ```
 
 ## Details of what the script is doing
+
+Create a Spanner Instance and Database
+
+```bash
+$ docker run -ti --volumes-from gcloud-config google/cloud-sdk:latest gcloud spanner instances create $INSTANCE --project $PROJECT --config=regional-us-east1 --description=playground-spanner-instance --nodes=1
+$ docker run -ti --volumes-from gcloud-config google/cloud-sdk:latest gcloud spanner databases create $DATABASE --instance $INSTANCE --project $PROJECT
+```
 
 Sending messages to topic `products`:
 
