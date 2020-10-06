@@ -83,3 +83,4 @@ connect/connect-github-source/myenv
 connect/connect-pagerduty-sink/myenv
 connect/connect-appdynamics-metrics-sink/docker-appdynamics-metrics/machine-agent.zip
 ksqldb/materialized-view/confluent-hub-components
+config.cc.travis
