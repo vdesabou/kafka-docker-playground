@@ -40,7 +40,7 @@ log "AWS Redshift cluster playgroundcluster has started!"
 PUBLIC_IP=$(curl ifconfig.me)
 log "Create a security group"
 GROUP_ID=$(aws ec2 create-security-group --group-name redshiftplaygroundcluster --description "playground aws redshift" | jq -r .GroupId)
-log "Allow ingress traffic from public ip on port 5439"
+log "Allow ingress traffic from public ip $PUBLIC_IP on port 5439"
 aws ec2 authorize-security-group-ingress --group-id $GROUP_ID --protocol tcp --port 5439 --cidr $PUBLIC_IP/24
 log "Modify AWS Redshift cluster to use the security group"
 aws redshift modify-cluster --cluster-identifier playgroundcluster --vpc-security-group-ids $GROUP_ID
