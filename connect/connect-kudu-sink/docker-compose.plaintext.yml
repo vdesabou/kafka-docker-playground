@@ -19,7 +19,7 @@ services:
 
 
   kudu:
-    image: nathannam/kudu-impala-with-ldap
+    image: vdesabou/kudu-impala-with-ldap # same as https://github.com/NathanNam/all-in-one-docker-impala-kudu/tree/master/default but with "IMPALA_LDAP_URI=${IMPALA_LDAP_URI:-ldaps://host.docker.internal:10636}"
     hostname: kudu
     container_name: kudu
     restart: always
@@ -27,6 +27,8 @@ services:
       nofile:
         soft: 100000
         hard: 100000
+    environment:
+        IMPALA_LDAP_URI: "ldaps://${DOCKER_GATEWAY_HOST:-host.docker.internal}:10636"
     depends_on:
       - ldap
 
