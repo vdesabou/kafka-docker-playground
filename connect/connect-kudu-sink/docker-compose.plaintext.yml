@@ -23,6 +23,10 @@ services:
     hostname: kudu
     container_name: kudu
     restart: always
+    ulimits:
+      nofile:
+        soft: 100000
+        hard: 100000
     depends_on:
       - ldap
 
