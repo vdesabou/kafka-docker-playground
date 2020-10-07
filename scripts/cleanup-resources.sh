@@ -2,6 +2,9 @@
 
 set -e
 
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
+source ${DIR}/../scripts/utils.sh
+
 function log() {
   YELLOW='\033[0;33m'
   NC='\033[0m' # No Color
