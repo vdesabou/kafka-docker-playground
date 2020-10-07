@@ -8,7 +8,6 @@ PROJECT=${1:-vincent-de-saboulin-lab}
 INSTANCE=${2:-test-instance}
 DATABASE=${3:-example-db}
 
-
 KEYFILE="${DIR}/keyfile.json"
 if [ ! -f ${KEYFILE} ]
 then
@@ -26,8 +25,12 @@ docker run -ti -v ${KEYFILE}:/tmp/keyfile.json --name gcloud-config google/cloud
 
 set +e
 log "Deleting Database and Instance, if required"
-docker run -ti --volumes-from gcloud-config google/cloud-sdk:latest echo Y | gcloud spanner databases delete $DATABASE --instance $INSTANCE --project $PROJECT
-docker run -ti --volumes-from gcloud-config google/cloud-sdk:latest echo Y | gcloud spanner instances delete $INSTANCE --project $PROJECT
+docker run -i --volumes-from gcloud-config google/cloud-sdk:latest gcloud spanner databases delete $DATABASE --instance $INSTANCE --project $PROJECT << EOF
+Y
+EOF
+docker run -i --volumes-from gcloud-config google/cloud-sdk:latest gcloud spanner instances delete $INSTANCE --project $PROJECT  << EOF
+Y
+EOF
 set -e
 log "Create a Spanner Instance and Database"
 docker run -ti --volumes-from gcloud-config google/cloud-sdk:latest gcloud spanner instances create $INSTANCE --project $PROJECT --config=regional-us-east1 --description=playground-spanner-instance --nodes=1
@@ -66,7 +69,11 @@ log "Verify data is in GCP Spanner"
 docker run -ti --volumes-from gcloud-config google/cloud-sdk:latest gcloud spanner databases execute-sql $DATABASE --instance $INSTANCE --project $PROJECT --sql='select * from kafka_products'
 
 log "Deleting Database and Instance"
-docker run -ti --volumes-from gcloud-config google/cloud-sdk:latest echo Y | gcloud spanner databases delete $DATABASE --instance $INSTANCE --project $PROJECT
-docker run -ti --volumes-from gcloud-config google/cloud-sdk:latest echo Y | gcloud spanner instances delete $INSTANCE --project $PROJECT
+docker run -i --volumes-from gcloud-config google/cloud-sdk:latest gcloud spanner databases delete $DATABASE --instance $INSTANCE --project $PROJECT << EOF
+Y
+EOF
+docker run -i --volumes-from gcloud-config google/cloud-sdk:latest gcloud spanner instances delete $INSTANCE --project $PROJECT  << EOF
+Y
+EOF
 
 docker rm -f gcloud-config
