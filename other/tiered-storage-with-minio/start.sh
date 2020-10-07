@@ -59,4 +59,4 @@ log "Sleep 5 minutes (confluent.tier.local.hotset.ms=60000)"
 sleep 300
 
 log "Check for deleted log segments"
-docker container logs broker | grep "Found deletable segments"
+docker container logs broker | grep "Deleted log"
