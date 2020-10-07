@@ -45,22 +45,11 @@ before_install:
 - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
 jobs:
   include:
-  - name: Update README
-    script: bash scripts/launch-github-action.sh
+  - name: Update README and cleanup resources
+    script: bash scripts/launch-github-action.sh;bash scripts/cleanup-resources.sh
   - name: '6.0.0: CONNECT: salesforce-bulkapi-sink salesforce-bulkapi-sink salesforce-cdc-source
       salesforce-platform-events-sink salesforce-platform-events-source salesforce-pushtopics-source salesforce-sobject-sink salesforce-cdc-source salesforce-platform-events-sink salesforce-platform-events-source'
     env: TEST_LIST="connect/connect-salesforce-bulkapi-sink connect/connect-salesforce-bulkapi-source connect/connect-salesforce-pushtopics-source connect/connect-salesforce-sobject-sink connect/connect-salesforce-cdc-source connect/connect-salesforce-platform-events-sink connect/connect-salesforce-platform-events-source" TAG="6.0.0"
-  - name: '6.0.0: CONNECT: azure-data-lake-storage-gen1-sink azure-data-lake-storage-gen2-sink
-      azure-event-hubs-source'
-    env: TEST_LIST="connect/connect-azure-data-lake-storage-gen1-sink connect/connect-azure-data-lake-storage-gen2-sink
-      connect/connect-azure-event-hubs-source" TAG="6.0.0"
-  - name: '6.0.0: CONNECT: azure-search-sink ftps-source ftps-sink rabbitmq-sink amps-source jira-source github-source pivotal-gemfire-sink'
-    env: TEST_LIST="connect/connect-azure-search-sink connect/connect-ftps-source connect/connect-ftps-sink connect/connect-rabbitmq-sink connect/connect-amps-source connect/connect-jira-source connect/connect-github-source connect/connect-pivotal-gemfire-sink"
-      TAG="6.0.0"
-  - name: '6.0.0: CONNECT: azure-service-bus-source azure-blob-storage-sink azure-sql-data-warehouse-sink
-      azure-blob-storage-source'
-    env: TEST_LIST="connect/connect-azure-service-bus-source connect/connect-azure-blob-storage-sink
-      connect/connect-azure-blob-storage-source connect/connect-azure-sql-data-warehouse-sink" TAG="6.0.0"
   - name: '6.0.0: CONNECT: splunk-sink splunk-source spool-dir-source syslog-source
       OTHER: override-policy-sftp-sink override-policy-sftp-source'
     env: TEST_LIST="connect/connect-splunk-sink connect/connect-splunk-source connect/connect-spool-dir-source
@@ -118,6 +107,17 @@ jobs:
   - name: '6.0.0: CONNECT: gcp-pubsub-source gcs-sink gcs-source'
     env: TEST_LIST="connect/connect-gcp-pubsub-source connect/connect-gcp-gcs-sink
       connect/connect-gcp-gcs-source" TAG="6.0.0"
+  - name: '6.0.0: CONNECT: azure-data-lake-storage-gen1-sink azure-data-lake-storage-gen2-sink
+      azure-event-hubs-source'
+    env: TEST_LIST="connect/connect-azure-data-lake-storage-gen1-sink connect/connect-azure-data-lake-storage-gen2-sink
+      connect/connect-azure-event-hubs-source" TAG="6.0.0"
+  - name: '6.0.0: CONNECT: azure-search-sink ftps-source ftps-sink rabbitmq-sink amps-source jira-source github-source pivotal-gemfire-sink'
+    env: TEST_LIST="connect/connect-azure-search-sink connect/connect-ftps-source connect/connect-ftps-sink connect/connect-rabbitmq-sink connect/connect-amps-source connect/connect-jira-source connect/connect-github-source connect/connect-pivotal-gemfire-sink"
+      TAG="6.0.0"
+  - name: '6.0.0: CONNECT: azure-service-bus-source azure-blob-storage-sink azure-sql-data-warehouse-sink
+      azure-blob-storage-source'
+    env: TEST_LIST="connect/connect-azure-service-bus-source connect/connect-azure-blob-storage-sink
+      connect/connect-azure-blob-storage-source connect/connect-azure-sql-data-warehouse-sink" TAG="6.0.0"
   - name: '6.0.0: CONNECT: http-sink'
     env: TEST_LIST="connect/connect-http-sink" TAG="6.0.0"
   - name: '6.0.0: kudu-source kudu-sink'
