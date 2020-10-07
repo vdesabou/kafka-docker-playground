@@ -17,6 +17,7 @@ aws redshift delete-cluster --cluster-identifier playgroundcluster --skip-final-
 aws ec2 delete-security-group --group-name redshiftplaygroundcluster
 set -e
 
+log "Create AWS Redshift cluster"
 # https://docs.aws.amazon.com/redshift/latest/mgmt/getting-started-cli.html
 aws redshift create-cluster --cluster-identifier playgroundcluster --master-username masteruser --master-user-password myPassword1 --node-type dc2.large --cluster-type single-node --publicly-accessible
 
