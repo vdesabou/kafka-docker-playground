@@ -44,3 +44,20 @@ do
     az group delete --name $group --yes
   fi
 done
+
+# remove azure ad apps
+for fn in `az ad app list --filter "startswith(displayName, 'playgroundtravis')" --query '[].appId'`
+do
+  if [ "$fn" == "[" ]
+  then
+    continue
+  fi
+  if [ "$fn" == "]" ]
+  then
+    continue
+  fi
+  app=$(echo "$fn" | tr -d '"')
+  app=$(echo "$app" | tr -d ',')
+  log "Deleting azure ad app $app"
+  az ad app delete --id $app
+done
