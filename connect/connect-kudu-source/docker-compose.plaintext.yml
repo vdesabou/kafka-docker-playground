@@ -12,14 +12,15 @@ services:
           LDAP_TLS_VERIFY_CLIENT: "try"
       ports:
           - "3890:389"
-          - "10636:636"
       volumes:
           - ../../connect/connect-kudu-source/ldap/custom:/container/service/slapd/assets/config/bootstrap/ldif/custom
       command: "--copy-service --loglevel debug"
 
 
   kudu:
-    image: vdesabou/kudu-impala-with-ldap # same as https://github.com/NathanNam/all-in-one-docker-impala-kudu/tree/master/default but with "IMPALA_LDAP_URI=${IMPALA_LDAP_URI:-ldaps://host.docker.internal:10636}"
+    # same as https://github.com/NathanNam/all-in-one-docker-impala-kudu/tree/master/default but with "IMPALA_LDAP_URI=${IMPALA_LDAP_URI:-ldaps://host.docker.internal:10636}"
+    # Build with docker build --ulimit nofile=100000:100000 . -t vdesabou/kudu-impala-with-ldap
+    image: vdesabou/kudu-impala-with-ldap
     hostname: kudu
     container_name: kudu
     restart: always
@@ -28,7 +29,7 @@ services:
         soft: 100000
         hard: 100000
     environment:
-        IMPALA_LDAP_URI: "ldaps://${DOCKER_GATEWAY_HOST:-host.docker.internal}:10636"
+        IMPALA_LDAP_URI: "ldaps://ldap:636"
     depends_on:
       - ldap
 
