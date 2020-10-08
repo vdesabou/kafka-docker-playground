@@ -48,11 +48,7 @@ done
 # remove azure ad apps
 for fn in `az ad app list --filter "startswith(displayName, 'playgroundtravis')" --query '[].appId'`
 do
-  if [ "$fn" == "[" ]
-  then
-    continue
-  fi
-  if [ "$fn" == "]" ]
+  if [ "$fn" == "[" ] || [ "$fn" == "]" ] || [ "$fn" == "[]" ]
   then
     continue
   fi
