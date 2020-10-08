@@ -4,10 +4,18 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
-if [ ! -f ${DIR}/ojdbc6.jar ]
-then
-     logerror "ERROR: ${DIR}/ojdbc6.jar is missing. It must be downloaded manually in order to acknowledge user agreement"
-     exit 1
+JDBC_CONNECTOR_VERSION=$(docker run vdesabou/kafka-docker-playground-connect:${TAG} cat /usr/share/confluent-hub-components/confluentinc-kafka-connect-jdbc/manifest.json | jq -r '.version')
+log "JDBC Connector version is $JDBC_CONNECTOR_VERSION"
+if ! version_gt $JDBC_CONNECTOR_VERSION "9.9.9"; then
+     if [ ! -f ${DIR}/ojdbc6.jar ]
+     then
+          logerror "ERROR: ${DIR}/ojdbc6.jar is missing. It must be downloaded manually in order to acknowledge user agreement"
+          exit 1
+     fi
+     ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
+else
+     log "ojdbc jar is shipped with connector (starting with 10.0.0)"
+     ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext-no-ojdbc.yml"
 fi
 
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
