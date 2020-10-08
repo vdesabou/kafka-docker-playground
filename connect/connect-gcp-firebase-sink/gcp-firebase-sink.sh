@@ -12,6 +12,14 @@ then
      exit 1
 fi
 
+if [ ! -z "$TRAVIS" ]
+then
+     # if this is travis
+     log "Removing all data"
+     docker run -p 9005:9005 -e FIREBASE_TOKEN=$FIREBASE_TOKEN -e PROJECT=$PROJECT -it kamshak/firebase-tools-docker firebase database:remove / -y --token "$FIREBASE_TOKEN" --project "$PROJECT"
+fi
+
+
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
 
 log "Creating GCP Firebase Sink connector"
@@ -49,3 +57,11 @@ docker exec -i connect kafka-avro-console-producer --broker-list broker:9092 --p
 EOF
 
 log "Follow README to verify data is in Firebase"
+
+if [ ! -z "$TRAVIS" ]
+then
+     # if this is travis
+     log "Verifying data is in Firebase"
+     docker run -p 9005:9005 -e FIREBASE_TOKEN=$FIREBASE_TOKEN -e PROJECT=$PROJECT -it kamshak/firebase-tools-docker firebase database:get / --token "$FIREBASE_TOKEN" --project "$PROJECT" | jq .
+fi
+
