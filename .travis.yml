@@ -43,11 +43,10 @@ before_install:
 - cp ./3rdparty/AMPS.tar.gz ./connect/connect-amps-source/docker-amps/AMPS.tar.gz
 - cp ./3rdparty/pivotal-gemfire.tgz ./connect/connect-pivotal-gemfire-sink/docker-pivotal-gemfire/pivotal-gemfire.tgz
 - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
-- bash scripts/launch-github-action.sh
-- bash scripts/cleanup-resources.sh
-
 jobs:
   include:
+  - name: Update README and cleanup resources
+    script: bash scripts/launch-github-action.sh;bash scripts/cleanup-resources.sh
   - name: '6.0.0: CONNECT: salesforce-bulkapi-sink salesforce-bulkapi-sink salesforce-cdc-source
       salesforce-platform-events-sink salesforce-platform-events-source salesforce-pushtopics-source salesforce-sobject-sink salesforce-cdc-source salesforce-platform-events-sink salesforce-platform-events-source'
     env: TEST_LIST="connect/connect-salesforce-bulkapi-sink connect/connect-salesforce-bulkapi-source connect/connect-salesforce-pushtopics-source connect/connect-salesforce-sobject-sink connect/connect-salesforce-cdc-source connect/connect-salesforce-platform-events-sink connect/connect-salesforce-platform-events-source" TAG="6.0.0"
