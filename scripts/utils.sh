@@ -174,6 +174,7 @@ then
     # noop
     :
   else
+    THE_CONNECTOR_TAG=""
     docker_compose_file=$(grep "environment" "$PWD/$0" | grep DIR | grep start.sh | cut -d "/" -f 7 | cut -d '"' -f 1 | head -n1)
     if [ "${docker_compose_file}" != "" ] && [ -f "${docker_compose_file}" ]
     then
@@ -184,37 +185,32 @@ then
       name=$(echo "$connector_path" | cut -d "-" -f 2-)
 
       THE_CONNECTOR_TAG=$(docker run vdesabou/kafka-docker-playground-connect:${TAG} cat /usr/share/confluent-hub-components/$connector_path/manifest.json | jq -r '.version')
-
-      file="$TAG-$THE_CONNECTOR_TAG-${0##*/}"
-      s3_file="s3://kafka-docker-playground/travis/$file"
-      set +e
-      exists=$(aws s3 ls $s3_file)
-      if [ -z "$exists" ]; then
-        # log "DEBUG: $s3_file does not exist, run the test"
-        :
-      else
-        aws s3 cp $s3_file /tmp/
-        last_success_time=$(cat /tmp/$file)
-        now=$(date +%s)
-        elapsed_time=$((now-last_success_time))
-        if [[ $elapsed_time -gt 604800 ]]
-        then
-          log "####################################################"
-          log "Test with CP $TAG and connector $THE_CONNECTOR_TAG has already been executed successfully $(displaytime $elapsed_time) ago, re-running"
-          log "####################################################"
-        else
-          logwarn "####################################################"
-          logwarn "skipping as test with CP $TAG and connector $THE_CONNECTOR_TAG has already been executed successfully $(displaytime $elapsed_time) ago"
-          logwarn "####################################################"
-          exit 0
-        fi
-      fi
-      set -e
-    else
-      logerror "ERROR: could not determine docker-compose override file from $PWD/$0 !"
-      logerror "ERROR: please check you're running a connector test"
-      exit 1
     fi
+    file="$TAG-$THE_CONNECTOR_TAG-${0##*/}"
+    s3_file="s3://kafka-docker-playground/travis/$file"
+    set +e
+    exists=$(aws s3 ls $s3_file)
+    if [ -z "$exists" ]; then
+      # log "DEBUG: $s3_file does not exist, run the test"
+      :
+    else
+      aws s3 cp $s3_file /tmp/
+      last_success_time=$(cat /tmp/$file)
+      now=$(date +%s)
+      elapsed_time=$((now-last_success_time))
+      if [[ $elapsed_time -gt 604800 ]]
+      then
+        log "####################################################"
+        log "Test with CP $TAG and connector $THE_CONNECTOR_TAG has already been executed successfully $(displaytime $elapsed_time) ago, re-running"
+        log "####################################################"
+      else
+        logwarn "####################################################"
+        logwarn "skipping as test with CP $TAG and connector $THE_CONNECTOR_TAG has already been executed successfully $(displaytime $elapsed_time) ago"
+        logwarn "####################################################"
+        exit 0
+      fi
+    fi
+    set -e
   fi
 fi
 

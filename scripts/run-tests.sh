@@ -74,10 +74,10 @@ do
             log "####################################################"
 
             # Travis: do not run tests that have been successfully executed (same CP and connector version) less than 7 days ago #132
+            THE_CONNECTOR_TAG=""
             docker_compose_file=$(grep "environment" "$script" | grep DIR | grep start.sh | cut -d "/" -f 7 | cut -d '"' -f 1 | head -n1)
             if [ "${docker_compose_file}" != "" ] && [ -f "${docker_compose_file}" ]
             then
-
                 connector_path=$(grep "CONNECT_PLUGIN_PATH" "${docker_compose_file}" | cut -d "/" -f 5)
                 # remove any extra comma at the end (when there are multiple connectors used, example S3 source)
                 connector_path=$(echo "$connector_path" | cut -d "," -f 1)
@@ -85,21 +85,16 @@ do
                 name=$(echo "$connector_path" | cut -d "-" -f 2-)
 
                 THE_CONNECTOR_TAG=$(docker run vdesabou/kafka-docker-playground-connect:${TAG} cat /usr/share/confluent-hub-components/$connector_path/manifest.json | jq -r '.version')
-
-                file="/tmp/$TAG-$THE_CONNECTOR_TAG-$script"
-                touch $file
-                date +%s > $file
-                if [ -f "$file" ]
-                then
-                    aws s3 cp "$file" "s3://kafka-docker-playground/travis/"
-                    log "INFO: <$file> was uploaded to S3 bucket"
-                else
-                    logerror "ERROR: $file could not be created"
-                    exit 1
-                fi
+            fi
+            file="/tmp/$TAG-$THE_CONNECTOR_TAG-$script"
+            touch $file
+            date +%s > $file
+            if [ -f "$file" ]
+            then
+                aws s3 cp "$file" "s3://kafka-docker-playground/travis/"
+                log "INFO: <$file> was uploaded to S3 bucket"
             else
-                logerror "ERROR: could not determine docker-compose override file from $PWD/$0 !"
-                logerror "ERROR: please check you're running a connector test"
+                logerror "ERROR: $file could not be created"
                 exit 1
             fi
         else
