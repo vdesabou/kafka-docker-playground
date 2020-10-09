@@ -207,7 +207,7 @@ then
         logwarn "####################################################"
         logwarn "skipping as test with CP $TAG and connector $THE_CONNECTOR_TAG has already been executed successfully $(displaytime $elapsed_time) ago"
         logwarn "####################################################"
-        exit 0
+        exit 123
       fi
     fi
     set -e
@@ -477,7 +477,15 @@ function retry() {
   local n=1
   local max=2
   while true; do
-    "$@" && break || {
+    "$@"
+    ret=$?
+    if [ $ret -eq 0 ]
+    then
+      return 0
+    elif [ $ret -eq 123 ] # skipped
+    then
+      return 123
+    else
       if [[ $n -lt $max ]]; then
         ((n++))
         logwarn "Command failed. Attempt $n/$max:"
@@ -499,7 +507,7 @@ function retry() {
         logerror "The command has failed after $n attempts."
         return 1
       fi
-    }
+    fi
   done
 }
 
