@@ -84,6 +84,19 @@ function set_kafka_client_tag()
     fi
 }
 
+function displaytime {
+  local T=$1
+  local D=$((T/60/60/24))
+  local H=$((T/60/60%24))
+  local M=$((T/60%60))
+  local S=$((T%60))
+  (( $D > 0 )) && printf '%d days ' $D
+  (( $H > 0 )) && printf '%d hours ' $H
+  (( $M > 0 )) && printf '%d minutes ' $M
+  (( $D > 0 || $H > 0 || $M > 0 )) && printf 'and '
+  printf '%d seconds\n' $S
+}
+
 # Setting up TAG environment variable
 #
 if [ -z "$TAG" ]
@@ -140,6 +153,70 @@ function verify_installed()
     exit 1
   fi
 }
+
+if [ ! -z "$TRAVIS" ]
+then
+  # log "DEBUG: called from $PWD $0"
+  TMP_DIR=/tmp/playground_connector_tag$TRAVIS_JOB_NUMBER
+  if [[ $0 == *"wait-for-connect-and-controlcenter.sh"* ]]
+  then
+    # log "DEBUG: wait-for-connect-and-controlcenter.sh from environment folder. Skipping..."
+    # noop
+    :
+  elif [[ $0 == *"environment"* ]]
+  then
+    # log "DEBUG: start.sh from environment folder. Skipping..."
+    # noop
+    :
+  elif [[ $0 == *"stop"* ]] || [[ $0 == *"run-tests"* ]]
+  then
+    # log "DEBUG: stop.sh or run-tests.sh. Skipping..."
+    # noop
+    :
+  else
+    docker_compose_file=$(grep "environment" "$PWD/$0" | grep DIR | grep start.sh | cut -d "/" -f 7 | cut -d '"' -f 1 | head -n1)
+    if [ "${docker_compose_file}" != "" ] && [ -f "${docker_compose_file}" ]
+    then
+      connector_path=$(grep "CONNECT_PLUGIN_PATH" "${docker_compose_file}" | cut -d "/" -f 5)
+      # remove any extra comma at the end (when there are multiple connectors used, example S3 source)
+      connector_path=$(echo "$connector_path" | cut -d "," -f 1)
+      owner=$(echo "$connector_path" | cut -d "-" -f 1)
+      name=$(echo "$connector_path" | cut -d "-" -f 2-)
+
+      THE_CONNECTOR_TAG=$(docker run vdesabou/kafka-docker-playground-connect:${TAG} cat /usr/share/confluent-hub-components/$connector_path/manifest.json | jq -r '.version')
+
+      file="$TAG-$THE_CONNECTOR_TAG-${0##*/}"
+      s3_file="s3://kafka-docker-playground/travis/$file"
+      set +e
+      exists=$(aws s3 ls $s3_file)
+      if [ -z "$exists" ]; then
+        # log "DEBUG: $s3_file does not exist, run the test"
+        :
+      else
+        aws s3 cp $s3_file /tmp/
+        last_success_time=$(cat /tmp/$file)
+        now=$(date +%s)
+        elapsed_time=$((now-last_success_time))
+        if [[ $elapsed_time -gt 604800 ]]
+        then
+          log "####################################################"
+          log "Test with CP $TAG and connector $THE_CONNECTOR_TAG has already been executed successfully $(displaytime $elapsed_time) ago, re-running"
+          log "####################################################"
+        else
+          logwarn "####################################################"
+          logwarn "skipping as test with CP $TAG and connector $THE_CONNECTOR_TAG has already been executed successfully $(displaytime $elapsed_time) ago"
+          logwarn "####################################################"
+          exit 0
+        fi
+      fi
+      set -e
+    else
+      logerror "ERROR: could not determine docker-compose override file from $PWD/$0 !"
+      logerror "ERROR: please check you're running a connector test"
+      exit 1
+    fi
+  fi
+fi
 
 if [ ! -z "$CONNECTOR_TAG" ]
 then
@@ -216,6 +293,8 @@ then
     fi
   fi
 fi
+
+
 
 function verify_memory()
 {
@@ -377,7 +456,7 @@ function aws() {
       log 'ERROR: $HOME/.aws/credentials does now exist. AWS credentials must be set !'
       return 1
     fi
-    docker run --rm -tiv $HOME/.aws:/root/.aws -v $(pwd):/aws mikesir87/aws-cli:v1 aws "$@"
+    docker run --rm -tiv $HOME/.aws:/root/.aws -v $(pwd):/aws -v /tmp:/tmp mikesir87/aws-cli:v1 aws "$@"
 }
 
 function timeout() {
