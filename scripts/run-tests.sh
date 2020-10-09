@@ -7,7 +7,9 @@ source ${DIR}/../scripts/utils.sh
 cd ${DIR}/..
 
 nb_test_failed=0
+nb_test_skipped=0
 failed_tests=""
+skipped_tests=""
 
 test_list="$1"
 if [ "$1" = "ALL" ]
@@ -97,6 +99,13 @@ do
                 logerror "ERROR: $file could not be created"
                 exit 1
             fi
+        elif [ $ret -eq 123 ] # skipped
+        then
+            logwarn "####################################################"
+            logwarn "RESULT: SKIPPED for $script in dir $dir ($ELAPSED - $CUMULATED)"
+            logwarn "####################################################"
+            skipped_tests=$skipped_tests"$dir[$script]\n"
+            let "nb_test_skipped++"
         else
             logerror "####################################################"
             logerror "RESULT: FAILURE for $script in dir $dir ($ELAPSED - $CUMULATED)"
@@ -115,10 +124,17 @@ then
     log "####################################################"
     log "RESULT: SUCCESS"
     log "####################################################"
-    exit 0
 else
     logerror "####################################################"
     logerror "RESULT: FAILED $nb_test_failed tests failed:\n$failed_tests"
     logerror "####################################################"
     exit $nb_test_failed
 fi
+
+if [ $nb_test_skipped -ne 0 ]
+then
+    log "####################################################"
+    log "RESULT: SKIPPED $nb_test_skipped tests skipped:\n$skipped_tests"
+    log "####################################################"
+fi
+exit 0
