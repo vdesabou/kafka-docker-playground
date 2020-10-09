@@ -137,15 +137,6 @@ services:
       CONTROL_CENTER_COMMAND_TOPIC_REPLICATION: 1
       CONTROL_CENTER_METRICS_TOPIC_REPLICATION: 1
 
-#      CONTROL_CENTER_SCHEMA_REGISTRY_URL: "http://schema-registry-europe:8081"
-#      CONTROL_CENTER_STREAMS_CPREST_URL: "http://broker:8090"
-
-      CONTROL_CENTER_KAFKA_US_CPREST_URL: "http://broker-us:8090"
-      CONTROL_CENTER_SCHEMA_REGISTRY_US_URL: "http://schema-registry-us:8081"
-
-      CONTROL_CENTER_KAFKA_EUROPE_CPREST_URL: "http://broker-europe:8090"
-      CONTROL_CENTER_SCHEMA_REGISTRY_EUROPE_URL: "http://schema-registry-europe:8081"
-
   mysql:
     image: mysql:5.7
     hostname: mysql
