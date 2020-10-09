@@ -34,8 +34,12 @@ then
      export ORACLE_IMAGE="vdesabou/oracle12"
 fi
 
-
-JDBC_CONNECTOR_VERSION=$(docker run vdesabou/kafka-docker-playground-connect:${TAG} cat /usr/share/confluent-hub-components/confluentinc-kafka-connect-jdbc/manifest.json | jq -r '.version')
+if [ ! -z "$CONNECTOR_TAG" ]
+then
+     JDBC_CONNECTOR_VERSION=$CONNECTOR_TAG
+else
+     JDBC_CONNECTOR_VERSION=$(docker run vdesabou/kafka-docker-playground-connect:${TAG} cat /usr/share/confluent-hub-components/confluentinc-kafka-connect-jdbc/manifest.json | jq -r '.version')
+fi
 log "JDBC Connector version is $JDBC_CONNECTOR_VERSION"
 if ! version_gt $JDBC_CONNECTOR_VERSION "9.9.9"; then
      if [ ! -f ${DIR}/ojdbc8.jar ]
