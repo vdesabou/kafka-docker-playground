@@ -177,7 +177,7 @@ then
     # noop
     :
   else
-    docker_compose_file=$(grep "environment" "$PWD/$0" | grep DIR | grep start.sh | cut -d "/" -f 7 | cut -d '"' -f 1)
+    docker_compose_file=$(grep "environment" "$PWD/$0" | grep DIR | grep start.sh | cut -d "/" -f 7 | cut -d '"' -f 1 | head -n1)
     if [ "${docker_compose_file}" != "" ] && [ -f "${docker_compose_file}" ]
     then
       set +e
