@@ -168,7 +168,7 @@ then
     # log "DEBUG: start.sh from environment folder. Skipping..."
     # noop
     :
-  elif [[ $0 == *"stop"* ]] || [[ $0 == *"run-tests"* ]]
+  elif [[ $0 == *"stop"* ]] || [[ $0 == *"run-tests"* ]] || [[ $0 == *"launch-github-action"* ]] || [[ $0 == *"cleanup-resources"* ]]
   then
     # log "DEBUG: stop.sh or run-tests.sh. Skipping..."
     # noop
