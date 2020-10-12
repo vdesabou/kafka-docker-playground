@@ -157,7 +157,6 @@ function verify_installed()
 if [ ! -z "$TRAVIS" ]
 then
   # log "DEBUG: called from $PWD $0"
-  TMP_DIR=/tmp/playground_connector_tag$TRAVIS_JOB_NUMBER
   if [[ $0 == *"wait-for-connect-and-controlcenter.sh"* ]]
   then
     # log "DEBUG: wait-for-connect-and-controlcenter.sh from environment folder. Skipping..."
@@ -226,7 +225,9 @@ then
       connector_path=$(cat ${TMP_DIR}/connector_path)
       connector=$(cat ${TMP_DIR}/connector)
       log "Installing connector $connector on container connect"
+      set -e
       docker cp ${TMP_DIR}/${connector_path} connect:/usr/share/confluent-hub-components/
+      set +e
       log "Verifying connector version installed in /usr/share/confluent-hub-components/${connector_path}"
       docker exec connect cat /usr/share/confluent-hub-components/${connector_path}/manifest.json | jq -r '.version'
       log "Restarting container connect"
@@ -276,6 +277,7 @@ then
       # save it
       echo "$owner/$name:$CONNECTOR_TAG" > ${TMP_DIR}/connector
       log "Downloading connector $owner/$name:$CONNECTOR_TAG"
+      mkdir -p ${TMP_DIR}/${connector_path}
       docker run -v ${TMP_DIR}/${connector_path}:/usr/share/confluent-hub-components/$connector_path vdesabou/kafka-docker-playground-connect:$TAG confluent-hub install --no-prompt "$owner/$name:$CONNECTOR_TAG"
       if [ $? -ne 0 ]
       then
