@@ -1,6 +1,6 @@
 # Salesforce Platform Events Source connector
 
-<!-- ![asciinema](https://github.com/vdesabou/gifs/blob/master/connect/connect-salesforce-platform-events-source/asciinema.gif?raw=true) -->
+![asciinema](https://github.com/vdesabou/gifs/blob/master/connect/connect-salesforce-platform-events-source/asciinema.gif?raw=true)
 
 ## Objective
 
