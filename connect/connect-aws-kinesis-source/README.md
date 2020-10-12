@@ -4,14 +4,14 @@
 
 ## Objective
 
-Quickly test [Kinesis Connector](https://docs.confluent.io/current/connect/kafka-connect-kinesis/quickstart.html) connector.
+Quickly test [Kinesis Connector](https://docs.confluent.io/current/connect/kafka-connect-kinesis/index.html#quick-start) connector.
 
 
 
 ## AWS Setup
 
 * Make sure you have an [AWS account](https://docs.aws.amazon.com/streams/latest/dev/before-you-begin.html#setting-up-sign-up-for-aws).
-* Set up [AWS Credentials](https://docs.confluent.io/current/connect/kafka-connect-kinesis/quickstart.html#aws-credentials)
+* Set up [AWS Credentials](https://docs.confluent.io/current/connect/kafka-connect-kinesis/index.html#aws-credentials)
 
 This project assumes `~/.aws/credentials` is set, see `docker-compose.yml`file for connect:
 
