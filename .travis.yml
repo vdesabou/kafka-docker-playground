@@ -104,9 +104,9 @@ jobs:
     env: TEST_LIST="connect/connect-gcp-bigquery-sink connect/connect-gcp-cloud-functions-sink
       connect/connect-vertica-sink connect/connect-prometheus-sink connect/connect-aws-sqs-source
       connect/connect-aws-s3-sink connect/connect-aws-s3-source" TAG="6.0.0"
-  - name: '6.0.0: CONNECT: gcp-pubsub-source gcs-sink gcs-source'
+  - name: '6.0.0: CONNECT: gcp-pubsub-source gcs-sink gcs-source gcp-bigtable-sink'
     env: TEST_LIST="connect/connect-gcp-pubsub-source connect/connect-gcp-gcs-sink
-      connect/connect-gcp-gcs-source" TAG="6.0.0"
+      connect/connect-gcp-gcs-source connect/connect-gcp-bigtable-sink" TAG="6.0.0"
   - name: '6.0.0: CONNECT: azure-data-lake-storage-gen1-sink azure-data-lake-storage-gen2-sink
       azure-event-hubs-source'
     env: TEST_LIST="connect/connect-azure-data-lake-storage-gen1-sink connect/connect-azure-data-lake-storage-gen2-sink
