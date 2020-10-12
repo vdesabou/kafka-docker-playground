@@ -43,6 +43,12 @@ az sql server create \
     --admin-password $PASSWORD
 log "Enable a server-level firewall rule"
 MY_IP=$(curl https://ipinfo.io/ip)
+if [ ! -z "$TRAVIS" ]
+then
+     # running with Travis
+     # connect-azure-sql-data-warehouse-sink is failing #131
+     MY_IP="0.0.0.0"
+fi
 az sql server firewall-rule create \
     --name $AZURE_FIREWALL_RULL_NAME \
     --resource-group $AZURE_RESOURCE_GROUP \
