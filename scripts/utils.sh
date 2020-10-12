@@ -154,65 +154,6 @@ function verify_installed()
   fi
 }
 
-if [ ! -z "$TRAVIS" ]
-then
-  # log "DEBUG: called from $PWD $0"
-  if [[ $0 == *"wait-for-connect-and-controlcenter.sh"* ]]
-  then
-    # log "DEBUG: wait-for-connect-and-controlcenter.sh from environment folder. Skipping..."
-    # noop
-    :
-  elif [[ $0 == *"environment"* ]]
-  then
-    # log "DEBUG: start.sh from environment folder. Skipping..."
-    # noop
-    :
-  elif [[ $0 == *"stop"* ]] || [[ $0 == *"run-tests"* ]] || [[ $0 == *"launch-github-action"* ]] || [[ $0 == *"cleanup-resources"* ]]
-  then
-    # log "DEBUG: stop.sh or run-tests.sh. Skipping..."
-    # noop
-    :
-  else
-    THE_CONNECTOR_TAG=""
-    docker_compose_file=$(grep "environment" "$PWD/$0" | grep DIR | grep start.sh | cut -d "/" -f 7 | cut -d '"' -f 1 | head -n1)
-    if [ "${docker_compose_file}" != "" ] && [ -f "${docker_compose_file}" ]
-    then
-      connector_path=$(grep "CONNECT_PLUGIN_PATH" "${docker_compose_file}" | cut -d "/" -f 5)
-      # remove any extra comma at the end (when there are multiple connectors used, example S3 source)
-      connector_path=$(echo "$connector_path" | cut -d "," -f 1)
-      owner=$(echo "$connector_path" | cut -d "-" -f 1)
-      name=$(echo "$connector_path" | cut -d "-" -f 2-)
-
-      THE_CONNECTOR_TAG=$(docker run vdesabou/kafka-docker-playground-connect:${TAG} cat /usr/share/confluent-hub-components/$connector_path/manifest.json | jq -r '.version')
-    fi
-    file="$TAG-$THE_CONNECTOR_TAG-${0##*/}"
-    s3_file="s3://kafka-docker-playground/travis/$file"
-    set +e
-    exists=$(aws s3 ls $s3_file)
-    if [ -z "$exists" ]; then
-      # log "DEBUG: $s3_file does not exist, run the test"
-      :
-    else
-      aws s3 cp $s3_file /tmp/
-      last_success_time=$(cat /tmp/$file)
-      now=$(date +%s)
-      elapsed_time=$((now-last_success_time))
-      if [[ $elapsed_time -gt 604800 ]]
-      then
-        log "####################################################"
-        log "Test with CP $TAG and connector $THE_CONNECTOR_TAG has already been executed successfully $(displaytime $elapsed_time) ago, re-running"
-        log "####################################################"
-      else
-        logwarn "####################################################"
-        logwarn "skipping as test with CP $TAG and connector $THE_CONNECTOR_TAG has already been executed successfully $(displaytime $elapsed_time) ago"
-        logwarn "####################################################"
-        exit 123
-      fi
-    fi
-    set -e
-  fi
-fi
-
 if [ ! -z "$CONNECTOR_TAG" ]
 then
   log "CONNECTOR_TAG is set"
@@ -226,6 +167,7 @@ then
       connector=$(cat ${TMP_DIR}/connector)
       log "Installing connector $connector on container connect"
       set -e
+      docker exec connect rm -rf /usr/share/confluent-hub-components/${connector_path}
       docker cp ${TMP_DIR}/${connector_path} connect:/usr/share/confluent-hub-components/
       set +e
       log "Verifying connector version installed in /usr/share/confluent-hub-components/${connector_path}"
