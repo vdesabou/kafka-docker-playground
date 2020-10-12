@@ -45,15 +45,17 @@ if [ ! -z "$TRAVIS" ]
 then
      # running with Travis
      # connect-azure-sql-data-warehouse-sink is failing #131
+     counter=1
      for ip in $(dig +short nat.travisci.net | sort)
      do
         log "Enable a server-level firewall rule for Travis IP $ip"
         az sql server firewall-rule create \
-        --name $AZURE_FIREWALL_RULL_NAME \
+        --name $AZURE_FIREWALL_RULL_NAME$counter \
         --resource-group $AZURE_RESOURCE_GROUP \
         --server $AZURE_SQL_NAME \
         --start-ip-address $ip \
         --end-ip-address $ip
+        let "counter++"
      done
 else
     log "Enable a server-level firewall rule"
