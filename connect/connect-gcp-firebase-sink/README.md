@@ -1,5 +1,7 @@
 # GCP Firebase Sink connector
 
+![asciinema](https://github.com/vdesabou/gifs/blob/master/connect/connect-gcp-firebase-sink/asciinema.gif?raw=true)
+
 ## Objective
 
 Quickly test [GCP Firebase Sink](https://docs.confluent.io/current/connect/kafka-connect-firebase/sink/index.html#quick-start) connector.
