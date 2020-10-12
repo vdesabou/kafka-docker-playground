@@ -41,20 +41,31 @@ az sql server create \
     --location $AZURE_REGION  \
     --admin-user myadmin \
     --admin-password $PASSWORD
-log "Enable a server-level firewall rule"
-MY_IP=$(curl https://ipinfo.io/ip)
 if [ ! -z "$TRAVIS" ]
 then
      # running with Travis
      # connect-azure-sql-data-warehouse-sink is failing #131
-     MY_IP="0.0.0.0"
-fi
-az sql server firewall-rule create \
+     for ip in $(dig +short nat.travisci.net | sort)
+     do
+        log "Enable a server-level firewall rule for Travis IP $ip"
+        az sql server firewall-rule create \
+        --name $AZURE_FIREWALL_RULL_NAME \
+        --resource-group $AZURE_RESOURCE_GROUP \
+        --server $AZURE_SQL_NAME \
+        --start-ip-address $ip \
+        --end-ip-address $ip
+     done
+else
+    log "Enable a server-level firewall rule"
+    MY_IP=$(curl https://ipinfo.io/ip)
+    az sql server firewall-rule create \
     --name $AZURE_FIREWALL_RULL_NAME \
     --resource-group $AZURE_RESOURCE_GROUP \
     --server $AZURE_SQL_NAME \
     --start-ip-address $MY_IP \
     --end-ip-address $MY_IP
+fi
+
 log "Create a SQL Data Warehouse instance"
 az sql dw create \
     --name $AZURE_DATA_WAREHOUSE_NAME \
