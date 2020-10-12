@@ -53,7 +53,7 @@ curl -X PUT \
         "connector.class":"io.confluent.connect.kinesis.KinesisSourceConnector",
                "tasks.max": "1",
                "kafka.topic": "kinesis_topic",
-               "kinesis.region": "US_EAST_1",
+               "kinesis.region": "EU_WEST_3",
                "kinesis.stream": "my_kinesis_stream",
                "confluent.license": "",
                "name": "kinesis-source",
