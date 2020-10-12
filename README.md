@@ -65,6 +65,7 @@ Quick start examples from Confluent [docs](https://docs.confluent.io/current/con
 | <img src="./images/icons/pivotal_gemfire.png" width="15"> [Gemfire Sink](connect/connect-pivotal-gemfire-sink) | Database | 1.0.1 | Confluent Subscription | 2019-11-19 | ✅ 
 | <img src="./images/icons/github.png" width="15"> [Github Source](connect/connect-github-source) | SaaS Apps | 1.0.1 | Confluent Subscription | 2020-06-05 | ✅ 
 | <img src="./images/icons/bigquery.png" width="15"> [Google BigQuery Sink](connect/connect-gcp-bigquery-sink) | Data Warehouse | 1.6.1 | Open Source (WePay) |  | ✅ 
+| <img src="./images/icons/gcp_bigtable.png.png" width="15"> [Google Cloud BigTable Sink](connect/connect-gcp-bigtable-sink) | Database | 1.0.5 | Confluent Subscription | 2020-07-20 | ✅ 
 | <img src="./images/icons/cloud_functions.png" width="15"> [Google Cloud Functions Sink](connect/connect-gcp-cloud-functions-sink) | SaaS Apps | 1.1.1 | Confluent Subscription | 2020-09-22 | ✅ 
 | <img src="./images/icons/gcp_pubsub.png" width="15"> [Google Cloud Pub/Sub Source](connect/connect-gcp-pubsub-source) |  Message Queue | 1.0.3 | Confluent Subscription | 2020-10-06 | ✅ 
 | <img src="./images/icons/spanner.png" width="15"> [Google Cloud Spanner Sink](connect/connect-gcp-spanner-sink) |  Database | 1.0.2 | Confluent Subscription | 2019-10-30 | ✅ 
