@@ -1,5 +1,7 @@
 # GCP Firebase Source connector
 
+![asciinema](https://github.com/vdesabou/gifs/blob/master/connect/connect-gcp-firebase-source/asciinema.gif?raw=true)
+
 ## Objective
 
 Quickly test [GCP Firebase Source](https://docs.confluent.io/current/connect/kafka-connect-firebase/source/index.html#quick-start) connector.
