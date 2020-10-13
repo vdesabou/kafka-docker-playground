@@ -25,6 +25,7 @@ AZURE_REGION=westeurope
 
 set +e
 az group delete --name $AZURE_RESOURCE_GROUP --yes
+rm -rf $PWD/LocalFunctionProj
 set -e
 
 log "Creating resource $AZURE_RESOURCE_GROUP in $AZURE_REGION"
@@ -39,23 +40,22 @@ az storage account create \
     --location $AZURE_REGION \
     --sku Standard_LRS
 
-# functions app was generated following https://docs.microsoft.com/en-us/azure/azure-functions/functions-create-function-linux-custom-image?tabs=bash%2Cportal&pivots=programming-language-javascript
+log "Creating local functions project with HTTP trigger"
+# https://docs.microsoft.com/en-us/azure/azure-functions/functions-create-first-azure-function-azure-cli?pivots=programming-language-javascript&tabs=bash%2Cbrowser
+docker run -v $PWD/LocalFunctionProj:/LocalFunctionProj mcr.microsoft.com/azure-functions/node:3.0-node12-core-tools bash -c "func init LocalFunctionProj --javascript && cd LocalFunctionProj && func new --name HttpExample --template \"HTTP trigger\""
 
 log "Creating functions app $AZURE_FUNCTIONS_NAME"
-az functionapp create --consumption-plan-location $AZURE_REGION --name $AZURE_FUNCTIONS_NAME --resource-group $AZURE_RESOURCE_GROUP --runtime node --storage-account $AZURE_STORAGE_NAME --deployment-container-image-name vdesabou/azurefunctionsimage:v1.0.0
+az functionapp create --consumption-plan-location $AZURE_REGION --name $AZURE_FUNCTIONS_NAME --resource-group $AZURE_RESOURCE_GROUP --runtime node --storage-account $AZURE_STORAGE_NAME --runtime-version 10 --functions-version 3
 
-storageConnectionString=$(az storage account show-connection-string --resource-group $AZURE_RESOURCE_GROUP --name $AZURE_STORAGE_NAME --query connectionString --output tsv)
+sleep 120
 
-az functionapp config appsettings set --name $AZURE_FUNCTIONS_NAME --resource-group $AZURE_RESOURCE_GROUP  --settings AzureWebJobsStorage=$storageConnectionString
+log "Publishing functions app"
+output=$(docker run -v $PWD/LocalFunctionProj:/LocalFunctionProj mcr.microsoft.com/azure-functions/node:3.0-node12-core-tools bash -c "az login -u \"$AZ_USER\" -p \"$AZ_PASS\" && cd LocalFunctionProj && func azure functionapp publish $AZURE_FUNCTIONS_NAME")
+tmp=$(echo "$output" | grep "Invoke url")
+prefix="        Invoke url: "
+FUNCTIONS_URL=${tmp#"$prefix"}
 
-subscription_id="4aef46e4-5a41-4867-9f2e-fa4a3b9dd2d2"
-URI="/subscriptions/$subscription_id/resourceGroups/$AZURE_RESOURCE_GROUP/providers/Microsoft.Web/sites/$AZURE_FUNCTIONS_NAME/host/default/listKeys?api-version=2018-11-01"
-
-KEY=$(az rest --method post --uri $URI --query functionKeys.default --output tsv)
-
-FUNCTIONS_URL="https://$AZURE_FUNCTIONS_NAME.azurewebsites.net/api/$AZURE_FUNCTIONS_NAME?code=$KEY"
 log "Functions URL is $FUNCTIONS_URL"
-exit 0
 
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
 
@@ -94,11 +94,8 @@ curl -X PUT \
 
 sleep 10
 
-log "Searching Azure Search index"
-curl -X GET \
-"https://${AZURE_SEARCH_SERVICE_NAME}.search.windows.net/indexes/functions-test-index/docs?api-version=2019-05-06&search=*" \
--H 'Content-Type: application/json' \
--H "api-key: $AZURE_SEARCH_ADMIN_PRIMARY_KEY" | jq
+log "Confirm that the messages were delivered to the result topic in Kafka"
+docker exec broker kafka-console-consumer --bootstrap-server broker:9092 --topic test-result --from-beginning --max-messages 3
 
 log "Deleting resource group"
 az group delete --name $AZURE_RESOURCE_GROUP --yes
