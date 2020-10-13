@@ -25,47 +25,41 @@ Logging to Azure using browser (or using environment variables `AZ_USER` and `AZ
 az login
 ```
 
-All the blob storage setup is automated:
+All the azure functions setup is automated:
 
 ```bash
 AZURE_NAME=playground$USER$TRAVIS_JOB_NUMBER
 AZURE_NAME=${AZURE_NAME//[-._]/}
 AZURE_RESOURCE_GROUP=$AZURE_NAME
-AZURE_SEARCH_SERVICE_NAME=$AZURE_NAME
+AZURE_STORAGE_NAME=$AZURE_NAME
+AZURE_FUNCTIONS_NAME=$AZURE_NAME
 AZURE_REGION=westeurope
 
-# Creating Azure Resource Group $AZURE_RESOURCE_GROUP
-az group create \
+# Creating resource $AZURE_RESOURCE_GROUP in $AZURE_REGION
+$ az group create \
     --name $AZURE_RESOURCE_GROUP \
     --location $AZURE_REGION
-# Creating Azure Search service
-az search service create \
-    --name $AZURE_SEARCH_SERVICE_NAME \
+
+# Creating storage account $AZURE_STORAGE_NAME in resource $AZURE_RESOURCE_GROUP
+$ az storage account create \
+    --name $AZURE_STORAGE_NAME \
     --resource-group $AZURE_RESOURCE_GROUP \
     --location $AZURE_REGION \
-    --sku free
-AZURE_SEARCH_ADMIN_PRIMARY_KEY=$(az search admin-key show \
-    --resource-group $AZURE_RESOURCE_GROUP \
-    --service-name $AZURE_SEARCH_SERVICE_NAME | jq -r '.primaryKey')
+    --sku Standard_LRS
+
+# Creating local functions project with HTTP trigger
+$ docker run -v $PWD/LocalFunctionProj:/LocalFunctionProj mcr.microsoft.com/azure-functions/node:3.0-node12-core-tools bash -c "func init LocalFunctionProj --javascript && cd LocalFunctionProj && func new --name HttpExample --template \"HTTP trigger\""
+
+# Creating functions app $AZURE_FUNCTIONS_NAME
+$ az functionapp create --consumption-plan-location $AZURE_REGION --name $AZURE_FUNCTIONS_NAME --resource-group $AZURE_RESOURCE_GROUP --runtime node --storage-account $AZURE_STORAGE_NAME --runtime-version 10 --functions-version 3
+
+# Publishing functions app
+output=$(docker run -v $PWD/LocalFunctionProj:/LocalFunctionProj mcr.microsoft.com/azure-functions/node:3.0-node12-core-tools bash -c "az login -u \"$AZ_USER\" -p \"$AZ_PASS\" && cd LocalFunctionProj && func azure functionapp publish $AZURE_FUNCTIONS_NAME")
+tmp=$(echo "$output" | grep "Invoke url")
+prefix="        Invoke url: "
+FUNCTIONS_URL=${tmp#"$prefix"}
 ```
 
-Creating Azure Search index
-
-```bash
-$ curl -X POST \
-"https://${AZURE_SEARCH_SERVICE_NAME}.search.windows.net/indexes?api-version=2019-05-06" \
--H 'Accept: application/json' \
--H 'Content-Type: application/json' \
--H "api-key: $AZURE_SEARCH_ADMIN_PRIMARY_KEY" \
--d '{
-  "name": "hotels-sample-index",
-  "fields": [
-    {"name": "HotelId", "type": "Edm.String", "key": true, "searchable": false, "sortable": false, "facetable": false},
-    {"name": "Description", "type": "Edm.String", "filterable": false, "sortable": false, "facetable": false},
-    {"name": "HotelName", "type": "Edm.String", "facetable": false}
-  ]
-}'
-```
 
 The connector is created with:
 
@@ -73,16 +67,12 @@ The connector is created with:
 $ curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
-               "connector.class": "io.confluent.connect.azure.search.AzureSearchSinkConnector",
+               "connector.class": "io.confluent.connect.azure.functions.AzureFunctionsSinkConnector",
                 "tasks.max": "1",
-                "topics": "hotels-sample",
-                "key.converter": "io.confluent.connect.avro.AvroConverter",
-                "key.converter.schema.registry.url": "http://schema-registry:8081",
-                "value.converter": "io.confluent.connect.avro.AvroConverter",
-                "value.converter.schema.registry.url": "http://schema-registry:8081",
-                "azure.search.service.name": "'"$AZURE_SEARCH_SERVICE_NAME"'",
-                "azure.search.api.key": "'"$AZURE_SEARCH_ADMIN_PRIMARY_KEY"'",
-                "index.name": "${topic}-index",
+                "topics": "functions-test",
+                "key.converter":"org.apache.kafka.connect.storage.StringConverter",
+                "value.converter":"org.apache.kafka.connect.storage.StringConverter",
+                "function.url": "'"$FUNCTIONS_URL"'",
                 "confluent.license": "",
                 "confluent.topic.bootstrap.servers": "broker:9092",
                 "confluent.topic.replication.factor": "1",
@@ -96,54 +86,51 @@ $ curl -X PUT \
                 "reporter.result.topic.value.format": "string",
                 "reporter.result.topic.replication.factor": 1
           }' \
-     http://localhost:8083/connectors/azure-search/config | jq .
+     http://localhost:8083/connectors/azure-functions-sink/config | jq .
 ```
 
-Messages are sent to `hotels-sample` topic using:
+Sending messages to topic functions-test
 
 ```bash
-$ docker exec -i connect kafka-avro-console-producer --broker-list broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic hotels-sample --property key.schema='{"type":"string"}' --property "parse.key=true" --property "key.separator=," --property value.schema='{"type":"record","name":"myrecord","fields":[{"name":"HotelName","type":"string"},{"name":"Description","type":"string"}]}' << EOF
-"marriotId",{"HotelName": "Marriot", "Description": "Marriot description"}
-"holidayinnId",{"HotelName": "HolidayInn", "Description": "HolidayInn description"}
-"motel8Id",{"HotelName": "Motel8", "Description": "motel8 description"}
+$ docker exec -i broker kafka-console-producer --broker-list broker:9092 --topic functions-test --property parse.key=true --property key.separator=, << EOF
+key1,value1
+key2,value2
+key3,value3
 EOF
 ```
 
-Searching Azure Search index
+Creating Azure Functions Sink connector
 
 ```bash
-$ curl -X GET \
-"https://${AZURE_SEARCH_SERVICE_NAME}.search.windows.net/indexes/hotels-sample-index/docs?api-version=2019-05-06&search=*" \
--H 'Content-Type: application/json' \
--H "api-key: $AZURE_SEARCH_ADMIN_PRIMARY_KEY" | jq
+$ curl -X PUT \
+     -H "Content-Type: application/json" \
+     --data '{
+               "connector.class": "io.confluent.connect.azure.functions.AzureFunctionsSinkConnector",
+                "tasks.max": "1",
+                "topics": "functions-test",
+                "key.converter":"org.apache.kafka.connect.storage.StringConverter",
+                "value.converter":"org.apache.kafka.connect.storage.StringConverter",
+                "function.url": "'"$FUNCTIONS_URL"'",
+                "confluent.license": "",
+                "confluent.topic.bootstrap.servers": "broker:9092",
+                "confluent.topic.replication.factor": "1",
+                "reporter.bootstrap.servers": "broker:9092",
+                "reporter.error.topic.name": "test-error",
+                "reporter.error.topic.replication.factor": 1,
+                "reporter.error.topic.key.format": "string",
+                "reporter.error.topic.value.format": "string",
+                "reporter.result.topic.name": "test-result",
+                "reporter.result.topic.key.format": "string",
+                "reporter.result.topic.value.format": "string",
+                "reporter.result.topic.replication.factor": 1
+          }' \
+     http://localhost:8083/connectors/azure-functions-sink/config | jq .
 ```
 
-Results:
+Confirm that the messages were delivered to the result topic in Kafka
 
-```json
-{
-  "@odata.context": "https://playgroundvsaboulin.search.windows.net/indexes('hotels-sample-index')/$metadata#docs(*)",
-  "value": [
-    {
-      "@search.score": 1,
-      "HotelId": "marriotId",
-      "Description": "Marriot description",
-      "HotelName": "Marriot"
-    },
-    {
-      "@search.score": 1,
-      "HotelId": "holidayinnId",
-      "Description": "HolidayInn description",
-      "HotelName": "HolidayInn"
-    },
-    {
-      "@search.score": 1,
-      "HotelId": "motel8Id",
-      "Description": "motel8 description",
-      "HotelName": "Motel8"
-    }
-  ]
-}
+```bash
+docker exec broker kafka-console-consumer --bootstrap-server broker:9092 --topic test-result --from-beginning --max-messages 3
 ```
 
 Deleting resource group:
