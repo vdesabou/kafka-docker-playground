@@ -47,13 +47,27 @@ docker run -v $PWD/LocalFunctionProj:/LocalFunctionProj mcr.microsoft.com/azure-
 log "Creating functions app $AZURE_FUNCTIONS_NAME"
 az functionapp create --consumption-plan-location $AZURE_REGION --name $AZURE_FUNCTIONS_NAME --resource-group $AZURE_RESOURCE_GROUP --runtime node --storage-account $AZURE_STORAGE_NAME --runtime-version 10 --functions-version 3
 
-sleep 120
+log "Publishing functions app, it will take a while"
+max_attempts="10"
+sleep_interval="60"
+attempt_num=1
 
-log "Publishing functions app"
-output=$(docker run -v $PWD/LocalFunctionProj:/LocalFunctionProj mcr.microsoft.com/azure-functions/node:3.0-node12-core-tools bash -c "az login -u \"$AZ_USER\" -p \"$AZ_PASS\" && cd LocalFunctionProj && func azure functionapp publish $AZURE_FUNCTIONS_NAME")
-tmp=$(echo "$output" | grep "Invoke url")
-prefix="        Invoke url: "
-FUNCTIONS_URL=${tmp#"$prefix"}
+until docker run -v $PWD/LocalFunctionProj:/LocalFunctionProj mcr.microsoft.com/azure-functions/node:3.0-node12-core-tools bash -c "az login -u \"$AZ_USER\" -p \"$AZ_PASS\" && cd LocalFunctionProj && func azure functionapp publish \"$AZURE_FUNCTIONS_NAME\""
+do
+    if (( attempt_num == max_attempts ))
+    then
+        logerror "ERROR: Failed after $attempt_num attempts. Please troubleshoot and run again."
+        return 1
+    else
+        log "Retrying after $sleep_interval seconds"
+        ((attempt_num++))
+        sleep $sleep_interval
+    fi
+done
+
+
+output=$(docker run -v $PWD/LocalFunctionProj:/LocalFunctionProj mcr.microsoft.com/azure-functions/node:3.0-node12-core-tools bash -c "az login -u \"$AZ_USER\" -p \"$AZ_PASS\" > /dev/null && cd LocalFunctionProj && func azure functionapp list-functions $AZURE_FUNCTIONS_NAME --show-keys")
+FUNCTIONS_URL=$(echo $output | grep -Eo 'https://[^ >]+'|head -1)
 
 log "Functions URL is $FUNCTIONS_URL"
 

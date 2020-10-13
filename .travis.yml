@@ -118,6 +118,8 @@ jobs:
       azure-blob-storage-source'
     env: TEST_LIST="connect/connect-azure-service-bus-source connect/connect-azure-blob-storage-sink
       connect/connect-azure-blob-storage-source connect/connect-azure-sql-data-warehouse-sink" TAG="6.0.0"
+  - name: '6.0.0: CONNECT: azure-functions-sink'
+    env: TEST_LIST="connect/connect-azure-functions-sink" TAG="6.0.0"
   - name: '6.0.0: CONNECT: http-sink'
     env: TEST_LIST="connect/connect-http-sink" TAG="6.0.0"
   - name: '6.0.0: kudu-source kudu-sink'
