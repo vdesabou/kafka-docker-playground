@@ -40,6 +40,15 @@ for group in $(az group list --query [].name --output tsv)
 do
   if [[ $group = playgroundtravis* ]]
   then
+    if [ ! -z "$TRAVIS_JOB_NUMBER" ]
+    then
+      job=$(echo $TRAVIS_JOB_NUMBER | cut -d "." -f 1)
+      if [[ $group = playgroundtravis$job* ]]
+      then
+        log "Skipping current travis build $job"
+        continue
+      fi
+    fi
     log "Deleting resource group $group"
     az group delete --name $group --yes
   fi
