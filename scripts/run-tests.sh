@@ -92,7 +92,7 @@ do
             log "####################################################"
         else
             logwarn "####################################################"
-            logwarn "skipping as test with CP $TAG and connector $THE_CONNECTOR_TAG has already been executed successfully $(displaytime $elapsed_time) ago"
+            logwarn "Skipping as test with CP $TAG and connector $THE_CONNECTOR_TAG has already been executed successfully $(displaytime $elapsed_time) ago"
             logwarn "####################################################"
             skipped_tests=$skipped_tests"$dir[$script]\n"
             let "nb_test_skipped++"
@@ -134,7 +134,9 @@ do
             failed_tests=$failed_tests"$dir[$script]\n"
             let "nb_test_failed++"
         fi
+        set +e
         bash stop.sh
+        set -e
     done
     cd - > /dev/null
 done
