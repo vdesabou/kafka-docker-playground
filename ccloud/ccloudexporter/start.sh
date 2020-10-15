@@ -6,7 +6,7 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
 verify_installed "ccloud"
-check_ccloud_version 1.0 || exit 1
+check_ccloud_version 1.7.0 || exit 1
 verify_ccloud_login  "ccloud kafka cluster list"
 verify_ccloud_details
 check_if_continue
