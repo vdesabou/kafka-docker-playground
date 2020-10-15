@@ -22,7 +22,7 @@ if [ "$tag" != "" ]
 then
     export TAG=$tag
 fi
-set -x
+
 for dir in $test_list
 do
     if [ ! -d $dir ]
@@ -92,21 +92,20 @@ do
                 elapsed_time=$((now-last_success_time))
             fi
 
-        if [[ $elapsed_time -gt 604800 ]]
-        then
-            log "####################################################"
-            log "Test with CP $TAG and connector $THE_CONNECTOR_TAG has already been executed successfully $(displaytime $elapsed_time) ago, re-running"
-            log "####################################################"
-        else
-            logwarn "####################################################"
-            logwarn "Skipping as test with CP $TAG and connector $THE_CONNECTOR_TAG has already been executed successfully $(displaytime $elapsed_time) ago"
-            logwarn "####################################################"
-            skipped_tests=$skipped_tests"$dir[$script]\n"
-            let "nb_test_skipped++"
-            continue
+            if [[ $elapsed_time -gt 604800 ]]
+            then
+                log "####################################################"
+                log "Test with CP $TAG and connector $THE_CONNECTOR_TAG has already been executed successfully $(displaytime $elapsed_time) ago, re-running"
+                log "####################################################"
+            else
+                logwarn "####################################################"
+                logwarn "Skipping as test with CP $TAG and connector $THE_CONNECTOR_TAG has already been executed successfully $(displaytime $elapsed_time) ago"
+                logwarn "####################################################"
+                skipped_tests=$skipped_tests"$dir[$script]\n"
+                let "nb_test_skipped++"
+                continue
+            fi
         fi
-        fi
-        set -e
 
         log "####################################################"
         log "Executing $script in dir $dir"
@@ -141,9 +140,7 @@ do
             failed_tests=$failed_tests"$dir[$script]\n"
             let "nb_test_failed++"
         fi
-        set +e
         bash stop.sh
-        set -e
     done
     cd - > /dev/null
 done
