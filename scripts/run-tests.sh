@@ -22,7 +22,7 @@ if [ "$tag" != "" ]
 then
     export TAG=$tag
 fi
-
+set -x
 for dir in $test_list
 do
     if [ ! -d $dir ]
@@ -82,9 +82,16 @@ do
             :
         else
             aws s3 cp $s3_file /tmp/
-            last_success_time=$(cat /tmp/$file)
-            now=$(date +%s)
-            elapsed_time=$((now-last_success_time))
+            if [ ! -f /tmp/$file ]
+            then
+                logwarn "Error getting $s3_file"
+                elapsed_time=999999999999
+            else
+                last_success_time=$(cat /tmp/$file)
+                now=$(date +%s)
+                elapsed_time=$((now-last_success_time))
+            fi
+
         if [[ $elapsed_time -gt 604800 ]]
         then
             log "####################################################"
