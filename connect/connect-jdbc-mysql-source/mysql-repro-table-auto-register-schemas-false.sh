@@ -100,6 +100,8 @@ curl -X PUT \
                     "value.converter": "io.confluent.connect.avro.AvroConverter",
                     "value.converter.schema.registry.url": "http://schema-registry:8081",
                     "value.converter.connect.meta.data": "false",
+                    "value.converter.auto.register.schemas" : "false",
+                    "value.converter.use.latest.version": "true",
                     "incrementing.column.name":"id",
                     "topic.prefix":"mysql-"
           }' \
@@ -115,5 +117,5 @@ timeout 60 docker exec connect kafka-avro-console-consumer -bootstrap-server bro
 # {"id":1,"team_email":"kafka@apache.org","name":"kafka","last_modified":1602857364000}
 # {"id":2,"team_email":"another@apache.org","name":"another","last_modified":1602857386000}
 
-log "Checking that there is only 1 version"
+log "Checking that there are 2 different versions"
 curl http://localhost:8081/subjects/mysql-application-value/versions | jq .
