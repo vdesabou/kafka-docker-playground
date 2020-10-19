@@ -81,8 +81,8 @@ do
             # log "DEBUG: $s3_file does not exist, run the test"
             :
         else
-            aws s3 cp $s3_file /tmp/
-            if [ ! -f /tmp/$file ]
+            aws s3 cp $s3_file .
+            if [ ! -f $file ]
             then
                 logwarn "Error getting $s3_file"
                 elapsed_time=999999999999
@@ -122,7 +122,7 @@ do
             log "RESULT: SUCCESS for $script in dir $dir ($ELAPSED - $CUMULATED)"
             log "####################################################"
 
-            file="/tmp/$TAG-$THE_CONNECTOR_TAG-$script"
+            file="$TAG-$THE_CONNECTOR_TAG-$script"
             touch $file
             date +%s > $file
             if [ -f "$file" ]
