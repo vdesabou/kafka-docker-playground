@@ -112,10 +112,11 @@ sleep 5
 log "Verifying topic mysql-application"
 timeout 60 docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic mysql-application --from-beginning --max-messages 4
 
-# {"id":1,"name":"kafka","team_email":"kafka@apache.org","last_modified":1602857364000}
-# {"id":2,"name":"another","team_email":"another@apache.org","last_modified":1602857385000}
-# {"id":1,"team_email":"kafka@apache.org","name":"kafka","last_modified":1602857364000}
-# {"id":2,"team_email":"another@apache.org","name":"another","last_modified":1602857386000}
+# PROBLEM !
+# {"id":1,"name":"kafka","team_email":"kafka@apache.org","last_modified":1603092523000}
+# {"id":2,"name":"another","team_email":"another@apache.org","last_modified":1603092548000}
+# {"id":1,"name":"kafka@apache.org","team_email":"kafka","last_modified":1603092523000}
+# {"id":2,"name":"another@apache.org","team_email":"another","last_modified":1603092549000}
 
-log "Checking that there are 2 different versions"
+log "Checking that there is only 1 version"
 curl http://localhost:8081/subjects/mysql-application-value/versions | jq .
