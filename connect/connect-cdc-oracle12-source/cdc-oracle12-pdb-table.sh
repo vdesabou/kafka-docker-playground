@@ -40,7 +40,7 @@ then
      export ORACLE_IMAGE="vdesabou/oracle12"
 fi
 
-${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
+${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext-pdb-table.yml"
 
 
 # Verify Oracle DB has started within MAX_WAIT seconds
@@ -75,6 +75,7 @@ curl -X PUT \
                "oracle.server": "oracle",
                "oracle.port": 1521,
                "oracle.sid": "ORCLCDB",
+               "oracle.pdb.name": "ORCLPDB1",
                "oracle.username": "C##MYUSER",
                "oracle.password": "mypassword",
                "start.from":"snapshot",
@@ -96,19 +97,7 @@ timeout 60 docker exec connect kafka-avro-console-consumer -bootstrap-server bro
 
 # FIXTHIS
 
-# cannot use "table.topic.name.template": "${databaseName}.${schemaName}.${tableName}"
-
 # {
 #   "error_code": 400,
-#   "message": "Connector configuration is invalid and contains the following 1 error(s):\nVariables in template resolve to an invalid topic name. Invalid value ORCLCDB.C##MYUSER.CUSTOMERS for configuration table.topic.name.template: topic names may have 1-249 ASCII alphanumeric, `+`, `.`, `_`, and `-` characters\nYou can also find the above list of errors at the endpoint `/connector-plugins/{connectorType}/config/validate`"
+#   "message": "Connector configuration is invalid and contains the following 2 error(s):\nNo tables appear to be accessible in  at jdbc:oracle:thin:@oracle:1521:ORCLCDB with user 'C##MYUSER' (pool=oracle-cdc-source:cdc-oracle-source). Check database and username.\nNo tables appear to be accessible in  at jdbc:oracle:thin:@oracle:1521:ORCLCDB with user 'C##MYUSER' (pool=oracle-cdc-source:cdc-oracle-source). Check database and username.\nYou can also find the above list of errors at the endpoint `/connector-plugins/{connectorType}/config/validate`"
 # }
-
-# [2020-09-24 17:38:53,285] ERROR Exception in RecordQueue thread (io.confluent.connect.oracle.cdc.util.RecordQueue)
-# org.apache.kafka.connect.errors.ConnectException: Failed to subscribe to the redo log topic 'cdc-oracle-source-ORCLCDB-redo-log' even after waiting PT1M. Verify that this redo log topic exists in the brokers at broker:9092, and that the redo log reading task is able to produce to that topic.
-#         at io.confluent.connect.oracle.cdc.ChangeEventGenerator.subscribeToRedoLogTopic(ChangeEventGenerator.java:236)
-#         at io.confluent.connect.oracle.cdc.ChangeEventGenerator.execute(ChangeEventGenerator.java:191)
-#         at io.confluent.connect.oracle.cdc.util.RecordQueue.lambda$createLoggingSupplier$1(RecordQueue.java:466)
-#         at java.util.concurrent.CompletableFuture$AsyncSupply.run(CompletableFuture.java:1590)
-#         at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1149)
-#         at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:624)
-#         at java.lang.Thread.run(Thread.java:748)
