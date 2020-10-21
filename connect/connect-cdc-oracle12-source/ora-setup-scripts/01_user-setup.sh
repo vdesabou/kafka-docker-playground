@@ -43,9 +43,11 @@ sqlplus sys/Admin123@//localhost:1521/ORCLPDB1 as sysdba <<- EOF
 	GRANT CREATE SEQUENCE TO myuser;
 	GRANT CREATE TRIGGER TO myuser;
 
-        -- Enable Supplemental Logging for All Columns
-	ALTER SESSION SET CONTAINER=cdb\$root;
-	ALTER DATABASE ADD SUPPLEMENTAL LOG DATA;
+	exit;
+EOF
+
+sqlplus / as sysdba <<- EOF
+    -- Enable Supplemental Logging for All Columns
 	ALTER DATABASE ADD SUPPLEMENTAL LOG DATA (ALL) COLUMNS;
 
 	exit;
