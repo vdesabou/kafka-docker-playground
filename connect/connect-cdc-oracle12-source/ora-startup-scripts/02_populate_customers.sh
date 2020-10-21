@@ -2,7 +2,7 @@
 
 echo 'Creating and populating customers table'
 
-sqlplus C\#\#MYUSER/mypassword@//localhost:1521/ORCLCDB  <<- EOF
+sqlplus myuser/mypassword@//localhost:1521/ORCLPDB1  <<- EOF
 
 insert into CUSTOMERS (id, first_name, last_name, email, gender, club_status, comments) values (1, 'Rica', 'Blaisdell', 'rblaisdell0@rambler.ru', 'Female', 'bronze', 'Universal optimal hierarchy');
 insert into CUSTOMERS (id, first_name, last_name, email, gender, club_status, comments) values (2, 'Ruthie', 'Brockherst', 'rbrockherst1@ow.ly', 'Female', 'platinum', 'Reverse-engineered tangible interface');

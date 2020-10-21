@@ -18,33 +18,30 @@ sqlplus /nolog <<- EOF
 	exit;
 EOF
 
-sqlplus / as sysdba <<- EOF
 
-EOF
-
-# Create C##MYUSER user in CDB (see https://github.com/oracle/docker-images/issues/443#issuecomment-313157302)
-sqlplus / as sysdba <<- EOF
-	create role C##CDC_PRIVS;
+# Create myuser user in PDB
+sqlplus sys/Admin123@//localhost:1521/ORCLPDB1 as sysdba <<- EOF
+	create role cdc_privs;
 	grant create session,
 	execute_catalog_role,
 	select any transaction,
-	select any dictionary to C##CDC_PRIVS;
-	grant select on SYSTEM.LOGMNR_COL\$ to C##CDC_PRIVS;
-	grant select on SYSTEM.LOGMNR_OBJ\$ to C##CDC_PRIVS;
-	grant select on SYSTEM.LOGMNR_USER\$ to C##CDC_PRIVS;
-	grant select on SYSTEM.LOGMNR_UID\$ to C##CDC_PRIVS;
+	select any dictionary to cdc_privs;
+	grant select on SYSTEM.LOGMNR_COL\$ to cdc_privs;
+	grant select on SYSTEM.LOGMNR_OBJ\$ to cdc_privs;
+	grant select on SYSTEM.LOGMNR_USER\$ to cdc_privs;
+	grant select on SYSTEM.LOGMNR_UID\$ to cdc_privs;
 
-	create user C##MYUSER identified by mypassword;
-	grant C##CDC_PRIVS to C##MYUSER;
-	alter user C##MYUSER quota unlimited on users;
+	create user myuser identified by mypassword;
+	grant cdc_privs to myuser;
+	alter user myuser quota unlimited on users;
 
-	grant LOGMINING to C##CDC_PRIVS;
+	grant LOGMINING to cdc_privs;
 
-	GRANT CONNECT TO C##MYUSER container=all;
-	GRANT CREATE SESSION TO C##MYUSER container=all;
-	GRANT CREATE TABLE TO C##MYUSER container=all;
-	GRANT CREATE SEQUENCE TO C##MYUSER container=all;
-	GRANT CREATE TRIGGER TO C##MYUSER container=all;
+	GRANT CONNECT TO myuser;
+	GRANT CREATE SESSION TO myuser;
+	GRANT CREATE TABLE TO myuser;
+	GRANT CREATE SEQUENCE TO myuser;
+	GRANT CREATE TRIGGER TO myuser;
 
         -- Enable Supplemental Logging for All Columns
 	ALTER SESSION SET CONTAINER=cdb\$root;
