@@ -74,7 +74,8 @@ curl -X PUT \
                "confluent.topic.replication.factor": "1",
                "oracle.server": "oracle",
                "oracle.port": 1521,
-               "oracle.sid": "ORCLPDB1",
+               "oracle.sid": "ORCLCDB",
+               "oracle.pdb.name": "ORCLPDB1",
                "oracle.username": "myuser",
                "oracle.password": "mypassword",
                "start.from":"snapshot",
@@ -82,7 +83,7 @@ curl -X PUT \
                "redo.log.consumer.bootstrap.servers":"broker:9092",
                "table.inclusion.regex": ".*CUSTOMERS.*",
                "_table.topic.name.template_":"Using template vars to set change event topic for each table",
-               "table.topic.name.template": "${databaseName}.${tableName}",
+               "table.topic.name.template": "${databaseName}.${schemaName}.${tableName}",
                "connection.pool.max.size": 20,
                "confluent.topic.replication.factor":1
           }' \
@@ -90,8 +91,8 @@ curl -X PUT \
 
 sleep 5
 
-log "Verifying topic ORCLCDB.CUSTOMERS"
-timeout 60 docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic ORCLCDB.CUSTOMERS --from-beginning --max-messages 2
+log "Verifying topic ORCLPDB1.CUSTOMERS"
+timeout 60 docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic ORCLPDB1.CUSTOMERS --from-beginning --max-messages 2
 
 # FIXTHIS
 
