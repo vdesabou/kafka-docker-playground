@@ -4,9 +4,9 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
-if [ ! -d ${DIR}/confluentinc-kafka-connect-oracle-cdc-0.1.0-preview ]
+if [ ! -d ${DIR}/confluentinc-kafka-connect-oracle-cdc-0.1.1-SNAPSHOT-preview ]
 then
-     logerror "ERROR: ${DIR}/confluentinc-kafka-connect-oracle-cdc-0.1.0-preview is missing."
+     logerror "ERROR: ${DIR}/confluentinc-kafka-connect-oracle-cdc-0.1.1-SNAPSHOT-preview is missing."
      exit 1
 fi
 
@@ -74,8 +74,8 @@ curl -X PUT \
                "confluent.topic.replication.factor": "1",
                "oracle.server": "oracle",
                "oracle.port": 1521,
-               "oracle.database": "ORCLCDB",
-               "oracle.username": "C##MYUSER",
+               "oracle.sid": "ORCLPDB1",
+               "oracle.username": "myuser",
                "oracle.password": "mypassword",
                "start.from":"snapshot",
                "log.topic.name": "redo-log-topic",
