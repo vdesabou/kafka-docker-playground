@@ -86,7 +86,7 @@ curl -X PUT \
                "connection.pool.max.size": 20,
                "confluent.topic.replication.factor":1
           }' \
-     http://localhost:8083/connectors/cdc-oracle-source3/config | jq .
+     http://localhost:8083/connectors/cdc-oracle-source/config | jq .
 
 sleep 5
 
