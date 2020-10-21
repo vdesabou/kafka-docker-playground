@@ -31,7 +31,7 @@ sqlplus sys/Admin123@//localhost:1521/ORCLPDB1 as sysdba <<- EOF
 	grant select on SYSTEM.LOGMNR_USER\$ to cdc_privs;
 	grant select on SYSTEM.LOGMNR_UID\$ to cdc_privs;
 
-	create user myuser identified by mypassword;
+	create user myuser identified by mypassword default tablespace users;
 	grant cdc_privs to myuser;
 	alter user myuser quota unlimited on users;
 
