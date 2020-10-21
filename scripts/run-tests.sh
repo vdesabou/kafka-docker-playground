@@ -87,7 +87,7 @@ do
                 logwarn "Error getting $s3_file"
                 elapsed_time=999999999999
             else
-                last_success_time=$(cat /tmp/$file)
+                last_success_time=$(cat $file)
                 now=$(date +%s)
                 elapsed_time=$((now-last_success_time))
             fi
