@@ -14,12 +14,10 @@ readme_tmp_file=/tmp/README.md
 cp $template_file $readme_file
 
 
-if [ ! -d travis ]
-then
-  log "Getting travis result files"
-  mkdir -p travis
-  aws s3 cp s3://kafka-docker-playground/travis/ travis/ --recursive
-fi
+log "Getting travis result files"
+mkdir -p travis
+aws s3 cp s3://kafka-docker-playground/travis/ travis/ --recursive
+
 
 for dir in $(docker run vdesabou/kafka-docker-playground-connect:${image_version} ls /usr/share/confluent-hub-components/)
 do
