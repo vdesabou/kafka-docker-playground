@@ -59,6 +59,35 @@ fi
 done
 log "Oracle DB has started!"
 
+# https://redthunder.blog/2019/07/16/multitenant-common-users-accessing-application-tables-in-pdbs/
+log "Grant the system privileges to create database link and synonym to the Common User"
+docker exec -i oracle sqlplus sys/Admin123@//localhost:1521/ORCLCDB as sysdba << EOF
+     GRANT CREATE DATABASE LINK TO C##MYUSER container=all;
+     GRANT CREATE SYNONYM TO C##MYUSER container=all;
+EOF
+
+log "Grant the SELECT, INSERT, UPDATE, DELETE privileges at a PDB Level to the Common User for CUSTOMERS table"
+docker exec -i oracle sqlplus C\#\#MYUSER/mypassword@//localhost:1521/ORCLPDB1 << EOF
+     -- Grant the object privileges at a PDB Level to the Common User
+     GRANT SELECT, INSERT, UPDATE, DELETE ON CUSTOMERS to C##MYUSER;
+EOF
+
+log "Connect to the Common User at CDB level and Create Database Link to PDB"
+docker exec -i oracle sqlplus C\#\#MYUSER/mypassword@//localhost:1521/ORCLCDB << EOF
+     CREATE DATABASE LINK ORCLPDB1 CONNECT TO C##MYUSER IDENTIFIED BY "mypassword" USING 'ORCLPDB1';
+EOF
+
+log "Create a Synonym (alias) to the CUSTOMERS table"
+docker exec -i oracle sqlplus C\#\#MYUSER/mypassword@//localhost:1521/ORCLCDB << EOF
+     CREATE OR REPLACE SYNONYM "CUSTOMERS" FOR "CUSTOMERS"@ORCLPDB1;
+EOF
+
+log " Query the table directly to confirm you can read the data"
+docker exec -i oracle sqlplus C\#\#MYUSER/mypassword@//localhost:1521/ORCLCDB << EOF
+     select count(*) from CUSTOMERS;
+EOF
+
+
 log "Creating Oracle source connector"
 curl -X PUT \
      -H "Content-Type: application/json" \
