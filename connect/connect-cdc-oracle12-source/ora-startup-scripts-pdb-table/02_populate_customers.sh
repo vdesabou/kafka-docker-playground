@@ -1,6 +1,6 @@
 #!/bin/sh
 
-echo 'Creating and populating customers table'
+echo 'Populating CUSTOMERS table'
 
 sqlplus C\#\#MYUSER/mypassword@//localhost:1521/ORCLPDB1  <<- EOF
 
