@@ -142,6 +142,8 @@ services:
       CONNECT_CONSUMER_CONFLUENT_MONITORING_INTERCEPTOR_BOOTSTRAP_SERVERS: broker-metrics:9092
       CONNECT_REST_EXTENSION_CLASSES: io.confluent.connect.replicator.monitoring.ReplicatorMonitoringExtension
       CLASSPATH: "/usr/share/confluent-hub-components/confluentinc-kafka-connect-replicator/lib/replicator-rest-extension-${TAG_BASE}.jar:/usr/share/java/monitoring-interceptors/*"
+      # KIP-158 https://cwiki.apache.org/confluence/display/KAFKA/KIP-158%3A+Kafka+Connect+should+allow+source+connectors+to+set+topic-specific+settings+for+new+topics (6.x only)
+      CONNECT_TOPIC_CREATION_ENABLE: 'true'
 
   connect-europe:
     image: vdesabou/kafka-docker-playground-connect:${TAG}
@@ -175,6 +177,8 @@ services:
       CONNECT_CONSUMER_CONFLUENT_MONITORING_INTERCEPTOR_BOOTSTRAP_SERVERS: broker-metrics:9092
       CONNECT_REST_EXTENSION_CLASSES: io.confluent.connect.replicator.monitoring.ReplicatorMonitoringExtension
       CLASSPATH: "/usr/share/confluent-hub-components/confluentinc-kafka-connect-replicator/lib/replicator-rest-extension-${TAG_BASE}.jar:/usr/share/java/monitoring-interceptors/*"
+      # KIP-158 https://cwiki.apache.org/confluence/display/KAFKA/KIP-158%3A+Kafka+Connect+should+allow+source+connectors+to+set+topic-specific+settings+for+new+topics (6.x only)
+      CONNECT_TOPIC_CREATION_ENABLE: 'true'
 
   control-center:
     image: confluentinc/cp-enterprise-control-center:${TAG}
