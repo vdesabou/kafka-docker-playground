@@ -401,7 +401,7 @@ function aws() {
       fi
     fi
 
-    docker run --rm -tiv $HOME/.aws:/root/.aws -v $(pwd):/aws -v /tmp:/tmp mikesir87/aws-cli:v1 aws "$@"
+    docker run --rm -iv $HOME/.aws:/root/.aws -v $(pwd):/aws -v /tmp:/tmp mikesir87/aws-cli:v1 aws "$@"
 }
 
 function timeout() {
