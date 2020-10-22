@@ -87,7 +87,8 @@ do
                 logwarn "Error getting $s3_file"
                 elapsed_time=999999999999
             else
-                last_success_time=$(cat $file)
+                file_content=$(cat $file)
+                last_success_time=$(cat $file | cut -d "|" -f 2)
                 now=$(date +%s)
                 elapsed_time=$((now-last_success_time))
             fi
@@ -123,8 +124,9 @@ do
             log "####################################################"
 
             file="$TAG-$THE_CONNECTOR_TAG-$script"
+            rm -f $file
             touch $file
-            date +%s > $file
+            echo "$connector_path|`date +%s`" > $file
             if [ -f "$file" ]
             then
                 aws s3 cp "$file" "s3://kafka-docker-playground/travis/"
