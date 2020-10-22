@@ -78,7 +78,7 @@ curl -X PUT \
                "oracle.username": "C##MYUSER",
                "oracle.password": "mypassword",
                "start.from":"snapshot",
-               "log.topic.name": "redo-log-topic",
+               "redo.log.topic.name": "redo-log-topic",
                "redo.log.consumer.bootstrap.servers":"broker:9092",
                "table.inclusion.regex": ".*CUSTOMERS.*",
                "_table.topic.name.template_":"Using template vars to set change event topic for each table",
@@ -86,7 +86,7 @@ curl -X PUT \
                "connection.pool.max.size": 20,
                "confluent.topic.replication.factor":1
           }' \
-     http://localhost:8083/connectors/cdc-oracle-source/config | jq .
+     http://localhost:8083/connectors/cdc-oracle-source-cdb/config | jq .
 
 sleep 5
 
