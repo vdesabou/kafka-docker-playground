@@ -2,23 +2,8 @@
 
 set -e
 
-function log() {
-  YELLOW='\033[0;33m'
-  NC='\033[0m' # No Color
-  echo -e "$YELLOW`date +"%H:%M:%S"` $@$NC"
-}
-
-function logerror() {
-  RED='\033[0;31m'
-  NC='\033[0m' # No Color
-  echo -e "$RED`date +"%H:%M:%S"` $@$NC"
-}
-
-function logwarn() {
-  PURPLE='\033[0;35m'
-  NC='\033[0m' # No Color
-  echo -e "$PURPLE`date +"%H:%M:%S"` $@$NC"
-}
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
+source ${DIR}/../scripts/utils.sh
 
 
 image_version=$1
@@ -28,22 +13,69 @@ readme_tmp_file=/tmp/README.md
 
 cp $template_file $readme_file
 
+
+if [ ! -d travis ]
+then
+  log "Getting travis result files"
+  mkdir -p travis
+  aws s3 cp s3://kafka-docker-playground/travis/ travis/ --recursive
+fi
+
 for dir in $(docker run vdesabou/kafka-docker-playground-connect:${image_version} ls /usr/share/confluent-hub-components/)
 do
-    log "processing $dir"
+    log "Processing connector $dir"
+    test_folders=$(grep ":${dir}:" $template_file | cut -d "(" -f 2 | cut -d ")" -f 1)
 
-    test_folder=$(grep ":${dir}:" $template_file | cut -d "(" -f 2 | cut -d ")" -f 1)
-    travis="❌"
-    if [ "$test_folder" != "" ]
-    then
-      set +e
-      grep "$test_folder" .travis.yml | grep -v jar > /dev/null
-      if [ $? = 0 ]
+    for test_folder in $test_folders
+    do
+      log "-> test folder $test_folder"
+      travis="❌"
+      if [ "$test_folder" != "" ]
       then
-        travis="✅"
+        set +e
+        last_success_time=""
+        for script in $test_folder/*.sh
+        do
+          script_name=$(basename ${script})
+          if [[ "$script_name" = "stop.sh" ]]
+          then
+            continue
+          fi
+
+          # check for ignored scripts in scripts/tests-ignored.txt
+          grep "$script_name" ${DIR}/tests-ignored.txt > /dev/null
+          if [ $? = 0 ]
+          then
+            continue
+          fi
+
+          # check for scripts containing "repro"
+          if [[ "$script_name" == *"repro"* ]]; then
+            continue
+          fi
+          time=""
+          last_success_time=$(grep "$dir" travis/${image_version}-*-${script_name} | tail -1 | cut -d "|" -f 2)
+          if [ "$last_success_time" != "" ]
+          then
+            # now=$(date +%s)
+            # elapsed_time=$((now-last_success_time))
+            # time="$(displaytime $elapsed_time) ago"
+            if [[ "$OSTYPE" == "darwin"* ]]
+            then
+              time=$(date -r $last_success_time +%Y-%m-%d)
+            else
+              time=$(date -d @$last_success_time +%Y-%m-%d)
+            fi
+          fi
+        done
+        grep "$test_folder" .travis.yml | grep -v jar > /dev/null
+        if [ $? = 0 ]
+        then
+          travis="✅ $time"
+        fi
+        set -e
       fi
-      set -e
-    fi
+    done
 
     if [ "$dir" = "kafka-connect-couchbase" ]
     then
