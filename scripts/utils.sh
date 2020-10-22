@@ -383,19 +383,24 @@ function remove_partition() {
 function aws() {
     if [ ! -d $HOME/.aws ]
     then
-      log 'ERROR: $HOME/.aws does now exist. AWS credentials must be set !'
-      return 1
+      if [ -z "$AWS_ACCESS_KEY_ID" ]
+      then
+        log 'ERROR: $HOME/.aws does not exist and AWS_ACCESS_KEY_ID environment variable is not set. AWS credentials must be set !'
+        return 1
+      fi
+    else
+      if [ ! -f $HOME/.aws/config ]
+      then
+        log 'ERROR: $HOME/.aws/config does now exist. AWS credentials must be set !'
+        return 1
+      fi
+      if [ ! -f $HOME/.aws/credentials ]
+      then
+        log 'ERROR: $HOME/.aws/credentials does now exist. AWS credentials must be set !'
+        return 1
+      fi
     fi
-    if [ ! -f $HOME/.aws/config ]
-    then
-      log 'ERROR: $HOME/.aws/config does now exist. AWS credentials must be set !'
-      return 1
-    fi
-    if [ ! -f $HOME/.aws/credentials ]
-    then
-      log 'ERROR: $HOME/.aws/credentials does now exist. AWS credentials must be set !'
-      return 1
-    fi
+
     docker run --rm -tiv $HOME/.aws:/root/.aws -v $(pwd):/aws -v /tmp:/tmp mikesir87/aws-cli:v1 aws "$@"
 }
 
