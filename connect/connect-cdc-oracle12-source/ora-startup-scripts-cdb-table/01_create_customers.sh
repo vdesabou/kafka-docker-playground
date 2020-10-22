@@ -1,6 +1,6 @@
 #!/bin/sh
 
-echo 'Creating CUSTOMERS table'
+echo 'Creating CUSTOMERS table in CDB'
 
 sqlplus C\#\#MYUSER/mypassword@//localhost:1521/ORCLCDB  <<- EOF
 
