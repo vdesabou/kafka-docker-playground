@@ -8,7 +8,7 @@
 
 ## Disclaimer
 
-**⚠️ Using cp-ansible with Confluent Cloud is not supported**
+**⚠️ Using cp-ansible with Confluent Cloud prior to CP 6.0 is not supported**
 
 ## Description
 
@@ -20,16 +20,9 @@ Here we're deploying the following containers connected to Confluent Cloud using
 * 1 ksql (`ksql-server`)
 * 1 control-center (`control-center`)
 
-This is modifying roles to comment `*.security.protocol` config parameters
-
-```
-sed -i.bak 's/^\(.*security.protocol=.*\)/#\1/g' ${DIR}/cp-ansible/roles/confluent.kafka_connect/templates/connect-distributed.properties.j2 ${DIR}/cp-ansible/roles/confluent.control_center/templates/control-center.properties.j2 ${DIR}/cp-ansible/roles/confluent.ksql/templates/ksql-server.properties.j2
-
-```
-
 ## Tags
 
-Available tags are `5.4.1`
+Available tags are `5.4.1` and `6.0.0`
 
 ## How to run
 
@@ -66,7 +59,7 @@ ccloud.password=<ccloud password>
 $ ./start.sh
 ```
 
-`hosts-ccloud.yml` host file is automatically generated with your confluent cloud details from `$HOME/.ccloud/config`
+`hosts-ccloud-5.4.1.yml` or `hosts-ccloud-6.0.0.yml` host file is automatically generated with your confluent cloud details from `$HOME/.ccloud/config`
 
 
 N.B: Control Center is reachable at [http://127.0.0.1:9021](http://127.0.0.1:9021])

@@ -23,9 +23,9 @@ all:
         plugin.path: /opt/confluent/share/confluent-hub-components,/usr/share/java
         confluent.licence: "_CONFLUENT_LICENSE_"
         #key.converter.schemas.enable: false
-        #value.converter.schemas.enable: false 
+        #value.converter.schemas.enable: false
         #key.converter: org.apache.kafka.connect.json.JsonConverter
-        #value.converter: org.apache.kafka.connect.json.JsonConverter 
+        #value.converter: org.apache.kafka.connect.json.JsonConverter
         config.storage.replication.factor: 3
         offset.storage.replication.factor: 3
         status.storage.replication.factor: 3

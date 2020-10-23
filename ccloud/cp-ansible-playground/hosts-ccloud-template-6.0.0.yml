@@ -1,0 +1,125 @@
+all:
+  vars:
+    ansible_connection: docker
+    ansible_user: root
+    ansible_become: true
+    ansible_python_interpreter: /usr/bin/python3
+    ansible_ssh_private_key_file: /tmp/certs/ssh_priv.pem
+
+    kafka_connect_custom_properties:
+      bootstrap.servers: _BOOTSTRAP_SERVER_
+      key.converter: org.apache.kafka.connect.storage.StringConverter
+      value.converter: io.confluent.connect.avro.AvroConverter
+
+      ssl.endpoint.identification.algorithm: https
+      security.protocol: SASL_SSL
+      sasl.mechanism: PLAIN
+      sasl.jaas.config: org.apache.kafka.common.security.plain.PlainLoginModule required username="_CLOUD_KEY_" password="_CLOUD_SECRET_";
+      request.timeout.ms: 20000
+      retry.backoff.ms: 500
+
+      producer.bootstrap.servers: _BOOTSTRAP_SERVER_
+      producer.ssl.endpoint.identification.algorithm: https
+      producer.security.protocol: SASL_SSL
+      producer.sasl.mechanism: PLAIN
+      producer.sasl.jaas.config: org.apache.kafka.common.security.plain.PlainLoginModule required username="_CLOUD_KEY_" password="_CLOUD_SECRET_";
+      producer.request.timeout.ms: 20000
+      producer.retry.backoff.ms: 500
+
+      consumer.bootstrap.servers: _BOOTSTRAP_SERVER_
+      consumer.ssl.endpoint.identification.algorithm: https
+      consumer.security.protocol: SASL_SSL
+      consumer.sasl.mechanism: PLAIN
+      consumer.sasl.jaas.config: org.apache.kafka.common.security.plain.PlainLoginModule required username="_CLOUD_KEY_" password="_CLOUD_SECRET_";
+      consumer.request.timeout.ms: 20000
+      consumer.retry.backoff.ms: 500
+
+      offset.flush.interval.ms: 10000
+      group.id: connect-cluster
+      offset.storage.topic: connect-offsets
+      offset.storage.replication.factor: 3
+      config.storage.topic: connect-configs
+      config.storage.replication.factor: 3
+      status.storage.topic: connect-status
+      status.storage.replication.factor: 3
+
+      # Schema Registry specific settings
+      value.converter.basic.auth.credentials.source: USER_INFO
+      value.converter.schema.registry.basic.auth.user.info: _SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO_
+      value.converter.schema.registry.url: _SCHEMA_REGISTRY_SERVER_
+      confluent.topic.bootstrap.servers: _BOOTSTRAP_SERVER_
+      confluent.topic.sasl.jaas.config: org.apache.kafka.common.security.plain.PlainLoginModule required username="_CLOUD_KEY_" password="_CLOUD_SECRET_";
+      confluent.topic.security.protocol: SASL_SSL
+      confluent.topic.sasl.mechanism: PLAIN
+
+      reporter.admin.bootstrap.servers: _BOOTSTRAP_SERVER_
+      reporter.admin.sasl.jaas.config: org.apache.kafka.common.security.plain.PlainLoginModule required username="_CLOUD_KEY_" password="_CLOUD_SECRET_";
+      reporter.admin.security.protocol: SASL_SSL
+      reporter.admin.sasl.mechanism: PLAIN
+
+      reporter.producer.bootstrap.servers: _BOOTSTRAP_SERVER_
+      reporter.producer.sasl.jaas.config: org.apache.kafka.common.security.plain.PlainLoginModule required username="_CLOUD_KEY_" password="_CLOUD_SECRET_";
+      reporter.producer.security.protocol: SASL_SSL
+      reporter.producer.sasl.mechanism: PLAIN
+
+      plugin.path: /opt/confluent/share/confluent-hub-components,/usr/share/java
+
+    control_center_custom_properties:
+
+      bootstrap.servers: _BOOTSTRAP_SERVER_
+      confluent.controlcenter.streams.security.protocol: SASL_SSL
+      confluent.controlcenter.streams.sasl.mechanism: PLAIN
+      confluent.controlcenter.streams.sasl.jaas.config: org.apache.kafka.common.security.plain.PlainLoginModule required username="_CLOUD_KEY_" password="_CLOUD_SECRET_";
+      confluent.metrics.topic.max.message.bytes: 8388608
+      confluent.controlcenter.streams.ssl.endpoint.identification.algorithm: https
+
+      confluent.controlcenter.internal.topics.replication: 3
+      confluent.controlcenter.command.topic.replication: 3
+      confluent.controlcenter.replication.factor: 3
+      confluent.metrics.topic.replication: 3
+      confluent.monitoring.interceptor.topic.replication: 3
+
+      confluent.monitoring.interceptor.security.protocol: SASL_SSL
+      confluent.monitoring.interceptor.sasl.mechanism: PLAIN
+      confluent.monitoring.interceptor.sasl.jaas.config: org.apache.kafka.common.security.plain.PlainLoginModule required username="_CLOUD_KEY_" password="_CLOUD_SECRET_";
+      confluent.monitoring.interceptor.ssl.endpoint.identification.algorithm: https
+
+      # Confluent Schema Registry configuration for Confluent Control Center
+      confluent.controlcenter.schema.registry.basic.auth.credentials.source: USER_INFO
+      confluent.controlcenter.schema.registry.basic.auth.user.info: _SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO_
+      confluent.controlcenter.schema.registry.url: _SCHEMA_REGISTRY_SERVER_
+
+      confluent.licence: "_CONFLUENT_LICENSE_"
+
+      confluent.controlcenter.id: 33
+
+    ksql_custom_properties:
+      # A comma separated list of the Confluent Cloud broker endpoints
+      bootstrap.servers: _BOOTSTRAP_SERVER_
+      ksql.internal.topic.replicas: 3
+      ksql.streams.replication.factor: 3
+      ksql.logging.processing.topic.replication.factor: 3
+      sasl.mechanism: PLAIN
+      sasl.jaas.config: org.apache.kafka.common.security.plain.PlainLoginModule required username="_CLOUD_KEY_" password="_CLOUD_SECRET_";
+      security.protocol: SASL_SSL
+
+      # Schema Registry specific settings
+      ksql.schema.registry.basic.auth.credentials.source: USER_INFO
+      ksql.schema.registry.basic.auth.user.info: _SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO_
+      ksql.schema.registry.url: _SCHEMA_REGISTRY_SERVER_
+kafka_broker:
+  hosts:
+    _BOOTSTRAP_SERVER_:
+schema_registry:
+  hosts:
+    _SCHEMA_REGISTRY_SERVER_:
+kafka_connect:
+  hosts:
+    connect:
+ksql:
+  hosts:
+    ksql-server:
+control_center:
+  hosts:
+    control-center:
+
