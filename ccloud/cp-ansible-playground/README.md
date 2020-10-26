@@ -18,7 +18,7 @@ Here we're deploying the following containers connected to Confluent Cloud using
 
 ## Tags
 
-Available tags are `5.4.1` and `6.0.0`
+Available tags are `6.0.0`
 
 ## How to run
 
