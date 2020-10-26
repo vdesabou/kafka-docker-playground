@@ -44,26 +44,16 @@ then
   esac
 fi
 
-if [ "$TAG" = "5.3.1" ]
-then
-     logerror "ERROR: This is only tested with 5.4.1 and 6.0.0. Please export TAG=5.4.1 or TAG=6.0.0 to use it"
-     exit 1
-elif [ "$TAG" = "5.4.0" ]
-then
-     logerror "ERROR: This is only tested with 5.4.1 and 6.0.0. Please export TAG=5.4.1 or TAG=6.0.0 to use it"
-     exit 1
-elif [ "$TAG" = "5.4.1" ]
-then
-  GIT_BRANCH="5.4.1-post"
-elif [ "$TAG" = "5.5.0" ]
-then
-     logerror "ERROR: This is only tested with 5.4.1 and 6.0.0. Please export TAG=5.4.1 or TAG=6.0.0 to use it"
-     exit 1
-elif [ "$TAG" = "6.0.0" ]
+if ! version_gt $TAG_BASE "5.9.0"; then
+        logerror "ERROR: This can only be run with version greater than 6.0.0"
+        exit 0
+fi
+
+if [ "$TAG" = "6.0.0" ]
 then
   GIT_BRANCH="6.0.0-post"
 else
-    logerror "ERROR: Version $TAG not supported. Only 5.4.1 or 6.0.0 are supported"
+    logerror "ERROR: Version $TAG not supported. Only 6.0.0 are supported"
     exit 1
 fi
 
@@ -91,37 +81,18 @@ else
     git checkout "${GIT_BRANCH}"
 fi
 
-if [ "$TAG" = "5.4.1" ]
-then
-  HOSTS_FILE="hosts-ccloud-5.4.1.yml"
-  BOOTSTRAP_SERVER=$(echo "$BOOTSTRAP_SERVERS" | cut -d ":" -f 1)
-  SCHEMA_REGISTRY_SERVER=$(echo $SCHEMA_REGISTRY_URL | cut -d "/" -f3)
-  sed -e "s|_BOOTSTRAP_SERVER_|$BOOTSTRAP_SERVER|g" \
-      -e "s|_SCHEMA_REGISTRY_SERVER_|$SCHEMA_REGISTRY_SERVER|g" \
-      -e "s|_SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO_|$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO|g" \
-      -e "s|_CLOUD_KEY_|$CLOUD_KEY|g" \
-      -e "s|_CLOUD_SECRET_|$CLOUD_SECRET|g" \
-      -e "s|_CONFLUENT_LICENSE_|$CONTROL_CENTER_LICENSE|g" \
-      ${DIR}/hosts-ccloud-template-5.4.1.yml > ${DIR}/${HOSTS_FILE}
+HOSTS_FILE="hosts-ccloud.yml"
+#HOSTS_FILE="hosts-ccloud-5.4.1.yml"
+BOOTSTRAP_SERVER=$(echo "$BOOTSTRAP_SERVERS" | cut -d ":" -f 1)
+SCHEMA_REGISTRY_SERVER=$(echo $SCHEMA_REGISTRY_URL | cut -d "/" -f3)
+sed -e "s|_BOOTSTRAP_SERVER_|$BOOTSTRAP_SERVER:9092|g" \
+    -e "s|_SCHEMA_REGISTRY_SERVER_|$SCHEMA_REGISTRY_SERVER|g" \
+    -e "s|_SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO_|$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO|g" \
+    -e "s|_CLOUD_KEY_|$CLOUD_KEY|g" \
+    -e "s|_CLOUD_SECRET_|$CLOUD_SECRET|g" \
+    -e "s|_CONFLUENT_LICENSE_|$CONTROL_CENTER_LICENSE|g" \
+    ${DIR}/hosts-ccloud-template.yml > ${DIR}/${HOSTS_FILE}
 
-  # NOT SUPPORTED: we need to do custom modifications in order to be able to override security.protocol to SASL_SSL
-  #
-  # We need to comment `*.security.protocol=` in cp-ansible/roles/confluent.kafka_connect/templates/connect-distributed.properties.j2, cp-ansible/roles/confluent.control_center/templates/control-center.properties.j2 and cp-ansible/roles/confluent.ksql/templates/ksql-server.properties.j2
-  sed -i.bak 's/^\(.*security.protocol=.*\)/#\1/g' ${DIR}/cp-ansible/roles/confluent.kafka_connect/templates/connect-distributed.properties.j2 ${DIR}/cp-ansible/roles/confluent.control_center/templates/control-center.properties.j2 ${DIR}/cp-ansible/roles/confluent.ksql/templates/ksql-server.properties.j2
-
-else
-  HOSTS_FILE="hosts-ccloud-6.0.0.yml"
-  #HOSTS_FILE="hosts-ccloud-5.4.1.yml"
-  BOOTSTRAP_SERVER=$(echo "$BOOTSTRAP_SERVERS" | cut -d ":" -f 1)
-  SCHEMA_REGISTRY_SERVER=$(echo $SCHEMA_REGISTRY_URL | cut -d "/" -f3)
-  sed -e "s|_BOOTSTRAP_SERVER_|$BOOTSTRAP_SERVER:9092|g" \
-      -e "s|_SCHEMA_REGISTRY_SERVER_|$SCHEMA_REGISTRY_SERVER|g" \
-      -e "s|_SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO_|$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO|g" \
-      -e "s|_CLOUD_KEY_|$CLOUD_KEY|g" \
-      -e "s|_CLOUD_SECRET_|$CLOUD_SECRET|g" \
-      -e "s|_CONFLUENT_LICENSE_|$CONTROL_CENTER_LICENSE|g" \
-      ${DIR}/hosts-ccloud-template-6.0.0.yml > ${DIR}/${HOSTS_FILE}
-fi
 
 # copy custom files
 cp ${DIR}/${HOSTS_FILE} ${DIR}/cp-ansible/
