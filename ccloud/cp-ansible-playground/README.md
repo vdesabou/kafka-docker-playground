@@ -6,10 +6,6 @@
 * `git` is installed
 * `ansible` and `ansible-playbook` installed
 
-## Disclaimer
-
-**⚠️ Using cp-ansible with Confluent Cloud prior to CP 6.0 is not supported**
-
 ## Description
 
 See [this link](../../other/cp-ansible-playground/cp-ansible/README.md) for details about `cp-ansible-playground`
@@ -59,7 +55,7 @@ ccloud.password=<ccloud password>
 $ ./start.sh
 ```
 
-`hosts-ccloud-5.4.1.yml` or `hosts-ccloud-6.0.0.yml` host file is automatically generated with your confluent cloud details from `$HOME/.ccloud/config`
+`hosts-ccloud` host file is automatically generated with your confluent cloud details from `$HOME/.ccloud/config`
 
 
 N.B: Control Center is reachable at [http://127.0.0.1:9021](http://127.0.0.1:9021])
