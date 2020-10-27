@@ -36,9 +36,9 @@ sqlplus / as sysdba <<- EOF
 
 	ALTER SESSION SET CONTAINER=cdb\$root;
 	GRANT create session, alter session, set container, logmining, execute_catalog_role TO C##MYUSER CONTAINER=all;
-	GRANT select on GV_\$DATABASE to C##MYUSER;
-	GRANT select on V_\$LOGMNR_CONTENTS to C##MYUSER;
-	GRANT select on GV_\$ARCHIVED_LOG to C##MYUSER;
+	GRANT select on GV_\$DATABASE to C##MYUSER CONTAINER=all;
+	GRANT select on V_\$LOGMNR_CONTENTS to C##MYUSER CONTAINER=all;
+	GRANT select on GV_\$ARCHIVED_LOG to C##MYUSER CONTAINER=all;
 
 	GRANT CONNECT TO C##MYUSER container=all;
 	GRANT CREATE TABLE TO C##MYUSER container=all;
