@@ -59,27 +59,10 @@ fi
 done
 log "Oracle DB has started!"
 
-# https://redthunder.blog/2019/07/16/multitenant-common-users-accessing-application-tables-in-pdbs/
-log "Grant the system privileges to create database link and synonym to the Common User"
-docker exec -i oracle sqlplus sys/Admin123@//localhost:1521/ORCLCDB as sysdba << EOF
-     GRANT CREATE DATABASE LINK TO C##MYUSER container=all;
-     GRANT CREATE SYNONYM TO C##MYUSER container=all;
-EOF
-
-log "Grant the SELECT, INSERT, UPDATE, DELETE privileges at a PDB Level to the Common User for CUSTOMERS table"
+log "Grant select on CUSTOMERS table"
 docker exec -i oracle sqlplus C\#\#MYUSER/mypassword@//localhost:1521/ORCLPDB1 << EOF
-     -- Grant the object privileges at a PDB Level to the Common User
-     GRANT SELECT, INSERT, UPDATE, DELETE ON CUSTOMERS to C##MYUSER;
-EOF
-
-log "Connect to the Common User at CDB level and Create Database Link to PDB"
-docker exec -i oracle sqlplus C\#\#MYUSER/mypassword@//localhost:1521/ORCLCDB << EOF
-     CREATE DATABASE LINK ORCLPDB1 CONNECT TO C##MYUSER IDENTIFIED BY "mypassword" USING 'ORCLPDB1';
-EOF
-
-log "Create a Synonym (alias) to the CUSTOMERS table"
-docker exec -i oracle sqlplus C\#\#MYUSER/mypassword@//localhost:1521/ORCLCDB << EOF
-     CREATE OR REPLACE SYNONYM "CUSTOMERS" FOR "CUSTOMERS"@ORCLPDB1;
+     ALTER SESSION SET CONTAINER=ORCLPDB1;
+     GRANT select on CUSTOMERS TO C##MYUSER;
 EOF
 
 log " Query the table directly to confirm you can read the data"
@@ -110,7 +93,7 @@ curl -X PUT \
                "start.from":"snapshot",
                "redo.log.topic.name": "redo-log-topic",
                "redo.log.consumer.bootstrap.servers":"broker:9092",
-               "table.inclusion.regex": ".*CUSTOMERS.*",
+               "table.inclusion.regex": "ORCLPDB1[.]WHATEVER[.]CUSTOMERS",
                "_table.topic.name.template_":"Using template vars to set change event topic for each table",
                "table.topic.name.template": "${databaseName}.${tableName}",
                "connection.pool.max.size": 20,
