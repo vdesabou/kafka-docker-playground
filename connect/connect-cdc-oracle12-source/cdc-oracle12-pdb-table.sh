@@ -65,12 +65,6 @@ docker exec -i oracle sqlplus C\#\#MYUSER/mypassword@//localhost:1521/ORCLPDB1 <
      GRANT select on CUSTOMERS TO C##MYUSER;
 EOF
 
-log " Query the table directly to confirm you can read the data"
-docker exec -i oracle sqlplus C\#\#MYUSER/mypassword@//localhost:1521/ORCLCDB << EOF
-     select count(*) from CUSTOMERS;
-EOF
-
-
 log "Creating Oracle source connector"
 curl -X PUT \
      -H "Content-Type: application/json" \
@@ -93,7 +87,7 @@ curl -X PUT \
                "start.from":"snapshot",
                "redo.log.topic.name": "redo-log-topic",
                "redo.log.consumer.bootstrap.servers":"broker:9092",
-               "table.inclusion.regex": "ORCLPDB1[.]WHATEVER[.]CUSTOMERS",
+               "table.inclusion.regex": "ORCLPDB1[.].*[.]CUSTOMERS",
                "_table.topic.name.template_":"Using template vars to set change event topic for each table",
                "table.topic.name.template": "${databaseName}.${tableName}",
                "connection.pool.max.size": 20,
@@ -104,12 +98,4 @@ curl -X PUT \
 sleep 5
 
 log "Verifying topic ORCLCDB.CUSTOMERS"
-timeout 60 docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic ORCLCDB.CUSTOMERS --from-beginning --max-messages 2
-
-
-# FIXTHIS
-
-# {
-#   "error_code": 400,
-#   "message": "Connector configuration is invalid and contains the following 2 error(s):\nNo tables appear to be accessible in  at jdbc:oracle:thin:@oracle:1521:ORCLCDB with user 'C##MYUSER' (pool=oracle-cdc-source:cdc-oracle-source). Check database and username.\nNo tables appear to be accessible in  at jdbc:oracle:thin:@oracle:1521:ORCLCDB with user 'C##MYUSER' (pool=oracle-cdc-source:cdc-oracle-source). Check database and username.\nYou can also find the above list of errors at the endpoint `/connector-plugins/{connectorType}/config/validate`"
-# }
+timeout 60 docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic ORCLPDB1.CUSTOMERS --from-beginning --max-messages 2
