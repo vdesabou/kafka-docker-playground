@@ -107,6 +107,24 @@ all:
       ksql.schema.registry.basic.auth.credentials.source: USER_INFO
       ksql.schema.registry.basic.auth.user.info: _SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO_
       ksql.schema.registry.url: _SCHEMA_REGISTRY_SERVER_
+
+    kafka_rest_custom_properties:
+      # A comma separated list of the Confluent Cloud broker endpoints
+      bootstrap.servers: _BOOTSTRAP_SERVER_
+      sasl.mechanism: PLAIN
+      sasl.jaas.config: org.apache.kafka.common.security.plain.PlainLoginModule required username="_CLOUD_KEY_" password="_CLOUD_SECRET_";
+      security.protocol: SASL_SSL
+
+      client.bootstrap.servers: _BOOTSTRAP_SERVER_
+      client.sasl.mechanism: PLAIN
+      client.sasl.jaas.config: org.apache.kafka.common.security.plain.PlainLoginModule required username="_CLOUD_KEY_" password="_CLOUD_SECRET_";
+      client.security.protocol: SASL_SSL
+
+      # Schema Registry specific settings
+      schema.registry.basic.auth.credentials.source: USER_INFO
+      schema.registry.basic.auth.user.info: _SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO_
+      schema.registry.url: _SCHEMA_REGISTRY_SERVER_
+
 kafka_broker:
   hosts:
     _BOOTSTRAP_SERVER_:
@@ -119,6 +137,9 @@ kafka_connect:
 ksql:
   hosts:
     ksql-server:
+kafka_rest:
+  hosts:
+    rest-proxy:
 control_center:
   hosts:
     control-center:

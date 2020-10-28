@@ -25,3 +25,11 @@ services:
     privileged: true
     ports:
       - "9021:9021"
+
+  rest-proxy:
+    image: vdesabou/cp-ansible-playground-rest-proxy:${TAG}
+    hostname: rest-proxy
+    container_name: rest-proxy
+    privileged: true
+    ports:
+      - "8082:8082"
