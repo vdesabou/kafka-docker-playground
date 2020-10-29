@@ -8,11 +8,9 @@ Quickly test [Tiered Storage](https://docs.confluent.io/current/kafka/tiered-sto
 
 ## Disclaimer
 
-[Tiered Storage](https://docs.confluent.io/current/kafka/tiered-storage-preview.html#tiered-storage) is a preview feature and only currently supported with AWS.
+[Tiered Storage](https://docs.confluent.io/current/kafka/tiered-storage-preview.html#tiered-storage) is currently only supported with AWS and [FlashBlade](https://www.confluent.io/blog/get-cloud-like-flexibility-elasticity-infinite-storage-on-prem-with-confluent-pure-storage.)
 
 **⚠️ Minio is not supported**
-
-
 
 
 ## How to run
