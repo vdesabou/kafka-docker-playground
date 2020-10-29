@@ -6,10 +6,6 @@
 
 Quickly test [Tiered Storage](https://docs.confluent.io/current/kafka/tiered-storage-preview.html#tiered-storage).
 
-## Disclaimer
-
-[Tiered Storage](https://docs.confluent.io/current/kafka/tiered-storage-preview.html#tiered-storage) is a preview feature
-
 
 ## AWS Setup
 
