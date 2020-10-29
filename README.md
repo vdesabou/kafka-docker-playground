@@ -48,7 +48,7 @@ Quick start examples from Confluent [docs](https://docs.confluent.io/current/con
 | <img src="./images/icons/event_hubs.png" width="15"> [Azure Event Hubs Source](connect/connect-azure-event-hubs-source)  | Message Queue | 1.0.3 | Confluent Subscription | 2020-03-28 | ✅ 2020-10-22 
 | <img src="./images/icons/azure_functions.png" width="15"> [Azure Functions Sink](connect/connect-azure-functions-sink) | SaaS Apps | 1.0.8 | Confluent Subscription | 2020-10-22 | ✅ 2020-10-23 
 | <img src="./images/icons/search.png" width="15"> [Azure Search Sink](connect/connect-azure-search-sink)  | Analytics | 1.0.3 | Confluent Subscription | 2020-10-08 | ✅ 2020-10-22 
-| <img src="./images/icons/service_bus.png" width="15"> [Azure Service Bus Source](connect/connect-azure-service-bus-source)  | Message Queue | 1.1.0 | Confluent Subscription | 2020-03-13 | ✅ 2020-10-22 
+| <img src="./images/icons/service_bus.png" width="15"> [Azure Service Bus Source](connect/connect-azure-service-bus-source)  | Message Queue | 1.1.1 | Confluent Subscription | 2020-10-28 | ✅ 2020-10-22 
 | <img src="./images/icons/sql_data_warehouse.png" width="15"> [Azure SQL Data Warehouse Sink](connect/connect-azure-sql-data-warehouse-sink)  | Data Warehouse | 1.0.4 | Confluent Subscription | 2020-10-08 | ✅ 2020-10-22 
 | <img src="./images/icons/cassandra.png" width="15"> [Cassandra Sink](connect/connect-cassandra-sink)  | Database | 1.2.2 | Confluent Subscription | 2020-06-19 | ✅ 2020-10-22 
 | <img src="./images/icons/couchbase.svg" width="15"> [Couchbase Sink](connect/connect-couchbase-sink)  | Database | 3.4.8 | Open Source (Couchbase) | | ✅ 2020-10-22 
@@ -68,7 +68,7 @@ Quick start examples from Confluent [docs](https://docs.confluent.io/current/con
 | <img src="./images/icons/bigquery.png" width="15"> [Google BigQuery Sink](connect/connect-gcp-bigquery-sink) | Data Warehouse | 1.6.1 | Open Source (WePay) |  | ✅ 2020-10-22 
 | <img src="./images/icons/gcp_bigtable.png" width="15"> [Google Cloud BigTable Sink](connect/connect-gcp-bigtable-sink) | Database | 1.0.5 | Confluent Subscription | 2020-07-20 | ✅ 2020-10-22 
 | <img src="./images/icons/cloud_functions.png" width="15"> [Google Cloud Functions Sink](connect/connect-gcp-cloud-functions-sink) | SaaS Apps | 1.1.1 | Confluent Subscription | 2020-09-22 | ✅ 2020-10-22 
-| <img src="./images/icons/gcp_pubsub.png" width="15"> [Google Cloud Pub/Sub Source](connect/connect-gcp-pubsub-source) |  Message Queue | 1.0.3 | Confluent Subscription | 2020-10-06 | ✅ 2020-10-22 
+| <img src="./images/icons/gcp_pubsub.png" width="15"> [Google Cloud Pub/Sub Source](connect/connect-gcp-pubsub-source) |  Message Queue | 1.0.4 | Confluent Subscription | 2020-10-28 | ✅ 2020-10-22 
 | <img src="./images/icons/spanner.png" width="15"> [Google Cloud Spanner Sink](connect/connect-gcp-spanner-sink) |  Database | 1.0.2 | Confluent Subscription | 2019-10-30 | ✅ 2020-10-22 
 | <img src="./images/icons/gcs.png" width="15"> [Google Cloud Storage Sink](connect/connect-gcp-gcs-sink) |  Datastore | 5.5.3 | Confluent Subscription | 2020-10-01 | ✅ 2020-10-22 
 | <img src="./images/icons/gcs.png" width="15"> [Google Cloud Storage Source](connect/connect-gcp-gcs-source) |  Datastore | 1.3.2 | Confluent Subscription | 2020-06-26 | ✅ 2020-10-22 
@@ -105,8 +105,8 @@ Quick start examples from Confluent [docs](https://docs.confluent.io/current/con
 | <img src="./images/icons/minio.png" height="15"> [Minio Sink](connect/connect-minio-s3-sink) |  Datastore | 5.5.2 | Confluent Community License | 2020-09-30 | ❌ 
 | <img src="./images/icons/mongodb.jpg" width="15"> [MongoDB Sink](connect/connect-mongodb-sink) |  Database | 1.2.0 | Open Source (MongoDB) | 2020-07-08 | ✅ 2020-10-22 
 | <img src="./images/icons/mongodb.jpg" width="15"> [MongoDB Source](connect/connect-mongodb-source) |  Database | 1.2.0 | Open Source (MongoDB) | 2020-07-08 | ✅ 2020-10-22 
-| <img src="./images/icons/mqtt.png" width="15"> [MQTT Sink](connect/connect-mqtt-sink) |  IoT | 1.3.0 | Confluent Subscription | 2020-08-28 | ✅ 2020-10-22 
-| <img src="./images/icons/mqtt.png" width="15"> [MQTT Source](connect/connect-mqtt-source) |  IoT | 1.3.0 | Confluent Subscription | 2020-08-28 | ✅ 2020-10-22 
+| <img src="./images/icons/mqtt.png" width="15"> [MQTT Sink](connect/connect-mqtt-sink) |  IoT | 1.4.0 | Confluent Subscription | 2020-10-29 | ✅ 2020-10-22 
+| <img src="./images/icons/mqtt.png" width="15"> [MQTT Source](connect/connect-mqtt-source) |  IoT | 1.4.0 | Confluent Subscription | 2020-10-29 | ✅ 2020-10-22 
 | <img src="./images/icons/neo4j.png" width="15"> [Neo4j Sink](connect/connect-neo4j-sink) |  Database | 1.0.9 | Open Source (Neo4j, Inc.) | 2020-09-02 | ✅ 2020-10-22 
 | <img src="./images/icons/omnisci.png" width="15"> [OmniSci Sink](connect/connect-omnisci-sink) |  Database | 1.0.2 | Confluent Subscription | 2019-08-20 | ✅ 2020-10-22 
 | <img src="./images/icons/pagerduty.png" width="15"> [PagerDuty Sink](connect/connect-pagerduty-sink) |  SaaS Apps | 1.0.1 | Confluent Subscription | 2020-07-20 | ✅ 2020-10-22 
