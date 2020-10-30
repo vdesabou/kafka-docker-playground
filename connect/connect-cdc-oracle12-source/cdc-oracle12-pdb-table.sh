@@ -4,9 +4,9 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
-if [ ! -d ${DIR}/confluentinc-kafka-connect-oracle-cdc-0.1.1-SNAPSHOT-preview ]
+if [ ! -d ${DIR}/confluentinc-kafka-connect-oracle-cdc-0.1.2-rc-039bdb2-preview ]
 then
-     logerror "ERROR: ${DIR}/confluentinc-kafka-connect-oracle-cdc-0.1.1-SNAPSHOT-preview is missing."
+     logerror "ERROR: ${DIR}/confluentinc-kafka-connect-oracle-cdc-0.1.2-rc-039bdb2-preview is missing."
      exit 1
 fi
 
@@ -89,7 +89,7 @@ curl -X PUT \
                "redo.log.consumer.bootstrap.servers":"broker:9092",
                "table.inclusion.regex": "ORCLPDB1[.].*[.]CUSTOMERS",
                "_table.topic.name.template_":"Using template vars to set change event topic for each table",
-               "table.topic.name.template": "${databaseName}.${tableName}",
+               "table.topic.name.template": "${databaseName}.${schemaName}.${tableName}",
                "connection.pool.max.size": 20,
                "confluent.topic.replication.factor":1
           }' \
@@ -97,5 +97,5 @@ curl -X PUT \
 
 sleep 5
 
-log "Verifying topic ORCLCDB.CUSTOMERS"
-timeout 60 docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic ORCLPDB1.CUSTOMERS --from-beginning --max-messages 2
+log "Verifying topic ORCLPDB1.C__MYUSER.CUSTOMERS"
+timeout 60 docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic ORCLPDB1.C__MYUSER.CUSTOMERS --from-beginning --max-messages 2

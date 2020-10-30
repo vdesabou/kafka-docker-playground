@@ -4,9 +4,9 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
-if [ ! -d ${DIR}/confluentinc-kafka-connect-oracle-cdc-0.1.1-SNAPSHOT-preview ]
+if [ ! -d ${DIR}/confluentinc-kafka-connect-oracle-cdc-0.1.2-rc-039bdb2-preview ]
 then
-     logerror "ERROR: ${DIR}/confluentinc-kafka-connect-oracle-cdc-0.1.1-SNAPSHOT-preview is missing."
+     logerror "ERROR: ${DIR}/confluentinc-kafka-connect-oracle-cdc-0.1.2-rc-039bdb2-preview is missing."
      exit 1
 fi
 
@@ -82,7 +82,7 @@ curl -X PUT \
                "redo.log.consumer.bootstrap.servers":"broker:9092",
                "table.inclusion.regex": ".*CUSTOMERS.*",
                "_table.topic.name.template_":"Using template vars to set change event topic for each table",
-               "table.topic.name.template": "${databaseName}.${tableName}",
+               "table.topic.name.template": "${databaseName}.${schemaName}.${tableName}",
                "connection.pool.max.size": 20,
                "confluent.topic.replication.factor":1
           }' \
@@ -90,25 +90,16 @@ curl -X PUT \
 
 sleep 5
 
-log "Verifying topic ORCLCDB.CUSTOMERS"
-timeout 60 docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic ORCLCDB.CUSTOMERS --from-beginning --max-messages 2
+log "Verifying topic ORCLCDB.C__MYUSER.CUSTOMERS"
+timeout 60 docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic ORCLCDB.C__MYUSER.CUSTOMERS --from-beginning --max-messages 2
 
 
-# FIXTHIS
-
-# cannot use "table.topic.name.template": "${databaseName}.${schemaName}.${tableName}"
-
-# {
-#   "error_code": 400,
-#   "message": "Connector configuration is invalid and contains the following 1 error(s):\nVariables in template resolve to an invalid topic name. Invalid value ORCLCDB.C##MYUSER.CUSTOMERS for configuration table.topic.name.template: topic names may have 1-249 ASCII alphanumeric, `+`, `.`, `_`, and `-` characters\nYou can also find the above list of errors at the endpoint `/connector-plugins/{connectorType}/config/validate`"
-# }
-
-# [2020-09-24 17:38:53,285] ERROR Exception in RecordQueue thread (io.confluent.connect.oracle.cdc.util.RecordQueue)
-# org.apache.kafka.connect.errors.ConnectException: Failed to subscribe to the redo log topic 'cdc-oracle-source-ORCLCDB-redo-log' even after waiting PT1M. Verify that this redo log topic exists in the brokers at broker:9092, and that the redo log reading task is able to produce to that topic.
-#         at io.confluent.connect.oracle.cdc.ChangeEventGenerator.subscribeToRedoLogTopic(ChangeEventGenerator.java:236)
-#         at io.confluent.connect.oracle.cdc.ChangeEventGenerator.execute(ChangeEventGenerator.java:191)
-#         at io.confluent.connect.oracle.cdc.util.RecordQueue.lambda$createLoggingSupplier$1(RecordQueue.java:466)
-#         at java.util.concurrent.CompletableFuture$AsyncSupply.run(CompletableFuture.java:1590)
-#         at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1149)
-#         at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:624)
-#         at java.lang.Thread.run(Thread.java:748)
+# [2020-10-30 08:40:08,284] ERROR Exception in RecordQueue thread (io.confluent.connect.oracle.cdc.util.RecordQueue)
+# org.apache.kafka.connect.errors.ConnectException: Failed to subscribe to the redo log topic 'redo-log-topic' even after waiting PT1M. Verify that this redo log topic exists in the brokers at broker:9092, and that the redo log reading task is able to produce to that topic.
+#         at io.confluent.connect.oracle.cdc.ChangeEventGenerator.subscribeToRedoLogTopic(ChangeEventGenerator.java:248)
+#         at io.confluent.connect.oracle.cdc.ChangeEventGenerator.execute(ChangeEventGenerator.java:203)
+#         at io.confluent.connect.oracle.cdc.util.RecordQueue.lambda$createLoggingSupplier$1(RecordQueue.java:468)
+#         at java.base/java.util.concurrent.CompletableFuture$AsyncSupply.run(CompletableFuture.java:1700)
+#         at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1128)
+#         at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:628)
+#         at java.base/java.lang.Thread.run(Thread.java:834)
