@@ -12,6 +12,7 @@ sqlplus /nolog <<- EOF
 	shutdown immediate
 	startup mount
 	alter database archivelog;
+	ALTER DATABASE FLASHBACK ON;
 	alter database open;
         -- Should show "Database log mode: Archive Mode"
 	archive log list
@@ -44,6 +45,7 @@ sqlplus / as sysdba <<- EOF
 	GRANT CREATE TABLE TO C##MYUSER container=all;
 	GRANT CREATE SEQUENCE TO C##MYUSER container=all;
 	GRANT CREATE TRIGGER TO C##MYUSER container=all;
+	GRANT FLASHBACK ANY TABLE TO C##MYUSER container=all;
 
         -- Enable Supplemental Logging for All Columns
 	ALTER SESSION SET CONTAINER=cdb\$root;
