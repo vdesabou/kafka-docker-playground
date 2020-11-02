@@ -41,7 +41,6 @@ sqlplus / as sysdba <<- EOF
 	GRANT select on V_\$LOGMNR_CONTENTS to C##MYUSER CONTAINER=all;
 	GRANT select on GV_\$ARCHIVED_LOG to C##MYUSER CONTAINER=all;
 
-	GRANT CONNECT TO C##MYUSER container=all;
 	GRANT CREATE TABLE TO C##MYUSER container=all;
 	GRANT CREATE SEQUENCE TO C##MYUSER container=all;
 	GRANT CREATE TRIGGER TO C##MYUSER container=all;
