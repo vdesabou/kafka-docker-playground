@@ -88,7 +88,6 @@ curl -X PUT \
                "redo.log.topic.name": "redo-log-topic",
                "redo.log.consumer.bootstrap.servers":"broker:9092",
                "table.inclusion.regex": "ORCLPDB1[.].*[.]CUSTOMERS",
-               "_table.topic.name.template_":"Using template vars to set change event topic for each table",
                "table.topic.name.template": "${databaseName}.${schemaName}.${tableName}",
                "connection.pool.max.size": 20,
                "confluent.topic.replication.factor":1
