@@ -36,7 +36,6 @@ sqlplus / as sysdba <<- EOF
 
 	grant LOGMINING to C##CDC_PRIVS;
 
-	GRANT CONNECT TO C##MYUSER container=all;
 	GRANT CREATE SESSION TO C##MYUSER container=all;
 	GRANT CREATE TABLE TO C##MYUSER container=all;
 	GRANT CREATE SEQUENCE TO C##MYUSER container=all;
