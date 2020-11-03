@@ -89,7 +89,7 @@ ccloud.password=<ccloud password>
 
 By default, the demo uses Confluent Schema Registry running in a local Docker container. If you prefer to use Confluent Cloud Schema Registry instead, you need to first set it up:
 
-   a. [Enable](http://docs.confluent.io/current/quickstart/cloud-quickstart.html#step-3-configure-sr-ccloud) Confluent Cloud Schema Registry prior to running the demo
+   a. [Enable](https://docs.confluent.io/current/cloud/quickstart/schema-registry.html#enable-sr-for-ccloud) Confluent Cloud Schema Registry prior to running the demo
 
    b. Validate your credentials to Confluent Cloud Schema Registry
 
