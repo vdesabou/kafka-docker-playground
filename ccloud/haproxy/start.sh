@@ -121,6 +121,7 @@ log "Verifying we can connect to $BOOTSTRAP_SERVER using HAProxy and netcat"
 docker exec -i -e BOOTSTRAP_SERVER=$BOOTSTRAP_SERVER client bash -c 'nc -zv $BOOTSTRAP_SERVER 9092'
 
 log "Verifying we can connect to $BOOTSTRAP_SERVERS using openssl"
+# to get a tcpdump, run on client the following: tcpdump -w tcpdump.pcap -i eth0 -s 0 port 9092
 docker exec -i -e BOOTSTRAP_SERVERS=$BOOTSTRAP_SERVERS client bash -c 'echo QUIT | openssl s_client -connect $BOOTSTRAP_SERVERS'
 
 log "Verifying we can use Kafkacat using HAProxy"
