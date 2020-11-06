@@ -20,3 +20,4 @@ services:
     hostname: client
     container_name: client
     entrypoint: ["sh", "-c", "sleep 2073600"]
+    privileged: true

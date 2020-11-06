@@ -169,7 +169,7 @@ do
     Blocking IP address $ip corresponding to bootstrap server $BOOTSTRAP_SERVER
 
     ```bash
-    docker exec -i --privileged --user root -e ip=$ip client bash -c 'iptables -I INPUT -p tcp -s $ip -j DROP'
+    docker exec -i -e ip=$ip client bash -c 'iptables -I INPUT -p tcp -s $ip -j DROP'
 done
 for (( i=0; i<$nb_broker; i++ ))
 do
@@ -178,7 +178,7 @@ do
     Blocking IP address $ip corresponding to broker $BROKER
 
     ```bash
-    docker exec -i --privileged --user root -e ip=$ip client bash -c 'iptables -I INPUT -p tcp -s $ip -j DROP'
+    docker exec -i -e ip=$ip client bash -c 'iptables -I INPUT -p tcp -s $ip -j DROP'
 done
 ```
 
@@ -198,10 +198,10 @@ Modifying `/etc/hosts` on client container, so that haproxy is used:
 
 ```bash
 HAPROXY_IP=$(container_to_ip haproxy)
-docker exec -i --privileged --user root -e BOOTSTRAP_SERVER=$BOOTSTRAP_SERVER -e HAPROXY_IP=$HAPROXY_IP client bash -c 'echo "$HAPROXY_IP $BOOTSTRAP_SERVER" >> /etc/hosts'
+docker exec -i -e BOOTSTRAP_SERVER=$BOOTSTRAP_SERVER -e HAPROXY_IP=$HAPROXY_IP client bash -c 'echo "$HAPROXY_IP $BOOTSTRAP_SERVER" >> /etc/hosts'
 for (( i=0; i<$nb_broker; i++ ))
 do
-    docker exec -i --privileged --user root -e BOOTSTRAP_SERVER=$BOOTSTRAP_SERVER -e HAPROXY_IP=$HAPROXY_IP -e i=$i client bash -c 'echo "$HAPROXY_IP b$i-$BOOTSTRAP_SERVER" >> /etc/hosts'
+    docker exec -i -e BOOTSTRAP_SERVER=$BOOTSTRAP_SERVER -e HAPROXY_IP=$HAPROXY_IP -e i=$i client bash -c 'echo "$HAPROXY_IP b$i-$BOOTSTRAP_SERVER" >> /etc/hosts'
 done
 docker exec -i client bash -c 'cat /etc/hosts'
 ```
