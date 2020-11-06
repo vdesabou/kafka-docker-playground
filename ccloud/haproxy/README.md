@@ -23,7 +23,7 @@ Note: you can also export these values as environment variable
 
 Example:
 
-```
+```shellscript
 $ export PKC_ENDPOINT=pkc-xxxxx.eu-west-2.aws.confluent.cloud
 $ export CLOUD_KEY=xxxx
 $ export CLOUD_SECRET=xxxx
@@ -37,7 +37,7 @@ $ ./start.sh
 
 Checking with Kafkacat before using HAProxy
 
-```bash
+```shellscript
 $ docker run confluentinc/cp-kafkacat:${TAG} kafkacat -b $PKC_ENDPOINT_WITH_PORT -L -X security.protocol=SASL_SSL -X sasl.mechanisms=PLAIN -X sasl.username=$CLOUD_KEY -X sasl.password=$CLOUD_SECRET | grep "broker"
 ```
 
@@ -180,7 +180,7 @@ Blocking traffic for all endpoints, using iptables (see function `block_traffic_
 
 Verify cluster is no more reachable using Kafkacat, as expected
 
-```bash
+```shellscript
 docker exec -i -e PKC_ENDPOINT_WITH_PORT=$PKC_ENDPOINT_WITH_PORT -e CLOUD_KEY=$CLOUD_KEY -e CLOUD_SECRET=$CLOUD_SECRET client bash -c 'kafkacat -b $PKC_ENDPOINT_WITH_PORT -L -X security.protocol=SASL_SSL -X sasl.mechanisms=PLAIN -X sasl.username=$CLOUD_KEY -X sasl.password=$CLOUD_SECRET | grep "broker"'
 ```
 
@@ -237,7 +237,7 @@ Results:
 
 Verifying we can connect to pkc endpoint using HAProxy and netcat
 
-```bash
+```shellscript
 docker exec -i -e PKC_ENDPOINT=$PKC_ENDPOINT client bash -c 'nc -zv $PKC_ENDPOINT 9092'
 ```
 
@@ -251,7 +251,7 @@ Ncat: 0 bytes sent, 0 bytes received in 0.01 seconds.
 
 Verifying we can connect to pkc endpoint using openssl
 
-```bash
+```shellscript
 $ docker exec -i -e PKC_ENDPOINT_WITH_PORT=$PKC_ENDPOINT_WITH_PORT client bash -c 'echo QUIT | openssl s_client -connect $PKC_ENDPOINT_WITH_PORT'
 ```
 
@@ -343,7 +343,7 @@ SSL-Session:
 
 Verifying we can use Kafkacat using HAProxy
 
-```bash
+```shellscript
 docker exec -i -e PKC_ENDPOINT_WITH_PORT=$PKC_ENDPOINT_WITH_PORT -e CLOUD_KEY=$CLOUD_KEY -e CLOUD_SECRET=$CLOUD_SECRET client bash -c 'kafkacat -b $PKC_ENDPOINT_WITH_PORT -L -X security.protocol=SASL_SSL -X sasl.mechanisms=PLAIN -X sasl.username=$CLOUD_KEY -X sasl.password=$CLOUD_SECRET | grep "broker"'
 ```
 
@@ -365,7 +365,7 @@ Metadata for all topics (from broker -1: sasl_ssl://pkc-41wq6.eu-west-2.aws.conf
 
 Verifying we can connect to pkac endpoint using HAProxy (HTTP 404 Not Found) is expected
 
-```bash
+```shellscript
 $ docker exec -i -e PKAC_ENDPOINT=$PKAC_ENDPOINT -e CLOUD_KEY=$CLOUD_KEY -e CLOUD_SECRET=$CLOUD_SECRET client bash -c 'curl --max-time 2 -u $CLOUD_KEY:$CLOUD_SECRET https://$PKAC_ENDPOINT/subjects'
 ```
 
@@ -379,6 +379,12 @@ Results:
 
 Verifying we can use Confluent Cloud Schema Registry using HAProxy
 
-```bash
+```shellscript
 $ docker exec -i -e SCHEMA_REGISTRY_ENDPOINT=$SCHEMA_REGISTRY_ENDPOINT -e SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO=$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO client bash -c 'curl --max-time 2 -u $SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO https://$SCHEMA_REGISTRY_ENDPOINT/subjects
+```
+
+Results:
+
+```
+100   402  100   402    0     0   1661      0 --:--:-- --:--:-- --:--:--  ["jltest2-value","customer-value","cmtest2-value","rating_count-value","testProto-value","ratings_keyed_by_id-value","my_avro_topic-value","other.proto","metricstopic-value","ratings-value","employees-value","jltest-value","customer-avro-value","_confluent-ksql-default_query_CTAS_RATING_COUNT_15-Aggregate-Aggregate-Materialize-changelog-value","demo_gen-value","mysql-application-value","demo-value"]1661
 ```
