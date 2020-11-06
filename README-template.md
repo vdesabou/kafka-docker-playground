@@ -170,6 +170,7 @@ Quick start examples from Confluent [docs](https://docs.confluent.io/current/con
   - [Confluent REST Proxy Security Plugin](ccloud/rest-proxy-security-plugin) with Principal Propagation
   - [Confluent Schema Registry Security Plugin](ccloud/schema-registry-security-plugin)
   - [Migrate Schemas to Confluent Cloud](ccloud/migrate-schemas-to-confluent-cloud) using Confluent Replicator
+  - [Confluent Cloud Networking](ccloud/haproxy) using HAProxy
 
 ## 🔄 Confluent Replicator and Mirror Maker 2
 

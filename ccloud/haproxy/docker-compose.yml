@@ -1,0 +1,22 @@
+---
+version: '3.5'
+services:
+
+  haproxy:
+    build:
+      context: ../../ccloud/haproxy/haproxy
+    hostname: haproxy
+    container_name: haproxy
+    ports:
+      - "9092:9092"
+    volumes:
+      - ../../ccloud/haproxy/haproxy/haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg:ro
+
+  client:
+    build:
+      context: ../../ccloud/haproxy/client
+      args:
+        TAG: ${TAG}
+    hostname: client
+    container_name: client
+    entrypoint: ["sh", "-c", "sleep 2073600"]
