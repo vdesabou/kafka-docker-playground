@@ -38,38 +38,38 @@ Rename it to `keyfile.json`and place it in `./keyfile.json`
 Simply run:
 
 ```bash
-$ ./gcs-sink.sh <GCS_BUCKET_NAME>
+$ ./gcs-sink.sh <PROJECT> <GCS_BUCKET_NAME>
 ```
 
 Or using SASL_SSL:
 
 ```bash
-$ ./gcs-sink-sasl-ssl.sh <GCS_BUCKET_NAME>
+$ ./gcs-sink-sasl-ssl.sh <PROJECT> <GCS_BUCKET_NAME>
 ```
 
 Or using 2 way SSL authentication:
 
 ```bash
-$ ./gcs-sink-2way-ssl.sh <GCS_BUCKET_NAME>
+$ ./gcs-sink-2way-ssl.sh <PROJECT> <GCS_BUCKET_NAME>
 ```
 
 
 Or using kerberos:
 
 ```bash
-$ ./gcs-sink-kerberos.sh <GCS_BUCKET_NAME>
+$ ./gcs-sink-kerberos.sh <PROJECT> <GCS_BUCKET_NAME>
 ```
 
 Or using LDAP Authorizer with SASL/PLAIN:
 
 ```bash
-$ ./gcs-sink-ldap-authorizer-sasl-plain.sh <GCS_BUCKET_NAME>
+$ ./gcs-sink-ldap-authorizer-sasl-plain.sh <PROJECT> <GCS_BUCKET_NAME>
 ```
 
 Or using RBAC environment with SASL/PLAIN:
 
 ```bash
-$ ./gcs-sink-rbac-sasl-plain.sh <GCS_BUCKET_NAME>
+$ ./gcs-sink-rbac-sasl-plain.sh <PROJECT> <GCS_BUCKET_NAME>
 ```
 
 Note: you can also export these values as environment variable

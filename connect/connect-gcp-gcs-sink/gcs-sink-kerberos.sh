@@ -4,7 +4,8 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
-GCS_BUCKET_NAME=${GCS_BUCKET_NAME:-$1}
+PROJECT=${1:-vincent-de-saboulin-lab}
+GCS_BUCKET_NAME=${GCS_BUCKET_NAME:-$2}
 
 if [ -z "$GCS_BUCKET_NAME" ]
 then

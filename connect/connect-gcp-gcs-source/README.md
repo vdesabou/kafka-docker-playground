@@ -38,7 +38,7 @@ Rename it to `keyfile.json`and place it in `./keyfile.json`
 Simply run:
 
 ```bash
-$ ./gcs-source.sh <GCS_BUCKET_NAME>
+$ ./gcs-source.sh <PROJECT> <GCS_BUCKET_NAME>
 ```
 
 Note: you can also export these values as environment variable
