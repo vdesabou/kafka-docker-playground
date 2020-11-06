@@ -15,7 +15,7 @@ Using iptables, communication between `client`and Confluent Cloud bootstrap serv
 Simply run:
 
 ```
-$ ./start.sh <BOOTSTRAP_SERVER> <CLOUD_KEY> <CLOUD_SECRET>
+$ ./start.sh <PKC_ENDPOINT> <CLOUD_KEY> <CLOUD_SECRET> optional: [<PKAC_ENDPOINT>] [<SCHEMA_REGISTRY_ENDPOINT>] [<SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO>]
 
 ```
 
@@ -24,9 +24,12 @@ Note: you can also export these values as environment variable
 Example:
 
 ```
-export BOOTSTRAP_SERVER=pkc-xxxxx.eu-west-2.aws.confluent.cloud
-export CLOUD_KEY=xxxx
-export CLOUD_SECRET=xxxx
+$ export PKC_ENDPOINT=pkc-xxxxx.eu-west-2.aws.confluent.cloud
+$ export CLOUD_KEY=xxxx
+$ export CLOUD_SECRET=xxxx
+$ export PKAC_ENDPOINT=pkac-xxxxx.eu-west-2.aws.confluent.cloud
+$ export SCHEMA_REGISTRY_ENDPOINT=psrc-xxxxx.eu-central-1.aws.confluent.cloud
+$ export SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO="<SR API KEY>:<SR API SECRET>"
 $ ./start.sh
 ```
 
@@ -35,7 +38,7 @@ $ ./start.sh
 Checking with Kafkacat before using HAProxy
 
 ```bash
-$ docker run confluentinc/cp-kafkacat:${TAG} kafkacat -b $BOOTSTRAP_SERVERS -L -X security.protocol=SASL_SSL -X sasl.mechanisms=PLAIN -X sasl.username=$CLOUD_KEY -X sasl.password=$CLOUD_SECRET | grep "broker"
+$ docker run confluentinc/cp-kafkacat:${TAG} kafkacat -b $PKC_ENDPOINT_WITH_PORT -L -X security.protocol=SASL_SSL -X sasl.mechanisms=PLAIN -X sasl.username=$CLOUD_KEY -X sasl.password=$CLOUD_SECRET | grep "broker"
 ```
 
 Example:
@@ -115,6 +118,8 @@ frontend kafka
     acl is_kafka6 req.ssl_sni -i b6-pkc-41wq6.eu-west-2.aws.confluent.cloud
     acl is_kafka7 req.ssl_sni -i b7-pkc-41wq6.eu-west-2.aws.confluent.cloud
     acl is_kafka8 req.ssl_sni -i b8-pkc-41wq6.eu-west-2.aws.confluent.cloud
+    acl is_topic req.ssl_sni -i pkac-l7qj1.eu-west-2.aws.confluent.cloud
+    acl is_ccsr req.ssl_sni -i psrc-lo5k9.eu-central-1.aws.confluent.cloud
 
     # depending name rule to route to specified backend
     use_backend bootstrap if is_bootstrap
@@ -127,6 +132,8 @@ frontend kafka
     use_backend kafka6 if is_kafka6
     use_backend kafka7 if is_kafka7
     use_backend kafka8 if is_kafka8
+    use_backend topic if is_topic
+    use_backend ccsr if is_ccsr
 
 # backend definitions
 backend bootstrap
@@ -159,33 +166,22 @@ backend kafka7
 backend kafka8
     mode tcp
     server kafka8 b8-pkc-41wq6.eu-west-2.aws.confluent.cloud:9092 check
+
+backend topic
+    mode tcp
+    server topic pkac-l7qj1.eu-west-2.aws.confluent.cloud:443 check
+backend ccsr
+    mode tcp
+    server ccsr psrc-lo5k9.eu-central-1.aws.confluent.cloud:443 check
+
 ```
 
-Using iptables on client to block pkc endpoint and all broker IPs
+Blocking traffic for all endpoints, using iptables (see function `block_traffic_for_all_endpoints()`)
+
+Verify cluster is no more reachable using Kafkacat, as expected
 
 ```bash
-for ip in $(docker exec -i -e BOOTSTRAP_SERVER=$BOOTSTRAP_SERVER client bash -c 'nslookup $BOOTSTRAP_SERVER | grep Address | grep -v "#" | cut -d " " -f 2')
-do
-    Blocking IP address $ip corresponding to bootstrap server $BOOTSTRAP_SERVER
-
-    ```bash
-    docker exec -i -e ip=$ip client bash -c 'iptables -I INPUT -p tcp -s $ip -j DROP'
-done
-for (( i=0; i<$nb_broker; i++ ))
-do
-    BROKER="b$i-$BOOTSTRAP_SERVER"
-    ip=$(docker exec -i -e BROKER=$BROKER client bash -c 'nslookup $BROKER | grep Address | grep -v "#" | cut -d " " -f 2')
-    Blocking IP address $ip corresponding to broker $BROKER
-
-    ```bash
-    docker exec -i -e ip=$ip client bash -c 'iptables -I INPUT -p tcp -s $ip -j DROP'
-done
-```
-
-Verify it is no more working, as expected
-
-```bash
-docker exec -i -e BOOTSTRAP_SERVERS=$BOOTSTRAP_SERVERS -e CLOUD_KEY=$CLOUD_KEY -e CLOUD_SECRET=$CLOUD_SECRET client bash -c 'kafkacat -b $BOOTSTRAP_SERVERS -L -X security.protocol=SASL_SSL -X sasl.mechanisms=PLAIN -X sasl.username=$CLOUD_KEY -X sasl.password=$CLOUD_SECRET | grep "broker"'
+docker exec -i -e PKC_ENDPOINT_WITH_PORT=$PKC_ENDPOINT_WITH_PORT -e CLOUD_KEY=$CLOUD_KEY -e CLOUD_SECRET=$CLOUD_SECRET client bash -c 'kafkacat -b $PKC_ENDPOINT_WITH_PORT -L -X security.protocol=SASL_SSL -X sasl.mechanisms=PLAIN -X sasl.username=$CLOUD_KEY -X sasl.password=$CLOUD_SECRET | grep "broker"'
 ```
 
 Results:
@@ -194,28 +190,37 @@ Results:
 % ERROR: Failed to acquire metadata: Local: Broker transport failure
 ```
 
-Modifying `/etc/hosts` on client container, so that haproxy is used:
+Verify pkac endpoint is no more reachable using curl, as expected:
 
-```bash
-HAPROXY_IP=$(container_to_ip haproxy)
-docker exec -i -e BOOTSTRAP_SERVER=$BOOTSTRAP_SERVER -e HAPROXY_IP=$HAPROXY_IP client bash -c 'echo "$HAPROXY_IP $BOOTSTRAP_SERVER" >> /etc/hosts'
-for (( i=0; i<$nb_broker; i++ ))
-do
-    docker exec -i -e BOOTSTRAP_SERVER=$BOOTSTRAP_SERVER -e HAPROXY_IP=$HAPROXY_IP -e i=$i client bash -c 'echo "$HAPROXY_IP b$i-$BOOTSTRAP_SERVER" >> /etc/hosts'
-done
-docker exec -i client bash -c 'cat /etc/hosts'
+Results:
+
 ```
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+  0     0    0     0    0     0      0      0 --:--:--  0:00:01 --:--:--     0curl: (7) Failed to connect to pkac-l7qj1.eu-west-2.aws.confluent.cloud port 443: Connection timed out
+```
+
+Verify Confluent Cloud Schema Registry is no more reachable using curl, as expected:
+
+Results:
+
+```
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+  0     0    0     0    0     0      0      0 --:--:--  0:00:01 --:--:--     0curl: (7) Failed to connect to psrc-lo5k9.eu-central-1.aws.confluent.cloud port 443: Connection timed out
+```
+
+
+Modifying `/etc/hosts` on client container, so that haproxy is used (see method `update_hosts_file()`):
+
 
 Results:
 
 ```
 127.0.0.1       localhost
 ::1     localhost ip6-localhost ip6-loopback
-fe00::0 ip6-localnet
-ff00::0 ip6-mcastprefix
-ff02::1 ip6-allnodes
-ff02::2 ip6-allrouters
-172.25.0.2      client
+<snip>
+192.168.48.2    client
 172.25.0.3 pkc-41wq6.eu-west-2.aws.confluent.cloud
 172.25.0.3 b0-pkc-41wq6.eu-west-2.aws.confluent.cloud
 172.25.0.3 b1-pkc-41wq6.eu-west-2.aws.confluent.cloud
@@ -226,12 +231,14 @@ ff02::2 ip6-allrouters
 172.25.0.3 b6-pkc-41wq6.eu-west-2.aws.confluent.cloud
 172.25.0.3 b7-pkc-41wq6.eu-west-2.aws.confluent.cloud
 172.25.0.3 b8-pkc-41wq6.eu-west-2.aws.confluent.cloud
+172.25.0.3 pkac-l7qj1.eu-west-2.aws.confluent.cloud
+172.25.0.3 psrc-lo5k9.eu-central-1.aws.confluent.cloud
 ```
 
 Verifying we can connect to pkc endpoint using HAProxy and netcat
 
 ```bash
-docker exec -i -e BOOTSTRAP_SERVER=$BOOTSTRAP_SERVER client bash -c 'nc -zv $BOOTSTRAP_SERVER 9092'
+docker exec -i -e PKC_ENDPOINT=$PKC_ENDPOINT client bash -c 'nc -zv $PKC_ENDPOINT 9092'
 ```
 
 Results:
@@ -245,7 +252,7 @@ Ncat: 0 bytes sent, 0 bytes received in 0.01 seconds.
 Verifying we can connect to pkc endpoint using openssl
 
 ```bash
-$ docker exec -i -e BOOTSTRAP_SERVERS=$BOOTSTRAP_SERVERS client bash -c 'echo QUIT | openssl s_client -connect $BOOTSTRAP_SERVERS'
+$ docker exec -i -e PKC_ENDPOINT_WITH_PORT=$PKC_ENDPOINT_WITH_PORT client bash -c 'echo QUIT | openssl s_client -connect $PKC_ENDPOINT_WITH_PORT'
 ```
 
 Results:
@@ -337,7 +344,7 @@ SSL-Session:
 Verifying we can use Kafkacat using HAProxy
 
 ```bash
-docker exec -i -e BOOTSTRAP_SERVERS=$BOOTSTRAP_SERVERS -e CLOUD_KEY=$CLOUD_KEY -e CLOUD_SECRET=$CLOUD_SECRET client bash -c 'kafkacat -b $BOOTSTRAP_SERVERS -L -X security.protocol=SASL_SSL -X sasl.mechanisms=PLAIN -X sasl.username=$CLOUD_KEY -X sasl.password=$CLOUD_SECRET | grep "broker"'
+docker exec -i -e PKC_ENDPOINT_WITH_PORT=$PKC_ENDPOINT_WITH_PORT -e CLOUD_KEY=$CLOUD_KEY -e CLOUD_SECRET=$CLOUD_SECRET client bash -c 'kafkacat -b $PKC_ENDPOINT_WITH_PORT -L -X security.protocol=SASL_SSL -X sasl.mechanisms=PLAIN -X sasl.username=$CLOUD_KEY -X sasl.password=$CLOUD_SECRET | grep "broker"'
 ```
 
 Results:
@@ -354,4 +361,24 @@ Metadata for all topics (from broker -1: sasl_ssl://pkc-41wq6.eu-west-2.aws.conf
   broker 6 at b6-pkc-41wq6.eu-west-2.aws.confluent.cloud:9092
   broker 7 at b7-pkc-41wq6.eu-west-2.aws.confluent.cloud:9092 (controller)
   broker 3 at b3-pkc-41wq6.eu-west-2.aws.confluent.cloud:9092
+```
+
+Verifying we can connect to pkac endpoint using HAProxy (HTTP 404 Not Found) is expected
+
+```bash
+$ docker exec -i -e PKAC_ENDPOINT=$PKAC_ENDPOINT -e CLOUD_KEY=$CLOUD_KEY -e CLOUD_SECRET=$CLOUD_SECRET client bash -c 'curl --max-time 2 -u $CLOUD_KEY:$CLOUD_SECRET https://$PKAC_ENDPOINT/subjects'
+```
+
+Results:
+
+```
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+100    49  100    49    0     0    284      0 --:--:-- --:--:-- --:--{"error_code":404,"message":"HTTP 404 Not Found"}:--   284
+```
+
+Verifying we can use Confluent Cloud Schema Registry using HAProxy
+
+```bash
+$ docker exec -i -e SCHEMA_REGISTRY_ENDPOINT=$SCHEMA_REGISTRY_ENDPOINT -e SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO=$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO client bash -c 'curl --max-time 2 -u $SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO https://$SCHEMA_REGISTRY_ENDPOINT/subjects
 ```
