@@ -111,8 +111,8 @@ Quick start examples from Confluent [docs](https://docs.confluent.io/current/con
 | <img src="./images/icons/omnisci.png" width="15"> [OmniSci Sink](connect/connect-omnisci-sink) |  Database | 1.0.2 | Confluent Subscription | 2019-08-20 | ✅ 2020-11-06 
 | <img src="./images/icons/pagerduty.png" width="15"> [PagerDuty Sink](connect/connect-pagerduty-sink) |  SaaS Apps | 1.0.1 | Confluent Subscription | 2020-07-20 | ✅ 2020-10-22 
 | <img src="./images/icons/prometheus.png" height="15">  [Prometheus Sink](connect/connect-prometheus-sink) |  Analytics | 1.1.2-preview | Confluent Subscription | 2020-06-08 | ✅ 2020-11-06 
-| <img src="./images/icons/rabbitmq.svg" width="15"> [RabbitMQ Sink](connect/connect-rabbitmq-sink) |  Message Queue | 1.4.1 | Confluent Subscription | 2020-10-31 | ✅ 2020-10-22 
-| <img src="./images/icons/rabbitmq.svg" width="15">  [RabbitMQ Source](connect/connect-rabbitmq-source) |  Message Queue | 1.4.1 | Confluent Subscription | 2020-10-31 | ✅ 2020-10-31 
+| <img src="./images/icons/rabbitmq.svg" width="15"> [RabbitMQ Sink](connect/connect-rabbitmq-sink) |  Message Queue | 1.4.1 | Confluent Subscription | 2020-10-31 | ✅ 2020-11-07 
+| <img src="./images/icons/rabbitmq.svg" width="15">  [RabbitMQ Source](connect/connect-rabbitmq-source) |  Message Queue | 1.4.1 | Confluent Subscription | 2020-10-31 | ✅ 2020-11-07 
 | <img src="./images/icons/redis.jpg" width="15"> [Redis Sink](connect/connect-redis-sink) |  Database | 0.0.2.11 | Open Source (Jeremy Custenborder) | 2020-01-22 | ✅ 2020-11-05 
 | <img src="./images/icons/salesforce.png" height="15"> [SalesForce Bulk API Sink](connect/connect-salesforce-bulkapi-sink) |  SaaS Apps | 1.7.4 | Confluent Subscription | 2020-11-04 | ✅ 2020-11-04 
 | <img src="./images/icons/salesforce.png" height="15"> [SalesForce Bulk API Source](connect/connect-salesforce-bulkapi-source) |  SaaS Apps | 1.7.4 | Confluent Subscription | 2020-11-04 | ✅ 2020-11-04 
