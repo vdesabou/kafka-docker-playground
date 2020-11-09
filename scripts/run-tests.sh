@@ -73,7 +73,10 @@ do
             name=$(echo "$connector_path" | cut -d "-" -f 2-)
 
 #            THE_CONNECTOR_TAG=$(docker run vdesabou/kafka-docker-playground-connect:${TAG} cat /usr/share/confluent-hub-components/$connector_path/manifest.json | jq -r '.version')
-            THE_CONNECTOR_TAG=$(grep "$connector_path " /tmp/README.txt | cut -d "|" -f 3 | sed 's/^[[:blank:]]*//;s/[[:blank:]]*$//')
+            if [ "$connector_path" != "" ]
+            then
+                THE_CONNECTOR_TAG=$(grep "$connector_path " /tmp/README.txt | cut -d "|" -f 3 | sed 's/^[[:blank:]]*//;s/[[:blank:]]*$//')
+            fi
         fi
         file="$TAG-$THE_CONNECTOR_TAG-$script"
         s3_file="s3://kafka-docker-playground/travis/$file"
@@ -114,7 +117,7 @@ do
         log "Executing $script in dir $dir"
         log "####################################################"
         SECONDS=0
-        retry bash $script
+        #retry bash $script
         ret=$?
         ELAPSED="took: $((($SECONDS / 60) % 60))min $(($SECONDS % 60))sec"
         let ELAPSED_TOTAL+=$SECONDS
@@ -131,7 +134,7 @@ do
             echo "$connector_path|`date +%s`" > $file
             if [ -f "$file" ]
             then
-                aws s3 cp "$file" "s3://kafka-docker-playground/travis/"
+                #aws s3 cp "$file" "s3://kafka-docker-playground/travis/"
                 log "INFO: <$file> was uploaded to S3 bucket"
             else
                 logerror "ERROR: $file could not be created"
@@ -144,7 +147,7 @@ do
             failed_tests=$failed_tests"$dir[$script]\n"
             let "nb_test_failed++"
         fi
-        bash stop.sh
+        #bash stop.sh
     done
     cd - > /dev/null
 done
