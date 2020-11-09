@@ -121,8 +121,8 @@ Quick start examples from Confluent [docs](https://docs.confluent.io/current/con
 | <img src="./images/icons/salesforce.png" height="15"> [SalesForce Platform Events Source](connect/connect-salesforce-platform-events-source) |  SaaS Apps | 1.7.4 | Confluent Subscription | 2020-11-04 | ✅ 2020-11-04 
 | <img src="./images/icons/salesforce.png" height="15"> [SalesForce PushTopics Source](connect/connect-salesforce-pushtopics-source) |  SaaS Apps | 1.7.4 | Confluent Subscription | 2020-11-04 | ✅ 2020-11-04 
 | <img src="./images/icons/salesforce.png" height="15"> [SalesForce SObject Sink](connect/connect-salesforce-sobject-sink) |  SaaS Apps | 1.7.4 | Confluent Subscription | 2020-11-04 | ✅ 2020-11-04 
-| <img src="./images/icons/servicenow.png" width="15"> [ServiceNow Sink](connect/connect-servicenow-sink) |  SaaS Apps | 2.0.1 | Confluent Subscription | 2020-07-28 | ✅  
-| <img src="./images/icons/servicenow.png" width="15"> [ServiceNow Source](connect/connect-servicenow-source) |  SaaS Apps | 2.0.1 | Confluent Subscription | 2020-07-28 | ✅  
+| <img src="./images/icons/servicenow.png" width="15"> [ServiceNow Sink](connect/connect-servicenow-sink) |  SaaS Apps | 2.0.1 | Confluent Subscription | 2020-07-28 | ❌ 
+| <img src="./images/icons/servicenow.png" width="15"> [ServiceNow Source](connect/connect-servicenow-source) |  SaaS Apps | 2.0.1 | Confluent Subscription | 2020-07-28 | ❌ 
 | <img src="./images/icons/sftp.png" width="15"> [SFTP Sink](connect/connect-sftp-sink) |  Datastore | 2.1.3 | Confluent Subscription | 2020-10-30 | ✅ 2020-11-08 
 | <img src="./images/icons/sftp.png" width="15"> [SFTP Sink](connect/connect-sftp-source) |  Datastore | 2.1.3 | Confluent Subscription | 2020-10-30 | ✅ 2020-11-08 
 | <img src="./images/icons/snmp_trap.png" width="15"> [SNMP Trap Source](connect/connect-snmp-source) |  IoT | 1.1.2 | Confluent Subscription | 2020-04-09 | ✅ 2020-11-06 
