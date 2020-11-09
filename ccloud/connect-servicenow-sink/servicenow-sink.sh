@@ -95,7 +95,7 @@ curl -X PUT \
      http://localhost:8083/connectors/servicenow-sink/config | jq .
 
 
-sleep 5
+sleep 15
 
 log "Confirm that the messages were delivered to the ServiceNow table"
 docker exec -e SERVICENOW_URL="$SERVICENOW_URL" -e SERVICENOW_PASSWORD="$SERVICENOW_PASSWORD" connect \
@@ -104,4 +104,4 @@ docker exec -e SERVICENOW_URL="$SERVICENOW_URL" -e SERVICENOW_PASSWORD="$SERVICE
     --user admin:"$SERVICENOW_PASSWORD" \
     -H 'Accept: application/json' \
     -H 'Content-Type: application/json' \
-    -H 'cache-control: no-cache'
+    -H 'cache-control: no-cache' | jq .
