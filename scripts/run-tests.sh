@@ -71,7 +71,9 @@ do
             owner=$(echo "$connector_path" | cut -d "-" -f 1)
             name=$(echo "$connector_path" | cut -d "-" -f 2-)
 
-            THE_CONNECTOR_TAG=$(docker run vdesabou/kafka-docker-playground-connect:${TAG} cat /usr/share/confluent-hub-components/$connector_path/manifest.json | jq -r '.version')
+#            THE_CONNECTOR_TAG=$(docker run vdesabou/kafka-docker-playground-connect:${TAG} cat /usr/share/confluent-hub-components/$connector_path/manifest.json | jq -r '.version')
+            curl https://raw.githubusercontent.com/vdesabou/kafka-docker-playground-connect/master/README.md -o /tmp/README.txt
+            THE_CONNECTOR_TAG=$(grep $connector_path /tmp/README.txt | cut -d "|" -f 3 | sed 's/^[[:blank:]]*//;s/[[:blank:]]*$//')
         fi
         file="$TAG-$THE_CONNECTOR_TAG-$script"
         s3_file="s3://kafka-docker-playground/travis/$file"
