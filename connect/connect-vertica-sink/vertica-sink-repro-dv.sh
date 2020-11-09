@@ -33,7 +33,8 @@ fi
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext-dv.yml"
 
 docker exec -i vertica /opt/vertica/bin/vsql -hlocalhost -Udbadmin << EOF
-CREATE TABLE public.customer
+CREATE SCHEMA IF NOT EXISTS DV_DWH;
+CREATE TABLE DV_DWH.customer
 (
     ListID int,
     NormalizedHashItemID int,
@@ -69,32 +70,32 @@ curl -X PUT \
                "vertica.username": "dbadmin",
                "vertica.password": "",
                "vertica.buffer.size.bytes" : 10285760,
-               "vertica.timeout.ms" : 60000,
-               "expected.records": 1000000,
-               "expected.topics":1,
                "config.action.reload": "restart",
                "rejected.record.logging.mode": "log",
-               "table.name.format": "public.${topic}",
-               "auto.create": "true",
+               "table.name.format": "DV_DWH.${topic}",
+               "auto.create": "false",
                "auto.evolve": "false",
-               "delete.enabled": "true",
-               "consumer.override.fetch.min.bytes":1000000,
-               "consumer.override.fetch.max.wait.ms": 10000,
-               "consumer.override.max.poll.records": 1000,
-               "consumer.override.max.poll.interval.ms": 1800000,
-               "consumer.override.heartbeat.interval.ms": 3000,
-               "consumer.override.session.timeout.ms": 30000,
-               "consumer.override.request.timeout.ms": 30000,
-               "consumer.override.retry.backoff.ms": 2000
+               "vertica.load.method": "direct",
+               "rejected.record.logging.mode": "table",
+               "rejected.record.table.schema":"DV_EXTERNAL",
+               "rejected.record.table.suffix":"_rejected_${yyyyMMdd}",
+               "vertica.timeout.ms":180000,
+               "consumer.override.max.poll.records":1000000,
+               "consumer.override.fetch.min.bytes":1250000,
+               "consumer.override.request.timeout.ms":125000000,
+               "consumer.override.fetch.max.wait.ms":180000,
+               "consumer.override.max.partition.fetch.bytes":125000000,
+               "consumer.override.session.timeout.ms": 180000,
+               "consumer.override.receive.buffer.bytes":125000000,
+               "consumer.override.max.poll.interval.ms":125000000
           }' \
      http://localhost:8083/connectors/vertica-sink/config | jq .
-
 
 sleep 30
 
 log "Check data is in Vertica for customer1"
 docker exec -i vertica /opt/vertica/bin/vsql -hlocalhost -Udbadmin << EOF
-select * from public.customer;
+select * from DV_DWH.customer;
 EOF
 
 # docker exec -i vertica /opt/vertica/bin/vsql -hlocalhost -Udbadmin << EOF
