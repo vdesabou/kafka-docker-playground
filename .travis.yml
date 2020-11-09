@@ -124,6 +124,8 @@ jobs:
     env: TEST_LIST="connect/connect-http-sink" TAG="6.0.0"
   - name: '6.0.0: kudu-source kudu-sink'
     env: TEST_LIST="connect/connect-kudu-source connect/connect-kudu-sink" TAG="6.0.0"
+  - name: '6.0.0: servicenow-source servicenow-sink'
+    env: TEST_LIST="connect/connect-servicenow-source connect/connect-servicenow-sink" TAG="6.0.0"
   - name: '6.0.0: REPLICATOR: connect'
     env: TEST_LIST="replicator/connect" TAG="6.0.0"
   - name: '6.0.0: mirrormaker2 ksqldb/materialized-view pagerduty-sink zendesk-source datadog-metrics-sink gcp-spanner-sink gcp-firebase-source gcp-firebase-sink'
