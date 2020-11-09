@@ -40,7 +40,7 @@ services:
     volumes:
         - ../../connect/connect-vertica-sink/vertica-jdbc.jar:/usr/share/confluent-hub-components/confluentinc-kafka-connect-vertica/lib/vertica-jdbc.jar
         - ../../connect/connect-vertica-sink/EmptySchema/target/EmptySchema-1.0.0-SNAPSHOT.jar:/usr/share/confluent-hub-components/confluentinc-kafka-connect-vertica/lib/EmptySchema-1.0.0-SNAPSHOT.jar
-       # - ../../connect/connect-vertica-sink/kafka-connect-vertica-1.2.3-SNAPSHOT.jar:/usr/share/confluent-hub-components/confluentinc-kafka-connect-vertica/lib/kafka-connect-vertica-1.2.2.jar
+        - ../../connect/connect-vertica-sink/kafka-connect-vertica-1.2.2_ashah_73a163d.jar:/usr/share/confluent-hub-components/confluentinc-kafka-connect-vertica/lib/kafka-connect-vertica-1.2.2.jar
     environment:
       CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-vertica,/usr/share/confluent-hub-components/confluentinc-connect-transforms
       CONNECT_CONNECTOR_CLIENT_CONFIG_OVERRIDE_POLICY: All
