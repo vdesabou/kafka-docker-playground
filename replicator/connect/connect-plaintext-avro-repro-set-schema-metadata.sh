@@ -54,7 +54,7 @@ curl -X PUT \
           "topic.whitelist": "products_EUROPE",
           "transforms": "SetSchemaMetadata",
           "transforms.SetSchemaMetadata.type": "org.apache.kafka.connect.transforms.SetSchemaMetadata$Value",
-          "transforms.SetSchemaMetadata.schema.name": "myrecord",
+          "transforms.SetSchemaMetadata.schema.name": "products_EUROPE-value",
           "transforms.SetSchemaMetadata.schema.version": "1"
           }' \
      http://localhost:8083/connectors/replicate-europe-to-us/config | jq .
