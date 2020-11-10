@@ -42,24 +42,7 @@ then
      log "##################################################"
      log "Log in to Confluent Cloud"
      log "##################################################"
-
-OUTPUT=$(
-expect <<END
-log_user 1
-spawn ccloud login
-expect "Email: "
-send "$CCLOUD_USER\r";
-expect "Password: "
-send "$CCLOUD_PASSWORD\r";
-expect "Logged in as "
-set result $expect_out(buffer)
-END
-)
-     if [[ ! "$OUTPUT" =~ "Logged in as" ]]; then
-          logerror "Failed to log into your cluster.  Please check all parameters and run again"
-          exit 1
-     fi
-
+     ccloud login --save
      log "Using travis cluster"
      ccloud kafka cluster use lkc-6kv2j
 fi
