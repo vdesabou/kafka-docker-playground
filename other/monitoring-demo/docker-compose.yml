@@ -79,34 +79,6 @@ services:
     volumes:
     - ../../other/monitoring-demo/jmx-exporter:/usr/share/jmx_exporter/
 
-  schema-registry-europe:
-    depends_on:
-      - broker-europe
-    image: confluentinc/cp-schema-registry:${TAG}
-    hostname: schema-registry-europe
-    container_name: schema-registry-europe
-    restart: always
-    ports:
-      - '8081:8081'
-    environment:
-      SCHEMA_REGISTRY_HOST_NAME: schema-registry-europe
-      SCHEMA_REGISTRY_LISTENERS: http://0.0.0.0:8081
-      SCHEMA_REGISTRY_KAFKASTORE_BOOTSTRAP_SERVERS: broker-europe:9092
-
-  schema-registry-us:
-    depends_on:
-      - broker-us
-    image: confluentinc/cp-schema-registry:${TAG}
-    hostname: schema-registry-us
-    container_name: schema-registry-us
-    restart: always
-    ports:
-      - '18081:8081'
-    environment:
-      SCHEMA_REGISTRY_HOST_NAME: schema-registry-us
-      SCHEMA_REGISTRY_LISTENERS: http://0.0.0.0:8081
-      SCHEMA_REGISTRY_KAFKASTORE_BOOTSTRAP_SERVERS: broker-us:9092
-
   ksqldb-server-europe:
     image: confluentinc/ksqldb-server:0.9.0
     hostname: ksqldb-server-europe

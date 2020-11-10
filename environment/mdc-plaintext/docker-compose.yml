@@ -67,6 +67,7 @@ services:
       KAFKA_CONFLUENT_LICENSE_TOPIC_REPLICATION_FACTOR: 1
       # for 6.0.0
       KAFKA_CONFLUENT_BALANCER_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_CONFLUENT_SCHEMA_REGISTRY_URL: http://schema-registry-europe:8081
 
   broker-us:
     image: confluentinc/${CP_KAFKA_IMAGE}:${TAG}
@@ -92,6 +93,7 @@ services:
       KAFKA_CONFLUENT_LICENSE_TOPIC_REPLICATION_FACTOR: 1
       # for 6.0.0
       KAFKA_CONFLUENT_BALANCER_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_CONFLUENT_SCHEMA_REGISTRY_URL: http://schema-registry-us:8081
 
   broker-metrics:
     image: confluentinc/${CP_KAFKA_IMAGE}:${TAG}
@@ -179,6 +181,34 @@ services:
       CLASSPATH: "/usr/share/confluent-hub-components/confluentinc-kafka-connect-replicator/lib/replicator-rest-extension-${TAG_BASE}.jar:/usr/share/java/monitoring-interceptors/*"
       # KIP-158 https://cwiki.apache.org/confluence/display/KAFKA/KIP-158%3A+Kafka+Connect+should+allow+source+connectors+to+set+topic-specific+settings+for+new+topics (6.x only)
       CONNECT_TOPIC_CREATION_ENABLE: 'true'
+
+  schema-registry-europe:
+    image: confluentinc/cp-schema-registry:${TAG}
+    hostname: schema-registry-europe
+    container_name: schema-registry-europe
+    restart: always
+    depends_on:
+      - broker-europe
+    ports:
+      - "18081:8081"
+    environment:
+      SCHEMA_REGISTRY_HOST_NAME: schema-registry-europe
+      SCHEMA_REGISTRY_LISTENERS: http://0.0.0.0:8081
+      SCHEMA_REGISTRY_KAFKASTORE_BOOTSTRAP_SERVERS: broker-europe:9092
+
+  schema-registry-us:
+    image: confluentinc/cp-schema-registry:${TAG}
+    hostname: schema-registry-us
+    container_name: schema-registry-us
+    restart: always
+    depends_on:
+      - broker-us
+    ports:
+      - "28081:8081"
+    environment:
+      SCHEMA_REGISTRY_HOST_NAME: schema-registry-us
+      SCHEMA_REGISTRY_LISTENERS: http://0.0.0.0:8081
+      SCHEMA_REGISTRY_KAFKASTORE_BOOTSTRAP_SERVERS: broker-us:9092
 
   control-center:
     image: confluentinc/cp-enterprise-control-center:${TAG}
