@@ -58,7 +58,7 @@ BASIC_AUTH_CREDENTIALS_SOURCE=$( grep "^basic.auth.credentials.source" $SR_CONFI
 SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO=$( grep "^schema.registry.basic.auth.user.info" $SR_CONFIG_FILE | awk -F'=' '{print $2;}' )
 SCHEMA_REGISTRY_URL=$( grep "^schema.registry.url" $SR_CONFIG_FILE | awk -F'=' '{print $2;}' )
 CONTROL_CENTER_LICENSE=$( grep "^confluent.license" $CCLOUD_CONFIG | cut -d'=' -f2- )
-CCLOUD_USER=$( grep "^ccloud.user" $CCLOUD_CONFIG | cut -d'=' -f2- )
+CCLOUD_EMAIL=$( grep "^ccloud.user" $CCLOUD_CONFIG | cut -d'=' -f2- )
 CCLOUD_PASSWORD=$( grep "^ccloud.password" $CCLOUD_CONFIG | cut -d'=' -f2- )
 
 ENV_CONFIG=$DEST/env.delta
@@ -73,6 +73,6 @@ export SCHEMA_REGISTRY_URL=$SCHEMA_REGISTRY_URL
 export CLOUD_KEY=$CLOUD_KEY
 export CLOUD_SECRET=$CLOUD_SECRET
 export CONTROL_CENTER_LICENSE='$CONTROL_CENTER_LICENSE'
-export CCLOUD_USER='$CCLOUD_USER'
+export CCLOUD_EMAIL='$CCLOUD_EMAIL'
 export CCLOUD_PASSWORD='$CCLOUD_PASSWORD'
 EOF
