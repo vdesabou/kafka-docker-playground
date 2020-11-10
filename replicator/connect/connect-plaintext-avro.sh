@@ -39,5 +39,5 @@ curl -X PUT \
 
 sleep 30
 
-log "Verify we have received the data in all the products_ topics in US"
+log "Verify we have received the data in topic products_EUROPE in US"
 timeout 60 docker container exec -i connect-us bash -c "export CLASSPATH=/usr/share/java/monitoring-interceptors/monitoring-interceptors-${TAG_BASE}.jar; kafka-avro-console-consumer --bootstrap-server broker-us:9092 --topic products_EUROPE --from-beginning --max-messages 1 --property metadata.max.age.ms 30000 --consumer-property interceptor.classes=io.confluent.monitoring.clients.interceptor.MonitoringConsumerInterceptor --consumer-property confluent.monitoring.interceptor.bootstrap.servers=broker-metrics:9092 --property schema.registry.url=http://schema-registry-us:8081"
