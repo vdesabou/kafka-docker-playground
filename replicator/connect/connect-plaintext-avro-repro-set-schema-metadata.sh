@@ -11,7 +11,7 @@ docker container exec schema-registry-us \
 curl -X POST --silent http://localhost:8081/subjects/products-value/versions \
   --header 'Content-Type: application/vnd.schemaregistry.v1+json' \
   --data '{
-    "schema": "{\n  \"fields\": [\n    {\n      \"name\": \"name\",\n      \"type\": \"string\"\n    },\n    {\n      \"name\": \"price\",\n      \"type\": \"float\"\n    },\n    {\n      \"name\": \"quantity\",\n      \"type\": \"int\"\n, \"default\": 1    }\n  ],\n  \"name\": \"myrecord\",\n  \"type\": \"record\"\n}"
+    "schema": "{\n  \"fields\": [\n    {\n      \"name\": \"name\",\n      \"type\": \"string\"\n    },\n    {\n      \"name\": \"price\",\n      \"type\": \"float\"\n    },\n    {\n      \"name\": \"quantity\",\n      \"type\": \"int\"\n, \"default\": 1    }\n  ],\n  \"name\": \"myrecord\",\n  \"type\": \"record\"\n, \n \"namespace\": \"com.github.vdesabou\"}"
 }'
 
 log "Register a subject in US cluster with version 2 (default for quantity=2)"
@@ -19,14 +19,14 @@ docker container exec schema-registry-us \
 curl -X POST --silent http://localhost:8081/subjects/products-value/versions \
   --header 'Content-Type: application/vnd.schemaregistry.v1+json' \
   --data '{
-    "schema": "{\n  \"fields\": [\n    {\n      \"name\": \"name\",\n      \"type\": \"string\"\n    },\n    {\n      \"name\": \"price\",\n      \"type\": \"float\"\n    },\n    {\n      \"name\": \"quantity\",\n      \"type\": \"int\"\n, \"default\": 2    }\n  ],\n  \"name\": \"myrecord\",\n  \"type\": \"record\"\n}"
+    "schema": "{\n  \"fields\": [\n    {\n      \"name\": \"name\",\n      \"type\": \"string\"\n    },\n    {\n      \"name\": \"price\",\n      \"type\": \"float\"\n    },\n    {\n      \"name\": \"quantity\",\n      \"type\": \"int\"\n, \"default\": 2    }\n  ],\n  \"name\": \"myrecord\",\n  \"type\": \"record\"\n, \n \"namespace\": \"com.github.vdesabou\"}"
 }'
 
 log "Get subject products-value version in US"
 docker container exec schema-registry-us curl -X GET --silent http://localhost:8081/subjects/products-value/versions
 
 log "Sending products in Europe cluster  (default for quantity=3)"
-docker exec -i connect-europe bash -c "kafka-avro-console-producer --broker-list broker-europe:9092 --property schema.registry.url=http://schema-registry-europe:8081 --topic products --property value.schema='{\"type\":\"record\",\"name\":\"myrecord\",\"fields\":[{\"name\":\"name\",\"type\":\"string\"},
+docker exec -i connect-europe bash -c "kafka-avro-console-producer --broker-list broker-europe:9092 --property schema.registry.url=http://schema-registry-europe:8081 --topic products --property value.schema='{\"type\":\"record\",\"name\":\"myrecord\",\"namespace\": \"com.github.vdesabou\",\"fields\":[{\"name\":\"name\",\"type\":\"string\"},
 {\"name\":\"price\", \"type\": \"float\"}, {\"name\":\"quantity\", \"type\": \"int\", \"default\": 3}]}' "<< EOF
 {"name": "scissors", "price": 2.75, "quantity": 3}
 {"name": "tape", "price": 0.99, "quantity": 10}
@@ -54,7 +54,7 @@ curl -X PUT \
           "topic.whitelist": "products",
           "transforms": "SetSchemaMetadata",
           "transforms.SetSchemaMetadata.type": "org.apache.kafka.connect.transforms.SetSchemaMetadata$Value",
-          "transforms.SetSchemaMetadata.schema.name": "myrecord",
+          "transforms.SetSchemaMetadata.schema.name": "com.github.vdesabou.myrecord",
           "transforms.SetSchemaMetadata.schema.version": "1"
           }' \
      http://localhost:8083/connectors/replicate-europe-to-us/config | jq .
