@@ -54,43 +54,15 @@ curl -X PUT \
           "topic.whitelist": "products",
           "transforms": "SetSchemaMetadata",
           "transforms.SetSchemaMetadata.type": "org.apache.kafka.connect.transforms.SetSchemaMetadata$Value",
-          "transforms.SetSchemaMetadata.schema.name": "products-value",
+          "transforms.SetSchemaMetadata.schema.name": "myrecord",
           "transforms.SetSchemaMetadata.schema.version": "1"
           }' \
      http://localhost:8083/connectors/replicate-europe-to-us/config | jq .
 
-# org.apache.kafka.connect.errors.ConnectException: Tolerance exceeded in error handler
-#         at org.apache.kafka.connect.runtime.errors.RetryWithToleranceOperator.execAndHandleError(RetryWithToleranceOperator.java:196)
-#         at org.apache.kafka.connect.runtime.errors.RetryWithToleranceOperator.execute(RetryWithToleranceOperator.java:122)
-#         at org.apache.kafka.connect.runtime.WorkerSourceTask.convertTransformedRecord(WorkerSourceTask.java:314)
-#         at org.apache.kafka.connect.runtime.WorkerSourceTask.sendRecords(WorkerSourceTask.java:340)
-#         at org.apache.kafka.connect.runtime.WorkerSourceTask.execute(WorkerSourceTask.java:264)
-#         at org.apache.kafka.connect.runtime.WorkerTask.doRun(WorkerTask.java:185)
-#         at org.apache.kafka.connect.runtime.WorkerTask.run(WorkerTask.java:235)
-#         at java.base/java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:515)
-#         at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:264)
-#         at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1128)
-#         at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:628)
-#         at java.base/java.lang.Thread.run(Thread.java:834)
-# Caused by: org.apache.avro.SchemaParseException: Illegal character in: products-value
-#         at org.apache.avro.Schema.validateName(Schema.java:1530)
-#         at org.apache.avro.Schema.access$400(Schema.java:87)
-#         at org.apache.avro.Schema$Name.<init>(Schema.java:673)
-#         at org.apache.avro.Schema.createRecord(Schema.java:212)
-#         at io.confluent.connect.avro.AvroData.fromConnectSchema(AvroData.java:867)
-#         at io.confluent.connect.avro.AvroData.fromConnectSchema(AvroData.java:706)
-#         at io.confluent.connect.avro.AvroData.fromConnectSchema(AvroData.java:700)
-#         at io.confluent.connect.avro.AvroConverter.fromConnectData(AvroConverter.java:83)
-#         at org.apache.kafka.connect.storage.Converter.fromConnectData(Converter.java:63)
-#         at org.apache.kafka.connect.runtime.WorkerSourceTask.lambda$convertTransformedRecord$2(WorkerSourceTask.java:314)
-#         at org.apache.kafka.connect.runtime.errors.RetryWithToleranceOperator.execAndRetry(RetryWithToleranceOperator.java:146)
-#         at org.apache.kafka.connect.runtime.errors.RetryWithToleranceOperator.execAndHandleError(RetryWithToleranceOperator.java:180)
-#         ... 11 more
-
 sleep 60
 
 log "Verify we have received the data in topic products in US"
-timeout 60 docker container exec -i connect-us kafka-avro-console-consumer --bootstrap-server broker-us:9092 --topic products --from-beginning --max-messages 1 --property schema.registry.url=http://schema-registry-us:8081
+timeout 60 docker container exec connect-us kafka-avro-console-consumer --bootstrap-server broker-us:9092 --topic products --from-beginning --max-messages 1 --property schema.registry.url=http://schema-registry-us:8081
 
 log "Get subject products-value version in US"
 docker container exec schema-registry-us curl -X GET --silent http://localhost:8081/subjects/products-value/versions
