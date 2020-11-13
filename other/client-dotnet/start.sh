@@ -4,7 +4,7 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
-CORE_DOT_VERSION=${1:-2.2}
+CORE_DOT_VERSION=${1:-3.1}
 
 if [[ "$CORE_DOT_VERSION" = "3.1" ]]
 then

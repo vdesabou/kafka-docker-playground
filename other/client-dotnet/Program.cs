@@ -97,6 +97,7 @@ namespace CCloud
             consumerConfig.PartitionAssignmentStrategy = PartitionAssignmentStrategy.Range;
             consumerConfig.ClientId = "IntTests";
             consumerConfig.HeartbeatIntervalMs = 300;
+            consumerConfig.AllowAutoCreateTopics = true;
 
             CancellationTokenSource cts = new CancellationTokenSource();
             Console.CancelKeyPress += (_, e) => {
