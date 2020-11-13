@@ -84,3 +84,4 @@ ksqldb/materialized-view/confluent-hub-components
 config.cc.travis
 connect/connect-gcp-firebase-sink/myenv
 connect/connect-gcp-firebase-source/myenv
+connect/connect-snowflake-sink/myenv
