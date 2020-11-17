@@ -134,7 +134,7 @@ do
             echo "$connector_path|`date +%s`" > $file
             if [ -f "$file" ]
             then
-                #aws s3 cp "$file" "s3://kafka-docker-playground/travis/"
+                aws s3 cp "$file" "s3://kafka-docker-playground/travis/"
                 log "INFO: <$file> was uploaded to S3 bucket"
             else
                 logerror "ERROR: $file could not be created"
