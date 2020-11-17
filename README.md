@@ -34,12 +34,12 @@ Quick start examples from Confluent [docs](https://docs.confluent.io/current/con
 | <img src="./images/icons/kinesis.svg" width="15"> [Amazon Kinesis Source](connect/connect-aws-kinesis-source) | Message Queue  | 1.3.1 | Confluent Subscription | 2020-10-30 | ✅ 2020-11-17 
 | <img src="./images/icons/aws_redshift.png" width="15"> [Amazon Redshift Sink](connect/connect-aws-redshift-sink) | Data Warehouse  | 1.0.3 | Confluent Subscription | 2020-10-21 | ❌ 
 | <img src="./images/icons/aws_redshift.png" width="15"> [Amazon Redshift Source](connect/connect-jdbc-aws-redshift-source) (using JDBC) | Data Warehouse  | 10.0.0 | Confluent Community License | 2020-10-07 | ✅ 2020-11-17 
-| <img src="./images/icons/s3.png" width="15"> [Amazon S3 Sink](connect/connect-aws-s3-sink) | Datastore  | 5.5.2 | Confluent Community License | 2020-09-30 | ✅  
+| <img src="./images/icons/s3.png" width="15"> [Amazon S3 Sink](connect/connect-aws-s3-sink) | Datastore  | 5.5.2 | Confluent Community License | 2020-09-30 | ✅ 2020-11-17 
 | <img src="./images/icons/s3.png" width="15"> [Amazon S3 Source](connect/connect-aws-s3-source)  | Datastore  | 1.3.2 | Confluent Subscription | 2020-06-26 | ✅ 2020-11-17 
 | <img src="./images/icons/sqs.svg" width="15"> [Amazon SQS Source](connect/connect-aws-sqs-source)  | Message Queue  | 1.1.0 | Confluent Subscription | 2020-10-29 | ✅ 2020-11-17 
 | <img src="./images/icons/amps.png" width="15"> [AMPS Source](connect/connect-amps-source)  | Message Queue  | 1.0.0-preview | Confluent Subscription | 2020-07-08 | ✅ 2020-11-17 
-| <img src="./images/icons/kudu.png" width="15"> [Apache Kudu Source](connect/connect-kudu-source)  | Database  | 1.0.1 | Confluent Subscription | 2020-01-07 | ✅ 2020-11-05 
-| <img src="./images/icons/kudu.png" width="15"> [Apache Kudu Sink](connect/connect-kudu-sink)  | Database  | 1.0.1 | Confluent Subscription | 2020-01-07 | ✅ 2020-11-05 
+| <img src="./images/icons/kudu.png" width="15"> [Apache Kudu Source](connect/connect-kudu-source)  | Database  | 1.0.1 | Confluent Subscription | 2020-01-07 | ✅ 2020-11-17 
+| <img src="./images/icons/kudu.png" width="15"> [Apache Kudu Sink](connect/connect-kudu-sink)  | Database  | 1.0.1 | Confluent Subscription | 2020-01-07 | ✅ 2020-11-17 
 | <img src="./images/icons/lambda.svg" width="15"> [AWS Lambda Sink](connect/connect-aws-lambda-sink)  | SaaS Apps  | 1.0.5 | Confluent Subscription | 2020-11-02 | ✅ 2020-11-17 
 | <img src="./images/icons/blob_storage.png" width="15"> [Azure Blob Storage Sink](connect/connect-azure-blob-storage-sink)  | Datastore | 1.5.0 | Confluent Subscription | 2020-10-07 | ✅ 2020-11-17 
 | <img src="./images/icons/blob_storage.png" width="15"> [Azure Blob Storage Source](connect/connect-azure-blob-storage-source)  | Datastore | 1.3.2 | Confluent Subscription | 2020-06-26 | ✅ 2020-11-17 
@@ -49,7 +49,7 @@ Quick start examples from Confluent [docs](https://docs.confluent.io/current/con
 | <img src="./images/icons/azure_functions.png" width="15"> [Azure Functions Sink](connect/connect-azure-functions-sink) | SaaS Apps | 1.0.8 | Confluent Subscription | 2020-10-22 | ✅ 2020-11-17 
 | <img src="./images/icons/search.png" width="15"> [Azure Search Sink](connect/connect-azure-search-sink)  | Analytics | 1.0.3 | Confluent Subscription | 2020-10-08 | ✅ 2020-11-17 
 | <img src="./images/icons/service_bus.png" width="15"> [Azure Service Bus Source](connect/connect-azure-service-bus-source)  | Message Queue | 1.1.2 | Confluent Subscription | 2020-10-30 | ✅ 2020-11-17 
-| <img src="./images/icons/sql_data_warehouse.png" width="15"> [Azure SQL Data Warehouse Sink](connect/connect-azure-sql-data-warehouse-sink)  | Data Warehouse | 1.0.4 | Confluent Subscription | 2020-10-08 | ✅ 2020-11-05 
+| <img src="./images/icons/sql_data_warehouse.png" width="15"> [Azure SQL Data Warehouse Sink](connect/connect-azure-sql-data-warehouse-sink)  | Data Warehouse | 1.0.4 | Confluent Subscription | 2020-10-08 | ✅ 2020-11-17 
 | <img src="./images/icons/cassandra.png" width="15"> [Cassandra Sink](connect/connect-cassandra-sink)  | Database | 1.2.2 | Confluent Subscription | 2020-06-19 | ✅ 2020-11-17 
 | <img src="./images/icons/couchbase.svg" width="15"> [Couchbase Sink](connect/connect-couchbase-sink)  | Database | 3.4.8 | Open Source (Couchbase) | | ✅ 2020-11-17 
 | <img src="./images/icons/couchbase.svg" width="15"> [Couchbase Source](connect/connect-couchbase-source)  | Database | 3.4.8 | Open Source (Couchbase) | | ✅ 2020-11-17 
@@ -79,7 +79,7 @@ Quick start examples from Confluent [docs](https://docs.confluent.io/current/con
 | <img src="./images/icons/hdfs_2.svg" width="15"> [HDFS 3 Source](connect/connect-hdfs3-source) |  Datastore | 1.3.2 | Confluent Subscription | 2020-06-26 | ✅ 2020-11-17 
 | <img src="./images/icons/hdfs_2.svg" width="15"> [HDFS 2 Sink](connect/connect-hdfs2-sink) |  Datastore | 10.0.0 | Confluent Community License | 2020-11-05 | ✅ 2020-11-05 
 | <img src="./images/icons/hdfs_2.svg" width="15"> [HDFS 3 Sink](connect/connect-hdfs3-sink) |  Datastore | 1.0.6 | Confluent Subscription | 2020-11-03 | ✅ 2020-11-17 
-| <img src="./images/icons/http.png" width="15"> [HTTP Sink](connect/connect-http-sink) |  SaaS Apps | 1.0.16 | Confluent Subscription | 2020-08-03 | ✅ 2020-11-05 
+| <img src="./images/icons/http.png" width="15"> [HTTP Sink](connect/connect-http-sink) |  SaaS Apps | 1.0.16 | Confluent Subscription | 2020-08-03 | ✅ 2020-11-17 
 | <img src="./images/icons/ibm_mq.png" width="15"> [IBM MQ Sink](connect/connect-ibm-mq-sink) |  Message Queue | 1.3.0 | Confluent Subscription | 2020-09-15 | ✅ 2020-11-17 
 | <img src="./images/icons/ibm_mq.png" width="15"> [IBM MQ Source](connect/connect-ibm-mq-source) |  Message Queue | 10.0.0 | Confluent Subscription | 2020-10-24 | ✅ 2020-10-22 
 | <img src="./images/icons/influxdb.svg" width="15"> [InfluxDB Sink](connect/connect-influxdb-sink) |  Database | 1.2.1 | Confluent Subscription | 2020-09-30 | ✅ 2020-11-17 
@@ -103,7 +103,7 @@ Quick start examples from Confluent [docs](https://docs.confluent.io/current/con
 | <img src="./images/icons/tibco_ems.png" width="15"> [JMS TIBCO EMS Source](connect/connect-jms-tibco-source) |  Message Queue | 10.0.0 | Confluent Subscription | 2020-10-24 | ✅ 2020-10-22 
 | <img src="./images/icons/mapr.png" height="15"> [Mapr Sink](connect/connect-mapr-sink) |  Datastore | 1.1.1 | Confluent Subscription | 2020-02-10 | ❌ 
 | <img src="./images/icons/marketo.png" height="15"> [Marketo Source](connect/connect-marketo-source) |  SaaS Apps | 1.0.0-preview | Confluent Subscription | 2020-10-20 | ✅  
-| <img src="./images/icons/minio.png" height="15"> [Minio Sink](connect/connect-minio-s3-sink) |  Datastore | 5.5.2 | Confluent Community License | 2020-09-30 | ✅  
+| <img src="./images/icons/minio.png" height="15"> [Minio Sink](connect/connect-minio-s3-sink) |  Datastore | 5.5.2 | Confluent Community License | 2020-09-30 | ✅ 2020-11-17 
 | <img src="./images/icons/mongodb.jpg" width="15"> [MongoDB Sink](connect/connect-mongodb-sink) |  Database | 1.2.0 | Open Source (MongoDB) | 2020-07-08 | ✅ 2020-11-17 
 | <img src="./images/icons/mongodb.jpg" width="15"> [MongoDB Source](connect/connect-mongodb-source) |  Database | 1.2.0 | Open Source (MongoDB) | 2020-07-08 | ✅ 2020-11-17 
 | <img src="./images/icons/mqtt.png" width="15"> [MQTT Sink](connect/connect-mqtt-sink) |  IoT | 1.4.0 | Confluent Subscription | 2020-10-29 | ✅ 2020-11-17 
