@@ -117,6 +117,8 @@ curl -X PUT \
                "snowflake.private.key.passphrase": "confluent",
                "snowflake.database.name":"PLAYGROUND_DB",
                "snowflake.schema.name":"PUBLIC",
+               "buffer.count.records": "3",
+               "buffer.flush.time" : "10",
                "key.converter":"org.apache.kafka.connect.storage.StringConverter",
                "value.converter": "io.confluent.connect.avro.AvroConverter",
                "value.converter.schema.registry.url": "http://schema-registry:8081"
@@ -124,7 +126,7 @@ curl -X PUT \
      http://localhost:8083/connectors/snowflake-sink/config | jq .
 
 
-sleep 30
+sleep 60
 
 log "Confirm that the messages were delivered to the Snowflake table (logged as PLAYGROUND_USER user)"
 docker run --rm -i -v $PWD/snowflake_key.p8:/tmp/rsa_key.p8 -e SNOWSQL_PRIVATE_KEY_PASSPHRASE=confluent kurron/snowsql --username PLAYGROUND_USER -a $SNOWFLAKE_ACCOUNT_NAME --private-key-path /tmp/rsa_key.p8 << EOF
