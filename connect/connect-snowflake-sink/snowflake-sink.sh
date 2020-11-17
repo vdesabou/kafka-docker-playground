@@ -62,7 +62,7 @@ EOF
 
 log "Create a Snowflake WAREHOUSE (for admin purpose as KafkaConnect is Serverless)"
 docker run --rm -i -e SNOWSQL_PWD="$SNOWFLAKE_PASSWORD" -e RSA_PUBLIC_KEY="$RSA_PUBLIC_KEY" kurron/snowsql --username $SNOWFLAKE_USERNAME -a $SNOWFLAKE_ACCOUNT_NAME << EOF
-USE ROLE ACCOUNTADMIN;
+USE ROLE SYSADMIN;
 CREATE OR REPLACE WAREHOUSE PLAYGROUND_WAREHOUSE
   WAREHOUSE_SIZE = 'XSMALL'
   WAREHOUSE_TYPE = 'STANDARD'
@@ -78,7 +78,7 @@ EOF
 
 log "Create a Snowflake USER"
 docker run --rm -i -e SNOWSQL_PWD="$SNOWFLAKE_PASSWORD" -e RSA_PUBLIC_KEY="$RSA_PUBLIC_KEY" kurron/snowsql --username $SNOWFLAKE_USERNAME -a $SNOWFLAKE_ACCOUNT_NAME << EOF
-USE ROLE ACCOUNTADMIN;
+USE ROLE USERADMIN;
 DROP USER IF EXISTS PLAYGROUND_USER;
 CREATE USER PLAYGROUND_USER
  PASSWORD = 'Password123!'
@@ -89,6 +89,7 @@ CREATE USER PLAYGROUND_USER
  DEFAULT_NAMESPACE = PLAYGROUND_DB
  MUST_CHANGE_PASSWORD = FALSE
  RSA_PUBLIC_KEY="$RSA_PUBLIC_KEY";
+USE ROLE SECURITYADMIN;
 GRANT ROLE PLAYGROUND_CONNECTOR_ROLE TO USER PLAYGROUND_USER;
 EOF
 
@@ -117,14 +118,13 @@ curl -X PUT \
                "snowflake.database.name":"PLAYGROUND_DB",
                "snowflake.schema.name":"PUBLIC",
                "key.converter":"org.apache.kafka.connect.storage.StringConverter",
-               "value.converter": "com.snowflake.kafka.connector.records.SnowflakeAvroConverter",
+               "value.converter": "io.confluent.connect.avro.AvroConverter",
                "value.converter.schema.registry.url": "http://schema-registry:8081"
           }' \
      http://localhost:8083/connectors/snowflake-sink/config | jq .
 
 
-sleep 5
-
+sleep 30
 
 log "Confirm that the messages were delivered to the Snowflake table (logged as PLAYGROUND_USER user)"
 docker run --rm -i -v $PWD/snowflake_key.p8:/tmp/rsa_key.p8 -e SNOWSQL_PRIVATE_KEY_PASSPHRASE=confluent kurron/snowsql --username PLAYGROUND_USER -a $SNOWFLAKE_ACCOUNT_NAME --private-key-path /tmp/rsa_key.p8 << EOF
