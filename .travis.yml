@@ -55,10 +55,10 @@ jobs:
     env: TEST_LIST="connect/connect-snowflake-sink connect/connect-splunk-sink connect/connect-splunk-source connect/connect-spool-dir-source
       connect/connect-syslog-source other/connect-override-policy-sftp-sink other/connect-override-policy-sftp-source"
       TAG="6.0.0"
-  - name: '6.0.0: CONNECT: marketo-source active-mq-sink active-mq-source cassandra-sink couchbase-sink
+  - name: '6.0.0: CONNECT: minio-s3-sink marketo-source active-mq-sink active-mq-source cassandra-sink couchbase-sink
       couchbase-source'
     env:
-    - TEST_LIST="connect/connect-marketo-source connect/connect-active-mq-sink connect/connect-active-mq-source connect/connect-cassandra-sink
+    - TEST_LIST="connect/connect-minio-s3-sink connect/connect-marketo-source connect/connect-active-mq-sink connect/connect-active-mq-source connect/connect-cassandra-sink
       connect/connect-couchbase-sink connect/connect-couchbase-source connect/connect-hbase-sink"
       TAG="6.0.0"
   - name: '6.0.0: CONNECT: jms-tibco-sink jms-tibco-source debezium-mongodb-source
