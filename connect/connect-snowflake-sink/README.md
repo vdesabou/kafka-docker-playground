@@ -119,6 +119,8 @@ $ curl -X PUT \
                "snowflake.private.key.passphrase": "confluent",
                "snowflake.database.name":"PLAYGROUND_DB",
                "snowflake.schema.name":"PUBLIC",
+               "buffer.count.records": "3",
+               "buffer.flush.time" : "10",
                "key.converter":"org.apache.kafka.connect.storage.StringConverter",
                "value.converter": "io.confluent.connect.avro.AvroConverter",
                "value.converter.schema.registry.url": "http://schema-registry:8081"
