@@ -41,9 +41,9 @@ do
 
         if [ -f ${GIF_DIR}/asciinema.gif ]
         then
-            logwarn "####################################################"
-            logwarn "asciinema.gif already exists, skipping dir $dir"
-            logwarn "####################################################"
+            # logwarn "####################################################"
+            # logwarn "asciinema.gif already exists, skipping dir $dir"
+            # logwarn "####################################################"
             continue
         fi
 
@@ -51,9 +51,9 @@ do
         grep "$script" ${DIR}/tests-ignored.txt > /dev/null
         if [ $? = 0 ]
         then
-            logwarn "####################################################"
-            logwarn "skipping $script in dir $dir"
-            logwarn "####################################################"
+            # logwarn "####################################################"
+            # logwarn "skipping $script in dir $dir"
+            # logwarn "####################################################"
             continue
         fi
 
@@ -75,7 +75,7 @@ do
         echo "####################################################"  >> $OUT_FILE
         echo "# $dir "  >> $OUT_FILE
         echo "####################################################"  >> $OUT_FILE
-        echo "cd $dir;clear"  >> $OUT_FILE
+        echo "cd /Users/vsaboulin/Documents/github/kafka-docker-playground/$dir;clear"  >> $OUT_FILE
         echo "asciinema rec $TMP_DIR/$dir/asciinema.cast --overwrite" >> $OUT_FILE
         echo "./$script"  >> $OUT_FILE
         echo 'exit'  >> $OUT_FILE
