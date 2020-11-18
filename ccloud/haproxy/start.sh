@@ -240,6 +240,10 @@ if [ ! -z "$PKAC_ENDPOINT" ]
 then
     log "Verifying we can connect to pkac endpoint using HAProxy (HTTP 404 Not Found) is expected"
     docker exec -i -e PKAC_ENDPOINT=$PKAC_ENDPOINT -e CLOUD_KEY=$CLOUD_KEY -e CLOUD_SECRET=$CLOUD_SECRET client bash -c 'curl --max-time 2 -u $CLOUD_KEY:$CLOUD_SECRET https://$PKAC_ENDPOINT/subjects'
+
+    log "Verifying we can connect to $PKAC_ENDPOINT using openssl"
+    # to get a tcpdump, run on client the following: tcpdump -w tcpdump.pcap -i eth0 -s 0 port 9092
+    docker exec -i -e PKAC_ENDPOINT=$PKAC_ENDPOINT client bash -c 'echo QUIT | openssl s_client -connect $PKAC_ENDPOINT:443'
 fi
 
 log "Verifying we can use Confluent Cloud Schema Registry using HAProxy"
