@@ -48,13 +48,13 @@ docker exec connect \
     -H 'cache-control: no-cache' \
     -d '{ "action":"createOrUpdate", "lookupField":"email", "input":[ { "lastName":"john", "firstName":"doe", "middleName":null, "email":"john.doe@email.com" } ]}'
 
-# since last minute
+# since last hour
 
 if [[ "$OSTYPE" == "darwin"* ]]
 then
-     SINCE=$(date -v-1M  +%Y-%m-%dT%H:%M:%SZ)
+     SINCE=$(date -v-1H  +%Y-%m-%dT%H:%M:%SZ)
 else
-     SINCE=$(date -d '1 minute ago'  +%Y-%m-%dT%H:%M:%SZ)
+     SINCE=$(date -d '1 hour ago'  +%Y-%m-%dT%H:%M:%SZ)
 fi
 
 log "Creating Marketo Source connector"
