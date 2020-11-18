@@ -22,6 +22,6 @@ services:
       - schema-registry
       - oracle
     volumes:
-        - ../../connect/connect-cdc-oracle12-source/confluentinc-kafka-connect-oracle-cdc-0.1.2-rc-3d761ad-preview:/usr/share/confluent-hub-components/confluentinc-kafka-connect-oracle-cdc-0.1.2-rc-3d761ad-preview
+        - ../../connect/connect-cdc-oracle12-source/confluentinc-kafka-connect-oracle-cdc-0.1.2-rc-6e1027a-preview:/usr/share/confluent-hub-components/confluentinc-kafka-connect-oracle-cdc-0.1.2-rc-6e1027a-preview
     environment:
-      CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-oracle-cdc-0.1.2-rc-3d761ad-preview
+      CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-oracle-cdc-0.1.2-rc-6e1027a-preview
