@@ -64,8 +64,8 @@ $ docker exec connect \
 Creating Marketo Source connector
 
 ```bash
-# since last minute
-$ SINCE=$(date -v-1M  +%Y-%m-%dT%H:%M:%SZ)
+# since last hour
+$ SINCE=$(date -v-1H  +%Y-%m-%dT%H:%M:%SZ)
 $ curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
