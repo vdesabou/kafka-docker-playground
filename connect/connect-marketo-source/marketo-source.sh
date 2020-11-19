@@ -40,13 +40,15 @@ ACCESS_TOKEN=$(docker exec connect \
     "${MARKETO_ENDPOINT_URL}/identity/oauth/token?grant_type=client_credentials&client_id=$MARKETO_CLIENT_ID&client_secret=$MARKETO_CLIENT_SECRET" | jq -r .access_token)
 
 log "Create one lead to Marketo"
+LEAD_FIRSTNAME=John_$RANDOM
+LEAD_LASTNAME=Doe_$RANDOM
 docker exec connect \
    curl -X POST \
     "${MARKETO_ENDPOINT_URL}/rest/v1/leads.json?access_token=$ACCESS_TOKEN" \
     -H 'Accept: application/json' \
     -H 'Content-Type: application/json' \
     -H 'cache-control: no-cache' \
-    -d '{ "action":"createOrUpdate", "lookupField":"email", "input":[ { "lastName":"john", "firstName":"doe", "middleName":null, "email":"john.doe@email.com" } ]}'
+    -d "{ \"action\":\"createOrUpdate\", \"lookupField\":\"email\", \"input\":[ { \"lastName\":\"$LEAD_LASTNAME\", \"firstName\":\"$LEAD_FIRSTNAME\", \"middleName\":null, \"email\":\"$LEAD_FIRSTNAME.$LEAD_LASTNAME@email.com\" } ]}"
 
 # since last hour
 
@@ -79,8 +81,8 @@ curl -X PUT \
           }' \
      http://localhost:8083/connectors/marketo-source/config | jq .
 
-log "Sleeping 5 minutes (leads are pulled with a delay of 5 minutes between consecutive pulls)"
-sleep 300
+log "Sleeping 6 minutes (leads are pulled with a delay of 5 minutes between consecutive pulls)"
+sleep 360
 
 log "Verify we have received the data in marketo_leads topic"
 timeout 60 docker exec connect kafka-console-consumer -bootstrap-server broker:9092 --topic marketo_leads --from-beginning --max-messages 1
