@@ -61,6 +61,11 @@ curl -X PUT \
 
 sleep 60
 
+# [2020-11-20 08:18:32,941] TRACE Applying transformation org.apache.kafka.connect.transforms.SetSchemaMetadata$Value to SourceRecord{sourcePartition={topic=products, partition=0}, sourceOffset={offset=0}} ConnectRecord{topic='products', kafkaPartition=0, key=null, keySchema=Schema{BYTES}, value=Struct{name=scissors,price=2.75,quantity=3}, valueSchema=Schema{com.github.vdesabou.myrecord:STRUCT}, timestamp=1605860307210, headers=ConnectHeaders(headers=[ConnectHeader(key=__replicator_id, value=[B@409efb1f, schema=Schema{BYTES})])} (org.apache.kafka.connect.runtime.TransformationChain)
+# [2020-11-20 08:18:32,943] TRACE Applying SetSchemaMetadata SMT. Original schema: Schema{com.github.vdesabou.myrecord:STRUCT}, updated schema: Schema{com.github.vdesabou.myrecord:STRUCT} (org.apache.kafka.connect.transforms.SetSchemaMetadata)
+# [2020-11-20 08:18:32,959] DEBUG Sending POST with input {"schema":"{\"type\":\"record\",\"name\":\"myrecord\",\"namespace\":\"com.github.vdesabou\",\"fields\":[{\"name\":\"name\",\"type\":\"string\"},{\"name\":\"price\",\"type\":\"float\"},{\"name\":\"quantity\",\"type\":\"int\",\"default\":3}]}"} to http://schema-registry-us:8081/subjects/products-value/versions (io.confluent.kafka.schemaregistry.client.rest.RestService)
+# [2020-11-20 08:18:32,987] TRACE WorkerSourceTask{id=replicate-europe-to-us-0} Appending record with key null, value Struct{name=scissors,price=2.75,quantity=3} (org.apache.kafka.connect.runtime.WorkerSourceTask)
+
 log "Verify we have received the data in topic products in US"
 timeout 60 docker container exec connect-us kafka-avro-console-consumer --bootstrap-server broker-us:9092 --topic products --from-beginning --max-messages 1 --property schema.registry.url=http://schema-registry-us:8081
 
