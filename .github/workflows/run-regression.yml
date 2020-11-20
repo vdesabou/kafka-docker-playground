@@ -22,7 +22,7 @@ jobs:
 
       - name: Set ENV variables
         run: |
-          echo "::set-env name=TRAVIS_JOB_NUMBER::${TRAVIS_JOB_NUMBER:-$(echo "${{ github.event_name }})}"
+          echo "::set-env name=TRAVIS_JOB_NUMBER::$(echo "${{ github.event_name }}")"
 
       - name: Print Travis ENV vars
         run: |
