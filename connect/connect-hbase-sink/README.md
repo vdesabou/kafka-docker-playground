@@ -54,7 +54,7 @@ $ curl -X PUT \
 Verify data is in HBase:
 
 ```
-$ docker exec -it hbase /bin/bash entrypoint.sh
+$ docker exec -i hbase /bin/bash entrypoint.sh
 ```
 
 Then type `scan 'example_table'`

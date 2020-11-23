@@ -20,11 +20,11 @@ cat >> orders.txt << EOF
 3:{"order_id":3,"order_ts":1534772742276,"total_amount":21.00,"customer_name":"Emma Turner"}
 EOF
 
-docker exec -it kafkacat kafkacat -P -b broker:9092 -t orders -K: -T  -l /data/orders.txt
+docker exec -i kafkacat kafkacat -P -b broker:9092 -t orders -K: -T  -l /data/orders.txt
 rm orders.txt
 
 log "Consumer Mode"
-docker exec -it kafkacat kafkacat -C -b broker:9092 -t orders -K: -f '\nKey (%K bytes): %k\t\nValue (%S bytes): %s\n\Partition: %p\tOffset: %o\n--\n' -c 3
+docker exec -i kafkacat kafkacat -C -b broker:9092 -t orders -K: -f '\nKey (%K bytes): %k\t\nValue (%S bytes): %s\n\Partition: %p\tOffset: %o\n--\n' -c 3
 
 
 log "Producer mode input"
@@ -36,4 +36,4 @@ docker exec -i kafkacat kafkacat -P -b broker:9092 -t orders -K: -T << EOF
 EOF
 
 log "Query Mode"
-docker exec -it kafkacat kafkacat -Q -b broker:9092 -t orders:0:-1
+docker exec -i kafkacat kafkacat -Q -b broker:9092 -t orders:0:-1

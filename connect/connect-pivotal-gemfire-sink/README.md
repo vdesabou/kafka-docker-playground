@@ -28,19 +28,19 @@ Pulse UI is reachable at [http://127.0.0.1:7070](http://127.0.0.1:7070]) (`admin
 Starting up locator
 
 ```bash
-docker exec -it pivotal-gemfire sh /opt/pivotal/workdir/startLocator.sh
+docker exec -i pivotal-gemfire sh /opt/pivotal/workdir/startLocator.sh
 ```
 
 Starting up server1
 
 ```bash
-docker exec -it pivotal-gemfire sh /opt/pivotal/workdir/startServer1.sh
+docker exec -i pivotal-gemfire sh /opt/pivotal/workdir/startServer1.sh
 ```
 
 Starting up server2
 
 ```bash
-docker exec -it pivotal-gemfire sh /opt/pivotal/workdir/startServer2.sh
+docker exec -i pivotal-gemfire sh /opt/pivotal/workdir/startServer2.sh
 ```
 
 Sending messages to topic `input_topic`

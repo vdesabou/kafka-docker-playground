@@ -22,7 +22,7 @@ create_topic dbserver1.inventory.customers
 set -e
 
 log "Initialize MongoDB replica set"
-docker exec -it mongodb mongo --eval 'rs.initiate({_id: "debezium", members:[{_id: 0, host: "mongodb:27017"}]})'
+docker exec -i mongodb mongo --eval 'rs.initiate({_id: "debezium", members:[{_id: 0, host: "mongodb:27017"}]})'
 
 sleep 5
 

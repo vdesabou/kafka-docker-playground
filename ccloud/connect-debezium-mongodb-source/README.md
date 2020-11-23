@@ -47,7 +47,7 @@ Note: topic `dbserver1.inventory.customers`must be created manually as `auto.cre
 Initialize MongoDB replica set
 
 ```bash
-$ docker exec -it mongodb mongo --eval 'rs.initiate({_id: "debezium", members:[{_id: 0, host: "mongodb:27017"}]})'
+$ docker exec -i mongodb mongo --eval 'rs.initiate({_id: "debezium", members:[{_id: 0, host: "mongodb:27017"}]})'
 ```
 
 Note: `mongodb:27017`is important here
