@@ -6,7 +6,7 @@ source ${DIR}/../../scripts/utils.sh
 
 ${DIR}/../../environment/sasl-plain/start.sh "${PWD}/docker-compose.sasl-plain.yml"
 
-docker exec -t sftp-server bash -c "
+docker exec sftp-server bash -c "
 mkdir -p /chroot/home/foo/upload/input
 mkdir -p /chroot/home/foo/upload/error
 mkdir -p /chroot/home/foo/upload/finished
