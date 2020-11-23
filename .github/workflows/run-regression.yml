@@ -66,15 +66,13 @@ jobs:
                       "connect/connect-gcp-pubsub-source connect/connect-gcp-gcs-sink
       connect/connect-gcp-gcs-source connect/connect-gcp-bigtable-sink",
                       "connect/connect-azure-data-lake-storage-gen1-sink connect/connect-azure-data-lake-storage-gen2-sink
-      connect/connect-azure-event-hubs-source",
-                      "connect/connect-azure-search-sink connect/connect-ftps-source connect/connect-ftps-sink connect/connect-rabbitmq-sink connect/connect-amps-source connect/connect-jira-source connect/connect-github-source connect/connect-pivotal-gemfire-sink",
-                      "connect/connect-azure-functions-sink",
+      connect/connect-azure-event-hubs-source connect/connect-azure-search-sink connect/connect-azure-functions-sink connect/connect-azure-service-bus-source connect/connect-azure-blob-storage-sink
+      connect/connect-azure-blob-storage-source connect/connect-azure-sql-data-warehouse-sink",
+                      "connect/connect-ftps-source connect/connect-ftps-sink connect/connect-rabbitmq-sink connect/connect-amps-source connect/connect-jira-source connect/connect-github-source connect/connect-pivotal-gemfire-sink",
                       "connect/connect-http-sink",
                       "connect/connect-kudu-source connect/connect-kudu-sink",
                       "replicator/connect",
-                      "replicator/mirrormaker2 ksqldb/materialized-view connect/connect-pagerduty-sink connect/connect-zendesk-source connect/connect-datadog-metrics-sink connect/connect-gcp-spanner-sink connect/connect-gcp-firebase-source connect/connect-gcp-firebase-sink",
-                      "connect/connect-azure-service-bus-source connect/connect-azure-blob-storage-sink
-      connect/connect-azure-blob-storage-source connect/connect-azure-sql-data-warehouse-sink"
+                      "replicator/mirrormaker2 ksqldb/materialized-view connect/connect-pagerduty-sink connect/connect-zendesk-source connect/connect-datadog-metrics-sink connect/connect-gcp-spanner-sink connect/connect-gcp-firebase-source connect/connect-gcp-firebase-sink"
                     ]
     steps:
       - uses: actions/checkout@v2
