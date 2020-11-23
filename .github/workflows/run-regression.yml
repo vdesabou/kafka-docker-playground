@@ -75,7 +75,7 @@ jobs:
 
       - name: Update README
         run: |
-          ./scripts/get-versions.sh "6.0.0"
+          ./scripts/get-versions.sh "${{ matrix.tag }}"
       - name: push
         uses: github-actions-x/commit@v2.6
         with:
