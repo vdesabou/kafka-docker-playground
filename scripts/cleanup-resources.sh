@@ -40,9 +40,9 @@ for group in $(az group list --query [].name --output tsv)
 do
   if [[ $group = playgroundtravis* ]]
   then
-    if [ ! -z "$TRAVIS_JOB_NUMBER" ]
+    if [ ! -z "$GITHUB_RUN_ID" ]
     then
-      job=$(echo $TRAVIS_JOB_NUMBER | cut -d "." -f 1)
+      job=$(echo $GITHUB_RUN_ID | cut -d "." -f 1)
       if [[ $group = playgroundtravis$job* ]]
       then
         log "Skipping current github actions $job"
