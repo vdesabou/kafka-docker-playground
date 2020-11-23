@@ -10,7 +10,7 @@ on: repository_dispatch
 jobs:
   build:
     runs-on: ubuntu-latest
-    name: Testing with ${{ matrix.tag }} ${{ matrix.test_list }}
+    name: ${{ matrix.tag }} ${{ matrix.test_list }}
     strategy:
       matrix:
         tag: [ "6.0.0"]
@@ -28,8 +28,48 @@ jobs:
         with:
           java-version: 1.8
 
-      - name: Decrypt secrets.tgz
-        run: ./.github/scripts/decrypt_secret.sh
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: eu-west-3
+
+      - name: Decrypt secrets.tar
+        run: |
+          ./.github/scripts/decrypt_secret.sh
+          tar xvf secrets.tar
+          mkdir -p $HOME/.ccloud
+          cp config.cc.travis $HOME/.ccloud/config
+          aws s3 cp s3://kafka-docker-playground/3rdparty/3rdparty.tgz .
+          tar xvfz 3rdparty.tgz
+          cp ./3rdparty/TIB_ems-ce_8.5.1_linux_x86_64.zip ./connect/connect-tibco-source/docker-tibco/TIB_ems-ce_8.5.1_linux_x86_64.zip
+          cp ./3rdparty/TIB_ems-ce_8.5.1_linux_x86_64.zip ./connect/connect-jms-tibco-sink/docker-tibco/TIB_ems-ce_8.5.1_linux_x86_64.zip
+          cp ./3rdparty/TIB_ems-ce_8.5.1_linux_x86_64.zip ./connect/connect-tibco-sink/docker-tibco/TIB_ems-ce_8.5.1_linux_x86_64.zip
+          cp ./3rdparty/TIB_ems-ce_8.5.1_linux_x86_64.zip ./connect/connect-jms-tibco-source/docker-tibco/TIB_ems-ce_8.5.1_linux_x86_64.zip
+          cp ./3rdparty/ojdbc6.jar ./connect/connect-jdbc-oracle11-sink/ojdbc6.jar
+          cp ./3rdparty/ojdbc6.jar ./connect/connect-jdbc-oracle11-source/ojdbc6.jar
+          cp ./3rdparty/ojdbc8.jar ./connect/connect-jdbc-oracle12-sink/ojdbc8.jar
+          cp ./3rdparty/ojdbc8.jar ./connect/connect-jdbc-oracle12-source/ojdbc8.jar
+          cp ./3rdparty/ImpalaJDBC42.jar ./connect/connect-kudu-source/ImpalaJDBC42.jar
+          cp ./3rdparty/ImpalaJDBC42.jar ./connect/connect-kudu-sink/ImpalaJDBC42.jar
+          cp ./3rdparty/jms.jar ./connect/connect-ibm-mq-sink/jms.jar
+          cp ./3rdparty/jms.jar ./connect/connect-ibm-mq-source/jms.jar
+          cp ./3rdparty/com.ibm.mq.allclient.jar ./connect/connect-ibm-mq-sink/com.ibm.mq.allclient.jar
+          cp ./3rdparty/com.ibm.mq.allclient.jar ./connect/connect-ibm-mq-source/com.ibm.mq.allclient.jar
+          cp ./3rdparty/mysql-connector-java-5.1.45.jar ./ccloud/ccloud-demo/mysql-connector-java-5.1.45.jar
+          cp ./3rdparty/mysql-connector-java-5.1.45.jar ./connect/connect-debezium-mysql-source/mysql-connector-java-5.1.45.jar
+          cp ./3rdparty/mysql-connector-java-5.1.45.jar ./connect/connect-jdbc-mysql-sink/mysql-connector-java-5.1.45.jar
+          cp ./3rdparty/mysql-connector-java-5.1.45.jar ./connect/connect-jdbc-mysql-source/mysql-connector-java-5.1.45.jar
+          cp ./3rdparty/RedshiftJDBC4-1.2.20.1043.jar ./connect/connect-aws-redshift-sink/RedshiftJDBC4-1.2.20.1043.jar
+          cp ./3rdparty/activemq-all-5.15.4.jar ./connect/connect-jms-active-mq-sink/activemq-all-5.15.4.jar
+          cp ./3rdparty/commons-lang-2.6.jar ./connect/connect-jms-solace-sink/commons-lang-2.6.jar
+          cp ./3rdparty/sol-jms-10.6.4.jar ./connect/connect-jms-solace-sink/sol-jms-10.6.4.jar
+          cp ./3rdparty/sol-jms-10.6.4.jar ./connect/connect-solace-sink/sol-jms-10.6.4.jar
+          cp ./3rdparty/sol-jms-10.6.4.jar ./connect/connect-solace-source/sol-jms-10.6.4.jar
+          cp ./3rdparty/AMPS.tar.gz ./connect/connect-amps-source/docker-amps/AMPS.tar.gz
+          cp ./3rdparty/pivotal-gemfire.tgz ./connect/connect-pivotal-gemfire-sink/docker-pivotal-gemfire/pivotal-gemfire.tgz
+          echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
         env:
           SECRETS_ENCRYPTION_PASSWORD: ${{ secrets.SECRETS_ENCRYPTION_PASSWORD }}
 
