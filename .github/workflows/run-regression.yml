@@ -14,7 +14,10 @@ jobs:
     strategy:
       matrix:
         tag: [ "6.0.0"]
-        test_list : [ "connect/connect-salesforce-bulkapi-sink connect/connect-salesforce-bulkapi-source" ]
+        test_list : [
+                      "connect/connect-salesforce-bulkapi-sink connect/connect-salesforce-bulkapi-source",
+                      "connect/connect-salesforce-bulkapi-sink connect/connect-salesforce-bulkapi-source"
+                    ]
     env:
       TRAVIS_JOB_NUMBER: ${{ github.event.number }}
     steps:
@@ -24,6 +27,9 @@ jobs:
         uses: actions/setup-java@v1
         with:
           java-version: 1.8
+
+      - name: Preparation Steps
+        run: gpg --quiet --batch --yes --decrypt --passphrase="$SECRETS_ENCRYPTION_PASSWORD" --output secrets.tgz secrets.tar.gpg
 
       - name: Build and Test
         run: bash scripts/run-tests.sh "${{ matrix.test_list }}" "${{ matrix.tag }}"
