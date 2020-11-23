@@ -1,11 +1,12 @@
 name: Run Regression Tests
 
 # on:
-  # push:
+#   push:
 
-  # schedule:
-  #   - cron: '0 0 * * 0' # weekly
-on: repository_dispatch
+#   schedule:
+#   #   - cron: '0 0 * * 0' # weekly
+on:
+  workflow_dispatch:
 
 jobs:
   build:
@@ -137,3 +138,31 @@ jobs:
           SECURITY_TOKEN_ACCOUNT2: ${{ secrets.SECURITY_TOKEN_ACCOUNT2 }}
           CONSUMER_KEY_ACCOUNT2: ${{ secrets.CONSUMER_KEY_ACCOUNT2 }}
           CONSUMER_PASSWORD_ACCOUNT2: ${{ secrets.CONSUMER_PASSWORD_ACCOUNT2 }}
+          AWS_BUCKET_NAME: ${{ secrets.AWS_BUCKET_NAME }}
+          AZ_PASS: ${{ secrets.AZ_PASS }}
+          AZ_USER: ${{ secrets.AZ_USER }}
+          CCLOUD_EMAIL: ${{ secrets.CCLOUD_EMAIL }}
+          CCLOUD_PASSWORD: ${{ secrets.CCLOUD_PASSWORD }}
+          CLUSTER_LKC: ${{ secrets.CLUSTER_LKC }}
+          DD_API_KEY: ${{ secrets.DD_API_KEY }}
+          DD_APP_KEY: ${{ secrets.DD_APP_KEY }}
+          DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
+          ENVIRONMENT: ${{ secrets.ENVIRONMENT }}
+          FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
+          GCS_BUCKET_NAME: ${{ secrets.GCS_BUCKET_NAME }}
+          GITHUB_ACCESS_TOKEN: ${{ secrets.THE_GITHUB_ACCESS_TOKEN }}
+          JIRA_URL: ${{ secrets.JIRA_URL }}
+          JIRA_USERNAME: ${{ secrets.JIRA_USERNAME }}
+          JIRA_API_TOKEN: ${{ secrets.JIRA_API_TOKEN }}
+          MARKETO_CLIENT_ID: ${{ secrets.MARKETO_CLIENT_ID }}
+          MARKETO_ENDPOINT_URL: ${{ secrets.MARKETO_ENDPOINT_URL }}
+          MARKETO_CLIENT_SECRET: ${{ secrets.MARKETO_CLIENT_SECRET }}
+          PAGERDUTY_SERVICE_ID: ${{ secrets.PAGERDUTY_SERVICE_ID }}
+          PAGERDUTY_API_KEY: ${{ secrets.PAGERDUTY_API_KEY }}
+          PAGERDUTY_USER_EMAIL: ${{ secrets.PAGERDUTY_USER_EMAIL }}
+          SNOWFLAKE_ACCOUNT_NAME: ${{ secrets.SNOWFLAKE_ACCOUNT_NAME }}
+          SNOWFLAKE_USERNAME: ${{ secrets.SNOWFLAKE_USERNAME }}
+          SNOWFLAKE_PASSWORD: ${{ secrets.SNOWFLAKE_PASSWORD }}
+          ZENDESK_URL: ${{ secrets.ZENDESK_URL }}
+          ZENDESK_USERNAME: ${{ secrets.ZENDESK_USERNAME }}
+          ZENDESK_PASSWORD: ${{ secrets.ZENDESK_PASSWORD }}
