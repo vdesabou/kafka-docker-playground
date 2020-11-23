@@ -14,7 +14,7 @@ skipped_tests=""
 test_list="$1"
 if [ "$1" = "ALL" ]
 then
-    test_list=$(grep "env: TEST_LIST" ${DIR}/../.travis.yml | cut -d '"' -f 2 | tr '\n' ' ')
+    test_list=$(grep "env: TEST_LIST" ${DIR}/../.github/workflows/run-regression.yml | cut -d '"' -f 2 | tr '\n' ' ')
 fi
 
 tag="$2"

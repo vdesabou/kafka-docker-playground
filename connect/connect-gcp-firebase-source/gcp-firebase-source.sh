@@ -12,9 +12,9 @@ then
      exit 1
 fi
 
-if [ ! -z "$TRAVIS" ]
+if [ ! -z "$CI" ]
 then
-     # if this is travis
+     # if this is github actions
      log "Removing all data"
      docker run -p 9005:9005 -e FIREBASE_TOKEN=$FIREBASE_TOKEN -e PROJECT=$PROJECT -it kamshak/firebase-tools-docker firebase database:remove / -y --token "$FIREBASE_TOKEN" --project "$PROJECT"
      log "Adding data from musicBlog.json"

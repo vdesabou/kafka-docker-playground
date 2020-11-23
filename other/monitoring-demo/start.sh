@@ -198,9 +198,9 @@ docker container exec -i connect-europe bash -c "KAFKA_OPTS="";export CLASSPATH=
 log "Verify we have received the data in all the sales_ topics in the US"
 docker container exec -i connect-us bash -c "KAFKA_OPTS="";export CLASSPATH=/usr/share/java/monitoring-interceptors/monitoring-interceptors-${TAG_BASE}.jar;  kafka-console-consumer --bootstrap-server broker-us:9092 --whitelist 'sales_.*' --from-beginning --max-messages 20 --property metadata.max.age.ms 30000 --consumer-property interceptor.classes=io.confluent.monitoring.clients.interceptor.MonitoringConsumerInterceptor --consumer-property confluent.monitoring.interceptor.bootstrap.servers=broker-metrics:9092"
 
-if [ ! -z "$TRAVIS" ]
+if [ ! -z "$CI" ]
 then
-     # running with travis
+     # running with github actions
      log "##################################################"
      log "Stopping everything"
      log "##################################################"

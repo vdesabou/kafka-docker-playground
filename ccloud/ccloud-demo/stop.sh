@@ -4,14 +4,14 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
 verify_installed "ccloud"
-if [ -z "$TRAVIS" ]
+if [ -z "$CI" ]
 then
-     # not running with travis
+     # not running with github actions
      verify_ccloud_login  "ccloud kafka cluster list"
      verify_ccloud_details
      check_if_continue
 else
-     # running with travis
+     # running with github actions
      CONFIG_FILE=~/.ccloud/config
 
      if [ ! -f ${CONFIG_FILE} ]
@@ -31,7 +31,7 @@ else
      log "Log in to Confluent Cloud"
      log "##################################################"
      ccloud login --save
-     log "Using travis cluster"
+     log "Using github actions cluster"
      ccloud kafka cluster use lkc-6kv2j
 fi
 

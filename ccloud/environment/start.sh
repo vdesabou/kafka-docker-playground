@@ -6,9 +6,9 @@ source ${DIR}/../../scripts/utils.sh
 
 verify_installed "docker-compose"
 
-if [ -z "$TRAVIS" ]
+if [ -z "$CI" ]
 then
-     # not running with TRAVIS
+     # not running with CI
      verify_installed "ccloud"
      check_ccloud_version 1.7.0 || exit 1
      verify_ccloud_login  "ccloud kafka cluster list"
@@ -34,16 +34,16 @@ else
      exit 1
 fi
 
-if [ ! -z "$TRAVIS" ]
+if [ ! -z "$CI" ]
 then
-     # running with travis
+     # running with github actions
      log "Installing ccloud CLI"
      curl -L https://cnfl.io/ccloud-cli | sudo sh -s -- -b /usr/local/bin
      log "##################################################"
      log "Log in to Confluent Cloud"
      log "##################################################"
      ccloud login --save
-     log "Using travis cluster"
+     log "Using github actions cluster"
      ccloud kafka cluster use lkc-6kv2j
 fi
 
@@ -73,9 +73,9 @@ fi
 ../../scripts/wait-for-connect-and-controlcenter.sh $@
 
 
-if [ ! -z "$TRAVIS" ]
+if [ ! -z "$CI" ]
 then
-     # running with travis
+     # running with github actions
      log "##################################################"
      log "Stopping everything"
      log "##################################################"
