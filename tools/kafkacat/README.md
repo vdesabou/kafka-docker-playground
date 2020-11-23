@@ -37,13 +37,13 @@ EOF
 ```
 
 ```
-$ docker exec -it kafkacat kafkacat -P -b broker:9092 -t orders -K: -T  -l /data/orders.txt
+$ docker exec -i kafkacat kafkacat -P -b broker:9092 -t orders -K: -T  -l /data/orders.txt
 ```
 
 Consumer Mode
 
 ```bash
-$ docker exec -it kafkacat kafkacat -C -b broker:9092 -t orders -K: -f '\nKey (%K bytes): %k\t\nValue (%S bytes): %s\n\Partition: %p\tOffset: %o\n--\n' -c 3
+$ docker exec -i kafkacat kafkacat -C -b broker:9092 -t orders -K: -f '\nKey (%K bytes): %k\t\nValue (%S bytes): %s\n\Partition: %p\tOffset: %o\n--\n' -c 3
 ```
 
 Producer mode input
@@ -59,7 +59,7 @@ EOF
 Query Mode
 
 ```bash
-$ docker exec -it kafkacat kafkacat -Q -b broker:9092 -t orders:0:-1
+$ docker exec -i kafkacat kafkacat -Q -b broker:9092 -t orders:0:-1
 ```
 
 N.B: Control Center is reachable at [http://127.0.0.1:9021](http://127.0.0.1:9021])

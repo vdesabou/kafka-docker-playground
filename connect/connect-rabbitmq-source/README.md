@@ -64,7 +64,7 @@ Note:
 Run the following command to consume all records in RabbitMQ queue `myqueue`
 
 ```bash
-$ docker exec -it rabbitmq_consumer bash -c "python /consumer.py myqueue"
+$ docker exec -i rabbitmq_consumer bash -c "python /consumer.py myqueue"
 ```
 
 N.B: Control Center is reachable at [http://127.0.0.1:9021](http://127.0.0.1:9021])

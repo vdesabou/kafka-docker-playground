@@ -8,9 +8,9 @@ ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml
 
 
 log "Create RabbitMQ exchange, queue and binding"
-docker exec -it rabbitmq rabbitmqadmin -u myuser -p mypassword -V / declare exchange name=exchange1 type=direct
-docker exec -it rabbitmq rabbitmqadmin -u myuser -p mypassword -V / declare queue name=queue1 durable=true
-docker exec -it rabbitmq rabbitmqadmin -u myuser -p mypassword -V / declare binding source=exchange1 destination=queue1 routing_key=rkey1
+docker exec -i rabbitmq rabbitmqadmin -u myuser -p mypassword -V / declare exchange name=exchange1 type=direct
+docker exec -i rabbitmq rabbitmqadmin -u myuser -p mypassword -V / declare queue name=queue1 durable=true
+docker exec -i rabbitmq rabbitmqadmin -u myuser -p mypassword -V / declare binding source=exchange1 destination=queue1 routing_key=rkey1
 
 
 log "Sending messages to topic rabbitmq-messages"
@@ -41,4 +41,4 @@ curl -X PUT \
 sleep 5
 
 log "Check messages received in RabbitMQ"
-docker exec -it rabbitmq rabbitmqadmin -u myuser -p mypassword get queue=queue1 count=10
+docker exec -i rabbitmq rabbitmqadmin -u myuser -p mypassword get queue=queue1 count=10

@@ -20,9 +20,9 @@ $ ./rabbitmq.sh
 Create RabbitMQ exchange, queue and binding:
 
 ```bash
-$ docker exec -it rabbitmq rabbitmqadmin -u myuser -p mypassword -V / declare exchange name=exchange1 type=direct
-$ docker exec -it rabbitmq rabbitmqadmin -u myuser -p mypassword -V / declare queue name=queue1 durable=true
-$ docker exec -it rabbitmq rabbitmqadmin -u myuser -p mypassword -V / declare binding source=exchange1 destination=queue1 routing_key=rkey1
+$ docker exec -i rabbitmq rabbitmqadmin -u myuser -p mypassword -V / declare exchange name=exchange1 type=direct
+$ docker exec -i rabbitmq rabbitmqadmin -u myuser -p mypassword -V / declare queue name=queue1 durable=true
+$ docker exec -i rabbitmq rabbitmqadmin -u myuser -p mypassword -V / declare binding source=exchange1 destination=queue1 routing_key=rkey1
 ```
 
 Sending messages to topic `rabbitmq-messages`:
@@ -58,7 +58,7 @@ $ curl -X PUT \
 Check messages received in RabbitMQ:
 
 ```bash
-$ docker exec -it rabbitmq rabbitmqadmin -u myuser -p mypassword get queue=queue1 count=10
+$ docker exec -i rabbitmq rabbitmqadmin -u myuser -p mypassword get queue=queue1 count=10
 ```
 
 Results:

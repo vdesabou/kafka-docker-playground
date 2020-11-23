@@ -24,11 +24,11 @@ fi
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
 
 log "Starting up locator"
-docker exec -it pivotal-gemfire sh /opt/pivotal/workdir/startLocator.sh
+docker exec -i pivotal-gemfire sh /opt/pivotal/workdir/startLocator.sh
 log "Starting up server1"
-docker exec -it pivotal-gemfire sh /opt/pivotal/workdir/startServer1.sh
+docker exec -i pivotal-gemfire sh /opt/pivotal/workdir/startServer1.sh
 log "Starting up server2"
-docker exec -it pivotal-gemfire sh /opt/pivotal/workdir/startServer2.sh
+docker exec -i pivotal-gemfire sh /opt/pivotal/workdir/startServer2.sh
 
 sleep 8
 
