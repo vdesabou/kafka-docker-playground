@@ -35,3 +35,15 @@ jobs:
 
       - name: Build and Test
         run: bash scripts/run-tests.sh "${{ matrix.test_list }}" "${{ matrix.tag }}"
+        env:
+          SALESFORCE_USERNAME: ${{ secrets.SALESFORCE_USERNAME }}
+          CONSUMER_KEY: ${{ secrets.CONSUMER_KEY }}
+          CONSUMER_PASSWORD: ${{ secrets.CONSUMER_PASSWORD }}
+          SALESFORCE_INSTANCE: ${{ secrets.SALESFORCE_INSTANCE }}
+          SALESFORCE_PASSWORD: ${{ secrets.SALESFORCE_PASSWORD }}
+          SECURITY_TOKEN: ${{ secrets.SECURITY_TOKEN }}
+          SALESFORCE_USERNAME_ACCOUNT2: ${{ secrets.SALESFORCE_USERNAME_ACCOUNT2 }}
+          SALESFORCE_PASSWORD_ACCOUNT2: ${{ secrets.SALESFORCE_PASSWORD_ACCOUNT2 }}
+          SECURITY_TOKEN_ACCOUNT2: ${{ secrets.SECURITY_TOKEN_ACCOUNT2 }}
+          CONSUMER_KEY_ACCOUNT2: ${{ secrets.CONSUMER_KEY_ACCOUNT2 }}
+          CONSUMER_PASSWORD_ACCOUNT2: ${{ secrets.CONSUMER_PASSWORD_ACCOUNT2 }}
