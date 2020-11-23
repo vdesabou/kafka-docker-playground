@@ -472,6 +472,20 @@ retrycmd() {
     do
         if (( attempt_num == max_attempts ))
         then
+            logwarn "####################################################"
+            logwarn "docker ps"
+            docker ps
+            logwarn "####################################################"
+            for container in broker broker2 schema-registry connect broker-us broker-europe connect-us connect-europe
+            do
+              if [[ $(docker ps -f "name=$container" --format '{{.Names}}') == $container ]]
+              then
+                logwarn "####################################################"
+                logwarn "$container logs"
+                docker container logs --tail=200 $container
+                logwarn "####################################################"
+              fi
+            done
             logerror "ERROR: Failed after $attempt_num attempts. Please troubleshoot and run again."
             return 1
         else
@@ -495,7 +509,8 @@ function host_check_kafka_cluster_registered() {
 
 # for RBAC, taken from cp-demo
 function host_check_mds_up() {
-  FOUND=$(docker container logs broker | grep "Started NetworkTrafficServerConnector")
+  docker container logs broker > /tmp/out.txt 2>&1
+  FOUND=$(cat /tmp/out.txt | grep "Started NetworkTrafficServerConnector")
   if [ -z "$FOUND" ]; then
     return 1
   fi
