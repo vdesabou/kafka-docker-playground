@@ -73,18 +73,6 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: eu-west-3
 
-      - name: Update README
-        run: |
-          ./scripts/get-versions.sh "${{ matrix.tag }}"
-      - name: push
-        uses: github-actions-x/commit@v2.6
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          push-branch: 'master'
-          commit-message: 'Updating with latest versions'
-          files: ./README.md
-          name: Vincent de Saboulin
-
       - name: Cleanup resources
         run: |
           ./scripts/cleanup-resources.sh
