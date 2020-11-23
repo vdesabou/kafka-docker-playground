@@ -202,7 +202,7 @@ then
           # running with github actions
           sudo rm -rf ${TMP_DIR}
           sudo mkdir -p ${TMP_DIR}
-          sudo chown travis ${TMP_DIR}
+          sudo chown runner ${TMP_DIR}
       else
           rm -rf ${TMP_DIR}
           mkdir -p ${TMP_DIR}
