@@ -13,6 +13,7 @@ jobs:
     runs-on: ubuntu-latest
     name: ${{ matrix.tag }} ${{ matrix.test_list }}
     strategy:
+      fail-fast: false
       matrix:
         tag: [ "6.0.0"]
         test_list : [
