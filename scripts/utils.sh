@@ -158,7 +158,7 @@ if [ ! -z "$CONNECTOR_TAG" ]
 then
   log "CONNECTOR_TAG is set"
   # log "DEBUG: called from $PWD $0"
-  TMP_DIR=/tmp/playground_connector_tag$TRAVIS_JOB_NUMBER
+  TMP_DIR=/tmp/playground_connector_tag$GITHUB_RUN_ID
   if [[ $0 == *"wait-for-connect-and-controlcenter.sh"* ]]
   then
     if [ -f ${TMP_DIR}/connector_path ]

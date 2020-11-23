@@ -57,8 +57,6 @@ jobs:
                       "connect/connect-azure-service-bus-source connect/connect-azure-blob-storage-sink
       connect/connect-azure-blob-storage-source connect/connect-azure-sql-data-warehouse-sink"
                     ]
-    env:
-      TRAVIS_JOB_NUMBER: ${{ github.event.number }}
     steps:
       - uses: actions/checkout@v2
 
