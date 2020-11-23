@@ -21,7 +21,7 @@ fi
 
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
 
-docker exec -t ftps-server bash -c "
+docker exec ftps-server bash -c "
 mkdir -p /home/vsftpd/bob/input
 mkdir -p /home/vsftpd/bob/error
 mkdir -p /home/vsftpd/bob/finished
