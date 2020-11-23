@@ -4,9 +4,9 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
-if [ -z "$TRAVIS" ]
+if [ -z "$CI" ]
 then
-     # not running with travis
+     # not running with github actions
      if test -z "$(docker images -q oracle/database:12.2.0.1-ee)"
      then
           if [ ! -f ${DIR}/linuxx64_12201_database.zip ]
@@ -28,9 +28,9 @@ then
 fi
 
 export ORACLE_IMAGE="oracle/database:12.2.0.1-ee"
-if [ ! -z "$TRAVIS" ]
+if [ ! -z "$CI" ]
 then
-     # if this is travis build, use private image.
+     # if this is github actions, use private image.
      export ORACLE_IMAGE="vdesabou/oracle12"
 fi
 

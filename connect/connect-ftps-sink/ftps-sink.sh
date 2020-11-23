@@ -12,9 +12,9 @@ verify_installed "keytool"
 
 cd ${DIR}
 
-if [ ! -z "$TRAVIS" ]
+if [ ! -z "$CI" ]
 then
-     # running with travis
+     # running with github actions
      sudo chown root ${DIR}/config/vsftpd.conf
      sudo chown root ${DIR}/security/vsftpd.pem
 fi

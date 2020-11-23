@@ -45,7 +45,7 @@ do
       job=$(echo $TRAVIS_JOB_NUMBER | cut -d "." -f 1)
       if [[ $group = playgroundtravis$job* ]]
       then
-        log "Skipping current travis build $job"
+        log "Skipping current github actions $job"
         continue
       fi
     fi

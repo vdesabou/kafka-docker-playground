@@ -10,9 +10,9 @@ then
      wget https://repo1.maven.org/maven2/mysql/mysql-connector-java/5.1.45/mysql-connector-java-5.1.45.jar
 fi
 
-if [ -z "$TRAVIS" ] && [ -z "$CLOUDFORMATION" ]
+if [ -z "$CI" ] && [ -z "$CLOUDFORMATION" ]
 then
-     # not running with TRAVIS
+     # not running with CI
      verify_installed "ccloud"
      check_ccloud_version 1.7.0 || exit 1
      verify_ccloud_login  "ccloud kafka cluster list"
@@ -55,9 +55,9 @@ do
      fi
 done
 
-if [ ! -z "$TRAVIS" ] || [ ! -z "$CLOUDFORMATION" ]
+if [ ! -z "$CI" ] || [ ! -z "$CLOUDFORMATION" ]
 then
-     # running with travis or cloudformation
+     # running with github actions or cloudformation
      log "Installing ccloud CLI"
      curl -L https://cnfl.io/ccloud-cli | sudo sh -s -- -b /usr/local/bin
      export PATH=$PATH:/usr/local/bin
@@ -384,9 +384,9 @@ if [[ ! $(type kafka-consumer-groups 2>&1) =~ "not found" ]]; then
      kafka-consumer-groups --bootstrap-server $BOOTSTRAP_SERVERS --command-config $CONFIG_FILE --group simple-stream --describe
 fi
 
-if [ ! -z "$TRAVIS" ]
+if [ ! -z "$CI" ]
 then
-     # running with travis
+     # running with github actions
      log "##################################################"
      log "Stopping everything"
      log "##################################################"

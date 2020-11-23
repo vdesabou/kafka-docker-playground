@@ -11,9 +11,9 @@ fi
 
 verify_installed "docker-compose"
 
-if [ -z "$TRAVIS" ]
+if [ -z "$CI" ]
 then
-     # not running with TRAVIS
+     # not running with CI
      verify_installed "ccloud"
      check_ccloud_version 1.7.0 || exit 1
      verify_ccloud_login  "ccloud kafka cluster list"

@@ -197,9 +197,9 @@ then
     if [ "${docker_compose_file}" != "" ] && [ -f "${docker_compose_file}" ]
     then
       set +e
-      if [ ! -z "$TRAVIS" ]
+      if [ ! -z "$CI" ]
       then
-          # running with travis
+          # running with github actions
           sudo rm -rf ${TMP_DIR}
           sudo mkdir -p ${TMP_DIR}
           sudo chown travis ${TMP_DIR}
@@ -294,9 +294,9 @@ function verify_ccloud_details()
 
 function check_if_continue()
 {
-    if [ ! -z "$TRAVIS" ] || [ ! -z "$CLOUDFORMATION" ]
+    if [ ! -z "$CI" ] || [ ! -z "$CLOUDFORMATION" ]
     then
-        # running with travis or cloudformation, continue
+        # running with github actions or cloudformation, continue
         return
     fi
     read -p "Continue (y/n)?" choice

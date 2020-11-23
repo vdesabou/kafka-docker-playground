@@ -41,7 +41,7 @@ az sql server create \
     --location $AZURE_REGION  \
     --admin-user myadmin \
     --admin-password $PASSWORD
-if [ ! -z "$TRAVIS" ]
+if [ ! -z "$CI" ]
 then
      # running with Travis
      # connect-azure-sql-data-warehouse-sink is failing #131

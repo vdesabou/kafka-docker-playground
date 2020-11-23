@@ -15,8 +15,47 @@ jobs:
       matrix:
         tag: [ "6.0.0"]
         test_list : [
-                      "connect/connect-salesforce-bulkapi-sink connect/connect-salesforce-bulkapi-source",
-                      "connect/connect-salesforce-bulkapi-sink connect/connect-salesforce-bulkapi-source"
+                      "connect/connect-salesforce-bulkapi-sink connect/connect-salesforce-bulkapi-source connect/connect-salesforce-pushtopics-source connect/connect-salesforce-sobject-sink connect/connect-salesforce-cdc-source connect/connect-salesforce-platform-events-sink connect/connect-salesforce-platform-events-source",
+                      "connect/connect-snowflake-sink connect/connect-splunk-sink connect/connect-splunk-source connect/connect-spool-dir-source
+      connect/connect-syslog-source other/connect-override-policy-sftp-sink other/connect-override-policy-sftp-source",
+                      "connect/connect-minio-s3-sink connect/connect-marketo-source connect/connect-active-mq-sink connect/connect-active-mq-source connect/connect-cassandra-sink
+      connect/connect-couchbase-sink connect/connect-couchbase-source connect/connect-hbase-sink",
+                      "connect/connect-jms-tibco-sink connect/connect-jms-tibco-source
+      connect/connect-debezium-mongodb-source connect/connect-debezium-mysql-source
+      connect/connect-debezium-postgresql-source connect/connect-debezium-sqlserver-source
+      connect/connect-elasticsearch-sink connect/connect-datadiode-source-sink",
+                      "connect/connect-hdfs2-sink connect/connect-hdfs2-source connect/connect-hdfs3-sink
+      connect/connect-hdfs3-source connect/connect-ibm-mq-sink connect/connect-ibm-mq-source connect/connect-snmp-source",
+                      "connect/connect-jdbc-oracle11-sink connect/connect-jdbc-oracle11-source
+      connect/connect-influxdb-sink connect/connect-influxdb-source connect/connect-jdbc-mysql-sink
+      connect/connect-jdbc-mysql-source connect/connect-jdbc-postgresql-sink connect/connect-jdbc-postgresql-source
+      connect/connect-jdbc-sqlserver-sink",
+                      "ccloud/ccloud-demo connect/connect-jdbc-sqlserver-source connect/connect-jdbc-vertica-sink
+      connect/connect-jms-active-mq-sink connect/connect-jms-solace-sink",
+                      "connect/connect-mongodb-sink connect/connect-mongodb-source connect/connect-mqtt-sink
+      connect/connect-mqtt-source connect/connect-neo4j-sink connect/connect-omnisci-sink
+      connect/connect-tibco-sink connect/connect-tibco-source connect/connect-jdbc-oracle12-sink
+      connect/connect-jdbc-oracle12-source",
+                      "connect/connect-rabbitmq-source connect/connect-redis-sink connect/connect-replicator
+      connect/connect-sftp-sink connect/connect-sftp-source connect/connect-solace-sink
+      connect/connect-solace-source",
+                      "connect/connect-aws-cloudwatch-logs-source connect/connect-aws-cloudwatch-metrics-sink
+      connect/connect-aws-dynamodb-sink connect/connect-aws-kinesis-source connect/connect-aws-lambda-sink",
+                      "connect/connect-gcp-bigquery-sink connect/connect-gcp-cloud-functions-sink
+      connect/connect-vertica-sink connect/connect-prometheus-sink connect/connect-aws-sqs-source
+      connect/connect-aws-s3-sink connect/connect-aws-s3-source",
+                      "connect/connect-gcp-pubsub-source connect/connect-gcp-gcs-sink
+      connect/connect-gcp-gcs-source connect/connect-gcp-bigtable-sink",
+                      "connect/connect-azure-data-lake-storage-gen1-sink connect/connect-azure-data-lake-storage-gen2-sink
+      connect/connect-azure-event-hubs-source",
+                      "connect/connect-azure-search-sink connect/connect-ftps-source connect/connect-ftps-sink connect/connect-rabbitmq-sink connect/connect-amps-source connect/connect-jira-source connect/connect-github-source connect/connect-pivotal-gemfire-sink",
+                      "connect/connect-azure-functions-sink",
+                      "connect/connect-http-sink",
+                      "connect/connect-kudu-source connect/connect-kudu-sink",
+                      "replicator/connect",
+                      "replicator/mirrormaker2 ksqldb/materialized-view connect/connect-pagerduty-sink connect/connect-zendesk-source connect/connect-datadog-metrics-sink connect/connect-gcp-spanner-sink connect/connect-gcp-firebase-source connect/connect-gcp-firebase-sink",
+                      "connect/connect-azure-service-bus-source connect/connect-azure-blob-storage-sink
+      connect/connect-azure-blob-storage-source connect/connect-azure-sql-data-warehouse-sink"
                     ]
     env:
       TRAVIS_JOB_NUMBER: ${{ github.event.number }}
@@ -34,6 +73,15 @@ jobs:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: eu-west-3
+
+      - name: Update README and cleanup resources
+        run: |
+          bash scripts/launch-github-action.sh
+          bash scripts/cleanup-resources.sh
+        env:
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+          AZ_USER: ${{ secrets.AZ_USER }}
+          AZ_PASS: ${{ secrets.AZ_PASS }}
 
       - name: Decrypt secrets.tar
         run: |
