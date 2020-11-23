@@ -25,11 +25,11 @@ log "Doing gsutil authentication"
 set +e
 docker rm -f gcloud-config
 set -e
-docker run -ti -v ${KEYFILE}:/tmp/keyfile.json --name gcloud-config google/cloud-sdk:latest gcloud auth activate-service-account --project ${PROJECT} --key-file /tmp/keyfile.json
+docker run -i -v ${KEYFILE}:/tmp/keyfile.json --name gcloud-config google/cloud-sdk:latest gcloud auth activate-service-account --project ${PROJECT} --key-file /tmp/keyfile.json
 
 
 log "Creating Dataproc cluster $CLUSTER_NAME"
-docker run -ti --volumes-from gcloud-config google/cloud-sdk:latest gcloud dataproc clusters create "$CLUSTER_NAME" --region us-east1 --project "$PROJECT"
+docker run -i --volumes-from gcloud-config google/cloud-sdk:latest gcloud dataproc clusters create "$CLUSTER_NAME" --region us-east1 --project "$PROJECT"
 
 log "Sending messages to topic test_dataproc"
 seq -f "{\"f1\": \"value%g-`date`\"}" 10 | docker exec -i connect kafka-avro-console-producer --broker-list broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic test_dataproc --property value.schema='{"type":"record","name":"myrecord","fields":[{"name":"f1","type":"string"}]}'
@@ -108,4 +108,4 @@ docker run -v /tmp:/tmp actions/avro-tools tojson /tmp/test_hdfs+0+0000000000+00
 docker rm -f gcloud-config
 
 log "Deleting Dataproc cluster $CLUSTER_NAME"
-docker run -ti --volumes-from gcloud-config google/cloud-sdk:latest echo y | gcloud dataproc clusters delete "$CLUSTER_NAME" --region us-east1 --project "$PROJECT"
+docker run -i --volumes-from gcloud-config google/cloud-sdk:latest echo y | gcloud dataproc clusters delete "$CLUSTER_NAME" --region us-east1 --project "$PROJECT"

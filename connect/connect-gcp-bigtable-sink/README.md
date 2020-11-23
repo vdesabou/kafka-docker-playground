@@ -54,7 +54,7 @@ Note: you can also export these values as environment variable
 Create a BigTable Instance and Database
 
 ```bash
-$ docker run -ti --volumes-from gcloud-config google/cloud-sdk:latest gcloud bigtable instances create $INSTANCE --project $PROJECT --cluster $INSTANCE --cluster-zone=us-east1-c --display-name="playground-bigtable-instance" --instance-type=DEVELOPMENT
+$ docker run -i --volumes-from gcloud-config google/cloud-sdk:latest gcloud bigtable instances create $INSTANCE --project $PROJECT --cluster $INSTANCE --cluster-zone=us-east1-c --display-name="playground-bigtable-instance" --instance-type=DEVELOPMENT
 ```
 
 Sending messages to topic `stats`
@@ -93,7 +93,7 @@ curl -X PUT \
 Verify data is in GCP BigTable
 
 ```bash
-$ docker run -ti --volumes-from gcloud-config google/cloud-sdk:latest cbt -project $PROJECT -instance $INSTANCE read kafka_stats
+$ docker run -i --volumes-from gcloud-config google/cloud-sdk:latest cbt -project $PROJECT -instance $INSTANCE read kafka_stats
 ```
 
 Results:
@@ -116,7 +116,7 @@ simple-key-2
 Delete table
 
 ```bash
-$ docker run -ti --volumes-from gcloud-config google/cloud-sdk:latest cbt -project $PROJECT -instance $INSTANCE deletetable kafka_stats
+$ docker run -i --volumes-from gcloud-config google/cloud-sdk:latest cbt -project $PROJECT -instance $INSTANCE deletetable kafka_stats
 ```
 
 Deleting instance

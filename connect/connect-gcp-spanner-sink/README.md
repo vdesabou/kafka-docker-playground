@@ -46,8 +46,8 @@ $ ./gcp-spanner.sh <PROJECT> <INSTANCE> <DATABASE>
 Create a Spanner Instance and Database
 
 ```bash
-$ docker run -ti --volumes-from gcloud-config google/cloud-sdk:latest gcloud spanner instances create $INSTANCE --project $PROJECT --config=regional-us-east1 --description=playground-spanner-instance --nodes=1
-$ docker run -ti --volumes-from gcloud-config google/cloud-sdk:latest gcloud spanner databases create $DATABASE --instance $INSTANCE --project $PROJECT
+$ docker run -i --volumes-from gcloud-config google/cloud-sdk:latest gcloud spanner instances create $INSTANCE --project $PROJECT --config=regional-us-east1 --description=playground-spanner-instance --nodes=1
+$ docker run -i --volumes-from gcloud-config google/cloud-sdk:latest gcloud spanner databases create $DATABASE --instance $INSTANCE --project $PROJECT
 ```
 
 Sending messages to topic `products`:
@@ -85,7 +85,7 @@ $ curl -X PUT \
 After a few seconds, data should be in GCP Spanner:
 
 ```bash
-$ docker run -ti --volumes-from gcloud-config google/cloud-sdk:latest gcloud spanner databases execute-sql $DATABASE --instance $INSTANCE --project $PROJECT --sql='select * from kafka_products'
+$ docker run -i --volumes-from gcloud-config google/cloud-sdk:latest gcloud spanner databases execute-sql $DATABASE --instance $INSTANCE --project $PROJECT --sql='select * from kafka_products'
 connect_topic__  connect_partition__  connect_offset__  name       price           quantity
 products         0                    0                 scissors   2.75            3
 products         0                    1                 tape       0.990000009537  10
