@@ -28,8 +28,10 @@ jobs:
         with:
           java-version: 1.8
 
-      - name: Preparation Steps
-        run: gpg --quiet --batch --yes --decrypt --passphrase="$SECRETS_ENCRYPTION_PASSWORD" --output secrets.tgz secrets.tar.gpg
+      - name: Decrypt secrets.tgz
+        run: ./.github/scripts/decrypt_secret.sh
+        env:
+          SECRETS_ENCRYPTION_PASSWORD: ${{ secrets.SECRETS_ENCRYPTION_PASSWORD }}
 
       - name: Build and Test
         run: bash scripts/run-tests.sh "${{ matrix.test_list }}" "${{ matrix.tag }}"
