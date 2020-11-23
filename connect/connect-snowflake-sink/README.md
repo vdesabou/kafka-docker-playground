@@ -131,7 +131,7 @@ $ curl -X PUT \
 Confirm that the messages were delivered to the Snowflake table (logged as `KAFKA_DEMO` user)
 
 ```bash
-$ docker run --rm -i -v $PWD/snowflake_key.p8:/tmp/rsa_key.p8 -e SNOWSQL_PRIVATE_KEY_PASSPHRASE=confluent kurron/snowsql --username PLAYGROUND_USER -a $SNOWFLAKE_ACCOUNT_NAME --private-key-path /tmp/rsa_key.p8 << EOF
+$ docker run --rm -i -e SNOWSQL_PWD='Password123!' -e RSA_PUBLIC_KEY="$RSA_PUBLIC_KEY" kurron/snowsql --username PLAYGROUND_USER -a $SNOWFLAKE_ACCOUNT_NAME << EOF
 USE ROLE PLAYGROUND_CONNECTOR_ROLE;
 USE DATABASE PLAYGROUND_DB;
 USE SCHEMA PUBLIC;
