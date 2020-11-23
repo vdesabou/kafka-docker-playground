@@ -32,7 +32,7 @@ log "Waiting up to $MAX_WAIT seconds for Kafka brokers to be registered in ZooKe
 retrycmd $MAX_WAIT 5 host_check_kafka_cluster_registered || exit 1
 
 # Verify MDS has started
-MAX_WAIT=60
+MAX_WAIT=120
 log "Waiting up to $MAX_WAIT seconds for MDS to start"
 retrycmd $MAX_WAIT 5 host_check_mds_up || exit 1
 sleep 5
