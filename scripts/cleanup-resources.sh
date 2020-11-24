@@ -38,12 +38,12 @@ fi
 log "Cleanup Azure Resource groups"
 for group in $(az group list --query [].name --output tsv)
 do
-  if [[ $group = playgroundtravis* ]]
+  if [[ $group = playgroundrunner* ]]
   then
     if [ ! -z "$GITHUB_RUN_NUMBER" ]
     then
       job=$(echo $GITHUB_RUN_NUMBER | cut -d "." -f 1)
-      if [[ $group = playgroundtravis$job* ]]
+      if [[ $group = playgroundrunner$job* ]]
       then
         log "Skipping current github actions $job"
         continue
@@ -55,7 +55,7 @@ do
 done
 
 # remove azure ad apps
-for fn in `az ad app list --filter "startswith(displayName, 'playgroundtravis')" --query '[].appId'`
+for fn in `az ad app list --filter "startswith(displayName, 'playgroundrunner')" --query '[].appId'`
 do
   if [ "$fn" == "[" ] || [ "$fn" == "]" ] || [ "$fn" == "[]" ]
   then
