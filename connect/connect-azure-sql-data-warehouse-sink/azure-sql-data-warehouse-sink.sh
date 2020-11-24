@@ -43,20 +43,15 @@ az sql server create \
     --admin-password $PASSWORD
 if [ ! -z "$CI" ]
 then
-     # running with Travis
-     # connect-azure-sql-data-warehouse-sink is failing #131
-     counter=1
-     for ip in $(dig +short nat.travisci.net | sort)
-     do
-        log "Enable a server-level firewall rule for Travis IP $ip"
-        az sql server firewall-rule create \
-        --name $AZURE_FIREWALL_RULL_NAME$counter \
-        --resource-group $AZURE_RESOURCE_GROUP \
-        --server $AZURE_SQL_NAME \
-        --start-ip-address $ip \
-        --end-ip-address $ip
-        let "counter++"
-     done
+    # running with CI
+    # connect-azure-sql-data-warehouse-sink is failing #131
+    # allow applications from Azure IP addresses to connect to your Azure Database for MySQL server, provide the IP address 0.0.0.0 as the Start IP and End IP
+    az sql server firewall-rule create \
+    --name $AZURE_FIREWALL_RULL_NAME \
+    --resource-group $AZURE_RESOURCE_GROUP \
+    --server $AZURE_SQL_NAME \
+    --start-ip-address 0.0.0.0 \
+    --end-ip-address 0.0.0.0
 else
     log "Enable a server-level firewall rule"
     MY_IP=$(curl https://ipinfo.io/ip)
