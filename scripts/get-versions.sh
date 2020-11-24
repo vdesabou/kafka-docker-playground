@@ -14,9 +14,9 @@ readme_tmp_file=/tmp/README.md
 cp $template_file $readme_file
 
 
-log "Getting travis result files"
-mkdir -p travis
-aws s3 cp s3://kafka-docker-playground/travis/ travis/ --recursive
+log "Getting ci result files"
+mkdir -p ci
+aws s3 cp s3://kafka-docker-playground/ci/ ci/ --recursive
 
 
 for dir in $(docker run vdesabou/kafka-docker-playground-connect:${image_version} ls /usr/share/confluent-hub-components/)
@@ -27,7 +27,7 @@ do
     for test_folder in $test_folders
     do
       log "-> test folder $test_folder"
-      travis="❌"
+      ci="❌"
       if [ "$test_folder" != "" ]
       then
         set +e
@@ -52,7 +52,7 @@ do
             continue
           fi
           time=""
-          last_success_time=$(grep "$dir" travis/${image_version}-*-${script_name} | tail -1 | cut -d "|" -f 2)
+          last_success_time=$(grep "$dir" ci/${image_version}-*-${script_name} | tail -1 | cut -d "|" -f 2)
           if [ "$last_success_time" != "" ]
           then
             # now=$(date +%s)
@@ -66,10 +66,10 @@ do
             fi
           fi
         done
-        grep "$test_folder" .travis.yml | grep -v jar > /dev/null
+        grep "$test_folder" ${DIR}/../.github/workflows/run-regression.yml | grep -v jar > /dev/null
         if [ $? = 0 ]
         then
-          travis="✅ $time"
+          ci="✅ $time"
         fi
         set -e
       fi
@@ -77,7 +77,7 @@ do
 
     if [ "$dir" = "kafka-connect-couchbase" ]
     then
-        sed -e "s|:${dir}:|3.4.8 \| Open Source (Couchbase) \| \| $travis |g" \
+        sed -e "s|:${dir}:|3.4.8 \| Open Source (Couchbase) \| \| $ci |g" \
             $readme_file > $readme_tmp_file
     else
         version=$(docker run vdesabou/kafka-docker-playground-connect:${image_version} cat /usr/share/confluent-hub-components/${dir}/manifest.json | jq -r '.version')
@@ -102,7 +102,7 @@ do
           type="$license"
         fi
 
-        sed -e "s|:${dir}:|${version} \| $type \| $release_date \| $travis |g" \
+        sed -e "s|:${dir}:|${version} \| $type \| $release_date \| $ci |g" \
             $readme_file > $readme_tmp_file
     fi
     cp $readme_tmp_file $readme_file

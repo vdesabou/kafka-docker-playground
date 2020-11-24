@@ -79,7 +79,7 @@ do
             fi
         fi
         file="$TAG-$THE_CONNECTOR_TAG-$script"
-        s3_file="s3://kafka-docker-playground/travis/$file"
+        s3_file="s3://kafka-docker-playground/ci/$file"
         set +e
         exists=$(aws s3 ls $s3_file)
         if [ -z "$exists" ]; then
@@ -134,7 +134,7 @@ do
             echo "$connector_path|`date +%s`" > $file
             if [ -f "$file" ]
             then
-                aws s3 cp "$file" "s3://kafka-docker-playground/travis/"
+                aws s3 cp "$file" "s3://kafka-docker-playground/ci/"
                 log "INFO: <$file> was uploaded to S3 bucket"
             else
                 logerror "ERROR: $file could not be created"
