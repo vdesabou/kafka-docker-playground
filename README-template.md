@@ -24,7 +24,7 @@ Playground for Kafka/Confluent Docker experimentations...
 
 Quick start examples from Confluent [docs](https://docs.confluent.io/current/connect/managing/index.html) but in Docker version for ease of use.
 
-| Connector  | Product Category  | Latest Version (*) | Type | Release Date| <img src="./images/icons/github-actions.png" width="15"> [CI](https://github.com/vdesabou/kafka-docker-playground/actions?query=workflow%3A%22Run+Regression+Tests%22)
+| Connector  | Product Category  | Latest Version (*) | Type | Release Date| <img src="./images/icons/github-actions.png" width="15"> [CI](https://github.com/vdesabou/kafka-docker-playground/actions?query=workflow%3ACI)
 |---|---|---|---|---|---|
 | <img src="./images/icons/activemq.png" width="15"> [ActiveMQ Sink](connect/connect-active-mq-sink)  | Message Queue  | :confluentinc-kafka-connect-activemq-sink:
 | <img src="./images/icons/activemq.png" width="15"> [ActiveMQ Source](connect/connect-active-mq-source)  | Message Queue  | :confluentinc-kafka-connect-activemq:
