@@ -21,12 +21,12 @@ log "Installing Mapr Client"
 
 # RHEL
 # required deps for mapr-client
-docker exec -i --privileged --user root -t connect  bash -c "rpm -i http://mirror.centos.org/centos/7/os/x86_64/Packages/mtools-4.0.18-5.el7.x86_64.rpm"
-docker exec -i --privileged --user root -t connect  bash -c "rpm -i http://mirror.centos.org/centos/7/os/x86_64/Packages/syslinux-4.05-15.el7.x86_64.rpm"
+docker exec -i --privileged --user root connect  bash -c "rpm -i http://mirror.centos.org/centos/7/os/x86_64/Packages/mtools-4.0.18-5.el7.x86_64.rpm"
+docker exec -i --privileged --user root connect  bash -c "rpm -i http://mirror.centos.org/centos/7/os/x86_64/Packages/syslinux-4.05-15.el7.x86_64.rpm"
 
-docker exec -i --privileged --user root -t connect  bash -c "yum -y install jre-1.8.0-openjdk hostname findutils net-tools"
+docker exec -i --privileged --user root connect  bash -c "yum -y install jre-1.8.0-openjdk hostname findutils net-tools"
 
-docker exec -i --privileged --user root -t connect  bash -c "rpm --import https://package.mapr.com/releases/pub/maprgpg.key && yum -y update && yum -y install mapr-client.x86_64"
+docker exec -i --privileged --user root connect  bash -c "rpm --import https://package.mapr.com/releases/pub/maprgpg.key && yum -y update && yum -y install mapr-client.x86_64"
 
 CONNECT_IP=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' connect)
 MAPR_IP=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' mapr)
@@ -45,8 +45,8 @@ sleep 60
 
 log "Configure Mapr Client"
 # Mapr sink is failing with CP 6.0 UBI8 #91
-docker exec -i --privileged --user root -t connect bash -c "ln -sf /usr/lib/jvm/jre-1.8.0-openjdk /usr/lib/jvm/java-8-openjdk"
-docker exec -i --privileged --user root -t connect bash -c "/opt/mapr/server/configure.sh -secure -N maprdemo.mapr.io -c -C $MAPR_IP -u appuser -g appuser"
+docker exec -i --privileged --user root connect bash -c "ln -sf /usr/lib/jvm/jre-1.8.0-openjdk /usr/lib/jvm/java-8-openjdk"
+docker exec -i --privileged --user root connect bash -c "/opt/mapr/server/configure.sh -secure -N maprdemo.mapr.io -c -C $MAPR_IP -u appuser -g appuser"
 
 docker cp mapr:/opt/mapr/conf/ssl_truststore /tmp/ssl_truststore
 docker cp /tmp/ssl_truststore connect:/opt/mapr/conf/ssl_truststore
