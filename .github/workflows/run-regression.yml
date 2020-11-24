@@ -72,7 +72,8 @@ jobs:
                       "connect/connect-http-sink",
                       "connect/connect-kudu-source connect/connect-kudu-sink",
                       "replicator/connect",
-                      "replicator/mirrormaker2 ksqldb/materialized-view connect/connect-pagerduty-sink connect/connect-zendesk-source connect/connect-datadog-metrics-sink connect/connect-gcp-spanner-sink connect/connect-gcp-firebase-source connect/connect-gcp-firebase-sink"
+                      "replicator/mirrormaker2 ksqldb/materialized-view connect/connect-pagerduty-sink connect/connect-zendesk-source connect/connect-datadog-metrics-sink connect/connect-gcp-spanner-sink connect/connect-gcp-firebase-source connect/connect-gcp-firebase-sink",
+                      "connect/connect-mapr-sink"
                     ]
     steps:
       - uses: actions/checkout@v2
