@@ -17,7 +17,7 @@ log "Generating public and private keys for token signing"
 mkdir -p ../../environment/rbac-sasl-plain/conf
 openssl genrsa -out ../../environment/rbac-sasl-plain/conf/keypair.pem 2048
 openssl rsa -in ../../environment/rbac-sasl-plain/conf/keypair.pem -outform PEM -pubout -out ../../environment/rbac-sasl-plain/conf/public.pem
-log"Enable Docker appuser to read files when created by a different UID"
+log "Enable Docker appuser to read files when created by a different UID"
 chmod 644 ../../environment/rbac-sasl-plain/conf/keypair.pem
 
 # Bring up base cluster and Confluent CLI
