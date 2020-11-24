@@ -1,11 +1,13 @@
 name: CI
 
-# on:
-#   push:
-
-#   schedule:
-#   #   - cron: '0 0 * * 0' # weekly
 on:
+  push:
+    branches:
+      - main
+
+  schedule:
+     - cron: '0 1 * * *' # every day at 1 am
+
   workflow_dispatch:
 
 jobs:
