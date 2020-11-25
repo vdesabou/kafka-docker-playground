@@ -1,4 +1,4 @@
-# Using cp-ansible playground with Confluent Cloud [![Build Status](https://travis-ci.com/vdesabou/cp-ansible-playground.svg?branch=master)](https://travis-ci.com/vdesabou/cp-ansible-playground)
+# Using cp-ansible playground with Confluent Cloud ![CI](https://github.com/vdesabou/cp-ansible-playground/workflows/CI/badge.svg?branch=master)
 
 
 ## Pre-requisites
