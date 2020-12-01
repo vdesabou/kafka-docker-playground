@@ -44,7 +44,9 @@ then
 fi
 
 log "Create bucket aws-playground-tiered-storage in S3"
+set +e
 aws s3api create-bucket --bucket aws-playground-tiered-storage --region $AWS_REGION --create-bucket-configuration LocationConstraint=$AWS_REGION
+set -e
 
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.yml" -a -b
 
