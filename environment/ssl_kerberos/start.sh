@@ -92,7 +92,6 @@ then
   # keytabs are created on kdc with root user
   # ubi8 images are using appuser user
   docker exec -i kdc chmod a+r /var/lib/secret/broker.key
-  docker exec -i kdc chmod a+r /var/lib/secret/broker2.key
   docker exec -i kdc chmod a+r /var/lib/secret/zookeeper.key
   docker exec -i kdc chmod a+r /var/lib/secret/zookeeper-client.key
   docker exec -i kdc chmod a+r /var/lib/secret/kafka-client.key
