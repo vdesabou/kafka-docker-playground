@@ -7,7 +7,12 @@ PROJECT=${1:-vincent-de-saboulin-lab}
 REGION=${2:-us-central1}
 FUNCTION=${3:-function-1}
 
-${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
+if [ -z "$KSQLDB" ]
+then
+     ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
+else
+     ${DIR}/../../ksqldb/environment/start.sh "${PWD}/docker-compose.plaintext.yml"
+fi
 
 
 log "Produce test data to the functions-messages topic in Kafka"
