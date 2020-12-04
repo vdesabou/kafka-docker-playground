@@ -140,6 +140,12 @@ Quick start examples from Confluent [docs](https://docs.confluent.io/current/con
 | <img src="./images/icons/zendesk.png" width="15"> [Zendesk Source](connect/connect-zendesk-source) |  SaaS Apps | :confluentinc-kafka-connect-zendesk:
 
 \* You can change default connector version by setting `CONNECTOR_TAG` environment variable before starting a test, get more details [here](https://github.com/vdesabou/kafka-docker-playground/wiki/How-to-run#default-connector-version)
+\* If you want to start ksqlDB server, set `KSQKDB` environment variable before starting a test. You can login with ksql CLI like this:
+
+```bash
+$ docker exec -i ksqldb-cli ksql http://ksqldb-server:8088
+```
+
 
 ## ☁️ Confluent Cloud
 

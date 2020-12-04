@@ -15,7 +15,12 @@ then
      exit 1
 fi
 
-${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
+if [ -z "$KSQLDB" ]
+then
+     ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
+else
+     ${DIR}/../../ksqldb/environment/start.sh "${PWD}/docker-compose.plaintext.yml"
+fi
 
 log "Sending messages to topic topic1"
 seq -f "{\"f1\": \"value%g\"}" 10 | docker exec -i connect kafka-avro-console-producer --broker-list broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic topic1 --property value.schema='{"type":"record","name":"myrecord","fields":[{"name":"f1","type":"string"}]}'

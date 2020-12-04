@@ -10,7 +10,12 @@ then
      wget https://repo1.maven.org/maven2/org/apache/activemq/activemq-all/5.15.4/activemq-all-5.15.4.jar
 fi
 
-${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
+if [ -z "$KSQLDB" ]
+then
+     ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
+else
+     ${DIR}/../../ksqldb/environment/start.sh "${PWD}/docker-compose.plaintext.yml"
+fi
 
 
 log "Sending messages to topic sink-messages"

@@ -4,7 +4,12 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
-${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
+if [ -z "$KSQLDB" ]
+then
+     ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
+else
+     ${DIR}/../../ksqldb/environment/start.sh "${PWD}/docker-compose.plaintext.yml"
+fi
 
 log "Minio UI is accessible at http://127.0.0.1:9000 (AKIAIOSFODNN7EXAMPLE/wJalrXUtnFEMI7K7MDENG8bPxRfiCYEXAMPLEKEY)"
 

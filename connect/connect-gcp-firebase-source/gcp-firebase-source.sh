@@ -23,7 +23,12 @@ then
      docker run -p 9005:9005 -e FIREBASE_TOKEN=$FIREBASE_TOKEN -e PROJECT=$PROJECT -it kamshak/firebase-tools-docker firebase database:get / --token "$FIREBASE_TOKEN" --project "$PROJECT" | jq .
 fi
 
-${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
+if [ -z "$KSQLDB" ]
+then
+     ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
+else
+     ${DIR}/../../ksqldb/environment/start.sh "${PWD}/docker-compose.plaintext.yml"
+fi
 
 log "Creating GCP Firebase Source connector"
 curl -X PUT \

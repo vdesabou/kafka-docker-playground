@@ -40,7 +40,12 @@ then
      export ORACLE_IMAGE="vdesabou/oracle12"
 fi
 
-${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext-pdb-table.yml"
+if [ -z "$KSQLDB" ]
+then
+     ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext-pdb-table.yml"
+else
+     ${DIR}/../../ksqldb/environment/start.sh "${PWD}/docker-compose.plaintext-pdb-table.yml"
+fi
 
 
 # Verify Oracle DB has started within MAX_WAIT seconds

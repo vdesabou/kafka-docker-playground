@@ -17,7 +17,12 @@ then
      wget https://s3.amazonaws.com/redshift-downloads/drivers/jdbc/1.2.20.1043/RedshiftJDBC4-1.2.20.1043.jar
 fi
 
-${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
+if [ -z "$KSQLDB" ]
+then
+     ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
+else
+     ${DIR}/../../ksqldb/environment/start.sh "${PWD}/docker-compose.plaintext.yml"
+fi
 
 set +e
 docker run -i -e CLUSTER="$CLUSTER" -e USER="$USER" -e DATABASE="$DATABASE" -e PORT="$PORT" -e PASSWORD="$PASSWORD" -v "${DIR}/customers.sql":/tmp/customers.sql debezium/postgres:10 psql -h "$CLUSTER" -U "$USER" -d "$DATABASE" -p "$PORT" << EOF

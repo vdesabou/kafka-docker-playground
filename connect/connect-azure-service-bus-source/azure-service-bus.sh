@@ -55,7 +55,12 @@ AZURE_SAS_KEY=$(az servicebus namespace authorization-rule keys list \
     --namespace-name $AZURE_SERVICE_BUS_NAMESPACE \
     --name "RootManageSharedAccessKey" | jq -r '.primaryKey')
 
-${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
+if [ -z "$KSQLDB" ]
+then
+     ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
+else
+     ${DIR}/../../ksqldb/environment/start.sh "${PWD}/docker-compose.plaintext.yml"
+fi
 
 log "Creating Azure Service Bus Source connector"
 curl -X PUT \

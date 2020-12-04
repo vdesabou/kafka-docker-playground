@@ -72,7 +72,12 @@ FUNCTIONS_URL=$(echo $output | grep -Eo 'https://[^ >]+'|head -1)
 
 log "Functions URL is $FUNCTIONS_URL"
 
-${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
+if [ -z "$KSQLDB" ]
+then
+     ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
+else
+     ${DIR}/../../ksqldb/environment/start.sh "${PWD}/docker-compose.plaintext.yml"
+fi
 
 log "Sending messages to topic functions-test"
 docker exec -i broker kafka-console-producer --broker-list broker:9092 --topic functions-test --property parse.key=true --property key.separator=, << EOF
