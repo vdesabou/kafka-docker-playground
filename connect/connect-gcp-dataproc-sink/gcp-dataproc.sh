@@ -19,12 +19,7 @@ fi
 PROJECT=${1:-vincent-de-saboulin-lab}
 CLUSTER_NAME=${2:-playground-cluster}
 
-if [ -z "$KSQLDB" ]
-then
-     ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
-else
-     ${DIR}/../../ksqldb/environment/start.sh "${PWD}/docker-compose.plaintext.yml"
-fi
+${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
 
 log "Doing gsutil authentication"
 set +e

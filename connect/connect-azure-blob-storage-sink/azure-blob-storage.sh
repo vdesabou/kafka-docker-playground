@@ -49,12 +49,7 @@ AZURE_ACCOUNT_KEY=$(az storage account keys list \
     | grep key1 | awk '{print $3}')
 
 
-if [ -z "$KSQLDB" ]
-then
-     ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
-else
-     ${DIR}/../../ksqldb/environment/start.sh "${PWD}/docker-compose.plaintext.yml"
-fi
+${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
 
 log "Creating Azure Blob Storage Sink connector"
 curl -X PUT \

@@ -8,12 +8,7 @@ mkdir -p ${DIR}/data/input
 mkdir -p ${DIR}/data/error
 mkdir -p ${DIR}/data/finished
 
-if [ -z "$KSQLDB" ]
-then
-     ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
-else
-     ${DIR}/../../ksqldb/environment/start.sh "${PWD}/docker-compose.plaintext.yml"
-fi
+${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
 
 if [ ! -f "${DIR}/data/input/json-spooldir-source.json" ]
 then

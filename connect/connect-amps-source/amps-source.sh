@@ -32,12 +32,7 @@ then
      cd ${OLDDIR}
 fi
 
-if [ -z "$KSQLDB" ]
-then
-     ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
-else
-     ${DIR}/../../ksqldb/environment/start.sh "${PWD}/docker-compose.plaintext.yml"
-fi
+${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
 
 log "Use the spark utility to quickly publish few records to the Orders topic"
 docker exec -i amps /AMPS/bin/spark publish -server localhost:9007 -topic Orders -type json << EOF

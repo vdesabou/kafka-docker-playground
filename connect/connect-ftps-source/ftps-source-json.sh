@@ -19,12 +19,7 @@ then
      sudo chown root ${DIR}/security/vsftpd.pem
 fi
 
-if [ -z "$KSQLDB" ]
-then
-     ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
-else
-     ${DIR}/../../ksqldb/environment/start.sh "${PWD}/docker-compose.plaintext.yml"
-fi
+${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
 
 docker exec ftps-server bash -c "
 mkdir -p /home/vsftpd/bob/input
