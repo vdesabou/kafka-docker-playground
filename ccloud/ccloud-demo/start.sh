@@ -59,7 +59,7 @@ if [ ! -z "$CI" ] || [ ! -z "$CLOUDFORMATION" ]
 then
      # running with github actions or cloudformation
      log "Installing ccloud CLI"
-     curl -L https://cnfl.io/ccloud-cli | sudo sh -s -- -b /usr/local/bin
+     curl -L --http1.1 https://cnfl.io/ccloud-cli | sudo sh -s -- -b /usr/local/bin
      export PATH=$PATH:/usr/local/bin
      log "##################################################"
      log "Log in to Confluent Cloud"
