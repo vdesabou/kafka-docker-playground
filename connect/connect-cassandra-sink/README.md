@@ -21,6 +21,12 @@ $ ./cassandra.sh
 
 ## Details of what the script is doing
 
+Getting value for cassandra.local.datacenter (2.0.x only), see https://docs.confluent.io/kafka-connect-cassandra/current/index.html#upgrading-to-version-2-0-x
+
+```bash
+DATACENTER=$(docker exec cassandra cqlsh -e 'SELECT data_center FROM system.local;' | head -4 | tail -1 | tr -d ' ')
+```
+
 Sending messages to topic topic1
 
 ```bash
@@ -39,6 +45,7 @@ $ curl -X PUT \
                     "cassandra.contact.points" : "cassandra",
                     "cassandra.keyspace" : "test",
                     "cassandra.consistency.level": "ONE",
+                    "cassandra.local.datacenter":"'"$DATACENTER"'",
                     "confluent.license": "",
                     "confluent.topic.bootstrap.servers": "broker:9092",
                     "confluent.topic.replication.factor": "1",
