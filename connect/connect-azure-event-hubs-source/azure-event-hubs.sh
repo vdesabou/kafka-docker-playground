@@ -55,12 +55,7 @@ AZURE_SAS_KEY=$(az eventhubs namespace authorization-rule keys list \
     --namespace-name $AZURE_EVENT_HUBS_NAMESPACE \
     --name "RootManageSharedAccessKey" | jq -r '.primaryKey')
 
-if [ -z "$KSQLDB" ]
-then
-     ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
-else
-     ${DIR}/../../ksqldb/environment/start.sh "${PWD}/docker-compose.plaintext.yml"
-fi
+${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
 
 log "Creating Azure Event Hubs Source connector"
 curl -X PUT \

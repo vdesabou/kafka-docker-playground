@@ -67,12 +67,7 @@ then
      exit 1
 fi
 
-if [ -z "$KSQLDB" ]
-then
-     ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
-else
-     ${DIR}/../../ksqldb/environment/start.sh "${PWD}/docker-compose.plaintext.yml"
-fi
+${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
 
 # the Salesforce PushTopic source connector is used to get data into Kafka and the Salesforce Bulk API sink connector is used to export data from Kafka to Salesforce
 

@@ -60,12 +60,7 @@ sleep 20
 log "Assigning Storage Blob Data Owner role to Service Principal $SERVICE_PRINCIPAL_ID"
 az role assignment create --assignee $SERVICE_PRINCIPAL_ID --role "Storage Blob Data Owner"
 
-if [ -z "$KSQLDB" ]
-then
-     ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
-else
-     ${DIR}/../../ksqldb/environment/start.sh "${PWD}/docker-compose.plaintext.yml"
-fi
+${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
 
 log "Creating Data Lake Storage Gen2 Sink connector"
 curl -X PUT \

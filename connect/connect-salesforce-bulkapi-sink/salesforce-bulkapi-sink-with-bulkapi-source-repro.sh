@@ -66,12 +66,7 @@ then
      exit 1
 fi
 
-if [ -z "$KSQLDB" ]
-then
-     ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
-else
-     ${DIR}/../../ksqldb/environment/start.sh "${PWD}/docker-compose.plaintext.yml"
-fi
+${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
 
 log "Login with sfdx CLI"
 docker exec sfdx-cli sh -c "sfdx sfpowerkit:auth:login -u \"$SALESFORCE_USERNAME\" -p \"$SALESFORCE_PASSWORD\" -r \"$SALESFORCE_INSTANCE\" -s \"$SECURITY_TOKEN\""

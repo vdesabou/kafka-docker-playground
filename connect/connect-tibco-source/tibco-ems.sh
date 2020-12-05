@@ -32,12 +32,7 @@ then
      cd ${OLDDIR}
 fi
 
-if [ -z "$KSQLDB" ]
-then
-     ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
-else
-     ${DIR}/../../ksqldb/environment/start.sh "${PWD}/docker-compose.plaintext.yml"
-fi
+${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
 
 
 log "Sending EMS messages m1 m2 m3 m4 m5 in queue connector-quickstart"

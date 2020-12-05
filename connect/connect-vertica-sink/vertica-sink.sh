@@ -15,12 +15,7 @@ then
      rm -f ${DIR}/vertica-client-10.0.1-0.x86_64.tar.gz
 fi
 
-if [ -z "$KSQLDB" ]
-then
-     ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
-else
-     ${DIR}/../../ksqldb/environment/start.sh "${PWD}/docker-compose.plaintext.yml"
-fi
+${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
 
 
 log "Sending messages to topic mytable"

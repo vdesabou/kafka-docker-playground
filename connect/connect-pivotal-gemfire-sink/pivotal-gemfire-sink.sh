@@ -21,12 +21,7 @@ then
      cd ${OLDDIR}
 fi
 
-if [ -z "$KSQLDB" ]
-then
-     ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
-else
-     ${DIR}/../../ksqldb/environment/start.sh "${PWD}/docker-compose.plaintext.yml"
-fi
+${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
 
 log "Starting up locator"
 docker exec -i pivotal-gemfire sh /opt/pivotal/workdir/startLocator.sh
