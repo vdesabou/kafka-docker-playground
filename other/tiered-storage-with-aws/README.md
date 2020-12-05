@@ -194,10 +194,10 @@ $ aws s3api list-objects --bucket aws-playground-tiered-storage
 }
 ```
 
-Sleep 5 minutes (confluent.tier.local.hotset.ms=60000)
+Sleep 6 minutes (confluent.tier.local.hotset.ms=60000)
 
 ```bash
-$ sleep 300
+$ sleep 320
 ```
 
 Check for deleted log segments:

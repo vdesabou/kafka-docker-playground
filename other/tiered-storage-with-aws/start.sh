@@ -64,8 +64,8 @@ docker container logs broker | grep "Uploaded"
 log "Listing objects of bucket aws-playground-tiered-storage in S3"
 aws s3api list-objects --bucket aws-playground-tiered-storage
 
-log "Sleep 5 minutes (confluent.tier.local.hotset.ms=60000)"
-sleep 300
+log "Sleep 6 minutes (confluent.tier.local.hotset.ms=60000)"
+sleep 360
 
 log "Check for deleted log segments"
 docker container logs broker | grep "Deleted log"
