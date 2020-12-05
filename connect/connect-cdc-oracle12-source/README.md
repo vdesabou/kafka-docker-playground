@@ -29,6 +29,14 @@ or
 $ ./cdc-oracle12-pdb-table.sh
 ```
 
+Note:
+
+Using ksqlDB using CLI:
+
+```bash
+$ docker exec -i ksqldb-cli ksql http://ksqldb-server:8088
+```
+
 ## Details of what the script is doing
 
 Build `oracle/database:12.2.0.1-ee` Docker image if required.
