@@ -33,7 +33,7 @@ curl -X PUT \
           }' \
      http://localhost:8083/connectors/cassandra-sink/config | jq .
 
-sleep 10
+sleep 15
 
 log "Verify messages are in cassandra table test.topic1"
 docker exec cassandra cqlsh -e 'select * from test.topic1;'
