@@ -19,13 +19,13 @@ if [ ! -f ${DIR}/EmptySchema/target/EmptySchema-1.0.0-SNAPSHOT.jar ]
 then
      # build EmptySchema transform
      log "Build EmptySchema transform"
-     docker run -it --rm -e KAFKA_CLIENT_TAG=$KAFKA_CLIENT_TAG -v "${DIR}/EmptySchema":/usr/src/mymaven -v "$HOME/.m2":/root/.m2 -v "${DIR}/EmptySchema/target:/usr/src/mymaven/target" -w /usr/src/mymaven maven:3.6.1-jdk-11 mvn package
+     docker run -i --rm -e KAFKA_CLIENT_TAG=$KAFKA_CLIENT_TAG -v "${DIR}/EmptySchema":/usr/src/mymaven -v "$HOME/.m2":/root/.m2 -v "${DIR}/EmptySchema/target:/usr/src/mymaven/target" -w /usr/src/mymaven maven:3.6.1-jdk-11 mvn package
 fi
 
 if [ ! -f ${DIR}/producer/target/producer-1.0.0-jar-with-dependencies.jar ]
 then
      log "Building jar for producer"
-     docker run -it --rm -e TAG=$TAG_BASE -e KAFKA_CLIENT_TAG=$KAFKA_CLIENT_TAG -v "${DIR}/producer":/usr/src/mymaven -v "$HOME/.m2":/root/.m2 -v "${DIR}/producer/target:/usr/src/mymaven/target" -w /usr/src/mymaven maven:3.6.1-jdk-11 mvn package
+     docker run -i --rm -e TAG=$TAG_BASE -e KAFKA_CLIENT_TAG=$KAFKA_CLIENT_TAG -v "${DIR}/producer":/usr/src/mymaven -v "$HOME/.m2":/root/.m2 -v "${DIR}/producer/target:/usr/src/mymaven/target" -w /usr/src/mymaven maven:3.6.1-jdk-11 mvn package
 fi
 
 

@@ -16,11 +16,11 @@ if [ ! -z "$CI" ]
 then
      # if this is github actions
      log "Removing all data"
-     docker run -p 9005:9005 -e FIREBASE_TOKEN=$FIREBASE_TOKEN -e PROJECT=$PROJECT -it kamshak/firebase-tools-docker firebase database:remove / -y --token "$FIREBASE_TOKEN" --project "$PROJECT"
+     docker run -p 9005:9005 -e FIREBASE_TOKEN=$FIREBASE_TOKEN -e PROJECT=$PROJECT -i kamshak/firebase-tools-docker firebase database:remove / -y --token "$FIREBASE_TOKEN" --project "$PROJECT"
      log "Adding data from musicBlog.json"
-     docker run -p 9005:9005 -v ${DIR}/musicBlog.json:/tmp/musicBlog.json -e FIREBASE_TOKEN=$FIREBASE_TOKEN -e PROJECT=$PROJECT -it kamshak/firebase-tools-docker firebase database:set / /tmp/musicBlog.json -y --token "$FIREBASE_TOKEN" --project "$PROJECT"
+     docker run -p 9005:9005 -v ${DIR}/musicBlog.json:/tmp/musicBlog.json -e FIREBASE_TOKEN=$FIREBASE_TOKEN -e PROJECT=$PROJECT -i kamshak/firebase-tools-docker firebase database:set / /tmp/musicBlog.json -y --token "$FIREBASE_TOKEN" --project "$PROJECT"
      log "Verifying data is in Firebase"
-     docker run -p 9005:9005 -e FIREBASE_TOKEN=$FIREBASE_TOKEN -e PROJECT=$PROJECT -it kamshak/firebase-tools-docker firebase database:get / --token "$FIREBASE_TOKEN" --project "$PROJECT" | jq .
+     docker run -p 9005:9005 -e FIREBASE_TOKEN=$FIREBASE_TOKEN -e PROJECT=$PROJECT -i kamshak/firebase-tools-docker firebase database:get / --token "$FIREBASE_TOKEN" --project "$PROJECT" | jq .
 fi
 
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
