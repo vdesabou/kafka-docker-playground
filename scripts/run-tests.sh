@@ -78,7 +78,7 @@ do
                 THE_CONNECTOR_TAG=$(grep "$connector_path " /tmp/README.txt | cut -d "|" -f 3 | sed 's/^[[:blank:]]*//;s/[[:blank:]]*$//')
             fi
         fi
-        testdir=echo "$dir" | sed 's/\//-/g'
+        testdir=$(echo "$dir" | sed 's/\//-/g')
         file="$TAG-$testdir-$THE_CONNECTOR_TAG-$script"
         s3_file="s3://kafka-docker-playground/ci/$file"
         set +e
@@ -129,7 +129,7 @@ do
             log "RESULT: SUCCESS for $script in dir $dir ($ELAPSED - $CUMULATED)"
             log "####################################################"
 
-            testdir=echo "$dir" | sed 's/\//-/g'
+            testdir=$(echo "$dir" | sed 's/\//-/g')
             file="$TAG-$testdir-$THE_CONNECTOR_TAG-$script"
             rm -f $file
             touch $file
