@@ -177,9 +177,8 @@ jobs:
           ZENDESK_USERNAME: ${{ secrets.ZENDESK_USERNAME }}
           ZENDESK_PASSWORD: ${{ secrets.ZENDESK_PASSWORD }}
 
-  post-build-success:
+  post-build:
     name: Update README
-    needs: build
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
