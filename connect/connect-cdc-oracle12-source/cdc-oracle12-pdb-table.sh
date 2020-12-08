@@ -62,7 +62,7 @@ log "Oracle DB has started!"
 
 log "Grant select on CUSTOMERS table"
 docker exec -i oracle sqlplus C\#\#MYUSER/mypassword@//localhost:1521/ORCLPDB1 << EOF
-     ALTER SESSION SET CONTAINER=ORCLPDB1;
+     ALTER SESSION SET CONTAINER=XEPDB1;
      GRANT select on CUSTOMERS TO C##MYUSER;
 EOF
 
