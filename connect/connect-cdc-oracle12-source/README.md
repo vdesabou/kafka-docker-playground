@@ -37,7 +37,7 @@ $ docker exec -i ksqldb-cli ksql http://ksqldb-server:8088
 
 ## Details of what the script is doing
 
-Build `oracle/database:12.2.0.1-ee` Docker image if required.
+Build `oracle/database:18.4.0-xe` Docker image if required.
 
 Wait (up to 15 minutes) that Oracle DB is up
 
@@ -60,13 +60,14 @@ $ curl -X PUT \
                "confluent.topic.replication.factor": "1",
                "oracle.server": "oracle",
                "oracle.port": 1521,
-               "oracle.sid": "ORCLCDB",
+               "oracle.sid": "XE",
                "oracle.username": "C##MYUSER",
                "oracle.password": "mypassword",
                "start.from":"snapshot",
                "redo.log.topic.name": "redo-log-topic",
                "redo.log.consumer.bootstrap.servers":"broker:9092",
                "table.inclusion.regex": ".*CUSTOMERS.*",
+               "_table.topic.name.template_":"Using template vars to set change event topic for each table",
                "table.topic.name.template": "${databaseName}.${schemaName}.${tableName}",
                "connection.pool.max.size": 20,
                "confluent.topic.replication.factor":1
@@ -74,10 +75,10 @@ $ curl -X PUT \
      http://localhost:8083/connectors/cdc-oracle-source-cdb/config | jq .
 ```
 
-Verify the topic `ORCLCDB.C__MYUSER.CUSTOMERS`:
+Verify the topic `XE.C__MYUSER.CUSTOMERS`:
 
 ```bash
-$ docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic ORCLCDB.C__MYUSER.CUSTOMERS --from-beginning --max-messages 2
+$ docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic XE.C__MYUSER.CUSTOMERS --from-beginning --max-messages 2
 ```
 
 Results:
@@ -92,8 +93,8 @@ Results:
 Grant select on CUSTOMERS table:
 
 ```bash
-$ docker exec -i oracle sqlplus C\#\#MYUSER/mypassword@//localhost:1521/ORCLPDB1 << EOF
-     ALTER SESSION SET CONTAINER=ORCLPDB1;
+$ docker exec -i oracle sqlplus C\#\#MYUSER/mypassword@//localhost:1521/XEPDB1 << EOF
+     ALTER SESSION SET CONTAINER=XEPDB1;
      GRANT select on CUSTOMERS TO C##MYUSER;
 EOF
 ```
@@ -115,14 +116,15 @@ $ curl -X PUT \
                "confluent.topic.replication.factor": "1",
                "oracle.server": "oracle",
                "oracle.port": 1521,
-               "oracle.sid": "ORCLCDB",
-               "oracle.pdb.name": "ORCLPDB1",
+               "oracle.sid": "XE",
+               "oracle.pdb.name": "XEPDB1",
                "oracle.username": "C##MYUSER",
                "oracle.password": "mypassword",
                "start.from":"snapshot",
                "redo.log.topic.name": "redo-log-topic",
                "redo.log.consumer.bootstrap.servers":"broker:9092",
-               "table.inclusion.regex": "ORCLPDB1[.].*[.]CUSTOMERS",
+               "table.inclusion.regex": "XEPDB1[.].*[.]CUSTOMERS",
+               "_table.topic.name.template_":"Using template vars to set change event topic for each table",
                "table.topic.name.template": "${databaseName}.${schemaName}.${tableName}",
                "connection.pool.max.size": 20,
                "confluent.topic.replication.factor":1
@@ -130,10 +132,10 @@ $ curl -X PUT \
      http://localhost:8083/connectors/cdc-oracle-source-pdb/config | jq .
 ```
 
-Verify the topic `ORCLPDB1.C__MYUSER.CUSTOMERS`:
+Verify the topic `XEPDB1.C__MYUSER.CUSTOMERS`:
 
 ```bash
-$ docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic ORCLPDB1.C__MYUSER.CUSTOMERS --from-beginning --max-messages 2
+$ docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic XEPDB1.C__MYUSER.CUSTOMERS --from-beginning --max-messages 2
 ```
 
 Results:
