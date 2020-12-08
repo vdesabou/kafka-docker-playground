@@ -90,8 +90,8 @@ curl -X PUT \
 
 sleep 5
 
-log "Verifying topic ORCLCDB.C__MYUSER.CUSTOMERS"
-timeout 60 docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic ORCLCDB.C__MYUSER.CUSTOMERS --from-beginning --max-messages 2
+log "Verifying topic XE.C__MYUSER.CUSTOMERS"
+timeout 60 docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic XE.C__MYUSER.CUSTOMERS --from-beginning --max-messages 2
 
 
 # [2020-10-30 08:40:08,284] ERROR Exception in RecordQueue thread (io.confluent.connect.oracle.cdc.util.RecordQueue)
