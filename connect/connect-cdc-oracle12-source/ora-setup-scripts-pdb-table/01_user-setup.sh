@@ -19,27 +19,29 @@ sqlplus /nolog <<- EOF
 EOF
 
 # Create C##MYUSER user in CDB (see https://github.com/oracle/docker-images/issues/443#issuecomment-313157302)
-sqlplus / as sysdba <<- EOF
+# https://github.com/oracle/docker-images/issues/1213
+# https://github.com/oracle/docker-images/pull/1217
+su -p oracle -c "sqlplus / as sysdba <<- EOF
 	create role C##CDC_PRIVS;
 	grant create session,
 	execute_catalog_role,
 	select any transaction,
 	select any dictionary to C##CDC_PRIVS;
-	grant select on SYSTEM.LOGMNR_COL\$ to C##CDC_PRIVS;
-	grant select on SYSTEM.LOGMNR_OBJ\$ to C##CDC_PRIVS;
-	grant select on SYSTEM.LOGMNR_USER\$ to C##CDC_PRIVS;
-	grant select on SYSTEM.LOGMNR_UID\$ to C##CDC_PRIVS;
+	grant select on SYSTEM.LOGMNR_COL$ to C##CDC_PRIVS;
+	grant select on SYSTEM.LOGMNR_OBJ$ to C##CDC_PRIVS;
+	grant select on SYSTEM.LOGMNR_USER$ to C##CDC_PRIVS;
+	grant select on SYSTEM.LOGMNR_UID$ to C##CDC_PRIVS;
 
 	create user C##MYUSER identified by mypassword CONTAINER=all;
 	grant C##CDC_PRIVS to C##MYUSER CONTAINER=all;
 	alter user C##MYUSER quota unlimited on users;
-	alter user C##MYUSER set container_data = (cdb\$root, XEPDB1) container=current;
+	alter user C##MYUSER set container_data = (cdb$root, XEPDB1) container=current;
 
-	ALTER SESSION SET CONTAINER=cdb\$root;
+	ALTER SESSION SET CONTAINER=cdb$root;
 	GRANT create session, alter session, set container, logmining, execute_catalog_role TO C##MYUSER CONTAINER=all;
-	GRANT select on GV_\$DATABASE to C##MYUSER CONTAINER=all;
-	GRANT select on V_\$LOGMNR_CONTENTS to C##MYUSER CONTAINER=all;
-	GRANT select on GV_\$ARCHIVED_LOG to C##MYUSER CONTAINER=all;
+	GRANT select on GV_$DATABASE to C##MYUSER CONTAINER=all;
+	GRANT select on V_$LOGMNR_CONTENTS to C##MYUSER CONTAINER=all;
+	GRANT select on GV_$ARCHIVED_LOG to C##MYUSER CONTAINER=all;
 
 	GRANT CREATE TABLE TO C##MYUSER container=all;
 	GRANT CREATE SEQUENCE TO C##MYUSER container=all;
@@ -47,10 +49,10 @@ sqlplus / as sysdba <<- EOF
 	GRANT FLASHBACK ANY TABLE TO C##MYUSER container=all;
 
         -- Enable Supplemental Logging for All Columns
-	ALTER SESSION SET CONTAINER=cdb\$root;
+	ALTER SESSION SET CONTAINER=cdb$root;
 	ALTER DATABASE ADD SUPPLEMENTAL LOG DATA;
 	ALTER DATABASE ADD SUPPLEMENTAL LOG DATA (ALL) COLUMNS;
 
 	exit;
-EOF
+EOF"
 
