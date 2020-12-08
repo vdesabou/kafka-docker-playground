@@ -19,16 +19,18 @@ sqlplus /nolog <<- EOF
 EOF
 
 # Create C##MYUSER user in CDB (see https://github.com/oracle/docker-images/issues/443#issuecomment-313157302)
-sqlplus / as sysdba <<- EOF
+# https://github.com/oracle/docker-images/issues/1213
+# https://github.com/oracle/docker-images/pull/1217
+su -p oracle -c "sqlplus / as sysdba <<- EOF
 	create role C##CDC_PRIVS;
 	grant create session,
 	execute_catalog_role,
 	select any transaction,
 	select any dictionary to C##CDC_PRIVS;
-	grant select on SYSTEM.LOGMNR_COL\$ to C##CDC_PRIVS;
-	grant select on SYSTEM.LOGMNR_OBJ\$ to C##CDC_PRIVS;
-	grant select on SYSTEM.LOGMNR_USER\$ to C##CDC_PRIVS;
-	grant select on SYSTEM.LOGMNR_UID\$ to C##CDC_PRIVS;
+	grant select on SYSTEM.LOGMNR_COL$ to C##CDC_PRIVS;
+	grant select on SYSTEM.LOGMNR_OBJ$ to C##CDC_PRIVS;
+	grant select on SYSTEM.LOGMNR_USER$ to C##CDC_PRIVS;
+	grant select on SYSTEM.LOGMNR_UID$ to C##CDC_PRIVS;
 
 	create user C##MYUSER identified by mypassword;
 	grant C##CDC_PRIVS to C##MYUSER;
@@ -43,10 +45,10 @@ sqlplus / as sysdba <<- EOF
 	GRANT FLASHBACK ANY TABLE TO C##MYUSER container=all;
 
         -- Enable Supplemental Logging for All Columns
-	ALTER SESSION SET CONTAINER=cdb\$root;
+	ALTER SESSION SET CONTAINER=cdb$root;
 	ALTER DATABASE ADD SUPPLEMENTAL LOG DATA;
 	ALTER DATABASE ADD SUPPLEMENTAL LOG DATA (ALL) COLUMNS;
 
 	exit;
-EOF
+EOF"
 
