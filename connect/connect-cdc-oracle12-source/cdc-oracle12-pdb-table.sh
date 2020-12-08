@@ -79,6 +79,7 @@ curl -X PUT \
                "confluent.license": "",
                "confluent.topic.bootstrap.servers": "broker:9092",
                "confluent.topic.replication.factor": "1",
+               "oracle.server": "oracle",
                "oracle.port": 1521,
                "oracle.sid": "XE",
                "oracle.pdb.name": "XEPDB1",
