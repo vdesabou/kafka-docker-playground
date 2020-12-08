@@ -97,5 +97,5 @@ curl -X PUT \
 
 sleep 5
 
-log "Verifying topic ORCLPDB1.C__MYUSER.CUSTOMERS"
-timeout 60 docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic ORCLPDB1.C__MYUSER.CUSTOMERS --from-beginning --max-messages 2
+log "Verifying topic XEPDB1.C__MYUSER.CUSTOMERS"
+timeout 60 docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic XEPDB1.C__MYUSER.CUSTOMERS --from-beginning --max-messages 2
