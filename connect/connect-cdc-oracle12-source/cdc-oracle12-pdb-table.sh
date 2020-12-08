@@ -88,7 +88,7 @@ curl -X PUT \
                "start.from":"snapshot",
                "redo.log.topic.name": "redo-log-topic",
                "redo.log.consumer.bootstrap.servers":"broker:9092",
-               "table.inclusion.regex": "ORCLPDB1[.].*[.]CUSTOMERS",
+               "table.inclusion.regex": "XEPDB1[.].*[.]CUSTOMERS",
                "table.topic.name.template": "${databaseName}.${schemaName}.${tableName}",
                "connection.pool.max.size": 20,
                "confluent.topic.replication.factor":1
