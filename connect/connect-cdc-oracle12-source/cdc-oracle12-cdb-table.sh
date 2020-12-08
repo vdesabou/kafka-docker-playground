@@ -13,27 +13,28 @@ fi
 if [ -z "$CI" ]
 then
      # not running with github actions
-     if test -z "$(docker images -q oracle/database:12.2.0.1-ee)"
+     if test -z "$(docker images -q oracle/database:18.4.0-xe)"
      then
-          if [ ! -f ${DIR}/linuxx64_12201_database.zip ]
+          if [ ! -f ${DIR}/oracle-database-xe-18c-1.0-1.x86_64.rpm ]
           then
-               logerror "ERROR: ${DIR}/linuxx64_12201_database.zip is missing. It must be downloaded manually in order to acknowledge user agreement"
+               logerror "ERROR: ${DIR}/oracle-database-xe-18c-1.0-1.x86_64.rpm is missing. It must be downloaded manually in order to acknowledge user agreement"
                exit 1
           fi
-          log "Building oracle/database:12.2.0.1-ee docker image..it can take a while...(more than 15 minutes!)"
+          log "Building oracle/database:18.4.0-xe docker image..it can take a while...(more than 15 minutes!)"
           OLDDIR=$PWD
           rm -rf ${DIR}/docker-images
           git clone https://github.com/oracle/docker-images.git
 
-          cp ${DIR}/linuxx64_12201_database.zip ${DIR}/docker-images/OracleDatabase/SingleInstance/dockerfiles/12.2.0.1/linuxx64_12201_database.zip
+          cp ${DIR}/oracle-database-xe-18c-1.0-1.x86_64.rpm ${DIR}/docker-images/OracleDatabase/SingleInstance/dockerfiles/18.4.0/oracle-database-xe-18c-1.0-1.x86_64.rpm
           cd ${DIR}/docker-images/OracleDatabase/SingleInstance/dockerfiles
-          ./buildDockerImage.sh -v 12.2.0.1 -e
+          # -x: creates image based on 'Express Edition'
+          ./buildDockerImage.sh -v 18.4.0 -x
           rm -rf ${DIR}/docker-images
           cd ${OLDDIR}
      fi
 fi
 
-export ORACLE_IMAGE="oracle/database:12.2.0.1-ee"
+export ORACLE_IMAGE="oracle/database:18.4.0-xe"
 if [ ! -z "$CI" ]
 then
      # if this is github actions, use private image.
