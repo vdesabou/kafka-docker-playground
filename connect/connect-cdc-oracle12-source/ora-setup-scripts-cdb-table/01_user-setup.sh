@@ -3,7 +3,7 @@
 echo 'Configuring Oracle for user myuser'
 
 # Set archive log mode and enable GG replication
-ORACLE_SID=ORCLCDB
+ORACLE_SID=XE
 export ORACLE_SID
 
 sqlplus /nolog <<- EOF
