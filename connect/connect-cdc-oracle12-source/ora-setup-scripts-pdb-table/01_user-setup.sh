@@ -12,7 +12,6 @@ sqlplus /nolog <<- EOF
 	shutdown immediate
 	startup mount
 	alter database archivelog;
-	ALTER DATABASE FLASHBACK ON;
 	alter database open;
         -- Should show "Database log mode: Archive Mode"
 	archive log list
