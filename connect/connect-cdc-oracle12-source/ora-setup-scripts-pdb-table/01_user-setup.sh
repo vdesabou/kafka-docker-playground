@@ -34,7 +34,7 @@ sqlplus / as sysdba <<- EOF
 	create user C##MYUSER identified by mypassword CONTAINER=all;
 	grant C##CDC_PRIVS to C##MYUSER CONTAINER=all;
 	alter user C##MYUSER quota unlimited on users;
-	alter user C##MYUSER set container_data = (cdb\$root, ORCLPDB1) container=current;
+	alter user C##MYUSER set container_data = (cdb\$root, XEPDB1) container=current;
 
 	ALTER SESSION SET CONTAINER=cdb\$root;
 	GRANT create session, alter session, set container, logmining, execute_catalog_role TO C##MYUSER CONTAINER=all;
