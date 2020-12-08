@@ -6,17 +6,20 @@ echo 'Configuring Oracle for user myuser'
 ORACLE_SID=XE
 export ORACLE_SID
 
-sqlplus /nolog <<- EOF
+# https://github.com/oracle/docker-images/issues/1213
+# https://github.com/oracle/docker-images/pull/1217
+su -p oracle -c "sqlplus /nolog <<- EOF
 	CONNECT sys/Admin123 AS SYSDBA
         -- Turn on Archivelog Mode
 	shutdown immediate
 	startup mount
 	alter database archivelog;
+		-- ALTER DATABASE FLASHBACK ON;
 	alter database open;
-        -- Should show "Database log mode: Archive Mode"
+        -- Should show 'Database log mode: Archive Mode'
 	archive log list
 	exit;
-EOF
+EOF"
 
 # Create C##MYUSER user in CDB (see https://github.com/oracle/docker-images/issues/443#issuecomment-313157302)
 # https://github.com/oracle/docker-images/issues/1213
