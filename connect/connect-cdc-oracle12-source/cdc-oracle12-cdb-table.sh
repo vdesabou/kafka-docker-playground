@@ -59,6 +59,13 @@ fi
 done
 log "Oracle DB has started!"
 
+# Create a redo-log-topic. Please make sure you create a topic with the same name you will use for "redo.log.topic.name": "redo-log-topic"
+# CC-13104 
+docker exec connect kafka-topics --create --topic redo-log-topic --bootstrap-server broker:9092 --replication-factor 1 --partitions 1 --config cleanup.policy=delete --config retention.ms=120960000 
+log "redo-log-topic is created"
+sleep 5
+
+
 log "Creating Oracle source connector"
 curl -X PUT \
      -H "Content-Type: application/json" \
