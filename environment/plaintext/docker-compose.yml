@@ -113,6 +113,9 @@ services:
     image: confluentinc/ksqldb-server:latest
     hostname: ksqldb-server
     container_name: ksqldb-server
+    depends_on:
+      - broker
+      - connect
     ports:
       - "8088:8088"
     environment:
@@ -129,6 +132,8 @@ services:
     image: confluentinc/ksqldb-cli:latest
     container_name: ksqldb-cli
     depends_on:
+      - broker
+      - connect
       - ksqldb-server
     entrypoint: /bin/sh
     tty: true
