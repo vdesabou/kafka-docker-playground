@@ -60,7 +60,7 @@ Quick start examples from Confluent [docs](https://docs.confluent.io/current/con
 | <img src="./images/icons/data_diode.jpg" width="15"> [Data Diode Sink](connect/connect-datadiode-source-sink) | Logs | 1.1.1 | Confluent Subscription | 2019-10-18 | ✅ 2020-12-06 
 | <img src="./images/icons/data_diode.jpg" width="15"> [Data Diode Source](connect/connect-datadiode-source-sink) | Logs | 1.1.1 | Confluent Subscription | 2019-10-18 | ✅ 2020-12-06 
 | <img src="./images/icons/datadog.png" height="15"> [Datadog Metrics Sink](connect/connect-datadog-metrics-sink) | Analytics | 1.1.2 | Confluent Subscription | 2020-06-08 | ✅ 2020-12-06 
-| <img src="./images/icons/elasticsearch.png" width="15"> [ElasticSearch Sink](connect/connect-elasticsearch-sink) | Analytics | 11.0.0 | Confluent Community License | 2020-12-11 | ✅ 2020-12-06 
+| <img src="./images/icons/elasticsearch.png" width="15"> [ElasticSearch Sink](connect/connect-elasticsearch-sink) | Analytics | 11.0.0 | Confluent Community License | 2020-12-11 | ✅ 2020-12-13 
 | <img src="./images/icons/ftps.png" height="15"> [FTPS Sink](connect/connect-ftps-sink) | Datastore |1.0.3-preview | Confluent Subscription | 2020-10-01 | ✅ 2020-12-06 
 | <img src="./images/icons/ftps.png" height="15"> [FTPS Source](connect/connect-ftps-source) | Datastore |1.0.3-preview | Confluent Subscription | 2020-10-01 | ✅ 2020-12-06 
 | <img src="./images/icons/pivotal_gemfire.png" width="15"> [Gemfire Sink](connect/connect-pivotal-gemfire-sink) | Database | 1.0.3 | Confluent Subscription | 2020-12-09 | ✅ 2020-12-10 
@@ -115,13 +115,13 @@ Quick start examples from Confluent [docs](https://docs.confluent.io/current/con
 | <img src="./images/icons/rabbitmq.svg" width="15"> [RabbitMQ Sink](connect/connect-rabbitmq-sink) |  Message Queue | 1.4.1 | Confluent Subscription | 2020-10-31 | ✅ 2020-12-06 
 | <img src="./images/icons/rabbitmq.svg" width="15">  [RabbitMQ Source](connect/connect-rabbitmq-source) |  Message Queue | 1.4.1 | Confluent Subscription | 2020-10-31 | ✅ 2020-12-06 
 | <img src="./images/icons/redis.jpg" width="15"> [Redis Sink](connect/connect-redis-sink) |  Database | 0.0.2.11 | Open Source (Jeremy Custenborder) | 2020-01-22 | ✅ 2020-12-06 
-| <img src="./images/icons/salesforce.png" height="15"> [SalesForce Bulk API Sink](connect/connect-salesforce-bulkapi-sink) |  SaaS Apps | 1.7.8 | Confluent Subscription | 2020-12-11 | ✅ 2020-12-10 
-| <img src="./images/icons/salesforce.png" height="15"> [SalesForce Bulk API Source](connect/connect-salesforce-bulkapi-source) |  SaaS Apps | 1.7.8 | Confluent Subscription | 2020-12-11 | ✅ 2020-12-10 
-| <img src="./images/icons/salesforce.png" height="15"> [SalesForce CDC Source](connect/connect-salesforce-cdc-source) |  SaaS Apps | 1.7.8 | Confluent Subscription | 2020-12-11 | ✅ 2020-12-10 
-| <img src="./images/icons/salesforce.png" height="15"> [SalesForce Platform Events Sink](connect/connect-salesforce-platform-events-sink) |  SaaS Apps | 1.7.8 | Confluent Subscription | 2020-12-11 | ✅ 2020-12-10 
-| <img src="./images/icons/salesforce.png" height="15"> [SalesForce Platform Events Source](connect/connect-salesforce-platform-events-source) |  SaaS Apps | 1.7.8 | Confluent Subscription | 2020-12-11 | ✅ 2020-12-10 
-| <img src="./images/icons/salesforce.png" height="15"> [SalesForce PushTopics Source](connect/connect-salesforce-pushtopics-source) |  SaaS Apps | 1.7.8 | Confluent Subscription | 2020-12-11 | ✅ 2020-12-10 
-| <img src="./images/icons/salesforce.png" height="15"> [SalesForce SObject Sink](connect/connect-salesforce-sobject-sink) |  SaaS Apps | 1.7.8 | Confluent Subscription | 2020-12-11 | ✅ 2020-12-10 
+| <img src="./images/icons/salesforce.png" height="15"> [SalesForce Bulk API Sink](connect/connect-salesforce-bulkapi-sink) |  SaaS Apps | 1.7.8 | Confluent Subscription | 2020-12-11 | ✅ 2020-12-13 
+| <img src="./images/icons/salesforce.png" height="15"> [SalesForce Bulk API Source](connect/connect-salesforce-bulkapi-source) |  SaaS Apps | 1.7.8 | Confluent Subscription | 2020-12-11 | ✅ 2020-12-13 
+| <img src="./images/icons/salesforce.png" height="15"> [SalesForce CDC Source](connect/connect-salesforce-cdc-source) |  SaaS Apps | 1.7.8 | Confluent Subscription | 2020-12-11 | ✅ 2020-12-13 
+| <img src="./images/icons/salesforce.png" height="15"> [SalesForce Platform Events Sink](connect/connect-salesforce-platform-events-sink) |  SaaS Apps | 1.7.8 | Confluent Subscription | 2020-12-11 | ✅ 2020-12-13 
+| <img src="./images/icons/salesforce.png" height="15"> [SalesForce Platform Events Source](connect/connect-salesforce-platform-events-source) |  SaaS Apps | 1.7.8 | Confluent Subscription | 2020-12-11 | ✅ 2020-12-13 
+| <img src="./images/icons/salesforce.png" height="15"> [SalesForce PushTopics Source](connect/connect-salesforce-pushtopics-source) |  SaaS Apps | 1.7.8 | Confluent Subscription | 2020-12-11 | ✅ 2020-12-13 
+| <img src="./images/icons/salesforce.png" height="15"> [SalesForce SObject Sink](connect/connect-salesforce-sobject-sink) |  SaaS Apps | 1.7.8 | Confluent Subscription | 2020-12-11 | ✅ 2020-12-13 
 | <img src="./images/icons/servicenow.png" width="15"> [ServiceNow Sink](connect/connect-servicenow-sink) |  SaaS Apps | 2.0.3 | Confluent Subscription | 2020-12-09 | ❌ 
 | <img src="./images/icons/servicenow.png" width="15"> [ServiceNow Source](connect/connect-servicenow-source) |  SaaS Apps | 2.0.3 | Confluent Subscription | 2020-12-09 | ❌ 
 | <img src="./images/icons/sftp.png" width="15"> [SFTP Sink](connect/connect-sftp-sink) |  Datastore | 2.1.4 | Confluent Subscription | 2020-12-01 | ✅ 2020-12-06 
