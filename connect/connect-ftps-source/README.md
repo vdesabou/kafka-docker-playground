@@ -71,4 +71,4 @@ Results:
 {"id":2,"first_name":{"string":"Gregoire"},"last_name":{"string":"Fentem"},"email":{"string":"gfentem1@nsw.gov.au"},"gender":{"string":"Male"},"ip_address":{"string":"221.159.106.63"},"last_login":{"string":"2015-03-27T00:29:56Z"},"account_balance":{"bytes":"\u0002\u001Få"},"country":{"string":"ID"},"favorite_color":{"string":"#e8f686"}}
 ```
 
-N.B: Control Center is reachable at [http://127.0.0.1:9021](http://127.0.0.1:9021])
+N.B: Control Center is reachable at [http://127.0.0.1:9021](http://127.0.0.1:9021)
