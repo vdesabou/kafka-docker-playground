@@ -4,9 +4,9 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
-if [ ! -d ${DIR}/confluentinc-kafka-connect-oracle-cdc-1.0.0-rc-70b3f21-preview ]
+if [ ! -d ${DIR}/confluentinc-kafka-connect-oracle-cdc-1.0.0-rc-56069d9-preview ]
 then
-     logerror "ERROR: ${DIR}/confluentinc-kafka-connect-oracle-cdc-1.0.0-rc-70b3f21-preview is missing."
+     logerror "ERROR: ${DIR}/confluentinc-kafka-connect-oracle-cdc-1.0.0-rc-56069d9-preview is missing."
      exit 1
 fi
 
