@@ -34,7 +34,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        tag: [ "6.0.0"]
+        tag: [ "6.0.1"]
         test_list : [
                       "connect/connect-salesforce-bulkapi-sink connect/connect-salesforce-bulkapi-source connect/connect-salesforce-pushtopics-source connect/connect-salesforce-sobject-sink connect/connect-salesforce-cdc-source connect/connect-salesforce-platform-events-sink connect/connect-salesforce-platform-events-source",
                       "connect/connect-snowflake-sink connect/connect-splunk-sink connect/connect-splunk-source connect/connect-spool-dir-source
@@ -196,7 +196,7 @@ jobs:
 
       - name: Update README
         run: |
-          ./scripts/get-versions.sh "6.0.0"
+          ./scripts/get-versions.sh "6.0.1"
       - name: push
         uses: github-actions-x/commit@v2.6
         with:
