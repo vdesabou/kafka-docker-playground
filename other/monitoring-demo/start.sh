@@ -132,11 +132,11 @@ then
      curl -XGET 'http://localhost:9200/mysql-application/_search?pretty'
 fi
 
-if [[ ! $(type kafka-consumer-groups 2>&1) =~ "not found" ]]; then
-     log "Example showing how to use kafka-consumer-groups command for Confluent Cloud"
-     kafka-consumer-groups --bootstrap-server "broker-europe:9092" --list
-     kafka-consumer-groups --bootstrap-server "broker-europe:9092" --group simple-stream --describe
-fi
+# if [[ ! $(type kafka-consumer-groups 2>&1) =~ "not found" ]]; then
+#      log "Example showing how to use kafka-consumer-groups command for Confluent Cloud"
+#      kafka-consumer-groups --bootstrap-server "broker-europe:9092" --list
+#      kafka-consumer-groups --bootstrap-server "broker-europe:9092" --group simple-stream --describe
+# fi
 
 
 log "Sending sales in Europe cluster"
