@@ -10,4 +10,4 @@ log "Sleep 90 seconds"
 sleep 90
 
 log "Verify we have received the data in syslog topic"
-docker exec broker kafka-console-consumer --bootstrap-server broker:9092 --topic topic-log --from-beginning --max-messages 100
+timeout 30 docker exec broker kafka-console-consumer --bootstrap-server broker:9092 --topic topic-log --from-beginning --max-messages 100
