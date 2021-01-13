@@ -55,8 +55,8 @@ docker container restart list-buckets
 sleep 3
 docker container logs --tail=100 list-buckets
 
-log "Sleep 5 minutes (confluent.tier.local.hotset.ms=60000)"
-sleep 300
+log "Sleep 6 minutes (confluent.tier.local.hotset.ms=60000)"
+sleep 360
 
 log "Check for deleted log segments"
 docker container logs --tail=500 broker
