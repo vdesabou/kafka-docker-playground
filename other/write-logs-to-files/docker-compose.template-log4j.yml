@@ -43,27 +43,11 @@ services:
       CONTROL_CENTER_LOG4J_ROOT_LOGLEVEL: "DEBUG"
       # CONTROL_CENTER_LOG4J_LOGGERS: ""
 
-  ksql-server:
-    image: confluentinc/${CP_KSQL_IMAGE}:${TAG}
-    hostname: ksql-server
-    container_name: ksql-server
-    depends_on:
-      - broker
-      - schema-registry
-    ports:
-      - "8088:8088"
+  ksqldb-server:
     volumes:
       - ../../other/write-logs-to-files/ksql-server/log4j.template.properties:/etc/confluent/docker/log4j.properties.template
       - ../../other/write-logs-to-files/ksql-server/logs:/var/log/ksql-server/
     environment:
-      KSQL_CONFIG_DIR: "/etc/ksql"
-      KSQL_BOOTSTRAP_SERVERS: "broker:9092"
-      KSQL_HOST_NAME: ksql-server
-      KSQL_LISTENERS: "http://0.0.0.0:8088"
-      KSQL_CACHE_MAX_BYTES_BUFFERING: 0
-      KSQL_KSQL_SCHEMA_REGISTRY_URL: "http://schema-registry:8081"
-      KSQL_PRODUCER_INTERCEPTOR_CLASSES: "io.confluent.monitoring.clients.interceptor.MonitoringProducerInterceptor"
-      KSQL_CONSUMER_INTERCEPTOR_CLASSES: "io.confluent.monitoring.clients.interceptor.MonitoringConsumerInterceptor"
       KSQL_LOG4J_ROOT_LOGLEVEL: "DEBUG"
       KSQL_LOG4J_LOGGERS: "org.reflections=ERROR"
       # — Processing log config —
