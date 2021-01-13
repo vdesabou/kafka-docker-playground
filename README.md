@@ -42,7 +42,7 @@ Quick start examples from Confluent [docs](https://docs.confluent.io/current/con
 | <img src="./images/icons/kudu.png" width="15"> [Apache Kudu Sink](connect/connect-kudu-sink)  | Database  | 1.0.1 | Confluent Subscription | 2020-01-07 | ✅ 2021-01-11 
 | <img src="./images/icons/lambda.svg" width="15"> [AWS Lambda Sink](connect/connect-aws-lambda-sink)  | SaaS Apps  | 1.1.1 | Confluent Subscription | 2021-01-07 | ✅ 2021-01-11 
 | <img src="./images/icons/blob_storage.png" width="15"> [Azure Blob Storage Sink](connect/connect-azure-blob-storage-sink)  | Datastore | 1.5.0 | Confluent Subscription | 2020-10-07 | ✅ 2021-01-11 
-| <img src="./images/icons/blob_storage.png" width="15"> [Azure Blob Storage Source](connect/connect-azure-blob-storage-source)  | Datastore | 1.4.0 | Confluent Subscription | 2021-01-12 | ✅ 2021-01-11 
+| <img src="./images/icons/blob_storage.png" width="15"> [Azure Blob Storage Source](connect/connect-azure-blob-storage-source)  | Datastore | 1.4.0 | Confluent Subscription | 2021-01-12 | ✅ 2021-01-13 
 | <img src="./images/icons/data_lake_gen1.png" width="15"> [Azure Data Lake Storage Gen1 Sink](connect/connect-azure-data-lake-storage-gen1-sink)  | Datastore | 1.5.0 | Confluent Subscription | 2020-10-07 | ✅ 2021-01-11 
 | <img src="./images/icons/data_lake_gen1.png" width="15"> [Azure Data Lake Storage Gen2 Sink](connect/connect-azure-data-lake-storage-gen2-sink)  | Datastore | 1.5.0 | Confluent Subscription | 2020-10-07 | ✅ 2021-01-11 
 | <img src="./images/icons/event_hubs.png" width="15"> [Azure Event Hubs Source](connect/connect-azure-event-hubs-source)  | Message Queue | 1.1.0 | Confluent Subscription | 2020-10-29 | ✅ 2021-01-11 
@@ -71,13 +71,13 @@ Quick start examples from Confluent [docs](https://docs.confluent.io/current/con
 | <img src="./images/icons/gcp_pubsub.png" width="15"> [Google Cloud Pub/Sub Source](connect/connect-gcp-pubsub-source) |  Message Queue | 1.0.5 | Confluent Subscription | 2020-10-29 | ✅ 2021-01-11 
 | <img src="./images/icons/spanner.png" width="15"> [Google Cloud Spanner Sink](connect/connect-gcp-spanner-sink) |  Database | 1.0.3 | Confluent Subscription | 2020-12-01 | ✅ 2021-01-11 
 | <img src="./images/icons/gcs.png" width="15"> [Google Cloud Storage Sink](connect/connect-gcp-gcs-sink) |  Datastore | 5.5.5 | Confluent Subscription | 2020-12-29 | ✅ 2021-01-11 
-| <img src="./images/icons/gcs.png" width="15"> [Google Cloud Storage Source](connect/connect-gcp-gcs-source) |  Datastore | 1.4.0 | Confluent Subscription | 2021-01-12 | ✅ 2021-01-11 
+| <img src="./images/icons/gcs.png" width="15"> [Google Cloud Storage Source](connect/connect-gcp-gcs-source) |  Datastore | 1.4.0 | Confluent Subscription | 2021-01-12 | ✅ 2021-01-13 
 | <img src="./images/icons/firebase.svg" width="15"> [Google Firebase Realtime Database Sink](connect/connect-gcp-firebase-sink) |  Database | 1.2.0 | Confluent Subscription | 2020-12-01 | ✅  
 | <img src="./images/icons/firebase.svg" width="15"> [Google Firebase Realtime Database Source](connect/connect-gcp-firebase-source) |  Database | 1.2.0 | Confluent Subscription | 2020-12-01 | ✅  
 | <img src="./images/icons/hbase.png" width="15"> [HBase Sink](connect/connect-hbase-sink) |  Database | 1.0.6 | Confluent Subscription | 2020-12-17 | ✅ 2021-01-11 
-| <img src="./images/icons/hdfs_2.svg" width="15"> [HDFS 2 Source](connect/connect-hdfs2-source) |  Datastore | 1.4.0 | Confluent Subscription | 2021-01-12 | ✅ 2021-01-11 
-| <img src="./images/icons/hdfs_2.svg" width="15"> [HDFS 3 Source](connect/connect-hdfs3-source) |  Datastore | 1.4.0 | Confluent Subscription | 2021-01-12 | ✅ 2021-01-11 
-| <img src="./images/icons/hdfs_2.svg" width="15"> [HDFS 2 Sink](connect/connect-hdfs2-sink) |  Datastore | 10.0.0 | Confluent Community License | 2020-11-05 | ✅ 2021-01-11 
+| <img src="./images/icons/hdfs_2.svg" width="15"> [HDFS 2 Source](connect/connect-hdfs2-source) |  Datastore | 1.4.0 | Confluent Subscription | 2021-01-12 | ✅ 2021-01-13 
+| <img src="./images/icons/hdfs_2.svg" width="15"> [HDFS 3 Source](connect/connect-hdfs3-source) |  Datastore | 1.4.0 | Confluent Subscription | 2021-01-12 | ✅ 2021-01-13 
+| <img src="./images/icons/hdfs_2.svg" width="15"> [HDFS 2 Sink](connect/connect-hdfs2-sink) |  Datastore | 10.0.0 | Confluent Community License | 2020-11-05 | ✅ 2021-01-13 
 | <img src="./images/icons/hdfs_2.svg" width="15"> [HDFS 3 Sink](connect/connect-hdfs3-sink) |  Datastore | 1.0.7 | Confluent Subscription | 2020-12-10 | ✅ 2021-01-11 
 | <img src="./images/icons/http.png" width="15"> [HTTP Sink](connect/connect-http-sink) |  SaaS Apps | 1.1.0 | Confluent Subscription | 2020-12-09 | ✅ 2021-01-11 
 | <img src="./images/icons/ibm_mq.png" width="15"> [IBM MQ Sink](connect/connect-ibm-mq-sink) |  Message Queue | 1.3.0 | Confluent Subscription | 2020-09-15 | ✅ 2021-01-11 
