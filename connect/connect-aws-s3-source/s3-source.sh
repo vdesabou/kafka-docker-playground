@@ -68,7 +68,6 @@ curl -X PUT \
                     "connector.class": "io.confluent.connect.s3.source.S3SourceConnector",
                     "s3.region": "us-east-1",
                     "s3.bucket.name": "'"$AWS_BUCKET_NAME"'",
-                    "store.url" : "https://s3.us-east-1.amazonaws.com",
                     "format.class": "io.confluent.connect.s3.format.avro.AvroFormat",
                     "confluent.license": "",
                     "confluent.topic.bootstrap.servers": "broker:9092",
@@ -80,7 +79,6 @@ curl -X PUT \
           }' \
      http://localhost:8083/connectors/s3-source/config | jq .
 
-# FIXTHIS #184: store.url seems to be mandatory now ?
 
 log "Verifying topic copy_of_s3_topic"
 timeout 60 docker exec broker kafka-console-consumer -bootstrap-server broker:9092 --topic copy_of_s3_topic --from-beginning --max-messages 9
