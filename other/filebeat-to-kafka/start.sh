@@ -9,5 +9,7 @@ ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml
 log "Sleep 90 seconds"
 sleep 90
 
+docker container logs --tail=300 filebeat
+
 log "Verify we have received the data in syslog topic"
 timeout 30 docker exec broker kafka-console-consumer --bootstrap-server broker:9092 --topic topic-log --from-beginning --max-messages 100
