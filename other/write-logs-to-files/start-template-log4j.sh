@@ -4,6 +4,11 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
+if [ ! -z "$CI" ]
+then
+     # running with github actions
+     sudo chown -R appuser ${DIR}
+fi
 
 rm -f ${DIR}/broker/logs/*
 rm -f ${DIR}/zookeeper/logs/*
