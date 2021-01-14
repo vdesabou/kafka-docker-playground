@@ -9,6 +9,7 @@ services:
     image: docker.elastic.co/beats/filebeat:6.6.0
     container_name: filebeat
     user: root
+    privileged: true
     environment:
         - strict.perms=false
     depends_on:
