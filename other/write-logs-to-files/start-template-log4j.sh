@@ -7,7 +7,7 @@ source ${DIR}/../../scripts/utils.sh
 if [ ! -z "$CI" ]
 then
      # running with github actions
-     sudo chown -R appuser ${DIR}
+     sudo chown -R $USER ${DIR}
 fi
 
 rm -f ${DIR}/broker/logs/*
