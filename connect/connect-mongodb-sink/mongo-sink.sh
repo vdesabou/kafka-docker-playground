@@ -51,3 +51,11 @@ docker exec -i mongodb mongo << EOF
 use inventory
 db.customers.find().pretty();
 EOF
+
+docker exec -i mongodb mongo << EOF > output.txt
+use inventory
+db.customers.find().pretty();
+EOF
+
+grep "foo" output.txt
+rm output.txt
