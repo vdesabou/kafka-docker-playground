@@ -15,5 +15,5 @@ services:
       - broker
     volumes:
         - ../../other/filebeat-to-kafka/filebeat.yml:/usr/share/filebeat/filebeat.yml:ro
-        - ../../other/filebeat-to-kafka/control-center.txt:/usr/share/services/control-center/logs/control-center.log``
+        - ../../other/filebeat-to-kafka/control-center.txt:/usr/share/services/control-center/logs/control-center.log
     command: filebeat -e -strict.perms=false
