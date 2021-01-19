@@ -13,7 +13,7 @@ services:
     environment:
       KAFKA_REST_HOST_NAME: restproxy
       KAFKA_REST_BOOTSTRAP_SERVERS: $BOOTSTRAP_SERVERS
-      KAFKA_REST_LISTENERS: "https://0.0.0.0:8086"
+      KAFKA_REST_LISTENERS: "https://0.0.0.0:8082"
 
       # Security configurations between REST Proxy and HTTP client
       KAFKA_REST_SSL_TRUSTSTORE_LOCATION: /etc/kafka/secrets/kafka.restproxy.truststore.jks
@@ -43,4 +43,4 @@ services:
       KAFKA_REST_CONFLUENT_REST_AUTH_SSL_PRINCIPAL_MAPPING_RULES: RULE:^CN=(.*?),OU=TEST.*$$/$$1/,DEFAULT
 
     ports:
-      - 8086:8086
+      - 8082:8082
