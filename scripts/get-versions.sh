@@ -52,7 +52,14 @@ do
             continue
           fi
           time=""
-          last_success_time=$(grep "$dir" ci/${image_version}-*-${script_name} | tail -1 | cut -d "|" -f 2)
+          if [ "$dir" = "kafka-connect-couchbase" ]
+          then
+            version="3.4.8"
+          else
+            version=$(docker run vdesabou/kafka-docker-playground-connect:${image_version} cat /usr/share/confluent-hub-components/${dir}/manifest.json | jq -r '.version')
+          fi
+          testdir=$(echo "$test_folder" | sed 's/\//-/g')
+          last_success_time=$(grep "$dir" ci/${image_version}-${testdir}-${version}-${script_name} | tail -1 | cut -d "|" -f 2)
           if [ "$last_success_time" != "" ]
           then
             # now=$(date +%s)
