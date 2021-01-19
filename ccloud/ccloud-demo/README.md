@@ -18,10 +18,11 @@
       - [Use with Insomnia](#use-with-insomnia-1)
     - [KSQL](#ksql)
     - [REST Proxy](#rest-proxy)
+      - [Use with Insomnia](#use-with-insomnia-2)
     - [Control Center](#control-center)
   - [Monitoring](#monitoring)
     - [Metrics API](#metrics-api)
-      - [Use with Insomnia](#use-with-insomnia-2)
+      - [Use with Insomnia](#use-with-insomnia-3)
       - [Export to Prometheus](#export-to-prometheus)
     - [Control Center](#control-center-1)
       - [Monitoring multiple clusters](#monitoring-multiple-clusters)
@@ -725,6 +726,17 @@ Result:
 ```json
 {"brokers":[0,5,2,8,4,1,6,7,3]}
 ```
+
+#### Use with Insomnia
+
+You can use [REST Proxy API v3](https://docs.confluent.io/platform/current/kafka-rest/api.html#crest-api-v3) with [insomnia](https://insomnia.rest/) (install it on Mac OS with `brew cask install insomnia`).
+Then go to Preferences->Data and import this [JSON file](insomnia/rest-proxy-api-v3?raw=true).
+
+You can set variables for your cluster by modifying sub environment called `REST Proxy API v3`:
+
+![Sub environment](./images/Screenshot13.jpg)
+
+![Sub environment](./images/Screenshot14.jpg)
 
 Link to Confluent [documentation](https://docs.confluent.io/current/cloud/connect/ksql-cloud-config.html)
 
