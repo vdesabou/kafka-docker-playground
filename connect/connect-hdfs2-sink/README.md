@@ -14,6 +14,10 @@ Simply run:
 
 ```
 $ ./hdfs2.sh
+
+or with Hive integration:
+
+$ ./hdfs2-hive-sink.sh
 ```
 
 ## Details of what the script is doing
