@@ -71,10 +71,14 @@ drwxr-xr-x   - root supergroup          0 2019-09-23 11:04 /topics/test_hdfs/f1=
 drwxr-xr-x   - root supergroup          0 2019-09-23 11:04 /topics/test_hdfs/f1=value9
 ```
 
-Check data with presto:
+Check data with beeline:
 
 ```
-./presto.jar --server localhost:18080 --catalog hive --schema testhive << EOF
+$ docker exec -i hive-server beeline << EOF
+!connect jdbc:hive2://hive-server:10000/testhive
+hive
+hive
+show create table test_hdfs;
 select * from test_hdfs;
 EOF
 ```
@@ -82,23 +86,52 @@ EOF
 Results:
 
 ```
-presto:testhive> select * from test_hdfs;
-   f1
---------
- value5
- value6
- value9
- value3
- value2
- value7
- value4
- value1
- value8
-(9 rows)
-
-Query 20210119_145939_00000_piuuk, FINISHED, 1 node
-Splits: 25 total, 25 done (100.00%)
-0:03 [9 rows, 1.75KB] [3 rows/s, 684B/s]
+Beeline version 2.3.2 by Apache Hive
+beeline> !connect jdbc:hive2://hive-server:10000/testhive
+Connecting to jdbc:hive2://hive-server:10000/testhive
+Enter username for jdbc:hive2://hive-server:10000/testhive: hive
+Enter password for jdbc:hive2://hive-server:10000/testhive: ****
+Connected to: Apache Hive (version 2.3.2)
+Driver: Hive JDBC (version 2.3.2)
+Transaction isolation: TRANSACTION_REPEATABLE_READ
+0: jdbc:hive2://hive-server:10000/testhive> show create table test_hdfs;
++----------------------------------------------------+
+|                   createtab_stmt                   |
++----------------------------------------------------+
+| CREATE EXTERNAL TABLE `test_hdfs`(                 |
+| )                                                  |
+| PARTITIONED BY (                                   |
+|   `f1` string COMMENT '')                          |
+| ROW FORMAT SERDE                                   |
+|   'org.apache.hadoop.hive.serde2.avro.AvroSerDe'   |
+| STORED AS INPUTFORMAT                              |
+|   'org.apache.hadoop.hive.ql.io.avro.AvroContainerInputFormat'  |
+| OUTPUTFORMAT                                       |
+|   'org.apache.hadoop.hive.ql.io.avro.AvroContainerOutputFormat' |
+| LOCATION                                           |
+|   'hdfs://namenode:8020/topics/test_hdfs'          |
+| TBLPROPERTIES (                                    |
+|   'avro.schema.literal'='{"type":"record","name":"ConnectDefault","namespace":"io.confluent.connect.avro","fields":[]}',  |
+|   'transient_lastDdlTime'='1611071894')            |
++----------------------------------------------------+
+15 rows selected (0.16 seconds)
+0: jdbc:hive2://hive-server:10000/testhive> select * from test_hdfs;
++---------------+
+| test_hdfs.f1  |
++---------------+
+| value1        |
+| value10       |
+| value2        |
+| value3        |
+| value4        |
+| value5        |
+| value6        |
+| value7        |
+| value8        |
+| value9        |
++---------------+
+10 rows selected (1.919 seconds)
+0: jdbc:hive2://hive-server:10000/testhive> Closing: 0: jdbc:hive2://hive-server:10000/testhive
 ```
 
 N.B: Control Center is reachable at [http://127.0.0.1:9021](http://127.0.0.1:9021])
