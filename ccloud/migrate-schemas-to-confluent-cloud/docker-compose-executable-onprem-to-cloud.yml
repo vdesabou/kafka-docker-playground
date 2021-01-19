@@ -33,7 +33,7 @@ services:
       KAFKA_CONFLUENT_LICENSE_TOPIC_REPLICATION_FACTOR: 1
       # for 6.0.0
       KAFKA_CONFLUENT_BALANCER_TOPIC_REPLICATION_FACTOR: 1
-  
+
   schema-registry:
     image: confluentinc/cp-schema-registry:${TAG}
     hostname: schema-registry
@@ -53,5 +53,5 @@ services:
         - ../../ccloud/migrate-schemas-to-confluent-cloud/executable-onprem-to-cloud-producer.properties:/etc/kafka/executable-onprem-to-cloud-producer.properties
         - ../../ccloud/migrate-schemas-to-confluent-cloud/executable-onprem-to-cloud-replicator.properties:/etc/kafka/executable-onprem-to-cloud-replicator.properties
     environment:
-      CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-s3 # this is not used but decrease test time
+      CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-s3
     entrypoint: ["sh", "-c", "sleep 2073600"]

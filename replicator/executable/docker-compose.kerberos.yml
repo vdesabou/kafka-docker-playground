@@ -10,7 +10,7 @@ services:
         - ../../replicator/executable/producer-us-kerberos.properties:/etc/kafka/producer-us.properties
         - ../../replicator/executable/replication-us.properties:/etc/kafka/replication-us.properties
     environment:
-      CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-s3 # this is not used but decrease test time
+      CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-s3
 
   connect-europe:
     volumes:
@@ -21,4 +21,4 @@ services:
         - ../../replicator/executable/producer-us-kerberos.properties:/etc/kafka/producer-us.properties
         - ../../replicator/executable/replication-us.properties:/etc/kafka/replication-us.properties
     environment:
-      CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-s3 # this is not used but decrease test time
+      CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-s3
