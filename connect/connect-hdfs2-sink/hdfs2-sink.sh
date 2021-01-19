@@ -10,14 +10,6 @@ then
      wget https://repo1.maven.org/maven2/org/apache/hive/hive-jdbc/3.1.2/hive-jdbc-3.1.2-standalone.jar
 fi
 
-if [ ! -f ${DIR}/presto.jar ]
-then
-     log "Getting presto-cli-0.183-executable.jar"
-     wget https://repo1.maven.org/maven2/com/facebook/presto/presto-cli/0.183/presto-cli-0.183-executable.jar
-     mv presto-cli-0.183-executable.jar presto.jar
-     chmod +x presto.jar
-fi
-
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
 
 sleep 10
@@ -67,7 +59,11 @@ docker cp namenode:/tmp/test_hdfs+0+0000000000+0000000000.avro /tmp/
 
 docker run -v /tmp:/tmp actions/avro-tools tojson /tmp/test_hdfs+0+0000000000+0000000000.avro
 
-log "Check data with presto"
-./presto.jar --server localhost:18080 --catalog hive --schema testhive << EOF
+log "Check data with beeline"
+docker exec -i hive-server beeline << EOF
+!connect jdbc:hive2://hive-server:10000/testhive
+hive
+hive
+show create table test_hdfs;
 select * from test_hdfs;
 EOF
