@@ -20,7 +20,7 @@ fi
 
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.hive.yml"
 
-sleep 30
+sleep 10
 
 # Note in this simple example, if you get into an issue with permissions at the local HDFS level, it may be easiest to unlock the permissions unless you want to debug that more.
 docker exec namenode bash -c "/opt/hadoop-2.7.4/bin/hdfs dfs -chmod 777  /"
@@ -68,5 +68,6 @@ docker cp namenode:/tmp/test_hdfs+0+0000000000+0000000000.avro /tmp/
 docker run -v /tmp:/tmp actions/avro-tools tojson /tmp/test_hdfs+0+0000000000+0000000000.avro
 
 log "Check data with presto"
-./presto.jar --server localhost:18080 --catalog hive --schema testhive
+./presto.jar --server localhost:18080 --catalog hive --schema testhive << EOF
 select * from test_hdfs;
+EOF
