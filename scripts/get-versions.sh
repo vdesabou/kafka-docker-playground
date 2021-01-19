@@ -27,7 +27,7 @@ do
     for test_folder in $test_folders
     do
       log "-> test folder $test_folder"
-      ci="❌"
+      ci="🤷‍♂️ not tested"
       if [ "$test_folder" != "" ]
       then
         set +e
@@ -69,7 +69,12 @@ do
         grep "$test_folder" ${DIR}/../.github/workflows/run-regression.yml | grep -v jar > /dev/null
         if [ $? = 0 ]
         then
-          ci="✅ $time"
+          if [ "$time" == "" ]
+          then
+            ci="☠"
+          else
+            ci="👍 $time"
+          fi
         fi
         set -e
       fi
