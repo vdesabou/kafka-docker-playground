@@ -52,6 +52,4 @@ services:
         - ../../ccloud/migrate-schemas-to-confluent-cloud/executable-onprem-to-cloud-consumer.properties:/etc/kafka/executable-onprem-to-cloud-consumer.properties
         - ../../ccloud/migrate-schemas-to-confluent-cloud/executable-onprem-to-cloud-producer.properties:/etc/kafka/executable-onprem-to-cloud-producer.properties
         - ../../ccloud/migrate-schemas-to-confluent-cloud/executable-onprem-to-cloud-replicator.properties:/etc/kafka/executable-onprem-to-cloud-replicator.properties
-    environment:
-      CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-s3
     entrypoint: ["sh", "-c", "sleep 2073600"]
