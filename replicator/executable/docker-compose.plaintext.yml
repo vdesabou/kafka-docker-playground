@@ -9,8 +9,6 @@ services:
         - ../../replicator/executable/consumer-us-plaintext.properties:/etc/kafka/consumer-us.properties
         - ../../replicator/executable/producer-us-plaintext.properties:/etc/kafka/producer-us.properties
         - ../../replicator/executable/replication-us.properties:/etc/kafka/replication-us.properties
-    environment:
-      CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-s3
 
   connect-europe:
     volumes:
@@ -20,8 +18,6 @@ services:
         - ../../replicator/executable/consumer-us-plaintext.properties:/etc/kafka/consumer-us.properties
         - ../../replicator/executable/producer-us-plaintext.properties:/etc/kafka/producer-us.properties
         - ../../replicator/executable/replication-us.properties:/etc/kafka/replication-us.properties
-    environment:
-      CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-s3
 
   control-center:
      environment:
