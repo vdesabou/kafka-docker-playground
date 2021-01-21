@@ -151,10 +151,10 @@ set +e
 MAX_WAIT=480
 CUR_WAIT=0
 log "Waiting up to $MAX_WAIT seconds for Kafka Connect replicator-0 to start"
-kubectl logs -n kafka-dest -f replicator-0 > /tmp/out.txt 2>&1
+kubectl logs -n kafka-dest replicator-0 > /tmp/out.txt 2>&1
 while [[ ! $(cat /tmp/out.txt) =~ "Finished starting connectors and tasks" ]]; do
   sleep 10
-  kubectl logs -n kafka-dest -f replicator-0 > /tmp/out.txt 2>&1
+  kubectl logs -n kafka-dest replicator-0 > /tmp/out.txt 2>&1
   CUR_WAIT=$(( CUR_WAIT+10 ))
   if [[ "$CUR_WAIT" -gt "$MAX_WAIT" ]]; then
     echo -e "\nERROR: The logs in replicator-0 container do not show 'Finished starting connectors and tasks' after $MAX_WAIT seconds. Please troubleshoot'.\n"
