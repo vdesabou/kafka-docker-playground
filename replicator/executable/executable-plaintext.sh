@@ -12,25 +12,14 @@ seq -f "european_sale_%g ${RANDOM}" 10 | docker container exec -i broker-europe 
 log "Sending sales in US cluster"
 seq -f "us_sale_%g ${RANDOM}" 10 | docker container exec -i broker-us kafka-console-producer --broker-list localhost:9092 --topic sales_US
 
-log "Consolidating all sales in the US (logs are in /tmp/replicator.log):"
+log "Starting replicator instances"
+docker-compose -f ../../environment/mdc-plaintext/docker-compose.yml -f docker-compose.replicator.plaintext.yml up -d
 
-# run in detach mode -d
-docker exec -d connect-us bash -c 'export CLASSPATH=/usr/share/java/kafka-connect-replicator/replicator-rest-extension-*.jar; replicator --consumer.config /etc/replicator/consumer.properties --producer.config /etc/replicator/producer.properties  --replication.config /etc/replicator/replication.properties.properties  --cluster.id replicate-europe-to-us --whitelist sales_EUROPE > /tmp/replicator.log 2>&1'
-
-log "Consolidating all sales in Europe (logs are in /tmp/replicator.log):"
-
-# run in detach mode -d
-docker exec -d connect-europe bash -c 'export CLASSPATH=/usr/share/java/kafka-connect-replicator/replicator-rest-extension-*.jar; replicator --consumer.config /etc/replicator/consumer.properties --producer.config /etc/replicator/producer.properties  --replication.config /etc/replicator/replication.properties  --cluster.id replicate-us-to-europe --whitelist sales_US  > /tmp/replicator.log 2>&1'
-
-log "sleeping 240 seconds"
-sleep 240
+../../scripts/wait-for-connect-and-controlcenter.sh replicator-us $@
+../../scripts/wait-for-connect-and-controlcenter.sh replicator-europe $@
 
 log "Verify we have received the data in all the sales_ topics in EUROPE"
 timeout 60 docker container exec broker-europe kafka-console-consumer --bootstrap-server localhost:9092 --whitelist "sales_.*" --from-beginning --max-messages 20 --property metadata.max.age.ms 30000
 
 log "Verify we have received the data in all the sales_ topics in the US"
 timeout 60 docker container exec broker-us kafka-console-consumer --bootstrap-server localhost:9092 --whitelist "sales_.*" --from-beginning --max-messages 20 --property metadata.max.age.ms 30000
-
-log "Copying replicator logs to /tmp/replicator-europe.log and /tmp/replicator-us.log"
-docker cp connect-europe:/tmp/replicator.log /tmp/replicator-europe.log
-docker cp connect-us:/tmp/replicator.log /tmp/replicator-us.log
