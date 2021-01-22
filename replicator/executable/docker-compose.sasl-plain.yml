@@ -10,19 +10,15 @@ services:
         - ../../environment/mdc-sasl-plain/client/client.properties:/etc/kafka/client.properties
 
   connect-us:
+    image: confluentinc/cp-enterprise-replicator-executable:${TAG}
     volumes:
-        - ../../replicator/executable/consumer-europe-sasl-plain.properties:/etc/kafka/consumer-europe.properties
-        - ../../replicator/executable/producer-europe-sasl-plain.properties:/etc/kafka/producer-europe.properties
-        - ../../replicator/executable/replication-europe.properties:/etc/kafka/replication-europe.properties
-        - ../../replicator/executable/consumer-us-sasl-plain.properties:/etc/kafka/consumer-us.properties
-        - ../../replicator/executable/producer-us-sasl-plain.properties:/etc/kafka/producer-us.properties
-        - ../../replicator/executable/replication-us.properties:/etc/kafka/replication-us.properties
+        - ../../replicator/executable/consumer-us-plaintext.properties:/etc/replicator/consumer.properties
+        - ../../replicator/executable/producer-us-plaintext.properties:/etc/replicator/producer.properties
+        - ../../replicator/executable/replication-us.properties:/etc/replicator/replication.properties
 
   connect-europe:
+    image: confluentinc/cp-enterprise-replicator-executable:${TAG}
     volumes:
-        - ../../replicator/executable/consumer-europe-sasl-plain.properties:/etc/kafka/consumer-europe.properties
-        - ../../replicator/executable/producer-europe-sasl-plain.properties:/etc/kafka/producer-europe.properties
-        - ../../replicator/executable/replication-europe.properties:/etc/kafka/replication-europe.properties
-        - ../../replicator/executable/consumer-us-sasl-plain.properties:/etc/kafka/consumer-us.properties
-        - ../../replicator/executable/producer-us-sasl-plain.properties:/etc/kafka/producer-us.properties
-        - ../../replicator/executable/replication-us.properties:/etc/kafka/replication-us.properties
+        - ../../replicator/executable/consumer-europe-plaintext.properties:/etc/replicator/consumer.properties
+        - ../../replicator/executable/producer-europe-plaintext.properties:/etc/replicator/producer.properties
+        - ../../replicator/executable/replication-europe.properties:/etc/replicator/replication.properties
