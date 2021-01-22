@@ -15,12 +15,12 @@ seq -f "us_sale_%g ${RANDOM}" 10 | docker container exec -i broker-us kafka-cons
 log "Consolidating all sales in the US (logs are in /tmp/replicator.log):"
 
 # run in detach mode -d
-docker exec -d connect-us bash -c 'replicator --consumer.config /etc/kafka/consumer-us.properties --producer.config /etc/kafka/producer-us.properties  --replication.config /etc/kafka/replication-us.properties  --cluster.id replicate-europe-to-us --whitelist sales_EUROPE'
+docker exec -d connect-us bash -c 'replicator --consumer.config /etc/replicator/consumer.properties --producer.config /etc/replicator/producer.properties --replication.config /etc/replicator/replication.properties  --cluster.id replicate-europe-to-us --whitelist sales_EUROPE'
 
 log "Consolidating all sales in Europe (logs are in /tmp/replicator.log):"
 
 # run in detach mode -d
-docker exec -d connect-europe bash -c 'replicator --consumer.config /etc/kafka/consumer-europe.properties --producer.config /etc/kafka/producer-europe.properties  --replication.config /etc/kafka/replication-europe.properties  --cluster.id replicate-us-to-europe --whitelist sales_US'
+docker exec -d connect-europe bash -c 'replicator --consumer.config /etc/replicator/consumer.properties --producer.config /etc/replicator/producer.properties --replication.config /etc/replicator/replication.properties  --cluster.id replicate-us-to-europe --whitelist sales_US'
 
 log "sleeping 240 seconds"
 sleep 240
