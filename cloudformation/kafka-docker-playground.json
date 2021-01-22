@@ -252,7 +252,7 @@
                 "command": "service docker start && usermod -a -G docker ec2-user"
               },
               "03install_docker_compose": {
-                  "command": "curl -L https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m) -o /usr/local/bin/docker-compose && chmod +x /usr/local/bin/docker-compose"
+                  "command": "sudo yum install -y python37 python3-devel.$(uname -m) libpython3.7-dev libffi-devel openssl-devel && sudo yum groupinstall -y \"Development Tools\" && sudo python -m pip install -U pip && python -m pip install docker-compose"
               },
               "04clone_repo": {
                   "command": "/home/ec2-user/clone.sh"
