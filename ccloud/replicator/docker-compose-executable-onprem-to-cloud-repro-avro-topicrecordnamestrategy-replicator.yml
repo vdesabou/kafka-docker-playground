@@ -1,0 +1,18 @@
+---
+version: '3.5'
+services:
+  replicator:
+    image: confluentinc/cp-enterprise-replicator-executable:${TAG}
+    hostname: replicator
+    container_name: replicator
+    volumes:
+        - ../../ccloud/replicator/executable-onprem-to-cloud-consumer.properties:/etc/replicator/consumer.properties
+        - ../../ccloud/replicator/executable-onprem-to-cloud-producer.properties:/etc/replicator/producer.properties
+        - ../../ccloud/replicator/executable-onprem-to-cloud-replicator-repro-avro-topicrecordnamestrategy.properties:/etc/replicator/replication.properties
+    environment:
+      WHITELIST: executable-products
+
+
+  control-center:
+     environment:
+      CONTROL_CENTER_CONNECT_CLUSTER: http://replicator:8083
