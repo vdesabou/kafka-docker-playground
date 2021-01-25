@@ -4,18 +4,7 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
-verify_installed "docker-compose"
-
-if [ -z "$CI" ]
-then
-     # not running with CI
-     verify_installed "ccloud"
-     check_ccloud_version 1.7.0 || exit 1
-     verify_ccloud_login  "ccloud kafka cluster list"
-     verify_ccloud_details
-     check_if_continue
-fi
-
+verify_installed "ccloud"
 CONFIG_FILE=~/.ccloud/config
 
 if [ ! -f ${CONFIG_FILE} ]
@@ -34,11 +23,13 @@ else
      exit 1
 fi
 
-if [ ! -z "$CI" ]
+if [ -z "$CI" ]
 then
-     # running with github actions
-     log "Installing ccloud CLI"
-     curl -L --http1.1 https://cnfl.io/ccloud-cli | sudo sh -s -- -b /usr/local/bin
+     # not running with github actions
+     verify_ccloud_login  "ccloud kafka cluster list"
+     verify_ccloud_details
+     check_if_continue
+else
      log "##################################################"
      log "Log in to Confluent Cloud"
      log "##################################################"
