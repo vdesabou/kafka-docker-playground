@@ -10,7 +10,7 @@ services:
         - ../../ccloud/replicator/executable-onprem-to-cloud-producer.properties:/etc/replicator/producer.properties
         - ../../ccloud/replicator/executable-onprem-to-cloud-replicator-repro-avro-topicrecordnamestrategy.properties:/etc/replicator/replication.properties
     environment:
-      WHITELIST: executable-products
+      WHITELIST: executable-products-avro
 
 
   control-center:
