@@ -27,7 +27,7 @@ then
 
           cp ${DIR}/linuxx64_12201_database.zip ${DIR}/docker-images/OracleDatabase/SingleInstance/dockerfiles/12.2.0.1/linuxx64_12201_database.zip
           cd ${DIR}/docker-images/OracleDatabase/SingleInstance/dockerfiles
-          ./buildDockerImage.sh -v 12.2.0.1 -e
+          ./buildContainerImage.sh -v 12.2.0.1 -e
           rm -rf ${DIR}/docker-images
           cd ${OLDDIR}
      fi
