@@ -1,0 +1,17 @@
+---
+version: '3.5'
+services:
+  replicator:
+    image: confluentinc/cp-enterprise-replicator-executable:${TAG}
+    hostname: replicator
+    container_name: replicator
+    volumes:
+        - ../../ccloud/migrate-schemas-to-confluent-cloud/executable-onprem-to-cloud-consumer.properties:/etc/replicator/consumer.properties
+        - ../../ccloud/migrate-schemas-to-confluent-cloud/executable-onprem-to-cloud-producer.properties:/etc/replicator/producer.properties
+        - ../../ccloud/migrate-schemas-to-confluent-cloud/executable-onprem-to-cloud-replicator.properties:/etc/replicator/replication.properties
+    environment:
+      WHITELIST: _schemas
+
+  control-center:
+     environment:
+      CONTROL_CENTER_CONNECT_CLUSTER: http://replicator:8083

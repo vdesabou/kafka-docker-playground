@@ -9,17 +9,7 @@ if ! version_gt $TAG_BASE "5.2.0"; then
     exit 0
 fi
 
-#############
 ${DIR}/../../ccloud/environment/start.sh "${PWD}/docker-compose-executable-onprem-to-cloud.yml" -a -b
-
-if [ -f /tmp/delta_configs/env.delta ]
-then
-     source /tmp/delta_configs/env.delta
-else
-     logerror "ERROR: /tmp/delta_configs/env.delta has not been generated"
-     exit 1
-fi
-#############
 
 # generate executable-onprem-to-cloud-producer.properties config
 sed -e "s|:BOOTSTRAP_SERVERS:|$BOOTSTRAP_SERVERS|g" \
@@ -59,10 +49,6 @@ delete_topic connect-onprem-to-cloud.status
 delete_topic connect-onprem-to-cloud.config
 set -e
 
-# Avoid java.lang.OutOfMemoryError: Java heap space
-docker container restart connect
-sleep 5
-
 log "Sending messages to topic executable-products on source OnPREM cluster"
 docker exec -i connect kafka-avro-console-producer --broker-list broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic executable-products --property value.schema='{"type":"record","name":"myrecord","fields":[{"name":"name","type":"string"},
 {"name":"price", "type": "float"}, {"name":"quantity", "type": "int"}]}' << EOF
@@ -71,9 +57,9 @@ docker exec -i connect kafka-avro-console-producer --broker-list broker:9092 --p
 {"name": "notebooks", "price": 1.99, "quantity": 5}
 EOF
 
-log "Starting replicator executable (logs are in /tmp/replicator.log):"
-# run in detach mode -d
-docker exec -d connect bash -c 'export CLASSPATH=/etc/kafka-connect/jars/replicator-rest-extension-*.jar; replicator --consumer.config /etc/kafka/executable-onprem-to-cloud-consumer.properties --producer.config /etc/kafka/executable-onprem-to-cloud-producer.properties  --replication.config /etc/kafka/executable-onprem-to-cloud-replicator.properties  --cluster.id executable-onprem-to-cloud --whitelist _schemas > /tmp/replicator.log 2>&1'
+log "Starting replicator executable"
+docker-compose -f ../../ccloud/environment/docker-compose.yml -f ${PWD}/docker-compose-executable-onprem-to-cloud.yml -f docker-compose-executable-onprem-to-cloud-replicator.yml up -d
+../../scripts/wait-for-connect-and-controlcenter.sh replicator $@
 
 sleep 50
 
@@ -86,5 +72,3 @@ curl -X PUT -H "Content-Type: application/json" "http://localhost:8081/mode" --d
 log "Set the destination Schema Registry to READWRITE mode"
 curl -u $SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO -X PUT -H "Content-Type: application/json" "$SCHEMA_REGISTRY_URL/mode" --data '{"mode": "READWRITE"}'
 
-log "Copying replicator logs to /tmp/replicator.log"
-docker cp connect:/tmp/replicator.log /tmp/replicator.log
