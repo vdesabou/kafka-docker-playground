@@ -9,6 +9,8 @@ services:
         - ../../replicator/executable/consumer-us-kerberos.properties:/etc/replicator/consumer.properties
         - ../../replicator/executable/producer-us-kerberos.properties:/etc/replicator/producer.properties
         - ../../replicator/executable/replication-us.properties:/etc/replicator/replication.properties
+        - secret:/var/lib/secret
+        - ../../environment/mdc-kerberos/kdc/krb5.conf:/etc/krb5.conf
     environment:
       WHITELIST: sales_EUROPE
 
@@ -20,5 +22,7 @@ services:
         - ../../replicator/executable/consumer-europe-kerberos.properties:/etc/replicator/consumer.properties
         - ../../replicator/executable/producer-europe-kerberos.properties:/etc/replicator/producer.properties
         - ../../replicator/executable/replication-europe.properties:/etc/replicator/replication.properties
+        - secret:/var/lib/secret
+        - ../../environment/mdc-kerberos/kdc/krb5.conf:/etc/krb5.conf
     environment:
       WHITELIST: sales_US
