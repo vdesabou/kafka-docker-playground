@@ -1,0 +1,226 @@
+## Overriding values for Chart's values.yaml
+## Example values to run Confluent Operator in Private Cloud
+global:
+  provider:
+    name: private
+    ## if any name which indicates regions
+    ##
+    region: anyregion
+    kubernetes:
+       deployment:
+         ## If kubernetes is deployed in multi zone mode then specify availability-zones as appropriate
+         ## If kubernetes is deployed in single availability zone then specify appropriate values
+         ## For the private cloud, use kubernetes node labels as appropriate
+         zones:
+          - myzones
+    ##
+    ## Docker registry endpoint where Confluent Images are available.
+    ##
+    registry:
+      fqdn: docker.io
+      credential:
+        required: false
+  sasl:
+    plain:
+      username: ""
+      password: ""
+  authorization:
+    rbac:
+      enabled: false
+    simple:
+      enabled: false
+    superUsers: []
+  dependencies:
+    mds:
+      endpoint: ""
+      publicKey: ""
+
+## Connect Cluster
+##
+connect:
+  imagePullPolicy: IfNotPresent
+  name: connectors
+  replicas: 1
+  ##
+  image:
+    repository: vdesabou/kafka-docker-playground-connect
+    tag: ""
+  key:
+    converter: io.confluent.connect.avro.AvroConverter
+  value:
+    converter: io.confluent.connect.avro.AvroConverter
+  ### Only Enable TLS if you want REST Endpoint for Connect in SSL mode
+  tls:
+    enabled: false
+    ## "" for none, "tls" for mutual auth
+    authentication:
+      type: ""
+    fullchain: |-
+    privkey: |-
+    cacerts: |-
+  loadBalancer:
+    enabled: false
+    domain: ""
+  dependencies:
+    kafka:
+      # dummy value that would be overidden by --set
+      bootstrapEndpoint: pkc-abcde.eastus.azure.confluent.cloud:9092
+      tls:
+        enabled: true
+        internal: true
+        authentication:
+          type: "plain"
+    schemaRegistry:
+      enabled: true
+      url: ""
+      authentication:
+        type: basic
+        source: USER_INFO
+        username: ""
+        password: ""
+  disableHostPort: true
+## Replicator Connect Cluster
+##
+replicator:
+  name: replicator
+  replicas: 1
+  tls:
+    enabled: false
+    authentication:
+      type: ""
+    fullchain: |-
+    privkey: |-
+    cacerts: |-
+  loadBalancer:
+    enabled: false
+    domain: ""
+  dependencies:
+    kafka:
+      brokerCount: 1
+      bootstrapEndpoint: kafka:9071
+  disableHostPort: true
+##
+## Schema Registry
+##
+schemaregistry:
+  name: schemaregistry
+  replicas: 1
+  tls:
+    enabled: false
+    authentication:
+      type: ""
+    fullchain: |-
+    privkey: |-
+    cacerts: |-
+  loadBalancer:
+    enabled: false
+    domain: ""
+  dependencies:
+    kafka:
+      brokerCount: 1
+      bootstrapEndpoint: kafka:9071
+  disableHostPort: true
+
+##
+## KSQL
+##
+ksql:
+  name: ksql
+  replicas: 1
+  tls:
+    enabled: false
+    authentication:
+      type: ""
+    fullchain: |-
+    privkey: |-
+    cacerts: |-
+  loadBalancer:
+    enabled: false
+    domain: ""
+  dependencies:
+    kafka:
+      brokerCount: 1
+      bootstrapEndpoint: kafka:9071
+      brokerEndpoints: kafka-0.kafka:9071,kafka-1.kafka:9071,kafka-2.kafka:9071
+    schemaRegistry:
+      enabled: false
+      tls:
+        enabled: false
+        authentication:
+          type: ""
+      url: http://schemaregistry:8081
+  disableHostPort: true
+
+## Control Center (C3) Resource configuration
+##
+controlcenter:
+  name: controlcenter
+  ### Add license here through run-time injection
+  license: ""
+  ##
+  ## C3 dependencies
+  ##
+  dependencies:
+    c3KafkaCluster:
+      tls:
+        enabled: true
+        internal: true
+        authentication:
+          type: "plain"
+      brokerCount: 3
+      # dummy value that would be overidden by --set
+      bootstrapEndpoint: pkc-abcde.eastus.azure.confluent.cloud:9092
+      # required:
+      zookeeper:
+        endpoint: zookeeper:2181
+    connectCluster:
+      enabled: true
+      url: http://connectors:8083
+      tls:
+        enabled: true
+        authentication:
+          type: ""
+    ksql:
+      enabled: true
+      url: http://ksql:9088
+      tls:
+        enabled: true
+        authentication:
+          type: ""
+    schemaRegistry:
+      enabled: true
+      # dummy value that would be overidden by --set
+      url: "https://psrc-abcde.europe-west3.gcp.confluent.cloud"
+      authentication:
+        type: basic
+        source: USER_INFO
+        username: ""
+        password: ""
+  ##
+  ## C3 External Access
+  ##
+  loadBalancer:
+    enabled: true
+    domain: "confluent.platform.playground.demo"
+  ##
+  ## TLS configuration
+  ##
+  tls:
+    enabled: false
+    authentication:
+      type: ""
+    fullchain: |-
+    privkey: |-
+    cacerts: |-
+  ##
+  ## C3 authentication
+  ##
+  auth:
+    basic:
+      enabled: true
+      ##
+      ## map with key as user and value as password and role
+      property:
+        admin: Developer1,Administrators
+        disallowed: no_access
+  disableHostPort: true
