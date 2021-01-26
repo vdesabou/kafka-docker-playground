@@ -177,14 +177,14 @@ controlcenter:
       enabled: true
       url: http://connectors:8083
       tls:
-        enabled: true
+        enabled: false
         authentication:
           type: ""
     ksql:
       enabled: true
       url: http://ksql:9088
       tls:
-        enabled: true
+        enabled: false
         authentication:
           type: ""
     schemaRegistry:
