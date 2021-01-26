@@ -18,6 +18,23 @@ then
      verify_ccloud_login  "ccloud kafka cluster list"
      verify_ccloud_details
      check_if_continue
+else
+     # running with github actions or cloudformation
+     log "Installing ccloud CLI"
+     curl -L --http1.1 https://cnfl.io/ccloud-cli | sudo sh -s -- -b /usr/local/bin
+     export PATH=$PATH:/usr/local/bin
+     log "##################################################"
+     log "Log in to Confluent Cloud"
+     log "##################################################"
+     ccloud login --save
+     log "Use environment $ENVIRONMENT"
+     ccloud environment use $ENVIRONMENT
+     log "Use cluster $CLUSTER_LKC"
+     ccloud kafka cluster use $CLUSTER_LKC
+     log "Store api key $CLOUD_KEY"
+     ccloud api-key store $CLOUD_KEY $CLOUD_SECRET --resource $CLUSTER_LKC --force
+     log "Use api key $CLOUD_KEY"
+     ccloud api-key use $CLOUD_KEY --resource $CLUSTER_LKC
 fi
 
 SR_TYPE=${1:-SCHEMA_REGISTRY_DOCKER}
@@ -54,26 +71,6 @@ do
           docker run -i --rm -e KAFKA_CLIENT_TAG=$KAFKA_CLIENT_TAG -e TAG=$TAG_BASE -v "${DIR}/${component}":/usr/src/mymaven -v "$HOME/.m2":/root/.m2 -v "${DIR}/${component}/target:/usr/src/mymaven/target" -w /usr/src/mymaven maven:3.6.1-jdk-11 mvn package
      fi
 done
-
-if [ ! -z "$CI" ] || [ ! -z "$CLOUDFORMATION" ]
-then
-     # running with github actions or cloudformation
-     log "Installing ccloud CLI"
-     curl -L --http1.1 https://cnfl.io/ccloud-cli | sudo sh -s -- -b /usr/local/bin
-     export PATH=$PATH:/usr/local/bin
-     log "##################################################"
-     log "Log in to Confluent Cloud"
-     log "##################################################"
-     ccloud login --save
-     log "Use environment $ENVIRONMENT"
-     ccloud environment use $ENVIRONMENT
-     log "Use cluster $CLUSTER_LKC"
-     ccloud kafka cluster use $CLUSTER_LKC
-     log "Store api key $CLOUD_KEY"
-     ccloud api-key store $CLOUD_KEY $CLOUD_SECRET --resource $CLUSTER_LKC --force
-     log "Use api key $CLOUD_KEY"
-     ccloud api-key use $CLOUD_KEY --resource $CLUSTER_LKC
-fi
 
 # required for dabz/ccloudexporter
 export CCLOUD_CLUSTER=$(ccloud prompt -f "%k")
