@@ -28,18 +28,18 @@ else
 fi
 #############
 
-# generate executable-onprem-to-cloud-producer-repro-avro.properties config
+# generate executable-onprem-to-cloud-producer-avro.properties config
 sed -e "s|:BOOTSTRAP_SERVERS:|$BOOTSTRAP_SERVERS|g" \
     -e "s|:CLOUD_KEY:|$CLOUD_KEY|g" \
     -e "s|:CLOUD_SECRET:|$CLOUD_SECRET|g" \
-    ${DIR}/executable-onprem-to-cloud-producer-repro-avro.properties > ${DIR}/tmp
-mv ${DIR}/tmp ${DIR}/executable-onprem-to-cloud-producer-repro-avro.properties
+    ${DIR}/executable-onprem-to-cloud-producer-avro.properties > ${DIR}/tmp
+mv ${DIR}/tmp ${DIR}/executable-onprem-to-cloud-producer-avro.properties
 
-# generate executable-onprem-to-cloud-replicator-repro-avro-topicrecordnamestrategy.properties config
+# generate executable-onprem-to-cloud-replicator-avro-topicrecordnamestrategy.properties config
 sed -e "s|:SCHEMA_REGISTRY_URL:|$SCHEMA_REGISTRY_URL|g" \
     -e "s|:SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO:|$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO|g" \
-    ${DIR}/executable-onprem-to-cloud-replicator-repro-avro-topicrecordnamestrategy.properties > ${DIR}/tmp
-mv ${DIR}/tmp ${DIR}/executable-onprem-to-cloud-replicator-repro-avro-topicrecordnamestrategy.properties
+    ${DIR}/executable-onprem-to-cloud-replicator-avro-topicrecordnamestrategy.properties > ${DIR}/tmp
+mv ${DIR}/tmp ${DIR}/executable-onprem-to-cloud-replicator-avro-topicrecordnamestrategy.properties
 
 log "Creating topic in Confluent Cloud (auto.create.topics.enable=false)"
 set +e
@@ -67,7 +67,7 @@ docker exec -e BOOTSTRAP_SERVERS="$BOOTSTRAP_SERVERS" -e CLOUD_KEY="$CLOUD_KEY" 
 sleep 15
 
 log "Starting replicator executable"
-docker-compose -f ../../ccloud/environment/docker-compose.yml -f ${PWD}/docker-compose-executable-onprem-to-cloud-topicrecordnamestrategy.yml -f docker-compose-executable-onprem-to-cloud-repro-avro.yml up -d
+docker-compose -f ../../ccloud/environment/docker-compose.yml -f ${PWD}/docker-compose-executable-onprem-to-cloud-topicrecordnamestrategy.yml -f docker-compose-executable-onprem-to-cloud-avro.yml up -d
 ../../scripts/wait-for-connect-and-controlcenter.sh replicator $@
 
 
