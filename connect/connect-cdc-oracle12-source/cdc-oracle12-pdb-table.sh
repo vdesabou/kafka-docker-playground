@@ -4,9 +4,9 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
-if [ ! -d ${DIR}/confluentinc-kafka-connect-oracle-cdc-1.0.0-rc-56069d9-preview ]
+if [ ! -d ${DIR}/confluentinc-kafka-connect-oracle-cdc-1.0.0-rc-4956344-preview ]
 then
-     logerror "ERROR: ${DIR}/confluentinc-kafka-connect-oracle-cdc-1.0.0-rc-56069d9-preview is missing."
+     logerror "ERROR: ${DIR}/confluentinc-kafka-connect-oracle-cdc-1.0.0-rc-4956344-preview is missing."
      exit 1
 fi
 
@@ -27,7 +27,7 @@ then
 
           cp ${DIR}/linuxx64_12201_database.zip ${DIR}/docker-images/OracleDatabase/SingleInstance/dockerfiles/12.2.0.1/linuxx64_12201_database.zip
           cd ${DIR}/docker-images/OracleDatabase/SingleInstance/dockerfiles
-          ./buildDockerImage.sh -v 12.2.0.1 -e
+          ./buildContainerImage.sh -v 12.2.0.1 -e
           rm -rf ${DIR}/docker-images
           cd ${OLDDIR}
      fi
