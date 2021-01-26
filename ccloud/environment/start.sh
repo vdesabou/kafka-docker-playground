@@ -23,19 +23,31 @@ else
      exit 1
 fi
 
-if [ -z "$CI" ]
+if [ -z "$CI" ] && [ -z "$CLOUDFORMATION" ]
 then
-     # not running with github actions
+     # not running with CI
+     verify_installed "ccloud"
+     check_ccloud_version 1.7.0 || exit 1
      verify_ccloud_login  "ccloud kafka cluster list"
      verify_ccloud_details
      check_if_continue
 else
+     # running with github actions or cloudformation
+     log "Installing ccloud CLI"
+     curl -L --http1.1 https://cnfl.io/ccloud-cli | sudo sh -s -- -b /usr/local/bin
+     export PATH=$PATH:/usr/local/bin
      log "##################################################"
      log "Log in to Confluent Cloud"
      log "##################################################"
      ccloud login --save
-     log "Using github actions cluster"
-     ccloud kafka cluster use lkc-6kv2j
+     log "Use environment $ENVIRONMENT"
+     ccloud environment use $ENVIRONMENT
+     log "Use cluster $CLUSTER_LKC"
+     ccloud kafka cluster use $CLUSTER_LKC
+     log "Store api key $CLOUD_KEY"
+     ccloud api-key store $CLOUD_KEY $CLOUD_SECRET --resource $CLUSTER_LKC --force
+     log "Use api key $CLOUD_KEY"
+     ccloud api-key use $CLOUD_KEY --resource $CLUSTER_LKC
 fi
 
 set +e
