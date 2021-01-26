@@ -68,8 +68,8 @@ $ curl -X PUT \
                 "value.converter": "org.apache.kafka.connect.json.JsonConverter",
                 "confluent.topic.ssl.endpoint.identification.algorithm" : "https",
                 "confluent.topic.sasl.mechanism" : "PLAIN",
-                "confluent.topic.bootstrap.servers": "'"$BOOTSTRAP_SERVERS"'",
-                "confluent.topic.sasl.jaas.config" : "org.apache.kafka.common.security.plain.PlainLoginModule required username=\"'$CLOUD_KEY'\" password=\"'$CLOUD_SECRET'\";",
+                "confluent.topic.bootstrap.servers": "${file:/data:bootstrap.servers}",
+                "confluent.topic.sasl.jaas.config" : "org.apache.kafka.common.security.plain.PlainLoginModule required username=\"${file:/data:sasl.username}\" password=\"${file:/data:sasl.password}\";",
                 "confluent.topic.security.protocol" : "SASL_SSL",
                 "confluent.topic.replication.factor": "3"
           }' \

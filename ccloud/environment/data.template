@@ -1,0 +1,4 @@
+bootstrap.servers=:BOOTSTRAP_SERVERS:
+sasl.username=:CLOUD_KEY:
+sasl.password=:CLOUD_SECRET:
+schema.registry.basic.auth.user.info=:SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO:

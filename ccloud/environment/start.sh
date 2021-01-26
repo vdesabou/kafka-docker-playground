@@ -49,6 +49,13 @@ else
      ccloud api-key use $CLOUD_KEY --resource $CLUSTER_LKC
 fi
 
+# generate data file for externalizing secrets
+sed -e "s|:BOOTSTRAP_SERVERS:|$BOOTSTRAP_SERVERS|g" \
+    -e "s|:CLOUD_KEY:|$CLOUD_KEY|g" \
+    -e "s|:CLOUD_SECRET:|$CLOUD_SECRET|g" \
+    -e "s|:SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO:|$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO|g" \
+    ../../ccloud/environment/data.template > ../../ccloud/environment/data
+
 set +e
 log "Cleanup connect worker topics"
 delete_topic connect-status

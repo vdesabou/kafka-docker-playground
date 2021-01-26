@@ -12,17 +12,7 @@ then
      exit 1
 fi
 
-#############
 ${DIR}/../../ccloud/environment/start.sh "${PWD}/docker-compose.yml"
-
-if [ -f /tmp/delta_configs/env.delta ]
-then
-     source /tmp/delta_configs/env.delta
-else
-     logerror "ERROR: /tmp/delta_configs/env.delta has not been generated"
-     exit 1
-fi
-#############
 
 log "Creating topic in Confluent Cloud (auto.create.topics.enable=false)"
 set +e
@@ -42,16 +32,16 @@ curl -X PUT \
                     "insert.mode":"update",
                     "key.converter" : "io.confluent.connect.avro.AvroConverter",
                     "key.converter.schema.registry.url": "'"$SCHEMA_REGISTRY_URL"'",
-                    "key.converter.basic.auth.user.info": "'"$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO"'",
+                    "key.converter.basic.auth.user.info": "${file:/data:schema.registry.basic.auth.user.info}",
                     "key.converter.basic.auth.credentials.source": "USER_INFO",
                     "value.converter" : "io.confluent.connect.avro.AvroConverter",
                     "value.converter.schema.registry.url": "'"$SCHEMA_REGISTRY_URL"'",
-                    "value.converter.basic.auth.user.info": "'"$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO"'",
+                    "value.converter.basic.auth.user.info": "${file:/data:schema.registry.basic.auth.user.info}",
                     "value.converter.basic.auth.credentials.source": "USER_INFO",
                     "confluent.topic.ssl.endpoint.identification.algorithm" : "https",
                     "confluent.topic.sasl.mechanism" : "PLAIN",
-                    "confluent.topic.bootstrap.servers": "'"$BOOTSTRAP_SERVERS"'",
-                    "confluent.topic.sasl.jaas.config" : "org.apache.kafka.common.security.plain.PlainLoginModule required username=\"'$CLOUD_KEY'\" password=\"'$CLOUD_SECRET'\";",
+                    "confluent.topic.bootstrap.servers": "${file:/data:bootstrap.servers}",
+                    "confluent.topic.sasl.jaas.config" : "org.apache.kafka.common.security.plain.PlainLoginModule required username=\"${file:/data:sasl.username}\" password=\"${file:/data:sasl.password}\";",
                     "confluent.topic.security.protocol" : "SASL_SSL",
                     "confluent.topic.replication.factor": "3"
           }' \
