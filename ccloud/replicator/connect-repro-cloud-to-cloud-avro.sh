@@ -67,13 +67,13 @@ curl -X PUT \
 
           "value.converter": "io.confluent.connect.avro.AvroConverter",
           "value.converter.schema.registry.url": "'"$SCHEMA_REGISTRY_URL"'",
-          "value.converter.basic.auth.user.info": "'"$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO"'",
+          "value.converter.basic.auth.user.info": "${file:/data:schema.registry.basic.auth.user.info}",
           "value.converter.basic.auth.credentials.source": "USER_INFO",
 
           "dest.kafka.ssl.endpoint.identification.algorithm":"https",
-          "dest.kafka.bootstrap.servers": "'"$BOOTSTRAP_SERVERS"'",
+          "dest.kafka.bootstrap.servers": "${file:/data:bootstrap.servers}",
           "dest.kafka.security.protocol" : "SASL_SSL",
-          "dest.kafka.sasl.jaas.config": "org.apache.kafka.common.security.plain.PlainLoginModule required username=\"'$CLOUD_KEY'\" password=\"'$CLOUD_SECRET'\";",
+          "dest.kafka.sasl.jaas.config": "org.apache.kafka.common.security.plain.PlainLoginModule required username=\"${file:/data:sasl.username}\" password=\"${file:/data:sasl.password}\";",
           "dest.kafka.sasl.mechanism":"PLAIN",
           "dest.kafka.request.timeout.ms":"20000",
           "dest.kafka.retry.backoff.ms":"500",

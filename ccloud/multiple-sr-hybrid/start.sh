@@ -9,35 +9,7 @@ if ! version_gt $TAG_BASE "5.4.0"; then
     exit 0
 fi
 
-verify_installed "docker-compose"
-
-if [ -z "$CI" ]
-then
-     # not running with CI
-     verify_installed "ccloud"
-     check_ccloud_version 1.7.0 || exit 1
-     verify_ccloud_login  "ccloud kafka cluster list"
-     verify_ccloud_details
-     check_if_continue
-fi
-
-CONFIG_FILE=~/.ccloud/config
-
-if [ ! -f ${CONFIG_FILE} ]
-then
-     logerror "ERROR: ${CONFIG_FILE} is not set"
-     exit 1
-fi
-
-${DIR}/../ccloud-demo/ccloud-generate-env-vars.sh ${CONFIG_FILE}
-
-if [ -f /tmp/delta_configs/env.delta ]
-then
-     source /tmp/delta_configs/env.delta
-else
-     logerror "ERROR: /tmp/delta_configs/env.delta has not been generated"
-     exit 1
-fi
+${DIR}/../../ccloud/environment/start.sh "${PWD}/docker-compose.yml"
 
 # generate sr.json config
 sed -e "s|:SCHEMA_REGISTRY_URL:|$SCHEMA_REGISTRY_URL|g" \
