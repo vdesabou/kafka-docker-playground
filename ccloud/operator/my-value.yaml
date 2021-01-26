@@ -43,7 +43,7 @@ connect:
   replicas: 1
   ##
   image:
-    repository: vdesabou/kafka-docker-playground-connect
+    repository: vdesabou/kafka-docker-playground-connect-replicator
     tag: ""
   key:
     converter: io.confluent.connect.avro.AvroConverter
@@ -72,7 +72,8 @@ connect:
           type: "plain"
     schemaRegistry:
       enabled: true
-      url: ""
+      # dummy value that would be overidden by --set
+      url: "https://psrc-abcde.europe-west3.gcp.confluent.cloud"
       authentication:
         type: basic
         source: USER_INFO
