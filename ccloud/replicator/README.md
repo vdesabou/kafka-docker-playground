@@ -43,7 +43,6 @@ This is documented [here](https://docs.confluent.io/platform/current/multi-dc-de
 
 Note: In order to remove avro converter metadata added in schema, we can set:
 
-```json
 "value.converter.connect.meta.data": false
 ```
 
