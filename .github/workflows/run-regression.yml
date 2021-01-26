@@ -78,7 +78,8 @@ jobs:
                       "replicator/mirrormaker2 ksqldb/materialized-view connect/connect-pagerduty-sink connect/connect-zendesk-source connect/connect-datadog-metrics-sink connect/connect-gcp-spanner-sink connect/connect-gcp-firebase-source connect/connect-gcp-firebase-sink",
                       "other/audit-logs",
                       "other/cp-ansible-playground",
-                      "other/filebeat-to-kafka other/rest-proxy-security-plugin other/tiered-storage-with-aws other/tiered-storage-with-minio other/write-logs-to-files"
+                      "other/filebeat-to-kafka other/rest-proxy-security-plugin other/tiered-storage-with-aws other/tiered-storage-with-minio other/write-logs-to-files",
+                      "ccloud/replicator"
                     ]
     steps:
       - uses: actions/checkout@v2
