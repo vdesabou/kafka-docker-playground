@@ -77,7 +77,7 @@ helm upgrade --install \
   --set connect.enabled=true \
   --set global.sasl.plain.username="${CLOUD_KEY}" \
   --set global.sasl.plain.password="${CLOUD_SECRET}" \
-  --set connect.image.tag=${TAG} \
+  --set connect.image.tag="${TAG}" \
   --set connect.dependencies.kafka.bootstrapEndpoint="${BOOTSTRAP_SERVERS}" \
   --set connect.dependencies.schemaRegistry.url="${SCHEMA_REGISTRY_URL}" \
   --set connect.dependencies.schemaRegistry.authentication.username="${SR_USERNAME}" \
@@ -121,6 +121,8 @@ done
 log "Connect connect-0 has started!"
 set -e
 
+kubectl -n operator port-forward controlcenter-0 9021:9021
+
 exit 0
 
 log "create a topic example on kafka-src cluster"
@@ -159,29 +161,3 @@ sleep 5
 
 log "check data on topic example on kafka-dest cluster"
 kubectl -n kafka-dest exec -i kafka-0 -- bash -c 'kafka-console-consumer -bootstrap-server kafka:9071 --topic example --from-beginning --max-messages 10'
-
-# log "In order to access C3, execute this (sudo password will be required)"
-# log "minikube tunnel"
-
-# log "/etc/hosts"
-
-# echo $(kubectl get service controlcenter-bootstrap-lb \
-#       --output=jsonpath={'.status.loadBalancer.ingress[0].ip'} \
-#       --namespace=kafka-dest) \
-#   controlcenter.confluent.platform.playground.demo | sudo tee -a /etc/hosts
-
-
-# log "Open Control Center"
-
-# ```bash
-# $ open http://controlcenter.confluent.platform.playground.demo (`admin`/`Developer1`)
-# ```
-
-
-# ### Clean up
-
-# Un-hack /etc/hosts
-
-# ```bash
-# $ minikube delete
-# ```
