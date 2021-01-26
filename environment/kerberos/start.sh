@@ -14,12 +14,12 @@ DOCKER_COMPOSE_FILE_OVERRIDE=$1
 if [ -f "${DOCKER_COMPOSE_FILE_OVERRIDE}" ]
 then
 
-  docker-compose -f ../../environment/plaintext/docker-compose.yml -f ../../environment/kerberos/docker-compose.yml -f ${DOCKER_COMPOSE_FILE_OVERRIDE} down -v
+  docker-compose -f ../../environment/plaintext/docker-compose.yml -f ../../environment/kerberos/docker-compose.yml -f ${DOCKER_COMPOSE_FILE_OVERRIDE} down -v --remove-orphans
   docker-compose -f ../../environment/plaintext/docker-compose.yml -f ../../environment/kerberos/docker-compose.yml -f ${DOCKER_COMPOSE_FILE_OVERRIDE} build kdc
   docker-compose -f ../../environment/plaintext/docker-compose.yml -f ../../environment/kerberos/docker-compose.yml -f ${DOCKER_COMPOSE_FILE_OVERRIDE} build client
   docker-compose -f ../../environment/plaintext/docker-compose.yml -f ../../environment/kerberos/docker-compose.yml -f ${DOCKER_COMPOSE_FILE_OVERRIDE} up -d kdc
 else
-  docker-compose -f ../../environment/plaintext/docker-compose.yml -f ../../environment/kerberos/docker-compose.yml down -v
+  docker-compose -f ../../environment/plaintext/docker-compose.yml -f ../../environment/kerberos/docker-compose.yml down -v --remove-orphans
   docker-compose -f ../../environment/plaintext/docker-compose.yml -f ../../environment/kerberos/docker-compose.yml build kdc
   docker-compose -f ../../environment/plaintext/docker-compose.yml -f ../../environment/kerberos/docker-compose.yml build client
   docker-compose -f ../../environment/plaintext/docker-compose.yml -f ../../environment/kerberos/docker-compose.yml up -d kdc

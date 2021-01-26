@@ -4,7 +4,7 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
-docker-compose down -v
+docker-compose down -v --remove-orphans
 docker-compose up -d
 ${DIR}/../../scripts/wait-for-connect-and-controlcenter.sh -a -b
 

@@ -49,11 +49,11 @@ DOCKER_COMPOSE_FILE_OVERRIDE=$1
 if [ -f "${DOCKER_COMPOSE_FILE_OVERRIDE}" ]
 then
   docker-compose -f ../../ccloud/environment/docker-compose.yml -f ${DOCKER_COMPOSE_FILE_OVERRIDE} build
-  docker-compose -f ../../ccloud/environment/docker-compose.yml -f ${DOCKER_COMPOSE_FILE_OVERRIDE} down -v
+  docker-compose -f ../../ccloud/environment/docker-compose.yml -f ${DOCKER_COMPOSE_FILE_OVERRIDE} down -v --remove-orphans
   docker-compose -f ../../ccloud/environment/docker-compose.yml -f ${DOCKER_COMPOSE_FILE_OVERRIDE} up -d
 else
   docker-compose -f ../../ccloud/environment/docker-compose.yml build
-  docker-compose -f ../../ccloud/environment/docker-compose.yml down -v
+  docker-compose -f ../../ccloud/environment/docker-compose.yml down -v --remove-orphans
   docker-compose -f ../../ccloud/environment/docker-compose.yml up -d
 fi
 

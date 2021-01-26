@@ -118,7 +118,7 @@ delete_topic connect-configs-demo
 set -e
 
 docker-compose build
-docker-compose down -v
+docker-compose down -v --remove-orphans
 docker-compose up -d
 ${DIR}/../../scripts/wait-for-connect-and-controlcenter.sh
 

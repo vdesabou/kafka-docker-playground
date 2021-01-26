@@ -97,7 +97,7 @@ sed -e "s|_BOOTSTRAP_SERVER_|$BOOTSTRAP_SERVER:9092|g" \
 # copy custom files
 cp ${DIR}/${HOSTS_FILE} ${DIR}/cp-ansible/
 
-docker-compose down -v
+docker-compose down -v --remove-orphans
 docker-compose up -d
 
 cd ${DIR}/cp-ansible
