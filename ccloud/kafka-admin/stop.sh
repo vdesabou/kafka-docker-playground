@@ -11,4 +11,4 @@ check_if_continue
 # Delete topic in Confluent Cloud
 delete_topic kafka-admin-acl-topic
 
-docker-compose down -v
+docker-compose down -v --remove-orphans

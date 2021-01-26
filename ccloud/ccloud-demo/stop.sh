@@ -59,4 +59,4 @@ then
      rm api_key_cloud_to_delete
 fi
 
-docker-compose down -v
+docker-compose down -v --remove-orphans

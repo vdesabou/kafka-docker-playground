@@ -62,7 +62,7 @@ export API_SECRET_CLOUD=$(echo "$OUTPUT" | grep '| Secret' | awk '{print $4;}')
 
 echo "$API_KEY_CLOUD" > api_key_cloud_to_delete
 
-docker-compose down -v
+docker-compose down -v --remove-orphans
 docker-compose up -d
 
 log "Producing data to ccloudexporter topic"
