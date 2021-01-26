@@ -73,13 +73,3 @@ then
     shift
 fi
 ../../scripts/wait-for-connect-and-controlcenter.sh $@
-
-
-if [ ! -z "$CI" ]
-then
-     # running with github actions
-     log "##################################################"
-     log "Stopping everything"
-     log "##################################################"
-     bash ${DIR}/stop.sh
-fi
