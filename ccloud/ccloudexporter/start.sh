@@ -7,19 +7,24 @@ source ${DIR}/../../scripts/utils.sh
 
 ${DIR}/../../ccloud/environment/start.sh "${PWD}/docker-compose.yml"
 
-# Offer to refresh images
-ret=$(docker images --format "{{.Repository}}|{{.Tag}}|{{.CreatedSince}}" | grep dabz/ccloudexporter | cut -d "|" -f 3)
-if [ "$ret" != "" ]
+if [ -z "$CI" ] && [ -z "$CLOUDFORMATION" ]
 then
-  log "Your dabz/ccloudexporter Docker images was pulled $ret"
-  read -p "Do you want to download new one? (y/n)?" choice
-  case "$choice" in
-  y|Y )
-    docker pull dabz/ccloudexporter:latest
-  ;;
-  n|N ) ;;
-  * ) logerror "ERROR: invalid response!";exit 1;;
-  esac
+     set +e
+     # Offer to refresh images
+     ret=$(docker images --format "{{.Repository}}|{{.Tag}}|{{.CreatedSince}}" | grep dabz/ccloudexporter | cut -d "|" -f 3)
+     if [ "$ret" != "" ]
+     then
+     log "Your dabz/ccloudexporter Docker images was pulled $ret"
+     read -p "Do you want to download new one? (y/n)?" choice
+     case "$choice" in
+     y|Y )
+     docker pull dabz/ccloudexporter:latest
+     ;;
+     n|N ) ;;
+     * ) logerror "ERROR: invalid response!";exit 1;;
+     esac
+     fi
+     set -e
 fi
 
 export CCLOUD_CLUSTER=$(ccloud prompt -f "%k")
