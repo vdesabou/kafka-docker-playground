@@ -5,7 +5,24 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
-${DIR}/../../ccloud/environment/start.sh "${PWD}/docker-compose.yml"
+CONFIG_FILE=~/.ccloud/config
+
+if [ ! -f ${CONFIG_FILE} ]
+then
+     logerror "ERROR: ${CONFIG_FILE} is not set"
+     exit 1
+fi
+
+${DIR}/../ccloud-demo/ccloud-generate-env-vars.sh ${CONFIG_FILE}
+
+if [ -f /tmp/delta_configs/env.delta ]
+then
+     source /tmp/delta_configs/env.delta
+else
+     logerror "ERROR: /tmp/delta_configs/env.delta has not been generated"
+     exit 1
+fi
+
 
 if [ -z "$CI" ] && [ -z "$CLOUDFORMATION" ]
 then
