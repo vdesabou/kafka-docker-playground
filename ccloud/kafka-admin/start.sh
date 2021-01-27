@@ -23,7 +23,7 @@ sed -e "s|:BOOTSTRAP_SERVERS:|$BOOTSTRAP_SERVERS|g" \
 #java -jar ${DIR}/kafka-admin/target/kafka-admin-1.0-SNAPSHOT-jar-with-dependencies.jar -properties ${DIR}/kafka-admin.properties -dump
 
 log "Pull the configured topics & ACLs from a cluster and write to an output file"
-java -jar ${DIR}/kafka-admin/target/kafka-admin-1.0-SNAPSHOT-jar-with-dependencies.jar -properties ${DIR}/kafka-admin.properties -dump -output ${DIR}/before.yml
+docker run -v ${DIR}:/tmp maven:3.6.1-jdk-11 java -jar /tmp/kafka-admin/target/kafka-admin-1.0-SNAPSHOT-jar-with-dependencies.jar -properties /tmp/kafka-admin.properties -dump -output /tmp/before.yml
 
 ######################
 ## Service Account and ACLs
@@ -100,7 +100,7 @@ log "Create ACLs for the service account, using kafka-admin"
 sed -e "s|<PRINCIPAL>|User:$SERVICE_ACCOUNT_ID|g" \
     ${DIR}/config-template.yml > ${DIR}/config.yml
 
-java -jar ${DIR}/kafka-admin/target/kafka-admin-1.0-SNAPSHOT-jar-with-dependencies.jar -properties ${DIR}/kafka-admin.properties -config ${DIR}/config.yml -execute
+docker run -v ${DIR}:/tmp maven:3.6.1-jdk-11 java -jar /tmp/kafka-admin/target/kafka-admin-1.0-SNAPSHOT-jar-with-dependencies.jar -properties /tmp/kafka-admin.properties -config /tmp/config.yml -execute
 
 log "ccloud kafka acl list --service-account $SERVICE_ACCOUNT_ID"
 ccloud kafka acl list --service-account $SERVICE_ACCOUNT_ID
@@ -120,7 +120,7 @@ fi
 cat $LOG2
 
 log "Pull the configured topics & ACLs from a cluster and write to an output file"
-java -jar ${DIR}/kafka-admin/target/kafka-admin-1.0-SNAPSHOT-jar-with-dependencies.jar -properties ${DIR}/kafka-admin.properties -dump -output ${DIR}/after.yml
+docker run -v ${DIR}:/tmp maven:3.6.1-jdk-11 java -jar /tmp/kafka-admin/target/kafka-admin-1.0-SNAPSHOT-jar-with-dependencies.jar -properties /tmp/kafka-admin.properties -dump -output /tmp/after.yml
 
 ##################################################
 # Cleanup
