@@ -36,7 +36,14 @@ log "Stop minikube if required"
 minikube delete
 set -e
 log "Start minikube"
-minikube start --cpus=8 --disk-size='50gb' --memory=16384
+if [ -z "$CI" ] && [ -z "$CLOUDFORMATION" ]
+then
+     # not running with CI
+    minikube start --cpus=8 --disk-size='50gb' --memory=16384
+else
+    minikube start --cpus=8 --disk-size='50gb' --memory=6954
+fi
+
 log "Launch minikube dashboard in background"
 minikube dashboard &
 
