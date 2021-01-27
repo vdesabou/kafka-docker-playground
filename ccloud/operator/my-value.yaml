@@ -43,7 +43,7 @@ connect:
   replicas: 1
   ##
   image:
-    repository: vdesabou/kafka-docker-playground-connect-replicator
+    repository: vdesabou/kafka-docker-playground-connect-operator
     tag: ""
   key:
     converter: io.confluent.connect.avro.AvroConverter
