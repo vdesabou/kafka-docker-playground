@@ -121,18 +121,18 @@ set +e
 # Verify Kafka Connect has started within MAX_WAIT seconds
 MAX_WAIT=480
 CUR_WAIT=0
-log "Waiting up to $MAX_WAIT seconds for Kafka Connect connect-0 to start"
-kubectl logs -n operator connect-0 > /tmp/out.txt 2>&1
+log "Waiting up to $MAX_WAIT seconds for Kafka Connect connectors-0 to start"
+kubectl logs -n operator connectors-0 > /tmp/out.txt 2>&1
 while [[ ! $(cat /tmp/out.txt) =~ "Finished starting connectors and tasks" ]]; do
   sleep 10
-  kubectl logs -n operator connect-0 > /tmp/out.txt 2>&1
+  kubectl logs -n operator connectors-0 > /tmp/out.txt 2>&1
   CUR_WAIT=$(( CUR_WAIT+10 ))
   if [[ "$CUR_WAIT" -gt "$MAX_WAIT" ]]; then
-    echo -e "\nERROR: The logs in connect-0 container do not show 'Finished starting connectors and tasks' after $MAX_WAIT seconds. Please troubleshoot'.\n"
+    echo -e "\nERROR: The logs in connectors-0 container do not show 'Finished starting connectors and tasks' after $MAX_WAIT seconds. Please troubleshoot'.\n"
     exit 1
   fi
 done
-log "Connect connect-0 has started!"
+log "Connect connectors-0 has started!"
 set -e
 
 log "Control Center is reachable at http://127.0.0.1:9021"
