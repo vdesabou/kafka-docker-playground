@@ -69,7 +69,7 @@ Quick start examples from Confluent [docs](https://docs.confluent.io/current/con
 | <img src="./images/icons/gcp_bigtable.png" width="15"> [Google Cloud BigTable Sink](connect/connect-gcp-bigtable-sink) | Database | 1.0.6 | Confluent Subscription | 2020-12-17 | 👍 2021-01-26 
 | <img src="./images/icons/cloud_functions.png" width="15"> [Google Cloud Functions Sink](connect/connect-gcp-cloud-functions-sink) | SaaS Apps | 1.1.2 | Confluent Subscription | 2020-11-30 | 👍 2021-01-26 
 | <img src="./images/icons/gcp_pubsub.png" width="15"> [Google Cloud Pub/Sub Source](connect/connect-gcp-pubsub-source) |  Message Queue | 1.0.6 | Confluent Subscription | 2021-01-16 | 👍 2021-01-25 
-| <img src="./images/icons/spanner.png" width="15"> [Google Cloud Spanner Sink](connect/connect-gcp-spanner-sink) |  Database | 1.0.3 | Confluent Subscription | 2020-12-01 | 👍 2021-01-20 
+| <img src="./images/icons/spanner.png" width="15"> [Google Cloud Spanner Sink](connect/connect-gcp-spanner-sink) |  Database | 1.0.3 | Confluent Subscription | 2020-12-01 | 👍 2021-01-27 
 | <img src="./images/icons/gcs.png" width="15"> [Google Cloud Storage Sink](connect/connect-gcp-gcs-sink) |  Datastore | 5.5.5 | Confluent Subscription | 2020-12-29 | 👍 2021-01-26 
 | <img src="./images/icons/gcs.png" width="15"> [Google Cloud Storage Source](connect/connect-gcp-gcs-source) |  Datastore | 1.4.2 | Confluent Subscription | 2021-01-19 | 👍 2021-01-27 
 | <img src="./images/icons/firebase.svg" width="15"> [Google Firebase Realtime Database Sink](connect/connect-gcp-firebase-sink) |  Database | 1.2.0 | Confluent Subscription | 2020-12-01 | 👍 2021-01-20 
