@@ -15,7 +15,13 @@ log "Stop minikube if required"
 minikube delete
 set -e
 log "Start minikube"
-minikube start --cpus=8 --disk-size='50gb' --memory=16384
+if [ -z "$CI" ] && [ -z "$CLOUDFORMATION" ]
+then
+     # not running with CI
+    minikube start --cpus=8 --disk-size='50gb' --memory=16384
+else
+    minikube start --cpus=8 --disk-size='50gb' --memory=6954
+fi
 log "Launch minikube dashboard in background"
 minikube dashboard &
 
@@ -62,17 +68,8 @@ openssl x509 -req \
  -extfile \
  <(echo "[server_ext]"; echo "extendedKeyUsage=serverAuth,clientAuth"; echo "subjectAltName=DNS:*.svc.cluster.local,DNS:kafka-0.kafka.kafka-dest.svc.cluster.local,DNS:kafka-0.kafka.kafka-src.svc.cluster.local")
 
-
-VALUES_FILE="${DIR}/my-value.yaml"
-
-# https://www.starkandwayne.com/blog/bashing-your-yaml/
-rm -f my-value.yaml temp.yml
-( echo "cat <<EOF >my-value.yaml";
-  cat my-value-template.yaml;
-  echo "EOF";
-) >temp.yml
-. temp.yml
-rm temp.yml
+# Use most basic values file and override it with --set
+VALUES_FILE="${DIR}/../../operator/private.yaml"
 
 log "installing operator"
 helm upgrade --install \
@@ -95,7 +92,16 @@ helm upgrade --install \
   ${DIR}/confluent-operator/helm/confluent-operator/ \
   --values $VALUES_FILE \
   --namespace kafka-dest \
-  --set kafka.enabled=true
+  --set kafka.enabled=true \
+  --set kafka.tls.enabled=true \
+  --set-file kafka.tls.fullchain=${PWD}/server.crt \
+  --set-file kafka.tls.privkey=${PWD}/server.key \
+  --set-file kafka.tls.cacerts=${PWD}/rootCA.pem \
+  --set 'kafka.configOverrides.server[0]=confluent.license.topic.replication.factor=1'
+
+
+  # --set 'kafka.configOverrides.server[1]=listener.name.internal.ssl.principal.mapping.rules=RULE:^CN=([a-zA-Z0-9.]*).*$//L,DEFAULT' \
+  # --set 'kafka.configOverrides.server[2]=listener.name.replication.ssl.principal.mapping.rules=RULE:^CN=([a-zA-Z0-9.]*).*$//L,DEFAULT'
 
 # helm upgrade --install \
 #   schemaregistry \
@@ -109,14 +115,24 @@ helm upgrade --install \
     ${DIR}/confluent-operator/helm/confluent-operator/ \
   --values $VALUES_FILE \
   --namespace kafka-dest \
-  --set replicator.enabled=true
+  --set replicator.enabled=true \
+  --set replicator.tls.enabled=true \
+  --set-file replicator.tls.fullchain=${PWD}/server.crt \
+  --set-file replicator.tls.privkey=${PWD}/server.key \
+  --set-file replicator.tls.cacerts=${PWD}/rootCA.pem \
+  --set replicator.dependencies.kafka.tls.enabled=true \
+  --set replicator.dependencies.kafka.brokerCount=1
 
 helm upgrade --install \
   controlcenter \
     ${DIR}/confluent-operator/helm/confluent-operator/ \
   --values $VALUES_FILE \
   --namespace kafka-dest \
-  --set controlcenter.enabled=true
+  --set controlcenter.enabled=true \
+  --set-file controlcenter.tls.fullchain=${PWD}/server.crt \
+  --set-file controlcenter.tls.privkey=${PWD}/server.key \
+  --set-file controlcenter.tls.cacerts=${PWD}/rootCA.pem \
+  --set controlcenter.dependencies.c3KafkaCluster.tls.enabled=true
 
 log "install kafka-src cluster"
 helm upgrade --install \
@@ -131,7 +147,13 @@ helm upgrade --install \
   ${DIR}/confluent-operator/helm/confluent-operator/ \
   --values $VALUES_FILE \
   --namespace kafka-src \
-  --set kafka.enabled=true
+  --set kafka.enabled=true \
+  --set kafka.enabled=true \
+  --set kafka.tls.enabled=true \
+  --set-file kafka.tls.fullchain=${PWD}/server.crt \
+  --set-file kafka.tls.privkey=${PWD}/server.key \
+  --set-file kafka.tls.cacerts=${PWD}/rootCA.pem \
+  --set kafka.configOverrides.server[0]='confluent.license.topic.replication.factor=1'
 
 # helm upgrade --install \
 #   schemaregistry \
@@ -164,6 +186,9 @@ done
 log "Connect replicator-0 has started!"
 set -e
 
+log "Control Center is reachable at http://127.0.0.1:9021 (admin/Developer1)"
+kubectl -n kafka-dest port-forward controlcenter-0 9021:9021 &
+
 log "create a topic example on kafka-src cluster"
 kubectl -n kafka-src exec -i kafka-0 -- bash -c 'kafka-topics --create --topic example --partitions 1 --replication-factor 1 --bootstrap-server kafka:9071'
 
@@ -191,7 +216,7 @@ kubectl -n kafka-dest exec -i replicator-0 -- curl -k -X PUT \
             "confluent.topic.ssl.truststore.location": "/tmp/truststore.jks",
             "confluent.topic.ssl.truststore.password": "mystorepassword"
           }' \
-     https://localhost:8083/connectors/test-replicator/config
+     https://localhost:8083/connectors/test-replicator/config | jq
 
 log "produce data on topic example on kafka-src cluster"
 kubectl -n kafka-src exec -i kafka-0 -- bash -c 'seq 10 | kafka-console-producer --broker-list kafka:9071 --topic example'
@@ -200,32 +225,3 @@ sleep 5
 
 log "check data on topic example on kafka-dest cluster"
 kubectl -n kafka-dest exec -i kafka-0 -- bash -c 'kafka-console-consumer -bootstrap-server kafka:9071 --topic example --from-beginning --max-messages 10'
-
-#keytool -list -v -keystore /tmp/keystore.jks
-### Configure and deploy Operator and CP
-
-# log "In order to access C3, execute this (sudo password will be required)"
-# log "minikube tunnel"
-
-# log "/etc/hosts"
-
-# echo $(kubectl get service controlcenter-bootstrap-lb \
-#       --output=jsonpath={'.status.loadBalancer.ingress[0].ip'} \
-#       --namespace=kafka-dest) \
-#   controlcenter.confluent.platform.playground.demo | sudo tee -a /etc/hosts
-
-
-# log "Open Control Center"
-
-# ```bash
-# $ open http://controlcenter.confluent.platform.playground.demo (`admin`/`Developer1`)
-# ```
-
-
-# ### Clean up
-
-# Un-hack /etc/hosts
-
-# ```bash
-# $ minikube delete
-# ```
