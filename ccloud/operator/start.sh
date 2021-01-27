@@ -28,7 +28,8 @@ else
      exit 1
 fi
 
-VALUES_FILE="${DIR}/my-value.yaml"
+# Use most basic values file and override it with --set
+VALUES_FILE="${DIR}/../../operator/private.yaml"
 
 set +e
 log "Stop minikube if required"
@@ -47,7 +48,6 @@ cd ${DIR}/confluent-operator
 wget https://platform-ops-bin.s3-us-west-1.amazonaws.com/operator/confluent-operator-1.6.1-for-confluent-platform-6.0.0.tar.gz
 tar xvfz confluent-operator-1.6.1-for-confluent-platform-6.0.0.tar.gz
 cd -
-
 
 log "Extend Kubernetes with first class CP primitives"
 kubectl apply --filename ${DIR}/confluent-operator/resources/crds/
@@ -68,7 +68,7 @@ helm upgrade --install \
 SR_USERNAME=$(echo $SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO | cut -d ":" -f 1)
 SR_SECRET=$(echo $SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO | cut -d ":" -f 2)
 
-log "install connect"
+log "Install connect"
 helm upgrade --install \
   connectors \
     ${DIR}/confluent-operator/helm/confluent-operator/ \
@@ -77,13 +77,21 @@ helm upgrade --install \
   --set connect.enabled=true \
   --set global.sasl.plain.username="${CLOUD_KEY}" \
   --set global.sasl.plain.password="${CLOUD_SECRET}" \
+  --set connect.imagePullPolicy="IfNotPresent" \
+  --set connect.image.repository="vdesabou/kafka-docker-playground-connect-operator" \
   --set connect.image.tag="${TAG}" \
+  --set connect.dependencies.kafka.tls.enabled=true \
+  --set connect.dependencies.kafka.tls.internal=true \
+  --set connect.dependencies.kafka.tls.authentication.type="plain" \
   --set connect.dependencies.kafka.bootstrapEndpoint="${BOOTSTRAP_SERVERS}" \
+  --set connect.dependencies.kafka.brokerCount=3 \
   --set connect.dependencies.schemaRegistry.url="${SCHEMA_REGISTRY_URL}" \
+  --set connect.dependencies.schemaRegistry.authentication.type="basic" \
+  --set connect.dependencies.schemaRegistry.authentication.source="USER_INFO" \
   --set connect.dependencies.schemaRegistry.authentication.username="${SR_USERNAME}" \
   --set connect.dependencies.schemaRegistry.authentication.password="${SR_SECRET}"
 
-log "install control-center"
+log "Install control-center"
 helm upgrade --install \
   controlcenter \
     ${DIR}/confluent-operator/helm/confluent-operator/ \
@@ -93,11 +101,17 @@ helm upgrade --install \
   --set global.sasl.plain.username="${CLOUD_KEY}" \
   --set global.sasl.plain.password="${CLOUD_SECRET}" \
   --set controlcenter.dependencies.c3KafkaCluster.bootstrapEndpoint="${BOOTSTRAP_SERVERS}" \
+  --set controlcenter.dependencies.c3KafkaCluster.brokerCount=3 \
+  --set controlcenter.dependencies.c3KafkaCluster.tls.enabled=true \
+  --set controlcenter.dependencies.c3KafkaCluster.tls.internal=true \
+  --set controlcenter.dependencies.c3KafkaCluster.tls.authentication.type="plain" \
   --set controlcenter.dependencies.schemaRegistry.url="${SCHEMA_REGISTRY_URL}" \
+  --set connect.dependencies.schemaRegistry.authentication.type="basic" \
+  --set connect.dependencies.schemaRegistry.authentication.source="USER_INFO" \
   --set controlcenter.dependencies.schemaRegistry.authentication.username="${SR_USERNAME}" \
   --set controlcenter.dependencies.schemaRegistry.authentication.password="${SR_SECRET}"
 
-# kubectl -n kafka-dest exec -it connect-0 -- bash
+# kubectl -n operator exec -it connect-0 -- bash
 
 
 log "Sleep 60 seconds to let pods being started"
@@ -108,10 +122,10 @@ set +e
 MAX_WAIT=480
 CUR_WAIT=0
 log "Waiting up to $MAX_WAIT seconds for Kafka Connect connect-0 to start"
-kubectl logs -n kafka-dest connect-0 > /tmp/out.txt 2>&1
+kubectl logs -n operator connect-0 > /tmp/out.txt 2>&1
 while [[ ! $(cat /tmp/out.txt) =~ "Finished starting connectors and tasks" ]]; do
   sleep 10
-  kubectl logs -n kafka-dest connect-0 > /tmp/out.txt 2>&1
+  kubectl logs -n operator connect-0 > /tmp/out.txt 2>&1
   CUR_WAIT=$(( CUR_WAIT+10 ))
   if [[ "$CUR_WAIT" -gt "$MAX_WAIT" ]]; then
     echo -e "\nERROR: The logs in connect-0 container do not show 'Finished starting connectors and tasks' after $MAX_WAIT seconds. Please troubleshoot'.\n"
@@ -121,43 +135,5 @@ done
 log "Connect connect-0 has started!"
 set -e
 
-kubectl -n operator port-forward controlcenter-0 9021:9021
-
-exit 0
-
-log "create a topic example on kafka-src cluster"
-kubectl -n kafka-src exec -i kafka-0 -- bash -c 'kafka-topics --create --topic example --partitions 1 --replication-factor 1 --bootstrap-server kafka:9071'
-
-log "create replicator"
-kubectl -n kafka-dest exec -i replicator-0 -- curl -k -X PUT \
-     -H "Content-Type: application/json" \
-     --data '{
-            "connector.class": "io.confluent.connect.replicator.ReplicatorSourceConnector",
-            "tasks.max": "1",
-            "topic.whitelist": "example",
-            "key.converter": "io.confluent.connect.replicator.util.ByteArrayConverter",
-            "value.converter": "io.confluent.connect.replicator.util.ByteArrayConverter",
-            "src.kafka.bootstrap.servers": "kafka-0.kafka.kafka-src.svc.cluster.local:9092",
-            "src.kafka.security.protocol": "SSL",
-            "src.kafka.ssl.truststore.location": "/tmp/truststore.jks",
-            "src.kafka.ssl.truststore.password": "mystorepassword",
-            "dest.kafka.bootstrap.servers": "kafka-0.kafka.kafka-dest.svc.cluster.local:9092",
-            "dest.kafka.security.protocol": "SSL",
-            "dest.kafka.ssl.truststore.location": "/tmp/truststore.jks",
-            "dest.kafka.ssl.truststore.password": "mystorepassword",
-            "confluent.license": "",
-            "confluent.topic.replication.factor": "1",
-            "confluent.topic.bootstrap.servers": "kafka-0.kafka.kafka-dest.svc.cluster.local:9092",
-            "confluent.topic.security.protocol": "SSL",
-            "confluent.topic.ssl.truststore.location": "/tmp/truststore.jks",
-            "confluent.topic.ssl.truststore.password": "mystorepassword"
-          }' \
-     https://localhost:8083/connectors/test-replicator/config
-
-log "produce data on topic example on kafka-src cluster"
-kubectl -n kafka-src exec -i kafka-0 -- bash -c 'seq 10 | kafka-console-producer --broker-list kafka:9071 --topic example'
-
-sleep 5
-
-log "check data on topic example on kafka-dest cluster"
-kubectl -n kafka-dest exec -i kafka-0 -- bash -c 'kafka-console-consumer -bootstrap-server kafka:9071 --topic example --from-beginning --max-messages 10'
+log "Control Center is reachable at http://127.0.0.1:9021"
+kubectl -n operator port-forward controlcenter-0 9021:9021 &
