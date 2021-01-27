@@ -111,7 +111,7 @@ helm upgrade --install \
   --set controlcenter.dependencies.schemaRegistry.authentication.username="${SR_USERNAME}" \
   --set controlcenter.dependencies.schemaRegistry.authentication.password="${SR_SECRET}"
 
-# kubectl -n operator exec -it connect-0 -- bash
+# kubectl -n operator exec -it connectors-0 -- bash
 
 
 log "Sleep 60 seconds to let pods being started"
