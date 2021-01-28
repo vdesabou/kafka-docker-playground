@@ -98,6 +98,31 @@ helm upgrade --install \
   --set connect.dependencies.schemaRegistry.authentication.username="${SR_USERNAME}" \
   --set connect.dependencies.schemaRegistry.authentication.password="${SR_SECRET}"
 
+# log "Install ksql"
+# helm upgrade --install \
+#   ksql \
+#     ${DIR}/confluent-operator/helm/confluent-operator/ \
+#   --values $VALUES_FILE \
+#   --namespace operator \
+#   --set ksql.enabled=true \
+#   --set ksql.replicas=1\
+#   --set global.sasl.plain.username="${CLOUD_KEY}" \
+#   --set global.sasl.plain.password="${CLOUD_SECRET}" \
+#   --set ksql.ksql.streams.replication.factor=3 \
+#   --set ksql.ksql.sink.replicas=3 \
+#   --set ksql.ksql.internal.topic.replicas=3 \
+#   --set ksql.dependencies.kafka.tls.enabled=true \
+#   --set ksql.dependencies.kafka.tls.internal=true \
+#   --set ksql.dependencies.kafka.tls.authentication.type="plain" \
+#   --set ksql.dependencies.kafka.bootstrapEndpoint="${BOOTSTRAP_SERVERS}" \
+#   --set ksql.dependencies.kafka.brokerEndpoints="${BOOTSTRAP_SERVERS}" \
+#   --set ksql.dependencies.kafka.brokerCount=3 \
+#   --set ksql.dependencies.schemaRegistry.url="${SCHEMA_REGISTRY_URL}" \
+#   --set ksql.dependencies.schemaRegistry.authentication.type="basic" \
+#   --set ksql.dependencies.schemaRegistry.authentication.source="USER_INFO" \
+#   --set ksql.dependencies.schemaRegistry.authentication.username="${SR_USERNAME}" \
+#   --set ksql.dependencies.schemaRegistry.authentication.password="${SR_SECRET}"
+
 log "Install control-center"
 helm upgrade --install \
   controlcenter \
@@ -145,6 +170,56 @@ set -e
 log "Control Center is reachable at http://127.0.0.1:9021 (admin/Developer1)"
 kubectl -n operator port-forward controlcenter-0 9021:9021 &
 
+#######
+# CONNECTOR TEST: Spool dir
+#######
+
+set +e
+log "Create topic spooldir-json-topic"
+kubectl cp ${CONFIG_FILE} operator/connectors-0:/tmp/config
+kubectl -n operator exec -it connectors-0 -- kafka-topics --bootstrap-server ${BOOTSTRAP_SERVERS} --command-config /tmp/config --topic spooldir-json-topic --create --replication-factor 3 --partitions 1
+set +e
+
+if [ ! -f "${DIR}/json-spooldir-source.json" ]
+then
+     log "Generating data"
+     curl "https://api.mockaroo.com/api/17c84440?count=500&key=25fd9c80" > "${DIR}/json-spooldir-source.json"
+fi
+
+kubectl -n operator exec -it connectors-0 -- mkdir -p /tmp/data/input
+kubectl -n operator exec -it connectors-0 -- mkdir -p /tmp/data/error
+kubectl -n operator exec -it connectors-0 -- mkdir -p /tmp/data/finished
+
+kubectl cp json-spooldir-source.json operator/connectors-0:/tmp/data/input/
+
+log "Creating JSON Spool Dir Source connector"
+kubectl -n operator exec -i connectors-0 -- curl -X PUT \
+     -H "Content-Type: application/json" \
+     --data '{
+               "tasks.max": "1",
+                "connector.class": "com.github.jcustenborder.kafka.connect.spooldir.SpoolDirJsonSourceConnector",
+                "input.path": "/tmp/data/input",
+                "input.file.pattern": "json-spooldir-source.json",
+                "error.path": "/tmp/data/error",
+                "finished.path": "/tmp/data/finished",
+                "halt.on.error": "false",
+                "topic": "spooldir-json-topic",
+                "schema.generation.enabled": "true",
+                "value.converter" : "io.confluent.connect.avro.AvroConverter",
+                "value.converter.schema.registry.url": "'"$SCHEMA_REGISTRY_URL"'",
+                "value.converter.basic.auth.user.info": "'"$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO"'",
+                "value.converter.basic.auth.credentials.source": "USER_INFO"
+          }' \
+     http://localhost:8083/connectors/spool-dir-source/config | jq
+
+sleep 5
+
+log "Verify we have received the data in spooldir-json-topic topic"
+kubectl -n operator exec -it connectors-0 -- kafka-avro-console-consumer --topic spooldir-json-topic --bootstrap-server $BOOTSTRAP_SERVERS --consumer-property ssl.endpoint.identification.algorithm=https --consumer-property sasl.mechanism=PLAIN --consumer-property security.protocol=SASL_SSL --consumer-property sasl.jaas.config="$SASL_JAAS_CONFIG" --property basic.auth.credentials.source=$BASIC_AUTH_CREDENTIALS_SOURCE --property schema.registry.basic.auth.user.info="$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO" --property schema.registry.url=$SCHEMA_REGISTRY_URL --from-beginning --max-messages 2
+
+#######
+# MONITORING
+#######
 log "Create the Kubernetes namespace monitoring to install prometheus/grafana"
 kubectl create namespace monitoring
 
