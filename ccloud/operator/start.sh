@@ -239,7 +239,7 @@ kubectl --namespace monitoring port-forward $POD_NAME 3000 &
 password=$(kubectl get secret --namespace monitoring grafana -o jsonpath="{.data.admin-password}" | base64 --decode)
 
 log "Visit http://localhost:3000 in your browser, and login with admin/$password."
-open "http://127.0.0.1:3000"
+open "http://127.0.0.1:3000" &
 
 
 log "Add Prometheus data source with url http://prometheus-server.monitoring.svc.cluster.local"
