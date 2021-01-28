@@ -144,3 +144,30 @@ set -e
 
 log "Control Center is reachable at http://127.0.0.1:9021 (admin/Developer1)"
 kubectl -n operator port-forward controlcenter-0 9021:9021 &
+
+log "Create the Kubernetes namespace monitoring to install prometheus/grafana"
+kubectl create namespace monitoring
+
+log "Install Prometheus"
+helm install prometheus stable/prometheus \
+ --set alertmanager.persistentVolume.enabled=false \
+ --set server.persistentVolume.enabled=false \
+ --namespace monitoring
+
+log "Install Grafana"
+helm install grafana stable/grafana --namespace monitoring
+
+sleep 90
+
+log "Open Grafana in your Browser"
+export POD_NAME=$(kubectl get pods --namespace monitoring -l "app.kubernetes.io/name=grafana,app.kubernetes.io/instance=grafana" -o jsonpath="{.items[0].metadata.name}")
+kubectl --namespace monitoring port-forward $POD_NAME 3000 &
+
+password=$(kubectl get secret --namespace monitoring grafana -o jsonpath="{.data.admin-password}" | base64 --decode)
+
+log "Visit http://localhost:3000 in your browser, and login with admin/$password."
+open "http://127.0.0.1:3000"
+
+
+log "Add Prometheus data source with url http://prometheus-server.monitoring.svc.cluster.local"
+log "Then you can import dashboard with id 1860 for node exporter full, and ./confluent-operator/grafana-dashboard/grafana-dashboard.json"
