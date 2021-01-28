@@ -56,6 +56,14 @@ wget https://platform-ops-bin.s3-us-west-1.amazonaws.com/operator/confluent-oper
 tar xvfz confluent-operator-1.6.1-for-confluent-platform-6.0.0.tar.gz
 cd -
 
+# FIXTHIS: we need to do custom modifications in order to be able to connect KSQM to Confluent CLoud:
+#
+sed -i.bak 's/^\(.*ksql.sink.replicas=.*\)//g' ${DIR}/confluent-operator/helm/confluent-operator/charts/ksql/templates/ksql-psc.yaml
+sed -i.bak 's/^\(.*ksql.streams.replication.factor=.*\)//g' ${DIR}/confluent-operator/helm/confluent-operator/charts/ksql/templates/ksql-psc.yaml
+sed -i.bak 's/^\(.*          retry.backoff.ms=500\)/\1\n          ksql.internal.topic.replicas=3\n          ksql.internal.topic.replicas=3\n          ksql.sink.replicas=3\n          ksql.streams.replication.factor=3/g' ${DIR}/confluent-operator/helm/confluent-operator/charts/ksql/templates/ksql-psc.yaml
+
+
+
 log "Extend Kubernetes with first class CP primitives"
 kubectl apply --filename ${DIR}/confluent-operator/resources/crds/
 
@@ -98,30 +106,26 @@ helm upgrade --install \
   --set connect.dependencies.schemaRegistry.authentication.username="${SR_USERNAME}" \
   --set connect.dependencies.schemaRegistry.authentication.password="${SR_SECRET}"
 
-# log "Install ksql"
-# helm upgrade --install \
-#   ksql \
-#     ${DIR}/confluent-operator/helm/confluent-operator/ \
-#   --values $VALUES_FILE \
-#   --namespace operator \
-#   --set ksql.enabled=true \
-#   --set ksql.replicas=1\
-#   --set global.sasl.plain.username="${CLOUD_KEY}" \
-#   --set global.sasl.plain.password="${CLOUD_SECRET}" \
-#   --set ksql.ksql.streams.replication.factor=3 \
-#   --set ksql.ksql.sink.replicas=3 \
-#   --set ksql.ksql.internal.topic.replicas=3 \
-#   --set ksql.dependencies.kafka.tls.enabled=true \
-#   --set ksql.dependencies.kafka.tls.internal=true \
-#   --set ksql.dependencies.kafka.tls.authentication.type="plain" \
-#   --set ksql.dependencies.kafka.bootstrapEndpoint="${BOOTSTRAP_SERVERS}" \
-#   --set ksql.dependencies.kafka.brokerEndpoints="${BOOTSTRAP_SERVERS}" \
-#   --set ksql.dependencies.kafka.brokerCount=3 \
-#   --set ksql.dependencies.schemaRegistry.url="${SCHEMA_REGISTRY_URL}" \
-#   --set ksql.dependencies.schemaRegistry.authentication.type="basic" \
-#   --set ksql.dependencies.schemaRegistry.authentication.source="USER_INFO" \
-#   --set ksql.dependencies.schemaRegistry.authentication.username="${SR_USERNAME}" \
-#   --set ksql.dependencies.schemaRegistry.authentication.password="${SR_SECRET}"
+log "Install ksql"
+helm upgrade --install \
+  ksql \
+    ${DIR}/confluent-operator/helm/confluent-operator/ \
+  --values $VALUES_FILE \
+  --namespace operator \
+  --set ksql.enabled=true \
+  --set global.sasl.plain.username="${CLOUD_KEY}" \
+  --set global.sasl.plain.password="${CLOUD_SECRET}" \
+  --set ksql.dependencies.kafka.tls.enabled=true \
+  --set ksql.dependencies.kafka.tls.internal=true \
+  --set ksql.dependencies.kafka.tls.authentication.type="plain" \
+  --set ksql.dependencies.kafka.bootstrapEndpoint="${BOOTSTRAP_SERVERS}" \
+  --set ksql.dependencies.kafka.brokerEndpoints="${BOOTSTRAP_SERVERS}" \
+  --set ksql.dependencies.kafka.brokerCount=3 \
+  --set ksql.dependencies.schemaRegistry.url="${SCHEMA_REGISTRY_URL}" \
+  --set ksql.dependencies.schemaRegistry.authentication.type="basic" \
+  --set ksql.dependencies.schemaRegistry.authentication.source="USER_INFO" \
+  --set ksql.dependencies.schemaRegistry.authentication.username="${SR_USERNAME}" \
+  --set ksql.dependencies.schemaRegistry.authentication.password="${SR_SECRET}"
 
 log "Install control-center"
 helm upgrade --install \
