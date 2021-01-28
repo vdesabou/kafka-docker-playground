@@ -80,7 +80,7 @@ Quick start examples from Confluent [docs](https://docs.confluent.io/current/con
 | <img src="./images/icons/hdfs_2.svg" width="15"> [HDFS 2 Sink](connect/connect-hdfs2-sink) |  Datastore | 10.0.0 | Confluent Community License | 2020-11-05 | 👍 2021-01-26 
 | <img src="./images/icons/hdfs_2.svg" width="15"> [HDFS 3 Sink](connect/connect-hdfs3-sink) |  Datastore | 1.0.7 | Confluent Subscription | 2020-12-10 | 👍 2021-01-26 
 | <img src="./images/icons/http.png" width="15"> [HTTP Sink](connect/connect-http-sink) |  SaaS Apps | 1.1.0 | Confluent Subscription | 2020-12-09 | 👍 2021-01-26 
-| <img src="./images/icons/ibm_mq.png" width="15"> [IBM MQ Sink](connect/connect-ibm-mq-sink) |  Message Queue | 1.3.1 | Confluent Subscription | 2021-01-28 | ☠ 
+| <img src="./images/icons/ibm_mq.png" width="15"> [IBM MQ Sink](connect/connect-ibm-mq-sink) |  Message Queue | 1.3.1 | Confluent Subscription | 2021-01-28 | 👍 2021-01-28 
 | <img src="./images/icons/ibm_mq.png" width="15"> [IBM MQ Source](connect/connect-ibm-mq-source) |  Message Queue | 10.1.0 | Confluent Subscription | 2020-12-15 | 👍 2021-01-26 
 | <img src="./images/icons/influxdb.svg" width="15"> [InfluxDB Sink](connect/connect-influxdb-sink) |  Database | 1.2.1 | Confluent Subscription | 2020-09-30 | 👍 2021-01-26 
 | <img src="./images/icons/influxdb.svg" width="15"> [InfluxDB Source](connect/connect-influxdb-source) |  Database | 1.2.1 | Confluent Subscription | 2020-09-30 | 👍 2021-01-26 
@@ -97,9 +97,9 @@ Quick start examples from Confluent [docs](https://docs.confluent.io/current/con
 | <img src="./images/icons/postgresql.png" width="15"> [JDBC PostGreSQL Source](connect/connect-jdbc-postgresql-source) |  Database | 10.0.1 | Confluent Community License | 2020-11-24 | 👍 2021-01-26 
 | <img src="./images/icons/sql_server.png" width="15"> [JDBC Microsoft SQL Server Source](connect/connect-jdbc-sqlserver-source) |  Database | 10.0.1 | Confluent Community License | 2020-11-24 | 👍 2021-01-26 
 | <img src="./images/icons/jira.png" width="15"> [JIRA Source](connect/connect-jira-source) |  SaaS Apps | 1.0.1-preview | Confluent Subscription | 2020-12-01 | 👍 2021-01-26 
-| <img src="./images/icons/activemq.png" width="15"> [JMS ActiveMQ Sink](connect/connect-jms-active-mq-sink) |  Message Queue | 1.3.1 | Confluent Subscription | 2021-01-28 | ☠ 
-| <img src="./images/icons/solace.jpg" width="15"> [JMS Solace Sink](connect/connect-jms-solace-sink) |  Message Queue | 1.3.1 | Confluent Subscription | 2021-01-28 | ☠ 
-| <img src="./images/icons/tibco_ems.png" width="15"> [JMS TIBCO EMS Sink](connect/connect-jms-tibco-sink) |  Message Queue | 1.3.1 | Confluent Subscription | 2021-01-28 | ☠ 
+| <img src="./images/icons/activemq.png" width="15"> [JMS ActiveMQ Sink](connect/connect-jms-active-mq-sink) |  Message Queue | 1.3.1 | Confluent Subscription | 2021-01-28 | 👍 2021-01-28 
+| <img src="./images/icons/solace.jpg" width="15"> [JMS Solace Sink](connect/connect-jms-solace-sink) |  Message Queue | 1.3.1 | Confluent Subscription | 2021-01-28 | 👍 2021-01-28 
+| <img src="./images/icons/tibco_ems.png" width="15"> [JMS TIBCO EMS Sink](connect/connect-jms-tibco-sink) |  Message Queue | 1.3.1 | Confluent Subscription | 2021-01-28 | 👍 2021-01-28 
 | <img src="./images/icons/tibco_ems.png" width="15"> [JMS TIBCO EMS Source](connect/connect-jms-tibco-source) |  Message Queue | 10.1.0 | Confluent Subscription | 2020-12-15 | 👍 2021-01-26 
 | <img src="./images/icons/mapr.png" height="15"> [Mapr Sink](connect/connect-mapr-sink) |  Datastore | 1.1.2 | Confluent Subscription | 2020-12-14 | 🤷‍♂️ not tested 
 | <img src="./images/icons/marketo.png" height="15"> [Marketo Source](connect/connect-marketo-source) |  SaaS Apps | 1.0.0-preview | Confluent Subscription | 2020-10-20 | 👍 2021-01-26 
@@ -128,13 +128,13 @@ Quick start examples from Confluent [docs](https://docs.confluent.io/current/con
 | <img src="./images/icons/sftp.png" width="15"> [SFTP Sink](connect/connect-sftp-source) |  Datastore | 2.1.5 | Confluent Subscription | 2020-12-19 | 👍 2021-01-26 
 | <img src="./images/icons/snmp_trap.png" width="15"> [SNMP Trap Source](connect/connect-snmp-source) |  IoT | 1.1.2 | Confluent Subscription | 2020-04-09 | 👍 2021-01-26 
 | <img src="./images/icons/snowflake.png" height="15">  [Snowflake Sink](connect/connect-snowflake-sink) |  Data Warehouse | 1.5.1 | Open Source (Snowflake, Inc.) | 2020-12-02 | 👍 2021-01-26 
-| <img src="./images/icons/solace.jpg" width="15"> [Solace Sink](connect/connect-solace-sink) |  Message Queue | 1.3.1 | Confluent Subscription | 2021-01-28 | ☠ 
+| <img src="./images/icons/solace.jpg" width="15"> [Solace Sink](connect/connect-solace-sink) |  Message Queue | 1.3.1 | Confluent Subscription | 2021-01-28 | 👍 2021-01-28 
 | <img src="./images/icons/solace.jpg" width="15"> [Solace Source](connect/connect-solace-source) |  Message Queue | 1.2.0 | Confluent Subscription | 2020-08-26 | 👍 2021-01-26 
 | <img src="./images/icons/splunk.jpg" width="15"> [Splunk Sink](connect/connect-splunk-sink) |  Analytics | 2.0 | Open Source (Splunk) |  | 👍 2021-01-26 
 | <img src="./images/icons/splunk.jpg" width="15"> [Splunk Source](connect/connect-splunk-source) |  Analytics | 1.0.3 | Confluent Subscription | 2020-11-18 | 👍 2021-01-26 
 | <img src="./images/icons/spool_dir.png" width="15"> [Spool Dir Source](connect/connect-spool-dir-source) |  Datastore | 2.0.58 | Open Source (Jeremy Custenborder) | 2021-01-19 | 👍 2021-01-27 
 | <img src="./images/icons/syslog.png" width="15"> [Syslog Source](connect/connect-syslog-source) |  Logs | 1.3.2 | Confluent Subscription | 2020-11-03 | 👍 2021-01-26 
-| <img src="./images/icons/tibco_ems.png" width="15"> [TIBCO EMS Sink](connect/connect-tibco-sink) |  Message Queue | 1.3.1 | Confluent Subscription | 2021-01-28 | ☠ 
+| <img src="./images/icons/tibco_ems.png" width="15"> [TIBCO EMS Sink](connect/connect-tibco-sink) |  Message Queue | 1.3.1 | Confluent Subscription | 2021-01-28 | 👍 2021-01-28 
 | <img src="./images/icons/tibco_ems.png" width="15"> [TIBCO EMS Source](connect/connect-tibco-source) |  Message Queue | 1.2.0 | Confluent Subscription | 2020-08-26 | 👍 2021-01-26 
 | <img src="./images/icons/vertica.png" width="15"> [Vertica Sink](connect/connect-vertica-sink) |  Database | 1.2.4 | Confluent Subscription | 2020-12-14 | 👍 2021-01-26 
 | <img src="./images/icons/zendesk.png" width="15"> [Zendesk Source](connect/connect-zendesk-source) |  SaaS Apps | 1.0.5 | Confluent Subscription | 2020-12-17 | 👍 2021-01-27 
