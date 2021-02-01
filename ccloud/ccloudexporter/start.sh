@@ -50,10 +50,6 @@ export CCLOUD_CLUSTER=$(ccloud prompt -f "%k")
 sed -e "s|:CCLOUD_CLUSTER:|$CCLOUD_CLUSTER|g" \
     ${DIR}/config-template.yml > ${DIR}/config.yml
 
-set +e
-create_topic ccloudexporter
-set -e
-
 log "Create API key and secret with cloud resource for Metrics API"
 log "ccloud api-key create --resource cloud"
 OUTPUT=$(ccloud api-key create --resource cloud)
@@ -64,6 +60,11 @@ echo "$API_KEY_CLOUD" > api_key_cloud_to_delete
 
 docker-compose down -v --remove-orphans
 docker-compose up -d
+
+set +e
+log "Create topic ccloudexporter"
+docker exec -e BOOTSTRAP_SERVERS=$BOOTSTRAP_SERVERS tools bash -c "kafka-topics --bootstrap-server ${BOOTSTRAP_SERVERS} --command-config /tmp/config --topic ccloudexporter --create --replication-factor 3 --partitions 6"
+set -e
 
 log "Producing data to ccloudexporter topic"
 docker exec tools bash -c "kafka-producer-perf-test --throughput 1000 --num-records 60000 --topic ccloudexporter --record-size 100 --producer.config /tmp/config"
