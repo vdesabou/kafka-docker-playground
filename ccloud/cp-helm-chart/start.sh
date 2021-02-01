@@ -44,8 +44,9 @@ kubectl config current-context
 kubectl cluster-info
 
 log "Launch minikube dashboard in background"
+set +e
 minikube dashboard &
-
+set -e
 #helm repo add stable https://charts.helm.sh/stable
 #helm repo update
 #helm repo add confluentinc https://confluentinc.github.io/cp-helm-charts/
@@ -58,8 +59,6 @@ kubectl create namespace cp-helm-charts
 SR_USERNAME=$(echo $SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO | cut -d ":" -f 1)
 SR_SECRET=$(echo $SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO | cut -d ":" -f 2)
 
-exit 0
-
 log "Install connect"
 helm upgrade --install \
    connect \
@@ -67,6 +66,9 @@ helm upgrade --install \
   --values ${DIR}/cp-helm-charts/charts/cp-kafka-connect/values.yaml \
   --namespace cp-helm-charts \
   --set kafka.bootstrapServers="${BOOTSTRAP_SERVERS}" \
+  --set imagePullPolicy="IfNotPresent" \
+  --set image="vdesabou/kafka-docker-playground-connect" \
+  --set imageTag="${TAG}" \
   --set configurationOverrides."ssl\.endpoint\.identification\.algorithm"=https \
   --set configurationOverrides."security\.protocol"=SASL_SSL \
   --set configurationOverrides."sasl\.mechanism"=PLAIN \
@@ -99,21 +101,72 @@ set +e
 # Verify Kafka Connect has started within MAX_WAIT seconds
 MAX_WAIT=480
 CUR_WAIT=0
-POD_NAME=$(kubectl get pods -n cp-helm-charts --selector=app=cp-kafka-connect -o jsonpath="{.items[0].metadata.name}")
-log "Waiting up to $MAX_WAIT seconds for Kafka Connect $POD_NAME to start"
-kubectl logs -n cp-helm-charts $POD_NAME -c cp-kafka-connect-server > /tmp/out.txt 2>&1
+CONNECT_POD_NAME=$(kubectl get pods -n cp-helm-charts --selector=app=cp-kafka-connect -o jsonpath="{.items[0].metadata.name}")
+log "Waiting up to $MAX_WAIT seconds for Kafka Connect $CONNECT_POD_NAME to start"
+kubectl logs -n cp-helm-charts $CONNECT_POD_NAME -c cp-kafka-connect-server > /tmp/out.txt 2>&1
 while [[ ! $(cat /tmp/out.txt) =~ "Finished starting connectors and tasks" ]]; do
   sleep 10
-  kubectl logs -n cp-helm-charts $POD_NAME -c cp-kafka-connect-server > /tmp/out.txt 2>&1
+  kubectl logs -n cp-helm-charts $CONNECT_POD_NAME -c cp-kafka-connect-server > /tmp/out.txt 2>&1
   CUR_WAIT=$(( CUR_WAIT+10 ))
   if [[ "$CUR_WAIT" -gt "$MAX_WAIT" ]]; then
-    echo -e "\nERROR: The logs in $POD_NAME container do not show 'Finished starting connectors and tasks' after $MAX_WAIT seconds. Please troubleshoot'.\n"
+    echo -e "\nERROR: The logs in $CONNECT_POD_NAME container do not show 'Finished starting connectors and tasks' after $MAX_WAIT seconds. Please troubleshoot'.\n"
     exit 1
   fi
 done
-log "Connect $POD_NAME has started!"
+log "Connect $CONNECT_POD_NAME has started!"
 set -e
 
+#######
+# CONNECTOR TEST: Spool dir
+#######
+
+set +e
+log "Create topic spooldir-json-topic"
+kubectl -c cp-kafka-connect-server cp ${CONFIG_FILE} cp-helm-charts/$CONNECT_POD_NAME:/tmp/config
+kubectl -n cp-helm-charts -c cp-kafka-connect-server exec -it $CONNECT_POD_NAME -- kafka-topics --bootstrap-server ${BOOTSTRAP_SERVERS} --command-config /tmp/config --topic spooldir-json-topic --create --replication-factor 3 --partitions 1
+set +e
+
+if [ ! -f "${DIR}/json-spooldir-source.json" ]
+then
+     log "Generating data"
+     curl "https://api.mockaroo.com/api/17c84440?count=500&key=25fd9c80" > "${DIR}/json-spooldir-source.json"
+fi
+
+kubectl -n cp-helm-charts -c cp-kafka-connect-server exec -it $CONNECT_POD_NAME -- mkdir -p /tmp/data/input
+kubectl -n cp-helm-charts -c cp-kafka-connect-server exec -it $CONNECT_POD_NAME -- mkdir -p /tmp/data/error
+kubectl -n cp-helm-charts -c cp-kafka-connect-server exec -it $CONNECT_POD_NAME -- mkdir -p /tmp/data/finished
+
+kubectl cp -c cp-kafka-connect-server json-spooldir-source.json cp-helm-charts/$CONNECT_POD_NAME:/tmp/data/input/
+
+log "Creating JSON Spool Dir Source connector"
+kubectl -n cp-helm-charts -c cp-kafka-connect-server exec -i $CONNECT_POD_NAME -- curl -X PUT \
+     -H "Content-Type: application/json" \
+     --data '{
+               "tasks.max": "1",
+                "connector.class": "com.github.jcustenborder.kafka.connect.spooldir.SpoolDirJsonSourceConnector",
+                "input.path": "/tmp/data/input",
+                "input.file.pattern": "json-spooldir-source.json",
+                "error.path": "/tmp/data/error",
+                "finished.path": "/tmp/data/finished",
+                "halt.on.error": "false",
+                "topic": "spooldir-json-topic",
+                "schema.generation.enabled": "true",
+                "value.converter" : "io.confluent.connect.avro.AvroConverter",
+                "value.converter.schema.registry.url": "'"$SCHEMA_REGISTRY_URL"'",
+                "value.converter.basic.auth.user.info": "'"$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO"'",
+                "value.converter.basic.auth.credentials.source": "USER_INFO"
+          }' \
+     http://localhost:8083/connectors/spool-dir-source/config | jq
+
+sleep 5
+
+log "Verify we have received the data in spooldir-json-topic topic"
+kubectl -n cp-helm-charts -c cp-kafka-connect-server exec -it $CONNECT_POD_NAME -- kafka-avro-console-consumer --topic spooldir-json-topic --bootstrap-server $BOOTSTRAP_SERVERS --consumer-property ssl.endpoint.identification.algorithm=https --consumer-property sasl.mechanism=PLAIN --consumer-property security.protocol=SASL_SSL --consumer-property sasl.jaas.config="$SASL_JAAS_CONFIG" --property basic.auth.credentials.source=$BASIC_AUTH_CREDENTIALS_SOURCE --property schema.registry.basic.auth.user.info="$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO" --property schema.registry.url=$SCHEMA_REGISTRY_URL --from-beginning --max-messages 2
+
+
+#######
+# MONITORING
+#######
 # https://github.com/confluentinc/cp-helm-charts#monitoring
 log "Install Prometheus"
 helm install prometheus stable/prometheus
