@@ -136,3 +136,8 @@ USE SCHEMA PUBLIC;
 USE WAREHOUSE PLAYGROUND_WAREHOUSE;
 SELECT * FROM PLAYGROUND_DB.PUBLIC.TEST_TABLE;
 EOF
+
+# docker exec broker kafka-consumer-groups --bootstrap-server broker:9092 --group connect-snowflake-sink --describe
+
+# docker exec broker kafka-consumer-groups --bootstrap-server broker:9092 --group connect-snowflake-sink --to-earliest --topic test_table --reset-offsets --dry-run
+# docker exec broker kafka-consumer-groups --bootstrap-server broker:9092 --group connect-snowflake-sink --to-earliest --topic test_table --reset-offsets --execute
