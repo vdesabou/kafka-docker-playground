@@ -30,7 +30,7 @@ curl -X PUT \
 sleep 10
 
 log "Test with SNMP v3 trap"
-docker exec snmptrap snmptrap -v 3 -c public -u mysecurityname -a MD5 -A myauthpassword -x DES -X myprivacypassword connect:10161 '' 1.3.6.1.4.1.8072.2.3.0.1 1.3.6.1.4.1.8072.2.3.2.1 i 123456
+docker exec snmptrap snmptrap -v 3 -c public -u mysecurityname -l authPriv -a MD5 -A myauthpassword -x DES -X myprivacypassword connect:10161 '' 1.3.6.1.4.1.8072.2.3.0.1 1.3.6.1.4.1.8072.2.3.2.1 i 123456
 
 sleep 5
 
