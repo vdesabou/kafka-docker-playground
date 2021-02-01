@@ -50,7 +50,7 @@ set -e
 #helm repo add stable https://charts.helm.sh/stable
 #helm repo update
 #helm repo add confluentinc https://confluentinc.github.io/cp-helm-charts/
-
+rm -rf cp-helm-charts
 git clone https://github.com/confluentinc/cp-helm-charts.git
 
 log "Create the Kubernetes namespace to install cp-helm-charts"
@@ -93,6 +93,27 @@ helm upgrade --install \
   --set configurationOverrides."value\.converter\.schema\.registry\.basic\.auth\.user\.info"="${SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO}" \
   --set configurationOverrides."value\.converter\.schema\.registry\.url"="${SCHEMA_REGISTRY_URL}"
 
+log "Install control-center"
+helm upgrade --install \
+  controlcenter \
+    ${DIR}/cp-helm-charts/charts/cp-control-center \
+  --values ${DIR}/cp-helm-charts/charts/cp-control-center/values.yaml \
+  --namespace cp-helm-charts \
+  --set kafka.bootstrapServers="${BOOTSTRAP_SERVERS}" \
+  --set configurationOverrides."bootstrap.\servers"="${BOOTSTRAP_SERVERS}" \
+  --set configurationOverrides."streams\.ssl\.endpoint\.identification\.algorithm"=https \
+  --set configurationOverrides."streams\.security\.protocol"=SASL_SSL \
+  --set configurationOverrides."streams\.sasl\.mechanism"=PLAIN \
+  --set configurationOverrides."streams\.sasl\.jaas\.config"="org.apache.kafka.common.security.plain.PlainLoginModule required username=\"${CLOUD_KEY}\" password=\"${CLOUD_SECRET}\";" \
+  --set configurationOverrides."confluent\.metrics\.topic\.max\.message\.bytes"=8388608 \
+  --set configurationOverrides."schema\.registry\.basic\.auth\.credentials\.source"=USER_INFO \
+  --set configurationOverrides."schema\.registry\.basic\.auth\.user\.info"="${SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO}" \
+  --set configurationOverrides."schema\.registry\.url"="${SCHEMA_REGISTRY_URL}" \
+  --set configurationOverrides."replication\.factor"=3 \
+  --set configurationOverrides."internal\.topics\.replication"=3 \
+  --set configurationOverrides."internal\.topics\.partitions"=1 \
+  --set configurationOverrides."command\.topic\.replication"=3 \
+  --set configurationOverrides."metrics\.topic\.replication"=3
 
 log "Sleep 60 seconds to let pods being started"
 sleep 60
@@ -115,6 +136,10 @@ while [[ ! $(cat /tmp/out.txt) =~ "Finished starting connectors and tasks" ]]; d
 done
 log "Connect $CONNECT_POD_NAME has started!"
 set -e
+
+C3_POD_NAME=$(kubectl get pods -n cp-helm-charts --selector=app=cp-control-center -o jsonpath="{.items[0].metadata.name}")
+log "Control Center is reachable at http://127.0.0.1:9021 (admin/Developer1)"
+kubectl -n cp-helm-charts port-forward ${C3_POD_NAME} 9021:9021 &
 
 #######
 # CONNECTOR TEST: Spool dir
