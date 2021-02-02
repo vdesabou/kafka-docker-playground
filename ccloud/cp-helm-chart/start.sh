@@ -223,5 +223,5 @@ log "Visit http://localhost:3000 in your browser, and login with admin/$password
 open "http://127.0.0.1:3000" &
 
 
-log "Add Prometheus data source with url http://prometheus-server.default.svc.cluster.local"
+log "Add Prometheus data source with url http://prometheus-server.cp-helm-charts.svc.cluster.local"
 log "Then you can import dashboard with id 1860 for node exporter full, and https://github.com/confluentinc/cp-helm-charts/blob/master/grafana-dashboard/confluent-open-source-grafana-dashboard.json"
