@@ -13,9 +13,6 @@ then
      exit 1
 fi
 
-REST_KEY=$1
-REST_SECRET=$2
-
 REST_KEY=${REST_KEY:-$1}
 REST_SECRET=${REST_SECRET:-$2}
 
