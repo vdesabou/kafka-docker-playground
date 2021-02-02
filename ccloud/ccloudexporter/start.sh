@@ -44,6 +44,26 @@ then
      set -e
 fi
 
+if [ ! -z "$CI" ] || [ ! -z "$CLOUDFORMATION" ]
+then
+     # running with github actions or cloudformation
+     log "Installing ccloud CLI"
+     curl -L --http1.1 https://cnfl.io/ccloud-cli | sudo sh -s -- -b /usr/local/bin
+     export PATH=$PATH:/usr/local/bin
+     log "##################################################"
+     log "Log in to Confluent Cloud"
+     log "##################################################"
+     ccloud login --save
+     log "Use environment $ENVIRONMENT"
+     ccloud environment use $ENVIRONMENT
+     log "Use cluster $CLUSTER_LKC"
+     ccloud kafka cluster use $CLUSTER_LKC
+     log "Store api key $CLOUD_KEY"
+     ccloud api-key store $CLOUD_KEY $CLOUD_SECRET --resource $CLUSTER_LKC --force
+     log "Use api key $CLOUD_KEY"
+     ccloud api-key use $CLOUD_KEY --resource $CLUSTER_LKC
+fi
+
 export CCLOUD_CLUSTER=$(ccloud prompt -f "%k")
 
 # generate config.yml
