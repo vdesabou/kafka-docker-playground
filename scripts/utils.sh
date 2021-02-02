@@ -311,11 +311,11 @@ function create_topic()
 {
   local topic="$1"
   log "Check if topic $topic exists"
-  ccloud kafka topic create $topic --dry-run 2>/dev/null
+  ccloud kafka topic create "$topic" --dry-run 2>/dev/null
   if [[ $? == 0 ]]; then
     log "Create topic $topic"
     log "ccloud kafka topic create $topic"
-    ccloud kafka topic create $topic || true
+    ccloud kafka topic create "$topic" || true
   else
     log "Topic $topic already exists"
   fi
@@ -325,11 +325,11 @@ function delete_topic()
 {
   local topic="$1"
   log "Check if topic $topic exists"
-  ccloud kafka topic create $topic --dry-run 2>/dev/null
+  ccloud kafka topic create "$topic" --dry-run 2>/dev/null
   if [[ $? != 0 ]]; then
     log "Delete topic $topic"
     log "ccloud kafka topic delete $topic"
-    ccloud kafka topic delete $topic || true
+    ccloud kafka topic delete "$topic" || true
   else
     log "Topic $topic does not exist"
   fi
