@@ -2,9 +2,14 @@
 
 ## Objective
 
-Quickly test [cp-helm-charts](https://github.com/confluentinc/cp-helm-charts) with Confluent Cloud.
-Following instructions from [here](https://github.com/alecpowell18/kube-connect-to-ccloud/tree/master/confluent-operator).
+Quickly test [cp-helm-charts](https://github.com/confluentinc/cp-helm-charts) with Confluent Cloud and Minikube.
 
+It starts:
+
+* Connect
+* Control Center
+
+It also showcases a connector example (SpoolDir) and Prometheus/Grafana example.
 ## How to run
 
 Create `$HOME/.ccloud/config`
@@ -39,6 +44,3 @@ Simply run:
 ```
 $ ./start.sh
 ```
-
-## Details of what the script is doing
-
