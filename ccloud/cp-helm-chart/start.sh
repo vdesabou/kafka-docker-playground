@@ -43,15 +43,28 @@ kubectl config use-context minikube.internal
 kubectl config current-context
 kubectl cluster-info
 
+if [ -d ${DIR}/cp-helm-charts ]
+then
+  log "cp-helm-charts repository already exists"
+  read -p "Do you want to get the latest version? (y/n)?" choice
+  case "$choice" in
+  y|Y )
+    rm -rf ${DIR}/cp-helm-charts
+    log "Getting cp-helm-charts from Github (branch $GIT_BRANCH)"
+    cd ${DIR}
+    git clone https://github.com/confluentinc/cp-helm-charts.git
+    cd ${DIR}/cp-helm-charts
+    git checkout "${GIT_BRANCH}"
+  ;;
+  n|N ) ;;
+  * ) logerror "ERROR: invalid response!";exit 1;;
+  esac
+fi
+
 log "Launch minikube dashboard in background"
 set +e
 minikube dashboard &
 set -e
-#helm repo add stable https://charts.helm.sh/stable
-#helm repo update
-#helm repo add confluentinc https://confluentinc.github.io/cp-helm-charts/
-rm -rf cp-helm-charts
-git clone https://github.com/confluentinc/cp-helm-charts.git
 
 log "Create the Kubernetes namespace to install cp-helm-charts"
 kubectl create namespace cp-helm-charts
@@ -194,17 +207,17 @@ kubectl -n cp-helm-charts -c cp-kafka-connect-server exec -it $CONNECT_POD_NAME 
 #######
 # https://github.com/confluentinc/cp-helm-charts#monitoring
 log "Install Prometheus"
-helm install prometheus stable/prometheus
+helm install prometheus stable/prometheus --namespace cp-helm-charts
 log "Install Grafana"
-helm install grafana stable/grafana
+helm install grafana stable/grafana --namespace cp-helm-charts
 
 sleep 90
 
 log "Open Grafana in your Browser"
-export POD_NAME=$(kubectl get pods -l "app.kubernetes.io/name=grafana,app.kubernetes.io/instance=grafana" -o jsonpath="{.items[0].metadata.name}")
-kubectl port-forward $POD_NAME 3000 &
+POD_NAME=$(kubectl get pods -n cp-helm-charts -l "app.kubernetes.io/name=grafana,app.kubernetes.io/instance=grafana" -o jsonpath="{.items[0].metadata.name}")
+kubectl port-forward -n cp-helm-charts $POD_NAME 3000 &
 
-password=$(kubectl get secret grafana -o jsonpath="{.data.admin-password}" | base64 --decode)
+password=$(kubectl get secret -n cp-helm-charts grafana -o jsonpath="{.data.admin-password}" | base64 --decode)
 
 log "Visit http://localhost:3000 in your browser, and login with admin/$password."
 open "http://127.0.0.1:3000" &
