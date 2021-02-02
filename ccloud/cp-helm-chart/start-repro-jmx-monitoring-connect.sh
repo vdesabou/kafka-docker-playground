@@ -106,6 +106,10 @@ helm upgrade --install \
   --set configurationOverrides."consumer\.sasl\.jaas\.config"="org.apache.kafka.common.security.plain.PlainLoginModule required username=\"${CLOUD_KEY}\" password=\"${CLOUD_SECRET}\";" \
   --set configurationOverrides."consumer\.request\.timeout\.ms"=20000 \
   --set configurationOverrides."consumer\.retry\.backoff\.ms"=500 \
+  --set cp-schema-registry.url="${SCHEMA_REGISTRY_URL}" \
+  --set configurationOverrides."key\.converter\.basic\.auth\.credentials\.source"=USER_INFO \
+  --set configurationOverrides."key\.converter\.schema\.registry\.basic\.auth\.user\.info"="${SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO}" \
+  --set configurationOverrides."key\.converter\.schema\.registry\.url"="${SCHEMA_REGISTRY_URL}" \
   --set configurationOverrides."value\.converter\.basic\.auth\.credentials\.source"=USER_INFO \
   --set configurationOverrides."value\.converter\.schema\.registry\.basic\.auth\.user\.info"="${SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO}" \
   --set configurationOverrides."value\.converter\.schema\.registry\.url"="${SCHEMA_REGISTRY_URL}"
