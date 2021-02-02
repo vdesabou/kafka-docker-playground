@@ -113,6 +113,7 @@ helm upgrade --install \
   --values ${DIR}/cp-helm-charts/charts/cp-control-center/values.yaml \
   --namespace cp-helm-charts \
   --set kafka.bootstrapServers="${BOOTSTRAP_SERVERS}" \
+  --set cp-kafka-connect.url="http://connect-cp-kafka-connect.cp-helm-charts.svc.cluster.local:8083" \
   --set configurationOverrides."bootstrap.\servers"="${BOOTSTRAP_SERVERS}" \
   --set configurationOverrides."streams\.ssl\.endpoint\.identification\.algorithm"=https \
   --set configurationOverrides."streams\.security\.protocol"=SASL_SSL \
