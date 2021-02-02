@@ -2,9 +2,15 @@
 
 ## Objective
 
-Quickly test [Confluent Operator](https://docs.confluent.io/operator/current/overview.html) with Confluent Cloud.
-Following instructions from [here](https://github.com/alecpowell18/kube-connect-to-ccloud/tree/master/confluent-operator).
+Quickly test [Confluent Operator](https://docs.confluent.io/operator/current/overview.html) with Confluent Cloud and Minikube.
 
+It starts:
+
+* Connect
+* Control Center
+* KSQL (requires tweaks to helm charts)
+
+It also showcases a connector example (SpoolDir) and Prometheus/Grafana example.
 ## How to run
 
 Create `$HOME/.ccloud/config`
@@ -39,6 +45,3 @@ Simply run:
 ```
 $ ./start.sh
 ```
-
-## Details of what the script is doing
-
