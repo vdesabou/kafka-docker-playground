@@ -127,7 +127,7 @@ Quick start examples from Confluent [docs](https://docs.confluent.io/current/con
 | <img src="./images/icons/sftp.png" width="15"> [SFTP Sink](connect/connect-sftp-sink) |  Datastore | 2.1.6 | Confluent Subscription | 2021-01-30 | 👍 2021-02-01 
 | <img src="./images/icons/sftp.png" width="15"> [SFTP Sink](connect/connect-sftp-source) |  Datastore | 2.1.6 | Confluent Subscription | 2021-01-30 | 👍 2021-02-01 
 | <img src="./images/icons/snmp_trap.png" width="15"> [SNMP Trap Source](connect/connect-snmp-source) |  IoT | 1.1.2 | Confluent Subscription | 2020-04-09 | 👍 2021-01-26 
-| <img src="./images/icons/snowflake.png" height="15">  [Snowflake Sink](connect/connect-snowflake-sink) |  Data Warehouse | 1.5.2 | Open Source (Snowflake, Inc.) | 2021-01-27 | 👍 2021-01-29 
+| <img src="./images/icons/snowflake.png" height="15">  [Snowflake Sink](connect/connect-snowflake-sink) |  Data Warehouse | 1.5.2 | Open Source (Snowflake, Inc.) | 2021-02-01 | 👍 2021-01-29 
 | <img src="./images/icons/solace.jpg" width="15"> [Solace Sink](connect/connect-solace-sink) |  Message Queue | 1.3.1 | Confluent Subscription | 2021-01-28 | 👍 2021-01-28 
 | <img src="./images/icons/solace.jpg" width="15"> [Solace Source](connect/connect-solace-source) |  Message Queue | 1.2.0 | Confluent Subscription | 2020-08-26 | 👍 2021-01-26 
 | <img src="./images/icons/splunk.jpg" width="15"> [Splunk Sink](connect/connect-splunk-sink) |  Analytics | 2.0 | Open Source (Splunk) |  | 👍 2021-01-26 
