@@ -195,7 +195,7 @@ kubectl -n cp-helm-charts -c cp-kafka-connect-server exec -i $CONNECT_POD_NAME -
                 "value.converter.basic.auth.user.info": "'"$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO"'",
                 "value.converter.basic.auth.credentials.source": "USER_INFO"
           }' \
-     http://localhost:8083/connectors/spool-dir-source/config | jq
+     http://localhost:8083/connectors/spool-dir-source$RANDOM/config | jq
 
 sleep 5
 
