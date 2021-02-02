@@ -11,6 +11,15 @@ then
      docker run -i --rm -v "${DIR}/kafka-admin":/usr/src/mymaven -v "$HOME/.m2":/root/.m2 -v "${DIR}/kafka-admin/target:/usr/src/mymaven/target" -w /usr/src/mymaven maven:3.6.1-jdk-11 mvn package
 fi
 
+for component in producer-acl
+do
+     if [ ! -f ${DIR}/${component}/target/${component}-1.0.0-jar-with-dependencies.jar ]
+     then
+          log "Building jar for ${component}"
+          docker run -i --rm -e KAFKA_CLIENT_TAG=$KAFKA_CLIENT_TAG -e TAG=$TAG_BASE -v "${DIR}/${component}":/usr/src/mymaven -v "$HOME/.m2":/root/.m2 -v "${DIR}/${component}/target:/usr/src/mymaven/target" -w /usr/src/mymaven maven:3.6.1-jdk-11 mvn package
+     fi
+done
+
 ${DIR}/../../ccloud/environment/start.sh "${PWD}/docker-compose.yml"
 
 # generate kafka-admin.properties config
