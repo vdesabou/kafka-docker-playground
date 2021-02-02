@@ -4,7 +4,7 @@ services:
 
   producer-acl:
     build:
-      context: ../ccloud-demo/producer-acl/
+      context: ../kafka-admin/producer-acl/
       args:
         TAG: ${TAG}
         CP_BASE_IMAGE: ${CP_BASE_IMAGE}
