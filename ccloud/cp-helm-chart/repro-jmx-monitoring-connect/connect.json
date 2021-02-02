@@ -897,7 +897,7 @@
         "steppedLine": false,
         "targets": [
           {
-            "expr": "rate(process_cpu_seconds_total{job=\"connect\",env=\"$env\",cluster=~\"$cluster\",instance=~\"$instance\"}[1m])",
+            "expr": "rate(process_cpu_seconds_total{env=\"$env\",cluster=~\"$cluster\",instance=~\"$instance\"}[1m])",
             "interval": "",
             "legendFormat": "{{cluster}}-{{instance}}",
             "refId": "A"
@@ -991,7 +991,7 @@
         "steppedLine": false,
         "targets": [
           {
-            "expr": "sum without(area)(jvm_memory_bytes_used{job=\"connect\",env=\"$env\",cluster=~\"$cluster\",instance=~\"$instance\"})",
+            "expr": "sum without(area)(jvm_memory_bytes_used{env=\"$env\",cluster=~\"$cluster\",instance=~\"$instance\"})",
             "interval": "",
             "legendFormat": "{{cluster}}-{{instance}}",
             "refId": "A"
@@ -1085,7 +1085,7 @@
         "steppedLine": false,
         "targets": [
           {
-            "expr": "sum without(gc)(rate(jvm_gc_collection_seconds_sum{job=\"connect\",env=\"$env\",cluster=~\"$cluster\",instance=~\"$instance\"}[5m]))",
+            "expr": "sum without(gc)(rate(jvm_gc_collection_seconds_sum{env=\"$env\",cluster=~\"$cluster\",instance=~\"$instance\"}[5m]))",
             "interval": "",
             "legendFormat": "{{cluster}}-{{instance}}",
             "refId": "A"
