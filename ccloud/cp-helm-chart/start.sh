@@ -160,9 +160,10 @@ kubectl -n cp-helm-charts port-forward ${C3_POD_NAME} 9021:9021 &
 #######
 
 set +e
-log "Create topic spooldir-json-topic"
+log "Delete and re-create topic spooldir-json-topic"
 kubectl -c cp-kafka-connect-server cp ${CONFIG_FILE} cp-helm-charts/$CONNECT_POD_NAME:/tmp/config
-kubectl -n cp-helm-charts -c cp-kafka-connect-server exec -it $CONNECT_POD_NAME -- kafka-topics --bootstrap-server ${BOOTSTRAP_SERVERS} --command-config /tmp/config --topic spooldir-json-topic --create --replication-factor 3 --partitions 1
+kubectl -n cp-helm-charts -c cp-kafka-connect-server exec -i $CONNECT_POD_NAME -- bash -c "KAFKA_HEAP_OPTS=\"\" kafka-topics --bootstrap-server ${BOOTSTRAP_SERVERS} --command-config /tmp/config --topic spooldir-json-topic --delete"
+kubectl -n cp-helm-charts -c cp-kafka-connect-server exec -i $CONNECT_POD_NAME -- bash -c "KAFKA_HEAP_OPTS=\"\" kafka-topics --bootstrap-server ${BOOTSTRAP_SERVERS} --command-config /tmp/config --topic spooldir-json-topic --create --replication-factor 3 --partitions 1"
 set +e
 
 if [ ! -f "${DIR}/json-spooldir-source.json" ]
