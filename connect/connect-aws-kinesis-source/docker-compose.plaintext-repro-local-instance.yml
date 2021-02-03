@@ -1,0 +1,17 @@
+---
+version: '3.5'
+services:
+  connect:
+    volumes:
+        - ../../connect/connect-aws-kinesis-source/aws-config-repro-local-instance/credentials:/root/.aws/credentials:ro
+    environment:
+      CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-kinesis
+
+  kinesis-local:
+    image: vsouza/kinesis-local:latest
+    hostname: kinesis-local
+    container_name: kinesis-local
+    command: --port 4567
+    restart: always
+    ports:
+      - 4567:4567
