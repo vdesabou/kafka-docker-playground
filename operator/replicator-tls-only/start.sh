@@ -91,7 +91,9 @@ helm upgrade --install \
   --set-file kafka.tls.fullchain=${PWD}/server.crt \
   --set-file kafka.tls.privkey=${PWD}/server.key \
   --set-file kafka.tls.cacerts=${PWD}/rootCA.pem \
-  --set 'kafka.configOverrides.server[0]=confluent.license.topic.replication.factor=1'
+  --set 'kafka.configOverrides.server[0]=confluent.license.topic.replication.factor=1' \
+  --set 'kafka.configOverrides.server[1]=confluent.balancer.enable=true' \
+  --set 'kafka.configOverrides.server[2]=confluent.balancer.heal.uneven.load.trigger=ANY_UNEVEN_LOAD'
 
 
   # --set 'kafka.configOverrides.server[1]=listener.name.internal.ssl.principal.mapping.rules=RULE:^CN=([a-zA-Z0-9.]*).*$//L,DEFAULT' \
