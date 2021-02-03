@@ -1,4 +1,4 @@
-# CDC Oracle 12 Source connector
+# Oracle CDC Source (Oracle 12) Source connector
 
 ## Objective
 
