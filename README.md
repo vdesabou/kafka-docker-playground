@@ -110,7 +110,7 @@ Quick start examples from Confluent [docs](https://docs.confluent.io/current/con
 | <img src="./images/icons/mqtt.png" width="15"> [MQTT Source](connect/connect-mqtt-source) |  IoT | 1.4.0 | Confluent Subscription | 2020-10-29 | 👍 2021-02-02 
 | <img src="./images/icons/neo4j.png" width="15"> [Neo4j Sink](connect/connect-neo4j-sink) |  Database | 1.0.9 | Open Source (Neo4j, Inc.) | 2020-09-02 | 👍 2021-02-02 
 | <img src="./images/icons/omnisci.png" width="15"> [OmniSci Sink](connect/connect-omnisci-sink) |  Database | 1.0.2 | Confluent Subscription | 2019-08-20 | 👍 2021-02-02 
-| <img src="./images/icons/oracle_12.png" width="15"> [Oracle CDC](connect/connect-cdc-oracle12-source) |  Database | 1.0.1 | Confluent Subscription | 2021-02-03 | ☠ 
+| <img src="./images/icons/oracle_12.jpg" width="15"> [Oracle CDC](connect/connect-cdc-oracle12-source) |  Database | 1.0.1 | Confluent Subscription | 2021-02-03 | ☠ 
 | <img src="./images/icons/pagerduty.png" width="15"> [PagerDuty Sink](connect/connect-pagerduty-sink) |  SaaS Apps | 1.0.2 | Confluent Subscription | 2020-11-18 | 👍 2021-01-27 
 | <img src="./images/icons/prometheus.png" height="15">  [Prometheus Sink](connect/connect-prometheus-sink) |  Analytics | 1.1.3-preview | Confluent Subscription | 2021-01-04 | 👍 2021-02-02 
 | <img src="./images/icons/rabbitmq.svg" width="15"> [RabbitMQ Sink](connect/connect-rabbitmq-sink) |  Message Queue | 1.4.1 | Confluent Subscription | 2020-10-31 | 👍 2021-02-02 
@@ -155,6 +155,7 @@ Quick start examples from Confluent [docs](https://docs.confluent.io/current/con
 
 ### 🔗 Kafka Connectors connected to Confluent Cloud
 
+  - <img src="./images/icons/kinesis.svg" width="15"> [AWS Kinesis](ccloud/connect-aws-kinesis-source) source
   - <img src="./images/icons/servicenow.png" width="15"> [ServiceNow](ccloud/connect-servicenow-source) source
   - <img src="./images/icons/servicenow.png" width="15"> [ServiceNow](ccloud/connect-servicenow-sink) sink
   - <img src="./images/icons/mongodb.jpg" width="15"> [MongoDB](ccloud/connect-debezium-mongodb-source) source
