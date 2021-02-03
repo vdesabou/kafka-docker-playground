@@ -4,6 +4,18 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
+# This is required even though we use a local instance !
+if [ ! -f $HOME/.aws/config ]
+then
+     logerror "ERROR: $HOME/.aws/config is not set"
+     exit 1
+fi
+if [ ! -f $HOME/.aws/credentials ]
+then
+     logerror "ERROR: $HOME/.aws/credentials is not set"
+     exit 1
+fi
+
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext-repro-local-instance.yml"
 
 log "Create a Kinesis stream my_kinesis_stream"
