@@ -17,6 +17,14 @@ fi
 
 ${DIR}/../../ccloud/environment/start.sh "${PWD}/docker-compose.yml"
 
+if [ -f /tmp/delta_configs/env.delta ]
+then
+     source /tmp/delta_configs/env.delta
+else
+     logerror "ERROR: /tmp/delta_configs/env.delta has not been generated"
+     exit 1
+fi
+
 log "Creating topic in Confluent Cloud (auto.create.topics.enable=false)"
 set +e
 create_topic kinesis_topic
