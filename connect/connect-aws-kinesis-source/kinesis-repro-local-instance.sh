@@ -6,9 +6,6 @@ source ${DIR}/../../scripts/utils.sh
 
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext-repro-local-instance.yml"
 
-export AWS_ACCESS_KEY_ID=x
-export AWS_SECRET_ACCESS_KEY=x
-
 log "Create a Kinesis stream my_kinesis_stream"
 /usr/local/bin/aws kinesis --endpoint-url http://localhost:4567/ create-stream --stream-name my_kinesis_stream --shard-count 1
 
@@ -29,6 +26,7 @@ curl -X PUT \
                "kafka.topic": "kinesis_topic",
                "kinesis.base.url": "http://kinesis-local:4567",
                "kinesis.stream": "my_kinesis_stream",
+               "kinesis.region": "eu-west-3",
                "confluent.license": "",
                "confluent.topic.bootstrap.servers": "broker:9092",
                "confluent.topic.replication.factor": "1"
