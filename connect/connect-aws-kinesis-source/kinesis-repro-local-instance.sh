@@ -30,11 +30,10 @@ curl -X PUT \
                "kinesis.base.url": "http://kinesis-local:4567",
                "kinesis.stream": "my_kinesis_stream",
                "confluent.license": "",
-               "name": "kinesis-source",
                "confluent.topic.bootstrap.servers": "broker:9092",
                "confluent.topic.replication.factor": "1"
           }' \
-     http://localhost:8083/connectors/kinesis-source/config | jq .
+     http://localhost:8083/connectors/kinesis-source-local/config | jq .
 
 log "Verify we have received the data in kinesis_topic topic"
 timeout 60 docker exec broker kafka-console-consumer --bootstrap-server broker:9092 --topic kinesis_topic --from-beginning --max-messages 1
