@@ -4,6 +4,7 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
+# not required
 if [ ! -f $HOME/.aws/config ]
 then
      logerror "ERROR: $HOME/.aws/config is not set"
@@ -46,7 +47,6 @@ curl -X PUT \
                "kinesis.region": "EU_WEST_3",
                "kinesis.stream": "my_kinesis_stream",
                "confluent.license": "",
-               "name": "kinesis-source",
                "confluent.topic.bootstrap.servers": "broker:9092",
                "confluent.topic.replication.factor": "1"
           }' \
