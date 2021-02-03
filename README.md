@@ -65,7 +65,7 @@ Quick start examples from Confluent [docs](https://docs.confluent.io/current/con
 | <img src="./images/icons/ftps.png" height="15"> [FTPS Source](connect/connect-ftps-source) | Datastore |1.0.3-preview | Confluent Subscription | 2020-10-01 | 👍 2021-02-02 
 | <img src="./images/icons/pivotal_gemfire.png" width="15"> [Gemfire Sink](connect/connect-pivotal-gemfire-sink) | Database | 1.0.3 | Confluent Subscription | 2020-12-09 | 👍 2021-02-02 
 | <img src="./images/icons/github.png" width="15"> [Github Source](connect/connect-github-source) | SaaS Apps | 1.0.2 | Confluent Subscription | 2020-12-01 | 👍 2021-02-02 
-| <img src="./images/icons/bigquery.png" width="15"> [Google BigQuery Sink](connect/connect-gcp-bigquery-sink) | Data Warehouse | 1.6.6 | Open Source (WePay) | 2020-11-23 | 👍 2021-02-02 
+| <img src="./images/icons/bigquery.png" width="15"> [Google BigQuery Sink](connect/connect-gcp-bigquery-sink) | Data Warehouse | 2.0.0 | Open Source (WePay) | 2021-02-02 | ☠ 
 | <img src="./images/icons/gcp_bigtable.png" width="15"> [Google Cloud BigTable Sink](connect/connect-gcp-bigtable-sink) | Database | 1.0.6 | Confluent Subscription | 2020-12-17 | 👍 2021-02-02 
 | <img src="./images/icons/cloud_functions.png" width="15"> [Google Cloud Functions Sink](connect/connect-gcp-cloud-functions-sink) | SaaS Apps | 1.1.2 | Confluent Subscription | 2020-11-30 | 👍 2021-02-02 
 | <img src="./images/icons/gcp_pubsub.png" width="15"> [Google Cloud Pub/Sub Source](connect/connect-gcp-pubsub-source) |  Message Queue | 1.0.6 | Confluent Subscription | 2021-01-16 | 👍 2021-02-01 
@@ -77,7 +77,7 @@ Quick start examples from Confluent [docs](https://docs.confluent.io/current/con
 | <img src="./images/icons/hbase.png" width="15"> [HBase Sink](connect/connect-hbase-sink) |  Database | 1.0.6 | Confluent Subscription | 2020-12-17 | 👍 2021-02-02 
 | <img src="./images/icons/hdfs_2.svg" width="15"> [HDFS 2 Source](connect/connect-hdfs2-source) |  Datastore | 1.4.2 | Confluent Subscription | 2021-01-19 | 👍 2021-01-27 
 | <img src="./images/icons/hdfs_2.svg" width="15"> [HDFS 3 Source](connect/connect-hdfs3-source) |  Datastore | 1.4.2 | Confluent Subscription | 2021-01-19 | 👍 2021-01-27 
-| <img src="./images/icons/hdfs_2.svg" width="15"> [HDFS 2 Sink](connect/connect-hdfs2-sink) |  Datastore | 10.0.0 | Confluent Community License | 2020-11-05 | 👍 2021-02-02 
+| <img src="./images/icons/hdfs_2.svg" width="15"> [HDFS 2 Sink](connect/connect-hdfs2-sink) |  Datastore | 10.0.1 | Confluent Community License | 2021-02-02 | ☠ 
 | <img src="./images/icons/hdfs_2.svg" width="15"> [HDFS 3 Sink](connect/connect-hdfs3-sink) |  Datastore | 1.1.0 | Confluent Subscription | 2021-01-28 | 👍 2021-01-29 
 | <img src="./images/icons/http.png" width="15"> [HTTP Sink](connect/connect-http-sink) |  SaaS Apps | 1.1.0 | Confluent Subscription | 2020-12-09 | 👍 2021-02-02 
 | <img src="./images/icons/ibm_mq.png" width="15"> [IBM MQ Sink](connect/connect-ibm-mq-sink) |  Message Queue | 1.3.1 | Confluent Subscription | 2021-01-28 | 👍 2021-01-28 
@@ -110,6 +110,7 @@ Quick start examples from Confluent [docs](https://docs.confluent.io/current/con
 | <img src="./images/icons/mqtt.png" width="15"> [MQTT Source](connect/connect-mqtt-source) |  IoT | 1.4.0 | Confluent Subscription | 2020-10-29 | 👍 2021-02-02 
 | <img src="./images/icons/neo4j.png" width="15"> [Neo4j Sink](connect/connect-neo4j-sink) |  Database | 1.0.9 | Open Source (Neo4j, Inc.) | 2020-09-02 | 👍 2021-02-02 
 | <img src="./images/icons/omnisci.png" width="15"> [OmniSci Sink](connect/connect-omnisci-sink) |  Database | 1.0.2 | Confluent Subscription | 2019-08-20 | 👍 2021-02-02 
+| <img src="./images/icons/oracle_12.png" width="15"> [Oracle CDC](connect/connect-cdc-oracle12-source) |  Database | 1.0.1 | Confluent Subscription | 2021-02-03 | ☠ 
 | <img src="./images/icons/pagerduty.png" width="15"> [PagerDuty Sink](connect/connect-pagerduty-sink) |  SaaS Apps | 1.0.2 | Confluent Subscription | 2020-11-18 | 👍 2021-01-27 
 | <img src="./images/icons/prometheus.png" height="15">  [Prometheus Sink](connect/connect-prometheus-sink) |  Analytics | 1.1.3-preview | Confluent Subscription | 2021-01-04 | 👍 2021-02-02 
 | <img src="./images/icons/rabbitmq.svg" width="15"> [RabbitMQ Sink](connect/connect-rabbitmq-sink) |  Message Queue | 1.4.1 | Confluent Subscription | 2020-10-31 | 👍 2021-02-02 
