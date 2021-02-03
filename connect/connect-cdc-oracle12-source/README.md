@@ -2,12 +2,9 @@
 
 ## Objective
 
-Quickly test Oracle CDC Source Connector with Oracle 12.
+Quickly test [Oracle CDC Source Connector](https://docs.confluent.io/kafka-connect-oracle-cdc/current/) with Oracle 12.
 
-* **FIXTHIS: connector not released**: unzip `confluentinc-kafka-connect-oracle-cdc-1.0.0-rc-f23ca16-preview.zip`
-* Download Oracle Database 12c Release 2 (12.2.0.1.0) for Linux x86-64 `linuxx64_12201_database.zip`from this [page](https://www.oracle.com/database/technologies/oracle-database-software-downloads.html) and place it in `./linuxx64_12201_database.zip`
-
-Note: Oracle Database Enterprise Edition 12.x and 18c are no longer available for download. The software is available as a media or FTP request for those customers who own a valid Oracle Database product license for any edition. To request access to these releases, follow the instructions in [Oracle Support Document 1071023.1 (Requesting Physical Shipment or Download URL for Software Media)](https://support.oracle.com/epmos/faces/ui/km/DocumentDisplay.jspx?id=1071023.1) from My Oracle Support. 
+Note: Oracle Database Enterprise Edition 12.x and 18c are no longer available for download. The software is available as a media or FTP request for those customers who own a valid Oracle Database product license for any edition. To request access to these releases, follow the instructions in [Oracle Support Document 1071023.1 (Requesting Physical Shipment or Download URL for Software Media)](https://support.oracle.com/epmos/faces/ui/km/DocumentDisplay.jspx?id=1071023.1) from My Oracle Support.
 
 
 Note: The first time you'll run the script, it will build (using this [project](https://github.com/oracle/docker-images/blob/master/OracleDatabase/SingleInstance/README.md)) the docker image `oracle/database:12.2.0.1-ee`. It takes about 20 minutes.

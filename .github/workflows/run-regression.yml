@@ -80,7 +80,8 @@ jobs:
                       "other/cp-ansible-playground",
                       "other/filebeat-to-kafka other/rest-proxy-security-plugin other/tiered-storage-with-aws other/tiered-storage-with-minio other/write-logs-to-files",
                       "ccloud/replicator",
-                      "ccloud/ccloudexporter ccloud/connect-debezium-mongodb-source ccloud/kafka-admin ccloud/rest-proxy-security-plugin ccloud/schema-registry-security-plugin"
+                      "ccloud/ccloudexporter ccloud/connect-debezium-mongodb-source ccloud/kafka-admin ccloud/rest-proxy-security-plugin ccloud/schema-registry-security-plugin",
+                      "connect/connect-cdc-oracle12-source"
                     ]
     steps:
       - uses: actions/checkout@v2
