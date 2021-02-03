@@ -4,7 +4,7 @@
 
 ## Objective
 
-Quickly test [Kinesis Connector](https://docs.confluent.io/current/connect/kafka-connect-kinesis/index.html#quick-start) connector.
+Quickly test [Kinesis Connector](https://docs.confluent.io/current/connect/kafka-connect-kinesis/index.html#quick-start) connector with Confluent Cloud.
 
 
 
@@ -47,7 +47,7 @@ $ aws kinesis put-record --stream-name my_kinesis_stream --partition-key 123 --d
 The connector is created with:
 
 ```
-curl -X PUT \
+$ curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
         "connector.class":"io.confluent.connect.kinesis.KinesisSourceConnector",
@@ -57,8 +57,12 @@ curl -X PUT \
                "kinesis.stream": "my_kinesis_stream",
                "confluent.license": "",
                "name": "kinesis-source",
-               "confluent.topic.bootstrap.servers": "broker:9092",
-               "confluent.topic.replication.factor": "1"
+               "confluent.topic.ssl.endpoint.identification.algorithm" : "https",
+               "confluent.topic.sasl.mechanism" : "PLAIN",
+               "confluent.topic.bootstrap.servers": "${file:/data:bootstrap.servers}",
+               "confluent.topic.sasl.jaas.config" : "org.apache.kafka.common.security.plain.PlainLoginModule required username=\"${file:/data:sasl.username}\" password=\"${file:/data:sasl.password}\";",
+               "confluent.topic.security.protocol" : "SASL_SSL",
+               "confluent.topic.replication.factor": "3"
           }' \
      http://localhost:8083/connectors/kinesis-source/config | jq .
 ```
@@ -66,7 +70,7 @@ curl -X PUT \
 Verify we have received the data in kinesis_topic topic:
 
 ```
-$ docker exec broker kafka-console-consumer --bootstrap-server broker:9092 --topic kinesis_topic --from-beginning --max-messages 1
+$ docker exec -e BOOTSTRAP_SERVERS="$BOOTSTRAP_SERVERS" -e SASL_JAAS_CONFIG="$SASL_JAAS_CONFIG" -e SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO="$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO" -e SCHEMA_REGISTRY_URL="$SCHEMA_REGISTRY_URL" connect bash -c 'kafka-avro-console-consumer --topic kinesis_topic --bootstrap-server $BOOTSTRAP_SERVERS --consumer-property ssl.endpoint.identification.algorithm=https --consumer-property sasl.mechanism=PLAIN --consumer-property security.protocol=SASL_SSL --consumer-property sasl.jaas.config="$SASL_JAAS_CONFIG" --property basic.auth.credentials.source=USER_INFO --property schema.registry.basic.auth.user.info="$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO" --property schema.registry.url=$SCHEMA_REGISTRY_URL --from-beginning --max-messages 1'
 ```
 
 Delete your stream and clean up resources to avoid incurring any unintended charges:
