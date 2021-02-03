@@ -110,6 +110,7 @@ Quick start examples from Confluent [docs](https://docs.confluent.io/current/con
 | <img src="./images/icons/mqtt.png" width="15"> [MQTT Source](connect/connect-mqtt-source) |  IoT | :confluentinc-kafka-connect-mqtt:
 | <img src="./images/icons/neo4j.png" width="15"> [Neo4j Sink](connect/connect-neo4j-sink) |  Database | :neo4j-kafka-connect-neo4j:
 | <img src="./images/icons/omnisci.png" width="15"> [OmniSci Sink](connect/connect-omnisci-sink) |  Database | :confluentinc-kafka-connect-omnisci:
+| <img src="./images/icons/oracle_12.png" width="15"> [Oracle CDC](connect/connect-cdc-oracle12-source) |  Database | :confluentinc-kafka-connect-oracle-cdc:
 | <img src="./images/icons/pagerduty.png" width="15"> [PagerDuty Sink](connect/connect-pagerduty-sink) |  SaaS Apps | :confluentinc-kafka-connect-pagerduty:
 | <img src="./images/icons/prometheus.png" height="15">  [Prometheus Sink](connect/connect-prometheus-sink) |  Analytics | :confluentinc-kafka-connect-prometheus-metrics:
 | <img src="./images/icons/rabbitmq.svg" width="15"> [RabbitMQ Sink](connect/connect-rabbitmq-sink) |  Message Queue | :confluentinc-kafka-connect-rabbitmq-sink:

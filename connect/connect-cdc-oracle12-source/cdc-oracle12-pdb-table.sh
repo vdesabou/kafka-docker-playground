@@ -4,12 +4,6 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
-if [ ! -d ${DIR}/confluentinc-kafka-connect-oracle-cdc-1.0.0-rc-f23ca16-preview ]
-then
-     logerror "ERROR: ${DIR}/confluentinc-kafka-connect-oracle-cdc-1.0.0-rc-f23ca16-preview is missing."
-     exit 1
-fi
-
 if [ -z "$CI" ]
 then
      # not running with github actions
@@ -66,8 +60,8 @@ docker exec -i oracle sqlplus C\#\#MYUSER/mypassword@//localhost:1521/ORCLPDB1 <
 EOF
 
 # Create a redo-log-topic. Please make sure you create a topic with the same name you will use for "redo.log.topic.name": "redo-log-topic"
-# CC-13104 
-docker exec connect kafka-topics --create --topic redo-log-topic --bootstrap-server broker:9092 --replication-factor 1 --partitions 1 --config cleanup.policy=delete --config retention.ms=120960000 
+# CC-13104
+docker exec connect kafka-topics --create --topic redo-log-topic --bootstrap-server broker:9092 --replication-factor 1 --partitions 1 --config cleanup.policy=delete --config retention.ms=120960000
 log "redo-log-topic is created"
 sleep 5
 
