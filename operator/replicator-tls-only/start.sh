@@ -10,14 +10,18 @@ verify_installed "kubectl"
 verify_installed "minikube"
 verify_installed "helm"
 
-set +e
-log "Stop minikube if required"
-minikube delete
-set -e
-log "Start minikube"
-minikube start --cpus=8 --disk-size='50gb' --memory=16384
-log "Launch minikube dashboard in background"
-minikube dashboard &
+if [ -z "$CI" ]
+then
+   # not running with github actions
+  set +e
+  log "Stop minikube if required"
+  minikube delete
+  set -e
+  log "Start minikube"
+  minikube start --cpus=8 --disk-size='50gb' --memory=16384
+  log "Launch minikube dashboard in background"
+  minikube dashboard &
+fi
 
 log "Download Confluent Operator in ${DIR}/confluent-operator"
 

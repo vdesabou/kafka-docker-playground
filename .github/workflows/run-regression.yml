@@ -81,7 +81,8 @@ jobs:
                       "other/filebeat-to-kafka other/rest-proxy-security-plugin other/tiered-storage-with-aws other/tiered-storage-with-minio other/write-logs-to-files",
                       "ccloud/replicator",
                       "ccloud/ccloudexporter ccloud/connect-debezium-mongodb-source ccloud/connect-aws-kinesis-source ccloud/kafka-admin ccloud/rest-proxy-security-plugin ccloud/schema-registry-security-plugin",
-                      "connect/connect-cdc-oracle12-source"
+                      "connect/connect-cdc-oracle12-source",
+                      "operator/replicator-tls-only"
                     ]
     steps:
       - uses: actions/checkout@v2
@@ -90,6 +91,9 @@ jobs:
         uses: actions/setup-java@v1
         with:
           java-version: 1.8
+
+      - name: Start minikube
+        uses: medyagh/setup-minikube@master
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v1
