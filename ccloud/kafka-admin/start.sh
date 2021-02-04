@@ -22,6 +22,14 @@ done
 
 ${DIR}/../../ccloud/environment/start.sh "${PWD}/docker-compose.yml"
 
+if [ -f /tmp/delta_configs/env.delta ]
+then
+     source /tmp/delta_configs/env.delta
+else
+     logerror "ERROR: /tmp/delta_configs/env.delta has not been generated"
+     exit 1
+fi
+
 # generate kafka-admin.properties config
 sed -e "s|:BOOTSTRAP_SERVERS:|$BOOTSTRAP_SERVERS|g" \
     -e "s|:CLOUD_KEY:|$CLOUD_KEY|g" \
