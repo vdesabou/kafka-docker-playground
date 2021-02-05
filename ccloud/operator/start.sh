@@ -5,7 +5,6 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
-verify_memory
 verify_installed "kubectl"
 verify_installed "minikube"
 verify_installed "helm"
@@ -168,8 +167,8 @@ helm upgrade --install \
 # kubectl -n operator exec -it connectors-0 -- bash
 
 
-log "Waiting up to 900 seconds for all pods in namespace operator to start"
-wait-until-pods-ready "900" "10" "operator"
+log "Waiting up to 1800 seconds for all pods in namespace operator to start"
+wait-until-pods-ready "1800" "10" "operator"
 
 set +e
 # Verify Kafka Connect has started within MAX_WAIT seconds
