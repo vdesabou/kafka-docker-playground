@@ -170,7 +170,7 @@ sleep 60
 
 set +e
 # Verify Kafka Connect has started within MAX_WAIT seconds
-MAX_WAIT=480
+MAX_WAIT=600
 CUR_WAIT=0
 log "Waiting up to $MAX_WAIT seconds for Kafka Connect replicator-0 to start"
 kubectl logs -n kafka-dest replicator-0 > /tmp/out.txt 2>&1
@@ -180,6 +180,7 @@ while [[ ! $(cat /tmp/out.txt) =~ "Finished starting connectors and tasks" ]]; d
   CUR_WAIT=$(( CUR_WAIT+10 ))
   if [[ "$CUR_WAIT" -gt "$MAX_WAIT" ]]; then
     echo -e "\nERROR: The logs in replicator-0 container do not show 'Finished starting connectors and tasks' after $MAX_WAIT seconds. Please troubleshoot'.\n"
+    tail -300 /tmp/out.txt
     exit 1
   fi
 done
