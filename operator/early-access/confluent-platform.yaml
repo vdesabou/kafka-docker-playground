@@ -5,7 +5,7 @@ metadata:
   name: zookeeper
   namespace: confluent
 spec:
-  replicas: 3
+  replicas: 1
   image:
     application: confluentinc/cp-zookeeper-operator:6.0.0.0
     init: confluentinc/cp-init-container-operator:6.0.0.0
@@ -18,7 +18,7 @@ metadata:
   name: kafka
   namespace: confluent
 spec:
-  replicas: 3
+  replicas: 1
   image:
     application: confluentinc/cp-server-operator:6.0.0.0
     init: confluentinc/cp-init-container-operator:6.0.0.0
@@ -51,7 +51,7 @@ spec:
   image:
     application: confluentinc/cp-ksqldb-server-operator:6.0.0.0
     init: confluentinc/cp-init-container-operator:6.0.0.0
-  dataVolumeCapacity: 10Gi
+  dataVolumeCapacity: 1Gi
 ---
 apiVersion: platform.confluent.io/v1beta1
 kind: ControlCenter
@@ -63,7 +63,7 @@ spec:
   image:
     application: confluentinc/cp-enterprise-control-center-operator:6.0.0.0
     init: confluentinc/cp-init-container-operator:6.0.0.0
-  dataVolumeCapacity: 10Gi
+  dataVolumeCapacity: 1Gi
   dependencies:
     schemaRegistry:
       url: http://schemaregistry.confluent.svc.cluster.local:8081
