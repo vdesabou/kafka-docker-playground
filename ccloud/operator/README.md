@@ -8,9 +8,12 @@ It starts:
 
 * Connect
 * Control Center
-* KSQL (requires tweaks to helm charts)
+* KSQL
+
+**IMPORTANT**: it requires tweaks to helm templates file, see tweaks [here](https://github.com/vdesabou/kafka-docker-playground/blob/7ec0c4b512efda45de1f8bd73719d9c90d0cca70/ccloud/operator/start.sh#L53)
 
 It also showcases a connector example (SpoolDir) and Prometheus/Grafana example.
+
 ## How to run
 
 Create `$HOME/.ccloud/config`

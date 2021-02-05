@@ -225,7 +225,7 @@ kubectl -n operator exec -i connectors-0 -- curl -X PUT \
                 "topic": "spooldir-json-topic",
                 "schema.generation.enabled": "true"
           }' \
-     http://localhost:8083/connectors/spool-dir-source/config | jq
+     http://localhost:8083/connectors/spool-dir-source$RANDOM/config | jq
 
 sleep 5
 
