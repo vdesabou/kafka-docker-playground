@@ -155,6 +155,9 @@ done
 log "Connect $CONNECT_POD_NAME has started!"
 set -e
 
+log "Waiting up to 900 seconds for all pods in namespace cp-helm-charts to start"
+wait-until-pods-ready "900" "10" "cp-helm-charts"
+
 C3_POD_NAME=$(kubectl get pods -n cp-helm-charts --selector=app=cp-control-center -o jsonpath="{.items[0].metadata.name}")
 log "Control Center is reachable at http://127.0.0.1:9021 (admin/Developer1)"
 kubectl -n cp-helm-charts port-forward ${C3_POD_NAME} 9021:9021 &
