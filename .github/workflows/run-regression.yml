@@ -92,8 +92,12 @@ jobs:
         with:
           java-version: 1.8
 
-      - name: Start minikube
-        uses: medyagh/setup-minikube@master
+      - name: Setup Minikube
+        uses: manusa/actions-setup-minikube@v2.3.0
+        with:
+          minikube version: 'v1.16.0'
+          kubernetes version: 'v1.19.2'
+          github token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Configure AWS credentials
         uses: aws-actions/configure-aws-credentials@v1
