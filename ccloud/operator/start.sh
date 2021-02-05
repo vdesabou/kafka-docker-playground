@@ -168,8 +168,8 @@ helm upgrade --install \
 # kubectl -n operator exec -it connectors-0 -- bash
 
 
-log "Sleep 60 seconds to let pods being started"
-sleep 60
+log "Waiting up to 900 seconds for all pods in namespace operator to start"
+wait-until-pods-ready "900" "10" "operator"
 
 set +e
 # Verify Kafka Connect has started within MAX_WAIT seconds
@@ -183,14 +183,12 @@ while [[ ! $(cat /tmp/out.txt) =~ "Finished starting connectors and tasks" ]]; d
   CUR_WAIT=$(( CUR_WAIT+10 ))
   if [[ "$CUR_WAIT" -gt "$MAX_WAIT" ]]; then
     echo -e "\nERROR: The logs in connectors-0 container do not show 'Finished starting connectors and tasks' after $MAX_WAIT seconds. Please troubleshoot'.\n"
+    tail -300 /tmp/out.txt
     exit 1
   fi
 done
 log "Connect connectors-0 has started!"
 set -e
-
-log "Waiting up to 900 seconds for all pods in namespace operator to start"
-wait-until-pods-ready "900" "10" "operator"
 
 log "Control Center is reachable at http://127.0.0.1:9021 (admin/Developer1)"
 kubectl -n operator port-forward controlcenter-0 9021:9021 &
