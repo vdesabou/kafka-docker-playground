@@ -41,6 +41,10 @@ minikube start --cpus=8 --disk-size='50gb' --memory=16384
 log "Launch minikube dashboard in background"
 minikube dashboard &
 
+log "Create the Kubernetes namespaces to install Operator and cluster"
+kubectl create namespace confluent
+kubectl config set-context --current --namespace=confluent
+
 log "Setup Operator Early Access credentials."
 kubectl create secret docker-registry confluent-registry \
   --docker-server=confluent-docker-internal-early-access-operator-2.jfrog.io \
@@ -58,9 +62,6 @@ set -e
 
 helm repo update
 
-log "Create the Kubernetes namespaces to install Operator and cluster"
-kubectl create namespace confluent
-kubectl config set-context --current --namespace=confluent
 
 log "installing operator"
 helm upgrade --install operator confluentinc_earlyaccess/confluent-operator \
@@ -68,5 +69,8 @@ helm upgrade --install operator confluentinc_earlyaccess/confluent-operator \
 
 log "install cluster"
 kubectl apply -f "${DIR}/confluent-platform.yaml"
+
+log "Waiting up to 900 seconds for all pods in namespace operator to start"
+wait-until-pods-ready "900" "10" "confluent"
 
 kubectl get confluent
