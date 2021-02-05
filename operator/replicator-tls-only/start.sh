@@ -180,7 +180,7 @@ while [[ ! $(cat /tmp/out.txt) =~ "Finished starting connectors and tasks" ]]; d
   CUR_WAIT=$(( CUR_WAIT+10 ))
   if [[ "$CUR_WAIT" -gt "$MAX_WAIT" ]]; then
     echo -e "\nERROR: The logs in replicator-0 container do not show 'Finished starting connectors and tasks' after $MAX_WAIT seconds. Please troubleshoot'.\n"
-    tail -300 /tmp/out.txt
+    kubectl logs -n kafka-dest replicator-0
     exit 1
   fi
 done
