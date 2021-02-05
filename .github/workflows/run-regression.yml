@@ -82,7 +82,7 @@ jobs:
                       "ccloud/replicator",
                       "ccloud/ccloudexporter ccloud/connect-debezium-mongodb-source ccloud/connect-aws-kinesis-source ccloud/kafka-admin ccloud/rest-proxy-security-plugin ccloud/schema-registry-security-plugin",
                       "connect/connect-cdc-oracle12-source",
-                      "operator/replicator-tls-only"
+                      "ccloud/operator"
                     ]
     steps:
       - uses: actions/checkout@v2
