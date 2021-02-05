@@ -50,12 +50,29 @@ wget https://platform-ops-bin.s3-us-west-1.amazonaws.com/operator/confluent-oper
 tar xvfz confluent-operator-1.6.1-for-confluent-platform-6.0.0.tar.gz
 cd -
 
-# FIXTHIS: we need to do custom modifications in order to be able to connect KSQM to Confluent CLoud:
-#
+# FIXTHIS: we need to do custom modifications in order to be able to connect Connect to Confluent Cloud Schema Registry:
+# see https://github.com/abraham-leal/cc-components-operator/commit/50f1a21391b267a7b008b844ee4754ce1cfbcf04
+sed -i.bak 's/^\(.*confluent.topic.replication.factor=.*\)//g' ${DIR}/confluent-operator/helm/confluent-operator/charts/connect/templates/connect-psc.yaml
+sed -i.bak 's/^\(.*offset.storage.replication.factor=.*\)//g' ${DIR}/confluent-operator/helm/confluent-operator/charts/connect/templates/connect-psc.yaml
+sed -i.bak 's/^\(.*config.storage.replication.factor=.*\)//g' ${DIR}/confluent-operator/helm/confluent-operator/charts/connect/templates/connect-psc.yaml
+sed -i.bak 's/^\(.*status.storage.replication.factor=.*\)//g' ${DIR}/confluent-operator/helm/confluent-operator/charts/connect/templates/connect-psc.yaml
+sed -i.bak 's/^\(.*          retry.backoff.ms=500\)/\1\n          confluent.topic.replication.factor=3\n          offset.storage.replication.factor=3\n          config.storage.replication.factor=3\n          status.storage.replication.factor=3\n          # Start Addon for Schema Registry for CCloud\n          {{- if eq .Values.dependencies.schemaRegistry.authentication.type "basic"}}\n          key.converter.basic.auth.credentials.source={{ .Values.dependencies.schemaRegistry.authentication.source }}\n          key.converter.basic.auth.user.info={{ $.Values.dependencies.schemaRegistry.authentication.username }}:{{ $.Values.dependencies.schemaRegistry.authentication.password }}\n          value.converter.basic.auth.credentials.source={{ .Values.dependencies.schemaRegistry.authentication.source }}\n          value.converter.basic.auth.user.info={{ $.Values.dependencies.schemaRegistry.authentication.username }}:{{ $.Values.dependencies.schemaRegistry.authentication.password }}\n          # End Addon for Schema Registry for CCloud\n          {{- end }}/g' ${DIR}/confluent-operator/helm/confluent-operator/charts/connect/templates/connect-psc.yaml
+
+
+# FIXTHIS: we need to do custom modifications in order to be able to connect KSQL to Confluent Cloud:
+# see https://github.com/abraham-leal/cc-components-operator/commit/50f1a21391b267a7b008b844ee4754ce1cfbcf04
 sed -i.bak 's/^\(.*ksql.sink.replicas=.*\)//g' ${DIR}/confluent-operator/helm/confluent-operator/charts/ksql/templates/ksql-psc.yaml
 sed -i.bak 's/^\(.*ksql.streams.replication.factor=.*\)//g' ${DIR}/confluent-operator/helm/confluent-operator/charts/ksql/templates/ksql-psc.yaml
-sed -i.bak 's/^\(.*          retry.backoff.ms=500\)/\1\n          ksql.internal.topic.replicas=3\n          ksql.internal.topic.replicas=3\n          ksql.sink.replicas=3\n          ksql.streams.replication.factor=3/g' ${DIR}/confluent-operator/helm/confluent-operator/charts/ksql/templates/ksql-psc.yaml
+sed -i.bak 's/^\(.*          retry.backoff.ms=500\)/\1\n          ksql.internal.topic.replicas=3\n          ksql.internal.topic.replicas=3\n          ksql.sink.replicas=3\n          ksql.streams.replication.factor=3          {{- if eq .Values.dependencies.schemaRegistry.authentication.type "basic"}}\n          ksql.schema.registry.url={{ .Values.dependencies.schemaRegistry.url }}\n          ksql.schema.registry.basic.auth.credentials.source={{ .Values.dependencies.schemaRegistry.authentication.source }}\n          ksql.schema.registry.basic.auth.user.info={{ $.Values.dependencies.schemaRegistry.authentication.username }}:{{ $.Values.dependencies.schemaRegistry.authentication.password }}\n          {{- end }}\n/g' ${DIR}/confluent-operator/helm/confluent-operator/charts/ksql/templates/ksql-psc.yaml
 
+
+# FIXTHIS: we need to do custom modifications in order to be able to controlcenter controlcenter to Confluent Cloud Schema Registry:
+# see https://github.com/abraham-leal/cc-components-operator/commit/50f1a21391b267a7b008b844ee4754ce1cfbcf04
+sed -i.bak 's/^\(.*confluent.monitoring.interceptor.topic.replication=.*\)//g' ${DIR}/confluent-operator/helm/confluent-operator/charts/controlcenter/templates/controlcenter-psc.yaml
+sed -i.bak 's/^\(.*confluent.metrics.topic.replication=.*\)//g' ${DIR}/confluent-operator/helm/confluent-operator/charts/controlcenter/templates/controlcenter-psc.yaml
+sed -i.bak 's/^\(.*confluent.controlcenter.command.topic.replication=.*\)//g' ${DIR}/confluent-operator/helm/confluent-operator/charts/controlcenter/templates/controlcenter-psc.yaml
+sed -i.bak 's/^\(.*confluent.controlcenter.internal.topics.replication=.*\)//g' ${DIR}/confluent-operator/helm/confluent-operator/charts/controlcenter/templates/controlcenter-psc.yaml
+sed -i.bak 's/^\(.*          confluent.monitoring.interceptor.topic.skip.backlog.minutes=15\)/\1\n          confluent.monitoring.interceptor.topic.replication=3\n          confluent.metrics.topic.replication=3\n          confluent.controlcenter.command.topic.replication=3\n          confluent.controlcenter.internal.topics.replication=3\n          {{- if eq .Values.dependencies.schemaRegistry.authentication.type "basic"}}\n          confluent.controlcenter.schema.registry.basic.auth.credentials.source={{ .Values.dependencies.schemaRegistry.authentication.source }}\n          confluent.controlcenter.schema.registry.basic.auth.user.info={{ $.Values.dependencies.schemaRegistry.authentication.username }}:{{ $.Values.dependencies.schemaRegistry.authentication.password }}\n          value.converter.basic.auth.credentials.source={{ .Values.dependencies.schemaRegistry.authentication.source }}\n          {{- end }}\n/g' ${DIR}/confluent-operator/helm/confluent-operator/charts/controlcenter/templates/controlcenter-psc.yaml
 
 
 log "Extend Kubernetes with first class CP primitives"
@@ -94,6 +111,7 @@ helm upgrade --install \
   --set connect.dependencies.kafka.tls.authentication.type="plain" \
   --set connect.dependencies.kafka.bootstrapEndpoint="${BOOTSTRAP_SERVERS}" \
   --set connect.dependencies.kafka.brokerCount=3 \
+  --set connect.value.converter="io.confluent.connect.avro.AvroConverter" \
   --set connect.dependencies.schemaRegistry.url="${SCHEMA_REGISTRY_URL}" \
   --set connect.dependencies.schemaRegistry.authentication.type="basic" \
   --set connect.dependencies.schemaRegistry.authentication.source="USER_INFO" \
@@ -202,11 +220,7 @@ kubectl -n operator exec -i connectors-0 -- curl -X PUT \
                 "finished.path": "/tmp/data/finished",
                 "halt.on.error": "false",
                 "topic": "spooldir-json-topic",
-                "schema.generation.enabled": "true",
-                "value.converter" : "io.confluent.connect.avro.AvroConverter",
-                "value.converter.schema.registry.url": "'"$SCHEMA_REGISTRY_URL"'",
-                "value.converter.basic.auth.user.info": "'"$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO"'",
-                "value.converter.basic.auth.credentials.source": "USER_INFO"
+                "schema.generation.enabled": "true"
           }' \
      http://localhost:8083/connectors/spool-dir-source/config | jq
 
