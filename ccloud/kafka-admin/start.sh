@@ -148,9 +148,8 @@ log "Delete ACLs"
 log "ccloud kafka acl delete --allow --service-account $SERVICE_ACCOUNT_ID --operation WRITE --topic $TOPIC_ACL"
 ccloud kafka acl delete --allow --service-account $SERVICE_ACCOUNT_ID --operation WRITE --topic $TOPIC_ACL
 
-log "ccloud service-account delete $SERVICE_ACCOUNT_ID"
-ccloud service-account delete $SERVICE_ACCOUNT_ID
-
 log "ccloud api-key delete $API_KEY_SA"
 ccloud api-key delete $API_KEY_SA 1>/dev/null
 
+log "ccloud service-account delete $SERVICE_ACCOUNT_ID"
+ccloud service-account delete $SERVICE_ACCOUNT_ID
