@@ -72,7 +72,10 @@ sed -i.bak 's/^\(.*confluent.monitoring.interceptor.topic.replication=.*\)//g' $
 sed -i.bak 's/^\(.*confluent.metrics.topic.replication=.*\)//g' ${DIR}/confluent-operator/helm/confluent-operator/charts/controlcenter/templates/controlcenter-psc.yaml
 sed -i.bak 's/^\(.*confluent.controlcenter.command.topic.replication=.*\)//g' ${DIR}/confluent-operator/helm/confluent-operator/charts/controlcenter/templates/controlcenter-psc.yaml
 sed -i.bak 's/^\(.*confluent.controlcenter.internal.topics.replication=.*\)//g' ${DIR}/confluent-operator/helm/confluent-operator/charts/controlcenter/templates/controlcenter-psc.yaml
-sed -i.bak 's/^\(.*          confluent.monitoring.interceptor.topic.skip.backlog.minutes=15\)/\1\n          confluent.monitoring.interceptor.topic.replication=3\n          confluent.metrics.topic.replication=3\n          confluent.controlcenter.command.topic.replication=3\n          confluent.controlcenter.internal.topics.replication=3\n          {{- if eq .Values.dependencies.schemaRegistry.authentication.type "basic"}}\n          confluent.controlcenter.schema.registry.basic.auth.credentials.source={{ .Values.dependencies.schemaRegistry.authentication.source }}\n          confluent.controlcenter.schema.registry.basic.auth.user.info={{ $.Values.dependencies.schemaRegistry.authentication.username }}:{{ $.Values.dependencies.schemaRegistry.authentication.password }}\n          value.converter.basic.auth.credentials.source={{ .Values.dependencies.schemaRegistry.authentication.source }}\n          {{- end }}\n/g' ${DIR}/confluent-operator/helm/confluent-operator/charts/controlcenter/templates/controlcenter-psc.yaml
+sed -i.bak 's/^\(.*          confluent.controlcenter.schema.registry.url={{ .Values.dependencies.schemaRegistry.url }}\)/\1\n          {{- if eq .Values.dependencies.schemaRegistry.authentication.type "basic"}}\n          confluent.controlcenter.schema.registry.basic.auth.credentials.source={{ .Values.dependencies.schemaRegistry.authentication.source }}\n          confluent.controlcenter.schema.registry.basic.auth.user.info={{ $.Values.dependencies.schemaRegistry.authentication.username }}:{{ $.Values.dependencies.schemaRegistry.authentication.password }}\n          {{- end }}\n/g' ${DIR}/confluent-operator/helm/confluent-operator/charts/controlcenter/templates/controlcenter-psc.yaml
+sed -i.bak 's/^\(.*confluent.controlcenter.schema.registry.url=.*\)//g' ${DIR}/confluent-operator/helm/confluent-operator/charts/controlcenter/templates/controlcenter-psc.yaml
+sed -i.bak 's/^\(.*          confluent.controlcenter.schema.registry.enable=true\)/\1\n          confluent.controlcenter.schema.registry.url={{ .Values.dependencies.schemaRegistry.url }}\n/g' ${DIR}/confluent-operator/helm/confluent-operator/charts/controlcenter/templates/controlcenter-psc.yaml
+sed -i.bak 's/^\(.*          confluent.monitoring.interceptor.topic.skip.backlog.minutes=15\)/\1\n          confluent.monitoring.interceptor.topic.replication=3\n          confluent.metrics.topic.replication=3\n          confluent.controlcenter.command.topic.replication=3\n          confluent.controlcenter.internal.topics.replication=3\n/g' ${DIR}/confluent-operator/helm/confluent-operator/charts/controlcenter/templates/controlcenter-psc.yaml
 
 
 log "Extend Kubernetes with first class CP primitives"
@@ -154,8 +157,8 @@ helm upgrade --install \
   --set controlcenter.dependencies.c3KafkaCluster.tls.internal=true \
   --set controlcenter.dependencies.c3KafkaCluster.tls.authentication.type="plain" \
   --set controlcenter.dependencies.schemaRegistry.url="${SCHEMA_REGISTRY_URL}" \
-  --set connect.dependencies.schemaRegistry.authentication.type="basic" \
-  --set connect.dependencies.schemaRegistry.authentication.source="USER_INFO" \
+  --set controlcenter.dependencies.schemaRegistry.authentication.type="basic" \
+  --set controlcenter.dependencies.schemaRegistry.authentication.source="USER_INFO" \
   --set controlcenter.dependencies.schemaRegistry.authentication.username="${SR_USERNAME}" \
   --set controlcenter.dependencies.schemaRegistry.authentication.password="${SR_SECRET}"
 
