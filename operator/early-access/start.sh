@@ -54,14 +54,13 @@ kubectl create secret docker-registry confluent-registry \
 
 set +e
 helm repo remove confluentinc_earlyaccess
+log "Add repo confluentinc_earlyaccess"
 helm repo add confluentinc_earlyaccess \
   https://confluent.jfrog.io/confluent/helm-early-access-operator-2 \
   --username $USER \
   --password $APIKEY
-set -e
-
 helm repo update
-
+set -e
 
 log "installing operator"
 helm upgrade --install operator confluentinc_earlyaccess/confluent-operator \
