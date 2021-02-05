@@ -187,6 +187,11 @@ done
 log "Connect replicator-0 has started!"
 set -e
 
+log "Waiting up to 900 seconds for all pods in namespace kafka-dest to start"
+wait-until-pods-ready "900" "10" "kafka-dest"
+log "Waiting up to 900 seconds for all pods in namespace kafka-src to start"
+wait-until-pods-ready "900" "10" "kafka-src"
+
 log "Control Center is reachable at http://127.0.0.1:9021 (admin/Developer1)"
 kubectl -n kafka-dest port-forward controlcenter-0 9021:9021 &
 

@@ -186,6 +186,9 @@ done
 log "Connect connectors-0 has started!"
 set -e
 
+log "Waiting up to 900 seconds for all pods in namespace operator to start"
+wait-until-pods-ready "900" "10" "operator"
+
 log "Control Center is reachable at http://127.0.0.1:9021 (admin/Developer1)"
 kubectl -n operator port-forward controlcenter-0 9021:9021 &
 
