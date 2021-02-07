@@ -177,6 +177,8 @@ jobs:
           JIRA_URL: ${{ secrets.JIRA_URL }}
           JIRA_USERNAME: ${{ secrets.JIRA_USERNAME }}
           JIRA_API_TOKEN: ${{ secrets.JIRA_API_TOKEN }}
+          REST_KEY: ${{ secrets.REST_KEY }}
+          REST_SECRET: ${{ secrets.REST_SECRET }}
           MARKETO_CLIENT_ID: ${{ secrets.MARKETO_CLIENT_ID }}
           MARKETO_ENDPOINT_URL: ${{ secrets.MARKETO_ENDPOINT_URL }}
           MARKETO_CLIENT_SECRET: ${{ secrets.MARKETO_CLIENT_SECRET }}
