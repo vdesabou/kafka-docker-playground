@@ -7,7 +7,7 @@ source ${DIR}/../../scripts/utils.sh
 cd ${DIR}/security
 
 log "Generate keys and certificates used for SSL"
-verify_installed "keytool"
+
 ./certs-create.sh # > /dev/null 2>&1
 
 cd ${DIR}
