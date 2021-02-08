@@ -4,7 +4,7 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
-verify_installed "keytool"
+
 
 if [ ! -z "$MCS_USERNAME" ] && [ ! -z "$MCS_PASSWORD" ]
 then
@@ -21,17 +21,8 @@ KEYSPACE=${1:-dockerplayground}
 CASSANDRA_HOSTNAME=${2:-cassandra.us-east-1.amazonaws.com}
 
 cd ${DIR}/security
-
 log "Generate keys and certificates used for SSL"
-verify_installed "keytool"
-if [ ! -f $(find $JAVA_HOME -follow -name cacerts) ]
-then
-  logerror "ERROR: Cannot find JAVA cacerts"
-  exit 1
-fi
-
 ./certs-create.sh
-
 cd ${DIR}
 
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext-aws-mcs.yml"
