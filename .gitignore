@@ -16,6 +16,7 @@ delta_configs
 *.pem
 *.der
 *.p12
+extfile
 keyfile.json
 .gradle
 connect/connect-jdbc-oracle12-source/docker-images
