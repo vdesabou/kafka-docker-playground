@@ -7,7 +7,6 @@ services:
     restart: always
     hostname: restproxy
     container_name: restproxy
-    user: "1000:1000"
     volumes:
       - ../../ccloud/rest-proxy-security-plugin/security:/etc/kafka/secrets
       - ../../ccloud/rest-proxy-security-plugin/kafka-rest.jaas.conf:/etc/kafka/kafka-rest.jaas.conf
