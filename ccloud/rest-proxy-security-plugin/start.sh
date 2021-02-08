@@ -43,18 +43,10 @@ sed -e "s|:REST_KEY:|$REST_KEY|g" \
     -e "s|:REST_SECRET:|$REST_SECRET|g" \
     ${DIR}/kafka-rest.jaas-template.conf > ${DIR}/kafka-rest.jaas.conf
 
-
-verify_installed "keytool"
-
-
 cd ${DIR}/security
-
 log "Generate keys and certificates used for SSL"
-verify_installed "keytool"
 ./certs-create.sh $REST_KEY > /dev/null 2>&1
-
 cd ${DIR}
-
 
 docker-compose -f "${PWD}/docker-compose.yml" up -d
 
@@ -63,7 +55,7 @@ set +e
 create_topic rest-proxy-security-plugin
 set -e
 
-sleep 15
+sleep 30
 
 log "HTTP client using $REST_KEY principal"
 docker exec -e REST_KEY=$REST_KEY restproxy curl -X POST --cert /etc/kafka/secrets/$REST_KEY.certificate.pem --key /etc/kafka/secrets/$REST_KEY.key --tlsv1.2 --cacert /etc/kafka/secrets/snakeoil-ca-1.crt -H "Content-Type: application/vnd.kafka.json.v2+json" -H "Accept: application/vnd.kafka.v2+json" --data '{"records":[{"value":{"foo":"bar"}}]}' "https://localhost:8082/topics/rest-proxy-security-plugin"
