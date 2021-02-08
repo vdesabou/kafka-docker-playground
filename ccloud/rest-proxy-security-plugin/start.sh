@@ -45,7 +45,7 @@ sed -e "s|:REST_KEY:|$REST_KEY|g" \
 
 cd ${DIR}/security
 log "Generate keys and certificates used for SSL"
-./certs-create.sh $REST_KEY > /dev/null 2>&1
+./certs-create.sh $REST_KEY
 cd ${DIR}
 
 docker-compose -f "${PWD}/docker-compose.yml" up -d
