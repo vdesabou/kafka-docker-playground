@@ -57,8 +57,8 @@ set -e
 
 sleep 15
 
-docker exec -e REST_KEY=$REST_KEY restproxy cp /etc/kafka/secrets/$REST_KEY.key /tmp/$REST_KEY.key
-docker exec -e REST_KEY=$REST_KEY restproxy ls -lrt /tmp/$REST_KEY.key
-
+# issue on linux where file is mounted as root, it gives
+# curl: (58) unable to set private key file: '/etc/kafka/secrets/***.key' type PEM
+docker container cp ./security/$REST_KEY.key restproxy:/tmp/$REST_KEY.key
 log "HTTP client using $REST_KEY principal"
 docker exec -e REST_KEY=$REST_KEY restproxy curl -X POST --cert /etc/kafka/secrets/$REST_KEY.certificate.pem --key /tmp/$REST_KEY.key --tlsv1.2 --cacert /etc/kafka/secrets/snakeoil-ca-1.crt -H "Content-Type: application/vnd.kafka.json.v2+json" -H "Accept: application/vnd.kafka.v2+json" --data '{"records":[{"value":{"foo":"bar"}}]}' "https://localhost:8082/topics/rest-proxy-security-plugin"
