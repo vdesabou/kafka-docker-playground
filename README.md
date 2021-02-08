@@ -43,8 +43,8 @@ Quick start examples from Confluent [docs](https://docs.confluent.io/current/con
 | <img src="./images/icons/lambda.svg" width="15"> [AWS Lambda Sink](connect/connect-aws-lambda-sink)  | SaaS Apps  | 1.1.1 | Confluent Subscription | 2021-01-07 | 👍 2021-02-02 
 | <img src="./images/icons/blob_storage.png" width="15"> [Azure Blob Storage Sink](connect/connect-azure-blob-storage-sink)  | Datastore | 1.6.0 | Confluent Subscription | 2021-01-30 | 👍 2021-02-08 
 | <img src="./images/icons/blob_storage.png" width="15"> [Azure Blob Storage Source](connect/connect-azure-blob-storage-source)  | Datastore | 1.4.2 | Confluent Subscription | 2021-01-19 | 👍 2021-02-03 
-| <img src="./images/icons/data_lake_gen1.png" width="15"> [Azure Data Lake Storage Gen1 Sink](connect/connect-azure-data-lake-storage-gen1-sink)  | Datastore | 1.6.0 | Confluent Subscription | 2021-01-30 | 👍 2021-02-01 
-| <img src="./images/icons/data_lake_gen1.png" width="15"> [Azure Data Lake Storage Gen2 Sink](connect/connect-azure-data-lake-storage-gen2-sink)  | Datastore | 1.6.0 | Confluent Subscription | 2021-01-30 | 👍 2021-02-01 
+| <img src="./images/icons/data_lake_gen1.png" width="15"> [Azure Data Lake Storage Gen1 Sink](connect/connect-azure-data-lake-storage-gen1-sink)  | Datastore | 1.6.0 | Confluent Subscription | 2021-01-30 | 👍 2021-02-08 
+| <img src="./images/icons/data_lake_gen1.png" width="15"> [Azure Data Lake Storage Gen2 Sink](connect/connect-azure-data-lake-storage-gen2-sink)  | Datastore | 1.6.0 | Confluent Subscription | 2021-01-30 | 👍 2021-02-08 
 | <img src="./images/icons/event_hubs.png" width="15"> [Azure Event Hubs Source](connect/connect-azure-event-hubs-source)  | Message Queue | 1.1.0 | Confluent Subscription | 2020-10-29 | 👍 2021-02-02 
 | <img src="./images/icons/azure_functions.png" width="15"> [Azure Functions Sink](connect/connect-azure-functions-sink) | SaaS Apps | 1.0.8 | Confluent Subscription | 2020-10-22 | 👍 2021-02-02 
 | <img src="./images/icons/search.png" width="15"> [Azure Search Sink](connect/connect-azure-search-sink)  | Analytics | 1.0.4 | Confluent Subscription | 2021-02-03 | 👍 2021-02-04 
@@ -68,7 +68,7 @@ Quick start examples from Confluent [docs](https://docs.confluent.io/current/con
 | <img src="./images/icons/bigquery.png" width="15"> [Google BigQuery Sink](connect/connect-gcp-bigquery-sink) | Data Warehouse | 2.0.0 | Open Source (WePay) | 2021-02-02 | 👍 2021-02-03 
 | <img src="./images/icons/gcp_bigtable.png" width="15"> [Google Cloud BigTable Sink](connect/connect-gcp-bigtable-sink) | Database | 1.0.6 | Confluent Subscription | 2020-12-17 | 👍 2021-02-02 
 | <img src="./images/icons/cloud_functions.png" width="15"> [Google Cloud Functions Sink](connect/connect-gcp-cloud-functions-sink) | SaaS Apps | 1.1.2 | Confluent Subscription | 2020-11-30 | 👍 2021-02-02 
-| <img src="./images/icons/gcp_pubsub.png" width="15"> [Google Cloud Pub/Sub Source](connect/connect-gcp-pubsub-source) |  Message Queue | 1.0.6 | Confluent Subscription | 2021-01-16 | 👍 2021-02-01 
+| <img src="./images/icons/gcp_pubsub.png" width="15"> [Google Cloud Pub/Sub Source](connect/connect-gcp-pubsub-source) |  Message Queue | 1.0.6 | Confluent Subscription | 2021-01-16 | 👍 2021-02-08 
 | <img src="./images/icons/spanner.png" width="15"> [Google Cloud Spanner Sink](connect/connect-gcp-spanner-sink) |  Database | 1.0.4 | Confluent Subscription | 2021-02-04 | 👍 2021-02-05 
 | <img src="./images/icons/gcs.png" width="15"> [Google Cloud Storage Sink](connect/connect-gcp-gcs-sink) |  Datastore | 5.5.5 | Confluent Subscription | 2020-12-29 | 👍 2021-02-02 
 | <img src="./images/icons/gcs.png" width="15"> [Google Cloud Storage Source](connect/connect-gcp-gcs-source) |  Datastore | 1.4.2 | Confluent Subscription | 2021-01-19 | 👍 2021-02-03 
