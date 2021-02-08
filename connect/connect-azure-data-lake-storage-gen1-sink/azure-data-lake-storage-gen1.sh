@@ -40,7 +40,7 @@ AZURE_DATALAKE_CLIENT_ID=$(az ad app create --display-name "$AZURE_AD_APP_NAME" 
 log "Creating Service Principal associated to the App"
 SERVICE_PRINCIPAL_ID=$(az ad sp create --id $AZURE_DATALAKE_CLIENT_ID | jq -r '.objectId')
 
-AZURE_TENANT_ID=$(az account list | jq -r '.[].tenantId')
+AZURE_TENANT_ID=$(az account list --query "[?name=='COPS']" | jq -r '.[].tenantId')
 AZURE_DATALAKE_TOKEN_ENDPOINT="https://login.microsoftonline.com/$AZURE_TENANT_ID/oauth2/token"
 
 log "Creating data lake $AZURE_DATALAKE_ACCOUNT_NAME in resource $AZURE_RESOURCE_GROUP"
