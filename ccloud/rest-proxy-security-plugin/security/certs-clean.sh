@@ -6,4 +6,4 @@ set -o nounset \
 #    -o xtrace
 
 # Cleanup files
-rm -f *.crt *.csr *_creds *.jks *.srl *.key *.pem *.der *.p12
+rm -f *.crt *.csr *_creds *.jks *.srl *.key *.pem *.der *.p12 extfile

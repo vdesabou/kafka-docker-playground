@@ -10,7 +10,7 @@ REST_KEY=$1
 for i in restproxy $REST_KEY
 do
         echo "------------------------------- $i keystore -------------------------------"
-	keytool -list -v -keystore kafka.$i.keystore.jks -storepass confluent | grep -e Alias -e Entry
+	docker run -v $PWD:/tmp vdesabou/kafka-docker-playground-connect:${TAG} keytool -list -v -keystore /tmp/kafka.$i.keystore.jks -storepass confluent | grep -e Alias -e Entry
         echo "------------------------------- $i truststore -------------------------------"
-	keytool -list -v -keystore kafka.$i.truststore.jks -storepass confluent | grep -e Alias -e Entry
+	docker run -v $PWD:/tmp vdesabou/kafka-docker-playground-connect:${TAG} keytool -list -v -keystore /tmp/kafka.$i.truststore.jks -storepass confluent | grep -e Alias -e Entry
 done
