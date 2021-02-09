@@ -968,7 +968,7 @@ prometheus:
     - alertmanager
 
 kafka-lag-exporter:
-  image: lightbend/kafka-lag-exporter:0.5.5
+  image: lightbend/kafka-lag-exporter:0.6.6
   hostname: kafka-lag-exporter
   container_name: kafka-lag-exporter
   restart: always
