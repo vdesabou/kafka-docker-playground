@@ -33,6 +33,7 @@ curl -X PUT \
                "reporter.error.topic.replication.factor": 1,
                "reporter.result.topic.name": "success-responses",
                "reporter.result.topic.replication.factor": 1,
+               "request.body.format": "json",
                "http.api.url": "http://http-service-basic-auth-204:8080/api/messages",
                "auth.type": "BASIC",
                "connection.user": "admin",
