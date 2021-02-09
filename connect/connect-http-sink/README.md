@@ -72,13 +72,10 @@ curl admin:password@localhost:9083/api/messages | jq .
 [
   {
     "id": 1,
-    "message": "{complaint_type=Dirty car, new_customer=false, trip_cost=29.1, customer_name=Ed, number_of_rides=22}"
+    "message": "[{\"complaint_type\":\"Dirty car\",\"new_customer\":false,\"trip_cost\":29.1,\"customer_name\":\"Ed\",\"number_of_rides\":22}]"
   }
 ]
 ```
-
-**FIXTHIS** output message is not valid JSON
-
 ### AVRO Converter Example
 
 ```
@@ -98,43 +95,43 @@ curl admin:password@localhost:9083/api/messages | jq .
 [
   {
     "id": 1,
-    "message": "Struct{f1=value1}"
+    "message": "[{\"f1\":\"value1\"}]"
   },
   {
     "id": 2,
-    "message": "Struct{f1=value2}"
+    "message": "[{\"f1\":\"value2\"}]"
   },
   {
     "id": 3,
-    "message": "Struct{f1=value3}"
+    "message": "[{\"f1\":\"value3\"}]"
   },
   {
     "id": 4,
-    "message": "Struct{f1=value4}"
+    "message": "[{\"f1\":\"value4\"}]"
   },
   {
     "id": 5,
-    "message": "Struct{f1=value5}"
+    "message": "[{\"f1\":\"value5\"}]"
   },
   {
     "id": 6,
-    "message": "Struct{f1=value6}"
+    "message": "[{\"f1\":\"value6\"}]"
   },
   {
     "id": 7,
-    "message": "Struct{f1=value7}"
+    "message": "[{\"f1\":\"value7\"}]"
   },
   {
     "id": 8,
-    "message": "Struct{f1=value8}"
+    "message": "[{\"f1\":\"value8\"}]"
   },
   {
     "id": 9,
-    "message": "Struct{f1=value9}"
+    "message": "[{\"f1\":\"value9\"}]"
   },
   {
     "id": 10,
-    "message": "Struct{f1=value10}"
+    "message": "[{\"f1\":\"value10\"}]"
   }
 ]
 ```
