@@ -9,6 +9,20 @@ verify_installed "kubectl"
 verify_installed "minikube"
 verify_installed "helm"
 
+# configurable values
+NUMBER_OF_PARTITIONS=12
+DATAGEN_TASKS=10
+
+orders_ITERATIONS=10000000
+shipments_ITERATIONS=8000000
+customers_ITERATIONS=10000
+products_ITERATIONS=1000
+
+orders_ITERATIONS=100
+shipments_ITERATIONS=800
+customers_ITERATIONS=100
+products_ITERATIONS=100
+#
 CONFIG_FILE=~/.ccloud/config
 
 if [ ! -f ${CONFIG_FILE} ]
@@ -83,8 +97,9 @@ sed -i.bak 's/^\(.*          confluent.monitoring.interceptor.topic.skip.backlog
 log "Extend Kubernetes with first class CP primitives"
 kubectl apply --filename ${DIR}/confluent-operator/resources/crds/
 
-log "Create the Kubernetes namespace to install Operator"
+log "Create the Kubernetes namespaces to install Operator and cluster"
 kubectl create namespace confluent
+kubectl config set-context --current --namespace=confluent
 
 log "installing operator"
 helm upgrade --install \
@@ -164,7 +179,7 @@ helm upgrade --install \
   --set controlcenter.dependencies.schemaRegistry.authentication.username="${SR_USERNAME}" \
   --set controlcenter.dependencies.schemaRegistry.authentication.password="${SR_SECRET}"
 
-# kubectl -n confluent exec -it connectors-0 -- bash
+# kubectl exec -it connectors-0 -- bash
 
 
 log "Waiting up to 1800 seconds for all pods in namespace confluent to start"
@@ -175,10 +190,10 @@ set +e
 MAX_WAIT=480
 CUR_WAIT=0
 log "Waiting up to $MAX_WAIT seconds for Kafka Connect connectors-0 to start"
-kubectl logs -n confluent connectors-0 > /tmp/out.txt 2>&1
+kubectl logs connectors-0 > /tmp/out.txt 2>&1
 while [[ ! $(cat /tmp/out.txt) =~ "Finished starting connectors and tasks" ]]; do
   sleep 10
-  kubectl logs -n confluent connectors-0 > /tmp/out.txt 2>&1
+  kubectl logs connectors-0 > /tmp/out.txt 2>&1
   CUR_WAIT=$(( CUR_WAIT+10 ))
   if [[ "$CUR_WAIT" -gt "$MAX_WAIT" ]]; then
     echo -e "\nERROR: The logs in connectors-0 container do not show 'Finished starting connectors and tasks' after $MAX_WAIT seconds. Please troubleshoot'.\n"
@@ -190,39 +205,63 @@ log "Connect connectors-0 has started!"
 set -e
 
 log "Control Center is reachable at http://127.0.0.1:9021 (admin/Developer1)"
-kubectl -n confluent port-forward controlcenter-0 9021:9021 &
+kubectl port-forward controlcenter-0 9021:9021 &
 
 #######
-# CONNECTOR TEST: Spool dir
+# INJECTING DATA
 #######
 
-set +e
-log "Create topic users"
-kubectl cp ${CONFIG_FILE} confluent/connectors-0:/tmp/config
-kubectl -n confluent exec -it connectors-0 -- kafka-topics --bootstrap-server ${BOOTSTRAP_SERVERS} --command-config /tmp/config --topic users --create --replication-factor 3 --partitions 1
-set +e
+for topic in orders shipments customers products
+do
+  log "Creating ${topic}"
+  set +e
+  log "Create topic ${topic}"
+  kubectl cp ${CONFIG_FILE} confluent/connectors-0:/tmp/config
+  kubectl exec -it connectors-0 -- kafka-topics --bootstrap-server ${BOOTSTRAP_SERVERS} --command-config /tmp/config --topic ${topic} --delete
+  kubectl exec -it connectors-0 -- kafka-topics --bootstrap-server ${BOOTSTRAP_SERVERS} --command-config /tmp/config --topic ${topic} --create --replication-factor 3 --partitions ${NUMBER_OF_PARTITIONS}
+  kubectl exec -i connectors-0 -- curl -X DELETE http://localhost:8083/connectors/datagen-${topic}
+  set -e
 
-# https://github.com/confluentinc/kafka-connect-datagen#configuration
-log "Creating Datagen Source connector"
-kubectl -n confluent exec -i connectors-0 -- curl -X PUT \
-     -H "Content-Type: application/json" \
-     --data '{
-              "connector.class": "io.confluent.kafka.connect.datagen.DatagenConnector",
-              "kafka.topic": "users",
-              "quickstart": "users",
-              "key.converter": "org.apache.kafka.connect.storage.StringConverter",
-              "value.converter": "org.apache.kafka.connect.json.JsonConverter",
-              "value.converter.schemas.enable": "false",
-              "max.interval": 1,
-              "iterations": -1,
-              "tasks.max": "10"
-          }' \
-     http://localhost:8083/connectors/datagen-users$RANDOM/config | jq
+  ITERATIONS=$(eval echo '$'${topic}_ITERATIONS)
+  # https://github.com/confluentinc/kafka-connect-datagen#configuration
+  kubectl exec -i connectors-0 -- curl -X PUT \
+      -H "Content-Type: application/json" \
+      --data '{
+                "connector.class": "io.confluent.kafka.connect.datagen.DatagenConnector",
+                "kafka.topic": "'"$topic"'",
+                "quickstart": "'"$topic"'",
+                "key.converter": "org.apache.kafka.connect.storage.StringConverter",
+                "value.converter": "org.apache.kafka.connect.json.JsonConverter",
+                "value.converter.schemas.enable": "false",
+                "max.interval": 1,
+                "iterations": "'"$ITERATIONS"'",
+                "tasks.max": "'"$DATAGEN_TASKS"'"
+            }' \
+      http://localhost:8083/connectors/datagen-${topic}/config | jq
 
-sleep 5
+
+  set +e
+  # wait for all tasks to be FAILED
+  MAX_WAIT=480
+  CUR_WAIT=0
+  log "Waiting up to $MAX_WAIT seconds for topic $topic to be filled with $ITERATIONS records"
+  kubectl exec -i connectors-0 -- curl -X GET http://localhost:8083/connectors/datagen-${topic}/status | jq .tasks[].state | grep FAILED | wc -l > /tmp/out.txt 2>&1
+  while [[ ! $(cat /tmp/out.txt) =~ "$DATAGEN_TASKS" ]]; do
+    sleep 10
+    kubectl exec -i connectors-0 -- curl -X GET http://localhost:8083/connectors/datagen-${topic}/status | jq .tasks[].state | grep FAILED | wc -l > /tmp/out.txt 2>&1
+    CUR_WAIT=$(( CUR_WAIT+10 ))
+    if [[ "$CUR_WAIT" -gt "$MAX_WAIT" ]]; then
+      echo -e "\nERROR: Please troubleshoot'.\n"
+      exit 1
+    fi
+  done
+  log "Topic $topic is now filled with $ITERATIONS records"
+  set -e
+done
+
 
 # log "Verify we have received the data in users topic"
-# kubectl -n confluent exec -it connectors-0 -- kafka-avro-console-consumer --topic users --bootstrap-server $BOOTSTRAP_SERVERS --consumer-property ssl.endpoint.identification.algorithm=https --consumer-property sasl.mechanism=PLAIN --consumer-property security.protocol=SASL_SSL --consumer-property sasl.jaas.config="$SASL_JAAS_CONFIG" --property basic.auth.credentials.source=$BASIC_AUTH_CREDENTIALS_SOURCE --property schema.registry.basic.auth.user.info="$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO" --property schema.registry.url=$SCHEMA_REGISTRY_URL --from-beginning --max-messages 2
+# kubectl exec -it connectors-0 -- kafka-avro-console-consumer --topic users --bootstrap-server $BOOTSTRAP_SERVERS --consumer-property ssl.endpoint.identification.algorithm=https --consumer-property sasl.mechanism=PLAIN --consumer-property security.protocol=SASL_SSL --consumer-property sasl.jaas.config="$SASL_JAAS_CONFIG" --property basic.auth.credentials.source=$BASIC_AUTH_CREDENTIALS_SOURCE --property schema.registry.basic.auth.user.info="$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO" --property schema.registry.url=$SCHEMA_REGISTRY_URL --from-beginning --max-messages 2
 
 #######
 # MONITORING
