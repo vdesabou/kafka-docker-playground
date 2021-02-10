@@ -56,8 +56,11 @@ then
 elif [ "$TAG" = "6.0.1" ]
 then
   GIT_BRANCH="6.0.1-post"
+elif [ "$TAG" = "6.1.0" ]
+then
+  GIT_BRANCH="6.1.0-post"
 else
-    logerror "ERROR: Version $TAG not supported. Only 5.3.1, 5.4.0, 5.4.1, 5.5.0, 6.0.0 and 6.0.1 are supported"
+    logerror "ERROR: Version $TAG not supported. Only 5.3.1, 5.4.0, 5.4.1, 5.5.0, 6.0.0, 6.0.1 and 6.1.0 are supported"
     exit 1
 fi
 
