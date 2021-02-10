@@ -4,14 +4,14 @@ services:
   connect:
     volumes:
         - $HOME/.aws/credentials:/root/.aws/credentials:ro
-        #- ../../connect/connect-aws-kinesis-source/kafka-connect-kinesis-1.4.0-SNAPSHOT.jar:/usr/share/confluent-hub-components/confluentinc-kafka-connect-kinesis/lib/kafka-connect-kinesis-1.3.2.jar
+        #- ../../connect/connect-aws-kinesis-source/kafka-connect-kinesis-1.4.0-SNAPSHOT.jar:/usr/share/confluent-hub-components/confluentinc-kafka-connect-kinesis/lib/kafka-connect-kinesis-1.3.3.jar
     environment:
       CONNECT_LOG4J_LOGGERS: org.apache.zookeeper=ERROR,org.I0Itec.zkclient=ERROR,org.reflections=ERROR,com.amazonaws=TRACE,io.confluent.connect.kinesis=TRACE
       CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-kinesis
       AWS_CBOR_DISABLE: 1
 
   kinesis-local:
-    image: vsouza/kinesis-local:latest
+    image: saidsef/aws-kinesis-local:latest
     hostname: kinesis-local
     container_name: kinesis-local
     command: --port 4567
