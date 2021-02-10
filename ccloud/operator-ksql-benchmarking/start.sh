@@ -84,14 +84,14 @@ log "Extend Kubernetes with first class CP primitives"
 kubectl apply --filename ${DIR}/confluent-operator/resources/crds/
 
 log "Create the Kubernetes namespace to install Operator"
-kubectl create namespace operator
+kubectl create namespace confluent
 
 log "installing operator"
 helm upgrade --install \
   operator \
   ${DIR}/confluent-operator/helm/confluent-operator/ \
   --values $VALUES_FILE \
-  --namespace operator \
+  --namespace confluent \
   --set operator.enabled=true \
   --set global.sasl.plain.username="${CLOUD_KEY}" \
   --set global.sasl.plain.password="${CLOUD_SECRET}"
@@ -104,7 +104,7 @@ helm upgrade --install \
   connectors \
     ${DIR}/confluent-operator/helm/confluent-operator/ \
   --values $VALUES_FILE \
-  --namespace operator \
+  --namespace confluent \
   --set connect.enabled=true \
   --set global.sasl.plain.username="${CLOUD_KEY}" \
   --set global.sasl.plain.password="${CLOUD_SECRET}" \
@@ -128,7 +128,7 @@ helm upgrade --install \
   ksql \
     ${DIR}/confluent-operator/helm/confluent-operator/ \
   --values $VALUES_FILE \
-  --namespace operator \
+  --namespace confluent \
   --set ksql.enabled=true \
   --set global.sasl.plain.username="${CLOUD_KEY}" \
   --set global.sasl.plain.password="${CLOUD_SECRET}" \
@@ -149,7 +149,7 @@ helm upgrade --install \
   controlcenter \
     ${DIR}/confluent-operator/helm/confluent-operator/ \
   --values $VALUES_FILE \
-  --namespace operator \
+  --namespace confluent \
   --set controlcenter.enabled=true \
   --set global.sasl.plain.username="${CLOUD_KEY}" \
   --set global.sasl.plain.password="${CLOUD_SECRET}" \
@@ -164,21 +164,21 @@ helm upgrade --install \
   --set controlcenter.dependencies.schemaRegistry.authentication.username="${SR_USERNAME}" \
   --set controlcenter.dependencies.schemaRegistry.authentication.password="${SR_SECRET}"
 
-# kubectl -n operator exec -it connectors-0 -- bash
+# kubectl -n confluent exec -it connectors-0 -- bash
 
 
-log "Waiting up to 1800 seconds for all pods in namespace operator to start"
-wait-until-pods-ready "1800" "10" "operator"
+log "Waiting up to 1800 seconds for all pods in namespace confluent to start"
+wait-until-pods-ready "1800" "10" "confluent"
 
 set +e
 # Verify Kafka Connect has started within MAX_WAIT seconds
 MAX_WAIT=480
 CUR_WAIT=0
 log "Waiting up to $MAX_WAIT seconds for Kafka Connect connectors-0 to start"
-kubectl logs -n operator connectors-0 > /tmp/out.txt 2>&1
+kubectl logs -n confluent connectors-0 > /tmp/out.txt 2>&1
 while [[ ! $(cat /tmp/out.txt) =~ "Finished starting connectors and tasks" ]]; do
   sleep 10
-  kubectl logs -n operator connectors-0 > /tmp/out.txt 2>&1
+  kubectl logs -n confluent connectors-0 > /tmp/out.txt 2>&1
   CUR_WAIT=$(( CUR_WAIT+10 ))
   if [[ "$CUR_WAIT" -gt "$MAX_WAIT" ]]; then
     echo -e "\nERROR: The logs in connectors-0 container do not show 'Finished starting connectors and tasks' after $MAX_WAIT seconds. Please troubleshoot'.\n"
@@ -190,7 +190,7 @@ log "Connect connectors-0 has started!"
 set -e
 
 log "Control Center is reachable at http://127.0.0.1:9021 (admin/Developer1)"
-kubectl -n operator port-forward controlcenter-0 9021:9021 &
+kubectl -n confluent port-forward controlcenter-0 9021:9021 &
 
 #######
 # CONNECTOR TEST: Spool dir
@@ -198,13 +198,13 @@ kubectl -n operator port-forward controlcenter-0 9021:9021 &
 
 set +e
 log "Create topic users"
-kubectl cp ${CONFIG_FILE} operator/connectors-0:/tmp/config
-kubectl -n operator exec -it connectors-0 -- kafka-topics --bootstrap-server ${BOOTSTRAP_SERVERS} --command-config /tmp/config --topic users --create --replication-factor 3 --partitions 1
+kubectl cp ${CONFIG_FILE} confluent/connectors-0:/tmp/config
+kubectl -n confluent exec -it connectors-0 -- kafka-topics --bootstrap-server ${BOOTSTRAP_SERVERS} --command-config /tmp/config --topic users --create --replication-factor 3 --partitions 1
 set +e
 
 # https://github.com/confluentinc/kafka-connect-datagen#configuration
 log "Creating Datagen Source connector"
-kubectl -n operator exec -i connectors-0 -- curl -X PUT \
+kubectl -n confluent exec -i connectors-0 -- curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
               "connector.class": "io.confluent.kafka.connect.datagen.DatagenConnector",
@@ -222,7 +222,7 @@ kubectl -n operator exec -i connectors-0 -- curl -X PUT \
 sleep 5
 
 # log "Verify we have received the data in users topic"
-# kubectl -n operator exec -it connectors-0 -- kafka-avro-console-consumer --topic users --bootstrap-server $BOOTSTRAP_SERVERS --consumer-property ssl.endpoint.identification.algorithm=https --consumer-property sasl.mechanism=PLAIN --consumer-property security.protocol=SASL_SSL --consumer-property sasl.jaas.config="$SASL_JAAS_CONFIG" --property basic.auth.credentials.source=$BASIC_AUTH_CREDENTIALS_SOURCE --property schema.registry.basic.auth.user.info="$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO" --property schema.registry.url=$SCHEMA_REGISTRY_URL --from-beginning --max-messages 2
+# kubectl -n confluent exec -it connectors-0 -- kafka-avro-console-consumer --topic users --bootstrap-server $BOOTSTRAP_SERVERS --consumer-property ssl.endpoint.identification.algorithm=https --consumer-property sasl.mechanism=PLAIN --consumer-property security.protocol=SASL_SSL --consumer-property sasl.jaas.config="$SASL_JAAS_CONFIG" --property basic.auth.credentials.source=$BASIC_AUTH_CREDENTIALS_SOURCE --property schema.registry.basic.auth.user.info="$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO" --property schema.registry.url=$SCHEMA_REGISTRY_URL --from-beginning --max-messages 2
 
 #######
 # MONITORING
