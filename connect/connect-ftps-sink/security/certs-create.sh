@@ -8,6 +8,8 @@
 # Cleanup files
 rm -f *.crt *.csr *_creds *.jks *.srl *.key *.pem *.der *.p12 extfile
 
+docker run -v $PWD:/tmp vdesabou/kafka-docker-playground-connect:${TAG} openssl req -x509 -nodes -days 365 -newkey rsa:1024 -keyout /tmp/vsftpd.pem -out vsftpd.pem  -config /tmp/cert_config -reqexts 'my server exts'
+
 # Generate CA key
 docker run -v $PWD:/tmp vdesabou/kafka-docker-playground-connect:${TAG} openssl req -new -x509 -keyout /tmp/snakeoil-ca-1.key -out /tmp/snakeoil-ca-1.crt -days 365 -subj '/CN=ca1.test.confluent.io/OU=TEST/O=CONFLUENT/L=PaloAlto/ST=Ca/C=US' -passin pass:confluent -passout pass:confluent
 
