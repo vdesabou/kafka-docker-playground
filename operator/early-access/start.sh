@@ -69,7 +69,7 @@ helm upgrade --install operator confluentinc_earlyaccess/confluent-operator \
 log "install cluster"
 kubectl apply -f "${DIR}/confluent-platform.yaml"
 
-log "Waiting up to 900 seconds for all pods in namespace operator to start"
+log "Waiting up to 900 seconds for all pods in namespace confluent to start"
 wait-until-pods-ready "900" "10" "confluent"
 
 kubectl get confluent

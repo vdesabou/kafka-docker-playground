@@ -38,7 +38,7 @@ kubectl apply --filename ${DIR}/confluent-operator/resources/crds/
 
 log "Create the Kubernetes namespaces to install Operator and clusters"
 
-kubectl create namespace operator
+kubectl create namespace confluent
 kubectl create namespace kafka-dest
 kubectl create namespace kafka-src
 
@@ -74,7 +74,7 @@ helm upgrade --install \
   operator \
   ${DIR}/confluent-operator/helm/confluent-operator/ \
   --values $VALUES_FILE \
-  --namespace operator \
+  --namespace confluent \
   --set operator.enabled=true
 
 log "install kafka-dest cluster"

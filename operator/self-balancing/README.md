@@ -6,13 +6,13 @@ Create a topic sbk, We are forcing the topic to not create replicas in broker 2 
 
 ```bash
 $ kubectl cp ${DIR}/kafka.properties operator/kafka-0:/tmp/config
-$ kubectl -n operator exec -i kafka-0 -- bash -c 'kafka-topics --create --topic sbk --bootstrap-server kafka:9071 --command-config /tmp/config --replica-assignment 0:1,0:1,0:1,0:1,0:1,0:1,0:1,0:1,0:1,0:1,0:1,0:1,0:1,0:1,0:1,0:1,0:1,0:1,0:1,0:1,0:1,0:1,0:1,0:1,0:1,0:1,0:1,0:1,0:1,0:1,0:1,0:1,0:1,0:1,0:1,0:1,0:1,0:1,0:1,0:1,0:1,0:1,0:1,0:1,0:1,0:1,0:1,0:1,0:1,0:1,0:1,0:1,0:1,0:1,0:1,0:1,0:1,0:1,0:1,0:1,0:1,0:1,0:1,0:1,0:1,0:1,0:1,0:1,0:1,0:1,0:1,0:1,0:1,0:1,0:1,0:1,0:1,0:1,0:1,0:1,0:1,0:1,0:1,0:1,0:1,0:1,0:1,0:1,0:1,0:1,0:1,0:1,0:1,0:1,0:1,0:1,0:1,0:1,0:1,0:1'
+$ kubectl -n confluent exec -i kafka-0 -- bash -c 'kafka-topics --create --topic sbk --bootstrap-server kafka:9071 --command-config /tmp/config --replica-assignment 0:1,0:1,0:1,0:1,0:1,0:1,0:1,0:1,0:1,0:1,0:1,0:1,0:1,0:1,0:1,0:1,0:1,0:1,0:1,0:1,0:1,0:1,0:1,0:1,0:1,0:1,0:1,0:1,0:1,0:1,0:1,0:1,0:1,0:1,0:1,0:1,0:1,0:1,0:1,0:1,0:1,0:1,0:1,0:1,0:1,0:1,0:1,0:1,0:1,0:1,0:1,0:1,0:1,0:1,0:1,0:1,0:1,0:1,0:1,0:1,0:1,0:1,0:1,0:1,0:1,0:1,0:1,0:1,0:1,0:1,0:1,0:1,0:1,0:1,0:1,0:1,0:1,0:1,0:1,0:1,0:1,0:1,0:1,0:1,0:1,0:1,0:1,0:1,0:1,0:1,0:1,0:1,0:1,0:1,0:1,0:1,0:1,0:1,0:1,0:1'
 ```
 
 Produce Data
 
 ```bash
-$ kubectl -n operator exec -i kafka-0 -- bash -c 'kafka-producer-perf-test --producer-props bootstrap.servers=kafka:9071 --producer.config /tmp/config --topic sbk --record-size 1000 --throughput 100000 --num-records 3600000'
+$ kubectl -n confluent exec -i kafka-0 -- bash -c 'kafka-producer-perf-test --producer-props bootstrap.servers=kafka:9071 --producer.config /tmp/config --topic sbk --record-size 1000 --throughput 100000 --num-records 3600000'
 ```
 
 ![disk usage](screenshot1.jpg)
@@ -24,7 +24,7 @@ $ helm upgrade --install \
   kafka \
   ${DIR}/confluent-operator/helm/confluent-operator/ \
   --values $VALUES_FILE \
-  --namespace operator \
+  --namespace confluent \
   --set kafka.enabled=true \
   --set kafka.replicas=3 \
   --set kafka.metricReporter.enabled=true \
