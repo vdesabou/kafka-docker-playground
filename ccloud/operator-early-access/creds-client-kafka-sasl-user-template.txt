@@ -1,0 +1,2 @@
+username=:CLOUD_KEY:
+password=:CLOUD_SECRET:
