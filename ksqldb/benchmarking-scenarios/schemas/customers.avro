@@ -82,7 +82,7 @@
             }
         },
         {
-            "name": "randomdata",
+            "name": "random_data",
             "type": {
                 "type": "string",
                 "arg.properties": {
