@@ -4,6 +4,35 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
+
+function wait_for_connector_to_inject_data () {
+  topic=$1
+  set +e
+  # wait for all tasks to be FAILED with org.apache.kafka.connect.errors.ConnectException: Stopping connector: generated the configured xxx number of messages
+  #   {
+  #   "id": 9,
+  #   "state": "FAILED",
+  #   "worker_id": "connectors-0.connectors.confluent.svc.cluster.local:9083",
+  #   "trace": "org.apache.kafka.connect.errors.ConnectException: Stopping connector: generated the configured 100 number of messages\n\tat io.confluent.kafka.connect.datagen.DatagenTask.poll(DatagenTask.java:238)\n\tat org.apache.kafka.connect.runtime.WorkerSourceTask.poll(WorkerSourceTask.java:289)\n\tat org.apache.kafka.connect.runtime.WorkerSourceTask.execute(WorkerSourceTask.java:256)\n\tat org.apache.kafka.connect.runtime.WorkerTask.doRun(WorkerTask.java:185)\n\tat org.apache.kafka.connect.runtime.WorkerTask.run(WorkerTask.java:235)\n\tat java.base/java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:515)\n\tat java.base/java.util.concurrent.FutureTask.run(FutureTask.java:264)\n\tat java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1128)\n\tat java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:628)\n\tat java.base/java.lang.Thread.run(Thread.java:834)\n"
+  # }
+  MAX_WAIT=3600
+  CUR_WAIT=0
+  log "Waiting up to $MAX_WAIT seconds for topic $topic to be filled"
+  curl -s -X GET http://localhost:8083/connectors/datagen-${topic}/status | jq .tasks[].trace | grep "generated the configured" | wc -l > /tmp/out.txt 2>&1
+  while [[ ! $(cat /tmp/out.txt) =~ "10" ]]; do
+    sleep 10
+    curl -s -X GET http://localhost:8083/connectors/datagen-${topic}/status | jq .tasks[].trace | grep "generated the configured" | wc -l > /tmp/out.txt 2>&1
+    CUR_WAIT=$(( CUR_WAIT+10 ))
+    if [[ "$CUR_WAIT" -gt "$MAX_WAIT" ]]; then
+      echo -e "\nERROR: Please troubleshoot'.\n"
+      curl -s -X GET http://localhost:8083/connectors/datagen-${topic}/status | jq
+      rm ${CONFIG_FILE}
+      exit 1
+    fi
+  done
+  log "Topic $topic is now filled"
+  set -e
+}
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
 
 log "Create topic orders"
@@ -16,13 +45,14 @@ curl -s -X PUT \
                 "value.converter": "org.apache.kafka.connect.json.JsonConverter",
                 "value.converter.schemas.enable": "false",
                 "max.interval": 1,
-                "iterations": "1000",
+                "iterations": "1000000",
                 "tasks.max": "10",
                 "schema.filename" : "/tmp/schemas/orders.avro",
                 "schema.keyfield" : "orderid"
             }' \
       http://localhost:8083/connectors/datagen-orders/config | jq
 
+wait_for_connector_to_inject_data "orders"
 
 log "Create topic shipments"
 curl -s -X PUT \
@@ -34,11 +64,13 @@ curl -s -X PUT \
                 "value.converter": "org.apache.kafka.connect.json.JsonConverter",
                 "value.converter.schemas.enable": "false",
                 "max.interval": 1,
-                "iterations": "1000",
+                "iterations": "800000",
                 "tasks.max": "10",
                 "schema.filename" : "/tmp/schemas/shipments.avro"
             }' \
       http://localhost:8083/connectors/datagen-shipments/config | jq
+
+wait_for_connector_to_inject_data "shipments"
 
 log "Create topic products"
 curl -s -X PUT \
@@ -50,12 +82,14 @@ curl -s -X PUT \
                 "value.converter": "org.apache.kafka.connect.json.JsonConverter",
                 "value.converter.schemas.enable": "false",
                 "max.interval": 1,
-                "iterations": "1000",
+                "iterations": "100",
                 "tasks.max": "10",
                 "schema.filename" : "/tmp/schemas/products.avro",
                 "schema.keyfield" : "productid"
             }' \
       http://localhost:8083/connectors/datagen-products/config | jq
+
+wait_for_connector_to_inject_data "products"
 
 log "Create topic customers"
 curl -s -X PUT \
@@ -74,7 +108,7 @@ curl -s -X PUT \
             }' \
       http://localhost:8083/connectors/datagen-customers/config | jq
 
-
+wait_for_connector_to_inject_data "customers"
 
 log "Create the ksqlDB tables and streams"
 timeout 120 docker exec -i ksqldb-cli bash -c 'echo -e "\n\n⏳ Waiting for ksqlDB to be available before launching CLI\n"; while [ $(curl -s -o /dev/null -w %{http_code} http://ksqldb-server:8088/) -eq 000 ] ; do echo -e $(date) "KSQL Server HTTP state: " $(curl -s -o /dev/null -w %{http_code} http:/ksqldb-server:8088/) " (waiting for 200)" ; sleep 10 ; done; ksql http://ksqldb-server:8088' << EOF
@@ -121,7 +155,30 @@ CREATE STREAM SHIPMENTS
     productid varchar,
     customerid varchar
 )
-    WITH (kafka_topic= 'shipments', value_format='json', timestamp='shipment_time');
+WITH
+    (kafka_topic= 'shipments', value_format='json', timestamp='shipment_time');
+
+CREATE STREAM ORDERS_ORIGINAL
+(
+    ordertime bigint,
+    orderid bigint,
+    productid varchar,
+    orderunits integer,
+    customerid varchar
+)
+WITH
+    (kafka_topic= 'orders', value_format='json', timestamp='ordertime');
+
+CREATE STREAM SHIPMENTS_ORIGINAL
+(
+    SHIPMENT_TIME bigint,
+    SHIPMENTID bigint,
+    orderid bigint,
+    productid varchar,
+    customerid varchar
+)
+WITH
+    (kafka_topic= 'shipments', value_format='json', timestamp='shipment_time');
 EOF
 
 log "QUERY 1"
@@ -221,4 +278,15 @@ FROM
 WINDOW TUMBLING ( SIZE 1 MINUTES )
 GROUP BY
   os.PRODUCTID, os.CUSTOMERID;
+EOF
+
+exit 0
+
+log "QUERY 5"
+timeout 120 docker exec -i ksqldb-cli bash -c 'echo -e "\n\n⏳ Waiting for ksqlDB to be available before launching CLI\n"; while [ $(curl -s -o /dev/null -w %{http_code} http://ksqldb-server:8088/) -eq 000 ] ; do echo -e $(date) "KSQL Server HTTP state: " $(curl -s -o /dev/null -w %{http_code} http:/ksqldb-server:8088/) " (waiting for 200)" ; sleep 10 ; done; ksql http://ksqldb-server:8088' << EOF
+
+SET 'auto.offset.reset' = 'earliest';
+
+INSERT INTO ORDERS SELECT * FROM ORDERS_ORIGINAL;
+INSERT INTO SHIPMENTS SELECT * FROM SHIPMENTS_ORIGINAL;
 EOF
