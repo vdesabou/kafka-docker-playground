@@ -204,9 +204,6 @@ ON O.ORDERID = S.ORDERID;
 EOF
 
 log "QUERY 4"
-# FIXTHIS
-# l8 is MAX(UNIX_TIMESTAMP()) - MIN(UNIX_TIMESTAMP())) TIMEDIFF
-# getting line 8:48: extraneous input ')' expecting {',', 'FROM'}
 timeout 120 docker exec -i ksqldb-cli bash -c 'echo -e "\n\n⏳ Waiting for ksqlDB to be available before launching CLI\n"; while [ $(curl -s -o /dev/null -w %{http_code} http://ksqldb-server:8088/) -eq 000 ] ; do echo -e $(date) "KSQL Server HTTP state: " $(curl -s -o /dev/null -w %{http_code} http:/ksqldb-server:8088/) " (waiting for 200)" ; sleep 10 ; done; ksql http://ksqldb-server:8088' << EOF
 
 SET 'auto.offset.reset' = 'earliest';
@@ -215,10 +212,10 @@ CREATE TABLE ORDERPER_PROD_CUST_AGG AS SELECT
   os.PRODUCTID PRODUCTID,
   os.CUSTOMERID CUSTOMERID,
   COUNT(*) COUNTVAL,
-  SUM(eo.ORDERUNITS) ORDERSUM,
+  SUM(os.ORDERUNITS) ORDERSUM,
   MIN(UNIX_TIMESTAMP()) MINTIME,
   MAX(UNIX_TIMESTAMP()) MAXTIME,
-  MAX(UNIX_TIMESTAMP()) - MIN(UNIX_TIMESTAMP())) TIMEDIFF
+  MAX(UNIX_TIMESTAMP()) - MIN(UNIX_TIMESTAMP()) TIMEDIFF
 FROM
   ORDERS_SHIPPED os
 WINDOW TUMBLING ( SIZE 1 MINUTES )
