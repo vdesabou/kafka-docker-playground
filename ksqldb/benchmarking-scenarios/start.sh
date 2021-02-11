@@ -20,7 +20,7 @@ function wait_for_connector_to_inject_data () {
   log "Waiting up to $MAX_WAIT seconds for topic $topic to be filled"
   curl -s -X GET http://localhost:8083/connectors/datagen-${topic}/status | jq .tasks[].trace | grep "generated the configured" | wc -l > /tmp/out.txt 2>&1
   while [[ ! $(cat /tmp/out.txt) =~ "10" ]]; do
-    sleep 10
+    sleep 5
     curl -s -X GET http://localhost:8083/connectors/datagen-${topic}/status | jq .tasks[].trace | grep "generated the configured" | wc -l > /tmp/out.txt 2>&1
     CUR_WAIT=$(( CUR_WAIT+10 ))
     if [[ "$CUR_WAIT" -gt "$MAX_WAIT" ]]; then
@@ -280,9 +280,7 @@ GROUP BY
   os.PRODUCTID, os.CUSTOMERID;
 EOF
 
-exit 0
-
-log "QUERY 5"
+log "START BENCHMARK"
 timeout 120 docker exec -i ksqldb-cli bash -c 'echo -e "\n\n⏳ Waiting for ksqlDB to be available before launching CLI\n"; while [ $(curl -s -o /dev/null -w %{http_code} http://ksqldb-server:8088/) -eq 000 ] ; do echo -e $(date) "KSQL Server HTTP state: " $(curl -s -o /dev/null -w %{http_code} http:/ksqldb-server:8088/) " (waiting for 200)" ; sleep 10 ; done; ksql http://ksqldb-server:8088' << EOF
 
 SET 'auto.offset.reset' = 'earliest';
