@@ -49,18 +49,28 @@ EOF
 
 for topic in orders
 do
-  log "Creating ${topic}"
   set +e
-  log "Create topic ${topic}"
   kubectl cp ${CONFIG_FILE} confluent/connectors-0:/tmp/config
-  kubectl exec -it connectors-0 -- kafka-topics --bootstrap-server ${bootstrap_servers} --command-config /tmp/config --topic ${topic} --delete
-  kubectl exec -it connectors-0 -- kafka-topics --bootstrap-server ${bootstrap_servers} --command-config /tmp/config --topic ${topic} --create --replication-factor 3 --partitions ${number_topic_partitions}
-  kubectl exec -i connectors-0 -- curl -X DELETE http://localhost:8083/connectors/datagen-${topic}
+  log "Delete connector datagen-${topic}, if applicable"
+  kubectl exec -i connectors-0 -- curl -s -X DELETE http://localhost:8083/connectors/datagen-${topic}
+  # check if topic already exists
+  kubectl exec -it connectors-0 -- kafka-topics --bootstrap-server ${bootstrap_servers} --command-config /tmp/config --topic ${topic} --describe > /dev/null 2>&1
+  if [ $? -eq 0 ]
+  then
+    logwarn "Topic ${topic} already exists, it will be deleted!"
+    check_if_continue
+  fi
+  log "Delete topic ${topic}"
+  kubectl exec -it connectors-0 -- kafka-topics --bootstrap-server ${bootstrap_servers} --command-config /tmp/config --topic ${topic} --delete > /dev/null 2>&1
+  log "Create topic ${topic}"
+  kubectl exec -it connectors-0 -- kafka-topics --bootstrap-server ${bootstrap_servers} --command-config /tmp/config --topic ${topic} --create --replication-factor 3 --partitions ${number_topic_partitions} > /dev/null 2>&1
   set -e
 
-  ITERATIONS=$(eval echo '$'${topic}_iterations)
+  iterations_total=$(eval echo '$'${topic}_iterations)
+  iterations_per_task=$((iterations_total / datagen_tasks))
+
   # https://github.com/confluentinc/kafka-connect-datagen#configuration
-  kubectl exec -i connectors-0 -- curl -X PUT \
+  kubectl exec -i connectors-0 -- curl -s -X PUT \
       -H "Content-Type: application/json" \
       --data '{
                 "connector.class": "io.confluent.kafka.connect.datagen.DatagenConnector",
@@ -69,8 +79,8 @@ do
                 "key.converter": "org.apache.kafka.connect.storage.StringConverter",
                 "value.converter": "org.apache.kafka.connect.json.JsonConverter",
                 "value.converter.schemas.enable": "false",
-                "max.interval": 10,
-                "iterations": "'"$ITERATIONS"'",
+                "max.interval": 1,
+                "iterations": "'"$iterations_per_task"'",
                 "tasks.max": "'"$datagen_tasks"'"
             }' \
       http://localhost:8083/connectors/datagen-${topic}/config | jq
@@ -84,7 +94,7 @@ do
   #   "worker_id": "connectors-0.connectors.confluent.svc.cluster.local:9083",
   #   "trace": "org.apache.kafka.connect.errors.ConnectException: Stopping connector: generated the configured 100 number of messages\n\tat io.confluent.kafka.connect.datagen.DatagenTask.poll(DatagenTask.java:238)\n\tat org.apache.kafka.connect.runtime.WorkerSourceTask.poll(WorkerSourceTask.java:289)\n\tat org.apache.kafka.connect.runtime.WorkerSourceTask.execute(WorkerSourceTask.java:256)\n\tat org.apache.kafka.connect.runtime.WorkerTask.doRun(WorkerTask.java:185)\n\tat org.apache.kafka.connect.runtime.WorkerTask.run(WorkerTask.java:235)\n\tat java.base/java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:515)\n\tat java.base/java.util.concurrent.FutureTask.run(FutureTask.java:264)\n\tat java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1128)\n\tat java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:628)\n\tat java.base/java.lang.Thread.run(Thread.java:834)\n"
   # }
-  MAX_WAIT=480
+  MAX_WAIT=3600
   CUR_WAIT=0
   log "Waiting up to $MAX_WAIT seconds for topic $topic to be filled with $ITERATIONS records"
   kubectl exec -i connectors-0 -- curl -s -X GET http://localhost:8083/connectors/datagen-${topic}/status | jq .tasks[].trace | grep "generated the configured" | wc -l > /tmp/out.txt 2>&1
