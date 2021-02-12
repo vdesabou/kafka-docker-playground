@@ -602,7 +602,8 @@ function wait-until-pods-ready() {
 
 function wait_for_datagen_connector_to_inject_data () {
   topic="$1"
-  prefix_cmd="$2"
+  datagen_tasks="$2"
+  prefix_cmd="$3"
   set +e
   # wait for all tasks to be FAILED with org.apache.kafka.connect.errors.ConnectException: Stopping connector: generated the configured xxx number of messages
   #   {
@@ -615,7 +616,7 @@ function wait_for_datagen_connector_to_inject_data () {
   CUR_WAIT=0
   log "Waiting up to $MAX_WAIT seconds for topic $topic to be filled"
   $prefix_cmd curl -s -X GET http://localhost:8083/connectors/datagen-${topic}/status | jq .tasks[].trace | grep "generated the configured" | wc -l > /tmp/out.txt 2>&1
-  while [[ ! $(cat /tmp/out.txt) =~ "10" ]]; do
+  while [[ ! $(cat /tmp/out.txt) =~ "${datagen_tasks}" ]]; do
     sleep 5
     $prefix_cmd curl -s -X GET http://localhost:8083/connectors/datagen-${topic}/status | jq .tasks[].trace | grep "generated the configured" | wc -l > /tmp/out.txt 2>&1
     CUR_WAIT=$(( CUR_WAIT+10 ))

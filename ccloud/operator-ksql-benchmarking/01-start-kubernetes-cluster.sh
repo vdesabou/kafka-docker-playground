@@ -45,6 +45,7 @@ then
     #######
     # aws
     #######
+    log "Start EKS"
 else
     logerror "Provider ${provider} is not supported"
     exit 1
