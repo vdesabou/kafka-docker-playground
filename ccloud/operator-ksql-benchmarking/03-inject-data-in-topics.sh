@@ -38,7 +38,7 @@ sasl.mechanism=PLAIN
 EOF
 
 kubectl cp ${CONFIG_FILE} confluent/connectors-0:/tmp/config
-
+kubectl cp ${DIR}/schemas confluent/connectors-0:/tmp/
 function create_input_topic () {
   topic=$1
   set +e
@@ -94,7 +94,7 @@ kubectl exec -i connectors-0 -- curl -s -X PUT \
             }' \
       http://localhost:8083/connectors/datagen-${topic}/config | jq
 
-wait_for_datagen_connector_to_inject_data "${topic}" "kubectl exec -i connectors-0 --"
+wait_for_datagen_connector_to_inject_data "${topic}" "${datagen_tasks}" "kubectl exec -i connectors-0 --"
 
 log "Verify we have received data in topic ${topic}"
 kubectl exec -it connectors-0 -- kafka-console-consumer --topic ${topic} --bootstrap-server ${bootstrap_servers} --consumer.config /tmp/config --from-beginning --max-messages 1
@@ -123,7 +123,7 @@ kubectl exec -i connectors-0 -- curl -s -X PUT \
             }' \
       http://localhost:8083/connectors/datagen-${topic}/config | jq
 
-wait_for_datagen_connector_to_inject_data "${topic}" "kubectl exec -i connectors-0 --"
+wait_for_datagen_connector_to_inject_data "${topic}" "${datagen_tasks}" "kubectl exec -i connectors-0 --"
 
 log "Verify we have received data in topic ${topic}"
 kubectl exec -it connectors-0 -- kafka-console-consumer --topic ${topic} --bootstrap-server ${bootstrap_servers} --consumer.config /tmp/config --from-beginning --max-messages 1
@@ -153,7 +153,7 @@ kubectl exec -i connectors-0 -- curl -s -X PUT \
             }' \
       http://localhost:8083/connectors/datagen-${topic}/config | jq
 
-wait_for_datagen_connector_to_inject_data "${topic}" "kubectl exec -i connectors-0 --"
+wait_for_datagen_connector_to_inject_data "${topic}" "${datagen_tasks}" "kubectl exec -i connectors-0 --"
 log "Verify we have received data in topic ${topic}"
 kubectl exec -it connectors-0 -- kafka-console-consumer --topic ${topic} --bootstrap-server ${bootstrap_servers} --consumer.config /tmp/config --from-beginning --max-messages 1
 
@@ -182,7 +182,7 @@ kubectl exec -i connectors-0 -- curl -s -X PUT \
             }' \
       http://localhost:8083/connectors/datagen-${topic}/config | jq
 
-wait_for_datagen_connector_to_inject_data "${topic}" "kubectl exec -i connectors-0 --"
+wait_for_datagen_connector_to_inject_data "${topic}" "${datagen_tasks}" "kubectl exec -i connectors-0 --"
 log "Verify we have received data in topic ${topic}"
 kubectl exec -it connectors-0 -- kafka-console-consumer --topic ${topic} --bootstrap-server ${bootstrap_servers} --consumer.config /tmp/config --from-beginning --max-messages 1
 

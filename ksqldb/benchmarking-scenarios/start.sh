@@ -23,7 +23,7 @@ curl -s -X PUT \
             }' \
       http://localhost:8083/connectors/datagen-orders/config | jq
 
-wait_for_datagen_connector_to_inject_data "orders"
+wait_for_datagen_connector_to_inject_data "orders" "10"
 
 log "Create topic shipments"
 curl -s -X PUT \
@@ -41,7 +41,7 @@ curl -s -X PUT \
             }' \
       http://localhost:8083/connectors/datagen-shipments/config | jq
 
-wait_for_datagen_connector_to_inject_data "shipments"
+wait_for_datagen_connector_to_inject_data "shipments" "10"
 
 log "Create topic products"
 curl -s -X PUT \
@@ -60,7 +60,7 @@ curl -s -X PUT \
             }' \
       http://localhost:8083/connectors/datagen-products/config | jq
 
-wait_for_datagen_connector_to_inject_data "products"
+wait_for_datagen_connector_to_inject_data "products" "10"
 
 log "Create topic customers"
 curl -s -X PUT \
@@ -79,7 +79,7 @@ curl -s -X PUT \
             }' \
       http://localhost:8083/connectors/datagen-customers/config | jq
 
-wait_for_datagen_connector_to_inject_data "customers"
+wait_for_datagen_connector_to_inject_data "customers" "10"
 
 log "Create the ksqlDB tables and streams"
 timeout 120 docker exec -i ksqldb-cli bash -c 'echo -e "\n\n⏳ Waiting for ksqlDB to be available before launching CLI\n"; while [ $(curl -s -o /dev/null -w %{http_code} http://ksqldb-server:8088/) -eq 000 ] ; do echo -e $(date) "KSQL Server HTTP state: " $(curl -s -o /dev/null -w %{http_code} http:/ksqldb-server:8088/) " (waiting for 200)" ; sleep 10 ; done; ksql http://ksqldb-server:8088' << EOF

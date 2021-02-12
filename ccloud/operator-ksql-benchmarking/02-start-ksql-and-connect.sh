@@ -60,6 +60,7 @@ then
     #######
     # aws
     #######
+    log "EKS"
 else
     logerror "Provider ${provider} is not supported"
     exit 1
