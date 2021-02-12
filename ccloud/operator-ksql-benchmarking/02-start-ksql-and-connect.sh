@@ -24,15 +24,48 @@ else
 fi
 
 verify_installed "kubectl"
-verify_installed "minikube"
 verify_installed "helm"
 
-# TODO change file based on k8s cluster
-# Use most basic values file and override it with --set
-VALUES_FILE="${DIR}/../../operator/private.yaml"
+########
+# MAKE SURE TO BE IDEMPOTENT
+########
+set +e
+# delete namespaces
+kubectl delete namespace confluent
+kubectl delete namespace monitoring
+
+# delete internal connect config to start from fresh state
+CONFIG_FILE=${DIR}/client.properties
+cat << EOF > ${CONFIG_FILE}
+bootstrap.servers=${bootstrap_servers}
+sasl.jaas.config=org.apache.kafka.common.security.plain.PlainLoginModule required username='${cluster_api_key}' password='${cluster_api_secret}';
+schema.registry.url=${schema_registry_url}
+basic.auth.credentials.source=USER_INFO
+basic.auth.user.info=${schema_registry_api_key}:${schema_registry_api_secret}
+security.protocol=SASL_SSL
+sasl.mechanism=PLAIN
+EOF
+log "Delete internal connect topics"
+docker run -v $PWD:/tmp vdesabou/kafka-docker-playground-connect:${TAG} kafka-topics --bootstrap-server ${bootstrap_servers} --command-config /tmp/client.properties --topic confluent.connectors-configs --delete > /dev/null 2>&1
+docker run -v $PWD:/tmp vdesabou/kafka-docker-playground-connect:${TAG} kafka-topics --bootstrap-server ${bootstrap_servers} --command-config /tmp/client.properties --topic confluent.connectors-offsets --delete > /dev/null 2>&1
+docker run -v $PWD:/tmp vdesabou/kafka-docker-playground-connect:${TAG} kafka-topics --bootstrap-server ${bootstrap_servers} --command-config /tmp/client.properties --topic confluent.connectors-status --delete > /dev/null 2>&1
+set -e
+
+if [ "${provider}" = "minikube" ]
+then
+    # Use most basic values file and override it with --set
+    VALUES_FILE="${DIR}/../../operator/private.yaml"
+elif [ "${provider}" = "aws" ]
+then
+    #######
+    # aws
+    #######
+else
+    logerror "Provider ${provider} is not supported"
+    exit 1
+fi
 
 log "Download Confluent Operator in ${DIR}/confluent-operator"
-
 rm -rf ${DIR}/confluent-operator
 mkdir ${DIR}/confluent-operator
 cd ${DIR}/confluent-operator

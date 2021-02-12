@@ -24,15 +24,29 @@ else
 fi
 
 verify_installed "kubectl"
-verify_installed "minikube"
 verify_installed "helm"
 
+if [ "${provider}" = "minikube" ]
+then
+    #######
+    # minikube
+    #######
+    verify_installed "minikube"
+    set +e
+    log "Stop minikube if required"
+    minikube delete
+    set -e
+    log "Start minikube"
+    minikube start --cpus=8 --disk-size='50gb' --memory=16384
+    log "Launch minikube dashboard in background"
+    minikube dashboard &
+elif [ "${provider}" = "aws" ]
+then
+    #######
+    # aws
+    #######
+else
+    logerror "Provider ${provider} is not supported"
+    exit 1
+fi
 
-set +e
-log "Stop minikube if required"
-minikube delete
-set -e
-log "Start minikube"
-minikube start --cpus=8 --disk-size='50gb' --memory=16384
-log "Launch minikube dashboard in background"
-minikube dashboard &
