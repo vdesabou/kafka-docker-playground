@@ -243,4 +243,4 @@ open "http://127.0.0.1:3000" &
 
 
 log "Add Prometheus data source with url http://prometheus-server.monitoring.svc.cluster.local"
-log "Then you can import dashboard with id 1860 for node exporter full, and ./confluent-operator/grafana-dashboard/grafana-dashboard.json"
+log "Then you can import dashboard with id 1860 for node exporter full, and ./grafana-dashboard/grafana-dashboard.json"
