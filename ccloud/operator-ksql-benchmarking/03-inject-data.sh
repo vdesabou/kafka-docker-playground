@@ -42,17 +42,12 @@ security.protocol=SASL_SSL
 sasl.mechanism=PLAIN
 EOF
 
-#######
-# INJECTING DATA
-#######
-# FIXTHIS shipments customers products
+kubectl cp ${CONFIG_FILE} confluent/connectors-0:/tmp/config
 
-for topic in orders
-do
+function create_input_topic () {
+  topic=$1
   set +e
-  kubectl cp ${CONFIG_FILE} confluent/connectors-0:/tmp/config
-  log "Delete connector datagen-${topic}, if applicable"
-  kubectl exec -i connectors-0 -- curl -s -X DELETE http://localhost:8083/connectors/datagen-${topic}
+  kubectl cp ${DIR}/schemas/${topic}.avro confluent/connectors-0:/tmp/${topic}.avro
   # check if topic already exists
   kubectl exec -it connectors-0 -- kafka-topics --bootstrap-server ${bootstrap_servers} --command-config /tmp/config --topic ${topic} --describe > /dev/null 2>&1
   if [ $? -eq 0 ]
@@ -65,55 +60,136 @@ do
   log "Create topic ${topic}"
   kubectl exec -it connectors-0 -- kafka-topics --bootstrap-server ${bootstrap_servers} --command-config /tmp/config --topic ${topic} --create --replication-factor 3 --partitions ${number_topic_partitions} > /dev/null 2>&1
   set -e
+}
 
-  iterations_total=$(eval echo '$'${topic}_iterations)
-  iterations_per_task=$((iterations_total / datagen_tasks))
+function delete_datagen_connector () {
+  topic=$1
+  set +e
+  kubectl cp ${DIR}/schemas/${topic}.avro confluent/connectors-0:/tmp/${topic}.avro
+  log "Delete connector datagen-${topic}, if applicable"
+  kubectl exec -i connectors-0 -- curl -s -X DELETE http://localhost:8083/connectors/datagen-${topic}
+  set -e
+}
 
-  # https://github.com/confluentinc/kafka-connect-datagen#configuration
-  kubectl exec -i connectors-0 -- curl -s -X PUT \
+# https://confluentinc.atlassian.net/wiki/spaces/CSH/pages/1679458811/Benchmarking+ksqlDB+on+CCloud
+# https://github.com/confluentinc/kafka-connect-datagen
+# https://github.com/confluentinc/avro-random-generator
+
+#######
+# orders
+#######
+topic="orders"
+create_input_topic "${topic}"
+delete_datagen_connector "${topic}"
+iterations_total=$(eval echo '$'${topic}_iterations)
+iterations_per_task=$((iterations_total / datagen_tasks))
+log "Create topic ${topic}"
+kubectl exec -i connectors-0 -- curl -s -X PUT \
       -H "Content-Type: application/json" \
       --data '{
                 "connector.class": "io.confluent.kafka.connect.datagen.DatagenConnector",
                 "kafka.topic": "'"$topic"'",
-                "quickstart": "'"$topic"'",
                 "key.converter": "org.apache.kafka.connect.storage.StringConverter",
                 "value.converter": "org.apache.kafka.connect.json.JsonConverter",
                 "value.converter.schemas.enable": "false",
                 "max.interval": 1,
                 "iterations": "'"$iterations_per_task"'",
-                "tasks.max": "'"$datagen_tasks"'"
+                "tasks.max": "'"$datagen_tasks"'",
+                "schema.filename" : "'"/tmp/schemas/${topic}.avro"'",
+                "schema.keyfield" : "orderid"
             }' \
       http://localhost:8083/connectors/datagen-${topic}/config | jq
 
-
-  set +e
-  # wait for all tasks to be FAILED with org.apache.kafka.connect.errors.ConnectException: Stopping connector: generated the configured xxx number of messages
-  #   {
-  #   "id": 9,
-  #   "state": "FAILED",
-  #   "worker_id": "connectors-0.connectors.confluent.svc.cluster.local:9083",
-  #   "trace": "org.apache.kafka.connect.errors.ConnectException: Stopping connector: generated the configured 100 number of messages\n\tat io.confluent.kafka.connect.datagen.DatagenTask.poll(DatagenTask.java:238)\n\tat org.apache.kafka.connect.runtime.WorkerSourceTask.poll(WorkerSourceTask.java:289)\n\tat org.apache.kafka.connect.runtime.WorkerSourceTask.execute(WorkerSourceTask.java:256)\n\tat org.apache.kafka.connect.runtime.WorkerTask.doRun(WorkerTask.java:185)\n\tat org.apache.kafka.connect.runtime.WorkerTask.run(WorkerTask.java:235)\n\tat java.base/java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:515)\n\tat java.base/java.util.concurrent.FutureTask.run(FutureTask.java:264)\n\tat java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1128)\n\tat java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:628)\n\tat java.base/java.lang.Thread.run(Thread.java:834)\n"
-  # }
-  MAX_WAIT=3600
-  CUR_WAIT=0
-  log "Waiting up to $MAX_WAIT seconds for topic $topic to be filled with $ITERATIONS records"
-  kubectl exec -i connectors-0 -- curl -s -X GET http://localhost:8083/connectors/datagen-${topic}/status | jq .tasks[].trace | grep "generated the configured" | wc -l > /tmp/out.txt 2>&1
-  while [[ ! $(cat /tmp/out.txt) =~ "$datagen_tasks" ]]; do
-    sleep 10
-    kubectl exec -i connectors-0 -- curl -s -X GET http://localhost:8083/connectors/datagen-${topic}/status | jq .tasks[].trace | grep "generated the configured" | wc -l > /tmp/out.txt 2>&1
-    CUR_WAIT=$(( CUR_WAIT+10 ))
-    if [[ "$CUR_WAIT" -gt "$MAX_WAIT" ]]; then
-      echo -e "\nERROR: Please troubleshoot'.\n"
-      kubectl exec -i connectors-0 -- curl -s -X GET http://localhost:8083/connectors/datagen-${topic}/status | jq
-      rm ${CONFIG_FILE}
-      exit 1
-    fi
-  done
-  log "Topic $topic is now filled with $ITERATIONS records"
-  set -e
-done
+wait_for_datagen_connector_to_inject_data "${topic}" "kubectl exec -i connectors-0 --"
 
 log "Verify we have received data in topic ${topic}"
-kubectl exec -it connectors-0 -- kafka-console-consumer --topic ${topic} --bootstrap-server ${bootstrap_servers} --consumer.config /tmp/config --from-beginning --max-messages 2
+kubectl exec -it connectors-0 -- kafka-console-consumer --topic ${topic} --bootstrap-server ${bootstrap_servers} --consumer.config /tmp/config --from-beginning --max-messages 1
+
+#######
+# shipments
+#######
+topic="shipments"
+create_input_topic "${topic}"
+delete_datagen_connector "${topic}"
+iterations_total=$(eval echo '$'${topic}_iterations)
+iterations_per_task=$((iterations_total / datagen_tasks))
+log "Create topic ${topic}"
+kubectl exec -i connectors-0 -- curl -s -X PUT \
+      -H "Content-Type: application/json" \
+      --data '{
+                "connector.class": "io.confluent.kafka.connect.datagen.DatagenConnector",
+                "kafka.topic": "'"$topic"'",
+                "key.converter": "org.apache.kafka.connect.storage.StringConverter",
+                "value.converter": "org.apache.kafka.connect.json.JsonConverter",
+                "value.converter.schemas.enable": "false",
+                "max.interval": 1,
+                "iterations": "'"$iterations_per_task"'",
+                "tasks.max": "'"$datagen_tasks"'",
+                "schema.filename" : "'"/tmp/schemas/${topic}.avro"'"
+            }' \
+      http://localhost:8083/connectors/datagen-${topic}/config | jq
+
+wait_for_datagen_connector_to_inject_data "${topic}" "kubectl exec -i connectors-0 --"
+
+log "Verify we have received data in topic ${topic}"
+kubectl exec -it connectors-0 -- kafka-console-consumer --topic ${topic} --bootstrap-server ${bootstrap_servers} --consumer.config /tmp/config --from-beginning --max-messages 1
+
+#######
+# products
+#######
+topic="products"
+create_input_topic "${topic}"
+delete_datagen_connector "${topic}"
+iterations_total=$(eval echo '$'${topic}_iterations)
+iterations_per_task=$((iterations_total / datagen_tasks))
+log "Create topic ${topic}"
+kubectl exec -i connectors-0 -- curl -s -X PUT \
+      -H "Content-Type: application/json" \
+      --data '{
+                "connector.class": "io.confluent.kafka.connect.datagen.DatagenConnector",
+                "kafka.topic": "'"$topic"'",
+                "key.converter": "org.apache.kafka.connect.storage.StringConverter",
+                "value.converter": "org.apache.kafka.connect.json.JsonConverter",
+                "value.converter.schemas.enable": "false",
+                "max.interval": 1,
+                "iterations": "'"$iterations_per_task"'",
+                "tasks.max": "'"$datagen_tasks"'",
+                "schema.filename" : "'"/tmp/schemas/${topic}.avro"'",
+                "schema.keyfield" : "productid"
+            }' \
+      http://localhost:8083/connectors/datagen-${topic}/config | jq
+
+wait_for_datagen_connector_to_inject_data "${topic}" "kubectl exec -i connectors-0 --"
+log "Verify we have received data in topic ${topic}"
+kubectl exec -it connectors-0 -- kafka-console-consumer --topic ${topic} --bootstrap-server ${bootstrap_servers} --consumer.config /tmp/config --from-beginning --max-messages 1
+
+#######
+# customers
+#######
+topic="customers"
+create_input_topic "${topic}"
+delete_datagen_connector "${topic}"
+iterations_total=$(eval echo '$'${topic}_iterations)
+iterations_per_task=$((iterations_total / datagen_tasks))
+log "Create topic ${topic}"
+kubectl exec -i connectors-0 -- curl -s -X PUT \
+      -H "Content-Type: application/json" \
+      --data '{
+                "connector.class": "io.confluent.kafka.connect.datagen.DatagenConnector",
+                "kafka.topic": "'"$topic"'",
+                "key.converter": "org.apache.kafka.connect.storage.StringConverter",
+                "value.converter": "org.apache.kafka.connect.json.JsonConverter",
+                "value.converter.schemas.enable": "false",
+                "max.interval": 1,
+                "iterations": "'"$iterations_per_task"'",
+                "tasks.max": "'"$datagen_tasks"'",
+                "schema.filename" : "'"/tmp/schemas/${topic}.avro"'",
+                "schema.keyfield" : "customerid"
+            }' \
+      http://localhost:8083/connectors/datagen-${topic}/config | jq
+
+wait_for_datagen_connector_to_inject_data "${topic}" "kubectl exec -i connectors-0 --"
+log "Verify we have received data in topic ${topic}"
+kubectl exec -it connectors-0 -- kafka-console-consumer --topic ${topic} --bootstrap-server ${bootstrap_servers} --consumer.config /tmp/config --from-beginning --max-messages 1
 
 rm ${CONFIG_FILE}

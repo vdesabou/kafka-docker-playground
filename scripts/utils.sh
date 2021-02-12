@@ -599,3 +599,32 @@ function wait-until-pods-ready() {
   echo "Waited for $period seconds, but all pods are not ready yet."
   return 1
 }
+
+function wait_for_datagen_connector_to_inject_data () {
+  topic="$1"
+  prefix_cmd="$2"
+  set +e
+  # wait for all tasks to be FAILED with org.apache.kafka.connect.errors.ConnectException: Stopping connector: generated the configured xxx number of messages
+  #   {
+  #   "id": 9,
+  #   "state": "FAILED",
+  #   "worker_id": "connectors-0.connectors.confluent.svc.cluster.local:9083",
+  #   "trace": "org.apache.kafka.connect.errors.ConnectException: Stopping connector: generated the configured 100 number of messages\n\tat io.confluent.kafka.connect.datagen.DatagenTask.poll(DatagenTask.java:238)\n\tat org.apache.kafka.connect.runtime.WorkerSourceTask.poll(WorkerSourceTask.java:289)\n\tat org.apache.kafka.connect.runtime.WorkerSourceTask.execute(WorkerSourceTask.java:256)\n\tat org.apache.kafka.connect.runtime.WorkerTask.doRun(WorkerTask.java:185)\n\tat org.apache.kafka.connect.runtime.WorkerTask.run(WorkerTask.java:235)\n\tat java.base/java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:515)\n\tat java.base/java.util.concurrent.FutureTask.run(FutureTask.java:264)\n\tat java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1128)\n\tat java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:628)\n\tat java.base/java.lang.Thread.run(Thread.java:834)\n"
+  # }
+  MAX_WAIT=3600
+  CUR_WAIT=0
+  log "Waiting up to $MAX_WAIT seconds for topic $topic to be filled"
+  $prefix_cmd curl -s -X GET http://localhost:8083/connectors/datagen-${topic}/status | jq .tasks[].trace | grep "generated the configured" | wc -l > /tmp/out.txt 2>&1
+  while [[ ! $(cat /tmp/out.txt) =~ "10" ]]; do
+    sleep 5
+    $prefix_cmd curl -s -X GET http://localhost:8083/connectors/datagen-${topic}/status | jq .tasks[].trace | grep "generated the configured" | wc -l > /tmp/out.txt 2>&1
+    CUR_WAIT=$(( CUR_WAIT+10 ))
+    if [[ "$CUR_WAIT" -gt "$MAX_WAIT" ]]; then
+      echo -e "\nERROR: Please troubleshoot'.\n"
+      $prefix_cmd curl -s -X GET http://localhost:8083/connectors/datagen-${topic}/status | jq
+      exit 1
+    fi
+  done
+  log "Topic $topic is now filled"
+  set -e
+}
