@@ -27,7 +27,7 @@ Quick start examples from Confluent [docs](https://docs.confluent.io/current/con
 | Connector  | Product Category  | Latest Version (*) | Type | Release Date| <img src="./images/icons/github-actions.png" width="15"> [CI](https://github.com/vdesabou/kafka-docker-playground/actions?query=workflow%3ACI) latest results
 |---|---|---|---|---|---|
 | <img src="./images/icons/activemq.png" width="15"> [ActiveMQ Sink](connect/connect-active-mq-sink)  | Message Queue  | 1.1.6 | Confluent Subscription | 2020-08-21 | 👍 2021-02-02 
-| <img src="./images/icons/activemq.png" width="15"> [ActiveMQ Source](connect/connect-active-mq-source)  | Message Queue  | 10.1.0 | Confluent Subscription | 2020-12-15 | 👍 2021-02-02 
+| <img src="./images/icons/activemq.png" width="15"> [ActiveMQ Source](connect/connect-active-mq-source)  | Message Queue  | 11.0.0 | Confluent Subscription | 2021-02-11 | ☠ 
 | <img src="./images/icons/cloudwatch_logs.svg" width="15"> [Amazon CloudWatch Logs Source](connect/connect-aws-cloudwatch-logs-source)  | Analytics  | 1.1.0 | Confluent Subscription | 2021-01-06 | 👍 2021-02-09 
 | <img src="./images/icons/cloudwatch_logs.svg" width="15"> [Amazon CloudWatch Metrics Sink](connect/connect-aws-cloudwatch-metrics-sink)  | Analytics  | 1.1.3 | Confluent Subscription | 2021-01-04 | 👍 2021-02-09 
 | <img src="./images/icons/dynamodb.svg" width="15"> [Amazon DynamoDB Sink](connect/connect-aws-dynamodb-sink) | Database  | 1.1.4 | Confluent Subscription | 2020-12-01 | 👍 2021-02-09 
@@ -65,7 +65,7 @@ Quick start examples from Confluent [docs](https://docs.confluent.io/current/con
 | <img src="./images/icons/ftps.png" height="15"> [FTPS Source](connect/connect-ftps-source) | Datastore |1.0.3-preview | Confluent Subscription | 2020-10-01 | 👍 2021-02-09 
 | <img src="./images/icons/pivotal_gemfire.png" width="15"> [Gemfire Sink](connect/connect-pivotal-gemfire-sink) | Database | 1.0.5 | Confluent Subscription | 2021-02-04 | 👍 2021-02-05 
 | <img src="./images/icons/github.png" width="15"> [Github Source](connect/connect-github-source) | SaaS Apps | 1.0.3 | Confluent Subscription | 2021-02-04 | 👍 2021-02-05 
-| <img src="./images/icons/bigquery.png" width="15"> [Google BigQuery Sink](connect/connect-gcp-bigquery-sink) | Data Warehouse | 2.0.0 | Open Source (WePay) | 2021-02-02 | 👍 2021-02-03 
+| <img src="./images/icons/bigquery.png" width="15"> [Google BigQuery Sink](connect/connect-gcp-bigquery-sink) | Data Warehouse | 2.1.0 | Open Source (WePay) | 2021-02-11 | ☠ 
 | <img src="./images/icons/gcp_bigtable.png" width="15"> [Google Cloud BigTable Sink](connect/connect-gcp-bigtable-sink) | Database | 1.0.6 | Confluent Subscription | 2020-12-17 | 👍 2021-02-02 
 | <img src="./images/icons/cloud_functions.png" width="15"> [Google Cloud Functions Sink](connect/connect-gcp-cloud-functions-sink) | SaaS Apps | 1.1.3 | Confluent Subscription | 2021-02-09 | ☠ 
 | <img src="./images/icons/gcp_pubsub.png" width="15"> [Google Cloud Pub/Sub Source](connect/connect-gcp-pubsub-source) |  Message Queue | 1.0.6 | Confluent Subscription | 2021-01-16 | 👍 2021-02-08 
@@ -81,7 +81,7 @@ Quick start examples from Confluent [docs](https://docs.confluent.io/current/con
 | <img src="./images/icons/hdfs_2.svg" width="15"> [HDFS 3 Sink](connect/connect-hdfs3-sink) |  Datastore | 1.1.0 | Confluent Subscription | 2021-01-28 | 👍 2021-02-05 
 | <img src="./images/icons/http.png" width="15"> [HTTP Sink](connect/connect-http-sink) |  SaaS Apps | 1.2.0 | Confluent Subscription | 2021-02-08 | 👍 2021-02-09 
 | <img src="./images/icons/ibm_mq.png" width="15"> [IBM MQ Sink](connect/connect-ibm-mq-sink) |  Message Queue | 1.3.1 | Confluent Subscription | 2021-01-28 | 👍 2021-02-04 
-| <img src="./images/icons/ibm_mq.png" width="15"> [IBM MQ Source](connect/connect-ibm-mq-source) |  Message Queue | 10.1.0 | Confluent Subscription | 2020-12-15 | 👍 2021-02-09 
+| <img src="./images/icons/ibm_mq.png" width="15"> [IBM MQ Source](connect/connect-ibm-mq-source) |  Message Queue | 11.0.0 | Confluent Subscription | 2021-02-11 | ☠ 
 | <img src="./images/icons/influxdb.svg" width="15"> [InfluxDB Sink](connect/connect-influxdb-sink) |  Database | 1.2.1 | Confluent Subscription | 2020-09-30 | 👍 2021-02-02 
 | <img src="./images/icons/influxdb.svg" width="15"> [InfluxDB Source](connect/connect-influxdb-source) |  Database | 1.2.1 | Confluent Subscription | 2020-09-30 | 👍 2021-02-02 
 | <img src="./images/icons/hive.png" width="15"> [JDBC Hive Sink](connect/connect-jdbc-hive-sink) |  Database | 10.0.1 | Confluent Community License | 2020-11-24 | 👍 2021-02-02 
@@ -100,7 +100,7 @@ Quick start examples from Confluent [docs](https://docs.confluent.io/current/con
 | <img src="./images/icons/activemq.png" width="15"> [JMS ActiveMQ Sink](connect/connect-jms-active-mq-sink) |  Message Queue | 1.3.1 | Confluent Subscription | 2021-01-28 | 👍 2021-02-04 
 | <img src="./images/icons/solace.jpg" width="15"> [JMS Solace Sink](connect/connect-jms-solace-sink) |  Message Queue | 1.3.1 | Confluent Subscription | 2021-01-28 | 👍 2021-02-04 
 | <img src="./images/icons/tibco_ems.png" width="15"> [JMS TIBCO EMS Sink](connect/connect-jms-tibco-sink) |  Message Queue | 1.3.1 | Confluent Subscription | 2021-01-28 | 👍 2021-02-04 
-| <img src="./images/icons/tibco_ems.png" width="15"> [JMS TIBCO EMS Source](connect/connect-jms-tibco-source) |  Message Queue | 10.1.0 | Confluent Subscription | 2020-12-15 | 👍 2021-02-09 
+| <img src="./images/icons/tibco_ems.png" width="15"> [JMS TIBCO EMS Source](connect/connect-jms-tibco-source) |  Message Queue | 11.0.0 | Confluent Subscription | 2021-02-11 | ☠ 
 | <img src="./images/icons/mapr.png" height="15"> [Mapr Sink](connect/connect-mapr-sink) |  Datastore | 1.1.2 | Confluent Subscription | 2020-12-14 | 🤷‍♂️ not tested 
 | <img src="./images/icons/marketo.png" height="15"> [Marketo Source](connect/connect-marketo-source) |  SaaS Apps | 1.0.0-preview | Confluent Subscription | 2020-10-20 | 👍 2021-02-02 
 | <img src="./images/icons/minio.png" height="15"> [Minio Sink](connect/connect-minio-s3-sink) |  Datastore | 5.5.3 | Confluent Community License | 2020-12-22 | 👍 2021-02-09 
