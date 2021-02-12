@@ -601,6 +601,7 @@ function wait-until-pods-ready() {
 }
 
 function wait_for_datagen_connector_to_inject_data () {
+  sleep 3
   topic="$1"
   datagen_tasks="$2"
   prefix_cmd="$3"

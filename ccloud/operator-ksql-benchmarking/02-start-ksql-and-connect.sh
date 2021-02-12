@@ -31,6 +31,7 @@ verify_installed "helm"
 ########
 set +e
 # delete namespaces
+# https://github.com/kubernetes/kubernetes/issues/77086#issuecomment-486840718
 kubectl delete namespace confluent
 kubectl delete namespace monitoring
 
@@ -51,20 +52,7 @@ docker run -v $PWD:/tmp vdesabou/kafka-docker-playground-connect:${TAG} kafka-to
 docker run -v $PWD:/tmp vdesabou/kafka-docker-playground-connect:${TAG} kafka-topics --bootstrap-server ${bootstrap_servers} --command-config /tmp/client.properties --topic confluent.connectors-status --delete > /dev/null 2>&1
 set -e
 
-if [ "${provider}" = "minikube" ]
-then
-    # Use most basic values file and override it with --set
-    VALUES_FILE="${DIR}/../../operator/private.yaml"
-elif [ "${provider}" = "aws" ]
-then
-    #######
-    # aws
-    #######
-    log "EKS"
-else
-    logerror "Provider ${provider} is not supported"
-    exit 1
-fi
+VALUES_FILE=${DIR}/${provider}.yaml
 
 log "Download Confluent Operator in ${DIR}/confluent-operator"
 rm -rf ${DIR}/confluent-operator
@@ -118,6 +106,7 @@ helm upgrade --install \
   --values $VALUES_FILE \
   --namespace confluent \
   --set operator.enabled=true \
+  --set global.provider.region="${eks_region}" \
   --set global.sasl.plain.username="${cluster_api_key}" \
   --set global.sasl.plain.password="${cluster_api_secret}"
 
@@ -128,6 +117,8 @@ helm upgrade --install \
   --values $VALUES_FILE \
   --namespace confluent \
   --set connect.enabled=true \
+  --set connect.replicas=${connect_replicas} \
+  --set global.provider.region="${eks_region}" \
   --set global.sasl.plain.username="${cluster_api_key}" \
   --set global.sasl.plain.password="${cluster_api_secret}" \
   --set connect.imagePullPolicy="IfNotPresent" \
@@ -152,6 +143,8 @@ helm upgrade --install \
   --values $VALUES_FILE \
   --namespace confluent \
   --set ksql.enabled=true \
+  --set ksql.replicas=${ksql_replicas} \
+  --set global.provider.region="${eks_region}" \
   --set global.sasl.plain.username="${cluster_api_key}" \
   --set global.sasl.plain.password="${cluster_api_secret}" \
   --set ksql.dependencies.kafka.tls.enabled=true \
@@ -174,6 +167,7 @@ helm upgrade --install \
   --values $VALUES_FILE \
   --namespace confluent \
   --set controlcenter.enabled=true \
+  --set global.provider.region="${eks_region}" \
   --set global.sasl.plain.username="${cluster_api_key}" \
   --set global.sasl.plain.password="${cluster_api_secret}" \
   --set controlcenter.dependencies.c3KafkaCluster.bootstrapEndpoint="${bootstrap_servers}" \
