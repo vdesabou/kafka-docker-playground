@@ -45,7 +45,43 @@ then
     #######
     # aws
     #######
-    log "Start EKS"
+    # brew tap weaveworks/tap
+    # brew install weaveworks/tap/eksctl
+    # to upgrade
+    # brew upgrade eksctl && brew link --overwrite eksctl
+    verify_installed "eksctl"
+    set +e
+    log "Stop EKS cluster if required"
+    eksctl delete ${eks_cluster_name}
+    set -e
+    log "Start EKS cluster with ${eks_ec2_instance_type} instances"
+    eksctl create cluster --name ${eks_cluster_name} \
+        --version 1.18 \
+        --nodegroup-name standard-workers \
+        --node-type ${eks_ec2_instance_type} \
+        --region ${eks_region} \
+        --nodes 12 \
+        --nodes-min 1 \
+        --nodes-max 12 \
+        --node-ami auto
+
+    log "Configure your computer to communicate with your cluster"
+    aws eks update-kubeconfig \
+        --region ${eks_region} \
+        --name ${eks_cluster_name}
+
+    log "Deploy the Metrics Server"
+    kubectl apply -f https://github.com/kubernetes-sigs/metrics-server/releases/latest/download/components.yaml
+
+    log "Deploy the Kubernetes dashboard"
+    kubectl apply -f https://raw.githubusercontent.com/kubernetes/dashboard/v2.0.5/aio/deploy/recommended.yaml
+
+    kubectl apply -f eks-admin-service-account.yaml
+
+    log "Get the token from the output below to connect to dashboard"
+    kubectl -n kube-system describe secret $(kubectl -n kube-system get secret | grep eks-admin | awk '{print $1}')
+
+    kubectl proxy &
 else
     logerror "Provider ${provider} is not supported"
     exit 1
