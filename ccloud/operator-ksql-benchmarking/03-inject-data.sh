@@ -24,14 +24,9 @@ else
 fi
 
 verify_installed "kubectl"
-verify_installed "minikube"
 verify_installed "helm"
 
-# TODO change file based on k8s cluster
-# Use most basic values file and override it with --set
-VALUES_FILE="${DIR}/../../operator/private.yaml"
 CONFIG_FILE=${DIR}/client.properties
-
 cat << EOF > ${CONFIG_FILE}
 bootstrap.servers=${bootstrap_servers}
 sasl.jaas.config=org.apache.kafka.common.security.plain.PlainLoginModule required username='${cluster_api_key}' password='${cluster_api_secret}';
@@ -65,7 +60,6 @@ function create_input_topic () {
 function delete_datagen_connector () {
   topic=$1
   set +e
-  kubectl cp ${DIR}/schemas/${topic}.avro confluent/connectors-0:/tmp/${topic}.avro
   log "Delete connector datagen-${topic}, if applicable"
   kubectl exec -i connectors-0 -- curl -s -X DELETE http://localhost:8083/connectors/datagen-${topic}
   set -e
