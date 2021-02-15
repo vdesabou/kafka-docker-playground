@@ -241,6 +241,9 @@ kubectl -n confluent exec -it connectors-0 -- kafka-avro-console-consumer --topi
 log "Create the Kubernetes namespace monitoring to install prometheus/grafana"
 kubectl create namespace monitoring
 
+log "Store custom dashboard in configmap"
+kubectl create -f grafana-dashboard-configmap.yaml -n monitoring
+
 log "Install Prometheus"
 helm install prometheus stable/prometheus \
  --set alertmanager.persistentVolume.enabled=false \
@@ -248,7 +251,28 @@ helm install prometheus stable/prometheus \
  --namespace monitoring
 
 log "Install Grafana"
-helm install grafana stable/grafana --namespace monitoring
+helm upgrade --install grafana stable/grafana \
+    --set adminPassword="admin" \
+    --set datasources."datasources\.yaml".apiVersion=1 \
+    --set datasources."datasources\.yaml".datasources[0].name=Prometheus \
+    --set datasources."datasources\.yaml".datasources[0].type=prometheus \
+    --set datasources."datasources\.yaml".datasources[0].url=http://prometheus-server.monitoring.svc.cluster.local \
+    --set datasources."datasources\.yaml".datasources[0].access=proxy \
+    --set datasources."datasources\.yaml".datasources[0].isDefault=true \
+    --set sidecar.dashboards.enabled=true \
+    --set dashboardProviders."dashboardproviders\.yaml".apiVersion=1 \
+    --set dashboardProviders."dashboardproviders\.yaml".providers[0].name=default \
+    --set dashboardProviders."dashboardproviders\.yaml".providers[0].orgId=1 \
+    --set dashboardProviders."dashboardproviders\.yaml".providers[0].folder="" \
+    --set dashboardProviders."dashboardproviders\.yaml".providers[0].type=file \
+    --set dashboardProviders."dashboardproviders\.yaml".providers[0].disableDeletion=false \
+    --set dashboardProviders."dashboardproviders\.yaml".providers[0].editable=true \
+    --set dashboardProviders."dashboardproviders\.yaml".providers[0].options.path=/var/lib/grafana/dashboards/default \
+    --set dashboards.default.kubernetes-all-nodes.gnetId=3131 \
+    --set dashboards.default.kubernetes-all-nodes.datasource=Prometheus \
+    --set dashboards.default.kubernetes-pods.gnetId=3146 \
+    --set dashboards.default.kubernetes-pods.datasource=Prometheus \
+    --namespace monitoring
 
 sleep 90
 
@@ -256,11 +280,5 @@ log "Open Grafana in your Browser"
 export POD_NAME=$(kubectl get pods --namespace monitoring -l "app.kubernetes.io/name=grafana,app.kubernetes.io/instance=grafana" -o jsonpath="{.items[0].metadata.name}")
 kubectl --namespace monitoring port-forward $POD_NAME 3000 &
 
-password=$(kubectl get secret --namespace monitoring grafana -o jsonpath="{.data.admin-password}" | base64 --decode)
-
-log "Visit http://localhost:3000 in your browser, and login with admin/$password."
+log "Visit http://localhost:3000 in your browser, and login with admin/admin"
 open "http://127.0.0.1:3000" &
-
-
-log "Add Prometheus data source with url http://prometheus-server.monitoring.svc.cluster.local"
-log "Then you can import dashboard with id 1860 for node exporter full, and ./confluent-operator/grafana-dashboard/grafana-dashboard.json"
