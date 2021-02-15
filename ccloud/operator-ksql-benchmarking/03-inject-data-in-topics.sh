@@ -40,28 +40,28 @@ EOF
 kubectl cp ${CONFIG_FILE} confluent/connectors-0:/tmp/config
 kubectl cp ${DIR}/schemas confluent/connectors-0:/tmp/
 function create_input_topic () {
-  topic=$1
+  topic_name=$1
   set +e
   kubectl cp ${DIR}/schemas/${topic}.avro confluent/connectors-0:/tmp/${topic}.avro
   # check if topic already exists
-  kubectl exec -it connectors-0 -- kafka-topics --bootstrap-server ${bootstrap_servers} --command-config /tmp/config --topic ${topic} --describe > /dev/null 2>&1
+  kubectl exec -it connectors-0 -- kafka-topics --bootstrap-server ${bootstrap_servers} --command-config /tmp/config --topic ${topic_name} --describe > /dev/null 2>&1
   if [ $? -eq 0 ]
   then
-    logwarn "Topic ${topic} already exists, it will be deleted!"
+    logwarn "Topic ${topic_name} already exists, it will be deleted!"
     check_if_continue
   fi
-  log "Delete topic ${topic}"
-  kubectl exec -it connectors-0 -- kafka-topics --bootstrap-server ${bootstrap_servers} --command-config /tmp/config --topic ${topic} --delete > /dev/null 2>&1
-  log "Create topic ${topic}"
-  kubectl exec -it connectors-0 -- kafka-topics --bootstrap-server ${bootstrap_servers} --command-config /tmp/config --topic ${topic} --create --replication-factor 3 --partitions ${number_topic_partitions} > /dev/null 2>&1
+  log "Delete topic ${topic_name}"
+  kubectl exec -it connectors-0 -- kafka-topics --bootstrap-server ${bootstrap_servers} --command-config /tmp/config --topic ${topic_name} --delete > /dev/null 2>&1
+  log "Create topic ${topic_name}"
+  kubectl exec -it connectors-0 -- kafka-topics --bootstrap-server ${bootstrap_servers} --command-config /tmp/config --topic ${topic_name} --create --replication-factor 3 --partitions ${number_topic_partitions} > /dev/null 2>&1
   set -e
 }
 
 function delete_datagen_connector () {
-  topic=$1
+  topic_name=$1
   set +e
-  log "Delete connector datagen-${topic}, if applicable"
-  kubectl exec -i connectors-0 -- curl -s -X DELETE http://localhost:8083/connectors/datagen-${topic}
+  log "Delete connector datagen-${topic_name}, if applicable"
+  kubectl exec -i connectors-0 -- curl -s -X DELETE http://localhost:8083/connectors/datagen-${topic_name}
   set -e
 }
 
