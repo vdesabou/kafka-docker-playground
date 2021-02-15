@@ -177,7 +177,7 @@ helm upgrade --install \
   --set controlcenter.dependencies.schemaRegistry.authentication.username="${SR_USERNAME}" \
   --set controlcenter.dependencies.schemaRegistry.authentication.password="${SR_SECRET}"
 
-# kubectl -n confluent exec -it connectors-0 -- bash
+# kubectl -n confluent exec -i connectors-0 -- bash
 
 
 log "Waiting up to 1800 seconds for all pods in namespace confluent to start"
@@ -212,7 +212,7 @@ kubectl -n confluent port-forward controlcenter-0 9021:9021 &
 set +e
 log "Create topic spooldir-json-topic"
 kubectl cp ${CONFIG_FILE} confluent/connectors-0:/tmp/config
-kubectl -n confluent exec -it connectors-0 -- kafka-topics --bootstrap-server ${BOOTSTRAP_SERVERS} --command-config /tmp/config --topic spooldir-json-topic --create --replication-factor 3 --partitions 1
+kubectl -n confluent exec -i connectors-0 -- kafka-topics --bootstrap-server ${BOOTSTRAP_SERVERS} --command-config /tmp/config --topic spooldir-json-topic --create --replication-factor 3 --partitions 1
 set +e
 
 if [ ! -f "${DIR}/json-spooldir-source.json" ]
@@ -221,9 +221,9 @@ then
      curl "https://api.mockaroo.com/api/17c84440?count=500&key=25fd9c80" > "${DIR}/json-spooldir-source.json"
 fi
 
-kubectl -n confluent exec -it connectors-0 -- mkdir -p /tmp/data/input
-kubectl -n confluent exec -it connectors-0 -- mkdir -p /tmp/data/error
-kubectl -n confluent exec -it connectors-0 -- mkdir -p /tmp/data/finished
+kubectl -n confluent exec -i connectors-0 -- mkdir -p /tmp/data/input
+kubectl -n confluent exec -i connectors-0 -- mkdir -p /tmp/data/error
+kubectl -n confluent exec -i connectors-0 -- mkdir -p /tmp/data/finished
 
 kubectl cp json-spooldir-source.json confluent/connectors-0:/tmp/data/input/
 
@@ -246,7 +246,7 @@ kubectl -n confluent exec -i connectors-0 -- curl -X PUT \
 sleep 5
 
 log "Verify we have received the data in spooldir-json-topic topic"
-kubectl -n confluent exec -it connectors-0 -- kafka-avro-console-consumer --topic spooldir-json-topic --bootstrap-server $BOOTSTRAP_SERVERS --consumer-property ssl.endpoint.identification.algorithm=https --consumer-property sasl.mechanism=PLAIN --consumer-property security.protocol=SASL_SSL --consumer-property sasl.jaas.config="$SASL_JAAS_CONFIG" --property basic.auth.credentials.source=$BASIC_AUTH_CREDENTIALS_SOURCE --property schema.registry.basic.auth.user.info="$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO" --property schema.registry.url=$SCHEMA_REGISTRY_URL --from-beginning --max-messages 2
+kubectl -n confluent exec -i connectors-0 -- kafka-avro-console-consumer --topic spooldir-json-topic --bootstrap-server $BOOTSTRAP_SERVERS --consumer-property ssl.endpoint.identification.algorithm=https --consumer-property sasl.mechanism=PLAIN --consumer-property security.protocol=SASL_SSL --consumer-property sasl.jaas.config="$SASL_JAAS_CONFIG" --property basic.auth.credentials.source=$BASIC_AUTH_CREDENTIALS_SOURCE --property schema.registry.basic.auth.user.info="$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO" --property schema.registry.url=$SCHEMA_REGISTRY_URL --from-beginning --max-messages 2
 
 #######
 # MONITORING
