@@ -23,6 +23,8 @@ else
     exit 1
 fi
 
+${DIR}/06-cleanup-queries.sh
+
 if [ "${provider}" = "minikube" ]
 then
     minikube delete
