@@ -52,7 +52,7 @@ docker run -v $PWD:/tmp vdesabou/kafka-docker-playground-connect:${TAG} kafka-to
 docker run -v $PWD:/tmp vdesabou/kafka-docker-playground-connect:${TAG} kafka-topics --bootstrap-server ${bootstrap_servers} --command-config /tmp/client.properties --topic confluent.connectors-status --delete > /dev/null 2>&1
 set -e
 
-VALUES_FILE=${DIR}/${provider}.yaml
+VALUES_FILE=${DIR}/providers/${provider}.yaml
 
 log "Download Confluent Operator in ${DIR}/confluent-operator"
 rm -rf ${DIR}/confluent-operator
