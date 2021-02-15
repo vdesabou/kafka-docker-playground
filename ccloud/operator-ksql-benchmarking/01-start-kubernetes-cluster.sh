@@ -58,12 +58,9 @@ then
     log "Start EKS cluster with ${eks_ec2_instance_type} instances"
     eksctl create cluster --name ${eks_cluster_name} \
         --version 1.18 \
-        --nodegroup-name standard-workers \
         --node-type ${eks_ec2_instance_type} \
         --region ${eks_region} \
-        --nodes 12 \
-        --nodes-min 1 \
-        --nodes-max 12 \
+        --nodes ${eks_nodes} \
         --node-ami auto
 
     log "Configure your computer to communicate with your cluster"
