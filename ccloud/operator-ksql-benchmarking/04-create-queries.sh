@@ -29,29 +29,29 @@ verify_installed "helm"
 set +e
 # https://rmoff.net/2019/03/25/terminate-all-ksql-queries/
 log "TERMINATE all queries, if applicable"
-kubectl exec -i connectors-0 -- curl -s -X "POST" "http://ksql:9088/ksql" \
-         -H "Content-Type: application/vnd.ksql.v1+json; charset=utf-8" \
-         -d '{"ksql": "SHOW QUERIES;"}' | \
+kubectl exec -i connectors-0 -- bash -c "curl -s -X \"POST\" \"http://ksql:9088/ksql\" \
+         -H \"Content-Type: application/vnd.ksql.v1+json; charset=utf-8\" \
+         -d '{\"ksql\": \"SHOW QUERIES;\"}' | \
   jq '.[].queries[].id' | \
-  xargs -Ifoo curl -X "POST" "http://ksql:9088/ksql" \
-           -H "Content-Type: application/vnd.ksql.v1+json; charset=utf-8" \
-           -d '{"ksql": "TERMINATE 'foo';"}'
+  xargs -Ifoo curl -s -X \"POST\" \"http://ksql:9088/ksql\" \
+           -H \"Content-Type: application/vnd.ksql.v1+json; charset=utf-8\" \
+           -d '{\"ksql\": \"TERMINATE 'foo';\"}'"
 log "DROP all streams, if applicable"
-kubectl exec -i connectors-0 -- curl -s -X "POST" "http://ksql:9088/ksql" \
-           -H "Content-Type: application/vnd.ksql.v1+json; charset=utf-8" \
-           -d '{"ksql": "SHOW STREAMS;"}' | \
+kubectl exec -i connectors-0 -- bash -c "curl -s -X \"POST\" \"http://ksql:9088/ksql\" \
+           -H \"Content-Type: application/vnd.ksql.v1+json; charset=utf-8\" \
+           -d '{\"ksql\": \"SHOW STREAMS;\"}' | \
     jq '.[].streams[].name' | \
-    xargs -Ifoo curl -X "POST" "http://ksql:9088/ksql" \
-             -H "Content-Type: application/vnd.ksql.v1+json; charset=utf-8" \
-             -d '{"ksql": "DROP STREAM 'foo';"}'
+    xargs -Ifoo curl -s -X \"POST\" \"http://ksql:9088/ksql\" \
+             -H \"Content-Type: application/vnd.ksql.v1+json; charset=utf-8\" \
+             -d '{\"ksql\": \"DROP STREAM 'foo';\"}'"
 log "DROP all tables, if applicable"
-kubectl exec -i connectors-0 -- curl -s -X "POST" "http://ksql:9088/ksql" \
-             -H "Content-Type: application/vnd.ksql.v1+json; charset=utf-8" \
-             -d '{"ksql": "SHOW TABLES;"}' | \
+kubectl exec -i connectors-0 -- bash -c "curl -s -X \"POST\" \"http://ksql:9088/ksql\" \
+             -H \"Content-Type: application/vnd.ksql.v1+json; charset=utf-8\" \
+             -d '{\"ksql\": \"SHOW TABLES;\"}' | \
       jq '.[].tables[].name' | \
-      xargs -Ifoo curl -X "POST" "http://ksql:9088/ksql" \
-               -H "Content-Type: application/vnd.ksql.v1+json; charset=utf-8" \
-               -d '{"ksql": "DROP TABLE 'foo';"}'
+      xargs -Ifoo curl -s -X \"POST\" \"http://ksql:9088/ksql\" \
+               -H \"Content-Type: application/vnd.ksql.v1+json; charset=utf-8\" \
+               -d '{\"ksql\": \"DROP TABLE 'foo';\"}'"
 set -e
 
 log "Create the ksqlDB tables and streams"
@@ -89,7 +89,7 @@ CREATE STREAM ORDERS
     customerid varchar
 )
 WITH
-    (kafka_topic= 'orders', value_format='json', timestamp='ordertime');
+    (kafka_topic= 'orders', partitions=$number_topic_partitions, value_format='json', timestamp='ordertime');
 
 CREATE STREAM SHIPMENTS
 (
@@ -100,7 +100,7 @@ CREATE STREAM SHIPMENTS
     customerid varchar
 )
 WITH
-    (kafka_topic= 'shipments', value_format='json', timestamp='shipment_time');
+    (kafka_topic= 'shipments', partitions=$number_topic_partitions, value_format='json', timestamp='shipment_time');
 
 CREATE STREAM ORDERS_ORIGINAL
 (
@@ -111,7 +111,7 @@ CREATE STREAM ORDERS_ORIGINAL
     customerid varchar
 )
 WITH
-    (kafka_topic= 'orders', value_format='json', timestamp='ordertime');
+    (kafka_topic= 'orders_original', value_format='json', timestamp='ordertime');
 
 CREATE STREAM SHIPMENTS_ORIGINAL
 (
@@ -122,7 +122,7 @@ CREATE STREAM SHIPMENTS_ORIGINAL
     customerid varchar
 )
 WITH
-    (kafka_topic= 'shipments', value_format='json', timestamp='shipment_time');
+    (kafka_topic= 'shipments_original', value_format='json', timestamp='shipment_time');
 EOF
 
 log "QUERY 1"
