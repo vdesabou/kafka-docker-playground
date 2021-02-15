@@ -26,6 +26,34 @@ fi
 verify_installed "kubectl"
 verify_installed "helm"
 
+set +e
+# https://rmoff.net/2019/03/25/terminate-all-ksql-queries/
+log "TERMINATE all queries, if applicable"
+kubectl exec -i connectors-0 -- curl -s -X "POST" "http://ksql:9088/ksql" \
+         -H "Content-Type: application/vnd.ksql.v1+json; charset=utf-8" \
+         -d '{"ksql": "SHOW QUERIES;"}' | \
+  jq '.[].queries[].id' | \
+  xargs -Ifoo curl -X "POST" "http://ksql:9088/ksql" \
+           -H "Content-Type: application/vnd.ksql.v1+json; charset=utf-8" \
+           -d '{"ksql": "TERMINATE 'foo';"}'
+log "DROP all streams, if applicable"
+kubectl exec -i connectors-0 -- curl -s -X "POST" "http://ksql:9088/ksql" \
+           -H "Content-Type: application/vnd.ksql.v1+json; charset=utf-8" \
+           -d '{"ksql": "SHOW STREAMS;"}' | \
+    jq '.[].streams[].name' | \
+    xargs -Ifoo curl -X "POST" "http://ksql:9088/ksql" \
+             -H "Content-Type: application/vnd.ksql.v1+json; charset=utf-8" \
+             -d '{"ksql": "DROP STREAM 'foo';"}'
+log "DROP all tables, if applicable"
+kubectl exec -i connectors-0 -- curl -s -X "POST" "http://ksql:9088/ksql" \
+             -H "Content-Type: application/vnd.ksql.v1+json; charset=utf-8" \
+             -d '{"ksql": "SHOW TABLES;"}' | \
+      jq '.[].tables[].name' | \
+      xargs -Ifoo curl -X "POST" "http://ksql:9088/ksql" \
+               -H "Content-Type: application/vnd.ksql.v1+json; charset=utf-8" \
+               -d '{"ksql": "DROP TABLE 'foo';"}'
+set -e
+
 log "Create the ksqlDB tables and streams"
 kubectl exec -i ksql-0 -- bash -c 'echo -e "\n\n⏳ Waiting for ksqlDB to be available before launching CLI\n"; while [ $(curl -s -o /dev/null -w %{http_code} http://localhost:8088/) -eq 000 ] ; do echo -e $(date) "KSQL Server HTTP state: " $(curl -s -o /dev/null -w %{http_code} http:/localhost:8088/) " (waiting for 200)" ; sleep 10 ; done; ksql http://localhost:8088' << EOF
 
