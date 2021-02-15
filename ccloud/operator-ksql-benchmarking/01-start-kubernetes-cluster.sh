@@ -50,6 +50,7 @@ then
     # to upgrade
     # brew upgrade eksctl && brew link --overwrite eksctl
     verify_installed "eksctl"
+    verify_installed "aws"
     set +e
     log "Stop EKS cluster if required"
     eksctl delete ${eks_cluster_name}
