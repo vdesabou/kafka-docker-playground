@@ -117,7 +117,7 @@ helm upgrade --install \
   --values $VALUES_FILE \
   --namespace confluent \
   --set connect.enabled=true \
-  --set connect.replicas=${connect_replicas} \
+  --set connect.replicas=1 \
   --set global.provider.region="${eks_region}" \
   --set global.sasl.plain.username="${cluster_api_key}" \
   --set global.sasl.plain.password="${cluster_api_secret}" \
