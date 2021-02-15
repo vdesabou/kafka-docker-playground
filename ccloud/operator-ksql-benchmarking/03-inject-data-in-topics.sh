@@ -73,7 +73,7 @@ function delete_datagen_connector () {
 # orders
 #######
 topic="orders"
-create_input_topic "${topic}"
+create_input_topic "${topic}_original"
 delete_datagen_connector "${topic}"
 iterations_total=$(eval echo '$'${topic}_iterations)
 iterations_per_task=$((iterations_total / datagen_tasks))
@@ -82,7 +82,7 @@ kubectl exec -i connectors-0 -- curl -s -X PUT \
       -H "Content-Type: application/json" \
       --data '{
                 "connector.class": "io.confluent.kafka.connect.datagen.DatagenConnector",
-                "kafka.topic": "'"$topic"'",
+                "kafka.topic": "'"${topic}_original"'",
                 "key.converter": "org.apache.kafka.connect.storage.StringConverter",
                 "value.converter": "org.apache.kafka.connect.json.JsonConverter",
                 "value.converter.schemas.enable": "false",
@@ -96,14 +96,14 @@ kubectl exec -i connectors-0 -- curl -s -X PUT \
 
 wait_for_datagen_connector_to_inject_data "${topic}" "${datagen_tasks}" "kubectl exec -i connectors-0 --"
 
-log "Verify we have received data in topic ${topic}"
-kubectl exec -it connectors-0 -- kafka-console-consumer --topic ${topic} --bootstrap-server ${bootstrap_servers} --consumer.config /tmp/config --from-beginning --max-messages 1
+log "Verify we have received data in topic ${topic}_original"
+kubectl exec -it connectors-0 -- kafka-console-consumer --topic ${topic}_original --bootstrap-server ${bootstrap_servers} --consumer.config /tmp/config --from-beginning --max-messages 1
 
 #######
 # shipments
 #######
 topic="shipments"
-create_input_topic "${topic}"
+create_input_topic "${topic}_original"
 delete_datagen_connector "${topic}"
 iterations_total=$(eval echo '$'${topic}_iterations)
 iterations_per_task=$((iterations_total / datagen_tasks))
@@ -112,7 +112,7 @@ kubectl exec -i connectors-0 -- curl -s -X PUT \
       -H "Content-Type: application/json" \
       --data '{
                 "connector.class": "io.confluent.kafka.connect.datagen.DatagenConnector",
-                "kafka.topic": "'"$topic"'",
+                "kafka.topic": "'"${topic}_original"'",
                 "key.converter": "org.apache.kafka.connect.storage.StringConverter",
                 "value.converter": "org.apache.kafka.connect.json.JsonConverter",
                 "value.converter.schemas.enable": "false",
@@ -126,7 +126,7 @@ kubectl exec -i connectors-0 -- curl -s -X PUT \
 wait_for_datagen_connector_to_inject_data "${topic}" "${datagen_tasks}" "kubectl exec -i connectors-0 --"
 
 log "Verify we have received data in topic ${topic}"
-kubectl exec -it connectors-0 -- kafka-console-consumer --topic ${topic} --bootstrap-server ${bootstrap_servers} --consumer.config /tmp/config --from-beginning --max-messages 1
+kubectl exec -it connectors-0 -- kafka-console-consumer --topic ${topic}_original --bootstrap-server ${bootstrap_servers} --consumer.config /tmp/config --from-beginning --max-messages 1
 
 #######
 # products
