@@ -66,3 +66,11 @@ do
   log "Deleting azure ad app $app"
   az ad app delete --id $app
 done
+
+#######
+# aws
+#######
+set +e
+log "Deleting EKS cluster"
+eksctl delete cluster --name kafka-docker-playground-ci
+set -e
