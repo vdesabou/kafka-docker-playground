@@ -31,8 +31,11 @@ verify_installed "helm"
 ########
 set +e
 # delete namespaces
-# https://github.com/kubernetes/kubernetes/issues/77086#issuecomment-486840718
 kubectl delete namespace confluent
+# https://github.com/kubernetes/kubernetes/issues/77086#issuecomment-486840718
+# kubectl delete namespace confluent --wait=false
+# kubectl get ns confluent -o json | jq '.spec.finalizers=[]' > ns-without-finalizers.json
+# curl -X PUT http://localhost:8001/api/v1/namespaces/confluent/finalize -H "Content-Type: application/json" --data-binary @ns-without-finalizers.json
 kubectl delete namespace monitoring
 
 # delete internal connect config to start from fresh state
