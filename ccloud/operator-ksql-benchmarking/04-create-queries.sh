@@ -26,6 +26,19 @@ fi
 verify_installed "kubectl"
 verify_installed "helm"
 
+CONFIG_FILE=${DIR}/client.properties
+cat << EOF > ${CONFIG_FILE}
+bootstrap.servers=${bootstrap_servers}
+sasl.jaas.config=org.apache.kafka.common.security.plain.PlainLoginModule required username='${cluster_api_key}' password='${cluster_api_secret}';
+schema.registry.url=${schema_registry_url}
+basic.auth.credentials.source=USER_INFO
+basic.auth.user.info=${schema_registry_api_key}:${schema_registry_api_secret}
+security.protocol=SASL_SSL
+sasl.mechanism=PLAIN
+EOF
+
+kubectl cp ${CONFIG_FILE} confluent/connectors-0:/tmp/config
+
 set +e
 # https://rmoff.net/2019/03/25/terminate-all-ksql-queries/
 log "TERMINATE all queries, if applicable"
@@ -52,6 +65,19 @@ kubectl exec -i connectors-0 -- bash -c "curl -s -X \"POST\" \"http://ksql:9088/
       xargs -Ifoo curl -s -X \"POST\" \"http://ksql:9088/ksql\" \
                -H \"Content-Type: application/vnd.ksql.v1+json; charset=utf-8\" \
                -d '{\"ksql\": \"DROP TABLE 'foo';\"}'"
+
+log "Delete topic orders, if applicable"
+kubectl exec -it connectors-0 -- kafka-topics --bootstrap-server ${bootstrap_servers} --command-config /tmp/config --topic orders --delete > /dev/null 2>&1
+log "Delete topic shipments, if applicable"
+kubectl exec -it connectors-0 -- kafka-topics --bootstrap-server ${bootstrap_servers} --command-config /tmp/config --topic shipments --delete > /dev/null 2>&1
+log "Delete topic ENRICHED_O_C, if applicable"
+kubectl exec -it connectors-0 -- kafka-topics --bootstrap-server ${bootstrap_servers} --command-config /tmp/config --topic ENRICHED_O_C --delete > /dev/null 2>&1
+log "Delete topic ENRICHED_O_C_P, if applicable"
+kubectl exec -it connectors-0 -- kafka-topics --bootstrap-server ${bootstrap_servers} --command-config /tmp/config --topic ENRICHED_O_C_P --delete > /dev/null 2>&1
+log "Delete topic ORDERPER_PROD_CUST_AGG, if applicable"
+kubectl exec -it connectors-0 -- kafka-topics --bootstrap-server ${bootstrap_servers} --command-config /tmp/config --topic ORDERPER_PROD_CUST_AGG --delete > /dev/null 2>&1
+log "Delete topic ORDERS_SHIPPED, if applicable"
+kubectl exec -it connectors-0 -- kafka-topics --bootstrap-server ${bootstrap_servers} --command-config /tmp/config --topic ORDERS_SHIPPED --delete > /dev/null 2>&1
 set -e
 
 log "Create the ksqlDB tables and streams"
