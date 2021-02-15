@@ -6,12 +6,12 @@ source ${DIR}/../../scripts/utils.sh
 
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
 
-log "Create topic orders"
+log "Create topic orders_original"
 curl -s -X PUT \
       -H "Content-Type: application/json" \
       --data '{
                 "connector.class": "io.confluent.kafka.connect.datagen.DatagenConnector",
-                "kafka.topic": "orders",
+                "kafka.topic": "orders_original",
                 "key.converter": "org.apache.kafka.connect.storage.StringConverter",
                 "value.converter": "org.apache.kafka.connect.json.JsonConverter",
                 "value.converter.schemas.enable": "false",
@@ -25,12 +25,12 @@ curl -s -X PUT \
 
 wait_for_datagen_connector_to_inject_data "orders" "10"
 
-log "Create topic shipments"
+log "Create topic shipments_original"
 curl -s -X PUT \
       -H "Content-Type: application/json" \
       --data '{
                 "connector.class": "io.confluent.kafka.connect.datagen.DatagenConnector",
-                "kafka.topic": "shipments",
+                "kafka.topic": "shipments_original",
                 "key.converter": "org.apache.kafka.connect.storage.StringConverter",
                 "value.converter": "org.apache.kafka.connect.json.JsonConverter",
                 "value.converter.schemas.enable": "false",
@@ -116,7 +116,7 @@ CREATE STREAM ORDERS
     customerid varchar
 )
 WITH
-    (kafka_topic= 'orders', value_format='json', timestamp='ordertime');
+    (kafka_topic= 'orders', partitions=1, value_format='json', timestamp='ordertime');
 
 CREATE STREAM SHIPMENTS
 (
@@ -127,7 +127,7 @@ CREATE STREAM SHIPMENTS
     customerid varchar
 )
 WITH
-    (kafka_topic= 'shipments', value_format='json', timestamp='shipment_time');
+    (kafka_topic= 'shipments', partitions=1, value_format='json', timestamp='shipment_time');
 
 CREATE STREAM ORDERS_ORIGINAL
 (
@@ -138,7 +138,7 @@ CREATE STREAM ORDERS_ORIGINAL
     customerid varchar
 )
 WITH
-    (kafka_topic= 'orders', value_format='json', timestamp='ordertime');
+    (kafka_topic= 'orders_original', value_format='json', timestamp='ordertime');
 
 CREATE STREAM SHIPMENTS_ORIGINAL
 (
@@ -149,7 +149,7 @@ CREATE STREAM SHIPMENTS_ORIGINAL
     customerid varchar
 )
 WITH
-    (kafka_topic= 'shipments', value_format='json', timestamp='shipment_time');
+    (kafka_topic= 'shipments_original', value_format='json', timestamp='shipment_time');
 EOF
 
 log "QUERY 1"
