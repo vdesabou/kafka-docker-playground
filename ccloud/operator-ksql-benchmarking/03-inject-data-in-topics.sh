@@ -42,7 +42,6 @@ kubectl cp ${DIR}/schemas confluent/connectors-0:/tmp/
 function create_input_topic () {
   topic_name=$1
   set +e
-  kubectl cp ${DIR}/schemas/${topic}.avro confluent/connectors-0:/tmp/${topic}.avro
   # check if topic already exists
   kubectl exec -it connectors-0 -- kafka-topics --bootstrap-server ${bootstrap_servers} --command-config /tmp/config --topic ${topic_name} --describe > /dev/null 2>&1
   if [ $? -eq 0 ]
