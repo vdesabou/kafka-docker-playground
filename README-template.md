@@ -126,7 +126,7 @@ Quick start examples from Confluent [docs](https://docs.confluent.io/current/con
 | <img src="./images/icons/servicenow.png" width="15"> [ServiceNow Sink](connect/connect-servicenow-sink) |  SaaS Apps | :confluentinc-kafka-connect-servicenow:
 | <img src="./images/icons/servicenow.png" width="15"> [ServiceNow Source](connect/connect-servicenow-source) |  SaaS Apps | :confluentinc-kafka-connect-servicenow:
 | <img src="./images/icons/sftp.png" width="15"> [SFTP Sink](connect/connect-sftp-sink) |  Datastore | :confluentinc-kafka-connect-sftp:
-| <img src="./images/icons/sftp.png" width="15"> [SFTP Sink](connect/connect-sftp-source) |  Datastore | :confluentinc-kafka-connect-sftp:
+| <img src="./images/icons/sftp.png" width="15"> [SFTP Source](connect/connect-sftp-source) |  Datastore | :confluentinc-kafka-connect-sftp:
 | <img src="./images/icons/snmp_trap.png" width="15"> [SNMP Trap Source](connect/connect-snmp-source) |  IoT | :confluentinc-kafka-connect-snmp:
 | <img src="./images/icons/snowflake.png" height="15">  [Snowflake Sink](connect/connect-snowflake-sink) |  Data Warehouse | :snowflakeinc-snowflake-kafka-connector:
 | <img src="./images/icons/solace.jpg" width="15"> [Solace Sink](connect/connect-solace-sink) |  Message Queue | :confluentinc-kafka-connect-solace-sink:
