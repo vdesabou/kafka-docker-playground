@@ -6,7 +6,6 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
 verify_installed "kubectl"
-verify_installed "minikube"
 verify_installed "helm"
 
 CONFIG_FILE=~/.ccloud/config
@@ -33,6 +32,7 @@ VALUES_FILE="${DIR}/../../operator/private.yaml"
 if [ -z "$CI" ]
 then
    # not running with github actions
+  verify_installed "minikube"
   set +e
   log "Stop minikube if required"
   minikube delete
@@ -41,6 +41,19 @@ then
   minikube start --cpus=8 --disk-size='50gb' --memory=16384
   log "Launch minikube dashboard in background"
   minikube dashboard &
+else
+  verify_installed "eksctl"
+  eksctl create cluster --name kafka-docker-playground-ci \
+      --version 1.18 \
+      --node-type t2.2xlarge \
+      --region eu-west-3 \
+      --nodes 2 \
+      --node-ami auto
+
+  log "Configure your computer to communicate with your cluster"
+  aws eks update-kubeconfig \
+      --region eu-west-3 \
+      --name kafka-docker-playground-ci
 fi
 
 log "Download Confluent Operator in ${DIR}/confluent-operator"
