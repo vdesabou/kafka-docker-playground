@@ -26,6 +26,7 @@ fi
 verify_installed "kubectl"
 verify_installed "helm"
 
+SECONDS=0
 log "START BENCHMARK"
 kubectl exec -i ksql-0 -- bash -c 'echo -e "\n\n⏳ Waiting for ksqlDB to be available before launching CLI\n"; while [ $(curl -s -o /dev/null -w %{http_code} http://localhost:8088/) -eq 000 ] ; do echo -e $(date) "KSQL Server HTTP state: " $(curl -s -o /dev/null -w %{http_code} http:/localhost:8088/) " (waiting for 200)" ; sleep 10 ; done; ksql http://localhost:8088' << EOF
 
@@ -36,3 +37,6 @@ INSERT INTO SHIPMENTS SELECT * FROM SHIPMENTS_ORIGINAL;
 EOF
 
 wait_for_all_streams_to_finish "ORDERPER_PROD_CUST_AGG ENRICHED_O_C ENRICHED_O_C_P ORDERS_SHIPPED" "kubectl exec -i ksql-0 --"
+
+throughput=$(echo $((orders_iterations / SECONDS)))
+log "Took $SECONDS seconds. Throughput=$throughput msg/s"
