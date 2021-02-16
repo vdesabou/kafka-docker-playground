@@ -147,6 +147,9 @@ helm upgrade --install \
   --namespace confluent \
   --set ksql.enabled=true \
   --set ksql.replicas=${ksql_replicas} \
+  --set ksql.resources.requests.cpu=${ksql_cpu} \
+  --set ksql.resources.requests.cpu=${ksql_memory} \
+  --set ksql.jvmConfig.heapSize=${ksql_jvm_memory} \
   --set global.provider.region="${eks_region}" \
   --set global.sasl.plain.username="${cluster_api_key}" \
   --set global.sasl.plain.password="${cluster_api_secret}" \
@@ -162,7 +165,6 @@ helm upgrade --install \
   --set ksql.dependencies.schemaRegistry.authentication.username="${schema_registry_api_key}" \
   --set ksql.dependencies.schemaRegistry.authentication.password="${schema_registry_api_secret}"
 
-# FIXTHIS not required during real testing
 log "Install control-center"
 helm upgrade --install \
   controlcenter \
