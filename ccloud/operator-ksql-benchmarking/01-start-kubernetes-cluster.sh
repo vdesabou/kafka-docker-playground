@@ -53,7 +53,7 @@ then
     verify_installed "aws"
     set +e
     log "Stop EKS cluster if required"
-    eksctl delete ${eks_cluster_name}
+    eksctl delete cluster --name ${eks_cluster_name} --region ${eks_region}
     set -e
     log "Start EKS cluster with ${eks_ec2_instance_type} instances"
     eksctl create cluster --name ${eks_cluster_name} \
