@@ -16,7 +16,7 @@ curl -s -X PUT \
                 "value.converter": "org.apache.kafka.connect.json.JsonConverter",
                 "value.converter.schemas.enable": "false",
                 "max.interval": 1,
-                "iterations": "1000000",
+                "iterations": "10000",
                 "tasks.max": "10",
                 "schema.filename" : "/tmp/schemas/orders.avro",
                 "schema.keyfield" : "orderid"
@@ -35,7 +35,7 @@ curl -s -X PUT \
                 "value.converter": "org.apache.kafka.connect.json.JsonConverter",
                 "value.converter.schemas.enable": "false",
                 "max.interval": 1,
-                "iterations": "800000",
+                "iterations": "8000",
                 "tasks.max": "10",
                 "schema.filename" : "/tmp/schemas/shipments.avro"
             }' \
@@ -259,3 +259,5 @@ SET 'auto.offset.reset' = 'earliest';
 INSERT INTO ORDERS SELECT * FROM ORDERS_ORIGINAL;
 INSERT INTO SHIPMENTS SELECT * FROM SHIPMENTS_ORIGINAL;
 EOF
+
+wait_for_all_streams_to_finish "ORDERPER_PROD_CUST_AGG ENRICHED_O_C ENRICHED_O_C_P ORDERS_SHIPPED" ""
