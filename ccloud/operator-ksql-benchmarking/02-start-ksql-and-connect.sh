@@ -148,7 +148,7 @@ helm upgrade --install \
   --set ksql.enabled=true \
   --set ksql.replicas=${ksql_replicas} \
   --set ksql.resources.requests.cpu=${ksql_cpu} \
-  --set ksql.resources.requests.cpu=${ksql_memory} \
+  --set ksql.resources.requests.memory=${ksql_memory} \
   --set ksql.jvmConfig.heapSize=${ksql_jvm_memory} \
   --set global.provider.region="${eks_region}" \
   --set global.sasl.plain.username="${cluster_api_key}" \
