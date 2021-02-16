@@ -210,6 +210,14 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: eu-west-3
 
+      - name: Cleanup resources
+        run: |
+          ./scripts/cleanup-resources.sh
+        env:
+          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+          AZ_USER: ${{ secrets.AZ_USER }}
+          AZ_PASS: ${{ secrets.AZ_PASS }}
+
       - name: Update README
         run: |
           ./scripts/get-versions.sh "6.0.1"
