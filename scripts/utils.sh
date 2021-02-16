@@ -653,7 +653,7 @@ function wait_for_all_streams_to_finish () {
         \"ksql\": \"DESCRIBE EXTENDED ${stream};\",
         \"streamsProperties\": {}
       }" | jq -r '.[].sourceDescription.statistics' | grep -Eo '(^|\s)messages-per-sec:\s*\d*\.*\d*' | cut -d":" -f 2 | sed 's/ //g')
-      if [ "$throughput" = "0" ]
+      if [ "$throughput" = "0" ] || [ "$throughput" = "" ]
       then
         let "nb_streams_finished++"
       else
