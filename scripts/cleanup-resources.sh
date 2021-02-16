@@ -69,3 +69,5 @@ done
 #######
 log "Deleting EKS cluster"
 eksctl delete cluster --name kafka-docker-playground-ci
+
+exit 0
