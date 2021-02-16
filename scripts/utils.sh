@@ -630,3 +630,44 @@ function wait_for_datagen_connector_to_inject_data () {
   log "Topic $topic is now filled"
   set -e
 }
+
+
+function wait_for_all_streams_to_finish () {
+  streams="$1"
+  prefix_cmd="$2"
+
+  set +e
+  nb_streams_finished=0
+  nb_streams=$(echo "$streams" | wc -w | sed 's/ //g')
+  MAX_WAIT=3600
+  CUR_WAIT=0
+  while [[ ! "${nb_streams_finished}" = "${nb_streams}" ]]
+  do
+    sleep 5
+    nb_streams_finished=0
+    for stream in ${streams}
+    do
+      throughput=$($prefix_cmd curl -s -X "POST" "http://localhost:8088/ksql" \
+          -H "Accept: application/vnd.ksql.v1+json" \
+          -d $"{
+        \"ksql\": \"DESCRIBE EXTENDED ${stream};\",
+        \"streamsProperties\": {}
+      }" | jq -r '.[].sourceDescription.statistics' | grep -Eo '(^|\s)messages-per-sec:\s*\d*\.*\d*' | cut -d":" -f 2 | sed 's/ //g')
+      if [ "$throughput" = "0" ]
+      then
+        let "nb_streams_finished++"
+      else
+        log "Stream $stream currently processing $throughput messages-per-sec"
+      fi
+    done
+    log "$nb_streams_finished out of $nb_streams streams finished"
+    log "retrying in 5 seconds..."
+
+    CUR_WAIT=$(( CUR_WAIT+5 ))
+    if [[ "$CUR_WAIT" -gt "$MAX_WAIT" ]]; then
+      echo -e "\nERROR: Please troubleshoot'.\n"
+      exit 1
+    fi
+  done
+  set -e
+}
