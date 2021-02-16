@@ -1,7 +1,5 @@
 #!/bin/bash
 
-set -e
-
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../scripts/utils.sh
 
@@ -26,9 +24,7 @@ function logwarn() {
 if [ ! -z "$AZ_USER" ] && [ ! -z "$AZ_PASS" ]
 then
     log "Logging to Azure using environment variables AZ_USER and AZ_PASS"
-    set +e
     az logout
-    set -e
     az login -u "$AZ_USER" -p "$AZ_PASS"
 else
     log "Logging to Azure using browser"
@@ -70,7 +66,5 @@ done
 #######
 # aws
 #######
-set +e
 log "Deleting EKS cluster"
 eksctl delete cluster --name kafka-docker-playground-ci
-set -e
