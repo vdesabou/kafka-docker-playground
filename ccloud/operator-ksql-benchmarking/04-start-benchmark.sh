@@ -155,6 +155,9 @@ wait_for_all_streams_to_finish "ENRICHED_O_C" "kubectl exec -i ksql-0 --"
 throughput=$(echo $((orders_iterations / SECONDS)))
 log "Took $SECONDS seconds. Throughput=$throughput msg/s"
 
+log "Verify we have received data in topic ENRICHED_O_C"
+kubectl exec -it connectors-0 -- kafka-console-consumer --topic ENRICHED_O_C --bootstrap-server ${bootstrap_servers} --consumer.config /tmp/config --from-beginning --max-messages 1
+
 SECONDS=0
 log "START BENCHMARK for QUERY 2"
 kubectl exec -i ksql-0 -- bash -c 'echo -e "\n\n⏳ Waiting for ksqlDB to be available before launching CLI\n"; while [ $(curl -s -o /dev/null -w %{http_code} http://localhost:8088/) -eq 000 ] ; do echo -e $(date) "KSQL Server HTTP state: " $(curl -s -o /dev/null -w %{http_code} http:/localhost:8088/) " (waiting for 200)" ; sleep 10 ; done; ksql http://localhost:8088' << EOF
@@ -186,6 +189,9 @@ EOF
 wait_for_all_streams_to_finish "ENRICHED_O_C_P" "kubectl exec -i ksql-0 --"
 throughput=$(echo $((orders_iterations / SECONDS)))
 log "Took $SECONDS seconds. Throughput=$throughput msg/s"
+
+log "Verify we have received data in topic ENRICHED_O_C_P"
+kubectl exec -it connectors-0 -- kafka-console-consumer --topic ENRICHED_O_C_P --bootstrap-server ${bootstrap_servers} --consumer.config /tmp/config --from-beginning --max-messages 1
 
 SECONDS=0
 log "START BENCHMARK for QUERY 3"
@@ -220,6 +226,9 @@ wait_for_all_streams_to_finish "ORDERS_SHIPPED" "kubectl exec -i ksql-0 --"
 throughput=$(echo $((orders_iterations / SECONDS)))
 log "Took $SECONDS seconds. Throughput=$throughput msg/s"
 
+log "Verify we have received data in topic ORDERS_SHIPPED"
+kubectl exec -it connectors-0 -- kafka-console-consumer --topic ORDERS_SHIPPED --bootstrap-server ${bootstrap_servers} --consumer.config /tmp/config --from-beginning --max-messages 1
+
 SECONDS=0
 log "START BENCHMARK for QUERY 4"
 kubectl exec -i ksql-0 -- bash -c 'echo -e "\n\n⏳ Waiting for ksqlDB to be available before launching CLI\n"; while [ $(curl -s -o /dev/null -w %{http_code} http://localhost:8088/) -eq 000 ] ; do echo -e $(date) "KSQL Server HTTP state: " $(curl -s -o /dev/null -w %{http_code} http:/localhost:8088/) " (waiting for 200)" ; sleep 10 ; done; ksql http://localhost:8088' << EOF
@@ -244,3 +253,6 @@ EOF
 wait_for_all_streams_to_finish "ORDERPER_PROD_CUST_AGG" "kubectl exec -i ksql-0 --"
 throughput=$(echo $((orders_iterations / SECONDS)))
 log "Took $SECONDS seconds. Throughput=$throughput msg/s"
+
+log "Verify we have received data in topic ORDERPER_PROD_CUST_AGG"
+kubectl exec -it connectors-0 -- kafka-console-consumer --topic ORDERPER_PROD_CUST_AGG --bootstrap-server ${bootstrap_servers} --consumer.config /tmp/config --from-beginning --max-messages 1
