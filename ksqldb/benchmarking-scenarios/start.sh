@@ -4,14 +4,20 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
+NOW="$(date +%s)000"
+sed -e "s|:NOW:|$NOW|g" \
+    ${DIR}/schemas/orders-template.avro > ${DIR}/schemas/orders.avro
+sed -e "s|:NOW:|$NOW|g" \
+    ${DIR}/schemas/shipments-template.avro > ${DIR}/schemas/shipments.avro
+
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
 
-log "Create topic orders_original"
+log "Create topic orders"
 curl -s -X PUT \
       -H "Content-Type: application/json" \
       --data '{
                 "connector.class": "io.confluent.kafka.connect.datagen.DatagenConnector",
-                "kafka.topic": "orders_original",
+                "kafka.topic": "orders",
                 "key.converter": "org.apache.kafka.connect.storage.StringConverter",
                 "value.converter": "org.apache.kafka.connect.json.JsonConverter",
                 "value.converter.schemas.enable": "false",
@@ -25,12 +31,12 @@ curl -s -X PUT \
 
 wait_for_datagen_connector_to_inject_data "orders" "10"
 
-log "Create topic shipments_original"
+log "Create topic shipments"
 curl -s -X PUT \
       -H "Content-Type: application/json" \
       --data '{
                 "connector.class": "io.confluent.kafka.connect.datagen.DatagenConnector",
-                "kafka.topic": "shipments_original",
+                "kafka.topic": "shipments",
                 "key.converter": "org.apache.kafka.connect.storage.StringConverter",
                 "value.converter": "org.apache.kafka.connect.json.JsonConverter",
                 "value.converter.schemas.enable": "false",
@@ -116,7 +122,7 @@ CREATE STREAM ORDERS
     customerid varchar
 )
 WITH
-    (kafka_topic= 'orders', partitions=1, value_format='json', timestamp='ordertime');
+    (kafka_topic= 'orders', value_format='json', timestamp='ordertime');
 
 CREATE STREAM SHIPMENTS
 (
@@ -127,32 +133,11 @@ CREATE STREAM SHIPMENTS
     customerid varchar
 )
 WITH
-    (kafka_topic= 'shipments', partitions=1, value_format='json', timestamp='shipment_time');
+    (kafka_topic= 'shipments', value_format='json', timestamp='shipment_time');
 
-CREATE STREAM ORDERS_ORIGINAL
-(
-    ordertime bigint,
-    orderid bigint,
-    productid varchar,
-    orderunits integer,
-    customerid varchar
-)
-WITH
-    (kafka_topic= 'orders_original', value_format='json', timestamp='ordertime');
-
-CREATE STREAM SHIPMENTS_ORIGINAL
-(
-    SHIPMENT_TIME bigint,
-    SHIPMENTID bigint,
-    orderid bigint,
-    productid varchar,
-    customerid varchar
-)
-WITH
-    (kafka_topic= 'shipments_original', value_format='json', timestamp='shipment_time');
 EOF
 
-log "QUERY 1"
+log "START BENCHMARK for QUERY 1"
 timeout 120 docker exec -i ksqldb-cli bash -c 'echo -e "\n\n⏳ Waiting for ksqlDB to be available before launching CLI\n"; while [ $(curl -s -o /dev/null -w %{http_code} http://ksqldb-server:8088/) -eq 000 ] ; do echo -e $(date) "KSQL Server HTTP state: " $(curl -s -o /dev/null -w %{http_code} http:/ksqldb-server:8088/) " (waiting for 200)" ; sleep 10 ; done; ksql http://ksqldb-server:8088' << EOF
 
 SET 'auto.offset.reset' = 'earliest';
@@ -176,7 +161,14 @@ LEFT OUTER JOIN
     ON ((O.CUSTOMERID = CUSTOMERS.CUSTOMERID));
 EOF
 
-log "QUERY 2"
+wait_for_all_streams_to_finish "ENRICHED_O_C" ""
+
+throughput=$(echo $((100000 / SECONDS)))
+log "Took $SECONDS seconds. Throughput=$throughput msg/s"
+
+
+SECONDS=0
+log "START BENCHMARK for QUERY 2"
 timeout 120 docker exec -i ksqldb-cli bash -c 'echo -e "\n\n⏳ Waiting for ksqlDB to be available before launching CLI\n"; while [ $(curl -s -o /dev/null -w %{http_code} http://ksqldb-server:8088/) -eq 000 ] ; do echo -e $(date) "KSQL Server HTTP state: " $(curl -s -o /dev/null -w %{http_code} http:/ksqldb-server:8088/) " (waiting for 200)" ; sleep 10 ; done; ksql http://ksqldb-server:8088' << EOF
 
 SET 'auto.offset.reset' = 'earliest';
@@ -203,7 +195,13 @@ LEFT JOIN
 ON O.PRODUCTID = P.PRODUCTID;
 EOF
 
-log "QUERY 3"
+wait_for_all_streams_to_finish "ENRICHED_O_C_P" ""
+
+throughput=$(echo $((100000 / SECONDS)))
+log "Took $SECONDS seconds. Throughput=$throughput msg/s"
+
+SECONDS=0
+log "START BENCHMARK for QUERY 3"
 timeout 120 docker exec -i ksqldb-cli bash -c 'echo -e "\n\n⏳ Waiting for ksqlDB to be available before launching CLI\n"; while [ $(curl -s -o /dev/null -w %{http_code} http://ksqldb-server:8088/) -eq 000 ] ; do echo -e $(date) "KSQL Server HTTP state: " $(curl -s -o /dev/null -w %{http_code} http:/ksqldb-server:8088/) " (waiting for 200)" ; sleep 10 ; done; ksql http://ksqldb-server:8088' << EOF
 
 SET 'auto.offset.reset' = 'earliest';
@@ -231,7 +229,13 @@ INNER JOIN SHIPMENTS S
 ON O.ORDERID = S.ORDERID;
 EOF
 
-log "QUERY 4"
+wait_for_all_streams_to_finish "ORDERS_SHIPPED" ""
+
+throughput=$(echo $((100000 / SECONDS)))
+log "Took $SECONDS seconds. Throughput=$throughput msg/s"
+
+SECONDS=0
+log "START BENCHMARK for QUERY 4"
 timeout 120 docker exec -i ksqldb-cli bash -c 'echo -e "\n\n⏳ Waiting for ksqlDB to be available before launching CLI\n"; while [ $(curl -s -o /dev/null -w %{http_code} http://ksqldb-server:8088/) -eq 000 ] ; do echo -e $(date) "KSQL Server HTTP state: " $(curl -s -o /dev/null -w %{http_code} http:/ksqldb-server:8088/) " (waiting for 200)" ; sleep 10 ; done; ksql http://ksqldb-server:8088' << EOF
 
 SET 'auto.offset.reset' = 'earliest';
@@ -251,13 +255,7 @@ GROUP BY
   os.PRODUCTID, os.CUSTOMERID;
 EOF
 
-log "START BENCHMARK"
-timeout 120 docker exec -i ksqldb-cli bash -c 'echo -e "\n\n⏳ Waiting for ksqlDB to be available before launching CLI\n"; while [ $(curl -s -o /dev/null -w %{http_code} http://ksqldb-server:8088/) -eq 000 ] ; do echo -e $(date) "KSQL Server HTTP state: " $(curl -s -o /dev/null -w %{http_code} http:/ksqldb-server:8088/) " (waiting for 200)" ; sleep 10 ; done; ksql http://ksqldb-server:8088' << EOF
+wait_for_all_streams_to_finish "ORDERPER_PROD_CUST_AGG" ""
 
-SET 'auto.offset.reset' = 'earliest';
-
-INSERT INTO ORDERS SELECT * FROM ORDERS_ORIGINAL;
-INSERT INTO SHIPMENTS SELECT * FROM SHIPMENTS_ORIGINAL;
-EOF
-
-wait_for_all_streams_to_finish "ORDERPER_PROD_CUST_AGG ENRICHED_O_C ENRICHED_O_C_P ORDERS_SHIPPED" ""
+throughput=$(echo $((100000 / SECONDS)))
+log "Took $SECONDS seconds. Throughput=$throughput msg/s"
