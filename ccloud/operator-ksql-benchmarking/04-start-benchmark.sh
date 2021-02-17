@@ -66,10 +66,6 @@ kubectl exec -i connectors-0 -- bash -c "curl -s -X \"POST\" \"http://ksql:9088/
                -H \"Content-Type: application/vnd.ksql.v1+json; charset=utf-8\" \
                -d '{\"ksql\": \"DROP TABLE 'foo';\"}'"
 
-log "Delete topic orders, if applicable"
-kubectl exec -it connectors-0 -- kafka-topics --bootstrap-server ${bootstrap_servers} --command-config /tmp/config --topic orders --delete > /dev/null 2>&1
-log "Delete topic shipments, if applicable"
-kubectl exec -it connectors-0 -- kafka-topics --bootstrap-server ${bootstrap_servers} --command-config /tmp/config --topic shipments --delete > /dev/null 2>&1
 log "Delete topic ENRICHED_O_C, if applicable"
 kubectl exec -it connectors-0 -- kafka-topics --bootstrap-server ${bootstrap_servers} --command-config /tmp/config --topic ENRICHED_O_C --delete > /dev/null 2>&1
 log "Delete topic ENRICHED_O_C_P, if applicable"
