@@ -93,7 +93,7 @@ curl -X PUT \
                 "azblob.account.name": "'"$AZURE_ACCOUNT_NAME"'",
                 "azblob.account.key": "'"$AZURE_ACCOUNT_KEY"'",
                 "azblob.container.name": "'"$AZURE_CONTAINER_NAME"'",
-                "format.class": "io.confluent.connect.azure.blob.storage.format.avro.AvroFormat",
+                "format.class": "io.confluent.connect.cloud.storage.source.format.CloudStorageAvroFormat",
                 "confluent.license": "",
                 "confluent.topic.bootstrap.servers": "broker:9092",
                 "confluent.topic.replication.factor": "1",
