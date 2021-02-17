@@ -97,6 +97,7 @@ log "Extend Kubernetes with first class CP primitives"
 kubectl apply --filename ${DIR}/confluent-operator/resources/crds/
 
 log "Create the Kubernetes namespace to install Operator"
+kubectl create namespace operator
 kubectl create namespace confluent
 
 log "installing operator"
@@ -104,10 +105,12 @@ helm upgrade --install \
   operator \
   ${DIR}/confluent-operator/helm/confluent-operator/ \
   --values $VALUES_FILE \
-  --namespace confluent \
+  --namespace operator \
   --set operator.enabled=true \
   --set global.sasl.plain.username="${CLOUD_KEY}" \
   --set global.sasl.plain.password="${CLOUD_SECRET}"
+
+kubectl config set-context --current --namespace=confluent
 
 SR_USERNAME=$(echo $SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO | cut -d ":" -f 1)
 SR_SECRET=$(echo $SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO | cut -d ":" -f 2)
@@ -177,7 +180,7 @@ helm upgrade --install \
   --set controlcenter.dependencies.schemaRegistry.authentication.username="${SR_USERNAME}" \
   --set controlcenter.dependencies.schemaRegistry.authentication.password="${SR_SECRET}"
 
-# kubectl -n confluent exec -i connectors-0 -- bash
+# kubectl exec -i connectors-0 -- bash
 
 
 log "Waiting up to 1800 seconds for all pods in namespace confluent to start"
@@ -188,10 +191,10 @@ set +e
 MAX_WAIT=480
 CUR_WAIT=0
 log "Waiting up to $MAX_WAIT seconds for Kafka Connect connectors-0 to start"
-kubectl logs -n confluent connectors-0 > /tmp/out.txt 2>&1
+kubectl logs connectors-0 > /tmp/out.txt 2>&1
 while [[ ! $(cat /tmp/out.txt) =~ "Finished starting connectors and tasks" ]]; do
   sleep 10
-  kubectl logs -n confluent connectors-0 > /tmp/out.txt 2>&1
+  kubectl logs connectors-0 > /tmp/out.txt 2>&1
   CUR_WAIT=$(( CUR_WAIT+10 ))
   if [[ "$CUR_WAIT" -gt "$MAX_WAIT" ]]; then
     echo -e "\nERROR: The logs in connectors-0 container do not show 'Finished starting connectors and tasks' after $MAX_WAIT seconds. Please troubleshoot'.\n"
@@ -203,7 +206,7 @@ log "Connect connectors-0 has started!"
 set -e
 
 log "Control Center is reachable at http://127.0.0.1:9021 (admin/Developer1)"
-kubectl -n confluent port-forward controlcenter-0 9021:9021 &
+kubectl port-forward controlcenter-0 9021:9021 &
 
 #######
 # CONNECTOR TEST: Spool dir
@@ -212,7 +215,7 @@ kubectl -n confluent port-forward controlcenter-0 9021:9021 &
 set +e
 log "Create topic spooldir-json-topic"
 kubectl cp ${CONFIG_FILE} confluent/connectors-0:/tmp/config
-kubectl -n confluent exec -i connectors-0 -- kafka-topics --bootstrap-server ${BOOTSTRAP_SERVERS} --command-config /tmp/config --topic spooldir-json-topic --create --replication-factor 3 --partitions 1
+kubectl exec -i connectors-0 -- kafka-topics --bootstrap-server ${BOOTSTRAP_SERVERS} --command-config /tmp/config --topic spooldir-json-topic --create --replication-factor 3 --partitions 1
 set +e
 
 if [ ! -f "${DIR}/json-spooldir-source.json" ]
@@ -221,14 +224,14 @@ then
      curl "https://api.mockaroo.com/api/17c84440?count=500&key=25fd9c80" > "${DIR}/json-spooldir-source.json"
 fi
 
-kubectl -n confluent exec -i connectors-0 -- mkdir -p /tmp/data/input
-kubectl -n confluent exec -i connectors-0 -- mkdir -p /tmp/data/error
-kubectl -n confluent exec -i connectors-0 -- mkdir -p /tmp/data/finished
+kubectl exec -i connectors-0 -- mkdir -p /tmp/data/input
+kubectl exec -i connectors-0 -- mkdir -p /tmp/data/error
+kubectl exec -i connectors-0 -- mkdir -p /tmp/data/finished
 
 kubectl cp json-spooldir-source.json confluent/connectors-0:/tmp/data/input/
 
 log "Creating JSON Spool Dir Source connector"
-kubectl -n confluent exec -i connectors-0 -- curl -X PUT \
+kubectl exec -i connectors-0 -- curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
                "tasks.max": "1",
@@ -246,7 +249,7 @@ kubectl -n confluent exec -i connectors-0 -- curl -X PUT \
 sleep 5
 
 log "Verify we have received the data in spooldir-json-topic topic"
-kubectl -n confluent exec -i connectors-0 -- kafka-avro-console-consumer --topic spooldir-json-topic --bootstrap-server $BOOTSTRAP_SERVERS --consumer-property ssl.endpoint.identification.algorithm=https --consumer-property sasl.mechanism=PLAIN --consumer-property security.protocol=SASL_SSL --consumer-property sasl.jaas.config="$SASL_JAAS_CONFIG" --property basic.auth.credentials.source=$BASIC_AUTH_CREDENTIALS_SOURCE --property schema.registry.basic.auth.user.info="$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO" --property schema.registry.url=$SCHEMA_REGISTRY_URL --from-beginning --max-messages 2
+kubectl exec -i connectors-0 -- kafka-avro-console-consumer --topic spooldir-json-topic --bootstrap-server $BOOTSTRAP_SERVERS --consumer-property ssl.endpoint.identification.algorithm=https --consumer-property sasl.mechanism=PLAIN --consumer-property security.protocol=SASL_SSL --consumer-property sasl.jaas.config="$SASL_JAAS_CONFIG" --property basic.auth.credentials.source=$BASIC_AUTH_CREDENTIALS_SOURCE --property schema.registry.basic.auth.user.info="$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO" --property schema.registry.url=$SCHEMA_REGISTRY_URL --from-beginning --max-messages 2
 
 #######
 # MONITORING

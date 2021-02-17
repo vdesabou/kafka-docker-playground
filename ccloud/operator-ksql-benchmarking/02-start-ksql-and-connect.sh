@@ -37,6 +37,7 @@ kubectl delete namespace confluent
 # kubectl get ns confluent -o json | jq '.spec.finalizers=[]' > ns-without-finalizers.json
 # curl -X PUT http://localhost:8001/api/v1/namespaces/confluent/finalize -H "Content-Type: application/json" --data-binary @ns-without-finalizers.json
 kubectl delete namespace monitoring
+kubectl delete namespace operator
 
 # delete internal connect config to start from fresh state
 CONFIG_FILE=${DIR}/client.properties
@@ -99,19 +100,21 @@ log "Extend Kubernetes with first class CP primitives"
 kubectl apply --filename ${DIR}/confluent-operator/resources/crds/
 
 log "Create the Kubernetes namespaces to install Operator and cluster"
+kubectl create namespace operator
 kubectl create namespace confluent
-kubectl config set-context --current --namespace=confluent
 
 log "installing operator"
 helm upgrade --install \
   operator \
   ${DIR}/confluent-operator/helm/confluent-operator/ \
   --values $VALUES_FILE \
-  --namespace confluent \
+  --namespace operator \
   --set operator.enabled=true \
   --set global.provider.region="${eks_region}" \
   --set global.sasl.plain.username="${cluster_api_key}" \
   --set global.sasl.plain.password="${cluster_api_secret}"
+
+kubectl config set-context --current --namespace=confluent
 
 log "Install connect"
 helm upgrade --install \
