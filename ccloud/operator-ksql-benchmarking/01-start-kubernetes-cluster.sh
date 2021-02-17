@@ -15,14 +15,6 @@ else
     exit 1
 fi
 
-if [ -r ${DIR}/ccloud-cluster.properties ]
-then
-    . ${DIR}/ccloud-cluster.properties
-else
-    logerror "Cannot read configuration file ${APP_HOME}/ccloud-cluster.properties"
-    exit 1
-fi
-
 verify_installed "kubectl"
 verify_installed "helm"
 
