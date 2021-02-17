@@ -62,24 +62,17 @@ function create_input_topic () {
   set -e
 }
 
-function delete_datagen_connector () {
-  topic_name=$1
-  set +e
-  log "Delete connector datagen-${topic_name}, if applicable"
-  kubectl exec -i connectors-0 -- curl -s -X DELETE http://localhost:8083/connectors/datagen-${topic_name}
-  set -e
-}
-
 # https://confluentinc.atlassian.net/wiki/spaces/CSH/pages/1679458811/Benchmarking+ksqlDB+on+CCloud
 # https://github.com/confluentinc/kafka-connect-datagen
 # https://github.com/confluentinc/avro-random-generator
+
+random_value=$RANDOM
 
 #######
 # orders
 #######
 topic="orders"
 create_input_topic "${topic}"
-delete_datagen_connector "${topic}"
 iterations_total=$(eval echo '$'${topic}_iterations)
 iterations_per_task=$((iterations_total / datagen_tasks))
 log "Create topic ${topic}"
@@ -97,9 +90,9 @@ kubectl exec -i connectors-0 -- curl -s -X PUT \
                 "schema.filename" : "'"/tmp/schemas/${topic}.avro"'",
                 "schema.keyfield" : "orderid"
             }' \
-      http://localhost:8083/connectors/datagen-${topic}/config | jq
+      http://localhost:8083/connectors/datagen-${topic}-${random_value}/config | jq
 
-wait_for_datagen_connector_to_inject_data "${topic}" "${datagen_tasks}" "kubectl exec -i connectors-0 --"
+wait_for_datagen_connector_to_inject_data "${topic}-${random_value}" "${datagen_tasks}" "kubectl exec -i connectors-0 --"
 
 log "Verify we have received data in topic ${topic}"
 kubectl exec -it connectors-0 -- kafka-console-consumer --topic ${topic} --bootstrap-server ${bootstrap_servers} --consumer.config /tmp/config --from-beginning --max-messages 1
@@ -109,7 +102,6 @@ kubectl exec -it connectors-0 -- kafka-console-consumer --topic ${topic} --boots
 #######
 topic="shipments"
 create_input_topic "${topic}"
-delete_datagen_connector "${topic}"
 iterations_total=$(eval echo '$'${topic}_iterations)
 iterations_per_task=$((iterations_total / datagen_tasks))
 log "Create topic ${topic}"
@@ -126,9 +118,9 @@ kubectl exec -i connectors-0 -- curl -s -X PUT \
                 "tasks.max": "'"$datagen_tasks"'",
                 "schema.filename" : "'"/tmp/schemas/${topic}.avro"'"
             }' \
-      http://localhost:8083/connectors/datagen-${topic}/config | jq
+      http://localhost:8083/connectors/datagen-${topic}-${random_value}/config | jq
 
-wait_for_datagen_connector_to_inject_data "${topic}" "${datagen_tasks}" "kubectl exec -i connectors-0 --"
+wait_for_datagen_connector_to_inject_data "${topic}-${random_value}" "${datagen_tasks}" "kubectl exec -i connectors-0 --"
 
 log "Verify we have received data in topic ${topic}"
 kubectl exec -it connectors-0 -- kafka-console-consumer --topic ${topic} --bootstrap-server ${bootstrap_servers} --consumer.config /tmp/config --from-beginning --max-messages 1
@@ -138,7 +130,6 @@ kubectl exec -it connectors-0 -- kafka-console-consumer --topic ${topic} --boots
 #######
 topic="products"
 create_input_topic "${topic}"
-delete_datagen_connector "${topic}"
 iterations_total=$(eval echo '$'${topic}_iterations)
 iterations_per_task=$((iterations_total / datagen_tasks))
 log "Create topic ${topic}"
@@ -156,9 +147,9 @@ kubectl exec -i connectors-0 -- curl -s -X PUT \
                 "schema.filename" : "'"/tmp/schemas/${topic}.avro"'",
                 "schema.keyfield" : "productid"
             }' \
-      http://localhost:8083/connectors/datagen-${topic}/config | jq
+      http://localhost:8083/connectors/datagen-${topic}-${random_value}/config | jq
 
-wait_for_datagen_connector_to_inject_data "${topic}" "${datagen_tasks}" "kubectl exec -i connectors-0 --"
+wait_for_datagen_connector_to_inject_data "${topic}-${random_value}" "${datagen_tasks}" "kubectl exec -i connectors-0 --"
 log "Verify we have received data in topic ${topic}"
 kubectl exec -it connectors-0 -- kafka-console-consumer --topic ${topic} --bootstrap-server ${bootstrap_servers} --consumer.config /tmp/config --from-beginning --max-messages 1
 
@@ -167,7 +158,6 @@ kubectl exec -it connectors-0 -- kafka-console-consumer --topic ${topic} --boots
 #######
 topic="customers"
 create_input_topic "${topic}"
-delete_datagen_connector "${topic}"
 iterations_total=$(eval echo '$'${topic}_iterations)
 iterations_per_task=$((iterations_total / datagen_tasks))
 log "Create topic ${topic}"
@@ -185,9 +175,9 @@ kubectl exec -i connectors-0 -- curl -s -X PUT \
                 "schema.filename" : "'"/tmp/schemas/${topic}.avro"'",
                 "schema.keyfield" : "customerid"
             }' \
-      http://localhost:8083/connectors/datagen-${topic}/config | jq
+      http://localhost:8083/connectors/datagen-${topic}-${random_value}/config | jq
 
-wait_for_datagen_connector_to_inject_data "${topic}" "${datagen_tasks}" "kubectl exec -i connectors-0 --"
+wait_for_datagen_connector_to_inject_data "${topic}-${random_value}" "${datagen_tasks}" "kubectl exec -i connectors-0 --"
 log "Verify we have received data in topic ${topic}"
 kubectl exec -it connectors-0 -- kafka-console-consumer --topic ${topic} --bootstrap-server ${bootstrap_servers} --consumer.config /tmp/config --from-beginning --max-messages 1
 
