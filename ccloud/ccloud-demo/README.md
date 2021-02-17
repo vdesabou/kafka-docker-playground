@@ -989,7 +989,7 @@ ccloud_exporter:
   command: ccloudexporter ${CCLOUD_CLUSTER}
 
 grafana:
-  image: grafana/grafana:7.0.6
+  image: grafana/grafana:7.4.1
   hostname: grafana
   container_name: grafana
   environment:
