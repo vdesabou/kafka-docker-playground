@@ -660,8 +660,6 @@ function wait_for_all_streams_to_finish () {
         log "Stream $stream currently processing $throughput messages-per-sec"
       fi
     done
-    log "$nb_streams_finished out of $nb_streams streams finished"
-    log "retrying in 5 seconds..."
 
     CUR_WAIT=$(( CUR_WAIT+5 ))
     if [[ "$CUR_WAIT" -gt "$MAX_WAIT" ]]; then
