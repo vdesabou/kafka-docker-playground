@@ -33,4 +33,4 @@ ccloud login
 set +e
 ccloud kafka cluster delete ksql-benchmarking
 set -e
-ccloud kafka cluster create ksql-benchmarking --type dedicated --cloud ${provider} --cku 2 --environment ${environment_id} --region ${eks_region}
+ccloud kafka cluster create ksql-benchmarking --type dedicated --cloud ${provider} --cku ${ckus} --environment ${environment_id} --region ${eks_region}
