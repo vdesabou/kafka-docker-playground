@@ -75,7 +75,6 @@ topic="orders"
 create_input_topic "${topic}"
 iterations_total=$(eval echo '$'${topic}_iterations)
 iterations_per_task=$((iterations_total / datagen_tasks))
-log "Create topic ${topic}"
 kubectl exec -i connectors-0 -- curl -s -X PUT \
       -H "Content-Type: application/json" \
       --data '{
@@ -104,7 +103,6 @@ topic="shipments"
 create_input_topic "${topic}"
 iterations_total=$(eval echo '$'${topic}_iterations)
 iterations_per_task=$((iterations_total / datagen_tasks))
-log "Create topic ${topic}"
 kubectl exec -i connectors-0 -- curl -s -X PUT \
       -H "Content-Type: application/json" \
       --data '{
@@ -132,7 +130,6 @@ topic="products"
 create_input_topic "${topic}"
 iterations_total=$(eval echo '$'${topic}_iterations)
 iterations_per_task=$((iterations_total / datagen_tasks))
-log "Create topic ${topic}"
 kubectl exec -i connectors-0 -- curl -s -X PUT \
       -H "Content-Type: application/json" \
       --data '{
@@ -160,7 +157,6 @@ topic="customers"
 create_input_topic "${topic}"
 iterations_total=$(eval echo '$'${topic}_iterations)
 iterations_per_task=$((iterations_total / datagen_tasks))
-log "Create topic ${topic}"
 kubectl exec -i connectors-0 -- curl -s -X PUT \
       -H "Content-Type: application/json" \
       --data '{
