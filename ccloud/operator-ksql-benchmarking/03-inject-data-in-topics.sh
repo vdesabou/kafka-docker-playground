@@ -68,6 +68,12 @@ function delete_datagen_connector () {
 # https://github.com/confluentinc/kafka-connect-datagen
 # https://github.com/confluentinc/avro-random-generator
 
+NOW="$(date +%s)000"
+sed -e "s|:NOW:|$NOW|g" \
+    ${DIR}/schemas/orders-template.avro > ${DIR}/schemas/orders.avro
+sed -e "s|:NOW:|$NOW|g" \
+    ${DIR}/schemas/shipments-template.avro > ${DIR}/schemas/shipments.avro
+
 #######
 # orders
 #######
