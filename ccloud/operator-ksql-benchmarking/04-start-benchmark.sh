@@ -115,7 +115,7 @@ CREATE STREAM ORDERS
     customerid varchar
 )
 WITH
-    (kafka_topic= 'orders', partitions=$number_topic_partitions, value_format='json', timestamp='ordertime');
+    (kafka_topic= 'orders', value_format='json', timestamp='ordertime');
 
 CREATE STREAM SHIPMENTS
 (
@@ -126,32 +126,12 @@ CREATE STREAM SHIPMENTS
     customerid varchar
 )
 WITH
-    (kafka_topic= 'shipments', partitions=$number_topic_partitions, value_format='json', timestamp='shipment_time');
+    (kafka_topic= 'shipments', value_format='json', timestamp='shipment_time');
 
-CREATE STREAM ORDERS_ORIGINAL
-(
-    ordertime bigint,
-    orderid bigint,
-    productid varchar,
-    orderunits integer,
-    customerid varchar
-)
-WITH
-    (kafka_topic= 'orders_original', value_format='json', timestamp='ordertime');
-
-CREATE STREAM SHIPMENTS_ORIGINAL
-(
-    SHIPMENT_TIME bigint,
-    SHIPMENTID bigint,
-    orderid bigint,
-    productid varchar,
-    customerid varchar
-)
-WITH
-    (kafka_topic= 'shipments_original', value_format='json', timestamp='shipment_time');
 EOF
 
-log "QUERY 1"
+SECONDS=0
+log "START BENCHMARK for QUERY 1"
 kubectl exec -i ksql-0 -- bash -c 'echo -e "\n\n⏳ Waiting for ksqlDB to be available before launching CLI\n"; while [ $(curl -s -o /dev/null -w %{http_code} http://localhost:8088/) -eq 000 ] ; do echo -e $(date) "KSQL Server HTTP state: " $(curl -s -o /dev/null -w %{http_code} http:/localhost:8088/) " (waiting for 200)" ; sleep 10 ; done; ksql http://localhost:8088' << EOF
 
 SET 'auto.offset.reset' = 'earliest';
@@ -175,7 +155,12 @@ LEFT OUTER JOIN
     ON ((O.CUSTOMERID = CUSTOMERS.CUSTOMERID));
 EOF
 
-log "QUERY 2"
+wait_for_all_streams_to_finish "ENRICHED_O_C" "kubectl exec -i ksql-0 --"
+throughput=$(echo $((orders_iterations / SECONDS)))
+log "Took $SECONDS seconds. Throughput=$throughput msg/s"
+
+SECONDS=0
+log "START BENCHMARK for QUERY 2"
 kubectl exec -i ksql-0 -- bash -c 'echo -e "\n\n⏳ Waiting for ksqlDB to be available before launching CLI\n"; while [ $(curl -s -o /dev/null -w %{http_code} http://localhost:8088/) -eq 000 ] ; do echo -e $(date) "KSQL Server HTTP state: " $(curl -s -o /dev/null -w %{http_code} http:/localhost:8088/) " (waiting for 200)" ; sleep 10 ; done; ksql http://localhost:8088' << EOF
 
 SET 'auto.offset.reset' = 'earliest';
@@ -202,7 +187,12 @@ LEFT JOIN
 ON O.PRODUCTID = P.PRODUCTID;
 EOF
 
-log "QUERY 3"
+wait_for_all_streams_to_finish "ENRICHED_O_C_P" "kubectl exec -i ksql-0 --"
+throughput=$(echo $((orders_iterations / SECONDS)))
+log "Took $SECONDS seconds. Throughput=$throughput msg/s"
+
+SECONDS=0
+log "START BENCHMARK for QUERY 3"
 kubectl exec -i ksql-0 -- bash -c 'echo -e "\n\n⏳ Waiting for ksqlDB to be available before launching CLI\n"; while [ $(curl -s -o /dev/null -w %{http_code} http://localhost:8088/) -eq 000 ] ; do echo -e $(date) "KSQL Server HTTP state: " $(curl -s -o /dev/null -w %{http_code} http:/localhost:8088/) " (waiting for 200)" ; sleep 10 ; done; ksql http://localhost:8088' << EOF
 
 SET 'auto.offset.reset' = 'earliest';
@@ -230,7 +220,12 @@ INNER JOIN SHIPMENTS S
 ON O.ORDERID = S.ORDERID;
 EOF
 
-log "QUERY 4"
+wait_for_all_streams_to_finish "ORDERS_SHIPPED" "kubectl exec -i ksql-0 --"
+throughput=$(echo $((orders_iterations / SECONDS)))
+log "Took $SECONDS seconds. Throughput=$throughput msg/s"
+
+SECONDS=0
+log "START BENCHMARK for QUERY 4"
 kubectl exec -i ksql-0 -- bash -c 'echo -e "\n\n⏳ Waiting for ksqlDB to be available before launching CLI\n"; while [ $(curl -s -o /dev/null -w %{http_code} http://localhost:8088/) -eq 000 ] ; do echo -e $(date) "KSQL Server HTTP state: " $(curl -s -o /dev/null -w %{http_code} http:/localhost:8088/) " (waiting for 200)" ; sleep 10 ; done; ksql http://localhost:8088' << EOF
 
 SET 'auto.offset.reset' = 'earliest';
@@ -249,3 +244,7 @@ WINDOW TUMBLING ( SIZE 1 MINUTES )
 GROUP BY
   os.PRODUCTID, os.CUSTOMERID;
 EOF
+
+wait_for_all_streams_to_finish "ORDERPER_PROD_CUST_AGG" "kubectl exec -i ksql-0 --"
+throughput=$(echo $((orders_iterations / SECONDS)))
+log "Took $SECONDS seconds. Throughput=$throughput msg/s"

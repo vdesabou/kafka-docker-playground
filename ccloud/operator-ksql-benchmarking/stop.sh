@@ -21,7 +21,7 @@ else
     exit 1
 fi
 
-${DIR}/06-cleanup-queries.sh
+${DIR}/05-cleanup-queries.sh
 
 if [ "${provider}" = "minikube" ]
 then
