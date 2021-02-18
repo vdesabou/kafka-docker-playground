@@ -231,3 +231,56 @@ sleep 5
 
 log "check data on topic example on kafka-dest cluster"
 kubectl -n kafka-dest exec -i kafka-0 -- bash -c 'kafka-console-consumer -bootstrap-server kafka:9071 --topic example --from-beginning --max-messages 10'
+
+#######
+# MONITORING
+#######
+log "Adding env label to pod (required for dashboards)"
+kubectl -n kafka-dest label pod replicator-0 env=dev
+
+log "Create the Kubernetes namespace monitoring to install prometheus/grafana"
+kubectl create namespace monitoring
+
+log "Store custom dashboards in configmap"
+kubectl create -f grafana-dashboard-default.yaml -n monitoring
+kubectl create -f grafana-dashboard-producer.yaml -n monitoring
+kubectl create -f grafana-dashboard-consumer.yaml -n monitoring
+
+log "Install Prometheus"
+helm install prometheus stable/prometheus \
+ --set alertmanager.persistentVolume.enabled=false \
+ --set server.persistentVolume.enabled=false \
+ --namespace monitoring
+
+log "Install Grafana"
+helm upgrade --install grafana stable/grafana \
+    --set adminPassword="admin" \
+    --set datasources."datasources\.yaml".apiVersion=1 \
+    --set datasources."datasources\.yaml".datasources[0].name=Prometheus \
+    --set datasources."datasources\.yaml".datasources[0].type=prometheus \
+    --set datasources."datasources\.yaml".datasources[0].url=http://prometheus-server.monitoring.svc.cluster.local \
+    --set datasources."datasources\.yaml".datasources[0].access=proxy \
+    --set datasources."datasources\.yaml".datasources[0].isDefault=true \
+    --set sidecar.dashboards.enabled=true \
+    --set dashboardProviders."dashboardproviders\.yaml".apiVersion=1 \
+    --set dashboardProviders."dashboardproviders\.yaml".providers[0].name=default \
+    --set dashboardProviders."dashboardproviders\.yaml".providers[0].orgId=1 \
+    --set dashboardProviders."dashboardproviders\.yaml".providers[0].folder="" \
+    --set dashboardProviders."dashboardproviders\.yaml".providers[0].type=file \
+    --set dashboardProviders."dashboardproviders\.yaml".providers[0].disableDeletion=false \
+    --set dashboardProviders."dashboardproviders\.yaml".providers[0].editable=true \
+    --set dashboardProviders."dashboardproviders\.yaml".providers[0].options.path=/var/lib/grafana/dashboards/default \
+    --set dashboards.default.kubernetes-all-nodes.gnetId=3131 \
+    --set dashboards.default.kubernetes-all-nodes.datasource=Prometheus \
+    --set dashboards.default.kubernetes-pods.gnetId=3146 \
+    --set dashboards.default.kubernetes-pods.datasource=Prometheus \
+    --namespace monitoring
+
+sleep 90
+
+log "Open Grafana in your Browser"
+export POD_NAME=$(kubectl get pods --namespace monitoring -l "app.kubernetes.io/name=grafana,app.kubernetes.io/instance=grafana" -o jsonpath="{.items[0].metadata.name}")
+kubectl --namespace monitoring port-forward $POD_NAME 3000 &
+
+log "Visit http://localhost:3000 in your browser, and login with admin/admin"
+open "http://127.0.0.1:3000" &
