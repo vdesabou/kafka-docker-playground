@@ -163,7 +163,13 @@ EOF
 
 wait_for_all_streams_to_finish "ENRICHED_O_C" ""
 
-throughput=$(echo $((100000 / SECONDS)))
+totalmessages=$(curl -s -X "POST" "http://localhost:8088/ksql" \
+    -H "Accept: application/vnd.ksql.v1+json" \
+    -d $"{
+  \"ksql\": \"DESCRIBE EXTENDED ENRICHED_O_C;\",
+  \"streamsProperties\": {}
+}" | jq -r '.[].sourceDescription.statistics' | grep -Eo '(^|\s)total-messages:\s*\d*\.*\d*' | cut -d":" -f 2 | sed 's/ //g')
+throughput=$(echo $((totalmessages / SECONDS)))
 log "Took $SECONDS seconds. Throughput=$throughput msg/s"
 
 
@@ -197,7 +203,13 @@ EOF
 
 wait_for_all_streams_to_finish "ENRICHED_O_C_P" ""
 
-throughput=$(echo $((100000 / SECONDS)))
+totalmessages=$(curl -s -X "POST" "http://localhost:8088/ksql" \
+    -H "Accept: application/vnd.ksql.v1+json" \
+    -d $"{
+  \"ksql\": \"DESCRIBE EXTENDED ENRICHED_O_C_P;\",
+  \"streamsProperties\": {}
+}" | jq -r '.[].sourceDescription.statistics' | grep -Eo '(^|\s)total-messages:\s*\d*\.*\d*' | cut -d":" -f 2 | sed 's/ //g')
+throughput=$(echo $((totalmessages / SECONDS)))
 log "Took $SECONDS seconds. Throughput=$throughput msg/s"
 
 SECONDS=0
@@ -231,7 +243,13 @@ EOF
 
 wait_for_all_streams_to_finish "ORDERS_SHIPPED" ""
 
-throughput=$(echo $((100000 / SECONDS)))
+totalmessages=$(curl -s -X "POST" "http://localhost:8088/ksql" \
+    -H "Accept: application/vnd.ksql.v1+json" \
+    -d $"{
+  \"ksql\": \"DESCRIBE EXTENDED ORDERS_SHIPPED;\",
+  \"streamsProperties\": {}
+}" | jq -r '.[].sourceDescription.statistics' | grep -Eo '(^|\s)total-messages:\s*\d*\.*\d*' | cut -d":" -f 2 | sed 's/ //g')
+throughput=$(echo $((totalmessages / SECONDS)))
 log "Took $SECONDS seconds. Throughput=$throughput msg/s"
 
 SECONDS=0
@@ -257,5 +275,11 @@ EOF
 
 wait_for_all_streams_to_finish "ORDERPER_PROD_CUST_AGG" ""
 
-throughput=$(echo $((100000 / SECONDS)))
+totalmessages=$(curl -s -X "POST" "http://localhost:8088/ksql" \
+    -H "Accept: application/vnd.ksql.v1+json" \
+    -d $"{
+  \"ksql\": \"DESCRIBE EXTENDED ORDERPER_PROD_CUST_AGG;\",
+  \"streamsProperties\": {}
+}" | jq -r '.[].sourceDescription.statistics' | grep -Eo '(^|\s)total-messages:\s*\d*\.*\d*' | cut -d":" -f 2 | sed 's/ //g')
+throughput=$(echo $((totalmessages / SECONDS)))
 log "Took $SECONDS seconds. Throughput=$throughput msg/s"
