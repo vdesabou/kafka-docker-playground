@@ -81,7 +81,7 @@ sed -i.bak 's/^\(.*\/usr\/share\/confluent-hub-components\)/\1\/confluentinc-kaf
 # see https://github.com/abraham-leal/cc-components-operator/commit/50f1a21391b267a7b008b844ee4754ce1cfbcf04
 sed -i.bak 's/^\(.*ksql.sink.replicas=.*\)//g' ${DIR}/confluent-operator/helm/confluent-operator/charts/ksql/templates/ksql-psc.yaml
 sed -i.bak 's/^\(.*ksql.streams.replication.factor=.*\)//g' ${DIR}/confluent-operator/helm/confluent-operator/charts/ksql/templates/ksql-psc.yaml
-sed -i.bak 's/^\(.*          retry.backoff.ms=500\)/\1\n          ksql.internal.topic.replicas=3\n          ksql.internal.topic.replicas=3\n          ksql.sink.replicas=3\n          compression.type=snappy\n          ksql.streams.replication.factor=3          {{- if eq .Values.dependencies.schemaRegistry.authentication.type "basic"}}\n          ksql.schema_registry_url={{ .Values.dependencies.schemaRegistry.url }}\n          ksql.schema.registry.basic.auth.credentials.source={{ .Values.dependencies.schemaRegistry.authentication.source }}\n          ksql.schema.registry.basic.auth.user.info={{ $.Values.dependencies.schemaRegistry.authentication.username }}:{{ $.Values.dependencies.schemaRegistry.authentication.password }}\n          {{- end }}\n/g' ${DIR}/confluent-operator/helm/confluent-operator/charts/ksql/templates/ksql-psc.yaml
+sed -i.bak 's/^\(.*          retry.backoff.ms=500\)/\1\n          ksql.internal.topic.replicas=3\n          ksql.internal.topic.replicas=3\n          ksql.sink.replicas=3\n          compression.type=lz4\n          ksql.streams.replication.factor=3          {{- if eq .Values.dependencies.schemaRegistry.authentication.type "basic"}}\n          ksql.schema_registry_url={{ .Values.dependencies.schemaRegistry.url }}\n          ksql.schema.registry.basic.auth.credentials.source={{ .Values.dependencies.schemaRegistry.authentication.source }}\n          ksql.schema.registry.basic.auth.user.info={{ $.Values.dependencies.schemaRegistry.authentication.username }}:{{ $.Values.dependencies.schemaRegistry.authentication.password }}\n          {{- end }}\n/g' ${DIR}/confluent-operator/helm/confluent-operator/charts/ksql/templates/ksql-psc.yaml
 
 
 # FIXTHIS: we need to do custom modifications in order to be able to controlcenter controlcenter to Confluent Cloud Schema Registry:
@@ -220,11 +220,17 @@ kubectl port-forward controlcenter-0 9021:9021 &
 #######
 # MONITORING
 #######
+log "Adding env label to pod (required for dashboards)"
+kubectl label pod connect-0 env=dev
+kubectl label pod ksql-0 env=dev
+
 log "Create the Kubernetes namespace monitoring to install prometheus/grafana"
 kubectl create namespace monitoring
 
-log "Store custom dashboard in configmap"
-kubectl create -f grafana-dashboard-configmap.yaml -n monitoring
+log "Store custom dashboards in configmap"
+kubectl create -f grafana-dashboard-default.yaml -n monitoring
+kubectl create -f grafana-dashboard-producer.yaml -n monitoring
+kubectl create -f grafana-dashboard-consumer.yaml -n monitoring
 
 log "Install Prometheus"
 helm install prometheus stable/prometheus \
