@@ -230,7 +230,7 @@ kubectl -n kafka-src exec -i kafka-0 -- bash -c 'seq 10 | kafka-console-producer
 
 sleep 5
 
-log "check data on topic example on kafka-dest cluster"
+log "check data on topic example_replica on kafka-dest cluster"
 kubectl -n kafka-dest exec -i kafka-0 -- bash -c 'kafka-console-consumer -bootstrap-server kafka:9071 --topic example_replica --from-beginning --max-messages 10'
 
 #######
