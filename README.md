@@ -26,7 +26,7 @@ Quick start examples from Confluent [docs](https://docs.confluent.io/current/con
 
 | Connector  | Product Category  | Latest Version (*) | Type | Release Date| <img src="./images/icons/github-actions.png" width="15"> [CI](https://github.com/vdesabou/kafka-docker-playground/actions?query=workflow%3ACI) latest results
 |---|---|---|---|---|---|
-| <img src="./images/icons/activemq.png" width="15"> [ActiveMQ Sink](connect/connect-active-mq-sink)  | Message Queue  | 1.1.6 | Confluent Subscription | 2020-08-21 | 👍 2021-02-02 
+| <img src="./images/icons/activemq.png" width="15"> [ActiveMQ Sink](connect/connect-active-mq-sink)  | Message Queue  | 1.2.2 | Confluent Subscription | 2021-02-18 | ☠ 
 | <img src="./images/icons/activemq.png" width="15"> [ActiveMQ Source](connect/connect-active-mq-source)  | Message Queue  | 11.0.0 | Confluent Subscription | 2021-02-11 | ☠ 
 | <img src="./images/icons/cloudwatch_logs.svg" width="15"> [Amazon CloudWatch Logs Source](connect/connect-aws-cloudwatch-logs-source)  | Analytics  | 1.1.0 | Confluent Subscription | 2021-01-06 | 👍 2021-02-09 
 | <img src="./images/icons/cloudwatch_logs.svg" width="15"> [Amazon CloudWatch Metrics Sink](connect/connect-aws-cloudwatch-metrics-sink)  | Analytics  | 1.1.3 | Confluent Subscription | 2021-01-04 | 👍 2021-02-09 
