@@ -152,7 +152,13 @@ LEFT OUTER JOIN
 EOF
 
 wait_for_all_streams_to_finish "ENRICHED_O_C" "kubectl exec -i ksql-0 --"
-throughput=$(echo $((orders_iterations / SECONDS)))
+totalmessages=$(kubectl exec -i ksql-0 -- curl -s -X "POST" "http://localhost:8088/ksql" \
+    -H "Accept: application/vnd.ksql.v1+json" \
+    -d $"{
+  \"ksql\": \"DESCRIBE EXTENDED ENRICHED_O_C;\",
+  \"streamsProperties\": {}
+}" | jq -r '.[].sourceDescription.statistics' | grep -Eo '(^|\s)total-messages:\s*\d*\.*\d*' | cut -d":" -f 2 | sed 's/ //g')
+throughput=$(echo $((totalmessages / SECONDS)))
 log "Took $SECONDS seconds. Throughput=$throughput msg/s"
 
 log "Verify we have received data in topic ENRICHED_O_C"
@@ -187,7 +193,13 @@ ON O.PRODUCTID = P.PRODUCTID;
 EOF
 
 wait_for_all_streams_to_finish "ENRICHED_O_C_P" "kubectl exec -i ksql-0 --"
-throughput=$(echo $((orders_iterations / SECONDS)))
+totalmessages=$(kubectl exec -i ksql-0 -- curl -s -X "POST" "http://localhost:8088/ksql" \
+    -H "Accept: application/vnd.ksql.v1+json" \
+    -d $"{
+  \"ksql\": \"DESCRIBE EXTENDED ENRICHED_O_C_P;\",
+  \"streamsProperties\": {}
+}" | jq -r '.[].sourceDescription.statistics' | grep -Eo '(^|\s)total-messages:\s*\d*\.*\d*' | cut -d":" -f 2 | sed 's/ //g')
+throughput=$(echo $((totalmessages / SECONDS)))
 log "Took $SECONDS seconds. Throughput=$throughput msg/s"
 
 log "Verify we have received data in topic ENRICHED_O_C_P"
@@ -223,7 +235,13 @@ ON O.ORDERID = S.ORDERID;
 EOF
 
 wait_for_all_streams_to_finish "ORDERS_SHIPPED" "kubectl exec -i ksql-0 --"
-throughput=$(echo $((orders_iterations / SECONDS)))
+totalmessages=$(kubectl exec -i ksql-0 -- curl -s -X "POST" "http://localhost:8088/ksql" \
+    -H "Accept: application/vnd.ksql.v1+json" \
+    -d $"{
+  \"ksql\": \"DESCRIBE EXTENDED ORDERS_SHIPPED;\",
+  \"streamsProperties\": {}
+}" | jq -r '.[].sourceDescription.statistics' | grep -Eo '(^|\s)total-messages:\s*\d*\.*\d*' | cut -d":" -f 2 | sed 's/ //g')
+throughput=$(echo $((totalmessages / SECONDS)))
 log "Took $SECONDS seconds. Throughput=$throughput msg/s"
 
 log "Verify we have received data in topic ORDERS_SHIPPED"
@@ -251,7 +269,13 @@ GROUP BY
 EOF
 
 wait_for_all_streams_to_finish "ORDERPER_PROD_CUST_AGG" "kubectl exec -i ksql-0 --"
-throughput=$(echo $((orders_iterations / SECONDS)))
+totalmessages=$(kubectl exec -i ksql-0 -- curl -s -X "POST" "http://localhost:8088/ksql" \
+    -H "Accept: application/vnd.ksql.v1+json" \
+    -d $"{
+  \"ksql\": \"DESCRIBE EXTENDED ORDERPER_PROD_CUST_AGG;\",
+  \"streamsProperties\": {}
+}" | jq -r '.[].sourceDescription.statistics' | grep -Eo '(^|\s)total-messages:\s*\d*\.*\d*' | cut -d":" -f 2 | sed 's/ //g')
+throughput=$(echo $((totalmessages / SECONDS)))
 log "Took $SECONDS seconds. Throughput=$throughput msg/s"
 
 log "Verify we have received data in topic ORDERPER_PROD_CUST_AGG"
