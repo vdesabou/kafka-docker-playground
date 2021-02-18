@@ -36,7 +36,7 @@
                     "type": "string",
                     "arg.properties": {
                     "regex": "[a-zA-Z]*",
-                    "length": 2000
+                    "length": 150
                     }
                   }}
         ]
