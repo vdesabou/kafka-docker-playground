@@ -205,6 +205,7 @@ kubectl -n kafka-dest exec -i replicator-0 -- curl -k -X PUT \
             "connector.class": "io.confluent.connect.replicator.ReplicatorSourceConnector",
             "tasks.max": "1",
             "topic.whitelist": "example",
+            "topic.rename.format": "${topic}_replica",
             "key.converter": "io.confluent.connect.replicator.util.ByteArrayConverter",
             "value.converter": "io.confluent.connect.replicator.util.ByteArrayConverter",
             "src.kafka.bootstrap.servers": "kafka-0.kafka.kafka-src.svc.cluster.local:9092",
@@ -229,8 +230,8 @@ kubectl -n kafka-src exec -i kafka-0 -- bash -c 'seq 10 | kafka-console-producer
 
 sleep 5
 
-log "check data on topic example on kafka-dest cluster"
-kubectl -n kafka-dest exec -i kafka-0 -- bash -c 'kafka-console-consumer -bootstrap-server kafka:9071 --topic example --from-beginning --max-messages 10'
+log "check data on topic example_replica on kafka-dest cluster"
+kubectl -n kafka-dest exec -i kafka-0 -- bash -c 'kafka-console-consumer -bootstrap-server kafka:9071 --topic example_replica --from-beginning --max-messages 10'
 
 #######
 # MONITORING
