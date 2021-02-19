@@ -221,7 +221,7 @@ kubectl port-forward controlcenter-0 9021:9021 &
 # MONITORING
 #######
 log "Adding env label to pod (required for dashboards)"
-kubectl label pod connect-0 env=dev
+kubectl label pod connectors-0 env=dev
 kubectl label pod ksql-0 env=dev
 
 log "Create the Kubernetes namespace monitoring to install prometheus/grafana"
