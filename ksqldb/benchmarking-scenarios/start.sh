@@ -170,7 +170,7 @@ totalmessages=$(curl -s -X "POST" "http://localhost:8088/ksql" \
   \"streamsProperties\": {}
 }" | jq -r '.[].sourceDescription.statistics' | grep -Eo '(^|\s)total-messages:\s*\d*\.*\d*' | cut -d":" -f 2 | sed 's/ //g')
 throughput=$(echo $((totalmessages / SECONDS)))
-log "Took $SECONDS seconds. Throughput=$throughput msg/s"
+log "Processed $totalmessages messages. Took $SECONDS seconds. Throughput=$throughput msg/s"
 
 
 SECONDS=0
@@ -210,7 +210,7 @@ totalmessages=$(curl -s -X "POST" "http://localhost:8088/ksql" \
   \"streamsProperties\": {}
 }" | jq -r '.[].sourceDescription.statistics' | grep -Eo '(^|\s)total-messages:\s*\d*\.*\d*' | cut -d":" -f 2 | sed 's/ //g')
 throughput=$(echo $((totalmessages / SECONDS)))
-log "Took $SECONDS seconds. Throughput=$throughput msg/s"
+log "Processed $totalmessages messages. Took $SECONDS seconds. Throughput=$throughput msg/s"
 
 SECONDS=0
 log "START BENCHMARK for QUERY 3"
@@ -250,7 +250,7 @@ totalmessages=$(curl -s -X "POST" "http://localhost:8088/ksql" \
   \"streamsProperties\": {}
 }" | jq -r '.[].sourceDescription.statistics' | grep -Eo '(^|\s)total-messages:\s*\d*\.*\d*' | cut -d":" -f 2 | sed 's/ //g')
 throughput=$(echo $((totalmessages / SECONDS)))
-log "Took $SECONDS seconds. Throughput=$throughput msg/s"
+log "Processed $totalmessages messages. Took $SECONDS seconds. Throughput=$throughput msg/s"
 
 SECONDS=0
 log "START BENCHMARK for QUERY 4"
@@ -282,4 +282,4 @@ totalmessages=$(curl -s -X "POST" "http://localhost:8088/ksql" \
   \"streamsProperties\": {}
 }" | jq -r '.[].sourceDescription.statistics' | grep -Eo '(^|\s)total-messages:\s*\d*\.*\d*' | cut -d":" -f 2 | sed 's/ //g')
 throughput=$(echo $((totalmessages / SECONDS)))
-log "Took $SECONDS seconds. Throughput=$throughput msg/s"
+log "Processed $totalmessages messages. Took $SECONDS seconds. Throughput=$throughput msg/s"
