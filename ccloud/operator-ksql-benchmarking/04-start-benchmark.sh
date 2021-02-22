@@ -39,6 +39,27 @@ EOF
 
 kubectl cp ${CONFIG_FILE} confluent/connectors-0:/tmp/config
 
+function throughtput () {
+  stream="$1"
+  duration="$2"
+
+  totalmessages=0
+  for (( i=0; i<$ksql_replicas; i++ ))
+  do
+    messages=$(kubectl exec -i ksql-$i -- curl -s -X "POST" "http://localhost:8088/ksql" \
+        -H "Accept: application/vnd.ksql.v1+json" \
+        -d $"{
+      \"ksql\": \"DESCRIBE EXTENDED $stream;\",
+      \"streamsProperties\": {}
+    }" | jq -r '.[].sourceDescription.statistics' | grep -Eo '(^|\s)total-messages:\s*\d*\.*\d*' | cut -d":" -f 2 | sed 's/ //g')
+    totalmessages=$((totalmessages + messages))
+    log "ℹ️ $messages messages processed by instance ksql-$i"
+  done
+
+  throughput=$(echo $((totalmessages / duration)))
+  log "🚀 Stream $stream has processed $totalmessages messages. Took $duration seconds. Throughput=$throughput msg/s"
+}
+
 set +e
 # https://rmoff.net/2019/03/25/terminate-all-ksql-queries/
 log "TERMINATE all queries, if applicable"
@@ -66,6 +87,8 @@ kubectl exec -i connectors-0 -- bash -c "curl -s -X \"POST\" \"http://ksql:9088/
                -H \"Content-Type: application/vnd.ksql.v1+json; charset=utf-8\" \
                -d '{\"ksql\": \"DROP TABLE 'foo';\"}'"
 
+log "Delete topic FILTERED_STREAM, if applicable"
+kubectl exec -it connectors-0 -- kafka-topics --bootstrap-server ${bootstrap_servers} --command-config /tmp/config --topic FILTERED_STREAM --delete > /dev/null 2>&1
 log "Delete topic ENRICHED_O_C, if applicable"
 kubectl exec -it connectors-0 -- kafka-topics --bootstrap-server ${bootstrap_servers} --command-config /tmp/config --topic ENRICHED_O_C --delete > /dev/null 2>&1
 log "Delete topic ENRICHED_O_C_P, if applicable"
@@ -140,14 +163,10 @@ WHERE productid='Product_1' or productid='Product_2';
 EOF
 
 wait_for_all_streams_to_finish "FILTERED_STREAM" "kubectl exec -i ksql-0 --"
-totalmessages=$(kubectl exec -i ksql-0 -- curl -s -X "POST" "http://localhost:8088/ksql" \
-    -H "Accept: application/vnd.ksql.v1+json" \
-    -d $"{
-  \"ksql\": \"DESCRIBE EXTENDED FILTERED_STREAM;\",
-  \"streamsProperties\": {}
-}" | jq -r '.[].sourceDescription.statistics' | grep -Eo '(^|\s)total-messages:\s*\d*\.*\d*' | cut -d":" -f 2 | sed 's/ //g')
-throughput=$(echo $((totalmessages / SECONDS)))
-log "Processed $totalmessages messages. Took $SECONDS seconds. Throughput=$throughput msg/s"
+throughtput "FILTERED_STREAM" "$SECONDS"
+
+log "Verify we have received data in topic FILTERED_STREAM"
+kubectl exec -it connectors-0 -- kafka-console-consumer --topic FILTERED_STREAM --bootstrap-server ${bootstrap_servers} --consumer.config /tmp/config --from-beginning --max-messages 1
 
 SECONDS=0
 log "START BENCHMARK for QUERY 1"
@@ -175,14 +194,7 @@ LEFT OUTER JOIN
 EOF
 
 wait_for_all_streams_to_finish "ENRICHED_O_C" "kubectl exec -i ksql-0 --"
-totalmessages=$(kubectl exec -i ksql-0 -- curl -s -X "POST" "http://localhost:8088/ksql" \
-    -H "Accept: application/vnd.ksql.v1+json" \
-    -d $"{
-  \"ksql\": \"DESCRIBE EXTENDED ENRICHED_O_C;\",
-  \"streamsProperties\": {}
-}" | jq -r '.[].sourceDescription.statistics' | grep -Eo '(^|\s)total-messages:\s*\d*\.*\d*' | cut -d":" -f 2 | sed 's/ //g')
-throughput=$(echo $((totalmessages / SECONDS)))
-log "Processed $totalmessages messages. Took $SECONDS seconds. Throughput=$throughput msg/s"
+throughtput "ENRICHED_O_C" "$SECONDS"
 
 log "Verify we have received data in topic ENRICHED_O_C"
 kubectl exec -it connectors-0 -- kafka-console-consumer --topic ENRICHED_O_C --bootstrap-server ${bootstrap_servers} --consumer.config /tmp/config --from-beginning --max-messages 1
@@ -216,14 +228,7 @@ ON O.PRODUCTID = P.PRODUCTID;
 EOF
 
 wait_for_all_streams_to_finish "ENRICHED_O_C_P" "kubectl exec -i ksql-0 --"
-totalmessages=$(kubectl exec -i ksql-0 -- curl -s -X "POST" "http://localhost:8088/ksql" \
-    -H "Accept: application/vnd.ksql.v1+json" \
-    -d $"{
-  \"ksql\": \"DESCRIBE EXTENDED ENRICHED_O_C_P;\",
-  \"streamsProperties\": {}
-}" | jq -r '.[].sourceDescription.statistics' | grep -Eo '(^|\s)total-messages:\s*\d*\.*\d*' | cut -d":" -f 2 | sed 's/ //g')
-throughput=$(echo $((totalmessages / SECONDS)))
-log "Processed $totalmessages messages. Took $SECONDS seconds. Throughput=$throughput msg/s"
+throughtput "ENRICHED_O_C_P" "$SECONDS"
 
 log "Verify we have received data in topic ENRICHED_O_C_P"
 kubectl exec -it connectors-0 -- kafka-console-consumer --topic ENRICHED_O_C_P --bootstrap-server ${bootstrap_servers} --consumer.config /tmp/config --from-beginning --max-messages 1
@@ -258,14 +263,7 @@ ON O.ORDERID = S.ORDERID;
 EOF
 
 wait_for_all_streams_to_finish "ORDERS_SHIPPED" "kubectl exec -i ksql-0 --"
-totalmessages=$(kubectl exec -i ksql-0 -- curl -s -X "POST" "http://localhost:8088/ksql" \
-    -H "Accept: application/vnd.ksql.v1+json" \
-    -d $"{
-  \"ksql\": \"DESCRIBE EXTENDED ORDERS_SHIPPED;\",
-  \"streamsProperties\": {}
-}" | jq -r '.[].sourceDescription.statistics' | grep -Eo '(^|\s)total-messages:\s*\d*\.*\d*' | cut -d":" -f 2 | sed 's/ //g')
-throughput=$(echo $((totalmessages / SECONDS)))
-log "Processed $totalmessages messages. Took $SECONDS seconds. Throughput=$throughput msg/s"
+throughtput "ORDERS_SHIPPED" "$SECONDS"
 
 log "Verify we have received data in topic ORDERS_SHIPPED"
 kubectl exec -it connectors-0 -- kafka-console-consumer --topic ORDERS_SHIPPED --bootstrap-server ${bootstrap_servers} --consumer.config /tmp/config --from-beginning --max-messages 1
@@ -292,14 +290,7 @@ GROUP BY
 EOF
 
 wait_for_all_streams_to_finish "ORDERPER_PROD_CUST_AGG" "kubectl exec -i ksql-0 --"
-totalmessages=$(kubectl exec -i ksql-0 -- curl -s -X "POST" "http://localhost:8088/ksql" \
-    -H "Accept: application/vnd.ksql.v1+json" \
-    -d $"{
-  \"ksql\": \"DESCRIBE EXTENDED ORDERPER_PROD_CUST_AGG;\",
-  \"streamsProperties\": {}
-}" | jq -r '.[].sourceDescription.statistics' | grep -Eo '(^|\s)total-messages:\s*\d*\.*\d*' | cut -d":" -f 2 | sed 's/ //g')
-throughput=$(echo $((totalmessages / SECONDS)))
-log "Processed $totalmessages messages. Took $SECONDS seconds. Throughput=$throughput msg/s"
+throughtput "ORDERPER_PROD_CUST_AGG" "$SECONDS"
 
 log "Verify we have received data in topic ORDERPER_PROD_CUST_AGG"
 kubectl exec -it connectors-0 -- kafka-console-consumer --topic ORDERPER_PROD_CUST_AGG --bootstrap-server ${bootstrap_servers} --consumer.config /tmp/config --from-beginning --max-messages 1
