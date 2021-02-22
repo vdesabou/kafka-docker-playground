@@ -651,13 +651,13 @@ function wait_for_all_streams_to_finish () {
       then
         let "nb_streams_finished++"
       else
-        log "Stream $stream currently processing $throughput messages-per-sec"
+        log "⏳ Stream $stream currently processing $throughput messages-per-sec"
       fi
     done
 
     CUR_WAIT=$(( CUR_WAIT+5 ))
     if [[ "$CUR_WAIT" -gt "$MAX_WAIT" ]]; then
-      echo -e "\nERROR: Please troubleshoot'.\n"
+      logerror "❗❗❗ ERROR: Please troubleshoot"
       exit 1
     fi
   done
