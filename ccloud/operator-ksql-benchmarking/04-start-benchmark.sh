@@ -60,33 +60,11 @@ function throughtput () {
   log "🚀 Stream $stream has processed $totalmessages messages. Took $duration seconds. Throughput=$throughput msg/s"
 }
 
-set +e
-# https://rmoff.net/2019/03/25/terminate-all-ksql-queries/
-log "TERMINATE all queries, if applicable"
-kubectl exec -i connectors-0 -- bash -c "curl -s -X \"POST\" \"http://ksql:9088/ksql\" \
-         -H \"Content-Type: application/vnd.ksql.v1+json; charset=utf-8\" \
-         -d '{\"ksql\": \"SHOW QUERIES;\"}' | \
-  jq '.[].queries[].id' | \
-  xargs -Ifoo curl -s -X \"POST\" \"http://ksql:9088/ksql\" \
-           -H \"Content-Type: application/vnd.ksql.v1+json; charset=utf-8\" \
-           -d '{\"ksql\": \"TERMINATE 'foo';\"}'"
-log "DROP all streams, if applicable"
-kubectl exec -i connectors-0 -- bash -c "curl -s -X \"POST\" \"http://ksql:9088/ksql\" \
-           -H \"Content-Type: application/vnd.ksql.v1+json; charset=utf-8\" \
-           -d '{\"ksql\": \"SHOW STREAMS;\"}' | \
-    jq '.[].streams[].name' | \
-    xargs -Ifoo curl -s -X \"POST\" \"http://ksql:9088/ksql\" \
-             -H \"Content-Type: application/vnd.ksql.v1+json; charset=utf-8\" \
-             -d '{\"ksql\": \"DROP STREAM 'foo';\"}'"
-log "DROP all tables, if applicable"
-kubectl exec -i connectors-0 -- bash -c "curl -s -X \"POST\" \"http://ksql:9088/ksql\" \
-             -H \"Content-Type: application/vnd.ksql.v1+json; charset=utf-8\" \
-             -d '{\"ksql\": \"SHOW TABLES;\"}' | \
-      jq '.[].tables[].name' | \
-      xargs -Ifoo curl -s -X \"POST\" \"http://ksql:9088/ksql\" \
-               -H \"Content-Type: application/vnd.ksql.v1+json; charset=utf-8\" \
-               -d '{\"ksql\": \"DROP TABLE 'foo';\"}'"
+# make sure to cleanup everything before running another round of tests
+log "Executing 05-cleanup-queries.sh script. If it fails, re-run until everything is cleaned up"
+./05-cleanup-queries.sh
 
+set +e
 log "Delete topic FILTERED_STREAM, if applicable"
 kubectl exec -it connectors-0 -- kafka-topics --bootstrap-server ${bootstrap_servers} --command-config /tmp/config --topic FILTERED_STREAM --delete > /dev/null 2>&1
 log "Delete topic ENRICHED_O_C, if applicable"
