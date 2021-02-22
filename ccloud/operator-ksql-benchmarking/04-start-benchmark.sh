@@ -39,34 +39,33 @@ EOF
 
 kubectl cp ${CONFIG_FILE} confluent/connectors-0:/tmp/config
 
-function wait_for_all_streams_to_finish () {
-  streams="$1"
+function wait_for_stream_to_finish () {
+  stream="$1"
 
   set +e
-  nb_streams_finished=0
-  nb_streams=$(echo "$streams" | wc -w | sed 's/ //g')
   MAX_WAIT=3600
   CUR_WAIT=0
-  while [[ ! "${nb_streams_finished}" = "${nb_streams}" ]]
+  nb_streams_finished=0
+  while [[ ! "${nb_streams_finished}" = "1" ]]
   do
-    sleep 5
-    nb_streams_finished=0
-    for stream in ${streams}
-    do
-      throughput=$(kubectl exec -i ksql-0 -- curl -s -X "POST" "http://localhost:8088/ksql" \
-          -H "Accept: application/vnd.ksql.v1+json" \
-          -d $"{
-        \"ksql\": \"DESCRIBE EXTENDED ${stream};\",
-        \"streamsProperties\": {}
-      }" | jq -r '.[].sourceDescription.statistics' | grep -Eo '(^|\s)messages-per-sec:\s*\d*\.*\d*' | cut -d":" -f 2 | sed 's/ //g')
-      if [ "$throughput" = "0" ] || [ "$throughput" = "" ]
-      then
-        let "nb_streams_finished++"
-      else
-        log "⏳ Stream $stream currently processing $throughput messages-per-sec"
-      fi
-    done
+    throughput=$(kubectl exec -i ksql-0 -- curl -s -X "POST" "http://localhost:8088/ksql" \
+        -H "Accept: application/vnd.ksql.v1+json" \
+        -d $"{
+      \"ksql\": \"DESCRIBE EXTENDED ${stream};\",
+      \"streamsProperties\": {}
+    }" | jq -r '.[].sourceDescription.statistics' | grep -Eo '(^|\s)messages-per-sec:\s*\d*\.*\d*' | cut -d":" -f 2 | sed 's/ //g')
+    if [ "$throughput" = "0" ]
+    then
+      let "nb_streams_finished++"
+    elif [ "$throughput" = "" ]
+    then
+      log "⚠️ Stream $stream has not started to process messages"
+      continue
+    else
+      log "⏳ Stream $stream currently processing $throughput messages-per-sec"
+    fi
 
+    sleep 5
     CUR_WAIT=$(( CUR_WAIT+5 ))
     if [[ "$CUR_WAIT" -gt "$MAX_WAIT" ]]; then
       logerror "❗❗❗ ERROR: Please troubleshoot"
@@ -190,7 +189,7 @@ FROM
 WHERE productid='Product_1' or productid='Product_2';
 EOF
 
-wait_for_all_streams_to_finish "FILTERED_STREAM"
+wait_for_stream_to_finish "FILTERED_STREAM"
 throughtput "FILTERED_STREAM" "$SECONDS"
 
 log "Verify we have received data in topic FILTERED_STREAM"
@@ -221,7 +220,7 @@ LEFT OUTER JOIN
     ON ((O.CUSTOMERID = CUSTOMERS.CUSTOMERID));
 EOF
 
-wait_for_all_streams_to_finish "ENRICHED_O_C"
+wait_for_stream_to_finish "ENRICHED_O_C"
 throughtput "ENRICHED_O_C" "$SECONDS"
 
 log "Verify we have received data in topic ENRICHED_O_C"
@@ -255,7 +254,7 @@ LEFT JOIN
 ON O.PRODUCTID = P.PRODUCTID;
 EOF
 
-wait_for_all_streams_to_finish "ENRICHED_O_C_P"
+wait_for_stream_to_finish "ENRICHED_O_C_P"
 throughtput "ENRICHED_O_C_P" "$SECONDS"
 
 log "Verify we have received data in topic ENRICHED_O_C_P"
@@ -290,7 +289,7 @@ INNER JOIN SHIPMENTS S
 ON O.ORDERID = S.ORDERID;
 EOF
 
-wait_for_all_streams_to_finish "ORDERS_SHIPPED"
+wait_for_stream_to_finish "ORDERS_SHIPPED"
 throughtput "ORDERS_SHIPPED" "$SECONDS"
 
 log "Verify we have received data in topic ORDERS_SHIPPED"
@@ -317,7 +316,7 @@ GROUP BY
   os.PRODUCTID, os.CUSTOMERID;
 EOF
 
-wait_for_all_streams_to_finish "ORDERPER_PROD_CUST_AGG"
+wait_for_stream_to_finish "ORDERPER_PROD_CUST_AGG"
 throughtput "ORDERPER_PROD_CUST_AGG" "$SECONDS"
 
 log "Verify we have received data in topic ORDERPER_PROD_CUST_AGG"
