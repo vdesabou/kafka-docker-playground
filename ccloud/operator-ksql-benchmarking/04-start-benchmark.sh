@@ -65,6 +65,14 @@ function wait_for_stream_to_finish () {
       log "⏳ Stream $stream currently processing $throughput messages-per-sec"
     fi
 
+    # cpu and memory usage
+    for (( i=0; i<$ksql_replicas; i++ ))
+    do
+      cpu=$(kubectl top pod ksql-$i --no-headers=true |awk '{print $2}')
+      memory=$(kubectl top pod ksql-$i --no-headers=true |awk '{print $3}')
+      log "📈 ksql-$i CPU $cpu | MEMORY $memory"
+    done
+
     sleep 5
     CUR_WAIT=$(( CUR_WAIT+5 ))
     if [[ "$CUR_WAIT" -gt "$MAX_WAIT" ]]; then
@@ -108,7 +116,9 @@ function throughtput () {
   throughput=$(echo $((totalmessages / duration)))
   log "🚀 Stream $stream has processed $totalmessages messages. Took $duration seconds. Throughput=$throughput msg/s"
 }
+wait_for_stream_to_finish "FILTERED_STREAM"
 
+exit 0
 # make sure to cleanup everything before running another round of tests
 log "Executing 05-cleanup-queries.sh script. If it fails, re-run until everything is cleaned up"
 ./05-cleanup-queries.sh
