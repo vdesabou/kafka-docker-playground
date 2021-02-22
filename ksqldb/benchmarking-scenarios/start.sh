@@ -4,6 +4,7 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
+
 function wait_for_all_streams_to_finish () {
   streams="$1"
 
@@ -45,12 +46,25 @@ function throughtput () {
   stream="$1"
   duration="$2"
 
-  totalmessages=$(curl -s -X "POST" "http://localhost:8088/ksql" \
-      -H "Accept: application/vnd.ksql.v1+json" \
-      -d $"{
-    \"ksql\": \"DESCRIBE EXTENDED $stream;\",
-    \"streamsProperties\": {}
-  }" | jq -r '.[].sourceDescription.statistics' | grep -Eo '(^|\s)total-messages:\s*\d*\.*\d*' | cut -d":" -f 2 | sed 's/ //g')
+  MAX_WAIT=600
+  CUR_WAIT=0
+  totalmessages=""
+  while [[ "${totalmessages}" = "" ]]
+  do
+    totalmessages=$(curl -s -X "POST" "http://localhost:8088/ksql" \
+        -H "Accept: application/vnd.ksql.v1+json" \
+        -d $"{
+      \"ksql\": \"DESCRIBE EXTENDED $stream;\",
+      \"streamsProperties\": {}
+    }" | jq -r '.[].sourceDescription.statistics' | grep -Eo '(^|\s)total-messages:\s*\d*\.*\d*' | cut -d":" -f 2 | sed 's/ //g')
+
+    sleep 5
+    CUR_WAIT=$(( CUR_WAIT+5 ))
+    if [[ "$CUR_WAIT" -gt "$MAX_WAIT" ]]; then
+      logerror "❗❗❗ ERROR: Please troubleshoot"
+      exit 1
+    fi
+  done
 
   throughput=$(echo $((totalmessages / duration)))
   log "🚀 Stream $stream has processed $totalmessages messages. Took $duration seconds. Throughput=$throughput msg/s"
