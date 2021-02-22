@@ -26,7 +26,6 @@ fi
 verify_installed "kubectl"
 verify_installed "helm"
 
-set +e
 # https://rmoff.net/2019/03/25/terminate-all-ksql-queries/
 log "TERMINATE all queries, if applicable"
 kubectl exec -i connectors-0 -- bash -c "curl -s -X \"POST\" \"http://ksql:9088/ksql\" \
@@ -35,7 +34,7 @@ kubectl exec -i connectors-0 -- bash -c "curl -s -X \"POST\" \"http://ksql:9088/
   jq '.[].queries[].id' | \
   xargs -Ifoo curl -s -X \"POST\" \"http://ksql:9088/ksql\" \
            -H \"Content-Type: application/vnd.ksql.v1+json; charset=utf-8\" \
-           -d '{\"ksql\": \"TERMINATE 'foo';\"}'"
+           -d '{\"ksql\": \"TERMINATE 'foo';\"}' | jq ."
 log "DROP all streams, if applicable"
 kubectl exec -i connectors-0 -- bash -c "curl -s -X \"POST\" \"http://ksql:9088/ksql\" \
            -H \"Content-Type: application/vnd.ksql.v1+json; charset=utf-8\" \
@@ -43,7 +42,7 @@ kubectl exec -i connectors-0 -- bash -c "curl -s -X \"POST\" \"http://ksql:9088/
     jq '.[].streams[].name' | \
     xargs -Ifoo curl -s -X \"POST\" \"http://ksql:9088/ksql\" \
              -H \"Content-Type: application/vnd.ksql.v1+json; charset=utf-8\" \
-             -d '{\"ksql\": \"DROP STREAM 'foo';\"}'"
+             -d '{\"ksql\": \"DROP STREAM 'foo';\"}' | jq ."
 log "DROP all tables, if applicable"
 kubectl exec -i connectors-0 -- bash -c "curl -s -X \"POST\" \"http://ksql:9088/ksql\" \
              -H \"Content-Type: application/vnd.ksql.v1+json; charset=utf-8\" \
@@ -51,5 +50,4 @@ kubectl exec -i connectors-0 -- bash -c "curl -s -X \"POST\" \"http://ksql:9088/
       jq '.[].tables[].name' | \
       xargs -Ifoo curl -s -X \"POST\" \"http://ksql:9088/ksql\" \
                -H \"Content-Type: application/vnd.ksql.v1+json; charset=utf-8\" \
-               -d '{\"ksql\": \"DROP TABLE 'foo';\"}'"
-set -e
+               -d '{\"ksql\": \"DROP TABLE 'foo';\"}' | jq ."
