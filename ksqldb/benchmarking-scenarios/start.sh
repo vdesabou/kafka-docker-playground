@@ -4,6 +4,58 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
+function wait_for_all_streams_to_finish () {
+  streams="$1"
+
+  set +e
+  nb_streams_finished=0
+  nb_streams=$(echo "$streams" | wc -w | sed 's/ //g')
+  MAX_WAIT=3600
+  CUR_WAIT=0
+  while [[ ! "${nb_streams_finished}" = "${nb_streams}" ]]
+  do
+    sleep 5
+    nb_streams_finished=0
+    for stream in ${streams}
+    do
+      throughput=$(curl -s -X "POST" "http://localhost:8088/ksql" \
+          -H "Accept: application/vnd.ksql.v1+json" \
+          -d $"{
+        \"ksql\": \"DESCRIBE EXTENDED ${stream};\",
+        \"streamsProperties\": {}
+      }" | jq -r '.[].sourceDescription.statistics' | grep -Eo '(^|\s)messages-per-sec:\s*\d*\.*\d*' | cut -d":" -f 2 | sed 's/ //g')
+      if [ "$throughput" = "0" ] || [ "$throughput" = "" ]
+      then
+        let "nb_streams_finished++"
+      else
+        log "⏳ Stream $stream currently processing $throughput messages-per-sec"
+      fi
+    done
+
+    CUR_WAIT=$(( CUR_WAIT+5 ))
+    if [[ "$CUR_WAIT" -gt "$MAX_WAIT" ]]; then
+      logerror "❗❗❗ ERROR: Please troubleshoot"
+      exit 1
+    fi
+  done
+  set -e
+}
+
+function throughtput () {
+  stream="$1"
+  duration="$2"
+
+  totalmessages=$(kubectl exec -i ksql-0 -- curl -s -X "POST" "http://localhost:8088/ksql" \
+      -H "Accept: application/vnd.ksql.v1+json" \
+      -d $"{
+    \"ksql\": \"DESCRIBE EXTENDED $stream;\",
+    \"streamsProperties\": {}
+  }" | jq -r '.[].sourceDescription.statistics' | grep -Eo '(^|\s)total-messages:\s*\d*\.*\d*' | cut -d":" -f 2 | sed 's/ //g')
+
+  throughput=$(echo $((totalmessages / duration)))
+  log "🚀 Stream $stream has processed $totalmessages messages. Took $duration seconds. Throughput=$throughput msg/s"
+}
+
 NOW="$(date +%s)000"
 sed -e "s|:NOW:|$NOW|g" \
     ${DIR}/schemas/orders-template.avro > ${DIR}/schemas/orders.avro
@@ -138,6 +190,7 @@ WITH
 EOF
 
 log "START BENCHMARK for QUERY 0"
+SECONDS=0
 timeout 120 docker exec -i ksqldb-cli bash -c 'echo -e "\n\n⏳ Waiting for ksqlDB to be available before launching CLI\n"; while [ $(curl -s -o /dev/null -w %{http_code} http://ksqldb-server:8088/) -eq 000 ] ; do echo -e $(date) "KSQL Server HTTP state: " $(curl -s -o /dev/null -w %{http_code} http:/ksqldb-server:8088/) " (waiting for 200)" ; sleep 10 ; done; ksql http://ksqldb-server:8088' << EOF
 
 SET 'auto.offset.reset' = 'earliest';
@@ -150,6 +203,7 @@ WHERE productid='Product_1' or productid='Product_2';
 EOF
 
 wait_for_all_streams_to_finish "FILTERED_STREAM" ""
+throughtput "FILTERED_STREAM" "$SECONDS"
 
 totalmessages=$(curl -s -X "POST" "http://localhost:8088/ksql" \
     -H "Accept: application/vnd.ksql.v1+json" \
@@ -161,6 +215,7 @@ throughput=$(echo $((totalmessages / SECONDS)))
 log "Processed $totalmessages messages. Took $SECONDS seconds. Throughput=$throughput msg/s"
 
 log "START BENCHMARK for QUERY 1"
+SECONDS=0
 timeout 120 docker exec -i ksqldb-cli bash -c 'echo -e "\n\n⏳ Waiting for ksqlDB to be available before launching CLI\n"; while [ $(curl -s -o /dev/null -w %{http_code} http://ksqldb-server:8088/) -eq 000 ] ; do echo -e $(date) "KSQL Server HTTP state: " $(curl -s -o /dev/null -w %{http_code} http:/ksqldb-server:8088/) " (waiting for 200)" ; sleep 10 ; done; ksql http://ksqldb-server:8088' << EOF
 
 SET 'auto.offset.reset' = 'earliest';
@@ -185,16 +240,7 @@ LEFT OUTER JOIN
 EOF
 
 wait_for_all_streams_to_finish "ENRICHED_O_C" ""
-
-totalmessages=$(curl -s -X "POST" "http://localhost:8088/ksql" \
-    -H "Accept: application/vnd.ksql.v1+json" \
-    -d $"{
-  \"ksql\": \"DESCRIBE EXTENDED ENRICHED_O_C;\",
-  \"streamsProperties\": {}
-}" | jq -r '.[].sourceDescription.statistics' | grep -Eo '(^|\s)total-messages:\s*\d*\.*\d*' | cut -d":" -f 2 | sed 's/ //g')
-throughput=$(echo $((totalmessages / SECONDS)))
-log "Processed $totalmessages messages. Took $SECONDS seconds. Throughput=$throughput msg/s"
-
+throughtput "ENRICHED_O_C" "$SECONDS"
 
 SECONDS=0
 log "START BENCHMARK for QUERY 2"
@@ -225,15 +271,7 @@ ON O.PRODUCTID = P.PRODUCTID;
 EOF
 
 wait_for_all_streams_to_finish "ENRICHED_O_C_P" ""
-
-totalmessages=$(curl -s -X "POST" "http://localhost:8088/ksql" \
-    -H "Accept: application/vnd.ksql.v1+json" \
-    -d $"{
-  \"ksql\": \"DESCRIBE EXTENDED ENRICHED_O_C_P;\",
-  \"streamsProperties\": {}
-}" | jq -r '.[].sourceDescription.statistics' | grep -Eo '(^|\s)total-messages:\s*\d*\.*\d*' | cut -d":" -f 2 | sed 's/ //g')
-throughput=$(echo $((totalmessages / SECONDS)))
-log "Processed $totalmessages messages. Took $SECONDS seconds. Throughput=$throughput msg/s"
+throughtput "ENRICHED_O_C_P" "$SECONDS"
 
 SECONDS=0
 log "START BENCHMARK for QUERY 3"
@@ -265,15 +303,7 @@ ON O.ORDERID = S.ORDERID;
 EOF
 
 wait_for_all_streams_to_finish "ORDERS_SHIPPED" ""
-
-totalmessages=$(curl -s -X "POST" "http://localhost:8088/ksql" \
-    -H "Accept: application/vnd.ksql.v1+json" \
-    -d $"{
-  \"ksql\": \"DESCRIBE EXTENDED ORDERS_SHIPPED;\",
-  \"streamsProperties\": {}
-}" | jq -r '.[].sourceDescription.statistics' | grep -Eo '(^|\s)total-messages:\s*\d*\.*\d*' | cut -d":" -f 2 | sed 's/ //g')
-throughput=$(echo $((totalmessages / SECONDS)))
-log "Processed $totalmessages messages. Took $SECONDS seconds. Throughput=$throughput msg/s"
+throughtput "ORDERS_SHIPPED" "$SECONDS"
 
 SECONDS=0
 log "START BENCHMARK for QUERY 4"
@@ -297,12 +327,4 @@ GROUP BY
 EOF
 
 wait_for_all_streams_to_finish "ORDERPER_PROD_CUST_AGG" ""
-
-totalmessages=$(curl -s -X "POST" "http://localhost:8088/ksql" \
-    -H "Accept: application/vnd.ksql.v1+json" \
-    -d $"{
-  \"ksql\": \"DESCRIBE EXTENDED ORDERPER_PROD_CUST_AGG;\",
-  \"streamsProperties\": {}
-}" | jq -r '.[].sourceDescription.statistics' | grep -Eo '(^|\s)total-messages:\s*\d*\.*\d*' | cut -d":" -f 2 | sed 's/ //g')
-throughput=$(echo $((totalmessages / SECONDS)))
-log "Processed $totalmessages messages. Took $SECONDS seconds. Throughput=$throughput msg/s"
+throughtput "ORDERPER_PROD_CUST_AGG" "$SECONDS"
