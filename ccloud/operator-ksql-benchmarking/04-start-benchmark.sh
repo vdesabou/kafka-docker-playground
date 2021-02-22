@@ -83,12 +83,25 @@ function throughtput () {
   totalmessages=0
   for (( i=0; i<$ksql_replicas; i++ ))
   do
-    messages=$(kubectl exec -i ksql-$i -- curl -s -X "POST" "http://localhost:8088/ksql" \
-        -H "Accept: application/vnd.ksql.v1+json" \
-        -d $"{
-      \"ksql\": \"DESCRIBE EXTENDED $stream;\",
-      \"streamsProperties\": {}
-    }" | jq -r '.[].sourceDescription.statistics' | grep -Eo '(^|\s)total-messages:\s*\d*\.*\d*' | cut -d":" -f 2 | sed 's/ //g')
+    MAX_WAIT=600
+    CUR_WAIT=0
+    messages=""
+    while [[ "${messages}" = "" ]]
+    do
+      messages=$(kubectl exec -i ksql-$i -- curl -s -X "POST" "http://localhost:8088/ksql" \
+          -H "Accept: application/vnd.ksql.v1+json" \
+          -d $"{
+        \"ksql\": \"DESCRIBE EXTENDED $stream;\",
+        \"streamsProperties\": {}
+      }" | jq -r '.[].sourceDescription.statistics' | grep -Eo '(^|\s)total-messages:\s*\d*\.*\d*' | cut -d":" -f 2 | sed 's/ //g')
+
+      sleep 5
+      CUR_WAIT=$(( CUR_WAIT+5 ))
+      if [[ "$CUR_WAIT" -gt "$MAX_WAIT" ]]; then
+        logerror "❗❗❗ ERROR: Please troubleshoot"
+        exit 1
+      fi
+    done
     totalmessages=$((totalmessages + messages))
     log "ℹ️ $messages messages processed by instance ksql-$i"
   done
