@@ -137,6 +137,29 @@ WITH
 
 EOF
 
+log "START BENCHMARK for QUERY 0"
+timeout 120 docker exec -i ksqldb-cli bash -c 'echo -e "\n\n⏳ Waiting for ksqlDB to be available before launching CLI\n"; while [ $(curl -s -o /dev/null -w %{http_code} http://ksqldb-server:8088/) -eq 000 ] ; do echo -e $(date) "KSQL Server HTTP state: " $(curl -s -o /dev/null -w %{http_code} http:/ksqldb-server:8088/) " (waiting for 200)" ; sleep 10 ; done; ksql http://ksqldb-server:8088' << EOF
+
+SET 'auto.offset.reset' = 'earliest';
+
+CREATE STREAM FILTERED_STREAM AS SELECT
+  *
+FROM
+  ORDERS
+WHERE productid='Product_1' or productid='Product_2';
+EOF
+
+wait_for_all_streams_to_finish "FILTERED_STREAM" ""
+
+totalmessages=$(curl -s -X "POST" "http://localhost:8088/ksql" \
+    -H "Accept: application/vnd.ksql.v1+json" \
+    -d $"{
+  \"ksql\": \"DESCRIBE EXTENDED FILTERED_STREAM;\",
+  \"streamsProperties\": {}
+}" | jq -r '.[].sourceDescription.statistics' | grep -Eo '(^|\s)total-messages:\s*\d*\.*\d*' | cut -d":" -f 2 | sed 's/ //g')
+throughput=$(echo $((totalmessages / SECONDS)))
+log "Processed $totalmessages messages. Took $SECONDS seconds. Throughput=$throughput msg/s"
+
 log "START BENCHMARK for QUERY 1"
 timeout 120 docker exec -i ksqldb-cli bash -c 'echo -e "\n\n⏳ Waiting for ksqlDB to be available before launching CLI\n"; while [ $(curl -s -o /dev/null -w %{http_code} http://ksqldb-server:8088/) -eq 000 ] ; do echo -e $(date) "KSQL Server HTTP state: " $(curl -s -o /dev/null -w %{http_code} http:/ksqldb-server:8088/) " (waiting for 200)" ; sleep 10 ; done; ksql http://ksqldb-server:8088' << EOF
 
