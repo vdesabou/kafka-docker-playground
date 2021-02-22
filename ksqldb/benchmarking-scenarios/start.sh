@@ -45,7 +45,7 @@ function throughtput () {
   stream="$1"
   duration="$2"
 
-  totalmessages=$(kubectl exec -i ksql-0 -- curl -s -X "POST" "http://localhost:8088/ksql" \
+  totalmessages=$(curl -s -X "POST" "http://localhost:8088/ksql" \
       -H "Accept: application/vnd.ksql.v1+json" \
       -d $"{
     \"ksql\": \"DESCRIBE EXTENDED $stream;\",
@@ -202,17 +202,8 @@ FROM
 WHERE productid='Product_1' or productid='Product_2';
 EOF
 
-wait_for_all_streams_to_finish "FILTERED_STREAM" ""
+wait_for_all_streams_to_finish "FILTERED_STREAM"
 throughtput "FILTERED_STREAM" "$SECONDS"
-
-totalmessages=$(curl -s -X "POST" "http://localhost:8088/ksql" \
-    -H "Accept: application/vnd.ksql.v1+json" \
-    -d $"{
-  \"ksql\": \"DESCRIBE EXTENDED FILTERED_STREAM;\",
-  \"streamsProperties\": {}
-}" | jq -r '.[].sourceDescription.statistics' | grep -Eo '(^|\s)total-messages:\s*\d*\.*\d*' | cut -d":" -f 2 | sed 's/ //g')
-throughput=$(echo $((totalmessages / SECONDS)))
-log "Processed $totalmessages messages. Took $SECONDS seconds. Throughput=$throughput msg/s"
 
 log "START BENCHMARK for QUERY 1"
 SECONDS=0
@@ -239,7 +230,7 @@ LEFT OUTER JOIN
     ON ((O.CUSTOMERID = CUSTOMERS.CUSTOMERID));
 EOF
 
-wait_for_all_streams_to_finish "ENRICHED_O_C" ""
+wait_for_all_streams_to_finish "ENRICHED_O_C"
 throughtput "ENRICHED_O_C" "$SECONDS"
 
 SECONDS=0
@@ -270,7 +261,7 @@ LEFT JOIN
 ON O.PRODUCTID = P.PRODUCTID;
 EOF
 
-wait_for_all_streams_to_finish "ENRICHED_O_C_P" ""
+wait_for_all_streams_to_finish "ENRICHED_O_C_P"
 throughtput "ENRICHED_O_C_P" "$SECONDS"
 
 SECONDS=0
@@ -302,7 +293,7 @@ INNER JOIN SHIPMENTS S
 ON O.ORDERID = S.ORDERID;
 EOF
 
-wait_for_all_streams_to_finish "ORDERS_SHIPPED" ""
+wait_for_all_streams_to_finish "ORDERS_SHIPPED"
 throughtput "ORDERS_SHIPPED" "$SECONDS"
 
 SECONDS=0
@@ -326,5 +317,5 @@ GROUP BY
   os.PRODUCTID, os.CUSTOMERID;
 EOF
 
-wait_for_all_streams_to_finish "ORDERPER_PROD_CUST_AGG" ""
+wait_for_all_streams_to_finish "ORDERPER_PROD_CUST_AGG"
 throughtput "ORDERPER_PROD_CUST_AGG" "$SECONDS"
