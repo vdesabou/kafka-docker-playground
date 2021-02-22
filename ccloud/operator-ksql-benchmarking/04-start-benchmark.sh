@@ -117,6 +117,32 @@ function throughtput () {
   log "🚀 Stream $stream has processed $totalmessages messages. Took $duration seconds. Throughput=$throughput msg/s"
 }
 
+
+SECONDS=0
+log "START BENCHMARK for QUERY 4"
+kubectl exec -i ksql-0 -- bash -c 'echo -e "\n\n⏳ Waiting for ksqlDB to be available before launching CLI\n"; while [ $(curl -s -o /dev/null -w %{http_code} http://localhost:8088/) -eq 000 ] ; do echo -e $(date) "KSQL Server HTTP state: " $(curl -s -o /dev/null -w %{http_code} http:/localhost:8088/) " (waiting for 200)" ; sleep 10 ; done; ksql http://localhost:8088' << EOF
+
+SET 'auto.offset.reset' = 'earliest';
+
+CREATE TABLE ORDERPER_PROD_CUST_AGG_VINCENT AS SELECT
+  os.PRODUCTID PRODUCTID,
+  os.CUSTOMERID CUSTOMERID,
+  COUNT(*) COUNTVAL,
+  SUM(os.ORDERUNITS) ORDERSUM,
+  MIN(UNIX_TIMESTAMP()) MINTIME,
+  MAX(UNIX_TIMESTAMP()) MAXTIME,
+  MAX(UNIX_TIMESTAMP()) - MIN(UNIX_TIMESTAMP()) TIMEDIFF
+FROM
+  ORDERS_SHIPPED os
+WINDOW TUMBLING ( SIZE 1 MINUTES )
+GROUP BY
+  os.PRODUCTID, os.CUSTOMERID;
+EOF
+
+wait_for_stream_to_finish "ORDERPER_PROD_CUST_AGG_VINCENT"
+throughtput "ORDERPER_PROD_CUST_AGG_VINCENT" "$SECONDS"
+
+exit 0
 # make sure to cleanup everything before running another round of tests
 log "Executing 05-cleanup-queries.sh script. If it fails, re-run until everything is cleaned up"
 ./05-cleanup-queries.sh
