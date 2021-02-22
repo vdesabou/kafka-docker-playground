@@ -116,9 +116,7 @@ function throughtput () {
   throughput=$(echo $((totalmessages / duration)))
   log "🚀 Stream $stream has processed $totalmessages messages. Took $duration seconds. Throughput=$throughput msg/s"
 }
-wait_for_stream_to_finish "FILTERED_STREAM"
 
-exit 0
 # make sure to cleanup everything before running another round of tests
 log "Executing 05-cleanup-queries.sh script. If it fails, re-run until everything is cleaned up"
 ./05-cleanup-queries.sh
