@@ -59,7 +59,7 @@ function wait_for_stream_to_finish () {
       let "nb_streams_finished++"
     elif [ "$throughput" = "" ]
     then
-      log "⚠️ Stream $stream has not started to process messages"
+      log "🐌 Stream $stream has not started to process messages"
       continue
     else
       log "⏳ Stream $stream currently processing $throughput messages-per-sec"
