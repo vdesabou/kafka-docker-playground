@@ -62,8 +62,8 @@ log "Download Confluent Operator in ${DIR}/confluent-operator"
 rm -rf ${DIR}/confluent-operator
 mkdir ${DIR}/confluent-operator
 cd ${DIR}/confluent-operator
-wget https://platform-ops-bin.s3-us-west-1.amazonaws.com/operator/confluent-operator-1.6.1-for-confluent-platform-6.0.0.tar.gz
-tar xvfz confluent-operator-1.6.1-for-confluent-platform-6.0.0.tar.gz
+wget https://platform-ops-bin.s3-us-west-1.amazonaws.com/operator/confluent-operator-1.7.0.tar.gz
+tar xvfz confluent-operator-1.7.0.tar.gz
 cd -
 
 # FIXTHIS: we need to do custom modifications in order to be able to connect Connect to Confluent Cloud Schema Registry:
