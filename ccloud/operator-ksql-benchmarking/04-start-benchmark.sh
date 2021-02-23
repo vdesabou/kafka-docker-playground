@@ -121,7 +121,7 @@ function wait_for_stream_to_finish () {
         log "ksql-$i|statistics are empty"
         touch $TMP_DIRECTORY_FINISHED/$i
       else
-        log "ksql-$i|⏳ $stream is processing $throughput msg/s [cpu=$cpu,memory=$memory]"
+        log "ksql-$i|⏳ $stream is processing $throughput msg/s [cpu=$current_cpu,memory=$current_memory]"
       fi
     done
 
