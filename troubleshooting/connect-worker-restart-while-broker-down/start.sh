@@ -47,39 +47,8 @@ docker container start connect2
 
 ${DIR}/../../scripts/wait-for-connect-and-controlcenter.sh "connect2"
 
+
 log "Getting tasks placement"
 curl --request GET \
   --url http://localhost:8083/connectors/sftp-sink/status \
   --header 'accept: application/json' | jq
-
-# FIXTHIS
-# {
-#   "name": "sftp-sink",
-#   "connector": {
-#     "state": "UNASSIGNED",
-#     "worker_id": "connect2:8083"
-#   },
-#   "tasks": [
-#     {
-#       "id": 0,
-#       "state": "UNASSIGNED",
-#       "worker_id": "connect2:8083"
-#     },
-#     {
-#       "id": 1,
-#       "state": "RUNNING",
-#       "worker_id": "connect1:8083"
-#     },
-#     {
-#       "id": 2,
-#       "state": "UNASSIGNED",
-#       "worker_id": "connect2:8083"
-#     },
-#     {
-#       "id": 3,
-#       "state": "RUNNING",
-#       "worker_id": "connect1:8083"
-#     }
-#   ],
-#   "type": "sink"
-# }
