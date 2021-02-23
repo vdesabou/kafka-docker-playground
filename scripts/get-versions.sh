@@ -60,6 +60,7 @@ do
           fi
           testdir=$(echo "$test_folder" | sed 's/\//-/g')
           last_success_time=$(grep "$dir" ci/${image_version}-${testdir}-${version}-${script_name} | tail -1 | cut -d "|" -f 2)
+          log "ci/${image_version}-${testdir}-${version}-${script_name}"
           if [ "$last_success_time" != "" ]
           then
             # now=$(date +%s)
@@ -79,8 +80,10 @@ do
           if [ "$time" == "" ]
           then
             ci="☠"
+            log "☠"
           else
             ci="👍 $time"
+            log "👍 $time"
           fi
         fi
         set -e
