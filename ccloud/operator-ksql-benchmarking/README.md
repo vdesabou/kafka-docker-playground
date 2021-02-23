@@ -208,7 +208,7 @@ $ 04-start-benchmark.sh
 
 This will create all streams and tables:
 
-```
+```sql
 CREATE TABLE CUSTOMERS
 (
     customerid varchar PRIMARY KEY,
@@ -267,7 +267,7 @@ WHERE productid='Product_1' or productid='Product_2';
 
 #### Query 1 (Table Join) - ENRICHED_O_C
 
-```
+```sql
 CREATE STREAM ENRICHED_O_C AS SELECT
   UNIX_TIMESTAMP() JOINTIME,
   O.ORDERTIME ORDERTIME,
@@ -289,7 +289,7 @@ LEFT OUTER JOIN
 
 #### Query 2 (Table Join) - ENRICHED_O_C_P
 
-```
+```sql
 CREATE STREAM ENRICHED_O_C_P AS SELECT
   UNIX_TIMESTAMP() JOINTIME,
   ORDERTIME,
@@ -314,7 +314,7 @@ ON O.PRODUCTID = P.PRODUCTID;
 
 #### Query 3 (Stream Join) - ORDERS_SHIPPED
 
-```
+```sql
 CREATE STREAM ORDERS_SHIPPED AS SELECT
   UNIX_TIMESTAMP() JOINTIME,
   O.ORDERID O_ORDERID,
@@ -340,7 +340,7 @@ ON O.ORDERID = S.ORDERID;
 
 #### Query 4 (Aggregation + Window) - ORDERPER_PROD_CUST_AGG
 
-```
+```sql
 CREATE TABLE ORDERPER_PROD_CUST_AGG AS SELECT
   os.PRODUCTID PRODUCTID,
   os.CUSTOMERID CUSTOMERID,
@@ -364,7 +364,7 @@ This is the overall flow:
 
 Every query is benchmarked individually, here is an example of output:
 
-```
+```bash
 15:56:35 ----------------------------------------------------------
 15:56:37 ksql-0|⏳ ENRICHED_O_C_P is processing 7832.46 msg/s [cpu=75,memory=1351]
 15:56:39 ksql-1|⏳ ENRICHED_O_C_P is processing 9099.10 msg/s [cpu=74,memory=1302]
