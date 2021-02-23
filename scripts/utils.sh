@@ -107,12 +107,12 @@ function displaytime {
 if [ -z "$TAG" ]
 then
     # TAG is not set, use defaults:
-    export TAG=6.0.1
+    export TAG=6.1.0
     # to handle ubi8 images
     export TAG_BASE=$TAG
     if [ -z "$CP_KAFKA_IMAGE" ]
     then
-      log "Using Confluent Platform version default tag $TAG, you can use other version by exporting TAG environment variable, example export TAG=5.5.1"
+      log "Using Confluent Platform version default tag $TAG, you can use other version by exporting TAG environment variable, example export TAG=5.5.3"
     fi
     export CP_KAFKA_IMAGE=cp-server
     export CP_BASE_IMAGE=cp-base-new
