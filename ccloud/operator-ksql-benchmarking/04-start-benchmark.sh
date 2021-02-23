@@ -125,7 +125,7 @@ function throughtput () {
         \"streamsProperties\": {}
       }" | jq -r '.[].sourceDescription.statistics' | grep -Eo '(^|\s)total-messages:\s*\d*\.*\d*' | cut -d":" -f 2 | sed 's/ //g')
 
-      # statistics are disappearng for ORDERS_SHIPPED
+      # statistics are disappearng for ORDERS_SHIPPED and ORDERPER_PROD_CUST_AGG
       if [ "$messages" = "" ]
       then
         messages=$TMP_DIRECTORY_RESULTS/messages_$i
@@ -146,6 +146,9 @@ function throughtput () {
   log "🚀 Stream $stream has processed $totalmessages messages. Took $duration seconds. Throughput=$throughput msg/s"
 }
 
+wait_for_stream_to_finish "ORDERPER_PROD_CUST_AGG"
+throughtput "ORDERPER_PROD_CUST_AGG" "$SECONDS"
+exit 0
 # make sure to cleanup everything before running another round of tests
 log "Executing 05-cleanup-queries.sh script until it succeeds"
 ./05-cleanup-queries.sh
