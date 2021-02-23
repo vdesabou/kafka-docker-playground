@@ -41,36 +41,37 @@ kubectl cp ${CONFIG_FILE} confluent/connectors-0:/tmp/config
 
 function wait_for_stream_to_finish () {
   stream="$1"
+  TMP_DIRECTORY=/tmp/wait_for_stream_to_finish
+  rm -rf $TMP_DIRECTORY
+  mkdir -p $TMP_DIRECTORY
 
   set +e
   MAX_WAIT=3600
   CUR_WAIT=0
-  nb_streams_finished=0
-  while [[ ! "${nb_streams_finished}" = "1" ]]
+  while [[ ! "$(ls -1q $TMP_DIRECTORY | wc -l | sed 's/ //g')" = "${ksql_replicas}" ]]
   do
-    throughput=$(kubectl exec -i ksql-0 -- curl -s -X "POST" "http://localhost:8088/ksql" \
-        -H "Accept: application/vnd.ksql.v1+json" \
-        -d $"{
-      \"ksql\": \"DESCRIBE EXTENDED ${stream};\",
-      \"streamsProperties\": {}
-    }" | jq -r '.[].sourceDescription.statistics' | grep -Eo '(^|\s)messages-per-sec:\s*\d*\.*\d*' | cut -d":" -f 2 | sed 's/ //g')
-    if [ "$throughput" = "0" ]
-    then
-      let "nb_streams_finished++"
-    elif [ "$throughput" = "" ]
-    then
-      log "🐌 Stream $stream has not started to process messages"
-      continue
-    else
-      log "⏳ Stream $stream currently processing $throughput messages-per-sec"
-    fi
-
-    # cpu and memory usage
+    log "----------------------------------------------------------"
     for (( i=0; i<$ksql_replicas; i++ ))
     do
+      # cpu and memory usage
       cpu=$(kubectl top pod ksql-$i --no-headers=true |awk '{print $2}')
       memory=$(kubectl top pod ksql-$i --no-headers=true |awk '{print $3}')
-      log "📈 ksql-$i CPU $cpu | MEMORY $memory"
+      throughput=$(kubectl exec -i ksql-$i -- curl -s -X "POST" "http://localhost:8088/ksql" \
+          -H "Accept: application/vnd.ksql.v1+json" \
+          -d $"{
+        \"ksql\": \"DESCRIBE EXTENDED ${stream};\",
+        \"streamsProperties\": {}
+      }" | jq -r '.[].sourceDescription.statistics' | grep -Eo '(^|\s)messages-per-sec:\s*\d*\.*\d*' | cut -d":" -f 2 | sed 's/ //g')
+      if [ "$throughput" = "0" ]
+      then
+        touch $TMP_DIRECTORY/$i
+      elif [ "$throughput" = "" ]
+      then
+        log "ksql-$i|🐌 $stream has not started"
+        continue
+      else
+        log "ksql-$i|⏳ $stream is processing $throughput msg/s [cpu=$cpu,memory=$memory]"
+      fi
     done
 
     sleep 5
@@ -98,7 +99,7 @@ function throughtput () {
       messages=$(kubectl exec -i ksql-$i -- curl -s -X "POST" "http://localhost:8088/ksql" \
           -H "Accept: application/vnd.ksql.v1+json" \
           -d $"{
-        \"ksql\": \"DESCRIBE EXTENDED $stream;\",
+        \"ksql\": \"DESCRIBE EXTENDED ${stream};\",
         \"streamsProperties\": {}
       }" | jq -r '.[].sourceDescription.statistics' | grep -Eo '(^|\s)total-messages:\s*\d*\.*\d*' | cut -d":" -f 2 | sed 's/ //g')
 
@@ -117,32 +118,6 @@ function throughtput () {
   log "🚀 Stream $stream has processed $totalmessages messages. Took $duration seconds. Throughput=$throughput msg/s"
 }
 
-
-SECONDS=0
-log "START BENCHMARK for QUERY 4"
-kubectl exec -i ksql-0 -- bash -c 'echo -e "\n\n⏳ Waiting for ksqlDB to be available before launching CLI\n"; while [ $(curl -s -o /dev/null -w %{http_code} http://localhost:8088/) -eq 000 ] ; do echo -e $(date) "KSQL Server HTTP state: " $(curl -s -o /dev/null -w %{http_code} http:/localhost:8088/) " (waiting for 200)" ; sleep 10 ; done; ksql http://localhost:8088' << EOF
-
-SET 'auto.offset.reset' = 'earliest';
-
-CREATE TABLE ORDERPER_PROD_CUST_AGG_VINCENT AS SELECT
-  os.PRODUCTID PRODUCTID,
-  os.CUSTOMERID CUSTOMERID,
-  COUNT(*) COUNTVAL,
-  SUM(os.ORDERUNITS) ORDERSUM,
-  MIN(UNIX_TIMESTAMP()) MINTIME,
-  MAX(UNIX_TIMESTAMP()) MAXTIME,
-  MAX(UNIX_TIMESTAMP()) - MIN(UNIX_TIMESTAMP()) TIMEDIFF
-FROM
-  ORDERS_SHIPPED os
-WINDOW TUMBLING ( SIZE 1 MINUTES )
-GROUP BY
-  os.PRODUCTID, os.CUSTOMERID;
-EOF
-
-wait_for_stream_to_finish "ORDERPER_PROD_CUST_AGG_VINCENT"
-throughtput "ORDERPER_PROD_CUST_AGG_VINCENT" "$SECONDS"
-
-exit 0
 # make sure to cleanup everything before running another round of tests
 log "Executing 05-cleanup-queries.sh script. If it fails, re-run until everything is cleaned up"
 ./05-cleanup-queries.sh
