@@ -142,13 +142,10 @@ function throughtput () {
     log "ℹ️ $messages messages processed by instance ksql-$i"
   done
 
-  throughput=$(echo $((totalmessages / duration)))
-  log "🚀 Stream $stream has processed $totalmessages messages. Took $duration seconds. Throughput=$throughput msg/s"
+  throughput=$(echo $((orders_iterations / duration)))
+  log "🚀 Stream $stream has processed in total $totalmessages messages in $duration seconds. Throughput (based on $orders_iterations input orders)=$throughput msg/s"
 }
 
-wait_for_stream_to_finish "ORDERPER_PROD_CUST_AGG"
-throughtput "ORDERPER_PROD_CUST_AGG" "$SECONDS"
-exit 0
 # make sure to cleanup everything before running another round of tests
 log "Executing 05-cleanup-queries.sh script until it succeeds"
 ./05-cleanup-queries.sh
