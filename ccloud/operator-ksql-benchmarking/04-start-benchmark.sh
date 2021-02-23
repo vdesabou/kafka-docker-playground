@@ -45,21 +45,52 @@ function wait_for_stream_to_finish () {
   rm -rf $TMP_DIRECTORY
   mkdir -p $TMP_DIRECTORY
 
-  TMP_DIRECTORY_RESULTS=/tmp/wait_for_stream_to_finish_results
-  rm -rf $TMP_DIRECTORY_RESULTS
+  TMP_DIRECTORY_FINISHED=$TMP_DIRECTORY/finished
+  mkdir -p $TMP_DIRECTORY_FINISHED
+
+  TMP_DIRECTORY_RESULTS=$TMP_DIRECTORY/results
   mkdir -p $TMP_DIRECTORY_RESULTS
 
+  TMP_DIRECTORY_CPU=$TMP_DIRECTORY/cpu
+  mkdir -p $TMP_DIRECTORY_CPU
+
+  TMP_DIRECTORY_MEMORY=$TMP_DIRECTORY/memory
+  mkdir -p $TMP_DIRECTORY_MEMORY
+
+  TMP_DIRECTORY_CPU_AVERAGE=$TMP_DIRECTORY/cpu_avg
+  mkdir -p $TMP_DIRECTORY_CPU_AVERAGE
+
+  TMP_DIRECTORY_MEMORY_AVERAGE=$TMP_DIRECTORY/memory_avg
+  mkdir -p $TMP_DIRECTORY_MEMORY_AVERAGE
+
+  counter=0
+
+  for (( i=0; i<$ksql_replicas; i++ ))
+  do
+    echo "0" > $TMP_DIRECTORY_CPU/$i
+    echo "0" > $TMP_DIRECTORY_MEMORY/$i
+    echo "0" > $TMP_DIRECTORY_CPU_AVERAGE/$i
+    echo "0" > $TMP_DIRECTORY_MEMORY_AVERAGE/$i
+  done
   set +e
   MAX_WAIT=3600
   CUR_WAIT=0
-  while [[ ! "$(ls -1q $TMP_DIRECTORY | wc -l | sed 's/ //g')" = "${ksql_replicas}" ]]
+  while [[ ! "$(ls -1q $TMP_DIRECTORY_FINISHED | wc -l | sed 's/ //g')" = "${ksql_replicas}" ]]
   do
     log "----------------------------------------------------------"
     for (( i=0; i<$ksql_replicas; i++ ))
     do
       # cpu and memory usage
-      cpu=$(kubectl top pod ksql-$i --no-headers=true |awk '{print $2}')
-      memory=$(kubectl top pod ksql-$i --no-headers=true |awk '{print $3}')
+      current_cpu=$(kubectl top pod ksql-$i --no-headers=true |awk '{print $2}' | sed 's/m$//')
+      old_cpu=$(cat $TMP_DIRECTORY_CPU/$i)
+      total_cpu=$((old_cpu + current_cpu))
+      echo "$total_cpu" > $TMP_DIRECTORY_CPU/$i
+
+      current_memory=$(kubectl top pod ksql-$i --no-headers=true |awk '{print $3}' | sed 's/Mi$//')
+      old_memory=$(cat $TMP_DIRECTORY_MEMORY/$i)
+      total_memory=$((old_memory + current_memory))
+      echo "$total_memory" > $TMP_DIRECTORY_MEMORY/$i
+
       throughput=$(kubectl exec -i ksql-$i -- curl -s -X "POST" "http://localhost:8088/ksql" \
           -H "Accept: application/vnd.ksql.v1+json" \
           -d $"{
@@ -75,23 +106,36 @@ function wait_for_stream_to_finish () {
       # store results in file, as statistics are disappearng for ORDERS_SHIPPED
       if [ "$messages" != "" ]
       then
-        echo "$messages" > $TMP_DIRECTORY_RESULTS/messages_$i
+        echo "$messages" > $TMP_DIRECTORY_RESULTS/$i
       fi
 
       if [ "$throughput" = "0" ]
       then
-        touch $TMP_DIRECTORY/$i
-      elif [ "$throughput" = "" ] && [ ! -f $TMP_DIRECTORY_RESULTS/messages_$i ]
+        touch $TMP_DIRECTORY_FINISHED/$i
+      elif [ "$throughput" = "" ] && [ ! -f $TMP_DIRECTORY_RESULTS/$i ]
       then
         log "ksql-$i|🐌 $stream has not started"
         continue
-      elif [ "$throughput" = "" ] && [ -f $TMP_DIRECTORY_RESULTS/messages_$i ]
+      elif [ "$throughput" = "" ] && [ -f $TMP_DIRECTORY_RESULTS/$i ]
       then
         log "ksql-$i|statistics are empty"
-        touch $TMP_DIRECTORY/$i
+        touch $TMP_DIRECTORY_FINISHED/$i
       else
         log "ksql-$i|⏳ $stream is processing $throughput msg/s [cpu=$cpu,memory=$memory]"
       fi
+    done
+
+    ((counter=counter+1))
+
+    for (( i=0; i<$ksql_replicas; i++ ))
+    do
+      total_cpu=$(cat $TMP_DIRECTORY_CPU/$i)
+      avg_cpu=$((total_cpu / counter))
+      echo "$avg_cpu" > $TMP_DIRECTORY_CPU_AVERAGE/$i
+
+      total_memory=$(cat $TMP_DIRECTORY_MEMORY/$i)
+      avg_memory=$((total_memory / counter))
+      echo "$avg_memory" > $TMP_DIRECTORY_MEMORY_AVERAGE/$i
     done
 
     sleep 5
@@ -108,7 +152,10 @@ function throughtput () {
   stream="$1"
   duration="$2"
 
-  TMP_DIRECTORY_RESULTS=/tmp/wait_for_stream_to_finish_results
+  TMP_DIRECTORY=/tmp/wait_for_stream_to_finish
+  TMP_DIRECTORY_FINISHED=$TMP_DIRECTORY/finished
+  TMP_DIRECTORY_CPU_AVERAGE=$TMP_DIRECTORY/cpu_avg
+  TMP_DIRECTORY_MEMORY_AVERAGE=$TMP_DIRECTORY/memory_avg
 
   totalmessages=0
   for (( i=0; i<$ksql_replicas; i++ ))
@@ -128,7 +175,7 @@ function throughtput () {
       # statistics are disappearng for ORDERS_SHIPPED and ORDERPER_PROD_CUST_AGG
       if [ "$messages" = "" ]
       then
-        messages=$TMP_DIRECTORY_RESULTS/messages_$i
+        messages=$TMP_DIRECTORY_FINISHED/$i
       fi
 
       sleep 5
@@ -144,6 +191,21 @@ function throughtput () {
 
   throughput=$(echo $((orders_iterations / duration)))
   log "🚀 Stream $stream has processed in total $totalmessages messages in $duration seconds. Throughput (based on $orders_iterations input orders)=$throughput msg/s"
+
+  # compute avg cpu and latency
+  avg_cpu_total=0
+  avg_memory_total=0
+  for (( i=0; i<$ksql_replicas; i++ ))
+  do
+    avg_cpu=$(cat $TMP_DIRECTORY_CPU_AVERAGE/$i)
+    avg_memory=$(cat $TMP_DIRECTORY_MEMORY_AVERAGE/$i)
+    log "ksql-$i|avg_cpu=${avg_cpu}m, avg_memory=${avg_memory}Mi"
+    avg_cpu_total=$((avg_cpu_total + avg_cpu))
+    avg_memory_total=$((avg_memory_total + avg_memory))
+  done
+  avg_cpu_final=$((avg_cpu_total / ksql_replicas))
+  avg_memory_final=$((avg_memory_total / ksql_replicas))
+  log "Average|avg_cpu=${avg_cpu_final}m, avg_memory=${avg_memory_final} Mi"
 }
 
 # make sure to cleanup everything before running another round of tests
