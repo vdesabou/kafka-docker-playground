@@ -368,7 +368,7 @@ $ 05-cleanup-queries.sh
 
 If you want to remove all queries, streams and tables, you can use this script. Note that it is also called at the start of `04-start-benchmark` in order to be idempotent.
 
-### Stop everything
+### Stop and remove EKS cluster
 
 ```
 $ stop.sh
