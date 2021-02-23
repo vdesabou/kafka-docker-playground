@@ -10,8 +10,28 @@ Confluent Operator 1.7.0 with EKS is used to deploy self-managed pods below:
 * `ksql_replicas` (configurable in `test.properties`) ksqlDB pods
 * Prometheus and Grafana pods: accessible at http://127.0.0.1:3000 (`admin/admin`)
 
+![grafana](./images/Screenshot2.jpg)
+
 **IMPORTANT**: it requires tweaks to helm templates file, see tweaks [here](https://github.com/vdesabou/kafka-docker-playground/blob/1377447938e4abea65e8ca1755ac3f835c74955c/ccloud/operator-ksql-benchmarking/02-start-ksql-and-connect.sh#L69)
 
+
+## The benchmark
+
+Our benchmark simulates a simple workload where we have two streams, **ORDERS** and **SHIPMENTS**.
+The orders for products are placed by customers, therefore, we have two tables, a **PRODUCT** table and a **CUSTOMER** table, that will be used to enrich the **ORDERS** stream in the benchmark. Each of these streams and tables are backed by Kafka topics.
+All the Kafka topics in this benchmark have 12 partitions (configurable with `number_topic_partitions`).
+For this benchmark we will have 10M orders where 100% of them will be shipped (**SHIPMENTS** stream will have 10M records). We will have 1000 products and 10000 customers.
+
+Here is the summary of streams and tables in the benchmark:
+* STREAMS:
+  * ORDERS (10M orders)
+  * SHIPMENTS (10M shipments)
+
+* TABLES:
+  * CUSTOMERS (10000 customers)
+  * PRODUCTS (1000 products)
+
+The benchmark uses JSON format.
 ## Setup
 
 Copy `ccloud-cluster-example.properties` into a new file called `ccloud-cluster.properties` and update properties according to your Confluent Cloud cluster:
@@ -257,6 +277,8 @@ And then execute 5 queries:
 
 #### Query 0 (Filtering) - FILTERED_STREAM
 
+Simple filtering:
+
 ```
 CREATE STREAM FILTERED_STREAM AS SELECT
   *
@@ -266,6 +288,8 @@ WHERE productid='Product_1' or productid='Product_2';
 ```
 
 #### Query 1 (Table Join) - ENRICHED_O_C
+
+Join the ORDERS stream with the CUSTOMERS stream to create an enriched orders stream with the customer information.
 
 ```sql
 CREATE STREAM ENRICHED_O_C AS SELECT
@@ -288,6 +312,8 @@ LEFT OUTER JOIN
 ```
 
 #### Query 2 (Table Join) - ENRICHED_O_C_P
+
+Joins the enriched stream with the PRODUCTS table to create an even more enriched orders stream where we have both customer and product information included in the messages.
 
 ```sql
 CREATE STREAM ENRICHED_O_C_P AS SELECT
@@ -313,6 +339,8 @@ ON O.PRODUCTID = P.PRODUCTID;
 ```
 
 #### Query 3 (Stream Join) - ORDERS_SHIPPED
+
+The third query will join the enriched orders stream and is joined with the shipments stream to determine the orders that have been shipped in a 2 hour window from the order timestamp. The result of the stream-stream join is the orders that have been shipped within the 2 hour window (which will be ~10M since our datagen created shipment messages with timestamp within 2 hours of orders).
 
 ```sql
 CREATE STREAM ORDERS_SHIPPED AS SELECT
@@ -340,6 +368,8 @@ ON O.ORDERID = S.ORDERID;
 
 #### Query 4 (Aggregation + Window) - ORDERPER_PROD_CUST_AGG
 
+The forth query will perform a windowed aggregation where we compute the count and sum of orders that have been shipped within two hours for each customer and product with a tumbling window of 1 minutes.
+
 ```sql
 CREATE TABLE ORDERPER_PROD_CUST_AGG AS SELECT
   os.PRODUCTID PRODUCTID,
@@ -358,7 +388,11 @@ GROUP BY
 
 #### Overall Flow
 
-This is the overall flow:
+The following diagram depicts the data flow in the benchmark. The rectangle nodes are the streams and tables in the benchmark and the oval nodes represent the queries.
+
+![flow](./images/Screenshot3.jpg)
+
+Flow in Control Center:
 
 ![flow](./images/Screenshot1.jpg)
 
