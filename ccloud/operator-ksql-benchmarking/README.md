@@ -2,8 +2,8 @@
 
 ## Objective
 
-Run self-managed ksqlDB benchmarks using dedicated Confluent Cloud cluster.
-Confluent Operator with EKS is used to deploy self-managed pods below:
+Run self-managed ksqlDB benchmarks using (dedicated) Confluent Cloud cluster.
+Confluent Operator 1.7.0 with EKS is used to deploy self-managed pods below:
 
 * 1 Connect pod: used to inject data into topics, see `03-inject-data-in-topics.sh`
 * 1 Control Center pod: accessible at http://127.0.0.1:9021 (`admin/Developer1`)
@@ -136,7 +136,13 @@ Datagen Schema is available [here](https://github.com/vdesabou/kafka-docker-play
 Example of JSON message:
 
 ```json
-
+{
+    "customerid": "Customer_944",
+    "orderid": 1441,
+    "ordertime": 1614070519441,
+    "orderunits": 1441,
+    "productid": "Product_9"
+}
 ```
 
 #### shipments topic
@@ -147,7 +153,13 @@ Datagen Schema is available [here](https://github.com/vdesabou/kafka-docker-play
 Example of JSON message:
 
 ```json
-
+{
+    "customerid": "Customer_504",
+    "orderid": 2310,
+    "productid": "Product_884",
+    "shipment_time": 1614070520310,
+    "shipmentid": 2310
+}
 ```
 
 #### customers topic
@@ -158,7 +170,18 @@ Datagen Schema is available [here](https://github.com/vdesabou/kafka-docker-play
 Example of JSON message:
 
 ```json
-
+{
+    "address": {
+        "city": "City_68",
+        "state": "State_21",
+        "zipcode": 46353
+    },
+    "customerid": "Customer_27",
+    "firstname": "AbdelKable_86",
+    "gender": "MALE",
+    "lastname": "Oriana_70",
+    "random_data": "NCQjIcNclxlwzLqtAzqriUEkkVRYUlgBcwZFrknejfwxpXmIuwZvMPUcKnZWgoemPFbGZtDKknWIDueRydUhVSefQqFcOKvKdvckWINFnTcqYVKCtyPeviFjOAIefeiAAflzbKANQixravzjUmaMOE"
+}
 ```
 
 #### products topic
@@ -169,7 +192,12 @@ Datagen Schema is available [here](https://github.com/vdesabou/kafka-docker-play
 Example of JSON message:
 
 ```json
-
+{
+    "category": "orange",
+    "description": "XudpHsARLQSYQYdcKmTxZwcXFSZccSmVefdprvRlJIQVdxrNNVCQKCuTMiwIFJjJyCqPXBxkHGLCXQFqpdhmvbqkqbnbsCIGTMRiyheeHTiOPvzDiQwPnHZQLmPkVHxUBVkTIoCSWlTnBQlEeyeATB",
+    "name": "Product_878",
+    "productid": "Product_831"
+}
 ```
 
 ### Step 04 - Start benchmark
