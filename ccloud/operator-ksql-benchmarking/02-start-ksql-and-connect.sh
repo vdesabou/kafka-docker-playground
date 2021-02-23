@@ -142,6 +142,7 @@ helm upgrade --install \
   --set connect.dependencies.schemaRegistry.authentication.username="${schema_registry_api_key}" \
   --set connect.dependencies.schemaRegistry.authentication.password="${schema_registry_api_secret}"
 
+
 log "Install ksql"
 helm upgrade --install \
   ksql \
@@ -153,6 +154,7 @@ helm upgrade --install \
   --set ksql.resources.requests.cpu="${ksql_cpu}" \
   --set ksql.resources.requests.memory="${ksql_memory}" \
   --set ksql.jvmConfig.heapSize="${ksql_jvm_memory}" \
+  --set ksql.volume.data="30Gi" \
   --set global.provider.region="${eks_region}" \
   --set global.sasl.plain.username="${cluster_api_key}" \
   --set global.sasl.plain.password="${cluster_api_secret}" \
