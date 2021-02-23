@@ -45,6 +45,10 @@ function wait_for_stream_to_finish () {
   rm -rf $TMP_DIRECTORY
   mkdir -p $TMP_DIRECTORY
 
+  TMP_DIRECTORY_RESULTS=/tmp/wait_for_stream_to_finish_results
+  rm -rf $TMP_DIRECTORY_RESULTS
+  mkdir -p $TMP_DIRECTORY_RESULTS
+
   set +e
   MAX_WAIT=3600
   CUR_WAIT=0
@@ -62,13 +66,29 @@ function wait_for_stream_to_finish () {
         \"ksql\": \"DESCRIBE EXTENDED ${stream};\",
         \"streamsProperties\": {}
       }" | jq -r '.[].sourceDescription.statistics' | grep -Eo '(^|\s)messages-per-sec:\s*\d*\.*\d*' | cut -d":" -f 2 | sed 's/ //g')
+      messages=$(kubectl exec -i ksql-$i -- curl -s -X "POST" "http://localhost:8088/ksql" \
+          -H "Accept: application/vnd.ksql.v1+json" \
+          -d $"{
+        \"ksql\": \"DESCRIBE EXTENDED ${stream};\",
+        \"streamsProperties\": {}
+      }" | jq -r '.[].sourceDescription.statistics' | grep -Eo '(^|\s)total-messages:\s*\d*\.*\d*' | cut -d":" -f 2 | sed 's/ //g')
+      # store results in file, as statistics are disappearng for ORDERS_SHIPPED
+      if [ "$messages" != "" ]
+      then
+        echo "$messages" > $TMP_DIRECTORY_RESULTS/messages_$i
+      fi
+
       if [ "$throughput" = "0" ]
       then
         touch $TMP_DIRECTORY/$i
-      elif [ "$throughput" = "" ]
+      elif [ "$throughput" = "" ] && [ ! -f $TMP_DIRECTORY_RESULTS/messages_$i ]
       then
         log "ksql-$i|🐌 $stream has not started"
         continue
+      elif [ "$throughput" = "" ] && [ -f $TMP_DIRECTORY_RESULTS/messages_$i ]
+      then
+        log "ksql-$i|statistics are empty"
+        touch $TMP_DIRECTORY/$i
       else
         log "ksql-$i|⏳ $stream is processing $throughput msg/s [cpu=$cpu,memory=$memory]"
       fi
@@ -88,6 +108,8 @@ function throughtput () {
   stream="$1"
   duration="$2"
 
+  TMP_DIRECTORY_RESULTS=/tmp/wait_for_stream_to_finish_results
+
   totalmessages=0
   for (( i=0; i<$ksql_replicas; i++ ))
   do
@@ -102,6 +124,12 @@ function throughtput () {
         \"ksql\": \"DESCRIBE EXTENDED ${stream};\",
         \"streamsProperties\": {}
       }" | jq -r '.[].sourceDescription.statistics' | grep -Eo '(^|\s)total-messages:\s*\d*\.*\d*' | cut -d":" -f 2 | sed 's/ //g')
+
+      # statistics are disappearng for ORDERS_SHIPPED
+      if [ "$messages" = "" ]
+      then
+        messages=$TMP_DIRECTORY_RESULTS/messages_$i
+      fi
 
       sleep 5
       CUR_WAIT=$(( CUR_WAIT+5 ))
@@ -119,8 +147,14 @@ function throughtput () {
 }
 
 # make sure to cleanup everything before running another round of tests
-log "Executing 05-cleanup-queries.sh script. If it fails, re-run until everything is cleaned up"
+log "Executing 05-cleanup-queries.sh script until it succeeds"
 ./05-cleanup-queries.sh
+while [ $? -ne 0 ]
+do
+    sleep 10
+    log "Retrying 05-cleanup-queries.sh"
+    ./05-cleanup-queries.sh
+done
 
 set +e
 log "Delete topic FILTERED_STREAM, if applicable"
