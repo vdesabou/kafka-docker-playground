@@ -33,7 +33,7 @@ Quick start examples from Confluent [docs](https://docs.confluent.io/current/con
 | <img src="./images/icons/dynamodb.svg" width="15"> [Amazon DynamoDB Sink](connect/connect-aws-dynamodb-sink) | Database  | 1.1.4 | Confluent Subscription | 2020-12-01 | 👍 2021-02-17 
 | <img src="./images/icons/kinesis.svg" width="15"> [Amazon Kinesis Source](connect/connect-aws-kinesis-source) | Message Queue  | 1.3.3 | Confluent Subscription | 2021-02-08 | 👍 2021-02-17 
 | <img src="./images/icons/aws_redshift.png" width="15"> [Amazon Redshift Sink](connect/connect-aws-redshift-sink) | Data Warehouse  | 1.0.5 | Confluent Subscription | 2021-02-22 | 🤷‍♂️ not tested 
-| <img src="./images/icons/aws_redshift.png" width="15"> [Amazon Redshift Source](connect/connect-jdbc-aws-redshift-source) (using JDBC) | Data Warehouse  | 10.0.1 | Confluent Community License | 2020-11-24 | 👍 2021-02-17 
+| <img src="./images/icons/aws_redshift.png" width="15"> [Amazon Redshift Source](connect/connect-jdbc-aws-redshift-source) (using JDBC) | Data Warehouse  | 10.0.2 | Confluent Community License | 2021-02-23 | ☠ 
 | <img src="./images/icons/s3.png" width="15"> [Amazon S3 Sink](connect/connect-aws-s3-sink) | Datastore  | 5.5.3 | Confluent Community License | 2020-12-22 | 👍 2021-02-17 
 | <img src="./images/icons/s3.png" width="15"> [Amazon S3 Source](connect/connect-aws-s3-source)  | Datastore  | 1.4.3 | Confluent Subscription | 2021-02-08 | 👍 2021-02-17 
 | <img src="./images/icons/sqs.svg" width="15"> [Amazon SQS Source](connect/connect-aws-sqs-source)  | Message Queue  | 1.1.1 | Confluent Subscription | 2021-01-30 | 👍 2021-02-17 
@@ -84,18 +84,18 @@ Quick start examples from Confluent [docs](https://docs.confluent.io/current/con
 | <img src="./images/icons/ibm_mq.png" width="15"> [IBM MQ Source](connect/connect-ibm-mq-source) |  Message Queue | 11.0.0 | Confluent Subscription | 2021-02-11 | 👍 2021-02-21 
 | <img src="./images/icons/influxdb.svg" width="15"> [InfluxDB Sink](connect/connect-influxdb-sink) |  Database | 1.2.1 | Confluent Subscription | 2020-09-30 | 👍 2021-02-17 
 | <img src="./images/icons/influxdb.svg" width="15"> [InfluxDB Source](connect/connect-influxdb-source) |  Database | 1.2.1 | Confluent Subscription | 2020-09-30 | 👍 2021-02-17 
-| <img src="./images/icons/hive.png" width="15"> [JDBC Hive Sink](connect/connect-jdbc-hive-sink) |  Database | 10.0.1 | Confluent Community License | 2020-11-24 | 👍 2021-02-17 
-| <img src="./images/icons/mysql.jpg" width="15"> [JDBC MySQL Sink](connect/connect-jdbc-mysql-sink) |  Database | 10.0.1 | Confluent Community License | 2020-11-24 | 👍 2021-02-17 
-| <img src="./images/icons/oracle_11.jpg" width="15"> [JDBC Oracle 11 Sink](connect/connect-jdbc-oracle11-sink) |  Database | 10.0.1 | Confluent Community License | 2020-11-24 | 👍 2021-02-17 
-| <img src="./images/icons/oracle_12.jpg" width="15"> [JDBC Oracle 12 Sink](connect/connect-jdbc-oracle11-sink) |  Database | 10.0.1 | Confluent Community License | 2020-11-24 | 👍 2021-02-17 
-| <img src="./images/icons/postgresql.png" width="15"> [JDBC PostGreSQL Sink](connect/connect-jdbc-postgresql-sink) |  Database | 10.0.1 | Confluent Community License | 2020-11-24 | 👍 2021-02-17 
-| <img src="./images/icons/sql_server.png" width="15"> [JDBC Microsoft SQL Server Sink](connect/connect-jdbc-sqlserver-sink) |  Database | 10.0.1 | Confluent Community License | 2020-11-24 | 👍 2021-02-17 
-| <img src="./images/icons/vertica.png" width="15"> [JDBC Vertica Sink](connect/connect-jdbc-vertica-sink) |  Database | 10.0.1 | Confluent Community License | 2020-11-24 | 👍 2021-02-17 
-| <img src="./images/icons/mysql.jpg" width="15"> [JDBC MySQL Source](connect/connect-jdbc-mysql-source) |  Database | 10.0.1 | Confluent Community License | 2020-11-24 | 👍 2021-02-17 
-| <img src="./images/icons/oracle_11.jpg" width="15"> [JDBC Oracle 11 Source](connect/connect-jdbc-oracle11-source) |  Database | 10.0.1 | Confluent Community License | 2020-11-24 | 👍 2021-02-17 
-| <img src="./images/icons/oracle_12.jpg" width="15"> [JDBC Oracle 12 Source](connect/connect-jdbc-oracle11-source) |  Database | 10.0.1 | Confluent Community License | 2020-11-24 | 👍 2021-02-17 
-| <img src="./images/icons/postgresql.png" width="15"> [JDBC PostGreSQL Source](connect/connect-jdbc-postgresql-source) |  Database | 10.0.1 | Confluent Community License | 2020-11-24 | 👍 2021-02-17 
-| <img src="./images/icons/sql_server.png" width="15"> [JDBC Microsoft SQL Server Source](connect/connect-jdbc-sqlserver-source) |  Database | 10.0.1 | Confluent Community License | 2020-11-24 | 👍 2021-02-17 
+| <img src="./images/icons/hive.png" width="15"> [JDBC Hive Sink](connect/connect-jdbc-hive-sink) |  Database | 10.0.2 | Confluent Community License | 2021-02-23 | ☠ 
+| <img src="./images/icons/mysql.jpg" width="15"> [JDBC MySQL Sink](connect/connect-jdbc-mysql-sink) |  Database | 10.0.2 | Confluent Community License | 2021-02-23 | ☠ 
+| <img src="./images/icons/oracle_11.jpg" width="15"> [JDBC Oracle 11 Sink](connect/connect-jdbc-oracle11-sink) |  Database | 10.0.2 | Confluent Community License | 2021-02-23 | ☠ 
+| <img src="./images/icons/oracle_12.jpg" width="15"> [JDBC Oracle 12 Sink](connect/connect-jdbc-oracle11-sink) |  Database | 10.0.2 | Confluent Community License | 2021-02-23 | ☠ 
+| <img src="./images/icons/postgresql.png" width="15"> [JDBC PostGreSQL Sink](connect/connect-jdbc-postgresql-sink) |  Database | 10.0.2 | Confluent Community License | 2021-02-23 | ☠ 
+| <img src="./images/icons/sql_server.png" width="15"> [JDBC Microsoft SQL Server Sink](connect/connect-jdbc-sqlserver-sink) |  Database | 10.0.2 | Confluent Community License | 2021-02-23 | ☠ 
+| <img src="./images/icons/vertica.png" width="15"> [JDBC Vertica Sink](connect/connect-jdbc-vertica-sink) |  Database | 10.0.2 | Confluent Community License | 2021-02-23 | ☠ 
+| <img src="./images/icons/mysql.jpg" width="15"> [JDBC MySQL Source](connect/connect-jdbc-mysql-source) |  Database | 10.0.2 | Confluent Community License | 2021-02-23 | ☠ 
+| <img src="./images/icons/oracle_11.jpg" width="15"> [JDBC Oracle 11 Source](connect/connect-jdbc-oracle11-source) |  Database | 10.0.2 | Confluent Community License | 2021-02-23 | ☠ 
+| <img src="./images/icons/oracle_12.jpg" width="15"> [JDBC Oracle 12 Source](connect/connect-jdbc-oracle11-source) |  Database | 10.0.2 | Confluent Community License | 2021-02-23 | ☠ 
+| <img src="./images/icons/postgresql.png" width="15"> [JDBC PostGreSQL Source](connect/connect-jdbc-postgresql-source) |  Database | 10.0.2 | Confluent Community License | 2021-02-23 | ☠ 
+| <img src="./images/icons/sql_server.png" width="15"> [JDBC Microsoft SQL Server Source](connect/connect-jdbc-sqlserver-source) |  Database | 10.0.2 | Confluent Community License | 2021-02-23 | ☠ 
 | <img src="./images/icons/jira.png" width="15"> [JIRA Source](connect/connect-jira-source) |  SaaS Apps | 1.0.2-preview | Confluent Subscription | 2021-02-04 | 👍 2021-02-17 
 | <img src="./images/icons/activemq.png" width="15"> [JMS ActiveMQ Sink](connect/connect-jms-active-mq-sink) |  Message Queue | 1.3.2 | Confluent Subscription | 2021-02-19 | 👍 2021-02-21 
 | <img src="./images/icons/solace.jpg" width="15"> [JMS Solace Sink](connect/connect-jms-solace-sink) |  Message Queue | 1.3.2 | Confluent Subscription | 2021-02-19 | 👍 2021-02-21 
@@ -110,7 +110,7 @@ Quick start examples from Confluent [docs](https://docs.confluent.io/current/con
 | <img src="./images/icons/mqtt.png" width="15"> [MQTT Source](connect/connect-mqtt-source) |  IoT | 1.4.0 | Confluent Subscription | 2020-10-29 | 👍 2021-02-22 
 | <img src="./images/icons/neo4j.png" width="15"> [Neo4j Sink](connect/connect-neo4j-sink) |  Database | 1.0.9 | Open Source (Neo4j, Inc.) | 2020-09-02 | 👍 2021-02-22 
 | <img src="./images/icons/omnisci.png" width="15"> [OmniSci Sink](connect/connect-omnisci-sink) |  Database | 1.0.2 | Confluent Subscription | 2019-08-20 | 👍 2021-02-22 
-| <img src="./images/icons/oracle_12.jpg" width="15"> [Oracle CDC](connect/connect-cdc-oracle12-source) |  Database | 1.0.3 | Confluent Subscription | 2021-02-04 | 👍 2021-02-17 
+| <img src="./images/icons/oracle_12.jpg" width="15"> [Oracle CDC](connect/connect-cdc-oracle12-source) |  Database | 1.0.4 | Confluent Subscription | 2021-02-23 | ☠ 
 | <img src="./images/icons/pagerduty.png" width="15"> [PagerDuty Sink](connect/connect-pagerduty-sink) |  SaaS Apps | 1.0.2 | Confluent Subscription | 2020-11-18 | 👍 2021-02-17 
 | <img src="./images/icons/prometheus.png" height="15">  [Prometheus Sink](connect/connect-prometheus-sink) |  Analytics | 1.1.3-preview | Confluent Subscription | 2021-01-04 | 👍 2021-02-17 
 | <img src="./images/icons/rabbitmq.svg" width="15"> [RabbitMQ Sink](connect/connect-rabbitmq-sink) |  Message Queue | 1.4.1 | Confluent Subscription | 2020-10-31 | 👍 2021-02-17 
@@ -125,13 +125,13 @@ Quick start examples from Confluent [docs](https://docs.confluent.io/current/con
 | <img src="./images/icons/salesforce.png" height="15"> [SalesForce SObject Sink](connect/connect-salesforce-sobject-sink) |  SaaS Apps | 1.7.14 | Confluent Subscription | 2021-02-05 | 👍 2021-02-17 
 | <img src="./images/icons/servicenow.png" width="15"> [ServiceNow Sink](connect/connect-servicenow-sink) |  SaaS Apps | 2.0.3 | Confluent Subscription | 2020-12-09 | 🤷‍♂️ not tested 
 | <img src="./images/icons/servicenow.png" width="15"> [ServiceNow Source](connect/connect-servicenow-source) |  SaaS Apps | 2.0.3 | Confluent Subscription | 2020-12-09 | 🤷‍♂️ not tested 
-| <img src="./images/icons/sftp.png" width="15"> [SFTP Sink](connect/connect-sftp-sink) |  Datastore | 2.2.3 | Confluent Subscription | 2021-02-19 | 👍 2021-02-21 
-| <img src="./images/icons/sftp.png" width="15"> [SFTP Source](connect/connect-sftp-source) |  Datastore | 2.2.3 | Confluent Subscription | 2021-02-19 | 👍 2021-02-21 
+| <img src="./images/icons/sftp.png" width="15"> [SFTP Sink](connect/connect-sftp-sink) |  Datastore | 2.2.4 | Confluent Subscription | 2021-02-23 | ☠ 
+| <img src="./images/icons/sftp.png" width="15"> [SFTP Source](connect/connect-sftp-source) |  Datastore | 2.2.4 | Confluent Subscription | 2021-02-23 | ☠ 
 | <img src="./images/icons/snmp_trap.png" width="15"> [SNMP Trap Source](connect/connect-snmp-source) |  IoT | 1.1.2 | Confluent Subscription | 2020-04-09 | 👍 2021-02-17 
 | <img src="./images/icons/snowflake.png" height="15">  [Snowflake Sink](connect/connect-snowflake-sink) |  Data Warehouse | 1.5.2 | Open Source (Snowflake, Inc.) | 2021-02-01 | 👍 2021-02-17 
 | <img src="./images/icons/solace.jpg" width="15"> [Solace Sink](connect/connect-solace-sink) |  Message Queue | 1.3.2 | Confluent Subscription | 2021-02-19 | 👍 2021-02-21 
 | <img src="./images/icons/solace.jpg" width="15"> [Solace Source](connect/connect-solace-source) |  Message Queue | 1.2.0 | Confluent Subscription | 2020-08-26 | 👍 2021-02-17 
-| <img src="./images/icons/splunk.jpg" width="15"> [Splunk Sink](connect/connect-splunk-sink) |  Analytics | 2.0 | Open Source (Splunk) |  | 👍 2021-02-17 
+| <img src="./images/icons/splunk.jpg" width="15"> [Splunk Sink](connect/connect-splunk-sink) |  Analytics | 2.0.2 | Open Source (Splunk) |  | ☠ 
 | <img src="./images/icons/splunk.jpg" width="15"> [Splunk Source](connect/connect-splunk-source) |  Analytics | 1.0.3 | Confluent Subscription | 2020-11-18 | 👍 2021-02-17 
 | <img src="./images/icons/spool_dir.png" width="15"> [Spool Dir Source](connect/connect-spool-dir-source) |  Datastore | 2.0.60 | Open Source (Jeremy Custenborder) | 2021-02-14 | 👍 2021-02-22 
 | <img src="./images/icons/syslog.png" width="15"> [Syslog Source](connect/connect-syslog-source) |  Logs | 1.3.2 | Confluent Subscription | 2020-11-03 | 👍 2021-02-17 
