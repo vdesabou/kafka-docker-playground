@@ -50,16 +50,13 @@ curl --request GET \
   --header 'accept: application/json' | jq
 
 
-log "Stop broker 1"
-#docker container stop broker1 --> don't do that otherwise geeting WARN Couldn't resolve server broker1:9092 from bootstrap.servers as DNS resolution failed for broker1 (org.apache.kafka.clients.ClientUtils)
-#docker container exec broker1 kill -STOP 1
-docker exec -i --privileged --user root broker1 bash -c "apt-get update && apt-get install iptables -y"
-docker exec -i --privileged --user root broker1 bash -c "iptables -A INPUT -p tcp --destination-port 9092 -j DROP"
-docker exec -i --privileged --user root broker1 bash -c "iptables -A OUTPUT -p tcp --destination-port 9092 -j DROP"
-docker exec -i --privileged --user root broker1 bash -c "iptables -L -n -v"
-
-# if broker 2 or 3 is down, no problem
-# docker container stop broker2
+log "Pausing broker 1"
+docker container pause broker1
+#--> don't do stop otherwise geeting WARN Couldn't resolve server broker1:9092 from bootstrap.servers as DNS resolution failed for broker1 (org.apache.kafka.clients.ClientUtils)
+# docker exec -i --privileged --user root broker1 bash -c "apt-get update && apt-get install iptables -y"
+# docker exec -i --privileged --user root broker1 bash -c "iptables -A INPUT -p tcp --destination-port 9092 -j REJECT"
+# docker exec -i --privileged --user root broker1 bash -c "iptables -A OUTPUT -p tcp --destination-port 9092 -j REJECT"
+# docker exec -i --privileged --user root broker1 bash -c "iptables -L -n -v"
 
 docker container stop connect2
 
@@ -81,11 +78,29 @@ curl --request GET \
   --header 'accept: application/json' | jq
 
 
-# [2021-02-24 16:55:58,935] INFO Kafka Connect started (org.apache.kafka.connect.runtime.Connect)
-# [2021-02-24 16:56:27,875] ERROR [Worker clientId=connect-1, groupId=connect-cluster] Uncaught exception in herder work thread, exiting:  (org.apache.kafka.connect.runtime.distributed.DistributedHerder)
-# org.apache.kafka.common.errors.TimeoutException: Failed to get offsets by times in 30000ms
-# [2021-02-24 16:56:27,878] INFO Kafka Connect stopping (org.apache.kafka.connect.runtime.Connect)
-
+# [2021-02-24 23:18:35,425] INFO [AdminClient clientId=adminclient-4] Metadata update failed (org.apache.kafka.clients.admin.internals.AdminMetadataManager)
+# org.apache.kafka.common.errors.TimeoutException: Call(callName=fetchMetadata, deadlineMs=1614208715423) timed out at 1614208715424 after 1 attempt(s)
+# Caused by: org.apache.kafka.common.errors.TimeoutException: Timed out waiting to send the call.
+# [2021-02-24 23:19:05,118] WARN [Producer clientId=producer-1] Bootstrap broker broker1:9092 (id: -1 rack: null) disconnected (org.apache.kafka.clients.NetworkClient)
+# [2021-02-24 23:19:05,224] INFO [Producer clientId=producer-1] Cluster ID: BeW7m24rSb6PSJADreaW9w (org.apache.kafka.clients.Metadata)
+# [2021-02-24 23:19:05,429] INFO [AdminClient clientId=adminclient-4] Metadata update failed (org.apache.kafka.clients.admin.internals.AdminMetadataManager)
+# org.apache.kafka.common.errors.TimeoutException: Call(callName=fetchMetadata, deadlineMs=1614208745424) timed out at 9223372036854775807 after 1 attempt(s)
+# Caused by: org.apache.kafka.common.errors.TimeoutException: Timed out waiting to send the call.
+# [2021-02-24 23:19:05,431] ERROR [Worker clientId=connect-1, groupId=connect-cluster] Uncaught exception in herder work thread, exiting:  (org.apache.kafka.connect.runtime.distributed.DistributedHerder)
+# org.apache.kafka.connect.errors.ConnectException: Timed out while checking for or creating topic(s) 'connect-configs'. This could indicate a connectivity issue, unavailable topic partitions, or if this is your first use of the topic it may have taken too long to create.
+# 	at org.apache.kafka.connect.util.TopicAdmin.createTopics(TopicAdmin.java:258)
+# 	at org.apache.kafka.connect.storage.KafkaConfigBackingStore$1.run(KafkaConfigBackingStore.java:484)
+# 	at org.apache.kafka.connect.util.KafkaBasedLog.start(KafkaBasedLog.java:130)
+# 	at org.apache.kafka.connect.storage.KafkaConfigBackingStore.start(KafkaConfigBackingStore.java:265)
+# 	at org.apache.kafka.connect.runtime.AbstractHerder.startServices(AbstractHerder.java:125)
+# 	at org.apache.kafka.connect.runtime.distributed.DistributedHerder.run(DistributedHerder.java:288)
+# 	at java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:511)
+# 	at java.util.concurrent.FutureTask.run(FutureTask.java:266)
+# 	at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1149)
+# 	at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:624)
+# 	at java.lang.Thread.run(Thread.java:748)
+# Caused by: org.apache.kafka.common.errors.TimeoutException: Call(callName=createTopics, deadlineMs=1614208745422) timed out at 1614208745423 after 1 attempt(s)
+# Caused by: org.apache.kafka.common.errors.TimeoutException: Timed out waiting for a node assignment.
 
 #    curl --request GET \
 # >     --url http://localhost:8083/connectors/replicator/status \
@@ -96,62 +111,65 @@ curl --request GET \
 # {
 #   "name": "replicator",
 #   "connector": {
-#     "state": "FAILED",
-#     "worker_id": "connect3:8083",
-#     "trace": "org.apache.kafka.common.errors.TimeoutException: Failed to get offsets by times in 30001ms\n"
+#     "state": "RUNNING",
+#     "worker_id": "connect3:8083"
 #   },
 #   "tasks": [
 #     {
 #       "id": 0,
 #       "state": "RUNNING",
-#       "worker_id": "connect1:8083"
+#       "worker_id": "connect3:8083"
 #     },
 #     {
 #       "id": 1,
-#       "state": "RUNNING",
-#       "worker_id": "connect3:8083"
-#     },
-#     {
-#       "id": 2,
 #       "state": "FAILED",
-#       "worker_id": "connect1:8083",
+#       "worker_id": "connect3:8083",
 #       "trace": "org.apache.kafka.connect.errors.ConnectException: Failed to obtain source cluster ID, please restart the source Kafka cluster\n\tat io.confluent.connect.replicator.ReplicatorSourceTask.setClusterIds(ReplicatorSourceTask.java:380)\n\tat io.confluent.connect.replicator.ReplicatorSourceTask.start(ReplicatorSourceTask.java:301)\n\tat org.apache.kafka.connect.runtime.WorkerSourceTask.execute(WorkerSourceTask.java:219)\n\tat org.apache.kafka.connect.runtime.WorkerTask.doRun(WorkerTask.java:185)\n\tat org.apache.kafka.connect.runtime.WorkerTask.run(WorkerTask.java:235)\n\tat java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:511)\n\tat java.util.concurrent.FutureTask.run(FutureTask.java:266)\n\tat java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1149)\n\tat java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:624)\n\tat java.lang.Thread.run(Thread.java:748)\n"
 #     },
 #     {
-#       "id": 3,
+#       "id": 2,
 #       "state": "RUNNING",
 #       "worker_id": "connect3:8083"
+#     },
+#     {
+#       "id": 3,
+#       "state": "FAILED",
+#       "worker_id": "connect3:8083",
+#       "trace": "org.apache.kafka.common.errors.TimeoutException: Timeout of 60000ms expired before the last committed offset for partitions [test-topic-2, __consumer_timestamps-12, __consumer_timestamps-42, __consumer_timestamps-22, __consumer_timestamps-2, __consumer_timestamps-32] could be determined. Try tuning default.api.timeout.ms larger to relax the threshold.\n"
 #     },
 #     {
 #       "id": 4,
 #       "state": "RUNNING",
-#       "worker_id": "connect1:8083"
+#       "worker_id": "connect3:8083"
 #     },
 #     {
 #       "id": 5,
-#       "state": "FAILED",
-#       "worker_id": "connect3:8083",
-#       "trace": "org.apache.kafka.connect.errors.ConnectException: Failed to obtain destination cluster ID, please restart the destination Kafka cluster\n\tat io.confluent.connect.replicator.ReplicatorSourceTask.setClusterIds(ReplicatorSourceTask.java:390)\n\tat io.confluent.connect.replicator.ReplicatorSourceTask.start(ReplicatorSourceTask.java:301)\n\tat org.apache.kafka.connect.runtime.WorkerSourceTask.execute(WorkerSourceTask.java:219)\n\tat org.apache.kafka.connect.runtime.WorkerTask.doRun(WorkerTask.java:185)\n\tat org.apache.kafka.connect.runtime.WorkerTask.run(WorkerTask.java:235)\n\tat java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:511)\n\tat java.util.concurrent.FutureTask.run(FutureTask.java:266)\n\tat java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1149)\n\tat java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:624)\n\tat java.lang.Thread.run(Thread.java:748)\n"
+#       "state": "RUNNING",
+#       "worker_id": "connect3:8083"
 #     },
 #     {
 #       "id": 6,
-#       "state": "RUNNING",
-#       "worker_id": "connect1:8083"
+#       "state": "FAILED",
+#       "worker_id": "connect3:8083",
+#       "trace": "org.apache.kafka.connect.errors.ConnectException: Failed to obtain source cluster ID, please restart the source Kafka cluster\n\tat io.confluent.connect.replicator.ReplicatorSourceTask.setClusterIds(ReplicatorSourceTask.java:380)\n\tat io.confluent.connect.replicator.ReplicatorSourceTask.start(ReplicatorSourceTask.java:301)\n\tat org.apache.kafka.connect.runtime.WorkerSourceTask.execute(WorkerSourceTask.java:219)\n\tat org.apache.kafka.connect.runtime.WorkerTask.doRun(WorkerTask.java:185)\n\tat org.apache.kafka.connect.runtime.WorkerTask.run(WorkerTask.java:235)\n\tat java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:511)\n\tat java.util.concurrent.FutureTask.run(FutureTask.java:266)\n\tat java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1149)\n\tat java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:624)\n\tat java.lang.Thread.run(Thread.java:748)\n"
 #     },
 #     {
 #       "id": 7,
-#       "state": "RUNNING",
-#       "worker_id": "connect3:8083"
+#       "state": "FAILED",
+#       "worker_id": "connect3:8083",
+#       "trace": "org.apache.kafka.connect.errors.ConnectException: Failed to obtain source cluster ID, please restart the source Kafka cluster\n\tat io.confluent.connect.replicator.ReplicatorSourceTask.setClusterIds(ReplicatorSourceTask.java:380)\n\tat io.confluent.connect.replicator.ReplicatorSourceTask.start(ReplicatorSourceTask.java:301)\n\tat org.apache.kafka.connect.runtime.WorkerSourceTask.execute(WorkerSourceTask.java:219)\n\tat org.apache.kafka.connect.runtime.WorkerTask.doRun(WorkerTask.java:185)\n\tat org.apache.kafka.connect.runtime.WorkerTask.run(WorkerTask.java:235)\n\tat java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:511)\n\tat java.util.concurrent.FutureTask.run(FutureTask.java:266)\n\tat java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1149)\n\tat java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:624)\n\tat java.lang.Thread.run(Thread.java:748)\n"
 #     },
 #     {
 #       "id": 8,
-#       "state": "RUNNING",
-#       "worker_id": "connect1:8083"
+#       "state": "FAILED",
+#       "worker_id": "connect3:8083",
+#       "trace": "org.apache.kafka.connect.errors.ConnectException: Failed to obtain source cluster ID, please restart the source Kafka cluster\n\tat io.confluent.connect.replicator.ReplicatorSourceTask.setClusterIds(ReplicatorSourceTask.java:380)\n\tat io.confluent.connect.replicator.ReplicatorSourceTask.start(ReplicatorSourceTask.java:301)\n\tat org.apache.kafka.connect.runtime.WorkerSourceTask.execute(WorkerSourceTask.java:219)\n\tat org.apache.kafka.connect.runtime.WorkerTask.doRun(WorkerTask.java:185)\n\tat org.apache.kafka.connect.runtime.WorkerTask.run(WorkerTask.java:235)\n\tat java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:511)\n\tat java.util.concurrent.FutureTask.run(FutureTask.java:266)\n\tat java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1149)\n\tat java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:624)\n\tat java.lang.Thread.run(Thread.java:748)\n"
 #     },
 #     {
 #       "id": 9,
-#       "state": "RUNNING",
-#       "worker_id": "connect3:8083"
+#       "state": "FAILED",
+#       "worker_id": "connect3:8083",
+#       "trace": "org.apache.kafka.connect.errors.ConnectException: Failed to obtain source cluster ID, please restart the source Kafka cluster\n\tat io.confluent.connect.replicator.ReplicatorSourceTask.setClusterIds(ReplicatorSourceTask.java:380)\n\tat io.confluent.connect.replicator.ReplicatorSourceTask.start(ReplicatorSourceTask.java:301)\n\tat org.apache.kafka.connect.runtime.WorkerSourceTask.execute(WorkerSourceTask.java:219)\n\tat org.apache.kafka.connect.runtime.WorkerTask.doRun(WorkerTask.java:185)\n\tat org.apache.kafka.connect.runtime.WorkerTask.run(WorkerTask.java:235)\n\tat java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:511)\n\tat java.util.concurrent.FutureTask.run(FutureTask.java:266)\n\tat java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1149)\n\tat java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:624)\n\tat java.lang.Thread.run(Thread.java:748)\n"
 #     }
 #   ],
 #   "type": "source"
