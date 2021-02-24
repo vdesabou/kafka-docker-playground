@@ -1,10 +1,11 @@
 #!/bin/bash
 set -e
 
+# force 5.5.3
+export TAG=5.5.3
+
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
-
-export TAG=5.5.3
 
 docker-compose down -v --remove-orphans
 docker-compose up -d
@@ -77,7 +78,7 @@ curl --request GET \
   --url http://localhost:8083/connectors/replicator/status \
   --header 'accept: application/json' | jq
 
-
+# connect2:
 # [2021-02-24 23:18:35,425] INFO [AdminClient clientId=adminclient-4] Metadata update failed (org.apache.kafka.clients.admin.internals.AdminMetadataManager)
 # org.apache.kafka.common.errors.TimeoutException: Call(callName=fetchMetadata, deadlineMs=1614208715423) timed out at 1614208715424 after 1 attempt(s)
 # Caused by: org.apache.kafka.common.errors.TimeoutException: Timed out waiting to send the call.
