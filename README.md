@@ -49,7 +49,7 @@ Quick start examples from Confluent [docs](https://docs.confluent.io/current/con
 | <img src="./images/icons/azure_functions.png" width="15"> [Azure Functions Sink](connect/connect-azure-functions-sink) | SaaS Apps | 1.0.9 | Confluent Subscription | 2021-02-09 | 👍 2021-02-24 
 | <img src="./images/icons/search.png" width="15"> [Azure Search Sink](connect/connect-azure-search-sink)  | Analytics | 1.0.4 | Confluent Subscription | 2021-02-03 | 👍 2021-02-24 
 | <img src="./images/icons/service_bus.png" width="15"> [Azure Service Bus Source](connect/connect-azure-service-bus-source)  | Message Queue | 1.1.3 | Confluent Subscription | 2021-01-29 | 👍 2021-02-24 
-| <img src="./images/icons/sql_data_warehouse.png" width="15"> [Azure SQL Data Warehouse Sink](connect/connect-azure-sql-data-warehouse-sink)  | Data Warehouse | 1.0.4 | Confluent Subscription | 2020-10-08 | 👍 2021-02-17 
+| <img src="./images/icons/sql_data_warehouse.png" width="15"> [Azure SQL Data Warehouse Sink](connect/connect-azure-sql-data-warehouse-sink)  | Data Warehouse | 1.0.4 | Confluent Subscription | 2020-10-08 | 👍 2021-02-24 
 | <img src="./images/icons/cassandra.png" width="15"> [Cassandra Sink](connect/connect-cassandra-sink)  | Database | 2.0.0 | Confluent Subscription | 2020-12-04 | 👍 2021-02-24 
 | <img src="./images/icons/couchbase.svg" width="15"> [Couchbase Sink](connect/connect-couchbase-sink)  | Database | 3.4.8 | Open Source (Couchbase) | | 👍 2021-02-24 
 | <img src="./images/icons/couchbase.svg" width="15"> [Couchbase Source](connect/connect-couchbase-source)  | Database | 3.4.8 | Open Source (Couchbase) | | 👍 2021-02-24 
@@ -102,7 +102,7 @@ Quick start examples from Confluent [docs](https://docs.confluent.io/current/con
 | <img src="./images/icons/tibco_ems.png" width="15"> [JMS TIBCO EMS Sink](connect/connect-jms-tibco-sink) |  Message Queue | 1.3.2 | Confluent Subscription | 2021-02-19 | 👍 2021-02-21 
 | <img src="./images/icons/tibco_ems.png" width="15"> [JMS TIBCO EMS Source](connect/connect-jms-tibco-source) |  Message Queue | 11.0.0 | Confluent Subscription | 2021-02-11 | 👍 2021-02-21 
 | <img src="./images/icons/mapr.png" height="15"> [Mapr Sink](connect/connect-mapr-sink) |  Datastore | 1.1.2 | Confluent Subscription | 2020-12-14 | 🤷‍♂️ not tested 
-| <img src="./images/icons/marketo.png" height="15"> [Marketo Source](connect/connect-marketo-source) |  SaaS Apps | 1.0.0-preview | Confluent Subscription | 2020-10-20 | 👍 2021-02-17 
+| <img src="./images/icons/marketo.png" height="15"> [Marketo Source](connect/connect-marketo-source) |  SaaS Apps | 1.0.0-preview | Confluent Subscription | 2020-10-20 | 👍 2021-02-24 
 | <img src="./images/icons/minio.png" height="15"> [Minio Sink](connect/connect-minio-s3-sink) |  Datastore | 5.5.3 | Confluent Community License | 2020-12-22 | 👍 2021-02-24 
 | <img src="./images/icons/mongodb.jpg" width="15"> [MongoDB Sink](connect/connect-mongodb-sink) |  Database | 1.2.0 | Open Source (MongoDB) | 2020-07-08 | 👍 2021-02-24 
 | <img src="./images/icons/mongodb.jpg" width="15"> [MongoDB Source](connect/connect-mongodb-source) |  Database | 1.2.0 | Open Source (MongoDB) | 2020-07-08 | 👍 2021-02-24 
