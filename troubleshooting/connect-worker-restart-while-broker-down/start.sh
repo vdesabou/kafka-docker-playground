@@ -41,12 +41,41 @@ curl --request GET \
   --url http://localhost:8083/connectors/sftp-sink/status \
   --header 'accept: application/json' | jq
 
-docker container stop broker2
+log "Stop broker 1 (first in the connect worker boo"
+docker container stop broker1
+# if broker 2 or 3 is down, no problem
+# docker container stop broker2
+
 docker container stop connect2
+
+log "Getting tasks placement"
+curl --request GET \
+  --url http://localhost:8083/connectors/sftp-sink/status \
+  --header 'accept: application/json' | jq
+
 docker container start connect2
 
-${DIR}/../../scripts/wait-for-connect-and-controlcenter.sh "connect2"
+#FIXTHIS
+# [kafka-admin-client-thread | adminclient-1] WARN org.apache.kafka.clients.NetworkClient - [AdminClient clientId=adminclient-1] Connection to node -4 (broker2/172.21.0.5:9092) could not be established. Broker may not be available.
+# [main] ERROR io.confluent.admin.utils.ClusterStatus - Error while getting broker list.
+# java.util.concurrent.ExecutionException: org.apache.kafka.common.errors.TimeoutException: Call(callName=listNodes, deadlineMs=1614161158427, tries=1, nextAllowedTryMs=1614161158528) timed out at 1614161158428 after 1 attempt(s)
+#         at org.apache.kafka.common.internals.KafkaFutureImpl.wrapAndThrow(KafkaFutureImpl.java:45)
+#         at org.apache.kafka.common.internals.KafkaFutureImpl.access$000(KafkaFutureImpl.java:32)
+#         at org.apache.kafka.common.internals.KafkaFutureImpl$SingleWaiter.await(KafkaFutureImpl.java:89)
+#         at org.apache.kafka.common.internals.KafkaFutureImpl.get(KafkaFutureImpl.java:260)
+#         at io.confluent.admin.utils.ClusterStatus.isKafkaReady(ClusterStatus.java:149)
+#         at io.confluent.admin.utils.cli.KafkaReadyCommand.main(KafkaReadyCommand.java:150)
+# Caused by: org.apache.kafka.common.errors.TimeoutException: Call(callName=listNodes, deadlineMs=1614161158427, tries=1, nextAllowedTryMs=1614161158528) timed out at 1614161158428 after 1 attempt(s)
+# Caused by: org.apache.kafka.common.errors.TimeoutException: Timed out waiting for a node assignment. Call: listNodes
+# [kafka-admin-client-thread | adminclient-1] WARN org.apache.kafka.clients.NetworkClient - [AdminClient clientId=adminclient-1] Connection to node -2 (broker2/172.21.0.5:9092) could not be established. Broker may not be available.
+# [kafka-admin-client-thread | adminclient-1] WARN org.apache.kafka.clients.NetworkClient - [AdminClient clientId=adminclient-1] Connection to node -3 (broker2/172.21.0.5:9092) could not be established. Broker may not be available.
+# [kafka-admin-client-thread | adminclient-1] WARN org.apache.kafka.clients.NetworkClient - [AdminClient clientId=adminclient-1] Connection to node -4 (broker2/172.21.0.5:9092) could not be established. Broker may not be available.
+# [kafka-admin-client-thread | adminclient-1] WARN org.apache.kafka.clients.NetworkClient - [AdminClient clientId=adminclient-1] Connection to node -1 (broker2/172.21.0.5:9092) could not be established. Broker may not be available.
+# [main] INFO io.confluent.admin.utils.ClusterStatus - Expected 1 brokers but found only 0. Trying to query Kafka for metadata again ...
+# [main] ERROR io.confluent.admin.utils.ClusterStatus - Expected 1 brokers but found only 0. Brokers found [].
 
+log "sleep 5 minutes (scheduled.rebalance.max.delay.ms), after this time all tasks should be RUNNING (no more UNASSIGNED)"
+sleep 310
 
 log "Getting tasks placement"
 curl --request GET \
