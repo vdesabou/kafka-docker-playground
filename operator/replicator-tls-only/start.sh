@@ -198,6 +198,18 @@ kubectl -n kafka-dest port-forward controlcenter-0 9021:9021 &
 log "create a topic example on kafka-src cluster"
 kubectl -n kafka-src exec -i kafka-0 -- bash -c 'kafka-topics --create --topic example --partitions 1 --replication-factor 1 --bootstrap-server kafka:9071'
 
+# Create a secret called "onprem-trustore-jks":
+
+# $ kubectl -n <namespace<> create secret generic onprem-trustore-jks --from-file=onprem-trustore-jks=/path/to/onprem/truststore.jks
+
+# In $VALUES_FILE, add for connect or replicator components:
+#  mountedSecrets:
+#  - secretRef: onprem-trustore-jks
+# This will mount the truststore into /mnt/secrets/onprem-trustore-jks/onprem-trustore-jks
+# Replicator config can then be set to:
+# "src.kafka.ssl.truststore.location": "/mnt/secrets/onprem-trustore-jks/onprem-trustore-jks"
+
+
 log "create replicator"
 kubectl -n kafka-dest exec -i replicator-0 -- curl -k -X PUT \
      -H "Content-Type: application/json" \
