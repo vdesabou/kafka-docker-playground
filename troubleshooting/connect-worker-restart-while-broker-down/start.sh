@@ -4,6 +4,8 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
+export TAG=5.5.3
+
 docker-compose down -v --remove-orphans
 docker-compose up -d
 ${DIR}/../../scripts/wait-for-connect-and-controlcenter.sh "connect1"
@@ -49,8 +51,13 @@ curl --request GET \
 
 
 log "Stop broker 1"
-#docker container stop broker1
-docker container kill broker1
+#docker container stop broker1 --> don't do that otherwise geeting WARN Couldn't resolve server broker1:9092 from bootstrap.servers as DNS resolution failed for broker1 (org.apache.kafka.clients.ClientUtils)
+#docker container exec broker1 kill -STOP 1
+docker exec -i --privileged --user root broker1 bash -c "apt-get update && apt-get install iptables -y"
+docker exec -i --privileged --user root broker1 bash -c "iptables -A INPUT -p tcp --destination-port 9092 -j DROP"
+docker exec -i --privileged --user root broker1 bash -c "iptables -A OUTPUT -p tcp --destination-port 9092 -j DROP"
+docker exec -i --privileged --user root broker1 bash -c "iptables -L -n -v"
+
 # if broker 2 or 3 is down, no problem
 # docker container stop broker2
 
@@ -72,3 +79,9 @@ log "Getting tasks placement"
 curl --request GET \
   --url http://localhost:8083/connectors/replicator/status \
   --header 'accept: application/json' | jq
+
+
+# [2021-02-24 16:55:58,935] INFO Kafka Connect started (org.apache.kafka.connect.runtime.Connect)
+# [2021-02-24 16:56:27,875] ERROR [Worker clientId=connect-1, groupId=connect-cluster] Uncaught exception in herder work thread, exiting:  (org.apache.kafka.connect.runtime.distributed.DistributedHerder)
+# org.apache.kafka.common.errors.TimeoutException: Failed to get offsets by times in 30000ms
+# [2021-02-24 16:56:27,878] INFO Kafka Connect stopping (org.apache.kafka.connect.runtime.Connect)
