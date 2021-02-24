@@ -78,7 +78,7 @@ curl --request GET \
   --url http://localhost:8083/connectors/replicator/status \
   --header 'accept: application/json' | jq
 
-# connect2:
+# connect2 (CP 5.5.3):
 # [2021-02-24 23:18:35,425] INFO [AdminClient clientId=adminclient-4] Metadata update failed (org.apache.kafka.clients.admin.internals.AdminMetadataManager)
 # org.apache.kafka.common.errors.TimeoutException: Call(callName=fetchMetadata, deadlineMs=1614208715423) timed out at 1614208715424 after 1 attempt(s)
 # Caused by: org.apache.kafka.common.errors.TimeoutException: Timed out waiting to send the call.
@@ -175,3 +175,40 @@ curl --request GET \
 #   ],
 #   "type": "source"
 # }
+
+
+# connect2 (CP 6.1.0)
+# [2021-02-24 23:40:32,262] ERROR [Producer clientId=producer-2] Interrupted while joining ioThread (org.apache.kafka.clients.producer.KafkaProducer)
+# java.lang.InterruptedException
+# 	at java.base/java.lang.Object.wait(Native Method)
+# 	at java.base/java.lang.Thread.join(Thread.java:1313)
+# 	at org.apache.kafka.clients.producer.KafkaProducer.close(KafkaProducer.java:1221)
+# 	at org.apache.kafka.clients.producer.KafkaProducer.close(KafkaProducer.java:1198)
+# 	at org.apache.kafka.clients.producer.KafkaProducer.close(KafkaProducer.java:1174)
+# 	at org.apache.kafka.connect.util.KafkaBasedLog.stop(KafkaBasedLog.java:190)
+# 	at org.apache.kafka.connect.storage.KafkaStatusBackingStore.stop(KafkaStatusBackingStore.java:228)
+# 	at org.apache.kafka.connect.runtime.AbstractHerder.stopServices(AbstractHerder.java:134)
+# 	at org.apache.kafka.connect.runtime.distributed.DistributedHerder.halt(DistributedHerder.java:676)
+# 	at org.apache.kafka.connect.runtime.distributed.DistributedHerder.run(DistributedHerder.java:298)
+# 	at java.base/java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:515)
+# 	at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:264)
+# 	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1128)
+# 	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:628)
+# 	at java.base/java.lang.Thread.run(Thread.java:834)
+# [2021-02-24 23:40:32,265] INFO [Producer clientId=producer-2] Proceeding to force close the producer since pending requests could not be completed within timeout 9223372036854775807 ms. (org.apache.kafka.clients.producer.KafkaProducer)
+# [2021-02-24 23:40:32,263] INFO [Worker clientId=connect-1, groupId=connect-cluster] Herder stopped (org.apache.kafka.connect.runtime.distributed.DistributedHerder)
+# [2021-02-24 23:40:32,265] INFO Kafka Connect stopped (org.apache.kafka.connect.runtime.Connect)
+# [2021-02-24 23:40:32,266] ERROR Failed to write status update (org.apache.kafka.connect.storage.KafkaStatusBackingStore)
+# org.apache.kafka.common.KafkaException: Producer is closed forcefully.
+# 	at org.apache.kafka.clients.producer.internals.RecordAccumulator.abortBatches(RecordAccumulator.java:748)
+# 	at org.apache.kafka.clients.producer.internals.RecordAccumulator.abortIncompleteBatches(RecordAccumulator.java:735)
+# 	at org.apache.kafka.clients.producer.internals.Sender.run(Sender.java:280)
+# 	at java.base/java.lang.Thread.run(Thread.java:834)
+# [2021-02-24 23:40:32,266] INFO Metrics scheduler closed (org.apache.kafka.common.metrics.Metrics)
+# [2021-02-24 23:40:32,266] INFO Closing reporter org.apache.kafka.common.metrics.JmxReporter (org.apache.kafka.common.metrics.Metrics)
+# [2021-02-24 23:40:32,266] ERROR Failed to write status update (org.apache.kafka.connect.storage.KafkaStatusBackingStore)
+# org.apache.kafka.common.KafkaException: Producer is closed forcefully.
+# 	at org.apache.kafka.clients.producer.internals.RecordAccumulator.abortBatches(RecordAccumulator.java:748)
+# 	at org.apache.kafka.clients.producer.internals.RecordAccumulator.abortIncompleteBatches(RecordAccumulator.java:735)
+# 	at org.apache.kafka.clients.producer.internals.Sender.run(Sender.java:280)
+# 	at java.base/java.lang.Thread.run(Thread.java:834)
