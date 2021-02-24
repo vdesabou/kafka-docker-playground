@@ -78,7 +78,7 @@ services:
     ports:
       - "8083:8083"
     environment:
-      CONNECT_BOOTSTRAP_SERVERS: 'broker1:9092,broker2:9092,broker2:9092,broker2:9092,broker2:9092'
+      CONNECT_BOOTSTRAP_SERVERS: 'broker1:9092,broker2:9092,broker3:9092'
       CONNECT_REST_ADVERTISED_HOST_NAME: connect1
       CONNECT_GROUP_ID: "connect-cluster"
       CONNECT_PRODUCER_CLIENT_ID: "connect-worker-producer"
@@ -114,7 +114,7 @@ services:
     ports:
       - "8084:8083"
     environment:
-      CONNECT_BOOTSTRAP_SERVERS: 'broker1:9092,broker2:9092,broker2:9092,broker2:9092,broker2:9092'
+      CONNECT_BOOTSTRAP_SERVERS: 'broker1:9092,broker2:9092,broker3:9092'
       CONNECT_REST_ADVERTISED_HOST_NAME: connect2
       CONNECT_GROUP_ID: "connect-cluster"
       CONNECT_PRODUCER_CLIENT_ID: "connect-worker-producer"
