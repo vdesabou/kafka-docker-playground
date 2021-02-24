@@ -85,3 +85,74 @@ curl --request GET \
 # [2021-02-24 16:56:27,875] ERROR [Worker clientId=connect-1, groupId=connect-cluster] Uncaught exception in herder work thread, exiting:  (org.apache.kafka.connect.runtime.distributed.DistributedHerder)
 # org.apache.kafka.common.errors.TimeoutException: Failed to get offsets by times in 30000ms
 # [2021-02-24 16:56:27,878] INFO Kafka Connect stopping (org.apache.kafka.connect.runtime.Connect)
+
+
+#    curl --request GET \
+# >     --url http://localhost:8083/connectors/replicator/status \
+# >     --header 'accept: application/json' | jq
+#   % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
+#                                  Dload  Upload   Total   Spent    Left  Speed
+# 100  2643  100  2643    0     0  94392      0 --:--:-- --:--:-- --:--:-- 94392
+# {
+#   "name": "replicator",
+#   "connector": {
+#     "state": "FAILED",
+#     "worker_id": "connect3:8083",
+#     "trace": "org.apache.kafka.common.errors.TimeoutException: Failed to get offsets by times in 30001ms\n"
+#   },
+#   "tasks": [
+#     {
+#       "id": 0,
+#       "state": "RUNNING",
+#       "worker_id": "connect1:8083"
+#     },
+#     {
+#       "id": 1,
+#       "state": "RUNNING",
+#       "worker_id": "connect3:8083"
+#     },
+#     {
+#       "id": 2,
+#       "state": "FAILED",
+#       "worker_id": "connect1:8083",
+#       "trace": "org.apache.kafka.connect.errors.ConnectException: Failed to obtain source cluster ID, please restart the source Kafka cluster\n\tat io.confluent.connect.replicator.ReplicatorSourceTask.setClusterIds(ReplicatorSourceTask.java:380)\n\tat io.confluent.connect.replicator.ReplicatorSourceTask.start(ReplicatorSourceTask.java:301)\n\tat org.apache.kafka.connect.runtime.WorkerSourceTask.execute(WorkerSourceTask.java:219)\n\tat org.apache.kafka.connect.runtime.WorkerTask.doRun(WorkerTask.java:185)\n\tat org.apache.kafka.connect.runtime.WorkerTask.run(WorkerTask.java:235)\n\tat java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:511)\n\tat java.util.concurrent.FutureTask.run(FutureTask.java:266)\n\tat java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1149)\n\tat java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:624)\n\tat java.lang.Thread.run(Thread.java:748)\n"
+#     },
+#     {
+#       "id": 3,
+#       "state": "RUNNING",
+#       "worker_id": "connect3:8083"
+#     },
+#     {
+#       "id": 4,
+#       "state": "RUNNING",
+#       "worker_id": "connect1:8083"
+#     },
+#     {
+#       "id": 5,
+#       "state": "FAILED",
+#       "worker_id": "connect3:8083",
+#       "trace": "org.apache.kafka.connect.errors.ConnectException: Failed to obtain destination cluster ID, please restart the destination Kafka cluster\n\tat io.confluent.connect.replicator.ReplicatorSourceTask.setClusterIds(ReplicatorSourceTask.java:390)\n\tat io.confluent.connect.replicator.ReplicatorSourceTask.start(ReplicatorSourceTask.java:301)\n\tat org.apache.kafka.connect.runtime.WorkerSourceTask.execute(WorkerSourceTask.java:219)\n\tat org.apache.kafka.connect.runtime.WorkerTask.doRun(WorkerTask.java:185)\n\tat org.apache.kafka.connect.runtime.WorkerTask.run(WorkerTask.java:235)\n\tat java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:511)\n\tat java.util.concurrent.FutureTask.run(FutureTask.java:266)\n\tat java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1149)\n\tat java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:624)\n\tat java.lang.Thread.run(Thread.java:748)\n"
+#     },
+#     {
+#       "id": 6,
+#       "state": "RUNNING",
+#       "worker_id": "connect1:8083"
+#     },
+#     {
+#       "id": 7,
+#       "state": "RUNNING",
+#       "worker_id": "connect3:8083"
+#     },
+#     {
+#       "id": 8,
+#       "state": "RUNNING",
+#       "worker_id": "connect1:8083"
+#     },
+#     {
+#       "id": 9,
+#       "state": "RUNNING",
+#       "worker_id": "connect3:8083"
+#     }
+#   ],
+#   "type": "source"
+# }
