@@ -157,12 +157,15 @@ do
   ./create-queries.sh
   sleep 5
   ./cleanup-queries.sh
-  if [ $? -ne 0 ]
-  then
-    logerror "Cleanup failed, check the reason"
-    exit 1
-  fi
+  while [ $? -ne 0 ]
+  do
+      sleep 10
+      logerror "Retrying ./cleanup-queries.sh"
+      ./cleanup-queries.sh
+  done
 done
+
+
 
 # 01:48:26 Cannot terminate all queries, check the errors below:
 # [
@@ -228,3 +231,6 @@ done
 #   "statementText": "TERMINATE CSAS_ORDERS_SHIPPED_109;",
 #   "entities": []
 # }
+
+# [2021-02-25 00:48:20,574] WARN Unregistering query that has not terminated. This may happen when streams threads are hung. State: RUNNING (io.confluent.ksql.engine.EngineContext:264)
+# [2021-02-25 00:48:25,712] INFO Processed unsuccessfully: KsqlRequest{ksql='TERMINATE CSAS_ORDERS_SHIPPED_109;', configOverrides={}, requestProperties={}, commandSequenceNumber=Optional.empty}, reason: Could not write the statement 'TERMINATE CSAS_ORDERS_SHIPPED_109;' into the command topic. (io.confluent.ksql.rest.server.resources.KsqlResource:301)
