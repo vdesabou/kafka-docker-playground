@@ -29,6 +29,7 @@ ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext-rep
 
 export HTTP_PROXY=127.0.0.1:8888
 export HTTPS_PROXY=127.0.0.1:8888
+log "Verify forward proxy is working correctly"
 curl -v ${SERVICENOW_URL}api/now/table/incident?sysparm_limit=1
 # * Uses proxy env variable HTTPS_PROXY == '127.0.0.1:8888'
 # *   Trying 127.0.0.1...
@@ -122,7 +123,7 @@ curl -X PUT \
 
 
 sleep 10
-# docker run -d -p 8888:8888 -v nginx_whitelist.conf:/usr/local/nginx/conf/nginx.conf reiz/nginx_proxy:0.0.3
+
 log "Create one record to ServiceNow"
 docker exec -e SERVICENOW_URL="$SERVICENOW_URL" -e SERVICENOW_PASSWORD="$SERVICENOW_PASSWORD" connect \
    curl -X POST \
