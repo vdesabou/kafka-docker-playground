@@ -151,15 +151,15 @@ curl -X PUT \
 
 sleep 10
 
-log "Create one record to ServiceNow"
-docker exec -e SERVICENOW_URL="$SERVICENOW_URL" -e SERVICENOW_PASSWORD="$SERVICENOW_PASSWORD" connect \
+log "Create one record to ServiceNow using proxy"
+docker exec -e SERVICENOW_URL="$SERVICENOW_URL" -e SERVICENOW_PASSWORD="$SERVICENOW_PASSWORD" connect bash -c "export HTTP_PROXY=nginx_proxy:8888 && export HTTPS_PROXY=nginx_proxy:8888 && \
    curl -X POST \
-    "${SERVICENOW_URL}/api/now/table/incident" \
-    --user admin:"$SERVICENOW_PASSWORD" \
+    \"${SERVICENOW_URL}api/now/table/incident\" \
+    --user admin:\"$SERVICENOW_PASSWORD\" \
     -H 'Accept: application/json' \
     -H 'Content-Type: application/json' \
     -H 'cache-control: no-cache' \
-    -d '{"short_description": "This is test"}'
+    -d '{\"short_description\": \"This is test\"}'"
 
 sleep 5
 
