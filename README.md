@@ -116,13 +116,13 @@ Quick start examples from Confluent [docs](https://docs.confluent.io/current/con
 | <img src="./images/icons/rabbitmq.svg" width="15"> [RabbitMQ Sink](connect/connect-rabbitmq-sink) |  Message Queue | 1.4.1 | Confluent Subscription | 2020-10-31 | 👍 2021-02-24 
 | <img src="./images/icons/rabbitmq.svg" width="15">  [RabbitMQ Source](connect/connect-rabbitmq-source) |  Message Queue | 1.4.1 | Confluent Subscription | 2020-10-31 | 👍 2021-02-24 
 | <img src="./images/icons/redis.jpg" width="15"> [Redis Sink](connect/connect-redis-sink) |  Database | 0.0.2.11 | Open Source (Jeremy Custenborder) | 2020-01-22 | 👍 2021-02-24 
-| <img src="./images/icons/salesforce.png" height="15"> [SalesForce Bulk API Sink](connect/connect-salesforce-bulkapi-sink) |  SaaS Apps | 1.7.15 | Confluent Subscription | 2021-02-24 | ☠ 
-| <img src="./images/icons/salesforce.png" height="15"> [SalesForce Bulk API Source](connect/connect-salesforce-bulkapi-source) |  SaaS Apps | 1.7.15 | Confluent Subscription | 2021-02-24 | ☠ 
-| <img src="./images/icons/salesforce.png" height="15"> [SalesForce CDC Source](connect/connect-salesforce-cdc-source) |  SaaS Apps | 1.7.15 | Confluent Subscription | 2021-02-24 | ☠ 
-| <img src="./images/icons/salesforce.png" height="15"> [SalesForce Platform Events Sink](connect/connect-salesforce-platform-events-sink) |  SaaS Apps | 1.7.15 | Confluent Subscription | 2021-02-24 | ☠ 
-| <img src="./images/icons/salesforce.png" height="15"> [SalesForce Platform Events Source](connect/connect-salesforce-platform-events-source) |  SaaS Apps | 1.7.15 | Confluent Subscription | 2021-02-24 | ☠ 
-| <img src="./images/icons/salesforce.png" height="15"> [SalesForce PushTopics Source](connect/connect-salesforce-pushtopics-source) |  SaaS Apps | 1.7.15 | Confluent Subscription | 2021-02-24 | ☠ 
-| <img src="./images/icons/salesforce.png" height="15"> [SalesForce SObject Sink](connect/connect-salesforce-sobject-sink) |  SaaS Apps | 1.7.15 | Confluent Subscription | 2021-02-24 | ☠ 
+| <img src="./images/icons/salesforce.png" height="15"> [SalesForce Bulk API Sink](connect/connect-salesforce-bulkapi-sink) |  SaaS Apps | 1.7.15 | Confluent Subscription | 2021-02-24 | 👍 2021-02-26 
+| <img src="./images/icons/salesforce.png" height="15"> [SalesForce Bulk API Source](connect/connect-salesforce-bulkapi-source) |  SaaS Apps | 1.7.15 | Confluent Subscription | 2021-02-24 | 👍 2021-02-26 
+| <img src="./images/icons/salesforce.png" height="15"> [SalesForce CDC Source](connect/connect-salesforce-cdc-source) |  SaaS Apps | 1.7.15 | Confluent Subscription | 2021-02-24 | 👍 2021-02-26 
+| <img src="./images/icons/salesforce.png" height="15"> [SalesForce Platform Events Sink](connect/connect-salesforce-platform-events-sink) |  SaaS Apps | 1.7.15 | Confluent Subscription | 2021-02-24 | 👍 2021-02-26 
+| <img src="./images/icons/salesforce.png" height="15"> [SalesForce Platform Events Source](connect/connect-salesforce-platform-events-source) |  SaaS Apps | 1.7.15 | Confluent Subscription | 2021-02-24 | 👍 2021-02-26 
+| <img src="./images/icons/salesforce.png" height="15"> [SalesForce PushTopics Source](connect/connect-salesforce-pushtopics-source) |  SaaS Apps | 1.7.15 | Confluent Subscription | 2021-02-24 | 👍 2021-02-26 
+| <img src="./images/icons/salesforce.png" height="15"> [SalesForce SObject Sink](connect/connect-salesforce-sobject-sink) |  SaaS Apps | 1.7.15 | Confluent Subscription | 2021-02-24 | 👍 2021-02-26 
 | <img src="./images/icons/servicenow.png" width="15"> [ServiceNow Sink](connect/connect-servicenow-sink) |  SaaS Apps | 2.0.3 | Confluent Subscription | 2020-12-09 | 🤷‍♂️ not tested 
 | <img src="./images/icons/servicenow.png" width="15"> [ServiceNow Source](connect/connect-servicenow-source) |  SaaS Apps | 2.0.3 | Confluent Subscription | 2020-12-09 | 🤷‍♂️ not tested 
 | <img src="./images/icons/sftp.png" width="15"> [SFTP Sink](connect/connect-sftp-sink) |  Datastore | 2.2.4 | Confluent Subscription | 2021-02-23 | 👍 2021-02-24 
