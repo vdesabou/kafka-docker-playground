@@ -17,3 +17,9 @@ services:
     environment:
       CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-servicenow
      #KAFKA_OPTS: -Djava.util.logging.config.file=/tmp/logging.properties
+
+  oldcurl:
+    hostname: oldcurl
+    container_name: oldcurl
+    image: vdesabou/kafka-docker-playground-connect:5.5.3
+    entrypoint: ["sh", "-c", "sleep 2073600"]
