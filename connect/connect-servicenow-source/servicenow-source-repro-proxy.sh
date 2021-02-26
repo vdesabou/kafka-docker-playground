@@ -29,7 +29,7 @@ ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext-rep
 
 export HTTP_PROXY=127.0.0.1:8888
 export HTTPS_PROXY=127.0.0.1:8888
-curl -v $SERVICENOW_URLapi/now/table/incident?sysparm_limit=1
+curl -v ${SERVICENOW_URL}api/now/table/incident?sysparm_limit=1
 # * Uses proxy env variable HTTPS_PROXY == '127.0.0.1:8888'
 # *   Trying 127.0.0.1...
 # * TCP_NODELAY set
