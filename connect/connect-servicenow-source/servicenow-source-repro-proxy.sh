@@ -115,15 +115,15 @@ docker exec  -e SERVICENOW_URL=$SERVICENOW_URL -e SERVICENOW_PASSWORD=$SERVICENO
 # * Connection #0 to host nginx_proxy left intact
 
 # block
-echo "$SERVICENOW_URL" | cut -d "/" -f3
-ip=$(dig +short $(echo "$SERVICENOW_URL" | cut -d "/" -f3))
-log "Blocking serviceNow instance IP address $ip on connect, to make sure proxy is used"
-docker exec -i --privileged --user root connect bash -c "yum update -y && yum install iptables -y"
-docker exec -i --privileged --user root connect bash -c "iptables -A INPUT -s $ip -j REJECT"
-docker exec -i --privileged --user root connect bash -c "iptables -A INPUT -d $ip -j REJECT"
-docker exec -i --privileged --user root connect bash -c "iptables -A OUTPUT -s $ip -j REJECT"
-docker exec -i --privileged --user root connect bash -c "iptables -A OUTPUT -d $ip -j REJECT"
-docker exec -i --privileged --user root connect bash -c "iptables -L -n -v"
+# echo "$SERVICENOW_URL" | cut -d "/" -f3
+# ip=$(dig +short $(echo "$SERVICENOW_URL" | cut -d "/" -f3))
+# log "Blocking serviceNow instance IP address $ip on connect, to make sure proxy is used"
+# docker exec -i --privileged --user root connect bash -c "yum update -y && yum install iptables -y"
+# docker exec -i --privileged --user root connect bash -c "iptables -A INPUT -s $ip -j REJECT"
+# docker exec -i --privileged --user root connect bash -c "iptables -A INPUT -d $ip -j REJECT"
+# docker exec -i --privileged --user root connect bash -c "iptables -A OUTPUT -s $ip -j REJECT"
+# docker exec -i --privileged --user root connect bash -c "iptables -A OUTPUT -d $ip -j REJECT"
+# docker exec -i --privileged --user root connect bash -c "iptables -L -n -v"
 
 TODAY=$(date '+%Y-%m-%d')
 
