@@ -17,6 +17,7 @@ services:
     environment:
       CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-servicenow
      #KAFKA_OPTS: -Djava.util.logging.config.file=/tmp/logging.properties
+    dns: 0.0.0.0
 
   oldcurl:
     hostname: oldcurl
