@@ -8,7 +8,7 @@
             "type": {
                 "type": "string",
                 "arg.properties": {
-                    "regex": "Customer_[1-9][0-9]{0,4}"
+                    "regex": "Customer_[1-9][0-9]{0,3}"
                 }
             }
         },
