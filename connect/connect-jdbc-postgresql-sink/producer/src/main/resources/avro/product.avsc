@@ -1,0 +1,10 @@
+{
+  "type": "record",
+  "namespace": "com.github.vdesabou",
+  "name": "Product",
+  "version": "1",
+  "fields": [
+    { "name": "id", "type": "long", "doc": "id" },
+    { "name": "name", "type": "string", "doc": "Name of Product" }
+  ]
+}

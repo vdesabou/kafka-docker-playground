@@ -1,0 +1,36 @@
+---
+version: '3.5'
+services:
+
+  producer:
+    build:
+      context: ../../connect/connect-jdbc-postgresql-sink/producer/
+      args:
+        TAG: ${TAG}
+        CP_BASE_IMAGE: ${CP_BASE_IMAGE}
+        KAFKA_CLIENT_TAG: ${KAFKA_CLIENT_TAG}
+    hostname: producer
+    container_name: producer
+    depends_on:
+      - zookeeper
+      - broker
+      - schema-registry
+
+  postgres:
+    image: debezium/postgres:10
+    hostname: postgres
+    container_name: postgres
+    environment:
+     - POSTGRES_USER=postgres
+     - POSTGRES_PASSWORD=postgres
+    volumes:
+     - ../../connect/connect-jdbc-postgresql-source/customers.sql:/docker-entrypoint-initdb.d/z99_dump.sql
+
+  connect:
+    depends_on:
+      - zookeeper
+      - broker
+      - schema-registry
+      - postgres
+    environment:
+      CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-jdbc
