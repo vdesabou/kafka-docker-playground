@@ -184,6 +184,7 @@ CREATE STREAM ORDERS
     orderid bigint,
     productid varchar,
     orderunits integer,
+    order_category varchar,
     customerid varchar
 )
 WITH

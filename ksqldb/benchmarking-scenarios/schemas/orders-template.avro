@@ -46,6 +46,21 @@
          }
       },
       {
+         "name": "order_category",
+         "type": {
+         "type": "string",
+         "arg.properties": {
+            "options": [
+               "train",
+               "truck",
+               "bike",
+               "plane",
+               "boat"
+               ]
+            }
+         }
+      },
+      {
          "name":"customerid",
          "type":{
             "type":"string",

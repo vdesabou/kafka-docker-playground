@@ -263,6 +263,7 @@ CREATE STREAM ORDERS
     orderid bigint,
     productid varchar,
     orderunits integer,
+    order_category varchar,
     customerid varchar
 )
 WITH
@@ -291,7 +292,7 @@ CREATE STREAM FILTERED_STREAM AS SELECT
   *
 FROM
   ORDERS
-WHERE category='orange';
+WHERE order_category='truck';
 EOF
 
 wait_for_stream_to_finish "FILTERED_STREAM"
