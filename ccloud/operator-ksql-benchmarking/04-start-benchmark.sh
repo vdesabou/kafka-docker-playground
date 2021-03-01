@@ -291,7 +291,7 @@ CREATE STREAM FILTERED_STREAM AS SELECT
   *
 FROM
   ORDERS
-WHERE productid='Product_1' or productid='Product_2';
+WHERE category='orange';
 EOF
 
 wait_for_stream_to_finish "FILTERED_STREAM"
