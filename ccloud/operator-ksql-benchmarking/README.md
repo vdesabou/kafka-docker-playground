@@ -161,6 +161,7 @@ Example of JSON message:
     "orderid": 1441,
     "ordertime": 1614070519441,
     "orderunits": 1441,
+    "order_category": "truck",
     "productid": "Product_9"
 }
 ```
