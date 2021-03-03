@@ -6,7 +6,7 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
 # DO NOT CHANGE (certs have been generated with this domain)
-domain=platformops.aws.devel.cpdev.cloud
+domain=platformops.dev.gcp.devel.cpdev.cloud
 
 # read configuration files
 #
@@ -101,18 +101,22 @@ eksctl create iamserviceaccount \
 
 set +e
 hosted_zone_id=$(aws route53 list-hosted-zones-by-name --output json --dns-name "external-dns-test.${domain}." | jq -r '.HostedZones[0].Id')
+log "Delete hosted zone ${hosted_zone_id}, if required"
 aws route53 delete-hosted-zone --id ${hosted_zone_id}
 set -e
 log "Create a DNS zone which will contain the managed DNS records"
 aws route53 create-hosted-zone --name "external-dns-test.${domain}." --caller-reference "external-dns-test-$(date +%s)"
 hosted_zone_id=$(aws route53 list-hosted-zones-by-name --output json --dns-name "external-dns-test.${domain}." | jq -r '.HostedZones[0].Id')
-log "Make a note of the nameservers that were assigned to your new zone"
+log "Make a note of the nameservers that were assigned to your new zone ${hosted_zone_id}"
 aws route53 list-resource-record-sets --output json --hosted-zone-id ${hosted_zone_id} --query "ResourceRecordSets[?Type == 'NS']" | jq -r '.[0].ResourceRecords[].Value'
 set -e
 
+set +e
+kubectl delete clusterrole external-dns-aws
+kubectl delete clusterrolebinding external-dns-aws
+set -e
 log "Install External DNS"
-# kubectl apply -f ${DIR}/aws-external-dns.yaml
-helm install external-dns-aws \
+helm upgrade --install external-dns-aws \
   --set provider=aws \
   --set aws.zoneType=public \
   --set txtOwnerId=${hosted_zone_id} \
