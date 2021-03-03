@@ -99,6 +99,8 @@ eksctl create iamserviceaccount \
     --approve \
     --override-existing-serviceaccounts
 
+iam_service_role=$(eksctl get iamserviceaccount --cluster "${eks_cluster_name}" --name "playground-operator-rbac-sa" --namespace operator -ojson | jq -r '.iam.serviceAccounts[].status.roleARN' | tail -1)
+
 set +e
 hosted_zone_id=$(aws route53 list-hosted-zones-by-name --output json --dns-name "external-dns-test.${domain}." | jq -r '.HostedZones[0].Id')
 log "Delete hosted zone ${hosted_zone_id}, if required"
@@ -119,10 +121,20 @@ log "Install External DNS"
 helm upgrade --install external-dns-aws \
   --set provider=aws \
   --set aws.zoneType=public \
+  --set aws.region=${eks_region} \
+  --set policy=sync \
+  --set registry=txt \
+  --set interval=1m \
   --set txtOwnerId=${hosted_zone_id} \
+  --set rbac.create=true \
+  --set rbac.serviceAccountName=playground-operator-rbac-sa \
+  --set rbac.serviceAccountAnnotations."eks\.amazonaws\.com/role-arn"="${iam_service_role}" \
+  --set log-level=debug \
   --namespace operator \
   --set domainFilters[0]="external-dns-test.${domain}." \
   stable/external-dns
+
+sleep 60
 
 log "Deploy Zookeeper Cluster"
 helm upgrade --install zookeeper -f $VALUES_FILE ${DIR}/confluent-operator/helm/confluent-operator/ --namespace operator --set zookeeper.enabled=true --wait
