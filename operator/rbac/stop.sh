@@ -15,17 +15,8 @@ else
     exit 1
 fi
 
-if [ "${provider}" = "minikube" ]
-then
-    minikube delete
-elif [ "${provider}" = "aws" ]
-then
-    #######
-    # aws
-    #######
-    log "Deleting EKS cluster"
-    eksctl delete cluster --name ${eks_cluster_name}
-else
-    logerror "Provider ${provider} is not supported"
-    exit 1
-fi
+#######
+# aws
+#######
+log "Deleting EKS cluster"
+eksctl delete cluster --name ${eks_cluster_name}
