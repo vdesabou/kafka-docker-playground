@@ -5,6 +5,9 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
+# DO NOT CHANGE (certs have been generated with this domain)
+domain=platformops.aws.devel.cpdev.cloud
+
 # read configuration files
 #
 if [ -r ${DIR}/test.properties ]
@@ -26,7 +29,6 @@ verify_installed "eksctl"
 # MAKE SURE TO BE IDEMPOTENT
 ########
 set +e
-kubectl delete namespace confluent
 kubectl delete namespace operator
 # delete namespaces
 # https://github.com/kubernetes/kubernetes/issues/77086#issuecomment-486840718
@@ -35,10 +37,10 @@ kubectl delete namespace operator
 # curl -X PUT http://localhost:8001/api/v1/namespaces/operator/finalize -H "Content-Type: application/json" --data-binary @ns-without-finalizers.json
 set -e
 
-VALUES_FILE=${DIR}/providers/${provider}.yaml
+VALUES_FILE=${DIR}/providers/aws.yaml
 
 log "Generate VALUES_FILE Yaml File"
-cat ${DIR}/providers/${provider}-template.yaml | sed 's/__DOMAIN__/'"$domain"'/g' | sed 's/__USER__/'"$USER"'/g' | sed 's/eks_region/'"$eks_region"'/g' > ${VALUES_FILE}
+cat ${DIR}/providers/aws-template.yaml | sed 's/__DOMAIN__/'"$domain"'/g' | sed 's/__USER__/'"$USER"'/g' | sed 's/eks_region/'"$eks_region"'/g' > ${VALUES_FILE}
 
 log "Download Confluent Operator confluent-operator-1.6.1-for-confluent-platform-6.0.0.tar.gz in ${DIR}/confluent-operator"
 rm -rf ${DIR}/confluent-operator
@@ -53,7 +55,6 @@ kubectl apply --filename ${DIR}/confluent-operator/resources/crds/
 
 log "Create the Kubernetes namespaces to install Operator and cluster"
 kubectl create namespace operator
-kubectl create namespace confluent
 
 log "Installing operator"
 helm upgrade --install \
@@ -64,10 +65,10 @@ helm upgrade --install \
   --set operator.enabled=true \
   --wait
 
-kubectl config set-context --current --namespace=confluent
+kubectl config set-context --current --namespace=operator
 
 log "Install ldap charts for testing"
-helm upgrade --install -f ${DIR}/openldap/ldaps-rbac.yaml test-ldap ${DIR}/openldap --namespace confluent
+helm upgrade --install -f ${DIR}/openldap/ldaps-rbac.yaml test-ldap ${DIR}/openldap --namespace operator
 
 log "Note: All required username/password are already part of openldap/values.yaml"
 
@@ -92,14 +93,17 @@ set -e
 log "Create IAM role for playground-operator-rbac-sa service account"
 eksctl create iamserviceaccount \
     --name playground-operator-rbac-sa \
-    --namespace confluent \
+    --namespace operator \
     --cluster ${eks_cluster_name} \
     --attach-policy-arn ${policy_arn} \
     --approve \
     --override-existing-serviceaccounts
 
-log "Create a DNS zone which will contain the managed DNS records"
 set +e
+hosted_zone_id=$(aws route53 list-hosted-zones-by-name --output json --dns-name "external-dns-test.${domain}." | jq -r '.HostedZones[0].Id')
+aws route53 delete-hosted-zone --id ${hosted_zone_id}
+set -e
+log "Create a DNS zone which will contain the managed DNS records"
 aws route53 create-hosted-zone --name "external-dns-test.${domain}." --caller-reference "external-dns-test-$(date +%s)"
 hosted_zone_id=$(aws route53 list-hosted-zones-by-name --output json --dns-name "external-dns-test.${domain}." | jq -r '.HostedZones[0].Id')
 log "Make a note of the nameservers that were assigned to your new zone"
@@ -112,15 +116,15 @@ helm install external-dns-aws \
   --set provider=aws \
   --set aws.zoneType=public \
   --set txtOwnerId=${hosted_zone_id} \
-  --namespace confluent \
+  --namespace operator \
   --set domainFilters[0]="external-dns-test.${domain}." \
   stable/external-dns
 
 log "Deploy Zookeeper Cluster"
-helm upgrade --install zookeeper -f $VALUES_FILE ${DIR}/confluent-operator/helm/confluent-operator/ --namespace confluent --set zookeeper.enabled=true --wait
+helm upgrade --install zookeeper -f $VALUES_FILE ${DIR}/confluent-operator/helm/confluent-operator/ --namespace operator --set zookeeper.enabled=true --wait
 
 log "Deploy Kafka Cluster"
-helm upgrade --install kafka -f $VALUES_FILE ${DIR}/confluent-operator/helm/confluent-operator/ --namespace confluent --set kafka.enabled=true --wait
+helm upgrade --install kafka -f $VALUES_FILE ${DIR}/confluent-operator/helm/confluent-operator/ --namespace operator --set kafka.enabled=true --wait
 
 log "Generate keystore and truststore first (client)"
 ${DIR}/scripts/createKeystore.sh ${DIR}/certs/fullchain.pem ${DIR}/certs/privkey.pem
@@ -129,8 +133,8 @@ ${DIR}/scripts/createTruststore.sh ${DIR}/certs/cacerts.pem
 log "Generate kafka.properties"
 cat ${DIR}/kafka.properties.tmpl | sed 's/__DOMAIN__/'"$domain"'/g' | sed 's/__USER__/'"$USER"'/g' > ${DIR}/kafka.properties
 
-log "Waiting up to 1800 seconds for all pods in namespace confluent to start"
-wait-until-pods-ready "1800" "10" "confluent"
+log "Waiting up to 1800 seconds for all pods in namespace operator to start"
+wait-until-pods-ready "1800" "10" "operator"
 
 log "Kafka Sanity Testing"
 kafka-broker-api-versions --command-config ${DIR}/kafka.properties --bootstrap-server "$USER.$domain:9092"
