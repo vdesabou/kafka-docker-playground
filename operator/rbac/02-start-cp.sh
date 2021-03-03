@@ -22,8 +22,6 @@ verify_installed "eksctl"
 
 # private repo https://github.com/confluentinc/cp-operator-deployment/tree/master/test/helm/scenarios/manual/rbac
 
-DOMAIN=playground.operator.rbac.cloud
-
 ########
 # MAKE SURE TO BE IDEMPOTENT
 ########
@@ -40,7 +38,7 @@ set -e
 VALUES_FILE=${DIR}/providers/${provider}.yaml
 
 log "Generate VALUES_FILE Yaml File"
-cat ${DIR}/providers/${provider}-template.yaml | sed 's/__DOMAIN__/'"$DOMAIN"'/g' | sed 's/__USER__/'"$USER"'/g' | sed 's/eks_region/'"$eks_region"'/g' > ${VALUES_FILE}
+cat ${DIR}/providers/${provider}-template.yaml | sed 's/__DOMAIN__/'"$domain"'/g' | sed 's/__USER__/'"$USER"'/g' | sed 's/eks_region/'"$eks_region"'/g' > ${VALUES_FILE}
 
 log "Download Confluent Operator confluent-operator-1.6.1-for-confluent-platform-6.0.0.tar.gz in ${DIR}/confluent-operator"
 rm -rf ${DIR}/confluent-operator
@@ -100,16 +98,13 @@ eksctl create iamserviceaccount \
     --approve \
     --override-existing-serviceaccounts
 
-log "Set up a hosted zone"
-
 log "Create a DNS zone which will contain the managed DNS records"
-aws route53 create-hosted-zone --name "external-dns-test.${DOMAIN}." --caller-reference "external-dns-test-$(date +%s)"
-hosted_zone_id=$(aws route53 list-hosted-zones-by-name --output json --dns-name "external-dns-test.${DOMAIN}." | jq -r '.HostedZones[0].Id')
+set +e
+aws route53 create-hosted-zone --name "external-dns-test.${domain}." --caller-reference "external-dns-test-$(date +%s)"
+hosted_zone_id=$(aws route53 list-hosted-zones-by-name --output json --dns-name "external-dns-test.${domain}." | jq -r '.HostedZones[0].Id')
 log "Make a note of the nameservers that were assigned to your new zone"
 aws route53 list-resource-record-sets --output json --hosted-zone-id ${hosted_zone_id} --query "ResourceRecordSets[?Type == 'NS']" | jq -r '.[0].ResourceRecords[].Value'
-
-# iam_service_role=$(eksctl get iamserviceaccount --cluster "${eks_cluster_name}" --name "playground-operator-rbac-sa" --namespace operator -ojson | jq -r '.iam.serviceAccounts[].status.roleARN' | tail -1)
-# escaped_iam_service_role=$(echo "$iam_service_role" | sed 's/\//\\\//g')
+set -e
 
 log "Install External DNS"
 # kubectl apply -f ${DIR}/aws-external-dns.yaml
@@ -118,7 +113,7 @@ helm install external-dns-aws \
   --set aws.zoneType=public \
   --set txtOwnerId=${hosted_zone_id} \
   --namespace confluent \
-  --set domainFilters[0]="external-dns-test.${DOMAIN}." \
+  --set domainFilters[0]="external-dns-test.${domain}." \
   stable/external-dns
 
 log "Deploy Zookeeper Cluster"
@@ -132,13 +127,13 @@ ${DIR}/scripts/createKeystore.sh ${DIR}/certs/fullchain.pem ${DIR}/certs/privkey
 ${DIR}/scripts/createTruststore.sh ${DIR}/certs/cacerts.pem
 
 log "Generate kafka.properties"
-cat ${DIR}/kafka.properties.tmpl | sed 's/__DOMAIN__/'"$DOMAIN"'/g' | sed 's/__USER__/'"$USER"'/g' > ${DIR}/kafka.properties
+cat ${DIR}/kafka.properties.tmpl | sed 's/__DOMAIN__/'"$domain"'/g' | sed 's/__USER__/'"$USER"'/g' > ${DIR}/kafka.properties
 
 log "Waiting up to 1800 seconds for all pods in namespace confluent to start"
 wait-until-pods-ready "1800" "10" "confluent"
 
 log "Kafka Sanity Testing"
-kafka-broker-api-versions --command-config ${DIR}/kafka.properties --bootstrap-server "$USER.$DOMAIN:9092"
+kafka-broker-api-versions --command-config ${DIR}/kafka.properties --bootstrap-server "$USER.$domain:9092"
 
 # kubectl exec -it connectors-0 -- bash
 
