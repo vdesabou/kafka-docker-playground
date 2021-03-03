@@ -25,7 +25,7 @@ global:
       enabled: true
   dependencies:
     mds:
-      endpoint: https://kafka.operator.svc.cluster.local:8090
+      endpoint: https://kafka.confluent.svc.cluster.local:8090
       publicKey: |-
         -----BEGIN PUBLIC KEY-----
         MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAwMyjnP4qfdTKhCS5sPbV
@@ -99,7 +99,7 @@ kafka:
         x5q0SqUVq6xv42213glBQMDJ4qQXTrsEBdpNynv7oVeXXwcaOTUaBw==
         -----END RSA PRIVATE KEY-----
       ldap:
-        address: ldaps://ldap.operator.svc.cluster.local:636
+        address: ldaps://ldap.confluent.svc.cluster.local:636
         authentication:
           simple:
             credentials: Developer!
