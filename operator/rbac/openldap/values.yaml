@@ -1,0 +1,74 @@
+name: ldap
+image: osixia/openldap:1.3.0
+tls:
+  enabled: false
+  fullchain: |-
+  privkey: |-
+  cacerts: |-
+
+env:
+  LDAP_ORGANISATION: "Test Inc."
+  LDAP_DOMAIN: "test.com"
+  LDAP_ADMIN_PASSWORD: "confluentrox"
+  LDAP_CONFIG_PASSWORD: "confluentconfigrox"
+  LDAP_READONLY_USER: "true"
+  LDAP_READONLY_USER_USERNAME: "mds"
+  LDAP_READONLY_USER_PASSWORD: "Developer!"
+
+ldifs:
+  kafka.ldif: |-
+    dn: cn=kafka,dc=test,dc=com
+    userPassword: kafka-secret
+    description: kafka user
+    objectClass: simpleSecurityObject
+    objectClass: organizationalRole
+    cn: kafka
+  erp.ldif: |-
+    dn: cn=erp,dc=test,dc=com
+    userPassword: erp-secret
+    description: erp user
+    objectClass: simpleSecurityObject
+    objectClass: organizationalRole
+    cn: erp
+  sr.ldif: |-
+    dn: cn=sr,dc=test,dc=com
+    userPassword: sr-secret
+    description: schema registry user
+    objectClass: simpleSecurityObject
+    objectClass: organizationalRole
+    cn: sr
+  c3.ldif: |-
+    dn: cn=c3,dc=test,dc=com
+    userPassword: c3-secret
+    description: control center user
+    objectClass: simpleSecurityObject
+    objectClass: organizationalRole
+    cn: c3
+  ksql.ldif: |-
+    dn: cn=ksql,dc=test,dc=com
+    userPassword: ksql-secret
+    description: ksql user
+    objectClass: simpleSecurityObject
+    objectClass: organizationalRole
+    cn: ksql
+  connect.ldif: |-
+    dn: cn=connect,dc=test,dc=com
+    userPassword: connect-secret
+    description: connect user
+    objectClass: simpleSecurityObject
+    objectClass: organizationalRole
+    cn: connect
+  replicator.ldif: |-
+    dn: cn=replicator,dc=test,dc=com
+    userPassword: replicator-secret
+    description: replicator user
+    objectClass: simpleSecurityObject
+    objectClass: organizationalRole
+    cn: replicator
+  c3-test.ldif: |-
+    dn: cn=testadmin,dc=test,dc=com
+    userPassword: testadmin
+    description: testadmin user
+    objectClass: simpleSecurityObject
+    objectClass: organizationalRole
+    cn: testadmin
