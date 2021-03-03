@@ -73,9 +73,9 @@ then
     log "Get the token from the output below to connect to dashboard"
     kubectl -n kube-system describe secret $(kubectl -n kube-system get secret | grep eks-admin | awk '{print $1}')
 
-    kubectl proxy &
+   # kubectl proxy &
 
-    log "Login to http://localhost:8001/api/v1/namespaces/kubernetes-dashboard/services/https:kubernetes-dashboard:/proxy/#/login"
+    log "If you want to use Kubernetes dashboard, run `kubectl proxy` and then login to http://localhost:8001/api/v1/namespaces/kubernetes-dashboard/services/https:kubernetes-dashboard:/proxy/#/login"
 else
     logerror "Provider ${provider} is not supported"
     exit 1
