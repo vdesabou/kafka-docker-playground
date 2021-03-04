@@ -80,8 +80,8 @@ kubectl config set-context --current --namespace=operator
 
 log "Install ldap charts for testing"
 helm upgrade --install -f ${DIR}/openldap/ldaps-rbac.yaml test-ldap ${DIR}/openldap \
-  --set-file tls.fullchain=${PWD}/certs/component-certs/kafka/kafka.pem  \
-  --set-file tls.privkey=${PWD}/certs/component-certs/kafka/kafka-key.pem \
+  --set-file tls.fullchain=${PWD}/certs/component-certs/replicator/replicator.pem  \
+  --set-file tls.privkey=${PWD}/certs/component-certs/replicator/replicator-key.pem \
   --set-file tls.cacerts=${PWD}/certs/ca.pem \
   --namespace operator
 
