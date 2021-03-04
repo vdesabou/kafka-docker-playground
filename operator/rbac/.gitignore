@@ -3,3 +3,4 @@ providers/aws.yaml
 kafka.properties
 aws-external-dns.yaml
 ns-without-finalizers.json
+external-dns.yaml

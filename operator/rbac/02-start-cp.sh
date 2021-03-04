@@ -78,7 +78,7 @@ log "Create IAM Policy, if required"
 set +e
 policy_arn=$(aws iam list-policies --query 'Policies[?PolicyName==`playground-operator-rbac-policy`].Arn' --output text)
 aws iam delete-policy --policy-arn "${policy_arn}"
-aws iam create-policy --policy-name "playground-operator-rbac-policy" --policy-document file://iam-policy.json --output text
+aws iam create-policy --policy-name "playground-operator-rbac-policy" --policy-document file://iam-policy-allow-externl-dns-updates.json --output text
 set -e
 
 policy_arn=$(aws iam list-policies --query 'Policies[?PolicyName==`playground-operator-rbac-policy`].Arn' --output text)
@@ -102,23 +102,23 @@ eksctl create iamserviceaccount \
 iam_service_role=$(eksctl get iamserviceaccount --cluster "${eks_cluster_name}" --name "playground-operator-rbac-sa" --namespace operator -ojson | jq -r '.iam.serviceAccounts[].status.roleARN' | tail -1)
 
 set +e
-hosted_zone_id=$(aws route53 list-hosted-zones-by-name --output json --dns-name "external-dns-test.${domain}." | jq -r '.HostedZones[0].Id')
+hosted_zone_id=$(aws route53 list-hosted-zones-by-name --output json --dns-name "${domain}." | jq -r '.HostedZones[0].Id')
 log "Delete hosted zone ${hosted_zone_id}, if required"
 aws route53 delete-hosted-zone --id ${hosted_zone_id}
 set -e
 log "Create a DNS zone which will contain the managed DNS records"
-aws route53 create-hosted-zone --name "external-dns-test.${domain}." --caller-reference "external-dns-test-$(date +%s)"
-hosted_zone_id=$(aws route53 list-hosted-zones-by-name --output json --dns-name "external-dns-test.${domain}." | jq -r '.HostedZones[0].Id')
+aws route53 create-hosted-zone --name "${domain}." --caller-reference "external-dns-test-$(date +%s)"
+hosted_zone_id=$(aws route53 list-hosted-zones-by-name --output json --dns-name "${domain}." | jq -r '.HostedZones[0].Id')
 log "Make a note of the nameservers that were assigned to your new zone ${hosted_zone_id}"
 aws route53 list-resource-record-sets --output json --hosted-zone-id ${hosted_zone_id} --query "ResourceRecordSets[?Type == 'NS']" | jq -r '.[0].ResourceRecords[].Value'
 set -e
 
 set +e
-kubectl delete clusterrole external-dns-aws
-kubectl delete clusterrolebinding external-dns-aws
+kubectl delete clusterrole external-dns
+kubectl delete clusterrolebinding external-dns
 set -e
 log "Install External DNS"
-helm upgrade --install external-dns-aws \
+helm upgrade --install external-dns \
   --set provider=aws \
   --set aws.zoneType=public \
   --set aws.region=${eks_region} \
@@ -126,12 +126,9 @@ helm upgrade --install external-dns-aws \
   --set registry=txt \
   --set interval=1m \
   --set txtOwnerId=${hosted_zone_id} \
-  --set rbac.create=true \
-  --set rbac.serviceAccountName=playground-operator-rbac-sa \
-  --set rbac.serviceAccountAnnotations."eks\.amazonaws\.com/role-arn"="${iam_service_role}" \
   --set log-level=debug \
   --namespace operator \
-  --set domainFilters[0]="external-dns-test.${domain}." \
+  --set domainFilters[0]="${domain}." \
   stable/external-dns
 
 sleep 60
