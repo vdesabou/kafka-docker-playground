@@ -5,9 +5,6 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
-# DO NOT CHANGE (certs have been generated with this domain)
-domain=platformops.aws.devel.cpdev.cloud
-
 # read configuration files
 #
 if [ -r ${DIR}/test.properties ]
@@ -22,6 +19,20 @@ verify_installed "kubectl"
 verify_installed "helm"
 verify_installed "aws"
 verify_installed "eksctl"
+verify_installed "cfssl"
+
+log "Generating certs"
+# https://github.com/confluentinc/cp-operator-deployment/tree/master/test/helm/scenarios/manual/certs/generate-certs
+
+# CA
+cfssl gencert -initca ${DIR}/certs/ca-csr.json | cfssljson -bare ${DIR}/certs/ca -
+
+# Server Certificates
+cat ${DIR}/certs/server-aws-template.json | sed 's/__DOMAIN__/'"$domain"'/g' > ${DIR}/certs/server-aws.json
+cfssl gencert -ca=${DIR}/certs/ca.pem -ca-key=${DIR}/certs/ca-key.pem -config=${DIR}/certs/ca-config.json -profile=server ${DIR}/certs/server-aws.json | cfssljson -bare ${DIR}/certs/server-aws
+
+# components
+./generate_certs.sh "operator" "$domain"
 
 # private repo https://github.com/confluentinc/cp-operator-deployment/tree/master/test/helm/scenarios/manual/rbac
 
@@ -137,11 +148,17 @@ log "Deploy Zookeeper Cluster"
 helm upgrade --install zookeeper -f $VALUES_FILE ${DIR}/confluent-operator/helm/confluent-operator/ --namespace operator --set zookeeper.enabled=true --wait
 
 log "Deploy Kafka Cluster"
-helm upgrade --install kafka -f $VALUES_FILE ${DIR}/confluent-operator/helm/confluent-operator/ --namespace operator --set kafka.enabled=true --wait
+helm upgrade --install kafka -f $VALUES_FILE ${DIR}/confluent-operator/helm/confluent-operator/ \
+    --namespace operator \
+    --set kafka.enabled=true \
+    --set-file kafka.tls.fullchain=${PWD}/certs/component-certs/kafka/kafka.pem  \
+    --set-file kafka.tls.privkey=${PWD}/certs/component-certs/kafka/kafka-key.pem \
+    --set-file kafka.tls.cacerts=${PWD}/certs/ca.pem \
+    --wait
 
 log "Generate keystore and truststore first (client)"
-${DIR}/scripts/createKeystore.sh ${DIR}/certs/fullchain.pem ${DIR}/certs/privkey.pem
-${DIR}/scripts/createTruststore.sh ${DIR}/certs/cacerts.pem
+${DIR}/scripts/createKeystore.sh ${DIR}/certs/component-certs/kafka/kafka.pem ${DIR}/certs/component-certs/kafka/kafka-key.pem
+${DIR}/scripts/createTruststore.sh ${DIR}/certs/ca.pem
 
 log "Generate kafka.properties"
 cat ${DIR}/kafka.properties.tmpl | sed 's/__DOMAIN__/'"$domain"'/g' | sed 's/__USER__/'"$USER"'/g' > ${DIR}/kafka.properties
