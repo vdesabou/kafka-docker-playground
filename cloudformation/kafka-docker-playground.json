@@ -23,7 +23,7 @@
     "Ec2RootVolumeSize": {
       "Description": " Ec2 root volume size",
       "Type": "String",
-      "Default": "30"
+      "Default": "100"
     },
 
     "IPAddressRange" : {
