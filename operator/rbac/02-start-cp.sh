@@ -128,23 +128,16 @@ log "Make a note of the nameservers that were assigned to your new zone ${hosted
 aws route53 list-resource-record-sets --output json --hosted-zone-id ${hosted_zone_id} --query "ResourceRecordSets[?Type == 'NS']" | jq -r '.[0].ResourceRecords[].Value'
 set -e
 
-set +e
-kubectl delete clusterrole external-dns
-kubectl delete clusterrolebinding external-dns
-set -e
+# set +e
+# kubectl delete clusterrole external-dns
+# kubectl delete clusterrolebinding external-dns
+# set -e
 log "Install External DNS"
-helm upgrade --install external-dns \
-  --set provider=aws \
-  --set aws.zoneType=public \
-  --set aws.region=${eks_region} \
-  --set policy=sync \
-  --set registry=txt \
-  --set interval=1m \
-  --set txtOwnerId=${hosted_zone_id} \
-  --set log-level=debug \
-  --namespace operator \
-  --set domainFilters[0]="${domain}." \
-  stable/external-dns
+helm upgrade --install external-dns -f $VALUES_FILE ${DIR}/confluent-operator/helm/confluent-operator/ \
+  --namespace kube-system \
+  --set externaldns.enabled=true \
+  --set externaldns.domainFilter=${domain} \
+  --set externaldns.id=demo-${USER}-test-identifier
 
 sleep 60
 
@@ -174,7 +167,6 @@ log "Kafka Sanity Testing"
 kafka-broker-api-versions --command-config ${DIR}/kafka.properties --bootstrap-server "$USER.$domain:9092"
 
 # kubectl exec -it connectors-0 -- bash
-
 
 # set +e
 # # Verify Kafka Connect has started within MAX_WAIT seconds
