@@ -6,7 +6,7 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
 # DO NOT CHANGE (certs have been generated with this domain)
-domain=platformops.dev.gcp.devel.cpdev.cloud
+domain=platformops.aws.devel.cpdev.cloud
 
 # read configuration files
 #
