@@ -79,7 +79,11 @@ helm upgrade --install \
 kubectl config set-context --current --namespace=operator
 
 log "Install ldap charts for testing"
-helm upgrade --install -f ${DIR}/openldap/ldaps-rbac.yaml test-ldap ${DIR}/openldap --namespace operator
+helm upgrade --install -f ${DIR}/openldap/ldaps-rbac.yaml test-ldap ${DIR}/openldap \
+  --set-file tls.fullchain=${PWD}/certs/component-certs/kafka/kafka.pem  \
+  --set-file tls.privkey=${PWD}/certs/component-certs/kafka/kafka-key.pem \
+  --set-file tls.cacerts=${PWD}/certs/ca.pem \
+  --namespace operator
 
 log "Note: All required username/password are already part of openldap/values.yaml"
 
