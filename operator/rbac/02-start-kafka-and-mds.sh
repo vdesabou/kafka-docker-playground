@@ -53,12 +53,12 @@ VALUES_FILE=${DIR}/providers/aws.yaml
 log "Generate VALUES_FILE Yaml File"
 cat ${DIR}/providers/aws-template.yaml | sed 's/__DOMAIN__/'"$domain"'/g' | sed 's/__USER__/'"$USER"'/g' | sed 's/eks_region/'"$eks_region"'/g' > ${VALUES_FILE}
 
-log "Download Confluent Operator confluent-operator-1.6.1-for-confluent-platform-6.0.0.tar.gz in ${DIR}/confluent-operator"
+log "Download Confluent Operator confluent-operator-1.6.2.tar.gz in ${DIR}/confluent-operator"
 rm -rf ${DIR}/confluent-operator
 mkdir ${DIR}/confluent-operator
 cd ${DIR}/confluent-operator
-wget https://platform-ops-bin.s3-us-west-1.amazonaws.com/operator/confluent-operator-1.6.1-for-confluent-platform-6.0.0.tar.gz
-tar xvfz confluent-operator-1.6.1-for-confluent-platform-6.0.0.tar.gz
+wget https://platform-ops-bin.s3-us-west-1.amazonaws.com/operator/confluent-operator-1.6.2.tar.gz
+tar xvfz confluent-operator-1.6.2.tar.gz
 cd -
 
 log "Extend Kubernetes with first class CP primitives"
