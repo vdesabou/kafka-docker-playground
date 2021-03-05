@@ -21,19 +21,6 @@ verify_installed "aws"
 verify_installed "eksctl"
 verify_installed "cfssl"
 
-log "Generating certs"
-# https://github.com/confluentinc/cp-operator-deployment/tree/master/test/helm/scenarios/manual/certs/generate-certs
-
-# CA
-cfssl gencert -initca ${DIR}/certs/ca-csr.json | cfssljson -bare ${DIR}/certs/ca -
-
-# Server Certificates
-cat ${DIR}/certs/server-aws-template.json | sed 's/__DOMAIN__/'"$domain"'/g' > ${DIR}/certs/server-aws.json
-cfssl gencert -ca=${DIR}/certs/ca.pem -ca-key=${DIR}/certs/ca-key.pem -config=${DIR}/certs/ca-config.json -profile=server ${DIR}/certs/server-aws.json | cfssljson -bare ${DIR}/certs/server-aws
-
-# components
-./generate_certs.sh "operator" "$domain"
-
 # private repo https://github.com/confluentinc/cp-operator-deployment/tree/master/test/helm/scenarios/manual/rbac
 
 ########
@@ -47,6 +34,19 @@ kubectl delete namespace operator
 # kubectl get ns operator -o json | jq '.spec.finalizers=[]' > ns-without-finalizers.json
 # curl -X PUT http://localhost:8001/api/v1/namespaces/operator/finalize -H "Content-Type: application/json" --data-binary @ns-without-finalizers.json
 set -e
+
+log "Generating certs"
+# https://github.com/confluentinc/cp-operator-deployment/tree/master/test/helm/scenarios/manual/certs/generate-certs
+
+# CA
+cfssl gencert -initca ${DIR}/certs/ca-csr.json | cfssljson -bare ${DIR}/certs/ca -
+
+# Server Certificates
+cat ${DIR}/certs/server-aws-template.json | sed 's/__DOMAIN__/'"$domain"'/g' > ${DIR}/certs/server-aws.json
+cfssl gencert -ca=${DIR}/certs/ca.pem -ca-key=${DIR}/certs/ca-key.pem -config=${DIR}/certs/ca-config.json -profile=server ${DIR}/certs/server-aws.json | cfssljson -bare ${DIR}/certs/server-aws
+
+# components
+./generate_certs.sh "operator" "$domain"
 
 VALUES_FILE=${DIR}/providers/aws.yaml
 
@@ -151,6 +151,8 @@ helm upgrade --install kafka -f $VALUES_FILE ${DIR}/confluent-operator/helm/conf
     --set-file kafka.tls.fullchain=${PWD}/certs/component-certs/kafka/kafka.pem  \
     --set-file kafka.tls.privkey=${PWD}/certs/component-certs/kafka/kafka-key.pem \
     --set-file kafka.tls.cacerts=${PWD}/certs/ca.pem \
+    --set global.sasl.plain.username=kafka \
+    --set global.sasl.plain.password=kafka-secret \
     --wait
 
 log "Generate keystore and truststore first (client)"
@@ -162,28 +164,3 @@ cat ${DIR}/kafka.properties.tmpl | sed 's/__DOMAIN__/'"$domain"'/g' | sed 's/__U
 
 log "Waiting up to 1800 seconds for all pods in namespace operator to start"
 wait-until-pods-ready "1800" "10" "operator"
-
-log "Kafka Sanity Testing"
-kafka-broker-api-versions --command-config ${DIR}/kafka.properties --bootstrap-server "$USER.$domain:9092"
-
-# kubectl exec -it connectors-0 -- bash
-
-# set +e
-# # Verify Kafka Connect has started within MAX_WAIT seconds
-# MAX_WAIT=480
-# CUR_WAIT=0
-# log "Waiting up to $MAX_WAIT seconds for Kafka Connect connectors-0 to start"
-# kubectl logs connectors-0 > /tmp/out.txt 2>&1
-# while [[ ! $(cat /tmp/out.txt) =~ "Finished starting connectors and tasks" ]]; do
-#   sleep 10
-#   kubectl logs connectors-0 > /tmp/out.txt 2>&1
-#   CUR_WAIT=$(( CUR_WAIT+10 ))
-#   if [[ "$CUR_WAIT" -gt "$MAX_WAIT" ]]; then
-#     echo -e "\nERROR: The logs in connectors-0 container do not show 'Finished starting connectors and tasks' after $MAX_WAIT seconds. Please troubleshoot'.\n"
-#     tail -300 /tmp/out.txt
-#     exit 1
-#   fi
-# done
-# log "Connect connectors-0 has started!"
-# set -e
-
