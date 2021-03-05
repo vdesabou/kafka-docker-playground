@@ -15,6 +15,11 @@ else
     exit 1
 fi
 
+function waitFor() {
+  retry 5 kubectl get statefulset $1 -n operator
+  kubectl rollout status -n operator -w sts/$1
+}
+
 mds_login_with_ca_cert()
 {
   MDS_URL=$1
@@ -83,15 +88,13 @@ log "KAFKA_ID=$KAFKA_ID"
 
 
 log "Schema Registry Role binding"
-# FIXTHIS: adding some retries because it fails if processed by broker other than kafka-0
-MAX_WAIT=120
-retrycmd $MAX_WAIT 5 confluent iam rolebinding create --kafka-cluster-id $KAFKA_ID --principal User:sr --role ResourceOwner  --resource Topic:_confluent-license
+confluent iam rolebinding create --kafka-cluster-id $KAFKA_ID --principal User:sr --role ResourceOwner  --resource Topic:_confluent-license
 
-retrycmd $MAX_WAIT 5 confluent iam rolebinding create --kafka-cluster-id $KAFKA_ID --principal User:sr --role SecurityAdmin --schema-registry-cluster-id id_schemaregistry_operator
+confluent iam rolebinding create --kafka-cluster-id $KAFKA_ID --principal User:sr --role SecurityAdmin --schema-registry-cluster-id id_schemaregistry_operator
 
-retrycmd $MAX_WAIT 5 confluent iam rolebinding create --kafka-cluster-id $KAFKA_ID --principal User:sr --role ResourceOwner --resource Group:id_schemaregistry_operator
+confluent iam rolebinding create --kafka-cluster-id $KAFKA_ID --principal User:sr --role ResourceOwner --resource Group:id_schemaregistry_operator
 
-retrycmd $MAX_WAIT 5 confluent iam rolebinding create --kafka-cluster-id $KAFKA_ID --principal User:sr --role ResourceOwner --resource Topic:_schemas_schemaregistry_operator
+confluent iam rolebinding create --kafka-cluster-id $KAFKA_ID --principal User:sr --role ResourceOwner --resource Topic:_schemas_schemaregistry_operator
 
 
 log "Deploy Schema Registry"
@@ -106,13 +109,11 @@ helm upgrade --install sr -f $VALUES_FILE ${DIR}/confluent-operator/helm/conflue
     --wait
 
 log "Connect Role binding"
-# FIXTHIS: adding some retries because it fails if processed by broker other than kafka-0
-MAX_WAIT=120
-retrycmd $MAX_WAIT 5 confluent iam rolebinding create --kafka-cluster-id $KAFKA_ID --principal User:connect --role ResourceOwner --resource Group:operator.connectors
+confluent iam rolebinding create --kafka-cluster-id $KAFKA_ID --principal User:connect --role ResourceOwner --resource Group:operator.connectors
 
-retrycmd $MAX_WAIT 5 confluent iam rolebinding create --kafka-cluster-id $KAFKA_ID --principal User:connect --role DeveloperWrite --resource Topic:_confluent-monitoring --prefix
+confluent iam rolebinding create --kafka-cluster-id $KAFKA_ID --principal User:connect --role DeveloperWrite --resource Topic:_confluent-monitoring --prefix
 
-retrycmd $MAX_WAIT 5 confluent iam rolebinding create --kafka-cluster-id $KAFKA_ID --principal User:connect --role ResourceOwner --resource Topic:operator.connectors- --prefix
+confluent iam rolebinding create --kafka-cluster-id $KAFKA_ID --principal User:connect --role ResourceOwner --resource Topic:operator.connectors- --prefix
 
 log "Deploy Connect"
 helm upgrade --install connect -f $VALUES_FILE ${DIR}/confluent-operator/helm/confluent-operator/ \
@@ -125,25 +126,71 @@ helm upgrade --install connect -f $VALUES_FILE ${DIR}/confluent-operator/helm/co
     --set global.sasl.plain.password=kafka-secret \
     --wait
 
+waitFor connect
 
 # kubectl exec -it connectors-0 -- bash
 
-# set +e
-# # Verify Kafka Connect has started within MAX_WAIT seconds
-# MAX_WAIT=480
-# CUR_WAIT=0
-# log "Waiting up to $MAX_WAIT seconds for Kafka Connect connectors-0 to start"
-# kubectl logs connectors-0 > /tmp/out.txt 2>&1
-# while [[ ! $(cat /tmp/out.txt) =~ "Finished starting connectors and tasks" ]]; do
-#   sleep 10
-#   kubectl logs connectors-0 > /tmp/out.txt 2>&1
-#   CUR_WAIT=$(( CUR_WAIT+10 ))
-#   if [[ "$CUR_WAIT" -gt "$MAX_WAIT" ]]; then
-#     echo -e "\nERROR: The logs in connectors-0 container do not show 'Finished starting connectors and tasks' after $MAX_WAIT seconds. Please troubleshoot'.\n"
-#     tail -300 /tmp/out.txt
-#     exit 1
-#   fi
-# done
-# log "Connect connectors-0 has started!"
-# set -e
+set +e
+# Verify Kafka Connect has started within MAX_WAIT seconds
+MAX_WAIT=480
+CUR_WAIT=0
+log "Waiting up to $MAX_WAIT seconds for Kafka Connect connectors-0 to start"
+kubectl logs connectors-0 > /tmp/out.txt 2>&1
+while [[ ! $(cat /tmp/out.txt) =~ "Finished starting connectors and tasks" ]]; do
+  sleep 10
+  kubectl logs connectors-0 > /tmp/out.txt 2>&1
+  CUR_WAIT=$(( CUR_WAIT+10 ))
+  if [[ "$CUR_WAIT" -gt "$MAX_WAIT" ]]; then
+    echo -e "\nERROR: The logs in connectors-0 container do not show 'Finished starting connectors and tasks' after $MAX_WAIT seconds. Please troubleshoot'.\n"
+    tail -300 /tmp/out.txt
+    exit 1
+  fi
+done
+log "Connect connectors-0 has started!"
+set -e
+
+log "KSQL Role binding"
+confluent iam rolebinding create --kafka-cluster-id $KAFKA_ID --principal User:ksql --role ResourceOwner  --ksql-cluster-id operator.ksql --resource KsqlCluster:ksql-cluster
+
+confluent iam rolebinding create --kafka-cluster-id $KAFKA_ID --principal User:ksql --role ResourceOwner  --resource Topic:_confluent-ksql-operator.ksql --prefix
+
+log "Deploy KSQL"
+helm upgrade --install ksql -f $VALUES_FILE ${DIR}/confluent-operator/helm/confluent-operator/ \
+    --namespace operator \
+    --set ksql.enabled=true \
+    --set-file ksql.tls.fullchain=${PWD}/certs/component-certs/ksql/ksql.pem  \
+    --set-file ksql.tls.privkey=${PWD}/certs/component-certs/ksql/ksql-key.pem \
+    --set-file ksql.tls.cacerts=${PWD}/certs/ca.pem \
+    --set global.sasl.plain.username=kafka \
+    --set global.sasl.plain.password=kafka-secret \
+    --wait
+
+
+log "Control Center Role binding"
+# Allow `c3`, system user for Control Center, to use Kafka cluster for storing data
+confluent iam rolebinding create --principal User:c3 --role SystemAdmin --kafka-cluster-id $KAFKA_ID
+
+# Allow `testadmin` to see kafka cluster information
+confluent iam rolebinding create --kafka-cluster-id $KAFKA_ID --role ClusterAdmin --principal User:testadmin
+
+# Allow `testadmin` to see connectcluster
+confluent iam rolebinding create --kafka-cluster-id $KAFKA_ID --connect-cluster-id operator.connect  --principal User:testadmin --role SystemAdmin
+
+# Allow `testadmin` to see Schema Registry
+confluent iam rolebinding create --kafka-cluster-id $KAFKA_ID --schema-registry-cluster-id operator.shemaregistry --principal User:testadmin --role SystemAdmin
+
+log "Deploy Control Center"
+helm upgrade --install controlcenter -f $VALUES_FILE ${DIR}/confluent-operator/helm/confluent-operator/ \
+    --namespace operator \
+    --set controlcenter.enabled=true \
+    --set-file controlcenter.tls.fullchain=${PWD}/certs/component-certs/controlcenter/controlcenter.pem  \
+    --set-file controlcenter.tls.privkey=${PWD}/certs/component-certs/controlcenter/controlcenter-key.pem \
+    --set-file controlcenter.tls.cacerts=${PWD}/certs/ca.pem \
+    --set global.sasl.plain.username=kafka \
+    --set global.sasl.plain.password=kafka-secret \
+    --wait
+
+
+log "Control Center is reachable at http://127.0.0.1:9021 (testadmin/testadmin)"
+kubectl port-forward controlcenter-0 9021:9021 &
 
