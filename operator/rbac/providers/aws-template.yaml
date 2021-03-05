@@ -196,15 +196,15 @@ controlcenter:
     c3KafkaCluster:
       brokerCount: 3
       bootstrapEndpoint: kafka:9071
-      zookeeper:
-        endpoint: zookeeper:2181
-      restProxy:
-        enabled: true
       tls:
         enabled: true
         internal: true
         authentication:
           type: plain
+      zookeeper:
+        endpoint: zookeeper:2181
+      restProxy:
+        enabled: true
     connectCluster:
       enabled: true
       tls:

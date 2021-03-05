@@ -88,13 +88,29 @@ log "KAFKA_ID=$KAFKA_ID"
 
 
 log "Schema Registry Role binding"
-confluent iam rolebinding create --kafka-cluster-id $KAFKA_ID --principal User:sr --role ResourceOwner  --resource Topic:_confluent-license
+confluent iam rolebinding create \
+  --kafka-cluster-id $KAFKA_ID \
+  --principal User:sr \
+  --role ResourceOwner  \
+  --resource Topic:_confluent-license
 
-confluent iam rolebinding create --kafka-cluster-id $KAFKA_ID --principal User:sr --role SecurityAdmin --schema-registry-cluster-id id_schemaregistry_operator
+confluent iam rolebinding create \
+  --kafka-cluster-id $KAFKA_ID \
+  --principal User:sr \
+  --role SecurityAdmin \
+  --schema-registry-cluster-id id_schemaregistry_operator
 
-confluent iam rolebinding create --kafka-cluster-id $KAFKA_ID --principal User:sr --role ResourceOwner --resource Group:id_schemaregistry_operator
+confluent iam rolebinding create \
+  --kafka-cluster-id $KAFKA_ID \
+  --principal User:sr \
+  --role ResourceOwner \
+  --resource Group:id_schemaregistry_operator
 
-confluent iam rolebinding create --kafka-cluster-id $KAFKA_ID --principal User:sr --role ResourceOwner --resource Topic:_schemas_schemaregistry_operator
+confluent iam rolebinding create \
+  --kafka-cluster-id $KAFKA_ID \
+  --principal User:sr \
+  --role ResourceOwner \
+  --resource Topic:_schemas_schemaregistry_operator
 
 
 log "Deploy Schema Registry"
@@ -109,11 +125,31 @@ helm upgrade --install sr -f $VALUES_FILE ${DIR}/confluent-operator/helm/conflue
     --wait
 
 log "Connect Role binding"
-confluent iam rolebinding create --kafka-cluster-id $KAFKA_ID --principal User:connect --role ResourceOwner --resource Group:operator.connectors
+confluent iam rolebinding create \
+  --kafka-cluster-id $KAFKA_ID \
+  --principal User:connect \
+  --role SecurityAdmin \
+  --connect-cluster-id id_connect_operator
 
-confluent iam rolebinding create --kafka-cluster-id $KAFKA_ID --principal User:connect --role DeveloperWrite --resource Topic:_confluent-monitoring --prefix
+confluent iam rolebinding create \
+  --kafka-cluster-id $KAFKA_ID \
+  --principal User:connect \
+  --role ResourceOwner \
+  --resource Group:operator.connectors
 
-confluent iam rolebinding create --kafka-cluster-id $KAFKA_ID --principal User:connect --role ResourceOwner --resource Topic:operator.connectors- --prefix
+confluent iam rolebinding create \
+  --kafka-cluster-id $KAFKA_ID \
+  --principal User:connect \
+  --role DeveloperWrite \
+  --resource Topic:_confluent-monitoring \
+  --prefix
+
+confluent iam rolebinding create \
+  --kafka-cluster-id $KAFKA_ID \
+  --principal User:connect \
+  --role ResourceOwner \
+  --resource Topic:operator.connectors- \
+  --prefix
 
 log "Deploy Connect"
 helm upgrade --install connect -f $VALUES_FILE ${DIR}/confluent-operator/helm/confluent-operator/ \
@@ -150,9 +186,19 @@ log "Connect connectors-0 has started!"
 set -e
 
 log "KSQL Role binding"
-confluent iam rolebinding create --kafka-cluster-id $KAFKA_ID --principal User:ksql --role ResourceOwner  --ksql-cluster-id operator.ksql --resource KsqlCluster:ksql-cluster
+confluent iam rolebinding create \
+  --kafka-cluster-id $KAFKA_ID \
+  --principal User:ksql \
+  --role ResourceOwner \
+  --ksql-cluster-id operator.ksql_ \
+  --resource KsqlCluster:ksql-cluster
 
-confluent iam rolebinding create --kafka-cluster-id $KAFKA_ID --principal User:ksql --role ResourceOwner  --resource Topic:_confluent-ksql-operator.ksql --prefix
+confluent iam rolebinding create \
+  --kafka-cluster-id $KAFKA_ID \
+  --principal User:ksql \
+  --role ResourceOwner \
+  --resource Topic:_confluent-ksql-operator.ksql_ \
+  --prefix
 
 log "Deploy KSQL"
 helm upgrade --install ksql -f $VALUES_FILE ${DIR}/confluent-operator/helm/confluent-operator/ \
@@ -167,17 +213,41 @@ helm upgrade --install ksql -f $VALUES_FILE ${DIR}/confluent-operator/helm/confl
 
 
 log "Control Center Role binding"
-# Allow `c3`, system user for Control Center, to use Kafka cluster for storing data
-confluent iam rolebinding create --principal User:c3 --role SystemAdmin --kafka-cluster-id $KAFKA_ID
 
-# Allow `testadmin` to see kafka cluster information
-confluent iam rolebinding create --kafka-cluster-id $KAFKA_ID --role ClusterAdmin --principal User:testadmin
+confluent iam rolebinding create \
+  --principal User:c3 \
+  --role SystemAdmin \
+  --kafka-cluster-id $KAFKA_ID
 
-# Allow `testadmin` to see connectcluster
-confluent iam rolebinding create --kafka-cluster-id $KAFKA_ID --connect-cluster-id operator.connect  --principal User:testadmin --role SystemAdmin
+confluent iam rolebinding create \
+  --kafka-cluster-id $KAFKA_ID \
+  --role ClusterAdmin \
+  --principal User:testadmin
 
-# Allow `testadmin` to see Schema Registry
-confluent iam rolebinding create --kafka-cluster-id $KAFKA_ID --schema-registry-cluster-id operator.shemaregistry --principal User:testadmin --role SystemAdmin
+confluent iam rolebinding create \
+  --kafka-cluster-id $KAFKA_ID \
+  --schema-registry-cluster-id id_schemaregistry_operator \
+  --principal User:testadmin \
+  --role SystemAdmin
+
+confluent iam rolebinding create \
+  --kafka-cluster-id $KAFKA_ID \
+  --connect-cluster-id operator.connectors \
+  --principal User:testadmin \
+  --role SystemAdmin
+
+confluent iam rolebinding create \
+  --kafka-cluster-id $KAFKA_ID \
+  --connect-cluster-id operator.replicator \
+  --principal User:testadmin \
+  --role SystemAdmin
+
+confluent iam rolebinding create \
+  --kafka-cluster-id $KAFKA_ID \
+  --ksql-cluster-id operator.ksql_ \
+  --resource KsqlCluster:ksql-cluster \
+  --principal User:testadmin \
+  --role ResourceOwner
 
 log "Deploy Control Center"
 helm upgrade --install controlcenter -f $VALUES_FILE ${DIR}/confluent-operator/helm/confluent-operator/ \
