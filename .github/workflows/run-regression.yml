@@ -42,7 +42,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        tag: [ "6.1.0"]
+        tag: [ "5.5.3", "6.0.2", "6.1.0"]
         test_list : [
                       "connect/connect-salesforce-bulkapi-sink connect/connect-salesforce-bulkapi-source connect/connect-salesforce-pushtopics-source connect/connect-salesforce-sobject-sink connect/connect-salesforce-cdc-source connect/connect-salesforce-platform-events-sink connect/connect-salesforce-platform-events-source",
                       "connect/connect-snowflake-sink connect/connect-splunk-sink connect/connect-splunk-source connect/connect-spool-dir-source
