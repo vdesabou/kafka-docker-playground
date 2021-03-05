@@ -30,9 +30,9 @@ IFS=$'\n'
 counter=0
 for arecord in $(aws route53 list-resource-record-sets --hosted-zone-id ${hosted_zone_id} --output text --query "ResourceRecordSets[?Type == 'A'].[Name, AliasTarget.DNSName]")
 do
+  log "A record: $arecord"
   ((counter=counter+1))
 done
-IFS="$oldIFS"
 
 if [ "$counter" != "4" ]
 then
@@ -56,3 +56,5 @@ do
   addhost "$ip" "$domain_host"
   ((counter=counter+1))
 done
+IFS="$oldIFS"
+
