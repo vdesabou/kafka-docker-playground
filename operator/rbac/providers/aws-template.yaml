@@ -187,29 +187,35 @@ controlcenter:
     enabled: true
     domain: __DOMAIN__
     prefix: __USER__-controlcenter
-  tls: *tls
+  tls:
+    internal: true
+    enabled: true
+    authentication:
+      type: plain
   dependencies:
     c3KafkaCluster:
       brokerCount: 3
-      bootstrapEndpoint: __USER__.__DOMAIN__:9092
+      bootstrapEndpoint: kafka:9071
       zookeeper:
         endpoint: zookeeper:2181
+      restProxy:
+        enabled: true
       tls:
         enabled: true
         internal: true
         authentication:
-          type: tls
+          type: plain
     connectCluster:
       enabled: true
       tls:
         enabled: true
-      url: https://connectors:9083
+      url: https://connectors:8083
     ksql:
       enabled: true
       tls:
         enabled: true
       advertisedUrl: https://__USER__-ksql.__DOMAIN__
-      url: http://ksql:9088
+      url: https://ksql:8088
     schemaRegistry:
       enabled: true
       tls:
