@@ -74,7 +74,8 @@ EOF
     docker run -v $PWD:/tmp vdesabou/kafka-docker-playground-connect:${TAG} openssl pkcs12 -in /tmp/$i.keystore.p12 -nodes -nocerts -out /tmp/$i.key -passin pass:confluent
 
     # https://confluentinc.atlassian.net/browse/DOCS-2541
-    docker run -v $PWD:/tmp vdesabou/kafka-docker-playground-connect:${TAG} keytool -noprompt -destkeystore /tmp/kafka.$i.truststore.jks -importkeystore -srckeystore /usr/lib/jvm/zulu11-ca/lib/security/cacerts -srcstorepass changeit -deststorepass confluent
+    cacerts_path=$(docker run -v $PWD:/tmp vdesabou/kafka-docker-playground-connect:${TAG} bash -c "find /usr/lib/jvm -name cacerts")
+    docker run -v $PWD:/tmp vdesabou/kafka-docker-playground-connect:${TAG} keytool -noprompt -destkeystore /tmp/kafka.$i.truststore.jks -importkeystore -srckeystore $cacerts_path -srcstorepass changeit -deststorepass confluent
 done
 
 # used for other/rest-proxy-security-plugin test
