@@ -146,6 +146,22 @@ do
             logerror "####################################################"
             logerror "RESULT: FAILURE for $script in dir $dir ($ELAPSED - $CUMULATED)"
             logerror "####################################################"
+
+            logwarn "####################################################"
+            logwarn "docker ps"
+            docker ps
+            logwarn "####################################################"
+            for container in broker broker2 schema-registry connect broker-us broker-europe connect-us connect-europe
+            do
+            if [[ $(docker ps -f "name=$container" --format '{{.Names}}') == $container ]]
+            then
+                logwarn "####################################################"
+                logwarn "$container logs"
+                docker container logs --tail=200 $container
+                logwarn "####################################################"
+            fi
+
+            done
             failed_tests=$failed_tests"$dir[$script]\n"
             let "nb_test_failed++"
         fi
