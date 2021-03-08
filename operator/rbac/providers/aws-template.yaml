@@ -214,7 +214,6 @@ controlcenter:
       enabled: true
       tls:
         enabled: true
-      advertisedUrl: https://__USER__-ksql.__DOMAIN__
       url: https://ksql:8088
     schemaRegistry:
       enabled: true
