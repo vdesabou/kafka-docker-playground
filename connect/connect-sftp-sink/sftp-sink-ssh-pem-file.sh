@@ -5,7 +5,7 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
 log "generate ssh host key"
-rm -f ssh_host*
+rm -rf ssh_host*
 ssh-keygen -t rsa -b 4096 -f ssh_host_rsa_key -P "mypassword"
 # needs to be a RSA key
 ssh-keygen -p -f ssh_host_rsa_key -m pem -P mypassword -N mypassword -b 2048
