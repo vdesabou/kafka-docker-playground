@@ -209,17 +209,17 @@ controlcenter:
       enabled: true
       tls:
         enabled: true
-      url: https://connectors:8083
+      url: https://connectors.confluent.svc.cluster.local:8083
     ksql:
       enabled: true
       tls:
         enabled: true
-      url: https://ksql:8088
+      url: https://ksql.confluent.svc.cluster.local:8088
     schemaRegistry:
       enabled: true
       tls:
         enabled: true
-      url: https://schemaregistry:8081
+      url: https://schemaregistry.confluent.svc.cluster.local:8081
     mds:
       authentication:
         username: c3
@@ -248,7 +248,7 @@ ksql:
       enabled: true
       tls:
         enabled: true
-      url: https://schemaregistry:8081
+      url: https://schemaregistry.confluent.svc.cluster.local:8081
     mds:
       authentication:
         username: ksql
