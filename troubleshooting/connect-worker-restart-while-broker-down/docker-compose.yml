@@ -77,6 +77,8 @@ services:
       - broker3
     ports:
       - "8083:8083"
+    sysctls:
+        - net.ipv4.tcp_syn_retries=3
     environment:
       CONNECT_BOOTSTRAP_SERVERS: 'broker1:9092,broker2:9092,broker3:9092'
       CONNECT_REST_ADVERTISED_HOST_NAME: connect1
@@ -86,9 +88,9 @@ services:
       CONNECT_OFFSET_STORAGE_TOPIC: connect-offsets
       CONNECT_STATUS_STORAGE_TOPIC: connect-status
       # FIXTHIS: normally fixed by https://issues.apache.org/jira/browse/KAFKA-8875 ?
-      CONNECT_CONFIG_STORAGE_REPLICATION_FACTOR: 2
-      CONNECT_OFFSET_STORAGE_REPLICATION_FACTOR: 2
-      CONNECT_STATUS_STORAGE_REPLICATION_FACTOR: 2
+      CONNECT_CONFIG_STORAGE_REPLICATION_FACTOR: 3
+      CONNECT_OFFSET_STORAGE_REPLICATION_FACTOR: 3
+      CONNECT_STATUS_STORAGE_REPLICATION_FACTOR: 3
       CONNECT_KEY_CONVERTER: "org.apache.kafka.connect.storage.StringConverter"
       CONNECT_VALUE_CONVERTER: "org.apache.kafka.connect.storage.StringConverter"
       CONNECT_INTERNAL_KEY_CONVERTER: "org.apache.kafka.connect.json.JsonConverter"
@@ -115,6 +117,8 @@ services:
       - broker3
     ports:
       - "8084:8083"
+    sysctls:
+        - net.ipv4.tcp_syn_retries=3
     environment:
       CONNECT_BOOTSTRAP_SERVERS: 'broker1:9092,broker2:9092,broker3:9092'
       CONNECT_REST_ADVERTISED_HOST_NAME: connect2
@@ -124,9 +128,9 @@ services:
       CONNECT_OFFSET_STORAGE_TOPIC: connect-offsets
       CONNECT_STATUS_STORAGE_TOPIC: connect-status
       # FIXTHIS: normally fixed by https://issues.apache.org/jira/browse/KAFKA-8875 ?
-      CONNECT_CONFIG_STORAGE_REPLICATION_FACTOR: 2
-      CONNECT_OFFSET_STORAGE_REPLICATION_FACTOR: 2
-      CONNECT_STATUS_STORAGE_REPLICATION_FACTOR: 2
+      CONNECT_CONFIG_STORAGE_REPLICATION_FACTOR: 3
+      CONNECT_OFFSET_STORAGE_REPLICATION_FACTOR: 3
+      CONNECT_STATUS_STORAGE_REPLICATION_FACTOR: 3
       CONNECT_KEY_CONVERTER: "org.apache.kafka.connect.storage.StringConverter"
       CONNECT_VALUE_CONVERTER: "org.apache.kafka.connect.storage.StringConverter"
       CONNECT_INTERNAL_KEY_CONVERTER: "org.apache.kafka.connect.json.JsonConverter"
@@ -153,6 +157,8 @@ services:
       - broker3
     ports:
       - "8085:8083"
+    sysctls:
+        - net.ipv4.tcp_syn_retries=3
     environment:
       CONNECT_BOOTSTRAP_SERVERS: 'broker1:9092,broker2:9092,broker3:9092'
       CONNECT_REST_ADVERTISED_HOST_NAME: connect3
@@ -162,9 +168,9 @@ services:
       CONNECT_OFFSET_STORAGE_TOPIC: connect-offsets
       CONNECT_STATUS_STORAGE_TOPIC: connect-status
       # FIXTHIS: normally fixed by https://issues.apache.org/jira/browse/KAFKA-8875 ?
-      CONNECT_CONFIG_STORAGE_REPLICATION_FACTOR: 2
-      CONNECT_OFFSET_STORAGE_REPLICATION_FACTOR: 2
-      CONNECT_STATUS_STORAGE_REPLICATION_FACTOR: 2
+      CONNECT_CONFIG_STORAGE_REPLICATION_FACTOR: 3
+      CONNECT_OFFSET_STORAGE_REPLICATION_FACTOR: 3
+      CONNECT_STATUS_STORAGE_REPLICATION_FACTOR: 3
       CONNECT_KEY_CONVERTER: "org.apache.kafka.connect.storage.StringConverter"
       CONNECT_VALUE_CONVERTER: "org.apache.kafka.connect.storage.StringConverter"
       CONNECT_INTERNAL_KEY_CONVERTER: "org.apache.kafka.connect.json.JsonConverter"
