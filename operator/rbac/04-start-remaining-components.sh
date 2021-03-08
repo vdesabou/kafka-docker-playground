@@ -15,11 +15,6 @@ else
     exit 1
 fi
 
-function waitFor() {
-  retry 5 kubectl get statefulset $1 -n operator
-  kubectl rollout status -n operator -w sts/$1
-}
-
 mds_login_with_ca_cert()
 {
   MDS_URL=$1
@@ -162,7 +157,8 @@ helm upgrade --install connect -f $VALUES_FILE ${DIR}/confluent-operator/helm/co
     --set global.sasl.plain.password=kafka-secret \
     --wait
 
-waitFor connect
+log "Waiting up to 1800 seconds for all pods in namespace operator to start"
+wait-until-pods-ready "1800" "10" "operator"
 
 # kubectl exec -it connectors-0 -- bash
 
@@ -210,7 +206,6 @@ helm upgrade --install ksql -f $VALUES_FILE ${DIR}/confluent-operator/helm/confl
     --set global.sasl.plain.username=kafka \
     --set global.sasl.plain.password=kafka-secret \
     --wait
-
 
 log "Control Center Role binding"
 
@@ -260,6 +255,8 @@ helm upgrade --install controlcenter -f $VALUES_FILE ${DIR}/confluent-operator/h
     --set global.sasl.plain.password=kafka-secret \
     --wait
 
+log "Waiting up to 1800 seconds for all pods in namespace operator to start"
+wait-until-pods-ready "1800" "10" "operator"
 
 log "Control Center is reachable at http://127.0.0.1:9021 (testadmin/testadmin)"
 kubectl port-forward controlcenter-0 9021:9021 &

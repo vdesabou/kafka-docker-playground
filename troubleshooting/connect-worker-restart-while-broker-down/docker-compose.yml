@@ -109,7 +109,7 @@ services:
     image: vdesabou/kafka-docker-playground-connect:${TAG}
     hostname: connect2
     container_name: connect2
-    # restart: always
+    restart: always
     depends_on:
       - zookeeper
       - broker1
