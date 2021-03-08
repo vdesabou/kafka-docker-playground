@@ -99,18 +99,28 @@ do
                 elapsed_time=$((now-last_success_time))
             fi
 
-            if [[ $elapsed_time -gt 604800 ]]
+            # run at least every 15 days, even with no changes
+            if [[ $elapsed_time -gt 1209600 ]]
             then
                 log "####################################################"
-                log "Test with CP $TAG and connector $THE_CONNECTOR_TAG has already been executed successfully $(displaytime $elapsed_time) ago, re-running"
+                log "Test with CP $TAG and connector $THE_CONNECTOR_TAG has already been executed successfully $(displaytime $elapsed_time) ago, more than 15 days ago re-running"
                 log "####################################################"
             else
-                logwarn "####################################################"
-                logwarn "Skipping as test with CP $TAG and connector $THE_CONNECTOR_TAG has already been executed successfully $(displaytime $elapsed_time) ago"
-                logwarn "####################################################"
-                skipped_tests=$skipped_tests"$dir[$script]\n"
-                let "nb_test_skipped++"
-                continue
+                # get last commit time unix timestamp for the fodler
+                last_git_commit=$(git log --format=%ct  -- ${dir} | head -1)
+                if [[ $last_git_commit -gt $last_success_time ]]
+                then
+                    log "####################################################"
+                    log "Test with CP $TAG and connector $THE_CONNECTOR_TAG has already been executed successfully $(displaytime $elapsed_time) ago, but a change has been noticed"
+                    log "####################################################"
+                else
+                    logwarn "####################################################"
+                    logwarn "Skipping as test with CP $TAG and connector $THE_CONNECTOR_TAG has already been executed successfully $(displaytime $elapsed_time) ago"
+                    logwarn "####################################################"
+                    skipped_tests=$skipped_tests"$dir[$script]\n"
+                    let "nb_test_skipped++"
+                    continue
+                fi
             fi
         fi
 
