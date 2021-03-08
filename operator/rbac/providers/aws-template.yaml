@@ -146,7 +146,7 @@ connect:
       enabled: true
       tls:
         enabled: true
-      url: https://schemaregistry:8081
+      url: https://schemaregistry.confluent.svc.cluster.local:8081
     mds:
       authentication:
         username: connect
