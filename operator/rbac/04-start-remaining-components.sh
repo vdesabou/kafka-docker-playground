@@ -93,24 +93,24 @@ confluent iam rolebinding create \
   --kafka-cluster-id $KAFKA_ID \
   --principal User:sr \
   --role SecurityAdmin \
-  --schema-registry-cluster-id id_schemaregistry_operator
+  --schema-registry-cluster-id id_schemaregistry_confluent
 
 confluent iam rolebinding create \
   --kafka-cluster-id $KAFKA_ID \
   --principal User:sr \
   --role ResourceOwner \
-  --resource Group:id_schemaregistry_operator
+  --resource Group:id_schemaregistry_confluent
 
 confluent iam rolebinding create \
   --kafka-cluster-id $KAFKA_ID \
   --principal User:sr \
   --role ResourceOwner \
-  --resource Topic:_schemas_schemaregistry_operator
+  --resource Topic:_schemas_schemaregistry_confluent
 
 
 log "Deploy Schema Registry"
 helm upgrade --install sr -f $VALUES_FILE ${DIR}/confluent-operator/helm/confluent-operator/ \
-    --namespace operator \
+    --namespace confluent \
     --set schemaregistry.enabled=true \
     --set-file schemaregistry.tls.fullchain=${PWD}/certs/component-certs/schemaregistry/schemaregistry.pem  \
     --set-file schemaregistry.tls.privkey=${PWD}/certs/component-certs/schemaregistry/schemaregistry-key.pem \
@@ -124,13 +124,13 @@ confluent iam rolebinding create \
   --kafka-cluster-id $KAFKA_ID \
   --principal User:connect \
   --role SecurityAdmin \
-  --connect-cluster-id id_connect_operator
+  --connect-cluster-id id_connect_confluent
 
 confluent iam rolebinding create \
   --kafka-cluster-id $KAFKA_ID \
   --principal User:connect \
   --role ResourceOwner \
-  --resource Group:operator.connectors
+  --resource Group:confluent.connectors
 
 confluent iam rolebinding create \
   --kafka-cluster-id $KAFKA_ID \
@@ -143,12 +143,12 @@ confluent iam rolebinding create \
   --kafka-cluster-id $KAFKA_ID \
   --principal User:connect \
   --role ResourceOwner \
-  --resource Topic:operator.connectors- \
+  --resource Topic:confluent.connectors- \
   --prefix
 
 log "Deploy Connect"
 helm upgrade --install connect -f $VALUES_FILE ${DIR}/confluent-operator/helm/confluent-operator/ \
-    --namespace operator \
+    --namespace confluent \
     --set connect.enabled=true \
     --set-file connect.tls.fullchain=${PWD}/certs/component-certs/connectors/connectors.pem  \
     --set-file connect.tls.privkey=${PWD}/certs/component-certs/connectors/connectors-key.pem \
@@ -157,8 +157,8 @@ helm upgrade --install connect -f $VALUES_FILE ${DIR}/confluent-operator/helm/co
     --set global.sasl.plain.password=kafka-secret \
     --wait
 
-log "Waiting up to 1800 seconds for all pods in namespace operator to start"
-wait-until-pods-ready "1800" "10" "operator"
+log "Waiting up to 1800 seconds for all pods in namespace confluent to start"
+wait-until-pods-ready "1800" "10" "confluent"
 
 # kubectl exec -it connectors-0 -- bash
 
@@ -186,19 +186,19 @@ confluent iam rolebinding create \
   --kafka-cluster-id $KAFKA_ID \
   --principal User:ksql \
   --role ResourceOwner \
-  --ksql-cluster-id operator.ksql_ \
+  --ksql-cluster-id confluent.ksql_ \
   --resource KsqlCluster:ksql-cluster
 
 confluent iam rolebinding create \
   --kafka-cluster-id $KAFKA_ID \
   --principal User:ksql \
   --role ResourceOwner \
-  --resource Topic:_confluent-ksql-operator.ksql_ \
+  --resource Topic:_confluent-ksql-confluent.ksql_ \
   --prefix
 
 log "Deploy KSQL"
 helm upgrade --install ksql -f $VALUES_FILE ${DIR}/confluent-operator/helm/confluent-operator/ \
-    --namespace operator \
+    --namespace confluent \
     --set ksql.enabled=true \
     --set-file ksql.tls.fullchain=${PWD}/certs/component-certs/ksql/ksql.pem  \
     --set-file ksql.tls.privkey=${PWD}/certs/component-certs/ksql/ksql-key.pem \
@@ -221,32 +221,32 @@ confluent iam rolebinding create \
 
 confluent iam rolebinding create \
   --kafka-cluster-id $KAFKA_ID \
-  --schema-registry-cluster-id id_schemaregistry_operator \
+  --schema-registry-cluster-id id_schemaregistry_confluent \
   --principal User:testadmin \
   --role SystemAdmin
 
 confluent iam rolebinding create \
   --kafka-cluster-id $KAFKA_ID \
-  --connect-cluster-id operator.connectors \
+  --connect-cluster-id confluent.connectors \
   --principal User:testadmin \
   --role SystemAdmin
 
 confluent iam rolebinding create \
   --kafka-cluster-id $KAFKA_ID \
-  --connect-cluster-id operator.replicator \
+  --connect-cluster-id confluent.replicator \
   --principal User:testadmin \
   --role SystemAdmin
 
 confluent iam rolebinding create \
   --kafka-cluster-id $KAFKA_ID \
-  --ksql-cluster-id operator.ksql_ \
+  --ksql-cluster-id confluent.ksql_ \
   --resource KsqlCluster:ksql-cluster \
   --principal User:testadmin \
   --role ResourceOwner
 
 log "Deploy Control Center"
 helm upgrade --install controlcenter -f $VALUES_FILE ${DIR}/confluent-operator/helm/confluent-operator/ \
-    --namespace operator \
+    --namespace confluent \
     --set controlcenter.enabled=true \
     --set-file controlcenter.tls.fullchain=${PWD}/certs/component-certs/controlcenter/controlcenter.pem  \
     --set-file controlcenter.tls.privkey=${PWD}/certs/component-certs/controlcenter/controlcenter-key.pem \
@@ -255,8 +255,8 @@ helm upgrade --install controlcenter -f $VALUES_FILE ${DIR}/confluent-operator/h
     --set global.sasl.plain.password=kafka-secret \
     --wait
 
-log "Waiting up to 1800 seconds for all pods in namespace operator to start"
-wait-until-pods-ready "1800" "10" "operator"
+log "Waiting up to 1800 seconds for all pods in namespace confluent to start"
+wait-until-pods-ready "1800" "10" "confluent"
 
 log "Control Center is reachable at http://127.0.0.1:9021 (testadmin/testadmin)"
 kubectl port-forward controlcenter-0 9021:9021 &

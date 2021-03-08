@@ -2,7 +2,7 @@
 
 DIR="$( cd "$(dirname "$0")" >/dev/null 2>&1 ; pwd -P )"
 COMPONENTS=(connectors controlcenter kafka ksql replicator schemaregistry zookeeper)
-NAMESPACE=${1:-operator}
+NAMESPACE=${1:-confluent}
 DOMAIN=${2:-"platformops.aws.devel.cpdev.cloud"}
 OUT_FOLDER="${DIR}/certs/component-certs"
 

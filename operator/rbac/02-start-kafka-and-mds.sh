@@ -27,6 +27,7 @@ verify_installed "cfssl"
 # MAKE SURE TO BE IDEMPOTENT
 ########
 set +e
+kubectl delete namespace confluent
 kubectl delete namespace operator
 # delete namespaces
 # https://github.com/kubernetes/kubernetes/issues/77086#issuecomment-486840718
@@ -46,7 +47,7 @@ cat ${DIR}/certs/server-aws-template.json | sed 's/__DOMAIN__/'"$domain"'/g' > $
 cfssl gencert -ca=${DIR}/certs/ca.pem -ca-key=${DIR}/certs/ca-key.pem -config=${DIR}/certs/ca-config.json -profile=server ${DIR}/certs/server-aws.json | cfssljson -bare ${DIR}/certs/server-aws
 
 # components
-./generate_certs.sh "operator" "$domain"
+./generate_certs.sh "confluent" "$domain"
 
 VALUES_FILE=${DIR}/providers/aws.yaml
 
@@ -66,6 +67,7 @@ kubectl apply --filename ${DIR}/confluent-operator/resources/crds/
 
 log "Create the Kubernetes namespaces to install Operator and cluster"
 kubectl create namespace operator
+kubectl create namespace confluent
 
 log "Installing operator"
 helm upgrade --install \
@@ -76,14 +78,14 @@ helm upgrade --install \
   --set operator.enabled=true \
   --wait
 
-kubectl config set-context --current --namespace=operator
+kubectl config set-context --current --namespace=confluent
 
 log "Install ldap charts for testing"
 helm upgrade --install -f ${DIR}/openldap/ldaps-rbac.yaml test-ldap ${DIR}/openldap \
   --set-file tls.fullchain=${PWD}/certs/component-certs/replicator/replicator.pem  \
   --set-file tls.privkey=${PWD}/certs/component-certs/replicator/replicator-key.pem \
   --set-file tls.cacerts=${PWD}/certs/ca.pem \
-  --namespace operator
+  --namespace confluent
 
 log "Note: All required username/password are already part of openldap/values.yaml"
 
@@ -108,7 +110,7 @@ set -e
 log "Create IAM role for playground-operator-rbac-sa service account"
 eksctl create iamserviceaccount \
     --name playground-operator-rbac-sa \
-    --namespace operator \
+    --namespace confluent \
     --cluster ${eks_cluster_name} \
     --attach-policy-arn ${policy_arn} \
     --approve \
@@ -142,11 +144,11 @@ helm upgrade --install external-dns -f $VALUES_FILE ${DIR}/confluent-operator/he
 sleep 60
 
 log "Deploy Zookeeper Cluster"
-helm upgrade --install zookeeper -f $VALUES_FILE ${DIR}/confluent-operator/helm/confluent-operator/ --namespace operator --set zookeeper.enabled=true --wait
+helm upgrade --install zookeeper -f $VALUES_FILE ${DIR}/confluent-operator/helm/confluent-operator/ --namespace confluent --set zookeeper.enabled=true --wait
 
 log "Deploy Kafka Cluster"
 helm upgrade --install kafka -f $VALUES_FILE ${DIR}/confluent-operator/helm/confluent-operator/ \
-    --namespace operator \
+    --namespace confluent \
     --set kafka.enabled=true \
     --set-file kafka.tls.fullchain=${PWD}/certs/component-certs/kafka/kafka.pem  \
     --set-file kafka.tls.privkey=${PWD}/certs/component-certs/kafka/kafka-key.pem \
@@ -162,5 +164,5 @@ ${DIR}/scripts/createTruststore.sh ${DIR}/certs/ca.pem
 log "Generate kafka.properties"
 cat ${DIR}/kafka.properties.tmpl | sed 's/__DOMAIN__/'"$domain"'/g' | sed 's/__USER__/'"$USER"'/g' > ${DIR}/kafka.properties
 
-log "Waiting up to 1800 seconds for all pods in namespace operator to start"
-wait-until-pods-ready "1800" "10" "operator"
+log "Waiting up to 1800 seconds for all pods in namespace confluent to start"
+wait-until-pods-ready "1800" "10" "confluent"
