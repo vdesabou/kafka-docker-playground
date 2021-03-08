@@ -72,7 +72,7 @@ kafka-console-consumer --from-beginning --topic example --bootstrap-server $USER
 
 log "Login to MDS"
 #confluent login --url https://$USER.$domain:443 --ca-cert-path ./certs/ca.pem
-mds_login_with_ca_cert https://$USER.$domain:443 kafka kafka-secret "$PWD/certs/ca.pem " || exit 1
+mds_login_with_ca_cert https://$USER.$domain:443 kafka kafka-secret "$PWD/certs/ca.pem" || exit 1
 
 #curl -u 'kafka:kafka-secret' -ik https://$USER.$domain/security/1.0/activenodes/https
 
@@ -196,6 +196,26 @@ confluent iam rolebinding create \
   --resource Topic:_confluent-ksql-confluent.ksql_ \
   --prefix
 
+# For operator 1.6.1 manually edit c3 psc to disable auto-update.  This might need to be tweaked as we upgrade versions
+C3_PSC_FILE="${DIR}/confluent-operator/helm/confluent-operator/charts/controlcenter/templates/controlcenter-psc.yaml"
+set +e
+grep "confluent.controlcenter.ui.autoupdate.enable" $C3_PSC_FILE > /dev/null
+if [[ $? -eq 1 ]]; then
+  log "updating c3 yaml..."
+  # use linux to run sed
+  docker run -v $PWD:/tmp vdesabou/kafka-docker-playground-connect:${TAG} sed -i '/confluent.controlcenter.data.dir/a \          confluent.controlcenter.ui.autoupdate.enable=false' /tmp/confluent-operator/helm/confluent-operator/charts/controlcenter/templates/controlcenter-psc.yaml
+fi
+# For operator 1.6.1 manually edit ksql psc to allow CORS.  This might need to be tweaked as we upgrade versions
+KSQL_PSC_FILE="${DIR}/confluent-operator/helm/confluent-operator/charts/ksql/templates/ksql-psc.yaml"
+grep "access.control.allow.origin" $KSQL_PSC_FILE > /dev/null
+if [[ $? -eq 1 ]]; then
+  log "updating ksql yaml..."
+  # use linux to run sed
+  docker run -v $PWD:/tmp vdesabou/kafka-docker-playground-connect:${TAG} sed -i '/authentication.skip.paths/a \          access.control.allow.origin=*' /tmp/confluent-operator/helm/confluent-operator/charts/ksql/templates/ksql-psc.yaml
+  docker run -v $PWD:/tmp vdesabou/kafka-docker-playground-connect:${TAG} sed -i '/authentication.skip.paths/a \          access.control.allow.methods=GET,POST,HEAD' /tmp/confluent-operator/helm/confluent-operator/charts/ksql/templates/ksql-psc.yaml
+  docker run -v $PWD:/tmp vdesabou/kafka-docker-playground-connect:${TAG} sed -i '/authentication.skip.paths/a \          access.control.allow.headers=X-Requested-With,Content-Type,Accept,Origin,Authorization' /tmp/confluent-operator/helm/confluent-operator/charts/ksql/templates/ksql-psc.yaml
+fi
+
 log "Deploy KSQL"
 helm upgrade --install ksql -f $VALUES_FILE ${DIR}/confluent-operator/helm/confluent-operator/ \
     --namespace confluent \
@@ -258,6 +278,6 @@ helm upgrade --install controlcenter -f $VALUES_FILE ${DIR}/confluent-operator/h
 log "Waiting up to 1800 seconds for all pods in namespace confluent to start"
 wait-until-pods-ready "1800" "10" "confluent"
 
-log "Control Center is reachable at http://127.0.0.1:9021 (testadmin/testadmin)"
+log "Control Center is reachable at https://127.0.0.1:9021 (testadmin/testadmin)"
 kubectl port-forward controlcenter-0 9021:9021 &
 
