@@ -7,15 +7,9 @@ source ${DIR}/../../scripts/utils.sh
 log "generate ssh host key"
 rm -f ssh_host*
 ssh-keygen -t rsa -b 4096 -f ssh_host_rsa_key -P "mypassword"
-
 # needs to be a RSA key
 ssh-keygen -p -f ssh_host_rsa_key -m pem -P mypassword -N mypassword -b 2048
-
-RSA_PUBLIC_KEY=$(cat ssh_host_rsa_key.pub)
-RSA_PRIVATE_KEY=$(awk '{printf "%s\\r\\n", $0}' ssh_host_rsa_key)
-
-log "RSA_PUBLIC_KEY=$RSA_PUBLIC_KEY"
-log "RSA_PRIVATE_KEY=$RSA_PRIVATE_KEY"
+openssl rsa -in ssh_host_rsa_key -outform pem -passin pass:mypassword > ssh_host_rsa_key.pem
 
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
 
@@ -36,8 +30,7 @@ curl -X PUT \
                "sftp.port": "22",
                "sftp.username": "foo",
                "sftp.password": "",
-               "tls.private.key": "'"$RSA_PRIVATE_KEY"'",
-               "tls.public.key": "'"$RSA_PUBLIC_KEY"'",
+               "tls.pemfile": "/tmp/ssh_host_rsa_key.pem",
                "tls.passphrase": "mypassword",
                "sftp.working.dir": "/upload",
                "confluent.license": "",
