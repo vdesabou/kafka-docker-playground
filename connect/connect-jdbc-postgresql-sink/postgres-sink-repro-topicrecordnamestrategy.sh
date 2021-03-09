@@ -4,13 +4,7 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
-if [ ! -f ${DIR}/producer/target/producer-1.0.0-jar-with-dependencies.jar ]
-then
-     log "Building jar for producer"
-     docker run -i --rm -e TAG=$TAG_BASE -e KAFKA_CLIENT_TAG=$KAFKA_CLIENT_TAG -v "${DIR}/producer":/usr/src/mymaven -v "$HOME/.m2":/root/.m2 -v "${DIR}/producer/target:/usr/src/mymaven/target" -w /usr/src/mymaven maven:3.6.1-jdk-11 mvn package
-fi
-
-${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext-repro-topicrecordnamestrategy.yml"
+${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
 
 log "Creating JDBC PostgreSQL sink connector"
 curl -X PUT \
@@ -29,12 +23,14 @@ curl -X PUT \
 
 sleep 5
 
-log "Run the Java producer, it sends one request every 5 seconds and use TopicRecordNameStrategy. Logs are in producer.log."
-docker exec producer bash -c "java -jar producer-1.0.0-jar-with-dependencies.jar" > producer.log 2>&1 &
+seq -f "{\"foo\": %g,\"bar\": \"a string\",\"onemore\": \"onemore string\"}" 10 | docker exec -i connect kafka-avro-console-producer --broker-list broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic topicrecordnamestrategy --property value.schema='{"type":"record","name":"myrecord","fields":[{"name":"foo","type":"int"},{"name":"bar","type":"string"},{"name":"onemore","type":"string", "default": "green"}]}' --property value.subject.name.strategy=io.confluent.kafka.serializers.subject.TopicRecordNameStrategy
+
+seq -f "{\"foo\": %g,\"bar\": \"a string\"}" 10 | docker exec -i connect kafka-avro-console-producer --broker-list broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic topicrecordnamestrategy --property value.schema='{"type":"record","name":"myrecord2","fields":[{"name":"foo","type":"int"},{"name":"bar","type":"string"}]}' --property value.subject.name.strategy=io.confluent.kafka.serializers.subject.TopicRecordNameStrategy
 
 log "Show content of TOPICRECORDNAMESTRATEGY table:"
 docker exec postgres bash -c "psql -U postgres -d postgres -c 'SELECT * FROM TOPICRECORDNAMESTRATEGY'"
 
+# if messages are not FORARD or BACKWARD compatible
 # [2021-03-01 17:36:40,731] ERROR WorkerSinkTask{id=postgres-sink-0} Task threw an uncaught and unrecoverable exception. Task is being killed and will not recover until manually restarted. Error: Cannot ALTER TABLE "topicrecordnamestrategy" to add missing field SinkRecordField{schema=Schema{STRING}, name='name', isPrimaryKey=false}, as the field is not optional and does not have a default value (org.apache.kafka.connect.runtime.WorkerSinkTask)
 # org.apache.kafka.connect.errors.ConnectException: Cannot ALTER TABLE "topicrecordnamestrategy" to add missing field SinkRecordField{schema=Schema{STRING}, name='name', isPrimaryKey=false}, as the field is not optional and does not have a default value
 #         at io.confluent.connect.jdbc.sink.DbStructure.amendIfNecessary(DbStructure.java:180)
