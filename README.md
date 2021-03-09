@@ -78,8 +78,8 @@ Quick start examples from Confluent [docs](https://docs.confluent.io/current/con
 | <img src="./images/icons/hdfs_2.svg" width="15"> [HDFS 2 Source](connect/connect-hdfs2-source) |  Datastore | 1.4.3 | Confluent Subscription | 2021-02-08 | 👍 2021-03-04 
 | <img src="./images/icons/hdfs_2.svg" width="15"> [HDFS 3 Source](connect/connect-hdfs3-source) |  Datastore | 1.4.3 | Confluent Subscription | 2021-02-08 | 👍 2021-03-04 
 | <img src="./images/icons/hdfs_2.svg" width="15"> [HDFS 2 Sink](connect/connect-hdfs2-sink) |  Datastore | 10.0.1 | Confluent Community License | 2021-02-02 | 👍 2021-03-04 
-| <img src="./images/icons/hdfs_2.svg" width="15"> [HDFS 3 Sink](connect/connect-hdfs3-sink) |  Datastore | 1.1.0 | Confluent Subscription | 2021-01-28 | 👍 2021-03-04 
-| <img src="./images/icons/http.png" width="15"> [HTTP Sink](connect/connect-http-sink) |  SaaS Apps | 1.2.1 | Confluent Subscription | 2021-03-01 | 👍 2021-03-02 
+| <img src="./images/icons/hdfs_2.svg" width="15"> [HDFS 3 Sink](connect/connect-hdfs3-sink) |  Datastore | 1.1.1 | Confluent Subscription | 2021-03-08 | ☠ 
+| <img src="./images/icons/http.png" width="15"> [HTTP Sink](connect/connect-http-sink) |  SaaS Apps | 1.2.2 | Confluent Subscription | 2021-03-08 | ☠ 
 | <img src="./images/icons/ibm_mq.png" width="15"> [IBM MQ Sink](connect/connect-ibm-mq-sink) |  Message Queue | 1.3.2 | Confluent Subscription | 2021-02-19 | 👍 2021-03-08 
 | <img src="./images/icons/ibm_mq.png" width="15"> [IBM MQ Source](connect/connect-ibm-mq-source) |  Message Queue | 11.0.1 | Confluent Subscription | 2021-03-02 | 👍 2021-03-02 
 | <img src="./images/icons/influxdb.svg" width="15"> [InfluxDB Sink](connect/connect-influxdb-sink) |  Database | 1.2.1 | Confluent Subscription | 2020-09-30 | 👍 2021-03-04 
