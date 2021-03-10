@@ -237,6 +237,66 @@ then
       exit 1
     fi
   fi
+else
+  if [[ $0 == *"wait-for-connect-and-controlcenter.sh"* ]]
+  then
+    # noop
+    :
+  elif [[ $0 == *"environment"* ]]
+  then
+    # noop
+    :
+  elif [[ $0 == *"couchbase"* ]]
+  then
+    # noop
+    :
+  elif [[ $0 == *"stop"* ]] || [[ $0 == *"run-tests"* ]]
+  then
+    # noop
+    :
+  else
+    docker_compose_file=$(grep "environment" "$PWD/$0" | grep DIR | grep start.sh | cut -d "/" -f 7 | cut -d '"' -f 1 | head -n1)
+    if [ "${docker_compose_file}" != "" ] && [ -f "${docker_compose_file}" ]
+    then
+      connector_path=$(grep "CONNECT_PLUGIN_PATH" "${docker_compose_file}" | cut -d "/" -f 5)
+      # remove any extra comma at the end (when there are multiple connectors used, example S3 source)
+      connector_path=$(echo "$connector_path" | cut -d "," -f 1)
+      if [ "$connector_path" != "" ]
+      then
+        owner=$(echo "$connector_path" | cut -d "-" -f 1)
+        name=$(echo "$connector_path" | cut -d "-" -f 2-)
+        version=$(docker exec connect cat /usr/share/confluent-hub-components/${connector_path}/manifest.json | jq -r '.version')
+        if [ -z "$CI" ] && [ -z "$CLOUDFORMATION" ]
+        then
+          # check if newer version available on vdesabou/kafka-docker-playground-connect image
+          curl -s https://raw.githubusercontent.com/vdesabou/kafka-docker-playground-connect/master/README.md -o /tmp/README.txt
+          latest_version=$(grep "$connector_path " /tmp/README.txt | cut -d "|" -f 3 | sed 's/^[[:blank:]]*//;s/[[:blank:]]*$//')
+          if version_gt $latest_version $version
+          then
+            set +e
+            # Offer to refresh images
+            log "Your vdesabou/kafka-docker-playground-connect:${TAG_BASE} is not up to date!"
+            log "You're using connector $owner/$name $version whereas $latest_version is available"
+            read -p "Do you want to download new one? (y/n)?" choice
+            case "$choice" in
+            y|Y )
+              docker pull vdesabou/kafka-docker-playground-connect:${TAG_BASE}
+              exit 0
+            ;;
+            n|N ) ;;
+            * ) logerror "ERROR: invalid response!";exit 1;;
+            esac
+            set -e
+          fi
+        fi
+        log "Using Connector $owner/$name:$version"
+      fi
+    else
+      # not a connector test, do nothing
+      :
+    fi
+  fi
+
 fi
 
 function verify_memory()
