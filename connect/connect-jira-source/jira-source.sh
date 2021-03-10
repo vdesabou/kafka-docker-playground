@@ -30,7 +30,7 @@ ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml
 
 # take since last 6 months
 #SINCE=$(date -v-4320H "+%Y-%m-%d %H:%M")
-SINCE="2020-03-05 00:00"
+SINCE="2021-01-01 00:00"
 
 log "Creating Jira Source connector"
 curl -X PUT \
@@ -43,11 +43,9 @@ curl -X PUT \
                     "jira.since": "'"$SINCE"'",
                     "jira.username": "'"$JIRA_USERNAME"'",
                     "jira.api.token": "'"$JIRA_API_TOKEN"'",
-                    "jira.tables": "project_categories",
-                    "key.converter": "io.confluent.connect.avro.AvroConverter",
-                    "key.converter.schema.registry.url":"http://schema-registry:8081",
-                    "value.converter": "io.confluent.connect.avro.AvroConverter",
-                    "value.converter.schema.registry.url":"http://schema-registry:8081",
+                    "jira.tables": "issues",
+                    "key.converter": "org.apache.kafka.connect.json.JsonConverter",
+                    "value.converter": "org.apache.kafka.connect.json.JsonConverter",
                     "confluent.license": "",
                     "confluent.topic.bootstrap.servers": "broker:9092",
                     "confluent.topic.replication.factor": "1"
@@ -58,4 +56,4 @@ curl -X PUT \
 sleep 10
 
 log "Verify we have received the data in jira-topic-project_categories topic"
-timeout 60 docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic jira-topic-project_categories --from-beginning --property print.key=true --max-messages 1
+timeout 60 docker exec connect kafka-console-consumer -bootstrap-server broker:9092 --topic jira-topic-issues --from-beginning --property print.key=true --max-messages 1
