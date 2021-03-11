@@ -21,9 +21,15 @@
     },
 
     "Ec2RootVolumeSize": {
-      "Description": " Ec2 root volume size",
+      "Description": "Ec2 root volume size",
       "Type": "String",
       "Default": "100"
+    },
+
+    "InstanceName": {
+      "Description": "Instance Name",
+      "Type": "String",
+      "Default": "kafka-docker-playground"
     },
 
     "IPAddressRange" : {
@@ -265,6 +271,9 @@
         "ImageId" : { "Fn::FindInMap" : [ "AWSRegionArch2AMI", { "Ref" : "AWS::Region" },
                           { "Fn::FindInMap" : [ "AWSInstanceType2Arch", { "Ref" : "InstanceType" }, "Arch" ] } ] },
         "InstanceType"   : { "Ref" : "InstanceType" },
+        "Tags" : [
+          {"Key" : "Name", "Value" : { "Ref" : "AWS::StackName" }}
+        ],
         "SecurityGroups" : [ {"Ref" : "KafkaDockerPlaygroundSecurityGroup"} ],
         "KeyName"        : { "Ref" : "KeyName" },
         "BlockDeviceMappings": [
