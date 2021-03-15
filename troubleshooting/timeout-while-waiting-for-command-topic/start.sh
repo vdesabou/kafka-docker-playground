@@ -58,3 +58,88 @@ SELECT
 
 PRINT ksql_processing_log FROM BEGINNING LIMIT 1;
 EOF
+
+
+# ksql> ksql> Successfully changed local property 'auto.offset.reset' to 'earliest'. Use the UNSET command to revert your change.
+# ksql> ksql> +-----+-----+-----+
+# |ID   |TIMES|ENABL|
+# |     |TAMP |ED   |
+# +-----+-----+-----+
+# |e7f45|2020-|true |
+# |046-a|01-15|     |
+# |d13-4| 02:2|     |
+# |04c-9|0:30 |     |
+# |95e-1|     |     |
+# |eca16|     |     |
+# |74280|     |     |
+# |1    |     |     |
+# |83522|2020-|true |
+# |6cf-c|01-15|     |
+# |af6-4| 02:2|     |
+# |c91-a|5:30 |     |
+# |046-3|     |     |
+# |59f1d|     |     |
+# |3a6e2|     |     |
+# |e    |     |     |
+# Limit Reached
+# Query terminated
+# ksql> ksql> ksql> SELECT
+# >    message->deserializationError->errorMessage,
+# >    encode(message->deserializationError->RECORDB64, 'base64', 'utf8')+-----+-----+-----+
+# |ERROR|MSG  |CAUSE|
+# |MESSA|     |     |
+# |GE   |     |     |
+# +-----+-----+-----+
+# |mvn v|{"id"|[Can'|
+# |alue |: "1a|t con|
+# |from |076a6|vert |
+# |topic|4-4a8|type.|
+# |: SEN|4-40c| sour|
+# |SORS_|b-a2e|ceTyp|
+# |RAW  |8-219|e: Te|
+# |     |0f3b3|xtNod|
+# |     |7465"|e, re|
+# |     |, "ti|quire|
+# |     |mesta|dType|
+# |     |mp": |: BOO|
+# |     |"2020|LEAN,|
+# |     |-01-1| path|
+# |     |5 02:|: $.E|
+# |     |30:30|NABLE|
+# |     |", "e|D, Ca|
+# |     |nable|n't c|
+# |     |d": "|onver|
+# |     |true"|t typ|
+# |     |}    |e. so|
+# |     |     |urceT|
+# |     |     |ype: |
+# |     |     |TextN|
+# |     |     |ode, |
+# |     |     |requi|
+# |     |     |redTy|
+# |     |     |pe: B|
+# |     |     |OOLEA|
+# |     |     |N, pa|
+# |     |     |th: .|
+# |     |     |ENABL|
+# |     |     |ED, C|
+# |     |     |an't |
+# |     |     |conve|
+# |     |     |rt ty|
+# |     |     |pe. s|
+# |     |     |ource|
+# |     |     |Type:|
+# |     |     | Text|
+# |     |     |Node,|
+# |     |     | requ|
+# |     |     |iredT|
+# |     |     |ype: |
+# |     |     |BOOLE|
+# |     |     |AN]  |
+# Limit Reached
+# Query terminated
+# ksql> ksql> Key format: ¯\_(ツ)_/¯ - no data processed
+# Value format: JSON or KAFKA_STRING
+# rowtime: 2021/03/15 10:17:45.965 Z, key: <null>, value: {"level":"ERROR","logger":"processing.CSAS_SENSORS_0.KsqlTopic.Source.deserializer","time":1615803465945,"message":{"type":0,"deserializationError":{"errorMessage":"mvn value from topic: SENSORS_RAW","recordB64":"eyJpZCI6ICIxYTA3NmE2NC00YTg0LTQwY2ItYTJlOC0yMTkwZjNiMzc0NjUiLCAidGltZXN0YW1wIjogIjIwMjAtMDEtMTUgMDI6MzA6MzAiLCAiZW5hYmxlZCI6ICJ0cnVlIn0=","cause":["Can't convert type. sourceType: TextNode, requiredType: BOOLEAN, path: $.ENABLED","Can't convert type. sourceType: TextNode, requiredType: BOOLEAN, path: .ENABLED","Can't convert type. sourceType: TextNode, requiredType: BOOLEAN"],"topic":"SENSORS_RAW"},"recordProcessingError":null,"productionError":null}}
+# Topic printing ceased
+# ksql> Exiting ksqlDB.
