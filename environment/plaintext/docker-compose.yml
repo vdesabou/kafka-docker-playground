@@ -48,12 +48,12 @@ services:
       KAFKA_CONFLUENT_LICENSE_TOPIC_REPLICATION_FACTOR: 1
       # for 6.0.0
       KAFKA_CONFLUENT_BALANCER_TOPIC_REPLICATION_FACTOR: 1
-      # For Confluent Telemetry Reporter (proactive support)
-      KAFKA_CONFLUENT_TELEMETRY_ENABLED: 'true'
-      KAFKA_CONFLUENT_TELEMETRY_API_KEY: 'CLOUD_API_KEY'
-      KAFKA_CONFLUENT_TELEMETRY_API_SECRET: 'CLOUD_API_SECRET'
       KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
       KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      # # For Confluent Telemetry Reporter (proactive support)
+      # KAFKA_CONFLUENT_TELEMETRY_ENABLED: 'true'
+      # KAFKA_CONFLUENT_TELEMETRY_API_KEY: 'CLOUD_API_KEY'
+      # KAFKA_CONFLUENT_TELEMETRY_API_SECRET: 'CLOUD_API_SECRET'
 
   schema-registry:
     image: confluentinc/cp-schema-registry:${TAG}
@@ -68,10 +68,10 @@ services:
       SCHEMA_REGISTRY_HOST_NAME: schema-registry
       SCHEMA_REGISTRY_LISTENERS: http://0.0.0.0:8081
       SCHEMA_REGISTRY_KAFKASTORE_BOOTSTRAP_SERVERS: broker:9092
-      SCHEMA_REGISTRY_METRIC_REPORTERS: io.confluent.telemetry.reporter.TelemetryReporter
-      SCHEMA_REGISTRY_CONFLUENT_TELEMETRY_ENABLED: 'true'
-      SCHEMA_REGISTRY_CONFLUENT_TELEMETRY_API_KEY: 'CLOUD_API_KEY'
-      SCHEMA_REGISTRY_CONFLUENT_TELEMETRY_API_SECRET: 'CLOUD_API_SECRET'
+      # SCHEMA_REGISTRY_METRIC_REPORTERS: io.confluent.telemetry.reporter.TelemetryReporter
+      # SCHEMA_REGISTRY_CONFLUENT_TELEMETRY_ENABLED: 'true'
+      # SCHEMA_REGISTRY_CONFLUENT_TELEMETRY_API_KEY: 'CLOUD_API_KEY'
+      # SCHEMA_REGISTRY_CONFLUENT_TELEMETRY_API_SECRET: 'CLOUD_API_SECRET'
 
   connect:
     image: vdesabou/kafka-docker-playground-connect:${TAG}
@@ -111,10 +111,10 @@ services:
       # CONNECT_LOG4J_ROOT_LOGLEVEL: DEBUG
       # KIP-158 https://cwiki.apache.org/confluence/display/KAFKA/KIP-158%3A+Kafka+Connect+should+allow+source+connectors+to+set+topic-specific+settings+for+new+topics (6.x only)
       CONNECT_TOPIC_CREATION_ENABLE: 'true'
-      CONNECT_METRIC_REPORTERS: io.confluent.telemetry.reporter.TelemetryReporter
-      CONNECT_CONFLUENT_TELEMETRY_ENABLED: 'true'
-      CONNECT_CONFLUENT_TELEMETRY_API_KEY: 'CLOUD_API_KEY'
-      CONNECT_CONFLUENT_TELEMETRY_API_SECRET: 'CLOUD_API_SECRET'
+      # CONNECT_METRIC_REPORTERS: io.confluent.telemetry.reporter.TelemetryReporter
+      # CONNECT_CONFLUENT_TELEMETRY_ENABLED: 'true'
+      # CONNECT_CONFLUENT_TELEMETRY_API_KEY: 'CLOUD_API_KEY'
+      # CONNECT_CONFLUENT_TELEMETRY_API_SECRET: 'CLOUD_API_SECRET'
 
   ksqldb-server:
     image: confluentinc/cp-ksqldb-server:${TAG}
@@ -142,10 +142,10 @@ services:
       KSQL_KSQL_LOGGING_PROCESSING_TOPIC_AUTO_CREATE: "true"
       KSQL_KSQL_LOGGING_PROCESSING_STREAM_AUTO_CREATE: "true"
       KSQL_KSQL_LOGGING_PROCESSING_ROWS_INCLUDE: 'true'
-      KSQL_METRIC_REPORTERS: io.confluent.telemetry.reporter.TelemetryReporter
-      KSQL_CONFLUENT_TELEMETRY_ENABLED: 'true'
-      KSQL_CONFLUENT_TELEMETRY_API_KEY: 'CLOUD_API_KEY'
-      KSQL_CONFLUENT_TELEMETRY_API_SECRET: 'CLOUD_API_SECRET'
+      # KSQL_METRIC_REPORTERS: io.confluent.telemetry.reporter.TelemetryReporter
+      # KSQL_CONFLUENT_TELEMETRY_ENABLED: 'true'
+      # KSQL_CONFLUENT_TELEMETRY_API_KEY: 'CLOUD_API_KEY'
+      # KSQL_CONFLUENT_TELEMETRY_API_SECRET: 'CLOUD_API_SECRET'
 
   ksqldb-cli:
     image: confluentinc/cp-ksqldb-cli:${TAG}
@@ -185,7 +185,7 @@ services:
       CONTROL_CENTER_KSQL_ADVERTISED_URL: "http://127.0.0.1:8088"
       CONTROL_CENTER_COMMAND_TOPIC_REPLICATION: 1
       CONTROL_CENTER_METRICS_TOPIC_REPLICATION: 1
-      METRIC_REPORTERS: io.confluent.telemetry.reporter.TelemetryReporter
-      CONFLUENT_TELEMETRY_ENABLED: 'true'
-      CONFLUENT_TELEMETRY_API_KEY: 'CLOUD_API_KEY'
-      CONFLUENT_TELEMETRY_API_SECRET: 'CLOUD_API_SECRET'
+      # METRIC_REPORTERS: io.confluent.telemetry.reporter.TelemetryReporter
+      # CONFLUENT_TELEMETRY_ENABLED: 'true'
+      # CONFLUENT_TELEMETRY_API_KEY: 'CLOUD_API_KEY'
+      # CONFLUENT_TELEMETRY_API_SECRET: 'CLOUD_API_SECRET'
