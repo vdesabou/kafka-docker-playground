@@ -379,7 +379,7 @@
                           { "Fn::FindInMap" : [ "AWSInstanceType2Arch", { "Ref" : "InstanceType" }, "Arch" ] } ] },
         "InstanceType"   : { "Ref" : "InstanceType" },
         "Tags" : [
-          {"Key" : "Name", "Value" : { "Ref" : "AWS::InstanceName" }}
+          {"Key" : "Name", "Value" : { "Ref" : "InstanceName" }}
         ],
         "SecurityGroups" : [ {"Ref" : "CcloudDemoSecurityGroup"} ],
         "KeyName"        : { "Ref" : "KeyName" },
