@@ -299,8 +299,16 @@ else
 
 fi
 
-function verify_memory()
+function verify_docker_and_memory()
 {
+  set +e
+  docker info > /dev/null 2>&1
+  if [[ $? -ne 0 ]]
+  then
+    logerror "ERROR: Cannot connect to the Docker daemon. Is the docker daemon running?"
+    exit 1
+  fi
+  set -e
   # Check only with Mac OS
   if [[ "$OSTYPE" == "darwin"* ]]
   then

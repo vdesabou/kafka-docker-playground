@@ -27,7 +27,7 @@ then
      exit 1
 fi
 
-verify_memory
+verify_docker_and_memory
 verify_installed "kubectl"
 verify_installed "minikube"
 verify_installed "helm"
