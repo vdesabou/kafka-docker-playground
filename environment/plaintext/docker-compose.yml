@@ -125,14 +125,15 @@ services:
       KSQL_KSQL_CONNECT_URL: "http://connect:8083"
       # KSQL_KSQL_STREAMS_PROCESSING_GUARANTEE=exactly_once
       # --- ksqlDB Server log config ---
-      KSQL_LOG4J_ROOT_LOGLEVEL: "ERROR"
+      KSQL_LOG4J_ROOT_LOGLEVEL: "INFO"
       KSQL_LOG4J_LOGGERS: "org.apache.kafka.connect.runtime.rest=WARN,org.reflections=ERROR"
       # --- ksqlDB processing log config ---
       KSQL_LOG4J_PROCESSING_LOG_BROKERLIST: broker:9092
-      KSQL_LOG4J_PROCESSING_LOG_TOPIC: ksql-processing-log
-      KSQL_KSQL_LOGGING_PROCESSING_TOPIC_NAME: ksql-processing-log
+      KSQL_LOG4J_PROCESSING_LOG_TOPIC: ksql_processing_log
+      KSQL_KSQL_LOGGING_PROCESSING_TOPIC_NAME: ksql_processing_log
       KSQL_KSQL_LOGGING_PROCESSING_TOPIC_AUTO_CREATE: "true"
       KSQL_KSQL_LOGGING_PROCESSING_STREAM_AUTO_CREATE: "true"
+      KSQL_KSQL_LOGGING_PROCESSING_ROWS_INCLUDE: 'true'
 
 
   ksqldb-cli:
