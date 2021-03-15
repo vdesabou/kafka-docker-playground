@@ -5,6 +5,11 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
+if ! version_gt $TAG_BASE "5.9.9"; then
+    logwarn "WARN: Schema Registry plugin before 6.x requires zookeeper"
+    exit 0
+fi
+
 CONFIG_FILE=~/.ccloud/config
 
 if [ ! -f ${CONFIG_FILE} ]
@@ -35,14 +40,23 @@ sleep 10
 
 docker exec schema-registry sr-acl-cli --config /etc/schema-registry/schema-registry.properties --add -s '*' -p read -o SUBJECT_READ
 docker exec schema-registry sr-acl-cli --config /etc/schema-registry/schema-registry.properties --add -s '*' -p write -o SUBJECT_WRITE
-docker exec schema-registry sr-acl-cli --config /etc/schema-registry/schema-registry.properties --add -s '*' -p admin -o '*'
+
+# ccloud/schema-registry-security-plugin failing with 5.5.3 #223
+# GLOBAL_SUBJECTS_READ replaced by GLOBAL_READ in CP 6.0.x
+operations_list="SUBJECT_READ:SUBJECT_WRITE:SUBJECT_DELETE:SUBJECT_COMPATIBILITY_READ:SUBJECT_COMPATIBILITY_WRITE:GLOBAL_COMPATIBILITY_WRITE:GLOBAL_SUBJECTS_READ"
+if version_gt $TAG_BASE "5.9.9"; then
+     operations_list="SUBJECT_READ:SUBJECT_WRITE:SUBJECT_DELETE:SUBJECT_COMPATIBILITY_READ:SUBJECT_COMPATIBILITY_WRITE:GLOBAL_COMPATIBILITY_WRITE:GLOBAL_READ"
+fi
+docker exec schema-registry sr-acl-cli --config /etc/schema-registry/schema-registry.properties --add -s '*' -p admin -o $operations_list
+
+docker exec schema-registry sr-acl-cli --config /etc/schema-registry/schema-registry.properties --list
 
 log "Schema Registry is listening on http://localhost:8081"
 log "-> user:password  |  description"
 log "-> _____________"
 log "-> read:read    |  Global read access (SUBJECT_READ)"
 log "-> write:write  |  Global write access (SUBJECT_WRITE)"
-log "-> admin:admin  |  Global admin access (All operations)"
+log "-> admin:admin  |  Global admin access (All operations, i.e $operations_list)"
 
 log "Registering a subject with write user"
 curl -X POST -u write:write http://localhost:8081/subjects/subject1-value/versions \
