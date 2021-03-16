@@ -193,6 +193,7 @@ jobs:
           ZENDESK_URL: ${{ secrets.ZENDESK_URL }}
           ZENDESK_USERNAME: ${{ secrets.ZENDESK_USERNAME }}
           ZENDESK_PASSWORD: ${{ secrets.ZENDESK_PASSWORD }}
+          AZURE_TENANT_NAME: "COPS"
 
   post-build:
     name: Update README

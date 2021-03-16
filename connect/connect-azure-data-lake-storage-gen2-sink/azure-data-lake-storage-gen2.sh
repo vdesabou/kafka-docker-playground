@@ -16,6 +16,14 @@ else
     az login
 fi
 
+AZURE_TENANT_NAME=${AZURE_TENANT_NAME:-$1}
+
+if [ -z "$AZURE_TENANT_NAME" ]
+then
+     logerror "AZURE_TENANT_NAME is not set. Export it as environment variable or pass it as argument"
+     exit 1
+fi
+
 AZURE_NAME=playground$USER$GITHUB_RUN_NUMBER
 AZURE_NAME=${AZURE_NAME//[-._]/}
 AZURE_RESOURCE_GROUP=$AZURE_NAME
@@ -43,7 +51,7 @@ AZURE_DATALAKE_CLIENT_ID=$(az ad app create --display-name "$AZURE_AD_APP_NAME" 
 log "Creating Service Principal associated to the App"
 SERVICE_PRINCIPAL_ID=$(az ad sp create --id $AZURE_DATALAKE_CLIENT_ID | jq -r '.objectId')
 
-AZURE_TENANT_ID=$(az account list --query "[?name=='COPS']" | jq -r '.[].tenantId')
+AZURE_TENANT_ID=$(az account list --query "[?name=='$AZURE_TENANT_NAME']" | jq -r '.[].tenantId')
 AZURE_DATALAKE_TOKEN_ENDPOINT="https://login.microsoftonline.com/$AZURE_TENANT_ID/oauth2/token"
 
 log "Creating data lake $AZURE_DATALAKE_ACCOUNT_NAME in resource $AZURE_RESOURCE_GROUP"
