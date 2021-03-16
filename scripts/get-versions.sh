@@ -64,12 +64,22 @@ do
             if [ "$dir" = "kafka-connect-couchbase" ]
             then
               version="3.4.8"
+            elif [ "$dir" = "confluentinc-kafka-connect-jdbc" ]
+            then
+              if ! version_gt ${image_version} "5.9.0"
+              then
+                # for version less than 6.0.0, use JDBC with same version
+                # see https://github.com/vdesabou/kafka-docker-playground/issues/221
+                version=${image_version}
+              else
+                version=$(docker run vdesabou/kafka-docker-playground-connect:${image_version} cat /usr/share/confluent-hub-components/${dir}/manifest.json | jq -r '.version')
+              fi
             else
               version=$(docker run vdesabou/kafka-docker-playground-connect:${image_version} cat /usr/share/confluent-hub-components/${dir}/manifest.json | jq -r '.version')
             fi
             testdir=$(echo "$test_folder" | sed 's/\//-/g')
             last_success_time=$(grep "$dir" ci/${image_version}-${testdir}-${version}-${script_name} | tail -1 | cut -d "|" -f 2)
-            log "ci/${image_version}-${testdir}-${version}-${script_name}"
+            log "dir "$dir" -> ci/${image_version}-${testdir}-${version}-${script_name}"
             if [ "$last_success_time" != "" ]
             then
               # now=$(date +%s)
