@@ -15,6 +15,8 @@ Simply run:
 $ ./azure-data-lake-storage-gen1.sh
 ```
 
+**Note**: You need to provide the tenant name by providing AZURE_TENANT_NAME environment variable. Check the list of tenants using `az account list`.
+
 ## Details of what the script is doing
 
 Logging to Azure using browser (or using environment variables `AZ_USER` and `AZ_PASS` if set)

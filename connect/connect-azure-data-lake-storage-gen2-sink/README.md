@@ -22,6 +22,7 @@ Or using 2 way SSL authentication:
 $ ./azure-data-lake-storage-gen2-2way-ssl.sh
 ```
 
+**Note**: You need to provide the tenant name by providing AZURE_TENANT_NAME environment variable. Check the list of tenants using `az account list`.
 ## Details of what the script is doing
 
 Logging to Azure using browser (or using environment variables `AZ_USER` and `AZ_PASS` if set)
@@ -54,7 +55,7 @@ Creating Service Principal associated to the App
 
 ```bash
 $ SERVICE_PRINCIPAL_ID=$(az ad sp create --id $AZURE_DATALAKE_CLIENT_ID | jq -r '.objectId')
-$ AZURE_TENANT_ID=$(az account list --query "[?name=='COPS']" | jq -r '.[].tenantId')
+$ AZURE_TENANT_ID=$(az account list --query "[?name=='$AZURE_TENANT_NAME']" | jq -r '.[].tenantId')
 $ AZURE_DATALAKE_TOKEN_ENDPOINT="https://login.microsoftonline.com/$AZURE_TENANT_ID/oauth2/token"
 ```
 
