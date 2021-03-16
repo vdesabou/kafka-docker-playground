@@ -198,6 +198,8 @@ jobs:
   post-build:
     name: Update README
     runs-on: ubuntu-latest
+    if: always()
+    needs: [pre-build, build]
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
