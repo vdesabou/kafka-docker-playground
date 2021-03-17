@@ -104,7 +104,7 @@ do
               if [ $? != 0 ]
               then
                 log "Creating GH issue with title $title"
-                gh issue create --title "$title" --body "$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID" --assignee @vdesabou --label bug
+                gh issue create --title "$title" --body "$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID" --assignee vdesabou --label bug
               fi
             else
               CIRESULTS[$image_version_no_dot]="👍 $time"
