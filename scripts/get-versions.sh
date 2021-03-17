@@ -96,10 +96,10 @@ do
           grep "$test_folder" ${DIR}/../.github/workflows/run-regression.yml | grep -v jar > /dev/null
           if [ $? = 0 ]
           then
+            title="🐛❌ ${testdir} ${version}"
             if [ "$time" == "" ]
             then
               CIRESULTS[$image_version_no_dot]="❌"
-              title="❌ [CP ${image_version}] ${testdir} ${version}"
               gh issue list | grep "$title" > /dev/null
               if [ $? != 0 ]
               then
@@ -108,6 +108,14 @@ do
               fi
             else
               CIRESULTS[$image_version_no_dot]="👍 $time"
+              gh issue list | grep "$title" > /dev/null
+              if [ $? = 0 ]
+              then
+                issue_number=$(gh issue list | grep "$title" | awk '{print $1;}')
+                gh issue comment ${issue_number} --body "Issue fixed in $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
+                log "Closing GH issue #${issue_number} with title $title"
+                gh issue close ${issue_number}
+              fi
             fi
             log "CP $image_version results ${CIRESULTS[$image_version_no_dot]}"
           fi
