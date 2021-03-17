@@ -35,7 +35,7 @@ do
 
     cd $dir > /dev/null
 
-    curl https://raw.githubusercontent.com/vdesabou/kafka-docker-playground-connect/master/README.md -o /tmp/README.txt
+    curl -s https://raw.githubusercontent.com/vdesabou/kafka-docker-playground-connect/master/README.md -o /tmp/README.txt
     for script in *.sh
     do
         if [[ "$script" = "stop.sh" ]]
@@ -75,6 +75,16 @@ do
             if [ "$connector_path" != "" ]
             then
                 THE_CONNECTOR_TAG=$(grep "$connector_path " /tmp/README.txt | cut -d "|" -f 3 | sed 's/^[[:blank:]]*//;s/[[:blank:]]*$//')
+
+                if [ "$connector_path" = "confluentinc-kafka-connect-jdbc" ]
+                then
+                    if ! version_gt ${TAG} "5.9.0"
+                    then
+                        # for version less than 6.0.0, use JDBC with same version
+                        # see https://github.com/vdesabou/kafka-docker-playground/issues/221
+                        THE_CONNECTOR_TAG=${TAG}
+                    fi
+                fi
             fi
         fi
         testdir=$(echo "$dir" | sed 's/\//-/g')
