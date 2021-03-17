@@ -52,18 +52,25 @@ do
     fi
 
     # check for scripts containing "repro"
-    if [[ "$script_name" == *"repro"* ]]; then
+    if [[ "$script_name" == *"repro"* ]]
+    then
         logwarn "####################################################"
         logwarn "skipping reproduction model $script_name in dir $dir"
         logwarn "####################################################"
         continue
     fi
-    docker_compose_file=$(grep "environment" "$script" | grep DIR | grep start.sh | cut -d "/" -f 7 | cut -d '"' -f 1 | head -n1)
-    if [ "${docker_compose_file}" != "" ] && [ -f "${dir}/${docker_compose_file}" ]
+
+    connector_path=""
+    if [[ "$dir" == "connect"* ]]
     then
-        connector_path=$(grep "CONNECT_PLUGIN_PATH" "${dir}/${docker_compose_file}" | grep -v KSQL_CONNECT_PLUGIN_PATH | cut -d "/" -f 5)
-        # remove any extra comma at the end (when there are multiple connectors used, example S3 source)
-        connector_path=$(echo "$connector_path" | cut -d "," -f 1)
+      # if it is a connector test, get connector_path
+      docker_compose_file=$(grep "environment" "$script" | grep DIR | grep start.sh | cut -d "/" -f 7 | cut -d '"' -f 1 | head -n1)
+      if [ "${docker_compose_file}" != "" ] && [ -f "${dir}/${docker_compose_file}" ]
+      then
+          connector_path=$(grep "CONNECT_PLUGIN_PATH" "${dir}/${docker_compose_file}" | grep -v KSQL_CONNECT_PLUGIN_PATH | cut -d "/" -f 5)
+          # remove any extra comma at the end (when there are multiple connectors used, example S3 source)
+          connector_path=$(echo "$connector_path" | cut -d "," -f 1)
+      fi
     fi
 
     log "###################### 📁 ${dir} 🔗 ${connector_path} #########################"
@@ -98,9 +105,6 @@ do
       last_success_time=$(grep "$connector_path" ci/${image_version}-${testdir}-${version}-${script_name} | tail -1 | cut -d "|" -f 2)
       if [ "$last_success_time" != "" ]
       then
-        # now=$(date +%s)
-        # elapsed_time=$((now-last_success_time))
-        # time="$(displaytime $elapsed_time) ago"
         if [[ "$OSTYPE" == "darwin"* ]]
         then
           time=$(date -r $last_success_time +%Y-%m-%d)
@@ -112,7 +116,7 @@ do
       grep "$dir" ${DIR}/../.github/workflows/run-regression.yml | grep -v jar > /dev/null
       if [ $? = 0 ]
       then
-        title="🐛❌ ${testdir} ${version}"
+        title="🐛❌ ${testdir}"
         if [ "$time" == "" ]
         then
           CIRESULTS[$image_version_no_dot]="❌"
@@ -120,7 +124,7 @@ do
           if [ $? != 0 ]
           then
             log "Creating GH issue with title $title"
-            gh issue create --title "$title" --body "$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID" --assignee vdesabou --label bug
+            gh issue create --title "$title" --body "Version: $version 🔗 Link to test: $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID" --assignee vdesabou --label bug
           fi
         else
           CIRESULTS[$image_version_no_dot]="👍 $time"
@@ -128,7 +132,7 @@ do
           if [ $? = 0 ]
           then
             issue_number=$(gh issue list | grep "$title" | awk '{print $1;}')
-            gh issue comment ${issue_number} --body "Issue fixed in $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
+            gh issue comment ${issue_number} --body "Version: $version ✅ Issue fixed in $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
             log "Closing GH issue #${issue_number} with title $title"
             gh issue close ${issue_number}
           fi
