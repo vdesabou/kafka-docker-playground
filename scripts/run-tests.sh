@@ -61,7 +61,6 @@ do
             continue
         fi
 
-        # Travis: do not run tests that have been successfully executed (same CP and connector version) less than 7 days ago #132
         THE_CONNECTOR_TAG=""
         docker_compose_file=$(grep "environment" "$script" | grep DIR | grep start.sh | cut -d "/" -f 7 | cut -d '"' -f 1 | head -n1)
         if [ "${docker_compose_file}" != "" ] && [ -f "${docker_compose_file}" ]
