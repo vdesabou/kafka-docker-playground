@@ -31,7 +31,7 @@ Quick start examples from Confluent [docs](https://docs.confluent.io/current/con
 | <img src="./images/icons/cloudwatch_logs.svg" width="15"> [Amazon CloudWatch Logs Source](connect/connect-aws-cloudwatch-logs-source)  | Analytics  | 1.1.0 | Confluent Subscription | 2021-01-06 |  👍 2021-03-04 | 👍 2021-03-05 | 👍 2021-03-05 | 
 | <img src="./images/icons/cloudwatch_logs.svg" width="15"> [Amazon CloudWatch Metrics Sink](connect/connect-aws-cloudwatch-metrics-sink)  | Analytics  | 1.1.3 | Confluent Subscription | 2021-01-04 |  👍 2021-03-04 | 👍 2021-03-05 | 👍 2021-03-05 | 
 | <img src="./images/icons/dynamodb.svg" width="15"> [Amazon DynamoDB Sink](connect/connect-aws-dynamodb-sink) | Database  | :confluentinc-kafka-connect-aws-dynamodb:
-| <img src="./images/icons/kinesis.svg" width="15"> [Amazon Kinesis Source](connect/connect-aws-kinesis-source) | Message Queue  | 1.3.3 | Confluent Subscription | 2021-02-08 |  👍 2021-03-05 | 👍 2021-03-05 | 👍 2021-03-05 | 
+| <img src="./images/icons/kinesis.svg" width="15"> [Amazon Kinesis Source](connect/connect-aws-kinesis-source) | Message Queue  | :confluentinc-kafka-connect-kinesis:
 | <img src="./images/icons/aws_redshift.png" width="15"> [Amazon Redshift Sink](connect/connect-aws-redshift-sink) | Data Warehouse  | :confluentinc-kafka-connect-aws-redshift:
 | <img src="./images/icons/aws_redshift.png" width="15"> [Amazon Redshift Source](connect/connect-jdbc-aws-redshift-source) (using JDBC) | Data Warehouse  | 10.0.2 | Confluent Community License | 2021-02-23 |  👍 2021-03-04 | 👍 2021-03-05 | ❌ | 
 | <img src="./images/icons/s3.png" width="15"> [Amazon S3 Sink](connect/connect-aws-s3-sink) | Datastore  | 10.0.0 | Confluent Community License | 2021-03-03 |  👍 2021-03-05 | 👍 2021-03-05 | 👍 2021-03-05 | 
@@ -56,7 +56,7 @@ Quick start examples from Confluent [docs](https://docs.confluent.io/current/con
 | <img src="./images/icons/sql_server.png" width="15"> [Debezium CDC Microsoft SQL Server Source](connect/connect-debezium-sqlserver-source)  | CDC | :debezium-debezium-connector-sqlserver:
 | <img src="./images/icons/mysql.jpg" width="15"> [Debezium CDC MySQL Source](connect/connect-debezium-mysql-source)  | CDC | :debezium-debezium-connector-mysql:
 | <img src="./images/icons/postgresql.png" width="15"> [Debezium CDC PostgreSQL Source](connect/connect-debezium-postgresql-source)  | CDC | :debezium-debezium-connector-postgresql:
-| <img src="./images/icons/mongodb.jpg" width="15"> [Debezium CDC MongoDB Source](connect/connect-debezium-mongodb-source)  | CDC | 1.4.0 | Open Source (Debezium Community) |  |  👍 2021-03-07 | 👍 2021-03-05 | 👍 2021-03-05 | 
+| <img src="./images/icons/mongodb.jpg" width="15"> [Debezium CDC MongoDB Source](connect/connect-debezium-mongodb-source)  | CDC | :debezium-debezium-connector-mongodb:
 | <img src="./images/icons/data_diode.jpg" width="15"> [Data Diode Sink](connect/connect-datadiode-source-sink) | Logs | :confluentinc-kafka-connect-data-diode:
 | <img src="./images/icons/data_diode.jpg" width="15"> [Data Diode Source](connect/connect-datadiode-source-sink) | Logs | :confluentinc-kafka-connect-data-diode:
 | <img src="./images/icons/datadog.png" height="15"> [Datadog Metrics Sink](connect/connect-datadog-metrics-sink) | Analytics | 1.1.3 | Confluent Subscription | 2021-01-04 |  👍 2021-03-04 | 👍 2021-03-05 | 👍 2021-03-05 | 
