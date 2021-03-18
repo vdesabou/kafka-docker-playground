@@ -62,7 +62,7 @@ do
     fi
 
     connector_path=""
-    if [[ "$dir" == "connect"* ]]
+    if [[ "$dir" == "connect/connect"* ]]
     then
       # if it is a connector test, get connector_path
       docker_compose_file=$(grep "environment" "$script" | grep DIR | grep start.sh | cut -d "/" -f 7 | cut -d '"' -f 1 | head -n1)
@@ -116,7 +116,7 @@ do
 
       if [ "$time" == "" ]
       then
-        CIRESULTS[$image_version_no_dot]="❌"
+        CIRESULTS[$image_version_no_dot]="🔥"
         is_test_failed=1
       else
         CIRESULTS[$image_version_no_dot]="👍 $time"
@@ -125,7 +125,8 @@ do
     done #end image_version
 
     # GH issues
-    title="🐛❌ ${testdir}"
+    t=$(echo ${testdir} | sed 's/-/\//')
+    title="🔥 ${t}"
     if [ $is_test_failed = 1 ]
     then
       gh issue list | grep "$title" > /dev/null
