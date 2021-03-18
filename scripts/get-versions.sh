@@ -181,3 +181,35 @@ do
     fi
   done #end script
 done #end test_list
+
+# Handle connector tests which are not tested as part of CI
+ci=""
+for image_version in $image_versions
+do
+  ci="$ci 🤷‍♂️ not tested \|"
+done
+for connector in confluentinc-kafka-connect-servicenow confluentinc-kafka-connect-maprdb confluentinc-kafka-connect-aws-redshift
+do
+  version=$(docker run vdesabou/kafka-docker-playground-connect:${latest_version} cat /usr/share/confluent-hub-components/${connector}/manifest.json | jq -r '.version')
+  license=$(docker run vdesabou/kafka-docker-playground-connect:${latest_version} cat /usr/share/confluent-hub-components/${connector}/manifest.json | jq -r '.license[0].name')
+  owner=$(docker run vdesabou/kafka-docker-playground-connect:${latest_version} cat /usr/share/confluent-hub-components/${connector}/manifest.json | jq -r '.owner.name')
+  release_date=$(docker run vdesabou/kafka-docker-playground-connect:${latest_version} cat /usr/share/confluent-hub-components/${connector}/manifest.json | jq -r '.release_date')
+  if [ "$release_date" = "null" ]
+  then
+    release_date=""
+  fi
+
+  if [ "$license" = "Confluent Software Evaluation License" ]
+  then
+    type="Confluent Subscription"
+  elif [ "$license" = "Apache License 2.0" ] || [ "$license" = "Apache 2.0" ] || [ "$license" = "Apache License, Version 2.0" ] || [ "$license" = "The Apache License, Version 2.0" ]
+  then
+    type="Open Source ($owner)"
+  else
+    type="$license"
+  fi
+
+  sed -e "s|:${connector}:|${version} \| $type \| $release_date \| $ci |g" \
+      $readme_file > $readme_tmp_file
+  cp $readme_tmp_file $readme_file
+done
