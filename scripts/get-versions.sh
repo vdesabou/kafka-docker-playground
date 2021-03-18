@@ -25,6 +25,7 @@ declare -a CIRESULTS
 test_list=$(grep "🚀 " ${DIR}/../.github/workflows/run-regression.yml | cut -d '"' -f 2 | tr '\n' ' ')
 for dir in $test_list
 do
+  is_test_failed=0
   if [ ! -d $dir ]
   then
       # logwarn "####################################################"
@@ -113,33 +114,36 @@ do
         fi
       fi
 
-      grep "$dir" ${DIR}/../.github/workflows/run-regression.yml | grep -v jar > /dev/null
+      if [ "$time" == "" ]
+      then
+        CIRESULTS[$image_version_no_dot]="❌"
+        is_test_failed=1
+      else
+        CIRESULTS[$image_version_no_dot]="👍 $time"
+      fi
+      log "CP ${image_version} result_file: ci/${image_version}-${testdir}-${version}-${script_name} results: ${CIRESULTS[$image_version_no_dot]}"
+    done #end image_version
+
+    # GH issues
+    title="🐛❌ ${testdir}"
+    if [ $is_test_failed = 1 ]
+    then
+      gh issue list | grep "$title" > /dev/null
+      if [ $? != 0 ]
+      then
+        log "Creating GH issue with title $title"
+        gh issue create --title "$title" --body "Version: $version 🔗 Link to test: $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID" --assignee vdesabou --label bug
+      fi
+    else
+      gh issue list | grep "$title" > /dev/null
       if [ $? = 0 ]
       then
-        # title="🐛❌ ${testdir}"
-        if [ "$time" == "" ]
-        then
-          CIRESULTS[$image_version_no_dot]="❌"
-          # gh issue list | grep "$title" > /dev/null
-          # if [ $? != 0 ]
-          # then
-          #   log "Creating GH issue with title $title"
-          #   gh issue create --title "$title" --body "Version: $version 🔗 Link to test: $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID" --assignee vdesabou --label bug
-          # fi
-        else
-          CIRESULTS[$image_version_no_dot]="👍 $time"
-          # gh issue list | grep "$title" > /dev/null
-          # if [ $? = 0 ]
-          # then
-          #   issue_number=$(gh issue list | grep "$title" | awk '{print $1;}')
-          #   gh issue comment ${issue_number} --body "Version: $version ✅ Issue fixed in $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
-          #   log "Closing GH issue #${issue_number} with title $title"
-          #   gh issue close ${issue_number}
-          # fi
-        fi
-        log "CP ${image_version} result_file: ci/${image_version}-${testdir}-${version}-${script_name} results: ${CIRESULTS[$image_version_no_dot]}"
+        issue_number=$(gh issue list | grep "$title" | awk '{print $1;}')
+        gh issue comment ${issue_number} --body "Version: $version ✅ Issue fixed in $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
+        log "Closing GH issue #${issue_number} with title $title"
+        gh issue close ${issue_number}
       fi
-    done #end image_version
+    fi
 
     ci=""
     for image_version in $image_versions
