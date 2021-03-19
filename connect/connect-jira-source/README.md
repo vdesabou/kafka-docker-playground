@@ -9,6 +9,7 @@ Quickly test [Jira Source](https://docs.confluent.io/current/connect/kafka-conne
 
 ## Create an API token
 
+If you want to create a developer account, create one [here](https://www.atlassian.com/try/cloud/signup?product=confluence.ondemand,jira-software.ondemand,jira-servicedesk.ondemand,jira-core.ondemand&developer=true)
 Go to your JIRA instance and select `Accounts Settings`:
 
 ![Jira api token](Screenshot1.png)

@@ -30,7 +30,7 @@ ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml
 
 # take since last 6 months
 #SINCE=$(date -v-4320H "+%Y-%m-%d %H:%M")
-SINCE="2021-01-01 00:00"
+SINCE="2020-01-01 00:00"
 
 log "Creating Jira Source connector"
 curl -X PUT \
@@ -55,5 +55,5 @@ curl -X PUT \
 
 sleep 10
 
-log "Verify we have received the data in jira-topic-project_categories topic"
+log "Verify we have received the data in jira-topic-issues topic"
 timeout 60 docker exec connect kafka-console-consumer -bootstrap-server broker:9092 --topic jira-topic-issues --from-beginning --property print.key=true --max-messages 1
