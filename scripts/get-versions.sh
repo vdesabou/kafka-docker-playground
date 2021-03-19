@@ -19,7 +19,7 @@ done
 
 log "Getting ci result files"
 mkdir -p ci
-aws s3 cp s3://kafka-docker-playground/ci/ ci/ --recursive
+aws s3 cp s3://kafka-docker-playground/ci/ ci/ --recursive --no-progress
 
 declare -a CIRESULTS
 test_list=$(grep "🚀 " ${DIR}/../.github/workflows/run-regression.yml | cut -d '"' -f 2 | tr '\n' ' ')
@@ -62,7 +62,7 @@ do
     fi
 
     connector_path=""
-    if [[ "$dir" == "connect/connect"* ]]
+    if [[ "$dir" == "connect"* ]]
     then
       # if it is a connector test, get connector_path
       docker_compose_file=$(grep "environment" "$script" | grep DIR | grep start.sh | cut -d "/" -f 7 | cut -d '"' -f 1 | head -n1)
@@ -116,7 +116,7 @@ do
 
       if [ "$time" == "" ]
       then
-        CIRESULTS[$image_version_no_dot]="🔥"
+        CIRESULTS[$image_version_no_dot]="❌"
         is_test_failed=1
       else
         CIRESULTS[$image_version_no_dot]="👍 $time"
@@ -125,6 +125,7 @@ do
     done #end image_version
 
     # GH issues
+    url_test="$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
     t=$(echo ${testdir} | sed 's/-/\//')
     title="🔥 ${t}"
     if [ $is_test_failed = 1 ]
@@ -133,14 +134,26 @@ do
       if [ $? != 0 ]
       then
         log "Creating GH issue with title $title"
-        gh issue create --title "$title" --body "Version: $version 🔗 Link to test: $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID" --assignee vdesabou --label bug
+        if [ "$version" = "" ]
+        then
+          body="🔗 Link to test: $url_test"
+        else
+          body="Version: $version 🔗 Link to test: $url_test"
+        fi
+        gh issue create --title "$title" --body "$body" --assignee vdesabou --label bug
       fi
     else
       gh issue list | grep "$title" > /dev/null
       if [ $? = 0 ]
       then
         issue_number=$(gh issue list | grep "$title" | awk '{print $1;}')
-        gh issue comment ${issue_number} --body "Version: $version ✅ Issue fixed in $GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
+        if [ "$version" = "" ]
+        then
+          body="✅ Issue fixed in $url_test"
+        else
+          body="Version: $version ✅ Issue fixed in $url_test"
+        fi
+        gh issue comment ${issue_number} --body "$body"
         log "Closing GH issue #${issue_number} with title $title"
         gh issue close ${issue_number}
       fi
