@@ -114,14 +114,16 @@ do
                 log "####################################################"
                 log "Test with CP $TAG and connector $THE_CONNECTOR_TAG has already been executed successfully $(displaytime $elapsed_time) ago, more than 15 days ago re-running"
                 log "####################################################"
+                aws s3 rm $s3_file
             else
                 # get last commit time unix timestamp for the folder
                 last_git_commit=$(git log --format=%ct  -- ${DIR}/../${dir} | head -1)
                 if [[ $last_git_commit -gt $last_success_time ]]
                 then
                     log "####################################################"
-                    log "Test with CP $TAG and connector $THE_CONNECTOR_TAG has already been executed successfully $(displaytime $elapsed_time) ago, but a change has been noticed"
+                    log "Test with CP $TAG and connector $THE_CONNECTOR_TAG has already been executed successfully $(displaytime $elapsed_time) ago, but a change has been noticed $(displaytime $last_git_commit) ago"
                     log "####################################################"
+                    aws s3 rm $s3_file
                 else
                     logwarn "####################################################"
                     logwarn "Skipping as test with CP $TAG and connector $THE_CONNECTOR_TAG has already been executed successfully $(displaytime $elapsed_time) ago"
