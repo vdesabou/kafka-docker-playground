@@ -1,12 +1,12 @@
 name: CI
 
 on:
-  push:
-    branches:
-      - master
+   # push:
+     # branches:
+      #  - master
 
-  schedule:
-     - cron: '0 1 * * *' # every day at 1 am
+  #schedule:
+      # - cron: '0 1 * * *' # every day at 1 am
 
   workflow_dispatch:
 
