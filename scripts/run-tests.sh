@@ -146,29 +146,23 @@ do
         ELAPSED="took: $((($SECONDS / 60) % 60))min $(($SECONDS % 60))sec"
         let ELAPSED_TOTAL+=$SECONDS
         CUMULATED="cumulated time: $((($ELAPSED_TOTAL / 60) % 60))min $(($ELAPSED_TOTAL % 60))sec"
+        testdir=$(echo "$dir" | sed 's/\//-/g')
+        file="$TAG-$testdir-$THE_CONNECTOR_TAG-$script"
+        rm -f $file
+        touch $file
         if [ $ret -eq 0 ]
         then
             log "####################################################"
             log "RESULT: SUCCESS for $script in dir $dir ($ELAPSED - $CUMULATED)"
             log "####################################################"
 
-            testdir=$(echo "$dir" | sed 's/\//-/g')
-            file="$TAG-$testdir-$THE_CONNECTOR_TAG-$script"
-            rm -f $file
-            touch $file
-            echo "$connector_path|`date +%s`" > $file
-            if [ -f "$file" ]
-            then
-                aws s3 cp "$file" "s3://kafka-docker-playground/ci/"
-                log "INFO: <$file> was uploaded to S3 bucket"
-            else
-                logerror "ERROR: $file could not be created"
-                exit 1
-            fi
+            echo "$connector_path|`date +%s`|success|$GITHUB_RUN_ID" > $file
         else
             logerror "####################################################"
             logerror "RESULT: FAILURE for $script in dir $dir ($ELAPSED - $CUMULATED)"
             logerror "####################################################"
+
+            echo "$connector_path|`date +%s`|failure|$GITHUB_RUN_ID" > $file
 
             logwarn "####################################################"
             logwarn "docker ps"
@@ -187,6 +181,14 @@ do
             done
             failed_tests=$failed_tests"$dir[$script]\n"
             let "nb_test_failed++"
+        fi
+        if [ -f "$file" ]
+        then
+            aws s3 cp "$file" "s3://kafka-docker-playground/ci/"
+            log "INFO: <$file> was uploaded to S3 bucket"
+        else
+            logerror "ERROR: $file could not be created"
+            exit 1
         fi
         bash stop.sh
     done
