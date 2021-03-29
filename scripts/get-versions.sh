@@ -110,6 +110,9 @@ do
         status=$(grep "$connector_path" ${ci_file} | tail -1 | cut -d "|" -f 3)
         gh_run_id=$(grep "$connector_path" ${ci_file} | tail -1 | cut -d "|" -f 4)
         html_url=$(curl -s  -H "Accept: application/vnd.github.v3+json" https://api.github.com/repos/vdesabou/kafka-docker-playground/actions/runs/$gh_run_id/jobs | jq ".jobs |= map(select(.name | contains(\"$dir\")))" | jq '[.jobs | .[] | {name: .name, html_url: .html_url }]' | jq '.[0].html_url')
+        if [ "$html_url" = "" ]; then
+          logwarn "Could not retrieve job url!"
+        fi
         if [ "$last_success_time" != "" ]
         then
           if [[ "$OSTYPE" == "darwin"* ]]
@@ -142,7 +145,7 @@ do
       gh issue list --limit 500 | grep "$title" > /dev/null
       if [ $? != 0 ]
       then
-        log "Creating GH issue with title $title"
+        log "Creating GH issue with title $title and link $html_url"
         if [ "$version" = "" ]
         then
           body="🔗 Link to test: $html_url"
