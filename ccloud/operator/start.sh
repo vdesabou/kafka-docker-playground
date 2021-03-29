@@ -43,7 +43,8 @@ then
   minikube dashboard &
 else
   verify_installed "eksctl"
-  eksctl create cluster --name kafka-docker-playground-ci \
+  tag=$(echo "$TAG" | sed -e 's/\.//g')
+  eksctl create cluster --name kafka-docker-playground-ci-$tag \
       --version 1.18 \
       --node-type t2.2xlarge \
       --region eu-west-3 \
@@ -53,7 +54,7 @@ else
   log "Configure your computer to communicate with your cluster"
   aws eks update-kubeconfig \
       --region eu-west-3 \
-      --name kafka-docker-playground-ci
+      --name kafka-docker-playground-ci-$tag
 fi
 
 log "Download Confluent Operator in ${DIR}/confluent-operator"

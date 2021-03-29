@@ -4,6 +4,8 @@ set +e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../scripts/utils.sh
 
+image_versions="$1"
+
 function log() {
   YELLOW='\033[0;33m'
   NC='\033[0m' # No Color
@@ -67,7 +69,11 @@ done
 #######
 # aws
 #######
-log "Deleting EKS cluster"
-eksctl delete cluster --name kafka-docker-playground-ci
+for image_version in $image_versions
+do
+  tag=$(echo "$image_version" | sed -e 's/\.//g')
+  log "Deleting EKS cluster kafka-docker-playground-ci-$tag"
+  eksctl delete cluster --name kafka-docker-playground-ci-$tag
+done
 
 exit 0

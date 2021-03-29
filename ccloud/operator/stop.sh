@@ -9,5 +9,6 @@ then
   verify_installed "minikube"
   minikube delete
 else
-  eksctl delete cluster --name kafka-docker-playground-ci
+  tag=$(echo "$TAG" | sed -e 's/\.//g')
+  eksctl delete cluster --name kafka-docker-playground-ci-$tag
 fi
