@@ -103,28 +103,34 @@ do
         fi
       fi
       testdir=$(echo "$dir" | sed 's/\//-/g')
-      last_success_time=$(grep "$connector_path" ci/${image_version}-${testdir}-${version}-${script_name} | tail -1 | cut -d "|" -f 2)
-      status=$(grep "$connector_path" ci/${image_version}-${testdir}-${version}-${script_name} | tail -1 | cut -d "|" -f 3)
-      gh_run_id=$(grep "$connector_path" ci/${image_version}-${testdir}-${version}-${script_name} | tail -1 | cut -d "|" -f 4)
-      html_url=$(curl -s  -H "Accept: application/vnd.github.v3+json" https://api.github.com/repos/vdesabou/kafka-docker-playground/actions/runs/$gh_run_id/jobs | jq '.jobs |= map(select(.name | contains("connect-jira-source")))' | jq '[.jobs | .[] | {name: .name, html_url: .html_url }]' | jq '.[0].html_url')
-      if [ "$last_success_time" != "" ]
+      ci_file="ci/${image_version}-${testdir}-${version}-${script_name}"
+      if [ -f ${ci_file} ]
       then
-        if [[ "$OSTYPE" == "darwin"* ]]
+        last_success_time=$(grep "$connector_path" ${ci_file} | tail -1 | cut -d "|" -f 2)
+        status=$(grep "$connector_path" ${ci_file} | tail -1 | cut -d "|" -f 3)
+        gh_run_id=$(grep "$connector_path" ${ci_file} | tail -1 | cut -d "|" -f 4)
+        html_url=$(curl -s  -H "Accept: application/vnd.github.v3+json" https://api.github.com/repos/vdesabou/kafka-docker-playground/actions/runs/$gh_run_id/jobs | jq ".jobs |= map(select(.name | contains(\"$dir\")))" | jq '[.jobs | .[] | {name: .name, html_url: .html_url }]' | jq '.[0].html_url')
+        if [ "$last_success_time" != "" ]
         then
-          time=$(date -r $last_success_time +%Y-%m-%d)
-        else
-          time=$(date -d @$last_success_time +%Y-%m-%d)
+          if [[ "$OSTYPE" == "darwin"* ]]
+          then
+            time=$(date -r $last_success_time +%Y-%m-%d)
+          else
+            time=$(date -d @$last_success_time +%Y-%m-%d)
+          fi
         fi
-      fi
 
-      if [ "$status" == "failure" ]
-      then
-        CIRESULTS[$image_version_no_dot]="[❌]($html_url)"
-        is_test_failed=1
+        if [ "$status" == "failure" ]
+        then
+          CIRESULTS[$image_version_no_dot]="[❌]($html_url)"
+          is_test_failed=1
+        else
+          CIRESULTS[$image_version_no_dot]="[👍 $time]($html_url)"
+        fi
+        log "CP ${image_version} result_file: ${ci_file} results: ${CIRESULTS[$image_version_no_dot]} gh_run_id: ${gh_run_id}"
       else
-        CIRESULTS[$image_version_no_dot]="[👍 $time]($html_url)"
+        logwarn "result_file: ${ci_file} does not exist !"
       fi
-      log "CP ${image_version} result_file: ci/${image_version}-${testdir}-${version}-${script_name} results: ${CIRESULTS[$image_version_no_dot]} gh_run_id: ${gh_run_id}"
     done #end image_version
 
     # GH issues
