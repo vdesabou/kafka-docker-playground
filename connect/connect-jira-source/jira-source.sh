@@ -30,7 +30,13 @@ ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml
 
 # take since last 6 months
 #SINCE=$(date -v-4320H "+%Y-%m-%d %H:%M")
-SINCE="2020-01-01 00:00"
+SINCE="2021-01-01 00:00"
+
+# log "Enable debug logging"
+# curl -X PUT \
+#      -H "Content-Type: application/json" \
+#      -d '{"level": "DEBUG"}' \
+#      http://localhost:8083/admin/loggers/org.apache.http.wire | jq .
 
 log "Creating Jira Source connector"
 curl -X PUT \
