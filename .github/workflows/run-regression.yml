@@ -1,12 +1,12 @@
 name: CI
 
 on:
-   # push:
-     # branches:
-      #  - master
+  push:
+     branches:
+       - master
 
-  #schedule:
-      # - cron: '0 1 * * *' # every day at 1 am
+  schedule:
+      - cron: '0 1 * * *' # every day at 1 am
 
   workflow_dispatch:
 
@@ -30,7 +30,7 @@ jobs:
       - name: Cleanup resources
         run: |
           curl --silent --location "https://github.com/weaveworks/eksctl/releases/latest/download/eksctl_$(uname -s)_amd64.tar.gz" | tar xz -C /tmp && sudo mv /tmp/eksctl /usr/local/bin
-          ./scripts/cleanup-resources.sh
+          ./scripts/cleanup-resources.sh "5.5.3 6.0.2 6.1.0"
         env:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
           AZ_USER: ${{ secrets.AZ_USER }}
@@ -196,7 +196,7 @@ jobs:
       - name: Cleanup resources
         run: |
           curl --silent --location "https://github.com/weaveworks/eksctl/releases/latest/download/eksctl_$(uname -s)_amd64.tar.gz" | tar xz -C /tmp && sudo mv /tmp/eksctl /usr/local/bin
-          ./scripts/cleanup-resources.sh
+          ./scripts/cleanup-resources.sh "5.5.3 6.0.2 6.1.0"
         env:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
           AZ_USER: ${{ secrets.AZ_USER }}
