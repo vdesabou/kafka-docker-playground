@@ -122,7 +122,7 @@ do
 
         if [ "$status" == "failure" ]
         then
-          CIRESULTS[$image_version_no_dot]="[❌]($html_url)"
+          CIRESULTS[$image_version_no_dot]="[❌ $time]($html_url)"
           is_test_failed=1
         else
           CIRESULTS[$image_version_no_dot]="[👍 $time]($html_url)"
