@@ -112,9 +112,9 @@ sed -e "s|:BOOTSTRAP_SERVERS:|$BOOTSTRAP_SERVERS|g" \
 
 set +e
 log "Cleanup connect worker topics"
-delete_topic connect-status-demo
-delete_topic connect-offsets-demo
-delete_topic connect-configs-demo
+delete_topic connect-status-demo-${TAG}
+delete_topic connect-offsets-demo-${TAG}
+delete_topic connect-configs-demo-${TAG}
 set -e
 
 docker-compose build
