@@ -32,6 +32,7 @@ test_list=$(grep "🚀 " ${DIR}/../.github/workflows/run-regression.yml | cut -d
 for dir in $test_list
 do
   is_test_failed=0
+  is_test_failed_html_url=""
   if [ ! -d $dir ]
   then
       # logwarn "####################################################"
@@ -123,7 +124,7 @@ do
         html_url=$(cat /tmp/${gh_run_id}.json | jq ".jobs |= map(select(.name | test(\"${v}.*${dir}\")))" | jq '[.jobs | .[] | {name: .name, html_url: .html_url }]' | jq '.[0].html_url')
         html_url=$(echo "$html_url" | sed -e 's/^"//' -e 's/"$//')
         if [ "$html_url" = "" ]; then
-          logwarn "Could not retrieve job url!"
+          logerror "Could not retrieve job url!"
           cat /tmp/${gh_run_id}.json
         fi
         if [ "$last_success_time" != "" ]
@@ -140,17 +141,18 @@ do
         then
           CIRESULTS[$image_version_no_dot]="[❌ $time]($html_url)"
           is_test_failed=1
+          is_test_failed_html_url=$html_url
         else
           CIRESULTS[$image_version_no_dot]="[👍 $time]($html_url)"
         fi
         log "CP ${image_version} result_file: ${ci_file} results: ${CIRESULTS[$image_version_no_dot]} gh_run_id: ${gh_run_id}"
       else
-        logwarn "result_file: ${ci_file} does not exist !"
+        logerror "result_file: ${ci_file} does not exist !"
       fi
     done #end image_version
 
     # GH issues
-    if [ "$html_url" != "" ]
+    if [ "$is_test_failed_html_url" != "" ]
     then
       t=$(echo ${testdir} | sed 's/-/\//')
       title="🔥 ${t}"
@@ -159,12 +161,12 @@ do
         gh issue list --limit 500 | grep "$title" > /dev/null
         if [ $? != 0 ]
         then
-          log "Creating GH issue with title $title and link $html_url"
+          log "Creating GH issue with title $title and link $is_test_failed_html_url"
           if [ "$version" = "" ]
           then
-            body="🔗 Link to test: $html_url"
+            body="🔗 Link to test: $is_test_failed_html_url"
           else
-            body="Version: $version 🔗 Link to test: $html_url"
+            body="Version: $version 🔗 Link to test: $is_test_failed_html_url"
           fi
           gh issue create --title "$title" --body "$body" --assignee vdesabou --label bug
         fi
@@ -175,9 +177,9 @@ do
           issue_number=$(gh issue list | grep "$title" | awk '{print $1;}')
           if [ "$version" = "" ]
           then
-            body="✅ Issue fixed in $html_url"
+            body="✅ Issue fixed in $is_test_failed_html_url"
           else
-            body="Version: $version ✅ Issue fixed in $html_url"
+            body="Version: $version ✅ Issue fixed in $is_test_failed_html_url"
           fi
           gh issue comment ${issue_number} --body "$body"
           log "Closing GH issue #${issue_number} with title $title"
