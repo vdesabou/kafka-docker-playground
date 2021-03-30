@@ -33,6 +33,7 @@ for dir in $test_list
 do
   is_test_failed=0
   is_test_failed_html_url=""
+  is_test_failed_cp_versions=""
   if [ ! -d $dir ]
   then
       # logwarn "####################################################"
@@ -142,6 +143,7 @@ do
           CIRESULTS[$image_version_no_dot]="[❌ $time]($html_url)"
           is_test_failed=1
           is_test_failed_html_url=$html_url
+          is_test_failed_cp_versions="$is_test_failed_cp_versions $image_version"
         else
           CIRESULTS[$image_version_no_dot]="[👍 $time]($html_url)"
         fi
@@ -161,12 +163,12 @@ do
         gh issue list --limit 500 | grep "$title" > /dev/null
         if [ $? != 0 ]
         then
-          log "Creating GH issue with title $title and link $is_test_failed_html_url"
+          log "Creating GH issue with title $title, CP version(s): $is_test_failed_cp_versions and link $is_test_failed_html_url"
           if [ "$version" = "" ]
           then
-            body="🔗 Link to test: $is_test_failed_html_url"
+            body="CP version(s): $is_test_failed_cp_versions 🔗 Link to test: $is_test_failed_html_url"
           else
-            body="Version: $version 🔗 Link to test: $is_test_failed_html_url"
+            body="CP version(s): $is_test_failed_cp_versions Version: $version 🔗 Link to test: $is_test_failed_html_url"
           fi
           gh issue create --title "$title" --body "$body" --assignee vdesabou --label bug
         fi
