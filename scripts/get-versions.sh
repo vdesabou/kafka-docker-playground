@@ -13,6 +13,7 @@ image_versions="$1"
 template_file=README-template.md
 readme_file=README.md
 readme_tmp_file=/tmp/README.md
+gh_msg_file=/tmp/gh.txt
 
 cp $template_file $readme_file
 
@@ -32,8 +33,8 @@ test_list=$(grep "🚀 " ${DIR}/../.github/workflows/run-regression.yml | cut -d
 for dir in $test_list
 do
   is_test_failed=0
-  is_test_failed_html_url=""
-  is_test_failed_cp_versions=""
+  rm -f ${gh_msg_file}
+  touch ${gh_msg_file}
   if [ ! -d $dir ]
   then
       # logwarn "####################################################"
@@ -142,10 +143,10 @@ do
         then
           CIRESULTS[$image_version_no_dot]="[❌ $time]($html_url)"
           is_test_failed=1
-          is_test_failed_html_url=$html_url
-          is_test_failed_cp_versions="$is_test_failed_cp_versions $image_version"
+          echo -e "🔥 CP $image_version 🔗 Link to test: $html_url\n" >> ${gh_msg_file}
         else
           CIRESULTS[$image_version_no_dot]="[👍 $time]($html_url)"
+          echo -e "👍 CP $image_version 🔗 Link to test: $html_url\n" >> ${gh_msg_file}
         fi
         log "CP ${image_version} result_file: ${ci_file} results: ${CIRESULTS[$image_version_no_dot]} gh_run_id: ${gh_run_id}"
       else
@@ -154,36 +155,30 @@ do
     done #end image_version
 
     # GH issues
-    if [ "$is_test_failed_html_url" != "" ]
+    if [ "$html_url" != "" ]
     then
       t=$(echo ${testdir} | sed 's/-/\//')
       title="🔥 ${t}"
+      if [ "$version" != "" ]
+      then
+        echo -e "🔢 Connector version: $version\n" >> ${gh_msg_file}
+      fi
+      msg=$(cat ${gh_msg_file})
       if [ $is_test_failed = 1 ]
       then
         gh issue list --limit 500 | grep "$title" > /dev/null
         if [ $? != 0 ]
         then
-          log "Creating GH issue with title $title, CP version(s): $is_test_failed_cp_versions and link $is_test_failed_html_url"
-          if [ "$version" = "" ]
-          then
-            body="CP version(s): $is_test_failed_cp_versions 🔗 Link to test: $is_test_failed_html_url"
-          else
-            body="CP version(s): $is_test_failed_cp_versions Version: $version 🔗 Link to test: $is_test_failed_html_url"
-          fi
-          gh issue create --title "$title" --body "$body" --assignee vdesabou --label bug
+          log "Creating GH issue with title $title"
+          gh issue create --title "$title" --body "$msg" --assignee vdesabou --label bug
         fi
       else
         gh issue list | grep "$title" > /dev/null
         if [ $? = 0 ]
         then
           issue_number=$(gh issue list | grep "$title" | awk '{print $1;}')
-          if [ "$version" = "" ]
-          then
-            body="✅ Issue fixed in $is_test_failed_html_url"
-          else
-            body="Version: $version ✅ Issue fixed in $is_test_failed_html_url"
-          fi
-          gh issue comment ${issue_number} --body "$body"
+          echo -e "✅ Issue fixed !\n"  >> ${gh_msg_file}
+          gh issue comment ${issue_number} --body "$msg"
           log "Closing GH issue #${issue_number} with title $title"
           gh issue close ${issue_number}
         fi
