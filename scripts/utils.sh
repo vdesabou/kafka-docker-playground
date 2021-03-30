@@ -490,7 +490,12 @@ function timeout() {
 }
 
 function jq() {
-    docker run --rm -i imega/jq "$@"
+    if [[ $(type -f jq 2>&1) =~ "not found" ]]
+    then
+      docker run --rm -i imega/jq "$@"
+    else
+      $(which jq) "$@"
+    fi
 }
 
 function az() {
