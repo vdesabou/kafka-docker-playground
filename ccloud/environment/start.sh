@@ -58,9 +58,9 @@ sed -e "s|:BOOTSTRAP_SERVERS:|$BOOTSTRAP_SERVERS|g" \
 
 set +e
 log "Cleanup connect worker topics"
-delete_topic connect-status
-delete_topic connect-offsets
-delete_topic connect-configs
+delete_topic connect-status-${TAG}
+delete_topic connect-offsets-${TAG}
+delete_topic connect-configs-${TAG}
 set -e
 
 DOCKER_COMPOSE_FILE_OVERRIDE=$1
