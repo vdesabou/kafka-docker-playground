@@ -109,7 +109,9 @@ do
         last_success_time=$(grep "$connector_path" ${ci_file} | tail -1 | cut -d "|" -f 2)
         status=$(grep "$connector_path" ${ci_file} | tail -1 | cut -d "|" -f 3)
         gh_run_id=$(grep "$connector_path" ${ci_file} | tail -1 | cut -d "|" -f 4)
-        html_url=$(curl -s  -H "Accept: application/vnd.github.v3+json" https://api.github.com/repos/vdesabou/kafka-docker-playground/actions/runs/$gh_run_id/jobs | jq ".jobs |= map(select(.name | contains(\"$dir\")))" | jq '[.jobs | .[] | {name: .name, html_url: .html_url }]' | jq '.[0].html_url')
+        v=$(echo $image_version | sed -e 's/\./[.]/g')
+        html_url=$(curl -s  -H "Accept: application/vnd.github.v3+json" https://api.github.com/repos/vdesabou/kafka-docker-playground/actions/runs/698939385/jobs?per_page=100 | jq ".jobs |= map(select(.name | test(\"${v}.*${dir}\")))" | jq '[.jobs | .[] | {name: .name, html_url: .html_url }]' | jq '.[0].html_url')
+        html_url=$(echo "$html_url" | sed -e 's/^"//' -e 's/"$//')
         if [ "$html_url" = "" ]; then
           logwarn "Could not retrieve job url!"
         fi
