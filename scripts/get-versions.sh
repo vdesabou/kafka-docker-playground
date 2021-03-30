@@ -3,6 +3,12 @@
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../scripts/utils.sh
 
+if [ -z "$GITHUB_TOKEN" ]
+then
+     logerror "GITHUB_TOKEN is not set. Export it as environment variable"
+     exit 1
+fi
+
 image_versions="$1"
 template_file=README-template.md
 readme_file=README.md
@@ -109,11 +115,16 @@ do
         last_success_time=$(grep "$connector_path" ${ci_file} | tail -1 | cut -d "|" -f 2)
         status=$(grep "$connector_path" ${ci_file} | tail -1 | cut -d "|" -f 3)
         gh_run_id=$(grep "$connector_path" ${ci_file} | tail -1 | cut -d "|" -f 4)
+        if [ ! -f /tmp/${gh_run_id}.json ]
+        then
+          curl -s -u vdesabou:$GITHUB_TOKEN -H "Accept: application/vnd.github.v3+json" -o /tmp/${gh_run_id}.json https://api.github.com/repos/vdesabou/kafka-docker-playground/actions/runs/${gh_run_id}/jobs?per_page=100
+        fi
         v=$(echo $image_version | sed -e 's/\./[.]/g')
-        html_url=$(curl -s  -H "Accept: application/vnd.github.v3+json" https://api.github.com/repos/vdesabou/kafka-docker-playground/actions/runs/698939385/jobs?per_page=100 | jq ".jobs |= map(select(.name | test(\"${v}.*${dir}\")))" | jq '[.jobs | .[] | {name: .name, html_url: .html_url }]' | jq '.[0].html_url')
+        html_url=$(cat /tmp/${gh_run_id}.json | jq ".jobs |= map(select(.name | test(\"${v}.*${dir}\")))" | jq '[.jobs | .[] | {name: .name, html_url: .html_url }]' | jq '.[0].html_url')
         html_url=$(echo "$html_url" | sed -e 's/^"//' -e 's/"$//')
         if [ "$html_url" = "" ]; then
           logwarn "Could not retrieve job url!"
+          cat /tmp/${gh_run_id}.json
         fi
         if [ "$last_success_time" != "" ]
         then
@@ -139,37 +150,39 @@ do
     done #end image_version
 
     # GH issues
-    url_test="$GITHUB_SERVER_URL/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID"
-    t=$(echo ${testdir} | sed 's/-/\//')
-    title="🔥 ${t}"
-    if [ $is_test_failed = 1 ]
+    if [ "$html_url" != "" ]
     then
-      gh issue list --limit 500 | grep "$title" > /dev/null
-      if [ $? != 0 ]
+      t=$(echo ${testdir} | sed 's/-/\//')
+      title="🔥 ${t}"
+      if [ $is_test_failed = 1 ]
       then
-        log "Creating GH issue with title $title and link $html_url"
-        if [ "$version" = "" ]
+        gh issue list --limit 500 | grep "$title" > /dev/null
+        if [ $? != 0 ]
         then
-          body="🔗 Link to test: $html_url"
-        else
-          body="Version: $version 🔗 Link to test: $html_url"
+          log "Creating GH issue with title $title and link $html_url"
+          if [ "$version" = "" ]
+          then
+            body="🔗 Link to test: $html_url"
+          else
+            body="Version: $version 🔗 Link to test: $html_url"
+          fi
+          gh issue create --title "$title" --body "$body" --assignee vdesabou --label bug
         fi
-        gh issue create --title "$title" --body "$body" --assignee vdesabou --label bug
-      fi
-    else
-      gh issue list | grep "$title" > /dev/null
-      if [ $? = 0 ]
-      then
-        issue_number=$(gh issue list | grep "$title" | awk '{print $1;}')
-        if [ "$version" = "" ]
+      else
+        gh issue list | grep "$title" > /dev/null
+        if [ $? = 0 ]
         then
-          body="✅ Issue fixed in $html_url"
-        else
-          body="Version: $version ✅ Issue fixed in $html_url"
+          issue_number=$(gh issue list | grep "$title" | awk '{print $1;}')
+          if [ "$version" = "" ]
+          then
+            body="✅ Issue fixed in $html_url"
+          else
+            body="Version: $version ✅ Issue fixed in $html_url"
+          fi
+          gh issue comment ${issue_number} --body "$body"
+          log "Closing GH issue #${issue_number} with title $title"
+          gh issue close ${issue_number}
         fi
-        gh issue comment ${issue_number} --body "$body"
-        log "Closing GH issue #${issue_number} with title $title"
-        gh issue close ${issue_number}
       fi
     fi
 
