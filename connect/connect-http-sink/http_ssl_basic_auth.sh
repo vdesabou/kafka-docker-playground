@@ -11,7 +11,7 @@ log "Sending messages to topic http-messages"
 seq 10 | docker exec -i broker kafka-console-producer --broker-list broker:9092 --topic http-messages
 
 log "-------------------------------------"
-log "Running SSL Authentication Example"
+log "Running SSL + Basic Authentication Example"
 log "-------------------------------------"
 
 log "Creating http-sink connector"
