@@ -58,7 +58,7 @@ do
     if (( attempt_num == max_attempts ))
     then
         logerror "ERROR: Failed after $attempt_num attempts. Please troubleshoot and run again."
-        return 1
+        exit 1
     else
         log "Retrying after $sleep_interval seconds"
         ((attempt_num++))
