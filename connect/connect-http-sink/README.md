@@ -8,9 +8,7 @@ Quickly test [HTTP Sink](https://docs.confluent.io/current/connect/kafka-connect
 
 This is based on [Kafka Connect HTTP Connector Quick Start](https://docs.confluent.io/current/connect/kafka-connect-http/index.html#kconnect-long-http-connector-quick-start)
 
-The HTTP service is using [Kafka Connect HTTP Sink Demo App](https://github.com/confluentinc/kafka-connect-http-demo)
-
-
+The HTTP service is using [vdesabou/kafka-connect-http-demo](https://github.com/vdesabou/kafka-connect-http-demo)
 
 ## How to run
 
@@ -36,9 +34,9 @@ $ ./http_oauth2_auth.sh
 ### SSL + Basic Authentication
 
 ```bash
-$ ./http_ssl_auth.sh
+$ ./http_ssl_basic_auth.sh
 ```
-### SSL Authentication (mTLS)
+### SSL Authentication (mutual TLS)
 
 ```bash
 $ ./http_mtls_auth.sh
