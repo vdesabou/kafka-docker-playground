@@ -30,20 +30,20 @@ aws s3 cp s3://kafka-docker-playground/ci/ ci/ --recursive --no-progress
 
 declare -a CIRESULTS
 test_list=$(grep "🚀 " ${DIR}/../.github/workflows/run-regression.yml | cut -d '"' -f 2 | tr '\n' ' ')
-for dir in $test_list
+for test in $test_list
 do
   is_test_failed=0
   rm -f ${gh_msg_file}
   touch ${gh_msg_file}
-  if [ ! -d $dir ]
+  if [ ! -d $test ]
   then
       # logwarn "####################################################"
-      # logwarn "skipping dir $dir, not a directory"
+      # logwarn "skipping test $test, not a directory"
       # logwarn "####################################################"
       continue
   fi
 
-  for script in ${dir}/*.sh
+  for script in ${test}/*.sh
   do
     script_name=$(basename ${script})
     if [[ "$script_name" = "stop.sh" ]]
@@ -56,7 +56,7 @@ do
     if [ $? = 0 ]
     then
         logwarn "####################################################"
-        logwarn "skipping $script_name in dir $dir"
+        logwarn "skipping $script_name in test $test"
         logwarn "####################################################"
         continue
     fi
@@ -65,25 +65,25 @@ do
     if [[ "$script_name" == *"repro"* ]]
     then
         logwarn "####################################################"
-        logwarn "skipping reproduction model $script_name in dir $dir"
+        logwarn "skipping reproduction model $script_name in test $test"
         logwarn "####################################################"
         continue
     fi
 
     connector_path=""
-    if [[ "$dir" == "connect"* ]]
+    if [[ "$test" == "connect"* ]]
     then
       # if it is a connector test, get connector_path
       docker_compose_file=$(grep "environment" "$script" | grep DIR | grep start.sh | cut -d "/" -f 7 | cut -d '"' -f 1 | head -n1)
-      if [ "${docker_compose_file}" != "" ] && [ -f "${dir}/${docker_compose_file}" ]
+      if [ "${docker_compose_file}" != "" ] && [ -f "${test}/${docker_compose_file}" ]
       then
-          connector_path=$(grep "CONNECT_PLUGIN_PATH" "${dir}/${docker_compose_file}" | grep -v KSQL_CONNECT_PLUGIN_PATH | cut -d "/" -f 5)
+          connector_path=$(grep "CONNECT_PLUGIN_PATH" "${test}/${docker_compose_file}" | grep -v KSQL_CONNECT_PLUGIN_PATH | cut -d "/" -f 5)
           # remove any extra comma at the end (when there are multiple connectors used, example S3 source)
           connector_path=$(echo "$connector_path" | cut -d "," -f 1)
       fi
     fi
 
-    log "###################### 📁 ${dir} 🔗 ${connector_path} #########################"
+    log "###################### 📁 ${test} 🔗 ${connector_path} #########################"
 
     for image_version in $image_versions
     do
@@ -111,7 +111,7 @@ do
           version=$(docker run vdesabou/kafka-docker-playground-connect:${image_version} cat /usr/share/confluent-hub-components/${connector_path}/manifest.json | jq -r '.version')
         fi
       fi
-      testdir=$(echo "$dir" | sed 's/\//-/g')
+      testdir=$(echo "$test" | sed 's/\//-/g')
       ci_file="ci/${image_version}-${testdir}-${version}-${script_name}"
       if [ -f ${ci_file} ]
       then
@@ -123,7 +123,7 @@ do
           curl -s -u vdesabou:$GITHUB_TOKEN -H "Accept: application/vnd.github.v3+json" -o /tmp/${gh_run_id}.json https://api.github.com/repos/vdesabou/kafka-docker-playground/actions/runs/${gh_run_id}/jobs?per_page=100
         fi
         v=$(echo $image_version | sed -e 's/\./[.]/g')
-        html_url=$(cat /tmp/${gh_run_id}.json | jq ".jobs |= map(select(.name | test(\"${v}.*${dir}\")))" | jq '[.jobs | .[] | {name: .name, html_url: .html_url }]' | jq '.[0].html_url')
+        html_url=$(cat /tmp/${gh_run_id}.json | jq ".jobs |= map(select(.name | test(\"${v}.*${test}\")))" | jq '[.jobs | .[] | {name: .name, html_url: .html_url }]' | jq '.[0].html_url')
         html_url=$(echo "$html_url" | sed -e 's/^"//' -e 's/"$//')
         if [ "$html_url" = "" ]; then
           logerror "Could not retrieve job url!"
