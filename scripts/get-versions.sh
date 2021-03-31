@@ -26,7 +26,7 @@ done
 
 log "Getting ci result files"
 mkdir -p ci
-#aws s3 cp s3://kafka-docker-playground/ci/ ci/ --recursive --no-progress
+aws s3 cp s3://kafka-docker-playground/ci/ ci/ --recursive --no-progress
 
 test_list=$(grep "🚀 " ${DIR}/../.github/workflows/run-regression.yml | cut -d '"' -f 2 | tr '\n' ' ')
 declare -a TEST_FAILED
