@@ -219,7 +219,7 @@ do
 
   if [ "$connector_path" != "" ]
   then
-    if [ "$connector_path" = "kafka-connect-couchbase" ]
+    if [ "$test" = "connect/connect-couchbase-sink" ] || [ "$test" = "connect/connect-couchbase-source" ]
     then
         sed -e "s|:${connector_path}:|3.4.8 \| Open Source (Couchbase) \| \| $ci |g" \
             $readme_file > $readme_tmp_file
@@ -243,7 +243,7 @@ do
           type="$license"
         fi
 
-        sed -e "s|:${connector_path}:|${version} \| $type \| $release_date \| $ci |g" \
+        sed -e "s|:${test}:|${version} \| $type \| $release_date \| $ci |g" \
             $readme_file > $readme_tmp_file
     fi
     cp $readme_tmp_file $readme_file
