@@ -30,27 +30,20 @@ curl -X PUT \
                "reporter.error.topic.replication.factor": 1,
                "reporter.result.topic.name": "success-responses",
                "reporter.result.topic.replication.factor": 1,
-               "http.api.url": "https://http-service-ssl-auth:8443/api/messages",
-               "auth.type": "NONE",
+               "http.api.url": "https://http-service-ssl-basic-auth:8443/api/messages",
+               "auth.type": "BASIC",
+               "connection.user": "admin",
+               "connection.password": "password",
                "ssl.enabled": "true",
-               "https.ssl.truststore.location": "/etc/kafka/secrets/truststore.jks",
+               "https.ssl.truststore.location": "/etc/kafka/secrets/truststore.http-service-ssl-basic-auth.jks",
                "https.ssl.truststore.type": "JKS",
                "https.ssl.truststore.password": "confluent",
-               "https.ssl.keystore.location": "/etc/kafka/secrets/keystore.jks",
-               "https.ssl.keystore.type": "JKS",
-               "https.ssl.keystore.password": "confluent",
-               "https.ssl.key.password": "confluent",
                "https.ssl.protocol": "TLSv1.2"
           }' \
-     http://localhost:8083/connectors/http-sink/config | jq .
+     http://localhost:8083/connectors/http-ssl-basic-auth-sink2/config | jq .
 
 
 sleep 10
 
 log "Confirm that the data was sent to the HTTP endpoint."
-curl -k --cert ./security/http-service-ssl-auth.certificate.pem --key ./security/http-service-ssl-auth.key --tlsv1.2 --cacert ./security/snakeoil-ca-1.crt  -X GET https://localhost:8443/api/messages | jq .
-
-# docker exec connect curl -k --cert /etc/kafka/secrets/http-service-ssl-auth.certificate.pem --key /etc/kafka/secrets/http-service-ssl-auth.key --tlsv1.2 --cacert /etc/kafka/secrets/snakeoil-ca-1.crt -X GET https://http-service-ssl-auth:8443/api/messages | jq .
-
-
-
+curl --tlsv1.2 --cacert ./security/snakeoil-ca-1.crt  -X GET https://admin:password@localhost:8443/api/messages | jq .
