@@ -26,13 +26,18 @@ done
 
 log "Getting ci result files"
 mkdir -p ci
-aws s3 cp s3://kafka-docker-playground/ci/ ci/ --recursive --no-progress
+#aws s3 cp s3://kafka-docker-playground/ci/ ci/ --recursive --no-progress
 
-declare -a CIRESULTS
 test_list=$(grep "🚀 " ${DIR}/../.github/workflows/run-regression.yml | cut -d '"' -f 2 | tr '\n' ' ')
+declare -a TEST_FAILED
+declare -a TEST_SUCCESS
 for test in $test_list
 do
-  is_test_failed=0
+  nb_tests=0
+  nb_fail=0
+  nb_success=0
+  TEST_FAILED=()
+  TEST_SUCCESS=()
   rm -f ${gh_msg_file}
   touch ${gh_msg_file}
   if [ ! -d $test ]
@@ -42,6 +47,8 @@ do
       # logwarn "####################################################"
       continue
   fi
+  log "################################"
+  log "### 📁 ${test}"
 
   for script in ${test}/*.sh
   do
@@ -83,13 +90,12 @@ do
       fi
     fi
 
-    log "###################### 📁 ${test} 🔗 ${connector_path} #########################"
+    log "## 📄 ${script_name}"
 
     for image_version in $image_versions
     do
+      let "nb_tests++"
       image_version_no_dot=$(echo ${image_version} | sed 's/\.//g')
-      CIRESULTS[$image_version_no_dot]="🤷‍♂️ not tested"
-
       time=""
       version=""
       if [ "$connector_path" != "" ]
@@ -141,89 +147,107 @@ do
 
         if [ "$status" == "failure" ]
         then
-          CIRESULTS[$image_version_no_dot]="[❌ $time]($html_url)"
-          is_test_failed=1
-          echo -e "🔥 CP $image_version 🔗 Link to test: $html_url\n" >> ${gh_msg_file}
+          let "nb_fail++"
+          TEST_FAILED[$image_version_no_dot]="[❌ $time]($html_url)"
+          echo -e "🔥 CP $image_version 📄 ${script_name} 🔗 Link to test: $html_url\n" >> ${gh_msg_file}
+          log "🔥 CP $image_version 📄 ${script_name} 🔗 Link to test: $html_url"
         else
-          CIRESULTS[$image_version_no_dot]="[👍 $time]($html_url)"
-          echo -e "👍 CP $image_version 🔗 Link to test: $html_url\n" >> ${gh_msg_file}
+          let "nb_success++"
+          TEST_SUCCESS[$image_version_no_dot]="[👍 $time]($html_url)"
+          echo -e "👍 CP $image_version 📄 ${script_name} 🔗 Link to test: $html_url\n" >> ${gh_msg_file}
+          log "👍 CP $image_version 📄 ${script_name} 🔗 Link to test: $html_url"
         fi
-        log "CP ${image_version} result_file: ${ci_file} results: ${CIRESULTS[$image_version_no_dot]} gh_run_id: ${gh_run_id}"
       else
         logerror "result_file: ${ci_file} does not exist !"
       fi
     done #end image_version
-
-    # GH issues
-    if [ "$html_url" != "" ]
-    then
-      t=$(echo ${testdir} | sed 's/-/\//')
-      title="🔥 ${t}"
-      if [ "$version" != "" ]
-      then
-        echo -e "🔢 Connector version: $version\n" >> ${gh_msg_file}
-      fi
-      msg=$(cat ${gh_msg_file})
-      if [ $is_test_failed = 1 ]
-      then
-        gh issue list --limit 500 | grep "$title" > /dev/null
-        if [ $? != 0 ]
-        then
-          log "Creating GH issue with title $title"
-          gh issue create --title "$title" --body "$msg" --assignee vdesabou --label bug
-        fi
-      else
-        gh issue list | grep "$title" > /dev/null
-        if [ $? = 0 ]
-        then
-          issue_number=$(gh issue list | grep "$title" | awk '{print $1;}')
-          echo -e "✅ Issue fixed !\n"  >> ${gh_msg_file}
-          gh issue comment ${issue_number} --body "$msg"
-          log "Closing GH issue #${issue_number} with title $title"
-          gh issue close ${issue_number}
-        fi
-      fi
-    fi
-
-    ci=""
-    for image_version in $image_versions
-    do
-      image_version_no_dot=$(echo ${image_version} | sed 's/\.//g')
-      ci="$ci ${CIRESULTS[$image_version_no_dot]} \|"
-    done
-
-    if [ "$connector_path" != "" ]
-    then
-      if [ "$connector_path" = "kafka-connect-couchbase" ]
-      then
-          sed -e "s|:${connector_path}:|3.4.8 \| Open Source (Couchbase) \| \| $ci |g" \
-              $readme_file > $readme_tmp_file
-      else
-          version=$(docker run vdesabou/kafka-docker-playground-connect:${latest_version} cat /usr/share/confluent-hub-components/${connector_path}/manifest.json | jq -r '.version')
-          license=$(docker run vdesabou/kafka-docker-playground-connect:${latest_version} cat /usr/share/confluent-hub-components/${connector_path}/manifest.json | jq -r '.license[0].name')
-          owner=$(docker run vdesabou/kafka-docker-playground-connect:${latest_version} cat /usr/share/confluent-hub-components/${connector_path}/manifest.json | jq -r '.owner.name')
-          release_date=$(docker run vdesabou/kafka-docker-playground-connect:${latest_version} cat /usr/share/confluent-hub-components/${connector_path}/manifest.json | jq -r '.release_date')
-          if [ "$release_date" = "null" ]
-          then
-            release_date=""
-          fi
-
-          if [ "$license" = "Confluent Software Evaluation License" ]
-          then
-            type="Confluent Subscription"
-          elif [ "$license" = "Apache License 2.0" ] || [ "$license" = "Apache 2.0" ] || [ "$license" = "Apache License, Version 2.0" ] || [ "$license" = "The Apache License, Version 2.0" ]
-          then
-            type="Open Source ($owner)"
-          else
-            type="$license"
-          fi
-
-          sed -e "s|:${connector_path}:|${version} \| $type \| $release_date \| $ci |g" \
-              $readme_file > $readme_tmp_file
-      fi
-      cp $readme_tmp_file $readme_file
-    fi
   done #end script
+
+  # GH issues
+  if [ "$html_url" != "" ]
+  then
+    t=$(echo ${testdir} | sed 's/-/\//')
+    title="🔥 ${t}"
+    if [ "$version" != "" ]
+    then
+      echo -e "🔢 Connector version: $version\n" >> ${gh_msg_file}
+    fi
+    log "Number of successful tests: $nb_success/${nb_tests}"
+    if [ ${nb_fail} -gt 0 ]
+    then
+      gh issue list --limit 500 | grep "$title" > /dev/null
+      if [ $? != 0 ]
+      then
+        log "Creating GH issue with title $title"
+        msg=$(cat ${gh_msg_file})
+        gh issue create --title "$title" --body "$msg" --assignee vdesabou --label bug
+      else
+        log "GH issue with title $title already exist, skipping..."
+      fi
+    fi
+    if [ ${nb_success} -eq ${nb_tests} ]
+    then
+      # if all scripts in tests are now successful, close the issue
+      gh issue list | grep "$title" > /dev/null
+      if [ $? = 0 ]
+      then
+        issue_number=$(gh issue list | grep "$title" | awk '{print $1;}')
+        echo -e "✅ Issue fixed !\n"  >> ${gh_msg_file}
+        msg=$(cat ${gh_msg_file})
+        gh issue comment ${issue_number} --body "$msg"
+        log "Closing GH issue #${issue_number} with title $title"
+        gh issue close ${issue_number}
+      fi
+    fi
+  fi
+
+  ci=""
+  for image_version in $image_versions
+  do
+    image_version_no_dot=$(echo ${image_version} | sed 's/\.//g')
+    if [ "${TEST_FAILED[$image_version_no_dot]}" != "" ]
+    then
+      ci="$ci ${TEST_FAILED[$image_version_no_dot]} \|"
+    elif [ "${TEST_SUCCESS[$image_version_no_dot]}" != "" ]
+    then
+      ci="$ci ${TEST_SUCCESS[$image_version_no_dot]} \|"
+    else
+      logerror "TEST_SUCCESS and TEST_FAILED are both empty !"
+    fi
+
+  done
+
+  if [ "$connector_path" != "" ]
+  then
+    if [ "$connector_path" = "kafka-connect-couchbase" ]
+    then
+        sed -e "s|:${connector_path}:|3.4.8 \| Open Source (Couchbase) \| \| $ci |g" \
+            $readme_file > $readme_tmp_file
+    else
+        version=$(docker run vdesabou/kafka-docker-playground-connect:${latest_version} cat /usr/share/confluent-hub-components/${connector_path}/manifest.json | jq -r '.version')
+        license=$(docker run vdesabou/kafka-docker-playground-connect:${latest_version} cat /usr/share/confluent-hub-components/${connector_path}/manifest.json | jq -r '.license[0].name')
+        owner=$(docker run vdesabou/kafka-docker-playground-connect:${latest_version} cat /usr/share/confluent-hub-components/${connector_path}/manifest.json | jq -r '.owner.name')
+        release_date=$(docker run vdesabou/kafka-docker-playground-connect:${latest_version} cat /usr/share/confluent-hub-components/${connector_path}/manifest.json | jq -r '.release_date')
+        if [ "$release_date" = "null" ]
+        then
+          release_date=""
+        fi
+
+        if [ "$license" = "Confluent Software Evaluation License" ]
+        then
+          type="Confluent Subscription"
+        elif [ "$license" = "Apache License 2.0" ] || [ "$license" = "Apache 2.0" ] || [ "$license" = "Apache License, Version 2.0" ] || [ "$license" = "The Apache License, Version 2.0" ]
+        then
+          type="Open Source ($owner)"
+        else
+          type="$license"
+        fi
+
+        sed -e "s|:${connector_path}:|${version} \| $type \| $release_date \| $ci |g" \
+            $readme_file > $readme_tmp_file
+    fi
+    cp $readme_tmp_file $readme_file
+  fi
 done #end test_list
 
 # Handle connector tests which are not tested as part of CI
