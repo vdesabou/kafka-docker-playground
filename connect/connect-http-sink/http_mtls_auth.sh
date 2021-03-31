@@ -48,9 +48,9 @@ curl -X PUT \
 sleep 10
 
 log "Confirm that the data was sent to the HTTP endpoint."
-curl -k --cert ./security/http-service-mtls-auth.certificate.pem --key ./security/http-service-mtls-auth.key --tlsv1.2 --cacert ./security/snakeoil-ca-1.crt  -X GET https://localhost:8643/api/messages | jq .
+curl --cert ./security/http-service-mtls-auth.certificate.pem --key ./security/http-service-mtls-auth.key --tlsv1.2 --cacert ./security/snakeoil-ca-1.crt  -X GET https://localhost:8643/api/messages | jq .
 
-# docker exec connect curl -k --cert /etc/kafka/secrets/http-service-mtls-auth.certificate.pem --key /etc/kafka/secrets/http-service-mtls-auth.key --tlsv1.2 --cacert /etc/kafka/secrets/snakeoil-ca-1.crt -X GET https://http-service-mtls-auth:8443/api/messages | jq .
+# docker exec connect curl --cert /etc/kafka/secrets/http-service-mtls-auth.certificate.pem --key /etc/kafka/secrets/http-service-mtls-auth.key --tlsv1.2 --cacert /etc/kafka/secrets/snakeoil-ca-1.crt -X GET https://http-service-mtls-auth:8443/api/messages | jq .
 
 
 
