@@ -103,9 +103,9 @@ do
                 elapsed_time=999999999999
             else
                 file_content=$(cat $file)
-                last_success_time=$(cat $file | cut -d "|" -f 2)
+                last_execution_time=$(cat $file | cut -d "|" -f 2)
                 now=$(date +%s)
-                elapsed_time=$((now-last_success_time))
+                elapsed_time=$((now-last_execution_time))
             fi
 
             # run at least every 15 days, even with no changes
@@ -119,7 +119,8 @@ do
                 # get last commit time unix timestamp for the folder
                 now=$(date +%s)
                 last_git_commit=$(git log --format=%ct  -- ${DIR}/../${dir} | head -1)
-                if [[ $last_git_commit -gt $last_success_time ]]
+                log "DEBUG git log --format=%ct  -- ${DIR}/../${dir} last_git_commit=$last_git_commit $last_execution_time"
+                if [[ $last_git_commit -gt $last_execution_time ]]
                 then
                     elapsed_git_time=$((now-last_git_commit))
                     log "####################################################"
@@ -141,7 +142,7 @@ do
         log "Executing $script in dir $dir"
         log "####################################################"
         SECONDS=0
-        retry bash $script
+        #retry bash $script
         ret=$?
         ELAPSED="took: $((($SECONDS / 60) % 60))min $(($SECONDS % 60))sec"
         let ELAPSED_TOTAL+=$SECONDS
@@ -184,13 +185,13 @@ do
         fi
         if [ -f "$file" ]
         then
-            aws s3 cp "$file" "s3://kafka-docker-playground/ci/"
+            #aws s3 cp "$file" "s3://kafka-docker-playground/ci/"
             log "INFO: <$file> was uploaded to S3 bucket"
         else
             logerror "ERROR: $file could not be created"
             exit 1
         fi
-        bash stop.sh
+        #bash stop.sh
     done
     cd - > /dev/null
 done
