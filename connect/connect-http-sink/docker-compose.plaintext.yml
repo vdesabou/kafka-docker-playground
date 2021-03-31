@@ -55,20 +55,29 @@ services:
     environment:
       SPRING_PROFILES_ACTIVE: 'oauth2'
 
-  http-service-ssl-auth:
+  http-service-ssl-basic-auth:
     image: vdesabou/http-sink-demo
-    hostname: http-service-ssl-auth
-    container_name: http-service-ssl-auth
+    hostname: http-service-ssl-basic-auth
+    container_name: http-service-ssl-basic-auth
     ports:
       - "8443:8443"
     environment:
-      SPRING_PROFILES_ACTIVE: 'ssl-auth'
+      SPRING_PROFILES_ACTIVE: 'ssl-basic-auth'
 
-  http-service-ssl-auth-no-ssl-endpoint-identification:
+  http-service-ssl-basic-auth-no-ssl-endpoint-identification:
     image: vdesabou/http-sink-demo-wrongssl
-    hostname: http-service-ssl-auth-no-ssl-endpoint-identification
-    container_name: http-service-ssl-auth-no-ssl-endpoint-identification
+    hostname: http-service-ssl-basic-auth-no-ssl-endpoint-identification
+    container_name: http-service-ssl-basic-auth-no-ssl-endpoint-identification
     ports:
       - "8543:8443"
+    environment:
+      SPRING_PROFILES_ACTIVE: 'ssl-basic-auth'
+
+  http-service-mtls-auth:
+    image: vdesabou/http-sink-demo
+    hostname: http-service-mtls-auth
+    container_name: http-service-mtls-auth
+    ports:
+      - "8643:8443"
     environment:
       SPRING_PROFILES_ACTIVE: 'ssl-auth'
