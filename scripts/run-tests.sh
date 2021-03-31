@@ -142,7 +142,7 @@ do
         log "Executing $script in dir $dir"
         log "####################################################"
         SECONDS=0
-        #retry bash $script
+        retry bash $script
         ret=$?
         ELAPSED="took: $((($SECONDS / 60) % 60))min $(($SECONDS % 60))sec"
         let ELAPSED_TOTAL+=$SECONDS
@@ -185,13 +185,13 @@ do
         fi
         if [ -f "$file" ]
         then
-            #aws s3 cp "$file" "s3://kafka-docker-playground/ci/"
+            aws s3 cp "$file" "s3://kafka-docker-playground/ci/"
             log "INFO: <$file> was uploaded to S3 bucket"
         else
             logerror "ERROR: $file could not be created"
             exit 1
         fi
-        #bash stop.sh
+        bash stop.sh
     done
     cd - > /dev/null
 done
