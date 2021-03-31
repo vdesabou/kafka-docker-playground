@@ -115,7 +115,7 @@ do
       ci_file="ci/${image_version}-${testdir}-${version}-${script_name}"
       if [ -f ${ci_file} ]
       then
-        last_success_time=$(grep "$connector_path" ${ci_file} | tail -1 | cut -d "|" -f 2)
+        last_execution_time=$(grep "$connector_path" ${ci_file} | tail -1 | cut -d "|" -f 2)
         status=$(grep "$connector_path" ${ci_file} | tail -1 | cut -d "|" -f 3)
         gh_run_id=$(grep "$connector_path" ${ci_file} | tail -1 | cut -d "|" -f 4)
         if [ ! -f /tmp/${gh_run_id}.json ]
@@ -129,13 +129,13 @@ do
           logerror "Could not retrieve job url!"
           cat /tmp/${gh_run_id}.json
         fi
-        if [ "$last_success_time" != "" ]
+        if [ "$last_execution_time" != "" ]
         then
           if [[ "$OSTYPE" == "darwin"* ]]
           then
-            time=$(date -r $last_success_time +%Y-%m-%d)
+            time=$(date -r $last_execution_time +%Y-%m-%d)
           else
-            time=$(date -d @$last_success_time +%Y-%m-%d)
+            time=$(date -d @$last_execution_time +%Y-%m-%d)
           fi
         fi
 
