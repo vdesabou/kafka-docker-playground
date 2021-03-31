@@ -120,6 +120,7 @@ do
                 now=$(date +%s)
                 last_git_commit=$(git log --format=%ct  -- ${DIR}/../${dir} | head -1)
                 log "DEBUG git log -- ${DIR}/../${dir} last_git_commit=$last_git_commit last_execution_time=$last_execution_time"
+                git log -- ${DIR}/../${dir}
                 if [[ $last_git_commit -gt $last_execution_time ]]
                 then
                     elapsed_git_time=$((now-last_git_commit))
