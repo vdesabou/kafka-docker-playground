@@ -33,10 +33,15 @@ $ ./http_basic_auth.sh
 $ ./http_oauth2_auth.sh
 ```
 
-### SSL Authentication
+### SSL + Basic Authentication
 
 ```bash
 $ ./http_ssl_auth.sh
+```
+### SSL Authentication (mTLS)
+
+```bash
+$ ./http_mtls_auth.sh
 ```
 
 ### JSON Converter Example
