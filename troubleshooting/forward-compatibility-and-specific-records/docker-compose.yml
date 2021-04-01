@@ -1,0 +1,54 @@
+---
+version: '3.5'
+services:
+  producer-v1:
+    build:
+      context: ../../troubleshooting/forward-compatibility-and-specific-records/producer-v1/
+    hostname: producer-v1
+    container_name: producer-v1
+    environment:
+      KAFKA_BOOTSTRAP_SERVERS: broker:9092
+      TOPIC: "customer-avro"
+      REPLICATION_FACTOR: 1
+      NUMBER_OF_PARTITIONS: 1
+      MESSAGE_BACKOFF: 1000 # Frequency of message injection
+      KAFKA_ACKS: "all" # default: "1"
+      KAFKA_REQUEST_TIMEOUT_MS: 20000
+      KAFKA_RETRY_BACKOFF_MS: 500
+      KAFKA_CLIENT_ID: "my-java-producer-v1"
+      KAFKA_SCHEMA_REGISTRY_URL: "http://schema-registry:8081"
+
+  producer-v2:
+    build:
+      context: ../../troubleshooting/forward-compatibility-and-specific-records/producer-v2/
+    hostname: producer-v2
+    container_name: producer-v2
+    environment:
+      KAFKA_BOOTSTRAP_SERVERS: broker:9092
+      TOPIC: "customer-avro"
+      REPLICATION_FACTOR: 1
+      NUMBER_OF_PARTITIONS: 1
+      MESSAGE_BACKOFF: 1000 # Frequency of message injection
+      KAFKA_ACKS: "all" # default: "1"
+      KAFKA_REQUEST_TIMEOUT_MS: 20000
+      KAFKA_RETRY_BACKOFF_MS: 500
+      KAFKA_CLIENT_ID: "my-java-producer-v2"
+      KAFKA_SCHEMA_REGISTRY_URL: "http://schema-registry:8081"
+
+  consumer-v1:
+    build:
+      context: ../../troubleshooting/forward-compatibility-and-specific-records/consumer-v1/
+    hostname: consumer-v1
+    container_name: consumer-v1
+    environment:
+      KAFKA_BOOTSTRAP_SERVERS: broker:9092
+      TOPIC: "customer-avro"
+      KAFKA_GROUP_ID: "customer-avro-app"
+      KAFKA_CLIENT_ID: "my-java-consumer"
+      CHECK_GAPS: "false"
+      COMMIT_STRATEGY: "AUTO_COMMIT" # possible values AUTO_COMMIT or PER_BATCH or PER_MESSAGES
+      #KAFKA_ENABLE_AUTO_COMMIT_CONFIG: "false" # default true if group.id is provided
+      #KAFKA_ISOLATION_LEVEL_CONFIG: "read_committed" # default read_uncommitted
+      # default: org.apache.kafka.clients.consumer.RangeAssignor
+      #KAFKA_PARTITION_ASSIGNMENT_STRATEGY_CONFIG: "org.apache.kafka.clients.consumer.CooperativeStickyAssignor"
+      KAFKA_SCHEMA_REGISTRY_URL: "http://schema-registry:8081"
