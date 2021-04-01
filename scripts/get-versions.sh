@@ -64,7 +64,7 @@ do
     if [ $? = 0 ]
     then
         logwarn "####################################################"
-        logwarn "skipping $script_name in test $test"
+        logwarn "⏭ skipping $script_name in test $test"
         logwarn "####################################################"
         continue
     fi
@@ -73,7 +73,7 @@ do
     if [[ "$script_name" == *"repro"* ]]
     then
         logwarn "####################################################"
-        logwarn "skipping reproduction model $script_name in test $test"
+        logwarn "⏭ skipping reproduction model $script_name in test $test"
         logwarn "####################################################"
         continue
     fi
@@ -209,9 +209,10 @@ do
     image_version_no_dot=$(echo ${image_version} | sed 's/\.//g')
     if [ "${TEST_FAILED[$image_version_no_dot]}" != "" ]
     then
+      gh_issue_number=$(echo $gh_issue_number|tr -d '\n')
       if [ "${gh_issue_number}" != "" ]
       then
-        ci="$ci ${TEST_FAILED[$image_version_no_dot]} [#${issue_number}](https://github.com/vdesabou/kafka-docker-playground/issues/${issue_number}) \|"
+        ci="$ci ${TEST_FAILED[$image_version_no_dot]} [\#${gh_issue_number}](https://github.com/vdesabou/kafka-docker-playground/issues/${gh_issue_number}) \|"
       else
         ci="$ci ${TEST_FAILED[$image_version_no_dot]} \|"
       fi
