@@ -117,25 +117,23 @@ do
                 aws s3 rm $s3_file
             else
                 # get last commit time unix timestamp for the folder
-                # now=$(date +%s)
-                # last_git_commit=$(git log --format=%ct  -- ${DIR}/../${dir} | head -1)
-                # log "DEBUG git log -- ${DIR}/../${dir} last_git_commit=$last_git_commit last_execution_time=$last_execution_time"
-                # git log -- ${DIR}/../${dir}
-                # if [[ $last_git_commit -gt $last_execution_time ]]
-                # then
-                #     elapsed_git_time=$((now-last_git_commit))
-                #     log "####################################################"
-                #     log "Test with CP $TAG and connector $THE_CONNECTOR_TAG has already been executed successfully $(displaytime $elapsed_time) ago, but a change has been noticed $(displaytime $elapsed_git_time) ago"
-                #     log "####################################################"
-                #     aws s3 rm $s3_file
-                # else
+                now=$(date +%s)
+                last_git_commit=$(git log --format=%ct  -- ${DIR}/../${dir} | head -1)
+                if [[ $last_git_commit -gt $last_execution_time ]]
+                then
+                    elapsed_git_time=$((now-last_git_commit))
+                    log "####################################################"
+                    log "Test with CP $TAG and connector $THE_CONNECTOR_TAG has already been executed successfully $(displaytime $elapsed_time) ago, but a change has been noticed $(displaytime $elapsed_git_time) ago"
+                    log "####################################################"
+                    aws s3 rm $s3_file
+                else
                     logwarn "####################################################"
                     logwarn "Skipping as test with CP $TAG and connector $THE_CONNECTOR_TAG has already been executed successfully $(displaytime $elapsed_time) ago"
                     logwarn "####################################################"
                     skipped_tests=$skipped_tests"$dir[$script]\n"
                     let "nb_test_skipped++"
                     continue
-                # fi
+                fi
             fi
         fi
 
