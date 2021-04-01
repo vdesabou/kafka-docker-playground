@@ -74,7 +74,7 @@ jobs:
                       "🚀 ccloud/operator"
                     ]
     steps:
-     - name: Checkout code
+      - name: Checkout code
         uses: actions/checkout@v2
         with:
           fetch-depth: 0
