@@ -24,7 +24,7 @@ Playground for Kafka/Confluent Docker experimentations...
 
 Quick start examples from Confluent [docs](https://docs.confluent.io/current/connect/managing/index.html) but in Docker version for ease of use.
 
-| Connector  | Product Category  | Latest Version (*) | Type | Release Date| CP 6.1.0 [CI](https://github.com/vdesabou/kafka-docker-playground/actions?query=workflow%3ACI) latest results| CP 6.0.2 [CI](https://github.com/vdesabou/kafka-docker-playground/actions?query=workflow%3ACI) latest results| CP 5.5.3 [CI](https://github.com/vdesabou/kafka-docker-playground/actions?query=workflow%3ACI) latest results
+| Connector  | Product Category  | Latest Version (*) | Type | Release Date| CP 6.1.1 [CI](https://github.com/vdesabou/kafka-docker-playground/actions?query=workflow%3ACI) latest results| CP 6.0.2 [CI](https://github.com/vdesabou/kafka-docker-playground/actions?query=workflow%3ACI) latest results| CP 5.5.3 [CI](https://github.com/vdesabou/kafka-docker-playground/actions?query=workflow%3ACI) latest results
 |---|---|---|---|---|---|---|---|
 | <img src="./images/icons/activemq.png" width="15"> [ActiveMQ Sink](connect/connect-active-mq-sink)  | Message Queue  | :connect/connect-active-mq-sink:
 | <img src="./images/icons/activemq.png" width="15"> [ActiveMQ Source](connect/connect-active-mq-source)  | Message Queue  | :connect/connect-active-mq-source:
