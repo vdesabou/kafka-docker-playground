@@ -40,6 +40,7 @@ do
   TEST_SUCCESS=()
   rm -f ${gh_msg_file}
   touch ${gh_msg_file}
+  gh_issue_number=""
   if [ ! -d $test ]
   then
       # logwarn "####################################################"
@@ -184,6 +185,7 @@ do
       else
         log "GH issue with title $title already exist, skipping..."
       fi
+      gh_issue_number=$(gh issue list --limit 500 | grep "$title" | awk '{print $1;}')
     fi
     if [ ${nb_success} -eq ${nb_tests} ]
     then
@@ -191,7 +193,7 @@ do
       gh issue list | grep "$title" > /dev/null
       if [ $? = 0 ]
       then
-        issue_number=$(gh issue list | grep "$title" | awk '{print $1;}')
+        issue_number=$(gh issue list --limit 500 | grep "$title" | awk '{print $1;}')
         echo -e "✅ Issue fixed !\n"  >> ${gh_msg_file}
         msg=$(cat ${gh_msg_file})
         gh issue comment ${issue_number} --body "$msg"
@@ -207,7 +209,12 @@ do
     image_version_no_dot=$(echo ${image_version} | sed 's/\.//g')
     if [ "${TEST_FAILED[$image_version_no_dot]}" != "" ]
     then
-      ci="$ci ${TEST_FAILED[$image_version_no_dot]} \|"
+      if [ "${gh_issue_number}" != "" ]
+      then
+        ci="$ci ${TEST_FAILED[$image_version_no_dot]} [#${issue_number}](https://github.com/vdesabou/kafka-docker-playground/issues/${issue_number}) \|"
+      else
+        ci="$ci ${TEST_FAILED[$image_version_no_dot]} \|"
+      fi
     elif [ "${TEST_SUCCESS[$image_version_no_dot]}" != "" ]
     then
       ci="$ci ${TEST_SUCCESS[$image_version_no_dot]} \|"
