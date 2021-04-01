@@ -28,7 +28,7 @@ jobs:
       - name: Cleanup resources
         run: |
           curl --silent --location "https://github.com/weaveworks/eksctl/releases/latest/download/eksctl_$(uname -s)_amd64.tar.gz" | tar xz -C /tmp && sudo mv /tmp/eksctl /usr/local/bin
-          ./scripts/cleanup-resources.sh "5.5.3 6.0.2 6.1.0"
+          ./scripts/cleanup-resources.sh "5.5.3 6.0.2 6.1.1"
         env:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
           AZ_USER: ${{ secrets.AZ_USER }}
@@ -40,7 +40,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        tag: [ "5.5.3", "6.0.2", "6.1.0"]
+        tag: [ "5.5.3", "6.0.2", "6.1.1"]
         test_list : [
                       "🚀 connect/connect-salesforce-bulkapi-sink connect/connect-salesforce-bulkapi-source connect/connect-salesforce-pushtopics-source connect/connect-salesforce-sobject-sink connect/connect-salesforce-cdc-source connect/connect-salesforce-platform-events-sink connect/connect-salesforce-platform-events-source",
                       "🚀 connect/connect-snowflake-sink connect/connect-splunk-sink connect/connect-splunk-source connect/connect-spool-dir-source connect/connect-syslog-source other/connect-override-policy-sftp-sink other/connect-override-policy-sftp-source",
@@ -197,7 +197,7 @@ jobs:
       - name: Cleanup resources
         run: |
           curl --silent --location "https://github.com/weaveworks/eksctl/releases/latest/download/eksctl_$(uname -s)_amd64.tar.gz" | tar xz -C /tmp && sudo mv /tmp/eksctl /usr/local/bin
-          ./scripts/cleanup-resources.sh "5.5.3 6.0.2 6.1.0"
+          ./scripts/cleanup-resources.sh "5.5.3 6.0.2 6.1.1"
         env:
           GH_TOKEN: ${{ secrets.GH_TOKEN }}
           AZ_USER: ${{ secrets.AZ_USER }}
@@ -205,7 +205,7 @@ jobs:
 
       - name: Update README
         run: |
-          ./scripts/get-versions.sh "6.1.0 6.0.2 5.5.3"
+          ./scripts/get-versions.sh "6.1.1 6.0.2 5.5.3"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: push
