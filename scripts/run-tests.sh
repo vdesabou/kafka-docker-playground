@@ -28,7 +28,7 @@ do
     if [ ! -d $dir ]
     then
         logwarn "####################################################"
-        logwarn "skipping dir $dir, not a directory"
+        logwarn "⏭ skipping dir $dir, not a directory"
         logwarn "####################################################"
         continue
     fi
@@ -48,7 +48,7 @@ do
         if [ $? = 0 ]
         then
             logwarn "####################################################"
-            logwarn "skipping $script in dir $dir"
+            logwarn "⏭ skipping $script in dir $dir"
             logwarn "####################################################"
             continue
         fi
@@ -56,7 +56,7 @@ do
         # check for scripts containing "repro"
         if [[ "$script" == *"repro"* ]]; then
             logwarn "####################################################"
-            logwarn "skipping reproduction model $script in dir $dir"
+            logwarn "⏭ skipping reproduction model $script in dir $dir"
             logwarn "####################################################"
             continue
         fi
@@ -103,7 +103,8 @@ do
                 elapsed_time=999999999999
             else
                 file_content=$(cat $file)
-                last_execution_time=$(cat $file | cut -d "|" -f 2)
+                last_execution_time=$(cat $file | tail -1 | cut -d "|" -f 2)
+                status=$(cat $file | tail -1 | cut -d "|" -f 3)
                 now=$(date +%s)
                 elapsed_time=$((now-last_execution_time))
             fi
@@ -112,7 +113,13 @@ do
             if [[ $elapsed_time -gt 1209600 ]]
             then
                 log "####################################################"
-                log "Test with CP $TAG and connector $THE_CONNECTOR_TAG has already been executed successfully $(displaytime $elapsed_time) ago, more than 15 days ago re-running"
+                log "⌛ Test with CP $TAG and connector $THE_CONNECTOR_TAG has already been executed successfully $(displaytime $elapsed_time) ago, more than 15 days ago...re-running"
+                log "####################################################"
+                aws s3 rm $s3_file
+            elif [ "$status" = "failure" ]
+            then
+                log "####################################################"
+                log "🔥 Test with CP $TAG and connector $THE_CONNECTOR_TAG was failing $(displaytime $elapsed_time) ago...re-running"
                 log "####################################################"
                 aws s3 rm $s3_file
             else
@@ -123,12 +130,12 @@ do
                 then
                     elapsed_git_time=$((now-last_git_commit))
                     log "####################################################"
-                    log "Test with CP $TAG and connector $THE_CONNECTOR_TAG has already been executed successfully $(displaytime $elapsed_time) ago, but a change has been noticed $(displaytime $elapsed_git_time) ago"
+                    log "🆕 Test with CP $TAG and connector $THE_CONNECTOR_TAG has already been executed successfully $(displaytime $elapsed_time) ago, but a change has been noticed $(displaytime $elapsed_git_time) ago"
                     log "####################################################"
                     aws s3 rm $s3_file
                 else
                     logwarn "####################################################"
-                    logwarn "Skipping as test with CP $TAG and connector $THE_CONNECTOR_TAG has already been executed successfully $(displaytime $elapsed_time) ago"
+                    logwarn "✅ Skipping as test with CP $TAG and connector $THE_CONNECTOR_TAG has already been executed successfully $(displaytime $elapsed_time) ago"
                     logwarn "####################################################"
                     skipped_tests=$skipped_tests"$dir[$script]\n"
                     let "nb_test_skipped++"
@@ -138,7 +145,7 @@ do
         fi
 
         log "####################################################"
-        log "Executing $script in dir $dir"
+        log "🚀 Executing $script in dir $dir"
         log "####################################################"
         SECONDS=0
         retry bash $script
@@ -153,13 +160,13 @@ do
         if [ $ret -eq 0 ]
         then
             log "####################################################"
-            log "RESULT: SUCCESS for $script in dir $dir ($ELAPSED - $CUMULATED)"
+            log "✅ RESULT: SUCCESS for $script in dir $dir ($ELAPSED - $CUMULATED)"
             log "####################################################"
 
             echo "$connector_path|`date +%s`|success|$GITHUB_RUN_ID" > $file
         else
             logerror "####################################################"
-            logerror "RESULT: FAILURE for $script in dir $dir ($ELAPSED - $CUMULATED)"
+            logerror "🔥 RESULT: FAILURE for $script in dir $dir ($ELAPSED - $CUMULATED)"
             logerror "####################################################"
 
             echo "$connector_path|`date +%s`|failure|$GITHUB_RUN_ID" > $file
@@ -170,14 +177,13 @@ do
             logwarn "####################################################"
             for container in broker broker2 schema-registry connect broker-us broker-europe connect-us connect-europe replicator-us replicator-europe
             do
-            if [[ $(docker ps -f "name=$container" --format '{{.Names}}') == $container ]]
-            then
-                logwarn "####################################################"
-                logwarn "$container logs"
-                docker container logs --tail=200 $container
-                logwarn "####################################################"
-            fi
-
+                if [[ $(docker ps -f "name=$container" --format '{{.Names}}') == $container ]]
+                then
+                    logwarn "####################################################"
+                    logwarn "$container logs"
+                    docker container logs --tail=150 $container
+                    logwarn "####################################################"
+                fi
             done
             failed_tests=$failed_tests"$dir[$script]\n"
             let "nb_test_failed++"
@@ -185,9 +191,9 @@ do
         if [ -f "$file" ]
         then
             aws s3 cp "$file" "s3://kafka-docker-playground/ci/"
-            log "INFO: <$file> was uploaded to S3 bucket"
+            log "📄 INFO: <$file> was uploaded to S3 bucket"
         else
-            logerror "ERROR: $file could not be created"
+            logerror "❗ ERROR: $file could not be created"
             exit 1
         fi
         bash stop.sh
@@ -195,15 +201,14 @@ do
     cd - > /dev/null
 done
 
-
 if [ $nb_test_failed -eq 0 ]
 then
     log "####################################################"
-    log "RESULT: SUCCESS"
+    log "✅ RESULT: SUCCESS"
     log "####################################################"
 else
     logerror "####################################################"
-    logerror "RESULT: FAILED $nb_test_failed tests failed:\n$failed_tests"
+    logerror "🔥 RESULT: FAILED $nb_test_failed tests failed:\n$failed_tests"
     logerror "####################################################"
     exit $nb_test_failed
 fi
@@ -211,7 +216,7 @@ fi
 if [ $nb_test_skipped -ne 0 ]
 then
     log "####################################################"
-    log "RESULT: SKIPPED $nb_test_skipped tests skipped:\n$skipped_tests"
+    log "⏭ RESULT: SKIPPED $nb_test_skipped tests skipped:\n$skipped_tests"
     log "####################################################"
 fi
 exit 0
