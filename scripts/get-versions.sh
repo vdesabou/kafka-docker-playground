@@ -221,7 +221,7 @@ do
   then
     if [ "$test" = "connect/connect-couchbase-sink" ] || [ "$test" = "connect/connect-couchbase-source" ]
     then
-        sed -e "s|:${connector_path}:|3.4.8 \| Open Source (Couchbase) \| \| $ci |g" \
+        sed -e "s|:${test}:|3.4.8 \| Open Source (Couchbase) \| \| $ci |g" \
             $readme_file > $readme_tmp_file
     else
         version=$(docker run vdesabou/kafka-docker-playground-connect:${latest_version} cat /usr/share/confluent-hub-components/${connector_path}/manifest.json | jq -r '.version')
