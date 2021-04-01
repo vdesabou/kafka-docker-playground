@@ -45,11 +45,12 @@ public class SimpleConsumer {
         logger.info("Subscribing to {} prefix", topicName);
         consumer.subscribe(Pattern.compile(topicName), listener);
         long lastKey = 0L;
-        long id = 0;
-        while (id < 10) {
+        while (true) {
             ConsumerRecords<Long, Customer> records = consumer.poll(Duration.ofMillis(100));
 
-            logger.debug("Received {}", records.count());
+            if (logger.isDebugEnabled() && !records.isEmpty()) {
+                logger.debug("Received {}", records.count());
+            }
             for (ConsumerRecord<Long, Customer> record : records) {
                 String rp = record.topic() + "#" + record.partition();
 
@@ -58,7 +59,7 @@ public class SimpleConsumer {
                 }
                 lastKey = record.key();
                 logger.info("Received {} offset = {}, key = {} , value = {}", rp, record.offset(), record.key(), record.value());
-                id++;
+
                 if (commitStrategy == CommitStrategy.PER_MESSAGE) {
                     commit(consumer);
                 }
