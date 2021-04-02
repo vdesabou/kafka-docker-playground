@@ -108,7 +108,7 @@ Security configurations between REST Proxy and HTTP client
       KAFKA_REST_SSL_KEY_PASSWORD: confluent
 ```
 
-Important: `/etc/kafka/secrets/kafka.restproxy.truststore.jks` should contain the certificate with private key of the HTTP client principal used `clientrestproxy`, this is done like this:
+Important: `/etc/kafka/secrets/kafka.restproxy.keystore.jks` should contain the certificate with private key of the HTTP client principal used `clientrestproxy`, this is done like this:
 
 ```bash
 $ openssl pkcs12 -export -in clientrestproxy-ca1-signed.crt -inkey clientrestproxy.key \
