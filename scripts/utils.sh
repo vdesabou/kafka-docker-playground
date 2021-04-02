@@ -107,7 +107,7 @@ function displaytime {
 if [ -z "$TAG" ]
 then
     # TAG is not set, use defaults:
-    export TAG=6.1.0
+    export TAG=6.1.1
     # to handle ubi8 images
     export TAG_BASE=$TAG
     if [ -z "$CP_KAFKA_IMAGE" ]
