@@ -150,13 +150,13 @@ do
         then
           let "nb_fail++"
           TEST_FAILED[$image_version_no_dot]="[❌ $time]($html_url)"
-          echo -e "🔥 CP $image_version 📄 ${script_name} 🔗 Link to test: $html_url\n" >> ${gh_msg_file}
-          log "🔥 CP $image_version 📄 ${script_name} 🔗 Link to test: $html_url"
+          echo -e "🔥 CP $image_version 🕐 ${time} 📄 ${script_name} 🔗 $html_url\n" >> ${gh_msg_file}
+          log "🔥 CP $image_version 🕐 ${time} 📄 ${script_name} 🔗 $html_url"
         else
           let "nb_success++"
           TEST_SUCCESS[$image_version_no_dot]="[👍 $time]($html_url)"
-          echo -e "👍 CP $image_version 📄 ${script_name} 🔗 Link to test: $html_url\n" >> ${gh_msg_file}
-          log "👍 CP $image_version 📄 ${script_name} 🔗 Link to test: $html_url"
+          echo -e "👍 CP $image_version 🕐 ${time} 📄 ${script_name} 🔗 $html_url\n" >> ${gh_msg_file}
+          log "👍 CP $image_version 🕐 ${time} 📄 ${script_name} 🔗 $html_url"
         fi
       else
         logerror "result_file: ${ci_file} does not exist !"
@@ -212,7 +212,7 @@ do
       gh_issue_number=$(echo $gh_issue_number|tr -d '\n')
       if [ "${gh_issue_number}" != "" ]
       then
-        ci="$ci ${TEST_FAILED[$image_version_no_dot]} [\#${gh_issue_number}](https://github.com/vdesabou/kafka-docker-playground/issues/${gh_issue_number}) \|"
+        ci="$ci ${TEST_FAILED[$image_version_no_dot]} [🐞 \#${gh_issue_number}](https://github.com/vdesabou/kafka-docker-playground/issues/${gh_issue_number}) \|"
       else
         ci="$ci ${TEST_FAILED[$image_version_no_dot]} \|"
       fi
