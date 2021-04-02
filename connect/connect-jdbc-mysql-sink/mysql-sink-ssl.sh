@@ -1,0 +1,66 @@
+#!/bin/bash
+set -e
+
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
+source ${DIR}/../../scripts/utils.sh
+
+if [ ! -f ${DIR}/mysql-connector-java-5.1.45.jar ]
+then
+     log "Downloading mysql-connector-java-5.1.45.jar"
+     wget https://repo1.maven.org/maven2/mysql/mysql-connector-java/5.1.45/mysql-connector-java-5.1.45.jar
+fi
+
+docker-compose -f ../../environment/plaintext/docker-compose.yml -f "${PWD}/docker-compose.plaintext-ssl.yml" down -v --remove-orphans
+log "Starting up mysql container to get generated certs from /var/lib/mysql"
+docker-compose -f ../../environment/plaintext/docker-compose.yml -f "${PWD}/docker-compose.plaintext-ssl.yml" up -d mysql
+
+sleep 5
+
+log "Getting certs from mysql container and transform them to JKS"
+rm -rf ${PWD}/security/*
+# https://dev.mysql.com/doc/connector-j/5.1/en/connector-j-reference-using-ssl.html
+docker cp mysql:/var/lib/mysql/ca.pem ${PWD}/security/
+docker cp mysql:/var/lib/mysql/client-key.pem ${PWD}/security/
+docker cp mysql:/var/lib/mysql/client-cert.pem ${PWD}/security/
+
+log "Creating JKS from pem files"
+cd ${PWD}/security/
+docker run -v $PWD:/tmp vdesabou/kafka-docker-playground-connect:${TAG} keytool -importcert -alias MySQLCACert -noprompt -file /tmp/ca.pem -keystore /tmp/truststore.jks -storepass mypassword
+# Convert the client key and certificate files to a PKCS #12 archive
+docker run -v $PWD:/tmp vdesabou/kafka-docker-playground-connect:${TAG} openssl pkcs12 -export -in /tmp/client-cert.pem -inkey /tmp/client-key.pem -name "mysqlclient" -passout pass:mypassword -out /tmp/client-keystore.p12
+# Import the client key and certificate into a Java keystore:
+docker run -v $PWD:/tmp vdesabou/kafka-docker-playground-connect:${TAG} keytool -importkeystore -srckeystore /tmp/client-keystore.p12 -srcstoretype pkcs12 -srcstorepass mypassword -destkeystore /tmp/keystore.jks -deststoretype JKS -deststorepass mypassword
+cd -
+
+docker-compose -f ../../environment/plaintext/docker-compose.yml -f "${PWD}/docker-compose.plaintext-ssl.yml" up -d
+../../scripts/wait-for-connect-and-controlcenter.sh
+
+log "Creating MySQL sink connector with server side Encrypted Connections (using <userssl> user which requires SSL)"
+curl -X PUT \
+     -H "Content-Type: application/json" \
+     --data '{
+               "connector.class": "io.confluent.connect.jdbc.JdbcSinkConnector",
+               "tasks.max": "1",
+               "connection.url": "jdbc:mysql://mysql:3306/db?user=userssl&password=password&verifyServerCertificate=true&useSSL=true&requireSSL=true",
+               "topics": "orders",
+               "auto.create": "true"
+          }' \
+     http://localhost:8083/connectors/mysql-ssl-sink/config | jq .
+
+
+log "Sending messages to topic orders"
+docker exec -i connect kafka-avro-console-producer --broker-list broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic orders --property value.schema='{"type":"record","name":"myrecord","fields":[{"name":"id","type":"int"},{"name":"product", "type": "string"}, {"name":"quantity", "type": "int"}, {"name":"price",
+"type": "float"}]}' << EOF
+{"id": 999, "product": "foo", "quantity": 100, "price": 50}
+EOF
+
+sleep 5
+
+# ssl-mode=VERIFY_CA: https://dev.mysql.com/doc/refman/5.7/en/using-encrypted-connections.html
+log "Describing the orders table in DB 'db':"
+docker exec mysql bash -c "mysql --user=userssl --password=password --ssl-mode=VERIFY_CA --ssl-ca=/var/lib/mysql/ca.pem --ssl-cert=/var/lib/mysql/client-cert.pem --ssl-key=/var/lib/mysql/client-key.pem --database=db -e 'describe orders'"
+
+log "Show content of orders table:"
+docker exec mysql bash -c "mysql --user=userssl --password=password --ssl-mode=VERIFY_CA --ssl-ca=/var/lib/mysql/ca.pem --ssl-cert=/var/lib/mysql/client-cert.pem --ssl-key=/var/lib/mysql/client-key.pem --database=db -e 'select * from orders'"
+
+
