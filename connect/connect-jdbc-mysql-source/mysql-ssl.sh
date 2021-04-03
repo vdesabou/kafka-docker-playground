@@ -38,13 +38,13 @@ docker-compose -f ../../environment/plaintext/docker-compose.yml -f "${PWD}/dock
 
 
 log "Describing the application table in DB 'db':"
-docker exec mysql bash -c "mysql --user=usermtls --password=password --ssl-mode=VERIFY_CA --ssl-ca=/var/lib/mysql/ca.pem --ssl-cert=/var/lib/mysql/client-cert.pem --ssl-key=/var/lib/mysql/client-key.pem --database=db -e 'describe application'"
+docker exec mysql bash -c "mysql --user=userssl --password=password --ssl-mode=VERIFY_CA --ssl-ca=/var/lib/mysql/ca.pem --ssl-cert=/var/lib/mysql/client-cert.pem --ssl-key=/var/lib/mysql/client-key.pem --database=db -e 'describe application'"
 
 log "Show content of application table:"
-docker exec mysql bash -c "mysql --user=usermtls --password=password --ssl-mode=VERIFY_CA --ssl-ca=/var/lib/mysql/ca.pem --ssl-cert=/var/lib/mysql/client-cert.pem --ssl-key=/var/lib/mysql/client-key.pem --database=db -e 'select * from application'"
+docker exec mysql bash -c "mysql --user=userssl --password=password --ssl-mode=VERIFY_CA --ssl-ca=/var/lib/mysql/ca.pem --ssl-cert=/var/lib/mysql/client-cert.pem --ssl-key=/var/lib/mysql/client-key.pem --database=db -e 'select * from application'"
 
 log "Adding an element to the table"
-docker exec mysql mysql --user=usermtls --password=password --ssl-mode=VERIFY_CA --ssl-ca=/var/lib/mysql/ca.pem --ssl-cert=/var/lib/mysql/client-cert.pem --ssl-key=/var/lib/mysql/client-key.pem --database=db -e "
+docker exec mysql mysql --user=userssl --password=password --ssl-mode=VERIFY_CA --ssl-ca=/var/lib/mysql/ca.pem --ssl-cert=/var/lib/mysql/client-cert.pem --ssl-key=/var/lib/mysql/client-key.pem --database=db -e "
 INSERT INTO application (   \
   id,   \
   name, \
@@ -58,7 +58,7 @@ INSERT INTO application (   \
 ); "
 
 log "Show content of application table:"
-docker exec mysql bash -c "mysql --user=usermtls --password=password --ssl-mode=VERIFY_CA --ssl-ca=/var/lib/mysql/ca.pem --ssl-cert=/var/lib/mysql/client-cert.pem --ssl-key=/var/lib/mysql/client-key.pem --database=db -e 'select * from application'"
+docker exec mysql bash -c "mysql --user=userssl --password=password --ssl-mode=VERIFY_CA --ssl-ca=/var/lib/mysql/ca.pem --ssl-cert=/var/lib/mysql/client-cert.pem --ssl-key=/var/lib/mysql/client-key.pem --database=db -e 'select * from application'"
 
 log "Creating MySQL source connector"
 curl -X PUT \
@@ -66,7 +66,7 @@ curl -X PUT \
      --data '{
                "connector.class":"io.confluent.connect.jdbc.JdbcSourceConnector",
                "tasks.max":"10",
-               "connection.url": "jdbc:mysql://mysql:3306/db?user=usermtls&password=password&verifyServerCertificate=true&useSSL=true&requireSSL=true",
+               "connection.url": "jdbc:mysql://mysql:3306/db?user=userssl&password=password&verifyServerCertificate=true&useSSL=true&requireSSL=true",
                "table.whitelist":"application",
                "mode":"timestamp+incrementing",
                "timestamp.column.name":"last_modified",
