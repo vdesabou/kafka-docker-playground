@@ -2,9 +2,6 @@
 version: '3.5'
 services:
   mysql:
-    # image: cyprien/mysql-tls:5.7 # https://github.com/wixyvir/docker-mysql-tls
-    # build:
-    #   context: ../../connect/connect-jdbc-mysql-sink/mysql-with-ssl/
     image: mysql:5.7
     hostname: mysql
     container_name: mysql
