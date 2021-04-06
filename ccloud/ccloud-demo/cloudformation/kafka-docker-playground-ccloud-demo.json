@@ -279,6 +279,7 @@
                 "git"        : [],
                 "docker"        : [],
                 "zip"        : [],
+                "zsh"        : [],
                 "expect"        : []
               }
             },
@@ -306,7 +307,7 @@
 
               "/home/ec2-user/start.sh" : {
                 "content" : { "Fn::Join" : [ "", [
-                  "#!/bin/bash\nset -e\n\n# run as ec2-user\ncat << EOF | su ec2-user\n\ncd \ngit clone https://github.com/vdesabou/kafka-docker-playground.git\n\nexport CLOUDFORMATION=1\nexport ENVIRONMENT=", {"Ref" : "06CCloudEnvironment"}, "\nexport CLUSTER_LKC=", {"Ref" : "07ClusterLkc"}, "\n\ncd ~/kafka-docker-playground/ccloud/ccloud-demo/\n./start.sh SCHEMA_REGISTRY_CONFLUENT_CLOUD\nEOF"
+                  "#!/bin/bash\nset -e\n\n# run as ec2-user\ncat << EOF | su ec2-user\n\ncd \ngit clone https://github.com/robbyrussell/oh-my-zsh.git /home/ec2-user/.oh-my-zsh\ncp /home/ec2-user/.oh-my-zsh/templates/zshrc.zsh-template /home/ec2-user/.zshrc \ncurl -fsSL https://starship.rs/install.sh -o install.sh \nsudo bash ./install.sh -y \necho 'export PATH=$HOME/bin:/usr/local/bin:$PATH' >> ~/.zshrc \necho 'eval \"\\$(starship init zsh)\"' >> ~/.zshrc \nsudo chsh -s /bin/zsh \ngit clone https://github.com/vdesabou/kafka-docker-playground.git\n\nexport CLOUDFORMATION=1\nexport ENVIRONMENT=", {"Ref" : "06CCloudEnvironment"}, "\nexport CLUSTER_LKC=", {"Ref" : "07ClusterLkc"}, "\n\ncd ~/kafka-docker-playground/ccloud/ccloud-demo/\n./start.sh SCHEMA_REGISTRY_CONFLUENT_CLOUD\nEOF"
                 ]]},
                 "mode"  : "000744",
                 "owner" : "ec2-user",
