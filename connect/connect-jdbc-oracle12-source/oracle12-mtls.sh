@@ -47,14 +47,14 @@ if ! version_gt $JDBC_CONNECTOR_VERSION "9.9.9"; then
           logerror "ERROR: ${DIR}/ojdbc8.jar is missing. It must be downloaded manually in order to acknowledge user agreement"
           exit 1
      fi
-     docker-compose -f ../../environment/plaintext/docker-compose.yml -f "${PWD}/docker-compose.plaintext-ssl.yml" down -v --remove-orphans
+     docker-compose -f ../../environment/plaintext/docker-compose.yml -f "${PWD}/docker-compose.plaintext-mtls.yml" down -v --remove-orphans
      log "Starting up oracle container to get generated cert oracle-certificate.crt"
-     docker-compose -f ../../environment/plaintext/docker-compose.yml -f "${PWD}/docker-compose.plaintext-ssl.yml" up -d oracle
+     docker-compose -f ../../environment/plaintext/docker-compose.yml -f "${PWD}/docker-compose.plaintext-mtls.yml" up -d oracle
 else
      log "ojdbc jar is shipped with connector (starting with 10.0.0)"
-     docker-compose -f ../../environment/plaintext/docker-compose.yml -f "${PWD}/docker-compose.plaintext-no-ojdbc-ssl.yml" down -v --remove-orphans
+     docker-compose -f ../../environment/plaintext/docker-compose.yml -f "${PWD}/docker-compose.plaintext-no-ojdbc-mtls.yml" down -v --remove-orphans
      log "Starting up oracle container to get generated cert oracle-certificate.crt"
-     docker-compose -f ../../environment/plaintext/docker-compose.yml -f "${PWD}/docker-compose.plaintext-no-ojdbc-ssl.yml" up -d oracle
+     docker-compose -f ../../environment/plaintext/docker-compose.yml -f "${PWD}/docker-compose.plaintext-no-ojdbc-mtls.yml" up -d oracle
 fi
 
 # Verify Oracle DB has started within MAX_WAIT seconds
@@ -86,17 +86,24 @@ docker exec oracle bash -c "orapki wallet display -wallet /opt/oracle/admin/ORCL
 docker exec oracle bash -c "orapki wallet export -wallet /opt/oracle/admin/ORCLCDB/xdb_wallet/myWallet -pwd WalletPasswd123 -dn \"CN=oracle\" -cert /tmp/oracle-certificate.crt"
 
 log "Getting oracle-certificate.crt from oracle server"
-docker cp oracle:/tmp/oracle-certificate.crt ${PWD}/ssl/oracle-certificate.crt
-cd ${DIR}/ssl
+docker cp oracle:/tmp/oracle-certificate.crt ${PWD}/mtls/oracle-certificate.crt
+cd ${DIR}/mtls
 log "Generating OracleTrustStore.jks from oracle-certificate.crt"
 rm -f OracleTrustStore.jks
 docker run -v $PWD:/tmp vdesabou/kafka-docker-playground-connect:${TAG} keytool -noprompt -srcstorepass WalletPasswd123 -deststorepass WalletPasswd123 -import -trustcacerts -alias oracle -file /tmp/oracle-certificate.crt -keystore /tmp/OracleTrustStore.jks
+
+log "Generate and export the client certificate"
+docker run -v $PWD:/tmp vdesabou/kafka-docker-playground-connect:${TAG} keytool -genkey -alias client-alias -keyalg RSA -storepass Confluent101 -dname "CN=connect,OU=TEST,O=CONFLUENT,L=PaloAlto,S=Ca,C=US" -keystore /tmp/clientKeystore.jks
+docker run -v $PWD:/tmp vdesabou/kafka-docker-playground-connect:${TAG} keytool -export -alias client-alias -storepass Confluent101 -file /tmp/client-certificate.crt -keystore /tmp/clientKeystore.jks -rfc
 cd ${DIR}
+log "Copy the client certificate into docker container. Import it to the Oracle wallet"
+docker cp ${PWD}/mtls/client-certificate.crt oracle:/tmp/client-certificate.crt
+docker exec oracle bash -c "orapki wallet add -wallet /opt/oracle/admin/ORCLCDB/xdb_wallet/myWallet  -pwd WalletPasswd123 -trusted_cert -cert /tmp/client-certificate.crt"
 
 log "Update listener.ora, sqlnet.ora and tnsnames.ora"
-docker cp ${PWD}/ssl/listener.ora oracle:/opt/oracle/oradata/dbconfig/ORCLCDB/listener.ora
-docker cp ${PWD}/ssl/sqlnet.ora oracle:/opt/oracle/oradata/dbconfig/ORCLCDB/sqlnet.ora
-docker cp ${PWD}/ssl/tnsnames.ora oracle:/opt/oracle/oradata/dbconfig/ORCLCDB/tnsnames.ora
+docker cp ${PWD}/mtls/listener.ora oracle:/opt/oracle/oradata/dbconfig/ORCLCDB/listener.ora
+docker cp ${PWD}/mtls/sqlnet.ora oracle:/opt/oracle/oradata/dbconfig/ORCLCDB/sqlnet.ora
+docker cp ${PWD}/mtls/tnsnames.ora oracle:/opt/oracle/oradata/dbconfig/ORCLCDB/tnsnames.ora
 
 docker exec -i oracle lsnrctl << EOF
 reload
@@ -105,9 +112,9 @@ start
 EOF
 
 if ! version_gt $JDBC_CONNECTOR_VERSION "9.9.9"; then
-     docker-compose -f ../../environment/plaintext/docker-compose.yml -f "${PWD}/docker-compose.plaintext-ssl.yml" up -d
+     docker-compose -f ../../environment/plaintext/docker-compose.yml -f "${PWD}/docker-compose.plaintext-mtls.yml" up -d
 else
-     docker-compose -f ../../environment/plaintext/docker-compose.yml -f "${PWD}/docker-compose.plaintext-no-ojdbc-ssl.yml" up -d
+     docker-compose -f ../../environment/plaintext/docker-compose.yml -f "${PWD}/docker-compose.plaintext-no-ojdbc-mtls.yml" up -d
 fi
 
 ../../scripts/wait-for-connect-and-controlcenter.sh
@@ -131,7 +138,7 @@ curl -X PUT \
                "errors.log.enable": "true",
                "errors.log.include.messages": "true"
           }' \
-     http://localhost:8083/connectors/oracle-source-ssl/config | jq .
+     http://localhost:8083/connectors/oracle-source-mtls/config | jq .
 
 sleep 5
 
