@@ -1,0 +1,34 @@
+---
+version: '3.5'
+services:
+  jms-sender:
+    build:
+      context: ../../connect/connect-jms-weblogic-source/jms-sender/
+    hostname: jms-sender
+    container_name: jms-sender
+    volumes:
+        - ../../connect/connect-jms-weblogic-source/jms-sender/lib/wljmsclient.jar:/tmp/wljmsclient.jar
+        - ../../connect/connect-jms-weblogic-source/jms-sender/lib/wlclient.jar:/tmp/wlclient.jar
+        - ../../connect/connect-jms-weblogic-source/jms-sender/lib/weblogic.jar:/tmp/weblogic.jar
+        # - ../../connect/connect-jms-weblogic-source/jms-sender/lib/jms-1.1.jar:/tmp/jms-1.1.jar
+
+  weblogic-jms:
+    image: weblogic-jms:latest
+    hostname: weblogic-jms
+    container_name: weblogic-jms
+    ports:
+      - '7001:7001'
+      - '7002:7002'
+      - '9002:9002'
+
+  connect:
+    depends_on:
+      - zookeeper
+      - broker
+      - schema-registry
+      - weblogic-jms
+    volumes:
+        - ../../connect/connect-jms-weblogic-source/wlthint3client.jar:/usr/share/confluent-hub-components/confluentinc-kafka-connect-weblogic/lib/wlthint3client.jar
+    environment:
+      CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-weblogic
+      # CONNECT_LOG4J_ROOT_LOGLEVEL: TRACE
