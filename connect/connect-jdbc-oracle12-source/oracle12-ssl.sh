@@ -89,7 +89,7 @@ rm -f OracleTrustStore.jks
 docker run -v $PWD:/tmp vdesabou/kafka-docker-playground-connect:${TAG} keytool -noprompt -srcstorepass WalletPasswd123 -deststorepass WalletPasswd123 -import -trustcacerts -alias oracle -file /tmp/oracle-certificate.crt -keystore /tmp/OracleTrustStore.jks
 cd ${DIR}
 
-log "Copy modified .ora files"
+log "Update listener.ora, sqlnet.ora and tnsnames.ora"
 docker cp ${PWD}/ssl/listener.ora oracle:/opt/oracle/oradata/dbconfig/ORCLCDB/listener.ora
 docker cp ${PWD}/ssl/sqlnet.ora oracle:/opt/oracle/oradata/dbconfig/ORCLCDB/sqlnet.ora
 docker cp ${PWD}/ssl/tnsnames.ora oracle:/opt/oracle/oradata/dbconfig/ORCLCDB/tnsnames.ora
