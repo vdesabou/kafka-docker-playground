@@ -116,7 +116,7 @@ curl -X PUT \
                "tasks.max":"1",
                "connection.user": "myuser",
                "connection.password": "mypassword",
-               "connection.url": "jdbc:oracle:thin:@(DESCRIPTION=(ADDRESS=(PROTOCOL=tcps)(HOST=oracle)(PORT=1521))(CONNECT_DATA=(SERVICE_NAME=ORCLPDB1)))",
+               "connection.url": "jdbc:oracle:thin:@(DESCRIPTION=(ADDRESS=(PROTOCOL=TCPS)(HOST=oracle)(PORT=1532))(CONNECT_DATA=(SERVICE_NAME=ORCLPDB1)))",
                "numeric.mapping":"best_fit",
                "mode":"timestamp",
                "poll.interval.ms":"1000",
