@@ -19,7 +19,7 @@
 
 # Pull base image
 # ---------------
-FROM 12213-domain
+FROM 1213-domain
 
 # Environment variables required for this build (do NOT change)
 # -------------------------------------------------------------
