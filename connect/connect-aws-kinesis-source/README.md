@@ -6,8 +6,6 @@
 
 Quickly test [Kinesis Connector](https://docs.confluent.io/current/connect/kafka-connect-kinesis/index.html#quick-start) connector.
 
-
-
 ## AWS Setup
 
 * Make sure you have an [AWS account](https://docs.aws.amazon.com/streams/latest/dev/before-you-begin.html#setting-up-sign-up-for-aws).
@@ -21,6 +19,17 @@ This project assumes `~/.aws/credentials` is set, see `docker-compose.yml`file f
     volumes:
         - $HOME/.aws/credentials:/root/.aws/credentials:ro
 ```
+
+Example:
+
+```
+[default]
+aws_access_key_id=xxx
+aws_secret_access_key=xxx
+region=eu-west-3
+```
+
+Make sure that region corresponds to the one used by the test (eu-west-3 by default), otherwise the conector will fail to start with `Stream does not exist`.
 
 ## How to run
 
