@@ -18,7 +18,7 @@ then
      log "Building WebLogic JMS docker image..it can take a while..."
      OLDDIR=$PWD
      cd ${DIR}/docker-weblogic
-     docker build --build-arg ADMIN_PASSWORD="welcome1" -t 12213-domain ./12213-domain
+     docker build --build-arg ADMIN_PASSWORD="welcome1" -t 1213-domain ./1213-domain
      docker build -t weblogic-jms:latest ./12212-domain-online-config -f ./12212-domain-online-config/Dockerfile
      cd ${OLDDIR}
 fi
