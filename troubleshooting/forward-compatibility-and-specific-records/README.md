@@ -65,10 +65,23 @@ In our case
 - The Consumer use a `SPECIFIC_RECORD`, thus uses an explicit `Customer v2` POJO with the `country` field.
 - When the Consumer tries to reproccess the old messages, it tries to deserialize a `Customer v1` record and map it to a `Customer v2` POJO. Since the `v1` message has not the `country` mandatory field, the deserialization failed and the application crashes.
 
+**Note on Kafka Stream**
+
+While the repoducer is using a basic producer/consumer, the rationale works for Kafka Stream too.
+Keep in mind that Kafka Streams uses topics under the hood for a lot of things (repartition, changelog, etc.) 
+
+You should raise an alert as soon as you see the combo:
+1. Old data peristed
+2. Schema changes with mandatory fields addition or removal
+3. Specific Avro records
+4. Need of reprocessing
+
 # How to fix
 
-1. Use GenericRecord instead. Not recommended because you loose strong typing!
-2. Only about new data. 
-3. Put the field optional (by adding null in the list of possible values), as such the Consumer would have been able to read existing messages OR new messages
+1. Use `GenericRecord` instead. Not recommended because you loose strong typing!
+2. Only care about new data. 
+3. Put the field optional (by adding null in the list of possible values), as such the Consumer would have been able to read existing messages OR new messages.
 4. If you really want to enforce the new model you should think about migrating existing data (create a new topic for the new schema, tranform and migrate the the old data to the new topic . Depending on the context, may be overkill.
+
+# Kafka Stream
 
