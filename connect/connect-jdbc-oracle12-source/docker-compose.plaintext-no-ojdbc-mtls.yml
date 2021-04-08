@@ -30,4 +30,4 @@ services:
                   -Djavax.net.ssl.trustStorePassword=WalletPasswd123
                   -Djavax.net.ssl.keyStore=/tmp/clientKeystore.jks
                   -Djavax.net.ssl.keyStorePassword=Confluent101
-                  -Djavax.net.debug=all
+                  # -Djavax.net.debug=all
