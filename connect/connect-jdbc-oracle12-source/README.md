@@ -164,6 +164,13 @@ ORCLPDB1=
   )
 ```
 
+`connect` container is configured with truststore:
+
+```
+      KAFKA_OPTS: -Djavax.net.ssl.trustStore=/tmp/OracleTrustStore.jks
+                  -Djavax.net.ssl.trustStorePassword=WalletPasswd123
+```
+
 `connection.url`is set to `jdbc:oracle:thin:@(DESCRIPTION=(ADDRESS=(PROTOCOL=TCPS)(HOST=oracle)(PORT=1532))(CONNECT_DATA=(SERVICE_NAME=ORCLPDB1)))`
 
 ### With SSL encryption + Mutual TLS auth
@@ -185,5 +192,14 @@ $ docker exec oracle bash -c "orapki wallet add -wallet /opt/oracle/admin/ORCLCD
 
 `.ora` files are same as before except that we set `SSL_CLIENT_AUTHENTICATION = TRUE`.
 
+
+`connect` container is configured with truststore **and** keystore:
+
+```
+      KAFKA_OPTS: -Djavax.net.ssl.trustStore=/tmp/OracleTrustStore.jks
+                  -Djavax.net.ssl.trustStorePassword=WalletPasswd123
+                  -Djavax.net.ssl.keyStore=/tmp/clientKeystore.jks
+                  -Djavax.net.ssl.keyStorePassword=Confluent101
+```
 
 N.B: Control Center is reachable at [http://127.0.0.1:9021](http://127.0.0.1:9021])
