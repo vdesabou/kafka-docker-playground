@@ -87,8 +87,8 @@ docker exec oracle bash -c "orapki wallet display -wallet /opt/oracle/admin/ORCL
 docker exec oracle bash -c "orapki wallet export -wallet /opt/oracle/admin/ORCLCDB/xdb_wallet/myWallet -pwd WalletPasswd123 -dn \"CN=oracle\" -cert /tmp/oracle-certificate.crt"
 
 log "Getting oracle-certificate.crt from oracle server"
-docker cp oracle:/tmp/oracle-certificate.crt ${PWD}/ssl/oracle-certificate.crt
-cd ${DIR}/ssl
+docker cp oracle:/tmp/oracle-certificate.crt ${PWD}/mtls/oracle-certificate.crt
+cd ${DIR}/mtls
 log "Generating OracleTrustStore.jks from oracle-certificate.crt"
 rm -f OracleTrustStore.jks
 docker run -v $PWD:/tmp vdesabou/kafka-docker-playground-connect:${TAG} keytool -noprompt -srcstorepass WalletPasswd123 -deststorepass WalletPasswd123 -import -trustcacerts -alias oracle -file /tmp/oracle-certificate.crt -keystore /tmp/OracleTrustStore.jks
@@ -103,9 +103,9 @@ docker cp ${PWD}/mtls/client-certificate.crt oracle:/tmp/client-certificate.crt
 docker exec oracle bash -c "orapki wallet add -wallet /opt/oracle/admin/ORCLCDB/xdb_wallet/myWallet  -pwd WalletPasswd123 -trusted_cert -cert /tmp/client-certificate.crt"
 
 log "Update listener.ora, sqlnet.ora and tnsnames.ora"
-docker cp ${PWD}/ssl/listener.ora oracle:/opt/oracle/oradata/dbconfig/ORCLCDB/listener.ora
-docker cp ${PWD}/ssl/sqlnet.ora oracle:/opt/oracle/oradata/dbconfig/ORCLCDB/sqlnet.ora
-docker cp ${PWD}/ssl/tnsnames.ora oracle:/opt/oracle/oradata/dbconfig/ORCLCDB/tnsnames.ora
+docker cp ${PWD}/mtls/listener.ora oracle:/opt/oracle/oradata/dbconfig/ORCLCDB/listener.ora
+docker cp ${PWD}/mtls/sqlnet.ora oracle:/opt/oracle/oradata/dbconfig/ORCLCDB/sqlnet.ora
+docker cp ${PWD}/mtls/tnsnames.ora oracle:/opt/oracle/oradata/dbconfig/ORCLCDB/tnsnames.ora
 
 docker exec -i oracle lsnrctl << EOF
 reload
