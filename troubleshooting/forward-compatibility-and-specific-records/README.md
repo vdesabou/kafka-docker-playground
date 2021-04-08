@@ -4,11 +4,17 @@ This example showcase how the forward compatibility and the usage of specific Av
 
 TL;DR: Existing data reprocessing should be considered in your data compatibility strategy.
 
+# Show me the code
+You can find a full reproducer at [start.sh](./start.sh) and you can run it by runnng:
+```
+$ ./start.sh
+```
+
 # Initial Situation
 
 1. The Schema Registry is configured to use the [`FORWARD` compatibility mode](https://docs.confluent.io/platform/current/schema-registry/avro.html#forward-compatibility)
 2. The initial version of Producer (`producer-v1`) and Consumer (`consumer-v1`) use the same `Customer v1` Avro schema.
-2. The consumer enables the [`SPECIFIC_AVRO_READER_CONFIG` property](https://docs.confluent.io/platform/current/schema-registry/schema_registry_onprem_tutorial.html#example-consumer-code#:~:text=SPECIFIC_AVRO_READER_CONFIG) to use the AVro generated record as a classic POJO.
+2. The consumer enables the [`SPECIFIC_AVRO_READER_CONFIG` property](https://docs.confluent.io/platform/current/schema-registry/schema_registry_onprem_tutorial.html#example-consumer-code#:~:text=SPECIFIC_AVRO_READER_CONFIG) to use the Avro generated record as a classic POJO.
 3. All parties auto-register schemas
 
 # To Reproduce
@@ -55,7 +61,7 @@ Caused by: org.apache.avro.AvroTypeException: Found com.github.vdesabou.Customer
 The usage of the `FORWARD` compatbility express the need to anticipate upcoming changes, be future proof.
 In this scenario, the need to reprocess the past data isn't conceptually compatible with the `FORWARD` requirement expressed.
 
-Avro proposes 2 data structures:
+Avro proposes 2 data structures (https://docs.confluent.io/platform/current/streams/developer-guide/datatypes.html#avro):
 * `GenericRecord`: The record is deserialized into a dictionnary structure (ie. a list of key,value pairs) like `java.util.Map`. In order, to get the data from the record, the developer ends up with `record.get("myFieldName")`, that means the schema contract isn't enforced by default. Very flexible from a structure stand point but not convenient to use in a business oriented processing.
 
 * `SpecificRecord`: The record is deserialized into a POJO (ie. a clasic Java class with properties). The developer can use the classic `record.getMyFieldName()` to retrieve the information. More static but strong typing enforces the structure and generally speaking way more natural for developers.
@@ -70,6 +76,8 @@ In our case
 While the repoducer is using a basic producer/consumer, the rationale works for Kafka Stream too.
 Keep in mind that Kafka Streams uses topics under the hood for a lot of things (repartition, changelog, etc.) 
 
+KStream defines an explicit [`SpecificAvroSerde`](https://docs.confluent.io/platform/current/streams/developer-guide/datatypes.html#avro) (ie. no need to set the `SPECIFIC_AVRO_READER_CONFIG`).
+
 You should raise an alert as soon as you see the combo:
 1. Old data peristed
 2. Schema changes with mandatory fields addition or removal
@@ -82,6 +90,3 @@ You should raise an alert as soon as you see the combo:
 2. Only care about new data. 
 3. Put the field optional (by adding null in the list of possible values), as such the Consumer would have been able to read existing messages OR new messages.
 4. If you really want to enforce the new model you should think about migrating existing data (create a new topic for the new schema, tranform and migrate the the old data to the new topic . Depending on the context, may be overkill.
-
-# Kafka Stream
-
