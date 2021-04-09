@@ -17,7 +17,7 @@ sqlplus sys/Admin123@//localhost:1521/ORCLPDB1 as sysdba <<- EOF
 	ALTER USER myuser QUOTA 100M ON users;
 
 	-- for mtls test
-	CREATE USER sslclient IDENTIFIED EXTERNALLY AS 'CN=connect,OU=TEST,O=CONFLUENT,L=PaloAlto,S=Ca,C=US';
+	CREATE USER sslclient IDENTIFIED EXTERNALLY AS 'CN=connect,C=US';
 	GRANT CONNECT TO sslclient;
 	GRANT CREATE SESSION TO sslclient;
 	GRANT CREATE TABLE TO sslclient;
