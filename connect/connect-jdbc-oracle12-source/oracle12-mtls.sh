@@ -48,12 +48,12 @@ if ! version_gt $JDBC_CONNECTOR_VERSION "9.9.9"; then
           exit 1
      fi
      docker-compose -f ../../environment/plaintext/docker-compose.yml -f "${PWD}/docker-compose.plaintext-mtls.yml" down -v --remove-orphans
-     log "Starting up oracle container to get generated cert oracle-certificate.crt"
+     log "Starting up oracle container to get generated cert from oracle server wallet"
      docker-compose -f ../../environment/plaintext/docker-compose.yml -f "${PWD}/docker-compose.plaintext-mtls.yml" up -d oracle
 else
      log "ojdbc jar is shipped with connector (starting with 10.0.0)"
      docker-compose -f ../../environment/plaintext/docker-compose.yml -f "${PWD}/docker-compose.plaintext-no-ojdbc-mtls.yml" down -v --remove-orphans
-     log "Starting up oracle container to get generated cert oracle-certificate.crt"
+     log "Starting up oracle container to get generated cert from oracle server wallet"
      docker-compose -f ../../environment/plaintext/docker-compose.yml -f "${PWD}/docker-compose.plaintext-no-ojdbc-mtls.yml" up -d oracle
 fi
 
