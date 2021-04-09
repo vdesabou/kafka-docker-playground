@@ -36,6 +36,8 @@ with SSL encryption + Mutual TLS authentication:
 $ ./oracle12-mtls.sh
 ```
 
+N.B: this is the [best resource](https://www.oracle.com/technetwork/topics/wp-oracle-jdbc-thin-ssl-130128.pdf) I found for Oracle DB and SSL.
+
 ## Details of what the script is doing
 
 Build `oracle/database:12.2.0.1-ee` Docker image if required.
@@ -200,6 +202,8 @@ $ docker exec oracle bash -c "orapki wallet add -wallet /opt/oracle/admin/ORCLCD
                   -Djavax.net.ssl.trustStorePassword=WalletPasswd123
                   -Djavax.net.ssl.keyStore=/tmp/clientKeystore.jks
                   -Djavax.net.ssl.keyStorePassword=Confluent101
+                  -Doracle.net.ssl_server_dn_match='true'
+                  -Doracle.net.authentication_services='(TCPS)'
 ```
 
 N.B: Control Center is reachable at [http://127.0.0.1:9021](http://127.0.0.1:9021])
