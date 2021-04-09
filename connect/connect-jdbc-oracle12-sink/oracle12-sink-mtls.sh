@@ -164,8 +164,6 @@ curl -X PUT \
      --data '{
                "connector.class": "io.confluent.connect.jdbc.JdbcSinkConnector",
                "tasks.max": "1",
-               "connection.user": "myuser",
-               "connection.password": "mypassword",
                "connection.oracle.net.ssl_server_dn_match": "true",
                "connection.oracle.net.authentication_services": "(TCPS)",
                "connection.url": "jdbc:oracle:thin:@(DESCRIPTION=(ADDRESS=(PROTOCOL=TCPS)(HOST=oracle)(PORT=1532))(CONNECT_DATA=(SERVICE_NAME=ORCLPDB1))(SECURITY=(SSL_SERVER_CERT_DN=\"CN=server,C=US\")))",

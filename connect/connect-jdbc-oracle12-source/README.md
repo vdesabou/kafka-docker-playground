@@ -237,6 +237,15 @@ $ keytool -list -keystore /tmp/keystore.jks -storepass 'welcome123' -v
                   -Djavax.net.ssl.keyStorePassword=welcome123
 ```
 
+We also need to alter user `myuser` in order to be identified as `CN=connect,C=US`
+
+```bash
+$ docker exec -i oracle sqlplus sys/Admin123@//localhost:1521/ORCLPDB1 as sysdba <<- EOF
+	ALTER USER myuser IDENTIFIED EXTERNALLY AS 'CN=connect,C=US';
+	exit;
+EOF
+```
+
 Connector is set with `"connection.oracle.net.authentication_services": "(TCPS)"`
 
 N.B: Control Center is reachable at [http://127.0.0.1:9021](http://127.0.0.1:9021])
