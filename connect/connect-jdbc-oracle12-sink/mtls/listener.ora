@@ -4,7 +4,7 @@ WALLET_LOCATION =
   (SOURCE =
     (METHOD = FILE)
     (METHOD_DATA =
-      (DIRECTORY = /tmp/server)
+      (DIRECTORY = /opt/oracle/admin/ORCLCDB/xdb_wallet/myWallet)
     )
   )
 
