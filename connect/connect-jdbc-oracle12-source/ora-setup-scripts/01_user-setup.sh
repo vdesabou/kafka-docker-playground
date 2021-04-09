@@ -16,14 +16,5 @@ sqlplus sys/Admin123@//localhost:1521/ORCLPDB1 as sysdba <<- EOF
 	GRANT CREATE TRIGGER TO myuser;
 	ALTER USER myuser QUOTA 100M ON users;
 
-	-- for mtls test
-	CREATE USER sslclient IDENTIFIED EXTERNALLY AS 'CN=connect,C=US';
-	GRANT CONNECT TO sslclient;
-	GRANT CREATE SESSION TO sslclient;
-	GRANT CREATE TABLE TO sslclient;
-	GRANT CREATE SEQUENCE TO sslclient;
-	GRANT CREATE TRIGGER TO sslclient;
-	ALTER USER sslclient QUOTA 100M ON users;
-
 	exit;
 EOF
