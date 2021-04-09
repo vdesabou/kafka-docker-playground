@@ -36,6 +36,7 @@ with SSL encryption + Mutual TLS authentication:
 $ ./oracle12-sink-mtls.sh
 ```
 
+N.B: this is the [best resource](https://www.oracle.com/technetwork/topics/wp-oracle-jdbc-thin-ssl-130128.pdf) I found for Oracle DB and SSL.
 
 ## Details of what the script is doing
 
