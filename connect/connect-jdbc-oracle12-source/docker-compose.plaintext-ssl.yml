@@ -23,9 +23,9 @@ services:
       - oracle
     volumes:
       - ../../connect/connect-jdbc-oracle12-source/ojdbc8.jar:/usr/share/confluent-hub-components/confluentinc-kafka-connect-jdbc/lib/ojdbc8.jar
-      - ../../connect/connect-jdbc-oracle12-source/ssl/OracleTrustStore.jks:/tmp/OracleTrustStore.jks
+      - ../../connect/connect-jdbc-oracle12-source/ssl/truststore.jks:/tmp/truststore.jks
     environment:
       CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-jdbc
-      KAFKA_OPTS: -Djavax.net.ssl.trustStore=/tmp/OracleTrustStore.jks
-                  -Djavax.net.ssl.trustStorePassword=WalletPasswd123
-                  -Djavax.net.debug=all
+      KAFKA_OPTS: -Djavax.net.ssl.trustStore=/tmp/truststore.jks
+                  -Djavax.net.ssl.trustStorePassword=welcome123
+                  # -Djavax.net.debug=all
