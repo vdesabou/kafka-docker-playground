@@ -31,4 +31,6 @@ services:
                   -Djavax.net.ssl.trustStorePassword=WalletPasswd123
                   -Djavax.net.ssl.keyStore=/tmp/clientKeystore.jks
                   -Djavax.net.ssl.keyStorePassword=Confluent101
-                  # -Djavax.net.debug=all
+                  -Doracle.net.ssl_server_dn_match="true"
+                  -Doracle.net.authentication_services="(TCPS)"
+                  -Djavax.net.debug=all

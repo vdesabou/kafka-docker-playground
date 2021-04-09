@@ -93,6 +93,7 @@ rm -f OracleTrustStore.jks
 docker run -v $PWD:/tmp vdesabou/kafka-docker-playground-connect:${TAG} keytool -noprompt -srcstorepass WalletPasswd123 -deststorepass WalletPasswd123 -import -trustcacerts -alias oracle -file /tmp/oracle-certificate.crt -keystore /tmp/OracleTrustStore.jks
 
 log "Generate and export the client certificate"
+rm -f clientKeystore.jks
 docker run -v $PWD:/tmp vdesabou/kafka-docker-playground-connect:${TAG} keytool -genkey -alias client-alias -keyalg RSA -storepass Confluent101 -dname "CN=connect,OU=TEST,O=CONFLUENT,L=PaloAlto,S=Ca,C=US" -keystore /tmp/clientKeystore.jks
 docker run -v $PWD:/tmp vdesabou/kafka-docker-playground-connect:${TAG} keytool -export -alias client-alias -storepass Confluent101 -file /tmp/client-certificate.crt -keystore /tmp/clientKeystore.jks -rfc
 cd ${DIR}
@@ -125,9 +126,9 @@ curl -X PUT \
      --data '{
                "connector.class":"io.confluent.connect.jdbc.JdbcSourceConnector",
                "tasks.max":"1",
-               "connection.user": "myuser",
-               "connection.password": "mypassword",
-               "connection.url": "jdbc:oracle:thin:@(DESCRIPTION=(ADDRESS=(PROTOCOL=TCPS)(HOST=oracle)(PORT=1532))(CONNECT_DATA=(SERVICE_NAME=ORCLPDB1)))",
+               "connection.oracle.net.ssl_server_dn_match": "true",
+               "connection.oracle.net.authentication_services": "(TCPS)",
+               "connection.url": "jdbc:oracle:thin:@(DESCRIPTION=(ADDRESS=(PROTOCOL=TCPS)(HOST=oracle)(PORT=1532))(CONNECT_DATA=(SERVICE_NAME=ORCLPDB1))(SECURITY=(SSL_SERVER_CERT_DN=\"CN=oracle\")))",
                "numeric.mapping":"best_fit",
                "mode":"timestamp",
                "poll.interval.ms":"1000",
