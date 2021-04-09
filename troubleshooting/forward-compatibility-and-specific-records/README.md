@@ -58,7 +58,7 @@ Caused by: org.apache.avro.AvroTypeException: Found com.github.vdesabou.Customer
 ```
 # What is happening
 
-The usage of the `FORWARD` compatbility express the need to anticipate upcoming changes, be future proof.
+The usage of the `FORWARD` compatibility express the need to anticipate upcoming changes, be future proof.
 In this scenario, the need to reprocess the past data isn't conceptually compatible with the `FORWARD` requirement expressed.
 
 Avro proposes 2 data structures (https://docs.confluent.io/platform/current/streams/developer-guide/datatypes.html#avro):
@@ -67,7 +67,7 @@ Avro proposes 2 data structures (https://docs.confluent.io/platform/current/stre
 * `SpecificRecord`: The record is deserialized into a POJO (ie. a clasic Java class with properties). The developer can use the classic `record.getMyFieldName()` to retrieve the information. More static but strong typing enforces the structure and generally speaking way more natural for developers.
 
 In our case
-- The Schema Regsistry enable the `FORWARD` comptaibility the producer can perfectly add a new madatory field.
+- The Schema Regsistry enable the `FORWARD` comptaibility the producer can perfectly add a new mandatory field.
 - The Consumer use a `SPECIFIC_RECORD`, thus uses an explicit `Customer v2` POJO with the `country` field.
 - When the Consumer tries to reproccess the old messages, it tries to deserialize a `Customer v1` record and map it to a `Customer v2` POJO. Since the `v1` message has not the `country` mandatory field, the deserialization failed and the application crashes.
 
@@ -79,7 +79,7 @@ Keep in mind that Kafka Streams uses topics under the hood for a lot of things (
 KStream defines an explicit [`SpecificAvroSerde`](https://docs.confluent.io/platform/current/streams/developer-guide/datatypes.html#avro) (ie. no need to set the `SPECIFIC_AVRO_READER_CONFIG`).
 
 You should raise an alert as soon as you see the combo:
-1. Old data peristed
+1. Old data persisted
 2. Schema changes with mandatory fields addition or removal
 3. Specific Avro records
 4. Need of reprocessing
@@ -89,4 +89,4 @@ You should raise an alert as soon as you see the combo:
 1. Use `GenericRecord` instead. Not recommended because you loose strong typing!
 2. Only care about new data. 
 3. Put the field optional (by adding null in the list of possible values), as such the Consumer would have been able to read existing messages OR new messages.
-4. If you really want to enforce the new model you should think about migrating existing data (create a new topic for the new schema, tranform and migrate the the old data to the new topic . Depending on the context, may be overkill.
+4. If you really want to enforce the new model you should think about migrating existing data (create a new topic for the new schema, tranform and migrate the old data to the new topic . Depending on the context, may be overkill.
