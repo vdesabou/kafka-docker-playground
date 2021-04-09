@@ -75,32 +75,68 @@ done
 log "Oracle DB has started!"
 
 log "Setting up SSL on oracle server..."
-# https://oracle-base.com/articles/misc/configure-tcpip-with-mtls-and-tls-for-database-connections
-log "Creating a server wallet in /opt/oracle/admin/ORCLCDB/xdb_wallet/myWallet"
-# Create a new auto-login wallet.
-docker exec oracle bash -c "orapki wallet create -wallet /opt/oracle/admin/ORCLCDB/xdb_wallet/myWallet -pwd WalletPasswd123 -auto_login_local"
-# Create a self-signed certificate and load it into the wallet.
-docker exec oracle bash -c "orapki wallet add -wallet /opt/oracle/admin/ORCLCDB/xdb_wallet/myWallet  -pwd WalletPasswd123 -dn \"CN=oracle\" -keysize 1024 -self_signed -validity 3650"
-# Check the contents of the wallet. Notice the self-signed certificate is both a user and trusted certificate.
-docker exec oracle bash -c "orapki wallet display -wallet /opt/oracle/admin/ORCLCDB/xdb_wallet/myWallet -pwd WalletPasswd123"
-# Export the certificate, so we can load it into the client (connect) later.
-docker exec oracle bash -c "orapki wallet export -wallet /opt/oracle/admin/ORCLCDB/xdb_wallet/myWallet -pwd WalletPasswd123 -dn \"CN=oracle\" -cert /tmp/oracle-certificate.crt"
+# https://www.oracle.com/technetwork/topics/wp-oracle-jdbc-thin-ssl-130128.pdf
+log "Create a wallet for the test CA"
 
-log "Getting oracle-certificate.crt from oracle server"
-docker cp oracle:/tmp/oracle-certificate.crt ${PWD}/mtls/oracle-certificate.crt
+docker exec oracle bash -c "orapki wallet create -wallet /tmp/root -pwd WalletPasswd123"
+# Add a self-signed certificate to the wallet
+docker exec oracle bash -c "orapki wallet add -wallet /tmp/root -dn CN=root_test,C=US -keysize 2048 -self_signed -validity 3650 -pwd WalletPasswd123"
+# Export the certificate
+docker exec oracle bash -c "orapki wallet export -wallet /tmp/root -dn CN=root_test,C=US -cert /tmp/root/b64certificate.txt -pwd WalletPasswd123"
+
+log "Create a wallet for the Oracle server"
+
+# Create an empty wallet with auto login enabled
+docker exec oracle bash -c "orapki wallet create -wallet /tmp/server -pwd WalletPasswd123 -auto_login"
+# Add a user In the wallet (a new pair of private/public keys is created)
+docker exec oracle bash -c "orapki wallet add -wallet /tmp/server -dn CN=server,C=US -pwd WalletPasswd123 -keysize 2048"
+# Export the certificate request to a file
+docker exec oracle bash -c "orapki wallet export -wallet /tmp/server -dn CN=server,C=US -pwd WalletPasswd123 -request /tmp/server/creq.txt"
+# Using the test CA, sign the certificate request
+docker exec oracle bash -c "orapki cert create -wallet /tmp/root -request /tmp/server/creq.txt -cert /tmp/server/cert.txt -validity 3650 -pwd WalletPasswd123"
+log "You now have the following files under the /tmp/server directory"
+docker exec oracle ls /tmp/server
+# View the signed certificate:
+docker exec oracle bash -c "orapki cert display -cert /tmp/server/cert.txt -complete"
+# Add the test CA's trusted certificate to the wallet
+docker exec oracle bash -c "orapki wallet add -wallet /tmp/server -trusted_cert -cert /tmp/root/b64certificate.txt -pwd WalletPasswd123"
+# add the user certificate to the wallet:
+docker exec oracle bash -c "orapki wallet add -wallet /tmp/server -user_cert -cert /tmp/server/cert.txt -pwd WalletPasswd123"
+
 cd ${DIR}/mtls
-log "Generating OracleTrustStore.jks from oracle-certificate.crt"
-rm -f OracleTrustStore.jks
-docker run -v $PWD:/tmp vdesabou/kafka-docker-playground-connect:${TAG} keytool -noprompt -srcstorepass WalletPasswd123 -deststorepass WalletPasswd123 -import -trustcacerts -alias oracle -file /tmp/oracle-certificate.crt -keystore /tmp/OracleTrustStore.jks
+log "Create a JKS keystore"
+# Create a new private/public key pair for 'CN=connect,C=US'
+rm -f keystore.jks
+docker run -v $PWD:/tmp vdesabou/kafka-docker-playground-connect:${TAG} keytool -genkey -alias testclient -dname 'CN=connect,C=US' -storepass 'welcome123' -storetype JKS -keystore /tmp/keystore.jks -keyalg RSA
+
+# Generate a CSR (Certificate Signing Request):
+docker run -v $PWD:/tmp vdesabou/kafka-docker-playground-connect:${TAG} keytool -certreq -alias testclient -file /tmp/csr.txt -keystore /tmp/keystore.jks -storepass 'welcome123'
+# Sign the client certificate using the test CA (root)
+docker cp csr.txt oracle:/tmp/csr.txt
+docker exec oracle bash -c "orapki cert create -wallet /tmp/root -request /tmp/csr.txt -cert /tmp/cert.txt -validity 3650 -pwd WalletPasswd123"
+# import the test CA's certificate:
+docker cp oracle:/tmp/root/b64certificate.txt b64certificate.txt
+docker run -v $PWD:/tmp vdesabou/kafka-docker-playground-connect:${TAG} keytool -import -v -noprompt -alias testroot -file /tmp/b64certificate.txt -keystore /tmp/keystore.jks -storepass 'welcome123'
+# Import the signed certificate
+docker cp oracle:/tmp/cert.txt cert.txt
+docker run -v $PWD:/tmp vdesabou/kafka-docker-playground-connect:${TAG} keytool -import -v -alias testclient -file /tmp/cert.txt -keystore /tmp/keystore.jks -storepass 'welcome123'
+log "Displaying keystore"
+docker run -v $PWD:/tmp vdesabou/kafka-docker-playground-connect:${TAG} keytool -list -keystore /tmp/keystore.jks -storepass 'welcome123' -v
+
+log "Create a JKS truststore"
+rm -f truststore.jks
+# We import the test CA certificate
+docker run -v $PWD:/tmp vdesabou/kafka-docker-playground-connect:${TAG} keytool -import -v -alias testroot -file /tmp/b64certificate.txt -keystore /tmp/truststore.jks -storetype JKS -storepass 'welcome123' -noprompt
+log "Displaying truststore"
+docker run -v $PWD:/tmp vdesabou/kafka-docker-playground-connect:${TAG} keytool -list -keystore /tmp/truststore.jks -storepass 'welcome123' -v
+
 cd ${DIR}
 
-log "Generate and export the client certificate"
-docker run -v $PWD:/tmp vdesabou/kafka-docker-playground-connect:${TAG} keytool -genkey -alias client-alias -keyalg RSA -storepass Confluent101 -dname "CN=connect,OU=TEST,O=CONFLUENT,L=PaloAlto,S=Ca,C=US" -keystore /tmp/clientKeystore.jks
-docker run -v $PWD:/tmp vdesabou/kafka-docker-playground-connect:${TAG} keytool -export -alias client-alias -storepass Confluent101 -file /tmp/client-certificate.crt -keystore /tmp/clientKeystore.jks -rfc
-cd ${DIR}
-log "Copy the client certificate into docker container. Import it to the Oracle wallet"
-docker cp ${PWD}/mtls/client-certificate.crt oracle:/tmp/client-certificate.crt
-docker exec oracle bash -c "orapki wallet add -wallet /opt/oracle/admin/ORCLCDB/xdb_wallet/myWallet  -pwd WalletPasswd123 -trusted_cert -cert /tmp/client-certificate.crt"
+log "Alter user 'myuser' in order to be identified as 'CN=connect,C=US'"
+docker exec -i oracle sqlplus sys/Admin123@//localhost:1521/ORCLPDB1 as sysdba <<- EOF
+	ALTER USER myuser IDENTIFIED EXTERNALLY AS 'CN=connect,C=US';
+	exit;
+EOF
 
 log "Update listener.ora, sqlnet.ora and tnsnames.ora"
 docker cp ${PWD}/mtls/listener.ora oracle:/opt/oracle/oradata/dbconfig/ORCLCDB/listener.ora
@@ -127,14 +163,16 @@ curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
                "connector.class": "io.confluent.connect.jdbc.JdbcSinkConnector",
-                    "tasks.max": "1",
-                    "connection.user": "myuser",
-                    "connection.password": "mypassword",
-                    "connection.url": "jdbc:oracle:thin:@(DESCRIPTION=(ADDRESS=(PROTOCOL=TCPS)(HOST=oracle)(PORT=1532))(CONNECT_DATA=(SERVICE_NAME=ORCLPDB1)))",
-                    "topics": "ORDERS",
-                    "auto.create": "true",
-                    "insert.mode":"insert",
-                    "auto.evolve":"true"
+               "tasks.max": "1",
+               "connection.user": "myuser",
+               "connection.password": "mypassword",
+               "connection.oracle.net.ssl_server_dn_match": "true",
+               "connection.oracle.net.authentication_services": "(TCPS)",
+               "connection.url": "jdbc:oracle:thin:@(DESCRIPTION=(ADDRESS=(PROTOCOL=TCPS)(HOST=oracle)(PORT=1532))(CONNECT_DATA=(SERVICE_NAME=ORCLPDB1))(SECURITY=(SSL_SERVER_CERT_DN=\"CN=server,C=US\")))",
+               "topics": "ORDERS",
+               "auto.create": "true",
+               "insert.mode":"insert",
+               "auto.evolve":"true"
           }' \
      http://localhost:8083/connectors/oracle-sink-mtls/config | jq .
 
@@ -147,6 +185,11 @@ EOF
 
 sleep 10
 
+log "Alter user 'myuser' in order to be identified as by password (in order to use sqlplus)"
+docker exec -i oracle sqlplus sys/Admin123@//localhost:1521/ORCLPDB1 as sysdba <<- EOF
+	ALTER USER myuser IDENTIFIED BY mypassword;
+	exit;
+EOF
 
 log "Show content of ORDERS table:"
 docker exec oracle bash -c "echo 'select * from ORDERS;' | sqlplus myuser/mypassword@//localhost:1521/ORCLPDB1"
