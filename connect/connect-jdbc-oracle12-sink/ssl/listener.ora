@@ -1,10 +1,10 @@
-SSL_CLIENT_AUTHENTICATION = TRUE
+SSL_CLIENT_AUTHENTICATION = FALSE
 
 WALLET_LOCATION =
   (SOURCE =
     (METHOD = FILE)
     (METHOD_DATA =
-      (DIRECTORY = /tmp/server)
+      (DIRECTORY = /opt/oracle/admin/ORCLCDB/xdb_wallet/myWallet)
     )
   )
 
