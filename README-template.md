@@ -85,15 +85,15 @@ Quick start examples from Confluent [docs](https://docs.confluent.io/current/con
 | <img src="./images/icons/influxdb.svg" width="15"> [InfluxDB Sink](connect/connect-influxdb-sink) |  Database | :connect/connect-influxdb-sink:
 | <img src="./images/icons/influxdb.svg" width="15"> [InfluxDB Source](connect/connect-influxdb-source) |  Database | :connect/connect-influxdb-source:
 | <img src="./images/icons/hive.png" width="15"> [JDBC Hive Sink](connect/connect-jdbc-hive-sink) |  Database | :connect/connect-jdbc-hive-sink:
-| <img src="./images/icons/mysql.jpg" width="15"> [JDBC MySQL Sink](connect/connect-jdbc-mysql-sink) |  Database | :connect/connect-jdbc-mysql-sink:
+| <img src="./images/icons/mysql.jpg" width="15"> [JDBC MySQL Sink](connect/connect-jdbc-mysql-sink) (also with 🔑 SSL and mTLS) |  Database | :connect/connect-jdbc-mysql-sink:
 | <img src="./images/icons/oracle_11.jpg" width="15"> [JDBC Oracle 11 Sink](connect/connect-jdbc-oracle11-sink) |  Database | :connect/connect-jdbc-oracle11-sink:
-| <img src="./images/icons/oracle_12.jpg" width="15"> [JDBC Oracle 12 Sink](connect/connect-jdbc-oracle11-sink) |  Database | :connect/connect-jdbc-oracle11-sink:
+| <img src="./images/icons/oracle_12.jpg" width="15"> [JDBC Oracle 12 Sink](connect/connect-jdbc-oracle12-sink) (also with 🔑 SSL and mTLS) |  Database | :connect/connect-jdbc-oracle12-sink:
 | <img src="./images/icons/postgresql.png" width="15"> [JDBC PostGreSQL Sink](connect/connect-jdbc-postgresql-sink) |  Database | :connect/connect-jdbc-postgresql-sink:
 | <img src="./images/icons/sql_server.png" width="15"> [JDBC Microsoft SQL Server Sink](connect/connect-jdbc-sqlserver-sink) |  Database | :connect/connect-jdbc-sqlserver-sink:
 | <img src="./images/icons/vertica.png" width="15"> [JDBC Vertica Sink](connect/connect-jdbc-vertica-sink) |  Database | :connect/connect-jdbc-vertica-sink:
-| <img src="./images/icons/mysql.jpg" width="15"> [JDBC MySQL Source](connect/connect-jdbc-mysql-source) |  Database | :connect/connect-jdbc-mysql-source:
+| <img src="./images/icons/mysql.jpg" width="15"> [JDBC MySQL Source](connect/connect-jdbc-mysql-source) (also with 🔑 SSL and mTLS) |  Database | :connect/connect-jdbc-mysql-source:
 | <img src="./images/icons/oracle_11.jpg" width="15"> [JDBC Oracle 11 Source](connect/connect-jdbc-oracle11-source) |  Database | :connect/connect-jdbc-oracle11-source:
-| <img src="./images/icons/oracle_12.jpg" width="15"> [JDBC Oracle 12 Source](connect/connect-jdbc-oracle11-source) |  Database | :connect/connect-jdbc-oracle11-source:
+| <img src="./images/icons/oracle_12.jpg" width="15"> [JDBC Oracle 12 Source](connect/connect-jdbc-oracle12-source) (also with 🔑 SSL and mTLS) |  Database | :connect/connect-jdbc-oracle12-source:
 | <img src="./images/icons/postgresql.png" width="15"> [JDBC PostGreSQL Source](connect/connect-jdbc-postgresql-source) |  Database | :connect/connect-jdbc-postgresql-source:
 | <img src="./images/icons/sql_server.png" width="15"> [JDBC Microsoft SQL Server Source](connect/connect-jdbc-sqlserver-source) |  Database | :connect/connect-jdbc-sqlserver-source:
 | <img src="./images/icons/jira.png" width="15"> [JIRA Source](connect/connect-jira-source) |  SaaS Apps | :connect/connect-jira-source:
