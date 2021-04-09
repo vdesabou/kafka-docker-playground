@@ -52,3 +52,21 @@ services:
       # default: org.apache.kafka.clients.consumer.RangeAssignor
       #KAFKA_PARTITION_ASSIGNMENT_STRATEGY_CONFIG: "org.apache.kafka.clients.consumer.CooperativeStickyAssignor"
       KAFKA_SCHEMA_REGISTRY_URL: "http://schema-registry:8081"
+
+  consumer-v2:
+    build:
+      context: ../../troubleshooting/forward-compatibility-and-specific-records/consumer-v2/
+    hostname: consumer-v2
+    container_name: consumer-v2
+    environment:
+      KAFKA_BOOTSTRAP_SERVERS: broker:9092
+      TOPIC: "customer-avro"
+      KAFKA_GROUP_ID: "customer-avro-app"
+      KAFKA_CLIENT_ID: "my-java-consumer"
+      CHECK_GAPS: "false"
+      COMMIT_STRATEGY: "AUTO_COMMIT" # possible values AUTO_COMMIT or PER_BATCH or PER_MESSAGES
+      #KAFKA_ENABLE_AUTO_COMMIT_CONFIG: "false" # default true if group.id is provided
+      #KAFKA_ISOLATION_LEVEL_CONFIG: "read_committed" # default read_uncommitted
+      # default: org.apache.kafka.clients.consumer.RangeAssignor
+      #KAFKA_PARTITION_ASSIGNMENT_STRATEGY_CONFIG: "org.apache.kafka.clients.consumer.CooperativeStickyAssignor"
+      KAFKA_SCHEMA_REGISTRY_URL: "http://schema-registry:8081"
