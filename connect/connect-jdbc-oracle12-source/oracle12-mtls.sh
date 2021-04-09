@@ -102,16 +102,6 @@ docker exec oracle bash -c "orapki wallet add -wallet /tmp/server -trusted_cert 
 # add the user certificate to the wallet:
 docker exec oracle bash -c "orapki wallet add -wallet /tmp/server -user_cert -cert /tmp/server/cert.txt -pwd WalletPasswd123"
 
-# log "Create a wallet for the client (connect)"
-
-# docker exec oracle bash -c "orapki wallet create -wallet /tmp/client -auto_login -pwd WalletPasswd123"
-# docker exec oracle bash -c "orapki wallet add -wallet /tmp/client -dn CN=connect,C=US -keysize 2048 -pwd WalletPasswd123"
-# docker exec oracle bash -c "orapki wallet export -wallet /tmp/client -dn CN=connect,C=US -request /tmp/client/creq.txt -pwd WalletPasswd123"
-# docker exec oracle bash -c "orapki cert create -wallet /tmp/root -request /tmp/client/creq.txt -cert /tmp/client/cert.txt -validity 3650 -pwd WalletPasswd123"
-# docker exec oracle bash -c "orapki wallet add -wallet /tmp/client -trusted_cert -cert /tmp/root/b64certificate.txt -pwd WalletPasswd123"
-# docker exec oracle bash -c "orapki wallet add -wallet /tmp/client -user_cert -cert /tmp/client/cert.txt -pwd WalletPasswd123"
-
-
 cd ${DIR}/mtls
 log "Create a JKS keystore"
 # Create a new private/public key pair for 'CN=connect,C=US'
@@ -140,6 +130,12 @@ log "Displaying truststore"
 docker run -v $PWD:/tmp vdesabou/kafka-docker-playground-connect:${TAG} keytool -list -keystore /tmp/truststore.jks -storepass 'welcome123' -v
 
 cd ${DIR}
+
+log "Alter user 'myuser' in order to be identified as 'CN=connect,C=US'"
+docker exec -i oracle sqlplus sys/Admin123@//localhost:1521/ORCLPDB1 as sysdba <<- EOF
+	ALTER USER myuser IDENTIFIED EXTERNALLY AS 'CN=connect,C=US';
+	exit;
+EOF
 
 log "Update listener.ora, sqlnet.ora and tnsnames.ora"
 docker cp ${PWD}/mtls/listener.ora oracle:/opt/oracle/oradata/dbconfig/ORCLCDB/listener.ora
