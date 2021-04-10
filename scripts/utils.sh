@@ -183,6 +183,7 @@ then
     # noop
     :
   else
+    log "🚀 CONNECTOR_TAG is set with version $CONNECTOR_TAG"
     # determining the connector from current path
     docker_compose_file=$(grep "environment" "$PWD/$0" | grep DIR | grep start.sh | cut -d "/" -f 7 | cut -d '"' -f 1 | head -n1)
     if [ "${docker_compose_file}" != "" ] && [ -f "${docker_compose_file}" ]
@@ -193,7 +194,7 @@ then
       owner=$(echo "$connector_path" | cut -d "-" -f 1)
       name=$(echo "$connector_path" | cut -d "-" -f 2-)
       export CONNECT_TAG="$name-$CONNECTOR_TAG"
-      log "Building Docker image vdesabou/kafka-docker-playground-connect:${CONNECT_TAG}"
+      log "👷 Building Docker image vdesabou/kafka-docker-playground-connect:${CONNECT_TAG}"
       tmp_dir=$(mktemp -d -t ci-XXXXXXXXXX)
 cat << EOF > $tmp_dir/Dockerfile
 FROM vdesabou/kafka-docker-playground-connect:${TAG}
@@ -201,6 +202,38 @@ RUN confluent-hub install --no-prompt $owner/$name:$CONNECTOR_TAG
 EOF
       docker build -t vdesabou/kafka-docker-playground-connect:$CONNECT_TAG $tmp_dir
       rm -rf $tmp_dir
+
+      if [ ! -z "$CONNECTOR_JAR" ]
+      then
+        if [ ! -f "$CONNECTOR_JAR" ]
+        then
+          logerror "ERROR: CONNECTOR_JAR $CONNECTOR_JAR does not exist!"
+          exit 1
+        fi
+        log "🚀 CONNECTOR_JAR is set with $CONNECTOR_JAR"
+        connector_jar_name=$(basename ${CONNECTOR_JAR})
+        current_jar_path="/usr/share/confluent-hub-components/$connector_path/lib/$name-$CONNECTOR_TAG.jar"
+        set +e
+        docker run vdesabou/kafka-docker-playground-connect:${CONNECT_TAG} ls $current_jar_path
+        if [ $? -ne 0 ]
+        then
+          logerror "ERROR: $connector_path/lib/$name-$version.jar does not exist!"
+          exit 1
+        fi
+        set -e
+        NEW_CONNECT_TAG="$name-$CONNECTOR_TAG-$connector_jar_name"
+        log "👷 Building Docker image vdesabou/kafka-docker-playground-connect:${NEW_CONNECT_TAG}"
+        log "Remplacing $name-$CONNECTOR_TAG.jar by $connector_jar_name"
+        tmp_dir=$(mktemp -d -t ci-XXXXXXXXXX)
+        cp $CONNECTOR_JAR $tmp_dir/
+cat << EOF > $tmp_dir/Dockerfile
+FROM vdesabou/kafka-docker-playground-connect:${CONNECT_TAG}
+COPY $connector_jar_name $current_jar_path
+EOF
+        docker build -t vdesabou/kafka-docker-playground-connect:$NEW_CONNECT_TAG $tmp_dir
+        export CONNECT_TAG="$NEW_CONNECT_TAG"
+        rm -rf $tmp_dir
+      fi
     else
       logerror "ERROR: could not determine docker-compose override file from $PWD/$0 !"
       logerror "ERROR: please check you're running a connector test"
@@ -270,16 +303,17 @@ else
           connector_jar_name=$(basename ${CONNECTOR_JAR})
           export CONNECT_TAG="$connector_jar_name"
           current_jar_path="/usr/share/confluent-hub-components/$connector_path/lib/$name-$version.jar"
+          set +e
           docker run vdesabou/kafka-docker-playground-connect:${TAG} ls $current_jar_path
           if [ $? -ne 0 ]
           then
             logerror "ERROR: $connector_path/lib/$name-$version.jar does not exist!"
             exit 1
           fi
-          log "Building Docker image vdesabou/kafka-docker-playground-connect:${CONNECT_TAG}"
+          set -e
+          log "👷 Building Docker image vdesabou/kafka-docker-playground-connect:${CONNECT_TAG}"
           log "Remplacing $name-$version.jar by $connector_jar_name"
           tmp_dir=$(mktemp -d -t ci-XXXXXXXXXX)
-          log "$tmp_dir"
           cp $CONNECTOR_JAR $tmp_dir/
 cat << EOF > $tmp_dir/Dockerfile
 FROM vdesabou/kafka-docker-playground-connect:${TAG}
