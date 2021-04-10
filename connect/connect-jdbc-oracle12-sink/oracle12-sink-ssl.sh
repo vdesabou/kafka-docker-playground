@@ -107,6 +107,7 @@ cd ${DIR}/ssl
 
 log "Create a JKS truststore"
 rm -f truststore.jks
+docker cp oracle:/tmp/root/b64certificate.txt b64certificate.txt
 # We import the test CA certificate
 docker run -v $PWD:/tmp vdesabou/kafka-docker-playground-connect:${TAG} keytool -import -v -alias testroot -file /tmp/b64certificate.txt -keystore /tmp/truststore.jks -storetype JKS -storepass 'welcome123' -noprompt
 log "Displaying truststore"
