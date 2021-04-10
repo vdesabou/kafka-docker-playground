@@ -113,7 +113,7 @@ services:
       KAFKA_CONFLUENT_BALANCER_TOPIC_REPLICATION_FACTOR: 1
 
   connect-us:
-    image: vdesabou/kafka-docker-playground-connect:${TAG}
+    image: vdesabou/kafka-docker-playground-connect:${CONNECT_TAG}
     hostname: connect-us
     container_name: connect-us
     depends_on:
@@ -148,7 +148,7 @@ services:
       CONNECT_TOPIC_CREATION_ENABLE: 'true'
 
   connect-europe:
-    image: vdesabou/kafka-docker-playground-connect:${TAG}
+    image: vdesabou/kafka-docker-playground-connect:${CONNECT_TAG}
     hostname: connect-europe
     container_name: connect-europe
     depends_on:

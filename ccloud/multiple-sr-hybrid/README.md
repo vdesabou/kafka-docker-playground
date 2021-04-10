@@ -49,7 +49,7 @@ Here is the container:
 
 ```yml
   webserver:
-    image: vdesabou/kafka-docker-playground-connect:${TAG}
+    image: vdesabou/kafka-docker-playground-connect:${CONNECT_TAG}
     hostname: webserver
     container_name: webserver
     depends_on:

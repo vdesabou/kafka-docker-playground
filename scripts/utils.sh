@@ -1,19 +1,19 @@
 function log() {
   YELLOW='\033[0;33m'
   NC='\033[0m' # No Color
-  echo -e "$YELLOW`date +"%H:%M:%S"` $@$NC"
+  echo -e "$YELLOW`date +"%H:%M:%S"` ℹ️ $@$NC"
 }
 
 function logerror() {
   RED='\033[0;31m'
   NC='\033[0m' # No Color
-  echo -e "$RED`date +"%H:%M:%S"` $@$NC"
+  echo -e "$RED`date +"%H:%M:%S"` 🔥 $@$NC"
 }
 
 function logwarn() {
   PURPLE='\033[0;35m'
   NC='\033[0m' # No Color
-  echo -e "$PURPLE`date +"%H:%M:%S"` $@$NC"
+  echo -e "$PURPLE`date +"%H:%M:%S"` ❗ $@$NC"
 }
 
 # https://stackoverflow.com/a/24067243
@@ -106,23 +106,24 @@ function displaytime {
 #
 if [ -z "$TAG" ]
 then
-    # TAG is not set, use defaults:
+    # TAG is not set, use default:
     export TAG=6.1.1
     # to handle ubi8 images
     export TAG_BASE=$TAG
     if [ -z "$CP_KAFKA_IMAGE" ]
     then
-      log "Using Confluent Platform version default tag $TAG, you can use other version by exporting TAG environment variable, example export TAG=5.5.3"
+      log "ℹ️ Using CP version $TAG (set TAG environment variable to specify different version)"
     fi
     export CP_KAFKA_IMAGE=cp-server
     export CP_BASE_IMAGE=cp-base-new
     export CP_KSQL_IMAGE=cp-ksqldb-server
     export CP_KSQL_CLI_IMAGE=ksqldb-cli:latest
+    export CP_CONNECT_IMAGE=cp-server-connect-base
     set_kafka_client_tag
 else
     if [ -z "$CP_KAFKA_IMAGE" ]
     then
-      log "Using Confluent Platform version tag $TAG"
+      log "🚀 Using CP version $TAG"
     fi
     # to handle ubi8 images
     export TAG_BASE=$(echo $TAG | cut -d "-" -f1)
@@ -130,8 +131,10 @@ else
     second_version=5.3.0
     if version_gt $first_version $second_version; then
         export CP_KAFKA_IMAGE=cp-server
+        export CP_CONNECT_IMAGE=cp-server-connect-base
     else
         export CP_KAFKA_IMAGE=cp-enterprise-kafka
+        export CP_CONNECT_IMAGE=cp-kafka-connect-base
     fi
     second_version=5.3.10
     if version_gt $first_version $second_version; then
@@ -161,28 +164,11 @@ function verify_installed()
 
 if [ ! -z "$CONNECTOR_TAG" ]
 then
-  log "CONNECTOR_TAG is set"
-  # log "DEBUG: called from $PWD $0"
-  TMP_DIR=/tmp/playground_connector_tag$GITHUB_RUN_NUMBER
+  log "🚀 CONNECTOR_TAG is set with version $CONNECTOR_TAG"
   if [[ $0 == *"wait-for-connect-and-controlcenter.sh"* ]]
   then
-    if [ -f ${TMP_DIR}/connector_path ]
-    then
-      connector_path=$(cat ${TMP_DIR}/connector_path)
-      connector=$(cat ${TMP_DIR}/connector)
-      log "Installing connector $connector on container connect"
-      set -e
-      docker exec connect rm -rf /usr/share/confluent-hub-components/${connector_path}
-      docker cp ${TMP_DIR}/${connector_path} connect:/usr/share/confluent-hub-components/
-      set +e
-      log "Verifying connector version installed in /usr/share/confluent-hub-components/${connector_path}"
-      docker exec connect cat /usr/share/confluent-hub-components/${connector_path}/manifest.json | jq -r '.version'
-      log "Restarting container connect"
-      docker container restart connect
-    else
-      logerror "ERROR: ${TMP_DIR}/connector_path does not exist !"
-      exit 1
-    fi
+    # noop
+    :
   elif [[ $0 == *"environment"* ]]
   then
     # log "DEBUG: start.sh from environment folder. Skipping..."
@@ -190,7 +176,7 @@ then
     :
   elif [[ $0 == *"couchbase"* ]]
   then
-    log "Setting CONNECTOR_TAG with couchbase is not supported as it is not available on Confluent Hub"
+    logwarn "Setting CONNECTOR_TAG with couchbase is not supported as it is not available on Confluent Hub"
     exit 0
   elif [[ $0 == *"stop"* ]] || [[ $0 == *"run-tests"* ]]
   then
@@ -198,39 +184,24 @@ then
     # noop
     :
   else
+    # determining the connector from current path
     docker_compose_file=$(grep "environment" "$PWD/$0" | grep DIR | grep start.sh | cut -d "/" -f 7 | cut -d '"' -f 1 | head -n1)
     if [ "${docker_compose_file}" != "" ] && [ -f "${docker_compose_file}" ]
     then
-      set +e
-      if [ ! -z "$CI" ]
-      then
-          # running with github actions
-          sudo rm -rf ${TMP_DIR}
-          sudo mkdir -p ${TMP_DIR}
-          sudo chown runner ${TMP_DIR}
-      else
-          rm -rf ${TMP_DIR}
-          mkdir -p ${TMP_DIR}
-      fi
-      set -e
-
       connector_path=$(grep "CONNECT_PLUGIN_PATH" "${docker_compose_file}" | cut -d "/" -f 5)
       # remove any extra comma at the end (when there are multiple connectors used, example S3 source)
       connector_path=$(echo "$connector_path" | cut -d "," -f 1)
-      # save it
-      echo "${connector_path}" > ${TMP_DIR}/connector_path
       owner=$(echo "$connector_path" | cut -d "-" -f 1)
       name=$(echo "$connector_path" | cut -d "-" -f 2-)
-      # save it
-      echo "$owner/$name:$CONNECTOR_TAG" > ${TMP_DIR}/connector
-      log "Downloading connector $owner/$name:$CONNECTOR_TAG"
-      mkdir -p ${TMP_DIR}/${connector_path}
-      docker run -v ${TMP_DIR}/${connector_path}:/usr/share/confluent-hub-components/$connector_path vdesabou/kafka-docker-playground-connect:$TAG confluent-hub install --no-prompt "$owner/$name:$CONNECTOR_TAG"
-      if [ $? -ne 0 ]
-      then
-          logerror "ERROR: connector $owner/$name:$CONNECTOR_TAG is not available on Confluent Hub"
-          exit 1
-      fi
+      export CONNECT_TAG="$name-$CONNECTOR_TAG"
+      log "Building Docker image vdesabou/kafka-docker-playground-connect:${CONNECT_TAG}"
+      tmp_dir=$(mktemp -d -t ci-XXXXXXXXXX)
+cat << EOF > $tmp_dir/Dockerfile
+FROM vdesabou/kafka-docker-playground-connect:${TAG}
+RUN confluent-hub install --no-prompt $owner/$name:$CONNECTOR_TAG
+EOF
+      docker build -t vdesabou/kafka-docker-playground-connect:$CONNECT_TAG $tmp_dir
+      rm -rf $tmp_dir
     else
       logerror "ERROR: could not determine docker-compose override file from $PWD/$0 !"
       logerror "ERROR: please check you're running a connector test"
@@ -238,6 +209,8 @@ then
     fi
   fi
 else
+  export CONNECT_TAG="$TAG"
+
   if [[ $0 == *"wait-for-connect-and-controlcenter.sh"* ]]
   then
     # noop
