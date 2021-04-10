@@ -164,7 +164,6 @@ function verify_installed()
 
 if [ ! -z "$CONNECTOR_TAG" ]
 then
-  log "🚀 CONNECTOR_TAG is set with version $CONNECTOR_TAG"
   if [[ $0 == *"wait-for-connect-and-controlcenter.sh"* ]]
   then
     # noop
@@ -209,8 +208,6 @@ EOF
     fi
   fi
 else
-  export CONNECT_TAG="$TAG"
-
   if [[ $0 == *"wait-for-connect-and-controlcenter.sh"* ]]
   then
     # noop
@@ -238,7 +235,7 @@ else
       then
         owner=$(echo "$connector_path" | cut -d "-" -f 1)
         name=$(echo "$connector_path" | cut -d "-" -f 2-)
-        version=$(docker run vdesabou/kafka-docker-playground-connect:${CONNECT_TAG} cat /usr/share/confluent-hub-components/${connector_path}/manifest.json | jq -r '.version')
+        version=$(docker run vdesabou/kafka-docker-playground-connect:${TAG} cat /usr/share/confluent-hub-components/${connector_path}/manifest.json | jq -r '.version')
         if [ -z "$CI" ] && [ -z "$CLOUDFORMATION" ]
         then
           # check if newer version available on vdesabou/kafka-docker-playground-connect image
@@ -248,12 +245,12 @@ else
           then
             set +e
             # Offer to refresh image
-            log "Your Docker image vdesabou/kafka-docker-playground-connect:${CONNECT_TAG} is not up to date!"
-            log "You're using connector $owner/$name $version whereas $latest_version is available"
+            logwarn "Your Docker image vdesabou/kafka-docker-playground-connect:${TAG} is not up to date!"
+            logwarn "You're using connector $owner/$name $version whereas $latest_version is available"
             read -p "Do you want to download new one? (y/n)?" choice
             case "$choice" in
             y|Y )
-              docker pull vdesabou/kafka-docker-playground-connect:${CONNECT_TAG}
+              docker pull vdesabou/kafka-docker-playground-connect:${TAG}
               exit 0
             ;;
             n|N ) ;;
@@ -262,14 +259,44 @@ else
             set -e
           fi
         fi
-        log "Using Connector $owner/$name:$version"
+        if [ ! -z "$CONNECTOR_JAR" ]
+        then
+          if [ ! -f "$CONNECTOR_JAR" ]
+          then
+            logerror "ERROR: CONNECTOR_JAR $CONNECTOR_JAR does not exist!"
+            exit 1
+          fi
+          log "🚀 CONNECTOR_JAR is set with $CONNECTOR_JAR"
+          connector_jar_name=$(basename ${CONNECTOR_JAR})
+          export CONNECT_TAG="$connector_jar_name"
+          current_jar_path="/usr/share/confluent-hub-components/$connector_path/lib/$name-$version.jar"
+          docker run vdesabou/kafka-docker-playground-connect:${TAG} ls $current_jar_path
+          if [ $? -ne 0 ]
+          then
+            logerror "ERROR: $connector_path/lib/$name-$version.jar does not exist!"
+            exit 1
+          fi
+          log "Building Docker image vdesabou/kafka-docker-playground-connect:${CONNECT_TAG}"
+          log "Remplacing $name-$version.jar by $connector_jar_name"
+          tmp_dir=$(mktemp -d -t ci-XXXXXXXXXX)
+          log "$tmp_dir"
+          cp $CONNECTOR_JAR $tmp_dir/
+cat << EOF > $tmp_dir/Dockerfile
+FROM vdesabou/kafka-docker-playground-connect:${TAG}
+COPY $connector_jar_name $current_jar_path
+EOF
+          docker build -t vdesabou/kafka-docker-playground-connect:$CONNECT_TAG $tmp_dir
+          rm -rf $tmp_dir
+        else
+          export CONNECT_TAG="$TAG"
+          log "Using Connector $owner/$name:$version"
+        fi
       fi
     else
       # not a connector test, do nothing
       :
     fi
   fi
-
 fi
 
 function verify_docker_and_memory()
