@@ -238,7 +238,7 @@ else
       then
         owner=$(echo "$connector_path" | cut -d "-" -f 1)
         name=$(echo "$connector_path" | cut -d "-" -f 2-)
-        version=$(docker run vdesabou/kafka-docker-playground-connect:${TAG} cat /usr/share/confluent-hub-components/${connector_path}/manifest.json | jq -r '.version')
+        version=$(docker run vdesabou/kafka-docker-playground-connect:${CONNECT_TAG} cat /usr/share/confluent-hub-components/${connector_path}/manifest.json | jq -r '.version')
         if [ -z "$CI" ] && [ -z "$CLOUDFORMATION" ]
         then
           # check if newer version available on vdesabou/kafka-docker-playground-connect image
@@ -247,13 +247,13 @@ else
           if version_gt $latest_version $version
           then
             set +e
-            # Offer to refresh images
-            log "Your vdesabou/kafka-docker-playground-connect:${TAG} is not up to date!"
+            # Offer to refresh image
+            log "Your Docker image vdesabou/kafka-docker-playground-connect:${CONNECT_TAG} is not up to date!"
             log "You're using connector $owner/$name $version whereas $latest_version is available"
             read -p "Do you want to download new one? (y/n)?" choice
             case "$choice" in
             y|Y )
-              docker pull vdesabou/kafka-docker-playground-connect:${TAG}
+              docker pull vdesabou/kafka-docker-playground-connect:${CONNECT_TAG}
               exit 0
             ;;
             n|N ) ;;
