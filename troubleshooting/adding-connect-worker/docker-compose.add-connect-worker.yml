@@ -2,7 +2,7 @@
 version: '3.5'
 services:
   connect2:
-    image: vdesabou/kafka-docker-playground-connect:${TAG}
+    image: vdesabou/kafka-docker-playground-connect:${CONNECT_TAG}
     hostname: connect2
     container_name: connect2
     depends_on:

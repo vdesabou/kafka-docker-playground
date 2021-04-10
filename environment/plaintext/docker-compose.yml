@@ -74,7 +74,7 @@ services:
       # SCHEMA_REGISTRY_CONFLUENT_TELEMETRY_API_SECRET: 'CLOUD_API_SECRET'
 
   connect:
-    image: vdesabou/kafka-docker-playground-connect:${TAG}
+    image: vdesabou/kafka-docker-playground-connect:${CONNECT_TAG}
     hostname: connect
     container_name: connect
     restart: always

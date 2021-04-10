@@ -51,9 +51,9 @@ security.protocol=SASL_SSL
 sasl.mechanism=PLAIN
 EOF
 log "Delete internal connect topics"
-docker run -v $PWD:/tmp vdesabou/kafka-docker-playground-connect:${TAG} kafka-topics --bootstrap-server ${bootstrap_servers} --command-config /tmp/client.properties --topic confluent.connectors-configs --delete > /dev/null 2>&1
-docker run -v $PWD:/tmp vdesabou/kafka-docker-playground-connect:${TAG} kafka-topics --bootstrap-server ${bootstrap_servers} --command-config /tmp/client.properties --topic confluent.connectors-offsets --delete > /dev/null 2>&1
-docker run -v $PWD:/tmp vdesabou/kafka-docker-playground-connect:${TAG} kafka-topics --bootstrap-server ${bootstrap_servers} --command-config /tmp/client.properties --topic confluent.connectors-status --delete > /dev/null 2>&1
+docker run -v $PWD:/tmp vdesabou/kafka-docker-playground-connect:${CONNECT_TAG} kafka-topics --bootstrap-server ${bootstrap_servers} --command-config /tmp/client.properties --topic confluent.connectors-configs --delete > /dev/null 2>&1
+docker run -v $PWD:/tmp vdesabou/kafka-docker-playground-connect:${CONNECT_TAG} kafka-topics --bootstrap-server ${bootstrap_servers} --command-config /tmp/client.properties --topic confluent.connectors-offsets --delete > /dev/null 2>&1
+docker run -v $PWD:/tmp vdesabou/kafka-docker-playground-connect:${CONNECT_TAG} kafka-topics --bootstrap-server ${bootstrap_servers} --command-config /tmp/client.properties --topic confluent.connectors-status --delete > /dev/null 2>&1
 set -e
 
 VALUES_FILE=${DIR}/providers/${provider}.yaml
