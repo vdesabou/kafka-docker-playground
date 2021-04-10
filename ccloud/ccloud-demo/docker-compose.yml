@@ -135,7 +135,7 @@ services:
       discovery.type: single-node
 
   connect:
-    image: vdesabou/kafka-docker-playground-connect:${TAG}
+    image: vdesabou/kafka-docker-playground-connect:${CONNECT_TAG}
     hostname: connect
     container_name: connect
     depends_on:

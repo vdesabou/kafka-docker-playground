@@ -262,7 +262,7 @@ A local Connect instance (docker service `connect`) is installed and bootstrappi
 
 ```yml
 connect:
-  image: vdesabou/kafka-docker-playground-connect:${TAG}
+  image: vdesabou/kafka-docker-playground-connect:${CONNECT_TAG}
   hostname: connect
   container_name: connect
   environment:
