@@ -177,13 +177,15 @@ do
     if [ ${nb_fail} -gt 0 ]
     then
       gh issue list --limit 500 | grep "$title" > /dev/null
+      msg=$(cat ${gh_msg_file})
       if [ $? != 0 ]
       then
         log "Creating GH issue with title $title"
-        msg=$(cat ${gh_msg_file})
         gh issue create --title "$title" --body "$msg" --assignee vdesabou --label bug
       else
-        log "GH issue with title $title already exist, skipping..."
+        log "GH issue with title $title already exist, adding comment..."
+        issue_number=$(gh issue list --limit 500 | grep "$title" | awk '{print $1;}')
+        gh issue comment ${issue_number} --body "$msg"
       fi
       gh_issue_number=$(gh issue list --limit 500 | grep "$title" | awk '{print $1;}')
     fi
