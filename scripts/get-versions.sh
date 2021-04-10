@@ -184,6 +184,7 @@ do
         gh issue create --title "$title" --body "$msg" --assignee vdesabou --label bug
       else
         log "GH issue with title $title already exist, adding comment..."
+        issue_number=$(gh issue list --limit 500 | grep "$title" | awk '{print $1;}')
         gh issue comment ${issue_number} --body "$msg"
       fi
       gh_issue_number=$(gh issue list --limit 500 | grep "$title" | awk '{print $1;}')
