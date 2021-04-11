@@ -339,7 +339,29 @@ COPY $connector_jar_name $current_jar_path
 EOF
           docker build -t vdesabou/kafka-docker-playground-connect:$CONNECT_TAG $tmp_dir
           rm -rf $tmp_dir
+        elif [ ! -z "$CONNECTOR_ZIP" ]
+        then
+          if [ ! -f "$CONNECTOR_ZIP" ]
+          then
+            logerror "ERROR: CONNECTOR_ZIP $CONNECTOR_ZIP does not exist!"
+            exit 1
+          fi
+          log "🚀 CONNECTOR_ZIP is set with $CONNECTOR_ZIP"
+          connector_zip_name=$(basename ${CONNECTOR_ZIP})
+          export CONNECT_TAG="$connector_zip_name"
+
+          log "👷 Building Docker image vdesabou/kafka-docker-playground-connect:${CONNECT_TAG}"
+          tmp_dir=$(mktemp -d -t ci-XXXXXXXXXX)
+          cp $CONNECTOR_ZIP $tmp_dir/
+cat << EOF > $tmp_dir/Dockerfile
+FROM vdesabou/kafka-docker-playground-connect:${TAG}
+COPY ${connector_zip_name} /tmp
+RUN confluent-hub install --no-prompt /tmp/${connector_zip_name}
+EOF
+          docker build -t vdesabou/kafka-docker-playground-connect:$CONNECT_TAG $tmp_dir
+          rm -rf $tmp_dir
         else
+          # Neither CONNECTOR_ZIP or CONNECTOR_JAR are set
           export CONNECT_TAG="$TAG"
           log "Using Connector $owner/$name:$version"
         fi
