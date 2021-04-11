@@ -102,6 +102,21 @@ function displaytime {
   printf '%d seconds\n' $S
 }
 
+function choosejar()
+{
+  log "Select the jar to replace:"
+  select jar
+  do
+    # Check the selected menu jar number
+    if [ 1 -le "$REPLY" ] && [ "$REPLY" -le $# ];
+    then
+      break;
+    else
+      logwarn "Wrong selection: select any number from 1-$#"
+    fi
+  done
+}
+
 # Setting up TAG environment variable
 #
 if [ -z "$TAG" ]
@@ -202,7 +217,6 @@ RUN confluent-hub install --no-prompt $owner/$name:$CONNECTOR_TAG
 EOF
       docker build -t vdesabou/kafka-docker-playground-connect:$CONNECT_TAG $tmp_dir
       rm -rf $tmp_dir
-
       if [ ! -z "$CONNECTOR_JAR" ]
       then
         if [ ! -f "$CONNECTOR_JAR" ]
@@ -217,8 +231,10 @@ EOF
         docker run vdesabou/kafka-docker-playground-connect:${CONNECT_TAG} ls $current_jar_path
         if [ $? -ne 0 ]
         then
-          logerror "ERROR: $connector_path/lib/$name-$version.jar does not exist!"
-          exit 1
+          logwarn "$connector_path/lib/$name-$CONNECTOR_TAG.jar does not exist, the jar name to replace could not be found automatically"
+          array=($(docker run vdesabou/kafka-docker-playground-connect:${CONNECT_TAG} ls /usr/share/confluent-hub-components/$connector_path/lib | grep $CONNECTOR_TAG))
+          choosejar "${array[@]}"
+          current_jar_path="/usr/share/confluent-hub-components/$connector_path/lib/$jar"
         fi
         set -e
         NEW_CONNECT_TAG="$name-$CONNECTOR_TAG-$connector_jar_name"
@@ -307,8 +323,10 @@ else
           docker run vdesabou/kafka-docker-playground-connect:${TAG} ls $current_jar_path
           if [ $? -ne 0 ]
           then
-            logerror "ERROR: $connector_path/lib/$name-$version.jar does not exist!"
-            exit 1
+            logwarn "$connector_path/lib/$name-$version.jar does not exist, the jar name to replace could not be found automatically"
+            array=($(docker run vdesabou/kafka-docker-playground-connect:${TAG} ls /usr/share/confluent-hub-components/$connector_path/lib | grep $version))
+            choosejar "${array[@]}"
+            current_jar_path="/usr/share/confluent-hub-components/$connector_path/lib/$jar"
           fi
           set -e
           log "👷 Building Docker image vdesabou/kafka-docker-playground-connect:${CONNECT_TAG}"
