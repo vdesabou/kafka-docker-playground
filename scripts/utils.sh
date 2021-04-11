@@ -177,6 +177,15 @@ function verify_installed()
   fi
 }
 
+if [ ! -z "$CONNECTOR_TAG" ] && [ ! -z "$CONNECTOR_ZIP" ]
+then
+  logerror "ERROR: CONNECTOR_TAG and CONNECTOR_ZIP are both set, they cannot be used at same time!"
+  exit 1
+fi
+
+###
+#  CONNECTOR_TAG is set
+###
 if [ ! -z "$CONNECTOR_TAG" ]
 then
   if [[ $0 == *"wait-for-connect-and-controlcenter.sh"* ]]
@@ -217,6 +226,9 @@ RUN confluent-hub install --no-prompt $owner/$name:$CONNECTOR_TAG
 EOF
       docker build -t vdesabou/kafka-docker-playground-connect:$CONNECT_TAG $tmp_dir
       rm -rf $tmp_dir
+      ###
+      #  CONNECTOR_JAR is set
+      ###
       if [ ! -z "$CONNECTOR_JAR" ]
       then
         if [ ! -f "$CONNECTOR_JAR" ]
@@ -257,6 +269,9 @@ EOF
     fi
   fi
 else
+  ###
+  #  CONNECTOR_TAG is not set
+  ###
   if [[ $0 == *"wait-for-connect-and-controlcenter.sh"* ]]
   then
     # noop
@@ -308,6 +323,9 @@ else
             set -e
           fi
         fi
+        ###
+        #  CONNECTOR_JAR is set
+        ###
         if [ ! -z "$CONNECTOR_JAR" ]
         then
           if [ ! -f "$CONNECTOR_JAR" ]
@@ -339,6 +357,9 @@ COPY $connector_jar_name $current_jar_path
 EOF
           docker build -t vdesabou/kafka-docker-playground-connect:$CONNECT_TAG $tmp_dir
           rm -rf $tmp_dir
+        ###
+        #  CONNECTOR_ZIP is set
+        ###
         elif [ ! -z "$CONNECTOR_ZIP" ]
         then
           if [ ! -f "$CONNECTOR_ZIP" ]
@@ -360,8 +381,10 @@ RUN confluent-hub install --no-prompt /tmp/${connector_zip_name}
 EOF
           docker build -t vdesabou/kafka-docker-playground-connect:$CONNECT_TAG $tmp_dir
           rm -rf $tmp_dir
+        ###
+        #  Neither CONNECTOR_ZIP or CONNECTOR_JAR are set
+        ###
         else
-          # Neither CONNECTOR_ZIP or CONNECTOR_JAR are set
           export CONNECT_TAG="$TAG"
           log "Using Connector $owner/$name:$version"
         fi
