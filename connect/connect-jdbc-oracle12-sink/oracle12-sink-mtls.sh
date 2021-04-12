@@ -160,6 +160,8 @@ fi
 
 ../../scripts/wait-for-connect-and-controlcenter.sh
 
+sleep 10
+
 log "Creating Oracle sink connector"
 
 curl -X PUT \
