@@ -58,7 +58,7 @@ docker run --sysctl net.ipv4.tcp_keepalive_time=60 --sysctl net.ipv4.tcp_keepali
 # log "Starting producer with let's encrypt certificate https://letsencrypt.org/certificates/"
 # docker run -v ${DIR}/librdkafka.config:/tmp/librdkafka.config -v ${DIR}/letsencrypt-cacert.txt:/tmp/cacert.pem vdesabou/dotnet-ccloud-example-docker produce test1 /tmp/librdkafka.config /tmp/cacert.pem
 
-log "Starting consumer"
-docker run --sysctl net.ipv4.tcp_keepalive_time=60 --sysctl net.ipv4.tcp_keepalive_intvl=30 --name consumer -v ${DIR}/librdkafka.config:/tmp/librdkafka.config vdesabou/dotnet-ccloud-example-docker consume test1 /tmp/librdkafka.config
+log "Starting consumer. Logs are in consumer.log."
+docker run --sysctl net.ipv4.tcp_keepalive_time=60 --sysctl net.ipv4.tcp_keepalive_intvl=30 --name consumer -v ${DIR}/librdkafka.config:/tmp/librdkafka.config vdesabou/dotnet-ccloud-example-docker consume test1 /tmp/librdkafka.config > consumer.log 2>&1 &
 
 # docker run -v ${DIR}/librdkafka.config:/tmp/librdkafka.config vdesabou/dotnet-ccloud-example-docker consume test1 /tmp/librdkafka.config
