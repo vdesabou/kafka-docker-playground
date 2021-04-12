@@ -107,7 +107,7 @@ stop
 start
 EOF
 
-docker-compose -f ../../environment/plaintext/docker-compose.yml -f "${PWD}/docker-compose.plaintext-cdb-table-ssl.yml" up -d
+docker-compose -f ../../environment/plaintext/docker-compose.yml -f "${PWD}/docker-compose.plaintext-pdb-table-ssl.yml" up -d
 
 ../../scripts/wait-for-connect-and-controlcenter.sh
 
