@@ -16,6 +16,15 @@ function logwarn() {
   echo -e "$PURPLE`date +"%H:%M:%S"` ❗ $@$NC"
 }
 
+function jq() {
+    if [[ $(type -f jq 2>&1) =~ "not found" ]]
+    then
+      docker run --rm -i imega/jq "$@"
+    else
+      $(which jq) "$@"
+    fi
+}
+
 # https://stackoverflow.com/a/24067243
 function version_gt() {
   test "$(printf '%s\n' "$@" | sort -V | head -n 1)" != "$1";
@@ -584,15 +593,6 @@ function timeout() {
   else
     $(which timeout) "$@"
   fi
-}
-
-function jq() {
-    if [[ $(type -f jq 2>&1) =~ "not found" ]]
-    then
-      docker run --rm -i imega/jq "$@"
-    else
-      $(which jq) "$@"
-    fi
 }
 
 function az() {
