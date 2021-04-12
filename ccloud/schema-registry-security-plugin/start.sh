@@ -42,9 +42,9 @@ docker exec schema-registry sr-acl-cli --config /etc/schema-registry/schema-regi
 docker exec schema-registry sr-acl-cli --config /etc/schema-registry/schema-registry.properties --add -s '*' -p write -o SUBJECT_WRITE
 
 # ccloud/schema-registry-security-plugin failing with 5.5.3 #223
-# GLOBAL_SUBJECTS_READ replaced by GLOBAL_READ in CP 6.0.x
+# GLOBAL_SUBJECTS_READ replaced by GLOBAL_READ in CP 6.1.0 and onward
 operations_list="SUBJECT_READ:SUBJECT_WRITE:SUBJECT_DELETE:SUBJECT_COMPATIBILITY_READ:SUBJECT_COMPATIBILITY_WRITE:GLOBAL_COMPATIBILITY_WRITE:GLOBAL_SUBJECTS_READ"
-if version_gt $TAG_BASE "5.9.9"; then
+if version_gt $TAG_BASE "6.0.99"; then
      operations_list="SUBJECT_READ:SUBJECT_WRITE:SUBJECT_DELETE:SUBJECT_COMPATIBILITY_READ:SUBJECT_COMPATIBILITY_WRITE:GLOBAL_COMPATIBILITY_WRITE:GLOBAL_READ"
 fi
 docker exec schema-registry sr-acl-cli --config /etc/schema-registry/schema-registry.properties --add -s '*' -p admin -o $operations_list
