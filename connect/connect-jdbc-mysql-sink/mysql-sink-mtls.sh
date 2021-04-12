@@ -10,6 +10,9 @@ then
      wget https://repo1.maven.org/maven2/mysql/mysql-connector-java/5.1.45/mysql-connector-java-5.1.45.jar
 fi
 
+# required to make utils.sh script being able to work, do not remove:
+# ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
+
 docker-compose -f ../../environment/plaintext/docker-compose.yml -f "${PWD}/docker-compose.plaintext-mtls.yml" down -v --remove-orphans
 log "Starting up mysql container to get generated certs from /var/lib/mysql"
 docker-compose -f ../../environment/plaintext/docker-compose.yml -f "${PWD}/docker-compose.plaintext-mtls.yml" up -d mysql
