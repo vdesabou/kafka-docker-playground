@@ -142,7 +142,8 @@ docker-compose -f ../../environment/plaintext/docker-compose.yml -f "${PWD}/dock
 
 docker exec connect kafka-topics --create --topic redo-log-topic --bootstrap-server broker:9092 --replication-factor 1 --partitions 1 --config cleanup.policy=delete --config retention.ms=120960000
 log "redo-log-topic is created"
-sleep 5
+
+sleep 15
 
 log "Creating Oracle source connector"
 curl -X PUT \
