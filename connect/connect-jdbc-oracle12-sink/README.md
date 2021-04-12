@@ -210,7 +210,7 @@ ORCLPDB1=
 jdbc:oracle:thin:@(DESCRIPTION=(ADDRESS=(PROTOCOL=TCPS)(HOST=oracle)(PORT=1532))(CONNECT_DATA=(SERVICE_NAME=ORCLPDB1))(SECURITY=(SSL_SERVER_CERT_DN=\"CN=server,C=US\")))
 ```
 
-Note that we force the driver to verify that the server’s DN matches with `"connection.oracle.net.ssl_server_dn_match": "true"`
+Note that we force the driver to verify that the server’s DN matches with `"connection.oracle.net.ssl_server_dn_match": "true"` (note that for JDBC connector version lower than 10.x, this property have to be set at JVM level)
 
 ### With SSL encryption + Mutual TLS auth
 
@@ -247,7 +247,7 @@ $ keytool -list -keystore /tmp/keystore.jks -storepass 'welcome123' -v
                   -Djavax.net.ssl.keyStorePassword=welcome123
 ```
 
-Connector is set with `"connection.oracle.net.authentication_services": "(TCPS)"`
+Connector is set with `"connection.oracle.net.authentication_services": "(TCPS)"` (note that for JDBC connector version lower than 10.x, this property have to be set at JVM level)
 
 We also need to alter user `myuser` in order to be identified as `CN=connect,C=US`
 
