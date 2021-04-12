@@ -55,6 +55,12 @@ fi
 done
 log "Oracle DB has started!"
 
+log "Grant select on CUSTOMERS table"
+docker exec -i oracle sqlplus C\#\#MYUSER/mypassword@//localhost:1521/ORCLPDB1 << EOF
+     ALTER SESSION SET CONTAINER=ORCLPDB1;
+     GRANT select on CUSTOMERS TO C##MYUSER;
+EOF
+
 log "Setting up SSL on oracle server..."
 # https://www.oracle.com/technetwork/topics/wp-oracle-jdbc-thin-ssl-130128.pdf
 log "Create a wallet for the test CA"
@@ -110,12 +116,6 @@ EOF
 docker-compose -f ../../environment/plaintext/docker-compose.yml -f "${PWD}/docker-compose.plaintext-pdb-table-ssl.yml" up -d
 
 ../../scripts/wait-for-connect-and-controlcenter.sh
-
-log "Grant select on CUSTOMERS table"
-docker exec -i oracle sqlplus C\#\#MYUSER/mypassword@//localhost:1521/ORCLPDB1 << EOF
-     ALTER SESSION SET CONTAINER=ORCLPDB1;
-     GRANT select on CUSTOMERS TO C##MYUSER;
-EOF
 
 docker exec connect kafka-topics --create --topic redo-log-topic --bootstrap-server broker:9092 --replication-factor 1 --partitions 1 --config cleanup.policy=delete --config retention.ms=120960000
 log "redo-log-topic is created"
