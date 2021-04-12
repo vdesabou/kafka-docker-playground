@@ -34,6 +34,9 @@ then
      export ORACLE_IMAGE="vdesabou/oracle12"
 fi
 
+# required to make utils.sh script being able to work, do not remove:
+# ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
+
 if [ ! -z "$CONNECTOR_TAG" ]
 then
      JDBC_CONNECTOR_VERSION=$CONNECTOR_TAG
