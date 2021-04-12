@@ -399,7 +399,8 @@ EOF
         fi
       fi
     else
-      # not a connector test, do nothing
+      # not a connector test
+      export CONNECT_TAG="$TAG"
       :
     fi
   fi
