@@ -21,7 +21,7 @@ KEYSPACE=${1:-dockerplayground}
 CASSANDRA_HOSTNAME=${2:-cassandra.us-east-1.amazonaws.com}
 
 cd ${DIR}/security
-log "Generate keys and certificates used for SSL"
+log "🔐 Generate keys and certificates used for SSL"
 ./certs-create.sh
 cd ${DIR}
 

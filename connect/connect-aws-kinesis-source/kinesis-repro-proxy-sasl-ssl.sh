@@ -44,7 +44,6 @@ docker exec connect curl -X PUT \
                "kafka.topic": "kinesis_topic",
                "kinesis.region": "EU_WEST_3",
                "kinesis.stream": "my_kinesis_stream",
-               "kinesis.proxy.url": "https://nginx_proxy:8888",
                "confluent.topic.bootstrap.servers": "broker:9092",
                "confluent.topic.replication.factor": "1",
                "confluent.topic.ssl.keystore.location" : "/etc/kafka/secrets/kafka.connect.keystore.jks",

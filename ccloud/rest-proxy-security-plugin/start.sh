@@ -44,7 +44,7 @@ sed -e "s|:REST_KEY:|$REST_KEY|g" \
     ${DIR}/kafka-rest.jaas-template.conf > ${DIR}/kafka-rest.jaas.conf
 
 cd ${DIR}/security
-log "Generate keys and certificates used for SSL"
+log "🔐 Generate keys and certificates used for SSL"
 ./certs-create.sh $REST_KEY > /dev/null 2>&1
 cd ${DIR}
 
