@@ -60,6 +60,8 @@ curl -X PUT \
                "tasks.max" : "1",
                "batch.size": "1",
                "max.pending.messages": "1",
+               "jms.subscription.durable": true,
+               "jms.subscription.name": "sub1",
                "confluent.license": "",
                "confluent.topic.bootstrap.servers": "broker:9092",
                "confluent.topic.replication.factor": "1"
