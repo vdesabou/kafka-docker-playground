@@ -49,8 +49,8 @@ curl -X PUT \
                "connector.class": "io.confluent.connect.weblogic.WeblogicSourceConnector",
                "kafka.topic": "from-weblogic-messages",
                "java.naming.factory.initial": "weblogic.jndi.WLInitialContextFactory",
-               "jms.destination.name": "myJMSServer/mySystemModule!myJMSServer@MyDistributedQueue",
-               "jms.destination.type": "QUEUE",
+               "jms.destination.name": "myJMSServer/mySystemModule!myJMSServer@MyDistributedTopic",
+               "jms.destination.type": "TOPIC",
                "java.naming.provider.url": "t3://weblogic-jms:7001",
                "connection.factory.name": "myFactory",
                "java.naming.security.principal": "weblogic",
@@ -64,11 +64,12 @@ curl -X PUT \
                "confluent.topic.bootstrap.servers": "broker:9092",
                "confluent.topic.replication.factor": "1"
           }' \
-     http://localhost:8083/connectors/jms-weblogic-queue-source/config | jq .
+     http://localhost:8083/connectors/jms-weblogic-topic-source/config | jq .
+
 
 sleep 5
 
-log "Sending one message in JMS queue myQueue"
+log "Sending one message in JMS topic myTopic"
 docker exec jms-sender bash -c 'java -cp "/tmp/weblogic.jar:/tmp/wlthint3client.jar:/jms-sender-1.0.0.jar" com.sample.jms.toolkit.JMSSender'
 
 sleep 5
