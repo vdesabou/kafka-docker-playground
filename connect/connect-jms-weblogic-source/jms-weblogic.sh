@@ -59,7 +59,8 @@ curl -X PUT \
                "java.naming.security.principal": "weblogic",
                "java.naming.security.credentials": "welcome1",
                "tasks.max" : "1",
-               "jms.client.id": "id1",
+               "batch.size": "1",
+               "max.pending.messages": "1",
                "confluent.license": "",
                "confluent.topic.bootstrap.servers": "broker:9092",
                "confluent.topic.replication.factor": "1"
