@@ -21,16 +21,13 @@ then
      cd ${OLDDIR}
 fi
 
-if [ ! -f ${DIR}/wlthint3client.jar ]
+if [ ! -f ${DIR}/jms-sender/lib/wlthint3client.jar ]
 then
-     log "${DIR}/wlthint3client.jar missing, will get it from weblogic-jms:latest image"
-     docker run weblogic-jms:latest cat /u01/oracle/wlserver/server/lib/wlthint3client.jar > ${DIR}/wlthint3client.jar
      docker run weblogic-jms:latest cat /u01/oracle/wlserver/server/lib/wlthint3client.jar > ${DIR}/jms-sender/lib/wlthint3client.jar
 fi
 
-if [ ! -f ${DIR}/weblogic.jar ]
+if [ ! -f ${DIR}/jms-sender/lib/weblogic.jar ]
 then
-     log "${DIR}/weblogic.jar missing, will get it from weblogic-jms:latest image"
      docker run weblogic-jms:latest cat /u01/oracle/wlserver/server/lib/weblogic.jar > ${DIR}/jms-sender/lib/weblogic.jar
 fi
 
@@ -39,12 +36,13 @@ do
      if [ ! -f ${DIR}/${component}/target/${component}-1.0.0-jar.jar ]
      then
           log "Building jar for ${component}"
-          docker run -i --rm -e KAFKA_CLIENT_TAG=$KAFKA_CLIENT_TAG -e TAG=$TAG_BASE -v "${DIR}/${component}":/usr/src/mymaven -v "$HOME/.m2":/root/.m2 -v "${DIR}/${component}/target:/usr/src/mymaven/target" -w /usr/src/mymaven maven:3.6.1-jdk-11 mvn package
+          docker run -i --rm -e KAFKA_CLIENT_TAG=$KAFKA_CLIENT_TAG -e TAG=$TAG_BASE -v "${DIR}/${component}":/usr/src/mymaven -v "$HOME/.m2":/root/.m2 -v "${DIR}/${component}/target:/usr/src/mymaven/target" -w /usr/src/mymaven maven:3.6.1-jdk-8 mvn package
      fi
 done
 
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
 
+log "Sending one message in JMS queue myQueue"
 docker exec jms-sender bash -c 'java -cp "/tmp/weblogic.jar:/tmp/wlthint3client.jar:/jms-sender-0.0.1-SNAPSHOT.jar" com.sample.jms.toolkit.JMSSender'
 
 log "Creating JMS weblogic source connector"
@@ -52,12 +50,12 @@ curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
                "connector.class": "io.confluent.connect.weblogic.WeblogicSourceConnector",
-               "kafka.topic":"from-weblogic-messages",
+               "kafka.topic": "from-weblogic-messages",
                "java.naming.factory.initial": "weblogic.jndi.WLInitialContextFactory",
-               "jms.destination.name":"myQueue",
-               "jms.destination.type":"queue",
-               "java.naming.provider.url": "t3://weblogic-jms:7001/",
-               "connection.factory.name": "weblogic.jms.ConnectionFactory",
+               "jms.destination.name": "myQueue",
+               "jms.destination.type": "QUEUE",
+               "java.naming.provider.url": "t3://weblogic-jms:7001",
+               "connection.factory.name": "myFactory",
                "java.naming.security.principal": "weblogic",
                "java.naming.security.credentials": "welcome1",
                "tasks.max" : "1",
@@ -66,9 +64,9 @@ curl -X PUT \
                "confluent.topic.bootstrap.servers": "broker:9092",
                "confluent.topic.replication.factor": "1"
           }' \
-     http://localhost:8083/connectors/jms-weblogic-source/config | jq .
+     http://localhost:8083/connectors/jms-weblogic-queue-source/config | jq .
 
 sleep 5
 
 log "Verify we have received the data in from-weblogic-messages topic"
-timeout 60 docker exec connect kafka-console-consumer -bootstrap-server broker:9092 --topic from-weblogic-messages --from-beginning --max-messages 2
+timeout 60 docker exec connect kafka-console-consumer -bootstrap-server broker:9092 --topic from-weblogic-messages --from-beginning --max-messages 1
