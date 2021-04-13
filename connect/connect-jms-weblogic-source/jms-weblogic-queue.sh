@@ -52,12 +52,14 @@ curl -X PUT \
                "connector.class": "io.confluent.connect.weblogic.WeblogicSourceConnector",
                "kafka.topic": "from-weblogic-messages",
                "java.naming.factory.initial": "weblogic.jndi.WLInitialContextFactory",
-               "jms.destination.name": "myQueue",
+               "jms.destination.name": "myJMSServer/mySystemModule!myJMSServer@MyDistributedQueue",
                "jms.destination.type": "QUEUE",
                "java.naming.provider.url": "t3://weblogic-jms:7001",
                "connection.factory.name": "myFactory",
                "java.naming.security.principal": "weblogic",
                "java.naming.security.credentials": "welcome1",
+               "key.converter": "org.apache.kafka.connect.storage.StringConverter",
+               "value.converter": "org.apache.kafka.connect.storage.StringConverter",
                "tasks.max" : "1",
                "batch.size": "1",
                "max.pending.messages": "1",
@@ -66,6 +68,7 @@ curl -X PUT \
                "confluent.topic.replication.factor": "1"
           }' \
      http://localhost:8083/connectors/jms-weblogic-queue-source/config | jq .
+
 
 sleep 5
 
