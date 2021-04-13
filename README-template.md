@@ -101,6 +101,7 @@ Quick start examples from Confluent [docs](https://docs.confluent.io/current/con
 | <img src="./images/icons/solace.jpg" width="15"> [JMS Solace Sink](connect/connect-jms-solace-sink) |  Message Queue | :connect/connect-jms-solace-sink:
 | <img src="./images/icons/tibco_ems.png" width="15"> [JMS TIBCO EMS Sink](connect/connect-jms-tibco-sink) |  Message Queue | :connect/connect-jms-tibco-sink:
 | <img src="./images/icons/tibco_ems.png" width="15"> [JMS TIBCO EMS Source](connect/connect-jms-tibco-source) |  Message Queue | :connect/connect-jms-tibco-source:
+| <img src="./images/icons/weblogic.png" width="15"> [JMS Oracle Weblogic Source](connect/connect-jms-weblogic-source) |  Message Queue | :connect/connect-jms-weblogic-source:
 | <img src="./images/icons/mapr.png" height="15"> [Mapr Sink](connect/connect-mapr-sink) |  Datastore | :confluentinc-kafka-connect-maprdb:
 | <img src="./images/icons/marketo.png" height="15"> [Marketo Source](connect/connect-marketo-source) |  SaaS Apps | :connect/connect-marketo-source:
 | <img src="./images/icons/minio.png" height="15"> [Minio Sink](connect/connect-minio-s3-sink) |  Datastore | :connect/connect-minio-s3-sink:

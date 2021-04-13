@@ -1,10 +1,10 @@
-# Oracle WebLogic Server Source connector
+# Oracle Weblogic JMS Source connector
 
 ![asciinema](https://github.com/vdesabou/gifs/blob/master/connect/connect-jms-weblogic-source/asciinema.gif?raw=true)
 
 ## Objective
 
-Quickly test [Oracle WebLogic Server Source](https://docs.confluent.io/kafka-connect-weblogic-source/current/index.html) connector.
+Quickly test [Oracle Weblogic JMS Source](https://docs.confluent.io/kafka-connect-weblogic-source/current/index.html) connector.
 
 Using Oracle WebLogic Server (Developer Tier, version `12.2.1.3`) Docker [image](https://hub.docker.com/_/oracle-weblogic-server-12c). You need to register to get the image.
 
