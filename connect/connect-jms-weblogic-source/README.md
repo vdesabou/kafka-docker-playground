@@ -15,8 +15,9 @@ Simply run:
 $ ./jms-weblogic.sh
 ```
 
-## Details of what the script is doing
+N.B: Weblogic console is reachable at [http://127.0.0.1:7001/console](http://127.0.0.1:7001/console]) (`weblogic`/`welcome1`)
 
+## Details of what the script is doing
 
 
 N.B: Control Center is reachable at [http://127.0.0.1:9021](http://127.0.0.1:9021])

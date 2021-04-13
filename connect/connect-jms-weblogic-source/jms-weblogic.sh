@@ -4,8 +4,6 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
-
-
 if test -z "$(docker images -q store/oracle/weblogic:12.2.1.3-dev-200127)"
 then
      logerror "Image store/oracle/weblogic:12.2.1.3-dev-200127 is not present. You must pull it from https://hub.docker.com/_/oracle-weblogic-server-12c"
@@ -27,18 +25,7 @@ if [ ! -f ${DIR}/wlthint3client.jar ]
 then
      log "${DIR}/wlthint3client.jar missing, will get it from weblogic-jms:latest image"
      docker run weblogic-jms:latest cat /u01/oracle/wlserver/server/lib/wlthint3client.jar > ${DIR}/wlthint3client.jar
-fi
-
-if [ ! -f ${DIR}/wljmsclient.jar ]
-then
-     log "${DIR}/wljmsclient.jar missing, will get it from weblogic-jms:latest image"
-     docker run weblogic-jms:latest cat /u01/oracle/wlserver/server/lib/wljmsclient.jar > ${DIR}/jms-sender/lib/wljmsclient.jar
-fi
-
-if [ ! -f ${DIR}/wlclient.jar ]
-then
-     log "${DIR}/wlclient.jar missing, will get it from weblogic-jms:latest image"
-     docker run weblogic-jms:latest cat /u01/oracle/wlserver/server/lib/wlclient.jar > ${DIR}/jms-sender/lib/wlclient.jar
+     docker run weblogic-jms:latest cat /u01/oracle/wlserver/server/lib/wlthint3client.jar > ${DIR}/jms-sender/lib/wlthint3client.jar
 fi
 
 if [ ! -f ${DIR}/weblogic.jar ]
@@ -58,16 +45,16 @@ done
 
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
 
-docker exec jms-sender bash -c 'java -cp "/tmp/weblogic.jar:/tmp/wlclient.jar:/tmp/wljmsclient.jar:/jms-sender-0.0.1-SNAPSHOT.jar" com.sample.jms.toolkit.JMSSender'
+docker exec jms-sender bash -c 'java -cp "/tmp/weblogic.jar:/tmp/wlthint3client.jar:/jms-sender-0.0.1-SNAPSHOT.jar" com.sample.jms.toolkit.JMSSender'
 
 log "Creating JMS weblogic source connector"
 curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
                "connector.class": "io.confluent.connect.weblogic.WeblogicSourceConnector",
-               "kafka.topic":"MyKafkaTopicName",
+               "kafka.topic":"from-weblogic-messages",
                "java.naming.factory.initial": "weblogic.jndi.WLInitialContextFactory",
-               "jms.destination.name":"myDistributedQueue",
+               "jms.destination.name":"myQueue",
                "jms.destination.type":"queue",
                "java.naming.provider.url": "t3://weblogic-jms:7001/",
                "connection.factory.name": "weblogic.jms.ConnectionFactory",
@@ -75,9 +62,6 @@ curl -X PUT \
                "java.naming.security.credentials": "welcome1",
                "tasks.max" : "1",
                "jms.client.id": "id1",
-               "jms.subscription.durable": true,
-               "jms.subscription.shared": true,
-               "jms.subscription.name": "sub1",
                "confluent.license": "",
                "confluent.topic.bootstrap.servers": "broker:9092",
                "confluent.topic.replication.factor": "1"
