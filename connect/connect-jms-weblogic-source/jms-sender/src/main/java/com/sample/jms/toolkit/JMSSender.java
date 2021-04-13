@@ -1,13 +1,12 @@
 package com.sample.jms.toolkit;
 
 import java.util.Hashtable;
-
+import javax.jms.Connection;
+import javax.jms.ConnectionFactory;
 import javax.jms.JMSException;
 import javax.jms.Message;
+import javax.jms.MessageProducer;
 import javax.jms.Queue;
-import javax.jms.QueueConnection;
-import javax.jms.QueueConnectionFactory;
-import javax.jms.QueueSender;
 import javax.jms.QueueSession;
 import javax.jms.Session;
 import javax.naming.Context;
@@ -15,33 +14,54 @@ import javax.naming.InitialContext;
 import javax.naming.NamingException;
 
 public class JMSSender {
+	public final static String JNDI_FACTORY = "weblogic.jndi.WLInitialContextFactory";
+
+	public final static String URL = "t3://weblogic-jms:7001";
 
 	public static void main(String[] args) throws NamingException, JMSException {
+		System.out.println("Hello World!");
 
-		String JNDIFactory = "weblogic.jndi.WLInitialContextFactory";
-		String providerUrl = "t3://weblogic-jms:7001";
-		Hashtable<String, String> env = new Hashtable<String, String>();
-		env.put(Context.INITIAL_CONTEXT_FACTORY, JNDIFactory);
-		env.put(Context.PROVIDER_URL, providerUrl);
-		Context ctx = new InitialContext(env);
+		Connection connection = null;
+		try {
+			System.out.println("Create JNDI Context");
+			Context context = getInitialContext();
 
-		QueueConnectionFactory connFactory = (QueueConnectionFactory) ctx.lookup("weblogic.jms.ConnectionFactory");
-		QueueConnection qConn = (QueueConnection) connFactory.createConnection("weblogic","welcome1");
-		QueueSession qSession = qConn.createQueueSession(false, Session.AUTO_ACKNOWLEDGE);
-		Queue queue = (Queue) ctx.lookup("myJMSServer/mySystemModule!myDistributedQueue");
-		QueueSender qSender = qSession.createSender(queue);
-		// 100b
-		Message msg = qSession.createTextMessage("helloworldhelloworldhelloworldhelloworldhelloworldhelloworldhelloworldhelloworldhelloworldhelloworld");
-		// 10000x100b=1m
-		// 100000x100b=10m
-		for (int i = 1; i <= 100; i++) {
-			System.out.println(i);
-			qSender.send(msg);
+			System.out.println("Get connection facory");
+			ConnectionFactory connectionFactory = (ConnectionFactory) context.lookup("myFactory");
+
+			System.out.println("Create connection");
+			connection = connectionFactory.createConnection();
+
+			System.out.println("Create session");
+			Session session = connection.createSession(false, QueueSession.AUTO_ACKNOWLEDGE);
+
+			System.out.println("Lookup queue");
+			Queue queue = (Queue) context.lookup("myQueue");
+
+			System.out.println("Start connection");
+			connection.start();
+
+			System.out.println("Create producer");
+			MessageProducer producer = session.createProducer(queue);
+
+			System.out.println("Create hello world message");
+			Message hellowWorldText = session.createTextMessage("Hello World!");
+
+			System.out.println("Send hello world message");
+
+			producer.send(hellowWorldText);
+		} finally {
+			if (connection != null) {
+				System.out.println("close the connection");
+				connection.close();
+			}
 		}
+	}
 
-		qSender.close();
-		qSession.close();
-		qConn.close();
-
+	private static InitialContext getInitialContext() throws NamingException {
+		Hashtable env = new Hashtable();
+		env.put(Context.INITIAL_CONTEXT_FACTORY, JNDI_FACTORY);
+		env.put(Context.PROVIDER_URL, URL);
+		return new InitialContext(env);
 	}
 }
