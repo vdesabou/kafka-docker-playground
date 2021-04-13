@@ -12,7 +12,7 @@ then
      log "INFO: the file ${KEYSTORE} file is not present, generating it..."
      cd ${DIR}/../../environment/sasl-ssl/security
 
-     log "Generate keys and certificates used for SSL"
+     log "🔐 Generate keys and certificates used for SSL"
      ./certs-create.sh > /dev/null 2>&1
      cd ${OLDDIR}
      cp ${DIR}/../../environment/sasl-ssl/security/kafka.broker.keystore.jks ${DIR}/keystore.jks
