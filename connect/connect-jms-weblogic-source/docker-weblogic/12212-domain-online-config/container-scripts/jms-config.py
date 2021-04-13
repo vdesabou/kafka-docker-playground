@@ -3,6 +3,8 @@ import java.lang
 import os
 import string
 
+# good tutorial to do it with GUI: https://www.oracle.com/webfolder/technetwork/tutorials/obe/java/JMSServiceWLS/JMSServiceWLS.html
+
 propInputStream = FileInputStream("/u01/oracle/jms-config.properties")
 configProps = Properties()
 configProps.load(propInputStream)
