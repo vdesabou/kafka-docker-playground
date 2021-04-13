@@ -33,7 +33,7 @@ fi
 
 for component in jms-sender
 do
-     if [ ! -f ${DIR}/${component}/target/${component}-1.0.0-jar.jar ]
+     if [ ! -f ${DIR}/${component}/target/${component}-1.0.0.jar ]
      then
           log "Building jar for ${component}"
           docker run -i --rm -e KAFKA_CLIENT_TAG=$KAFKA_CLIENT_TAG -e TAG=$TAG_BASE -v "${DIR}/${component}":/usr/src/mymaven -v "$HOME/.m2":/root/.m2 -v "${DIR}/${component}/target:/usr/src/mymaven/target" -w /usr/src/mymaven maven:3.6.1-jdk-8 mvn package
@@ -43,7 +43,7 @@ done
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
 
 log "Sending one message in JMS queue myQueue"
-docker exec jms-sender bash -c 'java -cp "/tmp/weblogic.jar:/tmp/wlthint3client.jar:/jms-sender-0.0.1-SNAPSHOT.jar" com.sample.jms.toolkit.JMSSender'
+docker exec jms-sender bash -c 'java -cp "/tmp/weblogic.jar:/tmp/wlthint3client.jar:/jms-sender-1.0.0.jar" com.sample.jms.toolkit.JMSSender'
 
 log "Creating JMS weblogic source connector"
 curl -X PUT \
