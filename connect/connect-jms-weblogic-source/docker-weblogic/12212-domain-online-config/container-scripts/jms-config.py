@@ -27,7 +27,7 @@ print('domain_home  : [%s]' % domainhome);
 
 clusterName = os.environ.get("CLUSTER_NAME", "DockerCluster")
 
- 
+
 migratableTargetName = configProps.get("migratabletarget.name")
 #machineName = configProps.get("machine.name")
 
@@ -35,14 +35,14 @@ migratableTargetName = configProps.get("migratabletarget.name")
 jmsServerName = configProps.get("jms.server.name")
 storeName = configProps.get("store.name")
 storePath = configProps.get("store.path")
- 
+
 # 3 - SystemModule Details
 systemModuleName = configProps.get("system.module.name")
- 
+
 # 4 - ConnectionFactory Details
 connectionFactoryName = configProps.get("connection.factory.name")
 ConnectionFactoryJNDIName = configProps.get("connection.factory.jndi.name")
- 
+
 # 5 - SubDeployment, Queue & Topic Details
 SubDeploymentName = configProps.get("sub.deployment.name")
 queueName = configProps.get("queue.name")
@@ -66,7 +66,7 @@ runningServer = ''
 for server in serverNames:
 	name = server.getName()
 	print 'server : '+name
-	
+
 	try:
 		cd('/ServerRuntimes/'+name)
 	except Exception, e:
@@ -78,7 +78,7 @@ for server in serverNames:
 
 	serverState = cmo.getState()
 	if serverState == "RUNNING":
-		print 'Server ' + name + ' is :\033[1;32m' + serverState + '\033[0m'		
+		print 'Server ' + name + ' is :\033[1;32m' + serverState + '\033[0m'
 	elif serverState == "STARTING":
 		print 'Server ' + name + ' is :\033[1;33m' + serverState + '\033[0m'
 	elif serverState == "UNKNOWN":
@@ -94,7 +94,7 @@ for server in serverNames:
 			continue
 		#if name == 'AdminServer' or name == 'Admin' or name:
 		#	continue
-		
+
 		cd('/ServerRuntimes/'+name)
 		runningServer = name
 		break
@@ -126,8 +126,8 @@ for server in serverNames:
 			print 'host ' + `host`
 			if i > 1:
 				clusterAddress = clusterAddress + ','
-			
-			clusterAddress = clusterAddress + host + ':' + `portNumber`                 
+
+			clusterAddress = clusterAddress + host + ':' + `portNumber`
 			i= i + 1
 		except Exception, e:
 			print 'Error creating up cluster Address'
@@ -142,8 +142,8 @@ for machine in machineNames:
 			print 'machine '+name
 			if i > 1:
 				machineName = machineName + ','
-			
-			machineName = machineName + `name`                 
+
+			machineName = machineName + `name`
 			i= i + 1
 		except Exception, e:
 			print 'Error creating up machine names'
@@ -176,7 +176,7 @@ activate()
 #cd('/Clusters/'+clusterName)
 #cmo.setMigrationBasis('consensus')
 #cmo.setClusterAddress(clusterAddress)
-machineArray = [] 
+machineArray = []
 for machine in machineNames:
 	name = machine.getName()
 	machineArray.append(ObjectName('com.bea:Name='+name+',Type=Machine'))
@@ -260,8 +260,8 @@ else:
 	print '===> Created JMS Server - ' + jmsServerName
 	Thread.sleep(10)
 	cd('/JMSServers/'+jmsServerName)
-	cmo.setPersistentStore(getMBean('/FileStores/'+storeName))
-	#set('Targets',jarray.array([ObjectName('com.bea:Name='+runningServer+' (migratable),Type=MigratableTarget')], ObjectName))
+	#cmo.setPersistentStore(getMBean('/FileStores/'+storeName))
+	set('Targets',jarray.array([ObjectName('com.bea:Name=AdminServer,Type=Server')], ObjectName))
 #	set('Targets',jarray.array([ObjectName('com.bea:Name='+migratableTargetName+',Type=MigratableTarget')], ObjectName))
 
 activate()
@@ -282,7 +282,8 @@ else:
 	cmo.createJMSSystemResource(systemModuleName)
 	print '===> Created JMS System Module - ' + systemModuleName
 	cd('/JMSSystemResources/'+systemModuleName)
-	set('Targets',jarray.array([ObjectName('com.bea:Name='+clusterName+',Type=Cluster')], ObjectName))
+	#set('Targets',jarray.array([ObjectName('com.bea:Name='+clusterName+',Type=Cluster')], ObjectName))
+	set('Targets',jarray.array([ObjectName('com.bea:Name=AdminServer,Type=Server')], ObjectName))
 
 activate()
 
@@ -319,7 +320,7 @@ else:
 	cd('/JMSSystemResources/'+systemModuleName+'/JMSResource/'+systemModuleName)
 	cmo.createConnectionFactory(connectionFactoryName)
 	print '===> Created Connection Factory - ' + connectionFactoryName
-	
+
 	cd('/JMSSystemResources/'+systemModuleName+'/JMSResource/'+systemModuleName+'/ConnectionFactories/'+connectionFactoryName)
 	cmo.setJNDIName(ConnectionFactoryJNDIName)
 
@@ -361,7 +362,7 @@ else:
 
 	cd('/JMSSystemResources/'+systemModuleName+'/JMSResource/'+systemModuleName+'/UniformDistributedQueues/'+queueName)
 	cmo.setJNDIName(queueJNDIName)
-	
+
 	cd('/JMSSystemResources/'+systemModuleName+'/SubDeployments/'+SubDeploymentName)
 	set('Targets',jarray.array([ObjectName('com.bea:Name='+jmsServerName+',Type=JMSServer')], ObjectName))
 
@@ -390,7 +391,7 @@ else:
 	cd('/JMSSystemResources/'+systemModuleName+'/JMSResource/'+systemModuleName+'/UniformDistributedTopics/'+topicName)
 	cmo.setJNDIName(topicJNDIName)
 	cmo.setForwardingPolicy('Replicated')
-	
+
 	cd('/JMSSystemResources/'+systemModuleName+'/SubDeployments/'+SubDeploymentName)
 	set('Targets',jarray.array([ObjectName('com.bea:Name='+jmsServerName+',Type=JMSServer')], ObjectName))
 
