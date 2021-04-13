@@ -24,6 +24,10 @@ $ ./jms-weblogic-topic.sh
 
 N.B: Weblogic console is reachable at [http://127.0.0.1:7001/console](http://127.0.0.1:7001/console]) (`weblogic`/`welcome1`)
 
+You can use it to see all JMS resources:
+
+![console](screenshot1.jpg)
+
 ## Details of what the script is doing
 
 ### Queue example
