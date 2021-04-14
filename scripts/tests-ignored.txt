@@ -1,3 +1,5 @@
 # scripts to ignore
 ccloud-generate-env-vars.sh
 01-create-table.sh
+#
+cdc-oracle12-pdb-table-mtls-db-auth.sh
