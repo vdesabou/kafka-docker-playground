@@ -9,6 +9,7 @@ on:
       - cron: '0 4 * * *' # every day at 4 am
 
   workflow_dispatch:
+    inputs:
 
 jobs:
   pre-build:

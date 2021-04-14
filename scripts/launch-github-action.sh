@@ -20,9 +20,15 @@ function logwarn() {
   echo -e "$PURPLE$@$NC"
 }
 
+if [ -z "$GH_TOKEN" ]
+then
+  logerror "GH_TOKEN is not set !"
+  exit 1
+fi
+
 log "Calling github action"
-curl -H "Accept: application/vnd.github.everest-preview+json" \
+curl -H "Accept: application/vnd.github.v3+json" \
     -H "Authorization: token $GH_TOKEN" \
     --request POST \
-    --data '{"event_type": "Manual trigger"}' \
-    https://api.github.com/repos/vdesabou/kafka-docker-playground/dispatches
+    "https://api.github.com/repos/vdesabou/kafka-docker-playground/actions/workflows/run-regression.yml/dispatches" \
+    -d '{"ref":"master"}'
