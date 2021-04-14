@@ -86,8 +86,8 @@ helm upgrade --install operator confluentinc_earlyaccess/confluent-operator \
   --set image.registry=confluent-docker-internal-early-access-operator-2.jfrog.io
 
 log "Generate a CA pair"
-docker run -rm -v $PWD:/tmp vdesabou/kafka-docker-playground-connect:${CONNECT_TAG} openssl genrsa -out /tmp/ca-key.pem 2048
-docker run -rm -v $PWD:/tmp vdesabou/kafka-docker-playground-connect:${CONNECT_TAG} openssl req -new -key /tmp/ca-key.pem -x509 \
+docker run --rm -v $PWD:/tmp vdesabou/kafka-docker-playground-connect:${CONNECT_TAG} openssl genrsa -out /tmp/ca-key.pem 2048
+docker run --rm -v $PWD:/tmp vdesabou/kafka-docker-playground-connect:${CONNECT_TAG} openssl req -new -key /tmp/ca-key.pem -x509 \
   -days 1000 \
   -out /tmp/ca.pem \
   -subj "/C=US/ST=CA/L=MountainView/O=Confluent/OU=Operator/CN=TestCA"
