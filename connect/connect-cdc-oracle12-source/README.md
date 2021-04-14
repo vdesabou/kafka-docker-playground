@@ -1,5 +1,7 @@
 # Oracle CDC Source (Oracle 12) Source connector
 
+![asciinema](https://github.com/vdesabou/gifs/blob/master/connect/connect-cdc-oracle12-source/asciinema.gif?raw=true)
+
 ## Objective
 
 Quickly test [Oracle CDC Source Connector](https://docs.confluent.io/kafka-connect-oracle-cdc/current/) with Oracle 12.
