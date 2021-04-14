@@ -33,8 +33,11 @@ fi
 
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext-repro-local-instance.yml"
 
-log "Create a Kinesis stream my_kinesis_stream"
-/usr/local/bin/aws kinesis --endpoint-url https://localhost:4567/ create-stream --stream-name my_kinesis_stream --shard-count 1 --no-verify-ssl
+KINESIS_STREAM_NAME=my_kinesis_stream$TAG
+KINESIS_STREAM_NAME=${KINESIS_STREAM_NAME//[-.]/}
+
+log "Create a Kinesis stream $KINESIS_STREAM_NAME"
+/usr/local/bin/aws kinesis --endpoint-url https://localhost:4567/ create-stream --stream-name $KINESIS_STREAM_NAME --shard-count 1 --no-verify-ssl
 
 log "Sleep 10 seconds to let the Kinesis stream being fully started"
 sleep 10
@@ -48,7 +51,7 @@ curl -X PUT \
                "tasks.max": "1",
                "kafka.topic": "kinesis_topic",
                "kinesis.base.url": "https://kinesis-local:4567",
-               "kinesis.stream": "my_kinesis_stream",
+               "kinesis.stream": "'"$KINESIS_STREAM_NAME"'",
                "kinesis.position": "AT_TIMESTAMP",
                "kinesis.shard.timestamp": "'"$TODAY"'",
                "kinesis.region": "eu-west-3",
@@ -60,7 +63,7 @@ curl -X PUT \
 
 log "Insert records in Kinesis stream"
 # The example shows that a record containing partition key 123 and data "test-message-1" is inserted into my_kinesis_stream.
-/usr/local/bin/aws kinesis --endpoint-url https://localhost:4567/ put-record --stream-name my_kinesis_stream --partition-key 123 --data test-message-1 --no-verify-ssl
+/usr/local/bin/aws kinesis --endpoint-url https://localhost:4567/ put-record --stream-name $KINESIS_STREAM_NAME --partition-key 123 --data test-message-1 --no-verify-ssl
 
 sleep 10
 
@@ -68,4 +71,4 @@ log "Verify we have received the data in kinesis_topic topic"
 timeout 60 docker exec broker kafka-console-consumer --bootstrap-server broker:9092 --topic kinesis_topic --from-beginning --max-messages 1
 
 log "Delete the stream"
-/usr/local/bin/aws kinesis --endpoint-url https://localhost:4567/ delete-stream --stream-name my_kinesis_stream --no-verify-ssl
+/usr/local/bin/aws kinesis --endpoint-url https://localhost:4567/ delete-stream --stream-name $KINESIS_STREAM_NAME --no-verify-ssl
