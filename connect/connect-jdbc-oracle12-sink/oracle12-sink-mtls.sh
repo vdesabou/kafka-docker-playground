@@ -136,12 +136,6 @@ docker run -v $PWD:/tmp vdesabou/kafka-docker-playground-connect:${CONNECT_TAG} 
 
 cd ${DIR}
 
-log "Alter user 'myuser' in order to be identified as 'CN=connect,C=US'"
-docker exec -i oracle sqlplus sys/Admin123@//localhost:1521/ORCLPDB1 as sysdba <<- EOF
-	ALTER USER myuser IDENTIFIED EXTERNALLY AS 'CN=connect,C=US';
-	exit;
-EOF
-
 log "Update listener.ora, sqlnet.ora and tnsnames.ora"
 docker cp ${PWD}/mtls/listener.ora oracle:/opt/oracle/oradata/dbconfig/ORCLCDB/listener.ora
 docker cp ${PWD}/mtls/sqlnet.ora oracle:/opt/oracle/oradata/dbconfig/ORCLCDB/sqlnet.ora
@@ -170,8 +164,9 @@ curl -X PUT \
      --data '{
                "connector.class": "io.confluent.connect.jdbc.JdbcSinkConnector",
                "tasks.max": "1",
+               "connection.user": "myuser",
+               "connection.password": "mypassword",
                "connection.oracle.net.ssl_server_dn_match": "true",
-               "connection.oracle.net.authentication_services": "(TCPS)",
                "connection.url": "jdbc:oracle:thin:@(DESCRIPTION=(ADDRESS=(PROTOCOL=TCPS)(HOST=oracle)(PORT=1532))(CONNECT_DATA=(SERVICE_NAME=ORCLPDB1))(SECURITY=(SSL_SERVER_CERT_DN=\"CN=server,C=US\")))",
                "topics": "ORDERS",
                "auto.create": "true",
@@ -188,12 +183,6 @@ docker exec -i connect kafka-avro-console-producer --broker-list broker:9092 --p
 EOF
 
 sleep 10
-
-log "Alter user 'myuser' in order to be identified as by password (in order to use sqlplus)"
-docker exec -i oracle sqlplus sys/Admin123@//localhost:1521/ORCLPDB1 as sysdba <<- EOF
-	ALTER USER myuser IDENTIFIED BY mypassword;
-	exit;
-EOF
 
 log "Show content of ORDERS table:"
 docker exec oracle bash -c "echo 'select * from ORDERS;' | sqlplus myuser/mypassword@//localhost:1521/ORCLPDB1"
