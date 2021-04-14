@@ -8,6 +8,6 @@ services:
   # https://pypi.org/project/azure-cosmos/
   azure-cosmos-client:
     build:
-      context: ../../connect/connect-azure-cosmosdb-source/azure-cosmos-client
+      context: ../../connect/connect-azure-cosmosdb-sink/azure-cosmos-client
     hostname: azure-cosmos-client
     container_name: azure-cosmos-client
