@@ -3,6 +3,8 @@
 
 Playground for Kafka/Confluent Docker experimentations...
 
+![GitHub issues by-label](https://img.shields.io/github/issues/vdesabou/kafka-docker-playground/bug)![GitHub commit activity](https://img.shields.io/github/commit-activity/w/vdesabou/kafka-docker-playground)![success tests](https://img.shields.io/badge/success%20tests-:nb_total_success:%2F:nb_total_tests:-red)![connector tested](https://img.shields.io/badge/connector%20tested-:nb_connector_tests:-green)![cp versions tested](https://img.shields.io/badge/cp%20version%20tested-:cp_version_tested:-orange)
+
 ℹ️ [How to run](https://github.com/vdesabou/kafka-docker-playground/wiki/How-to-run)
 
 <!-- omit in toc -->
