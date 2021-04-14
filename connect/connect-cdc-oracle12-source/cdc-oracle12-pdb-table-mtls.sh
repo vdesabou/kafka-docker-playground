@@ -120,12 +120,6 @@ docker run -v $PWD:/tmp vdesabou/kafka-docker-playground-connect:${CONNECT_TAG} 
 
 cd ${DIR}
 
-log "Alter user 'C##MYUSER' in order to be identified as 'CN=connect,C=US'"
-docker exec -i oracle sqlplus sys/Admin123@//localhost:1521/ORCLCDB as sysdba <<- EOF
-	ALTER USER C##MYUSER IDENTIFIED EXTERNALLY AS 'CN=connect,C=US';
-	exit;
-EOF
-
 log "Update listener.ora, sqlnet.ora and tnsnames.ora"
 docker cp ${PWD}/mtls/listener.ora oracle:/opt/oracle/oradata/dbconfig/ORCLCDB/listener.ora
 docker cp ${PWD}/mtls/sqlnet.ora oracle:/opt/oracle/oradata/dbconfig/ORCLCDB/sqlnet.ora
@@ -163,11 +157,12 @@ curl -X PUT \
                "oracle.port": 1532,
                "oracle.sid": "ORCLCDB",
                "oracle.pdb.name": "ORCLPDB1",
+               "oracle.username": "C##MYUSER",
+               "oracle.password": "mypassword",
                "oracle.ssl.truststore.file": "/tmp/truststore.jks",
                "oracle.ssl.truststore.password": "welcome123",
                "oracle.connection.javax.net.ssl.keyStore": "/tmp/keystore.jks",
                "oracle.connection.javax.net.ssl.keyStorePassword": "welcome123",
-               "oracle.connection.oracle.net.authentication_services": "(TCPS)",
                "start.from":"snapshot",
                "redo.log.topic.name": "redo-log-topic",
                "redo.log.consumer.bootstrap.servers":"broker:9092",
@@ -179,62 +174,6 @@ curl -X PUT \
      http://localhost:8083/connectors/cdc-oracle-source-pdb/config | jq .
 
 sleep 5
-
-# FIXTHIS:
-# [2021-04-12 13:33:52,281] ERROR WorkerSourceTask{id=cdc-oracle-source-pdb-0} Task threw an uncaught and unrecoverable exception. Task is being killed and will not recover until manually restarted (org.apache.kafka.connect.runtime.WorkerTask)
-# org.apache.kafka.connect.errors.ConnectException: Failed on attempt 1 of 32768 to snapshot table schema from  at jdbc:oracle:thin:@(DESCRIPTION=(ADDRESS=(PROTOCOL=TCPS)(HOST=oracle)(PORT=1532))(CONNECT_DATA=(SID=ORCLCDB))) (pool=oracle-cdc-source:cdc-oracle-source-pdb-0): ORA-65053: A global user cannot change the container in the session.
-
-#         at io.confluent.connect.utils.retry.RetryPolicy.callWith(RetryPolicy.java:423)
-#         at io.confluent.connect.utils.retry.RetryPolicy.callWith(RetryPolicy.java:368)
-#         at io.confluent.connect.oracle.cdc.OracleDatabase.snapshotTableSchema(OracleDatabase.java:466)
-#         at io.confluent.connect.oracle.cdc.OracleCdcSourceTask.lambda$start$4(OracleCdcSourceTask.java:235)
-#         at java.base/java.util.stream.Collectors.lambda$uniqKeysMapAccumulator$1(Collectors.java:178)
-#         at java.base/java.util.stream.ReduceOps$3ReducingSink.accept(ReduceOps.java:169)
-#         at java.base/java.util.stream.ReferencePipeline$2$1.accept(ReferencePipeline.java:177)
-#         at java.base/java.util.HashMap$KeySpliterator.forEachRemaining(HashMap.java:1603)
-#         at java.base/java.util.stream.AbstractPipeline.copyInto(AbstractPipeline.java:484)
-#         at java.base/java.util.stream.AbstractPipeline.wrapAndCopyInto(AbstractPipeline.java:474)
-#         at java.base/java.util.stream.ReduceOps$ReduceOp.evaluateSequential(ReduceOps.java:913)
-#         at java.base/java.util.stream.AbstractPipeline.evaluate(AbstractPipeline.java:234)
-#         at java.base/java.util.stream.ReferencePipeline.collect(ReferencePipeline.java:578)
-#         at io.confluent.connect.oracle.cdc.OracleCdcSourceTask.start(OracleCdcSourceTask.java:234)
-#         at org.apache.kafka.connect.runtime.WorkerSourceTask.execute(WorkerSourceTask.java:232)
-#         at org.apache.kafka.connect.runtime.WorkerTask.doRun(WorkerTask.java:189)
-#         at org.apache.kafka.connect.runtime.WorkerTask.run(WorkerTask.java:238)
-#         at java.base/java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:515)
-#         at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:264)
-#         at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1128)
-#         at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:628)
-#         at java.base/java.lang.Thread.run(Thread.java:834)
-# Caused by: java.sql.SQLException: ORA-65053: A global user cannot change the container in the session.
-
-#         at oracle.jdbc.driver.T4CTTIoer11.processError(T4CTTIoer11.java:509)
-#         at oracle.jdbc.driver.T4CTTIoer11.processError(T4CTTIoer11.java:461)
-#         at oracle.jdbc.driver.T4C8Oall.processError(T4C8Oall.java:1104)
-#         at oracle.jdbc.driver.T4CTTIfun.receive(T4CTTIfun.java:550)
-#         at oracle.jdbc.driver.T4CTTIfun.doRPC(T4CTTIfun.java:268)
-#         at oracle.jdbc.driver.T4C8Oall.doOALL(T4C8Oall.java:655)
-#         at oracle.jdbc.driver.T4CCallableStatement.doOall8(T4CCallableStatement.java:265)
-#         at oracle.jdbc.driver.T4CCallableStatement.doOall8(T4CCallableStatement.java:86)
-#         at oracle.jdbc.driver.T4CCallableStatement.executeForRows(T4CCallableStatement.java:965)
-#         at oracle.jdbc.driver.OracleStatement.doExecuteWithTimeout(OracleStatement.java:1205)
-#         at oracle.jdbc.driver.OraclePreparedStatement.executeInternal(OraclePreparedStatement.java:3666)
-#         at oracle.jdbc.driver.T4CCallableStatement.executeInternal(T4CCallableStatement.java:1358)
-#         at oracle.jdbc.driver.OraclePreparedStatement.execute(OraclePreparedStatement.java:3778)
-#         at oracle.jdbc.driver.OracleCallableStatement.execute(OracleCallableStatement.java:4251)
-#         at oracle.jdbc.driver.OraclePreparedStatementWrapper.execute(OraclePreparedStatementWrapper.java:1081)
-#         at oracle.ucp.jdbc.proxy.oracle$1ucp$1jdbc$1proxy$1oracle$1StatementProxy$2oracle$1jdbc$1internal$1OracleCallableStatement$$$Proxy.execute(Unknown Source)
-#         at io.confluent.connect.oracle.cdc.OracleDatabase.switchContainer(OracleDatabase.java:591)
-#         at io.confluent.connect.oracle.cdc.OracleDatabase$PdbContext.<init>(OracleDatabase.java:643)
-#         at io.confluent.connect.oracle.cdc.OracleDatabase.pdbContext(OracleDatabase.java:611)
-#         at io.confluent.connect.oracle.cdc.OracleDatabase.doSnapshotTableSchema(OracleDatabase.java:477)
-#         at io.confluent.connect.oracle.cdc.OracleDatabase.lambda$snapshotTableSchema$5(OracleDatabase.java:469)
-#         at io.confluent.connect.utils.retry.RetryPolicy.callWith(RetryPolicy.java:417)
-#         ... 21 more
-# Caused by: Error : 65053, Position : 0, Sql = ALTER SESSION SET CONTAINER=ORCLPDB1, OriginalSql = ALTER SESSION SET CONTAINER=ORCLPDB1, Error Msg = ORA-65053: A global user cannot change the container in the session.
-
-#         at oracle.jdbc.driver.T4CTTIoer11.processError(T4CTTIoer11.java:513)
-#         ... 42 more
 
 log "Verifying topic ORCLPDB1.C__MYUSER.CUSTOMERS"
 timeout 60 docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic ORCLPDB1.C__MYUSER.CUSTOMERS --from-beginning --max-messages 2

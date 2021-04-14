@@ -39,7 +39,7 @@ or
 $ ./cdc-oracle12-pdb-table-ssl.sh
 ```
 
-with SSL encryption + Mutual TLS authentication:
+with SSL encryption + Mutual TLS (case #3 in this [document](https://www.oracle.com/technetwork/database/enterprise-edition/wp-oracle-jdbc-thin-ssl-130128.pdf)):
 
 ```
 $ ./cdc-oracle12-cdb-table-mtls.sh
@@ -50,6 +50,15 @@ or
 ```
 $ ./cdc-oracle12-pdb-table-mtls.sh
 ```
+
+with SSL encryption + Mutual TLS + DB authentication (case #4 in this [document](https://www.oracle.com/technetwork/database/enterprise-edition/wp-oracle-jdbc-thin-ssl-130128.pdf):
+
+```
+$ ./cdc-oracle12-cdb-table-mtls-db-auth.sh
+```
+
+N.B: `./cdc-oracle12-pdb-table-mtls-db-auth.sh` does not work, see [Oracle CDC: mTLS with DB authentication cannot work with PDB](https://github.com/vdesabou/kafka-docker-playground/issues/833)
+
 
 N.B: this is the [best resource](https://www.oracle.com/technetwork/topics/wp-oracle-jdbc-thin-ssl-130128.pdf) I found for Oracle DB and SSL.
 
@@ -291,8 +300,7 @@ ORCLCDB=
 "oracle.ssl.truststore.password": "welcome123",
 ```
 
-
-### With SSL encryption + Mutual TLS auth
+### With SSL encryption + Mutual TLS (case #3 in this [document](https://www.oracle.com/technetwork/database/enterprise-edition/wp-oracle-jdbc-thin-ssl-130128.pdf))
 
 `truststore.jks` is same as before.
 
@@ -318,6 +326,19 @@ $ keytool -list -keystore /tmp/keystore.jks -storepass 'welcome123' -v
 `.ora` files are same as before except that we set `SSL_CLIENT_AUTHENTICATION = TRUE` and TCPS as authentication `SQLNET.AUTHENTICATION_SERVICES = (TCPS,NTS,BEQ)`.
 
 
+`oracle.port` is set to SSL listener port and we set `oracle.connection.javax.net.ssl.keyStore`:
+
+```json
+"oracle.port": 1532,
+"oracle.ssl.truststore.file": "/tmp/truststore.jks",
+"oracle.ssl.truststore.password": "welcome123",
+"oracle.username": "C##MYUSER",
+"oracle.password": "mypassword",
+"oracle.connection.javax.net.ssl.keyStore": "/tmp/keystore.jks",
+"oracle.connection.javax.net.ssl.keyStorePassword": "welcome123",
+```
+### With SSL encryption + Mutual TLS + DB authentication (case #4 in this [document](https://www.oracle.com/technetwork/database/enterprise-edition/wp-oracle-jdbc-thin-ssl-130128.pdf)
+
 `oracle.port` is set to SSL listener port and we set `oracle.connection.javax.net.ssl.keyStore` and `"connection.oracle.net.authentication_services": "(TCPS)"`:
 
 ```json
@@ -339,6 +360,5 @@ $ docker exec -i oracle sqlplus sys/Admin123@//localhost:1521/ORCLCDB as sysdba 
 	exit;
 EOF
 ```
-
 
 N.B: Control Center is reachable at [http://127.0.0.1:9021](http://127.0.0.1:9021])
