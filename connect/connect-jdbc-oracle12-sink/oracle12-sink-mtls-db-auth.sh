@@ -50,15 +50,16 @@ if ! version_gt $JDBC_CONNECTOR_VERSION "9.9.9"; then
           logerror "ERROR: ${DIR}/ojdbc8.jar is missing. It must be downloaded manually in order to acknowledge user agreement"
           exit 1
      fi
-     docker-compose -f ../../environment/plaintext/docker-compose.yml -f "${PWD}/docker-compose.plaintext-mtls.yml" down -v --remove-orphans
+     docker-compose -f ../../environment/plaintext/docker-compose.yml -f "${PWD}/docker-compose.plaintext-mtls-db-auth.yml" down -v --remove-orphans
      log "Starting up oracle container to get generated cert from oracle server wallet"
-     docker-compose -f ../../environment/plaintext/docker-compose.yml -f "${PWD}/docker-compose.plaintext-mtls.yml" up -d oracle
+     docker-compose -f ../../environment/plaintext/docker-compose.yml -f "${PWD}/docker-compose.plaintext-mtls-db-auth.yml" up -d oracle
 else
      log "ojdbc jar is shipped with connector (starting with 10.0.0)"
      docker-compose -f ../../environment/plaintext/docker-compose.yml -f "${PWD}/docker-compose.plaintext-no-ojdbc-mtls.yml" down -v --remove-orphans
      log "Starting up oracle container to get generated cert from oracle server wallet"
      docker-compose -f ../../environment/plaintext/docker-compose.yml -f "${PWD}/docker-compose.plaintext-no-ojdbc-mtls.yml" up -d oracle
 fi
+
 
 # Verify Oracle DB has started within MAX_WAIT seconds
 MAX_WAIT=900
@@ -135,6 +136,12 @@ docker run -v $PWD:/tmp vdesabou/kafka-docker-playground-connect:${CONNECT_TAG} 
 
 cd ${DIR}
 
+log "Alter user 'myuser' in order to be identified as 'CN=connect,C=US'"
+docker exec -i oracle sqlplus sys/Admin123@//localhost:1521/ORCLPDB1 as sysdba <<- EOF
+	ALTER USER myuser IDENTIFIED EXTERNALLY AS 'CN=connect,C=US';
+	exit;
+EOF
+
 log "Update listener.ora, sqlnet.ora and tnsnames.ora"
 docker cp ${PWD}/mtls/listener.ora oracle:/opt/oracle/oradata/dbconfig/ORCLCDB/listener.ora
 docker cp ${PWD}/mtls/sqlnet.ora oracle:/opt/oracle/oradata/dbconfig/ORCLCDB/sqlnet.ora
@@ -147,7 +154,7 @@ start
 EOF
 
 if ! version_gt $JDBC_CONNECTOR_VERSION "9.9.9"; then
-     docker-compose -f ../../environment/plaintext/docker-compose.yml -f "${PWD}/docker-compose.plaintext-mtls.yml" up -d
+     docker-compose -f ../../environment/plaintext/docker-compose.yml -f "${PWD}/docker-compose.plaintext-mtls-db-auth.yml" up -d
 else
      docker-compose -f ../../environment/plaintext/docker-compose.yml -f "${PWD}/docker-compose.plaintext-no-ojdbc-mtls.yml" up -d
 fi
@@ -156,31 +163,38 @@ fi
 
 sleep 10
 
-log "Creating Oracle source connector"
+log "Creating Oracle sink connector"
+
 curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
-               "connector.class":"io.confluent.connect.jdbc.JdbcSourceConnector",
-               "tasks.max":"1",
-               "connection.user": "myuser",
-               "connection.password": "mypassword",
+               "connector.class": "io.confluent.connect.jdbc.JdbcSinkConnector",
+               "tasks.max": "1",
                "connection.oracle.net.ssl_server_dn_match": "true",
+               "connection.oracle.net.authentication_services": "(TCPS)",
                "connection.url": "jdbc:oracle:thin:@(DESCRIPTION=(ADDRESS=(PROTOCOL=TCPS)(HOST=oracle)(PORT=1532))(CONNECT_DATA=(SERVICE_NAME=ORCLPDB1))(SECURITY=(SSL_SERVER_CERT_DN=\"CN=server,C=US\")))",
-               "numeric.mapping":"best_fit",
-               "mode":"timestamp",
-               "poll.interval.ms":"1000",
-               "validate.non.null":"false",
-               "table.whitelist":"CUSTOMERS",
-               "timestamp.column.name":"UPDATE_TS",
-               "topic.prefix":"oracle-",
-               "errors.log.enable": "true",
-               "errors.log.include.messages": "true"
+               "topics": "ORDERS",
+               "auto.create": "true",
+               "insert.mode":"insert",
+               "auto.evolve":"true"
           }' \
-     http://localhost:8083/connectors/oracle-source-mtls/config | jq .
+     http://localhost:8083/connectors/oracle-sink-mtls-db-auth/config | jq .
 
-sleep 5
 
-log "Verifying topic oracle-CUSTOMERS"
-timeout 60 docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic oracle-CUSTOMERS --from-beginning --max-messages 2
+log "Sending messages to topic ORDERS"
+docker exec -i connect kafka-avro-console-producer --broker-list broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic ORDERS --property value.schema='{"type":"record","name":"myrecord","fields":[{"name":"id","type":"int"},{"name":"product", "type": "string"}, {"name":"quantity", "type": "int"}, {"name":"price",
+"type": "float"}]}' << EOF
+{"id": 999, "product": "foo", "quantity": 100, "price": 50}
+EOF
 
+sleep 10
+
+log "Alter user 'myuser' in order to be identified as by password (in order to use sqlplus)"
+docker exec -i oracle sqlplus sys/Admin123@//localhost:1521/ORCLPDB1 as sysdba <<- EOF
+	ALTER USER myuser IDENTIFIED BY mypassword;
+	exit;
+EOF
+
+log "Show content of ORDERS table:"
+docker exec oracle bash -c "echo 'select * from ORDERS;' | sqlplus myuser/mypassword@//localhost:1521/ORCLPDB1"
 
