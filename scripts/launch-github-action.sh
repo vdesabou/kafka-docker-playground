@@ -24,5 +24,5 @@ log "Calling github action"
 curl -H "Accept: application/vnd.github.everest-preview+json" \
     -H "Authorization: token $GH_TOKEN" \
     --request POST \
-    --data '{"event_type": "Updating with latest version"}' \
+    --data '{"event_type": "Manual trigger"}' \
     https://api.github.com/repos/vdesabou/kafka-docker-playground/dispatches
