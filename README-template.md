@@ -43,6 +43,7 @@ Quick start examples from Confluent [docs](https://docs.confluent.io/current/con
 | <img src="./images/icons/lambda.svg" width="15"> [AWS Lambda Sink](connect/connect-aws-lambda-sink)  | SaaS Apps  | :connect/connect-aws-lambda-sink:
 | <img src="./images/icons/blob_storage.png" width="15"> [Azure Blob Storage Sink](connect/connect-azure-blob-storage-sink)  | Datastore | :connect/connect-azure-blob-storage-sink:
 | <img src="./images/icons/blob_storage.png" width="15"> [Azure Blob Storage Source](connect/connect-azure-blob-storage-source)  | Datastore | :connect/connect-azure-blob-storage-source:
+| <img src="./images/icons/cosmosdb.png" width="15"> [Azure Cosmos DB Source](connect/connect-azure-cosmosdb-source)  | Datastore | :connect/connect-azure-cosmosdb-source:
 | <img src="./images/icons/data_lake_gen1.png" width="15"> [Azure Data Lake Storage Gen1 Sink](connect/connect-azure-data-lake-storage-gen1-sink)  | Datastore | :connect/connect-azure-data-lake-storage-gen1-sink:
 | <img src="./images/icons/data_lake_gen1.png" width="15"> [Azure Data Lake Storage Gen2 Sink](connect/connect-azure-data-lake-storage-gen2-sink)  | Datastore | :connect/connect-azure-data-lake-storage-gen2-sink:
 | <img src="./images/icons/event_hubs.png" width="15"> [Azure Event Hubs Source](connect/connect-azure-event-hubs-source)  | Message Queue | :connect/connect-azure-event-hubs-source:

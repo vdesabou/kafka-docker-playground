@@ -70,6 +70,7 @@ jobs:
                       "🚀 ccloud/ccloudexporter ccloud/connect-debezium-mongodb-source ccloud/connect-aws-kinesis-source ccloud/kafka-admin ccloud/rest-proxy-security-plugin ccloud/schema-registry-security-plugin",
                       "🚀 connect/connect-cdc-oracle12-source",
                       "🚀 connect/connect-jms-weblogic-source",
+                      "🚀 connect/connect-azure-cosmosdb-source",
                       "🚀 ccloud/operator"
                     ]
     steps:
