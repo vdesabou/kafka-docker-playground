@@ -68,40 +68,43 @@ AZURE_COSMOSDB_PRIMARY_CONNECTION_KEY=$(az cosmosdb keys list -n $AZURE_COSMOSDB
 
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
 
-log "Create kafka topic apparels"
-docker exec broker kafka-topics --bootstrap-server 127.0.0.1:9092 --create --topic apparels --partitions 1 --replication-factor 1
+log "Write data to topic hotels"
+docker exec -i broker kafka-console-producer --broker-list broker:9092 --topic hotels << EOF
+{"id": "h1", "HotelName": "Marriott", "Description": "Marriott description"}
+{"id": "h2", "HotelName": "HolidayInn", "Description": "HolidayInn description"}
+{"id": "h3", "HotelName": "Motel8", "Description": "Motel8 description"}
+EOF
 
-TOPIC_MAP="apparels#${AZURE_COSMOSDB_DB_NAME}"
+TOPIC_MAP="hotels#${AZURE_COSMOSDB_DB_NAME}"
 
-# https://github.com/microsoft/kafka-connect-cosmosdb/blob/dev/doc/README_Source.md#source-configuration-properties
-log "Creating Azure Cosmos DB Source connector"
+# https://github.com/microsoft/kafka-connect-cosmosdb/blob/dev/doc/README_Sink.md
+log "Creating Azure Cosmos DB Sink connector"
 curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
-                "connector.class": "com.azure.cosmos.kafka.connect.source.CosmosDBSourceConnector",
+                "connector.class": "com.azure.cosmos.kafka.connect.sink.CosmosDBSinkConnector",
                 "tasks.max": "1",
+                "topics": [
+                    "hotels"
+                ],
                 "key.converter": "org.apache.kafka.connect.json.JsonConverter",
                 "value.converter": "org.apache.kafka.connect.json.JsonConverter",
                 "value.converter.schemas.enable": "false",
                 "key.converter.schemas.enable": "false",
-                "connect.cosmos.task.poll.interval": "100",
                 "connect.cosmos.connection.endpoint": "'"$AZURE_COSMOSDB_DB_ENDPOINT_URI"'",
                 "connect.cosmos.master.key": "'"$AZURE_COSMOSDB_PRIMARY_CONNECTION_KEY"'",
                 "connect.cosmos.databasename": "'"$AZURE_COSMOSDB_DB_NAME"'",
-                "connect.cosmos.containers.topicmap": "'"$TOPIC_MAP"'",
-                "connect.cosmos.offset.useLatest": false
+                "connect.cosmos.containers.topicmap": "'"$TOPIC_MAP"'"
           }' \
-     http://localhost:8083/connectors/azure-cosmosdb-source/config | jq .
+     http://localhost:8083/connectors/azure-cosmosdb-sink/config | jq .
 
 sleep 10
 
-log "Send messages to Azure Cosmos DB"
-docker exec -e AZURE_COSMOSDB_DB_ENDPOINT_URI=$AZURE_COSMOSDB_DB_ENDPOINT_URI -e AZURE_COSMOSDB_PRIMARY_CONNECTION_KEY=$AZURE_COSMOSDB_PRIMARY_CONNECTION_KEY -e AZURE_COSMOSDB_DB_NAME=$AZURE_COSMOSDB_DB_NAME -e AZURE_COSMOSDB_CONTAINER_NAME=$AZURE_COSMOSDB_CONTAINER_NAME azure-cosmos-client bash -c "python /insert-data.py"
+log "Verify data from Azure Cosmos DB"
+docker exec -e AZURE_COSMOSDB_DB_ENDPOINT_URI=$AZURE_COSMOSDB_DB_ENDPOINT_URI -e AZURE_COSMOSDB_PRIMARY_CONNECTION_KEY=$AZURE_COSMOSDB_PRIMARY_CONNECTION_KEY -e AZURE_COSMOSDB_DB_NAME=$AZURE_COSMOSDB_DB_NAME -e AZURE_COSMOSDB_CONTAINER_NAME=$AZURE_COSMOSDB_CONTAINER_NAME azure-cosmos-client bash -c "python /get-data.py"
 
-sleep 10
 
-log "Verifying topic apparels"
-timeout 60 docker exec broker kafka-console-consumer -bootstrap-server broker:9092 --topic apparels --from-beginning --max-messages 10
+exit 1
 
 log "Delete Cosmos DB instance"
 az cosmosdb delete -g $AZURE_RESOURCE_GROUP -n $AZURE_COSMOSDB_SERVER_NAME --yes

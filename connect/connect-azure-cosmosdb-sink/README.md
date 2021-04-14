@@ -1,0 +1,149 @@
+# Azure Cosmos DB Sink connector
+
+![asciinema](https://github.com/vdesabou/gifs/blob/master/connect/connect-azure-cosmosdb-sink/asciinema.gif?raw=true)
+
+## Objective
+
+Quickly test [Azure Cosmos DB Sink](https://github.com/microsoft/kafka-connect-cosmosdb) connector.
+
+
+## How to run
+
+Simply run:
+
+```
+$ ./azure-cosmosdb-sink.sh
+```
+
+## Details of what the script is doing
+
+Logging to Azure using browser (or using environment variables `AZ_USER` and `AZ_PASS` if set)
+
+```bash
+az login
+```
+
+All the Cosmos DB setup is automated:
+
+```bash
+AZURE_NAME=playground$USER$GITHUB_RUN_NUMBER$TAG
+AZURE_NAME=${AZURE_NAME//[-._]/}
+AZURE_REGION=westeurope
+AZURE_RESOURCE_GROUP=$AZURE_NAME
+AZURE_COSMOSDB_SERVER_NAME=$AZURE_NAME
+AZURE_COSMOSDB_DB_NAME=$AZURE_NAME
+AZURE_COSMOSDB_CONTAINER_NAME=$AZURE_NAME
+
+# Creating Azure Resource Group $AZURE_RESOURCE_GROUP
+az group create \
+    --name $AZURE_RESOURCE_GROUP \
+    --location $AZURE_REGION
+
+# Creating Cosmos DB server $AZURE_COSMOSDB_SERVER_NAME
+az cosmosdb create \
+    --name $AZURE_COSMOSDB_SERVER_NAME \
+    --resource-group $AZURE_RESOURCE_GROUP \
+    --locations regionName=$AZURE_REGION
+
+# Create the database
+az cosmosdb sql database create \
+    --name $AZURE_COSMOSDB_DB_NAME \
+    --resource-group $AZURE_RESOURCE_GROUP \
+    --account-name $AZURE_COSMOSDB_SERVER_NAME \
+    --throughput 400
+
+# Create the container
+az cosmosdb sql container create \
+    --name $AZURE_COSMOSDB_CONTAINER_NAME \
+    --resource-group $AZURE_RESOURCE_GROUP \
+    --account-name $AZURE_COSMOSDB_SERVER_NAME \
+    --database-name $AZURE_COSMOSDB_DB_NAME \
+    --partition-key-path "/id"
+
+# With the Azure Cosmos DB instance setup, you will need to get the Cosmos DB endpoint URI and primary connection key. These values will be used to setup the Cosmos DB Source and Sink connectors.
+AZURE_COSMOSDB_DB_ENDPOINT_URI="https://${AZURE_COSMOSDB_DB_NAME}.documents.azure.com:443/"
+# get Cosmos DB primary connection key
+AZURE_COSMOSDB_PRIMARY_CONNECTION_KEY=$(az cosmosdb keys list -n $AZURE_COSMOSDB_DB_NAME -g $AZURE_RESOURCE_GROUP --query primaryMasterKey -o tsv)
+```
+
+The connector is created with:
+
+```bash
+$ TOPIC_MAP="hotels#${AZURE_COSMOSDB_DB_NAME}"
+
+$ curl -X PUT \
+     -H "Content-Type: application/json" \
+     --data '{
+                "connector.class": "com.azure.cosmos.kafka.connect.sink.CosmosDBSinkConnector",
+                "tasks.max": "1",
+                "topics": [
+                    "hotels"
+                ],
+                "key.converter": "org.apache.kafka.connect.json.JsonConverter",
+                "value.converter": "org.apache.kafka.connect.json.JsonConverter",
+                "value.converter.schemas.enable": "false",
+                "key.converter.schemas.enable": "false",
+                "connect.cosmos.connection.endpoint": "'"$AZURE_COSMOSDB_DB_ENDPOINT_URI"'",
+                "connect.cosmos.master.key": "'"$AZURE_COSMOSDB_PRIMARY_CONNECTION_KEY"'",
+                "connect.cosmos.databasename": "'"$AZURE_COSMOSDB_DB_NAME"'",
+                "connect.cosmos.containers.topicmap": "'"$TOPIC_MAP"'"
+          }' \
+     http://localhost:8083/connectors/azure-cosmosdb-sink/config | jq .
+```
+
+Write data to topic hotels:
+
+```bash
+$ docker exec -i broker kafka-console-producer --broker-list broker:9092 --topic hotels << EOF
+{"id": "h1", "HotelName": "Marriott", "Description": "Marriott description"}
+{"id": "h2", "HotelName": "HolidayInn", "Description": "HolidayInn description"}
+{"id": "h3", "HotelName": "Motel8", "Description": "Motel8 description"}
+EOF
+```
+
+Messages are received from Cosmos DB using python script:
+
+```bash
+$ docker exec -e AZURE_COSMOSDB_DB_ENDPOINT_URI=$AZURE_COSMOSDB_DB_ENDPOINT_URI -e AZURE_COSMOSDB_PRIMARY_CONNECTION_KEY=$AZURE_COSMOSDB_PRIMARY_CONNECTION_KEY -e AZURE_COSMOSDB_DB_NAME=$AZURE_COSMOSDB_DB_NAME -e AZURE_COSMOSDB_CONTAINER_NAME=$AZURE_COSMOSDB_CONTAINER_NAME azure-cosmos-client bash -c "python /get-data.py"
+```
+
+```python
+from azure.cosmos import CosmosClient
+
+import os
+
+url = os.environ['AZURE_COSMOSDB_DB_ENDPOINT_URI']
+key = os.environ['AZURE_COSMOSDB_PRIMARY_CONNECTION_KEY']
+database_name = os.environ['AZURE_COSMOSDB_DB_NAME']
+container_name = os.environ['AZURE_COSMOSDB_CONTAINER_NAME']
+client = CosmosClient(url, credential=key)
+database = client.get_database_client(database_name)
+container = database.get_container_client(container_name)
+
+# Enumerate the returned items
+import json
+for item in container.query_items(
+        query='SELECT * FROM '.container.' r',
+        enable_cross_partition_query=True):
+    print(json.dumps(item, indent=True))
+```
+
+Results:
+
+```json
+
+```
+
+Delete Cosmos DB instance:
+
+```bash
+az cosmosdb delete -g $AZURE_RESOURCE_GROUP -n $AZURE_COSMOSDB_SERVER_NAME --yes
+```
+
+Deleting resource group:
+
+```bash
+az group delete --name $AZURE_RESOURCE_GROUP --yes
+```
+
+N.B: Control Center is reachable at [http://127.0.0.1:9021](http://127.0.0.1:9021])
