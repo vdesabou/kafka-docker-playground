@@ -136,7 +136,7 @@ then
     export TAG_BASE=$TAG
     if [ -z "$CP_KAFKA_IMAGE" ]
     then
-      log "Using CP version $TAG (set TAG environment variable to specify different version)"
+      log "Using CP version $TAG (🎓 set TAG environment variable to specify different version)"
     fi
     export CP_KAFKA_IMAGE=cp-server
     export CP_BASE_IMAGE=cp-base-new
@@ -395,7 +395,7 @@ EOF
         ###
         else
           export CONNECT_TAG="$TAG"
-          log "Using Connector $owner/$name:$version"
+          log "🔗 Using Connector $owner/$name:$version (🎓 set CONNECTOR_TAG or CONNECTOR_ZIP environment variables to specify different version)"
         fi
       fi
     else
