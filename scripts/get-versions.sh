@@ -31,6 +31,10 @@ aws s3 cp s3://kafka-docker-playground/ci/ ci/ --recursive --no-progress
 test_list=$(grep "🚀 " ${DIR}/../.github/workflows/run-regression.yml | cut -d '"' -f 2 | tr '\n' ' ')
 declare -a TEST_FAILED
 declare -a TEST_SUCCESS
+nb_total_tests=0
+nb_connector_tests=0
+nb_total_fail=0
+nb_total_success=0
 for test in $test_list
 do
   nb_tests=0
@@ -81,6 +85,7 @@ do
     connector_path=""
     if [[ "$test" == "connect"* ]]
     then
+      let "nb_connector_tests++"
       # if it is a connector test, get connector_path
       docker_compose_file=$(grep "environment" "$script" | grep DIR | grep start.sh | cut -d "/" -f 7 | cut -d '"' -f 1 | head -n1)
       if [ "${docker_compose_file}" != "" ] && [ -f "${test}/${docker_compose_file}" ]
@@ -96,6 +101,7 @@ do
     for image_version in $image_versions
     do
       let "nb_tests++"
+      let "nb_total_tests++"
       image_version_no_dot=$(echo ${image_version} | sed 's/\.//g')
       time=""
       version=""
@@ -146,11 +152,13 @@ do
         if [ "$status" == "failure" ]
         then
           let "nb_fail++"
+          let "nb_total_fail++"
           TEST_FAILED[$image_version_no_dot]="[❌ $time]($html_url)"
           echo -e "🔥 CP $image_version 🕐 ${time} 📄 ${script_name} 🔗 $html_url\n" >> ${gh_msg_file}
           log "🔥 CP $image_version 🕐 ${time} 📄 ${script_name} 🔗 $html_url"
         else
           let "nb_success++"
+          let "nb_total_success++"
           TEST_SUCCESS[$image_version_no_dot]="[👍 $time]($html_url)"
           echo -e "👍 CP $image_version 🕐 ${time} 📄 ${script_name} 🔗 $html_url\n" >> ${gh_msg_file}
           log "👍 CP $image_version 🕐 ${time} 📄 ${script_name} 🔗 $html_url"
@@ -254,9 +262,11 @@ done #end test_list
 
 # Handle connector tests which are not tested as part of CI
 ci=""
+cp_version_tested=""
 for image_version in $image_versions
 do
   ci="$ci 🤷‍♂️ not tested \|"
+  cp_version_tested="$cp_version_tested $image_version"
 done
 for connector in confluentinc-kafka-connect-servicenow confluentinc-kafka-connect-maprdb confluentinc-kafka-connect-aws-redshift
 do
@@ -283,3 +293,11 @@ do
       $readme_file > $readme_tmp_file
   cp $readme_tmp_file $readme_file
 done
+
+# handle shields badges
+sed -e "s|:nb_total_success:| $nb_total_success |g" \
+    -e "s|:nb_total_tests:|$nb_total_tests|g" \
+    -e "s|:nb_connector_tests:|$nb_connector_tests|g" \
+    -e "s|:cp_version_tested:|$cp_version_tested|g" \
+    $readme_file > $readme_tmp_file
+cp $readme_tmp_file $readme_file
