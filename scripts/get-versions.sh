@@ -101,10 +101,7 @@ do
       version=""
       if [ "$connector_path" != "" ]
       then
-        if [ "$connector_path" = "kafka-connect-couchbase" ]
-        then
-          version="3.4.8"
-        elif [ "$connector_path" = "confluentinc-kafka-connect-jdbc" ]
+        if [ "$connector_path" = "confluentinc-kafka-connect-jdbc" ]
         then
           if ! version_gt ${image_version} "5.9.0"
           then
@@ -229,33 +226,28 @@ do
 
   if [ "$connector_path" != "" ]
   then
-    if [ "$test" = "connect/connect-couchbase-sink" ] || [ "$test" = "connect/connect-couchbase-source" ]
+    version=$(docker run vdesabou/kafka-docker-playground-connect:${latest_version} cat /usr/share/confluent-hub-components/${connector_path}/manifest.json | jq -r '.version')
+    license=$(docker run vdesabou/kafka-docker-playground-connect:${latest_version} cat /usr/share/confluent-hub-components/${connector_path}/manifest.json | jq -r '.license[0].name')
+    owner=$(docker run vdesabou/kafka-docker-playground-connect:${latest_version} cat /usr/share/confluent-hub-components/${connector_path}/manifest.json | jq -r '.owner.name')
+    release_date=$(docker run vdesabou/kafka-docker-playground-connect:${latest_version} cat /usr/share/confluent-hub-components/${connector_path}/manifest.json | jq -r '.release_date')
+    if [ "$release_date" = "null" ]
     then
-        sed -e "s|:${test}:|3.4.8 \| Open Source (Couchbase) \| \| $ci |g" \
-            $readme_file > $readme_tmp_file
-    else
-        version=$(docker run vdesabou/kafka-docker-playground-connect:${latest_version} cat /usr/share/confluent-hub-components/${connector_path}/manifest.json | jq -r '.version')
-        license=$(docker run vdesabou/kafka-docker-playground-connect:${latest_version} cat /usr/share/confluent-hub-components/${connector_path}/manifest.json | jq -r '.license[0].name')
-        owner=$(docker run vdesabou/kafka-docker-playground-connect:${latest_version} cat /usr/share/confluent-hub-components/${connector_path}/manifest.json | jq -r '.owner.name')
-        release_date=$(docker run vdesabou/kafka-docker-playground-connect:${latest_version} cat /usr/share/confluent-hub-components/${connector_path}/manifest.json | jq -r '.release_date')
-        if [ "$release_date" = "null" ]
-        then
-          release_date=""
-        fi
-
-        if [ "$license" = "Confluent Software Evaluation License" ]
-        then
-          type="Confluent Subscription"
-        elif [ "$license" = "Apache License 2.0" ] || [ "$license" = "Apache 2.0" ] || [ "$license" = "Apache License, Version 2.0" ] || [ "$license" = "The Apache License, Version 2.0" ]
-        then
-          type="Open Source ($owner)"
-        else
-          type="$license"
-        fi
-
-        sed -e "s|:${test}:|${version} \| $type \| $release_date \| $ci |g" \
-            $readme_file > $readme_tmp_file
+      release_date=""
     fi
+
+    if [ "$license" = "Confluent Software Evaluation License" ]
+    then
+      type="Confluent Subscription"
+    elif [ "$license" = "Apache License 2.0" ] || [ "$license" = "Apache 2.0" ] || [ "$license" = "Apache License, Version 2.0" ] || [ "$license" = "The Apache License, Version 2.0" ]
+    then
+      type="Open Source ($owner)"
+    else
+      type="$license"
+    fi
+
+    sed -e "s|:${test}:|${version} \| $type \| $release_date \| $ci |g" \
+        $readme_file > $readme_tmp_file
+
     cp $readme_tmp_file $readme_file
   fi
 done #end test_list
