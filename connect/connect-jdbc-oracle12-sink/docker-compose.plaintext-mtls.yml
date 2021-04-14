@@ -33,5 +33,4 @@ services:
                   -Djavax.net.ssl.keyStore=/tmp/keystore.jks
                   -Djavax.net.ssl.keyStorePassword=welcome123
                   -Doracle.net.ssl_server_dn_match=true
-                  -Doracle.net.authentication_services="(TCPS)"
                   # -Djavax.net.debug=all

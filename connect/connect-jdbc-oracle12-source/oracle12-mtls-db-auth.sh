@@ -50,9 +50,9 @@ if ! version_gt $JDBC_CONNECTOR_VERSION "9.9.9"; then
           logerror "ERROR: ${DIR}/ojdbc8.jar is missing. It must be downloaded manually in order to acknowledge user agreement"
           exit 1
      fi
-     docker-compose -f ../../environment/plaintext/docker-compose.yml -f "${PWD}/docker-compose.plaintext-mtls.yml" down -v --remove-orphans
+     docker-compose -f ../../environment/plaintext/docker-compose.yml -f "${PWD}/docker-compose.plaintext-mtls-db-auth.yml" down -v --remove-orphans
      log "Starting up oracle container to get generated cert from oracle server wallet"
-     docker-compose -f ../../environment/plaintext/docker-compose.yml -f "${PWD}/docker-compose.plaintext-mtls.yml" up -d oracle
+     docker-compose -f ../../environment/plaintext/docker-compose.yml -f "${PWD}/docker-compose.plaintext-mtls-db-auth.yml" up -d oracle
 else
      log "ojdbc jar is shipped with connector (starting with 10.0.0)"
      docker-compose -f ../../environment/plaintext/docker-compose.yml -f "${PWD}/docker-compose.plaintext-no-ojdbc-mtls.yml" down -v --remove-orphans
@@ -135,6 +135,12 @@ docker run -v $PWD:/tmp vdesabou/kafka-docker-playground-connect:${CONNECT_TAG} 
 
 cd ${DIR}
 
+log "Alter user 'myuser' in order to be identified as 'CN=connect,C=US'"
+docker exec -i oracle sqlplus sys/Admin123@//localhost:1521/ORCLPDB1 as sysdba <<- EOF
+	ALTER USER myuser IDENTIFIED EXTERNALLY AS 'CN=connect,C=US';
+	exit;
+EOF
+
 log "Update listener.ora, sqlnet.ora and tnsnames.ora"
 docker cp ${PWD}/mtls/listener.ora oracle:/opt/oracle/oradata/dbconfig/ORCLCDB/listener.ora
 docker cp ${PWD}/mtls/sqlnet.ora oracle:/opt/oracle/oradata/dbconfig/ORCLCDB/sqlnet.ora
@@ -147,7 +153,7 @@ start
 EOF
 
 if ! version_gt $JDBC_CONNECTOR_VERSION "9.9.9"; then
-     docker-compose -f ../../environment/plaintext/docker-compose.yml -f "${PWD}/docker-compose.plaintext-mtls.yml" up -d
+     docker-compose -f ../../environment/plaintext/docker-compose.yml -f "${PWD}/docker-compose.plaintext-mtls-db-auth.yml" up -d
 else
      docker-compose -f ../../environment/plaintext/docker-compose.yml -f "${PWD}/docker-compose.plaintext-no-ojdbc-mtls.yml" up -d
 fi
@@ -162,9 +168,8 @@ curl -X PUT \
      --data '{
                "connector.class":"io.confluent.connect.jdbc.JdbcSourceConnector",
                "tasks.max":"1",
-               "connection.user": "myuser",
-               "connection.password": "mypassword",
                "connection.oracle.net.ssl_server_dn_match": "true",
+               "connection.oracle.net.authentication_services": "(TCPS)",
                "connection.url": "jdbc:oracle:thin:@(DESCRIPTION=(ADDRESS=(PROTOCOL=TCPS)(HOST=oracle)(PORT=1532))(CONNECT_DATA=(SERVICE_NAME=ORCLPDB1))(SECURITY=(SSL_SERVER_CERT_DN=\"CN=server,C=US\")))",
                "numeric.mapping":"best_fit",
                "mode":"timestamp",
@@ -176,7 +181,7 @@ curl -X PUT \
                "errors.log.enable": "true",
                "errors.log.include.messages": "true"
           }' \
-     http://localhost:8083/connectors/oracle-source-mtls/config | jq .
+     http://localhost:8083/connectors/oracle-source-mtls-db-auth/config | jq .
 
 sleep 5
 

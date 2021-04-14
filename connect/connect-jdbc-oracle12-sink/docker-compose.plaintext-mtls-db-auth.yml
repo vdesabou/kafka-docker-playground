@@ -10,8 +10,8 @@ services:
     ports:
       - "1521:1521"
     volumes:
-      - ../../connect/connect-jdbc-oracle12-source/ora-setup-scripts:/opt/oracle/scripts/setup
-      - ../../connect/connect-jdbc-oracle12-source/ora-startup-scripts:/opt/oracle/scripts/startup
+      - ../../connect/connect-jdbc-oracle12-sink/ora-setup-scripts:/opt/oracle/scripts/setup
+      - ../../connect/connect-jdbc-oracle12-sink/ora-startup-scripts:/opt/oracle/scripts/startup
     environment:
       ORACLE_PWD: Admin123
 
@@ -22,9 +22,9 @@ services:
       - schema-registry
       - oracle
     volumes:
-      - ../../connect/connect-jdbc-oracle12-source/ojdbc8.jar:/usr/share/confluent-hub-components/confluentinc-kafka-connect-jdbc/lib/ojdbc8.jar
-      - ../../connect/connect-jdbc-oracle12-source/mtls/truststore.jks:/tmp/truststore.jks
-      - ../../connect/connect-jdbc-oracle12-source/mtls/keystore.jks:/tmp/keystore.jks
+        - ../../connect/connect-jdbc-oracle12-sink/ojdbc8.jar:/usr/share/confluent-hub-components/confluentinc-kafka-connect-jdbc/lib/ojdbc8.jar
+        - ../../connect/connect-jdbc-oracle12-sink/mtls/truststore.jks:/tmp/truststore.jks
+        - ../../connect/connect-jdbc-oracle12-sink/mtls/keystore.jks:/tmp/keystore.jks
     environment:
       CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-jdbc
       # need to set oracle variables at JVM level because CCDB-2996 (Allow additional properties to be passed to the JDBC driver) was only added in 10.x
@@ -33,4 +33,5 @@ services:
                   -Djavax.net.ssl.keyStore=/tmp/keystore.jks
                   -Djavax.net.ssl.keyStorePassword=welcome123
                   -Doracle.net.ssl_server_dn_match=true
+                  -Doracle.net.authentication_services="(TCPS)"
                   # -Djavax.net.debug=all
