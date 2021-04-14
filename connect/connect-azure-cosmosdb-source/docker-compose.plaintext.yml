@@ -1,0 +1,12 @@
+---
+version: '3.5'
+services:
+  connect:
+    environment:
+      CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/microsoftcorporation-kafka-connect-cosmos
+
+  azure-cosmos-client:
+    build:
+      context: ../../connect/connect-azure-cosmosdb-source/azure-cosmos-client
+    hostname: azure-cosmos-client
+    container_name: azure-cosmos-client
