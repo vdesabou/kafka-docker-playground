@@ -1,0 +1,21 @@
+---
+version: '3.5'
+services:
+  connect:
+    volumes:
+      - ../../connect/connect-gcp-pubsub-source/keyfile.json:/root/keyfiles/keyfile.json:ro
+    environment:
+      CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-gcp-pubsub
+    dns: 0.0.0.0
+
+
+  nginx_http2_proxy:
+    # need to build with "--with-http_v2_module"
+    build:
+      context: ../../connect/connect-gcp-pubsub-source/repro-proxy/
+    hostname: nginx_http2_proxy
+    container_name: nginx_http2_proxy
+    ports:
+      - "8888:8888"
+    volumes:
+      - ../../connect/connect-gcp-pubsub-source/repro-proxy/nginx_whitelist.conf:/usr/local/nginx/conf/nginx.conf
