@@ -18,15 +18,15 @@ fi
 
 # rm -f *.jks
 # # Create truststore and import the CA cert
-# docker run -rm -v $PWD:/tmp vdesabou/kafka-docker-playground-connect:${CONNECT_TAG}  keytool -noprompt -keystore /tmp/my.truststore.jks -alias CARoot -import -file /tmp/server-crt.pem -storepass confluent -keypass confluent
-# docker run -rm -v $PWD:/tmp vdesabou/kafka-docker-playground-connect:${CONNECT_TAG} keytool -noprompt -destkeystore /tmp/my.truststore.jks -importkeystore -srckeystore /usr/lib/jvm/zulu11-ca/lib/security/cacerts -srcstorepass changeit -deststorepass confluent
+# docker run --rm -v $PWD:/tmp vdesabou/kafka-docker-playground-connect:${CONNECT_TAG}  keytool -noprompt -keystore /tmp/my.truststore.jks -alias CARoot -import -file /tmp/server-crt.pem -storepass confluent -keypass confluent
+# docker run --rm -v $PWD:/tmp vdesabou/kafka-docker-playground-connect:${CONNECT_TAG} keytool -noprompt -destkeystore /tmp/my.truststore.jks -importkeystore -srckeystore /usr/lib/jvm/zulu11-ca/lib/security/cacerts -srcstorepass changeit -deststorepass confluent
 
 
-# docker run -rm -v $PWD:/tmp vdesabou/kafka-docker-playground-connect:${CONNECT_TAG} openssl pkcs12 -export -in /tmp/server-crt.pem -inkey /tmp/server-key.pem \
+# docker run --rm -v $PWD:/tmp vdesabou/kafka-docker-playground-connect:${CONNECT_TAG} openssl pkcs12 -export -in /tmp/server-crt.pem -inkey /tmp/server-key.pem \
 #                -out /tmp/kinesis-server.p12 -name kinesis-server \
 #                -CAfile /tmp/ca-crt.pem -caname CARoot -passout pass:confluent
 
-# docker run -rm -v $PWD:/tmp vdesabou/kafka-docker-playground-connect:${CONNECT_TAG} keytool -importkeystore \
+# docker run --rm -v $PWD:/tmp vdesabou/kafka-docker-playground-connect:${CONNECT_TAG} keytool -importkeystore \
 #         -deststorepass confluent -destkeypass confluent -destkeystore /tmp/my.trustore.jks \
 #         -srckeystore /tmp/kinesis-server.p12 -srcstoretype PKCS12 -srcstorepass confluent \
 #         -alias kinesis-server
