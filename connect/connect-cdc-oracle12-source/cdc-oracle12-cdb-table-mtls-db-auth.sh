@@ -113,6 +113,12 @@ docker run -v $PWD:/tmp vdesabou/kafka-docker-playground-connect:${CONNECT_TAG} 
 
 cd ${DIR}
 
+log "Alter user 'C##MYUSER' in order to be identified as 'CN=connect,C=US'"
+docker exec -i oracle sqlplus sys/Admin123@//localhost:1521/ORCLCDB as sysdba <<- EOF
+	ALTER USER C##MYUSER IDENTIFIED EXTERNALLY AS 'CN=connect,C=US';
+	exit;
+EOF
+
 log "Update listener.ora, sqlnet.ora and tnsnames.ora"
 docker cp ${PWD}/mtls/listener.ora oracle:/opt/oracle/oradata/dbconfig/ORCLCDB/listener.ora
 docker cp ${PWD}/mtls/sqlnet.ora oracle:/opt/oracle/oradata/dbconfig/ORCLCDB/sqlnet.ora
@@ -150,12 +156,11 @@ curl -X PUT \
                "oracle.server": "oracle",
                "oracle.port": 1532,
                "oracle.sid": "ORCLCDB",
-               "oracle.username": "C##MYUSER",
-               "oracle.password": "mypassword",
                "oracle.ssl.truststore.file": "/tmp/truststore.jks",
                "oracle.ssl.truststore.password": "welcome123",
                "oracle.connection.javax.net.ssl.keyStore": "/tmp/keystore.jks",
                "oracle.connection.javax.net.ssl.keyStorePassword": "welcome123",
+               "oracle.connection.oracle.net.authentication_services": "(TCPS)",
                "start.from":"snapshot",
                "redo.log.topic.name": "redo-log-topic",
                "redo.log.consumer.bootstrap.servers":"broker:9092",
