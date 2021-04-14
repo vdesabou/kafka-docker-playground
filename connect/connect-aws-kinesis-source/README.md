@@ -44,13 +44,13 @@ $ ./kinesis.sh
 Create a Kinesis stream `my_kinesis_stream` in `us-east-1` region as it is default:
 
 ```
-$ aws kinesis create-stream --stream-name my_kinesis_stream --shard-count 1
+$ aws kinesis create-stream --stream-name $KINESIS_STREAM_NAME --shard-count 1
 ```
 
 Insert records in Kinesis stream:
 
 ```
-$ aws kinesis put-record --stream-name my_kinesis_stream --partition-key 123 --data test-message-1
+$ aws kinesis put-record --stream-name $KINESIS_STREAM_NAME --partition-key 123 --data test-message-1
 ```
 
 The connector is created with:
@@ -63,7 +63,7 @@ curl -X PUT \
                "tasks.max": "1",
                "kafka.topic": "kinesis_topic",
                "kinesis.region": "EU_WEST_3",
-               "kinesis.stream": "my_kinesis_stream",
+               "kinesis.stream": "'"$KINESIS_STREAM_NAME"'",
                "confluent.license": "",
                "name": "kinesis-source",
                "confluent.topic.bootstrap.servers": "broker:9092",
@@ -81,7 +81,7 @@ $ docker exec broker kafka-console-consumer --bootstrap-server broker:9092 --top
 Delete your stream and clean up resources to avoid incurring any unintended charges:
 
 ```
-aws kinesis delete-stream --stream-name my_kinesis_stream
+aws kinesis delete-stream --stream-name $KINESIS_STREAM_NAME
 ```
 
 N.B: Control Center is reachable at [http://127.0.0.1:9021](http://127.0.0.1:9021])
