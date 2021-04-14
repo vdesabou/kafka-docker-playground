@@ -84,9 +84,7 @@ curl -X PUT \
      --data '{
                 "connector.class": "com.azure.cosmos.kafka.connect.sink.CosmosDBSinkConnector",
                 "tasks.max": "1",
-                "topics": [
-                    "hotels"
-                ],
+                "topics": "hotels",
                 "key.converter": "org.apache.kafka.connect.json.JsonConverter",
                 "value.converter": "org.apache.kafka.connect.json.JsonConverter",
                 "value.converter.schemas.enable": "false",
@@ -102,9 +100,6 @@ sleep 10
 
 log "Verify data from Azure Cosmos DB"
 docker exec -e AZURE_COSMOSDB_DB_ENDPOINT_URI=$AZURE_COSMOSDB_DB_ENDPOINT_URI -e AZURE_COSMOSDB_PRIMARY_CONNECTION_KEY=$AZURE_COSMOSDB_PRIMARY_CONNECTION_KEY -e AZURE_COSMOSDB_DB_NAME=$AZURE_COSMOSDB_DB_NAME -e AZURE_COSMOSDB_CONTAINER_NAME=$AZURE_COSMOSDB_CONTAINER_NAME azure-cosmos-client bash -c "python /get-data.py"
-
-
-exit 1
 
 log "Delete Cosmos DB instance"
 az cosmosdb delete -g $AZURE_RESOURCE_GROUP -n $AZURE_COSMOSDB_SERVER_NAME --yes

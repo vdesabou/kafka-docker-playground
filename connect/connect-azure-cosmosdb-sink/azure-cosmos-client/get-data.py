@@ -13,6 +13,6 @@ container = database.get_container_client(container_name)
 # Enumerate the returned items
 import json
 for item in container.query_items(
-        query='SELECT * FROM '.container.' r',
+        query='SELECT * FROM '+container_name+' r',
         enable_cross_partition_query=True):
     print(json.dumps(item, indent=True))
