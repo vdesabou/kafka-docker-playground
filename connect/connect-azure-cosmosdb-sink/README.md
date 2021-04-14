@@ -76,9 +76,7 @@ $ curl -X PUT \
      --data '{
                 "connector.class": "com.azure.cosmos.kafka.connect.sink.CosmosDBSinkConnector",
                 "tasks.max": "1",
-                "topics": [
-                    "hotels"
-                ],
+                "topics": "hotels",
                 "key.converter": "org.apache.kafka.connect.json.JsonConverter",
                 "value.converter": "org.apache.kafka.connect.json.JsonConverter",
                 "value.converter.schemas.enable": "false",
@@ -123,7 +121,7 @@ container = database.get_container_client(container_name)
 # Enumerate the returned items
 import json
 for item in container.query_items(
-        query='SELECT * FROM '.container.' r',
+        query='SELECT * FROM '+container_name+' r',
         enable_cross_partition_query=True):
     print(json.dumps(item, indent=True))
 ```
@@ -131,7 +129,36 @@ for item in container.query_items(
 Results:
 
 ```json
-
+{
+ "Description": "Marriott description",
+ "id": "h1",
+ "HotelName": "Marriott",
+ "_rid": "5dodALYgtP8BAAAAAAAAAA==",
+ "_self": "dbs/5dodAA==/colls/5dodALYgtP8=/docs/5dodALYgtP8BAAAAAAAAAA==/",
+ "_etag": "\"1b0036f1-0000-0d00-0000-6076f04d0000\"",
+ "_attachments": "attachments/",
+ "_ts": 1618407501
+}
+{
+ "Description": "HolidayInn description",
+ "id": "h2",
+ "HotelName": "HolidayInn",
+ "_rid": "5dodALYgtP8CAAAAAAAAAA==",
+ "_self": "dbs/5dodAA==/colls/5dodALYgtP8=/docs/5dodALYgtP8CAAAAAAAAAA==/",
+ "_etag": "\"1b0037f1-0000-0d00-0000-6076f04d0000\"",
+ "_attachments": "attachments/",
+ "_ts": 1618407501
+}
+{
+ "Description": "Motel8 description",
+ "id": "h3",
+ "HotelName": "Motel8",
+ "_rid": "5dodALYgtP8DAAAAAAAAAA==",
+ "_self": "dbs/5dodAA==/colls/5dodALYgtP8=/docs/5dodALYgtP8DAAAAAAAAAA==/",
+ "_etag": "\"1b0038f1-0000-0d00-0000-6076f04d0000\"",
+ "_attachments": "attachments/",
+ "_ts": 1618407501
+}
 ```
 
 Delete Cosmos DB instance:
