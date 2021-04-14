@@ -25,6 +25,9 @@ else
      exit 1
 fi
 
+KINESIS_STREAM_NAME=my_kinesis_stream$TAG
+KINESIS_STREAM_NAME=${KINESIS_STREAM_NAME//[-.]/}
+
 log "Creating topic in Confluent Cloud (auto.create.topics.enable=false)"
 set +e
 create_topic kinesis_topic
@@ -32,20 +35,20 @@ set -e
 
 set +e
 log "Delete the stream"
-aws kinesis delete-stream --stream-name my_kinesis_stream
+aws kinesis delete-stream --stream-name $KINESIS_STREAM_NAME
 set -e
 
 sleep 5
 
-log "Create a Kinesis stream my_kinesis_stream"
-aws kinesis create-stream --stream-name my_kinesis_stream --shard-count 1
+log "Create a Kinesis stream $KINESIS_STREAM_NAME"
+aws kinesis create-stream --stream-name $KINESIS_STREAM_NAME --shard-count 1
 
 log "Sleep 60 seconds to let the Kinesis stream being fully started"
 sleep 60
 
 log "Insert records in Kinesis stream"
 # The example shows that a record containing partition key 123 and data "test-message-1" is inserted into my_kinesis_stream.
-aws kinesis put-record --stream-name my_kinesis_stream --partition-key 123 --data test-message-1
+aws kinesis put-record --stream-name $KINESIS_STREAM_NAME --partition-key 123 --data test-message-1
 
 
 log "Creating Kinesis Source connector"
@@ -56,7 +59,7 @@ curl -X PUT \
                "tasks.max": "1",
                "kafka.topic": "kinesis_topic",
                "kinesis.region": "EU_WEST_3",
-               "kinesis.stream": "my_kinesis_stream",
+               "kinesis.stream": "'"$KINESIS_STREAM_NAME"'",
                "confluent.license": "",
                "name": "kinesis-source",
                "confluent.topic.ssl.endpoint.identification.algorithm" : "https",
@@ -74,4 +77,4 @@ log "Verify we have received the data in kinesis_topic topic"
 timeout 60 docker exec -e BOOTSTRAP_SERVERS="$BOOTSTRAP_SERVERS" -e SASL_JAAS_CONFIG="$SASL_JAAS_CONFIG" -e SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO="$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO" -e SCHEMA_REGISTRY_URL="$SCHEMA_REGISTRY_URL" connect bash -c 'kafka-avro-console-consumer --topic kinesis_topic --bootstrap-server $BOOTSTRAP_SERVERS --consumer-property ssl.endpoint.identification.algorithm=https --consumer-property sasl.mechanism=PLAIN --consumer-property security.protocol=SASL_SSL --consumer-property sasl.jaas.config="$SASL_JAAS_CONFIG" --property basic.auth.credentials.source=USER_INFO --property schema.registry.basic.auth.user.info="$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO" --property schema.registry.url=$SCHEMA_REGISTRY_URL --from-beginning --max-messages 1'
 
 log "Delete the stream"
-aws kinesis delete-stream --stream-name my_kinesis_stream
+aws kinesis delete-stream --stream-name $KINESIS_STREAM_NAME
