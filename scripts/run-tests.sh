@@ -27,9 +27,9 @@ for dir in $test_list
 do
     if [ ! -d $dir ]
     then
-        logwarn "####################################################"
-        logwarn "⏭ skipping dir $dir, not a directory"
-        logwarn "####################################################"
+        log "####################################################"
+        log "⏭ skipping dir $dir, not a directory"
+        log "####################################################"
         continue
     fi
 
@@ -47,17 +47,17 @@ do
         grep "$script" ${DIR}/tests-ignored.txt > /dev/null
         if [ $? = 0 ]
         then
-            logwarn "####################################################"
-            logwarn "⏭ skipping $script in dir $dir"
-            logwarn "####################################################"
+            log "####################################################"
+            log "⏭ skipping $script in dir $dir"
+            log "####################################################"
             continue
         fi
 
         # check for scripts containing "repro"
         if [[ "$script" == *"repro"* ]]; then
-            logwarn "####################################################"
-            logwarn "⏭ skipping reproduction model $script in dir $dir"
-            logwarn "####################################################"
+            log "####################################################"
+            log "⏭ skipping reproduction model $script in dir $dir"
+            log "####################################################"
             continue
         fi
 
@@ -71,7 +71,6 @@ do
             owner=$(echo "$connector_path" | cut -d "-" -f 1)
             name=$(echo "$connector_path" | cut -d "-" -f 2-)
 
-#            THE_CONNECTOR_TAG=$(docker run vdesabou/kafka-docker-playground-connect:${CONNECT_TAG} cat /usr/share/confluent-hub-components/$connector_path/manifest.json | jq -r '.version')
             if [ "$connector_path" != "" ]
             then
                 THE_CONNECTOR_TAG=$(grep "$connector_path " /tmp/README.txt | cut -d "|" -f 3 | sed 's/^[[:blank:]]*//;s/[[:blank:]]*$//')
@@ -171,16 +170,16 @@ do
 
             echo "$connector_path|`date +%s`|failure|$GITHUB_RUN_ID" > $file
 
-            logwarn "####################################################"
-            logwarn "docker ps"
-            docker ps
-            logwarn "####################################################"
-            for container in broker broker2 schema-registry connect broker-us broker-europe connect-us connect-europe replicator-us replicator-europe
+            logerror "####################################################"
+            logerror "🐳 docker ps"
+            docker ps -a
+            logerror "####################################################"
+            for container in connect connect-us connect-europe replicator-us replicator-europe
             do
                 if [[ $(docker ps -f "name=$container" --format '{{.Names}}') == $container ]]
                 then
-                    logwarn "####################################################"
-                    logwarn "$container logs"
+                    logerror "####################################################"
+                    logerror "$container logs"
                     docker container logs --tail=150 $container
                     logwarn "####################################################"
                 fi
@@ -193,7 +192,7 @@ do
             aws s3 cp "$file" "s3://kafka-docker-playground/ci/"
             log "📄 INFO: <$file> was uploaded to S3 bucket"
         else
-            logerror "❗ ERROR: $file could not be created"
+            logerror "ERROR: $file could not be created"
             exit 1
         fi
         bash stop.sh
