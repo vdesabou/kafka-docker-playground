@@ -17,7 +17,7 @@ else
 fi
 
 # https://github.com/microsoft/kafka-connect-cosmosdb/blob/dev/doc/CosmosDB_Setup.md
-AZURE_NAME=playground$USER$GITHUB_RUN_NUMBER$TAG
+AZURE_NAME=playground${USER}sink${GITHUB_RUN_NUMBER}${TAG}
 AZURE_NAME=${AZURE_NAME//[-._]/}
 AZURE_REGION=westeurope
 AZURE_RESOURCE_GROUP=$AZURE_NAME
