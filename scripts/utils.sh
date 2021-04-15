@@ -199,17 +199,17 @@ if [ ! -z "$CONNECTOR_TAG" ]
 then
   if [[ $0 == *"wait-for-connect-and-controlcenter.sh"* ]]
   then
-    # noop
+    export CONNECT_TAG="$TAG"
     :
   elif [[ $0 == *"environment"* ]]
   then
     # log "DEBUG: start.sh from environment folder. Skipping..."
-    # noop
+    export CONNECT_TAG="$TAG"
     :
   elif [[ $0 == *"stop"* ]] || [[ $0 == *"run-tests"* ]]
   then
     # log "DEBUG: stop.sh or run-tests.sh. Skipping..."
-    # noop
+    export CONNECT_TAG="$TAG"
     :
   else
     log "🚀 CONNECTOR_TAG is set with version $CONNECTOR_TAG"
@@ -279,15 +279,15 @@ else
   ###
   if [[ $0 == *"wait-for-connect-and-controlcenter.sh"* ]]
   then
-    # noop
+    export CONNECT_TAG="$TAG"
     :
   elif [[ $0 == *"environment"* ]]
   then
-    # noop
+    export CONNECT_TAG="$TAG"
     :
   elif [[ $0 == *"stop"* ]] || [[ $0 == *"run-tests"* ]]
   then
-    # noop
+    export CONNECT_TAG="$TAG"
     :
   else
     docker_compose_file=$(grep "environment" "$PWD/$0" | grep DIR | grep start.sh | cut -d "/" -f 7 | cut -d '"' -f 1 | head -n1)
