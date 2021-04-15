@@ -101,7 +101,7 @@ docker exec -e AZURE_COSMOSDB_DB_ENDPOINT_URI=$AZURE_COSMOSDB_DB_ENDPOINT_URI -e
 sleep 10
 
 log "Verifying topic apparels"
-timeout 60 docker exec broker kafka-console-consumer -bootstrap-server broker:9092 --topic apparels --from-beginning --max-messages 10
+timeout 60 docker exec broker kafka-console-consumer -bootstrap-server broker:9092 --topic apparels --from-beginning --max-messages 9
 
 log "Delete Cosmos DB instance"
 az cosmosdb delete -g $AZURE_RESOURCE_GROUP -n $AZURE_COSMOSDB_SERVER_NAME --yes

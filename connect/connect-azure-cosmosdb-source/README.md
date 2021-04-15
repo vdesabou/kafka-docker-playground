@@ -124,7 +124,7 @@ for i in range(1, 10):
 Verifying topic apparels:
 
 ```bash
-$ docker exec broker kafka-console-consumer -bootstrap-server broker:9092 --topic apparels --from-beginning --max-messages 10
+$ docker exec broker kafka-console-consumer -bootstrap-server broker:9092 --topic apparels --from-beginning --max-messages 9
 ```
 
 Results:
@@ -139,7 +139,6 @@ Results:
 {"id":"item7","productName":"Widget","productModel":"Model 7","_rid":"KnksAPa6jwEHAAAAAAAAAA==","_self":"dbs/KnksAA==/colls/KnksAPa6jwE=/docs/KnksAPa6jwEHAAAAAAAAAA==/","_etag":"\"0000fe15-0000-0d00-0000-6076dab50000\"","_attachments":"attachments/","_ts":1618401973,"_lsn":9}
 {"id":"item8","productName":"Widget","productModel":"Model 8","_rid":"KnksAPa6jwEIAAAAAAAAAA==","_self":"dbs/KnksAA==/colls/KnksAPa6jwE=/docs/KnksAPa6jwEIAAAAAAAAAA==/","_etag":"\"0000ff15-0000-0d00-0000-6076dab50000\"","_attachments":"attachments/","_ts":1618401973,"_lsn":10}
 {"id":"item9","productName":"Widget","productModel":"Model 9","_rid":"KnksAPa6jwEJAAAAAAAAAA==","_self":"dbs/KnksAA==/colls/KnksAPa6jwE=/docs/KnksAPa6jwEJAAAAAAAAAA==/","_etag":"\"00000016-0000-0d00-0000-6076dab50000\"","_attachments":"attachments/","_ts":1618401973,"_lsn":11}
-{"id":"item1","productName":"Widget","productModel":"Model 1","_rid":"KnksAPa6jwEBAAAAAAAAAA==","_self":"dbs/KnksAA==/colls/KnksAPa6jwE=/docs/KnksAPa6jwEBAAAAAAAAAA==/","_etag":"\"00000116-0000-0d00-0000-6076dab90000\"","_attachments":"attachments/","_ts":1618401977,"_lsn":12}
 ```
 
 Delete Cosmos DB instance:
