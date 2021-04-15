@@ -24,7 +24,7 @@ services:
       - schema-registry
       - postgres
     volumes:
-      - ../../connect/connect-jdbc-postgresql-source/mtls/rootCA.crt:/tmp/root.crt
+      - ../../connect/connect-jdbc-postgresql-source/mtls/ca.crt:/tmp/ca.crt
       - ../../connect/connect-jdbc-postgresql-source/mtls/client.crt:/tmp/client.crt
       - ../../connect/connect-jdbc-postgresql-source/mtls/client.key.pk8:/tmp/client.key.pk8
     environment:
