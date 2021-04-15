@@ -89,7 +89,6 @@ do
       docker_compose_file=$(grep "environment" "$script" | grep DIR | grep start.sh | cut -d "/" -f 7 | cut -d '"' -f 1 | head -n1)
       if [ "${docker_compose_file}" != "" ] && [ -f "${test}/${docker_compose_file}" ]
       then
-          let "nb_connector_tests++"
           connector_path=$(grep "CONNECT_PLUGIN_PATH" "${test}/${docker_compose_file}" | grep -v KSQL_CONNECT_PLUGIN_PATH | cut -d "/" -f 5)
           # remove any extra comma at the end (when there are multiple connectors used, example S3 source)
           connector_path=$(echo "$connector_path" | cut -d "," -f 1)
@@ -289,6 +288,7 @@ do
     type="$license"
   fi
 
+  let "nb_connector_tests++"
   sed -e "s|:${connector}:|${version} \| $type \| $release_date \| $ci |g" \
       $readme_file > $readme_tmp_file
   cp $readme_tmp_file $readme_file
