@@ -28,7 +28,7 @@ az login
 All the blob storage setup is automated:
 
 ```bash
-AZURE_NAME=playground$USER$GITHUB_RUN_NUMBER$TAG
+AZURE_NAME=playground${USER}search${GITHUB_RUN_NUMBER}${TAG}
 AZURE_NAME=${AZURE_NAME//[-._]/}
 AZURE_RESOURCE_GROUP=$AZURE_NAME
 AZURE_SEARCH_SERVICE_NAME=$AZURE_NAME
