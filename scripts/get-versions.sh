@@ -102,7 +102,8 @@ do
       let "nb_tests++"
       let "nb_total_tests++"
       image_version_no_dot=$(echo ${image_version} | sed 's/\.//g')
-      time=""
+      time_day=""
+      time_day_hour=""
       version=""
       if [ "$connector_path" != "" ]
       then
@@ -142,9 +143,11 @@ do
         then
           if [[ "$OSTYPE" == "darwin"* ]]
           then
-            time=$(date -r $last_execution_time +%Y-%m-%d)
+            time_day=$(date -r $last_execution_time "+%Y-%m-%d")
+            time_day_hour=$(date -r $last_execution_time "+%Y-%m-%d %H:%M")
           else
-            time=$(date -d @$last_execution_time +%Y-%m-%d)
+            time_day=$(date -d @$last_execution_time "+%Y-%m-%d")
+            time_day_hour=$(date -d @$last_execution_time "+%Y-%m-%d %H:%M")
           fi
         fi
 
@@ -152,15 +155,15 @@ do
         then
           let "nb_fail++"
           let "nb_total_fail++"
-          TEST_FAILED[$image_version_no_dot]="[❌ $time]($html_url)"
-          echo -e "🔥 CP $image_version 🕐 ${time} 📄 ${script_name} 🔗 $html_url\n" >> ${gh_msg_file}
-          log "🔥 CP $image_version 🕐 ${time} 📄 ${script_name} 🔗 $html_url"
+          TEST_FAILED[$image_version_no_dot]="[❌ $time_day]($html_url)"
+          echo -e "🔥 CP $image_version 🕐 ${time_day_hour} 📄 ${script_name} 🔗 $html_url\n" >> ${gh_msg_file}
+          log "🔥 CP $image_version 🕐 ${time_day_hour} 📄 ${script_name} 🔗 $html_url"
         else
           let "nb_success++"
           let "nb_total_success++"
-          TEST_SUCCESS[$image_version_no_dot]="[👍 $time]($html_url)"
-          echo -e "👍 CP $image_version 🕐 ${time} 📄 ${script_name} 🔗 $html_url\n" >> ${gh_msg_file}
-          log "👍 CP $image_version 🕐 ${time} 📄 ${script_name} 🔗 $html_url"
+          TEST_SUCCESS[$image_version_no_dot]="[👍 $time_day]($html_url)"
+          echo -e "👍 CP $image_version 🕐 ${time_day_hour} 📄 ${script_name} 🔗 $html_url\n" >> ${gh_msg_file}
+          log "👍 CP $image_version 🕐 ${time_day_hour} 📄 ${script_name} 🔗 $html_url"
         fi
       else
         logerror "result_file: ${ci_file} does not exist !"
