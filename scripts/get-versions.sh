@@ -85,11 +85,11 @@ do
     connector_path=""
     if [[ "$test" == "connect"* ]]
     then
-      let "nb_connector_tests++"
       # if it is a connector test, get connector_path
       docker_compose_file=$(grep "environment" "$script" | grep DIR | grep start.sh | cut -d "/" -f 7 | cut -d '"' -f 1 | head -n1)
       if [ "${docker_compose_file}" != "" ] && [ -f "${test}/${docker_compose_file}" ]
       then
+          let "nb_connector_tests++"
           connector_path=$(grep "CONNECT_PLUGIN_PATH" "${test}/${docker_compose_file}" | grep -v KSQL_CONNECT_PLUGIN_PATH | cut -d "/" -f 5)
           # remove any extra comma at the end (when there are multiple connectors used, example S3 source)
           connector_path=$(echo "$connector_path" | cut -d "," -f 1)
@@ -294,10 +294,15 @@ do
   cp $readme_tmp_file $readme_file
 done
 
+tests_color="green"
+if [ $nb_total_fail -gt 0 ]; then
+  tests_color="red"
+fi
 # handle shields badges
-sed -e "s|:nb_total_success:| $nb_total_success |g" \
+sed -e "s|:nb_total_success:|$nb_total_success|g" \
     -e "s|:nb_total_tests:|$nb_total_tests|g" \
     -e "s|:nb_connector_tests:|$nb_connector_tests|g" \
     -e "s|:cp_version_tested:|$cp_version_tested|g" \
+    -e "s|:tests-color:|$tests_color|g" \
     $readme_file > $readme_tmp_file
 cp $readme_tmp_file $readme_file
