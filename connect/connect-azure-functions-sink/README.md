@@ -28,7 +28,7 @@ az login
 All the azure functions setup is automated:
 
 ```bash
-AZURE_NAME=playground$USER$GITHUB_RUN_NUMBER$TAG
+AZURE_NAME=playground${USER}functions${GITHUB_RUN_NUMBER}${TAG}
 AZURE_NAME=${AZURE_NAME//[-._]/}
 AZURE_RESOURCE_GROUP=$AZURE_NAME
 AZURE_STORAGE_NAME=$AZURE_NAME
