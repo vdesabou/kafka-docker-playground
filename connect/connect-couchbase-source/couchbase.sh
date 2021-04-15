@@ -19,19 +19,18 @@ curl -X PUT \
      --data '{
                "connector.class": "com.couchbase.connect.kafka.CouchbaseSourceConnector",
                     "tasks.max": "2",
-                    "topic.name": "test-travel-sample",
-                    "connection.cluster_address": "couchbase",
-                    "connection.timeout.ms": "2000",
-                    "connection.bucket": "travel-sample",
-                    "connection.username": "Administrator",
-                    "connection.password": "password",
-                    "use_snapshots": "false",
-                    "dcp.message.converter.class": "com.couchbase.connect.kafka.handler.source.DefaultSchemaSourceHandler",
+                    "couchbase.topic": "test-travel-sample",
+                    "couchbase.seed.nodes": "couchbase",
+                    "couchbase.bootstrap.timeout": "2000ms",
+                    "couchbase.bucket": "travel-sample",
+                    "couchbase.username": "Administrator",
+                    "couchbase.password": "password",
+                    "couchbase.source.handler": "com.couchbase.connect.kafka.handler.source.DefaultSchemaSourceHandler",
                     "couchbase.event.filter": "com.couchbase.connect.kafka.filter.AllPassFilter",
-                    "couchbase.stream_from": "SAVED_OFFSET_OR_BEGINNING",
+                    "couchbase.stream.from": "SAVED_OFFSET_OR_BEGINNING",
                     "couchbase.compression": "ENABLED",
-                    "couchbase.flow_control_buffer": "128m",
-                    "couchbase.persistence_polling_interval": "100ms"
+                    "couchbase.flow.control.buffer": "128m",
+                    "couchbase.persistence.polling.interval": "100ms"
           }' \
      http://localhost:8083/connectors/couchbase-source/config | jq .
 
