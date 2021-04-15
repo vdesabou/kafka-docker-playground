@@ -1,9 +1,11 @@
 <!-- omit in toc -->
-# <img src="https://www.docker.com/sites/default/files/d8/2019-07/vertical-logo-monochromatic.png" width="24"> <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/0/05/Apache_kafka.svg/1200px-Apache_kafka.svg.png" width="16"> <img src="https://avatars3.githubusercontent.com/u/9439498?s=60&v=4" width="24"> kafka-docker-playground ![CI](https://github.com/vdesabou/kafka-docker-playground/workflows/CI/badge.svg)
+# <img src="https://www.docker.com/sites/default/files/d8/2019-07/vertical-logo-monochromatic.png" width="24"> <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/0/05/Apache_kafka.svg/1200px-Apache_kafka.svg.png" width="16"> <img src="https://avatars3.githubusercontent.com/u/9439498?s=60&v=4" width="24"> kafka-docker-playground
 
 Playground for Kafka/Confluent Docker experimentations...
 
-![GitHub issues by-label](https://img.shields.io/github/issues/vdesabou/kafka-docker-playground/bug)![GitHub commit activity](https://img.shields.io/github/commit-activity/w/vdesabou/kafka-docker-playground)![success tests](https://img.shields.io/badge/success%20tests-:nb_total_success:%2F:nb_total_tests:-red)![connector tested](https://img.shields.io/badge/connector%20tested-:nb_connector_tests:-green)![cp versions tested](https://img.shields.io/badge/cp%20version%20tested-:cp_version_tested:-orange)
+![Github CI](https://github.com/vdesabou/kafka-docker-playground/workflows/CI/badge.svg)![success tests](https://img.shields.io/badge/success%20tests-:nb_total_success:%2F:nb_total_tests:-:tests-color:)![connector tested](https://img.shields.io/badge/connector%20tested-:nb_connector_tests:-green)![cp versions tested](https://img.shields.io/badge/cp%20version%20tested-:cp_version_tested:-green)
+![GitHub issues by-label](https://img.shields.io/github/issues/vdesabou/kafka-docker-playground/bug)![GitHub issues by-label](https://img.shields.io/github/issues/vdesabou/kafka-docker-playground/enhancement)
+![GitHub commit activity](https://img.shields.io/github/commit-activity/w/vdesabou/kafka-docker-playground)
 
 ℹ️ [How to run](https://github.com/vdesabou/kafka-docker-playground/wiki/How-to-run)
 
