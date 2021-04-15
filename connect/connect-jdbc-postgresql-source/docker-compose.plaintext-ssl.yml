@@ -23,7 +23,7 @@ services:
       - schema-registry
       - postgres
     volumes:
-      - ../../connect/connect-jdbc-postgresql-source/ssl/rootCA.crt:/tmp/root.crt
+      - ../../connect/connect-jdbc-postgresql-source/ssl/ca.crt:/tmp/ca.crt
     environment:
       CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-jdbc
       # KAFKA_OPTS: -Djavax.net.debug=all
