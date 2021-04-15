@@ -16,4 +16,4 @@ services:
       - schema-registry
       - couchbase
     environment:
-      CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/kafka-connect-couchbase,/usr/share/confluent-hub-components/confluentinc-connect-transforms
+      CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/couchbase-kafka-connect-couchbase,/usr/share/confluent-hub-components/confluentinc-connect-transforms

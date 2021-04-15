@@ -16,4 +16,4 @@ services:
       - schema-registry
       - couchbase
     environment:
-      CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/kafka-connect-couchbase
+      CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/couchbase-kafka-connect-couchbase
