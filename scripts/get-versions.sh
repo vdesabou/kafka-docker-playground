@@ -266,7 +266,7 @@ cp_version_tested=""
 for image_version in $image_versions
 do
   ci="$ci 🤷‍♂️ not tested \|"
-  cp_version_tested="$cp_version_tested $image_version"
+  cp_version_tested="$cp_version_tested%20$image_version"
 done
 for connector in confluentinc-kafka-connect-servicenow confluentinc-kafka-connect-maprdb confluentinc-kafka-connect-aws-redshift
 do
