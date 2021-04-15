@@ -5,8 +5,8 @@ source ${DIR}/../scripts/utils.sh
 
 if [ -z "$GITHUB_TOKEN" ]
 then
-     logerror "GITHUB_TOKEN is not set. Export it as environment variable"
-     exit 1
+  logerror "GITHUB_TOKEN is not set. Export it as environment variable"
+  exit 1
 fi
 
 image_versions="$1"
@@ -47,10 +47,10 @@ do
   gh_issue_number=""
   if [ ! -d $test ]
   then
-      # logwarn "####################################################"
-      # logwarn "skipping test $test, not a directory"
-      # logwarn "####################################################"
-      continue
+    # logwarn "####################################################"
+    # logwarn "skipping test $test, not a directory"
+    # logwarn "####################################################"
+    continue
   fi
   log "################################"
   log "### 📁 ${test}"
@@ -60,26 +60,26 @@ do
     script_name=$(basename ${script})
     if [[ "$script_name" = "stop.sh" ]]
     then
-        continue
+      continue
     fi
 
     # check for ignored scripts in scripts/tests-ignored.txt
     grep "$script_name" ${DIR}/tests-ignored.txt > /dev/null
     if [ $? = 0 ]
     then
-        logwarn "####################################################"
-        logwarn "⏭ skipping $script_name in test $test"
-        logwarn "####################################################"
-        continue
+      logwarn "####################################################"
+      logwarn "⏭ skipping $script_name in test $test"
+      logwarn "####################################################"
+      continue
     fi
 
     # check for scripts containing "repro"
     if [[ "$script_name" == *"repro"* ]]
     then
-        logwarn "####################################################"
-        logwarn "⏭ skipping reproduction model $script_name in test $test"
-        logwarn "####################################################"
-        continue
+      logwarn "####################################################"
+      logwarn "⏭ skipping reproduction model $script_name in test $test"
+      logwarn "####################################################"
+      continue
     fi
 
     connector_path=""
@@ -89,9 +89,9 @@ do
       docker_compose_file=$(grep "environment" "$script" | grep DIR | grep start.sh | cut -d "/" -f 7 | cut -d '"' -f 1 | head -n1)
       if [ "${docker_compose_file}" != "" ] && [ -f "${test}/${docker_compose_file}" ]
       then
-          connector_path=$(grep "CONNECT_PLUGIN_PATH" "${test}/${docker_compose_file}" | grep -v KSQL_CONNECT_PLUGIN_PATH | cut -d "/" -f 5)
-          # remove any extra comma at the end (when there are multiple connectors used, example S3 source)
-          connector_path=$(echo "$connector_path" | cut -d "," -f 1)
+        connector_path=$(grep "CONNECT_PLUGIN_PATH" "${test}/${docker_compose_file}" | grep -v KSQL_CONNECT_PLUGIN_PATH | cut -d "/" -f 5)
+        # remove any extra comma at the end (when there are multiple connectors used, example S3 source)
+        connector_path=$(echo "$connector_path" | cut -d "," -f 1)
       fi
     fi
 
@@ -255,6 +255,7 @@ do
       type="$license"
     fi
 
+    let "nb_connector_tests++"
     sed -e "s|:${test}:|${version} \| $type \| $release_date \| $ci |g" \
         $readme_file > $readme_tmp_file
 
