@@ -2,4 +2,4 @@
 ccloud-generate-env-vars.sh
 01-create-table.sh
 # https://github.com/vdesabou/kafka-docker-playground/issues/833 :
-cdc-oracle12-pdb-table-mtls.sh
+cdc-oracle12-pdb-table-mtls-db-auth.sh
