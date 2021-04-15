@@ -301,11 +301,18 @@ tests_color="green"
 if [ $nb_total_fail -gt 0 ]; then
   tests_color="red"
 fi
+if [[ "$OSTYPE" == "darwin"* ]]
+then
+  last_run=$(date "+%Y-%m-%d %H:%M")
+else
+  last_run=$(date "+%Y-%m-%d %H:%M")
+fi
 # handle shields badges
 sed -e "s|:nb_total_success:|$nb_total_success|g" \
     -e "s|:nb_total_tests:|$nb_total_tests|g" \
     -e "s|:nb_connector_tests:|$nb_connector_tests|g" \
     -e "s|:cp_version_tested:|$cp_version_tested|g" \
-    -e "s|:tests-color:|$tests_color|g" \
+    -e "s|:tests_color:|$tests_color|g" \
+    -e "s|:last_run:|$last_run|g" \
     $readme_file > $readme_tmp_file
 cp $readme_tmp_file $readme_file
