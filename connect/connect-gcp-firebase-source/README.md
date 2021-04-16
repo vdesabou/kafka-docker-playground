@@ -81,7 +81,7 @@ $ curl -X PUT \
      --data '{
                "connector.class" : "io.confluent.connect.firebase.FirebaseSourceConnector",
                     "tasks.max" : "1",
-                    "gcp.firebase.credentials.path": "/root/keyfiles/keyfile.json",
+                    "gcp.firebase.credentials.path": "/tmp/keyfile.json",
                     "gcp.firebase.database.reference": "https://'"$PROJECT"'.firebaseio.com/musicBlog",
                     "gcp.firebase.snapshot":"true",
                     "confluent.topic.bootstrap.servers": "broker:9092",
