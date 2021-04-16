@@ -20,15 +20,15 @@ function logwarn() {
   echo -e "$PURPLE$@$NC"
 }
 
-if [ -z "$GH_TOKEN" ]
+if [ -z "$GITHUB_TOKEN" ]
 then
-  logerror "GH_TOKEN is not set !"
+  logerror "GITHUB_TOKEN is not set !"
   exit 1
 fi
 
 log "Calling github action"
 curl -H "Accept: application/vnd.github.v3+json" \
-    -H "Authorization: token $GH_TOKEN" \
+    -H "Authorization: token $GITHUB_TOKEN" \
     --request POST \
     "https://api.github.com/repos/vdesabou/kafka-docker-playground/actions/workflows/run-regression.yml/dispatches" \
     -d '{"ref":"master"}'

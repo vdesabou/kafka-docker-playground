@@ -10,6 +10,12 @@ then
 fi
 
 image_versions="$1"
+
+if [ "$image_versions" = "" ]
+then
+  logerror "List of CP versions is not provided as argument!"
+  exit 1
+fi
 template_file=README-template.md
 readme_file=README.md
 readme_tmp_file=/tmp/README.md
@@ -115,10 +121,10 @@ do
             # see https://github.com/vdesabou/kafka-docker-playground/issues/221
             version=${image_version}
           else
-            version=$(docker run vdesabou/kafka-docker-playground-connect:${image_version} cat /usr/share/confluent-hub-components/${connector_path}/manifest.json | jq -r '.version')
+            version=$(docker run --rm vdesabou/kafka-docker-playground-connect:${image_version} cat /usr/share/confluent-hub-components/${connector_path}/manifest.json | jq -r '.version')
           fi
         else
-          version=$(docker run vdesabou/kafka-docker-playground-connect:${image_version} cat /usr/share/confluent-hub-components/${connector_path}/manifest.json | jq -r '.version')
+          version=$(docker run --rm vdesabou/kafka-docker-playground-connect:${image_version} cat /usr/share/confluent-hub-components/${connector_path}/manifest.json | jq -r '.version')
         fi
       fi
       testdir=$(echo "$test" | sed 's/\//-/g')
@@ -236,10 +242,10 @@ do
 
   if [ "$connector_path" != "" ]
   then
-    version=$(docker run vdesabou/kafka-docker-playground-connect:${latest_version} cat /usr/share/confluent-hub-components/${connector_path}/manifest.json | jq -r '.version')
-    license=$(docker run vdesabou/kafka-docker-playground-connect:${latest_version} cat /usr/share/confluent-hub-components/${connector_path}/manifest.json | jq -r '.license[0].name')
-    owner=$(docker run vdesabou/kafka-docker-playground-connect:${latest_version} cat /usr/share/confluent-hub-components/${connector_path}/manifest.json | jq -r '.owner.name')
-    release_date=$(docker run vdesabou/kafka-docker-playground-connect:${latest_version} cat /usr/share/confluent-hub-components/${connector_path}/manifest.json | jq -r '.release_date')
+    version=$(docker run --rm vdesabou/kafka-docker-playground-connect:${latest_version} cat /usr/share/confluent-hub-components/${connector_path}/manifest.json | jq -r '.version')
+    license=$(docker run --rm vdesabou/kafka-docker-playground-connect:${latest_version} cat /usr/share/confluent-hub-components/${connector_path}/manifest.json | jq -r '.license[0].name')
+    owner=$(docker run --rm vdesabou/kafka-docker-playground-connect:${latest_version} cat /usr/share/confluent-hub-components/${connector_path}/manifest.json | jq -r '.owner.name')
+    release_date=$(docker run --rm vdesabou/kafka-docker-playground-connect:${latest_version} cat /usr/share/confluent-hub-components/${connector_path}/manifest.json | jq -r '.release_date')
     if [ "$release_date" = "null" ]
     then
       release_date=""
@@ -273,10 +279,10 @@ do
 done
 for connector in confluentinc-kafka-connect-servicenow confluentinc-kafka-connect-maprdb confluentinc-kafka-connect-aws-redshift
 do
-  version=$(docker run vdesabou/kafka-docker-playground-connect:${latest_version} cat /usr/share/confluent-hub-components/${connector}/manifest.json | jq -r '.version')
-  license=$(docker run vdesabou/kafka-docker-playground-connect:${latest_version} cat /usr/share/confluent-hub-components/${connector}/manifest.json | jq -r '.license[0].name')
-  owner=$(docker run vdesabou/kafka-docker-playground-connect:${latest_version} cat /usr/share/confluent-hub-components/${connector}/manifest.json | jq -r '.owner.name')
-  release_date=$(docker run vdesabou/kafka-docker-playground-connect:${latest_version} cat /usr/share/confluent-hub-components/${connector}/manifest.json | jq -r '.release_date')
+  version=$(docker run --rm vdesabou/kafka-docker-playground-connect:${latest_version} cat /usr/share/confluent-hub-components/${connector}/manifest.json | jq -r '.version')
+  license=$(docker run --rm vdesabou/kafka-docker-playground-connect:${latest_version} cat /usr/share/confluent-hub-components/${connector}/manifest.json | jq -r '.license[0].name')
+  owner=$(docker run --rm vdesabou/kafka-docker-playground-connect:${latest_version} cat /usr/share/confluent-hub-components/${connector}/manifest.json | jq -r '.owner.name')
+  release_date=$(docker run --rm vdesabou/kafka-docker-playground-connect:${latest_version} cat /usr/share/confluent-hub-components/${connector}/manifest.json | jq -r '.release_date')
   if [ "$release_date" = "null" ]
   then
     release_date=""
