@@ -54,7 +54,7 @@ $ curl -X PUT \
                "key.converter.schema.registry.url": "http://schema-registry:8081",
                "value.converter": "io.confluent.connect.avro.AvroConverter",
                "value.converter.schema.registry.url": "http://schema-registry:8081",
-               "aws.cloudwatch.metrics.url": "https://monitoring.us-east-1.amazonaws.com",
+               "aws.cloudwatch.metrics.url": "'"$CLOUDWATCH_METRICS_URL"'",
                "aws.cloudwatch.metrics.namespace": "service-namespace",
                "behavior.on.malformed.metric": "FAIL",
                "confluent.license": "",

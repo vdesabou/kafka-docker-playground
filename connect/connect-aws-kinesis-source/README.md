@@ -42,7 +42,7 @@ $ ./kinesis.sh
 
 ## Details of what the script is doing
 
-Create a Kinesis stream `my_kinesis_stream` in `us-east-1` region as it is default:
+Create a Kinesis stream `my_kinesis_stream` in $AWS_REGION region:
 
 ```
 $ aws kinesis create-stream --stream-name $KINESIS_STREAM_NAME --shard-count 1

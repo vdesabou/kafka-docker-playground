@@ -49,8 +49,8 @@ $ curl -X PUT \
                "connector.class": "io.confluent.connect.aws.dynamodb.DynamoDbSinkConnector",
                     "tasks.max": "1",
                     "topics": "topic1",
-                    "aws.dynamodb.region": "us-east-1",
-                    "aws.dynamodb.endpoint": "https://dynamodb.us-east-1.amazonaws.com",
+                    "aws.dynamodb.region": "'"$AWS_REGION"'",
+                    "aws.dynamodb.endpoint": "'"$DYNAMODB_ENDPOINT"'",
                     "confluent.license": "",
                     "confluent.topic.bootstrap.servers": "broker:9092",
                     "confluent.topic.replication.factor": "1"
@@ -61,7 +61,7 @@ $ curl -X PUT \
 Verify data is in DynamoDB
 
 ```bash
-$ aws dynamodb scan --table-name topic1 --region us-east-1
+$ aws dynamodb scan --table-name topic1 --region $AWS_REGION
 ```
 
 Results:
