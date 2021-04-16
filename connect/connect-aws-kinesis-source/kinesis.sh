@@ -44,18 +44,20 @@ log "Insert records in Kinesis stream"
 # The example shows that a record containing partition key 123 and data "test-message-1" is inserted into my_kinesis_stream.
 aws kinesis put-record --stream-name $KINESIS_STREAM_NAME --partition-key 123 --data test-message-1
 
+AWS_REGION=$(aws configure get region | tr '\r' '\n')
 
 log "Creating Kinesis Source connector"
 curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
-        "connector.class":"io.confluent.connect.kinesis.KinesisSourceConnector",
-               "tasks.max": "1",
-               "kafka.topic": "kinesis_topic",
-               "kinesis.stream": "'"$KINESIS_STREAM_NAME"'",
-               "confluent.license": "",
-               "confluent.topic.bootstrap.servers": "broker:9092",
-               "confluent.topic.replication.factor": "1"
+          "connector.class":"io.confluent.connect.kinesis.KinesisSourceConnector",
+          "tasks.max": "1",
+          "kafka.topic": "kinesis_topic",
+          "kinesis.stream": "'"$KINESIS_STREAM_NAME"'",
+          "kinesis.region": "'"$AWS_REGION"'",
+          "confluent.license": "",
+          "confluent.topic.bootstrap.servers": "broker:9092",
+          "confluent.topic.replication.factor": "1"
           }' \
      http://localhost:8083/connectors/kinesis-source/config | jq .
 
