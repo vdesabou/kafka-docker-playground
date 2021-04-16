@@ -3,7 +3,7 @@ version: '3.5'
 services:
   connect:
     volumes:
-        - $HOME/.aws/credentials:/root/.aws/credentials:ro
+        - $HOME/.aws/credentials:$CONNECT_CONTAINER_HOME_DIR/.aws/credentials:ro
         # - ../../connect/connect-aws-kinesis-source/:/tmp/
     environment:
       CONNECT_LOG4J_LOGGERS: org.apache.zookeeper=ERROR,org.I0Itec.zkclient=ERROR,org.reflections=ERROR,com.amazonaws=TRACE,io.confluent.connect.kinesis=TRACE

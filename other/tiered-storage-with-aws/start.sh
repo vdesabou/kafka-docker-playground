@@ -21,9 +21,16 @@ then
      exit 1
 fi
 
+if [[ "$TAG" == *ubi8 ]] || version_gt $TAG_BASE "5.9.0"
+then
+     export CONNECT_CONTAINER_HOME_DIR="/home/appuser"
+else
+     export CONNECT_CONTAINER_HOME_DIR="/root"
+fi
+
 export AWS_ACCESS_KEY_ID=$( grep "^aws_access_key_id" $AWS_CREDENTIAL_FILE | awk -F'=' '{print $2;}' )
 export AWS_SECRET_ACCESS_KEY=$( grep "^aws_secret_access_key" $AWS_CREDENTIAL_FILE | awk -F'=' '{print $2;}' )
-export AWS_REGION=$( grep "^region" $AWS_CREDENTIAL_FILE | awk -F'=' '{print $2;}' )
+export AWS_REGION=$( grep "^region" $HOME/.aws/config | awk -F'=' '{print $2;}' )
 
 if [ -z "$AWS_ACCESS_KEY_ID" ]
 then
@@ -39,7 +46,7 @@ fi
 
 if [ -z "$AWS_REGION" ]
 then
-     logerror "AWS_REGION is not set. Check your $AWS_CREDENTIAL_FILE file"
+     logerror "AWS_REGION is not set. Check your $HOME/.aws/config file"
      exit 1
 fi
 

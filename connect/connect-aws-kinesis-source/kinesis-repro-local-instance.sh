@@ -16,6 +16,13 @@ then
      exit 1
 fi
 
+if [[ "$TAG" == *ubi8 ]] || version_gt $TAG_BASE "5.9.0"
+then
+     export CONNECT_CONTAINER_HOME_DIR="/home/appuser"
+else
+     export CONNECT_CONTAINER_HOME_DIR="/root"
+fi
+
 # rm -f *.jks
 # # Create truststore and import the CA cert
 # docker run --rm -v $PWD:/tmp vdesabou/kafka-docker-playground-connect:${CONNECT_TAG}  keytool -noprompt -keystore /tmp/my.truststore.jks -alias CARoot -import -file /tmp/server-crt.pem -storepass confluent -keypass confluent
