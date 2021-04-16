@@ -61,7 +61,7 @@ Install Couchbase bucket example `travel-sample`
 $ docker exec couchbase bash -c "/opt/couchbase/bin/cbdocloader -c localhost:8091 -u Administrator -p password -b travel-sample -m 100 /opt/couchbase/samples/travel-sample.zip"
 ```
 
-Creating Couchbase sink connector
+Creating Couchbase Source connector
 
 ```bash
 $ curl -X PUT \
