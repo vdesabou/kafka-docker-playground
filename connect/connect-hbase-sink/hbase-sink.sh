@@ -33,7 +33,11 @@ curl -X PUT \
           }' \
      http://localhost:8083/connectors/hbase-sink/config | jq .
 
-log "Verify data is in HBase: type scan 'example_table' and then exit"
-log "docker exec -i hbase /bin/bash entrypoint.sh"
-log "> type command: scan 'example_table' and then exit"
-
+log "Verify data is in HBase:"
+docker exec -i hbase hbase shell > /tmp/result.log <<-EOF
+scan 'example_table'
+EOF
+cat /tmp/result.log
+grep "key1" /tmp/result.log | grep "value=value1"
+grep "key2" /tmp/result.log | grep "value=value2"
+grep "key3" /tmp/result.log | grep "value=value3"
