@@ -19,7 +19,7 @@ else
      export CSPROJ_FILE="DotNet2.2.csproj"
 fi
 
-${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.yml" -a -b
+${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml" -a -b
 
 log "Starting producer"
 docker exec -i client-dotnet bash -c "dotnet DotNet.dll produce test1"

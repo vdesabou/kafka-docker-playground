@@ -25,7 +25,7 @@ then
      docker run -i --rm -e TAG=$TAG_BASE -e KAFKA_CLIENT_TAG=$KAFKA_CLIENT_TAG -v "${DIR}/spring":/usr/src/mymaven -v "$HOME/.m2":/root/.m2 -v "${DIR}/spring/target:/usr/src/mymaven/target" -w /usr/src/mymaven maven:3.6.1-jdk-11 mvn package -DskipTests
 fi
 
-${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.yml"
+${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
 
 
 log "create a topic testtopic with 30 seconds retention"

@@ -14,13 +14,13 @@ DOCKER_COMPOSE_FILE_OVERRIDE=$1
 if [ -f "${DOCKER_COMPOSE_FILE_OVERRIDE}" ]
 then
 
-  docker-compose -f ../../environment/plaintext/docker-compose.yml -f ../../other/tiered-storage-with-minio/docker-compose.yml -f ${DOCKER_COMPOSE_FILE_OVERRIDE} down -v --remove-orphans
-  docker-compose -f ../../environment/plaintext/docker-compose.yml -f ../../other/tiered-storage-with-minio/docker-compose.yml -f ${DOCKER_COMPOSE_FILE_OVERRIDE} up -d minio
-  docker-compose -f ../../environment/plaintext/docker-compose.yml -f ../../other/tiered-storage-with-minio/docker-compose.yml -f ${DOCKER_COMPOSE_FILE_OVERRIDE} up -d create-buckets
+  docker-compose -f ../../environment/plaintext/docker-compose.yml -f ../../other/tiered-storage-with-minio/docker-compose.plaintext.yml -f ${DOCKER_COMPOSE_FILE_OVERRIDE} down -v --remove-orphans
+  docker-compose -f ../../environment/plaintext/docker-compose.yml -f ../../other/tiered-storage-with-minio/docker-compose.plaintext.yml -f ${DOCKER_COMPOSE_FILE_OVERRIDE} up -d minio
+  docker-compose -f ../../environment/plaintext/docker-compose.yml -f ../../other/tiered-storage-with-minio/docker-compose.plaintext.yml -f ${DOCKER_COMPOSE_FILE_OVERRIDE} up -d create-buckets
 else
-  docker-compose -f ../../environment/plaintext/docker-compose.yml -f ../../other/tiered-storage-with-minio/docker-compose.yml down -v --remove-orphans
-  docker-compose -f ../../environment/plaintext/docker-compose.yml -f ../../other/tiered-storage-with-minio/docker-compose.yml up -d minio
-  docker-compose -f ../../environment/plaintext/docker-compose.yml -f ../../other/tiered-storage-with-minio/docker-compose.yml up -d create-buckets
+  docker-compose -f ../../environment/plaintext/docker-compose.yml -f ../../other/tiered-storage-with-minio/docker-compose.plaintext.yml down -v --remove-orphans
+  docker-compose -f ../../environment/plaintext/docker-compose.yml -f ../../other/tiered-storage-with-minio/docker-compose.plaintext.yml up -d minio
+  docker-compose -f ../../environment/plaintext/docker-compose.yml -f ../../other/tiered-storage-with-minio/docker-compose.plaintext.yml up -d create-buckets
 fi
 
 log "Minio UI is accessible at http://127.0.0.1:9000 (AKIAIOSFODNN7EXAMPLE/wJalrXUtnFEMI7K7MDENG8bPxRfiCYEXAMPLEKEY)"
@@ -33,9 +33,9 @@ docker container restart create-buckets
 # Starting all other services now that minio is up and bucket created
 if [ -f "${DOCKER_COMPOSE_FILE_OVERRIDE}" ]
 then
-  docker-compose -f ../../environment/plaintext/docker-compose.yml -f ../../other/tiered-storage-with-minio/docker-compose.yml -f ${DOCKER_COMPOSE_FILE_OVERRIDE} up -d
+  docker-compose -f ../../environment/plaintext/docker-compose.yml -f ../../other/tiered-storage-with-minio/docker-compose.plaintext.yml -f ${DOCKER_COMPOSE_FILE_OVERRIDE} up -d
 else
-  docker-compose -f ../../environment/plaintext/docker-compose.yml -f ../../other/tiered-storage-with-minio/docker-compose.yml up -d
+  docker-compose -f ../../environment/plaintext/docker-compose.yml -f ../../other/tiered-storage-with-minio/docker-compose.plaintext.yml up -d
 fi
 
 # wait for C3 to be started

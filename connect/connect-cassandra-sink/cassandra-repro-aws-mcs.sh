@@ -25,7 +25,7 @@ log "🔐 Generate keys and certificates used for SSL"
 ./certs-create.sh
 cd ${DIR}
 
-${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext-aws-mcs.yml"
+${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.aws-mcs.yml"
 
 log "create a topic topic1"
 docker exec broker kafka-topics --create --topic topic1 --partitions 1 --replication-factor 1 --zookeeper zookeeper:2181

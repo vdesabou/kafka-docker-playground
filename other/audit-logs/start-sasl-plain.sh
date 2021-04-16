@@ -9,7 +9,7 @@ if ! version_gt $TAG_BASE "5.3.2"; then
     exit 0
 fi
 
-${DIR}/../../environment/sasl-plain/start.sh "${PWD}/docker-compose-sasl-plain.yml"
+${DIR}/../../environment/sasl-plain/start.sh "${PWD}/docker-compose.sasl-plain.yml"
 
 sleep 10
 

@@ -11,7 +11,7 @@ then
      docker run -i --rm -e KAFKA_CLIENT_TAG=$KAFKA_CLIENT_TAG -v "${DIR}/AccessPermissionLocation":/usr/src/mymaven -v "$HOME/.m2":/root/.m2 -v "${DIR}/AccessPermissionLocation/target:/usr/src/mymaven/target" -w /usr/src/mymaven maven:3.6.1-jdk-11 mvn package
 fi
 
-${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext-repro-converter.yml"
+${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.repro-converter.yml"
 
 
 log "Show content of CUSTOMERS table:"
