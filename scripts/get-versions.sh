@@ -5,7 +5,7 @@ source ${DIR}/../scripts/utils.sh
 
 if [ -z "$GITHUB_TOKEN" ]
 then
-  logerror "GITHUB_TOKEN is not set. Export it as environment variable"
+  logerror "ERROR: GITHUB_TOKEN is not set. Export it as environment variable"
   exit 1
 fi
 
@@ -13,7 +13,7 @@ image_versions="$1"
 
 if [ "$image_versions" = "" ]
 then
-  logerror "List of CP versions is not provided as argument!"
+  logerror "ERROR: List of CP versions is not provided as argument!"
   exit 1
 fi
 template_file=README-template.md
@@ -141,8 +141,9 @@ do
         v=$(echo $image_version | sed -e 's/\./[.]/g')
         html_url=$(cat /tmp/${gh_run_id}.json | jq ".jobs |= map(select(.name | test(\"${v}.*${test}\")))" | jq '[.jobs | .[] | {name: .name, html_url: .html_url }]' | jq '.[0].html_url')
         html_url=$(echo "$html_url" | sed -e 's/^"//' -e 's/"$//')
-        if [ "$html_url" = "" ]; then
-          logerror "Could not retrieve job url!"
+        if [ "$html_url" = "" ] || [ "$html_url" = "null" ]
+        then
+          logerror "ERROR: Could not retrieve job url!"
           cat /tmp/${gh_run_id}.json
         fi
         if [ "$last_execution_time" != "" ]
@@ -172,7 +173,7 @@ do
           log "👍 CP $image_version 🕐 ${time_day_hour} 📄 ${script_name} 🔗 $html_url"
         fi
       else
-        logerror "result_file: ${ci_file} does not exist !"
+        logerror "ERROR: result_file: ${ci_file} does not exist !"
       fi
     done #end image_version
   done #end script
@@ -235,7 +236,7 @@ do
     then
       ci="$ci ${TEST_SUCCESS[$image_version_no_dot]} \|"
     else
-      logerror "TEST_SUCCESS and TEST_FAILED are both empty !"
+      logerror "ERROR: TEST_SUCCESS and TEST_FAILED are both empty !"
     fi
 
   done
