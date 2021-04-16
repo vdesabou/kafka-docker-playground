@@ -21,7 +21,7 @@ set +e
 docker exec couchbase bash -c "/opt/couchbase/bin/cbdocloader -c localhost:8091 -u Administrator -p password -b travel-sample -m 100 /opt/couchbase/samples/travel-sample.zip"
 set -e
 
-log "Creating Couchbase sink connector using couchbase.event.filter=example.KeyFilter"
+log "Creating Couchbase Source connector using couchbase.event.filter=example.KeyFilter"
 curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
