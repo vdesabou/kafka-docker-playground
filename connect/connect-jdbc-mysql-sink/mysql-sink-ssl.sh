@@ -28,6 +28,8 @@ docker cp mysql:/var/lib/mysql/client-cert.pem ${PWD}/security/
 
 log "Creating JKS from pem files"
 mkdir -p ${PWD}/security/
+# workaround for issue on linux, see https://github.com/vdesabou/kafka-docker-playground/issues/851#issuecomment-821151962
+chmod -R a+w .
 cd ${PWD}/security/
 docker run --rm -v $PWD:/tmp vdesabou/kafka-docker-playground-connect:${CONNECT_TAG} keytool -importcert -alias MySQLCACert -noprompt -file /tmp/ca.pem -keystore /tmp/truststore.jks -storepass mypassword
 # Convert the client key and certificate files to a PKCS #12 archive
