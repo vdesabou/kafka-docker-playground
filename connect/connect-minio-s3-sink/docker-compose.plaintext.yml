@@ -3,7 +3,7 @@ version: '3.5'
 services:
   connect:
     volumes:
-        - ../../connect/connect-minio-s3-sink/credentials:/root/.aws/credentials:ro
+        - ../../connect/connect-minio-s3-sink/credentials:$CONNECT_CONTAINER_HOME_DIR/.aws/credentials:ro
     environment:
       CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-s3
 
