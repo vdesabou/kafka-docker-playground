@@ -26,7 +26,7 @@ az login
 All the Cosmos DB setup is automated:
 
 ```bash
-AZURE_NAME=playground${USER}source${GITHUB_RUN_NUMBER}${TAG}
+AZURE_NAME=playground${USER}cs${GITHUB_RUN_NUMBER}${TAG}
 AZURE_NAME=${AZURE_NAME//[-._]/}
 AZURE_REGION=westeurope
 AZURE_RESOURCE_GROUP=$AZURE_NAME
