@@ -91,7 +91,8 @@ docker exec oracle bash -c "orapki wallet add -wallet /tmp/server -trusted_cert 
 docker exec oracle bash -c "orapki wallet add -wallet /tmp/server -user_cert -cert /tmp/server/cert.txt -pwd WalletPasswd123"
 
 cd ${DIR}/ssl
-
+# workaround for issue on linux, see https://github.com/vdesabou/kafka-docker-playground/issues/851#issuecomment-821151962
+chmod -R a+w .
 log "Create a JKS truststore"
 rm -f truststore.jks
 docker cp oracle:/tmp/root/b64certificate.txt b64certificate.txt
