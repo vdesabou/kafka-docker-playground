@@ -17,4 +17,4 @@ rm -f ${DIR}/schema-registry/logs/*
 rm -f ${DIR}/control-center/logs/*
 rm -f ${DIR}/ksql-server/logs/*
 
-${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.custom-log4j.yml"
+${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.custom-log4j.yml"

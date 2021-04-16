@@ -50,7 +50,7 @@ if ! version_gt $JDBC_CONNECTOR_VERSION "9.9.9"; then
      ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
 else
      log "ojdbc jar is shipped with connector (starting with 10.0.0)"
-     ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext-no-ojdbc.yml"
+     ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.no-ojdbc.yml"
 fi
 
 

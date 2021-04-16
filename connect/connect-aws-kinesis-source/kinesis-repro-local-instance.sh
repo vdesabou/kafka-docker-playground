@@ -38,7 +38,7 @@ fi
 #         -srckeystore /tmp/kinesis-server.p12 -srcstoretype PKCS12 -srcstorepass confluent \
 #         -alias kinesis-server
 
-${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext-repro-local-instance.yml"
+${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.repro-local-instance.yml"
 
 KINESIS_STREAM_NAME=my_kinesis_stream$TAG
 KINESIS_STREAM_NAME=${KINESIS_STREAM_NAME//[-.]/}

@@ -49,7 +49,7 @@ then
      docker run -i --rm -e KAFKA_CLIENT_TAG=$KAFKA_CLIENT_TAG -v "${DIR}/JsonFieldToKey":/usr/src/mymaven -v "$HOME/.m2":/root/.m2 -v "${DIR}/JsonFieldToKey/target:/usr/src/mymaven/target" -w /usr/src/mymaven maven:3.6.1-jdk-11 mvn package
 fi
 
-${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext-repro-header-to-key.yml"
+${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.repro-header-to-key.yml"
 
 log "Sending EMS JSON message in queue connector-quickstart"
 docker exec tibco-ems bash -c '

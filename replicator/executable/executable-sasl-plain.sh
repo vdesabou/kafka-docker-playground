@@ -4,7 +4,7 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
-${DIR}/../../environment/mdc-sasl-plain/start.sh "${PWD}/docker-compose.sasl-plain.yml"
+${DIR}/../../environment/mdc-sasl-plain/start.sh "${PWD}/docker-compose.mdc-sasl-plain.yml"
 
 log "Sending sales in Europe cluster"
 seq -f "european_sale_%g ${RANDOM}" 10 | docker container exec -i broker-europe kafka-console-producer --broker-list localhost:9092 --topic sales_EUROPE --producer.config /etc/kafka/client.properties
@@ -13,7 +13,7 @@ log "Sending sales in US cluster"
 seq -f "us_sale_%g ${RANDOM}" 10 | docker container exec -i broker-us kafka-console-producer --broker-list localhost:9092 --topic sales_US --producer.config /etc/kafka/client.properties
 
 log "Starting replicator instances"
-docker-compose -f ../../environment/mdc-plaintext/docker-compose.yml -f ../../environment/mdc-sasl-plain/docker-compose.sasl-plain.yml -f docker-compose.replicator.sasl-plain.yml up -d
+docker-compose -f ../../environment/mdc-plaintext/docker-compose.yml -f ../../environment/mdc-sasl-plain/docker-compose.mdc-sasl-plain.yml -f docker-compose.sasl-plain.yml up -d
 
 ../../scripts/wait-for-connect-and-controlcenter.sh replicator-us $@
 ../../scripts/wait-for-connect-and-controlcenter.sh replicator-europe $@

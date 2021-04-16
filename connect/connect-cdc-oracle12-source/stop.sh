@@ -12,5 +12,4 @@ then
      export ORACLE_IMAGE="vdesabou/oracle12"
 fi
 
-${DIR}/../../environment/plaintext/stop.sh "${PWD}/docker-compose.plaintext-cdb-table.yml"
-${DIR}/../../environment/plaintext/stop.sh "${PWD}/docker-compose.plaintext-pdb-table.yml"
+stop_all "$DIR"

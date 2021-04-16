@@ -22,7 +22,7 @@ else
      export CONNECT_CONTAINER_HOME_DIR="/root"
 fi
 
-${DIR}/../../environment/sasl-ssl/start.sh "${PWD}/docker-compose.plaintext-repro-proxy.yml"
+${DIR}/../../environment/sasl-ssl/start.sh "${PWD}/docker-compose.plaintext.repro-proxy.yml"
 
 KINESIS_STREAM_NAME=my_kinesis_stream$TAG
 KINESIS_STREAM_NAME=${KINESIS_STREAM_NAME//[-.]/}

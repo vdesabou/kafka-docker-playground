@@ -13,9 +13,9 @@ fi
 # required to make utils.sh script being able to work, do not remove:
 # ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
 
-docker-compose -f ../../environment/plaintext/docker-compose.yml -f "${PWD}/docker-compose.plaintext-ssl.yml" down -v --remove-orphans
+docker-compose -f ../../environment/plaintext/docker-compose.yml -f "${PWD}/docker-compose.plaintext.ssl.yml" down -v --remove-orphans
 log "Starting up mysql container to get generated certs from /var/lib/mysql"
-docker-compose -f ../../environment/plaintext/docker-compose.yml -f "${PWD}/docker-compose.plaintext-ssl.yml" up -d mysql
+docker-compose -f ../../environment/plaintext/docker-compose.yml -f "${PWD}/docker-compose.plaintext.ssl.yml" up -d mysql
 
 sleep 5
 
@@ -36,7 +36,7 @@ docker run --rm -v $PWD:/tmp vdesabou/kafka-docker-playground-connect:${CONNECT_
 docker run --rm -v $PWD:/tmp vdesabou/kafka-docker-playground-connect:${CONNECT_TAG} keytool -importkeystore -srckeystore /tmp/client-keystore.p12 -srcstoretype pkcs12 -srcstorepass mypassword -destkeystore /tmp/keystore.jks -deststoretype JKS -deststorepass mypassword
 cd -
 
-docker-compose -f ../../environment/plaintext/docker-compose.yml -f "${PWD}/docker-compose.plaintext-ssl.yml" up -d
+docker-compose -f ../../environment/plaintext/docker-compose.yml -f "${PWD}/docker-compose.plaintext.ssl.yml" up -d
 ../../scripts/wait-for-connect-and-controlcenter.sh
 
 log "Creating MySQL sink connector with server side Encrypted Connections (using <userssl> user which requires SSL)"

@@ -30,7 +30,7 @@ fi
 
 
 
-${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext-dv.yml"
+${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.dv.yml"
 
 docker exec -i vertica /opt/vertica/bin/vsql -hlocalhost -Udbadmin << EOF
 CREATE SCHEMA IF NOT EXISTS DV_DWH;
