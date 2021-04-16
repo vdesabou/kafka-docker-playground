@@ -29,7 +29,7 @@ All the blob storage setup is automated:
 
 ```bash
 
-AZURE_NAME=playground${USER}bk${GITHUB_RUN_NUMBER}${TAG}
+AZURE_NAME=pg${USER}bk${GITHUB_RUN_NUMBER}${TAG}
 AZURE_NAME=${AZURE_NAME//[-._]/}
 AZURE_RESOURCE_GROUP=$AZURE_NAME
 AZURE_ACCOUNT_NAME=$AZURE_NAME

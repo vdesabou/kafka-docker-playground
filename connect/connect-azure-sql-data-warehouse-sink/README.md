@@ -26,7 +26,7 @@ az login
 All the SQL Data Warehouse setup is automated:
 
 ```bash
-AZURE_NAME=playground${USER}wh${GITHUB_RUN_NUMBER}${TAG}
+AZURE_NAME=pg${USER}wh${GITHUB_RUN_NUMBER}${TAG}
 AZURE_NAME=${AZURE_NAME//[-._]/}
 AZURE_RESOURCE_GROUP=$AZURE_NAME
 AZURE_SQL_NAME=$AZURE_NAME

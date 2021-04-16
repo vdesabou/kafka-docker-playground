@@ -1,6 +1,5 @@
 #!/bin/bash
 
-set +e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../scripts/utils.sh
 
@@ -37,12 +36,12 @@ fi
 log "Cleanup Azure Resource groups"
 for group in $(az group list --query [].name --output tsv)
 do
-  if [[ $group = playgroundrunner* ]]
+  if [[ $group = pgrunner* ]]
   then
     if [ ! -z "$GITHUB_RUN_NUMBER" ]
     then
       job=$(echo $GITHUB_RUN_NUMBER | cut -d "." -f 1)
-      if [[ $group = playgroundrunner$job* ]]
+      if [[ $group = pgrunner$job* ]]
       then
         log "Skipping current github actions $job"
         continue
@@ -54,7 +53,7 @@ do
 done
 
 # remove azure ad apps
-for fn in `az ad app list --filter "startswith(displayName, 'playgroundrunner')" --query '[].appId'`
+for fn in `az ad app list --filter "startswith(displayName, 'pgrunner')" --query '[].appId'`
 do
   if [ "$fn" == "[" ] || [ "$fn" == "]" ] || [ "$fn" == "[]" ]
   then
