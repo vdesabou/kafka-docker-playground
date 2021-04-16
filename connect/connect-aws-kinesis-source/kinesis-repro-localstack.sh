@@ -59,7 +59,6 @@ curl -X PUT \
                "kafka.topic": "kinesis_topic",
                "kinesis.base.url": "https://kinesis-local:4566",
                "kinesis.stream": "'"$KINESIS_STREAM_NAME"'",
-               "kinesis.region": "eu-west-3",
                "confluent.license": "",
                "confluent.topic.bootstrap.servers": "broker:9092",
                "confluent.topic.replication.factor": "1"

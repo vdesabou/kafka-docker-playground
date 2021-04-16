@@ -9,6 +9,24 @@ then
      wget https://s3.amazonaws.com/redshift-downloads/drivers/jdbc/1.2.20.1043/RedshiftJDBC4-1.2.20.1043.jar
 fi
 
+if [ ! -f $HOME/.aws/config ]
+then
+     logerror "ERROR: $HOME/.aws/config is not set"
+     exit 1
+fi
+if [ ! -f $HOME/.aws/credentials ]
+then
+     logerror "ERROR: $HOME/.aws/credentials is not set"
+     exit 1
+fi
+
+if [[ "$TAG" == *ubi8 ]] || version_gt $TAG_BASE "5.9.0"
+then
+     export CONNECT_CONTAINER_HOME_DIR="/home/appuser"
+else
+     export CONNECT_CONTAINER_HOME_DIR="/root"
+fi
+
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
 
 set +e

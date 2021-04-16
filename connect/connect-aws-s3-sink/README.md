@@ -13,13 +13,14 @@ Quickly test [S3 Sink](https://docs.confluent.io/current/connect/kafka-connect-s
 * Make sure you have an [AWS account](https://docs.aws.amazon.com/streams/latest/dev/before-you-begin.html#setting-up-sign-up-for-aws).
 * Set up [AWS Credentials](https://docs.confluent.io/current/connect/kafka-connect-kinesis/quickstart.html#aws-credentials)
 
-This project assumes `~/.aws/credentials` is set, see `docker-compose.yml`file for connect:
+This project assumes `~/.aws/credentials` and `~/.aws/config` are set, see `docker-compose.yml`file for connect:
 
-```
+```yaml
     connect:
     <snip>
     volumes:
         - $HOME/.aws/credentials:$CONNECT_CONTAINER_HOME_DIR/.aws/credentials:ro
+        - $HOME/.aws/config:$CONNECT_CONTAINER_HOME_DIR/.aws/config:ro
 ```
 
 
