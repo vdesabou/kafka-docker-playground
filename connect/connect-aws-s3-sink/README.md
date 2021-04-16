@@ -39,7 +39,7 @@ Note: you can also export these values as environment variable
 Creating bucket name <$AWS_BUCKET_NAME>, if required
 
 ```bash
-$ aws s3api create-bucket --bucket $AWS_BUCKET_NAME --region us-east-1
+$ aws s3api create-bucket --bucket $AWS_BUCKET_NAME --region $AWS_REGION
 ```
 
 The connector is created with:
@@ -51,7 +51,7 @@ $ curl -X PUT \
                "connector.class": "io.confluent.connect.s3.S3SinkConnector",
                "tasks.max": "1",
                "topics": "s3_topic",
-               "s3.region": "us-east-1",
+               "s3.region": "'"$AWS_REGION"'",
                "s3.bucket.name": "$AWS_BUCKET_NAME",
                "s3.part.size": 52428801,
                "flush.size": "3",

@@ -30,7 +30,7 @@ fi
 
 export AWS_ACCESS_KEY_ID=$( grep "^aws_access_key_id" $AWS_CREDENTIAL_FILE | awk -F'=' '{print $2;}' )
 export AWS_SECRET_ACCESS_KEY=$( grep "^aws_secret_access_key" $AWS_CREDENTIAL_FILE | awk -F'=' '{print $2;}' )
-export AWS_REGION=$( grep "^region" $HOME/.aws/config | awk -F'=' '{print $2;}' | sed 's/ //g')
+export AWS_REGION=$(aws configure get region | tr '\r' '\n')
 
 if [ -z "$AWS_ACCESS_KEY_ID" ]
 then

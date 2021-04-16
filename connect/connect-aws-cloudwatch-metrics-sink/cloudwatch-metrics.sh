@@ -30,6 +30,9 @@ docker exec -i connect kafka-avro-console-producer --broker-list broker:9092 --p
 "key1", {"name" : "test_meter","type" : "meter", "timestamp" : $TIMESTAMP, "dimensions" : {"dimensions1" : "InstanceID","dimensions2" : "i-aaba32d4"},"values" : {"count" : 32423.0,"oneMinuteRate" : 342342.2,"fiveMinuteRate" : 34234.2,"fifteenMinuteRate" : 2123123.1,"meanRate" : 2312312.1}}
 EOF
 
+AWS_REGION=$(aws configure get region | tr '\r' '\n')
+CLOUDWATCH_METRICS_URL="https://monitoring.$AWS_REGION.amazonaws.com"
+
 log "Creating AWS CloudWatch metrics Sink connector"
 curl -X PUT \
      -H "Content-Type: application/json" \
@@ -41,7 +44,7 @@ curl -X PUT \
                "key.converter.schema.registry.url": "http://schema-registry:8081",
                "value.converter": "io.confluent.connect.avro.AvroConverter",
                "value.converter.schema.registry.url": "http://schema-registry:8081",
-               "aws.cloudwatch.metrics.url": "https://monitoring.us-east-1.amazonaws.com",
+               "aws.cloudwatch.metrics.url": "'"$CLOUDWATCH_METRICS_URL"'",
                "aws.cloudwatch.metrics.namespace": "service-namespace",
                "behavior.on.malformed.metric": "FAIL",
                "confluent.license": "",
