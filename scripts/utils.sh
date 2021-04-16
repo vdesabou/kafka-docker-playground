@@ -565,7 +565,7 @@ function aws() {
     else
       if [ ! -f $HOME/.aws/config ]
       then
-        log 'ERROR: $HOME/.aws/config does now exist. AWS credentials must be set !'
+        log 'ERROR: $HOME/.aws/config does now exist. AWS config must be set !'
         return 1
       fi
       if [ ! -f $HOME/.aws/credentials ]
