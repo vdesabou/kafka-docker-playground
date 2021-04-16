@@ -44,6 +44,8 @@ log "Insert records in Kinesis stream"
 # The example shows that a record containing partition key 123 and data "test-message-1" is inserted into my_kinesis_stream.
 aws kinesis put-record --stream-name $KINESIS_STREAM_NAME --partition-key 123 --data test-message-1
 
+AWS_REGION=$(aws configure get region | tr '\r' '\n')
+
 log "Creating Kinesis Source connector"
 docker exec connect curl -X PUT \
      --cert /etc/kafka/secrets/connect.certificate.pem --key /etc/kafka/secrets/connect.key --tlsv1.2 --cacert /etc/kafka/secrets/snakeoil-ca-1.crt \
@@ -53,6 +55,7 @@ docker exec connect curl -X PUT \
                "tasks.max": "1",
                "kafka.topic": "kinesis_topic",
                "kinesis.stream": "'"$KINESIS_STREAM_NAME"'",
+               "kinesis.region": "'"$AWS_REGION"'",
                "confluent.topic.bootstrap.servers": "broker:9092",
                "confluent.topic.replication.factor": "1",
                "confluent.topic.ssl.keystore.location" : "/etc/kafka/secrets/kafka.connect.keystore.jks",

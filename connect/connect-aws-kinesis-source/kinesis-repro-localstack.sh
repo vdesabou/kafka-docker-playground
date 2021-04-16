@@ -49,6 +49,7 @@ log "Create a Kinesis stream $KINESIS_STREAM_NAME"
 log "Sleep 10 seconds to let the Kinesis stream being fully started"
 sleep 10
 
+AWS_REGION=$(aws configure get region | tr '\r' '\n')
 TODAY=$(date +%s)
 log "Creating Kinesis Source connector"
 curl -X PUT \
@@ -59,6 +60,7 @@ curl -X PUT \
                "kafka.topic": "kinesis_topic",
                "kinesis.base.url": "https://kinesis-local:4566",
                "kinesis.stream": "'"$KINESIS_STREAM_NAME"'",
+               "kinesis.region": "'"$AWS_REGION"'",
                "confluent.license": "",
                "confluent.topic.bootstrap.servers": "broker:9092",
                "confluent.topic.replication.factor": "1"
