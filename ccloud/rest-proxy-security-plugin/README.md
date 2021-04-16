@@ -4,6 +4,7 @@
 
 Quickly test [Principal Propagation](https://docs.confluent.io/platform/current/kafka-rest/production-deployment/rest-proxy/security.html#credentials-propagation) with Confluent Cloud.
 
+N.B: the main problem at this time is that the SSL certificate would need to include the ccloud key as DN within the certificate rather than a username (tracked by FF-1552)
 
 ## How to run
 
