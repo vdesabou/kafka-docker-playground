@@ -53,25 +53,27 @@ $ curl -X PUT \
 
 Verify data is in HBase:
 
+```bash
+docker exec -i hbase hbase shell > /tmp/result.log <<-EOF
+scan 'example_table'
+EOF
+cat /tmp/result.log
 ```
-$ docker exec -i hbase /bin/bash entrypoint.sh
-```
-
-Then type `scan 'example_table'`
 
 Results:
 
 ```bash
-hbase(main):001:0> scan 'example_table'
-ROW                       COLUMN+CELL
- key1                     column=hbase-test:KAFKA_VALUE, timestamp=1575994573539, value=value1
- key2                     column=hbase-test:KAFKA_VALUE, timestamp=1575994573545, value=value2
- key3                     column=hbase-test:KAFKA_VALUE, timestamp=1575994573551, value=value3
-3 row(s) in 0.3860 seconds
+HBase Shell; enter 'help<RETURN>' for list of supported commands.
+Type "exit<RETURN>" to leave the HBase Shell
+Version 1.3.1, r930b9a55528fe45d8edce7af42fef2d35e77677a, Thu Apr  6 19:36:54 PDT 2017
+
+scan 'example_table'
+ROW  COLUMN+CELL
+ key1 column=hbase-test:KAFKA_VALUE, timestamp=1618586660024, value=value1
+ key2 column=hbase-test:KAFKA_VALUE, timestamp=1618586660029, value=value2
+ key3 column=hbase-test:KAFKA_VALUE, timestamp=1618586660031, value=value3
+3 row(s) in 0.2020 seconds
 ```
-
-Type `exit`to close the HBase shell.
-
 
 
 N.B: Control Center is reachable at [http://127.0.0.1:9021](http://127.0.0.1:9021])
