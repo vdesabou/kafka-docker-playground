@@ -48,7 +48,7 @@ $ curl -X PUT \
      --data '{
                "tasks.max": "1",
                     "connector.class": "io.confluent.connect.s3.source.S3SourceConnector",
-                    "s3.region": "us-east-1",
+                    "s3.region": "'"$AWS_REGION"'",
                     "s3.bucket.name": "'"$AWS_BUCKET_NAME"'",
                     "format.class": "io.confluent.connect.s3.format.avro.AvroFormat",
                     "confluent.license": "",

@@ -71,13 +71,13 @@ curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
                "connector.class": "io.confluent.connect.aws.cloudwatch.AwsCloudWatchSourceConnector",
-                    "tasks.max": "1",
-                    "aws.cloudwatch.logs.url": "https://logs.us-east-1.amazonaws.com",
-                    "aws.cloudwatch.log.group": "my-log-group",
-                    "aws.cloudwatch.log.streams": "my-log-stream",
-                    "confluent.license": "",
-                    "confluent.topic.bootstrap.servers": "broker:9092",
-                    "confluent.topic.replication.factor": "1"
+               "tasks.max": "1",
+               "aws.cloudwatch.logs.url": "'"$CLOUDWATCH_LOGS_URL"'",
+               "aws.cloudwatch.log.group": "my-log-group",
+               "aws.cloudwatch.log.streams": "my-log-stream",
+               "confluent.license": "",
+               "confluent.topic.bootstrap.servers": "broker:9092",
+               "confluent.topic.replication.factor": "1"
           }' \
      http://localhost:8083/connectors/aws-cloudwatch-logs-source/config | jq .
 ```
