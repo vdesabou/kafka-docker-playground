@@ -8,6 +8,13 @@ mkdir -p ${DIR}/data/input
 mkdir -p ${DIR}/data/error
 mkdir -p ${DIR}/data/finished
 
+if [[ "$TAG" == *ubi8 ]] || version_gt $TAG_BASE "5.9.0"
+then
+     export CONNECT_CONTAINER_HOME_DIR="/home/appuser"
+else
+     export CONNECT_CONTAINER_HOME_DIR="/root"
+fi
+
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
 
 if [ ! -f "${DIR}/data/input/csv-spooldir-source.csv" ]
@@ -24,26 +31,30 @@ curl --request POST \
     "schema": "{\n    \"type\": \"record\",\n    \"name\": \"User\",\n    \"namespace\": \"com.example.users\",\n    \"fields\": [\n        {\n            \"name\": \"id\",\n            \"type\": \"long\"\n        },\n        {\n            \"name\": \"first_name\",\n            \"type\": [\n                \"null\",\n                \"string\"\n            ],\n            \"default\": null\n        },\n        {\n            \"name\": \"last_name\",\n            \"type\": [\n                \"null\",\n                \"string\"\n            ],\n            \"default\": null\n        },\n        {\n            \"name\": \"email\",\n            \"type\": [\n                \"null\",\n                \"string\"\n            ],\n            \"default\": null\n        },\n        {\n            \"name\": \"gender\",\n            \"type\": [\n                \"null\",\n                \"string\"\n            ],\n            \"default\": null\n        },\n        {\n            \"name\": \"ip_address\",\n            \"type\": [\n                \"null\",\n                \"string\"\n            ],\n            \"default\": null\n        },\n        {\n            \"name\": \"last_login\",\n            \"type\": [\n                \"null\",\n                \"string\"\n            ],\n            \"default\": null\n        },\n        {\n            \"name\": \"account_balance\",\n            \"type\": [\n                \"null\",\n                {\n                    \"type\": \"bytes\",\n                    \"scale\": 2,\n                    \"precision\": 64,\n                    \"logicalType\": \"decimal\"\n                }\n            ],\n            \"default\": null\n        },\n        {\n            \"name\": \"country\",\n            \"type\": [\n                \"null\",\n                \"string\"\n            ],\n            \"default\": null\n        },\n        {\n            \"name\": \"favorite_color\",\n            \"type\": [\n                \"null\",\n                \"string\"\n            ],\n            \"default\": null\n        }\n    ]\n}"
 }'
 
+INPUT_PATH="${CONNECT_CONTAINER_HOME_DIR}/data/input/"
+ERROR_PATH="${CONNECT_CONTAINER_HOME_DIR}/data/error/"
+FINISHED_PATH="${CONNECT_CONTAINER_HOME_DIR}/data/finished/"
+
 log "Creating CSV Spool Dir Source connector with auto.register.schemas=false"
 curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
-                    "tasks.max": "1",
-                    "connector.class": "com.github.jcustenborder.kafka.connect.spooldir.SpoolDirCsvSourceConnector",
-                    "input.path": "/root/data/input",
-                    "input.file.pattern": "csv-spooldir-source.csv",
-                    "error.path": "/root/data/error",
-                    "finished.path": "/root/data/finished",
-                    "halt.on.error": "false",
-                    "topic": "spooldir-csv-topic",
-                    "schema.generation.enabled" : "false",
-                    "key.schema": "{\n  \"name\" : \"com.example.users.UserKey\",\n  \"type\" : \"STRUCT\",\n  \"isOptional\" : false,\n  \"fieldSchemas\" : {\n    \"id\" : {\n      \"type\" : \"INT64\",\n      \"isOptional\" : false\n    }\n  }\n}",
-                    "value.schema": "{\n  \"name\" : \"com.example.users.User\",\n  \"type\" : \"STRUCT\",\n  \"isOptional\" : false,\n  \"fieldSchemas\" : {\n    \"id\" : {\n      \"type\" : \"INT64\",\n      \"isOptional\" : false\n    },\n    \"first_name\" : {\n      \"type\" : \"STRING\",\n      \"isOptional\" : true\n    },\n    \"last_name\" : {\n      \"type\" : \"STRING\",\n      \"isOptional\" : true\n    },\n    \"email\" : {\n      \"type\" : \"STRING\",\n      \"isOptional\" : true\n    },\n    \"gender\" : {\n      \"type\" : \"STRING\",\n      \"isOptional\" : true\n    },\n    \"ip_address\" : {\n      \"type\" : \"STRING\",\n      \"isOptional\" : true\n    },\n    \"last_login\" : {\n      \"type\" : \"STRING\",\n      \"isOptional\" : true\n    },\n    \"account_balance\" : {\n      \"name\" : \"org.apache.kafka.connect.data.Decimal\",\n      \"type\" : \"BYTES\",\n      \"version\" : 1,\n      \"parameters\" : {\n        \"scale\" : \"2\"\n      },\n      \"isOptional\" : true\n    },\n    \"country\" : {\n      \"type\" : \"STRING\",\n      \"isOptional\" : true\n    },\n    \"favorite_color\" : {\n      \"type\" : \"STRING\",\n      \"isOptional\" : true\n    }\n  }\n}",
-                    "csv.first.row.as.header": "true",
-                    "value.converter": "io.confluent.connect.avro.AvroConverter",
-                    "value.converter.schema.registry.url": "http://schema-registry:8081",
-                    "value.converter.connect.meta.data": "false",
-                    "value.converter.auto.register.schemas" : "false"
+               "tasks.max": "1",
+               "connector.class": "com.github.jcustenborder.kafka.connect.spooldir.SpoolDirCsvSourceConnector",
+               "input.file.pattern": "csv-spooldir-source.csv",
+               "input.path": "'"$INPUT_PATH"'",
+               "error.path": "'"$ERROR_PATH"'",
+               "finished.path": "'"$FINISHED_PATH"'",
+               "halt.on.error": "false",
+               "topic": "spooldir-csv-topic",
+               "schema.generation.enabled" : "false",
+               "key.schema": "{\n  \"name\" : \"com.example.users.UserKey\",\n  \"type\" : \"STRUCT\",\n  \"isOptional\" : false,\n  \"fieldSchemas\" : {\n    \"id\" : {\n      \"type\" : \"INT64\",\n      \"isOptional\" : false\n    }\n  }\n}",
+               "value.schema": "{\n  \"name\" : \"com.example.users.User\",\n  \"type\" : \"STRUCT\",\n  \"isOptional\" : false,\n  \"fieldSchemas\" : {\n    \"id\" : {\n      \"type\" : \"INT64\",\n      \"isOptional\" : false\n    },\n    \"first_name\" : {\n      \"type\" : \"STRING\",\n      \"isOptional\" : true\n    },\n    \"last_name\" : {\n      \"type\" : \"STRING\",\n      \"isOptional\" : true\n    },\n    \"email\" : {\n      \"type\" : \"STRING\",\n      \"isOptional\" : true\n    },\n    \"gender\" : {\n      \"type\" : \"STRING\",\n      \"isOptional\" : true\n    },\n    \"ip_address\" : {\n      \"type\" : \"STRING\",\n      \"isOptional\" : true\n    },\n    \"last_login\" : {\n      \"type\" : \"STRING\",\n      \"isOptional\" : true\n    },\n    \"account_balance\" : {\n      \"name\" : \"org.apache.kafka.connect.data.Decimal\",\n      \"type\" : \"BYTES\",\n      \"version\" : 1,\n      \"parameters\" : {\n        \"scale\" : \"2\"\n      },\n      \"isOptional\" : true\n    },\n    \"country\" : {\n      \"type\" : \"STRING\",\n      \"isOptional\" : true\n    },\n    \"favorite_color\" : {\n      \"type\" : \"STRING\",\n      \"isOptional\" : true\n    }\n  }\n}",
+               "csv.first.row.as.header": "true",
+               "value.converter": "io.confluent.connect.avro.AvroConverter",
+               "value.converter.schema.registry.url": "http://schema-registry:8081",
+               "value.converter.connect.meta.data": "false",
+               "value.converter.auto.register.schemas" : "false"
           }}' \
      http://localhost:8083/connectors/spool-dir/config | jq .
 
