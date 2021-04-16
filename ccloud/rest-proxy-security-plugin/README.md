@@ -2,7 +2,7 @@
 
 ## Objective
 
-Quickly test [Principal Propagation](https://docs.confluent.io/current/confluent-security-plugins/kafka-rest/principal_propagation.html#principal-propagation) with Confluent Cloud.
+Quickly test [Principal Propagation](https://docs.confluent.io/platform/current/kafka-rest/production-deployment/rest-proxy/security.html#credentials-propagation) with Confluent Cloud.
 
 
 ## How to run
