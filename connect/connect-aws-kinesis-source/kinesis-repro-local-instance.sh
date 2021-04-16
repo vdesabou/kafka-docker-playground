@@ -61,7 +61,6 @@ curl -X PUT \
                "kinesis.stream": "'"$KINESIS_STREAM_NAME"'",
                "kinesis.position": "AT_TIMESTAMP",
                "kinesis.shard.timestamp": "'"$TODAY"'",
-               "kinesis.region": "eu-west-3",
                "confluent.license": "",
                "confluent.topic.bootstrap.servers": "broker:9092",
                "confluent.topic.replication.factor": "1"

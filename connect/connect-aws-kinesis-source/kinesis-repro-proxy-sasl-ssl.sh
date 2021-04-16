@@ -52,7 +52,6 @@ docker exec connect curl -X PUT \
                "connector.class":"io.confluent.connect.kinesis.KinesisSourceConnector",
                "tasks.max": "1",
                "kafka.topic": "kinesis_topic",
-               "kinesis.region": "EU_WEST_3",
                "kinesis.stream": "'"$KINESIS_STREAM_NAME"'",
                "confluent.topic.bootstrap.servers": "broker:9092",
                "confluent.topic.replication.factor": "1",
