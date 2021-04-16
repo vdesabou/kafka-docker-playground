@@ -67,18 +67,18 @@ do
     grep "$script_name" ${DIR}/tests-ignored.txt > /dev/null
     if [ $? = 0 ]
     then
-      logwarn "####################################################"
-      logwarn "⏭ skipping $script_name in test $test"
-      logwarn "####################################################"
+      log "####################################################"
+      log "⏭ skipping $script_name in test $test"
+      log "####################################################"
       continue
     fi
 
     # check for scripts containing "repro"
     if [[ "$script_name" == *"repro"* ]]
     then
-      logwarn "####################################################"
-      logwarn "⏭ skipping reproduction model $script_name in test $test"
-      logwarn "####################################################"
+      log "####################################################"
+      log "⏭ skipping reproduction model $script_name in test $test"
+      log "####################################################"
       continue
     fi
 

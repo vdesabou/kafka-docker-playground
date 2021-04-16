@@ -133,9 +133,9 @@ do
                     log "####################################################"
                     aws s3 rm $s3_file
                 else
-                    logwarn "####################################################"
-                    logwarn "✅ Skipping as test with CP $TAG and connector $THE_CONNECTOR_TAG has already been executed successfully $(displaytime $elapsed_time) ago"
-                    logwarn "####################################################"
+                    log "####################################################"
+                    log "✅ Skipping as test with CP $TAG and connector $THE_CONNECTOR_TAG has already been executed successfully $(displaytime $elapsed_time) ago"
+                    log "####################################################"
                     skipped_tests=$skipped_tests"$dir[$script]\n"
                     let "nb_test_skipped++"
                     continue
