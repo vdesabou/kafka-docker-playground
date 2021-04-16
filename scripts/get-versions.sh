@@ -314,6 +314,8 @@ then
 else
   last_run=$(date "+%Y-%m-%d %H:%M")
 fi
+last_run=${last_run// /%20}
+last_run=${last_run//-/--}
 # handle shields badges
 sed -e "s|:nb_total_success:|$nb_total_success|g" \
     -e "s|:nb_total_tests:|$nb_total_tests|g" \
