@@ -22,6 +22,13 @@ then
      exit 1
 fi
 
+if [[ "$TAG" == *ubi8 ]] || version_gt $TAG_BASE "5.9.0"
+then
+     export CONNECT_CONTAINER_HOME_DIR="/home/appuser"
+else
+     export CONNECT_CONTAINER_HOME_DIR="/root"
+fi
+
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
 
 log "Creating bucket name <$AWS_BUCKET_NAME>, if required"

@@ -17,7 +17,7 @@ This project assumes `~/.aws/credentials` is set, see `docker-compose.yml`file f
     connect:
     <snip>
     volumes:
-        - $HOME/.aws/credentials:/root/.aws/credentials:ro
+        - $HOME/.aws/credentials:$CONNECT_CONTAINER_HOME_DIR/.aws/credentials:ro
 ```
 
 Example:
