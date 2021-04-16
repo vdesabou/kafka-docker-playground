@@ -47,7 +47,7 @@ curl -X PUT \
                "tasks.max" : "1",
                "topics" : "stats",
                "auto.create" : "true",
-               "gcp.bigtable.credentials.path": "/root/keyfiles/keyfile.json",
+               "gcp.bigtable.credentials.path": "/tmp/keyfile.json",
                "gcp.bigtable.instance.id": "'"$INSTANCE"'",
                "gcp.bigtable.project.id": "'"$PROJECT"'",
                "auto.create.tables": "true",

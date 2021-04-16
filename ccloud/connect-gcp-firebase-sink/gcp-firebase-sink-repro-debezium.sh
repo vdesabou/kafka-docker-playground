@@ -75,7 +75,7 @@ curl -X PUT \
                "connector.class" : "io.confluent.connect.firebase.FirebaseSinkConnector",
                     "tasks.max" : "1",
                     "topics":"asgard_public_customers",
-                    "gcp.firebase.credentials.path": "/root/keyfiles/keyfile.json",
+                    "gcp.firebase.credentials.path": "/tmp/keyfile.json",
                     "gcp.firebase.database.reference": "https://'"$PROJECT"'.firebaseio.com/musicBlog",
                     "insert.mode":"update",
                     "key.converter" : "io.confluent.connect.avro.AvroConverter",

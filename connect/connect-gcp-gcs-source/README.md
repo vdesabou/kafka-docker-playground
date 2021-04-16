@@ -55,7 +55,7 @@ $ curl -X PUT \
      --data '{
                "connector.class": "io.confluent.connect.gcs.GcsSourceConnector",
                     "gcs.bucket.name" : "'"$GCS_BUCKET_NAME"'",
-                    "gcs.credentials.path" : "/root/keyfiles/keyfile.json",
+                    "gcs.credentials.path" : "/tmp/keyfile.json",
                     "format.class": "io.confluent.connect.gcs.format.avro.AvroFormat",
                     "tasks.max" : "1",
                     "confluent.topic.bootstrap.servers" : "broker:9092",

@@ -80,7 +80,7 @@ $ curl -X PUT \
                     "gcp.pubsub.project.id" : "'"$PROJECT"'",
                     "gcp.pubsub.topic.id" : "topic-1",
                     "gcp.pubsub.subscription.id" : "subscription-1",
-                    "gcp.pubsub.credentials.path" : "/root/keyfiles/keyfile.json",
+                    "gcp.pubsub.credentials.path" : "/tmp/keyfile.json",
                     "confluent.topic.bootstrap.servers": "broker:9092",
                     "confluent.topic.replication.factor": "1"
           }' \
