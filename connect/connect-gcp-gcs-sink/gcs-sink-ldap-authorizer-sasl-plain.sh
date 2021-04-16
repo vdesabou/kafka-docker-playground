@@ -53,7 +53,7 @@ curl -X PUT \
                     "gcs.bucket.name" : "'"$GCS_BUCKET_NAME"'",
                     "gcs.part.size": "5242880",
                     "flush.size": "3",
-                    "gcs.credentials.path": "/root/keyfiles/keyfile.json",
+                    "gcs.credentials.path": "/tmp/keyfile.json",
                     "storage.class": "io.confluent.connect.gcs.storage.GcsStorage",
                     "format.class": "io.confluent.connect.gcs.format.avro.AvroFormat",
                     "partitioner.class": "io.confluent.connect.storage.partitioner.DefaultPartitioner",

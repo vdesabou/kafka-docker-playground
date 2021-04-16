@@ -74,7 +74,7 @@ $ curl -X PUT \
                "table.name.format" : "kafka_${topic}",
                "gcp.spanner.instance.id" : "'"$INSTANCE"'",
                "gcp.spanner.database.id" : "'"$DATABASE"'",
-               "gcp.spanner.credentials.path" : "/root/keyfiles/keyfile.json",
+               "gcp.spanner.credentials.path" : "/tmp/keyfile.json",
                "confluent.license": "",
                "confluent.topic.bootstrap.servers": "broker:9092",
                "confluent.topic.replication.factor": "1"

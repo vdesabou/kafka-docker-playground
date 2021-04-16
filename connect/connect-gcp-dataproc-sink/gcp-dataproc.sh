@@ -46,7 +46,7 @@ curl -X PUT \
                "gcp.dataproc.projectId": "'"$PROJECT"'",
                "gcp.dataproc.region": "us-east1",
                "gcp.dataproc.cluster": "'"$CLUSTER_NAME"'",
-               "gcp.dataproc.credentials.path" : "/root/keyfiles/keyfile.json",
+               "gcp.dataproc.credentials.path" : "/tmp/keyfile.json",
                "confluent.license": "",
                "confluent.topic.bootstrap.servers": "broker:9092",
                "confluent.topic.replication.factor": "1"

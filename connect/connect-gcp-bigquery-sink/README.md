@@ -82,7 +82,7 @@ curl -X PUT \
                     "tableWriteWait": "1000",
                     "project" : "'"$PROJECT"'",
                     "datasets" : ".*='"$DATASET"'",
-                    "keyfile" : "/root/keyfiles/keyfile.json"
+                    "keyfile" : "/tmp/keyfile.json"
           }' \
      http://localhost:8083/connectors/kcbq-connect/config | jq .
 ```
