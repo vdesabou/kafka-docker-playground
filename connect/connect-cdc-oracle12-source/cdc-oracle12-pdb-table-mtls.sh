@@ -35,9 +35,9 @@ then
 fi
 
 # required to make utils.sh script being able to work, do not remove:
-# ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext-pdb-table.yml"
+# ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.pdb-table.yml"
 log "Starting up oracle container to get generated cert from oracle server wallet"
-docker-compose -f ../../environment/plaintext/docker-compose.yml -f "${PWD}/docker-compose.plaintext-pdb-table-mtls.yml" up -d oracle
+docker-compose -f ../../environment/plaintext/docker-compose.yml -f "${PWD}/docker-compose.plaintext.pdb-table-mtls.yml" up -d oracle
 
 # Verify Oracle DB has started within MAX_WAIT seconds
 MAX_WAIT=900
@@ -131,7 +131,7 @@ stop
 start
 EOF
 
-docker-compose -f ../../environment/plaintext/docker-compose.yml -f "${PWD}/docker-compose.plaintext-pdb-table-mtls.yml" up -d
+docker-compose -f ../../environment/plaintext/docker-compose.yml -f "${PWD}/docker-compose.plaintext.pdb-table-mtls.yml" up -d
 
 ../../scripts/wait-for-connect-and-controlcenter.sh
 

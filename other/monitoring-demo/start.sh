@@ -20,7 +20,7 @@ do
      fi
 done
 
-${DIR}/../../environment/mdc-plaintext/start.sh "${PWD}/docker-compose.yml"
+${DIR}/../../environment/mdc-plaintext/start.sh "${PWD}/docker-compose.mdc-plaintext.yml"
 
 log "-------------------------------------"
 log "Dotnet client examples"

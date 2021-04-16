@@ -34,7 +34,7 @@ then
      export ORACLE_IMAGE="vdesabou/oracle12"
 fi
 
-${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext-cdb-table.yml"
+${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.cdb-table.yml"
 
 
 # Verify Oracle DB has started within MAX_WAIT seconds
