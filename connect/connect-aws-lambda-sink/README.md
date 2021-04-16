@@ -19,8 +19,8 @@ This project assumes `~/.aws/credentials` and `~/.aws/config` are set, see `dock
     connect:
     <snip>
     volumes:
-        - $HOME/.aws/credentials:/root/.aws/credentials:ro
-        - $HOME/.aws/config:/root/.aws/config:ro
+        - $HOME/.aws/credentials:$CONNECT_CONTAINER_HOME_DIR/.aws/credentials:ro
+        - $HOME/.aws/config:$CONNECT_CONTAINER_HOME_DIR/.aws/config:ro
 ```
 
 Create an AWS Lambda function with name **Add** and use the below given python script
@@ -98,6 +98,7 @@ $ curl -X PUT \
                     "aws.lambda.function.name" : "Add",
                     "aws.lambda.invocation.type" : "sync",
                     "aws.lambda.batch.size" : "50",
+                    "aws.lambda.region": "us-east-1",
                     "behavior.on.error" : "fail",
                     "reporter.bootstrap.servers": "broker:9092",
                     "reporter.error.topic.name": "error-responses",

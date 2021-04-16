@@ -4,6 +4,24 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
+if [ ! -f $HOME/.aws/config ]
+then
+     logerror "ERROR: $HOME/.aws/config is not set"
+     exit 1
+fi
+if [ ! -f $HOME/.aws/credentials ]
+then
+     logerror "ERROR: $HOME/.aws/credentials is not set"
+     exit 1
+fi
+
+if [[ "$TAG" == *ubi8 ]] || version_gt $TAG_BASE "5.9.0"
+then
+     export CONNECT_CONTAINER_HOME_DIR="/home/appuser"
+else
+     export CONNECT_CONTAINER_HOME_DIR="/root"
+fi
+
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
 
 log "Sending messages to topic add-topic"
@@ -14,20 +32,21 @@ curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
                "connector.class" : "io.confluent.connect.aws.lambda.AwsLambdaSinkConnector",
-                    "tasks.max": "1",
-                    "topics" : "add-topic",
-                    "aws.lambda.function.name" : "Add",
-                    "aws.lambda.invocation.type" : "sync",
-                    "aws.lambda.batch.size" : "50",
-                    "behavior.on.error" : "fail",
-                    "reporter.bootstrap.servers": "broker:9092",
-                    "reporter.error.topic.name": "error-responses",
-                    "reporter.error.topic.replication.factor": 1,
-                    "reporter.result.topic.name": "success-responses",
-                    "reporter.result.topic.replication.factor": 1,
-                    "confluent.license": "",
-                    "confluent.topic.bootstrap.servers": "broker:9092",
-                    "confluent.topic.replication.factor": "1"
+               "tasks.max": "1",
+               "topics" : "add-topic",
+               "aws.lambda.function.name" : "Add",
+               "aws.lambda.invocation.type" : "sync",
+               "aws.lambda.batch.size" : "50",
+               "aws.lambda.region": "us-east-1",
+               "behavior.on.error" : "fail",
+               "reporter.bootstrap.servers": "broker:9092",
+               "reporter.error.topic.name": "error-responses",
+               "reporter.error.topic.replication.factor": 1,
+               "reporter.result.topic.name": "success-responses",
+               "reporter.result.topic.replication.factor": 1,
+               "confluent.license": "",
+               "confluent.topic.bootstrap.servers": "broker:9092",
+               "confluent.topic.replication.factor": "1"
           }' \
      http://localhost:8083/connectors/aws-lambda/config | jq .
 
