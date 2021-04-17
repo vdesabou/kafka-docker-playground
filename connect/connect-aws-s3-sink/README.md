@@ -39,7 +39,7 @@ Note: you can also export these values as environment variable
 Creating bucket name <$AWS_BUCKET_NAME>, if required
 
 ```bash
-$ aws s3api create-bucket --bucket $AWS_BUCKET_NAME --region $AWS_REGION
+$ aws s3api create-bucket --bucket $AWS_BUCKET_NAME --region $AWS_REGION --create-bucket-configuration LocationConstraint=$AWS_REGION
 ```
 
 The connector is created with:
