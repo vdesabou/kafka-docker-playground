@@ -158,18 +158,23 @@ do
           fi
         fi
 
+        connector_version=""
+        if [ "$version" != "" ]
+        then
+          connector_version=" 🔢 Connector v$version"
+        fi
         if [ "$status" == "failure" ]
         then
           let "nb_fail++"
           let "nb_total_fail++"
           TEST_FAILED[$image_version_no_dot]="[❌ $time_day]($html_url)"
-          echo -e "🔥 CP $image_version 🕐 ${time_day_hour} 📄 ${script_name} 🔗 $html_url\n" >> ${gh_msg_file}
+          echo -e "🔥 CP ${image_version}${connector_version} 🕐 ${time_day_hour} 📄 ${script_name} 🔗 $html_url\n" >> ${gh_msg_file}
           log "🔥 CP $image_version 🕐 ${time_day_hour} 📄 ${script_name} 🔗 $html_url"
         else
           let "nb_success++"
           let "nb_total_success++"
           TEST_SUCCESS[$image_version_no_dot]="[👍 $time_day]($html_url)"
-          echo -e "👍 CP $image_version 🕐 ${time_day_hour} 📄 ${script_name} 🔗 $html_url\n" >> ${gh_msg_file}
+          echo -e "👍 CP ${image_version}${connector_version} 🕐 ${time_day_hour} 📄 ${script_name} 🔗 $html_url\n" >> ${gh_msg_file}
           log "👍 CP $image_version 🕐 ${time_day_hour} 📄 ${script_name} 🔗 $html_url"
         fi
       else
@@ -183,10 +188,6 @@ do
   then
     t=$(echo ${testdir} | sed 's/-/\//')
     title="🔥 ${t}"
-    if [ "$version" != "" ]
-    then
-      echo -e "🔢 Connector version: $version\n" >> ${gh_msg_file}
-    fi
     log "Number of successful tests: $nb_success/${nb_tests}"
     if [ ${nb_fail} -gt 0 ]
     then
