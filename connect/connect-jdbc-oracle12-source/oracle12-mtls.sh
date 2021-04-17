@@ -107,7 +107,9 @@ docker exec oracle bash -c "orapki wallet add -wallet /tmp/server -user_cert -ce
 
 cd ${DIR}/mtls
 # workaround for issue on linux, see https://github.com/vdesabou/kafka-docker-playground/issues/851#issuecomment-821151962
+ls -lrt
 chmod -R a+w .
+ls -lrt
 log "Create a JKS keystore"
 # Create a new private/public key pair for 'CN=connect,C=US'
 rm -f keystore.jks
@@ -121,12 +123,16 @@ docker exec oracle bash -c "orapki cert create -wallet /tmp/root -request /tmp/c
 # import the test CA's certificate:
 docker cp oracle:/tmp/root/b64certificate.txt b64certificate.txt
 # workaround for issue on linux, see https://github.com/vdesabou/kafka-docker-playground/issues/851#issuecomment-821151962
+ls -lrt
 chmod -R a+w .
+ls -lrt
 docker run --rm -v $PWD:/tmp vdesabou/kafka-docker-playground-connect:${CONNECT_TAG} keytool -import -v -noprompt -alias testroot -file /tmp/b64certificate.txt -keystore /tmp/keystore.jks -storepass 'welcome123'
 # Import the signed certificate
 docker cp oracle:/tmp/cert.txt cert.txt
 # workaround for issue on linux, see https://github.com/vdesabou/kafka-docker-playground/issues/851#issuecomment-821151962
+ls -lrt
 chmod -R a+w .
+ls -lrt
 docker run --rm -v $PWD:/tmp vdesabou/kafka-docker-playground-connect:${CONNECT_TAG} keytool -import -v -alias testclient -file /tmp/cert.txt -keystore /tmp/keystore.jks -storepass 'welcome123'
 log "Displaying keystore"
 docker run --rm -v $PWD:/tmp vdesabou/kafka-docker-playground-connect:${CONNECT_TAG} keytool -list -keystore /tmp/keystore.jks -storepass 'welcome123' -v
@@ -135,7 +141,9 @@ log "Create a JKS truststore"
 rm -f truststore.jks
 docker cp oracle:/tmp/root/b64certificate.txt b64certificate.txt
 # workaround for issue on linux, see https://github.com/vdesabou/kafka-docker-playground/issues/851#issuecomment-821151962
+ls -lrt
 chmod -R a+w .
+ls -lrt
 # We import the test CA certificate
 docker run --rm -v $PWD:/tmp vdesabou/kafka-docker-playground-connect:${CONNECT_TAG} keytool -import -v -alias testroot -file /tmp/b64certificate.txt -keystore /tmp/truststore.jks -storetype JKS -storepass 'welcome123' -noprompt
 log "Displaying truststore"
