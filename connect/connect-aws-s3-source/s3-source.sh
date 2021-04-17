@@ -34,7 +34,7 @@ ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml
 AWS_REGION=$(aws configure get region | tr '\r' '\n')
 
 log "Creating bucket name <$AWS_BUCKET_NAME>, if required"
-aws s3api create-bucket --bucket $AWS_BUCKET_NAME --region $AWS_REGION
+aws s3api create-bucket --bucket $AWS_BUCKET_NAME --region $AWS_REGION --create-bucket-configuration LocationConstraint=$AWS_REGION
 
 log "Creating S3 Sink connector with bucket name <$AWS_BUCKET_NAME>"
 curl -X PUT \
