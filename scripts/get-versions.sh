@@ -20,6 +20,7 @@ template_file=README-template.md
 readme_file=README.md
 readme_tmp_file=/tmp/README.md
 gh_msg_file=/tmp/gh.txt
+gh_msg_file_intro=/tmp/gh_intro.txt
 
 cp $template_file $readme_file
 
@@ -50,6 +51,8 @@ do
   TEST_SUCCESS=()
   rm -f ${gh_msg_file}
   touch ${gh_msg_file}
+  rm -f ${gh_msg_file_intro}
+  touch ${gh_msg_file_intro}
   gh_issue_number=""
   if [ ! -d $test ]
   then
@@ -191,16 +194,20 @@ do
     log "Number of successful tests: $nb_success/${nb_tests}"
     if [ ${nb_fail} -gt 0 ]
     then
-      msg=$(cat ${gh_msg_file})
       gh issue list --limit 500 | grep "$title" > /dev/null
       if [ $? != 0 ]
       then
+        echo -e "🆕💥 New issue !\n" >> ${gh_msg_file_intro}
+        msg=$(cat ${gh_msg_file_intro} ${gh_msg_file})
         log "Creating GH issue with title $title"
-        gh issue create --title "$title" --body "$msg" --assignee vdesabou --label bug
+        gh issue create --title "$title" --body "$msg" --assignee vdesabou --label "new 🆕"
       else
+        echo -e "🤦‍♂️💥 Still failing !\n" >> ${gh_msg_file_intro}
+        msg=$(cat ${gh_msg_file_intro} ${gh_msg_file})
         log "GH issue with title $title already exist, adding comment..."
         issue_number=$(gh issue list --limit 500 | grep "$title" | awk '{print $1;}')
         gh issue comment ${issue_number} --body "$msg"
+        gh issue edit ${issue_number} --add-label "bug 🔥" --remove-label "new 🆕"
       fi
       gh_issue_number=$(gh issue list --limit 500 | grep "$title" | awk '{print $1;}')
     fi
@@ -211,8 +218,8 @@ do
       if [ $? = 0 ]
       then
         issue_number=$(gh issue list --limit 500 | grep "$title" | awk '{print $1;}')
-        echo -e "✅ Issue fixed !\n"  >> ${gh_msg_file}
-        msg=$(cat ${gh_msg_file})
+        echo -e "👍✅ Issue fixed !\n" >> ${gh_msg_file_intro}
+        msg=$(cat ${gh_msg_file_intro} ${gh_msg_file})
         gh issue comment ${issue_number} --body "$msg"
         log "Closing GH issue #${issue_number} with title $title"
         gh issue close ${issue_number}
