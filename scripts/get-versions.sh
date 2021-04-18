@@ -171,13 +171,13 @@ do
           let "nb_fail++"
           let "nb_total_fail++"
           TEST_FAILED[$image_version_no_dot]="[❌ $time_day]($html_url)"
-          echo -e "🔥 CP ${image_version}${connector_version} 🕐 ${time_day_hour} 📄 ${script_name} 🔗 $html_url\n" >> ${gh_msg_file}
+          echo -e "🔥 CP ${image_version}${connector_version} 🕐 ${time_day_hour} 📄 [${script_name}](https://github.com/vdesabou/kafka-docker-playground/blob/master/$test/$script_name) 🔗 $html_url\n" >> ${gh_msg_file}
           log "🔥 CP $image_version 🕐 ${time_day_hour} 📄 ${script_name} 🔗 $html_url"
         else
           let "nb_success++"
           let "nb_total_success++"
           TEST_SUCCESS[$image_version_no_dot]="[👍 $time_day]($html_url)"
-          echo -e "👍 CP ${image_version}${connector_version} 🕐 ${time_day_hour} 📄 ${script_name} 🔗 $html_url\n" >> ${gh_msg_file}
+          echo -e "👍 CP ${image_version}${connector_version} 🕐 ${time_day_hour} 📄 [${script_name}](https://github.com/vdesabou/kafka-docker-playground/blob/master/$test/$script_name) 🔗 $html_url\n" >> ${gh_msg_file}
           log "👍 CP $image_version 🕐 ${time_day_hour} 📄 ${script_name} 🔗 $html_url"
         fi
       else
