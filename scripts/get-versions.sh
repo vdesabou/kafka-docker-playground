@@ -217,7 +217,7 @@ do
       gh issue list | grep "$title" > /dev/null
       if [ $? = 0 ]
       then
-        issue_number=$(gh issue list --limit 500 | grep "$title" | awk '{print $1;}')
+        issue_number=$(gh issue list --limit 500 | grep "$title" | head -1 | awk '{print $1;}')
         echo -e "👍✅ Issue fixed !\n" >> ${gh_msg_file_intro}
         msg=$(cat ${gh_msg_file_intro} ${gh_msg_file})
         gh issue comment ${issue_number} --body "$msg"
