@@ -11,7 +11,7 @@
         <dependency>
             <groupId>com.couchbase.client</groupId>
             <artifactId>kafka-connect-couchbase</artifactId>
-            <version>3.4.5</version>
+            <version>4.0.0</version>
         </dependency>
     </dependencies>
     <build>
