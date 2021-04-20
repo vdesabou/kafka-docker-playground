@@ -85,13 +85,27 @@ docker exec oracle bash -c "orapki wallet add -wallet /tmp/server -trusted_cert 
 docker exec oracle bash -c "orapki wallet add -wallet /tmp/server -user_cert -cert /tmp/server/cert.txt -pwd WalletPasswd123"
 
 cd ${DIR}/ssl
-# workaround for issue on linux, see https://github.com/vdesabou/kafka-docker-playground/issues/851#issuecomment-821151962
-chmod -R a+w .
+if [ -z "$CI" ]
+then
+    # not running with github actions
+    # workaround for issue on linux, see https://github.com/vdesabou/kafka-docker-playground/issues/851#issuecomment-821151962
+    chmod -R a+w .
+else
+    # docker is run as runneradmin user, need to use sudo
+    sudo chmod -R a+w .
+fi
 log "Create a JKS truststore"
 rm -f truststore.jks
 docker cp oracle:/tmp/root/b64certificate.txt b64certificate.txt
-# workaround for issue on linux, see https://github.com/vdesabou/kafka-docker-playground/issues/851#issuecomment-821151962
-chmod -R a+w .
+if [ -z "$CI" ]
+then
+    # not running with github actions
+    # workaround for issue on linux, see https://github.com/vdesabou/kafka-docker-playground/issues/851#issuecomment-821151962
+    chmod -R a+w .
+else
+    # docker is run as runneradmin user, need to use sudo
+    sudo chmod -R a+w .
+fi
 # We import the test CA certificate
 docker run --rm -v $PWD:/tmp vdesabou/kafka-docker-playground-connect:${CONNECT_TAG} keytool -import -v -alias testroot -file /tmp/b64certificate.txt -keystore /tmp/truststore.jks -storetype JKS -storepass 'welcome123' -noprompt
 log "Displaying truststore"
