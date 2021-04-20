@@ -1,13 +1,12 @@
 package example;
 
-import com.couchbase.client.dcp.message.DcpMutationMessage;
-import com.couchbase.client.deps.io.netty.buffer.ByteBuf;
 import com.couchbase.connect.kafka.filter.Filter;
+import com.couchbase.connect.kafka.handler.source.DocumentEvent;
 
 public class KeyFilter implements Filter {
 
-  public boolean pass(ByteBuf message) {
+  public boolean pass(DocumentEvent message) {
     // replace airline by the key you want
-    return DcpMutationMessage.is(message) && DcpMutationMessage.keyString(message).startsWith("airline");
+    return message.key() != null && message.key().startsWith("airline");
   }
 }
