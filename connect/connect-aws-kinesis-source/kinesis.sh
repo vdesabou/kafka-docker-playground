@@ -15,9 +15,6 @@ then
      exit 1
 fi
 
-ls -lrt $HOME
-ls -lrt $HOME/.aws
-
 if [[ "$TAG" == *ubi8 ]] || version_gt $TAG_BASE "5.9.0"
 then
      export CONNECT_CONTAINER_HOME_DIR="/home/appuser"
