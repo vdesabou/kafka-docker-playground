@@ -111,10 +111,12 @@ if [ -z "$CI" ]
 then
     # not running with github actions
     # workaround for issue on linux, see https://github.com/vdesabou/kafka-docker-playground/issues/851#issuecomment-821151962
-    chmod -R a+w .
+    chmod -R a+rw .
 else
     # docker is run as runneradmin user, need to use sudo
-    sudo chmod -R a+w .
+    ls -lrt
+    sudo chmod -R a+rw .
+    ls -lrt
 fi
 log "Create a JKS keystore"
 # Create a new private/public key pair for 'CN=connect,C=US'
@@ -132,10 +134,12 @@ if [ -z "$CI" ]
 then
     # not running with github actions
     # workaround for issue on linux, see https://github.com/vdesabou/kafka-docker-playground/issues/851#issuecomment-821151962
-    chmod -R a+w .
+    chmod -R a+rw .
 else
     # docker is run as runneradmin user, need to use sudo
-    sudo chmod -R a+w .
+    ls -lrt
+    sudo chmod -R a+rw .
+    ls -lrt
 fi
 docker run --rm -v $PWD:/tmp vdesabou/kafka-docker-playground-connect:${CONNECT_TAG} keytool -import -v -noprompt -alias testroot -file /tmp/b64certificate.txt -keystore /tmp/keystore.jks -storepass 'welcome123'
 # Import the signed certificate
@@ -144,10 +148,12 @@ if [ -z "$CI" ]
 then
     # not running with github actions
     # workaround for issue on linux, see https://github.com/vdesabou/kafka-docker-playground/issues/851#issuecomment-821151962
-    chmod -R a+w .
+    chmod -R a+rw .
 else
     # docker is run as runneradmin user, need to use sudo
-    sudo chmod -R a+w .
+    ls -lrt
+    sudo chmod -R a+rw .
+    ls -lrt
 fi
 docker run --rm -v $PWD:/tmp vdesabou/kafka-docker-playground-connect:${CONNECT_TAG} keytool -import -v -alias testclient -file /tmp/cert.txt -keystore /tmp/keystore.jks -storepass 'welcome123'
 log "Displaying keystore"

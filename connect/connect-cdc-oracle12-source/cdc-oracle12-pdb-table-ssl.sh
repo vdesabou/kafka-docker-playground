@@ -95,10 +95,12 @@ if [ -z "$CI" ]
 then
     # not running with github actions
     # workaround for issue on linux, see https://github.com/vdesabou/kafka-docker-playground/issues/851#issuecomment-821151962
-    chmod -R a+w .
+    chmod -R a+rw .
 else
     # docker is run as runneradmin user, need to use sudo
-    sudo chmod -R a+w .
+    ls -lrt
+    sudo chmod -R a+rw .
+    ls -lrt
 fi
 log "Create a JKS truststore"
 rm -f truststore.jks
@@ -107,10 +109,12 @@ if [ -z "$CI" ]
 then
     # not running with github actions
     # workaround for issue on linux, see https://github.com/vdesabou/kafka-docker-playground/issues/851#issuecomment-821151962
-    chmod -R a+w .
+    chmod -R a+rw .
 else
     # docker is run as runneradmin user, need to use sudo
-    sudo chmod -R a+w .
+    ls -lrt
+    sudo chmod -R a+rw .
+    ls -lrt
 fi
 # We import the test CA certificate
 docker run --rm -v $PWD:/tmp vdesabou/kafka-docker-playground-connect:${CONNECT_TAG} keytool -import -v -alias testroot -file /tmp/b64certificate.txt -keystore /tmp/truststore.jks -storetype JKS -storepass 'welcome123' -noprompt
