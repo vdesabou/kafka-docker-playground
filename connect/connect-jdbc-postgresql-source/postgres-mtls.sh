@@ -6,7 +6,7 @@ source ${DIR}/../../scripts/utils.sh
 
 cd ${DIR}/mtls
 # workaround for issue on linux, see https://github.com/vdesabou/kafka-docker-playground/issues/851#issuecomment-821151962
-chmod -R a+w .
+chmod -R a+rw .
 
 rm -f server.crt
 rm -f server.csr
