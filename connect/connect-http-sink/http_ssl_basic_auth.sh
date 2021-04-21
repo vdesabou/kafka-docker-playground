@@ -35,7 +35,7 @@ curl -X PUT \
                "connection.user": "admin",
                "connection.password": "password",
                "ssl.enabled": "true",
-               "https.ssl.truststore.location": "/etc/kafka/secrets/truststore.http-service-ssl-basic-auth.jks",
+               "https.ssl.truststore.location": "/tmp/truststore.http-service-ssl-basic-auth.jks",
                "https.ssl.truststore.type": "JKS",
                "https.ssl.truststore.password": "confluent",
                "https.ssl.protocol": "TLSv1.2"
