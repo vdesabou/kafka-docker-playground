@@ -14,7 +14,7 @@ skipped_tests=""
 test_list="$1"
 if [ "$1" = "ALL" ]
 then
-    test_list=$(grep "env: TEST_LIST" ${DIR}/../.github/workflows/run-regression.yml | cut -d '"' -f 2 | tr '\n' ' ')
+    test_list=$(grep "🚀 " ${DIR}/../.github/workflows/run-regression.yml | cut -d '"' -f 2 | tr '\n' ' ')
 fi
 
 tag="$2"
@@ -106,19 +106,33 @@ do
                 status=$(cat $file | tail -1 | cut -d "|" -f 3)
                 now=$(date +%s)
                 elapsed_time=$((now-last_execution_time))
+
+                gh_run_id=$(grep "$connector_path" ${file} | tail -1 | cut -d "|" -f 4)
+                if [ ! -f /tmp/${gh_run_id}.json ]
+                then
+                    curl -s -u vdesabou:$GITHUB_TOKEN -H "Accept: application/vnd.github.v3+json" -o /tmp/${gh_run_id}.json https://api.github.com/repos/vdesabou/kafka-docker-playground/actions/runs/${gh_run_id}/jobs?per_page=100
+                fi
+                v=$(echo $tag | sed -e 's/\./[.]/g')
+                html_url=$(cat /tmp/${gh_run_id}.json | jq ".jobs |= map(select(.name | test(\"${v}.*${dir}\")))" | jq '[.jobs | .[] | {name: .name, html_url: .html_url }]' | jq '.[0].html_url')
+                html_url=$(echo "$html_url" | sed -e 's/^"//' -e 's/"$//')
+                if [ "$html_url" = "" ] || [ "$html_url" = "null" ]
+                then
+                    logerror "ERROR: Could not retrieve job url!"
+                    # cat /tmp/${gh_run_id}.json
+                fi
             fi
 
             # run at least every 15 days, even with no changes
             if [[ $elapsed_time -gt 1209600 ]]
             then
                 log "####################################################"
-                log "⌛ Test with CP $TAG and connector $THE_CONNECTOR_TAG has already been executed successfully $(displaytime $elapsed_time) ago, more than 15 days ago...re-running"
+                log "⌛ Test with CP $TAG and connector $THE_CONNECTOR_TAG has already been executed successfully $(displaytime $elapsed_time) ago, more than 15 days ago...re-running. Test url: $html_url"
                 log "####################################################"
                 aws s3 rm $s3_file
             elif [ "$status" = "failure" ]
             then
                 log "####################################################"
-                log "🔥 Test with CP $TAG and connector $THE_CONNECTOR_TAG was failing $(displaytime $elapsed_time) ago...re-running"
+                log "🔥 Test with CP $TAG and connector $THE_CONNECTOR_TAG was failing $(displaytime $elapsed_time) ago...re-running. Test url: $html_url"
                 log "####################################################"
                 aws s3 rm $s3_file
             else
@@ -129,12 +143,12 @@ do
                 then
                     elapsed_git_time=$((now-last_git_commit))
                     log "####################################################"
-                    log "🆕 Test with CP $TAG and connector $THE_CONNECTOR_TAG has already been executed successfully $(displaytime $elapsed_time) ago, but a change has been noticed $(displaytime $elapsed_git_time) ago"
+                    log "🆕 Test with CP $TAG and connector $THE_CONNECTOR_TAG has already been executed successfully $(displaytime $elapsed_time) ago, but a change has been noticed $(displaytime $elapsed_git_time) ago. Test url: $html_url"
                     log "####################################################"
                     aws s3 rm $s3_file
                 else
                     log "####################################################"
-                    log "✅ Skipping as test with CP $TAG and connector $THE_CONNECTOR_TAG has already been executed successfully $(displaytime $elapsed_time) ago"
+                    log "✅ Skipping as test with CP $TAG and connector $THE_CONNECTOR_TAG has already been executed successfully $(displaytime $elapsed_time) ago. Test url: $html_url"
                     log "####################################################"
                     skipped_tests=$skipped_tests"$dir[$script]\n"
                     let "nb_test_skipped++"
