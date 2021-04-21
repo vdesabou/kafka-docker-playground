@@ -147,7 +147,7 @@ do
         if [ "$html_url" = "" ] || [ "$html_url" = "null" ]
         then
           logerror "ERROR: Could not retrieve job url! Forcing re-run for next time..."
-          cat /tmp/${gh_run_id}.json
+          # cat /tmp/${gh_run_id}.json
           s3_file="s3://kafka-docker-playground/ci/${image_version}-${testdir}-${version}-${script_name}"
           aws s3 rm $s3_file
         fi
