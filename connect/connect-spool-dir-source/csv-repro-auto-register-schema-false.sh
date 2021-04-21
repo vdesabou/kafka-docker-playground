@@ -9,7 +9,7 @@ mkdir -p ${DIR}/data/error
 mkdir -p ${DIR}/data/finished
 
 # workaround for issue on linux, see https://github.com/vdesabou/kafka-docker-playground/issues/851#issuecomment-821151962
-chmod -R a+w ${DIR}/data
+chmod -R a+rw ${DIR}/data
 
 if [[ "$TAG" == *ubi8 ]] || version_gt $TAG_BASE "5.9.0"
 then
