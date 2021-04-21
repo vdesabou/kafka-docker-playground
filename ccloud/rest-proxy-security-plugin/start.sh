@@ -46,6 +46,17 @@ sed -e "s|:REST_KEY:|$REST_KEY|g" \
 cd ${DIR}/security
 log "🔐 Generate keys and certificates used for SSL"
 ./certs-create.sh $REST_KEY > /dev/null 2>&1
+if [ -z "$CI" ]
+then
+    # not running with github actions
+    # workaround for issue on linux, see https://github.com/vdesabou/kafka-docker-playground/issues/851#issuecomment-821151962
+    chmod -R a+rw .
+else
+    # docker is run as runneradmin user, need to use sudo
+    ls -lrt
+    sudo chmod -R a+rw .
+    ls -lrt
+fi
 cd ${DIR}
 
 docker-compose -f "${PWD}/docker-compose.yml" up -d
