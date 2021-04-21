@@ -35,7 +35,7 @@ else
 fi
 
 log "Cleanup Azure Resource groups"
-for group in $(az group list --query [].name --output tsv)
+for group in $(az group list --query '[].name' --output tsv)
 do
   if [[ $group = pgrunner* ]]
   then
