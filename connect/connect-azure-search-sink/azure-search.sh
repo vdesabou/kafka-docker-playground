@@ -105,4 +105,4 @@ curl -X GET \
 -H "api-key: $AZURE_SEARCH_ADMIN_PRIMARY_KEY" | jq
 
 log "Deleting resource group"
-az group delete --name $AZURE_RESOURCE_GROUP --yes
+az group delete --name $AZURE_RESOURCE_GROUP --yes --no-wait

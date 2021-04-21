@@ -107,4 +107,4 @@ log "Delete Cosmos DB instance"
 az cosmosdb delete -g $AZURE_RESOURCE_GROUP -n $AZURE_COSMOSDB_SERVER_NAME --yes
 
 log "Deleting resource group"
-az group delete --name $AZURE_RESOURCE_GROUP --yes
+az group delete --name $AZURE_RESOURCE_GROUP --yes --no-wait

@@ -113,4 +113,4 @@ log "Confirm that the messages were delivered to the result topic in Kafka"
 docker exec broker kafka-console-consumer --bootstrap-server broker:9092 --topic test-result --from-beginning --max-messages 3
 
 log "Deleting resource group"
-az group delete --name $AZURE_RESOURCE_GROUP --yes
+az group delete --name $AZURE_RESOURCE_GROUP --yes --no-wait
