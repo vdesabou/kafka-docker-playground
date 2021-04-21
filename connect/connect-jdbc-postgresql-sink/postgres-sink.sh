@@ -11,10 +11,10 @@ curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
                "connector.class": "io.confluent.connect.jdbc.JdbcSinkConnector",
-                    "tasks.max": "1",
-                    "connection.url": "jdbc:postgresql://postgres/postgres?user=postgres&password=postgres&ssl=false",
-                    "topics": "orders",
-                    "auto.create": "true"
+               "tasks.max": "1",
+               "connection.url": "jdbc:postgresql://postgres/postgres?user=postgres&password=postgres&ssl=false",
+               "topics": "orders",
+               "auto.create": "true"
           }' \
      http://localhost:8083/connectors/postgres-sink/config | jq .
 
@@ -27,6 +27,8 @@ EOF
 
 sleep 5
 
-
 log "Show content of ORDERS table:"
-docker exec postgres bash -c "psql -U postgres -d postgres -c 'SELECT * FROM ORDERS'"
+docker exec postgres bash -c "psql -U postgres -d postgres -c 'SELECT * FROM ORDERS'" > /tmp/result.log
+
+cat /tmp/result.log
+grep "Blaisdell" /tmp/result.log | grep "Universal optimal hierarchy"
