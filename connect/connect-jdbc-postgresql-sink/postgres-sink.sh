@@ -31,4 +31,4 @@ log "Show content of ORDERS table:"
 docker exec postgres bash -c "psql -U postgres -d postgres -c 'SELECT * FROM ORDERS'" > /tmp/result.log
 
 cat /tmp/result.log
-grep "Blaisdell" /tmp/result.log | grep "Universal optimal hierarchy"
+grep "foo" /tmp/result.log | grep "100"
