@@ -2,6 +2,14 @@
 version: '3.5'
 services:
 
+  connect:
+    volumes:
+        - ../../other/control-center-readonly-mode/connect.jaas:/tmp/connect.jaas
+        - ../../other/control-center-readonly-mode/connect.password:/tmp/connect.password
+    environment:
+      CONNECT_REST_EXTENSION_CLASSES: org.apache.kafka.connect.rest.basic.auth.extension.BasicAuthSecurityRestExtension
+      KAFKA_OPTS: -Djava.security.auth.login.config=/tmp/connect.jaas
+
   control-center:
     volumes:
       - ../../other/control-center-readonly-mode/login.properties:/tmp/login.properties
