@@ -62,7 +62,7 @@ curl -X PUT \
           "http.api.url": "https://http-service-mtls-auth:8443/api/messages",
           "auth.type": "NONE",
           "ssl.enabled": "true",
-          "https.ssl.truststore.location": "/etc/kafka/secrets/kafka.connect.keystore.jks",
+          "https.ssl.truststore.location": "/etc/kafka/secrets/kafka.connect.truststore.jks",
           "https.ssl.truststore.type": "JKS",
           "https.ssl.truststore.password": "confluent",
           "https.ssl.keystore.location": "/tmp/keystore.http-service-mtls-auth.jks",
