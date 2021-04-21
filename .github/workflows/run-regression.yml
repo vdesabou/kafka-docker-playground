@@ -209,6 +209,9 @@ jobs:
           ./scripts/get-versions.sh "6.1.1 6.0.2 5.5.3"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_REGION: "us-east-1"
       - name: push
         uses: github-actions-x/commit@v2.6
         with:
