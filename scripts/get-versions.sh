@@ -146,8 +146,10 @@ do
         html_url=$(echo "$html_url" | sed -e 's/^"//' -e 's/"$//')
         if [ "$html_url" = "" ] || [ "$html_url" = "null" ]
         then
-          logerror "ERROR: Could not retrieve job url!"
+          logerror "ERROR: Could not retrieve job url! Forcing re-run for next time..."
           cat /tmp/${gh_run_id}.json
+          s3_file="s3://kafka-docker-playground/ci/${image_version}-${testdir}-${version}-${script_name}"
+          aws s3 rm $s3_file
         fi
         if [ "$last_execution_time" != "" ]
         then
