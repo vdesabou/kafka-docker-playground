@@ -89,4 +89,4 @@ log "Verifying topic servicebus-topic"
 timeout 60 docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic servicebus-topic --from-beginning --max-messages 10
 
 log "Deleting resource group"
-az group delete --name $AZURE_RESOURCE_GROUP --yes
+az group delete --name $AZURE_RESOURCE_GROUP --yes --no-wait

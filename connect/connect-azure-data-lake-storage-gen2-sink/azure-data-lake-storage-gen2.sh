@@ -104,7 +104,7 @@ az storage blob download  --container-name topics --name datalake_topic/partitio
 docker run -v /tmp:/tmp actions/avro-tools tojson /tmp/datalake_topic+0+0000000000.avro
 
 log "Deleting resource group"
-az group delete --name $AZURE_RESOURCE_GROUP --yes
+az group delete --name $AZURE_RESOURCE_GROUP --yes --no-wait
 
 log "Deleting active directory app"
 az ad app delete --id $AZURE_DATALAKE_CLIENT_ID

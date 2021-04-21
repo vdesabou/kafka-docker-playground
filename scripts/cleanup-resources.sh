@@ -48,7 +48,7 @@ do
       fi
     fi
     log "Deleting resource group $group"
-    az group delete --name $group --yes
+    az group delete --name $group --yes --no-wait
   fi
 done
 
