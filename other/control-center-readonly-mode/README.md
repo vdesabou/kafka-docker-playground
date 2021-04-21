@@ -43,4 +43,36 @@ In order to login into Control Center, you will be now prompted with login/passw
 `admin/admin_pw` for Admin account
 `monitor/monitor` for readonly account
 
+## Issue with other components configured with Basic Authentication
 
+If another component is configured to use Basic Authentication (Connect or ksqlDB for example), Control Center will use the username/password defined for current user, therefore it should also be defined for other components.
+
+There is an example with Connect, which is configured with Basic Authentication:
+
+```yml
+  connect:
+    volumes:
+        - ../../other/control-center-readonly-mode/connect.jaas:/tmp/connect.jaas
+        - ../../other/control-center-readonly-mode/connect.password:/tmp/connect.password
+    environment:
+      CONNECT_REST_EXTENSION_CLASSES: org.apache.kafka.connect.rest.basic.auth.extension.BasicAuthSecurityRestExtension
+      KAFKA_OPTS: -Djava.security.auth.login.config=/tmp/connect.jaas
+```
+
+With `connect.jaas`:
+
+```
+KafkaConnect {
+    org.apache.kafka.connect.rest.basic.auth.extension.PropertyFileLoginModule required
+    file="/tmp/connect.password";
+};
+```
+
+And `connect.password`:
+
+```
+connectuser: connectpassword
+admin: admin_pw
+```
+
+If admin/admin_pw is not defined at connect level, Control-Center will display an error while connecting to the connect cluster.
