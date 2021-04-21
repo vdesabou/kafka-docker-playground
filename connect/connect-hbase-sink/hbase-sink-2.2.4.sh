@@ -4,7 +4,7 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
-${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
+${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.2.2.4.yml"
 
 
 log "Sending messages to topic hbase-test"
@@ -27,7 +27,7 @@ curl -X PUT \
                     "hbase.zookeeper.quorum": "hbase",
                     "hbase.zookeeper.property.clientPort": "2181",
                     "auto.create.tables": "true",
-                    "auto.create.column.families": "true",
+                    "auto.create.column.families": "false",
                     "table.name.format": "example_table",
                     "topics": "hbase-test"
           }' \
