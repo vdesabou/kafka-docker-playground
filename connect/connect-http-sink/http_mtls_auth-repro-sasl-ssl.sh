@@ -15,8 +15,10 @@ log "Running SSL with Mutual TLS Authentication Example"
 log "-------------------------------------"
 
 log "Creating http-sink connector"
+docker exec connect \
 curl -X PUT \
      -H "Content-Type: application/json" \
+     --cert /etc/kafka/secrets/connect.certificate.pem --key /etc/kafka/secrets/connect.key --tlsv1.2 --cacert /etc/kafka/secrets/snakeoil-ca-1.crt \
      --data '{
           "topics": "http-messages",
           "tasks.max": "1",
@@ -69,7 +71,7 @@ curl -X PUT \
           "https.ssl.key.password": "confluent",
           "https.ssl.protocol": "TLSv1.2"
           }' \
-     http://localhost:8083/connectors/http-mtls-sink/config | jq .
+     https://localhost:8083/connectors/http-mtls-sink/config | jq .
 
 
 sleep 10
