@@ -6,15 +6,18 @@
 
 Quickly test [HBase Sink](https://docs.confluent.io/current/connect/kafka-connect-hbase/index.html#quick-start) connector.
 
-
-
-
 ## How to run
 
 Simply run:
 
 ```
-$ ./hbase-sink.sh
+$ ./hbase-sink-1.2.0.sh
+```
+
+or
+
+```
+$ ./hbase-sink-2.2.4.sh
 ```
 
 ## Details of what the script is doing
@@ -36,17 +39,17 @@ $ curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
                "connector.class": "io.confluent.connect.hbase.HBaseSinkConnector",
-                    "tasks.max": "1",
-                    "key.converter":"org.apache.kafka.connect.storage.StringConverter",
-                    "value.converter":"org.apache.kafka.connect.storage.StringConverter",
-                    "confluent.topic.bootstrap.servers": "broker:9092",
-                    "confluent.topic.replication.factor":1,
-                    "hbase.zookeeper.quorum": "hbase",
-                    "hbase.zookeeper.property.clientPort": "2181",
-                    "auto.create.tables": "true",
-                    "auto.create.column.families": "true",
-                    "table.name.format": "example_table",
-                    "topics": "hbase-test"
+               "tasks.max": "1",
+               "key.converter":"org.apache.kafka.connect.storage.StringConverter",
+               "value.converter":"org.apache.kafka.connect.storage.StringConverter",
+               "confluent.topic.bootstrap.servers": "broker:9092",
+               "confluent.topic.replication.factor":1,
+               "hbase.zookeeper.quorum": "hbase",
+               "hbase.zookeeper.property.clientPort": "2181",
+               "auto.create.tables": "true",
+               "auto.create.column.families": "true",
+               "table.name.format": "example_table",
+               "topics": "hbase-test"
           }' \
      http://localhost:8083/connectors/hbase-sink/config | jq .
 ```
