@@ -565,12 +565,12 @@ function aws() {
     else
       if [ ! -f $HOME/.aws/config ]
       then
-        log 'ERROR: $HOME/.aws/config does now exist. AWS config must be set !'
+        log 'ERROR: $HOME/.aws/config does not exist. AWS config must be set !'
         return 1
       fi
       if [ ! -f $HOME/.aws/credentials ]
       then
-        log 'ERROR: $HOME/.aws/credentials does now exist. AWS credentials must be set !'
+        log 'ERROR: $HOME/.aws/credentials does not exist. AWS credentials must be set !'
         return 1
       fi
     fi
@@ -588,7 +588,7 @@ function timeout() {
   fi
 }
 
-function az() {
+function az2() {
     docker run -v /tmp:/tmp -v $HOME/.azure:/home/az/.azure -e HOME=/home/az --rm -i mcr.microsoft.com/azure-cli az "$@"
 }
 
