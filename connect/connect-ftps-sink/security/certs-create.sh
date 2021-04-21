@@ -9,7 +9,7 @@
 rm -f *.crt *.csr *_creds *.jks *.srl *.key *.pem *.der *.p12 extfile
 
 # workaround for issue on linux, see https://github.com/vdesabou/kafka-docker-playground/issues/851#issuecomment-821151962
-chmod -R a+w .
+chmod -R a+rw .
 
 docker run --rm -v $PWD:/tmp vdesabou/kafka-docker-playground-connect:${CONNECT_TAG} openssl req -x509 -nodes -days 365 -newkey rsa:1024 -keyout /tmp/vsftpd.pem -out /tmp/vsftpd.pem  -config /tmp/cert_config -reqexts 'my server exts'
 

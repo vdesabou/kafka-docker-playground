@@ -5,7 +5,7 @@ set -o nounset \
     -o verbose
 
 # workaround for issue on linux, see https://github.com/vdesabou/kafka-docker-playground/issues/851#issuecomment-821151962
-chmod -R a+w .
+chmod -R a+rw .
 
 # See what is in each keystore and truststore
 for i in broker broker2 client schema-registry restproxy connect control-center clientrestproxy

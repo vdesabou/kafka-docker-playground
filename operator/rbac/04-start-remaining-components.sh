@@ -302,7 +302,7 @@ confluent iam rolebinding create \
 #     --prefix \
 #     --kafka-cluster-id $KAFKA_CLUSTER_ID
 # workaround for issue on linux, see https://github.com/vdesabou/kafka-docker-playground/issues/851#issuecomment-821151962
-chmod -R a+w .
+chmod -R a+rw .
 
 # For operator 1.6.1 manually edit c3 psc to disable auto-update.  This might need to be tweaked as we upgrade versions
 C3_PSC_FILE="${DIR}/confluent-operator/helm/confluent-operator/charts/controlcenter/templates/controlcenter-psc.yaml"

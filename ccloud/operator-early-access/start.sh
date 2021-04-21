@@ -87,7 +87,7 @@ helm upgrade --install operator confluentinc_earlyaccess/confluent-operator \
 
 log "Generate a CA pair"
 # workaround for issue on linux, see https://github.com/vdesabou/kafka-docker-playground/issues/851#issuecomment-821151962
-chmod -R a+w .
+chmod -R a+rw .
 docker run --rm -v $PWD:/tmp vdesabou/kafka-docker-playground-connect:${CONNECT_TAG} openssl genrsa -out /tmp/ca-key.pem 2048
 docker run --rm -v $PWD:/tmp vdesabou/kafka-docker-playground-connect:${CONNECT_TAG} openssl req -new -key /tmp/ca-key.pem -x509 \
   -days 1000 \

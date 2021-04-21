@@ -51,7 +51,7 @@ security.protocol=SASL_SSL
 sasl.mechanism=PLAIN
 EOF
 # workaround for issue on linux, see https://github.com/vdesabou/kafka-docker-playground/issues/851#issuecomment-821151962
-chmod -R a+w .
+chmod -R a+rw .
 log "Delete internal connect topics"
 docker run --rm -v $PWD:/tmp vdesabou/kafka-docker-playground-connect:${CONNECT_TAG} kafka-topics --bootstrap-server ${bootstrap_servers} --command-config /tmp/client.properties --topic confluent.connectors-configs --delete > /dev/null 2>&1
 docker run --rm -v $PWD:/tmp vdesabou/kafka-docker-playground-connect:${CONNECT_TAG} kafka-topics --bootstrap-server ${bootstrap_servers} --command-config /tmp/client.properties --topic confluent.connectors-offsets --delete > /dev/null 2>&1
