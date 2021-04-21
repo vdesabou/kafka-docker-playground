@@ -4,6 +4,7 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../scripts/utils.sh
 
 image_versions="$1"
+no_wait="$2"
 
 function log() {
   YELLOW='\033[0;33m'
@@ -48,7 +49,7 @@ do
       fi
     fi
     log "Deleting resource group $group"
-    az group delete --name $group --yes --no-wait
+    az group delete --name $group --yes $no_wait
   fi
 done
 
