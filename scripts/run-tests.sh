@@ -177,7 +177,7 @@ do
             log "####################################################"
 
             echo "$connector_path|`date +%s`|success|$GITHUB_RUN_ID" > $file
-        elif [ $ret -eq 12345 ]
+        elif [ $ret -eq 123 ]
         then
             log "####################################################"
             log "💀 RESULT: KNOWN ISSUE for $script in dir $dir ($ELAPSED - $CUMULATED)"
