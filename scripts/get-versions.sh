@@ -149,7 +149,7 @@ do
           logerror "ERROR: Could not retrieve job url! Forcing re-run for next time..."
           # cat /tmp/${gh_run_id}.json
           s3_file="s3://kafka-docker-playground/ci/${image_version}-${testdir}-${version}-${script_name}"
-          aws s3 rm $s3_file
+          aws s3 rm $s3_file --region us-east-1
         fi
         if [ "$last_execution_time" != "" ]
         then
