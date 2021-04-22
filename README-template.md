@@ -90,6 +90,7 @@ Quick start examples from Confluent [docs](https://docs.confluent.io/current/con
 | <img src="./images/icons/ibm_mq.png" width="15"> [IBM MQ Source](connect/connect-ibm-mq-source) |  Message Queue | :connect/connect-ibm-mq-source:
 | <img src="./images/icons/influxdb.svg" width="15"> [InfluxDB Sink](connect/connect-influxdb-sink) |  Database | :connect/connect-influxdb-sink:
 | <img src="./images/icons/influxdb.svg" width="15"> [InfluxDB Source](connect/connect-influxdb-source) |  Database | :connect/connect-influxdb-source:
+| <img src="./images/icons/cockroachdb.png" width="15"> [JDBC CockroachDB Source](connect/connect-jdbc-cockroachdb-source) |  Database | :connect/connect-jdbc-cockroachdb-source:
 | <img src="./images/icons/hive.png" width="15"> [JDBC Hive Sink](connect/connect-jdbc-hive-sink) |  Database | JDBC version | Confluent Community License |  |  🤷‍♂️ not tested | 🤷‍♂️ not tested | 🤷‍♂️ not tested |
 | <img src="./images/icons/mysql.jpg" width="15"> [JDBC MySQL Sink](connect/connect-jdbc-mysql-sink) (also with 🔑 SSL and mTLS) |  Database | :connect/connect-jdbc-mysql-sink:
 | <img src="./images/icons/oracle_11.jpg" width="15"> [JDBC Oracle 11 Sink](connect/connect-jdbc-oracle11-sink) |  Database | :connect/connect-jdbc-oracle11-sink:
