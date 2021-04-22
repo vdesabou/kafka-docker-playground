@@ -555,24 +555,27 @@ function remove_partition() {
 }
 
 function aws() {
-    if [ ! -d $HOME/.aws ]
+
+    if [ -z "$AWS_ACCESS_KEY_ID" ] && [ -z "$AWS_SECRET_ACCESS_KEY" ] && [ ! -f $HOME/.aws/config ] && [ ! -f $HOME/.aws/credentials ]
     then
+      logerror 'ERROR: Neither AWS_ACCESS_KEY_ID/AWS_SECRET_ACCESS_KEY or $HOME/.aws/credentials are set. AWS credentials must be set !'
       if [ -z "$AWS_ACCESS_KEY_ID" ]
       then
-        log 'ERROR: $HOME/.aws does not exist and AWS_ACCESS_KEY_ID environment variable is not set. AWS credentials must be set !'
-        return 1
+        log 'AWS_ACCESS_KEY_ID environment variable is not set.'
       fi
-    else
+      if [ -z "$AWS_SECRET_ACCESS_KEY" ]
+      then
+        log 'AWS_SECRET_ACCESS_KEY environment variable is not set.'
+      fi
       if [ ! -f $HOME/.aws/config ]
       then
-        log 'ERROR: $HOME/.aws/config does not exist. AWS config must be set !'
-        return 1
+        log '$HOME/.aws/config does not exist.'
       fi
       if [ ! -f $HOME/.aws/credentials ]
       then
-        log 'ERROR: $HOME/.aws/credentials does not exist. AWS credentials must be set !'
-        return 1
+        log '$HOME/.aws/credentials does not exist.'
       fi
+      return 1
     fi
 
     docker run --rm -iv $HOME/.aws:/root/.aws -e AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID -e AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY -v $(pwd):/aws -v /tmp:/tmp mikesir87/aws-cli:v2 aws "$@"
