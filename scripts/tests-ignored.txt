@@ -1,5 +1,7 @@
 # scripts to ignore
 ccloud-generate-env-vars.sh
 01-create-table.sh
+# cp-ansible-playground
+upgrade-test.sh
 # https://github.com/vdesabou/kafka-docker-playground/issues/833 :
 cdc-oracle12-pdb-table-mtls-db-auth.sh
