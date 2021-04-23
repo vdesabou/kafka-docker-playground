@@ -25,7 +25,7 @@ This is deploying the following containers using Confluent [cp-ansible](https://
 
 ## Tags
 
-Available tags are `5.3.1`, `5.4.0`, `5.4.1`, `5.5.0`, `5.5.1`, `5.5.2`, `5.5.3`, `6.0.0`, `6.0.1`, `6.0.2`, `6.1.0` and `6.1.1`
+Available tags are `5.3.1`, `5.4.0`, `5.4.1`, `5.5.0`, `5.5.1`, `5.5.2`, `5.5.3`, `5.5.4`, `6.0.0`, `6.0.1`, `6.0.2`, `6.1.0` and `6.1.1`
 
 ## How to run
 

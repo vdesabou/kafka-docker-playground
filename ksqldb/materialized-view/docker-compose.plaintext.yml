@@ -31,7 +31,7 @@ services:
       # Configuration to embed Kafka Connect support.
       # https://docs.ksqldb.io/en/latest/how-to-guides/use-connector-management/#configuring-ksqldb
       KSQL_KSQL_CONNECT_URL: "http://localhost:8083"
-      # required for 5.5.3:
+      # required for 5.5.x:
       KSQL_CONNECT_REST_ADVERTISED_HOST_NAME: "ksqldb-server"
       KSQL_CONNECT_GROUP_ID: "ksql-connect-cluster"
       KSQL_CONNECT_BOOTSTRAP_SERVERS: "broker:9092"
