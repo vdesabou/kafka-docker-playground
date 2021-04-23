@@ -1,0 +1,82 @@
+---
+version: '3.5'
+services:
+
+  elasticsearch:
+    image: elasticsearch:6.8.3
+    hostname: elasticsearch
+    container_name: elasticsearch
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+    environment:
+      discovery.type: single-node
+
+  connect:
+    depends_on:
+      - elasticsearch
+    volumes:
+      - ../../other/monitoring-demo/jmx-exporter:/usr/share/jmx_exporter/
+    environment:
+      CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-elasticsearch
+      # Allow overriding configs on the connector level
+      CONNECT_CONNECTOR_CLIENT_CONFIG_OVERRIDE_POLICY: 'All'
+      KAFKA_OPTS: -javaagent:/usr/share/jmx_exporter/jmx_prometheus_javaagent-0.12.0.jar=1234:/usr/share/jmx_exporter/kafka-connect.yml
+
+  kafka-lag-exporter:
+    image: lightbend/kafka-lag-exporter:0.6.6
+    hostname: kafka-lag-exporter
+    container_name: kafka-lag-exporter
+    restart: always
+    ports:
+      - 9999:9999
+    volumes:
+      - ../../other/monitoring-demo/kafka-lag-exporter/application.conf:/opt/docker/conf/application.conf
+      - ../../other/monitoring-demo/kafka-lag-exporter/logback.xml:/opt/docker/conf/logback.xml
+
+  alertmanager:
+    image: prom/alertmanager:v0.18.0
+    hostname: alertmanager
+    container_name: alertmanager
+    ports:
+      - 9093:9093
+
+  node-exporter:
+    image: prom/node-exporter:v0.18.1
+    hostname: node-exporter
+    container_name: node-exporter
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/rootfs:ro
+    command:
+      - '--path.procfs=/host/proc'
+      - '--path.sysfs=/host/sys'
+      - '--collector.filesystem.ignored-mount-points'
+      - '^(aufs|proc|nsfs|shm|cgroup|tmpfs|binfmt_misc|debugfs|devpts|fusectl|hugetlbfs|fuse.lxcfs|mqueue|pstore|securityfs|sysfs|autofs|devtmpfs|configfs)'
+
+  prometheus:
+    image: prom/prometheus
+    hostname: prometheus
+    container_name: prometheus
+    ports:
+      - 9090:9090
+    volumes:
+      - ../../other/monitoring-demo/prometheus/:/etc/prometheus/
+    depends_on:
+      - node-exporter
+      - kafka-lag-exporter
+      - alertmanager
+
+  grafana:
+    image: grafana/grafana:7.4.1
+    hostname: grafana
+    container_name: grafana
+    environment:
+      GF_INSTALL_PLUGINS: grafana-piechart-panel
+    ports:
+      - 3000:3000
+    volumes:
+      - ../../other/monitoring-demo/grafana/provisioning/:/etc/grafana/provisioning/
+    depends_on:
+      - prometheus
