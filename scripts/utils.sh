@@ -288,6 +288,7 @@ else
   elif [[ $0 == *"stop"* ]] || [[ $0 == *"run-tests"* ]]
   then
     export CONNECT_TAG="$TAG"
+    CONNECTOR_TAG=$version
     :
   else
     docker_compose_file=$(grep "environment" "$PWD/$0" | grep DIR | grep start.sh | cut -d "/" -f 7 | cut -d '"' -f 1 | head -n1)
@@ -388,6 +389,7 @@ EOF
         else
           export CONNECT_TAG="$TAG"
           log "🔗 Using Connector $owner/$name:$version (🎓 set CONNECTOR_TAG or CONNECTOR_ZIP environment variables to specify different version)"
+          CONNECTOR_TAG=$version
         fi
       fi
     else
