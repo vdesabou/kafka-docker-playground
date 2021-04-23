@@ -1,10 +1,10 @@
 #!/bin/bash
 set -e
 
+export TAG=5.5.1
+
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
-
-export TAG=5.5.1
 
 if [ ! -f ${DIR}/postgresql-9.4.1207.jre7 ]
 then
