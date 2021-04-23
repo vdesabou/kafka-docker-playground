@@ -84,7 +84,7 @@ EOF
 sleep 5
 
 if ! version_gt $TAG_BASE "5.9.9"; then
-    # with 5.5.3, we need to use ROWKEY
+    # with 5.5.x, we need to use ROWKEY
     log "Query the materialized views"
 timeout 120 docker exec -i ksqldb-cli bash -c 'echo -e "\n\n⏳ Waiting for ksqlDB to be available before launching CLI\n"; while [ $(curl -s -o /dev/null -w %{http_code} http://ksqldb-server:8088/) -eq 000 ] ; do echo -e $(date) "KSQL Server HTTP state: " $(curl -s -o /dev/null -w %{http_code} http:/ksqldb-server:8088/) " (waiting for 200)" ; sleep 10 ; done; ksql http://ksqldb-server:8088' << EOF
 
