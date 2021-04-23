@@ -4,25 +4,51 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
-${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.repro-quota.yml"
+# As of version 11.0.0, the connector uses the Elasticsearch High Level REST Client (version 7.0.1),
+# which means only Elasticsearch 7.x is supported.
+
+export ELASTIC_VERSION="6.8.3"
+if version_gt $CONNECTOR_TAG "10.9.9"
+then
+    log "Connector version is > 11.0.0, using Elasticsearch 7.x"
+    export ELASTIC_VERSION="7.12.0"
+fi
+
+${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
 
 log "Applying quota for client id my-es-connector"
 docker exec broker kafka-configs --bootstrap-server localhost:9092 --alter --add-config 'consumer_byte_rate=1' --entity-type clients --entity-name my-es-connector
 
-log "Creating Elasticsearch Sink connector"
-curl -X PUT \
-     -H "Content-Type: application/json" \
-     --data '{
+log "Creating Elasticsearch Sink connector (Elasticsearch version is $ELASTIC_VERSION"
+if version_gt $CONNECTOR_TAG "10.9.9"
+then
+     # 7.x
+     curl -X PUT \
+          -H "Content-Type: application/json" \
+          --data '{
+               "connector.class": "io.confluent.connect.elasticsearch.ElasticsearchSinkConnector",
+               "tasks.max": "1",
+               "topics": "test-elasticsearch-sink",
+               "key.ignore": "true",
+               "connection.url": "http://elasticsearch:9200",
+               "consumer.override.client.id": "my-es-connector"
+               }' \
+          http://localhost:8083/connectors/elasticsearch-sink/config | jq .
+else
+     # 6.x
+     curl -X PUT \
+          -H "Content-Type: application/json" \
+          --data '{
                "connector.class": "io.confluent.connect.elasticsearch.ElasticsearchSinkConnector",
                "tasks.max": "1",
                "topics": "test-elasticsearch-sink",
                "key.ignore": "true",
                "connection.url": "http://elasticsearch:9200",
                "type.name": "kafka-connect",
-               "name": "elasticsearch-sink",
                "consumer.override.client.id": "my-es-connector"
-          }' \
-     http://localhost:8083/connectors/elasticsearch-sink/config | jq .
+               }' \
+          http://localhost:8083/connectors/elasticsearch-sink/config | jq .
+fi
 
 
 log "Sending messages to topic test-elasticsearch-sink"
@@ -31,7 +57,9 @@ seq -f "{\"f1\": \"value%g\"}" 100 | docker exec -i connect kafka-avro-console-p
 sleep 10
 
 log "Check that the data is available in Elasticsearch"
-
-curl -XGET 'http://localhost:9200/test-elasticsearch-sink/_search?pretty'
+curl -XGET 'http://localhost:9200/test-elasticsearch-sink/_search?pretty' > /tmp/result.log
+cat /tmp/result.log
+grep "f1" /tmp/result.log | grep "value1"
+grep "f1" /tmp/result.log | grep "value10"
 
 
