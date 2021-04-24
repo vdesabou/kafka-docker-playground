@@ -177,7 +177,7 @@ do
             log "####################################################"
 
             echo "$connector_path|`date +%s`|success|$GITHUB_RUN_ID" > $file
-        elif [ $ret -eq 907 ]
+        elif [ $ret -eq 107 ]
         then
             log "####################################################"
             log "💀 RESULT: KNOWN ISSUE #907 for $script in dir $dir ($ELAPSED - $CUMULATED)"
