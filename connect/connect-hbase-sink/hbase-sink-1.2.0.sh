@@ -7,7 +7,7 @@ source ${DIR}/../../scripts/utils.sh
 if version_gt $TAG_BASE "5.9.0"; then
      log "Hbase does not support JDK 11, see https://hbase.apache.org/book.html#java"
      # known_issue https://github.com/vdesabou/kafka-docker-playground/issues/907
-     exit 907
+     exit 107
 fi
 
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.1.2.0.yml"

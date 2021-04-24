@@ -609,9 +609,9 @@ function retry() {
     elif [ $ret -eq 123 ] # skipped
     then
       return 123
-    elif [ $ret -eq 907 ] # known issue https://github.com/vdesabou/kafka-docker-playground/issues/907
+    elif [ $ret -eq 107 ] # known issue https://github.com/vdesabou/kafka-docker-playground/issues/907
     then
-      return 907
+      return 107
     else
       if [[ $n -lt $max ]]; then
         ((n++))
