@@ -39,6 +39,8 @@ curl -X PUT \
           }' \
      http://localhost:8083/connectors/hbase-sink/config | jq .
 
+sleep 10
+
 log "Verify data is in HBase:"
 docker exec -i hbase hbase shell > /tmp/result.log <<-EOF
 scan 'example_table'
