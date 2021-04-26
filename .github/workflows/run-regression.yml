@@ -304,7 +304,7 @@ jobs:
     name: Update README
     runs-on: ubuntu-latest
     if: always()
-    needs: [pre-build, build]
+    needs: [pre-build, build-self-managed]
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
