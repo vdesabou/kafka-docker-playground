@@ -90,3 +90,12 @@ docker cp sftp-server:/home/foo/upload/topics/test_sftp_sink/partition\=0/test_s
 
 docker run -v /tmp:/tmp actions/avro-tools tojson /tmp/test_sftp_sink+0+0000000000.avro
 
+
+log "Remove /usr/share/confluent-hub-components/jcustenborder-kafka-connect-spooldir"
+docker exec connect rm -rf /usr/share/confluent-hub-components/jcustenborder-kafka-connect-spooldir
+
+log "restart connect container"
+docker container restart connect
+
+
+log "Now check connect cluster status in Control Center http://127.0.0.1:9021"
