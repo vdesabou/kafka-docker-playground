@@ -199,17 +199,26 @@ if [ ! -z "$CONNECTOR_TAG" ]
 then
   if [[ $0 == *"wait-for-connect-and-controlcenter.sh"* ]]
   then
-    export CONNECT_TAG="$TAG"
+    if [ -z "$CONNECT_TAG" ]
+    then
+      export CONNECT_TAG="$TAG"
+    fi
     :
   elif [[ $0 == *"environment"* ]]
   then
     # log "DEBUG: start.sh from environment folder. Skipping..."
-    export CONNECT_TAG="$TAG"
+    if [ -z "$CONNECT_TAG" ]
+    then
+      export CONNECT_TAG="$TAG"
+    fi
     :
   elif [[ $0 == *"stop"* ]] || [[ $0 == *"run-tests"* ]]
   then
     # log "DEBUG: stop.sh or run-tests.sh. Skipping..."
-    export CONNECT_TAG="$TAG"
+    if [ -z "$CONNECT_TAG" ]
+    then
+      export CONNECT_TAG="$TAG"
+    fi
     :
   else
     log "🚀 CONNECTOR_TAG is set with version $CONNECTOR_TAG"
@@ -279,15 +288,24 @@ else
   ###
   if [[ $0 == *"wait-for-connect-and-controlcenter.sh"* ]]
   then
-    export CONNECT_TAG="$TAG"
+    if [ -z "$CONNECT_TAG" ]
+    then
+      export CONNECT_TAG="$TAG"
+    fi
     :
   elif [[ $0 == *"environment"* ]]
   then
-    export CONNECT_TAG="$TAG"
+    if [ -z "$CONNECT_TAG" ]
+    then
+      export CONNECT_TAG="$TAG"
+    fi
     :
   elif [[ $0 == *"stop"* ]] || [[ $0 == *"run-tests"* ]]
   then
-    export CONNECT_TAG="$TAG"
+    if [ -z "$CONNECT_TAG" ]
+    then
+      export CONNECT_TAG="$TAG"
+    fi
     CONNECTOR_TAG=$version
     :
   else
@@ -387,14 +405,20 @@ EOF
         #  Neither CONNECTOR_ZIP or CONNECTOR_JAR are set
         ###
         else
-          export CONNECT_TAG="$TAG"
+          if [ -z "$CONNECT_TAG" ]
+          then
+            export CONNECT_TAG="$TAG"
+          fi
           log "🔗 Using Connector $owner/$name:$version (🎓 set CONNECTOR_TAG or CONNECTOR_ZIP environment variables to specify different version)"
           CONNECTOR_TAG=$version
         fi
       fi
     else
       # not a connector test
-      export CONNECT_TAG="$TAG"
+      if [ -z "$CONNECT_TAG" ]
+      then
+        export CONNECT_TAG="$TAG"
+      fi
       :
     fi
   fi
