@@ -21,6 +21,7 @@ log "Installing Mapr Client"
 
 # RHEL
 # required deps for mapr-client
+docker exec -i --privileged --user root connect  bash -c "chmod a+rw /etc/yum.repos.d/mapr_core.repo"
 docker exec -i --privileged --user root connect  bash -c "rpm -i http://mirror.centos.org/centos/7/os/x86_64/Packages/mtools-4.0.18-5.el7.x86_64.rpm"
 docker exec -i --privileged --user root connect  bash -c "rpm -i http://mirror.centos.org/centos/7/os/x86_64/Packages/syslinux-4.05-15.el7.x86_64.rpm"
 
