@@ -20,7 +20,7 @@ jobs:
       matrix:
         tag: [ "6.1.1"]
         test_list : [
-                      "🚀 connect/connect-hbase-sink"
+                      "🚀 connect/connect-mapr-sink"
                     ]
     steps:
       - name: Checkout code
