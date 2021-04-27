@@ -205,7 +205,14 @@ curl -X PUT \
           }' \
      http://localhost:8083/connectors/cdc-oracle-source-pdb/config | jq .
 
-sleep 5
+log "Waiting 60s for cdc-oracle-source-cdb to read existing data"
+sleep 60
+
+log "Running SQL scripts"
+for script in ${DIR}/sample-sql-scripts/*
+do
+     $script "ORCLPDB1"
+done
 
 log "Verifying topic ORCLPDB1.C__MYUSER.CUSTOMERS"
 timeout 60 docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic ORCLPDB1.C__MYUSER.CUSTOMERS --from-beginning --max-messages 2
