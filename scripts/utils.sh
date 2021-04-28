@@ -587,9 +587,9 @@ function remove_partition() {
 
 function aws() {
 
-    if [ -z "$AWS_ACCESS_KEY_ID" ] && [ -z "$AWS_SECRET_ACCESS_KEY" ] && [ ! -f $HOME/.aws/config ] && [ ! -f $HOME/.aws/credentials ]
+    if [ -z "$AWS_ACCESS_KEY_ID" ] && [ -z "$AWS_SECRET_ACCESS_KEY" ] && [ ! -f $HOME/.aws/config ] && [ ! -f $HOME/.aws/$AWS_CREDENTIALS_FILE_NAME ]
     then
-      logerror 'ERROR: Neither AWS_ACCESS_KEY_ID/AWS_SECRET_ACCESS_KEY or $HOME/.aws/credentials are set. AWS credentials must be set !'
+      logerror 'ERROR: Neither AWS_ACCESS_KEY_ID/AWS_SECRET_ACCESS_KEY or $HOME/.aws/$AWS_CREDENTIALS_FILE_NAME are set. AWS credentials must be set !'
       if [ -z "$AWS_ACCESS_KEY_ID" ]
       then
         log 'AWS_ACCESS_KEY_ID environment variable is not set.'
@@ -602,9 +602,9 @@ function aws() {
       then
         log '$HOME/.aws/config does not exist.'
       fi
-      if [ ! -f $HOME/.aws/credentials ]
+      if [ ! -f $HOME/.aws/$AWS_CREDENTIALS_FILE_NAME ]
       then
-        log '$HOME/.aws/credentials does not exist.'
+        log '$HOME/.aws/$AWS_CREDENTIALS_FILE_NAME does not exist.'
       fi
       return 1
     fi

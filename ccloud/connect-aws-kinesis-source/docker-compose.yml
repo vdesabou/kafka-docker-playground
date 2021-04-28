@@ -3,6 +3,6 @@ version: '3.5'
 services:
   connect:
     volumes:
-        - $HOME/.aws/credentials:$CONNECT_CONTAINER_HOME_DIR/.aws/credentials
+        - $HOME/.aws/$AWS_CREDENTIALS_FILE_NAME:$CONNECT_CONTAINER_HOME_DIR/.aws/credentials
     environment:
       CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-kinesis
