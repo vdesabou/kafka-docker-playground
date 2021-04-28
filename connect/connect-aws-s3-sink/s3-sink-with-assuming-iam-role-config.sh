@@ -47,6 +47,10 @@ log "Creating bucket name <$AWS_BUCKET_NAME>, if required"
 set +e
 aws s3api create-bucket --bucket $AWS_BUCKET_NAME --region $AWS_REGION --create-bucket-configuration LocationConstraint=$AWS_REGION
 set -e
+log "Empty bucket <$AWS_BUCKET_NAME>, if required"
+set +e
+aws s3 rm s3://$AWS_BUCKET_NAME --recursive
+set -e
 
 log "Creating S3 Sink connector with bucket name <$AWS_BUCKET_NAME>"
 curl -X PUT \
