@@ -25,7 +25,8 @@ fi
 
 ${DIR}/../../environment/sasl-ssl/start.sh "${PWD}/docker-compose.sasl-ssl.yml"
 
-QUEUE_NAME="sqs-source-connector-demo-ssl"
+QUEUE_NAME="sqs-playground-sasl-ssl-$TAG"
+QUEUE_NAME=${QUEUE_NAME//[._]/}
 AWS_REGION=$(aws configure get region | tr '\r' '\n')
 QUEUE_URL_RAW=$(aws sqs create-queue --queue-name $QUEUE_NAME | jq .QueueUrl)
 AWS_ACCOUNT_NUMBER=$(echo "$QUEUE_URL_RAW" | cut -d "/" -f 4)
