@@ -1,0 +1,18 @@
+---
+version: '3.5'
+services:
+  schema-registry:
+    environment:
+      CUB_CLASSPATH: '/etc/confluent/docker/docker-utils.jar:/usr/share/java/cp-base-new/*:/usr/share/java/confluent-security/schema-registry/*:/usr/share/java/schema-registry/*'
+      SCHEMA_REGISTRY_KAFKASTORE_TOPIC: "schemas-security-plugin"
+      SCHEMA_REGISTRY_SCHEMA_REGISTRY_RESOURCE_EXTENSION_CLASS: "io.confluent.kafka.schemaregistry.security.SchemaRegistrySecurityResourceExtension"
+      SCHEMA_REGISTRY_CONFLUENT_SCHEMA_REGISTRY_AUTHORIZER_CLASS: io.confluent.kafka.schemaregistry.security.authorizer.schemaregistryacl.SchemaRegistryAclAuthorizer
+      SCHEMA_REGISTRY_AUTHENTICATION_METHOD: "BASIC"
+      SCHEMA_REGISTRY_AUTHENTICATION_ROLES: "write,read,admin"
+      SCHEMA_REGISTRY_AUTHENTICATION_REALM: "Schema"
+      SCHEMA_REGISTRY_OPTS: "-Djava.security.auth.login.config=/tmp/jaas_config.file"
+      SCHEMA_REGISTRY_CONFLUENT_SCHEMA_REGISTRY_AUTH_MECHANISM: "JETTY_AUTH"
+      SCHEMA_REGISTRY_CONFLUENT_LICENSE_REPLICATION_FACTOR: 1
+    volumes:
+      - ../../other/schema-registry-security-plugin/jaas_config.file:/tmp/jaas_config.file
+      - ../../other/schema-registry-security-plugin/password-file:/tmp/password-file
