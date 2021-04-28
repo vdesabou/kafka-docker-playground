@@ -17,7 +17,7 @@ This project assumes `~/.aws/credentials` and `~/.aws/config` are set, see `dock
     connect:
     <snip>
     volumes:
-        - $HOME/.aws/credentials:$CONNECT_CONTAINER_HOME_DIR/.aws/credentials
+        - $HOME/.aws/$AWS_CREDENTIALS_FILE_NAME:$CONNECT_CONTAINER_HOME_DIR/.aws/credentials
         - $HOME/.aws/config:$CONNECT_CONTAINER_HOME_DIR/.aws/config
 ```
 

@@ -3,7 +3,7 @@ version: '3.5'
 services:
   connect:
     volumes:
-      - $HOME/.aws/credentials:$CONNECT_CONTAINER_HOME_DIR/.aws/credentials
+      - $HOME/.aws/$AWS_CREDENTIALS_FILE_NAME:$CONNECT_CONTAINER_HOME_DIR/.aws/credentials
       - $HOME/.aws/config:$CONNECT_CONTAINER_HOME_DIR/.aws/config
       - ../../environment/sasl-ssl/security:/etc/kafka/secrets
     environment:
