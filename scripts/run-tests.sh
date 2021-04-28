@@ -1,5 +1,11 @@
 #!/bin/bash
 
+tag="$2"
+if [ "$tag" != "" ]
+then
+    export TAG=$tag
+fi
+
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../scripts/utils.sh
 
@@ -15,12 +21,6 @@ test_list="$1"
 if [ "$1" = "ALL" ]
 then
     test_list=$(grep "🚀 " ${DIR}/../.github/workflows/run-regression.yml | cut -d '"' -f 2 | tr '\n' ' ')
-fi
-
-tag="$2"
-if [ "$tag" != "" ]
-then
-    export TAG=$tag
 fi
 
 for dir in $test_list
