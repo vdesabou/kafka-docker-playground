@@ -68,6 +68,9 @@ AZURE_COSMOSDB_PRIMARY_CONNECTION_KEY=$(az cosmosdb keys list -n $AZURE_COSMOSDB
 
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
 
+# FIXTHIS debug
+docker ps
+
 log "Write data to topic hotels"
 docker exec -i broker kafka-console-producer --broker-list broker:9092 --topic hotels << EOF
 {"id": "h1", "HotelName": "Marriott", "Description": "Marriott description"}
