@@ -617,7 +617,7 @@ function timeout() {
   fi
 }
 
-function az2() {
+function az() {
     docker run -v /tmp:/tmp -v $HOME/.azure:/home/az/.azure -e HOME=/home/az --rm -i mcr.microsoft.com/azure-cli az "$@"
 }
 
