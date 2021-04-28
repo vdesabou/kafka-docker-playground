@@ -212,13 +212,15 @@ then
       export CONNECT_TAG="$TAG"
     fi
     :
-  elif [[ $0 == *"stop"* ]] || [[ $0 == *"run-tests"* ]]
+  elif [[ $0 == *"stop"* ]]
   then
-    # log "DEBUG: stop.sh or run-tests.sh. Skipping..."
     if [ -z "$CONNECT_TAG" ]
     then
       export CONNECT_TAG="$TAG"
     fi
+    :
+  elif [[ $0 == *"run-tests"* ]]
+  then
     :
   else
     log "🚀 CONNECTOR_TAG is set with version $CONNECTOR_TAG"
@@ -300,13 +302,16 @@ else
       export CONNECT_TAG="$TAG"
     fi
     :
-  elif [[ $0 == *"stop"* ]] || [[ $0 == *"run-tests"* ]]
+  elif [[ $0 == *"stop"* ]]
   then
     if [ -z "$CONNECT_TAG" ]
     then
       export CONNECT_TAG="$TAG"
     fi
     CONNECTOR_TAG=$version
+    :
+  elif [[ $0 == *"run-tests"* ]]
+  then
     :
   else
     docker_compose_file=$(grep "environment" "$PWD/$0" | grep DIR | grep start.sh | cut -d "/" -f 7 | cut -d '"' -f 1 | head -n1)
