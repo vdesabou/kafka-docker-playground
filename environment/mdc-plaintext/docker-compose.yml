@@ -8,17 +8,6 @@ services:
     #
     ####
 
-  # not used in plaintext but required because docker override is used for other env
-  kdc:
-    hostname: kdc
-    build: ../../environment/mdc-kerberos/kdc
-    container_name: kdc
-
-  # not used in plaintext but required because docker override is used for other env
-  client:
-    build: ../../environment/mdc-kerberos/client
-    container_name: client
-
   zookeeper-europe:
     image: confluentinc/cp-zookeeper:${TAG}
     hostname: zookeeper-europe
