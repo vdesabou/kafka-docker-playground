@@ -2,17 +2,6 @@
 version: '3.5'
 services:
 
-  # not used in plaintext but required because docker override is used for other env
-  kdc:
-    hostname: kdc
-    build: ../../environment/plaintext
-    container_name: kdc
-
-  # not used in plaintext but required because docker override is used for other env
-  client:
-    build: ../../environment/plaintext
-    container_name: client
-
   zookeeper:
     image: confluentinc/cp-zookeeper:${TAG}
     hostname: zookeeper
