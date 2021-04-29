@@ -25,27 +25,32 @@ fi
 
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
 
+LOG_GROUP=my-log-group$TAG
+LOG_GROUP=${LOG_GROUP//[-.]/}
+LOG_STREAM=my-log-stream$TAG
+LOG_STREAM=${LOG_STREAM//[-.]/}
+
 # cleanup
 set +e
-aws logs delete-log-group --log-group my-log-group
+aws logs delete-log-group --log-group $LOG_GROUP
 set -e
 
 log "Create a log group in AWS CloudWatch Logs."
-aws logs create-log-group --log-group my-log-group
+aws logs create-log-group --log-group $LOG_GROUP
 
 log "Create a log stream in AWS CloudWatch Logs."
-aws logs create-log-stream --log-group my-log-group --log-stream my-log-stream
+aws logs create-log-stream --log-group $LOG_GROUP --log-stream $LOG_STREAM
 
 log "Insert Records into your log stream."
 # If this is the first time inserting logs into a new log stream, then no sequence token is needed.
 # However, after the first put, there will be a sequence token returned that will be needed as a parameter in the next put.
-aws logs put-log-events --log-group my-log-group --log-stream my-log-stream --log-events timestamp=`date +%s000`,message="This is a log #0"
+aws logs put-log-events --log-group $LOG_GROUP --log-stream $LOG_STREAM --log-events timestamp=`date +%s000`,message="This is a log #0"
 
 log "Injecting more messages"
 for i in $(seq 1 10)
 do
-     token=$(aws logs describe-log-streams --log-group my-log-group | jq -r .logStreams[0].uploadSequenceToken)
-     aws logs put-log-events --log-group my-log-group --log-stream my-log-stream --log-events timestamp=`date +%s000`,message="This is a log #${i}" --sequence-token ${token}
+     token=$(aws logs describe-log-streams --log-group $LOG_GROUP | jq -r .logStreams[0].uploadSequenceToken)
+     aws logs put-log-events --log-group $LOG_GROUP --log-stream $LOG_STREAM --log-events timestamp=`date +%s000`,message="This is a log #${i}" --sequence-token ${token}
 done
 
 AWS_REGION=$(aws configure get region | tr '\r' '\n')
@@ -58,8 +63,8 @@ curl -X PUT \
                "connector.class": "io.confluent.connect.aws.cloudwatch.AwsCloudWatchSourceConnector",
                "tasks.max": "1",
                "aws.cloudwatch.logs.url": "'"$CLOUDWATCH_LOGS_URL"'",
-               "aws.cloudwatch.log.group": "my-log-group",
-               "aws.cloudwatch.log.streams": "my-log-stream",
+               "aws.cloudwatch.log.group": "'"$LOG_GROUP"'",
+               "aws.cloudwatch.log.streams": "'"$LOG_STREAM"'",
                "confluent.license": "",
                "confluent.topic.bootstrap.servers": "broker:9092",
                "confluent.topic.replication.factor": "1"
@@ -68,5 +73,5 @@ curl -X PUT \
 
 sleep 5
 
-log "Verify we have received the data in my-log-group.my-log-stream topic"
-timeout 60 docker exec broker kafka-console-consumer -bootstrap-server broker:9092 --topic my-log-group.my-log-stream --from-beginning --max-messages 10
+log "Verify we have received the data in $LOG_GROUP.$LOG_STREAM topic"
+timeout 60 docker exec broker kafka-console-consumer -bootstrap-server broker:9092 --topic $LOG_GROUP.$LOG_STREAM --from-beginning --max-messages 10
