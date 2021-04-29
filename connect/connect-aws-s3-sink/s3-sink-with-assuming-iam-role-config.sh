@@ -17,7 +17,10 @@ then
      logerror "ERROR: $HOME/.aws/config is not set"
      exit 1
 fi
-export AWS_CREDENTIALS_FILE_NAME="credentials"
+if [ -z "$AWS_CREDENTIALS_FILE_NAME" ]
+then
+    export AWS_CREDENTIALS_FILE_NAME="credentials"
+fi
 if [ ! -f $HOME/.aws/$AWS_CREDENTIALS_FILE_NAME ]
 then
      logerror "ERROR: $HOME/.aws/$AWS_CREDENTIALS_FILE_NAME is not set"
@@ -49,7 +52,7 @@ aws s3api create-bucket --bucket $AWS_BUCKET_NAME --region $AWS_REGION --create-
 set -e
 log "Empty bucket <$AWS_BUCKET_NAME>, if required"
 set +e
-aws s3 rm s3://$AWS_BUCKET_NAME --recursive
+aws s3 rm s3://$AWS_BUCKET_NAME --recursive --region $AWS_REGION
 set -e
 
 log "Creating S3 Sink connector with bucket name <$AWS_BUCKET_NAME>"

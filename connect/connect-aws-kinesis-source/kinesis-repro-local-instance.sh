@@ -10,7 +10,10 @@ then
      logerror "ERROR: $HOME/.aws/config is not set"
      exit 1
 fi
-export AWS_CREDENTIALS_FILE_NAME="credentials"
+if [ -z "$AWS_CREDENTIALS_FILE_NAME" ]
+then
+    export AWS_CREDENTIALS_FILE_NAME="credentials"
+fi
 if [ ! -f $HOME/.aws/$AWS_CREDENTIALS_FILE_NAME ]
 then
      logerror "ERROR: $HOME/.aws/$AWS_CREDENTIALS_FILE_NAME is not set"
