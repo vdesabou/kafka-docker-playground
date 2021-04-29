@@ -67,14 +67,14 @@ done
 Creating AWS CloudWatch Logs Source connector
 
 ```bash
-curl -X PUT \
+$ curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
                "connector.class": "io.confluent.connect.aws.cloudwatch.AwsCloudWatchSourceConnector",
                "tasks.max": "1",
                "aws.cloudwatch.logs.url": "'"$CLOUDWATCH_LOGS_URL"'",
-               "aws.cloudwatch.log.group": "my-log-group",
-               "aws.cloudwatch.log.streams": "my-log-stream",
+               "aws.cloudwatch.log.group": "'"$LOG_GROUP"'",
+               "aws.cloudwatch.log.streams": "'"$LOG_STREAM"'",
                "confluent.license": "",
                "confluent.topic.bootstrap.servers": "broker:9092",
                "confluent.topic.replication.factor": "1"
