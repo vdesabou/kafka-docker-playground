@@ -1,0 +1,6 @@
+---
+version: '3.5'
+services:
+  broker-europe:
+      environment:
+        KAFKA_CONFLUENT_CLUSTER_LINK_ENABLE : "true"
