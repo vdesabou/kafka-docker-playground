@@ -19,6 +19,7 @@ services:
   client:
     hostname: client.kerberos-demo.local
     build: ../../environment/mdc-kerberos/client
+    container_name: client
     depends_on:
       - broker-us
       - broker-europe
