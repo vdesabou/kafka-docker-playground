@@ -17,6 +17,7 @@ then
      logerror "ERROR: $HOME/.aws/config is not set"
      exit 1
 fi
+# this is only used for AWS CLI
 if [ -z "$AWS_CREDENTIALS_FILE_NAME" ]
 then
     export AWS_CREDENTIALS_FILE_NAME="credentials"
@@ -27,14 +28,24 @@ then
      exit 1
 fi
 
-export AWS_ACCESS_KEY_ID=$( grep "^aws_access_key_id" $HOME/.aws/$AWS_CREDENTIALS_FILE_NAME | awk -F'=' '{print $2;}' )
-export AWS_SECRET_ACCESS_KEY=$( grep "^aws_secret_access_key" $HOME/.aws/$AWS_CREDENTIALS_FILE_NAME | awk -F'=' '{print $2;}' )
-
 if [ -z "$AWS_STS_ROLE_ARN" ]
 then
      logerror "AWS_STS_ROLE_ARN is not set. Export it as environment variable or pass it as argument"
      exit 1
 fi
+
+if [ -z "$AWS_ACCOUNT_WITH_ASSUME_ROLE_AWS_ACCESS_KEY_ID" ]
+then
+     logerror "AWS_ACCOUNT_WITH_ASSUME_ROLE_AWS_ACCESS_KEY_ID is not set. Export it as environment variable or pass it as argument"
+     exit 1
+fi
+
+if [ -z "$AWS_ACCOUNT_WITH_ASSUME_ROLE_AWS_SECRET_ACCESS_KEY" ]
+then
+     logerror "AWS_ACCOUNT_WITH_ASSUME_ROLE_AWS_SECRET_ACCESS_KEY is not set. Export it as environment variable or pass it as argument"
+     exit 1
+fi
+
 
 if [[ "$TAG" == *ubi8 ]] || version_gt $TAG_BASE "5.9.0"
 then
@@ -43,7 +54,8 @@ else
      export CONNECT_CONTAINER_HOME_DIR="/root"
 fi
 
-${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
+# credentials file is not mounted in connect container
+${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.with-assuming-iam-role-config.yml"
 
 AWS_REGION=$(aws configure get region | tr '\r' '\n')
 log "Creating bucket name <$AWS_BUCKET_NAME>, if required"
@@ -72,8 +84,8 @@ curl -X PUT \
                "s3.credentials.provider.sts.role.arn": "'"$AWS_STS_ROLE_ARN"'",
                "s3.credentials.provider.sts.role.session.name": "session-name",
                "s3.credentials.provider.sts.role.external.id": "123",
-               "aws.access.key.id": "'"$AWS_ACCESS_KEY_ID"'",
-               "aws.secret.access.key": "'"$AWS_SECRET_ACCESS_KEY"'",
+               "aws.access.key.id": "'"$AWS_ACCOUNT_WITH_ASSUME_ROLE_AWS_ACCESS_KEY_ID"'",
+               "aws.secret.access.key": "'"$AWS_ACCOUNT_WITH_ASSUME_ROLE_AWS_SECRET_ACCESS_KEY"'",
                "schema.compatibility": "NONE"
           }' \
      http://localhost:8083/connectors/s3-sink/config | jq .
