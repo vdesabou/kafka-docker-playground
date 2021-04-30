@@ -5,3 +5,7 @@ ccloud-generate-env-vars.sh
 upgrade-test.sh
 # https://github.com/vdesabou/kafka-docker-playground/issues/833 :
 cdc-oracle12-pdb-table-mtls-db-auth.sh
+# https://github.com/vdesabou/kafka-docker-playground/issues/920#issuecomment-830157555
+s3-sink-proxy-with-assuming-iam-role.sh
+# https://github.com/vdesabou/kafka-docker-playground/issues/920#issuecomment-830157555
+kinesis-proxy-with-assuming-iam-role.sh
