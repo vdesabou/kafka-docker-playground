@@ -4,7 +4,7 @@
 
 ## Objective
 
-Quickly test [S3 Source](https://docs.confluent.io/current/connect/kafka-connect-aws-s3-source/index.html) connector.
+Quickly test [S3 Source](https://docs.confluent.io/kafka-connect-s3-source/current/) connector.
 
 
 
