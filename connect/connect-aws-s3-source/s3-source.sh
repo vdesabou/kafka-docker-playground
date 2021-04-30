@@ -51,16 +51,16 @@ curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
                "connector.class": "io.confluent.connect.s3.S3SinkConnector",
-                    "tasks.max": "1",
-                    "topics": "s3_topic",
-                    "s3.region": "'"$AWS_REGION"'",
-                    "s3.bucket.name": "'"$AWS_BUCKET_NAME"'",
-                    "s3.part.size": 5242880,
-                    "flush.size": "3",
-                    "storage.class": "io.confluent.connect.s3.storage.S3Storage",
-                    "format.class": "io.confluent.connect.s3.format.avro.AvroFormat",
-                    "partitioner.class": "io.confluent.connect.storage.partitioner.DefaultPartitioner",
-                    "schema.compatibility": "NONE"
+               "tasks.max": "1",
+               "topics": "s3_topic",
+               "s3.region": "'"$AWS_REGION"'",
+               "s3.bucket.name": "'"$AWS_BUCKET_NAME"'",
+               "s3.part.size": 5242880,
+               "flush.size": "3",
+               "storage.class": "io.confluent.connect.s3.storage.S3Storage",
+               "format.class": "io.confluent.connect.s3.format.avro.AvroFormat",
+               "partitioner.class": "io.confluent.connect.storage.partitioner.DefaultPartitioner",
+               "schema.compatibility": "NONE"
           }' \
      http://localhost:8083/connectors/s3-sink/config | jq .
 
@@ -84,17 +84,17 @@ curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
                "tasks.max": "1",
-                    "connector.class": "io.confluent.connect.s3.source.S3SourceConnector",
-                    "s3.region": "'"$AWS_REGION"'",
-                    "s3.bucket.name": "'"$AWS_BUCKET_NAME"'",
-                    "format.class": "io.confluent.connect.s3.format.avro.AvroFormat",
-                    "confluent.license": "",
-                    "confluent.topic.bootstrap.servers": "broker:9092",
-                    "confluent.topic.replication.factor": "1",
-                    "transforms": "AddPrefix",
-                    "transforms.AddPrefix.type": "org.apache.kafka.connect.transforms.RegexRouter",
-                    "transforms.AddPrefix.regex": ".*",
-                    "transforms.AddPrefix.replacement": "copy_of_$0"
+               "connector.class": "io.confluent.connect.s3.source.S3SourceConnector",
+               "s3.region": "'"$AWS_REGION"'",
+               "s3.bucket.name": "'"$AWS_BUCKET_NAME"'",
+               "format.class": "io.confluent.connect.s3.format.avro.AvroFormat",
+               "confluent.license": "",
+               "confluent.topic.bootstrap.servers": "broker:9092",
+               "confluent.topic.replication.factor": "1",
+               "transforms": "AddPrefix",
+               "transforms.AddPrefix.type": "org.apache.kafka.connect.transforms.RegexRouter",
+               "transforms.AddPrefix.regex": ".*",
+               "transforms.AddPrefix.replacement": "copy_of_$0"
           }' \
      http://localhost:8083/connectors/s3-source/config | jq .
 
