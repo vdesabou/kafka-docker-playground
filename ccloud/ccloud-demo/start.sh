@@ -271,6 +271,10 @@ then
      log "Check that the data is available in Elasticsearch"
      curl -XGET 'http://localhost:9200/mysql-application/_search?pretty'
 fi
+if [ -z "$CLOUDFORMATION" ]
+then
+     exit 0
+fi
 log "Now we will test Service Account and ACLs"
 check_if_continue
 
