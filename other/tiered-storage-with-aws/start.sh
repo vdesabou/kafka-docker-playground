@@ -43,13 +43,16 @@ then
      exit 1
 fi
 
-log "Create bucket aws-playground-tiered-storage in S3"
+AWS_BUCKET_TIERED_STORAGE=aws-playground-tiered-storage$TAG
+AWS_BUCKET_TIERED_STORAGE=${AWS_BUCKET_TIERED_STORAGE//[-.]/}
+
+log "Create bucket $AWS_BUCKET_TIERED_STORAGE in S3"
 set +e
-aws s3api create-bucket --bucket aws-playground-tiered-storage --region $AWS_REGION --create-bucket-configuration LocationConstraint=$AWS_REGION
+aws s3api create-bucket --bucket $AWS_BUCKET_TIERED_STORAGE --region $AWS_REGION --create-bucket-configuration LocationConstraint=$AWS_REGION
 set -e
-log "Empty bucket aws-playground-tiered-storage, if required"
+log "Empty bucket $AWS_BUCKET_TIERED_STORAGE, if required"
 set +e
-aws s3 rm s3://aws-playground-tiered-storage --recursive --region $AWS_REGION
+aws s3 rm s3://$AWS_BUCKET_TIERED_STORAGE --recursive --region $AWS_REGION
 set -e
 
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml" -a -b
@@ -65,8 +68,8 @@ sleep 10
 log "Check for uploaded log segments"
 docker container logs broker | grep "Uploaded"
 
-log "Listing objects of bucket aws-playground-tiered-storage in S3"
-aws s3api list-objects --bucket aws-playground-tiered-storage
+log "Listing objects of bucket $AWS_BUCKET_TIERED_STORAGE in S3"
+aws s3api list-objects --bucket $AWS_BUCKET_TIERED_STORAGE
 
 log "Sleep 6 minutes (confluent.tier.local.hotset.ms=60000)"
 sleep 360
@@ -74,7 +77,7 @@ sleep 360
 log "Check for deleted log segments"
 docker container logs broker | grep "Deleted log"
 
-log "Empty bucket aws-playground-tiered-storage in S3"
-aws s3 rm s3://aws-playground-tiered-storage --recursive
-log "Delete bucket aws-playground-tiered-storage in S3"
-aws s3api delete-bucket --bucket aws-playground-tiered-storage
+log "Empty bucket $AWS_BUCKET_TIERED_STORAGE in S3"
+aws s3 rm s3://$AWS_BUCKET_TIERED_STORAGE --recursive
+log "Delete bucket $AWS_BUCKET_TIERED_STORAGE in S3"
+aws s3api delete-bucket --bucket $AWS_BUCKET_TIERED_STORAGE
