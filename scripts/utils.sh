@@ -37,7 +37,7 @@ function set_kafka_client_tag()
       export KAFKA_CLIENT_TAG="2.7.0"
     fi
 
-    if [ "$TAG_BASE" = "6.0.1" ] || [ "$TAG_BASE" = "6.0.0" ]
+    if [ "$TAG_BASE" = "6.0.2" ] || [ "$TAG_BASE" = "6.0.1" ] || [ "$TAG_BASE" = "6.0.0" ]
     then
       export KAFKA_CLIENT_TAG="2.6.0"
     fi
