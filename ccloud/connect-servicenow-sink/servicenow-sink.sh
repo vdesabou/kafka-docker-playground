@@ -109,4 +109,6 @@ docker exec -e SERVICENOW_URL="$SERVICENOW_URL" -e SERVICENOW_PASSWORD="$SERVICE
     --user admin:"$SERVICENOW_PASSWORD" \
     -H 'Accept: application/json' \
     -H 'Content-Type: application/json' \
-    -H 'cache-control: no-cache' | jq .
+    -H 'cache-control: no-cache' | jq . > /tmp/result.log
+cat /tmp/result.log
+grep "u_name" /tmp/result.log | grep "notebooks"
