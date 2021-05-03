@@ -27,11 +27,15 @@ log "-> read:read    |  Global read access (SUBJECT_READ)"
 log "-> write:write  |  Global write access (SUBJECT_WRITE)"
 log "-> admin:admin  |  Global admin access (All operations, i.e $operations_list)"
 
+log "Create a topic"
+docker exec broker kafka-topics --create --topic my-topic --bootstrap-server broker:9092 --replication-factor 1 --partitions 1
+
 log "Registering a subject with write user"
-curl -X POST -u write:write http://localhost:8081/subjects/subject1-value/versions \
+curl -X POST -u write:write http://localhost:8081/subjects/my-topic-value/versions \
   --header 'Content-Type: application/vnd.schemaregistry.v1+json' \
-  --data '{
-    "schema": "{\n    \"fields\": [\n      {\n        \"name\": \"id\",\n        \"type\": \"long\"\n      },\n      {\n        \"default\": null,\n        \"name\": \"first_name\",\n        \"type\": [\n          \"null\",\n          \"string\"\n        ]\n      },\n      {\n        \"default\": null,\n        \"name\": \"last_name\",\n        \"type\": [\n          \"null\",\n          \"string\"\n        ]\n      },\n      {\n        \"default\": null,\n        \"name\": \"email\",\n        \"type\": [\n          \"null\",\n          \"string\"\n        ]\n      },\n      {\n        \"default\": null,\n        \"name\": \"gender\",\n        \"type\": [\n          \"null\",\n          \"string\"\n        ]\n      },\n      {\n        \"default\": null,\n        \"name\": \"ip_address\",\n        \"type\": [\n          \"null\",\n          \"string\"\n        ]\n      },\n      {\n        \"default\": null,\n        \"name\": \"last_login\",\n        \"type\": [\n          \"null\",\n          \"string\"\n        ]\n      },\n      {\n        \"default\": null,\n        \"name\": \"account_balance\",\n        \"type\": [\n          \"null\",\n          {\n            \"logicalType\": \"decimal\",\n            \"precision\": 64,\n            \"scale\": 2,\n            \"type\": \"bytes\"\n          }\n        ]\n      },\n      {\n        \"default\": null,\n        \"name\": \"country\",\n        \"type\": [\n          \"null\",\n          \"string\"\n        ]\n      },\n      {\n        \"default\": null,\n        \"name\": \"favorite_color\",\n        \"type\": [\n          \"null\",\n          \"string\"\n        ]\n      }\n    ],\n    \"name\": \"User\",\n    \"namespace\": \"com.example.users\",\n    \"type\": \"record\"\n  }"
+  --data '
+{
+    "schema": "{\"type\":\"record\",\"name\":\"myrecord\",\"fields\":[{\"name\":\"u_name\",\"type\":\"string\"},{\"name\":\"u_price\", \"type\": \"float\"}, {\"name\":\"u_quantity\", \"type\": \"int\"}]}"
 }'
 
 log "Doing an admin operation with read user - expected to fail"
@@ -42,4 +46,34 @@ log "Doing an admin operation with admin user - expected to succeed"
 curl -X GET -u admin:admin http://localhost:8081/subjects
 log "Getting a subject with read user - expected to succeed"
 set +e
-curl -X GET -u read:read http://localhost:8081/subjects/subject1-value/versions
+curl -X GET -u read:read http://localhost:8081/subjects/my-topic-value/versions
+
+log "Testing with a producer (read:read)"
+docker exec -i connect kafka-avro-console-producer --broker-list broker:9092 --property schema.registry.url=http://schema-registry:8081 --property basic.auth.credentials.source=USER_INFO --property schema.registry.basic.auth.user.info="read:read" --topic my-topic --property value.schema='{"type":"record","name":"myrecord","fields":[{"name":"u_name","type":"string"},{"name":"u_price", "type": "float"}, {"name":"u_quantity", "type": "int"}]}' << EOF
+{"u_name": "scissors", "u_price": 2.75, "u_quantity": 3}
+{"u_name": "tape", "u_price": 0.99, "u_quantity": 10}
+{"u_name": "notebooks", "u_price": 1.99, "u_quantity": 5}
+EOF
+
+# org.apache.kafka.common.errors.SerializationException: Error registering Avro schema{"type":"record","name":"myrecord","fields":[{"name":"u_name","type":"string"},{"name":"u_price","type":"float"},{"name":"u_quantity","type":"int"}]}
+# Caused by: io.confluent.kafka.schemaregistry.client.rest.exceptions.RestClientException: User is denied operation Write on Subject: my-topic-value; error code: 40301
+#         at io.confluent.kafka.schemaregistry.client.rest.RestService.sendHttpRequest(RestService.java:295)
+#         at io.confluent.kafka.schemaregistry.client.rest.RestService.httpRequest(RestService.java:355)
+#         at io.confluent.kafka.schemaregistry.client.rest.RestService.registerSchema(RestService.java:498)
+#         at io.confluent.kafka.schemaregistry.client.rest.RestService.registerSchema(RestService.java:489)
+#         at io.confluent.kafka.schemaregistry.client.rest.RestService.registerSchema(RestService.java:462)
+#         at io.confluent.kafka.schemaregistry.client.CachedSchemaRegistryClient.registerAndGetId(CachedSchemaRegistryClient.java:214)
+#         at io.confluent.kafka.schemaregistry.client.CachedSchemaRegistryClient.register(CachedSchemaRegistryClient.java:276)
+#         at io.confluent.kafka.schemaregistry.client.CachedSchemaRegistryClient.register(CachedSchemaRegistryClient.java:252)
+#         at io.confluent.kafka.serializers.AbstractKafkaAvroSerializer.serializeImpl(AbstractKafkaAvroSerializer.java:84)
+#         at io.confluent.kafka.formatter.AvroMessageReader$AvroMessageSerializer.serialize(AvroMessageReader.java:168)
+#         at io.confluent.kafka.formatter.SchemaMessageReader.readMessage(SchemaMessageReader.java:317)
+#         at kafka.tools.ConsoleProducer$.main(ConsoleProducer.scala:51)
+#         at kafka.tools.ConsoleProducer.main(ConsoleProducer.scala)
+
+log "Testing with a producer (write:write)"
+docker exec -i connect kafka-avro-console-producer --broker-list broker:9092 --property schema.registry.url=http://schema-registry:8081 --property basic.auth.credentials.source=USER_INFO --property schema.registry.basic.auth.user.info="write:write" --topic my-topic --property value.schema='{"type":"record","name":"myrecord","fields":[{"name":"u_name","type":"string"},{"name":"u_price", "type": "float"}, {"name":"u_quantity", "type": "int"}]}' << EOF
+{"u_name": "scissors", "u_price": 2.75, "u_quantity": 3}
+{"u_name": "tape", "u_price": 0.99, "u_quantity": 10}
+{"u_name": "notebooks", "u_price": 1.99, "u_quantity": 5}
+EOF
