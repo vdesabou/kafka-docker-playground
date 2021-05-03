@@ -40,7 +40,6 @@ other/cp-ansible-playground/cp_ansible_playground_id_rsa
 other/cp-ansible-playground/cp_ansible_playground_id_rsa.pub
 aws_credentials
 aws_credentials_with_assuming_iam_role
-aws_credentials_aws_account_with_assume_role
 aws_config
 config.cc.vsaboulin.travis
 3rdparty.tgz
