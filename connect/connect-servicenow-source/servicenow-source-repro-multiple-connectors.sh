@@ -25,6 +25,17 @@ then
      exit 1
 fi
 
+if [ ! -z "$CI" ]
+then
+     # this is github actions
+     set +e
+     log "Waking up servicenow instance..."
+     docker run -e USERNAME="$SERVICENOW_DEVELOPER_USERNAME" -e PASSWORD="$SERVICENOW_DEVELOPER_PASSWORD" ruthless/servicenow-instance-wakeup:latest
+     set -e
+     log "sleeping 240 seconds"
+     sleep 240
+fi
+
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
 
 TODAY=$(date '+%Y-%m-%d')

@@ -122,8 +122,15 @@ do
                 fi
             fi
 
+            # for servicenow tests, run tests at least every 4 days
+            if [[ "$dir" == "connect-servicenow-"* ]] && [[ $elapsed_time -gt 322560 ]]
+            then
+                log "####################################################"
+                log "⌛ Test with CP $TAG and connector $THE_CONNECTOR_TAG has already been executed successfully $(displaytime $elapsed_time) ago, more than 4 days ago...re-running. Test url: $html_url"
+                log "####################################################"
+                aws s3 rm $s3_file
             # run at least every 15 days, even with no changes
-            if [[ $elapsed_time -gt 1209600 ]]
+            elif [[ $elapsed_time -gt 1209600 ]]
             then
                 log "####################################################"
                 log "⌛ Test with CP $TAG and connector $THE_CONNECTOR_TAG has already been executed successfully $(displaytime $elapsed_time) ago, more than 15 days ago...re-running. Test url: $html_url"
