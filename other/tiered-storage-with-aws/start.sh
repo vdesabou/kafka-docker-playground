@@ -45,6 +45,7 @@ fi
 
 AWS_BUCKET_TIERED_STORAGE=aws-playground-tiered-storage$TAG
 AWS_BUCKET_TIERED_STORAGE=${AWS_BUCKET_TIERED_STORAGE//[-.]/}
+export AWS_BUCKET_TIERED_STORAGE
 
 log "Create bucket $AWS_BUCKET_TIERED_STORAGE in S3"
 set +e
