@@ -190,6 +190,7 @@ jobs:
           SERVICENOW_DEVELOPER_PASSWORD: ${{ secrets.SERVICENOW_DEVELOPER_PASSWORD }}
           SERVICENOW_URL: ${{ secrets.SERVICENOW_URL }}
           SERVICENOW_PASSWORD: ${{ secrets.SERVICENOW_PASSWORD }}
+          CONFLUENT_LICENSE: ${{ secrets.CONFLUENT_LICENSE }}
 
   post-build:
     name: Update README
