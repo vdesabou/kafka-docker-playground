@@ -36,7 +36,7 @@ services:
 
       KAFKAREST_OPTS: -Djava.security.auth.login.config=/etc/kafka/kafka-rest.jaas.conf
 
-      KAFKA_REST_CONFLUENT_LICENSE: "$CONTROL_CENTER_LICENSE"
+      KAFKA_REST_CONFLUENT_LICENSE: "$CONFLUENT_LICENSE"
       # KAFKA_REST_SSL_CLIENT_AUTHENTICATION: "REQUIRED"
       KAFKA_REST_SSL_CLIENT_AUTH: "true" # deprecated, KAFKA_REST_SSL_CLIENT_AUTHENTICATION: "REQUIRED"
       KAFKA_REST_KAFKA_REST_RESOURCE_EXTENSION_CLASS: io.confluent.kafkarest.security.KafkaRestSecurityResourceExtension
