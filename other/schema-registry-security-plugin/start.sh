@@ -48,13 +48,15 @@ log "Getting a subject with read user - expected to succeed"
 set +e
 curl -X GET -u read:read http://localhost:8081/subjects/my-topic-value/versions
 
-log "Testing with a producer (read:read)"
-docker exec -i connect kafka-avro-console-producer --broker-list broker:9092 --property schema.registry.url=http://schema-registry:8081 --property basic.auth.credentials.source=USER_INFO --property schema.registry.basic.auth.user.info="read:read" --topic my-topic --property value.schema='{"type":"record","name":"myrecord","fields":[{"name":"u_name","type":"string"},{"name":"u_price", "type": "float"}, {"name":"u_quantity", "type": "int"}]}' << EOF
+
+log "Testing with a producer (read:read) and --property auto.register.schemas=true, it will fail"
+set +e
+docker exec -i connect kafka-avro-console-producer --broker-list broker:9092 --property schema.registry.url=http://schema-registry:8081 --property basic.auth.credentials.source=USER_INFO --property schema.registry.basic.auth.user.info="read:read" --topic my-topic --property value.schema='{"type":"record","name":"myrecord","fields":[{"name":"u_name","type":"string"},{"name":"u_price", "type": "float"}, {"name":"u_quantity", "type": "int"}]}' --property auto.register.schemas=true << EOF
 {"u_name": "scissors", "u_price": 2.75, "u_quantity": 3}
 {"u_name": "tape", "u_price": 0.99, "u_quantity": 10}
 {"u_name": "notebooks", "u_price": 1.99, "u_quantity": 5}
 EOF
-
+set -e
 # org.apache.kafka.common.errors.SerializationException: Error registering Avro schema{"type":"record","name":"myrecord","fields":[{"name":"u_name","type":"string"},{"name":"u_price","type":"float"},{"name":"u_quantity","type":"int"}]}
 # Caused by: io.confluent.kafka.schemaregistry.client.rest.exceptions.RestClientException: User is denied operation Write on Subject: my-topic-value; error code: 40301
 #         at io.confluent.kafka.schemaregistry.client.rest.RestService.sendHttpRequest(RestService.java:295)
@@ -71,8 +73,9 @@ EOF
 #         at kafka.tools.ConsoleProducer$.main(ConsoleProducer.scala:51)
 #         at kafka.tools.ConsoleProducer.main(ConsoleProducer.scala)
 
-log "Testing with a producer (write:write)"
-docker exec -i connect kafka-avro-console-producer --broker-list broker:9092 --property schema.registry.url=http://schema-registry:8081 --property basic.auth.credentials.source=USER_INFO --property schema.registry.basic.auth.user.info="write:write" --topic my-topic --property value.schema='{"type":"record","name":"myrecord","fields":[{"name":"u_name","type":"string"},{"name":"u_price", "type": "float"}, {"name":"u_quantity", "type": "int"}]}' << EOF
+
+log "Testing with a producer (read:read) and --property auto.register.schemas=false, it will work"
+docker exec -i connect kafka-avro-console-producer --broker-list broker:9092 --property schema.registry.url=http://schema-registry:8081 --property basic.auth.credentials.source=USER_INFO --property schema.registry.basic.auth.user.info="read:read" --topic my-topic --property value.schema='{"type":"record","name":"myrecord","fields":[{"name":"u_name","type":"string"},{"name":"u_price", "type": "float"}, {"name":"u_quantity", "type": "int"}]}' --property auto.register.schemas=false << EOF
 {"u_name": "scissors", "u_price": 2.75, "u_quantity": 3}
 {"u_name": "tape", "u_price": 0.99, "u_quantity": 10}
 {"u_name": "notebooks", "u_price": 1.99, "u_quantity": 5}
