@@ -28,6 +28,17 @@ then
      exit 1
 fi
 
+# this is used by connect
+if [ -z "$AWS_ACCOUNT_WITH_ASSUME_ROLE_AWS_CREDENTIALS_FILE_NAME" ]
+then
+    export AWS_ACCOUNT_WITH_ASSUME_ROLE_AWS_CREDENTIALS_FILE_NAME="credentials_aws_account_with_assume_role"
+fi
+if [ ! -f $HOME/.aws/$AWS_ACCOUNT_WITH_ASSUME_ROLE_AWS_CREDENTIALS_FILE_NAME ]
+then
+     logerror "ERROR: $HOME/.aws/$AWS_ACCOUNT_WITH_ASSUME_ROLE_AWS_CREDENTIALS_FILE_NAME is not set"
+     exit 1
+fi
+
 if [ -z "$AWS_STS_ROLE_ARN" ]
 then
      logerror "AWS_STS_ROLE_ARN is not set. Export it as environment variable or pass it as argument"
@@ -54,7 +65,6 @@ else
      export CONNECT_CONTAINER_HOME_DIR="/root"
 fi
 
-# credentials file is not mounted in connect container
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.with-assuming-iam-role-config.yml"
 
 AWS_REGION=$(aws configure get region | tr '\r' '\n')
@@ -82,10 +92,8 @@ curl -X PUT \
                "format.class": "io.confluent.connect.s3.format.avro.AvroFormat",
                "s3.credentials.provider.class": "io.confluent.connect.s3.auth.AwsAssumeRoleCredentialsProvider",
                "s3.credentials.provider.sts.role.arn": "'"$AWS_STS_ROLE_ARN"'",
-               "s3.credentials.provider.sts.role.session.name": "session-name",
+               "s3.credentials.provider.sts.role.session.name": "playground_session",
                "s3.credentials.provider.sts.role.external.id": "123",
-               "aws.access.key.id": "'"$AWS_ACCOUNT_WITH_ASSUME_ROLE_AWS_ACCESS_KEY_ID"'",
-               "aws.secret.access.key": "'"$AWS_ACCOUNT_WITH_ASSUME_ROLE_AWS_SECRET_ACCESS_KEY"'",
                "schema.compatibility": "NONE"
           }' \
      http://localhost:8083/connectors/s3-sink/config | jq .
