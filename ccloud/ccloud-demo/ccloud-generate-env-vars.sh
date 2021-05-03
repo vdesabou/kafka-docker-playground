@@ -57,7 +57,7 @@ CLOUD_SECRET=$( echo $SASL_JAAS_CONFIG | awk '{print $4}' | awk -F'"' '$0=$2' )
 BASIC_AUTH_CREDENTIALS_SOURCE=$( grep "^basic.auth.credentials.source" $SR_CONFIG_FILE | awk -F'=' '{print $2;}' )
 SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO=$( grep "^schema.registry.basic.auth.user.info" $SR_CONFIG_FILE | awk -F'=' '{print $2;}' )
 SCHEMA_REGISTRY_URL=$( grep "^schema.registry.url" $SR_CONFIG_FILE | awk -F'=' '{print $2;}' )
-CONTROL_CENTER_LICENSE=$( grep "^confluent.license" $CCLOUD_CONFIG | cut -d'=' -f2- )
+CONFLUENT_LICENSE=$( grep "^confluent.license" $CCLOUD_CONFIG | cut -d'=' -f2- )
 CCLOUD_EMAIL=$( grep "^ccloud.user" $CCLOUD_CONFIG | cut -d'=' -f2- )
 CCLOUD_PASSWORD=$( grep "^ccloud.password" $CCLOUD_CONFIG | cut -d'=' -f2- )
 
@@ -72,7 +72,7 @@ export SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO=$SCHEMA_REGISTRY_BASIC_AUTH_USER_INF
 export SCHEMA_REGISTRY_URL=$SCHEMA_REGISTRY_URL
 export CLOUD_KEY=$CLOUD_KEY
 export CLOUD_SECRET=$CLOUD_SECRET
-export CONTROL_CENTER_LICENSE='$CONTROL_CENTER_LICENSE'
+export CONFLUENT_LICENSE='$CONFLUENT_LICENSE'
 export CCLOUD_EMAIL='$CCLOUD_EMAIL'
 export CCLOUD_PASSWORD='$CCLOUD_PASSWORD'
 EOF
