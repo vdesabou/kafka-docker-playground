@@ -12,7 +12,7 @@ curl -X PUT \
      --data '{
                "connector.class": "io.confluent.connect.jdbc.JdbcSinkConnector",
                "tasks.max": "1",
-               "connection.url": "jdbc:postgresql://postgres/postgres?user=postgres&password=postgres&ssl=false",
+               "connection.url": "jdbc:postgresql://postgres/postgres?user=myuser&password=mypassword&ssl=false",
                "topics": "orders",
                "auto.create": "true"
           }' \
@@ -28,7 +28,7 @@ EOF
 sleep 5
 
 log "Show content of ORDERS table:"
-docker exec postgres bash -c "psql -U postgres -d postgres -c 'SELECT * FROM ORDERS'" > /tmp/result.log
+docker exec postgres bash -c "psql -U myuser -d postgres -c 'SELECT * FROM ORDERS'" > /tmp/result.log
 
 cat /tmp/result.log
 grep "foo" /tmp/result.log | grep "100"
