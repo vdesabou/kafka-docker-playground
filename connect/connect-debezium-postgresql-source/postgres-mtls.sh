@@ -96,7 +96,10 @@ curl -X PUT \
                     "database.hostname": "postgres",
                     "database.port": "5432",
                     "database.user": "myuser",
-                    "database.password": "mypassword",
+                    "database.sslmode": "verify-full",
+                    "database.sslrootcert": "/tmp/ca.crt",
+                    "database.sslcert": "/tmp/client.crt",
+                    "database.sslkey": "/tmp/client.key.pk8",
                     "database.dbname" : "postgres",
                     "database.server.name": "asgard",
                     "key.converter" : "io.confluent.connect.avro.AvroConverter",
@@ -109,8 +112,6 @@ curl -X PUT \
                     "transforms.addTopicSuffix.replacement":"$1-raw"
           }' \
      http://localhost:8083/connectors/debezium-postgres-source/config | jq .
-
-
 
 sleep 5
 
