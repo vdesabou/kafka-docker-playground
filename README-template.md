@@ -7,23 +7,20 @@ Playground for Kafka/Confluent Docker experimentations...
 ![GitHub issues by-label](https://img.shields.io/github/issues/vdesabou/kafka-docker-playground/bug%20🔥)![GitHub issues by-label](https://img.shields.io/github/issues/vdesabou/kafka-docker-playground/enhancement%20✨)
 ![GitHub repo size](https://img.shields.io/github/repo-size/vdesabou/kafka-docker-playground)
 
-ℹ️ [How to run](https://github.com/vdesabou/kafka-docker-playground/wiki/How-to-run)
+- [👾 Playgrounds](#-playgrounds)
+  - [☁️ Confluent Cloud](#️-confluent-cloud)
+  - [🔄 Confluent Replicator and Mirror Maker 2](#-confluent-replicator-and-mirror-maker-2)
+  - [🔐 Environments](#-environments)
+  - [Confluent Commercial](#confluent-commercial)
+  - [CP-Ansible Playground](#cp-ansible-playground)
+  - [👾 Other Playgrounds](#-other-playgrounds)
+- [🎓 How to use](#-how-to-use)
+  - [0️⃣ Prerequisites](#0️⃣-prerequisites)
+  - [🐳 Recommended Docker settings](#-recommended-docker-settings)
+  - [🌩 Running on AWS EC2 instance](#-running-on-aws-ec2-instance)
 
-<!-- omit in toc -->
-## Table of Contents
 
-- [🔗 Kafka Connectors](#-kafka-connectors)
-- [☁️ Confluent Cloud](#️-confluent-cloud)
-  - [Confluent Cloud Demo](#confluent-cloud-demo)
-  - [🔗 Kafka Connectors connected to Confluent Cloud](#-kafka-connectors-connected-to-confluent-cloud)
-  - [Other](#other)
-- [🔄 Confluent Replicator and Mirror Maker 2](#-confluent-replicator-and-mirror-maker-2)
-- [🔐 Environments](#-environments)
-- [Confluent Commercial](#confluent-commercial)
-- [CP-Ansible Playground](#cp-ansible-playground)
-- [👾 Other Playgrounds](#-other-playgrounds)
-
-## 🔗 Kafka Connectors
+# 👾 Playgrounds
 
 Quick start examples from Confluent [docs](https://docs.confluent.io/current/connect/managing/index.html) but in Docker version for ease of use.
 
@@ -151,7 +148,8 @@ Quick start examples from Confluent [docs](https://docs.confluent.io/current/con
 
 ## ☁️ Confluent Cloud
 
-### [Confluent Cloud Demo](https://github.com/vdesabou/kafka-docker-playground/tree/master/ccloud/ccloud-demo)
+<!-- omit in toc -->
+### [Confluent Cloud Demo](https://github.com/vdesabou/kafka-docker-playground/tree/master/ccloud/ccloud-demo) <!-- {docsify-ignore} -->
 
   - How to connect your components to Confluent Cloud
   - How to monitor your Confluent Cloud cluster
@@ -160,7 +158,8 @@ Quick start examples from Confluent [docs](https://docs.confluent.io/current/con
 
 ![Diagram](https://github.com/vdesabou/kafka-docker-playground/raw/master/ccloud/ccloud-demo/images/diagram.png)
 
-### 🔗 Kafka Connectors connected to Confluent Cloud
+<!-- omit in toc -->
+### 🔗 Kafka Connectors connected to Confluent Cloud <!-- {docsify-ignore} -->
 
   - <img src="https://github.com/vdesabou/kafka-docker-playground/raw/master/images/icons/kinesis.svg" width="15"> [AWS Kinesis](https://github.com/vdesabou/kafka-docker-playground/tree/master/ccloud/connect-aws-kinesis-source) source
   - <img src="https://github.com/vdesabou/kafka-docker-playground/raw/master/images/icons/servicenow.png" width="15"> [ServiceNow](https://github.com/vdesabou/kafka-docker-playground/tree/master/ccloud/connect-servicenow-source) source
@@ -168,7 +167,8 @@ Quick start examples from Confluent [docs](https://docs.confluent.io/current/con
   - <img src="https://github.com/vdesabou/kafka-docker-playground/raw/master/images/icons/mongodb.jpg" width="15"> [MongoDB](https://github.com/vdesabou/kafka-docker-playground/tree/master/ccloud/connect-debezium-mongodb-source) source
   - <img src="https://github.com/vdesabou/kafka-docker-playground/raw/master/images/icons/firebase.svg" width="15"> [Firebase](https://github.com/vdesabou/kafka-docker-playground/tree/master/ccloud/connect-gcp-firebase-sink)
 
-### Other
+<!-- omit in toc -->
+### Other <!-- {docsify-ignore} -->
 
   - Using [cp-ansible](https://github.com/vdesabou/kafka-docker-playground/tree/master/ccloud/cp-ansible-playground/) with Confluent Cloud
   - Using [cp-helm-charts](https://github.com/vdesabou/kafka-docker-playground/tree/master/ccloud/cp-helm-chart/) with Confluent Cloud
@@ -219,7 +219,6 @@ Multi-Data-Center setup:
 - [SASL_PLAIN](https://github.com/vdesabou/kafka-docker-playground/tree/master/environment/mdc-sasl-plain): no SSL encryption, SASL/PLAIN authentication
 - [Kerberos](https://github.com/vdesabou/kafka-docker-playground/tree/master/environment/mdc-kerberos): no SSL encryption, Kerberos GSSAPI authentication
 
-
 ## Confluent Commercial
 
 - Control Center
@@ -249,3 +248,27 @@ There is also a Confluent Cloud version available [here](https://github.com/vdes
 - [Publish logs to kafka with Elastic Filebeat](https://github.com/vdesabou/kafka-docker-playground/tree/master/other/filebeat-to-kafka)
 - <img src="https://www.pngitem.com/pimgs/m/33-335825_-net-core-logo-png-transparent-png.png" width="15"> [.NET](https://github.com/vdesabou/kafka-docker-playground/tree/master/other/client-dotnet) basic producer
 - <img src="https://datadog-docs.imgix.net/images/dd-docs-meta-image.png" width="15"> [Monitor Confluent Platform with Datadog](https://github.com/vdesabou/kafka-docker-playground/tools/datadog)
+
+# 🎓 How to use
+
+## 0️⃣ Prerequisites
+
+You just need to have [docker](https://docs.docker.com/get-docker/) and [docker-compose](https://docs.docker.com/compose/install/) installed on your machine !
+Every command used in the playground is using Docker, this includes `jq` (except if you have it on your host already), `aws`, `az`, `gcloud`, etc..
+The goal is to have a consistent behaviour and only depends on Docker.
+
+## 🐳 Recommended Docker settings
+
+![Diagram](https://github.com/vdesabou/kafka-docker-playground/blob/4c3e6d481fcff7353a64e666d09f0921153a70e1/ccloud/ccloud-demo/images/docker-settings.jpg?raw=true)
+
+## 🌩 Running on AWS EC2 instance
+
+If you want to run it on EC2 instance (highly recommended if you have low internet bandwith), you can use the AWS CloudFormation template provided [here]([cloudformation/README.md](https://github.com/vdesabou/kafka-docker-playground/blob/master/cloudformation/kafka-docker-playground.json)).
+
+For example, this is how I start it using aws CLI:
+
+```bash
+$ cp /path/to/kafka-docker-playground/cloudformation/kafka-docker-playground.json tmp.json
+$ aws cloudformation create-stack  --stack-name kafka-docker-playground-$USER --template-body file://tmp.json --region eu-west-3
+ --parameters ParameterKey=KeyName,ParameterValue=$KEY_NAME ParameterKey=InstanceName,ParameterValue=kafka-docker-playground-$USER
+```
