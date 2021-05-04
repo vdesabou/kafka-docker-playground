@@ -24,7 +24,7 @@ rm -f ca.crt
 rm -f ca.key
 
 #https://blog.crunchydata.com/blog/ssl-certificate-authentication-postgresql-docker-containers
-log " Creating a Root Certificate Authority (CA)"
+log "Creating a Root Certificate Authority (CA)"
 docker run --rm -v $PWD:/tmp vdesabou/kafka-docker-playground-connect:${CONNECT_TAG} openssl req -new -x509 -days 365 -nodes -out /tmp/ca.crt -keyout /tmp/ca.key -subj "/CN=root-ca"
 
 log "Generate the PostgreSQL server key and certificate"
