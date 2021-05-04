@@ -15,7 +15,7 @@ services:
      - ../../connect/connect-jdbc-postgresql-source/customers.sql:/docker-entrypoint-initdb.d/z99_dump.sql
      - ../../connect/connect-jdbc-postgresql-source/mtls/my-postgres.conf:/etc/postgresql/postgresql.conf
      - ../../connect/connect-jdbc-postgresql-source/mtls/pg_hba.conf:/etc/postgresql/pg_hba.conf
-    command: postgres -c config_file=/etc/postgresql/postgresql.conf -c hba_file=/etc/postgresql/pg_hba.conf -c ident_file=/etc/postgresql/pg_ident.conf
+    command: postgres -c config_file=/etc/postgresql/postgresql.conf -c hba_file=/etc/postgresql/pg_hba.conf
 
   connect:
     depends_on:
