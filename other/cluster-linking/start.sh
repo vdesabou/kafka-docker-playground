@@ -29,16 +29,26 @@ log "Wait 6 seconds for consumer.offset sync to happen (2 times consumer.offset.
 sleep 6
 
 log "Verify that current offset is consistent in source and destination"
-log "Source cluster"
+log "Describe consumer group my-consumer-group at Source cluster"
 docker exec broker-europe kafka-consumer-groups --bootstrap-server broker-us:9092 --describe --group my-consumer-group
-log "Destination cluster"
+# GROUP             TOPIC           PARTITION  CURRENT-OFFSET  LOG-END-OFFSET  LAG             CONSUMER-ID     HOST            CLIENT-ID
+# my-consumer-group demo            0          5               20              15              -               -               -
+log "Describe consumer group my-consumer-group at Destination cluster"
 docker exec broker-europe kafka-consumer-groups --bootstrap-server broker-europe:9092 --describe --group my-consumer-group
-
+# GROUP             TOPIC           PARTITION  CURRENT-OFFSET  LOG-END-OFFSET  LAG             CONSUMER-ID     HOST            CLIENT-ID
+# my-consumer-group demo            0          5               20              15              -               -               -
 log "Consume from the mirror topic on the destination cluster and verify consumer offset is working, it should start at 6"
 docker container exec -i connect-us bash -c "kafka-console-consumer --bootstrap-server broker-europe:9092 --topic demo --max-messages 5 --consumer-property group.id=my-consumer-group"
-
-log "Destination cluster"
+# us_sale_6 7999
+# us_sale_7 7999
+# us_sale_8 7999
+# us_sale_9 7999
+# us_sale_10 7999
+# Processed a total of 5 messages
+log "Describe consumer group my-consumer-group at Destination cluster. FIXTHIS: current-offset has not been updated"
 docker exec broker-europe kafka-consumer-groups --bootstrap-server broker-europe:9092 --describe --group my-consumer-group
+# GROUP             TOPIC           PARTITION  CURRENT-OFFSET  LOG-END-OFFSET  LAG             CONSUMER-ID     HOST            CLIENT-ID
+# my-consumer-group demo            0          5               20              15              -               -               -
 
 log "Stop consumer offset sync for consumer group my-consumer-group"
 echo "consumer.offset.group.filters={\"groupFilters\": [ \
@@ -56,20 +66,29 @@ echo "consumer.offset.group.filters={\"groupFilters\": [ \
 docker cp newFilters.properties broker-europe:/tmp/newFilters.properties
 docker exec broker-europe kafka-configs --bootstrap-server broker-europe:9092 --alter --cluster-link demo-link --add-config-file /tmp/newFilters.properties
 
-log "Destination cluster"
-docker exec broker-europe kafka-consumer-groups --bootstrap-server broker-europe:9092 --describe --group my-consumer-group
-
 sleep 6
 
 log "Consume from the source cluster another 10 messages, up to 15"
 docker container exec -i connect-us bash -c "kafka-console-consumer --bootstrap-server broker-us:9092 --topic demo --max-messages 10 --consumer-property group.id=my-consumer-group"
-
-
-
-log "Consume from the destination cluster, it will continue from it's last offset 11 FIXTHIS: it starts with 6 !"
+# us_sale_6 7999
+# us_sale_7 7999
+# us_sale_8 7999
+# us_sale_9 7999
+# us_sale_10 7999
+# us_sale_11 7999
+# us_sale_12 7999
+# us_sale_13 7999
+# us_sale_14 7999
+# us_sale_15 7999
+# Processed a total of 10 messages
+log "Consume from the destination cluster, it will continue from it's last offset 6"
 docker container exec -i connect-us bash -c "kafka-console-consumer --bootstrap-server broker-europe:9092 --topic demo --max-messages 5 --consumer-property group.id=my-consumer-group"
-
-# FIXTHIS
+# us_sale_6 7999
+# us_sale_7 7999
+# us_sale_8 7999
+# us_sale_9 7999
+# us_sale_10 7999
+# Processed a total of 5 messages
 exit 0
 
 
