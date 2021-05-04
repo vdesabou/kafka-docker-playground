@@ -7,8 +7,9 @@ services:
     hostname: postgres
     container_name: postgres
     environment:
-     - POSTGRES_USER=postgres
-     - POSTGRES_PASSWORD=postgres
+      - POSTGRES_USER=myuser
+      - POSTGRES_PASSWORD=mypassword
+      - POSTGRES_DB=postgres
     volumes:
      - ../../connect/connect-debezium-postgresql-source/customers.sql:/docker-entrypoint-initdb.d/z99_dump.sql
 

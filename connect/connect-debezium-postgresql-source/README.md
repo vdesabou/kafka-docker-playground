@@ -6,9 +6,6 @@
 
 Quickly test [Debezium PostGreSQL](https://docs.confluent.io/current/connect/debezium-connect-postgres/index.html#quick-start) connector.
 
-
-
-
 ## How to run
 
 Simply run:
@@ -22,20 +19,20 @@ $ ./postgres.sh
 Show content of CUSTOMERS table:
 
 ```bash
-$ docker exec postgres bash -c "psql -U postgres -d postgres -c 'SELECT * FROM CUSTOMERS'"
+$ docker exec postgres bash -c "psql -U myuser -d postgres -c 'SELECT * FROM CUSTOMERS'"
 ```
 
 Adding an element to the table
 
 ```bash
-$ docker exec postgres psql -U postgres -d postgres -c "insert into customers (id, first_name, last_name, email, gender, comments) values (21, 'Bernardo', 'Dudman', 'bdudmanb@lulu.com', 'Male', 'Robust bandwidth-monitored budgetary management');"
+$ docker exec postgres psql -U myuser -d postgres -c "insert into customers (id, first_name, last_name, email, gender, comments) values (21, 'Bernardo', 'Dudman', 'bdudmanb@lulu.com', 'Male', 'Robust bandwidth-monitored budgetary management');"
 ```
 
 
 Show content of CUSTOMERS table:
 
 ```bash
-$ docker exec postgres bash -c "psql -U postgres -d postgres -c 'SELECT * FROM CUSTOMERS'"
+$ docker exec postgres bash -c "psql -U myuser -d postgres -c 'SELECT * FROM CUSTOMERS'"
 ```
 
 Creating Debezium PostgreSQL source connector
@@ -48,8 +45,8 @@ curl -X PUT \
                     "tasks.max": "1",
                     "database.hostname": "postgres",
                     "database.port": "5432",
-                    "database.user": "postgres",
-                    "database.password": "postgres",
+                    "database.user": "myuser",
+                    "database.password": "mypassword",
                     "database.dbname" : "postgres",
                     "database.server.name": "asgard",
                     "key.converter" : "io.confluent.connect.avro.AvroConverter",
