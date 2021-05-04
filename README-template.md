@@ -232,6 +232,7 @@ Multi-Data-Center setup:
 - [RBAC with SASL/PLAIN](https://github.com/vdesabou/kafka-docker-playground/tree/master/environment/rbac-sasl-plain) RBAC with no SSL encryption, SASL/PLAIN authentication
 - [Audit Logs](https://github.com/vdesabou/kafka-docker-playground/tree/master/other/audit-logs)
 - [Confluent REST Proxy Security Plugin](https://github.com/vdesabou/kafka-docker-playground/tree/master/other/rest-proxy-security-plugin) with SASL_SSL and 2WAY_SSL Principal Propagation
+- [Cluster Linking](https://github.com/vdesabou/kafka-docker-playground/tree/master/other/cluster-linking)
 
 ## [CP-Ansible Playground](https://github.com/vdesabou/kafka-docker-playground/tree/master/other/cp-ansible-playground)
 
