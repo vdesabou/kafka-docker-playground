@@ -2,7 +2,7 @@
 version: '3.5'
 services:
   sqlserver:
-    image: mcr.microsoft.com/mssql/server:2017-latest
+    image: mcr.microsoft.com/mssql/server:2019-latest
     hostname: sqlserver
     container_name: sqlserver
     ports:
