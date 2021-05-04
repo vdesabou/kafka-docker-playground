@@ -4,7 +4,7 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
-${DIR}/../../environment/mdc-plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
+${DIR}/../../environment/mdc-plaintext/start.sh "${PWD}/docker-compose.mdc-plaintext.yml"
 
 log "Create topic demo"
 docker exec broker-europe kafka-topics --create --topic demo --bootstrap-server broker-us:9092 --replication-factor 1 --partitions 1
@@ -13,16 +13,18 @@ log "Sending sales in US cluster"
 seq -f "us_sale_%g ${RANDOM}" 10 | docker container exec -i connect-us bash -c "kafka-console-producer --broker-list broker-us:9092 --topic demo"
 
 log "Verify we have received the data in all the sales_ topics in the US"
-docker container exec -i connect-us bash -c " kafka-console-consumer --bootstrap-server broker-us:9092 --topic demo --from-beginning --max-messages 10 --consumer-property group.id=my-source-consumer"
+docker container exec -i connect-us bash -c "kafka-console-consumer --bootstrap-server broker-us:9092 --topic demo --from-beginning --max-messages 10"
 
 log "Create the cluster link on the destination cluster (with metadata.max.age.ms=5 minutes + consumer.offset.sync.enable=true + consumer.offset.sync.ms=3000)"
-docker exec broker-europe kafka-cluster-links --bootstrap-server broker-europe:9092 --create --link-name demo-link --config bootstrap.servers=broker-us:9092,metadata.max.age.ms=5000,consumer.offset.sync.enable=true,consumer.offset.sync.ms=3000
+docker exec broker-europe kafka-cluster-links --bootstrap-server broker-europe:9092 --create --link-name demo-link --config bootstrap.servers=broker-us:9092,metadata.max.age.ms=5000
+
+#,consumer.offset.sync.enable=true,consumer.offset.sync.ms=3000
 
 log "Initialize the topic mirror"
 docker exec broker-europe kafka-topics --create --topic demo --mirror-topic demo --link-name demo-link --bootstrap-server broker-europe:9092
 
 log "Consume from the mirror topic on the destination cluster to verify it"
-docker container exec -i connect-us bash -c " kafka-console-consumer --bootstrap-server broker-europe:9092 --topic demo --max-messages 10 --consumer-property group.id=my-source-consumer"
+docker container exec -i connect-us bash -c "kafka-console-consumer --bootstrap-server broker-europe:9092 --topic demo --from-beginning --max-messages 10"
 
 log "Check the replica status on the destination"
 docker exec broker-europe kafka-replica-status --topics demo --include-linked --bootstrap-server broker-europe:9092
@@ -42,7 +44,8 @@ docker container exec -i connect-us kafka-configs --describe --topic demo --boot
 # Dynamic configs for topic demo are:
 #   retention.ms=123456890 sensitive=false synonyms={DYNAMIC_TOPIC_CONFIG:retention.ms=123456890}
 
-sleep 5
+log "Wait 6 seconds (default is 5 minutes metadata.max.age.ms, but we modified it to 5 second)"
+sleep 6
 
 log "Check the Destination Topic Configuration"
 docker container exec -i connect-us kafka-configs --describe --topic demo --bootstrap-server broker-europe:9092
@@ -59,8 +62,8 @@ docker container exec -i connect-us kafka-topics --alter --topic demo --partitio
 log "Verify the change on the source topic"
 docker container exec -i connect-us kafka-topics --describe --topic demo --bootstrap-server broker-us:9092
 
-# wait 5 seconds (default is 5 minutes metadata.max.age.ms)
-sleep 5
+log "Wait 6 seconds (default is 5 minutes metadata.max.age.ms, but we modified it to 5 second)"
+sleep 6
 
 log "Verify the change on the destination topic"
 docker container exec -i connect-us kafka-topics --describe --topic demo --bootstrap-server broker-europe:9092
