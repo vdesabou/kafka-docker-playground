@@ -44,7 +44,7 @@ fi
 rm server.csr
 
 log "Generating the Client Key and Certificate"
-docker run --rm -v $PWD:/tmp vdesabou/kafka-docker-playground-connect:${CONNECT_TAG} openssl req -new -nodes -out /tmp/client.csr -keyout /tmp/client.key -subj "/CN=appuser"
+docker run --rm -v $PWD:/tmp vdesabou/kafka-docker-playground-connect:${CONNECT_TAG} openssl req -new -nodes -out /tmp/client.csr -keyout /tmp/client.key -subj "/CN=myuser"
 docker run --rm -v $PWD:/tmp vdesabou/kafka-docker-playground-connect:${CONNECT_TAG} openssl x509 -req -in /tmp/client.csr -days 365 -CA /tmp/ca.crt -CAkey /tmp/ca.key -CAcreateserial -out /tmp/client.crt
 if [ -z "$CI" ]
 then
@@ -93,7 +93,7 @@ curl -X PUT \
      --data '{
                "connector.class": "io.confluent.connect.jdbc.JdbcSourceConnector",
                     "tasks.max": "1",
-                    "connection.url": "jdbc:postgresql://postgres/postgres?user=postgres&sslmode=verify-full&sslrootcert=/tmp/ca.crt&sslcert=/tmp/client.crt&sslkey=/tmp/client.key.pk8",
+                    "connection.url": "jdbc:postgresql://postgres/postgres?user=myuser&sslmode=verify-full&sslrootcert=/tmp/ca.crt&sslcert=/tmp/client.crt&sslkey=/tmp/client.key.pk8",
                     "table.whitelist": "customers",
                     "mode": "timestamp+incrementing",
                     "timestamp.column.name": "update_ts",
