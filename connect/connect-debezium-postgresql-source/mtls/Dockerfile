@@ -1,4 +1,4 @@
-FROM postgres:10
+FROM debezium/postgres:10
 LABEL "Product"="PostgreSQL (MTLS enabled)"
 COPY server.key /var/lib/postgresql/server.key
 COPY server.crt /var/lib/postgresql/server.crt
