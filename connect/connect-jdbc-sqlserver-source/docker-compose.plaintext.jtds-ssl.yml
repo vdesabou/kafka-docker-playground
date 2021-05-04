@@ -1,0 +1,28 @@
+---
+version: '3.5'
+services:
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2019-latest
+    hostname: sqlserver
+    container_name: sqlserver
+    ports:
+      - "1433:1433"
+    volumes:
+      # the container is running as user mssql.
+      - ../../connect/connect-jdbc-sqlserver-source/ssl/mssql.conf:/var/opt/mssql/mssql.conf
+      - ../../connect/connect-jdbc-sqlserver-source/ssl/mssql.pem:/etc/ssl/certs/mssql.pem:rw
+      - ../../connect/connect-jdbc-sqlserver-source/ssl/mssql.key:/etc/ssl/private/mssql.key:rw
+    environment:
+      ACCEPT_EULA: "Y"
+      MSSQL_AGENT_ENABLED: "true"
+      MSSQL_PID: "Standard"
+      SA_PASSWORD: "Password!"
+
+  connect:
+    depends_on:
+      - zookeeper
+      - broker
+      - schema-registry
+      - sqlserver
+    environment:
+      CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-jdbc
