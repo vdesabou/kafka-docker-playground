@@ -48,6 +48,7 @@ cd -
 
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.ssl.yml"
 
+
 log "Show content of CUSTOMERS table:"
 docker exec postgres bash -c "psql -U myuser -d postgres -c 'SELECT * FROM CUSTOMERS'"
 
@@ -58,28 +59,34 @@ docker exec postgres psql -U myuser -d postgres -c "insert into customers (id, f
 log "Show content of CUSTOMERS table:"
 docker exec postgres bash -c "psql -U myuser -d postgres -c 'SELECT * FROM CUSTOMERS'"
 
-log "Creating JDBC PostgreSQL source connector"
+log "Creating Debezium PostgreSQL source connector"
 curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
-               "connector.class": "io.confluent.connect.jdbc.JdbcSourceConnector",
+               "connector.class": "io.debezium.connector.postgresql.PostgresConnector",
                     "tasks.max": "1",
-                    "connection.url": "jdbc:postgresql://postgres/postgres?user=myuser&password=mypassword&sslmode=verify-full&sslrootcert=/tmp/ca.crt",
-                    "table.whitelist": "customers",
-                    "mode": "timestamp+incrementing",
-                    "timestamp.column.name": "update_ts",
-                    "incrementing.column.name": "id",
-                    "topic.prefix": "postgres-",
-                    "validate.non.null":"false",
-                    "errors.log.enable": "true",
-                    "errors.log.include.messages": "true"
+                    "database.hostname": "postgres",
+                    "database.port": "5432",
+                    "database.user": "myuser",
+                    "database.password": "mypassword",
+                    "database.dbname" : "postgres",
+                    "database.server.name": "asgard",
+                    "database.sslmode": "verify-full",
+                    "database.sslrootcert": "/tmp/ca.crt",
+                    "key.converter" : "io.confluent.connect.avro.AvroConverter",
+                    "key.converter.schema.registry.url": "http://schema-registry:8081",
+                    "value.converter" : "io.confluent.connect.avro.AvroConverter",
+                    "value.converter.schema.registry.url": "http://schema-registry:8081",
+                    "transforms": "addTopicSuffix",
+                    "transforms.addTopicSuffix.type":"org.apache.kafka.connect.transforms.RegexRouter",
+                    "transforms.addTopicSuffix.regex":"(.*)",
+                    "transforms.addTopicSuffix.replacement":"$1-raw"
           }' \
-     http://localhost:8083/connectors/postgres-source-ssl/config | jq .
-
+     http://localhost:8083/connectors/debezium-postgres-source/config | jq .
 
 sleep 5
 
-log "Verifying topic postgres-customers"
-timeout 60 docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic postgres-customers --from-beginning --max-messages 5
+log "Verifying topic asgard.public.customers-raw"
+timeout 60 docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic asgard.public.customers-raw --from-beginning --property print.key=true --max-messages 5
 
 
