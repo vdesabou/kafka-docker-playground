@@ -64,7 +64,7 @@ curl -X PUT \
      --data '{
                "connector.class": "io.confluent.connect.jdbc.JdbcSourceConnector",
                     "tasks.max": "1",
-                    "connection.url": "jdbc:postgresql://postgres/postgres?user=postgres&password=postgres&sslmode=verify-full&sslrootcert=/tmp/ca.crt",
+                    "connection.url": "jdbc:postgresql://postgres/postgres?user=myuser&password=mypassword&sslmode=verify-full&sslrootcert=/tmp/ca.crt",
                     "table.whitelist": "customers",
                     "mode": "timestamp+incrementing",
                     "timestamp.column.name": "update_ts",
