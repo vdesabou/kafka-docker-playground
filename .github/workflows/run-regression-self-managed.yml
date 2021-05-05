@@ -1,32 +1,105 @@
-name: CI Self-Managed runner
+name: CI Self-Managed
 
 on:
   # push:
   #    branches:
   #      - master
 
-  # schedule:
-  #     - cron: '0 4 * * *' # every day at 4 am
+  schedule:
+      - cron: '0 1 * * *' # every day at 1 am
 
   workflow_dispatch:
     inputs:
 
 jobs:
+  start-runner:
+    name: Start Github self-hosted runner
+    runs-on: ubuntu-latest
+    steps:
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v1
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: eu-west-3
+
+    - name: Start EC2 instance github-actions-runner-vsaboulin
+      run: |
+        aws ec2 start-instances --instance-ids i-089ef31a75cb3f0e6
+
   build:
-    runs-on: my-runner
+    runs-on: self-hosted
+    needs: start-runner # required to start the main job when the runner is read
     name: ${{ matrix.tag }} ${{ matrix.test_list }}
     strategy:
       fail-fast: false
       matrix:
-        tag: [ "6.1.1"]
+        tag: [ "5.5.4", "6.0.2", "6.1.1"]
         test_list : [
-                      "🚀 connect/connect-mapr-sink"
+                      "🚀 connect/connect-mapr-sink",
                     ]
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
         with:
           fetch-depth: 0
+
+      - name: Set up JDK 1.8
+        uses: actions/setup-java@v1
+        with:
+          java-version: 1.8
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: eu-west-3
+
+      - name: Decrypt secrets.tar
+        run: |
+          curl --silent --location "https://github.com/weaveworks/eksctl/releases/latest/download/eksctl_$(uname -s)_amd64.tar.gz" | tar xz -C /tmp && sudo mv /tmp/eksctl /usr/local/bin
+          ./.github/scripts/decrypt_secret.sh
+          tar xvf secrets.tar
+          mkdir -p $HOME/.aws
+          cp aws_config $HOME/.aws/config
+          cp aws_credentials $HOME/.aws/credentials
+          cp aws_credentials_with_assuming_iam_role $HOME/.aws/credentials-with-assuming-iam-role
+          chmod -R a+rw $HOME/.aws
+          mkdir -p $HOME/.ccloud
+          cp config.cc.travis $HOME/.ccloud/config
+          aws s3 cp s3://kafka-docker-playground/3rdparty/3rdparty.tgz .
+          tar xvfz 3rdparty.tgz
+          cp ./3rdparty/TIB_ems-ce_8.5.1_linux_x86_64.zip ./connect/connect-tibco-source/docker-tibco/TIB_ems-ce_8.5.1_linux_x86_64.zip
+          cp ./3rdparty/TIB_ems-ce_8.5.1_linux_x86_64.zip ./connect/connect-jms-tibco-sink/docker-tibco/TIB_ems-ce_8.5.1_linux_x86_64.zip
+          cp ./3rdparty/TIB_ems-ce_8.5.1_linux_x86_64.zip ./connect/connect-tibco-sink/docker-tibco/TIB_ems-ce_8.5.1_linux_x86_64.zip
+          cp ./3rdparty/TIB_ems-ce_8.5.1_linux_x86_64.zip ./connect/connect-jms-tibco-source/docker-tibco/TIB_ems-ce_8.5.1_linux_x86_64.zip
+          cp ./3rdparty/ojdbc6.jar ./connect/connect-jdbc-oracle11-sink/ojdbc6.jar
+          cp ./3rdparty/ojdbc6.jar ./connect/connect-jdbc-oracle11-source/ojdbc6.jar
+          cp ./3rdparty/ojdbc8.jar ./connect/connect-jdbc-oracle12-sink/ojdbc8.jar
+          cp ./3rdparty/ojdbc8.jar ./connect/connect-jdbc-oracle12-source/ojdbc8.jar
+          cp ./3rdparty/ImpalaJDBC42.jar ./connect/connect-kudu-source/ImpalaJDBC42.jar
+          cp ./3rdparty/ImpalaJDBC42.jar ./connect/connect-kudu-sink/ImpalaJDBC42.jar
+          cp ./3rdparty/jms.jar ./connect/connect-ibm-mq-sink/jms.jar
+          cp ./3rdparty/jms.jar ./connect/connect-ibm-mq-source/jms.jar
+          cp ./3rdparty/com.ibm.mq.allclient.jar ./connect/connect-ibm-mq-sink/com.ibm.mq.allclient.jar
+          cp ./3rdparty/com.ibm.mq.allclient.jar ./connect/connect-ibm-mq-source/com.ibm.mq.allclient.jar
+          cp ./3rdparty/mysql-connector-java-5.1.45.jar ./ccloud/ccloud-demo/mysql-connector-java-5.1.45.jar
+          cp ./3rdparty/mysql-connector-java-5.1.45.jar ./connect/connect-debezium-mysql-source/mysql-connector-java-5.1.45.jar
+          cp ./3rdparty/mysql-connector-java-5.1.45.jar ./connect/connect-jdbc-mysql-sink/mysql-connector-java-5.1.45.jar
+          cp ./3rdparty/mysql-connector-java-5.1.45.jar ./connect/connect-jdbc-mysql-source/mysql-connector-java-5.1.45.jar
+          cp ./3rdparty/RedshiftJDBC4-1.2.20.1043.jar ./connect/connect-aws-redshift-sink/RedshiftJDBC4-1.2.20.1043.jar
+          cp ./3rdparty/activemq-all-5.15.4.jar ./connect/connect-jms-active-mq-sink/activemq-all-5.15.4.jar
+          cp ./3rdparty/commons-lang-2.6.jar ./connect/connect-jms-solace-sink/commons-lang-2.6.jar
+          cp ./3rdparty/sol-jms-10.6.4.jar ./connect/connect-jms-solace-sink/sol-jms-10.6.4.jar
+          cp ./3rdparty/sol-jms-10.6.4.jar ./connect/connect-solace-sink/sol-jms-10.6.4.jar
+          cp ./3rdparty/sol-jms-10.6.4.jar ./connect/connect-solace-source/sol-jms-10.6.4.jar
+          cp ./3rdparty/AMPS.tar.gz ./connect/connect-amps-source/docker-amps/AMPS.tar.gz
+          cp ./3rdparty/pivotal-gemfire.tgz ./connect/connect-pivotal-gemfire-sink/docker-pivotal-gemfire/pivotal-gemfire.tgz
+          echo "$DOCKER_PASSWORD" | docker login -u vdesabou --password-stdin
+        env:
+          SECRETS_ENCRYPTION_PASSWORD: ${{ secrets.SECRETS_ENCRYPTION_PASSWORD }}
+          DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
 
       - name: Build and Test
         run: bash scripts/run-tests.sh "${{ matrix.test_list }}" "${{ matrix.tag }}"
@@ -73,44 +146,30 @@ jobs:
           ZENDESK_USERNAME: ${{ secrets.ZENDESK_USERNAME }}
           ZENDESK_PASSWORD: ${{ secrets.ZENDESK_PASSWORD }}
           AZURE_TENANT_NAME: "COPS"
+          AWS_STS_ROLE_ARN: ${{ secrets.AWS_STS_ROLE_ARN }}
+          AWS_ACCOUNT_WITH_ASSUME_ROLE_AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCOUNT_WITH_ASSUME_ROLE_AWS_ACCESS_KEY_ID }}
+          AWS_ACCOUNT_WITH_ASSUME_ROLE_AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_ACCOUNT_WITH_ASSUME_ROLE_AWS_SECRET_ACCESS_KEY }}
+          SERVICENOW_DEVELOPER_USERNAME: ${{ secrets.SERVICENOW_DEVELOPER_USERNAME }}
+          SERVICENOW_DEVELOPER_PASSWORD: ${{ secrets.SERVICENOW_DEVELOPER_PASSWORD }}
+          SERVICENOW_URL: ${{ secrets.SERVICENOW_URL }}
+          SERVICENOW_PASSWORD: ${{ secrets.SERVICENOW_PASSWORD }}
+          CONFLUENT_LICENSE: ${{ secrets.CONFLUENT_LICENSE }}
 
-  # post-build:
-  #   name: Update README
-  #   runs-on: ubuntu-latest
-  #   # if: always()
-  #   needs: [pre-build, build]
-  #   steps:
-  #     - name: Checkout code
-  #       uses: actions/checkout@v2
+  stop-runner:
+    name: Stop Github self-hosted runner
+    needs:
+      - start-runner # required to get output from the start-runner job
+      - build # required to wait when the main job is done
+    if: ${{ always() }} # required to stop the runner even if the error happened in the previous jobs
+    runs-on: ubuntu-latest
+    steps:
+    - name: Configure AWS credentials
+      uses: aws-actions/configure-aws-credentials@v1
+      with:
+        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+        aws-region: eu-west-3
 
-  #     - name: Configure AWS credentials
-  #       uses: aws-actions/configure-aws-credentials@v1
-  #       with:
-  #         aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-  #         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-  #         aws-region: eu-west-3
-
-  #     - name: Cleanup resources
-  #       run: |
-  #         curl --silent --location "https://github.com/weaveworks/eksctl/releases/latest/download/eksctl_$(uname -s)_amd64.tar.gz" | tar xz -C /tmp && sudo mv /tmp/eksctl /usr/local/bin
-  #         ./scripts/cleanup-resources.sh "5.5.4 6.0.2 6.1.1" "--no-wait"
-  #       env:
-  #         AZ_USER: ${{ secrets.AZ_USER }}
-  #         AZ_PASS: ${{ secrets.AZ_PASS }}
-
-  #     - name: Update README
-  #       run: |
-  #         ./scripts/get-versions.sh "6.1.1 6.0.2 5.5.4"
-  #       env:
-  #         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-  #         AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-  #         AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-  #         AWS_REGION: "us-east-1"
-  #     - name: push
-  #       uses: github-actions-x/commit@v2.6
-  #       with:
-  #         github-token: ${{ secrets.GITHUB_TOKEN }}
-  #         push-branch: 'master'
-  #         commit-message: 'updating with latest versions'
-  #         files: ./README.md
-  #         name: Vincent de Saboulin
+    - name: Stop EC2 instance github-actions-runner-vsaboulin
+      run: |
+        aws ec2 stop-instances --instance-ids i-089ef31a75cb3f0e6
