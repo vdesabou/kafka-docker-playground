@@ -32,8 +32,8 @@ then
      log "Waking up servicenow instance..."
      docker run -e USERNAME="$SERVICENOW_DEVELOPER_USERNAME" -e PASSWORD="$SERVICENOW_DEVELOPER_PASSWORD" ruthless/servicenow-instance-wakeup:latest
      set -e
-     log "sleeping 240 seconds"
-     sleep 240
+     log "sleeping 360 seconds"
+     sleep 360
 fi
 
 ${DIR}/../../environment/sasl-scram/start.sh "${PWD}/docker-compose.plaintext.yml"
