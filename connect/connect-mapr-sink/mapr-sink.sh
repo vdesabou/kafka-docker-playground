@@ -47,10 +47,12 @@ sleep 60
 log "Configure Mapr Client"
 # Mapr sink is failing with CP 6.0 UBI8 #91
 docker exec -i --privileged --user root connect bash -c "ln -sf /usr/lib/jvm/jre-1.8.0-openjdk /usr/lib/jvm/java-8-openjdk"
+docker exec -i --privileged --user root connect bash -c "chown -R appuser:appuser /opt/mapr"
 docker exec -i --privileged --user root connect bash -c "/opt/mapr/server/configure.sh -secure -N maprdemo.mapr.io -c -C $MAPR_IP -u appuser -g appuser"
 
 docker cp mapr:/opt/mapr/conf/ssl_truststore /tmp/ssl_truststore
 docker cp /tmp/ssl_truststore connect:/opt/mapr/conf/ssl_truststore
+docker exec -i --privileged --user root connect bash -c "chown -R appuser:appuser /opt/mapr"
 
 log "Login with maprlogin on client side (connect)"
 docker exec -i connect bash -c "maprlogin password -user mapr" << EOF
@@ -80,6 +82,10 @@ curl -X PUT \
 sleep 40
 
 log "Verify data is in Mapr"
-docker exec -i mapr bash -c "mapr dbshell" << EOF
+docker exec -i mapr bash -c "mapr dbshell" > /tmp/result.log <<-EOF
 find /mapr/maprdemo.mapr.io/maprtopic
 EOF
+cat /tmp/result.log
+grep "_id" /tmp/result.log | grep "record1"
+grep "_id" /tmp/result.log | grep "record2"
+grep "_id" /tmp/result.log | grep "record3"
