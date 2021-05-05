@@ -30,7 +30,7 @@ then
                "tasks.max": "1",
                "topics": "test-elasticsearch-sink",
                "key.ignore": "true",
-               "connection.url": "http://elasticsearch01:9200,http://elasticsearch02:9200"
+               "connection.url": "http://elasticsearch01:9200,http://elasticsearch02:9200,http://elasticsearch03:9200"
                }' \
           http://localhost:8083/connectors/elasticsearch-sink/config | jq .
 else
@@ -42,7 +42,7 @@ else
                "tasks.max": "1",
                "topics": "test-elasticsearch-sink",
                "key.ignore": "true",
-               "connection.url": "http://elasticsearch01:9200,http://elasticsearch02:9200"
+               "connection.url": "http://elasticsearch01:9200,http://elasticsearch02:9200,http://elasticsearch03:9200"
                "type.name": "kafka-connect"
                }' \
           http://localhost:8083/connectors/elasticsearch-sink/config | jq .

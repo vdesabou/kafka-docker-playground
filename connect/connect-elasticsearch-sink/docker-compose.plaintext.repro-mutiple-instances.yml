@@ -12,8 +12,8 @@ services:
       - "9300:9300"
     environment:
       node.name: "elasticsearch01"
-      discovery.seed_hosts: "elasticsearch02"
-      cluster.initial_master_nodes: "elasticsearch01,elasticsearch02"
+      discovery.seed_hosts: "elasticsearch02,elasticsearch03"
+      cluster.initial_master_nodes: "elasticsearch01,elasticsearch02,elasticsearch03"
       bootstrap.memory_lock: "true"
       cluster.name: "docker-cluster"
       network.host: "0.0.0.0"
@@ -21,21 +21,19 @@ services:
       memlock:
         soft: -1
         hard: -1
-    # sysctls:
-    #   - vm.max_map_count=262144
-    #volumes:
-      #- elasticsearch_data:/usr/share/elasticsearch/data
-     # - ../../connect/connect-elasticsearch-sink/elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch.yml
 
   elasticsearch02:
     image: elasticsearch:$ELASTIC_VERSION
     hostname: elasticsearch02
     container_name: elasticsearch02
     restart: on-failure
+    ports:
+      - "9201:9200"
+      - "9301:9300"
     environment:
       node.name: "elasticsearch02"
-      discovery.seed_hosts: "elasticsearch01"
-      cluster.initial_master_nodes: "elasticsearch01,elasticsearch02"
+      discovery.seed_hosts: "elasticsearch01,elasticsearch03"
+      cluster.initial_master_nodes: "elasticsearch01,elasticsearch02,elasticsearch03"
       bootstrap.memory_lock: "true"
       cluster.name: "docker-cluster"
       network.host: "0.0.0.0"
@@ -43,11 +41,26 @@ services:
       memlock:
         soft: -1
         hard: -1
-    # sysctls:
-    #   - vm.max_map_count=262144
-   # volumes:
-      #- elasticsearch_data:/usr/share/elasticsearch/data
-     # - ../../connect/connect-elasticsearch-sink/elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch.yml
+
+  elasticsearch03:
+    image: elasticsearch:$ELASTIC_VERSION
+    hostname: elasticsearch03
+    container_name: elasticsearch03
+    restart: on-failure
+    ports:
+      - "9202:9200"
+      - "9302:9300"
+    environment:
+      node.name: "elasticsearch03"
+      discovery.seed_hosts: "elasticsearch01,elasticsearch02"
+      cluster.initial_master_nodes: "elasticsearch01,elasticsearch02,elasticsearch03"
+      bootstrap.memory_lock: "true"
+      cluster.name: "docker-cluster"
+      network.host: "0.0.0.0"
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
 
   connect:
     depends_on:
