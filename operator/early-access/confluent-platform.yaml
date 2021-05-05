@@ -33,6 +33,7 @@ metadata:
   namespace: confluent
 spec:
   replicas: 1
+  internalTopicReplicatorFactor: 1
   image:
     application: confluentinc/cp-server-connect-operator:6.0.0.0
     init: confluentinc/cp-init-container-operator:6.0.0.0
@@ -60,6 +61,7 @@ metadata:
   namespace: confluent
 spec:
   replicas: 1
+  internalTopicReplicatorFactor: 1
   image:
     application: confluentinc/cp-enterprise-control-center-operator:6.0.0.0
     init: confluentinc/cp-init-container-operator:6.0.0.0
