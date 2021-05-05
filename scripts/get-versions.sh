@@ -296,7 +296,7 @@ do
   ci="$ci 🤷‍♂️ not tested \|"
   cp_version_tested="$cp_version_tested%20$image_version"
 done
-for connector in confluentinc-kafka-connect-maprdb confluentinc-kafka-connect-aws-redshift
+for connector in confluentinc-kafka-connect-aws-redshift
 do
   version=$(docker run --rm vdesabou/kafka-docker-playground-connect:${latest_version} cat /usr/share/confluent-hub-components/${connector}/manifest.json | jq -r '.version')
   license=$(docker run --rm vdesabou/kafka-docker-playground-connect:${latest_version} cat /usr/share/confluent-hub-components/${connector}/manifest.json | jq -r '.license[0].name')
