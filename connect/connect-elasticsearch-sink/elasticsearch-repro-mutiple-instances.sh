@@ -19,6 +19,18 @@ fi
 
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.repro-mutiple-instances.yml"
 
+log "Create index with number_of_shards 3 and number_of_replicas 2"
+curl -X PUT "http://localhost:9200/test-elasticsearch-sink?pretty" -H 'Content-Type: application/json' -d'
+{
+  "settings": {
+    "index": {
+      "number_of_shards": 3,
+      "number_of_replicas": 2
+    }
+  }
+}
+'
+
 log "Creating Elasticsearch Sink connector (Elasticsearch version is $ELASTIC_VERSION"
 if version_gt $CONNECTOR_TAG "10.9.9"
 then
