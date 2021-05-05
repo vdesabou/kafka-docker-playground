@@ -3,7 +3,7 @@ version: '3.5'
 services:
 
   mapr:
-    image: maprtech/dev-sandbox-container:latest # https://mapr.com/docs/60/MapRContainerDevelopers/RunMapRContainerDevelopers.html
+    image: maprtech/dev-sandbox-container:6.1.0_6.0.0_ubuntu16 # https://mapr.com/docs/60/MapRContainerDevelopers/RunMapRContainerDevelopers.html
     hostname: maprdemo
     container_name: mapr
     privileged: true
@@ -30,7 +30,7 @@ services:
       - ../../connect/connect-mapr-sink/mapr.repo:/etc/yum.repos.d/mapr_core.repo
     environment:
       CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-maprdb
-      KAFKA_OPTS: "-Dmapr.home.dir=/opt/mapr -Dmapr.library.flatclass"
+      KAFKA_OPTS: "-Dmapr.home.dir=/opt/mapr -Dmapr.library.flatclass -Djava.security.auth.login.config=/opt/mapr/conf/mapr.login.conf"
 
   broker:
     networks:
