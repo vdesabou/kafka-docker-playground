@@ -10,6 +10,18 @@ then
      wget https://github.com/conker84/neo4j-streams-sink-tester/releases/download/1/neo4j-streams-sink-tester-1.0.jar
 fi
 
+if [ -z "$CI" ]
+then
+    # not running with github actions
+    # workaround for issue on linux, see https://github.com/vdesabou/kafka-docker-playground/issues/851#issuecomment-821151962
+    chmod -R a+rw .
+else
+    # docker is run as runneradmin user, need to use sudo
+    ls -lrt
+    sudo chmod -R a+rw .
+    ls -lrt
+fi
+
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
 
 log "Sending 1000 messages to topic my-topic using neo4j-streams-sink-teste"
@@ -17,7 +29,7 @@ docker exec connect java -jar /tmp/neo4j-streams-sink-tester-1.0.jar -f AVRO -e 
 
 
 log "Creating NEO4J Sink connector"
-curl -X PUT \
+docker exec connect curl -X PUT \
      -H "Content-Type: application/json" \
      --data @/tmp/contrib.sink.avro.neo4j.json \
      http://localhost:8083/connectors/neo4j-sink/config | jq .
@@ -30,6 +42,3 @@ if [ -z "$CI" ]
 then
      open "http://neo4j:connect@127.0.0.1:7474/"
 fi
-
-
-
