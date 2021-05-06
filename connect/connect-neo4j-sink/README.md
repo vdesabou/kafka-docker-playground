@@ -4,7 +4,7 @@
 
 ## Objective
 
-Quickly test [Neo4j Sink](https://www.confluent.jp/blog/kafka-connect-neo4j-sink-plugin) connector.
+Quickly test [Neo4j Sink](https://neo4j.com/labs/kafka/4.0/kafka-connect/) connector.
 
 
 ## How to run
@@ -45,6 +45,7 @@ With `contrib.sink.avro.neo4j.json`:
     "errors.tolerance": "all",
     "errors.log.enable": true,
     "errors.log.include.messages": true,
+    "errors.deadletterqueue.topic.name": "test-error-topic",
     "neo4j.server.uri": "bolt://neo4j:7687",
     "neo4j.authentication.basic.username": "neo4j",
     "neo4j.authentication.basic.password": "connect",
@@ -62,5 +63,24 @@ $ open "http://neo4j:connect@127.0.0.1:7474/"
 You should see:
 
 ![Neo4j](Screenshot1.png)
+
+With `cypher-shell` CLI:
+
+```bash
+$ docker exec -i neo4j cypher-shell -u neo4j -p connect << EOF
+MATCH (n) RETURN n;
+EOF
+```
+
+Results:
+
+```
+(:Person {name: "Name -196952286", from: "AVRO", surname: "Surname A"})
+(:Person {name: "Name -1950152848", from: "AVRO", surname: "Surname C"})
+(:Person {name: "Name 1062585389", from: "AVRO", surname: "Surname C"})
+(:Person {name: "Name -2126769236", from: "AVRO", surname: "Surname B"})
+(:Person {name: "Name 1974372360", from: "AVRO", surname: "Surname B"})
+(:Person {name: "Name -1285319995", from: "AVRO", surname: "Surname B"})
+```
 
 N.B: Control Center is reachable at [http://127.0.0.1:9021](http://127.0.0.1:9021])

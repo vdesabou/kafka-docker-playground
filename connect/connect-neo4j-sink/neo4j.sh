@@ -24,7 +24,7 @@ fi
 
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
 
-log "Sending 1000 messages to topic my-topic using neo4j-streams-sink-teste"
+log "Sending 1000 messages to topic my-topic using neo4j-streams-sink-tester"
 docker exec connect java -jar /tmp/neo4j-streams-sink-tester-1.0.jar -f AVRO -e 1000 -Dkafka.bootstrap.server=broker:9092 -Dkafka.schema.registry.url=http://schema-registry:8081
 
 
@@ -37,8 +37,14 @@ docker exec connect curl -X PUT \
 
 sleep 5
 
-log "Verify data is present in Neo4j http://127.0.0.1:7474 (neo4j/connect) by opening http://neo4j:connect@127.0.0.1:7474/ in your browser"
+log "Verify data is present in Neo4j http://localhost:7474 (neo4j/connect), see README"
 if [ -z "$CI" ]
 then
-     open "http://neo4j:connect@127.0.0.1:7474/"
+     open "http://localhost:7474/"
 fi
+
+docker exec -i neo4j cypher-shell -u neo4j -p connect > /tmp/result.log <<-EOF
+MATCH (n) RETURN n;
+EOF
+cat /tmp/result.log
+grep "AVRO" /tmp/result.log | grep "Surname A"
