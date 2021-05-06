@@ -129,7 +129,7 @@ curl -X PUT \
 sleep 120
 
 log "Confirm that the messages were delivered to the Snowflake table (logged as PLAYGROUND_USER user)"
-docker run --rm -i -e SNOWSQL_PWD='Password123!' -e RSA_PUBLIC_KEY="$RSA_PUBLIC_KEY" kurron/snowsql --username PLAYGROUND_USER -a $SNOWFLAKE_ACCOUNT_NAME > /tmp/result.log <<-EOF
+docker run --rm -i -e SNOWSQL_PWD='Password123!' -e RSA_PUBLIC_KEY="$RSA_PUBLIC_KEY" kurron/snowsql --username PLAYGROUND_USER -a $SNOWFLAKE_ACCOUNT_NAME > /tmp/result.log  2>&1 <<-EOF
 USE ROLE PLAYGROUND_CONNECTOR_ROLE;
 USE DATABASE PLAYGROUND_DB;
 USE SCHEMA PUBLIC;

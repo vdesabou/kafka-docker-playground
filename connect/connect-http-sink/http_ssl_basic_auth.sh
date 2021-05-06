@@ -46,6 +46,6 @@ curl -X PUT \
 sleep 10
 
 log "Confirm that the data was sent to the HTTP endpoint."
-curl --tlsv1.2 --cacert ./security/snakeoil-ca-1.crt  -X GET https://admin:password@localhost:8443/api/messages | jq . > /tmp/result.log
+curl --tlsv1.2 --cacert ./security/snakeoil-ca-1.crt  -X GET https://admin:password@localhost:8443/api/messages | jq . > /tmp/result.log  2>&1
 cat /tmp/result.log
 grep "10" /tmp/result.log

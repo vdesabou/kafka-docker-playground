@@ -57,7 +57,7 @@ curl -X PUT \
 sleep 5
 
 log "Verify message received in DEV.QUEUE.1 queue"
-docker exec ibmmq bash -c "/opt/mqm/samp/bin/amqsbcg DEV.QUEUE.1" > /tmp/result.log
+docker exec ibmmq bash -c "/opt/mqm/samp/bin/amqsbcg DEV.QUEUE.1" > /tmp/result.log  2>&1
 cat /tmp/result.log
 grep "my message" /tmp/result.log
 

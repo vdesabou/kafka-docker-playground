@@ -68,7 +68,7 @@ EOF
 EOFCONNECT
 
 log "Check that the data is available in Elasticsearch (this can probably fail)"
-curl -XGET 'http://localhost:9200/test-elasticsearch-sink/_search?pretty' > /tmp/result.log
+curl -XGET 'http://localhost:9200/test-elasticsearch-sink/_search?pretty' > /tmp/result.log  2>&1
 cat /tmp/result.log
 grep "f1" /tmp/result.log | grep "value1"
 grep "f1" /tmp/result.log | grep "value10"

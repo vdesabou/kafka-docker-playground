@@ -43,6 +43,6 @@ curl -s -X PUT \
 sleep 10
 
 log "Verify product data is in InfluxDB with its tags"
-docker exec influxdb influx -database product -execute 'select * from product' > /tmp/result.log
+docker exec influxdb influx -database product -execute 'select * from product' > /tmp/result.log  2>&1
 cat /tmp/result.log
 grep "pencil" /tmp/result.log

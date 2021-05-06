@@ -55,7 +55,7 @@ seq -f "{\"f1\": \"value%g\"}" 10 | docker exec -i connect kafka-avro-console-pr
 sleep 10
 
 log "Check that the data is available in Elasticsearch"
-curl -XGET 'http://localhost:9200/test-elasticsearch-sink/_search?pretty' > /tmp/result.log
+curl -XGET 'http://localhost:9200/test-elasticsearch-sink/_search?pretty' > /tmp/result.log  2>&1
 cat /tmp/result.log
 grep "f1" /tmp/result.log | grep "value1"
 grep "f1" /tmp/result.log | grep "value10"
