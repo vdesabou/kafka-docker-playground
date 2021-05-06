@@ -54,7 +54,7 @@ docker exec -i connect kafka-avro-console-producer --broker-list broker:9092 --p
 {"id": 999, "product": "foo", "quantity": 100, "price": 50}
 EOF
 
-sleep 5
+sleep 15
 
 log "Verify data is in kudu orders table"
 docker exec -i kudu impala-shell -i localhost:21000 -l -u kudu --ldap_password_cmd="echo -n secret" --auth_creds_ok_in_clear > /tmp/result.log <<-EOF
