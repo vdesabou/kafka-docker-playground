@@ -60,7 +60,7 @@ docker cp namenode:/tmp/test_hdfs+0+0000000000+0000000000.avro /tmp/
 docker run -v /tmp:/tmp actions/avro-tools tojson /tmp/test_hdfs+0+0000000000+0000000000.avro
 
 log "Check data with beeline"
-docker exec -i hive-server beeline > /tmp/result.log <<-EOF
+docker exec -i hive-server beeline > /tmp/result.log  2>&1 <<-EOF
 !connect jdbc:hive2://hive-server:10000/testhive
 hive
 hive

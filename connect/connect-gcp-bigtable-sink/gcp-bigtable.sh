@@ -62,7 +62,7 @@ curl -X PUT \
 sleep 30
 
 log "Verify data is in GCP BigTable"
-docker run -i --volumes-from gcloud-config google/cloud-sdk:latest cbt -project $PROJECT -instance $INSTANCE read kafka_stats > /tmp/result.log
+docker run -i --volumes-from gcloud-config google/cloud-sdk:latest cbt -project $PROJECT -instance $INSTANCE read kafka_stats > /tmp/result.log  2>&1
 cat /tmp/result.log
 grep "simple-key-1" /tmp/result.log | grep "Bob"
 

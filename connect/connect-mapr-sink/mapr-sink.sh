@@ -82,7 +82,7 @@ curl -X PUT \
 sleep 40
 
 log "Verify data is in Mapr"
-docker exec -i mapr bash -c "mapr dbshell" > /tmp/result.log <<-EOF
+docker exec -i mapr bash -c "mapr dbshell" > /tmp/result.log  2>&1 <<-EOF
 find /mapr/maprdemo.mapr.io/maprtopic
 EOF
 cat /tmp/result.log

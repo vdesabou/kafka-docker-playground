@@ -42,6 +42,6 @@ curl -X PUT \
 sleep 5
 
 log "Get messages from DEV.QUEUE.1 JMS queue:"
-curl -XGET -u admin:admin -d "body=message" http://localhost:8161/api/message/DEV.QUEUE.1?type=queue > /tmp/result.log
+curl -XGET -u admin:admin -d "body=message" http://localhost:8161/api/message/DEV.QUEUE.1?type=queue > /tmp/result.log  2>&1
 cat /tmp/result.log
 grep "This is my message" /tmp/result.log

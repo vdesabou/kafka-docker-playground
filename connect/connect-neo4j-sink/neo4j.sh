@@ -46,7 +46,7 @@ then
      open "http://localhost:7474/"
 fi
 
-docker exec -i neo4j cypher-shell -u neo4j -p connect > /tmp/result.log <<-EOF
+docker exec -i neo4j cypher-shell -u neo4j -p connect > /tmp/result.log  2>&1 <<-EOF
 MATCH (n) RETURN n;
 EOF
 cat /tmp/result.log

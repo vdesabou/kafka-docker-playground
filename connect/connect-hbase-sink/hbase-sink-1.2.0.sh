@@ -42,7 +42,7 @@ curl -X PUT \
 sleep 10
 
 log "Verify data is in HBase:"
-docker exec -i hbase hbase shell > /tmp/result.log <<-EOF
+docker exec -i hbase hbase shell > /tmp/result.log  2>&1 <<-EOF
 scan 'example_table'
 EOF
 cat /tmp/result.log

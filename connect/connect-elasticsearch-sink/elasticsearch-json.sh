@@ -43,6 +43,6 @@ EOF
 sleep 10
 
 log "Check that the data is available in Elasticsearch"
-curl -XGET 'http://localhost:9200/test-elasticsearch-sink/_search?pretty' > /tmp/result.log
+curl -XGET 'http://localhost:9200/test-elasticsearch-sink/_search?pretty' > /tmp/result.log  2>&1
 cat /tmp/result.log
 grep "complaint_type" /tmp/result.log | grep "Dirty car"
