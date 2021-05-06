@@ -22,7 +22,7 @@ curl -X PUT \
                "tasks.max": "1",
                "confluent.topic.bootstrap.servers":"broker:9092",
                "confluent.topic.replication.factor": "1",
-               "prometheus.scrape.url": "http://connect:8889/metrics",
+               "prometheus.listener.url": "http://connect:8889/metrics",
                "key.converter": "io.confluent.connect.avro.AvroConverter",
                "key.converter.schema.registry.url":"http://schema-registry:8081",
                "value.converter": "io.confluent.connect.avro.AvroConverter",
