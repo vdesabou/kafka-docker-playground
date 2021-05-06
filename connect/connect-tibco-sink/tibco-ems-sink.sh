@@ -61,13 +61,13 @@ sleep 5
 
 
 log "Verify we have received the data in connector-quickstart EMS queue"
-docker exec tibco-ems bash -c '
+docker exec -i tibco-ems bash -c '
 cd /opt/tibco/ems/8.5/samples/java
 export TIBEMS_JAVA=/opt/tibco/ems/8.5/lib
 CLASSPATH=${TIBEMS_JAVA}/jms-2.0.jar:${CLASSPATH}
 CLASSPATH=.:${TIBEMS_JAVA}/tibjms.jar:${TIBEMS_JAVA}/tibjmsadmin.jar:${CLASSPATH}
 export CLASSPATH
 javac *.java
-java tibjmsMsgConsumer -user admin -queue connector-quickstart -nbmessages 10' > /tmp/result.log
+java tibjmsMsgConsumer -user admin -queue connector-quickstart -nbmessages 10' > /tmp/result.log 2>&1
 cat /tmp/result.log
-grep "Integer:2" /tmp/result.log
+grep "Text=" /tmp/result.log
