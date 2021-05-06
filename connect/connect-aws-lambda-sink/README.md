@@ -23,9 +23,40 @@ This project assumes `~/.aws/credentials` and `~/.aws/config` are set, see `dock
         - $HOME/.aws/config:$CONNECT_CONTAINER_HOME_DIR/.aws/config
 ```
 
-Create an AWS Lambda function with name **Add** and use the below given python script
+## How to run
 
-Sample function in python to add two numbers and return the result:
+Simply run:
+
+```bash
+$ ./lambda.sh
+```
+
+## Details of what the script is doing
+
+Creating AWS role
+
+```bash
+LAMBDA_ROLE_NAME=playground_lambda_role$TAG
+LAMBDA_ROLE_NAME=${LAMBDA_ROLE_NAME//[-.]/}
+
+LAMBDA_ROLE=$(aws iam create-role --role-name $LAMBDA_ROLE_NAME --assume-role-policy-document '{"Version": "2012-10-17","Statement": [{ "Effect": "Allow", "Principal": {"Service": "lambda.amazonaws.com"}, "Action": "sts:AssumeRole"}]}' --output text --query 'Role.Arn')
+```
+
+Creating AWS Lambda function
+
+```bash
+LAMBDA_FUNCTION_NAME=playground_lambda_function$TAG
+LAMBDA_FUNCTION_NAME=${LAMBDA_FUNCTION_NAME//[-.]/}
+
+cd ${DIR}/my-add-function
+rm -f add.zip
+zip add.zip add.py
+cp add.zip /tmp/
+aws lambda create-function --function-name $LAMBDA_FUNCTION_NAME --zip-file fileb:///tmp/add.zip --handler add.lambda_handler --runtime python3.8 --role $LAMBDA_ROLE
+cd -
+```
+
+`./my-add-function/add.py` is the python function used:
 
 ```python
 import json
@@ -69,16 +100,7 @@ def lambda_handler(event, context):
     return result_list
 ```
 
-## How to run
 
-Simply run:
-
-```bash
-$ ./lambda.sh
-```
-
-
-## Details of what the script is doing
 
 Sending messages to topic `add-topic`
 
@@ -93,21 +115,21 @@ $ curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
                "connector.class" : "io.confluent.connect.aws.lambda.AwsLambdaSinkConnector",
-                    "tasks.max": "1",
-                    "topics" : "add-topic",
-                    "aws.lambda.function.name" : "Add",
-                    "aws.lambda.invocation.type" : "sync",
-                    "aws.lambda.batch.size" : "50",
-                    "aws.lambda.region": "us-east-1",
-                    "behavior.on.error" : "fail",
-                    "reporter.bootstrap.servers": "broker:9092",
-                    "reporter.error.topic.name": "error-responses",
-                    "reporter.error.topic.replication.factor": 1,
-                    "reporter.result.topic.name": "success-responses",
-                    "reporter.result.topic.replication.factor": 1,
-                    "confluent.license": "",
-                    "confluent.topic.bootstrap.servers": "broker:9092",
-                    "confluent.topic.replication.factor": "1"
+               "tasks.max": "1",
+               "topics" : "add-topic",
+               "aws.lambda.function.name" : "'"$LAMBDA_FUNCTION_NAME"'",
+               "aws.lambda.invocation.type" : "sync",
+               "aws.lambda.batch.size" : "50",
+               "aws.lambda.region": "'"$AWS_REGION"'",
+               "behavior.on.error" : "fail",
+               "reporter.bootstrap.servers": "broker:9092",
+               "reporter.error.topic.name": "error-responses",
+               "reporter.error.topic.replication.factor": 1,
+               "reporter.result.topic.name": "success-responses",
+               "reporter.result.topic.replication.factor": 1,
+               "confluent.license": "",
+               "confluent.topic.bootstrap.servers": "broker:9092",
+               "confluent.topic.replication.factor": "1"
           }' \
      http://localhost:8083/connectors/aws-lambda/config | jq .
 ```
