@@ -60,4 +60,6 @@ curl -X PUT \
 sleep 10
 
 log "View the metrics being produced to Amazon CloudWatch"
-aws cloudwatch list-metrics --namespace service-namespace
+aws cloudwatch list-metrics --namespace service-namespace > /tmp/result.log
+cat /tmp/result.log
+grep "test_meter_fifteenMinuteRate" /tmp/result.log

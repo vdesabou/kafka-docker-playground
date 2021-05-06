@@ -38,6 +38,8 @@ log "Describing the orders table in DB 'db':"
 docker exec mysql bash -c "mysql --user=root --password=password --database=db -e 'describe orders'"
 
 log "Show content of orders table:"
-docker exec mysql bash -c "mysql --user=root --password=password --database=db -e 'select * from orders'"
+docker exec mysql bash -c "mysql --user=root --password=password --database=db -e 'select * from orders'" > /tmp/result.log
+cat /tmp/result.log
+grep "foo" /tmp/result.log
 
 

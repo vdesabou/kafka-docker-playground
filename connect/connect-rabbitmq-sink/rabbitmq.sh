@@ -41,4 +41,6 @@ curl -X PUT \
 sleep 5
 
 log "Check messages received in RabbitMQ"
-docker exec -i rabbitmq rabbitmqadmin -u myuser -p mypassword get queue=queue1 count=10
+docker exec -i rabbitmq rabbitmqadmin -u myuser -p mypassword get queue=queue1 count=10 > /tmp/result.log
+cat /tmp/result.log
+grep "rkey1" /tmp/result.log

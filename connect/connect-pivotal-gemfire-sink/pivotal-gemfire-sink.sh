@@ -59,8 +59,10 @@ curl -X PUT \
 sleep 5
 
 log "Check messages received in Pivotal Gemfire"
-docker exec -i pivotal-gemfire gfsh  << EOF
+docker exec -i pivotal-gemfire gfsh  > /tmp/result.log <<-EOF
 connect --locator=localhost[10334]
 query --query="select * from /exampleRegion"
 EOF
+cat /tmp/result.log
+grep "value1" /tmp/result.log
 

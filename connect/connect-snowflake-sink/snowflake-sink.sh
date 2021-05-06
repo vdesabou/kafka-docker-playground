@@ -129,13 +129,15 @@ curl -X PUT \
 sleep 120
 
 log "Confirm that the messages were delivered to the Snowflake table (logged as PLAYGROUND_USER user)"
-docker run --rm -i -e SNOWSQL_PWD='Password123!' -e RSA_PUBLIC_KEY="$RSA_PUBLIC_KEY" kurron/snowsql --username PLAYGROUND_USER -a $SNOWFLAKE_ACCOUNT_NAME << EOF
+docker run --rm -i -e SNOWSQL_PWD='Password123!' -e RSA_PUBLIC_KEY="$RSA_PUBLIC_KEY" kurron/snowsql --username PLAYGROUND_USER -a $SNOWFLAKE_ACCOUNT_NAME > /tmp/result.log <<-EOF
 USE ROLE PLAYGROUND_CONNECTOR_ROLE;
 USE DATABASE PLAYGROUND_DB;
 USE SCHEMA PUBLIC;
 USE WAREHOUSE PLAYGROUND_WAREHOUSE;
 SELECT * FROM PLAYGROUND_DB.PUBLIC.TEST_TABLE;
 EOF
+cat /tmp/result.log
+grep "scissors" /tmp/result.log
 
 # docker exec broker kafka-consumer-groups --bootstrap-server broker:9092 --group connect-snowflake-sink --describe
 

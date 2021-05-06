@@ -41,4 +41,6 @@ curl -X PUT \
 sleep 10
 
 log "Confirm that the data was sent to the HTTP endpoint."
-curl admin:password@localhost:9083/api/messages | jq .
+curl admin:password@localhost:9083/api/messages | jq . > /tmp/result.log
+cat /tmp/result.log
+grep "10" /tmp/result.log

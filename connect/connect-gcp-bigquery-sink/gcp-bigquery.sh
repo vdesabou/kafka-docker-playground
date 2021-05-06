@@ -50,6 +50,8 @@ curl -X PUT \
 sleep 10
 
 log "Verify data is in GCP BigQuery:"
-docker run -i --volumes-from gcloud-config google/cloud-sdk:latest bq --project_id "$PROJECT" query "SELECT * FROM $DATASET.kcbq_quickstart1;"
+docker run -i --volumes-from gcloud-config google/cloud-sdk:latest bq --project_id "$PROJECT" query "SELECT * FROM $DATASET.kcbq_quickstart1;" > /tmp/result.log
+cat /tmp/result.log
+grep "value1" /tmp/result.log
 
 docker rm -f gcloud-config
