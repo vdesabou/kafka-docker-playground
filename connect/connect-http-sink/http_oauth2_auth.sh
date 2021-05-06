@@ -52,6 +52,6 @@ token=$(curl -X POST \
 log "Confirm that the data was sent to the HTTP endpoint."
 curl -X GET \
     http://localhost:10080/api/messages \
-    -H "Authorization: Bearer ${token}" | jq . > /tmp/result.log
+    -H "Authorization: Bearer ${token}" | jq . > /tmp/result.log  2>&1
 cat /tmp/result.log
 grep "10" /tmp/result.log

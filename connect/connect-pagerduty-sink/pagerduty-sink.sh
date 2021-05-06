@@ -65,6 +65,6 @@ curl --request GET \
   --header "accept: application/vnd.pagerduty+json;version=2" \
   --header "authorization: Token token=$PAGERDUTY_API_KEY" \
   --header "content-type: application/json" \
-  --data '{"time_zone": "UTC"}' > /tmp/result.log
+  --data '{"time_zone": "UTC"}' > /tmp/result.log  2>&1
 cat /tmp/result.log
 grep "Incident Title x 0" /tmp/result.log

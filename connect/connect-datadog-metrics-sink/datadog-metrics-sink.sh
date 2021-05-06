@@ -62,6 +62,6 @@ curl -X PUT \
 sleep 20
 
 log "Make sure perf.metric is present in Datadog"
-docker run -e DOGSHELL_API_KEY=$DD_API_KEY -e DOGSHELL_APP_KEY=$DD_APP_KEY dogshell:latest search query perf.metric > /tmp/result.log
+docker run -e DOGSHELL_API_KEY=$DD_API_KEY -e DOGSHELL_APP_KEY=$DD_APP_KEY dogshell:latest search query perf.metric > /tmp/result.log  2>&1
 cat /tmp/result.log
 grep "perf.metric" /tmp/result.log

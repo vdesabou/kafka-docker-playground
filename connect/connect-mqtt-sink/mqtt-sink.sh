@@ -34,6 +34,6 @@ curl -X PUT \
 sleep 5
 
 log "Verify we have received messages in MQTT sink-messages topic"
-timeout 60 docker exec mosquitto sh -c 'mosquitto_sub -h localhost -p 1883 -u "myuser" -P "mypassword" -t "sink-messages" -C 1' > /tmp/result.log
+timeout 60 docker exec mosquitto sh -c 'mosquitto_sub -h localhost -p 1883 -u "myuser" -P "mypassword" -t "sink-messages" -C 1' > /tmp/result.log  2>&1
 cat /tmp/result.log
 grep "This is my message" /tmp/result.log

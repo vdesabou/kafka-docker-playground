@@ -62,7 +62,7 @@ if [ ! -z "$CI" ]
 then
      # if this is github actions
      log "Verifying data is in Firebase"
-     docker run -p 9005:9005 -e FIREBASE_TOKEN=$FIREBASE_TOKEN -e PROJECT=$PROJECT -i kamshak/firebase-tools-docker firebase database:get / --token "$FIREBASE_TOKEN" --project "$PROJECT" | jq . > /tmp/result.log
+     docker run -p 9005:9005 -e FIREBASE_TOKEN=$FIREBASE_TOKEN -e PROJECT=$PROJECT -i kamshak/firebase-tools-docker firebase database:get / --token "$FIREBASE_TOKEN" --project "$PROJECT" | jq . > /tmp/result.log  2>&1
      cat /tmp/result.log
      grep "Michael Jackson" /tmp/result.log
 fi
