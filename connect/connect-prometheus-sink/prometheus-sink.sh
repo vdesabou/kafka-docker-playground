@@ -40,4 +40,6 @@ curl -X PUT \
 sleep 10
 
 log "Verify data is in Prometheus"
-curl 'http://localhost:9090/api/v1/query?query=kafka_gaugeMetric1'
+curl 'http://localhost:9090/api/v1/query?query=kafka_gaugeMetric1' > /tmp/result.log
+cat /tmp/result.log
+grep "kafka_gaugeMetric1" /tmp/result.log

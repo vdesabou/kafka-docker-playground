@@ -57,7 +57,9 @@ EOF
 sleep 5
 
 log "Verify data is in kudu orders table"
-docker exec -i kudu impala-shell -i localhost:21000 -l -u kudu --ldap_password_cmd="echo -n secret" --auth_creds_ok_in_clear << EOF
+docker exec -i kudu impala-shell -i localhost:21000 -l -u kudu --ldap_password_cmd="echo -n secret" --auth_creds_ok_in_clear > /tmp/result.log <<-EOF
 USE test;
 SELECT * from orders;
 EOF
+cat /tmp/result.log
+grep "foo" /tmp/result.log

@@ -58,6 +58,8 @@ curl -X PUT \
 sleep 10
 
 log "Check data is in hive"
-${DIR}/presto.jar --server localhost:18080 --catalog hive --schema default << EOF
+${DIR}/presto.jar --server localhost:18080 --catalog hive --schema default > /tmp/result.log <<-EOF
 select * from pokes;
 EOF
+cat /tmp/result.log
+grep "foo" /tmp/result.log
