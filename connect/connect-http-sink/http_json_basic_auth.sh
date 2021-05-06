@@ -39,7 +39,9 @@ curl -X PUT \
                "connection.user": "admin",
                "connection.password": "password"
           }' \
-     http://localhost:8083/connectors/http-sink/config | jq .
+     http://localhost:8083/connectors/http-sink/config | jq . > /tmp/result.log
+cat /tmp/result.log
+grep "Dirty car" /tmp/result.log
 
 
 sleep 10

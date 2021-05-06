@@ -53,4 +53,6 @@ log "Sleeping 120 seconds, waiting for table to be created"
 sleep 120
 
 log "Verify data is in DynamoDB"
-aws dynamodb scan --table-name topic1 --region $AWS_REGION
+aws dynamodb scan --table-name topic1 --region $AWS_REGION  > /tmp/result.log
+cat /tmp/result.log
+grep "value1" /tmp/result.log

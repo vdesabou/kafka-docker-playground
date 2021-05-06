@@ -42,4 +42,6 @@ curl -X PUT \
 sleep 30
 
 log "Confirm the messages were delivered to the connector-quickstart queue in the default Message VPN using CLI"
-docker exec solace bash -c "/usr/sw/loads/currentload/bin/cli -A -s cliscripts/show_queue_cmd"
+docker exec solace bash -c "/usr/sw/loads/currentload/bin/cli -A -s cliscripts/show_queue_cmd" > /tmp/result.log
+cat /tmp/result.log
+grep "Message VPN" /tmp/result.log

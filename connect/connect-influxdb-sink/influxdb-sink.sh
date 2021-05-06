@@ -38,4 +38,6 @@ curl -s -X PUT \
 sleep 10
 
 log "Verify that order is in InfluxDB"
-docker exec influxdb influx -database orders -execute 'select * from orders'
+docker exec influxdb influx -database orders -execute 'select * from orders' > /tmp/result.log
+cat /tmp/result.log
+grep "foo" /tmp/result.log

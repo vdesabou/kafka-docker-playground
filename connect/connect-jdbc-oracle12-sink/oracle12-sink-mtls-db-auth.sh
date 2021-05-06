@@ -228,5 +228,7 @@ docker exec -i oracle sqlplus sys/Admin123@//localhost:1521/ORCLPDB1 as sysdba <
 EOF
 
 log "Show content of ORDERS table:"
-docker exec oracle bash -c "echo 'select * from ORDERS;' | sqlplus myuser/mypassword@//localhost:1521/ORCLPDB1"
+docker exec oracle bash -c "echo 'select * from ORDERS;' | sqlplus myuser/mypassword@//localhost:1521/ORCLPDB1" > /tmp/result.log
+cat /tmp/result.log
+grep "foo" /tmp/result.log
 

@@ -43,6 +43,8 @@ curl -X PUT \
 sleep 10
 
 log "Check data is in Vertica"
-docker exec -i vertica /opt/vertica/bin/vsql -hlocalhost -Udbadmin << EOF
+docker exec -i vertica /opt/vertica/bin/vsql -hlocalhost -Udbadmin > /tmp/result.log <<-EOF
 select * from mytable;
 EOF
+cat /tmp/result.log
+grep "value1" /tmp/result.log
