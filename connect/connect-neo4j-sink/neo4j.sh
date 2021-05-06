@@ -37,6 +37,9 @@ docker exec connect curl -X PUT \
 
 sleep 5
 
+# FIXTHIS debug temp
+docker container logs --tail=300 neo4j
+
 log "Verify data is present in Neo4j http://localhost:7474 (neo4j/connect), see README"
 if [ -z "$CI" ]
 then
