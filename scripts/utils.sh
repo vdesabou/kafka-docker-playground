@@ -623,7 +623,7 @@ function timeout() {
 }
 
 function az() {
-    docker run -v /tmp:/tmp -v $HOME/.azure:/home/az/.azure -e HOME=/home/az --rm -i mcr.microsoft.com/azure-cli az "$@"
+    docker run -rm -v $HOME/.azure:/home/az/.azure -e HOME=/home/az --rm -i mcr.microsoft.com/azure-cli az "$@"
 }
 
 function retry() {
