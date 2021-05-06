@@ -27,6 +27,8 @@ curl -X PUT \
                "key.converter.schema.registry.url":"http://schema-registry:8081",
                "value.converter": "io.confluent.connect.avro.AvroConverter",
                "value.converter.schema.registry.url":"http://schema-registry:8081",
+               "key.converter.schemas.enable": "true",
+               "value.converter.schemas.enable": "true",
                "reporter.bootstrap.servers": "broker:9092",
                "reporter.error.topic.replication.factor": 1,
                "reporter.result.topic.replication.factor": 1,
@@ -36,9 +38,6 @@ curl -X PUT \
      http://localhost:8083/connectors/prometheus-sink/config | jq .
 
 sleep 10
-
-log "Verify topic prometheus-sink-success"
-timeout 60 docker exec broker kafka-console-consumer -bootstrap-server broker:9092 --topic prometheus-sink-success --from-beginning --max-messages 3
 
 log "Verify data is in Prometheus"
 curl 'http://localhost:9090/api/v1/query?query=kafka_gaugeMetric1' > /tmp/result.log  2>&1
