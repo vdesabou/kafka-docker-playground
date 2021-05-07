@@ -40,6 +40,8 @@ set +e
 log "Creating AWS role $LAMBDA_ROLE_NAME"
 LAMBDA_ROLE=$(aws iam create-role --role-name $LAMBDA_ROLE_NAME --assume-role-policy-document '{"Version": "2012-10-17","Statement": [{ "Effect": "Allow", "Principal": {"Service": "lambda.amazonaws.com"}, "Action": "sts:AssumeRole"}]}' --output text --query 'Role.Arn')
 log "Role is $LAMBDA_ROLE"
+log "Sleeping 7 seconds to let the role being propagated by AWS"
+sleep 7
 log "Creating AWS Lambda function"
 # https://docs.aws.amazon.com/lambda/latest/dg/python-package-create.html
 cd ${DIR}/my-add-function
