@@ -45,14 +45,15 @@ az storage account create \
     --location $AZURE_REGION \
     --sku Standard_LRS \
     --encryption-services blob
-az storage container create \
-    --account-name $AZURE_ACCOUNT_NAME \
-    --name $AZURE_CONTAINER_NAME
 AZURE_ACCOUNT_KEY=$(az storage account keys list \
     --account-name $AZURE_ACCOUNT_NAME \
     --resource-group $AZURE_RESOURCE_GROUP \
     --output table \
     | grep key1 | awk '{print $3}')
+az storage container create \
+    --account-name $AZURE_ACCOUNT_NAME \
+    --account-key $AZURE_ACCOUNT_KEY \
+    --name $AZURE_CONTAINER_NAME
 ```
 
 The connector is created with:
