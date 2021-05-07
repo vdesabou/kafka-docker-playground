@@ -10,6 +10,14 @@ on:
 
   workflow_dispatch:
     inputs:
+      test_name:
+        description: 'test to run'
+        required: false
+        default: ''
+      tag:
+        description: 'tag to use'
+        required: false
+        default: ''
 
 jobs:
   pre-build:
