@@ -26,26 +26,27 @@ else
      export CONNECT_CONTAINER_HOME_DIR="/root"
 fi
 
-LAMBDA_ROLE_NAME=playground_lambda_role$TAG
-LAMBDA_ROLE_NAME=${LAMBDA_ROLE_NAME//[-.]/}
+LAMBDA_ROLE_NAME=pglambdarole$TAG
+LAMBDA_ROLE_NAME=${LAMBDA_ROLE_NAME//[-._]/}
 
-LAMBDA_FUNCTION_NAME=playground_lambda_function$TAG
-LAMBDA_FUNCTION_NAME=${LAMBDA_FUNCTION_NAME//[-.]/}
+LAMBDA_FUNCTION_NAME=pglambdafunction$TAG
+LAMBDA_FUNCTION_NAME=${LAMBDA_FUNCTION_NAME//[-._]/}
 
 set +e
 log "Cleanup, this might fail..."
 aws iam delete-role --role-name $LAMBDA_ROLE_NAME
 aws lambda delete-function --function-name $LAMBDA_FUNCTION_NAME
 set +e
-log "Creating AWS role"
+log "Creating AWS role $LAMBDA_ROLE_NAME"
 LAMBDA_ROLE=$(aws iam create-role --role-name $LAMBDA_ROLE_NAME --assume-role-policy-document '{"Version": "2012-10-17","Statement": [{ "Effect": "Allow", "Principal": {"Service": "lambda.amazonaws.com"}, "Action": "sts:AssumeRole"}]}' --output text --query 'Role.Arn')
+log "Role is $LAMBDA_ROLE"
 log "Creating AWS Lambda function"
 # https://docs.aws.amazon.com/lambda/latest/dg/python-package-create.html
 cd ${DIR}/my-add-function
 rm -f add.zip
 zip add.zip add.py
 cp add.zip /tmp/
-aws lambda create-function --function-name $LAMBDA_FUNCTION_NAME --zip-file fileb:///tmp/add.zip --handler add.lambda_handler --runtime python3.8 --role $LAMBDA_ROLE
+aws lambda create-function --function-name "$LAMBDA_FUNCTION_NAME" --zip-file fileb:///tmp/add.zip --handler add.lambda_handler --runtime python3.8 --role "$LAMBDA_ROLE"
 cd -
 
 AWS_REGION=$(aws configure get region | tr '\r' '\n')
