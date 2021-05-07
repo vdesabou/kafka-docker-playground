@@ -99,7 +99,7 @@ curl -X PUT \
           }' \
      http://localhost:8083/connectors/azure-sql-dw-sink/config | jq .
 
-sleep 15
+sleep 20
 
 log "Check Azure SQL Data Warehouse for Data"
 docker run -i fabiang/sqlcmd -S "$AZURE_SQL_NAME.database.windows.net,1433" -I -U "myadmin" -P "$PASSWORD" -d "$AZURE_DATA_WAREHOUSE_NAME" -Q "select * from kafka_products;" -s"|"  > /tmp/result.log  2>&1
