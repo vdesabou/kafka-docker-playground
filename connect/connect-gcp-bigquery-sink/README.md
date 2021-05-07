@@ -70,21 +70,20 @@ curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
                "connector.class": "com.wepay.kafka.connect.bigquery.BigQuerySinkConnector",
-                    "tasks.max" : "1",
-                    "topics" : "kcbq-quickstart1",
-                    "sanitizeTopics" : "true",
-                    "autoCreateTables" : "true",
-                    "autoUpdateSchemas" : "true",
-                    "schemaRetriever" : "com.wepay.kafka.connect.bigquery.schemaregistry.schemaretriever.SchemaRegistrySchemaRetriever",
-                    "schemaRegistryLocation": "http://schema-registry:8081",
-                    "bufferSize": "100000",
-                    "maxWriteSize": "10000",
-                    "tableWriteWait": "1000",
-                    "project" : "'"$PROJECT"'",
-                    "datasets" : ".*='"$DATASET"'",
-                    "keyfile" : "/tmp/keyfile.json"
+               "tasks.max" : "1",
+               "topics" : "kcbq-quickstart1",
+               "sanitizeTopics" : "true",
+               "autoCreateTables" : "true",
+               "autoUpdateSchemas" : "true",
+               "schemaRetriever" : "com.wepay.kafka.connect.bigquery.retrieve.IdentitySchemaRetriever",
+               "defaultDataset" : "'"$DATASET"'",
+               "bufferSize": "100000",
+               "maxWriteSize": "10000",
+               "tableWriteWait": "1000",
+               "project" : "'"$PROJECT"'",
+               "keyfile" : "/tmp/keyfile.json"
           }' \
-     http://localhost:8083/connectors/kcbq-connect/config | jq .
+     http://localhost:8083/connectors/gcp-bigquey-sink/config | jq .
 ```
 
 
