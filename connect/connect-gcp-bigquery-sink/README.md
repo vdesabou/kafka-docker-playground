@@ -77,13 +77,14 @@ curl -X PUT \
                "autoUpdateSchemas" : "true",
                "schemaRetriever" : "com.wepay.kafka.connect.bigquery.retrieve.IdentitySchemaRetriever",
                "defaultDataset" : "'"$DATASET"'",
+               "mergeIntervalMs": "5000",
                "bufferSize": "100000",
                "maxWriteSize": "10000",
                "tableWriteWait": "1000",
                "project" : "'"$PROJECT"'",
                "keyfile" : "/tmp/keyfile.json"
           }' \
-     http://localhost:8083/connectors/gcp-bigquey-sink/config | jq .
+     http://localhost:8083/connectors/gcp-bigquery-sink/config | jq .
 ```
 
 
