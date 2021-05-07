@@ -14,10 +14,6 @@ on:
         description: 'test to run'
         required: false
         default: ''
-      tag:
-        description: 'tag to use'
-        required: false
-        default: ''
 
 jobs:
   pre-build:
@@ -208,7 +204,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        tag: [ "${{ github.event.inputs.tag }}" ]
+        tag: [ "5.5.4", "6.0.2", "6.1.1"]
         test_list : [
                       "🚀 ${{ github.event.inputs.test_name }}"
                     ]
