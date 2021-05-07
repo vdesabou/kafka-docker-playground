@@ -208,7 +208,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        tag: [ "5.5.4", "6.0.2", "6.1.1"]
+        tag: [ "${{ github.event.inputs.tag }}" ]
         test_list : [
                       "🚀 ${{ github.event.inputs.test_name }}"
                     ]
