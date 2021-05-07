@@ -5,7 +5,6 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
 PROJECT=${1:-vincent-de-saboulin-lab}
-DATASET=${2:-MyDatasetTest}
 
 KEYFILE="${DIR}/keyfile.json"
 if [ ! -f ${KEYFILE} ]
@@ -14,7 +13,8 @@ then
      exit 1
 fi
 
-${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
+DATASET=pg${USER}ds${GITHUB_RUN_NUMBER}${TAG}
+DATASET=${DATASET//[-._]/}
 
 log "Doing gsutil authentication"
 set +e
@@ -23,9 +23,15 @@ set -e
 docker run -i -v ${KEYFILE}:/tmp/keyfile.json --name gcloud-config google/cloud-sdk:latest gcloud auth activate-service-account --project ${PROJECT} --key-file /tmp/keyfile.json
 
 set +e
-log "Drop table $DATASET.kcbq_quickstart1, this might fail"
-docker run -i --volumes-from gcloud-config google/cloud-sdk:latest bq --project_id "$PROJECT" query --use_legacy_sql=false "DROP TABLE $DATASET.kcbq_quickstart1;"
+log "Drop dataset $DATASET, this might fail"
+docker run -i --volumes-from gcloud-config google/cloud-sdk:latest bq --project_id "$PROJECT" rm -r -f -d "$DATASET"
 set -e
+
+log "Create dataset $PROJECT.$DATASET"
+docker run -i --volumes-from gcloud-config google/cloud-sdk:latest bq --project_id "$PROJECT" mk --dataset --description "used by playground" "$DATASET"
+
+
+${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
 
 log "Creating GCP BigQuery Sink connector"
 curl -X PUT \
@@ -58,5 +64,8 @@ log "Verify data is in GCP BigQuery:"
 docker run -i --volumes-from gcloud-config google/cloud-sdk:latest bq --project_id "$PROJECT" query "SELECT * FROM $DATASET.kcbq_quickstart1;" > /tmp/result.log  2>&1
 cat /tmp/result.log
 grep "value1" /tmp/result.log
+
+log "Drop dataset $DATASET"
+docker run -i --volumes-from gcloud-config google/cloud-sdk:latest bq --project_id "$PROJECT" rm -r -f -d "$DATASET"
 
 docker rm -f gcloud-config
