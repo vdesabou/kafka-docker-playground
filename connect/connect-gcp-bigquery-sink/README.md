@@ -11,7 +11,6 @@ Quickly test [GCP BigQuery Sink](https://docs.confluent.io/current/connect/kafka
 ## GCP BigQuery Setup
 
 * Follow [Quickstart using the web UI in the GCP Console](https://cloud.google.com/bigquery/docs/quickstarts/quickstart-web-ui) to get familiar with GCP BigQuery
-* Create a DataSet in your project
 * Create `Service Account` from IAM & Admin console:
 
 Set `Service account name`:
@@ -19,20 +18,7 @@ Set `Service account name`:
 ![Service Account setup](Screenshot1.png)
 
 
-Choose permission `BigQuery`->`BigQuery Admin` or create a custom role with:
-
-```
-bigquery.datasets.get
-bigquery.tables.create
-bigquery.tables.get
-bigquery.tables.getData
-bigquery.tables.list
-bigquery.tables.update
-bigquery.tables.updateData
-bigquery.jobs.create
-```
-
-Note that `bigquery.jobs.create`is only required to run command `bq query "SELECT * FROM $DATASET.kcbq_quickstart1;"`
+Choose permission `BigQuery`->`BigQuery Admin`:
 
 ![Service Account setup](Screenshot2.png)
 
@@ -52,10 +38,16 @@ Rename it to `keyfile.json`and place it in `./keyfile.json`
 Simply run:
 
 ```bash
-$ ./gcp-bigquery.sh <PROJECT> <DATASET>
+$ ./gcp-bigquery.sh <PROJECT>
 ```
 
 ## Details of what the script is doing
+
+Create dataset $PROJECT.$DATASET
+
+```bash
+$ docker run -i --volumes-from gcloud-config google/cloud-sdk:latest bq --project_id "$PROJECT" mk --dataset --description "used by playground" "$DATASET"
+```
 
 Messages are sent to `kcbq-quickstart1` topic using:
 
@@ -89,7 +81,7 @@ curl -X PUT \
 
 
 
-After a few seconds, data should be in GCP BigQuery:
+After 120 seconds, data should be in GCP BigQuery:
 
 ```bash
 $ bq --project_id "$PROJECT" query "SELECT * FROM $DATASET.kcbq_quickstart1;"
