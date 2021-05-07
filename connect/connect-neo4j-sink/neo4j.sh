@@ -37,15 +37,15 @@ docker exec connect curl -X PUT \
 
 sleep 5
 
-log "Verify data is present in Neo4j http://localhost:7474 (neo4j/connect), see README"
-if [ -z "$CI" ]
-then
-     open "http://localhost:7474/"
-fi
-
 log "Verify data is present in Neo4j using cypher-shell CLI"
 docker exec -i neo4j cypher-shell -u neo4j -p connect > /tmp/result.log  2>&1 <<-EOF
 MATCH (n) RETURN n;
 EOF
 cat /tmp/result.log
 grep "AVRO" /tmp/result.log | grep "Surname A"
+
+if [ -z "$CI" ]
+then
+     log "Verify data is present in Neo4j http://localhost:7474 (neo4j/connect), see README"
+     open "http://localhost:7474/"
+fi
