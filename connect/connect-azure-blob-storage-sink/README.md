@@ -48,8 +48,7 @@ az storage account create \
 AZURE_ACCOUNT_KEY=$(az storage account keys list \
     --account-name $AZURE_ACCOUNT_NAME \
     --resource-group $AZURE_RESOURCE_GROUP \
-    --output table \
-    | grep key1 | awk '{print $3}')
+    --query "[0].value" | sed -e 's/^"//' -e 's/"$//')
 az storage container create \
     --account-name $AZURE_ACCOUNT_NAME \
     --account-key $AZURE_ACCOUNT_KEY \
