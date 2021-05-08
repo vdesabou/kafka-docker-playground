@@ -38,7 +38,7 @@ docker exec connect curl -X PUT \
 sleep 5
 
 log "Verify data is present in Neo4j using cypher-shell CLI"
-docker exec -i neo4j cypher-shell -u neo4j -p connect > /tmp/result.log  2>&1 <<-EOF
+docker exec -i neo4j cypher-shell -u neo4j -p connect > /tmp/result.log <<-EOF
 MATCH (n) RETURN n;
 EOF
 cat /tmp/result.log
