@@ -6,6 +6,7 @@ metadata:
   namespace: confluent
 spec:
   replicas: 1
+  internalTopicReplicationFactor: 3
   image:
     application: confluentinc/cp-server-connect-operator:6.1.0.0
     init: confluentinc/cp-init-container-operator:6.1.0.0
@@ -35,10 +36,14 @@ metadata:
   namespace: confluent
 spec:
   replicas: 1
+  internalTopicReplicationFactor: 3
   image:
     application: confluentinc/cp-ksqldb-server-operator:6.1.0.0
     init: confluentinc/cp-init-container-operator:6.1.0.0
   dataVolumeCapacity: 1Gi
+  configOverrides:
+    server:
+      - ksql.internal.topic.replicas=3
   dependencies:
     kafka:
       bootstrapEndpoint: BOOTSTRAP_SERVERS
