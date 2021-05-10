@@ -35,9 +35,12 @@ docker exec connect curl -X PUT \
      http://localhost:8083/connectors/neo4j-sink/config | jq .
 
 
-sleep 5
+sleep 15
 
 log "Verify data is present in Neo4j using cypher-shell CLI"
+docker exec -i neo4j cypher-shell -u neo4j -p connect << EOF
+MATCH (n) RETURN n;
+EOF
 docker exec -i neo4j cypher-shell -u neo4j -p connect > /tmp/result.log <<-EOF
 MATCH (n) RETURN n;
 EOF
