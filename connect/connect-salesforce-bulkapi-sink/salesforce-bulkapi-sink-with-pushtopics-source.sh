@@ -66,6 +66,12 @@ then
      exit 1
 fi
 
+PUSH_TOPICS_NAME=MyLeadPushTopics${TAG}
+PUSH_TOPICS_NAME=${PUSH_TOPICS_NAME//[-._]/}
+
+sed -e "s|:PUSH_TOPIC_NAME:|$PUSH_TOPICS_NAME|g" \
+    ${DIR}/MyLeadPushTopics-template.apex > ${DIR}/MyLeadPushTopics.apex
+
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
 
 # the Salesforce PushTopic source connector is used to get data into Kafka and the Salesforce Bulk API sink connector is used to export data from Kafka to Salesforce
@@ -73,15 +79,14 @@ ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml
 log "Login with sfdx CLI"
 docker exec sfdx-cli sh -c "sfdx sfpowerkit:auth:login -u \"$SALESFORCE_USERNAME\" -p \"$SALESFORCE_PASSWORD\" -r \"$SALESFORCE_INSTANCE\" -s \"$SECURITY_TOKEN\""
 
-
-log "Delete MyLeadPushTopics, if required"
+log "Delete $PUSH_TOPICS_NAME, if required"
 set +e
 docker exec -i sfdx-cli sh -c "sfdx force:apex:execute  -u \"$SALESFORCE_USERNAME\"" << EOF
-List<PushTopic> pts = [SELECT Id FROM PushTopic WHERE Name = 'MyLeadPushTopics'];
+List<PushTopic> pts = [SELECT Id FROM PushTopic WHERE Name = '$PUSH_TOPICS_NAME'];
 Database.delete(pts);
 EOF
 set -e
-log "Create MyLeadPushTopics"
+log "Create $PUSH_TOPICS_NAME"
 docker exec sfdx-cli sh -c "sfdx force:apex:execute  -u \"$SALESFORCE_USERNAME\" -f \"/tmp/MyLeadPushTopics.apex\""
 
 LEAD_FIRSTNAME=John_$RANDOM
@@ -98,7 +103,7 @@ curl -X PUT \
                     "tasks.max": "1",
                     "curl.logging": "true",
                     "salesforce.object" : "Lead",
-                    "salesforce.push.topic.name" : "MyLeadPushTopics",
+                    "salesforce.push.topic.name" : "'"$PUSH_TOPICS_NAME"'",
                     "salesforce.instance" : "'"$SALESFORCE_INSTANCE"'",
                     "salesforce.username" : "'"$SALESFORCE_USERNAME"'",
                     "salesforce.password" : "'"$SALESFORCE_PASSWORD"'",
