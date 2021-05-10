@@ -56,11 +56,11 @@ curl -X PUT \
      --data '{
                "connector.class": "io.confluent.connect.jdbc.JdbcSinkConnector",
                "tasks.max": "1",
-               "connection.url": "jdbc:mysql://mysql:3306/db?user=usermtls&password=password&verifyServerCertificate=true&useSSL=true&requireSSL=true",
+               "connection.url": "jdbc:mysql://mysql:3306/db?user=usermtls&password=password&verifyServerCertificate=true&useSSL=true&requireSSL=true&enabledTLSProtocols=TLSv1.3",
                "topics": "orders",
                "auto.create": "true"
           }' \
-     http://localhost:8083/connectors/mysql-ssl-sink/config | jq .
+     http://localhost:8083/connectors/mysql-mtls-sink/config | jq .
 
 
 log "Sending messages to topic orders"

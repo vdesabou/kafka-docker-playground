@@ -80,14 +80,14 @@ curl -X PUT \
      --data '{
                "connector.class":"io.confluent.connect.jdbc.JdbcSourceConnector",
                "tasks.max":"10",
-               "connection.url": "jdbc:mysql://mysql:3306/db?user=userssl&password=password&verifyServerCertificate=true&useSSL=true&requireSSL=true",
+               "connection.url": "jdbc:mysql://mysql:3306/db?user=userssl&password=password&verifyServerCertificate=true&useSSL=true&requireSSL=true&enabledTLSProtocols=TLSv1,TLSv1.1,TLSv1.2,TLSv1.3",
                "table.whitelist":"application",
                "mode":"timestamp+incrementing",
                "timestamp.column.name":"last_modified",
                "incrementing.column.name":"id",
                "topic.prefix":"mysql-"
           }' \
-     http://localhost:8083/connectors/mysql-source/config | jq .
+     http://localhost:8083/connectors/mysql-ssl-source/config | jq .
 
 sleep 5
 

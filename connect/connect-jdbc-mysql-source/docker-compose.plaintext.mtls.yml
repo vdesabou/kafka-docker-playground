@@ -29,4 +29,4 @@ services:
                   -Djavax.net.ssl.trustStorePassword=mypassword
                   -Djavax.net.ssl.keyStore=/etc/kafka/secrets/keystore.jks
                   -Djavax.net.ssl.keyStorePassword=mypassword
-                  -Djavax.net.debug=all
+                  # -Djavax.net.debug=all
