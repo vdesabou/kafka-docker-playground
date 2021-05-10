@@ -66,6 +66,12 @@ then
      exit 1
 fi
 
+PUSH_TOPICS_NAME=MyLeadPushTopics${TAG}
+PUSH_TOPICS_NAME=${PUSH_TOPICS_NAME//[-._]/}
+
+sed -e "s|:PUSH_TOPIC_NAME:|$PUSH_TOPICS_NAME|g" \
+    ${DIR}/MyLeadPushTopics-template.apex > ${DIR}/MyLeadPushTopics.apex
+
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
 
 log "Login with sfdx CLI"

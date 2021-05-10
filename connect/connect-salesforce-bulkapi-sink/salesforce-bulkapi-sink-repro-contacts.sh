@@ -67,6 +67,12 @@ then
      exit 1
 fi
 
+PUSH_TOPICS_NAME=MyLeadPushTopics${TAG}
+PUSH_TOPICS_NAME=${PUSH_TOPICS_NAME//[-._]/}
+
+sed -e "s|:PUSH_TOPIC_NAME:|$PUSH_TOPICS_NAME|g" \
+    ${DIR}/MyLeadPushTopics-template.apex > ${DIR}/MyLeadPushTopics.apex
+
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
 
 # the Salesforce PushTopic source connector is used to get data into Kafka and the Salesforce Bulk API sink connector is used to export data from Kafka to Salesforce
