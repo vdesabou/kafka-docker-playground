@@ -7,8 +7,8 @@ metadata:
 spec:
   replicas: 1
   image:
-    application: confluentinc/cp-zookeeper-operator:6.0.0.0
-    init: confluentinc/cp-init-container-operator:6.0.0.0
+    application: confluentinc/cp-zookeeper-operator:6.1.0.0
+    init: confluentinc/cp-init-container-operator:6.1.0.0
   dataVolumeCapacity: 1Gi
   logVolumeCapacity: 1Gi
 ---
@@ -20,8 +20,8 @@ metadata:
 spec:
   replicas: 1
   image:
-    application: confluentinc/cp-server-operator:6.0.0.0
-    init: confluentinc/cp-init-container-operator:6.0.0.0
+    application: confluentinc/cp-server-operator:6.1.0.0
+    init: confluentinc/cp-init-container-operator:6.1.0.0
   dataVolumeCapacity: 1Gi
   metricReporter:
     enabled: true
@@ -33,10 +33,10 @@ metadata:
   namespace: confluent
 spec:
   replicas: 1
-  internalTopicReplicatorFactor: 1
+  internalTopicReplicationFactor: 1
   image:
-    application: confluentinc/cp-server-connect-operator:6.0.0.0
-    init: confluentinc/cp-init-container-operator:6.0.0.0
+    application: confluentinc/cp-server-connect-operator:6.1.0.0
+    init: confluentinc/cp-init-container-operator:6.1.0.0
   dependencies:
     kafka:
       bootstrapEndpoint: kafka:9071
@@ -50,8 +50,8 @@ metadata:
 spec:
   replicas: 1
   image:
-    application: confluentinc/cp-ksqldb-server-operator:6.0.0.0
-    init: confluentinc/cp-init-container-operator:6.0.0.0
+    application: confluentinc/cp-ksqldb-server-operator:6.1.0.0
+    init: confluentinc/cp-init-container-operator:6.1.0.0
   dataVolumeCapacity: 1Gi
 ---
 apiVersion: platform.confluent.io/v1beta1
@@ -63,8 +63,8 @@ spec:
   replicas: 1
   internalTopicReplicatorFactor: 1
   image:
-    application: confluentinc/cp-enterprise-control-center-operator:6.0.0.0
-    init: confluentinc/cp-init-container-operator:6.0.0.0
+    application: confluentinc/cp-server-connect-operator:6.1.0.0
+    init: confluentinc/cp-init-container-operator:6.1.0.0
   dataVolumeCapacity: 1Gi
   dependencies:
     schemaRegistry:
@@ -84,5 +84,5 @@ metadata:
 spec:
   replicas: 1
   image:
-    application: confluentinc/cp-schema-registry-operator:6.0.0.0
-    init: confluentinc/cp-init-container-operator:6.0.0.0
+    application: confluentinc/cp-schema-registry-operator:6.1.0.0
+    init: confluentinc/cp-init-container-operator:6.1.0.0
