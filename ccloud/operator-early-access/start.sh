@@ -131,3 +131,6 @@ log "Waiting up to 900 seconds for all pods in namespace confluent to start"
 wait-until-pods-ready "900" "10" "confluent"
 
 kubectl get confluent
+
+log "Control Center is reachable at http://127.0.0.1:9021"
+kubectl -n confluent port-forward controlcenter-0 9021:9021 &
