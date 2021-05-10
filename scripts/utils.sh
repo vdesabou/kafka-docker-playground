@@ -786,6 +786,8 @@ function wait-until-pods-ready() {
   interval="$2"
   namespace="$3"
 
+  sleep 10
+
   for ((i=0; i<$period; i+=$interval)); do
     pods="$(kubectl get po -n $namespace -o 'jsonpath={.items[*].metadata.name}')"
     if __pods_ready $pods; then
