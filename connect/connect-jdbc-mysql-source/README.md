@@ -94,7 +94,7 @@ GRANT ALL PRIVILEGES ON *.* TO 'userssl'@'%' IDENTIFIED BY 'password' REQUIRE SS
 connection.url is:
 
 ```json
-"connection.url": "jdbc:mysql://mysql:3306/db?user=userssl&password=password&verifyServerCertificate=true&useSSL=true&requireSSL=true"
+"connection.url": "jdbc:mysql://mysql:3306/db?user=userssl&password=password&verifyServerCertificate=true&useSSL=true&requireSSL=true&enabledTLSProtocols=TLSv1,TLSv1.1,TLSv1.2,TLSv1.3"
 ```
 
 #### With SSL encryption + Mutual TLS auth
@@ -118,7 +118,7 @@ GRANT ALL PRIVILEGES ON *.* TO 'usermtls'@'%' IDENTIFIED BY 'password' REQUIRE X
 connection.url is:
 
 ```json
-"connection.url": "jdbc:mysql://mysql:3306/db?user=usermtls&password=password&verifyServerCertificate=true&useSSL=true&requireSSL=true"
+"connection.url": "jdbc:mysql://mysql:3306/db?user=usermtls&password=password&verifyServerCertificate=true&useSSL=true&requireSSL=true&enabledTLSProtocols=TLSv1,TLSv1.1,TLSv1.2,TLSv1.3"
 ```
 
 N.B: Control Center is reachable at [http://127.0.0.1:9021](http://127.0.0.1:9021])
