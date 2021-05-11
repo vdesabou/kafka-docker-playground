@@ -1,0 +1,22 @@
+---
+version: '3.5'
+services:
+  schema-registry-us:
+    environment:
+      SCHEMA_REGISTRY_AUTHENTICATION_METHOD: "BASIC"
+      SCHEMA_REGISTRY_AUTHENTICATION_ROLES: "write,read,admin"
+      SCHEMA_REGISTRY_AUTHENTICATION_REALM: "Schema"
+      SCHEMA_REGISTRY_OPTS: "-Djava.security.auth.login.config=/tmp/jaas_config.file"
+    volumes:
+      - ../../replicator/connect/jaas_config.file:/tmp/jaas_config.file
+      - ../../replicator/connect/password-file:/tmp/password-file
+
+  schema-registry-europe:
+    environment:
+      SCHEMA_REGISTRY_AUTHENTICATION_METHOD: "BASIC"
+      SCHEMA_REGISTRY_AUTHENTICATION_ROLES: "write,read,admin"
+      SCHEMA_REGISTRY_AUTHENTICATION_REALM: "Schema"
+      SCHEMA_REGISTRY_OPTS: "-Djava.security.auth.login.config=/tmp/jaas_config.file"
+    volumes:
+      - ../../replicator/connect/jaas_config.file:/tmp/jaas_config.file
+      - ../../replicator/connect/password-file:/tmp/password-file
