@@ -4,19 +4,6 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
-#############
-${DIR}/../../ccloud/environment/start.sh "${PWD}/docker-compose-repro-cloud-to-cloud.yml"
-
-if [ -f /tmp/delta_configs/env.delta ]
-then
-     source /tmp/delta_configs/env.delta
-else
-     logerror "ERROR: /tmp/delta_configs/env.delta has not been generated"
-     exit 1
-fi
-#############
-
-#############
 if [ -f ${DIR}/env.source ]
 then
      source ${DIR}/env.source
@@ -32,6 +19,21 @@ else
 
      exit 1
 fi
+
+#############
+${DIR}/../../ccloud/environment/start.sh "${PWD}/docker-compose-cloud-to-cloud.yml"
+
+if [ -f /tmp/delta_configs/env.delta ]
+then
+     source /tmp/delta_configs/env.delta
+else
+     logerror "ERROR: /tmp/delta_configs/env.delta has not been generated"
+     exit 1
+fi
+#############
+
+#############
+
 #############
 
 # log "Creating topic in Confluent Cloud (auto.create.topics.enable=false)"
