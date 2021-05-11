@@ -76,3 +76,9 @@ kubectl get confluent
 
 log "Control Center is reachable at http://127.0.0.1:9021"
 kubectl -n confluent port-forward controlcenter-0 9021:9021 &
+
+
+# helm pull confluentinc_earlyaccess/confluent-for-kubernetes --untar --untardir=.
+
+log "Create a topic"
+kubectl apply -f create-kafka-topic.yaml
