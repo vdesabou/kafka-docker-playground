@@ -56,8 +56,8 @@ curl -X PUT \
           "src.consumer.group.id": "replicate-demo-to-travis",
           "src.value.converter": "io.confluent.connect.avro.AvroConverter",
           "src.value.converter.schema.registry.url": "'"$SCHEMA_REGISTRY_URL_SRC"'",
-          "src.value.converter.basic.auth.user.info": "'"$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO_SRC"'",
-          "src.value.converter.basic.auth.credentials.source": "USER_INFO",
+          "src.value.converter.schema.registry.basic.auth.user.info": "'"$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO_SRC"'",
+          "src.value.converter.schema.registry.basic.auth.credentials.source": "USER_INFO",
 
           "src.kafka.ssl.endpoint.identification.algorithm":"https",
           "src.kafka.bootstrap.servers": "'"$BOOTSTRAP_SERVERS_SRC"'",
@@ -69,8 +69,8 @@ curl -X PUT \
 
           "value.converter": "io.confluent.connect.avro.AvroConverter",
           "value.converter.schema.registry.url": "'"$SCHEMA_REGISTRY_URL"'",
-          "value.converter.basic.auth.user.info": "${file:/data:schema.registry.basic.auth.user.info}",
-          "value.converter.basic.auth.credentials.source": "USER_INFO",
+          "value.converter.schema.registry.basic.auth.user.info": "${file:/data:schema.registry.basic.auth.user.info}",
+          "value.converter.schema.registry.basic.auth.credentials.source": "USER_INFO",
 
           "dest.kafka.ssl.endpoint.identification.algorithm":"https",
           "dest.kafka.bootstrap.servers": "${file:/data:bootstrap.servers}",
