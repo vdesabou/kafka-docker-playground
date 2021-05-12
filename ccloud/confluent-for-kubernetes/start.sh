@@ -5,29 +5,6 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
-USER=${USER:-$1}
-EMAIL=${EMAIL:-$2}
-APIKEY=${APIKEY:-$3}
-
-if [ -z "$USER" ]
-then
-     logerror "USER is not set. Export it as environment variable or pass it as argument"
-     exit 1
-fi
-
-if [ -z "$EMAIL" ]
-then
-     logerror "EMAIL is not set. Export it as environment variable or pass it as argument"
-     exit 1
-fi
-
-if [ -z "$APIKEY" ]
-then
-     logerror "APIKEY is not set. Export it as environment variable or pass it as argument"
-     exit 1
-fi
-
-
 CONFIG_FILE=~/.ccloud/config
 
 if [ ! -f ${CONFIG_FILE} ]
@@ -64,26 +41,15 @@ log "Create the Kubernetes namespaces to install Operator and cluster"
 kubectl create namespace confluent
 kubectl config set-context --current --namespace=confluent
 
-log "Setup Operator Early Access credentials."
-kubectl create secret docker-registry confluent-registry \
-  --docker-server=confluent-docker-internal-early-access-operator-2.jfrog.io \
-  --docker-username=$USER \
-        --docker-password=$APIKEY \
-        --docker-email=$EMAIL
-
 set +e
-helm repo remove confluentinc_earlyaccess
-log "Add repo confluentinc_earlyaccess"
-helm repo add confluentinc_earlyaccess \
-  https://confluent.jfrog.io/confluent/helm-early-access-operator-2 \
-  --username $USER \
-  --password $APIKEY
+helm repo remove confluentinc
+log "Add the Confluent for Kubernetes Helm repository"
+helm repo add confluentinc https://packages.confluent.io/helm
 helm repo update
 set -e
 
-log "Deploy Confluent Operator"
-helm upgrade --install operator confluentinc_earlyaccess/confluent-for-kubernetes \
-  --set image.registry=confluent-docker-internal-early-access-operator-2.jfrog.io
+log "Install Confluent for Kubernetes"
+helm upgrade --install confluent-operator confluentinc/confluent-for-kubernetes
 
 log "Generate a CA pair"
 # workaround for issue on linux, see https://github.com/vdesabou/kafka-docker-playground/issues/851#issuecomment-821151962

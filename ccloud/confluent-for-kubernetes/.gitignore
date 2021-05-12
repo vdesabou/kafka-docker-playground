@@ -1,4 +1,3 @@
-myenv
 confluent-platform.yaml
 creds-schemaRegistry-user.txt
 creds-client-kafka-sasl-user.txt
