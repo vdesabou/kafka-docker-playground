@@ -65,6 +65,63 @@ curl -X PUT \
           }' \
      http://localhost:8083/connectors/gcp-bigquery-sink/config | jq .
 
+# FIXTHIS
+# [2021-05-12 12:05:51,704] ERROR WorkerSinkTask{id=gcp-bigquery-sink-0} Error converting message value in topic 'myavrotopic' partition 0 at offset 1 and timestamp 1620821141211: Did not find matching union field for data: A (org.apache.kafka.connect.runtime.WorkerSinkTask)
+# org.apache.kafka.connect.errors.DataException: Did not find matching union field for data: A
+#         at io.confluent.connect.avro.AvroData.toConnectData(AvroData.java:1466)
+#         at io.confluent.connect.avro.AvroData.toConnectData(AvroData.java:1226)
+#         at io.confluent.connect.avro.AvroData.toConnectData(AvroData.java:1484)
+#         at io.confluent.connect.avro.AvroData.toConnectData(AvroData.java:1226)
+#         at io.confluent.connect.avro.AvroData.toConnectData(AvroData.java:1222)
+#         at io.confluent.connect.avro.AvroConverter.toConnectData(AvroConverter.java:115)
+#         at org.apache.kafka.connect.storage.Converter.toConnectData(Converter.java:87)
+#         at org.apache.kafka.connect.runtime.WorkerSinkTask.convertValue(WorkerSinkTask.java:545)
+#         at org.apache.kafka.connect.runtime.WorkerSinkTask.lambda$convertAndTransformRecord$1(WorkerSinkTask.java:501)
+#         at org.apache.kafka.connect.runtime.errors.RetryWithToleranceOperator.execAndRetry(RetryWithToleranceOperator.java:156)
+#         at org.apache.kafka.connect.runtime.errors.RetryWithToleranceOperator.execAndHandleError(RetryWithToleranceOperator.java:190)
+#         at org.apache.kafka.connect.runtime.errors.RetryWithToleranceOperator.execute(RetryWithToleranceOperator.java:132)
+#         at org.apache.kafka.connect.runtime.WorkerSinkTask.convertAndTransformRecord(WorkerSinkTask.java:501)
+#         at org.apache.kafka.connect.runtime.WorkerSinkTask.convertMessages(WorkerSinkTask.java:478)
+#         at org.apache.kafka.connect.runtime.WorkerSinkTask.poll(WorkerSinkTask.java:328)
+#         at org.apache.kafka.connect.runtime.WorkerSinkTask.iteration(WorkerSinkTask.java:232)
+#         at org.apache.kafka.connect.runtime.WorkerSinkTask.execute(WorkerSinkTask.java:201)
+#         at org.apache.kafka.connect.runtime.WorkerTask.doRun(WorkerTask.java:189)
+#         at org.apache.kafka.connect.runtime.WorkerTask.run(WorkerTask.java:238)
+#         at java.base/java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:515)
+#         at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:264)
+#         at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1128)
+#         at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:628)
+#         at java.base/java.lang.Thread.run(Thread.java:829)
+# [2021-05-12 12:05:51,713] ERROR WorkerSinkTask{id=gcp-bigquery-sink-0} Task threw an uncaught and unrecoverable exception. Task is being killed and will not recover until manually restarted (org.apache.kafka.connect.runtime.WorkerTask)
+# org.apache.kafka.connect.errors.ConnectException: Tolerance exceeded in error handler
+#         at org.apache.kafka.connect.runtime.errors.RetryWithToleranceOperator.execAndHandleError(RetryWithToleranceOperator.java:206)
+#         at org.apache.kafka.connect.runtime.errors.RetryWithToleranceOperator.execute(RetryWithToleranceOperator.java:132)
+#         at org.apache.kafka.connect.runtime.WorkerSinkTask.convertAndTransformRecord(WorkerSinkTask.java:501)
+#         at org.apache.kafka.connect.runtime.WorkerSinkTask.convertMessages(WorkerSinkTask.java:478)
+#         at org.apache.kafka.connect.runtime.WorkerSinkTask.poll(WorkerSinkTask.java:328)
+#         at org.apache.kafka.connect.runtime.WorkerSinkTask.iteration(WorkerSinkTask.java:232)
+#         at org.apache.kafka.connect.runtime.WorkerSinkTask.execute(WorkerSinkTask.java:201)
+#         at org.apache.kafka.connect.runtime.WorkerTask.doRun(WorkerTask.java:189)
+#         at org.apache.kafka.connect.runtime.WorkerTask.run(WorkerTask.java:238)
+#         at java.base/java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:515)
+#         at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:264)
+#         at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1128)
+#         at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:628)
+#         at java.base/java.lang.Thread.run(Thread.java:829)
+# Caused by: org.apache.kafka.connect.errors.DataException: Did not find matching union field for data: A
+#         at io.confluent.connect.avro.AvroData.toConnectData(AvroData.java:1466)
+#         at io.confluent.connect.avro.AvroData.toConnectData(AvroData.java:1226)
+#         at io.confluent.connect.avro.AvroData.toConnectData(AvroData.java:1484)
+#         at io.confluent.connect.avro.AvroData.toConnectData(AvroData.java:1226)
+#         at io.confluent.connect.avro.AvroData.toConnectData(AvroData.java:1222)
+#         at io.confluent.connect.avro.AvroConverter.toConnectData(AvroConverter.java:115)
+#         at org.apache.kafka.connect.storage.Converter.toConnectData(Converter.java:87)
+#         at org.apache.kafka.connect.runtime.WorkerSinkTask.convertValue(WorkerSinkTask.java:545)
+#         at org.apache.kafka.connect.runtime.WorkerSinkTask.lambda$convertAndTransformRecord$1(WorkerSinkTask.java:501)
+#         at org.apache.kafka.connect.runtime.errors.RetryWithToleranceOperator.execAndRetry(RetryWithToleranceOperator.java:156)
+#         at org.apache.kafka.connect.runtime.errors.RetryWithToleranceOperator.execAndHandleError(RetryWithToleranceOperator.java:190)
+#         ... 13 more
+
 log "Sleeping 125 seconds"
 sleep 125
 
