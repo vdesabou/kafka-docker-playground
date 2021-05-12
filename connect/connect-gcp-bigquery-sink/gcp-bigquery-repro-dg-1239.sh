@@ -33,7 +33,7 @@ log "Create dataset $PROJECT.$DATASET"
 docker run -i --volumes-from gcloud-config google/cloud-sdk:latest bq --project_id "$PROJECT" mk --dataset --description "used by playground" "$DATASET"
 
 log "Send data to topic myavrotopic"
-docker exec -i connect kafka-avro-console-producer --broker-list broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic myavrotopic --property value.schema='{"fields":[{"name":"id","type":["null","string",{"name":"testenum","symbols":["A","B","C","D"],"type":"enum"}]}],"name":"EnumUnionTest","namespace":"com","type":"record"}' << EOF
+docker exec -i connect kafka-avro-console-producer --broker-list broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic myavrotopic --property value.schema='{"fields":[{"name":"id","type":["null","string",{"name":"testenum","symbols":["A","B","C","D"],"type":"enum"}],"default":null}],"name":"EnumUnionTest","namespace":"com","type":"record"}' << EOF
 {"id":{"string":"anystring"}}
 {"id":{"com.testenum":"A"}}
 {"id":null}
