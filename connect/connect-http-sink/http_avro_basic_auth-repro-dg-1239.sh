@@ -34,7 +34,7 @@ ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml
 #     "type": "record"
 # }
 log "Send userType as string to topic myavrotopic1"
-docker exec -i connect kafka-avro-console-producer --broker-list broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic myavrotopic1 --property value.schema='{"fields":[{"default":null,"name":"userType","type":["null",{"type":"string","avro.java.string":"String"},{"name":"UserType","symbols":["ANONYMOUS","REGISTERED"],"type":"enum"}]}],"name":"EnumStringUnion","namespace":"com.connect.avro","type":"record"}' << EOF
+docker exec -i connect kafka-avro-console-producer --broker-list broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic myavrotopic1 --property value.schema='{"type":"record","name":"EnumStringUnion","namespace":"com.connect.avro","fields":[{"name":"userType","type":["null","string",{"type":"enum","name":"UserType","symbols":["ANONYMOUS","REGISTERED"]}],"default":null}]}' << EOF
 {"userType":{"string":"anystring"}}
 EOF
 
@@ -68,7 +68,7 @@ sleep 4
 curl localhost:8083/connectors/http-sink-1/status | jq
 
 log "Send userType as enum to topic myavrotopic2"
-docker exec -i connect kafka-avro-console-producer --broker-list broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic myavrotopic2 --property value.schema='{"fields":[{"default":null,"name":"userType","type":["null",{"type":"string","avro.java.string":"String"},{"name":"UserType","symbols":["ANONYMOUS","REGISTERED"],"type":"enum"}]}],"name":"EnumStringUnion","namespace":"com.connect.avro","type":"record"}' << EOF
+docker exec -i connect kafka-avro-console-producer --broker-list broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic myavrotopic2 --property value.schema='{"type":"record","name":"EnumStringUnion","namespace":"com.connect.avro","fields":[{"name":"userType","type":["null","string",{"type":"enum","name":"UserType","symbols":["ANONYMOUS","REGISTERED"]}],"default":null}]}' << EOF
 {"userType":{"com.connect.avro.UserType":"ANONYMOUS"}}
 EOF
 
@@ -120,7 +120,7 @@ curl localhost:8083/connectors/http-sink-2/status | jq
 # }
 
 log "Send userType as null to topic myavrotopic3"
-docker exec -i connect kafka-avro-console-producer --broker-list broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic myavrotopic3 --property value.schema='{"fields":[{"default":null,"name":"userType","type":["null",{"type":"string","avro.java.string":"String"},{"name":"UserType","symbols":["ANONYMOUS","REGISTERED"],"type":"enum"}]}],"name":"EnumStringUnion","namespace":"com.connect.avro","type":"record"}' << EOF
+docker exec -i connect kafka-avro-console-producer --broker-list broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic myavrotopic3 --property value.schema='{"type":"record","name":"EnumStringUnion","namespace":"com.connect.avro","fields":[{"name":"userType","type":["null","string",{"type":"enum","name":"UserType","symbols":["ANONYMOUS","REGISTERED"]}],"default":null}]}' << EOF
 {"userType":null}
 EOF
 
