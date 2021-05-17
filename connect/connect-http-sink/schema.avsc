@@ -1,0 +1,71 @@
+{
+    "fields": [
+        {
+            "name": "product1P",
+            "type": [
+                "null",
+                {
+                    "fields": [
+                        {
+                            "default": null,
+                            "name": "additionalProductProperties",
+                            "type": [
+                                "null",
+                                {
+                                    "fields": [
+                                        {
+                                            "name": "parentProductLink",
+                                            "type": [
+                                                "null",
+                                                {
+                                                    "fields": [
+                                                        {
+                                                            "name": "product",
+                                                            "type": [
+                                                                "null",
+                                                                {
+                                                                    "fields": [
+                                                                        {
+                                                                            "name": "isStoreStockAvailable",
+                                                                            "type": [
+                                                                                "null",
+                                                                                "boolean"
+                                                                            ]
+                                                                        },
+                                                                        {
+                                                                            "name": "isWarehouseStockAvailable",
+                                                                            "type": [
+                                                                                "null",
+                                                                                "boolean"
+                                                                            ]
+                                                                        }
+                                                                    ],
+                                                                    "name": "StandardProductData",
+                                                                    "type": "record"
+                                                                }
+                                                            ]
+                                                        }
+                                                    ],
+                                                    "name": "DerivedUnitLinkType",
+                                                    "type": "record"
+                                                }
+                                            ]
+                                        }
+                                    ],
+                                    "name": "DerivedUnitProductData",
+                                    "namespace": "com.github.vdesabou.properties",
+                                    "type": "record"
+                                }
+                            ]
+                        }
+                    ],
+                    "name": "Product1P",
+                    "type": "record"
+                }
+            ]
+        }
+    ],
+    "name": "Product1P3PMatched",
+    "namespace": "com.github.vdesabou",
+    "type": "record"
+  }
