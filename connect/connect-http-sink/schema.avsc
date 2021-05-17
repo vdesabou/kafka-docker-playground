@@ -55,7 +55,22 @@
                                     "name": "DerivedUnitProductData",
                                     "namespace": "com.github.vdesabou.properties",
                                     "type": "record"
-                                }
+                                },
+                                {
+                                    "fields": [
+                                        {
+                                            "name": "isStoreStockAvailable",
+                                            "type": [
+                                                "null",
+                                                "boolean"
+                                            ]
+                                        }
+                                    ],
+                                    "name": "DisplaySuppliesProductData",
+                                    "namespace": "com.github.vdesabou.properties",
+                                    "type": "record"
+                                },
+                                "com.github.vdesabou.properties.StandardProductData"
                             ]
                         }
                     ],
