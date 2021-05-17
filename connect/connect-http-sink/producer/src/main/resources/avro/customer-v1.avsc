@@ -1,0 +1,734 @@
+{
+    "fields": [
+        {
+            "name": "acmeProductId",
+            "type": [
+                "null",
+                "string"
+            ]
+        },
+        {
+            "name": "product1P",
+            "type": [
+                "null",
+                {
+                    "fields": [
+                        {
+                            "name": "acmeProductId",
+                            "type": [
+                                "null",
+                                "string"
+                            ]
+                        },
+                        {
+                            "default": null,
+                            "name": "additionalProductProperties",
+                            "type": [
+                                "null",
+                                {
+                                    "fields": [
+                                        {
+                                            "name": "supplierLink",
+                                            "type": [
+                                                "null",
+                                                {
+                                                    "fields": [
+                                                        {
+                                                            "name": "commercialSupplier",
+                                                            "type": [
+                                                                "null",
+                                                                {
+                                                                    "fields": [
+                                                                        {
+                                                                            "name": "acmeCommercialSupplierID",
+                                                                            "type": [
+                                                                                "null",
+                                                                                "string"
+                                                                            ]
+                                                                        },
+                                                                        {
+                                                                            "name": "category",
+                                                                            "type": [
+                                                                                "null",
+                                                                                "string"
+                                                                            ]
+                                                                        },
+                                                                        {
+                                                                            "name": "commercialSupplierID",
+                                                                            "type": [
+                                                                                "null",
+                                                                                "string"
+                                                                            ]
+                                                                        },
+                                                                        {
+                                                                            "name": "dispatchCountryCode",
+                                                                            "type": [
+                                                                                "null",
+                                                                                "string"
+                                                                            ]
+                                                                        },
+                                                                        {
+                                                                            "name": "sourceCountryCode",
+                                                                            "type": [
+                                                                                "null",
+                                                                                "string"
+                                                                            ]
+                                                                        }
+                                                                    ],
+                                                                    "name": "CommercialSupplierType",
+                                                                    "type": "record"
+                                                                }
+                                                            ]
+                                                        },
+                                                        {
+                                                            "name": "dispatchCountryCode",
+                                                            "type": [
+                                                                "null",
+                                                                "string"
+                                                            ]
+                                                        },
+                                                        {
+                                                            "name": "firstDeliveryDate",
+                                                            "type": [
+                                                                "null",
+                                                                {
+                                                                    "logicalType": "timestamp-millis",
+                                                                    "type": "long"
+                                                                }
+                                                            ]
+                                                        },
+                                                        {
+                                                            "name": "isLogisticRefered",
+                                                            "type": [
+                                                                "null",
+                                                                "boolean"
+                                                            ]
+                                                        },
+                                                        {
+                                                            "name": "isMadeToOrder",
+                                                            "type": [
+                                                                "null",
+                                                                "boolean"
+                                                            ]
+                                                        },
+                                                        {
+                                                            "name": "isWarehouseSupply",
+                                                            "type": [
+                                                                "null",
+                                                                "boolean"
+                                                            ]
+                                                        },
+                                                        {
+                                                            "name": "logisticUnitPlan",
+                                                            "type": [
+                                                                "null",
+                                                                {
+                                                                    "items": {
+                                                                        "fields": [
+                                                                            {
+                                                                                "name": "logisticUnit",
+                                                                                "type": [
+                                                                                    "null",
+                                                                                    {
+                                                                                        "fields": [
+                                                                                            {
+                                                                                                "name": "type",
+                                                                                                "type": "string"
+                                                                                            },
+                                                                                            {
+                                                                                                "name": "additionalFeature",
+                                                                                                "type": [
+                                                                                                    "null",
+                                                                                                    "string"
+                                                                                                ]
+                                                                                            },
+                                                                                            {
+                                                                                                "name": "stackingFactor",
+                                                                                                "type": [
+                                                                                                    "null",
+                                                                                                    "int"
+                                                                                                ]
+                                                                                            },
+                                                                                            {
+                                                                                                "name": "supportPalletCategory",
+                                                                                                "type": [
+                                                                                                    "null",
+                                                                                                    "string"
+                                                                                                ]
+                                                                                            },
+                                                                                            {
+                                                                                                "name": "reuseSupport",
+                                                                                                "type": [
+                                                                                                    "null",
+                                                                                                    "string"
+                                                                                                ]
+                                                                                            },
+                                                                                            {
+                                                                                                "name": "uvcQuantityByLayer",
+                                                                                                "type": [
+                                                                                                    "null",
+                                                                                                    {
+                                                                                                        "java-class": "java.math.BigDecimal",
+                                                                                                        "type": "string"
+                                                                                                    }
+                                                                                                ]
+                                                                                            },
+                                                                                            {
+                                                                                                "name": "quantityLowerLevelByLayer",
+                                                                                                "type": [
+                                                                                                    "null",
+                                                                                                    {
+                                                                                                        "java-class": "java.math.BigDecimal",
+                                                                                                        "type": "string"
+                                                                                                    }
+                                                                                                ]
+                                                                                            },
+                                                                                            {
+                                                                                                "name": "depth",
+                                                                                                "type": [
+                                                                                                    "null",
+                                                                                                    {
+                                                                                                        "java-class": "java.math.BigDecimal",
+                                                                                                        "type": "string"
+                                                                                                    }
+                                                                                                ]
+                                                                                            },
+                                                                                            {
+                                                                                                "name": "grossWeight",
+                                                                                                "type": [
+                                                                                                    "null",
+                                                                                                    {
+                                                                                                        "java-class": "java.math.BigDecimal",
+                                                                                                        "type": "string"
+                                                                                                    }
+                                                                                                ]
+                                                                                            },
+                                                                                            {
+                                                                                                "name": "height",
+                                                                                                "type": [
+                                                                                                    "null",
+                                                                                                    {
+                                                                                                        "java-class": "java.math.BigDecimal",
+                                                                                                        "type": "string"
+                                                                                                    }
+                                                                                                ]
+                                                                                            },
+                                                                                            {
+                                                                                                "name": "logisticUnitQuantities",
+                                                                                                "type": [
+                                                                                                    "null",
+                                                                                                    {
+                                                                                                        "items": {
+                                                                                                            "fields": [
+                                                                                                                {
+                                                                                                                    "name": "logisticUnit",
+                                                                                                                    "type": [
+                                                                                                                        "null",
+                                                                                                                        "LogisticUnitType"
+                                                                                                                    ]
+                                                                                                                },
+                                                                                                                {
+                                                                                                                    "name": "quantity",
+                                                                                                                    "type": [
+                                                                                                                        "null",
+                                                                                                                        {
+                                                                                                                            "java-class": "java.math.BigDecimal",
+                                                                                                                            "type": "string"
+                                                                                                                        }
+                                                                                                                    ]
+                                                                                                                }
+                                                                                                            ],
+                                                                                                            "name": "LogisticUnitQuantityType",
+                                                                                                            "type": "record"
+                                                                                                        },
+                                                                                                        "type": "array"
+                                                                                                    }
+                                                                                                ]
+                                                                                            },
+                                                                                            {
+                                                                                                "name": "packageCategory",
+                                                                                                "type": [
+                                                                                                    "null",
+                                                                                                    "string"
+                                                                                                ]
+                                                                                            },
+                                                                                            {
+                                                                                                "name": "uvcQuantity",
+                                                                                                "type": [
+                                                                                                    "null",
+                                                                                                    {
+                                                                                                        "java-class": "java.math.BigDecimal",
+                                                                                                        "type": "string"
+                                                                                                    }
+                                                                                                ]
+                                                                                            },
+                                                                                            {
+                                                                                                "name": "width",
+                                                                                                "type": [
+                                                                                                    "null",
+                                                                                                    {
+                                                                                                        "java-class": "java.math.BigDecimal",
+                                                                                                        "type": "string"
+                                                                                                    }
+                                                                                                ]
+                                                                                            }
+                                                                                        ],
+                                                                                        "name": "LogisticUnitType",
+                                                                                        "type": "record"
+                                                                                    }
+                                                                                ]
+                                                                            }
+                                                                        ],
+                                                                        "name": "LogisticUnitPlanType",
+                                                                        "type": "record"
+                                                                    },
+                                                                    "type": "array"
+                                                                }
+                                                            ]
+                                                        },
+                                                        {
+                                                            "name": "logisticUnits",
+                                                            "type": [
+                                                                "null",
+                                                                {
+                                                                    "items": "LogisticUnitType",
+                                                                    "type": "array"
+                                                                }
+                                                            ]
+                                                        },
+                                                        {
+                                                            "name": "processStatus",
+                                                            "type": [
+                                                                "null",
+                                                                {
+                                                                    "items": "string",
+                                                                    "type": "array"
+                                                                }
+                                                            ]
+                                                        },
+                                                        {
+                                                            "name": "productStatus",
+                                                            "type": [
+                                                                "null",
+                                                                "string"
+                                                            ]
+                                                        },
+                                                        {
+                                                            "name": "purchaseWarehouseStatus",
+                                                            "type": [
+                                                                "null",
+                                                                "string"
+                                                            ]
+                                                        },
+                                                        {
+                                                            "name": "qualityLockLevel",
+                                                            "type": [
+                                                                "null",
+                                                                {
+                                                                    "items": "string",
+                                                                    "type": "array"
+                                                                }
+                                                            ]
+                                                        },
+                                                        {
+                                                            "name": "sourceCountryCode",
+                                                            "type": [
+                                                                "null",
+                                                                "string"
+                                                            ]
+                                                        },
+                                                        {
+                                                            "name": "supplierProductID",
+                                                            "type": [
+                                                                "null",
+                                                                "string"
+                                                            ]
+                                                        },
+                                                        {
+                                                            "name": "supplierReferedStatus",
+                                                            "type": [
+                                                                "null",
+                                                                "string"
+                                                            ]
+                                                        },
+                                                        {
+                                                            "name": "traceID",
+                                                            "type": [
+                                                                "null",
+                                                                "string"
+                                                            ]
+                                                        },
+                                                        {
+                                                            "name": "validityEndDate",
+                                                            "type": [
+                                                                "null",
+                                                                {
+                                                                    "logicalType": "timestamp-millis",
+                                                                    "type": "long"
+                                                                }
+                                                            ]
+                                                        },
+                                                        {
+                                                            "name": "validityStartDate",
+                                                            "type": [
+                                                                "null",
+                                                                {
+                                                                    "logicalType": "timestamp-millis",
+                                                                    "type": "long"
+                                                                }
+                                                            ]
+                                                        }
+                                                    ],
+                                                    "name": "ProductSupplierLinkType",
+                                                    "type": "record"
+                                                }
+                                            ]
+                                        }
+                                    ],
+                                    "name": "CatalogProductData",
+                                    "namespace": "com.github.vdesabou.properties",
+                                    "type": "record"
+                                },
+                                {
+                                    "fields": [
+                                        {
+                                            "name": "compoCategory",
+                                            "type": [
+                                                "null",
+                                                {
+                                                    "name": "ProductItemCompoCategoryIDType",
+                                                    "symbols": [
+                                                        "PERSO",
+                                                        "ACHVTE",
+                                                        "ACH",
+                                                        "VTE"
+                                                    ],
+                                                    "type": "enum"
+                                                }
+                                            ]
+                                        },
+                                        {
+                                            "name": "compositionLinks",
+                                            "type": [
+                                                "null",
+                                                {
+                                                    "items": {
+                                                        "fields": [
+                                                            {
+                                                                "name": "endDate",
+                                                                "type": [
+                                                                    "null",
+                                                                    {
+                                                                        "logicalType": "timestamp-millis",
+                                                                        "type": "long"
+                                                                    }
+                                                                ]
+                                                            },
+                                                            {
+                                                                "name": "quantity",
+                                                                "type": [
+                                                                    "null",
+                                                                    {
+                                                                        "java-class": "java.math.BigDecimal",
+                                                                        "type": "string"
+                                                                    }
+                                                                ]
+                                                            },
+                                                            {
+                                                                "name": "startDate",
+                                                                "type": [
+                                                                    "null",
+                                                                    {
+                                                                        "logicalType": "timestamp-millis",
+                                                                        "type": "long"
+                                                                    }
+                                                                ]
+                                                            },
+                                                            {
+                                                                "name": "status",
+                                                                "type": [
+                                                                    "null",
+                                                                    "string"
+                                                                ]
+                                                            }
+                                                        ],
+                                                        "name": "CompositionLinkType",
+                                                        "type": "record"
+                                                    },
+                                                    "type": "array"
+                                                }
+                                            ]
+                                        },
+                                        {
+                                            "name": "isStoreStockAvailable",
+                                            "type": [
+                                                "null",
+                                                "boolean"
+                                            ]
+                                        },
+                                        {
+                                            "name": "isWarehouseStockAvailable",
+                                            "type": [
+                                                "null",
+                                                "boolean"
+                                            ]
+                                        },
+                                        {
+                                            "name": "priceDisplayRule",
+                                            "type": [
+                                                "null",
+                                                "string"
+                                            ]
+                                        },
+                                        {
+                                            "name": "priceLabel",
+                                            "type": [
+                                                "null",
+                                                "string"
+                                            ]
+                                        },
+                                        {
+                                            "name": "supplierLinks",
+                                            "type": [
+                                                "null",
+                                                {
+                                                    "items": "ProductSupplierLinkType",
+                                                    "type": "array"
+                                                }
+                                            ]
+                                        }
+                                    ],
+                                    "name": "CompositionProductData",
+                                    "namespace": "com.github.vdesabou.properties",
+                                    "type": "record"
+                                },
+                                {
+                                    "fields": [
+                                        {
+                                            "name": "supplierLink",
+                                            "type": [
+                                                "null",
+                                                "ProductSupplierLinkType"
+                                            ]
+                                        }
+                                    ],
+                                    "name": "CustomisedProductData",
+                                    "namespace": "com.github.vdesabou.properties",
+                                    "type": "record"
+                                },
+                                {
+                                    "fields": [
+                                        {
+                                            "name": "parentProductLink",
+                                            "type": [
+                                                "null",
+                                                {
+                                                    "fields": [
+                                                        {
+                                                            "name": "endDate",
+                                                            "type": [
+                                                                "null",
+                                                                {
+                                                                    "logicalType": "timestamp-millis",
+                                                                    "type": "long"
+                                                                }
+                                                            ]
+                                                        },
+                                                        {
+                                                            "name": "product",
+                                                            "type": [
+                                                                "null",
+                                                                {
+                                                                    "fields": [
+                                                                        {
+                                                                            "name": "isStoreStockAvailable",
+                                                                            "type": [
+                                                                                "null",
+                                                                                "boolean"
+                                                                            ]
+                                                                        },
+                                                                        {
+                                                                            "name": "isWarehouseStockAvailable",
+                                                                            "type": [
+                                                                                "null",
+                                                                                "boolean"
+                                                                            ]
+                                                                        },
+                                                                        {
+                                                                            "name": "sampleLinks",
+                                                                            "type": [
+                                                                                "null",
+                                                                                {
+                                                                                    "items": {
+                                                                                        "fields": [
+                                                                                            {
+                                                                                                "name": "endDate",
+                                                                                                "type": [
+                                                                                                    "null",
+                                                                                                    {
+                                                                                                        "logicalType": "timestamp-millis",
+                                                                                                        "type": "long"
+                                                                                                    }
+                                                                                                ]
+                                                                                            },
+                                                                                            {
+                                                                                                "name": "startDate",
+                                                                                                "type": [
+                                                                                                    "null",
+                                                                                                    {
+                                                                                                        "logicalType": "timestamp-millis",
+                                                                                                        "type": "long"
+                                                                                                    }
+                                                                                                ]
+                                                                                            },
+                                                                                            {
+                                                                                                "name": "status",
+                                                                                                "type": [
+                                                                                                    "null",
+                                                                                                    "string"
+                                                                                                ]
+                                                                                            }
+                                                                                        ],
+                                                                                        "name": "SampleLinkType",
+                                                                                        "type": "record"
+                                                                                    },
+                                                                                    "type": "array"
+                                                                                }
+                                                                            ]
+                                                                        },
+                                                                        {
+                                                                            "name": "supplierLinks",
+                                                                            "type": [
+                                                                                "null",
+                                                                                {
+                                                                                    "items": "ProductSupplierLinkType",
+                                                                                    "type": "array"
+                                                                                }
+                                                                            ]
+                                                                        },
+                                                                        {
+                                                                            "default": null,
+                                                                            "name": "productID",
+                                                                            "type": [
+                                                                                "null",
+                                                                                "string"
+                                                                            ]
+                                                                        }
+                                                                    ],
+                                                                    "name": "StandardProductData",
+                                                                    "type": "record"
+                                                                }
+                                                            ]
+                                                        },
+                                                        {
+                                                            "name": "ratingCategoryUnitDerived",
+                                                            "type": [
+                                                                "null",
+                                                                "string"
+                                                            ]
+                                                        },
+                                                        {
+                                                            "name": "ratingUnitDerived",
+                                                            "type": [
+                                                                "null",
+                                                                {
+                                                                    "java-class": "java.math.BigDecimal",
+                                                                    "type": "string"
+                                                                }
+                                                            ]
+                                                        },
+                                                        {
+                                                            "name": "startDate",
+                                                            "type": [
+                                                                "null",
+                                                                {
+                                                                    "logicalType": "timestamp-millis",
+                                                                    "type": "long"
+                                                                }
+                                                            ]
+                                                        },
+                                                        {
+                                                            "name": "status",
+                                                            "type": [
+                                                                "null",
+                                                                "string"
+                                                            ]
+                                                        }
+                                                    ],
+                                                    "name": "DerivedUnitLinkType",
+                                                    "type": "record"
+                                                }
+                                            ]
+                                        }
+                                    ],
+                                    "name": "DerivedUnitProductData",
+                                    "namespace": "com.github.vdesabou.properties",
+                                    "type": "record"
+                                },
+                                {
+                                    "fields": [
+                                        {
+                                            "name": "isStoreStockAvailable",
+                                            "type": [
+                                                "null",
+                                                "boolean"
+                                            ]
+                                        },
+                                        {
+                                            "name": "isWarehouseStockAvailable",
+                                            "type": [
+                                                "null",
+                                                "boolean"
+                                            ]
+                                        },
+                                        {
+                                            "name": "supplierLinks",
+                                            "type": [
+                                                "null",
+                                                {
+                                                    "items": "ProductSupplierLinkType",
+                                                    "type": "array"
+                                                }
+                                            ]
+                                        }
+                                    ],
+                                    "name": "DisplaySuppliesProductData",
+                                    "namespace": "com.github.vdesabou.properties",
+                                    "type": "record"
+                                },
+                                {
+                                    "fields": [],
+                                    "name": "LocalProductData",
+                                    "namespace": "com.github.vdesabou.properties",
+                                    "type": "record"
+                                },
+
+                                "com.github.vdesabou.properties.StandardProductData"
+                            ]
+                        }
+                    ],
+                    "name": "Product1P",
+                    "type": "record"
+                }
+            ]
+        },
+        {
+            "default": null,
+            "name": "origin",
+            "type": [
+                "null",
+                {
+                    "name": "Origin",
+                    "symbols": [
+                        "_1P",
+                        "_3P"
+                    ],
+                    "type": "enum"
+                }
+            ]
+        }
+    ],
+    "name": "Product1P3PMatched",
+    "namespace": "com.github.vdesabou",
+    "type": "record"
+  }
