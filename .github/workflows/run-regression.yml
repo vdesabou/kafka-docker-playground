@@ -78,6 +78,8 @@ jobs:
                       "🚀 connect/connect-cdc-oracle12-source",
                       "🚀 connect/connect-jms-weblogic-source",
                       "🚀 connect/connect-azure-cosmosdb-source connect/connect-azure-cosmosdb-sink connect/connect-jdbc-cockroachdb-source"
+                      # do not remove, this is run by run-regression-self-managed.yml, but required to update README file
+                      # 🚀 connect/connect-mapr-sink"
                     ]
     steps:
       - name: Checkout code
