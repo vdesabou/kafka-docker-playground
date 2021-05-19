@@ -20,7 +20,7 @@ then
      exit 1
 fi
 
-${DIR}/../../environment/ldap_authorizer_sasl_plain/start.sh "${PWD}/docker-compose.ldap_authorizer_sasl_plain.yml"
+${DIR}/../../environment/ldap-authorizer-sasl-plain/start.sh "${PWD}/docker-compose.ldap-authorizer-sasl-plain.yml"
 
 log "Doing gsutil authentication"
 set +e
