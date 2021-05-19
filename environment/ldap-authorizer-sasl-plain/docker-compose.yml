@@ -18,13 +18,13 @@ services:
             - "389:389"
             - "636:636"
         volumes:
-            - ../../environment/ldap_authorizer_sasl_plain/ldap/custom:/container/service/slapd/assets/config/bootstrap/ldif/custom
+            - ../../environment/ldap-authorizer-sasl-plain/ldap/custom:/container/service/slapd/assets/config/bootstrap/ldif/custom
         command: "--copy-service"
 
     broker:
         volumes:
-          - ../../environment/ldap_authorizer_sasl_plain/kafka/users:/service/kafka/users
-          - ../../environment/ldap_authorizer_sasl_plain/kafka/kafka.jaas.conf:/etc/kafka/kafka_server_jaas.conf
+          - ../../environment/ldap-authorizer-sasl-plain/kafka/users:/service/kafka/users
+          - ../../environment/ldap-authorizer-sasl-plain/kafka/kafka.jaas.conf:/etc/kafka/kafka_server_jaas.conf
         environment:
             # overide to add our users
             KAFKA_LISTENER_NAME_EXTERNAL_PLAIN_SASL_JAAS_CONFIG: |
