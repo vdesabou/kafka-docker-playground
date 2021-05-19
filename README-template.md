@@ -210,6 +210,7 @@ Single cluster:
 - [2WAY_SSL](https://github.com/vdesabou/kafka-docker-playground/tree/master/environment/2way-ssl): SSL encryption, SSL authentication
 - [Kerberos](https://github.com/vdesabou/kafka-docker-playground/tree/master/environment/kerberos): no SSL encryption, Kerberos GSSAPI authentication
 - [SSL_Kerberos](https://github.com/vdesabou/kafka-docker-playground/tree/master/environment/ssl_kerberos) SSL encryption, Kerberos GSSAPI authentication
+- [LDAP Authentication with SASL/PLAIN](https://github.com/vdesabou/kafka-docker-playground/tree/master/environment/ldap-sasl-plain) no SSL encryption, SASL/PLAIN authentication using LDAP
 - [LDAP Authorizer with SASL/PLAIN](https://github.com/vdesabou/kafka-docker-playground/tree/master/environment/ldap_authorizer_sasl_plain) no SSL encryption, SASL/PLAIN authentication, LDAP Authorizer for ACL authorization
 - [RBAC with SASL/PLAIN](https://github.com/vdesabou/kafka-docker-playground/tree/master/environment/rbac-sasl-plain) RBAC with no SSL encryption, SASL/PLAIN authentication
 
