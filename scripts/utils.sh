@@ -882,10 +882,15 @@ function addhost() {
 function stop_all() {
   current_dir="$1"
   cd ${current_dir}
-  for docker_compose_file in $(ls docker-compose.*)
-  do
-      environment=$(echo $docker_compose_file | cut -d "." -f 2)
-      ${DIR}/../../environment/${environment}/stop.sh "${PWD}/${docker_compose_file}"
-  done
+  if ls docker-compose.* 1> /dev/null 2>&1;
+  then
+    for docker_compose_file in $(ls docker-compose.*)
+    do
+        environment=$(echo $docker_compose_file | cut -d "." -f 2)
+        ${DIR}/../../environment/${environment}/stop.sh "${PWD}/${docker_compose_file}"
+    done
+  else
+    ${DIR}/../../environment/plaintext/stop.sh
+  fi
   cd -
 }
