@@ -1,0 +1,23 @@
+{
+    "fields": [
+        {
+            "name": "customer_id",
+            "type": "int"
+        },
+        {
+            "name": "customer_name",
+            "type": "string"
+        },
+        {
+            "name": "customer_email",
+            "type": "string"
+        },
+        {
+            "name": "customer_address",
+            "type": "string"
+        }
+    ],
+    "name": "Customer",
+    "namespace": "io.confluent.examples.avro",
+    "type": "record"
+}
