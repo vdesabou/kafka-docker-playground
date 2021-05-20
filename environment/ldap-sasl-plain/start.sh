@@ -24,3 +24,10 @@ then
     shift
 fi
 ../../scripts/wait-for-connect-and-controlcenter.sh $@
+
+log "📊 JMX metrics are available locally on those ports:"
+log "    - zookeeper       : 9999"
+log "    - broker          : 10000"
+log "    - schema-registry : 10001"
+log "    - connect         : 10002"
+log "    - ksqldb-server   : 10003"

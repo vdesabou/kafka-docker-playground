@@ -104,6 +104,13 @@ then
 fi
 ../../scripts/wait-for-connect-and-controlcenter.sh $@
 
+log "📊 JMX metrics are available locally on those ports:"
+log "    - zookeeper       : 9999"
+log "    - broker          : 10000"
+log "    - schema-registry : 10001"
+log "    - connect         : 10002"
+log "    - ksqldb-server   : 10003"
+
 # Adding ACLs for consumer and producer user:
 docker exec client bash -c "kinit -k -t /var/lib/secret/kafka-admin.key admin/for-kafka && kafka-acls --bootstrap-server broker:9092 --command-config /etc/kafka/command.properties --add --allow-principal User:kafka_producer --producer --topic=*"
 docker exec client bash -c "kinit -k -t /var/lib/secret/kafka-admin.key admin/for-kafka && kafka-acls --bootstrap-server broker:9092 --command-config /etc/kafka/command.properties --add --allow-principal User:kafka_consumer --consumer --topic=* --group=*"
