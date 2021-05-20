@@ -124,3 +124,10 @@ log "-> docker-compose exec client bash -c 'kinit -k -t /var/lib/secret/kafka-cl
 log "-> docker-compose exec client bash -c 'kinit -k -t /var/lib/secret/kafka-client.key kafka_consumer && kafka-console-consumer --bootstrap-server broker:9092 --topic test --consumer.config /etc/kafka/consumer.properties --from-beginning'"
 
 cd ${OLDDIR}
+
+log "📊 JMX metrics are available locally on those ports:"
+log "    - zookeeper       : 9999"
+log "    - broker          : 10000"
+log "    - schema-registry : 10001"
+log "    - connect         : 10002"
+log "    - ksqldb-server   : 10003"

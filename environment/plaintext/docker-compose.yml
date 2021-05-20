@@ -7,9 +7,13 @@ services:
     hostname: zookeeper
     container_name: zookeeper
     restart: always
+    ports:
+      - "9999:9999"
     environment:
       ZOOKEEPER_CLIENT_PORT: 2181
       ZOOKEEPER_TICK_TIME: 2000
+      KAFKA_JMX_PORT: 9999
+      KAFKA_JMX_HOSTNAME: localhost
       # for 5.4.x:
       KAFKA_OPTS: -Dzookeeper.4lw.commands.whitelist=*
 
@@ -22,7 +26,10 @@ services:
       - zookeeper
     ports:
       - "9092:9092"
+      - "10000:10000"
     environment:
+      KAFKA_JMX_PORT: 10000
+      KAFKA_JMX_HOSTNAME: localhost
       KAFKA_BROKER_ID: 1
       KAFKA_ZOOKEEPER_CONNECT: 'zookeeper:2181'
       KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://broker:9092
@@ -53,7 +60,10 @@ services:
       - broker
     ports:
       - "8081:8081"
+      - "10001:10001"
     environment:
+      SCHEMA_REGISTRY_JMX_PORT: 10001
+      SCHEMA_REGISTRY_JMX_HOSTNAME: localhost
       SCHEMA_REGISTRY_HOST_NAME: schema-registry
       SCHEMA_REGISTRY_LISTENERS: http://0.0.0.0:8081
       SCHEMA_REGISTRY_KAFKASTORE_BOOTSTRAP_SERVERS: broker:9092
@@ -73,7 +83,10 @@ services:
       - schema-registry
     ports:
       - "8083:8083"
+      - "10002:10002"
     environment:
+      KAFKA_JMX_PORT: 10002
+      KAFKA_JMX_HOSTNAME: localhost
       CONNECT_BOOTSTRAP_SERVERS: 'broker:9092'
       CONNECT_REST_ADVERTISED_HOST_NAME: connect
       CONNECT_GROUP_ID: "connect-cluster"
@@ -114,7 +127,10 @@ services:
       - connect
     ports:
       - "8088:8088"
+      - "10003:10003"
     environment:
+      KSQL_JMX_PORT: 10003
+      KSQL_JMX_HOSTNAME: localhost
       KSQL_LISTENERS: http://0.0.0.0:8088
       KSQL_BOOTSTRAP_SERVERS: broker:9092
       KSQL_CACHE_MAX_BYTES_BUFFERING: 0
