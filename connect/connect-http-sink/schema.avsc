@@ -8,9 +8,55 @@
                     "fields": [
                         {
                             "default": null,
+                            "name": "webProductManager",
+                            "type": [
+                                "null",
+                                "string"
+                            ]
+                        },
+                        {
+                            "default": null,
                             "name": "additionalProductProperties",
                             "type": [
                                 "null",
+                                {
+                                    "fields": [
+                                        {
+                                            "name": "supplierLink",
+                                            "type": [
+                                                "null",
+                                                {
+                                                    "fields": [
+                                                        {
+                                                            "name": "commercialSupplier",
+                                                            "type": [
+                                                                "null",
+                                                                {
+                                                                    "fields": [
+                                                                        {
+                                                                            "name": "acmeCommercialSupplierID",
+                                                                            "type": [
+                                                                                "null",
+                                                                                "string"
+                                                                            ]
+                                                                        }
+                                                                    ],
+                                                                    "name": "CommercialSupplierType",
+                                                                    "type": "record"
+                                                                }
+                                                            ]
+                                                        }
+                                                    ],
+                                                    "name": "ProductSupplierLinkType",
+                                                    "type": "record"
+                                                }
+                                            ]
+                                        }
+                                    ],
+                                    "name": "CatalogProductData",
+                                    "namespace": "com.github.vdesabou.properties",
+                                    "type": "record"
+                                },
                                 {
                                     "fields": [
                                         {
@@ -19,6 +65,17 @@
                                                 "null",
                                                 {
                                                     "fields": [
+                                                        {
+                                                            "default": null,
+                                                            "name": "endDate",
+                                                            "type": [
+                                                                "null",
+                                                                {
+                                                                    "logicalType": "timestamp-millis",
+                                                                    "type": "long"
+                                                                }
+                                                            ]
+                                                        },
                                                         {
                                                             "name": "product",
                                                             "type": [
@@ -37,6 +94,69 @@
                                                                             "type": [
                                                                                 "null",
                                                                                 "boolean"
+                                                                            ]
+                                                                        },
+                                                                        {
+                                                                            "name": "sampleLinks",
+                                                                            "type": [
+                                                                                "null",
+                                                                                {
+                                                                                    "items": {
+                                                                                        "fields": [
+                                                                                            {
+                                                                                                "name": "endDate",
+                                                                                                "type": [
+                                                                                                    "null",
+                                                                                                    {
+                                                                                                        "logicalType": "timestamp-millis",
+                                                                                                        "type": "long"
+                                                                                                    }
+                                                                                                ]
+                                                                                            }
+                                                                                        ],
+                                                                                        "name": "SampleLinkType",
+                                                                                        "type": "record"
+                                                                                    },
+                                                                                    "type": "array"
+                                                                                }
+                                                                            ]
+                                                                        },
+                                                                        {
+                                                                            "default": null,
+                                                                            "name": "productID",
+                                                                            "type": [
+                                                                                "null",
+                                                                                "string"
+                                                                            ]
+                                                                        },
+                                                                        {
+                                                                            "default": null,
+                                                                            "name": "unitSale",
+                                                                            "type": [
+                                                                                "null",
+                                                                                {
+                                                                                    "name": "UnitSaleType",
+                                                                                    "symbols": [
+                                                                                        "LTR",
+                                                                                        "MTR",
+                                                                                        "MTK",
+                                                                                        "MTQ",
+                                                                                        "KGM",
+                                                                                        "LOT",
+                                                                                        "NIU",
+                                                                                        "BZ",
+                                                                                        "RO",
+                                                                                        "PAN",
+                                                                                        "DAY",
+                                                                                        "UO",
+                                                                                        "WE",
+                                                                                        "DJ",
+                                                                                        "H",
+                                                                                        "PREST",
+                                                                                        "CAR"
+                                                                                    ],
+                                                                                    "type": "enum"
+                                                                                }
                                                                             ]
                                                                         }
                                                                     ],
