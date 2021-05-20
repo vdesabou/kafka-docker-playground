@@ -1,0 +1,4 @@
+[
+    "io.confluent.examples.avro.Customer",
+    "io.confluent.examples.avro.Product"
+]

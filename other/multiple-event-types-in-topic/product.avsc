@@ -1,0 +1,19 @@
+{
+    "fields": [
+        {
+            "name": "product_id",
+            "type": "int"
+        },
+        {
+            "name": "product_name",
+            "type": "string"
+        },
+        {
+            "name": "product_price",
+            "type": "double"
+        }
+    ],
+    "name": "Product",
+    "namespace": "io.confluent.examples.avro",
+    "type": "record"
+}
