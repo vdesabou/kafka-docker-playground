@@ -58,13 +58,6 @@ spec:
     - User:kafka
     - User:ANONYMOUS
   services:
-    # restProxy:
-    #   enabled: true
-    #   mds:
-    #     authentication:
-    #       type: bearer
-    #       bearer:
-    #         secretRef: mds-client
     mds:
       tls:
         enabled: true
@@ -94,11 +87,6 @@ spec:
             userObjectClass: organizationalRole
             userSearchBase: dc=test,dc=com
   dependencies:
-    kafkaRest:
-      authentication:
-        type: bearer
-        bearer:
-          secretRef: mds-client
     zookeeper:
       endpoint: zookeeper.confluent.svc.cluster.local:2182
       authentication:
@@ -107,6 +95,11 @@ spec:
           secretRef: credential
       tls:
         enabled: true
+    kafkaRest:
+      authentication:
+        type: bearer
+        bearer:
+          secretRef: mds-client
   configOverrides:
     server:
       - offsets.topic.replication.factor=1
@@ -292,14 +285,3 @@ spec:
       tls:
         enabled: true
 ---
-apiVersion: platform.confluent.io/v1beta1
-kind: KafkaRestClass
-metadata:
-  name: default
-  namespace: confluent
-spec:
-  kafkaRest:
-    authentication:
-      type: bearer
-      bearer:
-        secretRef: rest-credential
