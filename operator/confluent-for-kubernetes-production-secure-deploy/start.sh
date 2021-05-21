@@ -31,12 +31,12 @@ helm repo update
 set -e
 
 log "Install Confluent for Kubernetes"
-helm upgrade --install confluent-operator confluentinc/confluent-for-kubernetes
+helm upgrade --install confluent-operator confluentinc/confluent-for-kubernetes --set debug="true"
 
 log "Deploy OpenLdap"
 helm upgrade --install -f ${DIR}/openldap/ldaps-rbac.yaml test-ldap ${DIR}/openldap --namespace confluent
 
-sleep 30
+sleep 90
 
 log "Validate that OpenLDAP is running"
 kubectl exec -it ldap-0 -- ldapsearch -LLL -x -H ldap://ldap.confluent.svc.cluster.local:389 -b 'dc=test,dc=com' -D "cn=mds,dc=test,dc=com" -w 'Developer!'
