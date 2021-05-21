@@ -1,0 +1,11 @@
+{{- if .Values.ldifs }}
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: {{ .Values.name }}-ldifs
+data:
+{{- range $key, $val := .Values.ldifs }}
+  {{ $key }}: |-
+{{ $val | indent 4 }}
+{{- end }}
+{{- end }}
