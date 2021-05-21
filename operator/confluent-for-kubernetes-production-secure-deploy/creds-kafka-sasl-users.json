@@ -1,0 +1,5 @@
+{
+  "kafka_client": "kafka_client-secret",
+  "c3": "c3-secret",
+  "kafka": "kafka-secret"
+}

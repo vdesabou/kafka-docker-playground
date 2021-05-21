@@ -1,0 +1,2 @@
+username=c3
+password=c3-secret

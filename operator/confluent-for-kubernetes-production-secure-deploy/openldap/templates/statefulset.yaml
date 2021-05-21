@@ -1,0 +1,86 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: ldap
+  namespace: {{ .Release.Namespace }}
+spec:
+  selector:
+    matchLabels:
+      app: ldap
+  serviceName: "ldap"
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: ldap
+    spec:
+      containers:
+      - name: ldap
+        args:
+        - --copy-service
+        - --loglevel=debug
+        imagePullPolicy: IfNotPresent
+        image: {{ .Values.image }}
+        ports:
+        - containerPort: 389
+          name: ldap
+        - containerPort: 636
+          name: ldaps
+        env:
+        {{- if .Values.tls.enabled }}
+        - name: LDAP_TLS_VERIFY_CLIENT
+          value: try
+        - name: LDAP_TLS_CRT_FILENAME
+          value: tls.crt
+        - name: LDAP_TLS_KEY_FILENAME
+          value: tls.key
+        - name: LDAP_TLS_CA_CRT_FILENAME
+          value: ca.crt
+        - name: LDAP_TLS
+          value: "true"
+        {{- end }}
+        {{- range $key, $val := .Values.env }}
+        {{ printf "- name: %s" $key }}
+        {{ printf "  value: \"%s\"" $val }}
+        {{- end }}
+        volumeMounts:
+        {{- if .Values.tls.enabled }}
+        - mountPath: /container/service/slapd/assets/certs
+          name: sslcerts-volume
+        {{- end }}
+        - mountPath: /var/lib/ldap
+          name: ldap-data
+        - mountPath: /etc/ldap/slapd.d
+          name: ldap-config
+       {{- if .Values.ldifs }}
+        - mountPath: /container/service/slapd/assets/config/bootstrap/ldif/custom
+          name: customldif
+       {{- end }}
+      volumes:
+      {{- if .Values.tls.enabled }}
+      - name: sslcerts-volume
+        secret:
+          defaultMode: 420
+          secretName: {{ .Values.name }}-sslcerts
+      {{- end }}
+      {{- if .Values.ldifs }}
+      - name: customldif
+        configMap:
+          defaultMode: 420
+          name: {{ .Values.name }}-ldifs
+      {{- end }}
+  volumeClaimTemplates:
+  - metadata:
+      name: ldap-data
+    spec:
+      accessModes: ["ReadWriteOnce"]
+      resources:
+        requests:
+          storage: 500Mi
+  - metadata:
+      name: ldap-config
+    spec:
+      accessModes: ["ReadWriteOnce"]
+      resources:
+        requests:
+          storage: 500Mi
