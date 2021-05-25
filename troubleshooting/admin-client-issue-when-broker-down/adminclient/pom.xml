@@ -4,7 +4,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.github.vdesabou</groupId>
     <artifactId>adminclient</artifactId>
-    <version>${env.TAG}</version>
+    <version>${kafka.tag}</version>
     <packaging>jar</packaging>
     <properties>
         <maven.compiler.source>1.8</maven.compiler.source>
@@ -23,13 +23,13 @@
         <dependency>
             <groupId>org.apache.kafka</groupId>
             <artifactId>kafka-clients</artifactId>
-            <version>${env.KAFKA_CLIENT_TAG}</version>
+            <version>${kafka.client.tag}</version>
         </dependency>
 
         <dependency>
             <groupId>org.apache.kafka</groupId>
             <artifactId>kafka_2.12</artifactId>
-            <version>${env.TAG}-ccs</version>
+            <version>${kafka.tag}-ccs</version>
             <scope>provided</scope>
         </dependency>
 

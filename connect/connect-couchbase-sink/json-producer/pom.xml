@@ -18,7 +18,7 @@
         <dependency>
             <groupId>org.apache.kafka</groupId>
             <artifactId>kafka-clients</artifactId>
-            <version>${env.KAFKA_CLIENT_TAG}</version>
+            <version>${kafka.client.tag}</version>
         </dependency>
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>

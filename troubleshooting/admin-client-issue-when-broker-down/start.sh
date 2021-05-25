@@ -7,7 +7,7 @@ source ${DIR}/../../scripts/utils.sh
 if [ ! -f ${DIR}/adminclient/target/adminclient-${TAG}-jar-with-dependencies.jar ]
 then
      log "Building jar for adminclient"
-     docker run -i --rm -e TAG=$TAG_BASE -e KAFKA_CLIENT_TAG=$KAFKA_CLIENT_TAG -v "${DIR}/adminclient":/usr/src/mymaven -v "$HOME/.m2":/root/.m2 -v "${DIR}/adminclient/target:/usr/src/mymaven/target" -w /usr/src/mymaven maven:3.6.1-jdk-11 mvn package
+     docker run -i --rm -e TAG=$TAG_BASE -e KAFKA_CLIENT_TAG=$KAFKA_CLIENT_TAG -v "${DIR}/adminclient":/usr/src/mymaven -v "$HOME/.m2":/root/.m2 -v "${DIR}/adminclient/target:/usr/src/mymaven/target" -w /usr/src/mymaven maven:3.6.1-jdk-11 mvn -Dkafka.tag=$TAG -Dkafka.client.tag=$KAFKA_CLIENT_TAG package
 fi
 
 docker-compose down -v --remove-orphans
