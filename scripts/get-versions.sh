@@ -31,9 +31,23 @@ do
   break
 done
 
+for image_version in $image_versions
+do
+  if [ ! -d ${DIR}/confluent-hub-components${image_version} ]
+  then
+    docker rm -f kafka-docker-playground-connect${image_version}
+    docker create -ti --name kafka-docker-playground-connect${image_version} vdesabou/kafka-docker-playground-connect:${image_version} bash
+    docker cp kafka-docker-playground-connect${image_version}:/usr/share/confluent-hub-components ${DIR}/confluent-hub-components${image_version}
+    docker rm -f kafka-docker-playground-connect${image_version}
+  fi
+done
+
 log "Getting ci result files"
-mkdir -p ci
-aws s3 cp s3://kafka-docker-playground/ci/ ci/ --recursive --no-progress --region us-east-1
+if [ ! -d ci ]
+then
+  mkdir -p ci
+  aws s3 cp s3://kafka-docker-playground/ci/ ci/ --recursive --no-progress --region us-east-1
+fi
 
 test_list=$(grep "🚀 " ${DIR}/../.github/workflows/run-regression.yml | cut -d '"' -f 2 | tr '\n' ' ')
 declare -a TEST_FAILED
@@ -124,10 +138,10 @@ do
             # see https://github.com/vdesabou/kafka-docker-playground/issues/221
             version=${image_version}
           else
-            version=$(docker run --rm vdesabou/kafka-docker-playground-connect:${image_version} cat /usr/share/confluent-hub-components/${connector_path}/manifest.json | jq -r '.version')
+            version=$(cat ${DIR}/confluent-hub-components${image_version}/${connector_path}/manifest.json | jq -r '.version')
           fi
         else
-          version=$(docker run --rm vdesabou/kafka-docker-playground-connect:${image_version} cat /usr/share/confluent-hub-components/${connector_path}/manifest.json | jq -r '.version')
+          version=$(cat ${DIR}/confluent-hub-components${image_version}/${connector_path}/manifest.json | jq -r '.version')
         fi
       fi
       testdir=$(echo "$test" | sed 's/\//-/g')
@@ -261,10 +275,10 @@ do
 
   if [ "$connector_path" != "" ]
   then
-    version=$(docker run --rm vdesabou/kafka-docker-playground-connect:${latest_version} cat /usr/share/confluent-hub-components/${connector_path}/manifest.json | jq -r '.version')
-    license=$(docker run --rm vdesabou/kafka-docker-playground-connect:${latest_version} cat /usr/share/confluent-hub-components/${connector_path}/manifest.json | jq -r '.license[0].name')
-    owner=$(docker run --rm vdesabou/kafka-docker-playground-connect:${latest_version} cat /usr/share/confluent-hub-components/${connector_path}/manifest.json | jq -r '.owner.name')
-    release_date=$(docker run --rm vdesabou/kafka-docker-playground-connect:${latest_version} cat /usr/share/confluent-hub-components/${connector_path}/manifest.json | jq -r '.release_date')
+    version=$(cat ${DIR}/confluent-hub-components${image_version}/${connector_path}/manifest.json | jq -r '.version')
+    license=$(cat ${DIR}/confluent-hub-components${image_version}/${connector_path}/manifest.json | jq -r '.license[0].name')
+    owner=$(cat ${DIR}/confluent-hub-components${image_version}/${connector_path}/manifest.json | jq -r '.owner.name')
+    release_date=$(cat ${DIR}/confluent-hub-components${image_version}/${connector_path}/manifest.json | jq -r '.release_date')
     if [ "$release_date" = "null" ]
     then
       release_date=""
@@ -298,10 +312,10 @@ do
 done
 for connector in confluentinc-kafka-connect-aws-redshift
 do
-  version=$(docker run --rm vdesabou/kafka-docker-playground-connect:${latest_version} cat /usr/share/confluent-hub-components/${connector}/manifest.json | jq -r '.version')
-  license=$(docker run --rm vdesabou/kafka-docker-playground-connect:${latest_version} cat /usr/share/confluent-hub-components/${connector}/manifest.json | jq -r '.license[0].name')
-  owner=$(docker run --rm vdesabou/kafka-docker-playground-connect:${latest_version} cat /usr/share/confluent-hub-components/${connector}/manifest.json | jq -r '.owner.name')
-  release_date=$(docker run --rm vdesabou/kafka-docker-playground-connect:${latest_version} cat /usr/share/confluent-hub-components/${connector}/manifest.json | jq -r '.release_date')
+  version=$(cat ${DIR}/confluent-hub-components${image_version}/${connector}/manifest.json | jq -r '.version')
+  license=$(cat ${DIR}/confluent-hub-components${image_version}/${connector}/manifest.json | jq -r '.license[0].name')
+  owner=$(cat ${DIR}/confluent-hub-components${image_version}/${connector}/manifest.json | jq -r '.owner.name')
+  release_date=$(cat ${DIR}/confluent-hub-components${image_version}/${connector}/manifest.json | jq -r '.release_date')
   if [ "$release_date" = "null" ]
   then
     release_date=""
