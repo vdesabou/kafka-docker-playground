@@ -8,7 +8,7 @@ if [ ! -f ${DIR}/kafka-admin/target/kafka-admin-1.0-SNAPSHOT-jar-with-dependenci
 then
      log "Build kafka-admin-1.0-SNAPSHOT-jar-with-dependencies.jar"
      git clone https://github.com/matt-mangia/kafka-admin.git
-     docker run -i --rm -v "${DIR}/kafka-admin":/usr/src/mymaven -v "$HOME/.m2":/root/.m2 -v "${DIR}/kafka-admin/target:/usr/src/mymaven/target" -w /usr/src/mymaven maven:3.6.1-jdk-11 mvn package
+     docker run -i --rm -v "${DIR}/kafka-admin":/usr/src/mymaven -v "$HOME/.m2":/root/.m2 -v "${DIR}/kafka-admin/target:/usr/src/mymaven/target" -w /usr/src/mymaven maven:3.6.1-jdk-11 mvn -Dkafka.tag=$TAG -Dkafka.client.tag=$KAFKA_CLIENT_TAG package
 fi
 
 for component in producer-acl
@@ -16,7 +16,7 @@ do
      if [ ! -f ${DIR}/${component}/target/${component}-1.0.0-jar-with-dependencies.jar ]
      then
           log "Building jar for ${component}"
-          docker run -i --rm -e KAFKA_CLIENT_TAG=$KAFKA_CLIENT_TAG -e TAG=$TAG_BASE -v "${DIR}/${component}":/usr/src/mymaven -v "$HOME/.m2":/root/.m2 -v "${DIR}/${component}/target:/usr/src/mymaven/target" -w /usr/src/mymaven maven:3.6.1-jdk-11 mvn package
+          docker run -i --rm -e KAFKA_CLIENT_TAG=$KAFKA_CLIENT_TAG -e TAG=$TAG_BASE -v "${DIR}/${component}":/usr/src/mymaven -v "$HOME/.m2":/root/.m2 -v "${DIR}/${component}/target:/usr/src/mymaven/target" -w /usr/src/mymaven maven:3.6.1-jdk-11 mvn -Dkafka.tag=$TAG -Dkafka.client.tag=$KAFKA_CLIENT_TAG package
      fi
 done
 

@@ -12,6 +12,8 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <avro.version>1.10.2</avro.version>
+        <kafka.tag>6.1.1</kafka.tag>
+        <kafka.client.tag>2.7.0</kafka.client.tag>
     </properties>
     <repositories>
         <repository>

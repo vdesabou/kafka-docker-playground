@@ -12,6 +12,8 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
         <avro.version>1.10.2</avro.version>
+        <kafka.tag>6.1.1</kafka.tag>
+        <kafka.client.tag>2.7.0</kafka.client.tag>
     </properties>
     <repositories>
         <repository>
@@ -24,37 +26,37 @@
         <dependency>
             <groupId>org.apache.kafka</groupId>
             <artifactId>kafka-clients</artifactId>
-            <version>${env.KAFKA_CLIENT_TAG}</version>
+            <version>${kafka.client.tag}</version>
         </dependency>
         <dependency>
             <groupId>org.apache.kafka</groupId>
             <artifactId>kafka-streams</artifactId>
-            <version>${env.KAFKA_CLIENT_TAG}</version>
+            <version>${kafka.client.tag}</version>
         </dependency>
 
         <dependency>
             <groupId>io.confluent</groupId>
             <artifactId>kafka-avro-serializer</artifactId>
-            <version>${env.TAG}</version>
+            <version>${kafka.tag}</version>
         </dependency>
 
         <dependency>
             <groupId>org.apache.kafka</groupId>
             <artifactId>kafka_2.12</artifactId>
-            <version>${env.TAG}-ccs</version>
+            <version>${kafka.tag}-ccs</version>
             <scope>provided</scope>
         </dependency>
 
         <dependency>
             <groupId>io.confluent</groupId>
             <artifactId>kafka-streams-avro-serde</artifactId>
-            <version>${env.TAG}</version>
+            <version>${kafka.tag}</version>
         </dependency>
 
         <dependency>
             <groupId>io.confluent</groupId>
             <artifactId>monitoring-interceptors</artifactId>
-            <version>${env.TAG}</version>
+            <version>${kafka.tag}</version>
         </dependency>
 
         <!--Only dependency needed for the avro part-->

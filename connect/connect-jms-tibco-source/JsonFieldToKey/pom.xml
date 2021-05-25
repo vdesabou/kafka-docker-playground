@@ -18,13 +18,13 @@
         <dependency>
             <groupId>org.apache.kafka</groupId>
             <artifactId>connect-api</artifactId>
-            <version>${env.KAFKA_CLIENT_TAG}</version>
+            <version>${kafka.client.tag}</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>org.apache.kafka</groupId>
             <artifactId>connect-transforms</artifactId>
-            <version>${env.KAFKA_CLIENT_TAG}</version>
+            <version>${kafka.client.tag}</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
