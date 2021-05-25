@@ -26,13 +26,15 @@ services:
       - zookeeper
     ports:
       - "9092:9092"
+      - "29092:29092"
       - "10000:10000"
     environment:
       KAFKA_JMX_PORT: 10000
       KAFKA_JMX_HOSTNAME: localhost
       KAFKA_BROKER_ID: 1
       KAFKA_ZOOKEEPER_CONNECT: 'zookeeper:2181'
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://broker:9092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://broker:9092,PLAINTEXT_HOST://localhost:29092
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
       CONFLUENT_SUPPORT_CUSTOMER_ID: 'anonymous'
       # Confluent Metrics Reporter for Control Center Cluster Monitoring
