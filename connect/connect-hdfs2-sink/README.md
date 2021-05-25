@@ -22,13 +22,13 @@ $ ./hdfs2.sh
 The connector is created with:
 
 ```
-curl -X PUT \
+$ curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
                "connector.class":"io.confluent.connect.hdfs.HdfsSinkConnector",
                "tasks.max":"1",
                "topics":"test_hdfs",
-               "hdfs.url":"hdfs://namenode:8020",
+               "store.url":"hdfs://namenode:8020",
                "flush.size":"3",
                "hadoop.conf.dir":"/etc/hadoop/",
                "partitioner.class":"io.confluent.connect.hdfs.partitioner.FieldPartitioner",

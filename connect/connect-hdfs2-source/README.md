@@ -28,17 +28,17 @@ Creating HDFS Source connector:
 $ curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
-        "connector.class":"io.confluent.connect.hdfs2.Hdfs2SourceConnector",
-               "tasks.max":"1",
-               "hdfs.url":"hdfs://namenode:9000",
-               "hadoop.conf.dir":"/etc/hadoop/",
-               "format.class" : "io.confluent.connect.hdfs2.format.avro.AvroFormat",
-               "confluent.topic.bootstrap.servers": "broker:9092",
-               "confluent.topic.replication.factor": "1",
-               "transforms" : "AddPrefix",
-               "transforms.AddPrefix.type" : "org.apache.kafka.connect.transforms.RegexRouter",
-               "transforms.AddPrefix.regex" : ".*",
-               "transforms.AddPrefix.replacement" : "copy_of_$0"
+          "connector.class":"io.confluent.connect.hdfs2.Hdfs2SourceConnector",
+          "tasks.max":"1",
+          "store.url":"hdfs://namenode:8020",
+          "hadoop.conf.dir":"/etc/hadoop/",
+          "format.class" : "io.confluent.connect.hdfs2.format.avro.AvroFormat",
+          "confluent.topic.bootstrap.servers": "broker:9092",
+          "confluent.topic.replication.factor": "1",
+          "transforms" : "AddPrefix",
+          "transforms.AddPrefix.type" : "org.apache.kafka.connect.transforms.RegexRouter",
+          "transforms.AddPrefix.regex" : ".*",
+          "transforms.AddPrefix.replacement" : "copy_of_$0"
           }' \
      http://localhost:8083/connectors/hdfs2-source/config | jq .
 ```

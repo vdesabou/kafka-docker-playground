@@ -24,7 +24,7 @@ curl -X PUT \
                "connector.class":"io.confluent.connect.hdfs.HdfsSinkConnector",
                "tasks.max":"1",
                "topics":"test_hdfs",
-               "hdfs.url":"hdfs://namenode:8020",
+               "store.url":"hdfs://namenode:8020",
                "flush.size":"3",
                "hadoop.conf.dir":"/etc/hadoop/",
                "partitioner.class":"io.confluent.connect.hdfs.partitioner.FieldPartitioner",
