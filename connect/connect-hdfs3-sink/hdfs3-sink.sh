@@ -11,61 +11,60 @@ sleep 10
 # Note in this simple example, if you get into an issue with permissions at the local HDFS level, it may be easiest to unlock the permissions unless you want to debug that more.
 docker exec namenode bash -c "/opt/hadoop-3.1.3/bin/hdfs dfs -chmod 777  /"
 
-
 if version_gt $TAG_BASE "5.9.0" || [[ "$TAG" = *ubi8 ]]
 then
-log "Creating HDFS Sink connector without Hive integration (not supported with JDK 11)"
-curl -X PUT \
-     -H "Content-Type: application/json" \
-     --data '{
-               "connector.class":"io.confluent.connect.hdfs3.Hdfs3SinkConnector",
-               "tasks.max":"1",
-               "topics":"test_hdfs",
-               "store.url":"hdfs://namenode:9000",
-               "flush.size":"3",
-               "hadoop.conf.dir":"/etc/hadoop/",
-               "partitioner.class":"io.confluent.connect.storage.partitioner.FieldPartitioner",
-               "partition.field.name":"f1",
-               "rotate.interval.ms":"120000",
-               "hadoop.home":"/opt/hadoop-3.1.3/share/hadoop/common",
-               "logs.dir":"/tmp",
-               "confluent.license": "",
-               "confluent.topic.bootstrap.servers": "broker:9092",
-               "confluent.topic.replication.factor": "1",
-               "key.converter":"org.apache.kafka.connect.storage.StringConverter",
-               "value.converter":"io.confluent.connect.avro.AvroConverter",
-               "value.converter.schema.registry.url":"http://schema-registry:8081",
-               "schema.compatibility":"BACKWARD"
-          }' \
-     http://localhost:8083/connectors/hdfs3-sink/config | jq .
+     log "Creating HDFS Sink connector without Hive integration (not supported with JDK 11)"
+     curl -X PUT \
+          -H "Content-Type: application/json" \
+          --data '{
+                    "connector.class":"io.confluent.connect.hdfs3.Hdfs3SinkConnector",
+                    "tasks.max":"1",
+                    "topics":"test_hdfs",
+                    "store.url":"hdfs://namenode:9000",
+                    "flush.size":"3",
+                    "hadoop.conf.dir":"/etc/hadoop/",
+                    "partitioner.class":"io.confluent.connect.storage.partitioner.FieldPartitioner",
+                    "partition.field.name":"f1",
+                    "rotate.interval.ms":"120000",
+                    "hadoop.home":"/opt/hadoop-3.1.3/share/hadoop/common",
+                    "logs.dir":"/tmp",
+                    "confluent.license": "",
+                    "confluent.topic.bootstrap.servers": "broker:9092",
+                    "confluent.topic.replication.factor": "1",
+                    "key.converter":"org.apache.kafka.connect.storage.StringConverter",
+                    "value.converter":"io.confluent.connect.avro.AvroConverter",
+                    "value.converter.schema.registry.url":"http://schema-registry:8081",
+                    "schema.compatibility":"BACKWARD"
+               }' \
+          http://localhost:8083/connectors/hdfs3-sink/config | jq .
 else
-log "Creating HDFS Sink connector with Hive integration"
-curl -X PUT \
-     -H "Content-Type: application/json" \
-     --data '{
-               "connector.class":"io.confluent.connect.hdfs3.Hdfs3SinkConnector",
-               "tasks.max":"1",
-               "topics":"test_hdfs",
-               "store.url":"hdfs://namenode:9000",
-               "flush.size":"3",
-               "hadoop.conf.dir":"/etc/hadoop/",
-               "partitioner.class":"io.confluent.connect.storage.partitioner.FieldPartitioner",
-               "partition.field.name":"f1",
-               "rotate.interval.ms":"120000",
-               "hadoop.home":"/opt/hadoop-3.1.3/share/hadoop/common",
-               "logs.dir":"/tmp",
-               "hive.integration": "true",
-               "hive.metastore.uris": "thrift://hive-metastore:9083",
-               "hive.database": "testhive",
-               "confluent.license": "",
-               "confluent.topic.bootstrap.servers": "broker:9092",
-               "confluent.topic.replication.factor": "1",
-               "key.converter":"org.apache.kafka.connect.storage.StringConverter",
-               "value.converter":"io.confluent.connect.avro.AvroConverter",
-               "value.converter.schema.registry.url":"http://schema-registry:8081",
-               "schema.compatibility":"BACKWARD"
-          }' \
-     http://localhost:8083/connectors/hdfs3-sink/config | jq .
+     log "Creating HDFS Sink connector with Hive integration"
+     curl -X PUT \
+          -H "Content-Type: application/json" \
+          --data '{
+                    "connector.class":"io.confluent.connect.hdfs3.Hdfs3SinkConnector",
+                    "tasks.max":"1",
+                    "topics":"test_hdfs",
+                    "store.url":"hdfs://namenode:9000",
+                    "flush.size":"3",
+                    "hadoop.conf.dir":"/etc/hadoop/",
+                    "partitioner.class":"io.confluent.connect.storage.partitioner.FieldPartitioner",
+                    "partition.field.name":"f1",
+                    "rotate.interval.ms":"120000",
+                    "hadoop.home":"/opt/hadoop-3.1.3/share/hadoop/common",
+                    "logs.dir":"/tmp",
+                    "hive.integration": "true",
+                    "hive.metastore.uris": "thrift://hive-metastore:9083",
+                    "hive.database": "testhive",
+                    "confluent.license": "",
+                    "confluent.topic.bootstrap.servers": "broker:9092",
+                    "confluent.topic.replication.factor": "1",
+                    "key.converter":"org.apache.kafka.connect.storage.StringConverter",
+                    "value.converter":"io.confluent.connect.avro.AvroConverter",
+                    "value.converter.schema.registry.url":"http://schema-registry:8081",
+                    "schema.compatibility":"BACKWARD"
+               }' \
+          http://localhost:8083/connectors/hdfs3-sink/config | jq .
 fi
 
 log "Sending messages to topic test_hdfs"
@@ -82,11 +81,12 @@ docker cp namenode:/tmp/test_hdfs+0+0000000000+0000000000.avro /tmp/
 
 docker run -v /tmp:/tmp actions/avro-tools tojson /tmp/test_hdfs+0+0000000000+0000000000.avro
 
-sleep 60
-
-if ! version_gt $TAG_BASE "5.9.0" || [[ "$TAG" != *ubi8 ]]
+if version_gt $TAG_BASE "5.9.0" || [[ "$TAG" = *ubi8 ]]
 then
-log "Check data with beeline"
+     :
+else
+     sleep 60
+     log "Check data with beeline"
 docker exec -i hive-server beeline > /tmp/result.log  2>&1 <<-EOF
 !connect jdbc:hive2://hive-server:10000/testhive
 hive
@@ -94,6 +94,6 @@ hive
 show create table test_hdfs;
 select * from test_hdfs;
 EOF
-cat /tmp/result.log
-grep "value1" /tmp/result.log
+     cat /tmp/result.log
+     grep "value1" /tmp/result.log
 fi
