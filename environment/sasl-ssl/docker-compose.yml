@@ -22,6 +22,7 @@ services:
       - ../../environment/sasl-ssl/security:/etc/kafka/secrets
     environment:
       KAFKA_INTER_BROKER_LISTENER_NAME: SASL_SSL
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: SASL_SSL:SASL_SSL
       KAFKA_ADVERTISED_LISTENERS: SASL_SSL://broker:9092
       CONFLUENT_METRICS_REPORTER_SECURITY_PROTOCOL: SASL_SSL
       CONFLUENT_METRICS_REPORTER_SASL_JAAS_CONFIG: "org.apache.kafka.common.security.plain.PlainLoginModule required \

@@ -62,6 +62,7 @@ services:
       - ../../environment/ssl_kerberos/security:/etc/kafka/secrets
     environment:
       KAFKA_ZOOKEEPER_CONNECT: 'zookeeper.kerberos-demo.local:2181'
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: SASL_SSL:SASL_SSL
       KAFKA_ADVERTISED_LISTENERS: SASL_SSL://broker.kerberos-demo.local:9092
       # Kerberos / GSSAPI Authentication mechanism
       KAFKA_SASL_ENABLED_MECHANISMS: GSSAPI
