@@ -80,5 +80,8 @@ if [[ $(docker container ps) =~ "Exit 137" ]]; then
   exit 1
 fi
 
-log "You can use ksqlDB with CLI using:"
-log "docker exec -i ksqldb-cli ksql http://ksqldb-server:8088"
+if [ -z "$DISABLE_KSQLDB" ]
+then
+  log "You can use ksqlDB with CLI using:"
+  log "docker exec -i ksqldb-cli ksql http://ksqldb-server:8088"
+fi

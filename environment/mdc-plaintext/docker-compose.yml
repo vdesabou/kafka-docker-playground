@@ -210,6 +210,8 @@ services:
       - connect-us
     ports:
       - "9021:9021"
+    profiles:
+    - control-center
     environment:
       CONTROL_CENTER_BOOTSTRAP_SERVERS: 'broker-metrics:9092'
       CONTROL_CENTER_ZOOKEEPER_CONNECT: 'zookeeper-metrics:2181'

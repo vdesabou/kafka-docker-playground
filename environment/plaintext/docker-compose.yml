@@ -130,6 +130,8 @@ services:
     ports:
       - "8088:8088"
       - "10003:10003"
+    profiles:
+    - ksqldb
     environment:
       KSQL_JMX_PORT: 10003
       KSQL_JMX_HOSTNAME: localhost
@@ -162,6 +164,8 @@ services:
       - connect
       - ksqldb-server
     entrypoint: /bin/sh
+    profiles:
+    - ksqldb
     tty: true
 
   control-center:
@@ -176,6 +180,8 @@ services:
       - connect
     ports:
       - "9021:9021"
+    profiles:
+    - control-center
     environment:
       CONTROL_CENTER_BOOTSTRAP_SERVERS: 'broker:9092'
       CONTROL_CENTER_ZOOKEEPER_CONNECT: 'zookeeper:2181'

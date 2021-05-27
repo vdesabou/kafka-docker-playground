@@ -63,16 +63,24 @@ delete_topic connect-offsets-${TAG}
 delete_topic connect-configs-${TAG}
 set -e
 
+# https://docs.docker.com/compose/profiles/
+profile_control_center_command=""
+if [ -z "$DISABLE_CONTROL_CENTER" ]
+then
+  log "🛑 control-center is disabled"
+  profile_control_center_command="--profile control-center"
+fi
+
 DOCKER_COMPOSE_FILE_OVERRIDE=$1
 if [ -f "${DOCKER_COMPOSE_FILE_OVERRIDE}" ]
 then
   docker-compose -f ../../ccloud/environment/docker-compose.yml -f ${DOCKER_COMPOSE_FILE_OVERRIDE} build
   docker-compose -f ../../ccloud/environment/docker-compose.yml -f ${DOCKER_COMPOSE_FILE_OVERRIDE} down -v --remove-orphans
-  docker-compose -f ../../ccloud/environment/docker-compose.yml -f ${DOCKER_COMPOSE_FILE_OVERRIDE} up -d
+  docker-compose -f ../../ccloud/environment/docker-compose.yml -f ${DOCKER_COMPOSE_FILE_OVERRIDE} ${profile_control_center_command} up -d
 else
   docker-compose -f ../../ccloud/environment/docker-compose.yml build
   docker-compose -f ../../ccloud/environment/docker-compose.yml down -v --remove-orphans
-  docker-compose -f ../../ccloud/environment/docker-compose.yml up -d
+  docker-compose -f ../../ccloud/environment/docker-compose.yml ${profile_control_center_command} up -d
 fi
 
 if [ "$#" -ne 0 ]

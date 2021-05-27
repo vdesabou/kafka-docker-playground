@@ -20,6 +20,21 @@ then
      check_if_continue
 fi
 
+# https://docs.docker.com/compose/profiles/
+profile_control_center_command=""
+if [ -z "$DISABLE_CONTROL_CENTER" ]
+then
+  log "🛑 control-center is disabled"
+  profile_control_center_command="--profile control-center"
+fi
+
+profile_ksqldb_command=""
+if [ -z "$DISABLE_KSQLDB" ]
+then
+  log "🛑 ksqldb is disabled"
+  profile_ksqldb_command="--profile ksqldb"
+fi
+
 SR_TYPE=${1:-SCHEMA_REGISTRY_DOCKER}
 CONFIG_FILE=~/.ccloud/config
 
@@ -119,7 +134,7 @@ set -e
 
 docker-compose build
 docker-compose down -v --remove-orphans
-docker-compose up -d
+docker-compose ${profile_control_center_command} ${profile_ksqldb_command} up -d
 ${DIR}/../../scripts/wait-for-connect-and-controlcenter.sh
 
 log "-------------------------------------"
