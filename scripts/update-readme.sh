@@ -31,16 +31,7 @@ do
   break
 done
 
-for image_version in $image_versions
-do
-  if [ ! -d ${DIR}/confluent-hub-components${image_version} ]
-  then
-    docker rm -f kafka-docker-playground-connect${image_version}
-    docker create -ti --name kafka-docker-playground-connect${image_version} vdesabou/kafka-docker-playground-connect:${image_version} bash
-    docker cp kafka-docker-playground-connect${image_version}:/usr/share/confluent-hub-components ${DIR}/confluent-hub-components${image_version}
-    docker rm -f kafka-docker-playground-connect${image_version}
-  fi
-done
+curl -s https://raw.githubusercontent.com/vdesabou/kafka-docker-playground-connect/master/README.md -o /tmp/README.txt
 
 log "Getting ci result files"
 if [ ! -d ci ]
@@ -138,10 +129,10 @@ do
             # see https://github.com/vdesabou/kafka-docker-playground/issues/221
             version=${image_version}
           else
-            version=$(cat ${DIR}/confluent-hub-components${image_version}/${connector_path}/manifest.json | jq -r '.version')
+            version=$(grep "$connector_path " /tmp/README.txt | cut -d "|" -f 3 | sed 's/^[[:blank:]]*//;s/[[:blank:]]*$//')
           fi
         else
-          version=$(cat ${DIR}/confluent-hub-components${image_version}/${connector_path}/manifest.json | jq -r '.version')
+          version=$(grep "$connector_path " /tmp/README.txt | cut -d "|" -f 3 | sed 's/^[[:blank:]]*//;s/[[:blank:]]*$//')
         fi
       fi
       testdir=$(echo "$test" | sed 's/\//-/g')
@@ -275,10 +266,10 @@ do
 
   if [ "$connector_path" != "" ]
   then
-    version=$(cat ${DIR}/confluent-hub-components${image_version}/${connector_path}/manifest.json | jq -r '.version')
-    license=$(cat ${DIR}/confluent-hub-components${image_version}/${connector_path}/manifest.json | jq -r '.license[0].name')
-    owner=$(cat ${DIR}/confluent-hub-components${image_version}/${connector_path}/manifest.json | jq -r '.owner.name')
-    release_date=$(cat ${DIR}/confluent-hub-components${image_version}/${connector_path}/manifest.json | jq -r '.release_date')
+    version=$(grep "$connector_path " /tmp/README.txt | cut -d "|" -f 3 | sed 's/^[[:blank:]]*//;s/[[:blank:]]*$//')
+    license=$(grep "$connector_path " /tmp/README.txt | cut -d "|" -f 4 | sed 's/^[[:blank:]]*//;s/[[:blank:]]*$//')
+    owner=$(grep "$connector_path " /tmp/README.txt | cut -d "|" -f 5 | sed 's/^[[:blank:]]*//;s/[[:blank:]]*$//')
+    release_date=$(grep "$connector_path " /tmp/README.txt | cut -d "|" -f 6 | sed 's/^[[:blank:]]*//;s/[[:blank:]]*$//')
     if [ "$release_date" = "null" ]
     then
       release_date=""
@@ -312,10 +303,10 @@ do
 done
 for connector in confluentinc-kafka-connect-aws-redshift
 do
-  version=$(cat ${DIR}/confluent-hub-components${image_version}/${connector}/manifest.json | jq -r '.version')
-  license=$(cat ${DIR}/confluent-hub-components${image_version}/${connector}/manifest.json | jq -r '.license[0].name')
-  owner=$(cat ${DIR}/confluent-hub-components${image_version}/${connector}/manifest.json | jq -r '.owner.name')
-  release_date=$(cat ${DIR}/confluent-hub-components${image_version}/${connector}/manifest.json | jq -r '.release_date')
+  version=$(grep "$connector " /tmp/README.txt | cut -d "|" -f 3 | sed 's/^[[:blank:]]*//;s/[[:blank:]]*$//')
+  license=$(grep "$connector " /tmp/README.txt | cut -d "|" -f 4 | sed 's/^[[:blank:]]*//;s/[[:blank:]]*$//')
+  owner=$(grep "$connector " /tmp/README.txt | cut -d "|" -f 5 | sed 's/^[[:blank:]]*//;s/[[:blank:]]*$//')
+  release_date=$(grep "$connector " /tmp/README.txt | cut -d "|" -f 6 | sed 's/^[[:blank:]]*//;s/[[:blank:]]*$//')
   if [ "$release_date" = "null" ]
   then
     release_date=""
