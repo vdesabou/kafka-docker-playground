@@ -22,7 +22,7 @@ do
     docker run --rm -v $PWD:/tmp vdesabou/kafka-docker-playground-connect:${CONNECT_TAG} keytool -genkey -noprompt \
                  -alias $i \
                  -dname "CN=$i,OU=TEST,O=CONFLUENT,L=PaloAlto,S=Ca,C=US" \
-                                 -ext "SAN=dns:$i,dns:localhost" \
+                                 -ext "SAN=dns:$i,dns:localhost,dns:$i.kerberos-demo.local" \
                  -keystore /tmp/kafka.$i.keystore.jks \
                  -keyalg RSA \
                  -storepass confluent \
@@ -30,7 +30,7 @@ do
                  -storetype pkcs12
 
     # Create the certificate signing request (CSR)
-    docker run --rm -v $PWD:/tmp vdesabou/kafka-docker-playground-connect:${CONNECT_TAG} keytool -keystore /tmp/kafka.$i.keystore.jks -alias $i -certreq -file /tmp/$i.csr -storepass confluent -keypass confluent -ext "SAN=dns:$i,dns:localhost"
+    docker run --rm -v $PWD:/tmp vdesabou/kafka-docker-playground-connect:${CONNECT_TAG} keytool -keystore /tmp/kafka.$i.keystore.jks -alias $i -certreq -file /tmp/$i.csr -storepass confluent -keypass confluent -ext "SAN=dns:$i,dns:localhost,dns:$i.kerberos-demo.local"
         #openssl req -in $i.csr -text -noout
 
 cat << EOF > extfile
@@ -45,6 +45,7 @@ subjectAltName = @alt_names
 [alt_names]
 DNS.1 = $i
 DNS.2 = localhost
+DNS.3 = $i.kerberos-demo.local
 EOF
         # Sign the host certificate with the certificate authority (CA)
         docker run --rm -v $PWD:/tmp vdesabou/kafka-docker-playground-connect:${CONNECT_TAG} openssl x509 -req -CA /tmp/snakeoil-ca-1.crt -CAkey /tmp/snakeoil-ca-1.key -in /tmp/$i.csr -out /tmp/$i-ca1-signed.crt -days 9999 -CAcreateserial -passin pass:confluent -extensions v3_req -extfile /tmp/extfile
