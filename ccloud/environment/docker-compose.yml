@@ -68,6 +68,8 @@ services:
       - connect
     ports:
       - "9021:9021"
+    profiles:
+    - control-center
     environment:
       CONTROL_CENTER_BOOTSTRAP_SERVERS: $BOOTSTRAP_SERVERS
       CONTROL_CENTER_KSQL_URL: "http://ksql-server:8089"

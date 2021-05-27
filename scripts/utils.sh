@@ -894,3 +894,40 @@ function stop_all() {
   fi
   cd -
 }
+
+function display_jmx_info() {
+  log "📊 JMX metrics are available locally on those ports:"
+  log "    - zookeeper       : 9999"
+  log "    - broker          : 10000"
+  log "    - schema-registry : 10001"
+  log "    - connect         : 10002"
+
+  if [ -z "$DISABLE_KSQLDB" ]
+  then
+    log "    - ksqldb-server   : 10003"
+  fi
+}
+function get_jmx_metrics() {
+  JMXTERM_VERSION="1.0.2"
+  JMXTERM_UBER_JAR="/tmp/jmxterm-$JMXTERM_VERSION-uber.jar"
+  if [ ! -f $JMXTERM_UBER_JAR ]
+  then
+    curl -L https://github.com/jiaqi/jmxterm/releases/download/v$JMXTERM_VERSION/jmxterm-$JMXTERM_VERSION-uber.jar -o $JMXTERM_UBER_JAR -s
+  fi
+
+  component="$1"
+  case "$component" in
+  zookeeper )
+    domain
+java -jar $JMXTERM_UBER_JAR  -l localhost:9999 -n -v silent > /tmp/beans.log << EOF
+domain org.apache.ZooKeeperService
+beans
+exit
+EOF
+ while read line; do echo "get *"  -b $line; done < /tmp/beans.log > commands
+
+  ;;
+  n|N ) ;;
+  * ) logerror "ERROR: invalid component $component!";exit 1;;
+  esac
+}

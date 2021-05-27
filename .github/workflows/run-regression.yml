@@ -198,6 +198,8 @@ jobs:
           SERVICENOW_URL: ${{ secrets.SERVICENOW_URL }}
           SERVICENOW_PASSWORD: ${{ secrets.SERVICENOW_PASSWORD }}
           CONFLUENT_LICENSE: ${{ secrets.CONFLUENT_LICENSE }}
+          DISABLE_KSQLDB: "yes"
+          DISABLE_CONTROL_CENTER: "yes"
 
   execute_one_test:
     if: ${{ github.event.inputs.test_name != '' }}

@@ -8,6 +8,21 @@ source ${DIR}/../../scripts/utils.sh
 verify_docker_and_memory
 verify_installed "docker-compose"
 
+# https://docs.docker.com/compose/profiles/
+profile_control_center_command=""
+if [ -z "$DISABLE_CONTROL_CENTER" ]
+then
+  log "🛑 control-center is disabled"
+  profile_control_center_command="--profile control-center"
+fi
+
+profile_ksqldb_command=""
+if [ -z "$DISABLE_KSQLDB" ]
+then
+  log "🛑 ksqldb is disabled"
+  profile_ksqldb_command="--profile ksqldb"
+fi
+
 DOCKER_COMPOSE_FILE_OVERRIDE=$1
 # Starting kerberos,
 # Avoiding starting up all services at the begining to generate the keytab first
@@ -93,9 +108,9 @@ fi
 # Starting zookeeper and kafka now that the keytab has been created with the required credentials and services
 if [ -f "${DOCKER_COMPOSE_FILE_OVERRIDE}" ]
 then
-  docker-compose -f ../../environment/plaintext/docker-compose.yml -f ../../environment/kerberos/docker-compose.yml -f ${DOCKER_COMPOSE_FILE_OVERRIDE} up -d
+  docker-compose -f ../../environment/plaintext/docker-compose.yml -f ../../environment/kerberos/docker-compose.yml -f ${DOCKER_COMPOSE_FILE_OVERRIDE} ${profile_control_center_command} ${profile_ksqldb_command} up -d
 else
-  docker-compose -f ../../environment/plaintext/docker-compose.yml -f ../../environment/kerberos/docker-compose.yml up -d
+  docker-compose -f ../../environment/plaintext/docker-compose.yml -f ../../environment/kerberos/docker-compose.yml ${profile_control_center_command} ${profile_ksqldb_command} up -d
 fi
 
 if [ "$#" -ne 0 ]
@@ -104,12 +119,7 @@ then
 fi
 ../../scripts/wait-for-connect-and-controlcenter.sh $@
 
-log "📊 JMX metrics are available locally on those ports:"
-log "    - zookeeper       : 9999"
-log "    - broker          : 10000"
-log "    - schema-registry : 10001"
-log "    - connect         : 10002"
-log "    - ksqldb-server   : 10003"
+display_jmx_info
 
 # Adding ACLs for consumer and producer user:
 docker exec client bash -c "kinit -k -t /var/lib/secret/kafka-admin.key admin/for-kafka && kafka-acls --bootstrap-server broker:9092 --command-config /etc/kafka/command.properties --add --allow-principal User:kafka_producer --producer --topic=*"
