@@ -353,7 +353,6 @@ jobs:
           AZ_PASS: ${{ secrets.AZ_PASS }}
 
       - name: Update README
-        if: ${{ github.event.inputs.test_name == '' }}
         run: |
           ./scripts/update-readme.sh "6.1.1 6.0.2 5.5.4"
         env:
@@ -362,7 +361,6 @@ jobs:
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           AWS_REGION: "us-east-1"
       - name: push
-        if: ${{ github.event.inputs.test_name == '' }}
         uses: github-actions-x/commit@v2.6
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
