@@ -12,8 +12,9 @@ verify_installed "docker-compose"
 profile_control_center_command=""
 if [ -z "$DISABLE_CONTROL_CENTER" ]
 then
-  log "🛑 control-center is disabled"
   profile_control_center_command="--profile control-center"
+else
+  log "🛑 control-center is disabled"
 fi
 
 DOCKER_COMPOSE_FILE_OVERRIDE=$1
