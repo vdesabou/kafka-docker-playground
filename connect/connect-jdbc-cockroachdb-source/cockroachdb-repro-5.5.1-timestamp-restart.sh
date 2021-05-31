@@ -53,7 +53,7 @@ uuid2=$(uuidgen)
 # FIXTHIS: works only with Linux
 TIMESTAMP=`date --rfc-3339=seconds`
 
-log "Adding 2 elements to the table"
+log "Adding 2 elements to the table with timestamp $TIMESTAMP"
 docker exec -i cockroachdb /cockroach/cockroach sql --insecure << EOF
 INSERT INTO drivers (id,city,name,dl,address,updated_at) VALUES
     ('$uuid1', 'seattle', 'Eric', 'GHI-9123', '400 Broad St',TIMESTAMPTZ '$TIMESTAMP'),
@@ -69,7 +69,7 @@ sleep 5
 
 uuid1=$(uuidgen)
 uuid2=$(uuidgen)
-log "Adding 2 elements to the table"
+log "Adding 2 elements to the table with timestamp $TIMESTAMP"
 docker exec -i cockroachdb /cockroach/cockroach sql --insecure << EOF
 INSERT INTO drivers (id,city,name,dl,address,updated_at) VALUES
     ('$uuid1', 'Paris', 'paul', 'GHI-9123', '400 Broad St',TIMESTAMPTZ '$TIMESTAMP'),
@@ -88,7 +88,7 @@ uuid1=$(uuidgen)
 uuid2=$(uuidgen)
 TIMESTAMP=`date --rfc-3339=seconds`
 
-log "Adding 2 elements to the table"
+log "Adding 2 elements to the table with timestamp $TIMESTAMP"
 docker exec -i cockroachdb /cockroach/cockroach sql --insecure << EOF
 INSERT INTO drivers (id,city,name,dl,address,updated_at) VALUES
     ('$uuid1', 'LA', 'Eric', 'GHI-9123', '400 Broad St',TIMESTAMPTZ '$TIMESTAMP'),
@@ -108,7 +108,7 @@ curl --request PUT \
 
 uuid1=$(uuidgen)
 uuid2=$(uuidgen)
-log "Adding 2 elements to the table"
+log "Adding 2 elements to the table with timestamp $TIMESTAMP"
 docker exec -i cockroachdb /cockroach/cockroach sql --insecure << EOF
 INSERT INTO drivers (id,city,name,dl,address,updated_at) VALUES
     ('$uuid1', 'Nice', 'vincent', 'GHI-9123', '400 Broad St',TIMESTAMPTZ '$TIMESTAMP'),
@@ -125,6 +125,10 @@ timeout 60 docker exec connect kafka-console-consumer -bootstrap-server broker:9
 log "Restart task"
 curl --request POST \
   --url http://localhost:8083/connectors/cockroachdb-source/tasks/0/restart
+
+log "Resume the connector"
+curl --request PUT \
+  --url http://localhost:8083/connectors/cockroachdb-source/resume
 
 log "Display connect-offsets"
 timeout 60 docker exec connect kafka-console-consumer -bootstrap-server broker:9092 --topic connect-offsets --from-beginning --property print.key=true --max-messages 1
