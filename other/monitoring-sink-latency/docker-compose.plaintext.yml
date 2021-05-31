@@ -1,0 +1,201 @@
+---
+version: '3.5'
+services:
+  zookeeper:
+    ports:
+      - 12181:2181
+    environment:
+      ZOOKEEPER_SERVER_ID: "1"
+      EXTRA_ARGS: -javaagent:/usr/share/jmx_exporter/jmx_prometheus_javaagent-0.12.0.jar=1234:/usr/share/jmx_exporter/zookeeper.yml
+    volumes:
+    - ../../other/monitoring-sink-latency/jmx-exporter:/usr/share/jmx_exporter/
+
+  broker:
+    environment:
+      KAFKA_OPTS: -javaagent:/usr/share/jmx_exporter/jmx_prometheus_javaagent-0.12.0.jar=1234:/usr/share/jmx_exporter/kafka-broker.yml
+    volumes:
+    - ../../other/monitoring-sink-latency/jmx-exporter:/usr/share/jmx_exporter/
+
+  connect:
+    cap_add:
+      - NET_ADMIN
+    volumes:
+      - ../../other/monitoring-sink-latency/jmx-exporter:/usr/share/jmx_exporter/
+    environment:
+      CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-datagen,/usr/share/confluent-hub-components/confluentinc-kafka-connect-http,/usr/share/confluent-hub-components/confluentinc-kafka-connect-s3
+      KAFKA_OPTS: -javaagent:/usr/share/jmx_exporter/jmx_prometheus_javaagent-0.12.0.jar=1234:/usr/share/jmx_exporter/kafka-connect.yml
+
+
+  connect-with-fetch-latency:
+    cap_add:
+      - NET_ADMIN
+    image: vdesabou/kafka-docker-playground-connect:${CONNECT_TAG}
+    hostname: connect-with-fetch-latency
+    container_name: connect-with-fetch-latency
+    restart: always
+    depends_on:
+      - zookeeper
+      - broker
+      - schema-registry
+    ports:
+      - "8084:8083"
+    volumes:
+      - ../../other/monitoring-sink-latency/jmx-exporter:/usr/share/jmx_exporter/  
+    environment:
+      CONNECT_BOOTSTRAP_SERVERS: 'broker:9092'
+      CONNECT_REST_ADVERTISED_HOST_NAME: connect-with-fetch-latency
+      CONNECT_GROUP_ID: "connect-with-fetch-latency-cluster"
+      CONNECT_CONFIG_STORAGE_TOPIC: connect-with-fetch-latency-configs
+      CONNECT_OFFSET_STORAGE_TOPIC: connect-with-fetch-latency-offsets
+      CONNECT_STATUS_STORAGE_TOPIC: connect-with-fetch-latency-status
+      CONNECT_CONFIG_STORAGE_REPLICATION_FACTOR: 1
+      CONNECT_OFFSET_STORAGE_REPLICATION_FACTOR: 1
+      CONNECT_STATUS_STORAGE_REPLICATION_FACTOR: 1
+      CONNECT_KEY_CONVERTER: "org.apache.kafka.connect.storage.StringConverter"
+      CONNECT_VALUE_CONVERTER: "io.confluent.connect.avro.AvroConverter"
+      CONNECT_VALUE_CONVERTER_SCHEMAS_ENABLE: "false"
+      CONNECT_VALUE_CONVERTER_SCHEMA_REGISTRY_URL: "http://schema-registry:8081"
+      CONNECT_INTERNAL_KEY_CONVERTER: "org.apache.kafka.connect.json.JsonConverter"
+      CONNECT_INTERNAL_VALUE_CONVERTER: "org.apache.kafka.connect.json.JsonConverter"
+      CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-datagen,/usr/share/confluent-hub-components/confluentinc-kafka-connect-http
+      CONNECT_LOG4J_LOGGERS: org.apache.zookeeper=ERROR,org.I0Itec.zkclient=ERROR,org.reflections=ERROR
+      # Confluent Monitoring Interceptors for Control Center Streams Monitoring
+      CONNECT_PRODUCER_INTERCEPTOR_CLASSES: "io.confluent.monitoring.clients.interceptor.MonitoringProducerInterceptor"
+      CONNECT_PRODUCER_CONFLUENT_MONITORING_INTERCEPTOR_BOOTSTRAP_SERVERS: broker:9092
+      CONNECT_CONSUMER_INTERCEPTOR_CLASSES: "io.confluent.monitoring.clients.interceptor.MonitoringConsumerInterceptor"
+      CONNECT_CONSUMER_CONFLUENT_MONITORING_INTERCEPTOR_BOOTSTRAP_SERVERS: broker:9092
+      # CONNECT_LOG4J_ROOT_LOGLEVEL: DEBUG
+      # KIP-158 https://cwiki.apache.org/confluence/display/KAFKA/KIP-158%3A+Kafka+Connect+should+allow+source+connectors+to+set+topic-specific+settings+for+new+topics (6.x only)
+      CONNECT_TOPIC_CREATION_ENABLE: 'true'
+      # CONNECT_METRIC_REPORTERS: io.confluent.telemetry.reporter.TelemetryReporter
+      # CONNECT_CONFLUENT_TELEMETRY_ENABLED: 'true'
+      # CONNECT_CONFLUENT_TELEMETRY_API_KEY: 'CLOUD_API_KEY'
+      # CONNECT_CONFLUENT_TELEMETRY_API_SECRET: 'CLOUD_API_SECRET'
+      KAFKA_OPTS: -javaagent:/usr/share/jmx_exporter/jmx_prometheus_javaagent-0.12.0.jar=1234:/usr/share/jmx_exporter/kafka-connect.yml
+
+  connect-with-put-latency:
+    cap_add:
+      - NET_ADMIN
+    image: vdesabou/kafka-docker-playground-connect:${CONNECT_TAG}
+    hostname: connect-with-put-latency
+    container_name: connect-with-put-latency
+    restart: always
+    depends_on:
+      - zookeeper
+      - broker
+      - schema-registry
+    ports:
+      - "8085:8083"
+    volumes:
+      - ../../other/monitoring-sink-latency/jmx-exporter:/usr/share/jmx_exporter/  
+    environment:
+      CONNECT_BOOTSTRAP_SERVERS: 'broker:9092'
+      CONNECT_REST_ADVERTISED_HOST_NAME: connect-with-put-latency
+      CONNECT_GROUP_ID: "connect-with-put-latency-cluster"
+      CONNECT_CONFIG_STORAGE_TOPIC: connect-with-put-latency-configs
+      CONNECT_OFFSET_STORAGE_TOPIC: connect-with-put-latency-offsets
+      CONNECT_STATUS_STORAGE_TOPIC: connect-with-put-latency-status
+      CONNECT_CONFIG_STORAGE_REPLICATION_FACTOR: 1
+      CONNECT_OFFSET_STORAGE_REPLICATION_FACTOR: 1
+      CONNECT_STATUS_STORAGE_REPLICATION_FACTOR: 1
+      CONNECT_KEY_CONVERTER: "org.apache.kafka.connect.storage.StringConverter"
+      CONNECT_VALUE_CONVERTER: "io.confluent.connect.avro.AvroConverter"
+      CONNECT_VALUE_CONVERTER_SCHEMAS_ENABLE: "false"
+      CONNECT_VALUE_CONVERTER_SCHEMA_REGISTRY_URL: "http://schema-registry:8081"
+      CONNECT_INTERNAL_KEY_CONVERTER: "org.apache.kafka.connect.json.JsonConverter"
+      CONNECT_INTERNAL_VALUE_CONVERTER: "org.apache.kafka.connect.json.JsonConverter"
+      CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-datagen,/usr/share/confluent-hub-components/confluentinc-kafka-connect-http,/usr/share/confluent-hub-components/confluentinc-kafka-connect-s3
+      CONNECT_LOG4J_LOGGERS: org.apache.zookeeper=ERROR,org.I0Itec.zkclient=ERROR,org.reflections=ERROR
+      # Confluent Monitoring Interceptors for Control Center Streams Monitoring
+      CONNECT_PRODUCER_INTERCEPTOR_CLASSES: "io.confluent.monitoring.clients.interceptor.MonitoringProducerInterceptor"
+      CONNECT_PRODUCER_CONFLUENT_MONITORING_INTERCEPTOR_BOOTSTRAP_SERVERS: broker:9092
+      CONNECT_CONSUMER_INTERCEPTOR_CLASSES: "io.confluent.monitoring.clients.interceptor.MonitoringConsumerInterceptor"
+      CONNECT_CONSUMER_CONFLUENT_MONITORING_INTERCEPTOR_BOOTSTRAP_SERVERS: broker:9092
+      # CONNECT_LOG4J_ROOT_LOGLEVEL: DEBUG
+      # KIP-158 https://cwiki.apache.org/confluence/display/KAFKA/KIP-158%3A+Kafka+Connect+should+allow+source+connectors+to+set+topic-specific+settings+for+new+topics (6.x only)
+      CONNECT_TOPIC_CREATION_ENABLE: 'true'
+      # CONNECT_METRIC_REPORTERS: io.confluent.telemetry.reporter.TelemetryReporter
+      # CONNECT_CONFLUENT_TELEMETRY_ENABLED: 'true'
+      # CONNECT_CONFLUENT_TELEMETRY_API_KEY: 'CLOUD_API_KEY'
+      # CONNECT_CONFLUENT_TELEMETRY_API_SECRET: 'CLOUD_API_SECRET'
+      KAFKA_OPTS: -javaagent:/usr/share/jmx_exporter/jmx_prometheus_javaagent-0.12.0.jar=1234:/usr/share/jmx_exporter/kafka-connect.yml
+
+  http-service-basic-auth:
+    image: vdesabou/http-sink-demo
+    hostname: http-service-basic-auth
+    container_name: http-service-basic-auth
+    ports:
+      - "9083:8080"
+    environment:
+      SPRING_PROFILES_ACTIVE: 'basic-auth'
+
+  s3:
+    image: localstack/localstack:latest
+    hostname: s3
+    container_name: s3
+    ports:
+      - "4566:4566"
+      - "4571:4571"
+    environment:
+      AWS_ACCESS_KEY_ID: "MY_AWS_KEY_ID"
+      AWS_SECRET_ACCESS_KEY: "MY_AWS_SECRET_ACCESS_KEY"
+      SERVICES: "s3"
+      DEFAULT_REGION: "us-west-2"
+
+  kafka-lag-exporter:
+    image: lightbend/kafka-lag-exporter:0.6.6
+    hostname: kafka-lag-exporter
+    container_name: kafka-lag-exporter
+    restart: always
+    ports:
+      - 9999:9999
+    volumes:
+      - ../../other/monitoring-sink-latency/kafka-lag-exporter/application.conf:/opt/docker/conf/application.conf
+      - ../../other/monitoring-sink-latency/kafka-lag-exporter/logback.xml:/opt/docker/conf/logback.xml
+
+  alertmanager:
+    image: prom/alertmanager:v0.18.0
+    hostname: alertmanager
+    container_name: alertmanager
+    ports:
+      - 9093:9093
+
+  node-exporter:
+    image: prom/node-exporter:v0.18.1
+    hostname: node-exporter
+    container_name: node-exporter
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/rootfs:ro
+    command:
+      - '--path.procfs=/host/proc'
+      - '--path.sysfs=/host/sys'
+      - '--collector.filesystem.ignored-mount-points'
+      - '^(aufs|proc|nsfs|shm|cgroup|tmpfs|binfmt_misc|debugfs|devpts|fusectl|hugetlbfs|fuse.lxcfs|mqueue|pstore|securityfs|sysfs|autofs|devtmpfs|configfs)'
+
+  prometheus:
+    image: prom/prometheus
+    hostname: prometheus
+    container_name: prometheus
+    ports:
+      - 9090:9090
+    volumes:
+      - ../../other/monitoring-sink-latency/prometheus/:/etc/prometheus/
+    depends_on:
+      - node-exporter
+      - kafka-lag-exporter
+      - alertmanager
+
+  grafana:
+    image: grafana/grafana:7.4.1
+    hostname: grafana
+    container_name: grafana
+    environment:
+      GF_INSTALL_PLUGINS: grafana-piechart-panel
+    ports:
+      - 3000:3000
+    volumes:
+      - ../../other/monitoring-sink-latency/grafana/provisioning/:/etc/grafana/provisioning/
+    depends_on:
+      - prometheus
