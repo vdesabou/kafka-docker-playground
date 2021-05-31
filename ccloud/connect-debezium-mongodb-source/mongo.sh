@@ -19,6 +19,7 @@ fi
 log "Creating topic in Confluent Cloud (auto.create.topics.enable=false)"
 set +e
 create_topic dbserver1.inventory.customers
+create_topic dbserver1.config.system.sessions
 set -e
 
 log "Initialize MongoDB replica set"
