@@ -156,9 +156,13 @@ log "-------------------------------------"
 log "Connector examples"
 log "-------------------------------------"
 
-set +e
-create_topic mysql-application
-set -e
+if ! version_gt $TAG_BASE "5.9.9"; then
+     # note: for 6.x CONNECT_TOPIC_CREATION_ENABLE=true
+     log "Creating topic in Confluent Cloud (auto.create.topics.enable=false)"
+     set +e
+     create_topic mysql-application
+     set -e
+fi
 
 log "Creating MySQL source connector"
 curl -X PUT \

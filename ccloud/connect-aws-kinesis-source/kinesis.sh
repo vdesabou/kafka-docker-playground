@@ -39,10 +39,13 @@ fi
 KINESIS_STREAM_NAME=my_kinesis_stream$TAG
 KINESIS_STREAM_NAME=${KINESIS_STREAM_NAME//[-.]/}
 
-log "Creating topic in Confluent Cloud (auto.create.topics.enable=false)"
-set +e
-create_topic kinesis_topic
-set -e
+if ! version_gt $TAG_BASE "5.9.9"; then
+     # note: for 6.x CONNECT_TOPIC_CREATION_ENABLE=true
+     log "Creating topic in Confluent Cloud (auto.create.topics.enable=false)"
+     set +e
+     create_topic kinesis_topic
+     set -e
+fi
 
 set +e
 log "Delete the stream"
