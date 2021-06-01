@@ -14,11 +14,14 @@ fi
 
 ${DIR}/../../ccloud/environment/start.sh "${PWD}/docker-compose.yml"
 
-log "Creating topic in Confluent Cloud (auto.create.topics.enable=false)"
-set +e
-create_topic artists
-create_topic songs
-set -e
+if ! version_gt $TAG_BASE "5.9.9"; then
+     # note: for 6.x CONNECT_TOPIC_CREATION_ENABLE=true
+     log "Creating topic in Confluent Cloud (auto.create.topics.enable=false)"
+     set +e
+     create_topic artists
+     create_topic songs
+     set -e
+fi
 
 log "Creating GCP Firebase Sink connector"
 curl -X PUT \
