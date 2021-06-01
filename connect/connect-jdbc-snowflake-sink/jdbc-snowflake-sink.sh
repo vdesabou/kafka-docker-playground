@@ -102,24 +102,17 @@ EOF
 
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
 
-# log "Create table test-table"
-# docker run --rm -i -e SNOWSQL_PWD='Password123!' -e RSA_PUBLIC_KEY="$RSA_PUBLIC_KEY" kurron/snowsql --username PLAYGROUND_USER -a $SNOWFLAKE_ACCOUNT_NAME << EOF
-# USE ROLE PLAYGROUND_CONNECTOR_ROLE;
-# USE DATABASE PLAYGROUND_DB;
-# USE SCHEMA PUBLIC;
-# USE WAREHOUSE PLAYGROUND_WAREHOUSE;
-# create or replace table PLAYGROUND_DB.PUBLIC.TEST_TABLE (f1 string);
-# EOF
-
-log "Sending messages to topic test_table"
-docker exec -i connect kafka-avro-console-producer --broker-list broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic test_table --property value.schema='{"type":"record","name":"myrecord","fields":[{"name":"u_name","type":"string"},
-{"name":"u_price", "type": "float"}, {"name":"u_quantity", "type": "int"}]}' << EOF
-{"u_name": "scissors", "u_price": 2.75, "u_quantity": 3}
-{"u_name": "tape", "u_price": 0.99, "u_quantity": 10}
-{"u_name": "notebooks", "u_price": 1.99, "u_quantity": 5}
+log "Create table foo"
+docker run --rm -i -e SNOWSQL_PWD="$SNOWFLAKE_PASSWORD" -e RSA_PUBLIC_KEY="$RSA_PUBLIC_KEY" kurron/snowsql --username $SNOWFLAKE_USERNAME -a $SNOWFLAKE_ACCOUNT_NAME << EOF
+USE ROLE PLAYGROUND_CONNECTOR_ROLE;
+USE DATABASE PLAYGROUND_DB;
+USE SCHEMA PUBLIC;
+USE WAREHOUSE PLAYGROUND_WAREHOUSE;
+create or replace table FOO (f1 string, update_ts timestamp default current_timestamp());
 EOF
 
-seq -f "{\"f1\": \"value%g\"}" 10 | docker exec -i connect kafka-avro-console-producer --broker-list broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic mytopic --property value.schema='{"type":"record","name":"myrecord","fields":[{"name":"f1","type":"string"}]}'
+log "Sending messages to topic FOO"
+seq -f "{\"F1\": \"value%g\"}" 10 | docker exec -i connect kafka-avro-console-producer --broker-list broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic FOO --property value.schema='{"type":"record","name":"myrecord","fields":[{"name":"F1","type":"string"}]}'
 
 # https://docs.snowflake.com/en/user-guide/jdbc-configure.html#jdbc-driver-connection-string
 CONNECTION_URL="jdbc:snowflake://$SNOWFLAKE_ACCOUNT_NAME.snowflakecomputing.com/?warehouse=PLAYGROUND_WAREHOUSE&db=PLAYGROUND_DB&role=PLAYGROUND_CONNECTOR_ROLE&schema=PUBLIC&user=PLAYGROUND_USER&private_key_file=/tmp/snowflake_key.p8&private_key_file_pwd=confluent&tracing=ALL"
@@ -130,8 +123,8 @@ curl -X PUT \
                "connector.class": "io.confluent.connect.jdbc.JdbcSinkConnector",
                "tasks.max": "1",
                "connection.url": "'"$CONNECTION_URL"'",
-               "topics": "test_table",
-               "auto.create": "true",
+               "topics": "FOO",
+               "auto.create": "false",
                "key.converter":"org.apache.kafka.connect.storage.StringConverter",
                "value.converter": "io.confluent.connect.avro.AvroConverter",
                "value.converter.schema.registry.url": "http://schema-registry:8081"
@@ -139,7 +132,7 @@ curl -X PUT \
      http://localhost:8083/connectors/jdbc-snowflake-sink/config | jq .
 
 
-sleep 120
+sleep 15
 
 log "Confirm that the messages were delivered to the Snowflake table (logged as PLAYGROUND_USER user)"
 docker run --rm -i -e SNOWSQL_PWD='Password123!' -e RSA_PUBLIC_KEY="$RSA_PUBLIC_KEY" kurron/snowsql --username PLAYGROUND_USER -a $SNOWFLAKE_ACCOUNT_NAME > /tmp/result.log  2>&1 <<-EOF
@@ -147,7 +140,7 @@ USE ROLE PLAYGROUND_CONNECTOR_ROLE;
 USE DATABASE PLAYGROUND_DB;
 USE SCHEMA PUBLIC;
 USE WAREHOUSE PLAYGROUND_WAREHOUSE;
-SELECT * FROM PLAYGROUND_DB.PUBLIC.TEST_TABLE;
+SELECT * FROM PLAYGROUND_DB.PUBLIC.FOO;
 EOF
 cat /tmp/result.log
-grep "scissors" /tmp/result.log
+grep "value1" /tmp/result.log
