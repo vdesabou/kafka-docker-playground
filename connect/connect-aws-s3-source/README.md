@@ -29,11 +29,8 @@ This project assumes `~/.aws/credentials` and `~/.aws/config` are set, see `dock
 Simply run:
 
 ```bash
-$ ./s3-source.sh <AWS_BUCKET_NAME>
+$ ./s3-source.sh
 ```
-
-Note: you can also export these values as environment variable
-
 ## Details of what the script is doing
 
 
