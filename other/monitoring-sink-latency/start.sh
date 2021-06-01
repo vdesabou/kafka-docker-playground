@@ -101,7 +101,6 @@ curl -X PUT \
           }' \
      http://localhost:8083/connectors/http-sink-with-consumer-quota/config | jq .
 
-<<<<<<< HEAD
 # log "Add a consumption 256B per broker quota to client.id connector-consumer-http-sink-with-consumer-quota-0" 
 docker exec broker env -i bash -l -c "kafka-configs  --bootstrap-server localhost:9092 --alter --add-config 'consumer_byte_rate=256' --entity-name connector-consumer-http-sink-with-consumer-quota-0 --entity-type clients"
 docker exec broker env -i bash -l -c "kafka-configs  --bootstrap-server localhost:9092 --describe --entity-name connector-consumer-http-sink-with-consumer-quota-0 --entity-type clients"
@@ -140,12 +139,6 @@ curl -X PUT \
           }' \
      http://localhost:8083/connectors/s3-sink/config | jq .
 
-=======
-log "Add a consumption 256B per broker quota to client.id connector-consumer-http-sink-with-consumer-quota-0" 
-docker exec broker env -i bash -l -c "kafka-configs  --bootstrap-server localhost:9092 --alter --add-config 'consumer_byte_rate=256' --entity-name connector-consumer-http-sink-with-consumer-quota-0 --entity-type clients"
-docker exec broker env -i bash -l -c "kafka-configs  --bootstrap-server localhost:9092 --describe --entity-name connector-consumer-http-sink-with-consumer-quota-0 --entity-type clients"
-
->>>>>>> Infrastructure setup for monitoring sink latency
 log "Creating http-sink-with-fetch-latency connector"
 curl -X PUT \
      -H "Content-Type: application/json" \
@@ -219,8 +212,6 @@ curl -X PUT \
                "connection.user": "admin",
                "connection.password": "password",
                "retry.on.status.codes" : "400-500",
-<<<<<<< HEAD
-<<<<<<< HEAD
                "batch.max.size": "1000"
           }' \
      http://localhost:8085/connectors/http-sink-with-put-latency-and-batching/config | jq .
@@ -259,15 +250,6 @@ curl -X PUT \
           }' \
      http://localhost:8085/connectors/s3-sink-with-put-latency/config | jq .
 
-=======
-               "batch.max.size": "40"
-=======
-               "batch.max.size": "1000"
->>>>>>> keeping batch consistent over the tasks
-          }' \
-     http://localhost:8085/connectors/http-sink-with-put-latency-and-batching/config | jq .
-
->>>>>>> Infrastructure setup for monitoring sink latency
 source ${DIR}/tc-utils.sh
 
 # connect-with-fetch-latency
