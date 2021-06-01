@@ -6,7 +6,7 @@ export TAG=5.5.1
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
-if [ ! -f ${DIR}/postgresql-9.4.1207.jre7 ]
+if [ ! -f ${DIR}/postgresql-9.4.1207.jre7.jar ]
 then
      wget https://repo1.maven.org/maven2/org/postgresql/postgresql/9.4.1207.jre7/postgresql-9.4.1207.jre7.jar
 fi
