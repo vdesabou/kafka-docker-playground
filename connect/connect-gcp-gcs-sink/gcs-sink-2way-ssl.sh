@@ -5,13 +5,6 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
 PROJECT=${1:-vincent-de-saboulin-lab}
-GCS_BUCKET_NAME=${GCS_BUCKET_NAME:-$2}
-
-if [ -z "$GCS_BUCKET_NAME" ]
-then
-     logerror "GCS_BUCKET_NAME is not set. Export it as environment variable or pass it as argument"
-     exit 1
-fi
 
 KEYFILE="${DIR}/keyfile.json"
 if [ ! -f ${KEYFILE} ]
@@ -21,6 +14,9 @@ then
 fi
 
 ${DIR}/../../environment/2way-ssl/start.sh "${PWD}/docker-compose.2way-ssl.yml"
+
+GCS_BUCKET_NAME=kafka-docker-playground-bucket-${USER}${GITHUB_RUN_NUMBER}${TAG}
+GCS_BUCKET_NAME=${GCS_BUCKET_NAME//[-.]/}
 
 log "Doing gsutil authentication"
 set +e

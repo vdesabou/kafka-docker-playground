@@ -173,7 +173,6 @@ jobs:
           DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
           ENVIRONMENT: ${{ secrets.ENVIRONMENT }}
           FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
-          GCS_BUCKET_NAME: ${{ secrets.GCS_BUCKET_NAME }}
           GITHUB_ACCESS_TOKEN: ${{ secrets.THE_GITHUB_ACCESS_TOKEN }}
           JIRA_URL: ${{ secrets.JIRA_URL }}
           JIRA_USERNAME: ${{ secrets.JIRA_USERNAME }}
@@ -303,7 +302,6 @@ jobs:
           DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
           ENVIRONMENT: ${{ secrets.ENVIRONMENT }}
           FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
-          GCS_BUCKET_NAME: ${{ secrets.GCS_BUCKET_NAME }}
           GITHUB_ACCESS_TOKEN: ${{ secrets.THE_GITHUB_ACCESS_TOKEN }}
           JIRA_URL: ${{ secrets.JIRA_URL }}
           JIRA_USERNAME: ${{ secrets.JIRA_USERNAME }}
