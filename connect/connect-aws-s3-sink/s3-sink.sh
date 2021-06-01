@@ -3,13 +3,6 @@ set -e
 
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
-AWS_BUCKET_NAME=${AWS_BUCKET_NAME:-$1}
-
-if [ -z "$AWS_BUCKET_NAME" ]
-then
-     logerror "AWS_BUCKET_NAME is not set. Export it as environment variable or pass it as argument"
-     exit 1
-fi
 
 if [ ! -f $HOME/.aws/config ]
 then
@@ -34,6 +27,9 @@ else
 fi
 
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
+
+AWS_BUCKET_NAME=kafka-docker-playground-bucket-${USER}${GITHUB_RUN_NUMBER}${TAG}
+AWS_BUCKET_NAME=${AWS_BUCKET_NAME//[-.]/}
 
 AWS_REGION=$(aws configure get region | tr '\r' '\n')
 log "Creating bucket name <$AWS_BUCKET_NAME>, if required"

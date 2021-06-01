@@ -29,19 +29,19 @@ This project assumes `~/.aws/credentials` and `~/.aws/config` are set, see `dock
 Simply run:
 
 ```
-$ ./s3-sink.sh <AWS_BUCKET_NAME>
+$ ./s3-sink.sh
 ```
 
 If you want to [assume](https://docs.confluent.io/kafka-connect-s3-sink/current/index.html#using-trusted-account-credentials) IAM roles:
 
 ```
-$ ./s3-sink-with-assuming-iam-role.sh <AWS_BUCKET_NAME> (in that case `~/.aws/credentials-with-assuming-iam-role` file must be set)
+$ ./s3-sink-with-assuming-iam-role.sh (in that case `~/.aws/credentials-with-assuming-iam-role` file must be set)
 ```
 
 or
 
 ```
-$ ./s3-sink-with-assuming-iam-role-config.sh <AWS_BUCKET_NAME> <AWS_STS_ROLE_ARN>
+$ ./s3-sink-with-assuming-iam-role-config.sh <AWS_STS_ROLE_ARN>
 ```
 
 Note: you can also export these values as environment variable
