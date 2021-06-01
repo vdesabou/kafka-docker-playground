@@ -148,7 +148,7 @@ services:
     container_name: kafka-lag-exporter
     restart: always
     ports:
-      - 9999:9999
+      - 4321:4321
     volumes:
       - ../../other/monitoring-sink-latency/kafka-lag-exporter/application.conf:/opt/docker/conf/application.conf
       - ../../other/monitoring-sink-latency/kafka-lag-exporter/logback.xml:/opt/docker/conf/logback.xml
