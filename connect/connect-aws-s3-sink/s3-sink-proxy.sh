@@ -28,7 +28,7 @@ fi
 
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.proxy.yml"
 
-AWS_BUCKET_NAME=kafka-docker-playground-bucket-${USER}${GITHUB_RUN_NUMBER}${TAG}
+AWS_BUCKET_NAME=kafka-docker-playground-bucket-${USER}${TAG}
 AWS_BUCKET_NAME=${AWS_BUCKET_NAME//[-.]/}
 
 AWS_REGION=$(aws configure get region | tr '\r' '\n')

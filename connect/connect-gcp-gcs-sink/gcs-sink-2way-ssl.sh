@@ -15,7 +15,7 @@ fi
 
 ${DIR}/../../environment/2way-ssl/start.sh "${PWD}/docker-compose.2way-ssl.yml"
 
-GCS_BUCKET_NAME=kafka-docker-playground-bucket-${USER}${GITHUB_RUN_NUMBER}${TAG}
+GCS_BUCKET_NAME=kafka-docker-playground-bucket-${USER}${TAG}
 GCS_BUCKET_NAME=${GCS_BUCKET_NAME//[-.]/}
 
 log "Doing gsutil authentication"
