@@ -36,6 +36,8 @@ mkdir -p /home/sshuser/upload/finished
 chown -R sshuser /home/sshuser/upload
 "
 
+docker container restart ssh-server
+
 # just to make sure we can kinit
 docker exec connect kinit sshuser -k -t sshuser.keytab
 # if required to troubleshoot
