@@ -41,6 +41,17 @@ openssl genrsa 2048 | openssl pkcs8 -topk8 -inform PEM -v1 PBE-SHA1-RC4-128 -out
 # Generate public key from private key. You can share your public key.
 openssl rsa -in snowflake_key.p8 -pubout -out snowflake_key.pub -passin pass:confluent
 
+if [ -z "$CI" ]
+then
+    # not running with github actions
+    # workaround for issue on linux, see https://github.com/vdesabou/kafka-docker-playground/issues/851#issuecomment-821151962
+    chmod a+rw snowflake_key.p8
+else
+    # docker is run as runneradmin user, need to use sudo
+    ls -lrt
+    sudo chmod a+rw snowflake_key.p8
+    ls -lrt
+fi
 
 RSA_PUBLIC_KEY=$(grep -v "BEGIN PUBLIC" snowflake_key.pub | grep -v "END PUBLIC"|tr -d '\n')
 RSA_PRIVATE_KEY=$(grep -v "BEGIN ENCRYPTED PRIVATE KEY" snowflake_key.p8 | grep -v "END ENCRYPTED PRIVATE KEY"|tr -d '\n')
