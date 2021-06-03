@@ -61,6 +61,7 @@ fi
 
 # cd -
 
+mkdir -p ${DIR}/ssl
 cd ${DIR}/ssl
 if [ -z "$CI" ]
 then
