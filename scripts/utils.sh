@@ -542,6 +542,20 @@ function version_gt() {
   test "$(printf '%s\n' "$@" | sort -V | head -n 1)" != "$1";
 }
 
+function get_docker_compose_version() {
+  docker-compose version | grep "^docker-compose version" | cut -d' ' -f3 | cut -d',' -f1
+}
+
+function check_docker_compose_version() {
+  REQUIRED_DOCKER_COMPOSE_VER=${1:-"1.28.0"}
+  DOCKER_COMPOSE_VER=$(get_docker_compose_version)
+
+  if version_gt $REQUIRED_DOCKER_COMPOSE_VER $DOCKER_COMPOSE_VER; then
+    log "docker-compose version ${REQUIRED_DOCKER_COMPOSE_VER} or greater is required.  Current reported version: ${DOCKER_COMPOSE_VER}"
+    exit 1
+  fi
+}
+
 function get_ccloud_version() {
   ccloud version | grep "^Version:" | cut -d':' -f2 | cut -d'v' -f2
 }
