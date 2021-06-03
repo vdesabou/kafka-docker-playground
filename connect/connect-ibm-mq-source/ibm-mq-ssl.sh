@@ -24,43 +24,6 @@ then
      rm -rf ${DIR}/install
 fi
 
-# cd ${DIR}/ssl
-# if [ -z "$CI" ]
-# then
-#     # not running with github actions
-#     # workaround for issue on linux, see https://github.com/vdesabou/kafka-docker-playground/issues/851#issuecomment-821151962
-#     chmod -R a+rw .
-# else
-#     # docker is run as runneradmin user, need to use sudo
-#     ls -lrt
-#     sudo chmod -R a+rw .
-#     ls -lrt
-# fi
-
-# rm -f key.pem
-# rm -f key.key
-
-# # https://developer.ibm.com/components/ibm-mq/tutorials/mq-secure-msgs-tls/
-# log "Create a self-signed certificate"
-# docker run --rm -v $PWD:/tmp vdesabou/kafka-docker-playground-connect:${CONNECT_TAG} openssl req -x509 -nodes -newkey rsa:2048 -subj '/CN=ibmmq' -keyout /tmp/key.key -out /tmp/key.crt -days 365
-
-# log "Create a client keystore"
-# docker run --rm -v $PWD:/tmp vdesabou/kafka-docker-playground-connect:${CONNECT_TAG} keytool -keystore /tmp/clientkey.jks -storetype jks -importcert -file /tmp/key.crt -alias ibmmq-certificate -storepass confluent -keypass confluent
-
-# if [ -z "$CI" ]
-# then
-#     # not running with github actions
-#     # workaround for issue on linux, see https://github.com/vdesabou/kafka-docker-playground/issues/851#issuecomment-821151962
-#     chmod -R a+rw .
-# else
-#     # docker is run as runneradmin user, need to use sudo
-#     ls -lrt
-#     sudo chmod -R a+rw .
-#     ls -lrt
-# fi
-
-# cd -
-
 mkdir -p ${DIR}/ssl
 cd ${DIR}/ssl
 if [ -z "$CI" ]
