@@ -106,7 +106,6 @@ docker exec oracle bash -c "orapki wallet add -wallet /tmp/server -trusted_cert 
 # add the user certificate to the wallet:
 docker exec oracle bash -c "orapki wallet add -wallet /tmp/server -user_cert -cert /tmp/server/cert.txt -pwd WalletPasswd123"
 
-set -x
 cd ${DIR}/mtls
 if [ -z "$CI" ]
 then
@@ -168,7 +167,7 @@ log "Displaying truststore"
 docker run --rm -v $PWD:/tmp vdesabou/kafka-docker-playground-connect:${CONNECT_TAG} keytool -list -keystore /tmp/truststore.jks -storepass 'welcome123' -v
 
 cd ${DIR}
-set +x
+
 log "Update listener.ora, sqlnet.ora and tnsnames.ora"
 docker cp ${PWD}/mtls/listener.ora oracle:/opt/oracle/oradata/dbconfig/ORCLCDB/listener.ora
 docker cp ${PWD}/mtls/sqlnet.ora oracle:/opt/oracle/oradata/dbconfig/ORCLCDB/sqlnet.ora
