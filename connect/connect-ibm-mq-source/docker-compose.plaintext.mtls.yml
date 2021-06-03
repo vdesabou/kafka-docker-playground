@@ -10,10 +10,6 @@ services:
       MQ_QMGR_NAME: QM1
       MQ_ADMIN_PASSWORD: passw0rd
       MQ_APP_PASSWORD: passw0rd
-    volumes:
-        - ../../connect/connect-ibm-mq-source/mtls/ca.crt:/etc/mqm/pki/keys/mykey/ca.crt
-        - ../../connect/connect-ibm-mq-source/mtls/server.crt:/etc/mqm/pki/keys/mykey/tls.crt
-        - ../../connect/connect-ibm-mq-source/mtls/server.key:/etc/mqm/pki/keys/mykey/tls.key
     ports:
       - '1414:1414'
       - '9443:9443'
@@ -32,4 +28,6 @@ services:
     environment:
       CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-ibmmq
       # https://support.confluent.io/hc/en-us/articles/360054967632-What-cause-the-IBMMQ-connector-fail-to-establish-a-SSL-connection-with-Cipher-Error
-      KAFKA_OPTS: "-Dcom.ibm.mq.cfg.useIBMCipherMappings=false"
+      KAFKA_OPTS: -Dcom.ibm.mq.cfg.useIBMCipherMappings=false
+                  -Djavax.net.debug=true
+                  -Djavax.net.debug=ssl:handshake
