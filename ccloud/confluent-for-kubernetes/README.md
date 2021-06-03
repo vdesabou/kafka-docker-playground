@@ -2,5 +2,5 @@
 
 Quickly test [Confluent for Kubernetes ](https://docs.confluent.io/operator/current/co-quickstart.html#co-long-quickstart) with Confluent Cloud
 
-See https://github.com/confluentinc/operator-earlyaccess/tree/master/ccloud-integration
+See https://github.com/confluentinc/confluent-kubernetes-examples/tree/master/hybrid/ccloud-integration
 
