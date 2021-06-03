@@ -19,7 +19,7 @@ do
     keytool -genkey -noprompt \
                  -alias $i \
                  -dname "CN=$i,OU=TEST,O=CONFLUENT,L=PaloAlto,S=Ca,C=US" \
-                                 -ext "SAN=dns:$i,dns:localhost" \
+                                 -ext "SAN=dns:$i,dns:localhost,dns:$i.kerberos-demo.local" \
                  -keystore /tmp/kafka.$i.keystore.jks \
                  -keyalg RSA \
                  -storepass confluent \
@@ -27,7 +27,7 @@ do
                  -storetype pkcs12
 
     # Create the certificate signing request (CSR)
-    keytool -keystore /tmp/kafka.$i.keystore.jks -alias $i -certreq -file /tmp/$i.csr -storepass confluent -keypass confluent -ext "SAN=dns:$i,dns:localhost"
+    keytool -keystore /tmp/kafka.$i.keystore.jks -alias $i -certreq -file /tmp/$i.csr -storepass confluent -keypass confluent -ext "SAN=dns:$i,dns:localhost,dns:$i.kerberos-demo.local"
         #openssl req -in $i.csr -text -noout
 
 cat << EOF > /tmp/extfile
@@ -42,6 +42,7 @@ subjectAltName = @alt_names
 [alt_names]
 DNS.1 = $i
 DNS.2 = localhost
+DNS.3 = $i.kerberos-demo.local
 EOF
         # Sign the host certificate with the certificate authority (CA)
         openssl x509 -req -CA /tmp/snakeoil-ca-1.crt -CAkey /tmp/snakeoil-ca-1.key -in /tmp/$i.csr -out /tmp/$i-ca1-signed.crt -days 9999 -CAcreateserial -passin pass:confluent -extensions v3_req -extfile /tmp/extfile
@@ -53,7 +54,7 @@ EOF
         #keytool -list -v -keystore kafka.$i.keystore.jks -storepass confluent
 
         # Sign and import the host certificate into the keystore
-     keytool -noprompt -keystore /tmp/kafka.$i.keystore.jks -alias $i -import -file /tmp/$i-ca1-signed.crt -storepass confluent -keypass confluent -ext "SAN=dns:$i,dns:localhost"
+     keytool -noprompt -keystore /tmp/kafka.$i.keystore.jks -alias $i -import -file /tmp/$i-ca1-signed.crt -storepass confluent -keypass confluent -ext "SAN=dns:$i,dns:localhost,dns:$i.kerberos-demo.local"
         #keytool -list -v -keystore kafka.$i.keystore.jks -storepass confluent
 
     # Create truststore and import the CA cert
