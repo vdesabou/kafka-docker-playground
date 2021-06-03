@@ -7,6 +7,7 @@ source ${DIR}/../../scripts/utils.sh
 
 verify_docker_and_memory
 verify_installed "docker-compose"
+check_docker_compose_version
 
 DOCKER_COMPOSE_FILE_OVERRIDE=$1
 # Starting kerberos,
