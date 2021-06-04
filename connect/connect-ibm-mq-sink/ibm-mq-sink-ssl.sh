@@ -86,22 +86,22 @@ curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
                "connector.class": "io.confluent.connect.jms.IbmMqSinkConnector",
-                    "topics": "sink-messages",
-                    "mq.hostname": "ibmmq",
-                    "mq.port": "1414",
-                    "mq.transport.type": "client",
-                    "mq.queue.manager": "QM1",
-                    "mq.channel": "DEV.APP.SVRCONN",
-                    "mq.username": "app",
-                    "mq.password": "passw0rd",
-                    "jms.destination.name": "DEV.QUEUE.1",
-                    "jms.destination.type": "queue",
-                    "mq.ssl.cipher.suite":"TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384",
-                    "value.converter": "org.apache.kafka.connect.storage.StringConverter",
-                    "key.converter": "org.apache.kafka.connect.storage.StringConverter",
-                    "confluent.license": "",
-                    "confluent.topic.bootstrap.servers": "broker:9092",
-                    "confluent.topic.replication.factor": "1"
+               "topics": "sink-messages",
+               "mq.hostname": "ibmmq",
+               "mq.port": "1414",
+               "mq.transport.type": "client",
+               "mq.queue.manager": "QM1",
+               "mq.channel": "DEV.APP.SVRCONN",
+               "mq.username": "app",
+               "mq.password": "passw0rd",
+               "jms.destination.name": "DEV.QUEUE.1",
+               "jms.destination.type": "queue",
+               "mq.ssl.cipher.suite":"TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384",
+               "value.converter": "org.apache.kafka.connect.storage.StringConverter",
+               "key.converter": "org.apache.kafka.connect.storage.StringConverter",
+               "confluent.license": "",
+               "confluent.topic.bootstrap.servers": "broker:9092",
+               "confluent.topic.replication.factor": "1"
           }' \
      http://localhost:8083/connectors/ibm-mq-sink-ssl/config | jq .
 
