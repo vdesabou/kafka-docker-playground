@@ -4,7 +4,7 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
-${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext-mongo-sink-repro-sharding.yml"
+${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.mongo-sink-repro-sharding.yml"
 
 MAX_WAIT=40
 log "Waiting up to $MAX_WAIT seconds for MongoDB to start"
@@ -23,14 +23,14 @@ db.createUser(
 )
 EOF
 
-# Example of upserting in a sharded collection 
+# Example of upserting in a sharded collection
 # https://docs.mongodb.com/kafka-connector/current/kafka-sink-postprocessors/#replaceonebusinesskeystrategy-example
 log "Create a sharded collection"
 docker exec -i mongodb-sharded mongo << EOF
 use inventory
 db.createCollection("products")
 db.collection.createIndex({ "id": 1, "product": 1}, { unique: true })
-sh.enableSharding("inventory") 
+sh.enableSharding("inventory")
 sh.shardCollection("inventory.products", { "id": 1, "product": 1} )
 EOF
 
@@ -59,7 +59,7 @@ curl -X PUT \
      http://localhost:8083/connectors/mongodb-sharded-sink/config | jq .
 
 log "Waiting 10s for the connector to start and process extisting records"
-sleep 10 
+sleep 10
 
 log "Verify records have been upserted"
 docker exec -i mongodb-sharded mongo << EOF
@@ -80,7 +80,7 @@ docker exec -i mongodb-sharded mongo << EOF
 use inventory
 db.createCollection("products-with-key")
 db.collection.createIndex({ "id": 1, "product": 1}, { unique: true })
-sh.enableSharding("inventory") 
+sh.enableSharding("inventory")
 sh.shardCollection("inventory.products-with-key", { "id": 1, "product": 1} )
 EOF
 
@@ -111,7 +111,7 @@ curl -X PUT \
      http://localhost:8083/connectors/mongodb-sharded-sink-with-key/config | jq .
 
 log "Waiting 10s for the connector to start and process extisting records"
-sleep 10 
+sleep 10
 
 log "Verify connector fails to upsert in a sharded collection"
 curl -s http://localhost:8083/connectors/mongodb-sharded-sink-with-key/status | grep -o "Failed to target upsert by query :: could not extract exact shard key"
