@@ -1,8 +1,6 @@
 #!/bin/bash
 set -e
 
-# this
-export CONNECTOR_TAG="1.5.2"
 
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
@@ -49,78 +47,89 @@ docker run -i --volumes-from gcloud-config google/cloud-sdk:latest bq --project_
 
 docker cp schema.avsc connect:/tmp/
 docker cp message.json connect:/tmp/
-docker exec -i connect bash -c "kafka-avro-console-producer --broker-list broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic myavrotopic1 --property value.schema.file=/tmp/schema.avsc < /tmp/message.json"
+docker exec -i connect bash -c "kafka-avro-console-producer --broker-list broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic myavrotopic --property value.schema.file=/tmp/schema.avsc < /tmp/message.json"
 
-# 6.1.1
 
-# [2021-05-26 10:04:27,164] ERROR Task failed with com.wepay.kafka.connect.bigquery.exception.ConversionConnectException error: Kafka Connect schema contains cycle (com.wepay.kafka.connect.bigquery.write.batch.KCBQThreadPoolExecutor)
-# Exception in thread "pool-4-thread-1" com.wepay.kafka.connect.bigquery.exception.ConversionConnectException: Kafka Connect schema contains cycle
-#         at com.wepay.kafka.connect.bigquery.convert.BigQuerySchemaConverter.throwOnCycle(BigQuerySchemaConverter.java:129)
-#         at com.wepay.kafka.connect.bigquery.convert.BigQuerySchemaConverter.lambda$throwOnCycle$1(BigQuerySchemaConverter.java:142)
-#         at java.base/java.util.ArrayList.forEach(ArrayList.java:1541)
-#         at com.wepay.kafka.connect.bigquery.convert.BigQuerySchemaConverter.throwOnCycle(BigQuerySchemaConverter.java:142)
-#         at com.wepay.kafka.connect.bigquery.convert.BigQuerySchemaConverter.throwOnCycle(BigQuerySchemaConverter.java:135)
-#         at com.wepay.kafka.connect.bigquery.convert.BigQuerySchemaConverter.lambda$throwOnCycle$1(BigQuerySchemaConverter.java:142)
-#         at java.base/java.util.ArrayList.forEach(ArrayList.java:1541)
-#         at java.base/java.util.Collections$UnmodifiableCollection.forEach(Collections.java:1085)
-#         at com.wepay.kafka.connect.bigquery.convert.BigQuerySchemaConverter.throwOnCycle(BigQuerySchemaConverter.java:142)
-#         at com.wepay.kafka.connect.bigquery.convert.BigQuerySchemaConverter.lambda$throwOnCycle$1(BigQuerySchemaConverter.java:142)
-#         at java.base/java.util.ArrayList.forEach(ArrayList.java:1541)
-#         at java.base/java.util.Collections$UnmodifiableCollection.forEach(Collections.java:1085)
-#         at com.wepay.kafka.connect.bigquery.convert.BigQuerySchemaConverter.throwOnCycle(BigQuerySchemaConverter.java:142)
-#         at com.wepay.kafka.connect.bigquery.convert.BigQuerySchemaConverter.throwOnCycle(BigQuerySchemaConverter.java:135)
-#         at com.wepay.kafka.connect.bigquery.convert.BigQuerySchemaConverter.lambda$throwOnCycle$1(BigQuerySchemaConverter.java:142)
-#         at java.base/java.util.ArrayList.forEach(ArrayList.java:1541)
-#         at java.base/java.util.Collections$UnmodifiableCollection.forEach(Collections.java:1085)
-#         at com.wepay.kafka.connect.bigquery.convert.BigQuerySchemaConverter.throwOnCycle(BigQuerySchemaConverter.java:142)
-#         at com.wepay.kafka.connect.bigquery.convert.BigQuerySchemaConverter.lambda$throwOnCycle$1(BigQuerySchemaConverter.java:142)
-#         at java.base/java.util.ArrayList.forEach(ArrayList.java:1541)
-#         at java.base/java.util.Collections$UnmodifiableCollection.forEach(Collections.java:1085)
-#         at com.wepay.kafka.connect.bigquery.convert.BigQuerySchemaConverter.throwOnCycle(BigQuerySchemaConverter.java:142)
+if version_gt $CONNECTOR_TAG "1.9.9"
+then
+     curl -X PUT \
+          -H "Content-Type: application/json" \
+          --data '{
+                    "connector.class": "com.wepay.kafka.connect.bigquery.BigQuerySinkConnector",
+                    "tasks.max" : "1",
+                    "topics" : "myavrotopic",
+                    "sanitizeTopics" : "true",
+                    "autoCreateTables" : "true",
+                    "autoUpdateSchemas" : "true",
+                    "value.converter": "io.confluent.connect.avro.AvroConverter",
+                    "value.converter.schema.registry.url": "http://schema-registry:8081",
+                    "value.converter.enhanced.avro.schema.support": "false",
+                    "defaultDataset" : "'"$DATASET"'",
+                    "mergeIntervalMs": "5000",
+                    "bufferSize": "100000",
+                    "maxWriteSize": "10000",
+                    "tableWriteWait": "1000",
+                    "project" : "'"$PROJECT"'",
+                    "sanitizeFieldNames": "true",
+                    "allBQFieldsNullable": "true",
+                    "allowBigQueryRequiredFieldRelaxation": "true",
+                    "keyfile" : "/tmp/keyfile.json"
+               }' \
+          http://localhost:8083/connectors/gcp-bigquery-sink/config | jq .
+else
+     curl -X PUT \
+          -H "Content-Type: application/json" \
+          --data '{
+                    "connector.class": "com.wepay.kafka.connect.bigquery.BigQuerySinkConnector",
+                    "tasks.max" : "1",
+                    "topics" : "myavrotopic",
+                    "sanitizeTopics" : "true",
+                    "autoCreateTables" : "true",
+                    "autoUpdateSchemas" : "true",
+                    "schemaRetriever" : "com.wepay.kafka.connect.bigquery.schemaregistry.schemaretriever.SchemaRegistrySchemaRetriever",
+                    "schemaRegistryLocation": "http://schema-registry:8081",
+                    "value.converter": "io.confluent.connect.avro.AvroConverter",
+                    "value.converter.schema.registry.url": "http://schema-registry:8081",
+                    "value.converter.enhanced.avro.schema.support": "false",
+                    "mergeIntervalMs": "5000",
+                    "bufferSize": "100000",
+                    "maxWriteSize": "10000",
+                    "tableWriteWait": "1000",
+                    "sanitizeFieldNames": "true",
+                    "datasets" : ".*='"$DATASET"'",
+                    "project" : "'"$PROJECT"'",
+                    "keyfile" : "/tmp/keyfile.json"
+               }' \
+          http://localhost:8083/connectors/gcp-bigquery-sink/config | jq .
+fi
+
+# with 1.5.2
+# [2021-06-05 16:11:59,252] ERROR WorkerSinkTask{id=gcp-bigquery-sink-0} Task threw an uncaught and unrecoverable exception. Task is being killed and will not recover until manually restarted. Error: The RECORD field must have at least one sub-field (org.apache.kafka.connect.runtime.WorkerSinkTask)
+# java.lang.IllegalArgumentException: The RECORD field must have at least one sub-field
+#         at com.google.cloud.bigquery.Field$Builder.setType(Field.java:149)
+#         at com.google.cloud.bigquery.Field.newBuilder(Field.java:285)
+#         at com.wepay.kafka.connect.bigquery.convert.BigQuerySchemaConverter.convertStruct(BigQuerySchemaConverter.java:175)
+#         at com.wepay.kafka.connect.bigquery.convert.BigQuerySchemaConverter.convertField(BigQuerySchemaConverter.java:127)
+#         at com.wepay.kafka.connect.bigquery.convert.BigQuerySchemaConverter.convertStruct(BigQuerySchemaConverter.java:169)
+#         at com.wepay.kafka.connect.bigquery.convert.BigQuerySchemaConverter.convertField(BigQuerySchemaConverter.java:127)
+#         at com.wepay.kafka.connect.bigquery.convert.BigQuerySchemaConverter.convertStruct(BigQuerySchemaConverter.java:169)
+#         at com.wepay.kafka.connect.bigquery.convert.BigQuerySchemaConverter.convertField(BigQuerySchemaConverter.java:127)
 #         at com.wepay.kafka.connect.bigquery.convert.BigQuerySchemaConverter.convertSchema(BigQuerySchemaConverter.java:109)
-#         at com.wepay.kafka.connect.bigquery.convert.BigQuerySchemaConverter.convertSchema(BigQuerySchemaConverter.java:46)
-#         at com.wepay.kafka.connect.bigquery.SchemaManager.getBigQuerySchema(SchemaManager.java:507)
-#         at com.wepay.kafka.connect.bigquery.SchemaManager.convertRecordSchema(SchemaManager.java:323)
-#         at com.wepay.kafka.connect.bigquery.SchemaManager.getAndValidateProposedSchema(SchemaManager.java:294)
-#         at com.wepay.kafka.connect.bigquery.SchemaManager.getTableInfo(SchemaManager.java:277)
-#         at com.wepay.kafka.connect.bigquery.SchemaManager.createTable(SchemaManager.java:223)
-#         at com.wepay.kafka.connect.bigquery.write.row.AdaptiveBigQueryWriter.attemptTableCreate(AdaptiveBigQueryWriter.java:168)
-#         at com.wepay.kafka.connect.bigquery.write.row.AdaptiveBigQueryWriter.performWriteRequest(AdaptiveBigQueryWriter.java:115)
-#         at com.wepay.kafka.connect.bigquery.write.row.BigQueryWriter.writeRows(BigQueryWriter.java:118)
-#         at com.wepay.kafka.connect.bigquery.write.batch.TableWriter.run(TableWriter.java:96)
+#         at com.wepay.kafka.connect.bigquery.convert.BigQuerySchemaConverter.convertSchema(BigQuerySchemaConverter.java:43)
+#         at com.wepay.kafka.connect.bigquery.SchemaManager.getBigQuerySchema(SchemaManager.java:101)
+#         at com.wepay.kafka.connect.bigquery.SchemaManager.constructTableInfo(SchemaManager.java:86)
+#         at com.wepay.kafka.connect.bigquery.SchemaManager.createTable(SchemaManager.java:67)
+#         at com.wepay.kafka.connect.bigquery.BigQuerySinkTask.maybeCreateTable(BigQuerySinkTask.java:170)
+#         at com.wepay.kafka.connect.bigquery.BigQuerySinkTask.getRecordTable(BigQuerySinkTask.java:144)
+#         at com.wepay.kafka.connect.bigquery.BigQuerySinkTask.put(BigQuerySinkTask.java:207)
+#         at org.apache.kafka.connect.runtime.WorkerSinkTask.deliverMessages(WorkerSinkTask.java:586)
+#         at org.apache.kafka.connect.runtime.WorkerSinkTask.poll(WorkerSinkTask.java:329)
+#         at org.apache.kafka.connect.runtime.WorkerSinkTask.iteration(WorkerSinkTask.java:232)
+#         at org.apache.kafka.connect.runtime.WorkerSinkTask.execute(WorkerSinkTask.java:201)
+#         at org.apache.kafka.connect.runtime.WorkerTask.doRun(WorkerTask.java:189)
+#         at org.apache.kafka.connect.runtime.WorkerTask.run(WorkerTask.java:238)
+#         at java.base/java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:515)
+#         at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:264)
 #         at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1128)
 #         at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:628)
 #         at java.base/java.lang.Thread.run(Thread.java:829)
-
-
-log "Creating GCP BigQuery Sink connector gcp-bigquery-sink-1"
-curl -X PUT \
-     -H "Content-Type: application/json" \
-     --data '{
-               "connector.class": "com.wepay.kafka.connect.bigquery.BigQuerySinkConnector",
-               "tasks.max" : "1",
-               "topics" : "myavrotopic1",
-               "sanitizeTopics" : "true",
-               "autoCreateTables" : "true",
-               "autoUpdateSchemas" : "true",
-               "schemaRetriever" : "com.wepay.kafka.connect.bigquery.schemaregistry.schemaretriever.SchemaRegistrySchemaRetriever",
-               "schemaRegistryLocation": "http://schema-registry:8081",
-               "value.converter": "io.confluent.connect.avro.AvroConverter",
-               "value.converter.schema.registry.url": "http://schema-registry:8081",
-               "value.converter.enhanced.avro.schema.support": "true",
-               "datasets" : ".*='"$DATASET"'",
-               "mergeIntervalMs": "5000",
-               "bufferSize": "100000",
-               "maxWriteSize": "10000",
-               "tableWriteWait": "1000",
-               "project" : "'"$PROJECT"'",
-               "keyfile" : "/tmp/keyfile.json"
-          }' \
-     http://localhost:8083/connectors/gcp-bigquery-sink-1/config | jq .
-
-sleep 4
-
-curl localhost:8083/connectors/gcp-bigquery-sink-1/status | jq
-
-exit 0
-
