@@ -1,0 +1,38 @@
+---
+version: '3.5'
+services:
+
+  # https://github.com/dosvath/kerberos-containers
+  kdc-server:
+    hostname: kdc-server.kerberos-demo.local
+    container_name: kdc-server
+    build: ../../connect/connect-sftp-sink/kerberos/kdc-server
+    volumes:
+      # This is needed otherwise there won't be enough entropy to generate a new kerberos realm
+      - /dev/urandom:/dev/random
+    ports:
+      - "749:749"
+
+  # https://github.com/dosvath/kerberos-containers
+  ssh-server:
+    hostname: ssh-server.kerberos-demo.local
+    container_name: ssh-server
+    build: ../../connect/connect-sftp-sink/kerberos/ssh-server
+    volumes:
+        - ../../connect/connect-sftp-sink/kerberos/connect-krb5.conf:/etc/krb5.conf
+    ports:
+      - "2222:22"
+    entrypoint: /usr/sbin/sshd -D
+
+  connect:
+    hostname: connect.kerberos-demo.local
+    volumes:
+        - ../../connect/connect-sftp-sink/kerberos/connect-krb5.conf:/etc/krb5.conf
+        - ../../connect/connect-sftp-sink/kerberos/connect-ssh-config:/etc/ssh/ssh_config
+    environment:
+      CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-sftp
+      # CONNECT_LOG4J_LOGGERS: org.reflections=ERROR,io.confluent.connect.sftp=TRACE
+
+networks:
+  default:
+    name: kerberos-demo.local
