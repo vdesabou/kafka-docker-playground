@@ -37,5 +37,5 @@ log "Starting producer"
 docker run -v ${DIR}/librdkafka.config:/tmp/librdkafka.config vdesabou/go-ccloud-example-docker ./producer -f /tmp/librdkafka.config -t testgo
 
 
-log "Starting consumer"
+log "Starting consumer (use CTLR+c to stop)"
 docker run -v ${DIR}/librdkafka.config:/tmp/librdkafka.config vdesabou/go-ccloud-example-docker ./consumer -f /tmp/librdkafka.config -t testgo
