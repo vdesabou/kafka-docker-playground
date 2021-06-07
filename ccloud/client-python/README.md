@@ -1,8 +1,8 @@
-# GO client (producer/consumer) (using Confluent Cloud)
+# Python client (producer/consumer) (using Confluent Cloud)
 
 ## Objective
 
-Quickly test [GO example](https://github.com/confluentinc/examples/tree/5.4.1-post/clients/cloud/go) client using Confluent Cloud
+Quickly test [python example](https://docs.confluent.io/platform/current/tutorials/examples/clients/docs/python.html#run-all-the-code-in-docker) client using Confluent Cloud
 
 
 
@@ -17,7 +17,7 @@ Example:
 ```bash
 $ cat $HOME/.ccloud/config
 bootstrap.servers=<BROKER ENDPOINT>
-ssl.endpoint.identification.algorithm=https
+ssl.endpoint.identification.alpythonrithm=https
 security.protocol=SASL_SSL
 sasl.mechanism=PLAIN
 sasl.jaas.config=org.apache.kafka.common.security.plain.PlainLoginModule required username="<API KEY>" password="<API SECRET>";
@@ -34,13 +34,13 @@ $ ./start.sh
 Building docker image
 
 ```bash
-$ docker build -t vdesabou/go-ccloud-example-docker .
+$ docker build -t vdesabou/python-ccloud-example-docker .
 ```
 
 Starting producer
 
 ```bash
-$ docker run -v ${DIR}/librdkafka.config:/tmp/librdkafka.config vdesabou/go-ccloud-example-docker ./producer -f /tmp/librdkafka.config -t testgo
+$ docker run --rm -v ${DIR}/librdkafka.config:/tmp/librdkafka.config vdesabou/python-ccloud-example-docker ./producer.py -f /tmp/librdkafka.config -t testpython
 ```
 
 Note: `librdkafka.config`is generated from your `$HOME/.ccloud/config`
@@ -48,5 +48,17 @@ Note: `librdkafka.config`is generated from your `$HOME/.ccloud/config`
 Starting consumer
 
 ```bash
-$ docker run -v ${DIR}/librdkafka.config:/tmp/librdkafka.config vdesabou/go-ccloud-example-docker ./consumer -f /tmp/librdkafka.config -t testgo
+$ docker run --rm -it -v ${DIR}/librdkafka.config:/tmp/librdkafka.config vdesabou/python-ccloud-example-docker ./consumer.py -f /tmp/librdkafka.config -t testpython
+```
+
+Starting AVRO producer
+
+```bash
+$ docker run --rm -v ${DIR}/librdkafka.config:/tmp/librdkafka.config vdesabou/python-ccloud-example-docker ./producer.py -f /tmp/librdkafka.config -t testpythonavro
+```
+
+Starting AVRO consumer
+
+```bash
+$ docker run --rm -it -v ${DIR}/librdkafka.config:/tmp/librdkafka.config vdesabou/python-ccloud-example-docker ./consumer.py -f /tmp/librdkafka.config -t testpythonavro
 ```
