@@ -35,6 +35,7 @@
       - [Connect Dashboard](#connect-dashboard)
       - [Consumer Lag Dashboard](#consumer-lag-dashboard)
       - [CCloud Exporter Metrics API Dashboard](#ccloud-exporter-metrics-api-dashboard)
+    - [New Relic](#new-relic)
     - [How to monitor consumer lag](#how-to-monitor-consumer-lag)
   - [Restrict access to Confluent Cloud](#restrict-access-to-confluent-cloud)
     - [Restricted users](#restricted-users)
@@ -1044,6 +1045,40 @@ This demo is using [lightbend/kafka-lag-exporter](https://github.com/lightbend/k
 This demo is using [dabz/ccloudexporter](https://github.com/Dabz/ccloudexporter) in order to pull Metrics API data from Confluent Cloud cluster and be exported to Prometheus.
 
 ![CCloud exporter](https://github.com/vdesabou/gifs/raw/master/ccloud/ccloud-demo/ccloudexporter.gif?raw=true)
+
+### New Relic
+
+In order to integrate with New Relic, you can set up the [Prometheus remote write integration](https://docs.newrelic.com/docs/integrations/prometheus-integrations/install-configure-remote-write/set-your-prometheus-remote-write-integration/) very easily:
+
+* Sign in with your New Relic account
+* Go to this [page](https://docs.newrelic.com/docs/integrations/prometheus-integrations/install-configure-remote-write/set-your-prometheus-remote-write-integration/#setup) and click on `Add Prometheus data` button. You will land on this page:
+
+![New Relic setup](./images/newrelic.png)
+
+Set a name for the data source (for example `demo`) and then click on `Generate url`, it will give a `remote_write` like:
+
+```
+remote_write:
+- url: https://metric-api.eu.newrelic.com/prometheus/v1/write?prometheus_server=demo
+  bearer_token: eu01xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+```
+
+Open `prometheus.yml` [file](https://github.com/vdesabou/kafka-docker-playground/blob/master/ccloud/ccloud-demo/prometheus/prometheus.yml#L1) and copy the `remote_write` URL at the same level as global:
+
+Example:
+
+```yml
+global:
+  scrape_interval:     15s # By default, scrape targets every 15 seconds.
+  evaluation_interval: 15s # By default, scrape targets every 15 seconds.
+remote_write:
+- url: https://metric-api.eu.newrelic.com/prometheus/v1/write?prometheus_server=new_relic_demo
+  bearer_token: eu01xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
+```
+
+That's it ! All the data available in the prometheus instance will be available in New Relic:
+
+![New Relic UI](./images/newrelic2.jpg)
 
 
 ### How to monitor consumer lag
