@@ -51,6 +51,12 @@ Simply run:
 $ ./sftp-source-json-with-schema.sh
 ```
 
+or for a kerberos example:
+
+```bash
+$ ./sftp-sink-kerberos.sh
+```
+
 
 ## Details of what the script is doing
 

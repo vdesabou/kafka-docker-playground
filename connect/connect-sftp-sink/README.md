@@ -16,6 +16,12 @@ Simply run:
 $ ./sftp-sink.sh
 ```
 
+or
+
+```bash
+$ ./sftp-sink-kerberos.sh
+```
+
 ## Details of what the script is doing
 
 The connector is created with:

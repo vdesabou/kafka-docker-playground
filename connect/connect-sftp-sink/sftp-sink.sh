@@ -10,7 +10,7 @@ log "Creating SFTP Sink connector"
 curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
-        "topics": "test_sftp_sink",
+               "topics": "test_sftp_sink",
                "tasks.max": "1",
                "connector.class": "io.confluent.connect.sftp.SftpSinkConnector",
                "partitioner.class": "io.confluent.connect.storage.partitioner.DefaultPartitioner",
