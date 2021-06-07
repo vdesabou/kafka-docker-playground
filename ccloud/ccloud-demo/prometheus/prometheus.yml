@@ -1,6 +1,10 @@
 global:
   scrape_interval:     15s # By default, scrape targets every 15 seconds.
   evaluation_interval: 15s # By default, scrape targets every 15 seconds.
+# see https://github.com/vdesabou/kafka-docker-playground/tree/master/ccloud/ccloud-demo#new-relic
+# remote_write:
+# - url: https://metric-api.eu.newrelic.com/prometheus/v1/write?prometheus_server=new_relic_demo
+#   bearer_token: eu01xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 
 rule_files:
   - 'alert.rules'
