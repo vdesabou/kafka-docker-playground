@@ -119,7 +119,7 @@ else
           --data '{
                     "connector.class": "com.wepay.kafka.connect.bigquery.BigQuerySinkConnector",
                     "tasks.max" : "1",
-                    "topics" : "myavrotopic46",
+                    "topics" : "myavrotopic1",
                     "sanitizeTopics" : "true",
                     "autoCreateTables" : "true",
                     "autoUpdateSchemas" : "true",
