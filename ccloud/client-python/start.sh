@@ -38,12 +38,12 @@ log "Starting producer"
 docker run --rm -v ${DIR}/librdkafka.config:/tmp/librdkafka.config vdesabou/python-ccloud-example-docker ./producer.py -f /tmp/librdkafka.config -t testpython
 
 
-log "Starting consumer"
+log "Starting consumer (use CTLR+c to stop)"
 docker run --rm -it -v ${DIR}/librdkafka.config:/tmp/librdkafka.config vdesabou/python-ccloud-example-docker ./consumer.py -f /tmp/librdkafka.config -t testpython
 
 log "Starting AVRO producer"
 docker run --rm -v ${DIR}/librdkafka.config:/tmp/librdkafka.config vdesabou/python-ccloud-example-docker ./producer.py -f /tmp/librdkafka.config -t testpythonavro
 
 
-log "Starting AVRO consumer"
+log "Starting AVRO consumer (use CTLR+c to stop)"
 docker run --rm -it -v ${DIR}/librdkafka.config:/tmp/librdkafka.config vdesabou/python-ccloud-example-docker ./consumer.py -f /tmp/librdkafka.config -t testpythonavro
