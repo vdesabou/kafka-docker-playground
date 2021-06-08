@@ -19,6 +19,12 @@ or
 $ ./xml.sh
 ```
 
+or
+
+```
+$ ./json.sh
+```
+
 ## Details of what the script is doing
 
 ### CSV Example
@@ -59,9 +65,7 @@ Results:
 {"title":{"string":"Like a Song..."},"album":{"string":"War"},"duration":{"string":"04:47"},"release":{"string":"1983"},"artist":{"string":"U2"},"type":{"string":"Rock"}}
 {"title":{"string":"Love is Blindness"},"album":{"string":"Achtung Baby"},"duration":{"string":"04:23"},"release":{"string":"1991"},"artist":{"string":"U2"},"type":{"string":"Rock"}}
 ```
-
 ### XML Example
-
 
 Generating data
 
@@ -112,7 +116,7 @@ $ curl -X PUT \
      http://localhost:8083/connectors/filepulse-source-xml/config | jq .
 ```
 
-Verify we have received the data in `connect-file-pulse-quickstart-csv` topic
+Verify we have received the data in `playlists-filepulse-xml-00` topic
 
 ```bash
 $ docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic playlists-filepulse-xml-00 --from-beginning --max-messages 2
@@ -122,6 +126,64 @@ Results:
 
 ```json
 {"playlists":{"Playlists":{"playlist":{"io.confluent.connect.avro.Playlist":{"name":{"string":"BestOfStarWars"},"track":{"array":[{"io.confluent.connect.avro.Track":{"title":{"string":"Duel of the Fates"},"artist":{"string":"John Williams, London Symphony Orchestra"},"album":{"string":"Star Wars: The Phantom Menace (Original Motion Picture Soundtrack)"},"duration":{"string":"4:14"}}},{"io.confluent.connect.avro.Track":{"title":{"string":"Star Wars (Main Theme)"},"artist":{"string":"John Williams, London Symphony Orchestra"},"album":{"string":"Star Wars: The Empire Strikes Back (Original Motion Picture Soundtrack)"},"duration":{"string":"10:52"}}}]}}}}}}
+```
+
+### JSON Example
+
+Generating data
+
+```bash
+$ docker exec -i connect bash << EOFCONNECT
+mkdir -p /tmp/kafka-connect/examples/
+cat <<EOF > /tmp/kafka-connect/examples/track.json
+{
+  "track": {
+     "title":"Star Wars (Main Theme)",
+     "artist":"John Williams, London Symphony Orchestra",
+     "album":"Star Wars",
+     "duration":"10:52"
+  }
+}
+EOF
+EOFCONNECT
+```
+
+Creating XML FilePulse Source connector
+
+```bash
+$ curl -X PUT \
+     -H "Content-Type: application/json" \
+     --data '{
+            "connector.class":"io.streamthoughts.kafka.connect.filepulse.source.FilePulseSourceConnector",
+            "fs.scan.directory.path":"/tmp/kafka-connect/examples/",
+            "fs.scan.interval.ms":"10000",
+            "fs.scan.filters":"io.streamthoughts.kafka.connect.filepulse.scanner.local.filter.RegexFileListFilter",
+            "file.filter.regex.pattern":".*\\.json$",
+            "task.reader.class": "io.streamthoughts.kafka.connect.filepulse.reader.BytesArrayInputReader",
+            "offset.strategy":"name",
+            "topic":"tracks-filepulse-json-00",
+            "internal.kafka.reporter.bootstrap.servers": "broker:9092",
+            "internal.kafka.reporter.topic":"connect-file-pulse-status",
+            "fs.cleanup.policy.class": "io.streamthoughts.kafka.connect.filepulse.clean.DeleteCleanupPolicy",
+            "filters": "ParseJSON",
+            "filters.ParseJSON.type":"io.streamthoughts.kafka.connect.filepulse.filter.JSONFilter",
+            "filters.ParseJSON.source":"message",
+            "filters.ParseJSON.merge":"true",
+            "tasks.max": 1
+          }' \
+     http://localhost:8083/connectors/filepulse-source-json/config | jq .
+```
+
+Verify we have received the data in `tracks-filepulse-json-00` topic
+
+```bash
+$ docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic tracks-filepulse-json-00 --from-beginning --max-messages 1
+```
+
+Results:
+
+```json
+{"message":{"bytes":"{\n  \"track\": {\n     \"title\":\"Star Wars (Main Theme)\",\n     \"artist\":\"John Williams, London Symphony Orchestra\",\n     \"album\":\"Star Wars\",\n     \"duration\":\"10:52\"\n  }\n}\n"},"track":{"Track":{"title":{"string":"Star Wars (Main Theme)"},"artist":{"string":"John Williams, London Symphony Orchestra"},"album":{"string":"Star Wars"},"duration":{"string":"10:52"}}}}
 ```
 
 N.B: Control Center is reachable at [http://127.0.0.1:9021](http://127.0.0.1:9021])
