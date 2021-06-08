@@ -13,6 +13,12 @@ Simply run:
 $ ./csv.sh
 ```
 
+or
+
+```
+$ ./xml.sh
+```
+
 ## Details of what the script is doing
 
 ### CSV Example
@@ -36,7 +42,7 @@ $ curl -X PUT \
 Verify we have received the data in `connect-file-pulse-quickstart-csv` topic
 
 ```bash
-$ 60 docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic connect-file-pulse-quickstart-csv --from-beginning --max-messages 10
+$ docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic connect-file-pulse-quickstart-csv --from-beginning --max-messages 10
 ```
 
 Results:
@@ -52,6 +58,70 @@ Results:
 {"title":{"string":"I Still Haven't Found What I'm Looking For"},"album":{"string":"The Joshua Tree"},"duration":{"string":"04:37"},"release":{"string":"1987"},"artist":{"string":"U2"},"type":{"string":"Rock"}}
 {"title":{"string":"Like a Song..."},"album":{"string":"War"},"duration":{"string":"04:47"},"release":{"string":"1983"},"artist":{"string":"U2"},"type":{"string":"Rock"}}
 {"title":{"string":"Love is Blindness"},"album":{"string":"Achtung Baby"},"duration":{"string":"04:23"},"release":{"string":"1991"},"artist":{"string":"U2"},"type":{"string":"Rock"}}
+```
+
+### XML Example
+
+
+Generating data
+
+```bash
+$ docker exec -i connect bash << EOFCONNECT
+mkdir -p /tmp/kafka-connect/examples/
+cat <<EOF > /tmp/kafka-connect/examples/playlists.xml
+<?xml version="1.0" encoding="UTF-8"?>
+<playlists>
+    <playlist name="BestOfStarWars">
+        <track>
+            <title>Duel of the Fates</title>
+            <artist>John Williams, London Symphony Orchestra</artist>
+            <album>Star Wars: The Phantom Menace (Original Motion Picture Soundtrack)</album>
+            <duration>4:14</duration>
+        </track>
+        <track>
+            <title>Star Wars (Main Theme)</title>
+            <artist>John Williams, London Symphony Orchestra</artist>
+            <album>Star Wars: The Empire Strikes Back (Original Motion Picture Soundtrack)</album>
+            <duration>10:52</duration>
+        </track>
+    </playlist>
+</playlists>
+EOF
+EOFCONNECT
+```
+
+Creating CSV FilePulse Source connector
+
+```bash
+$ curl -X PUT \
+     -H "Content-Type: application/json" \
+     --data '{
+          "connector.class":"io.streamthoughts.kafka.connect.filepulse.source.FilePulseSourceConnector",
+          "fs.scan.directory.path":"/tmp/kafka-connect/examples/",
+          "fs.scan.interval.ms":"10000",
+          "fs.scan.filters":"io.streamthoughts.kafka.connect.filepulse.scanner.local.filter.RegexFileListFilter",
+          "file.filter.regex.pattern":".*\\.xml$",
+          "task.reader.class": "io.streamthoughts.kafka.connect.filepulse.reader.XMLFileInputReader",
+          "offset.strategy":"name",
+          "topic":"playlists-filepulse-xml-00",
+          "internal.kafka.reporter.bootstrap.servers": "broker:9092",
+          "internal.kafka.reporter.topic":"connect-file-pulse-status",
+          "fs.cleanup.policy.class": "io.streamthoughts.kafka.connect.filepulse.clean.LogCleanupPolicy",
+          "tasks.max": 1
+          }' \
+     http://localhost:8083/connectors/filepulse-source-xml/config | jq .
+```
+
+Verify we have received the data in `connect-file-pulse-quickstart-csv` topic
+
+```bash
+$ docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic playlists-filepulse-xml-00 --from-beginning --max-messages 2
+```
+
+Results:
+
+```json
+{"playlists":{"Playlists":{"playlist":{"io.confluent.connect.avro.Playlist":{"name":{"string":"BestOfStarWars"},"track":{"array":[{"io.confluent.connect.avro.Track":{"title":{"string":"Duel of the Fates"},"artist":{"string":"John Williams, London Symphony Orchestra"},"album":{"string":"Star Wars: The Phantom Menace (Original Motion Picture Soundtrack)"},"duration":{"string":"4:14"}}},{"io.confluent.connect.avro.Track":{"title":{"string":"Star Wars (Main Theme)"},"artist":{"string":"John Williams, London Symphony Orchestra"},"album":{"string":"Star Wars: The Empire Strikes Back (Original Motion Picture Soundtrack)"},"duration":{"string":"10:52"}}}]}}}}}}
 ```
 
 N.B: Control Center is reachable at [http://127.0.0.1:9021](http://127.0.0.1:9021])
