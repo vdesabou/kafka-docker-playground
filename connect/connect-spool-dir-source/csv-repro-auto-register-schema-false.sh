@@ -4,27 +4,10 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
-mkdir -p ${DIR}/data/input
-mkdir -p ${DIR}/data/error
-mkdir -p ${DIR}/data/finished
-
-# workaround for issue on linux, see https://github.com/vdesabou/kafka-docker-playground/issues/851#issuecomment-821151962
-chmod -R a+rw ${DIR}/data
-
-if [[ "$TAG" == *ubi8 ]] || version_gt $TAG_BASE "5.9.0"
-then
-     export CONNECT_CONTAINER_HOME_DIR="/home/appuser"
-else
-     export CONNECT_CONTAINER_HOME_DIR="/root"
-fi
-
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
 
-if [ ! -f "${DIR}/data/input/csv-spooldir-source.csv" ]
-then
-     log "Generating data"
-     curl "https://api.mockaroo.com/api/58605010?count=1000&key=25fd9c80" > "${DIR}/data/input/csv-spooldir-source.csv"
-fi
+log "Generate data"
+docker exec -i connect bash -c 'mkdir -p /tmp/data/input/ && mkdir -p /tmp/data/error/ && mkdir -p /tmp/data/finished/ && curl "https://api.mockaroo.com/api/58605010?count=1000&key=25fd9c80" > /tmp/data/input/csv-spooldir-source.csv'
 
 log "Registering subject spooldir-csv-topic-value"
 curl --request POST \
@@ -34,10 +17,6 @@ curl --request POST \
     "schema": "{\n    \"type\": \"record\",\n    \"name\": \"User\",\n    \"namespace\": \"com.example.users\",\n    \"fields\": [\n        {\n            \"name\": \"id\",\n            \"type\": \"long\"\n        },\n        {\n            \"name\": \"first_name\",\n            \"type\": [\n                \"null\",\n                \"string\"\n            ],\n            \"default\": null\n        },\n        {\n            \"name\": \"last_name\",\n            \"type\": [\n                \"null\",\n                \"string\"\n            ],\n            \"default\": null\n        },\n        {\n            \"name\": \"email\",\n            \"type\": [\n                \"null\",\n                \"string\"\n            ],\n            \"default\": null\n        },\n        {\n            \"name\": \"gender\",\n            \"type\": [\n                \"null\",\n                \"string\"\n            ],\n            \"default\": null\n        },\n        {\n            \"name\": \"ip_address\",\n            \"type\": [\n                \"null\",\n                \"string\"\n            ],\n            \"default\": null\n        },\n        {\n            \"name\": \"last_login\",\n            \"type\": [\n                \"null\",\n                \"string\"\n            ],\n            \"default\": null\n        },\n        {\n            \"name\": \"account_balance\",\n            \"type\": [\n                \"null\",\n                {\n                    \"type\": \"bytes\",\n                    \"scale\": 2,\n                    \"precision\": 64,\n                    \"logicalType\": \"decimal\"\n                }\n            ],\n            \"default\": null\n        },\n        {\n            \"name\": \"country\",\n            \"type\": [\n                \"null\",\n                \"string\"\n            ],\n            \"default\": null\n        },\n        {\n            \"name\": \"favorite_color\",\n            \"type\": [\n                \"null\",\n                \"string\"\n            ],\n            \"default\": null\n        }\n    ]\n}"
 }'
 
-INPUT_PATH="${CONNECT_CONTAINER_HOME_DIR}/data/input/"
-ERROR_PATH="${CONNECT_CONTAINER_HOME_DIR}/data/error/"
-FINISHED_PATH="${CONNECT_CONTAINER_HOME_DIR}/data/finished/"
-
 log "Creating CSV Spool Dir Source connector with auto.register.schemas=false"
 curl -X PUT \
      -H "Content-Type: application/json" \
@@ -45,9 +24,9 @@ curl -X PUT \
                "tasks.max": "1",
                "connector.class": "com.github.jcustenborder.kafka.connect.spooldir.SpoolDirCsvSourceConnector",
                "input.file.pattern": "csv-spooldir-source.csv",
-               "input.path": "'"$INPUT_PATH"'",
-               "error.path": "'"$ERROR_PATH"'",
-               "finished.path": "'"$FINISHED_PATH"'",
+               "input.path": "/tmp/data/input",
+               "error.path": "/tmp/data/error",
+               "finished.path": "/tmp/data/finished",
                "halt.on.error": "false",
                "topic": "spooldir-csv-topic",
                "schema.generation.enabled" : "false",
