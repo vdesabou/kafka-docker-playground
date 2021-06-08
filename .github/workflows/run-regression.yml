@@ -76,6 +76,7 @@ jobs:
                       "🚀 ccloud/replicator",
                       "🚀 ccloud/ccloudexporter ccloud/connect-debezium-mongodb-source ccloud/connect-aws-kinesis-source ccloud/kafka-admin ccloud/rest-proxy-security-plugin ccloud/schema-registry-security-plugin",
                       "🚀 connect/connect-cdc-oracle12-source",
+                      "🚀 connect/connect-cdc-oracle19-source",
                       "🚀 connect/connect-jms-weblogic-source",
                       "🚀 connect/connect-azure-cosmosdb-source connect/connect-azure-cosmosdb-sink connect/connect-jdbc-cockroachdb-source",
                       "🚀 environment/2way-ssl environment/kerberos environment/ldap-authorizer-sasl-plain environment/ldap-sasl-plain environment/mdc-kerberos environment/mdc-plaintext environment/mdc-sasl-plain environment/rbac-sasl-plain environment/sasl-plain environment/sasl-scram environment/sasl-ssl environment/ssl_kerberos",
@@ -264,6 +265,7 @@ jobs:
           cp ./3rdparty/sol-jms-10.6.4.jar ./connect/connect-solace-source/sol-jms-10.6.4.jar
           cp ./3rdparty/AMPS.tar.gz ./connect/connect-amps-source/docker-amps/AMPS.tar.gz
           cp ./3rdparty/pivotal-gemfire.tgz ./connect/connect-pivotal-gemfire-sink/docker-pivotal-gemfire/pivotal-gemfire.tgz
+          cp ./3rdparty/LINUX.X64_193000_db_home.zip ./connect/connect-cdc-oracle19-source/LINUX.X64_193000_db_home.zip
           echo "$DOCKER_PASSWORD" | docker login -u vdesabou --password-stdin
         env:
           SECRETS_ENCRYPTION_PASSWORD: ${{ secrets.SECRETS_ENCRYPTION_PASSWORD }}
