@@ -37,6 +37,7 @@ jobs:
         tag: [ "5.5.4", "6.0.2", "6.1.1"]
         test_list : [
                       "🚀 connect/connect-mapr-sink",
+                      "🚀 connect/connect-cdc-oracle19-source",
                     ]
     steps:
       - name: Checkout code
@@ -153,6 +154,8 @@ jobs:
           SERVICENOW_URL: ${{ secrets.SERVICENOW_URL }}
           SERVICENOW_PASSWORD: ${{ secrets.SERVICENOW_PASSWORD }}
           CONFLUENT_LICENSE: ${{ secrets.CONFLUENT_LICENSE }}
+          DISABLE_KSQLDB: "yes"
+          DISABLE_CONTROL_CENTER: "yes"
 
   stop-runner:
     name: Stop Github self-hosted runner
