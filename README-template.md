@@ -24,8 +24,8 @@ Playground for Kafka/Confluent Docker experimentations...
 
 Quick start examples from Confluent [docs](https://docs.confluent.io/current/connect/managing/index.html) but in Docker version for ease of use.
 
-| Connector  | Product Category  | Latest Version (*) | Type | Release Date| CP 6.1.1 [CI](https://github.com/vdesabou/kafka-docker-playground/actions?query=workflow%3ACI) latest results| CP 6.0.2 [CI](https://github.com/vdesabou/kafka-docker-playground/actions?query=workflow%3ACI) latest results| CP 5.5.4 [CI](https://github.com/vdesabou/kafka-docker-playground/actions?query=workflow%3ACI) latest results
-|---|---|---|---|---|---|---|---|
+| Connector  | Product Category  | Latest Version (*) | Type | Release Date| CP 6.2.0 [CI](https://github.com/vdesabou/kafka-docker-playground/actions?query=workflow%3ACI) | CP 6.1.1 [CI](https://github.com/vdesabou/kafka-docker-playground/actions?query=workflow%3ACI) latest results| CP 6.0.2 [CI](https://github.com/vdesabou/kafka-docker-playground/actions?query=workflow%3ACI) latest results| CP 5.5.4 [CI](https://github.com/vdesabou/kafka-docker-playground/actions?query=workflow%3ACI) latest results
+|---|---|---|---|---|---|---|---|---|
 | <img src="https://github.com/vdesabou/kafka-docker-playground/raw/master/images/icons/activemq.png" width="15"> [ActiveMQ Sink](https://github.com/vdesabou/kafka-docker-playground/tree/master/connect/connect-active-mq-sink)  | Message Queue  | :connect/connect-active-mq-sink:
 | <img src="https://github.com/vdesabou/kafka-docker-playground/raw/master/images/icons/activemq.png" width="15"> [ActiveMQ Source](https://github.com/vdesabou/kafka-docker-playground/tree/master/connect/connect-active-mq-source)  | Message Queue  | :connect/connect-active-mq-source:
 | <img src="https://github.com/vdesabou/kafka-docker-playground/raw/master/images/icons/cloudwatch_logs.svg" width="15"> [Amazon CloudWatch Logs Source](https://github.com/vdesabou/kafka-docker-playground/tree/master/connect/connect-aws-cloudwatch-logs-source)  | Analytics  | :connect/connect-aws-cloudwatch-logs-source:
