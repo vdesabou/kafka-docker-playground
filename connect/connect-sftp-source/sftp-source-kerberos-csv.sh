@@ -16,10 +16,13 @@ ktadd -k /sshuser.keytab sshuser@EXAMPLE.COM
 listprincs
 EOF
 
-log "Copy sshuser.keytab to connect container /home/appuser/sshuser.keytab"
+log "Copy sshuser.keytab to connect container /tmp/sshuser.keytab"
 docker cp kdc-server:/sshuser.keytab .
-docker cp sshuser.keytab connect:/home/appuser/sshuser.keytab
-docker exec -u 0 connect chown appuser:appuser sshuser.keytab
+docker cp sshuser.keytab connect:/tmp/sshuser.keytab
+if [[ "$TAG" == *ubi8 ]] || version_gt $TAG_BASE "5.9.0"
+then
+     docker exec -u 0 connect chown appuser:appuser /tmp/sshuser.keytab
+fi
 
 log "Copy sshserver.keytab to ssh server /etc/krb5.keytab"
 docker cp kdc-server:/sshserver.keytab .
@@ -41,7 +44,7 @@ chown -R sshuser /home/sshuser/upload
 "
 
 # FIXTHIS: it is required to do kinit manually
-docker exec connect kinit sshuser -k -t sshuser.keytab
+docker exec connect kinit sshuser -k -t /tmp/sshuser.keytab
 # if required to troubleshoot
 # docker exec -i --privileged --user root connect bash -c "yum update -y && yum install openssh-clients -y"
 
@@ -63,7 +66,7 @@ curl -X PUT \
                "finished.path": "/home/sshuser/upload/finished",
                "input.file.pattern": "csv-sftp-source.csv",
                "sftp.username":"sshuser",
-               "kerberos.keytab.path": "/home/appuser/sshuser.keytab",
+               "kerberos.keytab.path": "/tmp/sshuser.keytab",
                "kerberos.user.principal": "sshuser",
                "sftp.host":"ssh-server",
                "sftp.port":"22",
