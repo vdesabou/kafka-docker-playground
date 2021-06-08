@@ -9,7 +9,7 @@
     "filters.ParseDelimitedRow.type": "io.streamthoughts.kafka.connect.filepulse.filter.DelimitedRowFilter",
     "fs.cleanup.policy.class": "io.streamthoughts.kafka.connect.filepulse.clean.LogCleanupPolicy",
     "fs.listing.class": "io.streamthoughts.kafka.connect.filepulse.fs.LocalFSDirectoryListing",
-    "fs.scan.directory.path": "'"$DIRECTORY_PATH"'",
+    "fs.scan.directory.path": "/tmp/kafka-connect/examples/",
     "fs.listing.filters":"io.streamthoughts.kafka.connect.filepulse.fs.filter.RegexFileListFilter",
     "fs.listing.interval.ms": "10000",
     "file.filter.regex.pattern":".*\\.csv$",

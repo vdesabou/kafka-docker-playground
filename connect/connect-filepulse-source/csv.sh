@@ -4,33 +4,17 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
-mkdir -p ${DIR}/data/input
-
-# workaround for issue on linux, see https://github.com/vdesabou/kafka-docker-playground/issues/851#issuecomment-821151962
-chmod -R a+rw ${DIR}/data
-
-if [[ "$TAG" == *ubi8 ]] || version_gt $TAG_BASE "5.9.0"
-then
-     export CONNECT_CONTAINER_HOME_DIR="/home/appuser"
-else
-     export CONNECT_CONTAINER_HOME_DIR="/root"
-fi
-
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
 
-if [ ! -f "${DIR}/data/input/quickstart-musics-dataset.csv" ]
-then
-     log "Generating data"
-     curl -sSL https://raw.githubusercontent.com/streamthoughts/kafka-connect-file-pulse/master/datasets/quickstart-musics-dataset.csv -o ${DIR}/data/input/quickstart-musics-dataset.csv
-fi
+log "Generating data"
+docker exec -i connect bash -c "mkdir -p /tmp/kafka-connect/examples/ && curl -sSL https://raw.githubusercontent.com/streamthoughts/kafka-connect-file-pulse/master/datasets/quickstart-musics-dataset.csv -o /tmp/kafka-connect/examples/quickstart-musics-dataset.csv"
 
-export DIRECTORY_PATH="${CONNECT_CONTAINER_HOME_DIR}/data/input/"
 
 log "Creating CSV FilePulse Source connector"
 curl -X PUT \
      -H "Content-Type: application/json" \
      --data @connect-file-pulse-quickstart-csv.json \
-     http://localhost:8083/connectors/neo4j-sink/config | jq .
+     http://localhost:8083/connectors/filepulse-source-csv/config | jq .
 
 
 sleep 5
