@@ -33,7 +33,7 @@ jobs:
       - name: Cleanup resources
         run: |
           curl --silent --location "https://github.com/weaveworks/eksctl/releases/latest/download/eksctl_$(uname -s)_amd64.tar.gz" | tar xz -C /tmp && sudo mv /tmp/eksctl /usr/local/bin
-          ./scripts/cleanup-resources.sh "5.5.4 6.0.2 6.1.1"
+          ./scripts/cleanup-resources.sh "5.5.4 6.0.2 6.1.1 6.2.0"
         env:
           AZ_USER: ${{ secrets.AZ_USER }}
           AZ_PASS: ${{ secrets.AZ_PASS }}
