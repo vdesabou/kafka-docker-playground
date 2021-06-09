@@ -6,14 +6,14 @@ source ${DIR}/../../scripts/utils.sh
 
 export ORACLE_IMAGE="oracle/database:19.3.0-ee"
 
-if test -z "$(docker images -q oracle/database:19.3.0-ee)"
+if test -z "$(docker images -q $ORACLE_IMAGE)"
 then
     if [ ! -f ${DIR}/LINUX.X64_193000_db_home.zip ]
     then
         logerror "ERROR: ${DIR}/LINUX.X64_193000_db_home.zip is missing. It must be downloaded manually in order to acknowledge user agreement"
         exit 1
     fi
-    log "Building oracle/database:19.3.0-ee docker image..it can take a while...(more than 15 minutes!)"
+    log "Building $ORACLE_IMAGE docker image..it can take a while...(more than 15 minutes!)"
     OLDDIR=$PWD
     rm -rf ${DIR}/docker-images
     git clone https://github.com/oracle/docker-images.git
@@ -25,7 +25,24 @@ then
     cd ${OLDDIR}
 fi
 
-export ORACLE_IMAGE="oracle/database:19.3.0-ee"
+if [ ! -z "$CI" ]
+then
+     # running with github actions
+     aws s3 cp s3://kafka-docker-playground/internal/confluentinc-kafka-connect-oracle-cdc-1.2.0-SNAPSHOT.zip .
+     export CONNECTOR_ZIP="$PWD/confluentinc-kafka-connect-oracle-cdc-1.2.0-SNAPSHOT.zip"
+fi
+
+if [ -z "$CONNECTOR_ZIP" ]
+then
+     logerror "CONNECTOR_ZIP environment variable must be set with the path to the confluentinc-kafka-connect-oracle-cdc SNAPSHOT zip file"
+     exit 1
+fi
+
+if [ ! -f "$CONNECTOR_ZIP" ]
+then
+     logerror "File set with CONNECTOR_ZIP ($CONNECTOR_ZIP) does not exist !"
+     exit 1
+fi
 
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.cdb-table.yml"
 
