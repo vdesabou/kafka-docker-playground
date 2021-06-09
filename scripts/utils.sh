@@ -32,72 +32,47 @@ function version_gt() {
 
 function set_kafka_client_tag()
 {
-    if [ "$TAG_BASE" = "6.2.0" ]
+    if [[ $TAG_BASE = 6.2.* ]]
     then
       export KAFKA_CLIENT_TAG="2.8.0"
     fi
 
-    if [ "$TAG_BASE" = "6.1.1" ] || [ "$TAG_BASE" = "6.1.0" ]
+    if [[ $TAG_BASE = 6.1.* ]]
     then
       export KAFKA_CLIENT_TAG="2.7.0"
     fi
 
-    if [ "$TAG_BASE" = "6.0.2" ] || [ "$TAG_BASE" = "6.0.1" ] || [ "$TAG_BASE" = "6.0.0" ]
+    if [[ $TAG_BASE = 6.0.* ]]
     then
       export KAFKA_CLIENT_TAG="2.6.0"
     fi
 
-    if [ "$TAG_BASE" = "5.5.4" ] || [ "$TAG_BASE" = "5.5.3" ] || [ "$TAG_BASE" = "5.5.2" ] || [ "$TAG_BASE" = "5.5.1" ] || [ "$TAG_BASE" = "5.5.0" ]
+    if [[ $TAG_BASE = 5.5.* ]]
     then
       export KAFKA_CLIENT_TAG="2.5.0"
     fi
 
-    if [ "$TAG_BASE" = "5.4.3" ] || [ "$TAG_BASE" = "5.4.2" ] || [ "$TAG_BASE" = "5.4.1" ] || [ "$TAG_BASE" = "5.4.0" ]
+    if [[ $TAG_BASE = 5.4.* ]]
     then
       export KAFKA_CLIENT_TAG="2.4.0"
     fi
 
-    if [ "$TAG_BASE" = "5.3.2" ] || [ "$TAG_BASE" = "5.3.1" ]
-    then
-      export KAFKA_CLIENT_TAG="2.3.1"
-    fi
-
-    if [ "$TAG_BASE" = "5.3.0" ]
+    if [[ $TAG_BASE = 5.3.* ]]
     then
       export KAFKA_CLIENT_TAG="2.3.0"
     fi
 
-    if [ "$TAG_BASE" = "5.2.3" ] || [ "$TAG_BASE" = "5.2.2" ]
-    then
-      export KAFKA_CLIENT_TAG="2.2.2"
-    fi
-
-    if [ "$TAG_BASE" = "5.2.1" ]
-    then
-      export KAFKA_CLIENT_TAG="2.2.1"
-    fi
-
-    if [ "$TAG_BASE" = "5.2.0" ]
+    if [[ $TAG_BASE = 5.2.* ]]
     then
       export KAFKA_CLIENT_TAG="2.2.0"
     fi
 
-    if [ "$TAG_BASE" = "5.1.3" ] || [ "$TAG_BASE" = "5.1.2" ] || [ "$TAG_BASE" = "5.1.1" ]
-    then
-      export KAFKA_CLIENT_TAG="2.1.1"
-    fi
-
-    if [ "$TAG_BASE" = "5.1.0" ]
+    if [[ $TAG_BASE = 5.1.* ]]
     then
       export KAFKA_CLIENT_TAG="2.1.0"
     fi
 
-    if [ "$TAG_BASE" = "5.0.3" ] || [ "$TAG_BASE" = "5.0.2" ] || [ "$TAG_BASE" = "5.0.1" ]
-    then
-      export KAFKA_CLIENT_TAG="2.0.1"
-    fi
-
-    if [ "$TAG_BASE" = "5.0.0" ]
+    if [[ $TAG_BASE = 5.0.* ]]
     then
       export KAFKA_CLIENT_TAG="2.0.0"
     fi
