@@ -166,6 +166,7 @@ curl -X PUT \
                "oracle.ssl.truststore.password": "welcome123",
                "start.from":"snapshot",
                "redo.log.topic.name": "redo-log-topic",
+               "redo.log.row.fetch.size": 1,
                "redo.log.consumer.bootstrap.servers":"broker:9092",
                "table.inclusion.regex": "ORCLPDB1[.].*[.]CUSTOMERS",
                "table.topic.name.template": "${databaseName}.${schemaName}.${tableName}",
