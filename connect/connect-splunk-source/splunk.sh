@@ -13,9 +13,10 @@ then
      cd ${DIR}/../../environment/sasl-ssl/security
 
      log "🔐 Generate keys and certificates used for SSL"
-     ./certs-create.sh > /dev/null 2>&1
+     ./certs-create.sh
      # workaround for issue on linux, see https://github.com/vdesabou/kafka-docker-playground/issues/851#issuecomment-821151962
      chmod -R a+rw .
+     ls -lrt
      cd ${OLDDIR}
      cp ${DIR}/../../environment/sasl-ssl/security/kafka.broker.keystore.jks ${DIR}/keystore.jks
 fi
