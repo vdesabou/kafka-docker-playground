@@ -74,13 +74,11 @@ services:
       - hive-metastore
     volumes:
       - ../../ksqldb/benchmarking-scenarios/schemas:/tmp/schemas
-    # VisualVM / Java Mission Control / Flight Recorder
+    # VisualVM
     ports:
     - "8849:8849"
     environment:
       CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-hdfs,/usr/share/confluent-hub-components/confluentinc-kafka-connect-datagen
-      # Java Mission Control / Flight Recorder
-      JAVA_OPTS: -XX:+UnlockCommercialFeatures -XX:+FlightRecorder
       # VisualVM
       # https://gist.github.com/Kevin-Lee/cbfbde89d68299304b1b1a2e6371fe06#visualvm-with-docker
       # 1/ File -> Add JMX Connection...
