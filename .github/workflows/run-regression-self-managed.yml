@@ -34,7 +34,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        tag: [ "5.5.4", "6.0.2", "6.1.1"]
+        tag: [ "5.5.4", "6.0.2", "6.1.1", "6.2.0"]
         test_list : [
                       "🚀 connect/connect-mapr-sink",
                       "🚀 connect/connect-cdc-oracle19-source",
