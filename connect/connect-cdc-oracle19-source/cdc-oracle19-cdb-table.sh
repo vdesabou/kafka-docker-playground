@@ -48,7 +48,7 @@ ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.cdb
 
 
 # Verify Oracle DB has started within MAX_WAIT seconds
-MAX_WAIT=1800
+MAX_WAIT=2500
 CUR_WAIT=0
 log "Waiting up to $MAX_WAIT seconds for Oracle DB to start"
 docker container logs oracle > /tmp/out.txt 2>&1
