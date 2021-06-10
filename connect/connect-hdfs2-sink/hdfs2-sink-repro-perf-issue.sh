@@ -55,10 +55,29 @@ curl -s -X PUT \
 
 wait_for_datagen_connector_to_inject_data "products" "10"
 
+log "Create topic products-schema"
+curl -s -X PUT \
+      -H "Content-Type: application/json" \
+      --data '{
+                "connector.class": "io.confluent.kafka.connect.datagen.DatagenConnector",
+                "kafka.topic": "products-schema",
+                "key.converter": "org.apache.kafka.connect.storage.StringConverter",
+                "value.converter": "org.apache.kafka.connect.json.JsonConverter",
+                "value.converter.schemas.enable": "true",
+                "max.interval": 1,
+                "iterations": "10000",
+                "tasks.max": "10",
+                "schema.filename" : "/tmp/schemas/products.avro",
+                "schema.keyfield" : "productid"
+            }' \
+      http://localhost:8083/connectors/datagen-products-schema/config | jq
+
+wait_for_datagen_connector_to_inject_data "products-schema" "10"
+
 # Note in this simple example, if you get into an issue with permissions at the local HDFS level, it may be easiest to unlock the permissions unless you want to debug that more.
 docker exec namenode bash -c "/opt/hadoop-2.7.4/bin/hdfs dfs -chmod 777  /"
 
-log "Creating JSON CONVERTER HDFS Sink connector"
+log "Creating JSON CONVERTER (schemas.enable=false) HDFS Sink connector"
 curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
@@ -87,6 +106,37 @@ SECONDS=0
 wait_for_connector_to_finish hdfs-sink-json-converter
 ELAPSED="took: $((($SECONDS / 60) % 60))min $(($SECONDS % 60))sec"
 log "It took $ELAPSED"
+
+
+log "Creating JSON CONVERTER (schemas.enable=true) HDFS Sink connector"
+curl -X PUT \
+     -H "Content-Type: application/json" \
+     --data '{
+               "connector.class":"io.confluent.connect.hdfs.HdfsSinkConnector",
+               "tasks.max":"1",
+               "topics":"products-schema",
+               "store.url":"hdfs://namenode:8020",
+               "flush.size":"20001",
+               "hadoop.conf.dir":"/etc/hadoop/",
+               "format.class" : "io.confluent.connect.hdfs.json.JsonFormat",
+               "storage.class": "io.confluent.connect.hdfs.storage.HdfsStorage",
+               "rotate.interval.ms": "100",
+               "logs.dir":"/tmp/json",
+               "confluent.license": "",
+               "confluent.topic.bootstrap.servers": "broker:9092",
+               "confluent.topic.replication.factor": "1",
+               "key.converter":"org.apache.kafka.connect.storage.StringConverter",
+               "value.converter": "org.apache.kafka.connect.json.JsonConverter",
+               "value.converter.schemas.enable": "true",
+               "schema.compatibility":"BACKWARD"
+          }' \
+     http://localhost:8083/connectors/hdfs-sink-json-converter-schema/config | jq .
+
+SECONDS=0
+wait_for_connector_to_finish hdfs-sink-json-converter-schema
+ELAPSED="took: $((($SECONDS / 60) % 60))min $(($SECONDS % 60))sec"
+log "It took $ELAPSED"
+
 
 log "Deleting data in HDFS"
 docker exec namenode bash -c "/opt/hadoop-2.7.4/bin/hdfs dfs -rm -r /topics/*"
