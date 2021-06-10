@@ -45,9 +45,9 @@ then
 fi
 
 # required to make utils.sh script being able to work, do not remove:
-# ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.cdb-table.yml"
+# ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.pdb-table.yml"
 log "Starting up oracle container to get generated cert from oracle server wallet"
-docker-compose -f ../../environment/plaintext/docker-compose.yml -f "${PWD}/docker-compose.plaintext.cdb-table-mtls.yml" up -d oracle
+docker-compose -f ../../environment/plaintext/docker-compose.yml -f "${PWD}/docker-compose.plaintext.pdb-table-ssl.yml" up -d oracle
 
 # Verify Oracle DB has started within MAX_WAIT seconds
 MAX_WAIT=2500
@@ -64,6 +64,12 @@ if [[ "$CUR_WAIT" -gt "$MAX_WAIT" ]]; then
 fi
 done
 log "Oracle DB has started!"
+
+log "Grant select on CUSTOMERS table"
+docker exec -i oracle sqlplus C\#\#MYUSER/mypassword@//localhost:1521/ORCLPDB1 << EOF
+     ALTER SESSION SET CONTAINER=ORCLPDB1;
+     GRANT select on CUSTOMERS TO C##MYUSER;
+EOF
 
 log "Setting up SSL on oracle server..."
 # https://www.oracle.com/technetwork/topics/wp-oracle-jdbc-thin-ssl-130128.pdf
@@ -94,7 +100,7 @@ docker exec oracle bash -c "orapki wallet add -wallet /tmp/server -trusted_cert 
 # add the user certificate to the wallet:
 docker exec oracle bash -c "orapki wallet add -wallet /tmp/server -user_cert -cert /tmp/server/cert.txt -pwd WalletPasswd123"
 
-cd ${DIR}/mtls
+cd ${DIR}/ssl
 if [ -z "$CI" ]
 then
     # not running with github actions
@@ -106,17 +112,8 @@ else
     sudo chmod -R a+rw .
     ls -lrt
 fi
-log "Create a JKS keystore"
-# Create a new private/public key pair for 'CN=connect,C=US'
-rm -f keystore.jks
-docker run --rm -v $PWD:/tmp vdesabou/kafka-docker-playground-connect:${CONNECT_TAG} keytool -genkey -alias testclient -dname 'CN=connect,C=US' -storepass 'welcome123' -storetype JKS -keystore /tmp/keystore.jks -keyalg RSA
-
-# Generate a CSR (Certificate Signing Request):
-docker run --rm -v $PWD:/tmp vdesabou/kafka-docker-playground-connect:${CONNECT_TAG} keytool -certreq -alias testclient -file /tmp/csr.txt -keystore /tmp/keystore.jks -storepass 'welcome123'
-# Sign the client certificate using the test CA (root)
-docker cp csr.txt oracle:/tmp/csr.txt
-docker exec oracle bash -c "orapki cert create -wallet /tmp/root -request /tmp/csr.txt -cert /tmp/cert.txt -validity 3650 -pwd WalletPasswd123"
-# import the test CA's certificate:
+log "Create a JKS truststore"
+rm -f truststore.jks
 docker cp oracle:/tmp/root/b64certificate.txt b64certificate.txt
 if [ -z "$CI" ]
 then
@@ -129,26 +126,6 @@ else
     sudo chmod -R a+rw .
     ls -lrt
 fi
-docker run --rm -v $PWD:/tmp vdesabou/kafka-docker-playground-connect:${CONNECT_TAG} keytool -import -v -noprompt -alias testroot -file /tmp/b64certificate.txt -keystore /tmp/keystore.jks -storepass 'welcome123'
-# Import the signed certificate
-docker cp oracle:/tmp/cert.txt cert.txt
-if [ -z "$CI" ]
-then
-    # not running with github actions
-    # workaround for issue on linux, see https://github.com/vdesabou/kafka-docker-playground/issues/851#issuecomment-821151962
-    chmod -R a+rw .
-else
-    # docker is run as runneradmin user, need to use sudo
-    ls -lrt
-    sudo chmod -R a+rw .
-    ls -lrt
-fi
-docker run --rm -v $PWD:/tmp vdesabou/kafka-docker-playground-connect:${CONNECT_TAG} keytool -import -v -alias testclient -file /tmp/cert.txt -keystore /tmp/keystore.jks -storepass 'welcome123'
-log "Displaying keystore"
-docker run --rm -v $PWD:/tmp vdesabou/kafka-docker-playground-connect:${CONNECT_TAG} keytool -list -keystore /tmp/keystore.jks -storepass 'welcome123' -v
-
-log "Create a JKS truststore"
-rm -f truststore.jks
 # We import the test CA certificate
 docker run --rm -v $PWD:/tmp vdesabou/kafka-docker-playground-connect:${CONNECT_TAG} keytool -import -v -alias testroot -file /tmp/b64certificate.txt -keystore /tmp/truststore.jks -storetype JKS -storepass 'welcome123' -noprompt
 log "Displaying truststore"
@@ -156,16 +133,10 @@ docker run --rm -v $PWD:/tmp vdesabou/kafka-docker-playground-connect:${CONNECT_
 
 cd ${DIR}
 
-log "Alter user 'C##MYUSER' in order to be identified as 'CN=connect,C=US'"
-docker exec -i oracle sqlplus sys/Admin123@//localhost:1521/ORCLCDB as sysdba <<- EOF
-	ALTER USER C##MYUSER IDENTIFIED EXTERNALLY AS 'CN=connect,C=US';
-	exit;
-EOF
-
 log "Update listener.ora, sqlnet.ora and tnsnames.ora"
-docker cp ${PWD}/mtls/listener.ora oracle:/opt/oracle/oradata/dbconfig/ORCLCDB/listener.ora
-docker cp ${PWD}/mtls/sqlnet.ora oracle:/opt/oracle/oradata/dbconfig/ORCLCDB/sqlnet.ora
-docker cp ${PWD}/mtls/tnsnames.ora oracle:/opt/oracle/oradata/dbconfig/ORCLCDB/tnsnames.ora
+docker cp ${PWD}/ssl/listener.ora oracle:/opt/oracle/oradata/dbconfig/ORCLCDB/listener.ora
+docker cp ${PWD}/ssl/sqlnet.ora oracle:/opt/oracle/oradata/dbconfig/ORCLCDB/sqlnet.ora
+docker cp ${PWD}/ssl/tnsnames.ora oracle:/opt/oracle/oradata/dbconfig/ORCLCDB/tnsnames.ora
 
 docker exec -i oracle lsnrctl << EOF
 reload
@@ -173,10 +144,9 @@ stop
 start
 EOF
 
-docker-compose -f ../../environment/plaintext/docker-compose.yml -f "${PWD}/docker-compose.plaintext.cdb-table-mtls.yml" up -d
+docker-compose -f ../../environment/plaintext/docker-compose.yml -f "${PWD}/docker-compose.plaintext.pdb-table-ssl.yml" up -d
 
 ../../scripts/wait-for-connect-and-controlcenter.sh
-
 
 docker exec connect kafka-topics --create --topic redo-log-topic --bootstrap-server broker:9092 --replication-factor 1 --partitions 1 --config cleanup.policy=delete --config retention.ms=120960000
 log "redo-log-topic is created"
@@ -199,23 +169,29 @@ curl -X PUT \
                "oracle.server": "oracle",
                "oracle.port": 1532,
                "oracle.sid": "ORCLCDB",
+               "oracle.pdb.name": "ORCLPDB1",
+               "oracle.username": "C##MYUSER",
+               "oracle.password": "mypassword",
                "oracle.ssl.truststore.file": "/tmp/truststore.jks",
                "oracle.ssl.truststore.password": "welcome123",
-               "oracle.connection.javax.net.ssl.keyStore": "/tmp/keystore.jks",
-               "oracle.connection.javax.net.ssl.keyStorePassword": "welcome123",
-               "oracle.connection.oracle.net.authentication_services": "(TCPS)",
                "start.from":"snapshot",
                "redo.log.topic.name": "redo-log-topic",
                "redo.log.consumer.bootstrap.servers":"broker:9092",
-               "table.inclusion.regex": ".*CUSTOMERS.*",
+               "table.inclusion.regex": "ORCLPDB1[.].*[.]CUSTOMERS",
                "table.topic.name.template": "${databaseName}.${schemaName}.${tableName}",
                "connection.pool.max.size": 20,
                "confluent.topic.replication.factor":1
           }' \
-     http://localhost:8083/connectors/cdc-oracle-source-cdb/config | jq .
+     http://localhost:8083/connectors/cdc-oracle-source-pdb/config | jq .
 
 log "Waiting 60s for cdc-oracle-source-cdb to read existing data"
 sleep 60
 
-log "Verifying topic ORCLCDB.C__MYUSER.CUSTOMERS"
-timeout 60 docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic ORCLCDB.C__MYUSER.CUSTOMERS --from-beginning --max-messages 2
+log "Running SQL scripts"
+for script in ${DIR}/sample-sql-scripts/*
+do
+     $script "ORCLPDB1"
+done
+
+log "Verifying topic ORCLPDB1.C__MYUSER.CUSTOMERS"
+timeout 60 docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic ORCLPDB1.C__MYUSER.CUSTOMERS --from-beginning --max-messages 2
