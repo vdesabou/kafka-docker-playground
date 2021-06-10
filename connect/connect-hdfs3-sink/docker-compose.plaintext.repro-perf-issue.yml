@@ -90,9 +90,9 @@
 
     connect:
       build:
-      context: ../../connect/connect-hdfs2-sink/jprofiler
-      args:
-        TAG_BASE: ${TAG_BASE}
+        context: ../../connect/connect-hdfs2-sink/jprofiler
+        args:
+          TAG_BASE: ${TAG_BASE}
       depends_on:
         - nodemanager
         - historyserver
@@ -110,20 +110,20 @@
         - ../../ksqldb/benchmarking-scenarios/schemas:/tmp/schemas
       environment:
         CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-hdfs3,/usr/share/confluent-hub-components/confluentinc-kafka-connect-datagen
-      # VisualVM
-      # https://gist.github.com/Kevin-Lee/cbfbde89d68299304b1b1a2e6371fe06#visualvm-with-docker
-      # 1/ File -> Add JMX Connection...
-      # 2/ Enter the host and port (e.g. localhost:11002)
-      # JProfiler
-      # Open New Session->Attach to an already running HotSpot JVM and profile it->127.0.0.1 8849
-      KAFKA_OPTS:   -Dcom.sun.management.jmxremote=true
-                    -Dcom.sun.management.jmxremote.port=11002
-                    -Dcom.sun.management.jmxremote.authenticate=false
-                    -Dcom.sun.management.jmxremote.ssl=false
-                    -Dcom.sun.management.jmxremote.local.only=false
-                    -Dcom.sun.management.jmxremote.rmi.port=11002
-                    -Djava.rmi.server.hostname=localhost
-                    -agentpath:/tmp/jprofiler12.0.2/bin/linux-x64/libjprofilerti.so=port=8849,nowait
+        # VisualVM
+        # https://gist.github.com/Kevin-Lee/cbfbde89d68299304b1b1a2e6371fe06#visualvm-with-docker
+        # 1/ File -> Add JMX Connection...
+        # 2/ Enter the host and port (e.g. localhost:11002)
+        # JProfiler
+        # Open New Session->Attach to an already running HotSpot JVM and profile it->127.0.0.1 8849
+        KAFKA_OPTS:   -Dcom.sun.management.jmxremote=true
+                      -Dcom.sun.management.jmxremote.port=11002
+                      -Dcom.sun.management.jmxremote.authenticate=false
+                      -Dcom.sun.management.jmxremote.ssl=false
+                      -Dcom.sun.management.jmxremote.local.only=false
+                      -Dcom.sun.management.jmxremote.rmi.port=11002
+                      -Djava.rmi.server.hostname=localhost
+                      -agentpath:/tmp/jprofiler12.0.2/bin/linux-x64/libjprofilerti.so=port=8849,nowait
 
   volumes:
     datanode:
