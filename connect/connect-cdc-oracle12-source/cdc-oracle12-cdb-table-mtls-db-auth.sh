@@ -197,7 +197,6 @@ curl -X PUT \
                "start.from":"snapshot",
                "redo.log.topic.name": "redo-log-topic",
                "redo.log.consumer.bootstrap.servers":"broker:9092",
-               "redo.log.row.fetch.size": 1,
                "table.inclusion.regex": ".*CUSTOMERS.*",
                "table.topic.name.template": "${databaseName}.${schemaName}.${tableName}",
                "connection.pool.max.size": 20,
