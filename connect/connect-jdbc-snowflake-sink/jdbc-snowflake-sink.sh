@@ -155,7 +155,7 @@ curl -X PUT \
      http://localhost:8083/connectors/jdbc-snowflake-sink/config | jq .
 
 
-sleep 15
+sleep 30
 
 log "Confirm that the messages were delivered to the Snowflake table (logged as $PLAYGROUND_USER user)"
 docker run --rm -i -e SNOWSQL_PWD='Password123!' -e RSA_PUBLIC_KEY="$RSA_PUBLIC_KEY" kurron/snowsql --username $PLAYGROUND_USER -a $SNOWFLAKE_ACCOUNT_NAME > /tmp/result.log  2>&1 <<-EOF
