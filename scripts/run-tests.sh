@@ -110,7 +110,7 @@ do
                 gh_run_id=$(grep "$connector_path" ${file} | tail -1 | cut -d "|" -f 4)
                 if [ ! -f /tmp/${gh_run_id}.json ]
                 then
-                    curl -s -u vdesabou:$GITHUB_TOKEN -H "Accept: application/vnd.github.v3+json" -o /tmp/${gh_run_id}.json https://api.github.com/repos/vdesabou/kafka-docker-playground/actions/runs/${gh_run_id}/jobs?per_page=100
+                    curl -s -u vdesabou:$GITHUB_TOKEN -H "Accept: application/vnd.github.v3+json" -o /tmp/${gh_run_id}.json https://api.github.com/repos/vdesabou/kafka-docker-playground/actions/runs/${gh_run_id}/jobs?per_page=200
                 fi
                 v=$(echo $tag | sed -e 's/\./[.]/g')
                 html_url=$(cat /tmp/${gh_run_id}.json | jq ".jobs |= map(select(.name | test(\"${v}.*${dir}\")))" | jq '[.jobs | .[] | {name: .name, html_url: .html_url }]' | jq '.[0].html_url')
