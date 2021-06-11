@@ -173,6 +173,7 @@ curl -X PUT \
                "redo.log.consumer.bootstrap.servers":"broker:9092",
                "table.inclusion.regex": ".*CUSTOMERS.*",
                "table.topic.name.template": "${databaseName}.${schemaName}.${tableName}",
+               "numeric.mapping": "best_fit",
                "connection.pool.max.size": 20,
                "confluent.topic.replication.factor":1
           }' \
