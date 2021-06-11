@@ -36,7 +36,7 @@ else
      exit 1
 fi
 
-KINESIS_STREAM_NAME=my_kinesis_stream$TAG
+KINESIS_STREAM_NAME=my_kinesis_stream_cloud$TAG
 KINESIS_STREAM_NAME=${KINESIS_STREAM_NAME//[-.]/}
 
 if ! version_gt $TAG_BASE "5.9.9"; then
