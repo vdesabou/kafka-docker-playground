@@ -397,6 +397,12 @@ EOF
           log "🔗 Using Connector $owner/$name:$version (🎓 set CONNECTOR_TAG or CONNECTOR_ZIP environment variables to specify different version)"
           CONNECTOR_TAG=$version
         fi
+      else
+        # not a connector test
+        if [ -z "$CONNECT_TAG" ]
+        then
+          export CONNECT_TAG="$TAG"
+        fi
       fi
     else
       # not a connector test
