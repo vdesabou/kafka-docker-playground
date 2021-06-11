@@ -37,6 +37,22 @@ else
     ls -lrt
 fi
 
+log "Creating JKS from pem files"
+rm -f truststore.jks
+docker run --rm -v $PWD:/tmp vdesabou/kafka-docker-playground-connect:${CONNECT_TAG} keytool -importcert -alias MSSQLCACert -noprompt -file /tmp/mssql.pem -keystore /tmp/truststore.jks -storepass confluent
+
+if [ -z "$CI" ]
+then
+    # not running with github actions
+    # workaround for issue on linux, see https://github.com/vdesabou/kafka-docker-playground/issues/851#issuecomment-821151962
+    chmod -R a+rw .
+else
+    # docker is run as runneradmin user, need to use sudo
+    ls -lrt
+    sudo chmod -R a+rw .
+    ls -lrt
+fi
+
 cd -
 
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.jtds-ssl.yml"
@@ -52,7 +68,7 @@ curl -X PUT \
      --data '{
                "connector.class": "io.confluent.connect.jdbc.JdbcSourceConnector",
                "tasks.max": "1",
-               "connection.url": "jdbc:jtds:sqlserver://sqlserver:1433/testDB",
+               "connection.url": "jdbc:jtds:sqlserver://sqlserver:1433/testDB;ssl=require",
                "connection.user": "sa",
                "connection.password": "Password!",
                "table.whitelist": "customers",
@@ -63,7 +79,7 @@ curl -X PUT \
                "errors.log.enable": "true",
                "errors.log.include.messages": "true"
           }' \
-     http://localhost:8083/connectors/sqlserver-source/config | jq .
+     http://localhost:8083/connectors/sqlserver-source-ssl/config | jq .
 
 sleep 5
 
