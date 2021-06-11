@@ -915,19 +915,56 @@ function get_jmx_metrics() {
     curl -L https://github.com/jiaqi/jmxterm/releases/download/v$JMXTERM_VERSION/jmxterm-$JMXTERM_VERSION-uber.jar -o $JMXTERM_UBER_JAR -s
   fi
 
+  rm -f /tmp/commands
+  rm -f /tmp/jmx_metrics.log
+
   component="$1"
+  domains="$2"
+  if [ "$domains" = "" ]
+  then
+    # non existing domain: all domains will be in output !
+    logwarn "You did not specified a list of domains, all domains will be exported!"
+    domains="ALL"
+  fi
+
   case "$component" in
   zookeeper )
-    domain
-java -jar $JMXTERM_UBER_JAR  -l localhost:9999 -n -v silent > /tmp/beans.log << EOF
-domain org.apache.ZooKeeperService
+    port=9999
+  ;;
+  broker )
+    port=10000
+  ;;
+  schema-registry )
+    port=10001
+  ;;
+  connect )
+    port=10002
+  ;;
+  n|N ) ;;
+  * ) logerror "ERROR: invalid component $component! it should be one of zookeeper, broker, schema-registry or connect";exit 1;;
+  esac
+
+  if [ "$domains" = "ALL" ]
+  then
+log "This is the list of domains for component $component"
+java -jar $JMXTERM_UBER_JAR  -l localhost:$port -n -v silent << EOF
+domains
+exit
+EOF
+  fi
+
+for domain in `echo $domains`
+do
+java -jar $JMXTERM_UBER_JAR  -l localhost:$port -n -v silent > /tmp/beans.log << EOF
+domain $domain
 beans
 exit
 EOF
- while read line; do echo "get *"  -b $line; done < /tmp/beans.log > commands
+  while read line; do echo "get *"  -b $line; done < /tmp/beans.log >> /tmp/commands
 
-  ;;
-  n|N ) ;;
-  * ) logerror "ERROR: invalid component $component!";exit 1;;
-  esac
+  echo "####### domain $domain ########" >> /tmp/jmx_metrics.log
+  java -jar $JMXTERM_UBER_JAR  -l localhost:$port -n < /tmp/commands >> /tmp/jmx_metrics.log 2>&1
+done
+
+  log "JMX metrics are available in /tmp/jmx_metrics.log file"
 }
