@@ -16,7 +16,9 @@ then
      docker run -i --rm -e TAG=$TAG_BASE -e KAFKA_CLIENT_TAG=$KAFKA_CLIENT_TAG -v "${DIR}/producer-cloud":/usr/src/mymaven -v "$HOME/.m2":/root/.m2 -v "${DIR}/producer-cloud/target:/usr/src/mymaven/target" -w /usr/src/mymaven maven:3.6.1-jdk-11 mvn -Dkafka.tag=$TAG -Dkafka.client.tag=$KAFKA_CLIENT_TAG package
 fi
 
-#############
+# make sure control-center is not disabled
+unset DISABLE_CONTROL_CENTER
+
 ${DIR}/../../ccloud/environment/start.sh "${PWD}/docker-compose-executable-onprem-to-cloud-topicrecordnamestrategy.yml" -a -b
 
 if [ -f /tmp/delta_configs/env.delta ]
@@ -26,7 +28,7 @@ else
      logerror "ERROR: /tmp/delta_configs/env.delta has not been generated"
      exit 1
 fi
-#############
+
 
 # generate executable-onprem-to-cloud-producer-avro.properties config
 sed -e "s|:BOOTSTRAP_SERVERS:|$BOOTSTRAP_SERVERS|g" \

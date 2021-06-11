@@ -4,7 +4,9 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
-#############
+# make sure control-center is not disabled
+unset DISABLE_CONTROL_CENTER
+
 ${DIR}/../../ccloud/environment/start.sh "${PWD}/docker-compose-executable-onprem-to-cloud.yml" -a -b
 
 if [ -f /tmp/delta_configs/env.delta ]
@@ -14,7 +16,7 @@ else
      logerror "ERROR: /tmp/delta_configs/env.delta has not been generated"
      exit 1
 fi
-#############
+
 
 # generate executable-onprem-to-cloud-producer.properties config
 sed -e "s|:BOOTSTRAP_SERVERS:|$BOOTSTRAP_SERVERS|g" \
