@@ -108,20 +108,22 @@ do
                 elapsed_time=$((now-last_execution_time))
 
                 gh_run_id=$(grep "$connector_path" ${file} | tail -1 | cut -d "|" -f 4)
-                if [ ! -f /tmp/${gh_run_id}.json ]
+                if [ ! -f /tmp/${gh_run_id}_1.json ]
                 then
-                    curl -s -u vdesabou:$GITHUB_TOKEN -H "Accept: application/vnd.github.v3+json" -o /tmp/1.json https://api.github.com/repos/vdesabou/kafka-docker-playground/actions/runs/${gh_run_id}/jobs?per_page=100&page=1
-                    curl -s -u vdesabou:$GITHUB_TOKEN -H "Accept: application/vnd.github.v3+json" -o /tmp/2.json https://api.github.com/repos/vdesabou/kafka-docker-playground/actions/runs/${gh_run_id}/jobs?per_page=100&page=2
-                    cat /tmp/1.json > /tmp/${gh_run_id}.json
-                    cat /tmp/2.json >> /tmp/${gh_run_id}.json
+                    curl -s -u vdesabou:$GITHUB_TOKEN -H "Accept: application/vnd.github.v3+json" -o /tmp/${gh_run_id}_1.json https://api.github.com/repos/vdesabou/kafka-docker-playground/actions/runs/${gh_run_id}/jobs?per_page=100&page=1
+                    curl -s -u vdesabou:$GITHUB_TOKEN -H "Accept: application/vnd.github.v3+json" -o /tmp/${gh_run_id}_2.json https://api.github.com/repos/vdesabou/kafka-docker-playground/actions/runs/${gh_run_id}/jobs?per_page=100&page=2
                 fi
                 v=$(echo $tag | sed -e 's/\./[.]/g')
-                html_url=$(cat /tmp/${gh_run_id}.json | jq ".jobs |= map(select(.name | test(\"${v}.*${dir}\")))" | jq '[.jobs | .[] | {name: .name, html_url: .html_url }]' | jq '.[0].html_url')
+                html_url=$(cat /tmp/${gh_run_id}_1.json | jq ".jobs |= map(select(.name | test(\"${v}.*${dir}\")))" | jq '[.jobs | .[] | {name: .name, html_url: .html_url }]' | jq '.[0].html_url')
                 html_url=$(echo "$html_url" | sed -e 's/^"//' -e 's/"$//')
                 if [ "$html_url" = "" ] || [ "$html_url" = "null" ]
                 then
-                    logerror "ERROR: Could not retrieve job url!"
-                    # cat /tmp/${gh_run_id}.json
+                    html_url=$(cat /tmp/${gh_run_id}_2.json | jq ".jobs |= map(select(.name | test(\"${v}.*${dir}\")))" | jq '[.jobs | .[] | {name: .name, html_url: .html_url }]' | jq '.[0].html_url')
+                    html_url=$(echo "$html_url" | sed -e 's/^"//' -e 's/"$//')
+                    if [ "$html_url" = "" ] || [ "$html_url" = "null" ]
+                    then
+                        logerror "ERROR: Could not retrieve job url!"
+                    fi
                 fi
             fi
 
