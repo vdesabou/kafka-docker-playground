@@ -105,7 +105,7 @@ curl -X PUT \
           }' \
      http://localhost:8083/connectors/ibm-mq-sink-ssl/config | jq .
 
-sleep 5
+sleep 10
 
 log "Verify message received in DEV.QUEUE.1 queue"
 docker exec ibmmq bash -c "/opt/mqm/samp/bin/amqsbcg DEV.QUEUE.1" > /tmp/result.log  2>&1
