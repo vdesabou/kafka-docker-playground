@@ -1,0 +1,10 @@
+---
+version: '3.5'
+services:
+  broker:
+      environment:
+        KAFKA_CREATE_TOPIC_POLICY_CLASS_NAME : "com.github.vdesabou.MyTopicPolicy"
+        CLASSPATH: /tmp/mytopicpolicy-1.0.0-jar-with-dependencies.jar
+      volumes:
+        - ../../other/create-topic-policy/create-topic-policy/target/mytopicpolicy-1.0.0-jar-with-dependencies.jar:/tmp/mytopicpolicy-1.0.0-jar-with-dependencies.jar
+
