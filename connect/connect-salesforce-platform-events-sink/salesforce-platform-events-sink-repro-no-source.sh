@@ -104,6 +104,7 @@ curl -X PUT \
                     "salesforce.consumer.key" : "'"$CONSUMER_KEY"'",
                     "salesforce.consumer.secret" : "'"$CONSUMER_PASSWORD"'",
                     "salesforce.initial.start" : "all",
+                    "connection.max.message.size": "10048576",
                     "key.converter": "org.apache.kafka.connect.json.JsonConverter",
                     "value.converter": "org.apache.kafka.connect.json.JsonConverter",
                     "reporter.bootstrap.servers": "broker:9092",
