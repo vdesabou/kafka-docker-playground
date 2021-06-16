@@ -41,7 +41,7 @@ Creating CSV FilePulse Source connector
 ```bash
 $ curl -X PUT \
      -H "Content-Type: application/json" \
-     --data @connect-file-pulse-quickstart-csv.json \
+     --data @connect-file-pulse-quickstart-csv-2x.json \
      http://localhost:8083/connectors/filepulse-source-csv/config | jq .
 ```
 
@@ -98,22 +98,28 @@ Creating CSV FilePulse Source connector
 
 ```bash
 $ curl -X PUT \
-     -H "Content-Type: application/json" \
-     --data '{
-          "connector.class":"io.streamthoughts.kafka.connect.filepulse.source.FilePulseSourceConnector",
-          "fs.scan.directory.path":"/tmp/kafka-connect/examples/",
-          "fs.scan.interval.ms":"10000",
-          "fs.scan.filters":"io.streamthoughts.kafka.connect.filepulse.scanner.local.filter.RegexFileListFilter",
-          "file.filter.regex.pattern":".*\\.xml$",
-          "task.reader.class": "io.streamthoughts.kafka.connect.filepulse.reader.XMLFileInputReader",
-          "offset.strategy":"name",
-          "topic":"playlists-filepulse-xml-00",
-          "internal.kafka.reporter.bootstrap.servers": "broker:9092",
-          "internal.kafka.reporter.topic":"connect-file-pulse-status",
-          "fs.cleanup.policy.class": "io.streamthoughts.kafka.connect.filepulse.clean.LogCleanupPolicy",
-          "tasks.max": 1
-          }' \
-     http://localhost:8083/connectors/filepulse-source-xml/config | jq .
+        -H "Content-Type: application/json" \
+        --data '{
+            "connector.class":"io.streamthoughts.kafka.connect.filepulse.source.FilePulseSourceConnector",
+            "fs.cleanup.policy.class": "io.streamthoughts.kafka.connect.filepulse.fs.clean.LogCleanupPolicy",
+            "fs.listing.class": "io.streamthoughts.kafka.connect.filepulse.fs.LocalFSDirectoryListing",
+            "fs.listing.directory.path": "/tmp/kafka-connect/examples/",
+            "fs.listing.filters":"io.streamthoughts.kafka.connect.filepulse.fs.filter.RegexFileListFilter",
+            "fs.listing.interval.ms": "10000",
+            "file.filter.regex.pattern":".*\\.xml$",
+            "tasks.reader.class": "io.streamthoughts.kafka.connect.filepulse.fs.reader.LocalXMLFileInputReader",
+            "offset.strategy":"name",
+            "topic":"playlists-filepulse-xml-00",
+            "internal.kafka.reporter.bootstrap.servers": "broker:9092",
+            "internal.kafka.reporter.topic":"connect-file-pulse-status",
+            "tasks.file.status.storage.class": "io.streamthoughts.kafka.connect.filepulse.state.KafkaFileObjectStateBackingStore",
+            "tasks.file.status.storage.bootstrap.servers": "broker:9092",
+            "tasks.file.status.storage.topic": "connect-file-pulse-status",
+            "tasks.file.status.storage.topic.partitions": 10,
+            "tasks.file.status.storage.topic.replication.factor": 1,
+            "tasks.max": 1
+            }' \
+        http://localhost:8083/connectors/filepulse-source-xml/config | jq .
 ```
 
 Verify we have received the data in `playlists-filepulse-xml-00` topic
