@@ -25,6 +25,18 @@ or
 $ ./json.sh
 ```
 
+With AWS S3:
+
+```
+$ ./s3-csv.sh
+```
+
+or
+
+```
+$ ./s3-json.sh
+```
+
 ## Details of what the script is doing
 
 ### CSV Example
@@ -196,6 +208,80 @@ Results:
 
 ```json
 {"message":{"bytes":"{\n  \"track\": {\n     \"title\":\"Star Wars (Main Theme)\",\n     \"artist\":\"John Williams, London Symphony Orchestra\",\n     \"album\":\"Star Wars\",\n     \"duration\":\"10:52\"\n  }\n}\n"},"track":{"Track":{"title":{"string":"Star Wars (Main Theme)"},"artist":{"string":"John Williams, London Symphony Orchestra"},"album":{"string":"Star Wars"},"duration":{"string":"10:52"}}}}
+```
+
+### JSON Example with AWS S3
+
+```bash
+$ curl -X PUT \
+     -H "Content-Type: application/json" \
+     --data '{
+          "connector.class":"io.streamthoughts.kafka.connect.filepulse.source.FilePulseSourceConnector",
+          "aws.access.key.id": "${file:/data:aws.access.key.id}",
+          "aws.secret.access.key": "${file:/data:aws.secret.access.key}",
+          "aws.s3.bucket.name": "'"$AWS_BUCKET_NAME"'",
+          "aws.s3.region": "'"$AWS_REGION"'",
+          "fs.listing.class": "io.streamthoughts.kafka.connect.filepulse.fs.AmazonS3FileSystemListing",
+          "fs.listing.filters":"io.streamthoughts.kafka.connect.filepulse.fs.filter.RegexFileListFilter",
+          "fs.listing.interval.ms": "10000",
+          "file.filter.regex.pattern":".*\\.json$",
+          "offset.attributes.string": "uri",
+          "tasks.reader.class": "io.streamthoughts.kafka.connect.filepulse.fs.reader.AmazonS3BytesFileInputReader",
+          "offset.strategy":"name",
+          "topic":"tracks-filepulse-json-00",
+          "internal.kafka.reporter.bootstrap.servers": "broker:9092",
+          "internal.kafka.reporter.topic":"connect-file-pulse-status",
+          "fs.cleanup.policy.class": "io.streamthoughts.kafka.connect.filepulse.fs.clean.LogCleanupPolicy",
+          "filters": "ParseLine",
+          "filters.ParseJSON.type":"io.streamthoughts.kafka.connect.filepulse.filter.DelimitedRowFilter",
+          "filters.ParseLine.extractColumnName":"headers",
+          "filters.ParseLine.trimColumn":"true",
+          "filters.ParseLine.separator":";",
+          "tasks.file.status.storage.class": "io.streamthoughts.kafka.connect.filepulse.state.KafkaFileObjectStateBackingStore",
+          "tasks.file.status.storage.bootstrap.servers": "broker:9092",
+          "tasks.file.status.storage.topic": "connect-file-pulse-status",
+          "tasks.file.status.storage.topic.partitions": 10,
+          "tasks.file.status.storage.topic.replication.factor": 1,
+          "tasks.max": 1
+          }' \
+     http://localhost:8083/connectors/filepulse-source-s3-json/config | jq .
+```
+
+### CSV Example with AWS S3
+
+```bash
+$ curl -X PUT \
+     -H "Content-Type: application/json" \
+     --data '{
+          "connector.class":"io.streamthoughts.kafka.connect.filepulse.source.FilePulseSourceConnector",
+          "aws.access.key.id": "${file:/data:aws.access.key.id}",
+          "aws.secret.access.key": "${file:/data:aws.secret.access.key}",
+          "aws.s3.bucket.name": "'"$AWS_BUCKET_NAME"'",
+          "aws.s3.region": "'"$AWS_REGION"'",
+          "fs.listing.class": "io.streamthoughts.kafka.connect.filepulse.fs.AmazonS3FileSystemListing",
+          "fs.listing.filters":"io.streamthoughts.kafka.connect.filepulse.fs.filter.RegexFileListFilter",
+          "fs.listing.interval.ms": "10000",
+          "file.filter.regex.pattern":".*\\.csv$",
+          "skip.headers" : 1,
+          "offset.attributes.string": "uri",
+          "tasks.reader.class": "io.streamthoughts.kafka.connect.filepulse.fs.reader.AmazonS3RowFileInputReader",
+          "topic":"connect-filepulse-csv-data-records",
+          "internal.kafka.reporter.bootstrap.servers": "broker:9092",
+          "internal.kafka.reporter.topic":"connect-file-pulse-status",
+          "fs.cleanup.policy.class": "io.streamthoughts.kafka.connect.filepulse.fs.clean.LogCleanupPolicy",
+          "filters": "ParseLine",
+          "filters.ParseLine.type":"io.streamthoughts.kafka.connect.filepulse.filter.DelimitedRowFilter",
+          "filters.ParseLine.extractColumnName":"headers",
+          "filters.ParseLine.trimColumn":"true",
+          "filters.ParseLine.separator":";",
+          "tasks.file.status.storage.class": "io.streamthoughts.kafka.connect.filepulse.state.KafkaFileObjectStateBackingStore",
+          "tasks.file.status.storage.bootstrap.servers": "broker:9092",
+          "tasks.file.status.storage.topic": "connect-file-pulse-status",
+          "tasks.file.status.storage.topic.partitions": 10,
+          "tasks.file.status.storage.topic.replication.factor": 1,
+          "tasks.max": 1
+          }' \
+     http://localhost:8083/connectors/filepulse-source-s3-csv/config | jq .
 ```
 
 N.B: Control Center is reachable at [http://127.0.0.1:9021](http://127.0.0.1:9021])
