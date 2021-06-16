@@ -42,7 +42,7 @@ curl -X PUT \
                     "zendesk.url": "'"$ZENDESK_URL"'",
                     "zendesk.user": "'"$ZENDESK_USERNAME"'",
                     "zendesk.password": "'"$ZENDESK_PASSWORD"'",
-                    "zendesk.tables": "tickets",
+                    "zendesk.tables": "organizations",
                     "zendesk.since": "'"$SINCE"'",
                     "key.converter": "org.apache.kafka.connect.storage.StringConverter",
                     "value.converter": "org.apache.kafka.connect.json.JsonConverter",
@@ -59,5 +59,5 @@ curl -X PUT \
 
 sleep 10
 
-log "Verify we have received the data in zendesk-topic-tickets topic"
-timeout 60 docker exec broker kafka-console-consumer -bootstrap-server broker:9092 --topic zendesk-topic-tickets --from-beginning --max-messages 1
+log "Verify we have received the data in zendesk-topic-organizations topic"
+timeout 60 docker exec broker kafka-console-consumer -bootstrap-server broker:9092 --topic zendesk-topic-organizations --from-beginning --max-messages 1
