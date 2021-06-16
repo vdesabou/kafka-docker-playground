@@ -13,11 +13,13 @@ docker exec -i connect bash -c "mkdir -p /tmp/kafka-connect/examples/ && curl -s
 log "Creating CSV FilePulse Source connector"
 if ! version_gt $TAG_BASE "1.9.9"
 then
+     # Version 1.x
      curl -X PUT \
           -H "Content-Type: application/json" \
           --data @connect-file-pulse-quickstart-csv-1x.json \
           http://localhost:8083/connectors/filepulse-source-csv/config | jq .
 else
+     # Version 2.x
      curl -X PUT \
           -H "Content-Type: application/json" \
           --data @connect-file-pulse-quickstart-csv-2x.json \
