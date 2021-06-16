@@ -76,7 +76,7 @@ curl -X PUT \
           "file.filter.regex.pattern":".*\\.csv$",
           "skip.headers" : 1,
           "offset.attributes.string": "uri",
-          "task.reader.class": "io.streamthoughts.kafka.connect.filepulse.fs.reader.AmazonS3RowFileInputReader",
+          "tasks.reader.class": "io.streamthoughts.kafka.connect.filepulse.fs.reader.AmazonS3RowFileInputReader",
           "topic":"connect-filepulse-csv-data-records",
           "internal.kafka.reporter.bootstrap.servers": "broker:9092",
           "internal.kafka.reporter.topic":"connect-file-pulse-status",
