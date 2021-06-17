@@ -37,7 +37,7 @@ curl -X PUT \
           }' \
      http://localhost:8083/connectors/prometheus-sink/config | jq .
 
-sleep 10
+sleep 30
 
 log "Verify data is in Prometheus"
 curl 'http://localhost:9090/api/v1/query?query=kafka_gaugeMetric1' > /tmp/result.log  2>&1
