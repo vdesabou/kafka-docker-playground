@@ -968,3 +968,23 @@ done
 
   log "JMX metrics are available in /tmp/jmx_metrics.log file"
 }
+
+function display_docker_container_error_log() {
+  logerror "####################################################"
+  logerror "🐳 docker ps"
+  docker ps
+  logerror "####################################################"
+  for container in $(docker ps  --format="{{.Names}}")
+  do
+      logerror "####################################################"
+      logerror "$container logs"
+      if [[ "$container" == "connect" ]]
+      then
+          # always show all logs for connect
+          docker container logs --tail=100 $container | grep -v "was supplied but isn't a known config"
+      else
+          docker container logs $container > /dev/null 2>&1 | egrep "ERROR|FATAL" | grep -v "was supplied but isn't a known config"
+      fi
+      logwarn "####################################################"
+  done
+}

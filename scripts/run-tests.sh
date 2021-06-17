@@ -203,20 +203,8 @@ do
 
             echo "$connector_path|`date +%s`|failure|$GITHUB_RUN_ID" > $file
 
-            logerror "####################################################"
-            logerror "🐳 docker ps"
-            docker ps -a
-            logerror "####################################################"
-            for container in connect connect-us connect-europe replicator-us replicator-europe
-            do
-                if [[ $(docker ps -f "name=$container" --format '{{.Names}}') == $container ]]
-                then
-                    logerror "####################################################"
-                    logerror "$container logs"
-                    docker container logs --tail=150 $container
-                    logwarn "####################################################"
-                fi
-            done
+            display_docker_container_error_log
+
             failed_tests=$failed_tests"$dir[$script]\n"
             let "nb_test_failed++"
         fi
