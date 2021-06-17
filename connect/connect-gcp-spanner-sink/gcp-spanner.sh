@@ -63,7 +63,7 @@ curl -X PUT \
           }' \
      http://localhost:8083/connectors/gcp-spanner-sink/config | jq .
 
-sleep 30
+sleep 60
 
 log "Verify data is in GCP Spanner"
 docker run -i --volumes-from gcloud-config google/cloud-sdk:latest gcloud spanner databases execute-sql $DATABASE --instance $INSTANCE --project $PROJECT --sql='select * from kafka_products' > /tmp/result.log  2>&1
