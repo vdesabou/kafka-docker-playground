@@ -174,6 +174,9 @@ stop
 start
 EOF
 
+log "Sleeping 60 seconds"
+sleep 60
+
 docker-compose -f ../../environment/plaintext/docker-compose.yml -f "${PWD}/docker-compose.plaintext.cdb-table-mtls.yml" up -d
 
 ../../scripts/wait-for-connect-and-controlcenter.sh
