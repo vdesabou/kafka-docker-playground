@@ -184,6 +184,9 @@ stop
 start
 EOF
 
+log "Sleeping 60 seconds"
+sleep 60
+
 if ! version_gt $JDBC_CONNECTOR_VERSION "9.9.9"; then
      docker-compose -f ../../environment/plaintext/docker-compose.yml -f "${PWD}/docker-compose.plaintext.mtls-db-auth.yml" up -d
 else
