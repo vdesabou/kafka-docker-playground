@@ -4,6 +4,15 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
+if ! version_gt $TAG_BASE "5.9.0"
+then
+    if version_gt $CONNECTOR_TAG "1.9.9"
+    then
+        log "This connector does not support JDK 8 starting from version 2.0"
+        exit 0
+    fi
+fi
+
 if [ ! -f $HOME/.aws/config ]
 then
      logerror "ERROR: $HOME/.aws/config is not set"
@@ -26,7 +35,7 @@ else
      export CONNECT_CONTAINER_HOME_DIR="/root"
 fi
 
-if ! version_gt $TAG_BASE "1.9.9"
+if ! version_gt $CONNECTOR_TAG "1.9.9"
 then
      logerror "This is only available with connector version starting from 2.0"
      exit 1
