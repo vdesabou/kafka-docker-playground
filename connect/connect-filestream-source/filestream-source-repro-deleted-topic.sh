@@ -37,6 +37,9 @@ docker exec broker kafka-topics --delete --topic filestream --bootstrap-server b
 log "Generating 10 other messages"
 docker exec -i connect bash -c "mkdir -p /tmp/kafka-connect/examples/ && curl -sSL 'https://api.mockaroo.com/api/17c84440?count=10&key=25fd9c80' -o /tmp/kafka-connect/examples/file2.json && cat /tmp/kafka-connect/examples/file2.json >> /tmp/kafka-connect/examples/file.json"
 
+# [2021-06-18 16:05:44,675] WARN [Producer clientId=connect-worker-producer] Got error produce response with correlation id 7 on topic-partition filestream-0, retrying (2147483646 attempts left). Error: UNKNOWN_TOPIC_OR_PARTITION (org.apache.kafka.clients.producer.internals.Sender)
+# [2021-06-18 16:05:44,676] WARN [Producer clientId=connect-worker-producer] Received unknown topic or partition error in produce request on partition filestream-0. The topic-partition may not exist or the user may not have Describe access to it (org.apache.kafka.clients.producer.internals.Sender)
+
 log "display offsets"
 timeout 60 docker exec connect kafka-console-consumer -bootstrap-server broker:9092 --topic connect-offsets --from-beginning --property print.key=true --max-messages 1
 
