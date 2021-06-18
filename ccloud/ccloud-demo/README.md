@@ -819,7 +819,17 @@ You can set variables for your cluster by modifying sub environment called `Metr
 
 ![Sub environment](./images/Screenshot2.png)
 
-![Sub environment](./images/Screenshot3.png)
+![Sub environment](./images/insomnia_metrics_api.jpg)
+
+```json
+{
+  "api_key": "xxx",
+  "api_key_secret": "xxx",
+  "lkc": "lkc-xxxx",
+  "topic": "demo-topic-1",
+  "lsrc": "lsrc-xxxx"
+}
+```
 
 Example:
 
