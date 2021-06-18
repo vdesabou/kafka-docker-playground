@@ -116,7 +116,8 @@ then
     export TAG_BASE=$TAG
     if [ -z "$CP_KAFKA_IMAGE" ]
     then
-      log "Using CP version $TAG (🎓 set TAG environment variable to specify different version)"
+      log "💫 Using CP version $TAG"
+      log "🎓 set TAG environment variable to specify different version"
     fi
     export CP_KAFKA_IMAGE=cp-server
     export CP_BASE_IMAGE=cp-base-new
@@ -240,7 +241,7 @@ EOF
         if [ $? -ne 0 ]
         then
           logwarn "$connector_path/lib/$name-$CONNECTOR_TAG.jar does not exist, the jar name to replace could not be found automatically"
-          array=($(docker run vdesabou/kafka-docker-playground-connect:${CONNECT_TAG} ls /usr/share/confluent-hub-components/$connector_path/lib | grep $CONNECTOR_TAG))
+          array=($(docker run --rm vdesabou/kafka-docker-playground-connect:${CONNECT_TAG} ls /usr/share/confluent-hub-components/$connector_path/lib | grep $CONNECTOR_TAG))
           choosejar "${array[@]}"
           current_jar_path="/usr/share/confluent-hub-components/$connector_path/lib/$jar"
         fi
@@ -304,7 +305,10 @@ else
       then
         owner=$(echo "$connector_path" | cut -d "-" -f 1)
         name=$(echo "$connector_path" | cut -d "-" -f 2-)
-        version=$(docker run vdesabou/kafka-docker-playground-connect:${TAG} cat /usr/share/confluent-hub-components/${connector_path}/manifest.json | jq -r '.version')
+        docker run --rm vdesabou/kafka-docker-playground-connect:${TAG} cat /usr/share/confluent-hub-components/${connector_path}/manifest.json > /tmp/manifest.json
+        version=$(cat /tmp/manifest.json | jq -r '.version')
+        release_date=$(cat /tmp/manifest.json | jq -r '.release_date')
+        documentation_url=$(cat /tmp/manifest.json | jq -r '.documentation_url')
         if [ -z "$CI" ] && [ -z "$CLOUDFORMATION" ]
         then
           # check if newer version available on vdesabou/kafka-docker-playground-connect image
@@ -394,7 +398,8 @@ EOF
           then
             export CONNECT_TAG="$TAG"
           fi
-          log "🔗 Using Connector $owner/$name:$version (🎓 set CONNECTOR_TAG or CONNECTOR_ZIP environment variables to specify different version)"
+          log "💫 Using 🔗connector: $owner/$name:$version 📅release date: $release_date 🌐documentation: $documentation_url"
+          log "🎓 set CONNECTOR_TAG or CONNECTOR_ZIP environment variables to specify different version"
           CONNECTOR_TAG=$version
         fi
       else
