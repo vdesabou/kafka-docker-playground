@@ -27,8 +27,6 @@ curl -X PUT \
                "key.converter.schema.registry.url":"http://schema-registry:8081",
                "value.converter": "io.confluent.connect.avro.AvroConverter",
                "value.converter.schema.registry.url":"http://schema-registry:8081",
-               "key.converter.schemas.enable": "true",
-               "value.converter.schemas.enable": "true",
                "reporter.bootstrap.servers": "broker:9092",
                "reporter.error.topic.replication.factor": 1,
                "reporter.result.topic.replication.factor": 1,
