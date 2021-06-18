@@ -956,7 +956,7 @@ node-exporter:
     - '^(aufs|proc|nsfs|shm|cgroup|tmpfs|binfmt_misc|debugfs|devpts|fusectl|hugetlbfs|fuse.lxcfs|mqueue|pstore|securityfs|sysfs|autofs|devtmpfs|configfs)'
 
 prometheus:
-  image: prom/prometheus:v2.11.1
+  image: prom/prometheus
   hostname: prometheus
   container_name: prometheus
   ports:
