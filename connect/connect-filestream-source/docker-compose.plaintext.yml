@@ -1,6 +1,0 @@
----
-version: '3.5'
-services:
-  connect:
-    volumes:
-        - ../../connect/connect-filestream-source/data:$CONNECT_CONTAINER_HOME_DIR/data
