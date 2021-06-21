@@ -98,16 +98,33 @@ do
      $script "ORCLCDB"
 done
 
-log "Verifying topic ORCLCDB.C__MYUSER.CUSTOMERS"
-timeout 60 docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic ORCLCDB.C__MYUSER.CUSTOMERS --from-beginning --max-messages 2
+log "Verifying topic ORCLCDB.C__MYUSER.CUSTOMERS: there should be 13 records"
+timeout 60 docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic ORCLCDB.C__MYUSER.CUSTOMERS --from-beginning --max-messages 13 > /tmp/result.log  2>&1
+cat /tmp/result.log
+log "Check there is 5 snapshots events"
+if [ $(grep -c "op_type\":{\"string\":\"R\"}" /tmp/result.log) -ne 5 ]
+then
+     logerror "Did not get expected results"
+     exit 1
+fi
+log "Check there is 3 insert events"
+if [ $(grep -c "op_type\":{\"string\":\"I\"}" /tmp/result.log) -ne 3 ]
+then
+     logerror "Did not get expected results"
+     exit 1
+fi
+log "Check there is 4 update events"
+if [ $(grep -c "op_type\":{\"string\":\"U\"}" /tmp/result.log) -ne 4 ]
+then
+     logerror "Did not get expected results"
+     exit 1
+fi
+log "Check there is 1 delete events"
+if [ $(grep -c "op_type\":{\"string\":\"D\"}" /tmp/result.log) -ne 1 ]
+then
+     logerror "Did not get expected results"
+     exit 1
+fi
 
-
-# [2020-10-30 08:40:08,284] ERROR Exception in RecordQueue thread (io.confluent.connect.oracle.cdc.util.RecordQueue)
-# org.apache.kafka.connect.errors.ConnectException: Failed to subscribe to the redo log topic 'redo-log-topic' even after waiting PT1M. Verify that this redo log topic exists in the brokers at broker:9092, and that the redo log reading task is able to produce to that topic.
-#         at io.confluent.connect.oracle.cdc.ChangeEventGenerator.subscribeToRedoLogTopic(ChangeEventGenerator.java:248)
-#         at io.confluent.connect.oracle.cdc.ChangeEventGenerator.execute(ChangeEventGenerator.java:203)
-#         at io.confluent.connect.oracle.cdc.util.RecordQueue.lambda$createLoggingSupplier$1(RecordQueue.java:468)
-#         at java.base/java.util.concurrent.CompletableFuture$AsyncSupply.run(CompletableFuture.java:1700)
-#         at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1128)
-#         at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:628)
-#         at java.base/java.lang.Thread.run(Thread.java:834)
+log "Verifying topic redo-log-topic: there should be 9 records"
+timeout 60 docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic redo-log-topic --from-beginning --max-messages 9
