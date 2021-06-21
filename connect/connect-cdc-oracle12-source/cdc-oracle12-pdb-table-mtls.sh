@@ -218,5 +218,33 @@ do
      $script "ORCLPDB1"
 done
 
-log "Verifying topic ORCLPDB1.C__MYUSER.CUSTOMERS"
-timeout 60 docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic ORCLPDB1.C__MYUSER.CUSTOMERS --from-beginning --max-messages 2
+log "Verifying topic ORCLPDB1.C__MYUSER.CUSTOMERS: there should be 13 records"
+timeout 60 docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic ORCLPDB1.C__MYUSER.CUSTOMERS --from-beginning --max-messages 13 > /tmp/result.log  2>&1
+cat /tmp/result.log
+log "Check there is 5 snapshots events"
+if [ $(grep -c "op_type\":{\"string\":\"R\"}" /tmp/result.log) -ne 5 ]
+then
+     logerror "Did not get expected results"
+     exit 1
+fi
+log "Check there is 3 insert events"
+if [ $(grep -c "op_type\":{\"string\":\"I\"}" /tmp/result.log) -ne 3 ]
+then
+     logerror "Did not get expected results"
+     exit 1
+fi
+log "Check there is 4 update events"
+if [ $(grep -c "op_type\":{\"string\":\"U\"}" /tmp/result.log) -ne 4 ]
+then
+     logerror "Did not get expected results"
+     exit 1
+fi
+log "Check there is 1 delete events"
+if [ $(grep -c "op_type\":{\"string\":\"D\"}" /tmp/result.log) -ne 1 ]
+then
+     logerror "Did not get expected results"
+     exit 1
+fi
+
+log "Verifying topic redo-log-topic: there should be 9 records"
+timeout 60 docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic redo-log-topic --from-beginning --max-messages 9
