@@ -94,8 +94,12 @@ DOCKER_COMPOSE_FILE_OVERRIDE=$1
 if [ -f "${DOCKER_COMPOSE_FILE_OVERRIDE}" ]
 then
   docker-compose -f ../../environment/mdc-plaintext/docker-compose.yml -f ../../environment/mdc-kerberos/docker-compose.kerberos.yml -f ${DOCKER_COMPOSE_FILE_OVERRIDE} up -d
+  log "⚡If you modify a docker-compose file and want to re-create the container(s), use this command:"
+  log "⚡source ../../scripts/utils.sh && docker-compose -f ../../environment/mdc-plaintext/docker-compose.yml -f ../../environment/mdc-kerberos/docker-compose.kerberos.yml -f ${DOCKER_COMPOSE_FILE_OVERRIDE} up -d"
 else
   docker-compose -f ../../environment/mdc-plaintext/docker-compose.yml -f ../../environment/mdc-kerberos/docker-compose.kerberos.yml up -d
+  log "⚡If you modify a docker-compose file and want to re-create the container(s), use this command:"
+  log "⚡source ../../scripts/utils.sh && docker-compose -f ../../environment/mdc-plaintext/docker-compose.yml -f ../../environment/mdc-kerberos/docker-compose.kerberos.yml up -d"
 fi
 
 if [ "$#" -ne 0 ]
