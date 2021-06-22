@@ -149,12 +149,12 @@ services:
       KSQL_LOG4J_ROOT_LOGLEVEL: "INFO"
       KSQL_LOG4J_LOGGERS: "org.apache.kafka.connect.runtime.rest=WARN,org.reflections=ERROR"
       # --- ksqlDB processing log config ---
-      KSQL_LOG4J_PROCESSING_LOG_BROKERLIST: broker:9092
-      KSQL_LOG4J_PROCESSING_LOG_TOPIC: ksql_processing_log
-      KSQL_KSQL_LOGGING_PROCESSING_TOPIC_NAME: ksql_processing_log
-      KSQL_KSQL_LOGGING_PROCESSING_TOPIC_AUTO_CREATE: "true"
-      KSQL_KSQL_LOGGING_PROCESSING_STREAM_AUTO_CREATE: "true"
-      KSQL_KSQL_LOGGING_PROCESSING_ROWS_INCLUDE: 'true'
+      # KSQL_LOG4J_PROCESSING_LOG_BROKERLIST: broker:9092
+      # KSQL_LOG4J_PROCESSING_LOG_TOPIC: ksql_processing_log
+      # KSQL_KSQL_LOGGING_PROCESSING_TOPIC_NAME: ksql_processing_log
+      # KSQL_KSQL_LOGGING_PROCESSING_TOPIC_AUTO_CREATE: "true"
+      # KSQL_KSQL_LOGGING_PROCESSING_STREAM_AUTO_CREATE: "true"
+      # KSQL_KSQL_LOGGING_PROCESSING_ROWS_INCLUDE: 'true'
       KSQL_PRODUCER_INTERCEPTOR_CLASSES: "io.confluent.monitoring.clients.interceptor.MonitoringProducerInterceptor"
       KSQL_CONSUMER_INTERCEPTOR_CLASSES: "io.confluent.monitoring.clients.interceptor.MonitoringConsumerInterceptor"
       # KSQL_METRIC_REPORTERS: io.confluent.telemetry.reporter.TelemetryReporter
