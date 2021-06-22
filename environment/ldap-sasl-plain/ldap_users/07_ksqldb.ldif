@@ -1,0 +1,15 @@
+dn: cn=ksqldb,ou=users,{{ LDAP_BASE_DN }}
+objectClass: inetOrgPerson
+objectClass: posixAccount
+objectClass: shadowAccount
+uid: ksqldb
+sn: Sheen
+givenName: SchemaRegistry
+cn: ksqldb
+displayName: SchemaRegistry Sheen
+uidNumber: 10015
+gidNumber: 5000
+userPassword: ksqldb-secret
+gecos: ksqldb
+loginShell: /bin/bash
+homeDirectory: /home/ksqldb

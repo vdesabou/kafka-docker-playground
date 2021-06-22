@@ -68,6 +68,7 @@ docker exec -i kdc kadmin.local -w password -q "add_principal -randkey kafka_pro
 docker exec -i kdc kadmin.local -w password -q "add_principal -randkey kafka_consumer@TEST.CONFLUENT.IO"  > /dev/null
 docker exec -i kdc kadmin.local -w password -q "add_principal -randkey connect@TEST.CONFLUENT.IO"  > /dev/null
 docker exec -i kdc kadmin.local -w password -q "add_principal -randkey schemaregistry@TEST.CONFLUENT.IO"  > /dev/null
+docker exec -i kdc kadmin.local -w password -q "add_principal -randkey ksqldb@TEST.CONFLUENT.IO"  > /dev/null
 docker exec -i kdc kadmin.local -w password -q "add_principal -randkey controlcenter@TEST.CONFLUENT.IO"  > /dev/null
 
 
@@ -84,6 +85,7 @@ docker exec -i kdc rm -f /var/lib/secret/kafka-client.key 2>&1 > /dev/null
 docker exec -i kdc rm -f /var/lib/secret/kafka-admin.key 2>&1 > /dev/null
 docker exec -i kdc rm -f /var/lib/secret/kafka-connect.key 2>&1 > /dev/null
 docker exec -i kdc rm -f /var/lib/secret/kafka-schemaregistry.key 2>&1 > /dev/null
+docker exec -i kdc rm -f /var/lib/secret/kafka-ksqldb.key 2>&1 > /dev/null
 docker exec -i kdc rm -f /var/lib/secret/kafka-controlcenter.key 2>&1 > /dev/null
 
 docker exec -i kdc kadmin.local -w password -q "ktadd  -k /var/lib/secret/broker.key -norandkey kafka/broker.kerberos-demo.local@TEST.CONFLUENT.IO " > /dev/null
@@ -95,6 +97,7 @@ docker exec -i kdc kadmin.local -w password -q "ktadd  -k /var/lib/secret/kafka-
 docker exec -i kdc kadmin.local -w password -q "ktadd  -k /var/lib/secret/kafka-admin.key -norandkey admin/for-kafka@TEST.CONFLUENT.IO " > /dev/null
 docker exec -i kdc kadmin.local -w password -q "ktadd  -k /var/lib/secret/kafka-connect.key -norandkey connect@TEST.CONFLUENT.IO " > /dev/null
 docker exec -i kdc kadmin.local -w password -q "ktadd  -k /var/lib/secret/kafka-schemaregistry.key -norandkey schemaregistry@TEST.CONFLUENT.IO " > /dev/null
+docker exec -i kdc kadmin.local -w password -q "ktadd  -k /var/lib/secret/kafka-ksqldb.key -norandkey ksqldb@TEST.CONFLUENT.IO " > /dev/null
 docker exec -i kdc kadmin.local -w password -q "ktadd  -k /var/lib/secret/kafka-controlcenter.key -norandkey controlcenter@TEST.CONFLUENT.IO " > /dev/null
 
 if [[ "$TAG" == *ubi8 ]]  || version_gt $TAG_BASE "5.9.0"
@@ -109,6 +112,7 @@ then
   docker exec -i kdc chmod a+r /var/lib/secret/kafka-admin.key
   docker exec -i kdc chmod a+r /var/lib/secret/kafka-connect.key
   docker exec -i kdc chmod a+r /var/lib/secret/kafka-schemaregistry.key
+  docker exec -i kdc chmod a+r /var/lib/secret/kafka-ksqldb.key
   docker exec -i kdc chmod a+r /var/lib/secret/kafka-controlcenter.key
 fi
 # Starting zookeeper and kafka now that the keytab has been created with the required credentials and services
