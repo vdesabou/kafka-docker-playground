@@ -8,6 +8,8 @@ This is a deployment with no SSL encryption, SASL_PLAINTEXT as the security prot
 * 1 broker
 * 1 connect
 * 1 schema-registry
+* 1 ksqldb-server
+* 1 ksqldb-cli
 * 1 control-center
 
 The goal is to test [LDAP authorizer](https://docs.confluent.io/current/security/ldap-authorizer/quickstart.html#using-the-ldap-auth-long) in this config.

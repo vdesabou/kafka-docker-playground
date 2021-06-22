@@ -75,6 +75,26 @@ services:
                 username=\"schemaregistry\" \
                 password=\"schemaregistry-secret\";"
 
+    ksqldb-server:
+        environment:
+            KSQL_SECURITY_PROTOCOL: SASL_PLAINTEXT
+            KSQL_SASL_MECHANISM: SCRAM-SHA-256
+            KSQL_SASL_JAAS_CONFIG: "org.apache.kafka.common.security.scram.ScramLoginModule required \
+                username=\"ksqldb\" \
+                password=\"ksqldb-secret\";"
+            # producer
+            KSQL_PRODUCER_CONFLUENT_MONITORING_INTERCEPTOR_SECURITY_PROTOCOL: SASL_PLAINTEXT
+            KSQL_PRODUCER_CONFLUENT_MONITORING_INTERCEPTOR_SASL_JAAS_CONFIG: "org.apache.kafka.common.security.scram.ScramLoginModule required \
+                username=\"ksqldb\" \
+                password=\"ksqldb-secret\";"
+            KSQL_PRODUCER_CONFLUENT_MONITORING_INTERCEPTOR_SASL_MECHANISM: SCRAM-SHA-256
+            # consumer
+            KSQL_CONSUMER_CONFLUENT_MONITORING_INTERCEPTOR_SECURITY_PROTOCOL: SASL_PLAINTEXT
+            KSQL_CONSUMER_CONFLUENT_MONITORING_INTERCEPTOR_SASL_JAAS_CONFIG: "org.apache.kafka.common.security.scram.ScramLoginModule required \
+                username=\"ksqldb\" \
+                password=\"ksqldb-secret\";"
+            KSQL_CONSUMER_CONFLUENT_MONITORING_INTERCEPTOR_SASL_MECHANISM: SCRAM-SHA-256
+
     control-center:
         environment:
             CONTROL_CENTER_STREAMS_SECURITY_PROTOCOL: SASL_PLAINTEXT
@@ -82,3 +102,9 @@ services:
                 username=\"client\" \
                 password=\"client-secret\";"
             CONTROL_CENTER_STREAMS_SASL_MECHANISM: SCRAM-SHA-256
+
+            CONTROL_CENTER_KAFKA_MYCLUSTER_SECURITY_PROTOCOL: SASL_PLAINTEXT
+            CONTROL_CENTER_KAFKA_MYCLUSTER_SASL_JAAS_CONFIG: "org.apache.kafka.common.security.scram.ScramLoginModule required \
+                username=\"client\" \
+                password=\"client-secret\";"
+            CONTROL_CENTER_KAFKA_MYCLUSTER_SASL_MECHANISM: SCRAM-SHA-256

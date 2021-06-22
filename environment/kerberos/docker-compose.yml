@@ -73,7 +73,7 @@ services:
       KAFKA_AUTHORIZER_CLASS_NAME: kafka.security.auth.SimpleAclAuthorizer
       KAFKA_ZOOKEEPER_SET_ACL: "true"
       KAFKA_ALLOW_EVERYONE_IF_NO_ACL_FOUND: "false"
-      KAFKA_SUPER_USERS: User:admin;User:kafka;User:schemaregistry;User:connect;User:controlcenter
+      KAFKA_SUPER_USERS: User:admin;User:kafka;User:schemaregistry;User:connect;User:controlcenter;User:ksqldb
       KAFKA_OPTS: -Djava.security.auth.login.config=/etc/kafka/broker.sasl.jaas.config
                   # -Djdk.security.allowNonCaAnchor=true
                   # -Dsun.security.krb5.disableReferrals=true
@@ -116,7 +116,7 @@ services:
       KAFKA_AUTHORIZER_CLASS_NAME: kafka.security.auth.SimpleAclAuthorizer
       KAFKA_ZOOKEEPER_SET_ACL: "true"
       KAFKA_ALLOW_EVERYONE_IF_NO_ACL_FOUND: "false"
-      KAFKA_SUPER_USERS: User:admin;User:kafka;User:schemaregistry;User:connect;User:controlcenter
+      KAFKA_SUPER_USERS: User:admin;User:kafka;User:schemaregistry;User:connect;User:controlcenter;User:ksqldb
       KAFKA_OPTS: -Djava.security.auth.login.config=/etc/kafka/broker.sasl.jaas.config
                   # -Djdk.security.allowNonCaAnchor=true
                   # -Dsun.security.krb5.disableReferrals=true
@@ -213,6 +213,22 @@ services:
         storeKey=true \
         keyTab=\"/var/lib/secret/kafka-schemaregistry.key\" \
         principal=\"schemaregistry@TEST.CONFLUENT.IO\";"
+
+  ksqldb-server:
+    # Required to wait for the keytab to get generated
+    restart: on-failure
+    volumes:
+      - secret:/var/lib/secret
+      - ../../environment/kerberos/kdc/krb5.conf:/etc/krb5.conf
+    environment:
+      KSQL_SECURITY_PROTOCOL: SASL_PLAINTEXT
+      KSQL_SASL_MECHANISM: GSSAPI
+      KSQL_SASL_KERBEROS_SERVICE_NAME: kafka
+      KSQL_SASL_JAAS_CONFIG: "com.sun.security.auth.module.Krb5LoginModule required \
+        useKeyTab=true \
+        storeKey=true \
+        keyTab=\"/var/lib/secret/kafka-ksqldb.key\" \
+        principal=\"ksqldb@TEST.CONFLUENT.IO\";"
 
   control-center:
     # Required to wait for the keytab to get generated
