@@ -66,8 +66,12 @@ docker exec -i tools bash -c "/tmp/helper/create-role-bindings.sh"
 if [ -f "${DOCKER_COMPOSE_FILE_OVERRIDE}" ]
 then
   docker-compose -f ../../environment/plaintext/docker-compose.yml -f ../../environment/rbac-sasl-plain/docker-compose.yml -f ${DOCKER_COMPOSE_FILE_OVERRIDE} ${profile_control_center_command} ${profile_ksqldb_command} up -d
+  log "⚡If you modify a docker-compose file and want to re-create the container(s), use this command:"
+  log "⚡source ../../scripts/utils.sh && docker-compose -f ../../environment/plaintext/docker-compose.yml -f ../../environment/rbac-sasl-plain/docker-compose.yml -f ${DOCKER_COMPOSE_FILE_OVERRIDE} ${profile_control_center_command} ${profile_ksqldb_command} up -d"
 else
   docker-compose -f ../../environment/plaintext/docker-compose.yml -f ../../environment/rbac-sasl-plain/docker-compose.yml ${profile_control_center_command} ${profile_ksqldb_command} up -d
+  log "⚡If you modify a docker-compose file and want to re-create the container(s), use this command:"
+  log "⚡source ../../scripts/utils.sh && docker-compose -f ../../environment/plaintext/docker-compose.yml -f ../../environment/rbac-sasl-plain/docker-compose.yml ${profile_control_center_command} ${profile_ksqldb_command} up -d"
 fi
 
 if [ "$#" -ne 0 ]
