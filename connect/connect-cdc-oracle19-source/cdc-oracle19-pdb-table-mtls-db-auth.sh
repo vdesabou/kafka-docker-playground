@@ -227,7 +227,7 @@ curl -X PUT \
           }' \
      http://localhost:8083/connectors/cdc-oracle-source-pdb/config | jq .
 
-log "Waiting 60s for cdc-oracle-source-cdb to read existing data"
+log "Waiting 60s for connector to read existing data"
 sleep 60
 
 log "Running SQL scripts"
@@ -235,6 +235,9 @@ for script in ${DIR}/sample-sql-scripts/*
 do
      $script "ORCLPDB1"
 done
+
+log "Waiting 60s for connector to read new data"
+sleep 60
 
 # FIXTHIS:
 # [2021-04-12 13:33:52,281] ERROR WorkerSourceTask{id=cdc-oracle-source-pdb-0} Task threw an uncaught and unrecoverable exception. Task is being killed and will not recover until manually restarted (org.apache.kafka.connect.runtime.WorkerTask)
