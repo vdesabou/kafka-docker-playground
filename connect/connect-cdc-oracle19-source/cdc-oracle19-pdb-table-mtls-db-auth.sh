@@ -296,7 +296,9 @@ sleep 60
 #         ... 42 more
 
 log "Verifying topic ORCLPDB1.C__MYUSER.CUSTOMERS: there should be 10 records"
+set +e
 timeout 60 docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic ORCLPDB1.C__MYUSER.CUSTOMERS --from-beginning --max-messages 10 > /tmp/result.log  2>&1
+set -e
 cat /tmp/result.log
 log "Check there is 5 snapshots events"
 if [ $(grep -c "op_type\":{\"string\":\"R\"}" /tmp/result.log) -ne 5 ]

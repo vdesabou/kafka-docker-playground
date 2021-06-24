@@ -212,7 +212,9 @@ log "Waiting 60s for cdc-oracle-source-cdb to read existing data"
 sleep 60
 
 log "Verifying topic ORCLCDB.C__MYUSER.CUSTOMERS: there should be 5 records"
+set +e
 timeout 60 docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic ORCLCDB.C__MYUSER.CUSTOMERS --from-beginning --max-messages 5 > /tmp/result.log  2>&1
+set -e
 cat /tmp/result.log
 log "Check there is 5 snapshots events"
 if [ $(grep -c "op_type\":{\"string\":\"R\"}" /tmp/result.log) -ne 5 ]
