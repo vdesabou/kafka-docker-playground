@@ -78,12 +78,14 @@ then
   docker-compose -f ../../ccloud/environment/docker-compose.yml -f ${DOCKER_COMPOSE_FILE_OVERRIDE} build
   docker-compose -f ../../ccloud/environment/docker-compose.yml -f ${DOCKER_COMPOSE_FILE_OVERRIDE} down -v --remove-orphans
   docker-compose -f ../../ccloud/environment/docker-compose.yml -f ${DOCKER_COMPOSE_FILE_OVERRIDE} ${profile_control_center_command} up -d
+  log "🎓To see the actual properties file, use ../../scripts/get-properties.sh <container>"
   log "⚡If you modify a docker-compose file and want to re-create the container(s), use this command:"
   log "⚡source ../../scripts/utils.sh && docker-compose -f ../../ccloud/environment/docker-compose.yml -f ${DOCKER_COMPOSE_FILE_OVERRIDE} ${profile_control_center_command} up -d"
 else
   docker-compose -f ../../ccloud/environment/docker-compose.yml build
   docker-compose -f ../../ccloud/environment/docker-compose.yml down -v --remove-orphans
   docker-compose -f ../../ccloud/environment/docker-compose.yml ${profile_control_center_command} up -d
+  log "🎓To see the actual properties file, use ../../scripts/get-properties.sh <container>"
   log "⚡If you modify a docker-compose file and want to re-create the container(s), use this command:"
   log "⚡source ../../scripts/utils.sh && docker-compose -f ../../ccloud/environment/docker-compose.yml ${profile_control_center_command} up -d"
 fi
