@@ -80,6 +80,9 @@ then
 fi
 ../../scripts/wait-for-connect-and-controlcenter.sh $@
 
+log "You can use ksqlDB with CLI using:"
+log "docker exec -i ksqldb-cli ksql -u ksqlDBUser -p ksqlDBUser http://ksqldb-server:8088"
+
 display_jmx_info
 
 if [ -z "$DISABLE_CONTROL_CENTER" ]
