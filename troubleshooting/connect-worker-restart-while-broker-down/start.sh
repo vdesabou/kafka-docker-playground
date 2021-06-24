@@ -1,8 +1,8 @@
 #!/bin/bash
 set -e
 
-# force 5.5.4
-export TAG=5.5.4
+# force 5.5.5
+export TAG=5.5.5
 
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
