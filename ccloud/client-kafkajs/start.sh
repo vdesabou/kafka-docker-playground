@@ -23,11 +23,6 @@ else
      exit 1
 fi
 
-set +e
-log "Create topic kafkajs"
-ccloud kafka topic create kafkajs --partitions 6
-set -e
-
 # generate kafka-admin.properties config
 sed -e "s|:BOOTSTRAP_SERVERS:|$BOOTSTRAP_SERVERS|g" \
     -e "s|:CLOUD_KEY:|$CLOUD_KEY|g" \
@@ -38,5 +33,13 @@ sed -e "s|:BOOTSTRAP_SERVERS:|$BOOTSTRAP_SERVERS|g" \
 log "Building docker image"
 docker build -t vdesabou/kafkajs-ccloud-example-docker .
 
+set +e
+docker rm -f kafkajs-ccloud-example-docker
+set -e
 log "Starting producer"
 docker run -i --name kafkajs-ccloud-example-docker vdesabou/kafkajs-ccloud-example-docker node /usr/src/app/producer.js
+
+exit 0
+
+docker exec --privileged --user root kafkajs-ccloud-example-docker sh -c "iptables -A OUTPUT -p tcp --dport 9092 -j DROP"
+docker exec --privileged --user root kafkajs-ccloud-example-docker sh -c "iptables -D OUTPUT -p tcp --dport 9092 -j DROP"
