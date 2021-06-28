@@ -7,3 +7,4 @@ WORKDIR /usr/src/app
 
 # Copy files
 COPY producer.js /usr/src/app
+COPY consumer.js /usr/src/app
