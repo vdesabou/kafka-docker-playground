@@ -28,7 +28,7 @@ const sendMessage = () => {
   return producer
     .send({
       topic,
-      compression: CompressionTypes.GZIP,
+      // compression: CompressionTypes.GZIP,
       messages: Array(getRandomNumber())
         .fill()
         .map(_ => createMessage(getRandomNumber())),
@@ -46,7 +46,7 @@ const run = async () => {
 
   // Producing
   await producer.connect()
-  setInterval(sendMessage, 1000)
+  setInterval(sendMessage, 10)
 }
 
 run().catch(e => console.error(`[example/producer] ${e.message}`, e))
