@@ -4,7 +4,7 @@ const Chance = require('chance')                //npm install chance
 const kafka = new Kafka({
   clientId: 'my-kafkajs-producer',
   brokers: [':BOOTSTRAP_SERVERS:'],
-  connectionTimeout: 3000,
+  connectionTimeout: 20000,
   ssl: true,
   sasl: {
     mechanism: 'plain',
