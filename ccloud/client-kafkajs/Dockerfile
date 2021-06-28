@@ -1,5 +1,5 @@
 FROM node:lts-alpine
-
+RUN apk update && apk upgrade && apk add iptables
 RUN npm install kafkajs chance
 
 # Create app directory
