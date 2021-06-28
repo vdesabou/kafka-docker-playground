@@ -1,6 +1,5 @@
-const { Kafka,logLevel } = require('kafkajs')            //npm install kafkajs
+const { Kafka, CompressionTypes, logLevel } = require('kafkajs')            //npm install kafkajs
 const Chance = require('chance')                //npm install chance
-const chance = new Chance()
 
 const kafka = new Kafka({
   clientId: 'my-kafkajs-producer',
@@ -19,20 +18,23 @@ const producer = kafka.producer()
 const topic = 'kafkajs'
 const admin = kafka.admin()
 
-const produceMessage = async () => {
-    const value = chance.animal();
-    console.log(value);
+const getRandomNumber = () => Math.round(Math.random(10) * 1000)
+const createMessage = num => ({
+  key: `key-${num}`,
+  value: `value-${num}-${new Date().toISOString()}`,
+})
 
-    try {
-      await producer.send({
-          topic,
-          messages: [
-            { value },
-          ],
-        })
-    } catch (error) {
-        console.log(error);
-    }
+const sendMessage = () => {
+  return producer
+    .send({
+      topic,
+      compression: CompressionTypes.GZIP,
+      messages: Array(getRandomNumber())
+        .fill()
+        .map(_ => createMessage(getRandomNumber())),
+    })
+    .then(console.log)
+    .catch(e => console.error(`[example/producer] ${e.message}`, e))
 }
 
 const run = async () => {
@@ -44,7 +46,32 @@ const run = async () => {
 
   // Producing
   await producer.connect()
-  setInterval(produceMessage, 100)
+  setInterval(sendMessage, 1000)
 }
 
-run().catch(console.error)
+run().catch(e => console.error(`[example/producer] ${e.message}`, e))
+
+const errorTypes = ['unhandledRejection', 'uncaughtException']
+const signalTraps = ['SIGTERM', 'SIGINT', 'SIGUSR2']
+
+errorTypes.map(type => {
+  process.on(type, async () => {
+    try {
+      console.log(`process.on ${type}`)
+      await producer.disconnect()
+      process.exit(0)
+    } catch (_) {
+      process.exit(1)
+    }
+  })
+})
+
+signalTraps.map(type => {
+  process.once(type, async () => {
+    try {
+      await producer.disconnect()
+    } finally {
+      process.kill(process.pid, type)
+    }
+  })
+})
