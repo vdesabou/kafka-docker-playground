@@ -1,4 +1,4 @@
-# KafkaJS client (producer) (using Confluent Cloud)
+# KafkaJS client (producer and consumer) (using Confluent Cloud)
 
 ## Objective
 
