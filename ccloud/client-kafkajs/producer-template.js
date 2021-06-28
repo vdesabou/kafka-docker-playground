@@ -1,4 +1,4 @@
-const { Kafka } = require('kafkajs')            //npm install kafkajs
+const { Kafka,logLevel } = require('kafkajs')            //npm install kafkajs
 const Chance = require('chance')                //npm install chance
 const chance = new Chance()
 
@@ -11,11 +11,13 @@ const kafka = new Kafka({
     mechanism: 'plain',
     username: ':CLOUD_KEY:',
     password: ':CLOUD_SECRET:',
+    logLevel: logLevel.DEBUG
   },
 })
 
 const producer = kafka.producer()
 const topic = 'kafkajs'
+const admin = kafka.admin()
 
 const produceMessage = async () => {
     const value = chance.animal();
@@ -34,6 +36,12 @@ const produceMessage = async () => {
 }
 
 const run = async () => {
+  await admin.connect()
+  await admin.createTopics({
+    topics: [{ topic }],
+    waitForLeaders: true,
+  })
+
   // Producing
   await producer.connect()
   setInterval(produceMessage, 100)
