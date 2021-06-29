@@ -1,5 +1,4 @@
 const { Kafka, CompressionTypes, logLevel } = require('kafkajs')            //npm install kafkajs
-const Chance = require('chance')                //npm install chance
 
 const kafka = new Kafka({
   clientId: 'my-kafkajs-producer',
@@ -9,7 +8,6 @@ const kafka = new Kafka({
 
 const producer = kafka.producer()
 const topic = 'kafkajs'
-// const admin = kafka.admin()
 
 const getRandomNumber = () => Math.round(Math.random(10) * 1000)
 const createMessage = num => ({
@@ -31,12 +29,6 @@ const sendMessage = () => {
 }
 
 const run = async () => {
-  // await admin.connect()
-  // await admin.createTopics({
-  //   topics: [{ topic }],
-  //   waitForLeaders: true,
-  // })
-
   // Producing
   await producer.connect()
   setInterval(sendMessage, 1000)
