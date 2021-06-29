@@ -46,7 +46,7 @@ const run = async () => {
 
   // Producing
   await producer.connect()
-  setInterval(sendMessage, 10)
+  setInterval(sendMessage, 1000)
 }
 
 run().catch(e => console.error(`[example/producer] ${e.message}`, e))
