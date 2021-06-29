@@ -102,7 +102,12 @@ log "Searching Azure Search index"
 curl -X GET \
 "https://${AZURE_SEARCH_SERVICE_NAME}.search.windows.net/indexes/hotels-sample-index/docs?api-version=2019-05-06&search=*" \
 -H 'Content-Type: application/json' \
--H "api-key: $AZURE_SEARCH_ADMIN_PRIMARY_KEY" | jq
+-H "api-key: $AZURE_SEARCH_ADMIN_PRIMARY_KEY" | jq > /tmp/result.log  2>&1
+
+cat /tmp/result.log
+grep "Marriott" /tmp/result.log
+grep "HolidayInn" /tmp/result.log
+grep "Motel8" /tmp/result.log
 
 log "Deleting resource group"
 az group delete --name $AZURE_RESOURCE_GROUP --yes --no-wait
