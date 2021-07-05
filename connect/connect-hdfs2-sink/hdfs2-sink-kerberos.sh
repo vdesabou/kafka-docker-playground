@@ -43,7 +43,7 @@ curl -X PUT \
                "hdfs.authentication.kerberos": "true",
                "connect.hdfs.principal": "connect/connect.kerberos-demo.local@EXAMPLE.COM",
                "connect.hdfs.keytab": "/tmp/connect.keytab",
-               "hdfs.namenode.principal": "nn",
+               "hdfs.namenode.principal": "nn/hadoop.kerberos-demo.local@EXAMPLE.COM",
                "confluent.license": "",
                "confluent.topic.bootstrap.servers": "broker:9092",
                "confluent.topic.replication.factor": "1",
