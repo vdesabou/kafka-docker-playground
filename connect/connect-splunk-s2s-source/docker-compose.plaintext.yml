@@ -1,0 +1,14 @@
+---
+version: '3.5'
+services:
+  splunk-uf:
+    image: splunk/universalforwarder:8.1.2
+    hostname: splunk-uf
+    container_name: splunk-uf
+    environment:
+      SPLUNK_START_ARGS: "--accept-license"
+      SPLUNK_PASSWORD: "password"
+
+  connect:
+    environment:
+      CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-splunk-s2s
