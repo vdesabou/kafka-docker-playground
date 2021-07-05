@@ -13,8 +13,8 @@ docker exec hadoop bash -c "echo password | kinit && /usr/local/hadoop/bin/hdfs 
 
 log "Add connect kerberos principal"
 docker exec -i kdc kadmin.local << EOF
-addprinc -randkey connect/connect.kerberos-demo.local@EXAMPLE.COM
-ktadd -k /connect.keytab connect/connect.kerberos-demo.local@EXAMPLE.COM
+addprinc -randkey connect/connect.kerberos.local@EXAMPLE.COM
+ktadd -k /connect.keytab connect/connect.kerberos.local@EXAMPLE.COM
 listprincs
 EOF
 
@@ -33,7 +33,7 @@ curl -X PUT \
                "connector.class":"io.confluent.connect.hdfs.HdfsSinkConnector",
                "tasks.max":"1",
                "topics":"test_hdfs",
-               "store.url":"hdfs://hadoop.kerberos-demo.local:9000",
+               "store.url":"hdfs://hadoop.kerberos.local:9000",
                "flush.size":"3",
                "hadoop.conf.dir":"/etc/hadoop/",
                "partitioner.class":"io.confluent.connect.hdfs.partitioner.FieldPartitioner",
@@ -41,7 +41,7 @@ curl -X PUT \
                "rotate.interval.ms":"120000",
                "logs.dir":"/logs",
                "hdfs.authentication.kerberos": "true",
-               "connect.hdfs.principal": "connect/connect.kerberos-demo.local@EXAMPLE.COM",
+               "connect.hdfs.principal": "connect/connect.kerberos.local@EXAMPLE.COM",
                "connect.hdfs.keytab": "/tmp/connect.keytab",
                "hdfs.namenode.principal": "nn",
                "confluent.license": "",
@@ -69,7 +69,7 @@ docker cp hadoop:/tmp/test_hdfs+0+0000000000+0000000000.avro /tmp/
 docker run -v /tmp:/tmp actions/avro-tools tojson /tmp/test_hdfs+0+0000000000+0000000000.avro
 
 # renew ticket manually:
-# docker exec connect kinit -kt /tmp/connect.keytab connect/connect.kerberos-demo.local
+# docker exec connect kinit -kt /tmp/connect.keytab connect/connect.kerberos.local
 
 log "Creating HDFS Source connector"
 curl -X PUT \
@@ -77,11 +77,11 @@ curl -X PUT \
      --data '{
           "connector.class":"io.confluent.connect.hdfs2.Hdfs2SourceConnector",
           "tasks.max":"1",
-          "store.url":"hdfs://hadoop.kerberos-demo.local:9000",
+          "store.url":"hdfs://hadoop.kerberos.local:9000",
           "hadoop.conf.dir":"/etc/hadoop/",
           "format.class" : "io.confluent.connect.hdfs2.format.avro.AvroFormat",
           "hdfs.authentication.kerberos": "true",
-          "connect.hdfs.principal": "connect/connect.kerberos-demo.local@EXAMPLE.COM",
+          "connect.hdfs.principal": "connect/connect.kerberos.local@EXAMPLE.COM",
           "connect.hdfs.keytab": "/tmp/connect.keytab",
           "hdfs.namenode.principal": "nn",
           "confluent.topic.bootstrap.servers": "broker:9092",
