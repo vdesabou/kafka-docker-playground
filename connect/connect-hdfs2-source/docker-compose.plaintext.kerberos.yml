@@ -5,11 +5,11 @@ services:
   # https://github.com/Knappek/docker-hadoop-secure
   kdc:
     image: sequenceiq/kerberos
-    hostname: kdc.kerberos-demo.local
+    hostname: kdc.kerberos.local
     container_name: kdc
     environment:
       REALM: EXAMPLE.COM
-      DOMAIN_REALM: kdc.kerberos-demo.local
+      DOMAIN_REALM: kdc.kerberos.local
     volumes:
       - ../../connect/connect-hdfs2-source/kerberos/krb5.conf:/etc/krb5.conf
       - /dev/urandom:/dev/random
@@ -20,19 +20,19 @@ services:
     image: knappek/hadoop-secure:2.7.4
     depends_on:
       - kdc
-    hostname: hadoop.kerberos-demo.local
+    hostname: hadoop.kerberos.local
     container_name: hadoop
     environment:
       KRB_REALM: EXAMPLE.COM
-      DOMAIN_REALM: kdc.kerberos-demo.local
-      FQDN: hadoop.kerberos-demo.local
+      DOMAIN_REALM: kdc.kerberos.local
+      FQDN: hadoop.kerberos.local
       KERBEROS_ROOT_USER_PASSWORD: password
     volumes:
       - ../../connect/connect-hdfs2-source/kerberos/krb5.conf:/etc/krb5.conf
       - /etc/localtime:/etc/localtime:ro
 
   connect:
-    hostname: connect.kerberos-demo.local
+    hostname: connect.kerberos.local
     volumes:
       - ../../connect/connect-hdfs2-source/kerberos/krb5.conf:/etc/krb5.conf
       - ../../connect/connect-hdfs2-source/kerberos/core-site.xml:/etc/hadoop/core-site.xml
@@ -41,4 +41,4 @@ services:
 
 networks:
   default:
-    name: kerberos-demo.local
+    name: kerberos.local
