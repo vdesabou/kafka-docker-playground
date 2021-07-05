@@ -43,7 +43,7 @@ curl -X PUT \
                "hdfs.authentication.kerberos": "true",
                "connect.hdfs.principal": "connect/connect.kerberos-demo.local@EXAMPLE.COM",
                "connect.hdfs.keytab": "/tmp/connect.keytab",
-               "hdfs.namenode.principal": "nn/hadoop.kerberos-demo.local@EXAMPLE.COM",
+               "hdfs.namenode.principal": "nn",
                "confluent.license": "",
                "confluent.topic.bootstrap.servers": "broker:9092",
                "confluent.topic.replication.factor": "1",
@@ -52,7 +52,7 @@ curl -X PUT \
                "value.converter.schema.registry.url":"http://schema-registry:8081",
                "schema.compatibility":"BACKWARD"
           }' \
-     http://localhost:8083/connectors/hdfs-sink/config | jq .
+     http://localhost:8083/connectors/hdfs-sink-kerberos/config | jq .
 
 log "Sending messages to topic test_hdfs"
 seq -f "{\"f1\": \"value%g\"}" 10 | docker exec -i connect kafka-avro-console-producer --broker-list broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic test_hdfs --property value.schema='{"type":"record","name":"myrecord","fields":[{"name":"f1","type":"string"}]}'
