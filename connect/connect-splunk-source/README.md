@@ -17,7 +17,7 @@ $ ./splunk.sh
 
 ## Details of what the script is doing
 
-Creating Splunk sink connector
+Creating Splunk source connector
 
 ```bash
 $ curl -X PUT \
@@ -33,7 +33,7 @@ $ curl -X PUT \
                     "confluent.topic.bootstrap.servers": "broker:9092",
                     "confluent.topic.replication.factor": "1"
           }' \
-     http://localhost:8083/connectors/splunk-sink/config | jq .
+     http://localhost:8083/connectors/splunk-source/config | jq .
 ```
 
 Simulate an application sending data to the connector
