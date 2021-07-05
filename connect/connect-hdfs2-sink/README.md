@@ -13,8 +13,13 @@ Note: it also contains Hive integration
 Simply run:
 
 ```
-$ ./hdfs2.sh
+$ ./hdfs2-sink.sh
+```
 
+or with Kerberos:
+
+```
+$ ./hdfs2-sink-kerberos.sh (without Hive support)
 ```
 
 ## Details of what the script is doing
