@@ -36,7 +36,7 @@ log "Configure the UF to monitor the splunk-s2s-test.log file"
 docker exec -i splunk-uf sudo ./bin/splunk add monitor -source /opt/splunkforwarder/splunk-s2s-test.log -auth admin:password
 
 log "Configure the UF to connect to Splunk S2S Source connector"
-docker exec -it splunk-uf sudo ./bin/splunk add forward-server connect:9997
+docker exec -i splunk-uf sudo ./bin/splunk add forward-server connect:9997
 
 sleep 5
 
