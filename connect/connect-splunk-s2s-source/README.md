@@ -57,7 +57,7 @@ docker exec -i splunk-uf sudo ./bin/splunk add monitor -source /opt/splunkforwar
 Configure the UF to connect to Splunk S2S Source connector:
 
 ```bash
-docker exec -it splunk-uf sudo ./bin/splunk add forward-server connect:9997
+docker exec -i splunk-uf sudo ./bin/splunk add forward-server connect:9997
 ```
 
 Verifying topic `splunk-s2s-events`:
