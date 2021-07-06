@@ -21,6 +21,12 @@ Simply run:
 $ ./hdfs3-sink.sh
 ```
 
+or with Kerberos:
+
+```
+$ ./hdfs2-sink-kerberos.sh (without Hive support)
+```
+
 ## Details of what the script is doing
 
 Note in this simple example, if you get into an issue with permissions at the local HDFS level, it may be easiest to unlock the permissions unless you want to debug that more.
