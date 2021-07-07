@@ -8,12 +8,31 @@ ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.ker
 
 sleep 30
 
+# curl --request PUT \
+#   --url http://localhost:8083/admin/loggers/io.confluent.connect.hdfs \
+#   --header 'Accept: application/json' \
+#   --header 'Content-Type: application/json' \
+#   --data '{
+# 	"level": "DEBUG"
+# }'
+
+# curl --request PUT \
+#   --url http://localhost:8083/admin/loggers/org.apache.hadoop.security \
+#   --header 'Accept: application/json' \
+#   --header 'Content-Type: application/json' \
+#   --data '{
+# 	"level": "DEBUG"
+# }'
+
 # Note in this simple example, if you get into an issue with permissions at the local HDFS level, it may be easiest to unlock the permissions unless you want to debug that more.
 docker exec hadoop bash -c "echo password | kinit && /usr/local/hadoop/bin/hdfs dfs -chmod 777  /"
 
 log "Add connect kerberos principal"
 docker exec -i kdc kadmin.local << EOF
 addprinc -randkey connect/connect.kerberos-demo.local@EXAMPLE.COM
+modprinc -maxrenewlife 11days +allow_renewable connect/connect.kerberos-demo.local@EXAMPLE.COM
+modprinc -maxrenewlife 11days krbtgt/EXAMPLE.COM
+modprinc -maxlife 11days connect/connect.kerberos-demo.local@EXAMPLE.COM
 ktadd -k /connect.keytab connect/connect.kerberos-demo.local@EXAMPLE.COM
 listprincs
 EOF
@@ -25,6 +44,11 @@ if [[ "$TAG" == *ubi8 ]] || version_gt $TAG_BASE "5.9.0"
 then
      docker exec -u 0 connect chown appuser:appuser /tmp/connect.keytab
 fi
+
+# log "Calling kinit manually"
+# docker exec connect kinit -kt /tmp/connect.keytab connect/connect.kerberos-demo.local
+# docker exec connect klist
+
 
 log "Creating HDFS Sink connector"
 curl -X PUT \
@@ -41,6 +65,7 @@ curl -X PUT \
                "rotate.interval.ms":"120000",
                "logs.dir":"/logs",
                "hdfs.authentication.kerberos": "true",
+               "kerberos.ticket.renew.period.ms": "60000",
                "connect.hdfs.principal": "connect/connect.kerberos-demo.local@EXAMPLE.COM",
                "connect.hdfs.keytab": "/tmp/connect.keytab",
                "hdfs.namenode.principal": "nn/hadoop.kerberos-demo.local@EXAMPLE.COM",
