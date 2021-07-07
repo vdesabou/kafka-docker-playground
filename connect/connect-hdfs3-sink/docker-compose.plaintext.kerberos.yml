@@ -14,7 +14,7 @@ services:
     entrypoint: /tmp/config.sh
     volumes:
       # krb5.conf is generated from config.sh
-      - ../../connect/connect-hdfs2-sink/kerberos/config.sh:/tmp/config.sh
+      - ../../connect/connect-hdfs3-sink/kerberos/config.sh:/tmp/config.sh
       - /dev/urandom:/dev/random
       - /etc/localtime:/etc/localtime:ro
 
