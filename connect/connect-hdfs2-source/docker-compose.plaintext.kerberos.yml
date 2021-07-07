@@ -10,8 +10,11 @@ services:
     environment:
       REALM: EXAMPLE.COM
       DOMAIN_REALM: kdc.kerberos.local
+    # krb5.conf is generated from config.sh
+    entrypoint: /tmp/config.sh
     volumes:
-      - ../../connect/connect-hdfs2-source/kerberos/krb5.conf:/etc/krb5.conf
+      # krb5.conf is generated from config.sh
+      - ../../connect/connect-hdfs2-sink/kerberos/config.sh:/tmp/config.sh
       - /dev/urandom:/dev/random
       - /etc/localtime:/etc/localtime:ro
 
