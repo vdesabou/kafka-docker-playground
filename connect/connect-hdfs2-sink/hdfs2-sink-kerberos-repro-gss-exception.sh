@@ -4,6 +4,9 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
+# FIXTHIS README !
+# Need to manually modified ./kerberos/krb5.conf and ./keerberos/config.sh with  ticket_lifetime = 60
+
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.kerberos.yml"
 
 sleep 30
@@ -71,7 +74,7 @@ EOF
                     "kerberos.ticket.renew.period.ms": "500",
                     "connect.hdfs.principal": "'"$PRINCIPAL"'",
                     "connect.hdfs.keytab": "'"$KEYTAB"'",
-                    "hdfs.namenode.principal": "nn/_HOST@EXAMPLE.COM",
+                    "hdfs.namenode.principal": "nn/hadoop.kerberos-demo.local@EXAMPLE.COM",
                     "confluent.license": "",
                     "confluent.topic.bootstrap.servers": "broker:9092",
                     "confluent.topic.replication.factor": "1",
@@ -91,15 +94,17 @@ done
 # docker exec connect klist
 
 
-# [2021-07-09 13:30:46,435] INFO Hadoop namenode principal: nn/connect.kerberos-demo.local@EXAMPLE.COM (io.confluent.connect.hdfs.DataWriter)
-# [2021-07-09 13:30:46,439] DEBUG unwrapping token of length:492 (org.apache.hadoop.security.SaslRpcClient)
-# [2021-07-09 13:30:46,446] DEBUG hadoop login (org.apache.hadoop.security.UserGroupInformation)
-# [2021-07-09 13:30:46,446] DEBUG hadoop login commit (org.apache.hadoop.security.UserGroupInformation)
-# [2021-07-09 13:30:46,446] DEBUG using kerberos user:connect4/connect.kerberos-demo.local@EXAMPLE.COM (org.apache.hadoop.security.UserGroupInformation)
-# [2021-07-09 13:30:46,446] DEBUG Using user: "connect4/connect.kerberos-demo.local@EXAMPLE.COM" with name connect4/connect.kerberos-demo.local@EXAMPLE.COM (org.apache.hadoop.security.UserGroupInformation)
-# [2021-07-09 13:30:46,446] DEBUG User entry: "connect4/connect.kerberos-demo.local@EXAMPLE.COM" (org.apache.hadoop.security.UserGroupInformation)
-
-# [2021-07-09 13:32:30,830] WARN Exception encountered while connecting to the server  (org.apache.hadoop.ipc.Client)
+# [2021-07-09 13:49:14,131] DEBUG PrivilegedAction as:connect0/connect.kerberos-demo.local@EXAMPLE.COM (auth:KERBEROS) from:org.apache.hadoop.ipc.Client$Connection.setupIOstreams(Client.java:819) (org.apache.hadoop.security.UserGroupInformation)
+# [2021-07-09 13:49:14,131] DEBUG Sending sasl message state: NEGOTIATE
+#  (org.apache.hadoop.security.SaslRpcClient)
+# [2021-07-09 13:49:14,131] DEBUG Get token info proto:interface org.apache.hadoop.hdfs.protocolPB.ClientNamenodeProtocolPB info:@org.apache.hadoop.security.token.TokenInfo(value=org.apache.hadoop.hdfs.security.token.delegation.DelegationTokenSelector.class) (org.apache.hadoop.security.SaslRpcClient)
+# [2021-07-09 13:49:14,132] DEBUG Get kerberos info proto:interface org.apache.hadoop.hdfs.protocolPB.ClientNamenodeProtocolPB info:@org.apache.hadoop.security.KerberosInfo(clientPrincipal="", serverPrincipal="dfs.namenode.kerberos.principal") (org.apache.hadoop.security.SaslRpcClient)
+# [2021-07-09 13:49:14,132] DEBUG RPC Server's Kerberos principal name for protocol=org.apache.hadoop.hdfs.protocolPB.ClientNamenodeProtocolPB is nn/hadoop.kerberos-demo.local@EXAMPLE.COM (org.apache.hadoop.security.SaslRpcClient)
+# [2021-07-09 13:49:14,132] DEBUG Creating SASL GSSAPI(KERBEROS)  client to authenticate to service at hadoop.kerberos-demo.local (org.apache.hadoop.security.SaslRpcClient)
+# [2021-07-09 13:49:14,132] DEBUG Use KERBEROS authentication for protocol ClientNamenodeProtocolPB (org.apache.hadoop.security.SaslRpcClient)
+# [2021-07-09 13:49:14,137] DEBUG PrivilegedActionException as:connect0/connect.kerberos-demo.local@EXAMPLE.COM (auth:KERBEROS) cause:javax.security.sasl.SaslException: GSS initiate failed [Caused by GSSException: No valid credentials provided (Mechanism level: Failed to find any Kerberos tgt)] (org.apache.hadoop.security.UserGroupInformation)
+# [2021-07-09 13:49:14,138] DEBUG PrivilegedAction as:connect0/connect.kerberos-demo.local@EXAMPLE.COM (auth:KERBEROS) from:org.apache.hadoop.ipc.Client$Connection.handleSaslConnectionFailure(Client.java:734) (org.apache.hadoop.security.UserGroupInformation)
+# [2021-07-09 13:49:14,139] WARN Exception encountered while connecting to the server  (org.apache.hadoop.ipc.Client)
 # javax.security.sasl.SaslException: GSS initiate failed [Caused by GSSException: No valid credentials provided (Mechanism level: Failed to find any Kerberos tgt)]
 # 	at jdk.security.jgss/com.sun.security.sasl.gsskerb.GssKrb5Client.evaluateChallenge(GssKrb5Client.java:222)
 # 	at org.apache.hadoop.security.SaslRpcClient.saslConnect(SaslRpcClient.java:407)
@@ -143,6 +148,7 @@ done
 # 	at java.security.jgss/sun.security.jgss.GSSContextImpl.initSecContext(GSSContextImpl.java:196)
 # 	at jdk.security.jgss/com.sun.security.sasl.gsskerb.GssKrb5Client.evaluateChallenge(GssKrb5Client.java:203)
 # 	... 32 more
+# [2021-07-09 13:49:14,140] DEBUG PrivilegedActionException as:connect0/connect.kerberos-demo.local@EXAMPLE.COM (auth:KERBEROS) cause:java.io.IOException: javax.security.sasl.SaslException: GSS initiate failed [Caused by GSSException: No valid credentials provided (Mechanism level: Failed to find any Kerberos tgt)] (org.apache.hadoop.security.UserGroupInformation)
 
 exit 0
 
