@@ -41,6 +41,7 @@ services:
       - ../../connect/connect-hdfs2-sink/kerberos/core-site.xml:/etc/hadoop/core-site.xml
     environment:
       CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-hdfs
+      #KAFKA_OPTS: -Dsun.security.krb5.debug=true
 
 networks:
   default:
