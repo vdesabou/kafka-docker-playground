@@ -1,0 +1,66 @@
+#!/bin/bash
+
+set -e
+
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
+source ${DIR}/../../scripts/utils.sh
+
+${DIR}/../../environment/2way-ssl/start.sh "${PWD}/docker-compose.2way-ssl.security-plugin.yml"
+
+docker exec schema-registry sr-acl-cli --config /etc/schema-registry/schema-registry.properties --add -s '*' -p read -o SUBJECT_READ
+docker exec schema-registry sr-acl-cli --config /etc/schema-registry/schema-registry.properties --add -s '*' -p write -o SUBJECT_WRITE
+
+# ccloud/schema-registry-security-plugin failing with 5.5.3 #223
+# GLOBAL_SUBJECTS_READ replaced by GLOBAL_READ in CP 6.1.0 and onward
+operations_list="SUBJECT_READ:SUBJECT_WRITE:SUBJECT_DELETE:SUBJECT_COMPATIBILITY_READ:SUBJECT_COMPATIBILITY_WRITE:GLOBAL_COMPATIBILITY_WRITE:GLOBAL_SUBJECTS_READ"
+if version_gt $TAG_BASE "6.0.99"; then
+     operations_list="SUBJECT_READ:SUBJECT_WRITE:SUBJECT_DELETE:SUBJECT_COMPATIBILITY_READ:SUBJECT_COMPATIBILITY_WRITE:GLOBAL_COMPATIBILITY_WRITE:GLOBAL_READ"
+fi
+docker exec schema-registry sr-acl-cli --config /etc/schema-registry/schema-registry.properties --add -s '*' -p admin -o $operations_list
+
+docker exec schema-registry sr-acl-cli --config /etc/schema-registry/schema-registry.properties --list
+
+log "Schema Registry is listening on http://localhost:8081"
+log "-> user:password  |  description"
+log "-> _____________"
+log "-> read:read    |  Global read access (SUBJECT_READ)"
+log "-> write:write  |  Global write access (SUBJECT_WRITE)"
+log "-> admin:admin  |  Global admin access (All operations, i.e $operations_list)"
+
+log "Create topic topic-validation"
+docker exec broker kafka-topics --bootstrap-server broker:9092 --create --topic topic-validation --partitions 1 --replication-factor 2 --command-config /etc/kafka/secrets/client_without_interceptors_2way_ssl.config --config confluent.key.schema.validation=true --config confluent.value.schema.validation=true
+
+log "Describe topic"
+docker exec broker kafka-topics \
+   --describe \
+   --topic topic-validation \
+   --bootstrap-server broker:9092 \
+   --command-config /etc/kafka/secrets/client_without_interceptors_2way_ssl.config
+
+log "Registering a subject with write user"
+docker exec connect curl -X POST \
+   -H "Content-Type: application/vnd.schemaregistry.v1+json" \
+   --cert /etc/kafka/secrets/connect.certificate.pem --key /etc/kafka/secrets/connect.key --tlsv1.2 --cacert /etc/kafka/secrets/snakeoil-ca-1.crt \
+   -u write:write \
+   --data '{ "schema": "[ { \"type\":\"record\", \"name\":\"user\", \"fields\": [ {\"name\":\"userid\",\"type\":\"long\"}, {\"name\":\"username\",\"type\":\"string\"} ]} ]" }' \
+   https://schema-registry:8085/subjects/topic-validation-value/versions
+
+log "Sending a non-Avro record, it should fail"
+docker exec -i connect kafka-console-producer \
+     --topic topic-validation \
+     --broker-list broker:9092 \
+     --producer.config /etc/kafka/secrets/client_without_interceptors_2way_ssl.config << EOF
+{"userid":1,"username":"RODRIGUEZ"}
+EOF
+
+log "Sending a Avro record, it should work"
+docker exec -i connect kafka-avro-console-producer \
+     --topic topic-validation \
+     --broker-list broker:9092 \
+     --property basic.auth.credentials.source=USER_INFO \
+     --property schema.registry.basic.auth.user.info="write:write" \
+     --property schema.registry.url=https://schema-registry:8085 \
+     --property value.schema='{"type":"record","name":"user","fields":[{"name":"userid","type":"long"},{"name":"username","type":"string"}]}' \
+     --producer.config /etc/kafka/secrets/client_without_interceptors_2way_ssl.config << EOF
+{"userid":1,"username":"RODRIGUEZ"}
+EOF
