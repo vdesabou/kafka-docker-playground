@@ -1,4 +1,6 @@
 const { Kafka, CompressionTypes, logLevel } = require('kafkajs')            //npm install kafkajs
+// add timestamps in front of log messages
+require('console-stamp')(console, '[HH:MM:ss.l]');
 
 const kafka = new Kafka({
   clientId: 'my-kafkajs-producer',
