@@ -1,5 +1,4 @@
 const { Kafka, CompressionTypes, logLevel } = require('kafkajs')            //npm install kafkajs
-const Chance = require('chance')                //npm install chance
 
 const kafka = new Kafka({
   clientId: 'my-kafkajs-producer',
@@ -17,6 +16,12 @@ const kafka = new Kafka({
 const producer = kafka.producer()
 const topic = 'kafkajs'
 const admin = kafka.admin()
+
+const { CONNECT, DISCONNECT, REQUEST_TIMEOUT } = producer.events;
+producer.on(CONNECT, e => console.log(`Producer connected at ${e.timestamp}`));
+producer.on(DISCONNECT, e => console.log(`Producer disconnected at ${e.timestamp}`));
+producer.on(REQUEST_TIMEOUT, e => console.log(`Producer request timed out at ${e.timestamp}`, JSON.stringify(e.payload)));
+//producer.logger().setLogLevel(logLevel.DEBUG)
 
 const getRandomNumber = () => Math.round(Math.random(10) * 1000)
 const createMessage = num => ({
@@ -63,8 +68,6 @@ errorTypes.map(type => {
     } catch (_) {
       process.exit(1)
     }
-  })
-})
 
 signalTraps.map(type => {
   process.once(type, async () => {
