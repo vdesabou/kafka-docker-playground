@@ -10,10 +10,10 @@ const kafka = new Kafka({
     username: ':CLOUD_KEY:',
     password: ':CLOUD_SECRET:',
     // logLevel: logLevel.DEBUG,
-    // retry: {
-    //   initialRetryTime: 100,
-    //   retries: 0
-    // }
+    retry: {
+      initialRetryTime: 100,
+      retries: 1
+    }
   },
 })
 
@@ -21,10 +21,11 @@ const producer = kafka.producer()
 const topic = 'kafkajs'
 const admin = kafka.admin()
 
-const { CONNECT, DISCONNECT, REQUEST_TIMEOUT } = producer.events;
+const { CONNECT, DISCONNECT, REQUEST_TIMEOUT, REQUEST_QUEUE_SIZE } = producer.events;
 producer.on(CONNECT, e => console.log(`Producer connected at ${e.timestamp}`));
 producer.on(DISCONNECT, e => console.log(`Producer disconnected at ${e.timestamp}`));
 producer.on(REQUEST_TIMEOUT, e => console.log(`Producer request timed out at ${e.timestamp}`, JSON.stringify(e.payload)));
+producer.on(REQUEST_QUEUE_SIZE, e => console.log(`Request queue size at ${e.timestamp}`, JSON.stringify(e.payload)));
 //producer.logger().setLogLevel(logLevel.DEBUG)
 
 let bigString = '';
@@ -63,7 +64,7 @@ function sendData() {
     topic: topic,
     messages: payload,
     acks: 1,
-    timeout: 30000,
+    timeout: 1000,
   }).then(() => {
     console.log('data sent', {messages: payload.length, duration: new Date() - now});
     outgoingMessages--;
