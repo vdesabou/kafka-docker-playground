@@ -1,0 +1,98 @@
+const { Kafka, CompressionTypes, logLevel } = require('kafkajs')            //npm install kafkajs
+
+const kafka = new Kafka({
+  clientId: 'my-kafkajs-producer',
+  brokers: [':BOOTSTRAP_SERVERS:'],
+  //connectionTimeout: 20000,
+  ssl: true,
+  sasl: {
+    mechanism: 'plain',
+    username: ':CLOUD_KEY:',
+    password: ':CLOUD_SECRET:',
+    // logLevel: logLevel.DEBUG,
+    // retry: {
+    //   initialRetryTime: 100,
+    //   retries: 0
+    // }
+  },
+})
+
+const producer = kafka.producer()
+const topic = 'kafkajs'
+const admin = kafka.admin()
+
+const { CONNECT, DISCONNECT, REQUEST_TIMEOUT } = producer.events;
+producer.on(CONNECT, e => console.log(`Producer connected at ${e.timestamp}`));
+producer.on(DISCONNECT, e => console.log(`Producer disconnected at ${e.timestamp}`));
+producer.on(REQUEST_TIMEOUT, e => console.log(`Producer request timed out at ${e.timestamp}`, JSON.stringify(e.payload)));
+//producer.logger().setLogLevel(logLevel.DEBUG)
+
+let bigString = '';
+for (let i = 0; i < 10_000; i++) {
+	bigString += Math.random().toString(36);
+}
+
+const payload = new Array(10).fill({value: bigString});
+
+var outgoingMessages = 0;
+
+function successCallback(result) {
+  console.log("send() finished ");
+  outgoingMessages--;
+}
+
+function exceptionCallback(result) {
+  // console.error(`[example/producer] ${e.message}`, e)
+  console.log("send() failed!  " + result);
+  outgoingMessages--;
+}
+
+function sendData() {
+  const now = new Date();
+  const used = process.memoryUsage().heapUsed / 1024 / 1024;
+  console.log(`Memory: ${Math.round(used * 100) / 100} MB`);
+  console.log(`outgoingMessages ` + outgoingMessages);
+
+  if(outgoingMessages>100) {
+    console.log(`Refusing message as we have outgoing messages ` + outgoingMessages);
+    return;
+  }
+  outgoingMessages++;
+
+  producer.send({
+		topic: topic,
+    messages: payload,
+		acks: 1,
+		timeout: 30000,
+	}).then(() => {
+		console.log('data sent', {messages: payload.length, duration: new Date() - now});
+    outgoingMessages--;
+	}).catch(e => {
+		console.log('failed to send data', e);
+    outgoingMessages--;
+	});
+}
+
+// const run = async () => {
+//   await admin.connect()
+//   await admin.createTopics({
+//     topics: [{ topic }],
+//     waitForLeaders: true,
+//   })
+
+//   // Producing
+//   await producer.connect()
+//   setInterval(sendMessage, 1000)
+// }
+
+(async function main(){
+  await admin.connect()
+  await admin.createTopics({
+    topics: [{ topic }],
+    waitForLeaders: true,
+  })
+	await producer.connect().catch(e => {
+		log.error("failed to producer.connect()", e);
+	});
+	setInterval(sendData, 1000);
+})().catch(e => {throw e});
