@@ -9,7 +9,9 @@ const kafka = new Kafka({
     mechanism: 'plain',
     username: ':CLOUD_KEY:',
     password: ':CLOUD_SECRET:',
-    // logLevel: logLevel.DEBUG,
+    enforceRequestTimeout: true,
+    requestTimeout: 3000,
+    logLevel: logLevel.DEBUG,
     retry: {
       initialRetryTime: 100,
       retries: 1
@@ -64,7 +66,6 @@ function sendData() {
     topic: topic,
     messages: payload,
     acks: 1,
-    timeout: 1000,
   }).then(() => {
     console.log('data sent', {messages: payload.length, duration: new Date() - now});
     outgoingMessages--;
