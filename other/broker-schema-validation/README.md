@@ -13,6 +13,12 @@ Simply run:
 $ ./2way-ssl.sh
 ```
 
+or
+
+```
+$ ./2way-ssl-and-security-plugin.sh
+```
+
 ## Details of what the script is doing
 
 Schema Registry is configured at broker level:
@@ -26,6 +32,9 @@ Schema Registry is configured at broker level:
       KAFKA_CONFLUENT_SSL_KEYSTORE_LOCATION: /etc/kafka/secrets/kafka.client.keystore.jks
       KAFKA_CONFLUENT_SSL_KEYSTORE_PASSWORD: confluent
       KAFKA_CONFLUENT_SSL_KEY_PASSWORD: confluent
+      # for 2way-ssl-and-security-plugin.sh
+      KAFKA_CONFLUENT_BASIC_AUTH_CREDENTIALS_SOURCE: USER_INFO
+      KAFKA_CONFLUENT_BASIC_AUTH_USER_INFO: 'read:read'
 
   broker2:
     environment:
@@ -35,6 +44,9 @@ Schema Registry is configured at broker level:
       KAFKA_CONFLUENT_SSL_KEYSTORE_LOCATION: /etc/kafka/secrets/kafka.client.keystore.jks
       KAFKA_CONFLUENT_SSL_KEYSTORE_PASSWORD: confluent
       KAFKA_CONFLUENT_SSL_KEY_PASSWORD: confluent
+      # for 2way-ssl-and-security-plugin.sh
+      KAFKA_CONFLUENT_BASIC_AUTH_CREDENTIALS_SOURCE: USER_INFO
+      KAFKA_CONFLUENT_BASIC_AUTH_USER_INFO: 'read:read'
 ```
 
 Create topic topic-validation:
@@ -63,6 +75,8 @@ $ docker exec connect curl -X POST \
    https://schema-registry:8085/subjects/topic-validation-value/versions
 ```
 
+Note: for `2way-ssl-and-security-plugin.sh`, we need to use user `write`
+
 Sending a non-Avro record, it should fail:
 
 ```bash
@@ -85,6 +99,21 @@ Sending a Avro record, it should work:
 $ docker exec -i connect kafka-avro-console-producer \
      --topic topic-validation \
      --broker-list broker:9092 \
+     --property schema.registry.url=https://schema-registry:8085 \
+     --property value.schema='{"type":"record","name":"user","fields":[{"name":"userid","type":"long"},{"name":"username","type":"string"}]}' \
+     --producer.config /etc/kafka/secrets/client_without_interceptors_2way_ssl.config << EOF
+{"userid":1,"username":"RODRIGUEZ"}
+EOF
+```
+
+Note: for `2way-ssl-and-security-plugin.sh`, we need to use user `write`:
+
+```bash
+$ docker exec -i connect kafka-avro-console-producer \
+     --topic topic-validation \
+     --broker-list broker:9092 \
+     --property basic.auth.credentials.source=USER_INFO \
+     --property schema.registry.basic.auth.user.info="write:write" \
      --property schema.registry.url=https://schema-registry:8085 \
      --property value.schema='{"type":"record","name":"user","fields":[{"name":"userid","type":"long"},{"name":"username","type":"string"}]}' \
      --producer.config /etc/kafka/secrets/client_without_interceptors_2way_ssl.config << EOF
