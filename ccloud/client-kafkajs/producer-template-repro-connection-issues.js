@@ -3,7 +3,7 @@ const { Kafka, CompressionTypes, logLevel } = require('kafkajs')            //np
 const kafka = new Kafka({
   clientId: 'my-kafkajs-producer',
   brokers: [':BOOTSTRAP_SERVERS:'],
-  //connectionTimeout: 20000,
+  connectionTimeout: 20000,
   ssl: true,
   sasl: {
     mechanism: 'plain',
@@ -29,7 +29,7 @@ producer.on(REQUEST_TIMEOUT, e => console.log(`Producer request timed out at ${e
 
 let bigString = '';
 for (let i = 0; i < 10_000; i++) {
-	bigString += Math.random().toString(36);
+  bigString += Math.random().toString(36);
 }
 
 const payload = new Array(10).fill({value: bigString});
@@ -60,30 +60,18 @@ function sendData() {
   outgoingMessages++;
 
   producer.send({
-		topic: topic,
+    topic: topic,
     messages: payload,
-		acks: 1,
-		timeout: 30000,
-	}).then(() => {
-		console.log('data sent', {messages: payload.length, duration: new Date() - now});
+    acks: 1,
+    timeout: 30000,
+  }).then(() => {
+    console.log('data sent', {messages: payload.length, duration: new Date() - now});
     outgoingMessages--;
-	}).catch(e => {
-		console.log('failed to send data', e);
+  }).catch(e => {
+    console.log('failed to send data', e);
     outgoingMessages--;
-	});
+  });
 }
-
-// const run = async () => {
-//   await admin.connect()
-//   await admin.createTopics({
-//     topics: [{ topic }],
-//     waitForLeaders: true,
-//   })
-
-//   // Producing
-//   await producer.connect()
-//   setInterval(sendMessage, 1000)
-// }
 
 (async function main(){
   await admin.connect()
@@ -91,8 +79,8 @@ function sendData() {
     topics: [{ topic }],
     waitForLeaders: true,
   })
-	await producer.connect().catch(e => {
-		log.error("failed to producer.connect()", e);
-	});
-	setInterval(sendData, 1000);
+  await producer.connect().catch(e => {
+    log.error("failed to producer.connect()", e);
+  });
+  setInterval(sendData, 1000);
 })().catch(e => {throw e});
