@@ -27,7 +27,7 @@ fi
 sed -e "s|:BOOTSTRAP_SERVERS:|$BOOTSTRAP_SERVERS|g" \
     -e "s|:CLOUD_KEY:|$CLOUD_KEY|g" \
     -e "s|:CLOUD_SECRET:|$CLOUD_SECRET|g" \
-    ${DIR}/producer-template-repro-connection-issues > ${DIR}/producer.js
+    ${DIR}/producer-template-repro-connection-issues.js > ${DIR}/producer.js
 # generate consumer.js
 sed -e "s|:BOOTSTRAP_SERVERS:|$BOOTSTRAP_SERVERS|g" \
     -e "s|:CLOUD_KEY:|$CLOUD_KEY|g" \
