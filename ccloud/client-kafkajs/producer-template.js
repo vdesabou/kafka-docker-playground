@@ -68,6 +68,8 @@ errorTypes.map(type => {
     } catch (_) {
       process.exit(1)
     }
+  })
+})
 
 signalTraps.map(type => {
   process.once(type, async () => {
