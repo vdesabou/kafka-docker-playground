@@ -31,6 +31,7 @@ services:
       KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://broker1:9092
       KAFKA_METRIC_REPORTERS: io.confluent.metrics.reporter.ConfluentMetricsReporter
       CONFLUENT_METRICS_REPORTER_BOOTSTRAP_SERVERS: broker1:9092,broker2:9092,broker3:9092
+      KAFKA_MESSAGE_MAX_BYTES: 10048588
 
   broker2:
     image: confluentinc/${CP_KAFKA_IMAGE}:${TAG}
@@ -46,6 +47,7 @@ services:
       KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://broker2:9092
       KAFKA_METRIC_REPORTERS: io.confluent.metrics.reporter.ConfluentMetricsReporter
       CONFLUENT_METRICS_REPORTER_BOOTSTRAP_SERVERS: broker1:9092,broker2:9092,broker3:9092
+      KAFKA_MESSAGE_MAX_BYTES: 10048588
 
 
   broker3:
@@ -62,6 +64,7 @@ services:
       KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://broker3:9092
       KAFKA_METRIC_REPORTERS: io.confluent.metrics.reporter.ConfluentMetricsReporter
       CONFLUENT_METRICS_REPORTER_BOOTSTRAP_SERVERS: broker1:9092,broker2:9092,broker3:9092
+      KAFKA_MESSAGE_MAX_BYTES: 10048588
 
   control-center:
     image: confluentinc/cp-enterprise-control-center:${TAG}
