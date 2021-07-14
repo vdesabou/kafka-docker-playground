@@ -47,9 +47,10 @@ set +e
 docker rm -f kafkajs-ccloud-producer
 set -e
 log "Starting producer"
-docker run -i --name kafkajs-ccloud-producer vdesabou/kafkajs-ccloud-example-docker node /usr/src/app/producer.js
+docker run -i --name kafkajs-ccloud-producer vdesabou/kafkajs-ccloud-example-docker node /usr/src/app/producer.js > producer.log 2>&1 &
 
-exit 0
+sleep 10
 
 docker exec --privileged --user root kafkajs-ccloud-producer sh -c "iptables -A OUTPUT -p tcp --dport 9092 -j DROP"
-docker exec --privileged --user root kafkajs-ccloud-producer sh -c "iptables -D OUTPUT -p tcp --dport 9092 -j DROP"
+docker exec --privileged --user root kafkajs-ccloud-producer sh -c "iptables -A INPUT -p tcp --dport 9092 -j DROP"
+#docker exec --privileged --user root kafkajs-ccloud-producer sh -c "iptables -D OUTPUT -p tcp --dport 9092 -j DROP"
