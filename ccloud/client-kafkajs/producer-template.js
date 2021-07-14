@@ -7,11 +7,17 @@ const kafka = new Kafka({
   brokers: [':BOOTSTRAP_SERVERS:'],
   connectionTimeout: 20000,
   ssl: true,
+  // logLevel: logLevel.DEBUG,
+  enforceRequestTimeout: true,
+  requestTimeout: 3000,
+  retry: {
+    initialRetryTime: 100,
+    retries: 1
+  },
   sasl: {
     mechanism: 'plain',
     username: ':CLOUD_KEY:',
     password: ':CLOUD_SECRET:',
-    logLevel: logLevel.DEBUG
   },
 })
 
