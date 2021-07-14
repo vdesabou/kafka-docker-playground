@@ -4,20 +4,14 @@ require('console-stamp')(console, '[HH:MM:ss.l]');
 
 const kafka = new Kafka({
   clientId: 'my-kafkajs-producer',
-  brokers: [':BOOTSTRAP_SERVERS:'],
+  brokers: ['broker1:9092','broker2:9092','broker3:9092'],
   connectionTimeout: 20000,
-  // logLevel: logLevel.DEBUG,
   enforceRequestTimeout: true,
   requestTimeout: 3000,
+  //logLevel: logLevel.DEBUG,
   retry: {
     initialRetryTime: 100,
     retries: 1
-  },
-  ssl: true,
-  sasl: {
-    mechanism: 'plain',
-    username: ':CLOUD_KEY:',
-    password: ':CLOUD_SECRET:',
   },
 })
 
