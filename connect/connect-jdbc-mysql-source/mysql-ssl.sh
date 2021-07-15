@@ -29,13 +29,12 @@ docker cp mysql:/var/lib/mysql/client-cert.pem ${PWD}/security/
 
 log "Creating JKS from pem files"
 cd ${PWD}/security/
-if [ -z "$CI" ]
+if [[ "$OSTYPE" == "darwin"* ]]
 then
-    # not running with github actions
     # workaround for issue on linux, see https://github.com/vdesabou/kafka-docker-playground/issues/851#issuecomment-821151962
     chmod -R a+rw .
 else
-    # docker is run as runneradmin user, need to use sudo
+    # on CI, docker is run as runneradmin user, need to use sudo
     ls -lrt
     sudo chmod -R a+rw .
     ls -lrt

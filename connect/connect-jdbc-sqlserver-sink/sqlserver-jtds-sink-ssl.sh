@@ -14,13 +14,12 @@ if ! version_gt $TAG_BASE "5.9.0"; then
 fi
 
 cd ${DIR}/ssl
-if [ -z "$CI" ]
+if [[ "$OSTYPE" == "darwin"* ]]
 then
-    # not running with github actions
     # workaround for issue on linux, see https://github.com/vdesabou/kafka-docker-playground/issues/851#issuecomment-821151962
     chmod -R a+rw .
 else
-    # docker is run as runneradmin user, need to use sudo
+    # on CI, docker is run as runneradmin user, need to use sudo
     ls -lrt
     sudo chmod -R a+rw .
     ls -lrt
@@ -34,13 +33,12 @@ rm -f mssql.key
 log "Create a self-signed certificate"
 docker run --rm -v $PWD:/tmp vdesabou/kafka-docker-playground-connect:${CONNECT_TAG} openssl req -x509 -nodes -newkey rsa:2048 -subj '/CN=sqlserver' -keyout /tmp/mssql.key -out /tmp/mssql.pem -days 365
 
-if [ -z "$CI" ]
+if [[ "$OSTYPE" == "darwin"* ]]
 then
-    # not running with github actions
     # workaround for issue on linux, see https://github.com/vdesabou/kafka-docker-playground/issues/851#issuecomment-821151962
     chmod -R a+rw .
 else
-    # docker is run as runneradmin user, need to use sudo
+    # on CI, docker is run as runneradmin user, need to use sudo
     ls -lrt
     sudo chmod -R a+rw .
     ls -lrt
@@ -50,13 +48,12 @@ log "Creating JKS from pem files"
 rm -f truststore.jks
 docker run --rm -v $PWD:/tmp vdesabou/kafka-docker-playground-connect:${CONNECT_TAG} keytool -importcert -alias MSSQLCACert -noprompt -file /tmp/mssql.pem -keystore /tmp/truststore.jks -storepass confluent
 
-if [ -z "$CI" ]
+if [[ "$OSTYPE" == "darwin"* ]]
 then
-    # not running with github actions
     # workaround for issue on linux, see https://github.com/vdesabou/kafka-docker-playground/issues/851#issuecomment-821151962
     chmod -R a+rw .
 else
-    # docker is run as runneradmin user, need to use sudo
+    # on CI, docker is run as runneradmin user, need to use sudo
     ls -lrt
     sudo chmod -R a+rw .
     ls -lrt

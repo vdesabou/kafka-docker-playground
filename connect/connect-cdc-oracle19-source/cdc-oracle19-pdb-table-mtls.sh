@@ -102,13 +102,12 @@ docker exec oracle bash -c "orapki wallet add -wallet /tmp/server -trusted_cert 
 docker exec oracle bash -c "orapki wallet add -wallet /tmp/server -user_cert -cert /tmp/server/cert.txt -pwd WalletPasswd123"
 
 cd ${DIR}/mtls
-if [ -z "$CI" ]
+if [[ "$OSTYPE" == "darwin"* ]]
 then
-    # not running with github actions
     # workaround for issue on linux, see https://github.com/vdesabou/kafka-docker-playground/issues/851#issuecomment-821151962
     chmod -R a+rw .
 else
-    # docker is run as runneradmin user, need to use sudo
+    # on CI, docker is run as runneradmin user, need to use sudo
     ls -lrt
     sudo chmod -R a+rw .
     ls -lrt
@@ -125,13 +124,12 @@ docker cp csr.txt oracle:/tmp/csr.txt
 docker exec oracle bash -c "orapki cert create -wallet /tmp/root -request /tmp/csr.txt -cert /tmp/cert.txt -validity 3650 -pwd WalletPasswd123"
 # import the test CA's certificate:
 docker cp oracle:/tmp/root/b64certificate.txt b64certificate.txt
-if [ -z "$CI" ]
+if [[ "$OSTYPE" == "darwin"* ]]
 then
-    # not running with github actions
     # workaround for issue on linux, see https://github.com/vdesabou/kafka-docker-playground/issues/851#issuecomment-821151962
     chmod -R a+rw .
 else
-    # docker is run as runneradmin user, need to use sudo
+    # on CI, docker is run as runneradmin user, need to use sudo
     ls -lrt
     sudo chmod -R a+rw .
     ls -lrt
@@ -139,13 +137,12 @@ fi
 docker run --rm -v $PWD:/tmp vdesabou/kafka-docker-playground-connect:${CONNECT_TAG} keytool -import -v -noprompt -alias testroot -file /tmp/b64certificate.txt -keystore /tmp/keystore.jks -storepass 'welcome123'
 # Import the signed certificate
 docker cp oracle:/tmp/cert.txt cert.txt
-if [ -z "$CI" ]
+if [[ "$OSTYPE" == "darwin"* ]]
 then
-    # not running with github actions
     # workaround for issue on linux, see https://github.com/vdesabou/kafka-docker-playground/issues/851#issuecomment-821151962
     chmod -R a+rw .
 else
-    # docker is run as runneradmin user, need to use sudo
+    # on CI, docker is run as runneradmin user, need to use sudo
     ls -lrt
     sudo chmod -R a+rw .
     ls -lrt
