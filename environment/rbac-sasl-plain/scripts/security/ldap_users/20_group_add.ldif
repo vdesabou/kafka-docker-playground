@@ -7,3 +7,73 @@ dn: cn=KafkaDevelopers,ou=groups,{{ LDAP_BASE_DN }}
 changetype: modify
 add: memberuid
 memberuid: cn=barnie,ou=users,{{ LDAP_BASE_DN }}
+
+dn: cn=KafkaDevelopers,ou=groups,{{ LDAP_BASE_DN }}
+changetype: modify
+add: memberuid
+memberuid: cn=charlie,ou=users,{{ LDAP_BASE_DN }}
+
+dn: cn=KafkaDevelopers,ou=groups,{{ LDAP_BASE_DN }}
+changetype: modify
+add: memberuid
+memberuid: cn=mds,ou=users,{{ LDAP_BASE_DN }}
+
+dn: cn=KafkaDevelopers,ou=groups,{{ LDAP_BASE_DN }}
+changetype: modify
+add: memberuid
+memberuid: cn=superUser,ou=users,{{ LDAP_BASE_DN }}
+
+dn: cn=KafkaDevelopers,ou=groups,{{ LDAP_BASE_DN }}
+changetype: modify
+add: memberuid
+memberuid: cn=connectAdmin,ou=users,{{ LDAP_BASE_DN }}
+
+dn: cn=KafkaDevelopers,ou=groups,{{ LDAP_BASE_DN }}
+changetype: modify
+add: memberuid
+memberuid: cn=connectorSA,ou=users,{{ LDAP_BASE_DN }}
+
+dn: cn=KafkaDevelopers,ou=groups,{{ LDAP_BASE_DN }}
+changetype: modify
+add: memberuid
+memberuid: cn=connectorSubmitter,ou=users,{{ LDAP_BASE_DN }}
+
+dn: cn=KafkaDevelopers,ou=groups,{{ LDAP_BASE_DN }}
+changetype: modify
+add: memberuid
+memberuid: cn=schemaregistryUser,ou=users,{{ LDAP_BASE_DN }}
+
+dn: cn=KafkaDevelopers,ou=groups,{{ LDAP_BASE_DN }}
+changetype: modify
+add: memberuid
+memberuid: cn=ksqlDBAdmin,ou=users,{{ LDAP_BASE_DN }}
+
+dn: cn=KafkaDevelopers,ou=groups,{{ LDAP_BASE_DN }}
+changetype: modify
+add: memberuid
+memberuid: cn=ksqlDBUser,ou=users,{{ LDAP_BASE_DN }}
+
+dn: cn=KafkaDevelopers,ou=groups,{{ LDAP_BASE_DN }}
+changetype: modify
+add: memberuid
+memberuid: cn=controlcenterAdmin,ou=users,{{ LDAP_BASE_DN }}
+
+dn: cn=KafkaDevelopers,ou=groups,{{ LDAP_BASE_DN }}
+changetype: modify
+add: memberuid
+memberuid: cn=restAdmin,ou=users,{{ LDAP_BASE_DN }}
+
+dn: cn=KafkaDevelopers,ou=groups,{{ LDAP_BASE_DN }}
+changetype: modify
+add: memberuid
+memberuid: cn=appSA,ou=users,{{ LDAP_BASE_DN }}
+
+dn: cn=KafkaDevelopers,ou=groups,{{ LDAP_BASE_DN }}
+changetype: modify
+add: memberuid
+memberuid: cn=badApp,ou=users,{{ LDAP_BASE_DN }}
+
+dn: cn=KafkaDevelopers,ou=groups,{{ LDAP_BASE_DN }}
+changetype: modify
+add: memberuid
+memberuid: cn=clientListen,ou=users,{{ LDAP_BASE_DN }}
