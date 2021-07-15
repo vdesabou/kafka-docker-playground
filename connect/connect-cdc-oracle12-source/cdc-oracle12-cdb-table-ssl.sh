@@ -85,13 +85,12 @@ docker exec oracle bash -c "orapki wallet add -wallet /tmp/server -trusted_cert 
 docker exec oracle bash -c "orapki wallet add -wallet /tmp/server -user_cert -cert /tmp/server/cert.txt -pwd WalletPasswd123"
 
 cd ${DIR}/ssl
-if [ -z "$CI" ]
+if [[ "$OSTYPE" == "darwin"* ]]
 then
-    # not running with github actions
     # workaround for issue on linux, see https://github.com/vdesabou/kafka-docker-playground/issues/851#issuecomment-821151962
     chmod -R a+rw .
 else
-    # docker is run as runneradmin user, need to use sudo
+    # on CI, docker is run as runneradmin user, need to use sudo
     ls -lrt
     sudo chmod -R a+rw .
     ls -lrt
@@ -99,13 +98,12 @@ fi
 log "Create a JKS truststore"
 rm -f truststore.jks
 docker cp oracle:/tmp/root/b64certificate.txt b64certificate.txt
-if [ -z "$CI" ]
+if [[ "$OSTYPE" == "darwin"* ]]
 then
-    # not running with github actions
     # workaround for issue on linux, see https://github.com/vdesabou/kafka-docker-playground/issues/851#issuecomment-821151962
     chmod -R a+rw .
 else
-    # docker is run as runneradmin user, need to use sudo
+    # on CI, docker is run as runneradmin user, need to use sudo
     ls -lrt
     sudo chmod -R a+rw .
     ls -lrt

@@ -26,13 +26,12 @@ fi
 
 mkdir -p ${DIR}/ssl
 cd ${DIR}/ssl
-if [ -z "$CI" ]
+if [[ "$OSTYPE" == "darwin"* ]]
 then
-    # not running with github actions
     # workaround for issue on linux, see https://github.com/vdesabou/kafka-docker-playground/issues/851#issuecomment-821151962
     chmod -R a+rw .
 else
-    # docker is run as runneradmin user, need to use sudo
+    # on CI, docker is run as runneradmin user, need to use sudo
     ls -lrt
     sudo chmod -R a+rw .
     ls -lrt
@@ -54,13 +53,12 @@ docker run --rm -v $PWD:/tmp vdesabou/kafka-docker-playground-connect:${CONNECT_
 log "Generate truststore.jks"
 docker run --rm -v $PWD:/tmp vdesabou/kafka-docker-playground-connect:${CONNECT_TAG} keytool -noprompt -keystore /tmp/truststore.jks -alias CARoot -import -file /tmp/ca.crt -storepass confluent -keypass confluent
 
-if [ -z "$CI" ]
+if [[ "$OSTYPE" == "darwin"* ]]
 then
-    # not running with github actions
     # workaround for issue on linux, see https://github.com/vdesabou/kafka-docker-playground/issues/851#issuecomment-821151962
     chmod -R a+rw .
 else
-    # docker is run as runneradmin user, need to use sudo
+    # on CI, docker is run as runneradmin user, need to use sudo
     ls -lrt
     sudo chmod -R a+rw .
     ls -lrt

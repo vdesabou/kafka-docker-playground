@@ -29,8 +29,14 @@ fi
 OLDDIR=$PWD
 
 cd ${OLDDIR}/../../environment/ssl_kerberos/security
-# workaround for issue on linux, see https://github.com/vdesabou/kafka-docker-playground/issues/851#issuecomment-821151962
-chmod -R a+rw .
+if [[ "$OSTYPE" == "darwin"* ]]
+then
+    # workaround for issue on linux, see https://github.com/vdesabou/kafka-docker-playground/issues/851#issuecomment-821151962
+    chmod -R a+rw .
+else
+    # workaround for issue on linux, see https://github.com/vdesabou/kafka-docker-playground/issues/851#issuecomment-821151962
+    sudo chmod -R a+rw .
+fi
 log "🔐 Generate keys and certificates used for SSL"
 docker run --rm -v $PWD:/tmp vdesabou/kafka-docker-playground-connect:${CONNECT_TAG} /tmp/certs-create.sh
 cd ${OLDDIR}/../../environment/ssl_kerberos

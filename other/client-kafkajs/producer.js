@@ -5,14 +5,14 @@ require('console-stamp')(console, '[HH:MM:ss.l]');
 const kafka = new Kafka({
   clientId: 'my-kafkajs-producer',
   brokers: ['broker1:9092','broker2:9092','broker3:9092'],
-  connectionTimeout: 20000,
-  enforceRequestTimeout: true,
-  requestTimeout: 3000,
-  //logLevel: logLevel.DEBUG,
-  retry: {
-    initialRetryTime: 100,
-    retries: 1
-  },
+  //connectionTimeout: 20000,
+  // enforceRequestTimeout: true,
+  // requestTimeout: 3000,
+  // //logLevel: logLevel.DEBUG,
+  // retry: {
+  //   initialRetryTime: 100,
+  //   retries: 1
+  // },
 })
 
 const producer = kafka.producer()
