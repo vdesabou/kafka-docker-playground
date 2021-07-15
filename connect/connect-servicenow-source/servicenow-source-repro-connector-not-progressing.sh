@@ -25,9 +25,9 @@ then
      exit 1
 fi
 
-log "Make sure to execute steps in https://github.com/vdesabou/kafka-docker-playground/blob/414eefd55b89b1d868e57e116172b3c25e129e1b/connect/connect-servicenow-source/repro-connector-not-progressing.md before running this test"
+log "Make sure to execute steps in https://github.com/vdesabou/kafka-docker-playground/blob/master/connect/connect-servicenow-source/repro-connector-not-progressing/repro-connector-not-progressing.md before running this test"
 
-log "Is it done ?"
+log "Once done, type to continue"
 check_if_continue
 
 
