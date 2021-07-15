@@ -29,8 +29,8 @@ LDAP server (using docker image `osixia/openldap:1.3.0`) is loading at startup `
 The users in the example are:
 
 * `broker` : for brokers (groups are not used in the example for authorization of brokers, but broker authorization could also be configured using groups if required)
-* alice and barnie are in `Kafka Developers` group
-* charlie is **not** in `Kafka Developers` group
+* alice and barnie are in `KafkaDevelopers` group
+* charlie is **not** in `KafkaDevelopers` group
 
 Activate the Plugin:
 
@@ -107,10 +107,10 @@ Result:
 org.apache.kafka.common.errors.TopicAuthorizationException: Not authorized to access topics: [testtopic]
 ```
 
-Authorize group `Group:Kafka Developers`
+Authorize group `Group:KafkaDevelopers`
 
 ```bash
-$ docker exec broker kafka-acls --authorizer-properties zookeeper.connect=zookeeper:2181 --add --topic=testtopic --producer --allow-principal="Group:Kafka Developers"
+$ docker exec broker kafka-acls --authorizer-properties zookeeper.connect=zookeeper:2181 --add --topic=testtopic --producer --allow-principal="Group:KafkaDevelopers"
 ```
 
 Rerun producer for `alice`: SHOULD BE SUCCESS
@@ -123,7 +123,7 @@ EOF
 
 Run console consumer without access to consumer group: SHOULD FAIL
 
-Note: Consume should fail authorization since neither user alice nor the group Kafka Developers that alice belongs to has authorization to consume using the group test-consumer-group
+Note: Consume should fail authorization since neither user alice nor the group KafkaDevelopers that alice belongs to has authorization to consume using the group test-consumer-group
 
 ```bash
 $ docker exec broker kafka-console-consumer --bootstrap-server broker:9092 --topic testtopic --from-beginning --group test-consumer-group --consumer.config /service/kafka/users/alice.properties --max-messages 1
@@ -140,7 +140,7 @@ org.apache.kafka.common.errors.GroupAuthorizationException: Not authorized to ac
 Authorize group and rerun consumer
 
 ```bash
-$ docker exec broker kafka-acls --authorizer-properties zookeeper.connect=zookeeper:2181 --add --topic=testtopic --group test-consumer-group --allow-principal="Group:Kafka Developers"
+$ docker exec broker kafka-acls --authorizer-properties zookeeper.connect=zookeeper:2181 --add --topic=testtopic --group test-consumer-group --allow-principal="Group:KafkaDevelopers"
 
 $ docker exec broker kafka-console-consumer --bootstrap-server broker:9092 --topic testtopic --from-beginning --group test-consumer-group --consumer.config /service/kafka/users/alice.properties --max-messages 1
 ```
@@ -177,13 +177,13 @@ For reference, listing ACLs:
 $ docker exec broker kafka-acls --bootstrap-server broker:9092 --list --command-config /service/kafka/users/kafka.properties
 
 Current ACLs for resource `ResourcePattern(resourceType=GROUP, name=test-consumer-group, patternType=LITERAL)`:
-        (principal=Group:Kafka Developers, host=*, operation=ALL, permissionType=ALLOW)
+        (principal=Group:KafkaDevelopers, host=*, operation=ALL, permissionType=ALLOW)
 
 Current ACLs for resource `ResourcePattern(resourceType=TOPIC, name=testtopic, patternType=LITERAL)`:
-        (principal=Group:Kafka Developers, host=*, operation=CREATE, permissionType=ALLOW)
-        (principal=Group:Kafka Developers, host=*, operation=WRITE, permissionType=ALLOW)
-        (principal=Group:Kafka Developers, host=*, operation=DESCRIBE, permissionType=ALLOW)
-        (principal=Group:Kafka Developers, host=*, operation=ALL, permissionType=ALLOW)
+        (principal=Group:KafkaDevelopers, host=*, operation=CREATE, permissionType=ALLOW)
+        (principal=Group:KafkaDevelopers, host=*, operation=WRITE, permissionType=ALLOW)
+        (principal=Group:KafkaDevelopers, host=*, operation=DESCRIBE, permissionType=ALLOW)
+        (principal=Group:KafkaDevelopers, host=*, operation=ALL, permissionType=ALLOW)
 ```
 
 ## Credits

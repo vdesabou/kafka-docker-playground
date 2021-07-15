@@ -1,6 +1,6 @@
-dn: cn=Kafka Developers,ou=groups,{{ LDAP_BASE_DN }}
+dn: cn=KafkaDevelopers,ou=groups,{{ LDAP_BASE_DN }}
 objectClass: top
 objectClass: posixGroup
-cn: Kafka Developers
+cn: KafkaDevelopers
 gidNumber: 5000
 
