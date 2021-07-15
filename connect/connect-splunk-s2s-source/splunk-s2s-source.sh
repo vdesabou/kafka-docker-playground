@@ -43,7 +43,7 @@ sleep 5
 log "Verifying topic splunk-s2s-events"
 set +e
 # rely on timeout command
-timeout 10 docker exec connect kafka-console-consumer -bootstrap-server broker:9092 --topic splunk-s2s-events --from-beginning > /tmp/result.log  2>&1
+timeout 20 docker exec connect kafka-console-consumer -bootstrap-server broker:9092 --topic splunk-s2s-events --from-beginning > /tmp/result.log  2>&1
 set -e
 grep "log event 1" /tmp/result.log
 grep "log event 2" /tmp/result.log
