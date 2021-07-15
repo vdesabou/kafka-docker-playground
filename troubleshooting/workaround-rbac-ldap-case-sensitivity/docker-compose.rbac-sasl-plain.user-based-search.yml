@@ -12,3 +12,4 @@ services:
       KAFKA_LDAP_USER_OBJECT_CLASS: inetOrgPerson
       KAFKA_LDAP_USER_MEMBEROF_ATTRIBUTE: memberOf
       KAFKA_LDAP_USER_MEMBEROF_ATTRIBUTE_PATTERN: "cn=(.*),ou=groups,.*"
+      KAFKA_LOG4J_LOGGERS: "io.confluent.rest-utils=DEBUG,io.confluent.rbacapi=DEBUG,io.confluent.tokenapi=DEBUG,io.confluent.security.auth=DEBUG,io.confluent.security.store=DEBUG,io.confluent.common.security.jetty=DEBUG"
