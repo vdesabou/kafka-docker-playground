@@ -65,8 +65,8 @@ docker exec -i broker kafka-console-producer --broker-list broker:9092 --topic t
 message Alice
 EOF
 
-log "Authorize group Group:Kafka Developers and rerun producer for alice: SHOULD BE SUCCESS"
-docker exec broker kafka-acls --authorizer-properties zookeeper.connect=zookeeper:2181 --add --topic=testtopic --producer --allow-principal="Group:Kafka Developers"
+log "Authorize group Group:KafkaDevelopers and rerun producer for alice: SHOULD BE SUCCESS"
+docker exec broker kafka-acls --authorizer-properties zookeeper.connect=zookeeper:2181 --add --topic=testtopic --producer --allow-principal="Group:KafkaDevelopers"
 
 sleep 1
 
@@ -75,11 +75,11 @@ message Alice
 EOF
 
 log "Run console consumer without access to consumer group: SHOULD FAIL"
-# Consume should fail authorization since neither user alice nor the group Kafka Developers that alice belongs to has authorization to consume using the group test-consumer-group
+# Consume should fail authorization since neither user alice nor the group KafkaDevelopers that alice belongs to has authorization to consume using the group test-consumer-group
 timeout 60 docker exec broker kafka-console-consumer --bootstrap-server broker:9092 --topic testtopic --from-beginning --group test-consumer-group --consumer.config /service/kafka/users/alice.properties --max-messages 1
 
 log "Authorize group and rerun consumer"
-docker exec broker kafka-acls --authorizer-properties zookeeper.connect=zookeeper:2181 --add --topic=testtopic --group test-consumer-group --allow-principal="Group:Kafka Developers"
+docker exec broker kafka-acls --authorizer-properties zookeeper.connect=zookeeper:2181 --add --topic=testtopic --group test-consumer-group --allow-principal="Group:KafkaDevelopers"
 timeout 60 docker exec broker kafka-console-consumer --bootstrap-server broker:9092 --topic testtopic --from-beginning --group test-consumer-group --consumer.config /service/kafka/users/alice.properties --max-messages 1
 
 log "Run console producer with authorized user barnie (barnie is in group): SHOULD BE SUCCESS"
