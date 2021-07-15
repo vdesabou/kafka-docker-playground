@@ -41,3 +41,6 @@ docker exec -i connect kafka-avro-console-producer \
      --producer.config /etc/kafka/secrets/client_without_interceptors_2way_ssl.config << EOF
 {"userid":1,"username":"RODRIGUEZ"}
 EOF
+
+log "Verify we have the record"
+docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic topic-validation --from-beginning --max-messages 1 --property schema.registry.url=https://schema-registry:8085 --consumer.config /etc/kafka/secrets/client_without_interceptors_2way_ssl.config
