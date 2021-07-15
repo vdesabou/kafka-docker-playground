@@ -1,0 +1,14 @@
+---
+version: '3.5'
+services:
+
+  broker:
+    environment:
+      # https://docs.confluent.io/platform/current/security/ldap-authorizer/configuration.html#ldap-search-by-users
+      # How to locate users and groups
+      KAFKA_LDAP_SEARCH_MODE: USERS
+      KAFKA_LDAP_USER_SEARCH_BASE: ou=users,dc=confluentdemo,dc=io
+      KAFKA_LDAP_USER_NAME_ATTRIBUTE: uid
+      KAFKA_LDAP_USER_OBJECT_CLASS: inetOrgPerson
+      KAFKA_LDAP_USER_MEMBEROF_ATTRIBUTE: memberOf
+      KAFKA_LDAP_USER_MEMBEROF_ATTRIBUTE_PATTERN: "cn=(.*),ou=groups,.*"
