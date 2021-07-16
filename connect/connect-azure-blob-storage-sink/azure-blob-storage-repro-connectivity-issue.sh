@@ -61,20 +61,22 @@ curl -X PUT \
                     "azblob.account.name": "'"$AZURE_ACCOUNT_NAME"'",
                     "azblob.account.key": "'"$AZURE_ACCOUNT_KEY"'",
                     "azblob.container.name": "'"$AZURE_CONTAINER_NAME"'",
+                    "retry.backoff.ms": "30000",
                     "format.class": "io.confluent.connect.azure.blob.format.avro.AvroFormat",
                     "confluent.license": "",
                     "confluent.topic.bootstrap.servers": "broker:9092",
-                    "confluent.topic.replication.factor": "1"
+                    "confluent.topic.replication.factor": "1",
+                    "consumer.override.max.poll.interval.ms": "60000"
           }' \
      http://localhost:8083/connectors/azure-blob-sink/config | jq .
 
 sleep 30
 
 log "Block communication to Azure"
-docker exec --privileged --user root connect bash -c "iptables -D OUTPUT -p tcp --dport 443 -j DROP"
+docker exec --privileged --user root connect bash -c "iptables -A OUTPUT -p tcp --dport 443 -j DROP"
 
 log "Sending messages to topic blob_topic"
-seq -f "{\"f1\": \"value%g\"}" 10 | docker exec -i connect kafka-avro-console-producer --broker-list broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic blob_topic --property value.schema='{"type":"record","name":"myrecord","fields":[{"name":"f1","type":"string"}]}'
+seq -f "{\"f1\": \"value%g\"}" 550 | docker exec -i connect kafka-avro-console-producer --broker-list broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic blob_topic --property value.schema='{"type":"record","name":"myrecord","fields":[{"name":"f1","type":"string"}]}'
 
 sleep 10
 
