@@ -25,6 +25,9 @@ services:
     command: ["hdfs", "namenode"]
     volumes:
         - ../../connect/connect-hdfs2-sink/ha-kerberos/krb5.conf:/opt/launcher/plugins/011_kerberos/krb5.conf
+        - ../../connect/connect-hdfs2-sink/ha-kerberos/installer.sh:/opt/launcher/plugins/005_installer/installer.sh
+        - ../../connect/connect-hdfs2-sink/hadoop-2.7.4.tar.gz:/opt/download/hadoop.tar.gz
+
   namenode2:
     image: flokkr/hadoop:latest
     hostname: namenode2.kerberos-demo.local
@@ -41,6 +44,8 @@ services:
     command: ["hdfs", "namenode"]
     volumes:
         - ../../connect/connect-hdfs2-sink/ha-kerberos/krb5.conf:/opt/launcher/plugins/011_kerberos/krb5.conf
+        - ../../connect/connect-hdfs2-sink/ha-kerberos/installer.sh:/opt/launcher/plugins/005_installer/installer.sh
+        - ../../connect/connect-hdfs2-sink/hadoop-2.7.4.tar.gz:/opt/download/hadoop.tar.gz
 
   journal1:
     image: flokkr/hadoop:latest
@@ -55,6 +60,8 @@ services:
     command: ["hdfs", "journalnode"]
     volumes:
         - ../../connect/connect-hdfs2-sink/ha-kerberos/krb5.conf:/opt/launcher/plugins/011_kerberos/krb5.conf
+        - ../../connect/connect-hdfs2-sink/ha-kerberos/installer.sh:/opt/launcher/plugins/005_installer/installer.sh
+        - ../../connect/connect-hdfs2-sink/hadoop-2.7.4.tar.gz:/opt/download/hadoop.tar.gz
 
   journal2:
     image: flokkr/hadoop:latest
@@ -69,6 +76,8 @@ services:
     command: ["hdfs", "journalnode"]
     volumes:
         - ../../connect/connect-hdfs2-sink/ha-kerberos/krb5.conf:/opt/launcher/plugins/011_kerberos/krb5.conf
+        - ../../connect/connect-hdfs2-sink/ha-kerberos/installer.sh:/opt/launcher/plugins/005_installer/installer.sh
+        - ../../connect/connect-hdfs2-sink/hadoop-2.7.4.tar.gz:/opt/download/hadoop.tar.gz
 
   journal3:
     image: flokkr/hadoop:latest
@@ -83,6 +92,8 @@ services:
         # HADOOP_OPTS: "-Djava.net.preferIPv4Stack=true -Dsun.security.krb5.debug=true -Dsun.security.spnego.debug"
     volumes:
         - ../../connect/connect-hdfs2-sink/ha-kerberos/krb5.conf:/opt/launcher/plugins/011_kerberos/krb5.conf
+        - ../../connect/connect-hdfs2-sink/ha-kerberos/installer.sh:/opt/launcher/plugins/005_installer/installer.sh
+        - ../../connect/connect-hdfs2-sink/hadoop-2.7.4.tar.gz:/opt/download/hadoop.tar.gz
 
   datanode:
     image: flokkr/hadoop:latest
@@ -95,9 +106,11 @@ services:
       - ../../connect/connect-hdfs2-sink/ha-kerberos/config
     environment:
         SLEEP_SECONDS: 50
-        # HADOOP_OPTS: "-Djava.net.preferIPv4Stack=true -Dsun.security.krb5.debug=true -Dsun.security.spnego.debug"
+        HADOOP_OPTS: "-Djava.net.preferIPv4Stack=true -Dsun.security.krb5.debug=true -Dsun.security.spnego.debug"
     volumes:
         - ../../connect/connect-hdfs2-sink/ha-kerberos/krb5.conf:/opt/launcher/plugins/011_kerberos/krb5.conf
+        - ../../connect/connect-hdfs2-sink/ha-kerberos/installer.sh:/opt/launcher/plugins/005_installer/installer.sh
+        - ../../connect/connect-hdfs2-sink/hadoop-2.7.4.tar.gz:/opt/download/hadoop.tar.gz
 
   resourcemanager:
     image: flokkr/hadoop:latest
@@ -112,6 +125,8 @@ services:
         - ../../connect/connect-hdfs2-sink/ha-kerberos/config
     volumes:
         - ../../connect/connect-hdfs2-sink/ha-kerberos/krb5.conf:/opt/launcher/plugins/011_kerberos/krb5.conf
+        - ../../connect/connect-hdfs2-sink/ha-kerberos/installer.sh:/opt/launcher/plugins/005_installer/installer.sh
+        - ../../connect/connect-hdfs2-sink/hadoop-2.7.4.tar.gz:/opt/download/hadoop.tar.gz
 
   activator:
     image: flokkr/hadoop:latest
@@ -124,6 +139,9 @@ services:
       - ../../connect/connect-hdfs2-sink/ha-kerberos/config
     environment:
         SLEEP_SECONDS: 60
+    volumes:
+      - ../../connect/connect-hdfs2-sink/ha-kerberos/installer.sh:/opt/launcher/plugins/005_installer/installer.sh
+      - ../../connect/connect-hdfs2-sink/hadoop-2.7.4.tar.gz:/opt/download/hadoop.tar.gz
 
   connect:
     hostname: connect.kerberos-demo.local
