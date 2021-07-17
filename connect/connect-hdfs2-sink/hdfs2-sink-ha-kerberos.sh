@@ -12,8 +12,8 @@ fi
 
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.ha-kerberos.yml"
 
-log "Wait 90 seconds while hadoop is installing"
-sleep 90
+log "Wait 60 seconds while hadoop is installing"
+sleep 60
 
 # Note in this simple example, if you get into an issue with permissions at the local HDFS level, it may be easiest to unlock the permissions unless you want to debug that more.
 docker exec namenode1 bash -c "kinit -kt /opt/hadoop/etc/hadoop/nn.keytab nn/namenode1.kerberos-demo.local && /opt/hadoop/bin/hdfs dfs -chmod 777  /"
@@ -51,7 +51,7 @@ curl -X PUT \
                "rotate.interval.ms":"120000",
                "logs.dir":"/logs",
                "hdfs.authentication.kerberos": "true",
-               "kerberos.ticket.renew.period.ms": "600000",
+               "kerberos.ticket.renew.period.ms": "60000",
                "connect.hdfs.principal": "connect/connect.kerberos-demo.local@EXAMPLE.COM",
                "connect.hdfs.keytab": "/tmp/connect.keytab",
                "hdfs.namenode.principal": "nn/namenode1.kerberos-demo.local@EXAMPLE.COM",
