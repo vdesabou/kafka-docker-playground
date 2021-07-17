@@ -8,7 +8,7 @@ services:
     hostname: krb5.kerberos-demo.local
     container_name: krb5
     volumes:
-    - ../../connect/connect-hdfs3-sink/ha-kerberos/krb5.conf:/opt/launcher/plugins/011_kerberos/krb5.conf
+    - ../../connect/connect-hdfs3-sink/ha-kerberos/krb5.conf:/etc/krb5.conf
 
   namenode1:
     image: flokkr/hadoop:latest
