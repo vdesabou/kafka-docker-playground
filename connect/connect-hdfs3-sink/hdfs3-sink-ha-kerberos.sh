@@ -67,6 +67,6 @@ docker exec namenode1 bash -c "kinit -kt /opt/hadoop/etc/hadoop/nn.keytab nn/nam
 
 log "Getting one of the avro files locally and displaying content with avro-tools"
 docker exec namenode1 bash -c "kinit -kt /opt/hadoop/etc/hadoop/nn.keytab nn/namenode1.kerberos-demo.local && /opt/hadoop/bin/hadoop fs -copyToLocal /topics/test_hdfs/f1=value1/test_hdfs+0+0000000000+0000000000.avro /tmp"
-docker cp hadoop:/tmp/test_hdfs+0+0000000000+0000000000.avro /tmp/
+docker cp namenode1:/tmp/test_hdfs+0+0000000000+0000000000.avro /tmp/
 
 docker run -v /tmp:/tmp actions/avro-tools tojson /tmp/test_hdfs+0+0000000000+0000000000.avro
