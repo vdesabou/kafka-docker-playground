@@ -8,7 +8,7 @@ services:
     hostname: krb5.kerberos-demo.local
     container_name: krb5
     volumes:
-    - ../../connect/connect-hdfs2-sink/ha-kerberos/krb5.conf:/opt/launcher/plugins/011_kerberos/krb5.conf
+    - ../../connect/connect-hdfs2-sink/ha-kerberos/krb5.conf:/etc/krb5.conf
 
   namenode1:
     image: flokkr/hadoop:latest
@@ -21,7 +21,7 @@ services:
     environment:
         ENSURE_NAMENODE_DIR: "/tmp/hadoop-hadoop/dfs/name"
         SLEEP_SECONDS: 20
-        # HADOOP_OPTS: "-Djava.net.preferIPv4Stack=true -Dsun.security.krb5.debug=true -Dsun.security.spnego.debug"
+        # HADOOP_OPTS: "-Djava.net.preferIPv4Stack=true -Dsun.security.krb5.debug=true -Dsun.security.spnego.debug -Dsun.security.krb5.disableReferrals=true -Djdk.security.allowNonCaAnchor=true"
     command: ["hdfs", "namenode"]
     volumes:
         - ../../connect/connect-hdfs2-sink/ha-kerberos/krb5.conf:/opt/launcher/plugins/011_kerberos/krb5.conf
@@ -40,7 +40,7 @@ services:
         ENSURE_STANDBY_NAMENODE_DIR: "/tmp/hadoop-hadoop/dfs/name"
         #ENSURE_NAMENODE_CLUSTERID: "sh"
         SLEEP_SECONDS: 40
-        # HADOOP_OPTS: "-Djava.net.preferIPv4Stack=true -Dsun.security.krb5.debug=true -Dsun.security.spnego.debug"
+        # HADOOP_OPTS: "-Djava.net.preferIPv4Stack=true -Dsun.security.krb5.debug=true -Dsun.security.spnego.debug -Dsun.security.krb5.disableReferrals=true -Djdk.security.allowNonCaAnchor=true"
     command: ["hdfs", "namenode"]
     volumes:
         - ../../connect/connect-hdfs2-sink/ha-kerberos/krb5.conf:/opt/launcher/plugins/011_kerberos/krb5.conf
@@ -56,7 +56,7 @@ services:
     env_file:
       - ../../connect/connect-hdfs2-sink/ha-kerberos/config
     #environment:
-        # HADOOP_OPTS: "-Djava.net.preferIPv4Stack=true -Dsun.security.krb5.debug=true -Dsun.security.spnego.debug"
+        # HADOOP_OPTS: "-Djava.net.preferIPv4Stack=true -Dsun.security.krb5.debug=true -Dsun.security.spnego.debug -Dsun.security.krb5.disableReferrals=true -Djdk.security.allowNonCaAnchor=true"
     command: ["hdfs", "journalnode"]
     volumes:
         - ../../connect/connect-hdfs2-sink/ha-kerberos/krb5.conf:/opt/launcher/plugins/011_kerberos/krb5.conf
@@ -72,7 +72,7 @@ services:
     env_file:
       - ../../connect/connect-hdfs2-sink/ha-kerberos/config
     #environment:
-        # HADOOP_OPTS: "-Djava.net.preferIPv4Stack=true -Dsun.security.krb5.debug=true -Dsun.security.spnego.debug"
+        # HADOOP_OPTS: "-Djava.net.preferIPv4Stack=true -Dsun.security.krb5.debug=true -Dsun.security.spnego.debug -Dsun.security.krb5.disableReferrals=true -Djdk.security.allowNonCaAnchor=true"
     command: ["hdfs", "journalnode"]
     volumes:
         - ../../connect/connect-hdfs2-sink/ha-kerberos/krb5.conf:/opt/launcher/plugins/011_kerberos/krb5.conf
@@ -89,7 +89,7 @@ services:
       - ../../connect/connect-hdfs2-sink/ha-kerberos/config
     command: ["hdfs", "journalnode"]
     #environment:
-        # HADOOP_OPTS: "-Djava.net.preferIPv4Stack=true -Dsun.security.krb5.debug=true -Dsun.security.spnego.debug"
+         # HADOOP_OPTS: "-Djava.net.preferIPv4Stack=true -Dsun.security.krb5.debug=true -Dsun.security.spnego.debug -Dsun.security.krb5.disableReferrals=true -Djdk.security.allowNonCaAnchor=true"
     volumes:
         - ../../connect/connect-hdfs2-sink/ha-kerberos/krb5.conf:/opt/launcher/plugins/011_kerberos/krb5.conf
         - ../../connect/connect-hdfs2-sink/ha-kerberos/installer.sh:/opt/launcher/plugins/005_installer/installer.sh
@@ -106,7 +106,7 @@ services:
       - ../../connect/connect-hdfs2-sink/ha-kerberos/config
     environment:
         SLEEP_SECONDS: 50
-        HADOOP_OPTS: "-Djava.net.preferIPv4Stack=true -Dsun.security.krb5.debug=true -Dsun.security.spnego.debug"
+        # HADOOP_OPTS: "-Djava.net.preferIPv4Stack=true -Dsun.security.krb5.debug=true -Dsun.security.spnego.debug -Dsun.security.krb5.disableReferrals=true -Djdk.security.allowNonCaAnchor=true"
     volumes:
         - ../../connect/connect-hdfs2-sink/ha-kerberos/krb5.conf:/opt/launcher/plugins/011_kerberos/krb5.conf
         - ../../connect/connect-hdfs2-sink/ha-kerberos/installer.sh:/opt/launcher/plugins/005_installer/installer.sh
