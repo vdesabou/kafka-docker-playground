@@ -46,6 +46,8 @@ services:
     image: flokkr/hadoop:latest
     hostname: journal1.kerberos-demo.local
     container_name: journal1
+    depends_on:
+      - krb5
     env_file:
       - ../../connect/connect-hdfs3-sink/ha-kerberos/config
     #environment:
@@ -58,6 +60,8 @@ services:
     image: flokkr/hadoop:latest
     hostname: journal2.kerberos-demo.local
     container_name: journal2
+    depends_on:
+      - krb5
     env_file:
       - ../../connect/connect-hdfs3-sink/ha-kerberos/config
     #environment:
@@ -70,6 +74,8 @@ services:
     image: flokkr/hadoop:latest
     hostname: journal3.kerberos-demo.local
     container_name: journal3
+    depends_on:
+      - krb5
     env_file:
       - ../../connect/connect-hdfs3-sink/ha-kerberos/config
     command: ["hdfs", "journalnode"]
@@ -83,6 +89,8 @@ services:
     command: ["hdfs", "datanode"]
     hostname: datanode.kerberos-demo.local
     container_name: datanode
+    depends_on:
+      - krb5
     env_file:
       - ../../connect/connect-hdfs3-sink/ha-kerberos/config
     environment:
@@ -95,6 +103,8 @@ services:
     image: flokkr/hadoop:latest
     hostname: resourcemanager.kerberos-demo.local
     container_name: resourcemanager
+    depends_on:
+      - krb5
     command: ["yarn", "resourcemanager"]
     ports:
         - 8088:8088
@@ -107,6 +117,8 @@ services:
     image: flokkr/hadoop:latest
     hostname: activator.kerberos-demo.local
     container_name: activator
+    depends_on:
+      - krb5
     command: ["hdfs", "haadmin", "-transitionToActive", "nn1"]
     env_file:
       - ../../connect/connect-hdfs3-sink/ha-kerberos/config
