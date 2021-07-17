@@ -32,6 +32,7 @@ CAPACITY-SCHEDULER.XML_yarn.scheduler.capacity.queue-mappings-override.enable=fa
 CORE-SITE.XML_dfs.data.transfer.protection=authentication
 CORE-SITE.XML_hadoop.security.authentication=kerberos
 CORE-SITE.XML_hadoop.security.authorization=true
+CORE-SITE.XML_hadoop.rpc.protection=privacy
 CORE-SITE.XML_hadoop.security.auth_to_local=RULE:[2:$1@$0](.*)s/.*/root/
 
 HDFS-SITE.XML_dfs.replication=3
@@ -47,6 +48,7 @@ HDFS-SITE.XML_dfs.ha.automatic-failover.enabled=false
 HDFS-SITE.XML_dfs.namenode.shared.edits.dir=qjournal://journal1.kerberos-demo.local:8485;journal2.kerberos-demo.local:8485;journal3.kerberos-demo.local:8485/sh
 
 HDFS-SITE.XML_dfs.data.transfer.protection=authentication
+HDFS-SITE.XML_dfs.dfs.encrypt.data.transfer=true
 HDFS-SITE.XML_dfs.http.policy=HTTP_AND_HTTPS
 HDFS-SITE.XML_dfs.block.access.token.enable=true
 HDFS-SITE.XML_dfs.block.access.key.update.interval=5
