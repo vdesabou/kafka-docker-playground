@@ -119,6 +119,10 @@ docker run -v /tmp:/tmp actions/avro-tools tojson /tmp/test_hdfs+0+0000000000+00
 
 wait_for_gss_exception
 
+# https://bugs.openjdk.java.net/browse/JDK-8186576 ????
+# fixed normally in 8u242-b08, but https://bugs.openjdk.java.net/browse/JDK-8239188 says openjdk8u252
+# we use here 1.8.0_242-b20
+
 # Removed and destroyed the expired Ticket
 # Destroyed KerberosTicket
 # Found ticket for connect/connect.kerberos-demo.local@EXAMPLE.COM to go to nn/hadoop.kerberos-demo.local@EXAMPLE.COM expiring on Sat Jul 17 16:04:11 GMT 2021
