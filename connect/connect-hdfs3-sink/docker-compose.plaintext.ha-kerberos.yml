@@ -119,7 +119,7 @@ services:
     container_name: activator
     depends_on:
       - krb5
-    command: ["hdfs", "haadmin", "-transitionToActive", "nn1"]
+    command: kinit -kt /opt/hadoop/etc/hadoop/nn.keytab nn/activator.kerberos-demo.local;hdfs haadmin -transitionToActive nn1
     env_file:
       - ../../connect/connect-hdfs3-sink/ha-kerberos/config
     environment:
@@ -129,7 +129,8 @@ services:
     hostname: connect.kerberos-demo.local
     volumes:
       - ../../connect/connect-hdfs3-sink/ha-kerberos/krb5.conf:/etc/krb5.conf
-      #- ../../connect/connect-hdfs3-sink/kerberos/core-site.xml:/etc/hadoop/core-site.xml
+      - ../../connect/connect-hdfs3-sink/ha-kerberos/core-site.xml:/opt/hadoop/etc/hadoop/core-site.xml
+      - ../../connect/connect-hdfs3-sink/ha-kerberos/hdfs-site.xml:/opt/hadoop/etc/hadoop/hdfs-site.xml
     environment:
       CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-hdfs3
 
