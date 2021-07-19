@@ -15,6 +15,7 @@ services:
     volumes:
       # krb5.conf is generated from config.sh
       - ../../connect/connect-hdfs2-sink/kerberos-repro-gss-exception/config.sh:/tmp/config.sh
+      - ../../connect/connect-hdfs2-sink/kerberos-repro-gss-exception/kdc.conf:/var/kerberos/krb5kdc/kdc.conf
       - /dev/urandom:/dev/random
       - /etc/localtime:/etc/localtime:ro
 
@@ -37,6 +38,8 @@ services:
   connect:
     build:
       context: ../../connect/connect-hdfs2-sink/kerberos-repro-gss-exception/
+      args:
+        TAG: ${TAG}
     hostname: connect.kerberos-demo.local
     volumes:
       - ../../connect/connect-hdfs2-sink/kerberos-repro-gss-exception/krb5.conf:/etc/krb5.conf
