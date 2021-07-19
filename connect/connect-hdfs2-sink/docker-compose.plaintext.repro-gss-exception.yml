@@ -40,6 +40,7 @@ services:
       context: ../../connect/connect-hdfs2-sink/kerberos-repro-gss-exception/
       args:
         TAG: ${TAG}
+        CONNECTOR_TAG: ${CONNECTOR_TAG}
     hostname: connect.kerberos-demo.local
     volumes:
       - ../../connect/connect-hdfs2-sink/kerberos-repro-gss-exception/krb5.conf:/etc/krb5.conf
