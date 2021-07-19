@@ -4,9 +4,6 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
-then
-fi
-
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.ha-kerberos.yml"
 
 log "Wait 90 seconds while hadoop is installing"
