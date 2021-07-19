@@ -9,6 +9,8 @@ services:
     container_name: krb5
     volumes:
     - ../../connect/connect-hdfs2-sink/ha-kerberos/krb5.conf:/etc/krb5.conf
+    # see fork https://github.com/vdesabou/issuer to avoid KrbException: Message stream modified (41) (https://stackoverflow.com/a/68212311/2381999)
+    - ../../connect/connect-hdfs2-sink/ha-kerberos/issuer:/root/issuer
 
   namenode1:
     image: flokkr/hadoop:latest
