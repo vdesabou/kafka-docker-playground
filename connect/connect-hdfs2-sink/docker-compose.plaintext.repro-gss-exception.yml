@@ -35,6 +35,8 @@ services:
       - /etc/localtime:/etc/localtime:ro
 
   connect:
+    build:
+      context: ../../connect/connect-hdfs2-sink/kerberos-repro-gss-exception/
     hostname: connect.kerberos-demo.local
     volumes:
       - ../../connect/connect-hdfs2-sink/kerberos-repro-gss-exception/krb5.conf:/etc/krb5.conf
