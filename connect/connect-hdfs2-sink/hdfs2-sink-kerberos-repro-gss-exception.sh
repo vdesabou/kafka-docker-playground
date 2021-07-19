@@ -1,9 +1,6 @@
 #!/bin/bash
 set -e
 
-export TAG="5.4.0-1-ubi8"
-export CONNECTOR_TAG="10.0.6"
-
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
@@ -27,9 +24,10 @@ function wait_for_gss_exception () {
      log "The problem has been reproduced !"
 }
 
-log "Forcing TAG 5.4.0-1-ubi8 in order to use OpenJDK Runtime Environment (Zulu 8.44.0.11-CA-linux64) (build 1.8.0_242-b20)"
-
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.repro-gss-exception.yml"
+
+log "Java version used on connect:"
+docker exec -i connect java -version
 
 sleep 30
 
@@ -52,12 +50,13 @@ curl --request PUT \
 # Note in this simple example, if you get into an issue with permissions at the local HDFS level, it may be easiest to unlock the permissions unless you want to debug that more.
 docker exec hadoop bash -c "echo password | kinit && /usr/local/hadoop/bin/hdfs dfs -chmod 777  /"
 
+# https://serverfault.com/a/133631
 log "Add connect kerberos principal"
 docker exec -i kdc kadmin.local << EOF
 addprinc -randkey connect/connect.kerberos-demo.local@EXAMPLE.COM
-modprinc -maxrenewlife 11days +allow_renewable connect/connect.kerberos-demo.local@EXAMPLE.COM
-modprinc -maxrenewlife 11days krbtgt/EXAMPLE.COM
-modprinc -maxlife 11days connect/connect.kerberos-demo.local@EXAMPLE.COM
+modprinc -maxrenewlife 120days +allow_renewable connect/connect.kerberos-demo.local@EXAMPLE.COM
+modprinc -maxrenewlife 120days krbtgt/EXAMPLE.COM
+modprinc -maxlife 120days connect/connect.kerberos-demo.local@EXAMPLE.COM
 ktadd -k /connect.keytab connect/connect.kerberos-demo.local@EXAMPLE.COM
 listprincs
 EOF
@@ -118,67 +117,84 @@ docker cp hadoop:/tmp/test_hdfs+0+0000000000+0000000000.avro /tmp/
 
 docker run -v /tmp:/tmp actions/avro-tools tojson /tmp/test_hdfs+0+0000000000+0000000000.avro
 
+
 wait_for_gss_exception
 
-# https://bugs.openjdk.java.net/browse/JDK-8186576 ????
-# fixed normally in 8u242-b08, but https://bugs.openjdk.java.net/browse/JDK-8239188 says openjdk8u252
-# we use here 1.8.0_242-b20
+# With:
 
-# Removed and destroyed the expired Ticket
-# Destroyed KerberosTicket
-# Found ticket for connect/connect.kerberos-demo.local@EXAMPLE.COM to go to nn/hadoop.kerberos-demo.local@EXAMPLE.COM expiring on Sat Jul 17 16:04:11 GMT 2021
-# Removed and destroyed the expired Ticket
-# Destroyed KerberosTicket
+#  ticket_lifetime = 168h 0m 0s
+#  renew_lifetime = 90d
 
-# [2021-07-17 15:52:19,203] WARN Failed to renew lease for [DFSClient_NONMAPREDUCE_-1471448326_56] for 291 seconds.  Will retry shortly ... (org.apache.hadoop.hdfs.LeaseRenewer)
-# java.io.IOException: Failed on local exception: java.io.IOException: Couldn't setup connection for connect/connect.kerberos-demo.local@EXAMPLE.COM to hadoop.kerberos-demo.local/172.20.0.4:9000; Host Details : local host is: "connect.kerberos-demo.local/172.20.0.7"; destination host is: "hadoop.kerberos-demo.local":9000;
-#         at org.apache.hadoop.net.NetUtils.wrapException(NetUtils.java:776)
-#         at org.apache.hadoop.ipc.Client.call(Client.java:1479)
-#         at org.apache.hadoop.ipc.Client.call(Client.java:1412)
-#         at org.apache.hadoop.ipc.ProtobufRpcEngine$Invoker.invoke(ProtobufRpcEngine.java:229)
-#         at com.sun.proxy.$Proxy49.renewLease(Unknown Source)
-#         at org.apache.hadoop.hdfs.protocolPB.ClientNamenodeProtocolTranslatorPB.renewLease(ClientNamenodeProtocolTranslatorPB.java:590)
-#         at sun.reflect.GeneratedMethodAccessor23.invoke(Unknown Source)
-#         at sun.reflect.DelegatingMethodAccessorImpl.invoke(DelegatingMethodAccessorImpl.java:43)
-#         at java.lang.reflect.Method.invoke(Method.java:498)
-#         at org.apache.hadoop.io.retry.RetryInvocationHandler.invokeMethod(RetryInvocationHandler.java:191)
-#         at org.apache.hadoop.io.retry.RetryInvocationHandler.invoke(RetryInvocationHandler.java:102)
-#         at com.sun.proxy.$Proxy50.renewLease(Unknown Source)
-#         at org.apache.hadoop.hdfs.DFSClient.renewLease(DFSClient.java:892)
-#         at org.apache.hadoop.hdfs.LeaseRenewer.renew(LeaseRenewer.java:423)
-#         at org.apache.hadoop.hdfs.LeaseRenewer.run(LeaseRenewer.java:448)
-#         at org.apache.hadoop.hdfs.LeaseRenewer.access$700(LeaseRenewer.java:71)
-#         at org.apache.hadoop.hdfs.LeaseRenewer$1.run(LeaseRenewer.java:304)
-#         at java.lang.Thread.run(Thread.java:748)
-# Caused by: java.io.IOException: Couldn't setup connection for connect/connect.kerberos-demo.local@EXAMPLE.COM to hadoop.kerberos-demo.local/172.20.0.4:9000
-#         at org.apache.hadoop.ipc.Client$Connection$1.run(Client.java:679)
-#         at java.security.AccessController.doPrivileged(Native Method)
-#         at javax.security.auth.Subject.doAs(Subject.java:422)
-#         at org.apache.hadoop.security.UserGroupInformation.doAs(UserGroupInformation.java:1698)
-#         at org.apache.hadoop.ipc.Client$Connection.handleSaslConnectionFailure(Client.java:650)
-#         at org.apache.hadoop.ipc.Client$Connection.setupIOstreams(Client.java:737)
-#         at org.apache.hadoop.ipc.Client$Connection.access$2900(Client.java:375)
-#         at org.apache.hadoop.ipc.Client.getConnection(Client.java:1528)
-#         at org.apache.hadoop.ipc.Client.call(Client.java:1451)
-#         ... 16 more
-# Caused by: javax.security.sasl.SaslException: GSS initiate failed [Caused by GSSException: No valid credentials provided (Mechanism level: Failed to find any Kerberos tgt)]
-#         at com.sun.security.sasl.gsskerb.GssKrb5Client.evaluateChallenge(GssKrb5Client.java:211)
-#         at org.apache.hadoop.security.SaslRpcClient.saslConnect(SaslRpcClient.java:414)
-#         at org.apache.hadoop.ipc.Client$Connection.setupSaslConnection(Client.java:560)
-#         at org.apache.hadoop.ipc.Client$Connection.access$1900(Client.java:375)
-#         at org.apache.hadoop.ipc.Client$Connection$2.run(Client.java:729)
-#         at org.apache.hadoop.ipc.Client$Connection$2.run(Client.java:725)
-#         at java.security.AccessController.doPrivileged(Native Method)
-#         at javax.security.auth.Subject.doAs(Subject.java:422)
-#         at org.apache.hadoop.security.UserGroupInformation.doAs(UserGroupInformation.java:1698)
-#         at org.apache.hadoop.ipc.Client$Connection.setupIOstreams(Client.java:725)
-#         ... 19 more
-# Caused by: GSSException: No valid credentials provided (Mechanism level: Failed to find any Kerberos tgt)
-#         at sun.security.jgss.krb5.Krb5InitCredential.getInstance(Krb5InitCredential.java:162)
-#         at sun.security.jgss.krb5.Krb5MechFactory.getCredentialElement(Krb5MechFactory.java:122)
-#         at sun.security.jgss.krb5.Krb5MechFactory.getMechanismContext(Krb5MechFactory.java:189)
-#         at sun.security.jgss.GSSManagerImpl.getMechanismContext(GSSManagerImpl.java:224)
-#         at sun.security.jgss.GSSContextImpl.initSecContext(GSSContextImpl.java:212)
-#         at sun.security.jgss.GSSContextImpl.initSecContext(GSSContextImpl.java:179)
-#         at com.sun.security.sasl.gsskerb.GssKrb5Client.evaluateChallenge(GssKrb5Client.java:192)
-#         ... 28 more
+# Forwardable Ticket true
+# Forwarded Ticket false
+# Proxiable Ticket false
+# Proxy Ticket false
+# Postdated Ticket false
+# Renewable Ticket false
+# Initial Ticket false
+# Auth Time = Mon Jul 19 11:46:13 GMT 2021
+# Start Time = Mon Jul 19 11:46:14 GMT 2021
+# End Time = Tue Jul 20 11:46:13 GMT 2021    <--------- One day because of https://stackoverflow.com/questions/38555244/how-do-you-set-the-kerberos-ticket-lifetime-from-java ?
+# Renew Till = null
+# Client Addresses  Null
+# >>> KrbApReq: APOptions are 00100000 00000000 00000000 00000000
+# >>> EType: sun.security.krb5.internal.crypto.Aes256CtsHmacSha1EType
+# Krb5Context setting mySeqNumber to: 750598037
+# Created InitSecContextToken:
+
+
+# [root@connect appuser]# klist -f
+# Ticket cache: FILE:/tmp/krb5cc_0
+# Default principal: connect/connect.kerberos-demo.local@EXAMPLE.COM
+
+# Valid starting     Expires            Service principal
+# 07/19/21 11:49:51  07/20/21 11:49:51  krbtgt/EXAMPLE.COM@EXAMPLE.COM
+#         renew until 07/26/21 11:49:51, Flags: FRI
+
+
+
+
+# With:
+
+#  ticket_lifetime = 60
+#  renew_lifetime = 90d
+
+# or :
+
+#  ticket_lifetime = 60
+#  renew_lifetime = 10d
+
+
+# Forwardable Ticket true
+# Forwarded Ticket false
+# Proxiable Ticket false
+# Proxy Ticket false
+# Postdated Ticket false
+# Renewable Ticket false
+# Initial Ticket false
+# Auth Time = Mon Jul 19 12:00:59 GMT 2021
+# Start Time = Mon Jul 19 12:01:00 GMT 2021
+# End Time = Tue Jul 20 12:00:59 GMT 2021 --------> 1 day
+# Renew Till = null
+# Client Addresses  Null
+
+
+# With:
+
+#  ticket_lifetime = 60
+#  renew_lifetime = 604800
+
+
+# Forwardable Ticket true
+# Forwarded Ticket false
+# Proxiable Ticket false
+# Proxy Ticket false
+# Postdated Ticket false
+# Renewable Ticket false
+# Initial Ticket false
+# Auth Time = Mon Jul 19 12:57:45 GMT 2021
+# Start Time = Mon Jul 19 12:57:49 GMT 2021
+# End Time = Mon Jul 19 12:59:45 GMT 2021
+# Renew Till = null
+# Client Addresses  Null
+# >>> KrbApReq: APOptions are 00100000 00000000 00000000 00000000
