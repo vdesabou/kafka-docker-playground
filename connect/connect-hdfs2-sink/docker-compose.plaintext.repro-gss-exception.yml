@@ -21,7 +21,7 @@ services:
 
   # https://github.com/Knappek/docker-hadoop-secure
   hadoop:
-    image: knappek/hadoop-secure:2.7.4
+    image: vdesabou/hadoop-secure:2.7.3
     depends_on:
       - kdc
     hostname: hadoop.kerberos-demo.local
