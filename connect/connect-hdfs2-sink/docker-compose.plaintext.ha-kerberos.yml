@@ -119,8 +119,6 @@ services:
     depends_on:
       - krb5
     command: ["yarn", "resourcemanager"]
-    ports:
-        - 8088:8088
     env_file:
         - ../../connect/connect-hdfs2-sink/ha-kerberos/config
     volumes:
