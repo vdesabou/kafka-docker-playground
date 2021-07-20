@@ -24,6 +24,8 @@ services:
         ENSURE_NAMENODE_DIR: "/tmp/hadoop-hadoop/dfs/name"
         SLEEP_SECONDS: 20
         HADOOP_OPTS: "-Djava.net.preferIPv4Stack=true -Dsun.security.krb5.debug=true -Dsun.security.spnego.debug"
+        #KRB5_TRACE: /tmp/kinit.log
+        #HADOOP_JAAS_DEBUG: "true"
     command: ["hdfs", "namenode"]
     volumes:
         - ../../connect/connect-hdfs2-sink/ha-kerberos-repro-gss-exception/krb5.conf:/opt/launcher/plugins/011_kerberos/krb5.conf
