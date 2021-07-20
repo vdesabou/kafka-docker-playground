@@ -1,10 +1,16 @@
 #!/bin/bash
 set -e
 
-export CONNECTOR_TAG=10.0.1
+export CONNECTOR_TAG=10.0.6
 
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
+
+if [ ! -f ${DIR}/ha-kerberos-repro-gss-exception/jdk-8u201-linux-x64.rpm ]
+then
+     log "${DIR}/ha-kerberos-repro-gss-exception/jdk-8u201-linux-x64.rpm is missing, download it from Oracle!"
+     exit 1
+fi
 
 function wait_for_gss_exception () {
      CONNECT_CONTAINER=connect
@@ -65,7 +71,6 @@ docker exec namenode1 bash -c "kinit -kt /opt/hadoop/etc/hadoop/nn.keytab nn/nam
 log "Add connect kerberos principal"
 docker exec -i krb5 kadmin.local << EOF
 addprinc -randkey connect/connect.kerberos-demo.local@EXAMPLE.COM
-modprinc -maxrenewlife 604800 +allow_renewable connect/connect.kerberos-demo.local@EXAMPLE.COM
 modprinc -maxrenewlife 604800 +allow_renewable krbtgt/EXAMPLE.COM
 modprinc -maxrenewlife 604800 +allow_renewable krbtgt/EXAMPLE.COM@EXAMPLE.COM
 modprinc -maxlife 600 connect/connect.kerberos-demo.local@EXAMPLE.COM
