@@ -1,11 +1,11 @@
-FROM haproxy
+FROM haproxy:2.2.5
 
 ENV HAPROXY_USER haproxy
 
-RUN groupadd --system ${HAPROXY_USER} && \
-  useradd --system --gid ${HAPROXY_USER} ${HAPROXY_USER} && \
-  mkdir --parents /var/lib/${HAPROXY_USER} && \
-  chown -R ${HAPROXY_USER}:${HAPROXY_USER} /var/lib/${HAPROXY_USER}
+RUN groupadd --system ${HAPROXY_USER} ; \
+  useradd --system --gid ${HAPROXY_USER} ${HAPROXY_USER} ; \
+  mkdir --parents /var/lib/${HAPROXY_USER} ; \
+  chown -R ${HAPROXY_USER}:${HAPROXY_USER} /var/lib/${HAPROXY_USER} || true && exit 0
 
 RUN apt-get update && apt-get install net-tools
 RUN mkdir -p /run/haproxy/
