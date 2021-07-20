@@ -103,7 +103,7 @@ for((i=0;i<5;i++)); do
                     "kerberos.ticket.renew.period.ms": "60000",
                     "connect.hdfs.principal": "connect/connect.kerberos-demo.local@EXAMPLE.COM",
                     "connect.hdfs.keytab": "/tmp/connect.keytab",
-                    "hdfs.namenode.principal": "nn/namenode1.kerberos-demo.local@EXAMPLE.COM",
+                    "hdfs.namenode.principal": "nn/_HOST@EXAMPLE.COM",
                     "confluent.license": "",
                     "confluent.topic.bootstrap.servers": "broker:9092",
                     "confluent.topic.replication.factor": "1",
