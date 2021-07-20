@@ -1,14 +1,14 @@
 #!/bin/bash
 set -e
 
-export CONNECTOR_TAG=10.0.6
+export CONNECTOR_TAG=10.0.1
 
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
 function wait_for_gss_exception () {
      CONNECT_CONTAINER=connect
-     MAX_WAIT=600
+     MAX_WAIT=1200
      CUR_WAIT=0
      log "Waiting up to $MAX_WAIT seconds for GSS exception to happen"
      docker container logs ${CONNECT_CONTAINER} > /tmp/out.txt 2>&1
@@ -116,3 +116,8 @@ for((i=0;i<5;i++)); do
 done
 
 wait_for_gss_exception
+
+exit 0
+
+log "Trigger a manual failover from nn1 to nn2"
+docker exec namenode1 bash -c "kinit -kt /opt/hadoop/etc/hadoop/nn.keytab nn/namenode1.kerberos-demo.local && /opt/hadoop/bin/hdfs haadmin -failover -forceactive nn1 nn2"
