@@ -1,0 +1,162 @@
+---
+version: '3.5'
+
+services:
+
+  krb5:
+    image: flokkr/krb5
+    hostname: krb5.kerberos-demo.local
+    container_name: krb5
+    volumes:
+    - ../../connect/connect-hdfs2-sink/ha-kerberos-repro-gss-exception/krb5.conf:/etc/krb5.conf
+    # see fork https://github.com/vdesabou/issuer to avoid KrbException: Message stream modified (41) (https://stackoverflow.com/a/68212311/2381999)
+    - ../../connect/connect-hdfs2-sink/ha-kerberos-repro-gss-exception/issuer:/root/issuer
+
+  namenode1:
+    image: flokkr/hadoop:latest
+    hostname: namenode1.kerberos-demo.local
+    container_name: namenode1
+    depends_on:
+      - krb5
+    env_file:
+      - ../../connect/connect-hdfs2-sink/ha-kerberos-repro-gss-exception/config
+    environment:
+        ENSURE_NAMENODE_DIR: "/tmp/hadoop-hadoop/dfs/name"
+        SLEEP_SECONDS: 20
+        HADOOP_OPTS: "-Djava.net.preferIPv4Stack=true -Dsun.security.krb5.debug=true -Dsun.security.spnego.debug"
+    command: ["hdfs", "namenode"]
+    volumes:
+        - ../../connect/connect-hdfs2-sink/ha-kerberos-repro-gss-exception/krb5.conf:/opt/launcher/plugins/011_kerberos/krb5.conf
+        - ../../connect/connect-hdfs2-sink/ha-kerberos-repro-gss-exception/installer.sh:/opt/launcher/plugins/005_installer/installer.sh
+        - ../../connect/connect-hdfs2-sink/hadoop-2.7.3.tar.gz:/opt/download/hadoop.tar.gz
+
+  namenode2:
+    image: flokkr/hadoop:latest
+    hostname: namenode2.kerberos-demo.local
+    container_name: namenode2
+    env_file:
+      - ../../connect/connect-hdfs2-sink/ha-kerberos-repro-gss-exception/config
+    depends_on:
+      - krb5
+    environment:
+        ENSURE_STANDBY_NAMENODE_DIR: "/tmp/hadoop-hadoop/dfs/name"
+        #ENSURE_NAMENODE_CLUSTERID: "sh"
+        SLEEP_SECONDS: 40
+        HADOOP_OPTS: "-Djava.net.preferIPv4Stack=true -Dsun.security.krb5.debug=true -Dsun.security.spnego.debug"
+    command: ["hdfs", "namenode"]
+    volumes:
+        - ../../connect/connect-hdfs2-sink/ha-kerberos-repro-gss-exception/krb5.conf:/opt/launcher/plugins/011_kerberos/krb5.conf
+        - ../../connect/connect-hdfs2-sink/ha-kerberos-repro-gss-exception/installer.sh:/opt/launcher/plugins/005_installer/installer.sh
+        - ../../connect/connect-hdfs2-sink/hadoop-2.7.3.tar.gz:/opt/download/hadoop.tar.gz
+
+  journal1:
+    image: flokkr/hadoop:latest
+    hostname: journal1.kerberos-demo.local
+    container_name: journal1
+    depends_on:
+      - krb5
+    env_file:
+      - ../../connect/connect-hdfs2-sink/ha-kerberos-repro-gss-exception/config
+    environment:
+        HADOOP_OPTS: "-Djava.net.preferIPv4Stack=true -Dsun.security.krb5.debug=true -Dsun.security.spnego.debug"
+    command: ["hdfs", "journalnode"]
+    volumes:
+        - ../../connect/connect-hdfs2-sink/ha-kerberos-repro-gss-exception/krb5.conf:/opt/launcher/plugins/011_kerberos/krb5.conf
+        - ../../connect/connect-hdfs2-sink/ha-kerberos-repro-gss-exception/installer.sh:/opt/launcher/plugins/005_installer/installer.sh
+        - ../../connect/connect-hdfs2-sink/hadoop-2.7.3.tar.gz:/opt/download/hadoop.tar.gz
+
+  journal2:
+    image: flokkr/hadoop:latest
+    hostname: journal2.kerberos-demo.local
+    container_name: journal2
+    depends_on:
+      - krb5
+    env_file:
+      - ../../connect/connect-hdfs2-sink/ha-kerberos-repro-gss-exception/config
+    environment:
+        HADOOP_OPTS: "-Djava.net.preferIPv4Stack=true -Dsun.security.krb5.debug=true -Dsun.security.spnego.debug"
+    command: ["hdfs", "journalnode"]
+    volumes:
+        - ../../connect/connect-hdfs2-sink/ha-kerberos-repro-gss-exception/krb5.conf:/opt/launcher/plugins/011_kerberos/krb5.conf
+        - ../../connect/connect-hdfs2-sink/ha-kerberos-repro-gss-exception/installer.sh:/opt/launcher/plugins/005_installer/installer.sh
+        - ../../connect/connect-hdfs2-sink/hadoop-2.7.3.tar.gz:/opt/download/hadoop.tar.gz
+
+  journal3:
+    image: flokkr/hadoop:latest
+    hostname: journal3.kerberos-demo.local
+    container_name: journal3
+    depends_on:
+      - krb5
+    env_file:
+      - ../../connect/connect-hdfs2-sink/ha-kerberos-repro-gss-exception/config
+    command: ["hdfs", "journalnode"]
+    environment:
+         HADOOP_OPTS: "-Djava.net.preferIPv4Stack=true -Dsun.security.krb5.debug=true -Dsun.security.spnego.debug"
+    volumes:
+        - ../../connect/connect-hdfs2-sink/ha-kerberos-repro-gss-exception/krb5.conf:/opt/launcher/plugins/011_kerberos/krb5.conf
+        - ../../connect/connect-hdfs2-sink/ha-kerberos-repro-gss-exception/installer.sh:/opt/launcher/plugins/005_installer/installer.sh
+        - ../../connect/connect-hdfs2-sink/hadoop-2.7.3.tar.gz:/opt/download/hadoop.tar.gz
+
+  datanode:
+    image: flokkr/hadoop:latest
+    command: ["hdfs", "datanode"]
+    hostname: datanode.kerberos-demo.local
+    container_name: datanode
+    depends_on:
+      - krb5
+    env_file:
+      - ../../connect/connect-hdfs2-sink/ha-kerberos-repro-gss-exception/config
+    environment:
+        SLEEP_SECONDS: 50
+        HADOOP_OPTS: "-Djava.net.preferIPv4Stack=true -Dsun.security.krb5.debug=true -Dsun.security.spnego.debug"
+    volumes:
+        - ../../connect/connect-hdfs2-sink/ha-kerberos-repro-gss-exception/krb5.conf:/opt/launcher/plugins/011_kerberos/krb5.conf
+        - ../../connect/connect-hdfs2-sink/ha-kerberos-repro-gss-exception/installer.sh:/opt/launcher/plugins/005_installer/installer.sh
+        - ../../connect/connect-hdfs2-sink/hadoop-2.7.3.tar.gz:/opt/download/hadoop.tar.gz
+
+  resourcemanager:
+    image: flokkr/hadoop:latest
+    hostname: resourcemanager.kerberos-demo.local
+    container_name: resourcemanager
+    depends_on:
+      - krb5
+    command: ["yarn", "resourcemanager"]
+    env_file:
+        - ../../connect/connect-hdfs2-sink/ha-kerberos-repro-gss-exception/config
+    volumes:
+        - ../../connect/connect-hdfs2-sink/ha-kerberos-repro-gss-exception/krb5.conf:/opt/launcher/plugins/011_kerberos/krb5.conf
+        - ../../connect/connect-hdfs2-sink/ha-kerberos-repro-gss-exception/installer.sh:/opt/launcher/plugins/005_installer/installer.sh
+        - ../../connect/connect-hdfs2-sink/hadoop-2.7.3.tar.gz:/opt/download/hadoop.tar.gz
+
+  activator:
+    image: flokkr/hadoop:latest
+    hostname: activator.kerberos-demo.local
+    container_name: activator
+    depends_on:
+      - krb5
+    command: kinit -kt /opt/hadoop/etc/hadoop/nn.keytab nn/activator.kerberos-demo.local;hdfs haadmin -transitionToActive nn1
+    env_file:
+      - ../../connect/connect-hdfs2-sink/ha-kerberos-repro-gss-exception/config
+    environment:
+        SLEEP_SECONDS: 60
+    volumes:
+      - ../../connect/connect-hdfs2-sink/ha-kerberos-repro-gss-exception/installer.sh:/opt/launcher/plugins/005_installer/installer.sh
+      - ../../connect/connect-hdfs2-sink/hadoop-2.7.3.tar.gz:/opt/download/hadoop.tar.gz
+
+  connect:
+    build:
+      context: ../../connect/connect-hdfs2-sink/kerberos-repro-gss-exception/
+      args:
+        TAG: ${TAG}
+        CONNECTOR_TAG: ${CONNECTOR_TAG}
+    volumes:
+      - ../../connect/connect-hdfs2-sink/ha-kerberos-repro-gss-exception/krb5.conf:/etc/krb5.conf
+      - ../../connect/connect-hdfs2-sink/ha-kerberos-repro-gss-exception/core-site.xml:/opt/hadoop/etc/hadoop/core-site.xml
+      - ../../connect/connect-hdfs2-sink/ha-kerberos-repro-gss-exception/hdfs-site.xml:/opt/hadoop/etc/hadoop/hdfs-site.xml
+    environment:
+      CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-hdfs
+      KAFKA_OPTS: -Dsun.security.krb5.debug=true
+
+networks:
+  default:
+    name: kerberos-demo.local
