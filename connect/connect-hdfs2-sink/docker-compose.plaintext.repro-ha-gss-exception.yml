@@ -147,7 +147,7 @@ services:
 
   connect:
     build:
-      context: ../../connect/connect-hdfs2-sink/kerberos-repro-gss-exception/
+      context: ../../connect/connect-hdfs2-sink/ha-kerberos-repro-gss-exception/
       args:
         TAG: ${TAG}
         CONNECTOR_TAG: ${CONNECTOR_TAG}
