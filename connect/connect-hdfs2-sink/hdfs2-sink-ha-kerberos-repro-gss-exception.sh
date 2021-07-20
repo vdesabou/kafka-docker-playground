@@ -65,9 +65,9 @@ docker exec namenode1 bash -c "kinit -kt /opt/hadoop/etc/hadoop/nn.keytab nn/nam
 log "Add connect kerberos principal"
 docker exec -i krb5 kadmin.local << EOF
 addprinc -randkey connect/connect.kerberos-demo.local@EXAMPLE.COM
-modprinc -maxrenewlife 120 +allow_renewable connect/connect.kerberos-demo.local@EXAMPLE.COM
-modprinc -maxrenewlife 120 krbtgt/EXAMPLE.COM
-modprinc -maxlife 120 connect/connect.kerberos-demo.local@EXAMPLE.COM
+modprinc -maxrenewlife 600 +allow_renewable connect/connect.kerberos-demo.local@EXAMPLE.COM
+modprinc -maxrenewlife 600 krbtgt/EXAMPLE.COM
+modprinc -maxlife 600 connect/connect.kerberos-demo.local@EXAMPLE.COM
 ktadd -k /connect.keytab connect/connect.kerberos-demo.local@EXAMPLE.COM
 listprincs
 EOF
