@@ -13,8 +13,10 @@
     </property>
     <property>
         <name>hadoop.security.auth_to_local</name>
-        <value>RULE:[2:$1@$0](.*)s/.*/root/</value>
-        <value>RULE:[1:$1@$0](.*)s/.*/root/</value>
+        <value>
+            RULE:[2:$1@$0](.*)s/.*/root/
+            RULE:[1:$1@$0](.*)s/.*/root/
+        </value>
     </property>
     <property>
         <name>fs.default.name</name>
