@@ -30,4 +30,8 @@
         <name>hadoop.rpc.protection</name>
         <value>privacy</value>
     </property>
+    <property>
+        <name>hadoop.kerberos.min.seconds.before.relogin</name>
+        <value>1</value>
+    </property>
 </configuration>

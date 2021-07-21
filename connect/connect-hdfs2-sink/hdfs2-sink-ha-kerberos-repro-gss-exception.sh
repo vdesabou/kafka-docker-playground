@@ -1,8 +1,16 @@
 #!/bin/bash
 set -e
 
+# https://steveloughran.gitbooks.io/kerberos_and_hadoop/content/sections/errors.html
+# https://stackoverflow.com/questions/34616676/should-i-call-ugi-checktgtandreloginfromkeytab-before-every-action-on-hadoop
+# https://stackoverflow.com/questions/44362086/is-kinit-required-while-accessing-a-kerberized-service-through-java-code
+# https://stackoverflow.com/questions/38555244/how-do-you-set-the-kerberos-ticket-lifetime-from-java
+# https://serverfault.com/a/133631
+# https://community.cloudera.com/t5/Support-Questions/Error-on-kerberos-ticket-renewer-role-startup/td-p/31187
+
 #export TAG=5.4.2-1-ubi8
 export CONNECTOR_TAG=10.0.6
+NB_CONNECTORS=40
 
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
@@ -17,7 +25,7 @@ function wait_for_gss_exception () {
      CONNECT_CONTAINER=connect
      MAX_WAIT=1200
      CUR_WAIT=0
-     log "Waiting up to $MAX_WAIT seconds for GSS exception to happen (it takes about 19 minutes)"
+     log "Waiting up to $MAX_WAIT seconds for GSS exception to happen (it takes several minutes)"
      docker container logs ${CONNECT_CONTAINER} > /tmp/out.txt 2>&1
      while [[ ! $(cat /tmp/out.txt) =~ "Failed to find any Kerberos tgt" ]]; do
           sleep 10
@@ -28,9 +36,9 @@ function wait_for_gss_exception () {
                exit 1
           fi
 
-          for((i=0;i<5;i++)); do
+          for((i=0;i<$NB_CONNECTORS;i++)); do
                # send requests
-               seq -f "{\"f1\": \"value%g\"}" 10 | docker exec -i connect kafka-avro-console-producer --broker-list broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic test_hdfs$i --property value.schema='{"type":"record","name":"myrecord","fields":[{"name":"f1","type":"string"}]}'
+               seq -f "{\"f1\": \"value%g\"}" 1 | docker exec -i connect kafka-avro-console-producer --broker-list broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic test_hdfs$i --property value.schema='{"type":"record","name":"myrecord","fields":[{"name":"f1","type":"string"}]}'
           done
      done
      log "The problem has been reproduced !"
@@ -66,6 +74,23 @@ curl --request PUT \
 	"level": "DEBUG"
 }'
 
+curl --request PUT \
+  --url http://localhost:18083/admin/loggers/io.confluent.connect.hdfs \
+  --header 'Accept: application/json' \
+  --header 'Content-Type: application/json' \
+  --data '{
+	"level": "DEBUG"
+}'
+
+curl --request PUT \
+  --url http://localhost:18083/admin/loggers/org.apache.hadoop.security \
+  --header 'Accept: application/json' \
+  --header 'Content-Type: application/json' \
+  --data '{
+	"level": "DEBUG"
+}'
+
+
 # Note in this simple example, if you get into an issue with permissions at the local HDFS level, it may be easiest to unlock the permissions unless you want to debug that more.
 docker exec namenode1 bash -c "kinit -kt /opt/hadoop/etc/hadoop/nn.keytab nn/namenode1.kerberos-demo.local && /opt/hadoop/bin/hdfs dfs -chmod 777  /"
 
@@ -75,7 +100,7 @@ addprinc -randkey connect@EXAMPLE.COM
 modprinc -maxrenewlife 604800 +allow_renewable connect@EXAMPLE.COM
 modprinc -maxrenewlife 604800 +allow_renewable krbtgt/EXAMPLE.COM
 modprinc -maxrenewlife 604800 +allow_renewable krbtgt/EXAMPLE.COM@EXAMPLE.COM
-modprinc -maxlife 90 connect@EXAMPLE.COM
+modprinc -maxlife 15 connect@EXAMPLE.COM
 ktadd -k /connect.keytab connect@EXAMPLE.COM
 getprinc connect@EXAMPLE.COM
 EOF
@@ -95,8 +120,7 @@ then
      docker exec -u 0 connect2 chown appuser:appuser /tmp/connect.keytab
 fi
 
-for((i=0;i<5;i++)); do
-
+for((i=0;i<$NB_CONNECTORS;i++)); do
      LOG_DIR="/logs$i"
      TOPIC="test_hdfs$i"
      log "Creating HDFS Sink connector $i"
@@ -104,7 +128,7 @@ for((i=0;i<5;i++)); do
           -H "Content-Type: application/json" \
           --data '{
                     "connector.class":"io.confluent.connect.hdfs.HdfsSinkConnector",
-                    "tasks.max":"10",
+                    "tasks.max":"2",
                     "topics": "'"$TOPIC"'",
                     "store.url":"hdfs://sh",
                     "flush.size":"3",
@@ -135,10 +159,3 @@ exit 0
 
 log "Trigger a manual failover from nn1 to nn2"
 docker exec namenode1 bash -c "kinit -kt /opt/hadoop/etc/hadoop/nn.keytab nn/namenode1.kerberos-demo.local && /opt/hadoop/bin/hdfs haadmin -failover -forceactive nn1 nn2"
-
-# 08:17:47 ℹ️ Waiting up to 1200 seconds for GSS exception to happen
-# 08:36:13 ℹ️ The problem has been reproduced !
-# 19 minutes
-
-# 09:24:23 ℹ️ Waiting up to 1200 seconds for GSS exception to happen
-# 09:43:05 ℹ️ The problem has been reproduced !
