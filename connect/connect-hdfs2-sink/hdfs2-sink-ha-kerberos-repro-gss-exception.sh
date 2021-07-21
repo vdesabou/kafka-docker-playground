@@ -75,7 +75,7 @@ addprinc -randkey connect/connect.kerberos-demo.local@EXAMPLE.COM
 modprinc -maxrenewlife 604800 +allow_renewable connect/connect.kerberos-demo.local@EXAMPLE.COM
 modprinc -maxrenewlife 604800 +allow_renewable krbtgt/EXAMPLE.COM
 modprinc -maxrenewlife 604800 +allow_renewable krbtgt/EXAMPLE.COM@EXAMPLE.COM
-modprinc -maxlife 600 connect/connect.kerberos-demo.local@EXAMPLE.COM
+modprinc -maxlife 720 connect/connect.kerberos-demo.local@EXAMPLE.COM
 ktadd -k /connect.keytab connect/connect.kerberos-demo.local@EXAMPLE.COM
 getprinc connect/connect.kerberos-demo.local@EXAMPLE.COM
 EOF
@@ -88,7 +88,7 @@ then
      docker exec -u 0 connect chown appuser:appuser /tmp/connect.keytab
 fi
 
-for((i=0;i<5;i++)); do
+for((i=0;i<1;i++)); do
 
      LOG_DIR="/logs$i"
      TOPIC="test_hdfs$i"
