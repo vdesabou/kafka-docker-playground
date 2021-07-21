@@ -3,10 +3,13 @@ ARG CONNECTOR_TAG
 FROM vdesabou/kafka-docker-playground-connect:${TAG}
 COPY jdk-8u201-linux-x64.rpm /tmp/
 USER root
-RUN microdnf install yum \
-    && yum -y install /tmp/jdk-8u201-linux-x64.rpm && alternatives --list \
-    && rm -f /tmp/jdk-8u201-linux-x64.rpm
+# RUN microdnf install yum \
+#     && yum -y install /tmp/jdk-8u201-linux-x64.rpm && alternatives --list \
+#     && rm -f /tmp/jdk-8u201-linux-x64.rpm
 # && alternatives --remove java /usr/lib/jvm/zulu11/bin/java
+# with 5.4.x (needs to be ubi8, example 5.4.2-1-ubi8)
+RUN yum -y install /tmp/jdk-8u201-linux-x64.rpm && alternatives --list \
+    && rm -f /tmp/jdk-8u201-linux-x64.rpm && alternatives --remove java /usr/lib/jvm/zulu8/jre/bin/java
 USER appuser
 ARG CONNECTOR_TAG
 RUN confluent-hub install --no-prompt confluentinc/kafka-connect-hdfs:${CONNECTOR_TAG}

@@ -1,7 +1,8 @@
 #!/bin/bash
 set -e
 
-export CONNECTOR_TAG=10.0.6
+export TAG=5.4.2-1-ubi8
+export CONNECTOR_TAG=5.4.2
 
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
