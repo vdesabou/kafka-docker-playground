@@ -17,7 +17,7 @@ function wait_for_gss_exception () {
      CONNECT_CONTAINER=connect
      MAX_WAIT=1200
      CUR_WAIT=0
-     log "Waiting up to $MAX_WAIT seconds for GSS exception to happen"
+     log "Waiting up to $MAX_WAIT seconds for GSS exception to happen (it takes about 19 minutes)"
      docker container logs ${CONNECT_CONTAINER} > /tmp/out.txt 2>&1
      while [[ ! $(cat /tmp/out.txt) =~ "Failed to find any Kerberos tgt" ]]; do
           sleep 10
@@ -128,3 +128,10 @@ exit 0
 
 log "Trigger a manual failover from nn1 to nn2"
 docker exec namenode1 bash -c "kinit -kt /opt/hadoop/etc/hadoop/nn.keytab nn/namenode1.kerberos-demo.local && /opt/hadoop/bin/hdfs haadmin -failover -forceactive nn1 nn2"
+
+# 08:17:47 ℹ️ Waiting up to 1200 seconds for GSS exception to happen
+# 08:36:13 ℹ️ The problem has been reproduced !
+# 19 minutes
+
+# 09:24:23 ℹ️ Waiting up to 1200 seconds for GSS exception to happen
+# 09:43:05 ℹ️ The problem has been reproduced !
