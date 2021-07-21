@@ -34,6 +34,7 @@ CORE-SITE.XML_hadoop.security.authentication=kerberos
 CORE-SITE.XML_hadoop.security.authorization=true
 CORE-SITE.XML_hadoop.rpc.protection=privacy
 CORE-SITE.XML_hadoop.security.auth_to_local="RULE:[2:$1@$0](.*)s/.*/root/ RULE:[1:$1@$0](.*)s/.*/root/"
+CORE-SITE.XML_hadoop.hadoop.kerberos.min.seconds.before.relogin=1
 
 HDFS-SITE.XML_dfs.replication=3
 HDFS-SITE.XML_dfs.journalnode.edits.dir=/data/journalnode
