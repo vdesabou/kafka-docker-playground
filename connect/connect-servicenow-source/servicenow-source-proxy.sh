@@ -71,7 +71,7 @@ curl -X PUT \
                "servicenow.user": "admin",
                "servicenow.password": "'"$SERVICENOW_PASSWORD"'",
                "servicenow.since": "'"$TODAY"'",
-               "retry.max.times": "100",
+               "retry.max.times": "3",
                "key.converter": "org.apache.kafka.connect.json.JsonConverter",
                "value.converter": "org.apache.kafka.connect.json.JsonConverter",
                "confluent.license": "",
