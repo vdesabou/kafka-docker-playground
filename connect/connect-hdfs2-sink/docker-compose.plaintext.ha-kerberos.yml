@@ -41,7 +41,7 @@ services:
     environment:
         ENSURE_STANDBY_NAMENODE_DIR: "/tmp/hadoop-hadoop/dfs/name"
         #ENSURE_NAMENODE_CLUSTERID: "sh"
-        SLEEP_SECONDS: 40
+        SLEEP_SECONDS: 50
         # HADOOP_OPTS: "-Djava.net.preferIPv4Stack=true -Dsun.security.krb5.debug=true -Dsun.security.spnego.debug -Dsun.security.krb5.disableReferrals=true -Djdk.security.allowNonCaAnchor=true"
     command: ["hdfs", "namenode"]
     volumes:
@@ -107,7 +107,7 @@ services:
     env_file:
       - ../../connect/connect-hdfs2-sink/ha-kerberos/config
     environment:
-        SLEEP_SECONDS: 50
+        SLEEP_SECONDS: 60
         # HADOOP_OPTS: "-Djava.net.preferIPv4Stack=true -Dsun.security.krb5.debug=true -Dsun.security.spnego.debug -Dsun.security.krb5.disableReferrals=true -Djdk.security.allowNonCaAnchor=true"
     volumes:
         - ../../connect/connect-hdfs2-sink/ha-kerberos/krb5.conf:/opt/launcher/plugins/011_kerberos/krb5.conf
@@ -138,7 +138,7 @@ services:
     env_file:
       - ../../connect/connect-hdfs2-sink/ha-kerberos/config
     environment:
-        SLEEP_SECONDS: 60
+        SLEEP_SECONDS: 70
     volumes:
       - ../../connect/connect-hdfs2-sink/ha-kerberos/installer.sh:/opt/launcher/plugins/005_installer/installer.sh
       - ../../connect/connect-hdfs2-sink/hadoop-2.7.4.tar.gz:/opt/download/hadoop.tar.gz
