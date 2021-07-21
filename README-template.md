@@ -197,15 +197,15 @@ Quick start examples from Confluent [docs](https://docs.confluent.io/current/con
 
 Using Multi-Data-Center setup with `US` 🇺🇸 and `EUROPE` 🇪🇺 clusters.
 
-- <img src="https://github.com/vdesabou/kafka-docker-playground/raw/master/images/icons/using_confluent_replicator_as_connector.png" width="15"> [Using Confluent Replicator as connector](https://github.com/vdesabou/kafka-docker-playground/replicator/connect)
+- <img src="https://github.com/vdesabou/kafka-docker-playground/raw/master/images/icons/using_confluent_replicator_as_connector.png" width="15"> [Using Confluent Replicator as connector](https://github.com/vdesabou/kafka-docker-playground/tree/master/replicator/connect)
   - Using [PLAINTEXT](https://github.com/vdesabou/kafka-docker-playground/tree/master/environment/mdc-plaintext)
   - Using [SASL_PLAIN](https://github.com/vdesabou/kafka-docker-playground/tree/master/environment/mdc-sasl-plain)
   - Using [Kerberos](https://github.com/vdesabou/kafka-docker-playground/tree/master/environment/mdc-kerberos)
-- 👾 [Using Confluent Replicator as executable](https://github.com/vdesabou/kafka-docker-playground/replicator/executable)
+- 👾 [Using Confluent Replicator as executable](https://github.com/vdesabou/kafka-docker-playground/tree/master/replicator/executable)
   - Using [PLAINTEXT](https://github.com/vdesabou/kafka-docker-playground/tree/master/environment/mdc-plaintext)
   - Using [SASL_PLAIN](https://github.com/vdesabou/kafka-docker-playground/tree/master/environment/mdc-sasl-plain)
   - Using [Kerberos](https://github.com/vdesabou/kafka-docker-playground/tree/master/environment/mdc-kerberos)
-- <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/0/05/Apache_kafka.svg/1200px-Apache_kafka.svg.png" width="16"> [Using Mirror Maker 2](https://github.com/vdesabou/kafka-docker-playground/replicator/mirrormaker2)
+- <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/0/05/Apache_kafka.svg/1200px-Apache_kafka.svg.png" width="16"> [Using Mirror Maker 2](https://github.com/vdesabou/kafka-docker-playground/tree/master/replicator/mirrormaker2)
   - Using [PLAINTEXT](https://github.com/vdesabou/kafka-docker-playground/tree/master/environment/mdc-plaintext)
 
 ## 🔐 Environments
