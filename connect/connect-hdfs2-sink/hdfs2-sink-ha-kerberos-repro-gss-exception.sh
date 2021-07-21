@@ -1,8 +1,8 @@
 #!/bin/bash
 set -e
 
-export TAG=5.4.2-1-ubi8
-export CONNECTOR_TAG=5.4.2
+#export TAG=5.4.2-1-ubi8
+export CONNECTOR_TAG=10.0.6
 
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
@@ -71,16 +71,16 @@ docker exec namenode1 bash -c "kinit -kt /opt/hadoop/etc/hadoop/nn.keytab nn/nam
 
 log "Add connect kerberos principal"
 docker exec -i krb5 kadmin.local << EOF
-addprinc -randkey connect/connect.kerberos-demo.local@EXAMPLE.COM
-modprinc -maxrenewlife 604800 +allow_renewable connect/connect.kerberos-demo.local@EXAMPLE.COM
+addprinc -randkey connect@EXAMPLE.COM
+modprinc -maxrenewlife 604800 +allow_renewable connect@EXAMPLE.COM
 modprinc -maxrenewlife 604800 +allow_renewable krbtgt/EXAMPLE.COM
 modprinc -maxrenewlife 604800 +allow_renewable krbtgt/EXAMPLE.COM@EXAMPLE.COM
-modprinc -maxlife 720 connect/connect.kerberos-demo.local@EXAMPLE.COM
-ktadd -k /connect.keytab connect/connect.kerberos-demo.local@EXAMPLE.COM
-getprinc connect/connect.kerberos-demo.local@EXAMPLE.COM
+modprinc -maxlife 90 connect@EXAMPLE.COM
+ktadd -k /connect.keytab connect@EXAMPLE.COM
+getprinc connect@EXAMPLE.COM
 EOF
 
-log "Copy connect.keytab to connect container /tmp/sshuser.keytab"
+log "Copy connect.keytab to connect container"
 docker cp krb5:/connect.keytab .
 docker cp connect.keytab connect:/tmp/connect.keytab
 if [[ "$TAG" == *ubi8 ]] || version_gt $TAG_BASE "5.9.0"
@@ -88,7 +88,14 @@ then
      docker exec -u 0 connect chown appuser:appuser /tmp/connect.keytab
 fi
 
-for((i=0;i<1;i++)); do
+log "Copy connect.keytab to connect2 container"
+docker cp connect.keytab connect2:/tmp/connect.keytab
+if [[ "$TAG" == *ubi8 ]] || version_gt $TAG_BASE "5.9.0"
+then
+     docker exec -u 0 connect2 chown appuser:appuser /tmp/connect.keytab
+fi
+
+for((i=0;i<5;i++)); do
 
      LOG_DIR="/logs$i"
      TOPIC="test_hdfs$i"
@@ -97,7 +104,7 @@ for((i=0;i<1;i++)); do
           -H "Content-Type: application/json" \
           --data '{
                     "connector.class":"io.confluent.connect.hdfs.HdfsSinkConnector",
-                    "tasks.max":"1",
+                    "tasks.max":"10",
                     "topics": "'"$TOPIC"'",
                     "store.url":"hdfs://sh",
                     "flush.size":"3",
@@ -107,8 +114,8 @@ for((i=0;i<1;i++)); do
                     "rotate.interval.ms":"120000",
                     "logs.dir": "'"$LOG_DIR"'",
                     "hdfs.authentication.kerberos": "true",
-                    "kerberos.ticket.renew.period.ms": "60000",
-                    "connect.hdfs.principal": "connect/connect.kerberos-demo.local@EXAMPLE.COM",
+                    "kerberos.ticket.renew.period.ms": "1000",
+                    "connect.hdfs.principal": "connect@EXAMPLE.COM",
                     "connect.hdfs.keytab": "/tmp/connect.keytab",
                     "hdfs.namenode.principal": "nn/_HOST@EXAMPLE.COM",
                     "confluent.license": "",
