@@ -11,6 +11,8 @@ set -e
 #export TAG=5.4.2-1-ubi8
 export CONNECTOR_TAG=10.0.6
 NB_CONNECTORS=40
+NB_TASK_PER_CONNECTOR=10
+CONNECT_KERBEROS_TICKET_LIFETIME=10
 
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
@@ -38,7 +40,7 @@ function wait_for_gss_exception () {
 
           for((i=0;i<$NB_CONNECTORS;i++)); do
                # send requests
-               seq -f "{\"f1\": \"value%g\"}" 1 | docker exec -i connect kafka-avro-console-producer --broker-list broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic test_hdfs$i --property value.schema='{"type":"record","name":"myrecord","fields":[{"name":"f1","type":"string"}]}'
+               seq -f "{\"f1\": \"value%g\"}" 10 | docker exec -i connect kafka-avro-console-producer --broker-list broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic test_hdfs$i --property value.schema='{"type":"record","name":"myrecord","fields":[{"name":"f1","type":"string"}]}'
           done
      done
      log "The problem has been reproduced !"
@@ -90,6 +92,22 @@ curl --request PUT \
 	"level": "DEBUG"
 }'
 
+curl --request PUT \
+  --url http://localhost:28083/admin/loggers/io.confluent.connect.hdfs \
+  --header 'Accept: application/json' \
+  --header 'Content-Type: application/json' \
+  --data '{
+	"level": "DEBUG"
+}'
+
+curl --request PUT \
+  --url http://localhost:28083/admin/loggers/org.apache.hadoop.security \
+  --header 'Accept: application/json' \
+  --header 'Content-Type: application/json' \
+  --data '{
+	"level": "DEBUG"
+}'
+
 
 # Note in this simple example, if you get into an issue with permissions at the local HDFS level, it may be easiest to unlock the permissions unless you want to debug that more.
 docker exec namenode1 bash -c "kinit -kt /opt/hadoop/etc/hadoop/nn.keytab nn/namenode1.kerberos-demo.local && /opt/hadoop/bin/hdfs dfs -chmod 777  /"
@@ -100,7 +118,7 @@ addprinc -randkey connect@EXAMPLE.COM
 modprinc -maxrenewlife 604800 +allow_renewable connect@EXAMPLE.COM
 modprinc -maxrenewlife 604800 +allow_renewable krbtgt/EXAMPLE.COM
 modprinc -maxrenewlife 604800 +allow_renewable krbtgt/EXAMPLE.COM@EXAMPLE.COM
-modprinc -maxlife 15 connect@EXAMPLE.COM
+modprinc -maxlife $CONNECT_KERBEROS_TICKET_LIFETIME connect@EXAMPLE.COM
 ktadd -k /connect.keytab connect@EXAMPLE.COM
 getprinc connect@EXAMPLE.COM
 EOF
@@ -128,7 +146,7 @@ for((i=0;i<$NB_CONNECTORS;i++)); do
           -H "Content-Type: application/json" \
           --data '{
                     "connector.class":"io.confluent.connect.hdfs.HdfsSinkConnector",
-                    "tasks.max":"2",
+                    "tasks.max":"'"$NB_TASK_PER_CONNECTOR"'",
                     "topics": "'"$TOPIC"'",
                     "store.url":"hdfs://sh",
                     "flush.size":"3",
