@@ -29,12 +29,15 @@ function wait_for_gss_exception () {
      CUR_WAIT=0
      log "Waiting up to $MAX_WAIT seconds for GSS exception to happen (it takes several minutes)"
      docker container logs ${CONNECT_CONTAINER} > /tmp/out.txt 2>&1
-     while [[ ! $(cat /tmp/out.txt) =~ "Failed to find any Kerberos tgt" ]]; do
+     while grep "Failed to find any Kerberos tgt" /tmp/out.txt > /dev/null;
+     do
           sleep 10
-          docker container logs ${CONNECT_CONTAINER} > /tmp/out.txt 2>&1
+          docker container logs connect > /tmp/out.txt 2>&1
+          docker container logs connect2 >> /tmp/out.txt 2>&1
+          docker container logs connect3 >> /tmp/out.txt 2>&1
           CUR_WAIT=$(( CUR_WAIT+10 ))
           if [[ "$CUR_WAIT" -gt "$MAX_WAIT" ]]; then
-               echo -e "\nERROR: The logs in ${CONNECT_CONTAINER} container do not show 'Failed to find any Kerberos tgt' after $MAX_WAIT seconds. Please troubleshoot with 'docker container ps' and 'docker container logs'.\n"
+               echo -e "\nERROR: The logs in all connect containers do not show 'Failed to find any Kerberos tgt' after $MAX_WAIT seconds. Please troubleshoot with 'docker container ps' and 'docker container logs'.\n"
                exit 1
           fi
 
