@@ -12,7 +12,7 @@ set -e
 export CONNECTOR_TAG=10.0.6
 NB_CONNECTORS=40
 NB_TASK_PER_CONNECTOR=10
-CONNECT_KERBEROS_TICKET_LIFETIME=10
+CONNECT_KERBEROS_TICKET_LIFETIME=5
 
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
@@ -136,6 +136,13 @@ docker cp connect.keytab connect2:/tmp/connect.keytab
 if [[ "$TAG" == *ubi8 ]] || version_gt $TAG_BASE "5.9.0"
 then
      docker exec -u 0 connect2 chown appuser:appuser /tmp/connect.keytab
+fi
+
+log "Copy connect.keytab to connect3 container"
+docker cp connect.keytab connect3:/tmp/connect.keytab
+if [[ "$TAG" == *ubi8 ]] || version_gt $TAG_BASE "5.9.0"
+then
+     docker exec -u 0 connect3 chown appuser:appuser /tmp/connect.keytab
 fi
 
 for((i=0;i<$NB_CONNECTORS;i++)); do
