@@ -41,7 +41,7 @@ then
      export ORACLE_IMAGE="vdesabou/oracle12"
 fi
 
-${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.cdb-table.yml"
+${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.cdb-table-repro-schemabuilderexception.yml"
 
 
 # Verify Oracle DB has started within MAX_WAIT seconds
@@ -199,44 +199,44 @@ curl -X PUT \
           }' \
      http://localhost:8083/connectors/cdc-oracle-source-cdb2/config | jq .
 
-[2021-07-22 15:52:25,073] ERROR Exception in RecordQueue thread (io.confluent.connect.oracle.cdc.util.RecordQueue)
-org.apache.kafka.connect.errors.ConnectException: Exception converting redo to change event. SQL: '  alter table CUSTOMERS2 add (
-    country VARCHAR(50)
-  );' INFO: USER DDL (PlSql=0 RecDep=0)
-	at io.confluent.connect.oracle.cdc.record.OracleChangeEventSourceRecordConverter.convert(OracleChangeEventSourceRecordConverter.java:315)
-	at io.confluent.connect.oracle.cdc.ChangeEventGenerator.doGenerateChangeEvent(ChangeEventGenerator.java:431)
-	at io.confluent.connect.oracle.cdc.ChangeEventGenerator.execute(ChangeEventGenerator.java:212)
-	at io.confluent.connect.oracle.cdc.util.RecordQueue.lambda$createLoggingSupplier$0(RecordQueue.java:465)
-	at java.base/java.util.concurrent.CompletableFuture$AsyncSupply.run(CompletableFuture.java:1700)
-	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1128)
-	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:628)
-	at java.base/java.lang.Thread.run(Thread.java:829)
-Caused by: org.apache.kafka.connect.errors.SchemaBuilderException: Cannot create field because of field name duplication COUNTRY
-	at org.apache.kafka.connect.data.SchemaBuilder.field(SchemaBuilder.java:330)
-	at io.confluent.connect.oracle.cdc.OracleDdlParser.parseAndApply(OracleDdlParser.java:231)
-	at io.confluent.connect.oracle.cdc.record.OracleChangeEventSourceRecordConverter.convert(OracleChangeEventSourceRecordConverter.java:301)
-	... 7 more
-[2021-07-22 15:52:25,074] INFO Updating table CUSTOMERS with current schema Schema{STRUCT} with DDL   alter table CUSTOMERS add (
-    country VARCHAR(50)
-  ); (io.confluent.connect.oracle.cdc.OracleRedoLogReader)
-[2021-07-22 15:52:25,074] INFO Metrics scheduler closed (org.apache.kafka.common.metrics.Metrics)
-[2021-07-22 15:52:25,074] INFO Closing reporter org.apache.kafka.common.metrics.JmxReporter (org.apache.kafka.common.metrics.Metrics)
-[2021-07-22 15:52:25,074] INFO Metrics reporters closed (org.apache.kafka.common.metrics.Metrics)
-[2021-07-22 15:52:25,075] INFO App info kafka.consumer for consumer-task-1-main-consumer-19 unregistered (org.apache.kafka.common.utils.AppInfoParser)
-[2021-07-22 15:52:25,075] ERROR Exception in RecordQueue thread (io.confluent.connect.oracle.cdc.util.RecordQueue)
-org.apache.kafka.connect.errors.ConnectException: Exception converting redo to change event. SQL: '  alter table CUSTOMERS add (
-    country VARCHAR(50)
-  );' INFO: USER DDL (PlSql=0 RecDep=0)
-	at io.confluent.connect.oracle.cdc.record.OracleChangeEventSourceRecordConverter.convert(OracleChangeEventSourceRecordConverter.java:315)
-	at io.confluent.connect.oracle.cdc.ChangeEventGenerator.doGenerateChangeEvent(ChangeEventGenerator.java:431)
-	at io.confluent.connect.oracle.cdc.ChangeEventGenerator.execute(ChangeEventGenerator.java:212)
-	at io.confluent.connect.oracle.cdc.util.RecordQueue.lambda$createLoggingSupplier$0(RecordQueue.java:465)
-	at java.base/java.util.concurrent.CompletableFuture$AsyncSupply.run(CompletableFuture.java:1700)
-	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1128)
-	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:628)
-	at java.base/java.lang.Thread.run(Thread.java:829)
-Caused by: org.apache.kafka.connect.errors.SchemaBuilderException: Cannot create field because of field name duplication COUNTRY
-	at org.apache.kafka.connect.data.SchemaBuilder.field(SchemaBuilder.java:330)
-	at io.confluent.connect.oracle.cdc.OracleDdlParser.parseAndApply(OracleDdlParser.java:231)
-	at io.confluent.connect.oracle.cdc.record.OracleChangeEventSourceRecordConverter.convert(OracleChangeEventSourceRecordConverter.java:301)
-	... 7 more
+# [2021-07-22 15:52:25,073] ERROR Exception in RecordQueue thread (io.confluent.connect.oracle.cdc.util.RecordQueue)
+# org.apache.kafka.connect.errors.ConnectException: Exception converting redo to change event. SQL: '  alter table CUSTOMERS2 add (
+#     country VARCHAR(50)
+#   );' INFO: USER DDL (PlSql=0 RecDep=0)
+# 	at io.confluent.connect.oracle.cdc.record.OracleChangeEventSourceRecordConverter.convert(OracleChangeEventSourceRecordConverter.java:315)
+# 	at io.confluent.connect.oracle.cdc.ChangeEventGenerator.doGenerateChangeEvent(ChangeEventGenerator.java:431)
+# 	at io.confluent.connect.oracle.cdc.ChangeEventGenerator.execute(ChangeEventGenerator.java:212)
+# 	at io.confluent.connect.oracle.cdc.util.RecordQueue.lambda$createLoggingSupplier$0(RecordQueue.java:465)
+# 	at java.base/java.util.concurrent.CompletableFuture$AsyncSupply.run(CompletableFuture.java:1700)
+# 	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1128)
+# 	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:628)
+# 	at java.base/java.lang.Thread.run(Thread.java:829)
+# Caused by: org.apache.kafka.connect.errors.SchemaBuilderException: Cannot create field because of field name duplication COUNTRY
+# 	at org.apache.kafka.connect.data.SchemaBuilder.field(SchemaBuilder.java:330)
+# 	at io.confluent.connect.oracle.cdc.OracleDdlParser.parseAndApply(OracleDdlParser.java:231)
+# 	at io.confluent.connect.oracle.cdc.record.OracleChangeEventSourceRecordConverter.convert(OracleChangeEventSourceRecordConverter.java:301)
+# 	... 7 more
+# [2021-07-22 15:52:25,074] INFO Updating table CUSTOMERS with current schema Schema{STRUCT} with DDL   alter table CUSTOMERS add (
+#     country VARCHAR(50)
+#   ); (io.confluent.connect.oracle.cdc.OracleRedoLogReader)
+# [2021-07-22 15:52:25,074] INFO Metrics scheduler closed (org.apache.kafka.common.metrics.Metrics)
+# [2021-07-22 15:52:25,074] INFO Closing reporter org.apache.kafka.common.metrics.JmxReporter (org.apache.kafka.common.metrics.Metrics)
+# [2021-07-22 15:52:25,074] INFO Metrics reporters closed (org.apache.kafka.common.metrics.Metrics)
+# [2021-07-22 15:52:25,075] INFO App info kafka.consumer for consumer-task-1-main-consumer-19 unregistered (org.apache.kafka.common.utils.AppInfoParser)
+# [2021-07-22 15:52:25,075] ERROR Exception in RecordQueue thread (io.confluent.connect.oracle.cdc.util.RecordQueue)
+# org.apache.kafka.connect.errors.ConnectException: Exception converting redo to change event. SQL: '  alter table CUSTOMERS add (
+#     country VARCHAR(50)
+#   );' INFO: USER DDL (PlSql=0 RecDep=0)
+# 	at io.confluent.connect.oracle.cdc.record.OracleChangeEventSourceRecordConverter.convert(OracleChangeEventSourceRecordConverter.java:315)
+# 	at io.confluent.connect.oracle.cdc.ChangeEventGenerator.doGenerateChangeEvent(ChangeEventGenerator.java:431)
+# 	at io.confluent.connect.oracle.cdc.ChangeEventGenerator.execute(ChangeEventGenerator.java:212)
+# 	at io.confluent.connect.oracle.cdc.util.RecordQueue.lambda$createLoggingSupplier$0(RecordQueue.java:465)
+# 	at java.base/java.util.concurrent.CompletableFuture$AsyncSupply.run(CompletableFuture.java:1700)
+# 	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1128)
+# 	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:628)
+# 	at java.base/java.lang.Thread.run(Thread.java:829)
+# Caused by: org.apache.kafka.connect.errors.SchemaBuilderException: Cannot create field because of field name duplication COUNTRY
+# 	at org.apache.kafka.connect.data.SchemaBuilder.field(SchemaBuilder.java:330)
+# 	at io.confluent.connect.oracle.cdc.OracleDdlParser.parseAndApply(OracleDdlParser.java:231)
+# 	at io.confluent.connect.oracle.cdc.record.OracleChangeEventSourceRecordConverter.convert(OracleChangeEventSourceRecordConverter.java:301)
+# 	... 7 more
