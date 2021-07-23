@@ -9,7 +9,7 @@ set -e
 # https://community.cloudera.com/t5/Support-Questions/Error-on-kerberos-ticket-renewer-role-startup/td-p/31187
 
 #export TAG=5.4.2-1-ubi8
-export CONNECTOR_TAG=10.0.6
+# export CONNECTOR_TAG=10.0.6
 NB_CONNECTORS=40
 NB_TASK_PER_CONNECTOR=10
 CONNECT_KERBEROS_TICKET_LIFETIME=5
@@ -24,12 +24,13 @@ then
 fi
 
 function wait_for_gss_exception () {
-     CONNECT_CONTAINER=connect
      MAX_WAIT=1200
      CUR_WAIT=0
      log "Waiting up to $MAX_WAIT seconds for GSS exception to happen (it takes several minutes)"
-     docker container logs ${CONNECT_CONTAINER} > /tmp/out.txt 2>&1
-     while grep "Failed to find any Kerberos tgt" /tmp/out.txt > /dev/null;
+     docker container logs connect > /tmp/out.txt 2>&1
+     docker container logs connect2 >> /tmp/out.txt 2>&1
+     docker container logs connect3 >> /tmp/out.txt 2>&1
+     while ! grep "Failed to find any Kerberos tgt" /tmp/out.txt > /dev/null;
      do
           sleep 10
           docker container logs connect > /tmp/out.txt 2>&1
