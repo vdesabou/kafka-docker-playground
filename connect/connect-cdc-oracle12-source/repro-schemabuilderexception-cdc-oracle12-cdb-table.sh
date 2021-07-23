@@ -4,13 +4,6 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
-log "Running SQL scripts"
-for script in ${DIR}/sample-sql-scripts2/*
-do
-     $script "ORCLCDB"
-done
-
-exit 0
 if [ -z "$CI" ]
 then
      # not running with github actions
