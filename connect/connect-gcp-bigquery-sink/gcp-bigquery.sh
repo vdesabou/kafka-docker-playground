@@ -44,7 +44,6 @@ then
                     "topics" : "kcbq-quickstart1",
                     "sanitizeTopics" : "true",
                     "autoCreateTables" : "true",
-                    "autoUpdateSchemas" : "true",
                     "defaultDataset" : "'"$DATASET"'",
                     "mergeIntervalMs": "5000",
                     "bufferSize": "100000",
