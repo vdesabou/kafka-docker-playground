@@ -94,6 +94,8 @@ curl -X PUT \
                "allowNewBigQueryFields" : "true",
                "allowBigQueryRequiredFieldRelaxation" : "true",
                "allowSchemaUnionization" : "true",
+               "bigQueryRetryWait" : "30000",
+               "bigQueryRetry" : "3",
                "keyfile" : "/tmp/keyfile.json",
                "errors.tolerance" : "all",
                "errors.log.enable" : "true",
@@ -120,3 +122,7 @@ log "Run the Java producer-v2, it adds a default field statusAsString"
 docker exec producer-v2 bash -c "java -jar producer-v2-1.0.0-jar-with-dependencies.jar"
 
 wait_for_repro
+
+
+# [2021-07-24 20:27:55,692] TRACE Validating schema change. Existing schema: Schema{fields=[Field{name=myProductId, type=STRING, mode=NULLABLE, description=null, policyTags=null}, Field{name=bananaIds, type=STRING, mode=REPEATED, description=null, policyTags=null}, Field{name=discardedApple, type=BOOLEAN, mode=NULLABLE, description=null, policyTags=null}, Field{name=mergeApple, type=STRING, mode=NULLABLE, description=null, policyTags=null}, Field{name=mergedTomatoe, type=RECORD, mode=NULLABLE, description=null, policyTags=null}, Field{name=timestamp, type=TIMESTAMP, mode=NULLABLE, description=null, policyTags=null}]}; proposed Schema: Schema{fields=[Field{name=myProductId, type=STRING, mode=NULLABLE, description=null, policyTags=null}, Field{name=bananaIds, type=STRING, mode=REPEATED, description=null, policyTags=null}, Field{name=discardedApple, type=BOOLEAN, mode=NULLABLE, description=null, policyTags=null}, Field{name=mergeApple, type=STRING, mode=NULLABLE, description=null, policyTags=null}, Field{name=mergedTomatoe, type=RECORD, mode=NULLABLE, description=null, policyTags=null}, Field{name=timestamp, type=TIMESTAMP, mode=NULLABLE, description=null, policyTags=null}]} (com.wepay.kafka.connect.bigquery.SchemaManager)
+# [2021-07-24 20:27:55,694] DEBUG Skipping update of table `pgvsaboulinds620`.`customer_avro` since current schema should be compatible (com.wepay.kafka.connect.bigquery.SchemaManager)
