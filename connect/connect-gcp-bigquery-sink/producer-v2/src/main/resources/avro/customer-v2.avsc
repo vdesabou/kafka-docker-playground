@@ -30,7 +30,7 @@
             "name": "mergeApple",
             "type": {
                 "name": "MergeApple",
-                "namespace": "com.github.vdesabou.merged.enums",
+                "namespace": "com.github.vdesabou.enums",
                 "symbols": [
                     "DEFAULT_WEB_YYYY",
                     "DEFAULT_WEB_ZZZZ",
@@ -548,7 +548,6 @@
                                             }
                                         },
                                         {
-                                            "doc": "Deprecated Field",
                                             "name": "status",
                                             "type": {
                                                 "name": "GryStatus",
