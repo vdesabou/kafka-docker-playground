@@ -29,8 +29,6 @@ services:
     command: ["hdfs", "namenode"]
     volumes:
         - ../../connect/connect-hdfs3-sink/ha-kerberos-repro-gss-exception/krb5.conf:/opt/launcher/plugins/011_kerberos/krb5.conf
-        - ../../connect/connect-hdfs3-sink/ha-kerberos-repro-gss-exception/installer.sh:/opt/launcher/plugins/005_installer/installer.sh
-        - ../../connect/connect-hdfs3-sink/hadoop-2.7.3.tar.gz:/opt/download/hadoop.tar.gz
 
   namenode2:
     image: flokkr/hadoop:latest
@@ -48,8 +46,6 @@ services:
     command: ["hdfs", "namenode"]
     volumes:
         - ../../connect/connect-hdfs3-sink/ha-kerberos-repro-gss-exception/krb5.conf:/opt/launcher/plugins/011_kerberos/krb5.conf
-        - ../../connect/connect-hdfs3-sink/ha-kerberos-repro-gss-exception/installer.sh:/opt/launcher/plugins/005_installer/installer.sh
-        - ../../connect/connect-hdfs3-sink/hadoop-2.7.3.tar.gz:/opt/download/hadoop.tar.gz
 
   journal1:
     image: flokkr/hadoop:latest
@@ -64,8 +60,6 @@ services:
     command: ["hdfs", "journalnode"]
     volumes:
         - ../../connect/connect-hdfs3-sink/ha-kerberos-repro-gss-exception/krb5.conf:/opt/launcher/plugins/011_kerberos/krb5.conf
-        - ../../connect/connect-hdfs3-sink/ha-kerberos-repro-gss-exception/installer.sh:/opt/launcher/plugins/005_installer/installer.sh
-        - ../../connect/connect-hdfs3-sink/hadoop-2.7.3.tar.gz:/opt/download/hadoop.tar.gz
 
   journal2:
     image: flokkr/hadoop:latest
@@ -80,8 +74,6 @@ services:
     command: ["hdfs", "journalnode"]
     volumes:
         - ../../connect/connect-hdfs3-sink/ha-kerberos-repro-gss-exception/krb5.conf:/opt/launcher/plugins/011_kerberos/krb5.conf
-        - ../../connect/connect-hdfs3-sink/ha-kerberos-repro-gss-exception/installer.sh:/opt/launcher/plugins/005_installer/installer.sh
-        - ../../connect/connect-hdfs3-sink/hadoop-2.7.3.tar.gz:/opt/download/hadoop.tar.gz
 
   journal3:
     image: flokkr/hadoop:latest
@@ -96,8 +88,6 @@ services:
          HADOOP_OPTS: "-Djava.net.preferIPv4Stack=true -Dsun.security.krb5.debug=true -Dsun.security.spnego.debug"
     volumes:
         - ../../connect/connect-hdfs3-sink/ha-kerberos-repro-gss-exception/krb5.conf:/opt/launcher/plugins/011_kerberos/krb5.conf
-        - ../../connect/connect-hdfs3-sink/ha-kerberos-repro-gss-exception/installer.sh:/opt/launcher/plugins/005_installer/installer.sh
-        - ../../connect/connect-hdfs3-sink/hadoop-2.7.3.tar.gz:/opt/download/hadoop.tar.gz
 
   datanode:
     image: flokkr/hadoop:latest
@@ -113,8 +103,6 @@ services:
         HADOOP_OPTS: "-Djava.net.preferIPv4Stack=true -Dsun.security.krb5.debug=true -Dsun.security.spnego.debug"
     volumes:
         - ../../connect/connect-hdfs3-sink/ha-kerberos-repro-gss-exception/krb5.conf:/opt/launcher/plugins/011_kerberos/krb5.conf
-        - ../../connect/connect-hdfs3-sink/ha-kerberos-repro-gss-exception/installer.sh:/opt/launcher/plugins/005_installer/installer.sh
-        - ../../connect/connect-hdfs3-sink/hadoop-2.7.3.tar.gz:/opt/download/hadoop.tar.gz
 
   resourcemanager:
     image: flokkr/hadoop:latest
@@ -127,8 +115,6 @@ services:
         - ../../connect/connect-hdfs3-sink/ha-kerberos-repro-gss-exception/config
     volumes:
         - ../../connect/connect-hdfs3-sink/ha-kerberos-repro-gss-exception/krb5.conf:/opt/launcher/plugins/011_kerberos/krb5.conf
-        - ../../connect/connect-hdfs3-sink/ha-kerberos-repro-gss-exception/installer.sh:/opt/launcher/plugins/005_installer/installer.sh
-        - ../../connect/connect-hdfs3-sink/hadoop-2.7.3.tar.gz:/opt/download/hadoop.tar.gz
 
   activator:
     image: flokkr/hadoop:latest
@@ -141,9 +127,6 @@ services:
       - ../../connect/connect-hdfs3-sink/ha-kerberos-repro-gss-exception/config
     environment:
         SLEEP_SECONDS: 60
-    volumes:
-      - ../../connect/connect-hdfs3-sink/ha-kerberos-repro-gss-exception/installer.sh:/opt/launcher/plugins/005_installer/installer.sh
-      - ../../connect/connect-hdfs3-sink/hadoop-2.7.3.tar.gz:/opt/download/hadoop.tar.gz
 
   connect:
     build:
