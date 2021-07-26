@@ -13,7 +13,7 @@ RUN microdnf install yum \
 #     && rm -f /tmp/jdk-8u201-linux-x64.rpm && alternatives --remove java /usr/lib/jvm/zulu8/jre/bin/java
 USER appuser
 ARG CONNECTOR_TAG
-RUN confluent-hub install --no-prompt confluentinc/kafka-connect-hdfs:${CONNECTOR_TAG}
+RUN confluent-hub install --no-prompt confluentinc/kafka-connect-hdfs3:${CONNECTOR_TAG}
 # https://stackoverflow.com/a/41548434/2381999
 # WORKDIR /
 # RUN yum -y install gcc automake autoconf libtool make git && git clone https://github.com/wolfcw/libfaketime.git
