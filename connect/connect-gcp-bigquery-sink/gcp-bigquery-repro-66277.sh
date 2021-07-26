@@ -59,6 +59,8 @@ set -e
 log "Create dataset $PROJECT.$DATASET"
 docker run -i --volumes-from gcloud-config google/cloud-sdk:latest bq --project_id "$PROJECT" mk --dataset --description "used by playground" "$DATASET"
 
+sleep 60
+
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.repro-66277.yml"
 
 log "Activate TRACE logs for com.wepay.kafka.connect.bigquery"
@@ -94,7 +96,7 @@ curl -X PUT \
                "allowNewBigQueryFields" : "true",
                "allowBigQueryRequiredFieldRelaxation" : "true",
                "allowSchemaUnionization" : "true",
-               "bigQueryRetryWait" : "30000",
+               "bigQueryRetryWait" : "10000",
                "bigQueryRetry" : "3",
                "keyfile" : "/tmp/keyfile.json",
                "errors.tolerance" : "all",
@@ -104,7 +106,7 @@ curl -X PUT \
                "errors.deadletterqueue.topic.replication.factor": "1",
                "errors.deadletterqueue.context.headers.enable" : "true"
           }' \
-     http://localhost:8083/connectors/gcp-bigquery-sink2/config | jq .
+     http://localhost:8083/connectors/gcp-bigquery-sink/config | jq .
 
 
 log "Run the Java producer-v1"
