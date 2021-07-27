@@ -9,7 +9,7 @@ set -e
 # https://community.cloudera.com/t5/Support-Questions/Error-on-kerberos-ticket-renewer-role-startup/td-p/31187
 
 #export TAG=5.4.2-1-ubi8
-# export CONNECTOR_TAG=10.0.6
+export CONNECTOR_TAG=10.0.6
 NB_CONNECTORS=40
 NB_TASK_PER_CONNECTOR=2
 CONNECT_KERBEROS_TICKET_LIFETIME=60
