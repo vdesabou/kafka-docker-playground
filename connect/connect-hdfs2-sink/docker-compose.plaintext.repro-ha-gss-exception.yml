@@ -158,7 +158,7 @@ services:
       - ../../connect/connect-hdfs2-sink/ha-kerberos-repro-gss-exception/hdfs-site.xml:/opt/hadoop/etc/hadoop/hdfs-site.xml
     environment:
       CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-hdfs
-      KAFKA_OPTS: -Dsun.security.krb5.debug=true
+      # KAFKA_OPTS: -Dsun.security.krb5.debug=true
 
   connect2:
     # build:
@@ -204,7 +204,7 @@ services:
       CONNECT_CONSUMER_CONFLUENT_MONITORING_INTERCEPTOR_BOOTSTRAP_SERVERS: broker:9092
       # CONNECT_LOG4J_ROOT_LOGLEVEL: DEBUG
       CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-hdfs
-      KAFKA_OPTS: -Dsun.security.krb5.debug=true
+      # KAFKA_OPTS: -Dsun.security.krb5.debug=true
 
   connect3:
     # build:
@@ -250,7 +250,7 @@ services:
       CONNECT_CONSUMER_CONFLUENT_MONITORING_INTERCEPTOR_BOOTSTRAP_SERVERS: broker:9092
       # CONNECT_LOG4J_ROOT_LOGLEVEL: DEBUG
       CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-hdfs
-      KAFKA_OPTS: -Dsun.security.krb5.debug=true
+      # KAFKA_OPTS: -Dsun.security.krb5.debug=true
 
 networks:
   default:
