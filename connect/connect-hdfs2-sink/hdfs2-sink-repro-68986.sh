@@ -77,7 +77,7 @@ grep "value1" /tmp/result.log
 
 log "Update to 5.5.3"
 
-export CONNECT_TAG=5.5.3
+export TAG=5.5.3
 export CONNECTOR_TAG=5.5.3
 
 source ${DIR}/../../scripts/utils.sh
