@@ -94,6 +94,7 @@ sleep 10
 log "Listing content of /topics/my_topic in HDFS"
 docker exec namenode bash -c "/opt/hadoop-2.7.4/bin/hdfs dfs -ls /topics/my_topic"
 
+sleep 20
 
 log "Check data with beeline"
 docker exec -i hive-server beeline > /tmp/result.log  2>&1 <<-EOF
