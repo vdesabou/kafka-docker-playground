@@ -17,12 +17,6 @@ CONNECT_KERBEROS_TICKET_LIFETIME=60
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
-if [ ! -f ${DIR}/ha-kerberos-repro-gss-exception/jdk-8u201-linux-x64.rpm ]
-then
-     log "${DIR}/ha-kerberos-repro-gss-exception/jdk-8u201-linux-x64.rpm is missing, download it from Oracle!"
-     exit 1
-fi
-
 function wait_for_gss_exception () {
      MAX_WAIT=1200
      CUR_WAIT=0
@@ -162,7 +156,7 @@ for((i=0;i<$NB_CONNECTORS;i++)); do
                     "rotate.interval.ms":"120000",
                     "logs.dir": "'"$LOG_DIR"'",
                     "hdfs.authentication.kerberos": "true",
-                    "kerberos.ticket.renew.period.ms": "20000",
+                    "kerberos.ticket.renew.period.ms": "30000",
                     "connect.hdfs.principal": "connect@EXAMPLE.COM",
                     "connect.hdfs.keytab": "/tmp/connect.keytab",
                     "hdfs.namenode.principal": "nn/_HOST@EXAMPLE.COM",
