@@ -146,11 +146,12 @@ services:
       - ../../connect/connect-hdfs2-sink/hadoop-2.7.3.tar.gz:/opt/download/hadoop.tar.gz
 
   connect:
-    build:
-      context: ../../connect/connect-hdfs2-sink/ha-kerberos-repro-gss-exception/
-      args:
-        TAG: ${TAG}
-        CONNECTOR_TAG: ${CONNECTOR_TAG}
+    # build:
+    #   context: ../../connect/connect-hdfs2-sink/ha-kerberos-repro-gss-exception/
+    #   args:
+    #     TAG: ${TAG}
+    #     CONNECTOR_TAG: ${CONNECTOR_TAG}
+    image: vdesabou/kafka-docker-playground-connect:${CONNECT_TAG}
     volumes:
       - ../../connect/connect-hdfs2-sink/ha-kerberos-repro-gss-exception/krb5.conf:/etc/krb5.conf
       - ../../connect/connect-hdfs2-sink/ha-kerberos-repro-gss-exception/core-site.xml:/opt/hadoop/etc/hadoop/core-site.xml
@@ -160,11 +161,12 @@ services:
       KAFKA_OPTS: -Dsun.security.krb5.debug=true
 
   connect2:
-    build:
-      context: ../../connect/connect-hdfs2-sink/ha-kerberos-repro-gss-exception/
-      args:
-        TAG: ${TAG}
-        CONNECTOR_TAG: ${CONNECTOR_TAG}
+    # build:
+    #   context: ../../connect/connect-hdfs2-sink/ha-kerberos-repro-gss-exception/
+    #   args:
+    #     TAG: ${TAG}
+    #     CONNECTOR_TAG: ${CONNECTOR_TAG}
+    image: vdesabou/kafka-docker-playground-connect:${CONNECT_TAG}
     volumes:
       - ../../connect/connect-hdfs2-sink/ha-kerberos-repro-gss-exception/krb5.conf:/etc/krb5.conf
       - ../../connect/connect-hdfs2-sink/ha-kerberos-repro-gss-exception/core-site.xml:/opt/hadoop/etc/hadoop/core-site.xml
@@ -205,11 +207,12 @@ services:
       KAFKA_OPTS: -Dsun.security.krb5.debug=true
 
   connect3:
-    build:
-      context: ../../connect/connect-hdfs2-sink/ha-kerberos-repro-gss-exception/
-      args:
-        TAG: ${TAG}
-        CONNECTOR_TAG: ${CONNECTOR_TAG}
+    # build:
+    #   context: ../../connect/connect-hdfs2-sink/ha-kerberos-repro-gss-exception/
+    #   args:
+    #     TAG: ${TAG}
+    #     CONNECTOR_TAG: ${CONNECTOR_TAG}
+    image: vdesabou/kafka-docker-playground-connect:${CONNECT_TAG}
     volumes:
       - ../../connect/connect-hdfs2-sink/ha-kerberos-repro-gss-exception/krb5.conf:/etc/krb5.conf
       - ../../connect/connect-hdfs2-sink/ha-kerberos-repro-gss-exception/core-site.xml:/opt/hadoop/etc/hadoop/core-site.xml
