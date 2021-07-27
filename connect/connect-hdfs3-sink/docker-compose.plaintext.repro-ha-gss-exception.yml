@@ -129,25 +129,17 @@ services:
         SLEEP_SECONDS: 60
 
   connect:
-    build:
-      context: ../../connect/connect-hdfs3-sink/ha-kerberos-repro-gss-exception/
-      args:
-        TAG: ${TAG}
-        CONNECTOR_TAG: ${CONNECTOR_TAG}
+    image: vdesabou/kafka-docker-playground-connect:${CONNECT_TAG}
     volumes:
       - ../../connect/connect-hdfs3-sink/ha-kerberos-repro-gss-exception/krb5.conf:/etc/krb5.conf
       - ../../connect/connect-hdfs3-sink/ha-kerberos-repro-gss-exception/core-site.xml:/opt/hadoop/etc/hadoop/core-site.xml
       - ../../connect/connect-hdfs3-sink/ha-kerberos-repro-gss-exception/hdfs-site.xml:/opt/hadoop/etc/hadoop/hdfs-site.xml
     environment:
       CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-hdfs3
-      KAFKA_OPTS: -Dsun.security.krb5.debug=true
+      #KAFKA_OPTS: -Dsun.security.krb5.debug=true
 
   connect2:
-    build:
-      context: ../../connect/connect-hdfs3-sink/ha-kerberos-repro-gss-exception/
-      args:
-        TAG: ${TAG}
-        CONNECTOR_TAG: ${CONNECTOR_TAG}
+    image: vdesabou/kafka-docker-playground-connect:${CONNECT_TAG}
     volumes:
       - ../../connect/connect-hdfs3-sink/ha-kerberos-repro-gss-exception/krb5.conf:/etc/krb5.conf
       - ../../connect/connect-hdfs3-sink/ha-kerberos-repro-gss-exception/core-site.xml:/opt/hadoop/etc/hadoop/core-site.xml
@@ -185,14 +177,10 @@ services:
       CONNECT_CONSUMER_CONFLUENT_MONITORING_INTERCEPTOR_BOOTSTRAP_SERVERS: broker:9092
       # CONNECT_LOG4J_ROOT_LOGLEVEL: DEBUG
       CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-hdfs3
-      KAFKA_OPTS: -Dsun.security.krb5.debug=true
+      #KAFKA_OPTS: -Dsun.security.krb5.debug=true
 
   connect3:
-    build:
-      context: ../../connect/connect-hdfs3-sink/ha-kerberos-repro-gss-exception/
-      args:
-        TAG: ${TAG}
-        CONNECTOR_TAG: ${CONNECTOR_TAG}
+    image: vdesabou/kafka-docker-playground-connect:${CONNECT_TAG}
     volumes:
       - ../../connect/connect-hdfs3-sink/ha-kerberos-repro-gss-exception/krb5.conf:/etc/krb5.conf
       - ../../connect/connect-hdfs3-sink/ha-kerberos-repro-gss-exception/core-site.xml:/opt/hadoop/etc/hadoop/core-site.xml
@@ -230,7 +218,7 @@ services:
       CONNECT_CONSUMER_CONFLUENT_MONITORING_INTERCEPTOR_BOOTSTRAP_SERVERS: broker:9092
       # CONNECT_LOG4J_ROOT_LOGLEVEL: DEBUG
       CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-hdfs3
-      KAFKA_OPTS: -Dsun.security.krb5.debug=true
+      #KAFKA_OPTS: -Dsun.security.krb5.debug=true
 
 networks:
   default:
