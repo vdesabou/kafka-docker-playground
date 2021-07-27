@@ -6,6 +6,8 @@ source ${DIR}/../../scripts/utils.sh
 
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
 
+sleep 5
+
 log "Send message to RabbitMQ in myqueue"
 docker exec rabbitmq_producer bash -c "python /producer.py myqueue 5"
 
