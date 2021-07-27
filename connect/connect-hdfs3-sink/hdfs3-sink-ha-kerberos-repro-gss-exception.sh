@@ -9,10 +9,10 @@ set -e
 # https://community.cloudera.com/t5/Support-Questions/Error-on-kerberos-ticket-renewer-role-startup/td-p/31187
 
 #export TAG=5.4.2-1-ubi8
-export CONNECTOR_TAG=1.1.1
+# export CONNECTOR_TAG=1.1.1
 NB_CONNECTORS=40
-NB_TASK_PER_CONNECTOR=10
-CONNECT_KERBEROS_TICKET_LIFETIME=5
+NB_TASK_PER_CONNECTOR=2
+CONNECT_KERBEROS_TICKET_LIFETIME=60
 
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
@@ -59,53 +59,53 @@ docker exec -i connect java -version
 log "Wait 120 seconds while hadoop is installing"
 sleep 120
 
-curl --request PUT \
-  --url http://localhost:8083/admin/loggers/io.confluent.connect.hdfs \
-  --header 'Accept: application/json' \
-  --header 'Content-Type: application/json' \
-  --data '{
-	"level": "DEBUG"
-}'
+# curl --request PUT \
+#   --url http://localhost:8083/admin/loggers/io.confluent.connect.hdfs \
+#   --header 'Accept: application/json' \
+#   --header 'Content-Type: application/json' \
+#   --data '{
+# 	"level": "DEBUG"
+# }'
 
-curl --request PUT \
-  --url http://localhost:8083/admin/loggers/org.apache.hadoop.security \
-  --header 'Accept: application/json' \
-  --header 'Content-Type: application/json' \
-  --data '{
-	"level": "DEBUG"
-}'
+# curl --request PUT \
+#   --url http://localhost:8083/admin/loggers/org.apache.hadoop.security \
+#   --header 'Accept: application/json' \
+#   --header 'Content-Type: application/json' \
+#   --data '{
+# 	"level": "DEBUG"
+# }'
 
-curl --request PUT \
-  --url http://localhost:18083/admin/loggers/io.confluent.connect.hdfs \
-  --header 'Accept: application/json' \
-  --header 'Content-Type: application/json' \
-  --data '{
-	"level": "DEBUG"
-}'
+# curl --request PUT \
+#   --url http://localhost:18083/admin/loggers/io.confluent.connect.hdfs \
+#   --header 'Accept: application/json' \
+#   --header 'Content-Type: application/json' \
+#   --data '{
+# 	"level": "DEBUG"
+# }'
 
-curl --request PUT \
-  --url http://localhost:18083/admin/loggers/org.apache.hadoop.security \
-  --header 'Accept: application/json' \
-  --header 'Content-Type: application/json' \
-  --data '{
-	"level": "DEBUG"
-}'
+# curl --request PUT \
+#   --url http://localhost:18083/admin/loggers/org.apache.hadoop.security \
+#   --header 'Accept: application/json' \
+#   --header 'Content-Type: application/json' \
+#   --data '{
+# 	"level": "DEBUG"
+# }'
 
-curl --request PUT \
-  --url http://localhost:28083/admin/loggers/io.confluent.connect.hdfs \
-  --header 'Accept: application/json' \
-  --header 'Content-Type: application/json' \
-  --data '{
-	"level": "DEBUG"
-}'
+# curl --request PUT \
+#   --url http://localhost:28083/admin/loggers/io.confluent.connect.hdfs \
+#   --header 'Accept: application/json' \
+#   --header 'Content-Type: application/json' \
+#   --data '{
+# 	"level": "DEBUG"
+# }'
 
-curl --request PUT \
-  --url http://localhost:28083/admin/loggers/org.apache.hadoop.security \
-  --header 'Accept: application/json' \
-  --header 'Content-Type: application/json' \
-  --data '{
-	"level": "DEBUG"
-}'
+# curl --request PUT \
+#   --url http://localhost:28083/admin/loggers/org.apache.hadoop.security \
+#   --header 'Accept: application/json' \
+#   --header 'Content-Type: application/json' \
+#   --data '{
+# 	"level": "DEBUG"
+# }'
 
 
 # Note in this simple example, if you get into an issue with permissions at the local HDFS level, it may be easiest to unlock the permissions unless you want to debug that more.
@@ -162,7 +162,7 @@ for((i=0;i<$NB_CONNECTORS;i++)); do
                     "rotate.interval.ms":"120000",
                     "logs.dir": "'"$LOG_DIR"'",
                     "hdfs.authentication.kerberos": "true",
-                    "kerberos.ticket.renew.period.ms": "1000",
+                    "kerberos.ticket.renew.period.ms": "20000",
                     "connect.hdfs.principal": "connect@EXAMPLE.COM",
                     "connect.hdfs.keytab": "/tmp/connect.keytab",
                     "hdfs.namenode.principal": "nn/_HOST@EXAMPLE.COM",
