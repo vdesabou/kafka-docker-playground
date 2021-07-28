@@ -82,7 +82,7 @@ export CONNECTOR_TAG=5.5.3
 
 source ${DIR}/../../scripts/utils.sh
 
-docker-compose -f ../../environment/plaintext/docker-compose.yml -f /Users/vsaboulin/Documents/github/kafka-docker-playground/connect/connect-hdfs2-sink/docker-compose.plaintext.yml --profile control-center  up -d
+docker-compose -f ../../environment/plaintext/docker-compose.yml -f ../../connect/connect-hdfs2-sink/docker-compose.plaintext.yml --profile control-center  up -d
 
 ../../scripts/wait-for-connect-and-controlcenter.sh
 
