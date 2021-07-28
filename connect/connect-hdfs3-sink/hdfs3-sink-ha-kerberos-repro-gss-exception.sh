@@ -18,9 +18,9 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
 function wait_for_gss_exception () {
-     MAX_WAIT=1200
+     MAX_WAIT=43200
      CUR_WAIT=0
-     log "Waiting up to $MAX_WAIT seconds for GSS exception to happen (it takes several minutes)"
+     log "Waiting up to $MAX_WAIT seconds for GSS exception to happen (it can take several hours)"
      docker container logs connect > /tmp/out.txt 2>&1
      docker container logs connect2 >> /tmp/out.txt 2>&1
      docker container logs connect3 >> /tmp/out.txt 2>&1
@@ -156,7 +156,7 @@ for((i=0;i<$NB_CONNECTORS;i++)); do
                     "rotate.interval.ms":"120000",
                     "logs.dir": "'"$LOG_DIR"'",
                     "hdfs.authentication.kerberos": "true",
-                    "kerberos.ticket.renew.period.ms": "30000",
+                    "kerberos.ticket.renew.period.ms": "5000",
                     "connect.hdfs.principal": "connect@EXAMPLE.COM",
                     "connect.hdfs.keytab": "/tmp/connect.keytab",
                     "hdfs.namenode.principal": "nn/_HOST@EXAMPLE.COM",
