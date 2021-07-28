@@ -7,6 +7,15 @@ export CONNECTOR_TAG=5.4.1
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
+for component in producer-v1
+do
+     if [ ! -f ${DIR}/repro-68986/${component}/target/${component}-1.0.0-jar-with-dependencies.jar ]
+     then
+          log "Building jar for ${component}"
+          docker run -i --rm -e KAFKA_CLIENT_TAG=$KAFKA_CLIENT_TAG -e TAG=$TAG_BASE -v "${DIR}/repro-68986/${component}":/usr/src/mymaven -v "$HOME/.m2":/root/.m2 -v "${DIR}/repro-68986/${component}/target:/usr/src/mymaven/target" -w /usr/src/mymaven maven:3.6.1-jdk-11 mvn -Dkafka.tag=$TAG -Dkafka.client.tag=$KAFKA_CLIENT_TAG package
+     fi
+done
+
 log "Start with 5.4.1"
 
 if [ ! -f ${DIR}/hive-jdbc-3.1.2-standalone.jar ]
@@ -15,7 +24,7 @@ then
      wget https://repo1.maven.org/maven2/org/apache/hive/hive-jdbc/3.1.2/hive-jdbc-3.1.2-standalone.jar
 fi
 
-${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
+${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.repro-68986.yml"
 
 sleep 10
 
@@ -33,7 +42,7 @@ curl -X PUT \
                "flush.size":"3",
                "hadoop.conf.dir":"/etc/hadoop/",
                "partitioner.class":"io.confluent.connect.hdfs.partitioner.FieldPartitioner",
-               "partition.field.name":"f1",
+               "partition.field.name":"label",
                "rotate.interval.ms":"120000",
                "logs.dir":"/tmp",
                "hive.integration": "true",
@@ -50,19 +59,13 @@ curl -X PUT \
      http://localhost:8083/connectors/hdfs-sink-repro/config | jq .
 
 
-log "Sending messages to topic my_topic"
-seq -f "{\"f1\": \"value%g\", \"f2\": 0}" 10 | docker exec -i connect kafka-avro-console-producer --broker-list broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic my_topic --property value.schema='{"fields":[{"type":"string","name":"f1"},{"default":0,"type":"double","name":"f2"}],"type":"record","name":"myrecord"}'
+log "Run the Java producer-v1"
+docker exec producer-v1 bash -c "java -jar producer-v1-1.0.0-jar-with-dependencies.jar"
 
 sleep 10
 
 log "Listing content of /topics/my_topic in HDFS"
 docker exec namenode bash -c "/opt/hadoop-2.7.4/bin/hdfs dfs -ls /topics/my_topic"
-
-log "Getting one of the avro files locally and displaying content with avro-tools"
-docker exec namenode bash -c "/opt/hadoop-2.7.4/bin/hadoop fs -copyToLocal /topics/my_topic/f1=value1/my_topic+0+0000000000+0000000000.avro /tmp"
-docker cp namenode:/tmp/my_topic+0+0000000000+0000000000.avro /tmp/
-
-docker run -v /tmp:/tmp actions/avro-tools tojson /tmp/my_topic+0+0000000000+0000000000.avro
 
 log "Check data with beeline"
 docker exec -i hive-server beeline > /tmp/result.log  2>&1 <<-EOF
@@ -73,7 +76,6 @@ show create table my_topic;
 select * from my_topic;
 EOF
 cat /tmp/result.log
-grep "value1" /tmp/result.log
 
 log "Update to 5.5.3"
 
@@ -86,8 +88,8 @@ docker-compose -f ../../environment/plaintext/docker-compose.yml -f /Users/vsabo
 
 ../../scripts/wait-for-connect-and-controlcenter.sh
 
-log "Send some messages"
-seq -f "{\"f1\": \"value%g\", \"f2\": 0}" 10 | docker exec -i connect kafka-avro-console-producer --broker-list broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic my_topic --property value.schema='{"fields":[{"type":"string","name":"f1"},{"default":0,"type":"double","name":"f2"}],"type":"record","name":"myrecord"}'
+log "Run the Java producer-v1"
+docker exec producer-v1 bash -c "java -jar producer-v1-1.0.0-jar-with-dependencies.jar"
 
 sleep 10
 
@@ -105,3 +107,34 @@ show create table my_topic;
 select * from my_topic;
 EOF
 cat /tmp/result.log
+
+# [2021-07-28 07:42:05,120] ERROR WorkerSinkTask{id=hdfs-sink-repro-0} Task threw an uncaught and unrecoverable exception. Task is being killed and will not recover until manually restarted. Error: org.apache.kafka.connect.errors.SchemaProjectorException: Error projecting appOS (org.apache.kafka.connect.runtime.WorkerSinkTask)
+# java.lang.RuntimeException: org.apache.kafka.connect.errors.SchemaProjectorException: Error projecting appOS
+#         at io.confluent.connect.hdfs.TopicPartitionWriter.write(TopicPartitionWriter.java:406)
+#         at io.confluent.connect.hdfs.DataWriter.write(DataWriter.java:386)
+#         at io.confluent.connect.hdfs.HdfsSinkTask.put(HdfsSinkTask.java:124)
+#         at org.apache.kafka.connect.runtime.WorkerSinkTask.deliverMessages(WorkerSinkTask.java:546)
+#         at org.apache.kafka.connect.runtime.WorkerSinkTask.poll(WorkerSinkTask.java:326)
+#         at org.apache.kafka.connect.runtime.WorkerSinkTask.iteration(WorkerSinkTask.java:229)
+#         at org.apache.kafka.connect.runtime.WorkerSinkTask.execute(WorkerSinkTask.java:201)
+#         at org.apache.kafka.connect.runtime.WorkerTask.doRun(WorkerTask.java:185)
+#         at org.apache.kafka.connect.runtime.WorkerTask.run(WorkerTask.java:235)
+#         at java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:511)
+#         at java.util.concurrent.FutureTask.run(FutureTask.java:266)
+#         at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1149)
+#         at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:624)
+#         at java.lang.Thread.run(Thread.java:748)
+# Caused by: org.apache.kafka.connect.errors.SchemaProjectorException: Error projecting appOS
+#         at org.apache.kafka.connect.data.SchemaProjector.projectStruct(SchemaProjector.java:113)
+#         at org.apache.kafka.connect.data.SchemaProjector.projectRequiredSchema(SchemaProjector.java:93)
+#         at org.apache.kafka.connect.data.SchemaProjector.project(SchemaProjector.java:73)
+#         at io.confluent.connect.storage.schema.StorageSchemaCompatibility.projectInternal(StorageSchemaCompatibility.java:395)
+#         at io.confluent.connect.storage.schema.StorageSchemaCompatibility.projectInternal(StorageSchemaCompatibility.java:383)
+#         at io.confluent.connect.storage.schema.StorageSchemaCompatibility.project(StorageSchemaCompatibility.java:355)
+#         at io.confluent.connect.hdfs.TopicPartitionWriter.write(TopicPartitionWriter.java:383)
+#         ... 13 more
+# Caused by: org.apache.kafka.connect.errors.SchemaProjectorException: Schema parameters not equal. source parameters: {avro.java.string=String, io.confluent.connect.avro.field.default=true} and target parameters: {avro.java.string=String}
+#         at org.apache.kafka.connect.data.SchemaProjector.checkMaybeCompatible(SchemaProjector.java:133)
+#         at org.apache.kafka.connect.data.SchemaProjector.project(SchemaProjector.java:60)
+#         at org.apache.kafka.connect.data.SchemaProjector.projectStruct(SchemaProjector.java:110)
+#         ... 19 more

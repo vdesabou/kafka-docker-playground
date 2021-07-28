@@ -1,0 +1,47 @@
+{
+    "connect.name": "com.github.vdesabou.MyConnector",
+    "connect.version": 2,
+    "fields": [
+        {
+            "name": "category",
+            "type": "string"
+        },
+        {
+            "name": "action",
+            "type": "string"
+        },
+        {
+            "name": "label",
+            "type": "string"
+        },
+        {
+            "name": "timestamp",
+            "type": "long"
+        },
+        {
+            "name": "eventId",
+            "type": "long"
+        },
+        {
+            "default": "",
+            "name": "appVersion",
+            "type": {
+                "connect.default": "",
+                "type": "string"
+            }
+        },
+        {
+            "default": "",
+            "name": "appOS",
+            "type": "string"
+        },
+        {
+            "default": "",
+            "name": "app",
+            "type": "string"
+        }
+    ],
+    "name": "Customer",
+    "namespace": "com.github.vdesabou",
+    "type": "record"
+}
