@@ -58,6 +58,10 @@ docker exec producer-v1 bash -c "java -jar producer-v1-1.0.0-jar-with-dependenci
 
 sleep 10
 
+log "Get Schema Registry schema"
+curl --request GET \
+  --url http://localhost:8081/subjects/my_topic-value/versions/1 | jq .
+
 log "Listing content of /topics/my_topic in HDFS"
 docker exec namenode bash -c "/opt/hadoop-2.7.4/bin/hdfs dfs -ls /topics/my_topic"
 
@@ -106,6 +110,7 @@ docker exec namenode bash -c "/opt/hadoop-2.7.4/bin/hdfs dfs -ls /topics/my_topi
 
 # Notes:
 # - issue is the same without Hive integration
+# - https://confluentinc.atlassian.net/browse/DGS-486 ? see related GH issue https://github.com/confluentinc/schema-registry/issues/1042 (CP 5.5.3 contains the fix)
 
 # [2021-07-28 07:42:05,120] ERROR WorkerSinkTask{id=hdfs-sink-repro-0} Task threw an uncaught and unrecoverable exception. Task is being killed and will not recover until manually restarted. Error: org.apache.kafka.connect.errors.SchemaProjectorException: Error projecting appOS (org.apache.kafka.connect.runtime.WorkerSinkTask)
 # java.lang.RuntimeException: org.apache.kafka.connect.errors.SchemaProjectorException: Error projecting appOS
@@ -210,3 +215,40 @@ docker exec namenode bash -c "/opt/hadoop-2.7.4/bin/hdfs dfs -ls /topics/my_topi
 # Caused by: org.apache.kafka.connect.errors.SchemaProjectorException: Schema parameters not equal. source parameters: {avro.java.string=String, io.confluent.connect.avro.field.default=true} and target parameters: {avro.java.string=String}
 
 # if I set "schema.compatibility":"NONE", it works fine
+
+
+# with customer schema:
+
+# [2021-07-28 09:50:29,573] ERROR WorkerSinkTask{id=hdfs-sink-repro-0} Task threw an uncaught and unrecoverable exception (org.apache.kafka.connect.runtime.WorkerTask)
+# org.apache.kafka.connect.errors.ConnectException: Exiting WorkerSinkTask due to unrecoverable exception.
+#         at org.apache.kafka.connect.runtime.WorkerSinkTask.deliverMessages(WorkerSinkTask.java:568)
+#         at org.apache.kafka.connect.runtime.WorkerSinkTask.poll(WorkerSinkTask.java:326)
+#         at org.apache.kafka.connect.runtime.WorkerSinkTask.iteration(WorkerSinkTask.java:229)
+#         at org.apache.kafka.connect.runtime.WorkerSinkTask.execute(WorkerSinkTask.java:201)
+#         at org.apache.kafka.connect.runtime.WorkerTask.doRun(WorkerTask.java:185)
+#         at org.apache.kafka.connect.runtime.WorkerTask.run(WorkerTask.java:235)
+#         at java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:511)
+#         at java.util.concurrent.FutureTask.run(FutureTask.java:266)
+#         at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1149)
+#         at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:624)
+#         at java.lang.Thread.run(Thread.java:748)
+# Caused by: java.lang.RuntimeException: org.apache.kafka.connect.errors.SchemaProjectorException: Error projecting createdDate
+#         at io.confluent.connect.hdfs.TopicPartitionWriter.write(TopicPartitionWriter.java:406)
+#         at io.confluent.connect.hdfs.DataWriter.write(DataWriter.java:386)
+#         at io.confluent.connect.hdfs.HdfsSinkTask.put(HdfsSinkTask.java:124)
+#         at org.apache.kafka.connect.runtime.WorkerSinkTask.deliverMessages(WorkerSinkTask.java:546)
+#         ... 10 more
+# Caused by: org.apache.kafka.connect.errors.SchemaProjectorException: Error projecting createdDate
+#         at org.apache.kafka.connect.data.SchemaProjector.projectStruct(SchemaProjector.java:113)
+#         at org.apache.kafka.connect.data.SchemaProjector.projectRequiredSchema(SchemaProjector.java:93)
+#         at org.apache.kafka.connect.data.SchemaProjector.project(SchemaProjector.java:73)
+#         at io.confluent.connect.storage.schema.StorageSchemaCompatibility.projectInternal(StorageSchemaCompatibility.java:395)
+#         at io.confluent.connect.storage.schema.StorageSchemaCompatibility.projectInternal(StorageSchemaCompatibility.java:383)
+#         at io.confluent.connect.storage.schema.StorageSchemaCompatibility.project(StorageSchemaCompatibility.java:355)
+#         at io.confluent.connect.hdfs.TopicPartitionWriter.write(TopicPartitionWriter.java:383)
+#         ... 13 more
+# Caused by: org.apache.kafka.connect.errors.SchemaProjectorException: Schema parameters not equal. source parameters: {io.confluent.connect.avro.field.default=true} and target parameters: null
+#         at org.apache.kafka.connect.data.SchemaProjector.checkMaybeCompatible(SchemaProjector.java:133)
+#         at org.apache.kafka.connect.data.SchemaProjector.project(SchemaProjector.java:60)
+#         at org.apache.kafka.connect.data.SchemaProjector.projectStruct(SchemaProjector.java:110)
+#         ... 19 more
