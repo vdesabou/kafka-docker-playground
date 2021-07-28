@@ -45,9 +45,6 @@ curl -X PUT \
                "partition.field.name":"label",
                "rotate.interval.ms":"120000",
                "logs.dir":"/tmp",
-               "hive.integration": "true",
-               "hive.metastore.uris": "thrift://hive-metastore:9083",
-               "hive.database": "testhive",
                "confluent.license": "",
                "confluent.topic.bootstrap.servers": "broker:9092",
                "confluent.topic.replication.factor": "1",
@@ -67,15 +64,16 @@ sleep 10
 log "Listing content of /topics/my_topic in HDFS"
 docker exec namenode bash -c "/opt/hadoop-2.7.4/bin/hdfs dfs -ls /topics/my_topic"
 
-log "Check data with beeline"
-docker exec -i hive-server beeline > /tmp/result.log  2>&1 <<-EOF
-!connect jdbc:hive2://hive-server:10000/testhive
-hive
-hive
-show create table my_topic;
-select * from my_topic;
-EOF
-cat /tmp/result.log
+# - issue is the same without Hive integration
+# log "Check data with beeline"
+# docker exec -i hive-server beeline > /tmp/result.log  2>&1 <<-EOF
+# !connect jdbc:hive2://hive-server:10000/testhive
+# hive
+# hive
+# show create table my_topic;
+# select * from my_topic;
+# EOF
+# cat /tmp/result.log
 
 log "Update to 5.5.3"
 
@@ -96,17 +94,21 @@ sleep 10
 log "Listing content of /topics/my_topic in HDFS"
 docker exec namenode bash -c "/opt/hadoop-2.7.4/bin/hdfs dfs -ls /topics/my_topic"
 
-sleep 20
+# sleep 20
 
-log "Check data with beeline"
-docker exec -i hive-server beeline > /tmp/result.log  2>&1 <<-EOF
-!connect jdbc:hive2://hive-server:10000/testhive
-hive
-hive
-show create table my_topic;
-select * from my_topic;
-EOF
-cat /tmp/result.log
+# - issue is the same without Hive integration
+# log "Check data with beeline"
+# docker exec -i hive-server beeline > /tmp/result.log  2>&1 <<-EOF
+# !connect jdbc:hive2://hive-server:10000/testhive
+# hive
+# hive
+# show create table my_topic;
+# select * from my_topic;
+# EOF
+# cat /tmp/result.log
+
+# Notes:
+# - issue is the same without Hive integration
 
 # [2021-07-28 07:42:05,120] ERROR WorkerSinkTask{id=hdfs-sink-repro-0} Task threw an uncaught and unrecoverable exception. Task is being killed and will not recover until manually restarted. Error: org.apache.kafka.connect.errors.SchemaProjectorException: Error projecting appOS (org.apache.kafka.connect.runtime.WorkerSinkTask)
 # java.lang.RuntimeException: org.apache.kafka.connect.errors.SchemaProjectorException: Error projecting appOS
