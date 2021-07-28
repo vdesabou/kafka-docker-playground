@@ -11,14 +11,14 @@ docker-compose up -d --build
 ${DIR}/../../scripts/wait-for-connect-and-controlcenter.sh -a -b
 
 log "Create a topic kafkajs"
-docker exec broker1 kafka-topics --create --topic kafkajs --partitions 1 --replication-factor 3 --zookeeper zookeeper:2181
+docker exec broker1 kafka-topics --create --topic kafkajs --partitions 3 --replication-factor 3 --zookeeper zookeeper:2181
 
 
 log "Starting consumer. Logs are in consumer.log."
 docker exec -i client-kafkajs node /usr/src/app/consumer.js > consumer.log 2>&1 &
 
 log "Starting producer"
-docker exec -i client-kafkajs node /usr/src/app/producer.js
+docker exec -i client-kafkajs node /usr/src/app/producer.js > producer.log 2>&1 &
 
 exit 0
 
