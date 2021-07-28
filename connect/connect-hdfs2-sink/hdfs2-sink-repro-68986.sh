@@ -9,11 +9,8 @@ source ${DIR}/../../scripts/utils.sh
 
 for component in producer-v1
 do
-     if [ ! -f ${DIR}/repro-68986/${component}/target/${component}-1.0.0-jar-with-dependencies.jar ]
-     then
-          log "Building jar for ${component}"
-          docker run -i --rm -e KAFKA_CLIENT_TAG=$KAFKA_CLIENT_TAG -e TAG=$TAG_BASE -v "${DIR}/repro-68986/${component}":/usr/src/mymaven -v "$HOME/.m2":/root/.m2 -v "${DIR}/repro-68986/${component}/target:/usr/src/mymaven/target" -w /usr/src/mymaven maven:3.6.1-jdk-11 mvn -Dkafka.tag=$TAG -Dkafka.client.tag=$KAFKA_CLIENT_TAG package
-     fi
+     log "Building jar for ${component}"
+     docker run -i --rm -e KAFKA_CLIENT_TAG=$KAFKA_CLIENT_TAG -e TAG=$TAG_BASE -v "${DIR}/repro-68986/${component}":/usr/src/mymaven -v "$HOME/.m2":/root/.m2 -v "${DIR}/repro-68986/${component}/target:/usr/src/mymaven/target" -w /usr/src/mymaven maven:3.6.1-jdk-11 mvn -Dkafka.tag=$TAG -Dkafka.client.tag=$KAFKA_CLIENT_TAG package
 done
 
 log "Start with 5.4.1"
@@ -42,7 +39,7 @@ curl -X PUT \
                "flush.size":"3",
                "hadoop.conf.dir":"/etc/hadoop/",
                "partitioner.class":"io.confluent.connect.hdfs.partitioner.FieldPartitioner",
-               "partition.field.name":"label",
+               "partition.field.name":"appVersion",
                "rotate.interval.ms":"120000",
                "logs.dir":"/tmp",
                "confluent.license": "",
@@ -140,3 +137,76 @@ docker exec namenode bash -c "/opt/hadoop-2.7.4/bin/hdfs dfs -ls /topics/my_topi
 #         at org.apache.kafka.connect.data.SchemaProjector.project(SchemaProjector.java:60)
 #         at org.apache.kafka.connect.data.SchemaProjector.projectStruct(SchemaProjector.java:110)
 #         ... 19 more
+
+# With:
+
+#         {
+#             "default": "",
+#             "name": "appVersion",
+#             "type": {
+#                 "connect.default": "",
+#                 "type": "string"
+#             }
+#         },
+
+# Error projecting appOS
+# Caused by: org.apache.kafka.connect.errors.SchemaProjectorException: Schema parameters not equal. source parameters: {avro.java.string=String, io.confluent.connect.avro.field.default=true} and target parameters: {avro.java.string=String}
+
+# With:
+
+#         {
+#             "default": "",
+#             "name": "appVersion",
+#             "type": {
+#                 "type": "string"
+#             }
+#         },
+
+# Error projecting appVersion
+# Caused by: org.apache.kafka.connect.errors.SchemaProjectorException: Schema parameters not equal. source parameters: {avro.java.string=String, io.confluent.connect.avro.field.default=true} and target parameters: {avro.java.string=String}
+
+# With:
+
+     #    {
+     #        "default": "",
+     #        "name": "appVersion",
+     #        "type": "string"
+     #    },
+
+# Error projecting appVersion
+# Caused by: org.apache.kafka.connect.errors.SchemaProjectorException: Schema parameters not equal. source parameters: {avro.java.string=String, io.confluent.connect.avro.field.default=true} and target parameters: {avro.java.string=String}
+
+# With:
+
+     #    {
+     #        "name": "appVersion",
+     #        "type": "string"
+     #    },
+
+# Error projecting appOS
+# Caused by: org.apache.kafka.connect.errors.SchemaProjectorException: Schema parameters not equal. source parameters: {avro.java.string=String, io.confluent.connect.avro.field.default=true} and target parameters: {avro.java.string=String}
+
+
+# with
+
+# {
+#     "fields": [
+#         {
+#             "name": "appVersion",
+#             "type": "string"
+#         },
+#         {
+#             "default": "",
+#             "name": "appOS",
+#             "type": "string"
+#         }
+#     ],
+#     "name": "Customer",
+#     "namespace": "com.github.vdesabou",
+#     "type": "record"
+# }
+
+# Error projecting appOS
+# Caused by: org.apache.kafka.connect.errors.SchemaProjectorException: Schema parameters not equal. source parameters: {avro.java.string=String, io.confluent.connect.avro.field.default=true} and target parameters: {avro.java.string=String}
+
+# if I set "schema.compatibility":"NONE", it works fine
