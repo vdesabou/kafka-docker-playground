@@ -83,9 +83,34 @@ export CONNECTOR_TAG=5.5.3
 
 source ${DIR}/../../scripts/utils.sh
 
-docker-compose -f ../../environment/plaintext/docker-compose.yml -f ../../connect/connect-hdfs2-sink/docker-compose.plaintext.yml --profile control-center  up -d
+docker-compose -f ../../environment/plaintext/docker-compose.yml -f ../../connect/connect-hdfs2-sink/docker-compose.plaintext.yml -f ../../connect/connect-hdfs2-sink/repro-68986/docker-compose.patch.yml --profile control-center  up -d
 
 ../../scripts/wait-for-connect-and-controlcenter.sh
+
+log "Set value.converter.connect.meta.data to false"
+curl -X PUT \
+     -H "Content-Type: application/json" \
+     --data '{
+               "connector.class":"io.confluent.connect.hdfs.HdfsSinkConnector",
+               "tasks.max":"1",
+               "topics":"my_topic",
+               "store.url":"hdfs://namenode:8020",
+               "flush.size":"3",
+               "hadoop.conf.dir":"/etc/hadoop/",
+               "partitioner.class":"io.confluent.connect.hdfs.partitioner.FieldPartitioner",
+               "partition.field.name":"appVersion",
+               "rotate.interval.ms":"120000",
+               "logs.dir":"/tmp",
+               "confluent.license": "",
+               "confluent.topic.bootstrap.servers": "broker:9092",
+               "confluent.topic.replication.factor": "1",
+               "key.converter":"org.apache.kafka.connect.storage.StringConverter",
+               "value.converter":"io.confluent.connect.avro.AvroConverter",
+               "value.converter.schema.registry.url":"http://schema-registry:8081",
+               "value.converter.connect.meta.data": "false",
+               "schema.compatibility":"FULL"
+          }' \
+     http://localhost:8083/connectors/hdfs-sink-repro/config | jq .
 
 log "Run the Java producer-v1"
 docker exec producer-v1 bash -c "java -jar producer-v1-1.0.0-jar-with-dependencies.jar"
