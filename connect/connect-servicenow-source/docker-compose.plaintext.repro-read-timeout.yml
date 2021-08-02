@@ -1,0 +1,17 @@
+---
+version: '3.5'
+services:
+
+  toxiproxy:
+    image: shopify/toxiproxy
+    hostname: toxiproxy
+    container_name: toxiproxy
+    ports:
+      - "18888:18888"
+
+  connect:
+    volumes:
+      - ../../connect/connect-servicenow-source/repro-proxy/logging.properties:/tmp/logging.properties
+    environment:
+      CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-servicenow
+      KAFKA_OPTS: -Djava.util.logging.config.file=/tmp/logging.properties
