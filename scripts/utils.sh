@@ -1025,7 +1025,7 @@ get_latency() {
     fi
     src_container=$1
     dst_container=$2
-    docker exec --privileged -u0 -t $src_container ping $dst_container -c 4  | tail -1 | awk -F '/' '{print $5}'
+    docker exec --privileged -u0 -t $src_container ping $dst_container -c 4 -W 80 | tail -1 | awk -F '/' '{print $5}'
 }
 
 # https://serverfault.com/a/906499
