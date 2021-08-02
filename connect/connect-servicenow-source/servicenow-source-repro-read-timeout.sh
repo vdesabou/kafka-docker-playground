@@ -189,3 +189,54 @@ log "Latency from nginx_proxy to nginx_proxy AFTER traffic control: $latency_put
 #         at com.google.api.client.http.HttpResponse.parseAsString(HttpResponse.java:473)
 #         at io.confluent.connect.servicenow.rest.ServiceNowClientImpl.getObjects(ServiceNowClientImpl.java:167)
 #         ... 11 more
+
+
+
+# With 2.3.1, retries are done:
+
+# [2021-08-02 15:42:54,104] ERROR [servicenow-source|task-0] WorkerSourceTask{id=servicenow-source-0} Task threw an uncaught and unrecoverable exception. Task is being killed and will not recover until manually restarted (org.apache.kafka.connect.runtime.WorkerTask:184)
+# io.confluent.connect.utils.retry.RetryCountExceeded: Failed after 4 attempts to send request to ServiceNow: Connect to nginx_proxy:8888 [nginx_proxy/172.19.0.3] failed: connect timed out
+# 	at io.confluent.connect.utils.retry.RetryPolicy.callWith(RetryPolicy.java:429)
+# 	at io.confluent.connect.utils.retry.RetryPolicy.call(RetryPolicy.java:337)
+# 	at io.confluent.connect.servicenow.rest.ServiceNowClientImpl.executeRequest(ServiceNowClientImpl.java:229)
+# 	at io.confluent.connect.servicenow.rest.ServiceNowClientImpl.get(ServiceNowClientImpl.java:183)
+# 	at io.confluent.connect.servicenow.rest.ServiceNowClientImpl.getObjects(ServiceNowClientImpl.java:146)
+# 	at io.confluent.connect.servicenow.ServiceNowSourceTask.fetchRecordFromServiceNow(ServiceNowSourceTask.java:183)
+# 	at io.confluent.connect.servicenow.ServiceNowSourceTask.poll(ServiceNowSourceTask.java:147)
+# 	at org.apache.kafka.connect.runtime.WorkerSourceTask.poll(WorkerSourceTask.java:268)
+# 	at org.apache.kafka.connect.runtime.WorkerSourceTask.execute(WorkerSourceTask.java:241)
+# 	at org.apache.kafka.connect.runtime.WorkerTask.doRun(WorkerTask.java:182)
+# 	at org.apache.kafka.connect.runtime.WorkerTask.run(WorkerTask.java:231)
+# 	at java.base/java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:515)
+# 	at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:264)
+# 	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1128)
+# 	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:628)
+# 	at java.base/java.lang.Thread.run(Thread.java:829)
+# Caused by: org.apache.http.conn.ConnectTimeoutException: Connect to nginx_proxy:8888 [nginx_proxy/172.19.0.3] failed: connect timed out
+# 	at org.apache.http.impl.conn.DefaultHttpClientConnectionOperator.connect(DefaultHttpClientConnectionOperator.java:151)
+# 	at org.apache.http.impl.conn.PoolingHttpClientConnectionManager.connect(PoolingHttpClientConnectionManager.java:374)
+# 	at org.apache.http.impl.execchain.MainClientExec.establishRoute(MainClientExec.java:401)
+# 	at org.apache.http.impl.execchain.MainClientExec.execute(MainClientExec.java:236)
+# 	at org.apache.http.impl.execchain.ProtocolExec.execute(ProtocolExec.java:186)
+# 	at org.apache.http.impl.execchain.RetryExec.execute(RetryExec.java:89)
+# 	at org.apache.http.impl.execchain.RedirectExec.execute(RedirectExec.java:110)
+# 	at org.apache.http.impl.client.InternalHttpClient.doExecute(InternalHttpClient.java:185)
+# 	at org.apache.http.impl.client.CloseableHttpClient.execute(CloseableHttpClient.java:83)
+# 	at org.apache.http.impl.client.CloseableHttpClient.execute(CloseableHttpClient.java:108)
+# 	at org.apache.http.impl.client.CloseableHttpClient.execute(CloseableHttpClient.java:56)
+# 	at com.google.api.client.http.apache.v2.ApacheHttpRequest.execute(ApacheHttpRequest.java:71)
+# 	at com.google.api.client.http.HttpRequest.execute(HttpRequest.java:996)
+# 	at io.confluent.connect.servicenow.rest.ServiceNowClientImpl.lambda$executeRequest$2(ServiceNowClientImpl.java:230)
+# 	at io.confluent.connect.utils.retry.RetryPolicy.lambda$call$1(RetryPolicy.java:337)
+# 	at io.confluent.connect.utils.retry.RetryPolicy.callWith(RetryPolicy.java:417)
+# 	... 15 more
+# Caused by: java.net.SocketTimeoutException: connect timed out
+# 	at java.base/java.net.PlainSocketImpl.socketConnect(Native Method)
+# 	at java.base/java.net.AbstractPlainSocketImpl.doConnect(AbstractPlainSocketImpl.java:399)
+# 	at java.base/java.net.AbstractPlainSocketImpl.connectToAddress(AbstractPlainSocketImpl.java:242)
+# 	at java.base/java.net.AbstractPlainSocketImpl.connect(AbstractPlainSocketImpl.java:224)
+# 	at java.base/java.net.SocksSocketImpl.connect(SocksSocketImpl.java:392)
+# 	at java.base/java.net.Socket.connect(Socket.java:609)
+# 	at org.apache.http.conn.socket.PlainConnectionSocketFactory.connectSocket(PlainConnectionSocketFactory.java:75)
+# 	at org.apache.http.impl.conn.DefaultHttpClientConnectionOperator.connect(DefaultHttpClientConnectionOperator.java:142)
+# 	... 30 more
