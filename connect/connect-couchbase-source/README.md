@@ -4,10 +4,7 @@
 
 ## Objective
 
-Quickly test [Couchbase Source](https://docs.couchbase.com/kafka-connector/3.4/index.html) connector.
-
-
-
+Quickly test [Couchbase Source](https://docs.couchbase.com/kafka-connector/current/index.html) connector.
 
 ## How to run
 
@@ -58,7 +55,7 @@ $ docker exec couchbase bash -c "/opt/couchbase/bin/couchbase-cli cluster-init -
 Install Couchbase bucket example `travel-sample`
 
 ```bash
-$ docker exec couchbase bash -c "/opt/couchbase/bin/cbdocloader -c localhost:8091 -u Administrator -p password -b travel-sample -m 100 /opt/couchbase/samples/travel-sample.zip"
+$ docker exec couchbase bash -c "/opt/couchbase/bin/cbdocloader -c localhost:8091 -u Administrator -p password -b travel-sample -m 100 -d /opt/couchbase/samples/travel-sample.zip"
 ```
 
 Creating Couchbase Source connector
