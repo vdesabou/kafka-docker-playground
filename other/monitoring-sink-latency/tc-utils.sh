@@ -68,7 +68,5 @@ add_latency() {
 
     # Add a child queue named 20: under class 1:2
     docker exec --privileged -u0 -t $src_container tc qdisc add dev eth0 parent 1:2 handle 20: sfq 2>&1
-
-
 }
 
