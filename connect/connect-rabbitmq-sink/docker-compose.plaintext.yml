@@ -3,7 +3,7 @@ version: '3.5'
 services:
 
   rabbitmq:
-    image: rabbitmq:3.8.4-management
+    image: rabbitmq:3.8.19-alpine
     hostname: rabbitmq
     container_name: rabbitmq
     ports:
