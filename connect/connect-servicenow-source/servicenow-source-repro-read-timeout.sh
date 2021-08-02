@@ -57,9 +57,8 @@ ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.rep
 
 # https://blog.jakubholy.net/2018/11/26/java-understanding-the-different-network-https-exceptions/
 # https://github.com/shopify/toxiproxy#toxics
-docker exec toxiproxy sh -c "/go/bin/toxiproxy-cli create servicenow -l 127.0.0.1:18888 -u service-now.com:443"
+docker exec toxiproxy sh -c "/go/bin/toxiproxy-cli create servicenow -l 0.0.0.0:8888 -u service-now.com:443"
 docker exec toxiproxy sh -c "/go/bin/toxiproxy-cli toxic add servicenow -t latency -a latency=10"
-
 
 # docker exec toxiproxy sh -c "/go/bin/toxiproxy-cli toxic remove servicenow -n latency_downstream"
 # docker exec toxiproxy sh -c "/go/bin/toxiproxy-cli delete servicenow"
@@ -73,7 +72,7 @@ curl -X PUT \
      --data '{
                     "connector.class": "io.confluent.connect.servicenow.ServiceNowSourceConnector",
                     "kafka.topic": "topic-servicenow",
-                    "proxy.url": "toxiproxy:18888",
+                    "proxy.url": "toxiproxy:8888",
                     "servicenow.url": "'"$SERVICENOW_URL"'",
                     "tasks.max": "1",
                     "servicenow.table": "incident",

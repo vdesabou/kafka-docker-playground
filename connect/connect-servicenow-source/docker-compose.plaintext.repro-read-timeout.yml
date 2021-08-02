@@ -7,7 +7,7 @@ services:
     hostname: toxiproxy
     container_name: toxiproxy
     ports:
-      - "18888:18888"
+      - "8888:8888"
 
   connect:
     volumes:
