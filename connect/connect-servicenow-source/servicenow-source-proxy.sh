@@ -4,6 +4,24 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
+function wait_for_end_of_hibernation () {
+     MAX_WAIT=1200
+     CUR_WAIT=0
+     log "Waiting up to $MAX_WAIT seconds for end of hibernation to happen (it can take several minutes)"
+     curl -X POST "${SERVICENOW_URL}/api/now/table/incident" --user admin:"$SERVICENOW_PASSWORD" -H 'Accept: application/json' -H 'Content-Type: application/json' -H 'cache-control: no-cache' -d '{"short_description": "This is test"}' > /tmp/out.txt 2>&1
+     while [[ $(cat /tmp/out.txt) =~ "Sign in to the site to wake your instance" ]]
+     do
+          sleep 10
+          curl -X POST "${SERVICENOW_URL}/api/now/table/incident" --user admin:"$SERVICENOW_PASSWORD" -H 'Accept: application/json' -H 'Content-Type: application/json' -H 'cache-control: no-cache' -d '{"short_description": "This is test"}' > /tmp/out.txt 2>&1
+          CUR_WAIT=$(( CUR_WAIT+10 ))
+          if [[ "$CUR_WAIT" -gt "$MAX_WAIT" ]]; then
+               echo -e "\nERROR: The logs still show 'Sign in to the site to wake your instance' after $MAX_WAIT seconds.\n"
+               exit 1
+          fi
+     done
+     log "The instance is ready !"
+}
+
 SERVICENOW_URL=${SERVICENOW_URL:-$1}
 SERVICENOW_PASSWORD=${SERVICENOW_PASSWORD:-$2}
 
@@ -32,8 +50,7 @@ then
      log "Waking up servicenow instance..."
      docker run -e USERNAME="$SERVICENOW_DEVELOPER_USERNAME" -e PASSWORD="$SERVICENOW_DEVELOPER_PASSWORD" ruthless/servicenow-instance-wakeup:latest
      set -e
-     log "sleeping 480 seconds"
-     sleep 480
+     wait_for_end_of_hibernation
 fi
 
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.repro-proxy.yml"
