@@ -115,7 +115,7 @@ sleep 5
 log "Verify we have received the data in topic-servicenow topic"
 timeout 60 docker exec connect kafka-console-consumer -bootstrap-server broker:9092 --topic topic-servicenow --from-beginning --max-messages 1
 
-
+log "Adding latency from nginx_proxy to connect to simulate a read timeout (hard-coded to 20 seconds)"
 # connect
 latency_put=$(get_latency nginx_proxy connect)
 log "Latency from nginx_proxy to nginx_proxy BEFORE traffic control: $latency_put ms"
@@ -124,3 +124,68 @@ add_latency nginx_proxy connect 60000ms
 
 latency_put=$(get_latency nginx_proxy connect)
 log "Latency from nginx_proxy to nginx_proxy AFTER traffic control: $latency_put ms"
+
+
+
+# with 2.1.1, no retry:
+# Aug 02, 2021 3:16:34 PM com.google.api.client.http.HttpResponse <init>
+# CONFIG: -------------- RESPONSE --------------
+# HTTP/1.1 200 OK
+# X-Is-Logged-In: true
+# X-Transaction-ID: ab142c282f35
+# Set-Cookie: glide_session_store=B20424282F3530104318FE1DF699B63D; Max-Age=60; Expires=Mon, 02-Aug-2021 15:17:34 GMT; Path=/; HttpOnly;Secure
+# X-Total-Count: 1
+# Pragma: no-store,no-cache
+# Cache-Control: no-cache,no-store,must-revalidate,max-age=-1
+# Expires: 0
+# Content-Type: application/json;charset=UTF-8
+# Transfer-Encoding: chunked
+# Date: Mon, 02 Aug 2021 15:16:33 GMT
+# Server: ServiceNow
+# Strict-Transport-Security: max-age=63072000; includeSubDomains
+
+# [2021-08-02 15:16:54,084] INFO [servicenow-source|task-0] WorkerSourceTask{id=servicenow-source-0} flushing 0 outstanding messages for offset commit (org.apache.kafka.connect.runtime.WorkerSourceTask:482)
+# [2021-08-02 15:16:54,096] ERROR [servicenow-source|task-0] WorkerSourceTask{id=servicenow-source-0} Task threw an uncaught and unrecoverable exception. Task is being killed and will not recover until manually restarted (org.apache.kafka.connect.runtime.WorkerTask:184)
+# org.apache.kafka.connect.errors.ConnectException: Exception encountered while calling ServiceNow
+#         at io.confluent.connect.servicenow.rest.ServiceNowClientImpl.getObjects(ServiceNowClientImpl.java:174)
+#         at io.confluent.connect.servicenow.ServiceNowSourceTask.fetchRecordFromServiceNow(ServiceNowSourceTask.java:183)
+#         at io.confluent.connect.servicenow.ServiceNowSourceTask.poll(ServiceNowSourceTask.java:147)
+#         at org.apache.kafka.connect.runtime.WorkerSourceTask.poll(WorkerSourceTask.java:268)
+#         at org.apache.kafka.connect.runtime.WorkerSourceTask.execute(WorkerSourceTask.java:241)
+#         at org.apache.kafka.connect.runtime.WorkerTask.doRun(WorkerTask.java:182)
+#         at org.apache.kafka.connect.runtime.WorkerTask.run(WorkerTask.java:231)
+#         at java.base/java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:515)
+#         at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:264)
+#         at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1128)
+#         at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:628)
+#         at java.base/java.lang.Thread.run(Thread.java:829)
+# Caused by: java.net.SocketTimeoutException: Read timed out
+#         at java.base/java.net.SocketInputStream.socketRead0(Native Method)
+#         at java.base/java.net.SocketInputStream.socketRead(SocketInputStream.java:115)
+#         at java.base/java.net.SocketInputStream.read(SocketInputStream.java:168)
+#         at java.base/java.net.SocketInputStream.read(SocketInputStream.java:140)
+#         at java.base/sun.security.ssl.SSLSocketInputRecord.read(SSLSocketInputRecord.java:478)
+#         at java.base/sun.security.ssl.SSLSocketInputRecord.readHeader(SSLSocketInputRecord.java:472)
+#         at java.base/sun.security.ssl.SSLSocketInputRecord.bytesInCompletePacket(SSLSocketInputRecord.java:70)
+#         at java.base/sun.security.ssl.SSLSocketImpl.readApplicationRecord(SSLSocketImpl.java:1364)
+#         at java.base/sun.security.ssl.SSLSocketImpl$AppInputStream.read(SSLSocketImpl.java:973)
+#         at org.apache.http.impl.io.SessionInputBufferImpl.streamRead(SessionInputBufferImpl.java:137)
+#         at org.apache.http.impl.io.SessionInputBufferImpl.fillBuffer(SessionInputBufferImpl.java:153)
+#         at org.apache.http.impl.io.SessionInputBufferImpl.readLine(SessionInputBufferImpl.java:280)
+#         at org.apache.http.impl.io.ChunkedInputStream.getChunkSize(ChunkedInputStream.java:261)
+#         at org.apache.http.impl.io.ChunkedInputStream.nextChunk(ChunkedInputStream.java:222)
+#         at org.apache.http.impl.io.ChunkedInputStream.read(ChunkedInputStream.java:183)
+#         at org.apache.http.conn.EofSensorInputStream.read(EofSensorInputStream.java:135)
+#         at java.base/java.util.zip.InflaterInputStream.fill(InflaterInputStream.java:243)
+#         at java.base/java.util.zip.InflaterInputStream.read(InflaterInputStream.java:159)
+#         at java.base/java.util.zip.GZIPInputStream.read(GZIPInputStream.java:118)
+#         at org.apache.http.client.entity.LazyDecompressingInputStream.read(LazyDecompressingInputStream.java:70)
+#         at java.base/java.io.FilterInputStream.read(FilterInputStream.java:133)
+#         at com.google.api.client.util.LoggingInputStream.read(LoggingInputStream.java:57)
+#         at java.base/java.io.FilterInputStream.read(FilterInputStream.java:107)
+#         at com.google.api.client.util.ByteStreams.copy(ByteStreams.java:49)
+#         at com.google.api.client.util.IOUtils.copy(IOUtils.java:87)
+#         at com.google.api.client.util.IOUtils.copy(IOUtils.java:59)
+#         at com.google.api.client.http.HttpResponse.parseAsString(HttpResponse.java:473)
+#         at io.confluent.connect.servicenow.rest.ServiceNowClientImpl.getObjects(ServiceNowClientImpl.java:167)
+#         ... 11 more
