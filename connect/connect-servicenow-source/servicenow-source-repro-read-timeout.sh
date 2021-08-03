@@ -88,7 +88,6 @@ curl -X PUT \
                "servicenow.user": "admin",
                "servicenow.password": "'"$SERVICENOW_PASSWORD"'",
                "servicenow.since": "'"$TODAY"'",
-               "retry.max.times": "3",
                "key.converter": "org.apache.kafka.connect.json.JsonConverter",
                "value.converter": "org.apache.kafka.connect.json.JsonConverter",
                "confluent.license": "",
@@ -120,7 +119,7 @@ log "Adding latency from nginx_proxy to connect to simulate a read timeout (hard
 latency_put=$(get_latency nginx_proxy connect)
 log "Latency from nginx_proxy to nginx_proxy BEFORE traffic control: $latency_put ms"
 
-add_latency nginx_proxy connect 60000ms
+add_latency nginx_proxy connect 6000ms
 
 latency_put=$(get_latency nginx_proxy connect)
 log "Latency from nginx_proxy to nginx_proxy AFTER traffic control: $latency_put ms"
@@ -192,7 +191,6 @@ log "Latency from nginx_proxy to nginx_proxy AFTER traffic control: $latency_put
 
 
 
-# With 2.3.1, retries are done:
 
 # [2021-08-02 15:42:54,104] ERROR [servicenow-source|task-0] WorkerSourceTask{id=servicenow-source-0} Task threw an uncaught and unrecoverable exception. Task is being killed and will not recover until manually restarted (org.apache.kafka.connect.runtime.WorkerTask:184)
 # io.confluent.connect.utils.retry.RetryCountExceeded: Failed after 4 attempts to send request to ServiceNow: Connect to nginx_proxy:8888 [nginx_proxy/172.19.0.3] failed: connect timed out
