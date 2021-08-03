@@ -1,6 +1,25 @@
 #!/bin/bash
 set -e
 
+if [ ! -z "$CI" ]
+then
+     # running with github actions
+     aws s3 cp s3://kafka-docker-playground/internal/confluentinc-kafka-connect-oracle-cdc-1.3.0-SNAPSHOT-08022021b.zip .
+     export CONNECTOR_ZIP="$PWD/confluentinc-kafka-connect-oracle-cdc-1.3.0-SNAPSHOT-08022021b.zip"
+fi
+
+if [ -z "$CONNECTOR_ZIP" ]
+then
+     echo "CONNECTOR_ZIP environment variable must be set with the path to the confluentinc-kafka-connect-oracle-cdc SNAPSHOT zip file"
+     exit 1
+fi
+
+if [ ! -f "$CONNECTOR_ZIP" ]
+then
+     echo "File set with CONNECTOR_ZIP ($CONNECTOR_ZIP) does not exist !"
+     exit 1
+fi
+
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
@@ -23,25 +42,6 @@ then
     ./buildContainerImage.sh -v 19.3.0 -e
     rm -rf ${DIR}/docker-images
     cd ${OLDDIR}
-fi
-
-if [ ! -z "$CI" ]
-then
-     # running with github actions
-     aws s3 cp s3://kafka-docker-playground/internal/confluentinc-kafka-connect-oracle-cdc-1.3.0-SNAPSHOT-08022021b.zip .
-     export CONNECTOR_ZIP="$PWD/confluentinc-kafka-connect-oracle-cdc-1.3.0-SNAPSHOT-08022021b.zip"
-fi
-
-if [ -z "$CONNECTOR_ZIP" ]
-then
-     logerror "CONNECTOR_ZIP environment variable must be set with the path to the confluentinc-kafka-connect-oracle-cdc SNAPSHOT zip file"
-     exit 1
-fi
-
-if [ ! -f "$CONNECTOR_ZIP" ]
-then
-     logerror "File set with CONNECTOR_ZIP ($CONNECTOR_ZIP) does not exist !"
-     exit 1
 fi
 
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.cdb-table.yml"
