@@ -82,7 +82,7 @@ EOF
     docker run --rm -v $PWD:/tmp vdesabou/kafka-docker-playground-connect:${CONNECT_TAG} openssl pkcs12 -in /tmp/$i.keystore.p12 -nodes -nocerts -out /tmp/$i.key -passin pass:confluent
 
     # https://confluentinc.atlassian.net/browse/DOCS-2541
-    cacerts_path=$(docker run --rm -v $PWD:/tmp vdesabou/kafka-docker-playground-connect:${CONNECT_TAG} bash -c "find /usr/lib/jvm -name cacerts")
+    cacerts_path=$(docker run --rm -v $PWD:/tmp vdesabou/kafka-docker-playground-connect:${CONNECT_TAG} bash -c "find /usr/lib/jvm -name cacerts" | tail -1)
     docker run --rm -v $PWD:/tmp vdesabou/kafka-docker-playground-connect:${CONNECT_TAG} keytool -noprompt -destkeystore /tmp/kafka.$i.truststore.jks -importkeystore -srckeystore $cacerts_path -srcstorepass changeit -deststorepass confluent
 
 done
