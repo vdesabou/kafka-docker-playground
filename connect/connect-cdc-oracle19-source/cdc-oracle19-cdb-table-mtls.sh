@@ -37,7 +37,7 @@ then
     rm -rf ${DIR}/docker-images
     git clone https://github.com/oracle/docker-images.git
 
-    cp ${DIR}/LINUX.X64_193000_db_home.zip ${DIR}/docker-images/OracleDatabase/SingleInstance/dockerfiles/19.3.0/LINUX.X64_193000_db_home.zip
+    mv ${DIR}/LINUX.X64_193000_db_home.zip ${DIR}/docker-images/OracleDatabase/SingleInstance/dockerfiles/19.3.0/LINUX.X64_193000_db_home.zip
     cd ${DIR}/docker-images/OracleDatabase/SingleInstance/dockerfiles
     ./buildContainerImage.sh -v 19.3.0 -e
     rm -rf ${DIR}/docker-images

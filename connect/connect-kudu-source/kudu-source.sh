@@ -4,6 +4,12 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
+if [ ! -z "$CI" ]
+then
+     # running with github actions
+     aws s3 cp s3://kafka-docker-playground/3rdparty/ImpalaJDBC42.jar .
+fi
+
 if [ ! -f ${DIR}/ImpalaJDBC42.jar ]
 then
      logerror "ERROR: ${DIR}/ImpalaJDBC42.jar is missing. It must be downloaded manually in order to acknowledge user agreement"
