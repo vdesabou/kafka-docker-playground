@@ -101,7 +101,6 @@ jobs:
           sudo apt-get -qq purge build-essential ghc*
           sudo apt-get clean
           docker system prune -af
-          sudo rm -rf /usr/local/*
           rm -rf /usr/share/dotnet
           rm -rf /opt/ghc
           rm -rf "/usr/local/share/boost"
@@ -240,7 +239,6 @@ jobs:
           sudo apt-get -qq purge build-essential ghc*
           sudo apt-get clean
           docker system prune -af
-          sudo rm -rf /usr/local/*
           rm -rf /usr/share/dotnet
           rm -rf /opt/ghc
           rm -rf "/usr/local/share/boost"
