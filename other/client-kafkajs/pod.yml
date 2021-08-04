@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: kafkajs-bitnami-example-docker
+  namespace: default
+spec:
+  containers:
+  - name: kafkajs-bitnami-example-docker
+    image: vdesabou/kafkajs-bitnami-example-docker
+    imagePullPolicy: Never
