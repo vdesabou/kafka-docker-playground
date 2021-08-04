@@ -3,7 +3,7 @@
 
 Playground for Kafka/Confluent Docker experimentations...
 
-![Github CI](https://github.com/vdesabou/kafka-docker-playground/workflows/CI/badge.svg)![success tests](https://img.shields.io/badge/success%20tests-977%2F1052-red)![connector tested](https://img.shields.io/badge/connector%20tested-120-green)![cp versions tested](https://img.shields.io/badge/cp%20version%20tested-%206.2.0%206.1.2%206.0.3%205.5.5-green)![last run](https://img.shields.io/badge/last%20run-2021--08--03%2021:05-green)
+![Github CI](https://github.com/vdesabou/kafka-docker-playground/workflows/CI/badge.svg)![success tests](https://img.shields.io/badge/success%20tests-991%2F1052-red)![connector tested](https://img.shields.io/badge/connector%20tested-120-green)![cp versions tested](https://img.shields.io/badge/cp%20version%20tested-%206.2.0%206.1.2%206.0.3%205.5.5-green)![last run](https://img.shields.io/badge/last%20run-2021--08--04%2010:12-green)
 ![GitHub issues by-label](https://img.shields.io/github/issues/vdesabou/kafka-docker-playground/bug%20🔥)![GitHub issues by-label](https://img.shields.io/github/issues/vdesabou/kafka-docker-playground/enhancement%20✨)
 ![GitHub repo size](https://img.shields.io/github/repo-size/vdesabou/kafka-docker-playground)
 
