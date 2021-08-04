@@ -95,14 +95,24 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: eu-west-3
 
-      - name: Decrypt secrets.tar
+      - name: "Free up disk space"
         run: |
+          df -h
+          sudo apt-get -qq purge build-essential ghc*
+          sudo apt-get clean
+          docker system prune -af
+          sudo rm -rf /usr/local/*
           rm -rf /usr/share/dotnet
           rm -rf /opt/ghc
           rm -rf "/usr/local/share/boost"
           rm -rf "$AGENT_TOOLSDIRECTORY"
+          df -h
+
+      - name: Decrypt secrets.tar
+        run: |
           ./.github/scripts/decrypt_secret.sh
           tar xvf secrets.tar
+          rm secrets.tar
           mkdir -p $HOME/.aws
           cp aws_config $HOME/.aws/config
           cp aws_credentials $HOME/.aws/credentials
@@ -112,6 +122,7 @@ jobs:
           cp config.cc.travis $HOME/.ccloud/config
           aws s3 cp s3://kafka-docker-playground/3rdparty/3rdparty.tgz .
           tar xvfz 3rdparty.tgz
+          rm 3rdparty.tgz
           cp ./3rdparty/TIB_ems-ce_8.5.1_linux_x86_64.zip ./connect/connect-tibco-source/docker-tibco/TIB_ems-ce_8.5.1_linux_x86_64.zip
           cp ./3rdparty/TIB_ems-ce_8.5.1_linux_x86_64.zip ./connect/connect-jms-tibco-sink/docker-tibco/TIB_ems-ce_8.5.1_linux_x86_64.zip
           cp ./3rdparty/TIB_ems-ce_8.5.1_linux_x86_64.zip ./connect/connect-tibco-sink/docker-tibco/TIB_ems-ce_8.5.1_linux_x86_64.zip
