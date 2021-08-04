@@ -27,6 +27,14 @@ export ORACLE_IMAGE="oracle/database:19.3.0-ee"
 
 if test -z "$(docker images -q $ORACLE_IMAGE)"
 then
+    if [ ! -z "$CI" ]
+    then
+        if [ ! -f ${DIR}/LINUX.X64_193000_db_home.zip ]
+        then
+            # running with github actions
+            aws s3 cp s3://kafka-docker-playground/3rdparty/LINUX.X64_193000_db_home.zip .
+        fi
+    fi
     if [ ! -f ${DIR}/LINUX.X64_193000_db_home.zip ]
     then
         logerror "ERROR: ${DIR}/LINUX.X64_193000_db_home.zip is missing. It must be downloaded manually in order to acknowledge user agreement"
@@ -37,7 +45,7 @@ then
     rm -rf ${DIR}/docker-images
     git clone https://github.com/oracle/docker-images.git
 
-    cp ${DIR}/LINUX.X64_193000_db_home.zip ${DIR}/docker-images/OracleDatabase/SingleInstance/dockerfiles/19.3.0/LINUX.X64_193000_db_home.zip
+    mv ${DIR}/LINUX.X64_193000_db_home.zip ${DIR}/docker-images/OracleDatabase/SingleInstance/dockerfiles/19.3.0/LINUX.X64_193000_db_home.zip
     cd ${DIR}/docker-images/OracleDatabase/SingleInstance/dockerfiles
     ./buildContainerImage.sh -v 19.3.0 -e
     rm -rf ${DIR}/docker-images

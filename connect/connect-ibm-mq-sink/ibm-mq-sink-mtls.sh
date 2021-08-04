@@ -4,16 +4,18 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
-if [ ! -f ${DIR}/9.0.0.8-IBM-MQ-Install-Java-All.jar ]
+if [ ! -z "$CI" ]
 then
-     if [ -z "$CI" ]
-     then
-          # not running with github actions
-          logerror "ERROR: ${DIR}/9.0.0.8-IBM-MQ-Install-Java-All.jar is missing. It must be downloaded manually in order to acknowledge user agreement"
-          exit 1
-     fi
+     # running with github actions
+     aws s3 cp s3://kafka-docker-playground/3rdparty/9.0.0.8-IBM-MQ-Install-Java-All.jar .
 fi
 
+if [ ! -f ${DIR}/9.0.0.8-IBM-MQ-Install-Java-All.jar ]
+then
+     # not running with github actions
+     logerror "ERROR: ${DIR}/9.0.0.8-IBM-MQ-Install-Java-All.jar is missing. It must be downloaded manually in order to acknowledge user agreement"
+     exit 1
+fi
 if [ ! -f ${DIR}/com.ibm.mq.allclient.jar ]
 then
      # install deps

@@ -6,6 +6,12 @@ source ${DIR}/../../scripts/utils.sh
 
 # Need to create the docker image using https://github.com/GSSJacky/gemfire-docker
 
+if [ ! -z "$CI" ]
+then
+     # running with github actions
+     aws s3 cp s3://kafka-docker-playground/3rdparty/pivotal-gemfire.tgz .
+fi
+
 if [ ! -f ${DIR}/docker-pivotal-gemfire/pivotal-gemfire.tgz ]
 then
      logerror "ERROR: ${DIR}/docker-pivotal-gemfire/ does not contain file pivotal-gemfire.tgz"
