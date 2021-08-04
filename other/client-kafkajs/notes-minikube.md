@@ -1,4 +1,4 @@
-# Testing with Minkube and Bitnami
+# Testing with Minikube and Bitnami
 
 https://docs.bitnami.com/tutorials/deploy-scalable-kafka-zookeeper-cluster-kubernetes/
 
@@ -39,6 +39,6 @@ Update a config (numPartitions) to have a rolling restart
 helm upgrade kafka bitnami/kafka \
   --set zookeeper.enabled=false \
   --set replicaCount=3 \
-  --set numPartitions=4 \
+  --set numPartitions=5 \
   --set externalZookeeper.servers=zookeeper.default.svc.cluster.local
 ```
