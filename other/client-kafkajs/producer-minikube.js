@@ -23,7 +23,7 @@ const { CONNECT, DISCONNECT, REQUEST_TIMEOUT, REQUEST_QUEUE_SIZE } = producer.ev
 producer.on(CONNECT, e => console.log(`Producer connected at ${e.timestamp}`));
 producer.on(DISCONNECT, e => console.log(`Producer disconnected at ${e.timestamp}`));
 producer.on(REQUEST_TIMEOUT, e => console.log(`Producer request timed out at ${e.timestamp}`, JSON.stringify(e.payload)));
-producer.on(REQUEST_QUEUE_SIZE, e => console.log(`Request queue size at ${e.timestamp}`, JSON.stringify(e.payload)));
+// producer.on(REQUEST_QUEUE_SIZE, e => console.log(`Request queue size at ${e.timestamp}`, JSON.stringify(e.payload)));
 //producer.logger().setLogLevel(logLevel.DEBUG)
 
 let bigString = '';
