@@ -1007,8 +1007,19 @@ if (
 }
 ```
 
-So I'm not sure why it keeps retrying until `11:11:05`:
+Then it keeps retrying until `11:11:05`:
 
 ```log
 [[11:11:05.039]] [ERROR] {"level":"ERROR","timestamp":"2021-08-05T11:11:05.039Z","logger":"kafkajs","message":"[Connection] Response Produce(key: 0, version: 7)","broker":"kafka-1.kafka-headless.default.svc.cluster.local:9092","clientId":"my-kafkajs-producer","error":"This server does not host this topic-partition","correlationId":341,"size":55}
 ```
+
+Which seems to correspond to the time when kafka-1 is up again and leader for the partitions:
+
+```log
+[2021-08-05 11:11:05,930] INFO [Partition kafkajs-0 broker=1] ISR updated to 1,2 and version updated to [5] (kafka.cluster.Partition)
+[2021-08-05 11:11:05,949] INFO [Partition kafkajs-6 broker=1] ISR updated to 1,2 and version updated to [5] (kafka.cluster.Partition)
+[2021-08-05 11:11:05,960] INFO [Partition kafkajs-0 broker=1] ISR updated to 1,2,3 and version updated to [6] (kafka.cluster.Partition)
+[2021-08-05 11:11:06,067] INFO [Partition kafkajs-6 broker=1] ISR updated to 1,2,3 and version updated to [6] (kafka.cluster.Partition)
+```
+
+Logs are [here](https://github.com/vdesabou/kafka-docker-playground/blob/master/other/client-kafkajs/notes-minikube.zip?raw=true)
