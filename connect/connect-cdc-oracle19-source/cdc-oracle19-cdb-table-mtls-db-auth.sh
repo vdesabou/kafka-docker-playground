@@ -4,7 +4,7 @@ set -e
 if [ ! -z "$CI" ]
 then
      # running with github actions
-     aws s3 cp s3://kafka-docker-playground/internal/confluentinc-kafka-connect-oracle-cdc-1.3.0-SNAPSHOT-08022021b.zip .
+     aws s3 cp --only-show-errors s3://kafka-docker-playground/internal/confluentinc-kafka-connect-oracle-cdc-1.3.0-SNAPSHOT-08022021b.zip .
      export CONNECTOR_ZIP="$PWD/confluentinc-kafka-connect-oracle-cdc-1.3.0-SNAPSHOT-08022021b.zip"
 fi
 
@@ -32,7 +32,7 @@ then
         if [ ! -f ${DIR}/LINUX.X64_193000_db_home.zip ]
         then
             # running with github actions
-            aws s3 cp s3://kafka-docker-playground/3rdparty/LINUX.X64_193000_db_home.zip .
+            aws s3 cp --only-show-errors s3://kafka-docker-playground/3rdparty/LINUX.X64_193000_db_home.zip .
         fi
     fi
     if [ ! -f ${DIR}/LINUX.X64_193000_db_home.zip ]
@@ -45,7 +45,7 @@ then
     rm -rf ${DIR}/docker-images
     git clone https://github.com/oracle/docker-images.git
 
-    cp ${DIR}/LINUX.X64_193000_db_home.zip ${DIR}/docker-images/OracleDatabase/SingleInstance/dockerfiles/19.3.0/LINUX.X64_193000_db_home.zip
+    mv ${DIR}/LINUX.X64_193000_db_home.zip ${DIR}/docker-images/OracleDatabase/SingleInstance/dockerfiles/19.3.0/LINUX.X64_193000_db_home.zip
     cd ${DIR}/docker-images/OracleDatabase/SingleInstance/dockerfiles
     ./buildContainerImage.sh -v 19.3.0 -e
     rm -rf ${DIR}/docker-images
