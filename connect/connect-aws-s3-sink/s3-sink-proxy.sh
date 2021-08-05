@@ -69,7 +69,7 @@ log "Listing objects of in S3"
 aws s3api list-objects --bucket "$AWS_BUCKET_NAME"
 
 log "Getting one of the avro files locally and displaying content with avro-tools"
-aws s3 cp s3://$AWS_BUCKET_NAME/topics/s3_topic/partition=0/s3_topic+0+0000000000.avro s3_topic+0+0000000000.avro
+aws s3 cp --only-show-errors s3://$AWS_BUCKET_NAME/topics/s3_topic/partition=0/s3_topic+0+0000000000.avro s3_topic+0+0000000000.avro
 
 docker run -v ${DIR}:/tmp actions/avro-tools tojson /tmp/s3_topic+0+0000000000.avro
 rm -f s3_topic+0+0000000000.avro

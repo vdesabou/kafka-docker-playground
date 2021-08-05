@@ -9,7 +9,7 @@ source ${DIR}/../../scripts/utils.sh
 if [ ! -z "$CI" ]
 then
      # running with github actions
-     aws s3 cp s3://kafka-docker-playground/3rdparty/pivotal-gemfire.tgz .
+     aws s3 cp --only-show-errors s3://kafka-docker-playground/3rdparty/pivotal-gemfire.tgz .
 fi
 
 if [ ! -f ${DIR}/docker-pivotal-gemfire/pivotal-gemfire.tgz ]

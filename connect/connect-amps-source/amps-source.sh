@@ -10,7 +10,7 @@ if [ ! -z "$CI" ]
 then
      mkdir -p ${DIR}/docker-amps/
      # running with github actions
-     aws s3 cp s3://kafka-docker-playground/3rdparty/AMPS.tar.gz ${DIR}/docker-amps/
+     aws s3 cp --only-show-errors s3://kafka-docker-playground/3rdparty/AMPS.tar.gz ${DIR}/docker-amps/
 fi
 
 if [ ! -f ${DIR}/docker-amps/AMPS.tar.gz ]

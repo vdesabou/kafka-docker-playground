@@ -37,7 +37,7 @@ log "Getting ci result files"
 if [ ! -d ci ]
 then
   mkdir -p ci
-  aws s3 cp s3://kafka-docker-playground/ci/ ci/ --recursive --no-progress --region us-east-1
+  aws s3 cp --only-show-errors s3://kafka-docker-playground/ci/ ci/ --recursive --no-progress --region us-east-1
 fi
 
 test_list=$(grep "🚀 " ${DIR}/../.github/workflows/run-regression.yml | cut -d '"' -f 2 | tr '\n' ' ')

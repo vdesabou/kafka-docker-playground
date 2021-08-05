@@ -7,7 +7,7 @@ source ${DIR}/../../scripts/utils.sh
 if [ ! -z "$CI" ]
 then
      # running with github actions
-     aws s3 cp s3://kafka-docker-playground/3rdparty/ImpalaJDBC42.jar .
+     aws s3 cp --only-show-errors s3://kafka-docker-playground/3rdparty/ImpalaJDBC42.jar .
 fi
 
 if [ ! -f ${DIR}/ImpalaJDBC42.jar ]

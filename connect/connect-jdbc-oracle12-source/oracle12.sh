@@ -45,7 +45,7 @@ if ! version_gt $JDBC_CONNECTOR_VERSION "9.9.9"; then
      if [ ! -z "$CI" ]
      then
           # running with github actions
-          aws s3 cp s3://kafka-docker-playground/3rdparty/ojdbc8.jar .
+          aws s3 cp --only-show-errors s3://kafka-docker-playground/3rdparty/ojdbc8.jar .
      fi
      if [ ! -f ${DIR}/ojdbc8.jar ]
      then
