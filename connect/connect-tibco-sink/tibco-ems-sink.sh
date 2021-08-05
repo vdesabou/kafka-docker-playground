@@ -8,7 +8,7 @@ source ${DIR}/../../scripts/utils.sh
 if [ ! -z "$CI" ]
 then
      # running with github actions
-     aws s3 cp --only-show-errors s3://kafka-docker-playground/3rdparty/TIB_ems-ce_8.5.1_linux_x86_64.zip .
+     aws s3 cp --only-show-errors s3://kafka-docker-playground/3rdparty/TIB_ems-ce_8.5.1_linux_x86_64.zip ${DIR}/docker-tibco/
 fi
 
 if [ ! -f ${DIR}/docker-tibco/TIB_ems-ce_8.5.1_linux_x86_64.zip ]
