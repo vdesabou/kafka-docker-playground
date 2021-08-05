@@ -10,7 +10,9 @@ then
      if [ ! -z "$CI" ]
      then
           # running with github actions
-          aws s3 cp --only-show-errors s3://kafka-docker-playground/3rdparty/pivotal-gemfire.tgz ${DIR}/docker-pivotal-gemfire/
+          cd ${DIR}/docker-pivotal-gemfire/
+          aws s3 cp --only-show-errors s3://kafka-docker-playground/3rdparty/pivotal-gemfire.tgz .
+          cd -
      fi
      if [ ! -f ${DIR}/docker-pivotal-gemfire/pivotal-gemfire.tgz ]
      then
