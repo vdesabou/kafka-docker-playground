@@ -1,0 +1,8 @@
+apiVersion: platform.confluent.io/v1beta1
+kind: KafkaTopic
+metadata:
+  name: kafkajs
+  namespace: confluent
+spec:
+  replicas: 8
+  partitionCount: 3

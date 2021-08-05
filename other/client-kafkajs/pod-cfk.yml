@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: kafkajs-cfk-example-docker
+  namespace: confluent
+spec:
+  containers:
+  - name: kafkajs-cfk-example-docker
+    image: vdesabou/kafkajs-cfk-example-docker
+    imagePullPolicy: Never
