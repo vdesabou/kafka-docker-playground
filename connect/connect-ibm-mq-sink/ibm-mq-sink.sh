@@ -7,7 +7,8 @@ source ${DIR}/../../scripts/utils.sh
 if [ ! -z "$CI" ]
 then
      # running with github actions
-     aws s3 cp --only-show-errors s3://kafka-docker-playground/3rdparty/9.0.0.8-IBM-MQ-Install-Java-All.jar .
+     aws s3 cp --only-show-errors s3://kafka-docker-playground/3rdparty/com.ibm.mq.allclient.jar .
+     aws s3 cp --only-show-errors s3://kafka-docker-playground/3rdparty/jms.jar .
 fi
 
 if [ ! -f ${DIR}/9.0.0.8-IBM-MQ-Install-Java-All.jar ]
