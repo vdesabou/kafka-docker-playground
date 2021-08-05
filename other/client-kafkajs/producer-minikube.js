@@ -5,8 +5,8 @@ require('console-stamp')(console, '[HH:MM:ss.l]');
 const kafka = new Kafka({
   clientId: 'my-kafkajs-producer',
   brokers: ['kafka-0.kafka-headless.default.svc.cluster.local:9092','kafka-1.kafka-headless.default.svc.cluster.local:9092','kafka-2.kafka-headless.default.svc.cluster.local:9092'],
-  connectionTimeout: 10000,
-  // enforceRequestTimeout: true,
+  connectionTimeout: 20000,
+  enforceRequestTimeout: true,
   // requestTimeout: 3000,
   // //logLevel: logLevel.DEBUG,
   // retry: {
@@ -73,12 +73,12 @@ function sendData() {
 
 (async function main(){
   await admin.connect()
-  await admin.createTopics({
-    topics: [{ topic }],
-    waitForLeaders: true,
-    replicationFactor: 3,
-    numPartitions: 6
-  })
+  // await admin.createTopics({
+  //   topics: [{ topic }],
+  //   waitForLeaders: true,
+  //   replicationFactor: 3,
+  //   numPartitions: 6
+  // })
   await producer.connect().catch(e => {
     log.error("failed to producer.connect()", e);
   });
