@@ -30,7 +30,7 @@ helm upgrade kafka bitnami/kafka \
 
 ```bash
 eval $(minikube docker-env)
-docker build -t vdesabou/kafkajs-bitnami-example-docker . -f ./Dockerfile-minikube
+docker build -t vdesabou/kafkajs-bitnami-example-docker . -f ./Dockerfile-minikube-bitnami
 ```
 
 ```bash
