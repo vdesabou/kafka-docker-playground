@@ -12,16 +12,19 @@ helm repo add bitnami https://charts.bitnami.com/bitnami
 ```
 
 ```
-helm install zookeeper bitnami/zookeeper \
+helm upgrade zookeeper bitnami/zookeeper \
   --set replicaCount=3 \
   --set auth.enabled=false \
   --set allowAnonymousLogin=true
 ```
 
 ```
-helm install kafka bitnami/kafka \
+helm upgrade kafka bitnami/kafka \
   --set zookeeper.enabled=false \
-  --set replicaCount=3 \
+  --set replicaCount=4 \
+  --set defaultReplicationFactor=3 \
+  --set deleteTopicEnable=true \
+  --set numPartitions=8 \
   --set externalZookeeper.servers=zookeeper.default.svc.cluster.local
 ```
 
@@ -38,7 +41,16 @@ Update a config (numPartitions) to have a rolling restart
 ```
 helm upgrade kafka bitnami/kafka \
   --set zookeeper.enabled=false \
-  --set replicaCount=3 \
-  --set numPartitions=5 \
+  --set replicaCount=4 \
+  --set defaultReplicationFactor=3 \
+  --set numPartitions=10 \
   --set externalZookeeper.servers=zookeeper.default.svc.cluster.local
 ```
+
+kafka-topics.sh --bootstrap-server kafka-0.kafka-headless.default.svc.cluster.local:9092  --topic kafkajs --describe
+kafka-topics.sh --bootstrap-server kafka-0.kafka-headless.default.svc.cluster.local:9092  --topic kafkajs --delete
+
+kafka-console-consumer.sh \
+            --bootstrap-server kafka-1.kafka-headless.default.svc.cluster.local:9092 \
+            --topic kafkajs --partition 4 --max-messages 2\
+            --from-beginning
