@@ -4,22 +4,19 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
-# Need to create the docker image using https://github.com/GSSJacky/gemfire-docker
-
-if [ ! -z "$CI" ]
-then
-     # running with github actions
-     aws s3 cp --only-show-errors s3://kafka-docker-playground/3rdparty/pivotal-gemfire.tgz .
-fi
-
-if [ ! -f ${DIR}/docker-pivotal-gemfire/pivotal-gemfire.tgz ]
-then
-     logerror "ERROR: ${DIR}/docker-pivotal-gemfire/ does not contain file pivotal-gemfire.tgz"
-     exit 1
-fi
-
 if test -z "$(docker images -q pivotal-gemfire:latest)"
 then
+     # Need to create the docker image using https://github.com/GSSJacky/gemfire-docker
+     if [ ! -z "$CI" ]
+     then
+          # running with github actions
+          aws s3 cp --only-show-errors s3://kafka-docker-playground/3rdparty/pivotal-gemfire.tgz ${DIR}/docker-pivotal-gemfire/
+     fi
+     if [ ! -f ${DIR}/docker-pivotal-gemfire/pivotal-gemfire.tgz ]
+     then
+          logerror "ERROR: ${DIR}/docker-pivotal-gemfire/ does not contain file pivotal-gemfire.tgz"
+          exit 1
+     fi
      log "Building pivotal-gemfire docker image..it can take a while..."
      OLDDIR=$PWD
      cd ${DIR}/docker-pivotal-gemfire
