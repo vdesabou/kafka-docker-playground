@@ -6,7 +6,7 @@ RUN npm install kafkajs@1.15.0 console-stamp
 WORKDIR /usr/src/app
 
 # Copy files
-COPY producer-minikube-bitnami.js /usr/src/app/producer.js
+COPY producer-minikube-cfk.js /usr/src/app/producer.js
 COPY consumer.js /usr/src/app
 
 CMD node /usr/src/app/producer.js

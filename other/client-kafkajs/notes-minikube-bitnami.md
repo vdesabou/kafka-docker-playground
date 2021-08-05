@@ -34,7 +34,7 @@ docker build -t vdesabou/kafkajs-bitnami-example-docker . -f ./Dockerfile-miniku
 ```
 
 ```bash
-kubectl apply -f pod.yml
+kubectl apply -f pod-bitnami.yml
 ```
 
 Update a config (for example default numPartitions) to have a rolling restart:
