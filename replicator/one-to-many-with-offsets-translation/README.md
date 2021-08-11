@@ -92,11 +92,6 @@ $ docker container exec -i connect-us bash -c "kafka-console-consumer \
      --group my-consumer-group"
 ```
 
-Consumer with group my-consumer-group reads 10 messages in US cluster, it should start from previous offset
-```bash
-$ docker container exec -i connect-europe bash -c "kafka-console-consumer --bootstrap-server broker-us:9092 --whitelist 'sales_EUROPE' --max-messages 10 --consumer-property interceptor.classes=io.confluent.monitoring.clients.interceptor.MonitoringConsumerInterceptor --consumer-property confluent.monitoring.interceptor.bootstrap.servers=broker-metrics:9092 --consumer-property group.id=my-consumer-group"
-```
-
 Output:
 
 ```log
