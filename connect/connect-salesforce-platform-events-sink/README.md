@@ -162,5 +162,46 @@ Results:
 {"schema":{"type":"struct","fields":[{"type":"string","optional":true,"field":"ReplayId"},{"type":"int64","optional":true,"name":"org.apache.kafka.connect.data.Timestamp","version":1,"field":"CreatedDate"},{"type":"string","optional":true,"field":"CreatedById"},{"type":"string","optional":true,"field":"Message__c"},{"type":"string","optional":true,"field":"_ObjectType"},{"type":"string","optional":true,"field":"_EventType"}],"optional":false,"name":"io.confluent.salesforce.MyPlatformEvent__e"},"payload":{"ReplayId":"2956550","CreatedDate":1596010416799,"CreatedById":"0052X00000AJGNCQA5","Message__c":"test message 2","_ObjectType":"MyPlatformEvent__e","_EventType":"ir4e6bGYBtJYSX5x2vc4DQ"}}s
 ```
 
+Creating Salesforce Platform Events Sink connector
+
+```bash
+$ curl -X PUT \
+     -H "Content-Type: application/json" \
+     --data '{
+                    "connector.class": "io.confluent.salesforce.SalesforcePlatformEventSinkConnector",
+                    "topics": "sfdc-platform-events",
+                    "tasks.max": "1",
+                    "curl.logging": "true",
+                    "salesforce.platform.event.name" : "MyPlatformEvent__e",
+                    "salesforce.instance" : "'"$SALESFORCE_INSTANCE"'",
+                    "salesforce.username" : "'"$SALESFORCE_USERNAME"'",
+                    "salesforce.password" : "'"$SALESFORCE_PASSWORD"'",
+                    "salesforce.password.token" : "'"$SECURITY_TOKEN"'",
+                    "salesforce.consumer.key" : "'"$CONSUMER_KEY"'",
+                    "salesforce.consumer.secret" : "'"$CONSUMER_PASSWORD"'",
+                    "salesforce.initial.start" : "all",
+                    "connection.max.message.size": "10048576",
+                    "key.converter": "org.apache.kafka.connect.json.JsonConverter",
+                    "value.converter": "org.apache.kafka.connect.json.JsonConverter",
+                    "reporter.bootstrap.servers": "broker:9092",
+                    "reporter.error.topic.name": "error-responses",
+                    "reporter.error.topic.replication.factor": 1,
+                    "reporter.result.topic.name": "success-responses",
+                    "reporter.result.topic.replication.factor": 1,
+                    "transforms": "MaskField",
+                    "transforms.MaskField.type": "org.apache.kafka.connect.transforms.MaskField$Value",
+                    "transforms.MaskField.fields": "Message__c",
+                    "confluent.license": "",
+                    "confluent.topic.bootstrap.servers": "broker:9092",
+                    "confluent.topic.replication.factor": "1"
+          }' \
+     http://localhost:8083/connectors/salesforce-platform-events-sink/config | jq .
+```
+
+Verify topic success-responses
+
+```bash
+$ docker exec broker kafka-console-consumer -bootstrap-server broker:9092 --topic success-responses --from-beginning --max-messages 2
+```
 
 N.B: Control Center is reachable at [http://127.0.0.1:9021](http://127.0.0.1:9021])
