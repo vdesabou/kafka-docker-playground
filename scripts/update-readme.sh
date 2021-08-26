@@ -119,6 +119,7 @@ do
       time_day=""
       time_day_hour=""
       version=""
+      release_date=""
       if [ "$connector_path" != "" ]
       then
         if [ "$connector_path" = "confluentinc-kafka-connect-jdbc" ]
@@ -130,10 +131,16 @@ do
             version=${image_version}
           else
             version=$(grep "$connector_path " /tmp/README.txt | cut -d "|" -f 3 | sed 's/^[[:blank:]]*//;s/[[:blank:]]*$//')
+            release_date=$(grep "$connector_path " /tmp/README.txt | cut -d "|" -f 6 | sed 's/^[[:blank:]]*//;s/[[:blank:]]*$//')
           fi
         else
           version=$(grep "$connector_path " /tmp/README.txt | cut -d "|" -f 3 | sed 's/^[[:blank:]]*//;s/[[:blank:]]*$//')
+          release_date=$(grep "$connector_path " /tmp/README.txt | cut -d "|" -f 6 | sed 's/^[[:blank:]]*//;s/[[:blank:]]*$//')
         fi
+      fi
+      if [ "$release_date" = "null" ]
+      then
+        release_date=""
       fi
       testdir=$(echo "$test" | sed 's/\//-/g')
       ci_file="ci/${image_version}-${testdir}-${version}-${script_name}"
@@ -176,7 +183,12 @@ do
         connector_version=""
         if [ "$version" != "" ]
         then
-          connector_version=" 🔢 Connector v$version"
+          if [ "$release_date" != "" ]
+          then
+            connector_version=" 🔢 Connector v$version (📅 release date $release_date)"
+          else
+            connector_version=" 🔢 Connector v$version"
+          fi
         fi
         if [ "$status" == "failure" ]
         then
