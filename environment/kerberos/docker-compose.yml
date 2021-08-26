@@ -17,7 +17,10 @@ services:
       - ../../environment/kerberos/kdc/krb5.conf:/etc/kdc/krb5.conf
 
   client:
-    build: ../../environment/kerberos/client
+    build:
+      context: ../../environment/kerberos/client
+      args:
+        TAG: ${TAG}
     container_name: client
     hostname: client.kerberos-demo.local
     depends_on:

@@ -18,7 +18,10 @@ services:
 
   client:
     hostname: client.kerberos-demo.local
-    build: ../../environment/mdc-kerberos/client
+    build:
+      context: ../../environment/mdc-kerberos/client
+      args:
+        TAG: ${TAG}
     container_name: client
     depends_on:
       - broker-us
