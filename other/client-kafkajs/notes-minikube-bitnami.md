@@ -1022,4 +1022,4 @@ Which seems to correspond to the time when kafka-1 is up again and leader for th
 [2021-08-05 11:11:06,067] INFO [Partition kafkajs-6 broker=1] ISR updated to 1,2,3 and version updated to [6] (kafka.cluster.Partition)
 ```
 
-Logs are [here](https://github.com/vdesabou/kafka-docker-playground/blob/master/other/client-kafkajs/notes-minikube.zip?raw=true)
+Logs are [here](https://github.com/vdesabou/kafka-docker-playground/blob/master/other/client-kafkajs/notes-minikube-bitnami.zip?raw=true)
