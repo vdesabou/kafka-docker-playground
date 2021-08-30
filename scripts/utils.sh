@@ -633,7 +633,7 @@ function az() {
 
 function retry() {
   local n=1
-  local max=1
+  local max=2
   while true; do
     "$@"
     ret=$?
