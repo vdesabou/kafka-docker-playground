@@ -4,5 +4,5 @@ metadata:
   name: kafkajs
   namespace: confluent
 spec:
-  replicas: 8
-  partitionCount: 3
+  replicas: 3
+  partitionCount: 8
