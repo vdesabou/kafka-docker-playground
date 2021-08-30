@@ -8,7 +8,7 @@ const kafka = new Kafka({
   connectionTimeout: 20000,
   enforceRequestTimeout: true,
   // requestTimeout: 3000,
-  // //logLevel: logLevel.DEBUG,
+  logLevel: logLevel.DEBUG,
   // retry: {
   //   initialRetryTime: 100,
   //   retries: 1
