@@ -24,7 +24,6 @@ then
      docker run --rm -v ${DIR}/9.0.0.8-IBM-MQ-Install-Java-All.jar:/tmp/9.0.0.8-IBM-MQ-Install-Java-All.jar -v ${DIR}/install:/tmp/install openjdk:8 java -jar /tmp/9.0.0.8-IBM-MQ-Install-Java-All.jar --acceptLicense /tmp/install
      cp ${DIR}/install/wmq/JavaSE/jms.jar ${DIR}/
      cp ${DIR}/install/wmq/JavaSE/com.ibm.mq.allclient.jar ${DIR}/
-     rm -rf ${DIR}/install
 fi
 
 docker-compose -f ../../environment/plaintext/docker-compose.yml -f "${PWD}/docker-compose.plaintext.mtls.yml" down -v
