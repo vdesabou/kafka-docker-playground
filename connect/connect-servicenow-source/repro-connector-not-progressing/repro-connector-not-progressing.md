@@ -1,3 +1,5 @@
+EDIT: THIS IS FIXED WITH VERSION `2.3.4`
+
 Before running the test go to ServiceNow UI and select `Scripts Background`
 
 Execute the following:
