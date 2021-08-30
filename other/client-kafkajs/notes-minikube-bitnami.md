@@ -12,14 +12,14 @@ helm repo add bitnami https://charts.bitnami.com/bitnami
 ```
 
 ```bash
-helm upgrade zookeeper bitnami/zookeeper \
+helm install zookeeper bitnami/zookeeper \
   --set replicaCount=3 \
   --set auth.enabled=false \
   --set allowAnonymousLogin=true
 ```
 
 ```bash
-helm upgrade kafka bitnami/kafka \
+helm install kafka bitnami/kafka \
   --set zookeeper.enabled=false \
   --set replicaCount=4 \
   --set defaultReplicationFactor=3 \
