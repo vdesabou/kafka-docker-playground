@@ -56,7 +56,7 @@ docker build -t vdesabou/kafkajs-cfk-example-docker . -f ./Dockerfile-minikube-c
 kubectl apply -f pod-cfk.yml
 ```
 
-Roll the cluster
+Roll the cluster (FIXTHIS: issue with CFK https://confluentinc.atlassian.net/browse/OPER-1364 there is no graceful stop happening)
 
 ```bash
 kubectl get statefulset --namespace confluent
@@ -86,7 +86,7 @@ At `08:41:33`, producer starts to get `ECONNRESET`:
 [[08:41:33.987]] [LOG]   {"level":"DEBUG","timestamp":"2021-08-30T08:41:33.987Z","logger":"kafkajs","message":"[Connection] Response Metadata(key: 3, version: 6)","broker":"kafka-1.kafka.confluent.svc.cluster.local:9071","clientId":"my-kafkajs-producer","correlationId":303,"size":590,"data":{"throttleTime":0,"brokers":[{"nodeId":0,"host":"kafka-0.kafka.confluent.svc.cluster.local","port":9071,"rack":"0"},{"nodeId":2,"host":"kafka-2.kafka.confluent.svc.cluster.local","port":9071,"rack":"2"},{"nodeId":1,"host":"kafka-1.kafka.confluent.svc.cluster.local","port":9071,"rack":"1"}],"clusterId":"PWaURBD7Q5m_ZfaHONxGAA","controllerId":2,"topicMetadata":[{"topicErrorCode":0,"topic":"kafkajs","isInternal":false,"partitionMetadata":[{"partitionErrorCode":0,"partitionId":0,"leader":2,"replicas":[2,1,0],"isr":[2,1,0],"offlineReplicas":[]},{"partitionErrorCode":0,"partitionId":5,"leader":1,"replicas":[1,2,0],"isr":[1,2,0],"offlineReplicas":[]},{"partitionErrorCode":0,"partitionId":4,"leader":0,"replicas":[0,1,2],"isr":[0,1,2],"offlineReplicas":[]},{"partitionErrorCode":0,"partitionId":1,"leader":0,"replicas":[0,2,1],"isr":[0,2,1],"offlineReplicas":[]},{"partitionErrorCode":0,"partitionId":6,"leader":2,"replicas":[2,1,0],"isr":[2,1,0],"offlineReplicas":[]},{"partitionErrorCode":0,"partitionId":7,"leader":0,"replicas":[0,2,1],"isr":[0,2,1],"offlineReplicas":[]},{"partitionErrorCode":0,"partitionId":2,"leader":1,"replicas":[1,0,2],"isr":[1,0,2],"offlineReplicas":[]},{"partitionErrorCode":0,"partitionId":3,"leader":2,"replicas":[2,0,1],"isr":[2,0,1],"offlineReplicas":[]}]}],"clientSideThrottleTime":0}}
 ```
 
--> Request Metadata sent but kafka-2 is still leader !
+-> Request Metadata sent but kafka-2 is still leader
 
 -> we get reconnection attempts:
 
@@ -115,11 +115,8 @@ Etc..
 [[08:41:49.664]] [LOG]   {"level":"DEBUG","timestamp":"2021-08-30T08:41:49.663Z","logger":"kafkajs","message":"[Connection] Response Metadata(key: 3, version: 6)","broker":"kafka-1.kafka.confluent.svc.cluster.local:9071","clientId":"my-kafkajs-producer","correlationId":346,"size":590,"data":{"throttleTime":0,"brokers":[{"nodeId":0,"host":"kafka-0.kafka.confluent.svc.cluster.local","port":9071,"rack":"0"},{"nodeId":2,"host":"kafka-2.kafka.confluent.svc.cluster.local","port":9071,"rack":"2"},{"nodeId":1,"host":"kafka-1.kafka.confluent.svc.cluster.local","port":9071,"rack":"1"}],"clusterId":"PWaURBD7Q5m_ZfaHONxGAA","controllerId":2,"topicMetadata":[{"topicErrorCode":0,"topic":"kafkajs","isInternal":false,"partitionMetadata":[{"partitionErrorCode":0,"partitionId":0,"leader":2,"replicas":[2,1,0],"isr":[2,1,0],"offlineReplicas":[]},{"partitionErrorCode":0,"partitionId":5,"leader":1,"replicas":[1,2,0],"isr":[1,2,0],"offlineReplicas":[]},{"partitionErrorCode":0,"partitionId":4,"leader":0,"replicas":[0,1,2],"isr":[0,1,2],"offlineReplicas":[]},{"partitionErrorCode":0,"partitionId":1,"leader":0,"replicas":[0,2,1],"isr":[0,2,1],"offlineReplicas":[]},{"partitionErrorCode":0,"partitionId":6,"leader":2,"replicas":[2,1,0],"isr":[2,1,0],"offlineReplicas":[]},{"partitionErrorCode":0,"partitionId":7,"leader":0,"replicas":[0,2,1],"isr":[0,2,1],"offlineReplicas":[]},{"partitionErrorCode":0,"partitionId":2,"leader":1,"replicas":[1,0,2],"isr":[1,0,2],"offlineReplicas":[]},{"partitionErrorCode":0,"partitionId":3,"leader":2,"replicas":[2,0,1],"isr":[2,0,1],"offlineReplicas":[]}]}],"clientSideThrottleTime":0}}
 ```
 
-For partitionId 0, leader changed at `08:41:58` and `kafka-2` is finally seen as offline replica:
+For partitionId 0, leader changed at `08:41:58` (this is due to https://confluentinc.atlassian.net/browse/OPER-1364 and corresponds to the `zookeeper.session.timeout.ms` which is set to 22,5 seconds) and `kafka-2` is finally seen as offline replica:
 
 ```log
 [[08:41:58.001]] [LOG]   {"level":"DEBUG","timestamp":"2021-08-30T08:41:58.000Z","logger":"kafkajs","message":"[Connection] Response Metadata(key: 3, version: 6)","broker":"kafka-0.kafka.confluent.svc.cluster.local:9071","clientId":"my-kafkajs-producer","correlationId":724,"size":536,"data":{"throttleTime":0,"brokers":[{"nodeId":0,"host":"kafka-0.kafka.confluent.svc.cluster.local","port":9071,"rack":"0"},{"nodeId":1,"host":"kafka-1.kafka.confluent.svc.cluster.local","port":9071,"rack":"1"}],"clusterId":"PWaURBD7Q5m_ZfaHONxGAA","controllerId":1,"topicMetadata":[{"topicErrorCode":0,"topic":"kafkajs","isInternal":false,"partitionMetadata":[{"partitionErrorCode":0,"partitionId":0,"leader":1,"replicas":[2,1,0],"isr":[1,0],"offlineReplicas":[2]},{"partitionErrorCode":0,"partitionId":5,"leader":1,"replicas":[1,2,0],"isr":[1,0],"offlineReplicas":[2]},{"partitionErrorCode":0,"partitionId":4,"leader":0,"replicas":[0,1,2],"isr":[0,1],"offlineReplicas":[2]},{"partitionErrorCode":0,"partitionId":1,"leader":0,"replicas":[0,2,1],"isr":[0,1],"offlineReplicas":[2]},{"partitionErrorCode":0,"partitionId":6,"leader":1,"replicas":[2,1,0],"isr":[1,0],"offlineReplicas":[2]},{"partitionErrorCode":0,"partitionId":7,"leader":0,"replicas":[0,2,1],"isr":[0,1],"offlineReplicas":[2]},{"partitionErrorCode":0,"partitionId":2,"leader":1,"replicas":[1,0,2],"isr":[1,0],"offlineReplicas":[2]},{"partitionErrorCode":0,"partitionId":3,"leader":0,"replicas":[2,0,1],"isr":[0,1],"offlineReplicas":[2]}]}],"clientSideThrottleTime":0}}
 ```
-
-kafka-2 pod is started at `08:41:50` but failed to start (KeeperErrorCode = NodeExists) at `08:41:57`
-
