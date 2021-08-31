@@ -103,7 +103,7 @@ Messages are sent to `hotels-sample` topic using:
 
 ```bash
 $ docker exec -i connect kafka-avro-console-producer --broker-list broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic hotels-sample --property key.schema='{"type":"string"}' --property "parse.key=true" --property "key.separator=," --property value.schema='{"type":"record","name":"myrecord","fields":[{"name":"HotelName","type":"string"},{"name":"Description","type":"string"}]}' << EOF
-"marriotId",{"HotelName": "Marriot", "Description": "Marriot description"}
+"marriottId",{"HotelName": "Marriott", "Description": "Marriott description"}
 "holidayinnId",{"HotelName": "HolidayInn", "Description": "HolidayInn description"}
 "motel8Id",{"HotelName": "Motel8", "Description": "motel8 description"}
 EOF
@@ -126,9 +126,9 @@ Results:
   "value": [
     {
       "@search.score": 1,
-      "HotelId": "marriotId",
-      "Description": "Marriot description",
-      "HotelName": "Marriot"
+      "HotelId": "marriottId",
+      "Description": "Marriott description",
+      "HotelName": "Marriott"
     },
     {
       "@search.score": 1,
