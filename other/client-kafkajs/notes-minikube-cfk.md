@@ -1,5 +1,6 @@
 # Testing with Minikube and CFK
 
+## Setup
 
 ```bash
 minikube start --cpus=8 --disk-size='50gb' --memory=16384
@@ -56,12 +57,16 @@ docker build -t vdesabou/kafkajs-cfk-example-docker . -f ./Dockerfile-minikube-c
 kubectl apply -f pod-cfk.yml
 ```
 
-Roll the cluster (FIXTHIS: issue with CFK https://confluentinc.atlassian.net/browse/OPER-1364 there is no graceful stop happening)
+Roll the cluster
 
 ```bash
 kubectl get statefulset --namespace confluent
 kubectl rollout restart statefulset/kafka --namespace confluent
 ```
+
+## Results
+
+**FIXTHIS: issue with CFK https://confluentinc.atlassian.net/browse/OPER-1364 there is no graceful stop happening**
 
 Initial metadata, for example `partitionId` 0 has leader 2:
 
