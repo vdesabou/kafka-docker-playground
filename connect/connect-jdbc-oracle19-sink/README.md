@@ -6,7 +6,7 @@
 
 Quickly test [JDBC Source](https://docs.confluent.io/current/connect/kafka-connect-jdbc/source-connector/index.html#kconnect-long-jdbc-source-connector) connector with Oracle 19c.
 
-* If you're using a JDBC connector version before `10.0.0`, you need to download Oracle Database 19c JDBC Driver `ojdbc10.jar`from this [page](https://www.oracle.com/database/technologies/appdev/jdbc-ucp-19-12-c-downloads.html) and place it in `./ojdbc10.jar`
+* If you're using a JDBC connector version before `10.0.0`, you need to download Oracle Database 12.2.0.1 JDBC Driver `ojdbc8.jar`from this [page](https://www.oracle.com/database/technologies/jdbc-ucp-122-downloads.html) and place it in `./ojdbc8.jar`
 
 Download Oracle Database 19c (19.3) for Linux x86-64 `LINUX.X64_193000_db_home.zip`from this [page](https://www.oracle.com/database/technologies/oracle19c-linux-downloads.html) and place it in `./LINUX.X64_193000_db_home.zip`
 

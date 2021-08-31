@@ -47,11 +47,11 @@ if ! version_gt $JDBC_CONNECTOR_VERSION "9.9.9"; then
      if [ ! -z "$CI" ]
      then
           # running with github actions
-          aws s3 cp --only-show-errors s3://kafka-docker-playground/3rdparty/ojdbc10.jar .
+          aws s3 cp --only-show-errors s3://kafka-docker-playground/3rdparty/ojdbc8.jar .
      fi
-     if [ ! -f ${DIR}/ojdbc10.jar ]
+     if [ ! -f ${DIR}/ojdbc8.jar ]
      then
-          logerror "ERROR: ${DIR}/ojdbc10.jar is missing. It must be downloaded manually in order to acknowledge user agreement"
+          logerror "ERROR: ${DIR}/ojdbc8.jar is missing. It must be downloaded manually in order to acknowledge user agreement"
           exit 1
      fi
      docker-compose -f ../../environment/plaintext/docker-compose.yml -f "${PWD}/docker-compose.plaintext.mtls.yml" down -v --remove-orphans
