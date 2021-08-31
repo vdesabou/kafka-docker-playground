@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: kafkajs-operator-example-docker
+  namespace: confluent
+spec:
+  containers:
+  - name: kafkajs-operator-example-docker
+    image: vdesabou/kafkajs-operator-example-docker
+    imagePullPolicy: Never

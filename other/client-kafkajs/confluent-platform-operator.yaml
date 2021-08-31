@@ -1,0 +1,99 @@
+## Overriding values for Chart's values.yaml
+## Example values to run Confluent Operator in Private Cloud
+global:
+  provider:
+    name: private
+    ## if any name which indicates regions
+    ##
+    region: anyregion
+    kubernetes:
+       deployment:
+         ## If kubernetes is deployed in multi zone mode then specify availability-zones as appropriate
+         ## If kubernetes is deployed in single availability zone then specify appropriate values
+         ## For the private cloud, use kubernetes node labels as appropriate
+         zones:
+          - myzones
+    ##
+    ## Docker registry endpoint where Confluent Images are available.
+    ##
+    registry:
+      fqdn: docker.io
+      credential:
+        required: false
+  sasl:
+    plain:
+      username: test
+      password: test123
+  authorization:
+    rbac:
+      enabled: false
+    simple:
+      enabled: false
+    superUsers: []
+  dependencies:
+    mds:
+      endpoint: ""
+      publicKey: ""
+## Zookeeper cluster
+##
+zookeeper:
+  name: zookeeper
+  replicas: 1
+  resources:
+    requests:
+      cpu: 200m
+      memory: 512Mi
+  disableHostPort: true
+
+## Kafka Cluster
+##
+kafka:
+  name: kafka
+  replicas: 3
+  resources:
+    requests:
+      cpu: 200m
+      memory: 1Gi
+  loadBalancer:
+    enabled: false
+    domain: ""
+  tls:
+    enabled: false
+    fullchain: |-
+    privkey: |-
+    cacerts: |-
+  metricReporter:
+    enabled: false
+  disableHostPort: true
+
+## Control Center (C3) Resource configuration
+##
+controlcenter:
+  name: controlcenter
+  license: ""
+  ##
+  ## C3 dependencies
+  ##
+  dependencies:
+    c3KafkaCluster:
+      brokerCount: 3
+      bootstrapEndpoint: kafka:9071
+      zookeeper:
+        endpoint: zookeeper:2181
+  ##
+  ## C3 External Access
+  ##
+  loadBalancer:
+    enabled: true
+    domain: "confluent.platform.playground.demo"
+  ##
+  ## TLS configuration
+  ##
+  tls:
+    enabled: false
+    authentication:
+      type: ""
+    fullchain: |-
+    privkey: |-
+    cacerts: |-
+  disableHostPort: true
