@@ -114,3 +114,18 @@ Topic: kafkajs  TopicId: a9lB9-g7TX2r4nNTPpWhXg PartitionCount: 8       Replicat
         Topic: kafkajs  Partition: 6    Leader: 0       Replicas: 2,0,1 Isr: 0,2,1
         Topic: kafkajs  Partition: 7    Leader: 0       Replicas: 1,2,0 Isr: 0,2,1
 ```
+
+After some time, automatic rebalance is done:
+
+```bash
+$ kubectl exec -it kafka-0 -- kafka-topics.sh --bootstrap-server kafka-0:9092 --topic kafkajs --describe
+Topic: kafkajs  TopicId: a9lB9-g7TX2r4nNTPpWhXg PartitionCount: 8       ReplicationFactor: 3    Configs: flush.ms=1000,segment.bytes=1073741824,flush.messages=10000,max.message.bytes=1000012,retention.bytes=1073741824
+        Topic: kafkajs  Partition: 0    Leader: 2       Replicas: 2,0,1 Isr: 0,2,1
+        Topic: kafkajs  Partition: 1    Leader: 1       Replicas: 1,2,0 Isr: 0,2,1
+        Topic: kafkajs  Partition: 2    Leader: 0       Replicas: 0,1,2 Isr: 0,2,1
+        Topic: kafkajs  Partition: 3    Leader: 2       Replicas: 2,1,0 Isr: 0,2,1
+        Topic: kafkajs  Partition: 4    Leader: 1       Replicas: 1,0,2 Isr: 0,2,1
+        Topic: kafkajs  Partition: 5    Leader: 0       Replicas: 0,2,1 Isr: 0,2,1
+        Topic: kafkajs  Partition: 6    Leader: 2       Replicas: 2,0,1 Isr: 0,2,1
+        Topic: kafkajs  Partition: 7    Leader: 1       Replicas: 1,2,0 Isr: 0,2,1
+```
