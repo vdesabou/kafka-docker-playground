@@ -1,0 +1,19 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: deploy-kafkajs
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: deploy1kafkajs
+  template:
+    metadata:
+      labels:
+        app: deploy1kafkajs
+    spec:
+      containers:
+        - name: kafkajs-operator-example-docker
+          image: vdesabou/kafkajs-operator-example-docker
+          imagePullPolicy: Always
