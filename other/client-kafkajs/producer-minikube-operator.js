@@ -10,6 +10,7 @@ const kafka = new Kafka({
     username: 'test',
     password: 'test123'
   },
+  acks:1,
   connectionTimeout: 20000,
   enforceRequestTimeout: true,
   // requestTimeout: 3000,
@@ -36,7 +37,7 @@ for (let i = 0; i < 10_0; i++) {
   bigString += Math.random().toString(36);
 }
 
-const payload = new Array(1).fill({value: bigString});
+const payload = new Array(500).fill({value: bigString});
 
 var outgoingMessages = 0;
 
