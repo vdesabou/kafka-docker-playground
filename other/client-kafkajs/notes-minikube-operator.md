@@ -5,7 +5,7 @@
 If you want to use minkube:
 
 ```bash
-minikube start --cpus=8 --disk-size='50gb' --memory=20021
+minikube start --cpus=8 --disk-size='50gb' --memory=16384
 minikube dashboard &
 ```
 
