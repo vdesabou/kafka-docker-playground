@@ -2,10 +2,49 @@
 
 ## Setup
 
+If you want to use minkube:
+
 ```bash
-minikube start --cpus=8 --disk-size='50gb' --memory=16384
+minikube start --cpus=8 --disk-size='50gb' --memory=20021
 minikube dashboard &
 ```
+
+If you want to use AWS EKS:
+
+```bash
+# Start EKS cluster with t2.2xlarge instances
+eksctl create cluster --name client-kafkajs \
+    --version 1.18 \
+    --nodegroup-name standard-workers \
+    --node-type t2.2xlarge \
+    --region ${eks_region} \
+    --nodes-min 4 \
+    --nodes-max 10 \
+    --node-ami auto
+
+# Configure your computer to communicate with your cluster
+aws eks update-kubeconfig \
+    --region ${eks_region} \
+    --name client-kafkajs
+
+# Deploy the Metrics Server
+kubectl apply -f https://github.com/kubernetes-sigs/metrics-server/releases/latest/download/components.yaml
+
+# Deploy the Kubernetes dashboard
+kubectl apply -f https://raw.githubusercontent.com/kubernetes/dashboard/v2.0.5/aio/deploy/recommended.yaml
+
+kubectl apply -f eks-admin-service-account.yaml
+
+# Get the token from the output below to connect to dashboard
+kubectl -n kube-system describe secret $(kubectl -n kube-system get secret | grep eks-admin | awk '{print $1}')
+
+kubectl proxy &
+```
+
+If you want to use Kubernetes dashboard, run `kubectl proxy` and then login to http://localhost:8001/api/v1/namespaces/kubernetes-dashboard/services/https:kubernetes-dashboard:/proxy/#/login
+
+
+
 
 Create the Kubernetes namespaces to install Operator and cluster
 
@@ -43,6 +82,7 @@ helm upgrade --install \
   --namespace confluent \
   --set zookeeper.enabled=true
 
+# if using EKS, you can set kafka.replicas=32 for example
 helm upgrade --install \
   kafka \
   confluent-operator/helm/confluent-operator/ \
@@ -70,18 +110,38 @@ Control Center is reachable at http://127.0.0.1:9021
 kubectl -n confluent port-forward controlcenter-0 9021:9021 &
 ```
 
+If using Minikube:
+
 ```bash
 eval $(minikube docker-env)
 docker build -t vdesabou/kafkajs-operator-example-docker . -f ./Dockerfile-minikube-operator
 ```
 
+If using EKS:
+
 ```bash
-kubectl cp kafka.properties confluent/kafka-0:/tmp/config
-kubectl exec -it kafka-0 -- kafka-topics --bootstrap-server kafka:9071 --command-config /tmp/config --topic kafkajs --create --partitions 8 --replication-factor 3
+docker build -t vdesabou/kafkajs-operator-example-docker . -f ./Dockerfile-minikube-operator
+docker push vdesabou/kafkajs-operator-example-docker
 ```
 
 ```bash
+kubectl cp kafka.properties confluent/kafka-0:/tmp/config
+kubectl exec -it kafka-0 -- kafka-topics --bootstrap-server kafka:9071 --command-config /tmp/config --topic kafkajs --create --partitions 300 --replication-factor 3
+```
+
+If using Minikube:
+
+```bash
 kubectl apply -f pod-operator.yml
+```
+
+If using EKS:
+
+```bash
+kubectl apply -f deployment-pod-operator.yml
+
+# then you can scale the number of pods using:
+kubectl scale --replicas=50 deployment.apps/deploy-kafkajs
 ```
 
 Roll the cluster
