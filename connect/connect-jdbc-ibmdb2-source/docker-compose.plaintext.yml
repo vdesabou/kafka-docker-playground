@@ -1,0 +1,28 @@
+---
+version: '3.5'
+services:
+
+  ibmdb2:
+    image: ibmcom/db2
+    hostname: ibmdb2
+    container_name: ibmdb2
+    privileged: true
+    ports:
+      - 50000:50000
+    environment:
+      LICENSE: accept
+      DB2INST1_PASSWORD: passw0rd
+      DBNAME: testdb
+      ARCHIVE_LOGS: "false"
+      SAMPLEDB: "true"
+
+  connect:
+    depends_on:
+      - zookeeper
+      - broker
+      - schema-registry
+      - ibmdb2
+    volumes:
+        - ../../connect/connect-jdbc-ibmdb2-source/db2jcc4.jar:/usr/share/confluent-hub-components/confluentinc-kafka-connect-jdbc/lib/db2jcc4.jar
+    environment:
+      CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-jdbc
