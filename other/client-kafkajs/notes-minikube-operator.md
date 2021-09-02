@@ -17,14 +17,14 @@ eksctl create cluster --name client-kafkajs \
     --version 1.18 \
     --nodegroup-name standard-workers \
     --node-type t2.2xlarge \
-    --region ${eks_region} \
+    --region eu-west-3 \
     --nodes-min 4 \
     --nodes-max 10 \
     --node-ami auto
 
 # Configure your computer to communicate with your cluster
 aws eks update-kubeconfig \
-    --region ${eks_region} \
+    --region eu-west-3 \
     --name client-kafkajs
 
 # Deploy the Metrics Server
@@ -33,7 +33,7 @@ kubectl apply -f https://github.com/kubernetes-sigs/metrics-server/releases/late
 # Deploy the Kubernetes dashboard
 kubectl apply -f https://raw.githubusercontent.com/kubernetes/dashboard/v2.0.5/aio/deploy/recommended.yaml
 
-kubectl apply -f eks-admin-service-account.yaml
+kubectl apply -f ../../ccloud/operator-ksql-benchmarking/eks-admin-service-account.yaml
 
 # Get the token from the output below to connect to dashboard
 kubectl -n kube-system describe secret $(kubectl -n kube-system get secret | grep eks-admin | awk '{print $1}')
