@@ -1,0 +1,107 @@
+#!/bin/bash
+set -e
+
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
+source ${DIR}/../../scripts/utils.sh
+
+log "Replace create-role-bindings.sh"
+cp $PWD/create-role-bindings.sh ../../environment/rbac-sasl-plain/scripts/helper/
+
+log "Create truststore.jks from cert.pem"
+rm -f truststore.jks
+# https://docs.oracle.com/cd/E35976_01/server.740/es_admin/src/tadm_ssl_convert_pem_to_jks.html
+keytool -genkey -keyalg RSA -alias endeca -keystore truststore.jks -noprompt -storepass confluent -keypass confluent -dname 'CN=broker,C=US'
+keytool -delete -alias endeca -keystore truststore.jks -noprompt -storepass confluent -keypass confluent
+keytool -import -v -trustcacerts -alias endeca-ca -file cert.cer -keystore truststore.jks -noprompt -storepass confluent -keypass confluent
+
+#${DIR}/../../environment/rbac-sasl-plain/start.sh "${PWD}/docker-compose.rbac-with-azure-ad.yml"
+
+#############
+
+# https://docs.docker.com/compose/profiles/
+profile_control_center_command=""
+if [ -z "$DISABLE_CONTROL_CENTER" ]
+then
+  profile_control_center_command="--profile control-center"
+else
+  log "🛑 control-center is disabled"
+fi
+
+profile_ksqldb_command=""
+if [ -z "$DISABLE_KSQLDB" ]
+then
+  profile_ksqldb_command="--profile ksqldb"
+else
+  log "🛑 ksqldb is disabled"
+fi
+
+../../environment/rbac-sasl-plain/stop.sh $@
+
+# Generating public and private keys for token signing
+log "Generating public and private keys for token signing"
+mkdir -p ../../environment/rbac-sasl-plain/conf
+openssl genrsa -out ../../environment/rbac-sasl-plain/conf/keypair.pem 2048
+openssl rsa -in ../../environment/rbac-sasl-plain/conf/keypair.pem -outform PEM -pubout -out ../../environment/rbac-sasl-plain/conf/public.pem
+log "Enable Docker appuser to read files when created by a different UID"
+chmod 644 ../../environment/rbac-sasl-plain/conf/keypair.pem
+
+# Bring up base cluster and Confluent CLI
+docker-compose -f ../../environment/plaintext/docker-compose.yml -f ../../environment/rbac-sasl-plain/docker-compose.yml -f "${PWD}/docker-compose.rbac-with-azure-ad.yml" up -d zookeeper broker tools openldap
+
+sleep 5
+
+log "Add the FQDN of LDAP server to broker /etc/hosts"
+docker exec  --privileged --user root -i broker bash -c 'echo "20.86.237.230 ldaps.mydomain.onmicrosoft.com" >> /etc/hosts'
+
+# Verify Kafka brokers have started
+MAX_WAIT=30
+log "Waiting up to $MAX_WAIT seconds for Kafka brokers to be registered in ZooKeeper"
+retrycmd $MAX_WAIT 5 host_check_kafka_cluster_registered || exit 1
+
+# Verify MDS has started
+MAX_WAIT=120
+log "Waiting up to $MAX_WAIT seconds for MDS to start"
+retrycmd $MAX_WAIT 5 host_check_mds_up || exit 1
+sleep 5
+
+log "Creating role bindings for principals"
+docker exec -i tools bash -c "/tmp/helper/create-role-bindings.sh"
+
+
+docker-compose -f ../../environment/plaintext/docker-compose.yml -f ../../environment/rbac-sasl-plain/docker-compose.yml -f "${PWD}/docker-compose.rbac-with-azure-ad.yml" ${profile_control_center_command} ${profile_ksqldb_command} up -d
+log "🎓To see the actual properties file, use ../../scripts/get-properties.sh <container>"
+log "⚡If you modify a docker-compose file and want to re-create the container(s), use this command:"
+log "⚡source ../../scripts/utils.sh && docker-compose -f ../../environment/plaintext/docker-compose.yml -f ../../environment/rbac-sasl-plain/docker-compose.yml -f ${PWD}/docker-compose.rbac-with-azure-ad.yml ${profile_control_center_command} ${profile_ksqldb_command} up -d"
+
+../../scripts/wait-for-connect-and-controlcenter.sh
+
+display_jmx_info
+
+if [ -z "$DISABLE_CONTROL_CENTER" ]
+then
+  log "Control Center is reachable at http://127.0.0.1:9021, use superUser/superUser to login"
+fi
+#############
+
+log "Add the FQDN of LDAP server to openldap (just in order to use ldapsearch) /etc/hosts"
+docker exec -i openldap bash -c 'echo "20.86.237.230 ldaps.mydomain.onmicrosoft.com" >> /etc/hosts'
+log "Modify /etc/ldap/ldap.conf to include TLS_CACERT"
+docker exec -i openldap bash -c 'echo "TLS_CACERT /tmp/cert.txt" >> /etc/ldap/ldap.conf'
+
+log "Do a ldap search for admin"
+docker exec openldap ldapsearch -x -v  -H ldaps://ldaps.mydomain.onmicrosoft.com:636 -b "DC=mydomain,DC=onmicrosoft,DC=com" -D "CN=admin,OU=AADDC Users,DC=mydomain,DC=onmicrosoft,DC=com" -w 'Sugt5676'
+
+log "Do a ldap search for ksqlDBAdmin"
+docker exec openldap ldapsearch -x -v  -H ldaps://ldaps.mydomain.onmicrosoft.com:636 -b "DC=mydomain,DC=onmicrosoft,DC=com" -D "CN=ksqlDBAdmin,OU=AADDC Users,DC=mydomain,DC=onmicrosoft,DC=com" -w 'Yoco7654'
+
+log "Do a ldap search for connectAdmin"
+docker exec openldap ldapsearch -x -v  -H ldaps://ldaps.mydomain.onmicrosoft.com:636 -b "DC=mydomain,DC=onmicrosoft,DC=com" -D "CN=connectAdmin,OU=AADDC Users,DC=mydomain,DC=onmicrosoft,DC=com" -w 'UTu178cdd8'
+
+log "Do a ldap search for schemaregistryUser"
+docker exec openldap ldapsearch -x -v  -H ldaps://ldaps.mydomain.onmicrosoft.com:636 -b "DC=mydomain,DC=onmicrosoft,DC=com" -D "CN=schemaregistryUser,OU=AADDC Users,DC=mydomain,DC=onmicrosoft,DC=com" -w 'Tapu2399'
+
+log "Do a ldap search for controlcenterAdmin"
+docker exec openldap ldapsearch -x -v  -H ldaps://ldaps.mydomain.onmicrosoft.com:636 -b "DC=mydomain,DC=onmicrosoft,DC=com" -D "CN=controlcenterAdmin,OU=AADDC Users,DC=mydomain,DC=onmicrosoft,DC=com" -w 'Badu1234'
+
+log "Do a ldap search for superUser"
+docker exec openldap ldapsearch -x -v  -H ldaps://ldaps.mydomain.onmicrosoft.com:636 -b "DC=mydomain,DC=onmicrosoft,DC=com" -D "CN=superUser,OU=AADDC Users,DC=mydomain,DC=onmicrosoft,DC=com" -w 'Yoku5678'
