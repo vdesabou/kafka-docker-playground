@@ -4,7 +4,7 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
-log "Replace create-role-bindings.sh"
+log "Replace create-role-bindings.sh (in order to specify superAdmin user password)"
 cp $PWD/create-role-bindings.sh ../../environment/rbac-sasl-plain/scripts/helper/
 
 log "Create truststore.jks from cert.pem"
