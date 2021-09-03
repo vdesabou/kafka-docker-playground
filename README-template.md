@@ -247,6 +247,7 @@ Multi-Data-Center setup:
 - [Audit Logs](https://github.com/vdesabou/kafka-docker-playground/tree/master/other/audit-logs)
 - [Confluent REST Proxy Security Plugin](https://github.com/vdesabou/kafka-docker-playground/tree/master/other/rest-proxy-security-plugin) with SASL_SSL and 2WAY_SSL Principal Propagation
 - [Cluster Linking](https://github.com/vdesabou/kafka-docker-playground/tree/master/other/cluster-linking)
+- [Testing RBAC with Azure AD](https://github.com/vdesabou/kafka-docker-playground/tree/master/other/rbac-with-azure-ad)
 
 ## [CP-Ansible Playground](https://github.com/vdesabou/kafka-docker-playground/tree/master/other/cp-ansible-playground)
 
