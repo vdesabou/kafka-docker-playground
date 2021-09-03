@@ -16,7 +16,8 @@ See full tutorial doc [here](https://docs.microsoft.com/en-us/azure/active-direc
 
 I followed https://docs.microsoft.com/en-us/azure/active-directory-domain-services/tutorial-create-instance
 
-I created a new Resource Group
+I created a new Resource Group `rbac-azure-ad`
+
 I used *Standard* SKU and domain `mydomain` (Built-in domain name) which gives in the end `mydomain.onmicrosoft.com`
 The forest should be User
 
@@ -24,6 +25,9 @@ The forest should be User
 
 It took almost one hour to deploy !
 
+In the end the reousrce group looks like this:
+
+![7](./images/7.jpg)
 ### [Update DNS settings for the Azure virtual network](https://docs.microsoft.com/en-us/azure/active-directory-domain-services/tutorial-create-instance#update-dns-settings-for-the-azure-virtual-network)
 
 I followed all the steps
