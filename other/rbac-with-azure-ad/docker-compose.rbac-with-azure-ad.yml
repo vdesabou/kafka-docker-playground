@@ -63,6 +63,7 @@ services:
 
   schema-registry:
       environment:
+          SCHEMA_REGISTRY_CONFLUENT_METADATA_BASIC_AUTH_USER_INFO: schemaregistryUser:Tapu2399
           SCHEMA_REGISTRY_KAFKASTORE_SASL_JAAS_CONFIG: |
                   org.apache.kafka.common.security.oauthbearer.OAuthBearerLoginModule required \
                   username="schemaregistryUser" \
@@ -71,6 +72,7 @@ services:
 
   connect:
       environment:
+          CONNECT_CONFLUENT_METADATA_BASIC_AUTH_USER_INFO: 'connectAdmin:UTu178cdd8'
           CONNECT_SASL_JAAS_CONFIG: |
                   org.apache.kafka.common.security.oauthbearer.OAuthBearerLoginModule required \
                   username="connectAdmin" \
@@ -104,6 +106,7 @@ services:
 
   ksqldb-server:
     environment:
+        KSQL_CONFLUENT_METADATA_BASIC_AUTH_USER_INFO: ksqlDBAdmin:Yoco7654
         KSQL_SASL_JAAS_CONFIG: |
                 org.apache.kafka.common.security.oauthbearer.OAuthBearerLoginModule required \
                 username="ksqlDBAdmin" \
@@ -117,6 +120,7 @@ services:
 
   control-center:
       environment:
+          CONFLUENT_METADATA_BASIC_AUTH_USER_INFO: controlcenterAdmin:Badu1234
           CONTROL_CENTER_STREAMS_SASL_JAAS_CONFIG: |
                   org.apache.kafka.common.security.oauthbearer.OAuthBearerLoginModule required \
                   username="controlcenterAdmin" \
