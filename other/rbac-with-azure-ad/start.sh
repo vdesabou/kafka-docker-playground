@@ -79,7 +79,7 @@ display_jmx_info
 
 if [ -z "$DISABLE_CONTROL_CENTER" ]
 then
-  log "Control Center is reachable at http://127.0.0.1:9021, use superUser/superUser to login"
+  log "Control Center is reachable at http://127.0.0.1:9021, use superUser/Yoku5678 to login"
 fi
 #############
 
@@ -105,3 +105,6 @@ docker exec openldap ldapsearch -x -v  -H ldaps://ldaps.mydomain.onmicrosoft.com
 
 log "Do a ldap search for superUser"
 docker exec openldap ldapsearch -x -v  -H ldaps://ldaps.mydomain.onmicrosoft.com:636 -b "DC=mydomain,DC=onmicrosoft,DC=com" -D "CN=superUser,OU=AADDC Users,DC=mydomain,DC=onmicrosoft,DC=com" -w 'Yoku5678'
+
+log "Stopping now openldap container to make sure Azure AD is really used"
+docker stop openldap

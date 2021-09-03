@@ -125,3 +125,8 @@ KAFKA_LDAP_USER_OBJECT_CLASS: user
 KAFKA_LDAP_USER_MEMBEROF_ATTRIBUTE: memberOf
 KAFKA_LDAP_USER_MEMBEROF_ATTRIBUTE_PATTERN: "CN=(.*),OU=AADDC Users,.*"
 ```
+
+And it worked 🥳:
+
+![6](./images/6.jpg)
+
