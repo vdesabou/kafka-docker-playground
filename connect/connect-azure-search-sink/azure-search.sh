@@ -35,8 +35,7 @@ az search service create \
     --name $AZURE_SEARCH_SERVICE_NAME \
     --resource-group $AZURE_RESOURCE_GROUP \
     --location $AZURE_REGION \
-    --sku free \
-    --debug
+    --sku Basic
 AZURE_SEARCH_ADMIN_PRIMARY_KEY=$(az search admin-key show \
     --resource-group $AZURE_RESOURCE_GROUP \
     --service-name $AZURE_SEARCH_SERVICE_NAME | jq -r '.primaryKey')
