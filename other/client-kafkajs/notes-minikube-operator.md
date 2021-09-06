@@ -13,19 +13,20 @@ If you want to use AWS EKS:
 
 ```bash
 # Start EKS cluster with t2.2xlarge instances
-eksctl create cluster --name client-kafkajs \
+eksctl create cluster --name kafka-docker-playground-client-kafkajs \
     --version 1.18 \
     --nodegroup-name standard-workers \
     --node-type t2.2xlarge \
     --region eu-west-3 \
     --nodes-min 4 \
     --nodes-max 10 \
+    --node-volume-size 500 \
     --node-ami auto
 
 # Configure your computer to communicate with your cluster
 aws eks update-kubeconfig \
     --region eu-west-3 \
-    --name client-kafkajs
+    --name kafka-docker-playground-client-kafkajs
 
 # Deploy the Metrics Server
 kubectl apply -f https://github.com/kubernetes-sigs/metrics-server/releases/latest/download/components.yaml
@@ -126,7 +127,7 @@ docker push vdesabou/kafkajs-operator-example-docker
 
 ```bash
 kubectl cp kafka.properties confluent/kafka-0:/tmp/config
-kubectl exec -it kafka-0 -- kafka-topics --bootstrap-server kafka:9071 --command-config /tmp/config --topic kafkajs --create --partitions 300 --replication-factor 3
+kubectl exec -it kafka-0 -- kafka-topics --bootstrap-server kafka:9071 --command-config /tmp/config --topic kafkajs --create --partitions 216 --replication-factor 3
 ```
 
 If using Minikube:
