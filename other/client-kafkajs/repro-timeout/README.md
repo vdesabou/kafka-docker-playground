@@ -1,6 +1,86 @@
-# Results
+# Reproduction model for tulios/kafkajs #919
 
-## Test with 10 minutes connection error
+This is an attempt to reproduce issue seen in [producer.send() does not reconnect to broker when receiving an ETIMEDOUT error #919](https://github.com/tulios/kafkajs/issues/919)
+
+## Test description
+
+### Environment:
+
+KafkaJS version 1.15.0
+Kafka version 2.8 (Confluent Platform 6.2.0)
+NodeJS version from `node:lts-alpine` image
+
+### How to run
+
+Just run the script `start-repro-timeout.sh`
+
+### What the script does
+
+It starts a zookeeper + 3 brokers + control-center
+
+The producer [code](https://github.com/vdesabou/kafka-docker-playground/blob/master/other/client-kafkajs/repro-timeout/client/producer.js) is very simple.
+
+Config used is:
+
+```js
+const kafka = new Kafka({
+  clientId: 'my-kafkajs-producer',
+  brokers: ['broker1:9092','broker2:9092','broker3:9092'],
+  enforceRequestTimeout: true,
+  logLevel: logLevel.DEBUG,
+  acks:1,
+  connectionTimeout: 20000,
+})
+```
+
+It allows only one pending request in order to make troubleshooting easier.
+
+Create a topic kafkajs:
+
+```
+docker exec broker1 kafka-topics --create --topic kafkajs --partitions 3 --replication-factor 3 --zookeeper zookeeper:2181
+```
+
+Starting consumer. Logs are in consumer.log.
+
+```
+docker exec -i client-kafkajs node /usr/src/app/consumer.js > consumer.log 2>&1 &
+```
+
+Starting producer. Logs are in producer.log.
+
+```
+docker exec -i client-kafkajs node /usr/src/app/producer.js > producer.log 2>&1 &
+```
+
+Blocking IP address $ip corresponding to kafkaJS client
+
+```
+ip=$(docker inspect -f '{{.Name}} - {{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' $(docker ps -aq) | grep client-kafkajs | cut -d " " -f 3)
+docker exec -e ip=$ip --privileged --user root broker1 sh -c "iptables -A OUTPUT -p tcp -d $ip -j DROP"
+```
+
+let the test run 5 minutes
+
+```
+sleep 300
+```
+
+Unblocking IP address $ip corresponding to kafkaJS client
+
+```
+docker exec -e ip=$ip --privileged --user root broker1 sh -c "iptables -D OUTPUT -p tcp -d $ip -j DROP"
+```
+
+let the test run 5 minutes
+
+```
+sleep 300
+```
+
+## Results
+
+### Test with 10 minutes connection error
 
 Traffic is blocked at `11:32:33`:
 
@@ -80,7 +160,7 @@ We see a disconnection, probably because broker disconnected for good the client
 
 Full logs are [here](https://github.com/vdesabou/kafka-docker-playground/blob/master/other/client-kafkajs/repro-timeout/producer.log.zip?raw=true)
 
-## Test with 5 minutes connection error
+### Test with 5 minutes connection error
 
 I re-ran a test with 5 minutes of iptables instead of 10 minutes (to avoid the disconnection from the broker due to `connections.max.idle.ms`)
 
