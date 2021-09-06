@@ -1,0 +1,12 @@
+tasks:
+  - init: |
+      cd environment/plaintext && ./start.sh; ./stop.sh
+  - command: |
+      echo "nothing to do"
+ports:
+  - port: 9021
+    onOpen: open-browser
+
+vscode:
+  extensions:
+    - ms-azuretools.vscode-docker
