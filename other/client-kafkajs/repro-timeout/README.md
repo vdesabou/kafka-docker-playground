@@ -1,5 +1,7 @@
 # Results
 
+## Test with 10 minutes connection error
+
 Traffic is blocked at `11:32:33`:
 
 ```log
@@ -77,3 +79,58 @@ We see a disconnection, probably because broker disconnected for good the client
 ```
 
 Full logs are [here](https://github.com/vdesabou/kafka-docker-playground/blob/master/other/client-kafkajs/repro-timeout/producer.log.zip?raw=true)
+
+## Test with 5 minutes connection error
+
+I re-ran a test with 5 minutes of iptables instead of 10 minutes (to avoid the disconnection from the broker due to `connections.max.idle.ms`)
+
+Traffic was blocked at `12:50:45`:
+
+```log
+12:50:45 ℹ️ Blocking IP address 172.20.0.6 corresponding to kafkaJS client
+```
+
+Around 60 seconds later we see disconnection:
+
+```log
+[[12:51:44.730]] [ERROR] {"level":"ERROR","timestamp":"2021-09-06T12:51:44.730Z","logger":"kafkajs","message":"[Connection] Connection error: read ETIMEDOUT","broker":"broker1:9092","clientId":"my-kafkajs-producer","stack":"Error: read ETIMEDOUT\n    at TCP.onStreamRead (internal/stream_base_commons.js:209:20)"}
+[[12:51:44.730]] [LOG]   {"level":"DEBUG","timestamp":"2021-09-06T12:51:44.730Z","logger":"kafkajs","message":"[Connection] disconnecting...","broker":"broker1:9092","clientId":"my-kafkajs-producer"}
+[[12:51:44.731]] [LOG]   {"level":"DEBUG","timestamp":"2021-09-06T12:51:44.731Z","logger":"kafkajs","message":"[Connection] disconnected","broker":"broker1:9092","clientId":"my-kafkajs-producer"}
+```
+
+When traffic is back at `12:55:45`:
+
+```log
+12:55:45 ℹ️ Unblocking IP address 172.20.0.6 corresponding to kafkaJS client
+```
+
+We see a retry right after:
+
+```log
+[[12:56:00.874]] [LOG]   {"level":"DEBUG","timestamp":"2021-09-06T12:56:00.874Z","logger":"kafkajs","message":"[Connection] Request Produce(key: 0, version: 5)","broker":"broker1:9092","clientId":"my-kafkajs-producer","correlationId":25,"expectResponse":true,"size":510055}
+```
+
+After 21 seconds (not sure why??), we see accumulated responses (blocked by iptables)
+
+```log
+[[12:56:21.021]] [WARN]  {"level":"WARN","timestamp":"2021-09-06T12:56:21.021Z","logger":"kafkajs","message":"[RequestQueue] Response without match","clientId":"my-kafkajs-producer","broker":"broker1:9092","correlationId":15}
+[[12:56:21.023]] [WARN]  {"level":"WARN","timestamp":"2021-09-06T12:56:21.023Z","logger":"kafkajs","message":"[RequestQueue] Response without match","clientId":"my-kafkajs-producer","broker":"broker1:9092","correlationId":16}
+[[12:56:21.026]] [WARN]  {"level":"WARN","timestamp":"2021-09-06T12:56:21.026Z","logger":"kafkajs","message":"[RequestQueue] Response without match","clientId":"my-kafkajs-producer","broker":"broker1:9092","correlationId":17}
+[[12:56:21.029]] [WARN]  {"level":"WARN","timestamp":"2021-09-06T12:56:21.029Z","logger":"kafkajs","message":"[RequestQueue] Response without match","clientId":"my-kafkajs-producer","broker":"broker1:9092","correlationId":18}
+[[12:56:21.032]] [WARN]  {"level":"WARN","timestamp":"2021-09-06T12:56:21.032Z","logger":"kafkajs","message":"[RequestQueue] Response without match","clientId":"my-kafkajs-producer","broker":"broker1:9092","correlationId":19}
+[[12:56:21.034]] [WARN]  {"level":"WARN","timestamp":"2021-09-06T12:56:21.033Z","logger":"kafkajs","message":"[RequestQueue] Response without match","clientId":"my-kafkajs-producer","broker":"broker1:9092","correlationId":20}
+[[12:56:21.035]] [WARN]  {"level":"WARN","timestamp":"2021-09-06T12:56:21.035Z","logger":"kafkajs","message":"[RequestQueue] Response without match","clientId":"my-kafkajs-producer","broker":"broker1:9092","correlationId":21}
+[[12:56:21.038]] [WARN]  {"level":"WARN","timestamp":"2021-09-06T12:56:21.038Z","logger":"kafkajs","message":"[RequestQueue] Response without match","clientId":"my-kafkajs-producer","broker":"broker1:9092","correlationId":22}
+[[12:56:21.040]] [WARN]  {"level":"WARN","timestamp":"2021-09-06T12:56:21.040Z","logger":"kafkajs","message":"[RequestQueue] Response without match","clientId":"my-kafkajs-producer","broker":"broker1:9092","correlationId":23}
+[[12:56:21.043]] [WARN]  {"level":"WARN","timestamp":"2021-09-06T12:56:21.042Z","logger":"kafkajs","message":"[RequestQueue] Response without match","clientId":"my-kafkajs-producer","broker":"broker1:9092","correlationId":24}
+```
+
+Followed by request response:
+
+```log
+[[12:56:21.044]] [LOG]   {"level":"DEBUG","timestamp":"2021-09-06T12:56:21.044Z","logger":"kafkajs","message":"[Connection] Response Produce(key: 0, version: 5)","broker":"broker1:9092","clientId":"my-kafkajs-producer","correlationId":25,"size":55,"data":{"topics":[{"topicName":"kafkajs","partitions":[{"partition":0,"errorCode":0,"baseOffset":"83","logAppendTime":"-1","logStartOffset":"0"}]}],"throttleTime":0}}
+```
+
+So even if there was a disconnection, it seems that kafkaJS is able to send request again when connection is back ?
+
+Full logs are [here](https://github.com/vdesabou/kafka-docker-playground/blob/master/other/client-kafkajs/repro-timeout/producer_5min.log.zip?raw=true)

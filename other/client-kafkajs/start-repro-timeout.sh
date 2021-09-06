@@ -31,8 +31,8 @@ docker exec -e ip=$ip --privileged --user root broker1 sh -c "iptables -A OUTPUT
 log "Grepping for WARN|ERROR|Metadata|timed out|disconnect"
 tail -f producer.log | egrep "WARN|ERROR|Metadata|timed out|disconnect" > results.log 2>&1 &
 
-log "let the test run 10 minutes"
-sleep 600
+log "let the test run 5 minutes"
+sleep 300
 
 log "Unblocking IP address $ip corresponding to kafkaJS client"
 docker exec -e ip=$ip --privileged --user root broker1 sh -c "iptables -D OUTPUT -p tcp -d $ip -j DROP"
