@@ -53,8 +53,8 @@ function sendData() {
   console.log(`Memory: ${Math.round(used * 100) / 100} MB`);
   console.log(`outgoingMessages ` + outgoingMessages);
 
-  if(outgoingMessages>5) {
-    console.log(`Refusing message as we have outgoing messages ` + outgoingMessages);
+  if(outgoingMessages>=1) {
+    console.log(`Refusing message as we have one outgoing messages ` + outgoingMessages);
     return;
   }
   outgoingMessages++;
