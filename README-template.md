@@ -8,6 +8,7 @@ Playground for Kafka/Confluent Docker experimentations...
 ![GitHub repo size](https://img.shields.io/github/repo-size/vdesabou/kafka-docker-playground)
 
 - [👾 Playgrounds](#-playgrounds)
+  - [Connectors](#connectors)
   - [☁️ Confluent Cloud](#️-confluent-cloud)
   - [🔄 Confluent Replicator and Mirror Maker 2](#-confluent-replicator-and-mirror-maker-2)
   - [🔐 Environments](#-environments)
@@ -18,9 +19,12 @@ Playground for Kafka/Confluent Docker experimentations...
   - [0️⃣ Prerequisites](#0️⃣-prerequisites)
   - [🐳 Recommended Docker settings](#-recommended-docker-settings)
   - [🌩 Running on AWS EC2 instance](#-running-on-aws-ec2-instance)
+  - [<img src="https://gitpod.io/static/media/gitpod.2cdd910d.svg" width="15"> Running on Gitpod](#-running-on-gitpod)
 
 
 # 👾 Playgrounds
+
+## Connectors
 
 Quick start examples from Confluent [docs](https://docs.confluent.io/current/connect/managing/index.html) but in Docker version for ease of use.
 
@@ -290,3 +294,7 @@ $ cp /path/to/kafka-docker-playground/cloudformation/kafka-docker-playground.jso
 $ aws cloudformation create-stack  --stack-name kafka-docker-playground-$USER --template-body file://tmp.json --region eu-west-3
  --parameters ParameterKey=KeyName,ParameterValue=$KEY_NAME ParameterKey=InstanceName,ParameterValue=kafka-docker-playground-$USER
 ```
+
+## <img src="https://gitpod.io/static/media/gitpod.2cdd910d.svg" width="15"> Running on Gitpod
+
+[![Open in Gitpod](https://gitpod.io/button/open-in-gitpod.svg)](https://gitpod.io/#https://github.com/vdesabou/kafka-docker-playground)
