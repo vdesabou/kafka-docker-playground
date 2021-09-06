@@ -12,7 +12,7 @@ NodeJS version from `node:lts-alpine` image
 
 ### How to run
 
-Just run the script `start-repro-timeout.sh`
+Just run the script [`start-repro-timeout.sh`](https://github.com/vdesabou/kafka-docker-playground/blob/master/other/client-kafkajs/start-repro-timeout.sh)
 
 ### What the script does
 
