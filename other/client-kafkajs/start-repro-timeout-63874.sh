@@ -13,7 +13,6 @@ ${DIR}/../../scripts/wait-for-connect-and-controlcenter.sh -a -b
 log "Create a topic kafkajs"
 docker exec broker1 kafka-topics --create --topic kafkajs --partitions 3 --replication-factor 3 --zookeeper zookeeper:2181
 
-
 log "Starting consumer. Logs are in consumer.log."
 docker exec -i client-kafkajs node /usr/src/app/consumer.js > consumer.log 2>&1 &
 
@@ -32,5 +31,14 @@ sleep 45
 log "Setting back traffic to normal"
 docker exec -e ip=$ip --privileged --user root broker1 sh -c "iptables -D OUTPUT -p tcp -d $ip -j DROP"
 
-log "let the test run 3 minutes"
-sleep 180
+log "let the test run 1 minute"
+sleep 60
+
+log "Stop broker1"
+docker stop broker1
+
+log "Wait 60 seconds"
+sleep 60
+
+log "Start broker1"
+docker start broker1
