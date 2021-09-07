@@ -17,7 +17,49 @@ Just run the script [`start-repro-timeout-63874.sh`](https://github.com/vdesabou
 
 It starts a zookeeper + 3 brokers + control-center
 
-The producer [code](https://github.com/vdesabou/kafka-docker-playground/blob/master/other/client-kafkajs/repro-timeout-63874/client/producer.js) is waiting for all promises to return before sending next batch.
+The producer [code](https://github.com/vdesabou/kafka-docker-playground/blob/master/other/client-kafkajs/repro-timeout-63874/client/producer.js) is waiting for all promises to return before sending next batch (using a `lock` attribute):
+
+```js
+function deQueueBatch() {
+  if  (!lock) {
+    lock = true
+    const now = new Date();
+    const used = process.memoryUsage().heapUsed / 1024 / 1024;
+    console.log(`Memory: ${Math.round(used * 100) / 100} MB`);
+    console.log(`Queue size: ${batch.length}`)
+
+    var batches = splitQueue(batch)
+    var promises = batches.map(function (events) {
+        return sendData(events)
+          .catch(function(result) {
+              console.log(`Error in sending data`)
+              return result
+          }).then(function(result) {
+              console.log(`Success in sending data`)
+              return result
+          })
+    })
+
+    Promise.allSettled(promises).then(function(results) {
+        lock = false
+        console.log('lock released', {duration: new Date() - now});
+        //results.forEach((result) => console.log(result))
+    })
+  }
+}
+```
+
+When queue is more than 500 batches, we start discarding events:
+
+```js
+function addDataToQueue() {
+    if (batch.length < 500) {
+        batch.push({value: bigString})
+    } else {
+        console.log(`ERROR: Discarding events !!!!`)
+    }
+}
+```
 
 Config used is:
 
