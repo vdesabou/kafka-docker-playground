@@ -108,6 +108,25 @@ docker exec -e ip=$ip --privileged --user root broker1 sh -c "iptables -D OUTPUT
 
 let the test run 3 minutes
 
+Then simulate a broker restart (which happens during cluster roll for example):
+
+Stop broker1:
+
+```bash
+docker stop broker1
+```
+
+Wait 60 seconds:
+
+```bash
+sleep 60
+```
+
+Start broker1:
+
+```bash
+docker start broker1
+```
 
 ## Results
 
