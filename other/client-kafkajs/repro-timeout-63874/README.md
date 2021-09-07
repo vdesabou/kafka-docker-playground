@@ -341,5 +341,4 @@ After that broker1 is started, at the end there is leader re-election and we do 
 
 Full logs are [here](https://github.com/vdesabou/kafka-docker-playground/blob/master/other/client-kafkajs/repro-timeout-63874/producer_locking.zip?raw=true)
 
-### Test without locking and maxInFlightRequests
 
