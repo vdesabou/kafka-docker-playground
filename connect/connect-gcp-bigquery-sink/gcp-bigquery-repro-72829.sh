@@ -73,41 +73,68 @@ curl --request PUT \
 }'
 
 log "Create connector"
-curl -X PUT \
-     -H "Content-Type: application/json" \
-     --data '{
-               "connector.class": "com.wepay.kafka.connect.bigquery.BigQuerySinkConnector",
-               "tasks.max" : "1",
-               "topics" : "customer-avro",
-               "sanitizeTopics" : "true",
-               "autoCreateTables" : "true",
-               "value.converter": "io.confluent.connect.avro.AvroConverter",
-               "value.converter.schema.registry.url": "http://schema-registry:8081",
-               "value.converter.enhanced.avro.schema.support": "false",
-               "defaultDataset" : "'"$DATASET"'",
-               "mergeIntervalMs": "5000",
-               "bufferSize": "100000",
-               "maxWriteSize": "10000",
-               "tableWriteWait": "1000",
-               "project" : "'"$PROJECT"'",
-               "sanitizeFieldNames": "true",
-               "allBQFieldsNullable": "true",
-               "allowBigQueryRequiredFieldRelaxation": "true",
-               "allowNewBigQueryFields" : "true",
-               "allowBigQueryRequiredFieldRelaxation" : "true",
-               "allowSchemaUnionization" : "true",
-               "bigQueryRetryWait" : "10000",
-               "bigQueryRetry" : "3",
-               "keyfile" : "/tmp/keyfile.json",
-               "errors.tolerance" : "all",
-               "errors.log.enable" : "true",
-               "errors.log.include.messages" : "true",
-               "errors.deadletterqueue.topic.name" : "dlq",
-               "errors.deadletterqueue.topic.replication.factor": "1",
-               "errors.deadletterqueue.context.headers.enable" : "true"
-          }' \
-     http://localhost:8083/connectors/gcp-bigquery-sink-72829/config | jq .
 
+if version_gt $CONNECTOR_TAG "1.9.9"
+then
+     log "Creating GCP BigQuery Sink connector"
+     curl -X PUT \
+          -H "Content-Type: application/json" \
+          --data '{
+                    "connector.class": "com.wepay.kafka.connect.bigquery.BigQuerySinkConnector",
+                    "tasks.max" : "1",
+                    "topics" : "customer-avro",
+                    "sanitizeTopics" : "true",
+                    "autoCreateTables" : "true",
+                    "value.converter": "io.confluent.connect.avro.AvroConverter",
+                    "value.converter.schema.registry.url": "http://schema-registry:8081",
+                    "value.converter.enhanced.avro.schema.support": "false",
+                    "defaultDataset" : "'"$DATASET"'",
+                    "mergeIntervalMs": "5000",
+                    "bufferSize": "100000",
+                    "maxWriteSize": "10000",
+                    "tableWriteWait": "1000",
+                    "project" : "'"$PROJECT"'",
+                    "sanitizeFieldNames": "true",
+                    "allBQFieldsNullable": "true",
+                    "allowBigQueryRequiredFieldRelaxation": "true",
+                    "allowNewBigQueryFields" : "true",
+                    "allowBigQueryRequiredFieldRelaxation" : "true",
+                    "allowSchemaUnionization" : "true",
+                    "bigQueryRetryWait" : "10000",
+                    "bigQueryRetry" : "3",
+                    "keyfile" : "/tmp/keyfile.json",
+                    "errors.tolerance" : "all",
+                    "errors.log.enable" : "true",
+                    "errors.log.include.messages" : "true",
+                    "errors.deadletterqueue.topic.name" : "dlq",
+                    "errors.deadletterqueue.topic.replication.factor": "1",
+                    "errors.deadletterqueue.context.headers.enable" : "true"
+               }' \
+          http://localhost:8083/connectors/gcp-bigquery-sink-72829/config | jq .
+else
+     # with 1.6.2 it works
+     log "Creating GCP BigQuery Sink connector"
+     curl -X PUT \
+          -H "Content-Type: application/json" \
+          --data '{
+                    "connector.class": "com.wepay.kafka.connect.bigquery.BigQuerySinkConnector",
+                    "tasks.max" : "1",
+                    "topics" : "customer-avro",
+                    "sanitizeTopics" : "true",
+                    "autoCreateTables" : "true",
+                    "autoUpdateSchemas" : "true",
+                    "schemaRetriever" : "com.wepay.kafka.connect.bigquery.schemaregistry.schemaretriever.SchemaRegistrySchemaRetriever",
+                    "schemaRegistryLocation": "http://schema-registry:8081",
+                    "datasets" : ".*='"$DATASET"'",
+                    "mergeIntervalMs": "5000",
+                    "bufferSize": "100000",
+                    "maxWriteSize": "10000",
+                    "tableWriteWait": "1000",
+                    "project" : "'"$PROJECT"'",
+                    "keyfile" : "/tmp/keyfile.json"
+               }' \
+          http://localhost:8083/connectors/gcp-bigquery-sink/config | jq .
+fi
 
 log "Run the Java producer-72829"
 docker exec producer-72829 bash -c "java -jar producer-72829-1.0.0-jar-with-dependencies.jar"
