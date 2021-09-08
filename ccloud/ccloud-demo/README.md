@@ -1091,6 +1091,8 @@ That's it ! All the data available in the prometheus instance will be available 
 
 ![New Relic UI](./images/newrelic2.jpg)
 
+Note: if you prefer to use Telegraf, there is an example in [Dabz/ccloudexporter](https://github.com/Dabz/ccloudexporter) which was added with that [pull request](https://github.com/Dabz/ccloudexporter/pull/81).
+
 ### Splunk
 
 This is an example taken from [Dabz/ccloudexporter](https://github.com/Dabz/ccloudexporter#splunk)
