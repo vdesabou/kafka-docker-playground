@@ -4,9 +4,26 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
-docker-compose -f ../../environment/plaintext/docker-compose.yml -f "${PWD}/docker-compose.plaintext.yml" down -v --remove-orphans
+# https://docs.docker.com/compose/profiles/
+profile_control_center_command=""
+if [ -z "$DISABLE_CONTROL_CENTER" ]
+then
+  profile_control_center_command="--profile control-center"
+else
+  log "🛑 control-center is disabled"
+fi
+
+profile_ksqldb_command=""
+if [ -z "$DISABLE_KSQLDB" ]
+then
+  profile_ksqldb_command="--profile ksqldb"
+else
+  log "🛑 ksqldb is disabled"
+fi
+
+docker-compose -f ../../environment/plaintext/docker-compose.yml -f "${PWD}/docker-compose.plaintext.yml" ${profile_control_center_command} ${profile_ksqldb_command} down -v --remove-orphans
 log "Starting up ibmdb2 container to get db2jcc4.jar"
-docker-compose -f ../../environment/plaintext/docker-compose.yml -f "${PWD}/docker-compose.plaintext.yml" up -d ibmdb2
+docker-compose -f ../../environment/plaintext/docker-compose.yml -f "${PWD}/docker-compose.plaintext.yml" ${profile_control_center_command} ${profile_ksqldb_command} up -d ibmdb2
 
 rm -f ${DIR}/db2jcc4.jar
 log "Getting db2jcc4.jar"
@@ -28,7 +45,7 @@ fi
 done
 log "ibmdb2 DB has started!"
 
-docker-compose -f ../../environment/plaintext/docker-compose.yml -f "${PWD}/docker-compose.plaintext.yml" up -d
+docker-compose -f ../../environment/plaintext/docker-compose.yml -f "${PWD}/docker-compose.plaintext.yml" ${profile_control_center_command} ${profile_ksqldb_command} up -d
 
 ../../scripts/wait-for-connect-and-controlcenter.sh
 
