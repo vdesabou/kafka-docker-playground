@@ -1,5 +1,17 @@
+github:
+  prebuilds:
+    # enable for the default branch (defaults to true)
+    master: true
+    # enable for all branches in this repo (defaults to false)
+    branches: false
+    # enable for pull requests coming from this repo (defaults to true)
+    pullRequests: false
+    # add a "Review in Gitpod" button as a comment to pull requests (defaults to false)
+    addComment: true
+
 tasks:
-  - init: |
+  - name: Install ccloud CLI and run environment/plaintext to download main docker images
+    before: |
       curl -L --http1.1 https://cnfl.io/ccloud-cli | sudo sh -s -- -b /usr/local/bin
       cd environment/plaintext && ./start.sh; ./stop.sh
 ports:
