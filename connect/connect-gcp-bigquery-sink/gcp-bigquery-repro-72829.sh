@@ -106,7 +106,7 @@ curl -X PUT \
                "errors.deadletterqueue.topic.replication.factor": "1",
                "errors.deadletterqueue.context.headers.enable" : "true"
           }' \
-     http://localhost:8083/connectors/gcp-bigquery-sink/config | jq .
+     http://localhost:8083/connectors/gcp-bigquery-sink-72829/config | jq .
 
 
 log "Run the Java producer-72829"
