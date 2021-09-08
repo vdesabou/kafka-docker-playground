@@ -429,6 +429,7 @@
         "SecurityGroupIngress" : [
           {"IpProtocol" : "tcp", "FromPort" : "9021", "ToPort" : "9021", "CidrIp" : { "Ref" : "IPAddressRange"}},
           {"IpProtocol" : "tcp", "FromPort" : "3000", "ToPort" : "3000", "CidrIp" : { "Ref" : "IPAddressRange"}},
+          {"IpProtocol" : "tcp", "FromPort" : "18000", "ToPort" : "18000", "CidrIp" : { "Ref" : "IPAddressRange"}},
           {"IpProtocol" : "tcp", "FromPort" : "8083", "ToPort" : "8083", "CidrIp" : { "Ref" : "IPAddressRange"}},
           {"IpProtocol" : "tcp", "FromPort" : "9090", "ToPort" : "9090", "CidrIp" : { "Ref" : "IPAddressRange"}},
           {"IpProtocol" : "tcp", "FromPort" : "22", "ToPort" : "22", "CidrIp" : { "Ref" : "IPAddressRange"}}

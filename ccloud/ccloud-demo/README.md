@@ -36,6 +36,7 @@
       - [Consumer Lag Dashboard](#consumer-lag-dashboard)
       - [CCloud Exporter Metrics API Dashboard](#ccloud-exporter-metrics-api-dashboard)
     - [New Relic](#new-relic)
+    - [Splunk](#splunk)
     - [How to monitor consumer lag](#how-to-monitor-consumer-lag)
   - [Restrict access to Confluent Cloud](#restrict-access-to-confluent-cloud)
     - [Restricted users](#restricted-users)
@@ -1090,6 +1091,13 @@ That's it ! All the data available in the prometheus instance will be available 
 
 ![New Relic UI](./images/newrelic2.jpg)
 
+### Splunk
+
+This is an example taken from [Dabz/ccloudexporter](https://github.com/Dabz/ccloudexporter#splunk)
+
+Check analytics workspace [here](http://localhost:18000/en-US/app/search/analytics_workspace)
+
+Metrics will show up like this:
 
 ### How to monitor consumer lag
 
