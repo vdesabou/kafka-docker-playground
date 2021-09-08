@@ -1,0 +1,17 @@
+{
+    "fields": [
+        {
+            "doc": "Sed ut perspiciatis unde omnis",
+            "name": "cookieId",
+            "type": "string"
+        },
+        {
+            "doc": "aspernatur aut odit aut fugit, se",
+            "name": "merchantReference",
+            "type": "string"
+        }
+    ],
+    "name": "Customer",
+    "namespace": "com.github.vdesabou",
+    "type": "record"
+}
