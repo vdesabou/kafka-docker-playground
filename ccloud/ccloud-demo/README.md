@@ -1095,9 +1095,11 @@ That's it ! All the data available in the prometheus instance will be available 
 
 This is an example taken from [Dabz/ccloudexporter](https://github.com/Dabz/ccloudexporter#splunk)
 
-Check analytics workspace [here](http://localhost:18000/en-US/app/search/analytics_workspace)
+Check Splunk UI [http://127.0.0.1:18000](http://127.0.0.1:18000/en-US/app/search/analytics_workspace)(`admin`/`changeme`)
 
 Metrics will show up like this:
+
+![Splunk UI](./images/splunk.jpg)
 
 ### How to monitor consumer lag
 
