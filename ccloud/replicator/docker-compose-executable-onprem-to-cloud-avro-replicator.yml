@@ -16,6 +16,7 @@ services:
   control-center:
     environment:
       CONTROL_CENTER_CONNECT_CLUSTER: http://replicator:8083
+      CONTROL_CENTER_CONNECT_MYCONNECT_CLUSTER: http://replicator:8083
       CONTROL_CENTER_BOOTSTRAP_SERVERS: 'broker:9092'
       CONTROL_CENTER_ZOOKEEPER_CONNECT: 'zookeeper:2181'
       CONTROL_CENTER_KAFKA_BOOTSTRAP_SERVERS: 'broker:9092'

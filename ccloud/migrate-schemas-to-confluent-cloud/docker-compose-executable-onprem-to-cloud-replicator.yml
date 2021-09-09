@@ -15,3 +15,4 @@ services:
   control-center:
      environment:
       CONTROL_CENTER_CONNECT_CLUSTER: http://replicator:8083
+      CONTROL_CENTER_CONNECT_MYCONNECT_CLUSTER: http://replicator:8083
