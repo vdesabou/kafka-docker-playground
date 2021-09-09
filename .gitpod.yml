@@ -11,10 +11,10 @@ github:
     addCheck: false
 
 tasks:
-  - name: Install ccloud CLI and run environment/plaintext to download main docker images
+  - name: Playground
     init: |
       curl -L --http1.1 https://cnfl.io/ccloud-cli | sudo sh -s -- -b /usr/local/bin
-      cd environment/plaintext && source ../../scripts/utils.sh && docker-compose --profile control-center --profile ksqldb pull && cd -
+      cd environment/kerberos && source ../../scripts/utils.sh && docker-compose --profile control-center --profile ksqldb pull && cd -
 ports:
   - port: 9021
     onOpen: open-browser
