@@ -58,6 +58,7 @@ services:
     environment:
       KAFKA_ZOOKEEPER_CONNECT: "zookeeper:2181"
       KAFKA_INTER_BROKER_LISTENER_NAME: SASL_SSL
+      KAFKA_LISTENERS: SASL_SSL://:9092
       KAFKA_ADVERTISED_LISTENERS: SASL_SSL://broker2:9092
       KAFKA_LOG4J_LOGGERS: "kafka.authorizer.logger=INFO"
       KAFKA_METRIC_REPORTERS: "io.confluent.metrics.reporter.ConfluentMetricsReporter"
