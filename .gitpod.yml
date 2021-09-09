@@ -22,4 +22,3 @@ ports:
 vscode:
   extensions:
     - ms-azuretools.vscode-docker
-    - greven.umbra
