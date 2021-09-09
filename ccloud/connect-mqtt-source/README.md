@@ -1,6 +1,4 @@
-# AWS Kinesis Source connector
-
-![asciinema](https://github.com/vdesabou/gifs/blob/master/connect/connect-mqtt-source/asciinema.gif?raw=true)
+# MQTT Source connector
 
 ## Objective
 
@@ -12,7 +10,7 @@ Simply set the environment variables for connection to your Confluent Cloud clus
 
 ```bash
 $ export BOOTSTRAP_SERVERS=XXX
-$ eexport SASL_JAAS_CONFIG="org.apache.kafka.common.security.plain.PlainLoginModule required username='<<api_key>>' password='<<api_secret>>';"
+$ export SASL_JAAS_CONFIG="org.apache.kafka.common.security.plain.PlainLoginModule required username='<<api_key>>' password='<<api_secret>>';"
 $ export SCHEMA_REGISTRY_URL=YYY
 $ export SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO=SR_KEY:SR_SECRET
 $ export BASIC_AUTH_CREDENTIALS_SOURCE=USER_INFO
@@ -34,13 +32,13 @@ $ curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
                "connector.class": "io.confluent.connect.mqtt.MqttSourceConnector",
-                    "tasks.max": "1",
-                    "mqtt.server.uri": "tcp://mosquitto:1883",
-                    "mqtt.topics":"my-mqtt-topic",
-                    "kafka.topic":"mqtt-source-1",
-                    "mqtt.qos": "2",
-                    "mqtt.username": "myuser",
-                    "mqtt.password": "mypassword",
+               "tasks.max": "1",
+               "mqtt.server.uri": "tcp://mosquitto:1883",
+               "mqtt.topics":"my-mqtt-topic",
+               "kafka.topic":"mqtt-source-1",
+               "mqtt.qos": "2",
+               "mqtt.username": "myuser",
+               "mqtt.password": "mypassword",
                "confluent.topic.ssl.endpoint.identification.algorithm" : "https",
                "confluent.topic.sasl.mechanism" : "PLAIN",
                "confluent.topic.bootstrap.servers": "${file:/data:bootstrap.servers}",
