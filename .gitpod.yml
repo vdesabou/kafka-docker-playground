@@ -11,9 +11,9 @@ github:
 
 tasks:
   - name: Install ccloud CLI and run environment/plaintext to download main docker images
-    before: |
+    init: |
       curl -L --http1.1 https://cnfl.io/ccloud-cli | sudo sh -s -- -b /usr/local/bin
-      cd environment/plaintext && ./start.sh; ./stop.sh
+      cd environment/plaintext && source ../../scripts/utils.sh && docker-compose pull
 ports:
   - port: 9021
     onOpen: open-browser
