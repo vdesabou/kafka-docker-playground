@@ -22,3 +22,4 @@ ports:
 vscode:
   extensions:
     - ms-azuretools.vscode-docker
+    - bceskavich.theme-dracula-at-night
