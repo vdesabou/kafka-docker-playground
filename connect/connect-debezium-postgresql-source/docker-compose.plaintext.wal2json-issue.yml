@@ -11,7 +11,8 @@ services:
   # https://issues.jboss.org/browse/DBZ-1083
 
   postgres:
-    image: debezium/postgres:10.0 # using wal2json with commit d2b7fef021c46e0d429f2c1768de361069e58696 wal2json 1.0 release 1.0 March 2018
+    # using wal2json with commit d2b7fef021c46e0d429f2c1768de361069e58696 wal2json 1.0 release 1.0 March 2018
+    image: debezium/postgres:10.0
     hostname: postgres
     container_name: postgres
     environment:
