@@ -158,6 +158,14 @@ else
     set_kafka_client_tag
 fi
 
+# Migrate SimpleAclAuthorizer to AclAuthorizer #1276
+if version_gt $TAG "5.3.99"
+then
+  export KAFKA_AUTHORIZER_CLASS_NAME="kafka.security.authorizer.AclAuthorizer"
+else
+  export KAFKA_AUTHORIZER_CLASS_NAME="kafka.security.auth.SimpleAclAuthorizer"
+fi
+
 function verify_installed()
 {
   local cmd="$1"
