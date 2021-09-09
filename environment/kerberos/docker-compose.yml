@@ -253,6 +253,7 @@ services:
       - secret:/var/lib/secret
       - ../../environment/kerberos/kdc/krb5.conf:/etc/krb5.conf
     environment:
+      CONTROL_CENTER_BOOTSTRAP_SERVERS: "broker:9092,broker2:9092"
       CONTROL_CENTER_STREAMS_SECURITY_PROTOCOL: SASL_PLAINTEXT
       CONTROL_CENTER_STREAMS_SASL_JAAS_CONFIG: "com.sun.security.auth.module.Krb5LoginModule required \
         useKeyTab=true \
@@ -261,6 +262,15 @@ services:
         principal=\"controlcenter@TEST.CONFLUENT.IO\";"
       CONTROL_CENTER_STREAMS_SASL_MECHANISM: GSSAPI
       CONTROL_CENTER_STREAMS_SASL_KERBEROS_SERVICE_NAME: kafka
+
+      CONTROL_CENTER_KAFKA_MYCLUSTER_SECURITY_PROTOCOL: SASL_PLAINTEXT
+      CONTROL_CENTER_KAFKA_MYCLUSTER_SASL_JAAS_CONFIG: "com.sun.security.auth.module.Krb5LoginModule required \
+        useKeyTab=true \
+        storeKey=true \
+        keyTab=\"/var/lib/secret/kafka-controlcenter.key\" \
+        principal=\"controlcenter@TEST.CONFLUENT.IO\";"
+      CONTROL_CENTER_KAFKA_MYCLUSTER_SASL_MECHANISM: GSSAPI
+      CONTROL_CENTER_KAFKA_MYCLUSTER_SASL_KERBEROS_SERVICE_NAME: kafka
 
 volumes:
   secret: {}
