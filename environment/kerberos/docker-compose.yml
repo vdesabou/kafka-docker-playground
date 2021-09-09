@@ -73,7 +73,7 @@ services:
       KAFKA_SASL_MECHANISM_INTER_BROKER_PROTOCOL: GSSAPI
       KAFKA_INTER_BROKER_LISTENER_NAME: SASL_PLAINTEXT
       # Authorization config:
-      KAFKA_AUTHORIZER_CLASS_NAME: kafka.security.auth.SimpleAclAuthorizer
+      KAFKA_AUTHORIZER_CLASS_NAME: $KAFKA_AUTHORIZER_CLASS_NAME
       KAFKA_ZOOKEEPER_SET_ACL: "true"
       KAFKA_ALLOW_EVERYONE_IF_NO_ACL_FOUND: "false"
       KAFKA_SUPER_USERS: User:admin;User:kafka;User:schemaregistry;User:connect;User:controlcenter;User:ksqldb
@@ -116,7 +116,7 @@ services:
       KAFKA_SASL_MECHANISM_INTER_BROKER_PROTOCOL: GSSAPI
       KAFKA_INTER_BROKER_LISTENER_NAME: SASL_PLAINTEXT
       # Authorization config:
-      KAFKA_AUTHORIZER_CLASS_NAME: kafka.security.auth.SimpleAclAuthorizer
+      KAFKA_AUTHORIZER_CLASS_NAME: $KAFKA_AUTHORIZER_CLASS_NAME
       KAFKA_ZOOKEEPER_SET_ACL: "true"
       KAFKA_ALLOW_EVERYONE_IF_NO_ACL_FOUND: "false"
       KAFKA_SUPER_USERS: User:admin;User:kafka;User:schemaregistry;User:connect;User:controlcenter;User:ksqldb
