@@ -9,6 +9,16 @@ verify_docker_and_memory
 verify_installed "docker-compose"
 check_docker_compose_version
 
+# Migrate SimpleAclAuthorizer to AclAuthorizer #1276
+if version_gt $TAG "5.3.99"
+then
+  log "Setting KAFKA_AUTHORIZER_CLASS_NAME to kafka.security.authorizer.AclAuthorizer"
+  export KAFKA_AUTHORIZER_CLASS_NAME="kafka.security.authorizer.AclAuthorizer"
+else
+  log "Setting KAFKA_AUTHORIZER_CLASS_NAME to kafka.security.auth.SimpleAclAuthorizer"
+  export KAFKA_AUTHORIZER_CLASS_NAME="kafka.security.auth.SimpleAclAuthorizer"
+fi
+
 DOCKER_COMPOSE_FILE_OVERRIDE=$1
 # Starting kerberos,
 # Avoiding starting up all services at the begining to generate the keytab first
