@@ -19,8 +19,8 @@ docker exec -i client-kafkajs node /usr/src/app/consumer.js > consumer.log 2>&1 
 log "Starting producer. Logs are in producer.log."
 docker exec -i client-kafkajs node /usr/src/app/producer.js > producer.log 2>&1 &
 
-log "Sleeping 15 seconds"
-sleep 15
+log "Sleeping 60 seconds"
+sleep 60
 
 ip=$(docker inspect -f '{{.Name}} - {{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' $(docker ps -aq) | grep client-kafkajs | cut -d " " -f 3)
 log "Simulate a 45 seconds network issue with broker1 by blocking output traffic from broker1 to kafkaJS producer container"
