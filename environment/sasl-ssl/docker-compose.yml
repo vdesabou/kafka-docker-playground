@@ -24,6 +24,7 @@ services:
       KAFKA_INTER_BROKER_LISTENER_NAME: SASL_SSL
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: SASL_SSL:SASL_SSL
       KAFKA_ADVERTISED_LISTENERS: SASL_SSL://broker:9092
+      KAFKA_LISTENERS: SASL_SSL://:9092
       CONFLUENT_METRICS_REPORTER_SECURITY_PROTOCOL: SASL_SSL
       CONFLUENT_METRICS_REPORTER_SASL_JAAS_CONFIG: "org.apache.kafka.common.security.plain.PlainLoginModule required \
         username=\"client\" \
@@ -57,12 +58,14 @@ services:
       - ../../environment/sasl-ssl/security:/etc/kafka/secrets
     environment:
       KAFKA_ZOOKEEPER_CONNECT: "zookeeper:2181"
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: SASL_SSL:SASL_SSL
       KAFKA_INTER_BROKER_LISTENER_NAME: SASL_SSL
       KAFKA_LISTENERS: SASL_SSL://:9092
       KAFKA_ADVERTISED_LISTENERS: SASL_SSL://broker2:9092
       KAFKA_LOG4J_LOGGERS: "kafka.authorizer.logger=INFO"
       KAFKA_METRIC_REPORTERS: "io.confluent.metrics.reporter.ConfluentMetricsReporter"
       KAFKA_BROKER_ID: 2
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
       # for 5.4.x:
       KAFKA_CONFLUENT_LICENSE_TOPIC_REPLICATION_FACTOR: 1
       # for 6.0.0
