@@ -139,7 +139,10 @@ fi
 log "Run the Java producer-72829"
 docker exec producer-72829 bash -c "java -jar producer-72829-1.0.0-jar-with-dependencies.jar"
 
-sleep 30
+sleep 60
+
+log "Grep for doc description"
+docker container logs connect | grep "Sed ut perspiciatis unde omnis"
 
 log "Verify data is in GCP BigQuery:"
 docker run -i --volumes-from gcloud-config google/cloud-sdk:latest bq --project_id "$PROJECT" query "SELECT * FROM $DATASET.customer_avro;" > /tmp/result.log  2>&1
