@@ -222,7 +222,7 @@ then
       connector_path=$(echo "$connector_path" | cut -d "," -f 1)
       owner=$(echo "$connector_path" | cut -d "-" -f 1)
       name=$(echo "$connector_path" | cut -d "-" -f 2-)
-      export CONNECT_TAG="$name-$CONNECTOR_TAG"
+      export CONNECT_TAG="$name-CP$TAG-$CONNECTOR_TAG"
       log "👷 Building Docker image vdesabou/kafka-docker-playground-connect:${CONNECT_TAG}"
       tmp_dir=$(mktemp -d -t ci-XXXXXXXXXX)
 cat << EOF > $tmp_dir/Dockerfile
@@ -254,7 +254,7 @@ EOF
           current_jar_path="/usr/share/confluent-hub-components/$connector_path/lib/$jar"
         fi
         set -e
-        NEW_CONNECT_TAG="$name-$CONNECTOR_TAG-$connector_jar_name"
+        NEW_CONNECT_TAG="$name-CP$TAG-$CONNECTOR_TAG-$connector_jar_name"
         log "👷 Building Docker image vdesabou/kafka-docker-playground-connect:${NEW_CONNECT_TAG}"
         log "Remplacing $name-$CONNECTOR_TAG.jar by $connector_jar_name"
         tmp_dir=$(mktemp -d -t ci-XXXXXXXXXX)
@@ -352,7 +352,7 @@ else
           fi
           log "🚀 CONNECTOR_JAR is set with $CONNECTOR_JAR"
           connector_jar_name=$(basename ${CONNECTOR_JAR})
-          export CONNECT_TAG="$connector_jar_name"
+          export CONNECT_TAG="CP$TAG-$connector_jar_name"
           current_jar_path="/usr/share/confluent-hub-components/$connector_path/lib/$name-$version.jar"
           set +e
           docker run vdesabou/kafka-docker-playground-connect:${TAG} ls $current_jar_path
@@ -386,7 +386,7 @@ EOF
           fi
           log "🚀 CONNECTOR_ZIP is set with $CONNECTOR_ZIP"
           connector_zip_name=$(basename ${CONNECTOR_ZIP})
-          export CONNECT_TAG="$connector_zip_name"
+          export CONNECT_TAG="CP$TAG-$connector_zip_name"
 
           log "👷 Building Docker image vdesabou/kafka-docker-playground-connect:${CONNECT_TAG}"
           tmp_dir=$(mktemp -d -t ci-XXXXXXXXXX)
