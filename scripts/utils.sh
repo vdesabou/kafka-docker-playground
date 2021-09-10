@@ -352,7 +352,7 @@ else
           fi
           log "🚀 CONNECTOR_JAR is set with $CONNECTOR_JAR"
           connector_jar_name=$(basename ${CONNECTOR_JAR})
-          export CONNECT_TAG="CP$TAG-$connector_jar_name"
+          export CONNECT_TAG="CP-$TAG-$connector_jar_name"
           current_jar_path="/usr/share/confluent-hub-components/$connector_path/lib/$name-$version.jar"
           set +e
           docker run vdesabou/kafka-docker-playground-connect:${TAG} ls $current_jar_path
@@ -386,7 +386,7 @@ EOF
           fi
           log "🚀 CONNECTOR_ZIP is set with $CONNECTOR_ZIP"
           connector_zip_name=$(basename ${CONNECTOR_ZIP})
-          export CONNECT_TAG="CP$TAG-$connector_zip_name"
+          export CONNECT_TAG="CP-$TAG-$connector_zip_name"
 
           log "👷 Building Docker image vdesabou/kafka-docker-playground-connect:${CONNECT_TAG}"
           tmp_dir=$(mktemp -d -t ci-XXXXXXXXXX)
@@ -402,10 +402,7 @@ EOF
         #  Neither CONNECTOR_ZIP or CONNECTOR_JAR are set
         ###
         else
-          if [ -z "$CONNECT_TAG" ]
-          then
-            export CONNECT_TAG="$TAG"
-          fi
+          export CONNECT_TAG="$TAG"
           log "💫 Using 🔗connector: $owner/$name:$version 📅release date: $release_date 🌐documentation: $documentation_url"
           log "🎓 set CONNECTOR_TAG or CONNECTOR_ZIP environment variables to specify different version"
           CONNECTOR_TAG=$version
