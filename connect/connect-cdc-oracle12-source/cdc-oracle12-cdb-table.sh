@@ -65,7 +65,7 @@ curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
                "connector.class": "io.confluent.connect.oracle.cdc.OracleCdcSourceConnector",
-               "tasks.max":5,
+               "tasks.max":2,
                "key.converter": "io.confluent.connect.avro.AvroConverter",
                "key.converter.schema.registry.url": "http://schema-registry:8081",
                "value.converter": "io.confluent.connect.avro.AvroConverter",
@@ -81,7 +81,7 @@ curl -X PUT \
                "start.from":"snapshot",
                "redo.log.topic.name": "redo-log-topic",
                "redo.log.consumer.bootstrap.servers":"broker:9092",
-               "table.inclusion.regex": ".*CUSTOMERS",
+               "table.inclusion.regex": ".*CUSTOMERS.*",
                "table.topic.name.template": "${databaseName}.${schemaName}.${tableName}",
                "numeric.mapping": "best_fit",
                "connection.pool.max.size": 20,
@@ -130,106 +130,3 @@ fi
 
 log "Verifying topic redo-log-topic: there should be 9 records"
 timeout 60 docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic redo-log-topic --from-beginning --max-messages 9
-
-log "Update connector to include CUSTOMERS2 table"
-
-curl -X PUT \
-     -H "Content-Type: application/json" \
-     --data '{
-               "connector.class": "io.confluent.connect.oracle.cdc.OracleCdcSourceConnector",
-               "tasks.max":5,
-               "key.converter": "io.confluent.connect.avro.AvroConverter",
-               "key.converter.schema.registry.url": "http://schema-registry:8081",
-               "value.converter": "io.confluent.connect.avro.AvroConverter",
-               "value.converter.schema.registry.url": "http://schema-registry:8081",
-               "confluent.license": "",
-               "confluent.topic.bootstrap.servers": "broker:9092",
-               "confluent.topic.replication.factor": "1",
-               "oracle.server": "oracle",
-               "oracle.port": 1521,
-               "oracle.sid": "ORCLCDB",
-               "oracle.username": "C##MYUSER",
-               "oracle.password": "mypassword",
-               "start.from":"snapshot",
-               "redo.log.topic.name": "redo-log-topic",
-               "redo.log.consumer.bootstrap.servers":"broker:9092",
-               "table.inclusion.regex": ".*(CUSTOMERS|CUSTOMERS2)",
-               "table.topic.name.template": "${databaseName}.${schemaName}.${tableName}",
-               "numeric.mapping": "best_fit",
-               "connection.pool.max.size": 20,
-               "confluent.topic.replication.factor":1
-          }' \
-     http://localhost:8083/connectors/cdc-oracle-source-cdb/config | jq .
-
-exit 0
-# no reproduction
-# if I create another connector, then I see in logs
-curl -X PUT \
-     -H "Content-Type: application/json" \
-     --data '{
-               "connector.class": "io.confluent.connect.oracle.cdc.OracleCdcSourceConnector",
-               "tasks.max":5,
-               "key.converter": "io.confluent.connect.avro.AvroConverter",
-               "key.converter.schema.registry.url": "http://schema-registry:8081",
-               "value.converter": "io.confluent.connect.avro.AvroConverter",
-               "value.converter.schema.registry.url": "http://schema-registry:8081",
-               "confluent.license": "",
-               "confluent.topic.bootstrap.servers": "broker:9092",
-               "confluent.topic.replication.factor": "1",
-               "oracle.server": "oracle",
-               "oracle.port": 1521,
-               "oracle.sid": "ORCLCDB",
-               "oracle.username": "C##MYUSER",
-               "oracle.password": "mypassword",
-               "start.from":"snapshot",
-               "redo.log.topic.name": "redo-log-topic",
-               "redo.log.consumer.bootstrap.servers":"broker:9092",
-               "table.inclusion.regex": ".*(CUSTOMERS|CUSTOMERS2)",
-               "table.topic.name.template": "${databaseName}.${schemaName}.${tableName}",
-               "numeric.mapping": "best_fit",
-               "connection.pool.max.size": 20,
-               "confluent.topic.replication.factor":1
-          }' \
-     http://localhost:8083/connectors/cdc-oracle-source-cdb2/config | jq .
-
-[2021-07-22 15:52:25,073] ERROR Exception in RecordQueue thread (io.confluent.connect.oracle.cdc.util.RecordQueue)
-org.apache.kafka.connect.errors.ConnectException: Exception converting redo to change event. SQL: '  alter table CUSTOMERS2 add (
-    country VARCHAR(50)
-  );' INFO: USER DDL (PlSql=0 RecDep=0)
-	at io.confluent.connect.oracle.cdc.record.OracleChangeEventSourceRecordConverter.convert(OracleChangeEventSourceRecordConverter.java:315)
-	at io.confluent.connect.oracle.cdc.ChangeEventGenerator.doGenerateChangeEvent(ChangeEventGenerator.java:431)
-	at io.confluent.connect.oracle.cdc.ChangeEventGenerator.execute(ChangeEventGenerator.java:212)
-	at io.confluent.connect.oracle.cdc.util.RecordQueue.lambda$createLoggingSupplier$0(RecordQueue.java:465)
-	at java.base/java.util.concurrent.CompletableFuture$AsyncSupply.run(CompletableFuture.java:1700)
-	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1128)
-	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:628)
-	at java.base/java.lang.Thread.run(Thread.java:829)
-Caused by: org.apache.kafka.connect.errors.SchemaBuilderException: Cannot create field because of field name duplication COUNTRY
-	at org.apache.kafka.connect.data.SchemaBuilder.field(SchemaBuilder.java:330)
-	at io.confluent.connect.oracle.cdc.OracleDdlParser.parseAndApply(OracleDdlParser.java:231)
-	at io.confluent.connect.oracle.cdc.record.OracleChangeEventSourceRecordConverter.convert(OracleChangeEventSourceRecordConverter.java:301)
-	... 7 more
-[2021-07-22 15:52:25,074] INFO Updating table CUSTOMERS with current schema Schema{STRUCT} with DDL   alter table CUSTOMERS add (
-    country VARCHAR(50)
-  ); (io.confluent.connect.oracle.cdc.OracleRedoLogReader)
-[2021-07-22 15:52:25,074] INFO Metrics scheduler closed (org.apache.kafka.common.metrics.Metrics)
-[2021-07-22 15:52:25,074] INFO Closing reporter org.apache.kafka.common.metrics.JmxReporter (org.apache.kafka.common.metrics.Metrics)
-[2021-07-22 15:52:25,074] INFO Metrics reporters closed (org.apache.kafka.common.metrics.Metrics)
-[2021-07-22 15:52:25,075] INFO App info kafka.consumer for consumer-task-1-main-consumer-19 unregistered (org.apache.kafka.common.utils.AppInfoParser)
-[2021-07-22 15:52:25,075] ERROR Exception in RecordQueue thread (io.confluent.connect.oracle.cdc.util.RecordQueue)
-org.apache.kafka.connect.errors.ConnectException: Exception converting redo to change event. SQL: '  alter table CUSTOMERS add (
-    country VARCHAR(50)
-  );' INFO: USER DDL (PlSql=0 RecDep=0)
-	at io.confluent.connect.oracle.cdc.record.OracleChangeEventSourceRecordConverter.convert(OracleChangeEventSourceRecordConverter.java:315)
-	at io.confluent.connect.oracle.cdc.ChangeEventGenerator.doGenerateChangeEvent(ChangeEventGenerator.java:431)
-	at io.confluent.connect.oracle.cdc.ChangeEventGenerator.execute(ChangeEventGenerator.java:212)
-	at io.confluent.connect.oracle.cdc.util.RecordQueue.lambda$createLoggingSupplier$0(RecordQueue.java:465)
-	at java.base/java.util.concurrent.CompletableFuture$AsyncSupply.run(CompletableFuture.java:1700)
-	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1128)
-	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:628)
-	at java.base/java.lang.Thread.run(Thread.java:829)
-Caused by: org.apache.kafka.connect.errors.SchemaBuilderException: Cannot create field because of field name duplication COUNTRY
-	at org.apache.kafka.connect.data.SchemaBuilder.field(SchemaBuilder.java:330)
-	at io.confluent.connect.oracle.cdc.OracleDdlParser.parseAndApply(OracleDdlParser.java:231)
-	at io.confluent.connect.oracle.cdc.record.OracleChangeEventSourceRecordConverter.convert(OracleChangeEventSourceRecordConverter.java:301)
-	... 7 more
