@@ -205,55 +205,29 @@ timeout 60 docker exec connect kafka-console-consumer -bootstrap-server broker:9
 # {"schema":{"type":"struct","fields":[{"type":"int64","optional":true,"field":"SCN"},{"type":"int64","optional":true,"field":"START_SCN"},{"type":"int64","optional":true,"field":"COMMIT_SCN"},{"type":"int64","optional":true,"name":"org.apache.kafka.connect.data.Timestamp","version":1,"field":"TIMESTAMP"},{"type":"int64","optional":true,"name":"org.apache.kafka.connect.data.Timestamp","version":1,"field":"START_TIMESTAMP"},{"type":"int64","optional":true,"name":"org.apache.kafka.connect.data.Timestamp","version":1,"field":"COMMIT_TIMESTAMP"},{"type":"int64","optional":true,"field":"XIDUSN"},{"type":"int64","optional":true,"field":"XIDSLT"},{"type":"int64","optional":true,"field":"XIDSQN"},{"type":"bytes","optional":true,"field":"XID"},{"type":"int64","optional":true,"field":"PXIDUSN"},{"type":"int64","optional":true,"field":"PXIDSLT"},{"type":"int64","optional":true,"field":"PXIDSQN"},{"type":"bytes","optional":true,"field":"PXID"},{"type":"string","optional":true,"field":"TX_NAME"},{"type":"string","optional":true,"field":"OPERATION"},{"type":"int8","optional":true,"field":"OPERATION_CODE"},{"type":"boolean","optional":true,"field":"ROLLBACK"},{"type":"string","optional":true,"field":"SEG_OWNER"},{"type":"string","optional":true,"field":"SEG_NAME"},{"type":"string","optional":true,"field":"TABLE_NAME"},{"type":"int8","optional":true,"field":"SEG_TYPE"},{"type":"string","optional":true,"field":"SEG_TYPE_NAME"},{"type":"string","optional":true,"field":"TABLE_SPACE"},{"type":"string","optional":true,"field":"ROW_ID"},{"type":"string","optional":true,"field":"USERNAME"},{"type":"string","optional":true,"field":"OS_USERNAME"},{"type":"string","optional":true,"field":"MACHINE_NAME"},{"type":"int64","optional":true,"field":"AUDIT_SESSIONID"},{"type":"int64","optional":true,"field":"SESSION_NUM"},{"type":"int64","optional":true,"field":"SERIAL_NUM"},{"type":"string","optional":true,"field":"SESSION_INFO"},{"type":"int64","optional":true,"field":"THREAD_NUM"},{"type":"int64","optional":true,"field":"SEQUENCE_NUM"},{"type":"int64","optional":true,"field":"RBASQN"},{"type":"int64","optional":true,"field":"RBABLK"},{"type":"int64","optional":true,"field":"RBABYTE"},{"type":"int64","optional":true,"field":"UBAFIL"},{"type":"int64","optional":true,"field":"UBABLK"},{"type":"int64","optional":true,"field":"UBAREC"},{"type":"int64","optional":true,"field":"UBASQN"},{"type":"int64","optional":true,"field":"ABS_FILE_NUM"},{"type":"int64","optional":true,"field":"REL_FILE_NUM"},{"type":"int64","optional":true,"field":"DATA_BLK_NUM"},{"type":"int64","optional":true,"field":"DATA_OBJ_NUM"},{"type":"int64","optional":true,"field":"DATA_OBJV_NUM"},{"type":"int64","optional":true,"field":"DATA_OBJD_NUM"},{"type":"string","optional":true,"field":"SQL_REDO"},{"type":"string","optional":true,"field":"SQL_UNDO"},{"type":"string","optional":true,"field":"RS_ID"},{"type":"int64","optional":true,"field":"SSN"},{"type":"boolean","optional":true,"field":"CSF"},{"type":"string","optional":true,"field":"INFO"},{"type":"int32","optional":true,"field":"STATUS"},{"type":"int64","optional":true,"field":"REDO_VALUE"},{"type":"int64","optional":true,"field":"UNDO_VALUE"},{"type":"int64","optional":true,"field":"SAFE_RESUME_SCN"},{"type":"int64","optional":true,"field":"CSCN"},{"type":"bytes","optional":true,"field":"OBJECT_ID"},{"type":"string","optional":true,"field":"EDITION_NAME"},{"type":"string","optional":true,"field":"CLIENT_ID"},{"type":"string","optional":true,"field":"SRC_CON_NAME"},{"type":"int64","optional":true,"field":"SRC_CON_ID"},{"type":"int64","optional":true,"field":"SRC_CON_UID"},{"type":"int64","optional":true,"field":"SRC_CON_DBID"},{"type":"bytes","optional":true,"field":"SRC_CON_GUID"},{"type":"boolean","optional":true,"field":"CON_ID"}],"optional":false},"payload":{"SCN":1445256,"START_SCN":1445256,"COMMIT_SCN":1445257,"TIMESTAMP":1631536051000,"START_TIMESTAMP":1631536051000,"COMMIT_TIMESTAMP":1631536051000,"XIDUSN":7,"XIDSLT":16,"XIDSQN":526,"XID":"BwAQAA4CAAA=","PXIDUSN":7,"PXIDSLT":16,"PXIDSQN":526,"PXID":"BwAQAA4CAAA=","TX_NAME":null,"OPERATION":"UPDATE","OPERATION_CODE":3,"ROLLBACK":false,"SEG_OWNER":"C##MYUSER","SEG_NAME":"CUSTOMERS","TABLE_NAME":"CUSTOMERS","SEG_TYPE":2,"SEG_TYPE_NAME":"TABLE","TABLE_SPACE":"USERS","ROW_ID":"AAAR9TAAHAAAACHAAH","USERNAME":"C##MYUSER","OS_USERNAME":"oracle","MACHINE_NAME":"oracle","AUDIT_SESSIONID":80002,"SESSION_NUM":869,"SERIAL_NUM":59836,"SESSION_INFO":"login_username=C##MYUSER client_info= OS_username=oracle Machine_name=oracle OS_terminal= OS_process_id=3220 OS_program_name=sqlplus@oracle (TNS V1-V3)","THREAD_NUM":1,"SEQUENCE_NUM":5,"RBASQN":2,"RBABLK":150242,"RBABYTE":344,"UBAFIL":4,"UBABLK":16784411,"UBAREC":44,"UBASQN":133,"ABS_FILE_NUM":4,"REL_FILE_NUM":7,"DATA_BLK_NUM":135,"DATA_OBJ_NUM":73555,"DATA_OBJV_NUM":2,"DATA_OBJD_NUM":73555,"SQL_REDO":"update \"C##MYUSER\".\"CUSTOMERS\" set \"CLUB_STATUS\" = 'gold', \"UPDATE_TS\" = TO_TIMESTAMP('2021-09-13 12:27:31.000') where \"ID\" = '44' and \"FIRST_NAME\" = 'Josef' and \"LAST_NAME\" = 'K' and \"EMAIL\" = 'jk@confluent.io' and \"GENDER\" = 'Male' and \"CLUB_STATUS\" = 'bronze' and \"COMMENTS\" = 'How is it even possible for someone to be guilty' and \"CREATE_TS\" = TO_TIMESTAMP('2021-09-13 12:27:30.602') and \"UPDATE_TS\" = TO_TIMESTAMP('2021-09-13 12:27:30.000') and \"COUNTRY\" = 'Poland' and ROWID = 'AAAR9TAAHAAAACHAAH';","SQL_UNDO":"update \"C##MYUSER\".\"CUSTOMERS\" set \"CLUB_STATUS\" = 'bronze', \"UPDATE_TS\" = TO_TIMESTAMP('2021-09-13 12:27:30.000') where \"ID\" = '44' and \"FIRST_NAME\" = 'Josef' and \"LAST_NAME\" = 'K' and \"EMAIL\" = 'jk@confluent.io' and \"GENDER\" = 'Male' and \"CLUB_STATUS\" = 'gold' and \"COMMENTS\" = 'How is it even possible for someone to be guilty' and \"CREATE_TS\" = TO_TIMESTAMP('2021-09-13 12:27:30.602') and \"UPDATE_TS\" = TO_TIMESTAMP('2021-09-13 12:27:31.000') and \"COUNTRY\" = 'Poland' and ROWID = 'AAAR9TAAHAAAACHAAH';","RS_ID":" 0x000002.00024ae2.0158 ","SSN":0,"CSF":false,"INFO":null,"STATUS":0,"REDO_VALUE":50,"UNDO_VALUE":51,"SAFE_RESUME_SCN":0,"CSCN":1445257,"OBJECT_ID":null,"EDITION_NAME":null,"CLIENT_ID":null,"SRC_CON_NAME":"CDB$ROOT","SRC_CON_ID":1,"SRC_CON_UID":1,"SRC_CON_DBID":0,"SRC_CON_GUID":null,"CON_ID":false}}
 # Processed a total of 9 messages
 
-if version_gt $CONNECTOR_TAG "1.9.9"
-then
-     log "Creating GCP BigQuery Sink connector with kafkaKeyFieldName set to ID"
-     curl -X PUT \
-          -H "Content-Type: application/json" \
-          --data '{
-                    "connector.class": "com.wepay.kafka.connect.bigquery.BigQuerySinkConnector",
-                    "tasks.max" : "1",
-                    "value.converter": "org.apache.kafka.connect.json.JsonConverter",
-                    "key.converter": "org.apache.kafka.connect.json.JsonConverter",
-                    "kafkaKeyFieldName": "ID",
-                    "topics" : "ORCLCDB.C__MYUSER.CUSTOMERS",
-                    "sanitizeTopics" : "true",
-                    "autoCreateTables" : "true",
-                    "defaultDataset" : "'"$DATASET"'",
-                    "mergeIntervalMs": "5000",
-                    "bufferSize": "100000",
-                    "maxWriteSize": "10000",
-                    "tableWriteWait": "1000",
-                    "project" : "'"$PROJECT"'",
-                    "keyfile" : "/tmp/keyfile.json"
-               }' \
-          http://localhost:8083/connectors/gcp-bigquery-sink/config | jq .
-else
-     # NOT TESTED
-     log "Creating GCP BigQuery Sink connector"
-     curl -X PUT \
-          -H "Content-Type: application/json" \
-          --data '{
-                    "connector.class": "com.wepay.kafka.connect.bigquery.BigQuerySinkConnector",
-                    "tasks.max" : "1",
-                    "value.converter": "org.apache.kafka.connect.json.JsonConverter",
-                    "key.converter": "org.apache.kafka.connect.json.JsonConverter",
-                    "topics" : "ORCLCDB.C__MYUSER.CUSTOMERS",
-                    "sanitizeTopics" : "true",
-                    "autoCreateTables" : "true",
-                    "autoUpdateSchemas" : "true",
-                    "schemaRetriever" : "com.wepay.kafka.connect.bigquery.schemaregistry.schemaretriever.SchemaRegistrySchemaRetriever",
-                    "schemaRegistryLocation": "http://schema-registry:8081",
-                    "datasets" : ".*='"$DATASET"'",
-                    "mergeIntervalMs": "5000",
-                    "bufferSize": "100000",
-                    "maxWriteSize": "10000",
-                    "tableWriteWait": "1000",
-                    "project" : "'"$PROJECT"'",
-                    "keyfile" : "/tmp/keyfile.json"
-               }' \
-          http://localhost:8083/connectors/gcp-bigquery-sink/config | jq .
-fi
+
+log "Creating GCP BigQuery Sink connector with kafkaKeyFieldName set to ID"
+curl -X PUT \
+     -H "Content-Type: application/json" \
+     --data '{
+               "connector.class": "com.wepay.kafka.connect.bigquery.BigQuerySinkConnector",
+               "tasks.max" : "1",
+               "value.converter": "org.apache.kafka.connect.json.JsonConverter",
+               "key.converter": "org.apache.kafka.connect.json.JsonConverter",
+               "kafkaKeyFieldName": "ID",
+               "topics" : "ORCLCDB.C__MYUSER.CUSTOMERS",
+               "sanitizeTopics" : "true",
+               "autoCreateTables" : "true",
+               "defaultDataset" : "'"$DATASET"'",
+               "mergeIntervalMs": "5000",
+               "bufferSize": "100000",
+               "maxWriteSize": "10000",
+               "tableWriteWait": "1000",
+               "project" : "'"$PROJECT"'",
+               "keyfile" : "/tmp/keyfile.json"
+          }' \
+     http://localhost:8083/connectors/gcp-bigquery-sink/config | jq .
+
 
 # log "Sleeping 125 seconds"
 # sleep 125
