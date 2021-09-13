@@ -234,7 +234,7 @@ curl -X PUT \
                "project" : "'"$PROJECT"'",
                "keyfile" : "/tmp/keyfile.json"
           }' \
-     http://localhost:8083/connectors/gcp-bigquery-sink/config | jq .
+     http://localhost:8083/connectors/gcp-bigquery-sink2/config | jq .
 
 
 # log "Sleeping 125 seconds"
