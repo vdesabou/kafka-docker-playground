@@ -350,7 +350,21 @@ curl -X PUT \
                "project" : "'"$PROJECT"'",
                "keyfile" : "/tmp/keyfile.json"
           }' \
-     http://localhost:8083/connectors/gcp-bigquery-sink-avro2/config | jq .
+     http://localhost:8083/connectors/gcp-bigquery-sink-avro/config | jq .
+
+# Key Schema:
+
+# {
+#   "fields": [
+#     {
+#       "name": "ID",
+#       "type": "long"
+#     }
+#   ],
+#   "name": "ConnectDefault",
+#   "namespace": "io.confluent.connect.avro",
+#   "type": "record"
+# }
 
 # log "Sleeping 125 seconds"
 # sleep 125
