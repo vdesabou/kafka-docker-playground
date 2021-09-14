@@ -70,6 +70,22 @@ docker exec -i connect kafka-avro-console-producer --broker-list broker:9092 --p
 {"u_name": "notebooks", "u_price": 1.99, "u_quantity": 5}
 EOF
 
+curl --request PUT \
+  --url http://localhost:8083/admin/loggers/io.confluent.connect.servicenow \
+  --header 'Accept: application/json' \
+  --header 'Content-Type: application/json' \
+  --data '{
+	"level": "TRACE"
+}'
+
+curl --request PUT \
+  --url http://localhost:8083/admin/loggers/io.confluent.connect.utils.retry \
+  --header 'Accept: application/json' \
+  --header 'Content-Type: application/json' \
+  --data '{
+	"level": "TRACE"
+}'
+
 log "Creating ServiceNow Sink connector"
 curl -X PUT \
      -H "Content-Type: application/json" \
