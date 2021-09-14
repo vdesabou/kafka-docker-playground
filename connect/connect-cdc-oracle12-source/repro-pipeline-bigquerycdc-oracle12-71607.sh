@@ -101,14 +101,16 @@ fi
 done
 log "Oracle DB has started!"
 
-# Create a redo-log-topic. Please make sure you create a topic with the same name you will use for "redo.log.topic.name": "redo-log-topic"
+# Create a redo-log-topic-json. Please make sure you create a topic with the same name you will use for "redo.log.topic.name": "redo-log-topic-json"
 # CC-13104
-docker exec connect kafka-topics --create --topic redo-log-topic --bootstrap-server broker:9092 --replication-factor 1 --partitions 1 --config cleanup.policy=delete --config retention.ms=120960000
-log "redo-log-topic is created"
+docker exec connect kafka-topics --create --topic redo-log-topic-json --bootstrap-server broker:9092 --replication-factor 1 --partitions 1 --config cleanup.policy=delete --config retention.ms=120960000
+log "redo-log-topic-json is created"
+docker exec connect kafka-topics --create --topic redo-log-topic-avro --bootstrap-server broker:9092 --replication-factor 1 --partitions 1 --config cleanup.policy=delete --config retention.ms=120960000
+log "redo-log-topic-avro is created"
 sleep 5
 
 
-log "Creating Oracle source connector"
+log "Creating Oracle source connector with JSONConverter"
 curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
@@ -126,17 +128,47 @@ curl -X PUT \
                "oracle.username": "C##MYUSER",
                "oracle.password": "mypassword",
                "start.from":"snapshot",
-               "redo.log.topic.name": "redo-log-topic",
+               "redo.log.topic.name": "redo-log-topic-json",
                "redo.log.consumer.bootstrap.servers":"broker:9092",
                "table.inclusion.regex": ".*CUSTOMERS.*",
-               "table.topic.name.template": "${databaseName}.${schemaName}.${tableName}",
+               "table.topic.name.template": "${databaseName}.${schemaName}.${tableName}.JSON",
                "numeric.mapping": "best_fit",
                "connection.pool.max.size": 20,
                "confluent.topic.replication.factor":1
           }' \
-     http://localhost:8083/connectors/cdc-oracle-source-cdb/config | jq .
+     http://localhost:8083/connectors/cdc-oracle-source-cdb-json/config | jq .
 
-log "Waiting 60s for cdc-oracle-source-cdb to read existing data"
+log "Creating Oracle source connector with AvroConverter"
+curl -X PUT \
+     -H "Content-Type: application/json" \
+     --data '{
+               "connector.class": "io.confluent.connect.oracle.cdc.OracleCdcSourceConnector",
+               "tasks.max":2,
+               "key.converter": "io.confluent.connect.avro.AvroConverter",
+               "key.converter.schema.registry.url": "http://schema-registry:8081",
+               "value.converter": "io.confluent.connect.avro.AvroConverter",
+               "value.converter.schema.registry.url": "http://schema-registry:8081",
+               "key.template": "${primaryKeyStruct}",
+               "confluent.license": "",
+               "confluent.topic.bootstrap.servers": "broker:9092",
+               "confluent.topic.replication.factor": "1",
+               "oracle.server": "oracle",
+               "oracle.port": 1521,
+               "oracle.sid": "ORCLCDB",
+               "oracle.username": "C##MYUSER",
+               "oracle.password": "mypassword",
+               "start.from":"snapshot",
+               "redo.log.topic.name": "redo-log-topic-avro",
+               "redo.log.consumer.bootstrap.servers":"broker:9092",
+               "table.inclusion.regex": ".*CUSTOMERS.*",
+               "table.topic.name.template": "${databaseName}.${schemaName}.${tableName}.AVRO",
+               "numeric.mapping": "best_fit",
+               "connection.pool.max.size": 20,
+               "confluent.topic.replication.factor":1
+          }' \
+     http://localhost:8083/connectors/cdc-oracle-source-cdb-avro/config | jq .
+
+log "Waiting 60s for cdc-oracle-source-cdb-json and cdc-oracle-source-cdb-avro to read existing data"
 sleep 60
 
 log "Running SQL scripts"
@@ -145,9 +177,9 @@ do
      $script "ORCLCDB"
 done
 
-log "Verifying topic ORCLCDB.C__MYUSER.CUSTOMERS: there should be 13 records"
+log "Verifying topic ORCLCDB.C__MYUSER.CUSTOMERS.JSON: there should be 13 records"
 set +e
-timeout 60 docker exec connect kafka-console-consumer -bootstrap-server broker:9092 --topic ORCLCDB.C__MYUSER.CUSTOMERS --from-beginning --max-messages 13 > /tmp/result.log  2>&1
+timeout 60 docker exec connect kafka-console-consumer -bootstrap-server broker:9092 --topic ORCLCDB.C__MYUSER.CUSTOMERS.JSON --from-beginning --max-messages 13 > /tmp/result.log  2>&1
 set -e
 cat /tmp/result.log
 log "Check there is 5 snapshots events"
@@ -191,8 +223,8 @@ fi
 # Processed a total of 13 messages
 
 
-log "Verifying topic redo-log-topic: there should be 9 records"
-timeout 60 docker exec connect kafka-console-consumer -bootstrap-server broker:9092 --topic redo-log-topic --from-beginning --max-messages 9
+log "Verifying topic redo-log-topic-json: there should be 9 records"
+timeout 60 docker exec connect kafka-console-consumer -bootstrap-server broker:9092 --topic redo-log-topic-json --from-beginning --max-messages 9
 
 # {"schema":{"type":"struct","fields":[{"type":"int64","optional":true,"field":"SCN"},{"type":"int64","optional":true,"field":"START_SCN"},{"type":"int64","optional":true,"field":"COMMIT_SCN"},{"type":"int64","optional":true,"name":"org.apache.kafka.connect.data.Timestamp","version":1,"field":"TIMESTAMP"},{"type":"int64","optional":true,"name":"org.apache.kafka.connect.data.Timestamp","version":1,"field":"START_TIMESTAMP"},{"type":"int64","optional":true,"name":"org.apache.kafka.connect.data.Timestamp","version":1,"field":"COMMIT_TIMESTAMP"},{"type":"int64","optional":true,"field":"XIDUSN"},{"type":"int64","optional":true,"field":"XIDSLT"},{"type":"int64","optional":true,"field":"XIDSQN"},{"type":"bytes","optional":true,"field":"XID"},{"type":"int64","optional":true,"field":"PXIDUSN"},{"type":"int64","optional":true,"field":"PXIDSLT"},{"type":"int64","optional":true,"field":"PXIDSQN"},{"type":"bytes","optional":true,"field":"PXID"},{"type":"string","optional":true,"field":"TX_NAME"},{"type":"string","optional":true,"field":"OPERATION"},{"type":"int8","optional":true,"field":"OPERATION_CODE"},{"type":"boolean","optional":true,"field":"ROLLBACK"},{"type":"string","optional":true,"field":"SEG_OWNER"},{"type":"string","optional":true,"field":"SEG_NAME"},{"type":"string","optional":true,"field":"TABLE_NAME"},{"type":"int8","optional":true,"field":"SEG_TYPE"},{"type":"string","optional":true,"field":"SEG_TYPE_NAME"},{"type":"string","optional":true,"field":"TABLE_SPACE"},{"type":"string","optional":true,"field":"ROW_ID"},{"type":"string","optional":true,"field":"USERNAME"},{"type":"string","optional":true,"field":"OS_USERNAME"},{"type":"string","optional":true,"field":"MACHINE_NAME"},{"type":"int64","optional":true,"field":"AUDIT_SESSIONID"},{"type":"int64","optional":true,"field":"SESSION_NUM"},{"type":"int64","optional":true,"field":"SERIAL_NUM"},{"type":"string","optional":true,"field":"SESSION_INFO"},{"type":"int64","optional":true,"field":"THREAD_NUM"},{"type":"int64","optional":true,"field":"SEQUENCE_NUM"},{"type":"int64","optional":true,"field":"RBASQN"},{"type":"int64","optional":true,"field":"RBABLK"},{"type":"int64","optional":true,"field":"RBABYTE"},{"type":"int64","optional":true,"field":"UBAFIL"},{"type":"int64","optional":true,"field":"UBABLK"},{"type":"int64","optional":true,"field":"UBAREC"},{"type":"int64","optional":true,"field":"UBASQN"},{"type":"int64","optional":true,"field":"ABS_FILE_NUM"},{"type":"int64","optional":true,"field":"REL_FILE_NUM"},{"type":"int64","optional":true,"field":"DATA_BLK_NUM"},{"type":"int64","optional":true,"field":"DATA_OBJ_NUM"},{"type":"int64","optional":true,"field":"DATA_OBJV_NUM"},{"type":"int64","optional":true,"field":"DATA_OBJD_NUM"},{"type":"string","optional":true,"field":"SQL_REDO"},{"type":"string","optional":true,"field":"SQL_UNDO"},{"type":"string","optional":true,"field":"RS_ID"},{"type":"int64","optional":true,"field":"SSN"},{"type":"boolean","optional":true,"field":"CSF"},{"type":"string","optional":true,"field":"INFO"},{"type":"int32","optional":true,"field":"STATUS"},{"type":"int64","optional":true,"field":"REDO_VALUE"},{"type":"int64","optional":true,"field":"UNDO_VALUE"},{"type":"int64","optional":true,"field":"SAFE_RESUME_SCN"},{"type":"int64","optional":true,"field":"CSCN"},{"type":"bytes","optional":true,"field":"OBJECT_ID"},{"type":"string","optional":true,"field":"EDITION_NAME"},{"type":"string","optional":true,"field":"CLIENT_ID"},{"type":"string","optional":true,"field":"SRC_CON_NAME"},{"type":"int64","optional":true,"field":"SRC_CON_ID"},{"type":"int64","optional":true,"field":"SRC_CON_UID"},{"type":"int64","optional":true,"field":"SRC_CON_DBID"},{"type":"bytes","optional":true,"field":"SRC_CON_GUID"},{"type":"boolean","optional":true,"field":"CON_ID"}],"optional":false},"payload":{"SCN":1445212,"START_SCN":1445212,"COMMIT_SCN":1445213,"TIMESTAMP":1631536048000,"START_TIMESTAMP":1631536048000,"COMMIT_TIMESTAMP":1631536048000,"XIDUSN":8,"XIDSLT":31,"XIDSQN":743,"XID":"CAAfAOcCAAA=","PXIDUSN":8,"PXIDSLT":31,"PXIDSQN":743,"PXID":"CAAfAOcCAAA=","TX_NAME":null,"OPERATION":"INSERT","OPERATION_CODE":1,"ROLLBACK":false,"SEG_OWNER":"C##MYUSER","SEG_NAME":"CUSTOMERS","TABLE_NAME":"CUSTOMERS","SEG_TYPE":2,"SEG_TYPE_NAME":"TABLE","TABLE_SPACE":"USERS","ROW_ID":"AAAR9TAAHAAAACHAAF","USERNAME":"C##MYUSER","OS_USERNAME":"oracle","MACHINE_NAME":"oracle","AUDIT_SESSIONID":70001,"SESSION_NUM":869,"SERIAL_NUM":46182,"SESSION_INFO":"login_username=C##MYUSER client_info= OS_username=oracle Machine_name=oracle OS_terminal= OS_process_id=3182 OS_program_name=sqlplus@oracle (TNS V1-V3)","THREAD_NUM":1,"SEQUENCE_NUM":2,"RBASQN":2,"RBABLK":150188,"RBABYTE":16,"UBAFIL":4,"UBABLK":16784116,"UBAREC":8,"UBASQN":272,"ABS_FILE_NUM":7,"REL_FILE_NUM":7,"DATA_BLK_NUM":135,"DATA_OBJ_NUM":73555,"DATA_OBJV_NUM":1,"DATA_OBJD_NUM":73555,"SQL_REDO":"insert into \"C##MYUSER\".\"CUSTOMERS\"(\"ID\",\"FIRST_NAME\",\"LAST_NAME\",\"EMAIL\",\"GENDER\",\"CLUB_STATUS\",\"COMMENTS\",\"CREATE_TS\",\"UPDATE_TS\") values ('42','Frantz','Kafka','fkafka@confluent.io','Male','bronze','Evil is whatever distracts',TO_TIMESTAMP('2021-09-13 12:27:28.673'),TO_TIMESTAMP('2021-09-13 12:27:28.000'));","SQL_UNDO":"delete from \"C##MYUSER\".\"CUSTOMERS\" where \"ID\" = '42' and \"FIRST_NAME\" = 'Frantz' and \"LAST_NAME\" = 'Kafka' and \"EMAIL\" = 'fkafka@confluent.io' and \"GENDER\" = 'Male' and \"CLUB_STATUS\" = 'bronze' and \"COMMENTS\" = 'Evil is whatever distracts' and \"CREATE_TS\" = TO_TIMESTAMP('2021-09-13 12:27:28.673') and \"UPDATE_TS\" = TO_TIMESTAMP('2021-09-13 12:27:28.000') and ROWID = 'AAAR9TAAHAAAACHAAF';","RS_ID":" 0x000002.00024aac.0010 ","SSN":5,"CSF":false,"INFO":null,"STATUS":0,"REDO_VALUE":322,"UNDO_VALUE":323,"SAFE_RESUME_SCN":0,"CSCN":1445213,"OBJECT_ID":null,"EDITION_NAME":null,"CLIENT_ID":null,"SRC_CON_NAME":"CDB$ROOT","SRC_CON_ID":1,"SRC_CON_UID":1,"SRC_CON_DBID":0,"SRC_CON_GUID":null,"CON_ID":false}}
 # {"schema":{"type":"struct","fields":[{"type":"int64","optional":true,"field":"SCN"},{"type":"int64","optional":true,"field":"START_SCN"},{"type":"int64","optional":true,"field":"COMMIT_SCN"},{"type":"int64","optional":true,"name":"org.apache.kafka.connect.data.Timestamp","version":1,"field":"TIMESTAMP"},{"type":"int64","optional":true,"name":"org.apache.kafka.connect.data.Timestamp","version":1,"field":"START_TIMESTAMP"},{"type":"int64","optional":true,"name":"org.apache.kafka.connect.data.Timestamp","version":1,"field":"COMMIT_TIMESTAMP"},{"type":"int64","optional":true,"field":"XIDUSN"},{"type":"int64","optional":true,"field":"XIDSLT"},{"type":"int64","optional":true,"field":"XIDSQN"},{"type":"bytes","optional":true,"field":"XID"},{"type":"int64","optional":true,"field":"PXIDUSN"},{"type":"int64","optional":true,"field":"PXIDSLT"},{"type":"int64","optional":true,"field":"PXIDSQN"},{"type":"bytes","optional":true,"field":"PXID"},{"type":"string","optional":true,"field":"TX_NAME"},{"type":"string","optional":true,"field":"OPERATION"},{"type":"int8","optional":true,"field":"OPERATION_CODE"},{"type":"boolean","optional":true,"field":"ROLLBACK"},{"type":"string","optional":true,"field":"SEG_OWNER"},{"type":"string","optional":true,"field":"SEG_NAME"},{"type":"string","optional":true,"field":"TABLE_NAME"},{"type":"int8","optional":true,"field":"SEG_TYPE"},{"type":"string","optional":true,"field":"SEG_TYPE_NAME"},{"type":"string","optional":true,"field":"TABLE_SPACE"},{"type":"string","optional":true,"field":"ROW_ID"},{"type":"string","optional":true,"field":"USERNAME"},{"type":"string","optional":true,"field":"OS_USERNAME"},{"type":"string","optional":true,"field":"MACHINE_NAME"},{"type":"int64","optional":true,"field":"AUDIT_SESSIONID"},{"type":"int64","optional":true,"field":"SESSION_NUM"},{"type":"int64","optional":true,"field":"SERIAL_NUM"},{"type":"string","optional":true,"field":"SESSION_INFO"},{"type":"int64","optional":true,"field":"THREAD_NUM"},{"type":"int64","optional":true,"field":"SEQUENCE_NUM"},{"type":"int64","optional":true,"field":"RBASQN"},{"type":"int64","optional":true,"field":"RBABLK"},{"type":"int64","optional":true,"field":"RBABYTE"},{"type":"int64","optional":true,"field":"UBAFIL"},{"type":"int64","optional":true,"field":"UBABLK"},{"type":"int64","optional":true,"field":"UBAREC"},{"type":"int64","optional":true,"field":"UBASQN"},{"type":"int64","optional":true,"field":"ABS_FILE_NUM"},{"type":"int64","optional":true,"field":"REL_FILE_NUM"},{"type":"int64","optional":true,"field":"DATA_BLK_NUM"},{"type":"int64","optional":true,"field":"DATA_OBJ_NUM"},{"type":"int64","optional":true,"field":"DATA_OBJV_NUM"},{"type":"int64","optional":true,"field":"DATA_OBJD_NUM"},{"type":"string","optional":true,"field":"SQL_REDO"},{"type":"string","optional":true,"field":"SQL_UNDO"},{"type":"string","optional":true,"field":"RS_ID"},{"type":"int64","optional":true,"field":"SSN"},{"type":"boolean","optional":true,"field":"CSF"},{"type":"string","optional":true,"field":"INFO"},{"type":"int32","optional":true,"field":"STATUS"},{"type":"int64","optional":true,"field":"REDO_VALUE"},{"type":"int64","optional":true,"field":"UNDO_VALUE"},{"type":"int64","optional":true,"field":"SAFE_RESUME_SCN"},{"type":"int64","optional":true,"field":"CSCN"},{"type":"bytes","optional":true,"field":"OBJECT_ID"},{"type":"string","optional":true,"field":"EDITION_NAME"},{"type":"string","optional":true,"field":"CLIENT_ID"},{"type":"string","optional":true,"field":"SRC_CON_NAME"},{"type":"int64","optional":true,"field":"SRC_CON_ID"},{"type":"int64","optional":true,"field":"SRC_CON_UID"},{"type":"int64","optional":true,"field":"SRC_CON_DBID"},{"type":"bytes","optional":true,"field":"SRC_CON_GUID"},{"type":"boolean","optional":true,"field":"CON_ID"}],"optional":false},"payload":{"SCN":1445212,"START_SCN":1445212,"COMMIT_SCN":1445213,"TIMESTAMP":1631536048000,"START_TIMESTAMP":1631536048000,"COMMIT_TIMESTAMP":1631536048000,"XIDUSN":8,"XIDSLT":31,"XIDSQN":743,"XID":"CAAfAOcCAAA=","PXIDUSN":8,"PXIDSLT":31,"PXIDSQN":743,"PXID":"CAAfAOcCAAA=","TX_NAME":null,"OPERATION":"INSERT","OPERATION_CODE":1,"ROLLBACK":false,"SEG_OWNER":"C##MYUSER","SEG_NAME":"CUSTOMERS","TABLE_NAME":"CUSTOMERS","SEG_TYPE":2,"SEG_TYPE_NAME":"TABLE","TABLE_SPACE":"USERS","ROW_ID":"AAAR9TAAHAAAACHAAG","USERNAME":"C##MYUSER","OS_USERNAME":"oracle","MACHINE_NAME":"oracle","AUDIT_SESSIONID":70001,"SESSION_NUM":869,"SERIAL_NUM":46182,"SESSION_INFO":"login_username=C##MYUSER client_info= OS_username=oracle Machine_name=oracle OS_terminal= OS_process_id=3182 OS_program_name=sqlplus@oracle (TNS V1-V3)","THREAD_NUM":1,"SEQUENCE_NUM":3,"RBASQN":2,"RBABLK":150189,"RBABYTE":472,"UBAFIL":4,"UBABLK":16784116,"UBAREC":10,"UBASQN":272,"ABS_FILE_NUM":7,"REL_FILE_NUM":7,"DATA_BLK_NUM":135,"DATA_OBJ_NUM":73555,"DATA_OBJV_NUM":1,"DATA_OBJD_NUM":73555,"SQL_REDO":"insert into \"C##MYUSER\".\"CUSTOMERS\"(\"ID\",\"FIRST_NAME\",\"LAST_NAME\",\"EMAIL\",\"GENDER\",\"CLUB_STATUS\",\"COMMENTS\",\"CREATE_TS\",\"UPDATE_TS\") values ('43','Gregor','Samsa','gsamsa@confluent.io','Male','platinium','How about if I sleep a little bit longer and forget all this nonsense',TO_TIMESTAMP('2021-09-13 12:27:28.676'),TO_TIMESTAMP('2021-09-13 12:27:28.000'));","SQL_UNDO":"delete from \"C##MYUSER\".\"CUSTOMERS\" where \"ID\" = '43' and \"FIRST_NAME\" = 'Gregor' and \"LAST_NAME\" = 'Samsa' and \"EMAIL\" = 'gsamsa@confluent.io' and \"GENDER\" = 'Male' and \"CLUB_STATUS\" = 'platinium' and \"COMMENTS\" = 'How about if I sleep a little bit longer and forget all this nonsense' and \"CREATE_TS\" = TO_TIMESTAMP('2021-09-13 12:27:28.676') and \"UPDATE_TS\" = TO_TIMESTAMP('2021-09-13 12:27:28.000') and ROWID = 'AAAR9TAAHAAAACHAAG';","RS_ID":" 0x000002.00024aad.01d8 ","SSN":6,"CSF":false,"INFO":null,"STATUS":0,"REDO_VALUE":324,"UNDO_VALUE":325,"SAFE_RESUME_SCN":0,"CSCN":1445213,"OBJECT_ID":null,"EDITION_NAME":null,"CLIENT_ID":null,"SRC_CON_NAME":"CDB$ROOT","SRC_CON_ID":1,"SRC_CON_UID":1,"SRC_CON_DBID":0,"SRC_CON_GUID":null,"CON_ID":false}}
@@ -205,6 +237,40 @@ timeout 60 docker exec connect kafka-console-consumer -bootstrap-server broker:9
 # {"schema":{"type":"struct","fields":[{"type":"int64","optional":true,"field":"SCN"},{"type":"int64","optional":true,"field":"START_SCN"},{"type":"int64","optional":true,"field":"COMMIT_SCN"},{"type":"int64","optional":true,"name":"org.apache.kafka.connect.data.Timestamp","version":1,"field":"TIMESTAMP"},{"type":"int64","optional":true,"name":"org.apache.kafka.connect.data.Timestamp","version":1,"field":"START_TIMESTAMP"},{"type":"int64","optional":true,"name":"org.apache.kafka.connect.data.Timestamp","version":1,"field":"COMMIT_TIMESTAMP"},{"type":"int64","optional":true,"field":"XIDUSN"},{"type":"int64","optional":true,"field":"XIDSLT"},{"type":"int64","optional":true,"field":"XIDSQN"},{"type":"bytes","optional":true,"field":"XID"},{"type":"int64","optional":true,"field":"PXIDUSN"},{"type":"int64","optional":true,"field":"PXIDSLT"},{"type":"int64","optional":true,"field":"PXIDSQN"},{"type":"bytes","optional":true,"field":"PXID"},{"type":"string","optional":true,"field":"TX_NAME"},{"type":"string","optional":true,"field":"OPERATION"},{"type":"int8","optional":true,"field":"OPERATION_CODE"},{"type":"boolean","optional":true,"field":"ROLLBACK"},{"type":"string","optional":true,"field":"SEG_OWNER"},{"type":"string","optional":true,"field":"SEG_NAME"},{"type":"string","optional":true,"field":"TABLE_NAME"},{"type":"int8","optional":true,"field":"SEG_TYPE"},{"type":"string","optional":true,"field":"SEG_TYPE_NAME"},{"type":"string","optional":true,"field":"TABLE_SPACE"},{"type":"string","optional":true,"field":"ROW_ID"},{"type":"string","optional":true,"field":"USERNAME"},{"type":"string","optional":true,"field":"OS_USERNAME"},{"type":"string","optional":true,"field":"MACHINE_NAME"},{"type":"int64","optional":true,"field":"AUDIT_SESSIONID"},{"type":"int64","optional":true,"field":"SESSION_NUM"},{"type":"int64","optional":true,"field":"SERIAL_NUM"},{"type":"string","optional":true,"field":"SESSION_INFO"},{"type":"int64","optional":true,"field":"THREAD_NUM"},{"type":"int64","optional":true,"field":"SEQUENCE_NUM"},{"type":"int64","optional":true,"field":"RBASQN"},{"type":"int64","optional":true,"field":"RBABLK"},{"type":"int64","optional":true,"field":"RBABYTE"},{"type":"int64","optional":true,"field":"UBAFIL"},{"type":"int64","optional":true,"field":"UBABLK"},{"type":"int64","optional":true,"field":"UBAREC"},{"type":"int64","optional":true,"field":"UBASQN"},{"type":"int64","optional":true,"field":"ABS_FILE_NUM"},{"type":"int64","optional":true,"field":"REL_FILE_NUM"},{"type":"int64","optional":true,"field":"DATA_BLK_NUM"},{"type":"int64","optional":true,"field":"DATA_OBJ_NUM"},{"type":"int64","optional":true,"field":"DATA_OBJV_NUM"},{"type":"int64","optional":true,"field":"DATA_OBJD_NUM"},{"type":"string","optional":true,"field":"SQL_REDO"},{"type":"string","optional":true,"field":"SQL_UNDO"},{"type":"string","optional":true,"field":"RS_ID"},{"type":"int64","optional":true,"field":"SSN"},{"type":"boolean","optional":true,"field":"CSF"},{"type":"string","optional":true,"field":"INFO"},{"type":"int32","optional":true,"field":"STATUS"},{"type":"int64","optional":true,"field":"REDO_VALUE"},{"type":"int64","optional":true,"field":"UNDO_VALUE"},{"type":"int64","optional":true,"field":"SAFE_RESUME_SCN"},{"type":"int64","optional":true,"field":"CSCN"},{"type":"bytes","optional":true,"field":"OBJECT_ID"},{"type":"string","optional":true,"field":"EDITION_NAME"},{"type":"string","optional":true,"field":"CLIENT_ID"},{"type":"string","optional":true,"field":"SRC_CON_NAME"},{"type":"int64","optional":true,"field":"SRC_CON_ID"},{"type":"int64","optional":true,"field":"SRC_CON_UID"},{"type":"int64","optional":true,"field":"SRC_CON_DBID"},{"type":"bytes","optional":true,"field":"SRC_CON_GUID"},{"type":"boolean","optional":true,"field":"CON_ID"}],"optional":false},"payload":{"SCN":1445256,"START_SCN":1445256,"COMMIT_SCN":1445257,"TIMESTAMP":1631536051000,"START_TIMESTAMP":1631536051000,"COMMIT_TIMESTAMP":1631536051000,"XIDUSN":7,"XIDSLT":16,"XIDSQN":526,"XID":"BwAQAA4CAAA=","PXIDUSN":7,"PXIDSLT":16,"PXIDSQN":526,"PXID":"BwAQAA4CAAA=","TX_NAME":null,"OPERATION":"UPDATE","OPERATION_CODE":3,"ROLLBACK":false,"SEG_OWNER":"C##MYUSER","SEG_NAME":"CUSTOMERS","TABLE_NAME":"CUSTOMERS","SEG_TYPE":2,"SEG_TYPE_NAME":"TABLE","TABLE_SPACE":"USERS","ROW_ID":"AAAR9TAAHAAAACHAAH","USERNAME":"C##MYUSER","OS_USERNAME":"oracle","MACHINE_NAME":"oracle","AUDIT_SESSIONID":80002,"SESSION_NUM":869,"SERIAL_NUM":59836,"SESSION_INFO":"login_username=C##MYUSER client_info= OS_username=oracle Machine_name=oracle OS_terminal= OS_process_id=3220 OS_program_name=sqlplus@oracle (TNS V1-V3)","THREAD_NUM":1,"SEQUENCE_NUM":5,"RBASQN":2,"RBABLK":150242,"RBABYTE":344,"UBAFIL":4,"UBABLK":16784411,"UBAREC":44,"UBASQN":133,"ABS_FILE_NUM":4,"REL_FILE_NUM":7,"DATA_BLK_NUM":135,"DATA_OBJ_NUM":73555,"DATA_OBJV_NUM":2,"DATA_OBJD_NUM":73555,"SQL_REDO":"update \"C##MYUSER\".\"CUSTOMERS\" set \"CLUB_STATUS\" = 'gold', \"UPDATE_TS\" = TO_TIMESTAMP('2021-09-13 12:27:31.000') where \"ID\" = '44' and \"FIRST_NAME\" = 'Josef' and \"LAST_NAME\" = 'K' and \"EMAIL\" = 'jk@confluent.io' and \"GENDER\" = 'Male' and \"CLUB_STATUS\" = 'bronze' and \"COMMENTS\" = 'How is it even possible for someone to be guilty' and \"CREATE_TS\" = TO_TIMESTAMP('2021-09-13 12:27:30.602') and \"UPDATE_TS\" = TO_TIMESTAMP('2021-09-13 12:27:30.000') and \"COUNTRY\" = 'Poland' and ROWID = 'AAAR9TAAHAAAACHAAH';","SQL_UNDO":"update \"C##MYUSER\".\"CUSTOMERS\" set \"CLUB_STATUS\" = 'bronze', \"UPDATE_TS\" = TO_TIMESTAMP('2021-09-13 12:27:30.000') where \"ID\" = '44' and \"FIRST_NAME\" = 'Josef' and \"LAST_NAME\" = 'K' and \"EMAIL\" = 'jk@confluent.io' and \"GENDER\" = 'Male' and \"CLUB_STATUS\" = 'gold' and \"COMMENTS\" = 'How is it even possible for someone to be guilty' and \"CREATE_TS\" = TO_TIMESTAMP('2021-09-13 12:27:30.602') and \"UPDATE_TS\" = TO_TIMESTAMP('2021-09-13 12:27:31.000') and \"COUNTRY\" = 'Poland' and ROWID = 'AAAR9TAAHAAAACHAAH';","RS_ID":" 0x000002.00024ae2.0158 ","SSN":0,"CSF":false,"INFO":null,"STATUS":0,"REDO_VALUE":50,"UNDO_VALUE":51,"SAFE_RESUME_SCN":0,"CSCN":1445257,"OBJECT_ID":null,"EDITION_NAME":null,"CLIENT_ID":null,"SRC_CON_NAME":"CDB$ROOT","SRC_CON_ID":1,"SRC_CON_UID":1,"SRC_CON_DBID":0,"SRC_CON_GUID":null,"CON_ID":false}}
 # Processed a total of 9 messages
 
+log "Verifying topic ORCLCDB.C__MYUSER.CUSTOMERS.AVRO: there should be 13 records"
+set +e
+timeout 60 docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic ORCLCDB.C__MYUSER.CUSTOMERS.AVRO --from-beginning --max-messages 13 > /tmp/result.log  2>&1
+set -e
+cat /tmp/result.log
+log "Check there is 5 snapshots events"
+if [ $(grep -c "op_type\":{\"string\":\"R\"}" /tmp/result.log) -ne 5 ]
+then
+     logerror "Did not get expected results"
+     exit 1
+fi
+log "Check there is 3 insert events"
+if [ $(grep -c "op_type\":{\"string\":\"I\"}" /tmp/result.log) -ne 3 ]
+then
+     logerror "Did not get expected results"
+     exit 1
+fi
+log "Check there is 4 update events"
+if [ $(grep -c "op_type\":{\"string\":\"U\"}" /tmp/result.log) -ne 4 ]
+then
+     logerror "Did not get expected results"
+     exit 1
+fi
+log "Check there is 1 delete events"
+if [ $(grep -c "op_type\":{\"string\":\"D\"}" /tmp/result.log) -ne 1 ]
+then
+     logerror "Did not get expected results"
+     exit 1
+fi
+
+log "Verifying topic redo-log-topic-avro: there should be 9 records"
+timeout 60 docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic redo-log-topic-avro --from-beginning --max-messages 9
+
+
 log "Activate TRACE logs for com.wepay.kafka.connect.bigquery"
 curl --request PUT \
   --url http://localhost:8083/admin/loggers/com.wepay.kafka.connect.bigquery \
@@ -214,7 +280,7 @@ curl --request PUT \
 	"level": "TRACE"
 }'
 
-log "Creating GCP BigQuery Sink connector with kafkaKeyFieldName set to ID"
+log "Creating GCP BigQuery Sink connector with kafkaKeyFieldName set to ID and JsonConverter"
 curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
@@ -223,7 +289,7 @@ curl -X PUT \
                "value.converter": "org.apache.kafka.connect.json.JsonConverter",
                "key.converter": "org.apache.kafka.connect.json.JsonConverter",
                "kafkaKeyFieldName": "ID",
-               "topics" : "ORCLCDB.C__MYUSER.CUSTOMERS",
+               "topics" : "ORCLCDB.C__MYUSER.CUSTOMERS.JSON",
                "sanitizeTopics" : "true",
                "autoCreateTables" : "true",
                "defaultDataset" : "'"$DATASET"'",
@@ -234,8 +300,32 @@ curl -X PUT \
                "project" : "'"$PROJECT"'",
                "keyfile" : "/tmp/keyfile.json"
           }' \
-     http://localhost:8083/connectors/gcp-bigquery-sink2/config | jq .
+     http://localhost:8083/connectors/gcp-bigquery-sink-json/config | jq .
 
+
+log "Creating GCP BigQuery Sink connector with kafkaKeyFieldName set to ID and AvroConverter"
+curl -X PUT \
+     -H "Content-Type: application/json" \
+     --data '{
+               "connector.class": "com.wepay.kafka.connect.bigquery.BigQuerySinkConnector",
+               "tasks.max" : "1",
+               "key.converter": "io.confluent.connect.avro.AvroConverter",
+               "key.converter.schema.registry.url": "http://schema-registry:8081",
+               "value.converter": "io.confluent.connect.avro.AvroConverter",
+               "value.converter.schema.registry.url": "http://schema-registry:8081",
+               "kafkaKeyFieldName": "ID",
+               "topics" : "ORCLCDB.C__MYUSER.CUSTOMERS.AVRO",
+               "sanitizeTopics" : "true",
+               "autoCreateTables" : "true",
+               "defaultDataset" : "'"$DATASET"'",
+               "mergeIntervalMs": "5000",
+               "bufferSize": "100000",
+               "maxWriteSize": "10000",
+               "tableWriteWait": "1000",
+               "project" : "'"$PROJECT"'",
+               "keyfile" : "/tmp/keyfile.json"
+          }' \
+     http://localhost:8083/connectors/gcp-bigquery-sink-avro2/config | jq .
 
 # log "Sleeping 125 seconds"
 # sleep 125
