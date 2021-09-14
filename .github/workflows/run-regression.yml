@@ -45,7 +45,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        tag: [ "5.5.5", "6.0.3", "6.1.2", "6.2.0"]
+        tag: [ "5.5.6", "6.0.3", "6.1.2", "6.2.0"]
         test_list : [
                       "🚀 connect/connect-servicenow-sink connect/connect-servicenow-source",
                       "🚀 connect/connect-salesforce-bulkapi-sink connect/connect-salesforce-bulkapi-source connect/connect-salesforce-pushtopics-source connect/connect-salesforce-sobject-sink connect/connect-salesforce-cdc-source connect/connect-salesforce-platform-events-sink connect/connect-salesforce-platform-events-source",
@@ -187,7 +187,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        tag: [ "5.5.5", "6.0.3", "6.1.2", "6.2.0"]
+        tag: [ "5.5.6", "6.0.3", "6.1.2", "6.2.0"]
         test_list : [
                       "🚀 ${{ github.event.inputs.test_name }}"
                     ]
