@@ -840,7 +840,7 @@ function wait_for_datagen_connector_to_inject_data () {
 # https://gist.github.com/Fuxy22/da4b7ca3bcb0bfea2c582964eafeb4ed
 # remove specified host from /etc/hosts
 function removehost() {
-    if [[ "$1" ]]
+    if [ ! -z "$1" ]
     then
         HOSTNAME=$1
 
@@ -861,7 +861,7 @@ function removehost() {
 # https://gist.github.com/Fuxy22/da4b7ca3bcb0bfea2c582964eafeb4ed
 #add new ip host pair to /etc/hosts
 function addhost() {
-    if [[ "$1" && "$2" ]]
+    if [ $# -eq 2 ]
     then
         IP=$1
         HOSTNAME=$2
