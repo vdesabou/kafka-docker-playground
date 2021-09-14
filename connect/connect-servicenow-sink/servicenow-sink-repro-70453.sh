@@ -427,3 +427,58 @@ EOF
 #         at org.apache.http.impl.execchain.RedirectExec.execute(RedirectExec.java:110)
 #         at org.apache.http.impl.client.InternalHttpClient.doExecute(InternalHttpClient.java:185)
 #         ... 24 more
+
+
+# and at the end..
+
+# [2021-09-14 15:29:34,370] ERROR [servicenow-sink|task-0] WorkerSinkTask{id=servicenow-sink-0} Task threw an uncaught and unrecoverable exception (org.apache.kafka.connect.runtime.WorkerTask:187)
+# org.apache.kafka.connect.errors.ConnectException: Exiting WorkerSinkTask due to unrecoverable exception.
+#         at org.apache.kafka.connect.runtime.WorkerSinkTask.deliverMessages(WorkerSinkTask.java:588)
+#         at org.apache.kafka.connect.runtime.WorkerSinkTask.poll(WorkerSinkTask.java:323)
+#         at org.apache.kafka.connect.runtime.WorkerSinkTask.iteration(WorkerSinkTask.java:226)
+#         at org.apache.kafka.connect.runtime.WorkerSinkTask.execute(WorkerSinkTask.java:198)
+#         at org.apache.kafka.connect.runtime.WorkerTask.doRun(WorkerTask.java:185)
+#         at org.apache.kafka.connect.runtime.WorkerTask.run(WorkerTask.java:235)
+#         at java.base/java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:515)
+#         at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:264)
+#         at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1128)
+#         at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:628)
+#         at java.base/java.lang.Thread.run(Thread.java:834)
+# Caused by: io.confluent.connect.utils.retry.RetryCountExceeded: Failed after 2001 attempts to send request to ServiceNow: null
+#         at io.confluent.connect.utils.retry.RetryPolicy.callWith(RetryPolicy.java:429)
+#         at io.confluent.connect.utils.retry.RetryPolicy.call(RetryPolicy.java:337)
+#         at io.confluent.connect.servicenow.rest.ServiceNowClientImpl.executeRequest(ServiceNowClientImpl.java:229)
+#         at io.confluent.connect.servicenow.rest.ServiceNowClientImpl.doRequest(ServiceNowClientImpl.java:225)
+#         at io.confluent.connect.servicenow.rest.ServiceNowClientImpl.put(ServiceNowClientImpl.java:166)
+#         at io.confluent.connect.servicenow.ServiceNowSinkTask.put(ServiceNowSinkTask.java:58)
+#         at org.apache.kafka.connect.runtime.WorkerSinkTask.deliverMessages(WorkerSinkTask.java:560)
+#         ... 10 more
+# Caused by: org.apache.http.client.ClientProtocolException
+#         at org.apache.http.impl.client.InternalHttpClient.doExecute(InternalHttpClient.java:187)
+#         at org.apache.http.impl.client.CloseableHttpClient.execute(CloseableHttpClient.java:83)
+#         at org.apache.http.impl.client.CloseableHttpClient.execute(CloseableHttpClient.java:108)
+#         at org.apache.http.impl.client.CloseableHttpClient.execute(CloseableHttpClient.java:56)
+#         at com.google.api.client.http.apache.v2.ApacheHttpRequest.execute(ApacheHttpRequest.java:71)
+#         at com.google.api.client.http.HttpRequest.execute(HttpRequest.java:996)
+#         at io.confluent.connect.servicenow.rest.ServiceNowClientImpl.lambda$executeRequest$2(ServiceNowClientImpl.java:230)
+#         at io.confluent.connect.utils.retry.RetryPolicy.lambda$call$1(RetryPolicy.java:337)
+#         at io.confluent.connect.utils.retry.RetryPolicy.callWith(RetryPolicy.java:417)
+#         ... 16 more
+# Caused by: org.apache.http.client.NonRepeatableRequestException: Cannot retry request with a non-repeatable request entity.
+#         at org.apache.http.impl.execchain.MainClientExec.execute(MainClientExec.java:225)
+#         at org.apache.http.impl.execchain.ProtocolExec.execute(ProtocolExec.java:186)
+#         at org.apache.http.impl.execchain.RetryExec.execute(RetryExec.java:89)
+#         at org.apache.http.impl.execchain.RedirectExec.execute(RedirectExec.java:110)
+#         at org.apache.http.impl.client.InternalHttpClient.doExecute(InternalHttpClient.java:185)
+#         ... 24 more
+# [2021-09-14 15:29:34,370] ERROR [servicenow-sink|task-0] WorkerSinkTask{id=servicenow-sink-0} Task is being killed and will not recover until manually restarted (org.apache.kafka.connect.runtime.WorkerTask:188)
+# [2021-09-14 15:29:34,370] DEBUG [servicenow-sink|task-0] Stopping ServiceNow Sink Task... (io.confluent.connect.servicenow.ServiceNowSinkTask:115)
+# [2021-09-14 15:29:34,372] INFO [servicenow-sink|task-0] [Producer clientId=producer-4] Closing the Kafka producer with timeoutMillis = 9223372036854775807 ms. (org.apache.kafka.clients.producer.KafkaProducer:1189)
+# [2021-09-14 15:29:34,390] INFO [servicenow-sink|task-0] [Consumer clientId=connector-consumer-servicenow-sink-0, groupId=connect-servicenow-sink] Lost previously assigned partitions test_table-0 (org.apache.kafka.clients.consumer.internals.ConsumerCoordinator:326)
+# [2021-09-14 15:29:34,402] INFO [servicenow-sink|task-0] Publish thread interrupted for client_id=connector-consumer-servicenow-sink-0 client_type=CONSUMER session= cluster=p06BOwJ8SGmz9PrF3GsiBQ group=connect-servicenow-sink (io.confluent.monitoring.clients.interceptor.MonitoringInterceptor:285)
+# [2021-09-14 15:29:34,403] INFO [servicenow-sink|task-0] Publishing Monitoring Metrics stopped for client_id=connector-consumer-servicenow-sink-0 client_type=CONSUMER session= cluster=p06BOwJ8SGmz9PrF3GsiBQ group=connect-servicenow-sink (io.confluent.monitoring.clients.interceptor.MonitoringInterceptor:297)
+# [2021-09-14 15:29:34,403] INFO [servicenow-sink|task-0] [Producer clientId=confluent.monitoring.interceptor.connector-consumer-servicenow-sink-0] Closing the Kafka producer with timeoutMillis = 9223372036854775807 ms. (org.apache.kafka.clients.producer.KafkaProducer:1189)
+# [2021-09-14 15:29:34,410] INFO [servicenow-sink|task-0] Closed monitoring interceptor for client_id=connector-consumer-servicenow-sink-0 client_type=CONSUMER session= cluster=p06BOwJ8SGmz9PrF3GsiBQ group=connect-servicenow-sink (io.confluent.monitoring.clients.interceptor.MonitoringInterceptor:320)
+# [2021-09-14 15:54:10,467] INFO [Worker clientId=connect-1, groupId=connect-cluster] Session key updated (org.apache.kafka.connect.runtime.distributed.DistributedHerder:1570)
+
+# 360fd6523852   plaintext_nginx_proxy                             "/bin/sh -c /usr/loc…"   3 minutes ago   Up 38 seconds   0.0.0.0:8888->8888/tcp, :::8888->8888/tcp                                                                                                 nginx_proxy
