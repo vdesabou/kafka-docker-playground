@@ -102,6 +102,7 @@ curl -X PUT \
                     "key.converter.schema.registry.url": "http://schema-registry:8081",
                     "value.converter": "io.confluent.connect.avro.AvroConverter",
                     "value.converter.schema.registry.url": "http://schema-registry:8081",
+                    "retry.max.times": "2000",
                     "reporter.bootstrap.servers": "broker:9092",
                     "reporter.error.topic.name": "test-error",
                     "reporter.error.topic.replication.factor": 1,
@@ -132,7 +133,7 @@ cat /tmp/result.log
 grep "u_name" /tmp/result.log | grep "notebooks"
 
 
-log "Restart the proxy"
+log "Restart the proxy (if you don't reproduce from the first time, re-run manually the last 3 steps)"
 docker restart nginx_proxy &
 
 sleep 3
@@ -145,86 +146,15 @@ docker exec -i connect kafka-avro-console-producer --broker-list broker:9092 --p
 {"u_name": "notebooks", "u_price": 1.99, "u_quantity": 5}
 EOF
 
-# CONFIG: -------------- REQUEST  --------------
-# POST https://dev71747.service-now.com//api/now/table/u_test_table
-# Accept-Encoding: gzip
-# Content-Type: application/json
-# User-Agent: Google-HTTP-Java-Client/1.32.1 (gzip)
-# Content-Type: application/json
-# Content-Length: 51
 
-# Sep 07, 2021 4:13:09 PM com.google.api.client.http.HttpRequest execute
-# CONFIG: curl -v --compressed -X POST -H 'Accept-Encoding: gzip' -H 'Content-Type: application/json' -H 'User-Agent: Google-HTTP-Java-Client/1.32.1 (gzip)' -H 'Content-Type: application/json' -d '@-' -- 'https://dev71747.service-now.com//api/now/table/u_test_table' << $$$
-
-# Sep 07, 2021 4:13:11 PM com.google.api.client.util.LoggingByteArrayOutputStream close
-# CONFIG: Total: 51 bytes
-# Sep 07, 2021 4:13:11 PM com.google.api.client.util.LoggingByteArrayOutputStream close
-# CONFIG: {"u_name":"scissors","u_price":2.75,"u_quantity":3}
-# Sep 07, 2021 4:13:12 PM com.google.api.client.http.HttpRequest execute
-# CONFIG: -------------- REQUEST  --------------
-# POST https://dev71747.service-now.com//api/now/table/u_test_table
-# Accept-Encoding: gzip
-# Content-Type: application/json
-# User-Agent: Google-HTTP-Java-Client/1.32.1 (gzip)
-# Content-Type: application/json
-# Content-Length: 51
-
-# Sep 07, 2021 4:13:12 PM com.google.api.client.http.HttpRequest execute
-# CONFIG: curl -v --compressed -X POST -H 'Accept-Encoding: gzip' -H 'Content-Type: application/json' -H 'User-Agent: Google-HTTP-Java-Client/1.32.1 (gzip)' -H 'Content-Type: application/json' -d '@-' -- 'https://dev71747.service-now.com//api/now/table/u_test_table' << $$$
-# Sep 07, 2021 4:13:13 PM com.google.api.client.util.LoggingByteArrayOutputStream close
-# CONFIG: Total: 51 bytes
-# Sep 07, 2021 4:13:13 PM com.google.api.client.util.LoggingByteArrayOutputStream close
-# CONFIG: {"u_name":"scissors","u_price":2.75,"u_quantity":3}
-# Sep 07, 2021 4:13:14 PM com.google.api.client.http.HttpRequest execute
-# CONFIG: -------------- REQUEST  --------------
-# POST https://dev71747.service-now.com//api/now/table/u_test_table
-# Accept-Encoding: gzip
-# Content-Type: application/json
-# User-Agent: Google-HTTP-Java-Client/1.32.1 (gzip)
-# Content-Type: application/json
-# Content-Length: 51
-
-# Sep 07, 2021 4:13:14 PM com.google.api.client.http.HttpRequest execute
-# CONFIG: curl -v --compressed -X POST -H 'Accept-Encoding: gzip' -H 'Content-Type: application/json' -H 'User-Agent: Google-HTTP-Java-Client/1.32.1 (gzip)' -H 'Content-Type: application/json' -d '@-' -- 'https://dev71747.service-now.com//api/now/table/u_test_table' << $$$
-# Sep 07, 2021 4:13:16 PM com.google.api.client.util.LoggingByteArrayOutputStream close
-# CONFIG: Total: 51 bytes
-# Sep 07, 2021 4:13:16 PM com.google.api.client.util.LoggingByteArrayOutputStream close
-# CONFIG: {"u_name":"scissors","u_price":2.75,"u_quantity":3}
-# Sep 07, 2021 4:13:16 PM com.google.api.client.http.HttpRequest execute
-# CONFIG: -------------- REQUEST  --------------
-# POST https://dev71747.service-now.com//api/now/table/u_test_table
-# Accept-Encoding: gzip
-# Content-Type: application/json
-# User-Agent: Google-HTTP-Java-Client/1.32.1 (gzip)
-# Content-Type: application/json
-# Content-Length: 51
-
-# Sep 07, 2021 4:13:16 PM com.google.api.client.http.HttpRequest execute
-# CONFIG: curl -v --compressed -X POST -H 'Accept-Encoding: gzip' -H 'Content-Type: application/json' -H 'User-Agent: Google-HTTP-Java-Client/1.32.1 (gzip)' -H 'Content-Type: application/json' -d '@-' -- 'https://dev71747.service-now.com//api/now/table/u_test_table' << $$$
-# Sep 07, 2021 4:13:18 PM com.google.api.client.util.LoggingByteArrayOutputStream close
-# CONFIG: Total: 51 bytes
-# Sep 07, 2021 4:13:18 PM com.google.api.client.util.LoggingByteArrayOutputStream close
-# CONFIG: {"u_name":"scissors","u_price":2.75,"u_quantity":3}
-# [2021-09-07 16:13:18,694] ERROR [servicenow-sink|task-0] WorkerSinkTask{id=servicenow-sink-0} Task threw an uncaught and unrecoverable exception. Task is being killed and will not recover until manually restarted. Error: Failed after 4 attempts to send request to ServiceNow: null (org.apache.kafka.connect.runtime.WorkerSinkTask:607)
-# io.confluent.connect.utils.retry.RetryCountExceeded: Failed after 4 attempts to send request to ServiceNow: null
-#         at io.confluent.connect.utils.retry.RetryPolicy.callWith(RetryPolicy.java:429)
-#         at io.confluent.connect.utils.retry.RetryPolicy.call(RetryPolicy.java:337)
-#         at io.confluent.connect.servicenow.rest.ServiceNowClientImpl.executeRequest(ServiceNowClientImpl.java:229)
-#         at io.confluent.connect.servicenow.rest.ServiceNowClientImpl.doRequest(ServiceNowClientImpl.java:225)
-#         at io.confluent.connect.servicenow.rest.ServiceNowClientImpl.put(ServiceNowClientImpl.java:166)
-#         at io.confluent.connect.servicenow.ServiceNowSinkTask.put(ServiceNowSinkTask.java:58)
-#         at org.apache.kafka.connect.runtime.WorkerSinkTask.deliverMessages(WorkerSinkTask.java:581)
-#         at org.apache.kafka.connect.runtime.WorkerSinkTask.poll(WorkerSinkTask.java:329)
-#         at org.apache.kafka.connect.runtime.WorkerSinkTask.iteration(WorkerSinkTask.java:232)
-#         at org.apache.kafka.connect.runtime.WorkerSinkTask.execute(WorkerSinkTask.java:201)
-#         at org.apache.kafka.connect.runtime.WorkerTask.doRun(WorkerTask.java:182)
-#         at org.apache.kafka.connect.runtime.WorkerTask.run(WorkerTask.java:231)
-#         at java.base/java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:515)
-#         at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:264)
-#         at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1128)
-#         at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:628)
-#         at java.base/java.lang.Thread.run(Thread.java:829)
-# Caused by: org.apache.http.client.ClientProtocolException
+# [2021-09-14 15:01:05,411] TRACE [servicenow-sink|task-0] Create resources for send request to ServiceNow (attempt 270 of 2001) (io.confluent.connect.utils.retry.RetryPolicy:404)
+# [2021-09-14 15:01:05,411] TRACE [servicenow-sink|task-0] Try send request to ServiceNow (attempt 270 of 2001) (io.confluent.connect.utils.retry.RetryPolicy:411)
+# [2021-09-14 15:01:06,237] TRACE [servicenow-sink|task-0] Waiting before retrying to send request to ServiceNow (attempt 270 of 2001) (io.confluent.connect.utils.retry.RetryPolicy:440)
+# [2021-09-14 15:01:06,237] DEBUG [servicenow-sink|task-0] Start exponential (0-300 ms) backoff of 00:00:00.123 before another attempt (io.confluent.connect.utils.retry.RetryCounter:361)
+# [2021-09-14 15:01:06,238] TRACE [servicenow-sink|task-0] Sleeping for 00:00:00.123ms, 123ms remaining (io.confluent.connect.utils.retry.RetryCounter:412)
+# [2021-09-14 15:01:06,362] DEBUG [servicenow-sink|task-0] Completed exponential (0-300 ms) backoff of 00:00:00.123 (io.confluent.connect.utils.retry.RetryCounter:373)
+# [2021-09-14 15:01:06,362] DEBUG [servicenow-sink|task-0] Retrying to send request to ServiceNow (attempt 270 of 2001) after previous retriable error: null (io.confluent.connect.utils.retry.RetryPolicy:448)
+# org.apache.http.client.ClientProtocolException
 #         at org.apache.http.impl.client.InternalHttpClient.doExecute(InternalHttpClient.java:187)
 #         at org.apache.http.impl.client.CloseableHttpClient.execute(CloseableHttpClient.java:83)
 #         at org.apache.http.impl.client.CloseableHttpClient.execute(CloseableHttpClient.java:108)
@@ -234,7 +164,22 @@ EOF
 #         at io.confluent.connect.servicenow.rest.ServiceNowClientImpl.lambda$executeRequest$2(ServiceNowClientImpl.java:230)
 #         at io.confluent.connect.utils.retry.RetryPolicy.lambda$call$1(RetryPolicy.java:337)
 #         at io.confluent.connect.utils.retry.RetryPolicy.callWith(RetryPolicy.java:417)
-#         ... 16 more
+#         at io.confluent.connect.utils.retry.RetryPolicy.call(RetryPolicy.java:337)
+#         at io.confluent.connect.servicenow.rest.ServiceNowClientImpl.executeRequest(ServiceNowClientImpl.java:229)
+#         at io.confluent.connect.servicenow.rest.ServiceNowClientImpl.doRequest(ServiceNowClientImpl.java:225)
+#         at io.confluent.connect.servicenow.rest.ServiceNowClientImpl.put(ServiceNowClientImpl.java:166)
+#         at io.confluent.connect.servicenow.ServiceNowSinkTask.put(ServiceNowSinkTask.java:58)
+#         at org.apache.kafka.connect.runtime.WorkerSinkTask.deliverMessages(WorkerSinkTask.java:560)
+#         at org.apache.kafka.connect.runtime.WorkerSinkTask.poll(WorkerSinkTask.java:323)
+#         at org.apache.kafka.connect.runtime.WorkerSinkTask.iteration(WorkerSinkTask.java:226)
+#         at org.apache.kafka.connect.runtime.WorkerSinkTask.execute(WorkerSinkTask.java:198)
+#         at org.apache.kafka.connect.runtime.WorkerTask.doRun(WorkerTask.java:185)
+#         at org.apache.kafka.connect.runtime.WorkerTask.run(WorkerTask.java:235)
+#         at java.base/java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:515)
+#         at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:264)
+#         at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1128)
+#         at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:628)
+#         at java.base/java.lang.Thread.run(Thread.java:834)
 # Caused by: org.apache.http.client.NonRepeatableRequestException: Cannot retry request with a non-repeatable request entity.
 #         at org.apache.http.impl.execchain.MainClientExec.execute(MainClientExec.java:225)
 #         at org.apache.http.impl.execchain.ProtocolExec.execute(ProtocolExec.java:186)
@@ -242,29 +187,14 @@ EOF
 #         at org.apache.http.impl.execchain.RedirectExec.execute(RedirectExec.java:110)
 #         at org.apache.http.impl.client.InternalHttpClient.doExecute(InternalHttpClient.java:185)
 #         ... 24 more
-# [2021-09-07 16:13:18,697] ERROR [servicenow-sink|task-0] WorkerSinkTask{id=servicenow-sink-0} Task threw an uncaught and unrecoverable exception. Task is being killed and will not recover until manually restarted (org.apache.kafka.connect.runtime.WorkerTask:184)
-# org.apache.kafka.connect.errors.ConnectException: Exiting WorkerSinkTask due to unrecoverable exception.
-#         at org.apache.kafka.connect.runtime.WorkerSinkTask.deliverMessages(WorkerSinkTask.java:609)
-#         at org.apache.kafka.connect.runtime.WorkerSinkTask.poll(WorkerSinkTask.java:329)
-#         at org.apache.kafka.connect.runtime.WorkerSinkTask.iteration(WorkerSinkTask.java:232)
-#         at org.apache.kafka.connect.runtime.WorkerSinkTask.execute(WorkerSinkTask.java:201)
-#         at org.apache.kafka.connect.runtime.WorkerTask.doRun(WorkerTask.java:182)
-#         at org.apache.kafka.connect.runtime.WorkerTask.run(WorkerTask.java:231)
-#         at java.base/java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:515)
-#         at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:264)
-#         at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1128)
-#         at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:628)
-#         at java.base/java.lang.Thread.run(Thread.java:829)
-# Caused by: io.confluent.connect.utils.retry.RetryCountExceeded: Failed after 4 attempts to send request to ServiceNow: null
-#         at io.confluent.connect.utils.retry.RetryPolicy.callWith(RetryPolicy.java:429)
-#         at io.confluent.connect.utils.retry.RetryPolicy.call(RetryPolicy.java:337)
-#         at io.confluent.connect.servicenow.rest.ServiceNowClientImpl.executeRequest(ServiceNowClientImpl.java:229)
-#         at io.confluent.connect.servicenow.rest.ServiceNowClientImpl.doRequest(ServiceNowClientImpl.java:225)
-#         at io.confluent.connect.servicenow.rest.ServiceNowClientImpl.put(ServiceNowClientImpl.java:166)
-#         at io.confluent.connect.servicenow.ServiceNowSinkTask.put(ServiceNowSinkTask.java:58)
-#         at org.apache.kafka.connect.runtime.WorkerSinkTask.deliverMessages(WorkerSinkTask.java:581)
-#         ... 10 more
-# Caused by: org.apache.http.client.ClientProtocolException
+# [2021-09-14 15:01:06,362] TRACE [servicenow-sink|task-0] Create resources for send request to ServiceNow (attempt 271 of 2001) (io.confluent.connect.utils.retry.RetryPolicy:404)
+# [2021-09-14 15:01:06,362] TRACE [servicenow-sink|task-0] Try send request to ServiceNow (attempt 271 of 2001) (io.confluent.connect.utils.retry.RetryPolicy:411)
+# [2021-09-14 15:01:07,186] TRACE [servicenow-sink|task-0] Waiting before retrying to send request to ServiceNow (attempt 271 of 2001) (io.confluent.connect.utils.retry.RetryPolicy:440)
+# [2021-09-14 15:01:07,186] DEBUG [servicenow-sink|task-0] Start exponential (0-300 ms) backoff of 00:00:00.025 before another attempt (io.confluent.connect.utils.retry.RetryCounter:361)
+# [2021-09-14 15:01:07,186] TRACE [servicenow-sink|task-0] Sleeping for 00:00:00.025ms, 25ms remaining (io.confluent.connect.utils.retry.RetryCounter:412)
+# [2021-09-14 15:01:07,211] DEBUG [servicenow-sink|task-0] Completed exponential (0-300 ms) backoff of 00:00:00.025 (io.confluent.connect.utils.retry.RetryCounter:373)
+# [2021-09-14 15:01:07,212] DEBUG [servicenow-sink|task-0] Retrying to send request to ServiceNow (attempt 271 of 2001) after previous retriable error: null (io.confluent.connect.utils.retry.RetryPolicy:448)
+# org.apache.http.client.ClientProtocolException
 #         at org.apache.http.impl.client.InternalHttpClient.doExecute(InternalHttpClient.java:187)
 #         at org.apache.http.impl.client.CloseableHttpClient.execute(CloseableHttpClient.java:83)
 #         at org.apache.http.impl.client.CloseableHttpClient.execute(CloseableHttpClient.java:108)
@@ -274,7 +204,222 @@ EOF
 #         at io.confluent.connect.servicenow.rest.ServiceNowClientImpl.lambda$executeRequest$2(ServiceNowClientImpl.java:230)
 #         at io.confluent.connect.utils.retry.RetryPolicy.lambda$call$1(RetryPolicy.java:337)
 #         at io.confluent.connect.utils.retry.RetryPolicy.callWith(RetryPolicy.java:417)
-#         ... 16 more
+#         at io.confluent.connect.utils.retry.RetryPolicy.call(RetryPolicy.java:337)
+#         at io.confluent.connect.servicenow.rest.ServiceNowClientImpl.executeRequest(ServiceNowClientImpl.java:229)
+#         at io.confluent.connect.servicenow.rest.ServiceNowClientImpl.doRequest(ServiceNowClientImpl.java:225)
+#         at io.confluent.connect.servicenow.rest.ServiceNowClientImpl.put(ServiceNowClientImpl.java:166)
+#         at io.confluent.connect.servicenow.ServiceNowSinkTask.put(ServiceNowSinkTask.java:58)
+#         at org.apache.kafka.connect.runtime.WorkerSinkTask.deliverMessages(WorkerSinkTask.java:560)
+#         at org.apache.kafka.connect.runtime.WorkerSinkTask.poll(WorkerSinkTask.java:323)
+#         at org.apache.kafka.connect.runtime.WorkerSinkTask.iteration(WorkerSinkTask.java:226)
+#         at org.apache.kafka.connect.runtime.WorkerSinkTask.execute(WorkerSinkTask.java:198)
+#         at org.apache.kafka.connect.runtime.WorkerTask.doRun(WorkerTask.java:185)
+#         at org.apache.kafka.connect.runtime.WorkerTask.run(WorkerTask.java:235)
+#         at java.base/java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:515)
+#         at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:264)
+#         at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1128)
+#         at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:628)
+#         at java.base/java.lang.Thread.run(Thread.java:834)
+# Caused by: org.apache.http.client.NonRepeatableRequestException: Cannot retry request with a non-repeatable request entity.
+#         at org.apache.http.impl.execchain.MainClientExec.execute(MainClientExec.java:225)
+#         at org.apache.http.impl.execchain.ProtocolExec.execute(ProtocolExec.java:186)
+#         at org.apache.http.impl.execchain.RetryExec.execute(RetryExec.java:89)
+#         at org.apache.http.impl.execchain.RedirectExec.execute(RedirectExec.java:110)
+#         at org.apache.http.impl.client.InternalHttpClient.doExecute(InternalHttpClient.java:185)
+#         ... 24 more
+# [2021-09-14 15:01:07,212] TRACE [servicenow-sink|task-0] Create resources for send request to ServiceNow (attempt 272 of 2001) (io.confluent.connect.utils.retry.RetryPolicy:404)
+# [2021-09-14 15:01:07,212] TRACE [servicenow-sink|task-0] Try send request to ServiceNow (attempt 272 of 2001) (io.confluent.connect.utils.retry.RetryPolicy:411)
+# [2021-09-14 15:01:08,029] TRACE [servicenow-sink|task-0] Waiting before retrying to send request to ServiceNow (attempt 272 of 2001) (io.confluent.connect.utils.retry.RetryPolicy:440)
+# [2021-09-14 15:01:08,029] DEBUG [servicenow-sink|task-0] Start exponential (0-300 ms) backoff of 00:00:00.167 before another attempt (io.confluent.connect.utils.retry.RetryCounter:361)
+# [2021-09-14 15:01:08,030] TRACE [servicenow-sink|task-0] Sleeping for 00:00:00.167ms, 167ms remaining (io.confluent.connect.utils.retry.RetryCounter:412)
+# [2021-09-14 15:01:08,198] DEBUG [servicenow-sink|task-0] Completed exponential (0-300 ms) backoff of 00:00:00.167 (io.confluent.connect.utils.retry.RetryCounter:373)
+# [2021-09-14 15:01:08,198] DEBUG [servicenow-sink|task-0] Retrying to send request to ServiceNow (attempt 272 of 2001) after previous retriable error: null (io.confluent.connect.utils.retry.RetryPolicy:448)
+# org.apache.http.client.ClientProtocolException
+#         at org.apache.http.impl.client.InternalHttpClient.doExecute(InternalHttpClient.java:187)
+#         at org.apache.http.impl.client.CloseableHttpClient.execute(CloseableHttpClient.java:83)
+#         at org.apache.http.impl.client.CloseableHttpClient.execute(CloseableHttpClient.java:108)
+#         at org.apache.http.impl.client.CloseableHttpClient.execute(CloseableHttpClient.java:56)
+#         at com.google.api.client.http.apache.v2.ApacheHttpRequest.execute(ApacheHttpRequest.java:71)
+#         at com.google.api.client.http.HttpRequest.execute(HttpRequest.java:996)
+#         at io.confluent.connect.servicenow.rest.ServiceNowClientImpl.lambda$executeRequest$2(ServiceNowClientImpl.java:230)
+#         at io.confluent.connect.utils.retry.RetryPolicy.lambda$call$1(RetryPolicy.java:337)
+#         at io.confluent.connect.utils.retry.RetryPolicy.callWith(RetryPolicy.java:417)
+#         at io.confluent.connect.utils.retry.RetryPolicy.call(RetryPolicy.java:337)
+#         at io.confluent.connect.servicenow.rest.ServiceNowClientImpl.executeRequest(ServiceNowClientImpl.java:229)
+#         at io.confluent.connect.servicenow.rest.ServiceNowClientImpl.doRequest(ServiceNowClientImpl.java:225)
+#         at io.confluent.connect.servicenow.rest.ServiceNowClientImpl.put(ServiceNowClientImpl.java:166)
+#         at io.confluent.connect.servicenow.ServiceNowSinkTask.put(ServiceNowSinkTask.java:58)
+#         at org.apache.kafka.connect.runtime.WorkerSinkTask.deliverMessages(WorkerSinkTask.java:560)
+#         at org.apache.kafka.connect.runtime.WorkerSinkTask.poll(WorkerSinkTask.java:323)
+#         at org.apache.kafka.connect.runtime.WorkerSinkTask.iteration(WorkerSinkTask.java:226)
+#         at org.apache.kafka.connect.runtime.WorkerSinkTask.execute(WorkerSinkTask.java:198)
+#         at org.apache.kafka.connect.runtime.WorkerTask.doRun(WorkerTask.java:185)
+#         at org.apache.kafka.connect.runtime.WorkerTask.run(WorkerTask.java:235)
+#         at java.base/java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:515)
+#         at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:264)
+#         at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1128)
+#         at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:628)
+#         at java.base/java.lang.Thread.run(Thread.java:834)
+# Caused by: org.apache.http.client.NonRepeatableRequestException: Cannot retry request with a non-repeatable request entity.
+#         at org.apache.http.impl.execchain.MainClientExec.execute(MainClientExec.java:225)
+#         at org.apache.http.impl.execchain.ProtocolExec.execute(ProtocolExec.java:186)
+#         at org.apache.http.impl.execchain.RetryExec.execute(RetryExec.java:89)
+#         at org.apache.http.impl.execchain.RedirectExec.execute(RedirectExec.java:110)
+#         at org.apache.http.impl.client.InternalHttpClient.doExecute(InternalHttpClient.java:185)
+#         ... 24 more
+# [2021-09-14 15:01:08,198] TRACE [servicenow-sink|task-0] Create resources for send request to ServiceNow (attempt 273 of 2001) (io.confluent.connect.utils.retry.RetryPolicy:404)
+# [2021-09-14 15:01:08,198] TRACE [servicenow-sink|task-0] Try send request to ServiceNow (attempt 273 of 2001) (io.confluent.connect.utils.retry.RetryPolicy:411)
+# [2021-09-14 15:01:09,024] TRACE [servicenow-sink|task-0] Waiting before retrying to send request to ServiceNow (attempt 273 of 2001) (io.confluent.connect.utils.retry.RetryPolicy:440)
+# [2021-09-14 15:01:09,025] DEBUG [servicenow-sink|task-0] Start exponential (0-300 ms) backoff of 00:00:00.129 before another attempt (io.confluent.connect.utils.retry.RetryCounter:361)
+# [2021-09-14 15:01:09,025] TRACE [servicenow-sink|task-0] Sleeping for 00:00:00.129ms, 129ms remaining (io.confluent.connect.utils.retry.RetryCounter:412)
+# [2021-09-14 15:01:09,154] DEBUG [servicenow-sink|task-0] Completed exponential (0-300 ms) backoff of 00:00:00.129 (io.confluent.connect.utils.retry.RetryCounter:373)
+# [2021-09-14 15:01:09,155] DEBUG [servicenow-sink|task-0] Retrying to send request to ServiceNow (attempt 273 of 2001) after previous retriable error: null (io.confluent.connect.utils.retry.RetryPolicy:448)
+# org.apache.http.client.ClientProtocolException
+#         at org.apache.http.impl.client.InternalHttpClient.doExecute(InternalHttpClient.java:187)
+#         at org.apache.http.impl.client.CloseableHttpClient.execute(CloseableHttpClient.java:83)
+#         at org.apache.http.impl.client.CloseableHttpClient.execute(CloseableHttpClient.java:108)
+#         at org.apache.http.impl.client.CloseableHttpClient.execute(CloseableHttpClient.java:56)
+#         at com.google.api.client.http.apache.v2.ApacheHttpRequest.execute(ApacheHttpRequest.java:71)
+#         at com.google.api.client.http.HttpRequest.execute(HttpRequest.java:996)
+#         at io.confluent.connect.servicenow.rest.ServiceNowClientImpl.lambda$executeRequest$2(ServiceNowClientImpl.java:230)
+#         at io.confluent.connect.utils.retry.RetryPolicy.lambda$call$1(RetryPolicy.java:337)
+#         at io.confluent.connect.utils.retry.RetryPolicy.callWith(RetryPolicy.java:417)
+#         at io.confluent.connect.utils.retry.RetryPolicy.call(RetryPolicy.java:337)
+#         at io.confluent.connect.servicenow.rest.ServiceNowClientImpl.executeRequest(ServiceNowClientImpl.java:229)
+#         at io.confluent.connect.servicenow.rest.ServiceNowClientImpl.doRequest(ServiceNowClientImpl.java:225)
+#         at io.confluent.connect.servicenow.rest.ServiceNowClientImpl.put(ServiceNowClientImpl.java:166)
+#         at io.confluent.connect.servicenow.ServiceNowSinkTask.put(ServiceNowSinkTask.java:58)
+#         at org.apache.kafka.connect.runtime.WorkerSinkTask.deliverMessages(WorkerSinkTask.java:560)
+#         at org.apache.kafka.connect.runtime.WorkerSinkTask.poll(WorkerSinkTask.java:323)
+#         at org.apache.kafka.connect.runtime.WorkerSinkTask.iteration(WorkerSinkTask.java:226)
+#         at org.apache.kafka.connect.runtime.WorkerSinkTask.execute(WorkerSinkTask.java:198)
+#         at org.apache.kafka.connect.runtime.WorkerTask.doRun(WorkerTask.java:185)
+#         at org.apache.kafka.connect.runtime.WorkerTask.run(WorkerTask.java:235)
+#         at java.base/java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:515)
+#         at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:264)
+#         at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1128)
+#         at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:628)
+#         at java.base/java.lang.Thread.run(Thread.java:834)
+# Caused by: org.apache.http.client.NonRepeatableRequestException: Cannot retry request with a non-repeatable request entity.
+#         at org.apache.http.impl.execchain.MainClientExec.execute(MainClientExec.java:225)
+#         at org.apache.http.impl.execchain.ProtocolExec.execute(ProtocolExec.java:186)
+#         at org.apache.http.impl.execchain.RetryExec.execute(RetryExec.java:89)
+#         at org.apache.http.impl.execchain.RedirectExec.execute(RedirectExec.java:110)
+#         at org.apache.http.impl.client.InternalHttpClient.doExecute(InternalHttpClient.java:185)
+#         ... 24 more
+# [2021-09-14 15:01:09,155] TRACE [servicenow-sink|task-0] Create resources for send request to ServiceNow (attempt 274 of 2001) (io.confluent.connect.utils.retry.RetryPolicy:404)
+# [2021-09-14 15:01:09,155] TRACE [servicenow-sink|task-0] Try send request to ServiceNow (attempt 274 of 2001) (io.confluent.connect.utils.retry.RetryPolicy:411)
+# [2021-09-14 15:01:09,998] TRACE [servicenow-sink|task-0] Waiting before retrying to send request to ServiceNow (attempt 274 of 2001) (io.confluent.connect.utils.retry.RetryPolicy:440)
+# [2021-09-14 15:01:09,998] DEBUG [servicenow-sink|task-0] Start exponential (0-300 ms) backoff of 00:00:00.150 before another attempt (io.confluent.connect.utils.retry.RetryCounter:361)
+# [2021-09-14 15:01:09,999] TRACE [servicenow-sink|task-0] Sleeping for 00:00:00.150ms, 150ms remaining (io.confluent.connect.utils.retry.RetryCounter:412)
+# [2021-09-14 15:01:10,149] DEBUG [servicenow-sink|task-0] Completed exponential (0-300 ms) backoff of 00:00:00.150 (io.confluent.connect.utils.retry.RetryCounter:373)
+# [2021-09-14 15:01:10,149] DEBUG [servicenow-sink|task-0] Retrying to send request to ServiceNow (attempt 274 of 2001) after previous retriable error: null (io.confluent.connect.utils.retry.RetryPolicy:448)
+# org.apache.http.client.ClientProtocolException
+#         at org.apache.http.impl.client.InternalHttpClient.doExecute(InternalHttpClient.java:187)
+#         at org.apache.http.impl.client.CloseableHttpClient.execute(CloseableHttpClient.java:83)
+#         at org.apache.http.impl.client.CloseableHttpClient.execute(CloseableHttpClient.java:108)
+#         at org.apache.http.impl.client.CloseableHttpClient.execute(CloseableHttpClient.java:56)
+#         at com.google.api.client.http.apache.v2.ApacheHttpRequest.execute(ApacheHttpRequest.java:71)
+#         at com.google.api.client.http.HttpRequest.execute(HttpRequest.java:996)
+#         at io.confluent.connect.servicenow.rest.ServiceNowClientImpl.lambda$executeRequest$2(ServiceNowClientImpl.java:230)
+#         at io.confluent.connect.utils.retry.RetryPolicy.lambda$call$1(RetryPolicy.java:337)
+#         at io.confluent.connect.utils.retry.RetryPolicy.callWith(RetryPolicy.java:417)
+#         at io.confluent.connect.utils.retry.RetryPolicy.call(RetryPolicy.java:337)
+#         at io.confluent.connect.servicenow.rest.ServiceNowClientImpl.executeRequest(ServiceNowClientImpl.java:229)
+#         at io.confluent.connect.servicenow.rest.ServiceNowClientImpl.doRequest(ServiceNowClientImpl.java:225)
+#         at io.confluent.connect.servicenow.rest.ServiceNowClientImpl.put(ServiceNowClientImpl.java:166)
+#         at io.confluent.connect.servicenow.ServiceNowSinkTask.put(ServiceNowSinkTask.java:58)
+#         at org.apache.kafka.connect.runtime.WorkerSinkTask.deliverMessages(WorkerSinkTask.java:560)
+#         at org.apache.kafka.connect.runtime.WorkerSinkTask.poll(WorkerSinkTask.java:323)
+#         at org.apache.kafka.connect.runtime.WorkerSinkTask.iteration(WorkerSinkTask.java:226)
+#         at org.apache.kafka.connect.runtime.WorkerSinkTask.execute(WorkerSinkTask.java:198)
+#         at org.apache.kafka.connect.runtime.WorkerTask.doRun(WorkerTask.java:185)
+#         at org.apache.kafka.connect.runtime.WorkerTask.run(WorkerTask.java:235)
+#         at java.base/java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:515)
+#         at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:264)
+#         at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1128)
+#         at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:628)
+#         at java.base/java.lang.Thread.run(Thread.java:834)
+# Caused by: org.apache.http.client.NonRepeatableRequestException: Cannot retry request with a non-repeatable request entity.
+#         at org.apache.http.impl.execchain.MainClientExec.execute(MainClientExec.java:225)
+#         at org.apache.http.impl.execchain.ProtocolExec.execute(ProtocolExec.java:186)
+#         at org.apache.http.impl.execchain.RetryExec.execute(RetryExec.java:89)
+#         at org.apache.http.impl.execchain.RedirectExec.execute(RedirectExec.java:110)
+#         at org.apache.http.impl.client.InternalHttpClient.doExecute(InternalHttpClient.java:185)
+#         ... 24 more
+# [2021-09-14 15:01:10,150] TRACE [servicenow-sink|task-0] Create resources for send request to ServiceNow (attempt 275 of 2001) (io.confluent.connect.utils.retry.RetryPolicy:404)
+# [2021-09-14 15:01:10,150] TRACE [servicenow-sink|task-0] Try send request to ServiceNow (attempt 275 of 2001) (io.confluent.connect.utils.retry.RetryPolicy:411)
+# [2021-09-14 15:01:10,992] TRACE [servicenow-sink|task-0] Waiting before retrying to send request to ServiceNow (attempt 275 of 2001) (io.confluent.connect.utils.retry.RetryPolicy:440)
+# [2021-09-14 15:01:10,993] DEBUG [servicenow-sink|task-0] Start exponential (0-300 ms) backoff of 00:00:00.284 before another attempt (io.confluent.connect.utils.retry.RetryCounter:361)
+# [2021-09-14 15:01:10,993] TRACE [servicenow-sink|task-0] Sleeping for 00:00:00.284ms, 284ms remaining (io.confluent.connect.utils.retry.RetryCounter:412)
+# [2021-09-14 15:01:11,278] DEBUG [servicenow-sink|task-0] Completed exponential (0-300 ms) backoff of 00:00:00.284 (io.confluent.connect.utils.retry.RetryCounter:373)
+# [2021-09-14 15:01:11,278] DEBUG [servicenow-sink|task-0] Retrying to send request to ServiceNow (attempt 275 of 2001) after previous retriable error: null (io.confluent.connect.utils.retry.RetryPolicy:448)
+# org.apache.http.client.ClientProtocolException
+#         at org.apache.http.impl.client.InternalHttpClient.doExecute(InternalHttpClient.java:187)
+#         at org.apache.http.impl.client.CloseableHttpClient.execute(CloseableHttpClient.java:83)
+#         at org.apache.http.impl.client.CloseableHttpClient.execute(CloseableHttpClient.java:108)
+#         at org.apache.http.impl.client.CloseableHttpClient.execute(CloseableHttpClient.java:56)
+#         at com.google.api.client.http.apache.v2.ApacheHttpRequest.execute(ApacheHttpRequest.java:71)
+#         at com.google.api.client.http.HttpRequest.execute(HttpRequest.java:996)
+#         at io.confluent.connect.servicenow.rest.ServiceNowClientImpl.lambda$executeRequest$2(ServiceNowClientImpl.java:230)
+#         at io.confluent.connect.utils.retry.RetryPolicy.lambda$call$1(RetryPolicy.java:337)
+#         at io.confluent.connect.utils.retry.RetryPolicy.callWith(RetryPolicy.java:417)
+#         at io.confluent.connect.utils.retry.RetryPolicy.call(RetryPolicy.java:337)
+#         at io.confluent.connect.servicenow.rest.ServiceNowClientImpl.executeRequest(ServiceNowClientImpl.java:229)
+#         at io.confluent.connect.servicenow.rest.ServiceNowClientImpl.doRequest(ServiceNowClientImpl.java:225)
+#         at io.confluent.connect.servicenow.rest.ServiceNowClientImpl.put(ServiceNowClientImpl.java:166)
+#         at io.confluent.connect.servicenow.ServiceNowSinkTask.put(ServiceNowSinkTask.java:58)
+#         at org.apache.kafka.connect.runtime.WorkerSinkTask.deliverMessages(WorkerSinkTask.java:560)
+#         at org.apache.kafka.connect.runtime.WorkerSinkTask.poll(WorkerSinkTask.java:323)
+#         at org.apache.kafka.connect.runtime.WorkerSinkTask.iteration(WorkerSinkTask.java:226)
+#         at org.apache.kafka.connect.runtime.WorkerSinkTask.execute(WorkerSinkTask.java:198)
+#         at org.apache.kafka.connect.runtime.WorkerTask.doRun(WorkerTask.java:185)
+#         at org.apache.kafka.connect.runtime.WorkerTask.run(WorkerTask.java:235)
+#         at java.base/java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:515)
+#         at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:264)
+#         at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1128)
+#         at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:628)
+#         at java.base/java.lang.Thread.run(Thread.java:834)
+# Caused by: org.apache.http.client.NonRepeatableRequestException: Cannot retry request with a non-repeatable request entity.
+#         at org.apache.http.impl.execchain.MainClientExec.execute(MainClientExec.java:225)
+#         at org.apache.http.impl.execchain.ProtocolExec.execute(ProtocolExec.java:186)
+#         at org.apache.http.impl.execchain.RetryExec.execute(RetryExec.java:89)
+#         at org.apache.http.impl.execchain.RedirectExec.execute(RedirectExec.java:110)
+#         at org.apache.http.impl.client.InternalHttpClient.doExecute(InternalHttpClient.java:185)
+#         ... 24 more
+# [2021-09-14 15:01:11,278] TRACE [servicenow-sink|task-0] Create resources for send request to ServiceNow (attempt 276 of 2001) (io.confluent.connect.utils.retry.RetryPolicy:404)
+# [2021-09-14 15:01:11,278] TRACE [servicenow-sink|task-0] Try send request to ServiceNow (attempt 276 of 2001) (io.confluent.connect.utils.retry.RetryPolicy:411)
+# [2021-09-14 15:01:12,112] TRACE [servicenow-sink|task-0] Waiting before retrying to send request to ServiceNow (attempt 276 of 2001) (io.confluent.connect.utils.retry.RetryPolicy:440)
+# [2021-09-14 15:01:12,113] DEBUG [servicenow-sink|task-0] Start exponential (0-300 ms) backoff of 00:00:00.244 before another attempt (io.confluent.connect.utils.retry.RetryCounter:361)
+# [2021-09-14 15:01:12,113] TRACE [servicenow-sink|task-0] Sleeping for 00:00:00.244ms, 244ms remaining (io.confluent.connect.utils.retry.RetryCounter:412)
+# [2021-09-14 15:01:12,358] DEBUG [servicenow-sink|task-0] Completed exponential (0-300 ms) backoff of 00:00:00.244 (io.confluent.connect.utils.retry.RetryCounter:373)
+# [2021-09-14 15:01:12,358] DEBUG [servicenow-sink|task-0] Retrying to send request to ServiceNow (attempt 276 of 2001) after previous retriable error: null (io.confluent.connect.utils.retry.RetryPolicy:448)
+# org.apache.http.client.ClientProtocolException
+#         at org.apache.http.impl.client.InternalHttpClient.doExecute(InternalHttpClient.java:187)
+#         at org.apache.http.impl.client.CloseableHttpClient.execute(CloseableHttpClient.java:83)
+#         at org.apache.http.impl.client.CloseableHttpClient.execute(CloseableHttpClient.java:108)
+#         at org.apache.http.impl.client.CloseableHttpClient.execute(CloseableHttpClient.java:56)
+#         at com.google.api.client.http.apache.v2.ApacheHttpRequest.execute(ApacheHttpRequest.java:71)
+#         at com.google.api.client.http.HttpRequest.execute(HttpRequest.java:996)
+#         at io.confluent.connect.servicenow.rest.ServiceNowClientImpl.lambda$executeRequest$2(ServiceNowClientImpl.java:230)
+#         at io.confluent.connect.utils.retry.RetryPolicy.lambda$call$1(RetryPolicy.java:337)
+#         at io.confluent.connect.utils.retry.RetryPolicy.callWith(RetryPolicy.java:417)
+#         at io.confluent.connect.utils.retry.RetryPolicy.call(RetryPolicy.java:337)
+#         at io.confluent.connect.servicenow.rest.ServiceNowClientImpl.executeRequest(ServiceNowClientImpl.java:229)
+#         at io.confluent.connect.servicenow.rest.ServiceNowClientImpl.doRequest(ServiceNowClientImpl.java:225)
+#         at io.confluent.connect.servicenow.rest.ServiceNowClientImpl.put(ServiceNowClientImpl.java:166)
+#         at io.confluent.connect.servicenow.ServiceNowSinkTask.put(ServiceNowSinkTask.java:58)
+#         at org.apache.kafka.connect.runtime.WorkerSinkTask.deliverMessages(WorkerSinkTask.java:560)
+#         at org.apache.kafka.connect.runtime.WorkerSinkTask.poll(WorkerSinkTask.java:323)
+#         at org.apache.kafka.connect.runtime.WorkerSinkTask.iteration(WorkerSinkTask.java:226)
+#         at org.apache.kafka.connect.runtime.WorkerSinkTask.execute(WorkerSinkTask.java:198)
+#         at org.apache.kafka.connect.runtime.WorkerTask.doRun(WorkerTask.java:185)
+#         at org.apache.kafka.connect.runtime.WorkerTask.run(WorkerTask.java:235)
+#         at java.base/java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:515)
+#         at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:264)
+#         at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1128)
+#         at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:628)
+#         at java.base/java.lang.Thread.run(Thread.java:834)
 # Caused by: org.apache.http.client.NonRepeatableRequestException: Cannot retry request with a non-repeatable request entity.
 #         at org.apache.http.impl.execchain.MainClientExec.execute(MainClientExec.java:225)
 #         at org.apache.http.impl.execchain.ProtocolExec.execute(ProtocolExec.java:186)
