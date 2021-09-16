@@ -73,6 +73,14 @@ docker exec -e SERVICENOW_URL=$SERVICENOW_URL -e SERVICENOW_PASSWORD=$SERVICENOW
 # docker exec -i --privileged --user root connect bash -c "iptables -A OUTPUT -d $ip -j REJECT"
 # docker exec -i --privileged --user root connect bash -c "iptables -L -n -v"
 
+curl --request PUT \
+  --url http://localhost:8083/admin/loggers/io.confluent.connect.servicenow \
+  --header 'Accept: application/json' \
+  --header 'Content-Type: application/json' \
+  --data '{
+	"level": "TRACE"
+}'
+
 TODAY=$(date '+%Y-%m-%d')
 
 log "Creating ServiceNow Source connector"
