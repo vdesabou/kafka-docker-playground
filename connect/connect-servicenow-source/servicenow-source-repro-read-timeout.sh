@@ -116,9 +116,6 @@ sleep 5
 log "Verify we have received the data in topic-servicenow topic"
 timeout 60 docker exec connect kafka-console-consumer -bootstrap-server broker:9092 --topic topic-servicenow --from-beginning --max-messages 1
 
-log "install tcp dump"
-docker exec --privileged --user root connect bash -c 'curl http://mirror.centos.org/centos/8/AppStream/x86_64/os/Packages/tcpdump-4.9.3-1.el8.x86_64.rpm -o tcpdump-4.9.3-1.el8.x86_64.rpm  && rpm -Uvh tcpdump-4.9.3-1.el8.x86_64.rpm'
-
 log "Adding latency from nginx_proxy to connect to simulate a read timeout (hard-coded to 20 seconds)"
 # connect
 latency_put=$(get_latency nginx_proxy connect)
