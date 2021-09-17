@@ -107,3 +107,5 @@ wait_for_repro
 #         at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1128)
 #         at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:628)
 #         at java.base/java.lang.Thread.run(Thread.java:829)
+
+# a workaround is to use a different name for "kafkaKeyFieldName": example "MYID"

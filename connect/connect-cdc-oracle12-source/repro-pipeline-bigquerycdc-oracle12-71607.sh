@@ -1,9 +1,6 @@
 #!/bin/bash
 set -e
 
-#CP 5.4.2
-# CDC 1.2.1
-# BQ 2.1.5
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
@@ -351,6 +348,8 @@ curl -X PUT \
                "keyfile" : "/tmp/keyfile.json"
           }' \
      http://localhost:8083/connectors/gcp-bigquery-sink-avro/config | jq .
+
+# a workaround is to use a different name for "kafkaKeyFieldName": example "MYID"
 
 # Key Schema:
 
