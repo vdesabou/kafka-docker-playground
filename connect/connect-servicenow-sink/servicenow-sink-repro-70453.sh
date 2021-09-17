@@ -4,6 +4,24 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
+function wait_for_repro () {
+     MAX_WAIT=600
+     CUR_WAIT=0
+     log "Waiting up to $MAX_WAIT seconds for error Cannot retry request with a non-repeatable request entity to happen"
+     docker container logs connect > /tmp/out.txt 2>&1
+     while ! grep "Cannot retry request with a non-repeatable request entity" /tmp/out.txt > /dev/null;
+     do
+          sleep 10
+          docker container logs connect > /tmp/out.txt 2>&1
+          CUR_WAIT=$(( CUR_WAIT+10 ))
+          if [[ "$CUR_WAIT" -gt "$MAX_WAIT" ]]; then
+               echo -e "\nERROR: The logs in all connect containers do not show 'Cannot retry request with a non-repeatable request entity' after $MAX_WAIT seconds. Please troubleshoot with 'docker container ps' and 'docker container logs'.\n"
+               exit 1
+          fi
+     done
+     log "The problem has been reproduced !"
+}
+
 function wait_for_end_of_hibernation () {
      MAX_WAIT=1200
      CUR_WAIT=0
@@ -54,6 +72,9 @@ then
 fi
 
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.repro-70453.yml"
+
+log "Doing a tcpdump"
+docker exec -d --privileged --user root connect bash -c 'tcpdump -w tcpdump.pcap -i eth0 -s 0 port 8888 or port'
 
 export HTTP_PROXY=127.0.0.1:8888
 export HTTPS_PROXY=127.0.0.1:8888
@@ -133,10 +154,11 @@ cat /tmp/result.log
 grep "u_name" /tmp/result.log | grep "notebooks"
 
 
-log "Restart the proxy (if you don't reproduce from the first time, re-run manually the last 3 steps)"
-docker restart nginx_proxy &
-
-sleep 3
+log "Now simulate a 502 BAD Gateway by setting up a wrong NGINX config"
+cp ${DIR}/repro-70453/nginx_whitelist.conf /tmp/
+cp ${DIR}/repro-70453/nginx_whitelist_bad_gateway.conf ${DIR}/repro-70453/nginx_whitelist.conf
+log "Restart the proxy"
+docker restart nginx_proxy
 
 log "Sending messages to topic test_table"
 docker exec -i connect kafka-avro-console-producer --broker-list broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic test_table --property value.schema='{"type":"record","name":"myrecord","fields":[{"name":"u_name","type":"string"},
@@ -146,6 +168,25 @@ docker exec -i connect kafka-avro-console-producer --broker-list broker:9092 --p
 {"u_name": "notebooks", "u_price": 1.99, "u_quantity": 5}
 EOF
 
+log "The connector is now in a loop with 502 bad gateway, sleep 10 seconds"
+sleep 10
+
+log "Now set back the original working NGINX config"
+cp /tmp/nginx_whitelist.conf ${DIR}/repro-70453/nginx_whitelist.conf
+log "Restart the proxy"
+docker restart nginx_proxy
+
+log "Sending messages to topic test_table"
+docker exec -i connect kafka-avro-console-producer --broker-list broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic test_table --property value.schema='{"type":"record","name":"myrecord","fields":[{"name":"u_name","type":"string"},
+{"name":"u_price", "type": "float"}, {"name":"u_quantity", "type": "int"}]}' << EOF
+{"u_name": "scissors", "u_price": 2.75, "u_quantity": 3}
+{"u_name": "tape", "u_price": 0.99, "u_quantity": 10}
+{"u_name": "notebooks", "u_price": 1.99, "u_quantity": 5}
+EOF
+
+wait_for_repro
+
+log "The connector is now in a loop with Cannot retry request with a non-repeatable request entity"
 
 # [2021-09-14 15:01:05,411] TRACE [servicenow-sink|task-0] Create resources for send request to ServiceNow (attempt 270 of 2001) (io.confluent.connect.utils.retry.RetryPolicy:404)
 # [2021-09-14 15:01:05,411] TRACE [servicenow-sink|task-0] Try send request to ServiceNow (attempt 270 of 2001) (io.confluent.connect.utils.retry.RetryPolicy:411)
