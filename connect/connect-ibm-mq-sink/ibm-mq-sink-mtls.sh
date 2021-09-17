@@ -25,6 +25,7 @@ then
      cp ${DIR}/install/wmq/JavaSE/com.ibm.mq.allclient.jar ${DIR}/
 fi
 
+# ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
 docker-compose -f ../../environment/plaintext/docker-compose.yml -f "${PWD}/docker-compose.plaintext.mtls.yml" down -v
 
 log "Starting up ibmmq container to get generated cert from server"
