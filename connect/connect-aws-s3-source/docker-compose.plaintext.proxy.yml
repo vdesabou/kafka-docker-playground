@@ -2,7 +2,7 @@
 version: '3.5'
 services:
   nginx_proxy:
-    image: reiz/nginx_proxy:0.0.3
+    image: reiz/nginx_proxy:latest
     hostname: nginx_proxy
     container_name: nginx_proxy
     ports:
