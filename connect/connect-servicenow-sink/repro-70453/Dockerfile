@@ -1,2 +1,2 @@
-FROM reiz/nginx_proxy:0.0.3
+FROM reiz/nginx_proxy:latest
 RUN apt-get install -y iproute2 inetutils-ping
