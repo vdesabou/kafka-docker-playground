@@ -1,19 +1,17 @@
 ARG TAG
-ARG CONNECTOR_TAG
 FROM vdesabou/kafka-docker-playground-connect:${TAG}
-COPY jdk-8u201-linux-x64.rpm /tmp/
+COPY jdk-8u141-linux-x64.rpm /tmp/
 USER root
 # with 6.2.0
 RUN microdnf install yum \
-    && yum -y install /tmp/jdk-8u201-linux-x64.rpm && alternatives --list \
-    && rm -f /tmp/jdk-8u201-linux-x64.rpm
+    && yum -y install /tmp/jdk-8u141-linux-x64.rpm \
+    && rm -f /tmp/jdk-8u141-linux-x64.rpm
 # && alternatives --remove java /usr/lib/jvm/zulu11/bin/java
 # with 5.4.x (needs to be ubi8, example 5.4.2-1-ubi8)
-# RUN yum -y install /tmp/jdk-8u201-linux-x64.rpm && alternatives --list \
-#     && rm -f /tmp/jdk-8u201-linux-x64.rpm && alternatives --remove java /usr/lib/jvm/zulu8/jre/bin/java
+# RUN yum -y install /tmp/jdk-8u141-linux-x64.rpm && alternatives --list \
+#     && rm -f /tmp/jdk-8u141-linux-x64.rpm && alternatives --remove java /usr/lib/jvm/zulu11/bin/java
 USER appuser
-ARG CONNECTOR_TAG
-RUN confluent-hub install --no-prompt confluentinc/kafka-connect-hdfs3:${CONNECTOR_TAG}
+RUN confluent-hub install --no-prompt confluentinc/kafka-connect-hdfs3:latest
 # https://stackoverflow.com/a/41548434/2381999
 # WORKDIR /
 # RUN yum -y install gcc automake autoconf libtool make git && git clone https://github.com/wolfcw/libfaketime.git
