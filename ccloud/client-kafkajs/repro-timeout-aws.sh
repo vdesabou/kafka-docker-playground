@@ -7,15 +7,15 @@ source ${DIR}/../../scripts/utils.sh
 # make sure to run HA_PROXY on an EC2 instance
 
 # to block traffic from one of the brokers, here is an example
-# nslookup b0-pkc-4r297.europe-west1.gcp.confluent.cloud                                                      Server:         172.31.0.2
+# nslookup b0-pkc-r5djp.europe-west1.gcp.confluent.cloud                                                      Server:         172.31.0.2
 # Address:        172.31.0.2#53
 
 # Non-authoritative answer:
-# Name:   b0-pkc-4r297.europe-west1.gcp.confluent.cloud
-# Address: 35.205.213.167
+# Name:   b0-pkc-r5djp.europe-west1.gcp.confluent.cloud
+# Address: 34.79.192.45
 
-# docker exec --privileged --user root -i haproxy bash -c 'iptables -A INPUT -p tcp -s 35.205.213.167 -j DROP'
-# docker exec --privileged --user root -i haproxy bash -c 'iptables -D INPUT -p tcp -s 35.205.213.167 -j DROP'
+# docker exec --privileged --user root -i haproxy bash -c 'iptables -A INPUT -p tcp -s 34.79.192.45 -j DROP'
+# docker exec --privileged --user root -i haproxy bash -c 'iptables -D INPUT -p tcp -s 34.79.192.45 -j DROP'
 
 
 function update_hosts_file() {
