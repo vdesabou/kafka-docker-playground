@@ -12,10 +12,10 @@ source ${DIR}/../../scripts/utils.sh
 
 # Non-authoritative answer:
 # Name:   b0-pkc-r5djp.europe-west1.gcp.confluent.cloud
-# Address: 34.79.192.45
+# Address: 34.78.32.173
 
-# docker exec --privileged --user root -i haproxy bash -c 'iptables -A INPUT -p tcp -s 34.79.192.45 -j DROP'
-# docker exec --privileged --user root -i haproxy bash -c 'iptables -D INPUT -p tcp -s 34.79.192.45 -j DROP'
+# docker exec --privileged --user root -i haproxy bash -c 'iptables -A INPUT -p tcp -s 34.78.32.173 -j DROP'
+# docker exec --privileged --user root -i haproxy bash -c 'iptables -D INPUT -p tcp -s 34.78.32.173 -j DROP'
 
 
 function update_hosts_file() {
