@@ -93,7 +93,7 @@ curl -X PUT \
                "jms.destination.type": "queue",
                "mq.tls.truststore.location": "/tmp/truststore.jks",
                "mq.tls.truststore.password": "confluent",
-               "mq.ssl.cipher.suite":"TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384",
+               "mq.ssl.cipher.suite":"TLS_RSA_WITH_AES_128_CBC_SHA256",
                "confluent.license": "",
                "confluent.topic.bootstrap.servers": "broker:9092",
                "confluent.topic.replication.factor": "1"
