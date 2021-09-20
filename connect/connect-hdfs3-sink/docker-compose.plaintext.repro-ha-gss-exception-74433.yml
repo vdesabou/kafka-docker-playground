@@ -187,7 +187,10 @@ services:
       CONNECT_LOG4J_APPENDER_STDOUT_LAYOUT_CONVERSIONPATTERN: "[%d] %p %X{connector.context}%m (%c:%L)%n"
 
   connect3:
-    image: vdesabou/kafka-docker-playground-connect:${CONNECT_TAG}
+    build:
+      context: ../../connect/connect-hdfs3-sink/ha-kerberos-repro-gss-exception/
+      args:
+        TAG: ${TAG}
     volumes:
       - ../../connect/connect-hdfs3-sink/ha-kerberos-repro-gss-exception/krb5.conf:/etc/krb5.conf
       - ../../connect/connect-hdfs3-sink/ha-kerberos-repro-gss-exception/core-site.xml:/opt/hadoop/etc/hadoop/core-site.xml
