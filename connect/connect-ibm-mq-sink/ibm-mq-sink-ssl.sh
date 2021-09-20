@@ -96,7 +96,7 @@ curl -X PUT \
                "mq.password": "passw0rd",
                "jms.destination.name": "DEV.QUEUE.1",
                "jms.destination.type": "queue",
-               "mq.ssl.cipher.suite":"TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384",
+               "mq.ssl.cipher.suite":"TLS_RSA_WITH_AES_128_CBC_SHA256",
                "value.converter": "org.apache.kafka.connect.storage.StringConverter",
                "key.converter": "org.apache.kafka.connect.storage.StringConverter",
                "confluent.license": "",
