@@ -34,3 +34,5 @@ services:
       KAFKA_OPTS: -Dcom.ibm.mq.cfg.useIBMCipherMappings=false
                   -Djavax.net.ssl.trustStore=/tmp/truststore.jks
                   -Djavax.net.ssl.trustStorePassword=confluent
+                  -Djavax.net.debug=true
+                  -Djavax.net.debug=ssl:handshake
