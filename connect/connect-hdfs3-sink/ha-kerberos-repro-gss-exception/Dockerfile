@@ -4,8 +4,8 @@ COPY jdk-8u141-linux-x64.rpm /tmp/
 USER root
 # with 6.2.0
 RUN microdnf install yum \
-    && yum -y install /tmp/jdk-8u141-linux-x64.rpm \
-    && rm -f /tmp/jdk-8u141-linux-x64.rpm
+    && yum -y install /tmp/jdk-8u141-linux-x64.rpm;alternatives --remove java /usr/lib/jvm/zulu11/bin/java \
+    ;rm -f /tmp/jdk-8u141-linux-x64.rpm
 # && alternatives --remove java /usr/lib/jvm/zulu11/bin/java
 # with 5.4.x (needs to be ubi8, example 5.4.2-1-ubi8)
 # RUN yum -y install /tmp/jdk-8u141-linux-x64.rpm && alternatives --list \
