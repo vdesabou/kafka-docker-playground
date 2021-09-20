@@ -8,11 +8,9 @@ set -e
 # https://serverfault.com/a/133631
 # https://community.cloudera.com/t5/Support-Questions/Error-on-kerberos-ticket-renewer-role-startup/td-p/31187
 
-#export TAG=5.4.2-1-ubi8
-# export CONNECTOR_TAG=1.1.1
 NB_CONNECTORS=40
 NB_TASK_PER_CONNECTOR=2
-CONNECT_KERBEROS_TICKET_LIFETIME=60
+CONNECT_KERBEROS_TICKET_LIFETIME=5
 
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
@@ -156,7 +154,7 @@ for((i=0;i<$NB_CONNECTORS;i++)); do
                     "rotate.interval.ms":"120000",
                     "logs.dir": "'"$LOG_DIR"'",
                     "hdfs.authentication.kerberos": "true",
-                    "kerberos.ticket.renew.period.ms": "5000",
+                    "kerberos.ticket.renew.period.ms": "1000",
                     "connect.hdfs.principal": "connect@EXAMPLE.COM",
                     "connect.hdfs.keytab": "/tmp/connect.keytab",
                     "hdfs.namenode.principal": "nn/_HOST@EXAMPLE.COM",
