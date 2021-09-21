@@ -1,10 +1,10 @@
-# Azure Search Sink connector
+# Azure Cognitive Search Sink connector
 
-![asciinema](https://github.com/vdesabou/gifs/blob/master/connect/connect-azure-search-sink/asciinema.gif?raw=true)
+![asciinema](https://github.com/vdesabou/gifs/blob/master/connect/connect-azure-cognitive-search-sink/asciinema.gif?raw=true)
 
 ## Objective
 
-Quickly test [Azure Search Sink](https://docs.confluent.io/current/connect/kafka-connect-azure-search/index.html#azure-search-sink-connector-for-cp) connector.
+Quickly test [Azure Cognitive Search Sink](https://docs.confluent.io/kafka-connect-azure-search/current/overview.html#az-cognitive-search-sink-connector-for-cp) connector.
 
 
 
@@ -14,7 +14,7 @@ Quickly test [Azure Search Sink](https://docs.confluent.io/current/connect/kafka
 Simply run:
 
 ```
-$ ./azure-search.sh
+$ ./azure-cognitive-search.sh
 ```
 
 ## Details of what the script is doing
@@ -96,7 +96,7 @@ $ curl -X PUT \
                 "reporter.result.topic.value.format": "string",
                 "reporter.result.topic.replication.factor": 1
           }' \
-     http://localhost:8083/connectors/azure-search/config | jq .
+     http://localhost:8083/connectors/azure-cognitive-search/config | jq .
 ```
 
 Messages are sent to `hotels-sample` topic using:
