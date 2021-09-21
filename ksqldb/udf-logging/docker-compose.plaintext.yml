@@ -1,0 +1,13 @@
+---
+version: '3.5'
+services:
+  ksqldb-server:
+    depends_on:
+      - zookeeper
+      - broker
+    volumes:
+      - ../../ksqldb/udf-logging/log4j.template.properties:/etc/confluent/docker/log4j.properties.template
+      - ../../ksqldb/udf-logging/udf-simple-logging/target/udf-simple-logging-1.0.0.jar:/opt/ksqldb-extensions/udf-simple-logging-1.0.0.jar
+      - ../../ksqldb/udf-logging/udf-custom-logger/target/udf-custom-logger-1.0.0-jar-with-dependencies.jar:/opt/ksqldb-extensions/udf-custom-logger-1.0.0-jar-with-dependencies.jar
+    environment:
+      KSQL_KSQL_EXTENSION_DIR: "/opt/ksqldb-extensions"
