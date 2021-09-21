@@ -22,17 +22,24 @@ then
      # install deps
      log "Getting com.ibm.mq.allclient.jar and jms.jar from IBM-MQ-Install-Java-All.jar"
      docker run --rm -v ${DIR}/IBM-MQ-Install-Java-All.jar:/tmp/IBM-MQ-Install-Java-All.jar -v ${DIR}/install:/tmp/install openjdk:8 java -jar /tmp/IBM-MQ-Install-Java-All.jar --acceptLicense /tmp/install
-     cp ${DIR}/install/wmq/JavaSE/jms.jar ${DIR}/
-     cp ${DIR}/install/wmq/JavaSE/com.ibm.mq.allclient.jar ${DIR}/
 fi
 
 cd ${DIR}/security
 log "🔐 Generate keys and certificates used for SSL"
-./certs-create.sh
+#./certs-create.sh
 cd ${DIR}
 
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.mtls.yml"
 
+docker exec -i ibmmq runmqsc QM1 << EOF
+ALTER QMGR CONNAUTH(' ')
+EXIT
+EOF
+
+docker exec -i ibmmq runmqsc QM1 << EOF
+REFRESH SECURITY TYPE(CONNAUTH)
+EXIT
+EOF
 
 log "Set the channel authentication to required so that both the server and client will need to provide a trusted certificate"
 docker exec -i ibmmq runmqsc QM1 << EOF
