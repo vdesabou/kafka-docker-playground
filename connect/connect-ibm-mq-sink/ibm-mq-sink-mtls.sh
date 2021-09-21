@@ -21,8 +21,8 @@ then
      # install deps
      log "Getting com.ibm.mq.allclient.jar and jms.jar from IBM-MQ-Install-Java-All.jar"
      docker run --rm -v ${DIR}/IBM-MQ-Install-Java-All.jar:/tmp/IBM-MQ-Install-Java-All.jar -v ${DIR}/install:/tmp/install openjdk:8 java -jar /tmp/IBM-MQ-Install-Java-All.jar --acceptLicense /tmp/install
-     cp ${DIR}/install/wmq/JavaSE/lib/jms.jar ${DIR}/
-     cp ${DIR}/install/wmq/JavaSE/lib/com.ibm.mq.allclient.jar ${DIR}/
+     cp ${DIR}/install/wmq/JavaSE/jms.jar ${DIR}/
+     cp ${DIR}/install/wmq/JavaSE/com.ibm.mq.allclient.jar ${DIR}/
 fi
 
 cd ${DIR}/security
