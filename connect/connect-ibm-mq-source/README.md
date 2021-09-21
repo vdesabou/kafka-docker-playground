@@ -85,22 +85,10 @@ Results:
 
 ### With SSL
 
-Creating a Root Certificate Authority (CA)
+🔐 Generate keys and certificates used for SSL
 
 ```bash
-$ openssl req -new -x509 -days 365 -nodes -out /tmp/ca.crt -keyout /tmp/ca.key -subj "/CN=root-ca"
-Generate the IBM MQ server key and certificate
-```
-
-```bash
-$ openssl req -new -nodes -out /tmp/server.csr -keyout /tmp/server.key -subj "/CN=ibmmq"
-$ openssl x509 -req -in /tmp/server.csr -days 365 -CA /tmp/ca.crt -CAkey /tmp/ca.key -CAcreateserial -out /tmp/server.crt
-```
-
-Generate truststore.jks
-
-```bash
-$ keytool -noprompt -keystore /tmp/truststore.jks -alias CARoot -import -file /tmp/ca.crt -storepass confluent -keypass confluent
+./security/certs-create.sh
 ```
 
 Creating IBM MQ source connector
@@ -122,7 +110,7 @@ $ curl -X PUT \
                "jms.destination.type": "queue",
                "mq.tls.truststore.location": "/tmp/truststore.jks",
                "mq.tls.truststore.password": "confluent",
-               "mq.ssl.cipher.suite":"TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384",
+               "mq.ssl.cipher.suite":"TLS_RSA_WITH_AES_128_CBC_SHA256",
                "confluent.license": "",
                "confluent.topic.bootstrap.servers": "broker:9092",
                "confluent.topic.replication.factor": "1"
@@ -132,95 +120,10 @@ $ curl -X PUT \
 
 Note:
 
-* `"mq.ssl.cipher.suite":"TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384"` is required
+* `"mq.ssl.cipher.suite":"TLS_RSA_WITH_AES_128_CBC_SHA256"` is required
 * `KAFKA_OPTS: "-Dcom.ibm.mq.cfg.useIBMCipherMappings=false"` is also required
 
 ### With SSL encryption + Mutual TLS auth
-
-Starting up ibmmq container to get generated cert from server
-
-```bash
-$ docker-compose -f ../../environment/plaintext/docker-compose.yml -f "${PWD}/docker-compose.plaintext.mtls.yml" up -d ibmmq
-```
-
-Create a keystore (a .kdb file) using the MQ security tool command runmqakm
-
-```
-$ docker exec -i ibmmq bash << EOF
-cd /var/mqm/qmgrs/QM1/ssl
-rm -f key.*
-rm -f QM.*
-# Create a keystore (a .kdb file) using the MQ security tool command runmqakm
-runmqakm -keydb -create -db key.kdb -pw confluent -stash
-chmod 640 *
-# create a self-signed certificate and private key and put them in the keystore
-runmqakm -cert -create -db key.kdb -stashed -dn "cn=qm,o=ibm,c=uk" -label ibmwebspheremqqm1
-# let’s extract the queue manager certificate, which we’ll then give to the client application.
-runmqakm -cert -extract -label ibmwebspheremqqm1 -db key.kdb -stashed -file QM.cert
-EOF
-```
-
-Copy IBM MQ certificate
-
-```
-docker cp ibmmq:/var/mqm/qmgrs/QM1/ssl/QM.cert .
-```
-
-Create client truststore.jks with server certificate
-
-```
-docker run --rm -v $PWD:/tmp vdesabou/kafka-docker-playground-connect:${CONNECT_TAG} keytool -importcert -alias server-certificate -noprompt -file /tmp/QM.cert -keystore /tmp/truststore.jks -storepass confluent
-```
-
-Setting up mutual authentication
-Set the channel authentication to required so that both the server and client will need to provide a trusted
-
-```certificate
-docker exec -i ibmmq runmqsc QM1 << EOF
-ALTER CHANNEL(DEV.APP.SVRCONN) CHLTYPE(SVRCONN) SSLCAUTH(REQUIRED)
-EXIT
-EOF
-```
-
-Create client keystore.jks
-
-```
-rm -f keystore.jks
-docker run --rm -v $PWD:/tmp vdesabou/kafka-docker-playground-connect:${CONNECT_TAG} keytool -genkeypair -noprompt -keyalg RSA -alias client-key -keystore /tmp/keystore.jks -storepass confluent -keypass confluent -storetype pkcs12 -dname "CN=connect,OU=TEST,O=CONFLUENT,L=PaloAlto,S=Ca,C=US"
-```
-
-Extract the client certificate to the file client.crt
-
-```
-docker run --rm -v $PWD:/tmp vdesabou/kafka-docker-playground-connect:${CONNECT_TAG} keytool -noprompt -export -alias client-key -file /tmp/client.crt -keystore /tmp/keystore.jks -storepass confluent -keypass confluent
-```
-
-Copy client.crt to ibmmq container
-
-```
-docker cp client.crt ibmmq:/tmp/client.crt
-```
-
-Add client certificate to the queue manager’s key repository, so the server knows that it can trust the client
-
-```
-docker exec -i ibmmq bash -c "cd /var/mqm/qmgrs/QM1/ssl && runmqakm -cert -add -db key.kdb -stashed -label ibmwebspheremqapp -file /tmp/client.crt"
-```
-
-Force our queue manager to pick up these changes
-
-```
-docker exec -i ibmmq runmqsc QM1 << EOF
-REFRESH SECURITY(*) TYPE(SSL)
-EXIT
-EOF
-```
-
-List the certificates in the key repository
-
-```
-docker exec -i ibmmq bash -c "cd /var/mqm/qmgrs/QM1/ssl && runmqakm -cert -list -db key.kdb -stashed"
-```
 
 Creating IBM MQ source connector
 
@@ -235,19 +138,33 @@ $ curl -X PUT \
                "mq.transport.type": "client",
                "mq.queue.manager": "QM1",
                "mq.channel": "DEV.APP.SVRCONN",
-               "mq.username": "app",
-               "mq.password": "passw0rd",
+               "mq.username": "",
+               "mq.password": "",
                "jms.destination.name": "DEV.QUEUE.1",
                "jms.destination.type": "queue",
                "mq.tls.truststore.location": "/tmp/truststore.jks",
                "mq.tls.truststore.password": "confluent",
                "mq.tls.keystore.location": "/tmp/keystore.jks",
                "mq.tls.keystore.password": "confluent",
+               "mq.ssl.cipher.suite":"TLS_RSA_WITH_AES_128_CBC_SHA256",
                "confluent.license": "",
                "confluent.topic.bootstrap.servers": "broker:9092",
                "confluent.topic.replication.factor": "1"
           }' \
      http://localhost:8083/connectors/ibm-mq-source-mtls/config | jq .
+```
+
+Note: with mTLS, we do not require a username/password to connect to the Queue, this is done by commenting `MQ_APP_PASSWORD` on `ibmmq` container:
+
+```yml
+# MQ_APP_PASSWORD: passw0rd
+```
+
+Therefore we can set:
+
+```json
+"mq.username": "",
+"mq.password": "",
 ```
 
 N.B: Control Center is reachable at [http://127.0.0.1:9021](http://127.0.0.1:9021])
