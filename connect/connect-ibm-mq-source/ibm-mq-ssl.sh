@@ -7,21 +7,21 @@ source ${DIR}/../../scripts/utils.sh
 if [ ! -z "$CI" ]
 then
      # running with github actions
-     aws s3 cp --only-show-errors s3://kafka-docker-playground/3rdparty/9.0.0.8-IBM-MQ-Install-Java-All.jar .
+     aws s3 cp --only-show-errors s3://kafka-docker-playground/3rdparty/IBM-MQ-Install-Java-All.jar .
 fi
 
-if [ ! -f ${DIR}/9.0.0.8-IBM-MQ-Install-Java-All.jar ]
+if [ ! -f ${DIR}/IBM-MQ-Install-Java-All.jar ]
 then
      # not running with github actions
-     logerror "ERROR: ${DIR}/9.0.0.8-IBM-MQ-Install-Java-All.jar is missing. It must be downloaded manually in order to acknowledge user agreement"
+     logerror "ERROR: ${DIR}/IBM-MQ-Install-Java-All.jar is missing. It must be downloaded manually in order to acknowledge user agreement"
      exit 1
 fi
 
 if [ ! -f ${DIR}/com.ibm.mq.allclient.jar ]
 then
      # install deps
-     log "Getting com.ibm.mq.allclient.jar and jms.jar from 9.0.0.8-IBM-MQ-Install-Java-All.jar"
-     docker run --rm -v ${DIR}/9.0.0.8-IBM-MQ-Install-Java-All.jar:/tmp/9.0.0.8-IBM-MQ-Install-Java-All.jar -v ${DIR}/install:/tmp/install openjdk:8 java -jar /tmp/9.0.0.8-IBM-MQ-Install-Java-All.jar --acceptLicense /tmp/install
+     log "Getting com.ibm.mq.allclient.jar and jms.jar from IBM-MQ-Install-Java-All.jar"
+     docker run --rm -v ${DIR}/IBM-MQ-Install-Java-All.jar:/tmp/IBM-MQ-Install-Java-All.jar -v ${DIR}/install:/tmp/install openjdk:8 java -jar /tmp/IBM-MQ-Install-Java-All.jar --acceptLicense /tmp/install
      cp ${DIR}/install/wmq/JavaSE/jms.jar ${DIR}/
      cp ${DIR}/install/wmq/JavaSE/com.ibm.mq.allclient.jar ${DIR}/
 fi
