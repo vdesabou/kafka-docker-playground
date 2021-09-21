@@ -9,7 +9,7 @@ set -e
 # https://community.cloudera.com/t5/Support-Questions/Error-on-kerberos-ticket-renewer-role-startup/td-p/31187
 
 NB_CONNECTORS=40
-NB_TASK_PER_CONNECTOR=2
+NB_TASK_PER_CONNECTOR=5
 CONNECT_KERBEROS_TICKET_LIFETIME=5
 
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
