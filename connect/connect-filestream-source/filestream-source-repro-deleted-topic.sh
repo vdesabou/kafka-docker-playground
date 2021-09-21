@@ -4,7 +4,7 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
-${DIR}/../../environment/plaintext/start.sh
+${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
 
 log "Generating 10 messages"
 docker exec -i connect bash -c "mkdir -p /tmp/kafka-connect/examples/ && curl -sSL 'https://api.mockaroo.com/api/17c84440?count=10&key=25fd9c80' -o /tmp/kafka-connect/examples/file.json"
