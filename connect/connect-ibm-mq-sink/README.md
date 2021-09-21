@@ -8,7 +8,7 @@ Quickly test [IBM MQ Sink](https://docs.confluent.io/current/connect/kafka-conne
 
 Using IBM MQ Docker [image](https://hub.docker.com/r/ibmcom/mq/)
 
-* Download [9.0.0.8-IBM-MQ-Install-Java-All.jar](https://www-945.ibm.com/support/fixcentral/swg/selectFixes?product=ibm%2FWebSphere%2FWebSphere+MQ&fixids=9.0.0.4-IBM-MQ-Install-Java-All&source=dbluesearch&function=fixId&parent=ibm/WebSphere) and place it in `./9.0.0.8-IBM-MQ-Install-Java-All.jar`
+* Download [IBM-MQ-Install-Java-All.jar](https://ibm.biz/mq92javaclient) (for example `9.2.0.3-IBM-MQ-Install-Java-All.jar`) and place it in `./IBM-MQ-Install-Java-All.jar`
 
 ![IBM download page](Screenshot1.png)
 
