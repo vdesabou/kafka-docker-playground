@@ -36,7 +36,7 @@ function wait_for_gss_exception () {
 
           for((i=0;i<$NB_CONNECTORS;i++)); do
                # send requests
-               seq -f "{\"f1\": \"value%g\"}" 10 | docker exec -i connect kafka-avro-console-producer --broker-list broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic test_hdfs$i --property value.schema='{"type":"record","name":"myrecord","fields":[{"name":"f1","type":"string"}]}'
+               seq -f "{\"f1\": \"value%g\"}" 100 | docker exec -i connect kafka-avro-console-producer --broker-list broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic test_hdfs$i --property value.schema='{"type":"record","name":"myrecord","fields":[{"name":"f1","type":"string"}]}'
           done
      done
      log "The problem has been reproduced !"
