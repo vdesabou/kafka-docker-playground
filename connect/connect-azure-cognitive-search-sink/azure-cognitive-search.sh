@@ -93,7 +93,7 @@ curl -X PUT \
                 "reporter.result.topic.value.format": "string",
                 "reporter.result.topic.replication.factor": 1
           }' \
-     http://localhost:8083/connectors/azure-search/config | jq .
+     http://localhost:8083/connectors/azure-cognitive-search/config | jq .
 
 
 sleep 10
