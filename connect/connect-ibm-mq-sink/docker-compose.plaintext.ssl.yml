@@ -11,9 +11,9 @@ services:
       MQ_ADMIN_PASSWORD: passw0rd
       MQ_APP_PASSWORD: passw0rd
     volumes:
-      - ../../connect/connect-ibm-mq-sink/ssl/ca.crt:/etc/mqm/pki/keys/mykey/ca.crt
-      - ../../connect/connect-ibm-mq-sink/ssl/server.crt:/etc/mqm/pki/keys/mykey/tls.crt
-      - ../../connect/connect-ibm-mq-sink/ssl/server.key:/etc/mqm/pki/keys/mykey/tls.key
+        - ../../connect/connect-ibm-mq-sink/security/snakeoil-ca-1.crt:/etc/mqm/pki/keys/mykey/ca.crt
+        - ../../connect/connect-ibm-mq-sink/security/ibmmq.certificate.pem:/etc/mqm/pki/keys/mykey/tls.crt
+        - ../../connect/connect-ibm-mq-sink/security/ibmmq.key:/etc/mqm/pki/keys/mykey/tls.key
     ports:
       - '1414:1414'
       - '9443:9443'
@@ -27,11 +27,9 @@ services:
     volumes:
         - ../../connect/connect-ibm-mq-sink/com.ibm.mq.allclient.jar:/usr/share/confluent-hub-components/confluentinc-kafka-connect-ibmmq-sink/lib/com.ibm.mq.allclient.jar
         - ../../connect/connect-ibm-mq-sink/jms.jar:/usr/share/confluent-hub-components/confluentinc-kafka-connect-ibmmq-sink/lib/jms.jar
-        - ../../connect/connect-ibm-mq-sink/ssl/truststore.jks:/tmp/truststore.jks
+        - ../../connect/connect-ibm-mq-sink/security/kafka.connect.truststore.jks:/tmp/truststore.jks
     environment:
       CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-ibmmq-sink
       # https://support.confluent.io/hc/en-us/articles/360054967632-What-cause-the-IBMMQ-connector-fail-to-establish-a-SSL-connection-with-Cipher-Error
       KAFKA_OPTS: -Dcom.ibm.mq.cfg.useIBMCipherMappings=false
-                  -Djavax.net.ssl.trustStore=/tmp/truststore.jks
-                  -Djavax.net.ssl.trustStorePassword=confluent
                   -Djavax.net.debug=all
