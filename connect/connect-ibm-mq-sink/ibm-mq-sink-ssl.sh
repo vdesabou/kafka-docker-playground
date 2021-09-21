@@ -26,48 +26,10 @@ then
      cp ${DIR}/install/wmq/JavaSE/com.ibm.mq.allclient.jar ${DIR}/
 fi
 
-mkdir -p ${DIR}/ssl
-cd ${DIR}/ssl
-if [[ "$OSTYPE" == "darwin"* ]]
-then
-    # workaround for issue on linux, see https://github.com/vdesabou/kafka-docker-playground/issues/851#issuecomment-821151962
-    chmod -R a+rw .
-else
-    # on CI, docker is run as runneradmin user, need to use sudo
-    ls -lrt
-    sudo chmod -R a+rw .
-    ls -lrt
-fi
-
-rm -f server.crt
-rm -f server.csr
-rm -f server.key
-rm -f ca.crt
-rm -f ca.key
-rm -f truststore.jks
-
-log "Creating a Root Certificate Authority (CA)"
-docker run --rm -v $PWD:/tmp vdesabou/kafka-docker-playground-connect:${CONNECT_TAG} openssl req -new -x509 -days 365 -nodes -out /tmp/ca.crt -keyout /tmp/ca.key -subj "/CN=root-ca"
-log "Generate the IBM MQ server key and certificate"
-docker run --rm -v $PWD:/tmp vdesabou/kafka-docker-playground-connect:${CONNECT_TAG} openssl req -new -nodes -out /tmp/server.csr -keyout /tmp/server.key -subj "/CN=ibmmq"
-docker run --rm -v $PWD:/tmp vdesabou/kafka-docker-playground-connect:${CONNECT_TAG} openssl x509 -req -in /tmp/server.csr -days 365 -CA /tmp/ca.crt -CAkey /tmp/ca.key -CAcreateserial -out /tmp/server.crt
-
-log "Generate truststore.jks"
-docker run --rm -v $PWD:/tmp vdesabou/kafka-docker-playground-connect:${CONNECT_TAG} keytool -noprompt -keystore /tmp/truststore.jks -alias CARoot -import -file /tmp/ca.crt -storepass confluent -keypass confluent
-
-if [[ "$OSTYPE" == "darwin"* ]]
-then
-    # workaround for issue on linux, see https://github.com/vdesabou/kafka-docker-playground/issues/851#issuecomment-821151962
-    chmod -R a+rw .
-else
-    # on CI, docker is run as runneradmin user, need to use sudo
-    ls -lrt
-    sudo chmod -R a+rw .
-    ls -lrt
-fi
-rm server.csr
-
-cd -
+cd ${DIR}/security
+log "🔐 Generate keys and certificates used for SSL"
+./certs-create.sh
+cd ${DIR}
 
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.ssl.yml"
 
@@ -81,7 +43,7 @@ docker exec -i broker kafka-console-producer --broker-list broker:9092 --topic s
 This is my message
 EOF
 
-log "Creating IBM MQ source connector"
+log "Creating IBM MQ sink connector"
 curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
@@ -96,6 +58,8 @@ curl -X PUT \
                "mq.password": "passw0rd",
                "jms.destination.name": "DEV.QUEUE.1",
                "jms.destination.type": "queue",
+               "mq.tls.truststore.location": "/tmp/truststore.jks",
+               "mq.tls.truststore.password": "confluent",
                "mq.ssl.cipher.suite":"TLS_RSA_WITH_AES_128_CBC_SHA256",
                "value.converter": "org.apache.kafka.connect.storage.StringConverter",
                "key.converter": "org.apache.kafka.connect.storage.StringConverter",
