@@ -11,6 +11,10 @@ function wait_for_end_of_hibernation () {
      curl -X POST "${SERVICENOW_URL}/api/now/table/incident" --user admin:"$SERVICENOW_PASSWORD" -H 'Accept: application/json' -H 'Content-Type: application/json' -H 'cache-control: no-cache' -d '{"short_description": "This is test"}' > /tmp/out.txt 2>&1
      while [[ $(cat /tmp/out.txt) =~ "Sign in to the site to wake your instance" ]]
      do
+          set +e
+          log "Waking up servicenow instance..."
+          docker run -e USERNAME="$SERVICENOW_DEVELOPER_USERNAME" -e PASSWORD="$SERVICENOW_DEVELOPER_PASSWORD" ruthless/servicenow-instance-wakeup:latest
+          set -e
           sleep 10
           curl -X POST "${SERVICENOW_URL}/api/now/table/incident" --user admin:"$SERVICENOW_PASSWORD" -H 'Accept: application/json' -H 'Content-Type: application/json' -H 'cache-control: no-cache' -d '{"short_description": "This is test"}' > /tmp/out.txt 2>&1
           CUR_WAIT=$(( CUR_WAIT+10 ))
@@ -46,10 +50,6 @@ fi
 if [ ! -z "$CI" ]
 then
      # this is github actions
-     set +e
-     log "Waking up servicenow instance..."
-     docker run -e USERNAME="$SERVICENOW_DEVELOPER_USERNAME" -e PASSWORD="$SERVICENOW_DEVELOPER_PASSWORD" ruthless/servicenow-instance-wakeup:latest
-     set -e
      wait_for_end_of_hibernation
 fi
 
