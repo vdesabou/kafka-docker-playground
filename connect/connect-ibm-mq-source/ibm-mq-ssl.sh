@@ -21,6 +21,13 @@ if [ ! -f ${DIR}/com.ibm.mq.allclient.jar ]
 then
      # install deps
      log "Getting com.ibm.mq.allclient.jar and jms.jar from IBM-MQ-Install-Java-All.jar"
+     if [[ "$OSTYPE" == "darwin"* ]]
+     then
+          # workaround for issue on linux, see https://github.com/vdesabou/kafka-docker-playground/issues/851#issuecomment-821151962
+          rm -rf ${DIR}/install/
+     else
+          sudo rm -rf ${DIR}/install/
+     fi
      docker run --rm -v ${DIR}/IBM-MQ-Install-Java-All.jar:/tmp/IBM-MQ-Install-Java-All.jar -v ${DIR}/install:/tmp/install openjdk:8 java -jar /tmp/IBM-MQ-Install-Java-All.jar --acceptLicense /tmp/install
      cp ${DIR}/install/wmq/JavaSE/lib/jms.jar ${DIR}/
      cp ${DIR}/install/wmq/JavaSE/lib/com.ibm.mq.allclient.jar ${DIR}/
@@ -28,7 +35,15 @@ fi
 
 cd ${DIR}/security
 log "🔐 Generate keys and certificates used for SSL"
-./certs-create.sh
+#./certs-create.sh
+if [[ "$OSTYPE" == "darwin"* ]]
+then
+    # workaround for issue on linux, see https://github.com/vdesabou/kafka-docker-playground/issues/851#issuecomment-821151962
+    chmod -R a+rw .
+else
+    # workaround for issue on linux, see https://github.com/vdesabou/kafka-docker-playground/issues/851#issuecomment-821151962
+    sudo chmod -R a+rw .
+fi
 cd ${DIR}
 
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.ssl.yml"
