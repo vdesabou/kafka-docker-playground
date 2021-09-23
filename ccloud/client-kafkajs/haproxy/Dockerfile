@@ -7,7 +7,7 @@ RUN groupadd --system ${HAPROXY_USER} ; \
   mkdir --parents /var/lib/${HAPROXY_USER} ; \
   chown -R ${HAPROXY_USER}:${HAPROXY_USER} /var/lib/${HAPROXY_USER} || true && exit 0
 
-RUN apt-get update && apt-get install net-tools
+RUN apt-get update && apt-get install -y net-tools iptables
 RUN mkdir -p /run/haproxy/
 COPY ./haproxy.cfg /usr/local/etc/haproxy/haproxy.cfg
 COPY ./errors/400.http /etc/haproxy/errors/400.http
