@@ -35,7 +35,7 @@ fi
 
 cd ${DIR}/security
 log "🔐 Generate keys and certificates used for SSL"
-#./certs-create.sh
+./certs-create.sh
 if [[ "$OSTYPE" == "darwin"* ]]
 then
     # workaround for issue on linux, see https://github.com/vdesabou/kafka-docker-playground/issues/851#issuecomment-821151962
