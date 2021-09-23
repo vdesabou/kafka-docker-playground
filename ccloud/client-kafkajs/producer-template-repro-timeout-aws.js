@@ -35,7 +35,7 @@ producer.on(REQUEST_TIMEOUT, e => console.log(`Producer request timed out at ${e
 // producer.logger().setLogLevel(logLevel.DEBUG)
 
 let bigString = '';
-for (let i = 0; i < 10; i++) {
+for (let i = 0; i < 100; i++) {
   bigString += Math.random().toString(36);
 }
 
@@ -88,7 +88,7 @@ function splitQueue(queue) {
 }
 
 function deQueueBatch() {
-  if  (!lock) {
+  // if  (!lock) {
     lock = true
     const now = new Date();
     const used = process.memoryUsage().heapUsed / 1024 / 1024;
@@ -110,9 +110,9 @@ function deQueueBatch() {
     Promise.allSettled(promises).then(function(results) {
         lock = false
         console.log('lock released', {duration: new Date() - now});
-        //results.forEach((result) => console.log(result))
+        results.forEach((result) => console.log(result))
     })
-  }
+  // }
 }
 
 (async function main(){
