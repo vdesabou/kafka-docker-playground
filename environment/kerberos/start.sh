@@ -127,11 +127,13 @@ fi
 # Starting zookeeper and kafka now that the keytab has been created with the required credentials and services
 if [ -f "${DOCKER_COMPOSE_FILE_OVERRIDE}" ]
 then
+  docker-compose -f ../../environment/plaintext/docker-compose.yml -f ../../environment/kerberos/docker-compose.yml -f ${DOCKER_COMPOSE_FILE_OVERRIDE} ${profile_control_center_command} ${profile_ksqldb_command} build
   docker-compose -f ../../environment/plaintext/docker-compose.yml -f ../../environment/kerberos/docker-compose.yml -f ${DOCKER_COMPOSE_FILE_OVERRIDE} ${profile_control_center_command} ${profile_ksqldb_command} up -d
   log "🎓To see the actual properties file, use ../../scripts/get-properties.sh <container>"
   log "⚡If you modify a docker-compose file and want to re-create the container(s), use this command:"
   log "⚡source ../../scripts/utils.sh && docker-compose -f ../../environment/plaintext/docker-compose.yml -f ../../environment/kerberos/docker-compose.yml -f ${DOCKER_COMPOSE_FILE_OVERRIDE} ${profile_control_center_command} ${profile_ksqldb_command} up -d"
 else
+  docker-compose -f ../../environment/plaintext/docker-compose.yml -f ../../environment/kerberos/docker-compose.yml ${profile_control_center_command} ${profile_ksqldb_command} build
   docker-compose -f ../../environment/plaintext/docker-compose.yml -f ../../environment/kerberos/docker-compose.yml ${profile_control_center_command} ${profile_ksqldb_command} up -d
   log "🎓To see the actual properties file, use ../../scripts/get-properties.sh <container>"
   log "⚡If you modify a docker-compose file and want to re-create the container(s), use this command:"
