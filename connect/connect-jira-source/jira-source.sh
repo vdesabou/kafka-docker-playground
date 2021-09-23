@@ -43,13 +43,14 @@ curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
                     "connector.class": "io.confluent.connect.jira.JiraSourceConnector",
-                    "topic.name.pattern":"jira-topic-${entityName}",
+                    "topic.name.pattern":"jira-topic-${resourceName}",
                     "tasks.max": "1",
                     "jira.url": "'"$JIRA_URL"'",
                     "jira.since": "'"$SINCE"'",
                     "jira.username": "'"$JIRA_USERNAME"'",
                     "jira.api.token": "'"$JIRA_API_TOKEN"'",
                     "jira.tables": "issues",
+                    "jira.resources": "issues",
                     "key.converter": "org.apache.kafka.connect.json.JsonConverter",
                     "value.converter": "org.apache.kafka.connect.json.JsonConverter",
                     "confluent.license": "",
