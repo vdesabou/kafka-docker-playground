@@ -30,10 +30,11 @@ DOCKER_COMPOSE_FILE_OVERRIDE=$1
 # Starting broker first
 if [ -f "${DOCKER_COMPOSE_FILE_OVERRIDE}" ]
 then
-
+  docker-compose -f ../../environment/plaintext/docker-compose.yml -f ../../environment/sasl-scram/docker-compose.yml -f ${DOCKER_COMPOSE_FILE_OVERRIDE} build
   docker-compose -f ../../environment/plaintext/docker-compose.yml -f ../../environment/sasl-scram/docker-compose.yml -f ${DOCKER_COMPOSE_FILE_OVERRIDE} down -v --remove-orphans
   docker-compose -f ../../environment/plaintext/docker-compose.yml -f ../../environment/sasl-scram/docker-compose.yml -f ${DOCKER_COMPOSE_FILE_OVERRIDE} up -d --build broker
 else
+  docker-compose -f ../../environment/plaintext/docker-compose.yml -f ../../environment/sasl-scram/docker-compose.yml build
   docker-compose -f ../../environment/plaintext/docker-compose.yml -f ../../environment/sasl-scram/docker-compose.yml down -v --remove-orphans
   docker-compose -f ../../environment/plaintext/docker-compose.yml -f ../../environment/sasl-scram/docker-compose.yml up -d --build broker
 fi
