@@ -185,7 +185,8 @@ curl -X PUT \
                "table.topic.name.template": "${databaseName}.${schemaName}.${tableName}",
                "numeric.mapping": "best_fit",
                "connection.pool.max.size": 20,
-               "redo.log.row.fetch.size":1
+               "redo.log.row.fetch.size":1,
+               "oracle.dictionary.mode": "auto"
           }' \
      http://localhost:8083/connectors/cdc-oracle-source-cdb/config | jq .
 
@@ -211,14 +212,14 @@ then
      logerror "Did not get expected results"
      exit 1
 fi
-log "Check there is 2 insert events"
-if [ $(grep -c "op_type\":{\"string\":\"I\"}" /tmp/result.log) -ne 2 ]
+log "Check there is 3 insert events"
+if [ $(grep -c "op_type\":{\"string\":\"I\"}" /tmp/result.log) -ne 3 ]
 then
      logerror "Did not get expected results"
      exit 1
 fi
-log "Check there is 2 update events"
-if [ $(grep -c "op_type\":{\"string\":\"U\"}" /tmp/result.log) -ne 2 ]
+log "Check there is 4 update events"
+if [ $(grep -c "op_type\":{\"string\":\"U\"}" /tmp/result.log) -ne 4 ]
 then
      logerror "Did not get expected results"
      exit 1

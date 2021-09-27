@@ -220,7 +220,8 @@ curl -X PUT \
                "table.topic.name.template": "${databaseName}.${schemaName}.${tableName}",
                "numeric.mapping": "best_fit",
                "connection.pool.max.size": 20,
-               "redo.log.row.fetch.size":1
+               "redo.log.row.fetch.size":1,
+               "oracle.dictionary.mode": "auto"
           }' \
      http://localhost:8083/connectors/cdc-oracle-source-cdb/config | jq .
 
