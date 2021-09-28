@@ -5,6 +5,17 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
+# this is a regression introduced between 6.0.0 and 6.0.1 coming from this PR https://github.com/confluentinc/schema-registry/pull/1625
+
+# CP 6.0.0 and 2.0.8 -> ✅
+# CP 6.0.0 and 2.1.6 -> ✅
+# CP 6.0.1 and 2.1.6 -> ❌
+# CP 6.0.3 and 2.1.6 -> ❌
+
+# CP 6.1.3 and 2.1.6 -> ❌
+
+# CP 6.2.0 and 2.0.8 -> ❌
+# CP 6.2.0 and 2.1.6 -> ❌
 
 function wait_for_repro () {
      MAX_WAIT=600
@@ -112,7 +123,6 @@ then
                }' \
           http://localhost:8083/connectors/gcp-bigquery-sink-72829/config | jq .
 else
-     # with 1.6.2 it works
      log "Creating GCP BigQuery Sink connector"
      curl -X PUT \
           -H "Content-Type: application/json" \
