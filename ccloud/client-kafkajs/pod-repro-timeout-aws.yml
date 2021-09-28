@@ -1,0 +1,20 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: kafkajs-repro-timeout-aws
+  namespace: default
+spec:
+  containers:
+  - name: kafkajs-repro-timeout-aws
+    image: vdesabou/client-kafkajs-repro-timeout-aws
+    imagePullPolicy: Always
+  hostAliases:
+  - ip: "15.237.41.98"
+    hostnames:
+    - "pkc-r5djp.europe-west1.gcp.confluent.cloud"
+    - "b0-pkc-r5djp.europe-west1.gcp.confluent.cloud"
+    - "b1-pkc-r5djp.europe-west1.gcp.confluent.cloud"
+    - "b2-pkc-r5djp.europe-west1.gcp.confluent.cloud"
+    - "b3-pkc-r5djp.europe-west1.gcp.confluent.cloud"
+
+# docker build -t vdesabou/client-kafkajs-repro-timeout-aws . && docker push vdesabou/client-kafkajs-repro-timeout-aws

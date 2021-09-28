@@ -1,5 +1,4 @@
-const { Kafka, CompressionTypes, logLevel } = require('kafkajs')
-
+const { Kafka, CompressionTypes, logLevel } = require('kafkajs')            //npm install kafkajs
 // add timestamps in front of log messages
 require('console-stamp')(console, '[HH:MM:ss.l]');
 
@@ -16,7 +15,7 @@ const kafka = new Kafka({
     connectionTimeout: 20000,
     enforceRequestTimeout: true,
     // requestTimeout: 3000,
-    // logLevel: logLevel.DEBUG,
+    logLevel: logLevel.DEBUG,
     // retry: {
     //   initialRetryTime: 100,
     //   retries: 1
@@ -31,88 +30,37 @@ const { CONNECT, DISCONNECT, REQUEST_TIMEOUT, REQUEST_QUEUE_SIZE } = producer.ev
 producer.on(CONNECT, e => console.log(`Producer connected at ${e.timestamp}`));
 producer.on(DISCONNECT, e => console.log(`Producer disconnected at ${e.timestamp}`));
 producer.on(REQUEST_TIMEOUT, e => console.log(`Producer request timed out at ${e.timestamp}`, JSON.stringify(e.payload)));
-// producer.on(REQUEST_QUEUE_SIZE, e => console.log(`Request queue size at ${e.timestamp}`, JSON.stringify(e.payload)));
-// producer.logger().setLogLevel(logLevel.DEBUG)
+producer.on(REQUEST_QUEUE_SIZE, e => console.log(`Request queue size at ${e.timestamp}`, JSON.stringify(e.payload)));
 
 let bigString = '';
 for (let i = 0; i < 100; i++) {
   bigString += Math.random().toString(36);
 }
 
-const payload = new Array(500).fill({value: bigString});
+const getRandomNumber = () => Math.round(Math.random(10) * 1000)
+const createMessage = num => ({
+  key: `key-${num}-${Math.random().toString(12)}`,
+  value: `value-${num}-${bigString}`,
+})
 
-const batch = []
-var lock = false
 
-function successCallback(result) {
-  console.log("send() finished ");
-}
+function sendData() {
+  const used = process.memoryUsage().heapUsed / 1024 / 1024;
+  console.log(`Memory: ${Math.round(used * 100) / 100} MB`);
 
-function exceptionCallback(result) {
-  console.log("send() failed!  " + result);
-}
-
-function addDataToQueue() {
-    if (batch.length < 500) {
-        batch.push({value: bigString})
-    } else {
-        console.log(`discard event`)
-    }
-}
-
-function sendData(dataArray) {
-    return producer.send({
-        topic: topic,
-        messages: dataArray,
-        acks: 1,
-      }).then(() => {
-        return {
-            count: dataArray.length,
-        }
-      }).catch(e => {
-        console.log('failed to send data', e);
-        throw ({
-            error: e,
-            count: dataArray.length
-        })
-      });
-}
-
-function splitQueue(queue) {
-    var i,j, tmp = [], chunk = 5;
-    for (i = 0, j = queue.length; i<j; i += chunk) {
-        tmp.push(queue.slice(i, i+chunk))
-    }
-    batch.length = 0
-    return tmp
-}
-
-function deQueueBatch() {
-  // if  (!lock) {
-    lock = true
-    const now = new Date();
-    const used = process.memoryUsage().heapUsed / 1024 / 1024;
-    console.log(`Memory: ${Math.round(used * 100) / 100} MB`);
-    console.log(`Queue size: ${batch.length}`)
-
-    var batches = splitQueue(batch)
-    var promises = batches.map(function (events) {
-        return sendData(events)
-          .catch(function(result) {
-              console.log(`Error in sending data`)
-              return result
-          }).then(function(result) {
-              console.log(`Success in sending data`)
-              return result
-          })
-    })
-
-    Promise.allSettled(promises).then(function(results) {
-        lock = false
-        console.log('lock released', {duration: new Date() - now});
-        results.forEach((result) => console.log(result))
-    })
-  // }
+  console.log('kafka.js send');
+  producer.send({
+    topic: topic,
+    //messages: payload,
+    messages: Array(getRandomNumber())
+        .fill()
+        .map(_ => createMessage(getRandomNumber())),
+    acks: 1,
+  }).then(() => {
+    console.log('kafka.js success');
+  }).catch(e => {
+    console.log('kafka.js failed', e);
+  });
 }
 
 (async function main(){
@@ -124,6 +72,5 @@ function deQueueBatch() {
   await producer.connect().catch(e => {
     log.error("failed to producer.connect()", e);
   });
-  setInterval(addDataToQueue, 10)
-  setInterval(deQueueBatch, 1000);
+  setInterval(sendData, 100);
 })().catch(e => {throw e});
