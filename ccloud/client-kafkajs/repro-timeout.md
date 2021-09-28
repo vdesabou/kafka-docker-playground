@@ -57,4 +57,4 @@ And traffic restarts on all 4 brokers:
 ![2](2.jpg)
 
 
-Logs with DEBUG can be found here
+Logs with DEBUG can be found [here](https://github.com/vdesabou/kafka-docker-playground/blob/master/ccloud/client-kafkajs/producer.log.tgz?raw=true)
