@@ -164,4 +164,4 @@ docker exec -i client node /usr/src/app/producer.js > producer.log 2>&1 &
 
 exit 0
 
-date;docker exec --privileged --user root -i haproxy bash -c 'iptables -A INPUT -p tcp -s 34.78.32.173 -j DROP'
+date;docker exec --privileged --user root -i haproxy bash -c 'iptables -A INPUT -p tcp -s 35.205.238.172 -j DROP'
