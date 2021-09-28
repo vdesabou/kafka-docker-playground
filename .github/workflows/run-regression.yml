@@ -33,7 +33,7 @@ jobs:
       - name: Cleanup resources
         run: |
           curl --silent --location "https://github.com/weaveworks/eksctl/releases/latest/download/eksctl_$(uname -s)_amd64.tar.gz" | tar xz -C /tmp && sudo mv /tmp/eksctl /usr/local/bin
-          ./scripts/cleanup-resources.sh "5.5.6 6.0.3 6.1.2 6.2.0"
+          ./scripts/cleanup-resources.sh "5.5.6 6.0.3 6.1.2 6.2.1"
         env:
           AZ_USER: ${{ secrets.AZ_USER }}
           AZ_PASS: ${{ secrets.AZ_PASS }}
@@ -45,7 +45,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        tag: [ "5.5.6", "6.0.3", "6.1.2", "6.2.0"]
+        tag: [ "5.5.6", "6.0.3", "6.1.2", "6.2.1"]
         test_list : [
                       "🚀 connect/connect-servicenow-sink connect/connect-servicenow-source",
                       "🚀 connect/connect-salesforce-bulkapi-sink connect/connect-salesforce-bulkapi-source connect/connect-salesforce-pushtopics-source connect/connect-salesforce-sobject-sink connect/connect-salesforce-cdc-source connect/connect-salesforce-platform-events-sink connect/connect-salesforce-platform-events-source",
@@ -187,7 +187,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        tag: [ "5.5.6", "6.0.3", "6.1.2", "6.2.0"]
+        tag: [ "5.5.6", "6.0.3", "6.1.2", "6.2.1"]
         test_list : [
                       "🚀 ${{ github.event.inputs.test_name }}"
                     ]
@@ -307,14 +307,14 @@ jobs:
       - name: Cleanup resources
         run: |
           curl --silent --location "https://github.com/weaveworks/eksctl/releases/latest/download/eksctl_$(uname -s)_amd64.tar.gz" | tar xz -C /tmp && sudo mv /tmp/eksctl /usr/local/bin
-          ./scripts/cleanup-resources.sh "5.5.6 6.0.3 6.1.2 6.2.0" "--no-wait"
+          ./scripts/cleanup-resources.sh "5.5.6 6.0.3 6.1.2 6.2.1" "--no-wait"
         env:
           AZ_USER: ${{ secrets.AZ_USER }}
           AZ_PASS: ${{ secrets.AZ_PASS }}
 
       - name: Update README
         run: |
-          ./scripts/update-readme.sh "6.2.0 6.1.2 6.0.3 5.5.6"
+          ./scripts/update-readme.sh "6.2.1 6.1.2 6.0.3 5.5.6"
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
