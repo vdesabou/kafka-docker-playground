@@ -72,5 +72,5 @@ function sendData() {
   await producer.connect().catch(e => {
     log.error("failed to producer.connect()", e);
   });
-  setInterval(sendData, 100);
+  setInterval(sendData, 1000);
 })().catch(e => {throw e});
