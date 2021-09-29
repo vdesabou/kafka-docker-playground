@@ -56,7 +56,16 @@ This is my message
 EOF
 ````
 
-Check the message has been received in destination queue, using console:
+Check the message has been received in destination queue:
+
+Results:
+
+```
+JMS Ready To Receive Messages...
+Message Received: This is my message
+```
+
+Or you can check using [http://127.0.0.1:7001/console](http://127.0.0.1:7001/console]) (`weblogic`/`welcome1`):
 
 ![console](screenshot2.jpg)
 
