@@ -27,10 +27,24 @@ then
      cd ${OLDDIR}
 fi
 
-if [ ! -f ${DIR}/wlthint3client.jar ]
+if [ ! -f ${DIR}/jms-receiver/lib/wlthint3client.jar ]
 then
-     docker run weblogic-jms:latest cat /u01/oracle/wlserver/server/lib/wlthint3client.jar > ${DIR}/wlthint3client.jar
+     docker run weblogic-jms:latest cat /u01/oracle/wlserver/server/lib/wlthint3client.jar > ${DIR}/jms-receiver/lib/wlthint3client.jar
 fi
+
+if [ ! -f ${DIR}/jms-receiver/lib/weblogic.jar ]
+then
+     docker run weblogic-jms:latest cat /u01/oracle/wlserver/server/lib/weblogic.jar > ${DIR}/jms-receiver/lib/weblogic.jar
+fi
+
+for component in jms-receiver
+do
+     if [ ! -f ${DIR}/${component}/target/${component}-1.0.0.jar ]
+     then
+          log "Building jar for ${component}"
+          docker run -i --rm -e KAFKA_CLIENT_TAG=$KAFKA_CLIENT_TAG -e TAG=$TAG_BASE -v "${DIR}/${component}":/usr/src/mymaven -v "$HOME/.m2":/root/.m2 -v "${DIR}/${component}/target:/usr/src/mymaven/target" -w /usr/src/mymaven maven:3.6.1-jdk-8 mvn package
+     fi
+done
 
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
 
@@ -63,5 +77,5 @@ curl -X PUT \
      
 sleep 5
 
-# FIXTHIS; need to be automated
-log "Check the message has been received in destination queue, using console"
+log "Check the message has been received in destination queue"
+timeout 60 docker exec jms-receiver bash -c 'java -cp "/tmp/weblogic.jar:/tmp/wlthint3client.jar:/jms-receiver-1.0.0.jar" com.sample.jms.toolkit.JMSReceiver'
