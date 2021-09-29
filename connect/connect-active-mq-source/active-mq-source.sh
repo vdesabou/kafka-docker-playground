@@ -12,13 +12,13 @@ curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
                "connector.class": "io.confluent.connect.activemq.ActiveMQSourceConnector",
-                    "kafka.topic": "MyKafkaTopicName",
-                    "activemq.url": "tcp://activemq:61616",
-                    "jms.destination.name": "DEV.QUEUE.1",
-                    "jms.destination.type": "queue",
-                    "confluent.license": "",
-                    "confluent.topic.bootstrap.servers": "broker:9092",
-                    "confluent.topic.replication.factor": "1"
+               "kafka.topic": "MyKafkaTopicName",
+               "activemq.url": "tcp://activemq:61616",
+               "jms.destination.name": "DEV.QUEUE.1",
+               "jms.destination.type": "queue",
+               "confluent.license": "",
+               "confluent.topic.bootstrap.servers": "broker:9092",
+               "confluent.topic.replication.factor": "1"
           }' \
      http://localhost:8083/connectors/active-mq-source/config | jq .
 

@@ -8,17 +8,13 @@ Quickly test [ActiveMQ Source](https://docs.confluent.io/current/connect/kafka-c
 
 Using ActiveMQ Docker [image](https://hub.docker.com/r/rmohr/activemq/)
 
-
-
-
 ## How to run
 
 Simply run:
 
 ```
-$ ./active-mq.sh
+$ ./active-mq-source.sh
 ```
-
 ## Details of what the script is doing
 
 ActiveMQ UI is reachable at [http://127.0.0.1:8161](http://127.0.0.1:8161]) (`admin/admin`)
