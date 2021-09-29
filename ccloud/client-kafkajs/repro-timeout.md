@@ -7,6 +7,9 @@ KafkaJS Producer (using `kafkajs@1.15.0`) (`client` docker container) ----> HAPr
 
 The goal of using HAProxy is to be able to block incoming response from one of the Confluent Cloud brokers, using iptable rule
 
+
+**UPDATE**: this was caused by HAProxy closing connection (See KafkaJS slack [thread](https://kafkajs.slack.com/archives/CF6RFPF6K/p1632916935123600?thread_ts=1632756407.108800&cid=CF6RFPF6K)) and is fixed with this [commit](https://github.com/vdesabou/kafka-docker-playground/commit/6c010664091d478248de51f25b8b1834d833ab5f)
+
 ## How to run
 
 ```bash
