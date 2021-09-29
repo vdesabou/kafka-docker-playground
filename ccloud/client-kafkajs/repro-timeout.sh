@@ -49,12 +49,12 @@ function generate_haproxy_config() {
     echo "# backend definitions" >> $TMP_FILE
     echo "backend bootstrap" >> $TMP_FILE
     echo "    mode tcp" >> $TMP_FILE
-    echo "    server bootstrap $PKC_ENDPOINT_WITH_PORT check" >> $TMP_FILE
+    echo "    server bootstrap $PKC_ENDPOINT_WITH_PORT" >> $TMP_FILE
     for (( i=0; i<$nb_broker; i++ ))
     do
         echo "backend kafka$i" >> $TMP_FILE
         echo "    mode tcp" >> $TMP_FILE
-        echo "    server kafka$i b$i-$PKC_ENDPOINT_WITH_PORT check" >> $TMP_FILE
+        echo "    server kafka$i b$i-$PKC_ENDPOINT_WITH_PORT" >> $TMP_FILE
     done
     echo " " >> $TMP_FILE
 
@@ -62,14 +62,14 @@ function generate_haproxy_config() {
     then
         echo "backend topic" >> $TMP_FILE
         echo "    mode tcp" >> $TMP_FILE
-        echo "    server topic $PKAC_ENDPOINT:443 check" >> $TMP_FILE
+        echo "    server topic $PKAC_ENDPOINT:443" >> $TMP_FILE
     fi
 
     if [ ! -z "$SCHEMA_REGISTRY_ENDPOINT" ]
     then
         echo "backend ccsr" >> $TMP_FILE
         echo "    mode tcp" >> $TMP_FILE
-        echo "    server ccsr $SCHEMA_REGISTRY_ENDPOINT:443 check" >> $TMP_FILE
+        echo "    server ccsr $SCHEMA_REGISTRY_ENDPOINT:443" >> $TMP_FILE
     fi
 
     rm -f ${DIR}/haproxy/haproxy.cfg
