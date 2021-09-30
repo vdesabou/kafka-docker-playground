@@ -52,6 +52,11 @@ AZURE_SAS_KEY=$(az eventhubs namespace authorization-rule keys list \
     --resource-group $AZURE_RESOURCE_GROUP \
     --namespace-name $AZURE_EVENT_HUBS_NAMESPACE \
     --name "RootManageSharedAccessKey" | jq -r '.primaryKey')
+#Get Connection String for SimpleSend client
+AZURE_EVENT_CONNECTION_STRING=$(az eventhubs namespace authorization-rule keys list \
+    --resource-group $AZURE_RESOURCE_GROUP \
+    --namespace-name $AZURE_EVENT_HUBS_NAMESPACE \
+    --name "RootManageSharedAccessKey" | jq -r '.primaryConnectionString')
 ```
 
 The connector is created with:
@@ -75,16 +80,16 @@ $ curl -X PUT \
      http://localhost:8083/connectors/azure-event-hubs-source/config | jq .
 ```
 
-Inject data in Event Hubs, using [simple-send](https://github.com/Azure/azure-event-hubs/tree/master/samples/Java/Basic/SimpleSend) java program
+Inject data in Event Hubs, using [simple-send](https://docs.microsoft.com/en-us/azure/event-hubs/event-hubs-java-get-started-send) java program
 
 ```bash
-$ docker exec -e AZURE_EVENT_HUBS_NAME="$AZURE_EVENT_HUBS_NAME" -e AZURE_EVENT_HUBS_NAMESPACE="$AZURE_EVENT_HUBS_NAMESPACE" -e AZURE_SAS_KEYNAME="RootManageSharedAccessKey" -e AZURE_SAS_KEY="$AZURE_SAS_KEY" simple-send bash -c "java -jar simplesend-1.0.0-jar-with-dependencies.jar"
+$ docker exec -d -e AZURE_EVENT_HUBS_NAME="$AZURE_EVENT_HUBS_NAME" -e AZURE_EVENT_CONNECTION_STRING="$AZURE_EVENT_CONNECTION_STRING" simple-send bash -c "java -jar simplesend-1.0.0-jar-with-dependencies.jar"
 ```
 
 Verifying topic `event_hub_topic`
 
 ```bash
-$ docker exec broker kafka-console-consumer -bootstrap-server broker:9092 --topic event_hub_topic --from-beginning --max-messages 10
+$ docker exec broker kafka-console-consumer -bootstrap-server broker:9092 --topic event_hub_topic --from-beginning --property print.key=true --max-messages 2
 ```
 
 Deleting resource group:
@@ -96,17 +101,9 @@ $ az group delete --name $AZURE_RESOURCE_GROUP --yes
 Result:
 
 ```
-"Message 3"
-"Message 0"
-"Message 1"
-"Message 2"
-"Message 7"
-"Message 4"
-"Message 5"
-"Message 6"
-"Message 11"
-"Message 8"
-Processed a total of 10 messages
+mykey   Foo
+mykey   Bar
+Processed a total of 2 messages
 ```
 
 N.B: Control Center is reachable at [http://127.0.0.1:9021](http://127.0.0.1:9021])

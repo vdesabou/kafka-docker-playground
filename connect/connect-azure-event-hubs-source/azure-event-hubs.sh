@@ -55,6 +55,12 @@ AZURE_SAS_KEY=$(az eventhubs namespace authorization-rule keys list \
     --namespace-name $AZURE_EVENT_HUBS_NAMESPACE \
     --name "RootManageSharedAccessKey" | jq -r '.primaryKey')
 
+log "Get Connection String for SimpleSend client"
+AZURE_EVENT_CONNECTION_STRING=$(az eventhubs namespace authorization-rule keys list \
+    --resource-group $AZURE_RESOURCE_GROUP \
+    --namespace-name $AZURE_EVENT_HUBS_NAMESPACE \
+    --name "RootManageSharedAccessKey" | jq -r '.primaryConnectionString')
+    
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
 
 log "Creating Azure Event Hubs Source connector"
@@ -78,12 +84,12 @@ curl -X PUT \
 sleep 5
 
 log "Inject data in Event Hubs, using simple-send java program"
-docker exec -e AZURE_EVENT_HUBS_NAME="$AZURE_EVENT_HUBS_NAME" -e AZURE_EVENT_HUBS_NAMESPACE="$AZURE_EVENT_HUBS_NAMESPACE" -e AZURE_SAS_KEYNAME="RootManageSharedAccessKey" -e AZURE_SAS_KEY="$AZURE_SAS_KEY" simple-send bash -c "java -jar simplesend-1.0.0-jar-with-dependencies.jar"
+docker exec -d -e AZURE_EVENT_HUBS_NAME="$AZURE_EVENT_HUBS_NAME" -e AZURE_EVENT_CONNECTION_STRING="$AZURE_EVENT_CONNECTION_STRING" simple-send bash -c "java -jar simplesend-1.0.0-jar-with-dependencies.jar"
 
 sleep 5
 
 log "Verifying topic event_hub_topic"
-timeout 60 docker exec broker kafka-console-consumer -bootstrap-server broker:9092 --topic event_hub_topic --from-beginning --max-messages 10
+timeout 60 docker exec broker kafka-console-consumer -bootstrap-server broker:9092 --topic event_hub_topic --from-beginning --property print.key=true --max-messages 2
 
 log "Deleting resource group"
 az group delete --name $AZURE_RESOURCE_GROUP --yes --no-wait

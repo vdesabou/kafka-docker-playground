@@ -4,64 +4,58 @@
  */
 package com.microsoft.azure.eventhubs.samples.SimpleSend;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.microsoft.azure.eventhubs.ConnectionStringBuilder;
-import com.microsoft.azure.eventhubs.EventData;
-import com.microsoft.azure.eventhubs.EventHubClient;
-import com.microsoft.azure.eventhubs.EventHubException;
+import com.azure.messaging.eventhubs.*;
+import com.azure.messaging.eventhubs.models.CreateBatchOptions;
 
-import java.io.IOException;
-import java.nio.charset.Charset;
-import java.time.Instant;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
+import java.util.Arrays;
+import java.util.List;
 
 public class SimpleSend {
 
-    public static void main(String[] args)
-            throws EventHubException, ExecutionException, InterruptedException, IOException {
+    private static final String connectionString = System.getenv("AZURE_EVENT_CONNECTION_STRING");
+    private static final String eventHubName = System.getenv("AZURE_EVENT_HUBS_NAME");
 
-        final ConnectionStringBuilder connStr = new ConnectionStringBuilder()
-                .setNamespaceName(System.getenv("AZURE_EVENT_HUBS_NAMESPACE")) // to target National clouds - use .setEndpoint(URI)
-                .setEventHubName(System.getenv("AZURE_EVENT_HUBS_NAME"))
-                .setSasKeyName(System.getenv("AZURE_SAS_KEYNAME"))
-                .setSasKey(System.getenv("AZURE_SAS_KEY"));
+    public static void main(String[] args) {
+        publishEvents();
+    }
 
-        final Gson gson = new GsonBuilder().create();
+    /**
+     * Code sample for publishing events.
+     * 
+     * @throws IllegalArgumentException if the EventData is bigger than the max
+     *                                  batch size.
+     */
+    public static void publishEvents() {
+        // create a producer client
+        EventHubProducerClient producer = new EventHubClientBuilder().connectionString(connectionString, eventHubName)
+                .buildProducerClient();
 
-        // The Executor handles all asynchronous tasks and this is passed to the EventHubClient instance.
-        // This enables the user to segregate their thread pool based on the work load.
-        // This pool can then be shared across multiple EventHubClient instances.
-        // The following sample uses a single thread executor, as there is only one EventHubClient instance,
-        // handling different flavors of ingestion to Event Hubs here.
-        final ScheduledExecutorService executorService = Executors.newScheduledThreadPool(4);
+        // sample events in an array
+        List<EventData> allEvents = Arrays.asList(new EventData("Foo"), new EventData("Bar"));
 
-        // Each EventHubClient instance spins up a new TCP/SSL connection, which is expensive.
-        // It is always a best practice to reuse these instances. The following sample shows this.
-        final EventHubClient ehClient = EventHubClient.createFromConnectionStringSync(connStr.toString(), executorService);
+        final CreateBatchOptions options = new CreateBatchOptions().setPartitionKey("mykey");
+        
+        // create a batch
+        EventDataBatch eventDataBatch = producer.createBatch(options);
+        
+        for (EventData eventData : allEvents) {
+            // try to add the event from the array to the batch
+            if (!eventDataBatch.tryAdd(eventData)) {
+                // if the batch is full, send it and then create a new batch
+                producer.send(eventDataBatch);
+                eventDataBatch = producer.createBatch();
 
-        try {
-            for (int i = 0; i < 100; i++) {
-
-                String payload = "Message " + Integer.toString(i);
-                //PayloadEvent payload = new PayloadEvent(i);
-                byte[] payloadBytes = gson.toJson(payload).getBytes(Charset.defaultCharset());
-                EventData sendEvent = EventData.create(payloadBytes);
-
-                // Send - not tied to any partition
-                // Event Hubs service will round-robin the events across all Event Hubs partitions.
-                // This is the recommended & most reliable way to send to Event Hubs.
-                ehClient.sendSync(sendEvent);
+                // Try to add that event that couldn't fit before.
+                if (!eventDataBatch.tryAdd(eventData)) {
+                    throw new IllegalArgumentException(
+                            "Event is too large for an empty batch. Max size: " + eventDataBatch.getMaxSizeInBytes());
+                }
             }
-
-            System.out.println(Instant.now() + ": Send Complete...");
-            System.out.println("Press Enter to stop.");
-            System.in.read();
-        } finally {
-            ehClient.closeSync();
-            executorService.shutdown();
         }
+        // send the last batch of remaining events
+        if (eventDataBatch.getCount() > 0) {
+            producer.send(eventDataBatch);
+        }
+        producer.close();
     }
 }
