@@ -35,9 +35,6 @@ services:
       KAFKA_METRIC_REPORTERS: io.confluent.metrics.reporter.ConfluentMetricsReporter
       CONFLUENT_METRICS_REPORTER_BOOTSTRAP_SERVERS: broker1:9092,broker2:9092,broker3:9092
       KAFKA_MESSAGE_MAX_BYTES: 10048588
-      KAFKA_OPTS: -javaagent:/usr/share/jmx_exporter/jmx_prometheus_javaagent-0.12.0.jar=1234:/usr/share/jmx_exporter/kafka-broker.yml
-    volumes:
-    - ../../other/client-kafkajs/repro-timeout-63874/jmx-exporter:/usr/share/jmx_exporter/
 
   broker2:
     build:
@@ -57,11 +54,7 @@ services:
       KAFKA_METRIC_REPORTERS: io.confluent.metrics.reporter.ConfluentMetricsReporter
       CONFLUENT_METRICS_REPORTER_BOOTSTRAP_SERVERS: broker1:9092,broker2:9092,broker3:9092
       KAFKA_MESSAGE_MAX_BYTES: 10048588
-      KAFKA_OPTS: -javaagent:/usr/share/jmx_exporter/jmx_prometheus_javaagent-0.12.0.jar=1234:/usr/share/jmx_exporter/kafka-broker.yml
-    volumes:
-    - ../../other/client-kafkajs/repro-timeout-63874/jmx-exporter:/usr/share/jmx_exporter/
-
-
+      
   broker3:
     build:
       context: ../../other/client-kafkajs/repro-timeout-63874/broker
@@ -80,9 +73,6 @@ services:
       KAFKA_METRIC_REPORTERS: io.confluent.metrics.reporter.ConfluentMetricsReporter
       CONFLUENT_METRICS_REPORTER_BOOTSTRAP_SERVERS: broker1:9092,broker2:9092,broker3:9092
       KAFKA_MESSAGE_MAX_BYTES: 10048588
-      KAFKA_OPTS: -javaagent:/usr/share/jmx_exporter/jmx_prometheus_javaagent-0.12.0.jar=1234:/usr/share/jmx_exporter/kafka-broker.yml
-    volumes:
-    - ../../other/client-kafkajs/repro-timeout-63874/jmx-exporter:/usr/share/jmx_exporter/
 
   control-center:
     image: confluentinc/cp-enterprise-control-center:${TAG}
@@ -103,49 +93,3 @@ services:
       CONTROL_CENTER_INTERNAL_TOPICS_PARTITIONS: 3
       CONTROL_CENTER_MONITORING_INTERCEPTOR_TOPIC_PARTITIONS: 3
       CONFLUENT_METRICS_TOPIC_REPLICATION: 3
-
-  alertmanager:
-    image: prom/alertmanager:v0.18.0
-    hostname: alertmanager
-    container_name: alertmanager
-    ports:
-      - 9093:9093
-
-  node-exporter:
-    image: prom/node-exporter:v0.18.1
-    hostname: node-exporter
-    container_name: node-exporter
-    volumes:
-      - /proc:/host/proc:ro
-      - /sys:/host/sys:ro
-      - /:/rootfs:ro
-    command:
-      - '--path.procfs=/host/proc'
-      - '--path.sysfs=/host/sys'
-      - '--collector.filesystem.ignored-mount-points'
-      - '^(aufs|proc|nsfs|shm|cgroup|tmpfs|binfmt_misc|debugfs|devpts|fusectl|hugetlbfs|fuse.lxcfs|mqueue|pstore|securityfs|sysfs|autofs|devtmpfs|configfs)'
-
-  prometheus:
-    image: prom/prometheus
-    hostname: prometheus
-    container_name: prometheus
-    ports:
-      - 9090:9090
-    volumes:
-      - ../../other/client-kafkajs/repro-timeout-63874/prometheus/:/etc/prometheus/
-    depends_on:
-      - node-exporter
-      - alertmanager
-
-  grafana:
-    image: grafana/grafana:7.4.1
-    hostname: grafana
-    container_name: grafana
-    environment:
-      GF_INSTALL_PLUGINS: grafana-piechart-panel
-    ports:
-      - 3000:3000
-    volumes:
-      - ../../other/client-kafkajs/repro-timeout-63874/grafana/provisioning/:/etc/grafana/provisioning/
-    depends_on:
-      - prometheus
