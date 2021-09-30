@@ -2,7 +2,8 @@
 version: '3.5'
 services:
   activemq:
-    image: rmohr/activemq # https://hub.docker.com/r/rmohr/activemq/
+    # https://hub.docker.com/r/rmohr/activemq/
+    image: rmohr/activemq
     hostname: activemq
     container_name: activemq
     ports:
