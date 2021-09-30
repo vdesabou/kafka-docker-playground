@@ -9,12 +9,19 @@ services:
         - ../../connect/connect-active-mq-source/security/kafka.activemq.truststore.jks:/tmp/kafka.activemq.truststore.jks
         - ../../connect/connect-active-mq-source/security/kafka.activemq.keystore.jks:/tmp/kafka.activemq.keystore.jks
         - ../../connect/connect-active-mq-source/activemq.xml:/opt/apache-activemq-5.15.9/conf/activemq.xml
-
+    ports:
+      - '61616:61616'
+      - '61617:61617'
+      - '8161:8161'
+      
   connect:
     volumes:
         - ../../connect/connect-active-mq-source/security/kafka.connect.truststore.jks:/tmp/truststore.jks
+        - ../../connect/connect-active-mq-source/security/kafka.connect.keystore.jks:/tmp/keystore.jks
     environment:
       CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-activemq
-      KAFKA_OPTS:  -Djavax.net.debug=all
-                  -Djavax.net.ssl.trustStore=/tmp/truststore.jks
+      KAFKA_OPTS: -Djavax.net.ssl.trustStore=/tmp/truststore.jks
                   -Djavax.net.ssl.trustStorePassword=confluent
+                  -Djavax.net.ssl.keyStore=/tmp/keystore.jks
+                  -Djavax.net.ssl.keyStorePassword=confluent
+                  # -Djavax.net.debug=all

@@ -5,7 +5,7 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
 cd ${DIR}/security
-log "🔐 Generate keys and certificates used for SSL"
+log "🔐 Generate keys and certificates used for SSL using rmohr/activemq:5.15.9 image"
 ./certs-create.sh
 if [[ "$OSTYPE" == "darwin"* ]]
 then
