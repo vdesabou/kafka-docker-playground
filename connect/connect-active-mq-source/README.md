@@ -15,9 +15,18 @@ Simply run:
 ```
 $ ./active-mq-source.sh
 ```
+
+with SSL encryption + Mutual TLS authentication:
+
+```
+$ ./active-mq-source-mtls.sh
+```
+
 ## Details of what the script is doing
 
 ActiveMQ UI is reachable at [http://127.0.0.1:8161](http://127.0.0.1:8161]) (`admin/admin`)
+
+### Without SSL
 
 The connector is created with:
 
@@ -77,5 +86,49 @@ We get:
     "type": null
 }
 ```
+
+### With SSL encryption + Mutual TLS auth
+
+Active QM is set with (file `/opt/apache-activemq-5.15.9/conf/activemq.xml`):
+
+```xml
+<transportConnector name="ssl" uri="ssl://0.0.0.0:61617?trace=true&amp;needClientAuth=true" />
+```
+
+and
+
+```xml
+    <sslContext>
+        <sslContext keyStore="file:/tmp/kafka.activemq.keystore.jks" keyStorePassword="confluent" trustStore="file:/tmp/kafka.activemq.truststore.jks" trustStorePassword="confluent" />
+    </sslContext>
+```
+
+Connect is set with:
+
+```yml
+      KAFKA_OPTS: -Djavax.net.ssl.trustStore=/tmp/truststore.jks
+                  -Djavax.net.ssl.trustStorePassword=confluent
+                  -Djavax.net.ssl.keyStore=/tmp/keystore.jks
+                  -Djavax.net.ssl.keyStorePassword=confluent
+```
+
+The connector is created with:
+
+```bash
+$ curl -X PUT \
+     -H "Content-Type: application/json" \
+     --data '{
+               "connector.class": "io.confluent.connect.activemq.ActiveMQSourceConnector",
+               "kafka.topic": "MyKafkaTopicName",
+               "activemq.url": "ssl://activemq:61617",
+               "jms.destination.name": "DEV.QUEUE.1",
+               "jms.destination.type": "queue",
+               "confluent.license": "",
+               "confluent.topic.bootstrap.servers": "broker:9092",
+               "confluent.topic.replication.factor": "1"
+          }' \
+     http://localhost:8083/connectors/active-mq-source-mtls/config | jq .
+```
+
 
 N.B: Control Center is reachable at [http://127.0.0.1:9021](http://127.0.0.1:9021])
