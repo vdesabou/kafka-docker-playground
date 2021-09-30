@@ -1,0 +1,46 @@
+#!/bin/bash
+set -e
+
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
+source ${DIR}/../../scripts/utils.sh
+
+cd ${DIR}/security
+log "🔐 Generate keys and certificates used for SSL"
+./certs-create.sh
+if [[ "$OSTYPE" == "darwin"* ]]
+then
+    # workaround for issue on linux, see https://github.com/vdesabou/kafka-docker-playground/issues/851#issuecomment-821151962
+    chmod -R a+rw .
+else
+    # workaround for issue on linux, see https://github.com/vdesabou/kafka-docker-playground/issues/851#issuecomment-821151962
+    sudo chmod -R a+rw .
+fi
+cd ${DIR}
+
+${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.ssl.yml"
+
+
+log "Creating ActiveMQ source connector"
+curl -X PUT \
+     -H "Content-Type: application/json" \
+     --data '{
+               "connector.class": "io.confluent.connect.activemq.ActiveMQSourceConnector",
+               "kafka.topic": "MyKafkaTopicName",
+               "activemq.url": "ssl://activemq:61617",
+               "jms.destination.name": "DEV.QUEUE.1",
+               "jms.destination.type": "queue",
+               "confluent.license": "",
+               "confluent.topic.bootstrap.servers": "broker:9092",
+               "confluent.topic.replication.factor": "1"
+          }' \
+     http://localhost:8083/connectors/active-mq-source-ssl/config | jq .
+
+sleep 5
+
+log "Sending messages to DEV.QUEUE.1 JMS queue:"
+curl -XPOST -u admin:admin -d "body=message" http://localhost:8161/api/message/DEV.QUEUE.1?type=queue
+
+sleep 5
+
+log "Verify we have received the data in MyKafkaTopicName topic"
+timeout 60 docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic MyKafkaTopicName --from-beginning --max-messages 1
