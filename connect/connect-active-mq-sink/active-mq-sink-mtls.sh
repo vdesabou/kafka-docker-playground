@@ -4,8 +4,20 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
-${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
+cd ${DIR}/security
+log "🔐 Generate keys and certificates used for SSL using rmohr/activemq:5.15.9 image"
+./certs-create.sh
+if [[ "$OSTYPE" == "darwin"* ]]
+then
+    # workaround for issue on linux, see https://github.com/vdesabou/kafka-docker-playground/issues/851#issuecomment-821151962
+    chmod -R a+rw .
+else
+    # workaround for issue on linux, see https://github.com/vdesabou/kafka-docker-playground/issues/851#issuecomment-821151962
+    sudo chmod -R a+rw .
+fi
+cd ${DIR}
 
+${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.mtls.yml"
 
 log "Sending messages to topic sink-messages"
 docker exec -i broker kafka-console-producer --broker-list broker:9092 --topic sink-messages << EOF
@@ -18,7 +30,7 @@ curl -X PUT \
      --data '{
                "connector.class": "io.confluent.connect.jms.ActiveMqSinkConnector",
                "topics": "sink-messages",
-               "activemq.url": "tcp://activemq:61616",
+               "activemq.url": "ssl://activemq:61617",
                "activemq.username": "admin",
                "activemq.password": "admin",
                "jms.destination.name": "DEV.QUEUE.1",
@@ -29,7 +41,7 @@ curl -X PUT \
                "confluent.topic.bootstrap.servers": "broker:9092",
                "confluent.topic.replication.factor": "1"
           }' \
-     http://localhost:8083/connectors/active-mq-sink/config | jq .
+     http://localhost:8083/connectors/active-mq-sink-mtls/config | jq .
 
 sleep 5
 
