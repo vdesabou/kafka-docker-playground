@@ -66,11 +66,7 @@ docker exec -e SERVICENOW_URL=$SERVICENOW_URL -e SERVICENOW_PASSWORD=$SERVICENOW
 # echo "$SERVICENOW_URL" | cut -d "/" -f3
 # ip=$(dig +short $(echo "$SERVICENOW_URL" | cut -d "/" -f3))
 # log "Blocking serviceNow instance IP address $ip on connect, to make sure proxy is used"
-# docker exec -i --privileged --user root connect bash -c "yum update -y && yum install iptables -y"
 # docker exec -i --privileged --user root connect bash -c "iptables -A INPUT -s $ip -j REJECT"
-# docker exec -i --privileged --user root connect bash -c "iptables -A INPUT -d $ip -j REJECT"
-# docker exec -i --privileged --user root connect bash -c "iptables -A OUTPUT -s $ip -j REJECT"
-# docker exec -i --privileged --user root connect bash -c "iptables -A OUTPUT -d $ip -j REJECT"
 # docker exec -i --privileged --user root connect bash -c "iptables -L -n -v"
 
 curl --request PUT \
@@ -122,3 +118,54 @@ sleep 5
 
 log "Verify we have received the data in topic-servicenow topic"
 timeout 60 docker exec connect kafka-console-consumer -bootstrap-server broker:9092 --topic topic-servicenow --from-beginning --max-messages 1
+
+
+
+# echo "$SERVICENOW_URL" | cut -d "/" -f3
+# ip=$(dig +short $(echo "$SERVICENOW_URL" | cut -d "/" -f3))
+# log "Blocking serviceNow response on nginx_proxy"
+# docker exec -i --privileged --user root nginx_proxy bash -c "apt-get update -y && apt-get install iptables -y"
+# docker exec -i --privileged --user root nginx_proxy bash -c "iptables -A INPUT -p tcp -s $ip -j DROP"
+
+
+# [2021-09-30 09:01:29,490] ERROR [servicenow-source|task-0] WorkerSourceTask{id=servicenow-source-0} Task threw an uncaught and unrecoverable exception. Task is being killed and will not recover until manually restarted (org.apache.kafka.connect.runtime.WorkerTask:184)
+# io.confluent.connect.utils.retry.RetryCountExceeded: Failed after 4 attempts to send request to ServiceNow: 504 Gateway Time-out
+# <html>
+# <head><title>504 Gateway Time-out</title></head>
+# <body>
+# <center><h1>504 Gateway Time-out</h1></center>
+# <hr><center>nginx/1.18.0 (Ubuntu)</center>
+# </body>
+# </html>
+
+#         at io.confluent.connect.utils.retry.RetryPolicy.callWith(RetryPolicy.java:429)
+#         at io.confluent.connect.utils.retry.RetryPolicy.call(RetryPolicy.java:337)
+#         at io.confluent.connect.servicenow.rest.ServiceNowClientImpl.executeRequest(ServiceNowClientImpl.java:229)
+#         at io.confluent.connect.servicenow.rest.ServiceNowClientImpl.get(ServiceNowClientImpl.java:183)
+#         at io.confluent.connect.servicenow.rest.ServiceNowClientImpl.getObjects(ServiceNowClientImpl.java:146)
+#         at io.confluent.connect.servicenow.ServiceNowSourceTask.fetchRecordFromServiceNow(ServiceNowSourceTask.java:183)
+#         at io.confluent.connect.servicenow.ServiceNowSourceTask.poll(ServiceNowSourceTask.java:142)
+#         at org.apache.kafka.connect.runtime.WorkerSourceTask.poll(WorkerSourceTask.java:268)
+#         at org.apache.kafka.connect.runtime.WorkerSourceTask.execute(WorkerSourceTask.java:241)
+#         at org.apache.kafka.connect.runtime.WorkerTask.doRun(WorkerTask.java:182)
+#         at org.apache.kafka.connect.runtime.WorkerTask.run(WorkerTask.java:231)
+#         at java.base/java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:515)
+#         at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:264)
+#         at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1128)
+#         at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:628)
+#         at java.base/java.lang.Thread.run(Thread.java:829)
+# Caused by: com.google.api.client.http.HttpResponseException: 504 Gateway Time-out
+# <html>
+# <head><title>504 Gateway Time-out</title></head>
+# <body>
+# <center><h1>504 Gateway Time-out</h1></center>
+# <hr><center>nginx/1.18.0 (Ubuntu)</center>
+# </body>
+# </html>
+
+#         at com.google.api.client.http.HttpRequest.execute(HttpRequest.java:1097)
+#         at io.confluent.connect.servicenow.rest.ServiceNowClientImpl.lambda$executeRequest$2(ServiceNowClientImpl.java:230)
+#         at io.confluent.connect.utils.retry.RetryPolicy.lambda$call$1(RetryPolicy.java:337)
+#         at io.confluent.connect.utils.retry.RetryPolicy.callWith(RetryPolicy.java:417)
+#         ... 15 more
+        
