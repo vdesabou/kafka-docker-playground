@@ -97,3 +97,33 @@ services:
       CONTROL_CENTER_METRICS_TOPIC_MAX_MESSAGE_BYTES: 8388608
       CONFLUENT_LICENSE: "$CONFLUENT_LICENSE"
       PORT: 9021
+      
+  # 75147
+  # schema-registry:
+  #   image: confluentinc/cp-schema-registry:${TAG}
+  #   hostname: schema-registry
+  #   container_name: schema-registry
+  #   ports:
+  #     - '8081:8081'
+  #   environment:
+  #     SCHEMA_REGISTRY_HOST_NAME: schema-registry
+  #     SCHEMA_REGISTRY_LISTENERS: http://0.0.0.0:8081
+  #     SCHEMA_REGISTRY_KAFKASTORE_SECURITY_PROTOCOL: "SASL_SSL"
+  #     SCHEMA_REGISTRY_KAFKASTORE_BOOTSTRAP_SERVERS: $BOOTSTRAP_SERVERS
+  #     SCHEMA_REGISTRY_KAFKASTORE_SASL_JAAS_CONFIG: $SASL_JAAS_CONFIG
+  #     SCHEMA_REGISTRY_KAFKASTORE_SASL_MECHANISM: "PLAIN"
+  #     SCHEMA_REGISTRY_SCHEMA_COMPATIBILITY_LEVEL: none
+  #     SCHEMA_REGISTRY_SCHEMA_REGISTRY_GROUP_ID: myid
+  #     SCHEMA_REGISTRY_KAFKASTORE_GROUP_ID: myid2
+  #     SCHEMA_REGISTRY_LEADER_ELIGIBILITY: "true"
+  #     SCHEMA_REGISTRY_KAFKASTORE_TOPIC: "my_schemas_topic"
+  #     SCHEMA_REGISTRY_LOG4J_ROOT_LOGLEVEL: "DEBUG"
+  
+  # ACLs
+  # User:339785 | sa-ld2rdd        | ALLOW      | DESCRIBE         | TOPIC    | my_schemas_topic      | LITERAL  
+  # User:339785 | sa-ld2rdd        | ALLOW      | DESCRIBE_CONFIGS | TOPIC    | my_schemas_topic      | LITERAL  
+  # User:339785 | sa-ld2rdd        | ALLOW      | CREATE           | TOPIC    | my_schemas_topic      | LITERAL  
+  # User:339785 | sa-ld2rdd        | ALLOW      | READ             | TOPIC    | my_schemas_topic      | LITERAL  
+  # User:339785 | sa-ld2rdd        | ALLOW      | WRITE            | TOPIC    | my_schemas_topic      | LITERAL  
+  # User:339785 | sa-ld2rdd        | ALLOW      | DESCRIBE         | CLUSTER  | kafka-cluster         | LITERAL  
+  # User:339785 | sa-ld2rdd        | ALLOW      | READ             | GROUP    | myid                  | LITERAL
