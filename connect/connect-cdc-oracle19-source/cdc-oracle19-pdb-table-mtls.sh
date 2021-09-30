@@ -1,25 +1,6 @@
 #!/bin/bash
 set -e
 
-if [ ! -z "$CI" ]
-then
-     # running with github actions
-     aws s3 cp --only-show-errors s3://kafka-docker-playground/internal/confluentinc-kafka-connect-oracle-cdc-1.3.0-rc-8b91569.zip .
-     export CONNECTOR_ZIP="$PWD/confluentinc-kafka-connect-oracle-cdc-1.3.0-rc-8b91569.zip"
-fi
-
-if [ -z "$CONNECTOR_ZIP" ]
-then
-     logerror "CONNECTOR_ZIP environment variable must be set with the path to the confluentinc-kafka-connect-oracle-cdc SNAPSHOT zip file"
-     exit 1
-fi
-
-if [ ! -f "$CONNECTOR_ZIP" ]
-then
-     logerror "File set with CONNECTOR_ZIP ($CONNECTOR_ZIP) does not exist !"
-     exit 1
-fi
-
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 

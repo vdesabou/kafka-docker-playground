@@ -1,7 +1,5 @@
 # Oracle CDC Source (Oracle 19c) Source connector
 
-FIXTHIS: THE CONNECTOR VERSION COMPATIBLE WITH ORACLE 19 IS NOT AVAILABLE YET
-
 ## Objective
 
 Quickly test [Oracle CDC Source Connector](https://docs.confluent.io/kafka-connect-oracle-cdc/current/) with Oracle 19c.
