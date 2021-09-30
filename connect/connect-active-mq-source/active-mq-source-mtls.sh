@@ -17,7 +17,7 @@ else
 fi
 cd ${DIR}
 
-${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.ssl.yml"
+${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.mtls.yml"
 
 
 log "Creating ActiveMQ source connector"
@@ -33,7 +33,7 @@ curl -X PUT \
                "confluent.topic.bootstrap.servers": "broker:9092",
                "confluent.topic.replication.factor": "1"
           }' \
-     http://localhost:8083/connectors/active-mq-source-ssl/config | jq .
+     http://localhost:8083/connectors/active-mq-source-mtls/config | jq .
 
 sleep 5
 
