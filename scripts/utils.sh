@@ -393,7 +393,7 @@ EOF
           cp $CONNECTOR_ZIP $tmp_dir/
 cat << EOF > $tmp_dir/Dockerfile
 FROM vdesabou/kafka-docker-playground-connect:${TAG}
-COPY ${connector_zip_name} /tmp
+COPY --chown=appuser:appuser ${connector_zip_name} /tmp
 RUN confluent-hub install --no-prompt /tmp/${connector_zip_name}
 EOF
           docker build -t vdesabou/kafka-docker-playground-connect:$CONNECT_TAG $tmp_dir
