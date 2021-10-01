@@ -26,9 +26,8 @@ cp $template_file $readme_file
 
 for image_version in $image_versions
 do
-  # take first image
+  # take last image
   latest_version=$image_version
-  break
 done
 
 curl -s https://raw.githubusercontent.com/vdesabou/kafka-docker-playground-connect/master/README.md -o /tmp/README.txt
@@ -261,8 +260,11 @@ do
   fi
 
   ci=""
+  ci_nb_fail=0
+  nb_image_versions=0
   for image_version in $image_versions
   do
+    let "nb_image_versions++"
     image_version_no_dot=$(echo ${image_version} | sed 's/\.//g')
     if [ "${TEST_FAILED[$image_version_no_dot]}" != "" ]
     then
@@ -273,14 +275,22 @@ do
       else
         ci="$ci ${TEST_FAILED[$image_version_no_dot]}"
       fi
+      let "ci_nb_fail++"
     elif [ "${TEST_SUCCESS[$image_version_no_dot]}" != "" ]
     then
       ci="$ci ${TEST_SUCCESS[$image_version_no_dot]}"
     else
       logerror "ERROR: TEST_SUCCESS and TEST_FAILED are both empty !"
     fi
-
   done
+
+  if [ ${ci_nb_fail} -eq 0 ]
+  then
+      ci="[![CI ok](https://img.shields.io/badge/CI-ok!-green)]($html_url)"
+  elif [ ${ci_nb_fail} -eq ${nb_image_versions} ]
+  then
+      ci="[![CI fail](https://img.shields.io/badge/CI-fail!-red)](https://github.com/vdesabou/kafka-docker-playground/issues/$gh_issue_number)"
+  fi
 
   if [ "$connector_path" != "" ]
   then
@@ -308,7 +318,7 @@ do
     # fi
     
     ownerencoded=$(echo "$owner" | sed -e 's/ /%20/g')
-    owner_badge="![license](https://img.shields.io/badge/-$ownerencoded-black)"
+    owner_badge="![license](https://img.shields.io/badge/-$ownerencoded-lightgrey)"
     
     versionencoded=$(urlencode $version)
     versionencoded=$(echo $versionencoded | tr "-" "_")
