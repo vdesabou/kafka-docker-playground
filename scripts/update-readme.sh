@@ -193,8 +193,8 @@ do
         if [ "$status" == "failure" ]
         then
           let "nb_fail++"
-          let "nb_total_fail++"
-          TEST_FAILED[$image_version_no_dot]="[❌ $time_day]($html_url)"
+          let "nb_total_fail++"          
+          TEST_FAILED[$image_version_no_dot]="[![CP $image_version](https://img.shields.io/badge/CI-CP%20$image_version-red)]($html_url)"
           echo -e "🔥 CP ${image_version}${connector_version} 🕐 ${time_day_hour} 📄 [${script_name}](https://github.com/vdesabou/kafka-docker-playground/blob/master/$test/$script_name) 🔗 $html_url\n" >> ${gh_msg_file}
           log "🔥 CP $image_version 🕐 ${time_day_hour} 📄 ${script_name} 🔗 $html_url"
         elif [[ "$status" = known_issue* ]]
@@ -202,13 +202,14 @@ do
           let "nb_success++"
           let "nb_total_success++"
           known_issue_gh_issue_number=$(echo "$status" | cut -d "#" -f 2)
-          TEST_SUCCESS[$image_version_no_dot]="💀 known issue 🐞 [\#${known_issue_gh_issue_number}](https://github.com/vdesabou/kafka-docker-playground/issues/${known_issue_gh_issue_number})"
+          TEST_SUCCESS[$image_version_no_dot]="[![CP $image_version](https://img.shields.io/badge/known%20issue-CP%20$image_version-orange)](https://github.com/vdesabou/kafka-docker-playground/issues/$known_issue_gh_issue_number)"
+          
           echo -e "💀 known issue 🐞 [#${known_issue_gh_issue_number}](https://github.com/vdesabou/kafka-docker-playground/issues/${known_issue_gh_issue_number}) CP ${image_version}${connector_version} 🕐 ${time_day_hour} 📄 [${script_name}](https://github.com/vdesabou/kafka-docker-playground/blob/master/$test/$script_name) 🔗 $html_url\n" >> ${gh_msg_file}
           log "💀 known issue 🐞 [#${known_issue_gh_issue_number}](https://github.com/vdesabou/kafka-docker-playground/issues/${known_issue_gh_issue_number}) CP ${image_version}${connector_version} 🕐 ${time_day_hour} 📄 [${script_name}](https://github.com/vdesabou/kafka-docker-playground/blob/master/$test/$script_name) 🔗 $html_url"
         else
           let "nb_success++"
           let "nb_total_success++"
-          TEST_SUCCESS[$image_version_no_dot]="[👍 $time_day]($html_url)"
+          TEST_SUCCESS[$image_version_no_dot]="[![CP $image_version](https://img.shields.io/badge/CI-CP%20$image_version-green)]($html_url)"
           echo -e "👍 CP ${image_version}${connector_version} 🕐 ${time_day_hour} 📄 [${script_name}](https://github.com/vdesabou/kafka-docker-playground/blob/master/$test/$script_name) 🔗 $html_url\n" >> ${gh_msg_file}
           log "👍 CP $image_version 🕐 ${time_day_hour} 📄 ${script_name} 🔗 $html_url"
         fi
@@ -268,13 +269,13 @@ do
       gh_issue_number=$(echo $gh_issue_number|tr -d '\n')
       if [ "${gh_issue_number}" != "" ]
       then
-        ci="$ci ${TEST_FAILED[$image_version_no_dot]} [🐞 \#${gh_issue_number}](https://github.com/vdesabou/kafka-docker-playground/issues/${gh_issue_number}) \|"
+        ci="$ci [![issue $gh_issue_number](https://img.shields.io/badge/CI-CP%20$image_version-red)](https://github.com/vdesabou/kafka-docker-playground/issues/$gh_issue_number)"
       else
-        ci="$ci ${TEST_FAILED[$image_version_no_dot]} \|"
+        ci="$ci ${TEST_FAILED[$image_version_no_dot]}"
       fi
     elif [ "${TEST_SUCCESS[$image_version_no_dot]}" != "" ]
     then
-      ci="$ci ${TEST_SUCCESS[$image_version_no_dot]} \|"
+      ci="$ci ${TEST_SUCCESS[$image_version_no_dot]}"
     else
       logerror "ERROR: TEST_SUCCESS and TEST_FAILED are both empty !"
     fi
@@ -287,63 +288,39 @@ do
     license=$(grep "$connector_path " /tmp/README.txt | cut -d "|" -f 4 | sed 's/^[[:blank:]]*//;s/[[:blank:]]*$//')
     owner=$(grep "$connector_path " /tmp/README.txt | cut -d "|" -f 5 | sed 's/^[[:blank:]]*//;s/[[:blank:]]*$//')
     release_date=$(grep "$connector_path " /tmp/README.txt | cut -d "|" -f 6 | sed 's/^[[:blank:]]*//;s/[[:blank:]]*$//')
+    documentation_url=$(grep "$connector_path " /tmp/README.txt | cut -d "|" -f 7 | sed 's/^[[:blank:]]*//;s/[[:blank:]]*$//' | sed 's/.*(\(.*\))/\1/')
     if [ "$release_date" = "null" ]
     then
       release_date=""
     fi
 
-    if [ "$license" = "Confluent Software Evaluation License" ]
-    then
-      type="Confluent Subscription"
-    elif [ "$license" = "Apache License 2.0" ] || [ "$license" = "Apache 2.0" ] || [ "$license" = "Apache License, Version 2.0" ] || [ "$license" = "The Apache License, Version 2.0" ]
-    then
-      type="Open Source ($owner)"
-    else
-      type="$license"
-    fi
+    # if [ "$license" = "Confluent Software Evaluation License" ]
+    # then
+    #   type="![license](https://img.shields.io/badge/-confluent%20subscription-black)"
+    # elif [ "$license" = "Apache License 2.0" ] || [ "$license" = "Apache 2.0" ] || [ "$license" = "Apache License, Version 2.0" ] || [ "$license" = "The Apache License, Version 2.0" ]
+    # then
+    #   type="![license](https://img.shields.io/badge/-open%20source-black)"
+    # else
+    #   license=$(echo $licence | tr '[:upper:]' '[:lower:]')
+    #   #typeencoded=$(urlencode $license)
+    #   typeencoded=$(echo "$licence" | sed -e 's/ /%20/g')
+    #   type="![license](https://img.shields.io/badge/-$typeencoded-black)"
+    # fi
+    
+    ownerencoded=$(echo "$owner" | sed -e 's/ /%20/g')
+    owner_badge="![license](https://img.shields.io/badge/-$ownerencoded-black)"
+    
+    versionencoded=$(urlencode $version)
+    versionencoded=$(echo $versionencoded | tr "-" "_")
+    connector_badge="[![version](https://img.shields.io/badge/v-$versionencoded-pink)]($documentation_url)"
 
     let "nb_connector_tests++"
-    sed -e "s|:${test}:|${version} \| $type \| $release_date \| $ci |g" \
+    sed -e "s|:${test}:| $owner_badge $connector_badge $ci |g" \
         $readme_file > $readme_tmp_file
 
     cp $readme_tmp_file $readme_file
   fi
 done #end test_list
-
-# Handle connector tests which are not tested as part of CI
-ci=""
-cp_version_tested=""
-for image_version in $image_versions
-do
-  ci="$ci 🤷‍♂️ not tested \|"
-  cp_version_tested="$cp_version_tested%20$image_version"
-done
-for connector in confluentinc-kafka-connect-aws-redshift
-do
-  version=$(grep "$connector " /tmp/README.txt | cut -d "|" -f 3 | sed 's/^[[:blank:]]*//;s/[[:blank:]]*$//')
-  license=$(grep "$connector " /tmp/README.txt | cut -d "|" -f 4 | sed 's/^[[:blank:]]*//;s/[[:blank:]]*$//')
-  owner=$(grep "$connector " /tmp/README.txt | cut -d "|" -f 5 | sed 's/^[[:blank:]]*//;s/[[:blank:]]*$//')
-  release_date=$(grep "$connector " /tmp/README.txt | cut -d "|" -f 6 | sed 's/^[[:blank:]]*//;s/[[:blank:]]*$//')
-  if [ "$release_date" = "null" ]
-  then
-    release_date=""
-  fi
-
-  if [ "$license" = "Confluent Software Evaluation License" ]
-  then
-    type="Confluent Subscription"
-  elif [ "$license" = "Apache License 2.0" ] || [ "$license" = "Apache 2.0" ] || [ "$license" = "Apache License, Version 2.0" ] || [ "$license" = "The Apache License, Version 2.0" ]
-  then
-    type="Open Source ($owner)"
-  else
-    type="$license"
-  fi
-
-  let "nb_connector_tests++"
-  sed -e "s|:${connector}:|${version} \| $type \| $release_date \| $ci |g" \
-      $readme_file > $readme_tmp_file
-  cp $readme_tmp_file $readme_file
-done
 
 tests_color="green"
 if [ $nb_total_fail -gt 0 ]; then
