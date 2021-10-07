@@ -35,4 +35,4 @@ services:
       # https://support.confluent.io/hc/en-us/articles/360054967632-What-cause-the-IBMMQ-connector-fail-to-establish-a-SSL-connection-with-Cipher-Error
       KAFKA_OPTS: -Dcom.ibm.mq.cfg.useIBMCipherMappings=false
                   -Djavax.net.debug=all
-                 # -Duser.name=
+                  -Duser.name=
