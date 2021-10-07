@@ -59,6 +59,8 @@ ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.mtl
 # }'
 
 docker exec -i ibmmq runmqsc QM1 << EOF
+DISPLAY QMGR ALL
+DISPLAY QMGR CHLAUTH
 DISPLAY CHANNEL(DEV.APP.SVRCONN)
 DISPLAY CHLAUTH(DEV.APP.SVRCONN)
 EOF
@@ -103,6 +105,8 @@ EOF
 
 log "Verify TLS is active on IBM MQ: it should display SSLCIPH(ANY_TLS12) and SSLCAUTH(REQUIRED)"
 docker exec -i ibmmq runmqsc QM1 << EOF
+DISPLAY QMGR ALL
+DISPLAY QMGR CHLAUTH
 DISPLAY CHANNEL(DEV.APP.SVRCONN)
 DISPLAY CHLAUTH(DEV.APP.SVRCONN)
 EOF
