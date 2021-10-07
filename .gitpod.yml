@@ -13,7 +13,12 @@ github:
 
 tasks:
   - name: prebuild
-    init: cd environment/kerberos && source ../../scripts/utils.sh && docker-compose -f ../../environment/plaintext/docker-compose.yml --profile control-center --profile ksqldb pull && cd - && gp sync-done prebuild
+    init: |
+      cd environment/kerberos && source ../../scripts/utils.sh && docker-compose -f ../../environment/plaintext/docker-compose.yml --profile control-center --profile ksqldb pull && cd - 
+      docker pull google/cloud-sdk:latest
+      docker pull mikesir87/aws-cli:v2
+      docker pull mcr.microsoft.com/azure-cli
+      gp sync-done prebuild
     command: curl -L --http1.1 https://cnfl.io/ccloud-cli | sudo sh -s -- -b /usr/local/bin; exit
 
   - name: playground
