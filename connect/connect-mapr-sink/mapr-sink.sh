@@ -27,7 +27,7 @@ docker exec -i --privileged --user root connect  bash -c "rpm -i http://mirror.c
 
 docker exec -i --privileged --user root connect  bash -c "yum -y install jre-1.8.0-openjdk hostname findutils net-tools"
 
-docker exec -i --privileged --user root connect  bash -c "rpm --import https://package.mapr.com/releases/pub/maprgpg.key && yum -y update && yum -y install mapr-client.x86_64"
+docker exec -i --privileged --user root connect  bash -c "rpm --import https://package.mapr.com/releases/pub/maprgpg.key && yum -y update --disablerepo='Confluent*' && yum -y install mapr-client.x86_64"
 
 CONNECT_IP=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' connect)
 MAPR_IP=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' mapr)
