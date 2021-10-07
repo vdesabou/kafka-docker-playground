@@ -332,6 +332,12 @@ do
   fi
 done #end test_list
 
+cp_version_tested=""
+for image_version in $image_versions
+do
+  cp_version_tested="$cp_version_tested%20$image_version"
+done
+
 tests_color="green"
 if [ $nb_total_fail -gt 0 ]; then
   tests_color="red"
