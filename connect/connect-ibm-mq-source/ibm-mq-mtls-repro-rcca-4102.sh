@@ -48,6 +48,7 @@ cd ${DIR}
 
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.mtls-repro-4102.yml"
 
+# https://github.com/ibm-messaging/mq-container/blob/7f85fcf7db2749bfeb314e93cef83f0c506c4812/incubating/mqadvanced-server-dev/10-dev.mqsc.tpl
 
 # curl --request PUT \
 #   --url http://localhost:8083/admin/loggers/io.confluent.connect.jms \
@@ -62,17 +63,25 @@ DISPLAY CHANNEL(DEV.APP.SVRCONN)
 DISPLAY CHLAUTH(DEV.APP.SVRCONN)
 EOF
 
+log "Set CHCKCLNT OPTIONAL"
+docker exec -i ibmmq runmqsc QM1 << EOF
+DEFINE AUTHINFO('DEV.AUTHINFO') AUTHTYPE(IDPWOS) CHCKCLNT(OPTIONAL) CHCKLOCL(OPTIONAL) ADOPTCTX(YES) REPLACE
+ALTER QMGR CONNAUTH('DEV.AUTHINFO')
+REFRESH SECURITY(*) TYPE(CONNAUTH)
+EXIT
+EOF
+
 log "Disabling CHLAUTH"
 docker exec -i ibmmq runmqsc QM1 << EOF
 ALTER QMGR CHLAUTH(DISABLED)
 EXIT
 EOF
 
-# log "Set MCAUSER to empty"
-# docker exec -i ibmmq runmqsc QM1 << EOF
-# ALTER CHANNEL(DEV.APP.SVRCONN) CHLTYPE(SVRCONN)  MCAUSER('')
-# EXIT
-# EOF
+log "Set MCAUSER to empty"
+docker exec -i ibmmq runmqsc QM1 << EOF
+ALTER CHANNEL(DEV.APP.SVRCONN) CHLTYPE(SVRCONN)  MCAUSER('')
+EXIT
+EOF
 
 log "Refresh security"
 docker exec -i ibmmq runmqsc QM1 << EOF
