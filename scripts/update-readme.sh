@@ -317,15 +317,15 @@ do
     #   type="![license](https://img.shields.io/badge/-$typeencoded-black)"
     # fi
     
-    ownerencoded=$(echo "$owner" | sed -e 's/ /%20/g')
-    owner_badge="![license](https://img.shields.io/badge/-$ownerencoded-lightgrey)"
+    # ownerencoded=$(echo "$owner" | sed -e 's/ /%20/g')
+    # owner_badge="![license](https://img.shields.io/badge/-$ownerencoded-lightgrey)"
     
     versionencoded=$(urlencode $version)
     versionencoded=$(echo $versionencoded | tr "-" "_")
     connector_badge="[![version](https://img.shields.io/badge/v-$versionencoded-pink)]($documentation_url)"
 
     let "nb_connector_tests++"
-    sed -e "s|:${test}:| $owner_badge $connector_badge $ci |g" \
+    sed -e "s|:${test}:|\&nbsp; \&nbsp; \&nbsp; $connector_badge $ci |g" \
         $readme_file > $readme_tmp_file
 
     cp $readme_tmp_file $readme_file
