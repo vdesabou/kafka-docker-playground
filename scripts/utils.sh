@@ -410,9 +410,15 @@ EOF
           log "👷 Building Docker image vdesabou/kafka-docker-playground-connect:${CONNECT_TAG}"
           tmp_dir=$(mktemp -d -t ci-XXXXXXXXXX)
           cp $CONNECTOR_ZIP $tmp_dir/
+          if [[ "$TAG" == *ubi8 ]] || version_gt $TAG_BASE "5.9.0"
+          then
+              export CONNECT_CONTAINER_USER="appuser"
+          else
+              export CONNECT_CONTAINER_USER="root"
+          fi
 cat << EOF > $tmp_dir/Dockerfile
 FROM vdesabou/kafka-docker-playground-connect:${TAG}
-COPY ${connector_zip_name} /tmp
+COPY --chown=$CONNECT_CONTAINER_USER:$CONNECT_CONTAINER_USER ${connector_zip_name} /tmp
 RUN confluent-hub install --no-prompt /tmp/${connector_zip_name}
 EOF
           docker build -t vdesabou/kafka-docker-playground-connect:$CONNECT_TAG $tmp_dir
