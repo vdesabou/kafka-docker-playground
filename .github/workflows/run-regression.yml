@@ -6,7 +6,7 @@ on:
   #      - master
 
   schedule:
-      - cron: '0 20 * * *' # every day at 8 pm
+      - cron: '0 18 * * *' # every day at 6 pm
 
   workflow_dispatch:
     inputs:
