@@ -1,13 +1,24 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
+
 <head>
-  <meta charset="UTF-8">
-  <title>kafka-docker-playground</title>
-  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
-  <meta name="description" content="Description">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, minimum-scale=1.0">
-  <!-- Theme: Simple (latest v0.x.x) -->
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/docsify-themeable@0/dist/css/theme-simple.css">
+    <title>kafka-docker-playground</title>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1.0, shrink-to-fit=no, viewport-fit=cover">
+    <meta name="description" content="kafka-docker-playground">
+
+    <!-- Stylesheets -->
+    <!-- Theme: Simple Dark -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/docsify-themeable@0/dist/css/theme-simple-dark.css">
+
+    <link rel="stylesheet" href="assets/css/main.css">
+
+    <!-- Alternate Stylesheets -->
+    <link rel="stylesheet alternate" href="https://cdn.jsdelivr.net/npm/docsify-themeable@0/dist/css/theme-defaults.css" title="Defaults">
+    <link rel="stylesheet alternate" href="https://cdn.jsdelivr.net/npm/docsify-themeable@0/dist/css/theme-simple-dark.css" title="Simple Dark">
+
+
   <style>
     :root {
       /* Reduce the font size */
@@ -21,16 +32,29 @@
   <div id="app"></div>
   <script>
     window.$docsify = {
-      loadSidebar: false,
       name: 'kafka-docker-playground',
-      repo: 'https://github.com/vdesabou/kafka-docker-playground',
-      // Or use the readme in your repo
-      homepage:
-        'https://raw.githubusercontent.com/vdesabou/kafka-docker-playground/master/README.md',
-      themeable: {
-          readyTransition : true, // default
-          responsiveTables: true  // default
+      repo: 'vdesabou/kafka-docker-playground',
+      // // Or use the readme in your repo
+      // homepage:
+      //   'https://raw.githubusercontent.com/vdesabou/kafka-docker-playground/master/README.md',
+      homepage   : 'introduction.md',
+      loadSidebar: 'sidebar.md',
+      formatUpdated: "{MM}/{DD} {HH}:{mm}",
+
+      // NAVIGATION
+      // -----------------------------------------------------------------
+      auto2top   : true,
+      maxLevel   : 3,
+      subMaxLevel: 2,
+
+      // PLUGINS
+      // -----------------------------------------------------------------
+      search: {
+          depth      : 3,
+          noData     : 'No results!',
+          placeholder: 'Search...'
       },
+
       // docsify-copy-code (defaults)
       copyCode: {
         buttonText : 'Copy to clipboard',
@@ -39,14 +63,24 @@
       }
     }
   </script>
-  <!-- Docsify v4 -->
-  <script src="//cdn.jsdelivr.net/npm/docsify@4"></script>
-  <script src="//cdn.jsdelivr.net/npm/docsify/lib/plugins/emoji.min.js"></script>
-    <!-- docsify-themeable (latest v0.x.x) -->
+  <script src="assets/js/main.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/docsify@4/lib/docsify.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/docsify-themeable@0/dist/js/docsify-themeable.min.js"></script>
-  <script src="https://unpkg.com/docsify-copy-code@2"></script>
-  <script src="//unpkg.com/docsify-pagination/dist/docsify-pagination.min.js"></script>
-  <script src="//cdn.jsdelivr.net/npm/docsify/lib/plugins/search.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/docsify-tabs@1/dist/docsify-tabs.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/docsify-pagination@2/dist/docsify-pagination.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/docsify@4/lib/plugins/external-script.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/docsify@4/lib/plugins/search.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/docsify@4/lib/plugins/zoom-image.min.js"></script>
+
+
+  <script src="https://cdn.jsdelivr.net/npm/docsify-tabs@1"></script>
+  <script src="https://cdn.jsdelivr.net/npm/docsify-copy-code@2"></script>
+  <script src="https://cdn.jsdelivr.net/npm/prismjs@1/components/prism-bash.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/prismjs@1/components/prism-java.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/prismjs@1/components/prism-json.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/prismjs@1/components/prism-yaml.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/prismjs@1/components/prism-docker.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/prismjs@1/components/prism-properties.min.js"></script>
 
 </body>
 </html>

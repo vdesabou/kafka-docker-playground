@@ -16,13 +16,21 @@ then
   logerror "ERROR: List of CP versions is not provided as argument!"
   exit 1
 fi
-template_file=README-template.md
+readme_template_file=README-template.md
 readme_file=README.md
 readme_tmp_file=/tmp/README.md
+content_template_file=./docs/content-template.md
+content_file=./docs/content.md
+content_tmp_file=/tmp/content.md
+badges_template_file=./docs/badges-template.md
+badges_file=./docs/badges.md
+badges_tmp_file=/tmp/badges.md
 gh_msg_file=/tmp/gh.txt
 gh_msg_file_intro=/tmp/gh_intro.txt
 
-cp $template_file $readme_file
+cp $readme_template_file $readme_file
+cp $content_template_file $content_file
+cp $badges_template_file $badges_file
 
 for image_version in $image_versions
 do
@@ -326,9 +334,9 @@ do
 
     let "nb_connector_tests++"
     sed -e "s|:${test}:|\&nbsp; \&nbsp; \&nbsp; $connector_badge $ci |g" \
-        $readme_file > $readme_tmp_file
+        $content_file > $content_tmp_file
 
-    cp $readme_tmp_file $readme_file
+    cp $content_tmp_file $content_file
   fi
 done #end test_list
 
@@ -357,5 +365,9 @@ sed -e "s|:nb_total_success:|$nb_total_success|g" \
     -e "s|:cp_version_tested:|$cp_version_tested|g" \
     -e "s|:tests_color:|$tests_color|g" \
     -e "s|:last_run:|$last_run|g" \
-    $readme_file > $readme_tmp_file
-cp $readme_tmp_file $readme_file
+    $badges_file > $badges_tmp_file
+cp $badges_tmp_file $badges_file
+
+# Add content and badges to README
+cat $badges_file >> $readme_file
+cat $content_file >> $readme_file
