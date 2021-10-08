@@ -23,7 +23,7 @@ ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml
 if [ ! -f "${DIR}/data/input/csv-spooldir-source.csv" ]
 then
      log "Generating data"
-     curl "https://api.mockaroo.com/api/58605010?count=1000&key=25fd9c80" > "${DIR}/data/input/csv-spooldir-source.csv"
+     curl -k "https://api.mockaroo.com/api/58605010?count=1000&key=25fd9c80" > "${DIR}/data/input/csv-spooldir-source.csv"
 fi
 
 INPUT_PATH="${CONNECT_CONTAINER_HOME_DIR}/data/input/"

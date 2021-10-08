@@ -7,7 +7,7 @@ source ${DIR}/../../scripts/utils.sh
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
 
 log "Generate data"
-docker exec -i connect bash -c 'mkdir -p /tmp/data/input/ && mkdir -p /tmp/data/error/ && mkdir -p /tmp/data/finished/ && curl "https://api.mockaroo.com/api/b10f7e90?count=1000&key=25fd9c80" > /tmp/data/input/tsv-spooldir-source.tsv'
+docker exec -i connect bash -c 'mkdir -p /tmp/data/input/ && mkdir -p /tmp/data/error/ && mkdir -p /tmp/data/finished/ && curl -k "https://api.mockaroo.com/api/b10f7e90?count=1000&key=25fd9c80" > /tmp/data/input/tsv-spooldir-source.tsv'
 
 log "Creating TSV Spool Dir Source connector"
 curl -X PUT \
