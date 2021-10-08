@@ -16,7 +16,7 @@ fi
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
 
 log "Generating data"
-docker exec -i connect bash -c "mkdir -p /tmp/kafka-connect/examples/ && curl -sSL https://raw.githubusercontent.com/streamthoughts/kafka-connect-file-pulse/master/datasets/quickstart-musics-dataset.csv -o /tmp/kafka-connect/examples/quickstart-musics-dataset.csv"
+docker exec -i connect bash -c "mkdir -p /tmp/kafka-connect/examples/ && curl -sSL -k https://raw.githubusercontent.com/streamthoughts/kafka-connect-file-pulse/master/datasets/quickstart-musics-dataset.csv -o /tmp/kafka-connect/examples/quickstart-musics-dataset.csv"
 
 
 log "Creating CSV FilePulse Source connector"

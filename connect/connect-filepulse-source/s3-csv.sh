@@ -63,7 +63,7 @@ sed -e "s|:AWS_ACCESS_KEY_ID:|$AWS_ACCESS_KEY_ID|g" \
     ${DIR}/data.template > ${DIR}/data
 
 log "Generating data"
-curl -sSL https://raw.githubusercontent.com/streamthoughts/kafka-connect-file-pulse/master/datasets/quickstart-musics-dataset.csv -o /tmp/quickstart-musics-dataset.csv
+curl -sSL -k https://raw.githubusercontent.com/streamthoughts/kafka-connect-file-pulse/master/datasets/quickstart-musics-dataset.csv -o /tmp/quickstart-musics-dataset.csv
 
 log "Upload JSON file to AWS S3 bucket $AWS_BUCKET_NAME"
 aws s3 cp /tmp/quickstart-musics-dataset.csv s3://$AWS_BUCKET_NAME/
