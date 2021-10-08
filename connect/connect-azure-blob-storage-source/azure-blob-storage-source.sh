@@ -1,6 +1,9 @@
 #!/bin/bash
 set -e
 
+# TMP RCCA 4346
+export TAG=6.1.1
+
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
