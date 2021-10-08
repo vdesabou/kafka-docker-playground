@@ -1,9 +1,6 @@
 #!/bin/bash
 set -e
 
-# TMP RCCA 4346
-export TAG=6.1.1
-
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
@@ -53,8 +50,6 @@ az storage container create \
 
 
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
-
-docker ps
 
 log "Creating Azure Blob Storage Sink connector"
 curl -X PUT \
@@ -113,11 +108,6 @@ sleep 5
 
 log "Verifying topic copy_of_blob_topic"
 timeout 60 docker exec broker kafka-console-consumer -bootstrap-server broker:9092 --topic copy_of_blob_topic --from-beginning --max-messages 3
-
-
-curl localhost:8083/connectors/azure-blob-source/status | jq 
-
-docker container logs --tail=300 connect
 
 log "Deleting resource group"
 az group delete --name $AZURE_RESOURCE_GROUP --yes --no-wait
