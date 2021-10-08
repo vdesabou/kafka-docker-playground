@@ -177,7 +177,7 @@ set +e
 if [ ! -f "${DIR}/json-spooldir-source.json" ]
 then
      log "Generating data"
-     curl "https://api.mockaroo.com/api/17c84440?count=500&key=25fd9c80" > "${DIR}/json-spooldir-source.json"
+     curl -k "https://api.mockaroo.com/api/17c84440?count=500&key=25fd9c80" > "${DIR}/json-spooldir-source.json"
 fi
 
 kubectl -n cp-helm-charts -c cp-kafka-connect-server exec -it $CONNECT_POD_NAME -- mkdir -p /tmp/data/input

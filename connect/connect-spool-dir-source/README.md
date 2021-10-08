@@ -23,7 +23,7 @@ $ ./csv.sh
 Generating data
 
 ```bash
-$ curl "https://api.mockaroo.com/api/58605010?count=1000&key=25fd9c80" > "${DIR}/data/input/csv-spooldir-source.csv"
+$ curl -k "https://api.mockaroo.com/api/58605010?count=1000&key=25fd9c80" > "${DIR}/data/input/csv-spooldir-source.csv"
 ```
 
 Creating CSV Spool Dir Source connector
@@ -74,7 +74,7 @@ Results:
 Generating data
 
 ```bash
-$ curl "https://api.mockaroo.com/api/58605010?count=1000&key=25fd9c80" > "${DIR}/data/input/tsv-spooldir-source.csv"
+$ curl -k "https://api.mockaroo.com/api/58605010?count=1000&key=25fd9c80" > "${DIR}/data/input/tsv-spooldir-source.csv"
 ```
 
 Creating TSV Spool Dir Source connector
@@ -125,7 +125,7 @@ Results:
 Generate data
 
 ```bash
-$ curl "https://api.mockaroo.com/api/17c84440?count=500&key=25fd9c80" > "${DIR}/data/input/json-spooldir-source.json"
+$ curl -k "https://api.mockaroo.com/api/17c84440?count=500&key=25fd9c80" > "${DIR}/data/input/json-spooldir-source.json"
 ```
 
 Creating JSON Spool Dir Source connector
@@ -173,7 +173,7 @@ Results:
 Generating data
 
 ```bash
-$ curl "https://api.mockaroo.com/api/17c84440?count=500&key=25fd9c80" > "${DIR}/data/input/json-spooldir-source.json"
+$ curl -k "https://api.mockaroo.com/api/17c84440?count=500&key=25fd9c80" > "${DIR}/data/input/json-spooldir-source.json"
 ```
 
 Creating JSON Spool Dir Source connector
