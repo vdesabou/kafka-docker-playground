@@ -1,28 +1,11 @@
-<!-- omit in toc -->
 # <img src="https://www.docker.com/sites/default/files/d8/2019-07/vertical-logo-monochromatic.png" width="24"> <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/0/05/Apache_kafka.svg/1200px-Apache_kafka.svg.png" width="16"> <img src="https://avatars3.githubusercontent.com/u/9439498?s=60&v=4" width="24"> kafka-docker-playground
 
 Playground for Kafka/Confluent Docker experimentations...
 
-![Github CI](https://github.com/vdesabou/kafka-docker-playground/workflows/CI/badge.svg)![success tests](https://img.shields.io/badge/success%20tests-1033%2F1100-red)![connector tested](https://img.shields.io/badge/connector%20tested-125-green)![cp versions tested](https://img.shields.io/badge/cp%20version%20tested-%205.5.6%206.0.3%206.1.2%206.2.1-green)![last run](https://img.shields.io/badge/last%20run-2021--10--07%2021:42-green)
+![Github CI](https://github.com/vdesabou/kafka-docker-playground/workflows/CI/badge.svg)![success tests](https://img.shields.io/badge/success%20tests-1033%2F1100-red)![connector tested](https://img.shields.io/badge/connector%20tested-125-green)![cp versions tested](https://img.shields.io/badge/cp%20version%20tested-%205.5.6%206.0.3%206.1.2%206.2.1-green)![last run](https://img.shields.io/badge/last%20run-2021--10--08%2011:16-green)
 ![GitHub issues by-label](https://img.shields.io/github/issues/vdesabou/kafka-docker-playground/bug%20🔥)![GitHub issues by-label](https://img.shields.io/github/issues/vdesabou/kafka-docker-playground/enhancement%20✨)
 ![GitHub repo size](https://img.shields.io/github/repo-size/vdesabou/kafka-docker-playground)
 [![Gitpod ready-to-code](https://img.shields.io/badge/Gitpod-ready--to--code-908a85?logo=gitpod)](https://gitpod.io/#https://github.com/vdesabou/kafka-docker-playground)
-
-- [👾 Playgrounds](#-playgrounds)
-  - [Connectors](#connectors)
-  - [☁️ Confluent Cloud](#️-confluent-cloud)
-  - [🔄 Confluent Replicator and Mirror Maker 2](#-confluent-replicator-and-mirror-maker-2)
-  - [🔐 Environments](#-environments)
-  - [Confluent Commercial](#confluent-commercial)
-  - [CP-Ansible Playground](#cp-ansible-playground)
-  - [👾 Other Playgrounds](#-other-playgrounds)
-- [🎓 How to use](#-how-to-use)
-  - [0️⃣ Prerequisites](#0️⃣-prerequisites)
-  - [🐳 Recommended Docker settings](#-recommended-docker-settings)
-  - [🌩 Running on AWS EC2 instance](#-running-on-aws-ec2-instance)
-  - [<img src="https://gitpod.io/static/media/gitpod.2cdd910d.svg" width="15"> Running on Gitpod](#-running-on-gitpod)
-
-
 # 👾 Playgrounds
 
 ## Connectors
@@ -270,31 +253,3 @@ There is also a Confluent Cloud version available [here](https://github.com/vdes
 - <img src="https://kafka.js.org/img/kafkajs-logoV2.svg" width="15"> [KafkaJS](https://github.com/vdesabou/kafka-docker-playground/tree/master/other/client-kafkajs) client (producer/consumer)
 - <img src="https://datadog-docs.imgix.net/images/dd-docs-meta-image.png" width="15"> [Monitor Confluent Platform with Datadog](https://github.com/vdesabou/kafka-docker-playground/tools/datadog)
 - Testing [KIP-108](https://cwiki.apache.org/confluence/display/KAFKA/KIP-108%3A+Create+Topic+Policy) [Create Topic Policy](https://github.com/vdesabou/kafka-docker-playground/tree/master/other/create-topic-policy)
-
-# 🎓 How to use
-
-## 0️⃣ Prerequisites
-
-You just need to have [docker](https://docs.docker.com/get-docker/) and [docker-compose](https://docs.docker.com/compose/install/) installed on your machine !
-Every command used in the playground is using Docker, this includes `jq` (except if you have it on your host already), `aws`, `az`, `gcloud`, etc..
-The goal is to have a consistent behaviour and only depends on Docker.
-
-## 🐳 Recommended Docker settings
-
-![Diagram](https://github.com/vdesabou/kafka-docker-playground/blob/4c3e6d481fcff7353a64e666d09f0921153a70e1/ccloud/ccloud-demo/images/docker-settings.jpg?raw=true)
-
-## 🌩 Running on AWS EC2 instance
-
-If you want to run it on EC2 instance (highly recommended if you have low internet bandwith), you can use the AWS CloudFormation template provided [here]([cloudformation/README.md](https://github.com/vdesabou/kafka-docker-playground/blob/master/cloudformation/kafka-docker-playground.json)).
-
-For example, this is how I start it using aws CLI:
-
-```bash
-$ cp /path/to/kafka-docker-playground/cloudformation/kafka-docker-playground.json tmp.json
-$ aws cloudformation create-stack  --stack-name kafka-docker-playground-$USER --template-body file://tmp.json --region eu-west-3
- --parameters ParameterKey=KeyName,ParameterValue=$KEY_NAME ParameterKey=InstanceName,ParameterValue=kafka-docker-playground-$USER
-```
-
-## <img src="https://gitpod.io/static/media/gitpod.2cdd910d.svg" width="15"> Running on Gitpod
-
-[![Open in Gitpod](https://gitpod.io/button/open-in-gitpod.svg)](https://gitpod.io/#https://github.com/vdesabou/kafka-docker-playground)
