@@ -57,12 +57,12 @@ jobs:
           ./.github/scripts/decrypt_secret.sh
           tar xvf secrets.tar
           mkdir -p $HOME/.aws
-          cp aws_config $HOME/.aws/config
-          cp aws_credentials $HOME/.aws/credentials
-          cp aws_credentials_with_assuming_iam_role $HOME/.aws/credentials-with-assuming-iam-role
+          mv aws_config $HOME/.aws/config
+          mv aws_credentials $HOME/.aws/credentials
+          mv aws_credentials_with_assuming_iam_role $HOME/.aws/credentials-with-assuming-iam-role
           chmod -R a+rw $HOME/.aws
           mkdir -p $HOME/.ccloud
-          cp config.cc.travis $HOME/.ccloud/config
+          mv config.cc.travis $HOME/.ccloud/config
           echo "$DOCKER_PASSWORD" | docker login -u vdesabou --password-stdin
         env:
           SECRETS_ENCRYPTION_PASSWORD: ${{ secrets.SECRETS_ENCRYPTION_PASSWORD }}
