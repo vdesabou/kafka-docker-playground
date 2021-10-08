@@ -1,9 +1,7 @@
 
 # 👾 Playgrounds
 
-## Connectors
-
-Quick start examples from Confluent [docs](https://docs.confluent.io/current/connect/managing/index.html) but in Docker version for ease of use.
+## 🔗 Connectors
 
 * <img src="https://github.com/vdesabou/kafka-docker-playground/raw/master/images/icons/activemq.png" width="15"> [ActiveMQ Sink](https://github.com/vdesabou/kafka-docker-playground/tree/master/connect/connect-active-mq-sink) (also with 🔑 mTLS) :connect/connect-active-mq-sink:
 * <img src="https://github.com/vdesabou/kafka-docker-playground/raw/master/images/icons/activemq.png" width="15"> [ActiveMQ Source](https://github.com/vdesabou/kafka-docker-playground/tree/master/connect/connect-active-mq-source) (also with 🔑  mTLS) :connect/connect-active-mq-source:
@@ -134,22 +132,15 @@ Quick start examples from Confluent [docs](https://docs.confluent.io/current/con
 * <img src="https://github.com/vdesabou/kafka-docker-playground/raw/master/images/icons/vertica.png" width="15"> [Vertica Sink](https://github.com/vdesabou/kafka-docker-playground/tree/master/connect/connect-vertica-sink) :connect/connect-vertica-sink:
 * <img src="https://github.com/vdesabou/kafka-docker-playground/raw/master/images/icons/zendesk.png" width="15"> [Zendesk Source](https://github.com/vdesabou/kafka-docker-playground/tree/master/connect/connect-zendesk-source) :connect/connect-zendesk-source:
 
-\* You can change default connector version by setting `CONNECTOR_TAG` environment variable before starting a test, get more details [here](https://github.com/vdesabou/kafka-docker-playground/wiki/How-to-run#default-connector-version)
 
 ## ☁️ Confluent Cloud
 
-<!-- omit in toc -->
-### [Confluent Cloud Demo](https://github.com/vdesabou/kafka-docker-playground/tree/master/ccloud/ccloud-demo) <!-- {docsify-ignore} -->
+### 💻️ Demo
 
-  - How to connect your components to Confluent Cloud
-  - How to monitor your Confluent Cloud cluster
-  - How to restrict access
-  - etc...
+  - 🔌 How to [connect](https://github.com/vdesabou/kafka-docker-playground/tree/master/ccloud/ccloud-demo#connecting-components-to-confluent-cloud) your components to Confluent Cloud
+  - 📈 How to [monitor](https://github.com/vdesabou/kafka-docker-playground/tree/master/ccloud/ccloud-demo#monitoring) your Confluent Cloud cluster using Metrics API and Gr💻️afana, Splunk, New Relic, etc...
 
-![Diagram](https://github.com/vdesabou/kafka-docker-playground/raw/master/ccloud/ccloud-demo/images/diagram.png)
-
-<!-- omit in toc -->
-### 🔗 Kafka Connectors connected to Confluent Cloud <!-- {docsify-ignore} -->
+### 🔗 Connectors connected to Confluent Cloud
 
   - <img src="https://github.com/vdesabou/kafka-docker-playground/raw/master/images/icons/kinesis.svg" width="15"> [AWS Kinesis](https://github.com/vdesabou/kafka-docker-playground/tree/master/ccloud/connect-aws-kinesis-source) source
   - <img src="https://github.com/vdesabou/kafka-docker-playground/raw/master/images/icons/servicenow.png" width="15"> [ServiceNow](https://github.com/vdesabou/kafka-docker-playground/tree/master/ccloud/connect-servicenow-source) source
@@ -157,79 +148,78 @@ Quick start examples from Confluent [docs](https://docs.confluent.io/current/con
   - <img src="https://github.com/vdesabou/kafka-docker-playground/raw/master/images/icons/mongodb.jpg" width="15"> [MongoDB](https://github.com/vdesabou/kafka-docker-playground/tree/master/ccloud/connect-debezium-mongodb-source) source
   - <img src="https://github.com/vdesabou/kafka-docker-playground/raw/master/images/icons/firebase.svg" width="15"> [Firebase](https://github.com/vdesabou/kafka-docker-playground/tree/master/ccloud/connect-gcp-firebase-sink)
 
-<!-- omit in toc -->
-### Other <!-- {docsify-ignore} -->
+### 🚀 And much more...
 
-  - Using [cp-ansible](https://github.com/vdesabou/kafka-docker-playground/tree/master/ccloud/cp-ansible-playground/) with Confluent Cloud
-  - Using [cp-helm-charts](https://github.com/vdesabou/kafka-docker-playground/tree/master/ccloud/cp-helm-chart/) with Confluent Cloud
-  - Using [confluent operator](https://github.com/vdesabou/kafka-docker-playground/tree/master/ccloud/operator/) with Confluent Cloud
-  - Demo using [dabz/ccloudexporter](https://github.com/Dabz/ccloudexporter) in order to pull [Metrics API](https://docs.confluent.io/current/cloud/metrics-api.html) data from Confluent Cloud cluster and export it to Prometheus (Grafana dashboard is also available)
+  - ⛈️ Using [cp-ansible](https://github.com/vdesabou/kafka-docker-playground/tree/master/ccloud/cp-ansible-playground/) with Confluent Cloud
+  - 🌬️ Using [cp-helm-charts](https://github.com/vdesabou/kafka-docker-playground/tree/master/ccloud/cp-helm-chart/) with Confluent Cloud
+  - 🌦️ Using [confluent operator](https://github.com/vdesabou/kafka-docker-playground/tree/master/ccloud/operator/) with Confluent Cloud
+  - 📈 Demo using [dabz/ccloudexporter](https://github.com/Dabz/ccloudexporter)
   - <img src="https://www.pngitem.com/pimgs/m/33-335825_-net-core-logo-png-transparent-png.png" width="15"> [.NET](https://github.com/vdesabou/kafka-docker-playground/tree/master/ccloud/client-dotnet) client (producer/consumer)
   - <img src="https://github.com/confluentinc/examples/raw/5.4.1-post/clients/cloud/images/go.png" width="15"> [Go](https://github.com/vdesabou/kafka-docker-playground/tree/master/ccloud/client-go) client (producer/consumer)
   - <img src="https://kafka.js.org/img/kafkajs-logoV2.svg" width="15"> [KafkaJS](https://github.com/vdesabou/kafka-docker-playground/tree/master/ccloud/client-kafkajs) client (producer/consumer)
   - <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/c/c3/Python-logo-notext.svg/110px-Python-logo-notext.svg.png" width="15"> [Python](https://github.com/vdesabou/kafka-docker-playground/tree/master/ccloud/client-python) client (producer/consumer)
-  - <img src="https://vectorified.com/images/admin-icon-png-14.png" width="15"> [kafka-admin](https://github.com/vdesabou/kafka-docker-playground/tree/master/ccloud/kafka-admin) Managing topics and ACLs using [matt-mangia/kafka-admin](https://github.com/matt-mangia/kafka-admin)
-  - <img src="https://img.icons8.com/cotton/2x/synchronize--v1.png" width="15"> Confluent Replicator [OnPrem to cloud and Cloud to Cloud examples](https://github.com/vdesabou/kafka-docker-playground/tree/master/ccloud/replicator)
-  - <img src="https://avatars3.githubusercontent.com/u/9439498?s=60&v=4" width="15"> [Multi-Cluster Schema Registry](https://github.com/vdesabou/kafka-docker-playground/tree/master/ccloud/multiple-sr-hybrid) with hybrid configuration (onprem/confluent cloud)
-  - [Confluent REST Proxy Security Plugin](https://github.com/vdesabou/kafka-docker-playground/tree/master/ccloud/rest-proxy-security-plugin) with Principal Propagation
-  - [Confluent Schema Registry Security Plugin](https://github.com/vdesabou/kafka-docker-playground/tree/master/ccloud/schema-registry-security-plugin)
-  - [Migrate Schemas to Confluent Cloud](https://github.com/vdesabou/kafka-docker-playground/tree/master/ccloud/migrate-schemas-to-confluent-cloud) using Confluent Replicator
-  - [Confluent Cloud Networking](https://github.com/vdesabou/kafka-docker-playground/tree/master/ccloud/haproxy) using HAProxy
-  - [Multiple Event Types in the Same Topic](https://github.com/vdesabou/kafka-docker-playground/tree/master/other/multiple-event-types-in-topic)
+  - 🧑‍🏭 Managing topics and ACLs using [matt-mangia/kafka-admin](https://github.com/matt-mangia/kafka-admin)
+  - 🌍️ Confluent Replicator [OnPrem to cloud and Cloud to Cloud examples](https://github.com/vdesabou/kafka-docker-playground/tree/master/ccloud/replicator)
+  - 🗺️ [Multi-Cluster Schema Registry](https://github.com/vdesabou/kafka-docker-playground/tree/master/ccloud/multiple-sr-hybrid) with hybrid configuration (onprem/confluent cloud)
+  - 🔑 [Confluent REST Proxy Security Plugin](https://github.com/vdesabou/kafka-docker-playground/tree/master/ccloud/rest-proxy-security-plugin) with Principal Propagation
+  - 🗝️ [Confluent Schema Registry Security Plugin](https://github.com/vdesabou/kafka-docker-playground/tree/master/ccloud/schema-registry-security-plugin)
+  - 🚛 [Migrate Schemas to Confluent Cloud](https://github.com/vdesabou/kafka-docker-playground/tree/master/ccloud/migrate-schemas-to-confluent-cloud) using Confluent Replicator
+  - 🕸️ [Confluent Cloud Networking](https://github.com/vdesabou/kafka-docker-playground/tree/master/ccloud/haproxy) using HAProxy
+  - 🎫 [Multiple Event Types in the Same Topic](https://github.com/vdesabou/kafka-docker-playground/tree/master/other/multiple-event-types-in-topic)
 
 ## 🔄 Confluent Replicator and Mirror Maker 2
 
-Using Multi-Data-Center setup with `US` 🇺🇸 and `EUROPE` 🇪🇺 clusters.
+Using Multi-Data-Center setup with 🇺🇸 and 🇪🇺 clusters
 
-- <img src="https://github.com/vdesabou/kafka-docker-playground/raw/master/images/icons/using_confluent_replicator_as_connector.png" width="15"> [Using Confluent Replicator as connector](https://github.com/vdesabou/kafka-docker-playground/tree/master/replicator/connect)
-  - Using [PLAINTEXT](https://github.com/vdesabou/kafka-docker-playground/tree/master/environment/mdc-plaintext)
-  - Using [SASL_PLAIN](https://github.com/vdesabou/kafka-docker-playground/tree/master/environment/mdc-sasl-plain)
-  - Using [Kerberos](https://github.com/vdesabou/kafka-docker-playground/tree/master/environment/mdc-kerberos)
-- 👾 [Using Confluent Replicator as executable](https://github.com/vdesabou/kafka-docker-playground/tree/master/replicator/executable)
-  - Using [PLAINTEXT](https://github.com/vdesabou/kafka-docker-playground/tree/master/environment/mdc-plaintext)
-  - Using [SASL_PLAIN](https://github.com/vdesabou/kafka-docker-playground/tree/master/environment/mdc-sasl-plain)
-  - Using [Kerberos](https://github.com/vdesabou/kafka-docker-playground/tree/master/environment/mdc-kerberos)
-- <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/0/05/Apache_kafka.svg/1200px-Apache_kafka.svg.png" width="16"> [Using Mirror Maker 2](https://github.com/vdesabou/kafka-docker-playground/tree/master/replicator/mirrormaker2)
-  - Using [PLAINTEXT](https://github.com/vdesabou/kafka-docker-playground/tree/master/environment/mdc-plaintext)
+- 🔗 [Confluent Replicator as connector](https://github.com/vdesabou/kafka-docker-playground/tree/master/replicator/connect)
+  - With [PLAINTEXT](https://github.com/vdesabou/kafka-docker-playground/tree/master/environment/mdc-plaintext)
+  - With [SASL_PLAIN](https://github.com/vdesabou/kafka-docker-playground/tree/master/environment/mdc-sasl-plain)
+  - With [Kerberos](https://github.com/vdesabou/kafka-docker-playground/tree/master/environment/mdc-kerberos)
+- 🖇️ [Confluent Replicator as executable](https://github.com/vdesabou/kafka-docker-playground/tree/master/replicator/executable)
+  - With [PLAINTEXT](https://github.com/vdesabou/kafka-docker-playground/tree/master/environment/mdc-plaintext)
+  - With [SASL_PLAIN](https://github.com/vdesabou/kafka-docker-playground/tree/master/environment/mdc-sasl-plain)
+  - With [Kerberos](https://github.com/vdesabou/kafka-docker-playground/tree/master/environment/mdc-kerberos)
+- 🌎️ [Apache Mirror Maker 2](https://github.com/vdesabou/kafka-docker-playground/tree/master/replicator/mirrormaker2)
+  - With [PLAINTEXT](https://github.com/vdesabou/kafka-docker-playground/tree/master/environment/mdc-plaintext)
 
 ## 🔐 Environments
 
-Single cluster:
+Using single cluster:
 
 - [PLAINTEXT](https://github.com/vdesabou/kafka-docker-playground/tree/master/environment/plaintext): no security
-- [SASL_PLAIN](https://github.com/vdesabou/kafka-docker-playground/tree/master/environment/sasl-plain): no SSL encryption, SASL/PLAIN authentication
+- [SASL/PLAIN](https://github.com/vdesabou/kafka-docker-playground/tree/master/environment/sasl-plain): no SSL encryption, SASL/PLAIN authentication
 - [SASL/SCRAM](https://github.com/vdesabou/kafka-docker-playground/tree/master/environment/sasl-scram) no SSL encryption, SASL/SCRAM-SHA-256 authentication
-- [SASL_SSL](https://github.com/vdesabou/kafka-docker-playground/tree/master/environment/sasl-ssl): SSL encryption, SASL/PLAIN authentication
-- [2WAY_SSL](https://github.com/vdesabou/kafka-docker-playground/tree/master/environment/2way-ssl): SSL encryption, SSL authentication
-- [Kerberos](https://github.com/vdesabou/kafka-docker-playground/tree/master/environment/kerberos): no SSL encryption, Kerberos GSSAPI authentication
-- [SSL_Kerberos](https://github.com/vdesabou/kafka-docker-playground/tree/master/environment/ssl_kerberos) SSL encryption, Kerberos GSSAPI authentication
+- [SASL/SSL](https://github.com/vdesabou/kafka-docker-playground/tree/master/environment/sasl-ssl): SSL encryption, SASL/PLAIN authentication
+- [2WAY/SSL](https://github.com/vdesabou/kafka-docker-playground/tree/master/environment/2way-ssl): SSL encryption, SSL authentication
+- [KERBEROS](https://github.com/vdesabou/kafka-docker-playground/tree/master/environment/kerberos): no SSL encryption, Kerberos GSSAPI authentication
+- [SSL/KERBEROS](https://github.com/vdesabou/kafka-docker-playground/tree/master/environment/ssl_kerberos) SSL encryption, Kerberos GSSAPI authentication
 - [LDAP Authentication with SASL/PLAIN](https://github.com/vdesabou/kafka-docker-playground/tree/master/environment/ldap-sasl-plain) no SSL encryption, SASL/PLAIN authentication using LDAP
 - [LDAP Authorizer with SASL/PLAIN](https://github.com/vdesabou/kafka-docker-playground/tree/master/environment/ldap-authorizer-sasl-plain) no SSL encryption, SASL/PLAIN authentication, LDAP Authorizer for ACL authorization
 - [RBAC with SASL/PLAIN](https://github.com/vdesabou/kafka-docker-playground/tree/master/environment/rbac-sasl-plain) RBAC with no SSL encryption, SASL/PLAIN authentication
 
-Multi-Data-Center setup:
+Using Multi-Data-Center setup with 🇺🇸 and 🇪🇺 clusters
 
 - [PLAINTEXT](https://github.com/vdesabou/kafka-docker-playground/tree/master/environment/mdc-plaintext): no security
-- [SASL_PLAIN](https://github.com/vdesabou/kafka-docker-playground/tree/master/environment/mdc-sasl-plain): no SSL encryption, SASL/PLAIN authentication
-- [Kerberos](https://github.com/vdesabou/kafka-docker-playground/tree/master/environment/mdc-kerberos): no SSL encryption, Kerberos GSSAPI authentication
+- [SASL/PLAIN](https://github.com/vdesabou/kafka-docker-playground/tree/master/environment/mdc-sasl-plain): no SSL encryption, SASL/PLAIN authentication
+- [KERBEROS](https://github.com/vdesabou/kafka-docker-playground/tree/master/environment/mdc-kerberos): no SSL encryption, Kerberos GSSAPI authentication
 
-## Confluent Commercial
+## 💸 Confluent Commercial
 
-- Control Center
+- 💻 Control Center
   - [Control Center in "Read-Only" mode](https://github.com/vdesabou/kafka-docker-playground/tree/master/other/control-center-readonly-mode/)
   - [Configuring Control Center with LDAP authentication](https://github.com/vdesabou/kafka-docker-playground/tree/master/other/control-center-ldap-auth)
-- Tiered Storage
+- 💾 Tiered Storage
   - [Tiered storage with AWS S3](https://github.com/vdesabou/kafka-docker-playground/tree/master/other/tiered-storage-with-aws)
   - [Tiered storage with Minio](https://github.com/vdesabou/kafka-docker-playground/tree/master/other/tiered-storage-with-minio) (unsupported)
-- [Confluent Rebalancer](https://github.com/vdesabou/kafka-docker-playground/tree/master/other/rebalancer)
-- [JMS Client](https://github.com/vdesabou/kafka-docker-playground/tree/master/other/jms-client)
-- [RBAC with SASL/PLAIN](https://github.com/vdesabou/kafka-docker-playground/tree/master/environment/rbac-sasl-plain) RBAC with no SSL encryption, SASL/PLAIN authentication
-- [Audit Logs](https://github.com/vdesabou/kafka-docker-playground/tree/master/other/audit-logs)
-- [Confluent REST Proxy Security Plugin](https://github.com/vdesabou/kafka-docker-playground/tree/master/other/rest-proxy-security-plugin) with SASL_SSL and 2WAY_SSL Principal Propagation
-- [Cluster Linking](https://github.com/vdesabou/kafka-docker-playground/tree/master/other/cluster-linking)
-- [Testing RBAC with Azure AD](https://github.com/vdesabou/kafka-docker-playground/tree/master/other/rbac-with-azure-ad)
+- 📦 [Confluent Rebalancer](https://github.com/vdesabou/kafka-docker-playground/tree/master/other/rebalancer)
+- 👴 [JMS Client](https://github.com/vdesabou/kafka-docker-playground/tree/master/other/jms-client)
+- 〽️ [RBAC with SASL/PLAIN](https://github.com/vdesabou/kafka-docker-playground/tree/master/environment/rbac-sasl-plain) RBAC with no SSL encryption, SASL/PLAIN authentication
+- 🗃️ [Audit Logs](https://github.com/vdesabou/kafka-docker-playground/tree/master/other/audit-logs)
+- 🔒️ [Confluent REST Proxy Security Plugin](https://github.com/vdesabou/kafka-docker-playground/tree/master/other/rest-proxy-security-plugin) with SASL/SSL and 2WAY/SSL Principal Propagation
+- ♻️ [Cluster Linking](https://github.com/vdesabou/kafka-docker-playground/tree/master/other/cluster-linking)
+- 📒 [Testing RBAC with Azure AD](https://github.com/vdesabou/kafka-docker-playground/tree/master/other/rbac-with-azure-ad)
 
-## [CP-Ansible Playground](https://github.com/vdesabou/kafka-docker-playground/tree/master/other/cp-ansible-playground)
+## 🪄 [CP-Ansible Playground](https://github.com/vdesabou/kafka-docker-playground/tree/master/other/cp-ansible-playground)
 
 Easily play with Confluent Platform Ansible playbooks by using Ubuntu based Docker images generated daily from this [cp-ansible-playground](https://github.com/vdesabou/cp-ansible-playground) repository
 
@@ -237,12 +227,10 @@ There is also a Confluent Cloud version available [here](https://github.com/vdes
 
 ## 👾 Other Playgrounds
 
-- [Confluent Replicator](https://github.com/vdesabou/kafka-docker-playground/tree/master/connect/connect-replicator) [also with [SASL_SSL](https://github.com/vdesabou/kafka-docker-playground/tree/master/connect/connect-replicator/README.md#with-sasl-ssl-authentication) and [2WAY_SSL](https://github.com/vdesabou/kafka-docker-playground/tree/master/connect/connect-replicator/README.md#with-ssl-authentication)]
-- Testing [Separate principals](https://docs.confluent.io/current/connect/security.html#separate-principals) (`connector.client.config.override.policy`) for [Source connector (SFTP source)](https://github.com/vdesabou/kafka-docker-playground/tree/master/other/connect-override-policy-sftp-source)
-- Testing [Separate principals](https://docs.confluent.io/current/connect/security.html#separate-principals) (`connector.client.config.override.policy`) for [Source connector (SFTP sink)](https://github.com/vdesabou/kafka-docker-playground/tree/master/other/connect-override-policy-sftp-sink)
-- [How to write logs to files when using docker-compose](https://github.com/vdesabou/kafka-docker-playground/tree/master/other/write-logs-to-files)
-- [Publish logs to kafka with Elastic Filebeat](https://github.com/vdesabou/kafka-docker-playground/tree/master/other/filebeat-to-kafka)
+- 👬 [Separate principals](https://docs.confluent.io/current/connect/security.html#separate-principals) when using connectors: [example with SFTP source](https://github.com/vdesabou/kafka-docker-playground/tree/master/other/connect-override-policy-sftp-source)
+- 📃 [How to write logs to files when using docker-compose](https://github.com/vdesabou/kafka-docker-playground/tree/master/other/write-logs-to-files)
+- 📢 [Publish logs to kafka with Elastic Filebeat](https://github.com/vdesabou/kafka-docker-playground/tree/master/other/filebeat-to-kafka)
 - <img src="https://www.pngitem.com/pimgs/m/33-335825_-net-core-logo-png-transparent-png.png" width="15"> [.NET](https://github.com/vdesabou/kafka-docker-playground/tree/master/other/client-dotnet) basic producer
 - <img src="https://kafka.js.org/img/kafkajs-logoV2.svg" width="15"> [KafkaJS](https://github.com/vdesabou/kafka-docker-playground/tree/master/other/client-kafkajs) client (producer/consumer)
 - <img src="https://datadog-docs.imgix.net/images/dd-docs-meta-image.png" width="15"> [Monitor Confluent Platform with Datadog](https://github.com/vdesabou/kafka-docker-playground/tools/datadog)
-- Testing [KIP-108](https://cwiki.apache.org/confluence/display/KAFKA/KIP-108%3A+Create+Topic+Policy) [Create Topic Policy](https://github.com/vdesabou/kafka-docker-playground/tree/master/other/create-topic-policy)
+- 👻 Testing [KIP-108](https://cwiki.apache.org/confluence/display/KAFKA/KIP-108%3A+Create+Topic+Policy) [Create Topic Policy](https://github.com/vdesabou/kafka-docker-playground/tree/master/other/create-topic-policy)
