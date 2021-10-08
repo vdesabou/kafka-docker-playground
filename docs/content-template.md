@@ -159,7 +159,7 @@
   - <img src="https://kafka.js.org/img/kafkajs-logoV2.svg" width="15"> [KafkaJS](https://github.com/vdesabou/kafka-docker-playground/tree/master/ccloud/client-kafkajs) client (producer/consumer)
   - <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/c/c3/Python-logo-notext.svg/110px-Python-logo-notext.svg.png" width="15"> [Python](https://github.com/vdesabou/kafka-docker-playground/tree/master/ccloud/client-python) client (producer/consumer)
   - 🧑‍🏭 Managing topics and ACLs using [matt-mangia/kafka-admin](https://github.com/matt-mangia/kafka-admin)
-  - 🌍️ Confluent Replicator [OnPrem to cloud and Cloud to Cloud examples](https://github.com/vdesabou/kafka-docker-playground/tree/master/ccloud/replicator)
+  - ♻️ Confluent Replicator [OnPrem to cloud and Cloud to Cloud examples](https://github.com/vdesabou/kafka-docker-playground/tree/master/ccloud/replicator)
   - 🗺️ [Multi-Cluster Schema Registry](https://github.com/vdesabou/kafka-docker-playground/tree/master/ccloud/multiple-sr-hybrid) with hybrid configuration (onprem/confluent cloud)
   - 🔑 [Confluent REST Proxy Security Plugin](https://github.com/vdesabou/kafka-docker-playground/tree/master/ccloud/rest-proxy-security-plugin) with Principal Propagation
   - 🗝️ [Confluent Schema Registry Security Plugin](https://github.com/vdesabou/kafka-docker-playground/tree/master/ccloud/schema-registry-security-plugin)
@@ -167,7 +167,7 @@
   - 🕸️ [Confluent Cloud Networking](https://github.com/vdesabou/kafka-docker-playground/tree/master/ccloud/haproxy) using HAProxy
   - 🎫 [Multiple Event Types in the Same Topic](https://github.com/vdesabou/kafka-docker-playground/tree/master/other/multiple-event-types-in-topic)
 
-## 🔄 Confluent Replicator and Mirror Maker 2
+## ♻️ Confluent Replicator and Mirror Maker 2
 
 Using Multi-Data-Center setup with 🇺🇸 and 🇪🇺 clusters
 
