@@ -37,7 +37,7 @@ fi
 log "Cleanup Azure Resource groups"
 for group in $(az group list --query '[].name' --output tsv)
 do
-  if [[ $group = pgrunner* ]]
+  if [[ $group = pgrunner* ]] || [[ $group = pgec2user* ]]
   then
     if [ ! -z "$GITHUB_RUN_NUMBER" ]
     then
