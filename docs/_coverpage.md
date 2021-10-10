@@ -1,7 +1,7 @@
 
 # kafka-docker-playground
 
-> Fully automated Docker based demos // Framework to build reproduction models
+> Fully automated Docker based examples // Easily build kafka/Confluent reproduction models
 
 - 💯➕ Kafka [connectors](https://github.com/vdesabou/kafka-docker-playground#connectors)
 - 🔐 Secured [environments](https://github.com/vdesabou/kafka-docker-playground#-environments) (SASL, RBAC, SSL...)
