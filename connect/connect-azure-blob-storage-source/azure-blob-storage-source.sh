@@ -1,9 +1,6 @@
 #!/bin/bash
 set -e
 
-# TMP RCCA 4346
-export TAG=6.1.1
-
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
@@ -19,14 +16,6 @@ else
     az login
 fi
 
-AZURE_TENANT_NAME=${AZURE_TENANT_NAME:-$1}
-
-if [ -z "$AZURE_TENANT_NAME" ]
-then
-     logerror "AZURE_TENANT_NAME is not set. Export it as environment variable or pass it as argument"
-     exit 1
-fi
-
 AZURE_NAME=pg${USER}bs${GITHUB_RUN_NUMBER}${TAG}
 AZURE_NAME=${AZURE_NAME//[-._]/}
 AZURE_RESOURCE_GROUP=$AZURE_NAME
@@ -38,12 +27,10 @@ set +e
 az group delete --name $AZURE_RESOURCE_GROUP --yes
 set -e
 
-AZURE_TENANT_ID=$(az account list --query "[?name=='$AZURE_TENANT_NAME']" | jq -r '.[].tenantId')
 log "Creating Azure Resource Group $AZURE_RESOURCE_GROUP"
 az group create \
     --name $AZURE_RESOURCE_GROUP \
-    --location $AZURE_REGION \ 
-    --subscription $AZURE_TENANT_ID
+    --location $AZURE_REGION
 log "Creating Azure Storage Account $AZURE_ACCOUNT_NAME"
 az storage account create \
     --name $AZURE_ACCOUNT_NAME \
@@ -63,15 +50,6 @@ az storage container create \
 
 
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
-
-curl --request PUT \
-  --url http://localhost:8083/admin/loggers/io.confluent \
-  --header 'Accept: application/json' \
-  --header 'Content-Type: application/json' \
-  --data '{
-	"level": "TRACE"
-}'
-
 
 log "Creating Azure Blob Storage Sink connector"
 curl -X PUT \
@@ -105,7 +83,6 @@ az storage blob download --account-name "${AZURE_ACCOUNT_NAME}" --account-key "$
 
 docker run -v /tmp:/tmp actions/avro-tools tojson /tmp/blob_topic+0+0000000000.avro
 
-curl -X DELETE localhost:8083/connectors/azure-blob-sink
 
 log "Creating Azure Blob Storage Source connector"
 curl -X PUT \
@@ -127,13 +104,10 @@ curl -X PUT \
           }' \
      http://localhost:8083/connectors/azure-blob-source/config | jq .
 
-sleep 60
+sleep 5
 
 log "Verifying topic copy_of_blob_topic"
 timeout 60 docker exec broker kafka-console-consumer -bootstrap-server broker:9092 --topic copy_of_blob_topic --from-beginning --max-messages 3
-
-exit 0
-
 
 log "Deleting resource group"
 az group delete --name $AZURE_RESOURCE_GROUP --yes --no-wait
