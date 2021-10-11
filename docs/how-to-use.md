@@ -54,7 +54,7 @@ $ aws cloudformation create-stack  --stack-name kafka-docker-playground-$USER \
     ParameterKey=InstanceName,ParameterValue=kafka-docker-playground-$USER
 ```
 
-## 🟢 Start an example
+## 🏎️ Start an example
 
 Select an example in the **[Content](/content.md)** section and simply run the bash script you want !
 
@@ -142,3 +142,5 @@ ls: cannot access '/usr/share/confluent-hub-components/debezium-debezium-connect
 
 ?> The connect image [used](https://github.com/vdesabou/kafka-docker-playground/blob/714b36289981f9fe8f699ae3eab9a508127b625e/environment/plaintext/docker-compose.yml#L80) in the playground is `vdesabou/kafka-docker-playground-connect`, which is built [everyday](https://github.com/vdesabou/kafka-docker-playground-connect/actions) using the repo [vdesabou/kafka-docker-playground-connect](https://github.com/vdesabou/kafka-docker-playground-connect).
 
+
+## 🔢 JMX Metrics
