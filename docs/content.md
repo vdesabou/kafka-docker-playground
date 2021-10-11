@@ -134,7 +134,7 @@ Quick start examples from Confluent [docs](https://docs.confluent.io/current/con
 * <img src="https://github.com/vdesabou/kafka-docker-playground/raw/master/images/icons/vertica.png" width="15"> [Vertica Sink](https://github.com/vdesabou/kafka-docker-playground/tree/master/connect/connect-vertica-sink) &nbsp; &nbsp; &nbsp; [![version](https://img.shields.io/badge/v-1.2.5-pink)](https://docs.confluent.io/kafka-connect-vertica/current/index.html) [![CI ok](https://img.shields.io/badge/CI-ok!-green)](https://github.com/vdesabou/kafka-docker-playground/runs/3807650502) 
 * <img src="https://github.com/vdesabou/kafka-docker-playground/raw/master/images/icons/zendesk.png" width="15"> [Zendesk Source](https://github.com/vdesabou/kafka-docker-playground/tree/master/connect/connect-zendesk-source) &nbsp; &nbsp; &nbsp; [![version](https://img.shields.io/badge/v-1.0.6-pink)](https://docs.confluent.io/kafka-connect-zendesk/current/) [![CI ok](https://img.shields.io/badge/CI-ok!-green)](https://github.com/vdesabou/kafka-docker-playground/runs/3807651081) 
 
-\* You can change default connector version by setting `CONNECTOR_TAG` environment variable before starting a test, get more details [here](https://github.com/vdesabou/kafka-docker-playground/wiki/How-to-run#default-connector-version)
+\* You can change default connector version by setting `CONNECTOR_TAG` environment variable before starting a test, get more details [here](https://kafka-docker-playground.io/#/how-to-use?id=🔗-for-connectors)
 
 ## ☁️ Confluent Cloud
 
