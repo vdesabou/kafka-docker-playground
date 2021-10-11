@@ -74,7 +74,7 @@ fi
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.repro-70453.yml"
 
 log "Doing a tcpdump"
-docker exec -d --privileged --user root connect bash -c 'tcpdump -w tcpdump.pcap -i eth0 -s 0 port 8888 or port'
+docker exec -d --privileged --user root connect bash -c 'tcpdump -w tcpdump.pcap -i eth0 -s 0 port 8888'
 
 export HTTP_PROXY=127.0.0.1:8888
 export HTTPS_PROXY=127.0.0.1:8888
