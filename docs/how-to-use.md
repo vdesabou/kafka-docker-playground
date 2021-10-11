@@ -1,7 +1,9 @@
 
 # 👨‍🏫 How to use
 
-## 💻️ Running locally
+## Ways to run
+
+### 💻️ Locally
 
 * You just need to have [docker](https://docs.docker.com/get-docker/) and [docker-compose](https://docs.docker.com/compose/install/) installed on your machine !
 
@@ -12,7 +14,15 @@ The goal is to have a consistent behaviour and only depends on Docker.
 
 ![docker prefs](https://github.com/vdesabou/kafka-docker-playground/blob/4c3e6d481fcff7353a64e666d09f0921153a70e1/ccloud/ccloud-demo/images/docker-settings.jpg?raw=true)
 
-## <img src="https://gitpod.io/static/media/gitpod.2cdd910d.svg" width="15"> Running using Gitpod
+* Clone the repository
+
+```bash
+git clone https://github.com/vdesabou/kafka-docker-playground.git -–depth 1
+```
+
+?> Specifying `--depth 1` only get the latest version of the playground, which reduces a lot the size of the donwload
+
+### <img src="https://gitpod.io/static/media/gitpod.2cdd910d.svg" width="15"> Gitpod.io
 
 You can run the playground in your browser using [Gitpod.io](https://gitpod.io) workspace by clicking on this [link](https://gitpod.io/#https://github.com/vdesabou/kafka-docker-playground)
 
@@ -30,7 +40,7 @@ Or select `Remote Explorer` on the left sidebar and then click on the `Open Brow
 
 ![port](./images/gitpod_port_explorer.png)
 
-## 🌩 Running with AWS EC2 instance
+### 🌩 AWS CloudFormation
 
 If you want to run the playground on an EC2 instance, you can use the AWS CloudFormation template provided [here]([cloudformation/README.md](https://github.com/vdesabou/kafka-docker-playground/blob/master/cloudformation/kafka-docker-playground.json)).
 
@@ -44,4 +54,91 @@ $ aws cloudformation create-stack  --stack-name kafka-docker-playground-$USER \
     ParameterKey=InstanceName,ParameterValue=kafka-docker-playground-$USER
 ```
 
-## 
+## 🟢 Start an example
+
+Select an example in the **[Content](/content.md)** section and simply run the bash script you want !
+
+Example: if you want to run a test with IBM MQ sink connector, check out the [README](https://github.com/vdesabou/kafka-docker-playground/tree/master/connect/connect-ibm-mq-sink) and the list of tests in [How to Run](https://github.com/vdesabou/kafka-docker-playground/tree/master/connect/connect-ibm-mq-sink#how-to-run) section, then simply execute the script you want:
+
+```bash
+cd connect/connect-ibm-mq-sink
+./ibm-mq-sink-mtls.sh
+```
+
+?> When some addtional steps are required, it is specified in the corresponding `README` file, for example with [AWS S3 sink connector](https://github.com/vdesabou/kafka-docker-playground/tree/master/connect/connect-aws-s3-sink#aws-setup), `~/.aws/credentials` and `~/.aws/config` are required or for [Zendesk source connector](https://github.com/vdesabou/kafka-docker-playground/tree/master/connect/connect-zendesk-source#how-to-run), arguments `ZENDESK_URL`, `ZENDESK_USERNAME`and `ZENDESK_PASSWORD` are required (you can also pass them as enviroment variables).
+
+## 🪄 Specify versions
+
+### 🎯 For Confluent Platform (CP)
+
+By default, latest Confluent Platform version is used (currently `6.2.1`).
+Before running an example, you can change the CP version used (must be greater or equal to `5.0.0`), simply by exporting `TAG` environment variable:
+
+Example:
+
+```bash
+export TAG=6.0.3
+```
+
+?> To go back to default CP version, simply execute `unset TAG`
+
+### 🔗 For Connectors
+
+By default, for each connector, the latest available version on [Confluent Hub](https://www.confluent.io/hub/) is used (the only 2 exceptions are for replicator and JDBC which are using same version as CP).
+Each latest version used is specified on the [Connectors list](https://kafka-docker-playground.io/#/content?id=connectors)
+
+The playground has 3 different ways to use different connector version when running a connector test:
+
+1. Specify the connector version
+
+```bash
+export CONNECTOR_TAG=x.x.x
+```
+
+2. Specify a connector ZIP file
+
+```bash
+export CONNECTOR_ZIP="path/to/connector.zip"
+```
+
+Example:
+
+```bash
+export CONNECTOR_ZIP="/Users/vsaboulin/Downloads/confluentinc-kafka-connect-http-1.2.3.zip"
+17:37:20 ℹ️ 🚀 CONNECTOR_ZIP is set with /Users/vsaboulin/Downloads/confluentinc-kafka-connect-http-1.2.3.zip
+17:37:20 ℹ️ 👷 Building Docker image vdesabou/kafka-docker-playground-connect:CP-6.2.1-confluentinc-kafka-connect-http-1.2.3.zip
+```
+
+3. Specify a connector JAR file
+
+```bash
+export CONNECTOR_JAR="path/to/connector.jar"
+```
+
+Example:
+
+```bash
+export CONNECTOR_JAR/tmp/kafka-connect-http-1.3.1-SNAPSHOT.jar
+00:33:47 ℹ️ 🚀 CONNECTOR_JAR is set with /tmp/kafka-connect-http-1.3.1-SNAPSHOT.jar
+/usr/share/confluent-hub-components/confluentinc-kafka-connect-http/lib/kafka-connect-http-1.2.4.jar
+00:33:48 ℹ️ 👷 Building Docker image vdesabou/kafka-docker-playground-connect:CP-6.2.1-kafka-connect-http-1.2.4-kafka-connect-http-1.3.1-SNAPSHOT.jar
+00:33:48 ℹ️ Remplacing kafka-connect-http-1.2.4.jar by kafka-connect-http-1.3.1-SNAPSHOT.jar
+```
+
+When jar to replace cannot be found automatically, the user is able to select the one to replace automatically:
+
+```bash
+export CONNECTOR_JAR=/tmp/debezium-connector-postgres-1.4.0-SNAPSHOT.jar
+11:02:43 ℹ️ 🚀 CONNECTOR_JAR is set with /tmp/debezium-connector-postgres-1.4.0-SNAPSHOT.jar
+ls: cannot access '/usr/share/confluent-hub-components/debezium-debezium-connector-postgresql/lib/debezium-connector-postgresql-1.4.0.jar': No such file or directory
+11:02:44 ❗ debezium-debezium-connector-postgresql/lib/debezium-connector-postgresql-1.4.0.jar does not exist, the jar name to replace could not be found automatically
+11:02:45 ℹ️ Select the jar to replace:
+1) debezium-api-1.4.0.Final.jar
+2) debezium-connector-postgres-1.4.0.Final.jar
+3) debezium-core-1.4.0.Final.jar
+```
+
+!> you can use both `CONNECTOR_TAG` and `CONNECTOR_JAR` at same time (along with `TAG`), but `CONNECTOR_TAG` and `CONNECTOR_ZIP` are mutually exclusive.
+
+?> The connect image [used](https://github.com/vdesabou/kafka-docker-playground/blob/714b36289981f9fe8f699ae3eab9a508127b625e/environment/plaintext/docker-compose.yml#L80) in the playground is `vdesabou/kafka-docker-playground-connect`, which is built [everyday](https://github.com/vdesabou/kafka-docker-playground-connect/actions) using the repo [vdesabou/kafka-docker-playground-connect](https://github.com/vdesabou/kafka-docker-playground-connect).
+

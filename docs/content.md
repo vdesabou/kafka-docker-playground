@@ -1,7 +1,7 @@
 
 # 👾 Playgrounds
 
-## Connectors
+## 🔗 Connectors
 
 Quick start examples from Confluent [docs](https://docs.confluent.io/current/connect/managing/index.html) but in Docker version for ease of use.
 
