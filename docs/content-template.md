@@ -132,6 +132,7 @@
 * <img src="https://github.com/vdesabou/kafka-docker-playground/raw/master/images/icons/vertica.png" width="15"> [Vertica Sink](https://github.com/vdesabou/kafka-docker-playground/tree/master/connect/connect-vertica-sink) :connect/connect-vertica-sink:
 * <img src="https://github.com/vdesabou/kafka-docker-playground/raw/master/images/icons/zendesk.png" width="15"> [Zendesk Source](https://github.com/vdesabou/kafka-docker-playground/tree/master/connect/connect-zendesk-source) :connect/connect-zendesk-source:
 
+\* You can change default connector version by setting `CONNECTOR_TAG` environment variable before starting a test, get more details [here](https://kafka-docker-playground.io/#/how-to-use?id=🔗-for-connectors)
 
 ## ☁️ Confluent Cloud
 
