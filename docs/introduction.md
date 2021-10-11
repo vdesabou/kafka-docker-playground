@@ -1,21 +1,13 @@
 # Introduction
 
-## Overview
+## 🏁 Getting Started
 
-- 🚀  **TODO**: TODO
-## Features
+Check out the **[How to Use](/how-to-use.md)** section, then select an example in the **[Content](/content.md)** section and run it !
+## 💡 Ideology
 
-- 🚀  **TODO**: TODO
+Most of the examples in the playground are very basic, but it allows to quickly test components and most importantly to easily build your own reproduction models !
 
-## Getting Started
-
-Check out the **[Content](/content.md)**, select a test and run the corresponding script !
-
-## Ideology
-
-- 🚀  **TODO**: TODO
-
-## Contributing
+## ⛑️ Contributing
 
 Contributions are very welcome. See [CONTRIBUTING.md][contributing] for details.
 
