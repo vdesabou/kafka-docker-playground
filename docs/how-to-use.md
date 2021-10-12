@@ -7,7 +7,8 @@
 
 * You just need to have [docker](https://docs.docker.com/get-docker/) and [docker-compose](https://docs.docker.com/compose/install/) installed on your machine !
 
-?> Every command used in the playground is using Docker, this includes `jq` (except if you have it on your host already), `aws`, `az`, `gcloud`, etc..
+> [!NOTE]
+> Every command used in the playground is using Docker, this includes `jq` (except if you have it on your host already), `aws`, `az`, `gcloud`, etc..
 The goal is to have a consistent behaviour and only depends on Docker.
 
 * 🐳 Recommended Docker settings:
@@ -20,7 +21,8 @@ The goal is to have a consistent behaviour and only depends on Docker.
 git clone https://github.com/vdesabou/kafka-docker-playground.git -–depth 1
 ```
 
-?> Specifying `--depth 1` only get the latest version of the playground, which reduces a lot the size of the donwload
+> [!NOTE]
+> Specifying `--depth 1` only get the latest version of the playground, which reduces a lot the size of the donwload
 
 ### <img src="https://gitpod.io/static/media/gitpod.2cdd910d.svg" width="15"> Gitpod.io
 
@@ -30,7 +32,8 @@ Look at awesome this is 🪄 !
 
 ![demo](https://github.com/vdesabou/gifs/raw/master/docs/images/gitpod.gif)
 
-?> 50 hours/month can be used as part of the [free](https://www.gitpod.io/pricing) plan
+> [!TIP]
+> 50 hours/month can be used as part of the [free](https://www.gitpod.io/pricing) plan
 
 You can login into Control Center (port `9021`) by clicking on `Open Browser` option in pop-up:
 
@@ -65,7 +68,8 @@ cd connect/connect-ibm-mq-sink
 ./ibm-mq-sink-mtls.sh
 ```
 
-?> When some addtional steps are required, it is specified in the corresponding `README` file, for example with [AWS S3 sink connector](https://github.com/vdesabou/kafka-docker-playground/tree/master/connect/connect-aws-s3-sink#aws-setup), `~/.aws/credentials` and `~/.aws/config` are required or for [Zendesk source connector](https://github.com/vdesabou/kafka-docker-playground/tree/master/connect/connect-zendesk-source#how-to-run), arguments `ZENDESK_URL`, `ZENDESK_USERNAME`and `ZENDESK_PASSWORD` are required (you can also pass them as enviroment variables).
+> [!NOTE]
+> When some addtional steps are required, it is specified in the corresponding `README` file, for example with [AWS S3 sink connector](https://github.com/vdesabou/kafka-docker-playground/tree/master/connect/connect-aws-s3-sink#aws-setup), `~/.aws/credentials` and `~/.aws/config` are required or for [Zendesk source connector](https://github.com/vdesabou/kafka-docker-playground/tree/master/connect/connect-zendesk-source#how-to-run), arguments `ZENDESK_URL`, `ZENDESK_USERNAME`and `ZENDESK_PASSWORD` are required (you can also pass them as enviroment variables).
 
 ## 🪄 Specify versions
 
@@ -80,7 +84,8 @@ Example:
 export TAG=6.0.3
 ```
 
-?> To go back to default CP version, simply execute `unset TAG`
+> [!TIP]
+> To go back to default CP version, simply execute `unset TAG`
 
 ### 🔗 For Connectors
 
@@ -138,9 +143,11 @@ ls: cannot access '/usr/share/confluent-hub-components/debezium-debezium-connect
 3) debezium-core-1.4.0.Final.jar
 ```
 
-!> you can use both `CONNECTOR_TAG` and `CONNECTOR_JAR` at same time (along with `TAG`), but `CONNECTOR_TAG` and `CONNECTOR_ZIP` are mutually exclusive.
+> [!WARNING]
+> you can use both `CONNECTOR_TAG` and `CONNECTOR_JAR` at same time (along with `TAG`), but `CONNECTOR_TAG` and `CONNECTOR_ZIP` are mutually exclusive.
 
-?> The connect image [used](https://github.com/vdesabou/kafka-docker-playground/blob/714b36289981f9fe8f699ae3eab9a508127b625e/environment/plaintext/docker-compose.yml#L80) in the playground is `vdesabou/kafka-docker-playground-connect`, which is built [everyday](https://github.com/vdesabou/kafka-docker-playground-connect/actions) using the repo [vdesabou/kafka-docker-playground-connect](https://github.com/vdesabou/kafka-docker-playground-connect).
+> [!NOTE]
+> The connect image [used](https://github.com/vdesabou/kafka-docker-playground/blob/714b36289981f9fe8f699ae3eab9a508127b625e/environment/plaintext/docker-compose.yml#L80) in the playground is `vdesabou/kafka-docker-playground-connect`, which is built [everyday](https://github.com/vdesabou/kafka-docker-playground-connect/actions) using the repo [vdesabou/kafka-docker-playground-connect](https://github.com/vdesabou/kafka-docker-playground-connect).
 
 
 ## 🔢 JMX Metrics
