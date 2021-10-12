@@ -151,3 +151,59 @@ ls: cannot access '/usr/share/confluent-hub-components/debezium-debezium-connect
 
 
 ## 🔢 JMX Metrics
+
+JMX metrics are available locally on those ports:
+
+* zookeeper: `9999`
+* broker: `10000`
+* schema-registry: `10001`
+* connect: `10002`
+
+There is a function [`get_jmx_metrics`](https://github.com/vdesabou/kafka-docker-playground/blob/68a765ba6f93c02187b8efd868cb6b4622c19095/scripts/utils.sh#L945) in [`scripts/utils.sh`](https://github.com/vdesabou/kafka-docker-playground/blob/master/scripts/utils.sh) that helps to gather JMX metrics easily.
+
+To use it, you need to source [`scripts/utils.sh`](https://github.com/vdesabou/kafka-docker-playground/blob/master/scripts/utils.sh) first:
+
+```bash
+source scripts/utils.sh
+```
+
+And then you can call the function from your terminal:
+
+```bash
+get_jmx_metrics <component> [<domain>]
+```
+
+where:
+
+*  `component` (mandatory) is one of `zookeeper`, `broker`, `schema-registry` or `connect`
+*  `domain`(optional) is the JMX domain
+
+
+Example (without specifying domain):
+
+```bash
+$ get_jmx_metrics connect
+17:35:35 ❗ You did not specified a list of domains, all domains will be exported!
+17:35:35 ℹ️ This is the list of domains for component connect
+JMImplementation
+com.sun.management
+java.lang
+java.nio
+java.util.logging
+jdk.management.jfr
+kafka.admin.client
+kafka.connect
+kafka.consumer
+kafka.producer
+17:35:38 ℹ️ JMX metrics are available in /tmp/jmx_metrics.log file
+```
+
+Example (specifying domain):
+
+```bash
+$ get_jmx_metrics connect "kafka.connect kafka.consumer kafka.producer"
+17:38:00 ℹ️ JMX metrics are available in /tmp/jmx_metrics.log file
+```
+
+> [!WARNING]
+> Local install of `JDK` (at least 1.8) is required to run `get_jmx_metrics`

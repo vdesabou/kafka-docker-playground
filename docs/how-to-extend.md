@@ -23,4 +23,6 @@ Before learning how to create your own examples/reproduction models, here are so
 
 ## 🥽 Deep dive
 
+### 🤖 How CI works
+
 ## 🏭 Reusables
