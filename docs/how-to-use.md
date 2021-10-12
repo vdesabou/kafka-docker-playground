@@ -11,6 +11,9 @@
 > Every command used in the playground is using Docker, this includes `jq` (except if you have it on your host already), `aws`, `az`, `gcloud`, etc..
 The goal is to have a consistent behaviour and only depends on Docker.
 
+> [!NOTE]
+> The playground is tested on macOS and Linux.
+
 * 🐳 Recommended Docker settings:
 
 ![docker prefs](https://github.com/vdesabou/kafka-docker-playground/blob/4c3e6d481fcff7353a64e666d09f0921153a70e1/ccloud/ccloud-demo/images/docker-settings.jpg?raw=true)

@@ -17,7 +17,7 @@ Before learning how to create your own examples/reproduction models, here are so
 
 #### 🔒️ Security example
 
-### 📎 See properties file
+### 📝 See properties file
 
 ### 🔃 Re-create containers
 
@@ -26,3 +26,9 @@ Before learning how to create your own examples/reproduction models, here are so
 ### 🤖 How CI works
 
 ## 🏭 Reusables
+
+### Producing data
+
+### Consuming data
+
+### Using proxy
