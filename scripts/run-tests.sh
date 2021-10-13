@@ -138,7 +138,7 @@ do
             elif [[ $elapsed_time -gt 604800 ]]
             then
                 log "####################################################"
-                log "⌛ Test with CP $TAG and connector $THE_CONNECTOR_TAG has already been executed successfully $(displaytime $elapsed_time) ago, more than 15 days ago...re-running. Test url: $html_url"
+                log "⌛ Test with CP $TAG and connector $THE_CONNECTOR_TAG has already been executed successfully $(displaytime $elapsed_time) ago, more than 7 days ago...re-running. Test url: $html_url"
                 log "####################################################"
                 aws s3 rm $s3_file
             elif [ "$status" = "failure" ]
