@@ -20,16 +20,19 @@ sed -e "s|:BOOTSTRAP_SERVERS:|$BOOTSTRAP_SERVERS|g" \
     -e "s|:CLOUD_SECRET:|$CLOUD_SECRET|g" \
     ${DIR}/connect-mirror-maker-template-repro-77222.properties > ${DIR}/connect-mirror-maker.properties
 
-log "Creating topic sales_A in Confluent Cloud"
+log "Creating topic my-topic in Confluent Cloud"
 set +e
-delete_topic sales_A
+delete_topic my-topic
 delete_topic mm2-configs.A.internal
 delete_topic mm2-offsets.A.internal
 delete_topic mm2-status.A.internal
 delete_topic .checkpoints.internal
 sleep 3
-create_topic sales_A
+create_topic my-topic
 set -e
+
+log "Create topic my-topic with partition 32"
+docker exec connect bash -c "export KAFKA_LOG4J_OPTS='';kafka-topics --create --topic my-topic --bootstrap-server broker1:9092 --replication-factor 3 --partitions 32"
 
 log "Start MirrorMaker2 (logs are in mirrormaker.log):"
 docker cp ${DIR}/connect-mirror-maker.properties connect:/tmp/connect-mirror-maker.properties
@@ -39,16 +42,16 @@ log "sleeping 30 seconds"
 sleep 30
 
 log "Sending messages in A cluster (OnPrem)"
-docker exec connect bash -c "export KAFKA_LOG4J_OPTS='';kafka-producer-perf-test --topic sales_A --num-records 200000 --record-size 1000 --throughput 100000 --producer-props bootstrap.servers=broker1:9092"
+docker exec connect bash -c "export KAFKA_LOG4J_OPTS='';kafka-producer-perf-test --topic my-topic --num-records 200000 --record-size 1000 --throughput 100000 --producer-props bootstrap.servers=broker1:9092"
 
 log "Consumer with group my-consumer-group reads 10 messages in A cluster (OnPrem)"
-docker exec -i connect bash -c "export KAFKA_LOG4J_OPTS='';kafka-console-consumer --bootstrap-server broker1:9092 --whitelist 'sales_A' --from-beginning --max-messages 10 --consumer-property group.id=my-consumer-group"
+docker exec -i connect bash -c "export KAFKA_LOG4J_OPTS='';kafka-console-consumer --bootstrap-server broker1:9092 --whitelist 'my-topic' --from-beginning --max-messages 10 --consumer-property group.id=my-consumer-group"
 
 log "sleeping 70 seconds"
 sleep 70
 
 log "Consumer with group my-consumer-group reads 10 messages in B cluster (Confluent Cloud), it should start from previous offset (sync.group.offsets.enabled = true)"
-timeout 60 docker container exec -e BOOTSTRAP_SERVERS="$BOOTSTRAP_SERVERS" -e SASL_JAAS_CONFIG="$SASL_JAAS_CONFIG" connect bash -c 'kafka-console-consumer --topic sales_A --bootstrap-server $BOOTSTRAP_SERVERS --consumer-property sasl.mechanism=PLAIN --consumer-property security.protocol=SASL_SSL --consumer-property sasl.jaas.config="$SASL_JAAS_CONFIG" --max-messages 10 --consumer-property group.id=my-consumer-group'
+timeout 60 docker container exec -e BOOTSTRAP_SERVERS="$BOOTSTRAP_SERVERS" -e SASL_JAAS_CONFIG="$SASL_JAAS_CONFIG" connect bash -c 'kafka-console-consumer --topic my-topic --bootstrap-server $BOOTSTRAP_SERVERS --consumer-property sasl.mechanism=PLAIN --consumer-property security.protocol=SASL_SSL --consumer-property sasl.jaas.config="$SASL_JAAS_CONFIG" --max-messages 10 --consumer-property group.id=my-consumer-group'
 
 tail -f mirrormaker.log | grep "ERROR"
 
