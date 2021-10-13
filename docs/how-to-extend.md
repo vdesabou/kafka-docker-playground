@@ -170,6 +170,40 @@ services:
 
 ### 🤖 How CI works
 
+Everyday, regression tests are executed using [Github Actions](https://github.com/features/actions). 
+
+The workflow runs are available [here](https://github.com/vdesabou/kafka-docker-playground/actions).
+
+The CI is defined using [`.github/workflows/run-regression.yml`](https://github.com/vdesabou/kafka-docker-playground/blob/master/.github/workflows/run-regression.yml) file (see the list of tests executed [here](https://github.com/vdesabou/kafka-docker-playground/blob/fbc009be503d7c0c55a16ddf17679d50f721c74f/.github/workflows/run-regression.yml#L46-L84))
+
+> [!NOTE]
+> CI is executed on Ubuntu 20.04 on Azure, see [documentation](https://docs.github.com/en/actions/using-github-hosted-runners/about-github-hosted-runners#supported-runners-and-hardware-resources)
+
+A test is executed if:
+
+* it was failing in the last run
+* a change has been made in the test directory
+* CP or connection has changed
+* last execution was more than 7 days ago
+
+If a test is failing, a Github issue will be automatically opened or updated with results for each CP version.
+
+Example:
+
+Issue [#1401](https://github.com/vdesabou/kafka-docker-playground/issues/1401):
+
+![github_issue](./images/github_issue.jpg)
+
+The Github issue will be automatically closed when all results for a test are ok:
+
+Example:
+
+![github_issue_closed](./images/github_issue_closed.jpg)
+
+CI results are present in **[Content](/content.md)** section:
+
+![ci_results](./images/ci_results.jpg)
+
 ## 🏭 Reusables
 
 ### Producing data
