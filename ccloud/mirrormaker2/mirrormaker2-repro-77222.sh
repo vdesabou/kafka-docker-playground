@@ -132,3 +132,15 @@ tail -f mirrormaker.log | grep "ERROR"
 # [2021-10-13 10:32:45,511] INFO WorkerSourceTask{id=replicator-0} flushing 30721 outstanding messages for offset commit (org.apache.kafka.connect.runtime.WorkerSourceTask)
 # [2021-10-13 10:32:50,511] ERROR WorkerSourceTask{id=replicator-0} Failed to flush, timed out while waiting for producer to flush outstanding 28711 messages (org.apache.kafka.connect.runtime.WorkerSourceTask)
 # [2021-10-13 10:32:50,512] ERROR WorkerSourceTask{id=replicator-0} Failed to commit offsets (org.apache.kafka.connect.runtime.SourceTaskOffsetCommitter)
+
+# with original settings + 32 partitions + 100 tasks:
+
+# [2021-10-13 13:00:35,187] ERROR WorkerSourceTask{id=MirrorSourceConnector-9} Failed to flush, timed out while waiting for producer to flush outstanding 1 messages (org.apache.kafka.connect.runtime.WorkerSourceTask)
+# [2021-10-13 13:00:35,188] ERROR WorkerSourceTask{id=MirrorSourceConnector-9} Failed to commit offsets (org.apache.kafka.connect.runtime.SourceTaskOffsetCommitter)
+
+# with original settings + 1 partition (default) + 100 tasks:
+
+# [2021-10-13 13:06:13,386] ERROR WorkerSourceTask{id=MirrorSourceConnector-0} Failed to flush, timed out while waiting for producer to flush outstanding 30737 messages (org.apache.kafka.connect.runtime.WorkerSourceTask)
+# [2021-10-13 13:06:13,387] ERROR WorkerSourceTask{id=MirrorSourceConnector-0} Failed to commit offsets (org.apache.kafka.connect.runtime.SourceTaskOffsetCommitter)
+# [2021-10-13 13:07:18,320] ERROR WorkerSourceTask{id=MirrorSourceConnector-0} Failed to flush, timed out while waiting for producer to flush outstanding 30577 messages (org.apache.kafka.connect.runtime.WorkerSourceTask)
+# [2021-10-13 13:07:18,322] ERROR WorkerSourceTask{id=MirrorSourceConnector-0} Failed to commit offsets (org.apache.kafka.connect.runtime.SourceTaskOffsetCommitter)
