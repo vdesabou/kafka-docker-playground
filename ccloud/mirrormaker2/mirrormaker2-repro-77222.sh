@@ -31,8 +31,8 @@ sleep 3
 create_topic my-topic
 set -e
 
-log "Create topic my-topic with partition 32"
-docker exec connect bash -c "export KAFKA_LOG4J_OPTS='';kafka-topics --create --topic my-topic --bootstrap-server broker1:9092 --replication-factor 3 --partitions 32"
+# log "Create topic my-topic with partition 6"
+# docker exec connect bash -c "export KAFKA_LOG4J_OPTS='';kafka-topics --create --topic my-topic --bootstrap-server broker1:9092 --replication-factor 3 --partitions 6"
 
 log "Start MirrorMaker2 (logs are in mirrormaker.log):"
 docker cp ${DIR}/connect-mirror-maker.properties connect:/tmp/connect-mirror-maker.properties
@@ -51,7 +51,7 @@ log "sleeping 70 seconds"
 sleep 70
 
 log "Consumer with group my-consumer-group reads 10 messages in B cluster (Confluent Cloud), it should start from previous offset (sync.group.offsets.enabled = true)"
-timeout 60 docker container exec -e BOOTSTRAP_SERVERS="$BOOTSTRAP_SERVERS" -e SASL_JAAS_CONFIG="$SASL_JAAS_CONFIG" connect bash -c 'kafka-console-consumer --topic my-topic --bootstrap-server $BOOTSTRAP_SERVERS --consumer-property sasl.mechanism=PLAIN --consumer-property security.protocol=SASL_SSL --consumer-property sasl.jaas.config="$SASL_JAAS_CONFIG" --max-messages 10 --consumer-property group.id=my-consumer-group'
+timeout 60 docker container exec -e BOOTSTRAP_SERVERS="$BOOTSTRAP_SERVERS" -e SASL_JAAS_CONFIG="$SASL_JAAS_CONFIG" connect bash -c 'kafka-console-consumer --topic my-topic --bootstrap-server $BOOTSTRAP_SERVERS --consumer-property sasl.mechanism=PLAIN --consumer-property security.protocol=SASL_SSL --consumer-property sasl.jaas.config="$SASL_JAAS_CONFIG" --max-messages 10 --property print.offset=true --consumer-property group.id=my-consumer-group'
 
 tail -f mirrormaker.log | grep "ERROR"
 
@@ -144,3 +144,19 @@ tail -f mirrormaker.log | grep "ERROR"
 # [2021-10-13 13:06:13,387] ERROR WorkerSourceTask{id=MirrorSourceConnector-0} Failed to commit offsets (org.apache.kafka.connect.runtime.SourceTaskOffsetCommitter)
 # [2021-10-13 13:07:18,320] ERROR WorkerSourceTask{id=MirrorSourceConnector-0} Failed to flush, timed out while waiting for producer to flush outstanding 30577 messages (org.apache.kafka.connect.runtime.WorkerSourceTask)
 # [2021-10-13 13:07:18,322] ERROR WorkerSourceTask{id=MirrorSourceConnector-0} Failed to commit offsets (org.apache.kafka.connect.runtime.SourceTaskOffsetCommitter)
+
+
+# with original settings + 6 partitions (same as ccloud) + 100 tasks:
+
+# [2021-10-13 13:12:30,254] ERROR WorkerSourceTask{id=MirrorSourceConnector-3} Failed to flush, timed out while waiting for producer to flush outstanding 15296 messages (org.apache.kafka.connect.runtime.WorkerSourceTask)
+# [2021-10-13 13:12:30,254] ERROR WorkerSourceTask{id=MirrorSourceConnector-3} Failed to commit offsets (org.apache.kafka.connect.runtime.SourceTaskOffsetCommitter)
+# [2021-10-13 13:12:35,254] ERROR WorkerSourceTask{id=MirrorSourceConnector-2} Failed to flush, timed out while waiting for producer to flush outstanding 13376 messages (org.apache.kafka.connect.runtime.WorkerSourceTask)
+# [2021-10-13 13:12:35,255] ERROR WorkerSourceTask{id=MirrorSourceConnector-2} Failed to commit offsets (org.apache.kafka.connect.runtime.SourceTaskOffsetCommitter)
+# [2021-10-13 13:12:40,256] ERROR WorkerSourceTask{id=MirrorSourceConnector-1} Failed to flush, timed out while waiting for producer to flush outstanding 9776 messages (org.apache.kafka.connect.runtime.WorkerSourceTask)
+# [2021-10-13 13:12:40,256] ERROR WorkerSourceTask{id=MirrorSourceConnector-1} Failed to commit offsets (org.apache.kafka.connect.runtime.SourceTaskOffsetCommitter)
+# [2021-10-13 13:12:45,257] ERROR WorkerSourceTask{id=MirrorSourceConnector-5} Failed to flush, timed out while waiting for producer to flush outstanding 13200 messages (org.apache.kafka.connect.runtime.WorkerSourceTask)
+# [2021-10-13 13:12:45,258] ERROR WorkerSourceTask{id=MirrorSourceConnector-5} Failed to commit offsets (org.apache.kafka.connect.runtime.SourceTaskOffsetCommitter)
+# [2021-10-13 13:12:50,258] ERROR WorkerSourceTask{id=MirrorSourceConnector-4} Failed to flush, timed out while waiting for producer to flush outstanding 10256 messages (org.apache.kafka.connect.runtime.WorkerSourceTask)
+# [2021-10-13 13:12:50,258] ERROR WorkerSourceTask{id=MirrorSourceConnector-4} Failed to commit offsets (org.apache.kafka.connect.runtime.SourceTaskOffsetCommitter)
+# [2021-10-13 13:12:55,259] ERROR WorkerSourceTask{id=MirrorSourceConnector-0} Failed to flush, timed out while waiting for producer to flush outstanding 1840 messages (org.apache.kafka.connect.runtime.WorkerSourceTask)
+# [2021-10-13 13:12:55,259] ERROR WorkerSourceTask{id=MirrorSourceConnector-0} Failed to commit offsets (org.apache.kafka.connect.runtime.SourceTaskOffsetCommitter)
