@@ -9,10 +9,11 @@
 
 > [!NOTE]
 > Every command used in the playground is using Docker, this includes `jq` (except if you have it on your host already), `aws`, `az`, `gcloud`, etc..
-The goal is to have a consistent behaviour and only depends on Docker.
+> 
+> The goal is to have a consistent behaviour and only depends on Docker.
 
-> [!NOTE]
-> The playground is tested on macOS and Linux.
+> [!WARNING]
+> The playground is only tested on macOS and Linux (not Windows).
 
 * 🐳 Recommended Docker settings:
 
@@ -72,7 +73,13 @@ cd connect/connect-ibm-mq-sink
 ```
 
 > [!NOTE]
-> When some addtional steps are required, it is specified in the corresponding `README` file, for example with [AWS S3 sink connector](https://github.com/vdesabou/kafka-docker-playground/tree/master/connect/connect-aws-s3-sink#aws-setup), `~/.aws/credentials` and `~/.aws/config` are required or for [Zendesk source connector](https://github.com/vdesabou/kafka-docker-playground/tree/master/connect/connect-zendesk-source#how-to-run), arguments `ZENDESK_URL`, `ZENDESK_USERNAME`and `ZENDESK_PASSWORD` are required (you can also pass them as enviroment variables).
+> When some addtional steps are required, it is specified in the corresponding `README` file
+> 
+> Examples:
+> 
+> * [AWS S3 sink connector](https://github.com/vdesabou/kafka-docker-playground/tree/master/connect/connect-aws-s3-sink#aws-setup): Files `~/.aws/credentials` and `~/.aws/config` are required
+> 
+> * [Zendesk source connector](https://github.com/vdesabou/kafka-docker-playground/tree/master/connect/connect-zendesk-source#how-to-run): arguments `ZENDESK_URL`, `ZENDESK_USERNAME`and `ZENDESK_PASSWORD` are required (you can also pass them as enviroment variables)
 
 > [!ATTENTION]
 > Please ignore all the scripts containing `repro` in the name: they were used for reproduction models, and are **not maintained**.
