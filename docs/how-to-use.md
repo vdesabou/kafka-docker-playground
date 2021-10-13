@@ -74,6 +74,9 @@ cd connect/connect-ibm-mq-sink
 > [!NOTE]
 > When some addtional steps are required, it is specified in the corresponding `README` file, for example with [AWS S3 sink connector](https://github.com/vdesabou/kafka-docker-playground/tree/master/connect/connect-aws-s3-sink#aws-setup), `~/.aws/credentials` and `~/.aws/config` are required or for [Zendesk source connector](https://github.com/vdesabou/kafka-docker-playground/tree/master/connect/connect-zendesk-source#how-to-run), arguments `ZENDESK_URL`, `ZENDESK_USERNAME`and `ZENDESK_PASSWORD` are required (you can also pass them as enviroment variables).
 
+> [!ATTENTION]
+> Please ignore all the scripts containing `repro` in the name: they were used for reproduction models, and are **not maintained**.
+
 ## 🪄 Specify versions
 
 ### 🎯 For Confluent Platform (CP)
