@@ -371,3 +371,9 @@ cp $badges_tmp_file $badges_file
 # Add content and badges to README
 cat $badges_file >> $readme_file
 cat $content_file >> $readme_file
+
+# Create docs/introduction.md
+cat ./docs/introduction-header.md > ./docs/introduction.md
+cat $badges_file >> ./docs/introduction.md
+echo "" >> ./docs/introduction.md
+cat ./docs/introduction-footer.md >> ./docs/introduction.md
