@@ -4,5 +4,7 @@
 - [🚀 How to Use](/how-to-use.md)
 - [👷 How to Extend](/how-to-extend.md)
 - **Links**
+- [<img src="https://github.com/vdesabou/kafka-docker-playground/raw/master/images/icons/octocat.png" width="20">GitHub](https://github.com/vdesabou/kafka-docker-playground)
+- [🤖 CI](https://github.com/vdesabou/kafka-docker-playground/actions)
+- [🔥 Issues](https://github.com/vdesabou/kafka-docker-playground/issues)
 - [⛑ Contributing](https://github.com/vdesabou/kafka-docker-playground/blob/master/CONTRIBUTING.md)
-- [🔗 GitHub](https://github.com/vdesabou/kafka-docker-playground)
