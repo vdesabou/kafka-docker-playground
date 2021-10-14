@@ -80,7 +80,7 @@ do
         echo "./$script"  >> $OUT_FILE
         echo 'exit'  >> $OUT_FILE
         echo 'docker rm -f $(docker ps -a -q)'  >> $OUT_FILE
-        echo "asciicast2gif -w 80 $TMP_DIR/$dir/asciinema.cast ${GIF_DIR}/asciinema.gif" >> $OUT_FILE
+        echo "asciicast2gif -w 80 -h 30 $TMP_DIR/$dir/asciinema.cast ${GIF_DIR}/asciinema.gif" >> $OUT_FILE
         echo "cd -"  >> $OUT_FILE
     done
     cd - > /dev/null
