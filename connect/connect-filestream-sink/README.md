@@ -1,5 +1,7 @@
 # FileStream Sink connector
 
+![asciinema](https://github.com/vdesabou/gifs/blob/master/connect/connect-filestream-sink/asciinema.gif?raw=true)
+
 ## Objective
 
 Quickly test [FileStream Sink](https://docs.confluent.io/home/connect/filestream_connector.html#filesink-connector) connector.
