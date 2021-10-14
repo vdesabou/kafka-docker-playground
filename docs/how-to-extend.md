@@ -24,7 +24,7 @@ source ${DIR}/../../scripts/utils.sh
 
 ### 🐳 Docker override
 
-The playground makes extensive use of docker-compose [override](https://docs.docker.com/compose/extends/).
+The playground makes extensive use of docker-compose [override](https://docs.docker.com/compose/extends/) (i.e `docker-compose -f docker-compose1.yml -f docker-compose2.yml ...`).
 
 Each test is built based on an [environment](#/content?id=%F0%9F%94%90-environments), [PLAINTEXT](https://github.com/vdesabou/kafka-docker-playground/tree/master/environment/plaintext) being the most common one.
 
@@ -64,7 +64,7 @@ It contains:
 
 PLAINTEXT is used thanks to the call to `${DIR}/../../environment/plaintext/start.sh`
 
-> [!INFO]
+> [!WARNING]
 > The *local* docker-compose file should be named docker-compose.%environment%[.%optional'%].yml 
 > 
 > Example: 
@@ -79,11 +79,11 @@ PLAINTEXT is used thanks to the call to `${DIR}/../../environment/plaintext/star
 Environments are also overriding [PLAINTEXT](https://github.com/vdesabou/kafka-docker-playground/tree/master/environment/plaintext), so for example [SASL/SSL](https://github.com/vdesabou/kafka-docker-playground/tree/master/environment/sasl-ssl) has a [docker-compose.yml](https://github.com/vdesabou/kafka-docker-playground/blob/master/environment/sasl-ssl/docker-compose.yml) file like this:
 
 ```yml
-    ####
-    #
-    # This file overrides values from environment/plaintext/docker-compose.yml
-    #
-    ####
+  ####
+  #
+  # This file overrides values from environment/plaintext/docker-compose.yml
+  #
+  ####
 
   zookeeper:
     environment:
@@ -125,7 +125,7 @@ Environments are also overriding [PLAINTEXT](https://github.com/vdesabou/kafka-d
       KAFKA_OPTS: -Djava.security.auth.login.config=/etc/kafka/secrets/broker_jaas.conf
       KAFKA_SSL_PRINCIPAL_MAPPING_RULES: RULE:^CN=(.*?),OU=TEST.*$$/$$1/,DEFAULT
 
-            <snip>
+      <snip>
 ```
 
 It only contains what is required to add SASL/SSL to a PLAINTEXT environment 💫 !
