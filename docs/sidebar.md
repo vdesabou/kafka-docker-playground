@@ -1,6 +1,6 @@
 - **Getting Started**
-- [⚡ Introduction](/introduction.md)
-- [🌟 Content](/content.md)
+- [👋 Introduction](/introduction.md)
+- [👾 Content](/content.md)
 - [🚀 How to Use](/how-to-use.md)
 - [👷 How to Extend](/how-to-extend.md)
 - **Links**
