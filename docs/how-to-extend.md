@@ -28,6 +28,9 @@ The playground makes extensive use of docker-compose [override](https://docs.doc
 
 Each test is built based on an [environment](#/content?id=%F0%9F%94%90-environments), [PLAINTEXT](https://github.com/vdesabou/kafka-docker-playground/tree/master/environment/plaintext) being the most common one.
 
+> [!TIP]
+> Check **[📝 See properties file](/how-to-use?id=📝-see-properties-file)** section, in order to see the end result properties file
+
 Let's have a look at some examples to understand how it works:
 
 #### Connector using PLAINTEXT
@@ -161,8 +164,6 @@ services:
 #### 🔓️ Plaintext example
 
 #### 🔒️ Security example
-
-### 📝 See properties file
 
 ### 🔃 Re-create containers
 
