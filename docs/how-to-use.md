@@ -182,6 +182,52 @@ Example:
 export DISABLE_CONTROL_CENTER=true
 ```
 
+## 📝 See properties file
+
+Because the playground use **[Docker override](/how-to-extend?id=🐳-docker-override)**, not all configuration parameters are in same `docker-compose.yml` file.
+
+In order to easily see the end result properties file, you can use [`scripts/get-properties.sh`](https://github.com/vdesabou/kafka-docker-playground/blob/master/scripts/get-properties.sh):
+
+```bash
+scripts/get-properties.sh <container>
+```
+
+Example:
+
+```properties
+$ ../../scripts/get-properties.sh connect
+bootstrap.servers=broker:9092
+config.providers.file.class=org.apache.kafka.common.config.provider.FileConfigProvider
+config.providers=file
+config.storage.replication.factor=1
+config.storage.topic=connect-configs
+connector.client.config.override.policy=All
+consumer.confluent.monitoring.interceptor.bootstrap.servers=broker:9092
+consumer.interceptor.classes=io.confluent.monitoring.clients.interceptor.MonitoringConsumerInterceptor
+group.id=connect-cluster
+internal.key.converter.schemas.enable=false
+internal.key.converter=org.apache.kafka.connect.json.JsonConverter
+internal.value.converter.schemas.enable=false
+internal.value.converter=org.apache.kafka.connect.json.JsonConverter
+key.converter=org.apache.kafka.connect.storage.StringConverter
+log4j.appender.stdout.layout.conversionpattern=[%d] %p %X{connector.context}%m (%c:%L)%n
+log4j.loggers=org.apache.zookeeper=ERROR,org.I0Itec.zkclient=ERROR,org.reflections=ERROR
+offset.storage.replication.factor=1
+offset.storage.topic=connect-offsets
+plugin.path=/usr/share/confluent-hub-components/confluentinc-kafka-connect-http
+producer.client.id=connect-worker-producer
+producer.confluent.monitoring.interceptor.bootstrap.servers=broker:9092
+producer.interceptor.classes=io.confluent.monitoring.clients.interceptor.MonitoringProducerInterceptor
+rest.advertised.host.name=connect
+rest.port=8083
+status.storage.replication.factor=1
+status.storage.topic=connect-status
+topic.creation.enable=true
+value.converter.schema.registry.url=http://schema-registry:8081
+value.converter.schemas.enable=false
+value.converter=io.confluent.connect.avro.AvroConverter
+```
+
 ## 🔢 JMX Metrics
 
 JMX metrics are available locally on those ports:
