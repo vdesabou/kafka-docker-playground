@@ -189,7 +189,9 @@ Because the playground use **[Docker override](/how-it-works?id=🐳-docker-over
 
 For these reasons, if you want to make a change in one of the docker-compose files (without restarting the test from scratch), it is not simply a matter of doing `docker-compose up -d` 😀
 
-However, when you execute a test, you'll have in the output the command to run in order to easily re-create modified container(s), see an example:
+However, when you execute a test, you'll have in the output the command to run in order to easily re-create modified container(s)
+
+*Example:*
 
 ```bash
 12:02:18 ℹ️ ⚡If you modify a docker-compose file 
@@ -199,7 +201,7 @@ and want to re-create the container(s), use this command:
 
 So you can modify one of the docker-compose files (in that case either `environment/plaintext/docker-compose.yml` or `connect/connect-http-sink/docker-compose.plaintext.yml`), and then run the suggested command:
 
-Example:
+*Example:*
 
 I've edited `connect/connect-http-sink/docker-compose.plaintext.yml` and updated both `connect` and `http-service-no-auth`, and then I execute the suggested command:
 
@@ -239,7 +241,7 @@ A test is executed if:
 
 If a test is failing, a Github issue will be automatically opened or updated with results for each CP version.
 
-Example:
+*Example:*
 
 Issue [#1401](https://github.com/vdesabou/kafka-docker-playground/issues/1401):
 
@@ -247,13 +249,13 @@ Issue [#1401](https://github.com/vdesabou/kafka-docker-playground/issues/1401):
 
 The Github issue will be automatically closed when all results for a test are ok:
 
-Example:
+*Example:*
 
 ![github_issue_closed](./images/github_issue_closed.jpg)
 
 CI results are present in **[Content](/content.md)** section:
 
-Example:
+*Example:*
 
 ![ci_results](./images/ci_results.jpg)
 

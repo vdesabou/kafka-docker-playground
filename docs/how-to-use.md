@@ -65,7 +65,7 @@ $ aws cloudformation create-stack  --stack-name kafka-docker-playground-$USER \
 
 Select an example in the **[Content](/content.md)** section and simply run the bash script you want !
 
-Example: if you want to run a test with IBM MQ sink connector, check out the [README](https://github.com/vdesabou/kafka-docker-playground/tree/master/connect/connect-ibm-mq-sink) and the list of tests in [How to Run](https://github.com/vdesabou/kafka-docker-playground/tree/master/connect/connect-ibm-mq-sink#how-to-run) section, then simply execute the script you want:
+*Example:* if you want to run a test with IBM MQ sink connector, check out the [README](https://github.com/vdesabou/kafka-docker-playground/tree/master/connect/connect-ibm-mq-sink) and the list of tests in [How to Run](https://github.com/vdesabou/kafka-docker-playground/tree/master/connect/connect-ibm-mq-sink#how-to-run) section, then simply execute the script you want:
 
 ```bash
 cd connect/connect-ibm-mq-sink
@@ -91,7 +91,7 @@ cd connect/connect-ibm-mq-sink
 By default, latest Confluent Platform version is used (currently `6.2.1`).
 Before running an example, you can change the CP version used (must be greater or equal to `5.0.0`), simply by exporting `TAG` environment variable:
 
-Example:
+*Example:*
 
 ```bash
 export TAG=6.0.3
@@ -119,7 +119,7 @@ export CONNECTOR_TAG=x.x.x
 export CONNECTOR_ZIP="path/to/connector.zip"
 ```
 
-Example:
+*Example:*
 
 ```bash
 export CONNECTOR_ZIP="/Users/vsaboulin/Downloads/confluentinc-kafka-connect-http-1.2.3.zip"
@@ -133,7 +133,7 @@ export CONNECTOR_ZIP="/Users/vsaboulin/Downloads/confluentinc-kafka-connect-http
 export CONNECTOR_JAR="path/to/connector.jar"
 ```
 
-Example:
+*Example:*
 
 ```bash
 export CONNECTOR_JAR/tmp/kafka-connect-http-1.3.1-SNAPSHOT.jar
@@ -166,7 +166,7 @@ ls: cannot access '/usr/share/confluent-hub-components/debezium-debezium-connect
 
 By default, [`ksqldb-server`](https://github.com/vdesabou/kafka-docker-playground/blob/7098800a582bfb2629005366b514a923d2fa037f/environment/plaintext/docker-compose.yml#L135-L171) and [`ksqldb-cli`](https://github.com/vdesabou/kafka-docker-playground/blob/7098800a582bfb2629005366b514a923d2fa037f/environment/plaintext/docker-compose.yml#L173-L183) containers is started for every test. You can disable this by setting environment variable `DISABLE_KSQLDB`:
 
-Example:
+*Example:*
 
 ```bash
 export DISABLE_KSQLDB=true
@@ -176,7 +176,7 @@ export DISABLE_KSQLDB=true
 
 By default, [`control-center`](https://github.com/vdesabou/kafka-docker-playground/blob/7098800a582bfb2629005366b514a923d2fa037f/environment/plaintext/docker-compose.yml#L185-L221) container is started for every test. You can disable this by setting environment variable `DISABLE_CONTROL_CENTER`:
 
-Example:
+*Example:*
 
 ```bash
 export DISABLE_CONTROL_CENTER=true
@@ -192,7 +192,7 @@ In order to easily see the end result properties file, you can use [`scripts/get
 scripts/get-properties.sh <container>
 ```
 
-Example:
+*Example:*
 
 ```properties
 $ ../../scripts/get-properties.sh connect
