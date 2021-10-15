@@ -183,14 +183,6 @@ services:
 > [!TIP]
 > [connect-gcp-gcs-sink](https://github.com/vdesabou/kafka-docker-playground/tree/master/connect/connect-gcp-gcs-sink) example contains various examples with security [gcs-sink-2way-ssl.sh](https://github.com/vdesabou/kafka-docker-playground/blob/master/connect/connect-gcp-gcs-sink/gcs-sink-2way-ssl.sh), [gcs-sink-kerberos.sh](https://github.com/vdesabou/kafka-docker-playground/blob/master/connect/connect-gcp-gcs-sink/gcs-sink-kerberos.sh), [gcs-sink-ldap-authorizer-sasl-plain.sh](https://github.com/vdesabou/kafka-docker-playground/blob/master/connect/connect-gcp-gcs-sink/gcs-sink-ldap-authorizer-sasl-plain.sh) or even RBAC [gcs-sink-rbac-sasl-plain.sh](https://github.com/vdesabou/kafka-docker-playground/blob/master/connect/connect-gcp-gcs-sink/gcs-sink-rbac-sasl-plain.sh)
 
-# 👷‍♂️ Build your example
-
-## 👍️ Examples
-
-### 🔓️ Plaintext example
-
-### 🔒️ Security example
-
 ## ♻️ Re-create containers
 
 Because the playground use **[Docker override](/how-it-works?id=🐳-docker-override)**, not all configuration parameters are in same `docker-compose.yml` file and docker-compose files in the playground depends on environment variables to be set.
@@ -226,8 +218,6 @@ Recreating http-service-no-auth ... done
 Recreating connect              ... done
 control-center is up-to-date
 ```
-
-# 🥽 Deep dive
 
 ## 🤖 How CI works
 
