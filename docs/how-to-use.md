@@ -184,7 +184,7 @@ export DISABLE_CONTROL_CENTER=true
 
 ## 📝 See properties file
 
-Because the playground use **[Docker override](/how-to-extend?id=🐳-docker-override)**, not all configuration parameters are in same `docker-compose.yml` file.
+Because the playground use **[Docker override](/how-it-works?id=🐳-docker-override)**, not all configuration parameters are in same `docker-compose.yml` file.
 
 In order to easily see the end result properties file, you can use [`scripts/get-properties.sh`](https://github.com/vdesabou/kafka-docker-playground/blob/master/scripts/get-properties.sh):
 

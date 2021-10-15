@@ -1,11 +1,9 @@
 
-# 🎓️ How to extend
+# 🎓️ How it works
 
 Before learning how to create your own examples/reproduction models, here are some explanations on how the playground works internally:
 
-## 🏫 How it works
-
-### 📁 Folder structure
+## 📁 Folder structure
 
 The main categories like `ccloud`, `connect`, `environment` are in root folder:
 
@@ -22,7 +20,7 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 ```
 
-### 🐳 Docker override
+## 🐳 Docker override
 
 The playground makes extensive use of docker-compose [override](https://docs.docker.com/compose/extends/) (i.e `docker-compose -f docker-compose1.yml -f docker-compose2.yml ...`).
 
@@ -33,7 +31,7 @@ Each test is built based on an [environment](#/content?id=%F0%9F%94%90-environme
 
 Let's have a look at some examples to understand how it works:
 
-#### Connector using PLAINTEXT
+### Connector using PLAINTEXT
 
 Example with ([active-mq-sink.sh](https://github.com/vdesabou/kafka-docker-playground/blob/master/connect/connect-active-mq-sink/active-mq-sink.sh)):
 
@@ -77,7 +75,7 @@ PLAINTEXT is used thanks to the call to `${DIR}/../../environment/plaintext/star
 > This is required for [stop.sh](https://github.com/vdesabou/kafka-docker-playground/blob/master/connect/connect-active-mq-sink/stop.sh) script to work properly.
 
 
-#### Environment SASL/SSL 
+### Environment SASL/SSL 
 
 Environments are also overriding [PLAINTEXT](https://github.com/vdesabou/kafka-docker-playground/tree/master/environment/plaintext), so for example [SASL/SSL](https://github.com/vdesabou/kafka-docker-playground/tree/master/environment/sasl-ssl) has a [docker-compose.yml](https://github.com/vdesabou/kafka-docker-playground/blob/master/environment/sasl-ssl/docker-compose.yml) file like this:
 
@@ -133,7 +131,7 @@ Environments are also overriding [PLAINTEXT](https://github.com/vdesabou/kafka-d
 
 It only contains what is required to add SASL/SSL to a PLAINTEXT environment 💫 !
 
-#### Connector using SASL/SSL
+### Connector using SASL/SSL
 
 Example with ([gcs-sink-sasl-ssl.sh](https://github.com/vdesabou/kafka-docker-playground/blob/master/connect/connect-gcp-gcs-sink/gcs-sink-sasl-ssl.sh)):
 
@@ -157,17 +155,17 @@ services:
 > [!TIP]
 > [connect-gcp-gcs-sink](https://github.com/vdesabou/kafka-docker-playground/tree/master/connect/connect-gcp-gcs-sink) example contains various examples with security [gcs-sink-2way-ssl.sh](https://github.com/vdesabou/kafka-docker-playground/blob/master/connect/connect-gcp-gcs-sink/gcs-sink-2way-ssl.sh), [gcs-sink-kerberos.sh](https://github.com/vdesabou/kafka-docker-playground/blob/master/connect/connect-gcp-gcs-sink/gcs-sink-kerberos.sh), [gcs-sink-ldap-authorizer-sasl-plain.sh](https://github.com/vdesabou/kafka-docker-playground/blob/master/connect/connect-gcp-gcs-sink/gcs-sink-ldap-authorizer-sasl-plain.sh) or even RBAC [gcs-sink-rbac-sasl-plain.sh](https://github.com/vdesabou/kafka-docker-playground/blob/master/connect/connect-gcp-gcs-sink/gcs-sink-rbac-sasl-plain.sh)
 
-## 👷‍♂️ Build your example
+# 👷‍♂️ Build your example
 
-### 👍️ Examples
+## 👍️ Examples
 
-#### 🔓️ Plaintext example
+### 🔓️ Plaintext example
 
-#### 🔒️ Security example
+### 🔒️ Security example
 
-### 🔃 Re-create containers
+## 🔃 Re-create containers
 
-Because the playground use **[Docker override](/how-to-extend?id=🐳-docker-override)**, not all configuration parameters are in same `docker-compose.yml` file and docker-compose files in the playground depends on environment variables to be set.
+Because the playground use **[Docker override](/how-it-works?id=🐳-docker-override)**, not all configuration parameters are in same `docker-compose.yml` file and docker-compose files in the playground depends on environment variables to be set.
 
 For these reasons, if you want to make a change in one of the docker-compose files (without restarting the test from scratch), it is not simply a matter of doing `docker-compose up -d` 😀
 
@@ -201,9 +199,9 @@ Recreating connect              ... done
 control-center is up-to-date
 ```
 
-## 🥽 Deep dive
+# 🥽 Deep dive
 
-### 🤖 How CI works
+## 🤖 How CI works
 
 Everyday, regression tests are executed using [Github Actions](https://github.com/features/actions). 
 
@@ -238,11 +236,3 @@ Example:
 CI results are present in **[Content](/content.md)** section:
 
 ![ci_results](./images/ci_results.jpg)
-
-## 🏭 Reusables
-
-### Producing data
-
-### Consuming data
-
-### Using proxy
