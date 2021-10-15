@@ -191,7 +191,7 @@ services:
 
 ### 🔒️ Security example
 
-## 🔃 Re-create containers
+## ♻️ Re-create containers
 
 Because the playground use **[Docker override](/how-it-works?id=🐳-docker-override)**, not all configuration parameters are in same `docker-compose.yml` file and docker-compose files in the playground depends on environment variables to be set.
 

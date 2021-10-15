@@ -1,5 +1,5 @@
 - **Getting Started**
-- [👋 Introduction](/introduction.md)
+- [🐳 Introduction](/introduction.md)
 - [👾 Content](/content.md)
 - [🚀 How to Use](/how-to-use.md)
 - [🎓 How it works](/how-it-works.md)
