@@ -7,11 +7,39 @@ Before learning how to create your own examples/reproduction models, here are so
 
 The main categories like `ccloud`, `connect`, `environment` are in root folder:
 
-![folder_structure](./images/folder_structure.jpg)
+```
+├── 3rdparty
+├── ccloud
+├── cloudformation
+├── connect
+├── docs
+├── environment
+├── images
+├── ksqldb
+├── operator
+├── other
+├── replicator
+├── scripts
+├── tools
+└── troubleshooting
+```
 
-All the tests are and **must** be at second level:
+All the tests are and **must** be at second level.
 
-![folder_structure](./images/folder_structure2.jpg)
+Example with `connect`folder:
+
+```
+connect
+├── connect-active-mq-sink
+├── connect-active-mq-source
+├── connect-amps-source
+├── connect-appdynamics-metrics-sink
+├── connect-aws-cloudwatch-logs-source
+├── connect-aws-cloudwatch-metrics-sink
+<snip>
+
+131 directories
+```
 
 This is important because each test is sourcing [`scripts/utils.sh`](https://github.com/vdesabou/kafka-docker-playground/blob/master/scripts/utils.sh) like this:
 
