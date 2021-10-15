@@ -73,3 +73,6 @@ connect/connect-appdynamics-metrics-sink/docker-appdynamics-metrics/machine-agen
 ksqldb/materialized-view/confluent-hub-components
 config.cc.travis
 myenv
+._aws_config
+._aws_credentials
+._config.cc.travis
