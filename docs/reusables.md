@@ -2,9 +2,9 @@
 
 Below is a collection of *how to* that you can re-use when you build your own reproduction models 
 
-## Producing data
+## 👉 Producing data
 
-### Using [kafka-console-producer](https://docs.confluent.io/platform/current/tutorials/examples/clients/docs/kafka-commands.html#produce-records)
+### [kafka-console-producer](https://docs.confluent.io/platform/current/tutorials/examples/clients/docs/kafka-commands.html#produce-records)
 
 * Using `seq`
 
@@ -41,7 +41,7 @@ docker exec -i broker kafka-console-producer --broker-list broker:9092 --topic a
 EOF
 ```
 
-### Using [kafka-avro-console-producer ](https://docs.confluent.io/platform/current/tutorials/examples/clients/docs/kafka-commands.html#produce-avro-records)
+### [kafka-avro-console-producer](https://docs.confluent.io/platform/current/tutorials/examples/clients/docs/kafka-commands.html#produce-avro-records)
 
 * Using `seq`
 
@@ -83,23 +83,29 @@ docker exec -i connect bash -c "kafka-avro-console-producer --broker-list broker
 
 Here are examples of [`schema.avsc`](https://github.com/vdesabou/kafka-docker-playground/blob/master/connect/connect-http-sink/schema.avsc) and [`message.json`](https://github.com/vdesabou/kafka-docker-playground/blob/master/connect/connect-http-sink/message.json)
 
-### Using kafka-avro-console-producer 
+### kafka-producer-perf-test
 
 ```bash
 docker exec broker kafka-producer-perf-test --topic a-topic --num-records 200000 --record-size 1000 --throughput 100000 --producer-props bootstrap.servers=broker:9092
 ```
 
-### Using Java producer
+### Java producer
+
+🚧 TODO 
 
 
+## 👈 Consuming data
 
-## Consuming data
+🚧 TODO 
 
-## Using proxy
+## 🌐 Using proxy
 
-## Using specific JDK
+🚧 TODO 
 
-WIP
+
+## ☕ Using specific JDK
+
+🚧 TODO 
 
 ```yml
 COPY zulu11.48.21-ca-jdk11.0.11-linux.x86_64.rpm /tmp/zulu11.48.21-ca-jdk11.0.11-linux.x86_64.rpm
