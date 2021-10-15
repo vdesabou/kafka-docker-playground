@@ -16,9 +16,9 @@
 - 💸 Confluent commercial [features](/content?id=💸-confluent-commercial) (Tiered Storage, Control Center, Audit logs...)
 - ♻️ Replicator [setups](/content?id=♻%EF%B8%8F-confluent-replicator-and-mirror-maker-2)
 - 🎯 Run examples with any Confluent Platform or connector [versions](/how-to-use?id=🪄-specify-versions)
-- 👷‍♂️ Build your own reproduction [models](/how-to-extend?id=🎓%EF%B8%8F-how-to-extend)
+- 👷‍♂️ Build your own reproduction [models](/how-it-works?id=🎓%EF%B8%8F-how-it-works)
 - 📱 Work directly in your browser using [Gitpod.io](/how-to-use?id=-gitpodio)
-- 🤖 Automated testing using Github Actions [CI](/how-to-extend?id=🤖-how-ci-works)
+- 🤖 Automated testing using Github Actions [CI](/how-it-works?id=🤖-how-ci-works)
 - 👾 And even more [playgrounds](/content?id=👾-other-playgrounds)...
 
 ## 🏁 Getting Started
