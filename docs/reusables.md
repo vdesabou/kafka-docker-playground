@@ -107,8 +107,20 @@ docker exec broker kafka-producer-perf-test --topic a-topic --num-records 200000
 
 🚧 TODO 
 
+https://www.azul.com/downloads
+
 ```yml
-COPY zulu11.48.21-ca-jdk11.0.11-linux.x86_64.rpm /tmp/zulu11.48.21-ca-jdk11.0.11-linux.x86_64.rpm
-RUN yum install -y /tmp/zulu11.48.21-ca-jdk11.0.11-linux.x86_64.rpm
-RUN alternatives --remove java /usr/lib/jvm/zulu11/bin/java
+  connect:
+    build:
+      context: ../../connect/connect-cdc-oracle12-source/
+      args:
+        TAG: ${TAG}
+```
+
+```yml
+ARG TAG
+FROM vdesabou/kafka-docker-playground-connect:${TAG}
+USER root
+RUN wget https://cdn.azul.com/zulu/bin/zulu11.48.21-ca-jdk11.0.11-linux.x86_64.rpm && yum install -y zulu11.48.21-ca-jdk11.0.11-linux.x86_64.rpm && alternatives --remove java /usr/lib/jvm/zulu11/bin/java
+USER appuser
 ```
