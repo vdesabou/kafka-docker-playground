@@ -1,4 +1,4 @@
-# 👋 Introduction
+# 🐳 Introduction
 
 *Fully automated Docker based examples // Easily build reproduction models*
 
