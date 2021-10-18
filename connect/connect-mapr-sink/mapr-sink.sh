@@ -25,7 +25,7 @@ docker exec -i --privileged --user root connect  bash -c "chmod a+rw /etc/yum.re
 docker exec -i --privileged --user root connect  bash -c "rpm -i http://mirror.centos.org/centos/7/os/x86_64/Packages/mtools-4.0.18-5.el7.x86_64.rpm"
 docker exec -i --privileged --user root connect  bash -c "rpm -i http://mirror.centos.org/centos/7/os/x86_64/Packages/syslinux-4.05-15.el7.x86_64.rpm"
 
-docker exec -i --privileged --user root connect  bash -c "yum -y install jre-1.8.0-openjdk hostname findutils net-tools"
+docker exec -i --privileged --user root connect  bash -c "yum -y install --disablerepo='Confluent*' jre-1.8.0-openjdk hostname findutils net-tools"
 
 docker exec -i --privileged --user root connect  bash -c "rpm --import https://package.mapr.com/releases/pub/maprgpg.key && yum -y update --disablerepo='Confluent*' && yum -y install mapr-client.x86_64"
 
