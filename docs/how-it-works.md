@@ -1,7 +1,7 @@
 
 # 🎓️ How it works
 
-Before learning how to create your own examples/reproduction models, here are some explanations on how the playground works internally:
+Before learning how to create your own examples/reproduction models, here are some explanations on how the playground works internally...
 
 ## 📁 Folder structure
 
@@ -55,19 +55,21 @@ The playground makes extensive use of docker-compose [override](https://docs.doc
 Each test is built based on an [environment](#/content?id=%F0%9F%94%90-environments), [PLAINTEXT](https://github.com/vdesabou/kafka-docker-playground/tree/master/environment/plaintext) being the most common one.
 
 > [!TIP]
-> Check **[📝 See properties file](/how-to-use?id=📝-see-properties-file)** section, in order to see the end result properties file
+> Check **[📝 See properties file](/how-to-use?id=📝-see-properties-file)** section, in order to see the end result properties file.
 
 Let's have a look at some examples to understand how it works:
 
-### Connector using PLAINTEXT
+### 🔓 Connector using PLAINTEXT
 
 Example with ([active-mq-sink.sh](https://github.com/vdesabou/kafka-docker-playground/blob/master/connect/connect-active-mq-sink/active-mq-sink.sh)):
+
+At the beginning of the script, we have:
 
 ```shell
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
 ```
 
-The *local* [`${PWD}/docker-compose.plaintext.yml`](https://github.com/vdesabou/kafka-docker-playground/blob/master/connect/connect-active-mq-sink/docker-compose.plaintext.yml) is only composed of:
+The *local* [`${PWD}/docker-compose.plaintext.yml`](https://github.com/vdesabou/kafka-docker-playground/blob/master/connect/connect-active-mq-sink/docker-compose.plaintext.yml) file is only composed of:
 
 ```yml
 ---
@@ -88,10 +90,15 @@ services:
 
 It contains:
 
-* `activemq` container required for the test 
-* For `connect` container, it will override value `CONNECT_PLUGIN_PATH` from [`environment/plaintext/docker-compose.yml`](https://github.com/vdesabou/kafka-docker-playground/blob/master/environment/plaintext/docker-compose.yml)
+* `activemq` which is a container required for the test.
+* `connect` container, which overrides value `CONNECT_PLUGIN_PATH` from [`environment/plaintext/docker-compose.yml`](https://github.com/vdesabou/kafka-docker-playground/blob/master/environment/plaintext/docker-compose.yml)
 
-PLAINTEXT is used thanks to the call to `${DIR}/../../environment/plaintext/start.sh`
+PLAINTEXT environment is used thanks to the call to [`${DIR}/../../environment/plaintext/start.sh`](https://github.com/vdesabou/kafka-docker-playground/blob/master/environment/plaintext/start.sh), which invokes the docker-compose command in the end like this:
+
+```bash
+docker-compose -f ../../environment/plaintext/docker-compose.yml -f ${PWD}/docker-compose.plaintext.yml up -d
+```
+
 
 > [!WARNING]
 > The *local* docker-compose file should be named docker-compose.%environment%[.%optional'%].yml 
@@ -103,7 +110,7 @@ PLAINTEXT is used thanks to the call to `${DIR}/../../environment/plaintext/star
 > This is required for [stop.sh](https://github.com/vdesabou/kafka-docker-playground/blob/master/connect/connect-active-mq-sink/stop.sh) script to work properly.
 
 
-### Environment SASL/SSL 
+### 🔐 Environment SASL/SSL 
 
 Environments are also overriding [PLAINTEXT](https://github.com/vdesabou/kafka-docker-playground/tree/master/environment/plaintext), so for example [SASL/SSL](https://github.com/vdesabou/kafka-docker-playground/tree/master/environment/sasl-ssl) has a [docker-compose.yml](https://github.com/vdesabou/kafka-docker-playground/blob/master/environment/sasl-ssl/docker-compose.yml) file like this:
 
@@ -157,9 +164,9 @@ Environments are also overriding [PLAINTEXT](https://github.com/vdesabou/kafka-d
       <snip>
 ```
 
-It only contains what is required to add SASL/SSL to a PLAINTEXT environment 💫 !
+As you can see, it only contains what is required to add SASL/SSL to a PLAINTEXT environment 💫 !
 
-### Connector using SASL/SSL
+### 🔏 Connector using SASL/SSL
 
 Example with ([gcs-sink-sasl-ssl.sh](https://github.com/vdesabou/kafka-docker-playground/blob/master/connect/connect-gcp-gcs-sink/gcs-sink-sasl-ssl.sh)):
 
@@ -181,32 +188,37 @@ services:
 ```
 
 > [!TIP]
-> [connect-gcp-gcs-sink](https://github.com/vdesabou/kafka-docker-playground/tree/master/connect/connect-gcp-gcs-sink) example contains various examples with security [gcs-sink-2way-ssl.sh](https://github.com/vdesabou/kafka-docker-playground/blob/master/connect/connect-gcp-gcs-sink/gcs-sink-2way-ssl.sh), [gcs-sink-kerberos.sh](https://github.com/vdesabou/kafka-docker-playground/blob/master/connect/connect-gcp-gcs-sink/gcs-sink-kerberos.sh), [gcs-sink-ldap-authorizer-sasl-plain.sh](https://github.com/vdesabou/kafka-docker-playground/blob/master/connect/connect-gcp-gcs-sink/gcs-sink-ldap-authorizer-sasl-plain.sh) or even RBAC [gcs-sink-rbac-sasl-plain.sh](https://github.com/vdesabou/kafka-docker-playground/blob/master/connect/connect-gcp-gcs-sink/gcs-sink-rbac-sasl-plain.sh)
+> If you're looking for a connector example with different environments, [GCS sink](https://github.com/vdesabou/kafka-docker-playground/tree/master/connect/connect-gcp-gcs-sink) contains various examples:
+> * [SASL/SSL](https://github.com/vdesabou/kafka-docker-playground/blob/master/connect/connect-gcp-gcs-sink/gcs-sink-sasl-ssl.sh)
+> * [2WAY/SSL](https://github.com/vdesabou/kafka-docker-playground/blob/master/connect/connect-gcp-gcs-sink/gcs-sink-2way-ssl.sh)
+> * [KERBEROS](https://github.com/vdesabou/kafka-docker-playground/blob/master/connect/connect-gcp-gcs-sink/gcs-sink-kerberos.sh)
+> * [LDAP Authentication with SASL/PLAIN](https://github.com/vdesabou/kafka-docker-playground/blob/master/connect/connect-gcp-gcs-sink/gcs-sink-ldap-authorizer-sasl-plain.sh)
+> * [RBAC with SASL/PLAIN](https://github.com/vdesabou/kafka-docker-playground/blob/master/connect/connect-gcp-gcs-sink/gcs-sink-rbac-sasl-plain.sh)
 
 ## ♻️ Re-create containers
 
-Because the playground use **[Docker override](/how-it-works?id=🐳-docker-override)**, not all configuration parameters are in same `docker-compose.yml` file and docker-compose files in the playground depends on environment variables to be set.
+Because the playground uses **[Docker override](/how-it-works?id=🐳-docker-override)**, not all configuration parameters are in same `docker-compose.yml` file and also `docker-compose` files in the playground depends on environment variables to be set.
 
-For these reasons, if you want to make a change in one of the docker-compose files (without restarting the test from scratch), it is not simply a matter of doing `docker-compose up -d` 😀
+For these reasons, if you want to make a change in one of the `docker-compose` files (without restarting the test from scratch), it is not simply a matter of doing `docker-compose up -d` 😅 !
 
-However, when you execute a test, you'll have in the output the command to run in order to easily re-create modified container(s)
+However, when you execute an example, you get in the output the command to run in order to easily re-create modified container(s) 🥳.
 
 *Example:*
 
 ```bash
 12:02:18 ℹ️ 🔃If you modify a docker-compose file 
 and want to re-create the container(s), use this command:
-12:02:18 ℹ️ 🔃source ../../scripts/utils.sh && docker-compose -f ../../environment/plaintext/docker-compose.yml -f /Users/vsaboulin/Documents/github/kafka-docker-playground/connect/connect-http-sink/docker-compose.plaintext.yml --profile control-center up -d
+12:02:18 ℹ️ 🔃source ../../scripts/utils.sh && docker-compose -f ../../environment/plaintext/docker-compose.yml -f $PWD/docker-compose.plaintext.yml --profile control-center up -d
 ```
 
-So you can modify one of the docker-compose files (in that case either `environment/plaintext/docker-compose.yml` or `connect/connect-http-sink/docker-compose.plaintext.yml`), and then run the suggested command:
+So you can modify one of the `docker-compose` files (in that case either [`environment/plaintext/docker-compose.yml`](https://github.com/vdesabou/kafka-docker-playground/blob/master/environment/plaintext/docker-compose.yml) or [`connect/connect-http-sink/docker-compose.plaintext.yml`](https://github.com/vdesabou/kafka-docker-playground/blob/master/connect/connect-http-sink/docker-compose.plaintext.yml)), and then run the suggested command:
 
 *Example:*
 
-I've edited `connect/connect-http-sink/docker-compose.plaintext.yml` and updated both `connect` and `http-service-no-auth`, and then I execute the suggested command:
+After editing [`connect/connect-http-sink/docker-compose.plaintext.yml`](https://github.com/vdesabou/kafka-docker-playground/blob/master/connect/connect-http-sink/docker-compose.plaintext.yml) and updated both `connect` and `http-service-no-auth`, the suggested command was ran:
 
 ```bash
-$ source ../../scripts/utils.sh && docker-compose -f ../../environment/plaintext/docker-compose.yml -f /Users/vsaboulin/Documents/github/kafka-docker-playground/connect/connect-http-sink/docker-compose.plaintext.yml --profile control-center  up -d
+$ source ../../scripts/utils.sh && docker-compose -f ../../environment/plaintext/docker-compose.yml -f $PWD/docker-compose.plaintext.yml --profile control-center  up -d
 http-service-ssl-basic-auth is up-to-date
 http-service-oauth2-auth is up-to-date
 Recreating http-service-no-auth ... 
@@ -221,25 +233,40 @@ Recreating connect              ... done
 control-center is up-to-date
 ```
 
+## 🔗 Connect image used
+
+The Kafka Connect image [used](https://github.com/vdesabou/kafka-docker-playground/blob/714b36289981f9fe8f699ae3eab9a508127b625e/environment/plaintext/docker-compose.yml#L80) in the playground is `vdesabou/kafka-docker-playground-connect`
+
+It is built [everyday](https://github.com/vdesabou/kafka-docker-playground-connect/actions) using the repository [vdesabou/kafka-docker-playground-connect](https://github.com/vdesabou/kafka-docker-playground-connect).
+
+It is either based on [`cp-server-connect-base`](https://hub.docker.com/r/confluentinc/cp-server-connect-base) for version greater than `5.3.0` or [`cp-kafka-connect-base`](https://hub.docker.com/r/confluentinc/cp-kafka-connect-base) otherwise.
+
+Several tools are [installed](https://github.com/vdesabou/kafka-docker-playground-connect/blob/00f29069be566162a5be84d64637b3e1f9920f95/Dockerfile#L11-L15) on this image such as `openssl`, `tcpdump`, `iptables`, `netcat`, etc..
+
+By default, for each connector, the latest available version on [Confluent Hub](https://www.confluent.io/hub/) is used (the only 2 exceptions are for [replicator](https://github.com/vdesabou/kafka-docker-playground-connect/blob/00f29069be566162a5be84d64637b3e1f9920f95/Dockerfile#L36) and [JDBC](https://github.com/vdesabou/kafka-docker-playground-connect/blob/00f29069be566162a5be84d64637b3e1f9920f95/Dockerfile#L26) which are using same version as CP).
+
+See the [Dockerfile](https://github.com/vdesabou/kafka-docker-playground-connect/blob/master/Dockerfile) used to build the images.
+
 ## 🤖 How CI works
 
-Everyday, regression tests are executed using [Github Actions](https://github.com/features/actions). 
+[Everyday](https://github.com/vdesabou/kafka-docker-playground/blob/c65704df7b66a2c47321d04fb75f43a8bbb4fef1/.github/workflows/run-regression.yml#L8-L9), regression tests are executed using [Github Actions](https://github.com/features/actions). 
 
-The workflow runs are available [here](https://github.com/vdesabou/kafka-docker-playground/actions).
+The workflow runs and logs are available [here](https://github.com/vdesabou/kafka-docker-playground/actions).
 
 The CI is defined using [`.github/workflows/run-regression.yml`](https://github.com/vdesabou/kafka-docker-playground/blob/master/.github/workflows/run-regression.yml) file (see the list of tests executed [here](https://github.com/vdesabou/kafka-docker-playground/blob/fbc009be503d7c0c55a16ddf17679d50f721c74f/.github/workflows/run-regression.yml#L46-L84))
 
 > [!NOTE]
 > CI is executed on Ubuntu 20.04 on Azure, see [documentation](https://docs.github.com/en/actions/using-github-hosted-runners/about-github-hosted-runners#supported-runners-and-hardware-resources)
 
-A test is executed if:
+> [!NOTE]
+> A test is executed if:
+> 
+> * It was failing in the last run
+> * A change has been made in the test directory
+> * CP and/or connector version(s) has/have changed
+> * Last execution was more than 7 days ago
 
-* it was failing in the last run
-* a change has been made in the test directory
-* CP or connection has changed
-* last execution was more than 7 days ago
-
-If a test is failing, a Github issue will be automatically opened or updated with results for each CP version.
+If a test is failing 🔥, a Github issue will be automatically opened or updated with results for each CP version.
 
 *Example:*
 
@@ -249,24 +276,20 @@ Issue [#1401](https://github.com/vdesabou/kafka-docker-playground/issues/1401):
 
 The Github issue will be automatically closed when all results for a test are ok:
 
-*Example:*
-
 ![github_issue_closed](./images/github_issue_closed.jpg)
 
-CI results are present in **[Content](/content.md)** section:
-
-*Example:*
+CI results are displayed in **[Content](/content.md)** section:
 
 ![ci_results](./images/ci_results.jpg)
 
 > [!TIP]
-> * When the test is successful, the badge looks like [![CI ok](https://img.shields.io/badge/CI-ok!-green)](https://github.com/vdesabou/kafka-docker-playground/runs/3875670630) and clicking on it brings you to the CI run
+> * When the test is successful, the badge looks like [![CI ok](https://img.shields.io/badge/CI-ok!-green)](https://github.com/vdesabou/kafka-docker-playground/runs/3875670630) and clicking on it brings you to the CI run.
 > 
-> * When the test is failing for **all** tested CP versions, the badge looks like [![CI fail](https://img.shields.io/badge/CI-fail!-red)](https://github.com/vdesabou/kafka-docker-playground/issues/935) and clicking on it brings you to the corresponding Github issue
+> * When the test is failing for **all** tested CP versions, the badge looks like [![CI fail](https://img.shields.io/badge/CI-fail!-red)](https://github.com/vdesabou/kafka-docker-playground/issues/935) and clicking on it brings you to the corresponding Github issue.
 > 
-> * When the test is failing for **just some** tested CP versions, the badge looks like [![issue 778](https://img.shields.io/badge/CI-CP%206.2.1-red)](https://github.com/vdesabou/kafka-docker-playground/issues/778) and clicking on it brings you to the corresponding Github issue
+> * When the test is failing for **just some** tested CP versions, the badge looks like [![issue 778](https://img.shields.io/badge/CI-CP%206.2.1-red)](https://github.com/vdesabou/kafka-docker-playground/issues/778) (which includes CP version) and clicking on it brings you to the corresponding Github issue.
 > 
-> * When a test cannot be tested in CI, the badge ![not tested](https://img.shields.io/badge/CI-not%20tested!-violet) is set (without any associated link)
+> * When a test cannot be tested in CI, the badge ![not tested](https://img.shields.io/badge/CI-not%20tested!-violet) is set (without any associated link).
 
 > [!TIP]
 > * Clicking on the connector version badge [![version](https://img.shields.io/badge/v-1.2.2-pink)](https://docs.confluent.io/kafka-connect-aws-dynamodb/current/index.html) brings you to the corresponding documentation page
