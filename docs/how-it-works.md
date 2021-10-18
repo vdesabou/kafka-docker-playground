@@ -194,9 +194,9 @@ However, when you execute a test, you'll have in the output the command to run i
 *Example:*
 
 ```bash
-12:02:18 ℹ️ ⚡If you modify a docker-compose file 
+12:02:18 ℹ️ 🔃If you modify a docker-compose file 
 and want to re-create the container(s), use this command:
-12:02:18 ℹ️ ⚡source ../../scripts/utils.sh && docker-compose -f ../../environment/plaintext/docker-compose.yml -f /Users/vsaboulin/Documents/github/kafka-docker-playground/connect/connect-http-sink/docker-compose.plaintext.yml --profile control-center up -d
+12:02:18 ℹ️ 🔃source ../../scripts/utils.sh && docker-compose -f ../../environment/plaintext/docker-compose.yml -f /Users/vsaboulin/Documents/github/kafka-docker-playground/connect/connect-http-sink/docker-compose.plaintext.yml --profile control-center up -d
 ```
 
 So you can modify one of the docker-compose files (in that case either `environment/plaintext/docker-compose.yml` or `connect/connect-http-sink/docker-compose.plaintext.yml`), and then run the suggested command:
