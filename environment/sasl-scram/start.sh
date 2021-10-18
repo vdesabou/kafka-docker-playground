@@ -26,18 +26,16 @@ else
   log "🛑 ksqldb is disabled"
 fi
 
+ENABLE_DOCKER_COMPOSE_FILE_OVERRIDE=""
 DOCKER_COMPOSE_FILE_OVERRIDE=$1
-# Starting broker first
 if [ -f "${DOCKER_COMPOSE_FILE_OVERRIDE}" ]
 then
-  docker-compose -f ../../environment/plaintext/docker-compose.yml -f ../../environment/sasl-scram/docker-compose.yml -f ${DOCKER_COMPOSE_FILE_OVERRIDE} build
-  docker-compose -f ../../environment/plaintext/docker-compose.yml -f ../../environment/sasl-scram/docker-compose.yml -f ${DOCKER_COMPOSE_FILE_OVERRIDE} down -v --remove-orphans
-  docker-compose -f ../../environment/plaintext/docker-compose.yml -f ../../environment/sasl-scram/docker-compose.yml -f ${DOCKER_COMPOSE_FILE_OVERRIDE} up -d --build broker
-else
-  docker-compose -f ../../environment/plaintext/docker-compose.yml -f ../../environment/sasl-scram/docker-compose.yml build
-  docker-compose -f ../../environment/plaintext/docker-compose.yml -f ../../environment/sasl-scram/docker-compose.yml down -v --remove-orphans
-  docker-compose -f ../../environment/plaintext/docker-compose.yml -f ../../environment/sasl-scram/docker-compose.yml up -d --build broker
+  ENABLE_DOCKER_COMPOSE_FILE_OVERRIDE="-f ${DOCKER_COMPOSE_FILE_OVERRIDE}"
 fi
+
+docker-compose -f ../../environment/plaintext/docker-compose.yml -f ../../environment/sasl-scram/docker-compose.yml ${ENABLE_DOCKER_COMPOSE_FILE_OVERRIDE} build
+docker-compose -f ../../environment/plaintext/docker-compose.yml ${ENABLE_DOCKER_COMPOSE_FILE_OVERRIDE} down -v --remove-orphans
+docker-compose -f ../../environment/plaintext/docker-compose.yml ${ENABLE_DOCKER_COMPOSE_FILE_OVERRIDE} ${profile_control_center_command} ${profile_ksqldb_command} up -d --build broker
 
 # Creating the users
 docker exec broker kafka-configs --zookeeper zookeeper:2181 --alter --add-config 'SCRAM-SHA-256=[password=broker],SCRAM-SHA-512=[password=broker]' --entity-type users --entity-name broker
@@ -46,18 +44,10 @@ docker exec broker kafka-configs --zookeeper zookeeper:2181 --alter --add-config
 docker exec broker kafka-configs --zookeeper zookeeper:2181 --alter --add-config 'SCRAM-SHA-256=[password=ksqldb-secret],SCRAM-SHA-512=[password=ksqldb-secret]' --entity-type users --entity-name ksqldb
 docker exec broker kafka-configs --zookeeper zookeeper:2181 --alter --add-config 'SCRAM-SHA-256=[password=client-secret],SCRAM-SHA-512=[password=client-secret]' --entity-type users --entity-name client
 
-if [ -f "${DOCKER_COMPOSE_FILE_OVERRIDE}" ]
-then
-  docker-compose -f ../../environment/plaintext/docker-compose.yml -f ../../environment/sasl-scram/docker-compose.yml -f ${DOCKER_COMPOSE_FILE_OVERRIDE} ${profile_control_center_command} ${profile_ksqldb_command} up -d
-  log "🎓To see the actual properties file, use ../../scripts/get-properties.sh <container>"
-  log "⚡If you modify a docker-compose file and want to re-create the container(s), use this command:"
-  log "⚡source ../../scripts/utils.sh && docker-compose -f ../../environment/plaintext/docker-compose.yml -f ../../environment/sasl-scram/docker-compose.yml -f ${DOCKER_COMPOSE_FILE_OVERRIDE} ${profile_control_center_command} ${profile_ksqldb_command} up -d"
-else
-  docker-compose -f ../../environment/plaintext/docker-compose.yml -f ../../environment/sasl-scram/docker-compose.yml ${profile_control_center_command} ${profile_ksqldb_command} up -d
-  log "🎓To see the actual properties file, use ../../scripts/get-properties.sh <container>"
-  log "⚡If you modify a docker-compose file and want to re-create the container(s), use this command:"
-  log "⚡source ../../scripts/utils.sh && docker-compose -f ../../environment/plaintext/docker-compose.yml -f ../../environment/sasl-scram/docker-compose.yml ${profile_control_center_command} ${profile_ksqldb_command} up -d"
-fi
+docker-compose -f ../../environment/plaintext/docker-compose.yml -f ../../environment/sasl-scram/docker-compose.yml ${ENABLE_DOCKER_COMPOSE_FILE_OVERRIDE} ${profile_control_center_command} ${profile_ksqldb_command} up -d
+log "📝 To see the actual properties file, use ../../scripts/get-properties.sh <container>"
+log "🔃 If you modify a docker-compose file and want to re-create the container(s), use this command:"
+log "🔃 source ../../scripts/utils.sh && docker-compose -f ../../environment/plaintext/docker-compose.yml -f ../../environment/sasl-scram/docker-compose.yml ${ENABLE_DOCKER_COMPOSE_FILE_OVERRIDE} ${profile_control_center_command} ${profile_ksqldb_command} up -d"
 
 if [ "$#" -ne 0 ]
 then
