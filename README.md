@@ -150,7 +150,7 @@ Fully automated Kafka and Confluent Docker based examples // Easily build reprod
 ### 💻️ Demo
 
   - 🔌 How to [connect](https://github.com/vdesabou/kafka-docker-playground/tree/master/ccloud/ccloud-demo#connecting-components-to-confluent-cloud) your components to Confluent Cloud
-  - 📈 How to [monitor](https://github.com/vdesabou/kafka-docker-playground/tree/master/ccloud/ccloud-demo#monitoring) your Confluent Cloud cluster using Metrics API and Gr💻️afana, Splunk, New Relic, etc...
+  - 📈 How to [monitor](https://github.com/vdesabou/kafka-docker-playground/tree/master/ccloud/ccloud-demo#monitoring) your Confluent Cloud cluster using Metrics API and Grafana, Splunk, New Relic, etc...
 
 ### 🔗 Connectors connected to Confluent Cloud
 
