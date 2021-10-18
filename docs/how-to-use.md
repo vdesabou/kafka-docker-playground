@@ -1,5 +1,5 @@
 
-# 👨‍🏫 How to use
+# 🚀 How to use
 
 ## 3️⃣ Ways to run
 
