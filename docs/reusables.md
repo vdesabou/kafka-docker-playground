@@ -154,14 +154,82 @@ docker exec producer-v1 bash -c "java -jar producer-v1-1.0.0-jar-with-dependenci
 
 ## 👈 Consuming data
 
-🚧 TODO 
+### 🔤 [kafka-console-consumer](https://docs.confluent.io/platform/current/tutorials/examples/clients/docs/kafka-commands.html#consume-records)
 
-## 🌐 Using proxy
+* 1️⃣ Simplest
 
-🚧 TODO 
+```
+timeout 60 docker exec broker kafka-console-consumer --bootstrap-server broker:9092 --topic a-topic --from-beginning --max-messages 1
+```
 
+> [!TIP]
+> Using `timeout` command prevents the command to run forever.
+> It is [ignored](https://github.com/vdesabou/kafka-docker-playground/blob/c65704df7b66a2c47321d04fb75f43a8bbb4fef1/scripts/utils.sh#L650-L658) if not present on your machine.
 
-## ☕ Using specific JDK
+* 2️⃣ Displaying key:
+
+```bash
+timeout 60 docker exec broker kafka-console-consumer --bootstrap-server broker:9092 --topic a-topic --property print.key=true --property key.separator=, --from-beginning --max-messages 1
+```
+
+## 🌐 Using HTTPS proxy
+
+There are several connector examples which include HTTPS proxy (check for `also with 🌐 proxy` in the **[Content](/content.md)** section).
+
+> [!TIP]
+> A complete example is available [here](https://github.com/vdesabou/kafka-docker-playground/blob/master/connect/connect-aws-s3-sink/s3-sink-proxy.sh). 
+
+Here are the steps to follow:
+
+1. Copy [`connect/connect-aws-s3-sink/repro-proxy`](https://github.com/vdesabou/kafka-docker-playground/tree/master/connect/connect-aws-s3-sink/repro-proxy) directory into your test directory.
+
+2. Update [`connect/connect-aws-s3-sink/repro-proxy/nginx_whitelist.conf`](https://github.com/vdesabou/kafka-docker-playground/blob/master/connect/connect-aws-s3-sink/repro-proxy/nginx_whitelist.conf) with the domain name required for your needs.
+
+*Example:*
+
+```conf
+        server_name  service-now.com;
+        server_name  *.service-now.com;
+```
+
+3. Add this in your `docker-compose` file:
+
+```yml
+  nginx_proxy:
+    image: reiz/nginx_proxy:latest
+    hostname: nginx_proxy
+    container_name: nginx_proxy
+    ports:
+      - "8888:8888"
+    volumes:
+      - ../../connect/connect-aws-s3-sink/repro-proxy/nginx_whitelist.conf:/usr/local/nginx/conf/nginx.conf
+```
+
+> [!WARNING]
+> Make sure to update `../../connect/connect-aws-s3-sink` above with the right path.
+
+4. [Optional] In order to make sure the proxy is used, you can set `dns: 0.0.0.0` in the connect instance, so that there is no internet connectivity.
+
+```yml
+  connect:
+    <snip>
+    environment:
+      <snip>
+    dns: 0.0.0.0
+```
+
+5. In you connector configuration, update the proxy configuration parameter with `https://nginx_proxy:8888`.
+
+*Example:*
+
+```json
+"s3.proxy.url": "https://nginx_proxy:8888"
+```
+
+> [!NOTE]
+> If your proxy requires HTTP2 support, there is a full example available in this example: [GCP Pub/Sub Source connector](https://github.com/vdesabou/kafka-docker-playground/blob/master/connect/connect-gcp-pubsub-source/gcp-pubsub-repro-proxy.sh)
+
+## ♨️ Using specific JDK
 
 🚧 TODO 
 
