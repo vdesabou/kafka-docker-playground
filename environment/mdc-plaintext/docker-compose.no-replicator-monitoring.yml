@@ -1,0 +1,11 @@
+---
+version: '3.5'
+services:
+
+  connect-us:
+    environment:
+      CONNECT_REST_EXTENSION_CLASSES: 
+
+  connect-europe:
+    environment:
+      CONNECT_REST_EXTENSION_CLASSES: 
