@@ -231,22 +231,87 @@ Here are the steps to follow:
 
 ## ♨️ Using specific JDK
 
-🚧 TODO 
+It is sometime necessary for an investigation to replace JDK installed on connect image for example.
 
-https://www.azul.com/downloads
+Here are some examples:
+
+### 🌀 Azul Zulu JDK
+
+Here are the steps to follow:
+
+1. Get the JDK `.rpm` version link you want to install from the [website](https://www.azul.com/downloads). In our example, that will be `https://cdn.azul.com/zulu/bin/zulu11.48.21-ca-jdk11.0.11-linux.x86_64.rpm`
+
+2. Add this in your `docker-compose` file:
 
 ```yml
   connect:
     build:
-      context: ../../connect/connect-cdc-oracle12-source/
+      context: ../../connect/connect-filestream-sink/
       args:
         TAG: ${TAG}
 ```
+> [!WARNING]
+> Make sure to update `context` above with the right path.
+
+3. Create a `Dockerfile` file in `context` directory above (`../../connect/connect-filestream-sink/`).
 
 ```yml
 ARG TAG
 FROM vdesabou/kafka-docker-playground-connect:${TAG}
 USER root
-RUN wget https://cdn.azul.com/zulu/bin/zulu11.48.21-ca-jdk11.0.11-linux.x86_64.rpm && yum install -y zulu11.48.21-ca-jdk11.0.11-linux.x86_64.rpm && alternatives --remove java /usr/lib/jvm/zulu11/bin/java
+RUN wget https://cdn.azul.com/zulu/bin/zulu11.48.21-ca-jdk11.0.11-linux.x86_64.rpm && yum install -y zulu11.48.21-ca-jdk11.0.11-linux.x86_64.rpm && alternatives --set java /usr/lib/jvm/zulu-11/bin/java
 USER appuser
+```
+
+> [!WARNING]
+> Make sure to update `alternatives --set java` above with the right path.
+
+4. Verify the correct JDK version is installed once your test is started:
+
+```bash
+docker exec connect java -version
+openjdk version "11.0.11" 2021-04-20 LTS
+OpenJDK Runtime Environment Zulu11.48+21-CA (build 11.0.11+9-LTS)
+OpenJDK 64-Bit Server VM Zulu11.48+21-CA (build 11.0.11+9-LTS, mixed mode)
+```
+
+### ⭕️ Oracle JDK
+
+Here are the steps to follow:
+
+1. Get the Oracle JDK `.rpm` version link you want to install from the [website](https://www.oracle.com/java/technologies/downloads/). In our example, that will be `jdk-8u201-linux-x64.rpm`
+
+2. Add this in your `docker-compose` file:
+
+```yml
+  connect:
+    build:
+      context: ../../connect/connect-filestream-sink/
+      args:
+        TAG: ${TAG}
+```
+> [!WARNING]
+> Make sure to update `context` above with the right path.
+
+3. Create a `Dockerfile` file in `context` directory above (`../../connect/connect-filestream-sink/`).
+
+```yml
+ARG TAG
+FROM vdesabou/kafka-docker-playground-connect:${TAG}
+COPY jdk-8u201-linux-x64.rpm /tmp/
+USER root
+RUN yum -y install /tmp/jdk-8u201-linux-x64.rpm && alternatives --set java /usr/java/jdk1.8.0_201-amd64/jre/bin/java && rm /tmp/jdk-8u201-linux-x64.rpm
+USER appuser
+```
+
+> [!WARNING]
+> Make sure to update `alternatives --set java` above with the right path.
+
+4. Verify the correct JDK version is installed once your test is started:
+
+```bash
+docker exec connect java -version
+java version "1.8.0_201"
+Java(TM) SE Runtime Environment (build 1.8.0_201-b09)
+Java HotSpot(TM) 64-Bit Server VM (build 25.201-b09, mixed mode)
 ```
