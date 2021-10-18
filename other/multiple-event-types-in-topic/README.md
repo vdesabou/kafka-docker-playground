@@ -6,6 +6,8 @@ Quickly test [Multiple Event Types in the Same Topic](https://docs.confluent.io/
 
 Using this blog [post](https://www.confluent.io/blog/multiple-event-types-in-the-same-kafka-topic).
 
+Note: This can only be run with version greater than 5.5
+
 ## How to run
 
 Simply run:
