@@ -52,6 +52,7 @@ if [[ "$CUR_WAIT" -gt "$MAX_WAIT" ]]; then
 fi
 done
 log "Oracle DB has started!"
+sleep 60
 
 log "Grant select on CUSTOMERS table"
 docker exec -i oracle sqlplus C\#\#MYUSER/mypassword@//localhost:1521/ORCLPDB1 << EOF
@@ -91,11 +92,11 @@ curl -X PUT \
                "table.topic.name.template": "${databaseName}.${schemaName}.${tableName}",
                "numeric.mapping": "best_fit",
                "connection.pool.max.size": 20,
-               "confluent.topic.replication.factor":1
+               "redo.log.row.fetch.size":1
           }' \
      http://localhost:8083/connectors/cdc-oracle-source-pdb/config | jq .
 
-log "Waiting 60s for cdc-oracle-source-cdb to read existing data"
+log "Waiting 60s for connector to read existing data"
 sleep 60
 
 log "Running SQL scripts"

@@ -52,6 +52,7 @@ if [[ "$CUR_WAIT" -gt "$MAX_WAIT" ]]; then
 fi
 done
 log "Oracle DB has started!"
+sleep 60
 
 # Create a redo-log-topic. Please make sure you create a topic with the same name you will use for "redo.log.topic.name": "redo-log-topic"
 # CC-13104
@@ -85,11 +86,11 @@ curl -X PUT \
                "table.topic.name.template": "${databaseName}.${schemaName}.${tableName}",
                "numeric.mapping": "best_fit",
                "connection.pool.max.size": 20,
-               "confluent.topic.replication.factor":1
+               "redo.log.row.fetch.size":1
           }' \
      http://localhost:8083/connectors/cdc-oracle-source-cdb/config | jq .
 
-log "Waiting 60s for cdc-oracle-source-cdb to read existing data"
+log "Waiting 60s for connector to read existing data"
 sleep 60
 
 log "Running SQL scripts"
@@ -97,6 +98,9 @@ for script in ${DIR}/sample-sql-scripts/*
 do
      $script "ORCLCDB"
 done
+
+log "Waiting 60s for connector to read new data"
+sleep 60
 
 log "Verifying topic ORCLCDB.C__MYUSER.CUSTOMERS: there should be 13 records"
 set +e
