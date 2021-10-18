@@ -172,6 +172,74 @@ timeout 60 docker exec broker kafka-console-consumer --bootstrap-server broker:9
 timeout 60 docker exec broker kafka-console-consumer --bootstrap-server broker:9092 --topic a-topic --property print.key=true --property key.separator=, --from-beginning --max-messages 1
 ```
 
+## 🚫 Blocking traffic
+
+It is sometime necessary for a reproduction model to simulate network issues like blocking incoming or outgoing traffic.
+
+The [connect image](/how-it-works?id=🔗-connect-image-used) used by the playground contains [`iptables`](https://en.wikipedia.org/wiki/Iptables) tool, so it is really easy to simulate network issues:
+
+*Examples:*
+
+* Block outgoing HTTPS traffic
+
+```bash
+docker exec --privileged --user root connect bash -c "iptables -A OUTPUT -p tcp --dport 443 -j DROP"
+```
+
+* Block incoming traffic from an IP address
+
+```bash
+docker exec --privileged --user root connect bash -c 'iptables -A INPUT -p tcp -s 35.205.238.172 -j DROP'
+```
+
+> [!TIP]
+> Notice the use of `--privileged --user root`.
+
+## 🐌 Add latency
+
+It is sometime necessary for a reproduction model to simulate latency between components.
+
+The [connect image](/how-it-works?id=🔗-connect-image-used) used by the playground contains [`tc`](https://man7.org/linux/man-pages/man8/tc.8.html) tool, and most importantly contains functions [`add_latency()`](https://github.com/vdesabou/kafka-docker-playground/blob/495578d413ff6b9db1d612ee8b1ebdf695f7ab51/scripts/utils.sh#L1062-L1095), [`get_latency()`](https://github.com/vdesabou/kafka-docker-playground/blob/495578d413ff6b9db1d612ee8b1ebdf695f7ab51/scripts/utils.sh#L1052-L1059)` and `[clear_traffic_control()](https://github.com/vdesabou/kafka-docker-playground/blob/495578d413ff6b9db1d612ee8b1ebdf695f7ab51/scripts/utils.sh#L1039-L1050)`:
+
+> [!TIP]
+> A complete example is available [here](https://github.com/vdesabou/kafka-docker-playground/blob/master/connect/connect-servicenow-source/servicenow-source-repro-read-timeout.sh).
+
+*Example:*
+
+Adding latency from `nginx_proxy` to `connect`:
+
+```bash
+add_latency nginx_proxy connect 25000ms
+
+latency_put=$(get_latency nginx_proxy connect)
+log "Latency from nginx_proxy to connect AFTER traffic control: $latency_put ms"
+
+log "Clear traffic control"
+clear_traffic_control
+```
+
+## 🕵 TCP Dump
+
+It is sometime necessary to sniff the network in order to better undertsand what's going on.
+
+The [connect image](/how-it-works?id=🔗-connect-image-used) used by the playground contains [`tcpdump`](https://www.tcpdump.org) tool for that purpose.
+
+*Example:*
+
+Sniff all traffic on port `8888`:
+
+```bash
+docker exec -d --privileged --user root connect bash -c 'tcpdump -w /tmp/tcpdump.pcap -i eth0 -s 0 port 8888'
+```
+
+The TCP dump will run in background (`-d` option is used).
+
+Once you test is over, you can get the `tcpdump.pcap` file (that you can open with [wireshark](https://www.wireshark.org) for example) using:
+
+```bash
+docker cp connect:/tmp/tcpdump.pcap .
+```
+
 ## 🌐 Using HTTPS proxy
 
 There are several connector examples which include HTTPS proxy (check for `also with 🌐 proxy` in the **[Content](/content.md)** section).
