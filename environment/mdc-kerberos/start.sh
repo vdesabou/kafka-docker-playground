@@ -9,6 +9,15 @@ verify_docker_and_memory
 verify_installed "docker-compose"
 check_docker_compose_version
 
+# https://docs.docker.com/compose/profiles/
+profile_control_center_command=""
+if [ -z "$DISABLE_CONTROL_CENTER" ]
+then
+  profile_control_center_command="--profile control-center"
+else
+  log "🛑 control-center is disabled"
+fi
+
 ENABLE_DOCKER_COMPOSE_FILE_OVERRIDE=""
 DOCKER_COMPOSE_FILE_OVERRIDE=$1
 if [ -f "${DOCKER_COMPOSE_FILE_OVERRIDE}" ]
