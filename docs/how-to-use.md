@@ -1,11 +1,13 @@
 
 # 👨‍🏫 How to use
 
-## Ways to run
+## 3️⃣ Ways to run
 
 ### 💻️ Locally
 
-* You just need to have [docker](https://docs.docker.com/get-docker/) and [docker-compose](https://docs.docker.com/compose/install/) installed on your machine !
+#### ☑️ Prerequisites
+
+You just need to have [docker](https://docs.docker.com/get-docker/) and [docker-compose](https://docs.docker.com/compose/install/) installed on your machine !
 
 > [!NOTE]
 > Every command used in the playground is using Docker, this includes `jq` (except if you have it on your host already), `aws`, `az`, `gcloud`, etc..
@@ -15,29 +17,28 @@
 > [!WARNING]
 > The playground is only tested on macOS and Linux (not Windows).
 
-* 🐳 Recommended Docker settings:
+> [!ATTENTION]
+> On MacOS, the [Docker memory](https://docs.docker.com/desktop/mac/#resources) should be set to at least 8Gb.
 
-![docker prefs](https://github.com/vdesabou/kafka-docker-playground/blob/4c3e6d481fcff7353a64e666d09f0921153a70e1/ccloud/ccloud-demo/images/docker-settings.jpg?raw=true)
-
-* Clone the repository
+#### 🔽 Clone the repository
 
 ```bash
 git clone https://github.com/vdesabou/kafka-docker-playground.git -–depth 1
 ```
 
-> [!NOTE]
+> [!TIP]
 > Specifying `--depth 1` only get the latest version of the playground, which reduces a lot the size of the donwload
 
-### <img src="https://gitpod.io/static/media/gitpod.2cdd910d.svg" width="15"> Gitpod.io
+### 🪄 Gitpod.io
 
-You can run the playground in your browser using [Gitpod.io](https://gitpod.io) workspace by clicking on this [link](https://gitpod.io/#https://github.com/vdesabou/kafka-docker-playground)
+You can run the playground directly in your browser (*Cloud IDE*) using [Gitpod.io](https://gitpod.io) workspace by clicking on this [link](https://gitpod.io/#https://github.com/vdesabou/kafka-docker-playground)
 
-Look at awesome this is 🪄 !
+Look at *✨awesome✨* this is 🪄 !
 
 ![demo](https://github.com/vdesabou/gifs/raw/master/docs/images/gitpod.gif)
 
 > [!TIP]
-> 50 hours/month can be used as part of the [free](https://www.gitpod.io/pricing) plan
+> 50 hours/month can be used as part of the [free](https://www.gitpod.io/pricing) plan.
 
 You can login into Control Center (port `9021`) by clicking on `Open Browser` option in pop-up:
 
@@ -47,7 +48,9 @@ Or select `Remote Explorer` on the left sidebar and then click on the `Open Brow
 
 ![port](./images/gitpod_port_explorer.png)
 
-### 🌩 AWS CloudFormation
+You can set your own environment variables in gitpod, see this [link](https://www.gitpod.io/docs/environment-variables#user-specific-environment-variables).
+
+### ☁️ AWS CloudFormation
 
 If you want to run the playground on an EC2 instance, you can use the AWS CloudFormation template provided [here]([cloudformation/README.md](https://github.com/vdesabou/kafka-docker-playground/blob/master/cloudformation/kafka-docker-playground.json)).
 
@@ -157,14 +160,14 @@ ls: cannot access '/usr/share/confluent-hub-components/debezium-debezium-connect
 ```
 
 > [!WARNING]
-> you can use both `CONNECTOR_TAG` and `CONNECTOR_JAR` at same time (along with `TAG`), but `CONNECTOR_TAG` and `CONNECTOR_ZIP` are mutually exclusive.
+> You can use both `CONNECTOR_TAG` and `CONNECTOR_JAR` at same time (along with `TAG`), but `CONNECTOR_TAG` and `CONNECTOR_ZIP` are mutually exclusive.
 
 > [!NOTE]
 > The connect image [used](https://github.com/vdesabou/kafka-docker-playground/blob/714b36289981f9fe8f699ae3eab9a508127b625e/environment/plaintext/docker-compose.yml#L80) in the playground is `vdesabou/kafka-docker-playground-connect`, which is built [everyday](https://github.com/vdesabou/kafka-docker-playground-connect/actions) using the repo [vdesabou/kafka-docker-playground-connect](https://github.com/vdesabou/kafka-docker-playground-connect).
 
 ## 🛑 Disabling ksqldb
 
-By default, [`ksqldb-server`](https://github.com/vdesabou/kafka-docker-playground/blob/7098800a582bfb2629005366b514a923d2fa037f/environment/plaintext/docker-compose.yml#L135-L171) and [`ksqldb-cli`](https://github.com/vdesabou/kafka-docker-playground/blob/7098800a582bfb2629005366b514a923d2fa037f/environment/plaintext/docker-compose.yml#L173-L183) containers is started for every test. You can disable this by setting environment variable `DISABLE_KSQLDB`:
+By default, [`ksqldb-server`](https://github.com/vdesabou/kafka-docker-playground/blob/7098800a582bfb2629005366b514a923d2fa037f/environment/plaintext/docker-compose.yml#L135-L171) and [`ksqldb-cli`](https://github.com/vdesabou/kafka-docker-playground/blob/7098800a582bfb2629005366b514a923d2fa037f/environment/plaintext/docker-compose.yml#L173-L183) containers are started for every test. You can disable this by setting environment variable `DISABLE_KSQLDB`:
 
 *Example:*
 
@@ -237,7 +240,7 @@ JMX metrics are available locally on those ports:
 * schema-registry: `10001`
 * connect: `10002`
 
-There is a script [`get-jmx-metrics.sh`](https://github.com/vdesabou/kafka-docker-playground/blob/master/scripts/get-jmx-metrics.sh) that helps to gather JMX metrics easily.
+In order to easily gather JMX metrics, you can use [`scripts/get-jmx-metrics.sh`](https://github.com/vdesabou/kafka-docker-playground/blob/master/scripts/get-jmx-metrics.sh):
 
 ```bash
 get-jmx-metrics.sh <component> [<domain>]
@@ -276,4 +279,4 @@ $ ../../scripts/get-jmx-metrics.sh connect "kafka.connect kafka.consumer kafka.p
 ```
 
 > [!WARNING]
-> Local install of `JDK` (at least 1.8) is required to run `get_jmx_metrics`
+> Local install of Java `JDK` (at least 1.8) is required to run `scripts/get-jmx-metrics.sh`
