@@ -253,7 +253,7 @@ Example (without specifying domain):
 
 ```bash
 $ ../../scripts/get-jmx-metrics.sh connect
-17:35:35 ❗ You did not specified a list of domains, all domains will be exported!
+17:35:35 ❗ You did not specify a list of domains, all domains will be exported!
 17:35:35 ℹ️ This is the list of domains for component connect
 JMImplementation
 com.sun.management

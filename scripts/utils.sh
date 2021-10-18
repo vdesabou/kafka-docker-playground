@@ -958,7 +958,7 @@ function get_jmx_metrics() {
   if [ "$domains" = "" ]
   then
     # non existing domain: all domains will be in output !
-    logwarn "You did not specified a list of domains, all domains will be exported!"
+    logwarn "You did not specify a list of domains, all domains will be exported!"
     domains="ALL"
   fi
 
