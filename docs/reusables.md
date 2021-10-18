@@ -172,6 +172,49 @@ timeout 60 docker exec broker kafka-console-consumer --bootstrap-server broker:9
 timeout 60 docker exec broker kafka-console-consumer --bootstrap-server broker:9092 --topic a-topic --property print.key=true --property key.separator=, --from-beginning --max-messages 1
 ```
 
+## 🐛 Enable DEBUG
+
+### 🔗 Connectors
+
+In order to enable `TRACE`(or `DEBUG`) logs for connectors, use the `admin/loggers` endpoint (see docs [here](https://docs.confluent.io/platform/current/connect/logging.html#change-the-log-level-for-a-specific-logger)):
+
+*Example:*
+
+```bash
+curl --request PUT \
+  --url http://localhost:8083/admin/loggers/io.confluent.connect.oracle.cdc \
+  --header 'Accept: application/json' \
+  --header 'Content-Type: application/json' \
+  --data '{
+	"level": "TRACE"
+}'
+```
+
+> [!WARNING]
+> Make sure to update `io.confluent.connect.oracle.cdc` above with the package you want to troubleshoot.
+
+### 🔑 SSL debug
+
+Add `-Djavax.net.debug=all` in your `docker-compose` file:
+
+*Example:*
+
+```yml
+  connect:
+    KAFKA_OPTS: -Djavax.net.debug=all
+```
+
+### 🔒 Kerberos debug
+
+Add `-Dsun.security.krb5.debug=true` in your `docker-compose` file:
+
+*Example:*
+
+```yml
+  connect:
+    KAFKA_OPTS: -Dsun.security.krb5.debug=true
+```
+
 ## 🚫 Blocking traffic
 
 It is sometime necessary for a reproduction model to simulate network issues like blocking incoming or outgoing traffic.
@@ -234,7 +277,7 @@ docker exec -d --privileged --user root connect bash -c 'tcpdump -w /tmp/tcpdump
 
 The TCP dump will run in background (`-d` option is used).
 
-Once you test is over, you can get the `tcpdump.pcap` file (that you can open with [wireshark](https://www.wireshark.org) for example) using:
+Once you test is over, you can get the `tcpdump.pcap` file (that you can open with [Wireshark](https://www.wireshark.org) for example) using:
 
 ```bash
 docker cp connect:/tmp/tcpdump.pcap .
