@@ -41,22 +41,20 @@ log "🔐 Generate keys and certificates used for SSL"
 docker run --rm -v $PWD:/tmp vdesabou/kafka-docker-playground-connect:${CONNECT_TAG} /tmp/certs-create.sh
 cd ${OLDDIR}/../../environment/ssl_kerberos
 
-DOCKER_COMPOSE_FILE_OVERRIDE=$1
+
 # Starting kerberos,
 # Avoiding starting up all services at the begining to generate the keytab first
+ENABLE_DOCKER_COMPOSE_FILE_OVERRIDE=""
+DOCKER_COMPOSE_FILE_OVERRIDE=$1
 if [ -f "${DOCKER_COMPOSE_FILE_OVERRIDE}" ]
 then
-
-  docker-compose -f ../../environment/plaintext/docker-compose.yml -f ../../environment/ssl_kerberos/docker-compose.yml -f ${DOCKER_COMPOSE_FILE_OVERRIDE} down -v --remove-orphans
-  docker-compose -f ../../environment/plaintext/docker-compose.yml -f ../../environment/ssl_kerberos/docker-compose.yml -f ${DOCKER_COMPOSE_FILE_OVERRIDE} build kdc
-  docker-compose -f ../../environment/plaintext/docker-compose.yml -f ../../environment/ssl_kerberos/docker-compose.yml -f ${DOCKER_COMPOSE_FILE_OVERRIDE} build client
-  docker-compose -f ../../environment/plaintext/docker-compose.yml -f ../../environment/ssl_kerberos/docker-compose.yml -f ${DOCKER_COMPOSE_FILE_OVERRIDE} up -d kdc
-else
-  docker-compose -f ../../environment/plaintext/docker-compose.yml -f ../../environment/ssl_kerberos/docker-compose.yml down -v --remove-orphans
-  docker-compose -f ../../environment/plaintext/docker-compose.yml -f ../../environment/ssl_kerberos/docker-compose.yml build kdc
-  docker-compose -f ../../environment/plaintext/docker-compose.yml -f ../../environment/ssl_kerberos/docker-compose.yml build client
-  docker-compose -f ../../environment/plaintext/docker-compose.yml -f ../../environment/ssl_kerberos/docker-compose.yml up -d kdc
+  ENABLE_DOCKER_COMPOSE_FILE_OVERRIDE="-f ${DOCKER_COMPOSE_FILE_OVERRIDE}"
 fi
+
+docker-compose -f ../../environment/plaintext/docker-compose.yml -f ../../environment/ssl_kerberos/docker-compose.yml ${ENABLE_DOCKER_COMPOSE_FILE_OVERRIDE} down -v --remove-orphans
+docker-compose -f ../../environment/plaintext/docker-compose.yml -f ../../environment/ssl_kerberos/docker-compose.yml ${ENABLE_DOCKER_COMPOSE_FILE_OVERRIDE} build kdc
+docker-compose -f ../../environment/plaintext/docker-compose.yml -f ../../environment/ssl_kerberos/docker-compose.yml ${ENABLE_DOCKER_COMPOSE_FILE_OVERRIDE} build client
+docker-compose -f ../../environment/plaintext/docker-compose.yml -f ../../environment/ssl_kerberos/docker-compose.yml ${ENABLE_DOCKER_COMPOSE_FILE_OVERRIDE} up -d kdc
 
 docker exec -i kdc kadmin.local -w password -q "modprinc -maxrenewlife 11days +allow_renewable krbtgt/TEST.CONFLUENT.IO"  > /dev/null
 ### Create the required identities:
@@ -135,18 +133,10 @@ then
   docker exec -i kdc chmod a+r /var/lib/secret/kafka-controlcenter.key
 fi
 # Starting zookeeper and kafka now that the keytab has been created with the required credentials and services
-if [ -f "${DOCKER_COMPOSE_FILE_OVERRIDE}" ]
-then
-  docker-compose -f ../../environment/plaintext/docker-compose.yml -f ../../environment/ssl_kerberos/docker-compose.yml -f ${DOCKER_COMPOSE_FILE_OVERRIDE} ${profile_control_center_command} ${profile_ksqldb_command} up -d
-  log "🎓To see the actual properties file, use ../../scripts/get-properties.sh <container>"
-  log "⚡If you modify a docker-compose file and want to re-create the container(s), use this command:"
-  log "⚡source ../../scripts/utils.sh && docker-compose -f ../../environment/plaintext/docker-compose.yml -f ../../environment/ssl_kerberos/docker-compose.yml -f ${DOCKER_COMPOSE_FILE_OVERRIDE} ${profile_control_center_command} ${profile_ksqldb_command} up -d"
-else
-  docker-compose -f ../../environment/plaintext/docker-compose.yml -f ../../environment/ssl_kerberos/docker-compose.yml ${profile_control_center_command} ${profile_ksqldb_command} up -d
-  log "🎓To see the actual properties file, use ../../scripts/get-properties.sh <container>"
-  log "⚡If you modify a docker-compose file and want to re-create the container(s), use this command:"
-  log "⚡source ../../scripts/utils.sh && docker-compose -f ../../environment/plaintext/docker-compose.yml -f ../../environment/ssl_kerberos/docker-compose.yml ${profile_control_center_command} ${profile_ksqldb_command} up -d"
-fi
+docker-compose -f ../../environment/plaintext/docker-compose.yml -f ../../environment/ssl_kerberos/docker-compose.yml ${ENABLE_DOCKER_COMPOSE_FILE_OVERRIDE} ${profile_control_center_command} ${profile_ksqldb_command} up -d
+log "📝 To see the actual properties file, use ../../scripts/get-properties.sh <container>"
+log "🔃 If you modify a docker-compose file and want to re-create the container(s), use this command:"
+log "🔃 source ../../scripts/utils.sh && docker-compose -f ../../environment/plaintext/docker-compose.yml -f ../../environment/ssl_kerberos/docker-compose.yml ${ENABLE_DOCKER_COMPOSE_FILE_OVERRIDE} ${profile_control_center_command} ${profile_ksqldb_command} up -d"
 
 cd ${OLDDIR}
 

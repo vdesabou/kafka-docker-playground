@@ -26,8 +26,6 @@ else
   log "🛑 ksqldb is disabled"
 fi
 
-DOCKER_COMPOSE_FILE_OVERRIDE=$1
-
 ../../environment/rbac-sasl-plain/stop.sh $@
 
 # Generating public and private keys for token signing
@@ -46,6 +44,15 @@ else
   docker-compose -f ../../environment/plaintext/docker-compose.yml -f ../../environment/rbac-sasl-plain/docker-compose.yml up -d zookeeper broker tools openldap
 fi
 
+ENABLE_DOCKER_COMPOSE_FILE_OVERRIDE=""
+DOCKER_COMPOSE_FILE_OVERRIDE=$1
+if [ -f "${DOCKER_COMPOSE_FILE_OVERRIDE}" ]
+then
+  ENABLE_DOCKER_COMPOSE_FILE_OVERRIDE="-f ${DOCKER_COMPOSE_FILE_OVERRIDE}"
+fi
+
+docker-compose -f ../../environment/plaintext/docker-compose.yml -f ../../environment/rbac-sasl-plain/docker-compose.yml ${ENABLE_DOCKER_COMPOSE_FILE_OVERRIDE} up -d zookeeper broker tools openldap
+
 # Verify Kafka brokers have started
 MAX_WAIT=30
 log "Waiting up to $MAX_WAIT seconds for Kafka brokers to be registered in ZooKeeper"
@@ -63,20 +70,11 @@ docker exec openldap ldapsearch -x -h localhost -b dc=confluentdemo,dc=io -D "cn
 log "Creating role bindings for principals"
 docker exec -i tools bash -c "/tmp/helper/create-role-bindings.sh"
 
-if [ -f "${DOCKER_COMPOSE_FILE_OVERRIDE}" ]
-then
-  docker-compose -f ../../environment/plaintext/docker-compose.yml -f ../../environment/rbac-sasl-plain/docker-compose.yml -f ${DOCKER_COMPOSE_FILE_OVERRIDE} ${profile_control_center_command} ${profile_ksqldb_command} build
-  docker-compose -f ../../environment/plaintext/docker-compose.yml -f ../../environment/rbac-sasl-plain/docker-compose.yml -f ${DOCKER_COMPOSE_FILE_OVERRIDE} ${profile_control_center_command} ${profile_ksqldb_command} up -d
-  log "🎓To see the actual properties file, use ../../scripts/get-properties.sh <container>"
-  log "⚡If you modify a docker-compose file and want to re-create the container(s), use this command:"
-  log "⚡source ../../scripts/utils.sh && docker-compose -f ../../environment/plaintext/docker-compose.yml -f ../../environment/rbac-sasl-plain/docker-compose.yml -f ${DOCKER_COMPOSE_FILE_OVERRIDE} ${profile_control_center_command} ${profile_ksqldb_command} up -d"
-else
-  docker-compose -f ../../environment/plaintext/docker-compose.yml -f ../../environment/rbac-sasl-plain/docker-compose.yml ${profile_control_center_command} ${profile_ksqldb_command} build
-  docker-compose -f ../../environment/plaintext/docker-compose.yml -f ../../environment/rbac-sasl-plain/docker-compose.yml ${profile_control_center_command} ${profile_ksqldb_command} up -d
-  log "🎓To see the actual properties file, use ../../scripts/get-properties.sh <container>"
-  log "⚡If you modify a docker-compose file and want to re-create the container(s), use this command:"
-  log "⚡source ../../scripts/utils.sh && docker-compose -f ../../environment/plaintext/docker-compose.yml -f ../../environment/rbac-sasl-plain/docker-compose.yml ${profile_control_center_command} ${profile_ksqldb_command} up -d"
-fi
+docker-compose -f ../../environment/plaintext/docker-compose.yml -f ../../environment/rbac-sasl-plain/docker-compose.yml ${ENABLE_DOCKER_COMPOSE_FILE_OVERRIDE} build
+docker-compose -f ../../environment/plaintext/docker-compose.yml -f ../../environment/rbac-sasl-plain/docker-compose.yml ${ENABLE_DOCKER_COMPOSE_FILE_OVERRIDE} ${profile_control_center_command} ${profile_ksqldb_command} up -d
+log "📝 To see the actual properties file, use ../../scripts/get-properties.sh <container>"
+log "🔃 If you modify a docker-compose file and want to re-create the container(s), use this command:"
+log "🔃 source ../../scripts/utils.sh && docker-compose -f ../../environment/plaintext/docker-compose.yml -f ../../environment/rbac-sasl-plain/docker-compose.yml ${ENABLE_DOCKER_COMPOSE_FILE_OVERRIDE} ${profile_control_center_command} ${profile_ksqldb_command} up -d"
 
 if [ "$#" -ne 0 ]
 then
