@@ -127,10 +127,8 @@ services:
       # CONNECT_CONFLUENT_TELEMETRY_API_SECRET: 'CLOUD_API_SECRET'
       CONNECT_CONNECTOR_CLIENT_CONFIG_OVERRIDE_POLICY: All
       CONNECT_LOG4J_APPENDER_STDOUT_LAYOUT_CONVERSIONPATTERN: "[%d] %p %X{connector.context}%m (%c:%L)%n"
-      # https://github.com/vdesabou/kafka-docker-playground/issues/1381
-      # Enable KAFKA_DEBUG for debugging remotely connect container #1381
+      # https://kafka-docker-playground.io/#/reusables?id=✨-remote-debugging
       # KAFKA_DEBUG: 'true'
-      # DEBUG_SUSPEND_FLAG: 'y'
 
   ksqldb-server:
     image: confluentinc/cp-ksqldb-server:${TAG}
