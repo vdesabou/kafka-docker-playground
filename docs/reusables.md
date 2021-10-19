@@ -172,6 +172,91 @@ timeout 60 docker exec broker kafka-console-consumer --bootstrap-server broker:9
 timeout 60 docker exec broker kafka-console-consumer --bootstrap-server broker:9092 --topic a-topic --property print.key=true --property key.separator=, --from-beginning --max-messages 1
 ```
 
+## ✨ Remote debugging
+
+Java Remote debugging is the perfect tool for troubleshooting Kafka connectors for example.
+
+Here are some instructions for [Visual Studio Code ](https://code.visualstudio.com/docs/java/java-debugging), but it is exactly the same principle for [IntelliJ IDEA](https://www.jetbrains.com/help/idea/tutorial-remote-debug.html#436b3b68).
+
+### ☑️ Prerequisites
+
+Make sure you have already the required Visual Studio code extensions by following [this](https://code.visualstudio.com/docs/java/java-debugging#_install).
+
+### 💫 Full example
+
+Here is a full example using [HDFS 2 sink](https://github.com/vdesabou/kafka-docker-playground/tree/master/connect/connect-hdfs2-sink) connector and [Visual Studio Code ](https://code.visualstudio.com/docs/java/java-debugging):
+
+1. Clone and open [`confluentinc/kafka-connect-hdfs`](https://github.com/confluentinc/kafka-connect-hdfs) repository in Visual Studio Code.
+
+2. Switch to the branch corresponding to the connector version you're going to run. 
+ 
+In my example, the connector version is `10.1.1`, so I'm switching to branch tag `v10.1.1`:
+
+![remote_debugging](./images/remote_debugging2.jpg)
+
+3. [Configure](https://code.visualstudio.com/docs/java/java-debugging#_configure) remote debugging by clicking on menu `Run`->`Add Configuration...`:
+
+![remote_debugging](./images/remote_debugging1.jpg)
+
+Then copy/paste the following entry:
+
+```yml
+        {
+            "type": "java",
+            "name": "Debug Connect container",
+            "request": "attach",
+            "hostName": "127.0.0.1",
+            "port": 5005,
+            "timeout": 30000
+        }
+```
+
+*Example:*
+
+![remote_debugging](./images/remote_debugging3.jpg)
+
+4. Update [`connect/connect-hdfs2-sink/docker-compose.plaintext.yml`](https://github.com/vdesabou/kafka-docker-playground/blob/master/connect/connect-hdfs2-sink/docker-compose.plaintext.yml) and add `KAFKA_DEBUG: 'true'`:
+
+```yml
+  connect:
+    depends_on:
+      - zookeeper
+      - broker
+      - schema-registry
+      - hive-server
+      - presto-coordinator
+      - hive-metastore
+    environment:
+      CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-hdfs
+      KAFKA_DEBUG: 'true'
+```
+
+5. Launch the example as usual, i.e start `./hdfs2-sink.sh`.
+
+6. Go in `Run and Debug` and make sure to select the `Debug Connect container` config:
+
+![remote_debugging](./images/remote_debugging5.jpg)
+
+7. Click on the green play button
+
+![remote_debugging](./images/remote_debugging6.jpg)
+
+8. Add breakpoint(s) where you want, for example [here](https://github.com/confluentinc/kafka-connect-hdfs/blob/9a5e68d7294a79c40050efd7b51d7428c7f7c4d5/src/main/java/io/confluent/connect/hdfs/TopicPartitionWriter.java#L894):
+
+![remote_debugging](./images/remote_debugging4.jpg)
+
+9. Process some messages:
+
+```bash
+seq -f "{\"f1\": \"value%g\"}" 10 | docker exec -i connect kafka-avro-console-producer --broker-list broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic test_hdfs --property value.schema='{"type":"record","name":"myrecord","fields":[{"name":"f1","type":"string"}]}'
+```
+
+10. See results 🍿:
+
+![remote_debugging](./images/remote_debugging7.jpg)
+
+![remote_debugging](https://github.com/vdesabou/gifs/raw/master/docs/images/remote_debugging.gif)
+
 ## 🐛 Enable DEBUG
 
 ### 🔗 Connectors
