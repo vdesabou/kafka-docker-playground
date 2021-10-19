@@ -229,7 +229,10 @@ Then copy/paste the following entry:
       - hive-metastore
     environment:
       CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-hdfs
+      # Java remote debugging: set
       KAFKA_DEBUG: 'true'
+      # With JDK9+, need to specify address=*:5005, see https://www.baeldung.com/java-application-remote-debugging#from-java9
+      JAVA_DEBUG_OPTS: '-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005'
 ```
 
 5. Launch the example as usual, i.e start `./hdfs2-sink.sh`.
