@@ -176,7 +176,8 @@ timeout 60 docker exec broker kafka-console-consumer --bootstrap-server broker:9
 
 Java Remote debugging is the perfect tool for troubleshooting Kafka connectors for example.
 
-Here are some instructions for [Visual Studio Code ](https://code.visualstudio.com/docs/java/java-debugging), but it is exactly the same principle for [IntelliJ IDEA](https://www.jetbrains.com/help/idea/tutorial-remote-debug.html#436b3b68).
+> [!TIP]
+> Following are instructions for [Visual Studio Code ](https://code.visualstudio.com/docs/java/java-debugging), but it is exactly the same principle for [IntelliJ IDEA](https://www.jetbrains.com/help/idea/tutorial-remote-debug.html#436b3b68).
 
 ### ☑️ Prerequisites
 
