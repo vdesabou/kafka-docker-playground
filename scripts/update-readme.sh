@@ -333,7 +333,7 @@ do
     connector_badge="[![version](https://img.shields.io/badge/v-$versionencoded-pink)]($documentation_url)"
 
     let "nb_connector_tests++"
-    sed -e "s|:${test}:|\&nbsp; \&nbsp; \&nbsp; $connector_badge $ci |g" \
+    sed -e "s|:${test}:|\&nbsp; $connector_badge $ci |g" \
         $content_file > $content_tmp_file
 
     cp $content_tmp_file $content_file
