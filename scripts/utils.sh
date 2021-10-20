@@ -275,7 +275,7 @@ EOF
         set -e
         NEW_CONNECT_TAG="$name-CP$TAG-$CONNECTOR_TAG-$connector_jar_name"
         log "👷 Building Docker image vdesabou/kafka-docker-playground-connect:${NEW_CONNECT_TAG}"
-        log "Remplacing $name-$CONNECTOR_TAG.jar by $connector_jar_name"
+        log "🔄 Remplacing $name-$CONNECTOR_TAG.jar by $connector_jar_name"
         tmp_dir=$(mktemp -d -t ci-XXXXXXXXXX)
         cp $CONNECTOR_JAR $tmp_dir/
 cat << EOF > $tmp_dir/Dockerfile
@@ -338,25 +338,28 @@ else
         documentation_url=$(cat /tmp/manifest.json | jq -r '.documentation_url')
         if [ -z "$CI" ] && [ -z "$CLOUDFORMATION" ]
         then
-          # check if newer version available on vdesabou/kafka-docker-playground-connect image
-          curl -s https://raw.githubusercontent.com/vdesabou/kafka-docker-playground-connect/master/README.md -o /tmp/README.txt
-          latest_version=$(grep "$connector_path " /tmp/README.txt | cut -d "|" -f 3 | sed 's/^[[:blank:]]*//;s/[[:blank:]]*$//')
-          if version_gt $latest_version $version
+          if [ "$name" != "kafka-connect-replicator" ] && [ "$name" != "kafka-connect-jdbc" ]
           then
-            set +e
-            # Offer to refresh image
-            logwarn "Your Docker image vdesabou/kafka-docker-playground-connect:${TAG} is not up to date!"
-            logwarn "You're using connector $owner/$name $version whereas $latest_version is available"
-            read -p "Do you want to download new one? (y/n)?" choice
-            case "$choice" in
-            y|Y )
-              docker pull vdesabou/kafka-docker-playground-connect:${TAG}
-              exit 0
-            ;;
-            n|N ) ;;
-            * ) logerror "ERROR: invalid response!";exit 1;;
-            esac
-            set -e
+            # check if newer version available on vdesabou/kafka-docker-playground-connect image
+            curl -s https://raw.githubusercontent.com/vdesabou/kafka-docker-playground-connect/master/README.md -o /tmp/README.txt
+            latest_version=$(grep "$connector_path " /tmp/README.txt | cut -d "|" -f 3 | sed 's/^[[:blank:]]*//;s/[[:blank:]]*$//')
+            if version_gt $latest_version $version
+            then
+              set +e
+              # Offer to refresh image
+              logwarn "Your Docker image vdesabou/kafka-docker-playground-connect:${TAG} is not up to date!"
+              logwarn "You're using connector $owner/$name $version whereas $latest_version is available"
+              read -p "Do you want to download new one? (y/n)?" choice
+              case "$choice" in
+              y|Y )
+                docker pull vdesabou/kafka-docker-playground-connect:${TAG}
+                exit 0
+              ;;
+              n|N ) ;;
+              * ) logerror "ERROR: invalid response!";exit 1;;
+              esac
+              set -e
+            fi
           fi
         fi
         ###
