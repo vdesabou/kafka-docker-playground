@@ -473,6 +473,10 @@ EOF
       done
     fi
   fi
+  if [ -z "$CONNECT_TAG" ]
+  then
+    export CONNECT_TAG="$TAG"
+  fi
 fi
 
 function verify_docker_and_memory()
