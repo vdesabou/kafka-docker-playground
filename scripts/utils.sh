@@ -135,8 +135,8 @@ then
     export TAG_BASE=$TAG
     if [ -z "$CP_KAFKA_IMAGE" ]
     then
-      log "💫 Using CP version $TAG"
-      log "🎓 set TAG environment variable to specify different version"
+      log "💫 Using default CP version $TAG"
+      log "🎓 set TAG environment variable to specify different version, see https://kafka-docker-playground.io/#/how-to-use?id=🎯-for-confluent-platform-cp"
     fi
     export CP_KAFKA_IMAGE=cp-server
     export CP_BASE_IMAGE=cp-base-new
@@ -147,7 +147,7 @@ then
 else
     if [ -z "$CP_KAFKA_IMAGE" ]
     then
-      log "🚀 Using CP version $TAG"
+      log "🚀 Using specified CP version $TAG"
     fi
     # to handle ubi8 images
     export TAG_BASE=$(echo $TAG | cut -d "-" -f1)
