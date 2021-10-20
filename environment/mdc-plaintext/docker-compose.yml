@@ -111,6 +111,8 @@ services:
     image: vdesabou/kafka-docker-playground-connect:${CONNECT_TAG}
     hostname: connect-us
     container_name: connect-us
+    ports:
+      - "5005:5005"
     depends_on:
       - zookeeper-us
       - broker-us
@@ -151,6 +153,8 @@ services:
     image: vdesabou/kafka-docker-playground-connect:${CONNECT_TAG}
     hostname: connect-europe
     container_name: connect-europe
+    ports:
+      - "5006:5005"
     depends_on:
       - zookeeper-europe
       - broker-europe
@@ -186,7 +190,7 @@ services:
       KAFKA_DEBUG: 'true'
       # With JDK9+, need to specify address=*:5005, see https://www.baeldung.com/java-application-remote-debugging#from-java9
       JAVA_DEBUG_OPTS: '-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=0.0.0.0:5005'
-      
+
   schema-registry-europe:
     image: confluentinc/cp-schema-registry:${TAG}
     hostname: schema-registry-europe

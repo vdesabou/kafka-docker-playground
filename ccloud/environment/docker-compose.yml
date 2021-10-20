@@ -7,6 +7,7 @@ services:
     container_name: connect
     ports:
       - "8083:8083"
+      - "5005:5005"
     volumes:
       - ../../ccloud/environment/data:/data
     environment:
@@ -65,7 +66,7 @@ services:
       KAFKA_DEBUG: 'true'
       # With JDK9+, need to specify address=*:5005, see https://www.baeldung.com/java-application-remote-debugging#from-java9
       JAVA_DEBUG_OPTS: '-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=0.0.0.0:5005'
-      
+
   control-center:
     image: confluentinc/cp-enterprise-control-center:${TAG}
     hostname: control-center
