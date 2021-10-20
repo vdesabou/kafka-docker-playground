@@ -196,7 +196,7 @@ function verify_installed()
 
 if [ ! -z "$CONNECTOR_TAG" ] && [ ! -z "$CONNECTOR_ZIP" ]
 then
-  logerror "ERROR: CONNECTOR_TAG and CONNECTOR_ZIP are both set, they cannot be used at same time!"
+  logerror "CONNECTOR_TAG and CONNECTOR_ZIP are both set, they cannot be used at same time!"
   exit 1
 fi
 
@@ -231,7 +231,7 @@ then
   then
     :
   else
-    log "🚀 CONNECTOR_TAG is set with version $CONNECTOR_TAG"
+    log "🎯 CONNECTOR_TAG is set with version $CONNECTOR_TAG"
     # determining the connector from current path
     docker_compose_file=$(grep "environment" "$PWD/$0" | grep DIR | grep start.sh | cut -d "/" -f 7 | cut -d '"' -f 1 | head -n1)
     if [ "${docker_compose_file}" != "" ] && [ -f "${docker_compose_file}" ]
@@ -241,7 +241,7 @@ then
       connector_path=$(echo "$connector_path" | cut -d "," -f 1)
       owner=$(echo "$connector_path" | cut -d "-" -f 1)
       name=$(echo "$connector_path" | cut -d "-" -f 2-)
-      export CONNECT_TAG="$name-CP$TAG-$CONNECTOR_TAG"
+      export CONNECT_TAG="$name-cp-$TAG-$CONNECTOR_TAG"
       log "👷 Building Docker image vdesabou/kafka-docker-playground-connect:${CONNECT_TAG}"
       tmp_dir=$(mktemp -d -t ci-XXXXXXXXXX)
 cat << EOF > $tmp_dir/Dockerfile
@@ -251,16 +251,16 @@ EOF
       docker build -t vdesabou/kafka-docker-playground-connect:$CONNECT_TAG $tmp_dir
       rm -rf $tmp_dir
       ###
-      #  CONNECTOR_JAR is set
+      #  CONNECTOR_JAR is set (and also CONNECTOR_TAG)
       ###
       if [ ! -z "$CONNECTOR_JAR" ]
       then
         if [ ! -f "$CONNECTOR_JAR" ]
         then
-          logerror "ERROR: CONNECTOR_JAR $CONNECTOR_JAR does not exist!"
+          logerror "CONNECTOR_JAR $CONNECTOR_JAR does not exist!"
           exit 1
         fi
-        log "🚀 CONNECTOR_JAR is set with $CONNECTOR_JAR"
+        log "🎯 CONNECTOR_JAR is set with $CONNECTOR_JAR"
         connector_jar_name=$(basename ${CONNECTOR_JAR})
         current_jar_path="/usr/share/confluent-hub-components/$connector_path/lib/$name-$CONNECTOR_TAG.jar"
         set +e
@@ -273,7 +273,7 @@ EOF
           current_jar_path="/usr/share/confluent-hub-components/$connector_path/lib/$jar"
         fi
         set -e
-        NEW_CONNECT_TAG="$name-CP$TAG-$CONNECTOR_TAG-$connector_jar_name"
+        NEW_CONNECT_TAG="$name-cp-$TAG-$CONNECTOR_TAG-$connector_jar_name"
         log "👷 Building Docker image vdesabou/kafka-docker-playground-connect:${NEW_CONNECT_TAG}"
         log "🔄 Remplacing $name-$CONNECTOR_TAG.jar by $connector_jar_name"
         tmp_dir=$(mktemp -d -t ci-XXXXXXXXXX)
@@ -287,8 +287,9 @@ EOF
         rm -rf $tmp_dir
       fi
     else
-      logerror "ERROR: could not determine docker-compose override file from $PWD/$0 !"
-      logerror "ERROR: please check you're running a connector test"
+      logerror "📁 Could not determine docker-compose override file from $PWD/$0 !"
+      logerror "👉 Please check you're running a connector example !"
+      logerror "🎓 Check the related documentation https://kafka-docker-playground.io/#/how-it-works?id=🐳-docker-override"
       exit 1
     fi
   fi
@@ -325,56 +326,56 @@ else
     docker_compose_file=$(grep "environment" "$PWD/$0" | grep DIR | grep start.sh | cut -d "/" -f 7 | cut -d '"' -f 1 | head -n1)
     if [ "${docker_compose_file}" != "" ] && [ -f "${docker_compose_file}" ]
     then
-      connector_path=$(grep "CONNECT_PLUGIN_PATH" "${docker_compose_file}" | grep -v "KSQL_CONNECT_PLUGIN_PATH" | cut -d "/" -f 5 | head -1)
-      # remove any extra comma at the end (when there are multiple connectors used, example S3 source)
-      connector_path=$(echo "$connector_path" | cut -d "," -f 1)
-      if [ "$connector_path" != "" ]
+      connector_paths=$(grep "CONNECT_PLUGIN_PATH" "${docker_compose_file}" | grep -v "KSQL_CONNECT_PLUGIN_PATH" | cut -d ":" -f 2  | tr -s " " | head -1)
+      if [ "$connector_paths" == "" ]
       then
+        # not a connector test
+        if [ -z "$CONNECT_TAG" ]
+        then
+          export CONNECT_TAG="$TAG"
+        fi
+        return
+      fi
+
+      
+      ###
+      #  Loop on all connectors in CONNECT_PLUGIN_PATH and install latest version from Confluent Hub
+      ###
+      first_loop=true
+      for connector_path in ${connector_paths//,/ }
+      do
+        connector_path=$(echo "$connector_path" | cut -d "/" -f 5)
         owner=$(echo "$connector_path" | cut -d "-" -f 1)
         name=$(echo "$connector_path" | cut -d "-" -f 2-)
+
+        export CONNECT_TAG="$TAG"
+        log "👷♻️ Re-building Docker image vdesabou/kafka-docker-playground-connect:${TAG} to include $owner/$name:latest"
+        tmp_dir=$(mktemp -d -t ci-XXXXXXXXXX)
+cat << EOF > $tmp_dir/Dockerfile
+FROM vdesabou/kafka-docker-playground-connect:${TAG}
+RUN confluent-hub install --no-prompt $owner/$name:latest
+EOF
+        docker build -t vdesabou/kafka-docker-playground-connect:$TAG $tmp_dir
+        rm -rf $tmp_dir
+
         docker run --rm vdesabou/kafka-docker-playground-connect:${TAG} cat /usr/share/confluent-hub-components/${connector_path}/manifest.json > /tmp/manifest.json
         version=$(cat /tmp/manifest.json | jq -r '.version')
         release_date=$(cat /tmp/manifest.json | jq -r '.release_date')
         documentation_url=$(cat /tmp/manifest.json | jq -r '.documentation_url')
-        if [ -z "$CI" ] && [ -z "$CLOUDFORMATION" ]
-        then
-          if [ "$name" != "kafka-connect-replicator" ] && [ "$name" != "kafka-connect-jdbc" ]
-          then
-            # check if newer version available on vdesabou/kafka-docker-playground-connect image
-            curl -s https://raw.githubusercontent.com/vdesabou/kafka-docker-playground-connect/master/README.md -o /tmp/README.txt
-            latest_version=$(grep "$connector_path " /tmp/README.txt | cut -d "|" -f 3 | sed 's/^[[:blank:]]*//;s/[[:blank:]]*$//')
-            if version_gt $latest_version $version
-            then
-              set +e
-              # Offer to refresh image
-              logwarn "Your Docker image vdesabou/kafka-docker-playground-connect:${TAG} is not up to date!"
-              logwarn "You're using connector $owner/$name $version whereas $latest_version is available"
-              read -p "Do you want to download new one? (y/n)?" choice
-              case "$choice" in
-              y|Y )
-                docker pull vdesabou/kafka-docker-playground-connect:${TAG}
-                exit 0
-              ;;
-              n|N ) ;;
-              * ) logerror "ERROR: invalid response!";exit 1;;
-              esac
-              set -e
-            fi
-          fi
-        fi
+
         ###
         #  CONNECTOR_JAR is set
         ###
-        if [ ! -z "$CONNECTOR_JAR" ]
+        if [ ! -z "$CONNECTOR_JAR" ] && [ "$first_loop" = true ]
         then
           if [ ! -f "$CONNECTOR_JAR" ]
           then
-            logerror "ERROR: CONNECTOR_JAR $CONNECTOR_JAR does not exist!"
+            logerror "CONNECTOR_JAR $CONNECTOR_JAR does not exist!"
             exit 1
           fi
-          log "🚀 CONNECTOR_JAR is set with $CONNECTOR_JAR"
+          log "🎯 CONNECTOR_JAR is set with $CONNECTOR_JAR"
           connector_jar_name=$(basename ${CONNECTOR_JAR})
-          export CONNECT_TAG="CP-$TAG-$connector_jar_name"
+          export CONNECT_TAG="CP-$CONNECT_TAG-$connector_jar_name"
           current_jar_path="/usr/share/confluent-hub-components/$connector_path/lib/$name-$version.jar"
           set +e
           docker run vdesabou/kafka-docker-playground-connect:${TAG} ls $current_jar_path
@@ -386,7 +387,7 @@ else
             current_jar_path="/usr/share/confluent-hub-components/$connector_path/lib/$jar"
           fi
           set -e
-          log "👷 Building Docker image vdesabou/kafka-docker-playground-connect:${CONNECT_TAG}"
+          log "👷🎯 Building Docker image vdesabou/kafka-docker-playground-connect:${CONNECT_TAG}"
           log "Remplacing $name-$version.jar by $connector_jar_name"
           tmp_dir=$(mktemp -d -t ci-XXXXXXXXXX)
           cp $CONNECTOR_JAR $tmp_dir/
@@ -399,14 +400,14 @@ EOF
         ###
         #  CONNECTOR_ZIP is set
         ###
-        elif [ ! -z "$CONNECTOR_ZIP" ]
+        elif [ ! -z "$CONNECTOR_ZIP" ] && [ "$first_loop" = true ]
         then
           if [ ! -f "$CONNECTOR_ZIP" ]
           then
-            logerror "ERROR: CONNECTOR_ZIP $CONNECTOR_ZIP does not exist!"
+            logerror "CONNECTOR_ZIP $CONNECTOR_ZIP does not exist!"
             exit 1
           fi
-          log "🚀 CONNECTOR_ZIP is set with $CONNECTOR_ZIP"
+          log "🎯 CONNECTOR_ZIP is set with $CONNECTOR_ZIP"
           connector_zip_name=$(basename ${CONNECTOR_ZIP})
           export CONNECT_TAG="CP-$TAG-$connector_zip_name"
 
@@ -431,24 +432,15 @@ EOF
         ###
         else
           export CONNECT_TAG="$TAG"
-          log "💫 Using 🔗connector: $owner/$name:$version 📅release date: $release_date 🌐documentation: $documentation_url"
-          log "🎓 set CONNECTOR_TAG or CONNECTOR_ZIP environment variables to specify different version"
+          if [ "$first_loop" = true ]
+          then
+            log "💫 Using 🔗connector: $owner/$name:$version 📅release date: $release_date 🌐documentation: $documentation_url"
+            log "🎓 To specify different version, check the documentation https://kafka-docker-playground.io/#/how-to-use?id=🔗-for-connectors"
+          fi
           CONNECTOR_TAG=$version
         fi
-      else
-        # not a connector test
-        if [ -z "$CONNECT_TAG" ]
-        then
-          export CONNECT_TAG="$TAG"
-        fi
-      fi
-    else
-      # not a connector test
-      if [ -z "$CONNECT_TAG" ]
-      then
-        export CONNECT_TAG="$TAG"
-      fi
-      :
+        first_loop=false
+      done
     fi
   fi
 fi
@@ -459,7 +451,7 @@ function verify_docker_and_memory()
   docker info > /dev/null 2>&1
   if [[ $? -ne 0 ]]
   then
-    logerror "ERROR: Cannot connect to the Docker daemon. Is the docker daemon running?"
+    logerror "Cannot connect to the Docker daemon. Is the docker daemon running?"
     exit 1
   fi
   set -e
@@ -484,7 +476,7 @@ function verify_ccloud_login()
   output=$($cmd 2>&1)
   set -e
   if [ "${output}" = "Error: You must login to run that command." ] || [ "${output}" = "Error: Your session has expired. Please login again." ]; then
-    logerror "ERROR: This script requires ccloud to be logged in. Please execute 'ccloud login' and run again."
+    logerror "This script requires ccloud to be logged in. Please execute 'ccloud login' and run again."
     exit 1
   fi
 }
@@ -493,7 +485,7 @@ function verify_ccloud_details()
 {
     if [ "$(ccloud prompt -f "%E")" = "(none)" ]
     then
-        logerror "ERROR: ccloud command is badly configured: environment is not set"
+        logerror "ccloud command is badly configured: environment is not set"
         log "Example: ccloud kafka environment list"
         log "then: ccloud kafka environment use <environment id>"
         exit 1
@@ -501,7 +493,7 @@ function verify_ccloud_details()
 
     if [ "$(ccloud prompt -f "%K")" = "(none)" ]
     then
-        logerror "ERROR: ccloud command is badly configured: cluster is not set"
+        logerror "ccloud command is badly configured: cluster is not set"
         log "Example: ccloud kafka cluster list"
         log "then: ccloud kafka cluster use <cluster id>"
         exit 1
@@ -509,7 +501,7 @@ function verify_ccloud_details()
 
     if [ "$(ccloud prompt -f "%a")" = "(none)" ]
     then
-        logerror "ERROR: ccloud command is badly configured: api key is not set"
+        logerror "ccloud command is badly configured: api key is not set"
         log "Example: ccloud api-key store <api key> <password>"
         log "then: ccloud api-key use <api key>"
         exit 1
@@ -530,7 +522,7 @@ function check_if_continue()
     case "$choice" in
     y|Y ) ;;
     n|N ) exit 0;;
-    * ) logerror "ERROR: invalid response!";exit 1;;
+    * ) logerror "invalid response!";exit 1;;
     esac
 }
 
@@ -729,7 +721,7 @@ retrycmd() {
                 logwarn "####################################################"
               fi
             done
-            logerror "ERROR: Failed after $attempt_num attempts. Please troubleshoot and run again."
+            logerror "Failed after $attempt_num attempts. Please troubleshoot and run again."
             return 1
         else
             printf "."
@@ -979,7 +971,7 @@ function get_jmx_metrics() {
     port=10002
   ;;
   n|N ) ;;
-  * ) logerror "ERROR: invalid component $component! it should be one of zookeeper, broker, schema-registry or connect";exit 1;;
+  * ) logerror "invalid component $component! it should be one of zookeeper, broker, schema-registry or connect";exit 1;;
   esac
 
   if [ "$domains" = "ALL" ]
