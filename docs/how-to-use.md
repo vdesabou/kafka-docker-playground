@@ -122,6 +122,14 @@ The playground has 3 different ways to use different connector version when runn
 export CONNECTOR_TAG=x.x.x
 ```
 
+*Example:*
+
+```bash
+export CONNECTOR_TAG=10.2.3
+16:19:02 ℹ️ 🎯 CONNECTOR_TAG is set with version 10.2.3
+16:19:02 ℹ️ 👷 Building Docker image vdesabou/kafka-docker-playground-connect:kafka-connect-jdbc-cp-6.2.1-10.2.3
+```
+
 2. Specify a connector ZIP file
 
 ```bash
@@ -133,7 +141,7 @@ export CONNECTOR_ZIP="path/to/connector.zip"
 ```bash
 export CONNECTOR_ZIP="/Users/vsaboulin/Downloads/confluentinc-kafka-connect-http-1.2.3.zip"
 17:37:20 ℹ️ 🎯 CONNECTOR_ZIP is set with /Users/vsaboulin/Downloads/confluentinc-kafka-connect-http-1.2.3.zip
-17:37:20 ℹ️ 👷 Building Docker image vdesabou/kafka-docker-playground-connect:CP-6.2.1-confluentinc-kafka-connect-http-1.2.3.zip
+17:37:20 ℹ️ 👷 Building Docker image vdesabou/kafka-docker-playground-connect:cp-6.2.1-confluentinc-kafka-connect-http-1.2.3.zip
 ```
 
 3. Specify a connector JAR file
@@ -148,7 +156,7 @@ export CONNECTOR_JAR="path/to/connector.jar"
 export CONNECTOR_JAR/tmp/kafka-connect-http-1.3.1-SNAPSHOT.jar
 00:33:47 ℹ️ 🎯 CONNECTOR_JAR is set with /tmp/kafka-connect-http-1.3.1-SNAPSHOT.jar
 /usr/share/confluent-hub-components/confluentinc-kafka-connect-http/lib/kafka-connect-http-1.2.4.jar
-00:33:48 ℹ️ 👷 Building Docker image vdesabou/kafka-docker-playground-connect:CP-6.2.1-kafka-connect-http-1.2.4-kafka-connect-http-1.3.1-SNAPSHOT.jar
+00:33:48 ℹ️ 👷 Building Docker image vdesabou/kafka-docker-playground-connect:cp-6.2.1-kafka-connect-http-1.2.4-kafka-connect-http-1.3.1-SNAPSHOT.jar
 00:33:48 ℹ️ Remplacing kafka-connect-http-1.2.4.jar by kafka-connect-http-1.3.1-SNAPSHOT.jar
 ```
 
