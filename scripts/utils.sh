@@ -348,6 +348,16 @@ else
         owner=$(echo "$connector_path" | cut -d "-" -f 1)
         name=$(echo "$connector_path" | cut -d "-" -f 2-)
 
+        if [ "$name" == "" ]
+        then
+          # can happen for filestream
+          if [ -z "$CONNECT_TAG" ]
+          then
+            export CONNECT_TAG="$TAG"
+          fi
+          return
+        fi
+
         export CONNECT_TAG="$TAG"
 
         version_to_get_from_hub="latest"
