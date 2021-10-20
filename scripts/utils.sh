@@ -339,7 +339,7 @@ else
 
       
       ###
-      #  Loop on all connectors in CONNECT_PLUGIN_PATH and install latest version from Confluent Hub
+      #  Loop on all connectors in CONNECT_PLUGIN_PATH and install latest version from Confluent Hub (except for JDBC and replicator)
       ###
       first_loop=true
       for connector_path in ${connector_paths//,/ }
@@ -349,11 +349,31 @@ else
         name=$(echo "$connector_path" | cut -d "-" -f 2-)
 
         export CONNECT_TAG="$TAG"
-        log "👷♻️ Re-building Docker image vdesabou/kafka-docker-playground-connect:${TAG} to include $owner/$name:latest"
+
+        version_to_get_from_hub="latest"
+        if [ "$name" = "kafka-connect-replicator" ]
+        then
+          version_to_get_from_hub="$TAG"
+        fi
+        if [ "$name" = "kafka-connect-jdbc" ]
+        then
+          if ! version_gt $TAG_BASE "5.9.0"; then
+            # for version less than 6.0.0, use JDBC with same version
+            # see https://github.com/vdesabou/kafka-docker-playground/issues/221
+            version_to_get_from_hub="$TAG_BASE"
+          fi
+
+          if [ "$TAG_BASE" = "5.0.2" ] || [ "$TAG_BASE" = "5.0.3" ]
+          then
+            version_to_get_from_hub="5.0.1"
+          fi
+        fi
+
+        log "👷♻️ Re-building Docker image vdesabou/kafka-docker-playground-connect:${TAG} to include $owner/$name:$version_to_get_from_hub"
         tmp_dir=$(mktemp -d -t ci-XXXXXXXXXX)
 cat << EOF > $tmp_dir/Dockerfile
 FROM vdesabou/kafka-docker-playground-connect:${TAG}
-RUN confluent-hub install --no-prompt $owner/$name:latest
+RUN confluent-hub install --no-prompt $owner/$name:$version_to_get_from_hub
 EOF
         docker build -t vdesabou/kafka-docker-playground-connect:$TAG $tmp_dir
         rm -rf $tmp_dir
