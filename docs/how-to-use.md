@@ -105,7 +105,13 @@ export TAG=6.0.3
 
 ### 🔗 For Connectors
 
-By default, for each connector, the latest available version on [Confluent Hub](https://www.confluent.io/hub/) is used (the only 2 exceptions are for replicator and JDBC which are using same version as CP).
+By default, for each connector, the latest available version on [Confluent Hub](https://www.confluent.io/hub/) is used. 
+
+The only 2 exceptions are:
+
+* replicator which is using same version as CP
+* JDBC which is using same version as CP (but only for CP version lower than 6.x)
+
 Each latest version used is specified on the [Connectors list](https://kafka-docker-playground.io/#/content?id=connectors).
 
 The playground has 3 different ways to use different connector version when running a connector test:
