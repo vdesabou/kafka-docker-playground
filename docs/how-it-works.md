@@ -243,9 +243,11 @@ It is either based on [`cp-server-connect-base`](https://hub.docker.com/r/conflu
 
 Several tools are [installed](https://github.com/vdesabou/kafka-docker-playground-connect/blob/00f29069be566162a5be84d64637b3e1f9920f95/Dockerfile#L11-L15) on this image such as `openssl`, `tcpdump`, `iptables`, `netcat`, etc..
 
-By default, for each connector, the latest available version on [Confluent Hub](https://www.confluent.io/hub/) is used (the only 2 exceptions are for [replicator](https://github.com/vdesabou/kafka-docker-playground-connect/blob/00f29069be566162a5be84d64637b3e1f9920f95/Dockerfile#L36) and [JDBC](https://github.com/vdesabou/kafka-docker-playground-connect/blob/00f29069be566162a5be84d64637b3e1f9920f95/Dockerfile#L26) which are using same version as CP).
-
 See the [Dockerfile](https://github.com/vdesabou/kafka-docker-playground-connect/blob/master/Dockerfile) used to build the images.
+
+> [!NOTE]
+> In the past, the image used to have all latest connectors included, but this is no more the case since [#1426](https://github.com/vdesabou/kafka-docker-playground/issues/1426)
+
 
 ## 🤖 How CI works
 

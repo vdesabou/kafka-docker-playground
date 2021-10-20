@@ -126,7 +126,7 @@ export CONNECTOR_ZIP="path/to/connector.zip"
 
 ```bash
 export CONNECTOR_ZIP="/Users/vsaboulin/Downloads/confluentinc-kafka-connect-http-1.2.3.zip"
-17:37:20 ℹ️ 🚀 CONNECTOR_ZIP is set with /Users/vsaboulin/Downloads/confluentinc-kafka-connect-http-1.2.3.zip
+17:37:20 ℹ️ 🎯 CONNECTOR_ZIP is set with /Users/vsaboulin/Downloads/confluentinc-kafka-connect-http-1.2.3.zip
 17:37:20 ℹ️ 👷 Building Docker image vdesabou/kafka-docker-playground-connect:CP-6.2.1-confluentinc-kafka-connect-http-1.2.3.zip
 ```
 
@@ -140,7 +140,7 @@ export CONNECTOR_JAR="path/to/connector.jar"
 
 ```bash
 export CONNECTOR_JAR/tmp/kafka-connect-http-1.3.1-SNAPSHOT.jar
-00:33:47 ℹ️ 🚀 CONNECTOR_JAR is set with /tmp/kafka-connect-http-1.3.1-SNAPSHOT.jar
+00:33:47 ℹ️ 🎯 CONNECTOR_JAR is set with /tmp/kafka-connect-http-1.3.1-SNAPSHOT.jar
 /usr/share/confluent-hub-components/confluentinc-kafka-connect-http/lib/kafka-connect-http-1.2.4.jar
 00:33:48 ℹ️ 👷 Building Docker image vdesabou/kafka-docker-playground-connect:CP-6.2.1-kafka-connect-http-1.2.4-kafka-connect-http-1.3.1-SNAPSHOT.jar
 00:33:48 ℹ️ Remplacing kafka-connect-http-1.2.4.jar by kafka-connect-http-1.3.1-SNAPSHOT.jar
@@ -150,7 +150,7 @@ When jar to replace cannot be found automatically, the user is able to select th
 
 ```bash
 export CONNECTOR_JAR=/tmp/debezium-connector-postgres-1.4.0-SNAPSHOT.jar
-11:02:43 ℹ️ 🚀 CONNECTOR_JAR is set with /tmp/debezium-connector-postgres-1.4.0-SNAPSHOT.jar
+11:02:43 ℹ️ 🎯 CONNECTOR_JAR is set with /tmp/debezium-connector-postgres-1.4.0-SNAPSHOT.jar
 ls: cannot access '/usr/share/confluent-hub-components/debezium-debezium-connector-postgresql/lib/debezium-connector-postgresql-1.4.0.jar': No such file or directory
 11:02:44 ❗ debezium-debezium-connector-postgresql/lib/debezium-connector-postgresql-1.4.0.jar does not exist, the jar name to replace could not be found automatically
 11:02:45 ℹ️ Select the jar to replace:
@@ -163,7 +163,7 @@ ls: cannot access '/usr/share/confluent-hub-components/debezium-debezium-connect
 > You can use both `CONNECTOR_TAG` and `CONNECTOR_JAR` at same time (along with `TAG`), but `CONNECTOR_TAG` and `CONNECTOR_ZIP` are mutually exclusive.
 
 > [!NOTE]
-> The connect image [used](https://github.com/vdesabou/kafka-docker-playground/blob/714b36289981f9fe8f699ae3eab9a508127b625e/environment/plaintext/docker-compose.yml#L80) in the playground is `vdesabou/kafka-docker-playground-connect`, which is built [everyday](https://github.com/vdesabou/kafka-docker-playground-connect/actions) using the repo [vdesabou/kafka-docker-playground-connect](https://github.com/vdesabou/kafka-docker-playground-connect).
+> For more information about the Connect image used, check [here](/how-it-works?id=🔗-connect-image-used).
 
 ## 🛑 Disabling ksqldb
 
