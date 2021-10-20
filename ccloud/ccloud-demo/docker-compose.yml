@@ -212,7 +212,11 @@ services:
       # Enable topic creation by the connect worker (as auto-topic creation is disabled on Confluent Cloud)
       CONNECT_TOPIC_CREATION_ENABLE: "true"
       KAFKA_OPTS: -javaagent:/usr/share/jmx_exporter/jmx_prometheus_javaagent-0.12.0.jar=1234:/usr/share/jmx_exporter/kafka-connect.yml
-
+      # https://kafka-docker-playground.io/#/reusables?id=✨-remote-debugging
+      KAFKA_DEBUG: 'true'
+      # With JDK9+, need to specify address=*:5005, see https://www.baeldung.com/java-application-remote-debugging#from-java9
+      JAVA_DEBUG_OPTS: '-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=0.0.0.0:5005'
+      
   http-service-basic-auth:
     image: vdesabou/http-sink-demo
     hostname: http-service-basic-auth

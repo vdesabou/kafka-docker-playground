@@ -216,46 +216,27 @@ Then copy/paste the following entry:
 
 ![remote_debugging](./images/remote_debugging3.jpg)
 
-4. Update [`connect/connect-hdfs2-sink/docker-compose.plaintext.yml`](https://github.com/vdesabou/kafka-docker-playground/blob/master/connect/connect-hdfs2-sink/docker-compose.plaintext.yml) and add `KAFKA_DEBUG: 'true'`:
+4. Launch the example as usual, i.e start `./hdfs2-sink.sh`.
 
-```yml
-  connect:
-    depends_on:
-      - zookeeper
-      - broker
-      - schema-registry
-      - hive-server
-      - presto-coordinator
-      - hive-metastore
-    environment:
-      CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-hdfs
-      # Java remote debugging: set
-      KAFKA_DEBUG: 'true'
-      # With JDK9+, need to specify address=*:5005, see https://www.baeldung.com/java-application-remote-debugging#from-java9
-      JAVA_DEBUG_OPTS: '-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005'
-```
-
-5. Launch the example as usual, i.e start `./hdfs2-sink.sh`.
-
-6. Go in `Run and Debug` and make sure to select the `Debug Connect container` config:
+5. Go in `Run and Debug` and make sure to select the `Debug Connect container` config:
 
 ![remote_debugging](./images/remote_debugging5.jpg)
 
-7. Click on the green play button
+6. Click on the green play button
 
 ![remote_debugging](./images/remote_debugging6.jpg)
 
-8. Add breakpoint(s) where you want, for example [here](https://github.com/confluentinc/kafka-connect-hdfs/blob/9a5e68d7294a79c40050efd7b51d7428c7f7c4d5/src/main/java/io/confluent/connect/hdfs/TopicPartitionWriter.java#L894):
+7. Add breakpoint(s) where you want, for example [here](https://github.com/confluentinc/kafka-connect-hdfs/blob/9a5e68d7294a79c40050efd7b51d7428c7f7c4d5/src/main/java/io/confluent/connect/hdfs/TopicPartitionWriter.java#L894):
 
 ![remote_debugging](./images/remote_debugging4.jpg)
 
-9. Process some messages:
+8. Process some messages:
 
 ```bash
 seq -f "{\"f1\": \"value%g\"}" 10 | docker exec -i connect kafka-avro-console-producer --broker-list broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic test_hdfs --property value.schema='{"type":"record","name":"myrecord","fields":[{"name":"f1","type":"string"}]}'
 ```
 
-10. See results 🍿:
+9. See results 🍿:
 
 ![remote_debugging](./images/remote_debugging7.jpg)
 
