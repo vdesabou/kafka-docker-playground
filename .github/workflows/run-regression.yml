@@ -119,62 +119,14 @@ jobs:
           chmod -R a+rw $HOME/.aws
           mkdir -p $HOME/.ccloud
           mv config.cc.travis $HOME/.ccloud/config
+          source secrets.properties
           echo "$DOCKER_PASSWORD" | docker login -u vdesabou --password-stdin
         env:
           SECRETS_ENCRYPTION_PASSWORD: ${{ secrets.SECRETS_ENCRYPTION_PASSWORD }}
-          DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
 
       - name: Build and Test
-        run: bash scripts/run-tests.sh "${{ matrix.test_list }}" "${{ matrix.tag }}"
+        run: source secrets.properties && bash scripts/run-tests.sh "${{ matrix.test_list }}" "${{ matrix.tag }}"
         env:
-          SALESFORCE_USERNAME: ${{ secrets.SALESFORCE_USERNAME }}
-          CONSUMER_KEY: ${{ secrets.CONSUMER_KEY }}
-          CONSUMER_PASSWORD: ${{ secrets.CONSUMER_PASSWORD }}
-          SALESFORCE_INSTANCE: ${{ secrets.SALESFORCE_INSTANCE }}
-          SALESFORCE_PASSWORD: ${{ secrets.SALESFORCE_PASSWORD }}
-          SECURITY_TOKEN: ${{ secrets.SECURITY_TOKEN }}
-          SALESFORCE_USERNAME_ACCOUNT2: ${{ secrets.SALESFORCE_USERNAME_ACCOUNT2 }}
-          SALESFORCE_PASSWORD_ACCOUNT2: ${{ secrets.SALESFORCE_PASSWORD_ACCOUNT2 }}
-          SECURITY_TOKEN_ACCOUNT2: ${{ secrets.SECURITY_TOKEN_ACCOUNT2 }}
-          CONSUMER_KEY_ACCOUNT2: ${{ secrets.CONSUMER_KEY_ACCOUNT2 }}
-          CONSUMER_PASSWORD_ACCOUNT2: ${{ secrets.CONSUMER_PASSWORD_ACCOUNT2 }}
-          AZ_PASS: ${{ secrets.AZ_PASS }}
-          AZ_USER: ${{ secrets.AZ_USER }}
-          CCLOUD_EMAIL: ${{ secrets.CCLOUD_EMAIL }}
-          CCLOUD_PASSWORD: ${{ secrets.CCLOUD_PASSWORD }}
-          CLUSTER_LKC: ${{ secrets.CLUSTER_LKC }}
-          DD_API_KEY: ${{ secrets.DD_API_KEY }}
-          DD_APP_KEY: ${{ secrets.DD_APP_KEY }}
-          DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
-          ENVIRONMENT: ${{ secrets.ENVIRONMENT }}
-          FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
-          GITHUB_ACCESS_TOKEN: ${{ secrets.THE_GITHUB_ACCESS_TOKEN }}
-          JIRA_URL: ${{ secrets.JIRA_URL }}
-          JIRA_USERNAME: ${{ secrets.JIRA_USERNAME }}
-          JIRA_API_TOKEN: ${{ secrets.JIRA_API_TOKEN }}
-          REST_KEY: ${{ secrets.REST_KEY }}
-          REST_SECRET: ${{ secrets.REST_SECRET }}
-          MARKETO_CLIENT_ID: ${{ secrets.MARKETO_CLIENT_ID }}
-          MARKETO_ENDPOINT_URL: ${{ secrets.MARKETO_ENDPOINT_URL }}
-          MARKETO_CLIENT_SECRET: ${{ secrets.MARKETO_CLIENT_SECRET }}
-          PAGERDUTY_SERVICE_ID: ${{ secrets.PAGERDUTY_SERVICE_ID }}
-          PAGERDUTY_API_KEY: ${{ secrets.PAGERDUTY_API_KEY }}
-          PAGERDUTY_USER_EMAIL: ${{ secrets.PAGERDUTY_USER_EMAIL }}
-          SNOWFLAKE_ACCOUNT_NAME: ${{ secrets.SNOWFLAKE_ACCOUNT_NAME }}
-          SNOWFLAKE_USERNAME: ${{ secrets.SNOWFLAKE_USERNAME }}
-          SNOWFLAKE_PASSWORD: ${{ secrets.SNOWFLAKE_PASSWORD }}
-          ZENDESK_URL: ${{ secrets.ZENDESK_URL }}
-          ZENDESK_USERNAME: ${{ secrets.ZENDESK_USERNAME }}
-          ZENDESK_PASSWORD: ${{ secrets.ZENDESK_PASSWORD }}
-          AZURE_TENANT_NAME: "COPS"
-          AWS_STS_ROLE_ARN: ${{ secrets.AWS_STS_ROLE_ARN }}
-          AWS_ACCOUNT_WITH_ASSUME_ROLE_AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCOUNT_WITH_ASSUME_ROLE_AWS_ACCESS_KEY_ID }}
-          AWS_ACCOUNT_WITH_ASSUME_ROLE_AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_ACCOUNT_WITH_ASSUME_ROLE_AWS_SECRET_ACCESS_KEY }}
-          SERVICENOW_DEVELOPER_USERNAME: ${{ secrets.SERVICENOW_DEVELOPER_USERNAME }}
-          SERVICENOW_DEVELOPER_PASSWORD: ${{ secrets.SERVICENOW_DEVELOPER_PASSWORD }}
-          SERVICENOW_URL: ${{ secrets.SERVICENOW_URL }}
-          SERVICENOW_PASSWORD: ${{ secrets.SERVICENOW_PASSWORD }}
-          CONFLUENT_LICENSE: ${{ secrets.CONFLUENT_LICENSE }}
           DISABLE_KSQLDB: "yes"
           DISABLE_CONTROL_CENTER: "yes"
 
@@ -227,62 +179,14 @@ jobs:
           chmod -R a+rw $HOME/.aws
           mkdir -p $HOME/.ccloud
           mv config.cc.travis $HOME/.ccloud/config
+          source secrets.properties
           echo "$DOCKER_PASSWORD" | docker login -u vdesabou --password-stdin
         env:
           SECRETS_ENCRYPTION_PASSWORD: ${{ secrets.SECRETS_ENCRYPTION_PASSWORD }}
-          DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
 
       - name: Build and Test
         run: bash scripts/run-tests.sh "${{ matrix.test_list }}" "${{ matrix.tag }}"
         env:
-          SALESFORCE_USERNAME: ${{ secrets.SALESFORCE_USERNAME }}
-          CONSUMER_KEY: ${{ secrets.CONSUMER_KEY }}
-          CONSUMER_PASSWORD: ${{ secrets.CONSUMER_PASSWORD }}
-          SALESFORCE_INSTANCE: ${{ secrets.SALESFORCE_INSTANCE }}
-          SALESFORCE_PASSWORD: ${{ secrets.SALESFORCE_PASSWORD }}
-          SECURITY_TOKEN: ${{ secrets.SECURITY_TOKEN }}
-          SALESFORCE_USERNAME_ACCOUNT2: ${{ secrets.SALESFORCE_USERNAME_ACCOUNT2 }}
-          SALESFORCE_PASSWORD_ACCOUNT2: ${{ secrets.SALESFORCE_PASSWORD_ACCOUNT2 }}
-          SECURITY_TOKEN_ACCOUNT2: ${{ secrets.SECURITY_TOKEN_ACCOUNT2 }}
-          CONSUMER_KEY_ACCOUNT2: ${{ secrets.CONSUMER_KEY_ACCOUNT2 }}
-          CONSUMER_PASSWORD_ACCOUNT2: ${{ secrets.CONSUMER_PASSWORD_ACCOUNT2 }}
-          AZ_PASS: ${{ secrets.AZ_PASS }}
-          AZ_USER: ${{ secrets.AZ_USER }}
-          CCLOUD_EMAIL: ${{ secrets.CCLOUD_EMAIL }}
-          CCLOUD_PASSWORD: ${{ secrets.CCLOUD_PASSWORD }}
-          CLUSTER_LKC: ${{ secrets.CLUSTER_LKC }}
-          DD_API_KEY: ${{ secrets.DD_API_KEY }}
-          DD_APP_KEY: ${{ secrets.DD_APP_KEY }}
-          DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
-          ENVIRONMENT: ${{ secrets.ENVIRONMENT }}
-          FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
-          GITHUB_ACCESS_TOKEN: ${{ secrets.THE_GITHUB_ACCESS_TOKEN }}
-          JIRA_URL: ${{ secrets.JIRA_URL }}
-          JIRA_USERNAME: ${{ secrets.JIRA_USERNAME }}
-          JIRA_API_TOKEN: ${{ secrets.JIRA_API_TOKEN }}
-          REST_KEY: ${{ secrets.REST_KEY }}
-          REST_SECRET: ${{ secrets.REST_SECRET }}
-          MARKETO_CLIENT_ID: ${{ secrets.MARKETO_CLIENT_ID }}
-          MARKETO_ENDPOINT_URL: ${{ secrets.MARKETO_ENDPOINT_URL }}
-          MARKETO_CLIENT_SECRET: ${{ secrets.MARKETO_CLIENT_SECRET }}
-          PAGERDUTY_SERVICE_ID: ${{ secrets.PAGERDUTY_SERVICE_ID }}
-          PAGERDUTY_API_KEY: ${{ secrets.PAGERDUTY_API_KEY }}
-          PAGERDUTY_USER_EMAIL: ${{ secrets.PAGERDUTY_USER_EMAIL }}
-          SNOWFLAKE_ACCOUNT_NAME: ${{ secrets.SNOWFLAKE_ACCOUNT_NAME }}
-          SNOWFLAKE_USERNAME: ${{ secrets.SNOWFLAKE_USERNAME }}
-          SNOWFLAKE_PASSWORD: ${{ secrets.SNOWFLAKE_PASSWORD }}
-          ZENDESK_URL: ${{ secrets.ZENDESK_URL }}
-          ZENDESK_USERNAME: ${{ secrets.ZENDESK_USERNAME }}
-          ZENDESK_PASSWORD: ${{ secrets.ZENDESK_PASSWORD }}
-          AZURE_TENANT_NAME: "COPS"
-          AWS_STS_ROLE_ARN: ${{ secrets.AWS_STS_ROLE_ARN }}
-          AWS_ACCOUNT_WITH_ASSUME_ROLE_AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCOUNT_WITH_ASSUME_ROLE_AWS_ACCESS_KEY_ID }}
-          AWS_ACCOUNT_WITH_ASSUME_ROLE_AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_ACCOUNT_WITH_ASSUME_ROLE_AWS_SECRET_ACCESS_KEY }}
-          SERVICENOW_DEVELOPER_USERNAME: ${{ secrets.SERVICENOW_DEVELOPER_USERNAME }}
-          SERVICENOW_DEVELOPER_PASSWORD: ${{ secrets.SERVICENOW_DEVELOPER_PASSWORD }}
-          SERVICENOW_URL: ${{ secrets.SERVICENOW_URL }}
-          SERVICENOW_PASSWORD: ${{ secrets.SERVICENOW_PASSWORD }}
-          CONFLUENT_LICENSE: ${{ secrets.CONFLUENT_LICENSE }}
           DISABLE_KSQLDB: "yes"
           DISABLE_CONTROL_CENTER: "yes"
 
