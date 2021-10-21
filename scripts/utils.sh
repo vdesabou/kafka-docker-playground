@@ -358,7 +358,10 @@ else
           return
         fi
 
-        export CONNECT_TAG="$TAG"
+        if [ -z "$CONNECT_TAG" ]
+        then
+          export CONNECT_TAG="$TAG"
+        fi
 
         version_to_get_from_hub="latest"
         if [ "$name" = "kafka-connect-replicator" ]
@@ -379,16 +382,16 @@ else
           fi
         fi
 
-        log "👷♻️ Re-building Docker image vdesabou/kafka-docker-playground-connect:${TAG} to include $owner/$name:$version_to_get_from_hub"
+        log "👷♻️ Re-building Docker image vdesabou/kafka-docker-playground-connect:${CONNECT_TAG} to include $owner/$name:$version_to_get_from_hub"
         tmp_dir=$(mktemp -d -t ci-XXXXXXXXXX)
 cat << EOF > $tmp_dir/Dockerfile
-FROM vdesabou/kafka-docker-playground-connect:${TAG}
+FROM vdesabou/kafka-docker-playground-connect:${CONNECT_TAG}
 RUN confluent-hub install --no-prompt $owner/$name:$version_to_get_from_hub
 EOF
-        docker build -t vdesabou/kafka-docker-playground-connect:$TAG $tmp_dir
+        docker build -t vdesabou/kafka-docker-playground-connect:$CONNECT_TAG $tmp_dir
         rm -rf $tmp_dir
 
-        docker run --rm vdesabou/kafka-docker-playground-connect:${TAG} cat /usr/share/confluent-hub-components/${connector_path}/manifest.json > /tmp/manifest.json
+        docker run --rm vdesabou/kafka-docker-playground-connect:${CONNECT_TAG} cat /usr/share/confluent-hub-components/${connector_path}/manifest.json > /tmp/manifest.json
         version=$(cat /tmp/manifest.json | jq -r '.version')
         release_date=$(cat /tmp/manifest.json | jq -r '.release_date')
         documentation_url=$(cat /tmp/manifest.json | jq -r '.documentation_url')
