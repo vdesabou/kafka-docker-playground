@@ -13,6 +13,11 @@
                 "logicalType": "date",
                 "type": "int"
             }
+        },
+        {
+            "name": "anotherCreatedDateDate",
+            "type": "int",
+            "logicalType": "date"
         }
     ],
     "name": "Customer",
