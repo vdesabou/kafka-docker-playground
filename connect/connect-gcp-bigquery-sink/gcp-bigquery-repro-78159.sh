@@ -133,3 +133,5 @@ cat /tmp/result.log
 # |        2025-12-04 16:28:24 |      2025-12-04 |             -833784125 |
 # |        2021-07-29 12:39:12 |      2021-07-29 |            -1621910390 |
 # +----------------------------+-----------------+------------------------+
+
+# See results in GCP https://github.com/vdesabou/kafka-docker-playground/raw/master/connect/connect-gcp-bigquery-sink/producer-78159/78159.jpg
