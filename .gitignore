@@ -20,7 +20,6 @@ extfile
 keyfile.json
 .gradle
 connect/connect-jdbc-oracle12-source/docker-images
-connect/connect-jdbc-oracle11-source/ojdbc6.jar
 *.rpm
 connect/connect-jdbc-oracle11-source/instantclient/OracleSample.java
 connect/connect-jdbc-oracle11-source/instantclient/OracleSample.class
@@ -76,3 +75,5 @@ myenv
 ._aws_config
 ._aws_credentials
 ._config.cc.travis
+*.jar
+*.log
