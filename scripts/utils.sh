@@ -464,7 +464,10 @@ EOF
         #  Neither CONNECTOR_ZIP or CONNECTOR_JAR are set
         ###
         else
-          export CONNECT_TAG="$TAG"
+          if [ -z "$CONNECT_TAG" ]
+          then
+            export CONNECT_TAG="$TAG"
+          fi
           if [ "$first_loop" = true ]
           then
             log "💫 Using 🔗connector: $owner/$name:$version 📅release date: $release_date 🌐documentation: $documentation_url"
