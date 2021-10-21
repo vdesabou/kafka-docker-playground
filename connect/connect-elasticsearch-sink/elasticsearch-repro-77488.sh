@@ -16,6 +16,14 @@ fi
 
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
 
+curl --request PUT \
+  --url http://localhost:8083/admin/loggers/io.confluent.connect.elasticsearch \
+  --header 'Accept: application/json' \
+  --header 'Content-Type: application/json' \
+  --data '{
+	"level": "TRACE"
+}'
+
 log "Creating Elasticsearch Sink connector (Elasticsearch version is $ELASTIC_VERSION"
 if version_gt $CONNECTOR_TAG "10.9.9"
 then
@@ -75,7 +83,7 @@ grep "Found no committed offset for partition test-elasticsearch-sink-0" connect
 log "Sending messages to topic test-elasticsearch-sink"
 seq -f "{\"f1\": \"value_after_restart%g\"}" 10 | docker exec -i connect kafka-avro-console-producer --broker-list broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic test-elasticsearch-sink --property value.schema='{"type":"record","name":"myrecord","fields":[{"name":"f1","type":"string"}]}'
 
-sleep 10
+sleep 80
 
 log "Check that the new data is available in Elasticsearch, there should be 10 value_after_restart"
 curl -XGET 'http://localhost:9200/copy_of_test-elasticsearch-sink/_search?pretty' > /tmp/result.log  2>&1
