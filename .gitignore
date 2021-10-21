@@ -77,3 +77,4 @@ myenv
 ._config.cc.travis
 *.jar
 *.log
+secrets.properties
