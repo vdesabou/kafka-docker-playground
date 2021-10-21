@@ -108,7 +108,11 @@ services:
       KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
 
   connect-us:
-    image: vdesabou/kafka-docker-playground-connect:${CONNECT_TAG}
+    build:
+      context: ../../environment/mdc-plaintext/
+      args:
+        TAG_BASE: ${TAG_BASE}
+        CONNECT_TAG: ${CONNECT_TAG}
     hostname: connect-us
     container_name: connect-us
     ports:
@@ -150,7 +154,11 @@ services:
       JAVA_DEBUG_OPTS: '-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=0.0.0.0:5005'
 
   connect-europe:
-    image: vdesabou/kafka-docker-playground-connect:${CONNECT_TAG}
+    build:
+      context: ../../environment/mdc-plaintext/
+      args:
+        TAG_BASE: ${TAG_BASE}
+        CONNECT_TAG: ${CONNECT_TAG}
     hostname: connect-europe
     container_name: connect-europe
     ports:
