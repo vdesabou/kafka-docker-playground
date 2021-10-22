@@ -61,7 +61,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        tag: ${{ inputs.tag }}
+        tag: [ "${{ inputs.tag }}" ] 
         test_list : [
                       "🚀 connect/connect-servicenow-sink connect/connect-servicenow-source",
                       "🚀 connect/connect-salesforce-bulkapi-sink connect/connect-salesforce-bulkapi-source connect/connect-salesforce-pushtopics-source connect/connect-salesforce-sobject-sink connect/connect-salesforce-cdc-source connect/connect-salesforce-platform-events-sink connect/connect-salesforce-platform-events-source",
@@ -157,7 +157,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        tag: ${{ inputs.tag }}
+        tag: [ "${{ inputs.tag }}" ] 
         test_list : [
                       "🚀 ${{ inputs.test_name }}"
                     ]
