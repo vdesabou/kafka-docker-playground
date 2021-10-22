@@ -125,7 +125,7 @@ jobs:
           SECRETS_ENCRYPTION_PASSWORD: ${{ secrets.SECRETS_ENCRYPTION_PASSWORD }}
 
       - name: Build and Test
-        run: source secrets.properties && bash scripts/run-tests.sh "${{ matrix.test_list }}" "${{ matrix.tag }}"
+        run: bash scripts/run-tests.sh "${{ matrix.test_list }}" "${{ matrix.tag }}"
         env:
           DISABLE_KSQLDB: "yes"
           DISABLE_CONTROL_CENTER: "yes"

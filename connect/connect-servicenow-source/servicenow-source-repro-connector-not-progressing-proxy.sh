@@ -4,6 +4,17 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
+if [ ! -z "$CI" ]
+then
+     # running with github actions
+     if [ ! -f $HOME/secrets.properties ]
+     then
+          logerror "$HOME/secrets.properties is not present!"
+          exit 1
+     fi
+     source $HOME/secrets.properties
+fi
+
 SERVICENOW_URL=${SERVICENOW_URL:-$1}
 SERVICENOW_PASSWORD=${SERVICENOW_PASSWORD:-$2}
 
