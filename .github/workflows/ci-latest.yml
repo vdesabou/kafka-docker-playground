@@ -1,0 +1,23 @@
+name: CI 
+
+on:
+  # push:
+  #    branches:
+  #      - master
+
+  schedule:
+      - cron: '0 18 * * *' # every day at 6 pm
+
+  workflow_dispatch:
+    inputs:
+      test_name:
+        description: 'test to run'
+        required: false
+        default: ''
+
+jobs:
+  call-workflow-ci-latest:
+    uses: vdesabou/kafka-docker-playground/.github/workflows/ci.yml@master
+    with:
+      tag: "6.2.1"
+      test_name: "${{ github.event.inputs.test_name }}"
