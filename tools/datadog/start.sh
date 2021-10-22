@@ -9,12 +9,12 @@ ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml
 if [ ! -z "$CI" ]
 then
      # running with github actions
-     if [ ! -f $HOME/kafka-docker-playground/secrets.properties ]
+     if [ ! -f $HOME/secrets.properties ]
      then
-          logerror "$HOME/kafka-docker-playground/secrets.properties is not present!"
+          logerror "$HOME/secrets.properties is not present!"
           exit 1
      fi
-     source $HOME/kafka-docker-playground/secrets.properties
+     source $HOME/secrets.properties
 fi
 
 DD_API_KEY=${DD_API_KEY:-$1}
