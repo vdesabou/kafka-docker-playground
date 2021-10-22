@@ -4,6 +4,17 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
+if [ ! -z "$CI" ]
+then
+     # running with github actions
+     if [ ! -f $HOME/secrets.properties ]
+     then
+          logerror "$HOME/secrets.properties is not present!"
+          exit 1
+     fi
+     source $HOME/secrets.properties
+fi
+
 ZENDESK_URL=${ZENDESK_URL:-$1}
 ZENDESK_USERNAME=${ZENDESK_USERNAME:-$2}
 ZENDESK_PASSWORD=${ZENDESK_PASSWORD:-$3}

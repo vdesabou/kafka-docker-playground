@@ -4,6 +4,17 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
+if [ ! -z "$CI" ]
+then
+     # running with github actions
+     if [ ! -f $HOME/secrets.properties ]
+     then
+          logerror "$HOME/secrets.properties is not present!"
+          exit 1
+     fi
+     source $HOME/secrets.properties
+fi
+
 GITHUB_ACCESS_TOKEN=${GITHUB_ACCESS_TOKEN:-$1}
 
 if [ -z "$GITHUB_ACCESS_TOKEN" ]
