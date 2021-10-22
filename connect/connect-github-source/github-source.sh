@@ -7,12 +7,12 @@ source ${DIR}/../../scripts/utils.sh
 if [ ! -z "$CI" ]
 then
      # running with github actions
-     if [ ! -f $HOME/secrets.properties ]
+     if [ ! -f $HOME/kafka-docker-playground/secrets.properties ]
      then
-          logerror "$HOME/secrets.properties is not present!"
+          logerror "$HOME/kafka-docker-playground/secrets.properties is not present!"
           exit 1
      fi
-     source $HOME/secrets.properties
+     source $HOME/kafka-docker-playground/secrets.properties
 fi
 
 GITHUB_ACCESS_TOKEN=${GITHUB_ACCESS_TOKEN:-$1}
