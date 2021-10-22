@@ -4,6 +4,17 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
+if [ ! -z "$CI" ]
+then
+     # running with github actions
+     if [ ! -f $HOME/kafka-docker-playground/secrets.properties ]
+     then
+          logerror "$HOME/kafka-docker-playground/secrets.properties is not present!"
+          exit 1
+     fi
+     source $HOME/kafka-docker-playground/secrets.properties
+fi
+
 # make sure to run HA_PROXY on an EC2 instance
 
 # to block traffic from one of the brokers, here is an example
