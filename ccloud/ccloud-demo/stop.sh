@@ -48,9 +48,6 @@ curl -X DELETE localhost:8083/connectors/elasticsearch-sink
 delete_topic customer-avro
 delete_topic mysql-application
 delete_topic demo-acl-topic
-delete_topic connect-status-demo-${TAG}
-delete_topic connect-offsets-demo-${TAG}
-delete_topic connect-configs-demo-${TAG}
 
 if [ -f api_key_cloud_to_delete ]
 then
@@ -59,4 +56,4 @@ then
      rm api_key_cloud_to_delete
 fi
 
-docker-compose down -v --remove-orphans
+${DIR}/../../ccloud/environment/stop.sh "${PWD}/docker-compose.ccloud-demo.yml"

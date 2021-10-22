@@ -70,54 +70,6 @@ services:
     profiles:
     - ksqldb
 
-  control-center:
-    image: confluentinc/cp-enterprise-control-center:${TAG}
-    hostname: control-center
-    container_name: control-center
-    depends_on:
-      - schema-registry
-    ports:
-      - "9021:9021"
-    profiles:
-    - control-center
-    environment:
-      CONTROL_CENTER_BOOTSTRAP_SERVERS: $BOOTSTRAP_SERVERS
-      CONTROL_CENTER_KSQL_URL: "http://ksql-server:8089"
-      CONTROL_CENTER_KSQL_ADVERTISED_URL: "http://localhost:8089"
-      CONTROL_CENTER_SCHEMA_REGISTRY_URL: $SCHEMA_REGISTRY_URL
-      CONTROL_CENTER_SCHEMA_REGISTRY_BASIC_AUTH_CREDENTIALS_SOURCE: $BASIC_AUTH_CREDENTIALS_SOURCE
-      CONTROL_CENTER_SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO: $SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO
-      CONTROL_CENTER_CONNECT_CLUSTER: "connect:8083"
-      CONTROL_CENTER_CONNECT_MYCONNECT_CLUSTER: http://connect:8083
-      CONTROL_CENTER_STREAMS_SECURITY_PROTOCOL: SASL_SSL
-      CONTROL_CENTER_STREAMS_SASL_JAAS_CONFIG: $SASL_JAAS_CONFIG
-      CONTROL_CENTER_STREAMS_SASL_MECHANISM: PLAIN
-      CONTROL_CENTER_REPLICATION_FACTOR: 3
-      CONTROL_CENTER_MONITORING_INTERCEPTOR_TOPIC_REPLICATION: 3
-      CONTROL_CENTER_INTERNAL_TOPICS_REPLICATION: 3
-      CONTROL_CENTER_COMMAND_TOPIC_REPLICATION: 3
-      CONTROL_CENTER_METRICS_TOPIC_REPLICATION: 3
-      CONFLUENT_METRICS_TOPIC_REPLICATION: 3
-      CONTROL_CENTER_STREAMS_NUM_STREAM_THREADS: 3
-      CONTROL_CENTER_INTERNAL_TOPICS_PARTITIONS: 1
-      CONTROL_CENTER_MONITORING_INTERCEPTOR_TOPIC_PARTITIONS: 1
-      # Workaround for MMA-3564
-      CONTROL_CENTER_METRICS_TOPIC_MAX_MESSAGE_BYTES: 8388608
-      CONFLUENT_LICENSE: "$CONFLUENT_LICENSE"
-      CONTROL_CENTER_UI_AUTOUPDATE_ENABLE: "true"
-      PORT: 9021
-      # CONTROL_CENTER_LOG4J_ROOT_LOGLEVEL: DEBUG
-      # Email settings
-      # CONTROL_CENTER_MAIL_ENABLED: "true"
-      # CONTROL_CENTER_MAIL_HOST_NAME: "smtp.gmail.com"
-      # CONTROL_CENTER_MAIL_PORT: 587
-      # CONTROL_CENTER_MAIL_FROM: "toto@gmail.com"
-      # CONTROL_CENTER_MAIL_USERNAME: "toto@gmail.com"
-      # CONTROL_CENTER_MAIL_PASSWORD: "xxxx"
-      # CONTROL_CENTER_MAIL_STARTTLS_REQUIRED: "true"
-      # CONTROL_CENTER_MAIL_SSL_CHECKSERVERIDENTITY: "true"
-      # CONTROL_CENTER_MAIL_BOUNCE_ADDRESS: "toto@gmail.com"
-
   mysql:
     image: mysql:5.7
     hostname: mysql
@@ -132,7 +84,7 @@ services:
       MYSQL_ROOT_HOST: 172.%  # Allow docker containers to connect to mysql
 
   elasticsearch:
-    image: elasticsearch:6.8.3
+    image: elasticsearch:7.12.0
     hostname: elasticsearch
     container_name: elasticsearch
     ports:
@@ -140,84 +92,27 @@ services:
       - "9300:9300"
     environment:
       discovery.type: single-node
-
+      
   connect:
-    image: vdesabou/kafka-docker-playground-connect:${CONNECT_TAG}
-    hostname: connect
-    container_name: connect
     depends_on:
       - schema-registry
       - mysql
       - http-service-basic-auth
-    ports:
-      - "8083:8083"
-      - "5005:5005"
     ulimits:
       nofile:
         soft: 100000
         hard: 100000
     volumes:
       - ../../ccloud/ccloud-demo/mysql-connector-java-5.1.45.jar:/usr/share/confluent-hub-components/confluentinc-kafka-connect-jdbc/lib/mysql-connector-java-5.1.45.jar
-      - ./jmx-exporter:/usr/share/jmx_exporter/
-      - ./data:/data
-
+      - ../../ccloud/ccloud-demo/jmx-exporter:/usr/share/jmx_exporter/
+      - ../../ccloud/environment/data:/data
     environment:
-      CONNECT_BOOTSTRAP_SERVERS: $BOOTSTRAP_SERVERS
-      CONNECT_REST_PORT: 8083
-      CONNECT_GROUP_ID: "connect"
-      CONNECT_CONFIG_STORAGE_TOPIC: connect-configs-demo-${TAG}
-      CONNECT_OFFSET_STORAGE_TOPIC: connect-offsets-demo-${TAG}
-      CONNECT_STATUS_STORAGE_TOPIC: connect-status-demo-${TAG}
-      CONNECT_REPLICATION_FACTOR: 3
-      CONNECT_CONFIG_STORAGE_REPLICATION_FACTOR: 3
-      CONNECT_OFFSET_STORAGE_REPLICATION_FACTOR: 3
-      CONNECT_STATUS_STORAGE_REPLICATION_FACTOR: 3
-      CONNECT_KEY_CONVERTER: "org.apache.kafka.connect.storage.StringConverter"
-      CONNECT_VALUE_CONVERTER: "io.confluent.connect.avro.AvroConverter"
-      CONNECT_VALUE_CONVERTER_SCHEMAS_ENABLE: "true"
-      CONNECT_VALUE_CONVERTER_SCHEMA_REGISTRY_URL: $SCHEMA_REGISTRY_URL
-      CONNECT_VALUE_CONVERTER_BASIC_AUTH_CREDENTIALS_SOURCE: $BASIC_AUTH_CREDENTIALS_SOURCE
-      CONNECT_VALUE_CONVERTER_SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO: $SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO
-      CONNECT_INTERNAL_KEY_CONVERTER: "org.apache.kafka.connect.json.JsonConverter"
-      CONNECT_INTERNAL_VALUE_CONVERTER: "org.apache.kafka.connect.json.JsonConverter"
-      CONNECT_REST_ADVERTISED_HOST_NAME: "connect"
       CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-elasticsearch,/usr/share/confluent-hub-components/confluentinc-kafka-connect-http,/usr/share/confluent-hub-components/confluentinc-kafka-connect-jdbc
-      CONNECT_LOG4J_ROOT_LOGLEVEL: INFO
-      CONNECT_LOG4J_LOGGERS: org.reflections=ERROR
-      # CLASSPATH required due to CC-2422
-      CLASSPATH: /usr/share/java/monitoring-interceptors/monitoring-interceptors-${TAG_BASE}.jar
-      # Connect worker
-      CONNECT_SECURITY_PROTOCOL: SASL_SSL
-      CONNECT_SASL_JAAS_CONFIG: $SASL_JAAS_CONFIG
-      CONNECT_SASL_MECHANISM: PLAIN
-      CONNECT_SSL_ENDPOINT_IDENTIFICATION_ALGORITHM: "HTTPS"
-      # Connect producer
-      CONNECT_PRODUCER_SECURITY_PROTOCOL: SASL_SSL
-      CONNECT_PRODUCER_SASL_JAAS_CONFIG: $SASL_JAAS_CONFIG
-      CONNECT_PRODUCER_SASL_MECHANISM: PLAIN
-      CONNECT_PRODUCER_INTERCEPTOR_CLASSES: "io.confluent.monitoring.clients.interceptor.MonitoringProducerInterceptor"
-      CONNECT_PRODUCER_CONFLUENT_MONITORING_INTERCEPTOR_SECURITY_PROTOCOL: SASL_SSL
-      CONNECT_PRODUCER_CONFLUENT_MONITORING_INTERCEPTOR_SASL_JAAS_CONFIG: $SASL_JAAS_CONFIG
-      CONNECT_PRODUCER_CONFLUENT_MONITORING_INTERCEPTOR_SASL_MECHANISM: PLAIN
-      # Connect consumer
-      CONNECT_CONSUMER_SECURITY_PROTOCOL: SASL_SSL
-      CONNECT_CONSUMER_SASL_JAAS_CONFIG: $SASL_JAAS_CONFIG
-      CONNECT_CONSUMER_SASL_MECHANISM: PLAIN
-      CONNECT_CONSUMER_INTERCEPTOR_CLASSES: "io.confluent.monitoring.clients.interceptor.MonitoringConsumerInterceptor"
-      CONNECT_CONSUMER_CONFLUENT_MONITORING_INTERCEPTOR_SECURITY_PROTOCOL: SASL_SSL
-      CONNECT_CONSUMER_CONFLUENT_MONITORING_INTERCEPTOR_SASL_JAAS_CONFIG: $SASL_JAAS_CONFIG
-      CONNECT_CONSUMER_CONFLUENT_MONITORING_INTERCEPTOR_SASL_MECHANISM: PLAIN
-      # Externalizing Secrets
-      CONNECT_CONFIG_PROVIDERS: 'file'
-      CONNECT_CONFIG_PROVIDERS_FILE_CLASS: 'org.apache.kafka.common.config.provider.FileConfigProvider'
-      # Enable topic creation by the connect worker (as auto-topic creation is disabled on Confluent Cloud)
-      CONNECT_TOPIC_CREATION_ENABLE: "true"
       KAFKA_OPTS: -javaagent:/usr/share/jmx_exporter/jmx_prometheus_javaagent-0.12.0.jar=1234:/usr/share/jmx_exporter/kafka-connect.yml
       # # https://kafka-docker-playground.io/#/reusables?id=✨-remote-debugging
       # KAFKA_DEBUG: 'true'
       # # With JDK9+, need to specify address=*:5005, see https://www.baeldung.com/java-application-remote-debugging#from-java9
       # JAVA_DEBUG_OPTS: '-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=0.0.0.0:5005'
-
 
   http-service-basic-auth:
     image: vdesabou/http-sink-demo
@@ -255,7 +150,7 @@ services:
 
   streams:
     build:
-      context: streams/
+      context: ../../ccloud/ccloud-demo/streams/
       args:
         TAG: ${TAG}
         CP_BASE_IMAGE: ${CP_BASE_IMAGE}
@@ -270,11 +165,11 @@ services:
       CLOUD_SECRET: $CLOUD_SECRET
       JAVA_OPTS: -javaagent:/usr/share/jmx_exporter/jmx_prometheus_javaagent-0.12.0.jar=1234:/usr/share/jmx_exporter/kafka-producer.yml -Xmx256M -Xms256M
     volumes:
-      - ./jmx-exporter:/usr/share/jmx_exporter/
+      - ../../ccloud/ccloud-demo/jmx-exporter:/usr/share/jmx_exporter/
 
   client-dotnet:
     build:
-      context: client-dotnet/
+      context: ../../ccloud/ccloud-demo/client-dotnet/
       args:
         CORE_RUNTIME_TAG: "3.1.2-bionic"
         CORE_SDK_TAG: "3.1.102-bionic"
@@ -285,11 +180,11 @@ services:
       - 7074:7074
       - 7075:7075
     volumes:
-      - ./client-dotnet/librdkafka.config:/tmp/librdkafka.config
+      - ../../ccloud/ccloud-demo/client-dotnet/librdkafka.config:/tmp/librdkafka.config
 
   producer:
     build:
-      context: producer/
+      context: ../../ccloud/ccloud-demo/producer/
     hostname: producer
     container_name: producer
     environment:
@@ -326,13 +221,13 @@ services:
       #KAFKA_TRANSACTIONAL_ID: "prod-1"
       JAVA_OPTS: -javaagent:/usr/share/jmx_exporter/jmx_prometheus_javaagent-0.12.0.jar=1234:/usr/share/jmx_exporter/kafka-producer.yml -Xmx256M -Xms256M
     volumes:
-      - ./jmx-exporter:/usr/share/jmx_exporter/
+      - ../../ccloud/ccloud-demo/jmx-exporter:/usr/share/jmx_exporter/
     depends_on:
       - streams
 
   consumer:
     build:
-      context: consumer/
+      context: ../../ccloud/ccloud-demo/consumer/
     hostname: consumer
     container_name: consumer
     environment:
@@ -363,13 +258,13 @@ services:
       KAFKA_CONFLUENT_MONITORING_INTERCEPTOR_SECURITY_PROTOCOL: "SASL_SSL"
       JAVA_OPTS: -javaagent:/usr/share/jmx_exporter/jmx_prometheus_javaagent-0.12.0.jar=1234:/usr/share/jmx_exporter/kafka-consumer.yml -Xmx256M -Xms256M
     volumes:
-      - ./jmx-exporter:/usr/share/jmx_exporter/
+      - ../../ccloud/ccloud-demo/jmx-exporter:/usr/share/jmx_exporter/
     depends_on:
       - streams
 
   producer-acl:
     build:
-      context: producer-acl/
+      context: ../../ccloud/ccloud-demo/producer-acl/
       args:
         TAG: ${TAG}
         CP_BASE_IMAGE: ${CP_BASE_IMAGE}
@@ -384,8 +279,8 @@ services:
     ports:
       - 9999:9999
     volumes:
-      - ./kafka-lag-exporter/application.conf:/opt/docker/conf/application.conf
-      - ./kafka-lag-exporter/logback.xml:/opt/docker/conf/logback.xml
+      - ../../ccloud/ccloud-demo/kafka-lag-exporter/application.conf:/opt/docker/conf/application.conf
+      - ../../ccloud/ccloud-demo/kafka-lag-exporter/logback.xml:/opt/docker/conf/logback.xml
 
   alertmanager:
     image: prom/alertmanager:v0.18.0
@@ -417,7 +312,7 @@ services:
       CCLOUD_PASSWORD: ${API_SECRET_CLOUD}
     command: -config /conf/config.yml
     volumes:
-        - ./config.yml:/conf/config.yml
+        - ../../ccloud/ccloud-demo/config.yml:/conf/config.yml
 
   prometheus:
     image: prom/prometheus
@@ -426,7 +321,7 @@ services:
     ports:
       - 9090:9090
     volumes:
-      - ./prometheus/:/etc/prometheus/
+      - ../../ccloud/ccloud-demo/prometheus/:/etc/prometheus/
     depends_on:
       - node-exporter
       - kafka-lag-exporter
@@ -441,7 +336,7 @@ services:
     ports:
       - 3000:3000
     volumes:
-      - ./grafana/provisioning/:/etc/grafana/provisioning/
+      - ../../ccloud/ccloud-demo/grafana/provisioning/:/etc/grafana/provisioning/
     depends_on:
       - prometheus
 
@@ -461,7 +356,7 @@ services:
       timeout: 5s
       retries: 20
     volumes:
-      - ./splunk/splunk.yml:/tmp/defaults/default.yml
+      - ../../ccloud/ccloud-demo/splunk/splunk.yml:/tmp/defaults/default.yml
       - /opt/splunk/var
       - /opt/splunk/etc
   # OpenTelemetry Collector
@@ -470,7 +365,7 @@ services:
     container_name: otelcollector
     command: ["--config=/etc/otel-collector-config.yml", "--log-level=DEBUG"]
     volumes:
-      - ./splunk/otel-collector-config.yml:/etc/otel-collector-config.yml
+      - ../../ccloud/ccloud-demo/splunk/otel-collector-config.yml:/etc/otel-collector-config.yml
     depends_on:
       - splunk
       - ccloud_exporter
