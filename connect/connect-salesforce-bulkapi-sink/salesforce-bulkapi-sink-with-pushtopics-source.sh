@@ -4,6 +4,17 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
+if [ ! -z "$CI" ]
+then
+     # running with github actions
+     if [ ! -f $HOME/kafka-docker-playground/secrets.properties ]
+     then
+          logerror "$HOME/kafka-docker-playground/secrets.properties is not present!"
+          exit 1
+     fi
+     source $HOME/kafka-docker-playground/secrets.properties
+fi
+
 SALESFORCE_USERNAME=${SALESFORCE_USERNAME:-$1}
 SALESFORCE_PASSWORD=${SALESFORCE_PASSWORD:-$2}
 CONSUMER_KEY=${CONSUMER_KEY:-$3}

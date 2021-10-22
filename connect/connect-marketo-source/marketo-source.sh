@@ -4,6 +4,17 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
+if [ ! -z "$CI" ]
+then
+     # running with github actions
+     if [ ! -f $HOME/kafka-docker-playground/secrets.properties ]
+     then
+          logerror "$HOME/kafka-docker-playground/secrets.properties is not present!"
+          exit 1
+     fi
+     source $HOME/kafka-docker-playground/secrets.properties
+fi
+
 MARKETO_ENDPOINT_URL=${MARKETO_ENDPOINT_URL:-$1}
 MARKETO_CLIENT_ID=${MARKETO_CLIENT_ID:-$2}
 MARKETO_CLIENT_SECRET=${MARKETO_CLIENT_SECRET:-$3}
