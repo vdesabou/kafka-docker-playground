@@ -4,39 +4,6 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
-if [ ! -f ${DIR}/mysql-connector-java-5.1.45.jar ]
-then
-     log "Downloading mysql-connector-java-5.1.45.jar"
-     wget https://repo1.maven.org/maven2/mysql/mysql-connector-java/5.1.45/mysql-connector-java-5.1.45.jar
-fi
-
-if [ -z "$CI" ] && [ -z "$CLOUDFORMATION" ]
-then
-     # not running with CI
-     verify_installed "ccloud"
-     check_ccloud_version 1.7.0 || exit 1
-     verify_ccloud_login  "ccloud kafka cluster list"
-     verify_ccloud_details
-     check_if_continue
-fi
-
-# https://docs.docker.com/compose/profiles/
-profile_control_center_command=""
-if [ -z "$DISABLE_CONTROL_CENTER" ]
-then
-  profile_control_center_command="--profile control-center"
-else
-  log "🛑 control-center is disabled"
-fi
-
-profile_ksqldb_command=""
-if [ -z "$DISABLE_KSQLDB" ]
-then
-  profile_ksqldb_command="--profile ksqldb"
-else
-  log "🛑 ksqldb is disabled"
-fi
-
 SR_TYPE=${1:-SCHEMA_REGISTRY_DOCKER}
 CONFIG_FILE=~/.ccloud/config
 
@@ -72,26 +39,6 @@ do
      fi
 done
 
-if [ ! -z "$CI" ] || [ ! -z "$CLOUDFORMATION" ]
-then
-     # running with github actions or cloudformation
-     log "Installing ccloud CLI"
-     curl -L --http1.1 https://cnfl.io/ccloud-cli | sudo sh -s -- -b /usr/local/bin
-     export PATH=$PATH:/usr/local/bin
-     log "##################################################"
-     log "Log in to Confluent Cloud"
-     log "##################################################"
-     ccloud login --save
-     log "Use environment $ENVIRONMENT"
-     ccloud environment use $ENVIRONMENT
-     log "Use cluster $CLUSTER_LKC"
-     ccloud kafka cluster use $CLUSTER_LKC
-     log "Store api key $CLOUD_KEY"
-     ccloud api-key store $CLOUD_KEY $CLOUD_SECRET --resource $CLUSTER_LKC --force
-     log "Use api key $CLOUD_KEY"
-     ccloud api-key use $CLOUD_KEY --resource $CLUSTER_LKC
-fi
-
 # required for dabz/ccloudexporter
 export CCLOUD_CLUSTER=$(ccloud prompt -f "%k")
 
@@ -119,25 +66,15 @@ sed -e "s|:BOOTSTRAP_SERVERS:|$BOOTSTRAP_SERVERS|g" \
     -e "s|:CLOUD_SECRET:|$CLOUD_SECRET|g" \
     ${DIR}/kafka-lag-exporter/application.template.conf > ${DIR}/kafka-lag-exporter/application.conf
 
-# generate data file for externalizing secrets
-sed -e "s|:BOOTSTRAP_SERVERS:|$BOOTSTRAP_SERVERS|g" \
-    -e "s|:CLOUD_KEY:|$CLOUD_KEY|g" \
-    -e "s|:CLOUD_SECRET:|$CLOUD_SECRET|g" \
-    ${DIR}/data.template > ${DIR}/data
+if [ ! -f ${DIR}/mysql-connector-java-5.1.45.jar ]
+then
+     log "Downloading mysql-connector-java-5.1.45.jar"
+     wget https://repo1.maven.org/maven2/mysql/mysql-connector-java/5.1.45/mysql-connector-java-5.1.45.jar
+fi
 
 # kafka-topics --bootstrap-server `grep "^\s*bootstrap.server" ${CONFIG_FILE} | tail -1` --command-config ${CONFIG_FILE} --topic customer-avro --create --replication-factor 3 --partitions 6
 
-set +e
-log "Cleanup connect worker topics"
-delete_topic connect-status-demo-${TAG}
-delete_topic connect-offsets-demo-${TAG}
-delete_topic connect-configs-demo-${TAG}
-set -e
-
-docker-compose build
-docker-compose down -v --remove-orphans
-docker-compose ${profile_control_center_command} ${profile_ksqldb_command} up -d
-${DIR}/../../scripts/wait-for-connect-and-controlcenter.sh
+${DIR}/../../ccloud/environment/start.sh "${PWD}/docker-compose.ccloud-demo.yml"
 
 log "-------------------------------------"
 log "Dotnet client examples"
@@ -213,7 +150,7 @@ then
      # not running with CI
      log "Verifying topic mysql-application"
      # this command works for both cases (with local schema registry and Confluent Cloud Schema Registry)
-     docker-compose exec -e BOOTSTRAP_SERVERS="$BOOTSTRAP_SERVERS" -e SASL_JAAS_CONFIG="$SASL_JAAS_CONFIG" -e BASIC_AUTH_CREDENTIALS_SOURCE="$BASIC_AUTH_CREDENTIALS_SOURCE" -e SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO="$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO" -e SCHEMA_REGISTRY_URL="$SCHEMA_REGISTRY_URL" connect bash -c 'kafka-avro-console-consumer --topic mysql-application --bootstrap-server $BOOTSTRAP_SERVERS --consumer-property ssl.endpoint.identification.algorithm=https --consumer-property sasl.mechanism=PLAIN --consumer-property security.protocol=SASL_SSL --consumer-property sasl.jaas.config="$SASL_JAAS_CONFIG" --property basic.auth.credentials.source=$BASIC_AUTH_CREDENTIALS_SOURCE --property schema.registry.basic.auth.user.info="$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO" --property schema.registry.url=$SCHEMA_REGISTRY_URL --from-beginning --max-messages 2'
+     docker exec -e BOOTSTRAP_SERVERS="$BOOTSTRAP_SERVERS" -e SASL_JAAS_CONFIG="$SASL_JAAS_CONFIG" -e BASIC_AUTH_CREDENTIALS_SOURCE="$BASIC_AUTH_CREDENTIALS_SOURCE" -e SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO="$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO" -e SCHEMA_REGISTRY_URL="$SCHEMA_REGISTRY_URL" connect bash -c 'kafka-avro-console-consumer --topic mysql-application --bootstrap-server $BOOTSTRAP_SERVERS --consumer-property ssl.endpoint.identification.algorithm=https --consumer-property sasl.mechanism=PLAIN --consumer-property security.protocol=SASL_SSL --consumer-property sasl.jaas.config="$SASL_JAAS_CONFIG" --property basic.auth.credentials.source=$BASIC_AUTH_CREDENTIALS_SOURCE --property schema.registry.basic.auth.user.info="$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO" --property schema.registry.url=$SCHEMA_REGISTRY_URL --from-beginning --max-messages 2'
 fi
 
 # Example using confluent CLI:
@@ -275,13 +212,11 @@ log "Creating Elasticsearch Sink connector"
 curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
-        "connector.class": "io.confluent.connect.elasticsearch.ElasticsearchSinkConnector",
+          "connector.class": "io.confluent.connect.elasticsearch.ElasticsearchSinkConnector",
           "tasks.max": "1",
           "topics": "mysql-application",
           "key.ignore": "true",
-          "connection.url": "http://elasticsearch:9200",
-          "type.name": "kafka-connect",
-          "name": "elasticsearch-sink"
+          "connection.url": "http://elasticsearch:9200"
           }' \
      http://localhost:8083/connectors/elasticsearch-sink/config | jq .
 

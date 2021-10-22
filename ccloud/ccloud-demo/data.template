@@ -1,3 +1,0 @@
-bootstrap.servers=:BOOTSTRAP_SERVERS:
-sasl.username=:CLOUD_KEY:
-sasl.password=:CLOUD_SECRET:

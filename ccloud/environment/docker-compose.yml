@@ -34,8 +34,6 @@ services:
       CONNECT_LOG4J_ROOT_LOGLEVEL: INFO
       CONNECT_LOG4J_LOGGERS: org.reflections=ERROR
       CLASSPATH: /usr/share/java/monitoring-interceptors/monitoring-interceptors-${TAG_BASE}.jar
-      CONNECT_REQUEST_TIMEOUT_MS: 60000
-      CONNECT_RETRY_BACKOFF_MS: 500
       # Connect worker
       CONNECT_SECURITY_PROTOCOL: SASL_SSL
       CONNECT_SASL_JAAS_CONFIG: $SASL_JAAS_CONFIG
@@ -102,6 +100,18 @@ services:
       CONTROL_CENTER_METRICS_TOPIC_MAX_MESSAGE_BYTES: 8388608
       CONFLUENT_LICENSE: "$CONFLUENT_LICENSE"
       PORT: 9021
+      CONTROL_CENTER_UI_AUTOUPDATE_ENABLE: "true"
+      # CONTROL_CENTER_LOG4J_ROOT_LOGLEVEL: DEBUG
+      # Email settings
+      # CONTROL_CENTER_MAIL_ENABLED: "true"
+      # CONTROL_CENTER_MAIL_HOST_NAME: "smtp.gmail.com"
+      # CONTROL_CENTER_MAIL_PORT: 587
+      # CONTROL_CENTER_MAIL_FROM: "toto@gmail.com"
+      # CONTROL_CENTER_MAIL_USERNAME: "toto@gmail.com"
+      # CONTROL_CENTER_MAIL_PASSWORD: "xxxx"
+      # CONTROL_CENTER_MAIL_STARTTLS_REQUIRED: "true"
+      # CONTROL_CENTER_MAIL_SSL_CHECKSERVERIDENTITY: "true"
+      # CONTROL_CENTER_MAIL_BOUNCE_ADDRESS: "toto@gmail.com"
       
   # 75147
   # schema-registry:
