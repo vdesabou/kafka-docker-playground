@@ -7,12 +7,12 @@ source ${DIR}/../../scripts/utils.sh
 if [ ! -z "$CI" ]
 then
      # running with github actions
-     if [ ! -f $HOME/kafka-docker-playground/secrets.properties ]
+     if [ ! -f $HOME/secrets.properties ]
      then
-          logerror "$HOME/kafka-docker-playground/secrets.properties is not present!"
+          logerror "$HOME/secrets.properties is not present!"
           exit 1
      fi
-     source $HOME/kafka-docker-playground/secrets.properties
+     source $HOME/secrets.properties
 fi
 
 PAGERDUTY_USER_EMAIL=${PAGERDUTY_USER_EMAIL:-$1}
