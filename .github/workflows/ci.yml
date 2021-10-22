@@ -1,4 +1,4 @@
-name: CI
+name: Reusable CI workflow
 
 on:
   workflow_call:
@@ -15,6 +15,7 @@ on:
       test_name:
         description: 'test to run'
         required: false
+        type: string
         default: ''
 
 jobs:
