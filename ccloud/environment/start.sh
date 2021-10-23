@@ -31,7 +31,14 @@ then
      verify_ccloud_details
      check_if_continue
 else
-     # running with github actions or cloudformation
+     # running with github actions
+     if [ ! -f $HOME/secrets.properties ]
+     then
+          logerror "$HOME/secrets.properties is not present!"
+          exit 1
+     fi
+     source $HOME/secrets.properties
+     
      log "Installing ccloud CLI"
      curl -L --http1.1 https://cnfl.io/ccloud-cli | sudo sh -s -- -b /usr/local/bin
      export PATH=$PATH:/usr/local/bin
