@@ -5,7 +5,7 @@ Fully automated Kafka and Confluent Docker based examples // Easily build reprod
 🔥 Check out [kafka-docker-playground.io](https://kafka-docker-playground.io/) to learn how to use the playground, how it works and how to build your own reproduction models ! 
 
 ![asciinema](https://github.com/vdesabou/gifs/blob/master/connect/connect-cdc-oracle12-source/asciinema.gif?raw=true)
-![success tests](https://img.shields.io/badge/success%20tests-1266%2F1375-red)![connector tested](https://img.shields.io/badge/connector%20tested-125-green)![cp versions tested](https://img.shields.io/badge/cp%20version%20tested-%205.4.5%205.5.6%206.0.4%206.1.3%206.2.1-green)![last run](https://img.shields.io/badge/last%20run-2021--10--23%2012:42-green)
+![success tests](https://img.shields.io/badge/success%20tests-1266%2F1375-red)![connector tested](https://img.shields.io/badge/connector%20tested-125-green)![cp versions tested](https://img.shields.io/badge/cp%20version%20tested-%205.4.5%205.5.6%206.0.4%206.1.3%206.2.1-green)![last run](https://img.shields.io/badge/last%20run-2021--10--23%2016:39-green)
 ![GitHub issues by-label](https://img.shields.io/github/issues/vdesabou/kafka-docker-playground/bug%20🔥)![GitHub issues by-label](https://img.shields.io/github/issues/vdesabou/kafka-docker-playground/enhancement%20✨)
 ![GitHub repo size](https://img.shields.io/github/repo-size/vdesabou/kafka-docker-playground)
 [![Gitpod ready-to-code](https://img.shields.io/badge/Gitpod-ready--to--code-908a85?logo=gitpod)](https://gitpod.io/#https://github.com/vdesabou/kafka-docker-playground)
