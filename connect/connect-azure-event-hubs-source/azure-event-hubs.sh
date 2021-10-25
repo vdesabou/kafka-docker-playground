@@ -4,12 +4,22 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
-
 # https://github.com/Azure/azure-event-hubs/tree/master/samples/Java/Basic/SimpleSend
 if [ ! -f ${DIR}/simple-send/target/simplesend-1.0.0-jar-with-dependencies.jar ]
 then
      log "Building jar simplesend-1.0.0-jar-with-dependencies.jar"
      docker run -i --rm -e KAFKA_CLIENT_TAG=$KAFKA_CLIENT_TAG -v "${DIR}/simple-send":/usr/src/mymaven -v "$HOME/.m2":/root/.m2 -v "${DIR}/simple-send/target:/usr/src/mymaven/target" -w /usr/src/mymaven maven:3.6.1-jdk-11 mvn -Dkafka.tag=$TAG -Dkafka.client.tag=$KAFKA_CLIENT_TAG package
+fi
+
+if [ ! -z "$CI" ]
+then
+     # running with github actions
+     if [ ! -f $HOME/secrets.properties ]
+     then
+          logerror "$HOME/secrets.properties is not present!"
+          exit 1
+     fi
+     source $HOME/secrets.properties
 fi
 
 if [ ! -z "$AZ_USER" ] && [ ! -z "$AZ_PASS" ]

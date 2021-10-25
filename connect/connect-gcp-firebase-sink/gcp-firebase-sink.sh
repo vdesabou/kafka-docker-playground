@@ -14,6 +14,14 @@ fi
 
 if [ ! -z "$CI" ]
 then
+     # running with github actions
+     if [ ! -f $HOME/secrets.properties ]
+     then
+          logerror "$HOME/secrets.properties is not present!"
+          exit 1
+     fi
+     source $HOME/secrets.properties
+     
      # if this is github actions
      log "Removing all data"
      docker run -p 9005:9005 -e FIREBASE_TOKEN=$FIREBASE_TOKEN -e PROJECT=$PROJECT -i kamshak/firebase-tools-docker firebase database:remove / -y --token "$FIREBASE_TOKEN" --project "$PROJECT"
