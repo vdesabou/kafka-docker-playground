@@ -14,12 +14,12 @@ fi
 if [ ! -z "$CI" ]
 then
      # running with github actions
-     if [ ! -f $HOME/secrets.properties ]
+     if [ ! -f ../../secrets.properties ]
      then
-          logerror "$HOME/secrets.properties is not present!"
+          logerror "../../secrets.properties is not present!"
           exit 1
      fi
-     source $HOME/secrets.properties
+     source ../../secrets.properties > /dev/null 2>&1
 fi
 
 if [ ! -z "$AZ_USER" ] && [ ! -z "$AZ_PASS" ]

@@ -35,12 +35,12 @@ then
      check_if_continue
 else
      # running with github actions
-     if [ ! -f $HOME/secrets.properties ]
+     if [ ! -f ../../secrets.properties ]
      then
-          logerror "$HOME/secrets.properties is not present!"
+          logerror "../../secrets.properties is not present!"
           exit 1
      fi
-     source $HOME/secrets.properties
+     source ../../secrets.properties > /dev/null 2>&1
      
      log "Installing ccloud CLI"
      curl -L --http1.1 https://cnfl.io/ccloud-cli | sudo sh -s -- -b /usr/local/bin
