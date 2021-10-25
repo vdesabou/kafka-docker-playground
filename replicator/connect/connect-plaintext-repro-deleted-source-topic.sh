@@ -73,9 +73,8 @@ sleep 5
 log "Verify topic is still present in US cluster"
 docker exec broker-us kafka-topics --describe --topic sales_NEMEA --bootstrap-server broker-us:9092
 
-log "Verify replicator can not find the sales_NEMEA topic anymore in th Europe cluster "
+log "Verify replicator can not find the sales_NEMEA topic anymore in th Europe cluster (the connector does not stop to produce a warning message)"
 docker logs connect-us | grep ".*WARN \[replicate-nemea-to-us.*\].*"
-# [replicate-nemea-to-us]
 
 log "Deleting topic sales_SEMEA in Europe cluster"
 docker exec broker-europe kafka-topics --delete --topic sales_SEMEA --bootstrap-server broker-europe:9092
@@ -85,5 +84,5 @@ sleep 10
 log "Verify topic is still present in US cluster"
 docker exec broker-us kafka-topics --describe --topic sales_SEMEA --bootstrap-server broker-us:9092
 
-log "Verify replicator can not find the sales_SEMEA topic anymore in th Europe cluster "
+log "Verify replicator stops to look for sales_SEMEA topic in th Europe cluster (after topic.poll.interval.ms, the connector updates the config and stops to look for this topic."
 docker logs connect-us | grep ".*WARN \[replicate-semea-to-us.*\].*"
