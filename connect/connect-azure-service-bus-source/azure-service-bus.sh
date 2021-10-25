@@ -4,12 +4,22 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
-
 # https://docs.microsoft.com/en-us/azure/service-bus-messaging/service-bus-quickstart-cli#send-and-receive-messages
 if [ ! -f ${DIR}/QueuesGettingStarted/target/queuesgettingstarted-1.0.0-jar-with-dependencies.jar ]
 then
      log "Building jar queuesgettingstarted-1.0.0-jar-with-dependencies.jar"
      docker run -i --rm -e KAFKA_CLIENT_TAG=$KAFKA_CLIENT_TAG -v "${DIR}/QueuesGettingStarted":/usr/src/mymaven -v "$HOME/.m2":/root/.m2 -v "${DIR}/QueuesGettingStarted/target:/usr/src/mymaven/target" -w /usr/src/mymaven maven:3.6.1-jdk-11 mvn -Dkafka.tag=$TAG -Dkafka.client.tag=$KAFKA_CLIENT_TAG package
+fi
+
+if [ ! -z "$CI" ]
+then
+     # running with github actions
+     if [ ! -f $HOME/secrets.properties ]
+     then
+          logerror "$HOME/secrets.properties is not present!"
+          exit 1
+     fi
+     source $HOME/secrets.properties
 fi
 
 if [ ! -z "$AZ_USER" ] && [ ! -z "$AZ_PASS" ]

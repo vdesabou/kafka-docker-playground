@@ -42,6 +42,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v2
         with:
+          repository: vdesabou/kafka-docker-playground
           fetch-depth: 0
 
       - name: Configure AWS credentials
@@ -63,7 +64,8 @@ jobs:
           chmod -R a+rw $HOME/.aws
           mkdir -p $HOME/.ccloud
           mv config.cc.travis $HOME/.ccloud/config
-          source secrets.properties
+          mv secrets.properties $HOME/secrets.properties
+          source $HOME/secrets.properties
           echo "$DOCKER_PASSWORD" | docker login -u vdesabou --password-stdin
         env:
           SECRETS_ENCRYPTION_PASSWORD: ${{ secrets.SECRETS_ENCRYPTION_PASSWORD }}
