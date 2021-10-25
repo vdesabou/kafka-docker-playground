@@ -123,7 +123,7 @@ jobs:
           chmod -R a+rw $HOME/.aws
           mkdir -p $HOME/.ccloud
           mv config.cc.travis $HOME/.ccloud/config
-          source secrets.properties
+          source secrets.properties > /dev/null 2>&1
           echo "$DOCKER_PASSWORD" | docker login -u vdesabou --password-stdin
         env:
           SECRETS_ENCRYPTION_PASSWORD: ${{ secrets.SECRETS_ENCRYPTION_PASSWORD }}
@@ -184,7 +184,7 @@ jobs:
           chmod -R a+rw $HOME/.aws
           mkdir -p $HOME/.ccloud
           mv config.cc.travis $HOME/.ccloud/config
-          source secrets.properties
+          source secrets.properties > /dev/null 2>&1
           echo "$DOCKER_PASSWORD" | docker login -u vdesabou --password-stdin
         env:
           SECRETS_ENCRYPTION_PASSWORD: ${{ secrets.SECRETS_ENCRYPTION_PASSWORD }}
