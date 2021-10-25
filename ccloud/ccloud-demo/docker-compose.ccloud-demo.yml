@@ -262,15 +262,6 @@ services:
     depends_on:
       - streams
 
-  producer-acl:
-    build:
-      context: ../../ccloud/ccloud-demo/producer-acl/
-      args:
-        TAG: ${TAG}
-        CP_BASE_IMAGE: ${CP_BASE_IMAGE}
-    hostname: producer-acl
-    container_name: producer-acl
-
   kafka-lag-exporter:
     image: lightbend/kafka-lag-exporter:0.6.6
     hostname: kafka-lag-exporter
