@@ -35,24 +35,9 @@ do
      if [ ! -f ${DIR}/${component}/target/${component}-1.0.0-jar-with-dependencies.jar ]
      then
           log "Building jar for ${component}"
-          docker run -i --rm -e KAFKA_CLIENT_TAG=$KAFKA_CLIENT_TAG -e TAG=$TAG_BASE -v "${DIR}/${component}":/usr/src/mymaven -v "$HOME/.m2":/root/.m2 -v "${DIR}/${component}/target:/usr/src/mymaven/target" -w /usr/src/mymaven maven:3.6.1-jdk-11 mvn -Dkafka.tag=$TAG -Dkafka.client.tag=$KAFKA_CLIENT_TAG package
+          docker run -i --rm -e KAFKA_CLIENT_TAG=$KAFKA_CLIENT_TAG -e TAG=$TAG_BASE -v "${DIR}/${component}":/usr/src/mymaven -v "$HOME/.m2":/root/.m2 -v "${DIR}/${component}/target:/usr/src/mymaven/target" -w /usr/src/mymaven maven:3.6.1-jdk-11 mvn -Dkafka.tag=$TAG -Dkafka.client.tag=$KAFKA_CLIENT_TAG package > /dev/null 2>&1
      fi
 done
-
-# required for dabz/ccloudexporter
-export CCLOUD_CLUSTER=$(ccloud prompt -f "%k")
-
-# generate config.yml
-sed -e "s|:CCLOUD_CLUSTER:|$CCLOUD_CLUSTER|g" \
-    ${DIR}/config-template.yml > ${DIR}/config.yml
-
-log "Create API key and secret with cloud resource for Metrics API"
-log "ccloud api-key create --resource cloud"
-OUTPUT=$(ccloud api-key create --resource cloud)
-export API_KEY_CLOUD=$(echo "$OUTPUT" | grep '| API Key' | awk '{print $5;}')
-export API_SECRET_CLOUD=$(echo "$OUTPUT" | grep '| Secret' | awk '{print $4;}')
-
-echo "$API_KEY_CLOUD" > api_key_cloud_to_delete
 
 # generate librdkafka.config config
 sed -e "s|:BOOTSTRAP_SERVERS:|$BOOTSTRAP_SERVERS|g" \
@@ -93,13 +78,14 @@ log "-------------------------------------"
 log "Connector examples"
 log "-------------------------------------"
 
-if ! version_gt $TAG_BASE "5.9.9"; then
+# FIXTHIS: https://github.com/vdesabou/kafka-docker-playground/issues/1457
+# if ! version_gt $TAG_BASE "5.9.9"; then
      # note: for 6.x CONNECT_TOPIC_CREATION_ENABLE=true
      log "Creating topic in Confluent Cloud (auto.create.topics.enable=false)"
      set +e
      create_topic mysql-application
      set -e
-fi
+# fi
 
 log "Creating MySQL source connector"
 curl -X PUT \
