@@ -12,14 +12,17 @@ then
      exit 1
 fi
 
-${DIR}/../ccloud-demo/ccloud-generate-env-vars.sh ${CONFIG_FILE}
-
-if [ -f /tmp/delta_configs/env.delta ]
+if [ -z "$BOOTSTRAP_SERVERS" ]
 then
-     source /tmp/delta_configs/env.delta
-else
-     logerror "ERROR: /tmp/delta_configs/env.delta has not been generated"
-     exit 1
+     ${DIR}/../ccloud-demo/ccloud-generate-env-vars.sh ${CONFIG_FILE}
+
+     if [ -f /tmp/delta_configs/env.delta ]
+     then
+          source /tmp/delta_configs/env.delta
+     else
+          logerror "ERROR: /tmp/delta_configs/env.delta has not been generated"
+          exit 1
+     fi
 fi
 
 if [ -z "$CI" ] && [ -z "$CLOUDFORMATION" ]
