@@ -24,18 +24,18 @@ then
      exit 1
 fi
 
-REST_KEY=${REST_KEY:-$1}
-REST_SECRET=${REST_SECRET:-$2}
+CCLOUD_REST_PROXY_SECURITY_PLUGIN_API_KEY=${CCLOUD_REST_PROXY_SECURITY_PLUGIN_API_KEY:-$1}
+CCLOUD_REST_PROXY_SECURITY_PLUGIN_API_SECRET=${CCLOUD_REST_PROXY_SECURITY_PLUGIN_API_SECRET:-$2}
 
-if [ -z "$REST_KEY" ]
+if [ -z "$CCLOUD_REST_PROXY_SECURITY_PLUGIN_API_KEY" ]
 then
-     logerror "REST_KEY is not set. Export it as environment variable or pass it as argument"
+     logerror "CCLOUD_REST_PROXY_SECURITY_PLUGIN_API_KEY is not set. Export it as environment variable or pass it as argument"
      exit 1
 fi
 
-if [ -z "$REST_SECRET" ]
+if [ -z "$CCLOUD_REST_PROXY_SECURITY_PLUGIN_API_SECRET" ]
 then
-     logerror "REST_SECRET is not set. Export it as environment variable or pass it as argument"
+     logerror "CCLOUD_REST_PROXY_SECURITY_PLUGIN_API_SECRET is not set. Export it as environment variable or pass it as argument"
      exit 1
 fi
 
@@ -50,13 +50,13 @@ else
 fi
 
 # generate kafka-admin.properties config
-sed -e "s|:REST_KEY:|$REST_KEY|g" \
-    -e "s|:REST_SECRET:|$REST_SECRET|g" \
+sed -e "s|:CCLOUD_REST_PROXY_SECURITY_PLUGIN_API_KEY:|$CCLOUD_REST_PROXY_SECURITY_PLUGIN_API_KEY|g" \
+    -e "s|:CCLOUD_REST_PROXY_SECURITY_PLUGIN_API_SECRET:|$CCLOUD_REST_PROXY_SECURITY_PLUGIN_API_SECRET|g" \
     ${DIR}/kafka-rest.jaas-template.conf > ${DIR}/kafka-rest.jaas.conf
 
 cd ${DIR}/security
 log "🔐 Generate keys and certificates used for SSL"
-./certs-create.sh $REST_KEY > /dev/null 2>&1
+./certs-create.sh $CCLOUD_REST_PROXY_SECURITY_PLUGIN_API_KEY > /dev/null 2>&1
 if [ -z "$CI" ]
 then
     # not running with github actions
@@ -80,5 +80,5 @@ set -e
 sleep 15
 
 # run as root for linux case where key is owned by root user
-log "HTTP client using $REST_KEY principal"
-docker exec -e REST_KEY=$REST_KEY --privileged --user root restproxy curl -X POST --cert /etc/kafka/secrets/$REST_KEY.certificate.pem --key /etc/kafka/secrets/$REST_KEY.key --tlsv1.2 --cacert /etc/kafka/secrets/snakeoil-ca-1.crt -H "Content-Type: application/vnd.kafka.json.v2+json" -H "Accept: application/vnd.kafka.v2+json" --data '{"records":[{"value":{"foo":"bar"}}]}' "https://localhost:8082/topics/rest-proxy-security-plugin"
+log "HTTP client using $CCLOUD_REST_PROXY_SECURITY_PLUGIN_API_KEY principal"
+docker exec -e CCLOUD_REST_PROXY_SECURITY_PLUGIN_API_KEY=$CCLOUD_REST_PROXY_SECURITY_PLUGIN_API_KEY --privileged --user root restproxy curl -X POST --cert /etc/kafka/secrets/$CCLOUD_REST_PROXY_SECURITY_PLUGIN_API_KEY.certificate.pem --key /etc/kafka/secrets/$CCLOUD_REST_PROXY_SECURITY_PLUGIN_API_KEY.key --tlsv1.2 --cacert /etc/kafka/secrets/snakeoil-ca-1.crt -H "Content-Type: application/vnd.kafka.json.v2+json" -H "Accept: application/vnd.kafka.v2+json" --data '{"records":[{"value":{"foo":"bar"}}]}' "https://localhost:8082/topics/rest-proxy-security-plugin"
