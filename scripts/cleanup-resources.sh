@@ -24,6 +24,17 @@ function logwarn() {
   echo -e "$PURPLE$@$NC"
 }
 
+if [ ! -z "$CI" ]
+then
+     # running with github actions
+     if [ ! -f secrets.properties ]
+     then
+          logerror "secrets.properties is not present!"
+          exit 1
+     fi
+     source secrets.properties > /dev/null 2>&1
+fi
+
 if [ ! -z "$AZ_USER" ] && [ ! -z "$AZ_PASS" ]
 then
     log "Logging to Azure using environment variables AZ_USER and AZ_PASS"
@@ -64,16 +75,6 @@ do
   app=$(echo "$app" | tr -d ',')
   log "Deleting azure ad app $app"
   az ad app delete --id $app
-done
-
-#######
-# aws
-#######
-for image_version in $image_versions
-do
-  tag=$(echo "$image_version" | sed -e 's/\.//g')
-  log "Deleting EKS cluster kafka-docker-playground-ci-$tag"
-  eksctl delete cluster --name kafka-docker-playground-ci-$tag
 done
 
 exit 0

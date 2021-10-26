@@ -61,27 +61,30 @@ do
             continue
         fi
 
-        THE_CONNECTOR_TAG=""
-        docker_compose_file=$(grep "environment" "$script" | grep DIR | grep start.sh | cut -d "/" -f 7 | cut -d '"' -f 1 | head -n1)
-        if [ "${docker_compose_file}" != "" ] && [ -f "${docker_compose_file}" ]
+        if [[ "$dir" == "connect"* ]]
         then
-            connector_path=$(grep "CONNECT_PLUGIN_PATH" "${docker_compose_file}" | cut -d "/" -f 5 | head -1)
-            # remove any extra comma at the end (when there are multiple connectors used, example S3 source)
-            connector_path=$(echo "$connector_path" | cut -d "," -f 1)
-            owner=$(echo "$connector_path" | cut -d "-" -f 1)
-            name=$(echo "$connector_path" | cut -d "-" -f 2-)
-
-            if [ "$connector_path" != "" ]
+            THE_CONNECTOR_TAG=""
+            docker_compose_file=$(grep "environment" "$script" | grep DIR | grep start.sh | cut -d "/" -f 7 | cut -d '"' -f 1 | head -n1)
+            if [ "${docker_compose_file}" != "" ] && [ -f "${docker_compose_file}" ]
             then
-                THE_CONNECTOR_TAG=$(grep "$connector_path " /tmp/README.txt | cut -d "|" -f 3 | sed 's/^[[:blank:]]*//;s/[[:blank:]]*$//')
+                connector_path=$(grep "CONNECT_PLUGIN_PATH" "${docker_compose_file}" | cut -d "/" -f 5 | head -1)
+                # remove any extra comma at the end (when there are multiple connectors used, example S3 source)
+                connector_path=$(echo "$connector_path" | cut -d "," -f 1)
+                owner=$(echo "$connector_path" | cut -d "-" -f 1)
+                name=$(echo "$connector_path" | cut -d "-" -f 2-)
 
-                if [ "$connector_path" = "confluentinc-kafka-connect-jdbc" ]
+                if [ "$connector_path" != "" ]
                 then
-                    if ! version_gt ${TAG} "5.9.0"
+                    THE_CONNECTOR_TAG=$(grep "$connector_path " /tmp/README.txt | cut -d "|" -f 3 | sed 's/^[[:blank:]]*//;s/[[:blank:]]*$//')
+
+                    if [ "$connector_path" = "confluentinc-kafka-connect-jdbc" ]
                     then
-                        # for version less than 6.0.0, use JDBC with same version
-                        # see https://github.com/vdesabou/kafka-docker-playground/issues/221
-                        THE_CONNECTOR_TAG=${TAG}
+                        if ! version_gt ${TAG} "5.9.0"
+                        then
+                            # for version less than 6.0.0, use JDBC with same version
+                            # see https://github.com/vdesabou/kafka-docker-playground/issues/221
+                            THE_CONNECTOR_TAG=${TAG}
+                        fi
                     fi
                 fi
             fi
