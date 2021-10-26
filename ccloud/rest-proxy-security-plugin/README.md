@@ -38,7 +38,7 @@ ccloud.password=<ccloud password>
 Simply run:
 
 ```
-$ ./start.sh <REST_KEY> <REST_SECRET>
+$ ./start.sh <CCLOUD_REST_PROXY_SECURITY_PLUGIN_API_KEY> <CCLOUD_REST_PROXY_SECURITY_PLUGIN_API_SECRET>
 ```
 
 ## Details of what the script is doing
@@ -71,13 +71,13 @@ Security configurations between REST Proxy and Confluent Cloud cluster
 
 ```
 
-JAAS file is generated REST_KEY and REST_SECRET passed as argument or environment variables.
+JAAS file is generated CCLOUD_REST_PROXY_SECURITY_PLUGIN_API_KEY and CCLOUD_REST_PROXY_SECURITY_PLUGIN_API_SECRET passed as argument or environment variables.
 
 ```
 KafkaClient {
   org.apache.kafka.common.security.plain.PlainLoginModule required
-  username=":REST_KEY:"
-  password=":REST_SECRET:";
+  username=":CCLOUD_REST_PROXY_SECURITY_PLUGIN_API_KEY:"
+  password=":CCLOUD_REST_PROXY_SECURITY_PLUGIN_API_SECRET:";
 };
 ```
 
@@ -85,7 +85,7 @@ KafkaClient {
       KAFKAREST_OPTS: -Djava.security.auth.login.config=/etc/kafka/kafka-rest.jaas.conf
 ```
 
-`REST_KEY` is the principal used by HTTP client and propagated to broker:
+`CCLOUD_REST_PROXY_SECURITY_PLUGIN_API_KEY` is the principal used by HTTP client and propagated to broker:
 
 Security extension configuration
 
@@ -100,8 +100,8 @@ Security extension configuration
 
 Important: you need to set your license
 
-HTTP client using `$REST_KEY` principal:
+HTTP client using `$CCLOUD_REST_PROXY_SECURITY_PLUGIN_API_KEY` principal:
 
 ```bash
-$ docker exec -e REST_KEY=$REST_KEY restproxy curl -X POST --cert /etc/kafka/secrets/$REST_KEY.certificate.pem --key /etc/kafka/secrets/$REST_KEY.key --tlsv1.2 --cacert /etc/kafka/secrets/snakeoil-ca-1.crt -H "Content-Type: application/vnd.kafka.json.v2+json" -H "Accept: application/vnd.kafka.v2+json" --data '{"records":[{"value":{"foo":"bar"}}]}' "https://localhost:8086/topics/rest-proxy-security-plugin"
+$ docker exec -e CCLOUD_REST_PROXY_SECURITY_PLUGIN_API_KEY=$CCLOUD_REST_PROXY_SECURITY_PLUGIN_API_KEY restproxy curl -X POST --cert /etc/kafka/secrets/$CCLOUD_REST_PROXY_SECURITY_PLUGIN_API_KEY.certificate.pem --key /etc/kafka/secrets/$CCLOUD_REST_PROXY_SECURITY_PLUGIN_API_KEY.key --tlsv1.2 --cacert /etc/kafka/secrets/snakeoil-ca-1.crt -H "Content-Type: application/vnd.kafka.json.v2+json" -H "Accept: application/vnd.kafka.v2+json" --data '{"records":[{"value":{"foo":"bar"}}]}' "https://localhost:8086/topics/rest-proxy-security-plugin"
 ```
