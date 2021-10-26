@@ -6,24 +6,19 @@ export TAG=5.3.1
 source ${DIR}/../../scripts/utils.sh
 
 log "Using CP 5.3.1"
-
-if [ ! -f ${DIR}/producer/target/producer-1.0.0-jar-with-dependencies.jar ]
-then
-     log "Building jar for producer"
-     docker run -i --rm -e TAG=$TAG_BASE -e KAFKA_CLIENT_TAG=$KAFKA_CLIENT_TAG -v "${DIR}/producer":/usr/src/mymaven -v "$HOME/.m2":/root/.m2 -v "${DIR}/producer/target:/usr/src/mymaven/target" -w /usr/src/mymaven maven:3.6.1-jdk-11 mvn -Dkafka.tag=$TAG -Dkafka.client.tag=$KAFKA_CLIENT_TAG package
-fi
-
-if [ ! -f ${DIR}/consumer/target/consumer-1.0.0-jar-with-dependencies.jar ]
-then
-     log "Building jar for consumer"
-     docker run -i --rm -e TAG=$TAG_BASE -e KAFKA_CLIENT_TAG=$KAFKA_CLIENT_TAG -v "${DIR}/consumer":/usr/src/mymaven -v "$HOME/.m2":/root/.m2 -v "${DIR}/consumer/target:/usr/src/mymaven/target" -w /usr/src/mymaven maven:3.6.1-jdk-11 mvn -Dkafka.tag=$TAG -Dkafka.client.tag=$KAFKA_CLIENT_TAG package
-fi
-
-if [ ! -f ${DIR}/spring/target/spring-kafka-hello-world-0.0.1-SNAPSHOT.jar ]
-then
-     log "Building jar for spring"
-     docker run -i --rm -e TAG=$TAG_BASE -e KAFKA_CLIENT_TAG=$KAFKA_CLIENT_TAG -v "${DIR}/spring":/usr/src/mymaven -v "$HOME/.m2":/root/.m2 -v "${DIR}/spring/target:/usr/src/mymaven/target" -w /usr/src/mymaven maven:3.6.1-jdk-11 mvn -Dkafka.tag=$TAG -Dkafka.client.tag=$KAFKA_CLIENT_TAG package -DskipTests
-fi
+for component in producer consumer spring
+do
+     set +e
+     log "🏗 Building jar for ${component}"
+     docker run -i --rm -e KAFKA_CLIENT_TAG=$KAFKA_CLIENT_TAG -e TAG=$TAG_BASE -v "${DIR}/${component}":/usr/src/mymaven -v "$HOME/.m2":/root/.m2 -v "${DIR}/${component}/target:/usr/src/mymaven/target" -w /usr/src/mymaven maven:3.6.1-jdk-11 mvn -Dkafka.tag=$TAG -Dkafka.client.tag=$KAFKA_CLIENT_TAG package > /tmp/result.log 2>&1
+     if [ $? != 0 ]
+     then
+          logerror "ERROR: failed to build java component $component"
+          tail -500 /tmp/result.log
+          exit 1
+     fi
+     set -e
+done
 
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
 
