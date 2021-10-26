@@ -23,3 +23,7 @@ services:
       - oracle
     environment:
       CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-oracle-cdc
+      # https://github.com/vdesabou/kafka-docker-playground/issues/1461
+      # On CP 5.x ORA-01882: timezone region not found
+      KAFKA_OPTS: -Duser.timezone=America/Detroit
+                  -Doracle.jdbc.timezoneAsRegion=false
