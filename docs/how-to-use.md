@@ -9,6 +9,8 @@
 
 You just need to have [docker](https://docs.docker.com/get-docker/) and [docker-compose](https://docs.docker.com/compose/install/) installed on your machine !
 
+You also need internet connectivity when running connect tests as connectors are downloaded from Confluent Hub on the fly.
+
 > [!NOTE]
 > Every command used in the playground is using Docker, this includes `jq` (except if you have it on your host already), `aws`, `az`, `gcloud`, etc..
 > 

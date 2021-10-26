@@ -5,21 +5,29 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
 # https://docs.microsoft.com/en-us/azure/service-bus-messaging/service-bus-quickstart-cli#send-and-receive-messages
-if [ ! -f ${DIR}/QueuesGettingStarted/target/queuesgettingstarted-1.0.0-jar-with-dependencies.jar ]
-then
-     log "Building jar queuesgettingstarted-1.0.0-jar-with-dependencies.jar"
-     docker run -i --rm -e KAFKA_CLIENT_TAG=$KAFKA_CLIENT_TAG -v "${DIR}/QueuesGettingStarted":/usr/src/mymaven -v "$HOME/.m2":/root/.m2 -v "${DIR}/QueuesGettingStarted/target:/usr/src/mymaven/target" -w /usr/src/mymaven maven:3.6.1-jdk-11 mvn -Dkafka.tag=$TAG -Dkafka.client.tag=$KAFKA_CLIENT_TAG package
-fi
+for component in QueuesGettingStarted
+do
+     set +e
+     log "🏗 Building jar for ${component}"
+     docker run -i --rm -e KAFKA_CLIENT_TAG=$KAFKA_CLIENT_TAG -e TAG=$TAG_BASE -v "${DIR}/${component}":/usr/src/mymaven -v "$HOME/.m2":/root/.m2 -v "${DIR}/${component}/target:/usr/src/mymaven/target" -w /usr/src/mymaven maven:3.6.1-jdk-11 mvn -Dkafka.tag=$TAG -Dkafka.client.tag=$KAFKA_CLIENT_TAG package > /tmp/result.log 2>&1
+     if [ $? != 0 ]
+     then
+          logerror "ERROR: failed to build java component $component"
+          tail -500 /tmp/result.log
+          exit 1
+     fi
+     set -e
+done
 
 if [ ! -z "$CI" ]
 then
      # running with github actions
-     if [ ! -f $HOME/secrets.properties ]
+     if [ ! -f ../../secrets.properties ]
      then
-          logerror "$HOME/secrets.properties is not present!"
+          logerror "../../secrets.properties is not present!"
           exit 1
      fi
-     source $HOME/secrets.properties
+     source ../../secrets.properties > /dev/null 2>&1
 fi
 
 if [ ! -z "$AZ_USER" ] && [ ! -z "$AZ_PASS" ]

@@ -16,12 +16,22 @@ jobs:
     name: Start Github self-hosted runner
     runs-on: ubuntu-latest
     steps:
-    - name: Configure AWS credentials
-      uses: aws-actions/configure-aws-credentials@v1
-      with:
-        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        aws-region: eu-west-3
+    - name: Decrypt secrets.tar
+      run: |
+        ./.github/scripts/decrypt_secret.sh
+        tar xvf secrets.tar
+        rm secrets.tar
+        mkdir -p $HOME/.aws
+        mv aws_config $HOME/.aws/config
+        mv aws_credentials $HOME/.aws/credentials
+        mv aws_credentials_with_assuming_iam_role $HOME/.aws/credentials-with-assuming-iam-role
+        chmod -R a+rw $HOME/.aws
+        mkdir -p $HOME/.ccloud
+        mv config.cc.travis $HOME/.ccloud/config
+        source secrets.properties > /dev/null 2>&1
+        echo "$DOCKER_PASSWORD" | docker login -u vdesabou --password-stdin
+      env:
+        SECRETS_ENCRYPTION_PASSWORD: ${{ secrets.SECRETS_ENCRYPTION_PASSWORD }}
 
     - name: Start EC2 instance github-actions-runner-vsaboulin
       run: |
@@ -45,13 +55,6 @@ jobs:
           repository: vdesabou/kafka-docker-playground
           fetch-depth: 0
 
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v1
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: eu-west-3
-
       - name: Decrypt secrets.tar
         run: |
           curl --silent --location "https://github.com/weaveworks/eksctl/releases/latest/download/eksctl_$(uname -s)_amd64.tar.gz" | tar xz -C /tmp && sudo mv /tmp/eksctl /usr/local/bin
@@ -64,8 +67,7 @@ jobs:
           chmod -R a+rw $HOME/.aws
           mkdir -p $HOME/.ccloud
           mv config.cc.travis $HOME/.ccloud/config
-          mv secrets.properties $HOME/secrets.properties
-          source $HOME/secrets.properties
+          source secrets.properties > /dev/null 2>&1
           echo "$DOCKER_PASSWORD" | docker login -u vdesabou --password-stdin
         env:
           SECRETS_ENCRYPTION_PASSWORD: ${{ secrets.SECRETS_ENCRYPTION_PASSWORD }}
@@ -84,12 +86,22 @@ jobs:
     if: ${{ always() }} # required to stop the runner even if the error happened in the previous jobs
     runs-on: ubuntu-latest
     steps:
-    - name: Configure AWS credentials
-      uses: aws-actions/configure-aws-credentials@v1
-      with:
-        aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        aws-region: eu-west-3
+    - name: Decrypt secrets.tar
+      run: |
+        ./.github/scripts/decrypt_secret.sh
+        tar xvf secrets.tar
+        rm secrets.tar
+        mkdir -p $HOME/.aws
+        mv aws_config $HOME/.aws/config
+        mv aws_credentials $HOME/.aws/credentials
+        mv aws_credentials_with_assuming_iam_role $HOME/.aws/credentials-with-assuming-iam-role
+        chmod -R a+rw $HOME/.aws
+        mkdir -p $HOME/.ccloud
+        mv config.cc.travis $HOME/.ccloud/config
+        source secrets.properties > /dev/null 2>&1
+        echo "$DOCKER_PASSWORD" | docker login -u vdesabou --password-stdin
+      env:
+        SECRETS_ENCRYPTION_PASSWORD: ${{ secrets.SECRETS_ENCRYPTION_PASSWORD }}
 
     - name: Stop EC2 instance github-actions-runner-vsaboulin
       run: |

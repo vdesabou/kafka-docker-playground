@@ -1,0 +1,6 @@
+---
+version: '3.5'
+services:
+  broker-europe:
+    environment:
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: 'false'

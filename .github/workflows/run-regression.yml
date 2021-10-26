@@ -26,19 +26,27 @@ jobs:
           repository: vdesabou/kafka-docker-playground
           fetch-depth: 0
 
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v1
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: eu-west-3
+      - name: Decrypt secrets.tar
+        run: |
+          ./.github/scripts/decrypt_secret.sh
+          tar xvf secrets.tar
+          rm secrets.tar
+          mkdir -p $HOME/.aws
+          mv aws_config $HOME/.aws/config
+          mv aws_credentials $HOME/.aws/credentials
+          mv aws_credentials_with_assuming_iam_role $HOME/.aws/credentials-with-assuming-iam-role
+          chmod -R a+rw $HOME/.aws
+          mkdir -p $HOME/.ccloud
+          mv config.cc.travis $HOME/.ccloud/config
+          source secrets.properties > /dev/null 2>&1
+          echo "$DOCKER_PASSWORD" | docker login -u vdesabou --password-stdin
+        env:
+          SECRETS_ENCRYPTION_PASSWORD: ${{ secrets.SECRETS_ENCRYPTION_PASSWORD }}
 
       - name: Cleanup resources
         run: |
           ./scripts/cleanup-resources.sh "5.4.5 5.5.6 6.0.4 6.1.3 6.2.1"
-        env:
-          AZ_USER: ${{ secrets.AZ_USER }}
-          AZ_PASS: ${{ secrets.AZ_PASS }}
+
   build:
     if: ${{ github.event.inputs.test_name == '' }}
     runs-on: ubuntu-latest
@@ -55,7 +63,7 @@ jobs:
                       "🚀 connect/connect-minio-s3-sink connect/connect-marketo-source connect/connect-active-mq-sink connect/connect-active-mq-source connect/connect-cassandra-sink connect/connect-couchbase-sink connect/connect-couchbase-source connect/connect-hbase-sink",
                       "🚀 connect/connect-jms-tibco-sink connect/connect-jms-tibco-source connect/connect-debezium-mongodb-source connect/connect-debezium-mysql-source connect/connect-debezium-postgresql-source connect/connect-debezium-sqlserver-source connect/connect-elasticsearch-sink connect/connect-datadiode-source-sink",
                       "🚀 connect/connect-hdfs2-sink connect/connect-hdfs2-source connect/connect-hdfs3-sink connect/connect-hdfs3-source connect/connect-ibm-mq-sink connect/connect-ibm-mq-source connect/connect-snmp-source",
-                      "🚀 connect/connect-jdbc-oracle11-sink connect/connect-jdbc-oracle11-source connect/connect-influxdb-sink connect/connect-influxdb-source connect/connect-jdbc-mysql-sink connect/connect-jdbc-mysql-source connect/connect-jdbc-postgresql-sink connect/connect-jdbc-postgresql-source connect/connect-jdbc-sqlserver-sink",
+                      "🚀 connect/connect-cdc-oracle11-source connect/connect-jdbc-oracle11-sink connect/connect-jdbc-oracle11-source connect/connect-influxdb-sink connect/connect-influxdb-source connect/connect-jdbc-mysql-sink connect/connect-jdbc-mysql-source connect/connect-jdbc-postgresql-sink connect/connect-jdbc-postgresql-source connect/connect-jdbc-sqlserver-sink",
                       "🚀 ccloud/ccloud-demo",
                       "🚀 connect/connect-jdbc-sqlserver-source connect/connect-jdbc-vertica-sink connect/connect-jms-active-mq-sink connect/connect-jms-solace-sink",
                       "🚀 connect/connect-mongodb-sink connect/connect-mongodb-source connect/connect-mqtt-sink connect/connect-mqtt-source connect/connect-neo4j-sink connect/connect-omnisci-sink connect/connect-tibco-sink connect/connect-tibco-source",
@@ -92,13 +100,6 @@ jobs:
           repository: vdesabou/kafka-docker-playground
           fetch-depth: 0
 
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v1
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: eu-west-3
-
       - name: "Free up disk space"
         run: |
           df -h
@@ -123,8 +124,7 @@ jobs:
           chmod -R a+rw $HOME/.aws
           mkdir -p $HOME/.ccloud
           mv config.cc.travis $HOME/.ccloud/config
-          mv secrets.properties $HOME/secrets.properties
-          source $HOME/secrets.properties
+          source secrets.properties > /dev/null 2>&1
           echo "$DOCKER_PASSWORD" | docker login -u vdesabou --password-stdin
         env:
           SECRETS_ENCRYPTION_PASSWORD: ${{ secrets.SECRETS_ENCRYPTION_PASSWORD }}
@@ -154,13 +154,6 @@ jobs:
           repository: vdesabou/kafka-docker-playground
           fetch-depth: 0
 
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v1
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: eu-west-3
-
       - name: "Free up disk space"
         run: |
           df -h
@@ -185,8 +178,7 @@ jobs:
           chmod -R a+rw $HOME/.aws
           mkdir -p $HOME/.ccloud
           mv config.cc.travis $HOME/.ccloud/config
-          mv secrets.properties $HOME/secrets.properties
-          source $HOME/secrets.properties
+          source secrets.properties > /dev/null 2>&1
           echo "$DOCKER_PASSWORD" | docker login -u vdesabou --password-stdin
         env:
           SECRETS_ENCRYPTION_PASSWORD: ${{ secrets.SECRETS_ENCRYPTION_PASSWORD }}
@@ -209,28 +201,31 @@ jobs:
           repository: vdesabou/kafka-docker-playground
           fetch-depth: 0
 
-      - name: Configure AWS credentials
-        uses: aws-actions/configure-aws-credentials@v1
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: eu-west-3
+      - name: Decrypt secrets.tar
+        run: |
+          ./.github/scripts/decrypt_secret.sh
+          tar xvf secrets.tar
+          rm secrets.tar
+          mkdir -p $HOME/.aws
+          mv aws_config $HOME/.aws/config
+          mv aws_credentials $HOME/.aws/credentials
+          mv aws_credentials_with_assuming_iam_role $HOME/.aws/credentials-with-assuming-iam-role
+          chmod -R a+rw $HOME/.aws
+          mkdir -p $HOME/.ccloud
+          mv config.cc.travis $HOME/.ccloud/config
+          source secrets.properties > /dev/null 2>&1
+          echo "$DOCKER_PASSWORD" | docker login -u vdesabou --password-stdin
+        env:
+          SECRETS_ENCRYPTION_PASSWORD: ${{ secrets.SECRETS_ENCRYPTION_PASSWORD }}
 
       - name: Cleanup resources
         run: |
           ./scripts/cleanup-resources.sh "5.4.5 5.5.6 6.0.4 6.1.3 6.2.1" "--no-wait"
-        env:
-          AZ_USER: ${{ secrets.AZ_USER }}
-          AZ_PASS: ${{ secrets.AZ_PASS }}
 
       - name: Update README
         run: |
           ./scripts/update-readme.sh "5.4.5 5.5.6 6.0.4 6.1.3 6.2.1"
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          AWS_REGION: "us-east-1"
+
       - name: push
         uses: github-actions-x/commit@v2.6
         with:

@@ -12,14 +12,17 @@ then
      exit 1
 fi
 
-${DIR}/../ccloud-demo/ccloud-generate-env-vars.sh ${CONFIG_FILE}
-
-if [ -f /tmp/delta_configs/env.delta ]
+if [ -z "$BOOTSTRAP_SERVERS" ]
 then
-     source /tmp/delta_configs/env.delta
-else
-     logerror "ERROR: /tmp/delta_configs/env.delta has not been generated"
-     exit 1
+     ${DIR}/../ccloud-demo/ccloud-generate-env-vars.sh ${CONFIG_FILE}
+
+     if [ -f /tmp/delta_configs/env.delta ]
+     then
+          source /tmp/delta_configs/env.delta
+     else
+          logerror "ERROR: /tmp/delta_configs/env.delta has not been generated"
+          exit 1
+     fi
 fi
 
 if [ -z "$CI" ] && [ -z "$CLOUDFORMATION" ]
@@ -32,12 +35,12 @@ then
      check_if_continue
 else
      # running with github actions
-     if [ ! -f $HOME/secrets.properties ]
+     if [ ! -f ../../secrets.properties ]
      then
-          logerror "$HOME/secrets.properties is not present!"
+          logerror "../../secrets.properties is not present!"
           exit 1
      fi
-     source $HOME/secrets.properties
+     source ../../secrets.properties > /dev/null 2>&1
      
      log "Installing ccloud CLI"
      curl -L --http1.1 https://cnfl.io/ccloud-cli | sudo sh -s -- -b /usr/local/bin

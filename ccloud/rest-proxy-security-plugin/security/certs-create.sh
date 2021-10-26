@@ -5,7 +5,7 @@
 #    -o verbose \
 #    -o xtrace
 
-REST_KEY=$1
+CCLOUD_REST_PROXY_SECURITY_PLUGIN_API_KEY=$1
 
 # Cleanup files
 rm -f *.crt *.csr *_creds *.jks *.srl *.key *.pem *.der *.p12 extfile
@@ -21,7 +21,7 @@ fi
 # Generate CA key
 docker run --rm -v $PWD:/tmp vdesabou/kafka-docker-playground-connect:${CONNECT_TAG} openssl req -new -x509 -keyout /tmp/snakeoil-ca-1.key -out /tmp/snakeoil-ca-1.crt -days 365 -subj '/CN=ca1.test.confluent.io/OU=TEST/O=CONFLUENT/L=PaloAlto/ST=Ca/C=US' -passin pass:confluent -passout pass:confluent
 
-for i in restproxy $REST_KEY
+for i in restproxy $CCLOUD_REST_PROXY_SECURITY_PLUGIN_API_KEY
 do
     echo "------------------------------- $i -------------------------------"
 

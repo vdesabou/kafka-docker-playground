@@ -12,6 +12,13 @@ then
      check_if_continue
 else
      # running with github actions
+     if [ ! -f ../../secrets.properties ]
+     then
+          logerror "../../secrets.properties is not present!"
+          exit 1
+     fi
+     source ../../secrets.properties > /dev/null 2>&1
+
      CONFIG_FILE=~/.ccloud/config
 
      if [ ! -f ${CONFIG_FILE} ]
@@ -31,8 +38,12 @@ else
      log "Log in to Confluent Cloud"
      log "##################################################"
      ccloud login --save
-     log "Using github actions cluster"
-     ccloud kafka cluster use lkc-6kv2j
+     log "Use environment $ENVIRONMENT"
+     ccloud environment use $ENVIRONMENT
+     log "Use cluster $CLUSTER_LKC"
+     ccloud kafka cluster use $CLUSTER_LKC
+     log "Use api key $CLOUD_KEY"
+     ccloud api-key use $CLOUD_KEY --resource $CLUSTER_LKC
 fi
 
 set +e
@@ -48,12 +59,5 @@ curl -X DELETE localhost:8083/connectors/elasticsearch-sink
 delete_topic customer-avro
 delete_topic mysql-application
 delete_topic demo-acl-topic
-
-if [ -f api_key_cloud_to_delete ]
-then
-     log "Deleting API key created for this test"
-     ccloud api-key delete $(cat api_key_cloud_to_delete)
-     rm api_key_cloud_to_delete
-fi
 
 ${DIR}/../../ccloud/environment/stop.sh "${PWD}/docker-compose.ccloud-demo.yml"
