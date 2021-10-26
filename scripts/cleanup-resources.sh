@@ -77,14 +77,4 @@ do
   az ad app delete --id $app
 done
 
-#######
-# aws
-#######
-for image_version in $image_versions
-do
-  tag=$(echo "$image_version" | sed -e 's/\.//g')
-  log "Deleting EKS cluster kafka-docker-playground-ci-$tag"
-  eksctl delete cluster --name kafka-docker-playground-ci-$tag
-done
-
 exit 0
