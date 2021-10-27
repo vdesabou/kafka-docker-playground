@@ -981,8 +981,6 @@ kafka-lag-exporter:
   hostname: kafka-lag-exporter
   container_name: kafka-lag-exporter
   restart: always
-  ports:
-    - 9999:9999
   volumes:
     - ./kafka-lag-exporter/application.conf:/opt/docker/conf/application.conf
     - ./kafka-lag-exporter/logback.xml:/opt/docker/conf/logback.xml
