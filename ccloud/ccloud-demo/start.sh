@@ -44,8 +44,6 @@ do
      set -e
 done
 
-exit 0
-
 # generate librdkafka.config config
 sed -e "s|:BOOTSTRAP_SERVERS:|$BOOTSTRAP_SERVERS|g" \
     -e "s|:CLOUD_KEY:|$CLOUD_KEY|g" \
