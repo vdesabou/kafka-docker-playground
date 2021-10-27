@@ -267,8 +267,6 @@ services:
     hostname: kafka-lag-exporter
     container_name: kafka-lag-exporter
     restart: always
-    ports:
-      - 9999:9999
     volumes:
       - ../../ccloud/ccloud-demo/kafka-lag-exporter/application.conf:/opt/docker/conf/application.conf
       - ../../ccloud/ccloud-demo/kafka-lag-exporter/logback.xml:/opt/docker/conf/logback.xml
