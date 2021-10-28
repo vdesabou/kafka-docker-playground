@@ -137,11 +137,11 @@ do
                 log "⌛ Test with CP $TAG and connector $THE_CONNECTOR_TAG has already been executed successfully $(displaytime $elapsed_time) ago, more than 4 days ago...re-running. Test url: $html_url"
                 log "####################################################"
                 aws s3 rm $s3_file
-            # run at least every 7 days, even with no changes
-            elif [[ $elapsed_time -gt 604800 ]]
+            # run at least every 14 days, even with no changes
+            elif [[ $elapsed_time -gt 1209600 ]]
             then
                 log "####################################################"
-                log "⌛ Test with CP $TAG and connector $THE_CONNECTOR_TAG has already been executed successfully $(displaytime $elapsed_time) ago, more than 7 days ago...re-running. Test url: $html_url"
+                log "⌛ Test with CP $TAG and connector $THE_CONNECTOR_TAG has already been executed successfully $(displaytime $elapsed_time) ago, more than 14 days ago...re-running. Test url: $html_url"
                 log "####################################################"
                 aws s3 rm $s3_file
             elif [ "$status" = "failure" ]
