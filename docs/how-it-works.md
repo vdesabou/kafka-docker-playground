@@ -275,7 +275,7 @@ The CI is defined using [`.github/workflows/run-regression.yml`](https://github.
 > * It was failing in the last run
 > * A change has been made in the test directory
 > * CP and/or connector version(s) has/have changed
-> * Last execution was more than 7 days ago
+> * Last execution was more than 14 days ago
 
 If a test is failing 🔥, a Github issue will be automatically opened or updated with results for each CP version.
 
