@@ -124,9 +124,9 @@
 * <img src="https://github.com/vdesabou/kafka-docker-playground/raw/master/images/icons/snowflake.png" height="15">  [Snowflake Sink](https://github.com/vdesabou/kafka-docker-playground/tree/master/connect/connect-snowflake-sink) :connect/connect-snowflake-sink:
 * <img src="https://github.com/vdesabou/kafka-docker-playground/raw/master/images/icons/solace.png" width="15"> [Solace Sink](https://github.com/vdesabou/kafka-docker-playground/tree/master/connect/connect-solace-sink) :connect/connect-solace-sink:
 * <img src="https://github.com/vdesabou/kafka-docker-playground/raw/master/images/icons/solace.png" width="15"> [Solace Source](https://github.com/vdesabou/kafka-docker-playground/tree/master/connect/connect-solace-source) :connect/connect-solace-source:
-* <img src="https://github.com/vdesabou/kafka-docker-playground/raw/master/images/icons/splunk.jpg" width="15"> [Splunk Sink](https://github.com/vdesabou/kafka-docker-playground/tree/master/connect/connect-splunk-sink) :connect/connect-splunk-sink:
-* <img src="https://github.com/vdesabou/kafka-docker-playground/raw/master/images/icons/splunk.jpg" width="15"> [Splunk Source](https://github.com/vdesabou/kafka-docker-playground/tree/master/connect/connect-splunk-source) :connect/connect-splunk-source:
-* <img src="https://github.com/vdesabou/kafka-docker-playground/raw/master/images/icons/splunk.jpg" width="15"> [Splunk S2S Source](https://github.com/vdesabou/kafka-docker-playground/tree/master/connect/connect-splunk-s2s-source) :connect/connect-splunk-s2s-source:
+* <img src="https://github.com/vdesabou/kafka-docker-playground/raw/master/images/icons/splunk.png" width="15"> [Splunk Sink](https://github.com/vdesabou/kafka-docker-playground/tree/master/connect/connect-splunk-sink) :connect/connect-splunk-sink:
+* <img src="https://github.com/vdesabou/kafka-docker-playground/raw/master/images/icons/splunk.png" width="15"> [Splunk Source](https://github.com/vdesabou/kafka-docker-playground/tree/master/connect/connect-splunk-source) :connect/connect-splunk-source:
+* <img src="https://github.com/vdesabou/kafka-docker-playground/raw/master/images/icons/splunk.png" width="15"> [Splunk S2S Source](https://github.com/vdesabou/kafka-docker-playground/tree/master/connect/connect-splunk-s2s-source) :connect/connect-splunk-s2s-source:
 * <img src="https://github.com/vdesabou/kafka-docker-playground/raw/master/images/icons/spool_dir.png" width="15"> [Spool Dir Source](https://github.com/vdesabou/kafka-docker-playground/tree/master/connect/connect-spool-dir-source) :connect/connect-spool-dir-source:
 * <img src="https://github.com/vdesabou/kafka-docker-playground/raw/master/images/icons/syslog.png" width="15"> [Syslog Source](https://github.com/vdesabou/kafka-docker-playground/tree/master/connect/connect-syslog-source) :connect/connect-syslog-source:
 * <img src="https://github.com/vdesabou/kafka-docker-playground/raw/master/images/icons/tibco_ems.png" width="15"> [TIBCO EMS Sink](https://github.com/vdesabou/kafka-docker-playground/tree/master/connect/connect-tibco-sink) :connect/connect-tibco-sink:
@@ -159,10 +159,10 @@
   - 🌦️ Using [Confluent Operator](https://github.com/vdesabou/kafka-docker-playground/tree/master/ccloud/operator/) with Confluent Cloud
   - 🌨 Using [Confluent for Kubenetes](https://github.com/vdesabou/kafka-docker-playground/tree/master/ccloud/confluent-for-kubernetes/) with Confluent Cloud
   - 📈 Demo using [dabz/ccloudexporter](https://github.com/Dabz/ccloudexporter)
-  - <img src="https://www.pngitem.com/pimgs/m/33-335825_-net-core-logo-png-transparent-png.png" width="15"> [.NET](https://github.com/vdesabou/kafka-docker-playground/tree/master/ccloud/client-dotnet) client (producer/consumer)
-  - <img src="https://github.com/confluentinc/examples/raw/5.4.1-post/clients/cloud/images/go.png" width="15"> [Go](https://github.com/vdesabou/kafka-docker-playground/tree/master/ccloud/client-go) client (producer/consumer)
-  - <img src="https://kafka.js.org/img/kafkajs-logoV2.svg" width="15"> [KafkaJS](https://github.com/vdesabou/kafka-docker-playground/tree/master/ccloud/client-kafkajs) client (producer/consumer)
-  - <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/c/c3/Python-logo-notext.svg/110px-Python-logo-notext.svg.png" width="15"> [Python](https://github.com/vdesabou/kafka-docker-playground/tree/master/ccloud/client-python) client (producer/consumer)
+  - 💠 [.NET](https://github.com/vdesabou/kafka-docker-playground/tree/master/ccloud/client-dotnet) client (producer/consumer)
+  - 🗯 [Go](https://github.com/vdesabou/kafka-docker-playground/tree/master/ccloud/client-go) client (producer/consumer)
+  - 🐚 [KafkaJS](https://github.com/vdesabou/kafka-docker-playground/tree/master/ccloud/client-kafkajs) client (producer/consumer)
+  - 🐍 [Python](https://github.com/vdesabou/kafka-docker-playground/tree/master/ccloud/client-python) client (producer/consumer)
   - 🧑‍🏭 Managing topics and ACLs using [matt-mangia/kafka-admin](https://github.com/matt-mangia/kafka-admin)
   - ♻️ Confluent Replicator [OnPrem to cloud and Cloud to Cloud examples](https://github.com/vdesabou/kafka-docker-playground/tree/master/ccloud/replicator)
   - 🗺️ [Multi-Cluster Schema Registry](https://github.com/vdesabou/kafka-docker-playground/tree/master/ccloud/multiple-sr-hybrid) with hybrid configuration (onprem/confluent cloud)
@@ -237,9 +237,9 @@ There is also a Confluent Cloud version available [here](https://github.com/vdes
 - 👬 [Separate principals](https://docs.confluent.io/current/connect/security.html#separate-principals) when using connectors: [example with SFTP source](https://github.com/vdesabou/kafka-docker-playground/tree/master/other/connect-override-policy-sftp-source)
 - 📃 [How to write logs to files when using docker-compose](https://github.com/vdesabou/kafka-docker-playground/tree/master/other/write-logs-to-files)
 - 📢 [Publish logs to kafka with Elastic Filebeat](https://github.com/vdesabou/kafka-docker-playground/tree/master/other/filebeat-to-kafka)
-- <img src="https://www.pngitem.com/pimgs/m/33-335825_-net-core-logo-png-transparent-png.png" width="15"> [.NET](https://github.com/vdesabou/kafka-docker-playground/tree/master/other/client-dotnet) basic producer
-- <img src="https://kafka.js.org/img/kafkajs-logoV2.svg" width="15"> [KafkaJS](https://github.com/vdesabou/kafka-docker-playground/tree/master/other/client-kafkajs) client (producer/consumer)
-- <img src="https://datadog-docs.imgix.net/images/dd-docs-meta-image.png" width="15"> [Monitor Confluent Platform with Datadog](https://github.com/vdesabou/kafka-docker-playground/tools/datadog)
+- 💠 [.NET](https://github.com/vdesabou/kafka-docker-playground/tree/master/other/client-dotnet) basic producer
+- 🐚 [KafkaJS](https://github.com/vdesabou/kafka-docker-playground/tree/master/other/client-kafkajs) client (producer/consumer)
+- 🐶 [Monitor Confluent Platform with Datadog](https://github.com/vdesabou/kafka-docker-playground/tools/datadog)
 - 👻 Testing [KIP-108](https://cwiki.apache.org/confluence/display/KAFKA/KIP-108%3A+Create+Topic+Policy) [Create Topic Policy](https://github.com/vdesabou/kafka-docker-playground/tree/master/other/create-topic-policy)
 - 📉 [Monitoring Demo](https://github.com/vdesabou/kafka-docker-playground/tree/master/other/monitoring-demo)
 - 🕵️‍♀️ [Kafka Connect Sink Monitoring Demo](https://github.com/vdesabou/kafka-docker-playground/tree/master/other/monitoring-sink-latency) Showcase different Kafka Connect Sink troubleshooting scenarios
