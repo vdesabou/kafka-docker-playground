@@ -34,7 +34,7 @@ function wait_for_repro () {
 }
 
 function wait_for_end_of_hibernation () {
-     MAX_WAIT=1200
+     MAX_WAIT=360
      CUR_WAIT=0
      log "Waiting up to $MAX_WAIT seconds for end of hibernation to happen (it can take several minutes)"
      curl -X POST "${SERVICENOW_URL}/api/now/table/incident" --user admin:"$SERVICENOW_PASSWORD" -H 'Accept: application/json' -H 'Content-Type: application/json' -H 'cache-control: no-cache' -d '{"short_description": "This is test"}' > /tmp/out.txt 2>&1
