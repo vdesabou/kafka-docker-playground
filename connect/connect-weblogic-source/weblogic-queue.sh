@@ -75,7 +75,7 @@ curl -X PUT \
                "confluent.topic.bootstrap.servers": "broker:9092",
                "confluent.topic.replication.factor": "1"
           }' \
-     http://localhost:8083/connectors/jms-weblogic-queue-source/config | jq .
+     http://localhost:8083/connectors/weblogic-queue-source/config | jq .
 
 sleep 5
 
