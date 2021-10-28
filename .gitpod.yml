@@ -1,0 +1,67 @@
+github:
+  prebuilds:
+    # enable for the default branch (defaults to true)
+    master: true
+    # enable for all branches in this repo (defaults to false)
+    branches: true
+    # enable for pull requests coming from this repo (defaults to true)
+    pullRequests: true
+    # add a "Review in Gitpod" button as a comment to pull requests (defaults to false)
+    addComment: true
+    # configure whether Gitpod registers itself as a status check to pull requests
+    addCheck: false
+
+image:
+  file: .gitpod.Dockerfile
+  
+tasks:
+  - name: prebuild
+    init: |
+      cd environment/kerberos && source ../../scripts/utils.sh && docker-compose -f ../../environment/plaintext/docker-compose.yml --profile control-center --profile ksqldb pull && cd - 
+      docker pull google/cloud-sdk:latest
+      docker pull mikesir87/aws-cli:v2
+      docker pull mcr.microsoft.com/azure-cli
+      docker pull imega/jq
+      docker pull actions/avro-tools
+      gp sync-done prebuild
+    command: curl -L --http1.1 https://cnfl.io/ccloud-cli | sudo sh -s -- -b /usr/local/bin; exit
+
+  - name: playground
+    init: gp sync-await prebuild
+    command: if [ -z "$SECRETS_ENCRYPTION_PASSWORD" ]; then echo "🚀 Enjoy the playground"; else echo "ℹ️ SECRETS_ENCRYPTION_PASSWORD environment variable is set"; ./.github/scripts/decrypt_secret.sh;tar xvf secrets.tar;rm secrets.tar;mkdir -p $HOME/.aws;mv aws_config $HOME/.aws/config;mv aws_credentials $HOME/.aws/credentials;mv aws_credentials_with_assuming_iam_role $HOME/.aws/credentials-with-assuming-iam-role;chmod -R a+rw $HOME/.aws;mkdir -p $HOME/.ccloud;mv config.cc.travis $HOME/.ccloud/config;echo "$DOCKER_PASSWORD" | docker login -u vdesabou --password-stdin;fi
+
+vscode:
+  extensions:
+    - ms-azuretools.vscode-docker
+
+ports:
+# zookeeper
+- port: 9999
+  onOpen: ignore
+# broker
+- port: 9092
+  onOpen: ignore
+- port: 10000
+  onOpen: ignore
+- port: 29092
+  onOpen: ignore
+# connect
+- port: 8083
+  onOpen: ignore
+- port: 5005
+  onOpen: ignore
+- port: 10002
+  onOpen: ignore
+# control-center
+- port: 9021
+  onOpen: notify
+# schema-registry
+- port: 8081
+  onOpen: ignore
+- port: 10001
+  onOpen: ignore    
+# ksqldb-server
+- port: 8088
+  onOpen: ignore
+- port: 10003
+  onOpen: ignore
