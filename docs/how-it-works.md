@@ -243,6 +243,15 @@ It is either based on [`cp-server-connect-base`](https://hub.docker.com/r/conflu
 
 Several tools are [installed](https://github.com/vdesabou/kafka-docker-playground-connect/blob/00f29069be566162a5be84d64637b3e1f9920f95/Dockerfile#L11-L15) on this image such as `openssl`, `tcpdump`, `iptables`, `netcat`, etc..
 
+If you're missing a tool, you can install it at runtime, some examples:
+
+```bash
+# directly with rpm
+docker exec -i --user root connect bash -c "curl http://mirror.centos.org/centos/7/os/x86_64/Packages/tree-1.6.0-10.el7.x86_64.rpm -o tree-1.6.0-10.el7.x86_64.rpm && rpm -Uvh tree-1.6.0-10.el7.x86_64.rpm"
+# using yum
+docker exec -i --user root connect bash -c "yum update -y --disablerepo='Confluent*' && yum install findutils -y"
+```
+
 See the [Dockerfile](https://github.com/vdesabou/kafka-docker-playground-connect/blob/master/Dockerfile) used to build the images.
 
 > [!NOTE]

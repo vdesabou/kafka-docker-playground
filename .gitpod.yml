@@ -11,6 +11,9 @@ github:
     # configure whether Gitpod registers itself as a status check to pull requests
     addCheck: false
 
+image:
+  file: .gitpod.Dockerfile
+  
 tasks:
   - name: prebuild
     init: |
