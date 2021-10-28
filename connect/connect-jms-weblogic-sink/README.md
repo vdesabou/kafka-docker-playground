@@ -45,7 +45,7 @@ $ curl -X PUT \
                "confluent.topic.bootstrap.servers": "broker:9092",
                "confluent.topic.replication.factor": "1"
           }' \
-     http://localhost:8083/connectors/jms-weblogic-topic-sink/config | jq .
+     http://localhost:8083/connectors/weblogic-topic-sink/config | jq .
 ```
 
 Sending messages to topic sink-messages

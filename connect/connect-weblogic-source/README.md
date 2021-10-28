@@ -1,10 +1,10 @@
-# Oracle Weblogic JMS Source connector
+# Oracle Weblogic Source connector
 
-![asciinema](https://github.com/vdesabou/gifs/blob/master/connect/connect-jms-weblogic-source/asciinema.gif?raw=true)
+![asciinema](https://github.com/vdesabou/gifs/blob/master/connect/connect-weblogic-source/asciinema.gif?raw=true)
 
 ## Objective
 
-Quickly test [Oracle Weblogic JMS Source](https://docs.confluent.io/kafka-connect-weblogic-source/current/index.html) connector.
+Quickly test [Oracle Weblogic Source](https://docs.confluent.io/kafka-connect-weblogic-source/current/index.html) connector.
 
 Using Oracle WebLogic Server (Developer Tier, version `12.2.1.3`) Docker [image](https://hub.docker.com/_/oracle-weblogic-server-12c). You need to register to get the image.
 
@@ -13,13 +13,13 @@ Using Oracle WebLogic Server (Developer Tier, version `12.2.1.3`) Docker [image]
 Simply run:
 
 ```
-$ ./jms-weblogic-queue.sh
+$ ./weblogic-queue.sh
 ```
 
 or
 
 ```
-$ ./jms-weblogic-topic.sh
+$ ./weblogic-topic.sh
 ```
 
 N.B: Weblogic console is reachable at [http://127.0.0.1:7001/console](http://127.0.0.1:7001/console]) (`weblogic`/`welcome1`)
@@ -57,7 +57,7 @@ $ curl -X PUT \
                "confluent.topic.bootstrap.servers": "broker:9092",
                "confluent.topic.replication.factor": "1"
           }' \
-     http://localhost:8083/connectors/jms-weblogic-queue-source/config | jq .
+     http://localhost:8083/connectors/weblogic-queue-source/config | jq .
 ```
 
 Sending one message in JMS queue myQueue
@@ -104,7 +104,7 @@ $ curl -X PUT \
                "confluent.topic.bootstrap.servers": "broker:9092",
                "confluent.topic.replication.factor": "1"
           }' \
-     http://localhost:8083/connectors/jms-weblogic-topic-source/config | jq .
+     http://localhost:8083/connectors/weblogic-topic-source/config | jq .
 ```
 
 Sending one message in JMS topic myTopic
