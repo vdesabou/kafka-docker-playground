@@ -4,6 +4,10 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
+# KNOWN ISSUE
+logerror "💀 KNOWN ISSUE: https://confluentinc.atlassian.net/browse/CC-14617"
+exit 1
+
 if [ ! -z "$CI" ]
 then
      # running with github actions

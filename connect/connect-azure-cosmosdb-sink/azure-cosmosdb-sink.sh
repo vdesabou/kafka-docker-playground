@@ -4,6 +4,12 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
+if ! version_gt $TAG_BASE "5.9.9"; then
+    # KNOWN ISSUE
+    logerror "💀 KNOWN ISSUE: https://github.com/microsoft/kafka-connect-cosmosdb/issues/413"
+    exit 1
+fi
+
 if [ ! -z "$CI" ]
 then
      # running with github actions

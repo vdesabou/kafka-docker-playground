@@ -4,6 +4,10 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
+# KNOWN ISSUE
+logerror "💀 KNOWN ISSUE: https://confluentinc.atlassian.net/browse/CCMSG-1224"
+exit 1
+
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.kerberos.yml"
 
 sleep 30
