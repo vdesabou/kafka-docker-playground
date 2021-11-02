@@ -76,6 +76,15 @@ docker exec broker-us kafka-topics --describe --topic sales_NEMEA --bootstrap-se
 log "Verify replicator can not find the sales_NEMEA topic anymore in th Europe cluster (the connector does not stop to produce a warning message)"
 docker logs connect-us | grep ".*WARN \[replicate-nemea-to-us.*\].*"
 
+log "Verify the connector's status is FAILED"
+docker container exec connect-us curl -X GET http://localhost:8083/connectors/replicate-nemea-to-us/status | jq
+
+log "Restarting NEMEA replictor, Connector is status FAILED and Task is RUNNING"
+docker container exec connect-us curl -X POST http://localhost:8083/connectors/replicate-nemea-to-us/restart
+
+log "Verify the connector's status is still FAILED but task is running"
+docker container exec connect-us curl -X GET http://localhost:8083/connectors/replicate-nemea-to-us/status | jq
+
 log "Deleting topic sales_SEMEA in Europe cluster"
 docker exec broker-europe kafka-topics --delete --topic sales_SEMEA --bootstrap-server broker-europe:9092
 
@@ -86,3 +95,6 @@ docker exec broker-us kafka-topics --describe --topic sales_SEMEA --bootstrap-se
 
 log "Verify replicator stops to look for sales_SEMEA topic in th Europe cluster (after topic.poll.interval.ms, the connector updates the config and stops to look for this topic."
 docker logs connect-us | grep ".*WARN \[replicate-semea-to-us.*\].*"
+
+log "Verify the connector's status is RUNNING"
+docker container exec connect-us curl -X GET http://localhost:8083/connectors/replicate-semea-to-us/status | jq
