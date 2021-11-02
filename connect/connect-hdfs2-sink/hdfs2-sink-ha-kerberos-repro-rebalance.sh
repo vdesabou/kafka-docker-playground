@@ -51,9 +51,6 @@ function wait_for_repro () {
      log "The problem has been reproduced !"
 }
 
-wait_for_repro
-exit 0
-
 if [ ! -f ${DIR}/hadoop-2.7.4.tar.gz ]
 then
      log "Getting hadoop-2.7.4.tar.gz"
