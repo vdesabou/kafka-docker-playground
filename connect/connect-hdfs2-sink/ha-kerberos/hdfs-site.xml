@@ -104,4 +104,12 @@
 		<name>dfs.namenode.kerberos.internal.spnego.principal</name>
 		<value>HTTP/_HOST@EXAMPLE.COM</value>
 	</property>
+	<property>
+		<name>dfs.client.block.write.replace-datanode-on-failure.enable</name>
+		<value>NEVER</value>
+	</property>
+	<property>
+		<name>dfs.client.block.write.replace-datanode-on-failure.policy</name>
+		<value>NEVER</value>
+	</property>
 </configuration>
