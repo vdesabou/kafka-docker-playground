@@ -169,7 +169,7 @@ log "Waiting 60s for cdc-oracle-source-cdb-json and cdc-oracle-source-cdb-avro t
 sleep 60
 
 log "Running SQL scripts"
-for script in ${DIR}/sample-sql-scripts/*
+for script in ${DIR}/sample-sql-scripts/*.sh
 do
      $script "ORCLCDB"
 done

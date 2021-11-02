@@ -93,7 +93,7 @@ log "Waiting 60s for cdc-oracle-source-cdb to read existing data"
 sleep 60
 
 log "Running SQL scripts"
-for script in ${DIR}/sample-sql-scripts/*
+for script in ${DIR}/sample-sql-scripts/*.sh
 do
      $script "ORCLCDB"
 done
