@@ -13,7 +13,9 @@ Note: The first time you'll run the script, it will build (using this [project](
 
 ![Docker image disk](Screenshot1.png)
 
-**IMPORTANT**: The connector is configured with `"redo.log.row.fetch.size":1` for demo purpose only. If you're planning to inject more data, it is recommended to increase the value.
+## Note on `redo.log.row.fetch.size`
+
+The connector is configured with `"redo.log.row.fetch.size":1` for demo purpose only. If you're planning to inject more data, it is recommended to increase the value.
 
 Example with included script `07_generate_customers.sh`, in that case you would need to set `"redo.log.row.fetch.size":1000`:
 
