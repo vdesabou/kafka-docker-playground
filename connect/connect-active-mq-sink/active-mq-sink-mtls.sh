@@ -6,15 +6,7 @@ source ${DIR}/../../scripts/utils.sh
 
 cd ${DIR}/security
 log "🔐 Generate keys and certificates used for SSL using rmohr/activemq:5.15.9 image"
-./certs-create.sh
-if [[ "$OSTYPE" == "darwin"* ]]
-then
-    # workaround for issue on linux, see https://github.com/vdesabou/kafka-docker-playground/issues/851#issuecomment-821151962
-    chmod -R a+rw .
-else
-    # workaround for issue on linux, see https://github.com/vdesabou/kafka-docker-playground/issues/851#issuecomment-821151962
-    sudo chmod -R a+rw .
-fi
+docker run -u0 --rm -v $PWD:/tmp rmohr/activemq:5.15.9 bash -c "/tmp/certs-create.sh && chown -R $(id -u $USER):$(id -g $USER) /tmp/"
 cd ${DIR}
 
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.mtls.yml"
