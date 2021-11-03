@@ -5,8 +5,8 @@ on:
   #    branches:
   #      - master
 
-  schedule:
-      - cron: '0 18 * * *' # every day at 6 pm
+  # schedule:
+  #     - cron: '0 18 * * *' # every day at 6 pm
 
   workflow_dispatch:
     inputs:
@@ -19,11 +19,48 @@ jobs:
   call-workflow-ci-latest:
     uses: vdesabou/kafka-docker-playground/.github/workflows/ci.yml@master
     with:
-      tag: "6.2.1"
+      tag: "7.0.0"
       test_name: "${{ github.event.inputs.test_name }}"
     secrets:
-      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-      AZ_USER: ${{ secrets.AZ_USER }}
-      AZ_PASS: ${{ secrets.AZ_PASS }}
       SECRETS_ENCRYPTION_PASSWORD: ${{ secrets.SECRETS_ENCRYPTION_PASSWORD }}
+
+  post-build:
+    name: Update README
+    runs-on: ubuntu-latest
+    if: always()
+    needs: [call-workflow-ci-latest]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+        with:
+          repository: vdesabou/kafka-docker-playground
+          fetch-depth: 0
+
+      - name: Decrypt secrets.tar
+        run: |
+          ./.github/scripts/decrypt_secret.sh
+          tar xvf secrets.tar
+          rm secrets.tar
+          mkdir -p $HOME/.aws
+          mv aws_config $HOME/.aws/config
+          mv aws_credentials $HOME/.aws/credentials
+          mv aws_credentials_with_assuming_iam_role $HOME/.aws/credentials-with-assuming-iam-role
+          chmod -R a+rw $HOME/.aws
+          mkdir -p $HOME/.ccloud
+          mv config.cc.travis $HOME/.ccloud/config
+          source secrets.properties > /dev/null 2>&1
+          echo "$DOCKER_PASSWORD" | docker login -u vdesabou --password-stdin
+        env:
+          SECRETS_ENCRYPTION_PASSWORD: ${{ secrets.SECRETS_ENCRYPTION_PASSWORD }}
+
+      - name: Update README
+        run: |
+          ./scripts/update-readme.sh ${{ inputs.all_tags }}
+      - name: push
+        uses: github-actions-x/commit@v2.6
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          push-branch: 'master'
+          commit-message: 'updating with latest versions'
+          files: ./README.md ./docs/content.md ./docs/introduction.md
+          name: Vincent de Saboulin
