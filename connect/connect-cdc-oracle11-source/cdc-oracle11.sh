@@ -54,7 +54,7 @@ curl -X PUT \
                "table.topic.name.template": "${databaseName}.${schemaName}.${tableName}",
                "numeric.mapping": "best_fit",
                "connection.pool.max.size": 20,
-               "redo.log.row.fetch.size":1000
+               "redo.log.row.fetch.size":1
           }' \
      http://localhost:8083/connectors/cdc-oracle11-source/config | jq .
 
