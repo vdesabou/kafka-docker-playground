@@ -19,7 +19,7 @@ jobs:
   ci:
     uses: vdesabou/kafka-docker-playground/.github/workflows/ci.yml@master
     with:
-      tag: "7.0.0"
+      tags: "6.2.1 7.0.0"
       test_name: "${{ github.event.inputs.test_name }}"
     secrets:
       SECRETS_ENCRYPTION_PASSWORD: ${{ secrets.SECRETS_ENCRYPTION_PASSWORD }}
@@ -55,7 +55,7 @@ jobs:
 
       - name: Update README
         run: |
-          ./scripts/update-readme.sh ${{ inputs.all_tags }}
+          ./scripts/update-readme.sh "${{ inputs.tags }}"
       - name: push
         uses: github-actions-x/commit@v2.6
         with:
