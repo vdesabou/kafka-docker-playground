@@ -1058,7 +1058,7 @@ function display_docker_container_error_log() {
           # always show all logs for connect
           docker container logs --tail=100 $container | grep -v "was supplied but isn't a known config"
       else
-          docker container logs $container > /dev/null 2>&1 | egrep "ERROR|FATAL" | grep -v "was supplied but isn't a known config"
+          docker container logs $container | egrep "ERROR|FATAL" | grep -v "was supplied but isn't a known config"
       fi
       logwarn "####################################################"
   done
