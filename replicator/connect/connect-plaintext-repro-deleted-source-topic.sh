@@ -12,6 +12,11 @@ docker container exec -i broker-europe bash -c "kafka-topics --create --topic sa
 log "Creating topic sales_SEMEA topic in Europe cluster"
 docker container exec -i broker-europe bash -c "kafka-topics --create --topic sales_SEMEA --bootstrap-server broker-europe:9092"
 
+log "Creating topic customers_NEMEA topic in Europe cluster"
+docker container exec -i broker-europe bash -c "kafka-topics --create --topic customers_NEMEA --bootstrap-server broker-europe:9092"
+
+log "Creating topic customers_SEMEA topic in Europe cluster"
+docker container exec -i broker-europe bash -c "kafka-topics --create --topic customers_SEMEA --bootstrap-server broker-europe:9092"
 
 log "Sending 10 sales in sales_NEMEA topic in Europe cluster"
 seq -f "north_european_sale_%g `date +%s`" 10 | docker container exec -i connect-europe bash -c "kafka-console-producer --broker-list broker-europe:9092 --topic sales_NEMEA"
@@ -34,7 +39,7 @@ curl -X PUT \
           "dest.kafka.bootstrap.servers": "broker-us:9092",
           "confluent.topic.replication.factor": 1,
           "provenance.header.enable": true,
-          "topic.whitelist": "sales_NEMEA"
+          "topic.whitelist": "sales_NEMEA,customers_NEMEA"
           }' \
      http://localhost:8083/connectors/replicate-nemea-to-us/config | jq .
 
@@ -52,7 +57,7 @@ curl -X PUT \
           "dest.kafka.bootstrap.servers": "broker-us:9092",
           "confluent.topic.replication.factor": 1,
           "provenance.header.enable": true,
-          "topic.regex": "sales_SEMEA",
+          "topic.regex": "(sales_SEMEA|customers_SEMEA)",
           "topic.poll.interval.ms": "10000"
           }' \
      http://localhost:8083/connectors/replicate-semea-to-us/config | jq .
@@ -85,6 +90,12 @@ docker container exec connect-us curl -X POST http://localhost:8083/connectors/r
 log "Verify the connector's status is still FAILED but task is running"
 docker container exec connect-us curl -X GET http://localhost:8083/connectors/replicate-nemea-to-us/status | jq
 
+log "Sending 10 customers in sales_NEMEA topic in Europe cluster"
+seq -f "north_european_customer_%g `date +%s`" 10 | docker container exec -i connect-europe bash -c "kafka-console-producer --broker-list broker-europe:9092 --topic customers_NEMEA"
+
+log "Verify replicator still can replicate by verifying 10 customers in sales_NEMEA in US cluster "
+docker container exec -i connect-europe bash -c "kafka-console-consumer --bootstrap-server broker-us:9092 --whitelist 'customers_NEMEA' --from-beginning --max-messages 10"
+
 log "Deleting topic sales_SEMEA in Europe cluster"
 docker exec broker-europe kafka-topics --delete --topic sales_SEMEA --bootstrap-server broker-europe:9092
 
@@ -98,3 +109,9 @@ docker logs connect-us | grep ".*WARN \[replicate-semea-to-us.*\].*"
 
 log "Verify the connector's status is RUNNING"
 docker container exec connect-us curl -X GET http://localhost:8083/connectors/replicate-semea-to-us/status | jq
+
+log "Sending 10 sales in customers_SEMEA topic in Europe cluster"
+seq -f "south_european_customer_%g `date +%s`" 10 | docker container exec -i connect-europe bash -c "kafka-console-producer --broker-list broker-europe:9092 --topic customers_SEMEA"
+
+log "Verify replicator still can replicate by verifying 10 customers in sales_SEMEA in Europe US cluster "
+docker container exec -i connect-europe bash -c "kafka-console-consumer --bootstrap-server broker-us:9092 --whitelist 'customers_SEMEA' --from-beginning --max-messages 10"
