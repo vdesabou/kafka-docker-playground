@@ -77,7 +77,7 @@ public class SimpleStream {
         counts.print(Printed.<String,Long>toSysOut().withLabel("Consumed record"));
 
         // Aggregate values by key
-        KStream<String,Long> countAgg = counts.groupByKey(Serialized.with(Serdes.String(), Serdes.Long()))
+        KStream<String,Long> countAgg = counts.groupByKey(Grouped.with(Serdes.String(), Serdes.Long()))
             .reduce(
                 (aggValue, newValue) -> aggValue + newValue)
             .toStream();
