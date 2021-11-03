@@ -16,7 +16,7 @@ on:
         default: ''
 
 jobs:
-  call-workflow-ci-latest:
+  ci:
     uses: vdesabou/kafka-docker-playground/.github/workflows/ci.yml@master
     with:
       tag: "7.0.0"
@@ -28,7 +28,7 @@ jobs:
     name: Update README
     runs-on: ubuntu-latest
     if: always()
-    needs: [call-workflow-ci-latest]
+    needs: [ci]
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
