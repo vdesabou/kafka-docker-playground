@@ -54,7 +54,7 @@ curl -X PUT \
                "table.topic.name.template": "${databaseName}.${schemaName}.${tableName}",
                "numeric.mapping": "best_fit",
                "connection.pool.max.size": 20,
-               "redo.log.row.fetch.size":1
+               "redo.log.row.fetch.size":1000
           }' \
      http://localhost:8083/connectors/cdc-oracle11-source/config | jq .
 
@@ -102,3 +102,5 @@ fi
 
 log "Verifying topic redo-log-topic: there should be 9 records"
 timeout 60 docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic redo-log-topic --from-beginning --max-messages 9
+
+log "🚚 If you're planning to inject more data, have a look at https://github.com/vdesabou/kafka-docker-playground/blob/master/connect/connect-cdc-oracle11-source/README.md#note-on-redologrowfetchsize"

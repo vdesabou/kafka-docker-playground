@@ -60,6 +60,9 @@ sqlplus / as sysdba <<- EOF
 	GRANT EXECUTE ON SYS.DBMS_LOGMNR_LOGREP_DICT TO C##CDC_PRIVS;
 	GRANT EXECUTE ON SYS.DBMS_LOGMNR_SESSION TO C##CDC_PRIVS;
 
+	-- only required to execute DBMS_LOCK.SLEEP (not required by connector)
+	GRANT EXECUTE ON DBMS_LOCK TO C##CDC_PRIVS;
+	
 	exit;
 EOF
 
