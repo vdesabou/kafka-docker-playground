@@ -13,7 +13,7 @@ ${DIR}/../../scripts/wait-for-connect-and-controlcenter.sh "connect1"
 ${DIR}/../../scripts/wait-for-connect-and-controlcenter.sh "connect2"
 ${DIR}/../../scripts/wait-for-connect-and-controlcenter.sh "connect3"
 
-docker exec broker1 kafka-topics --create --topic test-topic --partitions 10 --replication-factor 3 --zookeeper zookeeper:2181
+docker exec broker1 kafka-topics --create --topic test-topic --partitions 10 --replication-factor 3 --bootstrap-server broker:9092
 
 log "Sending messages to topic test-topic"
 seq 10 | docker exec -i broker1 kafka-console-producer --broker-list broker1:9092 --topic test-topic

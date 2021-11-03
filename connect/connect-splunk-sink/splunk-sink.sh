@@ -15,7 +15,7 @@ log "Splunk UI is accessible at http://127.0.0.1:8000 (admin/password)"
 # sleep 60
 
 log "Create topic splunk-qs"
-docker exec broker kafka-topics --create --topic splunk-qs --partitions 10 --replication-factor 1 --zookeeper zookeeper:2181
+docker exec broker kafka-topics --create --topic splunk-qs --partitions 10 --replication-factor 1 --bootstrap-server broker:9092
 
 
 log "Creating Splunk sink connector"

@@ -11,7 +11,7 @@ docker-compose -f docker-compose-repro-timeout.yml up -d --build
 ${DIR}/../../scripts/wait-for-connect-and-controlcenter.sh -a -b
 
 log "Create a topic kafkajs"
-docker exec broker1 kafka-topics --create --topic kafkajs --partitions 3 --replication-factor 3 --zookeeper zookeeper:2181
+docker exec broker1 kafka-topics --create --topic kafkajs --partitions 3 --replication-factor 3 --bootstrap-server broker:9092
 
 
 log "Starting consumer. Logs are in consumer.log."

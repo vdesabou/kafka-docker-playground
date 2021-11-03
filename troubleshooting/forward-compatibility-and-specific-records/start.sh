@@ -20,7 +20,7 @@ done
 
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
 
-docker exec broker kafka-topics --create --topic customer-avro --partitions 1 --replication-factor 1 --zookeeper zookeeper:2181
+docker exec broker kafka-topics --create --topic customer-avro --partitions 1 --replication-factor 1 --bootstrap-server broker:9092
 
 log "Set global compatibility mode to FORWARD"
 curl --request PUT \

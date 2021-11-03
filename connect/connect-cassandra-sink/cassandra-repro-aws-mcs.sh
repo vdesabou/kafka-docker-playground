@@ -28,7 +28,7 @@ cd ${DIR}
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.aws-mcs.yml"
 
 log "create a topic topic1"
-docker exec broker kafka-topics --create --topic topic1 --partitions 1 --replication-factor 1 --zookeeper zookeeper:2181
+docker exec broker kafka-topics --create --topic topic1 --partitions 1 --replication-factor 1 --bootstrap-server broker:9092
 
 log "Creating Cassandra Sink connector"
 curl -X PUT \

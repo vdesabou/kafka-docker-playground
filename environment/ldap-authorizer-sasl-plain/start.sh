@@ -56,7 +56,7 @@ display_jmx_info
 # Test LDAP group-based authorization
 # https://docs.confluent.io/current/security/ldap-authorizer/quickstart.html#test-ldap-group-based-authorization
 log "Create topic testtopic"
-docker exec broker kafka-topics --create --topic testtopic --partitions 10 --replication-factor 1 --zookeeper zookeeper:2181
+docker exec broker kafka-topics --create --topic testtopic --partitions 10 --replication-factor 1 --bootstrap-server broker:9092
 
 log "Run console producer without authorizing user alice: SHOULD FAIL"
 docker exec -i broker kafka-console-producer --broker-list broker:9092 --topic testtopic --producer.config /service/kafka/users/alice.properties << EOF

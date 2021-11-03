@@ -24,7 +24,7 @@ Splunk UI is available at [127.0.0.1:8000](http://127.0.0.1:8000) `admin/passwor
 Create topic `splunk-qs`
 
 ```bash
-docker exec broker kafka-topics --create --topic splunk-qs --partitions 10 --replication-factor 1 --zookeeper zookeeper:2181
+docker exec broker kafka-topics --create --topic splunk-qs --partitions 10 --replication-factor 1 --bootstrap-server broker:9092
 ```
 
 Creating Splunk sink connector

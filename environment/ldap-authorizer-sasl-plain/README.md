@@ -87,7 +87,7 @@ KAFKA_LDAP_GROUP_MEMBER_ATTRIBUTE_PATTERN: cn=(.*),ou=users,dc=confluent,dc=io
 Create topic testtopic
 
 ```bash
-$ docker exec broker kafka-topics --create --topic testtopic --partitions 10 --replication-factor 1 --zookeeper zookeeper:2181
+$ docker exec broker kafka-topics --create --topic testtopic --partitions 10 --replication-factor 1 --bootstrap-server broker:9092
 ```
 
 Run console producer without authorizing user `alice`: SHOULD FAIL
