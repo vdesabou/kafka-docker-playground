@@ -52,19 +52,8 @@ log "Install Confluent for Kubernetes"
 helm upgrade --install confluent-operator confluentinc/confluent-for-kubernetes
 
 log "Generate a CA pair"
-if [[ "$OSTYPE" == "darwin"* ]]
-then
-    # workaround for issue on linux, see https://github.com/vdesabou/kafka-docker-playground/issues/851#issuecomment-821151962
-    chmod -R a+rw .
-else
-    # workaround for issue on linux, see https://github.com/vdesabou/kafka-docker-playground/issues/851#issuecomment-821151962
-    sudo chmod -R a+rw .
-fi
-docker run --rm -v $PWD:/tmp vdesabou/kafka-docker-playground-connect:${CONNECT_TAG} openssl genrsa -out /tmp/ca-key.pem 2048
-docker run --rm -v $PWD:/tmp vdesabou/kafka-docker-playground-connect:${CONNECT_TAG} openssl req -new -key /tmp/ca-key.pem -x509 \
-  -days 1000 \
-  -out /tmp/ca.pem \
-  -subj "/C=US/ST=CA/L=MountainView/O=Confluent/OU=Operator/CN=TestCA"
+docker run -u0 --rm -v $PWD:/tmp vdesabou/kafka-docker-playground-connect:${CONNECT_TAG} bash -c "openssl genrsa -out /tmp/ca-key.pem 2048 && chown -R $(id -u $USER):$(id -g $USER) /tmp/"
+docker run -u0 --rm -v $PWD:/tmp vdesabou/kafka-docker-playground-connect:${CONNECT_TAG} bash -c "openssl req -new -key /tmp/ca-key.pem -x509 -days 1000 -out /tmp/ca.pem -subj '/C=US/ST=CA/L=MountainView/O=Confluent/OU=Operator/CN=TestCA' && chown -R $(id -u $USER):$(id -g $USER) /tmp/"
 
 log "Create a Kuebernetes secret for inter-component TLS"
 kubectl create secret tls ca-pair-sslcerts \

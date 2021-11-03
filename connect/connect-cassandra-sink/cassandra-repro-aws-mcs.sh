@@ -22,7 +22,7 @@ CASSANDRA_HOSTNAME=${2:-cassandra.us-east-1.amazonaws.com}
 
 cd ${DIR}/security
 log "🔐 Generate keys and certificates used for SSL"
-./certs-create.sh
+docker run -u0 --rm -v $PWD:/tmp vdesabou/kafka-docker-playground-connect:${CONNECT_TAG} bash -c "/tmp/certs-create.sh && chown -R $(id -u $USER):$(id -g $USER) /tmp/"
 cd ${DIR}
 
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.aws-mcs.yml"
