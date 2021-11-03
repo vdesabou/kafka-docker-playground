@@ -22,13 +22,13 @@ $ ./repro-no-compaction-idle-topic.sh
 create a topic `testtopic` with 30 seconds `segment.ms`
 
 ```bash
-$ docker exec broker kafka-topics --create --topic testtopic --partitions 1 --replication-factor 1 --zookeeper zookeeper:2181 --config segment.ms=30000 --config cleanup.policy=compact --config min.cleanable.dirty.ratio=0.0
+$ docker exec broker kafka-topics --create --topic testtopic --partitions 1 --replication-factor 1 --bootstrap-server broker:9092 --config segment.ms=30000 --config cleanup.policy=compact --config min.cleanable.dirty.ratio=0.0
 ```
 
 Describe new topic `testtopic`
 
 ```bash
-$ docker exec zookeeper kafka-topics --describe --topic testtopic --zookeeper zookeeper:2181
+$ docker exec zookeeper kafka-topics --describe --topic testtopic --bootstrap-server broker:9092
 ```
 
 ```

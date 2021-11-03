@@ -50,7 +50,7 @@ $ ./no-activity.sh
 Create a topic `testtopic` with 30 seconds retention:
 
 ```bash
-$ docker exec broker kafka-topics --create --topic testtopic --partitions 1 --replication-factor 1 --zookeeper zookeeper:2181 --config retention.ms=30000
+$ docker exec broker kafka-topics --create --topic testtopic --partitions 1 --replication-factor 1 --bootstrap-server broker:9092 --config retention.ms=30000
 ```
 
 Sending message to topic testtopic
@@ -118,7 +118,7 @@ $ ./activity.sh
 Create a topic `testtopic` with 30 seconds retention:
 
 ```bash
-$ docker exec broker kafka-topics --create --topic testtopic --partitions 1 --replication-factor 1 --zookeeper zookeeper:2181 --config retention.ms=30000
+$ docker exec broker kafka-topics --create --topic testtopic --partitions 1 --replication-factor 1 --bootstrap-server broker:9092 --config retention.ms=30000
 ```
 
 Sending message to topic testtopic every second for 50 seconds
@@ -172,7 +172,7 @@ $ ./activity-small-segment-ms.sh
 Create a topic `testtopic` with 30 seconds retention and `segment.ms` 15000:
 
 ```bash
-$ docker exec broker kafka-topics --create --topic testtopic --partitions 1 --replication-factor 1 --zookeeper zookeeper:2181 --config retention.ms=30000 --config segment.ms=15000
+$ docker exec broker kafka-topics --create --topic testtopic --partitions 1 --replication-factor 1 --bootstrap-server broker:9092 --config retention.ms=30000 --config segment.ms=15000
 ```
 
 Sending message to topic testtopic every second for 50 seconds
@@ -239,7 +239,7 @@ $ ./old-timestamp.sh
 Create a topic testtopic with 30 seconds retention
 
 ```bash
-docker exec broker kafka-topics --create --topic testtopic --partitions 1 --replication-factor 1 --zookeeper zookeeper:2181 --config retention.ms=30000
+docker exec broker kafka-topics --create --topic testtopic --partitions 1 --replication-factor 1 --bootstrap-server broker:9092 --config retention.ms=30000
 ```
 
 Run a Java producer, it sends one request per second and uses old timestamps
@@ -275,7 +275,7 @@ Result: **CLEANUP**
 Create a topic testtopic with 30 seconds retention and message.timestamp.type=LogAppendTime
 
 ```bash
-docker exec broker kafka-topics --create --topic testtopic --partitions 1 --replication-factor 1 --zookeeper zookeeper:2181 --config retention.ms=30000 --config message.timestamp.type=LogAppendTime
+docker exec broker kafka-topics --create --topic testtopic --partitions 1 --replication-factor 1 --bootstrap-server broker:9092 --config retention.ms=30000 --config message.timestamp.type=LogAppendTime
 ```
 
 Result: **NO CLEANUP**

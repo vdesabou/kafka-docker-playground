@@ -24,7 +24,7 @@ The producer is using old timestamp. In our case hard-coded to `02/13/2020 @ 8:3
 Create a topic `testtopic` with 30 seconds retention and 15 seconds segment:
 
 ```bash
-$ docker exec broker kafka-topics --create --topic testtopic --partitions 1 --replication-factor 1 --zookeeper zookeeper:2181 --config segment.ms=15000 --config retention.ms=30000 --config message.timestamp.type=CreateTime
+$ docker exec broker kafka-topics --create --topic testtopic --partitions 1 --replication-factor 1 --bootstrap-server broker:9092 --config segment.ms=15000 --config retention.ms=30000 --config message.timestamp.type=CreateTime
 ```
 
 Note: `message.timestamp.type`=`CreateTime` is default.

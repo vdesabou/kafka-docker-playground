@@ -130,7 +130,8 @@ sleep 5
 log "Verify we have received the data in topic-servicenow topic"
 timeout 60 docker exec connect kafka-console-consumer -bootstrap-server broker:9092 --topic topic-servicenow --from-beginning --max-messages 1
 
-
+log "starting tcpdump"
+docker exec -d --privileged --user root connect bash -c 'tcpdump -w /tmp/tcpdump.pcap -i eth0 -s 0 port 8888'
 
 # echo "$SERVICENOW_URL" | cut -d "/" -f3
 # ip=$(dig +short $(echo "$SERVICENOW_URL" | cut -d "/" -f3))

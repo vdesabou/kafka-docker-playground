@@ -38,7 +38,7 @@ It allows only one pending request in order to make troubleshooting easier.
 Create a topic kafkajs:
 
 ```
-docker exec broker1 kafka-topics --create --topic kafkajs --partitions 3 --replication-factor 3 --zookeeper zookeeper:2181
+docker exec broker1 kafka-topics --create --topic kafkajs --partitions 3 --replication-factor 3 --bootstrap-server broker:9092
 ```
 
 Starting consumer. Logs are in consumer.log.
