@@ -1,0 +1,255 @@
+name: Reusable CI workflow
+
+on:
+  workflow_call:
+    inputs:
+      all_tags:
+        description: 'all cp versions'
+        default: '5.4.5 5.5.6 6.0.4 6.1.3 6.2.1'
+        required: false
+        type: string
+      tag:
+        description: 'cp version'
+        required: true
+        type: string
+      test_name:
+        description: 'test to run'
+        required: false
+        type: string
+        default: ''
+    secrets:
+      AWS_ACCESS_KEY_ID:
+        required: true
+      AWS_SECRET_ACCESS_KEY:
+        required: true
+      AZ_USER:
+        required: true
+      AZ_PASS:
+        required: true
+      SECRETS_ENCRYPTION_PASSWORD:
+        required: true
+
+jobs:
+  pre-build:
+    name: Cleanup resources
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+        with:
+          repository: vdesabou/kafka-docker-playground
+          fetch-depth: 0
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: eu-west-3
+
+      - name: Cleanup resources
+        run: |
+          ./scripts/cleanup-resources.sh ${{ inputs.all_tags }}
+        env:
+          AZ_USER: ${{ secrets.AZ_USER }}
+          AZ_PASS: ${{ secrets.AZ_PASS }}
+  build:
+    if: ${{ inputs.test_name == '' }}
+    runs-on: ubuntu-latest
+    needs: pre-build
+    name: ${{ matrix.tag }} ${{ matrix.test_list }}
+    strategy:
+      fail-fast: false
+      matrix:
+        tag: [ "${{ inputs.tag }}" ] 
+        test_list : [
+                      "🚀 connect/connect-servicenow-sink connect/connect-servicenow-source",
+                      "🚀 connect/connect-salesforce-bulkapi-sink connect/connect-salesforce-bulkapi-source connect/connect-salesforce-pushtopics-source connect/connect-salesforce-sobject-sink connect/connect-salesforce-cdc-source connect/connect-salesforce-platform-events-sink connect/connect-salesforce-platform-events-source",
+                      "🚀 connect/connect-splunk-sink connect/connect-splunk-source connect/connect-splunk-s2s-source connect/connect-spool-dir-source connect/connect-syslog-source other/connect-override-policy-sftp-sink other/connect-override-policy-sftp-source",
+                      "🚀 connect/connect-minio-s3-sink connect/connect-marketo-source connect/connect-active-mq-sink connect/connect-active-mq-source connect/connect-cassandra-sink connect/connect-couchbase-sink connect/connect-couchbase-source connect/connect-hbase-sink",
+                      "🚀 connect/connect-jms-tibco-sink connect/connect-jms-tibco-source connect/connect-debezium-mongodb-source connect/connect-debezium-mysql-source connect/connect-debezium-postgresql-source connect/connect-debezium-sqlserver-source connect/connect-elasticsearch-sink connect/connect-datadiode-source-sink",
+                      "🚀 connect/connect-hdfs2-sink connect/connect-hdfs2-source connect/connect-hdfs3-sink connect/connect-hdfs3-source connect/connect-ibm-mq-sink connect/connect-ibm-mq-source connect/connect-snmp-source",
+                      "🚀 connect/connect-jdbc-oracle11-sink connect/connect-jdbc-oracle11-source connect/connect-influxdb-sink connect/connect-influxdb-source connect/connect-jdbc-mysql-sink connect/connect-jdbc-mysql-source connect/connect-jdbc-postgresql-sink connect/connect-jdbc-postgresql-source connect/connect-jdbc-sqlserver-sink",
+                      "🚀 ccloud/ccloud-demo",
+                      "🚀 connect/connect-jdbc-sqlserver-source connect/connect-jdbc-vertica-sink connect/connect-jms-active-mq-sink connect/connect-jms-solace-sink",
+                      "🚀 connect/connect-mongodb-sink connect/connect-mongodb-source connect/connect-mqtt-sink connect/connect-mqtt-source connect/connect-neo4j-sink connect/connect-omnisci-sink connect/connect-tibco-sink connect/connect-tibco-source",
+                      "🚀 connect/connect-jdbc-oracle12-source connect/connect-jdbc-oracle12-sink",
+                      "🚀 connect/connect-jdbc-oracle19-source connect/connect-jdbc-oracle19-sink",
+                      "🚀 connect/connect-rabbitmq-source connect/connect-redis-sink connect/connect-replicator connect/connect-sftp-source connect/connect-solace-sink connect/connect-solace-source",
+                      "🚀 connect/connect-aws-cloudwatch-logs-source connect/connect-aws-cloudwatch-metrics-sink connect/connect-aws-dynamodb-sink connect/connect-aws-kinesis-source connect/connect-aws-lambda-sink connect/connect-sftp-sink",
+                      "🚀 connect/connect-gcp-bigquery-sink connect/connect-gcp-cloud-functions-sink connect/connect-vertica-sink connect/connect-prometheus-sink connect/connect-aws-sqs-source connect/connect-aws-s3-sink connect/connect-aws-s3-source",
+                      "🚀 connect/connect-gcp-pubsub-source connect/connect-gcp-gcs-sink connect/connect-gcp-gcs-source connect/connect-gcp-bigtable-sink",
+                      "🚀 connect/connect-azure-data-lake-storage-gen1-sink connect/connect-azure-data-lake-storage-gen2-sink connect/connect-azure-event-hubs-source connect/connect-azure-cognitive-search-sink connect/connect-azure-functions-sink connect/connect-azure-service-bus-source connect/connect-azure-blob-storage-source",
+                      "🚀 connect/connect-ftps-source connect/connect-ftps-sink connect/connect-rabbitmq-sink connect/connect-amps-source connect/connect-jira-source connect/connect-github-source connect/connect-pivotal-gemfire-sink connect/connect-azure-blob-storage-sink connect/connect-azure-sql-data-warehouse-sink",
+                      "🚀 connect/connect-http-sink",
+                      "🚀 connect/connect-kudu-source connect/connect-kudu-sink",
+                      "🚀 replicator/connect",
+                      "🚀 replicator/executable",
+                      "🚀 replicator/mirrormaker2 ksqldb/materialized-view connect/connect-pagerduty-sink connect/connect-zendesk-source connect/connect-datadog-metrics-sink connect/connect-gcp-spanner-sink connect/connect-gcp-firebase-source connect/connect-gcp-firebase-sink",
+                      "🚀 other/audit-logs other/multiple-event-types-in-topic other/broker-schema-validation",
+                      "🚀 other/filebeat-to-kafka other/rest-proxy-security-plugin other/tiered-storage-with-aws other/write-logs-to-files",
+                      "🚀 ccloud/replicator",
+                      "🚀 ccloud/ccloudexporter ccloud/connect-debezium-mongodb-source ccloud/connect-aws-kinesis-source ccloud/kafka-admin ccloud/rest-proxy-security-plugin ccloud/schema-registry-security-plugin",
+                      "🚀 connect/connect-cdc-oracle12-source",
+                      "🚀 connect/connect-cdc-oracle19-source",
+                      "🚀 connect/connect-jms-weblogic-source connect/connect-jms-weblogic-sink",
+                      "🚀 connect/connect-azure-cosmosdb-source connect/connect-azure-cosmosdb-sink connect/connect-jdbc-cockroachdb-source connect/connect-jdbc-ibmdb2-source connect/connect-jdbc-ibmdb2-sink",
+                      "🚀 environment/2way-ssl environment/kerberos environment/ldap-authorizer-sasl-plain environment/ldap-sasl-plain environment/mdc-kerberos environment/mdc-plaintext environment/mdc-sasl-plain environment/rbac-sasl-plain environment/sasl-plain environment/sasl-scram environment/sasl-ssl environment/ssl_kerberos",
+                      "🚀 connect/connect-snowflake-sink connect/connect-jdbc-snowflake-source connect/connect-jdbc-snowflake-sink connect/connect-filestream-source connect/connect-filestream-sink connect/connect-filepulse-source"
+                      # do not remove, this is run by run-regression-self-managed.yml, but required to update README file
+                      # "🚀 connect/connect-mapr-sink connect/connect-cdc-oracle19-source"
+                    ]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+        with:
+          repository: vdesabou/kafka-docker-playground
+          fetch-depth: 0
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: eu-west-3
+
+      - name: "Free up disk space"
+        run: |
+          df -h
+          sudo apt-get -qq purge build-essential ghc*
+          sudo apt-get clean
+          docker system prune -af
+          rm -rf /usr/share/dotnet
+          rm -rf /opt/ghc
+          rm -rf "/usr/local/share/boost"
+          rm -rf "$AGENT_TOOLSDIRECTORY"
+          df -h
+
+      - name: Decrypt secrets.tar
+        run: |
+          ./.github/scripts/decrypt_secret.sh
+          tar xvf secrets.tar
+          rm secrets.tar
+          mkdir -p $HOME/.aws
+          mv aws_config $HOME/.aws/config
+          mv aws_credentials $HOME/.aws/credentials
+          mv aws_credentials_with_assuming_iam_role $HOME/.aws/credentials-with-assuming-iam-role
+          chmod -R a+rw $HOME/.aws
+          mkdir -p $HOME/.ccloud
+          mv config.cc.travis $HOME/.ccloud/config
+          mv secrets.properties $HOME/secrets.properties
+          source $HOME/secrets.properties
+          echo "$DOCKER_PASSWORD" | docker login -u vdesabou --password-stdin
+        env:
+          SECRETS_ENCRYPTION_PASSWORD: ${{ secrets.SECRETS_ENCRYPTION_PASSWORD }}
+
+      - name: Build and Test
+        run: bash scripts/run-tests.sh "${{ matrix.test_list }}" "${{ matrix.tag }}"
+        env:
+          DISABLE_KSQLDB: "yes"
+          DISABLE_CONTROL_CENTER: "yes"
+
+  execute_one_test:
+    if: ${{ inputs.test_name != '' }}
+    runs-on: ubuntu-latest
+    needs: pre-build
+    name: ${{ matrix.tag }} ${{ matrix.test_list }}
+    strategy:
+      fail-fast: false
+      matrix:
+        tag: [ "${{ inputs.tag }}" ] 
+        test_list : [
+                      "🚀 ${{ inputs.test_name }}"
+                    ]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+        with:
+          repository: vdesabou/kafka-docker-playground
+          fetch-depth: 0
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: eu-west-3
+
+      - name: "Free up disk space"
+        run: |
+          df -h
+          sudo apt-get -qq purge build-essential ghc*
+          sudo apt-get clean
+          docker system prune -af
+          rm -rf /usr/share/dotnet
+          rm -rf /opt/ghc
+          rm -rf "/usr/local/share/boost"
+          rm -rf "$AGENT_TOOLSDIRECTORY"
+          df -h
+
+      - name: Decrypt secrets.tar
+        run: |
+          ./.github/scripts/decrypt_secret.sh
+          tar xvf secrets.tar
+          rm secrets.tar
+          mkdir -p $HOME/.aws
+          mv aws_config $HOME/.aws/config
+          mv aws_credentials $HOME/.aws/credentials
+          mv aws_credentials_with_assuming_iam_role $HOME/.aws/credentials-with-assuming-iam-role
+          chmod -R a+rw $HOME/.aws
+          mkdir -p $HOME/.ccloud
+          mv config.cc.travis $HOME/.ccloud/config
+          mv secrets.properties $HOME/secrets.properties
+          source $HOME/secrets.properties
+          echo "$DOCKER_PASSWORD" | docker login -u vdesabou --password-stdin
+        env:
+          SECRETS_ENCRYPTION_PASSWORD: ${{ secrets.SECRETS_ENCRYPTION_PASSWORD }}
+
+      - name: Build and Test
+        run: bash scripts/run-tests.sh "${{ matrix.test_list }}" "${{ matrix.tag }}"
+        env:
+          DISABLE_KSQLDB: "yes"
+          DISABLE_CONTROL_CENTER: "yes"
+
+  post-build:
+    name: Update README
+    runs-on: ubuntu-latest
+    if: always()
+    needs: [pre-build, build, execute_one_test]
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+        with:
+          repository: vdesabou/kafka-docker-playground
+          fetch-depth: 0
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: eu-west-3
+
+      - name: Cleanup resources
+        run: |
+          ./scripts/cleanup-resources.sh ${{ inputs.all_tags }} "--no-wait"
+        env:
+          AZ_USER: ${{ secrets.AZ_USER }}
+          AZ_PASS: ${{ secrets.AZ_PASS }}
+
+      - name: Update README
+        run: |
+          ./scripts/update-readme.sh ${{ inputs.all_tags }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_REGION: "us-east-1"
+      - name: push
+        uses: github-actions-x/commit@v2.6
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          push-branch: 'master'
+          commit-message: 'updating with latest versions'
+          files: ./README.md ./docs/content.md ./docs/introduction.md
+          name: Vincent de Saboulin
