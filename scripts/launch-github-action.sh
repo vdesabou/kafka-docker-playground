@@ -30,5 +30,5 @@ log "Calling github action"
 curl -H "Accept: application/vnd.github.v3+json" \
     -H "Authorization: token $GITHUB_TOKEN" \
     --request POST \
-    "https://api.github.com/repos/vdesabou/kafka-docker-playground/actions/workflows/run-regression.yml/dispatches" \
+    "https://api.github.com/repos/vdesabou/kafka-docker-playground/actions/workflows/ci-base.yml/dispatches" \
     -d '{"ref":"master"}'
