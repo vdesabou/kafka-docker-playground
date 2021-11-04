@@ -14,7 +14,7 @@ on:
         type: string
         default: ''
       update_readme:
-        description: 'update readme (yes or no)'
+        description: 'update readme'
         required: false
         type: boolean
         default: true
