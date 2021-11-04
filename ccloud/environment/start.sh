@@ -34,13 +34,16 @@ then
      verify_ccloud_details
      check_if_continue
 else
-     # running with github actions
-     if [ ! -f ../../secrets.properties ]
+     if [ ! -z "$CI" ]
      then
-          logerror "../../secrets.properties is not present!"
-          exit 1
+          # running with github actions
+          if [ ! -f ../../secrets.properties ]
+          then
+               logerror "../../secrets.properties is not present!"
+               exit 1
+          fi
+          source ../../secrets.properties > /dev/null 2>&1
      fi
-     source ../../secrets.properties > /dev/null 2>&1
      
      log "Installing ccloud CLI"
      curl -L --http1.1 https://cnfl.io/ccloud-cli | sudo sh -s -- -b /usr/local/bin
