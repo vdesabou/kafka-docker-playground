@@ -23,6 +23,10 @@ This is deploying the following containers using Confluent [cp-ansible](https://
 * 1 rest-proxy (`rest-proxy`)
 * 1 control-center (`control-center`)
 
+## Tags
+
+Available tags are listed [here](https://github.com/vdesabou/cp-ansible-playground/blob/6fd3a884684de0735754ee339d6fd63c481cdb7c/.github/workflows/run-regression.yml#L20).
+
 ## How to run
 
 ```
