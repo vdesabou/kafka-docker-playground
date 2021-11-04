@@ -19,9 +19,9 @@ on:
         required: false
         default: ''
       update_readme:
-        description: 'update readme'
-        required: true
-        default: true
+        description: 'update readme (yes or no)'
+        required: false
+        default: 'yes'
 
 jobs:
   ci:
