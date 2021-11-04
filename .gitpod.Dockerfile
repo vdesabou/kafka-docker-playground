@@ -1,6 +1,5 @@
 FROM gitpod/workspace-base:latest
 
-USER root
 ### Docker ###
 USER root
 ENV TRIGGER_REBUILD=4
@@ -20,3 +19,10 @@ RUN curl -o /usr/local/bin/docker-compose -fsSL https://github.com/docker/compos
 RUN echo "PATH="${PATH}"" | sudo tee /etc/environment
 
 USER gitpod
+
+# Install Confluent Cloud CLI, with shell auto completion
+RUN mkdir -p ~/.local/share/bash-completion/
+RUN curl -L --http1.1 https://cnfl.io/ccloud-cli | sudo sh -s -- -b /usr/local/bin && \
+    touch ~/.local/share/bash-completion/ccloud && \
+    ccloud completion bash > ~/.local/share/bash-completion/ccloud && \
+    echo "source ~/.local/share/bash-completion/ccloud" >> ~/.bashrc
