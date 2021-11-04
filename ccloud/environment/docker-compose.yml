@@ -112,6 +112,8 @@ services:
       # CONTROL_CENTER_MAIL_STARTTLS_REQUIRED: "true"
       # CONTROL_CENTER_MAIL_SSL_CHECKSERVERIDENTITY: "true"
       # CONTROL_CENTER_MAIL_BOUNCE_ADDRESS: "toto@gmail.com"
+      # starting from 7.0
+      CONTROL_CENTER_MODE_ENABLE: management
       
   # 75147
   # schema-registry:
