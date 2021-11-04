@@ -37,13 +37,13 @@ $ ./sftp-sink.sh
 Set ACLs for user `sftp` for consumer on topic test_sftp_sink:
 
 ```bash
-$ docker exec broker kafka-acls --authorizer-properties zookeeper.connect=zookeeper:2181 --add --allow-principal User:sftp --consumer --topic test_sftp_sink --group connect-sftp-sink
+$ docker exec broker kafka-acls --bootstrap-server broker:9092 --add --allow-principal User:sftp --consumer --topic test_sftp_sink --group connect-sftp-sink
 ```
 
 Set ACLs for user `sftp` for operation CREATE on topic test_sftp_sink:
 
 ```bash
-$ docker exec broker kafka-acls --authorizer-properties zookeeper.connect=zookeeper:2181 --add --allow-principal User:sftp --operation CREATE --topic test_sftp_sink
+$ docker exec broker kafka-acls --bootstrap-server broker:9092 --add --allow-principal User:sftp --operation CREATE --topic test_sftp_sink
 ```
 
 The connector is created with:

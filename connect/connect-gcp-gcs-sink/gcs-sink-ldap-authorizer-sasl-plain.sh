@@ -34,7 +34,7 @@ set +e
 docker run -i --volumes-from gcloud-config google/cloud-sdk:latest gsutil rm -r gs://$GCS_BUCKET_NAME/topics/gcs_topic
 set -e
 
-docker exec broker kafka-acls --authorizer-properties zookeeper.connect=zookeeper:2181 --add --topic=gcs_topic --producer --allow-principal="Group:KafkaDevelopers"
+docker exec broker kafka-acls --bootstrap-server broker:9092 --add --topic=gcs_topic --producer --allow-principal="Group:KafkaDevelopers" --command-config /service/kafka/users/kafka.properties
 
 log "Sending messages to topic gcs_topic"
 seq -f "{\"f1\": \"This is a message sent with LDAP Authorizer SASL/PLAIN authentication %g\"}" 10 | docker exec -i connect kafka-avro-console-producer --broker-list broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic gcs_topic --property value.schema='{"type":"record","name":"myrecord","fields":[{"name":"f1","type":"string"}]}' --producer.config /service/kafka/users/alice.properties

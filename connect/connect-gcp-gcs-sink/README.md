@@ -329,7 +329,7 @@ $ docker run -v /tmp:/tmp actions/avro-tools tojson /tmp/rbac_gcs_topic+0+000000
 We need to add ACL for topic `gcs_topic-ldap-authorizer-sasl-plain` (user `alice` is part of group `KafkaDevelopers`):
 
 ```bash
-$ docker exec broker kafka-acls --authorizer-properties zookeeper.connect=zookeeper:2181 --add --topic=gcs_topic-ldap-authorizer-sasl-plain --producer --allow-principal="Group:KafkaDevelopers"
+$ docker exec broker kafka-acls --bootstrap-server broker:9092 --add --topic=gcs_topic-ldap-authorizer-sasl-plain --producer --allow-principal="Group:KafkaDevelopers" --command-config /service/kafka/users/kafka.properties
 ```
 
 Messages are sent to `gcs_topic-ldap-authorizer-sasl-plain` topic using:
