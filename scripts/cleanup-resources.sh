@@ -3,8 +3,7 @@
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../scripts/utils.sh
 
-image_versions="$1"
-no_wait="$2"
+no_wait="$1"
 
 function log() {
   YELLOW='\033[0;33m'
