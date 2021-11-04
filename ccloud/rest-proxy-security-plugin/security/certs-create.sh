@@ -5,6 +5,8 @@
 #    -o verbose \
 #    -o xtrace
 
+CCLOUD_REST_PROXY_SECURITY_PLUGIN_API_KEY=$1
+
 # Cleanup files
 rm -f /tmp/*.crt /tmp/*.csr /tmp/*_creds /tmp/*.jks /tmp/*.srl /tmp/*.key /tmp/*.pem /tmp/*.der /tmp/*.p12 /tmp/extfile
 
@@ -77,14 +79,3 @@ EOF
     cacerts_path=$(bash -c "find /usr/lib/jvm -name cacerts" | tail -1)
     keytool -noprompt -destkeystore /tmp/kafka.$i.truststore.jks -importkeystore -srckeystore $cacerts_path -srcstorepass changeit -deststorepass confluent
 done
-
-# used for other/rest-proxy-security-plugin test
-# https://stackoverflow.com/a/8224863
-openssl pkcs12 -export -in /tmp/clientrestproxy-ca1-signed.crt -inkey /tmp/clientrestproxy.key \
-               -out /tmp/clientrestproxy.p12 -name clientrestproxy \
-               -CAfile /tmp/snakeoil-ca-1.crt -caname CARoot -passout pass:confluent
-
-keytool -importkeystore \
-        -deststorepass confluent -destkeypass confluent -destkeystore /tmp/kafka.restproxy.keystore.jks \
-        -srckeystore /tmp/clientrestproxy.p12 -srcstoretype PKCS12 -srcstorepass confluent \
-        -alias clientrestproxy
