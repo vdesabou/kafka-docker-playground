@@ -93,7 +93,7 @@ cd connect/connect-ibm-mq-sink
 
 ### 🎯 For Confluent Platform (CP)
 
-By default, latest Confluent Platform version is used (currently `6.2.1`).
+By default, latest Confluent Platform version is used (currently `7.0.0`).
 Before running an example, you can change the CP version used (must be greater or equal to `5.0.0`), simply by exporting `TAG` environment variable:
 
 *Example:*
