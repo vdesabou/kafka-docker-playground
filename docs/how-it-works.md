@@ -260,11 +260,11 @@ See the [Dockerfile](https://github.com/vdesabou/kafka-docker-playground-connect
 
 ## 🤖 How CI works
 
-[Everyday](https://github.com/vdesabou/kafka-docker-playground/blob/c65704df7b66a2c47321d04fb75f43a8bbb4fef1/.github/workflows/run-regression.yml#L8-L9), regression tests are executed using [Github Actions](https://github.com/features/actions). 
+[Everyday](https://github.com/vdesabou/kafka-docker-playground/blob/7fd2985e9bffa7120ddf5316b97e0bb17bd96ce8/.github/workflows/ci.yml#L8-L9), regression tests are executed using [Github Actions](https://github.com/features/actions). 
 
 The workflow runs and logs are available [here](https://github.com/vdesabou/kafka-docker-playground/actions).
 
-The CI is defined using [`.github/workflows/run-regression.yml`](https://github.com/vdesabou/kafka-docker-playground/blob/master/.github/workflows/run-regression.yml) file (see the list of tests executed [here](https://github.com/vdesabou/kafka-docker-playground/blob/fbc009be503d7c0c55a16ddf17679d50f721c74f/.github/workflows/run-regression.yml#L46-L84))
+The CI is defined using [`.github/workflows/ci.yml`](https://github.com/vdesabou/kafka-docker-playground/blob/master/.github/workflows/ci.yml) which is using [`.github/workflows/ci-base.yml`](https://github.com/vdesabou/kafka-docker-playground/blob/master/.github/workflows/ci-base.yml) file (see the list of tests executed [here](https://github.com/vdesabou/kafka-docker-playground/blob/7fd2985e9bffa7120ddf5316b97e0bb17bd96ce8/.github/workflows/ci-base.yml#L66-L98))
 
 > [!NOTE]
 > CI is executed on Ubuntu 20.04 on Azure, see [documentation](https://docs.github.com/en/actions/using-github-hosted-runners/about-github-hosted-runners#supported-runners-and-hardware-resources)
