@@ -36,7 +36,7 @@ $ ./sftp-source-csv.sh
 Set ACLs for user `sftp` for producer on topic sftp-testing-topic:
 
 ```bash
-docker exec broker kafka-acls --authorizer-properties zookeeper.connect=zookeeper:2181 --add --allow-principal User:sftp --producer --topic sftp-testing-topic
+docker exec broker kafka-acls --bootstrap-server broker:9092 --add --allow-principal User:sftp --producer --topic sftp-testing-topic
 ```
 
 Creating CSV SFTP Source connector (notice the `producer.override`)

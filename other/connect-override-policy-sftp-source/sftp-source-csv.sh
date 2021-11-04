@@ -21,7 +21,7 @@ rm -f csv-sftp-source.csv
 
 # Principal = User:sftp is Denied Operation = Describe from host = 192.168.208.6 on resource = Topic:LITERAL:sftp-testing-topic (kafka.authorizer.logger)
 
-docker exec broker kafka-acls --authorizer-properties zookeeper.connect=zookeeper:2181 --add --allow-principal User:sftp --producer --topic sftp-testing-topic
+docker exec broker kafka-acls --bootstrap-server broker:9092 --add --allow-principal User:sftp --producer --topic sftp-testing-topic
 
 # Adding ACLs for resource `Topic:LITERAL:sftp-testing-topic`:
 #         User:sftp has Allow permission for operations: Create from hosts: *

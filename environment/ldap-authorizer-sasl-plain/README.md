@@ -110,7 +110,7 @@ org.apache.kafka.common.errors.TopicAuthorizationException: Not authorized to ac
 Authorize group `Group:KafkaDevelopers`
 
 ```bash
-$ docker exec broker kafka-acls --authorizer-properties zookeeper.connect=zookeeper:2181 --add --topic=testtopic --producer --allow-principal="Group:KafkaDevelopers"
+$ docker exec broker kafka-acls --bootstrap-server broker:9092 --add --topic=testtopic --producer --allow-principal="Group:KafkaDevelopers" --command-config /service/kafka/users/kafka.properties
 ```
 
 Rerun producer for `alice`: SHOULD BE SUCCESS
@@ -140,7 +140,7 @@ org.apache.kafka.common.errors.GroupAuthorizationException: Not authorized to ac
 Authorize group and rerun consumer
 
 ```bash
-$ docker exec broker kafka-acls --authorizer-properties zookeeper.connect=zookeeper:2181 --add --topic=testtopic --group test-consumer-group --allow-principal="Group:KafkaDevelopers"
+$ docker exec broker kafka-acls --bootstrap-server broker:9092 --add --topic=testtopic --group test-consumer-group --allow-principal="Group:KafkaDevelopers" --command-config /service/kafka/users/kafka.properties
 
 $ docker exec broker kafka-console-consumer --bootstrap-server broker:9092 --topic testtopic --from-beginning --group test-consumer-group --consumer.config /service/kafka/users/alice.properties --max-messages 1
 ```
