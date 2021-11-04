@@ -6,15 +6,18 @@ on:
       tags:
         description: 'cp versions'
         default: '["5.4.5","5.5.6","6.0.4","6.1.3","6.2.1","7.0.0"]'
+        type: string
         required: false
       test_name:
         description: 'test(s) to run (example connect/connect-jms-weblogic-sink connect/connect-http-sink)'
         required: false
+        type: string
         default: ''
       update_readme:
         description: 'update readme (yes or no)'
         required: false
-        default: 'yes'
+        type: boolean
+        default: true
     secrets:
       SECRETS_ENCRYPTION_PASSWORD:
         required: true
@@ -223,7 +226,7 @@ jobs:
           ./scripts/cleanup-resources.sh "--no-wait"
 
       - name: Update README
-        if: ${{ inputs.update_readme != 'no' }}
+        if: ${{ inputs.update_readme == true }}
         run: |
           ./scripts/update-readme.sh "${{ fromJson(inputs.tags) }}"
       - name: push
