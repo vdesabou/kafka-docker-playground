@@ -157,21 +157,21 @@ else
     # to handle ubi8 images
     export TAG_BASE=$(echo $TAG | cut -d "-" -f1)
     first_version=${TAG_BASE}
-    second_version=5.3.0
-    if version_gt $first_version $second_version; then
+    second_version=5.3.99
+    if version_gt $first_version 5.3.99; then
         export CP_KAFKA_IMAGE=cp-server
         export CP_CONNECT_IMAGE=cp-server-connect-base
     else
         export CP_KAFKA_IMAGE=cp-enterprise-kafka
         export CP_CONNECT_IMAGE=cp-kafka-connect-base
     fi
-    second_version=5.3.10
+    second_version=5.3.99
     if version_gt $first_version $second_version; then
         export CP_BASE_IMAGE=cp-base-new
     else
         export CP_BASE_IMAGE=cp-base
     fi
-    second_version=5.4.10
+    second_version=5.4.99
     if version_gt $first_version $second_version; then
         export CP_KSQL_IMAGE=cp-ksqldb-server
         export CP_KSQL_CLI_IMAGE=ksqldb-cli:latest
