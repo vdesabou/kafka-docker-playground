@@ -33,7 +33,9 @@ git clone https://github.com/vdesabou/kafka-docker-playground.git -–depth 1
 
 ### 🪄 Gitpod.io
 
-You can run the playground directly in your browser (*Cloud IDE*) using [Gitpod.io](https://gitpod.io) workspace by clicking on this [link](https://gitpod.io/#https://github.com/vdesabou/kafka-docker-playground)
+You can run the playground directly in your browser (*Cloud IDE*) using [Gitpod.io](https://gitpod.io) workspace by clicking on the link below:
+
+[![Open in Gitpod](https://gitpod.io/button/open-in-gitpod.svg)](https://gitpod.io/#https://github.com/vdesabou/kafka-docker-playground)
 
 Look at *✨awesome✨* this is 🪄 !
 
