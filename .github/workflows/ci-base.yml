@@ -14,10 +14,10 @@ on:
         type: string
         default: ''
       update_readme:
-        description: 'update readme'
+        description: 'update readme (yes or no)'
         required: false
-        type: boolean
-        default: true
+        type: string
+        default: 'yes'
     secrets:
       SECRETS_ENCRYPTION_PASSWORD:
         required: true
@@ -226,7 +226,7 @@ jobs:
           ./scripts/cleanup-resources.sh "--no-wait"
 
       - name: Update README
-        if: ${{ inputs.update_readme == true }}
+        if: ${{ inputs.update_readme != 'no' }}
         run: |
           ./scripts/update-readme.sh "${{ fromJson(inputs.tags) }}"
       - name: push
