@@ -13,17 +13,14 @@ on:
       tags:
         description: 'cp versions'
         default: '["5.4.5","5.5.6","6.0.4","6.1.3","6.2.1","7.0.0"]'
-        type: string
         required: false
       test_name:
         description: 'test(s) to run (example connect/connect-jms-weblogic-sink connect/connect-http-sink)'
         required: false
-        type: string
         default: ''
       update_readme:
-        description: 'update readme (yes or no)'
+        description: 'update readme'
         required: true
-        type: boolean
         default: true
 
 jobs:
