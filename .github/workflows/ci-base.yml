@@ -193,7 +193,7 @@ jobs:
           DISABLE_CONTROL_CENTER: "yes"
 
   post-build:
-    name: Cleanup resources
+    name: Cleanup resources and Update README
     runs-on: ubuntu-latest
     if: always()
     needs: [pre-build, build, execute_one_test]
@@ -228,7 +228,7 @@ jobs:
       - name: Update README
         if: ${{ inputs.update_readme != 'no' }}
         run: |
-          ./scripts/update-readme.sh "${{ fromJson(inputs.tags) }}"
+          ./scripts/update-readme.sh ${{ fromJson(inputs.tags) }}
       - name: push
         uses: github-actions-x/commit@v2.6
         with:
