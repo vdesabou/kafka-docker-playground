@@ -20,11 +20,22 @@ then
   exit 1
 fi
 
+set -x
 image_versions="$1"
 
 if [ "$image_versions" = "" ]
 then
   logerror "ERROR: List of CP versions is not provided as argument!"
+
+  arr=("$@")
+
+  for image_version in "${arr[@]}"
+  do
+    # take last image
+    latest_version=$image_version
+    log "version $image_version"
+  done
+
   exit 1
 fi
 readme_template_file=README-template.md
