@@ -514,46 +514,46 @@ function verify_docker_and_memory()
 }
 
 
-function verify_ccloud_login()
+function verify_confluent_login()
 {
   local cmd="$1"
   set +e
   output=$($cmd 2>&1)
   set -e
   if [ "${output}" = "Error: You must login to run that command." ] || [ "${output}" = "Error: Your session has expired. Please login again." ]; then
-    logerror "This script requires ccloud to be logged in. Please execute 'ccloud login' and run again."
+    logerror "This script requires confluent CLI to be logged in. Please execute 'confluent login' and run again."
     exit 1
   fi
 }
 
-function verify_ccloud_details()
+function verify_confluent_details()
 {
-    if [ "$(ccloud prompt -f "%E")" = "(none)" ]
+    if [ "$(confluent prompt -f "%E")" = "(none)" ]
     then
-        logerror "ccloud command is badly configured: environment is not set"
-        log "Example: ccloud kafka environment list"
-        log "then: ccloud kafka environment use <environment id>"
+        logerror "confluent command is badly configured: environment is not set"
+        log "Example: confluent kafka environment list"
+        log "then: confluent kafka environment use <environment id>"
         exit 1
     fi
 
-    if [ "$(ccloud prompt -f "%K")" = "(none)" ]
+    if [ "$(confluent prompt -f "%K")" = "(none)" ]
     then
-        logerror "ccloud command is badly configured: cluster is not set"
-        log "Example: ccloud kafka cluster list"
-        log "then: ccloud kafka cluster use <cluster id>"
+        logerror "confluent command is badly configured: cluster is not set"
+        log "Example: confluent kafka cluster list"
+        log "then: confluent kafka cluster use <cluster id>"
         exit 1
     fi
 
-    if [ "$(ccloud prompt -f "%a")" = "(none)" ]
+    if [ "$(confluent prompt -f "%a")" = "(none)" ]
     then
-        logerror "ccloud command is badly configured: api key is not set"
-        log "Example: ccloud api-key store <api key> <password>"
-        log "then: ccloud api-key use <api key>"
+        logerror "confluent command is badly configured: api key is not set"
+        log "Example: confluent api-key store <api key> <password>"
+        log "then: confluent api-key use <api key>"
         exit 1
     fi
 
     CCLOUD_PROMPT_FMT='You will be using Confluent Cloud config: user={{color "green" "%u"}}, environment={{color "red" "%E"}}, cluster={{color "cyan" "%K"}}, api key={{color "yellow" "%a"}}'
-    ccloud prompt -f "$CCLOUD_PROMPT_FMT"
+    confluent prompt -f "$CCLOUD_PROMPT_FMT"
 }
 
 function check_if_continue()
@@ -575,11 +575,11 @@ function create_topic()
 {
   local topic="$1"
   log "Check if topic $topic exists"
-  ccloud kafka topic create "$topic" --dry-run 2>/dev/null
+  confluent kafka topic create "$topic" --dry-run 2>/dev/null
   if [[ $? == 0 ]]; then
     log "Create topic $topic"
-    log "ccloud kafka topic create $topic"
-    ccloud kafka topic create "$topic" || true
+    log "confluent kafka topic create $topic"
+    confluent kafka topic create "$topic" || true
   else
     log "Topic $topic already exists"
   fi
@@ -589,11 +589,11 @@ function delete_topic()
 {
   local topic="$1"
   log "Check if topic $topic exists"
-  ccloud kafka topic create "$topic" --dry-run 2>/dev/null
+  confluent kafka topic create "$topic" --dry-run 2>/dev/null
   if [[ $? != 0 ]]; then
     log "Delete topic $topic"
-    log "ccloud kafka topic delete $topic"
-    ccloud kafka topic delete "$topic" || true
+    log "confluent kafka topic delete $topic"
+    confluent kafka topic delete "$topic" || true
   else
     log "Topic $topic does not exist"
   fi
@@ -617,17 +617,17 @@ function check_docker_compose_version() {
   fi
 }
 
-function get_ccloud_version() {
-  ccloud version | grep "^Version:" | cut -d':' -f2 | cut -d'v' -f2
+function get_confluent_version() {
+  confluent version | grep "^Version:" | cut -d':' -f2 | cut -d'v' -f2
 }
 
-function check_ccloud_version() {
-  REQUIRED_CCLOUD_VER=${1:-"0.185.0"}
-  CCLOUD_VER=$(get_ccloud_version)
+function check_confluent_version() {
+  REQUIRED_CONFLUENT_VER=${1:-"2.0.0"}
+  CONFLUENT_VER=$(get_confluent_version)
 
-  if version_gt $REQUIRED_CCLOUD_VER $CCLOUD_VER; then
-    log "ccloud version ${REQUIRED_CCLOUD_VER} or greater is required.  Current reported version: ${CCLOUD_VER}"
-    echo 'To update run: ccloud update'
+  if version_gt $REQUIRED_CONFLUENT_VER $CONFLUENT_VER; then
+    log "confluent version ${REQUIRED_CONFLUENT_VER} or greater is required.  Current reported version: ${CONFLUENT_VER}"
+    echo 'To update run: confluent update'
     exit 1
   fi
 }

@@ -6,14 +6,14 @@ Quickly test [matt-mangia/kafka-admin](https://github.com/matt-mangia/kafka-admi
 
 ## How to run
 
-Create `$HOME/.ccloud/config`
+Create `$HOME/.confluent/config`
 
-On the host from which you are running Docker, ensure that you have properly initialized Confluent Cloud CLI and have a valid configuration file at `$HOME/.ccloud/config`.
+On the host from which you are running Docker, ensure that you have properly initialized Confluent Cloud CLI and have a valid configuration file at `$HOME/.confluent/config`.
 
 Example:
 
 ```bash
-$ cat $HOME/.ccloud/config
+$ cat $HOME/.confluent/config
 bootstrap.servers=<BROKER ENDPOINT>
 ssl.endpoint.identification.algorithm=https
 security.protocol=SASL_SSL
@@ -41,7 +41,7 @@ $ ./start.sh
 
 ## Details of what the script is doing
 
-Same as [Service Account and ACLs](https://github.com/vdesabou/kafka-docker-playground/tree/master/ccloud/ccloud-demo#service-account-and-acls), except that instead of using ccloud to create acl (ccloud kafka acl create), we use [kafka admin](https://github.com/matt-mangia/kafka-admin):
+Same as [Service Account and ACLs](https://github.com/vdesabou/kafka-docker-playground/tree/master/ccloud/ccloud-demo#service-account-and-acls), except that instead of using confluent CLI to create acl (confluent kafka acl create), we use [kafka admin](https://github.com/matt-mangia/kafka-admin):
 
 ```bash
 java -jar ${DIR}/kafka-admin/target/kafka-admin-1.0-SNAPSHOT-jar-with-dependencies.jar -properties ${DIR}/kafka-admin.properties -config ${DIR}/config.yml -execute
@@ -99,7 +99,7 @@ Creating ACLs...Done!
 ACLs are correctly applied:
 
 ```bash
-ccloud kafka acl list --service-account 41839
+confluent kafka acl list --service-account 41839
   ServiceAccountId | Permission | Operation | Resource |         Name          |  Type
 +------------------+------------+-----------+----------+-----------------------+---------+
   User:41839       | ALLOW      | READ      | TOPIC    | kafka-admin-acl-topic | LITERAL

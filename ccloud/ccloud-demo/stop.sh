@@ -3,12 +3,12 @@
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
-verify_installed "ccloud"
+verify_installed "confluent"
 if [ -z "$CI" ]
 then
      # not running with github actions
-     verify_ccloud_login  "ccloud kafka cluster list"
-     verify_ccloud_details
+     verify_confluent_login  "confluent kafka cluster list"
+     verify_confluent_details
      check_if_continue
 else
      # running with github actions
@@ -19,7 +19,7 @@ else
      fi
      source ../../secrets.properties > /dev/null 2>&1
 
-     CONFIG_FILE=~/.ccloud/config
+     CONFIG_FILE=~/.confluent/config
 
      if [ ! -f ${CONFIG_FILE} ]
      then
@@ -37,13 +37,13 @@ else
      log "##################################################"
      log "Log in to Confluent Cloud"
      log "##################################################"
-     ccloud login --save
+     confluent login --save
      log "Use environment $ENVIRONMENT"
-     ccloud environment use $ENVIRONMENT
+     confluent environment use $ENVIRONMENT
      log "Use cluster $CLUSTER_LKC"
-     ccloud kafka cluster use $CLUSTER_LKC
+     confluent kafka cluster use $CLUSTER_LKC
      log "Use api key $CLOUD_KEY"
-     ccloud api-key use $CLOUD_KEY --resource $CLUSTER_LKC
+     confluent api-key use $CLOUD_KEY --resource $CLUSTER_LKC
 fi
 
 set +e

@@ -8,14 +8,14 @@ Quickly test [KafkaJS](https://kafka.js.org) client using Confluent Cloud
 
 ## How to run
 
-1. Create `$HOME/.ccloud/config`
+1. Create `$HOME/.confluent/config`
 
-On the host from which you are running Docker, ensure that you have properly initialized Confluent Cloud CLI and have a valid configuration file at `$HOME/.ccloud/config`.
+On the host from which you are running Docker, ensure that you have properly initialized Confluent Cloud CLI and have a valid configuration file at `$HOME/.confluent/config`.
 
 Example:
 
 ```bash
-$ cat $HOME/.ccloud/config
+$ cat $HOME/.confluent/config
 bootstrap.servers=<BROKER ENDPOINT>
 ssl.endpoint.identification.algorithm=https
 security.protocol=SASL_SSL

@@ -70,7 +70,7 @@ $ curl -X PUT \
 Send message to MQTT in basic1-topic topic from a file
 
 ```bash
-$ ccloud kafka topic create "basic1"
+$ confluent kafka topic create "basic1"
 $ docker exec -i mosquitto sh -c 'mosquitto_pub -h localhost -p 1883 -u "myuser" -P "mypassword" -t "basic1-topic" -s' < basic_data.json
 ```
 

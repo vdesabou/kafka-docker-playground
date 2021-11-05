@@ -23,14 +23,14 @@ else
     exit 1
 fi
 
-verify_installed "ccloud"
+verify_installed "confluent"
 
-export CCLOUD_EMAIL=$ccloud_login
-export CCLOUD_PASSWORD=$ccloud_password
+export CONFLUENT_CLOUD_EMAIL=$ccloud_login
+export CONFLUENT_CLOUD_PASSWORD=$ccloud_password
 
-ccloud login
+confluent login
 
 set +e
-ccloud kafka cluster delete ksql-benchmarking
+confluent kafka cluster delete ksql-benchmarking
 set -e
-ccloud kafka cluster create ksql-benchmarking --type dedicated --cloud ${provider} --cku ${ckus} --environment ${environment_id} --region ${eks_region}
+confluent kafka cluster create ksql-benchmarking --type dedicated --cloud ${provider} --cku ${ckus} --environment ${environment_id} --region ${eks_region}

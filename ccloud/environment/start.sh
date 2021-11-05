@@ -4,7 +4,7 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
-CONFIG_FILE=~/.ccloud/config
+CONFIG_FILE=~/.confluent/config
 
 if [ ! -f ${CONFIG_FILE} ]
 then
@@ -14,7 +14,7 @@ fi
 
 if [ -z "$BOOTSTRAP_SERVERS" ]
 then
-     ${DIR}/../ccloud-demo/ccloud-generate-env-vars.sh ${CONFIG_FILE}
+     ${DIR}/../ccloud-demo/confluent-generate-env-vars.sh ${CONFIG_FILE}
 
      if [ -f /tmp/delta_configs/env.delta ]
      then
@@ -28,10 +28,10 @@ fi
 if [ -z "$CI" ] && [ -z "$CLOUDFORMATION" ]
 then
      # not running with CI
-     verify_installed "ccloud"
-     check_ccloud_version 1.7.0 || exit 1
-     verify_ccloud_login  "ccloud kafka cluster list"
-     verify_ccloud_details
+     verify_installed "confluent"
+     check_confluent_version 2.0.0 || exit 1
+     verify_confluent_login  "confluent kafka cluster list"
+     verify_confluent_details
      check_if_continue
 else
      if [ ! -z "$CI" ]
@@ -45,21 +45,21 @@ else
           source ../../secrets.properties > /dev/null 2>&1
      fi
      
-     log "Installing ccloud CLI"
-     curl -L --http1.1 https://cnfl.io/ccloud-cli | sudo sh -s -- -b /usr/local/bin
+     log "Installing confluent CLI"
+     curl -L --http1.1 https://cnfl.io/cli | sudo sh -s -- -b /usr/local/bin
      export PATH=$PATH:/usr/local/bin
      log "##################################################"
      log "Log in to Confluent Cloud"
      log "##################################################"
-     ccloud login --save
+     confluent login --save
      log "Use environment $ENVIRONMENT"
-     ccloud environment use $ENVIRONMENT
+     confluent environment use $ENVIRONMENT
      log "Use cluster $CLUSTER_LKC"
-     ccloud kafka cluster use $CLUSTER_LKC
+     confluent kafka cluster use $CLUSTER_LKC
      log "Store api key $CLOUD_KEY"
-     ccloud api-key store $CLOUD_KEY $CLOUD_SECRET --resource $CLUSTER_LKC --force
+     confluent api-key store $CLOUD_KEY $CLOUD_SECRET --resource $CLUSTER_LKC --force
      log "Use api key $CLOUD_KEY"
-     ccloud api-key use $CLOUD_KEY --resource $CLUSTER_LKC
+     confluent api-key use $CLOUD_KEY --resource $CLUSTER_LKC
 fi
 
 # generate data file for externalizing secrets

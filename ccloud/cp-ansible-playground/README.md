@@ -22,14 +22,14 @@ Available tags are `6.0.0`
 
 ## How to run
 
-1. Create `$HOME/.ccloud/config`
+1. Create `$HOME/.confluent/config`
 
-On the host from which you are running Docker, ensure that you have properly initialized Confluent Cloud CLI and have a valid configuration file at `$HOME/.ccloud/config`.
+On the host from which you are running Docker, ensure that you have properly initialized Confluent Cloud CLI and have a valid configuration file at `$HOME/.confluent/config`.
 
 Example:
 
 ```bash
-$ cat $HOME/.ccloud/config
+$ cat $HOME/.confluent/config
 bootstrap.servers=<BROKER ENDPOINT>
 ssl.endpoint.identification.algorithm=https
 security.protocol=SASL_SSL
@@ -55,7 +55,7 @@ ccloud.password=<ccloud password>
 $ ./start.sh
 ```
 
-`hosts-ccloud` host file is automatically generated with your confluent cloud details from `$HOME/.ccloud/config`
+`hosts-ccloud` host file is automatically generated with your confluent cloud details from `$HOME/.confluent/config`
 
 
 N.B: Control Center is reachable at [http://127.0.0.1:9021](http://127.0.0.1:9021])

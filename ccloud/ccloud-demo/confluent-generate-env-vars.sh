@@ -17,19 +17,18 @@
 
 ###############################################################################
 # Overview:
-# This code reads the Confluent Cloud configuration in $HOME/.ccloud/config
+# This code reads the Confluent Cloud configuration in $HOME/.confluent/config
 # and writes the ENV variables used by Docker Compose to a file called 'delta_configs/env.delta'
 #
-# Reference: https://github.com/confluentinc/examples/blob/5.1.2-post/ccloud/ccloud-generate-cp-configs.sh
 #
 ###############################################################################
 
 set -eu
 
 # Confluent Cloud configuration
-CCLOUD_CONFIG=$HOME/.ccloud/config
+CCLOUD_CONFIG=$HOME/.confluent/config
 if [[ ! -f $CCLOUD_CONFIG ]]; then
-  log "'ccloud' is not initialized. Run 'ccloud init' and try again"
+  log "'confluent CLI' is not initialized. Run 'confluent init' and try again"
   exit 1
 fi
 
@@ -58,8 +57,8 @@ BASIC_AUTH_CREDENTIALS_SOURCE=$( grep "^basic.auth.credentials.source" $SR_CONFI
 SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO=$( grep "^schema.registry.basic.auth.user.info" $SR_CONFIG_FILE | awk -F'=' '{print $2;}' )
 SCHEMA_REGISTRY_URL=$( grep "^schema.registry.url" $SR_CONFIG_FILE | awk -F'=' '{print $2;}' )
 CONFLUENT_LICENSE=$( grep "^confluent.license" $CCLOUD_CONFIG | cut -d'=' -f2- )
-CCLOUD_EMAIL=$( grep "^ccloud.user" $CCLOUD_CONFIG | cut -d'=' -f2- )
-CCLOUD_PASSWORD=$( grep "^ccloud.password" $CCLOUD_CONFIG | cut -d'=' -f2- )
+CONFLUENT_CLOUD_EMAIL=$( grep "^ccloud.user" $CCLOUD_CONFIG | cut -d'=' -f2- )
+CONFLUENT_CLOUD_PASSWORD=$( grep "^ccloud.password" $CCLOUD_CONFIG | cut -d'=' -f2- )
 
 ENV_CONFIG=$DEST/env.delta
 rm -f $ENV_CONFIG
@@ -73,6 +72,6 @@ export SCHEMA_REGISTRY_URL=$SCHEMA_REGISTRY_URL
 export CLOUD_KEY=$CLOUD_KEY
 export CLOUD_SECRET=$CLOUD_SECRET
 export CONFLUENT_LICENSE='$CONFLUENT_LICENSE'
-export CCLOUD_EMAIL='$CCLOUD_EMAIL'
-export CCLOUD_PASSWORD='$CCLOUD_PASSWORD'
+export CONFLUENT_CLOUD_EMAIL='$CONFLUENT_CLOUD_EMAIL'
+export CONFLUENT_CLOUD_PASSWORD='$CONFLUENT_CLOUD_PASSWORD'
 EOF
