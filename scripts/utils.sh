@@ -339,149 +339,146 @@ else
         then
           export CONNECT_TAG="$TAG"
         fi
-        return
-      fi
+      else
+        ###
+        #  Loop on all connectors in CONNECT_PLUGIN_PATH and install latest version from Confluent Hub (except for JDBC and replicator)
+        ###
+        first_loop=true
+        for connector_path in ${connector_paths//,/ }
+        do
+          connector_path=$(echo "$connector_path" | cut -d "/" -f 5)
+          owner=$(echo "$connector_path" | cut -d "-" -f 1)
+          name=$(echo "$connector_path" | cut -d "-" -f 2-)
 
-      
-      ###
-      #  Loop on all connectors in CONNECT_PLUGIN_PATH and install latest version from Confluent Hub (except for JDBC and replicator)
-      ###
-      first_loop=true
-      for connector_path in ${connector_paths//,/ }
-      do
-        connector_path=$(echo "$connector_path" | cut -d "/" -f 5)
-        owner=$(echo "$connector_path" | cut -d "-" -f 1)
-        name=$(echo "$connector_path" | cut -d "-" -f 2-)
-
-        if [ "$name" == "" ]
-        then
-          # can happen for filestream
-          if [ -z "$CONNECT_TAG" ]
+          if [ "$name" == "" ]
           then
-            export CONNECT_TAG="$TAG"
-          fi
-          return
-        fi
+            # can happen for filestream
+            if [ -z "$CONNECT_TAG" ]
+            then
+              export CONNECT_TAG="$TAG"
+            fi
+          else
+            if [ -z "$CONNECT_TAG" ]
+            then
+              export CONNECT_TAG="$TAG"
+            fi
 
-        if [ -z "$CONNECT_TAG" ]
-        then
-          export CONNECT_TAG="$TAG"
-        fi
+            version_to_get_from_hub="latest"
+            if [ "$name" = "kafka-connect-replicator" ]
+            then
+              version_to_get_from_hub="$TAG"
+            fi
+            if [ "$name" = "kafka-connect-jdbc" ]
+            then
+              if ! version_gt $TAG_BASE "5.9.0"; then
+                # for version less than 6.0.0, use JDBC with same version
+                # see https://github.com/vdesabou/kafka-docker-playground/issues/221
+                version_to_get_from_hub="$TAG_BASE"
+              fi
 
-        version_to_get_from_hub="latest"
-        if [ "$name" = "kafka-connect-replicator" ]
-        then
-          version_to_get_from_hub="$TAG"
-        fi
-        if [ "$name" = "kafka-connect-jdbc" ]
-        then
-          if ! version_gt $TAG_BASE "5.9.0"; then
-            # for version less than 6.0.0, use JDBC with same version
-            # see https://github.com/vdesabou/kafka-docker-playground/issues/221
-            version_to_get_from_hub="$TAG_BASE"
-          fi
+              if [ "$TAG_BASE" = "5.0.2" ] || [ "$TAG_BASE" = "5.0.3" ]
+              then
+                version_to_get_from_hub="5.0.1"
+              fi
+            fi
 
-          if [ "$TAG_BASE" = "5.0.2" ] || [ "$TAG_BASE" = "5.0.3" ]
-          then
-            version_to_get_from_hub="5.0.1"
-          fi
-        fi
-
-        log "👷♻️ Re-building Docker image vdesabou/kafka-docker-playground-connect:${CONNECT_TAG} to include $owner/$name:$version_to_get_from_hub"
-        tmp_dir=$(mktemp -d -t ci-XXXXXXXXXX)
+            log "👷♻️ Re-building Docker image vdesabou/kafka-docker-playground-connect:${CONNECT_TAG} to include $owner/$name:$version_to_get_from_hub"
+            tmp_dir=$(mktemp -d -t ci-XXXXXXXXXX)
 cat << EOF > $tmp_dir/Dockerfile
 FROM vdesabou/kafka-docker-playground-connect:${CONNECT_TAG}
 RUN confluent-hub install --no-prompt $owner/$name:$version_to_get_from_hub
 EOF
-        docker build -t vdesabou/kafka-docker-playground-connect:$CONNECT_TAG $tmp_dir
-        rm -rf $tmp_dir
+            docker build -t vdesabou/kafka-docker-playground-connect:$CONNECT_TAG $tmp_dir
+            rm -rf $tmp_dir
 
-        docker run --rm vdesabou/kafka-docker-playground-connect:${CONNECT_TAG} cat /usr/share/confluent-hub-components/${connector_path}/manifest.json > /tmp/manifest.json
-        version=$(cat /tmp/manifest.json | jq -r '.version')
-        release_date=$(cat /tmp/manifest.json | jq -r '.release_date')
-        documentation_url=$(cat /tmp/manifest.json | jq -r '.documentation_url')
+            docker run --rm vdesabou/kafka-docker-playground-connect:${CONNECT_TAG} cat /usr/share/confluent-hub-components/${connector_path}/manifest.json > /tmp/manifest.json
+            version=$(cat /tmp/manifest.json | jq -r '.version')
+            release_date=$(cat /tmp/manifest.json | jq -r '.release_date')
+            documentation_url=$(cat /tmp/manifest.json | jq -r '.documentation_url')
 
-        ###
-        #  CONNECTOR_JAR is set
-        ###
-        if [ ! -z "$CONNECTOR_JAR" ] && [ "$first_loop" = true ]
-        then
-          if [ ! -f "$CONNECTOR_JAR" ]
-          then
-            logerror "CONNECTOR_JAR $CONNECTOR_JAR does not exist!"
-            exit 1
-          fi
-          log "🎯 CONNECTOR_JAR is set with $CONNECTOR_JAR"
-          connector_jar_name=$(basename ${CONNECTOR_JAR})
-          export CONNECT_TAG="CP-$CONNECT_TAG-$connector_jar_name"
-          current_jar_path="/usr/share/confluent-hub-components/$connector_path/lib/$name-$version.jar"
-          set +e
-          docker run vdesabou/kafka-docker-playground-connect:${TAG} ls $current_jar_path
-          if [ $? -ne 0 ]
-          then
-            logwarn "$connector_path/lib/$name-$version.jar does not exist, the jar name to replace could not be found automatically"
-            array=($(docker run vdesabou/kafka-docker-playground-connect:${TAG} ls /usr/share/confluent-hub-components/$connector_path/lib | grep $version))
-            choosejar "${array[@]}"
-            current_jar_path="/usr/share/confluent-hub-components/$connector_path/lib/$jar"
-          fi
-          set -e
-          log "👷🎯 Building Docker image vdesabou/kafka-docker-playground-connect:${CONNECT_TAG}"
-          log "Remplacing $name-$version.jar by $connector_jar_name"
-          tmp_dir=$(mktemp -d -t ci-XXXXXXXXXX)
-          cp $CONNECTOR_JAR $tmp_dir/
+            ###
+            #  CONNECTOR_JAR is set
+            ###
+            if [ ! -z "$CONNECTOR_JAR" ] && [ "$first_loop" = true ]
+            then
+              if [ ! -f "$CONNECTOR_JAR" ]
+              then
+                logerror "CONNECTOR_JAR $CONNECTOR_JAR does not exist!"
+                exit 1
+              fi
+              log "🎯 CONNECTOR_JAR is set with $CONNECTOR_JAR"
+              connector_jar_name=$(basename ${CONNECTOR_JAR})
+              export CONNECT_TAG="CP-$CONNECT_TAG-$connector_jar_name"
+              current_jar_path="/usr/share/confluent-hub-components/$connector_path/lib/$name-$version.jar"
+              set +e
+              docker run vdesabou/kafka-docker-playground-connect:${TAG} ls $current_jar_path
+              if [ $? -ne 0 ]
+              then
+                logwarn "$connector_path/lib/$name-$version.jar does not exist, the jar name to replace could not be found automatically"
+                array=($(docker run vdesabou/kafka-docker-playground-connect:${TAG} ls /usr/share/confluent-hub-components/$connector_path/lib | grep $version))
+                choosejar "${array[@]}"
+                current_jar_path="/usr/share/confluent-hub-components/$connector_path/lib/$jar"
+              fi
+              set -e
+              log "👷🎯 Building Docker image vdesabou/kafka-docker-playground-connect:${CONNECT_TAG}"
+              log "Remplacing $name-$version.jar by $connector_jar_name"
+              tmp_dir=$(mktemp -d -t ci-XXXXXXXXXX)
+              cp $CONNECTOR_JAR $tmp_dir/
 cat << EOF > $tmp_dir/Dockerfile
 FROM vdesabou/kafka-docker-playground-connect:${TAG}
 COPY $connector_jar_name $current_jar_path
 EOF
-          docker build -t vdesabou/kafka-docker-playground-connect:$CONNECT_TAG $tmp_dir
-          rm -rf $tmp_dir
-        ###
-        #  CONNECTOR_ZIP is set
-        ###
-        elif [ ! -z "$CONNECTOR_ZIP" ] && [ "$first_loop" = true ]
-        then
-          if [ ! -f "$CONNECTOR_ZIP" ]
-          then
-            logerror "CONNECTOR_ZIP $CONNECTOR_ZIP does not exist!"
-            exit 1
-          fi
-          log "🎯 CONNECTOR_ZIP is set with $CONNECTOR_ZIP"
-          connector_zip_name=$(basename ${CONNECTOR_ZIP})
-          export CONNECT_TAG="CP-$TAG-$connector_zip_name"
+              docker build -t vdesabou/kafka-docker-playground-connect:$CONNECT_TAG $tmp_dir
+              rm -rf $tmp_dir
+            ###
+            #  CONNECTOR_ZIP is set
+            ###
+            elif [ ! -z "$CONNECTOR_ZIP" ] && [ "$first_loop" = true ]
+            then
+              if [ ! -f "$CONNECTOR_ZIP" ]
+              then
+                logerror "CONNECTOR_ZIP $CONNECTOR_ZIP does not exist!"
+                exit 1
+              fi
+              log "🎯 CONNECTOR_ZIP is set with $CONNECTOR_ZIP"
+              connector_zip_name=$(basename ${CONNECTOR_ZIP})
+              export CONNECT_TAG="CP-$TAG-$connector_zip_name"
 
-          log "👷 Building Docker image vdesabou/kafka-docker-playground-connect:${CONNECT_TAG}"
-          tmp_dir=$(mktemp -d -t ci-XXXXXXXXXX)
-          cp $CONNECTOR_ZIP $tmp_dir/
-          if [[ "$TAG" == *ubi8 ]] || version_gt $TAG_BASE "5.9.0"
-          then
-              export CONNECT_CONTAINER_USER="appuser"
-          else
-              export CONNECT_CONTAINER_USER="root"
-          fi
+              log "👷 Building Docker image vdesabou/kafka-docker-playground-connect:${CONNECT_TAG}"
+              tmp_dir=$(mktemp -d -t ci-XXXXXXXXXX)
+              cp $CONNECTOR_ZIP $tmp_dir/
+              if [[ "$TAG" == *ubi8 ]] || version_gt $TAG_BASE "5.9.0"
+              then
+                  export CONNECT_CONTAINER_USER="appuser"
+              else
+                  export CONNECT_CONTAINER_USER="root"
+              fi
 cat << EOF > $tmp_dir/Dockerfile
 FROM vdesabou/kafka-docker-playground-connect:${TAG}
 COPY --chown=$CONNECT_CONTAINER_USER:$CONNECT_CONTAINER_USER ${connector_zip_name} /tmp
 RUN confluent-hub install --no-prompt /tmp/${connector_zip_name}
 EOF
-          docker build -t vdesabou/kafka-docker-playground-connect:$CONNECT_TAG $tmp_dir
-          rm -rf $tmp_dir
-        ###
-        #  Neither CONNECTOR_ZIP or CONNECTOR_JAR are set
-        ###
-        else
-          if [ -z "$CONNECT_TAG" ]
-          then
-            export CONNECT_TAG="$TAG"
+              docker build -t vdesabou/kafka-docker-playground-connect:$CONNECT_TAG $tmp_dir
+              rm -rf $tmp_dir
+            ###
+            #  Neither CONNECTOR_ZIP or CONNECTOR_JAR are set
+            ###
+            else
+              if [ -z "$CONNECT_TAG" ]
+              then
+                export CONNECT_TAG="$TAG"
+              fi
+              if [ "$first_loop" = true ]
+              then
+                log "💫 Using 🔗connector: $owner/$name:$version 📅release date: $release_date 🌐documentation: $documentation_url"
+                log "🎓 To specify different version, check the documentation https://kafka-docker-playground.io/#/how-to-use?id=🔗-for-connectors"
+              fi
+              CONNECTOR_TAG=$version
+            fi
+            first_loop=false
           fi
-          if [ "$first_loop" = true ]
-          then
-            log "💫 Using 🔗connector: $owner/$name:$version 📅release date: $release_date 🌐documentation: $documentation_url"
-            log "🎓 To specify different version, check the documentation https://kafka-docker-playground.io/#/how-to-use?id=🔗-for-connectors"
-          fi
-          CONNECTOR_TAG=$version
-        fi
-        first_loop=false
-      done
+        done
+      fi
     fi
   fi
   if [ -z "$CONNECT_TAG" ]
