@@ -66,9 +66,9 @@ docker run -v ${DIR}:/tmp maven:3.6.1-jdk-11 java -jar /tmp/kafka-admin/target/k
 
 log "Create a new service account"
 SERVICE_NAME="my-java-producer-app-1234"
-log "confluent service-account create $SERVICE_NAME --description $SERVICE_NAME"
-confluent service-account create $SERVICE_NAME --description $SERVICE_NAME || true
-SERVICE_ACCOUNT_ID=$(confluent service-account list | grep $SERVICE_NAME | awk '{print $1;}')
+log "confluent iam service-account create $SERVICE_NAME --description $SERVICE_NAME"
+confluent iam service-account create $SERVICE_NAME --description $SERVICE_NAME || true
+SERVICE_ACCOUNT_ID=$(confluent iam service-account list | grep $SERVICE_NAME | awk '{print $1;}')
 
 CCLOUD_CLUSTER=$(confluent prompt -f "%k")
 log "Create an API key and secret for the new service account"
@@ -164,5 +164,5 @@ confluent kafka acl delete --allow --service-account $SERVICE_ACCOUNT_ID --opera
 log "confluent api-key delete $API_KEY_SA"
 confluent api-key delete $API_KEY_SA 1>/dev/null
 
-log "confluent service-account delete $SERVICE_ACCOUNT_ID"
-confluent service-account delete $SERVICE_ACCOUNT_ID
+log "confluent iam service-account delete $SERVICE_ACCOUNT_ID"
+confluent iam service-account delete $SERVICE_ACCOUNT_ID

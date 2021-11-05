@@ -552,7 +552,7 @@ function verify_confluent_details()
         exit 1
     fi
 
-    CCLOUD_PROMPT_FMT='You will be using Confluent Cloud config: user={{color "green" "%u"}}, environment={{color "red" "%E"}}, cluster={{color "cyan" "%K"}}, api key={{color "yellow" "%a"}}'
+    CCLOUD_PROMPT_FMT='You will be using Confluent Cloud config: user={{fgcolor "green" "%u"}}, environment={{fgcolor "red" "%E"}}, cluster={{fgcolor "cyan" "%K"}}, api key={{fgcolor "yellow" "%a"}}'
     confluent prompt -f "$CCLOUD_PROMPT_FMT"
 }
 
