@@ -10,10 +10,6 @@ on:
 
   workflow_dispatch:
     inputs:
-      tags:
-        description: 'cp versions'
-        default: '["5.4.5","5.5.6","6.0.4","6.1.3","6.2.1","7.0.0"]'
-        required: false
       test_name:
         description: 'test(s) to run (example connect/connect-jms-weblogic-sink connect/connect-http-sink)'
         required: false
@@ -59,7 +55,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        tag: ${{ fromJson(github.event.inputs.tags) }}
+        tag: ["5.4.5","5.5.6","6.0.4","6.1.3","6.2.1","7.0.0"]
         test_list : [
                       "🚀 connect/connect-servicenow-sink connect/connect-servicenow-source",
                       "🚀 connect/connect-salesforce-bulkapi-sink connect/connect-salesforce-bulkapi-source connect/connect-salesforce-pushtopics-source connect/connect-salesforce-sobject-sink connect/connect-salesforce-cdc-source connect/connect-salesforce-platform-events-sink connect/connect-salesforce-platform-events-source",
@@ -144,7 +140,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        tag: ${{ fromJson(github.event.inputs.tags) }}
+        tag: ["5.4.5","5.5.6","6.0.4","6.1.3","6.2.1","7.0.0"]
         test_list : [
                       "🚀 ${{ github.event.inputs.test_name }}"
                     ]
