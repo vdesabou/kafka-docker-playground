@@ -348,6 +348,11 @@ do
         $content_file > $content_tmp_file
 
     cp $content_tmp_file $content_file
+  else
+    sed -e "s|:${test}:|\&nbsp; $ci |g" \
+        $content_file > $content_tmp_file
+
+    cp $content_tmp_file $content_file
   fi
 done #end test_list
 
