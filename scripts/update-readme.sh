@@ -58,7 +58,7 @@ then
   aws s3 cp --only-show-errors s3://kafka-docker-playground/ci/ ci/ --recursive --no-progress --region us-east-1
 fi
 
-test_list=$(grep "🚀 " ${DIR}/../.github/workflows/ci-base.yml | cut -d '"' -f 2 | tr '\n' ' ')
+test_list=$(grep "🚀 " ${DIR}/../.github/workflows/ci.yml | cut -d '"' -f 2 | tr '\n' ' ')
 declare -a TEST_FAILED
 declare -a TEST_SUCCESS
 nb_total_tests=0
