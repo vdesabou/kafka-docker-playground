@@ -5,7 +5,7 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
-CONFIG_FILE=~/.ccloud/config
+CONFIG_FILE=~/.confluent/config
 
 if [ ! -f ${CONFIG_FILE} ]
 then
@@ -13,7 +13,7 @@ then
      exit 1
 fi
 
-${DIR}/../ccloud-demo/ccloud-generate-env-vars.sh ${CONFIG_FILE}
+${DIR}/../ccloud-demo/confluent-generate-env-vars.sh ${CONFIG_FILE}
 
 if [ -f /tmp/delta_configs/env.delta ]
 then
@@ -54,32 +54,32 @@ then
      fi
      source ../../secrets.properties > /dev/null 2>&1
 
-     log "Installing ccloud CLI"
-     curl -L --http1.1 https://cnfl.io/ccloud-cli | sudo sh -s -- -b /usr/local/bin
+     log "Installing confluent CLI"
+     curl -L --http1.1 https://cnfl.io/cli | sudo sh -s -- -b /usr/local/bin
      export PATH=$PATH:/usr/local/bin
      log "##################################################"
      log "Log in to Confluent Cloud"
      log "##################################################"
-     ccloud login --save
+     confluent login --save
      log "Use environment $ENVIRONMENT"
-     ccloud environment use $ENVIRONMENT
+     confluent environment use $ENVIRONMENT
      log "Use cluster $CLUSTER_LKC"
-     ccloud kafka cluster use $CLUSTER_LKC
+     confluent kafka cluster use $CLUSTER_LKC
      log "Store api key $CLOUD_KEY"
-     ccloud api-key store $CLOUD_KEY $CLOUD_SECRET --resource $CLUSTER_LKC --force
+     confluent api-key store $CLOUD_KEY $CLOUD_SECRET --resource $CLUSTER_LKC --force
      log "Use api key $CLOUD_KEY"
-     ccloud api-key use $CLOUD_KEY --resource $CLUSTER_LKC
+     confluent api-key use $CLOUD_KEY --resource $CLUSTER_LKC
 fi
 
-export CCLOUD_CLUSTER=$(ccloud prompt -f "%k")
+export CCLOUD_CLUSTER=$(confluent prompt -f "%k")
 
 # generate config.yml
 sed -e "s|:CCLOUD_CLUSTER:|$CCLOUD_CLUSTER|g" \
     ${DIR}/config-template.yml > ${DIR}/config.yml
 
 log "Create API key and secret with cloud resource for Metrics API"
-log "ccloud api-key create --resource cloud"
-OUTPUT=$(ccloud api-key create --resource cloud)
+log "confluent api-key create --resource cloud"
+OUTPUT=$(confluent api-key create --resource cloud)
 export API_KEY_CLOUD=$(echo "$OUTPUT" | grep '| API Key' | awk '{print $5;}')
 export API_SECRET_CLOUD=$(echo "$OUTPUT" | grep '| Secret' | awk '{print $4;}')
 

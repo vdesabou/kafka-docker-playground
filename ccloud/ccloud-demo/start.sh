@@ -5,7 +5,7 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
 SR_TYPE=${1:-SCHEMA_REGISTRY_DOCKER}
-CONFIG_FILE=~/.ccloud/config
+CONFIG_FILE=~/.confluent/config
 
 if [ ! -f ${CONFIG_FILE} ]
 then
@@ -16,10 +16,10 @@ fi
 if [ "${SR_TYPE}" == "SCHEMA_REGISTRY_DOCKER" ]
 then
      log "INFO: Using Docker Schema Registry"
-     ./ccloud-generate-env-vars.sh schema_registry_docker.config
+     ./confluent-generate-env-vars.sh schema_registry_docker.config
 else
      log "INFO: Using Confluent Cloud Schema Registry"
-     ./ccloud-generate-env-vars.sh ${CONFIG_FILE}
+     ./confluent-generate-env-vars.sh ${CONFIG_FILE}
 fi
 
 if [ -f /tmp/delta_configs/env.delta ]

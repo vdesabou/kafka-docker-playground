@@ -66,14 +66,14 @@ docker run -v ${DIR}:/tmp maven:3.6.1-jdk-11 java -jar /tmp/kafka-admin/target/k
 
 log "Create a new service account"
 SERVICE_NAME="my-java-producer-app-1234"
-log "ccloud service-account create $SERVICE_NAME --description $SERVICE_NAME"
-ccloud service-account create $SERVICE_NAME --description $SERVICE_NAME || true
-SERVICE_ACCOUNT_ID=$(ccloud service-account list | grep $SERVICE_NAME | awk '{print $1;}')
+log "confluent service-account create $SERVICE_NAME --description $SERVICE_NAME"
+confluent service-account create $SERVICE_NAME --description $SERVICE_NAME || true
+SERVICE_ACCOUNT_ID=$(confluent service-account list | grep $SERVICE_NAME | awk '{print $1;}')
 
-CCLOUD_CLUSTER=$(ccloud prompt -f "%k")
+CCLOUD_CLUSTER=$(confluent prompt -f "%k")
 log "Create an API key and secret for the new service account"
-log "ccloud api-key create --service-account $SERVICE_ACCOUNT_ID --resource $CCLOUD_CLUSTER"
-OUTPUT=$(ccloud api-key create --service-account $SERVICE_ACCOUNT_ID --resource $CCLOUD_CLUSTER)
+log "confluent api-key create --service-account $SERVICE_ACCOUNT_ID --resource $CCLOUD_CLUSTER"
+OUTPUT=$(confluent api-key create --service-account $SERVICE_ACCOUNT_ID --resource $CCLOUD_CLUSTER)
 API_KEY_SA=$(echo "$OUTPUT" | grep '| API Key' | awk '{print $5;}')
 API_SECRET_SA=$(echo "$OUTPUT" | grep '| Secret' | awk '{print $4;}')
 
@@ -107,8 +107,8 @@ set +e
 create_topic $TOPIC_ACL
 
 log "By default, no ACLs are configured"
-log "ccloud kafka acl list --service-account $SERVICE_ACCOUNT_ID"
-ccloud kafka acl list --service-account $SERVICE_ACCOUNT_ID
+log "confluent kafka acl list --service-account $SERVICE_ACCOUNT_ID"
+confluent kafka acl list --service-account $SERVICE_ACCOUNT_ID
 
 log "Run the Java producer to $TOPIC_ACL: before ACLs"
 LOG1="/tmp/log.1"
@@ -123,8 +123,8 @@ else
 fi
 
 log "Create ACLs for the service account, using kafka-admin"
-# log "ccloud kafka acl create --allow --service-account $SERVICE_ACCOUNT_ID --operation WRITE --topic $TOPIC_ACL"
-# ccloud kafka acl create --allow --service-account $SERVICE_ACCOUNT_ID --operation WRITE --topic $TOPIC_ACL
+# log "confluent kafka acl create --allow --service-account $SERVICE_ACCOUNT_ID --operation WRITE --topic $TOPIC_ACL"
+# confluent kafka acl create --allow --service-account $SERVICE_ACCOUNT_ID --operation WRITE --topic $TOPIC_ACL
 
 # generate config.yml
 sed -e "s|<PRINCIPAL>|User:$SERVICE_ACCOUNT_ID|g" \
@@ -132,8 +132,8 @@ sed -e "s|<PRINCIPAL>|User:$SERVICE_ACCOUNT_ID|g" \
 
 docker run -v ${DIR}:/tmp maven:3.6.1-jdk-11 java -jar /tmp/kafka-admin/target/kafka-admin-1.0-SNAPSHOT-jar-with-dependencies.jar -properties /tmp/kafka-admin.properties -config /tmp/config.yml -execute
 
-log "ccloud kafka acl list --service-account $SERVICE_ACCOUNT_ID"
-ccloud kafka acl list --service-account $SERVICE_ACCOUNT_ID
+log "confluent kafka acl list --service-account $SERVICE_ACCOUNT_ID"
+confluent kafka acl list --service-account $SERVICE_ACCOUNT_ID
 
 sleep 20
 
@@ -158,11 +158,11 @@ docker run -v ${DIR}:/tmp maven:3.6.1-jdk-11 java -jar /tmp/kafka-admin/target/k
 ##################################################
 
 log "Delete ACLs"
-log "ccloud kafka acl delete --allow --service-account $SERVICE_ACCOUNT_ID --operation WRITE --topic $TOPIC_ACL"
-ccloud kafka acl delete --allow --service-account $SERVICE_ACCOUNT_ID --operation WRITE --topic $TOPIC_ACL
+log "confluent kafka acl delete --allow --service-account $SERVICE_ACCOUNT_ID --operation WRITE --topic $TOPIC_ACL"
+confluent kafka acl delete --allow --service-account $SERVICE_ACCOUNT_ID --operation WRITE --topic $TOPIC_ACL
 
-log "ccloud api-key delete $API_KEY_SA"
-ccloud api-key delete $API_KEY_SA 1>/dev/null
+log "confluent api-key delete $API_KEY_SA"
+confluent api-key delete $API_KEY_SA 1>/dev/null
 
-log "ccloud service-account delete $SERVICE_ACCOUNT_ID"
-ccloud service-account delete $SERVICE_ACCOUNT_ID
+log "confluent service-account delete $SERVICE_ACCOUNT_ID"
+confluent service-account delete $SERVICE_ACCOUNT_ID

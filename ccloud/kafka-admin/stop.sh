@@ -3,9 +3,9 @@
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
-verify_installed "ccloud"
-verify_ccloud_login  "ccloud kafka cluster list"
-verify_ccloud_details
+verify_installed "confluent"
+verify_confluent_login  "confluent kafka cluster list"
+verify_confluent_details
 check_if_continue
 
 # Delete topic in Confluent Cloud

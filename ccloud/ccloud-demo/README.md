@@ -58,14 +58,14 @@ If you choose to run it against your Confluent Cloud cluster, be aware that it:
 
 ## How to run locally
 
-1. Create `$HOME/.ccloud/config`
+1. Create `$HOME/.confluent/config`
 
-On the host from which you are running Docker, ensure that you have properly initialized Confluent Cloud CLI and have a valid configuration file at `$HOME/.ccloud/config`.
+On the host from which you are running Docker, ensure that you have properly initialized Confluent Cloud CLI and have a valid configuration file at `$HOME/.confluent/config`.
 
 Example:
 
 ```bash
-$ cat $HOME/.ccloud/config
+$ cat $HOME/.confluent/config
 bootstrap.servers=<BROKER ENDPOINT>
 ssl.endpoint.identification.algorithm=https
 security.protocol=SASL_SSL
@@ -94,7 +94,7 @@ By default, the demo uses Confluent Schema Registry running in a local Docker co
    b. Validate your credentials to Confluent Cloud Schema Registry
 
    ```bash
-   $ curl -u $(grep "^schema.registry.basic.auth.user.info" $HOME/.ccloud/config | cut -d'=' -f2) $(grep "^schema.registry.url" $HOME/.ccloud/config | cut -d'=' -f2)/subjects
+   $ curl -u $(grep "^schema.registry.basic.auth.user.info" $HOME/.confluent/config | cut -d'=' -f2) $(grep "^schema.registry.url" $HOME/.confluent/config | cut -d'=' -f2)/subjects
    ```
 
 3. Start the demo
@@ -337,7 +337,7 @@ A JDBC MySQL source connector called `mysql-source` is created and using a MySQL
 Note: the topic `mysql-application` used by this connector shall be created before using command:
 
 ```bash
-$ ccloud kafka topic create mysql-application --partitions 6
+$ confluent kafka topic create mysql-application --partitions 6
 ```
 
 ```bash
@@ -793,7 +793,7 @@ Pull server-side metrics easily over public internet using HTTPS
 👍Use Cloud API key generated using
 
 ```bash
-$ ccloud api-key create --resource cloud
+$ confluent api-key create --resource cloud
 ```
 👎Use user account login/password
 
@@ -990,8 +990,8 @@ ccloud_exporter:
   hostname: ccloud_exporter
   container_name: ccloud_exporter
   environment:
-    CCLOUD_USER: ${API_KEY_CLOUD} # ccloud api-key create --resource cloud
-    CCLOUD_PASSWORD: ${API_SECRET_CLOUD} # ccloud api-key create --resource cloud
+    CCLOUD_USER: ${API_KEY_CLOUD} # confluent api-key create --resource cloud
+    CCLOUD_PASSWORD: ${API_SECRET_CLOUD} # confluent api-key create --resource cloud
     CCLOUD_CLUSTER: ${CCLOUD_CLUSTER}
   command: ccloudexporter ${CCLOUD_CLUSTER}
 

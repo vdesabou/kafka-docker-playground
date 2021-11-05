@@ -1,5 +1,5 @@
 # scripts to ignore
-ccloud-generate-env-vars.sh
+confluent-generate-env-vars.sh
 01-create-table.sh
 # cp-ansible-playground
 upgrade-test.sh

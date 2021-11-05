@@ -9,14 +9,14 @@ This demo is using [dabz/ccloudexporter](https://github.com/Dabz/ccloudexporter)
 
 ## How to run
 
-Create `$HOME/.ccloud/config`
+Create `$HOME/.confluent/config`
 
-On the host from which you are running Docker, ensure that you have properly initialized Confluent Cloud CLI and have a valid configuration file at `$HOME/.ccloud/config`.
+On the host from which you are running Docker, ensure that you have properly initialized Confluent Cloud CLI and have a valid configuration file at `$HOME/.confluent/config`.
 
 Example:
 
 ```bash
-$ cat $HOME/.ccloud/config
+$ cat $HOME/.confluent/config
 bootstrap.servers=<BROKER ENDPOINT>
 ssl.endpoint.identification.algorithm=https
 security.protocol=SASL_SSL

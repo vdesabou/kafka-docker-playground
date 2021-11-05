@@ -36,8 +36,8 @@ jobs:
           mv aws_credentials $HOME/.aws/credentials
           mv aws_credentials_with_assuming_iam_role $HOME/.aws/credentials-with-assuming-iam-role
           chmod -R a+rw $HOME/.aws
-          mkdir -p $HOME/.ccloud
-          mv config.cc.travis $HOME/.ccloud/config
+          mkdir -p $HOME/.confluent
+          mv config.cc.travis $HOME/.confluent/config
           source secrets.properties > /dev/null 2>&1
           echo "$DOCKER_PASSWORD" | docker login -u vdesabou --password-stdin
         env:
@@ -119,8 +119,8 @@ jobs:
           mv aws_credentials $HOME/.aws/credentials
           mv aws_credentials_with_assuming_iam_role $HOME/.aws/credentials-with-assuming-iam-role
           chmod -R a+rw $HOME/.aws
-          mkdir -p $HOME/.ccloud
-          mv config.cc.travis $HOME/.ccloud/config
+          mkdir -p $HOME/.confluent
+          mv config.cc.travis $HOME/.confluent/config
           source secrets.properties > /dev/null 2>&1
           echo "$DOCKER_PASSWORD" | docker login -u vdesabou --password-stdin
         env:
@@ -173,8 +173,8 @@ jobs:
           mv aws_credentials $HOME/.aws/credentials
           mv aws_credentials_with_assuming_iam_role $HOME/.aws/credentials-with-assuming-iam-role
           chmod -R a+rw $HOME/.aws
-          mkdir -p $HOME/.ccloud
-          mv config.cc.travis $HOME/.ccloud/config
+          mkdir -p $HOME/.confluent
+          mv config.cc.travis $HOME/.confluent/config
           source secrets.properties > /dev/null 2>&1
           echo "$DOCKER_PASSWORD" | docker login -u vdesabou --password-stdin
         env:
@@ -208,8 +208,8 @@ jobs:
           mv aws_credentials $HOME/.aws/credentials
           mv aws_credentials_with_assuming_iam_role $HOME/.aws/credentials-with-assuming-iam-role
           chmod -R a+rw $HOME/.aws
-          mkdir -p $HOME/.ccloud
-          mv config.cc.travis $HOME/.ccloud/config
+          mkdir -p $HOME/.confluent
+          mv config.cc.travis $HOME/.confluent/config
           source secrets.properties > /dev/null 2>&1
           echo "$DOCKER_PASSWORD" | docker login -u vdesabou --password-stdin
         env:

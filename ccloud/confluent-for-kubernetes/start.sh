@@ -5,7 +5,7 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
-CONFIG_FILE=~/.ccloud/config
+CONFIG_FILE=~/.confluent/config
 
 if [ ! -f ${CONFIG_FILE} ]
 then
@@ -13,7 +13,7 @@ then
      exit 1
 fi
 
-${DIR}/../ccloud-demo/ccloud-generate-env-vars.sh ${CONFIG_FILE}
+${DIR}/../ccloud-demo/confluent-generate-env-vars.sh ${CONFIG_FILE}
 
 if [ -f /tmp/delta_configs/env.delta ]
 then

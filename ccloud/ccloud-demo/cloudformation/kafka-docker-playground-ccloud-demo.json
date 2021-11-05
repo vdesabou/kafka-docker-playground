@@ -287,7 +287,7 @@
             },
 
             "files" : {
-              "/home/ec2-user/.ccloud/config" : {
+              "/home/ec2-user/.confluent/config" : {
                 "content" : { "Fn::Join" : [ "", [
                   "ssl.endpoint.identification.algorithm=https\n",
                   "request.timeout.ms=20000\n",
@@ -365,7 +365,7 @@
                   "command": "yum install -y python38 python38-devel.$(uname -m) libffi-devel openssl-devel && python3 -m pip install -U pip && python3 -m pip install docker-compose"
               },
               "04fix-dir-permission": {
-                  "command": "chown ec2-user:ec2-user /home/ec2-user/.ccloud"
+                  "command": "chown ec2-user:ec2-user /home/ec2-user/.confluent"
               },
               "05increase-ulimit": {
                 "command": "echo '* hard nofile 100000' | tee -a /etc/security/limits.conf;echo '* soft nofile 100000' | tee -a /etc/security/limits.conf;ulimit -n 100000"

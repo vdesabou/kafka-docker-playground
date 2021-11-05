@@ -16,7 +16,7 @@ then
      source ../../secrets.properties > /dev/null 2>&1
 fi
 
-CONFIG_FILE=~/.ccloud/config
+CONFIG_FILE=~/.confluent/config
 
 if [ ! -f ${CONFIG_FILE} ]
 then
@@ -39,7 +39,7 @@ then
      exit 1
 fi
 
-${DIR}/../ccloud-demo/ccloud-generate-env-vars.sh ${CONFIG_FILE}
+${DIR}/../ccloud-demo/confluent-generate-env-vars.sh ${CONFIG_FILE}
 
 if [ -f /tmp/delta_configs/env.delta ]
 then

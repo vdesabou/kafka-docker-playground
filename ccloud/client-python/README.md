@@ -8,14 +8,14 @@ Quickly test [python example](https://docs.confluent.io/platform/current/tutoria
 
 ## How to run
 
-1. Create `$HOME/.ccloud/config`
+1. Create `$HOME/.confluent/config`
 
-On the host from which you are running Docker, ensure that you have properly initialized Confluent Cloud CLI and have a valid configuration file at `$HOME/.ccloud/config`.
+On the host from which you are running Docker, ensure that you have properly initialized Confluent Cloud CLI and have a valid configuration file at `$HOME/.confluent/config`.
 
 Example:
 
 ```bash
-$ cat $HOME/.ccloud/config
+$ cat $HOME/.confluent/config
 bootstrap.servers=<BROKER ENDPOINT>
 ssl.endpoint.identification.alpythonrithm=https
 security.protocol=SASL_SSL
@@ -43,7 +43,7 @@ Starting producer
 $ docker run --rm -v ${DIR}/librdkafka.config:/tmp/librdkafka.config vdesabou/python-ccloud-example-docker ./producer.py -f /tmp/librdkafka.config -t testpython
 ```
 
-Note: `librdkafka.config`is generated from your `$HOME/.ccloud/config`
+Note: `librdkafka.config`is generated from your `$HOME/.confluent/config`
 
 Starting consumer
 
