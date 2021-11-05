@@ -6,34 +6,33 @@ source ${DIR}/../../scripts/utils.sh
 
 # THIS TEST IS SKIPPED AS NOT WORKING, see #833 Oracle CDC: mTLS with DB authentication cannot work with PDB #833 https://github.com/vdesabou/kafka-docker-playground/issues/833
 
-if [ -z "$CI" ]
-then
-     # not running with github actions
-     if test -z "$(docker images -q oracle/database:12.2.0.1-ee)"
-     then
-          if [ ! -f ${DIR}/linuxx64_12201_database.zip ]
-          then
-               logerror "ERROR: ${DIR}/linuxx64_12201_database.zip is missing. It must be downloaded manually in order to acknowledge user agreement"
-               exit 1
-          fi
-          log "Building oracle/database:12.2.0.1-ee docker image..it can take a while...(more than 15 minutes!)"
-          OLDDIR=$PWD
-          rm -rf ${DIR}/docker-images
-          git clone https://github.com/oracle/docker-images.git
-
-          cp ${DIR}/linuxx64_12201_database.zip ${DIR}/docker-images/OracleDatabase/SingleInstance/dockerfiles/12.2.0.1/linuxx64_12201_database.zip
-          cd ${DIR}/docker-images/OracleDatabase/SingleInstance/dockerfiles
-          ./buildContainerImage.sh -v 12.2.0.1 -e
-          rm -rf ${DIR}/docker-images
-          cd ${OLDDIR}
-     fi
-fi
-
 export ORACLE_IMAGE="oracle/database:12.2.0.1-ee"
-if [ ! -z "$CI" ]
+
+if test -z "$(docker images -q $ORACLE_IMAGE)"
 then
-     # if this is github actions, use private image.
-     export ORACLE_IMAGE="vdesabou/oracle12"
+    if [ ! -z "$CI" ]
+    then
+        if [ ! -f ${DIR}/linuxx64_12201_database.zip ]
+        then
+            # running with github actions
+            aws s3 cp --only-show-errors s3://kafka-docker-playground/3rdparty/linuxx64_12201_database.zip .
+        fi
+    fi
+    if [ ! -f ${DIR}/linuxx64_12201_database.zip ]
+    then
+        logerror "ERROR: ${DIR}/linuxx64_12201_database.zip is missing. It must be downloaded manually in order to acknowledge user agreement"
+        exit 1
+    fi
+    log "Building $ORACLE_IMAGE docker image..it can take a while...(more than 15 minutes!)"
+    OLDDIR=$PWD
+    rm -rf ${DIR}/docker-images
+    git clone https://github.com/oracle/docker-images.git
+
+    mv ${DIR}/linuxx64_12201_database.zip ${DIR}/docker-images/OracleDatabase/SingleInstance/dockerfiles/12.2.0.1/linuxx64_12201_database.zip
+    cd ${DIR}/docker-images/OracleDatabase/SingleInstance/dockerfiles
+    ./buildContainerImage.sh -v 12.2.0.1 -e
+    rm -rf ${DIR}/docker-images
+    cd ${OLDDIR}
 fi
 
 # required to make utils.sh script being able to work, do not remove:
