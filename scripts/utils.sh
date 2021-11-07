@@ -157,8 +157,8 @@ else
     # to handle ubi8 images
     export TAG_BASE=$(echo $TAG | cut -d "-" -f1)
     first_version=${TAG_BASE}
-    second_version=5.2.99
-    if version_gt $first_version $second_version; then
+    second_version=5.3.99
+    if version_gt $first_version 5.3.99; then
         export CP_KAFKA_IMAGE=cp-server
         export CP_CONNECT_IMAGE=cp-server-connect-base
     else
