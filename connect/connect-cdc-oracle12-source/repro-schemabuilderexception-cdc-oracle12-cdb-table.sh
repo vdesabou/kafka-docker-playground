@@ -4,34 +4,7 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
-export ORACLE_IMAGE="oracle/database:12.2.0.1-ee"
-
-if test -z "$(docker images -q $ORACLE_IMAGE)"
-then
-    if [ ! -z "$CI" ]
-    then
-        if [ ! -f ${DIR}/linuxx64_12201_database.zip ]
-        then
-            # running with github actions
-            aws s3 cp --only-show-errors s3://kafka-docker-playground/3rdparty/linuxx64_12201_database.zip .
-        fi
-    fi
-    if [ ! -f ${DIR}/linuxx64_12201_database.zip ]
-    then
-        logerror "ERROR: ${DIR}/linuxx64_12201_database.zip is missing. It must be downloaded manually in order to acknowledge user agreement"
-        exit 1
-    fi
-    log "Building $ORACLE_IMAGE docker image..it can take a while...(more than 15 minutes!)"
-    OLDDIR=$PWD
-    rm -rf ${DIR}/docker-images
-    git clone https://github.com/oracle/docker-images.git
-
-    mv ${DIR}/linuxx64_12201_database.zip ${DIR}/docker-images/OracleDatabase/SingleInstance/dockerfiles/12.2.0.1/linuxx64_12201_database.zip
-    cd ${DIR}/docker-images/OracleDatabase/SingleInstance/dockerfiles
-    ./buildContainerImage.sh -v 12.2.0.1 -e
-    rm -rf ${DIR}/docker-images
-    cd ${OLDDIR}
-fi
+create_or_get_oracle_image "linuxx64_12201_database.zip" "$(pwd)/ora-setup-scripts-cdb-table"
 
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.cdb-table-repro-schemabuilderexception.yml"
 

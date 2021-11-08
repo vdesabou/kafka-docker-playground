@@ -5,13 +5,9 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
 # Need to create the TIBCO EMS image using https://github.com/mikeschippers/docker-tibco
-if [ ! -z "$CI" ]
-then
-     # running with github actions
-     cd ${DIR}/docker-tibco/
-     aws s3 cp --only-show-errors s3://kafka-docker-playground/3rdparty/TIB_ems-ce_8.5.1_linux_x86_64.zip .
-     cd -
-fi
+cd ${DIR}/docker-tibco/
+get_3rdparty_file "TIB_ems-ce_8.5.1_linux_x86_64.zip"
+cd -
 
 if [ ! -f ${DIR}/docker-tibco/TIB_ems-ce_8.5.1_linux_x86_64.zip ]
 then

@@ -12,16 +12,7 @@ else
 fi
 log "JDBC Connector version is $JDBC_CONNECTOR_VERSION"
 if ! version_gt $JDBC_CONNECTOR_VERSION "9.9.9"; then
-     if [ ! -z "$CI" ]
-     then
-          # running with github actions
-          aws s3 cp --only-show-errors s3://kafka-docker-playground/3rdparty/ojdbc6.jar .
-     fi
-     if [ ! -f ${DIR}/ojdbc6.jar ]
-     then
-          logerror "ERROR: ${DIR}/ojdbc6.jar is missing. It must be downloaded manually in order to acknowledge user agreement"
-          exit 1
-     fi
+     get_3rdparty_file "ojdbc6.jar"
      ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
 else
      log "ojdbc jar is shipped with connector (starting with 10.0.0)"

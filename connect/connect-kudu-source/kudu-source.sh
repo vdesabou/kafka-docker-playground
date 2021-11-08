@@ -4,11 +4,7 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
-if [ ! -z "$CI" ]
-then
-     # running with github actions
-     aws s3 cp --only-show-errors s3://kafka-docker-playground/3rdparty/ImpalaJDBC42.jar .
-fi
+get_3rdparty_file "ImpalaJDBC42.jar"
 
 if [ ! -f ${DIR}/ImpalaJDBC42.jar ]
 then
