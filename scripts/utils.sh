@@ -1164,7 +1164,7 @@ function create_or_get_oracle_image() {
         fi
         docker load -i /tmp/$ORACLE_IMAGE.tar
         if [ $? -eq 0 ]; then
-              log "📄 image $ORACLE_IMAGE is now available"
+              log "📄 image $ORACLE_IMAGE has been installed locally"
         fi
     fi
     set -e
@@ -1172,7 +1172,7 @@ function create_or_get_oracle_image() {
 
   if ! test -z "$(docker images -q $ORACLE_IMAGE)"
   then
-    log "You're using Oracle prebuilt image $ORACLE_IMAGE"
+    log "✨ Now using Oracle prebuilt image $ORACLE_IMAGE"
     return
   fi
 
@@ -1183,7 +1183,15 @@ function create_or_get_oracle_image() {
       if [ ! -f ${zip_file} ]
       then
           set +e
-          aws s3 cp --only-show-errors s3://kafka-docker-playground/3rdparty/${zip_file} . > /dev/null 2>&1
+          aws s3 ls s3://kafka-docker-playground/3rdparty/${zip_file} > /dev/null 2>&1
+          if [ $? -eq 0 ]
+          then
+              log "Downloading <s3://kafka-docker-playground/3rdparty/${zip_file}> from S3 bucket"
+              aws s3 cp --only-show-errors "s3://kafka-docker-playground/3rdparty/${zip_file}" .
+              if [ $? -eq 0 ]; then
+                    log "📄 <s3://kafka-docker-playground/3rdparty/${zip_file}> was downloaded from S3 bucket"
+              fi
+          fi
           set -e
       fi
       if [ ! -f ${zip_file} ]
@@ -1237,8 +1245,8 @@ function create_or_get_oracle_image() {
       if [ ! -z "$CI" ]
       then
           set +e
-          exists=$(aws s3 ls $S3_FILE)
-          if [ -z "$exists" ]
+          aws s3 ls $S3_FILE > /dev/null 2>&1
+          if [ $? -ne 0 ]
           then
               log "📄 Uploading </tmp/$ORACLE_IMAGE.tar> to S3 bucket"
               docker save -o /tmp/$ORACLE_IMAGE.tar $ORACLE_IMAGE
