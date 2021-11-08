@@ -1131,6 +1131,22 @@ add_latency() {
     docker exec --privileged -u0 -t $src_container tc qdisc add dev eth0 parent 1:2 handle 20: sfq 2>&1
 }
 
+function get_3rdparty_file () {
+  file="$1"
+
+  set +e
+  aws s3 ls s3://kafka-docker-playground/3rdparty/$file > /dev/null 2>&1
+  if [ $? -eq 0 ]
+  then
+      log "Downloading <s3://kafka-docker-playground/3rdparty/$file> from S3 bucket"
+      aws s3 cp --only-show-errors "s3://kafka-docker-playground/3rdparty/$file" .
+      if [ $? -eq 0 ]; then
+        log "📄 <s3://kafka-docker-playground/3rdparty/$file> was downloaded from S3 bucket"
+      fi
+  fi
+  set -e
+}
+
 function create_or_get_oracle_image() {
   zip_file="$1"
   setup_folder="$2"

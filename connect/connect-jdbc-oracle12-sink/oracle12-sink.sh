@@ -14,11 +14,7 @@ else
 fi
 log "JDBC Connector version is $JDBC_CONNECTOR_VERSION"
 if ! version_gt $JDBC_CONNECTOR_VERSION "9.9.9"; then
-     if [ ! -z "$CI" ]
-     then
-          # running with github actions
-          aws s3 cp --only-show-errors s3://kafka-docker-playground/3rdparty/ojdbc8.jar .
-     fi
+     get_3rdparty_file "ojdbc8.jar"
      if [ ! -f ${DIR}/ojdbc8.jar ]
      then
           logerror "ERROR: ${DIR}/ojdbc8.jar is missing. It must be downloaded manually in order to acknowledge user agreement"
