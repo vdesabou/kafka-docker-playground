@@ -38,7 +38,7 @@ OLD_ORACLE_IMAGE=$ORACLE_IMAGE
 SETUP_FOLDER=$(pwd)/ora-setup-scripts-cdb-table
 SETUP_FILE=${SETUP_FOLDER}/01_user-setup.sh
 SETUP_FILE_CKSUM=$(cksum $SETUP_FILE | awk '{ print $1 }')
-export ORACLE_IMAGE="oracle/db-prebuilt-$SETUP_FILE_CKSUM:19.3.0-ee"
+export ORACLE_IMAGE="db-prebuilt-$SETUP_FILE_CKSUM:19.3.0-ee"
 TEMP_CONTAINER="oracle-build-19-$(basename $SETUP_FOLDER)"
 
 if test -z "$(docker images -q $ORACLE_IMAGE)"
