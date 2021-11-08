@@ -1148,7 +1148,7 @@ function create_or_get_oracle_image() {
   SETUP_FILE=${setup_folder}/01_user-setup.sh
   SETUP_FILE_CKSUM=$(cksum $SETUP_FILE | awk '{ print $1 }')
   export ORACLE_IMAGE="db-prebuilt-$SETUP_FILE_CKSUM:$ORACLE_VERSION"
-  TEMP_CONTAINER="oracle-build-$ORACLE_VERSION-$(basename $SETUP_FOLDER)"
+  TEMP_CONTAINER="oracle-build-$ORACLE_VERSION-$(basename $setup_folder)"
   S3_FILE="s3://kafka-docker-playground/3rdparty/$ORACLE_IMAGE.tar"
 
   if test -z "$(docker images -q $ORACLE_IMAGE)"
