@@ -5,6 +5,11 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
+if ! version_gt $TAG_BASE "5.3.99"; then
+    logwarn "WARN: Broker Validation is available since CP 5.4 only"
+    exit 0
+fi
+
 ${DIR}/../../environment/2way-ssl/start.sh "${PWD}/docker-compose.2way-ssl.yml"
 
 log "Create topic topic-validation"
