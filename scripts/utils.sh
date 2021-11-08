@@ -1130,3 +1130,126 @@ add_latency() {
     # Add a child queue named 20: under class 1:2
     docker exec --privileged -u0 -t $src_container tc qdisc add dev eth0 parent 1:2 handle 20: sfq 2>&1
 }
+
+function create_or_get_oracle_image() {
+  zip_file="$1"
+  setup_folder="$2"
+
+  if [ "$zip_file" == "linuxx64_12201_database.zip" ]
+  then
+      ORACLE_VERSION="12.2.0.1-ee"
+  else
+      ORACLE_VERSION="19.3.0-ee"
+  fi
+  # used for docker-images repo
+  DOCKERFILE_VERSION=$(echo "$ORACLE_VERSION" | cut -d "-" -f 1)
+
+  # https://github.com/oracle/docker-images/tree/main/OracleDatabase/SingleInstance/samples/prebuiltdb
+  SETUP_FILE=${setup_folder}/01_user-setup.sh
+  SETUP_FILE_CKSUM=$(cksum $SETUP_FILE | awk '{ print $1 }')
+  export ORACLE_IMAGE="db-prebuilt-$SETUP_FILE_CKSUM:$ORACLE_VERSION"
+  TEMP_CONTAINER="oracle-build-$ORACLE_VERSION-$(basename $SETUP_FOLDER)"
+  S3_FILE="s3://kafka-docker-playground/3rdparty/$ORACLE_IMAGE.tar"
+
+  if test -z "$(docker images -q $ORACLE_IMAGE)"
+  then
+    set +e
+    exists=$(aws s3 ls $S3_FILE)
+    if [ ! -z "$exists" ]
+    then
+        log "Downloading <$S3_FILE> from S3 bucket"
+        aws s3 cp --only-show-errors "$S3_FILE" /tmp/
+        if [ $? -eq 0 ]; then
+              log "📄 <$S3_FILE> was downloaded from S3 bucket"
+        fi
+        docker load -i /tmp/$ORACLE_IMAGE.tar
+        if [ $? -eq 0 ]; then
+              log "📄 image $ORACLE_IMAGE is now available"
+        fi
+    fi
+    set -e
+  fi
+
+  if ! test -z "$(docker images -q $ORACLE_IMAGE)"
+  then
+    log "You're using Oracle prebuilt image $ORACLE_IMAGE"
+    return
+  fi
+
+  BASE_ORACLE_IMAGE="oracle/database:$ORACLE_VERSION"
+
+  if test -z "$(docker images -q $BASE_ORACLE_IMAGE)"
+  then
+      if [ ! -f ${zip_file} ]
+      then
+          set +e
+          aws s3 cp --only-show-errors s3://kafka-docker-playground/3rdparty/${zip_file} . > /dev/null 2>&1
+          set -e
+      fi
+      if [ ! -f ${zip_file} ]
+      then
+          logerror "ERROR: ${zip_file} is missing. It must be downloaded manually in order to acknowledge user agreement"
+          exit 1
+      fi
+      log "👷 Building $BASE_ORACLE_IMAGE docker image..it can take a while...(more than 15 minutes!)"
+      OLDDIR=$PWD
+      rm -rf docker-images
+      git clone https://github.com/oracle/docker-images.git
+
+      mv ${zip_file} docker-images/OracleDatabase/SingleInstance/dockerfiles/$DOCKERFILE_VERSION/${zip_file}
+      cd docker-images/OracleDatabase/SingleInstance/dockerfiles
+      ./buildContainerImage.sh -v $DOCKERFILE_VERSION -e
+      rm -rf docker-images
+      cd ${OLDDIR}
+  fi
+
+  export ORACLE_IMAGE="db-prebuilt-$SETUP_FILE_CKSUM:$ORACLE_VERSION"
+
+  if test -z "$(docker images -q $ORACLE_IMAGE)"
+  then
+      log "🏭 Prebuilt $ORACLE_IMAGE docker image does not exist, building it now..it can take a while..."
+      log "🏎 Startup a container ${TEMP_CONTAINER} and create the database"
+      docker run -d -e ORACLE_PWD=Admin123 -v ${SETUP_FOLDER}:/opt/oracle/scripts/setup --name ${TEMP_CONTAINER} ${BASE_ORACLE_IMAGE}
+
+      # Verify ${TEMP_CONTAINER} has started within MAX_WAIT seconds
+      MAX_WAIT=2500
+      CUR_WAIT=0
+      log "⌛ Waiting up to $MAX_WAIT seconds for ${TEMP_CONTAINER} to start"
+      docker container logs ${TEMP_CONTAINER} > /tmp/out.txt 2>&1
+      while [[ ! $(cat /tmp/out.txt) =~ "DONE: Executing user defined scripts" ]]; do
+      sleep 10
+      docker container logs ${TEMP_CONTAINER} > /tmp/out.txt 2>&1
+      CUR_WAIT=$(( CUR_WAIT+10 ))
+      if [[ "$CUR_WAIT" -gt "$MAX_WAIT" ]]; then
+            logerror "ERROR: The logs in ${TEMP_CONTAINER} container do not show 'DONE: Executing user defined scripts' after $MAX_WAIT seconds. Please troubleshoot with 'docker container ps' and 'docker container logs'.\n"
+            exit 1
+      fi
+      done
+      log "${TEMP_CONTAINER} has started! Check logs in /tmp/${TEMP_CONTAINER}.log"
+      docker container logs ${TEMP_CONTAINER} > /tmp/${TEMP_CONTAINER}.log 2>&1
+      log "🛑 Stop the running container"
+      docker stop -t 600 ${TEMP_CONTAINER}
+      log "🛠 Create the image with the prebuilt database"
+      docker commit -m "Image with prebuilt database" ${TEMP_CONTAINER} ${ORACLE_IMAGE}
+      log "🧹 Clean up ${TEMP_CONTAINER}"
+      docker rm ${TEMP_CONTAINER}
+
+      if [ ! -z "$CI" ]
+      then
+          set +e
+          exists=$(aws s3 ls $S3_FILE)
+          if [ -z "$exists" ]
+          then
+              log "📄 Uploading </tmp/$ORACLE_IMAGE.tar> to S3 bucket"
+              docker save -o /tmp/$ORACLE_IMAGE.tar $ORACLE_IMAGE
+              aws s3 cp --only-show-errors "/tmp/$ORACLE_IMAGE.tar" "s3://kafka-docker-playground/3rdparty/"
+              if [ $? -eq 0 ]; then
+                    log "📄 <$file> was uploaded to S3 bucket"
+              fi
+          fi
+          set -e
+      fi
+  fi
+
+  log "You're using Oracle prebuilt image $ORACLE_IMAGE"
+}
