@@ -1149,18 +1149,17 @@ function create_or_get_oracle_image() {
   SETUP_FILE_CKSUM=$(cksum $SETUP_FILE | awk '{ print $1 }')
   export ORACLE_IMAGE="db-prebuilt-$SETUP_FILE_CKSUM:$ORACLE_VERSION"
   TEMP_CONTAINER="oracle-build-$ORACLE_VERSION-$(basename $setup_folder)"
-  S3_FILE="s3://kafka-docker-playground/3rdparty/$ORACLE_IMAGE.tar"
 
   if test -z "$(docker images -q $ORACLE_IMAGE)"
   then
     set +e
-    exists=$(aws s3 ls $S3_FILE)
-    if [ ! -z "$exists" ]
+    aws s3 ls s3://kafka-docker-playground/3rdparty/$ORACLE_IMAGE.tar > /dev/null 2>&1
+    if [ $? -eq 0 ]
     then
-        log "Downloading <$S3_FILE> from S3 bucket"
-        aws s3 cp --only-show-errors "$S3_FILE" /tmp/
+        log "Downloading <s3://kafka-docker-playground/3rdparty/$ORACLE_IMAGE.tar> from S3 bucket"
+        aws s3 cp --only-show-errors "s3://kafka-docker-playground/3rdparty/$ORACLE_IMAGE.tar" /tmp/
         if [ $? -eq 0 ]; then
-              log "📄 <$S3_FILE> was downloaded from S3 bucket"
+              log "📄 <s3://kafka-docker-playground/3rdparty/$ORACLE_IMAGE.tar> was downloaded from S3 bucket"
         fi
         docker load -i /tmp/$ORACLE_IMAGE.tar
         if [ $? -eq 0 ]; then
@@ -1245,7 +1244,7 @@ function create_or_get_oracle_image() {
       if [ ! -z "$CI" ]
       then
           set +e
-          aws s3 ls $S3_FILE > /dev/null 2>&1
+          aws s3 ls s3://kafka-docker-playground/3rdparty/$ORACLE_IMAGE.tar > /dev/null 2>&1
           if [ $? -ne 0 ]
           then
               log "📄 Uploading </tmp/$ORACLE_IMAGE.tar> to S3 bucket"
