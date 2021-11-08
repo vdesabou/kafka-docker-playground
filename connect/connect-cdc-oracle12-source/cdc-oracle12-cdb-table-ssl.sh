@@ -33,6 +33,44 @@ then
     cd ${OLDDIR}
 fi
 
+OLD_ORACLE_IMAGE=$ORACLE_IMAGE
+# https://github.com/oracle/docker-images/tree/main/OracleDatabase/SingleInstance/samples/prebuiltdb
+SETUP_FOLDER=$(pwd)/ora-setup-scripts-cdb-table
+SETUP_FILE=${SETUP_FOLDER}/01_user-setup.sh
+SETUP_FILE_CKSUM=$(cksum $SETUP_FILE | awk '{ print $1 }')
+export ORACLE_IMAGE="oracle/db-prebuilt-$SETUP_FILE_CKSUM:12.2.0.1-ee"
+TEMP_CONTAINER="oracle-build-12-$(basename $SETUP_FOLDER)"
+
+if test -z "$(docker images -q $ORACLE_IMAGE)"
+then
+     log "🏭 Prebuilt $ORACLE_IMAGE docker image did not exist, building it now..it can take a while..."
+     log "Startup a container ${TEMP_CONTAINER} and create the database"
+     docker run -d -e ORACLE_PWD=Admin123 -v ${SETUP_FOLDER}:/opt/oracle/scripts/setup --name ${TEMP_CONTAINER} ${OLD_ORACLE_IMAGE}
+
+     # Verify ${TEMP_CONTAINER} has started within MAX_WAIT seconds
+     MAX_WAIT=2500
+     CUR_WAIT=0
+     log "Waiting up to $MAX_WAIT seconds for ${TEMP_CONTAINER} to start"
+     docker container logs ${TEMP_CONTAINER} > /tmp/out.txt 2>&1
+     while [[ ! $(cat /tmp/out.txt) =~ "DONE: Executing user defined scripts" ]]; do
+     sleep 10
+     docker container logs ${TEMP_CONTAINER} > /tmp/out.txt 2>&1
+     CUR_WAIT=$(( CUR_WAIT+10 ))
+     if [[ "$CUR_WAIT" -gt "$MAX_WAIT" ]]; then
+          logerror "ERROR: The logs in ${TEMP_CONTAINER} container do not show 'DONE: Executing user defined scripts' after $MAX_WAIT seconds. Please troubleshoot with 'docker container ps' and 'docker container logs'.\n"
+          exit 1
+     fi
+     done
+     log "${TEMP_CONTAINER} has started! Check logs in /tmp/${TEMP_CONTAINER}.log"
+     docker container logs ${TEMP_CONTAINER} > /tmp/${TEMP_CONTAINER}.log 2>&1
+     log "Stop the running container"
+     docker stop -t 600 ${TEMP_CONTAINER}
+     log "Create the image with the prebuilt database"
+     docker commit -m "Image with prebuilt database" ${TEMP_CONTAINER} ${ORACLE_IMAGE}
+     log "Clean up ${TEMP_CONTAINER}"
+     docker rm ${TEMP_CONTAINER}
+fi
+
 # required to make utils.sh script being able to work, do not remove:
 # ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.cdb-table.yml"
 log "Starting up oracle container to get generated cert from oracle server wallet"
