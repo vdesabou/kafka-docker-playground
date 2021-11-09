@@ -15,19 +15,25 @@ curl -X PUT \
                "tasks.max": "1",
                "mqtt.server.uri": "tcp://mosquitto:1883",
                "mqtt.topics":"my-mqtt-topic",
-               "kafka.topic":"mqtt-avro-topic",
+               "kafka.topic":"mqtt-json-topic",
                "mqtt.qos": "2",
                "mqtt.username": "myuser",
                "mqtt.password": "mypassword",
-               "transforms" : "fromJson",
+               "value.converter": "org.apache.kafka.connect.json.JsonConverter",
+               "value.converter.schemas.enable": "false",
+               "transforms" : "fromJson,createKey,extractInt",
                "transforms.fromJson.type" : "com.github.jcustenborder.kafka.connect.json.FromJson$Value",
                "transforms.fromJson.json.schema.location" : "Inline",
                "transforms.fromJson.json.schema.inline" : "{\n  \"$id\": \"https://example.com/person.schema.json\",\n  \"$schema\": \"http://json-schema.org/draft-07/schema#\",\n  \"title\": \"Person\",\n  \"type\": \"object\",\n  \"properties\": {\n    \"firstName\": {\n      \"type\": \"string\",\n      \"description\": \"The person first name.\"\n    },\n    \"lastName\": {\n      \"type\": \"string\",\n      \"description\": \"The person last name.\"\n    },\n    \"age\": {\n      \"description\": \"Age in years which must be equal to or greater than zero.\",\n      \"type\": \"integer\",\n      \"minimum\": 0\n    }\n  }\n}",
+               "transforms.createKey.type":"org.apache.kafka.connect.transforms.ValueToKey",
+               "transforms.createKey.fields":"lastName",
+               "transforms.extractInt.type":"org.apache.kafka.connect.transforms.ExtractField$Key",
+               "transforms.extractInt.field":"lastName",
                "confluent.license": "",
                "confluent.topic.bootstrap.servers": "broker:9092",
                "confluent.topic.replication.factor": "1"
           }' \
-     http://localhost:8083/connectors/source-mqtt-avro/config | jq .
+     http://localhost:8083/connectors/source-mqtt-json/config | jq .
 
 
 sleep 5
@@ -37,5 +43,9 @@ docker exec mosquitto sh -c 'mosquitto_pub -h localhost -p 1883 -u "myuser" -P "
 
 sleep 5
 
-log "Verify we have received the avro data in mqtt-avro-topic topic"
-timeout 60 docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic mqtt-avro-topic --from-beginning --max-messages 1
+log "Verify we have received the json data in mqtt-json-topic topic"
+timeout 60 docker exec broker kafka-console-consumer -bootstrap-server broker:9092 --topic mqtt-json-topic --from-beginning --max-messages 1 --property print.key=true --property key.separator=,
+
+# Results (Key:Doe):
+
+# Doe,{"age":21,"firstName":"John","lastName":"Doe"}
