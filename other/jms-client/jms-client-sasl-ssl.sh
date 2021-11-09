@@ -4,7 +4,7 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
-if version_gt $TAG_BASE "5.3.2"; then
+if version_gt $TAG_BASE "5.3.99"; then
     logwarn "WARN: zookeeper.connect is deprecated. Use JMS client with confluent.license parameter only."
     exit 0
 fi
