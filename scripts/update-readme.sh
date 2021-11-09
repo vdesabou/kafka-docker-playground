@@ -211,7 +211,7 @@ do
         if [ "$status" == "failure" ]
         then
           let "nb_fail++"
-          let "nb_total_fail++"          
+          let "nb_total_fail++"
           TEST_FAILED[$image_version_no_dot]="[![CP $image_version](https://img.shields.io/badge/CI-CP%20$image_version-red)]($html_url)"
           echo -e "🔥 CP ${image_version}${connector_version} 🕐 ${time_day_hour} 📄 [${script_name}](https://github.com/vdesabou/kafka-docker-playground/blob/master/$test/$script_name) 🔗 $html_url\n" >> ${gh_msg_file}
           log "🔥 CP $image_version 🕐 ${time_day_hour} 📄 ${script_name} 🔗 $html_url"
@@ -265,7 +265,7 @@ do
     if [ ${nb_success} -eq ${nb_tests} ]
     then
       # if all scripts in tests are now successful, close the issue
-      gh issue list | grep "$title" > /dev/null
+      gh issue list --limit 500 | grep "$title" > /dev/null
       if [ $? = 0 ]
       then
         issue_number=$(gh issue list --limit 500 | grep "$title" | head -1 | awk '{print $1;}')
