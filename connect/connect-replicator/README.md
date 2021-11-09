@@ -77,9 +77,8 @@ $ seq 10 | docker exec -i broker kafka-console-producer --broker-list broker:909
 Creating Confluent Replicator connector with SSL authentication
 
 ```bash
-$ docker exec connect \
-     curl -X PUT \
-     --cert /etc/kafka/secrets/connect.certificate.pem --key /etc/kafka/secrets/connect.key --tlsv1.2 --cacert /etc/kafka/secrets/snakeoil-ca-1.crt \
+$ curl -X PUT \
+     --cert ../../environment/2way-ssl/security/connect.certificate.pem --key ../../environment/2way-ssl/security/connect.key --tlsv1.2 --cacert ../../environment/2way-ssl/security/snakeoil-ca-1.crt \
      -H "Content-Type: application/json" \
      --data '{
                     "connector.class":"io.confluent.connect.replicator.ReplicatorSourceConnector",
@@ -136,9 +135,8 @@ $ seq 10 | docker exec -i broker kafka-console-producer --broker-list broker:909
 Creating Confluent Replicator connector with SASL_SSL authentication
 
 ```bash
-$ docker exec connect \
-     curl -X PUT \
-     --cert /etc/kafka/secrets/connect.certificate.pem --key /etc/kafka/secrets/connect.key --tlsv1.2 --cacert /etc/kafka/secrets/snakeoil-ca-1.crt \
+$ curl -X PUT \
+     --cert ../../environment/sasl-ssl/security/connect.certificate.pem --key ../../environment/sasl-ssl/security/connect.key --tlsv1.2 --cacert ../../environment/sasl-ssl/security/snakeoil-ca-1.crt \
      -H "Content-Type: application/json" \
      --data '{
                     "connector.class":"io.confluent.connect.replicator.ReplicatorSourceConnector",

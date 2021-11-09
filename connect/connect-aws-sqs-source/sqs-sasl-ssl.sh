@@ -60,9 +60,8 @@ aws sqs send-message-batch --queue-url $QUEUE_URL --entries file://send-message-
 
 
 log "Creating SQS Source connector with SASL_SSL authentication"
-docker exec -e QUEUE_URL="$QUEUE_URL" connect \
 curl -X PUT \
-     --cert /etc/kafka/secrets/connect.certificate.pem --key /etc/kafka/secrets/connect.key --tlsv1.2 --cacert /etc/kafka/secrets/snakeoil-ca-1.crt \
+     --cert ../../environment/sasl-ssl/security/connect.certificate.pem --key ../../environment/sasl-ssl/security/connect.key --tlsv1.2 --cacert ../../environment/sasl-ssl/security/snakeoil-ca-1.crt \
      -H "Content-Type: application/json" \
      --data '{
                     "connector.class": "io.confluent.connect.sqs.source.SqsSourceConnector",
