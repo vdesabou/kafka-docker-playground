@@ -27,7 +27,7 @@ curl -X POST \
    -H "Content-Type: application/vnd.schemaregistry.v1+json" \
    --cert ../../environment/2way-ssl/security/connect.certificate.pem --key ../../environment/2way-ssl/security/connect.key --tlsv1.2 --cacert ../../environment/2way-ssl/security/snakeoil-ca-1.crt \
    --data '{ "schema": "[ { \"type\":\"record\", \"name\":\"user\", \"fields\": [ {\"name\":\"userid\",\"type\":\"long\"}, {\"name\":\"username\",\"type\":\"string\"} ]} ]" }' \
-   https://schema-registry:8085/subjects/topic-validation-value/versions
+   https://localhost:8085/subjects/topic-validation-value/versions
 
 log "Sending a non-Avro record, it should fail"
 docker exec -i connect kafka-console-producer \
