@@ -312,6 +312,34 @@ Add `-Dsun.security.krb5.debug=true` in your `docker-compose` file:
     KAFKA_OPTS: -Dsun.security.krb5.debug=true
 ```
 
+### 🔬 Class loading
+
+Add `-verbose:class` in your `docker-compose` file to troubleshoot a `ClassNotFoundException` for example:
+
+*Example:*
+
+```yml
+  connect:
+    KAFKA_OPTS: -verbose:class
+```
+
+In logs, you'll see:
+
+```log
+[Loaded org.apache.kafka.connect.runtime.isolation.DelegatingClassLoader$$Lambda$20/1007251739 from org.apache.kafka.connect.runtime.isolation.DelegatingClassLoader]
+[Loaded java.lang.invoke.LambdaForm$MH/1556595366 from java.lang.invoke.LambdaForm]
+[Loaded org.reflections.util.ConfigurationBuilder from file:/usr/share/java/kafka/reflections-0.9.12.jar]
+[Loaded org.reflections.serializers.Serializer from file:/usr/share/java/kafka/reflections-0.9.12.jar]
+[Loaded org.reflections.adapters.MetadataAdapter from file:/usr/share/java/kafka/reflections-0.9.12.jar]
+[Loaded org.reflections.scanners.Scanner from file:/usr/share/java/kafka/reflections-0.9.12.jar]
+[Loaded org.reflections.scanners.AbstractScanner from file:/usr/share/java/kafka/reflections-0.9.12.jar]
+[Loaded org.reflections.scanners.TypeAnnotationsScanner from file:/usr/share/java/kafka/reflections-0.9.12.jar]
+[Loaded org.reflections.scanners.AbstractScanner$$Lambda$21/1725097945 from org.reflections.scanners.AbstractScanner]
+[Loaded org.reflections.scanners.SubTypesScanner from file:/usr/share/java/kafka/reflections-0.9.12.jar]
+[Loaded org.reflections.util.FilterBuilder from file:/usr/share/java/kafka/reflections-0.9.12.jar]
+[Loaded org.reflections.util.FilterBuilder$Matcher from file:/usr/share/java/kafka/reflections-0.9.12.jar]
+```
+
 ## 🚫 Blocking traffic
 
 It is sometime necessary for a reproduction model to simulate network issues like blocking incoming or outgoing traffic.
