@@ -58,4 +58,10 @@ Verify we have received the data in mqtt-source-1 topic
 $ docker exec broker kafka-console-consumer -bootstrap-server broker:9092 --topic mqtt-source-1 --from-beginning --max-messages 1
 ```
 
+Results:
+
+```
+sample-msg-1
+```
+
 N.B: Control Center is reachable at [http://127.0.0.1:9021](http://127.0.0.1:9021])
