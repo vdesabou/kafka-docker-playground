@@ -1169,6 +1169,25 @@ function create_or_get_oracle_image() {
 
   if test -z "$(docker images -q $BASE_ORACLE_IMAGE)"
   then
+    set +e
+    aws s3 ls s3://kafka-docker-playground/3rdparty/oracle_database_$ORACLE_VERSION.tar > /dev/null 2>&1
+    if [ $? -eq 0 ]
+    then
+        log "Downloading <s3://kafka-docker-playground/3rdparty/oracle_database_$ORACLE_VERSION.tar> from S3 bucket"
+        aws s3 cp --only-show-errors "s3://kafka-docker-playground/3rdparty/oracle_database_$ORACLE_VERSION.tar" /tmp/
+        if [ $? -eq 0 ]; then
+              log "📄 <s3://kafka-docker-playground/3rdparty/oracle_database_$ORACLE_VERSION.tar> was downloaded from S3 bucket"
+        fi
+        docker load -i /tmp/oracle_database_$ORACLE_VERSION.tar
+        if [ $? -eq 0 ]; then
+              log "📄 image $BASE_ORACLE_IMAGE has been installed locally"
+        fi
+    fi
+    set -e
+  fi
+
+  if test -z "$(docker images -q $BASE_ORACLE_IMAGE)"
+  then
       if [ ! -f ${ZIP_FILE} ]
       then
           set +e
