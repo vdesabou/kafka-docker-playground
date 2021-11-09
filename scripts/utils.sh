@@ -1148,10 +1148,10 @@ function get_3rdparty_file () {
 }
 
 function create_or_get_oracle_image() {
-  zip_file="$1"
-  setup_folder="$2"
+  ZIP_FILE="$1"
+  SETUP_FOLDER="$2"
 
-  if [ "$zip_file" == "linuxx64_12201_database.zip" ]
+  if [ "$ZIP_FILE" == "linuxx64_12201_database.zip" ]
   then
       ORACLE_VERSION="12.2.0.1-ee"
   else
@@ -1161,10 +1161,10 @@ function create_or_get_oracle_image() {
   DOCKERFILE_VERSION=$(echo "$ORACLE_VERSION" | cut -d "-" -f 1)
 
   # https://github.com/oracle/docker-images/tree/main/OracleDatabase/SingleInstance/samples/prebuiltdb
-  SETUP_FILE=${setup_folder}/01_user-setup.sh
+  SETUP_FILE=${SETUP_FOLDER}/01_user-setup.sh
   SETUP_FILE_CKSUM=$(cksum $SETUP_FILE | awk '{ print $1 }')
   export ORACLE_IMAGE="db-prebuilt-$SETUP_FILE_CKSUM:$ORACLE_VERSION"
-  TEMP_CONTAINER="oracle-build-$ORACLE_VERSION-$(basename $setup_folder)"
+  TEMP_CONTAINER="oracle-build-$ORACLE_VERSION-$(basename $SETUP_FOLDER)"
 
   if test -z "$(docker images -q $ORACLE_IMAGE)"
   then
@@ -1187,7 +1187,7 @@ function create_or_get_oracle_image() {
 
   if ! test -z "$(docker images -q $ORACLE_IMAGE)"
   then
-    log "✨ Now using Oracle prebuilt image $ORACLE_IMAGE"
+    log "✨ Using Oracle prebuilt image $ORACLE_IMAGE (oracle version 🔢 $ORACLE_VERSION and 📂 setup folder $SETUP_FOLDER)"
     return
   fi
 
@@ -1195,23 +1195,23 @@ function create_or_get_oracle_image() {
 
   if test -z "$(docker images -q $BASE_ORACLE_IMAGE)"
   then
-      if [ ! -f ${zip_file} ]
+      if [ ! -f ${ZIP_FILE} ]
       then
           set +e
-          aws s3 ls s3://kafka-docker-playground/3rdparty/${zip_file} > /dev/null 2>&1
+          aws s3 ls s3://kafka-docker-playground/3rdparty/${ZIP_FILE} > /dev/null 2>&1
           if [ $? -eq 0 ]
           then
-              log "Downloading <s3://kafka-docker-playground/3rdparty/${zip_file}> from S3 bucket"
-              aws s3 cp --only-show-errors "s3://kafka-docker-playground/3rdparty/${zip_file}" .
+              log "Downloading <s3://kafka-docker-playground/3rdparty/${ZIP_FILE}> from S3 bucket"
+              aws s3 cp --only-show-errors "s3://kafka-docker-playground/3rdparty/${ZIP_FILE}" .
               if [ $? -eq 0 ]; then
-                    log "📄 <s3://kafka-docker-playground/3rdparty/${zip_file}> was downloaded from S3 bucket"
+                    log "📄 <s3://kafka-docker-playground/3rdparty/${ZIP_FILE}> was downloaded from S3 bucket"
               fi
           fi
           set -e
       fi
-      if [ ! -f ${zip_file} ]
+      if [ ! -f ${ZIP_FILE} ]
       then
-          logerror "ERROR: ${zip_file} is missing. It must be downloaded manually in order to acknowledge user agreement"
+          logerror "ERROR: ${ZIP_FILE} is missing. It must be downloaded manually in order to acknowledge user agreement"
           exit 1
       fi
       log "👷 Building $BASE_ORACLE_IMAGE docker image..it can take a while...(more than 15 minutes!)"
@@ -1219,7 +1219,7 @@ function create_or_get_oracle_image() {
       rm -rf docker-images
       git clone https://github.com/oracle/docker-images.git
 
-      mv ${zip_file} docker-images/OracleDatabase/SingleInstance/dockerfiles/$DOCKERFILE_VERSION/${zip_file}
+      mv ${ZIP_FILE} docker-images/OracleDatabase/SingleInstance/dockerfiles/$DOCKERFILE_VERSION/${ZIP_FILE}
       cd docker-images/OracleDatabase/SingleInstance/dockerfiles
       ./buildContainerImage.sh -v $DOCKERFILE_VERSION -e
       rm -rf docker-images
@@ -1231,10 +1231,9 @@ function create_or_get_oracle_image() {
   if test -z "$(docker images -q $ORACLE_IMAGE)"
   then
       log "🏭 Prebuilt $ORACLE_IMAGE docker image does not exist, building it now..it can take a while..."
-      log "🏎 Startup a container ${TEMP_CONTAINER} and create the database"
+      log "🚦 Startup a container ${TEMP_CONTAINER} with setup folder $SETUP_FOLDER and create the database"
       docker run -d -e ORACLE_PWD=Admin123 -v ${SETUP_FOLDER}:/opt/oracle/scripts/setup --name ${TEMP_CONTAINER} ${BASE_ORACLE_IMAGE}
 
-      # Verify ${TEMP_CONTAINER} has started within MAX_WAIT seconds
       MAX_WAIT=2500
       CUR_WAIT=0
       log "⌛ Waiting up to $MAX_WAIT seconds for ${TEMP_CONTAINER} to start"
@@ -1267,12 +1266,12 @@ function create_or_get_oracle_image() {
               docker save -o /tmp/$ORACLE_IMAGE.tar $ORACLE_IMAGE
               aws s3 cp --only-show-errors "/tmp/$ORACLE_IMAGE.tar" "s3://kafka-docker-playground/3rdparty/"
               if [ $? -eq 0 ]; then
-                    log "📄 <$file> was uploaded to S3 bucket"
+                    log "📄 </tmp/$ORACLE_IMAGE.tar> was uploaded to S3 bucket"
               fi
           fi
           set -e
       fi
   fi
 
-  log "You're using Oracle prebuilt image $ORACLE_IMAGE"
+  log "✨ Using Oracle prebuilt image $ORACLE_IMAGE (oracle version 🔢 $ORACLE_VERSION and 📂 setup folder $SETUP_FOLDER)"
 }
