@@ -698,6 +698,26 @@ function az() {
     docker run -v /tmp:/tmp -v $HOME/.azure:/home/az/.azure -e HOME=/home/az --rm -i mcr.microsoft.com/azure-cli az "$@"
 }
 
+function display_docker_container_error_log() {
+  logerror "####################################################"
+  logerror "🐳 docker ps"
+  docker ps
+  logerror "####################################################"
+  for container in $(docker ps  --format="{{.Names}}")
+  do
+      logerror "####################################################"
+      logerror "$container logs"
+      if [[ "$container" == "connect" ]]
+      then
+          # always show all logs for connect
+          docker container logs --tail=100 $container | grep -v "was supplied but isn't a known config"
+      else
+          docker container logs $container | egrep "ERROR|FATAL"
+      fi
+      logwarn "####################################################"
+  done
+}
+
 function retry() {
   local n=1
   local max=2
@@ -717,20 +737,7 @@ function retry() {
       if [[ $n -lt $max ]]; then
         ((n++))
         logwarn "Command failed. Attempt $n/$max:"
-        logwarn "####################################################"
-        logwarn "docker ps"
-        docker ps
-        logwarn "####################################################"
-        for container in broker broker2 schema-registry connect broker-us broker-europe connect-us connect-europe replicator-us replicator-europe
-        do
-          if [[ $(docker ps -f "name=$container" --format '{{.Names}}') == $container ]]
-          then
-            logwarn "####################################################"
-            logwarn "$container logs"
-            docker container logs --tail=200 $container
-            logwarn "####################################################"
-          fi
-        done
+        display_docker_container_error_log
       else
         logerror "The command has failed after $n attempts."
         return 1
@@ -749,20 +756,7 @@ retrycmd() {
     do
         if (( attempt_num == max_attempts ))
         then
-            logwarn "####################################################"
-            logwarn "docker ps"
-            docker ps
-            logwarn "####################################################"
-            for container in broker broker2 schema-registry connect broker-us broker-europe connect-us connect-europe replicator-us replicator-europe ibmmq
-            do
-              if [[ $(docker ps -f "name=$container" --format '{{.Names}}') == $container ]]
-              then
-                logwarn "####################################################"
-                logwarn "$container logs"
-                docker container logs --tail=200 $container
-                logwarn "####################################################"
-              fi
-            done
+            display_docker_container_error_log
             logerror "Failed after $attempt_num attempts. Please troubleshoot and run again."
             return 1
         else
@@ -1039,26 +1033,6 @@ EOF
 done
 
   log "JMX metrics are available in /tmp/jmx_metrics.log file"
-}
-
-function display_docker_container_error_log() {
-  logerror "####################################################"
-  logerror "🐳 docker ps"
-  docker ps
-  logerror "####################################################"
-  for container in $(docker ps  --format="{{.Names}}")
-  do
-      logerror "####################################################"
-      logerror "$container logs"
-      if [[ "$container" == "connect" ]]
-      then
-          # always show all logs for connect
-          docker container logs --tail=100 $container | grep -v "was supplied but isn't a known config"
-      else
-          docker container logs $container | egrep "ERROR|FATAL" | grep -v "was supplied but isn't a known config"
-      fi
-      logwarn "####################################################"
-  done
 }
 
 container_to_name() {
