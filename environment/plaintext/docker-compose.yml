@@ -135,7 +135,7 @@ services:
       # KAFKA_OPTS: '-verbose:class'
 
   ksqldb-server:
-    image: confluentinc/cp-ksqldb-server:${TAG}
+    image: confluentinc/${CP_KSQL_IMAGE}:${TAG}
     hostname: ksqldb-server
     container_name: ksqldb-server
     depends_on:
