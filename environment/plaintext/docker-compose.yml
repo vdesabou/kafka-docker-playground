@@ -173,7 +173,7 @@ services:
       # KSQL_CONFLUENT_TELEMETRY_API_SECRET: 'CLOUD_API_SECRET'
 
   ksqldb-cli:
-    image: confluentinc/${CP_KSQL_CLI_IMAGE}:${TAG}
+    image: confluentinc/${CP_KSQL_CLI_IMAGE}
     container_name: ksqldb-cli
     depends_on:
       - broker
