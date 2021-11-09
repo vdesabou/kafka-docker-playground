@@ -51,8 +51,8 @@ aws kinesis put-record --stream-name $KINESIS_STREAM_NAME --partition-key 123 --
 AWS_REGION=$(aws configure get region | tr '\r' '\n')
 
 log "Creating Kinesis Source connector"
-docker exec connect curl -X PUT \
-     --cert /etc/kafka/secrets/connect.certificate.pem --key /etc/kafka/secrets/connect.key --tlsv1.2 --cacert /etc/kafka/secrets/snakeoil-ca-1.crt \
+curl -X PUT \
+     --cert ../../environment/sasl-ssl/security/connect.certificate.pem --key ../../environment/sasl-ssl/security/connect.key --tlsv1.2 --cacert ../../environment/sasl-ssl/security/snakeoil-ca-1.crt \
      -H "Content-Type: application/json" \
      --data '{
                "connector.class":"io.confluent.connect.kinesis.KinesisSourceConnector",

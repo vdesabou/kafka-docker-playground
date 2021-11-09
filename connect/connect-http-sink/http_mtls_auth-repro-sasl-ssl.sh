@@ -15,10 +15,9 @@ log "Running SSL with Mutual TLS Authentication Example"
 log "-------------------------------------"
 
 log "Creating http-sink connector"
-docker exec connect \
 curl -X PUT \
      -H "Content-Type: application/json" \
-     --cert /etc/kafka/secrets/connect.certificate.pem --key /etc/kafka/secrets/connect.key --tlsv1.2 --cacert /etc/kafka/secrets/snakeoil-ca-1.crt \
+     --cert ../../environment/sasl-ssl/security/connect.certificate.pem --key ../../environment/sasl-ssl/security/connect.key --tlsv1.2 --cacert ../../environment/sasl-ssl/security/snakeoil-ca-1.crt \
      --data '{
           "topics": "http-messages",
           "tasks.max": "1",

@@ -183,7 +183,7 @@ The connector is created with:
 
 ```bash
 curl -X PUT \
-     --cert /etc/kafka/secrets/connect.certificate.pem --key /etc/kafka/secrets/connect.key --tlsv1.2 --cacert /etc/kafka/secrets/snakeoil-ca-1.crt \
+     --cert ../../environment/2way-ssl/security/connect.certificate.pem --key ../../environment/2way-ssl/security/connect.key --tlsv1.2 --cacert ../../environment/2way-ssl/security/snakeoil-ca-1.crt \
      -H "Content-Type: application/json" \
      --data '{
                     "connector.class": "io.confluent.connect.sqs.source.SqsSourceConnector",
@@ -191,7 +191,6 @@ curl -X PUT \
                     "kafka.topic": "test-sqs-source-ssl",
                     "sqs.url": "'"$QUEUE_URL"'",
                     "confluent.license": "",
-                    "name": "sqs-source-ssl",
                     "confluent.topic.bootstrap.servers": "broker:9092",
                     "confluent.topic.replication.factor": "1",
                     "confluent.topic.ssl.keystore.location" : "/etc/kafka/secrets/kafka.connect.keystore.jks",
@@ -203,7 +202,7 @@ curl -X PUT \
                     "confluent.topic.ssl.truststore.type" : "JKS",
                     "confluent.topic.security.protocol" : "SSL"
           }' \
-     https://localhost:8083/connectors/sqs-source/config | jq .
+     https://localhost:8083/connectors/sqs-source-ssl/config | jq .
 ```
 
 Verify we have received the data in test-sqs-source topic:
@@ -231,7 +230,7 @@ The connector is created with:
 
 ```bash
 curl -X PUT \
-     --cert /etc/kafka/secrets/connect.certificate.pem --key /etc/kafka/secrets/connect.key --tlsv1.2 --cacert /etc/kafka/secrets/snakeoil-ca-1.crt \
+     --cert ../../environment/sasl-ssl/security/connect.certificate.pem --key ../../environment/sasl-ssl/security/connect.key --tlsv1.2 --cacert ../../environment/sasl-ssl/security/snakeoil-ca-1.crt \
      -H "Content-Type: application/json" \
      --data '{
                     "connector.class": "io.confluent.connect.sqs.source.SqsSourceConnector",
@@ -239,7 +238,6 @@ curl -X PUT \
                     "kafka.topic": "test-sqs-source-sasl-ssl",
                     "sqs.url": "'"$QUEUE_URL"'",
                     "confluent.license": "",
-                    "name": "sqs-source-sasl-ssl",
                     "confluent.topic.bootstrap.servers": "broker:9092",
                     "confluent.topic.replication.factor": "1",
                     "confluent.topic.ssl.keystore.location" : "/etc/kafka/secrets/kafka.connect.keystore.jks",
@@ -251,7 +249,7 @@ curl -X PUT \
                     "confluent.topic.sasl.mechanism": "PLAIN",
                     "confluent.topic.sasl.jaas.config": "org.apache.kafka.common.security.plain.PlainLoginModule required  username=\"client\" password=\"client-secret\";"
           }' \
-     https://localhost:8083/connectors/sqs-source/config | jq .
+     https://localhost:8083/connectors/sqs-source-sasl-ssl/config | jq .
 ```
 
 Verify we have received the data in test-sqs-source topic:
