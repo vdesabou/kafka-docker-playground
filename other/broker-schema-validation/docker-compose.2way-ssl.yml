@@ -18,3 +18,7 @@ services:
       KAFKA_CONFLUENT_SSL_KEYSTORE_LOCATION: /etc/kafka/secrets/kafka.client.keystore.jks
       KAFKA_CONFLUENT_SSL_KEYSTORE_PASSWORD: confluent
       KAFKA_CONFLUENT_SSL_KEY_PASSWORD: confluent
+
+  schema-registry:
+    ports:
+      - "8085:8085"
