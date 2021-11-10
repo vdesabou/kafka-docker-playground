@@ -20,7 +20,7 @@ services:
       ZOOKEEPER_CLIENT_PORT: 2181
 
   broker1:
-    image: confluentinc/${CP_KAFKA_IMAGE}:${TAG}
+    image: ${CP_KAFKA_IMAGE}:${TAG}
     hostname: broker1
     container_name: broker1
     depends_on:
@@ -36,7 +36,7 @@ services:
 
 
   broker2:
-    image: confluentinc/${CP_KAFKA_IMAGE}:${TAG}
+    image: ${CP_KAFKA_IMAGE}:${TAG}
     hostname: broker2
     container_name: broker2
     depends_on:
@@ -52,7 +52,7 @@ services:
 
 
   broker3:
-    image: confluentinc/${CP_KAFKA_IMAGE}:${TAG}
+    image: ${CP_KAFKA_IMAGE}:${TAG}
     hostname: broker3
     container_name: broker3
     depends_on:

@@ -18,7 +18,7 @@ services:
       KAFKA_OPTS: -Dzookeeper.4lw.commands.whitelist=*
 
   broker:
-    image: confluentinc/${CP_KAFKA_IMAGE}:${TAG}
+    image: ${CP_KAFKA_IMAGE}:${TAG}
     hostname: broker
     container_name: broker
     restart: always
@@ -135,7 +135,7 @@ services:
       # KAFKA_OPTS: '-verbose:class'
 
   ksqldb-server:
-    image: confluentinc/${CP_KSQL_IMAGE}:${TAG}
+    image: ${CP_KSQL_IMAGE}:${TAG}
     hostname: ksqldb-server
     container_name: ksqldb-server
     depends_on:
@@ -173,7 +173,7 @@ services:
       # KSQL_CONFLUENT_TELEMETRY_API_SECRET: 'CLOUD_API_SECRET'
 
   ksqldb-cli:
-    image: confluentinc/${CP_KSQL_CLI_IMAGE}
+    image: ${CP_KSQL_CLI_IMAGE}
     container_name: ksqldb-cli
     depends_on:
       - broker

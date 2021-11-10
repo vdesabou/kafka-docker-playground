@@ -13,7 +13,7 @@ services:
       KAFKA_OPTS: -Dzookeeper.4lw.commands.whitelist=*
 
   broker:
-    image: confluentinc/${CP_KAFKA_IMAGE}:${TAG}
+    image: ${CP_KAFKA_IMAGE}:${TAG}
     hostname: broker
     container_name: broker
     depends_on:

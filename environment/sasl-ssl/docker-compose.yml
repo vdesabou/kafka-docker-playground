@@ -49,7 +49,7 @@ services:
       KAFKA_SSL_PRINCIPAL_MAPPING_RULES: RULE:^CN=(.*?),OU=TEST.*$$/$$1/,DEFAULT
 
   broker2:
-    image: confluentinc/${CP_KAFKA_IMAGE}:${TAG}
+    image: ${CP_KAFKA_IMAGE}:${TAG}
     hostname: broker2
     container_name: broker2
     depends_on:

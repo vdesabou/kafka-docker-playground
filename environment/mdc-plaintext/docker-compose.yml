@@ -33,7 +33,7 @@ services:
       ZOOKEEPER_TICK_TIME: 2000
 
   broker-europe:
-    image: confluentinc/${CP_KAFKA_IMAGE}:${TAG}
+    image: ${CP_KAFKA_IMAGE}:${TAG}
     hostname: broker-europe
     container_name: broker-europe
     depends_on:
@@ -61,7 +61,7 @@ services:
       KAFKA_CONFLUENT_SCHEMA_REGISTRY_URL: http://schema-registry-europe:8081
 
   broker-us:
-    image: confluentinc/${CP_KAFKA_IMAGE}:${TAG}
+    image: ${CP_KAFKA_IMAGE}:${TAG}
     hostname: broker-us
     container_name: broker-us
     depends_on:
@@ -89,7 +89,7 @@ services:
       KAFKA_CONFLUENT_SCHEMA_REGISTRY_URL: http://schema-registry-us:8081
 
   broker-metrics:
-    image: confluentinc/${CP_KAFKA_IMAGE}:${TAG}
+    image: ${CP_KAFKA_IMAGE}:${TAG}
     hostname: broker-metrics
     container_name: broker-metrics
     depends_on:

@@ -143,11 +143,10 @@ then
       log "💫 Using default CP version $TAG"
       log "🎓 set TAG environment variable to specify different version, see https://kafka-docker-playground.io/#/how-to-use?id=🎯-for-confluent-platform-cp"
     fi
-    export CP_KAFKA_IMAGE=cp-server
-    export CP_BASE_IMAGE=cp-base-new
-    export CP_KSQL_IMAGE=cp-ksqldb-server
-    export CP_KSQL_CLI_IMAGE=ksqldb-cli:latest
-    export CP_CONNECT_IMAGE=cp-server-connect-base
+    export CP_KAFKA_IMAGE=confluentinc/cp-server
+    export CP_BASE_IMAGE=confluentinc/cp-base-new
+    export CP_KSQL_IMAGE=confluentinc/cp-ksqldb-server
+    export CP_KSQL_CLI_IMAGE=confluentinc/ksqldb-cli:latest
     set_kafka_client_tag
 else
     if [ -z "$CP_KAFKA_IMAGE" ]
@@ -159,25 +158,23 @@ else
     first_version=${TAG_BASE}
     second_version=5.3.99
     if version_gt $first_version 5.3.99; then
-        export CP_KAFKA_IMAGE=cp-server
-        export CP_CONNECT_IMAGE=cp-server-connect-base
+        export CP_KAFKA_IMAGE=confluentinc/cp-server
     else
-        export CP_KAFKA_IMAGE=cp-enterprise-kafka
-        export CP_CONNECT_IMAGE=cp-kafka-connect-base
+        export CP_KAFKA_IMAGE=confluentinc/cp-enterprise-kafka
     fi
     second_version=5.3.99
     if version_gt $first_version $second_version; then
-        export CP_BASE_IMAGE=cp-base-new
+        export CP_BASE_IMAGE=confluentinc/cp-base-new
     else
-        export CP_BASE_IMAGE=cp-base
+        export CP_BASE_IMAGE=confluentinc/cp-base
     fi
     second_version=5.4.99
     if version_gt $first_version $second_version; then
-        export CP_KSQL_IMAGE=cp-ksqldb-server
-        export CP_KSQL_CLI_IMAGE=ksqldb-cli:latest
+        export CP_KSQL_IMAGE=confluentinc/cp-ksqldb-server
+        export CP_KSQL_CLI_IMAGE=confluentinc/ksqldb-cli:latest
     else
-        export CP_KSQL_IMAGE=cp-ksql-server
-        export CP_KSQL_CLI_IMAGE=cp-ksql-cli:${TAG_BASE}
+        export CP_KSQL_IMAGE=confluentinc/cp-ksql-server
+        export CP_KSQL_CLI_IMAGE=confluentinc/cp-ksql-cli:${TAG_BASE}
     fi
     set_kafka_client_tag
 fi
