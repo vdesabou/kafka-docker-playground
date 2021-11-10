@@ -156,9 +156,15 @@ else
     # to handle ubi8 images
     export TAG_BASE=$(echo $TAG | cut -d "-" -f1)
     first_version=${TAG_BASE}
-    second_version=5.3.99
+    second_version=5.2.99
     if version_gt $first_version 5.3.99; then
-        export CP_KAFKA_IMAGE=confluentinc/cp-server
+        if [ "$first_version" == "5.3.6" ]
+        then
+          logwarn "Workaround for ST-6539, using custom image vdesabou/cp-server !"
+          export CP_KAFKA_IMAGE=vdesabou/cp-server
+        else
+          export CP_KAFKA_IMAGE=confluentinc/cp-server
+        fi
     else
         export CP_KAFKA_IMAGE=confluentinc/cp-enterprise-kafka
     fi
