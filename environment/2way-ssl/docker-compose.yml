@@ -42,7 +42,7 @@ services:
       # KAFKA_OPTS: -Djavax.net.debug=all
 
   broker2:
-    image: confluentinc/${CP_KAFKA_IMAGE}:${TAG}
+    image: ${CP_KAFKA_IMAGE}:${TAG}
     hostname: broker2
     container_name: broker2
     depends_on:

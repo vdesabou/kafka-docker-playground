@@ -562,7 +562,7 @@ As [Confluent Cloud KSQL](https://docs.confluent.io/current/cloud/limits.html#cc
 
 ```yml
 ksql-server:
-  image: confluentinc/${CP_KSQL_IMAGE}:${TAG}
+  image: ${CP_KSQL_IMAGE}:${TAG}
   hostname: ksql-server
   container_name: ksql-server
   ports:
@@ -631,7 +631,7 @@ ksql> show topics;
 
 ```yml
 ksql-cli:
-  image: confluentinc/${CP_KSQL_CLI_IMAGE}
+  image: ${CP_KSQL_CLI_IMAGE}
   container_name: ksql-cli
   entrypoint: /bin/sh
   tty: true

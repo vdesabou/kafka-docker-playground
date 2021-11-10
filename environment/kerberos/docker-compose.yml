@@ -92,7 +92,7 @@ services:
         principal=\"admin/for-kafka@TEST.CONFLUENT.IO\";"
 
   broker2:
-    image: confluentinc/${CP_KAFKA_IMAGE}:${TAG}
+    image: ${CP_KAFKA_IMAGE}:${TAG}
     hostname: broker2.kerberos-demo.local
     container_name: broker2
     depends_on:
