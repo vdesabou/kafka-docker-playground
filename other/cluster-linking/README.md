@@ -53,13 +53,13 @@ Processed a total of 5 messages
 
 Create the cluster link on the destination cluster (with `metadata.max.age.ms=5 seconds` + `consumer.offset.sync.enable=true` + `consumer.offset.sync.ms=3000` + `consumer.offset.sync.all.json` set to all consumer groups)
 ```bash
-docker exec broker-europe kafka-cluster-links --bootstrap-server broker-europe:9092 --create --link-name demo-link --config bootstrap.servers=broker-us:9092,metadata.max.age.ms=5000,consumer.offset.sync.enable=true,consumer.offset.sync.ms=3000 --consumer-group-filters-json-file /tmp/consumer.offset.sync.all.json
+docker exec broker-europe kafka-cluster-links --bootstrap-server broker-europe:9092 --create --link demo-link --config bootstrap.servers=broker-us:9092,metadata.max.age.ms=5000,consumer.offset.sync.enable=true,consumer.offset.sync.ms=3000 --consumer-group-filters-json-file /tmp/consumer.offset.sync.all.json
 ```
 
 Initialize the topic mirror for topic demo
 
 ```bash
-docker exec broker-europe kafka-topics --create --topic demo --mirror-topic demo --link-name demo-link --bootstrap-server broker-europe:9092
+docker exec broker-europe kafka-topics --create --topic demo --mirror-topic demo --link demo-link --bootstrap-server broker-europe:9092
 ```
 
 Created topic demo.
@@ -313,7 +313,7 @@ Topic: demo     PartitionCount: 8       ReplicationFactor: 1    Configs: compres
 List mirror topics
 
 ```bash
-docker container exec -i connect-us kafka-cluster-links --list --link-name demo-link --include-topics --bootstrap-server broker-europe:9092
+docker container exec -i connect-us kafka-cluster-links --list --link demo-link --include-topics --bootstrap-server broker-europe:9092
 ```
 
 ```
@@ -324,7 +324,7 @@ Link name: 'demo-link', link ID: '49d143a1-846b-4ef2-9819-2dee26d0ea99', cluster
 Cut over the mirror topic to make it writable
 
 ```bash
-docker container exec -i connect-us kafka-topics --alter --topic demo --mirror-action stop --bootstrap-server broker-europe:9092
+docker container exec -i connect-us kafka-mirrors --failover --topics demo --bootstrap-server broker-europe:9092
 ```
 
 Produce to both topics to verify divergence
@@ -344,7 +344,7 @@ seq -f "europe_sale_%g ${RANDOM}" 10 | docker container exec -i connect-us bash 
 Delete the cluster link
 
 ```bash
-docker container exec -i connect-us kafka-cluster-links --bootstrap-server broker-europe:9092 --delete --link-name demo-link
+docker container exec -i connect-us kafka-cluster-links --bootstrap-server broker-europe:9092 --delete --link demo-link
 ```
 
 ```
