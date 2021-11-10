@@ -4,8 +4,8 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
-if ! version_gt $TAG_BASE "5.9.9"; then
-    logwarn "WARN: Cluster Linking is available since CP 6.0 only"
+if ! version_gt $TAG_BASE "6.9.9"; then
+    logwarn "WARN: Cluster Linking is GA since CP 7.0 only"
     exit 0
 fi
 
@@ -22,10 +22,10 @@ docker container exec -i connect-us bash -c "kafka-console-consumer --bootstrap-
 
 log "Create the cluster link on the destination cluster (with metadata.max.age.ms=5 seconds + consumer.offset.sync.enable=true + consumer.offset.sync.ms=3000 + consumer.offset.sync.all.json set to all consumer groups)"
 docker cp consumer.offset.sync.all.json broker-europe:/tmp/consumer.offset.sync.all.json
-docker exec broker-europe kafka-cluster-links --bootstrap-server broker-europe:9092 --create --link-name demo-link --config bootstrap.servers=broker-us:9092,metadata.max.age.ms=5000,consumer.offset.sync.enable=true,consumer.offset.sync.ms=3000 --consumer-group-filters-json-file /tmp/consumer.offset.sync.all.json
+docker exec broker-europe kafka-cluster-links --bootstrap-server broker-europe:9092 --create --link demo-link --config bootstrap.servers=broker-us:9092,metadata.max.age.ms=5000,consumer.offset.sync.enable=true,consumer.offset.sync.ms=3000 --consumer-group-filters-json-file /tmp/consumer.offset.sync.all.json
 
 log "Initialize the topic mirror for topic demo"
-docker exec broker-europe kafka-topics --create --topic demo --mirror-topic demo --link-name demo-link --bootstrap-server broker-europe:9092
+docker exec broker-europe kafka-mirrors --create --mirror-topic demo --link demo-link --bootstrap-server broker-europe:9092
 
 log "Check the replica status on the destination"
 docker exec broker-europe kafka-replica-status --topics demo --include-linked --bootstrap-server broker-europe:9092
@@ -102,10 +102,10 @@ log "Verify the change on the destination topic"
 docker container exec -i connect-us kafka-topics --describe --topic demo --bootstrap-server broker-europe:9092
 
 log "List mirror topics"
-docker container exec -i connect-us kafka-cluster-links --list --link-name demo-link --include-topics --bootstrap-server broker-europe:9092
+docker container exec -i connect-us kafka-cluster-links --list --link demo-link --include-topics --bootstrap-server broker-europe:9092
 
 log "Cut over the mirror topic to make it writable"
-docker container exec -i connect-us kafka-topics --alter --topic demo --mirror-action stop --bootstrap-server broker-europe:9092
+docker container exec -i connect-us kafka-mirrors --failover --topics demo --bootstrap-server broker-europe:9092
 
 log "Produce to both topics to verify divergence"
 
@@ -116,4 +116,4 @@ log "Sending data in EUROPE cluster"
 seq -f "europe_sale_%g ${RANDOM}" 10 | docker container exec -i connect-us bash -c "kafka-console-producer --broker-list broker-europe:9092 --topic demo"
 
 log "Delete the cluster link"
-docker container exec -i connect-us kafka-cluster-links --bootstrap-server broker-europe:9092 --delete --link-name demo-link
+docker container exec -i connect-us kafka-cluster-links --bootstrap-server broker-europe:9092 --delete --link demo-link
