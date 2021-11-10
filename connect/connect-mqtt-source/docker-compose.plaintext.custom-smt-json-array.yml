@@ -1,0 +1,25 @@
+---
+version: '3.5'
+services:
+
+  mosquitto:
+    image: eclipse-mosquitto:1.6.13
+    hostname: mosquitto
+    container_name: mosquitto
+    ports:
+      - 9001:9001
+      - 1883:1883
+    volumes:
+      - ../../connect/connect-mqtt-source/mosquitto.conf:/mosquitto/config/mosquitto.conf
+      - ../../connect/connect-mqtt-source/password:/etc/mosquitto/passwd
+
+  connect:
+    depends_on:
+      - zookeeper
+      - broker
+      - schema-registry
+      - mosquitto
+    volumes:
+      - ../../connect/connect-mqtt-source/JsonFieldToKey/target/JsonFieldToKey-1.0.0-SNAPSHOT-jar-with-dependencies.jar:/usr/share/confluent-hub-components/confluentinc-kafka-connect-mqtt/lib/JsonFieldToKey-1.0.0-SNAPSHOT-jar-with-dependencies.jar
+    environment:
+      CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-mqtt
