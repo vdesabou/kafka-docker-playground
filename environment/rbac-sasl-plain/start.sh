@@ -5,6 +5,11 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
+if ! version_gt $TAG_BASE "5.3.99"; then
+    logwarn "WARN: This RBAC example is working starting from CP 5.4 only"
+    exit 0
+fi
+
 verify_docker_and_memory
 verify_installed "docker-compose"
 check_docker_compose_version
