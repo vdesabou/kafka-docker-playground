@@ -157,7 +157,7 @@ else
     export TAG_BASE=$(echo $TAG | cut -d "-" -f1)
     first_version=${TAG_BASE}
     second_version=5.2.99
-    if version_gt $first_version 5.3.99; then
+    if version_gt $first_version $second_version; then
         if [ "$first_version" == "5.3.6" ]
         then
           logwarn "Workaround for ST-6539, using custom image vdesabou/cp-server !"
