@@ -19,3 +19,5 @@ services:
     volumes:
       - ../../other/schema-registry-security-plugin/jaas_config.file:/tmp/jaas_config.file
       - ../../other/schema-registry-security-plugin/password-file:/tmp/password-file
+      # workaround for https://github.com/vdesabou/kafka-docker-playground/issues/1494#issuecomment-965573878
+      - ../../other/schema-registry-security-plugin/ensure:/etc/confluent/docker/ensure
