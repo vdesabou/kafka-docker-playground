@@ -72,6 +72,7 @@ do
   nb_success=0
   TEST_FAILED=()
   TEST_SUCCESS=()
+  TEST_SKIPPED=()
   rm -f ${gh_msg_file}
   touch ${gh_msg_file}
   rm -f ${gh_msg_file_intro}
@@ -224,6 +225,13 @@ do
           
           echo -e "💀 known issue 🐞 [#${known_issue_gh_issue_number}](https://github.com/vdesabou/kafka-docker-playground/issues/${known_issue_gh_issue_number}) CP ${image_version}${connector_version} 🕐 ${time_day_hour} 📄 [${script_name}](https://github.com/vdesabou/kafka-docker-playground/blob/master/$test/$script_name) 🔗 $html_url\n" >> ${gh_msg_file}
           log "💀 known issue 🐞 [#${known_issue_gh_issue_number}](https://github.com/vdesabou/kafka-docker-playground/issues/${known_issue_gh_issue_number}) CP ${image_version}${connector_version} 🕐 ${time_day_hour} 📄 [${script_name}](https://github.com/vdesabou/kafka-docker-playground/blob/master/$test/$script_name) 🔗 $html_url"
+        elif [ "$status" == "skipped" ]
+        then
+          let "nb_success++"
+          let "nb_total_success++"
+          TEST_SKIPPED[$image_version_no_dot]="[![CP $image_version](https://img.shields.io/badge/CI-CP%20$image_version-orange)]($html_url)"
+          echo -e "⏭ SKIPPED CP ${image_version}${connector_version} 🕐 ${time_day_hour} 📄 [${script_name}](https://github.com/vdesabou/kafka-docker-playground/blob/master/$test/$script_name) 🔗 $html_url\n" >> ${gh_msg_file}
+          log "⏭ SKIPPED CP $image_version 🕐 ${time_day_hour} 📄 ${script_name} 🔗 $html_url"
         else
           let "nb_success++"
           let "nb_total_success++"
@@ -280,6 +288,7 @@ do
 
   ci=""
   ci_nb_fail=0
+  ci_nb_skipped=0
   nb_image_versions=0
   for image_version in $image_versions
   do
@@ -295,15 +304,19 @@ do
         ci="$ci ${TEST_FAILED[$image_version_no_dot]}"
       fi
       let "ci_nb_fail++"
+    elif [ "${TEST_SKIPPED[$image_version_no_dot]}" != "" ]
+    then
+      ci="$ci ${TEST_SKIPPED[$image_version_no_dot]}"
+      let "ci_nb_skipped++"
     elif [ "${TEST_SUCCESS[$image_version_no_dot]}" != "" ]
     then
       ci="$ci ${TEST_SUCCESS[$image_version_no_dot]}"
     else
-      logerror "ERROR: TEST_SUCCESS and TEST_FAILED are both empty !"
+      logerror "ERROR: TEST_SUCCESS, TEST_SKIPPED and TEST_FAILED are all empty !"
     fi
   done
 
-  if [ ${ci_nb_fail} -eq 0 ]
+  if [ ${ci_nb_fail} -eq 0 ] && [ ${ci_nb_skipped} -eq 0 ]
   then
       ci="[![CI ok](https://img.shields.io/badge/CI-ok!-green)]($html_url)"
   elif [ ${ci_nb_fail} -eq ${nb_image_versions} ]
