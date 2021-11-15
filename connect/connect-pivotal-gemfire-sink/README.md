@@ -6,6 +6,7 @@
 
 Quickly test [Pivotal Gemfire sink](https://docs.confluent.io/current/connect/kafka-connect-pivotal-gemfire/index.html#pivotal-gemfire-sink-connector-for-cp) connector.
 
+N.B: if you're a Confluent employee, please check this [link](https://confluent.slack.com/archives/C0116NM415F/p1636391410032900).
 
 * Create an account [here](https://account.run.pivotal.io/z/uaa/sign-up) and download from [here](https://network.pivotal.io/products/pivotal-gemfire#/releases/692529) `[Pivotal GemFire Tar]` version `9.10.2`, then rename it to `pivotal-gemfire.tgz` and put it into `docker-pivotal-gemfire` directory
 

@@ -8,6 +8,7 @@ Quickly test [JMS TIBCO Source](https://docs.confluent.io/current/connect/kafka-
 
 Using TIBCO Docker [image](https://github.com/mikeschippers/docker-tibco)
 
+N.B: if you're a Confluent employee, please check this [link](https://confluent.slack.com/archives/C0116NM415F/p1636391410032900).
 
 * Download [TIBCO EMS Community Edition](https://www.tibco.com/resources/product-download/tibco-enterprise-message-service-community-edition--free-download) and put `TIB_ems-ce_8.5.1_linux_x86_64.zip`into `docker-file`directory
 

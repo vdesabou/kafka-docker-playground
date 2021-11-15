@@ -6,6 +6,8 @@
 
 Quickly test [Oracle CDC Source Connector](https://docs.confluent.io/kafka-connect-oracle-cdc/current/) with Oracle 12.
 
+N.B: if you're a Confluent employee, please check this [link](https://confluent.slack.com/archives/C0116NM415F/p1636391410032900) and also [here](https://confluent.slack.com/archives/C0116NM415F/p1636389483030900).
+
 Note: Oracle Database Enterprise Edition 12.x and 18c are no longer available for download. The software is available as a media or FTP request for those customers who own a valid Oracle Database product license for any edition. To request access to these releases, follow the instructions in [Oracle Support Document 1071023.1 (Requesting Physical Shipment or Download URL for Software Media)](https://support.oracle.com/epmos/faces/ui/km/DocumentDisplay.jspx?id=1071023.1) from My Oracle Support.
 
 
