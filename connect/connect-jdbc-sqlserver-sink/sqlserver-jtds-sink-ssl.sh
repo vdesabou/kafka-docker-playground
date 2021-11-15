@@ -9,7 +9,7 @@ if ! version_gt $TAG_BASE "5.9.0"; then
     then
         logwarn "Known issue ! JDBC Source and Sink with MS SQL and JTDS driver does not work with SSL, see https://github.com/vdesabou/kafka-docker-playground/issues/1107"
         # known_issue https://github.com/vdesabou/kafka-docker-playground/issues/1107
-        exit 0
+        exit 111
     fi
 fi
 

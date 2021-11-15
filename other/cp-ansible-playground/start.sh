@@ -40,7 +40,7 @@ fi
 
 if ! version_gt $TAG_BASE "5.3.99"; then
     logwarn "WARN: This example is working starting from CP 5.4 only"
-    exit 0
+    exit 111
 fi
 
 GIT_BRANCH="$TAG-post"

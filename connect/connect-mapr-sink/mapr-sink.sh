@@ -8,7 +8,7 @@ if ! version_gt $TAG_BASE "5.9.0"; then
     if [[ "$TAG" != *ubi8 ]]
     then
           logwarn "WARN: This can only be run with UBI image or version greater than 6.0.0"
-          exit 0
+          exit 111
     fi
 fi
 

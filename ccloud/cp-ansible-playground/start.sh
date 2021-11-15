@@ -46,7 +46,7 @@ fi
 
 if ! version_gt $TAG_BASE "5.9.0"; then
         logerror "ERROR: This can only be run with version greater than 6.0.0"
-        exit 0
+        exit 111
 fi
 
 if [ "$TAG" = "6.0.0" ]

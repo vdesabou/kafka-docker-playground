@@ -6,7 +6,7 @@ source ${DIR}/../../scripts/utils.sh
 
 if ! version_gt $TAG_BASE "5.2.0"; then
     logwarn "WARN: Audit logs is only available from Confluent Platform 5.2.0"
-    exit 0
+    exit 111
 fi
 
 ${DIR}/../../ccloud/environment/start.sh "${PWD}/docker-compose-executable-onprem-to-cloud.yml" -a -b

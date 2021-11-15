@@ -6,7 +6,7 @@ source ${DIR}/../../scripts/utils.sh
 
 if ! version_gt $TAG_BASE "5.3.99"; then
     logwarn "WARN: Audit logs is only available from Confluent Platform 5.4.0"
-    exit 0
+    exit 111
 fi
 
 ${DIR}/../../environment/rbac-sasl-plain/start.sh "${PWD}/docker-compose.rbac-sasl-plain.yml"

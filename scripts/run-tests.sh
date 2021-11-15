@@ -199,6 +199,13 @@ do
             log "####################################################"
 
             echo "$connector_path|`date +%s`|known_issue#907|$GITHUB_RUN_ID" > $file
+        elif [ $ret -eq 111 ]
+        then
+            log "####################################################"
+            log "⏭ RESULT: SKIPPED for $script in dir $dir ($ELAPSED - $CUMULATED)"
+            log "####################################################"
+
+            echo "$connector_path|`date +%s`|skipped|$GITHUB_RUN_ID" > $file
         else
             logerror "####################################################"
             logerror "🔥 RESULT: FAILURE for $script in dir $dir ($ELAPSED - $CUMULATED)"

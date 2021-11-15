@@ -6,7 +6,7 @@ source ${DIR}/../../scripts/utils.sh
 
 if version_gt $TAG_BASE "5.3.99"; then
     logwarn "WARN: zookeeper.connect is deprecated. Use JMS client with confluent.license parameter only."
-    exit 0
+    exit 111
 fi
 
 if [ ! -f ${DIR}/jms-client/target/jms-client-1.0.0-SNAPSHOT.jar ]
