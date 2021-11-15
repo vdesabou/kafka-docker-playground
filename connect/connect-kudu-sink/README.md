@@ -6,6 +6,7 @@
 
 Quickly test [Kudu Sink](https://docs.confluent.io/current/connect/kafka-connect-kudu/sink-connector/index.html#quick-start) connector.
 
+N.B: if you're a Confluent employee, please check this [link](https://confluent.slack.com/archives/C0116NM415F/p1636391410032900).
 
 * Download Impala JDBC Driver `ImpalaJDBC42.jar`from this [page](https://www.oracle.com/technetwork/java/javase/jdbc/index.html) and place it in `./ImpalaJDBC42.jar`
 
