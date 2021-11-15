@@ -2,6 +2,11 @@
 version: '3.5'
 services:
   schema-registry:
+    # workaround for https://github.com/vdesabou/kafka-docker-playground/issues/1494#issuecomment-965573878
+    build:
+      context: ../../other/schema-registry-security-plugin/
+      args:
+        TAG: ${TAG}
     environment:
       CUB_CLASSPATH: '/etc/confluent/docker/docker-utils.jar:/usr/share/java/cp-base-new/*:/usr/share/java/confluent-security/schema-registry/*:/usr/share/java/schema-registry/*'
       SCHEMA_REGISTRY_KAFKASTORE_TOPIC: "schemas-security-plugin"
@@ -19,5 +24,3 @@ services:
     volumes:
       - ../../other/schema-registry-security-plugin/jaas_config.file:/tmp/jaas_config.file
       - ../../other/schema-registry-security-plugin/password-file:/tmp/password-file
-      # workaround for https://github.com/vdesabou/kafka-docker-playground/issues/1494#issuecomment-965573878
-      - ../../other/schema-registry-security-plugin/ensure:/etc/confluent/docker/ensure
