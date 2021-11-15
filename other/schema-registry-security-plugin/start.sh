@@ -48,10 +48,14 @@ log "Getting a subject with read user - expected to succeed"
 set +e
 curl -X GET -u read:read http://localhost:8081/subjects/my-topic-value/versions
 
-
-log "Testing with a producer (read:read) and --property auto.register.schemas=true, it will fail"
+# property auto.register.schemas was added in 5.5.2, need to use auto.register for previous versions #1651
+AUTO_REGISTER_PROPERTY="auto.register.schemas"
+if ! version_gt $TAG_BASE "5.5.2"; then
+    AUTO_REGISTER_PROPERTY="auto.register"
+fi
+log "Testing with a producer (read:read) and --property $AUTO_REGISTER_PROPERTY=true, it will fail"
 set +e
-docker exec -i connect kafka-avro-console-producer --broker-list broker:9092 --property schema.registry.url=http://schema-registry:8081 --property basic.auth.credentials.source=USER_INFO --property schema.registry.basic.auth.user.info="read:read" --topic my-topic --property value.schema='{"type":"record","name":"myrecord","fields":[{"name":"u_name","type":"string"},{"name":"u_price", "type": "float"}, {"name":"u_quantity", "type": "int"}]}' --property auto.register.schemas=true << EOF
+docker exec -i connect kafka-avro-console-producer --broker-list broker:9092 --property schema.registry.url=http://schema-registry:8081 --property basic.auth.credentials.source=USER_INFO --property schema.registry.basic.auth.user.info="read:read" --topic my-topic --property value.schema='{"type":"record","name":"myrecord","fields":[{"name":"u_name","type":"string"},{"name":"u_price", "type": "float"}, {"name":"u_quantity", "type": "int"}]}' --property $AUTO_REGISTER_PROPERTY=true << EOF
 {"u_name": "scissors", "u_price": 2.75, "u_quantity": 3}
 {"u_name": "tape", "u_price": 0.99, "u_quantity": 10}
 {"u_name": "notebooks", "u_price": 1.99, "u_quantity": 5}
@@ -74,8 +78,8 @@ set -e
 #         at kafka.tools.ConsoleProducer.main(ConsoleProducer.scala)
 
 
-log "Testing with a producer (read:read) and --property auto.register.schemas=false, it will work"
-docker exec -i connect kafka-avro-console-producer --broker-list broker:9092 --property schema.registry.url=http://schema-registry:8081 --property basic.auth.credentials.source=USER_INFO --property schema.registry.basic.auth.user.info="read:read" --topic my-topic --property value.schema='{"type":"record","name":"myrecord","fields":[{"name":"u_name","type":"string"},{"name":"u_price", "type": "float"}, {"name":"u_quantity", "type": "int"}]}' --property auto.register.schemas=false << EOF
+log "Testing with a producer (read:read) and --property $AUTO_REGISTER_PROPERTY=false, it will work"
+docker exec -i connect kafka-avro-console-producer --broker-list broker:9092 --property schema.registry.url=http://schema-registry:8081 --property basic.auth.credentials.source=USER_INFO --property schema.registry.basic.auth.user.info="read:read" --topic my-topic --property value.schema='{"type":"record","name":"myrecord","fields":[{"name":"u_name","type":"string"},{"name":"u_price", "type": "float"}, {"name":"u_quantity", "type": "int"}]}' --property $AUTO_REGISTER_PROPERTY=false << EOF
 {"u_name": "scissors", "u_price": 2.75, "u_quantity": 3}
 {"u_name": "tape", "u_price": 0.99, "u_quantity": 10}
 {"u_name": "notebooks", "u_price": 1.99, "u_quantity": 5}

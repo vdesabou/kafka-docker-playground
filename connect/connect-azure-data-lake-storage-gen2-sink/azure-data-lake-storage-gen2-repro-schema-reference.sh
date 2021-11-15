@@ -122,7 +122,12 @@ log "Get schema id for datalake_topic"
 id=$(curl http://localhost:8081/subjects/customer/versions/1/referencedby | tr -d '[' | tr -d ']')
 
 log "Produce some Customer and Product data in topic datalake_topic"
-docker exec -i connect kafka-avro-console-producer --broker-list broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic datalake_topic --property value.schema.id=$id --property auto.register.schemas=false --property use.latest.version=true << EOF
+# property auto.register.schemas was added in 5.5.2, need to use auto.register for previous versions #1651
+AUTO_REGISTER_PROPERTY="auto.register.schemas"
+if ! version_gt $TAG_BASE "5.5.2"; then
+    AUTO_REGISTER_PROPERTY="auto.register"
+fi
+docker exec -i connect kafka-avro-console-producer --broker-list broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic datalake_topic --property value.schema.id=$id --property $AUTO_REGISTER_PROPERTY=false --property use.latest.version=true << EOF
 { "io.confluent.examples.avro.Product": { "product_id": 1, "product_name" : "rice", "product_price" : 100.00 } }
 { "io.confluent.examples.avro.Customer": { "customer_id": 100, "customer_name": "acme", "customer_email": "acme@google.com", "customer_address": "1 Main St" } }
 EOF
