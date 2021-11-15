@@ -9,6 +9,8 @@ if ! version_gt $TAG_BASE "5.3.99"; then
     exit 0
 fi
 
+unset DISABLE_CONTROL_CENTER
+
 DOCKER_COMPOSE_FILE_OVERRIDE=$1
 # Starting minio
 if [ -f "${DOCKER_COMPOSE_FILE_OVERRIDE}" ]

@@ -78,7 +78,7 @@ jobs:
                       "🚀 replicator/connect",
                       "🚀 replicator/executable",
                       "🚀 replicator/mirrormaker2 ksqldb/materialized-view connect/connect-pagerduty-sink connect/connect-zendesk-source connect/connect-datadog-metrics-sink connect/connect-gcp-spanner-sink connect/connect-gcp-firebase-source connect/connect-gcp-firebase-sink",
-                      "🚀 other/filebeat-to-kafka other/rest-proxy-security-plugin other/tiered-storage-with-aws other/write-logs-to-files other/audit-logs other/multiple-event-types-in-topic other/broker-schema-validation other/schema-registry-security-plugin other/cluster-linking",
+                      "🚀 other/filebeat-to-kafka other/rest-proxy-security-plugin other/tiered-storage-with-aws other/tiered-storage-with-minio other/write-logs-to-files other/audit-logs other/multiple-event-types-in-topic other/broker-schema-validation other/schema-registry-security-plugin other/cluster-linking",
                       "🚀 ccloud/replicator",
                       "🚀 ccloud/ccloudexporter ccloud/connect-debezium-mongodb-source ccloud/connect-aws-kinesis-source ccloud/kafka-admin ccloud/rest-proxy-security-plugin ccloud/schema-registry-security-plugin",
                       "🚀 connect/connect-cdc-oracle12-source",
