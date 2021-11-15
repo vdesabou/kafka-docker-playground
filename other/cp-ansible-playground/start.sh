@@ -38,9 +38,9 @@ then
   esac
 fi
 
-if ! version_gt $TAG "5.3.0"; then
-    logerror "ERROR: only versions from 5.3.1 are supported"
-    exit 1
+if ! version_gt $TAG_BASE "5.3.99"; then
+    logwarn "WARN: This example is working starting from CP 5.4 only"
+    exit 0
 fi
 
 GIT_BRANCH="$TAG-post"
