@@ -5,8 +5,8 @@ on:
   #    branches:
   #      - master
 
-  schedule:
-      - cron: '0 0 * * 0' # every week on sunday at 0 am
+  # schedule:
+  #     - cron: '0 0 * * 0' # every week on sunday at 0 am
 
   workflow_dispatch:
     inputs:
