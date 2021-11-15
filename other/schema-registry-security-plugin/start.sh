@@ -73,14 +73,9 @@ set -e
 #         at kafka.tools.ConsoleProducer$.main(ConsoleProducer.scala:51)
 #         at kafka.tools.ConsoleProducer.main(ConsoleProducer.scala)
 
-user="read:read"
-if ! version_gt $TAG_BASE "5.4.99"; then
-    logwarn "WARN: we need to use SUBJECT_WRITE workaround, see https://github.com/vdesabou/kafka-docker-playground/issues/1494#issuecomment-968809303"
-    user="write:write"
-fi
 
-log "Testing with a producer ($user) and --property auto.register.schemas=false, it will work"
-docker exec -i connect kafka-avro-console-producer --broker-list broker:9092 --property schema.registry.url=http://schema-registry:8081 --property basic.auth.credentials.source=USER_INFO --property schema.registry.basic.auth.user.info="$user" --topic my-topic --property value.schema='{"type":"record","name":"myrecord","fields":[{"name":"u_name","type":"string"},{"name":"u_price", "type": "float"}, {"name":"u_quantity", "type": "int"}]}' --property auto.register.schemas=false << EOF
+log "Testing with a producer (read:read) and --property auto.register.schemas=false, it will work"
+docker exec -i connect kafka-avro-console-producer --broker-list broker:9092 --property schema.registry.url=http://schema-registry:8081 --property basic.auth.credentials.source=USER_INFO --property schema.registry.basic.auth.user.info="read:read" --topic my-topic --property value.schema='{"type":"record","name":"myrecord","fields":[{"name":"u_name","type":"string"},{"name":"u_price", "type": "float"}, {"name":"u_quantity", "type": "int"}]}' --property auto.register.schemas=false << EOF
 {"u_name": "scissors", "u_price": 2.75, "u_quantity": 3}
 {"u_name": "tape", "u_price": 0.99, "u_quantity": 10}
 {"u_name": "notebooks", "u_price": 1.99, "u_quantity": 5}
