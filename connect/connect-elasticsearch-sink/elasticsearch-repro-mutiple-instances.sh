@@ -14,7 +14,7 @@ then
     export ELASTIC_VERSION="7.10.1" # it doesn't work with 7.12.0
 else
      log "This has been untested"
-     exit 0
+     exit 111
 fi
 
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.repro-mutiple-instances.yml"

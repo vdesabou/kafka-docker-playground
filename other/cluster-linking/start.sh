@@ -6,7 +6,7 @@ source ${DIR}/../../scripts/utils.sh
 
 if ! version_gt $TAG_BASE "6.9.9"; then
     logwarn "WARN: Cluster Linking is GA since CP 7.0 only"
-    exit 0
+    exit 111
 fi
 
 ${DIR}/../../environment/mdc-plaintext/start.sh "${PWD}/docker-compose.mdc-plaintext.yml"

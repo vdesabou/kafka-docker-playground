@@ -7,7 +7,7 @@ source ${DIR}/../../scripts/utils.sh
 
 if ! version_gt $TAG_BASE "5.3.99"; then
     logwarn "WARN: Kafka Client Authentication with LDAP was added in CP 5.4"
-    exit 0
+    exit 111
 fi
 
 verify_docker_and_memory

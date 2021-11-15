@@ -6,7 +6,7 @@ source ${DIR}/../../scripts/utils.sh
 
 if ! version_gt $TAG_BASE "5.3.99"; then
     logwarn "WARN: Tiered Storage is available since CP 5.4 only"
-    exit 0
+    exit 111
 fi
 
 unset DISABLE_CONTROL_CENTER

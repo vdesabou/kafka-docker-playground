@@ -7,7 +7,7 @@ source ${DIR}/../../scripts/utils.sh
 
 if ! version_gt $TAG_BASE "5.9.9"; then
     logwarn "WARN: Schema Registry plugin before 6.x requires zookeeper"
-    exit 0
+    exit 111
 fi
 
 CONFIG_FILE=~/.confluent/config

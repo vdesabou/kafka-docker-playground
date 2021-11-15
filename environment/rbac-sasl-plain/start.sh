@@ -7,7 +7,7 @@ source ${DIR}/../../scripts/utils.sh
 
 if ! version_gt $TAG_BASE "5.3.99"; then
     logwarn "WARN: This RBAC example is working starting from CP 5.4 only"
-    exit 0
+    exit 111
 fi
 
 verify_docker_and_memory

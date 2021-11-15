@@ -9,7 +9,7 @@ then
     if version_gt $CONNECTOR_TAG "1.9.9"
     then
         log "This connector does not support JDK 8 starting from version 2.0"
-        exit 0
+        exit 111
     fi
 fi
 

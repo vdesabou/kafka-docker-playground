@@ -111,5 +111,3 @@ docker exec -i client node /usr/src/app/consumer.js > consumer.log 2>&1 &
 
 log "Starting producer"
 docker exec -i client node /usr/src/app/producer.js > producer.log 2>&1 &
-
-exit 0
