@@ -3,6 +3,8 @@ version: '3.5'
 services:
 
   broker:
+    volumes:
+        - ../../other/connect-override-policy-sftp-sink/client.properties:/tmp/client.properties
     environment:
       KAFKA_AUTHORIZER_CLASS_NAME: $KAFKA_AUTHORIZER_CLASS_NAME
       KAFKA_ZOOKEEPER_SET_ACL: "true"
