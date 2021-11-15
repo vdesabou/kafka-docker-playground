@@ -61,9 +61,9 @@ do
             continue
         fi
 
+        THE_CONNECTOR_TAG=""
         if [[ "$dir" == "connect"* ]]
         then
-            THE_CONNECTOR_TAG=""
             docker_compose_file=$(grep "environment" "$script" | grep DIR | grep start.sh | cut -d "/" -f 7 | cut -d '"' -f 1 | head -n1)
             if [ "${docker_compose_file}" != "" ] && [ -f "${docker_compose_file}" ]
             then
