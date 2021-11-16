@@ -63,7 +63,7 @@ curl -X PUT \
                "kafka.topic": "test-sqs-source",
                "sqs.url": "'"$QUEUE_URL"'",
                "confluent.license": "",
-               "sqs.proxy.url": "https://nginx_proxy:8888",
+               "sqs.proxy.url": "https://nginx-proxy:8888",
                "confluent.topic.bootstrap.servers": "broker:9092",
                "confluent.topic.replication.factor": "1"
           }' \

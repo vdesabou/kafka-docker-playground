@@ -52,7 +52,7 @@ curl -X PUT \
                "s3.bucket.name": "'"$AWS_BUCKET_NAME"'",
                "s3.part.size": 52428801,
                "flush.size": "3",
-               "s3.proxy.url": "https://nginx_proxy:8888",
+               "s3.proxy.url": "https://nginx-proxy:8888",
                "storage.class": "io.confluent.connect.s3.storage.S3Storage",
                "format.class": "io.confluent.connect.s3.format.avro.AvroFormat",
                "schema.compatibility": "NONE"

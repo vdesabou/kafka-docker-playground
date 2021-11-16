@@ -59,7 +59,7 @@ curl -X PUT \
                "kafka.topic": "kinesis_topic",
                "kinesis.stream": "'"$KINESIS_STREAM_NAME"'",
                "kinesis.region": "'"$AWS_REGION"'",
-               "kinesis.proxy.url": "https://nginx_proxy:8888",
+               "kinesis.proxy.url": "https://nginx-proxy:8888",
                "confluent.license": "",
                "confluent.topic.bootstrap.servers": "broker:9092",
                "confluent.topic.replication.factor": "1"

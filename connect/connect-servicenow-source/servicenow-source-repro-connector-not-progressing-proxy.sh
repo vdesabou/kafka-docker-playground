@@ -49,7 +49,7 @@ export HTTPS_PROXY=127.0.0.1:8888
 log "Verify forward proxy is working correctly"
 curl --compressed -H 'Accept-Encoding: gzip' -H 'Content-Type: application/json' -H 'User-Agent: Google-HTTP-Java-Client/1.30.0 (gzip)' -v ${SERVICENOW_URL}api/now/table/incident?sysparm_limit=1 -u "admin:$SERVICENOW_PASSWORD" | jq .
 
-docker exec -e SERVICENOW_URL=$SERVICENOW_URL -e SERVICENOW_PASSWORD=$SERVICENOW_PASSWORD connect bash -c "export HTTP_PROXY=nginx_proxy:8888 && export HTTPS_PROXY=nginx_proxy:8888 && curl --compressed -H 'Accept-Encoding: gzip' -H 'User-Agent: Google-HTTP-Java-Client/1.30.0 (gzip)' -v ${SERVICENOW_URL}api/now/table/incident?sysparm_limit=1 -u \"admin:$SERVICENOW_PASSWORD\""
+docker exec -e SERVICENOW_URL=$SERVICENOW_URL -e SERVICENOW_PASSWORD=$SERVICENOW_PASSWORD connect bash -c "export HTTP_PROXY=nginx-proxy:8888 && export HTTPS_PROXY=nginx-proxy:8888 && curl --compressed -H 'Accept-Encoding: gzip' -H 'User-Agent: Google-HTTP-Java-Client/1.30.0 (gzip)' -v ${SERVICENOW_URL}api/now/table/incident?sysparm_limit=1 -u \"admin:$SERVICENOW_PASSWORD\""
 
 curl --request PUT \
   --url http://localhost:8083/admin/loggers/io.confluent.connect.servicenow \
@@ -66,7 +66,7 @@ curl -X PUT \
      --data '{
                     "connector.class": "io.confluent.connect.servicenow.ServiceNowSourceConnector",
                     "kafka.topic": "topic-servicenow",
-                    "proxy.url": "nginx_proxy:8888",
+                    "proxy.url": "nginx-proxy:8888",
                     "servicenow.url": "'"$SERVICENOW_URL"'",
                     "tasks.max": "1",
                     "servicenow.table": "incident",

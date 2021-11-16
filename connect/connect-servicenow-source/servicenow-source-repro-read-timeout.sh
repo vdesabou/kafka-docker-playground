@@ -71,7 +71,7 @@ export HTTPS_PROXY=127.0.0.1:8888
 log "Verify forward proxy is working correctly"
 curl --compressed -H 'Accept-Encoding: gzip' -H 'Content-Type: application/json' -H 'User-Agent: Google-HTTP-Java-Client/1.30.0 (gzip)' -v ${SERVICENOW_URL}api/now/table/incident?sysparm_limit=1 -u "admin:$SERVICENOW_PASSWORD" | jq .
 
-docker exec -e SERVICENOW_URL=$SERVICENOW_URL -e SERVICENOW_PASSWORD=$SERVICENOW_PASSWORD connect bash -c "export HTTP_PROXY=nginx_proxy:8888 && export HTTPS_PROXY=nginx_proxy:8888 && curl --compressed -H 'Accept-Encoding: gzip' -H 'User-Agent: Google-HTTP-Java-Client/1.30.0 (gzip)' -v ${SERVICENOW_URL}api/now/table/incident?sysparm_limit=1 -u \"admin:$SERVICENOW_PASSWORD\""
+docker exec -e SERVICENOW_URL=$SERVICENOW_URL -e SERVICENOW_PASSWORD=$SERVICENOW_PASSWORD connect bash -c "export HTTP_PROXY=nginx-proxy:8888 && export HTTPS_PROXY=nginx-proxy:8888 && curl --compressed -H 'Accept-Encoding: gzip' -H 'User-Agent: Google-HTTP-Java-Client/1.30.0 (gzip)' -v ${SERVICENOW_URL}api/now/table/incident?sysparm_limit=1 -u \"admin:$SERVICENOW_PASSWORD\""
 
 # block
 # echo "$SERVICENOW_URL" | cut -d "/" -f3
@@ -92,7 +92,7 @@ curl -X PUT \
      --data '{
                "connector.class": "io.confluent.connect.servicenow.ServiceNowSourceConnector",
                "kafka.topic": "topic-servicenow",
-               "proxy.url": "nginx_proxy:8888",
+               "proxy.url": "nginx-proxy:8888",
                "servicenow.url": "'"$SERVICENOW_URL"'",
                "tasks.max": "1",
                "servicenow.table": "incident",
@@ -113,7 +113,7 @@ curl -X PUT \
 sleep 10
 
 log "Create one record to ServiceNow using proxy"
-docker exec -e SERVICENOW_URL="$SERVICENOW_URL" -e SERVICENOW_PASSWORD="$SERVICENOW_PASSWORD" connect bash -c "export HTTP_PROXY=nginx_proxy:8888 && export HTTPS_PROXY=nginx_proxy:8888 && \
+docker exec -e SERVICENOW_URL="$SERVICENOW_URL" -e SERVICENOW_PASSWORD="$SERVICENOW_PASSWORD" connect bash -c "export HTTP_PROXY=nginx-proxy:8888 && export HTTPS_PROXY=nginx-proxy:8888 && \
    curl -X POST \
     \"${SERVICENOW_URL}api/now/table/incident\" \
     --user admin:\"$SERVICENOW_PASSWORD\" \
@@ -208,7 +208,7 @@ docker exec --privileged --user root connect bash -c 'tcpdump -w tcpdump.pcap -i
 # With default connection.timeout.ms (50 seconds) and 60 seconds latency between nginx_proxy and connect, we get a connect timeout error (SocketTimeoutException: connect timed out), which makes sense:
 
 # [2021-08-02 15:42:54,104] ERROR [servicenow-source|task-0] WorkerSourceTask{id=servicenow-source-0} Task threw an uncaught and unrecoverable exception. Task is being killed and will not recover until manually restarted (org.apache.kafka.connect.runtime.WorkerTask:184)
-# io.confluent.connect.utils.retry.RetryCountExceeded: Failed after 4 attempts to send request to ServiceNow: Connect to nginx_proxy:8888 [nginx_proxy/172.19.0.3] failed: connect timed out
+# io.confluent.connect.utils.retry.RetryCountExceeded: Failed after 4 attempts to send request to ServiceNow: Connect to nginx-proxy:8888 [nginx_proxy/172.19.0.3] failed: connect timed out
 # 	at io.confluent.connect.utils.retry.RetryPolicy.callWith(RetryPolicy.java:429)
 # 	at io.confluent.connect.utils.retry.RetryPolicy.call(RetryPolicy.java:337)
 # 	at io.confluent.connect.servicenow.rest.ServiceNowClientImpl.executeRequest(ServiceNowClientImpl.java:229)
@@ -225,7 +225,7 @@ docker exec --privileged --user root connect bash -c 'tcpdump -w tcpdump.pcap -i
 # 	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1128)
 # 	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:628)
 # 	at java.base/java.lang.Thread.run(Thread.java:829)
-# Caused by: org.apache.http.conn.ConnectTimeoutException: Connect to nginx_proxy:8888 [nginx_proxy/172.19.0.3] failed: connect timed out
+# Caused by: org.apache.http.conn.ConnectTimeoutException: Connect to nginx-proxy:8888 [nginx_proxy/172.19.0.3] failed: connect timed out
 # 	at org.apache.http.impl.conn.DefaultHttpClientConnectionOperator.connect(DefaultHttpClientConnectionOperator.java:151)
 # 	at org.apache.http.impl.conn.PoolingHttpClientConnectionManager.connect(PoolingHttpClientConnectionManager.java:374)
 # 	at org.apache.http.impl.execchain.MainClientExec.establishRoute(MainClientExec.java:401)
