@@ -72,7 +72,7 @@ curl -X PUT \
                 "azblob.account.name": "'"$AZURE_ACCOUNT_NAME"'",
                 "azblob.account.key": "'"$AZURE_ACCOUNT_KEY"'",
                 "azblob.container.name": "'"$AZURE_CONTAINER_NAME"'",
-                "azblob.proxy.url" : "https://nginx_proxy:8888",
+                "azblob.proxy.url" : "https://nginx-proxy:8888",
                 "format.class": "io.confluent.connect.azure.blob.format.avro.AvroFormat",
                 "confluent.license": "",
                 "confluent.topic.bootstrap.servers": "broker:9092",

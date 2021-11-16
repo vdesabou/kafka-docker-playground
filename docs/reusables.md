@@ -431,10 +431,10 @@ Here are the steps to follow:
 3. Add this in your `docker-compose` file:
 
 ```yml
-  nginx_proxy:
+  nginx-proxy:
     image: reiz/nginx_proxy:latest
-    hostname: nginx_proxy
-    container_name: nginx_proxy
+    hostname: nginx-proxy
+    container_name: nginx-proxy
     ports:
       - "8888:8888"
     volumes:
@@ -454,12 +454,12 @@ Here are the steps to follow:
     dns: 0.0.0.0
 ```
 
-5. In you connector configuration, update the proxy configuration parameter with `https://nginx_proxy:8888`.
+5. In you connector configuration, update the proxy configuration parameter with `https://nginx-proxy:8888`.
 
 *Example:*
 
 ```json
-"s3.proxy.url": "https://nginx_proxy:8888"
+"s3.proxy.url": "https://nginx-proxy:8888"
 ```
 
 > [!NOTE]

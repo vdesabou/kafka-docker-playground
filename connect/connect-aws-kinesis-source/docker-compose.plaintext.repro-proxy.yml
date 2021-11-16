@@ -2,10 +2,10 @@
 version: '3.5'
 services:
 
-  nginx_proxy:
+  nginx-proxy:
     image: reiz/nginx_proxy:latest
-    hostname: nginx_proxy
-    container_name: nginx_proxy
+    hostname: nginx-proxy
+    container_name: nginx-proxy
     ports:
       - "8888:8888"
     volumes:
