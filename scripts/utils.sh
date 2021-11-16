@@ -730,9 +730,9 @@ function retry() {
     if [ $ret -eq 0 ]
     then
       return 0
-    elif [ $ret -eq 123 ] # skipped
+    elif [ $ret -eq 111 ] # skipped
     then
-      return 123
+      return 111
     elif [ $ret -eq 107 ] # known issue https://github.com/vdesabou/kafka-docker-playground/issues/907
     then
       return 107
