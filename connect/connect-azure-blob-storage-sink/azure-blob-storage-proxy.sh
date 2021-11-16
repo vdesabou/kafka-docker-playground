@@ -78,7 +78,7 @@ curl -X PUT \
                 "confluent.topic.bootstrap.servers": "broker:9092",
                 "confluent.topic.replication.factor": "1"
           }' \
-     http://localhost:8083/connectors/azure-blob-sink-proxy5/config | jq .
+     http://localhost:8083/connectors/azure-blob-sink-proxy/config | jq .
 
 
 log "Sending messages to topic blob_topic"
