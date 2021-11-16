@@ -44,6 +44,9 @@ docker exec -i connect kafka-avro-console-producer --broker-list broker:9092 --p
 "simple-key-3", {"users": {"name":"John","friends": "10000"}}
 EOF
 
+IP=$(nslookup bigtableadmin.googleapis.com | grep Address | grep -v "#" | cut -d " " -f 2)
+log "Blocking bigtableadmin.googleapis.com IP $IP to make sure proxy is used"
+docker exec --privileged --user root connect bash -c "iptables -A INPUT -p tcp -s $IP -j DROP"
 
 log "Creating GCP BigTbale Sink connector"
 curl -X PUT \
