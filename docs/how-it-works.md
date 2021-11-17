@@ -206,9 +206,9 @@ However, when you execute an example, you get in the output the command to run i
 *Example:*
 
 ```bash
-12:02:18 ℹ️ 🔃If you modify a docker-compose file 
-and want to re-create the container(s), use this command:
-12:02:18 ℹ️ 🔃source ../../scripts/utils.sh && docker-compose -f ../../environment/plaintext/docker-compose.yml -f $PWD/docker-compose.plaintext.yml --profile control-center up -d
+12:02:18 ℹ️ ✨If you modify a docker-compose file and want to re-create the container(s),
+ run ../../scripts/recreate-containers.sh or use this command:
+12:02:18 ℹ️ ✨source ../../scripts/utils.sh && docker-compose -f ../../environment/plaintext/docker-compose.yml -f docker-compose.plaintext.yml --profile control-center up -d
 ```
 
 So you can modify one of the `docker-compose` files (in that case either [`environment/plaintext/docker-compose.yml`](https://github.com/vdesabou/kafka-docker-playground/blob/master/environment/plaintext/docker-compose.yml) or [`connect/connect-http-sink/docker-compose.plaintext.yml`](https://github.com/vdesabou/kafka-docker-playground/blob/master/connect/connect-http-sink/docker-compose.plaintext.yml)), and then run the suggested command:
@@ -218,7 +218,7 @@ So you can modify one of the `docker-compose` files (in that case either [`envir
 After editing [`connect/connect-http-sink/docker-compose.plaintext.yml`](https://github.com/vdesabou/kafka-docker-playground/blob/master/connect/connect-http-sink/docker-compose.plaintext.yml) and updated both `connect` and `http-service-no-auth`, the suggested command was ran:
 
 ```bash
-$ source ../../scripts/utils.sh && docker-compose -f ../../environment/plaintext/docker-compose.yml -f $PWD/docker-compose.plaintext.yml --profile control-center  up -d
+$ source ../../scripts/utils.sh && docker-compose -f ../../environment/plaintext/docker-compose.yml -f docker-compose.plaintext.yml --profile control-center  up -d
 http-service-ssl-basic-auth is up-to-date
 http-service-oauth2-auth is up-to-date
 Recreating http-service-no-auth ... 
