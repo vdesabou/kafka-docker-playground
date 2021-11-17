@@ -301,6 +301,10 @@ CI results are displayed in **[Content](/content.md)** section:
 > * When the test is failing for **just some** tested CP versions, the badge looks like [![issue 778](https://img.shields.io/badge/CI-CP%206.2.1-red)](https://github.com/vdesabou/kafka-docker-playground/issues/778) (which includes CP version) and clicking on it brings you to the corresponding Github issue.
 > 
 > * When a test cannot be tested in CI, the badge ![not tested](https://img.shields.io/badge/CI-not%20tested!-violet) is set (without any associated link).
+> 
+> * When a test is skipped, the badge looks like [![CP 5.4.5](https://img.shields.io/badge/skipped-CP%205.4.5-lightgrey)](https://github.com/vdesabou/kafka-docker-playground/runs/4223957685?check_suite_focus=true) and clicking on it brings you to the CI run.
+> 
+> * When there is a known issue, the badge looks like [![CP 6.2.1](https://img.shields.io/badge/known%20issue-CP%206.2.1-orange)](https://github.com/vdesabou/kafka-docker-playground/issues/907) and clicking on it brings you to the corresponding Github issue.
 
 > [!TIP]
 > * Clicking on the connector version badge [![version](https://img.shields.io/badge/v-1.2.2-pink)](https://docs.confluent.io/kafka-connect-aws-dynamodb/current/index.html) brings you to the corresponding documentation page
