@@ -241,7 +241,11 @@ then
   else
     log "🎯 CONNECTOR_TAG is set with version $CONNECTOR_TAG"
     # determining the connector from current path
-    docker_compose_file=$(grep "environment" "$PWD/$0" | grep DIR | grep start.sh | cut -d "/" -f 7 | cut -d '"' -f 1 | head -n1)
+    docker_compose_file=""
+    if [ -f "$PWD/$0" ]
+    then
+      docker_compose_file=$(grep "environment" "$PWD/$0" | grep DIR | grep start.sh | cut -d "/" -f 7 | cut -d '"' -f 1 | head -n1)
+    fi
     if [ "${docker_compose_file}" != "" ] && [ -f "${docker_compose_file}" ]
     then
       connector_path=$(grep "CONNECT_PLUGIN_PATH" "${docker_compose_file}" | cut -d "/" -f 5 | head -1)
@@ -331,7 +335,11 @@ else
   then
     :
   else
-    docker_compose_file=$(grep "environment" "$PWD/$0" | grep DIR | grep start.sh | cut -d "/" -f 7 | cut -d '"' -f 1 | head -n1)
+    docker_compose_file=""
+    if [ -f "$PWD/$0" ]
+    then
+      docker_compose_file=$(grep "environment" "$PWD/$0" | grep DIR | grep start.sh | cut -d "/" -f 7 | cut -d '"' -f 1 | head -n1)
+    fi
     if [ "${docker_compose_file}" != "" ] && [ -f "${docker_compose_file}" ]
     then
       connector_paths=$(grep "CONNECT_PLUGIN_PATH" "${docker_compose_file}" | grep -v "KSQL_CONNECT_PLUGIN_PATH" | cut -d ":" -f 2  | tr -s " " | head -1)
