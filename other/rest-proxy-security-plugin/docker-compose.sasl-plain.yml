@@ -43,6 +43,9 @@ services:
       # Security configurations between REST Proxy and broker
       KAFKA_REST_CLIENT_SECURITY_PROTOCOL: SASL_PLAINTEXT
       KAFKA_REST_CLIENT_SASL_MECHANISM: PLAIN
+      # This is required for dub kafka-ready tool only (Docker specific)
+      # it can be removed, but in that case KAFKA_OPTS: "-Djava.security.auth.login.config=/etc/kafka/sasl-plain-with-basic-auth.properties"
+      # should be set
       KAFKA_REST_CLIENT_SASL_JAAS_CONFIG: "org.apache.kafka.common.security.plain.PlainLoginModule required \
               username=\"clientrestproxy\" \
               password=\"clientrestproxy-secret\";"
@@ -53,6 +56,9 @@ services:
       # HTTP Basic Authentication
       # https://docs.confluent.io/platform/current/kafka-rest/production-deployment/rest-proxy/security.html#http-basic-authentication
       KAFKAREST_OPTS: "-Djava.security.auth.login.config=/etc/kafka/sasl-plain-with-basic-auth.properties"
+      # This is required for dub kafka-ready tool only (Docker specific)
+      # This is required when KAFKA_REST_CLIENT_SASL_JAAS_CONFIG is not set
+      # KAFKA_OPTS: "-Djava.security.auth.login.config=/etc/kafka/sasl-plain-with-basic-auth.properties"
       KAFKA_REST_AUTHENTICATION_METHOD: BASIC
       KAFKA_REST_AUTHENTICATION_REALM: KafkaRest
       KAFKA_REST_AUTHENTICATION_ROLES: thisismyrole

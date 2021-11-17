@@ -198,8 +198,9 @@ Security configurations between REST Proxy and broker, using `clientrestproxy` p
 
 ```yml
       # Security configurations between REST Proxy and broker
-      KAFKA_REST_CLIENT_SECURITY_PROTOCOL: SASL_PLAINTEXT
-      KAFKA_REST_CLIENT_SASL_MECHANISM: PLAIN
+      # This is required for dub kafka-ready tool only (Docker specific)
+      # it can be removed, but in that case KAFKA_OPTS: "-Djava.security.auth.login.config=/etc/kafka/sasl-plain-with-basic-auth.properties"
+      # should be set
       KAFKA_REST_CLIENT_SASL_JAAS_CONFIG: "org.apache.kafka.common.security.plain.PlainLoginModule required \
               username=\"clientrestproxy\" \
               password=\"clientrestproxy-secret\";"
