@@ -19,6 +19,12 @@ or
 $ ./start-2way-ssl.sh
 ```
 
+or
+
+```
+$ ./start-sasl-plain-with-basic-auth.sh
+```
+
 ## With SASL
 
 Brokers are configured with SASL_SSL.
@@ -162,5 +168,82 @@ We can verify principal `clientrestproxy` is used:
 ```
 
 Note: If Confluent REST Proxy Security Plugin is not configured, then principal used would be `restproxy`.
+
+## With HTTP Basic Authentication to SASL Authentication
+
+Broker is configured with SASL_PLAIN, and `clientrestproxy`user has been added:
+
+```yml
+  broker:
+    environment:
+      KAFKA_LOG4J_LOGGERS: "kafka.authorizer.logger=DEBUG"
+      KAFKA_AUTHORIZER_CLASS_NAME: $KAFKA_AUTHORIZER_CLASS_NAME
+      KAFKA_ALLOW_EVERYONE_IF_NO_ACL_FOUND: "true"
+      KAFKA_LISTENER_NAME_EXTERNAL_PLAIN_SASL_JAAS_CONFIG: |
+              org.apache.kafka.common.security.plain.PlainLoginModule required \
+              username="broker" \
+              password="broker" \
+              user_broker="broker" \
+              user_controlcenter="controlcenter-secret" \
+              user_schemaregistry="schemaregistry-secret" \
+              user_ksqldb="ksqldb-secret" \
+              user_connect="connect-secret" \
+              user_sftp="sftp-secret" \
+              user_clientrestproxy="clientrestproxy-secret" \
+              user_client="client-secret";
+```
+
+
+Security configurations between REST Proxy and broker, using `clientrestproxy` principal
+
+```yml
+      # Security configurations between REST Proxy and broker
+      KAFKA_REST_CLIENT_SECURITY_PROTOCOL: SASL_PLAINTEXT
+      KAFKA_REST_CLIENT_SASL_MECHANISM: PLAIN
+      KAFKA_REST_CLIENT_SASL_JAAS_CONFIG: "org.apache.kafka.common.security.plain.PlainLoginModule required \
+              username=\"clientrestproxy\" \
+              password=\"clientrestproxy-secret\";"
+
+```
+
+HTTP Basic Authentication to SASL Authentication:
+
+```yml
+      # HTTP Basic Authentication
+      # https://docs.confluent.io/platform/current/kafka-rest/production-deployment/rest-proxy/security.html#http-basic-authentication
+      KAFKAREST_OPTS: "-Djava.security.auth.login.config=/etc/kafka/sasl-plain-with-basic-auth.properties"
+      KAFKA_REST_AUTHENTICATION_METHOD: BASIC
+      KAFKA_REST_AUTHENTICATION_REALM: KafkaRest
+      KAFKA_REST_AUTHENTICATION_ROLES: thisismyrole
+      KAFKA_REST_CONFLUENT_REST_AUTH_PROPAGATE_METHOD: JETTY_AUTH
+```
+
+where `sasl-plain-with-basic-auth.properties` contains:
+
+```properties
+KafkaRest {
+    org.eclipse.jetty.jaas.spi.PropertyFileLoginModule required
+    debug="true"
+    file="/tmp/password.properties";
+};
+
+KafkaClient {
+  org.apache.kafka.common.security.plain.PlainLoginModule required
+  username="clientrestproxy"
+  password="clientrestproxy-secret";
+};
+```
+
+and `password.properties`:
+
+```properties
+clientrestproxy: clientrestproxy-secret,thisismyrole
+```
+
+curl command is using `clientrestproxy` principal:
+
+```
+docker exec --privileged --user root restproxy curl -X POST -u clientrestproxy:clientrestproxy-secret -H "Content-Type: application/vnd.kafka.json.v2+json" -H "Accept: application/vnd.kafka.v2+json" --data '{"records":[{"value":{"foo":"bar"}}]}' "http://localhost:8086/topics/jsontest"
+```
 
 
