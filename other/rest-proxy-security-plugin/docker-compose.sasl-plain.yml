@@ -1,0 +1,59 @@
+---
+version: '3.5'
+services:
+
+  broker:
+    environment:
+      KAFKA_LOG4J_LOGGERS: "kafka.authorizer.logger=DEBUG"
+      KAFKA_AUTHORIZER_CLASS_NAME: $KAFKA_AUTHORIZER_CLASS_NAME
+      KAFKA_ALLOW_EVERYONE_IF_NO_ACL_FOUND: "true"
+      KAFKA_LISTENER_NAME_EXTERNAL_PLAIN_SASL_JAAS_CONFIG: |
+              org.apache.kafka.common.security.plain.PlainLoginModule required \
+              username="broker" \
+              password="broker" \
+              user_broker="broker" \
+              user_controlcenter="controlcenter-secret" \
+              user_schemaregistry="schemaregistry-secret" \
+              user_ksqldb="ksqldb-secret" \
+              user_connect="connect-secret" \
+              user_sftp="sftp-secret" \
+              user_clientrestproxy="clientrestproxy-secret" \
+              user_client="client-secret";
+
+  restproxy:
+    image: confluentinc/cp-kafka-rest:${TAG}
+    restart: always
+    depends_on:
+      - zookeeper
+      - broker
+      - schema-registry
+    hostname: restproxy
+    container_name: restproxy
+    ports:
+      - 8086:8086
+    volumes:
+      - ../../other/rest-proxy-security-plugin/sasl-plain-with-basic-auth.properties:/etc/kafka/sasl-plain-with-basic-auth.properties
+      - ../../other/rest-proxy-security-plugin/password.properties:/tmp/password.properties
+    environment:
+      KAFKA_REST_HOST_NAME: restproxy
+      KAFKA_REST_BOOTSTRAP_SERVERS: "EXTERNAL://broker:9092"
+      KAFKA_REST_LISTENERS: "http://0.0.0.0:8086"
+      KAFKA_REST_SCHEMA_REGISTRY_URL: "http://schema-registry:8081"
+
+      # Security configurations between REST Proxy and broker
+      KAFKA_REST_CLIENT_SECURITY_PROTOCOL: SASL_PLAINTEXT
+      KAFKA_REST_CLIENT_SASL_MECHANISM: PLAIN
+      KAFKA_REST_CLIENT_SASL_JAAS_CONFIG: "org.apache.kafka.common.security.plain.PlainLoginModule required \
+              username=\"clientrestproxy\" \
+              password=\"clientrestproxy-secret\";"
+      # Security extension configuration
+      # ZooKeeper required to validate trial license
+      KAFKA_REST_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_REST_KAFKA_REST_RESOURCE_EXTENSION_CLASS: io.confluent.kafkarest.security.KafkaRestSecurityResourceExtension
+      # HTTP Basic Authentication
+      # https://docs.confluent.io/platform/current/kafka-rest/production-deployment/rest-proxy/security.html#http-basic-authentication
+      KAFKAREST_OPTS: "-Djava.security.auth.login.config=/etc/kafka/sasl-plain-with-basic-auth.properties"
+      KAFKA_REST_AUTHENTICATION_METHOD: BASIC
+      KAFKA_REST_AUTHENTICATION_REALM: KafkaRest
+      KAFKA_REST_AUTHENTICATION_ROLES: thisismyrole
+      KAFKA_REST_CONFLUENT_REST_AUTH_PROPAGATE_METHOD: JETTY_AUTH
