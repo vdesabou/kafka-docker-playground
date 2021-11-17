@@ -16,7 +16,7 @@ services:
       - ../../connect/connect-http-sink/security:/tmp
     environment:
       CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-http
-    #dns: 0.0.0.0
+    dns: 0.0.0.0
 
   http-service-no-auth:
     image: vdesabou/http-sink-demo # created from https://github.com/vdesabou/kafka-connect-http-demo with mvn clean install -DskipTests && docker build -t vdesabou/http-sink-demo:latest . && docker push vdesabou/http-sink-demo:latest
