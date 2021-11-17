@@ -195,57 +195,92 @@ Make sure you have already the required Visual Studio code extensions by followi
 
 Here is a full example using [HDFS 2 sink](https://github.com/vdesabou/kafka-docker-playground/tree/master/connect/connect-hdfs2-sink) connector and [Visual Studio Code ](https://code.visualstudio.com/docs/java/java-debugging):
 
-1. Clone and open [`confluentinc/kafka-connect-hdfs`](https://github.com/confluentinc/kafka-connect-hdfs) repository in Visual Studio Code.
+1. Launch the example as usual, i.e start `./hdfs2-sink.sh`.
 
-2. Switch to the branch corresponding to the connector version you're going to run. 
+2. Clone and open [`confluentinc/kafka-connect-hdfs`](https://github.com/confluentinc/kafka-connect-hdfs) repository in Visual Studio Code.
+
+3. Switch to the branch corresponding to the connector version you're going to run. 
  
 In my example, the connector version is `10.1.1`, so I'm switching to branch tag `v10.1.1`:
 
 ![remote_debugging](./images/remote_debugging2.jpg)
 
-3. [Configure](https://code.visualstudio.com/docs/java/java-debugging#_configure) remote debugging by clicking on menu `Run`->`Add Configuration...`:
+4. Run script `../../scripts/enable-remote-debugging.sh`
 
-![remote_debugging](./images/remote_debugging1.jpg)
-
-Then copy/paste the following entry:
-
-```yml
+```
+namenode is up-to-date
+zookeeper is up-to-date
+hive-metastore-postgresql is up-to-date
+datanode is up-to-date
+presto-coordinator is up-to-date
+hive-server is up-to-date
+hive-metastore is up-to-date
+broker is up-to-date
+schema-registry is up-to-date
+Recreating connect ... done
+control-center is up-to-date
+15:34:36 ℹ️ If you use Visual Studio Code:
+15:34:36 ℹ️ Edit .vscode/launch.json with
+15:34:36 ℹ️ 
+{
+    "version": "0.2.0",
+    "configurations": [
+    
         {
             "type": "java",
-            "name": "Debug Connect container",
+            "name": "Debug connect container",
             "request": "attach",
             "hostName": "127.0.0.1",
             "port": 5005,
             "timeout": 30000
         }
+    ]
+}
+
+15:34:36 ℹ️ See https://kafka-docker-playground.io/#/reusables?id=✨-remote-debugging
+```
+   
+5. [Configure](https://code.visualstudio.com/docs/java/java-debugging#_configure) remote debugging by clicking on menu `Run`->`Add Configuration...`:
+
+![remote_debugging](./images/remote_debugging1.jpg)
+
+Then copy/paste the following entry:
+
+```json
+{
+    "type": "java",
+    "name": "Debug connect container",
+    "request": "attach",
+    "hostName": "127.0.0.1",
+    "port": 5005,
+    "timeout": 30000
+}
+```
+
+Note: you can also directly edit file `.vscode/launch.json`:
+
+```json
+{
+    "version": "0.2.0",
+    "configurations": [
+    
+        {
+            "type": "java",
+            "name": "Debug connect container",
+            "request": "attach",
+            "hostName": "127.0.0.1",
+            "port": 5005,
+            "timeout": 30000
+        }
+    ]
+}
 ```
 
 *Example:*
 
 ![remote_debugging](./images/remote_debugging3.jpg)
 
-4. Update [`connect/connect-hdfs2-sink/docker-compose.plaintext.yml`](https://github.com/vdesabou/kafka-docker-playground/blob/master/connect/connect-hdfs2-sink/docker-compose.plaintext.yml) and add `KAFKA_DEBUG: 'true'`:
-
-```yml
-  connect:
-    depends_on:
-      - zookeeper
-      - broker
-      - schema-registry
-      - hive-server
-      - presto-coordinator
-      - hive-metastore
-    environment:
-      CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-hdfs
-      # Java remote debugging: set
-      KAFKA_DEBUG: 'true'
-      # With JDK9+, need to specify address=*:5005, see https://www.baeldung.com/java-application-remote-debugging#from-java9
-      JAVA_DEBUG_OPTS: '-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=*:5005'
-```
-
-5. Launch the example as usual, i.e start `./hdfs2-sink.sh`.
-
-6. Go in `Run and Debug` and make sure to select the `Debug Connect container` config:
+5. Go in `Run and Debug` and make sure to select the `Debug Connect container` config:
 
 ![remote_debugging](./images/remote_debugging5.jpg)
 
