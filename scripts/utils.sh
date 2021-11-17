@@ -146,7 +146,7 @@ then
     export CP_KAFKA_IMAGE=confluentinc/cp-server
     export CP_BASE_IMAGE=confluentinc/cp-base-new
     export CP_KSQL_IMAGE=confluentinc/cp-ksqldb-server
-    export CP_KSQL_CLI_IMAGE=confluentinc/ksqldb-cli:latest
+    export CP_KSQL_CLI_IMAGE=confluentinc/cp-ksqldb-cli:latest
     set_kafka_client_tag
 else
     if [ -z "$CP_KAFKA_IMAGE" ]
@@ -177,7 +177,7 @@ else
     second_version=5.4.99
     if version_gt $first_version $second_version; then
         export CP_KSQL_IMAGE=confluentinc/cp-ksqldb-server
-        export CP_KSQL_CLI_IMAGE=confluentinc/ksqldb-cli:latest
+        export CP_KSQL_CLI_IMAGE=confluentinc/cp-ksqldb-cli:${TAG_BASE}
     else
         export CP_KSQL_IMAGE=confluentinc/cp-ksql-server
         export CP_KSQL_CLI_IMAGE=confluentinc/cp-ksql-cli:${TAG_BASE}
