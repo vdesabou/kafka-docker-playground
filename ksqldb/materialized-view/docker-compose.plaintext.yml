@@ -18,7 +18,9 @@ services:
   connect:
     volumes:
       - confluent-hub-components:/usr/share/confluent-hub-components/debezium-debezium-connector-mysql
-
+    environment:
+      CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/debezium-debezium-connector-mysql
+      
   ksqldb-server:
     depends_on:
       - zookeeper
