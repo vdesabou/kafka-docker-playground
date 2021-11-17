@@ -218,7 +218,7 @@ So you can modify one of the `docker-compose` files (in that case either [`envir
 After editing [`connect/connect-http-sink/docker-compose.plaintext.yml`](https://github.com/vdesabou/kafka-docker-playground/blob/master/connect/connect-http-sink/docker-compose.plaintext.yml) and updated both `connect` and `http-service-no-auth`, the suggested command was ran:
 
 ```bash
-$ source ../../scripts/utils.sh && docker-compose -f ../../environment/plaintext/docker-compose.yml -f docker-compose.plaintext.yml --profile control-center  up -d
+$ ../../scripts/recreate-containers.sh
 http-service-ssl-basic-auth is up-to-date
 http-service-oauth2-auth is up-to-date
 Recreating http-service-no-auth ... 
