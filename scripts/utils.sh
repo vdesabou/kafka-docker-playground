@@ -1181,12 +1181,16 @@ function create_or_get_oracle_image() {
     then
         log "Downloading <s3://kafka-docker-playground/3rdparty/$ORACLE_IMAGE.tar> from S3 bucket"
         aws s3 cp --only-show-errors "s3://kafka-docker-playground/3rdparty/$ORACLE_IMAGE.tar" /tmp/
-        if [ $? -eq 0 ]; then
-              log "📄 <s3://kafka-docker-playground/3rdparty/$ORACLE_IMAGE.tar> was downloaded from S3 bucket"
-        fi
-        docker load -i /tmp/$ORACLE_IMAGE.tar
-        if [ $? -eq 0 ]; then
-              log "📄 image $ORACLE_IMAGE has been installed locally"
+        if [ $? -eq 0 ]
+        then
+          log "📄 <s3://kafka-docker-playground/3rdparty/$ORACLE_IMAGE.tar> was downloaded from S3 bucket"
+          docker load -i /tmp/$ORACLE_IMAGE.tar
+          if [ $? -eq 0 ]
+          then
+            log "📄 image $ORACLE_IMAGE has been installed locally"
+          fi
+          log "🧹 Removing /tmp/$ORACLE_IMAGE.tar"
+          rm -f /tmp/$ORACLE_IMAGE.tar
         fi
     fi
     set -e
@@ -1208,12 +1212,16 @@ function create_or_get_oracle_image() {
     then
         log "Downloading <s3://kafka-docker-playground/3rdparty/oracle_database_$ORACLE_VERSION.tar> from S3 bucket"
         aws s3 cp --only-show-errors "s3://kafka-docker-playground/3rdparty/oracle_database_$ORACLE_VERSION.tar" /tmp/
-        if [ $? -eq 0 ]; then
-              log "📄 <s3://kafka-docker-playground/3rdparty/oracle_database_$ORACLE_VERSION.tar> was downloaded from S3 bucket"
-        fi
-        docker load -i /tmp/oracle_database_$ORACLE_VERSION.tar
-        if [ $? -eq 0 ]; then
-              log "📄 image $BASE_ORACLE_IMAGE has been installed locally"
+        if [ $? -eq 0 ]
+        then
+          log "📄 <s3://kafka-docker-playground/3rdparty/oracle_database_$ORACLE_VERSION.tar> was downloaded from S3 bucket"
+          docker load -i /tmp/oracle_database_$ORACLE_VERSION.tar
+          if [ $? -eq 0 ]
+          then
+            log "📄 image $BASE_ORACLE_IMAGE has been installed locally"
+          fi
+          log "🧹 Removing /tmp/$ORACLE_IMAGE.tar"
+          rm -f /tmp/oracle_database_$ORACLE_VERSION.tar
         fi
     fi
     set -e
