@@ -180,6 +180,20 @@ timeout 60 docker exec broker kafka-console-consumer --bootstrap-server broker:9
 timeout 60 docker exec broker kafka-console-consumer --bootstrap-server broker:9092 --topic a-topic --property print.key=true --property key.separator=, --from-beginning --max-messages 1
 ```
 
+### 🔣 [kafka-avro-console-consumer](https://docs.confluent.io/platform/current/tutorials/examples/clients/docs/kafka-commands.html#consume-avro-records)
+
+* 1️⃣ Simplest
+  
+```
+docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic a-topic --from-beginning --max-messages 1
+```
+
+* 2️⃣ Displaying key:
+  
+```
+docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic a-topic --property print.key=true --property key.separator=, --from-beginning --max-messages 1
+```
+
 ## ✨ Remote debugging
 
 Java Remote debugging is the perfect tool for troubleshooting Kafka connectors for example.
