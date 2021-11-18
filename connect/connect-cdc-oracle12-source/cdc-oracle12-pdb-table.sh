@@ -4,6 +4,12 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
+if [ ! -z "$GITHUB_RUN_NUMBER" ]
+then
+     # running with github actions
+     remove_cdb_oracle_image "linuxx64_12201_database.zip" "$(pwd)/ora-setup-scripts-cdb-table"
+fi
+
 create_or_get_oracle_image "linuxx64_12201_database.zip" "$(pwd)/ora-setup-scripts-pdb-table"
 
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.pdb-table.yml"
