@@ -44,7 +44,7 @@ docker exec -i connect kafka-avro-console-producer --broker-list broker:9092 --p
 {"name": "notebooks", "price": 1.99, "quantity": 5}
 EOF
 
-IP=$(dig +short spanner.googleapis.com)
+IP=$(nslookup spanner.googleapis.com | grep Address | grep -v "#" | cut -d " " -f 2)
 log "Blocking spanner.googleapis.com IP $IP to make sure proxy is used"
 docker exec --privileged --user root connect bash -c "iptables -A INPUT -p tcp -s $IP -j DROP"
 
