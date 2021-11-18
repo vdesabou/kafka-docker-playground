@@ -1132,6 +1132,28 @@ function get_3rdparty_file () {
   set -e
 }
 
+function remove_cdb_oracle_image() {
+  ZIP_FILE="$1"
+  SETUP_FOLDER="$2"
+
+  if [ "$ZIP_FILE" == "linuxx64_12201_database.zip" ]
+  then
+      ORACLE_VERSION="12.2.0.1-ee"
+  else
+      ORACLE_VERSION="19.3.0-ee"
+  fi
+
+  SETUP_FILE=${SETUP_FOLDER}/01_user-setup.sh
+  SETUP_FILE_CKSUM=$(cksum $SETUP_FILE | awk '{ print $1 }')
+  ORACLE_IMAGE="db-prebuilt-$SETUP_FILE_CKSUM:$ORACLE_VERSION"
+
+  if ! test -z "$(docker images -q $ORACLE_IMAGE)"
+  then
+    log "🧹 Removing Oracle image $ORACLE_IMAGE"
+    docker image rm $ORACLE_IMAGE
+  fi
+}
+
 function create_or_get_oracle_image() {
   ZIP_FILE="$1"
   SETUP_FOLDER="$2"
