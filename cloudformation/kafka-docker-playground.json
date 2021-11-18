@@ -262,7 +262,10 @@
               "03install_docker_compose": {
                   "command": "yum install -y python38 python38-devel.$(uname -m) libffi-devel openssl-devel && python3 -m pip install -U pip && python3 -m pip install docker-compose"
               },
-              "04clone_repo": {
+              "04install_ansible": {
+                  "command": "yum install -y ansible --enablerepo=epel"
+              },
+              "05clone_repo": {
                   "command": "/home/ec2-user/clone.sh > /home/ec2-user/output.log 2>&1"
               }
             }
