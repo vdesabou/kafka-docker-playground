@@ -6,6 +6,12 @@ source ${DIR}/../../scripts/utils.sh
 
 # THIS TEST IS SKIPPED AS NOT WORKING, see #833 Oracle CDC: mTLS with DB authentication cannot work with PDB #833 https://github.com/vdesabou/kafka-docker-playground/issues/833
 
+if [ ! -z "$GITHUB_RUN_NUMBER" ]
+then
+     # running with github actions
+     remove_cdb_oracle_image "LINUX.X64_193000_db_home.zip" "$(pwd)/ora-setup-scripts-cdb-table"
+fi
+
 create_or_get_oracle_image "LINUX.X64_193000_db_home.zip" "$(pwd)/ora-setup-scripts-pdb-table"
 
 # required to make utils.sh script being able to work, do not remove:
