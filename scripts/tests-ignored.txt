@@ -10,10 +10,3 @@ cdc-oracle19-pdb-table-mtls-db-auth.sh
 s3-sink-proxy-with-assuming-iam-role.sh
 # https://github.com/vdesabou/kafka-docker-playground/issues/920#issuecomment-830157555
 kinesis-proxy-with-assuming-iam-role.sh
-# skipping as it takes too much time:
-cdc-oracle19-cdb-table-ssl.sh
-cdc-oracle19-cdb-table-mtls.sh
-cdc-oracle19-cdb-table-mtls-db-auth.sh
-cdc-oracle19-pdb-table-ssl.sh
-cdc-oracle19-pdb-table-mtls.sh
-cdc-oracle19-pdb-table-mtls-db-auth.sh
