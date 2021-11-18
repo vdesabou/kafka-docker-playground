@@ -1,0 +1,133 @@
+#!/bin/bash
+set -e
+
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
+source ${DIR}/../../scripts/utils.sh
+
+if [ ! -z "$CI" ]
+then
+     # running with github actions
+     if [ ! -f ../../secrets.properties ]
+     then
+          logerror "../../secrets.properties is not present!"
+          exit 1
+     fi
+     source ../../secrets.properties > /dev/null 2>&1
+fi
+
+if [ ! -z "$AZ_USER" ] && [ ! -z "$AZ_PASS" ]
+then
+    log "Logging to Azure using environment variables AZ_USER and AZ_PASS"
+    set +e
+    az logout
+    set -e
+    az login -u "$AZ_USER" -p "$AZ_PASS"
+else
+    log "Logging to Azure using browser"
+    az login
+fi
+
+AZURE_NAME=pg${USER}
+AZURE_NAME=${AZURE_NAME//[-._]/}
+AZURE_RESOURCE_GROUP=$AZURE_NAME
+AZURE_ACCOUNT_NAME=$AZURE_NAME
+AZURE_CONTAINER_NAME=$AZURE_NAME
+AZURE_REGION=westeurope
+
+set +e
+az group delete --name $AZURE_RESOURCE_GROUP --yes
+set -e
+
+log "Creating Azure Resource Group $AZURE_RESOURCE_GROUP"
+az group create \
+    --name $AZURE_RESOURCE_GROUP \
+    --location $AZURE_REGION
+log "Creating Azure Storage Account $AZURE_ACCOUNT_NAME"
+az storage account create \
+    --name $AZURE_ACCOUNT_NAME \
+    --resource-group $AZURE_RESOURCE_GROUP \
+    --location $AZURE_REGION \
+    --sku Standard_LRS \
+    --encryption-services blob
+AZURE_ACCOUNT_KEY=$(az storage account keys list \
+    --account-name $AZURE_ACCOUNT_NAME \
+    --resource-group $AZURE_RESOURCE_GROUP \
+    --query "[0].value" | sed -e 's/^"//' -e 's/"$//')
+log "Creating Azure Storage Container $AZURE_CONTAINER_NAME"
+az storage container create \
+    --account-name $AZURE_ACCOUNT_NAME \
+    --account-key $AZURE_ACCOUNT_KEY \
+    --name $AZURE_CONTAINER_NAME
+
+for component in producer-v1
+do
+    set +e
+    log "🏗 Building jar for ${component}"
+    docker run -i --rm -e KAFKA_CLIENT_TAG=$KAFKA_CLIENT_TAG -e TAG=$TAG_BASE -v "${DIR}/${component}":/usr/src/mymaven -v "$HOME/.m2":/root/.m2 -v "${DIR}/${component}/target:/usr/src/mymaven/target" -w /usr/src/mymaven maven:3.6.1-jdk-11 mvn -Dkafka.tag=$TAG -Dkafka.client.tag=$KAFKA_CLIENT_TAG package > /tmp/result.log 2>&1
+    if [ $? != 0 ]
+    then
+        logerror "ERROR: failed to build java component $component"
+        tail -500 /tmp/result.log
+        exit 1
+    fi
+    set -e
+done
+
+${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.repro-corrupted-file.yml"
+
+log "Set SR compatibility to NONE"
+curl --request PUT \
+  --header 'Content-Type: application/vnd.schemaregistry.v1+json' \
+  --url http://localhost:8081/config \
+  --data '{
+    "compatibility": "NONE"
+}'
+
+log "Run 2 Java producer-v1 in background"
+docker exec -d producer-v1 bash -c "java -jar producer-v1-1.0.0-jar-with-dependencies.jar"
+docker exec -d producer-v1 bash -c "java -jar producer-v1-1.0.0-jar-with-dependencies.jar"
+
+log "Creating Azure Blob Storage Sink connector"
+curl -X PUT \
+     -H "Content-Type: application/json" \
+     --data '{
+                "connector.class": "io.confluent.connect.azure.blob.AzureBlobStorageSinkConnector",
+                "tasks.max": "1",
+                "topics": "customer-avro",
+                "flush.size": "10000",
+                "azblob.account.name": "'"$AZURE_ACCOUNT_NAME"'",
+                "azblob.account.key": "'"$AZURE_ACCOUNT_KEY"'",
+                "azblob.container.name": "'"$AZURE_CONTAINER_NAME"'",
+                "format.class": "io.confluent.connect.azure.blob.format.avro.AvroFormat",
+                "partitioner.class": "io.confluent.connect.storage.partitioner.DailyPartitioner",
+                "rotate.schedule.interval.ms": "1000",
+                "locale": "en_US",
+                "timezone": "UTC",
+                "consumer.override.auto.offset.reset": "earliest",
+                "confluent.license": "",
+                "confluent.topic.bootstrap.servers": "broker:9092",
+                "confluent.topic.replication.factor": "1"
+          }' \
+     http://localhost:8083/connectors/azure-blob-sink/config | jq .
+
+
+for((i=0;i<10;i++)); do
+    log "sending 300000 records with another schema"
+    seq -f "{\"f1\": \"value%g\"}" 30 | docker exec -i connect kafka-avro-console-producer --broker-list broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic customer-avro --property value.schema='{"type":"record","name":"myrecord","fields":[{"name":"f1","type":"string"}]}'
+    sleep 60
+done
+
+# log "Block communication to Azure"
+# docker exec --privileged --user root connect bash -c "iptables -A OUTPUT -p tcp --dport 443 -j DROP"
+set +e
+for file in $(az storage blob list --account-name "${AZURE_ACCOUNT_NAME}" --account-key "${AZURE_ACCOUNT_KEY}" --container-name "${AZURE_CONTAINER_NAME}" --output table | grep BlockBlob | awk 'NR>1 {print $1}')
+do
+    echo "Processing $file"
+    basename_file=$(basename $file)
+    az storage blob download --account-name "${AZURE_ACCOUNT_NAME}" --account-key "${AZURE_ACCOUNT_KEY}" --container-name "${AZURE_CONTAINER_NAME}" --name $file --file /tmp/$basename_file > /dev/null 2>&1
+    docker run -v /tmp:/tmp actions/avro-tools repair -o report /tmp/$basename_file | grep "Number of corrupt" | egrep -v "Number of corrupt blocks: 0|Number of corrupt records: 0"
+done
+
+exit 0
+log "Deleting resource group"
+az group delete --name $AZURE_RESOURCE_GROUP --yes --no-wait
