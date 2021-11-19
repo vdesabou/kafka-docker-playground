@@ -21,15 +21,14 @@ confluent-v1 secret file encrypt --local-secrets-file /secrets/secret.txt --remo
 '
 
 export CONFLUENT_SECURITY_MASTER_KEY=$(cat ${DIR}/secrets/CONFLUENT_SECURITY_MASTER_KEY | sed 's/ //g' | tail -1 | tr -d '\n')
+log "Exporting CONFLUENT_SECURITY_MASTER_KEY=$CONFLUENT_SECURITY_MASTER_KEY"
 
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
 
-log "Sending messages to topic filestream"
-docker exec -i broker kafka-console-producer --broker-list broker:9092 --topic filestream << EOF
+log "Sending messages to topic my-secret-value"
+docker exec -i broker kafka-console-producer --broker-list broker:9092 --topic my-secret-value << EOF
 {"customer_name":"Ed", "complaint_type":"Dirty car", "trip_cost": 29.10, "new_customer": false, "number_of_rides": 22}
 EOF
-
-OUTPUT_FILE="${CONNECT_CONTAINER_HOME_DIR}/data/ouput/file.json"
 
 log "Creating FileStream Sink connector"
 curl -X PUT \
