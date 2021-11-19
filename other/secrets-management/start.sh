@@ -17,6 +17,7 @@ confluent-v1 secret master-key generate --local-secrets-file /secrets/secret.txt
 cat /tmp/result.log
 export CONFLUENT_SECURITY_MASTER_KEY=$(grep "Master Key" /tmp/result.log | cut -d"|" -f 3 | sed "s/ //g" | tail -1 | tr -d "\n")
 echo "$CONFLUENT_SECURITY_MASTER_KEY" > /secrets/CONFLUENT_SECURITY_MASTER_KEY
+echo "Encrypting my-secret-property in file my-config-file.properties"
 confluent-v1 secret file encrypt --local-secrets-file /secrets/secret.txt --remote-secrets-file /etc/kafka/secrets/secret.txt --config my-secret-property --config-file /secrets/my-config-file.properties
 '
 
@@ -30,7 +31,7 @@ docker exec -i broker kafka-console-producer --broker-list broker:9092 --topic m
 {"customer_name":"Ed", "complaint_type":"Dirty car", "trip_cost": 29.10, "new_customer": false, "number_of_rides": 22}
 EOF
 
-log "Creating FileStream Sink connector"
+log "Creating FileStream Sink connector with topics set with secrets variable"
 curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
