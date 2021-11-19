@@ -11,15 +11,14 @@ fi
 
 rm -f ${DIR}/secrets/secret.txt
 rm -f ${DIR}/secrets/CONFLUENT_SECURITY_MASTER_KEY
-docker run -i --rm -v ${DIR}/secrets:/secrets cnfltraining/training-tools:5.4 << EOF
+docker run -i --rm -v ${DIR}/secrets:/secrets cnfldemos/tools:0.3 bash -c '
 echo "Generate master key"
-confluent secret master-key generate --local-secrets-file /secrets/secret.txt --passphrase @/secrets/passphrase.txt > /tmp/result.log 2>&1
+confluent-v1 secret master-key generate --local-secrets-file /secrets/secret.txt --passphrase @/secrets/passphrase.txt > /tmp/result.log 2>&1
 cat /tmp/result.log
-set -x
-export CONFLUENT_SECURITY_MASTER_KEY="$(grep "Master Key" /tmp/result.log | cut -d"|" -f 3 | sed 's/ //g' | tail -1 | tr -d '\n')"
+export CONFLUENT_SECURITY_MASTER_KEY=$(grep "Master Key" /tmp/result.log | cut -d"|" -f 3 | sed "s/ //g" | tail -1 | tr -d "\n")
 echo "$CONFLUENT_SECURITY_MASTER_KEY" > /secrets/CONFLUENT_SECURITY_MASTER_KEY
-confluent secret file encrypt --local-secrets-file /secrets/secret.txt --remote-secrets-file /etc/kafka/secrets/secret.txt --config my-secret-property --config-file /secrets/my-config-file.properties
-EOF
+confluent-v1 secret file encrypt --local-secrets-file /secrets/secret.txt --remote-secrets-file /etc/kafka/secrets/secret.txt --config my-secret-property --config-file /secrets/my-config-file.properties
+'
 
 export CONFLUENT_SECURITY_MASTER_KEY=$(cat ${DIR}/secrets/CONFLUENT_SECURITY_MASTER_KEY | sed 's/ //g' | tail -1 | tr -d '\n')
 
