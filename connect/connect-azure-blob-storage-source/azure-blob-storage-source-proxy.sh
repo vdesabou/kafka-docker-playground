@@ -93,7 +93,7 @@ az storage blob list --account-name "${AZURE_ACCOUNT_NAME}" --account-key "${AZU
 log "Getting one of the avro files locally and displaying content with avro-tools"
 az storage blob download --account-name "${AZURE_ACCOUNT_NAME}" --account-key "${AZURE_ACCOUNT_KEY}" --container-name "${AZURE_CONTAINER_NAME}" --name topics/blob_topic/partition=0/blob_topic+0+0000000000.avro --file /tmp/blob_topic+0+0000000000.avro
 
-docker run -v /tmp:/tmp actions/avro-tools tojson /tmp/blob_topic+0+0000000000.avro
+docker run --rm -v /tmp:/tmp actions/avro-tools tojson /tmp/blob_topic+0+0000000000.avro
 
 
 log "Creating Azure Blob Storage Source connector"
