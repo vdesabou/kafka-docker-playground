@@ -212,7 +212,7 @@ az storage blob download  --container-name topics --name datalake_topic/partitio
 # ls -lrt /tmp/datalake_topic+0+0000000000.avro
 # -rw-r--r--  1 vsaboulin  wheel  0 Sep 24 12:32 /tmp/datalake_topic+0+0000000000.avro
 
-docker run -v /tmp:/tmp actions/avro-tools tojson /tmp/datalake_topic+0+0000000000.avro
+docker run --rm -v /tmp:/tmp actions/avro-tools tojson /tmp/datalake_topic+0+0000000000.avro
 
 exit 0
 log "Deleting resource group"
