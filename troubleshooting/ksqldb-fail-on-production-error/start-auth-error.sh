@@ -4,11 +4,6 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
-if ! version_gt $TAG_BASE "5.4.99"; then
-    logwarn "WARN: This example with connectors works since CP 5.5 only"
-    exit 111
-fi
-
 # make sure ksqlDB is not disabled
 unset DISABLE_KSQLDB
 
