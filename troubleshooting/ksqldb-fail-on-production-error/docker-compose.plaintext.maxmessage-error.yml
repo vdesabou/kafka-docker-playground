@@ -1,0 +1,22 @@
+---
+version: '3.5'
+services:
+
+  broker:
+    environment:
+      KAFKA_TOPIC_AUTO_CREATE: "false"
+
+  ksqldb-server:
+    environment:
+        # --- ksqlDB Server log config ---
+        KSQL_LOG4J_ROOT_LOGLEVEL: "INFO"
+        KSQL_LOG4J_LOGGERS: "org.apache.kafka.connect.runtime.rest=WARN,org.reflections=ERROR"
+        # --- ksqlDB processing log config ---
+        KSQL_LOG4J_PROCESSING_LOG_BROKERLIST: broker:9092
+        KSQL_LOG4J_PROCESSING_LOG_TOPIC: ksql_processing_log
+        KSQL_KSQL_LOGGING_PROCESSING_TOPIC_NAME: ksql_processing_log
+        KSQL_KSQL_LOGGING_PROCESSING_TOPIC_AUTO_CREATE: "true"
+        KSQL_KSQL_LOGGING_PROCESSING_STREAM_AUTO_CREATE: "true"
+        # ksql.fail.on.production.error
+        KSQL_KSQL_FAIL_ON_PRODUCTION_ERROR: "true"
+        KSQL_KSQL_STREAMS_PRODUCER_RETRIES: "5"
