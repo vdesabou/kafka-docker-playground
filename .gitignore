@@ -16,6 +16,9 @@ delta_configs
 *.pem
 *.der
 *.p12
+*.tar
+*.gz
+*.rar
 extfile
 keyfile.json
 .gradle
