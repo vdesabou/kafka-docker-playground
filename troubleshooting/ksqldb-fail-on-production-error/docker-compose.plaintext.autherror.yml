@@ -1,0 +1,34 @@
+---
+version: '3.5'
+services:
+
+  broker:
+    volumes:
+        - ../../troubleshooting/ksqldb-fail-on-production-error/client.properties:/tmp/client.properties
+    environment:
+      KAFKA_AUTHORIZER_CLASS_NAME: $KAFKA_AUTHORIZER_CLASS_NAME
+      KAFKA_ZOOKEEPER_SET_ACL: "true"
+      KAFKA_ALLOW_EVERYONE_IF_NO_ACL_FOUND: "false"
+      KAFKA_SUPER_USERS: User:broker;User:schemaregistry;User:client;User:connect
+
+  ksqldb-server:
+    #restart: always
+    volumes:
+        - ../../troubleshooting/ksqldb-fail-on-production-error/client.properties:/tmp/client.properties
+        - ../../troubleshooting/ksqldb-fail-on-production-error/log4j-secure.properties:/tmp/log4j-secure.properties
+    environment:
+        KSQL_KSQL_SERVICE_ID: "playground_"
+        # --- ksqlDB Server log config ---
+        KSQL_LOG4J_OPTS: "-Dlog4j.configuration=file:/tmp/log4j-secure.properties"
+
+        # KSQL_LOG4J_ROOT_LOGLEVEL: "INFO"
+        KSQL_LOG4J_LOGGERS: "org.apache.kafka.connect.runtime.rest=WARN,org.reflections=ERROR"
+        # # --- ksqlDB processing log config ---
+        # KSQL_LOG4J_PROCESSING_LOG_BROKERLIST: broker:9092
+        # KSQL_LOG4J_PROCESSING_LOG_TOPIC: ksql_processing_log
+        # KSQL_KSQL_LOGGING_PROCESSING_TOPIC_NAME: ksql_processing_log
+        KSQL_KSQL_LOGGING_PROCESSING_TOPIC_AUTO_CREATE: "true"
+        KSQL_KSQL_LOGGING_PROCESSING_STREAM_AUTO_CREATE: "true"
+        # ksql.fail.on.production.error
+        KSQL_KSQL_FAIL_ON_PRODUCTION_ERROR: "true"
+        KSQL_KSQL_STREAMS_PRODUCER_RETRIES: "5"
