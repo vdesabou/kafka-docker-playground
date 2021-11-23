@@ -432,7 +432,7 @@ latency_put=$(get_latency nginx_proxy connect)
 log "Latency from nginx_proxy to connect AFTER traffic control: $latency_put ms"
 
 log "Clear traffic control"
-clear_traffic_control
+clear_traffic_control nginx_proxy
 ```
 
 ## 🕵 TCP Dump
