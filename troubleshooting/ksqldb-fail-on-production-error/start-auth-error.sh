@@ -30,7 +30,8 @@ docker exec broker kafka-acls --bootstrap-server broker:9092 --add --allow-princ
 
 docker-compose -f ../../environment/plaintext/docker-compose.yml -f ../../environment/sasl-plain/docker-compose.yml -f ${DIR}/docker-compose.plaintext.autherror.yml --profile control-center --profile ksqldb up -d
 
-sleep 30
+log "Sleep 60 seconds to let ksql to start"
+sleep 60
 
 log "Create the input topic with a stream"
 timeout 120 docker exec -i ksqldb-cli bash -c 'echo -e "\n\n⏳ Waiting for ksqlDB to be available before launching CLI\n"; while [ $(curl -s -o /dev/null -w %{http_code} http://ksqldb-server:8088/) -eq 000 ] ; do echo -e $(date) "KSQL Server HTTP state: " $(curl -s -o /dev/null -w %{http_code} http:/ksqldb-server:8088/) " (waiting for 200)" ; sleep 10 ; done; ksql http://ksqldb-server:8088' << EOF
