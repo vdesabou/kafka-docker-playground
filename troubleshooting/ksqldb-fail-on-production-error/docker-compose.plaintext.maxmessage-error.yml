@@ -2,10 +2,6 @@
 version: '3.5'
 services:
 
-  broker:
-    environment:
-      KAFKA_TOPIC_AUTO_CREATE: "false"
-
   ksqldb-server:
     environment:
         # --- ksqlDB Server log config ---
