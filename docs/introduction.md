@@ -1,9 +1,5 @@
 # 🐳 kafka-docker-playground
 
-*Fully automated Kafka and Confluent Docker based examples // Easily build reproduction models*
-
-![asciinema](https://github.com/vdesabou/gifs/blob/master/connect/connect-cdc-oracle12-source/asciinema.gif?raw=true)
-
 ![success tests](https://img.shields.io/badge/success%20tests-2000%2F2072-red)![connector tested](https://img.shields.io/badge/connector%20tested-126-green)![cp versions tested](https://img.shields.io/badge/cp%20version%20tested-%205.3.6%205.4.5%205.5.6%206.0.4%206.1.3%206.2.1%207.0.0-green)![last run](https://img.shields.io/badge/last%20run-2021--11--22%2019:55-green)
 ![GitHub issues by-label](https://img.shields.io/github/issues/vdesabou/kafka-docker-playground/bug%20🔥)![GitHub issues by-label](https://img.shields.io/github/issues/vdesabou/kafka-docker-playground/enhancement%20✨)
 ![GitHub repo size](https://img.shields.io/github/repo-size/vdesabou/kafka-docker-playground)
@@ -22,6 +18,10 @@
 - 📱 Work directly in your browser using [Gitpod.io](/how-to-use?id=🪄-gitpodio)
 - 🤖 Automated testing using Github Actions [CI](/how-it-works?id=🤖-how-ci-works)
 - 👾 And even more [playgrounds](/content?id=👾-other-playgrounds)...
+
+## 📽 Example 
+
+![asciinema](https://github.com/vdesabou/gifs/blob/master/connect/connect-cdc-oracle12-source/asciinema.gif?raw=true)
 
 ## 🏁 Getting Started
 
