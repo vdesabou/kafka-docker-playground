@@ -32,3 +32,5 @@ services:
         # ksql.fail.on.production.error
         KSQL_KSQL_FAIL_ON_PRODUCTION_ERROR: "true"
         KSQL_KSQL_STREAMS_PRODUCER_RETRIES: "5"
+        KSQL_KSQL_LOGGING_PROCESSING_ROWS_INCLUDE: "true"
+        KSQL_KSQL_STREAMS_AUTO_OFFSET_RESET: "earliest"
