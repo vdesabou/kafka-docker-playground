@@ -65,17 +65,17 @@ log "Creating Azure Blob Storage Sink connector"
 curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
-               "connector.class": "io.confluent.connect.azure.blob.AzureBlobStorageSinkConnector",
-                    "tasks.max": "1",
-                    "topics": "blob_topic",
-                    "flush.size": "3",
-                    "azblob.account.name": "'"$AZURE_ACCOUNT_NAME"'",
-                    "azblob.account.key": "'"$AZURE_ACCOUNT_KEY"'",
-                    "azblob.container.name": "'"$AZURE_CONTAINER_NAME"'",
-                    "format.class": "io.confluent.connect.azure.blob.format.avro.AvroFormat",
-                    "confluent.license": "",
-                    "confluent.topic.bootstrap.servers": "broker:9092",
-                    "confluent.topic.replication.factor": "1"
+                "connector.class": "io.confluent.connect.azure.blob.AzureBlobStorageSinkConnector",
+                "tasks.max": "1",
+                "topics": "blob_topic",
+                "flush.size": "3",
+                "azblob.account.name": "'"$AZURE_ACCOUNT_NAME"'",
+                "azblob.account.key": "'"$AZURE_ACCOUNT_KEY"'",
+                "azblob.container.name": "'"$AZURE_CONTAINER_NAME"'",
+                "format.class": "io.confluent.connect.azure.blob.format.avro.AvroFormat",
+                "confluent.license": "",
+                "confluent.topic.bootstrap.servers": "broker:9092",
+                "confluent.topic.replication.factor": "1"
           }' \
      http://localhost:8083/connectors/azure-blob-sink/config | jq .
 
