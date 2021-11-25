@@ -1234,6 +1234,12 @@ function add_packet_loss() {
 function get_3rdparty_file () {
   file="$1"
 
+  if [ -f $file ]
+  then
+    log "$file already present, skipping"
+    return
+  fi
+
   set +e
   aws s3 ls s3://kafka-docker-playground/3rdparty/$file > /dev/null 2>&1
   if [ $? -eq 0 ]
