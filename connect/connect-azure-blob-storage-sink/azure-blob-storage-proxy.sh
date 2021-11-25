@@ -4,18 +4,6 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
-function check_corrupted_files () {
-    log "Checking for corrupted files"
-    set +e
-    for file in $(az storage blob list --account-name "${AZURE_ACCOUNT_NAME}" --account-key "${AZURE_ACCOUNT_KEY}" --container-name "${AZURE_CONTAINER_NAME}" --output table | grep BlockBlob | awk 'NR>1 {print $1}')
-    do
-        echo "Processing $file"
-        basename_file=$(basename $file)
-        az storage blob download --account-name "${AZURE_ACCOUNT_NAME}" --account-key "${AZURE_ACCOUNT_KEY}" --container-name "${AZURE_CONTAINER_NAME}" --name $file --file /tmp/$basename_file > /dev/null 2>&1
-        docker run --rm -v /tmp:/tmp actions/avro-tools repair -o report /tmp/$basename_file | grep "Number of corrupt" | egrep -v "Number of corrupt blocks: 0|Number of corrupt records: 0"
-    done
-}
-
 if [ ! -z "$CI" ]
 then
      # running with github actions
@@ -92,8 +80,6 @@ curl -X PUT \
           }' \
      http://localhost:8083/connectors/azure-blob-sink-proxy/config | jq .
 
-log "Adding 50% corruption"
-add_packet_corruption connect nginx-proxy 50%
 
 log "Sending messages to topic blob_topic"
 seq -f "{\"f1\": \"value%g\"}" 10 | docker exec -i connect kafka-avro-console-producer --broker-list broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic blob_topic --property value.schema='{"type":"record","name":"myrecord","fields":[{"name":"f1","type":"string"}]}'
@@ -107,11 +93,6 @@ log "Getting one of the avro files locally and displaying content with avro-tool
 az storage blob download --account-name "${AZURE_ACCOUNT_NAME}" --account-key "${AZURE_ACCOUNT_KEY}" --container-name "${AZURE_CONTAINER_NAME}" --name topics/blob_topic/partition=0/blob_topic+0+0000000000.avro --file /tmp/blob_topic+0+0000000000.avro
 
 docker run --rm -v /tmp:/tmp actions/avro-tools tojson /tmp/blob_topic+0+0000000000.avro
-
-
-check_corrupted_files
-
-exit 0
 
 log "Deleting resource group"
 az group delete --name $AZURE_RESOURCE_GROUP --yes --no-wait
