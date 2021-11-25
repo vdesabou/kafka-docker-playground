@@ -4,6 +4,18 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
+function check_corrupted_files () {
+    log "Checking for corrupted files"
+    set +e
+    for file in $(az storage blob list --account-name "${AZURE_ACCOUNT_NAME}" --account-key "${AZURE_ACCOUNT_KEY}" --container-name "${AZURE_CONTAINER_NAME}" --output table | grep BlockBlob | awk 'NR>1 {print $1}')
+    do
+        echo "Processing $file"
+        basename_file=$(basename $file)
+        az storage blob download --account-name "${AZURE_ACCOUNT_NAME}" --account-key "${AZURE_ACCOUNT_KEY}" --container-name "${AZURE_CONTAINER_NAME}" --name $file --file /tmp/$basename_file > /dev/null 2>&1
+        docker run --rm -v /tmp:/tmp actions/avro-tools repair -o report /tmp/$basename_file | grep "Number of corrupt" | egrep -v "Number of corrupt blocks: 0|Number of corrupt records: 0"
+    done
+}
+
 if [ ! -z "$CI" ]
 then
      # running with github actions
@@ -75,16 +87,15 @@ done
 
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.repro-corrupted-file.yml"
 
-log "Set SR compatibility to NONE"
-curl --request PUT \
-  --header 'Content-Type: application/vnd.schemaregistry.v1+json' \
-  --url http://localhost:8081/config \
-  --data '{
-    "compatibility": "NONE"
-}'
+# curl --request PUT \
+#   --url http://localhost:8083/admin/loggers/io.confluent.connect \
+#   --header 'Accept: application/json' \
+#   --header 'Content-Type: application/json' \
+#   --data '{
+# 	"level": "TRACE"
+# }'
 
-log "Run 2 Java producer-v1 in background"
-docker exec -d producer-v1 bash -c "java -jar producer-v1-1.0.0-jar-with-dependencies.jar"
+log "Run Java producer-v1 in background"
 docker exec -d producer-v1 bash -c "java -jar producer-v1-1.0.0-jar-with-dependencies.jar"
 
 log "Creating Azure Blob Storage Sink connector"
@@ -110,24 +121,12 @@ curl -X PUT \
           }' \
      http://localhost:8083/connectors/azure-blob-sink/config | jq .
 
-
-for((i=0;i<10;i++)); do
-    log "sending 300000 records with another schema"
-    seq -f "{\"f1\": \"value%g\"}" 30 | docker exec -i connect kafka-avro-console-producer --broker-list broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic customer-avro --property value.schema='{"type":"record","name":"myrecord","fields":[{"name":"f1","type":"string"}]}'
-    sleep 60
-done
-
-# log "Block communication to Azure"
-# docker exec --privileged --user root connect bash -c "iptables -A OUTPUT -p tcp --dport 443 -j DROP"
-set +e
-for file in $(az storage blob list --account-name "${AZURE_ACCOUNT_NAME}" --account-key "${AZURE_ACCOUNT_KEY}" --container-name "${AZURE_CONTAINER_NAME}" --output table | grep BlockBlob | awk 'NR>1 {print $1}')
-do
-    echo "Processing $file"
-    basename_file=$(basename $file)
-    az storage blob download --account-name "${AZURE_ACCOUNT_NAME}" --account-key "${AZURE_ACCOUNT_KEY}" --container-name "${AZURE_CONTAINER_NAME}" --name $file --file /tmp/$basename_file > /dev/null 2>&1
-    docker run -v /tmp:/tmp actions/avro-tools repair -o report /tmp/$basename_file | grep "Number of corrupt" | egrep -v "Number of corrupt blocks: 0|Number of corrupt records: 0"
-done
+# note if we start another connector with same config, we get InvalidBlockList: The specified block list is invalid.
 
 exit 0
+
+
+check_corrupted_files
+
 log "Deleting resource group"
 az group delete --name $AZURE_RESOURCE_GROUP --yes --no-wait
