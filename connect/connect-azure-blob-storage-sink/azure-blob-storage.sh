@@ -6,15 +6,6 @@ source ${DIR}/../../scripts/utils.sh
 
 if [ ! -z "$CI" ]
 then
-    #778 testing fix
-    get_3rdparty_file confluentinc-kafka-connect-azure-blob-storage-source-1.4.11-SNAPSHOT.zip
-    unset CONNECTOR_TAG
-    export CONNECTOR_ZIP=$PWD/confluentinc-kafka-connect-azure-blob-storage-source-1.4.11-SNAPSHOT.zip
-    source ${DIR}/../../scripts/utils.sh
-fi
-
-if [ ! -z "$CI" ]
-then
      # running with github actions
      if [ ! -f ../../secrets.properties ]
      then
