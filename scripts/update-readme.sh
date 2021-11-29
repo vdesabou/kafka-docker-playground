@@ -219,7 +219,7 @@ do
         then
           let "nb_fail++"
           let "nb_total_fail++"
-          TEST_FAILED[$image_version_no_dot]="[![CP $image_version](https://img.shields.io/badge/CI-CP%20$image_version-red)]($html_url)"
+          TEST_FAILED[$image_version_no_dot]="[![CP $image_version](https://img.shields.io/badge/$nb_success/$nb_tests-CP%20$image_version-red)]($html_url)"
           echo -e "🔥 CP ${image_version}${connector_version} 🕐 ${time_day_hour} 📄 [${script_name}](https://github.com/vdesabou/kafka-docker-playground/blob/master/$test/$script_name) 🔗 $html_url\n" >> ${gh_msg_file}
           log "🔥 CP $image_version 🕐 ${time_day_hour} 📄 ${script_name} 🔗 $html_url"
         elif [[ "$status" = known_issue* ]]
@@ -241,7 +241,7 @@ do
         else
           let "nb_success++"
           let "nb_total_success++"
-          TEST_SUCCESS[$image_version_no_dot]="[![CP $image_version](https://img.shields.io/badge/CI-CP%20$image_version-green)]($html_url)"
+          TEST_SUCCESS[$image_version_no_dot]="[![CP $image_version](https://img.shields.io/badge/$nb_success/$nb_tests-CP%20$image_version-green)]($html_url)"
           echo -e "👍 CP ${image_version}${connector_version} 🕐 ${time_day_hour} 📄 [${script_name}](https://github.com/vdesabou/kafka-docker-playground/blob/master/$test/$script_name) 🔗 $html_url\n" >> ${gh_msg_file}
           log "👍 CP $image_version 🕐 ${time_day_hour} 📄 ${script_name} 🔗 $html_url"
         fi
@@ -305,7 +305,7 @@ do
       gh_issue_number=$(echo $gh_issue_number|tr -d '\n')
       if [ "${gh_issue_number}" != "" ]
       then
-        ci="$ci [![issue $gh_issue_number](https://img.shields.io/badge/CI-CP%20$image_version-red)](https://github.com/vdesabou/kafka-docker-playground/issues/$gh_issue_number)"
+        ci="$ci [![issue $gh_issue_number](https://img.shields.io/badge/$nb_success/$nb_tests-CP%20$image_version-red)](https://github.com/vdesabou/kafka-docker-playground/issues/$gh_issue_number)"
       else
         ci="$ci ${TEST_FAILED[$image_version_no_dot]}"
       fi
@@ -324,10 +324,10 @@ do
 
   if [ ${ci_nb_fail} -eq 0 ] && [ ${ci_nb_skipped} -eq 0 ]
   then
-      ci="[![CI ok](https://img.shields.io/badge/CI-ok!-green)]($html_url)"
+      ci="[![CI ok](https://img.shields.io/badge/$nb_success/$nb_tests-ok!-green)]($html_url)"
   elif [ ${ci_nb_fail} -eq ${nb_image_versions} ]
   then
-      ci="[![CI fail](https://img.shields.io/badge/CI-fail!-red)](https://github.com/vdesabou/kafka-docker-playground/issues/$gh_issue_number)"
+      ci="[![CI fail](https://img.shields.io/badge/$nb_success/$nb_tests-fail!-red)](https://github.com/vdesabou/kafka-docker-playground/issues/$gh_issue_number)"
   fi
 
   if [ "$connector_path" != "" ]

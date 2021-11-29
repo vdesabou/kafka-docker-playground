@@ -294,11 +294,11 @@ CI results are displayed in **[Content](/content.md)** section:
 ![ci_results](./images/ci_results.jpg)
 
 > [!TIP]
-> * When the test is successful, the badge looks like [![CI ok](https://img.shields.io/badge/CI-ok!-green)](https://github.com/vdesabou/kafka-docker-playground/runs/3875670630) and clicking on it brings you to the CI run.
+> * When the test is successful, the badge looks like [![CI ok](https://img.shields.io/badge/6/6-ok!-green)](https://github.com/vdesabou/kafka-docker-playground/runs/3875670630) and clicking on it brings you to the CI run.
 > 
-> * When the test is failing for **all** tested CP versions, the badge looks like [![CI fail](https://img.shields.io/badge/CI-fail!-red)](https://github.com/vdesabou/kafka-docker-playground/issues/935) and clicking on it brings you to the corresponding Github issue.
+> * When the test is failing for **all** tested CP versions, the badge looks like [![CI fail](https://img.shields.io/badge/16/24-fail!-red)](https://github.com/vdesabou/kafka-docker-playground/issues/935) and clicking on it brings you to the corresponding Github issue.
 > 
-> * When the test is failing for **just some** tested CP versions, the badge looks like [![issue 778](https://img.shields.io/badge/CI-CP%206.2.1-red)](https://github.com/vdesabou/kafka-docker-playground/issues/778) (which includes CP version) and clicking on it brings you to the corresponding Github issue.
+> * When the test is failing for **just some** tested CP versions, the badge looks like [![issue 778](https://img.shields.io/badge/6/12-CP%206.2.1-red)](https://github.com/vdesabou/kafka-docker-playground/issues/778) (which includes CP version) and clicking on it brings you to the corresponding Github issue.
 > 
 > * When a test cannot be tested in CI, the badge ![not tested](https://img.shields.io/badge/CI-not%20tested!-violet) is set (without any associated link).
 > 

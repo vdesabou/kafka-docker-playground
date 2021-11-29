@@ -1,4 +1,5 @@
-![Github CI](https://github.com/vdesabou/kafka-docker-playground/workflows/CI/badge.svg)![success tests](https://img.shields.io/badge/success%20tests-1033%2F1100-red)![connector tested](https://img.shields.io/badge/connector%20tested-125-green)![cp versions tested](https://img.shields.io/badge/cp%20version%20tested-%205.5.6%206.0.3%206.1.2%206.2.1-green)![last run](https://img.shields.io/badge/last%20run-2021--10--08%2011:16-green)
+![success tests](https://img.shields.io/badge/success%20tests-1725%2F1848-red)![connector tested](https://img.shields.io/badge/connector%20tested-126-green)![cp versions tested](https://img.shields.io/badge/cp%20version%20tested-%205.4.5%205.5.6%206.0.4%206.1.3%206.2.1%207.0.0-green)![last run](https://img.shields.io/badge/last%20run-2021--11--29%2013:43-green)
 ![GitHub issues by-label](https://img.shields.io/github/issues/vdesabou/kafka-docker-playground/bug%20🔥)![GitHub issues by-label](https://img.shields.io/github/issues/vdesabou/kafka-docker-playground/enhancement%20✨)
 ![GitHub repo size](https://img.shields.io/github/repo-size/vdesabou/kafka-docker-playground)
-[![Gitpod ready-to-code](https://img.shields.io/badge/Gitpod-ready--to--code-908a85?logo=gitpod)](https://gitpod.io/#https://github.com/vdesabou/kafka-docker-playground)
+
+[![Open in Gitpod](https://gitpod.io/button/open-in-gitpod.svg)](https://gitpod.io/#https://github.com/vdesabou/kafka-docker-playground)
