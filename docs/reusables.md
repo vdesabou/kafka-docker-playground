@@ -437,7 +437,7 @@ clear_traffic_control nginx_proxy
 
 ## 🏚 Simulate TCP connections problems
 
-[emicklei/zazkia](https://github.com/emicklei/zazkia) is a nice tool to simulate a TCP connection issue (reset,delay,throttle,corrupt).
+[emicklei/zazkia](https://github.com/emicklei/zazkia) is a nice tool to simulate a TCP connection issues (reset,delay,throttle,corrupt).
 
 Here is an example with HDFS 2 sink connector:
 
