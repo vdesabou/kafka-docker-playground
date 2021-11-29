@@ -112,7 +112,7 @@ As a result, we get:
 
 ### Issue 1
 
-* Despite the fact that we set `KSQL_KSQL_FAIL_ON_PRODUCTION_ERROR: "true"`, we see the query being restarted:
+* Despite the fact that we set `KSQL_KSQL_FAIL_ON_PRODUCTION_ERROR: "true"`, we see the query being restarted (this is expected, see https://github.com/confluentinc/ksql/issues/5897):
 
 ```log
 [2021-11-23 09:19:40,498] ERROR Unhandled exception caught in streams thread _confluent-ksql-default_query_CSAS_SENSORS_3-030e833a-12f2-43b6-a31c-1d8afb59e9a6-StreamThread-1. (UNKNOWN) (io.confluent.ksql.util.QueryMetadataImpl)
