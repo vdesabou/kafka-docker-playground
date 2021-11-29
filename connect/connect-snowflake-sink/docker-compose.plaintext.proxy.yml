@@ -1,0 +1,20 @@
+---
+version: '3.5'
+services:
+
+  nginx-proxy:
+    image: reiz/nginx_proxy:latest
+    hostname: nginx-proxy
+    container_name: nginx-proxy
+    ports:
+      - "8888:8888"
+    volumes:
+      - ../../connect/connect-snowflake-sink/repro-proxy/nginx_whitelist.conf:/usr/local/nginx/conf/nginx.conf
+
+  connect:
+    environment:
+      CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/snowflakeinc-snowflake-kafka-connector,/usr/share/confluent-hub-components/confluentinc-connect-transforms
+      JDBC_TRACE: "true"
+      # CONNECT_LOG4J_ROOT_LOGLEVEL: DEBUG
+      # CONNECT_LOG4J_LOGGERS: org.reflections=ERROR,com.snowflake.kafka.connector=TRACE,net.snowflake.client.jdbc=TRACE
+    dns: 0.0.0.0
