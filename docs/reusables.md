@@ -435,6 +435,83 @@ log "Clear traffic control"
 clear_traffic_control nginx_proxy
 ```
 
+## 🏚 Simulate TCP connections problems
+
+[emicklei/zazkia](https://github.com/emicklei/zazkia) is a nice tool to simulate a TCP connection issue (reset,delay,throttle,corrupt).
+
+Here is an example with HDFS 2 sink connector:
+
+1. Create a folder `zazkia`and put the config file `zazkia-routes.json` in there, with the config you want:
+
+```json
+[
+    {
+        "label": "hdfs",
+        "service-hostname": "namenode",
+        "service-port": 8020,
+        "listen-port": 49998,
+        "transport": {
+            "accept-connections": true,
+            "throttle-service-response": 0,
+            "delay-service-response": 0,
+            "break-service-response": 0,
+            "service-response-corrupt-method": "",
+            "sending-to-client": true,
+            "receiving-from-client": true,
+            "sending-to-service": true,
+            "receiving-from-service": true,
+            "verbose": true
+        }
+    }
+]
+```
+
+2. In docker-compose, add the following:
+
+```yml
+  zazkia:
+    hostname: zazkia
+    container_name: zazkia
+    image: emicklei/zazkia
+    ports:
+      - "9191:9191"
+    volumes:
+      - ../../connect/connect-azure-blob-storage-sink/zazkia:/data
+```
+
+3. In connector config, update `store.url`with `hdfs://zazkia:49998`:
+
+```bash
+curl -X PUT \
+     -H "Content-Type: application/json" \
+     --data '{
+               "connector.class":"io.confluent.connect.hdfs.HdfsSinkConnector",
+               "tasks.max":"1",
+               "topics":"test_hdfs",
+               "store.url":"hdfs://zazkia:49998",
+               "flush.size":"3",
+               "hadoop.conf.dir":"/etc/hadoop/",
+               "partitioner.class":"io.confluent.connect.hdfs.partitioner.FieldPartitioner",
+               "partition.field.name":"f1",
+               "rotate.interval.ms":"120000",
+               "logs.dir":"/tmp",
+               "hive.integration": "true",
+               "hive.metastore.uris": "thrift://hive-metastore:9083",
+               "hive.database": "testhive",
+               "confluent.license": "",
+               "confluent.topic.bootstrap.servers": "broker:9092",
+               "confluent.topic.replication.factor": "1",
+               "key.converter":"org.apache.kafka.connect.storage.StringConverter",
+               "value.converter":"io.confluent.connect.avro.AvroConverter",
+               "value.converter.schema.registry.url":"http://schema-registry:8081",
+               "schema.compatibility":"BACKWARD"
+          }' \
+     http://localhost:8083/connectors/hdfs-sink/config | jq .
+```
+
+4. zazkia UI is available on [http://localhost:9191](http://localhost:9191)
+
+
 ## 🕵 TCP Dump
 
 It is sometime necessary to sniff the network in order to better undertsand what's going on.
