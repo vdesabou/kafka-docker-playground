@@ -4,24 +4,6 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
-function wait_for_end_of_injection () {
-     MAX_WAIT=2400
-     CUR_WAIT=0
-     log "Waiting up to $MAX_WAIT seconds for IT IS OVER MICHAEL to happen"
-     docker container logs producer-v1 > /tmp/out.txt 2>&1
-     while ! grep "IT IS OVER MICHAEL" /tmp/out.txt > /dev/null;
-     do
-          sleep 10
-          docker container logs producer-v1 > /tmp/out.txt 2>&1
-          CUR_WAIT=$(( CUR_WAIT+10 ))
-          if [[ "$CUR_WAIT" -gt "$MAX_WAIT" ]]; then
-               echo -e "\nERROR: The logs in all producer-v1 containers do not show 'IT IS OVER MICHAEL' after $MAX_WAIT seconds. Please troubleshoot with 'docker container ps' and 'docker container logs'.\n"
-               exit 1
-          fi
-     done
-     log "The 3M RECORDS ARE THERE!"
-}
-
 for component in producer-v1
 do
     set +e
@@ -49,11 +31,8 @@ fi
 
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.repro-rcca-4937.yml"
 
-log "Run the Java producer-v1"
-docker exec -d producer-v1 bash -c "java -jar producer-v1-1.0.0-jar-with-dependencies.jar"
-
-wait_for_end_of_injection
-
+log "Run the Java producer-v1, with problematic header (byte[] { -17, -65,  -65 }), see KAFKA-10574"
+docker exec producer-v1 bash -c "java -jar producer-v1-1.0.0-jar-with-dependencies.jar"
 
 log "Creating Elasticsearch Sink connector (Elasticsearch version is $ELASTIC_VERSION"
 if version_gt $CONNECTOR_TAG "10.9.9"

@@ -25,6 +25,7 @@ import uk.co.jemos.podam.api.PodamFactoryImpl;
 import uk.co.jemos.podam.api.PodamFactory;
 import org.jeasy.random.EasyRandom;
 import org.jeasy.random.EasyRandomParameters;
+import org.apache.kafka.common.header.internals.RecordHeader;
 
 public class SimpleProducer {
 
@@ -70,7 +71,7 @@ public class SimpleProducer {
 
         try (Producer<Long, Customer> producer = new KafkaProducer<>(properties)) {
             long id = 0;
-            while (id < 3000000) {
+            while (id < 10) {
 
                 // This will use constructor with minimum arguments and
                 // then setters to populate POJO
@@ -78,15 +79,14 @@ public class SimpleProducer {
 
             Customer customer = generator.nextObject(Customer.class);
 
-
+                byte[] bytes = new byte[] { -17, -65,  -65 };
                 ProducerRecord<Long, Customer> record = new ProducerRecord<>(topicName, id, customer);
-                //logger.info("Sending Key = {}, Value = {}", record.key(), record.value());
+                record.headers().add(new RecordHeader("myheader", bytes));
+                logger.info("Sending Key = {}, Value = {}", record.key(), record.value());
                 producer.send(record,(recordMetadata, exception) -> sendCallback(record, recordMetadata,exception));
                 id++;
                 TimeUnit.MILLISECONDS.sleep(messageBackOff);
             }
-
-            logger.info("IT IS OVER MICHAEL");
         }
     }
 
