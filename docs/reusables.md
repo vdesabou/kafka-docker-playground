@@ -412,6 +412,12 @@ docker exec --privileged --user root connect bash -c 'iptables -A INPUT -p tcp -
 > [!TIP]
 > Notice the use of `--privileged --user root`.
 
+To drop random packets, you can use statistic module like this:
+
+```bash
+docker exec --privileged --user root connect bash -c "iptables -A OUTPUT -p tcp --dport 443 -m statistic --mode random --probability 0.01 -j DROP"
+```
+
 ## 🐌 Add latency
 
 It is sometime necessary for a reproduction model to simulate latency between components.
