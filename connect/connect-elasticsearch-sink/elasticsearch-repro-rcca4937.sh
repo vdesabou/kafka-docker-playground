@@ -1,6 +1,11 @@
 #!/bin/bash
 set -e
 
+# https://issues.apache.org/jira/browse/KAFKA-10574
+export TAG=5.5.2
+# to fix use:
+# "header.converter": "org.apache.kafka.connect.converters.ByteArrayConverter"
+
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
