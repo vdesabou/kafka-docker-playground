@@ -1,0 +1,37 @@
+---
+version: '3.5'
+services:
+
+  producer-v1:
+    build:
+      context: ../../connect/connect-elasticsearch-sink/producer-v1/
+    hostname: producer-v1
+    container_name: producer-v1
+    environment:
+      KAFKA_BOOTSTRAP_SERVERS: broker:9092
+      TOPIC: "test-elasticsearch-sink"
+      REPLICATION_FACTOR: 1
+      NUMBER_OF_PARTITIONS: 1
+      MESSAGE_BACKOFF: 1 # Frequency of message injection
+      KAFKA_ACKS: "all" # default: "1"
+      KAFKA_REQUEST_TIMEOUT_MS: 20000
+      KAFKA_RETRY_BACKOFF_MS: 500
+      KAFKA_CLIENT_ID: "my-java-producer-v1"
+      KAFKA_SCHEMA_REGISTRY_URL: "http://schema-registry:8081"
+
+
+  elasticsearch:
+    image: elasticsearch:$ELASTIC_VERSION
+    hostname: elasticsearch
+    container_name: elasticsearch
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+    environment:
+      discovery.type: single-node
+
+  connect:
+    depends_on:
+      - elasticsearch
+    environment:
+      CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-elasticsearch
