@@ -92,6 +92,22 @@ services:
               username=\"connect\" \
               password=\"connect-secret\";"
 
+  schema-registry-europe:
+      environment:
+          SCHEMA_REGISTRY_KAFKASTORE_SECURITY_PROTOCOL: SASL_PLAINTEXT
+          SCHEMA_REGISTRY_KAFKASTORE_SASL_MECHANISM: PLAIN
+          SCHEMA_REGISTRY_KAFKASTORE_SASL_JAAS_CONFIG: "org.apache.kafka.common.security.plain.PlainLoginModule required \
+            username=\"schemaregistry\" \
+            password=\"schemaregistry-secret\";"
+
+  schema-registry-us:
+      environment:
+          SCHEMA_REGISTRY_KAFKASTORE_SECURITY_PROTOCOL: SASL_PLAINTEXT
+          SCHEMA_REGISTRY_KAFKASTORE_SASL_MECHANISM: PLAIN
+          SCHEMA_REGISTRY_KAFKASTORE_SASL_JAAS_CONFIG: "org.apache.kafka.common.security.plain.PlainLoginModule required \
+            username=\"schemaregistry\" \
+            password=\"schemaregistry-secret\";"
+
   control-center:
       environment:
           CONTROL_CENTER_KAFKA_EUROPE_BOOTSTRAP_SERVERS: 'broker-europe:9092'
