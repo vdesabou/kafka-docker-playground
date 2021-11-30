@@ -1,7 +1,0 @@
----
-version: '3.5'
-services:
-  connect-us:
-    volumes:
-      - ../../replicator/kafka-offsets-migrator/requirements.txt:/tmp/requirements.txt
-      - ../../replicator/kafka-offsets-migrator/offset_translator.py:/tmp/offset_translator.py

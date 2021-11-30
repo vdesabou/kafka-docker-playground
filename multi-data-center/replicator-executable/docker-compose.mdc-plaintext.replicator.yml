@@ -1,0 +1,24 @@
+---
+version: '3.5'
+services:
+  replicator-us:
+    image: confluentinc/cp-enterprise-replicator-executable:${TAG}
+    hostname: replicator-us
+    container_name: replicator-us
+    volumes:
+        - ../../multi-data-center/replicator-executable/consumer-us-plaintext.properties:/etc/replicator/consumer.properties
+        - ../../multi-data-center/replicator-executable/producer-us-plaintext.properties:/etc/replicator/producer.properties
+        - ../../multi-data-center/replicator-executable/replication-us.properties:/etc/replicator/replication.properties
+    environment:
+      WHITELIST: sales_EUROPE
+
+  replicator-europe:
+    image: confluentinc/cp-enterprise-replicator-executable:${TAG}
+    hostname: replicator-europe
+    container_name: replicator-europe
+    volumes:
+        - ../../multi-data-center/replicator-executable/consumer-europe-plaintext.properties:/etc/replicator/consumer.properties
+        - ../../multi-data-center/replicator-executable/producer-europe-plaintext.properties:/etc/replicator/producer.properties
+        - ../../multi-data-center/replicator-executable/replication-europe.properties:/etc/replicator/replication.properties
+    environment:
+      WHITELIST: sales_US

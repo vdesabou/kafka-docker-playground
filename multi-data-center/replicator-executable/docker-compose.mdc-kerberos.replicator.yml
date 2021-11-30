@@ -1,0 +1,28 @@
+---
+version: '3.5'
+services:
+  replicator-us:
+    image: confluentinc/cp-enterprise-replicator-executable:${TAG}
+    hostname: replicator-us
+    container_name: replicator-us
+    volumes:
+        - ../../multi-data-center/replicator-executable/consumer-us-kerberos.properties:/etc/replicator/consumer.properties
+        - ../../multi-data-center/replicator-executable/producer-us-kerberos.properties:/etc/replicator/producer.properties
+        - ../../multi-data-center/replicator-executable/replication-us.properties:/etc/replicator/replication.properties
+        - secret:/var/lib/secret
+        - ../../environment/mdc-kerberos/kdc/krb5.conf:/etc/krb5.conf
+    environment:
+      WHITELIST: sales_EUROPE
+
+  replicator-europe:
+    image: confluentinc/cp-enterprise-replicator-executable:${TAG}
+    hostname: replicator-europe
+    container_name: replicator-europe
+    volumes:
+        - ../../multi-data-center/replicator-executable/consumer-europe-kerberos.properties:/etc/replicator/consumer.properties
+        - ../../multi-data-center/replicator-executable/producer-europe-kerberos.properties:/etc/replicator/producer.properties
+        - ../../multi-data-center/replicator-executable/replication-europe.properties:/etc/replicator/replication.properties
+        - secret:/var/lib/secret
+        - ../../environment/mdc-kerberos/kdc/krb5.conf:/etc/krb5.conf
+    environment:
+      WHITELIST: sales_US

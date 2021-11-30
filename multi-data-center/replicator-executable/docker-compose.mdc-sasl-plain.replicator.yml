@@ -1,0 +1,33 @@
+---
+version: '3.5'
+services:
+
+  broker-us:
+      volumes:
+        - ../../environment/mdc-sasl-plain/client/client.properties:/etc/kafka/client.properties
+
+  broker-europe:
+      volumes:
+        - ../../environment/mdc-sasl-plain/client/client.properties:/etc/kafka/client.properties
+
+  replicator-us:
+    image: confluentinc/cp-enterprise-replicator-executable:${TAG}
+    hostname: replicator-us
+    container_name: replicator-us
+    volumes:
+        - ../../multi-data-center/replicator-executable/consumer-us-sasl-plain.properties:/etc/replicator/consumer.properties
+        - ../../multi-data-center/replicator-executable/producer-us-sasl-plain.properties:/etc/replicator/producer.properties
+        - ../../multi-data-center/replicator-executable/replication-us.properties:/etc/replicator/replication.properties
+    environment:
+      WHITELIST: sales_EUROPE
+
+  replicator-europe:
+    image: confluentinc/cp-enterprise-replicator-executable:${TAG}
+    hostname: replicator-europe
+    container_name: replicator-europe
+    volumes:
+        - ../../multi-data-center/replicator-executable/consumer-europe-sasl-plain.properties:/etc/replicator/consumer.properties
+        - ../../multi-data-center/replicator-executable/producer-europe-sasl-plain.properties:/etc/replicator/producer.properties
+        - ../../multi-data-center/replicator-executable/replication-europe.properties:/etc/replicator/replication.properties
+    environment:
+      WHITELIST: sales_US
