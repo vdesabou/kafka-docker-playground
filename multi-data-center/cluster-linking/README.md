@@ -12,6 +12,11 @@ Simply run:
 $ ./start-plaintext.sh
 ```
 
+or with SASL_PLAINTEXT and ACLs:
+
+```
+$ ./start-sasl-plain-acl.sh
+```
 ## Details of what the script is doing
 
 `US`cluster is source and `EUROPE` cluster is destination
