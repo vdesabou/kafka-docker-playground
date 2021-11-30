@@ -9,7 +9,7 @@ Quickly test [Cluster Linking](https://docs.confluent.io/platform/current/multi-
 Simply run:
 
 ```
-$ ./start.sh
+$ ./start-plaintext.sh
 ```
 
 ## Details of what the script is doing
