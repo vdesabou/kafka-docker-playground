@@ -174,7 +174,7 @@
   - 🔰 [Confluent Cloud Networking](https://github.com/vdesabou/kafka-docker-playground/tree/master/ccloud/haproxy) using HAProxy ![not tested](https://img.shields.io/badge/CI-not%20tested!-violet)
   - 🌎️ [Apache Mirror Maker 2](https://github.com/vdesabou/kafka-docker-playground/tree/master/ccloud/mirrormaker2) ![not tested](https://img.shields.io/badge/CI-not%20tested!-violet)
 
-## ♻️ Confluent Replicator and Mirror Maker 2
+## 🌍 Multi-Data-Center deployments
 
 Using Multi-Data-Center setup with 🇺🇸 and 🇪🇺 clusters
 
@@ -188,7 +188,8 @@ Using Multi-Data-Center setup with 🇺🇸 and 🇪🇺 clusters
   - With [Kerberos](https://github.com/vdesabou/kafka-docker-playground/tree/master/environment/mdc-kerberos)
 - 🌎️ [Apache Mirror Maker 2](https://github.com/vdesabou/kafka-docker-playground/tree/master/multi-data-center/mirrormaker2) :multi-data-center/mirrormaker2:
   - With [PLAINTEXT](https://github.com/vdesabou/kafka-docker-playground/tree/master/environment/mdc-plaintext)
-
+- ♻️ [Cluster Linking](https://github.com/vdesabou/kafka-docker-playground/tree/master/multi-data-center/cluster-linking) :multi-data-center/cluster-linking:
+- 
 ## 🔐 Environments
 
 Using single cluster:
