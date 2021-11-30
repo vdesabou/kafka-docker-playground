@@ -6,9 +6,9 @@ services:
     hostname: replicator
     container_name: replicator
     volumes:
-        - ../../ccloud/replicator/executable-onprem-to-cloud-consumer.properties:/etc/replicator/consumer.properties
-        - ../../ccloud/replicator/executable-onprem-to-cloud-producer.properties:/etc/replicator/producer.properties
-        - ../../ccloud/replicator/executable-onprem-to-cloud-replicator.properties:/etc/replicator/replication.properties
+        - ../../ccloud/multi-data-center/replicator-executable-onprem-to-cloud-consumer.properties:/etc/replicator/consumer.properties
+        - ../../ccloud/multi-data-center/replicator-executable-onprem-to-cloud-producer.properties:/etc/replicator/producer.properties
+        - ../../ccloud/multi-data-center/replicator-executable-onprem-to-cloud-replicator.properties:/etc/replicator/replication.properties
     environment:
       WHITELIST: executable-products
 

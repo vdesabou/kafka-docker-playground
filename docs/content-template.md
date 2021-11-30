@@ -178,15 +178,15 @@
 
 Using Multi-Data-Center setup with 🇺🇸 and 🇪🇺 clusters
 
-- 🔗 [Confluent Replicator as connector](https://github.com/vdesabou/kafka-docker-playground/tree/master/replicator/connect) :replicator/connect:
+- 🔗 [Confluent Replicator as connector](https://github.com/vdesabou/kafka-docker-playground/tree/master/multi-data-center/replicator-connect) :multi-data-center/replicator-connect:
   - With [PLAINTEXT](https://github.com/vdesabou/kafka-docker-playground/tree/master/environment/mdc-plaintext)
   - With [SASL_PLAIN](https://github.com/vdesabou/kafka-docker-playground/tree/master/environment/mdc-sasl-plain)
   - With [Kerberos](https://github.com/vdesabou/kafka-docker-playground/tree/master/environment/mdc-kerberos)
-- 🖇️ [Confluent Replicator as executable](https://github.com/vdesabou/kafka-docker-playground/tree/master/replicator/executable) :replicator/executable:
+- 🖇️ [Confluent Replicator as executable](https://github.com/vdesabou/kafka-docker-playground/tree/master/multi-data-center/replicator-executable) :multi-data-center/replicator-executable:
   - With [PLAINTEXT](https://github.com/vdesabou/kafka-docker-playground/tree/master/environment/mdc-plaintext)
   - With [SASL_PLAIN](https://github.com/vdesabou/kafka-docker-playground/tree/master/environment/mdc-sasl-plain)
   - With [Kerberos](https://github.com/vdesabou/kafka-docker-playground/tree/master/environment/mdc-kerberos)
-- 🌎️ [Apache Mirror Maker 2](https://github.com/vdesabou/kafka-docker-playground/tree/master/replicator/mirrormaker2) :replicator/mirrormaker2:
+- 🌎️ [Apache Mirror Maker 2](https://github.com/vdesabou/kafka-docker-playground/tree/master/multi-data-center/mirrormaker2) :multi-data-center/mirrormaker2:
   - With [PLAINTEXT](https://github.com/vdesabou/kafka-docker-playground/tree/master/environment/mdc-plaintext)
 
 ## 🔐 Environments
@@ -223,7 +223,7 @@ Using Multi-Data-Center setup with 🇺🇸 and 🇪🇺 clusters
 - 🗃️ [Audit Logs](https://github.com/vdesabou/kafka-docker-playground/tree/master/other/audit-logs) :other/audit-logs:
 - 🗝️ [Confluent Schema Registry Security Plugin](https://github.com/vdesabou/kafka-docker-playground/tree/master/other/schema-registry-security-plugin) :other/schema-registry-security-plugin:
 - 🔒️ [Confluent REST Proxy Security Plugin](https://github.com/vdesabou/kafka-docker-playground/tree/master/other/rest-proxy-security-plugin) with SASL/SSL and 2WAY/SSL Principal Propagation :other/rest-proxy-security-plugin:
-- ♻️ [Cluster Linking](https://github.com/vdesabou/kafka-docker-playground/tree/master/replicator/cluster-linking) :replicator/cluster-linking:
+- ♻️ [Cluster Linking](https://github.com/vdesabou/kafka-docker-playground/tree/master/multi-data-center/cluster-linking) :multi-data-center/cluster-linking:
 - 📒 [Testing RBAC with Azure AD](https://github.com/vdesabou/kafka-docker-playground/tree/master/other/rbac-with-azure-ad) ![not tested](https://img.shields.io/badge/CI-not%20tested!-violet)
 - 🛂 [Schema Validation on Confluent Server](https://github.com/vdesabou/kafka-docker-playground/tree/master/other/broker-schema-validation) Schema Validation on Confluent Server :other/broker-schema-validation:
 - 🙊 [Secrets Management](https://github.com/vdesabou/kafka-docker-playground/tree/master/other/secrets-management) with Connect :other/secrets-management:

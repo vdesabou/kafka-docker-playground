@@ -51,8 +51,8 @@ services:
       SCHEMA_REGISTRY_AUTHENTICATION_REALM: "Schema"
       SCHEMA_REGISTRY_OPTS: "-Djava.security.auth.login.config=/tmp/jaas_config.file"
     volumes:
-      - ../../replicator/connect/jaas_config.file:/tmp/jaas_config.file
-      - ../../replicator/connect/password-file:/tmp/password-file
+      - ../../multi-data-center/replicator-connect/jaas_config.file:/tmp/jaas_config.file
+      - ../../multi-data-center/replicator-connect/password-file:/tmp/password-file
 
   connect:
     image: vdesabou/kafka-docker-playground-connect:${CONNECT_TAG}
