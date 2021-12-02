@@ -105,13 +105,13 @@ curl -X PUT \
                 "connector.class": "io.confluent.connect.azure.blob.AzureBlobStorageSinkConnector",
                 "tasks.max": "1",
                 "topics": "customer-avro",
-                "flush.size": "10000",
+                "flush.size": "100000000",
                 "azblob.account.name": "'"$AZURE_ACCOUNT_NAME"'",
                 "azblob.account.key": "'"$AZURE_ACCOUNT_KEY"'",
                 "azblob.container.name": "'"$AZURE_CONTAINER_NAME"'",
                 "format.class": "io.confluent.connect.azure.blob.format.avro.AvroFormat",
                 "partitioner.class": "io.confluent.connect.storage.partitioner.DailyPartitioner",
-                "rotate.schedule.interval.ms": "1000",
+                "rotate.schedule.interval.ms": "300000",
                 "locale": "en_US",
                 "timezone": "UTC",
                 "consumer.override.auto.offset.reset": "earliest",
@@ -123,10 +123,15 @@ curl -X PUT \
 
 # note if we start another connector with same config, we get InvalidBlockList: The specified block list is invalid.
 
-exit 0
+DOMAIN=$(echo $AZURE_CONTAINER_NAME.blob.core.windows.net)
+IP=$(nslookup $AZURE_CONTAINER_NAME.blob.core.windows.net | grep Address | grep -v "#" | cut -d " " -f 2 | tail -1)
+log "Add packet corruption from connect to $DOMAIN IP $IP"
+add_packet_corruption connect $IP 20%
 
+log "sleeping 5 minutes"
+sleep 310
 
+log "checking for corruption"
 check_corrupted_files
 
-log "Deleting resource group"
-az group delete --name $AZURE_RESOURCE_GROUP --yes --no-wait
+exit 0
