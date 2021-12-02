@@ -173,6 +173,7 @@
   - 📦 [Migrate Schemas to Confluent Cloud](https://github.com/vdesabou/kafka-docker-playground/tree/master/ccloud/migrate-schemas-to-confluent-cloud) using Confluent Replicator ![not tested](https://img.shields.io/badge/CI-not%20tested!-violet)
   - 🔰 [Confluent Cloud Networking](https://github.com/vdesabou/kafka-docker-playground/tree/master/ccloud/haproxy) using HAProxy ![not tested](https://img.shields.io/badge/CI-not%20tested!-violet)
   - 🌎️ [Apache Mirror Maker 2](https://github.com/vdesabou/kafka-docker-playground/tree/master/ccloud/mirrormaker2) ![not tested](https://img.shields.io/badge/CI-not%20tested!-violet)
+  - ♻️ [Cluster Linking Quick Start with service account only](https://github.com/vdesabou/kafka-docker-playground/tree/master/ccloud/cluster-linking-with-service-accounts-only) ![not tested](https://img.shields.io/badge/CI-not%20tested!-violet)
 
 ## 🌍 Multi-Data-Center deployments
 
