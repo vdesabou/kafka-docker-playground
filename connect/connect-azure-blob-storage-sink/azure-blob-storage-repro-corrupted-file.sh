@@ -125,8 +125,9 @@ curl -X PUT \
 
 DOMAIN=$(echo $AZURE_CONTAINER_NAME.blob.core.windows.net)
 IP=$(nslookup $AZURE_CONTAINER_NAME.blob.core.windows.net | grep Address | grep -v "#" | cut -d " " -f 2 | tail -1)
-log "Add packet corruption from connect to $DOMAIN IP $IP"
-add_packet_corruption connect $IP 20%
+CORRUPTION_PERCENTAGE="1%"
+log "Add $CORRUPTION_PERCENTAGE packet corruption from connect to $DOMAIN IP $IP"
+add_packet_corruption connect $IP $CORRUPTION_PERCENTAGE
 
 log "sleeping 5 minutes"
 sleep 310
