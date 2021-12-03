@@ -90,6 +90,7 @@ services:
       KAFKA_AUTHORIZER_CLASS_NAME: $KAFKA_AUTHORIZER_CLASS_NAME
       KAFKA_ZOOKEEPER_SET_ACL: "true"
       KAFKA_ALLOW_EVERYONE_IF_NO_ACL_FOUND: "false"
+      KAFKA_LOG4J_LOGGERS: "kafka.authorizer.logger=INFO"
       KAFKA_SUPER_USERS: User:admin;User:kafka;User:connect;User:controlcenter
       KAFKA_OPTS: -Djava.security.auth.login.config=/etc/kafka/broker.sasl.jaas.config
                   # -Djdk.security.allowNonCaAnchor=true
@@ -115,6 +116,7 @@ services:
       KAFKA_AUTHORIZER_CLASS_NAME: $KAFKA_AUTHORIZER_CLASS_NAME
       KAFKA_ZOOKEEPER_SET_ACL: "true"
       KAFKA_ALLOW_EVERYONE_IF_NO_ACL_FOUND: "false"
+      KAFKA_LOG4J_LOGGERS: "kafka.authorizer.logger=INFO"
       KAFKA_SUPER_USERS: User:admin;User:kafka;User:connect;User:controlcenter
       KAFKA_OPTS: -Djava.security.auth.login.config=/etc/kafka/broker.sasl.jaas.config
                   # -Djdk.security.allowNonCaAnchor=true

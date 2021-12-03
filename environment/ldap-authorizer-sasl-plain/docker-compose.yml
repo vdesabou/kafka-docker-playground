@@ -46,6 +46,7 @@ services:
             KAFKA_AUTHORIZER_CLASS_NAME: io.confluent.kafka.security.ldap.authorizer.LdapAuthorizer
             KAFKA_ZOOKEEPER_SET_ACL: "true"
             KAFKA_ALLOW_EVERYONE_IF_NO_ACL_FOUND: "false"
+            KAFKA_LOG4J_LOGGERS: "kafka.authorizer.logger=INFO"
             # Set Kafka broker user as super user (alternatively, set ACLs before starting brokers)
             KAFKA_SUPER_USERS: User:broker;User:client;User:controlcenter;User:connect;User:schemaregistry;User:ksqldb
 
