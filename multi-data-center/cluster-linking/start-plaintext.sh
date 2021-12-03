@@ -20,9 +20,9 @@ seq -f "us_sale_%g ${RANDOM}" 20 | docker container exec -i connect-us bash -c "
 log "Verify we have received the data in source cluster using consumer group id my-consumer-group, we read only 5 messages"
 docker container exec -i connect-us bash -c "kafka-console-consumer --bootstrap-server broker-us:9092 --topic demo --from-beginning --max-messages 5 --consumer-property group.id=my-consumer-group"
 
-log "Create the cluster link on the destination cluster (with metadata.max.age.ms=5 seconds + consumer.offset.sync.enable=true + consumer.offset.sync.ms=3000 + consumer.offset.sync.all.json set to all consumer groups)"
-docker cp consumer.offset.sync.all.json broker-europe:/tmp/consumer.offset.sync.all.json
-docker exec broker-europe kafka-cluster-links --bootstrap-server broker-europe:9092 --create --link demo-link --config bootstrap.servers=broker-us:9092,metadata.max.age.ms=5000,consumer.offset.sync.enable=true,consumer.offset.sync.ms=3000 --consumer-group-filters-json-file /tmp/consumer.offset.sync.all.json
+log "Create the cluster link on the destination cluster (with metadata.max.age.ms=5 seconds + consumer.offset.sync.enable=true + consumer.offset.sync.ms=3000 + consumer.offset.sync.json set to all consumer groups)"
+docker cp consumer.offset.sync.json broker-europe:/tmp/consumer.offset.sync.json
+docker exec broker-europe kafka-cluster-links --bootstrap-server broker-europe:9092 --create --link demo-link --config bootstrap.servers=broker-us:9092,metadata.max.age.ms=5000,consumer.offset.sync.enable=true,consumer.offset.sync.ms=3000 --consumer-group-filters-json-file /tmp/consumer.offset.sync.json
 
 log "Initialize the topic mirror for topic demo"
 docker exec broker-europe kafka-mirrors --create --mirror-topic demo --link demo-link --bootstrap-server broker-europe:9092
@@ -105,7 +105,7 @@ log "List mirror topics"
 docker container exec -i connect-us kafka-cluster-links --list --link demo-link --include-topics --bootstrap-server broker-europe:9092
 
 log "Cut over the mirror topic to make it writable"
-docker container exec -i connect-us kafka-mirrors --failover --topics demo --bootstrap-server broker-europe:9092
+docker container exec -i connect-us kafka-mirrors --promote --topics demo --bootstrap-server broker-europe:9092
 
 log "Produce to both topics to verify divergence"
 
