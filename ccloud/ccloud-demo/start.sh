@@ -83,14 +83,13 @@ log "-------------------------------------"
 log "Connector examples"
 log "-------------------------------------"
 
-# FIXTHIS: https://github.com/vdesabou/kafka-docker-playground/issues/1457
-# if ! version_gt $TAG_BASE "5.9.9"; then
+if ! version_gt $TAG_BASE "5.9.9"; then
      # note: for 6.x CONNECT_TOPIC_CREATION_ENABLE=true
      log "Creating topic in Confluent Cloud (auto.create.topics.enable=false)"
      set +e
      create_topic mysql-application
      set -e
-# fi
+fi
 
 log "Creating MySQL source connector"
 curl -X PUT \
@@ -103,7 +102,9 @@ curl -X PUT \
                "mode":"timestamp+incrementing",
                "timestamp.column.name":"last_modified",
                "incrementing.column.name":"id",
-               "topic.prefix":"mysql-"
+               "topic.prefix":"mysql-",
+               "topic.creation.default.replication.factor": "-1",
+               "topic.creation.default.partitions": "-1"
           }' \
      http://localhost:8083/connectors/mysql-source/config | jq .
 

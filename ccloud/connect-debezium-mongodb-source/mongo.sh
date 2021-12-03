@@ -67,7 +67,9 @@ curl -X PUT \
                "mongodb.hosts" : "debezium/mongodb:27017",
                "mongodb.name" : "dbserver1",
                "mongodb.user" : "debezium",
-               "mongodb.password" : "dbz"
+               "mongodb.password" : "dbz",
+               "topic.creation.default.replication.factor": "-1",
+               "topic.creation.default.partitions": "-1"
           }' \
      http://localhost:8083/connectors/debezium-mongodb-source/config | jq .
 

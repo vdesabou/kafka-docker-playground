@@ -70,13 +70,14 @@ log "Creating Kinesis Source connector"
 curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
-        "connector.class":"io.confluent.connect.kinesis.KinesisSourceConnector",
+               "connector.class":"io.confluent.connect.kinesis.KinesisSourceConnector",
                "tasks.max": "1",
                "kafka.topic": "kinesis_topic",
                "kinesis.stream": "'"$KINESIS_STREAM_NAME"'",
                "kinesis.region": "'"$AWS_REGION"'",
                "confluent.license": "",
-               "name": "kinesis-source",
+               "topic.creation.default.replication.factor": "-1",
+               "topic.creation.default.partitions": "-1",
                "confluent.topic.ssl.endpoint.identification.algorithm" : "https",
                "confluent.topic.sasl.mechanism" : "PLAIN",
                "confluent.topic.bootstrap.servers": "${file:/data:bootstrap.servers}",

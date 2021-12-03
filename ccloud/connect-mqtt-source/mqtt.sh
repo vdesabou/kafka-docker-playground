@@ -17,23 +17,29 @@ ${DIR}/../../ccloud/environment/start.sh "${PWD}/docker-compose.yml"
 MQTT_TOPIC="my-mqtt-topic"
 KAFKA_TOPIC="mqtt-source-1"
 
-set +e
-create_topic $KAFKA_TOPIC
-set -e
+if ! version_gt $TAG_BASE "5.9.9"; then
+     # note: for 6.x CONNECT_TOPIC_CREATION_ENABLE=true
+     log "Creating topic in Confluent Cloud (auto.create.topics.enable=false)"
+     set +e
+     create_topic $KAFKA_TOPIC
+     set -e
+fi
 
 log "Creating MQTT Source connector"
 generate_post_data()
 {
   cat <<EOF
 {
-	"connector.class": "io.confluent.connect.mqtt.MqttSourceConnector",
-	"tasks.max": "1",
-	"mqtt.server.uri": "tcp://mosquitto:1883",
-	"mqtt.topics":"$MQTT_TOPIC",
-	"kafka.topic":"$KAFKA_TOPIC",
-	"mqtt.qos": "2",
-	"mqtt.username": "myuser",
-	"mqtt.password": "mypassword"
+    "connector.class": "io.confluent.connect.mqtt.MqttSourceConnector",
+    "tasks.max": "1",
+    "mqtt.server.uri": "tcp://mosquitto:1883",
+    "mqtt.topics":"$MQTT_TOPIC",
+    "kafka.topic":"$KAFKA_TOPIC",
+    "mqtt.qos": "2",
+    "mqtt.username": "myuser",
+    "mqtt.password": "mypassword",
+    "topic.creation.default.replication.factor": "-1",
+    "topic.creation.default.partitions": "-1"
    }
 EOF
 }
