@@ -88,6 +88,8 @@ curl -X PUT \
                "servicenow.user": "admin",
                "servicenow.password": "'"$SERVICENOW_PASSWORD"'",
                "servicenow.since": "'"$TODAY"'",
+               "topic.creation.default.replication.factor": "-1",
+               "topic.creation.default.partitions": "-1",
                "key.converter": "org.apache.kafka.connect.json.JsonConverter",
                "value.converter": "org.apache.kafka.connect.json.JsonConverter",
                "confluent.topic.ssl.endpoint.identification.algorithm" : "https",
