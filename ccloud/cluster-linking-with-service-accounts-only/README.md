@@ -14,16 +14,19 @@ This is the [quickstart](https://docs.confluent.io/cloud/current/multi-cloud/clu
       - [Attempt to use confluent kafka link create](#attempt-to-use-confluent-kafka-link-create)
       - [Using kafka-cluster-links (working)](#using-kafka-cluster-links-working)
     - [Setting up ACLs](#setting-up-acls)
+      - [Destination](#destination)
+      - [Source](#source)
     - [Creating or modifying a cluster link](#creating-or-modifying-a-cluster-link)
   - [Create source topic and populate it](#create-source-topic-and-populate-it)
-  - [Create mirror topic on destination without ACLs](#create-mirror-topic-on-destination-without-acls)
-    - [Permissions for the cluster link to read from the source cluster](#permissions-for-the-cluster-link-to-read-from-the-source-cluster)
-    - [Create mirror topic after ACLs are set](#create-mirror-topic-after-acls-are-set)
+  - [Create mirror topic on destination](#create-mirror-topic-on-destination)
+    - [Using `kafka-mirrors` CLI](#using-kafka-mirrors-cli)
+    - [Using `confluent` CLI](#using-confluent-cli)
 - [✅ Verifications](#-verifications)
   - [Consumer offsets](#consumer-offsets)
   - [Update topic config](#update-topic-config)
   - [ACLs sync](#acls-sync)
   - [Deleting user account that created link and mirror topic](#deleting-user-account-that-created-link-and-mirror-topic)
+  - [Stop consumer offset sync for consumer group my-consumer-group](#stop-consumer-offset-sync-for-consumer-group-my-consumer-group)
 
 ## Create source and destination clusters
 
@@ -36,10 +39,10 @@ confluent kafka cluster create VincentClusterLinkingDestination --type dedicated
 ```
 
 ```
-source_id=lkc-73zw1
+source_id=lkc-65176
 source_endpoint=pkc-pgq85.us-west-2.aws.confluent.cloud:9092
-destination_id=lkc-p80ym
-destination_endpoint=pkc-3n1v0.us-east-1.aws.confluent.cloud:9092
+destination_id=lkc-nz953
+destination_endpoint=pkc-6o99j.us-east-1.aws.confluent.cloud:9092
 ```
 
 ## Create service accounts and API keys
@@ -50,13 +53,13 @@ destination_endpoint=pkc-3n1v0.us-east-1.aws.confluent.cloud:9092
 confluent iam service-account create SA-Source-ClusterLinking --description "SA for Source cluster" 
 
 +-------------+-----------------------+
-| ID          | sa-12nn2j             |
+| ID          | sa-81g8qq             |
 | Name        | SA-Source-ClusterLinking     |
 | Description | SA for Source cluster |
 +-------------+-----------------------+
 ```
 
-source_service_account=sa-12nn2j
+source_service_account=sa-81g8qq
 
 ```bash
 confluent api-key create --resource $source_id --service-account $source_service_account --description "api key for SA-ClusterLinking"
@@ -76,13 +79,13 @@ source_api_secret="<SOURCE_SA_API_SECRET>"
 ```bash
 confluent iam service-account create SA--Destination-ClusterLinking --description "SA for Destination cluster" 
 +-------------+--------------------------------+
-| ID          | sa-do11o7                      |
+| ID          | sa-k8jr62                      |
 | Name        | SA--Destination-ClusterLinking |
 | Description | SA for Destination cluster     |
 +-------------+--------------------------------+
 ```
 
-destination_service_account=sa-do11o7
+destination_service_account=sa-k8jr62
 
 ```bash
 confluent api-key create --resource $destination_id --service-account $destination_service_account --description "api key for SA-ClusterLinking"
@@ -213,6 +216,10 @@ Caused by: org.apache.kafka.common.errors.ClusterAuthorizationException: Cluster
 
 ### Setting up ACLs
 
+See summary table [there](https://docs.confluent.io/platform/current/multi-dc-deployments/cluster-linking/security.html#authorization-acls).
+
+#### Destination
+
 [docs](https://docs.confluent.io/cloud/current/multi-cloud/cluster-linking/security-cloud.html#creating-or-modifying-a-cluster-link)
 
 > If the user or client application is authenticated with a service account, then their service account needs an ACL to allow them to ALTER the destination cluster. To list the cluster links that exist on a destination cluster, their service account needs an ACL to allow them to DESCRIBE the destination cluster.
@@ -222,14 +229,56 @@ confluent kafka acl create --service-account $destination_service_account --allo
 confluent kafka acl create --service-account $destination_service_account --allow --operation describe --cluster-scope
 ```
 
-Listing ACLs:
+To allow to create and alter mirror topic:
 
 ```bash
-confluent kafka acl list  --service-account $destination_service_account    
-Principal    | Permission | Operation | ResourceType | ResourceName  | PatternType  
+confluent kafka acl create --allow --service-account $destination_service_account --operation CREATE --operation ALTER --topic "topic-to-link" --cluster $destination_id
+
+    Principal    | Permission | Operation | ResourceType | ResourceName  | PatternType  
 -----------------+------------+-----------+--------------+---------------+--------------
-  User:sa-do11o7 | ALLOW      | ALTER     | CLUSTER      | kafka-cluster | LITERAL      
-  User:sa-do11o7 | ALLOW      | DESCRIBE  | CLUSTER      | kafka-cluster | LITERAL  
+  User:sa-k8jr62 | ALLOW      | CREATE    | TOPIC        | topic-to-link | LITERAL      
+  User:sa-k8jr62 | ALLOW      | ALTER     | TOPIC        | topic-to-link | LITERAL  
+```
+
+#### Source
+
+[docs](https://docs.confluent.io/cloud/current/multi-cloud/cluster-linking/security-cloud.html#permissions-for-the-cluster-link-to-read-from-the-source-cluster)
+
+> Allowed to READ and DESCRIBE_CONFIGS for all topics you want to mirror (“source topics”). This will let the cluster link mirror topic data from the source topic to the mirror topic. You could allow the link to read all topics by passing in *, or for specific topics whose names match a prefix, or for specific topic names. Here is an example CLI command to give the cluster link READ access to all topics:
+
+```bash
+confluent kafka acl create --allow --service-account $source_service_account --operation READ --operation DESCRIBE_CONFIGS --topic "topic-to-link" --cluster $source_id
+
+    Principal    | Permission |    Operation     | ResourceType | ResourceName  | PatternType  
+-----------------+------------+------------------+--------------+---------------+--------------
+  User:sa-81g8qq | ALLOW      | READ             | TOPIC        | topic-to-link | LITERAL      
+  User:sa-81g8qq | ALLOW      | DESCRIBE_CONFIGS | TOPIC        | topic-to-link | LITERAL 
+```
+
+> To sync ACLs (optional), the cluster link must have permissions to DESCRIBE the source cluster. Here is an example of how to specify these permissions.
+
+```bash
+confluent kafka acl create --allow --service-account $source_service_account --operation DESCRIBE --cluster-scope --cluster $source_id
+    Principal    | Permission | Operation | ResourceType | ResourceName  | PatternType  
+-----------------+------------+-----------+--------------+---------------+--------------
+  User:sa-81g8qq | ALLOW      | DESCRIBE  | CLUSTER      | kafka-cluster | LITERAL  
+```
+
+> To sync consumer group offsets (optional), the cluster link must have permissions to DESCRIBE source topics, and READ and DESCRIBE consumer groups on the source cluster. Here is an example of how to specify these permissions, each of which has to be specified in a separate command:
+
+```bash
+confluent kafka acl create --allow --service-account $source_service_account --operation DESCRIBE --topic "topic-to-link" --cluster $source_id
+    Principal    | Permission | Operation | ResourceType | ResourceName  | PatternType  
+-----------------+------------+-----------+--------------+---------------+--------------
+  User:sa-81g8qq | ALLOW      | DESCRIBE  | TOPIC        | topic-to-link | LITERAL 
+```
+
+```bash
+confluent kafka acl create --allow --service-account $source_service_account --operation READ --operation DESCRIBE --consumer-group "*" --cluster $source_id
+    Principal    | Permission | Operation | ResourceType | ResourceName | PatternType  
+-----------------+------------+-----------+--------------+--------------+--------------
+  User:sa-81g8qq | ALLOW      | READ      | GROUP        | *            | LITERAL      
+  User:sa-81g8qq | ALLOW      | DESCRIBE  | GROUP        | *            | LITERAL  
 ```
 
 ### Creating or modifying a cluster link
@@ -277,89 +326,24 @@ where `acl.sync.all.json`:
 }
 ```
 
-Note: the link is created even if there is no ACL for service account used for source cluster yet.
-
 ## Create source topic and populate it
 
 [docs](https://docs.confluent.io/cloud/current/multi-cloud/cluster-linking/quickstart.html#create-source-and-mirror-topics)
 
-Create a topic `topic-to-link` and put data in it. (I used admin user for that, it is not relevant here).
+Create a topic `topic-to-link` and put data in it. (I used admin user for that with UI, it is not relevant here).
 
-## Create mirror topic on destination without ACLs
+## Create mirror topic on destination
 
-```bash
-confluent kafka mirror create topic-to-link --cluster $destination_id --link my-link
-Error: REST request failed: While fetching description for topic 'topic-to-link' over cluster link 'my-link': Topic authorization failed. (40301)
-Usage:
-  confluent kafka mirror create <source-topic-name> [flags]
+### Using `kafka-mirrors` CLI
 
-Examples:
-Create a mirror topic `my-topic` under cluster link `my-link`.
-
-  $ confluent kafka mirror create my-topic --link my-link
-
-Create a mirror topic with a custom replication factor and configuration file.
-
-  $ confluent kafka mirror create my-topic --link my-link --replication-factor 5 --config-file my-config.txt
-
-Flags:
-      --link string                REQUIRED: The name of the cluster link to attach to the mirror topic.
-      --replication-factor int32   Replication factor. (default 3)
-      --config-file string         Name of a file with additional topic configuration. Each property should be on its own line with the format: key=value.
-      --environment string         Environment ID.
-      --cluster string             Kafka cluster ID.
-      --context string             CLI context name.
-
-Global Flags:
-  -h, --help            Show help for this command.
-  -v, --verbose count   Increase verbosity (-v for warn, -vv for info, -vvv for debug, -vvvv for trace).
-```
-
-It fails as expected as ACLs are not set on source cluster.
-
-
-### Permissions for the cluster link to read from the source cluster
-
-[docs](https://docs.confluent.io/cloud/current/multi-cloud/cluster-linking/security-cloud.html#permissions-for-the-cluster-link-to-read-from-the-source-cluster)
-
-> Allowed to READ and DESCRIBE_CONFIGS for all topics you want to mirror (“source topics”). This will let the cluster link mirror topic data from the source topic to the mirror topic. You could allow the link to read all topics by passing in *, or for specific topics whose names match a prefix, or for specific topic names. Here is an example CLI command to give the cluster link READ access to all topics:
+This is the only way to use a service account when creating mirror topic.
 
 ```bash
-confluent kafka acl create --allow --service-account $source_service_account --operation READ --operation DESCRIBE_CONFIGS --topic "topic-to-link" --cluster $source_id
-
-    Principal    | Permission |    Operation     | ResourceType | ResourceName  | PatternType  
------------------+------------+------------------+--------------+---------------+--------------
-  User:sa-12nn2j | ALLOW      | READ             | TOPIC        | topic-to-link | LITERAL      
-  User:sa-12nn2j | ALLOW      | DESCRIBE_CONFIGS | TOPIC        | topic-to-link | LITERAL 
+kafka-mirrors --create --mirror-topic topic-to-link --link my-link --bootstrap-server $destination_endpoint --command-config destination.config
 ```
+### Using `confluent` CLI
 
-> To sync ACLs (optional), the cluster link must have permissions to DESCRIBE the source cluster. Here is an example of how to specify these permissions.
-
-```bash
-confluent kafka acl create --allow --service-account $source_service_account --operation DESCRIBE --cluster-scope --cluster $source_id
-    Principal    | Permission | Operation | ResourceType | ResourceName  | PatternType  
------------------+------------+-----------+--------------+---------------+--------------
-  User:sa-12nn2j | ALLOW      | DESCRIBE  | CLUSTER      | kafka-cluster | LITERAL  
-```
-
-> To sync consumer group offsets (optional), the cluster link must have permissions to DESCRIBE source topics, and READ and DESCRIBE consumer groups on the source cluster. Here is an example of how to specify these permissions, each of which has to be specified in a separate command:
-
-```bash
-confluent kafka acl create --allow --service-account $source_service_account --operation DESCRIBE --topic "topic-to-link" --cluster $source_id
-    Principal    | Permission | Operation | ResourceType | ResourceName  | PatternType  
------------------+------------+-----------+--------------+---------------+--------------
-  User:sa-12nn2j | ALLOW      | DESCRIBE  | TOPIC        | topic-to-link | LITERAL 
-```
-
-```bash
-confluent kafka acl create --allow --service-account $source_service_account --operation READ --operation DESCRIBE --consumer-group "*" --cluster $source_id
-    Principal    | Permission | Operation | ResourceType | ResourceName | PatternType  
------------------+------------+-----------+--------------+--------------+--------------
-  User:sa-12nn2j | ALLOW      | READ      | GROUP        | *            | LITERAL      
-  User:sa-12nn2j | ALLOW      | DESCRIBE  | GROUP        | *            | LITERAL  
-```
-
-### Create mirror topic after ACLs are set
+**FIXTHIS**: There is no way to specify service account here ?
 
 ```bash
 confluent kafka mirror create topic-to-link --cluster $destination_id --link my-link
@@ -416,13 +400,55 @@ confluent kafka acl create --allow --service-account $source_service_account --o
 Verify it is present in destination cluster:
 
 ```bash
-confluent kafka acl list --service-account $source_service_account
+confluent kafka cluster use $destination_id
+confluent kafka acl list | grep $source_service_account
     Principal    | Permission |    Operation     | ResourceType | ResourceName  | PatternType  
 -----------------+------------+------------------+--------------+---------------+--------------
-  User:sa-12nn2j | ALLOW      | READ             | TOPIC        | test-acl-sync | LITERAL      
+  User:sa-81g8qq | ALLOW      | READ             | TOPIC        | test-acl-sync | LITERAL      
 ```
 
 ## Deleting user account that created link and mirror topic
 
 I created a temp OrgAdmin user account and created link `confluent kafka link` and mirror topic using that account and `confluent` CLI.
 After deleting the temp OrgAdmin user account, the link is still active and present, and also mirror topic is still working.
+
+## Stop consumer offset sync for consumer group my-consumer-group
+
+```bash
+echo "consumer.offset.group.filters={\"groupFilters\": [ \
+  { \
+    \"name\": \"*\", \
+    \"patternType\": \"LITERAL\", \
+    \"filterType\": \"INCLUDE\" \
+  }, \
+  { \
+    \"name\": \"my-consumer-group\", \
+    \"patternType\": \"LITERAL\", \
+    \"filterType\": \"EXCLUDE\" \
+  } \
+]}" > newFilters.properties
+
+kafka-configs --bootstrap-server $destination_endpoint --alter --cluster-link my-link --add-config-file newFilters.properties --command-config destination.config
+```
+
+**FIXTHIS**: getting :
+
+```
+Error while executing config command with args '--bootstrap-server pkc-6o99j.us-east-1.aws.confluent.cloud:9092 --alter --cluster-link my-link --add-config-file newFilters.properties --command-config destination.config'
+java.util.concurrent.ExecutionException: org.apache.kafka.common.errors.ClusterAuthorizationException: Cluster authorization failed.
+        at java.util.concurrent.CompletableFuture.reportGet(CompletableFuture.java:357)
+        at java.util.concurrent.CompletableFuture.get(CompletableFuture.java:1928)
+        at org.apache.kafka.common.internals.KafkaFutureImpl.get(KafkaFutureImpl.java:180)
+        at kafka.admin.ConfigCommand$.getResourceConfig(ConfigCommand.scala:606)
+        at kafka.admin.ConfigCommand$.alterConfig(ConfigCommand.scala:364)
+        at kafka.admin.ConfigCommand$.processCommand(ConfigCommand.scala:344)
+        at kafka.admin.ConfigCommand$.main(ConfigCommand.scala:103)
+        at kafka.admin.ConfigCommand.main(ConfigCommand.scala)
+Caused by: org.apache.kafka.common.errors.ClusterAuthorizationException: Cluster authorization failed.
+```
+
+Need to add undocumented ACL `alter-configs`:
+
+```bash
+confluent kafka acl create --service-account $destination_service_account --allow --operation alter-configs --cluster-scope
+```
