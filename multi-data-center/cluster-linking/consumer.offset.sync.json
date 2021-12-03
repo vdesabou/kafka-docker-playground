@@ -1,6 +1,6 @@
 {
     "groupFilters": [{
-        "name": "*",
+        "name": "my-consumer-group",
         "patternType": "LITERAL",
         "filterType": "INCLUDE"
     }]

@@ -56,9 +56,9 @@ us_sale_5 3669
 Processed a total of 5 messages
 ```
 
-Create the cluster link on the destination cluster (with `metadata.max.age.ms=5 seconds` + `consumer.offset.sync.enable=true` + `consumer.offset.sync.ms=3000` + `consumer.offset.sync.all.json` set to all consumer groups)
+Create the cluster link on the destination cluster (with `metadata.max.age.ms=5 seconds` + `consumer.offset.sync.enable=true` + `consumer.offset.sync.ms=3000` + `consumer.offset.sync.json` set to all consumer groups)
 ```bash
-docker exec broker-europe kafka-cluster-links --bootstrap-server broker-europe:9092 --create --link demo-link --config bootstrap.servers=broker-us:9092,metadata.max.age.ms=5000,consumer.offset.sync.enable=true,consumer.offset.sync.ms=3000 --consumer-group-filters-json-file /tmp/consumer.offset.sync.all.json
+docker exec broker-europe kafka-cluster-links --bootstrap-server broker-europe:9092 --create --link demo-link --config bootstrap.servers=broker-us:9092,metadata.max.age.ms=5000,consumer.offset.sync.enable=true,consumer.offset.sync.ms=3000 --consumer-group-filters-json-file /tmp/consumer.offset.sync.json
 ```
 
 Initialize the topic mirror for topic demo

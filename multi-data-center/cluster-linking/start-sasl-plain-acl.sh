@@ -21,25 +21,36 @@ log "Verify we have received the data in source cluster using consumer group id 
 docker container exec -i broker-europe bash -c "kafka-console-consumer --bootstrap-server broker-us:9092 --topic demo --from-beginning --max-messages 5 --consumer-property group.id=my-consumer-group --consumer.config /tmp/superuser-client.properties"
 
 # https://docs.confluent.io/platform/current/multi-dc-deployments/cluster-linking/security.html#authorization-acls
-log "Setup acls"
+log "ACLs at Source (US)"
 log "Allow DESCRIBE_CONFIGS and READ for topic demo"
 docker exec broker-europe kafka-acls --bootstrap-server broker-us:9092 --add --allow-principal User:us --operation READ --topic demo --command-config /tmp/superuser-client.properties
 docker exec broker-europe kafka-acls --bootstrap-server broker-us:9092 --add --allow-principal User:us --operation DescribeConfigs --topic demo --command-config /tmp/superuser-client.properties
-log "Allow DESCRIBE cluster"
-docker exec broker-europe kafka-acls --bootstrap-server broker-us:9092 --add --allow-principal User:us --operation DESCRIBE --cluster --command-config /tmp/superuser-client.properties
-log "Allow ALTER cluster"
-docker exec broker-europe kafka-acls --bootstrap-server broker-us:9092 --add --allow-principal User:us --operation ALTER --cluster --command-config /tmp/superuser-client.properties
 log "Allow my-consumer-group to read and describe from topic demo"
 docker exec broker-europe kafka-acls --bootstrap-server broker-us:9092 --add --allow-principal User:us --consumer --topic demo --group my-consumer-group --command-config /tmp/superuser-client.properties
+log "Allow DESCRIBE cluster (for ACLs sync)"
+docker exec broker-europe kafka-acls --bootstrap-server broker-us:9092 --add --allow-principal User:us --operation DESCRIBE --cluster --command-config /tmp/superuser-client.properties
 
-log "Create the cluster link on the destination cluster (with metadata.max.age.ms=5 seconds + consumer.offset.sync.enable=true + consumer.offset.sync.ms=3000 + consumer.offset.sync.all.json set to all consumer groups)"
-docker cp consumer.offset.sync.all.json broker-europe:/tmp/consumer.offset.sync.all.json
+log "ACLs at Destination (EUROPE)"
+log "Allow DESCRIBE cluster"
+docker exec broker-europe kafka-acls --bootstrap-server broker-europe:9092 --add --allow-principal User:europe --operation DESCRIBE --cluster --command-config /tmp/superuser-client.properties
+log "Allow ALTER cluster"
+docker exec broker-europe kafka-acls --bootstrap-server broker-europe:9092 --add --allow-principal User:europe --operation ALTER --cluster --command-config /tmp/superuser-client.properties
+log "Allow CREATE for mirror topic demo"
+docker exec broker-europe kafka-acls --bootstrap-server broker-europe:9092 --add --allow-principal User:europe --operation CREATE --topic demo --command-config /tmp/superuser-client.properties
+log "Allow ALTER for mirror topic demo"
+docker exec broker-europe kafka-acls --bootstrap-server broker-europe:9092 --add --allow-principal User:europe --operation ALTER --topic demo --command-config /tmp/superuser-client.properties
+log "FIXTHIS (not documented) Allow AlterConfigs for mirror topic demo "
+docker exec broker-europe kafka-acls --bootstrap-server broker-europe:9092 --add --allow-principal User:europe --operation AlterConfigs --cluster --command-config /tmp/superuser-client.properties
+
+
+log "Create the cluster link on the destination cluster (with metadata.max.age.ms=5 seconds + consumer.offset.sync.enable=true + consumer.offset.sync.ms=3000 + consumer.offset.sync.json set to all consumer groups)"
+docker cp consumer.offset.sync.json broker-europe:/tmp/consumer.offset.sync.json
 # --config-file is for source cluster
 # --command-config is for destination cluser
-docker exec broker-europe kafka-cluster-links --bootstrap-server broker-europe:9092 --create --link demo-link --config-file /tmp/cluster-linking-config.conf --consumer-group-filters-json-file /tmp/consumer.offset.sync.all.json --command-config /tmp/superuser-client.properties
+docker exec broker-europe kafka-cluster-links --bootstrap-server broker-europe:9092 --create --link demo-link --config-file /tmp/source.config --consumer-group-filters-json-file /tmp/consumer.offset.sync.json --command-config /tmp/europe-client.properties
 
 log "Initialize the topic mirror for topic demo"
-docker exec broker-europe kafka-mirrors --create --mirror-topic demo --link demo-link --bootstrap-server broker-europe:9092 --command-config /tmp/superuser-client.properties
+docker exec broker-europe kafka-mirrors --create --mirror-topic demo --link demo-link --bootstrap-server broker-europe:9092 --command-config /tmp/europe-client.properties
 
 log "Check the replica status on the destination"
 docker exec broker-europe kafka-replica-status --topics demo --include-linked --bootstrap-server broker-europe:9092 --admin.config /tmp/superuser-client.properties
@@ -78,7 +89,7 @@ echo "consumer.offset.group.filters={\"groupFilters\": [ \
   } \
 ]}" > newFilters.properties
 docker cp newFilters.properties broker-europe:/tmp/newFilters.properties
-docker exec broker-europe kafka-configs --bootstrap-server broker-europe:9092 --alter --cluster-link demo-link --add-config-file /tmp/newFilters.properties --command-config /tmp/superuser-client.properties
+docker exec broker-europe kafka-configs --bootstrap-server broker-europe:9092 --alter --cluster-link demo-link --add-config-file /tmp/newFilters.properties --command-config /tmp/europe-client.properties
 
 sleep 6
 
@@ -119,7 +130,7 @@ log "List mirror topics"
 docker container exec -i broker-europe kafka-cluster-links --list --link demo-link --include-topics --bootstrap-server broker-europe:9092 --command-config /tmp/superuser-client.properties
 
 log "Cut over the mirror topic to make it writable"
-docker container exec -i broker-europe kafka-mirrors --failover --topics demo --bootstrap-server broker-europe:9092 --command-config /tmp/superuser-client.properties
+docker container exec -i broker-europe kafka-mirrors --promote --topics demo --bootstrap-server broker-europe:9092 --command-config /tmp/superuser-client.properties
 
 log "Produce to both topics to verify divergence"
 
