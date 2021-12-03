@@ -2,25 +2,24 @@
 
 This is the [quickstart](https://docs.confluent.io/cloud/current/multi-cloud/cluster-linking/quickstart.html) that is being followed here, but with requirement to use only service accounts (least privileges principle).
 
-⚠️ This is not an automated test, just some notes of the tests done.
+❗ This is not an automated test, just some notes of the tests done. ❗
 
 - [Cluster Linking Quick Start with service account only](#cluster-linking-quick-start-with-service-account-only)
-  - [Create source and destination clusters](#create-source-and-destination-clusters)
-  - [Create service accounts and API keys](#create-service-accounts-and-api-keys)
-    - [Source cluster](#source-cluster)
-    - [Destination cluster](#destination-cluster)
-  - [Creating Cluster Link](#creating-cluster-link)
-    - [Testing cluster linking without ACLs set:](#testing-cluster-linking-without-acls-set)
-      - [Attempt to use confluent kafka link create](#attempt-to-use-confluent-kafka-link-create)
-      - [Using kafka-cluster-links (working)](#using-kafka-cluster-links-working)
+  - [🏁 Prerequisites](#-prerequisites)
+    - [Create source and destination clusters](#create-source-and-destination-clusters)
+    - [Create source topic and populate it](#create-source-topic-and-populate-it)
+    - [Create service accounts and API keys](#create-service-accounts-and-api-keys)
+      - [Source cluster](#source-cluster)
+      - [Destination cluster](#destination-cluster)
     - [Setting up ACLs](#setting-up-acls)
       - [Destination](#destination)
       - [Source](#source)
-    - [Creating or modifying a cluster link](#creating-or-modifying-a-cluster-link)
-  - [Create source topic and populate it](#create-source-topic-and-populate-it)
-  - [Create mirror topic on destination](#create-mirror-topic-on-destination)
-    - [Using `kafka-mirrors` CLI](#using-kafka-mirrors-cli)
+  - [🔗 Creating Cluster Link](#-creating-cluster-link)
+    - [Using `confluent` CLI (not working)](#using-confluent-cli-not-working)
+      - [Using `kafka-cluster-links` CLI (working)](#using-kafka-cluster-links-cli-working)
+  - [🪞 Create mirror topic on destination](#-create-mirror-topic-on-destination)
     - [Using `confluent` CLI](#using-confluent-cli)
+    - [Using `kafka-mirrors` CLI](#using-kafka-mirrors-cli)
 - [✅ Verifications](#-verifications)
   - [Consumer offsets](#consumer-offsets)
   - [Update topic config](#update-topic-config)
@@ -28,7 +27,8 @@ This is the [quickstart](https://docs.confluent.io/cloud/current/multi-cloud/clu
   - [Deleting user account that created link and mirror topic](#deleting-user-account-that-created-link-and-mirror-topic)
   - [Stop consumer offset sync for consumer group my-consumer-group](#stop-consumer-offset-sync-for-consumer-group-my-consumer-group)
 
-## Create source and destination clusters
+## 🏁 Prerequisites
+### Create source and destination clusters
 
 ```bash
 confluent kafka cluster create VincentClusterLinkingSource --type basic --cloud aws --region us-west-2
@@ -45,9 +45,15 @@ destination_id=lkc-nz953
 destination_endpoint=pkc-6o99j.us-east-1.aws.confluent.cloud:9092
 ```
 
-## Create service accounts and API keys
+### Create source topic and populate it
 
-### Source cluster
+[docs](https://docs.confluent.io/cloud/current/multi-cloud/cluster-linking/quickstart.html#create-source-and-mirror-topics)
+
+Create a topic `topic-to-link` and put data in it. (I used admin user for that with UI, it is not relevant here).
+
+### Create service accounts and API keys
+
+#### Source cluster
 
 ```bash
 confluent iam service-account create SA-Source-ClusterLinking --description "SA for Source cluster" 
@@ -59,7 +65,9 @@ confluent iam service-account create SA-Source-ClusterLinking --description "SA 
 +-------------+-----------------------+
 ```
 
+```
 source_service_account=sa-81g8qq
+```
 
 ```bash
 confluent api-key create --resource $source_id --service-account $source_service_account --description "api key for SA-ClusterLinking"
@@ -71,10 +79,12 @@ Save the API key and secret. The secret is not retrievable later.
 +---------+------------------------------------------------------------------+
 ```
 
+```
 source_api_key="<SOURCE_SA_API_KEY>"
 source_api_secret="<SOURCE_SA_API_SECRET>"
+```
 
-### Destination cluster
+#### Destination cluster
 
 ```bash
 confluent iam service-account create SA--Destination-ClusterLinking --description "SA for Destination cluster" 
@@ -85,7 +95,9 @@ confluent iam service-account create SA--Destination-ClusterLinking --descriptio
 +-------------+--------------------------------+
 ```
 
+```
 destination_service_account=sa-k8jr62
+```
 
 ```bash
 confluent api-key create --resource $destination_id --service-account $destination_service_account --description "api key for SA-ClusterLinking"
@@ -97,121 +109,9 @@ Save the API key and secret. The secret is not retrievable later.
 +---------+------------------------------------------------------------------+
 ```
 
+```
 destination_api_key="<DESTINATION_SA_API_KEY>"
 destination_api_secret="<DESTINATION_SA_API_SECRET>"
-
-## Creating Cluster Link
-
-### Testing cluster linking without ACLs set:
-
-#### Attempt to use confluent kafka link create
-
-Setup CLI to use destination cluster
-
-```bash
-confluent kafka cluster use $destination_id
-Set Kafka cluster "lkc-p80ym" as the active cluster for environment "t36311".
-```
-
-Setup CLI to use destination api key
-
-```bash
-confluent api-key use $destination_api_key --resource $destination_id
-Set API Key "<DESTINATION_SA_API_KEY>" as the active API key for "lkc-p80ym".
-```
-
-```bash
-confluent kafka link create my-link --cluster $destination_id \
-    --source-cluster-id $source_id \
-    --source-bootstrap-server $source_endpoint \
-    --source-api-key "$source_api_key" --source-api-secret "$source_api_secret"
-```
-
-It works because User with `OrgAdmin` is used here. 
-
-**FIXTHIS**: is there any way to specify that we want to use service account for destination cluster ?? Slack discussion [here](https://confluent.slack.com/archives/C01LNM9C8S2/p1638373082429100)
-
-Trying with context:
-
-```bash
- confluent context create destination-using-sa-context --bootstrap $destination_endpoint --api-key $destination_api_key --api-secret $destination_api_secret 
-+------------+----------------------------------------------+
-| Name       | destination-using-sa-context                 |
-| Platform   | pkc-3n1v0.us-east-1.aws.confluent.cloud:9092 |
-| Credential | api-key-<DESTINATION_SA_API_KEY>                     |
-+------------+----------------------------------------------+
-```
-
-```bash
-confluent kafka link create my-link-with-confluent-cli --cluster $destination_id \
-    --source-cluster-id $source_id \
-    --source-bootstrap-server $source_endpoint \
-    --source-api-key "$source_api_key" --source-api-secret "$source_api_secret" \
-    --context destination-using-sa-context
-```
-
-Getting:
-
-```
-Error: Kafka cluster not found or access forbidden: Kafka cluster not found or access forbidden: error describing kafka cluster: Forbidden Access
-```
-
-#### Using kafka-cluster-links (working)
-
-So it seems to be required to use `kafka-cluster-links` instead:
-
-```bash
-kafka-cluster-links --create --link my-link \
-  --cluster-id $source_id \
-  --config-file source.config \
-  --bootstrap-server $destination_endpoint \
-  --command-config destination.config
-```
-
-where `destination.config`:
-
-```properties
-security.protocol=SASL_SSL
-sasl.mechanism=PLAIN
-sasl.jaas.config=org.apache.kafka.common.security.plain.PlainLoginModule required username="<DESTINATION_SA_API_KEY>" password="<DESTINATION_SA_API_SECRET>";
-```
-
-And `source.config`:
-
-```properties
-bootstrap.servers=pkc-pgq85.us-west-2.aws.confluent.cloud:9092
-security.protocol=SASL_SSL
-sasl.mechanism=PLAIN
-sasl.jaas.config=org.apache.kafka.common.security.plain.PlainLoginModule required username="<SOURCE_SA_API_KEY>" password="<SOURCE_SA_API_SECRET>";
-consumer.offset.sync.enable=true
-consumer.offset.sync.ms=3000
-acl.sync.enable=true
-```
-
-Results (it fails as expected):
-
-```bash
-kafka-cluster-links --create --link my-link \
-  --cluster-id $source_id \
-  --config-file source.config \
-  --bootstrap-server $destination_endpoint \
-  --command-config destination.config
-Cluster authorization failed.
-Error while executing cluster link command: Cluster authorization failed.
-[2021-12-01 15:23:33,115] ERROR kafka.common.AdminCommandFailedException: Cluster authorization failed.
-        at kafka.admin.ClusterLinkCommand$.throwAdminCommandFailedException$1(ClusterLinkCommand.scala:142)
-        at kafka.admin.ClusterLinkCommand$.run(ClusterLinkCommand.scala:148)
-        at kafka.admin.ClusterLinkCommand$.main(ClusterLinkCommand.scala:24)
-        at kafka.admin.ClusterLinkCommand.main(ClusterLinkCommand.scala)
-Caused by: java.util.concurrent.ExecutionException: org.apache.kafka.common.errors.ClusterAuthorizationException: Cluster authorization failed.
-        at java.util.concurrent.CompletableFuture.reportGet(CompletableFuture.java:357)
-        at java.util.concurrent.CompletableFuture.get(CompletableFuture.java:1908)
-        at org.apache.kafka.common.internals.KafkaFutureImpl.get(KafkaFutureImpl.java:165)
-        at kafka.admin.ClusterLinkCommand$.createClusterLink(ClusterLinkCommand.scala:168)
-        at kafka.admin.ClusterLinkCommand$.run(ClusterLinkCommand.scala:133)
-        ... 2 more
-Caused by: org.apache.kafka.common.errors.ClusterAuthorizationException: Cluster authorization failed.
- (kafka.admin.ClusterLinkCommand$)
 ```
 
 ### Setting up ACLs
@@ -281,7 +181,91 @@ confluent kafka acl create --allow --service-account $source_service_account --o
   User:sa-81g8qq | ALLOW      | DESCRIBE  | GROUP        | *            | LITERAL  
 ```
 
-### Creating or modifying a cluster link
+## 🔗 Creating Cluster Link
+
+### Using `confluent` CLI (not working)
+
+**FIXTHIS**: is there any way to specify that we want to use service account for destination cluster ?? Slack discussion [here](https://confluent.slack.com/archives/C01LNM9C8S2/p1638373082429100). For source cluster, this is ok because we can use `source-api-key`  
+
+Setup CLI to use destination cluster
+
+```bash
+confluent kafka cluster use $destination_id
+Set Kafka cluster "lkc-p80ym" as the active cluster for environment "t36311".
+```
+
+Setup CLI to use destination api key
+
+```bash
+confluent api-key use $destination_api_key --resource $destination_id
+Set API Key "<DESTINATION_SA_API_KEY>" as the active API key for "lkc-p80ym".
+```
+
+```bash
+confluent kafka link create my-link --cluster $destination_id \
+    --source-cluster-id $source_id \
+    --source-bootstrap-server $source_endpoint \
+    --source-api-key "$source_api_key" --source-api-secret "$source_api_secret"
+```
+
+Trying with context:
+
+```bash
+ confluent context create destination-using-sa-context --bootstrap $destination_endpoint --api-key $destination_api_key --api-secret $destination_api_secret 
++------------+----------------------------------------------+
+| Name       | destination-using-sa-context                 |
+| Platform   | $destination_endpoint |
+| Credential | api-key-<DESTINATION_SA_API_KEY>                     |
++------------+----------------------------------------------+
+```
+
+```bash
+confluent kafka link create my-link-with-confluent-cli --cluster $destination_id \
+    --source-cluster-id $source_id \
+    --source-bootstrap-server $source_endpoint \
+    --source-api-key "$source_api_key" --source-api-secret "$source_api_secret" \
+    --context destination-using-sa-context
+```
+
+Getting:
+
+```
+Error: Kafka cluster not found or access forbidden: Kafka cluster not found or access forbidden: error describing kafka cluster: Forbidden Access
+```
+
+#### Using `kafka-cluster-links` CLI (working)
+
+It seems to be required to use `kafka-cluster-links` when we want to use service accounts only:
+
+```bash
+kafka-cluster-links --create --link my-link \
+  --cluster-id $source_id \
+  --config-file source.config \
+  --bootstrap-server $destination_endpoint \
+  --command-config destination.config
+```
+
+where `destination.config`:
+
+```properties
+security.protocol=SASL_SSL
+sasl.mechanism=PLAIN
+sasl.jaas.config=org.apache.kafka.common.security.plain.PlainLoginModule required username="<DESTINATION_SA_API_KEY>" password="<DESTINATION_SA_API_SECRET>";
+```
+
+And `source.config`:
+
+```properties
+bootstrap.servers=pkc-pgq85.us-west-2.aws.confluent.cloud:9092
+security.protocol=SASL_SSL
+sasl.mechanism=PLAIN
+sasl.jaas.config=org.apache.kafka.common.security.plain.PlainLoginModule required username="<SOURCE_SA_API_KEY>" password="<SOURCE_SA_API_SECRET>";
+consumer.offset.sync.enable=true
+consumer.offset.sync.ms=3000
+acl.sync.enable=true
+```
+
+Results:
 
 ```bash
 kafka-cluster-links --create --link my-link \
@@ -325,29 +309,21 @@ where `acl.sync.all.json`:
     ]
 }
 ```
+## 🪞 Create mirror topic on destination
 
-## Create source topic and populate it
+### Using `confluent` CLI
 
-[docs](https://docs.confluent.io/cloud/current/multi-cloud/cluster-linking/quickstart.html#create-source-and-mirror-topics)
-
-Create a topic `topic-to-link` and put data in it. (I used admin user for that with UI, it is not relevant here).
-
-## Create mirror topic on destination
+```bash
+confluent kafka mirror create topic-to-link --cluster $destination_id --link my-link --config-file destination.config
+Created mirror topic "topic-to-link".
+```
 
 ### Using `kafka-mirrors` CLI
 
-This is the only way to use a service account when creating mirror topic.
+We can also used `kafka-mirrors` CLI:
 
 ```bash
 kafka-mirrors --create --mirror-topic topic-to-link --link my-link --bootstrap-server $destination_endpoint --command-config destination.config
-```
-### Using `confluent` CLI
-
-**FIXTHIS**: There is no way to specify service account here ?
-
-```bash
-confluent kafka mirror create topic-to-link --cluster $destination_id --link my-link
-Created mirror topic "topic-to-link".
 ```
 
 # ✅ Verifications
@@ -451,4 +427,11 @@ Need to add undocumented ACL `alter-configs`:
 
 ```bash
 confluent kafka acl create --service-account $destination_service_account --allow --operation alter-configs --cluster-scope
+```
+
+And then it works:
+
+```bash
+kafka-configs --bootstrap-server $destination_endpoint --alter --cluster-link my-link --add-config-file newFilters.properties --command-config destination.config
+Completed updating config for cluster-link my-link.
 ```
