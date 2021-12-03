@@ -195,7 +195,7 @@ us_sale_15 3669
 Processed a total of 10 messages
 ```
 
-Consume from the destination cluster, it will continue from it's last offset 6
+Consume from the destination cluster, it will continue from it's last offset 10
 
 ```bash
 docker container exec -i connect-us bash -c "kafka-console-consumer --bootstrap-server broker-europe:9092 --topic demo --max-messages 5 --consumer-property group.id=my-consumer-group"

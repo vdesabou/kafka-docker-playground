@@ -71,7 +71,7 @@ sleep 6
 log "Consume from the source cluster another 10 messages, up to 15"
 docker container exec -i connect-us bash -c "kafka-console-consumer --bootstrap-server broker-us:9092 --topic demo --max-messages 10 --consumer-property group.id=my-consumer-group"
 
-log "Consume from the destination cluster, it will continue from it's last offset 6"
+log "Consume from the destination cluster, it will continue from it's last offset 10"
 docker container exec -i connect-us bash -c "kafka-console-consumer --bootstrap-server broker-europe:9092 --topic demo --max-messages 5 --consumer-property group.id=my-consumer-group"
 
 log "Verify that the topic mirror is read-only"
