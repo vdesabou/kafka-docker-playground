@@ -19,7 +19,7 @@ This is the [quickstart](https://docs.confluent.io/cloud/current/multi-cloud/clu
   - [Create mirror topic on destination without ACLs](#create-mirror-topic-on-destination-without-acls)
     - [Permissions for the cluster link to read from the source cluster](#permissions-for-the-cluster-link-to-read-from-the-source-cluster)
     - [Create mirror topic after ACLs are set](#create-mirror-topic-after-acls-are-set)
-    - [✅ Verifications](#-verifications)
+- [✅ Verifications](#-verifications)
   - [Consumer offsets](#consumer-offsets)
   - [Update topic config](#update-topic-config)
   - [ACLs sync](#acls-sync)
@@ -366,7 +366,7 @@ confluent kafka mirror create topic-to-link --cluster $destination_id --link my-
 Created mirror topic "topic-to-link".
 ```
 
-### ✅ Verifications
+# ✅ Verifications
 
 ## Consumer offsets
 
