@@ -1,0 +1,17 @@
+---
+version: '3.5'
+services:
+
+  sfdx-cli:
+    image: vdesabou/sfdx-cli:latest # forked from salestrip/sfdx-cli to add plugin sfpowerkit
+    hostname: sfdx-cli
+    container_name: sfdx-cli
+    command: "sleep infinity"
+
+  connect:
+    volumes:
+      - ../../connect/connect-salesforce-bulkapi-source/repro-proxy/logging.properties:/tmp/logging.properties
+    environment:
+      CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-salesforce-bulk-api
+      KAFKA_OPTS: -Djava.util.logging.config.file=/tmp/logging.properties
+                  -Djavax.net.debug=all
