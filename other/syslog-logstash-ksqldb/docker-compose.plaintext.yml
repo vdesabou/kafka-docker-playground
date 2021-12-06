@@ -1,0 +1,116 @@
+version: "3.9"
+
+services:
+  akhq:
+    image: tchiotludo/akhq
+    environment:
+      AKHQ_CONFIGURATION: |
+        akhq:
+          server:
+            access-log:
+              enabled: false
+          connections:
+            docker-kafka-server:
+              properties:
+                bootstrap.servers: "broker:9092"
+              connect:
+                - name: "connect"
+                  url: "http://connect:8083"
+    ports:
+      - 8082:8080
+    links:
+      - broker
+
+  connect:
+    depends_on:
+      - elasticsearch
+    ports:
+      - 42514:42514/udp
+    environment:
+      CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-syslog,/usr/share/confluent-hub-components/confluentinc-kafka-connect-elasticsearch
+
+  logstash:
+    image: docker.elastic.co/logstash/logstash:7.15.2
+    volumes:
+      - ../../other/syslog-logstash-ksqldb/logstash/patterns:/usr/share/logstash/patterns
+      - ../../other/syslog-logstash-ksqldb/logstash/config/logstash.yml:/usr/share/logstash/config/logstash.yml
+      - ../../other/syslog-logstash-ksqldb/logstash/pipeline:/usr/share/logstash/pipeline
+    ports:
+      - "5044:5044"
+      - "5000:5000/tcp"
+      - "5000:5000/udp"
+      - "9600:9600"
+    environment:
+      LS_JAVA_OPTS: "-Xmx1G -Xms1G"
+    command: bash -c "bin/logstash-plugin install logstash-integration-kafka && logstash -f /usr/share/logstash/pipeline/logstash.conf "
+    depends_on:
+      - zookeeper
+      - broker
+      - elasticsearch
+
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.15.2
+    volumes:
+      - ../../other/syslog-logstash-ksqldb/elasticsearch/config/elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch.yml
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+    environment:
+      ES_JAVA_OPTS: "-Xmx256m -Xms256m"
+      ELASTIC_PASSWORD: elastic
+      # Use single node discovery in order to disable production mode and avoid bootstrap checks.
+      # see: https://www.elastic.co/guide/en/elasticsearch/reference/current/bootstrap-checks.html
+      discovery.type: single-node
+    command: 
+      - bash 
+      - -c 
+      - |
+        /usr/local/bin/docker-entrypoint.sh & 
+        echo "Waiting for Elasticsearch to start ⏳"
+        while [ $$(curl -s -o /dev/null -w %{http_code} http://localhost:9200/) -eq 000 ] ; do 
+          echo -e $$(date) " Elasticsearch listener HTTP state: " $$(curl -s -o /dev/null -w %{http_code} http://localhost:9200/) " (waiting for != 000)"
+          sleep 5 
+        done
+        curl -XPUT "http://localhost:9200/_template/kafkaconnect/" -H 'Content-Type: application/json' -d'
+          {
+            "index_patterns": "*",
+            "settings": { "number_of_shards": 1, "number_of_replicas": 0 },
+            "mappings": { "dynamic_templates": [
+                { "dates1": { "match": "date", "mapping": { "type": "date" } } },
+                { "dates2": { "match": "DATE", "mapping": { "type": "date" } } },
+                { "dates3": { "match": "*_TS", "mapping": { "type": "date" } } }
+            ] } }'
+        sleep infinity
+
+  kibana:
+    image: docker.elastic.co/kibana/kibana:7.15.2
+    container_name: kibana
+    hostname: kibana
+    depends_on:
+      - elasticsearch
+    ports:
+      - 5601:5601
+    environment:
+      xpack.security.enabled: "false"
+      discovery.type: "single-node"
+      ELASTICSEARCH_USERNAME: elastic
+      ELASTICSEARCH_PASSWORD: elastic
+  
+  ubuntu:
+    build: ../../other/syslog-logstash-ksqldb/ubuntu
+    container_name: ubuntu
+    hostname: ubuntu
+    depends_on:
+      - connect
+    ports:
+      - "7022:22"
+    command:
+      - bash
+      - -c
+      - |
+        echo "Start SSH service"
+        service ssh start
+        echo "Start RSYSLOG service"
+        service rsyslog start
+        #
+        sleep infinity
