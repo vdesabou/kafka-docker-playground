@@ -137,7 +137,7 @@ do
             fi
 
             # for servicenow tests, run tests at least every 4 days
-            if [[ "$dir" == "connect-servicenow-"* ]] && [[ $elapsed_time -gt 322560 ]]
+            if [[ "$dir" == "connect/connect-servicenow-"* ]] && [[ $elapsed_time -gt 322560 ]]
             then
                 log "####################################################"
                 log "⌛ Test with CP $TAG and connector $THE_CONNECTOR_TAG has already been executed successfully $(displaytime $elapsed_time) ago, more than 4 days ago...re-running. Test url: $html_url"
