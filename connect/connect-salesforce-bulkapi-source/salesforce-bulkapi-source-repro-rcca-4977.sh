@@ -58,7 +58,7 @@ then
      exit 1
 fi
 
-${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext-repro-rcca-4977.yml"
+${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.repro-rcca-4977.yml"
 
 log "Login with sfdx CLI"
 docker exec sfdx-cli sh -c "sfdx sfpowerkit:auth:login -u \"$SALESFORCE_USERNAME\" -p \"$SALESFORCE_PASSWORD\" -r \"$SALESFORCE_INSTANCE\" -s \"$SECURITY_TOKEN\""
@@ -98,27 +98,30 @@ log "Verify we have received the data in sfdc-bulkapi-leads topic"
 timeout 60 docker exec broker kafka-console-consumer -bootstrap-server broker:9092 --topic sfdc-bulkapi-leads --from-beginning --max-messages 1
 
 
-log "Creating Salesforce Bulk API Source connector 2"
-curl -X PUT \
-     -H "Content-Type: application/json" \
-     --data '{
-                    "connector.class": "io.confluent.connect.salesforce.SalesforceBulkApiSourceConnector",
-                    "kafka.topic": "sfdc-bulkapi-leads",
-                    "tasks.max": "1",
-                    "curl.logging": "true",
-                    "salesforce.object" : "Lead",
-                    "salesforce.instance" : "'"$SALESFORCE_INSTANCE"'",
-                    "salesforce.username" : "'"$SALESFORCE_USERNAME"'",
-                    "salesforce.password" : "'"$SALESFORCE_PASSWORD"'",
-                    "salesforce.password.token" : "'"$SECURITY_TOKEN"'",
-                    "connection.max.message.size": "10048576",
-                    "key.converter": "org.apache.kafka.connect.json.JsonConverter",
-                    "value.converter": "org.apache.kafka.connect.json.JsonConverter",
-                    "confluent.license": "",
-                    "confluent.topic.bootstrap.servers": "broker:9092",
-                    "confluent.topic.replication.factor": "1"
-          }' \
-     http://localhost:8083/connectors/salesforce-bulkapi-source2/config | jq .
+# log "Creating Salesforce Bulk API Source connector 2"
+# curl -X PUT \
+#      -H "Content-Type: application/json" \
+#      --data '{
+#                     "connector.class": "io.confluent.connect.salesforce.SalesforceBulkApiSourceConnector",
+#                     "kafka.topic": "sfdc-bulkapi-leads",
+#                     "tasks.max": "1",
+#                     "curl.logging": "true",
+#                     "salesforce.object" : "Lead",
+#                     "salesforce.instance" : "'"$SALESFORCE_INSTANCE"'",
+#                     "salesforce.username" : "'"$SALESFORCE_USERNAME"'",
+#                     "salesforce.password" : "'"$SALESFORCE_PASSWORD"'",
+#                     "salesforce.password.token" : "'"$SECURITY_TOKEN"'",
+#                     "connection.max.message.size": "10048576",
+#                     "key.converter": "org.apache.kafka.connect.json.JsonConverter",
+#                     "value.converter": "org.apache.kafka.connect.json.JsonConverter",
+#                     "confluent.license": "",
+#                     "confluent.topic.bootstrap.servers": "broker:9092",
+#                     "confluent.topic.replication.factor": "1"
+#           }' \
+#      http://localhost:8083/connectors/salesforce-bulkapi-source2/config | jq .
+
+log "sleeping 16 minutes for sesstion timeout (15 minutes) to happen"
+sleep 960
 
 log "Add another lead"
 docker exec sfdx-cli sh -c "sfdx sfpowerkit:auth:login -u \"$SALESFORCE_USERNAME\" -p \"$SALESFORCE_PASSWORD\" -r \"$SALESFORCE_INSTANCE\" -s \"$SECURITY_TOKEN\""
