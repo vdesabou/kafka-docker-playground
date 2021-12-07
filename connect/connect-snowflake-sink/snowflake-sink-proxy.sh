@@ -139,8 +139,8 @@ curl -X PUT \
                "snowflake.private.key":"'"$RSA_PRIVATE_KEY"'",
                "snowflake.private.key.passphrase": "confluent",
                "snowflake.database.name": "'"$PLAYGROUND_DB"'",
-               "jvm.proxy.host": "nginx-proxy",
-               "jvm.proxy.port": "8888",
+               "jvm.proxy.host": "squid",
+               "jvm.proxy.port": "3128",
                "snowflake.schema.name":"PUBLIC",
                "buffer.count.records": "3",
                "buffer.flush.time" : "10",
@@ -149,51 +149,6 @@ curl -X PUT \
                "value.converter.schema.registry.url": "http://schema-registry:8081"
           }' \
      http://localhost:8083/connectors/snowflake-sink-proxy/config | jq .
-
-# [SF_KAFKA_CONNECTOR] enabling JDBC tracing (com.snowflake.kafka.connector.internal.SnowflakeURL:32)
-# Nov 29, 2021 11:31:18 AM net.snowflake.client.jdbc.RestRequest execute
-# SEVERE: Error response: HTTP Response code: 400, request: POST https://confluent_partner.snowflakecomputing.com:443/session/v1/login-request?databaseName=PLAYGROUNDDB700&schemaName=PUBLIC&requestId=209904c8-ae3c-4b71-aa4e-e62d3140bcf1 HTTP/1.1
-# Nov 29, 2021 11:31:18 AM net.snowflake.client.core.HttpUtil executeRequestInternal
-# SEVERE: Error executing request: POST https://confluent_partner.snowflakecomputing.com:443/session/v1/login-request?databaseName=PLAYGROUNDDB700&schemaName=PUBLIC&requestId=209904c8-ae3c-4b71-aa4e-e62d3140bcf1 HTTP/1.1
-# Nov 29, 2021 11:31:18 AM net.snowflake.client.jdbc.SnowflakeUtil logResponseDetails
-# SEVERE: Response status line reason: Bad Request
-# Nov 29, 2021 11:31:18 AM net.snowflake.client.jdbc.SnowflakeUtil logResponseDetails
-# SEVERE: Response content: <html>
-# <head><title>400 Bad Request</title></head>
-# <body>
-# <center><h1>400 Bad Request</h1></center>
-# <hr><center>nginx/1.18.0 (Ubuntu)</center>
-# </body>
-# </html>
-
-# [2021-11-29 11:31:18,041] ERROR Validate: Error connecting to snowflake:
-# [SF_KAFKA_CONNECTOR] Exception: Failed to connect to Snowflake Server
-# [SF_KAFKA_CONNECTOR] Error Code: 1001
-# [SF_KAFKA_CONNECTOR] Detail: Snowflake connection issue, reported by Snowflake JDBC
-# [SF_KAFKA_CONNECTOR] Message: JDBC driver encountered communication error. Message: HTTP status=400.
-# [SF_KAFKA_CONNECTOR] net.snowflake.client.core.HttpUtil.executeRequestInternal(HttpUtil.java:521)
-# [SF_KAFKA_CONNECTOR] net.snowflake.client.core.HttpUtil.executeRequest(HttpUtil.java:441)
-# [SF_KAFKA_CONNECTOR] net.snowflake.client.core.HttpUtil.executeGeneralRequest(HttpUtil.java:408)
-# [SF_KAFKA_CONNECTOR] net.snowflake.client.core.SessionUtil.newSession(SessionUtil.java:586)
-# [SF_KAFKA_CONNECTOR] net.snowflake.client.core.SessionUtil.openSession(SessionUtil.java:284)
-# [SF_KAFKA_CONNECTOR] net.snowflake.client.core.SFSession.open(SFSession.java:435)
-# [SF_KAFKA_CONNECTOR] net.snowflake.client.jdbc.DefaultSFConnectionHandler.initialize(DefaultSFConnectionHandler.java:104)
-# [SF_KAFKA_CONNECTOR] net.snowflake.client.jdbc.DefaultSFConnectionHandler.initializeConnection(DefaultSFConnectionHandler.java:79)
-# [SF_KAFKA_CONNECTOR] net.snowflake.client.jdbc.SnowflakeConnectionV1.initConnectionWithImpl(SnowflakeConnectionV1.java:116)
-# [SF_KAFKA_CONNECTOR] net.snowflake.client.jdbc.SnowflakeConnectionV1.<init>(SnowflakeConnectionV1.java:96)
-# [SF_KAFKA_CONNECTOR] net.snowflake.client.jdbc.SnowflakeDriver.connect(SnowflakeDriver.java:164)
-# [SF_KAFKA_CONNECTOR] com.snowflake.kafka.connector.internal.SnowflakeConnectionServiceV1.<init>(SnowflakeConnectionServiceV1.java:66)
-# [SF_KAFKA_CONNECTOR] com.snowflake.kafka.connector.internal.SnowflakeConnectionServiceFactory$SnowflakeConnectionServiceBuilder.build(SnowflakeConnectionServiceFactory.java:75)
-# [SF_KAFKA_CONNECTOR] com.snowflake.kafka.connector.SnowflakeSinkConnector.validate(SnowflakeSinkConnector.java:234)
-# [SF_KAFKA_CONNECTOR] org.apache.kafka.connect.runtime.AbstractHerder.validateConnectorConfig(AbstractHerder.java:465)
-# [SF_KAFKA_CONNECTOR] org.apache.kafka.connect.runtime.AbstractHerder.lambda$validateConnectorConfig$2(AbstractHerder.java:365)
-# [SF_KAFKA_CONNECTOR] java.base/java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:515)
-# [SF_KAFKA_CONNECTOR] java.base/java.util.concurrent.FutureTask.run(FutureTask.java:264)
-# [SF_KAFKA_CONNECTOR] java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1128)
-# [SF_KAFKA_CONNECTOR] java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:628)
-# [SF_KAFKA_CONNECTOR] java.base/java.lang.Thread.run(Thread.java:829), errorCode:1001 (com.snowflake.kafka.connector.SnowflakeSinkConnector:236)
-# [2021-11-29 11:31:18,042] INFO AbstractConfig values: 
-#  (org.apache.kafka.common.config.AbstractConfig:376)
 
 
 sleep 120
