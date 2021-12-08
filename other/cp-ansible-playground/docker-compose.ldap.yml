@@ -1,0 +1,16 @@
+---
+version: '3.5'
+services:
+  openldap:
+      image: osixia/openldap:1.3.0
+      hostname: openldap
+      container_name: openldap
+      ports:
+          - 389:389
+      environment:
+          LDAP_ORGANISATION: "ConfluentDemo"
+          LDAP_DOMAIN: "confluentdemo.io"
+          LDAP_BASE_DN: "dc=confluentdemo,dc=io"
+      volumes:
+        - ../../other/cp-ansible-playground/ldap/ldap_users:/container/service/slapd/assets/config/bootstrap/ldif/custom
+      command: "--copy-service --loglevel debug"
