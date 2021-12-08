@@ -44,41 +44,57 @@ if ! version_gt $TAG_BASE "5.3.99"; then
 fi
 
 GIT_BRANCH="$TAG-post"
+ANSIBLE_VER=$(get_ansible_version)
 
-if [ -d ${DIR}/cp-ansible ]
+# https://docs.confluent.io/ansible/current/ansible-download.html#download-ansible-for-ansible-2-11-or-higher-hosts
+if version_gt $ANSIBLE_VER "2.10" && version_gt $TAG "6.9.9"
 then
-  log "cp-ansible repository already exists"
-  read -p "Do you want to get the latest version? (y/n)?" choice
-  case "$choice" in
-  y|Y )
-    rm -rf ${DIR}/cp-ansible
-    log "Getting cp-ansible from Github (branch $GIT_BRANCH)"
-    cd ${DIR}
-    git clone https://github.com/confluentinc/cp-ansible
-    cd ${DIR}/cp-ansible
-    git checkout "${GIT_BRANCH}"
-  ;;
-  n|N ) ;;
-  * ) logerror "ERROR: invalid response!";exit 1;;
-  esac
+    log "Using ansible-galaxy to install cp-ansible"
+    ansible-galaxy collection install git+https://github.com/confluentinc/cp-ansible.git
 else
-    log "Getting cp-ansible from Github (branch $GIT_BRANCH)"
-    cd ${DIR}
-    git clone https://github.com/confluentinc/cp-ansible
-    cd ${DIR}/cp-ansible
-    git checkout "${GIT_BRANCH}"
-fi
+  if [ -d ${DIR}/cp-ansible ]
+  then
+    log "cp-ansible repository already exists"
+    read -p "Do you want to get the latest version? (y/n)?" choice
+    case "$choice" in
+    y|Y )
+      rm -rf ${DIR}/cp-ansible
+      log "Getting cp-ansible from Github (branch $GIT_BRANCH)"
+      cd ${DIR}
+      git clone https://github.com/confluentinc/cp-ansible
+      cd ${DIR}/cp-ansible
+      git checkout "${GIT_BRANCH}"
+    ;;
+    n|N ) ;;
+    * ) logerror "ERROR: invalid response!";exit 1;;
+    esac
+  else
+      log "Getting cp-ansible from Github (branch $GIT_BRANCH)"
+      cd ${DIR}
+      git clone https://github.com/confluentinc/cp-ansible
+      cd ${DIR}/cp-ansible
+      git checkout "${GIT_BRANCH}"
+  fi
 
-# copy custom files
-cp ${DIR}/${HOSTS_FILE} ${DIR}/cp-ansible/
+  # copy custom files
+  cp ${DIR}/${HOSTS_FILE} ${DIR}/cp-ansible/
+  cd ${DIR}/cp-ansible
+fi
 
 docker-compose down -v --remove-orphans
 docker-compose up -d
 
-log "INFO: Checking Ansible can connect over DOCKER."
-cd ${DIR}/cp-ansible
+log "Checking Ansible can connect over DOCKER."
 ansible -i ${HOSTS_FILE} all -m ping
 
-log "INFO: Now you can modify the playbooks and run ansible-playbook -i ${HOSTS_FILE} all.yml"
-ansible-playbook -i ${HOSTS_FILE} all.yml
-cd ${DIR}
+# https://docs.confluent.io/ansible/current/ansible-install.html
+if version_gt $ANSIBLE_VER "2.10" && version_gt $TAG "6.9.9"
+then
+  export ANSIBLE_CONFIG=${DIR}/ansible.cfg
+  log "Now you can modify the playbooks and run ansible-playbook -i ${HOSTS_FILE} confluent.platform.all"
+  retry ansible-playbook -i ${HOSTS_FILE} confluent.platform.all
+else
+  log "Now you can modify the playbooks and run ansible-playbook -i ${HOSTS_FILE} all.yml"
+  ansible-playbook -i ${HOSTS_FILE} all.yml
+  cd ${DIR}
+fi

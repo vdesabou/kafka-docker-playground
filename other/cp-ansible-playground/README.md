@@ -55,6 +55,12 @@ If you want to test additional modifications, you can update your `hosts-custom.
 $ ansible-playbook -i hosts-custom.yml all.yml
 ```
 
+or if ansible version > 2.11:
+
+```bash
+$ ansible-playbook -i hosts-custom.yml confluent.platform.all
+```
+
 Or use ansible tags as explain in [Confluent docs](https://docs.confluent.io/current/installation/cp-ansible/ansible-install.html#installing-cp):
 
 ```bash
@@ -67,6 +73,19 @@ $ ansible-playbook -i hosts-custom.yml all.yml --tags=ksql
 $ ansible-playbook -i hosts-custom.yml all.yml --tags=control_center
 ```
 
+or if ansible version > 2.11:
+
+```bash
+$ ansible-playbook -i hosts-custom.yml confluent.platform.all --tags=zookeeper
+$ ansible-playbook -i hosts-custom.yml confluent.platform.all --tags=kafka_broker
+$ ansible-playbook -i hosts-custom.yml confluent.platform.all --tags=schema_registry
+$ ansible-playbook -i hosts-custom.yml confluent.platform.all --tags=kafka_rest
+$ ansible-playbook -i hosts-custom.yml confluent.platform.all --tags=kafka_connect
+$ ansible-playbook -i hosts-custom.yml confluent.platform.all --tags=ksql
+$ ansible-playbook -i hosts-custom.yml confluent.platform.all --tags=control_center
+```
+
+
 You can also limit to one particular host using `--limit` option:
 
 Example:
@@ -75,11 +94,11 @@ Example:
 $ ansible-playbook -i hosts-custom.yml all.yml --limit=broker1
 ```
 
+or if ansible version > 2.11:
 
-
-## Upgrade test
-
-An upgrade test from `5.3.1` to `5.4.1` is available using `upgrade-test.sh`script
+```bash
+$ ansible-playbook -i hosts-custom.yml confluent.platform.all --limit=broker1
+```
 
 
 N.B: Control Center is reachable at [http://127.0.0.1:9021](http://127.0.0.1:9021])
