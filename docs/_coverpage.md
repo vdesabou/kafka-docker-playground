@@ -1,7 +1,7 @@
 
 # 🐳 kafka-docker-playground
 
-> Fully automated Kafka and Confluent Docker based examples // Easily build reproduction models
+> Fully automated Apache Kafka® and Confluent Docker based examples // Easily build reproduction models
 
 [🐳 Introduction](/introduction.md)
 [👾 Content](/content.md)
