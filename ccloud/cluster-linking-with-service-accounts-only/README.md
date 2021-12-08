@@ -127,6 +127,7 @@ See summary table [there](https://docs.confluent.io/platform/current/multi-dc-de
 ```bash
 confluent kafka acl create --service-account $destination_service_account --allow --operation alter --cluster-scope
 confluent kafka acl create --service-account $destination_service_account --allow --operation describe --cluster-scope
+confluent kafka acl create --service-account $destination_service_account --allow --operation alter-configs --cluster-scope
 ```
 
 To allow to create and alter mirror topic:
@@ -423,7 +424,7 @@ java.util.concurrent.ExecutionException: org.apache.kafka.common.errors.ClusterA
 Caused by: org.apache.kafka.common.errors.ClusterAuthorizationException: Cluster authorization failed.
 ```
 
-Need to add undocumented ACL `alter-configs`:
+Need to add undocumented ACL `alter-configs` (this will be fixed by DOCS-10988):
 
 ```bash
 confluent kafka acl create --service-account $destination_service_account --allow --operation alter-configs --cluster-scope
