@@ -81,8 +81,16 @@ else
   cd ${DIR}/cp-ansible
 fi
 
-docker-compose down -v --remove-orphans
-docker-compose up -d
+ENABLE_DOCKER_COMPOSE_FILE_OVERRIDE=""
+DOCKER_COMPOSE_FILE_OVERRIDE=$2
+if [ -f "${DOCKER_COMPOSE_FILE_OVERRIDE}" ]
+then
+  log "Using $DOCKER_COMPOSE_FILE_OVERRIDE"
+  ENABLE_DOCKER_COMPOSE_FILE_OVERRIDE="-f ${DOCKER_COMPOSE_FILE_OVERRIDE}"
+fi
+
+docker-compose -f ${DIR}/docker-compose.yml ${ENABLE_DOCKER_COMPOSE_FILE_OVERRIDE} down -v --remove-orphans
+docker-compose -f ${DIR}/docker-compose.yml ${ENABLE_DOCKER_COMPOSE_FILE_OVERRIDE} up -d
 
 log "Checking Ansible can connect over DOCKER."
 ansible -i ${HOSTS_FILE} all -m ping
