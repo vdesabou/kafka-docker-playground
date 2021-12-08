@@ -629,6 +629,10 @@ function get_confluent_version() {
   confluent version | grep "^Version:" | cut -d':' -f2 | cut -d'v' -f2
 }
 
+function get_ansible_version() {
+  ansible --version | grep "core" | cut -d'[' -f2 | cut -d']' -f1 | cut -d' ' -f 2
+}
+
 function check_confluent_version() {
   REQUIRED_CONFLUENT_VER=${1:-"2.0.0"}
   CONFLUENT_VER=$(get_confluent_version)
