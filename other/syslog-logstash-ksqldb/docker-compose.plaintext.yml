@@ -57,7 +57,6 @@ services:
       - "9300:9300"
     environment:
       ES_JAVA_OPTS: "-Xmx256m -Xms256m"
-      ELASTIC_PASSWORD: elastic
       # Use single node discovery in order to disable production mode and avoid bootstrap checks.
       # see: https://www.elastic.co/guide/en/elasticsearch/reference/current/bootstrap-checks.html
       discovery.type: single-node
@@ -71,15 +70,6 @@ services:
           echo -e $$(date) " Elasticsearch listener HTTP state: " $$(curl -s -o /dev/null -w %{http_code} http://localhost:9200/) " (waiting for != 000)"
           sleep 5 
         done
-        curl -XPUT "http://localhost:9200/_template/kafkaconnect/" -H 'Content-Type: application/json' -d'
-          {
-            "index_patterns": "*",
-            "settings": { "number_of_shards": 1, "number_of_replicas": 0 },
-            "mappings": { "dynamic_templates": [
-                { "dates1": { "match": "date", "mapping": { "type": "date" } } },
-                { "dates2": { "match": "DATE", "mapping": { "type": "date" } } },
-                { "dates3": { "match": "*_TS", "mapping": { "type": "date" } } }
-            ] } }'
         sleep infinity
 
   kibana:
@@ -93,8 +83,6 @@ services:
     environment:
       xpack.security.enabled: "false"
       discovery.type: "single-node"
-      ELASTICSEARCH_USERNAME: elastic
-      ELASTICSEARCH_PASSWORD: elastic
   
   ubuntu:
     build: ../../other/syslog-logstash-ksqldb/ubuntu
