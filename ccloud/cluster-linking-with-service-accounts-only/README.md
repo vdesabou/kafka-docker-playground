@@ -406,33 +406,5 @@ echo "consumer.offset.group.filters={\"groupFilters\": [ \
 ]}" > newFilters.properties
 
 kafka-configs --bootstrap-server $destination_endpoint --alter --cluster-link my-link --add-config-file newFilters.properties --command-config destination.config
-```
-
-**FIXTHIS**: getting :
-
-```
-Error while executing config command with args '--bootstrap-server pkc-6o99j.us-east-1.aws.confluent.cloud:9092 --alter --cluster-link my-link --add-config-file newFilters.properties --command-config destination.config'
-java.util.concurrent.ExecutionException: org.apache.kafka.common.errors.ClusterAuthorizationException: Cluster authorization failed.
-        at java.util.concurrent.CompletableFuture.reportGet(CompletableFuture.java:357)
-        at java.util.concurrent.CompletableFuture.get(CompletableFuture.java:1928)
-        at org.apache.kafka.common.internals.KafkaFutureImpl.get(KafkaFutureImpl.java:180)
-        at kafka.admin.ConfigCommand$.getResourceConfig(ConfigCommand.scala:606)
-        at kafka.admin.ConfigCommand$.alterConfig(ConfigCommand.scala:364)
-        at kafka.admin.ConfigCommand$.processCommand(ConfigCommand.scala:344)
-        at kafka.admin.ConfigCommand$.main(ConfigCommand.scala:103)
-        at kafka.admin.ConfigCommand.main(ConfigCommand.scala)
-Caused by: org.apache.kafka.common.errors.ClusterAuthorizationException: Cluster authorization failed.
-```
-
-Need to add undocumented ACL `alter-configs` (this will be fixed by DOCS-10988):
-
-```bash
-confluent kafka acl create --service-account $destination_service_account --allow --operation alter-configs --cluster-scope
-```
-
-And then it works:
-
-```bash
-kafka-configs --bootstrap-server $destination_endpoint --alter --cluster-link my-link --add-config-file newFilters.properties --command-config destination.config
 Completed updating config for cluster-link my-link.
 ```
