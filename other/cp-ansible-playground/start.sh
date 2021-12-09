@@ -82,11 +82,30 @@ else
 fi
 
 ENABLE_DOCKER_COMPOSE_FILE_OVERRIDE=""
-DOCKER_COMPOSE_FILE_OVERRIDE=$2
-if [ -f "${DOCKER_COMPOSE_FILE_OVERRIDE}" ]
+
+if [ "${HOSTS_FILE}" == "hosts-rbac.yml" ]
 then
-  log "Using $DOCKER_COMPOSE_FILE_OVERRIDE"
-  ENABLE_DOCKER_COMPOSE_FILE_OVERRIDE="-f ${DOCKER_COMPOSE_FILE_OVERRIDE}"
+  DOCKER_COMPOSE_FILE_OVERRIDE=${DIR}/docker-compose.ldap.yml
+  if [ -f "${DOCKER_COMPOSE_FILE_OVERRIDE}" ]
+  then
+    log "Using $DOCKER_COMPOSE_FILE_OVERRIDE"
+    ENABLE_DOCKER_COMPOSE_FILE_OVERRIDE="-f ${DOCKER_COMPOSE_FILE_OVERRIDE}"
+  fi
+
+  mkdir -p ${DIR}/ldap/ldap_certs
+  cd ${DIR}/ldap/ldap_certs
+  log "LDAPS: Creating a Root Certificate Authority (CA)"
+  openssl req -new -x509 -days 365 -nodes -out ca.crt -keyout ca.key -subj "/CN=root-ca"
+  log "LDAPS: Generate the LDAPS server key and certificate"
+  openssl req -new -nodes -out server.csr -keyout server.key -subj "/CN=openldap"
+  openssl x509 -req -in server.csr -days 365 -CA ca.crt -CAkey ca.key -CAcreateserial -out server.crt
+  log "LDAPS: Create a JKS truststore"
+  rm -f ldap_truststore.jks
+  # We import the test CA certificate
+  keytool -import -v -alias testroot -file ca.crt -keystore ldap_truststore.jks -storetype JKS -storepass 'welcome123' -noprompt
+  log "LDAPS: Displaying truststore"
+  keytool -list -keystore ldap_truststore.jks -storepass 'welcome123' -v
+  cd -
 fi
 
 docker-compose -f ${DIR}/docker-compose.yml ${ENABLE_DOCKER_COMPOSE_FILE_OVERRIDE} down -v --remove-orphans
