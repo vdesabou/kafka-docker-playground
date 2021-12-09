@@ -4,6 +4,8 @@ This is the [quickstart](https://docs.confluent.io/cloud/current/multi-cloud/clu
 
 ❗ This is not an automated test, just some notes of the tests done. ❗
 
+*EDIT*: there is a documented example with service accounts [here](https://docs.confluent.io/cloud/current/multi-cloud/cluster-linking/topic-data-sharing.html#share-data-across-clusters-regions-and-clouds) 
+
 - [Cluster Linking Quick Start with service account only](#cluster-linking-quick-start-with-service-account-only)
   - [🏁 Prerequisites](#-prerequisites)
     - [Create source and destination clusters](#create-source-and-destination-clusters)
