@@ -23,17 +23,6 @@ CREATE OR REPLACE TABLE SSH_TABLE_LOGS
 - Use ElasticSinkConnector to forward `SSH_BAD_AUTH_COUNT` record into an elasticsearch db
 - Use Kibana Dashboarding to visualize metrics
 
-
-## Requirements
-
-To run this use case, some tools are requirement :
-- docker
-- docker-compose
-- curl
-- jq
-
-Please install these softwares before run any scripts
-
 ## How to run
 
 Start command:
