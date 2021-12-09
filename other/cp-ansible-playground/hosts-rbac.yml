@@ -44,10 +44,13 @@ kafka_broker:
     kafka_broker_custom_properties:
       ldap.java.naming.factory.initial: com.sun.jndi.ldap.LdapCtxFactory
       ldap.com.sun.jndi.ldap.read.timeout: 3000
-      ldap.java.naming.provider.url: ldap://openldap:389
+      ldap.java.naming.provider.url: ldaps://openldap:636
+      ldap.ssl.truststore.location: /tmp/ldap_certs/ldap_truststore.jks
+      ldap.ssl.truststore.password: welcome123
       ldap.java.naming.security.principal: cn=admin,dc=confluentdemo,dc=io
       ldap.java.naming.security.credentials: admin
       ldap.java.naming.security.authentication: simple
+      ldap.java.naming.security.protocol: SSL
       ldap.search.mode: GROUPS
       ldap.user.search.base: ou=users,dc=confluentdemo,dc=io
       ldap.group.search.base: ou=groups,dc=confluentdemo,dc=io
