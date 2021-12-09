@@ -25,12 +25,18 @@ services:
         container_name: openldap
         ports:
             - 389:389
+            - 636:636
         environment:
             LDAP_ORGANISATION: "ConfluentDemo"
             LDAP_DOMAIN: "confluentdemo.io"
             LDAP_BASE_DN: "dc=confluentdemo,dc=io"
+            LDAP_TLS_CRT_FILENAME: server.crt
+            LDAP_TLS_KEY_FILENAME: server.key
+            LDAP_TLS_CA_CRT_FILENAME: ca.crt
+            LDAP_TLS_VERIFY_CLIENT: "try"
         volumes:
           - ../../environment/rbac-sasl-plain/scripts/security/ldap_users:/container/service/slapd/assets/config/bootstrap/ldif/custom
+          - ../../environment/rbac-sasl-plain/scripts/security/ldap_certs:/container/service/slapd/assets/certs
         command: "--copy-service --loglevel debug"
 
     zookeeper:
@@ -50,6 +56,7 @@ services:
           - ../../environment/rbac-sasl-plain/kafka/kafka.jaas.conf:/etc/kafka/kafka_server_jaas.conf
           - ../../environment/rbac-sasl-plain/conf:/tmp/conf
           - ../../environment/rbac-sasl-plain/scripts/helper:/tmp/helper
+          - ../../environment/rbac-sasl-plain/scripts/security/ldap_certs/ldap_truststore.jks:/tmp/ldap_certs/ldap_truststore.jks
         environment:
             KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INTERNAL:SASL_PLAINTEXT,TOKEN:SASL_PLAINTEXT
             KAFKA_LISTENERS: INTERNAL://:9092,TOKEN://:10091
@@ -105,7 +112,11 @@ services:
             # Configure MDS to talk to AD/LDAP
             KAFKA_LDAP_JAVA_NAMING_FACTORY_INITIAL: com.sun.jndi.ldap.LdapCtxFactory
             KAFKA_LDAP_COM_SUN_JNDI_LDAP_READ_TIMEOUT: 3000
-            KAFKA_LDAP_JAVA_NAMING_PROVIDER_URL: ldap://openldap:389
+            KAFKA_LDAP_JAVA_NAMING_PROVIDER_URL: ldaps://openldap:636
+            KAFKA_LDAP_SSL_TRUSTSTORE_LOCATION: /tmp/ldap_certs/ldap_truststore.jks
+            KAFKA_LDAP_SSL_TRUSTSTORE_PASSWORD: welcome123
+            KAFKA_LDAP_JAVA_NAMING_SECURITY_PROTOCOL: SSL
+
             # Authenticate to LDAP
             KAFKA_LDAP_JAVA_NAMING_SECURITY_PRINCIPAL: cn=admin,dc=confluentdemo,dc=io
             KAFKA_LDAP_JAVA_NAMING_SECURITY_CREDENTIALS: admin
