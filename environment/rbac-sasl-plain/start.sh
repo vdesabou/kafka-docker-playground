@@ -31,6 +31,7 @@ else
   log "🛑 ksqldb is disabled"
 fi
 
+mkdir -p ${DIR}/scripts/security/ldap_certs
 cd ${DIR}/scripts/security/ldap_certs
 log "LDAPS: Creating a Root Certificate Authority (CA)"
 docker run --rm -v $PWD:/tmp vdesabou/kafka-docker-playground-connect:${CONNECT_TAG} openssl req -new -x509 -days 365 -nodes -out /tmp/ca.crt -keyout /tmp/ca.key -subj "/CN=root-ca"
