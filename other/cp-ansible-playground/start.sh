@@ -81,8 +81,9 @@ else
   cd ${DIR}/cp-ansible
 fi
 
-ENABLE_DOCKER_COMPOSE_FILE_OVERRIDE=""
+cp ${DIR}/log4j/* /tmp/
 
+ENABLE_DOCKER_COMPOSE_FILE_OVERRIDE=""
 if [[ "${HOSTS_FILE}" == "hosts-rbac"* ]]
 then
   DOCKER_COMPOSE_FILE_OVERRIDE=${DIR}/docker-compose.ldap.yml
