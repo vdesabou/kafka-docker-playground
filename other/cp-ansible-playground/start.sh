@@ -83,7 +83,7 @@ fi
 
 ENABLE_DOCKER_COMPOSE_FILE_OVERRIDE=""
 
-if [ "${HOSTS_FILE}" == "hosts-rbac.yml" ]
+if [[ "${HOSTS_FILE}" == "hosts-rbac"* ]]
 then
   DOCKER_COMPOSE_FILE_OVERRIDE=${DIR}/docker-compose.ldap.yml
   if [ -f "${DOCKER_COMPOSE_FILE_OVERRIDE}" ]
@@ -106,6 +106,23 @@ then
   log "LDAPS: Displaying truststore"
   keytool -list -keystore ldap_truststore.jks -storepass 'welcome123' -v
   cd -
+fi
+
+if [ "${HOSTS_FILE}" == "hosts-rbac-provided-certificates.yml" ]
+then
+  DOCKER_COMPOSE_FILE_OVERRIDE=${DIR}/docker-compose.rbac-provided-certificates.yml
+  if [ -f "${DOCKER_COMPOSE_FILE_OVERRIDE}" ]
+  then
+    log "Using $DOCKER_COMPOSE_FILE_OVERRIDE"
+    ENABLE_DOCKER_COMPOSE_FILE_OVERRIDE="-f ${DOCKER_COMPOSE_FILE_OVERRIDE}"
+  fi
+
+  cd ${DIR}/security
+  log "🔐 Generate keys and certificates used for SSL"
+  docker run -u0 --rm -v $PWD:/tmp vdesabou/cp-ansible-playground-connect:${TAG} bash -c "/tmp/certs-create.sh > /dev/null 2>&1 && chown -R $(id -u $USER):$(id -g $USER) /tmp/"
+  cd -
+  rm -rf /tmp/security
+  cp -R ${DIR}/security /tmp/
 fi
 
 docker-compose -f ${DIR}/docker-compose.yml ${ENABLE_DOCKER_COMPOSE_FILE_OVERRIDE} down -v --remove-orphans
