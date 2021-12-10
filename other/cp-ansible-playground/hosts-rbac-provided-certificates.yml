@@ -169,7 +169,6 @@ kafka_connect:
 control_center:
   hosts:
     control-center:
-    connect:
       ssl_keystore_filepath: /tmp/security/kafka.control-center.keystore.jks
       ssl_keystore_key_password: confluent
       ssl_keystore_store_password: confluent
