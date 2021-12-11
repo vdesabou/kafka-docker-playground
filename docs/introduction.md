@@ -1,5 +1,5 @@
 # 🐳 kafka-docker-playground
-![success tests](https://img.shields.io/badge/success%20tests-2050%2F2170-red)![connector tested](https://img.shields.io/badge/connector%20tested-126-green)![cp versions tested](https://img.shields.io/badge/cp%20version%20tested-%205.3.6%205.4.5%205.5.6%206.0.5%206.1.3%206.2.2%207.0.1-green)![last run](https://img.shields.io/badge/last%20run-2021--12--11%2013:30-green)
+![success tests](https://img.shields.io/badge/success%20tests-2051%2F2170-red)![connector tested](https://img.shields.io/badge/connector%20tested-126-green)![cp versions tested](https://img.shields.io/badge/cp%20version%20tested-%205.3.6%205.4.5%205.5.6%206.0.5%206.1.3%206.2.2%207.0.1-green)![last run](https://img.shields.io/badge/last%20run-2021--12--11%2020:00-green)
 ![GitHub issues by-label](https://img.shields.io/github/issues/vdesabou/kafka-docker-playground/bug%20🔥)![GitHub issues by-label](https://img.shields.io/github/issues/vdesabou/kafka-docker-playground/enhancement%20✨)
 ![GitHub repo size](https://img.shields.io/github/repo-size/vdesabou/kafka-docker-playground)
 
