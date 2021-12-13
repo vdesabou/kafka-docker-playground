@@ -121,14 +121,10 @@ kafka_broker:
       ldap.java.naming.security.credentials: admin
       ldap.java.naming.security.authentication: simple
       ldap.java.naming.security.protocol: SSL
-      ldap.search.mode: GROUPS
       ldap.user.search.base: ou=users,dc=confluentdemo,dc=io
-      ldap.group.search.base: ou=groups,dc=confluentdemo,dc=io
-      ldap.group.object.class: posixGroup
       ldap.user.name.attribute: uid
-      ldap.group.name.attribute: cn
-      ldap.group.member.attribute.pattern: cn=(.*),ou=users,dc=confluentdemo,dc=io
       ldap.user.object.class: inetOrgPerson
+      ldap.search.mode: USERS
       ssl.principal.mapping.rules: "RULE:^1.2.840.113549.1.9.1=#1614696e666f40616e6465737363642e636f6d2e636f,CN=(.*?),OU=TEST.*$/$1/,RULE:^CN=(.*?),OU=TEST.*$/$1/,DEFAULT"
       # workaround for ANSIENG-983, need to specify super.users manually
       super.users: User:mds;User:broker1;User:broker2;User:broker3
