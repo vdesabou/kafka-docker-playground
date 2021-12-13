@@ -109,7 +109,13 @@ then
   cd -
 fi
 
-if [ "${HOSTS_FILE}" == "hosts-rbac-provided-certificates.yml" ]
+if [ "${HOSTS_FILE}" == "hosts-rbac-provided-certificates-repro-ANSIENG-983.yml" ]
+then
+  log "Replacing certs-create.sh to reproduce ANSIENG-983"
+  cp ${DIR}/repro-ANSIENG-983/certs-create.sh ${DIR}/security/
+fi
+
+if [ "${HOSTS_FILE}" == "hosts-rbac-provided-certificates.yml" ] || [ "${HOSTS_FILE}" == "hosts-rbac-provided-certificates-repro-ANSIENG-983.yml" ]
 then
   DOCKER_COMPOSE_FILE_OVERRIDE=${DIR}/docker-compose.rbac-provided-certificates.yml
   if [ -f "${DOCKER_COMPOSE_FILE_OVERRIDE}" ]
