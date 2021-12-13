@@ -129,7 +129,7 @@ kafka_broker:
       ldap.group.name.attribute: cn
       ldap.group.member.attribute.pattern: cn=(.*),ou=users,dc=confluentdemo,dc=io
       ldap.user.object.class: inetOrgPerson
-      ssl.principal.mapping.rules: "RULE:^1.2.840.113549.1.9.1=#0c0f766d636140766d776172652e636f6d,CN=(.*?),OU=TEST.*$/$1/,RULE:^CN=(.*?),OU=TEST.*$/$1/,DEFAULT"
+      ssl.principal.mapping.rules: "RULE:^1.2.840.113549.1.9.1=#1614696e666f40616e6465737363642e636f6d2e636f,CN=(.*?),OU=TEST.*$/$1/,RULE:^CN=(.*?),OU=TEST.*$/$1/,DEFAULT"
       # workaround for ANSIENG-983, need to specify super.users manually
       super.users: User:mds;User:broker1;User:broker2;User:broker3
 
