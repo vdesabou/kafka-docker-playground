@@ -116,6 +116,7 @@ do
                     curl -s -u vdesabou:$GITHUB_TOKEN -H "Accept: application/vnd.github.v3+json" -o "/tmp/${gh_run_id}_1.json" "https://api.github.com/repos/vdesabou/kafka-docker-playground/actions/runs/${gh_run_id}/jobs?per_page=100&page=1"
                     curl -s -u vdesabou:$GITHUB_TOKEN -H "Accept: application/vnd.github.v3+json" -o "/tmp/${gh_run_id}_2.json" "https://api.github.com/repos/vdesabou/kafka-docker-playground/actions/runs/${gh_run_id}/jobs?per_page=100&page=2"
                     curl -s -u vdesabou:$GITHUB_TOKEN -H "Accept: application/vnd.github.v3+json" -o "/tmp/${gh_run_id}_3.json" "https://api.github.com/repos/vdesabou/kafka-docker-playground/actions/runs/${gh_run_id}/jobs?per_page=100&page=3"
+                    curl -s -u vdesabou:$GITHUB_TOKEN -H "Accept: application/vnd.github.v3+json" -o "/tmp/${gh_run_id}_4.json" "https://api.github.com/repos/vdesabou/kafka-docker-playground/actions/runs/${gh_run_id}/jobs?per_page=100&page=4"
                 fi
                 v=$(echo $tag | sed -e 's/\./[.]/g')
                 html_url=$(cat "/tmp/${gh_run_id}_1.json" | jq ".jobs |= map(select(.name | test(\"${v}.*${dir}\")))" | jq '[.jobs | .[] | {name: .name, html_url: .html_url }]' | jq '.[0].html_url')
@@ -130,7 +131,12 @@ do
                         html_url=$(echo "$html_url" | sed -e 's/^"//' -e 's/"$//')
                         if [ "$html_url" = "" ] || [ "$html_url" = "null" ]
                         then
-                            logerror "ERROR: Could not retrieve job url!"
+                            html_url=$(cat "/tmp/${gh_run_id}_4.json" | jq ".jobs |= map(select(.name | test(\"${v}.*${dir}\")))" | jq '[.jobs | .[] | {name: .name, html_url: .html_url }]' | jq '.[0].html_url')
+                            html_url=$(echo "$html_url" | sed -e 's/^"//' -e 's/"$//')
+                            if [ "$html_url" = "" ] || [ "$html_url" = "null" ]
+                            then
+                                logerror "ERROR: Could not retrieve job url!"
+                            fi
                         fi
                     fi
                 fi
