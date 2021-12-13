@@ -137,7 +137,7 @@ schema_registry:
   hosts:
     schema-registry:2240:
       ssl_keystore_filepath: /tmp/security/kafka.schema-registry.keystore.jks
-      ssl_keystore_key_password: conflue,nt
+      ssl_keystore_key_password: confluent
       ssl_keystore_store_password: confluent
       ssl_truststore_filepath: /tmp/security/kafka.schema-registry.truststore.jks
       ssl_truststore_password: confluent
