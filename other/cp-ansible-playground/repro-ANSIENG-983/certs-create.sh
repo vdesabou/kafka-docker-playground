@@ -15,7 +15,7 @@ for i in zookeeper1 broker1 broker2 broker3 schema-registry rest-proxy connect c
 do
     echo "------------------------------- $i -------------------------------"
 
-    if [ "$i" == "broker1" ] || [ "$i" == "broker2" ] || [ "$i" == "broker2" ]
+    if [ "$i" == "broker1" ] || [ "$i" == "broker2" ] || [ "$i" == "broker3" ]
     then
         DNAME="1.2.840.113549.1.9.1=#0c0f766d636140766d776172652e636f6d,CN=$i,OU=TEST,O=CONFLUENT,L=PaloAlto,S=Ca,C=US"
     else
