@@ -33,6 +33,16 @@ fi
 
 mkdir -p ${DIR}/scripts/security/ldap_certs
 cd ${DIR}/scripts/security/ldap_certs
+if [[ "$OSTYPE" == "darwin"* ]]
+then
+    # workaround for issue on linux, see https://github.com/vdesabou/kafka-docker-playground/issues/851#issuecomment-821151962
+    chmod -R a+rw .
+else
+    # on CI, docker is run as runneradmin user, need to use sudo
+    ls -lrt
+    sudo chmod -R a+rw .
+    ls -lrt
+fi
 log "LDAPS: Creating a Root Certificate Authority (CA)"
 docker run --rm -v $PWD:/tmp vdesabou/kafka-docker-playground-connect:${CONNECT_TAG} openssl req -new -x509 -days 365 -nodes -out /tmp/ca.crt -keyout /tmp/ca.key -subj "/CN=root-ca"
 log "LDAPS: Generate the LDAPS server key and certificate"
