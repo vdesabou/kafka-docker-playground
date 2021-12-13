@@ -177,3 +177,8 @@ control_center:
       ssl_keystore_store_password: confluent
       ssl_truststore_filepath: /tmp/security/kafka.control-center.truststore.jks
       ssl_truststore_password: confluent
+  vars:
+    # cp-ansible-playground: control-center not working #1880
+    # https://github.com/vdesabou/kafka-docker-playground/issues/1880
+    control_center_custom_properties:
+      confluent.controlcenter.id: 32

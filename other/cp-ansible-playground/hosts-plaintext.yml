@@ -76,3 +76,8 @@ kafka_connect:
 control_center:
   hosts:
     control-center:
+  vars:
+    # cp-ansible-playground: control-center not working #1880
+    # https://github.com/vdesabou/kafka-docker-playground/issues/1880
+    control_center_custom_properties:
+      confluent.controlcenter.id: 32
