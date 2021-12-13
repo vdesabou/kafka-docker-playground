@@ -17,7 +17,7 @@ do
 
     if [ "$i" == "broker1" ] || [ "$i" == "broker2" ] || [ "$i" == "broker3" ]
     then
-        DNAME="1.2.840.113549.1.9.1=#0c0f766d636140766d776172652e636f6d,CN=$i,OU=TEST,O=CONFLUENT,L=PaloAlto,S=Ca,C=US"
+        DNAME="1.2.840.113549.1.9.1=#1614696e666f40616e6465737363642e636f6d2e636f,CN=$i,OU=TEST,O=CONFLUENT,L=PaloAlto,S=Ca,C=US"
     else
         DNAME="CN=$i,OU=TEST,O=CONFLUENT,L=PaloAlto,S=Ca,C=US"
     fi
