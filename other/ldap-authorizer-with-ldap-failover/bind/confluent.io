@@ -12,8 +12,8 @@ $TTL    604800
 ; name servers - A records
 bind.confluent.io.          IN      A      172.28.1.1
 ldap.confluent.io.          IN      A      172.28.1.2
-ldap2.confluent.io.         IN      A      172.28.1.7
-ldap3.confluent.io.         IN      A      172.28.1.8
+ldap2.confluent.io.         IN      A      172.28.1.3
+ldap3.confluent.io.         IN      A      172.28.1.4
 
 _ldap._tcp.confluent.io. IN SRV 10 50 389 ldap.confluent.io.
 _ldap._tcp.confluent.io. IN SRV 10 50 389 ldap2.confluent.io.
