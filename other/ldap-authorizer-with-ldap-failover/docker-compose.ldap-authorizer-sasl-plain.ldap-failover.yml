@@ -4,7 +4,7 @@ services:
     bind:
         build:
             context: ../../other/ldap-authorizer-with-ldap-failover/bind
-        hostname: bind.example.com
+        hostname: bind.confluent.io
         container_name: bind
         ports:
         - 53:53/udp
@@ -18,28 +18,28 @@ services:
                 ipv4_address: 172.28.1.1
 
     ldap:
-        hostname: ldap.example.com
+        hostname: ldap.confluent.io
         networks:
             testing_net:
                 ipv4_address: 172.28.1.2
 
 
     zookeeper:
-        hostname: zookeeper.example.com
+        hostname: zookeeper.confluent.io
         networks:
             testing_net:
                 ipv4_address: 172.28.1.3
 
 
     schema-registry:
-        hostname: schema-registry.example.com
+        hostname: schema-registry.confluent.io
         networks:
             testing_net:
                 ipv4_address: 172.28.1.4
 
 
     control-center:
-        hostname: control-center.example.com
+        hostname: control-center.confluent.io
         networks:
             testing_net:
                 ipv4_address: 172.28.1.5
@@ -48,10 +48,10 @@ services:
     connect:
         # this is not working so workaround with /etc/resolv.conf
         dns: 172.28.1.1
-        dns_search: example.com
+        dns_search: confluent.io
         volumes:
             - ../../other/ldap-authorizer-with-ldap-failover/resolv.conf:/etc/resolv.conf
-        hostname: connect.example.com
+        hostname: connect.confluent.io
         depends_on:
         - ldap
         - ldap2
@@ -63,7 +63,7 @@ services:
 
     ldap2:
         image: osixia/openldap:1.3.0
-        hostname: ldap2.example.com
+        hostname: ldap2.confluent.io
         container_name: ldap2
         environment:
             LDAP_ORGANISATION: "Confluent"
@@ -92,23 +92,24 @@ services:
 
 
     broker:
-        hostname: broker.example.com
+        hostname: broker.confluent.io
         # this is not working so workaround with /etc/resolv.conf
         dns: 172.28.1.1
-        dns_search: example.com
+        dns_search: confluent.io
         volumes:
             - ../../other/ldap-authorizer-with-ldap-failover/resolv.conf:/etc/resolv.conf
         environment:
             # https://ldap.com/dns-srv-records-for-ldap/
             # LDAP provider URL
-            KAFKA_LDAP_JAVA_NAMING_PROVIDER_URL: "ldap://example.com"
+            KAFKA_LDAP_JAVA_NAMING_PROVIDER_URL: "ldap:///dc=confluent,dc=io"
+            KAFKA_LDAP_GROUP_SEARCH_BASE: ou=groups
         networks:
             testing_net:
                 ipv4_address: 172.28.1.9
 
 networks:
   default:
-    name: example.com
+    name: confluent.io
   testing_net:
     ipam:
       driver: default
