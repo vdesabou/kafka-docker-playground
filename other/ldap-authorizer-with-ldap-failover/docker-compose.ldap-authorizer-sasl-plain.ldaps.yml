@@ -25,13 +25,13 @@ services:
       testing_net:
         ipv4_address: 172.28.1.2
     environment:
-      LDAP_TLS_CRT_FILENAME: server.crt
-      LDAP_TLS_KEY_FILENAME: server.key
-      LDAP_TLS_CA_CRT_FILENAME: ca.crt
+      LDAP_TLS_CRT_FILENAME: ldap-ca1-signed.crt
+      LDAP_TLS_KEY_FILENAME: ldap.key
+      LDAP_TLS_CA_CRT_FILENAME: snakeoil-ca-1.crt
       LDAP_TLS_VERIFY_CLIENT: "try"
     volumes:
       - ../../environment/ldap-authorizer-sasl-plain/ldap/custom:/container/service/slapd/assets/config/bootstrap/ldif/custom
-      - ../../other/ldap-authorizer-with-ldap-failover/ldap_certs:/container/service/slapd/assets/certs
+      - ../../other/ldap-authorizer-with-ldap-failover/security:/container/service/slapd/assets/certs
 
   ldap2:
     image: osixia/openldap:1.3.0
@@ -40,18 +40,17 @@ services:
     environment:
       LDAP_ORGANISATION: "Confluent"
       LDAP_DOMAIN: "confluent.io"
-      LDAP_TLS_CRT_FILENAME: server.crt
-      LDAP_TLS_KEY_FILENAME: server.key
-      LDAP_TLS_CA_CRT_FILENAME: ca.crt
+      LDAP_TLS_CRT_FILENAME: ldap2-ca1-signed.crt
+      LDAP_TLS_KEY_FILENAME: ldap2.key
+      LDAP_TLS_CA_CRT_FILENAME: snakeoil-ca-1.crt
       LDAP_TLS_VERIFY_CLIENT: "try"
     volumes:
       - ../../environment/ldap-authorizer-sasl-plain/ldap/custom:/container/service/slapd/assets/config/bootstrap/ldif/custom
-      - ../../other/ldap-authorizer-with-ldap-failover/ldap_certs:/container/service/slapd/assets/certs
+      - ../../other/ldap-authorizer-with-ldap-failover/security:/container/service/slapd/assets/certs
     command: "--copy-service"
     networks:
       testing_net:
         ipv4_address: 172.28.1.3
-
 
   ldap3:
     image: osixia/openldap:1.3.0
@@ -60,13 +59,13 @@ services:
     environment:
       LDAP_ORGANISATION: "Confluent"
       LDAP_DOMAIN: "confluent.io"
-      LDAP_TLS_CRT_FILENAME: server.crt
-      LDAP_TLS_KEY_FILENAME: server.key
-      LDAP_TLS_CA_CRT_FILENAME: ca.crt
+      LDAP_TLS_CRT_FILENAME: ldap3-ca1-signed.crt
+      LDAP_TLS_KEY_FILENAME: ldap3.key
+      LDAP_TLS_CA_CRT_FILENAME: snakeoil-ca-1.crt
       LDAP_TLS_VERIFY_CLIENT: "try"
     volumes:
       - ../../environment/ldap-authorizer-sasl-plain/ldap/custom:/container/service/slapd/assets/config/bootstrap/ldif/custom
-      - ../../other/ldap-authorizer-with-ldap-failover/ldap_certs:/container/service/slapd/assets/certs
+      - ../../other/ldap-authorizer-with-ldap-failover/security:/container/service/slapd/assets/certs
     command: "--copy-service"
     networks:
       testing_net:
@@ -85,13 +84,13 @@ services:
     dns_search: confluent.io
     volumes:
       - ../../other/ldap-authorizer-with-ldap-failover/resolv.conf:/etc/resolv.conf
-      - ../../other/ldap-authorizer-with-ldap-failover/ldap_certs/ldap_truststore.jks:/tmp/ldap_certs/ldap_truststore.jks
+      - ../../other/ldap-authorizer-with-ldap-failover/security:/etc/kafka/security
     environment:
       # https://ldap.com/dns-srv-records-for-ldap/
       # LDAP provider URL
       KAFKA_LDAP_JAVA_NAMING_PROVIDER_URL: "ldap:///dc=confluent,dc=io"
-      KAFKA_LDAP_SSL_TRUSTSTORE_LOCATION: /tmp/ldap_certs/ldap_truststore.jks
-      KAFKA_LDAP_SSL_TRUSTSTORE_PASSWORD: welcome123
+      KAFKA_LDAP_SSL_TRUSTSTORE_LOCATION: /etc/kafka/security/kafka.broker.truststore.jks
+      KAFKA_LDAP_SSL_TRUSTSTORE_PASSWORD: confluent
       KAFKA_LDAP_JAVA_NAMING_SECURITY_PROTOCOL: SSL
       #KAFKA_LDAP_SSL_ENDPOINT_IDENTIFICATION_ALGORITHM: ""
       KAFKA_LDAP_GROUP_SEARCH_BASE: ou=groups
