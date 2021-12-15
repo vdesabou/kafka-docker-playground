@@ -26,7 +26,7 @@ $ ./start-rbac.sh
 
 ![RBAC](rbac.jpg)
 
-## Properties
+### Properties (RBAC case)
 
 broker:
 
@@ -97,6 +97,95 @@ user_mds="mds-secret";
 username="admin" \
 zookeeper.connect=zookeeper:2181
 zookeeper.set.acl=true
+```
+
+connect:
+
+```
+internal.key.converter.schemas.enable=false
+group.id=connect-cluster
+value.converter.schemas.enable=false
+producer.confluent.monitoring.interceptor.sasl.mechanism=OAUTHBEARER
+config.providers=file
+status.storage.replication.factor=1
+key.converter=org.apache.kafka.connect.storage.StringConverter
+config.storage.topic=connect-configs
+log4j.loggers=org.apache.zookeeper=ERROR,org.I0Itec.zkclient=ERROR,org.reflections=ERROR
+config.providers.file.class=org.apache.kafka.common.config.provider.FileConfigProvider
+producer.security.protocol=SASL_PLAINTEXT
+sasl.login.callback.handler.class=io.confluent.kafka.clients.plugins.auth.token.TokenUserLoginCallbackHandler
+topic.creation.enable=true
+offset.storage.replication.factor=1
+plugin.path=/usr/share/confluent-hub-components/confluentinc-kafka-connect-datagen
+admin.sasl.mechanism=OAUTHBEARER
+offset.storage.topic=connect-offsets
+confluent.metadata.bootstrap.server.urls=http://broker:8091
+consumer.sasl.mechanism=OAUTHBEARER
+admin.sasl.login.callback.handler.class=io.confluent.kafka.clients.plugins.auth.token.TokenUserLoginCallbackHandler
+producer.sasl.jaas.config=org.apache.kafka.common.security.oauthbearer.OAuthBearerLoginModule required \
+username="connectAdmin" \
+password="connectAdmin" \
+metadataServerUrls="http://broker:8091";
+
+producer.confluent.monitoring.interceptor.bootstrap.servers=broker:10091
+bootstrap.servers=broker:10091
+producer.sasl.login.callback.handler.class=io.confluent.kafka.clients.plugins.auth.token.TokenUserLoginCallbackHandler
+consumer.sasl.jaas.config=org.apache.kafka.common.security.oauthbearer.OAuthBearerLoginModule required \
+username="connectAdmin" \
+password="connectAdmin" \
+metadataServerUrls="http://broker:8091";
+
+consumer.confluent.monitoring.interceptor.bootstrap.servers=broker:10091
+value.converter=io.confluent.connect.avro.AvroConverter
+producer.interceptor.classes=io.confluent.monitoring.clients.interceptor.MonitoringProducerInterceptor
+rest.servlet.initializor.classes=io.confluent.common.security.jetty.initializer.InstallBearerOrBasicSecurityHandler
+rest.advertised.host.name=connect
+sasl.jaas.config=org.apache.kafka.common.security.oauthbearer.OAuthBearerLoginModule required \
+username="connectAdmin" \
+password="connectAdmin" \
+metadataServerUrls="http://broker:8091";
+
+sasl.mechanism=OAUTHBEARER
+internal.key.converter=org.apache.kafka.connect.json.JsonConverter
+consumer.confluent.monitoring.interceptor.sasl.mechanism=OAUTHBEARER
+rest.extension.classes=io.confluent.connect.replicator.monitoring.ReplicatorMonitoringExtension,io.confluent.connect.security.ConnectSecurityExtension
+rest.port=8083
+consumer.sasl.login.callback.handler.class=io.confluent.kafka.clients.plugins.auth.token.TokenUserLoginCallbackHandler
+consumer.confluent.monitoring.interceptor.sasl.jaas.config=org.apache.kafka.common.security.oauthbearer.OAuthBearerLoginModule required \
+username="connectAdmin" \
+password="connectAdmin" \
+metadataServerUrls="http://broker:8091";
+
+confluent.metadata.http.auth.credentials.provider=BASIC
+status.storage.topic=connect-status
+public.key.path=/tmp/conf/public.pem
+internal.value.converter=org.apache.kafka.connect.json.JsonConverter
+consumer.confluent.monitoring.interceptor.security.protocol=SASL_PLAINTEXT
+consumer.interceptor.classes=io.confluent.monitoring.clients.interceptor.MonitoringConsumerInterceptor
+value.converter.schema.registry.url=http://schema-registry:8081
+producer.sasl.mechanism=OAUTHBEARER
+internal.value.converter.schemas.enable=false
+producer.confluent.monitoring.interceptor.security.protocol=SASL_PLAINTEXT
+connector.client.config.override.policy=All
+log4j.appender.stdout.layout.conversionpattern=[%d] %p %X{connector.context}%m (%c:%L)%n
+consumer.confluent.monitoring.interceptor.sasl.login.callback.handler.class=io.confluent.kafka.clients.plugins.auth.token.TokenUserLoginCallbackHandler
+producer.confluent.monitoring.interceptor.sasl.login.callback.handler.class=io.confluent.kafka.clients.plugins.auth.token.TokenUserLoginCallbackHandler
+producer.confluent.monitoring.interceptor.sasl.jaas.config=org.apache.kafka.common.security.oauthbearer.OAuthBearerLoginModule required \
+username="connectAdmin" \
+password="connectAdmin" \
+metadataServerUrls="http://broker:8091";
+
+admin.security.protocol=SASL_PLAINTEXT
+producer.client.id=connect-worker-producer
+security.protocol=SASL_PLAINTEXT
+admin.sasl.jaas.config=org.apache.kafka.common.security.oauthbearer.OAuthBearerLoginModule required \
+username="connectAdmin" \
+password="connectAdmin" \
+metadataServerUrls="http://broker:8091";
+
+confluent.metadata.basic.auth.user.info=connectAdmin:connectAdmin
+config.storage.replication.factor=1
+consumer.security.protocol=SASL_PLAINTEXT
 ```
 
 control-center:
