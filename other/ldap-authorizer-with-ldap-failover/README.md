@@ -12,7 +12,7 @@ Simply run:
 $ ./start-ldap.sh
 ```
 
-or with LDAPS (**this is not working**):
+or with LDAPS (**this is not working**, see [here](https://github.com/vdesabou/kafka-docker-playground/blob/master/other/ldap-authorizer-with-ldap-failover/README.md#using-dns-srv-records-with-ldap-over-tls) for details):
 
 ```
 $ ./start-ldaps.sh

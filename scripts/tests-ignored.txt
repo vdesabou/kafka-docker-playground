@@ -10,3 +10,5 @@ cdc-oracle19-pdb-table-mtls-db-auth.sh
 s3-sink-proxy-with-assuming-iam-role.sh
 # https://github.com/vdesabou/kafka-docker-playground/issues/920#issuecomment-830157555
 kinesis-proxy-with-assuming-iam-role.sh
+# see https://github.com/vdesabou/kafka-docker-playground/blob/master/other/ldap-authorizer-with-ldap-failover/README.md#using-dns-srv-records-with-ldap-over-tls
+start-ldaps.sh
