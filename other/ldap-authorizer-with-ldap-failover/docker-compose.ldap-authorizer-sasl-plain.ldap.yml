@@ -4,6 +4,8 @@ services:
   bind:
     build:
       context: ../../other/ldap-authorizer-with-ldap-failover/bind
+      args:
+        DOMAIN_FILE: "confluent.io-ldap"
     hostname: bind.confluent.io
     container_name: bind
     ports:
