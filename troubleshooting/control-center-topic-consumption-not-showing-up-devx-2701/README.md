@@ -1,6 +1,4 @@
-# Testing a potential workaround for RBAC/LDAP case sensitivity issue
-
-
+# Topic consumption is complaining about missing interceptors
 
 ## How to run
 
