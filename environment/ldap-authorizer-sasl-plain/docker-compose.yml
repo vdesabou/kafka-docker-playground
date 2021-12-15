@@ -51,7 +51,7 @@ services:
             KAFKA_SUPER_USERS: User:broker;User:client;User:controlcenter;User:connect;User:schemaregistry;User:ksqldb
 
             # LDAP provider URL
-            KAFKA_LDAP_JAVA_NAMING_PROVIDER_URL: ldap://ldap:389/DC=CONFLUENT,DC=IO
+            KAFKA_LDAP_JAVA_NAMING_PROVIDER_URL: ldap://ldap:389
             # Refresh interval for LDAP cache. If set to zero, persistent search is used.
             # Reduced this value from the default 60000ms (60sec) to 10sec to detect
             # faster the updates done in the LDAP database
@@ -60,9 +60,7 @@ services:
             KAFKA_LDAP_JAVA_NAMING_SECURITY_AUTHENTICATION: SIMPLE
             KAFKA_LDAP_JAVA_NAMING_SECURITY_PRINCIPAL: cn=admin,dc=confluent,dc=io
             KAFKA_LDAP_JAVA_NAMING_SECURITY_CREDENTIALS: admin
-            # Remember that LDAP works in a context. The search base is ou=groups,dc=confluent,dc=io
-            # But since my URL is ldap://ldap:389/DC=CONFLUENT,DC=IO, we are already working in the dc=confluent,dc=io context
-            KAFKA_LDAP_GROUP_SEARCH_BASE: ou=groups
+            KAFKA_LDAP_GROUP_SEARCH_BASE: ou=groups,dc=confluent,dc=io
 
             # Object class for groups
             KAFKA_LDAP_GROUP_OBJECT_CLASS: posixGroup
