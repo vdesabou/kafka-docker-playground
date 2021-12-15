@@ -19,7 +19,7 @@ do
     keytool -genkey -noprompt \
                  -alias $i \
                  -dname "CN=$i,OU=TEST,O=CONFLUENT,L=PaloAlto,S=Ca,C=US" \
-                                 -ext "SAN=dns:$i,dns:localhost" \
+                                 -ext "SAN=dns:$i,dns:localhost,dns:$i.confluent.io" \
                  -keystore /tmp/kafka.$i.keystore.jks \
                  -keyalg RSA \
                  -storepass confluent \
@@ -27,7 +27,7 @@ do
                  -storetype pkcs12
 
     # Create the certificate signing request (CSR)
-    keytool -keystore /tmp/kafka.$i.keystore.jks -alias $i -certreq -file /tmp/$i.csr -storepass confluent -keypass confluent -ext "SAN=dns:$i,dns:localhost"
+    keytool -keystore /tmp/kafka.$i.keystore.jks -alias $i -certreq -file /tmp/$i.csr -storepass confluent -keypass confluent -ext "SAN=dns:$i,dns:localhost,dns:$i.confluent.io"
         #openssl req -in $i.csr -text -noout
 
 cat << EOF > /tmp/extfile
