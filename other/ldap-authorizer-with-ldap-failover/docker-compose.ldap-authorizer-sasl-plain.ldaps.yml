@@ -93,7 +93,10 @@ services:
       KAFKA_LDAP_SSL_TRUSTSTORE_LOCATION: /tmp/ldap_certs/ldap_truststore.jks
       KAFKA_LDAP_SSL_TRUSTSTORE_PASSWORD: welcome123
       KAFKA_LDAP_JAVA_NAMING_SECURITY_PROTOCOL: SSL
+      #KAFKA_LDAP_SSL_ENDPOINT_IDENTIFICATION_ALGORITHM: ""
       KAFKA_LDAP_GROUP_SEARCH_BASE: ou=groups
+      # KAFKA_OPTS: -Djava.security.auth.login.config=/etc/kafka/kafka_server_jaas.conf
+      #             -Djavax.net.debug=all
     networks:
       testing_net:
         ipv4_address: 172.28.1.6
