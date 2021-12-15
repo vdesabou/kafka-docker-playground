@@ -63,10 +63,9 @@ curl -X PUT \
 
 sleep 5
 
-log "Verifying topic dbserver1_mydb_team"
-timeout 60 docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic dbserver1_mydb_team --from-beginning --max-messages 2
-
-
 log "Verify we have received the protobuf data in dbserver1_mydb_team topic"
 timeout 60 docker exec connect kafka-protobuf-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic dbserver1_mydb_team --from-beginning --max-messages 2
 
+# {"after":{"id":1,"name":"kafka","email":"kafka@apache.org","lastModified":"1639581893000"},"source":{"version":"1.7.1.Final","connector":"mysql","name":"dbserver1","tsMs":"1639581925390","snapshot":"true","db":"mydb","sequence":"","table":"team","serverId":"0","gtid":"","file":"mysql-bin.000003","pos":"457","row":0,"thread":"0","query":""},"op":"r","tsMs":"1639581925394"}
+# {"after":{"id":2,"name":"another","email":"another@apache.org","lastModified":"1639581923000"},"source":{"version":"1.7.1.Final","connector":"mysql","name":"dbserver1","tsMs":"1639581925398","snapshot":"last","db":"mydb","sequence":"","table":"team","serverId":"0","gtid":"","file":"mysql-bin.000003","pos":"457","row":0,"thread":"0","query":""},"op":"r","tsMs":"1639581925398"}
+# Processed a total of 2 messages
