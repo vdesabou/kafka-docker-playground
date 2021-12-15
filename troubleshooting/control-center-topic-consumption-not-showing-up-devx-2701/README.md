@@ -24,6 +24,10 @@ $ ./start-rbac.sh
 
 ![RBAC](rbac.jpg)
 
+Note that monitoring interceptors are set and working, for example in Consumers->Consumption we have:
+
+![RBAC](rbac2.jpg)
+
 ### Properties (RBAC case)
 
 broker:
