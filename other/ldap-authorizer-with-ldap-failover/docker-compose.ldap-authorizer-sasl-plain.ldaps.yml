@@ -88,7 +88,7 @@ services:
     environment:
       # https://ldap.com/dns-srv-records-for-ldap/
       # LDAP provider URL
-      KAFKA_LDAP_JAVA_NAMING_PROVIDER_URL: "ldap:///dc=confluent,dc=io"
+      KAFKA_LDAP_JAVA_NAMING_PROVIDER_URL: "ldaps:///dc=confluent,dc=io"
       KAFKA_LDAP_SSL_TRUSTSTORE_LOCATION: /etc/kafka/security/kafka.broker.truststore.jks
       KAFKA_LDAP_SSL_TRUSTSTORE_PASSWORD: confluent
       KAFKA_LDAP_JAVA_NAMING_SECURITY_PROTOCOL: SSL
