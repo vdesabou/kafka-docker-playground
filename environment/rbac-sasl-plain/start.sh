@@ -100,6 +100,9 @@ docker exec openldap ldapsearch -x -h localhost -b dc=confluentdemo,dc=io -D "cn
 log "Creating role bindings for principals"
 docker exec -i tools bash -c "/tmp/helper/create-role-bindings.sh"
 
+log "Validate bindings"
+docker exec -i tools bash -c "/tmp/helper/validate_bindings.sh"
+
 docker-compose -f ../../environment/plaintext/docker-compose.yml -f ../../environment/rbac-sasl-plain/docker-compose.yml ${ENABLE_DOCKER_COMPOSE_FILE_OVERRIDE} build
 docker-compose -f ../../environment/plaintext/docker-compose.yml -f ../../environment/rbac-sasl-plain/docker-compose.yml ${ENABLE_DOCKER_COMPOSE_FILE_OVERRIDE} ${profile_control_center_command} ${profile_ksqldb_command} up -d
 log "📝 To see the actual properties file, use ../../scripts/get-properties.sh <container>"
