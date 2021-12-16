@@ -24,7 +24,7 @@ curl -s -X PUT \
                 "schema.keyfield" : "orderid",
                 "producer.override.sasl.jaas.config": "org.apache.kafka.common.security.oauthbearer.OAuthBearerLoginModule required username=\"connectorSA\" password=\"connectorSA\" metadataServerUrls=\"http://broker:8091\";"
             }' \
-      http://localhost:8083/connectors/gcs-rbac-sink/config | jq .
+      http://localhost:8083/connectors/my-rbac-connector/config | jq .
 
 
 
