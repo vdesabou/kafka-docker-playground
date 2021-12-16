@@ -1,16 +1,7 @@
 #!/bin/bash
 set -e
 
-# to reproduce use version 1.3.1
-export CONNECTOR_TAG=1.3.1
-
-# 1.3.1: 🔥
-# 1.3.2: 🔥
-# 1.3.3: ✅
-# 1.4.0: 🔥
-# 1.4.2: ✅
-# 1.5.0: ✅
-
+# NO REPRODUCTION
 
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
