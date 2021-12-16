@@ -55,21 +55,26 @@ curl -X PUT \
                "value.converter": "io.confluent.connect.protobuf.ProtobufConverter",
                "value.converter.schema.registry.url": "http://schema-registry:8081",
                "value.converter.schemas.enable": "false",
-               "transforms": "RemoveDots,outbox",
-               "transforms.RemoveDots.type": "org.apache.kafka.connect.transforms.RegexRouter",
-               "transforms.RemoveDots.regex": "(.*)\\.(.*)\\.(.*)",
-               "transforms.RemoveDots.replacement": "$1_$2_$3",
+               "transforms": "outbox",
                "transforms.outbox.type" : "io.debezium.transforms.outbox.EventRouter",
                "transforms.outbox.route.topic.replacement" : "users.events",
-               "transforms.outbox.table.fields.additional.placement" : "type:header:eventType"
+               "transforms.outbox.table.fields.additional.placement" : "type:envelope:eventType"
           }' \
      http://localhost:8083/connectors/debezium-mysql-source/config | jq .
 
 sleep 5
 
-log "Verify we have received the protobuf data in dbserver1_mydb_outboxevent topic"
-timeout 60 docker exec connect kafka-protobuf-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic dbserver1_mydb_outboxevent --from-beginning --max-messages 2
+log "Verify we have received the protobuf data in users.events topic"
+timeout 60 docker exec connect kafka-protobuf-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic users.events --from-beginning --max-messages 1
 
+# if using "transforms.outbox.table.fields.additional.placement" : "type:envelope:eventType"
+# Results:
+# {"payload":"ASNF","eventType":"OrderCreated"}
+# Processed a total of 1 messages
+
+
+# if using "transforms.outbox.table.fields.additional.placement" : "type:header:eventType":
+# Results:
 # [2021-12-16 09:11:40,238] ERROR [debezium-mysql-source|task-0] WorkerSourceTask{id=debezium-mysql-source-0} Task threw an uncaught and unrecoverable exception. Task is being killed and will not recover until manually restarted (org.apache.kafka.connect.runtime.WorkerTask:206)
 # org.apache.kafka.connect.errors.ConnectException: Tolerance exceeded in error handler
 #         at org.apache.kafka.connect.runtime.errors.RetryWithToleranceOperator.execAndHandleError(RetryWithToleranceOperator.java:220)
