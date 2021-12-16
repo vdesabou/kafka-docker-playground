@@ -119,6 +119,13 @@ done
 echo "Creating role bindings for GCP GCS sink connector"
 
 confluent iam rolebinding create \
+    --principal $C3_ADMIN \
+    --role ResourceOwner \
+    --resource Connector:my-rbac-connector \
+    --kafka-cluster-id $KAFKA_CLUSTER_ID \
+    --connect-cluster-id $CONNECT
+
+confluent iam rolebinding create \
     --principal $CONNECTOR_SUBMITTER \
     --role ResourceOwner \
     --resource Connector:my-rbac-connector \
