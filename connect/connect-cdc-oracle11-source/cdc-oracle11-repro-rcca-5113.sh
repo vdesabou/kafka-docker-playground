@@ -64,7 +64,8 @@ curl -X PUT \
                "key.converter.schemas.enable": "false",
                "key.converter": "org.apache.kafka.connect.json.JsonConverter",
                "value.converter.schemas.enable": "false",
-               "value.converter": "org.apache.kafka.connect.json.JsonConverter"
+               "value.converter": "org.apache.kafka.connect.json.JsonConverter",
+               "redo.log.row.fetch.size":1
           }' \
      http://localhost:8083/connectors/cdc-oracle11-source/config | jq .
 
