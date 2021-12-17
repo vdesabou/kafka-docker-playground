@@ -520,7 +520,7 @@ curl -X PUT \
 
 ## 🕵 TCP Dump
 
-It is sometime necessary to sniff the network in order to better undertsand what's going on.
+It is sometime necessary to sniff the network in order to better understand what's going on.
 
 The [connect image](/how-it-works?id=🔗-connect-image-used) used by the playground contains [`tcpdump`](https://www.tcpdump.org) tool for that purpose.
 
@@ -538,6 +538,12 @@ Once you test is over, you can get the `tcpdump.pcap` file (that you can open wi
 
 ```bash
 docker cp connect:/tmp/tcpdump.pcap .
+```
+
+For other UBI8 images, you can install tcpdump like this:
+
+```bash
+docker exec --privileged --user root control-center bash -c "curl http://mirror.centos.org/centos/8-stream/AppStream/x86_64/os/Packages/tcpdump-4.9.3-1.el8.x86_64.rpm -o tcpdump-4.9.3-1.el8.x86_64.rpm && rpm -Uvh tcpdump-4.9.3-1.el8.x86_64.rpm"
 ```
 
 ## 🌐 Using HTTPS proxy
