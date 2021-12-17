@@ -318,6 +318,18 @@ seq -f "{\"f1\": \"value%g\"}" 10 | docker exec -i connect kafka-avro-console-pr
 
 ![remote_debugging](https://github.com/vdesabou/gifs/raw/master/docs/images/remote_debugging.gif)
 
+
+Note (*for Confluent employees because control center code is proprietary*): for `control-center`, you can use following override (note the `5006` port in order to avoid clash with `connect` port):
+
+```yml
+  control-center:
+    ports:
+      - "9021:9021"
+      - "5006:5006"
+    environment:
+      CONTROL_CENTER_OPTS: "-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=0.0.0.0:5006"
+```
+
 ## 🐛 Enable DEBUG
 
 ### 🔗 Connectors
