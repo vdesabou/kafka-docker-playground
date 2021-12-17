@@ -1,0 +1,6 @@
+enable
+configure
+message-spool message-vpn default
+create queue connector-quickstart
+permission all consume
+no shutdown full
