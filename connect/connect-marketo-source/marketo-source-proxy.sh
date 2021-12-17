@@ -70,6 +70,11 @@ else
      SINCE=$(date -d '1 hour ago'  +%Y-%m-%dT%H:%M:%SZ)
 fi
 
+DOMAIN=$(echo $MARKETO_ENDPOINT_URL | cut -d "/" -f 3)
+IP=$(nslookup $DOMAIN | grep Address | grep -v "#" | cut -d " " -f 2 | tail -1)
+log "Blocking $DOMAIN IP $IP to make sure proxy is used"
+docker exec --privileged --user root connect bash -c "iptables -A INPUT -p tcp -s $IP -j DROP"
+
 log "Creating Marketo Source connector"
 curl -X PUT \
      -H "Content-Type: application/json" \
