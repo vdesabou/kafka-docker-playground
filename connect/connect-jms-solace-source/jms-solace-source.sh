@@ -26,7 +26,6 @@ log "Create the queue connector-quickstart in the default Message VPN using CLI"
 docker exec solace bash -c "/usr/sw/loads/currentload/bin/cli -A -s cliscripts/create_queue_cmd"
 
 log "Publish messages to the Solace queue using the REST endpoint"
-
 for i in 1000 1001 1002
 do
      curl -X POST -d "m1" http://localhost:9000/Queue/connector-quickstart -H "Content-Type: text/plain" -H "Solace-Message-ID: $i"
@@ -57,4 +56,4 @@ curl -X PUT \
 sleep 10
 
 log "Verifying topic source-messages"
-timeout 60 docker exec broker kafka-console-consumer -bootstrap-server broker:9092 --topic source-messages --from-beginning --max-messages 5
+timeout 60 docker exec broker kafka-console-consumer -bootstrap-server broker:9092 --topic source-messages --from-beginning --max-messages 3
