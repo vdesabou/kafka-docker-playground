@@ -8,8 +8,6 @@ services:
         DOMAIN_FILE: "confluent.io-ldap"
     hostname: bind.confluent.io
     container_name: bind
-    ports:
-    - 53:53/udp
     restart: unless-stopped
     depends_on:
     - ldap
