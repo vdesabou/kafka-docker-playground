@@ -8,10 +8,6 @@ services:
     volumes:
       - ../../connect/connect-jms-solace-sink/show_queue_cmd:/usr/sw/jail/cliscripts/show_queue_cmd
       - ../../connect/connect-jms-solace-sink/create_queue_cmd:/usr/sw/jail/cliscripts/create_queue_cmd
-    ports:
-      - 8080:8080
-      - 55555:55555
-      - 5550:5550
     tmpfs: /dev/shm
     ulimits:
       nofile:
