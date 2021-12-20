@@ -28,11 +28,21 @@ This project assumes `~/.aws/credentials` and `~/.aws/config` are set, see `dock
 
 Simply run:
 
+For [Backup and Restore Amazon S3 Source](https://docs.confluent.io/kafka-connect-s3-source/current/backup-and-restore/overview.html#)
+
 ```bash
-$ ./s3-source.sh
+$ ./s3-source-backup-and-restore.sh
 ```
+
+For [Generalized Amazon S3 Source](https://docs.confluent.io/kafka-connect-s3-source/current/generalized/overview.html)
+
+```bash
+$ ./s3-source-generalized.sh
+```
+
 ## Details of what the script is doing
 
+### Backup and Restore Amazon S3 Source
 
 Steps from [connect-aws-s3-sink](connect/connect-aws-s3-sink/README.md)
 
@@ -44,17 +54,17 @@ $ curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
                "tasks.max": "1",
-                    "connector.class": "io.confluent.connect.s3.source.S3SourceConnector",
-                    "s3.region": "'"$AWS_REGION"'",
-                    "s3.bucket.name": "'"$AWS_BUCKET_NAME"'",
-                    "format.class": "io.confluent.connect.s3.format.avro.AvroFormat",
-                    "confluent.license": "",
-                    "confluent.topic.bootstrap.servers": "broker:9092",
-                    "confluent.topic.replication.factor": "1",
-                    "transforms": "AddPrefix",
-                    "transforms.AddPrefix.type": "org.apache.kafka.connect.transforms.RegexRouter",
-                    "transforms.AddPrefix.regex": ".*",
-                    "transforms.AddPrefix.replacement": "copy_of_$0"
+               "connector.class": "io.confluent.connect.s3.source.S3SourceConnector",
+               "s3.region": "'"$AWS_REGION"'",
+               "s3.bucket.name": "'"$AWS_BUCKET_NAME"'",
+               "format.class": "io.confluent.connect.s3.format.avro.AvroFormat",
+               "confluent.license": "",
+               "confluent.topic.bootstrap.servers": "broker:9092",
+               "confluent.topic.replication.factor": "1",
+               "transforms": "AddPrefix",
+               "transforms.AddPrefix.type": "org.apache.kafka.connect.transforms.RegexRouter",
+               "transforms.AddPrefix.regex": ".*",
+               "transforms.AddPrefix.replacement": "copy_of_$0"
           }' \
      http://localhost:8083/connectors/s3-source/config | jq .
 ```
