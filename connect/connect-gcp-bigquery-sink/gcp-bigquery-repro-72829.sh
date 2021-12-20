@@ -104,6 +104,8 @@ then
                     "value.converter": "io.confluent.connect.avro.AvroConverter",
                     "value.converter.schema.registry.url": "http://schema-registry:8081",
                     "value.converter.enhanced.avro.schema.support": "false",
+                    "_comment": "discard.type.doc.default allows to restore previous behaviour, i.e set the doc description in BQ:",
+                    "value.converter.discard.type.doc.default": "true",
                     "defaultDataset" : "'"$DATASET"'",
                     "mergeIntervalMs": "5000",
                     "bufferSize": "100000",
