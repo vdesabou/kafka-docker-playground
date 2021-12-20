@@ -20,7 +20,7 @@ function wait_for_solace () {
           fi
      done
      log "Solace is started!"
-     sleep 10
+     sleep 30
 }
 
 if [ ! -f ${DIR}/sol-jms-10.6.4.jar ]
