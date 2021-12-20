@@ -188,7 +188,7 @@ confluent kafka acl create --allow --service-account $source_service_account --o
 
 ### Using `confluent` CLI (not working)
 
-**FIXTHIS**: is there any way to specify that we want to use service account for destination cluster ?? Slack discussion [here](https://confluent.slack.com/archives/C01LNM9C8S2/p1638373082429100). For source cluster, this is ok because we can use `source-api-key`  
+There is no way to specify that we want to use service account for destination cluster. This is tracked internally by [CLI-1489](https://confluentinc.atlassian.net/browse/CLI-1489). For source cluster, this is ok because we can use `source-api-key`  
 
 Setup CLI to use destination cluster
 
