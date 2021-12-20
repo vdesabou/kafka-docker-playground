@@ -26,7 +26,7 @@ else
      export CONNECT_CONTAINER_HOME_DIR="/root"
 fi
 
-${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.proxy.yml"
+${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.backup-and-restore-proxy.yml"
 
 AWS_BUCKET_NAME=kafka-docker-playground-bucket-${USER}${TAG}
 AWS_BUCKET_NAME=${AWS_BUCKET_NAME//[-.]/}
