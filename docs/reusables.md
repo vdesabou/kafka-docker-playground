@@ -63,6 +63,27 @@ EOF
 > If Protobuf schema is very complex, it is better to use [♨️ Protobuf Java producer](/reusables?id=♨%EF%B8%8F-protobuf-java-producer) below.
 
 
+### 🔣 [kafka-json-schema-console-producer](https://docs.confluent.io/platform/current/schema-registry/serdes-develop/serdes-json.html)
+
+* 1️⃣ Using `seq`
+
+```
+seq -f "{\"f1\": \"value%g\"}" 10 | docker exec -i connect kafka-json-schema-console-producer --broker-list broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic a-topic --property value.schema='{"type":"object","properties":{"f1":{"type":"string"}}}'
+```
+
+* 2️⃣ Using [`Heredoc`](https://www.google.fr/url?sa=t&rct=j&q=&esrc=s&source=web&cd=&cad=rja&uact=8&ved=2ahUKEwjHrNGg8tPzAhVIOBoKHVsLA3wQFnoECAMQAw&url=https%3A%2F%2Flinuxize.com%2Fpost%2Fbash-heredoc%2F&usg=AOvVaw2Fsus1FqR5phtsBikk2-B6)
+
+```bash
+docker exec -i connect kafka-json-schema-console-producer --broker-list broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic a-topic --property value.schema='{"type":"object","properties":{"f1":{"type":"string"}}}' << EOF
+{"f1":"value1"}
+{"f1":"value2"}
+{"f1":"value3"}
+EOF
+```
+
+> [!TIP]
+> If JSON Schema schema is very complex, it is better to use [♨️ JSON Schema Java producer](/reusables?id=♨%EF%B8%8F-json-schema-java-producer) below.
+
 ### 🔣 [kafka-avro-console-producer](https://docs.confluent.io/platform/current/tutorials/examples/clients/docs/kafka-commands.html#produce-avro-records)
 
 * 1️⃣ Using `seq`
@@ -213,7 +234,103 @@ done
     container_name: producer
     environment:
       KAFKA_BOOTSTRAP_SERVERS: broker:9092
-      TOPIC: "customer-avro"
+      TOPIC: "customer-protobuf"
+      REPLICATION_FACTOR: 1
+      NUMBER_OF_PARTITIONS: 1
+      MESSAGE_BACKOFF: 1000 # Frequency of message injection
+      KAFKA_ACKS: "all" # default: "1"
+      KAFKA_REQUEST_TIMEOUT_MS: 20000
+      KAFKA_RETRY_BACKOFF_MS: 500
+      KAFKA_CLIENT_ID: "my-java-producer"
+      KAFKA_SCHEMA_REGISTRY_URL: "http://schema-registry:8081"
+```
+
+You can change the environment values to your needs (for example `TOPIC`).
+
+> [!WARNING]
+> Make sure to update `context` above with the right path.
+
+5. You can then invoke the Java producer by executing:
+
+```bash
+log "Run the Java producer"
+docker exec producer bash -c "java -jar producer-1.0.0-jar-with-dependencies.jar"
+```
+
+### ♨️ JSON Schema Java producer
+
+If you want to send a complex JSON Schema message, the easiest way is to use an JSON Schema JAVA producer which creates a JSON Schema Record using Maven [plugin](https://github.com/joelittlejohn/jsonschema2pojo) and populate it using [j-easy/easy-random](https://github.com/j-easy/easy-random).
+
+> [!TIP]
+> A complete example is available [here](https://github.com/vdesabou/kafka-docker-playground/tree/master/other/json-schema).
+
+Here are the steps to follow:
+
+1. Copy [`other/json-schema/producer`](https://github.com/vdesabou/kafka-docker-playground/tree/master/other/json-schema) directory into your test directory.
+
+2. Update [`other/json-schema/producer/src/main/resources/schema/Customer.json`](https://github.com/vdesabou/kafka-docker-playground/blob/master/other/json-schema/producer/src/main/resources/schema/Customer.json) with your JSON Schema schema but be careful, you need to keep `Customer` for the title:
+
+```json
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "additionalProperties": false,
+  "$id": "http://lh.test/Customer.schema.json",
+  "title": "Customer",
+  "description": "Customer description",
+  "type": "object",
+  "properties": {
+    "name": {
+      "description": "Customer name",
+      "type": "string",
+      "maxLength": 25
+    },
+    "surname": {
+      "description": "Customer surname",
+      "type": "string",
+      "minLength": 2
+    },
+    "email": {
+      "description": "Email",
+      "type": "string",
+      "pattern": "^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\\.[a-zA-Z0-9-.]+$"
+    }
+  },
+  "required": [
+    "name",
+    "surname"
+  ]
+}
+```
+
+3. In your script, and *before* `${DIR}/../../environment/plaintext/start.sh`, add this:
+
+```bash
+for component in producer
+do
+    set +e
+    log "🏗 Building jar for ${component}"
+    docker run -i --rm -e KAFKA_CLIENT_TAG=$KAFKA_CLIENT_TAG -e TAG=$TAG_BASE -v "${DIR}/${component}":/usr/src/mymaven -v "$HOME/.m2":/root/.m2 -v "${DIR}/${component}/target:/usr/src/mymaven/target" -w /usr/src/mymaven maven:3.6.1-jdk-11 mvn -Dkafka.tag=$TAG -Dkafka.client.tag=$KAFKA_CLIENT_TAG package > /tmp/result.log 2>&1
+    if [ $? != 0 ]
+    then
+        logerror "ERROR: failed to build java component $component"
+        tail -500 /tmp/result.log
+        exit 1
+    fi
+    set -e
+done
+```
+
+4. Add this in your `docker-compose` file:
+
+```yml
+  producer:
+    build:
+      context: ../../other/json-schema/producer
+    hostname: producer
+    container_name: producer
+    environment:
+      KAFKA_BOOTSTRAP_SERVERS: broker:9092
+      TOPIC: "customer-json-schema"
       REPLICATION_FACTOR: 1
       NUMBER_OF_PARTITIONS: 1
       MESSAGE_BACKOFF: 1000 # Frequency of message injection
@@ -282,6 +399,20 @@ docker exec connect kafka-protobuf-console-consumer -bootstrap-server broker:909
   
 ```
 docker exec connect kafka-protobuf-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic a-topic --property print.key=true --property key.separator=, --from-beginning --max-messages 1
+```
+
+### 🔣 [kafka-json-schema-console-consumer](https://docs.confluent.io/platform/current/schema-registry/serdes-develop/serdes-json.html)
+
+* 1️⃣ Simplest
+  
+```
+docker exec connect kafka-json-schema-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic a-topic --from-beginning --max-messages 1
+```
+
+* 2️⃣ Displaying key:
+  
+```
+docker exec connect kafka-json-schema-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic a-topic --property print.key=true --property key.separator=, --from-beginning --max-messages 1
 ```
 
 ## ✨ Remote debugging
