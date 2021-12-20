@@ -76,7 +76,7 @@ aws s3 cp --only-show-errors s3://$AWS_BUCKET_NAME/topics/s3_topic/partition=0/s
 docker run --rm -v ${DIR}:/tmp actions/avro-tools tojson /tmp/s3_topic+0+0000000000.avro
 rm -f s3_topic+0+0000000000.avro
 
-log "Creating S3 Source connector with bucket name <$AWS_BUCKET_NAME>"
+log "Creating Backup and Restore S3 Source connector with bucket name <$AWS_BUCKET_NAME>"
 curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
