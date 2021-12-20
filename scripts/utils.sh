@@ -299,10 +299,18 @@ EOF
         rm -rf $tmp_dir
       fi
     else
-      logerror "📁 Could not determine docker-compose override file from $PWD/$0 !"
-      logerror "👉 Please check you're running a connector example !"
-      logerror "🎓 Check the related documentation https://kafka-docker-playground.io/#/how-it-works?id=🐳-docker-override"
-      exit 1
+      if [ -z "$IGNORE_CHECK_FOR_DOCKER_COMPOSE" ] && [ "$0" != "/tmp/playground-command" ] && [ "$0" != "/tmp/playground-command-debugging" ]
+      then
+        logerror "📁 Could not determine docker-compose override file from $PWD/$0 !"
+        logerror "👉 Please check you're running a connector example !"
+        logerror "🎓 Check the related documentation https://kafka-docker-playground.io/#/how-it-works?id=🐳-docker-override"
+        exit 1
+      else
+        if [ -z "$CONNECT_TAG" ]
+        then
+          export CONNECT_TAG="$TAG"
+        fi
+      fi
     fi
   fi
 else
