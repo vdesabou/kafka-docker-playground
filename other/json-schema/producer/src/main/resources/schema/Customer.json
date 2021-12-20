@@ -1,0 +1,29 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "additionalProperties": false,
+  "$id": "http://lh.test/Customer.schema.json",
+  "title": "Customer",
+  "description": "Customer description",
+  "type": "object",
+  "properties": {
+    "name": {
+      "description": "Customer name",
+      "type": "string",
+      "maxLength": 25
+    },
+    "surname": {
+      "description": "Customer surname",
+      "type": "string",
+      "minLength": 2
+    },
+    "email": {
+      "description": "Email",
+      "type": "string",
+      "pattern": "^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\\.[a-zA-Z0-9-.]+$"
+    }
+  },
+  "required": [
+    "name",
+    "surname"
+  ]
+}
