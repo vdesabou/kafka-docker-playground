@@ -7,7 +7,6 @@
 Quickly test [S3 Source](https://docs.confluent.io/kafka-connect-s3-source/current/) connector.
 
 
-
 ## AWS Setup
 
 * Make sure you have an [AWS account](https://docs.aws.amazon.com/streams/latest/dev/before-you-begin.html#setting-up-sign-up-for-aws).
@@ -28,13 +27,13 @@ This project assumes `~/.aws/credentials` and `~/.aws/config` are set, see `dock
 
 Simply run:
 
-For [Backup and Restore Amazon S3 Source](https://docs.confluent.io/kafka-connect-s3-source/current/backup-and-restore/overview.html#)
+For [Backup and Restore Amazon S3 Source](https://docs.confluent.io/kafka-connect-s3-source/current/backup-and-restore/overview.html#):
 
 ```bash
 $ ./s3-source-backup-and-restore.sh
 ```
 
-For [Generalized Amazon S3 Source](https://docs.confluent.io/kafka-connect-s3-source/current/generalized/overview.html)
+For [Generalized Amazon S3 Source](https://docs.confluent.io/kafka-connect-s3-source/current/generalized/overview.html) (it requires version 2.0.0 at minimum):
 
 ```bash
 $ ./s3-source-generalized.sh
@@ -45,7 +44,6 @@ $ ./s3-source-generalized.sh
 ### Backup and Restore Amazon S3 Source
 
 Steps from [connect-aws-s3-sink](connect/connect-aws-s3-sink/README.md)
-
 
 The connector is created with:
 
@@ -95,6 +93,58 @@ value7
 value8
 
 value9
+Processed a total of 9 messages
+```
+
+### Generalized Amazon S3 Source
+
+Copy `generalized.quickstart.json` to bucket `$AWS_BUCKET_NAME/quickstart`:
+
+```bash
+aws s3 cp generalized.quickstart.json s3://$AWS_BUCKET_NAME/quickstart/generalized.quickstart.json
+```
+
+Creating Generalized S3 Source connector with bucket name `<$AWS_BUCKET_NAME>`:
+
+```bash
+$ curl -X PUT \
+     -H "Content-Type: application/json" \
+     --data '{
+               "tasks.max": "1",
+               "connector.class": "io.confluent.connect.s3.source.S3SourceConnector",
+               "s3.region": "'"$AWS_REGION"'",
+               "s3.bucket.name": "'"$AWS_BUCKET_NAME"'",
+               "format.class": "io.confluent.connect.s3.format.json.JsonFormat",
+               "value.converter": "org.apache.kafka.connect.json.JsonConverter",
+               "value.converter.schemas.enable": "false",
+               "confluent.license": "",
+               "mode": "GENERIC",
+               "topics.dir": "quickstart",
+               "topic.regex.list": "quick-start-topic:.*",
+               "confluent.topic.bootstrap.servers": "broker:9092",
+               "confluent.topic.replication.factor": "1"
+          }' \
+     http://localhost:8083/connectors/s3-source-generalized/config | jq .
+```
+
+Verifying topic `quick-start-topic`:
+
+```bash
+$ docker exec broker kafka-console-consumer -bootstrap-server broker:9092 --topic quick-start-topic --from-beginning --max-messages 9
+```
+
+Results:
+
+```json
+{"f1":"value1"}
+{"f1":"value2"}
+{"f1":"value3"}
+{"f1":"value4"}
+{"f1":"value5"}
+{"f1":"value6"}
+{"f1":"value7"}
+{"f1":"value8"}
+{"f1":"value9"}
 Processed a total of 9 messages
 ```
 
