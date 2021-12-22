@@ -94,4 +94,33 @@ do
     fi
 done
 
-exit 0
+log "Cleanup AWS S3 buckets"
+if [ ! -f $HOME/.aws/config ]
+then
+     logerror "ERROR: $HOME/.aws/config is not set"
+     exit 1
+fi
+if [ -z "$AWS_CREDENTIALS_FILE_NAME" ]
+then
+    export AWS_CREDENTIALS_FILE_NAME="credentials"
+fi
+if [ ! -f $HOME/.aws/$AWS_CREDENTIALS_FILE_NAME ]
+then
+     logerror "ERROR: $HOME/.aws/$AWS_CREDENTIALS_FILE_NAME is not set"
+     exit 1
+fi
+
+AWS_REGION=$(aws configure get region | tr '\r' '\n')
+
+for bucket in $(aws s3api list-buckets | jq .Buckets[].Name -r)
+do
+    if [[ $bucket = *kafkadockerplaygroundbucketrunner* ]] || [[ $bucket = *kafkadockerplaygroundfilepulsebucket* ]]
+    then
+      log "Empty bucket $bucket, if required"
+      set +e
+      aws s3 rm s3://$bucket --recursive --region $AWS_REGION
+      set -e
+      log "Removing bucket $bucket"
+      aws s3api delete-bucket --bucket $bucket
+    fi
+done
