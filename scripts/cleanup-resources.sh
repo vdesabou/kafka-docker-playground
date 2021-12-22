@@ -124,3 +124,13 @@ do
       aws s3api delete-bucket --bucket $bucket
     fi
 done
+
+log "Cleanup AWS Kinesis streams"
+for stream in $(aws kinesis list-streams | jq '.StreamNames[]' -r)
+do
+    if [[ $stream = *kafka_docker_playground* ]]
+    then
+      log "Removing stream $stream"
+      aws kinesis delete-stream --stream-name $stream
+    fi
+done
