@@ -1,0 +1,7 @@
+---
+version: '3.5'
+services:
+
+  connect:
+    environment:
+      CONNECT_REST_EXTENSION_CLASSES: 
