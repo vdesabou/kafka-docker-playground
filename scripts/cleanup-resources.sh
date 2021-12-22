@@ -77,4 +77,21 @@ do
   az ad app delete --id $app
 done
 
+log "Cleanup GCP GCS buckets"
+KEYFILE="${DIR}/../connect/connect-gcp-gcs-sink/keyfile.json"
+PROJECT="vincent-de-saboulin-lab"
+set +e
+docker rm -f gcloud-config-cleanup-resources
+set -e
+docker run -i -v ${KEYFILE}:/tmp/keyfile.json --name gcloud-config-cleanup-resources google/cloud-sdk:latest gcloud auth activate-service-account --project ${PROJECT} --key-file /tmp/keyfile.json
+
+for bucket in $(docker run -i --volumes-from gcloud-config-cleanup-resources google/cloud-sdk:latest gsutil ls)
+do
+    if [[ $bucket = *kafkadockerplaygroundbucketrunner* ]]
+    then
+      log "Removing bucket $bucket"
+      docker run -i --volumes-from gcloud-config-cleanup-resources google/cloud-sdk:latest gsutil -m rm -r $bucket
+    fi
+done
+
 exit 0
