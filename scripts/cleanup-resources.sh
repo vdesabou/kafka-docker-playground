@@ -119,9 +119,9 @@ do
       log "Empty bucket $bucket, if required"
       set +e
       aws s3 rm s3://$bucket --recursive --region $AWS_REGION
-      set -e
       log "Removing bucket $bucket"
       aws s3api delete-bucket --bucket $bucket
+      set -e
     fi
 done
 
