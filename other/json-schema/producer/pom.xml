@@ -46,13 +46,6 @@
             <version>${kafka.tag}</version>
         </dependency>
 
-        <dependency>
-            <groupId>org.apache.kafka</groupId>
-            <artifactId>kafka_2.13</artifactId>
-            <version>${kafka.tag}-ccs</version>
-            <scope>provided</scope>
-        </dependency>
-
         <!--for logging purposes-->
         <!-- https://mvnrepository.com/artifact/org.slf4j/slf4j-api -->
         <dependency>
