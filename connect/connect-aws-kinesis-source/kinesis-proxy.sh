@@ -28,7 +28,7 @@ fi
 
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.repro-proxy.yml"
 
-KINESIS_STREAM_NAME=my_kinesis_stream$TAG
+KINESIS_STREAM_NAME=kafka_docker_playground$TAG
 KINESIS_STREAM_NAME=${KINESIS_STREAM_NAME//[-.]/}
 
 set +e
@@ -45,7 +45,7 @@ log "Sleep 60 seconds to let the Kinesis stream being fully started"
 sleep 60
 
 log "Insert records in Kinesis stream"
-# The example shows that a record containing partition key 123 and data "test-message-1" is inserted into my_kinesis_stream.
+# The example shows that a record containing partition key 123 and data "test-message-1" is inserted into kafka_docker_playground.
 aws kinesis put-record --stream-name $KINESIS_STREAM_NAME --partition-key 123 --data test-message-1
 
 AWS_REGION=$(aws configure get region | tr '\r' '\n')

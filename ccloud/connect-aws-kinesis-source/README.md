@@ -33,7 +33,7 @@ $ ./kinesis.sh
 
 ## Details of what the script is doing
 
-Create a Kinesis stream `my_kinesis_stream`:
+Create a Kinesis stream `kafka_docker_playground`:
 
 ```
 $ aws kinesis create-stream --stream-name $KINESIS_STREAM_NAME --shard-count 1
