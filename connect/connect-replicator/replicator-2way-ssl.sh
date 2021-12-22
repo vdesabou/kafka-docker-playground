@@ -4,12 +4,6 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
-if ! version_gt $TAG_BASE "5.5.0"; then
-    # KNOWN ISSUE
-    logerror "💀 KNOWN ISSUE: https://confluentinc.atlassian.net/browse/REPL-1845"
-    exit 1
-fi
-
 ${DIR}/../../environment/2way-ssl/start.sh "${PWD}/docker-compose.2way-ssl.yml"
 
 
