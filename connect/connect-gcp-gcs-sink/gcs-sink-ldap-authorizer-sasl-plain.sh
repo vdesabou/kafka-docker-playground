@@ -31,7 +31,7 @@ set -e
 
 log "Removing existing objects in GCS, if applicable"
 set +e
-docker run -i --volumes-from gcloud-config google/cloud-sdk:latest gsutil rm -r gs://$GCS_BUCKET_NAME/topics/gcs_topic
+docker run -i --volumes-from gcloud-config google/cloud-sdk:latest gsutil -m rm -r gs://$GCS_BUCKET_NAME/topics/gcs_topic
 set -e
 
 docker exec broker kafka-acls --bootstrap-server broker:9092 --add --topic=gcs_topic --producer --allow-principal="Group:KafkaDevelopers" --command-config /service/kafka/users/kafka.properties
