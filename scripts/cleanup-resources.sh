@@ -116,11 +116,9 @@ for bucket in $(aws s3api list-buckets | jq .Buckets[].Name -r)
 do
     if [[ $bucket = *kafkadockerplaygroundbucketrunner* ]] || [[ $bucket = *kafkadockerplaygroundfilepulsebucket* ]]
     then
-      log "Empty bucket $bucket, if required"
       set +e
-      aws s3 rm s3://$bucket --recursive --region $AWS_REGION
       log "Removing bucket $bucket"
-      aws s3api delete-bucket --bucket $bucket
+      aws s3 rb s3://$bucket --force 
       set -e
     fi
 done
