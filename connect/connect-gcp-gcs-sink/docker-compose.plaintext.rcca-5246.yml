@@ -1,0 +1,26 @@
+---
+version: '3.5'
+services:
+
+  producer-v1:
+    build:
+      context: ../../connect/connect-gcp-gcs-sink/producer-v1/
+    hostname: producer-v1
+    container_name: producer-v1
+    environment:
+      KAFKA_BOOTSTRAP_SERVERS: broker:9092
+      TOPIC: "gcs_topic"
+      REPLICATION_FACTOR: 1
+      NUMBER_OF_PARTITIONS: 6
+      MESSAGE_BACKOFF: 1 # Frequency of message injection
+      KAFKA_ACKS: "all" # default: "1"
+      KAFKA_REQUEST_TIMEOUT_MS: 20000
+      KAFKA_RETRY_BACKOFF_MS: 500
+      KAFKA_CLIENT_ID: "my-java-producer-v1"
+      KAFKA_SCHEMA_REGISTRY_URL: "http://schema-registry:8081"
+
+  connect:
+    volumes:
+        - ../../connect/connect-gcp-gcs-sink/keyfile-rcca-5246-quickly-expiring-key.json:/tmp/keyfile-rcca-5246-quickly-expiring-key.json:ro
+    environment:
+      CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-gcs

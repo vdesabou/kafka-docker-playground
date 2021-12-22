@@ -1,0 +1,372 @@
+{
+    "connect.name": "OMSADM.VENDING_DEVICE_MV",
+    "connect.version": 1,
+    "fields": [
+        {
+            "default": null,
+            "name": "op_type",
+            "type": [
+                "null",
+                "string"
+            ]
+        },
+        {
+            "default": null,
+            "name": "op_ts",
+            "type": [
+                "null",
+                "string"
+            ]
+        },
+        {
+            "default": null,
+            "name": "current_ts",
+            "type": [
+                "null",
+                "string"
+            ]
+        },
+        {
+            "default": null,
+            "name": "pos",
+            "type": [
+                "null",
+                "string"
+            ]
+        },
+        {
+            "default": null,
+            "name": "tokens",
+            "type": [
+                "null",
+                {
+                    "type": "map",
+                    "values": "string"
+                }
+            ]
+        },
+        {
+            "default": null,
+            "name": "CUST_NO",
+            "type": [
+                "null",
+                "string"
+            ]
+        },
+        {
+            "default": null,
+            "name": "OWNER_BU",
+            "type": [
+                "null",
+                "string"
+            ]
+        },
+        {
+            "default": null,
+            "name": "DEVICE_SN",
+            "type": [
+                "null",
+                "string"
+            ]
+        },
+        {
+            "default": null,
+            "name": "DEVICE_NAME",
+            "type": [
+                "null",
+                "string"
+            ]
+        },
+        {
+            "default": null,
+            "name": "DEVICE_ID",
+            "type": [
+                "null",
+                "string"
+            ]
+        },
+        {
+            "default": null,
+            "name": "DEVICE_MODEL",
+            "type": [
+                "null",
+                "string"
+            ]
+        },
+        {
+            "default": null,
+            "name": "DEVICE_MODEL1",
+            "type": [
+                "null",
+                "string"
+            ]
+        },
+        {
+            "default": null,
+            "name": "DEVICE_MODEL2",
+            "type": [
+                "null",
+                "string"
+            ]
+        },
+        {
+            "default": null,
+            "name": "DEVICE_MODEL3",
+            "type": [
+                "null",
+                "string"
+            ]
+        },
+        {
+            "default": null,
+            "name": "DEVICE_MODEL4",
+            "type": [
+                "null",
+                "string"
+            ]
+        },
+        {
+            "default": null,
+            "name": "DEVICE_MODEL5",
+            "type": [
+                "null",
+                "string"
+            ]
+        },
+        {
+            "default": null,
+            "name": "DEVICE_ENCLOSURE_SN",
+            "type": [
+                "null",
+                "string"
+            ]
+        },
+        {
+            "default": null,
+            "name": "DEVICE_MODEL_SN1",
+            "type": [
+                "null",
+                "string"
+            ]
+        },
+        {
+            "default": null,
+            "name": "DEVICE_MODEL_SN2",
+            "type": [
+                "null",
+                "string"
+            ]
+        },
+        {
+            "default": null,
+            "name": "DEVICE_MODEL_SN3",
+            "type": [
+                "null",
+                "string"
+            ]
+        },
+        {
+            "default": null,
+            "name": "DEVICE_MODEL_SN4",
+            "type": [
+                "null",
+                "string"
+            ]
+        },
+        {
+            "default": null,
+            "name": "DEVICE_MODEL_SN5",
+            "type": [
+                "null",
+                "string"
+            ]
+        },
+        {
+            "default": null,
+            "name": "CUSTOMER_ACCOUNT",
+            "type": [
+                "null",
+                "string"
+            ]
+        },
+        {
+            "default": null,
+            "name": "LOCKER_COUNT",
+            "type": [
+                "null",
+                "double"
+            ]
+        },
+        {
+            "default": null,
+            "name": "IS_ACTIVE",
+            "type": [
+                "null",
+                "double"
+            ]
+        },
+        {
+            "default": null,
+            "name": "INSTALLATION_DT",
+            "type": [
+                "null",
+                "string"
+            ]
+        },
+        {
+            "default": null,
+            "name": "LAST_HEARTBEAT_DT",
+            "type": [
+                "null",
+                "string"
+            ]
+        },
+        {
+            "default": null,
+            "name": "SITE_NAME",
+            "type": [
+                "null",
+                "string"
+            ]
+        },
+        {
+            "default": null,
+            "name": "SITE_ID",
+            "type": [
+                "null",
+                "string"
+            ]
+        },
+        {
+            "default": null,
+            "name": "THUB_ACTUAL_SCORE",
+            "type": [
+                "null",
+                "double"
+            ]
+        },
+        {
+            "default": null,
+            "name": "THUB_POTENTIAL_SCORE",
+            "type": [
+                "null",
+                "double"
+            ]
+        },
+        {
+            "default": null,
+            "name": "EXPECTED_MONTHLY_SPEND",
+            "type": [
+                "null",
+                "double"
+            ]
+        },
+        {
+            "default": null,
+            "name": "INSTALL_DT",
+            "type": [
+                "null",
+                "string"
+            ]
+        },
+        {
+            "default": null,
+            "name": "PENDING_REMOVAL_SUBMIT_DT",
+            "type": [
+                "null",
+                "string"
+            ]
+        },
+        {
+            "default": null,
+            "name": "MAC_ADDRESS",
+            "type": [
+                "null",
+                "string"
+            ]
+        },
+        {
+            "default": null,
+            "name": "DEVICE_TYPE",
+            "type": [
+                "null",
+                "string"
+            ]
+        },
+        {
+            "default": null,
+            "name": "IS_CREDIT_CARD_ENABLED",
+            "type": [
+                "null",
+                "long"
+            ]
+        },
+        {
+            "default": null,
+            "name": "MERCHANT_ID",
+            "type": [
+                "null",
+                "string"
+            ]
+        },
+        {
+            "default": null,
+            "name": "TERMINAL_ID",
+            "type": [
+                "null",
+                "string"
+            ]
+        },
+        {
+            "default": null,
+            "name": "MACHINE_TYPE",
+            "type": [
+                "null",
+                "string"
+            ]
+        },
+        {
+            "default": null,
+            "name": "DEVICE_MASTER",
+            "type": [
+                "null",
+                "string"
+            ]
+        },
+        {
+            "default": null,
+            "name": "MACHINE_CONSIGNMENT_IND",
+            "type": [
+                "null",
+                "long"
+            ]
+        },
+        {
+            "default": null,
+            "name": "LOCKER_CONSIGNMENT_IND",
+            "type": [
+                "null",
+                "long"
+            ]
+        },
+        {
+            "default": null,
+            "name": "CUST_LOCATION_ID",
+            "type": [
+                "null",
+                "double"
+            ]
+        },
+        {
+            "default": null,
+            "name": "SERVICING_BU",
+            "type": [
+                "null",
+                "string"
+            ]
+        }
+    ],
+    "name": "Customer",
+    "namespace": "com.github.vdesabou",
+    "type": "record"
+}
