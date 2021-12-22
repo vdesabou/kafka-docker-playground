@@ -40,12 +40,6 @@
             <version>${kafka.tag}</version>
         </dependency>
 
-        <dependency>
-            <groupId>org.apache.kafka</groupId>
-            <artifactId>kafka_2.12</artifactId>
-            <version>${kafka.tag}-ccs</version>
-            <scope>provided</scope>
-        </dependency>
 
         <dependency>
             <groupId>io.confluent</groupId>
