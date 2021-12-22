@@ -11,8 +11,8 @@ services:
       KAFKA_BOOTSTRAP_SERVERS: broker:9092
       TOPIC: "gcs_topic"
       REPLICATION_FACTOR: 1
-      NUMBER_OF_PARTITIONS: 6
-      MESSAGE_BACKOFF: 1 # Frequency of message injection
+      NUMBER_OF_PARTITIONS: 1
+      MESSAGE_BACKOFF: 1000 # Frequency of message injection
       KAFKA_ACKS: "all" # default: "1"
       KAFKA_REQUEST_TIMEOUT_MS: 20000
       KAFKA_RETRY_BACKOFF_MS: 500
