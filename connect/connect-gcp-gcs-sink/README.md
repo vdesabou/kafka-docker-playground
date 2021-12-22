@@ -4,7 +4,7 @@
 
 ## Objective
 
-Quickly test [GCS Sink](https://docs.confluent.io/current/connect/kafka-connect-gcs/index.html#quick-start) connector.
+Quickly test [GCS Sink](https://docs.confluent.io/kafka-connect-gcs-sink/current/overview.html) connector.
 
 * Active Google Cloud Platform (GCP) account with authorization to create resources
 
