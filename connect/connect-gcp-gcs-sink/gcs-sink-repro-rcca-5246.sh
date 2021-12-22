@@ -5,7 +5,7 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
 function wait_for_repro () {
-     MAX_WAIT=600
+     MAX_WAIT=6000
      CUR_WAIT=0
      log "Waiting up to $MAX_WAIT seconds for error Invalid JWT Signature to happen"
      docker container logs connect > /tmp/out.txt 2>&1
