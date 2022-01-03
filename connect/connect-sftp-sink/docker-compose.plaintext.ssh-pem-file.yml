@@ -8,6 +8,8 @@ services:
     ports:
       - "2222:22"
     command: foo:pass:::upload
+    volumes:
+      - ../../connect/connect-sftp-sink/ssh_host_rsa_key.pub:/home/foo/.ssh/keys/id_rsa.pub:ro
 
   connect:
     volumes:
