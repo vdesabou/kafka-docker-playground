@@ -39,7 +39,7 @@ if [ ! -z "$AZ_USER" ] && [ ! -z "$AZ_PASS" ]
 then
     log "Logging to Azure using environment variables AZ_USER and AZ_PASS"
     az logout
-    az login -u "$AZ_USER" -p "$AZ_PASS"
+    az login -u "$AZ_USER" -p "$AZ_PASS" > /dev/null 2>&1
 else
     log "Logging to Azure using browser"
     az login

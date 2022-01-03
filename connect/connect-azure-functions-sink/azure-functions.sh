@@ -21,7 +21,7 @@ then
     set +e
     az logout
     set -e
-    az login -u "$AZ_USER" -p "$AZ_PASS"
+    az login -u "$AZ_USER" -p "$AZ_PASS" > /dev/null 2>&1
 else
     log "Logging to Azure using browser"
     az login
