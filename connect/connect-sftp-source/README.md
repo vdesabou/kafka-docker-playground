@@ -13,15 +13,11 @@ Quickly test [SFTP Source](https://docs.confluent.io/current/connect/kafka-conne
 
 * With CSV (no schema)
 
-Simply run:
-
 ```bash
 $ ./sftp-source-csv.sh
 ```
 
 * With CSV (with schema)
-
-Simply run:
 
 ```bash
 $ ./sftp-source-csv-with-schema.sh
@@ -29,15 +25,11 @@ $ ./sftp-source-csv-with-schema.sh
 
 * With TSV
 
-Simply run:
-
 ```bash
 $ ./sftp-source-tsv.sh
 ```
 
 * With JSON (no schema)
-
-Simply run:
 
 ```bash
 $ ./sftp-source-json.sh
@@ -45,16 +37,26 @@ $ ./sftp-source-json.sh
 
 * With JSON (with schema)
 
-Simply run:
-
 ```bash
 $ ./sftp-source-json-with-schema.sh
 ```
 
-or for a kerberos example:
+* With Kerberos:
 
 ```bash
-$ ./sftp-sink-kerberos.sh
+$ ./sftp-source-kerberos.sh
+```
+
+* With SSH key
+
+```bash
+$ ./sftp-source-ssh-key.sh
+```
+
+* With SSH PEM file
+
+```bash
+$ ./sftp-source-ssh-pem-file.sh
 ```
 
 
