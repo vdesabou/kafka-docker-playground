@@ -22,8 +22,6 @@ services:
     hostname: broker
     container_name: broker
     restart: always
-    depends_on:
-      - zookeeper
     ports:
       - "9092:9092"
       - "29092:29092"
@@ -82,7 +80,6 @@ services:
     container_name: connect
     restart: always
     depends_on:
-      - zookeeper
       - broker
       - schema-registry
     ports:
@@ -190,7 +187,6 @@ services:
     container_name: control-center
     restart: always
     depends_on:
-      - zookeeper
       - broker
       - schema-registry
       - connect
