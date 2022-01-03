@@ -16,10 +16,22 @@ Simply run:
 $ ./sftp-sink.sh
 ```
 
-or
+or with Kerberos
 
 ```bash
 $ ./sftp-sink-kerberos.sh
+```
+
+or with SSH key
+
+```bash
+$ ./sftp-sink-ssh-key.sh
+```
+
+or with SSH PEM file
+
+```bash
+$ ./sftp-sink-ssh-pem-file.sh
 ```
 
 ## Details of what the script is doing
