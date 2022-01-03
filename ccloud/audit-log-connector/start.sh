@@ -4,6 +4,17 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
+if [ ! -z "$CI" ]
+then
+     # running with github actions
+     if [ ! -f ../../secrets.properties ]
+     then
+          logerror "../../secrets.properties is not present!"
+          exit 1
+     fi
+     source ../../secrets.properties > /dev/null 2>&1
+fi
+
 AUDIT_LOG_CLUSTER_BOOTSTRAP_SERVERS=${AUDIT_LOG_CLUSTER_BOOTSTRAP_SERVERS:-$1}
 AUDIT_LOG_CLUSTER_API_KEY=${AUDIT_LOG_CLUSTER_API_KEY:-$2}
 AUDIT_LOG_CLUSTER_API_SECRET=${AUDIT_LOG_CLUSTER_API_SECRET:-$3}
