@@ -12,3 +12,4 @@ s3-sink-proxy-with-assuming-iam-role.sh
 kinesis-proxy-with-assuming-iam-role.sh
 # see https://github.com/vdesabou/kafka-docker-playground/blob/master/other/ldap-authorizer-with-ldap-failover/README.md#using-dns-srv-records-with-ldap-over-tls
 start-ldaps.sh
+update_run.sh
