@@ -17,13 +17,13 @@ RSA_PRIVATE_KEY=$(awk '{printf "%s\\r\\n", $0}' ssh_host_rsa_key)
 log "RSA_PUBLIC_KEY=$RSA_PUBLIC_KEY"
 log "RSA_PRIVATE_KEY=$RSA_PRIVATE_KEY"
 
-${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
+${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.ssh-key.yml"
 
 log "Creating SFTP Sink connector"
 curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
-        "topics": "test_sftp_sink",
+               "topics": "test_sftp_sink",
                "tasks.max": "1",
                "connector.class": "io.confluent.connect.sftp.SftpSinkConnector",
                "partitioner.class": "io.confluent.connect.storage.partitioner.DefaultPartitioner",
