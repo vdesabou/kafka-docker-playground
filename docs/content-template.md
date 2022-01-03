@@ -161,12 +161,12 @@
   - 🌤 Using [cp-helm-charts](https://github.com/vdesabou/kafka-docker-playground/tree/master/ccloud/cp-helm-chart/) with Confluent Cloud ![not tested](https://img.shields.io/badge/CI-not%20tested!-violet)
   - 🌦️ Using [Confluent Operator](https://github.com/vdesabou/kafka-docker-playground/tree/master/ccloud/operator/) with Confluent Cloud ![not tested](https://img.shields.io/badge/CI-not%20tested!-violet)
   - 🌨 Using [Confluent for Kubenetes](https://github.com/vdesabou/kafka-docker-playground/tree/master/ccloud/confluent-for-kubernetes/) with Confluent Cloud ![not tested](https://img.shields.io/badge/CI-not%20tested!-violet)
-  - 📈 Demo using [dabz/ccloudexporter](https://github.com/Dabz/ccloudexporter) :ccloud/ccloudexporter:
+  - 📈 [Demo](https://github.com/vdesabou/kafka-docker-playground/tree/master/ccloud/ccloudexporter/) using [dabz/ccloudexporter](https://github.com/Dabz/ccloudexporter) :ccloud/ccloudexporter:
   - 💠 [.NET](https://github.com/vdesabou/kafka-docker-playground/tree/master/ccloud/client-dotnet) client (producer/consumer) ![not tested](https://img.shields.io/badge/CI-not%20tested!-violet)
   - 🗯 [Go](https://github.com/vdesabou/kafka-docker-playground/tree/master/ccloud/client-go) client (producer/consumer) ![not tested](https://img.shields.io/badge/CI-not%20tested!-violet)
   - 🐚 [KafkaJS](https://github.com/vdesabou/kafka-docker-playground/tree/master/ccloud/client-kafkajs) client (producer/consumer) ![not tested](https://img.shields.io/badge/CI-not%20tested!-violet)
   - 🐍 [Python](https://github.com/vdesabou/kafka-docker-playground/tree/master/ccloud/client-python) client (producer/consumer) ![not tested](https://img.shields.io/badge/CI-not%20tested!-violet)
-  - 🧑‍🏭 Managing topics and ACLs using [matt-mangia/kafka-admin](https://github.com/matt-mangia/kafka-admin) :ccloud/kafka-admin:
+  - 🧑‍🏭 [Managing](https://github.com/vdesabou/kafka-docker-playground/tree/master/ccloud/kafka-admin/) topics and ACLs using [matt-mangia/kafka-admin](https://github.com/matt-mangia/kafka-admin) :ccloud/kafka-admin:
   - ♻️ Confluent Replicator [OnPrem to cloud and Cloud to Cloud examples](https://github.com/vdesabou/kafka-docker-playground/tree/master/ccloud/replicator) :ccloud/replicator:
   - 🗺️ [Multi-Cluster Schema Registry](https://github.com/vdesabou/kafka-docker-playground/tree/master/ccloud/multiple-sr-hybrid) with hybrid configuration (onprem/confluent cloud) ![not tested](https://img.shields.io/badge/CI-not%20tested!-violet)
   - 🔑 [Confluent REST Proxy Security Plugin](https://github.com/vdesabou/kafka-docker-playground/tree/master/ccloud/rest-proxy-security-plugin) with Principal Propagation :ccloud/rest-proxy-security-plugin:
@@ -175,6 +175,7 @@
   - 🔰 [Confluent Cloud Networking](https://github.com/vdesabou/kafka-docker-playground/tree/master/ccloud/haproxy) using HAProxy ![not tested](https://img.shields.io/badge/CI-not%20tested!-violet)
   - 🌎️ [Apache Mirror Maker 2](https://github.com/vdesabou/kafka-docker-playground/tree/master/ccloud/mirrormaker2) ![not tested](https://img.shields.io/badge/CI-not%20tested!-violet)
   - ♻️ [Cluster Linking Quick Start with service account only](https://github.com/vdesabou/kafka-docker-playground/tree/master/ccloud/cluster-linking-with-service-accounts-only) ![not tested](https://img.shields.io/badge/CI-not%20tested!-violet)
+  - 🧬 [Confluent Cloud example of connector getting data from Audit Log cluster](https://github.com/vdesabou/kafka-docker-playground/tree/master/ccloud/audit-log-connector/) :ccloud/audit-log-connector:
 
 ## 🌍 Multi-Data-Center deployments
 
