@@ -109,7 +109,7 @@ curl -X PUT \
      http://localhost:8083/connectors/azure-cognitive-search-proxy/config | jq .
 
 
-sleep 10
+sleep 30
 
 log "Searching Azure Search index"
 curl -X GET \
