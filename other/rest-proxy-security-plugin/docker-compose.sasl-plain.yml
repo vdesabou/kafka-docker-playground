@@ -7,7 +7,7 @@ services:
       KAFKA_LOG4J_LOGGERS: "kafka.authorizer.logger=DEBUG"
       KAFKA_AUTHORIZER_CLASS_NAME: $KAFKA_AUTHORIZER_CLASS_NAME
       KAFKA_ALLOW_EVERYONE_IF_NO_ACL_FOUND: "true"
-      KAFKA_LISTENER_NAME_EXTERNAL_PLAIN_SASL_JAAS_CONFIG: |
+      KAFKA_LISTENER_NAME_BROKER_PLAIN_SASL_JAAS_CONFIG: |
               org.apache.kafka.common.security.plain.PlainLoginModule required \
               username="broker" \
               password="broker" \
