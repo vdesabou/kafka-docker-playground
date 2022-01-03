@@ -27,7 +27,7 @@ services:
           - ../../environment/ldap-authorizer-sasl-plain/kafka/kafka.jaas.conf:/etc/kafka/kafka_server_jaas.conf
         environment:
             # override to add our users
-            KAFKA_LISTENER_NAME_EXTERNAL_PLAIN_SASL_JAAS_CONFIG: |
+            KAFKA_LISTENER_NAME_BROKER_PLAIN_SASL_JAAS_CONFIG: |
                     org.apache.kafka.common.security.plain.PlainLoginModule required \
                     username="broker" \
                     password="broker" \

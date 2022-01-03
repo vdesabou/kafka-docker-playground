@@ -23,7 +23,7 @@ services:
 
     broker:
         environment:
-            KAFKA_LISTENER_NAME_EXTERNAL_PLAIN_SASL_SERVER_CALLBACK_HANDLER_CLASS: io.confluent.security.auth.provider.ldap.LdapAuthenticateCallbackHandler
+            KAFKA_LISTENER_NAME_BROKER_PLAIN_SASL_SERVER_CALLBACK_HANDLER_CLASS: io.confluent.security.auth.provider.ldap.LdapAuthenticateCallbackHandler
             # Configure MDS to talk to AD/LDAP
             KAFKA_LDAP_JAVA_NAMING_FACTORY_INITIAL: com.sun.jndi.ldap.LdapCtxFactory
             KAFKA_LDAP_COM_SUN_JNDI_LDAP_READ_TIMEOUT: 3000
