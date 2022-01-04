@@ -24,5 +24,8 @@ ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml
 log "Starting producer"
 docker exec -i client-dotnet bash -c "dotnet DotNet.dll produce test1"
 
-log "Starting consumer. Logs are in consumer.log."
-docker exec -i client-dotnet bash -c "dotnet DotNet.dll consume test1" > consumer.log 2>&1 &
+log "Starting consumer. Logs are in /tmp/result.log"
+docker exec -i client-dotnet bash -c "dotnet DotNet.dll consume test1" > /tmp/result.log 2>&1 &
+sleep 5
+cat /tmp/result.log
+grep "alice" /tmp/result.log
