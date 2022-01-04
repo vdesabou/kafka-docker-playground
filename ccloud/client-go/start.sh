@@ -5,6 +5,10 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
+set +e
+docker rm -f go-ccloud-consumer go-ccloud-producer
+set -e
+
 CONFIG_FILE=~/.confluent/config
 
 if [ ! -f ${CONFIG_FILE} ]
@@ -29,13 +33,19 @@ sed -e "s|:BOOTSTRAP_SERVERS:|$BOOTSTRAP_SERVERS|g" \
     -e "s|:CLOUD_SECRET:|$CLOUD_SECRET|g" \
     ${DIR}/librdkafka.config.template > ${DIR}/librdkafka.config
 
+log "Creating topic in Confluent Cloud (auto.create.topics.enable=false)"
+set +e
+create_topic client_go_$TAG
+set -e
 
 log "Building docker image"
 docker build -t vdesabou/go-ccloud-example-docker .
 
 log "Starting producer"
-docker run -v ${DIR}/librdkafka.config:/tmp/librdkafka.config vdesabou/go-ccloud-example-docker ./producer -f /tmp/librdkafka.config -t testgo
+docker run --name dotnet-ccloud-producer -v ${DIR}/librdkafka.config:/tmp/librdkafka.config vdesabou/go-ccloud-example-docker ./producer -f /tmp/librdkafka.config -t client_go_$TAG
 
-
-log "Starting consumer (use CTLR+c to stop)"
-docker run -v ${DIR}/librdkafka.config:/tmp/librdkafka.config vdesabou/go-ccloud-example-docker ./consumer -f /tmp/librdkafka.config -t testgo
+log "Starting consumer. Logs are in /tmp/result.log"
+docker run --name go-ccloud-consumer -v ${DIR}/librdkafka.config:/tmp/librdkafka.config -e TAG=$TAG vdesabou/go-ccloud-example-docker ./consumer -f /tmp/librdkafka.config -t client_go_$TAG > /tmp/result.log 2>&1 &
+sleep 5
+cat /tmp/result.log
+grep "alice" /tmp/result.log
