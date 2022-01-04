@@ -23,39 +23,36 @@ else
 fi
 #############
 
-if ! version_gt $TAG_BASE "5.9.9"; then
-     # note: for 6.x CONNECT_TOPIC_CREATION_ENABLE=true
-     log "Creating topic in Confluent Cloud (auto.create.topics.enable=false)"
-     set +e
-     create_topic artists
-     create_topic songs
-     set -e
-fi
+log "Creating topic in Confluent Cloud (auto.create.topics.enable=false)"
+set +e
+create_topic artists
+create_topic songs
+set -e
 
 log "Creating GCP Firebase Sink connector"
 curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
                "connector.class" : "io.confluent.connect.firebase.FirebaseSinkConnector",
-                    "tasks.max" : "1",
-                    "topics":"artists,songs",
-                    "gcp.firebase.credentials.path": "/tmp/keyfile.json",
-                    "gcp.firebase.database.reference": "https://'"$PROJECT"'.firebaseio.com/musicBlog",
-                    "insert.mode":"update",
-                    "key.converter" : "io.confluent.connect.avro.AvroConverter",
-                    "key.converter.schema.registry.url": "'"$SCHEMA_REGISTRY_URL"'",
-                    "key.converter.basic.auth.user.info": "${file:/data:schema.registry.basic.auth.user.info}",
-                    "key.converter.basic.auth.credentials.source": "USER_INFO",
-                    "value.converter" : "io.confluent.connect.avro.AvroConverter",
-                    "value.converter.schema.registry.url": "'"$SCHEMA_REGISTRY_URL"'",
-                    "value.converter.basic.auth.user.info": "${file:/data:schema.registry.basic.auth.user.info}",
-                    "value.converter.basic.auth.credentials.source": "USER_INFO",
-                    "confluent.topic.ssl.endpoint.identification.algorithm" : "https",
-                    "confluent.topic.sasl.mechanism" : "PLAIN",
-                    "confluent.topic.bootstrap.servers": "${file:/data:bootstrap.servers}",
-                    "confluent.topic.sasl.jaas.config" : "org.apache.kafka.common.security.plain.PlainLoginModule required username=\"${file:/data:sasl.username}\" password=\"${file:/data:sasl.password}\";",
-                    "confluent.topic.security.protocol" : "SASL_SSL",
-                    "confluent.topic.replication.factor": "3"
+               "tasks.max" : "1",
+               "topics":"artists,songs",
+               "gcp.firebase.credentials.path": "/tmp/keyfile.json",
+               "gcp.firebase.database.reference": "https://'"$PROJECT"'.firebaseio.com/musicBlog",
+               "insert.mode":"update",
+               "key.converter" : "io.confluent.connect.avro.AvroConverter",
+               "key.converter.schema.registry.url": "'"$SCHEMA_REGISTRY_URL"'",
+               "key.converter.basic.auth.user.info": "${file:/data:schema.registry.basic.auth.user.info}",
+               "key.converter.basic.auth.credentials.source": "USER_INFO",
+               "value.converter" : "io.confluent.connect.avro.AvroConverter",
+               "value.converter.schema.registry.url": "'"$SCHEMA_REGISTRY_URL"'",
+               "value.converter.basic.auth.user.info": "${file:/data:schema.registry.basic.auth.user.info}",
+               "value.converter.basic.auth.credentials.source": "USER_INFO",
+               "confluent.topic.ssl.endpoint.identification.algorithm" : "https",
+               "confluent.topic.sasl.mechanism" : "PLAIN",
+               "confluent.topic.bootstrap.servers": "${file:/data:bootstrap.servers}",
+               "confluent.topic.sasl.jaas.config" : "org.apache.kafka.common.security.plain.PlainLoginModule required username=\"${file:/data:sasl.username}\" password=\"${file:/data:sasl.password}\";",
+               "confluent.topic.security.protocol" : "SASL_SSL",
+               "confluent.topic.replication.factor": "3"
           }' \
      http://localhost:8083/connectors/firebase-sink/config | jq .
 
@@ -76,3 +73,19 @@ docker exec -i -e BOOTSTRAP_SERVERS="$BOOTSTRAP_SERVERS" -e SASL_JAAS_CONFIG="$S
 EOF
 
 log "Follow README to verify data is in Firebase"
+
+if [ ! -z "$CI" ]
+then
+     
+     if [ ! -f ../../secrets.properties ]
+     then
+          logerror "../../secrets.properties is not present!"
+          exit 1
+     fi
+     source ../../secrets.properties > /dev/null 2>&1
+     
+     log "Verifying data is in Firebase"
+     docker run -p 9005:9005 -e FIREBASE_TOKEN=$FIREBASE_TOKEN -e PROJECT=$PROJECT -i kamshak/firebase-tools-docker firebase database:get / --token "$FIREBASE_TOKEN" --project "$PROJECT" | jq . > /tmp/result.log  2>&1
+     cat /tmp/result.log
+     grep "Michael Jackson" /tmp/result.log
+fi
