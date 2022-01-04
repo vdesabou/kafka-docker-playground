@@ -14,6 +14,15 @@ fi
 
 ${DIR}/../../ccloud/environment/start.sh "${PWD}/docker-compose-repro-debezium.yml"
 
+if [ -f /tmp/delta_configs/env.delta ]
+then
+     source /tmp/delta_configs/env.delta
+else
+     logerror "ERROR: /tmp/delta_configs/env.delta has not been generated"
+     exit 1
+fi
+#############
+
 if ! version_gt $TAG_BASE "5.9.9"; then
      # note: for 6.x CONNECT_TOPIC_CREATION_ENABLE=true
      log "Creating topic in Confluent Cloud (auto.create.topics.enable=false)"
