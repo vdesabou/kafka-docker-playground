@@ -259,6 +259,7 @@ There is also a Confluent Cloud version available [here](https://github.com/vdes
 - 🎫 [Multiple Event Types in the Same Topic](https://github.com/vdesabou/kafka-docker-playground/tree/master/other/multiple-event-types-in-topic) :other/multiple-event-types-in-topic:
 - 👊 [Integrate syslogs to detect SSH failure connections](https://github.com/vdesabou/kafka-docker-playground/tree/master/other/syslog-logstash-ksqldb) using Syslog source connector, LogStash and ksqlDB :other/syslog-logstash-ksqldb:
 - 📶 [How to ensure high availability of LDAP using DNS SRV Records](https://github.com/vdesabou/kafka-docker-playground/tree/master/other/ldap-authorizer-with-ldap-failover) :other/ldap-authorizer-with-ldap-failover:
-- 🧩 [Protobuf examples](https://github.com/vdesabou/kafka-docker-playground/tree/master/other/schema-format-protobuf) :other/schema-format-protobuf:
-- 🎱 [JSON Schema examples](https://github.com/vdesabou/kafka-docker-playground/tree/master/other/schema-format-json-schema) :other/schema-format-json-schema:
+- 🕹 [AVRO examples](https://github.com/vdesabou/kafka-docker-playground/tree/master/other/schema-format-avro) including a JAVA producer :other/schema-format-avro:
+- 🧩 [Protobuf examples](https://github.com/vdesabou/kafka-docker-playground/tree/master/other/schema-format-protobuf) including a JAVA producer :other/schema-format-protobuf:
+- 🎱 [JSON Schema examples](https://github.com/vdesabou/kafka-docker-playground/tree/master/other/schema-format-json-schema) including a JAVA producer :other/schema-format-json-schema:
 - 🚏 [How to use kafka-avro-console-producer and kafka-avro-console-consumer when Schema Registry is behind a proxy](https://github.com/vdesabou/kafka-docker-playground/tree/master/other/http-proxy-schema-registry) :other/http-proxy-schema-registry:
