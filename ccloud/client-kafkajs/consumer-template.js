@@ -13,7 +13,9 @@ const kafka = new Kafka({
 })
 
 
-const topic = 'kafkajs'
+const myArgs = process.argv.slice(2)
+console.log('topic is : ', myArgs[0])
+const topic = myArgs[0]
 const consumer = kafka.consumer({ groupId: 'test-group' })
 const admin = kafka.admin()
 
