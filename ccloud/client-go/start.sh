@@ -44,7 +44,7 @@ log "Building docker image"
 docker build -t vdesabou/go-ccloud-example-docker .
 
 log "Starting producer"
-docker run --name dotnet-ccloud-producer -v ${DIR}/librdkafka.config:/tmp/librdkafka.config vdesabou/go-ccloud-example-docker ./producer -f /tmp/librdkafka.config -t client_go_$TAG
+docker run --name dotnet-ccloud-producer -v ${DIR}/librdkafka.config:/tmp/librdkafka.config -e TAG=$TAG vdesabou/go-ccloud-example-docker ./producer -f /tmp/librdkafka.config -t client_go_$TAG
 
 log "Starting consumer. Logs are in /tmp/result.log"
 docker run --name go-ccloud-consumer -v ${DIR}/librdkafka.config:/tmp/librdkafka.config -e TAG=$TAG vdesabou/go-ccloud-example-docker ./consumer -f /tmp/librdkafka.config -t client_go_$TAG > /tmp/result.log 2>&1 &

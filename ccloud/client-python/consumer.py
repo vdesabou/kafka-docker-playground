@@ -48,8 +48,9 @@ if __name__ == '__main__':
 
     # Process messages
     total_count = 0
+    total_messages = 0
     try:
-        while True:
+        while total_messages < 10:
             msg = consumer.poll(1.0)
             if msg is None:
                 # No message available within timeout.
@@ -67,11 +68,10 @@ if __name__ == '__main__':
                 data = json.loads(record_value)
                 count = data['count']
                 total_count += count
+                total_messages += 1
                 print("Consumed record with key {} and value {}, \
                       and updated total count to {}"
                       .format(record_key, record_value, total_count))
-    except KeyboardInterrupt:
-        pass
     finally:
         # Leave group and commit final offsets
         consumer.close()
