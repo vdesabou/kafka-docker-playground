@@ -124,13 +124,13 @@ docker exec broker kafka-producer-perf-test --topic a-topic --num-records 200000
 If you want to send a complex AVRO message, the easiest way is to use an Avro JAVA producer which creates a Specific Record using Maven plugin and populate it using [j-easy/easy-random](https://github.com/j-easy/easy-random).
 
 > [!TIP]
-> A complete example is available [here](https://github.com/vdesabou/kafka-docker-playground/blob/master/connect/connect-gcp-bigquery-sink/gcp-bigquery-repro-66277.sh).
+> A complete example is available [here](https://github.com/vdesabou/kafka-docker-playground/blob/master/other/schema-format-avro).
 
 Here are the steps to follow:
 
-1. Copy [`connect/connect-gcp-bigquery-sink/producer-v1`](https://github.com/vdesabou/kafka-docker-playground/tree/master/connect/connect-gcp-bigquery-sink/producer-v1) directory into your test directory.
+1. Copy [`other/schema-format-avro/producer`](https://github.com/vdesabou/kafka-docker-playground/tree/master/other/schema-format-avro/producer) directory into your test directory.
 
-2. Update [`connect/connect-gcp-bigquery-sink/producer-v1/src/main/resources/avro/customer-v1.avsc`](https://github.com/vdesabou/kafka-docker-playground/blob/master/connect/connect-gcp-bigquery-sink/producer-v1/src/main/resources/avro/customer-v1.avsc) with your AVRO schema but be careful, you need to keep `Customer` for the name and `com.github.vdesabou` for the namespace:
+2. Update [`other/schema-format-avro/producer/src/main/resources/avro/customer.avsc`](https://github.com/vdesabou/kafka-docker-playground/blob/master/other/schema-format-avro/producer/src/main/resources/avro/customer.avsc) with your AVRO schema but be careful, you need to keep `Customer` for the name and `com.github.vdesabou` for the namespace:
 
 ```json
     "name": "Customer",
@@ -140,7 +140,7 @@ Here are the steps to follow:
 3. In your script, and *before* `${DIR}/../../environment/plaintext/start.sh`, add this:
 
 ```bash
-for component in producer-v1
+for component in producer
 do
     set +e
     log "🏗 Building jar for ${component}"
@@ -160,7 +160,7 @@ done
 ```yml
   producer-v1:
     build:
-      context: ../../connect/connect-gcp-bigquery-sink/producer-v1/
+      context: ../../other/schema-format-avro/producer
     hostname: producer-v1
     container_name: producer-v1
     environment:
@@ -193,13 +193,13 @@ docker exec producer-v1 bash -c "java -jar producer-v1-1.0.0-jar-with-dependenci
 If you want to send a complex Protobuf message, the easiest way is to use an Protobuf JAVA producer which creates a Protobuf Record using Maven [plugin](https://github.com/os72/protoc-jar-maven-plugin) and populate it using [j-easy/easy-random](https://github.com/j-easy/easy-random).
 
 > [!TIP]
-> A complete example is available [here](https://github.com/vdesabou/kafka-docker-playground/tree/master/other/protobuf-schema).
+> A complete example is available [here](https://github.com/vdesabou/kafka-docker-playground/tree/master/other/schema-format-protobuf).
 
 Here are the steps to follow:
 
-1. Copy [`other/protobuf-schema/producer`](https://github.com/vdesabou/kafka-docker-playground/tree/master/other/protobuf-schema) directory into your test directory.
+1. Copy [`other/schema-format-protobuf/producer`](https://github.com/vdesabou/kafka-docker-playground/tree/master/other/schema-format-protobuf) directory into your test directory.
 
-2. Update [`other/protobuf-schema/producer/src/main/resources/avro/Customer.proto`](https://github.com/vdesabou/kafka-docker-playground/blob/master/other/protobuf-schema/producer/src/main/resources/Customer.proto) with your Protobuf schema but be careful, you need to keep `Customer` for the name and `com.github.vdesabou` for the package and `CustomerImpl` for the `java_outer_classname`:
+2. Update [`other/schema-format-protobuf/producer/src/main/resources/avro/Customer.proto`](https://github.com/vdesabou/kafka-docker-playground/blob/master/other/schema-format-protobuf/producer/src/main/resources/Customer.proto) with your Protobuf schema but be careful, you need to keep `Customer` for the name and `com.github.vdesabou` for the package and `CustomerImpl` for the `java_outer_classname`:
 
 ```
 package com.github.vdesabou;
@@ -229,7 +229,7 @@ done
 ```yml
   producer:
     build:
-      context: ../../other/protobuf-schema/producer
+      context: ../../other/schema-format-protobuf/producer
     hostname: producer
     container_name: producer
     environment:
@@ -262,13 +262,13 @@ docker exec producer bash -c "java -jar producer-1.0.0-jar-with-dependencies.jar
 If you want to send a complex JSON Schema message, the easiest way is to use an JSON Schema JAVA producer which creates a JSON Schema Record using Maven [plugin](https://github.com/joelittlejohn/jsonschema2pojo) and populate it using [j-easy/easy-random](https://github.com/j-easy/easy-random).
 
 > [!TIP]
-> A complete example is available [here](https://github.com/vdesabou/kafka-docker-playground/tree/master/other/json-schema).
+> A complete example is available [here](https://github.com/vdesabou/kafka-docker-playground/tree/master/other/schema-format-json-schema).
 
 Here are the steps to follow:
 
-1. Copy [`other/json-schema/producer`](https://github.com/vdesabou/kafka-docker-playground/tree/master/other/json-schema) directory into your test directory.
+1. Copy [`other/schema-format-json-schema/producer`](https://github.com/vdesabou/kafka-docker-playground/tree/master/other/schema-format-json-schema) directory into your test directory.
 
-2. Update [`other/json-schema/producer/src/main/resources/schema/Customer.json`](https://github.com/vdesabou/kafka-docker-playground/blob/master/other/json-schema/producer/src/main/resources/schema/Customer.json) with your JSON Schema schema but be careful, you need to keep `Customer` for the title:
+2. Update [`other/schema-format-json-schema/producer/src/main/resources/schema/Customer.json`](https://github.com/vdesabou/kafka-docker-playground/blob/master/other/schema-format-json-schema/producer/src/main/resources/schema/Customer.json) with your JSON Schema schema but be careful, you need to keep `Customer` for the title:
 
 ```json
 {
@@ -325,7 +325,7 @@ done
 ```yml
   producer:
     build:
-      context: ../../other/json-schema/producer
+      context: ../../other/schema-format-json-schema/producer
     hostname: producer
     container_name: producer
     environment:
