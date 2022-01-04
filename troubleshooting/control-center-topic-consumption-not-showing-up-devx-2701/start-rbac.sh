@@ -4,6 +4,11 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
+NOW="$(date +%s)000"
+sed -e "s|:NOW:|$NOW|g" \
+    ${DIR}/../../ksqldb/benchmarking-scenarios/schemas/orders-template.avro > ${DIR}/../../ksqldb/benchmarking-scenarios/schemas/orders.avro
+sed -e "s|:NOW:|$NOW|g" \
+    ${DIR}/../../ksqldb/benchmarking-scenarios/schemas/shipments-template.avro > ${DIR}/../../ksqldb/benchmarking-scenarios/schemas/shipments.avro
 
 ${DIR}/../../environment/rbac-sasl-plain/start.sh "${PWD}/docker-compose.rbac-sasl-plain.yml"
 
