@@ -361,16 +361,19 @@ do
     #   typeencoded=$(echo "$licence" | sed -e 's/ /%20/g')
     #   type="![license](https://img.shields.io/badge/-$typeencoded-black)"
     # fi
-    
-    # ownerencoded=$(echo "$owner" | sed -e 's/ /%20/g')
-    # owner_badge="![license](https://img.shields.io/badge/-$ownerencoded-lightgrey)"
+    owner_badge=""
+    if [ "$owner" != "Confluent, Inc." ]
+    then
+      ownerencoded=$(echo "$owner" | sed -e 's/ /%20/g')
+      owner_badge="![owner](https://img.shields.io/badge/-$ownerencoded-blue)"
+    fi
     
     versionencoded=$(urlencode $version)
     versionencoded=$(echo $versionencoded | tr "-" "_")
     connector_badge="[![version](https://img.shields.io/badge/v-$versionencoded-pink)]($documentation_url)"
 
     let "nb_connector_tests++"
-    sed -e "s|:${test}:|\&nbsp; $connector_badge $ci |g" \
+    sed -e "s|:${test}:|\&nbsp; $connector_badge $owner_badge $ci |g" \
         $content_file > $content_tmp_file
 
     cp $content_tmp_file $content_file
