@@ -44,7 +44,7 @@ sed -e "s|:AUDIT_LOG_CLUSTER_BOOTSTRAP_SERVERS:|$AUDIT_LOG_CLUSTER_BOOTSTRAP_SER
     ${DIR}/data_audit_cluster.template > ${DIR}/data_audit_cluster
 
 #############
-${DIR}/../../ccloud/environment/start.sh "${PWD}/docker-compose.plaintext.yml"
+${DIR}/../../ccloud/environment/start.sh "${PWD}/docker-compose.yml"
 
 if [ -f /tmp/delta_configs/env.delta ]
 then
