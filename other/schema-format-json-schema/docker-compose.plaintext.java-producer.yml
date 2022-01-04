@@ -4,7 +4,7 @@ services:
 
   producer:
     build:
-      context: ../../other/json-schema/producer/
+      context: ../../other/schema-format-json-schema/producer/
     hostname: producer
     container_name: producer
     environment:

@@ -4,7 +4,7 @@ services:
 
   producer:
     build:
-      context: ../../other/protobuf-schema/producer/
+      context: ../../other/schema-format-protobuf/producer/
     hostname: producer
     container_name: producer
     environment:
