@@ -248,7 +248,7 @@ do
         else
           let "nb_success++"
           let "nb_total_success++"
-          TEST_SUCCESS[$image_version_no_dot]="[![CP $image_version](https://img.shields.io/badge/$nb_success/$nb_tests-CP%20$image_version-green)]($html_url)"
+          TEST_SUCCESS[$image_version_no_dot]="$html_url"
           echo -e "👍 CP ${image_version}${connector_version} 🕐 ${time_day_hour} 📄 [${script_name}](https://github.com/vdesabou/kafka-docker-playground/blob/master/$test/$script_name) 🔗 $html_url\n" >> ${gh_msg_file}
           log "👍 CP $image_version 🕐 ${time_day_hour} 📄 ${script_name} 🔗 $html_url"
         fi
@@ -323,7 +323,7 @@ do
       let "ci_nb_skipped++"
     elif [ "${TEST_SUCCESS[$image_version_no_dot]}" != "" ]
     then
-      ci="$ci ${TEST_SUCCESS[$image_version_no_dot]}"
+      ci="$ci [![CP $image_version](https://img.shields.io/badge/$nb_success/$nb_tests-CP%20$image_version-green)](${TEST_SUCCESS[$image_version_no_dot]})"
     else
       logerror "ERROR: TEST_SUCCESS, TEST_SKIPPED and TEST_FAILED are all empty !"
     fi
