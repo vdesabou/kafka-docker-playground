@@ -51,6 +51,8 @@ fi
 
 log "Creating topic in Confluent Cloud (auto.create.topics.enable=false)"
 set +e
+delete_topic client_dotnet_$TAG
+sleep 3
 create_topic client_dotnet_$TAG
 set -e
 

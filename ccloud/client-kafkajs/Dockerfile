@@ -1,9 +1,9 @@
 FROM node:lts-alpine
 RUN apk update && apk upgrade && apk add iptables
-RUN npm install kafkajs@1.15.0 console-stamp
-
 # Create app directory
 WORKDIR /usr/src/app
+
+RUN npm install kafkajs console-stamp
 
 # Copy files
 COPY producer.js /usr/src/app

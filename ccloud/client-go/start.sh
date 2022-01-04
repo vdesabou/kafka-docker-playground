@@ -35,6 +35,8 @@ sed -e "s|:BOOTSTRAP_SERVERS:|$BOOTSTRAP_SERVERS|g" \
 
 log "Creating topic in Confluent Cloud (auto.create.topics.enable=false)"
 set +e
+delete_topic client_go_$TAG
+sleep 3
 create_topic client_go_$TAG
 set -e
 

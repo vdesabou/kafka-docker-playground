@@ -5,6 +5,10 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
+set +e
+docker rm -f kafkajs-ccloud-consumer kafkajs-ccloud-producer
+set -e
+
 CONFIG_FILE=~/.confluent/config
 
 if [ ! -f ${CONFIG_FILE} ]
@@ -34,22 +38,23 @@ sed -e "s|:BOOTSTRAP_SERVERS:|$BOOTSTRAP_SERVERS|g" \
     -e "s|:CLOUD_SECRET:|$CLOUD_SECRET|g" \
     ${DIR}/consumer-template.js > ${DIR}/consumer.js
 
+log "Creating topic in Confluent Cloud (auto.create.topics.enable=false)"
+set +e
+delete_topic client_kafkajs_$TAG
+sleep 3
+create_topic client_kafkajs_$TAG
+set -e
+
 log "Building docker image"
 docker build -t vdesabou/kafkajs-ccloud-example-docker .
 
-set +e
-docker rm -f kafkajs-ccloud-consumer
-set -e
-log "Starting consumer. Logs are in consumer.log."
-docker run -i --name kafkajs-ccloud-consumer vdesabou/kafkajs-ccloud-example-docker node /usr/src/app/consumer.js > consumer.log 2>&1 &
-
-set +e
-docker rm -f kafkajs-ccloud-producer
-set -e
 log "Starting producer"
-docker run -i --name kafkajs-ccloud-producer vdesabou/kafkajs-ccloud-example-docker node /usr/src/app/producer.js
+docker run -i --name kafkajs-ccloud-producer vdesabou/kafkajs-ccloud-example-docker node /usr/src/app/producer.js client_kafkajs_$TAG > /dev/null 2>&1 &
 
-exit 0
+sleep 3
 
-docker exec --privileged --user root kafkajs-ccloud-producer sh -c "iptables -A OUTPUT -p tcp --dport 9092 -j DROP"
-docker exec --privileged --user root kafkajs-ccloud-producer sh -c "iptables -D OUTPUT -p tcp --dport 9092 -j DROP"
+log "Starting consumer. Logs are in /tmp/result.log"
+docker run -i --name kafkajs-ccloud-consumer vdesabou/kafkajs-ccloud-example-docker node /usr/src/app/consumer.js client_kafkajs_$TAG > /tmp/result.log 2>&1 &
+sleep 15
+cat /tmp/result.log
+grep "value-" /tmp/result.log

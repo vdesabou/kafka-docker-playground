@@ -22,7 +22,9 @@ const kafka = new Kafka({
 })
 
 const producer = kafka.producer()
-const topic = 'kafkajs'
+const myArgs = process.argv.slice(2)
+console.log('topic is : ', myArgs[0])
+const topic = myArgs[0]
 const admin = kafka.admin()
 
 const { CONNECT, DISCONNECT, REQUEST_TIMEOUT } = producer.events;
