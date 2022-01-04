@@ -1,0 +1,9 @@
+---
+version: '3.5'
+services:
+
+  client-kafkajs:
+    build:
+      context: ../../other/client-kafkajs/
+    hostname: client-kafkajs
+    container_name: client-kafkajs

@@ -4,7 +4,7 @@ require('console-stamp')(console, '[HH:MM:ss.l]');
 
 const kafka = new Kafka({
   clientId: 'my-kafkajs-producer',
-  brokers: ['broker1:9092','broker2:9092','broker3:9092'],
+  brokers: ['broker:9092'],
   connectionTimeout: 10000,
   // enforceRequestTimeout: true,
   // requestTimeout: 3000,
@@ -27,8 +27,8 @@ producer.on(REQUEST_QUEUE_SIZE, e => console.log(`Request queue size at ${e.time
 //producer.logger().setLogLevel(logLevel.DEBUG)
 
 let bigString = '';
-for (let i = 0; i < 10_000; i++) {
-  bigString += Math.random().toString(36);
+for (let i = 0; i < 100; i++) {
+  bigString += Math.random().toString(3);
 }
 
 const payload = new Array(10).fill({value: bigString});
@@ -80,5 +80,5 @@ function sendData() {
   await producer.connect().catch(e => {
     log.error("failed to producer.connect()", e);
   });
-  setInterval(sendData, 100);
+  setInterval(sendData, 1000);
 })().catch(e => {throw e});

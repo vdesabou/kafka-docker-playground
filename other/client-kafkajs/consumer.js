@@ -2,7 +2,7 @@ const { Kafka, CompressionTypes, logLevel } = require('kafkajs')            //np
 
 const kafka = new Kafka({
   clientId: 'my-kafkajs-consumer',
-  brokers: ['broker1:9092','broker2:9092','broker3:9092'],
+  brokers: ['broker:9092'],
   connectionTimeout: 20000,
 })
 
