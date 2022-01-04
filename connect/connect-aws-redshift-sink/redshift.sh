@@ -46,7 +46,7 @@ aws redshift create-cluster --cluster-identifier playgroundcluster --master-user
 # Verify AWS Redshift cluster has started within MAX_WAIT seconds
 MAX_WAIT=480
 CUR_WAIT=0
-log "Waiting up to $MAX_WAIT seconds for AWS Redshift cluster playgroundcluster to start"
+log "⌛ Waiting up to $MAX_WAIT seconds for AWS Redshift cluster playgroundcluster to start"
 aws redshift describe-clusters --cluster-identifier playgroundcluster | jq .Clusters[0].ClusterStatus > /tmp/out.txt 2>&1
 while [[ ! $(cat /tmp/out.txt) =~ "available" ]]; do
      sleep 10

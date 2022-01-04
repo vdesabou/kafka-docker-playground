@@ -10,7 +10,7 @@ function wait_for_gss_exception () {
      CONNECT_CONTAINER=connect
      MAX_WAIT=600
      CUR_WAIT=0
-     log "Waiting up to $MAX_WAIT seconds for GSS exception to happen"
+     log "⌛ Waiting up to $MAX_WAIT seconds for GSS exception to happen"
      docker container logs ${CONNECT_CONTAINER} > /tmp/out.txt 2>&1
      while [[ ! $(cat /tmp/out.txt) =~ "Failed to find any Kerberos tgt" ]]; do
           sleep 10

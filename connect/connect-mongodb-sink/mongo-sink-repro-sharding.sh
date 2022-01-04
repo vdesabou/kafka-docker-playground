@@ -7,7 +7,7 @@ source ${DIR}/../../scripts/utils.sh
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.mongo-sink-repro-sharding.yml"
 
 MAX_WAIT=40
-log "Waiting up to $MAX_WAIT seconds for MongoDB to start"
+log "⌛ Waiting up to $MAX_WAIT seconds for MongoDB to start"
 until $(curl --output /dev/null --silent --fail localhost:27017); do printf '.'; sleep 5; if [[ $var -eq ${MAX_WAIT} ]] ; then exit 1; fi; var=$((var+1)); done
 log "MongoDB DB has started!"
 

@@ -24,7 +24,7 @@ function wait_for_repro () {
      set +e
      MAX_WAIT=43200
      CUR_WAIT=0
-     log "Waiting up to $MAX_WAIT seconds for Failed to APPEND_FILE to happen"
+     log "⌛ Waiting up to $MAX_WAIT seconds for Failed to APPEND_FILE to happen"
      docker container logs connect > /tmp/out.txt 2>&1
      docker container logs connect2 >> /tmp/out.txt 2>&1
      docker container logs connect3 >> /tmp/out.txt 2>&1

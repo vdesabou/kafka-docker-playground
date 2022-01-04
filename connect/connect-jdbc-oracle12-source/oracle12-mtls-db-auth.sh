@@ -36,7 +36,7 @@ fi
 # Verify Oracle DB has started within MAX_WAIT seconds
 MAX_WAIT=900
 CUR_WAIT=0
-log "Waiting up to $MAX_WAIT seconds for Oracle DB to start"
+log "⌛ Waiting up to $MAX_WAIT seconds for Oracle DB to start"
 docker container logs oracle > /tmp/out.txt 2>&1
 while [[ ! $(cat /tmp/out.txt) =~ "DONE: Executing user defined scripts" ]]; do
 sleep 10

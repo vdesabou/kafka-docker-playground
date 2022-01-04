@@ -185,14 +185,14 @@ helm upgrade --install \
 # kubectl exec -i connectors-0 -- bash
 
 
-log "Waiting up to 1800 seconds for all pods in namespace confluent to start"
+log "⌛ Waiting up to 1800 seconds for all pods in namespace confluent to start"
 wait-until-pods-ready "1800" "10" "confluent"
 
 set +e
 # Verify Kafka Connect has started within MAX_WAIT seconds
 MAX_WAIT=480
 CUR_WAIT=0
-log "Waiting up to $MAX_WAIT seconds for Kafka Connect connectors-0 to start"
+log "⌛ Waiting up to $MAX_WAIT seconds for Kafka Connect connectors-0 to start"
 kubectl logs connectors-0 > /tmp/out.txt 2>&1
 while [[ ! $(cat /tmp/out.txt) =~ "Finished starting connectors and tasks" ]]; do
   sleep 10

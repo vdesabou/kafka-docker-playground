@@ -164,5 +164,5 @@ ${DIR}/scripts/createTruststore.sh ${DIR}/certs/ca.pem
 log "Generate kafka.properties"
 cat ${DIR}/kafka.properties.tmpl | sed 's/__DOMAIN__/'"$domain"'/g' | sed 's/__USER__/'"$USER"'/g' > ${DIR}/kafka.properties
 
-log "Waiting up to 1800 seconds for all pods in namespace confluent to start"
+log "⌛ Waiting up to 1800 seconds for all pods in namespace confluent to start"
 wait-until-pods-ready "1800" "10" "confluent"

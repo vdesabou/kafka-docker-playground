@@ -7,7 +7,7 @@ source ${DIR}/../../scripts/utils.sh
 function wait_for_repro () {
      MAX_WAIT=600
      CUR_WAIT=0
-     log "Waiting up to $MAX_WAIT seconds for error Multiple entries with same key to happen"
+     log "⌛ Waiting up to $MAX_WAIT seconds for error Multiple entries with same key to happen"
      docker container logs connect > /tmp/out.txt 2>&1
      while ! grep "Multiple entries with same key" /tmp/out.txt > /dev/null;
      do
@@ -56,7 +56,7 @@ ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.cdb
 # Verify Oracle DB has started within MAX_WAIT seconds
 MAX_WAIT=900
 CUR_WAIT=0
-log "Waiting up to $MAX_WAIT seconds for Oracle DB to start"
+log "⌛ Waiting up to $MAX_WAIT seconds for Oracle DB to start"
 docker container logs oracle > /tmp/out.txt 2>&1
 while [[ ! $(cat /tmp/out.txt) =~ "DONE: Executing user defined scripts" ]]; do
 sleep 10

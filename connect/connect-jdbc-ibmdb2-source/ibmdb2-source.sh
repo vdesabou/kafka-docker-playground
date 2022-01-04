@@ -32,7 +32,7 @@ docker cp ibmdb2:/opt/ibm/db2/V11.5/java/db2jcc4.jar ${DIR}/db2jcc4.jar
 # Verify IBM DB has started within MAX_WAIT seconds
 MAX_WAIT=2500
 CUR_WAIT=0
-log "Waiting up to $MAX_WAIT seconds for IBM DB to start"
+log "⌛ Waiting up to $MAX_WAIT seconds for IBM DB to start"
 docker container logs ibmdb2 > /tmp/out.txt 2>&1
 while [[ ! $(cat /tmp/out.txt) =~ "Setup has completed" ]]; do
 sleep 10
