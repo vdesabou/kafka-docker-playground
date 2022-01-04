@@ -164,9 +164,9 @@
   - 🌨 Using [Confluent for Kubenetes](https://github.com/vdesabou/kafka-docker-playground/tree/master/ccloud/confluent-for-kubernetes/) with Confluent Cloud ![not tested](https://img.shields.io/badge/CI-not%20tested!-violet)
   - 📈 [Demo](https://github.com/vdesabou/kafka-docker-playground/tree/master/ccloud/ccloudexporter/) using [dabz/ccloudexporter](https://github.com/Dabz/ccloudexporter) :ccloud/ccloudexporter:
   - 💠 [.NET](https://github.com/vdesabou/kafka-docker-playground/tree/master/ccloud/client-dotnet) client (producer/consumer) :ccloud/client-dotnet:
-  - 🗯 [Go](https://github.com/vdesabou/kafka-docker-playground/tree/master/ccloud/client-go) client (producer/consumer) ![not tested](https://img.shields.io/badge/CI-not%20tested!-violet)
-  - 🐚 [KafkaJS](https://github.com/vdesabou/kafka-docker-playground/tree/master/ccloud/client-kafkajs) client (producer/consumer) ![not tested](https://img.shields.io/badge/CI-not%20tested!-violet)
-  - 🐍 [Python](https://github.com/vdesabou/kafka-docker-playground/tree/master/ccloud/client-python) client (producer/consumer) ![not tested](https://img.shields.io/badge/CI-not%20tested!-violet)
+  - 🗯 [Go](https://github.com/vdesabou/kafka-docker-playground/tree/master/ccloud/client-go) client (producer/consumer) :ccloud/client-go:
+  - 🐚 [KafkaJS](https://github.com/vdesabou/kafka-docker-playground/tree/master/ccloud/client-kafkajs) client (producer/consumer) :ccloud/client-kafkajs:
+  - 🐍 [Python](https://github.com/vdesabou/kafka-docker-playground/tree/master/ccloud/client-python) client (producer/consumer) :ccloud/client-python:
   - 🧑‍🏭 [Managing](https://github.com/vdesabou/kafka-docker-playground/tree/master/ccloud/kafka-admin/) topics and ACLs using [matt-mangia/kafka-admin](https://github.com/matt-mangia/kafka-admin) :ccloud/kafka-admin:
   - ♻️ Confluent Replicator [OnPrem to cloud and Cloud to Cloud examples](https://github.com/vdesabou/kafka-docker-playground/tree/master/ccloud/replicator) :ccloud/replicator:
   - 🗺️ [Multi-Cluster Schema Registry](https://github.com/vdesabou/kafka-docker-playground/tree/master/ccloud/multiple-sr-hybrid) with hybrid configuration (onprem/confluent cloud) ![not tested](https://img.shields.io/badge/CI-not%20tested!-violet)
