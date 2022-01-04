@@ -9,7 +9,7 @@ source ${DIR}/../../scripts/utils.sh
 function wait_for_repro () {
      MAX_WAIT=600
      CUR_WAIT=0
-     log "Waiting up to $MAX_WAIT seconds for error no such field: statusAsString to happen"
+     log "⌛ Waiting up to $MAX_WAIT seconds for error no such field: statusAsString to happen"
      docker container logs connect > /tmp/out.txt 2>&1
      while ! grep "message=no such field: statusAsString" /tmp/out.txt > /dev/null;
      do

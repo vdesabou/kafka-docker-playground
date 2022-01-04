@@ -900,7 +900,7 @@ function wait_for_datagen_connector_to_inject_data () {
   # wait for all tasks to be FAILED with org.apache.kafka.connect.errors.ConnectException: Stopping connector: generated the configured xxx number of messages
   MAX_WAIT=3600
   CUR_WAIT=0
-  log "Waiting up to $MAX_WAIT seconds for connector $connector_name to finish injecting requested load"
+  log "⌛ Waiting up to $MAX_WAIT seconds for connector $connector_name to finish injecting requested load"
   $prefix_cmd curl -s -X GET http://localhost:8083/connectors/datagen-${connector_name}/status | jq .tasks[].trace | grep "generated the configured" | wc -l > /tmp/out.txt 2>&1
   while [[ ! $(cat /tmp/out.txt) =~ "${datagen_tasks}" ]]; do
     sleep 5

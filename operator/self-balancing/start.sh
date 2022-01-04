@@ -98,7 +98,7 @@ set +e
 # Verify Kafka Connect has started within MAX_WAIT seconds
 MAX_WAIT=480
 CUR_WAIT=0
-log "Waiting up to $MAX_WAIT seconds for Kafka Connect replicator-0 to start"
+log "⌛ Waiting up to $MAX_WAIT seconds for Kafka Connect replicator-0 to start"
 kubectl logs -n confluent replicator-0 > /tmp/out.txt 2>&1
 while [[ ! $(cat /tmp/out.txt) =~ "Finished starting connectors and tasks" ]]; do
   sleep 10
@@ -112,7 +112,7 @@ done
 log "Connect replicator-0 has started!"
 set -e
 
-log "Waiting up to 900 seconds for all pods in namespace confluent to start"
+log "⌛ Waiting up to 900 seconds for all pods in namespace confluent to start"
 wait-until-pods-ready "900" "10" "confluent"
 
 log "Control Center is reachable at http://127.0.0.1:9021 (admin/Developer1)"

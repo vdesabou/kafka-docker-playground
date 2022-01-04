@@ -7,7 +7,7 @@ source ${DIR}/../../scripts/utils.sh
 function wait_for_repro () {
      MAX_WAIT=600
      CUR_WAIT=0
-     log "Waiting up to $MAX_WAIT seconds for error invalid session ID exception to happen"
+     log "⌛ Waiting up to $MAX_WAIT seconds for error invalid session ID exception to happen"
      docker container logs connect > /tmp/out.txt 2>&1
      while ! grep "invalid session ID exception" /tmp/out.txt > /dev/null;
      do

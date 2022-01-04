@@ -7,7 +7,7 @@ source ${DIR}/../../scripts/utils.sh
 function wait_for_solace () {
      MAX_WAIT=240
      CUR_WAIT=0
-     log "Waiting up to $MAX_WAIT seconds for Solace to startup"
+     log "⌛ Waiting up to $MAX_WAIT seconds for Solace to startup"
      docker container logs solace > /tmp/out.txt 2>&1
      while ! grep "Running pre-startup checks" /tmp/out.txt > /dev/null;
      do

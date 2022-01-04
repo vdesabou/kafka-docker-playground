@@ -145,7 +145,7 @@ set +e
 MAX_WAIT=480
 CUR_WAIT=0
 CONNECT_POD_NAME=$(kubectl get pods -n cp-helm-charts --selector=app=cp-kafka-connect -o jsonpath="{.items[0].metadata.name}")
-log "Waiting up to $MAX_WAIT seconds for Kafka Connect $CONNECT_POD_NAME to start"
+log "⌛ Waiting up to $MAX_WAIT seconds for Kafka Connect $CONNECT_POD_NAME to start"
 kubectl logs -n cp-helm-charts $CONNECT_POD_NAME -c cp-kafka-connect-server > /tmp/out.txt 2>&1
 while [[ ! $(cat /tmp/out.txt) =~ "Finished starting connectors and tasks" ]]; do
   sleep 10

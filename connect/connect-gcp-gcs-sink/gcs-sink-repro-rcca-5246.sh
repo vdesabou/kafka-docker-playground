@@ -7,7 +7,7 @@ source ${DIR}/../../scripts/utils.sh
 function wait_for_repro () {
      MAX_WAIT=4200
      CUR_WAIT=0
-     log "Waiting up to $MAX_WAIT seconds for error Invalid JWT Signature to happen"
+     log "⌛ Waiting up to $MAX_WAIT seconds for error Invalid JWT Signature to happen"
      docker container logs connect > /tmp/out.txt 2>&1
      while ! grep "Invalid JWT Signature" /tmp/out.txt > /dev/null;
      do

@@ -41,7 +41,7 @@ then
   # Verify Kafka Connect has started within MAX_WAIT seconds
   MAX_WAIT=480
   CUR_WAIT=0
-  log "Waiting up to $MAX_WAIT seconds for Kafka Connect ${CONNECT_CONTAINER} to start"
+  log "⌛ Waiting up to $MAX_WAIT seconds for Kafka Connect ${CONNECT_CONTAINER} to start"
   docker container logs ${CONNECT_CONTAINER} > /tmp/out.txt 2>&1
   while [[ ! $(cat /tmp/out.txt) =~ "Finished starting connectors and tasks" ]]; do
     sleep 10
@@ -61,7 +61,7 @@ then
   # Verify Confluent Control Center has started within MAX_WAIT seconds
   MAX_WAIT=480
   CUR_WAIT=0
-  log "Waiting up to $MAX_WAIT seconds for Confluent Control Center ${CONTROL_CENTER_CONTAINER} to start"
+  log "⌛ Waiting up to $MAX_WAIT seconds for Confluent Control Center ${CONTROL_CENTER_CONTAINER} to start"
   docker container logs ${CONTROL_CENTER_CONTAINER} > /tmp/out.txt 2>&1
   while [[ ! $(cat /tmp/out.txt) =~ "Started NetworkTrafficServerConnector" ]]; do
     sleep 10

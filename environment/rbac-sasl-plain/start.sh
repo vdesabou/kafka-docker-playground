@@ -85,12 +85,12 @@ docker-compose -f ../../environment/plaintext/docker-compose.yml -f ../../enviro
 
 # Verify Kafka brokers have started
 MAX_WAIT=30
-log "Waiting up to $MAX_WAIT seconds for Kafka brokers to be registered in ZooKeeper"
+log "⌛ Waiting up to $MAX_WAIT seconds for Kafka brokers to be registered in ZooKeeper"
 retrycmd $MAX_WAIT 5 host_check_kafka_cluster_registered || exit 1
 
 # Verify MDS has started
 MAX_WAIT=120
-log "Waiting up to $MAX_WAIT seconds for MDS to start"
+log "⌛ Waiting up to $MAX_WAIT seconds for MDS to start"
 retrycmd $MAX_WAIT 5 host_check_mds_up || exit 1
 sleep 5
 

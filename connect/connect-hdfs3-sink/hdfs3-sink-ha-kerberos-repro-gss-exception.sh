@@ -20,7 +20,7 @@ source ${DIR}/../../scripts/utils.sh
 function wait_for_gss_exception () {
      MAX_WAIT=43200
      CUR_WAIT=0
-     log "Waiting up to $MAX_WAIT seconds for GSS exception to happen (it can take several hours)"
+     log "⌛ Waiting up to $MAX_WAIT seconds for GSS exception to happen (it can take several hours)"
      docker container logs connect > /tmp/out.txt 2>&1
      docker container logs connect2 >> /tmp/out.txt 2>&1
      docker container logs connect3 >> /tmp/out.txt 2>&1

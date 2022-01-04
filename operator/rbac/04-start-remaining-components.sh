@@ -157,7 +157,7 @@ helm upgrade --install connect -f $VALUES_FILE ${DIR}/confluent-operator/helm/co
     --set global.sasl.plain.password=kafka-secret \
     --wait
 
-log "Waiting up to 1800 seconds for all pods in namespace confluent to start"
+log "⌛ Waiting up to 1800 seconds for all pods in namespace confluent to start"
 wait-until-pods-ready "1800" "10" "confluent"
 
 # kubectl exec -it connectors-0 -- bash
@@ -166,7 +166,7 @@ set +e
 # Verify Kafka Connect has started within MAX_WAIT seconds
 MAX_WAIT=480
 CUR_WAIT=0
-log "Waiting up to $MAX_WAIT seconds for Kafka Connect connectors-0 to start"
+log "⌛ Waiting up to $MAX_WAIT seconds for Kafka Connect connectors-0 to start"
 kubectl logs connectors-0 > /tmp/out.txt 2>&1
 while [[ ! $(cat /tmp/out.txt) =~ "Finished starting connectors and tasks" ]]; do
   sleep 10
@@ -408,7 +408,7 @@ helm upgrade --install controlcenter -f $VALUES_FILE ${DIR}/confluent-operator/h
     --set global.sasl.plain.password=kafka-secret \
     --wait
 
-log "Waiting up to 1800 seconds for all pods in namespace confluent to start"
+log "⌛ Waiting up to 1800 seconds for all pods in namespace confluent to start"
 wait-until-pods-ready "1800" "10" "confluent"
 
 log "Control Center is reachable at https://127.0.0.1:9021 (testadmin/testadmin)"

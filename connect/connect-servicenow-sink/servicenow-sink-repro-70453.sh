@@ -18,7 +18,7 @@ fi
 function wait_for_repro () {
      MAX_WAIT=600
      CUR_WAIT=0
-     log "Waiting up to $MAX_WAIT seconds for error Cannot retry request with a non-repeatable request entity to happen"
+     log "⌛ Waiting up to $MAX_WAIT seconds for error Cannot retry request with a non-repeatable request entity to happen"
      docker container logs connect > /tmp/out.txt 2>&1
      while ! grep "Cannot retry request with a non-repeatable request entity" /tmp/out.txt > /dev/null;
      do
@@ -36,7 +36,7 @@ function wait_for_repro () {
 function wait_for_end_of_hibernation () {
      MAX_WAIT=600
      CUR_WAIT=0
-     log "Waiting up to $MAX_WAIT seconds for end of hibernation to happen (it can take several minutes)"
+     log "⌛ Waiting up to $MAX_WAIT seconds for end of hibernation to happen (it can take several minutes)"
      curl -X POST "${SERVICENOW_URL}/api/now/table/incident" --user admin:"$SERVICENOW_PASSWORD" -H 'Accept: application/json' -H 'Content-Type: application/json' -H 'cache-control: no-cache' -d '{"short_description": "This is test"}' > /tmp/out.txt 2>&1
      while [[ $(cat /tmp/out.txt) =~ "Sign in to the site to wake your instance" ]]
      do
