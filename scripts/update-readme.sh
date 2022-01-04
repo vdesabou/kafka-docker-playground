@@ -362,7 +362,7 @@ do
     #   type="![license](https://img.shields.io/badge/-$typeencoded-black)"
     # fi
     owner_badge=""
-    if [ "$owner" != "Confluent, Inc." ]
+    if [[ "$owner" != *"Confluent"* ]]
     then
       ownerencoded=$(echo "$owner" | sed -e 's/ /%20/g')
       owner_badge="![owner](https://img.shields.io/badge/-$ownerencoded-blue)"
