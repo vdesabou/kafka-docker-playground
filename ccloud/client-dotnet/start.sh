@@ -5,6 +5,10 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
+set +e
+docker rm -f dotnet-ccloud-consumer dotnet-ccloud-producer
+set -e
+
 CONFIG_FILE=~/.confluent/config
 
 if [ ! -f ${CONFIG_FILE} ]
@@ -45,20 +49,29 @@ else
      CSPROJ_FILE="CCloud2.2.csproj"
 fi
 
+log "Creating topic in Confluent Cloud (auto.create.topics.enable=false)"
+set +e
+create_topic client_dotnet_$TAG
+set -e
+
 log "Building docker image"
 docker build --build-arg CORE_RUNTIME_TAG=$CORE_RUNTIME_TAG --build-arg CORE_SDK_TAG=$CORE_SDK_TAG --build-arg CSPROJ_FILE=$CSPROJ_FILE -t vdesabou/dotnet-ccloud-example-docker .
 
 log "Starting producer"
-docker run --sysctl net.ipv4.tcp_keepalive_time=60 --sysctl net.ipv4.tcp_keepalive_intvl=30 -v ${DIR}/librdkafka.config:/tmp/librdkafka.config vdesabou/dotnet-ccloud-example-docker produce test1 /tmp/librdkafka.config
+docker run --name dotnet-ccloud-producer --sysctl net.ipv4.tcp_keepalive_time=60 --sysctl net.ipv4.tcp_keepalive_intvl=30 -v ${DIR}/librdkafka.config:/tmp/librdkafka.config -e TAG=$TAG vdesabou/dotnet-ccloud-example-docker produce client_dotnet_$TAG /tmp/librdkafka.config
 
-# docker run -v ${DIR}/librdkafka.config:/tmp/librdkafka.config vdesabou/dotnet-ccloud-example-docker produce test1 /tmp/librdkafka.config
+# docker run -v ${DIR}/librdkafka.config:/tmp/librdkafka.config vdesabou/dotnet-ccloud-example-docker produce client_dotnet_$TAG /tmp/librdkafka.config
 
 # log "Starting producer with curl certificate https://curl.haxx.se/ca/cacert.pem"
-# docker run -v ${DIR}/librdkafka.config:/tmp/librdkafka.config -v ${DIR}/curl-cacert.txt:/tmp/cacert.pem vdesabou/dotnet-ccloud-example-docker produce test1 /tmp/librdkafka.config /tmp/cacert.pem
+# docker run -v ${DIR}/librdkafka.config:/tmp/librdkafka.config -v ${DIR}/curl-cacert.txt:/tmp/cacert.pem vdesabou/dotnet-ccloud-example-docker produce client_dotnet_$TAG /tmp/librdkafka.config /tmp/cacert.pem
 # log "Starting producer with let's encrypt certificate https://letsencrypt.org/certificates/"
-# docker run -v ${DIR}/librdkafka.config:/tmp/librdkafka.config -v ${DIR}/letsencrypt-cacert.txt:/tmp/cacert.pem vdesabou/dotnet-ccloud-example-docker produce test1 /tmp/librdkafka.config /tmp/cacert.pem
+# docker run -v ${DIR}/librdkafka.config:/tmp/librdkafka.config -v ${DIR}/letsencrypt-cacert.txt:/tmp/cacert.pem vdesabou/dotnet-ccloud-example-docker produce client_dotnet_$TAG /tmp/librdkafka.config /tmp/cacert.pem
 
-log "Starting consumer. Logs are in consumer.log."
-docker run --sysctl net.ipv4.tcp_keepalive_time=60 --sysctl net.ipv4.tcp_keepalive_intvl=30 --name consumer -v ${DIR}/librdkafka.config:/tmp/librdkafka.config vdesabou/dotnet-ccloud-example-docker consume test1 /tmp/librdkafka.config > consumer.log 2>&1 &
+log "Starting consumer. Logs are in /tmp/result.log"
+docker run --name dotnet-ccloud-consumer --sysctl net.ipv4.tcp_keepalive_time=60 --sysctl net.ipv4.tcp_keepalive_intvl=30 -v ${DIR}/librdkafka.config:/tmp/librdkafka.config -e TAG=$TAG vdesabou/dotnet-ccloud-example-docker consume client_dotnet_$TAG /tmp/librdkafka.config > /tmp/result.log 2>&1 &
 
-# docker run -v ${DIR}/librdkafka.config:/tmp/librdkafka.config vdesabou/dotnet-ccloud-example-docker consume test1 /tmp/librdkafka.config
+sleep 5
+cat /tmp/result.log
+grep "alice" /tmp/result.log
+
+# docker run -v ${DIR}/librdkafka.config:/tmp/librdkafka.config vdesabou/dotnet-ccloud-example-docker consume client_dotnet_$TAG /tmp/librdkafka.config
