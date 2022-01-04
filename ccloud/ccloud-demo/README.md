@@ -834,8 +834,12 @@ Example:
 ![insomnia](https://github.com/vdesabou/gifs/raw/master/ccloud/ccloud-demo/insomnia.gif?raw=true)
 
 #### Export to Prometheus
-
+ 
 This demo is using [dabz/ccloudexporter](https://github.com/Dabz/ccloudexporter) in order to pull Metrics API data from Confluent Cloud cluster and be exported to Prometheus. A Grafana dashboard is also available, see [below](#ccloud-exporter-metrics-api-dashboard).
+
+DEPRECATED - Use export endpoint instead
+
+As of December 2021, Confluent recommends using the [export endpoint of the Confluent Cloud Metrics API](https://api.telemetry.confluent.cloud/docs#tag/Version-2/paths/~1v2~1metrics~1{dataset}~1export/get) to extract metrics instead of running a separate service such as the ccloudexporter. This endpoint can be scraped directly with a Prometheus server or other Open Metrics compatible scrapers.
 
 ### Control Center
 
