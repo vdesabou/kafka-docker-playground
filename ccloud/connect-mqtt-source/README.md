@@ -6,15 +6,8 @@ Quickly test [MQTT Source Connector](https://docs.confluent.io/kafka-connect-mqt
 
 ## How to run
 
-Simply set the environment variables for connection to your Confluent Cloud cluster and run:
-
-```bash
-$ export BOOTSTRAP_SERVERS=XXX
-$ export SASL_JAAS_CONFIG="org.apache.kafka.common.security.plain.PlainLoginModule required username='<<api_key>>' password='<<api_secret>>';"
-$ export SCHEMA_REGISTRY_URL=YYY
-$ export SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO=SR_KEY:SR_SECRET
-$ export BASIC_AUTH_CREDENTIALS_SOURCE=USER_INFO
-$ ./mqtt.sh
+```
+$ ./mqtt-source.sh
 ```
 
 ## Details of what the script is doing
@@ -39,6 +32,8 @@ $ curl -X PUT \
                "mqtt.qos": "2",
                "mqtt.username": "myuser",
                "mqtt.password": "mypassword",
+               "topic.creation.default.replication.factor": "-1",
+               "topic.creation.default.partitions": "-1",
                "confluent.topic.ssl.endpoint.identification.algorithm" : "https",
                "confluent.topic.sasl.mechanism" : "PLAIN",
                "confluent.topic.bootstrap.servers": "${file:/data:bootstrap.servers}",
@@ -46,38 +41,19 @@ $ curl -X PUT \
                "confluent.topic.security.protocol" : "SASL_SSL",
                "confluent.topic.replication.factor": "3"
           }' \
-     http://localhost:8083/connectors/source-mqtt/config | jq .
-```
-If the license settings are applied in the underlying Connect Worker, or already available in the Confluent Cloud cluster you can use the simpler form:
-
-``` bash
-$ curl -X PUT \
-     -H "Content-Type: application/json" \
-     --data '{
-               "connector.class": "io.confluent.connect.mqtt.MqttSourceConnector",
-               "tasks.max": "1",
-               "mqtt.server.uri": "tcp://mosquitto:1883",
-               "mqtt.topics":"basic1-topic",
-               "kafka.topic":"basic1",
-               "mqtt.qos": "2",
-               "mqtt.username": "myuser",
-               "mqtt.password": "mypassword",
-                "value.converter": "org.apache.kafka.connect.converters.ByteArrayConverter"
-          }' \
-     http://localhost:8083/connectors/basic1-mqtt/config | jq .
+     http://localhost:8083/connectors/mqtt-source/config | jq .
 ```
 
-Send message to MQTT in basic1-topic topic from a file
+Send message to MQTT in `my-mqtt-topic` topic:
 
 ```bash
-$ confluent kafka topic create "basic1"
-$ docker exec -i mosquitto sh -c 'mosquitto_pub -h localhost -p 1883 -u "myuser" -P "mypassword" -t "basic1-topic" -s' < basic_data.json
+docker exec mosquitto sh -c 'mosquitto_pub -h localhost -p 1883 -u "myuser" -P "mypassword" -t "my-mqtt-topic" -m "sample-msg-1"'
 ```
 
-Verify we have received the data in basic1-topic topic (uses the property file created in ../environment/data)
+Verify we have received the data in `mqtt-source-1` topic:
 
 ```bash
-$ docker exec -e BOOTSTRAP_SERVERS="$BOOTSTRAP_SERVERS" -e KAFKA_TOPIC="basic1-topic" connect bash -c 'kafka-console-consumer --bootstrap-server $BOOTSTRAP_SERVERS  --consumer.config /data/ --topic $KAFKA_TOPIC --from-beginning --max-messages 1'
+timeout 60 docker container exec -e BOOTSTRAP_SERVERS="$BOOTSTRAP_SERVERS" -e SASL_JAAS_CONFIG="$SASL_JAAS_CONFIG" connect bash -c 'kafka-console-consumer --topic mqtt-source-1 --bootstrap-server $BOOTSTRAP_SERVERS --consumer-property ssl.endpoint.identification.algorithm=https --consumer-property sasl.mechanism=PLAIN --consumer-property security.protocol=SASL_SSL --consumer-property sasl.jaas.config="$SASL_JAAS_CONFIG" --property basic.auth.credentials.source=USER_INFO --from-beginning --max-messages 1'
 ```
 
 N.B: Control Center is reachable at [http://127.0.0.1:9021](http://127.0.0.1:9021])
