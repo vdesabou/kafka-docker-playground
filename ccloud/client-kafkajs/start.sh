@@ -49,12 +49,12 @@ log "Building docker image"
 docker build -t vdesabou/kafkajs-ccloud-example-docker .
 
 log "Starting producer"
-docker run -i --name kafkajs-ccloud-producer vdesabou/kafkajs-ccloud-example-docker node /usr/src/app/producer.js client_kafkajs_$TAG > /dev/null 2>&1 &
+docker run -i --name kafkajs-ccloud-producer -e TAG=$TAG vdesabou/kafkajs-ccloud-example-docker node /usr/src/app/producer.js client_kafkajs_$TAG > /dev/null 2>&1 &
 
 sleep 3
 
 log "Starting consumer. Logs are in /tmp/result.log"
-docker run -i --name kafkajs-ccloud-consumer vdesabou/kafkajs-ccloud-example-docker node /usr/src/app/consumer.js client_kafkajs_$TAG > /tmp/result.log 2>&1 &
+docker run -i --name kafkajs-ccloud-consumer -e TAG=$TAG vdesabou/kafkajs-ccloud-example-docker node /usr/src/app/consumer.js client_kafkajs_$TAG > /tmp/result.log 2>&1 &
 sleep 15
 cat /tmp/result.log
 grep "value-" /tmp/result.log

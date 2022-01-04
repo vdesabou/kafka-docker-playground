@@ -66,7 +66,8 @@ if __name__ == '__main__':
 
     # Process messages
     total_count = 0
-    while True:
+    total_messages = 0
+    while total_messages < 10:
         try:
             msg = consumer.poll(1.0)
             if msg is None:
@@ -86,8 +87,7 @@ if __name__ == '__main__':
                 print("Consumed record with key {} and value {}, \
                       and updated total count to {}"
                       .format(name_object.name, count, total_count))
-        except KeyboardInterrupt:
-            break
+                total_messages += 1
         except SerializerError as e:
             # Report malformed record, discard results, continue polling
             print("Message deserialization failed {}".format(e))
