@@ -1,0 +1,24 @@
+---
+version: '3.5'
+services:
+
+  connect:
+    volumes:
+      - ../../environment/rbac-sasl-plain/scripts/security/client_sasl_plain.config:/etc/kafka/secrets/client_sasl_plain.config
+    environment:
+      # in newer version, it is located in /usr/share/filestream-connectors
+      CONNECT_PLUGIN_PATH: /usr/share/java/,/usr/share/confluent-hub-components/,/usr/share/filestream-connectors
+      ### Secret Provider
+      CONNECT_REST_EXTENSION_CLASSES: io.confluent.connect.security.ConnectSecurityExtension,io.confluent.connect.secretregistry.ConnectSecretRegistryExtension
+      CONNECT_CONFIG_PROVIDERS: "secret"
+      CONNECT_CONFIG_PROVIDERS_SECRET_CLASS: "io.confluent.connect.secretregistry.rbac.config.provider.InternalSecretConfigProvider"
+      CONNECT_CONFIG_PROVIDERS_SECRET_PARAM_MASTER_ENCRYPTION_KEY: my_master_key
+      CONNECT_CONFIG_PROVIDERS_SECRET_PARAM_KAFKASTORE_BOOTSTRAP_SERVERS: SASL_PLAINTEXT://broker:10091
+      CONNECT_CONFIG_PROVIDERS_SECRET_PARAM_KAFKASTORE_SECURITY_PROTOCOL: SASL_PLAINTEXT
+      CONNECT_CONFIG_PROVIDERS_SECRET_PARAM_KAFKASTORE_SASL_MECHANISM: 'OAUTHBEARER'
+      CONNECT_CONFIG_PROVIDERS_SECRET_PARAM_KAFKASTORE_SASL_LOGIN_CALLBACK_HANDLER_CLASS: "io.confluent.kafka.clients.plugins.auth.token.TokenUserLoginCallbackHandler"
+      CONNECT_CONFIG_PROVIDERS_SECRET_PARAM_KAFKASTORE_SASL_JAAS_CONFIG:  |
+                    org.apache.kafka.common.security.oauthbearer.OAuthBearerLoginModule required \
+                    username="connectAdmin" \
+                    password="connectAdmin" \
+                    metadataServerUrls="http://broker:8091";

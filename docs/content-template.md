@@ -236,6 +236,7 @@ Using Multi-Data-Center setup with 🇺🇸 and 🇪🇺 clusters
 - 📒 [Testing RBAC with Azure AD](https://github.com/vdesabou/kafka-docker-playground/tree/master/other/rbac-with-azure-ad) ![not tested](https://img.shields.io/badge/CI-not%20tested!-violet)
 - 🛂 [Schema Validation on Confluent Server](https://github.com/vdesabou/kafka-docker-playground/tree/master/other/broker-schema-validation) Schema Validation on Confluent Server :other/broker-schema-validation:
 - 🙊 [Secrets Management](https://github.com/vdesabou/kafka-docker-playground/tree/master/other/secrets-management) with Connect :other/secrets-management:
+- ⛓ [Connect Secret Registry](https://github.com/vdesabou/kafka-docker-playground/tree/master/other/connect-secret-registry) :other/connect-secret-registry:
 
 ## 🪄 [CP-Ansible Playground](https://github.com/vdesabou/kafka-docker-playground/tree/master/other/cp-ansible-playground)
 
