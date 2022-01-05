@@ -72,7 +72,8 @@ services:
             KAFKA_OPTS: "-Djava.security.auth.login.config=/etc/kafka/kafka_server_jaas.conf"
 
             KAFKA_SUPER_USERS: User:admin;User:mds;User:superUser;User:ANONYMOUS
-            KAFKA_LOG4J_LOGGERS: "kafka.authorizer.logger=INFO"
+            # KAFKA_LOG4J_LOGGERS: "kafka.authorizer.logger=INFO"
+            KAFKA_LOG4J_LOGGERS: "kafka.authorizer.logger=INFO,io.confluent.rest-utils=DEBUG,io.confluent.rbacapi=DEBUG,io.confluent.tokenapi=DEBUG,io.confluent.security.auth=DEBUG,io.confluent.security.store=DEBUG,io.confluent.common.security.jetty=DEBUG"
             KAFKA_LOG4J_ROOT_LOGLEVEL: INFO
 
             KAFKA_LISTENER_NAME_INTERNAL_PLAIN_SASL_JAAS_CONFIG: |
