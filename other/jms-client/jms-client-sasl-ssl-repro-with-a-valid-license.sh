@@ -11,6 +11,9 @@ then
      docker run -i --rm -e TAG=$TAG_BASE -e KAFKA_CLIENT_TAG=$KAFKA_CLIENT_TAG -v "${DIR}/jms-client":/usr/src/mymaven -v "$HOME/.m2":/root/.m2 -v "${DIR}/jms-client/target:/usr/src/mymaven/target" -w /usr/src/mymaven maven:3.6.1-jdk-8 mvn package
 fi
 
+# make sure control-center is not disabled
+unset DISABLE_CONTROL_CENTER
+
 ${DIR}/../../environment/sasl-ssl/start.sh "${PWD}/docker-compose.sasl-ssl.yml" -a -b
 
 ZOOKEEPER_IP=$(container_to_ip zookeeper)
