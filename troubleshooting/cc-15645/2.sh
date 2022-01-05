@@ -9,7 +9,7 @@ if ! version_gt $TAG_BASE "5.2.99"; then
     exit 111
 fi
 
-${DIR}/../../environment/rbac-sasl-plain/start.sh "${PWD}/docker-compose.rbac-sasl-plain.1.yml"
+${DIR}/../../environment/rbac-sasl-plain/start.sh "${PWD}/docker-compose.rbac-sasl-plain.2.yml"
 
 log "Sending messages to topic rbac_topic"
 seq -f "{\"f1\": \"This is a message sent with RBAC SASL/PLAIN authentication %g\"}" 10 | docker exec -i connect kafka-avro-console-producer --broker-list broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic rbac_topic --property value.schema='{"type":"record","name":"myrecord","fields":[{"name":"f1","type":"string"}]}' --property schema.registry.url=http://schema-registry:8081 --property basic.auth.credentials.source=USER_INFO --property schema.registry.basic.auth.user.info=clientAvroCli:clientAvroCli --producer.config /etc/kafka/secrets/client_sasl_plain.config
@@ -27,7 +27,11 @@ curl -X PUT \
                "topics": "rbac_topic",
                "file": "/tmp/output.json",
                "principal.service.name": "connectorSA",
-               "principal.service.password": "connectorSA"
+               "principal.service.password": "connectorSA",
+               "value.converter": "io.confluent.connect.avro.AvroConverter",
+               "value.converter.schema.registry.url": "http://schema-registry:8081",
+               "value.converter.schema.registry.basic.auth.credentials.source": "USER_INFO",
+               "value.converter.schema.registry.basic.auth.user.info": "connectorSA:${file:/data:password}"
           }' \
      http://localhost:8083/connectors/my-rbac-connector/config | jq .
 
