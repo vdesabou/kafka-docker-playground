@@ -21,7 +21,7 @@ echo "Encrypting my-secret-property in file my-config-file.properties"
 confluent-v1 secret file encrypt --local-secrets-file /secrets/secret.txt --remote-secrets-file /etc/kafka/secrets/secret.txt --config my-secret-property --config-file /secrets/my-config-file.properties
 '
 
-export CONFLUENT_SECURITY_MASTER_KEY=$(cat ${DIR}/secrets/CONFLUENT_SECURITY_MASTER_KEY | sed 's/ //g' | tail -1 | tr -d '\n')
+export CONFLUENT_SECURITY_MASTER_KEY=$(cat ${DIR}/repro-combining-connect-secret-registry-and-confluent-secrets/secrets/CONFLUENT_SECURITY_MASTER_KEY | sed 's/ //g' | tail -1 | tr -d '\n')
 log "Exporting CONFLUENT_SECURITY_MASTER_KEY=$CONFLUENT_SECURITY_MASTER_KEY"
 
 ${DIR}/../../environment/rbac-sasl-plain/start.sh "${PWD}/docker-compose.rbac-sasl-plain.yml"
