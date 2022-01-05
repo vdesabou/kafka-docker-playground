@@ -1,0 +1,15 @@
+---
+version: '3.5'
+services:
+
+  connect:
+    volumes:
+      - ../../environment/rbac-sasl-plain/scripts/security/client_sasl_plain.config:/etc/kafka/secrets/client_sasl_plain.config
+      - ../../troubleshooting/cc-15645/data:/data
+    environment:
+      # in newer version, it is located in /usr/share/filestream-connectors
+      CONNECT_PLUGIN_PATH: /usr/share/java/,/usr/share/confluent-hub-components/,/usr/share/filestream-connectors
+      CONNECT_VALUE_CONVERTER: "io.confluent.connect.avro.AvroConverter"
+      CONNECT_VALUE_CONVERTER_SCHEMA_REGISTRY_URL: http://schema-registry:8081
+      CONNECT_VALUE_CONVERTER_BASIC_AUTH_CREDENTIALS_SOURCE: USER_INFO
+      CONNECT_VALUE_CONVERTER_SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO: connectorSA:$${file:/data:password}
