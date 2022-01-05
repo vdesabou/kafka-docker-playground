@@ -30,8 +30,8 @@ curl -X PUT \
                "principal.service.password": "connectorSA",
                "value.converter": "io.confluent.connect.avro.AvroConverter",
                "value.converter.schema.registry.url": "http://schema-registry:8081",
-               "value.converter.schema.registry.basic.auth.credentials.source": "USER_INFO",
-               "value.converter.schema.registry.basic.auth.user.info": "connectorSA:${file:/data:password}"
+               "value.converter.basic.auth.credentials.source": "USER_INFO",
+               "value.converter.basic.auth.user.info": "connectorSA:connectorSA"
           }' \
      http://localhost:8083/connectors/my-rbac-connector/config | jq .
 
