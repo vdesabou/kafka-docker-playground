@@ -8,6 +8,9 @@ source ${DIR}/../../scripts/utils.sh
 docker-compose -f docker-compose-repro-timeout-63874.yml down -v --remove-orphans
 docker-compose -f docker-compose-repro-timeout-63874.yml up -d --build
 
+# make sure control-center is not disabled
+unset DISABLE_CONTROL_CENTER
+
 ${DIR}/../../scripts/wait-for-connect-and-controlcenter.sh -a -b
 
 log "Create a topic kafkajs"

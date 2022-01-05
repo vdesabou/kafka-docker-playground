@@ -19,6 +19,9 @@ else
      export CSPROJ_FILE="DotNet2.2.csproj"
 fi
 
+# make sure control-center is not disabled
+unset DISABLE_CONTROL_CENTER
+
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.yml" -a -b
 
 # log "Starting producer"

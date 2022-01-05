@@ -4,6 +4,9 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
+# make sure control-center is not disabled
+unset DISABLE_CONTROL_CENTER
+
 ${DIR}/../../ccloud/environment/start.sh "${PWD}/docker-compose.plaintext.repro-77222.yml" -a -b
 
 if [ -f /tmp/delta_configs/env.delta ]
