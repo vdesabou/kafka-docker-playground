@@ -47,7 +47,7 @@ curl -X PUT \
                "value.converter": "io.confluent.connect.avro.AvroConverter",
                "value.converter.schema.registry.url": "http://schema-registry:8081",
                "value.converter.basic.auth.credentials.source": "USER_INFO",
-               "value.converter.basic.auth.user.info": "connectorSA:connectorSA",
+               "value.converter.basic.auth.user.info": "${secret:my-rbac-connector:username}:${secret:my-rbac-connector:username}",
                "consumer.override.sasl.jaas.config": "org.apache.kafka.common.security.oauthbearer.OAuthBearerLoginModule required username=\"${secret:my-rbac-connector:username}\" password=\"${secret:my-rbac-connector:password}\" metadataServerUrls=\"http://broker:8091\";"
           }' \
      http://localhost:8083/connectors/my-rbac-connector/config | jq .
