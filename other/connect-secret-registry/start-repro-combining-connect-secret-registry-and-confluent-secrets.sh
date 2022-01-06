@@ -71,7 +71,7 @@ curl -X PUT \
 sleep 5
 
 log "Verify we have received the data in file"
-docker exec connect cat /tmp/output.
+docker exec connect cat /tmp/output.json
 
 
 # ===> User
