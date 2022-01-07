@@ -23,11 +23,18 @@ else
 fi
 #############
 
+MQTT_TOPIC=kafka_docker_pg_mqtt$TAG
+MQTT_TOPIC=${MQTT_TOPIC//[-.]/}
+
+set +e
+delete_topic $MQTT_TOPIC
+set -e
+
 if ! version_gt $TAG_BASE "5.9.9"; then
      # note: for 6.x CONNECT_TOPIC_CREATION_ENABLE=true
      log "Creating topic in Confluent Cloud (auto.create.topics.enable=false)"
      set +e
-     create_topic mqtt-source-1
+     create_topic $MQTT_TOPIC
      set -e
 fi
 
@@ -39,7 +46,7 @@ curl -X PUT \
                "tasks.max": "1",
                "mqtt.server.uri": "tcp://mosquitto:1883",
                "mqtt.topics":"my-mqtt-topic",
-               "kafka.topic":"mqtt-source-1",
+               "kafka.topic": "'"$MQTT_TOPIC"'",
                "mqtt.qos": "2",
                "mqtt.username": "myuser",
                "mqtt.password": "mypassword",
@@ -61,5 +68,5 @@ docker exec mosquitto sh -c 'mosquitto_pub -h localhost -p 1883 -u "myuser" -P "
 
 sleep 5
 
-log "Verify we have received the data in mqtt-source-1 topic"
-timeout 60 docker container exec -e BOOTSTRAP_SERVERS="$BOOTSTRAP_SERVERS" -e SASL_JAAS_CONFIG="$SASL_JAAS_CONFIG" connect bash -c 'kafka-console-consumer --topic mqtt-source-1 --bootstrap-server $BOOTSTRAP_SERVERS --consumer-property ssl.endpoint.identification.algorithm=https --consumer-property sasl.mechanism=PLAIN --consumer-property security.protocol=SASL_SSL --consumer-property sasl.jaas.config="$SASL_JAAS_CONFIG" --property basic.auth.credentials.source=USER_INFO --from-beginning --max-messages 1'
+log "Verify we have received the data in $MQTT_TOPIC topic"
+timeout 60 docker container exec -e BOOTSTRAP_SERVERS="$BOOTSTRAP_SERVERS" -e SASL_JAAS_CONFIG="$SASL_JAAS_CONFIG" -e MQTT_TOPIC="$MQTT_TOPIC" connect bash -c 'kafka-console-consumer --topic $MQTT_TOPIC --bootstrap-server $BOOTSTRAP_SERVERS --consumer-property ssl.endpoint.identification.algorithm=https --consumer-property sasl.mechanism=PLAIN --consumer-property security.protocol=SASL_SSL --consumer-property sasl.jaas.config="$SASL_JAAS_CONFIG" --property basic.auth.credentials.source=USER_INFO --from-beginning --max-messages 1'
