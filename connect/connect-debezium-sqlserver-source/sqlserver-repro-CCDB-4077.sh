@@ -62,7 +62,7 @@ timeout 60 docker exec connect kafka-avro-console-consumer -bootstrap-server bro
 # [2022-01-06 10:11:02,056] INFO [debezium-sqlserver-source|task-0]    name = debezium-sqlserver-source (io.debezium.connector.common.BaseSourceTask:129)
 # [2022-01-06 10:11:02,056] INFO [debezium-sqlserver-source|task-0]    value.converter = io.confluent.connect.avro.AvroConverter (io.debezium.connector.common.BaseSourceTask:129)
 
-# With workaround in place:
+# With workaround in place (commit https://github.com/vdesabou/kafka-docker-playground/commit/b603f41505416aca4aca7209c8b70a29c68ae5cb):
 
 # [2022-01-07 10:49:49,084] INFO Starting SqlServerConnectorTask with configuration: (io.debezium.connector.common.BaseSourceTask)
 # [2022-01-07 10:49:49,087] INFO    connector.class = io.debezium.connector.sqlserver.SqlServerConnector (io.debezium.connector.common.BaseSourceTask)
