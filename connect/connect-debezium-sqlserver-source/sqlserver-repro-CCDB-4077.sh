@@ -61,3 +61,22 @@ timeout 60 docker exec connect kafka-avro-console-consumer -bootstrap-server bro
 # [2022-01-06 10:11:02,056] INFO [debezium-sqlserver-source|task-0]    database.password = ******** (io.debezium.connector.common.BaseSourceTask:129)
 # [2022-01-06 10:11:02,056] INFO [debezium-sqlserver-source|task-0]    name = debezium-sqlserver-source (io.debezium.connector.common.BaseSourceTask:129)
 # [2022-01-06 10:11:02,056] INFO [debezium-sqlserver-source|task-0]    value.converter = io.confluent.connect.avro.AvroConverter (io.debezium.connector.common.BaseSourceTask:129)
+
+# With workaround in place:
+
+# [2022-01-07 10:49:49,084] INFO Starting SqlServerConnectorTask with configuration: (io.debezium.connector.common.BaseSourceTask)
+# [2022-01-07 10:49:49,087] INFO    connector.class = io.debezium.connector.sqlserver.SqlServerConnector (io.debezium.connector.common.BaseSourceTask)
+# [2022-01-07 10:49:49,088] INFO    database.user = sa (io.debezium.connector.common.BaseSourceTask)
+# [2022-01-07 10:49:49,089] INFO    database.dbname = testDB (io.debezium.connector.common.BaseSourceTask)
+# [2022-01-07 10:49:49,089] INFO    tasks.max = 1 (io.debezium.connector.common.BaseSourceTask)
+# [2022-01-07 10:49:49,090] INFO    database.history.kafka.bootstrap.servers = broker:9092 (io.debezium.connector.common.BaseSourceTask)
+# [2022-01-07 10:49:49,091] INFO    database.history.kafka.topic = schema-changes.inventory (io.debezium.connector.common.BaseSourceTask)
+# [2022-01-07 10:49:49,091] INFO    database.server.name = server1 (io.debezium.connector.common.BaseSourceTask)
+# [2022-01-07 10:49:49,092] INFO    database.port = 1433 (io.debezium.connector.common.BaseSourceTask)
+# [2022-01-07 10:49:49,093] INFO    value.converter.basic.auth.credentials.source = USER_INFO (io.debezium.connector.common.BaseSourceTask)
+# [2022-01-07 10:49:49,094] INFO    value.converter.schema.registry.url = http://schema-registry:8081 (io.debezium.connector.common.BaseSourceTask)
+# [2022-01-07 10:49:49,094] INFO    task.class = io.debezium.connector.sqlserver.SqlServerConnectorTask (io.debezium.connector.common.BaseSourceTask)
+# [2022-01-07 10:49:49,095] INFO    database.hostname = sqlserver (io.debezium.connector.common.BaseSourceTask)
+# [2022-01-07 10:49:49,096] INFO    database.password = ******** (io.debezium.connector.common.BaseSourceTask)
+# [2022-01-07 10:49:49,096] INFO    name = debezium-sqlserver-source (io.debezium.connector.common.BaseSourceTask)
+# [2022-01-07 10:49:49,097] INFO    value.converter = io.confluent.connect.avro.AvroConverter (io.debezium.connector.common.BaseSourceTask)
