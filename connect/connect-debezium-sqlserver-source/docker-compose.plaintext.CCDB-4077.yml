@@ -30,7 +30,12 @@ services:
       - broker
       - schema-registry
       - sqlserver
+
+    volumes:
+      - ../../connect/connect-debezium-sqlserver-source/repro-CCDB-4077/log4j-rolling.properties:/opt/connect/log4j-rolling.properties
+      - ../../connect/connect-debezium-sqlserver-source/repro-CCDB-4077/logs:/var/log/connect/
     environment:
       CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/debezium-debezium-connector-sqlserver
       CONNECT_VALUE_CONVERTER_BASIC_AUTH_CREDENTIALS_SOURCE: USER_INFO
       CONNECT_VALUE_CONVERTER_SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO: admin:admin
+      KAFKA_LOG4J_OPTS: "-Dlog4j.configuration=file:/opt/connect/log4j-rolling.properties"
