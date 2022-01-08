@@ -62,6 +62,10 @@ do
             continue
         fi
 
+        log "####################################################"
+        log "🕹 processing $script in dir $dir"
+        log "####################################################"
+
         THE_CONNECTOR_TAG=""
         if [[ "$dir" == "connect"* ]]
         then
