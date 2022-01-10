@@ -674,6 +674,12 @@ log "Clear traffic control"
 clear_traffic_control nginx_proxy
 ```
 
+`connect` image has `tc` installed but if you want to use it with broker for example, you need to install it, for example:
+
+```bash
+docker exec --privileged --user root -i broker bash -c 'yum install -y libmnl && wget http://vault.centos.org/8.1.1911/BaseOS/x86_64/os/Packages/iproute-tc-4.18.0-15.el8.x86_64.rpm && rpm -i --nodeps --nosignature http://vault.centos.org/8.1.1911/BaseOS/x86_64/os/Packages/iproute-tc-4.18.0-15.el8.x86_64.rpm'
+```
+
 ## 🏚 Simulate TCP connections problems
 
 [emicklei/zazkia](https://github.com/emicklei/zazkia) is a nice tool to simulate a TCP connection issues (reset,delay,throttle,corrupt).
