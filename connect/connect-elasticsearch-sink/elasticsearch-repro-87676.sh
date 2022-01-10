@@ -46,6 +46,14 @@ export ELASTIC_VERSION="6.8.3"
 
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
 
+curl --request PUT \
+  --url http://localhost:8083/admin/loggers/io.confluent.connect.elasticsearch \
+  --header 'Accept: application/json' \
+  --header 'Content-Type: application/json' \
+  --data '{
+	"level": "TRACE"
+}'
+
 log "Creating Elasticsearch Sink connector (Elasticsearch version is $ELASTIC_VERSION"
 if version_gt $CONNECTOR_TAG "10.9.9"
 then
@@ -95,7 +103,7 @@ fi
 
 log "Sending messages to topic test-elasticsearch-sink"
 docker exec -i broker kafka-console-producer --broker-list broker:9092 --topic test-elasticsearch-sink << EOF
-"{"customer_name":"Ed", "complaint_type":"<root/>\n", "trip_cost": 29.10, "new_customer": false, "number_of_rides": 22}"
+"{"customer_name":"Ed", "complaint_type":"Dirty car", "trip_cost": 29.10, "new_customer": false, "number_of_rides": 22}"
 EOF
 
 sleep 10
