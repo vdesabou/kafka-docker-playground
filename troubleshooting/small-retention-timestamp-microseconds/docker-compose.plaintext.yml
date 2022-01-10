@@ -17,3 +17,22 @@ services:
     container_name: producer
     depends_on:
       - broker
+
+
+  consumer:
+    build:
+      context: ../../troubleshooting/small-retention-timestamp-microseconds/consumer/
+    hostname: consumer
+    container_name: consumer
+    environment:
+      KAFKA_BOOTSTRAP_SERVERS: broker:9092
+      TOPIC: "testtopic"
+      KAFKA_GROUP_ID: "testtopic-app"
+      KAFKA_CLIENT_ID: "my-java-consumer"
+      CHECK_GAPS: "false"
+      COMMIT_STRATEGY: "AUTO_COMMIT" # possible values AUTO_COMMIT or PER_BATCH or PER_MESSAGES
+      #KAFKA_ENABLE_AUTO_COMMIT_CONFIG: "false" # default true if group.id is provided
+      #KAFKA_ISOLATION_LEVEL_CONFIG: "read_committed" # default read_uncommitted
+      # default: org.apache.kafka.clients.consumer.RangeAssignor
+      #KAFKA_PARTITION_ASSIGNMENT_STRATEGY_CONFIG: "org.apache.kafka.clients.consumer.CooperativeStickyAssignor"
+      #KAFKA_SCHEMA_REGISTRY_URL: "http://schema-registry:8081"

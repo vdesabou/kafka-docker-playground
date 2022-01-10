@@ -5,7 +5,7 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 
 source ${DIR}/../../scripts/utils.sh
 
-for component in producer
+for component in producer consumer
 do
      set +e
      log "🏗 Building jar for ${component}"
@@ -23,7 +23,7 @@ ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml
 
 
 log "create a topic testtopic with 30 seconds retention"
-docker exec broker kafka-topics --create --topic testtopic --partitions 1 --replication-factor 1 --bootstrap-server broker:9092 --config retention.ms=30000
+docker exec broker kafka-topics --create --topic testtopic --partitions 1 --replication-factor 1 --bootstrap-server broker:9092 --config retention.ms=30000 --config message.timestamp.type=LogAppendTime 
 
 log "Describe new topic testtopic"
 docker exec zookeeper kafka-topics --describe --topic testtopic --bootstrap-server broker:9092
@@ -38,41 +38,23 @@ sleep 60
 log "Showing segments: 00000000000000000000.index should have been deleted by now"
 docker exec broker ls -lrt /var/lib/kafka/data/testtopic-0/
 
-# With microsecond timestamp 1581583089003000L
-# total 8
-# -rw-r--r-- 1 appuser appuser        0 Jan  7 14:34 leader-epoch-checkpoint
-# -rw-r--r-- 1 appuser appuser 10485760 Jan  7 14:34 00000000000000000000.index
-# -rw-r--r-- 1 appuser appuser       43 Jan  7 14:34 partition.metadata
-# -rw-r--r-- 1 appuser appuser 10485756 Jan  7 14:34 00000000000000000000.timeindex
-# -rw-r--r-- 1 appuser appuser      462 Jan  7 14:34 00000000000000000000.log
-
-# With millisecond timestamp 1581583089003L
 # total 20
-# -rw-r--r-- 1 appuser appuser       43 Jan  7 14:37 partition.metadata
-# -rw-r--r-- 1 appuser appuser      462 Jan  7 14:37 00000000000000000000.log.deleted
-# -rw-r--r-- 1 appuser appuser       12 Jan  7 14:37 00000000000000000000.timeindex.deleted
-# -rw-r--r-- 1 appuser appuser        0 Jan  7 14:37 00000000000000000000.index.deleted
-# -rw-r--r-- 1 appuser appuser       56 Jan  7 14:37 00000000000000000006.snapshot
-# -rw-r--r-- 1 appuser appuser        0 Jan  7 14:37 00000000000000000006.log
-# -rw-r--r-- 1 appuser appuser        8 Jan  7 14:37 leader-epoch-checkpoint
-# -rw-r--r-- 1 appuser appuser 10485756 Jan  7 14:38 00000000000000000006.timeindex
+# -rw-r--r-- 1 appuser appuser  43 Jan 10 09:40 partition.metadata
+# -rw-r--r-- 1 appuser appuser 462 Jan 10 09:40 00000000000000000000.log.deleted
+# -rw-r--r-- 1 appuser appuser  12 Jan 10 09:41 00000000000000000000.timeindex.deleted
+# -rw-r--r-- 1 appuser appuser   0 Jan 10 09:41 00000000000000000000.index.deleted
+# -rw-r--r-- 1 appuser appuser  56 Jan 10 09:41 00000000000000000006.snapshot
+# -rw-r--r-- 1 appuser appuser   8 Jan 10 09:41 leader-epoch-checkpoint
+# -rw-r--r-- 1 appuser appuser   0 Jan 10 09:41 00000000000000000006.log
 
-log "Configure topic testtopic with message.timestamp.type=LogAppendTime"
-docker exec broker kafka-configs --alter --topic testtopic --add-config message.timestamp.type=LogAppendTime --bootstrap-server broker:9092
 
-log "Run the Java producer, logs are in producer.log."
-docker exec producer bash -c "java -jar producer-1.0.0-jar-with-dependencies.jar" > producer.log 2>&1 &
+log "Run the Java consumer. Logs are in consumer.log."
+docker exec consumer bash -c "java -jar consumer-1.0.0-jar-with-dependencies.jar" > consumer.log 2>&1 &
 
-sleep 60
 
-log "Showing segments: 00000000000000000000.index should have been deleted by now"
-docker exec broker ls -lrt /var/lib/kafka/data/testtopic-0/
-
-# it does not trigger deletion:
-
-# total 8
-# -rw-r--r-- 1 appuser appuser       43 Jan 10 08:31 partition.metadata
-# -rw-r--r-- 1 appuser appuser        0 Jan 10 08:31 leader-epoch-checkpoint
-# -rw-r--r-- 1 appuser appuser 10485756 Jan 10 08:31 00000000000000000000.timeindex
-# -rw-r--r-- 1 appuser appuser 10485760 Jan 10 08:31 00000000000000000000.index
-# -rw-r--r-- 1 appuser appuser      924 Jan 10 08:39 00000000000000000000.log
+# [2022-01-10 09:54:26,519] INFO Received testtopic#0 offset = 6, key = null , value = message 0 , value = 1641808466506 (com.github.vdesabou.SimpleConsumer)
+# [2022-01-10 09:54:27,514] INFO Received testtopic#0 offset = 7, key = null , value = message 1 , value = 1641808467512 (com.github.vdesabou.SimpleConsumer)
+# [2022-01-10 09:54:28,517] INFO Received testtopic#0 offset = 8, key = null , value = message 2 , value = 1641808468515 (com.github.vdesabou.SimpleConsumer)
+# [2022-01-10 09:54:29,521] INFO Received testtopic#0 offset = 9, key = null , value = message 3 , value = 1641808469520 (com.github.vdesabou.SimpleConsumer)
+# [2022-01-10 09:54:30,532] INFO Received testtopic#0 offset = 10, key = null , value = message 4 , value = 1641808470522 (com.github.vdesabou.SimpleConsumer)
+# [2022-01-10 09:54:31,528] INFO Received testtopic#0 offset = 11, key = null , value = message 5 , value = 1641808471527 (com.github.vdesabou.SimpleConsumer)
