@@ -22,7 +22,7 @@ docker exec broker kafka-configs --bootstrap-server localhost:9092 --alter --add
 log "Sending messages to topic test-elasticsearch-sink"
 seq -f "{\"f1\": \"value%g\"}" 1000 | docker exec -i connect kafka-avro-console-producer --broker-list broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic test-elasticsearch-sink --property value.schema='{"type":"record","name":"myrecord","fields":[{"name":"f1","type":"string"}]}'
 
-log "Creating Elasticsearch Sink connector (Elasticsearch version is $ELASTIC_VERSION"
+log "Creating Elasticsearch Sink connector (Elasticsearch version is $ELASTIC_VERSION")
 if version_gt $CONNECTOR_TAG "10.9.9"
 then
      # 7.x

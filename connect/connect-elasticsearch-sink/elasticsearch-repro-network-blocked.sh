@@ -43,7 +43,7 @@ curl --request PUT \
 	"level": "TRACE"
 }'
 
-log "Creating Elasticsearch Sink connector (Elasticsearch version is $ELASTIC_VERSION"
+log "Creating Elasticsearch Sink connector (Elasticsearch version is $ELASTIC_VERSION")
 if version_gt $CONNECTOR_TAG "10.9.9"
 then
      # 7.x
