@@ -94,35 +94,6 @@ curl -XGET 'http://localhost:9200/test-elasticsearch-sink/_search?pretty' > /tmp
 cat /tmp/result.log
 grep "Ed" /tmp/result.log | grep "myPayload"
 
-{
-  "took" : 22,
-  "timed_out" : false,
-  "_shards" : {
-    "total" : 1,
-    "successful" : 1,
-    "skipped" : 0,
-    "failed" : 0
-  },
-  "hits" : {
-    "total" : {
-      "value" : 1,
-      "relation" : "eq"
-    },
-    "max_score" : 1.0,
-    "hits" : [
-      {
-        "_index" : "test-elasticsearch-sink",
-        "_type" : "_doc",
-        "_id" : "test-elasticsearch-sink+0+0",
-        "_score" : 1.0,
-        "_source" : {
-          "myPayload" : "{\"customer_name\":\"Ed\", \"complaint_type\":\"Dirty car\", \"trip_cost\": 29.10, \"new_customer\": false, \"number_of_rides\": 22}"
-        }
-      }
-    ]
-  }
-}
-
 # {
 #   "took" : 2,
 #   "timed_out" : false,
