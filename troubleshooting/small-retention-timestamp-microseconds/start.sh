@@ -35,6 +35,7 @@ docker exec producer bash -c "java -jar producer-1.0.0-jar-with-dependencies.jar
 
 sleep 60
 
+log "Showing segments: 00000000000000000000.index should have been deleted by now"
 docker exec broker ls -lrt /var/lib/kafka/data/testtopic-0/
 
 # With microsecond timestamp 1581583089003000L
@@ -55,3 +56,23 @@ docker exec broker ls -lrt /var/lib/kafka/data/testtopic-0/
 # -rw-r--r-- 1 appuser appuser        0 Jan  7 14:37 00000000000000000006.log
 # -rw-r--r-- 1 appuser appuser        8 Jan  7 14:37 leader-epoch-checkpoint
 # -rw-r--r-- 1 appuser appuser 10485756 Jan  7 14:38 00000000000000000006.timeindex
+
+log "Configure topic testtopic with message.timestamp.type=LogAppendTime"
+docker exec broker kafka-configs --alter --topic testtopic --add-config message.timestamp.type=LogAppendTime --bootstrap-server broker:9092
+
+log "Run the Java producer, logs are in producer.log."
+docker exec producer bash -c "java -jar producer-1.0.0-jar-with-dependencies.jar" > producer.log 2>&1 &
+
+sleep 60
+
+log "Showing segments: 00000000000000000000.index should have been deleted by now"
+docker exec broker ls -lrt /var/lib/kafka/data/testtopic-0/
+
+# it does not trigger deletion:
+
+# total 8
+# -rw-r--r-- 1 appuser appuser       43 Jan 10 08:31 partition.metadata
+# -rw-r--r-- 1 appuser appuser        0 Jan 10 08:31 leader-epoch-checkpoint
+# -rw-r--r-- 1 appuser appuser 10485756 Jan 10 08:31 00000000000000000000.timeindex
+# -rw-r--r-- 1 appuser appuser 10485760 Jan 10 08:31 00000000000000000000.index
+# -rw-r--r-- 1 appuser appuser      924 Jan 10 08:39 00000000000000000000.log
