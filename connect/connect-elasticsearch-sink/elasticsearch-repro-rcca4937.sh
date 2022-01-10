@@ -39,7 +39,7 @@ ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.rep
 log "Run the Java producer-v1, with problematic header (byte[] { -17, -65,  -65 }), see KAFKA-10574"
 docker exec producer-v1 bash -c "java -jar producer-v1-1.0.0-jar-with-dependencies.jar"
 
-log "Creating Elasticsearch Sink connector (Elasticsearch version is $ELASTIC_VERSION"
+log "Creating Elasticsearch Sink connector (Elasticsearch version is $ELASTIC_VERSION")
 if version_gt $CONNECTOR_TAG "10.9.9"
 then
      # 7.x
