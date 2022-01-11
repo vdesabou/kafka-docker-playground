@@ -68,7 +68,6 @@ curl -X PUT \
                "autoCreateTables" : "true",
                "kafkaKeyFieldName": "KEY",
                "intermediateTableSuffix": "_intermediate",
-               "autoUpdateSchemas" : "true",
                "key.converter" : "io.confluent.connect.avro.AvroConverter",
                "key.converter.schema.registry.url" : "http://schema-registry:8081"
           }' \
@@ -81,9 +80,9 @@ docker exec producer-87895-2 bash -c "java -jar producer-87895-2-1.0.0-jar-with-
 log "Sleeping 120 seconds"
 sleep 120
 
-log "Verify data is in GCP BigQuery:"
-docker run -i --volumes-from gcloud-config google/cloud-sdk:latest bq --project_id "$PROJECT" query "SELECT * FROM $DATASET.customer-avro;" > /tmp/result.log  2>&1
-cat /tmp/result.log
+# log "Verify data is in GCP BigQuery:"
+# docker run -i --volumes-from gcloud-config google/cloud-sdk:latest bq --project_id "$PROJECT" query "SELECT * FROM $DATASET.customer_avro;" > /tmp/result.log  2>&1
+# cat /tmp/result.log
 
 log "Change compatibility mode to NONE"
 curl --request PUT \
