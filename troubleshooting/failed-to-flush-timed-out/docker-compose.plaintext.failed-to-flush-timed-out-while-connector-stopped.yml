@@ -1,0 +1,10 @@
+---
+version: '3.5'
+services:
+  connect:
+    environment:
+      # in newer version, it is located in /usr/share/filestream-connectors
+      CONNECT_PLUGIN_PATH: /usr/share/java/,/usr/share/confluent-hub-components/,/usr/share/filestream-connectors
+      CONNECT_OFFSET_FLUSH_INTERVAL_MS: 10000
+      CONNECT_OFFSET_FLUSH_TIMEOUT_MS: 500
+      CONNECT_TASK_SHUTDOWN_GRACEFUL_TIMEOUT_MS: 100
