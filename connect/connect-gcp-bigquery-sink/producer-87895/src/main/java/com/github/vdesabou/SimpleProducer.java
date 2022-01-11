@@ -26,6 +26,7 @@ import uk.co.jemos.podam.api.PodamFactoryImpl;
 import uk.co.jemos.podam.api.PodamFactory;
 import org.jeasy.random.EasyRandom;
 import org.jeasy.random.EasyRandomParameters;
+import com.github.javafaker.Faker;
 
 public class SimpleProducer {
 
@@ -68,14 +69,21 @@ public class SimpleProducer {
         .overrideDefaultInitialization(false)
         .ignoreRandomizationErrors(false);
         EasyRandom generator = new EasyRandom(parameters);
+        Faker faker = new Faker();
 
         try (Producer<MyKey, Customer> producer = new KafkaProducer<>(properties)) {
             long id = 0;
             while (id < 10) {
+                MyKey myKey = MyKey.newBuilder()
+                        .setID(id)
+                        .build();
 
-                MyKey myKey = generator.nextObject(MyKey.class);
-                
-                Customer customer = generator.nextObject(Customer.class);
+                Customer customer = Customer.newBuilder()
+                        .setCount(id)
+                        .setFirstName(faker.name().firstName())
+                        .setLastName(faker.name().lastName())
+                        .setAddress(faker.address().streetAddress())
+                        .build();
 
                 if(id==9) {
                     // tombstone
