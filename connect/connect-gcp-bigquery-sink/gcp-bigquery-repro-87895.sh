@@ -68,7 +68,6 @@ curl -X PUT \
                "autoCreateTables" : "true",
                "kafkaKeyFieldName": "KEY",
                "intermediateTableSuffix": "_intermediate",
-               "autoUpdateSchemas" : "true",
                "key.converter" : "io.confluent.connect.avro.AvroConverter",
                "key.converter.schema.registry.url" : "http://schema-registry:8081"
           }' \
