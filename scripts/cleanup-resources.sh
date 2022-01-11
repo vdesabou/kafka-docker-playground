@@ -94,6 +94,23 @@ do
     fi
 done
 
+log "Cleanup GCP BQ datasets"
+KEYFILE="${DIR}/../connect/connect-gcp-bigquery-sink/keyfile.json"
+PROJECT="vincent-de-saboulin-lab"
+set +e
+docker rm -f gcloud-config-cleanup-resources
+set -e
+docker run -i -v ${KEYFILE}:/tmp/keyfile.json --name gcloud-config-cleanup-resources google/cloud-sdk:latest gcloud auth activate-service-account --project ${PROJECT} --key-file /tmp/keyfile.json
+
+for dataset in $(docker run -i --volumes-from gcloud-config-cleanup-resources google/cloud-sdk:latest bq --project_id "$PROJECT" ls)
+do
+    if [[ $dataset = *pgrunnerds* ]]
+    then
+      log "Remove dataset $dataset"
+      docker run -i --volumes-from gcloud-config-cleanup-resources google/cloud-sdk:latest bq --project_id "$PROJECT" rm -r -f -d "$dataset"
+    fi
+done
+
 log "Cleanup AWS S3 buckets"
 if [ ! -f $HOME/.aws/config ]
 then
