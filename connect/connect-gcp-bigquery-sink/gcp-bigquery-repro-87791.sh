@@ -66,7 +66,7 @@ then
                     "project" : "'"$PROJECT"'",
                     "keyfile" : "/tmp/keyfile.json"
                }' \
-          http://localhost:8083/connectors/gcp-bigquery-sink4/config | jq .
+          http://localhost:8083/connectors/gcp-bigquery-sink/config | jq .
 else
      log "Creating GCP BigQuery Sink connector"
      curl -X PUT \
