@@ -1,7 +1,7 @@
 {
     "fields": [
         {
-            "name": "ID",
+            "name": "KEY",
             "type": "long"
         }
     ],
