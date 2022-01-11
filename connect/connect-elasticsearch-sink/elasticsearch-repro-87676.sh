@@ -153,7 +153,7 @@ else
                "transforms.AddPrefix.replacement": "new",
                "transforms.AddPrefix.regex": ".*"
                }' \
-          http://localhost:8083/connectors/elasticsearch-sink3/config | jq .
+          http://localhost:8083/connectors/elasticsearch-sink/config | jq .
 fi
 
 log "Sending messages to topic test-elasticsearch-sink"
