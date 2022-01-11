@@ -1,112 +1,12 @@
 {
-    "connect.name": "TOTO.TITI",
-    "fields": [
-        {
-            "default": null,
-            "name": "ID",
-            "type": [
-                "null",
-                "long"
-            ]
-        },
-        {
-            "default": null,
-            "name": "DELETED",
-            "type": [
-                "null",
-                "long"
-            ]
-        },
-        {
-            "default": null,
-            "name": "DAYSAFTER",
-            "type": [
-                "null",
-                "long"
-            ]
-        },
-        {
-            "default": null,
-            "name": "CREATEDDATE",
-            "type": [
-                "null",
-                "string"
-            ]
-        },
-        {
-            "default": null,
-            "name": "MODIFIEDDATE",
-            "type": [
-                "null",
-                "string"
-            ]
-        },
-        {
-            "default": null,
-            "name": "NAME",
-            "type": [
-                "null",
-                "string"
-            ]
-        },
-        {
-            "default": null,
-            "name": "STARTEXPIRYDATE",
-            "type": [
-                "null",
-                "string"
-            ]
-        },
-        {
-            "default": null,
-            "name": "STATUS",
-            "type": [
-                "null",
-                "string"
-            ]
-        },
-        {
-            "default": null,
-            "name": "TYPE",
-            "type": [
-                "null",
-                "string"
-            ]
-        },
-        {
-            "default": null,
-            "name": "PUBLISHINGTYPEHARDCOPY",
-            "type": [
-                "null",
-                "long"
-            ]
-        },
-        {
-            "default": null,
-            "name": "COUPONFORREJECTION",
-            "type": [
-                "null",
-                "long"
-            ]
-        },
-        {
-            "default": null,
-            "name": "USECATBASEDMINAMOUNT",
-            "type": [
-                "null",
-                "long"
-            ]
-        },
-        {
-            "default": null,
-            "name": "DESCRIPTION",
-            "type": [
-                "null",
-                "string"
-            ]
-        }
-    ],
-    "name": "Customer",
-    "namespace": "com.github.vdesabou",
-    "type": "record"
+     "type": "record",
+     "namespace": "com.github.vdesabou",
+     "name": "Customer",
+     "version": "1",
+     "fields": [
+       { "name": "count", "type": "long", "doc": "count" },
+       { "name": "first_name", "type": "string", "doc": "First Name of Customer" },
+       { "name": "last_name", "type": "string", "doc": "Last Name of Customer" },
+       { "name": "address", "type": "string", "doc": "Address of Customer" }
+     ]
 }
