@@ -114,3 +114,9 @@ sleep 5
 
 log "Verifying topic redshift-customers"
 timeout 60 docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic redshift-customers --from-beginning --max-messages 5
+
+set +e
+log "Delete AWS Redshift cluster"
+aws redshift delete-cluster --cluster-identifier $CLUSTER_NAME --skip-final-cluster-snapshot
+log "Delete security group sg$CLUSTER_NAME"
+aws ec2 delete-security-group --group-name sg$CLUSTER_NAME
