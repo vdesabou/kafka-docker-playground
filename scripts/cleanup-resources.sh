@@ -155,9 +155,11 @@ for cluster in $(aws redshift describe-clusters | jq '.Clusters[].ClusterIdentif
 do
     if [[ $cluster = pg*redshift* ]]
     then
+      set +e
       log "Delete AWS Redshift $cluster"
       aws redshift delete-cluster --cluster-identifier $cluster --skip-final-cluster-snapshot
       log "Delete security group sg$cluster"
       aws ec2 delete-security-group --group-name sg$cluster
+      set -e
     fi
 done
