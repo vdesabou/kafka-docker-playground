@@ -29,7 +29,7 @@ function wait_for_repro () {
 
      log "Delete WAL log /logs/test_hdfs/0/log to unblock the connector ?"
      check_if_continue
-     doc
+     docker exec namenode1 bash -c "kinit -kt /opt/hadoop/etc/hadoop/nn.keytab nn/namenode1.kerberos-demo.local && /opt/hadoop/bin/hadoop fs -rm /logs/test_hdfs/0/log"
 
      log "Sending messages to make sure connector is unblocked"
      seq -f "{\"f1\": \"value%g\"}" 10 | docker exec -i connect kafka-avro-console-producer --broker-list broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic test_hdfs --property value.schema='{"type":"record","name":"myrecord","fields":[{"name":"f1","type":"string"}]}'
