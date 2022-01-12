@@ -3,6 +3,8 @@ version: '3.5'
 services:
 
   connect:
+    ports:
+      - "5439:5439"
     depends_on:
       - zookeeper
       - broker
