@@ -9,7 +9,7 @@ Quickly test [JDBC Source](https://docs.confluent.io/current/connect/kafka-conne
 Simply run:
 
 ```bash
-$ ./redshift.sh
+$ ./redshift-jdbc-source.sh
 ```
 ## Details of what the script is doing
 
