@@ -149,3 +149,15 @@ do
       aws kinesis delete-stream --stream-name $stream
     fi
 done
+
+log "Cleanup AWS Redshift clusters"
+for cluster in $(aws redshift describe-clusters | jq '.Clusters[].ClusterIdentifier' -r)
+do
+    if [[ $cluster = pg*redshift* ]]
+    then
+      log "Delete AWS Redshift $cluster"
+      aws redshift delete-cluster --cluster-identifier $cluster --skip-final-cluster-snapshot
+      log "Delete security group sg$cluster"
+      aws ec2 delete-security-group --group-name sg$cluster
+    fi
+done
