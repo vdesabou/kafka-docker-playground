@@ -1,12 +1,8 @@
 {
     "fields": [
         {
-            "default": null,
             "name": "KEY",
-            "type": [
-                "null",
-                "long"
-            ]
+            "type": "long"
         }
     ],
     "name": "MyKey",

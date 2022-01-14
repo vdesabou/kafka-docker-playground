@@ -18,6 +18,26 @@ do
      set -e
 done
 
+function wait_for_repro () {
+     ERROR="$1"
+     MAX_WAIT=600
+     CUR_WAIT=0
+     log "⌛ Waiting up to $MAX_WAIT seconds for error $ERROR to happen"
+     docker container logs connect > /tmp/out.txt 2>&1
+     while ! grep -i "$ERROR" /tmp/out.txt > /dev/null;
+     do
+          sleep 10
+          docker container logs connect > /tmp/out.txt 2>&1
+          CUR_WAIT=$(( CUR_WAIT+10 ))
+          if [[ "$CUR_WAIT" -gt "$MAX_WAIT" ]]; then
+               echo -e "\nERROR: The logs in all connect containers do not show '$ERROR' after $MAX_WAIT seconds. Please troubleshoot with 'docker container ps' and 'docker container logs'.\n"
+               exit 1
+          fi
+     done
+     log "The problem has been reproduced !"
+}
+
+
 PROJECT=${1:-vincent-de-saboulin-lab}
 
 KEYFILE="${DIR}/keyfile.json"
@@ -27,6 +47,7 @@ then
      exit 1
 fi
 
+# pgrepro should exist with table created like this: https://github.com/vdesabou/kafka-docker-playground/blob/e8ee3b1cfd8b0704b70a669f147fe16e958ac14e/connect/connect-gcp-bigquery-sink/producer-87895/customer-avro.jpg
 DATASET=pgrepro
 DATASET=${DATASET//[-._]/}
 
@@ -36,19 +57,9 @@ docker rm -f gcloud-config
 set -e
 docker run -i -v ${KEYFILE}:/tmp/keyfile.json --name gcloud-config google/cloud-sdk:latest gcloud auth activate-service-account --project ${PROJECT} --key-file /tmp/keyfile.json
 
-set +e
-log "Drop dataset $DATASET, this might fail"
-docker run -i --volumes-from gcloud-config google/cloud-sdk:latest bq --project_id "$PROJECT" rm -r -f -d "$DATASET"
-set -e
-
-log "Create dataset $PROJECT.$DATASET"
-docker run -i --volumes-from gcloud-config google/cloud-sdk:latest bq --project_id "$PROJECT" mk --dataset --description "used by playground" "$DATASET"
-
-
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.repro-87895.yml"
 
-
-log "Creating GCP BigQuery Sink connector"
+log "Creating GCP BigQuery Sink connector with autoCreateTables=true"
 curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
@@ -65,35 +76,19 @@ curl -X PUT \
                "project" : "'"$PROJECT"'",
                "keyfile" : "/tmp/keyfile.json",
                "deleteEnabled": "true",
-               "autoCreateTables" : "true",
+               "upsertEnabled": "true",
                "kafkaKeyFieldName": "KEY",
                "intermediateTableSuffix": "_intermediate",
                "key.converter" : "io.confluent.connect.avro.AvroConverter",
                "key.converter.schema.registry.url" : "http://schema-registry:8081"
           }' \
-     http://localhost:8083/connectors/gcp-bigquery-sink/config | jq .
+     http://localhost:8083/connectors/gcp-bigquery-sink-key-nullable-to-required/config | jq .
 
 
-log "Run the Java producer-87895-2 (KEY is NULLABLE id=9 is a tombstone)"
-docker exec producer-87895-2 bash -c "java -jar producer-87895-2-1.0.0-jar-with-dependencies.jar"
-
-log "Sleeping 120 seconds"
-sleep 120
-
-# log "Verify data is in GCP BigQuery:"
-# docker run -i --volumes-from gcloud-config google/cloud-sdk:latest bq --project_id "$PROJECT" query "SELECT * FROM $DATASET.customer_avro;" > /tmp/result.log  2>&1
-# cat /tmp/result.log
-
-log "Change compatibility mode to NONE"
-curl --request PUT \
-  --url http://localhost:8081/config \
-  --header 'Content-Type: application/vnd.schemaregistry.v1+json' \
-  --data '{
-    "compatibility": "NONE"
-}'
-
-log "Run the Java producer-87895 (KEY is REQUIRED, id=9 is a tombstone)"
+log "Run the Java producer-87895 (KEY is REQUIRED)"
 docker exec producer-87895 bash -c "java -jar producer-87895-1.0.0-jar-with-dependencies.jar"
+
+wait_for_repro "Field KEY.KEY has changed mode from NULLABLE to REQUIRED"
 
 # [2022-01-11 16:59:38,234] INFO [gcp-bigquery-sink|task-0] Attempting to update table `pgrepro`.`customer-avro` with schema Schema{fields=[Field{name=count, type=INTEGER, mode=REQUIRED, description=null, policyTags=null}, Field{name=first_name, type=STRING, mode=REQUIRED, description=null, policyTags=null}, Field{name=last_name, type=STRING, mode=REQUIRED, description=null, policyTags=null}, Field{name=address, type=STRING, mode=REQUIRED, description=null, policyTags=null}, Field{name=KEY, type=RECORD, mode=NULLABLE, description=null, policyTags=null}]} (com.wepay.kafka.connect.bigquery.SchemaManager:255)
 # Exception in thread "pool-6-thread-3" com.wepay.kafka.connect.bigquery.exception.BigQueryConnectException: Failed to create table GenericData{classInfo=[datasetId, projectId, tableId], {datasetId=pgrepro, tableId=customer_avro__intermediate_0_a3fe48e9_191e_42bb_88be_2334e52cfe7c_1641920361088}}
@@ -141,3 +136,35 @@ docker exec producer-87895 bash -c "java -jar producer-87895-1.0.0-jar-with-depe
 #         at com.google.api.client.googleapis.services.AbstractGoogleClientRequest.execute(AbstractGoogleClientRequest.java:591)
 #         at com.google.cloud.bigquery.spi.v2.HttpBigQueryRpc.patch(HttpBigQueryRpc.java:268)
 #         ... 15 more
+
+log "Creating GCP BigQuery Sink connector with autoCreateTables=false"
+curl -X PUT \
+     -H "Content-Type: application/json" \
+     --data '{
+               "connector.class": "com.wepay.kafka.connect.bigquery.BigQuerySinkConnector",
+               "tasks.max" : "1",
+               "topics" : "customer-avro2",
+               "sanitizeFieldNames": "true",
+               "autoCreateTables" : "false",
+               "defaultDataset" : "'"$DATASET"'",
+               "mergeIntervalMs": "5000",
+               "bufferSize": "100000",
+               "maxWriteSize": "10000",
+               "tableWriteWait": "1000",
+               "project" : "'"$PROJECT"'",
+               "keyfile" : "/tmp/keyfile.json",
+               "deleteEnabled": "true",
+               "upsertEnabled": "true",
+               "kafkaKeyFieldName": "KEY",
+               "intermediateTableSuffix": "_intermediate",
+               "key.converter" : "io.confluent.connect.avro.AvroConverter",
+               "key.converter.schema.registry.url" : "http://schema-registry:8081"
+          }' \
+     http://localhost:8083/connectors/gcp-bigquery-sink-tombstones/config | jq .
+
+
+log "Run the Java producer-87895-2 (only composed of tombstones)"
+docker exec producer-87895-2 bash -c "java -jar producer-87895-2-1.0.0-jar-with-dependencies.jar"
+
+wait_for_repro "Failed to unionize schemas of records for the table"
+
