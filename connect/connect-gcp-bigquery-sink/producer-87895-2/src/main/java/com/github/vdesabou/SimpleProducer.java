@@ -85,11 +85,7 @@ public class SimpleProducer {
                         .setAddress(faker.address().streetAddress())
                         .build();
 
-                if(id==9) {
-                    // tombstone
-                    customer = null;
-                } 
-                ProducerRecord<MyKey, Customer> record = new ProducerRecord<>(topicName, myKey, customer);
+                ProducerRecord<MyKey, Customer> record = new ProducerRecord<>(topicName, myKey, null);
                 logger.info("Sending Key = {}, Value = {}", record.key(), record.value());
                 producer.send(record,(recordMetadata, exception) -> sendCallback(record, recordMetadata,exception));
                 id++;

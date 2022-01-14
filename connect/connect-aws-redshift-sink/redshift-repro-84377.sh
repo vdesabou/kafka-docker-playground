@@ -148,9 +148,3 @@ SELECT * from orders;
 EOF
 cat /tmp/result.log
 grep "foo" /tmp/result.log
-
-set +e
-log "Delete AWS Redshift cluster"
-aws redshift delete-cluster --cluster-identifier $CLUSTER_NAME --skip-final-cluster-snapshot
-log "Delete security group sg$CLUSTER_NAME"
-aws ec2 delete-security-group --group-name sg$CLUSTER_NAME
