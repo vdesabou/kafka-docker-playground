@@ -160,6 +160,35 @@ curl -X PUT \
                "key.converter" : "io.confluent.connect.avro.AvroConverter",
                "key.converter.schema.registry.url" : "http://schema-registry:8081"
           }' \
+     http://localhost:8083/connectors/gcp-bigquery-sink-tombstones3/config | jq .
+
+
+log "Run the Java producer-87895-2 (only composed of tombstones)"
+docker exec producer-87895-2 bash -c "java -jar producer-87895-2-1.0.0-jar-with-dependencies.jar"
+
+log "Creating GCP BigQuery Sink connector with autoCreateTables=false"
+curl -X PUT \
+     -H "Content-Type: application/json" \
+     --data '{
+               "connector.class": "com.wepay.kafka.connect.bigquery.BigQuerySinkConnector",
+               "tasks.max" : "1",
+               "topics" : "customer-avro2",
+               "sanitizeFieldNames": "true",
+               "autoCreateTables" : "false",
+               "defaultDataset" : "'"$DATASET"'",
+               "mergeIntervalMs": "5000",
+               "bufferSize": "100000",
+               "maxWriteSize": "10000",
+               "tableWriteWait": "1000",
+               "project" : "'"$PROJECT"'",
+               "keyfile" : "/tmp/keyfile.json",
+               "deleteEnabled": "true",
+               "upsertEnabled": "true",
+               "kafkaKeyFieldName": "KEY",
+               "intermediateTableSuffix": "_intermediate",
+               "key.converter" : "io.confluent.connect.avro.AvroConverter",
+               "key.converter.schema.registry.url" : "http://schema-registry:8081"
+          }' \
      http://localhost:8083/connectors/gcp-bigquery-sink-tombstones/config | jq .
 
 
@@ -167,4 +196,21 @@ log "Run the Java producer-87895-2 (only composed of tombstones)"
 docker exec producer-87895-2 bash -c "java -jar producer-87895-2-1.0.0-jar-with-dependencies.jar"
 
 wait_for_repro "Failed to unionize schemas of records for the table"
+
+# Exception in thread "pool-10-thread-1" com.wepay.kafka.connect.bigquery.exception.BigQueryConnectException: Failed to unionize schemas of records for the table GenericData{classInfo=[datasetId, projectId, tableId], {datasetId=pgrepro, tableId=customer_avro2__intermediate_0_437011d3_a297_4d6d_a2ef_13c9e2d0edf1_1642152694641}}
+# Caused by: Could not convert to BigQuery schema with a batch of tombstone records.
+#         at com.wepay.kafka.connect.bigquery.SchemaManager.getTableInfo(SchemaManager.java:289)
+#         at com.wepay.kafka.connect.bigquery.SchemaManager.createTable(SchemaManager.java:232)
+#         at com.wepay.kafka.connect.bigquery.write.row.AdaptiveBigQueryWriter.attemptTableCreate(AdaptiveBigQueryWriter.java:161)
+#         at com.wepay.kafka.connect.bigquery.write.row.UpsertDeleteBigQueryWriter.attemptTableCreate(UpsertDeleteBigQueryWriter.java:82)
+#         at com.wepay.kafka.connect.bigquery.write.row.AdaptiveBigQueryWriter.performWriteRequest(AdaptiveBigQueryWriter.java:102)
+#         at com.wepay.kafka.connect.bigquery.write.row.BigQueryWriter.writeRows(BigQueryWriter.java:112)
+#         at com.wepay.kafka.connect.bigquery.write.batch.TableWriter.run(TableWriter.java:93)
+#         at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1128)
+#         at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:628)
+#         at java.base/java.lang.Thread.run(Thread.java:829)
+# Caused by: com.wepay.kafka.connect.bigquery.exception.BigQueryConnectException: Could not convert to BigQuery schema with a batch of tombstone records.
+#         at com.wepay.kafka.connect.bigquery.SchemaManager.getAndValidateProposedSchema(SchemaManager.java:307)
+#         at com.wepay.kafka.connect.bigquery.SchemaManager.getTableInfo(SchemaManager.java:286)
+#         ... 9 more
 
