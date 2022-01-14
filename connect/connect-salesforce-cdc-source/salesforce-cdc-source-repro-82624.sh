@@ -71,6 +71,8 @@ curl -X PUT \
                     "curl.logging": "true",
                     "salesforce.instance" : "'"$SALESFORCE_INSTANCE"'",
                     "salesforce.cdc.name" : "AccountChangeEvent",
+                    "__comment" : "from 2.0.0 salesforce.cdc.name is renamed salesforce.cdc.channel",
+                    "salesforce.cdc.channel" : "AccountChangeEvent",
                     "salesforce.username" : "'"$SALESFORCE_USERNAME"'",
                     "salesforce.password" : "'"$SALESFORCE_PASSWORD"'",
                     "salesforce.password.token" : "'"$SECURITY_TOKEN"'",
