@@ -88,6 +88,8 @@ $ curl -X PUT \
                     "tasks.max": "1",
                     "curl.logging": "true",
                     "salesforce.cdc.name" : "ContactChangeEvent",
+                    "__comment" : "from 2.0.0 salesforce.cdc.name is renamed salesforce.cdc.channel",
+                    "salesforce.cdc.channel" : "ContactChangeEvent",
                     "salesforce.instance" : "'"$SALESFORCE_INSTANCE"'",
                     "salesforce.username" : "'"$SALESFORCE_USERNAME"'",
                     "salesforce.password" : "'"$SALESFORCE_PASSWORD"'",
