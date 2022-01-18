@@ -70,6 +70,8 @@ aws ec2 authorize-security-group-ingress --group-id $GROUP_ID --protocol tcp --p
 log "Modify AWS Redshift cluster to use the security group $GROUP_ID"
 aws redshift modify-cluster --cluster-identifier $CLUSTER_NAME --vpc-security-group-ids $GROUP_ID
 
+sleep 60
+
 # getting cluster URL
 CLUSTER=$(aws redshift describe-clusters --cluster-identifier $CLUSTER_NAME | jq -r .Clusters[0].Endpoint.Address)
 
