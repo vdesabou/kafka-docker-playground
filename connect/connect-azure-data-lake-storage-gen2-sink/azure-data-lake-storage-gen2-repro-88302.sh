@@ -110,6 +110,7 @@ curl -X PUT \
                     "azure.datalake.gen2.token.endpoint": "'"$AZURE_DATALAKE_TOKEN_ENDPOINT"'",
                     "format.class":"io.confluent.connect.azure.storage.format.avro.AvroFormat",
                     "value.converter": "io.confluent.connect.protobuf.ProtobufConverter",
+                    "connect.meta.data": "true",
                     "value.converter.schema.registry.url": "http://schema-registry:8081",
                     "value.converter.schemas.enable": "false",
                     "value.converter.auto.register.schemas":"false",
@@ -118,6 +119,9 @@ curl -X PUT \
                     "errors.tolerance": "all",
                     "errors.log.enable":"true",
                     "errors.log.include.messages":"true",
+                    "timestamp.extractor": "Record",
+                    "schema.compatibility": "FULL",
+                    "behavior.on.null.values": "ignore",
                     "confluent.license": "",
                     "confluent.topic.bootstrap.servers": "broker:9092",
                     "confluent.topic.replication.factor": "1"
