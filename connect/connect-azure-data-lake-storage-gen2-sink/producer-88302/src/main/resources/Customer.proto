@@ -4,18 +4,43 @@ package com.github.vdesabou;
 option java_outer_classname = "CustomerImpl";
 
 message Customer {
+    // ************************ Prices ************************
+    message InstrumentPrice {
+        int64 price = 123;
+    }
+
+    // Groups all price related properties
     message Price {
-        bool rfq=6;
+
+
+        // Opening Price
+        InstrumentPrice open_price= 1;
 
         message PriceOverride {
-            int64 price= 1;
-    
-            int64 start_time= 2;
+            InstrumentPrice price= 12;
         }
 
+        // Price override (for CA) for open position.
         PriceOverride price_override= 7;
     }
 
     // All price related properties. This is never null.
     Price price = 101;
+
+    Price price2 = 102;
+
+    // Details about fill when position message is a (partial) fill update.
+    message Fill {
+        // The filled quantity (i.e. signed amount)
+        int64 quantity = 1;
+
+        // The fill price
+        InstrumentPrice price = 2;
+
+        // The underlying market price of fill
+        InstrumentPrice underlying_market_price = 3;
+    }
+
+    // Details about fill when position message is a (partial) fill update.
+    Fill fill = 118;
 }
