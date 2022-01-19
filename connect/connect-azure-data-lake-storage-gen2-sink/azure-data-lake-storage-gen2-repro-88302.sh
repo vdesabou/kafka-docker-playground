@@ -124,6 +124,9 @@ curl -X PUT \
                     "errors.tolerance": "all",
                     "errors.log.enable":"true",
                     "errors.log.include.messages":"true",
+                    "timestamp.extractor": "Record",
+                    "schema.compatibility": "FULL",
+                    "behavior.on.null.values": "ignore",
                     "confluent.license": "",
                     "confluent.topic.bootstrap.servers": "broker:9092",
                     "confluent.topic.replication.factor": "1"

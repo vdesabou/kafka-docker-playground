@@ -6,6 +6,12 @@ option java_outer_classname = "CustomerImpl";
 import "InstrumentPrice.proto";
 
 message Customer {
+    // ************************ Prices ************************
+    message InstrumentPrice {
+        int64 price = 123;
+    }
+
+    // Groups all price related properties
     message Price {
         .com.github.vdesabou.price.InstrumentPrice open_price= 1;
     }
