@@ -47,6 +47,19 @@ docker exec producer-88620 bash -c "java -jar producer-88620-1.0.0-jar-with-depe
 
 sleep 5
 
+# This is causing the issue:
+#     "evtTime": {
+#       "items": [
+#         {
+#           "type": "integer"
+#         },
+#         {
+#           "type": "integer"
+#         } 
+#       ],
+#       "type": "array"
+#     },
+
 # [2022-01-19 15:04:02,683] ERROR [mysql-sink|task-0] WorkerSinkTask{id=mysql-sink-0} Error converting message value in topic 'customer-json-schema' partition 0 at offset 0 and timestamp 1642604461150: Unsupported schema type org.everit.json.schema.EmptySchema (org.apache.kafka.connect.runtime.WorkerSinkTask:565)
 # org.apache.kafka.connect.errors.DataException: Unsupported schema type org.everit.json.schema.EmptySchema
 #         at io.confluent.connect.json.JsonSchemaData.toConnectSchema(JsonSchemaData.java:1025)
