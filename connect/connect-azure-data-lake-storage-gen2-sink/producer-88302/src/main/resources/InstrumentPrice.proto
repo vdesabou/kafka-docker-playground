@@ -1,0 +1,12 @@
+syntax = "proto3";
+
+package com.github.vdesabou.price;
+
+message InstrumentPrice {
+
+    message Price {
+        int64 price = 123;
+    }
+
+    Price price = 124;
+}
