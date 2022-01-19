@@ -3,19 +3,12 @@ syntax = "proto3";
 package com.github.vdesabou;
 option java_outer_classname = "CustomerImpl";
 
+import "InstrumentPrice.proto";
+
 message Customer {
     message Price {
-        bool rfq=6;
-
-        message PriceOverride {
-            int64 price= 1;
-    
-            int64 start_time= 2;
-        }
-
-        PriceOverride price_override= 7;
+        .com.github.vdesabou.price.InstrumentPrice open_price= 1;
     }
 
-    // All price related properties. This is never null.
     Price price = 101;
 }

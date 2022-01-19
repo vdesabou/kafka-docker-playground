@@ -96,6 +96,10 @@ az role assignment create --assignee $SERVICE_PRINCIPAL_ID --role "Storage Blob 
 
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.repro-88302.yml"
 
+echo "AZURE_DATALAKE_CLIENT_ID=$AZURE_DATALAKE_CLIENT_ID"
+echo "AZURE_DATALAKE_ACCOUNT_NAME=$AZURE_DATALAKE_ACCOUNT_NAME"
+echo "AZURE_DATALAKE_TOKEN_ENDPOINT=$AZURE_DATALAKE_TOKEN_ENDPOINT"
+
 log "Creating Data Lake Storage Gen2 Sink connector"
 curl -X PUT \
      -H "Content-Type: application/json" \
@@ -110,6 +114,8 @@ curl -X PUT \
                     "azure.datalake.gen2.token.endpoint": "'"$AZURE_DATALAKE_TOKEN_ENDPOINT"'",
                     "format.class":"io.confluent.connect.azure.storage.format.avro.AvroFormat",
                     "value.converter": "io.confluent.connect.protobuf.ProtobufConverter",
+                    "connect.meta.data": "false",
+                    "enhanced.avro.schema.support": "true",
                     "value.converter.schema.registry.url": "http://schema-registry:8081",
                     "value.converter.schemas.enable": "false",
                     "value.converter.auto.register.schemas":"false",
@@ -138,3 +144,43 @@ log "Getting one of the avro files locally and displaying content with avro-tool
 az storage blob download  --container-name topics --name customer-protobuf/partition=0/customer-protobuf+0+0000000000.avro --file /tmp/customer-protobuf+0+0000000000.avro --account-name "${AZURE_DATALAKE_ACCOUNT_NAME}"
 
 docker run --rm -v /tmp:/tmp actions/avro-tools tojson /tmp/customer-protobuf+0+0000000000.avro
+
+
+# [2022-01-19 13:01:03,897] ERROR [azure-datalake-gen2-sink-proto|task-0] WorkerSinkTask{id=azure-datalake-gen2-sink-proto-0} Task threw an uncaught and unrecoverable exception. Task is being killed and will not recover until manually restarted (org.apache.kafka.connect.runtime.WorkerTask:206)
+# org.apache.kafka.connect.errors.ConnectException: Exiting WorkerSinkTask due to unrecoverable exception.
+#         at org.apache.kafka.connect.runtime.WorkerSinkTask.deliverMessages(WorkerSinkTask.java:638)
+#         at org.apache.kafka.connect.runtime.WorkerSinkTask.poll(WorkerSinkTask.java:334)
+#         at org.apache.kafka.connect.runtime.WorkerSinkTask.iteration(WorkerSinkTask.java:235)
+#         at org.apache.kafka.connect.runtime.WorkerSinkTask.execute(WorkerSinkTask.java:204)
+#         at org.apache.kafka.connect.runtime.WorkerTask.doRun(WorkerTask.java:199)
+#         at org.apache.kafka.connect.runtime.WorkerTask.run(WorkerTask.java:254)
+#         at java.base/java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:515)
+#         at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:264)
+#         at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1128)
+#         at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:628)
+#         at java.base/java.lang.Thread.run(Thread.java:829)
+# Caused by: org.apache.avro.SchemaParseException: Can't redefine: Price
+#         at org.apache.avro.Schema$Names.put(Schema.java:1511)
+#         at org.apache.avro.Schema$NamedSchema.writeNameRef(Schema.java:782)
+#         at org.apache.avro.Schema$RecordSchema.toJson(Schema.java:943)
+#         at org.apache.avro.Schema$UnionSchema.toJson(Schema.java:1203)
+#         at org.apache.avro.Schema$RecordSchema.fieldsToJson(Schema.java:971)
+#         at org.apache.avro.Schema$RecordSchema.toJson(Schema.java:955)
+#         at org.apache.avro.Schema$UnionSchema.toJson(Schema.java:1203)
+#         at org.apache.avro.Schema$RecordSchema.fieldsToJson(Schema.java:971)
+#         at org.apache.avro.Schema$RecordSchema.toJson(Schema.java:955)
+#         at org.apache.avro.Schema$UnionSchema.toJson(Schema.java:1203)
+#         at org.apache.avro.Schema$RecordSchema.fieldsToJson(Schema.java:971)
+#         at org.apache.avro.Schema$RecordSchema.toJson(Schema.java:955)
+#         at org.apache.avro.Schema.toString(Schema.java:396)
+#         at org.apache.avro.Schema.toString(Schema.java:382)
+#         at org.apache.avro.file.DataFileWriter.create(DataFileWriter.java:153)
+#         at org.apache.avro.file.DataFileWriter.create(DataFileWriter.java:145)
+#         at io.confluent.connect.azure.storage.format.avro.AvroRecordWriterProvider$1.write(AvroRecordWriterProvider.java:61)
+#         at io.confluent.connect.azure.storage.TopicPartitionWriter.writeRecord(TopicPartitionWriter.java:381)
+#         at io.confluent.connect.azure.storage.TopicPartitionWriter.checkRotationOrAppend(TopicPartitionWriter.java:201)
+#         at io.confluent.connect.azure.storage.TopicPartitionWriter.executeState(TopicPartitionWriter.java:164)
+#         at io.confluent.connect.azure.storage.TopicPartitionWriter.write(TopicPartitionWriter.java:133)
+#         at io.confluent.connect.azure.storage.AzureStorageSinkTask.put(AzureStorageSinkTask.java:144)
+#         at org.apache.kafka.connect.runtime.WorkerSinkTask.deliverMessages(WorkerSinkTask.java:604)
+#         ... 10 more
