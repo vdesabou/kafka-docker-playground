@@ -9,7 +9,7 @@ services:
     container_name: producer-88620
     environment:
       KAFKA_BOOTSTRAP_SERVERS: broker:9092
-      TOPIC: "customer-json-schema"
+      TOPIC: "customer"
       REPLICATION_FACTOR: 1
       NUMBER_OF_PARTITIONS: 1
       MESSAGE_BACKOFF: 1000 # Frequency of message injection
