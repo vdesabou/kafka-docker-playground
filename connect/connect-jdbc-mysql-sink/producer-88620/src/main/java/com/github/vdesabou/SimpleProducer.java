@@ -99,7 +99,8 @@ public class SimpleProducer {
     private Map<String, String> defaultProps = Map.of(
             ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, "broker:9092",
             ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, "org.apache.kafka.common.serialization.LongSerializer",
-            ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, "io.confluent.kafka.serializers.json.KafkaJsonSchemaSerializer");
+            ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, "io.confluent.kafka.serializers.json.KafkaJsonSchemaSerializer",
+            "json.oneof.for.nullables", "false");
 
     private Properties buildProperties(Map<String, String> baseProps, Map<String, String> envProps, String prefix) {
         Map<String, String> systemProperties = envProps.entrySet()
