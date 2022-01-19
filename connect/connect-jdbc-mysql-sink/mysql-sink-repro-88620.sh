@@ -33,15 +33,18 @@ curl -X PUT \
                "connector.class": "io.confluent.connect.jdbc.JdbcSinkConnector",
                "tasks.max": "1",
                "connection.url": "jdbc:mysql://mysql:3306/db?user=user&password=password&useSSL=false",
-               "topics": "customer-json-schema",
+               "topics": "customer",
                "value.converter": "io.confluent.connect.json.JsonSchemaConverter",
                "value.converter.schema.registry.url": "http://schema-registry:8081",
-               "auto.create": "true"
+               "auto.create": "true",
+               "transforms": "flatten",
+               "transforms.flatten.type": "org.apache.kafka.connect.transforms.Flatten$Value",
+               "transforms.flatten.delimiter": "_"
           }' \
      http://localhost:8083/connectors/mysql-sink/config | jq .
 
 
-log "Sending messages to topic customer-json-schema"
+log "Sending messages to topic customer"
 log "Produce json-schema data using Java producer"
 docker exec producer-88620 bash -c "java -jar producer-88620-1.0.0-jar-with-dependencies.jar"
 
@@ -60,7 +63,7 @@ sleep 5
 #       "type": "array"
 #     },
 
-# [2022-01-19 15:04:02,683] ERROR [mysql-sink|task-0] WorkerSinkTask{id=mysql-sink-0} Error converting message value in topic 'customer-json-schema' partition 0 at offset 0 and timestamp 1642604461150: Unsupported schema type org.everit.json.schema.EmptySchema (org.apache.kafka.connect.runtime.WorkerSinkTask:565)
+# [2022-01-19 15:04:02,683] ERROR [mysql-sink|task-0] WorkerSinkTask{id=mysql-sink-0} Error converting message value in topic 'customer' partition 0 at offset 0 and timestamp 1642604461150: Unsupported schema type org.everit.json.schema.EmptySchema (org.apache.kafka.connect.runtime.WorkerSinkTask:565)
 # org.apache.kafka.connect.errors.DataException: Unsupported schema type org.everit.json.schema.EmptySchema
 #         at io.confluent.connect.json.JsonSchemaData.toConnectSchema(JsonSchemaData.java:1025)
 #         at io.confluent.connect.json.JsonSchemaData.toConnectSchema(JsonSchemaData.java:876)
@@ -89,11 +92,11 @@ sleep 5
 #         at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:628)
 #         at java.base/java.lang.Thread.run(Thread.java:829)
 
-log "Describing the customer-json-schema table in DB 'db':"
-docker exec mysql bash -c "mysql --user=root --password=password --database=db -e 'describe orders'"
+log "Describing the customer table in DB 'db':"
+docker exec mysql bash -c "mysql --user=root --password=password --database=db -e 'describe customer'"
 
-log "Show content of customer-json-schema table:"
-docker exec mysql bash -c "mysql --user=root --password=password --database=db -e 'select * from orders'" > /tmp/result.log  2>&1
+log "Show content of customer table:"
+docker exec mysql bash -c "mysql --user=root --password=password --database=db -e 'select * from customer'" > /tmp/result.log  2>&1
 cat /tmp/result.log
 
 
