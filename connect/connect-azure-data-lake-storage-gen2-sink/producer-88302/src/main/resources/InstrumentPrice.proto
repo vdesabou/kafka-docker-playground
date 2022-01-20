@@ -1,12 +1,7 @@
 syntax = "proto3";
 
-package com.github.vdesabou.price;
+package com.github.vdesabou.instrumentprice;
 
 message InstrumentPrice {
-
-    message Price {
-        int64 price = 123;
-    }
-
-    Price price = 124;
+    int64 price = 123;
 }
