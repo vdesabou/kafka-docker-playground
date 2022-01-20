@@ -1,0 +1,10 @@
+syntax = "proto3";
+
+package com.github.vdesabou.openpositionfxoption;
+
+message OpenPositionFxOption {
+  message Price {
+    int64 price = 223;
+  }
+  Price price = 224;
+}
