@@ -24,6 +24,15 @@ sleep 60
 log "Load inventory-repro-89155.sql to SQL Server"
 cat inventory-repro-89155.sql | docker exec -i sqlserver bash -c '/opt/mssql-tools/bin/sqlcmd -U sa -P Password!'
 
+log "activate TRACE for io.confluent.connect.jdbc"
+curl --request PUT \
+  --url http://localhost:8083/admin/loggers/io.confluent.connect.jdbc \
+  --header 'Accept: application/json' \
+  --header 'Content-Type: application/json' \
+  --data '{
+	"level": "TRACE"
+}'
+
 log "Creating JDBC SQL Server (with Microsoft driver) sink connector"
 curl -X PUT \
      -H "Content-Type: application/json" \
