@@ -153,6 +153,35 @@ curl -X PUT \
 #         at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:628)
 #         at java.base/java.lang.Thread.run(Thread.java:829)
 
+# [2022-01-21 13:53:53,658] INFO SalesforcePushTopicSourceConnectorConfig values: 
+# 	confluent.license = 
+# 	confluent.topic = _confluent-command
+# 	confluent.topic.bootstrap.servers = [broker:9092]
+# 	confluent.topic.replication.factor = 1
+# 	connection.max.message.size = 10048576
+# 	connection.timeout = 30000
+# 	curl.logging = true
+# 	http.proxy = nginx-proxy:8888
+# 	kafka.topic = sfdc-pushtopic-leads
+# 	kafka.topic.lowercase = true
+# 	request.max.retries.time.ms = 900000
+# 	salesforce.consumer.key = 3MVG9lsAlIP.W_V.k0nr8DU2tp2TITctLGpiBlCaIVY1jac6hN2Zp0jqlLuUQ9UopxJsW72pLdFBu40TLRd7l
+# 	salesforce.consumer.secret = [hidden]
+# 	salesforce.initial.start = all
+# 	salesforce.instance = xxxx
+# 	salesforce.jwt.keystore.password = null
+# 	salesforce.jwt.keystore.path = null
+# 	salesforce.object = Lead
+# 	salesforce.password = [hidden]
+# 	salesforce.password.token = [hidden]
+# 	salesforce.push.topic.create = true
+# 	salesforce.push.topic.name = MyLeadPushTopics701
+# 	salesforce.push.topic.notify.create = true
+# 	salesforce.push.topic.notify.delete = true
+# 	salesforce.push.topic.notify.undelete = true
+# 	salesforce.push.topic.notify.update = true
+# 	salesforce.username = vsaboulin@confluent.io.sumup
+# 	salesforce.version = latest
 
 sleep 10
 
