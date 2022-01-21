@@ -33,6 +33,15 @@ curl --request PUT \
 	"level": "TRACE"
 }'
 
+log "activate DEBUG for org.apache.kafka.connect.runtime.WorkerSinkTask"
+curl --request PUT \
+  --url http://localhost:8083/admin/loggers/org.apache.kafka.connect.runtime.WorkerSinkTask \
+  --header 'Accept: application/json' \
+  --header 'Content-Type: application/json' \
+  --data '{
+	"level": "DEBUG"
+}'
+
 log "Creating JDBC SQL Server (with Microsoft driver) sink connector"
 curl -X PUT \
      -H "Content-Type: application/json" \
@@ -58,8 +67,9 @@ EOF
 
 sleep 65
 
+set +e
 log "check __consumer_offsets"
-timeout 30 docker container exec -it connect bash -c 'kafka-console-consumer \
+timeout 30 docker container exec -i connect bash -c 'kafka-console-consumer \
      --bootstrap-server broker:9092 \
      --topic __consumer_offsets \
      --from-beginning \
@@ -75,7 +85,7 @@ EOF
 sleep 65
 
 log "check __consumer_offsets"
-timeout 30 docker container exec -it connect bash -c 'kafka-console-consumer \
+timeout 30 docker container exec -i connect bash -c 'kafka-console-consumer \
      --bootstrap-server broker:9092 \
      --topic __consumer_offsets \
      --from-beginning \
