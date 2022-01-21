@@ -116,6 +116,7 @@ curl -X PUT \
                     "value.converter": "io.confluent.connect.protobuf.ProtobufConverter",
                     "connect.meta.data": "false",
                     "enhanced.avro.schema.support": "true",
+                    "value.converter.enhanced.protobuf.schema.support": "true",
                     "value.converter.schema.registry.url": "http://schema-registry:8081",
                     "value.converter.schemas.enable": "false",
                     "value.converter.auto.register.schemas":"false",
@@ -148,7 +149,7 @@ az storage blob download  --container-name topics --name customer-protobuf/parti
 
 docker run --rm -v /tmp:/tmp actions/avro-tools tojson /tmp/customer-protobuf+0+0000000000.avro
 
-
+# without "value.converter.enhanced.protobuf.schema.support": "true", we get:
 # [2022-01-19 13:01:03,897] ERROR [azure-datalake-gen2-sink-proto|task-0] WorkerSinkTask{id=azure-datalake-gen2-sink-proto-0} Task threw an uncaught and unrecoverable exception. Task is being killed and will not recover until manually restarted (org.apache.kafka.connect.runtime.WorkerTask:206)
 # org.apache.kafka.connect.errors.ConnectException: Exiting WorkerSinkTask due to unrecoverable exception.
 #         at org.apache.kafka.connect.runtime.WorkerSinkTask.deliverMessages(WorkerSinkTask.java:638)
