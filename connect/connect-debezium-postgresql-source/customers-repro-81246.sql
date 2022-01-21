@@ -1,5 +1,5 @@
 create table CUSTOMERS (
-        id INT PRIMARY KEY,
+        id INT,
         first_name VARCHAR(50),
         last_name VARCHAR(50),
         email VARCHAR(50),
@@ -8,7 +8,8 @@ create table CUSTOMERS (
         comments VARCHAR(90),
         create_ts timestamp DEFAULT CURRENT_TIMESTAMP,
         update_ts timestamp DEFAULT CURRENT_TIMESTAMP,
-        curr_amount numeric(14,2) NOT NULL DEFAULT NULL::numeric
+        curr_amount numeric(14,2) NOT NULL DEFAULT NULL::numeric,
+        trans_dollar_amt numeric(15,2) NOT NULL DEFAULT 0
 );
 
 
