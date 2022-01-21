@@ -65,7 +65,7 @@ PUSH_TOPICS_NAME=${PUSH_TOPICS_NAME//[-._]/}
 sed -e "s|:PUSH_TOPIC_NAME:|$PUSH_TOPICS_NAME|g" \
     ${DIR}/MyLeadPushTopics-template.apex > ${DIR}/MyLeadPushTopics.apex
 
-${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.proxy.repro-87149.yml"
+${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.proxy.basic-auth.yml"
 
 log "Login with sfdx CLI"
 docker exec sfdx-cli sh -c "sfdx sfpowerkit:auth:login -u \"$SALESFORCE_USERNAME\" -p \"$SALESFORCE_PASSWORD\" -r \"$SALESFORCE_INSTANCE\" -s \"$SECURITY_TOKEN\""
@@ -90,6 +90,14 @@ DOMAIN=$(echo $SALESFORCE_INSTANCE | cut -d "/" -f 3)
 IP=$(nslookup $DOMAIN | grep Address | grep -v "#" | cut -d " " -f 2 | tail -1)
 log "Blocking $DOMAIN IP $IP to make sure proxy is used"
 docker exec --privileged --user root connect bash -c "iptables -A INPUT -p tcp -s $IP -j DROP"
+
+curl --request PUT \
+  --url http://localhost:8083/admin/loggers/io.confluent.salesforce \
+  --header 'Accept: application/json' \
+  --header 'Content-Type: application/json' \
+  --data '{
+	"level": "DEBUG"
+}'
 
 log "Creating Salesforce PushTopics Source connector"
 curl -X PUT \
@@ -119,15 +127,21 @@ curl -X PUT \
                     "confluent.topic.bootstrap.servers": "broker:9092",
                     "confluent.topic.replication.factor": "1"
           }' \
-     http://localhost:8083/connectors/salesforce-pushtopic-source-proxy/config | jq .
+     http://localhost:8083/connectors/salesforce-pushtopic-source-proxy-basic-auth/config | jq .
 
-# [2022-01-21 12:37:02,584] ERROR Invalid url entered, enter a valid url. (io.confluent.salesforce.common.AbstractSalesforceValidation:99)
-# java.io.IOException: Unable to tunnel through proxy. Proxy returns "HTTP/1.1 401 Unauthorized"
-#         at java.base/sun.net.www.protocol.http.HttpURLConnection.doTunneling(HttpURLConnection.java:2177)
-#         at java.base/sun.net.www.protocol.https.AbstractDelegateHttpsURLConnection.connect(AbstractDelegateHttpsURLConnection.java:195)
-#         at java.base/sun.net.www.protocol.https.HttpsURLConnectionImpl.connect(HttpsURLConnectionImpl.java:168)
-#         at io.confluent.salesforce.common.AbstractSalesforceValidation.validateConnection(AbstractSalesforceValidation.java:89)
-#         at io.confluent.salesforce.common.AbstractSalesforceValidation.performValidation(AbstractSalesforceValidation.java:60)
+# [2022-01-21 13:47:19,274] DEBUG Using HTTP(S) proxy: nginx-proxy:8888 (io.confluent.salesforce.rest.SalesforceHttpClientUtil:40)
+# [2022-01-21 13:47:19,292] ERROR Uncaught exception in REST call to /connectors/salesforce-pushtopic-source-proxy/config (org.apache.kafka.connect.runtime.rest.errors.ConnectExceptionMapper:61)
+# org.apache.kafka.common.config.ConfigException: Unknown configuration 'http.proxy.user'
+#         at org.apache.kafka.common.config.AbstractConfig.get(AbstractConfig.java:163)
+#         at org.apache.kafka.common.config.AbstractConfig.getString(AbstractConfig.java:198)
+#         at io.confluent.salesforce.common.SalesforceCommonConnectorConfig.httpProxyUsername(SalesforceCommonConnectorConfig.java:332)
+#         at io.confluent.salesforce.rest.SalesforceHttpClientUtil.setHttpProxyCredentialsProvider(SalesforceHttpClientUtil.java:58)
+#         at io.confluent.salesforce.rest.SalesforceHttpClientUtil.httpClientBuilder(SalesforceHttpClientUtil.java:47)
+#         at io.confluent.salesforce.rest.SalesforceRestClientImpl.<init>(SalesforceRestClientImpl.java:94)
+#         at io.confluent.salesforce.rest.SalesforceRestClientImpl.<init>(SalesforceRestClientImpl.java:83)
+#         at io.confluent.salesforce.rest.SalesforceRestClientFactory.create(SalesforceRestClientFactory.java:12)
+#         at io.confluent.salesforce.common.AbstractSalesforceValidation.createAndValidateClient(AbstractSalesforceValidation.java:109)
+#         at io.confluent.salesforce.common.AbstractSalesforceValidation.performValidation(AbstractSalesforceValidation.java:63)
 #         at io.confluent.salesforce.pushtopic.SalesforcePushTopicSourceValidation.performValidation(SalesforcePushTopicSourceValidation.java:81)
 #         at io.confluent.connect.utils.validators.all.ConfigValidation.validate(ConfigValidation.java:185)
 #         at io.confluent.salesforce.SalesforcePushTopicSourceConnector.validate(SalesforcePushTopicSourceConnector.java:152)
@@ -138,8 +152,7 @@ curl -X PUT \
 #         at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1128)
 #         at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:628)
 #         at java.base/java.lang.Thread.run(Thread.java:829)
-# [2022-01-21 12:37:02,595] INFO AbstractConfig values: 
-#  (org.apache.kafka.common.config.AbstractConfig:376)
+
 
 sleep 10
 
