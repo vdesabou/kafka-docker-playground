@@ -842,6 +842,30 @@ Here are the steps to follow:
 > [!NOTE]
 > If your proxy requires HTTP2 support, there is a full example available in this example: [GCP Pub/Sub Source connector](https://github.com/vdesabou/kafka-docker-playground/blob/master/connect/connect-gcp-pubsub-source/gcp-pubsub-repro-proxy.sh)
 
+### Proxy with BASIC authentication
+
+If you want to setup [BASIC authentication](https://docs.nginx.com/nginx/admin-guide/security-controls/configuring-http-basic-authentication/) with your NGINX proxy:
+
+* Create a `htpasswd` file by executing: `htpasswd -c htpasswd myuser` (I used `mypassword` for the password)
+* In nginx `nginx_whitelist.conf`, add
+
+```properties
+    server {
+        auth_basic "Basic auth required area";
+        auth_basic_user_file /tmp/htpasswd;
+
+        ...
+```
+
+* in your `docker-compose`, add `htpasswd` line as below:
+
+
+```yml
+    volumes:
+      - ../../connect/connect-aws-s3-sink/repro-proxy/nginx_whitelist.conf:/usr/local/nginx/conf/nginx.conf
+      - ../../connect/connect-aws-s3-sink/repro-proxy/htpasswd:/tmp/htpasswd
+```
+
 ## ♨️ Using specific JDK
 
 It is sometime necessary for an investigation to replace JDK installed on connect image for example.
