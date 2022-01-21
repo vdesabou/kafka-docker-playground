@@ -149,6 +149,10 @@ az storage blob download  --container-name topics --name customer-protobuf/parti
 
 docker run --rm -v /tmp:/tmp actions/avro-tools tojson /tmp/customer-protobuf+0+0000000000.avro
 
+# {"price":{"com.github.vdesabou.Customer.Price":{"open_price":{"com.github.vdesabou.instrumentprice.InstrumentPrice":{"price":{"long":-5106534569952410475}}}}},"fx_option":{"com.github.vdesabou.openpositionfxoption.OpenPositionFxOption":{"price":{"com.github.vdesabou.openpositionfxoption.OpenPositionFxOption.Price":{"price":{"long":-167885730524958550}}}}}}
+# {"price":{"com.github.vdesabou.Customer.Price":{"open_price":{"com.github.vdesabou.instrumentprice.InstrumentPrice":{"price":{"long":4672433029010564658}}}}},"fx_option":{"com.github.vdesabou.openpositionfxoption.OpenPositionFxOption":{"price":{"com.github.vdesabou.openpositionfxoption.OpenPositionFxOption.Price":{"price":{"long":-7216359497931550918}}}}}}
+# {"price":{"com.github.vdesabou.Customer.Price":{"open_price":{"com.github.vdesabou.instrumentprice.InstrumentPrice":{"price":{"long":-3581075550420886390}}}}},"fx_option":{"com.github.vdesabou.openpositionfxoption.OpenPositionFxOption":{"price":{"com.github.vdesabou.openpositionfxoption.OpenPositionFxOption.Price":{"price":{"long":-2298228485105199876}}}}}}
+
 # without "value.converter.enhanced.protobuf.schema.support": "true", we get:
 # [2022-01-19 13:01:03,897] ERROR [azure-datalake-gen2-sink-proto|task-0] WorkerSinkTask{id=azure-datalake-gen2-sink-proto-0} Task threw an uncaught and unrecoverable exception. Task is being killed and will not recover until manually restarted (org.apache.kafka.connect.runtime.WorkerTask:206)
 # org.apache.kafka.connect.errors.ConnectException: Exiting WorkerSinkTask due to unrecoverable exception.
