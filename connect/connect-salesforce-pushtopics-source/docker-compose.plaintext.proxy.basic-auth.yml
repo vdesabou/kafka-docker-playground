@@ -9,8 +9,8 @@ services:
     ports:
       - "8888:8888"
     volumes:
-      - ../../connect/connect-salesforce-pushtopics-source/repro-proxy-repro-87149/nginx_whitelist.conf:/usr/local/nginx/conf/nginx.conf
-      - ../../connect/connect-salesforce-pushtopics-source/repro-proxy-repro-87149/htpasswd:/tmp/htpasswd
+      - ../../connect/connect-salesforce-pushtopics-source/repro-proxy-basic-auth/nginx_whitelist.conf:/usr/local/nginx/conf/nginx.conf
+      - ../../connect/connect-salesforce-pushtopics-source/repro-proxy-basic-auth/htpasswd:/tmp/htpasswd
 
   sfdx-cli:
     image: vdesabou/sfdx-cli:latest # forked from salestrip/sfdx-cli to add plugin sfpowerkit
