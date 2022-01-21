@@ -16,6 +16,14 @@ docker exec postgres psql -U myuser -d postgres -c "insert into customers (id, f
 log "Show content of CUSTOMERS table:"
 docker exec postgres bash -c "psql -U myuser -d postgres -c 'SELECT * FROM CUSTOMERS'"
 
+# curl --request PUT \
+#   --url http://localhost:8083/admin/loggers/io.debezium.connector \
+#   --header 'Accept: application/json' \
+#   --header 'Content-Type: application/json' \
+#   --data '{
+# 	"level": "DEBUG"
+# }'
+
 log "Creating Debezium PostgreSQL source connector"
 curl -X PUT \
      -H "Content-Type: application/json" \
@@ -36,7 +44,11 @@ curl -X PUT \
                     "transforms.addTopicSuffix.type":"org.apache.kafka.connect.transforms.RegexRouter",
                     "transforms.addTopicSuffix.regex":"(.*)",
                     "transforms.addTopicSuffix.replacement":"$1-raw",
-                    "decimal.handling.mode": "double"
+                    "decimal.handling.mode": "double",
+                    "schema.refresh.mode": "columns_diff",
+                    "event.processing.failure.handling.mode": "fail",
+                    "include.unknown.datatypes": "true",
+                    "plugin.name": "pgoutput"
           }' \
      http://localhost:8083/connectors/debezium-postgres-source/config | jq .
 
@@ -65,3 +77,7 @@ timeout 60 docker exec connect kafka-avro-console-consumer -bootstrap-server bro
 # With 1.4.1: no Cannot parse column default value at all and "curr_amount":"1.2"
 
 # {"id":1}        {"before":null,"after":{"asgard.public.customers.Value":{"id":1,"first_name":{"string":"Rica"},"last_name":{"string":"Blaisdell"},"email":{"string":"rblaisdell0@rambler.ru"},"gender":{"string":"Female"},"club_status":{"string":"bronze"},"comments":{"string":"Universal optimal hierarchy"},"create_ts":{"long":1642781817800503},"update_ts":{"long":1642781817800503},"curr_amount":1.2}},"source":{"version":"1.4.1.Final","connector":"postgresql","name":"asgard","ts_ms":1642781853914,"snapshot":{"string":"true"},"db":"postgres","schema":"public","table":"customers","txId":{"long":580},"lsn":{"long":24527280},"xmin":null},"op":"r","ts_ms":{"long":1642781853917},"transaction":null}
+
+
+log "Adding an element to the table"
+docker exec postgres psql -U myuser -d postgres -c "insert into customers (id, first_name, last_name, email, gender, comments, curr_amount) values (303, 'Bernardo', 'Dudman', 'bdudmanb@lulu.com', 'Male', 'Robust bandwidth-monitored budgetary management', 1.4);"
