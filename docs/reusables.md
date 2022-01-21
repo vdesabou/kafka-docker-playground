@@ -844,15 +844,22 @@ Here are the steps to follow:
 
 ### Proxy with BASIC authentication
 
-If you want to setup [BASIC authentication](https://docs.nginx.com/nginx/admin-guide/security-controls/configuring-http-basic-authentication/) with your NGINX proxy:
+If you want to setup [BASIC authentication](https://docs.nginx.com/nginx/admin-guide/security-controls/configuring-http-basic-authentication/) with your NGINX proxy, follow those steps:
+
+> [!TIP]
+> A complete example is available [here](https://github.com/vdesabou/kafka-docker-playground/blob/master/connect/connect-aws-s3-sink/s3-sink-proxy-basic-auth.sh). 
 
 * Create a `htpasswd` file by executing: `htpasswd -c htpasswd myuser` (I used `mypassword` for the password)
 * In nginx `nginx_whitelist.conf`, add
 
 ```properties
-    server {
-        auth_basic "Basic auth required area";
-        auth_basic_user_file /tmp/htpasswd;
+        ...
+        location / {
+            auth_basic "Basic auth required area";
+            auth_basic_user_file /tmp/htpasswd;
+            proxy_pass http://$http_host;
+            proxy_set_header Host $http_host;
+        }
 
         ...
 ```
