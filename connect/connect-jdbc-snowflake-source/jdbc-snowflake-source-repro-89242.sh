@@ -164,6 +164,7 @@ curl -X PUT \
                "mode": "timestamp",
                "timestamp.column.name": "UPDATE_TS",
                "timestamp.delay.interval.ms": "1000",
+               "table.poll.interval.ms": "3600000",
                "topic.prefix": "snowflake-",
                "validate.non.null":"false",
                "errors.log.enable": "true",
@@ -177,3 +178,26 @@ log "Verifying topic snowflake-FOO"
 timeout 60 docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic snowflake-FOO --from-beginning --max-messages 3
 
 # [2022-01-21 10:30:54,560] INFO [jdbc-snowflake-source|task-0] Begin using SQL query: SELECT * FROM "PLAYGROUNDDB701"."PUBLIC"."FOO" WHERE "PLAYGROUNDDB701"."PUBLIC"."FOO"."UPDATE_TS" > ? AND "PLAYGROUNDDB701"."PUBLIC"."FOO"."UPDATE_TS" < ? ORDER BY "PLAYGROUNDDB701"."PUBLIC"."FOO"."UPDATE_TS" ASC (io.confluent.connect.jdbc.source.TableQuerier:164)
+
+
+log "insert more records table foo"
+docker run --rm -i -e SNOWSQL_PWD="$SNOWFLAKE_PASSWORD" -e RSA_PUBLIC_KEY="$RSA_PUBLIC_KEY" kurron/snowsql --username $SNOWFLAKE_USERNAME -a $SNOWFLAKE_ACCOUNT_NAME << EOF
+USE ROLE $PLAYGROUND_CONNECTOR_ROLE;
+USE DATABASE $PLAYGROUND_DB;
+USE SCHEMA PUBLIC;
+USE WAREHOUSE $PLAYGROUND_WAREHOUSE;
+insert into FOO (f1) values ('value4');
+insert into FOO (f1) values ('value5');
+insert into FOO (f1) values ('value6');
+EOF
+
+log "Verifying topic snowflake-FOO after 3 inserts"
+timeout 60 docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic snowflake-FOO --from-beginning --max-messages 6
+
+# without "table.poll.interval.ms": "3600000",
+# {"ID":{"long":1},"F1":{"string":"value1"},"UPDATE_TS":{"long":1642743757732}}
+# {"ID":{"long":2},"F1":{"string":"value2"},"UPDATE_TS":{"long":1642743758696}}
+# {"ID":{"long":3},"F1":{"string":"value3"},"UPDATE_TS":{"long":1642743759580}}
+# {"ID":{"long":1},"F1":{"string":"value1"},"UPDATE_TS":{"long":1642743757732}}
+# {"ID":{"long":2},"F1":{"string":"value2"},"UPDATE_TS":{"long":1642743758696}}
+# {"ID":{"long":3},"F1":{"string":"value3"},"UPDATE_TS":{"long":1642743759580}}
