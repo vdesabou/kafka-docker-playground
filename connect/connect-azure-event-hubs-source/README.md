@@ -106,4 +106,57 @@ mykey   Bar
 Processed a total of 2 messages
 ```
 
+```json
+[
+    {
+        "__confluent_index": 0,
+        "headers": [
+            {
+                "key": "x-opt-sequence-number",
+                "stringValue": "0"
+            },
+            {
+                "key": "x-opt-enqueued-time",
+                "stringValue": "2022-01-24T16:19:51.662Z"
+            },
+            {
+                "key": "x-opt-offset",
+                "stringValue": "0"
+            },
+            {
+                "key": "x-opt-partition-key",
+                "stringValue": "mykey"
+            },
+            {
+                "key": "azure.eventhubs.namespace",
+                "stringValue": "pgec2usereh701"
+            },
+            {
+                "key": "azure.eventhubs.hub.name",
+                "stringValue": "pgec2usereh701"
+            },
+            {
+                "key": "azure.eventhubs.partition.id",
+                "stringValue": "3"
+            },
+            {
+                "key": "system.properties",
+                "stringValue": "{}"
+            },
+            {
+                "key": "properties",
+                "stringValue": "{}"
+            }
+        ],
+        "key": "mykey",
+        "offset": 0,
+        "partition": 0,
+        "timestamp": 1643041191662,
+        "timestampType": "CREATE_TIME",
+        "topic": "event_hub_topic",
+        "value": "\u0000\u0000\u0000\u0000\u0001Foo"
+    }
+]
+```
+
 N.B: Control Center is reachable at [http://127.0.0.1:9021](http://127.0.0.1:9021])
