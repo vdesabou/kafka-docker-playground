@@ -4,7 +4,7 @@ services:
 
   producer-88797:
     build:
-      context: ../../other/schema-format-json-schema/producer/
+      context: ../../connect/connect-sftp-sink/producer-88797
     hostname: producer-88797
     container_name: producer-88797
     environment:
