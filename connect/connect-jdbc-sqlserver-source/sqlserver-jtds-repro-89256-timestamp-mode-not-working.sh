@@ -4,64 +4,7 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
-if ! version_gt $TAG_BASE "5.9.0"; then
-    if [[ "$TAG" != *ubi8 ]]
-    then
-        logwarn "Known issue ! JDBC Source and Sink with MS SQL and JTDS driver does not work with SSL, see https://github.com/vdesabou/kafka-docker-playground/issues/1107"
-        # known_issue https://github.com/vdesabou/kafka-docker-playground/issues/1107
-        exit 111
-    fi
-fi
-
-cd ${DIR}/ssl
-if [[ "$OSTYPE" == "darwin"* ]]
-then
-    # workaround for issue on linux, see https://github.com/vdesabou/kafka-docker-playground/issues/851#issuecomment-821151962
-    chmod -R a+rw .
-else
-    # on CI, docker is run as runneradmin user, need to use sudo
-    ls -lrt
-    sudo chmod -R a+rw .
-    ls -lrt
-fi
-
-rm -f mssql.pem
-rm -f mssql.key
-
-#https://docs.microsoft.com/en-us/sql/linux/sql-server-linux-docker-container-security?view=sql-server-ver15
-#https://docs.microsoft.com/en-us/sql/linux/sql-server-linux-encrypted-connections?view=sql-server-ver15&preserve-view=true#client-initiated-encryption
-log "Create a self-signed certificate"
-docker run --rm -v $PWD:/tmp vdesabou/kafka-docker-playground-connect:${CONNECT_TAG} openssl req -x509 -nodes -newkey rsa:2048 -subj '/CN=sqlserver' -keyout /tmp/mssql.key -out /tmp/mssql.pem -days 365
-
-if [[ "$OSTYPE" == "darwin"* ]]
-then
-    # workaround for issue on linux, see https://github.com/vdesabou/kafka-docker-playground/issues/851#issuecomment-821151962
-    chmod -R a+rw .
-else
-    # on CI, docker is run as runneradmin user, need to use sudo
-    ls -lrt
-    sudo chmod -R a+rw .
-    ls -lrt
-fi
-
-log "Creating JKS from pem files"
-rm -f truststore.jks
-docker run --rm -v $PWD:/tmp vdesabou/kafka-docker-playground-connect:${CONNECT_TAG} keytool -importcert -alias MSSQLCACert -noprompt -file /tmp/mssql.pem -keystore /tmp/truststore.jks -storepass confluent
-
-if [[ "$OSTYPE" == "darwin"* ]]
-then
-    # workaround for issue on linux, see https://github.com/vdesabou/kafka-docker-playground/issues/851#issuecomment-821151962
-    chmod -R a+rw .
-else
-    # on CI, docker is run as runneradmin user, need to use sudo
-    ls -lrt
-    sudo chmod -R a+rw .
-    ls -lrt
-fi
-
-cd -
-
-${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.jtds-ssl.repro-89256-timestamp-mode-not-working.yml"
+${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.jtds.repro-89256-timestamp-mode-not-working.yml"
 
 
 log "Load inventory.sql to SQL Server"
@@ -74,7 +17,7 @@ curl -X PUT \
      --data '{
                "connector.class": "io.confluent.connect.jdbc.JdbcSourceConnector",
                "tasks.max": "1",
-               "connection.url": "jdbc:jtds:sqlserver://sqlserver:1433/testDB;ssl=require",
+               "connection.url": "jdbc:jtds:sqlserver://sqlserver:1433/testDB",
                "connection.user": "sa",
                "connection.password": "Password!",
                "table.whitelist": "customers",
@@ -86,7 +29,7 @@ curl -X PUT \
                "errors.log.enable": "true",
                "errors.log.include.messages": "true"
           }' \
-     http://localhost:8083/connectors/sqlserver-source-ssl/config | jq .
+     http://localhost:8083/connectors/sqlserver-source/config | jq .
 
 
 # [2022-01-24 09:26:19,830] ERROR [sqlserver-source-ssl|task-0] Failed to run query for table: TimestampTableQuerier{table="testDB"."dbo"."customers", query='null', topicPrefix='sqlserver-', timestampColumns=[last_update]} (io.confluent.connect.jdbc.source.JdbcSourceTask:423)
