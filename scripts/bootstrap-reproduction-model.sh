@@ -36,6 +36,7 @@ test_file_directory="$(dirname "${test_file}")"
 # determining the connector from test_file
 docker_compose_file=$(grep "environment" "$test_file" | grep DIR | grep start.sh | cut -d "/" -f 7 | cut -d '"' -f 1 | head -n1)
 comments_kebab_case="${comments// /-}"
+comments_kebab_case=$(echo "$comments_kebab_case" | tr '[:upper:]' '[:lower:]')
 
 if [ "${docker_compose_file}" != "" ] && [ -f "${docker_compose_file}" ]
 then
