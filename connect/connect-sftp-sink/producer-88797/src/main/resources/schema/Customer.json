@@ -1,0 +1,56 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "additionalProperties": false,
+  "$id": "http://lh.test/Customer.schema.json",
+  "title": "Customer",
+  "description": "Customer description",
+  "type": "object",
+  "properties": {
+      "source": {
+          "$id": "#/properties/source",
+          "default": "",
+          "description": "blah",
+          "examples": [
+              "example"
+          ],
+          "title": "Asset UID",
+          "type": "string"
+      },
+      "timestamp": {
+          "$id": "#/properties/timestamp",
+          "default": "",
+          "description": "The time",
+          "examples": [
+              "2022-01-03T10:37:00.000+01:00"
+          ],
+          "title": "Timestamp",
+          "type": "string"
+      },
+      "uom": {
+          "$id": "#/properties/uom",
+          "default": "",
+          "description": "The unit of measure",
+          "examples": [
+              "kWh"
+          ],
+          "title": "Unit of Measure",
+          "type": "string"
+      },
+      "value": {
+          "$id": "#/properties/value",
+          "default": "",
+          "description": "The number",
+          "examples": [
+              "123"
+          ],
+          "title": "Energy Consumption",
+          "type": "number"
+      }
+  },
+  "required": [
+      "source",
+      "uom",
+      "timestamp",
+      "value"
+  ]
+}

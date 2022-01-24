@@ -1,0 +1,34 @@
+---
+version: '3.5'
+services:
+
+  producer-88797:
+    build:
+      context: ../../other/schema-format-json-schema/producer/
+    hostname: producer-88797
+    container_name: producer-88797
+    environment:
+      KAFKA_BOOTSTRAP_SERVERS: broker:9092
+      TOPIC: "customer-json-schema"
+      REPLICATION_FACTOR: 1
+      NUMBER_OF_PARTITIONS: 1
+      MESSAGE_BACKOFF: 1000 # Frequency of message injection
+      KAFKA_ACKS: "all" # default: "1"
+      KAFKA_REQUEST_TIMEOUT_MS: 20000
+      KAFKA_RETRY_BACKOFF_MS: 500
+      KAFKA_CLIENT_ID: "my-java-producer"
+      KAFKA_SCHEMA_REGISTRY_URL: "http://schema-registry:8081"
+
+
+  sftp-server:
+    image: atmoz/sftp
+    hostname: sftp-server
+    container_name: sftp-server
+    ports:
+      - "2222:22"
+    command: foo:pass:::upload
+
+
+  connect:
+    environment:
+      CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-sftp
