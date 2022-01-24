@@ -58,7 +58,7 @@ then
   log "Creating $repro_test_file"
   sed -e "s|$docker_compose_file|$docker_compose_test_file_name|g" \
       $test_file > $repro_test_file
-
+  chmod u+x $repro_test_file
 else
   logerror "📁 Could not determine docker-compose override file from $test_file !"
   exit 1
