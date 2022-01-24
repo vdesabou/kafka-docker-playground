@@ -56,7 +56,11 @@ curl -X PUT \
                "errors.tolerance": "all",
                "errors.deadletterqueue.topic.name": "dlq",
                "errors.deadletterqueue.topic.replication.factor": "1",
-               "errors.deadletterqueue.context.headers.enable": "true"
+               "errors.deadletterqueue.context.headers.enable": "true",
+               "errors.log.enable": "true",
+               "errors.log.include.messages": "true",
+               "errors.retry.delay.max.ms": "60000",
+               "errors.retry.timeout": "0"
           }' \
      http://localhost:8083/connectors/sqlserver-sink/config | jq .
 
@@ -65,7 +69,7 @@ docker exec -i connect kafka-avro-console-producer --broker-list broker:9092 --p
 {"first_name": "vincent"}
 EOF
 
-sleep 65
+sleep 85
 
 set +e
 log "check __consumer_offsets"
