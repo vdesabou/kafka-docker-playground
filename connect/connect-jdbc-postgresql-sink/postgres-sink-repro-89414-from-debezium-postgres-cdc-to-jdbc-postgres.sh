@@ -33,10 +33,9 @@ curl -X PUT \
                "key.converter.schema.registry.url": "http://schema-registry:8081",
                "value.converter" : "io.confluent.connect.avro.AvroConverter",
                "value.converter.schema.registry.url": "http://schema-registry:8081",
-               "transforms": "addTopicSuffix",
-               "transforms.addTopicSuffix.type":"org.apache.kafka.connect.transforms.RegexRouter",
-               "transforms.addTopicSuffix.regex":"(.*)",
-               "transforms.addTopicSuffix.replacement":"$1-raw"
+               "transforms": "unwrap",
+               "transforms": "unwrap",
+               "transforms.unwrap.type": "io.debezium.transforms.ExtractNewRecordState"
           }' \
      http://localhost:8083/connectors/debezium-postgres-source/config | jq .
 
@@ -44,8 +43,8 @@ curl -X PUT \
 
 sleep 5
 
-log "Verifying topic asgard.public.customers-raw"
-timeout 60 docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic asgard.public.customers-raw --from-beginning --property print.key=true --max-messages 5
+log "Verifying topic asgard.public.customers"
+timeout 60 docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic asgard.public.customers --from-beginning --property print.key=true --max-messages 5
 
 
 log "Creating JDBC PostgreSQL sink connector"
@@ -55,14 +54,15 @@ curl -X PUT \
                "connector.class": "io.confluent.connect.jdbc.JdbcSinkConnector",
                "tasks.max": "1",
                "connection.url": "jdbc:postgresql://postgres/postgres?user=myuser&password=mypassword&ssl=false",
-               "topics": "asgard.public.customers-raw",
-               "auto.create": "true"
+               "topics": "asgard.public.customers",
+               "auto.create": "true",
+               "table.name.format": "my_output_table"
           }' \
      http://localhost:8083/connectors/postgres-sink/config | jq .
 
 
-log "Show content of ORDERS table:"
-docker exec postgres bash -c "psql -U myuser -d postgres -c 'SELECT * FROM ORDERS'" > /tmp/result.log  2>&1
+log "Show content of my_output_table table:"
+docker exec postgres bash -c "psql -U myuser -d postgres -c 'SELECT * FROM my_output_table'" > /tmp/result.log  2>&1
 cat /tmp/result.log
 
 # without SMT:
