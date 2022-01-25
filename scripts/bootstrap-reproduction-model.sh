@@ -79,7 +79,6 @@ then
         exit 1
       ;;
     esac
-
         original_topic_name=$(grep "\"topics\"" $repro_test_file | cut -d "\"" -f 4)
         if [ "$original_topic_name" != "" ]
         then
@@ -90,7 +89,6 @@ then
           mv /tmp/tmp $repro_test_file
           log "🎩 Replacing topic $original_topic_name with $topic_name"
         fi
-        chmod u+x $repro_test_file
 
         # looks like there is a maximum size for hostname in docker (container init caused: sethostname: invalid argument: unknown)
         producer_hostname="producer-repro-$description_kebab_case"
@@ -159,8 +157,8 @@ EOF
       log "🎩 Adding command to run producer to $repro_test_file"
       cp $repro_test_file $tmp_dir/tmp_file      
       { head -n $(($line-1)) $tmp_dir/tmp_file; cat $tmp_dir/java_producer; tail -n +$line $tmp_dir/tmp_file; } > $repro_test_file
-
   fi
+  chmod u+x $repro_test_file
 else
   logerror "📁 Could not determine docker-compose override file from $test_file !"
   exit 1
