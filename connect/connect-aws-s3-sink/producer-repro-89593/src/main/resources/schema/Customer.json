@@ -1,0 +1,50 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "additionalProperties": false,
+  "$id": "http://lh.test/Customer.schema.json",
+  "title": "Customer",
+  "description": "Customer description",
+  "type": "object",
+  "properties": {
+      "data": {
+          "properties": {
+              "market_name": {
+                  "type": "string"
+              },
+              "orid": {
+                  "type": "string"
+              }
+          },
+          "type": "object"
+      },
+      "id": {
+          "type": "string"
+      },
+      "line_items": {
+          "items": {
+              "properties": {
+                  "item_id": {
+                      "type": "string"
+                  },
+                  "name": {
+                      "type": "string"
+                  },
+                  "price": {
+                      "type": "number"
+                  }
+              },
+              "type": "object"
+          },
+          "type": "array"
+      },
+      "name": {
+          "type": "string"
+      },
+      "schemaVersion": {
+          "type": "string"
+      },
+      "sentEpochTimeMillis": {
+          "type": "number"
+      }
+  }
+}
