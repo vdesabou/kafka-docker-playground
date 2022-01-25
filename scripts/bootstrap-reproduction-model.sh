@@ -138,7 +138,7 @@ do
 done
 
 EOF
-      log "🎩 Adding command to build jar for ${component} to $repro_test_file"
+      log "🎩 Adding command to build jar for producer-repro-$description_kebab_case to $repro_test_file"
       cp $repro_test_file $tmp_dir/tmp_file
       line=$(grep -n '${DIR}/../../environment' $repro_test_file | cut -d ":" -f 1)
       
