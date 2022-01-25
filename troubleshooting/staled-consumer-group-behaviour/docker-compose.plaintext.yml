@@ -1,0 +1,38 @@
+---
+version: '3.5'
+services:
+
+  broker:
+    environment:
+      KAFKA_OFFSETS_RETENTION_CHECK_INTERVAL_MS: 60000
+      KAFKA_OFFSETS_RETENTION_MINUTES: 3
+
+  producer:
+    build:
+      context: ../../troubleshooting/staled-consumer-group-behaviour/producer/
+      args:
+        TAG: ${TAG}
+        CP_BASE_IMAGE: ${CP_BASE_IMAGE}
+        KAFKA_CLIENT_TAG: ${KAFKA_CLIENT_TAG}
+    hostname: producer
+    container_name: producer
+    depends_on:
+      - broker
+
+  consumer:
+    build:
+      context: ../../troubleshooting/staled-consumer-group-behaviour/consumer/
+    hostname: consumer
+    container_name: consumer
+    environment:
+      KAFKA_BOOTSTRAP_SERVERS: broker:9092
+      TOPIC: "testtopic"
+      KAFKA_GROUP_ID: "testtopic-app"
+      KAFKA_CLIENT_ID: "my-java-consumer"
+      CHECK_GAPS: "false"
+      COMMIT_STRATEGY: "PER_MESSAGE" # possible values AUTO_COMMIT or PER_BATCH or PER_MESSAGES
+      KAFKA_ENABLE_AUTO_COMMIT_CONFIG: "false" # default true if group.id is provided
+      #KAFKA_ISOLATION_LEVEL_CONFIG: "read_committed" # default read_uncommitted
+      # default: org.apache.kafka.clients.consumer.RangeAssignor
+      #KAFKA_PARTITION_ASSIGNMENT_STRATEGY_CONFIG: "org.apache.kafka.clients.consumer.CooperativeStickyAssignor"
+      #KAFKA_SCHEMA_REGISTRY_URL: "http://schema-registry:8081"
