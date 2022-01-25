@@ -90,9 +90,12 @@ then
         exit 1
       ;;
     esac
-
-        rm -rf producer-repro-$description_kebab_case
-        cp -R ../../other/schema-format-$schema_format/producer producer-repro-$description_kebab_case
+        # looks like there is a maximum size for hostname in docker (container init caused: sethostname: invalid argument: unknown)
+        producer_hostname="producer-repro-$description_kebab_case"
+        producer_hostname=${producer_hostname:0:20} 
+        
+        rm -rf $producer_hostname
+        cp -R ../../other/schema-format-$schema_format/producer $producer_hostname
         
         # update docker compose with producer container
         base1="${test_file_directory##*/}"
@@ -102,11 +105,11 @@ then
         tmp_dir=$(mktemp -d -t ci-XXXXXXXXXX)
         cat << EOF > $tmp_dir/producer
 
-  producer-repro-$description_kebab_case:
+  $producer_hostname:
     build:
-      context: ../../$test_file_directory_2_levels/producer-repro-$description_kebab_case/
-    hostname: producer-repro-$description_kebab_case
-    container_name: producer-repro-$description_kebab_case
+      context: ../../$test_file_directory_2_levels/$producer_hostname/
+    hostname: $producer_hostname
+    container_name: $producer_hostname
     environment:
       KAFKA_BOOTSTRAP_SERVERS: broker:9092
       TOPIC: "$topic_name"
@@ -116,14 +119,14 @@ then
       KAFKA_ACKS: "all" # default: "1"
       KAFKA_REQUEST_TIMEOUT_MS: 20000
       KAFKA_RETRY_BACKOFF_MS: 500
-      KAFKA_CLIENT_ID: "my-java-producer-repro-$description_kebab_case"
+      KAFKA_CLIENT_ID: "my-java-$producer_hostname"
       KAFKA_SCHEMA_REGISTRY_URL: "http://schema-registry:8081"
 EOF
-      log "🎩 Adding producer-repro-$description_kebab_case container to $docker_compose_test_file_name"
+      log "🎩 Adding $producer_hostname container to $docker_compose_test_file_name"
       cat $tmp_dir/producer >> $docker_compose_test_file_name
 
         cat << EOF > $tmp_dir/build_producer
-for component in producer-repro-$description_kebab_case
+for component in $producer_hostname
 do
     set +e
     log "🏗 Building jar for \${component}"
@@ -138,7 +141,7 @@ do
 done
 
 EOF
-      log "🎩 Adding command to build jar for producer-repro-$description_kebab_case to $repro_test_file"
+      log "🎩 Adding command to build jar for $producer_hostname to $repro_test_file"
       cp $repro_test_file $tmp_dir/tmp_file
       line=$(grep -n '${DIR}/../../environment' $repro_test_file | cut -d ":" -f 1)
       
@@ -148,7 +151,7 @@ EOF
 
 # 🚨🚨🚨 FIXTHIS: move it to the correct place 🚨🚨🚨
 log "✨ Run the $schema_format java producer which produces to topic $topic_name"
-docker exec producer-repro-$description_kebab_case bash -c "java -jar producer-1.0.0-jar-with-dependencies.jar"
+docker exec $producer_hostname bash -c "java -jar producer-1.0.0-jar-with-dependencies.jar"
 
 EOF
       log "🎩 Adding command to run producer to $repro_test_file"
