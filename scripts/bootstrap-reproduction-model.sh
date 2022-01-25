@@ -72,9 +72,9 @@ then
         $repro_test_file > /tmp/tmp
 
     mv /tmp/tmp $repro_test_file
-    chmod u+x $repro_test_file
     log "🎩 Replacing topic $original_topic_name with $topic_name"
   fi
+  chmod u+x $repro_test_file
 
   if [ "$schema_format" != "" ]
   then
