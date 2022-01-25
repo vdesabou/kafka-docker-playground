@@ -65,17 +65,6 @@ then
   sed -e "s|$docker_compose_file|$docker_compose_test_file_name|g" \
       $test_file > $repro_test_file
 
-  original_topic_name=$(grep "\"topics\"" $repro_test_file | cut -d "\"" -f 4)
-  if [ "$original_topic_name" != "" ]
-  then
-    sed -e "s|$original_topic_name|$topic_name|g" \
-        $repro_test_file > /tmp/tmp
-
-    mv /tmp/tmp $repro_test_file
-    log "🎩 Replacing topic $original_topic_name with $topic_name"
-  fi
-  chmod u+x $repro_test_file
-
   if [ "$schema_format" != "" ]
   then
     case "${schema_format}" in
@@ -90,6 +79,19 @@ then
         exit 1
       ;;
     esac
+
+        original_topic_name=$(grep "\"topics\"" $repro_test_file | cut -d "\"" -f 4)
+        if [ "$original_topic_name" != "" ]
+        then
+          tmp=$(echo $original_topic_name | tr '-' '\-')
+          sed -e "s|$tmp|$topic_name|g" \
+              $repro_test_file > /tmp/tmp
+
+          mv /tmp/tmp $repro_test_file
+          log "🎩 Replacing topic $original_topic_name with $topic_name"
+        fi
+        chmod u+x $repro_test_file
+
         # looks like there is a maximum size for hostname in docker (container init caused: sethostname: invalid argument: unknown)
         producer_hostname="producer-repro-$description_kebab_case"
         producer_hostname=${producer_hostname:0:20} 
