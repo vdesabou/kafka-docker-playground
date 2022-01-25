@@ -95,7 +95,7 @@ then
         producer_hostname=${producer_hostname:0:20} 
         
         rm -rf $producer_hostname
-        cp -R ../../other/schema-format-$schema_format/producer $producer_hostname
+        cp -Ra ../../other/schema-format-$schema_format/producer $producer_hostname
         
         # update docker compose with producer container
         base1="${test_file_directory##*/}"
