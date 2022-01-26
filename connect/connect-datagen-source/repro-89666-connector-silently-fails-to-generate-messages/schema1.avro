@@ -92,7 +92,7 @@
                     }
                 }
             }
-        }, 
+        },
         {
             "name": "MY_BOOLEAN",
             "type": {
@@ -137,7 +137,7 @@
                     "regex": "[0-9]{11}"
                 }
             },
-            "default" : ""
+            "default": ""
         },
         {
             "name": "MY_STRING_6",
@@ -231,7 +231,7 @@
             "type": {
                 "type": "string",
                 "arg.properties": {
-                    "regex": "[a-zA-Z0-9]{15}"
+                    "regex": "[a-zA-Z0-9]{30}"
                 }
             },
             "default": ""
@@ -241,7 +241,7 @@
             "type": {
                 "type": "string",
                 "arg.properties": {
-                    "regex": "[a-zA-Z0-9]{15}"
+                    "regex": "[a-zA-Z0-9]{20}"
                 }
             },
             "default": ""
