@@ -493,7 +493,6 @@ EOF
                 log "🎓 To specify different version, check the documentation https://kafka-docker-playground.io/#/how-to-use?id=🔗-for-connectors"
               fi
               CONNECTOR_TAG=$version
-              export CURRENT_CONNECTOR_TAG=$version
             fi
             first_loop=false
           fi
