@@ -163,3 +163,29 @@ do
       set -e
     fi
 done
+
+if [ ! -z "$CI" ]
+then
+     log "Installing confluent CLI"
+     curl -L --http1.1 https://cnfl.io/cli | sudo sh -s -- -b /usr/local/bin
+     export PATH=$PATH:/usr/local/bin
+     log "##################################################"
+     log "Log in to Confluent Cloud"
+     log "##################################################"
+     confluent login --save
+     log "Use environment $ENVIRONMENT"
+     confluent environment use $ENVIRONMENT
+     log "Use cluster $CLUSTER_LKC"
+     confluent kafka cluster use $CLUSTER_LKC
+     log "Store api key $CLOUD_KEY"
+     confluent api-key store $CLOUD_KEY $CLOUD_SECRET --resource $CLUSTER_LKC --force
+     log "Use api key $CLOUD_KEY"
+     confluent api-key use $CLOUD_KEY --resource $CLUSTER_LKC
+
+     for topic in $(confluent kafka topic list)
+     do
+        set +e 
+        log "delete topic $topic"
+        confluent kafka topic delete $topic
+     done
+fi
