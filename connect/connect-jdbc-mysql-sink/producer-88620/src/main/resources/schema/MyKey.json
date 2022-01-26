@@ -1,0 +1,16 @@
+{
+    "$id": "http://lh.test/MyKey.schema.json",
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "additionalProperties": false,
+    "description": "MyKey description",
+    "properties": {
+        "key": {
+            "type": "string"
+        }
+    },
+    "required": [
+        "key"
+    ],
+    "title": "MyKey",
+    "type": "object"
+}

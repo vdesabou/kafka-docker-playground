@@ -1,47 +1,50 @@
 {
-  "$schema": "http://json-schema.org/draft-07/schema#",
-  "additionalProperties": false,
-  "$id": "http://lh.test/Customer.schema.json",
-  "title": "Customer",
-  "description": "Customer description",
-  "type": "object",
-  "properties": {
-    "data": {
-      "properties": {
-        "agreementSerialId": {
-          "type": "string"
+    "$id": "http://lh.test/Customer.schema.json",
+    "$schema": "http://json-schema.org/draft-07/schema#",
+    "additionalProperties": false,
+    "description": "Customer description",
+    "properties": {
+        "data": {
+            "properties": {
+                "agreementSerialId": {
+                    "type": "string"
+                },
+                "cardHolderId": {
+                    "type": "string"
+                },
+                "cardToken": {
+                    "type": "string"
+                },
+                "suffixPlasticCardNumber": {
+                    "type": "string"
+                }
+            },
+            "required": [
+                "requestSerialId",
+                "eventSerialId",
+                "lastModifiedBy"
+            ],
+            "type": "object"
         },
-        "cardHolderId": {
-          "type": "string"
+        "dataType": {
+            "type": "string"
         },
-        "cardToken": {
-          "type": "string"
+        "evtTime": {
+            "type": "string"
         },
-        "suffixPlasticCardNumber": {
-          "type": "string"
+        "incidentID": {
+            "type": "string"
+        },
+        "operationType": {
+            "type": "string"
         }
-      },
-      "required": [
-        "requestSerialId",
-        "eventSerialId",
-        "lastModifiedBy"
-      ],
-      "type": "object"
     },
-    "dataType": {
-      "type": "string"
-    },
-    "incidentID": {
-      "type": "string"
-    },
-    "operationType": {
-      "type": "string"
-    }
-  },
-  "required": [
-    "incidentID",
-    "operationType",
-    "data",
-    "dataType"
-  ]
+    "required": [
+        "incidentID",
+        "operationType",
+        "data",
+        "dataType"
+    ],
+    "title": "Customer",
+    "type": "object"
 }

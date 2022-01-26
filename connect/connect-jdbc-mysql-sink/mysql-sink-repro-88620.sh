@@ -34,14 +34,17 @@ curl -X PUT \
                "tasks.max": "1",
                "connection.url": "jdbc:mysql://mysql:3306/db?user=user&password=password&useSSL=false",
                "topics": "customer",
+               "key.converter": "io.confluent.connect.json.JsonSchemaConverter",
+               "key.converter.schema.registry.url": "http://schema-registry:8081",
+               "key.converter.schemas.enable": "true",
                "value.converter": "io.confluent.connect.json.JsonSchemaConverter",
                "value.converter.schema.registry.url": "http://schema-registry:8081",
+               "value.converter.schemas.enable": "true",
                "auto.create": "true",
-               "transforms": "flatten",
-               "transforms.flatten.type": "org.apache.kafka.connect.transforms.Flatten$Value",
-               "transforms.flatten.delimiter": "_"
+               "pk.mode": "none",
+               "errors.log.enable": "true"
           }' \
-     http://localhost:8083/connectors/mysql-sink/config | jq .
+     http://localhost:8083/connectors/mysql-sink2/config | jq .
 
 
 log "Sending messages to topic customer"
@@ -100,4 +103,30 @@ docker exec mysql bash -c "mysql --user=root --password=password --database=db -
 cat /tmp/result.log
 
 
-
+# without flatten:
+# [2022-01-26 10:25:10,138] ERROR [mysql-sink|task-0] WorkerSinkTask{id=mysql-sink-0} Task threw an uncaught and unrecoverable exception. Task is being killed and will not recover until manually restarted. Error: null (STRUCT) type doesn't have a mapping to the SQL database column type (org.apache.kafka.connect.runtime.WorkerSinkTask:636)
+# org.apache.kafka.connect.errors.ConnectException: null (STRUCT) type doesn't have a mapping to the SQL database column type
+#         at io.confluent.connect.jdbc.dialect.GenericDatabaseDialect.getSqlType(GenericDatabaseDialect.java:1869)
+#         at io.confluent.connect.jdbc.dialect.MySqlDatabaseDialect.getSqlType(MySqlDatabaseDialect.java:128)
+#         at io.confluent.connect.jdbc.dialect.GenericDatabaseDialect.writeColumnSpec(GenericDatabaseDialect.java:1785)
+#         at io.confluent.connect.jdbc.dialect.GenericDatabaseDialect.lambda$writeColumnsSpec$34(GenericDatabaseDialect.java:1774)
+#         at io.confluent.connect.jdbc.util.ExpressionBuilder.append(ExpressionBuilder.java:560)
+#         at io.confluent.connect.jdbc.util.ExpressionBuilder$BasicListBuilder.of(ExpressionBuilder.java:599)
+#         at io.confluent.connect.jdbc.dialect.GenericDatabaseDialect.writeColumnsSpec(GenericDatabaseDialect.java:1776)
+#         at io.confluent.connect.jdbc.dialect.GenericDatabaseDialect.buildCreateTableStatement(GenericDatabaseDialect.java:1693)
+#         at io.confluent.connect.jdbc.sink.DbStructure.create(DbStructure.java:118)
+#         at io.confluent.connect.jdbc.sink.DbStructure.createOrAmendIfNecessary(DbStructure.java:67)
+#         at io.confluent.connect.jdbc.sink.BufferedRecords.add(BufferedRecords.java:123)
+#         at io.confluent.connect.jdbc.sink.JdbcDbWriter.write(JdbcDbWriter.java:74)
+#         at io.confluent.connect.jdbc.sink.JdbcSinkTask.put(JdbcSinkTask.java:84)
+#         at org.apache.kafka.connect.runtime.WorkerSinkTask.deliverMessages(WorkerSinkTask.java:604)
+#         at org.apache.kafka.connect.runtime.WorkerSinkTask.poll(WorkerSinkTask.java:334)
+#         at org.apache.kafka.connect.runtime.WorkerSinkTask.iteration(WorkerSinkTask.java:235)
+#         at org.apache.kafka.connect.runtime.WorkerSinkTask.execute(WorkerSinkTask.java:204)
+#         at org.apache.kafka.connect.runtime.WorkerTask.doRun(WorkerTask.java:199)
+#         at org.apache.kafka.connect.runtime.WorkerTask.run(WorkerTask.java:254)
+#         at java.base/java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:515)
+#         at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:264)
+#         at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1128)
+#         at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:628)
+#         at java.base/java.lang.Thread.run(Thread.java:829)
