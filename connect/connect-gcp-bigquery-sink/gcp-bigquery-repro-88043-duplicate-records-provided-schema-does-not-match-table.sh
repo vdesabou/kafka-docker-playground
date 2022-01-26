@@ -13,7 +13,7 @@ then
      exit 1
 fi
 
-DATASET=pgvinc-88043
+DATASET=pgvinc2-88043
 DATASET=${DATASET//[-._]/}
 
 log "Doing gsutil authentication"
@@ -95,10 +95,6 @@ curl --request POST \
 log "Sending messages to topic my_topic which cannot be null (f1 changed to required) and adding a field f2"
 seq -f "{\"f1\": \"value%g-`date`\",\"f2\": \"value\"}" 10 | docker exec -i connect kafka-avro-console-producer --broker-list broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic my_topic --property value.schema='{"type":"record","name":"myrecord","fields":[{"name":"f1","type":"string"},{"name":"f2","type":"string"}]}'
 
-# log "Verify data is in GCP BigQuery:"
-# docker run -i --volumes-from gcloud-config google/cloud-sdk:latest bq --project_id "$PROJECT" query "SELECT * FROM $DATASET.my_topic;" > /tmp/result.log  2>&1
-# cat /tmp/result.log
-
 # [2022-01-26 13:12:05,958] ERROR [gcp-bigquery-sink|task-0] WorkerSinkTask{id=gcp-bigquery-sink-0} Task threw an uncaught and unrecoverable exception. Task is being killed and will not recover until manually restarted (org.apache.kafka.connect.runtime.WorkerTask:206)
 # org.apache.kafka.connect.errors.ConnectException: Exiting WorkerSinkTask due to unrecoverable exception.
 #         at org.apache.kafka.connect.runtime.WorkerSinkTask.deliverMessages(WorkerSinkTask.java:638)
@@ -164,9 +160,17 @@ seq -f "{\"f1\": \"value%g-`date`\",\"f2\": \"value\"}" 10 | docker exec -i conn
 
 sleep 30
 
-while [ true ]
-do
-     log "Restart failed tasks"
+for((i=0;i<10;i++)); do
+     log "Restarting failed tasks"
      curl --request POST --url 'http://localhost:8083/connectors/gcp-bigquery-sink/restart?includeTasks=true&onlyFailed=false'
-     sleep 2
+     sleep 10
 done
+
+# log "Verify data is in GCP BigQuery:"
+# docker run -i --volumes-from gcloud-config google/cloud-sdk:latest bq --project_id "$PROJECT" query "SELECT * FROM $DATASET.my_topic;" > /tmp/result.log  2>&1
+
+# log "Number of records in GCP:"
+# grep "NULL" /tmp/result.log | wc -l
+
+
+# In topic I have 10021 records, but in GCP, I have 14142 rows
