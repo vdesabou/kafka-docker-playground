@@ -1,0 +1,43 @@
+{
+        "namespace": "ksql",
+        "name": "product",
+        "type": "record",
+        "fields": [
+                {
+                    "name":"productid",
+                    "type":{
+                        "type":"string",
+                        "arg.properties":{
+                        "regex":"Product_[1-9][0-9]{0,2}"
+                        }
+                    }
+                },
+                {
+                    "name":"name",
+                    "type":{
+                        "type":"string",
+                        "arg.properties":{
+                        "regex":"Product_[1-9][0-9]{0,2}"
+                        }
+                    }
+                },
+                {"name": "category", "type": {
+                    "type": "string",
+                    "arg.properties": {
+                    "options": [
+                        "orange",
+                        "apple",
+                        "grapefruit",
+                        "banana"
+                        ]
+                    }
+                 }},
+                 {"name": "description", "type": {
+                    "type": "string",
+                    "arg.properties": {
+                    "regex": "[a-zA-Z]*",
+                    "length": 150
+                    }
+                  }}
+        ]
+}

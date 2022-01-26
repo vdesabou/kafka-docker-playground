@@ -57,7 +57,7 @@ jobs:
       matrix:
         tag: ["5.3.7","5.4.6","5.5.7","6.0.5","6.1.4","6.2.2","7.0.1"]
         test_list : [
-                      "🚀 connect/connect-servicenow-sink connect/connect-servicenow-source",
+                      "🚀 connect/connect-servicenow-sink connect/connect-servicenow-source connect/connect-datagen-source",
                       "🚀 connect/connect-salesforce-bulkapi-sink connect/connect-salesforce-bulkapi-source connect/connect-salesforce-pushtopics-source connect/connect-salesforce-sobject-sink connect/connect-salesforce-cdc-source connect/connect-salesforce-platform-events-sink connect/connect-salesforce-platform-events-source",
                       "🚀 connect/connect-splunk-sink connect/connect-splunk-source connect/connect-splunk-s2s-source connect/connect-spool-dir-source connect/connect-syslog-source other/connect-override-policy-sftp-sink other/connect-override-policy-sftp-source",
                       "🚀 connect/connect-minio-s3-sink connect/connect-marketo-source connect/connect-active-mq-sink connect/connect-active-mq-source connect/connect-cassandra-sink connect/connect-couchbase-sink connect/connect-couchbase-source connect/connect-hbase-sink",
