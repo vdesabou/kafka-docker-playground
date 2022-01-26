@@ -15,7 +15,8 @@
                   "type": "string"
               }
           },
-          "type": "object"
+          "type": "object",
+          "title": "mydata"
       },
       "id": {
           "type": "string"
@@ -33,7 +34,8 @@
                       "type": "number"
                   }
               },
-              "type": "object"
+              "type": "object",
+              "title": "my_line_items"
           },
           "type": "array"
       },
