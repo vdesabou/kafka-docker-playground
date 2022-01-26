@@ -1,0 +1,134 @@
+{
+    "namespace": "ksql",
+    "name": "customers",
+    "type": "record",
+    "fields": [
+        {
+            "name": "customerid",
+            "type": {
+                "type": "string",
+                "arg.properties": {
+                    "regex": "Customer_[1-9][0-9]{0,3}"
+                }
+            }
+        },
+        {
+            "name": "firstname",
+            "type": {
+                "type": "string",
+                "arg.properties": {
+                    "options": [
+                        "akatz1022",
+                        "bobk_43",
+                        "alison_99",
+                        "k_robertz_88",
+                        "Ferd88",
+                        "Reeva43",
+                        "Antonio_0966",
+                        "ArlyneW8ter",
+                        "DimitriSchenz88",
+                        "Oriana_70",
+                        "AbdelKable_86",
+                        "Roberto_123",
+                        "AlanGreta_GG66",
+                        "Nathan_126",
+                        "AndySims_345324",
+                        "GlenAlan_23344",
+                        "LukeWaters_23",
+                        "BenSteins_235"
+                    ]
+                }
+            }
+        },
+        {
+            "name": "lastname",
+            "type": {
+                "type": "string",
+                "arg.properties": {
+                    "options": [
+                        "akatz1022",
+                        "bobk_43",
+                        "alison_99",
+                        "k_robertz_88",
+                        "Ferd88",
+                        "Reeva43",
+                        "Antonio_0966",
+                        "ArlyneW8ter",
+                        "DimitriSchenz88",
+                        "Oriana_70",
+                        "AbdelKable_86",
+                        "Roberto_123",
+                        "AlanGreta_GG66",
+                        "Nathan_126",
+                        "AndySims_345324",
+                        "GlenAlan_23344",
+                        "LukeWaters_23",
+                        "BenSteins_235"
+                    ]
+                }
+            }
+        },
+        {
+            "name": "gender",
+            "type": {
+                "type": "string",
+                "arg.properties": {
+                    "options": [
+                        "MALE",
+                        "FEMALE",
+                        "OTHER"
+                    ]
+                }
+            }
+        },
+        {
+            "name": "random_data",
+            "type": {
+                "type": "string",
+                "arg.properties": {
+                    "regex": "[a-zA-Z]*",
+                    "length": 150
+                }
+            }
+        },
+        {
+            "name": "address",
+            "type": {
+                "name": "address",
+                "type": "record",
+                "fields": [
+                    {
+                        "name": "city",
+                        "type": {
+                            "type": "string",
+                            "arg.properties": {
+                                "regex": "City_[1-9]{0,2}"
+                            }
+                        }
+                    },
+                    {
+                        "name": "state",
+                        "type": {
+                            "type": "string",
+                            "arg.properties": {
+                                "regex": "State_[1-9]{0,2}"
+                            }
+                        }
+                    },
+                    {
+                        "name": "zipcode",
+                        "type": {
+                            "type": "long",
+                            "arg.properties": {
+                                "range": {
+                                    "min": 10000,
+                                    "max": 99999
+                                }
+                            }
+                        }
+                    }
+                ]
+            }
+        }
+    ]
+}
