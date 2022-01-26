@@ -32,6 +32,21 @@ docker run -i --volumes-from gcloud-config google/cloud-sdk:latest bq --project_
 
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
 
+curl --request PUT \
+  --url http://localhost:8083/admin/loggers/org.apache.kafka.connect.runtime.WorkerSinkTask \
+  --header 'Accept: application/json' \
+  --header 'Content-Type: application/json' \
+  --data '{
+	"level": "TRACE"
+}'
+
+curl --request PUT \
+  --url http://localhost:8083/admin/loggers/com.wepay.kafka.connect.bigquery \
+  --header 'Accept: application/json' \
+  --header 'Content-Type: application/json' \
+  --data '{
+	"level": "TRACE"
+}'
 
 log "Creating GCP BigQuery Sink connector"
 curl -X PUT \
@@ -167,10 +182,11 @@ for((i=0;i<10;i++)); do
 done
 
 # log "Verify data is in GCP BigQuery:"
-# docker run -i --volumes-from gcloud-config google/cloud-sdk:latest bq --project_id "$PROJECT" query "SELECT * FROM $DATASET.my_topic;" > /tmp/result.log  2>&1
+#docker run -i --volumes-from gcloud-config google/cloud-sdk:latest bq --project_id "$PROJECT" query "SELECT * FROM \"vincent-de-saboulin-lab.pgvinc388043.my_topic\" WHERE DATE(_PARTITIONTIME) = \"2022-01-26\";" > /tmp/result.log  2>&1
 
 # log "Number of records in GCP:"
 # grep "NULL" /tmp/result.log | wc -l
 
 
-# In topic I have 10021 records, but in GCP, I have 14142 rows
+# In topic I have 10021 records, but in GCP, I have 31639 rows, everytime there is a restart, it inserts 4500 rows
+# full logs https://github.com/vdesabou/kafka-docker-playground/blob/master/connect/connect-gcp-bigquery-sink/repro-88043-duplicate-records-provided-schema-does-not-match-table.log.zip?raw=true
