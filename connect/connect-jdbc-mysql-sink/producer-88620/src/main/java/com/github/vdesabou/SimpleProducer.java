@@ -21,6 +21,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import com.github.vdesabou.Customer;
+import com.github.vdesabou.MyKey;
 
 import uk.co.jemos.podam.api.PodamFactoryImpl;
 import uk.co.jemos.podam.api.PodamFactory;
@@ -69,17 +70,14 @@ public class SimpleProducer {
         .ignoreRandomizationErrors(false);
         EasyRandom generator = new EasyRandom(parameters);
 
-        try (Producer<Long, Customer> producer = new KafkaProducer<>(properties)) {
+        try (Producer<MyKey, Customer> producer = new KafkaProducer<>(properties)) {
             long id = 0;
             while (id < 10) {
 
-                // This will use constructor with minimum arguments and
-                // then setters to populate POJO
-                //Customer customer = factory.manufacturePojo(Customer.class);
-
+                MyKey mykey = generator.nextObject(MyKey.class);
                 Customer customer = generator.nextObject(Customer.class);
 
-                ProducerRecord<Long, Customer> record = new ProducerRecord<>(topicName, id, customer);
+                ProducerRecord<MyKey, Customer> record = new ProducerRecord<>(topicName, mykey, customer);
                 logger.info("Sending Key = {}, Value = {}", record.key(), record.value());
                 producer.send(record,(recordMetadata, exception) -> sendCallback(record, recordMetadata,exception));
                 id++;
@@ -88,7 +86,7 @@ public class SimpleProducer {
         }
     }
 
-    private void sendCallback(ProducerRecord<Long, Customer> record, RecordMetadata recordMetadata, Exception e) {
+    private void sendCallback(ProducerRecord<MyKey, Customer> record, RecordMetadata recordMetadata, Exception e) {
         if (e == null) {
             logger.debug("succeeded sending. offset: {}", recordMetadata.offset());
         } else {
@@ -98,7 +96,7 @@ public class SimpleProducer {
 
     private Map<String, String> defaultProps = Map.of(
             ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, "broker:9092",
-            ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, "org.apache.kafka.common.serialization.LongSerializer",
+            ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, "io.confluent.kafka.serializers.json.KafkaJsonSchemaSerializer",
             ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, "io.confluent.kafka.serializers.json.KafkaJsonSchemaSerializer",
             "json.oneof.for.nullables", "true");
 
