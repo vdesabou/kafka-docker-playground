@@ -26,7 +26,7 @@ curl -s -X PUT \
                 "value.converter.schemas.enable": "false",
                 "max.interval": 1,
                 "iterations": "10000",
-                "tasks.max": "10",
+                "tasks.max": "1",
                 "schema.filename" : "/tmp/schemas/schema1.avro"
             }' \
       http://localhost:8083/connectors/datagen-schema1/config | jq
@@ -37,3 +37,15 @@ sleep 10
 
 log "Verify we have received the data in schema1 topic"
 timeout 60 docker exec broker kafka-console-consumer --bootstrap-server broker:9092 --topic schema1 --from-beginning --max-messages 1
+
+# it fails as soon as nulber of characters is > 15:
+#   {
+#       "name": "MY_STRING_11",
+#       "type": {
+#           "type": "string",
+#           "arg.properties": {
+#               "regex": "[a-zA-Z0-9]{16}"
+#           }
+#       },
+#       "default": ""
+#   }
