@@ -31,7 +31,7 @@ curl -s -X PUT \
             }' \
       http://localhost:8083/connectors/datagen-schema1/config | jq
 
-wait_for_datagen_connector_to_inject_data "schema1" "10"
+wait_for_datagen_connector_to_inject_data "schema1" "1"
 
 sleep 10
 
