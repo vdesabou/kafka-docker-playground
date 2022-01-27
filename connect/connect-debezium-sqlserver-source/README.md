@@ -25,6 +25,7 @@ $ ./sqlserver-standalone.sh
 
 ## Details of what the script is doing
 
+### Without SSL
 
 Load inventory.sql to SQL Server
 
@@ -80,5 +81,13 @@ Results:
 {"before":null,"after":{"server1.dbo.customers.Value":{"id":1005,"first_name":"Pam","last_name":"Thomas","email":"pam@office.com"}},"source":{"version":"0.10.0.Final","connector":"sqlserver","name":"server1","ts_ms":1571914677337,"snapshot":{"string":"false"},"db":"testDB","schema":"dbo","table":"customers","change_lsn":{"string":"00000025:00000518:0003"},"commit_lsn":{"string":"00000025:00000518:0005"},"event_serial_no":{"long":1}},"op":"c","ts_ms":{"long":1571914683147}}
 ```
 
+### with SSL encryption
+
+There is no specific parameter on debezium side, so connect will use generic JVM config:
+
+```yml
+      KAFKA_OPTS: -Djavax.net.ssl.trustStore=/tmp/truststore.jks
+                  -Djavax.net.ssl.trustStorePassword=confluent
+```
 
 N.B: Control Center is reachable at [http://127.0.0.1:9021](http://127.0.0.1:9021])
