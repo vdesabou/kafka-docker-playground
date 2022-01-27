@@ -64,7 +64,7 @@ curl -X PUT \
 
 log "Sending messages to topic a-topic"
 docker exec -i broker kafka-console-producer --broker-list broker:9092 --topic a-topic --property parse.key=true --property key.separator=, << EOF
-"23283960770403",{"k1Epoch":1642688333164,"acctNo":"23283960","appGrp":"AG1","odLimitAmt":0,"timestamp":"2022-01-14T10:39:00.420807000+00:00","postTxnAvBal":53322.33,"avBalTimestamp":"2022-01-14T10:39:00.420807000+00:00","enablerEventVer":"1.0.0","brand":"LLOYDS","txnDt":"20220104","rmngOdAmt":0,"sortCd":"770403","k2Epoch":1642688333519,"trueRunBal":53322.33,"clrdBalWthdrwl":53322.33,"seqNo":"1156766207961216682","eventCatgry":"CBS-BALANCE-CHG","srcKafkaTopic":"SIT3_KAFKA_CBS_AG1","crncyCd":"GBP","eventTyp":"FP-NEW"}
+"1",{"f1":"value1"}
 EOF
 
 
