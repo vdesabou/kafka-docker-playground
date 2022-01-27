@@ -337,7 +337,7 @@ A JDBC MySQL source connector called `mysql-source` is created and using a MySQL
 Note: the topic `mysql-application` used by this connector shall be created before using command:
 
 ```bash
-$ confluent kafka topic create mysql-application --partitions 6
+$ confluent kafka topic create mysql-application --partitions 1
 ```
 
 ```bash

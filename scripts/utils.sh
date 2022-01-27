@@ -491,6 +491,7 @@ EOF
               then
                 log "💫 Using 🔗connector: $owner/$name:$version 📅release date: $release_date 🌐documentation: $documentation_url"
                 log "🎓 To specify different version, check the documentation https://kafka-docker-playground.io/#/how-to-use?id=🔗-for-connectors"
+
               fi
               CONNECTOR_TAG=$version
             fi
@@ -594,8 +595,8 @@ function create_topic()
   confluent kafka topic create "$topic" --dry-run 2>/dev/null
   if [[ $? == 0 ]]; then
     log "Create topic $topic"
-    log "confluent kafka topic create $topic"
-    confluent kafka topic create "$topic" || true
+    log "confluent kafka topic create $topic --partitions 1"
+    confluent kafka topic create "$topic" --partitions 1 || true
   else
     log "Topic $topic already exists"
   fi
