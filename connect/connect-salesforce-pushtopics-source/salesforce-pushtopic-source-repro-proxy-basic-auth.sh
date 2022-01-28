@@ -4,6 +4,8 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
+# This is not a supported option
+
 # https://docs.nginx.com/nginx/admin-guide/security-controls/configuring-http-basic-authentication/
 # htpasswd was created with 
 # htpasswd -c htpasswd myuser
