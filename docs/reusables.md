@@ -2,6 +2,49 @@
 
 Below is a collection of *how to* that you can re-use when you build your own reproduction models.
 
+## 🛠 Bootstrap reproduction model
+
+If you want to create your own reproduction model, follow these steps:
+
+* Go into the directory of the example of your choice
+* Choose the script that you want to use as basis
+* Execute `../../scripts/bootstrap-reproduction-model.sh <script file> <description> [<avro>, <protobuf> or <json-schema>]`
+
+Example:
+
+```bash
+cd connect/connect-hdfs2-sink
+../../scripts/bootstrap-reproduction-model.sh hdfs2-sink.sh "12345 testing with parquet format"
+
+16:54:01 ℹ️ 💫 Using default CP version 7.0.1
+16:54:01 ℹ️ 🎓 set TAG environment variable to specify different version, see https://kafka-docker-playground.io/#/how-to-use?id=🎯-for-confluent-platform-cp
+16:54:01 ℹ️ 🎩 Creating file docker-compose.plaintext.repro-12345-testing-with-parquet-format.yml
+16:54:01 ℹ️ 🎩 Creating file hdfs2-sink-repro-12345-testing-with-parquet-format.sh
+```
+
+If you want to automatically generate a Java Producer, just add a third parameter (one of `avro`, `protobuf` or `json-schema`):
+
+Example with `protobuf`:
+
+```bash
+cd connect/connect-hdfs2-sink
+../../scripts/bootstrap-reproduction-model.sh hdfs2-sink.sh "12345 testing with parquet format" protobuf
+16:56:15 ℹ️ 💫 Using default CP version 7.0.1
+16:56:15 ℹ️ 🎓 set TAG environment variable to specify different version, see https://kafka-docker-playground.io/#/how-to-use?id=🎯-for-confluent-platform-cp
+16:56:15 ℹ️ 🎩 Creating file docker-compose.plaintext.repro-12345-testing-with-parquet-format.yml
+16:56:15 ℹ️ 🎩 Creating file hdfs2-sink-repro-12345-testing-with-parquet-format.sh
+16:56:15 ℹ️ 🎩 Replacing topic test_hdfs with customer_protobuf
+16:56:15 ℹ️ 🎩 Adding producer-repro-12345 container to docker-compose.plaintext.repro-12345-testing-with-parquet-format.yml
+16:56:15 ℹ️ 🎩 Adding command to build jar for producer-repro-12345 to /Users/vsaboulin/Documents/github/kafka-docker-playground/connect/connect-hdfs2-sink/hdfs2-sink-repro-12345-testing-with-parquet-format.sh
+16:56:15 ℹ️ 🎩 Adding command to run producer to /Users/vsaboulin/Documents/github/kafka-docker-playground/connect/connect-hdfs2-sink/hdfs2-sink-repro-12345-testing-with-parquet-format.sh
+```
+
+This will create the following files:
+
+![file structure](./images/bootstrap_reproduction_model.jpg)
+
+Then follow instructions in one of [♨️ AVRO Java producer](/reusables?id=♨%EF%B8%8F-avro-java-producer), [♨️ Protobuf Java producer](/reusables?id=♨%EF%B8%8F-protobuf-java-producer) or [♨️ JSON Schema Java producer](/reusables?id=♨%EF%B8%8F-json-schema-java-producer) below.
+
 ## 👉 Producing data
 
 ### 🔤 [kafka-console-producer](https://docs.confluent.io/platform/current/tutorials/examples/clients/docs/kafka-commands.html#produce-records)
@@ -128,65 +171,24 @@ If you want to send a complex AVRO message, the easiest way is to use an Avro JA
 
 Here are the steps to follow:
 
-1. Copy [`other/schema-format-avro/producer`](https://github.com/vdesabou/kafka-docker-playground/tree/master/other/schema-format-avro/producer) directory into your test directory.
+1. Bootstrap your reproduction model by following [🛠 Bootstrap reproduction model](/reusables?id=🛠-bootstrap-reproduction-model) and use `avro` as third parameter.
 
-2. Update [`other/schema-format-avro/producer/src/main/resources/avro/customer.avsc`](https://github.com/vdesabou/kafka-docker-playground/blob/master/other/schema-format-avro/producer/src/main/resources/avro/customer.avsc) with your AVRO schema but be careful, you need to keep `Customer` for the name and `com.github.vdesabou` for the namespace:
+2. Update `producer-repro-12345/src/main/resources/avro/customer.avsc` with your AVRO schema but be careful, you need to keep `Customer` for the name and `com.github.vdesabou` for the namespace:
 
 ```json
     "name": "Customer",
     "namespace": "com.github.vdesabou",
 ```
 
-3. In your script, and *before* `${DIR}/../../environment/plaintext/start.sh`, add this:
+3. In the generated reproduction model file, you will see this:
 
 ```bash
-for component in producer
-do
-    set +e
-    log "🏗 Building jar for ${component}"
-    docker run -i --rm -e KAFKA_CLIENT_TAG=$KAFKA_CLIENT_TAG -e TAG=$TAG_BASE -v "${DIR}/${component}":/usr/src/mymaven -v "$HOME/.m2":/root/.m2 -v "${DIR}/${component}/target:/usr/src/mymaven/target" -w /usr/src/mymaven maven:3.6.1-jdk-11 mvn -Dkafka.tag=$TAG -Dkafka.client.tag=$KAFKA_CLIENT_TAG package > /tmp/result.log 2>&1
-    if [ $? != 0 ]
-    then
-        logerror "ERROR: failed to build java component $component"
-        tail -500 /tmp/result.log
-        exit 1
-    fi
-    set -e
-done
+# 🚨🚨🚨 FIXTHIS: move it to the correct place 🚨🚨🚨
+log "✨ Run the avro java producer which produces to topic customer_avro"
+docker exec producer-repro-12345 bash -c "java -jar producer-1.0.0-jar-with-dependencies.jar"
 ```
 
-4. Add this in your `docker-compose` file:
-
-```yml
-  producer-v1:
-    build:
-      context: ../../other/schema-format-avro/producer
-    hostname: producer-v1
-    container_name: producer-v1
-    environment:
-      KAFKA_BOOTSTRAP_SERVERS: broker:9092
-      TOPIC: "customer-avro"
-      REPLICATION_FACTOR: 1
-      NUMBER_OF_PARTITIONS: 1
-      MESSAGE_BACKOFF: 1000 # Frequency of message injection
-      KAFKA_ACKS: "all" # default: "1"
-      KAFKA_REQUEST_TIMEOUT_MS: 20000
-      KAFKA_RETRY_BACKOFF_MS: 500
-      KAFKA_CLIENT_ID: "my-java-producer-v1"
-      KAFKA_SCHEMA_REGISTRY_URL: "http://schema-registry:8081"
-```
-
-You can change the environment values to your needs (for example `TOPIC`).
-
-> [!WARNING]
-> Make sure to update `context` above with the right path.
-
-5. You can then invoke the Java producer by executing:
-
-```bash
-log "Run the Java producer-v1"
-docker exec producer-v1 bash -c "java -jar producer-v1-1.0.0-jar-with-dependencies.jar"
-```
+Make sure to move it in your script to the right place.
 
 ### ♨️ Protobuf Java producer
 
@@ -197,64 +199,21 @@ If you want to send a complex Protobuf message, the easiest way is to use an Pro
 
 Here are the steps to follow:
 
-1. Copy [`other/schema-format-protobuf/producer`](https://github.com/vdesabou/kafka-docker-playground/tree/master/other/schema-format-protobuf) directory into your test directory.
+1. Bootstrap your reproduction model by following [🛠 Bootstrap reproduction model](/reusables?id=🛠-bootstrap-reproduction-model) and use `protobuf` as third parameter.
 
-2. Update [`other/schema-format-protobuf/producer/src/main/resources/avro/Customer.proto`](https://github.com/vdesabou/kafka-docker-playground/blob/master/other/schema-format-protobuf/producer/src/main/resources/Customer.proto) with your Protobuf schema but be careful, you need to keep `Customer` for the name and `com.github.vdesabou` for the package and `CustomerImpl` for the `java_outer_classname`:
+2. Update `producer-repro-12345/src/main/resources/Customer.proto` with your Protobuf schema but be careful, you need to keep `Customer` for the name and `com.github.vdesabou` for the package and `CustomerImpl` for the `java_outer_classname`:
 
 ```
 package com.github.vdesabou;
 option java_outer_classname = "CustomerImpl";
 ```
 
-3. In your script, and *before* `${DIR}/../../environment/plaintext/start.sh`, add this:
+3. In the generated reproduction model file, you will see this:
 
 ```bash
-for component in producer
-do
-    set +e
-    log "🏗 Building jar for ${component}"
-    docker run -i --rm -e KAFKA_CLIENT_TAG=$KAFKA_CLIENT_TAG -e TAG=$TAG_BASE -v "${DIR}/${component}":/usr/src/mymaven -v "$HOME/.m2":/root/.m2 -v "${DIR}/${component}/target:/usr/src/mymaven/target" -w /usr/src/mymaven maven:3.6.1-jdk-11 mvn -Dkafka.tag=$TAG -Dkafka.client.tag=$KAFKA_CLIENT_TAG package > /tmp/result.log 2>&1
-    if [ $? != 0 ]
-    then
-        logerror "ERROR: failed to build java component $component"
-        tail -500 /tmp/result.log
-        exit 1
-    fi
-    set -e
-done
-```
-
-4. Add this in your `docker-compose` file:
-
-```yml
-  producer:
-    build:
-      context: ../../other/schema-format-protobuf/producer
-    hostname: producer
-    container_name: producer
-    environment:
-      KAFKA_BOOTSTRAP_SERVERS: broker:9092
-      TOPIC: "customer-protobuf"
-      REPLICATION_FACTOR: 1
-      NUMBER_OF_PARTITIONS: 1
-      MESSAGE_BACKOFF: 1000 # Frequency of message injection
-      KAFKA_ACKS: "all" # default: "1"
-      KAFKA_REQUEST_TIMEOUT_MS: 20000
-      KAFKA_RETRY_BACKOFF_MS: 500
-      KAFKA_CLIENT_ID: "my-java-producer"
-      KAFKA_SCHEMA_REGISTRY_URL: "http://schema-registry:8081"
-```
-
-You can change the environment values to your needs (for example `TOPIC`).
-
-> [!WARNING]
-> Make sure to update `context` above with the right path.
-
-5. You can then invoke the Java producer by executing:
-
-```bash
-log "Run the Java producer"
-docker exec producer bash -c "java -jar producer-1.0.0-jar-with-dependencies.jar"
+# 🚨🚨🚨 FIXTHIS: move it to the correct place 🚨🚨🚨
+log "✨ Run the protobuf java producer which produces to topic customer_protobuf"
+docker exec producer-repro-12345 bash -c "java -jar producer-1.0.0-jar-with-dependencies.jar"
 ```
 
 ### ♨️ JSON Schema Java producer
@@ -266,9 +225,9 @@ If you want to send a complex JSON Schema message, the easiest way is to use an 
 
 Here are the steps to follow:
 
-1. Copy [`other/schema-format-json-schema/producer`](https://github.com/vdesabou/kafka-docker-playground/tree/master/other/schema-format-json-schema) directory into your test directory.
+1. Bootstrap your reproduction model by following [🛠 Bootstrap reproduction model](/reusables?id=🛠-bootstrap-reproduction-model) and use `json-schema` as third parameter.
 
-2. Update [`other/schema-format-json-schema/producer/src/main/resources/schema/Customer.json`](https://github.com/vdesabou/kafka-docker-playground/blob/master/other/schema-format-json-schema/producer/src/main/resources/schema/Customer.json) with your JSON Schema schema but be careful, you need to keep `Customer` for the title:
+2. Update `producer-repro-12345/src/main/resources/schema/Customer.json` with your JSON Schema schema but be careful, you need to keep `Customer` for the title:
 
 ```json
 {
@@ -302,55 +261,12 @@ Here are the steps to follow:
 }
 ```
 
-3. In your script, and *before* `${DIR}/../../environment/plaintext/start.sh`, add this:
+3. In the generated reproduction model file, you will see this:
 
 ```bash
-for component in producer
-do
-    set +e
-    log "🏗 Building jar for ${component}"
-    docker run -i --rm -e KAFKA_CLIENT_TAG=$KAFKA_CLIENT_TAG -e TAG=$TAG_BASE -v "${DIR}/${component}":/usr/src/mymaven -v "$HOME/.m2":/root/.m2 -v "${DIR}/${component}/target:/usr/src/mymaven/target" -w /usr/src/mymaven maven:3.6.1-jdk-11 mvn -Dkafka.tag=$TAG -Dkafka.client.tag=$KAFKA_CLIENT_TAG package > /tmp/result.log 2>&1
-    if [ $? != 0 ]
-    then
-        logerror "ERROR: failed to build java component $component"
-        tail -500 /tmp/result.log
-        exit 1
-    fi
-    set -e
-done
-```
-
-4. Add this in your `docker-compose` file:
-
-```yml
-  producer:
-    build:
-      context: ../../other/schema-format-json-schema/producer
-    hostname: producer
-    container_name: producer
-    environment:
-      KAFKA_BOOTSTRAP_SERVERS: broker:9092
-      TOPIC: "customer-json-schema"
-      REPLICATION_FACTOR: 1
-      NUMBER_OF_PARTITIONS: 1
-      MESSAGE_BACKOFF: 1000 # Frequency of message injection
-      KAFKA_ACKS: "all" # default: "1"
-      KAFKA_REQUEST_TIMEOUT_MS: 20000
-      KAFKA_RETRY_BACKOFF_MS: 500
-      KAFKA_CLIENT_ID: "my-java-producer"
-      KAFKA_SCHEMA_REGISTRY_URL: "http://schema-registry:8081"
-```
-
-You can change the environment values to your needs (for example `TOPIC`).
-
-> [!WARNING]
-> Make sure to update `context` above with the right path.
-
-5. You can then invoke the Java producer by executing:
-
-```bash
-log "Run the Java producer"
-docker exec producer bash -c "java -jar producer-1.0.0-jar-with-dependencies.jar"
+# 🚨🚨🚨 FIXTHIS: move it to the correct place 🚨🚨🚨
+log "✨ Run the json-schema java producer which produces to topic customer_json_schema"
+docker exec producer-repro-12345 bash -c "java -jar producer-1.0.0-jar-with-dependencies.jar"
 ```
 
 ## 👈 Consuming data
