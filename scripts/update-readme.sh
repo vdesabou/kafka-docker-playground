@@ -291,7 +291,7 @@ do
         log "GH issue with title $title already exist, adding comment..."
         issue_number=$(gh issue list --limit 500 | grep "$title" | awk '{print $1;}')
         gh issue comment ${issue_number} --body "$msg"
-        gh issue edit ${issue_number} --add-label "bug 🔥" --remove-label "new 🆕"
+        gh issue edit ${issue_number} --add-label "CI failing 🔥" --remove-label "new 🆕"
       fi
       gh_issue_number=$(gh issue list --limit 500 | grep "$title" | awk '{print $1;}')
     fi
