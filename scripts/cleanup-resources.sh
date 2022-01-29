@@ -182,10 +182,13 @@ then
      log "Use api key $CLOUD_KEY"
      confluent api-key use $CLOUD_KEY --resource $CLUSTER_LKC
 
+     set +e 
      for topic in $(confluent kafka topic list)
      do
-        set +e 
         log "delete topic $topic"
-        confluent kafka topic delete $topic
+        confluent kafka topic delete "$topic"
      done
 fi
+
+# always exit with success
+exit 0
