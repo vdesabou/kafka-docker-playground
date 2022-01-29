@@ -170,11 +170,6 @@ services:
                   -Djavax.net.ssl.trustStorePassword=confluent
                   -Djavax.net.ssl.keyStore=/etc/kafka/secrets/kafka.client.keystore.jks
                   -Djavax.net.ssl.keyStorePassword=confluent
-      # Reduce Connect memory utilization
-      KAFKA_JVM_PERFORMANCE_OPTS: -server -XX:+UseG1GC -XX:GCTimeRatio=1
-                  -XX:MinHeapFreeRatio=10 -XX:MaxHeapFreeRatio=20
-                  -XX:MaxGCPauseMillis=10000 -XX:InitiatingHeapOccupancyPercent=35 -XX:+ExplicitGCInvokesConcurrent
-                  -XX:MaxInlineLevel=15 -Djava.awt.headless=true
 
   ksqldb-server:
     volumes:
