@@ -61,7 +61,7 @@ fi
 
 # $SALESFORCE_INSTANCE/services/oauth2/authorize?response_type=token&client_id=$CONSUMER_KEY_APP_WITH_JWT&redirect_uri=https://test.salesforce.com/services/oauth2/success
 
-${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.repro-90050-jwt-bearer-authentication.yml"
+${DIR}/../../environment/sasl-ssl/start.sh "${PWD}/docker-compose.plaintext.repro-90050-jwt-bearer-authentication.yml"
 
 log "Login with sfdx CLI"
 docker exec sfdx-cli sh -c "sfdx sfpowerkit:auth:login -u \"$SALESFORCE_USERNAME\" -p \"$SALESFORCE_PASSWORD\" -r \"$SALESFORCE_INSTANCE\" -s \"$SECURITY_TOKEN\""
@@ -72,6 +72,7 @@ docker exec sfdx-cli sh -c "sfdx force:apex:execute  -u \"$SALESFORCE_USERNAME\"
 log "Creating Salesforce Platform Events Source connector"
 curl -X PUT \
      -H "Content-Type: application/json" \
+     --cert ../../environment/sasl-ssl/security/connect.certificate.pem --key ../../environment/sasl-ssl/security/connect.key --tlsv1.2 --cacert ../../environment/sasl-ssl/security/snakeoil-ca-1.crt \
      --data '{
                     "connector.class": "io.confluent.salesforce.SalesforcePlatformEventSourceConnector",
                     "kafka.topic": "sfdc-platform-events",
@@ -87,11 +88,16 @@ curl -X PUT \
                     "salesforce.initial.start" : "all",
                     "key.converter": "org.apache.kafka.connect.json.JsonConverter",
                     "value.converter": "org.apache.kafka.connect.json.JsonConverter",
-                    "confluent.license": "",
                     "confluent.topic.bootstrap.servers": "broker:9092",
-                    "confluent.topic.replication.factor": "1"
+                    "confluent.topic.replication.factor": "1",
+                    "confluent.topic.ssl.keystore.location" : "/etc/kafka/secrets/kafka.connect.keystore.jks",
+                    "confluent.topic.ssl.keystore.password" : "confluent",
+                    "confluent.topic.ssl.key.password" : "confluent",
+                    "confluent.topic.security.protocol" : "SASL_SSL",
+                    "confluent.topic.sasl.mechanism": "PLAIN",
+                    "confluent.topic.sasl.jaas.config": "org.apache.kafka.common.security.plain.PlainLoginModule required  username=\"client\" password=\"client-secret\";"
           }' \
-     http://localhost:8083/connectors/salesforce-platform-events-source/config | jq .
+     https://localhost:8083/connectors/salesforce-platform-events-source/config | jq .
 
 
 
@@ -99,11 +105,12 @@ curl -X PUT \
 sleep 10
 
 log "Verify we have received the data in sfdc-platform-events topic"
-timeout 60 docker exec broker kafka-console-consumer -bootstrap-server broker:9092 --topic sfdc-platform-events --from-beginning --max-messages 2
+timeout 60 docker exec connect kafka-console-consumer -bootstrap-server broker:9092 --topic sfdc-platform-events --from-beginning --max-messages 2 --consumer.config /etc/kafka/secrets/client_without_interceptors.config
 
 log "Creating Salesforce Platform Events Sink connector"
 curl -X PUT \
      -H "Content-Type: application/json" \
+     --cert ../../environment/sasl-ssl/security/connect.certificate.pem --key ../../environment/sasl-ssl/security/connect.key --tlsv1.2 --cacert ../../environment/sasl-ssl/security/snakeoil-ca-1.crt \
      --data '{
                     "connector.class": "io.confluent.salesforce.SalesforcePlatformEventSinkConnector",
                     "topics": "sfdc-platform-events",
@@ -127,20 +134,46 @@ curl -X PUT \
                     "reporter.error.topic.replication.factor": 1,
                     "reporter.result.topic.name": "success-responses",
                     "reporter.result.topic.replication.factor": 1,
+                    "reporter.ssl.endpoint.identification.algorithm" : "https",
+                    "reporter.sasl.mechanism" : "PLAIN",
+                    "reporter.sasl.jaas.config" : "org.apache.kafka.common.security.plain.PlainLoginModule required username=\"client\" password=\"client-secret\";",
+                    "reporter.security.protocol" : "SASL_SSL",
+                    "reporter.ssl.keystore.location" : "/etc/kafka/secrets/kafka.connect.keystore.jks",
+                    "reporter.ssl.keystore.password" : "confluent",
+                    "reporter.ssl.key.password" : "confluent",
+                    "reporter.admin.ssl.endpoint.identification.algorithm" : "https",
+                    "reporter.admin.sasl.mechanism" : "PLAIN",
+                    "reporter.admin.sasl.jaas.config" : "org.apache.kafka.common.security.plain.PlainLoginModule required username=\"client\" password=\"client-secret\";",
+                    "reporter.admin.security.protocol" : "SASL_SSL",
+                    "reporter.admin.ssl.keystore.location" : "/etc/kafka/secrets/kafka.connect.keystore.jks",
+                    "reporter.admin.ssl.keystore.password" : "confluent",
+                    "reporter.admin.ssl.key.password" : "confluent",
+                    "reporter.producer.ssl.endpoint.identification.algorithm" : "https",
+                    "reporter.producer.sasl.mechanism" : "PLAIN",
+                    "reporter.producer.sasl.jaas.config" : "org.apache.kafka.common.security.plain.PlainLoginModule required username=\"client\" password=\"client-secret\";",
+                    "reporter.producer.security.protocol" : "SASL_SSL",
+                    "reporter.producer.ssl.keystore.location" : "/etc/kafka/secrets/kafka.connect.keystore.jks",
+                    "reporter.producer.ssl.keystore.password" : "confluent",
+                    "reporter.producer.ssl.key.password" : "confluent",
                     "transforms": "MaskField",
                     "transforms.MaskField.type": "org.apache.kafka.connect.transforms.MaskField$Value",
                     "transforms.MaskField.fields": "Message__c",
-                    "confluent.license": "",
                     "confluent.topic.bootstrap.servers": "broker:9092",
-                    "confluent.topic.replication.factor": "1"
+                    "confluent.topic.replication.factor": "1",
+                    "confluent.topic.ssl.keystore.location" : "/etc/kafka/secrets/kafka.connect.keystore.jks",
+                    "confluent.topic.ssl.keystore.password" : "confluent",
+                    "confluent.topic.ssl.key.password" : "confluent",
+                    "confluent.topic.security.protocol" : "SASL_SSL",
+                    "confluent.topic.sasl.mechanism": "PLAIN",
+                    "confluent.topic.sasl.jaas.config": "org.apache.kafka.common.security.plain.PlainLoginModule required  username=\"client\" password=\"client-secret\";"
           }' \
-     http://localhost:8083/connectors/salesforce-platform-events-sink/config | jq .
+     https://localhost:8083/connectors/salesforce-platform-events-sink/config | jq .
 
 
 sleep 10
 
 log "Verify topic success-responses"
-timeout 60 docker exec broker kafka-console-consumer -bootstrap-server broker:9092 --topic success-responses --from-beginning --max-messages 2
+timeout 60 docker exec connect kafka-console-consumer -bootstrap-server broker:9092 --topic success-responses --from-beginning --max-messages 2 --consumer.config /etc/kafka/secrets/client_without_interceptors.config
 
 # log "Verify topic error-responses"
 # timeout 20 docker exec broker kafka-console-consumer -bootstrap-server broker:9092 --topic error-responses --from-beginning --max-messages 1

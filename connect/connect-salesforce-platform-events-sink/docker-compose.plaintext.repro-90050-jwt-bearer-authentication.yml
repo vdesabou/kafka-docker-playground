@@ -14,6 +14,7 @@ services:
   connect:
     volumes:
     - ../../connect/connect-salesforce-platform-events-sink/salesforce-confluent.keystore.jks:/tmp/salesforce-confluent.keystore.jks
+    - ../../environment/sasl-ssl/security:/etc/kafka/secrets
     environment:
       CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-salesforce
       #KAFKA_OPTS:  -Djavax.net.debug=all
