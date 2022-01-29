@@ -358,7 +358,7 @@ do
     documentation_url=$(grep "$connector_path " /tmp/README.txt | cut -d "|" -f 7 | sed 's/^[[:blank:]]*//;s/[[:blank:]]*$//' | sed 's/.*(\(.*\))/\1/')
     if [ "$release_date" = "null" ]
     then
-      release_date=""
+      release_date="unknown"
     fi
 
     # if [ "$license" = "Confluent Software Evaluation License" ]
@@ -385,7 +385,9 @@ do
     
     versionencoded=$(urlencode $version)
     versionencoded=$(echo $versionencoded | tr "-" "_")
-    connector_badge="[![version](https://img.shields.io/badge/v-$versionencoded-pink)]($documentation_url)"
+    release_date_encoded=$(urlencode $release_date)
+    release_date_encoded=$(echo $release_date_encoded | tr "-" "_")
+    connector_badge="[![version](https://img.shields.io/badge/v-$versionencoded%20($release_date_encoded)-pink)]($documentation_url)"
 
     let "nb_connector_tests++"
     sed -e "s|:${test}:|\&nbsp; $connector_badge $owner_badge $ci |g" \
