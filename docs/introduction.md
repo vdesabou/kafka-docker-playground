@@ -10,7 +10,7 @@
 - 🔐 10+ secured [environments](/content?id=%F0%9F%94%90-environments) (SASL, RBAC, SSL...)
 - ☁️ Confluent Cloud [examples](/content?id=☁%EF%B8%8F-confluent-cloud)
 - 💸 Confluent commercial [features](/content?id=💸-confluent-commercial) (Tiered Storage, Control Center, Audit logs...)
-- ♻️ Replicator and MirrorMaker 2 [examples](/content?id=♻%EF%B8%8F-confluent-replicator-and-mirror-maker-2)
+- 🌍 Multi-Data-Center deployments [examples](/content?id=🌍-multi-data-center-deployments)
 - 🎯 Run examples with any Confluent Platform or connector [versions](/how-to-use?id=🪄-specify-versions)
 - 🎓 Learn how the playground [works](/how-it-works)
 - 👷‍♂️ Build your own reproduction with [reusables](/reusables)
