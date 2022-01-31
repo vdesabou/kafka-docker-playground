@@ -57,3 +57,15 @@ timeout 60 docker exec connect kafka-console-consumer -bootstrap-server broker:9
 # {"schema":{"type":"struct","fields":[{"type":"int32","optional":false,"field":"id"},{"type":"string","optional":true,"field":"projectId"}],"optional":false,"name":"server1.dbo.customers.Key"},"payload":{"id":1003,"projectId":"test"}},{"schema":{"type":"struct","fields":[{"type":"int32","optional":false,"field":"id"},{"type":"string","optional":false,"field":"first_name"},{"type":"string","optional":false,"field":"last_name"},{"type":"string","optional":false,"field":"email"}],"optional":false,"name":"server1.dbo.customers.Value"},"payload":{"id":1003,"first_name":"Edward","last_name":"Walker","email":"ed@walker.com"}}
 # {"schema":{"type":"struct","fields":[{"type":"int32","optional":false,"field":"id"},{"type":"string","optional":true,"field":"projectId"}],"optional":false,"name":"server1.dbo.customers.Key"},"payload":{"id":1004,"projectId":"test"}},{"schema":{"type":"struct","fields":[{"type":"int32","optional":false,"field":"id"},{"type":"string","optional":false,"field":"first_name"},{"type":"string","optional":false,"field":"last_name"},{"type":"string","optional":false,"field":"email"}],"optional":false,"name":"server1.dbo.customers.Value"},"payload":{"id":1004,"first_name":"Anne","last_name":"Kretchmar","email":"annek@noanswer.org"}}
 # {"schema":{"type":"struct","fields":[{"type":"int32","optional":false,"field":"id"},{"type":"string","optional":true,"field":"projectId"}],"optional":false,"name":"server1.dbo.customers.Key"},"payload":{"id":1005,"projectId":"test"}},{"schema":{"type":"struct","fields":[{"type":"int32","optional":false,"field":"id"},{"type":"string","optional":false,"field":"first_name"},{"type":"string","optional":false,"field":"last_name"},{"type":"string","optional":false,"field":"email"}],"optional":false,"name":"server1.dbo.customers.Value"},"payload":{"id":1005,"first_name":"Pam","last_name":"Thomas","email":"pam@office.com"}}
+
+
+# without primey key;
+
+# CREATE TABLE customers (
+#   id INTEGER IDENTITY(1001,1) NOT NULL,
+#   first_name VARCHAR(255) NOT NULL,
+#   last_name VARCHAR(255) NOT NULL,
+#   email VARCHAR(255) NOT NULL
+# );
+
+# key is null
