@@ -223,4 +223,5 @@ services:
       # CONFLUENT_TELEMETRY_API_SECRET: 'CLOUD_API_SECRET'
       # starting from 7.0
       #CONTROL_CENTER_MODE_ENABLE: management
+      # CONTROL_CENTER_ID: 32
 
