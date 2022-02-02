@@ -9,8 +9,12 @@ ${DIR}/../../environment/mdc-plaintext/start.sh
 log "Create topic sales_EUROPE in EUROPE with config confluent.value.schema.validation=true"
 docker exec broker-europe kafka-topics --create --topic sales_EUROPE --partitions 1 --replication-factor 1 --bootstrap-server broker-europe:9092 --config confluent.value.schema.validation=true
 
-log "Sending sales in Europe cluster a key"
-# Using a key
+# same issue if topic is pre-created and "topic.config.sync": "false"
+# log "Create topic sales_EUROPE in US with config confluent.value.schema.validation=true"
+# docker exec broker-us kafka-topics --create --topic sales_EUROPE --partitions 1 --replication-factor 1 --bootstrap-server broker-us:9092 --config confluent.value.schema.validation=true
+
+
+log "Sending sales in Europe cluster"
 docker exec -i connect-europe kafka-avro-console-producer --broker-list broker-europe:9092 --property schema.registry.url=http://schema-registry-europe:8081 --topic sales_EUROPE --property key.schema='{"type":"record","namespace": "io.confluent.connect.avro","name":"myrecordkey","fields":[{"name":"ID","type":"long"}]}' --property value.schema='{"type":"record","name":"myrecordvalue","fields":[{"name":"ID","type":"long"},{"name":"product", "type": "string"}, {"name":"quantity", "type": "int"}, {"name":"price",
 "type": "float"}]}'  --property parse.key=true --property key.separator="|" << EOF
 {"ID": 111}|{"ID": 111,"product": "foo", "quantity": 100, "price": 50}
@@ -44,6 +48,23 @@ sleep 15
 log "Verify we have received the data in all the sales_ topics in the US"
 docker container exec -i connect-us bash -c "kafka-console-consumer --bootstrap-server broker-us:9092 --whitelist 'sales_.*' --from-beginning --property print.key=true --property key.separator=, --max-messages 2"
 
+
+log "Verify the destination topic has confluent.value.schema.validation=true"
+docker container exec -i broker-us kafka-topics --describe --topic sales_EUROPE --bootstrap-server broker-us:9092
+
+# Topic: sales_EUROPE     PartitionCount: 1       ReplicationFactor: 1    Configs: confluent.value.schema.validation=true,message.timestamp.type=CreateTime
+#         Topic: sales_EUROPE     Partition: 0    Leader: 2       Replicas: 2     Isr: 2  Offline: 
+
+# With 7.0.1
+
+# [2022-02-02 10:35:52,832] ERROR [replicate-europe-to-us|task-0] WorkerSourceTask{id=replicate-europe-to-us-0} failed to send record to sales_EUROPE:  (org.apache.kafka.connect.runtime.WorkerSourceTask:384)
+# org.apache.kafka.common.InvalidRecordException: Log record DefaultRecord(offset=0, timestamp=1643798150113, key=7 bytes, value=17 bytes) is rejected by the record interceptor io.confluent.kafka.schemaregistry.validator.RecordSchemaValidator
+# [2022-02-02 10:35:52,834] INFO [replicate-europe-to-us|task-0] [Producer clientId=confluent.monitoring.interceptor.connect-worker-producer-us] Cluster ID: 3e5GM-S0QAqzBVcgwq3tRQ (org.apache.kafka.clients.Metadata:287)
+# [2022-02-02 10:35:52,840] ERROR [replicate-europe-to-us|task-0] WorkerSourceTask{id=replicate-europe-to-us-0} failed to send record to sales_EUROPE:  (org.apache.kafka.connect.runtime.WorkerSourceTask:384)
+# org.apache.kafka.common.InvalidRecordException: Log record DefaultRecord(offset=0, timestamp=1643798150125, key=7 bytes, value=17 bytes) is rejected by the record interceptor io.confluent.kafka.schemaregistry.validator.RecordSchemaValidator
+
+
+# With 6.1.0
 # [2022-02-02 10:25:06,700] ERROR [replicate-europe-to-us|task-0] WorkerSourceTask{id=replicate-europe-to-us-0} failed to send record to sales_EUROPE:  (org.apache.kafka.connect.runtime.WorkerSourceTask:370)
 # org.apache.kafka.common.InvalidRecordException: One or more records have been rejected
 # [2022-02-02 10:25:06,701] INFO [replicate-europe-to-us|task-0] [Producer clientId=confluent.monitoring.interceptor.connect-worker-producer-us] Cluster ID: AE59TlymS0qIfYC_mLUDjg (org.apache.kafka.clients.Metadata:279)
