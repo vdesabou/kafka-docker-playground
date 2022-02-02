@@ -74,47 +74,71 @@ curl --request PUT \
 	"level": "DEBUG"
 }'
 
-log "Creating GCP BigQuery Sink connector with autoCreateTables=false"
-curl -X PUT \
-     -H "Content-Type: application/json" \
-     --data '{
-               "connector.class": "com.wepay.kafka.connect.bigquery.BigQuerySinkConnector",
-               "tasks.max" : "1",
-               "topics" : "customer-avro",
-               "sanitizeFieldNames": "true",
-               "autoCreateTables" : "true",
-               "defaultDataset" : "'"$DATASET"'",
-               "mergeIntervalMs": "5000",
-               "bufferSize": "100000",
-               "maxWriteSize": "10000",
-               "tableWriteWait": "1000",
-               "project" : "'"$PROJECT"'",
-               "keyfile" : "/tmp/keyfile.json",
-               "deleteEnabled": "true",
-               "upsertEnabled": "true",
-               "avroDataCacheSize": "100",
-               "kafkaKeyFieldName": "KEY",
-               "intermediateTableSuffix": "_intermediate",
-               "key.converter" : "io.confluent.connect.avro.AvroConverter",
-               "key.converter.schema.registry.url" : "http://schema-registry:8081",
-               "consumer.override.max.poll.records":  "10000",
-               "consumer.override.fetch.min.bytes": "1048576",
-               "consumer.override.fetch.max.wait.ms": "1000",
-               "consumer.override.session.timeout.ms": "60000"
-          }' \
-     http://localhost:8083/connectors/gcp-bigquery-sink/config | jq .
+function delete_connector () {
+     curl --request DELETE \
+               --url http://localhost:8083/connectors/gcp-bigquery-sink
+}
+
+function create_connector () {
+     log "Creating GCP BigQuery Sink connector with autoCreateTables=false"
+     curl -X PUT \
+          -H "Content-Type: application/json" \
+          --data '{
+                    "connector.class": "com.wepay.kafka.connect.bigquery.BigQuerySinkConnector",
+                    "tasks.max" : "1",
+                    "topics" : "customer-avro",
+                    "sanitizeFieldNames": "true",
+                    "autoCreateTables" : "true",
+                    "defaultDataset" : "'"$DATASET"'",
+                    "mergeIntervalMs": "5000",
+                    "bufferSize": "100000",
+                    "maxWriteSize": "10000",
+                    "tableWriteWait": "1000",
+                    "project" : "'"$PROJECT"'",
+                    "keyfile" : "/tmp/keyfile.json",
+                    "deleteEnabled": "true",
+                    "upsertEnabled": "true",
+                    "avroDataCacheSize": "101",
+                    "kafkaKeyFieldName": "KEY",
+                    "intermediateTableSuffix": "_intermediate",
+                    "key.converter" : "io.confluent.connect.avro.AvroConverter",
+                    "key.converter.schema.registry.url" : "http://schema-registry:8081",
+                    "consumer.override.max.poll.records":  "10000",
+                    "consumer.override.fetch.min.bytes": "1048576",
+                    "consumer.override.fetch.max.wait.ms": "1000",
+                    "consumer.override.session.timeout.ms": "60000"
+               }' \
+          http://localhost:8083/connectors/gcp-bigquery-sink/config | jq .
+}
+
+create_connector
 
 sleep 10
 
+# it is ok
 log "Run the Java producer-87895 (10 records)"
 docker exec producer-87895 bash -c "java -jar producer-87895-1.0.0-jar-with-dependencies.jar"
+delete_connector
+create_connector
+
+exit 0
 
 sleep 30
 
+delete_connector
 log "Run the Java producer-87895-2 (only one tombstone)"
 docker exec producer-87895-2 bash -c "java -jar producer-87895-2-1.0.0-jar-with-dependencies.jar"
+# it is not ok, as last record is a tombstone
+create_connector
 
 
+delete_connector
+log "Run the Java producer-87895 (10 records)"
+docker exec producer-87895 bash -c "java -jar producer-87895-1.0.0-jar-with-dependencies.jar"
+# it is ok now since there are valid records since then
+create_connector
+
+exit 0
 
 
 log "Reset offset for customer-avro"
