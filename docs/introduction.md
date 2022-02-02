@@ -1,6 +1,6 @@
 # 🐳 kafka-docker-playground
-![success tests](https://img.shields.io/badge/success%20tests-2256%2F2373-red)![connector tested](https://img.shields.io/badge/connector%20tested-130-green)![reproduction models](https://img.shields.io/badge/reproduction%20models-156-green)![cp versions tested](https://img.shields.io/badge/cp%20version%20tested-%205.3.7%205.4.6%205.5.7%206.0.5%206.1.4%206.2.2%207.0.1-green)![cp versions tested](https://img.shields.io/badge/cp%20version%20tested-%205.3.7%205.4.6%205.5.7%206.0.5%206.1.4%206.2.2%207.0.1-green)![last run](https://img.shields.io/badge/last%20run-2022--01--31%2002:30-green)
-![GitHub issues by-label](https://img.shields.io/github/issues/vdesabou/kafka-docker-playground/bug%20🔥)![GitHub issues by-label](https://img.shields.io/github/issues/vdesabou/kafka-docker-playground/enhancement%20✨)
+![success tests](https://img.shields.io/badge/success%20tests-2282%2F2373-red)![connector tested](https://img.shields.io/badge/connector%20tested-130-green)![reproduction models](https://img.shields.io/badge/reproduction%20models-158-green)![cp versions tested](https://img.shields.io/badge/cp%20version%20tested-%205.3.7%205.4.6%205.5.7%206.0.5%206.1.4%206.2.2%207.0.1-green)![last run](https://img.shields.io/badge/last%20run-2022--02--02%2001:42-green)
+![GitHub issues by-label](https://img.shields.io/github/issues/vdesabou/kafka-docker-playground/CI%20failing%20🔥)![GitHub issues by-label](https://img.shields.io/github/issues/vdesabou/kafka-docker-playground/enhancement%20✨)
 ![GitHub repo size](https://img.shields.io/github/repo-size/vdesabou/kafka-docker-playground)
 
 [![Open in Gitpod](https://gitpod.io/button/open-in-gitpod.svg)](https://gitpod.io/#https://github.com/vdesabou/kafka-docker-playground)
