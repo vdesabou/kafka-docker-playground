@@ -42,8 +42,30 @@ curl -X PUT \
           }' \
      http://localhost:8083/connectors/replicate-europe-to-us/config | jq .
 
+# working with avroconverter
 
-sleep 15
+# docker container exec connect-us \
+# curl -X PUT \
+#      -H "Content-Type: application/json" \
+#      --data '{
+#           "connector.class":"io.confluent.connect.replicator.ReplicatorSourceConnector",
+#           "value.converter": "io.confluent.connect.avro.AvroConverter",
+#           "value.converter.schema.registry.url": "http://schema-registry-us:8081",
+#           "value.converter.connect.meta.data": "false",
+#           "src.consumer.group.id": "replicate-europe-to-us",
+#           "src.consumer.interceptor.classes": "io.confluent.monitoring.clients.interceptor.MonitoringConsumerInterceptor",
+#           "src.consumer.confluent.monitoring.interceptor.bootstrap.servers": "broker-metrics:9092",
+#           "src.kafka.bootstrap.servers": "broker-europe:9092",
+#           "src.value.converter": "io.confluent.connect.avro.AvroConverter",
+#           "src.value.converter.schema.registry.url": "http://schema-registry-europe:8081",
+#           "dest.kafka.bootstrap.servers": "broker-us:9092",
+#           "confluent.topic.replication.factor": 1,
+#           "provenance.header.enable": true,
+#           "topic.whitelist": "sales_EUROPE",
+#           "topic.config.sync": "true"
+#           }' \
+#      http://localhost:8083/connectors/replicate-europe-to-us/config | jq .
+     
 
 log "Verify we have received the data in all the sales_ topics in the US"
 docker container exec -i connect-us bash -c "kafka-console-consumer --bootstrap-server broker-us:9092 --whitelist 'sales_.*' --from-beginning --property print.key=true --property key.separator=, --max-messages 2"
