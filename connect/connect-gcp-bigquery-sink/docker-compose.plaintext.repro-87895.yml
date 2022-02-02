@@ -26,7 +26,7 @@ services:
     container_name: producer-87895-2
     environment:
       KAFKA_BOOTSTRAP_SERVERS: broker:9092
-      TOPIC: "customer-avro2"
+      TOPIC: "customer-avro"
       REPLICATION_FACTOR: 1
       NUMBER_OF_PARTITIONS: 1
       MESSAGE_BACKOFF: 1000 # Frequency of message injection

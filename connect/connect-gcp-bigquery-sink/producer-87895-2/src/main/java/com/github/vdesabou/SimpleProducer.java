@@ -73,24 +73,21 @@ public class SimpleProducer {
 
         try (Producer<MyKey, Customer> producer = new KafkaProducer<>(properties)) {
             long id = 0;
-            while (id < 10) {
-                MyKey myKey = MyKey.newBuilder()
-                        .setKEY(id)
-                        .build();
+            MyKey myKey = MyKey.newBuilder()
+                    .setKEY(id)
+                    .build();
 
-                Customer customer = Customer.newBuilder()
-                        .setCount(id)
-                        .setFirstName(faker.name().firstName())
-                        .setLastName(faker.name().lastName())
-                        .setAddress(faker.address().streetAddress())
-                        .build();
+            Customer customer = Customer.newBuilder()
+                    .setCount(id)
+                    .setFirstName(faker.name().firstName())
+                    .setLastName(faker.name().lastName())
+                    .setAddress(faker.address().streetAddress())
+                    .build();
 
-                ProducerRecord<MyKey, Customer> record = new ProducerRecord<>(topicName, myKey, null);
-                logger.info("Sending Key = {}, Value = {}", record.key(), record.value());
-                producer.send(record,(recordMetadata, exception) -> sendCallback(record, recordMetadata,exception));
-                id++;
-                TimeUnit.MILLISECONDS.sleep(messageBackOff);
-            }
+            ProducerRecord<MyKey, Customer> record = new ProducerRecord<>(topicName, myKey, null);
+            logger.info("Sending Key = {}, Value = {}", record.key(), record.value());
+            producer.send(record,(recordMetadata, exception) -> sendCallback(record, recordMetadata,exception));
+            TimeUnit.MILLISECONDS.sleep(messageBackOff);
         }
     }
 
