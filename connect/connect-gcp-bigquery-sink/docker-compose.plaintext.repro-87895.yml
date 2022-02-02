@@ -11,7 +11,7 @@ services:
       KAFKA_BOOTSTRAP_SERVERS: broker:9092
       TOPIC: "customer-avro"
       REPLICATION_FACTOR: 1
-      NUMBER_OF_PARTITIONS: 1
+      NUMBER_OF_PARTITIONS: 6
       MESSAGE_BACKOFF: 1000 # Frequency of message injection
       KAFKA_ACKS: "all" # default: "1"
       KAFKA_REQUEST_TIMEOUT_MS: 20000
@@ -28,7 +28,7 @@ services:
       KAFKA_BOOTSTRAP_SERVERS: broker:9092
       TOPIC: "customer-avro"
       REPLICATION_FACTOR: 1
-      NUMBER_OF_PARTITIONS: 1
+      NUMBER_OF_PARTITIONS: 6
       MESSAGE_BACKOFF: 1000 # Frequency of message injection
       KAFKA_ACKS: "all" # default: "1"
       KAFKA_REQUEST_TIMEOUT_MS: 20000
