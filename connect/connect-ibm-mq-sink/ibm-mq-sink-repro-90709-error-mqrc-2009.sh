@@ -37,7 +37,7 @@ This is my message
 EOF
 
 curl --request PUT \
-  --url http://localhost:8083/admin/loggers/io.confluent.connect.jms \
+  --url http://localhost:8083/admin/loggers/io.confluent.connect.utils \
   --header 'Accept: application/json' \
   --header 'Content-Type: application/json' \
   --data '{
@@ -76,7 +76,18 @@ grep "my message" /tmp/result.log
 
 log "Blocking traffic from IBM MQ $IP"
 IP=$(docker inspect -f '{{.Name}} - {{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' $(docker ps -aq) | grep ibmmq | cut -d " " -f 3)
-docker exec --privileged --user root connect bash -c "iptables -A INPUT -p tcp -s $IP -j DROP"
+docker exec --privileged --user root connect bash -c "iptables -A INPUT -p tcp -s $IP -j REJECT"
+
+log "Sending messages to topic sink-messages"
+docker exec -i broker kafka-console-producer --broker-list broker:9092 --topic sink-messages << EOF
+This is my message
+EOF
+
+exit 0
+
+log "Unblocking traffic from IBM MQ $IP"
+IP=$(docker inspect -f '{{.Name}} - {{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' $(docker ps -aq) | grep ibmmq | cut -d " " -f 3)
+docker exec --privileged --user root connect bash -c "iptables -D INPUT -p tcp -s $IP -j REJECT"
 
 
 # [2022-02-02 15:08:49,763] WARN [ibm-mq-sink|task-0] Could not produce message. Will retry for 60000 millis (io.confluent.connect.jms.BaseJmsSinkTask:182)
