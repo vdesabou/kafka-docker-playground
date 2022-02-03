@@ -62,8 +62,7 @@ then
                     "key.converter":"org.apache.kafka.connect.storage.StringConverter",
                     "value.converter":"io.confluent.connect.avro.AvroConverter",
                     "value.converter.schema.registry.url":"http://schema-registry:8081",
-                    "schema.compatibility":"BACKWARD",
-                    "format.class": "io.confluent.connect.hdfs3.parquet.ParquetFormat"
+                    "schema.compatibility":"BACKWARD"
                }' \
           http://localhost:8083/connectors/hdfs3-sink/config | jq .
 else
@@ -136,6 +135,16 @@ sleep 10
 #         at org.apache.kafka.connect.data.ConnectSchema.validateValue(ConnectSchema.java:213)
 #         at org.apache.kafka.connect.data.SchemaBuilder.defaultValue(SchemaBuilder.java:129)
 #         ... 24 more
+
+log "Update schema"
+curl -X POST http://localhost:8081/subjects/customer_avro-value/versions \
+  --header 'Content-Type: application/vnd.schemaregistry.v1+json' \
+  --data '
+{
+    "schema": "{\"type\":\"record\",\"namespace\":\"com.github.vdesabou\",\"name\":\"Customer\",\"fields\":[{\"type\":\"string\",\"name\":\"f1\"},{\"default\":null,\"type\": [ \"null\",\"string\"],\"name\":\"partition_date\"}]}"
+}'
+
+seq -f "{\"f1\": \"value%g\",\"partition_date\": { \"string\": \"test\"}}" 10 | docker exec -i connect kafka-avro-console-producer --broker-list broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic customer_avro --property value.schema='{"type":"record","namespace":"com.github.vdesabou","name":"Customer","fields":[{"type":"string","name":"f1"},{"default":null,"type":["null","string"],"name":"partition_date"}]}'
 
 log "Listing content of /topics/customer_avro in HDFS"
 docker exec namenode bash -c "/opt/hadoop-3.1.3/bin/hdfs dfs -ls /topics/customer_avro"
