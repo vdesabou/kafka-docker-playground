@@ -24,6 +24,7 @@ curl -X PUT \
           "connector.class": "io.confluent.connect.http.HttpSinkConnector",
           "key.converter": "org.apache.kafka.connect.storage.StringConverter",
           "value.converter": "org.apache.kafka.connect.storage.StringConverter",
+          "confluent.license": "",
           "confluent.topic.bootstrap.servers": "broker:9092",
           "confluent.topic.replication.factor": "1",
           "confluent.topic.ssl.keystore.location" : "/etc/kafka/secrets/kafka.connect.keystore.jks",
