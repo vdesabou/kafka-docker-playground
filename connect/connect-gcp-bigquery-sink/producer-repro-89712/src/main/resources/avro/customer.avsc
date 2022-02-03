@@ -1,0 +1,64 @@
+{
+    "fields": [
+        {
+            "name": "bd_entr_no_enc",
+            "type": "string"
+        },
+        {
+            "name": "sd_cell_id",
+            "type": "string"
+        },
+        {
+            "name": "a_field_01_enc",
+            "type": "string"
+        },
+        {
+            "name": "ik_a_field_01_enc",
+            "type": "string"
+        },
+        {
+            "name": "a_field_02",
+            "type": "string"
+        },
+        {
+            "name": "a_field_03",
+            "type": "string"
+        },
+        {
+            "name": "a_field_04",
+            "type": "string"
+        },
+        {
+            "name": "a_field_05",
+            "type": "string"
+        },
+        {
+            "name": "a_field_06",
+            "type": "string"
+        },
+        {
+            "name": "a_field_07",
+            "type": "string"
+        },
+        {
+            "name": "a_field_08",
+            "type": "string"
+        },
+        {
+            "name": "a_field_09",
+            "type": "string"
+        },
+        {
+            "name": "a_field_10",
+            "type": "string"
+        },
+        {
+            "logicalType": "date",
+            "name": "p_yyyymmdd",
+            "type": "int"
+        }
+    ],
+    "name": "Customer",
+    "namespace": "com.github.vdesabou",
+    "type": "record"
+}
