@@ -1,0 +1,22 @@
+---
+version: '3.5'
+services:
+
+  singlestore:
+    image:  memsql/cluster-in-a-box
+    hostname: singlestore
+    container_name: singlestore
+    environment:
+      LICENSE_KEY: "BDY3MWY1YjBlODE5MTQ5MzFiN2U3YjE5MmIxZTA3MjE1AAAAAAAAAAAEAAAAAAAAAAwwNAIYCEGeOFLkBLpI/heNrajZSFMOCSk7070QAhgaIkGN1St1VNrSETEYU5FpyrKXI7uR3LoAAA=="
+      ROOT_PASSWORD: "root"
+
+  connect:
+    depends_on:
+      - zookeeper
+      - broker
+      - schema-registry
+      - singlestore
+    volumes:
+        - ../../connect/connect-singlestore-sink/singlestore-jdbc-client-1.0.1.jar:/usr/share/confluent-hub-components/singlestore-singlestore-kafka-connector/lib/singlestore-jdbc-client-1.0.1.jar
+    environment:
+      CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/singlestore-singlestore-kafka-connector
