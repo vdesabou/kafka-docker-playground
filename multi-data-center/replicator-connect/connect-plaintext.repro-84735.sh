@@ -22,42 +22,18 @@ docker exec -i connect-europe kafka-avro-console-producer --broker-list broker-e
 EOF
 
 log "Create replicator"
-docker container exec connect-us \
-curl -X PUT \
-     -H "Content-Type: application/json" \
-     --data '{
-          "connector.class":"io.confluent.connect.replicator.ReplicatorSourceConnector",
-          "key.converter": "io.confluent.connect.replicator.util.ByteArrayConverter",
-          "value.converter": "io.confluent.connect.replicator.util.ByteArrayConverter",
-          "header.converter": "io.confluent.connect.replicator.util.ByteArrayConverter",
-          "src.consumer.group.id": "replicate-europe-to-us",
-          "src.consumer.interceptor.classes": "io.confluent.monitoring.clients.interceptor.MonitoringConsumerInterceptor",
-          "src.consumer.confluent.monitoring.interceptor.bootstrap.servers": "broker-metrics:9092",
-          "src.kafka.bootstrap.servers": "broker-europe:9092",
-          "dest.kafka.bootstrap.servers": "broker-us:9092",
-          "confluent.topic.replication.factor": 1,
-          "provenance.header.enable": true,
-          "topic.whitelist": "sales_EUROPE",
-          "topic.config.sync": "true"
-          }' \
-     http://localhost:8083/connectors/replicate-europe-to-us/config | jq .
-
-# working with avroconverter
-
 # docker container exec connect-us \
 # curl -X PUT \
 #      -H "Content-Type: application/json" \
 #      --data '{
 #           "connector.class":"io.confluent.connect.replicator.ReplicatorSourceConnector",
-#           "value.converter": "io.confluent.connect.avro.AvroConverter",
-#           "value.converter.schema.registry.url": "http://schema-registry-us:8081",
-#           "value.converter.connect.meta.data": "false",
+#           "key.converter": "io.confluent.connect.replicator.util.ByteArrayConverter",
+#           "value.converter": "io.confluent.connect.replicator.util.ByteArrayConverter",
+#           "header.converter": "io.confluent.connect.replicator.util.ByteArrayConverter",
 #           "src.consumer.group.id": "replicate-europe-to-us",
 #           "src.consumer.interceptor.classes": "io.confluent.monitoring.clients.interceptor.MonitoringConsumerInterceptor",
 #           "src.consumer.confluent.monitoring.interceptor.bootstrap.servers": "broker-metrics:9092",
 #           "src.kafka.bootstrap.servers": "broker-europe:9092",
-#           "src.value.converter": "io.confluent.connect.avro.AvroConverter",
-#           "src.value.converter.schema.registry.url": "http://schema-registry-europe:8081",
 #           "dest.kafka.bootstrap.servers": "broker-us:9092",
 #           "confluent.topic.replication.factor": 1,
 #           "provenance.header.enable": true,
@@ -65,10 +41,34 @@ curl -X PUT \
 #           "topic.config.sync": "true"
 #           }' \
 #      http://localhost:8083/connectors/replicate-europe-to-us/config | jq .
+
+# working with avroconverter
+
+docker container exec connect-us \
+curl -X PUT \
+     -H "Content-Type: application/json" \
+     --data '{
+          "connector.class":"io.confluent.connect.replicator.ReplicatorSourceConnector",
+          "value.converter": "io.confluent.connect.avro.AvroConverter",
+          "value.converter.schema.registry.url": "http://schema-registry-us:8081",
+          "value.converter.connect.meta.data": "false",
+          "src.consumer.group.id": "replicate-europe-to-us",
+          "src.consumer.interceptor.classes": "io.confluent.monitoring.clients.interceptor.MonitoringConsumerInterceptor",
+          "src.consumer.confluent.monitoring.interceptor.bootstrap.servers": "broker-metrics:9092",
+          "src.kafka.bootstrap.servers": "broker-europe:9092",
+          "src.value.converter": "io.confluent.connect.avro.AvroConverter",
+          "src.value.converter.schema.registry.url": "http://schema-registry-europe:8081",
+          "dest.kafka.bootstrap.servers": "broker-us:9092",
+          "confluent.topic.replication.factor": 1,
+          "provenance.header.enable": true,
+          "topic.whitelist": "sales_EUROPE",
+          "topic.config.sync": "true"
+          }' \
+     http://localhost:8083/connectors/replicate-europe-to-us/config | jq .
      
 
 log "Verify we have received the data in all the sales_ topics in the US"
-docker container exec -i connect-us bash -c "kafka-console-consumer --bootstrap-server broker-us:9092 --whitelist 'sales_.*' --from-beginning --property print.key=true --property key.separator=, --max-messages 2"
+docker container exec -i connect-us bash -c "kafka-avro-console-consumer --bootstrap-server broker-us:9092 --property schema.registry.url=http://schema-registry-us:8081 --whitelist 'sales_.*' --from-beginning --property print.key=true --property key.separator=, --max-messages 2"
 
 
 log "Verify the destination topic has confluent.value.schema.validation=true"
@@ -95,17 +95,17 @@ docker container exec -i broker-us kafka-topics --describe --topic sales_EUROPE 
 # [2022-02-02 10:25:36,363] INFO [replicate-europe-to-us|task-0] WorkerSourceTask{id=replicate-europe-to-us-0} Committing offsets (org.apache.kafka.connect.runtime.WorkerSourceTask:478)
 # [2022-02-02 10:25:36,364] INFO [replicate-europe-to-us|task-0] WorkerSourceTask{id=replicate-europe-to-us-0} flushing 2 outstanding messages for offset commit (org.apache.kafka.connect.runtime.WorkerSourceTask:495)
 # [2022-02-02 10:25:41,364] ERROR [replicate-europe-to-us|task-0] WorkerSourceTask{id=replicate-europe-to-us-0} Failed to flush, timed out while waiting for producer to flush outstanding 2 messages (org.apache.kafka.connect.runtime.WorkerSourceTask:500)
-# [2022-02-02 10:25:41,364] ERROR [replicate-europe-to-us|task-0] WorkerSourceTask{id=replicate-europe-to-us-0} Task threw an uncaught and unrecoverable exception. Task is being killed and will not recover until manually restarted (org.apache.kafka.connect.runtime.WorkerTask:187)
-# org.apache.kafka.connect.errors.ConnectException: Unrecoverable exception from producer send callback
-#         at org.apache.kafka.connect.runtime.WorkerSourceTask.maybeThrowProducerSendException(WorkerSourceTask.java:282)
-#         at org.apache.kafka.connect.runtime.WorkerSourceTask.execute(WorkerSourceTask.java:251)
-#         at org.apache.kafka.connect.runtime.WorkerTask.doRun(WorkerTask.java:185)
-#         at org.apache.kafka.connect.runtime.WorkerTask.run(WorkerTask.java:234)
-#         at java.base/java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:515)
-#         at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:264)
-#         at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1128)
-#         at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:628)
-#         at java.base/java.lang.Thread.run(Thread.java:834)
+[2022-02-02 10:25:41,364] ERROR [replicate-europe-to-us|task-0] WorkerSourceTask{id=replicate-europe-to-us-0} Task threw an uncaught and unrecoverable exception. Task is being killed and will not recover until manually restarted (org.apache.kafka.connect.runtime.WorkerTask:187)
+org.apache.kafka.connect.errors.ConnectException: Unrecoverable exception from producer send callback
+        at org.apache.kafka.connect.runtime.WorkerSourceTask.maybeThrowProducerSendException(WorkerSourceTask.java:282)
+        at org.apache.kafka.connect.runtime.WorkerSourceTask.execute(WorkerSourceTask.java:251)
+        at org.apache.kafka.connect.runtime.WorkerTask.doRun(WorkerTask.java:185)
+        at org.apache.kafka.connect.runtime.WorkerTask.run(WorkerTask.java:234)
+        at java.base/java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:515)
+        at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:264)
+        at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1128)
+        at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:628)
+        at java.base/java.lang.Thread.run(Thread.java:834)
 # Caused by: org.apache.kafka.common.InvalidRecordException: One or more records have been rejected
 # [2022-02-02 10:25:41,365] INFO [replicate-europe-to-us|task-0] Closing kafka replicator task replicate-europe-to-us-0 (io.confluent.connect.replicator.ReplicatorSourceTask:1187)
 # [2022-02-02 10:25:41,365] INFO [replicate-europe-to-us|task-0] App info kafka.admin.client for adminclient-17 unregistered (org.apache.kafka.common.utils.AppInfoParser:83)
