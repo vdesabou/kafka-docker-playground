@@ -60,8 +60,7 @@ curl -X PUT \
                "errors.log.enable": "true",
                "errors.log.include.messages": "true",
                "errors.retry.delay.max.ms": "60000",
-               "errors.retry.timeout": "0",
-               "max.retries": "0"
+               "errors.retry.timeout": "0"
           }' \
      http://localhost:8083/connectors/sqlserver-sink/config | jq .
 
