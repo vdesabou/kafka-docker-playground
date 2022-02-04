@@ -14,12 +14,27 @@ services:
       - '1414:1414'
       - '9443:9443'
 
+  zazkia:
+    hostname: zazkia
+    container_name: zazkia
+    image: emicklei/zazkia
+    ports:
+      - "9191:9191"
+    volumes:
+      - ../../connect/connect-ibm-mq-sink/zazkia-repro-90709-error-mqrc-2009:/data
+
+
   connect:
     depends_on:
       - zookeeper
       - broker
       - schema-registry
       - ibmmq
+    privileged: true
+    sysctls:
+      - net.ipv4.tcp_keepalive_intvl=10
+      - net.ipv4.tcp_keepalive_probes=15
+      - net.ipv4.tcp_keepalive_time=60
     volumes:
         - ../../connect/connect-ibm-mq-sink/com.ibm.mq.allclient.jar:/usr/share/confluent-hub-components/confluentinc-kafka-connect-ibmmq-sink/lib/com.ibm.mq.allclient.jar
         - ../../connect/connect-ibm-mq-sink/jms.jar:/usr/share/confluent-hub-components/confluentinc-kafka-connect-ibmmq-sink/lib/jms.jar
