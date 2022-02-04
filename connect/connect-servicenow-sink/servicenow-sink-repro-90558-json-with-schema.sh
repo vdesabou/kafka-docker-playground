@@ -67,17 +67,54 @@ fi
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.repro-90558-json-with-schema.yml"
 
 #  Using JSON with schema (and key):
-docker exec -i broker kafka-console-producer --broker-list broker:9092 --topic test_table --property parse.key=true --property key.separator=, << EOF
-1,{"payload":{"u_price":2.75,"u_quantity":3,"u_name":"scissors"},"schema":{"fields":[{"field":"u_name","optional":false,"type":"string"},{"field":"u_price","optional":false,"type":"float"},{"field":"u_quantity","optional":false,"type":"int32"}],"type":"struct"}}
+# docker exec -i broker kafka-console-producer --broker-list broker:9092 --topic test_table_int642 --property parse.key=true --property key.separator=, << EOF
+# 1,{"payload":{"u_price":2.75,"u_quantity":3,"u_name":"scissors"},"schema":{"fields":[{"field":"u_name","optional":false,"type":"string"},{"field":"u_price","optional":false,"type":"float"},{"field":"u_quantity","optional":false,"type":"int64"}],"type":"struct"}}
+# EOF
+
+# when setting a key, getting (because sys_id is not GUID probably https://docs.servicenow.com/bundle/rome-platform-administration/page/administer/table-administration/concept/c_UniqueRecordIdentifier.html):
+
+# [2022-02-04 12:24:56,012] ERROR [servicenow-sink2|task-0] WorkerSinkTask{id=servicenow-sink2-0} Task threw an uncaught and unrecoverable exception. Task is being killed and will not recover until manually restarted (org.apache.kafka.connect.runtime.WorkerTask:206)
+# org.apache.kafka.connect.errors.ConnectException: Exiting WorkerSinkTask due to unrecoverable exception.
+#         at org.apache.kafka.connect.runtime.WorkerSinkTask.deliverMessages(WorkerSinkTask.java:638)
+#         at org.apache.kafka.connect.runtime.WorkerSinkTask.poll(WorkerSinkTask.java:334)
+#         at org.apache.kafka.connect.runtime.WorkerSinkTask.iteration(WorkerSinkTask.java:235)
+#         at org.apache.kafka.connect.runtime.WorkerSinkTask.execute(WorkerSinkTask.java:204)
+#         at org.apache.kafka.connect.runtime.WorkerTask.doRun(WorkerTask.java:199)
+#         at org.apache.kafka.connect.runtime.WorkerTask.run(WorkerTask.java:254)
+#         at java.base/java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:515)
+#         at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:264)
+#         at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1128)
+#         at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:628)
+#         at java.base/java.lang.Thread.run(Thread.java:829)
+# Caused by: io.confluent.connect.utils.retry.RetryCountExceeded: Failed after 4 attempts to send request to ServiceNow: 404 Not Found
+# {"error":{"message":"No Record found","detail":"Record doesn't exist or ACL restricts the record retrieval"},"status":"failure"}
+#         at io.confluent.connect.utils.retry.RetryPolicy.callWith(RetryPolicy.java:429)
+#         at io.confluent.connect.utils.retry.RetryPolicy.call(RetryPolicy.java:337)
+#         at io.confluent.connect.servicenow.rest.ServiceNowClientImpl.executeRequest(ServiceNowClientImpl.java:245)
+#         at io.confluent.connect.servicenow.rest.ServiceNowClientImpl.doRequest(ServiceNowClientImpl.java:241)
+#         at io.confluent.connect.servicenow.rest.ServiceNowClientImpl.put(ServiceNowClientImpl.java:176)
+#         at io.confluent.connect.servicenow.ServiceNowSinkTask.put(ServiceNowSinkTask.java:58)
+#         at org.apache.kafka.connect.runtime.WorkerSinkTask.deliverMessages(WorkerSinkTask.java:604)
+#         ... 10 more
+# Caused by: com.google.api.client.http.HttpResponseException: 404 Not Found
+# {"error":{"message":"No Record found","detail":"Record doesn't exist or ACL restricts the record retrieval"},"status":"failure"}
+#         at com.google.api.client.http.HttpRequest.execute(HttpRequest.java:1097)
+#         at io.confluent.connect.servicenow.rest.ServiceNowClientImpl.lambda$executeRequest$2(ServiceNowClientImpl.java:246)
+#         at io.confluent.connect.utils.retry.RetryPolicy.lambda$call$1(RetryPolicy.java:337)
+#         at io.confluent.connect.utils.retry.RetryPolicy.callWith(RetryPolicy.java:417)
+#         ... 16 more
+
+docker exec -i broker kafka-console-producer --broker-list broker:9092 --topic test_table << EOF
+{"payload":{"u_price":2.75,"u_quantity":3,"u_name":"scissors"},"schema":{"fields":[{"field":"u_name","optional":false,"type":"string"},{"field":"u_price","optional":false,"type":"float"},{"field":"u_quantity","optional":false,"type":"int64"}],"type":"struct"}}
 EOF
 
-curl --request PUT \
-  --url http://localhost:8083/admin/loggers/io.confluent.connect.servicenow. \
-  --header 'Accept: application/json' \
-  --header 'Content-Type: application/json' \
-  --data '{
-	"level": "TRACE"
-}'
+# curl --request PUT \
+#   --url http://localhost:8083/admin/loggers/io.confluent.connect.servicenow. \
+#   --header 'Accept: application/json' \
+#   --header 'Content-Type: application/json' \
+#   --data '{
+# 	"level": "TRACE"
+# }'
 
 log "Creating ServiceNow Sink connector"
 curl -X PUT \
