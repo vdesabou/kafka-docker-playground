@@ -36,16 +36,9 @@ if ! version_gt $TAG_BASE "5.9.9"; then
      set +e
      create_topic $MQTT_TOPIC
      set -e
+
+     sleep 30
 fi
-
-
-curl --request PUT \
-  --url http://localhost:8083/admin/loggers/io.confluent.connect.mqtt \
-  --header 'Accept: application/json' \
-  --header 'Content-Type: application/json' \
-  --data '{
-	"level": "TRACE"
-}'
 
 log "Creating MQTT Source connector"
 curl -X PUT \

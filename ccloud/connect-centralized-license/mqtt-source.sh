@@ -12,6 +12,18 @@ else
      export CONNECT_CONTAINER_HOME_DIR="/root"
 fi
 
+set +e
+delete_topic my_license_topic
+set -e
+
+MQTT_TOPIC=kafka_docker_pg_mqtt$TAG
+MQTT_TOPIC=${MQTT_TOPIC//[-.]/}
+
+set +e
+delete_topic $MQTT_TOPIC
+set -e
+
+
 ${DIR}/../../ccloud/environment/start.sh "${PWD}/docker-compose.mqtt-source.yml"
 
 if [ -f /tmp/delta_configs/env.delta ]
@@ -22,15 +34,6 @@ else
      exit 1
 fi
 #############
-
-MQTT_TOPIC=kafka_docker_pg_mqtt$TAG
-MQTT_TOPIC=${MQTT_TOPIC//[-.]/}
-
-set +e
-delete_topic $MQTT_TOPIC
-delete_topic my_license_topic
-set -e
-
 
 log "Creating MQTT Source connector"
 curl -X PUT \
