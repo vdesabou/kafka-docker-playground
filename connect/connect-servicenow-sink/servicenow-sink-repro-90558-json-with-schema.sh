@@ -54,22 +54,30 @@ then
      exit 1
 fi
 
-if [ ! -z "$CI" ]
-then
-     # this is github actions
-     set +e
-     log "Waking up servicenow instance..."
-     docker run -e USERNAME="$SERVICENOW_DEVELOPER_USERNAME" -e PASSWORD="$SERVICENOW_DEVELOPER_PASSWORD" ruthless/servicenow-instance-wakeup:latest
-     set -e
-     wait_for_end_of_hibernation
-fi
+# if [ ! -z "$CI" ]
+# then
+#      # this is github actions
+#      set +e
+#      log "Waking up servicenow instance..."
+#      docker run -e USERNAME="$SERVICENOW_DEVELOPER_USERNAME" -e PASSWORD="$SERVICENOW_DEVELOPER_PASSWORD" ruthless/servicenow-instance-wakeup:latest
+#      set -e
+#      wait_for_end_of_hibernation
+# fi
 
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.repro-90558-json-with-schema.yml"
 
 #  Using JSON with schema (and key):
 docker exec -i broker kafka-console-producer --broker-list broker:9092 --topic test_table --property parse.key=true --property key.separator=, << EOF
-1,{"payload":{"u_price":2.75,"u_quantity":3,"u_name":"scissors"},"schema":{"fields":[{"field":"u_name","optional":false,"type":"string"},{"field":"u_price","optional":false,"type":"float"},{"field":"u_quantity","optional":false,"type":"int"}],"type":"struct"}}
+1,{"payload":{"u_price":2.75,"u_quantity":3,"u_name":"scissors"},"schema":{"fields":[{"field":"u_name","optional":false,"type":"string"},{"field":"u_price","optional":false,"type":"float"},{"field":"u_quantity","optional":false,"type":"int32"}],"type":"struct"}}
 EOF
+
+curl --request PUT \
+  --url http://localhost:8083/admin/loggers/io.confluent.connect.servicenow. \
+  --header 'Accept: application/json' \
+  --header 'Content-Type: application/json' \
+  --data '{
+	"level": "TRACE"
+}'
 
 log "Creating ServiceNow Sink connector"
 curl -X PUT \
@@ -99,8 +107,36 @@ curl -X PUT \
                     "confluent.topic.bootstrap.servers": "broker:9092",
                     "confluent.topic.replication.factor": "1"
           }' \
-     http://localhost:8083/connectors/servicenow-sink/config | jq .
+     http://localhost:8083/connectors/servicenow-sink2/config | jq .
 
+# with "field":"u_quantity","optional":false,"type":"number"
+# docker exec -i broker kafka-console-producer --broker-list broker:9092 --topic test_table --property parse.key=true --property key.separator=, << EOF
+# 1,{"payload":{"u_price":2.75,"u_quantity":3,"u_name":"scissors"},"schema":{"fields":[{"field":"u_name","optional":false,"type":"string"},{"field":"u_price","optional":false,"type":"float"},{"field":"u_quantity","optional":false,"type":"number"}],"type":"struct"}}
+# EOF
+
+# [2022-02-04 11:48:25,200] ERROR [servicenow-sink|task-0] WorkerSinkTask{id=servicenow-sink-0} Error converting message value in topic 'test_table' partition 0 at offset 0 and timestamp 1643975283347: Unknown schema type: number (org.apache.kafka.connect.runtime.WorkerSinkTask:565)
+# org.apache.kafka.connect.errors.DataException: Unknown schema type: number
+#         at org.apache.kafka.connect.json.JsonConverter.asConnectSchema(JsonConverter.java:497)
+#         at org.apache.kafka.connect.json.JsonConverter.asConnectSchema(JsonConverter.java:493)
+#         at org.apache.kafka.connect.json.JsonConverter.toConnectData(JsonConverter.java:340)
+#         at org.apache.kafka.connect.storage.Converter.toConnectData(Converter.java:87)
+#         at org.apache.kafka.connect.runtime.WorkerSinkTask.convertValue(WorkerSinkTask.java:563)
+#         at org.apache.kafka.connect.runtime.WorkerSinkTask.lambda$convertAndTransformRecord$5(WorkerSinkTask.java:519)
+#         at org.apache.kafka.connect.runtime.errors.RetryWithToleranceOperator.execAndRetry(RetryWithToleranceOperator.java:166)
+#         at org.apache.kafka.connect.runtime.errors.RetryWithToleranceOperator.execAndHandleError(RetryWithToleranceOperator.java:200)
+#         at org.apache.kafka.connect.runtime.errors.RetryWithToleranceOperator.execute(RetryWithToleranceOperator.java:142)
+#         at org.apache.kafka.connect.runtime.WorkerSinkTask.convertAndTransformRecord(WorkerSinkTask.java:519)
+#         at org.apache.kafka.connect.runtime.WorkerSinkTask.convertMessages(WorkerSinkTask.java:494)
+#         at org.apache.kafka.connect.runtime.WorkerSinkTask.poll(WorkerSinkTask.java:333)
+#         at org.apache.kafka.connect.runtime.WorkerSinkTask.iteration(WorkerSinkTask.java:235)
+#         at org.apache.kafka.connect.runtime.WorkerSinkTask.execute(WorkerSinkTask.java:204)
+#         at org.apache.kafka.connect.runtime.WorkerTask.doRun(WorkerTask.java:199)
+#         at org.apache.kafka.connect.runtime.WorkerTask.run(WorkerTask.java:254)
+#         at java.base/java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:515)
+#         at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:264)
+#         at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1128)
+#         at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:628)
+#         at java.base/java.lang.Thread.run(Thread.java:829)
 
 sleep 15
 
