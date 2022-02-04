@@ -20,6 +20,15 @@ then
      exit 1
 fi
 
+set +e
+delete_topic my_license_topic
+set -e
+
+log "Creating topic in Confluent Cloud (auto.create.topics.enable=false)"
+set +e
+create_topic stats
+set -e
+
 ${DIR}/../../ccloud/environment/start.sh "${PWD}/docker-compose.gcp-bigtable.yml"
 
 if [ -f /tmp/delta_configs/env.delta ]
@@ -67,9 +76,7 @@ curl -X PUT \
                "gcp.bigtable.project.id": "'"$PROJECT"'",
                "auto.create.tables": "true",
                "auto.create.column.families": "true",
-               "table.name.format" : "kafka_${topic}",
-               "topic.creation.default.replication.factor": "-1",
-               "topic.creation.default.partitions": "-1"
+               "table.name.format" : "kafka_${topic}"
           }' \
      http://localhost:8083/connectors/gcp-bigtable-sink/config | jq .
 
@@ -103,6 +110,14 @@ sleep 30
 #         at org.apache.kafka.connect.runtime.WorkerConnector.doTransitionTo(WorkerConnector.java:349)
 #         at org.apache.kafka.connect.runtime.WorkerConnector.doTransitionTo(WorkerConnector.java:332)
 #         ... 7 more
+
+# With MQTT, I see:
+
+# [2022-02-04 10:09:28,010] INFO MqttSourceConnectorConfig values: 
+# 	confluent.license = 
+# 	confluent.topic = my_license_topic
+# 	confluent.topic.bootstrap.servers = [pkc-xxx:9092]
+# 	confluent.topic.replication.factor = 3
 
 log "Verify data is in GCP BigTable"
 docker run -i --volumes-from gcloud-config google/cloud-sdk:latest cbt -project $PROJECT -instance $INSTANCE read kafka_stats > /tmp/result.log  2>&1
