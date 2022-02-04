@@ -1,0 +1,20 @@
+[
+    {
+        "label": "IBM",
+        "service-hostname": "ibmmq",
+        "service-port": 1414,
+        "listen-port": 49998,
+        "transport": {
+            "accept-connections": true,
+            "throttle-service-response": 0,
+            "delay-service-response": 0,
+            "break-service-response": 0,
+            "service-response-corrupt-method": "",
+            "sending-to-client": true,
+            "receiving-from-client": true,
+            "sending-to-service": true,
+            "receiving-from-service": true,
+            "verbose": true
+        }
+    }
+]
