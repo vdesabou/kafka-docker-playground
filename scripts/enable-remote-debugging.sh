@@ -4,6 +4,12 @@ IGNORE_CHECK_FOR_DOCKER_COMPOSE=true
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../scripts/utils.sh
 
+# For ccloud case
+if [ -f /tmp/delta_configs/env.delta ]
+then
+     source /tmp/delta_configs/env.delta
+fi
+
 component=${1:-connect}
 
 if [ ! -f /tmp/playground-command ]
