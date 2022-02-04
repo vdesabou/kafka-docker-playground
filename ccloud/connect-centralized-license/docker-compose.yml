@@ -1,0 +1,25 @@
+---
+version: '3.5'
+services:
+  mosquitto:
+    image: eclipse-mosquitto:1.6.13
+    hostname: mosquitto
+    container_name: mosquitto
+    ports:
+      - 9001:9001
+      - 1883:1883
+    volumes:
+      - ../../ccloud/connect-mqtt-source/mosquitto.conf:/mosquitto/config/mosquitto.conf
+      - ../../ccloud/connect-mqtt-source/password:/etc/mosquitto/passwd
+
+  connect:
+    depends_on:
+      - mosquitto
+    environment:
+      CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-mqtt
+      CONNECT_CONFLUENT_TOPIC: "my_license_topic"
+#      CONNECT_CONFLUENT_TOPIC_BOOTSTRAP_SERVERS: "server:port"
+      CONNECT_CONFLUENT_TOPIC_SECURITY_PROTOCOL: "SASL_SSL"
+      CONNECT_CONFLUENT_TOPIC_REPLICATION_FACTOR: "3"
+      CONNECT_CONFLUENT_TOPIC_SASL_MECHANISM: "PLAIN"
+      CONNECT_CONFLUENT_TOPIC_SASL_JAAS_CONFIG: $SASL_JAAS_CONFIG
