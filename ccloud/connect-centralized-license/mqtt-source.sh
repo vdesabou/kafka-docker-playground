@@ -12,7 +12,7 @@ else
      export CONNECT_CONTAINER_HOME_DIR="/root"
 fi
 
-${DIR}/../../ccloud/environment/start.sh "${PWD}/docker-compose.yml"
+${DIR}/../../ccloud/environment/start.sh "${PWD}/docker-compose.mqtt-source.yml"
 
 if [ -f /tmp/delta_configs/env.delta ]
 then
