@@ -27,11 +27,11 @@ log "Oracle DB has started!"
 sleep 60
 
 log "Set multiple LOG_ARCHIVE_DEST_x"
-docker exec -i oracle bash -c "ORACLE_SID=ORCLCDB;export ORACLE_SID;sqlplus /nolog" << EOF
+docker exec -i oracle bash -c "mkdir /tmp/redolog;ORACLE_SID=ORCLCDB;export ORACLE_SID;sqlplus /nolog" << EOF
 CONNECT sys/Admin123 AS SYSDBA
 
 ALTER SYSTEM SET LOG_ARCHIVE_DEST_1='LOCATION=/opt/oracle/product/19c/dbhome_1/dbs/';
-ALTER SYSTEM SET LOG_ARCHIVE_DEST_2='LOCATION=/tmp/';
+ALTER SYSTEM SET LOG_ARCHIVE_DEST_2='LOCATION=/tmp/redolog';
 
   exit;
 EOF
