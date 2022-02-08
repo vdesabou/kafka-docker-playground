@@ -86,19 +86,20 @@ function create_connector () {
           --data '{
                     "connector.class": "com.wepay.kafka.connect.bigquery.BigQuerySinkConnector",
                     "tasks.max" : "1",
-                    "topics" : "customer-avro",
+                    "topics.regex" : "customer-avro.*",
                     "sanitizeFieldNames": "true",
                     "autoCreateTables" : "true",
                     "defaultDataset" : "'"$DATASET"'",
-                    "mergeIntervalMs": "5000",
+                    "mergeIntervalMs": "300000",
                     "bufferSize": "100000",
-                    "maxWriteSize": "10000",
-                    "tableWriteWait": "1000",
+                    "maxWriteSize":"10000",
+                    "queueSize": "10",
+                    "threadPoolSize": "100",
+                    "tableWriteWait": "10",
                     "project" : "'"$PROJECT"'",
                     "keyfile" : "/tmp/keyfile.json",
                     "deleteEnabled": "true",
                     "upsertEnabled": "true",
-                    "avroDataCacheSize": "101",
                     "kafkaKeyFieldName": "KEY",
                     "intermediateTableSuffix": "_intermediate",
                     "key.converter" : "io.confluent.connect.avro.AvroConverter",
@@ -116,7 +117,7 @@ create_connector
 sleep 10
 
 # it is ok
-log "Run the Java producer-87895 (10 records)"
+log "Run the Java producer-87895 (1000 records, except for topic customer-avro10"
 docker exec producer-87895 bash -c "java -jar producer-87895-1.0.0-jar-with-dependencies.jar"
 delete_connector
 create_connector
@@ -126,14 +127,14 @@ exit 0
 sleep 30
 
 delete_connector
-log "Run the Java producer-87895-2 (only one tombstone)"
+log "Run the Java producer-87895-2 (only one tombstone per topic)"
 docker exec producer-87895-2 bash -c "java -jar producer-87895-2-1.0.0-jar-with-dependencies.jar"
 # it is not ok, as last record is a tombstone
 create_connector
 
 
 delete_connector
-log "Run the Java producer-87895 (10 records)"
+log "Run the Java producer-87895 (1000 records, except for topic customer-avro10"
 docker exec producer-87895 bash -c "java -jar producer-87895-1.0.0-jar-with-dependencies.jar"
 # it is ok now since there are valid records since then
 create_connector

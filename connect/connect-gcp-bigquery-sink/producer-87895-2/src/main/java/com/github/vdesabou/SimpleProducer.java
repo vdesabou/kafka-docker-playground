@@ -50,13 +50,13 @@ public class SimpleProducer {
         final Short replicationFactor =  Short.valueOf(System.getenv().getOrDefault("REPLICATION_FACTOR","3"));
 
         AdminClient adminClient = KafkaAdminClient.create(properties);
-        createTopic(adminClient, topicName, numberOfPartitions, replicationFactor);
+        for (int i = 0; i < 25; i++) {
+            createTopic(adminClient, topicName+i, numberOfPartitions, replicationFactor);
+        }
     }
 
     private void start() throws InterruptedException {
         logger.info("creating producer with props: {}", properties);
-
-        logger.info("Sending data to `{}` topic", topicName);
 
        // PodamFactory factory = new PodamFactoryImpl();
         EasyRandomParameters parameters = new EasyRandomParameters()
@@ -71,23 +71,26 @@ public class SimpleProducer {
         EasyRandom generator = new EasyRandom(parameters);
         Faker faker = new Faker();
 
-        try (Producer<MyKey, Customer> producer = new KafkaProducer<>(properties)) {
-            long id = 0;
-            MyKey myKey = MyKey.newBuilder()
-                    .setKEY(id)
-                    .build();
+        for (int i = 0; i < 25; i++) {
+        logger.info("Sending tombstone to `{}` topic", topicName+i);
+            try (Producer<MyKey, Customer> producer = new KafkaProducer<>(properties)) {
+                long id = 0;
+                MyKey myKey = MyKey.newBuilder()
+                        .setKEY(id)
+                        .build();
 
-            Customer customer = Customer.newBuilder()
-                    .setCount(id)
-                    .setFirstName(faker.name().firstName())
-                    .setLastName(faker.name().lastName())
-                    .setAddress(faker.address().streetAddress())
-                    .build();
+                Customer customer = Customer.newBuilder()
+                        .setCount(id)
+                        .setFirstName(faker.name().firstName())
+                        .setLastName(faker.name().lastName())
+                        .setAddress(faker.address().streetAddress())
+                        .build();
 
-            ProducerRecord<MyKey, Customer> record = new ProducerRecord<>(topicName, myKey, null);
-            logger.info("Sending Key = {}, Value = {}", record.key(), record.value());
-            producer.send(record,(recordMetadata, exception) -> sendCallback(record, recordMetadata,exception));
-            TimeUnit.MILLISECONDS.sleep(messageBackOff);
+                ProducerRecord<MyKey, Customer> record = new ProducerRecord<>(topicName+i, myKey, null);
+                //logger.info("Sending Key = {}, Value = {}", record.key(), record.value());
+                producer.send(record,(recordMetadata, exception) -> sendCallback(record, recordMetadata,exception));
+                // TimeUnit.MILLISECONDS.sleep(messageBackOff);
+            }
         }
     }
 
