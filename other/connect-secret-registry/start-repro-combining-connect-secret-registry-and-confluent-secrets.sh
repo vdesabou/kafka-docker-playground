@@ -9,6 +9,7 @@ if ! version_gt $TAG_BASE "5.2.99"; then
     exit 111
 fi
 
+chmod a+x ${DIR}/repro-combining-connect-secret-registry-and-confluent-secrets/ensure
 rm -f ${DIR}/repro-combining-connect-secret-registry-and-confluent-secrets/secrets/secret.txt
 rm -f ${DIR}/repro-combining-connect-secret-registry-and-confluent-secrets/secrets/CONFLUENT_SECURITY_MASTER_KEY
 docker run -i --rm -v ${DIR}/repro-combining-connect-secret-registry-and-confluent-secrets/secrets:/secrets cnfldemos/tools:0.3 bash -c '
