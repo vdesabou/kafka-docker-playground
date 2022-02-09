@@ -38,7 +38,7 @@ curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
                "connector.class": "io.confluent.connect.oracle.cdc.OracleCdcSourceConnector",
-               "tasks.max":2,
+               "tasks.max":1,
                "key.converter": "io.confluent.connect.avro.AvroConverter",
                "key.converter.schema.registry.url": "http://schema-registry:8081",
                "value.converter": "io.confluent.connect.avro.AvroConverter",
@@ -108,6 +108,26 @@ fi
 log "Verifying topic redo-log-topic: there should be 9 records"
 timeout 60 docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic redo-log-topic --from-beginning --max-messages 9
 
+log "Adding connect catalog user"
+docker exec -i oracle bash -c "ORACLE_SID=ORCLCDB;export ORACLE_SID;sqlplus /nolog" << EOF
+CONNECT sys/Admin123 AS SYSDBA
+
+CREATE USER C##reco_cat IDENTIFIED BY mypassword DEFAULT TABLESPACE USERS;
+ALTER USER C##reco_cat QUOTA UNLIMITED ON USERS;
+
+grant create session to C##reco_cat;
+grant recovery_catalog_owner to C##reco_cat;
+exit;
+EOF
+
+log "Adding connect catalog to RMAN"
+docker exec -i oracle bash -c "ORACLE_SID=ORCLCDB;export ORACLE_SID;rman target /" << EOF
+connect catalog C##reco_cat/mypassword
+create catalog;
+register database;
+  exit;
+EOF
+
 log "SHUTDOWN IMMEDIATE and STARTUP MOUNT"
 docker exec -i oracle bash -c "ORACLE_SID=ORCLCDB;export ORACLE_SID;sqlplus /nolog" << EOF
 CONNECT sys/Admin123 AS SYSDBA
@@ -118,11 +138,22 @@ exit;
 EOF
 
 # https://www.carajandb.com/en/blog/2019/backup-and-recovery-with-rman-is-easy/
+set +e
 log "Doing a cold backup using RMAN"
 docker exec -i oracle bash -c "ORACLE_SID=ORCLCDB;export ORACLE_SID;rman target /" << EOF
+connect catalog C##reco_cat/mypassword
 BACKUP INCREMENTAL LEVEL=0 DATABASE tag playground; 
-  exit;
 EOF
+set -e
+
+# docker exec -i oracle bash -c "ORACLE_SID=ORCLCDB;export ORACLE_SID;rman target /" << EOF
+# connect catalog C##reco_cat/mypassword
+# SHOW ALL;
+# sql 'alter system archive log current ';
+# delete archivelog all;
+# YES
+#   exit;
+# EOF
 
 log "ALTER DATABASE OPEN"
 docker exec -i oracle bash -c "ORACLE_SID=ORCLCDB;export ORACLE_SID;sqlplus /nolog" << EOF
