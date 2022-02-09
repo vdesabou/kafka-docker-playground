@@ -120,7 +120,8 @@ EOF
 # https://www.carajandb.com/en/blog/2019/backup-and-recovery-with-rman-is-easy/
 log "Doing a cold backup using RMAN"
 docker exec -i oracle bash -c "ORACLE_SID=ORCLCDB;export ORACLE_SID;rman target /" << EOF
-BACKUP DATABASE PLUS ARCHIVELOG; 
+ALLOCATE CHANNEL ch01 TYPE SBT_TAPE;
+BACKUP INCREMENTAL LEVEL=0 DATABASE tag playground; 
   exit;
 EOF
 
@@ -150,8 +151,8 @@ done
 log "Waiting 60s for connector to read new data"
 sleep 60
 
-log "Verifying topic ORCLCDB.C__MYUSER.CUSTOMERS: there should be 26 records"
+log "Verifying topic ORCLCDB.C__MYUSER.CUSTOMERS: there should be 24 records"
 set +e
-timeout 60 docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic ORCLCDB.C__MYUSER.CUSTOMERS --from-beginning --max-messages 26 > /tmp/result.log  2>&1
+timeout 60 docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic ORCLCDB.C__MYUSER.CUSTOMERS --from-beginning --max-messages 24 > /tmp/result.log  2>&1
 set -e
 cat /tmp/result.log
