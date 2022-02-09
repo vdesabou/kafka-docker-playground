@@ -120,7 +120,6 @@ EOF
 # https://www.carajandb.com/en/blog/2019/backup-and-recovery-with-rman-is-easy/
 log "Doing a cold backup using RMAN"
 docker exec -i oracle bash -c "ORACLE_SID=ORCLCDB;export ORACLE_SID;rman target /" << EOF
-ALLOCATE CHANNEL ch01 TYPE SBT_TAPE;
 BACKUP INCREMENTAL LEVEL=0 DATABASE tag playground; 
   exit;
 EOF
