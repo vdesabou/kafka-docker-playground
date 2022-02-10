@@ -185,6 +185,19 @@ else
     set_kafka_client_tag
 fi
 
+# Setting grafana agent based  
+if [ -z "$ENABLE_JMX_GRAFANA" ]
+then
+  # defaulting to empty variable since this is default in kafka-run-class.sh
+  export GRAFANA_AGENT_ZK=""
+  export GRAFANA_AGENT_BROKER=""
+  export GRAFANA_AGENT_CONNECT=""
+else
+  export GRAFANA_AGENT_ZK="-javaagent:/usr/share/jmx_exporter/jmx_prometheus_javaagent-0.16.1.jar=1234:/usr/share/jmx_exporter/zookeeper.yml"
+  export GRAFANA_AGENT_BROKER="-javaagent:/usr/share/jmx_exporter/jmx_prometheus_javaagent-0.16.1.jar=1234:/usr/share/jmx_exporter/broker.yml"
+  export GRAFANA_AGENT_CONNECT="-javaagent:/usr/share/jmx_exporter/jmx_prometheus_javaagent-0.16.1.jar=1234:/usr/share/jmx_exporter/connect.yml"
+fi
+
 # Migrate SimpleAclAuthorizer to AclAuthorizer #1276
 if version_gt $TAG "5.3.99"
 then
@@ -986,7 +999,12 @@ function stop_all() {
 }
 
 function display_jmx_info() {
-  log "📊 JMX metrics are available locally on those ports:"
+  if [ -z "$ENABLE_JMX_GRAFANA" ]
+  then
+    log "📊 JMX metrics are available locally on those ports:"
+  else
+    log "📊 Grafana is reachable at http://127.0.0.1:3000 (login/password is admin/admin) or JMX metrics are available locally on those ports:"
+  fi  
   log "    - zookeeper       : 9999"
   log "    - broker          : 10000"
   log "    - schema-registry : 10001"
@@ -996,6 +1014,8 @@ function display_jmx_info() {
   then
     log "    - ksqldb-server   : 10003"
   fi
+
+  
 }
 function get_jmx_metrics() {
   JMXTERM_VERSION="1.0.2"
