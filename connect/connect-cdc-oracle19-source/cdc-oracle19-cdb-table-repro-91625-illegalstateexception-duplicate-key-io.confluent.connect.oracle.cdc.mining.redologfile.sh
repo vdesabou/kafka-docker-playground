@@ -26,6 +26,7 @@ done
 log "Oracle DB has started!"
 sleep 60
 
+# https://docs.oracle.com/cd/B19306_01/server.102/b14237/initparams100.htm#REFRN10086
 log "Set multiple LOG_ARCHIVE_DEST_x"
 docker exec -i oracle bash -c "mkdir /tmp/redolog;ORACLE_SID=ORCLCDB;export ORACLE_SID;sqlplus /nolog" << EOF
 CONNECT sys/Admin123 AS SYSDBA
@@ -35,6 +36,16 @@ ALTER SYSTEM SET LOG_ARCHIVE_DEST_2='LOCATION=/tmp/redolog';
 
   exit;
 EOF
+
+# with alternate, we don't have the issue java.lang.IllegalStateException: Duplicate key before 1.5.3
+# docker exec -i oracle bash -c "mkdir /tmp/redolog;ORACLE_SID=ORCLCDB;export ORACLE_SID;sqlplus /nolog" << EOF
+# CONNECT sys/Admin123 AS SYSDBA
+
+# ALTER SYSTEM SET LOG_ARCHIVE_DEST_1='LOCATION=/opt/oracle/product/19c/dbhome_1/dbs/ reopen=0 max_failure=0 alternate=LOG_ARCHIVE_DEST_9';
+# ALTER SYSTEM SET LOG_ARCHIVE_DEST_9='LOCATION=/tmp/redolog';
+# ALTER SYSTEM SET LOG_ARCHIVE_DEST_STATE_9='alternate';
+#   exit;
+# EOF
 
 # Create a redo-log-topic. Please make sure you create a topic with the same name you will use for "redo.log.topic.name": "redo-log-topic"
 # CC-13104
@@ -160,3 +171,47 @@ log "Verifying topic redo-log-topic: there should be 9 records"
 timeout 60 docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic redo-log-topic --from-beginning --max-messages 9
 
 log "🚚 If you're planning to inject more data, have a look at https://github.com/vdesabou/kafka-docker-playground/blob/master/connect/connect-cdc-oracle19-source/README.md#note-on-redologrowfetchsize"
+
+exit 0
+
+docker exec -i oracle bash -c "ORACLE_SID=ORCLCDB;export ORACLE_SID;sqlplus /nolog" << EOF
+CONNECT sys/Admin123 AS SYSDBA
+select * from v\$ARCHIVED_LOG;
+  exit;
+EOF
+
+docker exec -i oracle bash -c "ORACLE_SID=ORCLCDB;export ORACLE_SID;sqlplus /nolog" << EOF
+CONNECT sys/Admin123 AS SYSDBA
+show parameter archive;
+  exit;
+EOF
+
+docker exec -i oracle bash -c "ORACLE_SID=ORCLCDB;export ORACLE_SID;sqlplus /nolog" << EOF
+CONNECT sys/Admin123 AS SYSDBA
+alter system set log_archive_config='';
+  exit;
+EOF
+
+docker exec -i oracle bash -c "ORACLE_SID=ORCLCDB;export ORACLE_SID;sqlplus /nolog" << EOF
+CONNECT sys/Admin123 AS SYSDBA
+alter system set LOG_ARCHIVE_DEST_2='';
+  exit;
+EOF
+
+docker exec -i oracle bash -c "ORACLE_SID=ORCLCDB;export ORACLE_SID;sqlplus /nolog" << EOF
+CONNECT sys/Admin123 AS SYSDBA
+alter system set log_archive_dest_state_2='defer';
+  exit;
+EOF
+
+
+# without settinf dest_x, archives are present there /opt/oracle/product/19c/dbhome_1/dbs/arch1_7_1088159216.dbf
+
+
+# [2022-02-09 11:31:55,024] WARN [cdc-oracle-source-cdb|task-0|redoLog] VINC: name /tmp/redolog/1_11_1088159216.dbf filename: 1_11_1088159216.dbf (io.confluent.connect.oracle.cdc.mining.WithoutContinuousMining:415)
+# [2022-02-09 11:31:59,038] WARN [cdc-oracle-source-cdb|task-0|redoLog] VINC: name /opt/oracle/product/19c/dbhome_1/dbs/1_13_1088159216.dbf filename: 1_13_1088159216.dbf (io.confluent.connect.oracle.cdc.mining.WithoutContinuousMining:415)
+# [2022-02-09 11:31:59,038] WARN [cdc-oracle-source-cdb|task-0|redoLog] VINC: name /opt/oracle/product/19c/dbhome_1/dbs/1_12_1088159216.dbf filename: 1_12_1088159216.dbf (io.confluent.connect.oracle.cdc.mining.WithoutContinuousMining:415)
+# [2022-02-09 11:32:00,080] WARN [cdc-oracle-source-cdb|task-0|redoLog] VINC: name /tmp/redolog/1_14_1088159216.dbf filename: 1_14_1088159216.dbf (io.confluent.connect.oracle.cdc.mining.WithoutContinuousMining:415)
+
+
+

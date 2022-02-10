@@ -38,7 +38,7 @@ curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
                "connector.class": "io.confluent.connect.oracle.cdc.OracleCdcSourceConnector",
-               "tasks.max":2,
+               "tasks.max":1,
                "key.converter": "io.confluent.connect.avro.AvroConverter",
                "key.converter.schema.registry.url": "http://schema-registry:8081",
                "value.converter": "io.confluent.connect.avro.AvroConverter",
@@ -107,35 +107,63 @@ fi
 
 log "Verifying topic redo-log-topic: there should be 9 records"
 timeout 60 docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic redo-log-topic --from-beginning --max-messages 9
-#https://www.support.dbagenesis.com/post/oracle-database-cold-backup-recovery
-log "doing a cold backup"
+
+log "Adding connect catalog user"
 docker exec -i oracle bash -c "ORACLE_SID=ORCLCDB;export ORACLE_SID;sqlplus /nolog" << EOF
 CONNECT sys/Admin123 AS SYSDBA
 
-select name from v\$datafile;
-select member from v\$logfile; 
-select name from v\$controlfile; 
-shutdown immediate
+CREATE USER C##reco_cat IDENTIFIED BY mypassword DEFAULT TABLESPACE USERS;
+ALTER USER C##reco_cat QUOTA UNLIMITED ON USERS;
 
+grant create session to C##reco_cat;
+grant recovery_catalog_owner to C##reco_cat;
+exit;
+EOF
+
+log "Adding connect catalog to RMAN"
+docker exec -i oracle bash -c "ORACLE_SID=ORCLCDB;export ORACLE_SID;rman target /" << EOF
+connect catalog C##reco_cat/mypassword
+create catalog;
+register database;
   exit;
 EOF
 
-docker exec -i oracle bash << EOF
-mkdir -p /tmp/coldbkp
-cp /opt/oracle/oradata/ORCLCDB/*.dbf /tmp/coldbkp
-cp /opt/oracle/oradata/ORCLCDB/*.log /tmp/coldbkp
-cp /opt/oracle/oradata/ORCLCDB/*.ctl /tmp/coldbkp
-cp /opt/oracle/product/19c/dbhome_1/dbs/*.ora /tmp/coldbkp
-EOF
-
+log "SHUTDOWN IMMEDIATE and STARTUP MOUNT"
 docker exec -i oracle bash -c "ORACLE_SID=ORCLCDB;export ORACLE_SID;sqlplus /nolog" << EOF
 CONNECT sys/Admin123 AS SYSDBA
-startup 
-alter database backup controlfile to trace;
-  exit;
+
+SHUTDOWN IMMEDIATE
+STARTUP MOUNT
+exit;
 EOF
 
-sleep 10
+# https://www.carajandb.com/en/blog/2019/backup-and-recovery-with-rman-is-easy/
+set +e
+log "Doing a cold backup using RMAN"
+docker exec -i oracle bash -c "ORACLE_SID=ORCLCDB;export ORACLE_SID;rman target /" << EOF
+connect catalog C##reco_cat/mypassword
+BACKUP INCREMENTAL LEVEL=0 DATABASE tag playground; 
+EOF
+set -e
+
+# docker exec -i oracle bash -c "ORACLE_SID=ORCLCDB;export ORACLE_SID;rman target /" << EOF
+# connect catalog C##reco_cat/mypassword
+# SHOW ALL;
+# sql 'alter system archive log current ';
+# delete archivelog all;
+# YES
+#   exit;
+# EOF
+
+log "ALTER DATABASE OPEN"
+docker exec -i oracle bash -c "ORACLE_SID=ORCLCDB;export ORACLE_SID;sqlplus /nolog" << EOF
+CONNECT sys/Admin123 AS SYSDBA
+
+alter database open;
+exit;
+EOF
+
+sleep 20
 
 log "restart failed task"
 curl --request POST \
@@ -153,8 +181,8 @@ done
 log "Waiting 60s for connector to read new data"
 sleep 60
 
-log "Verifying topic ORCLCDB.C__MYUSER.CUSTOMERS: there should be 13 records"
+log "Verifying topic ORCLCDB.C__MYUSER.CUSTOMERS: there should be 24 records"
 set +e
-timeout 60 docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic ORCLCDB.C__MYUSER.CUSTOMERS --from-beginning --max-messages 13 > /tmp/result.log  2>&1
+timeout 60 docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic ORCLCDB.C__MYUSER.CUSTOMERS --from-beginning --max-messages 24 > /tmp/result.log  2>&1
 set -e
 cat /tmp/result.log
