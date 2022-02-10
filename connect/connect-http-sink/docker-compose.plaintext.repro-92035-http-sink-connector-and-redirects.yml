@@ -8,11 +8,11 @@ services:
     environment:
       CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-http
 
-  # for testing error 302
-  http-service-no-auth-302:
-    image: vdesabou/http-service-no-auth-302
-    hostname: http-service-no-auth-302
-    container_name: http-service-no-auth-302
+  # for testing error 307
+  http-service-no-auth-307:
+    image: vdesabou/http-service-no-auth-307
+    hostname: http-service-no-auth-307
+    container_name: http-service-no-auth-307
     ports:
       - "8080:8080"
     environment:
