@@ -13,10 +13,10 @@ The HTTP service is using [vdesabou/kafka-connect-http-demo](https://github.com/
 ## How to run
 
 
-### Simple (No) Authentication
+### No Authentication
 
 ```bash
-$ ./http_simple_auth.sh
+$ ./http_no_auth.sh
 ```
 
 ### Basic Authentication

@@ -41,3 +41,5 @@ log "Confirm that the data was sent to the HTTP endpoint."
 curl localhost:8080/api/messages | jq . > /tmp/result.log  2>&1
 cat /tmp/result.log
 grep "10" /tmp/result.log
+
+timeout 60 docker exec broker kafka-console-consumer --bootstrap-server broker:9092 --topic success-responses --from-beginning --max-messages 1
