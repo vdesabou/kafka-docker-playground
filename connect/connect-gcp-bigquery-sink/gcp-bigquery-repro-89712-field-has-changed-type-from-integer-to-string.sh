@@ -30,22 +30,8 @@ set -e
 log "Create dataset $PROJECT.$DATASET"
 docker run -i --volumes-from gcloud-config google/cloud-sdk:latest bq --project_id "$PROJECT" mk --dataset --description "used by playground" "$DATASET"
 
-
-for component in producer-repro-89712 producer-repro-89712-2
-do
-    set +e
-    log "🏗 Building jar for ${component}"
-    docker run -i --rm -e KAFKA_CLIENT_TAG=$KAFKA_CLIENT_TAG -e TAG=$TAG_BASE -v "${DIR}/${component}":/usr/src/mymaven -v "$HOME/.m2":/root/.m2 -v "${DIR}/${component}/target:/usr/src/mymaven/target" -w /usr/src/mymaven maven:3.6.1-jdk-11 mvn -Dkafka.tag=$TAG -Dkafka.client.tag=$KAFKA_CLIENT_TAG package > /tmp/result.log 2>&1
-    if [ $? != 0 ]
-    then
-        logerror "ERROR: failed to build java component "
-        tail -500 /tmp/result.log
-        exit 1
-    fi
-    set -e
-done
-
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.repro-89712-field-has-changed-type-from-integer-to-string.yml"
+
 
 if version_gt $CONNECTOR_TAG "1.9.9"
 then
@@ -55,10 +41,10 @@ then
           --data '{
                     "connector.class": "com.wepay.kafka.connect.bigquery.BigQuerySinkConnector",
                     "tasks.max" : "1",
-                    "topics" : "customer_avro",
+                    "topics" : "mytopic2",
                     "sanitizeTopics" : "true",
                     "autoCreateTables" : "true",
-                    "autoUpdateSchemas" : "false",
+                    "autoUpdateSchemas" : "true",
                     "defaultDataset" : "'"$DATASET"'",
                     "mergeIntervalMs": "5000",
                     "bufferSize": "100000",
@@ -75,7 +61,7 @@ else
           --data '{
                     "connector.class": "com.wepay.kafka.connect.bigquery.BigQuerySinkConnector",
                     "tasks.max" : "1",
-                    "topics" : "customer_avro,
+                    "topics" : "mytopic2,
                     "sanitizeTopics" : "true",
                     "autoCreateTables" : "true",
                     "autoUpdateSchemas" : "true",
@@ -92,15 +78,21 @@ else
           http://localhost:8083/connectors/gcp-bigquery-sink/config | jq .
 fi
 
-log "✨ Run the avro java producer which produces to topic customer_avro"
-docker exec producer-repro-89712 bash -c "java -jar producer-1.0.0-jar-with-dependencies.jar"
+seq -f "{\"f1\": %g}" 10 | docker exec -i connect kafka-avro-console-producer --broker-list broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic mytopic2 --property value.schema='{"type":"record","name":"myrecord","fields":[{"name":"f1","type":"int"}]}'
 
-log "Sleeping 125 seconds"
-sleep 125
+log "Sleeping 60 seconds"
+sleep 60
 
 log "Verify data is in GCP BigQuery:"
-docker run -i --volumes-from gcloud-config google/cloud-sdk:latest bq --project_id "$PROJECT" query "SELECT * FROM $DATASET.kcbq_quickstart1;" > /tmp/result.log  2>&1
+docker run -i --volumes-from gcloud-config google/cloud-sdk:latest bq --project_id "$PROJECT" query "SELECT * FROM $DATASET.mytopic2;" > /tmp/result.log  2>&1
 cat /tmp/result.log
 
-log "✨ Run the avro java producer which produces to topic customer_avro"
-docker exec producer-repro-89712-2 bash -c "java -jar producer-1.0.0-jar-with-dependencies.jar"
+log "Change compatibility mode to NONE"
+curl --request PUT \
+  --url http://localhost:8081/config \
+  --header 'Content-Type: application/vnd.schemaregistry.v1+json' \
+  --data '{
+    "compatibility": "NONE"
+}'
+
+seq -f "{\"f1\": \"value%g-`date`\"}" 10 | docker exec -i connect kafka-avro-console-producer --broker-list broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic mytopic2 --property value.schema='{"type":"record","name":"myrecord","fields":[{"name":"f1","type":"string"}]}'
