@@ -56,6 +56,7 @@ fi
 
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.repro-91796-json-schema.yml"
 
+# this is the topic when source connector is used
 # {
 #   "properties": {
 #     "CreatedById": {
@@ -143,22 +144,47 @@ ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.rep
 #   "type": "object"
 # }
 
+# example of message
 # {"ReplayId":"9004013","CreatedDate":1644345809665,"CreatedById":"0053a00000L9RsbAAF","EventUuid":"a870010c-2fda-4057-b95d-e14db56a6af1","Message__c":"","_ObjectType":"MyPlatformEvent__e","_EventType":"ir4e6bGYBtJYSX5x2vc4DQ"},"__confluent_index":59}
 
-docker exec -i connect kafka-json-schema-console-producer --broker-list broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic a-topic --property value.schema='{"type":"object","properties":{"EventUuid":{"connect.index":3,"oneOf":[{"type":"null"},{"type":"string"}]},"_ObjectType":{"connect.index":5,"oneOf":[{"type":"null"},{"type":"string"}]},"ReplayId":{"connect.index":0,"oneOf":[{"type":"null"},{"type":"string"}]},"CreatedById":{"connect.index":2,"oneOf":[{"type":"null"},{"type":"string"}]},"CreatedDate":{"connect.index":1,"oneOf":[{"type":"null"},{"type":"integer","connect.version":1,"connect.type":"int64","title":"org.apache.kafka.connect.data.Timestamp"}]},"Message__c":{"connect.index":4,"oneOf":[{"type":"null"},{"type":"string"}]},"_EventType":{"connect.index":6,"oneOf":[{"type":"null"},{"type":"string"}]}},"title":"io.confluent.salesforce.MyPlatformEvent__e"}' << EOF
+# this works fine (schema is taken from when source connector is used)
+docker exec -i connect kafka-json-schema-console-producer --broker-list broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic a-topic-ok --property value.schema='{"type":"object","properties":{"EventUuid":{"connect.index":3,"oneOf":[{"type":"null"},{"type":"string"}]},"_ObjectType":{"connect.index":5,"oneOf":[{"type":"null"},{"type":"string"}]},"ReplayId":{"connect.index":0,"oneOf":[{"type":"null"},{"type":"string"}]},"CreatedById":{"connect.index":2,"oneOf":[{"type":"null"},{"type":"string"}]},"CreatedDate":{"connect.index":1,"oneOf":[{"type":"null"},{"type":"integer","connect.version":1,"connect.type":"int64","title":"org.apache.kafka.connect.data.Timestamp"}]},"Message__c":{"connect.index":4,"oneOf":[{"type":"null"},{"type":"string"}]},"_EventType":{"connect.index":6,"oneOf":[{"type":"null"},{"type":"string"}]}},"title":"io.confluent.salesforce.MyPlatformEvent__e"}' << EOF
 {"ReplayId":"9004013","CreatedDate":1644345809665,"CreatedById":"0053a00000L9RsbAAF","EventUuid":"a870010c-2fda-4057-b95d-e14db56a6af1","Message__c":"","_ObjectType":"MyPlatformEvent__e","_EventType":"ir4e6bGYBtJYSX5x2vc4DQ"},"__confluent_index":59}
 EOF
 
+# this silently fails (title is not set)
+docker exec -i connect kafka-json-schema-console-producer --broker-list broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic a-topic-ko --property value.schema='{"type":"object","properties":{"EVENTUUID":{"connect.index":3,"oneOf":[{"type":"null"},{"type":"string"}]},"_OBJECTTYPE":{"connect.index":5,"oneOf":[{"type":"null"},{"type":"string"}]},"REPLAYID":{"connect.index":0,"oneOf":[{"type":"null"},{"type":"string"}]},"CREATEDBYID":{"connect.index":2,"oneOf":[{"type":"null"},{"type":"string"}]},"CREATEDDATE":{"connect.index":1,"oneOf":[{"type":"null"},{"type":"integer","connect.version":1,"connect.type":"int64","title":"org.apache.kafka.connect.data.Timestamp"}]},"MESSAGE__C":{"connect.index":4,"oneOf":[{"type":"null"},{"type":"string"}]},"_EVENTTYPE":{"connect.index":6,"oneOf":[{"type":"null"},{"type":"string"}]}}}' << EOF
+{"ReplayId":"9004013","CreatedDate":1644345809665,"CreatedById":"0053a00000L9RsbAAF","EventUuid":"a870010c-2fda-4057-b95d-e14db56a6af1","Message__c":"","_ObjectType":"MyPlatformEvent__e","_EventType":"ir4e6bGYBtJYSX5x2vc4DQ"},"__confluent_index":59}
+EOF
+# in debug logs we see:
+# [2022-02-10 19:59:40,109] DEBUG [salesforce-platform-events-sink|task-0] Skipping empty event (io.confluent.salesforce.platformevent.SalesforcePlatformEventSinkTask:92)
 
-log "Verify we have received the data in a-topic topic"
-timeout 60 docker exec broker kafka-console-consumer -bootstrap-server broker:9092 --topic a-topic --from-beginning --max-messages 1
+# this silently fails (title is set "title": "io.confluent.salesforce.MyPlatformEvent__e",)
+docker exec -i connect kafka-json-schema-console-producer --broker-list broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic a-topic-ko2 --property value.schema='{"type":"object","properties":{"EVENTUUID":{"connect.index":3,"oneOf":[{"type":"null"},{"type":"string"}]},"_OBJECTTYPE":{"connect.index":5,"oneOf":[{"type":"null"},{"type":"string"}]},"REPLAYID":{"connect.index":0,"oneOf":[{"type":"null"},{"type":"string"}]},"CREATEDBYID":{"connect.index":2,"oneOf":[{"type":"null"},{"type":"string"}]},"CREATEDDATE":{"connect.index":1,"oneOf":[{"type":"null"},{"type":"integer","connect.version":1,"connect.type":"int64","title":"org.apache.kafka.connect.data.Timestamp"}]},"MESSAGE__C":{"connect.index":4,"oneOf":[{"type":"null"},{"type":"string"}]},"_EVENTTYPE":{"connect.index":6,"oneOf":[{"type":"null"},{"type":"string"}]}},"title":"io.confluent.salesforce.MyPlatformEvent__e"}' << EOF
+{"ReplayId":"9004013","CreatedDate":1644345809665,"CreatedById":"0053a00000L9RsbAAF","EventUuid":"a870010c-2fda-4057-b95d-e14db56a6af1","Message__c":"","_ObjectType":"MyPlatformEvent__e","_EventType":"ir4e6bGYBtJYSX5x2vc4DQ"},"__confluent_index":59}
+EOF
+
+# [2022-02-10 20:02:31,223] DEBUG [salesforce-platform-events-sink|task-0] Skipping empty event (io.confluent.salesforce.platformevent.SalesforcePlatformEventSinkTask:92)
+
+# This is ok (all lowercase)
+docker exec -i connect kafka-json-schema-console-producer --broker-list broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic a-topic-ok2 --property value.schema='{"type":"object","properties":{"EventUuid":{"connect.index":3,"oneOf":[{"type":"null"},{"type":"string"}]},"_ObjectType":{"connect.index":5,"oneOf":[{"type":"null"},{"type":"string"}]},"ReplayId":{"connect.index":0,"oneOf":[{"type":"null"},{"type":"string"}]},"CreatedById":{"connect.index":2,"oneOf":[{"type":"null"},{"type":"string"}]},"CreatedDate":{"connect.index":1,"oneOf":[{"type":"null"},{"type":"integer","connect.version":1,"connect.type":"int64","title":"org.apache.kafka.connect.data.Timestamp"}]},"Message__c":{"connect.index":4,"oneOf":[{"type":"null"},{"type":"string"}]},"_EventType":{"connect.index":6,"oneOf":[{"type":"null"},{"type":"string"}]}},"title":"io.confluent.salesforce.MyPlatformEvent__e"}' << EOF
+{"ReplayId":"9004013","CreatedDate":1644345809665,"CreatedById":"0053a00000L9RsbAAF","EventUuid":"a870010c-2fda-4057-b95d-e14db56a6af1","Message__c":"","_ObjectType":"MyPlatformEvent__e","_EventType":"ir4e6bGYBtJYSX5x2vc4DQ"},"__confluent_index":59}
+EOF
+
+curl --request PUT \
+  --url http://localhost:8083/admin/loggers/io.confluent.salesforce \
+  --header 'Accept: application/json' \
+  --header 'Content-Type: application/json' \
+  --data '{
+	"level": "TRACE"
+}'
 
 log "Creating Salesforce Platform Events Sink connector"
 curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
                     "connector.class": "io.confluent.salesforce.SalesforcePlatformEventSinkConnector",
-                    "topics": "a-topic",
+                    "topics": "a-topic-ko",
                     "tasks.max": "1",
                     "curl.logging": "true",
                     "salesforce.platform.event.name" : "MyPlatformEvent__e",
