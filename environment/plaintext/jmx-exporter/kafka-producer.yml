@@ -1,0 +1,26 @@
+lowercaseOutputName: true
+rules:
+  - pattern : 'kafka.producer<type=app-info, client-id=(.+)><>(.+): (.+)'
+    value: 1
+    name: kafka_producer_app_info
+    labels:
+      client-id: $1
+      $2: $3
+    type: COUNTER
+  - pattern : 'kafka.producer<type=(.+), client-id=(.+), node-id=(node-[0-9]+)><>(.+):'
+    name: kafka_producer_$1_$4
+    type: GAUGE
+    labels:
+      client-id: "$2"
+      host-id: "$3"
+  - pattern : 'kafka.producer<type=(.+), client-id=(.+), topic=([-\w]+)><>(.+):'
+    name: kafka_producer_$1_$4
+    type: GAUGE
+    labels:
+      client-id: "$2"
+      topic: "$3"
+  - pattern : 'kafka.producer<type=(.+), client-id=(.+)><>(.+):'
+    name: kafka_producer_$1_$3
+    type: GAUGE
+    labels:
+      client-id: "$2"

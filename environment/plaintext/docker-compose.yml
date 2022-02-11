@@ -7,12 +7,15 @@ services:
     hostname: zookeeper
     container_name: zookeeper
     restart: always
+    volumes:
+      - ./jmx-exporter:/usr/share/jmx_exporter/
     ports:
       - "9999:9999"
     environment:
       ZOOKEEPER_CLIENT_PORT: 2181
       ZOOKEEPER_TICK_TIME: 2000
       KAFKA_JMX_PORT: 9999
+      EXTRA_ARGS: ${GRAFANA_AGENT_ZK}
       KAFKA_JMX_HOSTNAME: localhost
       # for 5.4.x:
       KAFKA_OPTS: -Dzookeeper.4lw.commands.whitelist=*
@@ -52,7 +55,10 @@ services:
       # KAFKA_CONFLUENT_TELEMETRY_ENABLED: 'true'
       # KAFKA_CONFLUENT_TELEMETRY_API_KEY: 'CLOUD_API_KEY'
       # KAFKA_CONFLUENT_TELEMETRY_API_SECRET: 'CLOUD_API_SECRET'
-
+      EXTRA_ARGS: ${GRAFANA_AGENT_BROKER}
+    volumes:
+      - ./jmx-exporter:/usr/share/jmx_exporter/
+  
   schema-registry:
     image: confluentinc/cp-schema-registry:${TAG}
     hostname: schema-registry
@@ -86,6 +92,8 @@ services:
       - "5005:5005"
       - "8083:8083"
       - "10002:10002"
+    volumes:
+      - ./jmx-exporter:/usr/share/jmx_exporter/
     environment:
       KAFKA_JMX_PORT: 10002
       KAFKA_JMX_HOSTNAME: localhost
@@ -131,6 +139,7 @@ services:
       # uncomment when investigating class not found issue, see https://kafka-docker-playground.io/#/reusables?id=🔬-class-loading
       # KAFKA_OPTS: '-verbose:class'
       # Reduce Connect memory utilization
+      EXTRA_ARGS: ${GRAFANA_AGENT_CONNECT}
       KAFKA_JVM_PERFORMANCE_OPTS: -server -XX:+UseG1GC -XX:GCTimeRatio=1
                   -XX:MinHeapFreeRatio=10 -XX:MaxHeapFreeRatio=20
                   -XX:MaxGCPauseMillis=10000 -XX:InitiatingHeapOccupancyPercent=35 -XX:+ExplicitGCInvokesConcurrent
@@ -225,3 +234,70 @@ services:
       #CONTROL_CENTER_MODE_ENABLE: management
       # CONTROL_CENTER_ID: 32
 
+  kafka-lag-exporter:
+    image: lightbend/kafka-lag-exporter:0.6.6
+    hostname: kafka-lag-exporter
+    container_name: kafka-lag-exporter
+    profiles:
+      - "grafana"
+    restart: always
+    ports:
+      - 9998:9998
+    volumes:
+      - ./kafka-lag-exporter/application.conf:/opt/docker/conf/application.conf
+      - ./kafka-lag-exporter/logback.xml:/opt/docker/conf/logback.xml
+
+  alertmanager:
+    image: prom/alertmanager:v0.18.0
+    hostname: alertmanager
+    container_name: alertmanager
+    profiles:
+      - "grafana"
+    ports:
+      - 9093:9093
+
+  node-exporter:
+    image: prom/node-exporter:v0.18.1
+    hostname: node-exporter
+    container_name: node-exporter
+    profiles:
+      - "grafana"
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/rootfs:ro
+    command:
+      - '--path.procfs=/host/proc'
+      - '--path.sysfs=/host/sys'
+      - '--collector.filesystem.ignored-mount-points'
+      - '^(aufs|proc|nsfs|shm|cgroup|tmpfs|binfmt_misc|debugfs|devpts|fusectl|hugetlbfs|fuse.lxcfs|mqueue|pstore|securityfs|sysfs|autofs|devtmpfs|configfs)'
+
+  prometheus:
+    image: prom/prometheus
+    hostname: prometheus
+    container_name: prometheus
+    profiles:
+      - "grafana"
+    ports:
+      - 9090:9090
+    volumes:
+      - ./prometheus/:/etc/prometheus/
+    depends_on:
+      - node-exporter
+      - kafka-lag-exporter
+      - alertmanager
+
+  grafana:
+    image: grafana/grafana:7.4.1
+    hostname: grafana
+    container_name: grafana
+    profiles:
+      - "grafana"
+    environment:
+      GF_INSTALL_PLUGINS: grafana-piechart-panel
+    ports:
+      - 3000:3000
+    volumes:
+      - ../../other/monitoring-demo/grafana/provisioning/:/etc/grafana/provisioning/
+    depends_on:
+      - prometheus
