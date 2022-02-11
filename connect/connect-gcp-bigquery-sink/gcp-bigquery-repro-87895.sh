@@ -66,13 +66,13 @@ docker run -i --volumes-from gcloud-config google/cloud-sdk:latest bq --project_
 
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.repro-87895.yml"
 
-curl --request PUT \
-  --url http://localhost:8083/admin/loggers/com.wepay.kafka.connect.bigquery \
-  --header 'Accept: application/json' \
-  --header 'Content-Type: application/json' \
-  --data '{
-	"level": "DEBUG"
-}'
+# curl --request PUT \
+#   --url http://localhost:8083/admin/loggers/com.wepay.kafka.connect.bigquery \
+#   --header 'Accept: application/json' \
+#   --header 'Content-Type: application/json' \
+#   --data '{
+# 	"level": "DEBUG"
+# }'
 
 function delete_connector () {
      curl --request DELETE \
@@ -87,6 +87,7 @@ function create_connector () {
                     "connector.class": "com.wepay.kafka.connect.bigquery.BigQuerySinkConnector",
                     "tasks.max" : "1",
                     "topics" : "customer-avro",
+                    "sanitizeTopics" : "true",
                     "sanitizeFieldNames": "true",
                     "autoCreateTables" : "true",
                     "defaultDataset" : "'"$DATASET"'",
@@ -111,17 +112,13 @@ function create_connector () {
           http://localhost:8083/connectors/gcp-bigquery-sink/config | jq .
 }
 
-create_connector
-
-sleep 10
-
 # it is ok
 log "Run the Java producer-87895 (10 records)"
 docker exec producer-87895 bash -c "java -jar producer-87895-1.0.0-jar-with-dependencies.jar"
-delete_connector
 create_connector
 
-sleep 30
+log "sleep 150 seconds"
+sleep 150
 
 delete_connector
 log "Run the Java producer-87895-2 (only one tombstone)"
@@ -129,26 +126,7 @@ docker exec producer-87895-2 bash -c "java -jar producer-87895-2-1.0.0-jar-with-
 # it is not ok, as last record is a tombstone
 create_connector
 
-exit 0
-
-delete_connector
-log "Run the Java producer-87895 (10 records)"
-docker exec producer-87895 bash -c "java -jar producer-87895-1.0.0-jar-with-dependencies.jar"
-# it is ok now since there are valid records since then
-create_connector
-
-
-
-
-log "Reset offset for customer-avro"
-
-docker exec broker kafka-consumer-groups --bootstrap-server broker:9092 --group connect-gcp-bigquery-sink --describe
-docker exec broker kafka-consumer-groups --bootstrap-server broker:9092 --group connect-gcp-bigquery-sink --to-offset 54 --topic customer-avro --reset-offsets --dry-run
-docker exec broker kafka-consumer-groups --bootstrap-server broker:9092 --group connect-gcp-bigquery-sink --to-offset 54 --topic customer-avro --reset-offsets --execute
-docker exec broker kafka-consumer-groups --bootstrap-server broker:9092 --group connect-gcp-bigquery-sink --describe
-
-
-#wait_for_repro "Failed to unionize schemas of records for the table"
+wait_for_repro "Failed to unionize schemas of records for the table"
 
 # Exception in thread "pool-10-thread-1" com.wepay.kafka.connect.bigquery.exception.BigQueryConnectException: Failed to unionize schemas of records for the table GenericData{classInfo=[datasetId, projectId, tableId], {datasetId=pgrepro, tableId=customer_avro2__intermediate_0_437011d3_a297_4d6d_a2ef_13c9e2d0edf1_1642152694641}}
 # Caused by: Could not convert to BigQuery schema with a batch of tombstone records.
@@ -167,3 +145,76 @@ docker exec broker kafka-consumer-groups --bootstrap-server broker:9092 --group 
 #         at com.wepay.kafka.connect.bigquery.SchemaManager.getTableInfo(SchemaManager.java:286)
 #         ... 9 more
 
+
+# delete_connector
+# log "Run the Java producer-87895 (10 records)"
+# docker exec producer-87895 bash -c "java -jar producer-87895-1.0.0-jar-with-dependencies.jar"
+# # it is ok now since there are valid records since then
+# create_connector
+
+log "Verify data is in GCP BigQuery:"
+docker run -i --volumes-from gcloud-config google/cloud-sdk:latest bq --project_id "$PROJECT" query "SELECT * FROM $DATASET.customer_avro;" > /tmp/result.log  2>&1
+cat /tmp/result.log
+
+# -----+-------------------------+---------+
+# | count | first_name |  last_name  |         address         | KEY_KEY |
+# +-------+------------+-------------+-------------------------+---------+
+# |     1 | Estefania  | Parisian    | 90115 Beahan Road       |       1 |
+# |     7 | Jaida      | Williamson  | 746 Jeanette Knoll      |       7 |
+# |     6 | Beulah     | Durgan      | 3271 Mueller Crescent   |       6 |
+# |     3 | Nicole     | Reichel     | 74216 Jewel Ferry       |       3 |
+# |     4 | Caterina   | Gleichner   | 1446 VonRueden Villages |       4 |
+# |     0 | Amparo     | Von         | 029 Alfredo Lodge       |       0 |
+# |     2 | Kareem     | Greenfelder | 5160 O'Conner Street    |       2 |
+# |     5 | Stephania  | Lynch       | 3341 Kutch Shoals       |       5 |
+# |     8 | Rosie      | Gerlach     | 3291 Lowe Mount         |       8 |
+# |     9 | Wiley      | Berge       | 8593 Arnaldo Point      |       9 |
+# +-------+------------+-------------+-------------------------+---------+
+
+delete_connector
+
+log "Reset offset for customer-avro to 9 (the record before tombstone)"
+docker exec broker kafka-consumer-groups --bootstrap-server broker:9092 --group connect-gcp-bigquery-sink --describe
+# GROUP                     TOPIC           PARTITION  CURRENT-OFFSET  LOG-END-OFFSET  LAG             CONSUMER-ID                                                                 HOST            CLIENT-ID
+# connect-gcp-bigquery-sink customer-avro   0          10              11              1               connector-consumer-gcp-bigquery-sink-0-e3e3f0bf-c814-4814-a0e3-85e54b027abb /172.24.0.7     connector-consumer-gcp-bigquery-sink-0
+
+# GCP has 10 records
+
+docker exec broker kafka-consumer-groups --bootstrap-server broker:9092 --group connect-gcp-bigquery-sink --to-offset 9 --topic customer-avro --reset-offsets --dry-run
+docker exec broker kafka-consumer-groups --bootstrap-server broker:9092 --group connect-gcp-bigquery-sink --to-offset 9 --topic customer-avro --reset-offsets --execute
+docker exec broker kafka-consumer-groups --bootstrap-server broker:9092 --group connect-gcp-bigquery-sink --describe
+
+# GROUP                     TOPIC           PARTITION  CURRENT-OFFSET  LOG-END-OFFSET  LAG             CONSUMER-ID     HOST            CLIENT-ID
+# connect-gcp-bigquery-sink customer-avro   0          9              11              1               -               -               -
+
+# restart connector
+
+log "restart failed task"
+create_connector
+
+
+sleep 120
+
+log "Verify data is in GCP BigQuery:"
+docker run -i --volumes-from gcloud-config google/cloud-sdk:latest bq --project_id "$PROJECT" query "SELECT * FROM $DATASET.customer_avro;" > /tmp/result.log  2>&1
+cat /tmp/result.log
+
+# +-------+------------+-------------+-------------------------+---------+
+# | count | first_name |  last_name  |         address         | KEY_KEY |
+# +-------+------------+-------------+-------------------------+---------+
+# |     1 | Estefania  | Parisian    | 90115 Beahan Road       |       1 |
+# |     7 | Jaida      | Williamson  | 746 Jeanette Knoll      |       7 |
+# |     6 | Beulah     | Durgan      | 3271 Mueller Crescent   |       6 |
+# |     3 | Nicole     | Reichel     | 74216 Jewel Ferry       |       3 |
+# |     4 | Caterina   | Gleichner   | 1446 VonRueden Villages |       4 |
+# |     0 | Amparo     | Von         | 029 Alfredo Lodge       |       0 |
+# |     2 | Kareem     | Greenfelder | 5160 O'Conner Street    |       2 |
+# |     5 | Stephania  | Lynch       | 3341 Kutch Shoals       |       5 |
+# |     8 | Rosie      | Gerlach     | 3291 Lowe Mount         |       8 |
+# |     9 | Wiley      | Berge       | 8593 Arnaldo Point      |       9 |
+# +-------+------------+-------------+-------------------------+---------+
+
+docker exec broker kafka-consumer-groups --bootstrap-server broker:9092 --group connect-gcp-bigquery-sink --describe
+
+# GROUP                     TOPIC           PARTITION  CURRENT-OFFSET  LOG-END-OFFSET  LAG             CONSUMER-ID     HOST            CLIENT-ID
+# connect-gcp-bigquery-sink customer-avro   0          11              11              1               -               -               -
