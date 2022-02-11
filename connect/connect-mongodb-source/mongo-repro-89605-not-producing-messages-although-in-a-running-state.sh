@@ -75,3 +75,5 @@ timeout 60 docker exec connect kafka-avro-console-consumer -bootstrap-server bro
 log "Checking connect-offsets"
 docker exec connect kafka-console-consumer -bootstrap-server broker:9092 --topic connect-offsets --from-beginning --property print.key=true
 
+# we only have 
+# ["mongodb-source-smt",{"ns":"my-offset-partition-name-smt"}]    {"_id":"{\"_data\": \"8262064696000000022B022C0100296E5A10045D5F9A1A4CD64D37BECEDF674B8F3991461E5F6964002B020004\", \"_typeBits\": {\"$binary\": {\"base64\": \"QA==\", \"subType\": \"00\"}}}"}
