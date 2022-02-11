@@ -1,0 +1,27 @@
+lowercaseOutputName: true
+rules:
+  - pattern : 'kafka.streams<type=stream-metrics, client-id=(.*)><>(.+): (.+)'
+    value: 1
+    name: kafka_streams_app_info
+    labels:
+      client-id: $1
+      $2: $3
+    type: COUNTER
+  - pattern : 'kafka.streams<type=(.+), thread-id=(.+), task-id=(.*), (.+)=(.+)><>(.+):'
+    name: kafka_streams_$1_$6
+    type: GAUGE
+    labels:
+      thread-id: "$2"
+      task-id: "$3"
+      $4: "$5"
+  - pattern : 'kafka.streams<type=stream-task-metrics, thread-id=(.+), task-id=(.*)><>(.+):'
+    name: kafka_streams_stream-task-metrics_$3
+    type: GAUGE
+    labels:
+      thread-id: "$1"
+      task-id: "$2"
+  - pattern : 'kafka.streams<type=(.+), thread-id=(.+)><>(.+):'
+    name: kafka_streams_$1_$3
+    type: GAUGE
+    labels:
+      thread-id: "$2"
