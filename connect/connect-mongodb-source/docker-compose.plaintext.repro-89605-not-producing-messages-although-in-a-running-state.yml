@@ -1,0 +1,23 @@
+---
+version: '3.5'
+services:
+
+  mongodb:
+    image: mongo:latest
+    hostname: mongodb
+    container_name: mongodb
+    ports:
+      - 27017:27017
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: myuser
+      MONGO_INITDB_ROOT_PASSWORD: mypassword
+    entrypoint: [ "/usr/bin/mongod", "--bind_ip_all", "--replSet", "myuser" ]
+
+  connect:
+    depends_on:
+      - zookeeper
+      - broker
+      - schema-registry
+      - mongodb
+    environment:
+      CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/mongodb-kafka-connect-mongodb
