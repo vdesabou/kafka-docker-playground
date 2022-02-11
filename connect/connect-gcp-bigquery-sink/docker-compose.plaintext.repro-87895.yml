@@ -41,3 +41,5 @@ services:
         - ../../connect/connect-gcp-bigquery-sink/keyfile.json:/tmp/keyfile.json:ro
     environment:
       CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/wepay-kafka-connect-bigquery
+      CONNECT_OFFSET_FLUSH_INTERVAL_MS: 20000
+      CONNECT_OFFSET_FLUSH_TIMEOUT_MS: 10000
