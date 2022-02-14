@@ -28,12 +28,11 @@ sleep 60
 
 # https://docs.oracle.com/cd/B19306_01/server.102/b14237/initparams100.htm#REFRN10086
 log "Set multiple LOG_ARCHIVE_DEST_x"
-docker exec -i oracle bash -c "mkdir /tmp/redolog;ORACLE_SID=ORCLCDB;export ORACLE_SID;sqlplus /nolog" << EOF
+docker exec -i oracle bash -c "mkdir -p /tmp/redolog;ORACLE_SID=ORCLCDB;export ORACLE_SID;sqlplus /nolog" << EOF
 CONNECT sys/Admin123 AS SYSDBA
 
 ALTER SYSTEM SET LOG_ARCHIVE_DEST_1='LOCATION=/opt/oracle/product/19c/dbhome_1/dbs/';
 ALTER SYSTEM SET LOG_ARCHIVE_DEST_2='LOCATION=/tmp/redolog';
-
   exit;
 EOF
 
@@ -214,4 +213,79 @@ EOF
 # [2022-02-09 11:32:00,080] WARN [cdc-oracle-source-cdb|task-0|redoLog] VINC: name /tmp/redolog/1_14_1088159216.dbf filename: 1_14_1088159216.dbf (io.confluent.connect.oracle.cdc.mining.WithoutContinuousMining:415)
 
 
+# to simulate "Failed to add online log files": rm /opt/oracle/oradata/ORCLCDB/redo01.log
+# [2022-02-10 08:55:17,177] WARN [cdc-oracle-source-cdb|task-0|redoLog] Failed to add online log files. (io.confluent.connect.oracle.cdc.mining.WithoutContinuousMining:464)
+# java.sql.SQLException: ORA-01284: file /opt/oracle/oradata/ORCLCDB/redo03.log cannot be opened
+# ORA-00308: cannot open archived log '/opt/oracle/oradata/ORCLCDB/redo03.log'
+# ORA-27037: unable to obtain file status
+# Linux-x86_64 Error: 2: No such file or directory
+# Additional information: 7
+# ORA-06512: at "SYS.DBMS_LOGMNR", line 82
+# ORA-06512: at line 1
 
+#         at oracle.jdbc.driver.T4CTTIoer11.processError(T4CTTIoer11.java:509)
+#         at oracle.jdbc.driver.T4CTTIoer11.processError(T4CTTIoer11.java:461)
+#         at oracle.jdbc.driver.T4C8Oall.processError(T4C8Oall.java:1104)
+#         at oracle.jdbc.driver.T4CTTIfun.receive(T4CTTIfun.java:550)
+#         at oracle.jdbc.driver.T4CTTIfun.doRPC(T4CTTIfun.java:268)
+#         at oracle.jdbc.driver.T4C8Oall.doOALL(T4C8Oall.java:655)
+#         at oracle.jdbc.driver.T4CStatement.doOall8(T4CStatement.java:229)
+#         at oracle.jdbc.driver.T4CStatement.doOall8(T4CStatement.java:41)
+#         at oracle.jdbc.driver.T4CStatement.executeForRows(T4CStatement.java:928)
+
+# to simulate "Failed to add archived log files"
+
+# docker exec oracle bashc -c "while [ true ]; do rm /opt/oracle/product/19c/dbhome_1/dbs/*.dbf /tmp/redolog/*.dbf; sleep 0.1; done"
+
+# [2022-02-10 10:07:49,991] WARN [cdc-oracle-source-cdb|task-0|redoLog] Failed to add archived log files. (io.confluent.connect.oracle.cdc.mining.WithoutContinuousMining:445)
+# java.sql.SQLException: ORA-01284: file /tmp/redolog/1_15_1088159216.dbf cannot be opened
+# ORA-00308: cannot open archived log '/tmp/redolog/1_15_1088159216.dbf'
+# ORA-27037: unable to obtain file status
+# Linux-x86_64 Error: 2: No such file or directory
+# Additional information: 7
+# ORA-06512: at "SYS.DBMS_LOGMNR", line 82
+# ORA-06512: at line 1
+
+#         at oracle.jdbc.driver.T4CTTIoer11.processError(T4CTTIoer11.java:509)
+#         at oracle.jdbc.driver.T4CTTIoer11.processError(T4CTTIoer11.java:461)
+#         at oracle.jdbc.driver.T4C8Oall.processError(T4C8Oall.java:1104)
+#         at oracle.jdbc.driver.T4CTTIfun.receive(T4CTTIfun.java:550)
+#         at oracle.jdbc.driver.T4CTTIfun.doRPC(T4CTTIfun.java:268)
+#         at oracle.jdbc.driver.T4C8Oall.doOALL(T4C8Oall.java:655)
+#         at oracle.jdbc.driver.T4CStatement.doOall8(T4CStatement.java:229)
+#         at oracle.jdbc.driver.T4CStatement.doOall8(T4CStatement.java:41)
+#         at oracle.jdbc.driver.T4CStatement.executeForRows(T4CStatement.java:928)
+#         at oracle.jdbc.driver.OracleStatement.doExecuteWithTimeout(OracleStatement.java:1205)
+#         at oracle.jdbc.driver.OracleStatement.executeUpdateInternal(OracleStatement.java:1747)
+#         at oracle.jdbc.driver.OracleStatement.executeLargeUpdate(OracleStatement.java:1712)
+#         at oracle.jdbc.driver.OracleStatement.executeUpdate(OracleStatement.java:1699)
+#         at oracle.jdbc.driver.OracleStatementWrapper.executeUpdate(OracleStatementWrapper.java:285)
+#         at oracle.ucp.jdbc.proxy.oracle$1ucp$1jdbc$1proxy$1oracle$1StatementProxy$2oracle$1jdbc$1internal$1OracleStatement$$$Proxy.executeUpdate(Unknown Source)
+#         at io.confluent.connect.oracle.cdc.logging.LogUtils.executeUpdate(LogUtils.java:30)
+#         at io.confluent.connect.oracle.cdc.OracleDatabase.executeUpdate(OracleDatabase.java:1006)
+#         at io.confluent.connect.oracle.cdc.OracleDatabase.addArchivedLogFiles(OracleDatabase.java:897)
+#         at io.confluent.connect.oracle.cdc.mining.WithoutContinuousMining.addArchivedFiles(WithoutContinuousMining.java:443)
+#         at io.confluent.connect.oracle.cdc.mining.WithoutContinuousMining.startFrom(WithoutContinuousMining.java:165)
+#         at io.confluent.connect.oracle.cdc.mining.WithoutContinuousMining.mineRedoLogs(WithoutContinuousMining.java:82)
+#         at io.confluent.connect.oracle.cdc.OracleRedoLogReader.lambda$readRedoLogs$0(OracleRedoLogReader.java:91)
+#         at io.confluent.connect.utils.retry.RetryPolicy.callWith(RetryPolicy.java:417)
+#         at io.confluent.connect.utils.retry.RetryPolicy.callWith(RetryPolicy.java:368)
+#         at io.confluent.connect.oracle.cdc.OracleDatabase.retry(OracleDatabase.java:564)
+#         at io.confluent.connect.oracle.cdc.OracleRedoLogReader.readRedoLogs(OracleRedoLogReader.java:89)
+#         at io.confluent.connect.oracle.cdc.util.RecordQueue.lambda$createLoggingSupplier$0(RecordQueue.java:465)
+#         at java.base/java.util.concurrent.CompletableFuture$AsyncSupply.run(CompletableFuture.java:1700)
+#         at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1128)
+#         at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:628)
+#         at java.base/java.lang.Thread.run(Thread.java:829)
+# Caused by: Error : 1284, Position : 0, Sql = BEGIN DBMS_LOGMNR.ADD_LOGFILE(LOGFILENAME => '/tmp/redolog/1_15_1088159216.dbf', OPTIONS => DBMS_LOGMNR.NEW); END;, OriginalSql = {CALL DBMS_LOGMNR.ADD_LOGFILE(LOGFILENAME => '/tmp/redolog/1_15_1088159216.dbf', OPTIONS => DBMS_LOGMNR.NEW)}, Error Msg = ORA-01284: file /tmp/redolog/1_15_1088159216.dbf cannot be opened
+# ORA-00308: cannot open archived log '/tmp/redolog/1_15_1088159216.dbf'
+# ORA-27037: unable to obtain file status
+# Linux-x86_64 Error: 2: No such file or directory
+# Additional information: 7
+# ORA-06512: at "SYS.DBMS_LOGMNR", line 82
+# ORA-06512: at line 1
+
+#         at oracle.jdbc.driver.T4CTTIoer11.processError(T4CTTIoer11.java:513)
+#         ... 30 more
+
+# doing a "start.from":"force_current" resolved the issue
