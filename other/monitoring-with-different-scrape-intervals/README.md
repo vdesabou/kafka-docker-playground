@@ -33,7 +33,7 @@ Because jmx exporter does not permit to run multiple agent in parallel, we need 
 
 At this point we will leverage JMX exporter standalone capability.
 
-You need firs to enable the remote access to the service's JMX server as defined in
+You need firs to enable the remote access to the service's JMX server as defined in [Monitoring and Management Using JMX Technology](https://docs.oracle.com/javase/7/docs/technotes/guides/management/agent.html)
 ```
 -Dcom.sun.management.jmxremote        
 -Dcom.sun.management.jmxremote.port=5555
