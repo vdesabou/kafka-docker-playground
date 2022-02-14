@@ -19,23 +19,41 @@ curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
           "topics": "http-messages",
-               "tasks.max": "1",
-               "connector.class": "io.confluent.connect.http.HttpSinkConnector",
-               "key.converter": "org.apache.kafka.connect.storage.StringConverter",
-               "value.converter": "org.apache.kafka.connect.storage.StringConverter",
-               "confluent.topic.bootstrap.servers": "broker:9092",
-               "confluent.topic.replication.factor": "1",
-               "reporter.bootstrap.servers": "broker:9092",
-               "reporter.error.topic.name": "error-responses",
-               "reporter.error.topic.replication.factor": 1,
-               "reporter.result.topic.name": "success-responses",
-               "reporter.result.topic.replication.factor": 1,
-               "http.api.url": "http://http-service-no-auth-307:8080/redirect"
+          "tasks.max": "1",
+          "connector.class": "io.confluent.connect.http.HttpSinkConnector",
+          "key.converter": "org.apache.kafka.connect.storage.StringConverter",
+          "value.converter": "org.apache.kafka.connect.storage.StringConverter",
+          "confluent.topic.bootstrap.servers": "broker:9092",
+          "confluent.topic.replication.factor": "1",
+          "reporter.bootstrap.servers": "broker:9092",
+          "reporter.error.topic.name": "error-responses",
+          "reporter.error.topic.replication.factor": 1,
+          "reporter.result.topic.name": "",
+          "reporter.result.topic.replication.factor": 1,
+          "http.api.url": "http://http-service-no-auth-307:8080/redirect",
+          "behavior.on.error": "log",
+          "behavior.on.null.values": "log",  
+          "errors.deadletterqueue.topic.name": "dlq",
+          "errors.deadletterqueue.context.headers.enable": true,
+          "errors.log.enable": "true",
+          "errors.tolerance": "all",
+          "errors.deadletterqueue.topic.replication.factor": "1",
+          "errors.retry.delay.max.ms": "10000",
+          "max.retries": "10",
+          "batch.max.size": "1",
+          "retry.backoff.ms": "3000",
+          "request.body.format": "json",
+          "batch.separator": ",",
+          "regex.separator": "~",
+          "header.converter": "org.apache.kafka.connect.storage.StringConverter",
+          "header.separator": "|",
+          "errors.log.include.messages": "false"
           }' \
      http://localhost:8083/connectors/http-sink-307/config | jq .
 
 sleep 10
 
+#without behavior.on.error=log
 # 2022-02-10 21:14:20,796] ERROR [http-sink-307|task-0] WorkerSinkTask{id=http-sink-307-0} Task threw an uncaught and unrecoverable exception. Task is being killed and will not recover until manually restarted (org.apache.kafka.connect.runtime.WorkerTask:206)
 # org.apache.kafka.connect.errors.ConnectException: Exiting WorkerSinkTask due to unrecoverable exception.
 #         at org.apache.kafka.connect.runtime.WorkerSinkTask.deliverMessages(WorkerSinkTask.java:638)
@@ -61,6 +79,33 @@ sleep 10
 #         at io.confluent.connect.http.writer.HttpWriterImpl.executeRequestWithBackOff(HttpWriterImpl.java:303)
 #         at io.confluent.connect.http.writer.HttpWriterImpl.sendBatch(HttpWriterImpl.java:277)
 #         ... 13 more
+
+#with behavior.on.error=log
+
+# [2022-02-14 08:14:58,613] ERROR [http-sink-307|task-0] Error while processing HTTP request with Url : http://http-service-no-auth-307:8080/redirect, Status code : 307, Reason Phrase : , Response Content : ,  (io.confluent.connect.http.writer.HttpWriterImpl:401)
+# [2022-02-14 08:14:58,619] ERROR [http-sink-307|task-0] Error while processing HTTP request with Url : http://http-service-no-auth-307:8080/redirect, Status code : 307, Reason Phrase : , Response Content : ,  (io.confluent.connect.http.writer.HttpWriterImpl:401)
+# [2022-02-14 08:14:58,623] ERROR [http-sink-307|task-0] Error while processing HTTP request with Url : http://http-service-no-auth-307:8080/redirect, Status code : 307, Reason Phrase : , Response Content : ,  (io.confluent.connect.http.writer.HttpWriterImpl:401)
+# [2022-02-14 08:14:58,627] ERROR [http-sink-307|task-0] Error while processing HTTP request with Url : http://http-service-no-auth-307:8080/redirect, Status code : 307, Reason Phrase : , Response Content : ,  (io.confluent.connect.http.writer.HttpWriterImpl:401)
+# [2022-02-14 08:14:58,631] ERROR [http-sink-307|task-0] Error while processing HTTP request with Url : http://http-service-no-auth-307:8080/redirect, Status code : 307, Reason Phrase : , Response Content : ,  (io.confluent.connect.http.writer.HttpWriterImpl:401)
+# [2022-02-14 08:14:58,635] ERROR [http-sink-307|task-0] Error while processing HTTP request with Url : http://http-service-no-auth-307:8080/redirect, Status code : 307, Reason Phrase : , Response Content : ,  (io.confluent.connect.http.writer.HttpWriterImpl:401)
+# [2022-02-14 08:14:58,640] ERROR [http-sink-307|task-0] Error while processing HTTP request with Url : http://http-service-no-auth-307:8080/redirect, Status code : 307, Reason Phrase : , Response Content : ,  (io.confluent.connect.http.writer.HttpWriterImpl:401)
+# [2022-02-14 08:14:58,645] ERROR [http-sink-307|task-0] Error while processing HTTP request with Url : http://http-service-no-auth-307:8080/redirect, Status code : 307, Reason Phrase : , Response Content : ,  (io.confluent.connect.http.writer.HttpWriterImpl:401)
+# [2022-02-14 08:14:58,649] ERROR [http-sink-307|task-0] Error while processing HTTP request with Url : http://http-service-no-auth-307:8080/redirect, Status code : 307, Reason Phrase : , Response Content : ,  (io.confluent.connect.http.writer.HttpWriterImpl:401)
+# [2022-02-14 08:14:58,653] ERROR [http-sink-307|task-0] Error while processing HTTP request with Url : http://http-service-no-auth-307:8080/redirect, Status code : 307, Reason Phrase : , Response Content : ,  (io.confluent.connect.http.writer.HttpWriterImpl:401)
+
+
+timeout 60 docker exec broker kafka-console-consumer --bootstrap-server broker:9092 --topic error-responses --from-beginning --max-messages 10
+# "Retry time lapsed, unable to process HTTP request. HTTP Response code: 307, Reason phrase: , Url: http://http-service-no-auth-307:8080/redirect, Response content: , Exception: null, Error message: null"
+# "Retry time lapsed, unable to process HTTP request. HTTP Response code: 307, Reason phrase: , Url: http://http-service-no-auth-307:8080/redirect, Response content: , Exception: null, Error message: null"
+# "Retry time lapsed, unable to process HTTP request. HTTP Response code: 307, Reason phrase: , Url: http://http-service-no-auth-307:8080/redirect, Response content: , Exception: null, Error message: null"
+# "Retry time lapsed, unable to process HTTP request. HTTP Response code: 307, Reason phrase: , Url: http://http-service-no-auth-307:8080/redirect, Response content: , Exception: null, Error message: null"
+# "Retry time lapsed, unable to process HTTP request. HTTP Response code: 307, Reason phrase: , Url: http://http-service-no-auth-307:8080/redirect, Response content: , Exception: null, Error message: null"
+# "Retry time lapsed, unable to process HTTP request. HTTP Response code: 307, Reason phrase: , Url: http://http-service-no-auth-307:8080/redirect, Response content: , Exception: null, Error message: null"
+# "Retry time lapsed, unable to process HTTP request. HTTP Response code: 307, Reason phrase: , Url: http://http-service-no-auth-307:8080/redirect, Response content: , Exception: null, Error message: null"
+# "Retry time lapsed, unable to process HTTP request. HTTP Response code: 307, Reason phrase: , Url: http://http-service-no-auth-307:8080/redirect, Response content: , Exception: null, Error message: null"
+# "Retry time lapsed, unable to process HTTP request. HTTP Response code: 307, Reason phrase: , Url: http://http-service-no-auth-307:8080/redirect, Response content: , Exception: null, Error message: null"
+# "Retry time lapsed, unable to process HTTP request. HTTP Response code: 307, Reason phrase: , Url: http://http-service-no-auth-307:8080/redirect, Response content: , Exception: null, Error message: null"
+# Processed a total of 10 messages
 
 
 log "Confirm that the data was sent to the HTTP endpoint."
