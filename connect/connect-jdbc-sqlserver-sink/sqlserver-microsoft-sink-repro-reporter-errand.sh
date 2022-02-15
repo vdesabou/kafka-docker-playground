@@ -44,6 +44,9 @@ curl --request PUT \
 
 docker exec broker kafka-acls --bootstrap-server broker:9092 --add --allow-principal User:sftp --consumer --topic customers --group connect-sqlserver-sink --command-config /tmp/client.properties
 docker exec broker kafka-acls --bootstrap-server broker:9092 --add --allow-principal User:sftp --operation CREATE --topic dlq --command-config /tmp/client.properties
+# Write for DLQ is not set
+
+sleep 5
 
 log "Creating JDBC SQL Server (with Microsoft driver) sink connector"
 curl -X PUT \
@@ -62,7 +65,7 @@ curl -X PUT \
                "errors.deadletterqueue.context.headers.enable": "true",
                "errors.log.enable": "true",
                "errors.log.include.messages": "true",
-               "errors.retry.delay.max.ms": "300",
+               "errors.retry.delay.max.ms": "301",
                "errors.retry.timeout": "0",
                "admin.override.sasl.mechanism": "PLAIN",
                "admin.override.security.protocol": "SASL_PLAINTEXT",
@@ -76,20 +79,37 @@ curl -X PUT \
           }' \
      http://localhost:8083/connectors/sqlserver-sink/config | jq .
 
+log "Sending messages to topic customers, valid record"
+docker exec -i connect kafka-avro-console-producer --broker-list broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic customers --property value.schema='{"type":"record","name":"myrecord","fields":[{"name":"first_name", "type": "string"}]}' --producer.config /tmp/client.properties << EOF
+{"first_name": "vincent"}
+EOF
+
+
 log "Sending messages to topic customers, it goes to DLQ"
 docker exec -i connect kafka-avro-console-producer --broker-list broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic customers --property value.schema='{"type":"record","name":"myrecord","fields":[{"name":"first_name", "type": "string"}]}' --producer.config /tmp/client.properties << EOF
 {"first_name": "fooccccvvfjnvdkjnbjkdgnbjfgnbkjfgnbkjfngjkbnfgbjfg"}
 EOF
 
-# docker exec broker kafka-acls --bootstrap-server broker:9092 --add --allow-principal User:client --operation READ --topic __consumer_offsets --command-config /tmp/client.properties
-# docker container exec -i connect bash -c 'kafka-console-consumer \
-#      --bootstrap-server broker:9092 \
-#      --topic __consumer_offsets \
-#      --from-beginning \
-#      --formatter "kafka.coordinator.group.GroupMetadataManager\$OffsetsMessageFormatter"
-#      --consumer.config /tmp/client.properties'   | grep sqlserver-sink
+log "continue manually..."
+exit 0
 
-log "Sending messages to topic customers, valid record"
-docker exec -i connect kafka-avro-console-producer --broker-list broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic customers --property value.schema='{"type":"record","name":"myrecord","fields":[{"name":"first_name", "type": "string"}]}' --producer.config /tmp/client.properties << EOF
-{"first_name": "vincent"}
+
+# [2022-02-15 13:38:33,537] ERROR [sqlserver-sink|task-0] [Producer clientId=connect-worker-producer] Topic authorization failed for topics [dlq] (org.apache.kafka.clients.Metadata:309)
+
+# the commit does not happen
+docker exec broker kafka-acls --bootstrap-server broker:9092 --add --allow-principal User:client --operation READ --topic __consumer_offsets --command-config /tmp/client.properties
+docker container exec -i connect bash -c 'kafka-console-consumer --bootstrap-server broker:9092 --topic __consumer_offsets --from-beginning --formatter "kafka.coordinator.group.GroupMetadataManager\$OffsetsMessageFormatter" --consumer.config /tmp/client.properties'   | grep sqlserver-sink
+
+log "Add write ACL for DLQ"
+docker exec broker kafka-acls --bootstrap-server broker:9092 --add --allow-principal User:sftp --operation WRITE --topic dlq --command-config /tmp/client.properties
+
+
+# commit happens after
+
+log "Show content of customers table:"
+docker exec -i sqlserver /opt/mssql-tools/bin/sqlcmd -U sa -P Password! > /tmp/result.log  2>&1 <<-EOF
+USE testDB;
+select * from customers
+GO
 EOF
+cat /tmp/result.log
