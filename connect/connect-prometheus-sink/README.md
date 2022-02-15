@@ -58,7 +58,7 @@ $ curl -X PUT \
 Verify data is in Prometheus
 
 ```bash
-$ curl 'http://localhost:9090/api/v1/query?query=kafka_gaugeMetric1'
+$ curl 'http://localhost:19090/api/v1/query?query=kafka_gaugeMetric1'
 ```
 
 Results:

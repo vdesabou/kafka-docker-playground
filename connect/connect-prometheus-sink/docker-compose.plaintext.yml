@@ -6,7 +6,7 @@ services:
     hostname: prometheus-server
     container_name: prometheus-server
     ports:
-      - 9090:9090
+      - 19090:9090
     volumes:
       - ../../connect/connect-prometheus-sink/prometheus:/etc/prometheus/
 
