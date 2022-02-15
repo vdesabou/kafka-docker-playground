@@ -1,0 +1,46 @@
+---
+version: '3.5'
+services:
+  broker:
+    ports:
+      - "1234:1234"
+      - "5555:5555"
+    volumes:
+    - ../../other/monitoring-with-different-scrape-intervals/jmx_exporter:/usr/share/jmx_exporter/
+    environment:
+      # -Djava.rmi.server.hostname=broker and -Dcom.sun.management.jmxremote.local.only=false are used to access JMX sever from outside of the container
+      # the optins can be skipped if jmx_exporter standalone runs in the same host (default hostname is localhost)
+      EXTRA_ARGS: >-
+        -javaagent:/usr/share/jmx_exporter/jmx_prometheus_javaagent-0.16.1.jar=1234:/usr/share/jmx_exporter/broker-agent.yml
+        -Dcom.sun.management.jmxremote        
+        -Dcom.sun.management.jmxremote.port=5555
+        -Dcom.sun.management.jmxremote.ssl=false
+        -Dcom.sun.management.jmxremote.authenticate=false
+        -Djava.rmi.server.hostname=broker
+        -Dcom.sun.management.jmxremote.local.only=false
+
+  jmx_exporter_standalone:    
+    build: ../../other/monitoring-with-different-scrape-intervals/
+    hostname: jmx_exporter_standalone
+    container_name: jmx_exporter_standalone    
+    ports:
+      - "4321:4321"
+    depends_on:
+      - broker
+    volumes:
+    - ../../other/monitoring-with-different-scrape-intervals/jmx_exporter/broker-httpserver.yml:/usr/share/jmx_exporter/broker-httpserver.yml
+    environment:
+      JMX_EXPORTER_PORT: 4321
+      JMX_EXPORTER_CONFIG_FILE: /usr/share/jmx_exporter/broker-httpserver.yml      
+
+  prometheus_custom:
+    image: prom/prometheus
+    hostname: prometheus_custom
+    container_name: prometheus_custom
+    ports:
+      - 9090:9090
+    volumes:
+    - ../../other/monitoring-with-different-scrape-intervals/prometheus/:/etc/prometheus/
+    depends_on:
+      - broker
+      - jmx_exporter_standalone
