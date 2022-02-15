@@ -115,6 +115,7 @@ then
       TOPIC: "$topic_name"
       REPLICATION_FACTOR: 1
       NUMBER_OF_PARTITIONS: 1
+      NB_MESSAGES: 10 # -1 for MAX_VALUE
       MESSAGE_BACKOFF: 1000 # Frequency of message injection
       KAFKA_ACKS: "all" # default: "1"
       KAFKA_REQUEST_TIMEOUT_MS: 20000

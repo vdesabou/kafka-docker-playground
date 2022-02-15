@@ -35,6 +35,7 @@ public class SimpleProducer {
     private final Properties properties;
     private final String topicName;
     private final Long messageBackOff;
+    private Long nbMessages;
 
     public static void main(String[] args) throws InterruptedException, ExecutionException {
         SimpleProducer simpleProducer = new SimpleProducer();
@@ -45,6 +46,10 @@ public class SimpleProducer {
         properties = buildProperties(defaultProps, System.getenv(), KAFKA_ENV_PREFIX);
         topicName = System.getenv().getOrDefault("TOPIC","sample");
         messageBackOff = Long.valueOf(System.getenv().getOrDefault("MESSAGE_BACKOFF","100"));
+        nbMessages = Long.valueOf(System.getenv().getOrDefault("NB_MESSAGES", "10"));
+        if (nbMessages == -1) {
+            nbMessages = Long.MAX_VALUE;
+        }
 
         final Integer numberOfPartitions =  Integer.valueOf(System.getenv().getOrDefault("NUMBER_OF_PARTITIONS","2"));
         final Short replicationFactor =  Short.valueOf(System.getenv().getOrDefault("REPLICATION_FACTOR","3"));
@@ -72,7 +77,7 @@ public class SimpleProducer {
 
         try (Producer<Long, Customer> producer = new KafkaProducer<>(properties)) {
             long id = 0;
-            while (id < 10) {
+            while (id < nbMessages) {
 
                 // This will use constructor with minimum arguments and
                 // then setters to populate POJO
