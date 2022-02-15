@@ -8,7 +8,7 @@ services:
     container_name: zookeeper
     restart: always
     volumes:
-      - ./jmx-exporter:/usr/share/jmx_exporter/
+      - ../../environment/plaintext/jmx-exporter:/usr/share/jmx_exporter/
     ports:
       - "9999:9999"
     environment:
@@ -57,7 +57,7 @@ services:
       # KAFKA_CONFLUENT_TELEMETRY_API_SECRET: 'CLOUD_API_SECRET'
       EXTRA_ARGS: ${GRAFANA_AGENT_BROKER}
     volumes:
-      - ./jmx-exporter:/usr/share/jmx_exporter/
+      - ../../environment/plaintext/jmx-exporter:/usr/share/jmx_exporter/
   
   schema-registry:
     image: confluentinc/cp-schema-registry:${TAG}
@@ -93,7 +93,7 @@ services:
       - "8083:8083"
       - "10002:10002"
     volumes:
-      - ./jmx-exporter:/usr/share/jmx_exporter/
+      - ../../environment/plaintext/jmx-exporter:/usr/share/jmx_exporter/
     environment:
       KAFKA_JMX_PORT: 10002
       KAFKA_JMX_HOSTNAME: localhost
