@@ -98,8 +98,6 @@ log "HEADERS=$HEADERS"
 
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.repro-92320-sending-to-azure-event-hubs.yml"
 
-HEADERS="Authorization: SharedAccessSignature sr=nspgec2usereh701.servicebus.windows.net&sig=Kc8pHpSuj7D%2B9sPbq%2BLAE0URGxO5ArsxJCjx%2BHFU36E%3D&se=1645097489&skn=RootManageSharedAccessKey|Content-Type: application/atom+xml;type=entry;charset=utf-8"
-
 log "Sending messages to topic mytopic"
 docker exec -i broker kafka-console-producer --broker-list broker:9092 --topic mytopic << EOF
 { "DeviceId":"dev-01", "Temperature":"37.0" }
@@ -135,7 +133,7 @@ curl -X PUT \
                "headers": "'"$HEADERS"'",
                "header.separator": "|"
           }' \
-     http://localhost:8083/connectors/http-sink-json7/config | jq .
+     http://localhost:8083/connectors/http-sink-json/config | jq .
 
 # [2022-02-16 11:06:25,363] DEBUG [http-sink5|task-0] Backing off after failing to execute HTTP request for 1 records (io.confluent.connect.http.writer.HttpWriterImpl:316)
 # Error while processing HTTP request with Url : https://xxx.servicebus.windows.net/xxx/messages?timeout=60&api-version=2014-01, Error Message : Exception while processing HTTP request for a batch of 1 records., Exception : java.net.SocketException: Connection reset
