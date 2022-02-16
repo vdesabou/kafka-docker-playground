@@ -103,13 +103,13 @@ docker exec -i broker kafka-console-producer --broker-list broker:9092 --topic m
 { "DeviceId":"dev-01", "Temperature":"37.0" }
 EOF
 
-curl --request PUT \
-  --url http://localhost:8083/admin/loggers/io.confluent.connect.http \
-  --header 'Accept: application/json' \
-  --header 'Content-Type: application/json' \
-  --data '{
-	"level": "TRACE"
-}'
+# curl --request PUT \
+#   --url http://localhost:8083/admin/loggers/io.confluent.connect.http \
+#   --header 'Accept: application/json' \
+#   --header 'Content-Type: application/json' \
+#   --data '{
+# 	"level": "TRACE"
+# }'
 
 log "Creating http-sink connector"
 curl -X PUT \
@@ -131,9 +131,10 @@ curl -X PUT \
                "http.api.url": "'"$HTTP_API_URL"'",
                "request.method": "POST",
                "headers": "'"$HEADERS"'",
-               "header.separator": "|"
+               "header.separator": "|",
+               "https.ssl.protocol": "TLSv1.2"
           }' \
-     http://localhost:8083/connectors/http-sink-json/config | jq .
+     http://localhost:8083/connectors/http-sink/config | jq .
 
 # [2022-02-16 11:06:25,363] DEBUG [http-sink5|task-0] Backing off after failing to execute HTTP request for 1 records (io.confluent.connect.http.writer.HttpWriterImpl:316)
 # Error while processing HTTP request with Url : https://xxx.servicebus.windows.net/xxx/messages?timeout=60&api-version=2014-01, Error Message : Exception while processing HTTP request for a batch of 1 records., Exception : java.net.SocketException: Connection reset
