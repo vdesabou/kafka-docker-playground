@@ -177,7 +177,9 @@ sleep 5
 log "Verifying topic copy_of_blob_topic"
 timeout 60 docker exec broker kafka-console-consumer --bootstrap-server broker:9092 --topic copy_of_blob_topic --property print.key=true --property key.separator=, --from-beginning --max-messages 3
 
-#MyServiceRequestKey_MyClient,{"ERSS":{"Episode":{"ServiceRequest":{"ListOfServiceRequests":[{"ServiceRequestKey":"MyServiceRequestKey"}],"ClientSystem":"MyClient"}}}}
+# MyServiceRequestKey_MyClient,{"ERSS":{"Episode":{"ServiceRequest":{"ListOfServiceRequests":[{"ServiceRequestKey":"MyServiceRequestKey"}],"ClientSystem":"MyClient"}}}}
+# MyServiceRequestKey2_MyClient2,{"ERSS":{"Episode":{"ServiceRequest":{"ListOfServiceRequests":[{"ServiceRequestKey":"MyServiceRequestKey2"}],"ClientSystem":"MyClient2"}}}}
+# MyServiceRequestKey3_MyClient3,{"ERSS":{"Episode":{"ServiceRequest":{"ListOfServiceRequests":[{"ServiceRequestKey":"MyServiceRequestKey3"}],"ClientSystem":"MyClient3"}}}}
 
 #log "Deleting resource group"
 #az group delete --name $AZURE_RESOURCE_GROUP --yes --no-wait
