@@ -35,6 +35,15 @@ curl -X POST \
           }' \
      http://localhost:8083/secret/paths/my-rbac-connector/keys/password/versions | jq .
 
+log "Registering secret my-smt-password with superUser"
+curl -X POST \
+     -u superUser:superUser \
+     -H "Content-Type: application/json" \
+     --data '{
+               "secret": "this-is-my-secret-value"
+          }' \
+     http://localhost:8083/secret/paths/my-rbac-connector/keys/my-smt-password/versions | jq .
+
 log "Creating FileStream Sink connector"
 curl -X PUT \
      -u connectorSubmitter:connectorSubmitter \
@@ -48,7 +57,11 @@ curl -X PUT \
                "value.converter.schema.registry.url": "http://schema-registry:8081",
                "value.converter.basic.auth.credentials.source": "USER_INFO",
                "value.converter.basic.auth.user.info": "${secret:my-rbac-connector:username}:${secret:my-rbac-connector:username}",
-               "consumer.override.sasl.jaas.config": "org.apache.kafka.common.security.oauthbearer.OAuthBearerLoginModule required username=\"${secret:my-rbac-connector:username}\" password=\"${secret:my-rbac-connector:password}\" metadataServerUrls=\"http://broker:8091\";"
+               "consumer.override.sasl.jaas.config": "org.apache.kafka.common.security.oauthbearer.OAuthBearerLoginModule required username=\"${secret:my-rbac-connector:username}\" password=\"${secret:my-rbac-connector:password}\" metadataServerUrls=\"http://broker:8091\";",
+               "transforms": "InsertField",
+               "transforms.InsertField.type": "org.apache.kafka.connect.transforms.InsertField$Value",
+               "transforms.InsertField.static.field": "AddedBySMT",
+               "transforms.InsertField.static.value": "${secret:my-rbac-connector:my-smt-password}"
           }' \
      http://localhost:8083/connectors/my-rbac-connector/config | jq .
 
@@ -57,3 +70,14 @@ sleep 5
 
 log "Verify we have received the data in file"
 docker exec connect cat /tmp/output.json
+
+# Struct{f1=This is a message sent with RBAC SASL/PLAIN authentication 1,AddedBySMT=this-is-my-secret-value}
+# Struct{f1=This is a message sent with RBAC SASL/PLAIN authentication 2,AddedBySMT=this-is-my-secret-value}
+# Struct{f1=This is a message sent with RBAC SASL/PLAIN authentication 3,AddedBySMT=this-is-my-secret-value}
+# Struct{f1=This is a message sent with RBAC SASL/PLAIN authentication 4,AddedBySMT=this-is-my-secret-value}
+# Struct{f1=This is a message sent with RBAC SASL/PLAIN authentication 5,AddedBySMT=this-is-my-secret-value}
+# Struct{f1=This is a message sent with RBAC SASL/PLAIN authentication 6,AddedBySMT=this-is-my-secret-value}
+# Struct{f1=This is a message sent with RBAC SASL/PLAIN authentication 7,AddedBySMT=this-is-my-secret-value}
+# Struct{f1=This is a message sent with RBAC SASL/PLAIN authentication 8,AddedBySMT=this-is-my-secret-value}
+# Struct{f1=This is a message sent with RBAC SASL/PLAIN authentication 9,AddedBySMT=this-is-my-secret-value}
+# Struct{f1=This is a message sent with RBAC SASL/PLAIN authentication 10,AddedBySMT=this-is-my-secret-value}
