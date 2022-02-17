@@ -26,6 +26,13 @@ then
   exit 1
 fi
 
+
+if [[ "$(dirname $test_file)" == *. ]]
+then
+  logerror "ERROR: do not use './' for the test file!"
+  exit 1
+fi
+
 if [ "$description" = "" ]
 then
   logerror "ERROR: description is not provided as argument!"
@@ -104,6 +111,7 @@ then
 
         tmp_dir=$(mktemp -d -t ci-XXXXXXXXXX)
         cat << EOF > $tmp_dir/producer
+
 
   $producer_hostname:
     build:
