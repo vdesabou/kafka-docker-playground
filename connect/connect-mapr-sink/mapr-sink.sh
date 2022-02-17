@@ -49,6 +49,11 @@ log "Configure Mapr Client"
 docker exec -i --privileged --user root connect bash -c "ln -sf /usr/lib/jvm/jre-1.8.0-openjdk /usr/lib/jvm/java-8-openjdk"
 docker exec -i --privileged --user root connect bash -c "alternatives --remove java /usr/lib/jvm/zulu11/bin/java"
 docker exec -i --privileged --user root connect bash -c "chown -R appuser:appuser /opt/mapr"
+set +e
+log "It will fail the first time for some reasons.."
+docker exec -i --privileged --user root connect bash -c "/opt/mapr/server/configure.sh -secure -N maprdemo.mapr.io -c -C $MAPR_IP -u appuser -g appuser"
+docker exec -i --privileged --user root connect bash -c "rm -rf /opt/mapr/conf && cp -R /opt/mapr/conf.new /opt/mapr/conf"
+set -e
 docker exec -i --privileged --user root connect bash -c "/opt/mapr/server/configure.sh -secure -N maprdemo.mapr.io -c -C $MAPR_IP -u appuser -g appuser"
 
 docker cp mapr:/opt/mapr/conf/ssl_truststore /tmp/ssl_truststore
