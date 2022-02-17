@@ -10,12 +10,33 @@ This demo is using [dabz/ccloudexporter](https://github.com/Dabz/ccloudexporter)
 
 ![CCloud exporter](https://github.com/vdesabou/gifs/raw/master/ccloud/ccloud-demo/ccloudexporter.gif?raw=true)
 
+## Prerequisites
 
-## How to run
+* Properly initialized Confluent Cloud CLI
 
-Create `$HOME/.confluent/config`
+You must be already logged in with confluent CLI which needs to be setup with correct environment, cluster and api key to use:
 
-On the host from which you are running Docker, ensure that you have properly initialized Confluent Cloud CLI and have a valid configuration file at `$HOME/.confluent/config`.
+Typical commands to run:
+
+```bash
+$ confluent login --save
+
+Use environment $ENVIRONMENT_ID:
+$ confluent environment use $ENVIRONMENT_ID
+
+Use cluster $CLUSTER_ID:
+$ confluent kafka cluster use $CLUSTER_ID
+
+Store api key $API_KEY:
+$ confluent api-key store $API_KEY $API_SECRET --resource $CLUSTER_ID --force
+
+Use api key $API_KEY:
+$ confluent api-key use $API_KEY --resource $CLUSTER_ID
+```
+
+* Create a file `$HOME/.confluent/config`
+
+You should have a valid configuration file at `$HOME/.confluent/config`.
 
 Example:
 
@@ -39,6 +60,8 @@ confluent.license=<YOUR LICENSE>
 ccloud.user=<ccloud login>
 ccloud.password=<ccloud password>
 ```
+
+## How to run
 
 Simply run:
 

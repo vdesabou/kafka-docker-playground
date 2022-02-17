@@ -2,7 +2,7 @@
 
 - [Confluent Cloud Demo](#confluent-cloud-demo)
   - [⚠️ Disclaimer](#️-disclaimer)
-  - [Pre-requisites](#pre-requisites)
+  - [Prerequisites](#prerequisites)
   - [How to run locally](#how-to-run-locally)
   - [How to run with AWS CloudFormation](#how-to-run-with-aws-cloudformation)
   - [Connecting components to Confluent Cloud](#connecting-components-to-confluent-cloud)
@@ -50,17 +50,33 @@ If you choose to run it against your Confluent Cloud cluster, be aware that it:
 - is for demo purposes only
 - should be used only on a non-production cluster
 
-## Pre-requisites
+## Prerequisites
 
-* `docker-compose` (example `brew cask install docker`)
-* Local install of the new [Confluent Cloud CLI](https://docs.confluent.io/current/cloud/cli/install.html#ccloud-install-cli) v0.192.0 or above
-* [An initialized Confluent Cloud cluster used for development only](https://confluent.cloud)
+* Properly initialized Confluent Cloud CLI
 
-## How to run locally
+You must be already logged in with confluent CLI which needs to be setup with correct environment, cluster and api key to use:
 
-1. Create `$HOME/.confluent/config`
+Typical commands to run:
 
-On the host from which you are running Docker, ensure that you have properly initialized Confluent Cloud CLI and have a valid configuration file at `$HOME/.confluent/config`.
+```bash
+$ confluent login --save
+
+Use environment $ENVIRONMENT_ID:
+$ confluent environment use $ENVIRONMENT_ID
+
+Use cluster $CLUSTER_ID:
+$ confluent kafka cluster use $CLUSTER_ID
+
+Store api key $API_KEY:
+$ confluent api-key store $API_KEY $API_SECRET --resource $CLUSTER_ID --force
+
+Use api key $API_KEY:
+$ confluent api-key use $API_KEY --resource $CLUSTER_ID
+```
+
+* Create a file `$HOME/.confluent/config`
+
+You should have a valid configuration file at `$HOME/.confluent/config`.
 
 Example:
 
@@ -85,7 +101,7 @@ ccloud.user=<ccloud login>
 ccloud.password=<ccloud password>
 ```
 
-2. (Optional) Enable Confluent Cloud Schema Registry
+* (Optional) Enable Confluent Cloud Schema Registry
 
 By default, the demo uses Confluent Schema Registry running in a local Docker container. If you prefer to use Confluent Cloud Schema Registry instead, you need to first set it up:
 
@@ -96,8 +112,9 @@ By default, the demo uses Confluent Schema Registry running in a local Docker co
    ```bash
    $ curl -u $(grep "^schema.registry.basic.auth.user.info" $HOME/.confluent/config | cut -d'=' -f2) $(grep "^schema.registry.url" $HOME/.confluent/config | cut -d'=' -f2)/subjects
    ```
+## How to run locally
 
-3. Start the demo
+Start the demo:
 
 Run with local Docker Schema Registry:
 

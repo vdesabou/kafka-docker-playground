@@ -5,15 +5,7 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
-CONFIG_FILE=~/.confluent/config
-
-if [ ! -f ${CONFIG_FILE} ]
-then
-     logerror "ERROR: ${CONFIG_FILE} is not set"
-     exit 1
-fi
-
-${DIR}/../ccloud-demo/confluent-generate-env-vars.sh ${CONFIG_FILE}
+bootstrap_ccloud_environment
 
 if [ -f /tmp/delta_configs/env.delta ]
 then
@@ -48,33 +40,6 @@ then
      esac
      fi
      set -e
-fi
-
-if [ ! -z "$CI" ] || [ ! -z "$CLOUDFORMATION" ]
-then
-     # running with github actions
-     if [ ! -f ../../secrets.properties ]
-     then
-          logerror "../../secrets.properties is not present!"
-          exit 1
-     fi
-     source ../../secrets.properties > /dev/null 2>&1
-
-     log "Installing confluent CLI"
-     curl -L --http1.1 https://cnfl.io/cli | sudo sh -s -- -b /usr/local/bin
-     export PATH=$PATH:/usr/local/bin
-     log "##################################################"
-     log "Log in to Confluent Cloud"
-     log "##################################################"
-     confluent login --save
-     log "Use environment $ENVIRONMENT"
-     confluent environment use $ENVIRONMENT
-     log "Use cluster $CLUSTER_LKC"
-     confluent kafka cluster use $CLUSTER_LKC
-     log "Store api key $CLOUD_KEY"
-     confluent api-key store $CLOUD_KEY $CLOUD_SECRET --resource $CLUSTER_LKC --force
-     log "Use api key $CLOUD_KEY"
-     confluent api-key use $CLOUD_KEY --resource $CLUSTER_LKC
 fi
 
 export CCLOUD_CLUSTER=$(confluent prompt -f "%k")

@@ -16,13 +16,6 @@ then
      source ../../secrets.properties > /dev/null 2>&1
 fi
 
-CONFIG_FILE=~/.confluent/config
-
-if [ ! -f ${CONFIG_FILE} ]
-then
-     logerror "ERROR: ${CONFIG_FILE} is not set"
-     exit 1
-fi
 
 CCLOUD_REST_PROXY_SECURITY_PLUGIN_API_KEY=${CCLOUD_REST_PROXY_SECURITY_PLUGIN_API_KEY:-$1}
 CCLOUD_REST_PROXY_SECURITY_PLUGIN_API_SECRET=${CCLOUD_REST_PROXY_SECURITY_PLUGIN_API_SECRET:-$2}
@@ -39,7 +32,7 @@ then
      exit 1
 fi
 
-${DIR}/../ccloud-demo/confluent-generate-env-vars.sh ${CONFIG_FILE}
+bootstrap_ccloud_environment
 
 if [ -f /tmp/delta_configs/env.delta ]
 then

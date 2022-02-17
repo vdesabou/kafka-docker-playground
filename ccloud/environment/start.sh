@@ -4,63 +4,7 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
-CONFIG_FILE=~/.confluent/config
-
-if [ ! -f ${CONFIG_FILE} ]
-then
-     logerror "ERROR: ${CONFIG_FILE} is not set"
-     exit 1
-fi
-
-if [ -z "$BOOTSTRAP_SERVERS" ]
-then
-     ${DIR}/../ccloud-demo/confluent-generate-env-vars.sh ${CONFIG_FILE}
-
-     if [ -f /tmp/delta_configs/env.delta ]
-     then
-          source /tmp/delta_configs/env.delta
-     else
-          logerror "ERROR: /tmp/delta_configs/env.delta has not been generated"
-          exit 1
-     fi
-fi
-
-if [ -z "$CI" ] && [ -z "$CLOUDFORMATION" ]
-then
-     # not running with CI
-     verify_installed "confluent"
-     check_confluent_version 2.0.0 || exit 1
-     verify_confluent_login  "confluent kafka cluster list"
-     verify_confluent_details
-     check_if_continue
-else
-     if [ ! -z "$CI" ]
-     then
-          # running with github actions
-          if [ ! -f ../../secrets.properties ]
-          then
-               logerror "../../secrets.properties is not present!"
-               exit 1
-          fi
-          source ../../secrets.properties > /dev/null 2>&1
-     fi
-     
-     log "Installing confluent CLI"
-     curl -L --http1.1 https://cnfl.io/cli | sudo sh -s -- -b /usr/local/bin
-     export PATH=$PATH:/usr/local/bin
-     log "##################################################"
-     log "Log in to Confluent Cloud"
-     log "##################################################"
-     confluent login --save
-     log "Use environment $ENVIRONMENT"
-     confluent environment use $ENVIRONMENT
-     log "Use cluster $CLUSTER_LKC"
-     confluent kafka cluster use $CLUSTER_LKC
-     log "Store api key $CLOUD_KEY"
-     confluent api-key store $CLOUD_KEY $CLOUD_SECRET --resource $CLUSTER_LKC --force
-     log "Use api key $CLOUD_KEY"
-     confluent api-key use $CLOUD_KEY --resource $CLUSTER_LKC
-fi
+bootstrap_ccloud_environment
 
 # generate data file for externalizing secrets
 sed -e "s|:BOOTSTRAP_SERVERS:|$BOOTSTRAP_SERVERS|g" \

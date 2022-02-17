@@ -10,15 +10,7 @@ if ! version_gt $TAG_BASE "5.9.9"; then
     exit 111
 fi
 
-CONFIG_FILE=~/.confluent/config
-
-if [ ! -f ${CONFIG_FILE} ]
-then
-     logerror "ERROR: ${CONFIG_FILE} is not set"
-     exit 1
-fi
-
-${DIR}/../ccloud-demo/confluent-generate-env-vars.sh ${CONFIG_FILE}
+bootstrap_ccloud_environment
 
 if [ -f /tmp/delta_configs/env.delta ]
 then

@@ -9,17 +9,9 @@ set +e
 docker rm -f dotnet-ccloud-consumer dotnet-ccloud-producer
 set -e
 
-CONFIG_FILE=~/.confluent/config
-
-if [ ! -f ${CONFIG_FILE} ]
-then
-     logerror "ERROR: ${CONFIG_FILE} is not set"
-     exit 1
-fi
-
 CORE_DOT_VERSION=${1:-3.1}
 
-${DIR}/../ccloud-demo/confluent-generate-env-vars.sh ${CONFIG_FILE}
+bootstrap_ccloud_environment
 
 if [ -f /tmp/delta_configs/env.delta ]
 then

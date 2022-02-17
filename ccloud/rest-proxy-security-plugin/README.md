@@ -6,11 +6,33 @@ Quickly test [Principal Propagation](https://docs.confluent.io/platform/current/
 
 N.B: the main problem at this time is that the SSL certificate would need to include the ccloud key as DN within the certificate rather than a username (tracked by FF-1552)
 
-## How to run
+## Prerequisites
 
-Create `$HOME/.confluent/config`
+* Properly initialized Confluent Cloud CLI
 
-On the host from which you are running Docker, ensure that you have properly initialized Confluent Cloud CLI and have a valid configuration file at `$HOME/.confluent/config`.
+You must be already logged in with confluent CLI which needs to be setup with correct environment, cluster and api key to use:
+
+Typical commands to run:
+
+```bash
+$ confluent login --save
+
+Use environment $ENVIRONMENT_ID:
+$ confluent environment use $ENVIRONMENT_ID
+
+Use cluster $CLUSTER_ID:
+$ confluent kafka cluster use $CLUSTER_ID
+
+Store api key $API_KEY:
+$ confluent api-key store $API_KEY $API_SECRET --resource $CLUSTER_ID --force
+
+Use api key $API_KEY:
+$ confluent api-key use $API_KEY --resource $CLUSTER_ID
+```
+
+* Create a file `$HOME/.confluent/config`
+
+You should have a valid configuration file at `$HOME/.confluent/config`.
 
 Example:
 
@@ -34,6 +56,8 @@ confluent.license=<YOUR LICENSE>
 ccloud.user=<ccloud login>
 ccloud.password=<ccloud password>
 ```
+## How to run
+
 
 Simply run:
 

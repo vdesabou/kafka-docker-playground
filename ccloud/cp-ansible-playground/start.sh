@@ -8,16 +8,7 @@ verify_installed "git"
 verify_installed "ansible"
 verify_installed "ansible-playbook"
 
-
-CONFIG_FILE=~/.confluent/config
-
-if [ ! -f ${CONFIG_FILE} ]
-then
-     logerror "ERROR: ${CONFIG_FILE} is not set"
-     exit 1
-fi
-
-${DIR}/../ccloud-demo/confluent-generate-env-vars.sh ${CONFIG_FILE}
+bootstrap_ccloud_environment
 
 if [ -f /tmp/delta_configs/env.delta ]
 then
