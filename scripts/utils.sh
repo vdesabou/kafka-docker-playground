@@ -1463,3 +1463,137 @@ function create_or_get_oracle_image() {
 
   log "✨ Using Oracle prebuilt image $ORACLE_IMAGE (oracle version 🔢 $ORACLE_VERSION and 📂 setup folder $SETUP_FOLDER)"
 }
+
+function bootstrap_ccloud_environment () {
+  CONFIG_FILE=~/.confluent/config
+
+  if [ ! -f ${CONFIG_FILE} ]
+  then
+      logerror "ERROR: ${CONFIG_FILE} is not set"
+      exit 1
+  fi
+
+  if [ -z "$BOOTSTRAP_SERVERS" ]
+  then
+      ${DIR}/../ccloud-demo/confluent-generate-env-vars.sh ${CONFIG_FILE}
+
+      if [ -f /tmp/delta_configs/env.delta ]
+      then
+            source /tmp/delta_configs/env.delta
+      else
+            logerror "ERROR: /tmp/delta_configs/env.delta has not been generated"
+            exit 1
+      fi
+  fi
+
+  if [ -z "$CI" ] && [ -z "$CLOUDFORMATION" ]
+  then
+      # not running with CI
+      verify_installed "confluent"
+      check_confluent_version 2.0.0 || exit 1
+      verify_confluent_login  "confluent kafka cluster list"
+      verify_confluent_details
+      check_if_continue
+  else
+      if [ ! -z "$CI" ]
+      then
+            # running with github actions
+            if [ ! -f ../../secrets.properties ]
+            then
+                logerror "../../secrets.properties is not present!"
+                exit 1
+            fi
+            source ../../secrets.properties > /dev/null 2>&1
+      fi
+      
+      log "Installing confluent CLI"
+      curl -L --http1.1 https://cnfl.io/cli | sudo sh -s -- -b /usr/local/bin
+      export PATH=$PATH:/usr/local/bin
+      log "##################################################"
+      log "Log in to Confluent Cloud"
+      log "##################################################"
+      confluent login --save
+      log "Use environment $ENVIRONMENT"
+      confluent environment use $ENVIRONMENT
+      log "Use cluster $CLUSTER_LKC"
+      confluent kafka cluster use $CLUSTER_LKC
+      log "Store api key $CLOUD_KEY"
+      confluent api-key store $CLOUD_KEY $CLOUD_SECRET --resource $CLUSTER_LKC --force
+      log "Use api key $CLOUD_KEY"
+      confluent api-key use $CLOUD_KEY --resource $CLUSTER_LKC
+  fi
+}
+
+function create_ccloud_connector() {
+  file=$1
+
+  log "Creating connector from $file"
+  confluent connect create --config $file
+  if [[ $? != 0 ]]
+  then
+    logerror "Exit status was not 0 while creating connector from $file.  Please troubleshoot and try again"
+    exit 1
+  fi
+
+  return 0
+}
+
+function validate_ccloud_connector_up() {
+  confluent connect list -o json | jq -e 'map(select(.name == "'"$1"'" and .status == "RUNNING")) | .[]' > /dev/null 2>&1
+}
+
+function get_ccloud_connector_lcc() {
+  confluent connect list -o json | jq -r -e 'map(select(.name == "'"$1"'")) | .[].id'
+}
+
+function ccloud::retry() {
+    local -r -i max_wait="$1"; shift
+    local -r cmd="$@"
+
+    local -i sleep_interval=5
+    local -i curr_wait=0
+
+    until $cmd
+    do
+        if (( curr_wait >= max_wait ))
+        then
+            echo "ERROR: Failed after $curr_wait seconds. Please troubleshoot and run again."
+            return 1
+        else
+            printf "."
+            curr_wait=$((curr_wait+sleep_interval))
+            sleep $sleep_interval
+        fi
+    done
+    printf "\n"
+}
+
+function wait_for_ccloud_connector_up() {
+  filename=$1
+  maxWait=$2
+
+  connectorName=$(cat $filename | jq -r .name)
+  connectorId=$(get_ccloud_connector_lcc $connectorName)
+  log "Waiting up to $maxWait seconds for connector $connectorName ($connectorId) to be RUNNING"
+  ccloud::retry $maxWait validate_ccloud_connector_up $connectorName || exit 1
+  log "Connector $connectorName ($connectorId) is RUNNING"
+
+  return 0
+}
+
+
+function delete_ccloud_connector() {
+  filename=$1
+  connectorName=$(cat $filename | jq -r .name)
+  connectorId=$(get_ccloud_connector_lcc $connectorName)
+
+  log "Deleting connector $connectorName ($connectorId)"
+  confluent connect delete $connectorId
+  if [[ $? != 0 ]]
+  then
+    logerror "Exit status was not 0 while deleting connector from $file. Please troubleshoot and try again."
+    exit 1
+  fi
+
+  return 0
+}
