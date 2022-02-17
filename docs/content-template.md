@@ -150,7 +150,11 @@
   - 🔌 How to [connect](https://github.com/vdesabou/kafka-docker-playground/tree/master/ccloud/ccloud-demo#connecting-components-to-confluent-cloud) your components to Confluent Cloud
   - 📈 How to [monitor](https://github.com/vdesabou/kafka-docker-playground/tree/master/ccloud/ccloud-demo#monitoring) your Confluent Cloud cluster using Metrics API and Grafana, Splunk, New Relic, etc...
 
-### 🔗 Connectors connected to Confluent Cloud
+### 🤖 Full-Managed Connectors
+
+  - <img src="https://github.com/vdesabou/kafka-docker-playground/raw/master/images/icons/ibm_mq.png" width="15"> [IBM MQ Source](https://github.com/vdesabou/kafka-docker-playground/tree/master/ccloud/fully-managed-connect-ibm-mq-source) :ccloud/fully-managed-connect-ibm-mq-source:
+
+### 🔗 Self-Managed Connectors
 
   - <img src="https://github.com/vdesabou/kafka-docker-playground/raw/master/images/icons/kinesis.svg" width="15"> [AWS Kinesis](https://github.com/vdesabou/kafka-docker-playground/tree/master/ccloud/connect-aws-kinesis-source) source :connect/connect-aws-kinesis-source:
   - <img src="https://github.com/vdesabou/kafka-docker-playground/raw/master/images/icons/servicenow.png" width="15"> [ServiceNow](https://github.com/vdesabou/kafka-docker-playground/tree/master/ccloud/connect-servicenow-source) source :ccloud/connect-servicenow-source:
