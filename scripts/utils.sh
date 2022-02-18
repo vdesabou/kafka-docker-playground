@@ -188,7 +188,7 @@ fi
 # Setting grafana agent based  
 if [ -z "$ENABLE_JMX_GRAFANA" ]
 then
-  # defaulting to empty variable since this is default in kafka-run-class.sh
+  # defaulting to empty variable since this is default in kafka-run-class.sh & avoid warning
   export GRAFANA_AGENT_ZK=""
   export GRAFANA_AGENT_BROKER=""
   export GRAFANA_AGENT_CONNECT=""
