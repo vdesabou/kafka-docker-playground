@@ -284,7 +284,6 @@ then
           then
             export CONNECT_TAG="$name-cp-$TAG-$CONNECTOR_TAG"
           else
-            logwarn "VINC ONNECTOR_TAG="latest""
             export CONNECTOR_TAG="latest"
           fi
 
