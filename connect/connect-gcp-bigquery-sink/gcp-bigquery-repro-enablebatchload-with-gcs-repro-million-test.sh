@@ -29,7 +29,8 @@ done
 
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.repro-enablebatchload-with-gcs.repro-million-test.yml"
 
-#FIXTHIS: time needs to be created
+#FIXTHIS: table needs to be created first: "autoCreateTables" : "true" does not work with enableBatchLoad
+# It can be run first and then delete with DELETE FROM `vincent-de-saboulin-lab.pgec2userds701.customer_avro` where true;
 
 #####
 ## GCS
