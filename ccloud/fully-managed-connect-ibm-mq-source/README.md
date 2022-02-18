@@ -6,7 +6,9 @@ Quickly test [IBM MQ Source](https://docs.confluent.io/cloud/current/connectors/
 
 Using IBM MQ Docker [image](https://hub.docker.com/r/ibmcom/mq/)
 
-## Ngrok auth token
+## Exposing docker container over internet
+
+**🚨WARNING🚨** It is considered a security risk to run this example on your personal machine since you'll be exposing a TCP port over internet using [Ngrok](https://ngrok.com). It is strongly encouraged to run it on a AWS EC2 instance where you'll use [Confluent Static Egress IP Addresses](https://docs.confluent.io/cloud/current/networking/static-egress-ip-addresses.html#use-static-egress-ip-addresses-with-ccloud) (only available for public endpoints on AWS) to allow traffic from your Confluent Cloud cluster to your EC2 instance using EC2 Security Group.
 
 An [Ngrok](https://ngrok.com) auth token is necessary in order to expose the Docker Container port to internet, so that fully managed connector can reach it.
 

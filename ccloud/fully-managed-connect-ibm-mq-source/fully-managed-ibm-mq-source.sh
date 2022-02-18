@@ -15,6 +15,11 @@ then
      exit 1
 fi
 
+logwarn "🚨WARNING🚨"
+logwarn "It is considered a security risk to run this example on your personal machine since you'll be exposing a TCP port over internet using Ngrok (https://ngrok.com)."
+logwarn "It is strongly encouraged to run it on a AWS EC2 instance where you'll use Confluent Static Egress IP Addresses (https://docs.confluent.io/cloud/current/networking/static-egress-ip-addresses.html#use-static-egress-ip-addresses-with-ccloud) (only available for public endpoints on AWS) to allow traffic from your Confluent Cloud cluster to your EC2 instance using EC2 Security Group."
+check_if_continue
+
 bootstrap_ccloud_environment
 
 if [ -f /tmp/delta_configs/env.delta ]
