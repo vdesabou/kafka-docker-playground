@@ -261,55 +261,83 @@ then
     fi
     if [ "${docker_compose_file}" != "" ] && [ -f "${docker_compose_file}" ]
     then
-      connector_path=$(grep "CONNECT_PLUGIN_PATH" "${docker_compose_file}" | cut -d "/" -f 5 | head -1)
-      # remove any extra comma at the end (when there are multiple connectors used, example S3 source)
-      connector_path=$(echo "$connector_path" | cut -d "," -f 1)
-      owner=$(echo "$connector_path" | cut -d "-" -f 1)
-      name=$(echo "$connector_path" | cut -d "-" -f 2-)
-      export CONNECT_TAG="$name-cp-$TAG-$CONNECTOR_TAG"
-      log "👷 Building Docker image vdesabou/kafka-docker-playground-connect:${CONNECT_TAG}"
-      tmp_dir=$(mktemp -d -t ci-XXXXXXXXXX)
+      connector_paths=$(grep "CONNECT_PLUGIN_PATH" "${docker_compose_file}" | grep -v "KSQL_CONNECT_PLUGIN_PATH" | cut -d ":" -f 2  | tr -s " " | head -1)
+      if [ "$connector_paths" == "" ]
+      then
+        # not a connector test
+        if [ -z "$CONNECT_TAG" ]
+        then
+          export CONNECT_TAG="$TAG"
+        fi
+      else
+        ###
+        #  Loop on all connectors in CONNECT_PLUGIN_PATH and install latest version from Confluent Hub (except for JDBC and replicator)
+        ###
+        first_loop=true
+        for connector_path in ${connector_paths//,/ }
+        do
+          connector_path=$(echo "$connector_path" | cut -d "/" -f 5)
+          owner=$(echo "$connector_path" | cut -d "-" -f 1)
+          name=$(echo "$connector_path" | cut -d "-" -f 2-)
+
+          if [ "$first_loop" = true ]
+          then
+            export CONNECT_TAG="$name-cp-$TAG-$CONNECTOR_TAG"
+          else
+            logwarn "VINC ONNECTOR_TAG="latest""
+            export CONNECTOR_TAG="latest"
+          fi
+
+          log "👷 Building Docker image vdesabou/kafka-docker-playground-connect:${CONNECT_TAG}"
+          tmp_dir=$(mktemp -d -t ci-XXXXXXXXXX)
 cat << EOF > $tmp_dir/Dockerfile
 FROM vdesabou/kafka-docker-playground-connect:${TAG}
 RUN confluent-hub install --no-prompt $owner/$name:$CONNECTOR_TAG
 EOF
-      docker build -t vdesabou/kafka-docker-playground-connect:$CONNECT_TAG $tmp_dir
-      rm -rf $tmp_dir
-      ###
-      #  CONNECTOR_JAR is set (and also CONNECTOR_TAG)
-      ###
-      if [ ! -z "$CONNECTOR_JAR" ]
-      then
-        if [ ! -f "$CONNECTOR_JAR" ]
-        then
-          logerror "CONNECTOR_JAR $CONNECTOR_JAR does not exist!"
-          exit 1
-        fi
-        log "🎯 CONNECTOR_JAR is set with $CONNECTOR_JAR"
-        connector_jar_name=$(basename ${CONNECTOR_JAR})
-        current_jar_path="/usr/share/confluent-hub-components/$connector_path/lib/$name-$CONNECTOR_TAG.jar"
-        set +e
-        docker run vdesabou/kafka-docker-playground-connect:${CONNECT_TAG} ls $current_jar_path
-        if [ $? -ne 0 ]
-        then
-          logwarn "$connector_path/lib/$name-$CONNECTOR_TAG.jar does not exist, the jar name to replace could not be found automatically"
-          array=($(docker run --rm vdesabou/kafka-docker-playground-connect:${CONNECT_TAG} ls /usr/share/confluent-hub-components/$connector_path/lib | grep $CONNECTOR_TAG))
-          choosejar "${array[@]}"
-          current_jar_path="/usr/share/confluent-hub-components/$connector_path/lib/$jar"
-        fi
-        set -e
-        NEW_CONNECT_TAG="$name-cp-$TAG-$CONNECTOR_TAG-$connector_jar_name"
-        log "👷 Building Docker image vdesabou/kafka-docker-playground-connect:${NEW_CONNECT_TAG}"
-        log "🔄 Remplacing $name-$CONNECTOR_TAG.jar by $connector_jar_name"
-        tmp_dir=$(mktemp -d -t ci-XXXXXXXXXX)
-        cp $CONNECTOR_JAR $tmp_dir/
+          docker build -t vdesabou/kafka-docker-playground-connect:$CONNECT_TAG $tmp_dir
+          rm -rf $tmp_dir
+
+          if [ "$first_loop" = true ]
+          then
+            first_loop=false
+            ###
+            #  CONNECTOR_JAR is set (and also CONNECTOR_TAG)
+            ###
+            if [ ! -z "$CONNECTOR_JAR" ]
+            then
+              if [ ! -f "$CONNECTOR_JAR" ]
+              then
+                logerror "CONNECTOR_JAR $CONNECTOR_JAR does not exist!"
+                exit 1
+              fi
+              log "🎯 CONNECTOR_JAR is set with $CONNECTOR_JAR"
+              connector_jar_name=$(basename ${CONNECTOR_JAR})
+              current_jar_path="/usr/share/confluent-hub-components/$connector_path/lib/$name-$CONNECTOR_TAG.jar"
+              set +e
+              docker run vdesabou/kafka-docker-playground-connect:${CONNECT_TAG} ls $current_jar_path
+              if [ $? -ne 0 ]
+              then
+                logwarn "$connector_path/lib/$name-$CONNECTOR_TAG.jar does not exist, the jar name to replace could not be found automatically"
+                array=($(docker run --rm vdesabou/kafka-docker-playground-connect:${CONNECT_TAG} ls /usr/share/confluent-hub-components/$connector_path/lib | grep $CONNECTOR_TAG))
+                choosejar "${array[@]}"
+                current_jar_path="/usr/share/confluent-hub-components/$connector_path/lib/$jar"
+              fi
+              set -e
+              NEW_CONNECT_TAG="$name-cp-$TAG-$CONNECTOR_TAG-$connector_jar_name"
+              log "👷 Building Docker image vdesabou/kafka-docker-playground-connect:${NEW_CONNECT_TAG}"
+              log "🔄 Remplacing $name-$CONNECTOR_TAG.jar by $connector_jar_name"
+              tmp_dir=$(mktemp -d -t ci-XXXXXXXXXX)
+              cp $CONNECTOR_JAR $tmp_dir/
 cat << EOF > $tmp_dir/Dockerfile
 FROM vdesabou/kafka-docker-playground-connect:${CONNECT_TAG}
 COPY $connector_jar_name $current_jar_path
 EOF
-        docker build -t vdesabou/kafka-docker-playground-connect:$NEW_CONNECT_TAG $tmp_dir
-        export CONNECT_TAG="$NEW_CONNECT_TAG"
-        rm -rf $tmp_dir
+              docker build -t vdesabou/kafka-docker-playground-connect:$NEW_CONNECT_TAG $tmp_dir
+              export CONNECT_TAG="$NEW_CONNECT_TAG"
+              rm -rf $tmp_dir
+            fi
+          fi
+        done
       fi
     else
       if [ -z "$IGNORE_CHECK_FOR_DOCKER_COMPOSE" ] && [ "$0" != "/tmp/playground-command" ] && [ "$0" != "/tmp/playground-command-debugging" ]
@@ -1532,7 +1560,6 @@ function create_ccloud_connector() {
   if [[ $? != 0 ]]
   then
     logerror "Exit status was not 0 while creating connector from $file.  Please troubleshoot and try again"
-    exit 1
   fi
 
   return 0
@@ -1589,11 +1616,5 @@ function delete_ccloud_connector() {
 
   log "Deleting connector $connectorName ($connectorId)"
   confluent connect delete $connectorId
-  if [[ $? != 0 ]]
-  then
-    logerror "Exit status was not 0 while deleting connector from $file. Please troubleshoot and try again."
-    exit 1
-  fi
-
   return 0
 }
