@@ -29,6 +29,8 @@ function wait_for_gss_exception () {
      log "The problem has been reproduced !"
 }
 
+export ENABLE_CONNECT_NODES=1
+
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.repro-gss-exception.yml"
 
 log "Java version used on connect:"
