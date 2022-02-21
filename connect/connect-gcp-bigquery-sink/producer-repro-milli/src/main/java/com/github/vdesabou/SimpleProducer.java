@@ -69,7 +69,6 @@ public class SimpleProducer {
                 .randomizationDepth(10)
                 .stringLengthRange(1, 5)
                 .collectionSizeRange(1, 1)
-                .charset(forName("UTF-8"))
                 .scanClasspathForConcreteTypes(true)
                 .overrideDefaultInitialization(false)
                 .ignoreRandomizationErrors(false);
