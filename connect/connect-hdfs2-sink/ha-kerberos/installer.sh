@@ -1,6 +1,12 @@
 #/usr/bin/env bash
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 for INSTALLER in $(env | grep INSTALLER_); do
+        # https://techglimpse.com/failed-metadata-repo-appstream-centos-8/
+        # Centos 8 is EOL BEGIN
+        cd /etc/yum.repos.d/
+        sudo sed -i 's/mirrorlist/#mirrorlist/g' /etc/yum.repos.d/CentOS-*
+        sudo sed -i 's|#baseurl=http://mirror.centos.org|baseurl=http://vault.centos.org|g' /etc/yum.repos.d/CentOS-*
+        # Centos 8 is EOL END
         sudo yum install -y rsync
         cd /
         ID=$(id -u -n)
