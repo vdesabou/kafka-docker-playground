@@ -41,7 +41,11 @@ if ! version_gt $TAG_BASE "5.9.9"; then
 fi
 
 log "Send message to MQTT in my-mqtt-topic topic"
-docker exec mosquitto sh -c 'mosquitto_pub -h localhost -p 1883 -u "myuser" -P "mypassword" -t "my-mqtt-topic" -m "sample-msg-1"'
+docker exec mosquitto sh << EOF
+mosquitto_pub -h localhost -p 1883 -u "myuser" -P "mypassword" -t "my-mqtt-topic" -m "sample-msg-1"
+mosquitto_pub -h localhost -p 1883 -u "myuser" -P "mypassword" -t "my-mqtt-topic" -m "sample-msg-2"
+mosquitto_pub -h localhost -p 1883 -u "myuser" -P "mypassword" -t "my-mqtt-topic" -m "sample-msg-3"
+EOF
 
 sleep 5
 
@@ -69,6 +73,14 @@ curl -X PUT \
      http://localhost:8083/connectors/mqtt-source/config | jq .
 
 sleep 30
+
+log "Send message again to MQTT in my-mqtt-topic topic"
+docker exec mosquitto sh << EOF
+mosquitto_pub -h localhost -p 1883 -u "myuser" -P "mypassword" -t "my-mqtt-topic" -m "sample-msg-4"
+mosquitto_pub -h localhost -p 1883 -u "myuser" -P "mypassword" -t "my-mqtt-topic" -m "sample-msg-5"
+mosquitto_pub -h localhost -p 1883 -u "myuser" -P "mypassword" -t "my-mqtt-topic" -m "sample-msg-6"
+EOF
+
 
 log "Verify we have received the data in $MQTT_TOPIC topic"
 timeout 60 docker container exec -e BOOTSTRAP_SERVERS="$BOOTSTRAP_SERVERS" -e SASL_JAAS_CONFIG="$SASL_JAAS_CONFIG" -e MQTT_TOPIC="$MQTT_TOPIC" connect bash -c 'kafka-console-consumer --topic $MQTT_TOPIC --bootstrap-server $BOOTSTRAP_SERVERS --consumer-property ssl.endpoint.identification.algorithm=https --consumer-property sasl.mechanism=PLAIN --consumer-property security.protocol=SASL_SSL --consumer-property sasl.jaas.config="$SASL_JAAS_CONFIG" --property basic.auth.credentials.source=USER_INFO --from-beginning --max-messages 1'
