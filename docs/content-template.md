@@ -234,7 +234,6 @@ Using Multi-Data-Center setup with 🇺🇸 and 🇪🇺 clusters
   - [Configuring Control Center with LDAP authentication](https://github.com/vdesabou/kafka-docker-playground/tree/master/other/control-center-ldap-auth) ![not tested](https://img.shields.io/badge/CI-not%20tested!-violet)
 - 💾 Tiered Storage
   - [Tiered storage with AWS S3](https://github.com/vdesabou/kafka-docker-playground/tree/master/other/tiered-storage-with-aws) :other/tiered-storage-with-aws:
-  - [Tiered storage with Minio](https://github.com/vdesabou/kafka-docker-playground/tree/master/other/tiered-storage-with-minio) (unsupported) ![not tested](https://img.shields.io/badge/CI-not%20tested!-violet)
 - ⚖ [Confluent Rebalancer](https://github.com/vdesabou/kafka-docker-playground/tree/master/other/rebalancer) ![not tested](https://img.shields.io/badge/CI-not%20tested!-violet)
 - 👴 [JMS Client](https://github.com/vdesabou/kafka-docker-playground/tree/master/other/jms-client) ![not tested](https://img.shields.io/badge/CI-not%20tested!-violet)
 - 🗃️ [Audit Logs](https://github.com/vdesabou/kafka-docker-playground/tree/master/other/audit-logs) :other/audit-logs:
