@@ -90,6 +90,9 @@ docker exec broker kafka-topics --bootstrap-server 127.0.0.1:9092 --create --top
 
 TOPIC_MAP="apparels#${AZURE_COSMOSDB_DB_NAME}"
 
+log "Send messages to Azure Cosmos DB"
+docker exec -e AZURE_COSMOSDB_DB_ENDPOINT_URI="$AZURE_COSMOSDB_DB_ENDPOINT_URI" -e AZURE_COSMOSDB_PRIMARY_CONNECTION_KEY="$AZURE_COSMOSDB_PRIMARY_CONNECTION_KEY" -e AZURE_COSMOSDB_DB_NAME="$AZURE_COSMOSDB_DB_NAME" -e AZURE_COSMOSDB_CONTAINER_NAME="$AZURE_COSMOSDB_CONTAINER_NAME" azure-cosmos-client bash -c "python /insert-data.py"
+
 # https://github.com/microsoft/kafka-connect-cosmosdb/blob/dev/doc/README_Source.md#source-configuration-properties
 log "Creating Azure Cosmos DB Source connector"
 curl -X PUT \
@@ -110,12 +113,10 @@ curl -X PUT \
           }' \
      http://localhost:8083/connectors/azure-cosmosdb-source/config | jq .
 
-sleep 10
-
-log "Send messages to Azure Cosmos DB"
-docker exec -e AZURE_COSMOSDB_DB_ENDPOINT_URI="$AZURE_COSMOSDB_DB_ENDPOINT_URI" -e AZURE_COSMOSDB_PRIMARY_CONNECTION_KEY="$AZURE_COSMOSDB_PRIMARY_CONNECTION_KEY" -e AZURE_COSMOSDB_DB_NAME="$AZURE_COSMOSDB_DB_NAME" -e AZURE_COSMOSDB_CONTAINER_NAME="$AZURE_COSMOSDB_CONTAINER_NAME" azure-cosmos-client bash -c "python /insert-data.py"
-
 sleep 30
+
+log "Send again messages to Azure Cosmos DB"
+docker exec -e AZURE_COSMOSDB_DB_ENDPOINT_URI="$AZURE_COSMOSDB_DB_ENDPOINT_URI" -e AZURE_COSMOSDB_PRIMARY_CONNECTION_KEY="$AZURE_COSMOSDB_PRIMARY_CONNECTION_KEY" -e AZURE_COSMOSDB_DB_NAME="$AZURE_COSMOSDB_DB_NAME" -e AZURE_COSMOSDB_CONTAINER_NAME="$AZURE_COSMOSDB_CONTAINER_NAME" azure-cosmos-client bash -c "python /insert-data.py"
 
 log "Verifying topic apparels"
 timeout 60 docker exec broker kafka-console-consumer -bootstrap-server broker:9092 --topic apparels --from-beginning --max-messages 9
