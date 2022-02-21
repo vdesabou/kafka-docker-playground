@@ -44,6 +44,14 @@ curl -X PUT \
           "src.value.converter.basic.auth.credentials.source": "USER_INFO",
           "src.kafka.bootstrap.servers": "broker:9092",
 
+          "dest.kafka.ssl.endpoint.identification.algorithm":"https",
+          "dest.kafka.bootstrap.servers": "${file:/data:bootstrap.servers}",
+          "dest.kafka.security.protocol" : "SASL_SSL",
+          "dest.kafka.sasl.jaas.config": "org.apache.kafka.common.security.plain.PlainLoginModule required username=\"${file:/data:sasl.username}\" password=\"${file:/data:sasl.password}\";",
+          "dest.kafka.sasl.mechanism":"PLAIN",
+          "dest.kafka.request.timeout.ms":"20000",
+          "dest.kafka.retry.backoff.ms":"500",
+          
           "key.converter": "io.confluent.connect.avro.AvroConverter",
           "key.converter.schema.registry.url": "'"$SCHEMA_REGISTRY_URL"'",
           "key.converter.basic.auth.user.info": "${file:/data:schema.registry.basic.auth.user.info}",
