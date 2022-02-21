@@ -77,7 +77,40 @@ set -e
 log "Create dataset $PROJECT.$DATASET"
 docker run -i --volumes-from gcloud-config google/cloud-sdk:latest bq --project_id "$PROJECT" mk --dataset --description "used by playground" "$DATASET"
 
-log "✨ Run the avro java producer which produces to topic customer_avro"
+log "✨ Run the avro java producer which produces to topic customer_avro, only 10 messages"
+docker exec -e NB_MESSAGES=10 producer-repro-milli bash -c "java -jar producer-1.0.0-jar-with-dependencies.jar" > /dev/null 2>&1
+
+
+log "Creating GCP BigQuery Sink connector, with autoCreateTables=true in order to create the table"
+curl -X PUT \
+     -H "Content-Type: application/json" \
+     --data '{
+               "connector.class": "com.wepay.kafka.connect.bigquery.BigQuerySinkConnector",
+               "tasks.max" : "1",
+               "topics" : "customer_avro",
+               "sanitizeTopics" : "true",
+               "autoCreateTables" : "true",
+               "autoUpdateSchemas" : "true",
+               "defaultDataset" : "'"$DATASET"'",
+               "allBQFieldsNullable": "false",
+               "autoCreateTables": "true",
+               "autoUpdateSchemas": "true",
+               "includeKafkaData": "true",
+               "bufferSize": "100000",
+               "project" : "'"$PROJECT"'",
+               "keyfile" : "/tmp/keyfile.json",
+               "errors.log.enable": "true",
+               "errors.log.include.messages": "true",
+               "threadPoolSize": "10"
+          }' \
+     http://localhost:8083/connectors/gcp-bigquery-sink/config | jq .
+
+
+sleep 120
+
+curl -X DELETE localhost:8083/connectors/gcp-bigquery-sink
+
+log "✨ Run the avro java producer which produces to topic customer_avro, 1M records"
 docker exec producer-repro-milli bash -c "java -jar producer-1.0.0-jar-with-dependencies.jar" > /dev/null 2>&1
 
 
@@ -106,14 +139,14 @@ curl -X PUT \
                "errors.log.include.messages": "true",
                "threadPoolSize": "10"
           }' \
-     http://localhost:8083/connectors/gcp-bigquery-sink-bulk-1235/config | jq .
+     http://localhost:8083/connectors/gcp-bigquery-sink-bulk/config | jq .
 
 
 log "Sleeping 125 seconds"
 sleep 125
 
 log "Verify data is in GCP BigQuery:"
-docker run -i --volumes-from gcloud-config google/cloud-sdk:latest bq --project_id "$PROJECT" query "SELECT * FROM $DATASET.customer_avro;" > /tmp/result.log  2>&1
+docker run -i --volumes-from gcloud-config google/cloud-sdk:latest bq --project_id "$PROJECT" query "SELECT COUNT(*) FROM $DATASET.customer_avro;" > /tmp/result.log  2>&1
 cat /tmp/result.log
 grep "value1" /tmp/result.log
 
