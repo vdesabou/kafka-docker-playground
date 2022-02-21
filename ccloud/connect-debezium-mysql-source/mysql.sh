@@ -27,6 +27,7 @@ if ! version_gt $TAG_BASE "5.9.9"; then
      log "Creating topic in Confluent Cloud (auto.create.topics.enable=false)"
      set +e
      create_topic dbserver1_mydb_team
+     create_topic dbserver1
      create_topic schema-changes.mydb
      set -e
 fi
