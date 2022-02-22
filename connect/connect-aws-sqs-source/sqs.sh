@@ -28,8 +28,8 @@ fi
 
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
 
-QUEUE_NAME="sqs-playground-$TAG"
-QUEUE_NAME=${QUEUE_NAME//[._]/}
+QUEUE_NAME=pg${USER}sqs${TAG}
+QUEUE_NAME=${QUEUE_NAME//[-._]/}
 AWS_REGION=$(aws configure get region | tr '\r' '\n')
 QUEUE_URL_RAW=$(aws sqs create-queue --queue-name $QUEUE_NAME | jq .QueueUrl)
 AWS_ACCOUNT_NUMBER=$(echo "$QUEUE_URL_RAW" | cut -d "/" -f 4)
