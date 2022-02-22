@@ -16,10 +16,11 @@ Example:
 cd connect/connect-hdfs2-sink
 ../../scripts/bootstrap-reproduction-model.sh hdfs2-sink.sh "12345 testing with parquet format"
 
-16:54:01 ℹ️ 💫 Using default CP version 7.0.1
-16:54:01 ℹ️ 🎓 set TAG environment variable to specify different version, see https://kafka-docker-playground.io/#/how-to-use?id=🎯-for-confluent-platform-cp
-16:54:01 ℹ️ 🎩 Creating file docker-compose.plaintext.repro-12345-testing-with-parquet-format.yml
-16:54:01 ℹ️ 🎩 Creating file hdfs2-sink-repro-12345-testing-with-parquet-format.sh
+12:25:06 ℹ️ 💫 Using default CP version 7.0.1
+12:25:06 ℹ️ 🎓 set TAG environment variable to specify different version, see https://kafka-docker-playground.io/#/how-to-use?id=🎯-for-confluent-platform-cp
+12:25:06 ℹ️ 🎩 Creating file /Users/vsaboulin/Documents/github/kafka-docker-playground/reproduction-models/connect-connect-hdfs2-sink/docker-compose.plaintext.repro-12345-testing-with-parquet-format.yml
+12:25:06 ℹ️ 🎩 Creating file /Users/vsaboulin/Documents/github/kafka-docker-playground/reproduction-models/connect-connect-hdfs2-sink/hdfs2-sink-repro-12345-testing-with-parquet-format.sh
+12:25:06 ℹ️ 📂 The reproduction files are now available in: /Users/vsaboulin/Documents/github/kafka-docker-playground/reproduction-models/connect-connect-hdfs2-sink
 ```
 
 If you want to automatically generate a Java Producer, just add a third parameter (one of `avro`, `protobuf` or `json-schema`):
@@ -29,14 +30,12 @@ Example with `protobuf`:
 ```bash
 cd connect/connect-hdfs2-sink
 ../../scripts/bootstrap-reproduction-model.sh hdfs2-sink.sh "12345 testing with parquet format" protobuf
-16:56:15 ℹ️ 💫 Using default CP version 7.0.1
-16:56:15 ℹ️ 🎓 set TAG environment variable to specify different version, see https://kafka-docker-playground.io/#/how-to-use?id=🎯-for-confluent-platform-cp
-16:56:15 ℹ️ 🎩 Creating file docker-compose.plaintext.repro-12345-testing-with-parquet-format.yml
-16:56:15 ℹ️ 🎩 Creating file hdfs2-sink-repro-12345-testing-with-parquet-format.sh
-16:56:15 ℹ️ 🎩 Replacing topic test_hdfs with customer_protobuf
-16:56:15 ℹ️ 🎩 Adding producer-repro-12345 container to docker-compose.plaintext.repro-12345-testing-with-parquet-format.yml
-16:56:15 ℹ️ 🎩 Adding command to build jar for producer-repro-12345 to /Users/vsaboulin/Documents/github/kafka-docker-playground/connect/connect-hdfs2-sink/hdfs2-sink-repro-12345-testing-with-parquet-format.sh
-16:56:15 ℹ️ 🎩 Adding command to run producer to /Users/vsaboulin/Documents/github/kafka-docker-playground/connect/connect-hdfs2-sink/hdfs2-sink-repro-12345-testing-with-parquet-format.sh
+12:24:36 ℹ️ 💫 Using default CP version 7.0.1
+12:24:36 ℹ️ 🎓 set TAG environment variable to specify different version, see https://kafka-docker-playground.io/#/how-to-use?id=🎯-for-confluent-platform-cp
+12:24:36 ℹ️ 🎩 Creating file /Users/vsaboulin/Documents/github/kafka-docker-playground/reproduction-models/connect-connect-hdfs2-sink/docker-compose.plaintext.repro-12345-testing-with-parquet-format.yml
+12:24:36 ℹ️ 🎩 Creating file /Users/vsaboulin/Documents/github/kafka-docker-playground/reproduction-models/connect-connect-hdfs2-sink/hdfs2-sink-repro-12345-testing-with-parquet-format.sh
+12:24:36 ℹ️ 🎩 Adding Java protobuf producer in /Users/vsaboulin/Documents/github/kafka-docker-playground/reproduction-models/connect-connect-hdfs2-sink/producer-repro-12345
+12:24:36 ℹ️ 📂 The reproduction files are now available in: /Users/vsaboulin/Documents/github/kafka-docker-playground/reproduction-models/connect-connect-hdfs2-sink
 ```
 
 This will create the following files:
