@@ -531,9 +531,8 @@ EOF
               then
                 log "💫 Using 🔗connector: $owner/$name:$version 📅release date: $release_date 🌐documentation: $documentation_url"
                 log "🎓 To specify different version, check the documentation https://kafka-docker-playground.io/#/how-to-use?id=🔗-for-connectors"
-
+                CONNECTOR_TAG=$version  
               fi
-              CONNECTOR_TAG=$version
             fi
             first_loop=false
           fi
