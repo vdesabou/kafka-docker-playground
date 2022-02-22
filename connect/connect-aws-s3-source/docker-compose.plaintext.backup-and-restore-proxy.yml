@@ -8,7 +8,7 @@ services:
     ports:
       - "8888:8888"
     volumes:
-      - ../../connect/connect-aws-s3-source/repro-proxy/nginx_whitelist.conf:/usr/local/nginx/conf/nginx.conf
+      - ../../connect/connect-aws-s3-source/nginx-proxy/nginx_whitelist.conf:/usr/local/nginx/conf/nginx.conf
 
   connect:
     volumes:

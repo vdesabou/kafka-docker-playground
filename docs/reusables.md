@@ -710,9 +710,9 @@ There are several connector examples which include HTTPS proxy (check for `also 
 
 Here are the steps to follow:
 
-1. Copy [`connect/connect-aws-s3-sink/repro-proxy`](https://github.com/vdesabou/kafka-docker-playground/tree/master/connect/connect-aws-s3-sink/repro-proxy) directory into your test directory.
+1. Copy [`connect/connect-aws-s3-sink/nginx-proxy`](https://github.com/vdesabou/kafka-docker-playground/tree/master/connect/connect-aws-s3-sink/nginx-proxy) directory into your test directory.
 
-2. Update [`connect/connect-aws-s3-sink/repro-proxy/nginx_whitelist.conf`](https://github.com/vdesabou/kafka-docker-playground/blob/master/connect/connect-aws-s3-sink/repro-proxy/nginx_whitelist.conf) with the domain name required for your needs.
+2. Update [`connect/connect-aws-s3-sink/nginx-proxy/nginx_whitelist.conf`](https://github.com/vdesabou/kafka-docker-playground/blob/master/connect/connect-aws-s3-sink/nginx-proxy/nginx_whitelist.conf) with the domain name required for your needs.
 
 *Example:*
 
@@ -731,7 +731,7 @@ Here are the steps to follow:
     ports:
       - "8888:8888"
     volumes:
-      - ../../connect/connect-aws-s3-sink/repro-proxy/nginx_whitelist.conf:/usr/local/nginx/conf/nginx.conf
+      - ../../connect/connect-aws-s3-sink/nginx-proxy/nginx_whitelist.conf:/usr/local/nginx/conf/nginx.conf
 ```
 
 > [!WARNING]
@@ -756,7 +756,7 @@ Here are the steps to follow:
 ```
 
 > [!NOTE]
-> If your proxy requires HTTP2 support, there is a full example available in this example: [GCP Pub/Sub Source connector](https://github.com/vdesabou/kafka-docker-playground/blob/master/connect/connect-gcp-pubsub-source/gcp-pubsub-repro-proxy.sh)
+> If your proxy requires HTTP2 support, there is a full example available in this example: [GCP Pub/Sub Source connector](https://github.com/vdesabou/kafka-docker-playground/blob/master/connect/connect-gcp-pubsub-source/gcp-pubsub-nginx-proxy.sh)
 
 ### Proxy with BASIC authentication
 
@@ -785,8 +785,8 @@ If you want to setup [BASIC authentication](https://docs.nginx.com/nginx/admin-g
 
 ```yml
     volumes:
-      - ../../connect/connect-aws-s3-sink/repro-proxy/nginx_whitelist.conf:/usr/local/nginx/conf/nginx.conf
-      - ../../connect/connect-aws-s3-sink/repro-proxy/htpasswd:/tmp/htpasswd
+      - ../../connect/connect-aws-s3-sink/nginx-proxy/nginx_whitelist.conf:/usr/local/nginx/conf/nginx.conf
+      - ../../connect/connect-aws-s3-sink/nginx-proxy/htpasswd:/tmp/htpasswd
 ```
 
 ## ♨️ Using specific JDK

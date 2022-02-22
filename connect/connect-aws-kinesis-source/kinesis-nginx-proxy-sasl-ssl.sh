@@ -26,7 +26,7 @@ else
      export CONNECT_CONTAINER_HOME_DIR="/root"
 fi
 
-${DIR}/../../environment/sasl-ssl/start.sh "${PWD}/docker-compose.plaintext.repro-proxy.yml"
+${DIR}/../../environment/sasl-ssl/start.sh "${PWD}/docker-compose.plaintext.nginx-proxy.yml"
 
 KINESIS_STREAM_NAME=kafka_docker_playground$TAG
 KINESIS_STREAM_NAME=${KINESIS_STREAM_NAME//[-.]/}

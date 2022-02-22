@@ -13,7 +13,7 @@ then
      exit 1
 fi
 
-${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.repro-proxy.yml"
+${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.nginx-proxy.yml"
 
 log "Doing gsutil authentication"
 set +e

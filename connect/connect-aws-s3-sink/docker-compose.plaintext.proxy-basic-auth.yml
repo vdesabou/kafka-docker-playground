@@ -8,8 +8,8 @@ services:
     ports:
       - "8888:8888"
     volumes:
-      - ../../connect/connect-aws-s3-sink/repro-proxy-basic-auth/nginx_whitelist.conf:/usr/local/nginx/conf/nginx.conf
-      - ../../connect/connect-aws-s3-sink/repro-proxy-basic-auth/htpasswd:/tmp/htpasswd
+      - ../../connect/connect-aws-s3-sink/nginx-proxy-basic-auth/nginx_whitelist.conf:/usr/local/nginx/conf/nginx.conf
+      - ../../connect/connect-aws-s3-sink/nginx-proxy-basic-auth/htpasswd:/tmp/htpasswd
 
   connect:
     volumes:

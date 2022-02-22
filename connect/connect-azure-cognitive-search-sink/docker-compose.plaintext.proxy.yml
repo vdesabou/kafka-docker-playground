@@ -9,7 +9,7 @@ services:
     ports:
       - "8888:8888"
     volumes:
-      - ../../connect/connect-azure-cognitive-search-sink/repro-proxy/nginx_whitelist.conf:/usr/local/nginx/conf/nginx.conf
+      - ../../connect/connect-azure-cognitive-search-sink/nginx-proxy/nginx_whitelist.conf:/usr/local/nginx/conf/nginx.conf
 
   connect:
     environment:

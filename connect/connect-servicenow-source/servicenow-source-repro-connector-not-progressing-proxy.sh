@@ -42,7 +42,7 @@ log "Once done, type to continue"
 check_if_continue
 
 
-${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.repro-proxy.yml"
+${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.nginx-proxy.yml"
 
 export HTTP_PROXY=127.0.0.1:8888
 export HTTPS_PROXY=127.0.0.1:8888

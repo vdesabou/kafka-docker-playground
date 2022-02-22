@@ -10,7 +10,7 @@ services:
 
   connect:
     volumes:
-      - ../../connect/connect-salesforce-bulkapi-source/repro-proxy/logging.properties:/tmp/logging.properties
+      - ../../connect/connect-salesforce-bulkapi-source/nginx-proxy/logging.properties:/tmp/logging.properties
     environment:
       CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-salesforce-bulk-api
       KAFKA_OPTS: -Djava.util.logging.config.file=/tmp/logging.properties
