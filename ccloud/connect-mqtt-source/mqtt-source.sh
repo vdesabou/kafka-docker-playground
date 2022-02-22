@@ -41,11 +41,7 @@ if ! version_gt $TAG_BASE "5.9.9"; then
 fi
 
 log "Send message to MQTT in my-mqtt-topic topic"
-docker exec mosquitto sh << EOF
-mosquitto_pub -h localhost -p 1883 -u "myuser" -P "mypassword" -t "my-mqtt-topic" -m "sample-msg-1"
-mosquitto_pub -h localhost -p 1883 -u "myuser" -P "mypassword" -t "my-mqtt-topic" -m "sample-msg-2"
-mosquitto_pub -h localhost -p 1883 -u "myuser" -P "mypassword" -t "my-mqtt-topic" -m "sample-msg-3"
-EOF
+docker exec mosquitto sh -c 'mosquitto_pub -h localhost -p 1883 -u "myuser" -P "mypassword" -t "my-mqtt-topic" -m "sample-msg-1"'
 
 sleep 5
 
@@ -72,14 +68,10 @@ curl -X PUT \
           }' \
      http://localhost:8083/connectors/mqtt-source/config | jq .
 
-sleep 30
+sleep 5
 
 log "Send message again to MQTT in my-mqtt-topic topic"
-docker exec mosquitto sh << EOF
-mosquitto_pub -h localhost -p 1883 -u "myuser" -P "mypassword" -t "my-mqtt-topic" -m "sample-msg-4"
-mosquitto_pub -h localhost -p 1883 -u "myuser" -P "mypassword" -t "my-mqtt-topic" -m "sample-msg-5"
-mosquitto_pub -h localhost -p 1883 -u "myuser" -P "mypassword" -t "my-mqtt-topic" -m "sample-msg-6"
-EOF
+docker exec mosquitto sh -c 'mosquitto_pub -h localhost -p 1883 -u "myuser" -P "mypassword" -t "my-mqtt-topic" -m "sample-msg-2"'
 
 
 log "Verify we have received the data in $MQTT_TOPIC topic"
