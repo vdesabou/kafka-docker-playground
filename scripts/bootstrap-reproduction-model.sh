@@ -4,6 +4,9 @@ IGNORE_CHECK_FOR_DOCKER_COMPOSE=true
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../scripts/utils.sh
 
+root_folder=${DIR}/..
+root_folder=${root_folder//\/scripts\/\.\./}
+
 test_file="$PWD/$1"
 description="$2"
 schema_format="$3"
@@ -25,7 +28,6 @@ then
   logerror "ERROR: test_file $test_file is not a .sh file!"
   exit 1
 fi
-
 
 if [[ "$(dirname $test_file)" == *. ]]
 then
@@ -53,21 +55,32 @@ then
   filename=$(basename -- "$test_file")
   extension="${filename##*.}"
   filename="${filename%.*}"
+  
+  base1="${test_file_directory##*/}" # connect-cdc-oracle12-source
+  dir1="${test_file_directory%/*}" #connect
+  dir2="${dir1##*/}/$base1" # connect/connect-cdc-oracle12-source
+  final_dir=$(echo $dir2 | tr '/' '-') # connect-connect-cdc-oracle12-source
+  repro_dir=$root_folder/reproduction-models/$final_dir
+  mkdir -p $repro_dir
 
-  repro_test_file="$test_file_directory/$filename-repro-$description_kebab_case.$extension"
+  repro_test_file="$repro_dir/$filename-repro-$description_kebab_case.$extension"
 
   filename=$(basename -- "$PWD/$docker_compose_file")
   extension="${filename##*.}"
   filename="${filename%.*}"
 
-  docker_compose_test_file="$test_file_directory/$filename.repro-$description_kebab_case.$extension"
-  log "🎩 Creating file $(basename -- $docker_compose_test_file)"
+  docker_compose_test_file="$repro_dir/$filename.repro-$description_kebab_case.$extension"
+  log "🎩 Creating file $docker_compose_test_file"
   rm -f $docker_compose_test_file
   cp $PWD/$docker_compose_file $docker_compose_test_file
 
+  sed -e "s|../../$dir2|../../reproduction-models/$final_dir|g" \
+      $docker_compose_test_file > /tmp/tmp
+  mv /tmp/tmp $docker_compose_test_file
+
   docker_compose_test_file_name=$(basename -- "$docker_compose_test_file")
 
-  log "🎩 Creating file $(basename -- $repro_test_file)"
+  log "🎩 Creating file $repro_test_file"
   rm -f $repro_test_file
   sed -e "s|$docker_compose_file|$docker_compose_test_file_name|g" \
       $test_file > $repro_test_file
@@ -94,7 +107,7 @@ then
               $repro_test_file > /tmp/tmp
 
           mv /tmp/tmp $repro_test_file
-          log "🎩 Replacing topic $original_topic_name with $topic_name"
+          # log "🎩 Replacing topic $original_topic_name with $topic_name"
         fi
 
         # looks like there is a maximum size for hostname in docker (container init caused: sethostname: invalid argument: unknown)
@@ -102,20 +115,16 @@ then
         producer_hostname=${producer_hostname:0:20} 
         
         rm -rf $producer_hostname
-        cp -Ra ../../other/schema-format-$schema_format/producer $producer_hostname
+        cp -Ra ../../other/schema-format-$schema_format/producer $repro_dir/$producer_hostname
         
         # update docker compose with producer container
-        base1="${test_file_directory##*/}"
-        dir1="${test_file_directory%/*}"
-        test_file_directory_2_levels="${dir1##*/}/$base1"
-
         tmp_dir=$(mktemp -d -t ci-XXXXXXXXXX)
         cat << EOF > $tmp_dir/producer
 
 
   $producer_hostname:
     build:
-      context: ../../$test_file_directory_2_levels/$producer_hostname/
+      context: ../../reproduction-models/$final_dir/$producer_hostname/
     hostname: $producer_hostname
     container_name: $producer_hostname
     environment:
@@ -134,8 +143,8 @@ then
     volumes:
       - ../../environment/plaintext/jmx-exporter:/usr/share/jmx_exporter/
 EOF
-      log "🎩 Adding $producer_hostname container to $docker_compose_test_file_name"
-      cat $tmp_dir/producer >> $docker_compose_test_file_name
+      log "🎩 Adding Java $schema_format producer in $repro_dir/$producer_hostname"
+      cat $tmp_dir/producer >> $docker_compose_test_file
 
         cat << EOF > $tmp_dir/build_producer
 for component in $producer_hostname
@@ -153,7 +162,7 @@ do
 done
 
 EOF
-      log "🎩 Adding command to build jar for $producer_hostname to $repro_test_file"
+      # log "🎩 Adding command to build jar for $producer_hostname to $repro_test_file"
       cp $repro_test_file $tmp_dir/tmp_file
       line=$(grep -n '${DIR}/../../environment' $repro_test_file | cut -d ":" -f 1)
       
@@ -166,8 +175,8 @@ log "✨ Run the $schema_format java producer which produces to topic $topic_nam
 docker exec $producer_hostname bash -c "java -jar producer-1.0.0-jar-with-dependencies.jar"
 
 EOF
-      log "🎩 Adding command to run producer to $repro_test_file"
-      cp $repro_test_file $tmp_dir/tmp_file      
+      # log "🎩 Adding command to run producer to $repro_test_file"
+      cp $repro_test_file $tmp_dir/tmp_file
       { head -n $(($line-1)) $tmp_dir/tmp_file; cat $tmp_dir/java_producer; tail -n +$line $tmp_dir/tmp_file; } > $repro_test_file
   fi
   chmod u+x $repro_test_file
@@ -175,3 +184,6 @@ else
   logerror "📁 Could not determine docker-compose override file from $test_file !"
   exit 1
 fi
+
+log "📂 The reproduction files are now available in: $repro_dir"
+cd $repro_dir
