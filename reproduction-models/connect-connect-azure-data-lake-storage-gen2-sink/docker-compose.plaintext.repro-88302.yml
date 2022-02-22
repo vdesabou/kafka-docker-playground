@@ -1,0 +1,24 @@
+---
+version: '3.5'
+services:
+
+  producer-88302:
+    build:
+      context: ../../reproduction-models/connect-connect-azure-data-lake-storage-gen2-sink/producer-88302
+    hostname: producer-88302
+    container_name: producer-88302
+    environment:
+      KAFKA_BOOTSTRAP_SERVERS: broker:9092
+      TOPIC: "customer-protobuf"
+      REPLICATION_FACTOR: 1
+      NUMBER_OF_PARTITIONS: 1
+      MESSAGE_BACKOFF: 1000 # Frequency of message injection
+      KAFKA_ACKS: "all" # default: "1"
+      KAFKA_REQUEST_TIMEOUT_MS: 20000
+      KAFKA_RETRY_BACKOFF_MS: 500
+      KAFKA_CLIENT_ID: "my-java-producer"
+      KAFKA_SCHEMA_REGISTRY_URL: "http://schema-registry:8081"
+
+  connect:
+    environment:
+      CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-azure-data-lake-gen2-storage

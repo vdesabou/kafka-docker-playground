@@ -1,0 +1,20 @@
+---
+version: '3.5'
+services:
+
+  sfdx-cli:
+    image: vdesabou/sfdx-cli:latest # forked from salestrip/sfdx-cli to add plugin sfpowerkit
+    hostname: sfdx-cli
+    container_name: sfdx-cli
+    command: "sleep infinity"
+    volumes:
+    - ../../reproduction-models/connect-connect-salesforce-platform-events-sink/event.apex:/tmp/event.apex
+
+
+  connect:
+    volumes:
+    - ../../reproduction-models/connect-connect-salesforce-platform-events-sink/salesforce-confluent.keystore.jks:/tmp/salesforce-confluent.keystore.jks
+    - ../../environment/sasl-ssl/security:/etc/kafka/secrets
+    environment:
+      CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-salesforce
+      #KAFKA_OPTS:  -Djavax.net.debug=all

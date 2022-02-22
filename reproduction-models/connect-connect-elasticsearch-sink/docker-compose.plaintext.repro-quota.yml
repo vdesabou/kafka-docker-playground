@@ -1,0 +1,26 @@
+---
+version: '3.5'
+services:
+
+  elasticsearch:
+    image: elasticsearch:$ELASTIC_VERSION
+    hostname: elasticsearch
+    container_name: elasticsearch
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+    environment:
+      discovery.type: single-node
+
+  connect:
+    depends_on:
+      - elasticsearch
+    volumes:
+      - ../../reproduction-models/other-monitoring-demo/jmx-exporter:/usr/share/jmx_exporter/
+    environment:
+      CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-elasticsearch
+      # Allow overriding configs on the connector level
+      CONNECT_CONNECTOR_CLIENT_CONFIG_OVERRIDE_POLICY: 'All'
+      KAFKA_JMX_PORT: 10002
+      KAFKA_JMX_HOSTNAME: connect
+      KAFKA_OPTS: -javaagent:/usr/share/jmx_exporter/jmx_prometheus_javaagent-0.12.0.jar=1234:/usr/share/jmx_exporter/kafka-connect.yml

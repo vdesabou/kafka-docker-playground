@@ -1,0 +1,26 @@
+---
+version: '3.5'
+services:
+
+  producer-87791:
+    build:
+      context: ../../reproduction-models/connect-connect-gcp-bigquery-sink/producer-87791/
+    hostname: producer-87791
+    container_name: producer-87791
+    environment:
+      KAFKA_BOOTSTRAP_SERVERS: broker:9092
+      TOPIC: "customer-avro"
+      REPLICATION_FACTOR: 1
+      NUMBER_OF_PARTITIONS: 1
+      MESSAGE_BACKOFF: 1000 # Frequency of message injection
+      KAFKA_ACKS: "all" # default: "1"
+      KAFKA_REQUEST_TIMEOUT_MS: 20000
+      KAFKA_RETRY_BACKOFF_MS: 500
+      KAFKA_CLIENT_ID: "my-java-producer-87791"
+      KAFKA_SCHEMA_REGISTRY_URL: "http://schema-registry:8081"
+
+  connect:
+    volumes:
+        - ../../reproduction-models/connect-connect-gcp-bigquery-sink/keyfile.json:/tmp/keyfile.json:ro
+    environment:
+      CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/wepay-kafka-connect-bigquery

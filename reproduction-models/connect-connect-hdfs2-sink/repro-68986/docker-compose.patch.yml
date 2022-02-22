@@ -1,0 +1,9 @@
+---
+version: '3.5'
+
+services:
+  connect:
+    volumes:
+      - ../../reproduction-models/connect-connect-hdfs2-sink/repro-68986/kafka-connect-avro-data-5.5.3-DGS-1909.jar:/usr/share/confluent-hub-components/confluentinc-kafka-connect-hdfs/lib/kafka-connect-avro-data-5.5.3.jar
+      - ../../reproduction-models/connect-connect-hdfs2-sink/repro-68986/kafka-connect-avro-data-5.5.3-DGS-1909.jar:/usr/share/java/kafka-serde-tools/kafka-connect-avro-data-5.5.3.jar
+      - ../../reproduction-models/connect-connect-hdfs2-sink/repro-68986/kafka-connect-avro-data-5.5.3-DGS-1909.jar:/usr/share/java/confluent-security/connect/kafka-connect-avro-data-5.5.3.jar

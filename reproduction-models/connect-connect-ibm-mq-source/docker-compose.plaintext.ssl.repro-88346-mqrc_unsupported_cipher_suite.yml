@@ -1,0 +1,35 @@
+---
+version: '3.5'
+services:
+  ibmmq:
+    image: ibmcom/mq # https://hub.docker.com/r/ibmcom/mq/
+    hostname: ibmmq
+    container_name: ibmmq
+    environment:
+      LICENSE: accept
+      MQ_QMGR_NAME: QM1
+      MQ_ADMIN_PASSWORD: passw0rd
+      MQ_APP_PASSWORD: passw0rd
+    volumes:
+        - ../../reproduction-models/connect-connect-ibm-mq-source/security/snakeoil-ca-1.crt:/etc/mqm/pki/keys/mykey/ca.crt
+        - ../../reproduction-models/connect-connect-ibm-mq-source/security/ibmmq.certificate.pem:/etc/mqm/pki/keys/mykey/tls.crt
+        - ../../reproduction-models/connect-connect-ibm-mq-source/security/ibmmq.key:/etc/mqm/pki/keys/mykey/tls.key
+    ports:
+      - '1414:1414'
+      - '9443:9443'
+
+  connect:
+    depends_on:
+      - zookeeper
+      - broker
+      - schema-registry
+      - ibmmq
+    volumes:
+        - ../../reproduction-models/connect-connect-ibm-mq-source/com.ibm.mq.allclient.jar:/usr/share/confluent-hub-components/confluentinc-kafka-connect-ibmmq/lib/com.ibm.mq.allclient.jar
+        - ../../reproduction-models/connect-connect-ibm-mq-source/jms.jar:/usr/share/confluent-hub-components/confluentinc-kafka-connect-ibmmq/lib/jms.jar
+        - ../../reproduction-models/connect-connect-ibm-mq-source/security/kafka.connect.truststore.jks:/tmp/truststore.jks
+    environment:
+      CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-ibmmq
+      # https://support.confluent.io/hc/en-us/articles/360054967632-What-cause-the-IBMMQ-connector-fail-to-establish-a-SSL-connection-with-Cipher-Error
+      # KAFKA_OPTS: -Dcom.ibm.mq.cfg.useIBMCipherMappings=false
+      #             -Djavax.net.debug=all

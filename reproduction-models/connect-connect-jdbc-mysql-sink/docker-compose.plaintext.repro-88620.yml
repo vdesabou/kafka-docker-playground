@@ -1,0 +1,45 @@
+---
+version: '3.5'
+services:
+
+  producer-88620:
+    build:
+      context: ../../reproduction-models/connect-connect-jdbc-mysql-sink/producer-88620/
+    hostname: producer-88620
+    container_name: producer-88620
+    environment:
+      KAFKA_BOOTSTRAP_SERVERS: broker:9092
+      TOPIC: "customer"
+      REPLICATION_FACTOR: 1
+      NUMBER_OF_PARTITIONS: 1
+      MESSAGE_BACKOFF: 1000 # Frequency of message injection
+      KAFKA_ACKS: "all" # default: "1"
+      KAFKA_REQUEST_TIMEOUT_MS: 20000
+      KAFKA_RETRY_BACKOFF_MS: 500
+      KAFKA_CLIENT_ID: "my-java-producer"
+      KAFKA_SCHEMA_REGISTRY_URL: "http://schema-registry:8081"
+
+
+  mysql:
+    image: mysql:5.7
+    hostname: mysql
+    container_name: mysql
+    volumes:
+      - ../../reproduction-models/connect-connect-jdbc-mysql-sink/mysql-init.sql:/docker-entrypoint-initdb.d/mysql-init.sql
+    environment:
+      MYSQL_ROOT_PASSWORD: password
+      MYSQL_DATABASE: db
+      MYSQL_USER: user
+      MYSQL_PASSWORD: password
+      MYSQL_ROOT_HOST: 172.%  # Allow docker containers to connect to mysql
+
+  connect:
+    depends_on:
+      - zookeeper
+      - broker
+      - schema-registry
+      - mysql
+    volumes:
+        - ../../reproduction-models/connect-connect-jdbc-mysql-sink/mysql-connector-java-5.1.45.jar:/usr/share/confluent-hub-components/confluentinc-kafka-connect-jdbc/lib/mysql-connector-java-5.1.45.jar
+    environment:
+      CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-jdbc

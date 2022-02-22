@@ -1,0 +1,20 @@
+---
+version: '3.5'
+services:
+  sftp-server:
+    image: atmoz/sftp
+    hostname: sftp-server
+    container_name: sftp-server
+    ports:
+      - "2222:22"
+    command: foo:pass:::upload
+    volumes:
+      # for sftp-sink-ssh-key.sh
+      - ../../reproduction-models/connect-connect-sftp-sink/repro-file-config-provider/ssh_host_rsa_key.pub:/home/foo/.ssh/keys/id_rsa.pub:ro
+
+
+  connect:
+    volumes:
+      - ../../reproduction-models/connect-connect-sftp-sink/repro-file-config-provider/secrets.properties:/tmp/secrets.properties
+    environment:
+      CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-sftp

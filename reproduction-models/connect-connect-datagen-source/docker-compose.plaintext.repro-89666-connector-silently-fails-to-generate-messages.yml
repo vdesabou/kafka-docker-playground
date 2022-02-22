@@ -1,0 +1,9 @@
+---
+version: '3.5'
+services:
+
+  connect:
+    volumes:
+      - ../../reproduction-models/connect-connect-datagen-source/repro-89666-connector-silently-fails-to-generate-messages:/tmp/schemas
+    environment:
+      CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-datagen

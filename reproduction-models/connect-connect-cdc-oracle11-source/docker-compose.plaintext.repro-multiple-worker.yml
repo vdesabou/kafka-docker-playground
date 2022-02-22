@@ -1,0 +1,87 @@
+---
+version: '3.5'
+services:
+  oracle:    
+    image: wnameless/oracle-xe-11g-r2
+    hostname: oracle
+    container_name: oracle
+    ports:
+      - "1521:1521"
+    volumes:
+      - ../../reproduction-models/connect-connect-cdc-oracle11-source/ora-setup-scripts/01_init.sql:/docker-entrypoint-initdb.d/01_init.sql
+      - ../../reproduction-models/connect-connect-cdc-oracle11-source/ora-setup-scripts/02_init.sql:/docker-entrypoint-initdb.d/02_init.sql
+      - ../../reproduction-models/connect-connect-cdc-oracle11-source/ora-startup-scripts/01_create_customers.sh:/docker-entrypoint-initdb.d/03_create_customers.sh
+      - ../../reproduction-models/connect-connect-cdc-oracle11-source/ora-startup-scripts/02_populate_customer.sh:/docker-entrypoint-initdb.d/04_populate_customer.sh
+    environment:
+      ORACLE_ALLOW_REMOTE: "true"
+
+  connect:
+    depends_on:
+      - zookeeper
+      - broker
+      - schema-registry
+      - oracle
+    environment:
+      CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-oracle-cdc
+      CONNECT_GROUP_ID: "connect-cluster"
+      # https://github.com/vdesabou/kafka-docker-playground/issues/1461
+      # On CP 5.x ORA-01882: timezone region not found
+      KAFKA_OPTS: -Duser.timezone=America/Detroit
+                  -Doracle.jdbc.timezoneAsRegion=false
+
+
+  connect2:
+    image: vdesabou/kafka-docker-playground-connect:${CONNECT_TAG}
+    hostname: connect2
+    container_name: connect2
+    restart: always
+    depends_on:
+      - zookeeper
+      - broker
+      - schema-registry
+    ports:
+      - "8084:8083"
+    environment:
+      CONNECT_BOOTSTRAP_SERVERS: 'broker:9092'
+      CONNECT_REST_ADVERTISED_HOST_NAME: connect2
+      CONNECT_GROUP_ID: "connect2-cluster"
+      CONNECT_PRODUCER_CLIENT_ID: "connect2-worker-producer"
+      CONNECT_CONFIG_STORAGE_TOPIC: connect2-configs
+      CONNECT_OFFSET_STORAGE_TOPIC: connect2-offsets
+      CONNECT_STATUS_STORAGE_TOPIC: connect2-status
+      CONNECT_CONFIG_STORAGE_REPLICATION_FACTOR: 1
+      CONNECT_OFFSET_STORAGE_REPLICATION_FACTOR: 1
+      CONNECT_STATUS_STORAGE_REPLICATION_FACTOR: 1
+      CONNECT_KEY_CONVERTER: "org.apache.kafka.connect.storage.StringConverter"
+      CONNECT_VALUE_CONVERTER: "io.confluent.connect.avro.AvroConverter"
+      CONNECT_VALUE_CONVERTER_SCHEMAS_ENABLE: "false"
+      CONNECT_VALUE_CONVERTER_SCHEMA_REGISTRY_URL: "http://schema-registry:8081"
+      CONNECT_INTERNAL_KEY_CONVERTER: "org.apache.kafka.connect.json.JsonConverter"
+      CONNECT_INTERNAL_VALUE_CONVERTER: "org.apache.kafka.connect.json.JsonConverter"
+      CONNECT_LOG4J_LOGGERS: org.apache.zookeeper=ERROR,org.I0Itec.zkclient=ERROR,org.reflections=ERROR
+      # Confluent Monitoring Interceptors for Control Center Streams Monitoring
+      CONNECT_PRODUCER_INTERCEPTOR_CLASSES: "io.confluent.monitoring.clients.interceptor.MonitoringProducerInterceptor"
+      CONNECT_PRODUCER_CONFLUENT_MONITORING_INTERCEPTOR_BOOTSTRAP_SERVERS: broker:9092
+      CONNECT_CONSUMER_INTERCEPTOR_CLASSES: "io.confluent.monitoring.clients.interceptor.MonitoringConsumerInterceptor"
+      CONNECT_CONSUMER_CONFLUENT_MONITORING_INTERCEPTOR_BOOTSTRAP_SERVERS: broker:9092
+      # Externalizing Secrets
+      CONNECT_CONFIG_PROVIDERS: 'file'
+      CONNECT_CONFIG_PROVIDERS_FILE_CLASS: 'org.apache.kafka.common.config.provider.FileConfigProvider'
+      # CONNECT_LOG4J_ROOT_LOGLEVEL: DEBUG
+      # KIP-158 https://cwiki.apache.org/confluence/display/KAFKA/KIP-158%3A+Kafka+Connect+should+allow+source+connectors+to+set+topic-specific+settings+for+new+topics (6.x only)
+      CONNECT_TOPIC_CREATION_ENABLE: 'true'
+      # CONNECT_METRIC_REPORTERS: io.confluent.telemetry.reporter.TelemetryReporter
+      # CONNECT_CONFLUENT_TELEMETRY_ENABLED: 'true'
+      # CONNECT_CONFLUENT_TELEMETRY_API_KEY: 'CLOUD_API_KEY'
+      # CONNECT_CONFLUENT_TELEMETRY_API_SECRET: 'CLOUD_API_SECRET'
+      CONNECT_CONNECTOR_CLIENT_CONFIG_OVERRIDE_POLICY: All
+      CONNECT_LOG4J_APPENDER_STDOUT_LAYOUT_CONVERSIONPATTERN: "[%d] %p %X{connector.context}%m (%c:%L)%n"
+      # # https://kafka-docker-playground.io/#/reusables?id=✨-remote-debugging
+      # KAFKA_DEBUG: 'true'
+      # # With JDK9+, need to specify address=*:5005, see https://www.baeldung.com/java-application-remote-debugging#from-java9
+      # JAVA_DEBUG_OPTS: '-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=0.0.0.0:5005'
+      CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-oracle-cdc
+      # https://github.com/vdesabou/kafka-docker-playground/issues/1461
+      # On CP 5.x ORA-01882: timezone region not found
+      KAFKA_OPTS: -Duser.timezone=America/Detroit
+                  -Doracle.jdbc.timezoneAsRegion=false

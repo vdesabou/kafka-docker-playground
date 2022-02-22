@@ -1,0 +1,54 @@
+---
+version: '3.5'
+
+services:
+  # https://github.com/Knappek/docker-hadoop-secure
+  kdc:
+    image: sequenceiq/kerberos
+    hostname: kdc.kerberos-demo.local
+    container_name: kdc
+    environment:
+      REALM: EXAMPLE.COM
+      DOMAIN_REALM: kdc.kerberos-demo.local
+    # krb5.conf is generated from config.sh
+    entrypoint: /tmp/config.sh
+    volumes:
+      # krb5.conf is generated from config.sh
+      - ../../reproduction-models/connect-connect-hdfs2-sink/kerberos-repro-gss-exception/config.sh:/tmp/config.sh
+      - ../../reproduction-models/connect-connect-hdfs2-sink/kerberos-repro-gss-exception/kdc.conf:/var/kerberos/krb5kdc/kdc.conf
+      - /dev/urandom:/dev/random
+      - /etc/localtime:/etc/localtime:ro
+
+  # https://github.com/Knappek/docker-hadoop-secure
+  hadoop:
+    image: vdesabou/hadoop-secure:2.7.3
+    depends_on:
+      - kdc
+    hostname: hadoop.kerberos-demo.local
+    container_name: hadoop
+    environment:
+      KRB_REALM: EXAMPLE.COM
+      DOMAIN_REALM: kdc.kerberos-demo.local
+      FQDN: hadoop.kerberos-demo.local
+      KERBEROS_ROOT_USER_PASSWORD: password
+    volumes:
+      - ../../reproduction-models/connect-connect-hdfs2-sink/kerberos-repro-gss-exception/krb5.conf:/etc/krb5.conf
+      - /etc/localtime:/etc/localtime:ro
+
+  connect:
+    build:
+      context: ../../reproduction-models/connect-connect-hdfs2-sink/kerberos-repro-gss-exception/
+      args:
+        TAG: ${TAG}
+        CONNECTOR_TAG: ${CONNECTOR_TAG}
+    hostname: connect.kerberos-demo.local
+    volumes:
+      - ../../reproduction-models/connect-connect-hdfs2-sink/kerberos-repro-gss-exception/krb5.conf:/etc/krb5.conf
+      - ../../reproduction-models/connect-connect-hdfs2-sink/kerberos-repro-gss-exception/core-site.xml:/etc/hadoop/core-site.xml
+    environment:
+      CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-hdfs
+      KAFKA_OPTS: -Dsun.security.krb5.debug=true
+
+networks:
+  default:
+    name: kerberos-demo.local

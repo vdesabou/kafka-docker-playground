@@ -1,0 +1,38 @@
+---
+version: '3.5'
+services:
+
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2019-latest
+    hostname: sqlserver
+    container_name: sqlserver
+    ports:
+      - "1433:1433"
+    environment:
+      ACCEPT_EULA: "Y"
+      MSSQL_AGENT_ENABLED: "true"
+      MSSQL_PID: "Standard"
+      SA_PASSWORD: "Password!"
+
+  broker:
+    volumes:
+        - ../../reproduction-models/other-connect-override-policy-sftp-source/client.properties:/tmp/client.properties
+    environment:
+      KAFKA_AUTHORIZER_CLASS_NAME: $KAFKA_AUTHORIZER_CLASS_NAME
+      KAFKA_ZOOKEEPER_SET_ACL: "true"
+      KAFKA_ALLOW_EVERYONE_IF_NO_ACL_FOUND: "false"
+      KAFKA_LOG4J_LOGGERS: "kafka.authorizer.logger=INFO"
+      KAFKA_SUPER_USERS: User:broker;User:schemaregistry;User:client;User:connect
+
+  schema-registry:
+    volumes:
+        - ../../reproduction-models/other-connect-override-policy-sftp-source/client.properties:/tmp/client.properties
+
+
+  connect:
+    volumes:
+        - ../../reproduction-models/connect-connect-jdbc-sqlserver-sink/sqljdbc_7.4/enu/mssql-jdbc-7.4.1.jre8.jar:/usr/share/confluent-hub-components/confluentinc-kafka-connect-jdbc/lib/mssql-jdbc-7.4.1.jre8.jar
+        - ../../reproduction-models/other-connect-override-policy-sftp-source/client.properties:/tmp/client.properties
+    environment:
+      CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-jdbc
+      

@@ -1,0 +1,30 @@
+---
+version: '3.5'
+services:
+
+  mongodb-sharded:
+    build: 
+      context: ../../reproduction-models/connect-connect-mongodb-sink/
+      dockerfile: Dockerfile.mongo-sink-repro-sharding
+    hostname: mongodb-sharded
+    container_name: mongodb-sharded
+    ports:
+      - 27017:27017
+      - 27018:27018
+      - 27019:27019
+      - 27020:27020
+    command:
+      - /bin/sh
+      - -c
+      - | 
+          mlaunch --username myuser --password mypassword --port 27017 --replicaset --nodes 1 --sharded 3 --bind_ip_all
+          sleep infinity
+
+  connect:
+    depends_on:
+      - zookeeper
+      - broker
+      - schema-registry
+      - mongodb-sharded
+    environment:
+      CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/mongodb-kafka-connect-mongodb
