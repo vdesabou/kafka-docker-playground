@@ -10,10 +10,6 @@ then
     exit 111
 fi
 
-# KNOWN ISSUE
-logerror "💀 KNOWN ISSUE: https://confluentinc.atlassian.net/browse/CCMSG-1231"
-exit 1
-
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.kerberos.yml"
 
 sleep 10
