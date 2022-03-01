@@ -19,11 +19,11 @@ docker exec hadoop bash -c "echo password | kinit && /usr/local/hadoop/bin/hdfs 
 
 log "Add connect kerberos principal"
 docker exec -i kdc kadmin.local << EOF
-addprinc -randkey connect/connect.kerberos-demo.local@EXAMPLE.COM
-modprinc -maxrenewlife 11days +allow_renewable connect/connect.kerberos-demo.local@EXAMPLE.COM
+addprinc -randkey connect/connect.kerberos.local@EXAMPLE.COM
+modprinc -maxrenewlife 11days +allow_renewable connect/connect.kerberos.local@EXAMPLE.COM
 modprinc -maxrenewlife 11days krbtgt/EXAMPLE.COM
-modprinc -maxlife 11days connect/connect.kerberos-demo.local@EXAMPLE.COM
-ktadd -k /connect.keytab connect/connect.kerberos-demo.local@EXAMPLE.COM
+modprinc -maxlife 11days connect/connect.kerberos.local@EXAMPLE.COM
+ktadd -k /connect.keytab connect/connect.kerberos.local@EXAMPLE.COM
 listprincs
 EOF
 
