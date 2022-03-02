@@ -14,7 +14,7 @@ mkdir -p /chroot/home/foo/upload/finished
 chown -R foo /chroot/home/foo/upload
 "
 
-echo $'{"id":1,"first_name":"Roscoe","last_name":"Brentnall","email":"rbrentnall0@mediafire.com","gender":"Male","ip_address":"202.84.142.254","last_login":"2018-02-12T06:26:23Z","account_balance":1450.68,"country":"CZ","favorite_color":"#4eaefa"}\n{"id":2,"first_name":"Dutch頎ut","last_name":"Fentem","email":"gfentem1@nsw.gov.au","gender":"Male","ip_address":"221.159.106.63","last_login":"2015-03-27T00:29:56Z","account_balance":1392.37,"country":"ID","favorite_color":"#e8f686"}' > json-sftp-source.json
+echo $'{"id":1,"first_name":"T. M. Duch頎ut Co., Inc.","last_name":"Fentem","email":"gfentem1@nsw.gov.au","gender":"Male","ip_address":"221.159.106.63","last_login":"2015-03-27T00:29:56Z","account_balance":1392.37,"country":"ID","favorite_color":"#e8f686"}' > json-sftp-source.json
 
 docker cp json-sftp-source.json sftp-server:/chroot/home/foo/upload/input/
 rm -f json-sftp-source.json
@@ -27,7 +27,7 @@ curl -X PUT \
                "tasks.max": "1",
                "connector.class": "io.confluent.connect.sftp.SftpJsonSourceConnector",
                "cleanup.policy":"NONE",
-               "behavior.on.error":"IGNORE",
+               "behavior.on.error":"FAIL",
                "input.path": "/home/foo/upload/input",
                "error.path": "/home/foo/upload/error",
                "finished.path": "/home/foo/upload/finished",
@@ -45,4 +45,4 @@ curl -X PUT \
 sleep 5
 
 log "Verifying topic sftp-testing-topic"
-timeout 60 docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic sftp-testing-topic --from-beginning --max-messages 2
+timeout 60 docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic sftp-testing-topic --from-beginning --max-messages 1
