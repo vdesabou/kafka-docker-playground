@@ -5,9 +5,6 @@ services:
     image: eclipse-mosquitto:1.6.13
     hostname: mosquitto
     container_name: mosquitto
-    ports:
-      - 9001:9001
-      - 1883:1883
     volumes:
       - ../../ccloud/connect-mqtt-source/mosquitto.conf:/mosquitto/config/mosquitto.conf
       - ../../ccloud/connect-mqtt-source/password:/etc/mosquitto/passwd
