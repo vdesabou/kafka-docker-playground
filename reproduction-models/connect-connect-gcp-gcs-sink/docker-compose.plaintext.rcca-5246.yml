@@ -4,7 +4,7 @@ services:
 
   producer-v1:
     build:
-      context: ../../connect/connect-gcp-gcs-sink/producer-v1/
+      context: ../../reproduction-models/connect-connect-gcp-gcs-sink/producer-v1/
     hostname: producer-v1
     container_name: producer-v1
     environment:
@@ -21,6 +21,6 @@ services:
 
   connect:
     volumes:
-        - ../../connect/connect-gcp-gcs-sink/keyfile-rcca-5246-quickly-expiring-key.json:/tmp/keyfile-rcca-5246-quickly-expiring-key.json:ro
+        - ../../reproduction-models/connect-connect-gcp-gcs-sink/keyfile-rcca-5246-quickly-expiring-key.json:/tmp/keyfile-rcca-5246-quickly-expiring-key.json:ro
     environment:
       CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-gcs
