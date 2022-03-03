@@ -10,8 +10,8 @@ services:
     ports:
       - "1521:1521"
     volumes:
-      - ../../connect/connect-cdc-oracle19-source/ora-setup-scripts-pdb-table:/opt/oracle/scripts/setup
-      - ../../connect/connect-cdc-oracle19-source/ora-startup-scripts-pdb-table:/opt/oracle/scripts/startup
+      - ../../ccloud/connect-cdc-oracle19-source/ora-setup-scripts-pdb-table:/opt/oracle/scripts/setup
+      - ../../ccloud/connect-cdc-oracle19-source/ora-startup-scripts-pdb-table:/opt/oracle/scripts/startup
     environment:
       ORACLE_PWD: Admin123
 
