@@ -10,10 +10,19 @@ then
      remove_cdb_oracle_image "LINUX.X64_193000_db_home.zip" "$(pwd)/ora-setup-scripts-cdb-table"
 fi
 
+
 create_or_get_oracle_image "LINUX.X64_193000_db_home.zip" "$(pwd)/ora-setup-scripts-pdb-table"
 
-${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.pdb-table.yml"
+${DIR}/../../ccloud/environment/start.sh "${PWD}/docker-compose.plaintext.pdb-table.yml"
 
+if [ -f /tmp/delta_configs/env.delta ]
+then
+     source /tmp/delta_configs/env.delta
+else
+     logerror "ERROR: /tmp/delta_configs/env.delta has not been generated"
+     exit 1
+fi
+#############
 
 # Verify Oracle DB has started within MAX_WAIT seconds
 MAX_WAIT=2500
@@ -32,17 +41,16 @@ done
 log "Oracle DB has started!"
 sleep 60
 
+log "Creating _confluent-monitoring topic in Confluent Cloud (auto.create.topics.enable=false)"
+set +e
+create_topic _confluent-monitoring
+set -e
+
 log "Grant select on CUSTOMERS table"
 docker exec -i oracle sqlplus C\#\#MYUSER/mypassword@//localhost:1521/ORCLPDB1 << EOF
      ALTER SESSION SET CONTAINER=ORCLPDB1;
      GRANT select on CUSTOMERS TO C##MYUSER;
 EOF
-
-# Create a redo-log-topic. Please make sure you create a topic with the same name you will use for "redo.log.topic.name": "redo-log-topic"
-# CC-13104
-docker exec connect kafka-topics --create --topic redo-log-topic --bootstrap-server broker:9092 --replication-factor 1 --partitions 1 --config cleanup.policy=delete --config retention.ms=120960000
-log "redo-log-topic is created"
-sleep 5
 
 log "Creating Oracle source connector"
 curl -X PUT \
@@ -50,13 +58,32 @@ curl -X PUT \
      --data '{
                "connector.class": "io.confluent.connect.oracle.cdc.OracleCdcSourceConnector",
                "tasks.max":2,
-               "key.converter": "io.confluent.connect.avro.AvroConverter",
-               "key.converter.schema.registry.url": "http://schema-registry:8081",
-               "value.converter": "io.confluent.connect.avro.AvroConverter",
-               "value.converter.schema.registry.url": "http://schema-registry:8081",
-               "confluent.license": "",
-               "confluent.topic.bootstrap.servers": "broker:9092",
-               "confluent.topic.replication.factor": "1",
+               "key.converter" : "io.confluent.connect.avro.AvroConverter",
+               "key.converter.schema.registry.url": "'"$SCHEMA_REGISTRY_URL"'",
+               "key.converter.basic.auth.user.info": "${file:/data:schema.registry.basic.auth.user.info}",
+               "key.converter.basic.auth.credentials.source": "USER_INFO",
+               "value.converter" : "io.confluent.connect.avro.AvroConverter",
+               "value.converter.schema.registry.url": "'"$SCHEMA_REGISTRY_URL"'",
+               "value.converter.basic.auth.user.info": "${file:/data:schema.registry.basic.auth.user.info}",
+               "value.converter.basic.auth.credentials.source": "USER_INFO",
+
+               "confluent.topic.ssl.endpoint.identification.algorithm" : "https",
+               "confluent.topic.sasl.mechanism" : "PLAIN",
+               "confluent.topic.bootstrap.servers": "${file:/data:bootstrap.servers}",
+               "confluent.topic.sasl.jaas.config" : "org.apache.kafka.common.security.plain.PlainLoginModule required username=\"${file:/data:sasl.username}\" password=\"${file:/data:sasl.password}\";",
+               "confluent.topic.security.protocol" : "SASL_SSL",
+               "confluent.topic.replication.factor": "3",
+
+               "topic.creation.groups":"redo",
+               "topic.creation.redo.include":"redo-log-topic",
+               "topic.creation.redo.replication.factor":3,
+               "topic.creation.redo.partitions":1,
+               "topic.creation.redo.cleanup.policy":"delete",
+               "topic.creation.redo.retention.ms":1209600000,
+               "topic.creation.default.replication.factor":3,
+               "topic.creation.default.partitions":3,
+               "topic.creation.default.cleanup.policy":"compact",
+
                "oracle.server": "oracle",
                "oracle.port": 1521,
                "oracle.sid": "ORCLCDB",
@@ -64,8 +91,13 @@ curl -X PUT \
                "oracle.username": "C##MYUSER",
                "oracle.password": "mypassword",
                "start.from":"snapshot",
+
                "redo.log.topic.name": "redo-log-topic",
-               "redo.log.consumer.bootstrap.servers":"broker:9092",
+               "redo.log.consumer.bootstrap.servers": "${file:/data:bootstrap.servers}",
+               "redo.log.consumer.sasl.jaas.config": "org.apache.kafka.common.security.plain.PlainLoginModule required username=\"${file:/data:sasl.username}\" password=\"${file:/data:sasl.password}\";",
+               "redo.log.consumer.security.protocol":"SASL_SSL",
+               "redo.log.consumer.sasl.mechanism":"PLAIN",
+
                "table.inclusion.regex": "ORCLPDB1[.].*[.]CUSTOMERS",
                "table.topic.name.template": "${databaseName}.${schemaName}.${tableName}",
                "numeric.mapping": "best_fit",
@@ -73,7 +105,7 @@ curl -X PUT \
                "redo.log.row.fetch.size":1,
                "oracle.dictionary.mode": "auto"
           }' \
-     http://localhost:8083/connectors/cdc-oracle-source-pdb/config | jq .
+     http://localhost:8083/connectors/cdc-oracle-source-pdb-cloud/config | jq .
 
 log "Waiting 60s for connector to read existing data"
 sleep 60
@@ -89,7 +121,7 @@ sleep 60
 
 log "Verifying topic ORCLPDB1.C__MYUSER.CUSTOMERS: there should be 13 records"
 set +e
-timeout 60 docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic ORCLPDB1.C__MYUSER.CUSTOMERS --from-beginning --max-messages 13 > /tmp/result.log  2>&1
+timeout 60 docker exec -e BOOTSTRAP_SERVERS="$BOOTSTRAP_SERVERS" -e SASL_JAAS_CONFIG="$SASL_JAAS_CONFIG" -e SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO="$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO" -e SCHEMA_REGISTRY_URL="$SCHEMA_REGISTRY_URL" connect bash -c 'kafka-avro-console-consumer --topic ORCLPDB1.C__MYUSER.CUSTOMERS --bootstrap-server $BOOTSTRAP_SERVERS --consumer-property ssl.endpoint.identification.algorithm=https --consumer-property sasl.mechanism=PLAIN --consumer-property security.protocol=SASL_SSL --consumer-property sasl.jaas.config="$SASL_JAAS_CONFIG" --property basic.auth.credentials.source=USER_INFO --property schema.registry.basic.auth.user.info="$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO" --property schema.registry.url=$SCHEMA_REGISTRY_URL --from-beginning --max-messages 13' > /tmp/result.log  2>&1
 set -e
 cat /tmp/result.log
 log "Check there is 5 snapshots events"
@@ -118,7 +150,7 @@ then
 fi
 
 log "Verifying topic redo-log-topic: there should be 9 records"
-timeout 60 docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic redo-log-topic --from-beginning --max-messages 9
+timeout 60 docker exec -e BOOTSTRAP_SERVERS="$BOOTSTRAP_SERVERS" -e SASL_JAAS_CONFIG="$SASL_JAAS_CONFIG" -e SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO="$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO" -e SCHEMA_REGISTRY_URL="$SCHEMA_REGISTRY_URL" connect bash -c 'kafka-avro-console-consumer --topic redo-log-topic --bootstrap-server $BOOTSTRAP_SERVERS --consumer-property ssl.endpoint.identification.algorithm=https --consumer-property sasl.mechanism=PLAIN --consumer-property security.protocol=SASL_SSL --consumer-property sasl.jaas.config="$SASL_JAAS_CONFIG" --property basic.auth.credentials.source=USER_INFO --property schema.registry.basic.auth.user.info="$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO" --property schema.registry.url=$SCHEMA_REGISTRY_URL --from-beginning --max-messages 9'
 
 log "🚚 If you're planning to inject more data, have a look at https://github.com/vdesabou/kafka-docker-playground/blob/master/connect/connect-cdc-oracle19-source/README.md#note-on-redologrowfetchsize"
 

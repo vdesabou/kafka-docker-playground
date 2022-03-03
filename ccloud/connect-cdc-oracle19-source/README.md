@@ -120,21 +120,45 @@ $ curl -X PUT \
      --data '{
                "connector.class": "io.confluent.connect.oracle.cdc.OracleCdcSourceConnector",
                "tasks.max":2,
-               "key.converter": "io.confluent.connect.avro.AvroConverter",
-               "key.converter.schema.registry.url": "http://schema-registry:8081",
-               "value.converter": "io.confluent.connect.avro.AvroConverter",
-               "value.converter.schema.registry.url": "http://schema-registry:8081",
-               "confluent.license": "",
-               "confluent.topic.bootstrap.servers": "broker:9092",
-               "confluent.topic.replication.factor": "1",
+               "key.converter" : "io.confluent.connect.avro.AvroConverter",
+               "key.converter.schema.registry.url": "'"$SCHEMA_REGISTRY_URL"'",
+               "key.converter.basic.auth.user.info": "${file:/data:schema.registry.basic.auth.user.info}",
+               "key.converter.basic.auth.credentials.source": "USER_INFO",
+               "value.converter" : "io.confluent.connect.avro.AvroConverter",
+               "value.converter.schema.registry.url": "'"$SCHEMA_REGISTRY_URL"'",
+               "value.converter.basic.auth.user.info": "${file:/data:schema.registry.basic.auth.user.info}",
+               "value.converter.basic.auth.credentials.source": "USER_INFO",
+
+               "confluent.topic.ssl.endpoint.identification.algorithm" : "https",
+               "confluent.topic.sasl.mechanism" : "PLAIN",
+               "confluent.topic.bootstrap.servers": "${file:/data:bootstrap.servers}",
+               "confluent.topic.sasl.jaas.config" : "org.apache.kafka.common.security.plain.PlainLoginModule required username=\"${file:/data:sasl.username}\" password=\"${file:/data:sasl.password}\";",
+               "confluent.topic.security.protocol" : "SASL_SSL",
+               "confluent.topic.replication.factor": "3",
+
+               "topic.creation.groups":"redo",
+               "topic.creation.redo.include":"redo-log-topic",
+               "topic.creation.redo.replication.factor":3,
+               "topic.creation.redo.partitions":1,
+               "topic.creation.redo.cleanup.policy":"delete",
+               "topic.creation.redo.retention.ms":1209600000,
+               "topic.creation.default.replication.factor":3,
+               "topic.creation.default.partitions":3,
+               "topic.creation.default.cleanup.policy":"compact",
+
                "oracle.server": "oracle",
                "oracle.port": 1521,
                "oracle.sid": "ORCLCDB",
                "oracle.username": "C##MYUSER",
                "oracle.password": "mypassword",
                "start.from":"snapshot",
+
                "redo.log.topic.name": "redo-log-topic",
-               "redo.log.consumer.bootstrap.servers":"broker:9092",
+               "redo.log.consumer.bootstrap.servers": "${file:/data:bootstrap.servers}",
+               "redo.log.consumer.sasl.jaas.config": "org.apache.kafka.common.security.plain.PlainLoginModule required username=\"${file:/data:sasl.username}\" password=\"${file:/data:sasl.password}\";",
+               "redo.log.consumer.security.protocol":"SASL_SSL",
+               "redo.log.consumer.sasl.mechanism":"PLAIN",
+
                "table.inclusion.regex": ".*CUSTOMERS.*",
                "table.topic.name.template": "${databaseName}.${schemaName}.${tableName}",
                "numeric.mapping": "best_fit",
@@ -142,13 +166,13 @@ $ curl -X PUT \
                "redo.log.row.fetch.size":1,
                "oracle.dictionary.mode": "auto"
           }' \
-     http://localhost:8083/connectors/cdc-oracle-source-cdb/config | jq .
+     http://localhost:8083/connectors/cdc-oracle-source-cdb-cloud/config | jq .
 ```
 
 Verify the topic `ORCLCDB.C__MYUSER.CUSTOMERS`:
 
 ```bash
-$ docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic ORCLCDB.C__MYUSER.CUSTOMERS --from-beginning --max-messages 2
+$ docker exec -e BOOTSTRAP_SERVERS="$BOOTSTRAP_SERVERS" -e SASL_JAAS_CONFIG="$SASL_JAAS_CONFIG" -e SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO="$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO" -e SCHEMA_REGISTRY_URL="$SCHEMA_REGISTRY_URL" connect bash -c 'kafka-avro-console-consumer --topic ORCLCDB.C__MYUSER.CUSTOMERS --bootstrap-server $BOOTSTRAP_SERVERS --consumer-property ssl.endpoint.identification.algorithm=https --consumer-property sasl.mechanism=PLAIN --consumer-property security.protocol=SASL_SSL --consumer-property sasl.jaas.config="$SASL_JAAS_CONFIG" --property basic.auth.credentials.source=USER_INFO --property schema.registry.basic.auth.user.info="$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO" --property schema.registry.url=$SCHEMA_REGISTRY_URL --from-beginning --max-messages 13
 ```
 
 Results:
@@ -177,13 +201,32 @@ $ curl -X PUT \
      --data '{
                "connector.class": "io.confluent.connect.oracle.cdc.OracleCdcSourceConnector",
                "tasks.max":2,
-               "key.converter": "io.confluent.connect.avro.AvroConverter",
-               "key.converter.schema.registry.url": "http://schema-registry:8081",
-               "value.converter": "io.confluent.connect.avro.AvroConverter",
-               "value.converter.schema.registry.url": "http://schema-registry:8081",
-               "confluent.license": "",
-               "confluent.topic.bootstrap.servers": "broker:9092",
-               "confluent.topic.replication.factor": "1",
+               "key.converter" : "io.confluent.connect.avro.AvroConverter",
+               "key.converter.schema.registry.url": "'"$SCHEMA_REGISTRY_URL"'",
+               "key.converter.basic.auth.user.info": "${file:/data:schema.registry.basic.auth.user.info}",
+               "key.converter.basic.auth.credentials.source": "USER_INFO",
+               "value.converter" : "io.confluent.connect.avro.AvroConverter",
+               "value.converter.schema.registry.url": "'"$SCHEMA_REGISTRY_URL"'",
+               "value.converter.basic.auth.user.info": "${file:/data:schema.registry.basic.auth.user.info}",
+               "value.converter.basic.auth.credentials.source": "USER_INFO",
+
+               "confluent.topic.ssl.endpoint.identification.algorithm" : "https",
+               "confluent.topic.sasl.mechanism" : "PLAIN",
+               "confluent.topic.bootstrap.servers": "${file:/data:bootstrap.servers}",
+               "confluent.topic.sasl.jaas.config" : "org.apache.kafka.common.security.plain.PlainLoginModule required username=\"${file:/data:sasl.username}\" password=\"${file:/data:sasl.password}\";",
+               "confluent.topic.security.protocol" : "SASL_SSL",
+               "confluent.topic.replication.factor": "3",
+
+               "topic.creation.groups":"redo",
+               "topic.creation.redo.include":"redo-log-topic",
+               "topic.creation.redo.replication.factor":3,
+               "topic.creation.redo.partitions":1,
+               "topic.creation.redo.cleanup.policy":"delete",
+               "topic.creation.redo.retention.ms":1209600000,
+               "topic.creation.default.replication.factor":3,
+               "topic.creation.default.partitions":3,
+               "topic.creation.default.cleanup.policy":"compact",
+
                "oracle.server": "oracle",
                "oracle.port": 1521,
                "oracle.sid": "ORCLCDB",
@@ -191,8 +234,13 @@ $ curl -X PUT \
                "oracle.username": "C##MYUSER",
                "oracle.password": "mypassword",
                "start.from":"snapshot",
+
                "redo.log.topic.name": "redo-log-topic",
-               "redo.log.consumer.bootstrap.servers":"broker:9092",
+               "redo.log.consumer.bootstrap.servers": "${file:/data:bootstrap.servers}",
+               "redo.log.consumer.sasl.jaas.config": "org.apache.kafka.common.security.plain.PlainLoginModule required username=\"${file:/data:sasl.username}\" password=\"${file:/data:sasl.password}\";",
+               "redo.log.consumer.security.protocol":"SASL_SSL",
+               "redo.log.consumer.sasl.mechanism":"PLAIN",
+
                "table.inclusion.regex": "ORCLPDB1[.].*[.]CUSTOMERS",
                "table.topic.name.template": "${databaseName}.${schemaName}.${tableName}",
                "numeric.mapping": "best_fit",
@@ -200,13 +248,13 @@ $ curl -X PUT \
                "redo.log.row.fetch.size":1,
                "oracle.dictionary.mode": "auto"
           }' \
-     http://localhost:8083/connectors/cdc-oracle-source-pdb/config | jq .
+     http://localhost:8083/connectors/cdc-oracle-source-pdb-cloud/config | jq .
 ```
 
 Verify the topic `ORCLPDB1.C__MYUSER.CUSTOMERS`:
 
 ```bash
-$ docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic ORCLPDB1.C__MYUSER.CUSTOMERS --from-beginning --max-messages 2
+$ docker exec -e BOOTSTRAP_SERVERS="$BOOTSTRAP_SERVERS" -e SASL_JAAS_CONFIG="$SASL_JAAS_CONFIG" -e SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO="$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO" -e SCHEMA_REGISTRY_URL="$SCHEMA_REGISTRY_URL" connect bash -c 'kafka-avro-console-consumer --topic ORCLPDB1.C__MYUSER.CUSTOMERS --bootstrap-server $BOOTSTRAP_SERVERS --consumer-property ssl.endpoint.identification.algorithm=https --consumer-property sasl.mechanism=PLAIN --consumer-property security.protocol=SASL_SSL --consumer-property sasl.jaas.config="$SASL_JAAS_CONFIG" --property basic.auth.credentials.source=USER_INFO --property schema.registry.basic.auth.user.info="$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO" --property schema.registry.url=$SCHEMA_REGISTRY_URL --from-beginning --max-messages 13'
 ```
 
 Results:
