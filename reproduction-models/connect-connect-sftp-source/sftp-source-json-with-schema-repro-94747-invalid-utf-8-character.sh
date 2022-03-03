@@ -22,7 +22,7 @@ curl -X PUT \
      --data '{
                "topics": "test_sftp_sink",
                "tasks.max": "1",
-               "connector.class": "io.confluent.connect.sftp.SftpJsonSourceConnector",
+               "connector.class": "io.confluent.connect.sftp.SftpBinaryFileSourceConnector",
                "cleanup.policy":"NONE",
                "behavior.on.error":"FAIL",
                "input.path": "/home/foo/upload/input",
@@ -34,10 +34,14 @@ curl -X PUT \
                "sftp.host":"sftp-server",
                "sftp.port":"22",
                "kafka.topic": "sftp-testing-topic",
-               "key.schema": "{\"name\" : \"Key\",\"type\" : \"STRUCT\",\"isOptional\" : true,\"fieldSchemas\" : {\"id\":{\"type\":\"INT64\",\"isOptional\":true} }}",
-               "value.schema": "{\"name\":\"bill\",\"type\":\"STRUCT\",\"isOptional\":true,\"fieldSchemas\":{\"ActionType\":{\"type\":\"STRING\",\"isOptional\":true},\"KeyRecord\":{\"type\":\"STRING\",\"isOptional\":true},\"InsuredName\":{\"type\":\"STRING\",\"isOptional\":true}}}"
+               "transforms" : "HoistField,bytesToString",
+               "transforms.HoistField.type": "org.apache.kafka.connect.transforms.HoistField$Value",
+               "transforms.HoistField.field": "myPayload",
+               "transforms.bytesToString.type" : "com.github.jcustenborder.kafka.connect.transform.common.BytesToString$Value",
+               "transforms.bytesToString.fields" : "myPayload",
+               "transforms.bytesToString.charset" : "ISO-8859-1"
           }' \
-     http://localhost:8083/connectors/sftp-source/config | jq .
+     http://localhost:8083/connectors/sftp-testing-topic/config | jq .
 
 sleep 5
 
