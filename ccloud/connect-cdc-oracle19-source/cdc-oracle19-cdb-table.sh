@@ -34,6 +34,10 @@ done
 log "Oracle DB has started!"
 sleep 60
 
+log "Creating _confluent-monitoring topic in Confluent Cloud (auto.create.topics.enable=false)"
+set +e
+create_topic _confluent-monitoring
+set -e
 
 log "Creating Oracle source connector"
 curl -X PUT \
