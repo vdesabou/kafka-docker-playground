@@ -1501,7 +1501,7 @@ function bootstrap_ccloud_environment () {
 
   if [ -z "$BOOTSTRAP_SERVERS" ]
   then
-      ${DIR}/../ccloud-demo/confluent-generate-env-vars.sh ${CONFIG_FILE}
+      ${DIR}/../../ccloud/ccloud-demo/confluent-generate-env-vars.sh ${CONFIG_FILE}
 
       if [ -f /tmp/delta_configs/env.delta ]
       then
