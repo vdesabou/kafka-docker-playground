@@ -1,0 +1,15 @@
+            {
+                "default": null,
+                "doc": "a doc comment",
+                "name": "target_ban_time",
+                "type": [
+                    "null",
+                    "long"
+                ]
+            }
+        ],
+        "name": "Customer",
+        "namespace": "com.github.vdesabou",
+        "type": "record"
+    }
+]
