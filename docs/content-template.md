@@ -152,6 +152,7 @@
 
 ### 🤖 Full-Managed Connectors
 
+  - <img src="https://github.com/vdesabou/kafka-docker-playground/raw/master/images/icons/s3.png" width="15"> [Amazon S3 Sink](https://github.com/vdesabou/kafka-docker-playground/tree/master/ccloud/fully-managed-connect-aws-s3-sink) ![not tested](https://img.shields.io/badge/CI-not%20tested!-violet)
   - <img src="https://github.com/vdesabou/kafka-docker-playground/raw/master/images/icons/ibm_mq.png" width="15"> [IBM MQ Source](https://github.com/vdesabou/kafka-docker-playground/tree/master/ccloud/fully-managed-connect-ibm-mq-source) ![not tested](https://img.shields.io/badge/CI-not%20tested!-violet)
   - <img src="https://github.com/vdesabou/kafka-docker-playground/raw/master/images/icons/snowflake.png" width="15"> [Snowflake Sink](https://github.com/vdesabou/kafka-docker-playground/tree/master/ccloud/fully-managed-connect-snowflake-sink) ![not tested](https://img.shields.io/badge/CI-not%20tested!-violet)
 
