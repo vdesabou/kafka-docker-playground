@@ -65,7 +65,7 @@ else
      export CONNECT_CONTAINER_HOME_DIR="/root"
 fi
 
-for component in producer-repro-93917
+for component in producer-repro-93917 producer-repro-93917-2
 do
     set +e
     log "🏗 Building jar for ${component}"
@@ -105,6 +105,7 @@ curl -X PUT \
                "s3.bucket.name": "'"$AWS_BUCKET_NAME"'",
                "s3.part.size": 52428801,
                "flush.size": "5000",
+               "key.converter": "org.apache.kafka.connect.converters.ByteArrayConverter",
                "storage.class": "io.confluent.connect.s3.storage.S3Storage",
                "format.class": "io.confluent.connect.s3.format.json.JsonFormat",
                "schema.compatibility": "BACKWARD",
@@ -124,19 +125,18 @@ curl -X PUT \
                "path.format": "YYYY/MM/dd/HH",
                "timestamp.extractor": "Record",
                "timestamp.field": "timestamp",
-               "timezone": "UTC"
+               "timezone": "UTC",
+
+               "errors.tolerance": "all",
+               "errors.deadletterqueue.topic.name": "dlq",
+               "errors.deadletterqueue.topic.replication.factor": "1",
+               "errors.deadletterqueue.context.headers.enable": "true",
+               "errors.log.enable": "true",
+               "errors.log.include.messages": "false",
+               "errors.retry.delay.max.ms": "60000",
+               "errors.retry.timeout": "0"
           }' \
      http://localhost:8083/connectors/s3-sink/config | jq .
-
-# PartitionerConfig values: 
-# 	locale = en
-# 	partition.duration.ms = 3600000
-# 	partition.field.name = []
-# 	partitioner.class = class io.confluent.connect.storage.partitioner.TimeBasedPartitioner
-# 	path.format = YYYY/MM/dd/HH
-# 	timestamp.extractor = Record
-# 	timestamp.field = timestamp
-# 	timezone = UTC
 
 log "✨ Run 5 java producers which produces to topic customer_avro"
 docker exec -d producer-repro-93917 bash -c "java -jar producer-1.0.0-jar-with-dependencies.jar"
@@ -146,6 +146,14 @@ docker exec -d producer-repro-93917 bash -c "java -jar producer-1.0.0-jar-with-d
 docker exec -d producer-repro-93917 bash -c "java -jar producer-1.0.0-jar-with-dependencies.jar"
 
 sleep 10
+
+log "✨ Run 5 java producers-2 which produces to topic customer_avro"
+docker exec -d producer-repro-93917-2 bash -c "java -jar producer-1.0.0-jar-with-dependencies.jar"
+docker exec -d producer-repro-93917-2 bash -c "java -jar producer-1.0.0-jar-with-dependencies.jar"
+docker exec -d producer-repro-93917-2 bash -c "java -jar producer-1.0.0-jar-with-dependencies.jar"
+docker exec -d producer-repro-93917-2 bash -c "java -jar producer-1.0.0-jar-with-dependencies.jar"
+docker exec -d producer-repro-93917-2 bash -c "java -jar producer-1.0.0-jar-with-dependencies.jar"
+
 
 register_new_versions
 
