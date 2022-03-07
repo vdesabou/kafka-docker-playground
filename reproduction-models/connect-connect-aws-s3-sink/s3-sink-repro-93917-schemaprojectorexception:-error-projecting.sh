@@ -4,45 +4,6 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
-function register_new_versions() {
-     rm -f /tmp/added-fields.json
-     rm -f /tmp/repro-93917-schema-v*.json
-     rm -f /tmp/final.json
-     for((i=0;i<100;i++))
-     do
-          # Create file
-          cat producer-repro-93917/repro-93917-schema-template-begin > /tmp/repro-93917-schema-v$i.json
-
-cat << EOF >> /tmp/added-fields.json
-            {
-                "default": null,
-                "doc": "my added field $i",
-                "name": "added_field_$i",
-                "type": [
-                    "null",
-                    "string"
-                ]
-            },
-EOF
-          cat /tmp/added-fields.json >> /tmp/repro-93917-schema-v$i.json
-          cat producer-repro-93917/repro-93917-schema-template-end >> /tmp/repro-93917-schema-v$i.json
-
-          # register new version
-          escaped_json=$(jq -c -Rs '.' /tmp/repro-93917-schema-v$i.json)
-
-cat << EOF > /tmp/final.json
-{"schema":$escaped_json}
-EOF
-
-          log "Register new version v$i for schema customer_avro-value"
-          curl -X POST http://localhost:8081/subjects/customer_avro-value/versions \
-          --header 'Content-Type: application/vnd.schemaregistry.v1+json' \
-          --data @/tmp/final.json
-
-          sleep 10
-     done
-}
-
 if [ ! -f $HOME/.aws/config ]
 then
      logerror "ERROR: $HOME/.aws/config is not set"
@@ -110,7 +71,7 @@ curl -X PUT \
                "format.class": "io.confluent.connect.s3.format.json.JsonFormat",
                "schema.compatibility": "BACKWARD",
                "behavior.on.null.values": "ignore",
-               "connect.meta.data": "false",
+               "connect.meta.data": "true",
                "enhanced.avro.schema.support": "true",
                "rotate.interval.ms": "180000",
                "schemas.cache.config": "1000",
@@ -138,6 +99,19 @@ curl -X PUT \
           }' \
      http://localhost:8083/connectors/s3-sink/config | jq .
 
+
+
+log "Register first version using producer-repro-93917/src/main/resources/avro/customer.avsc"
+escaped_json=$(jq -c -Rs '.' producer-repro-93917/src/main/resources/avro/customer.avsc)
+cat << EOF > /tmp/final.json
+{"schema":$escaped_json}
+EOF
+
+log "Register new version v$i for schema customer_avro-value"
+curl -X POST http://localhost:8081/subjects/customer_avro-value/versions \
+--header 'Content-Type: application/vnd.schemaregistry.v1+json' \
+--data @/tmp/final.json
+
 log "✨ Run 5 java producers which produces to topic customer_avro"
 docker exec -d producer-repro-93917 bash -c "java -jar producer-1.0.0-jar-with-dependencies.jar"
 docker exec -d producer-repro-93917 bash -c "java -jar producer-1.0.0-jar-with-dependencies.jar"
@@ -147,6 +121,18 @@ docker exec -d producer-repro-93917 bash -c "java -jar producer-1.0.0-jar-with-d
 
 sleep 10
 
+log "Register second version using producer-repro-93917-2/src/main/resources/avro/customer.avsc"
+escaped_json=$(jq -c -Rs '.' producer-repro-93917-2/src/main/resources/avro/customer.avsc)
+
+cat << EOF > /tmp/final.json
+{"schema":$escaped_json}
+EOF
+
+log "Register new version v$i for schema customer_avro-value"
+curl -X POST http://localhost:8081/subjects/customer_avro-value/versions \
+--header 'Content-Type: application/vnd.schemaregistry.v1+json' \
+--data @/tmp/final.json
+
 log "✨ Run 5 java producers-2 which produces to topic customer_avro"
 docker exec -d producer-repro-93917-2 bash -c "java -jar producer-1.0.0-jar-with-dependencies.jar"
 docker exec -d producer-repro-93917-2 bash -c "java -jar producer-1.0.0-jar-with-dependencies.jar"
@@ -154,6 +140,32 @@ docker exec -d producer-repro-93917-2 bash -c "java -jar producer-1.0.0-jar-with
 docker exec -d producer-repro-93917-2 bash -c "java -jar producer-1.0.0-jar-with-dependencies.jar"
 docker exec -d producer-repro-93917-2 bash -c "java -jar producer-1.0.0-jar-with-dependencies.jar"
 
-
-register_new_versions
-
+# [2022-03-07 14:13:34,799] WARN [s3-sink|task-0] Errant record written to DLQ due to: Error projecting client_background_music_option (io.confluent.connect.s3.TopicPartitionWriter:204)
+# [2022-03-07 14:13:34,799] ERROR [s3-sink|task-0] Error encountered in task s3-sink-0. Executing stage 'TASK_PUT' with class 'org.apache.kafka.connect.sink.SinkTask'. (org.apache.kafka.connect.runtime.errors.LogReporter:66)
+# org.apache.kafka.connect.errors.SchemaProjectorException: Error projecting client_background_music_option
+#         at org.apache.kafka.connect.data.SchemaProjector.projectStruct(SchemaProjector.java:113)
+#         at org.apache.kafka.connect.data.SchemaProjector.projectRequiredSchema(SchemaProjector.java:93)
+#         at org.apache.kafka.connect.data.SchemaProjector.project(SchemaProjector.java:73)
+#         at io.confluent.connect.storage.schema.StorageSchemaCompatibility.projectInternal(StorageSchemaCompatibility.java:395)
+#         at io.confluent.connect.storage.schema.StorageSchemaCompatibility.projectInternal(StorageSchemaCompatibility.java:383)
+#         at io.confluent.connect.storage.schema.StorageSchemaCompatibility.project(StorageSchemaCompatibility.java:355)
+#         at io.confluent.connect.s3.TopicPartitionWriter.checkRotationOrAppend(TopicPartitionWriter.java:303)
+#         at io.confluent.connect.s3.TopicPartitionWriter.executeState(TopicPartitionWriter.java:247)
+#         at io.confluent.connect.s3.TopicPartitionWriter.write(TopicPartitionWriter.java:198)
+#         at io.confluent.connect.s3.S3SinkTask.put(S3SinkTask.java:234)
+#         at org.apache.kafka.connect.runtime.WorkerSinkTask.deliverMessages(WorkerSinkTask.java:604)
+#         at org.apache.kafka.connect.runtime.WorkerSinkTask.poll(WorkerSinkTask.java:334)
+#         at org.apache.kafka.connect.runtime.WorkerSinkTask.iteration(WorkerSinkTask.java:235)
+#         at org.apache.kafka.connect.runtime.WorkerSinkTask.execute(WorkerSinkTask.java:204)
+#         at org.apache.kafka.connect.runtime.WorkerTask.doRun(WorkerTask.java:199)
+#         at org.apache.kafka.connect.runtime.WorkerTask.run(WorkerTask.java:254)
+#         at java.base/java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:515)
+#         at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:264)
+#         at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1128)
+#         at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:628)
+#         at java.base/java.lang.Thread.run(Thread.java:829)
+# Caused by: org.apache.kafka.connect.errors.SchemaProjectorException: Schema parameters not equal. source parameters: {io.confluent.connect.avro.record.doc=this is a doc, io.confluent.connect.avro.field.doc.action=this is a doc, io.confluent.connect.avro.field.doc.adid=this is a doc, io.confluent.connect.avro.field.doc.client_number_version=this is a doc, io.confluent.connect.avro.field.doc.idfa_or_gps_adid=this is a doc, io.confluent.connect.avro.field.doc.network=this is a doc, io.confluent.connect.avro.field.doc.campaign=this is a doc, io.confluent.connect.avro.field.doc.adgroup=this is a doc, io.confluent.connect.avro.field.doc.creative=this is a doc, io.confluent.connect.avro.field.doc.sn_type=this is a doc, io.confluent.connect.avro.field.doc.user_sn_id=this is a doc, io.confluent.connect.avro.field.doc.session_id=this is a doc, io.confluent.connect.avro.field.doc.exp=this is a doc, io.confluent.connect.avro.field.doc.rp=this is a doc, io.confluent.connect.avro.field.doc.coin=this is a doc, io.confluent.connect.avro.field.doc.day=this is a doc, io.confluent.connect.avro.field.doc.device_id=this is a doc, io.confluent.connect.avro.field.doc.event_id=this is a doc, io.confluent.connect.avro.field.doc.id=this is a doc, io.confluent.connect.avro.field.doc.level=this is a doc, io.confluent.connect.avro.field.doc.login_ct=this is a doc, io.confluent.connect.avro.field.doc.ltv=this is a doc, io.confluent.connect.avro.field.doc.os=this is a doc, io.confluent.connect.avro.field.doc.purchase_ct=this is a doc, io.confluent.connect.avro.field.doc.reg_ts=this is a doc, io.confluent.connect.avro.field.doc.spt=this is a doc, io.confluent.connect.avro.field.doc.tier=this is a doc, io.confluent.connect.avro.field.doc.total_spt=this is a doc, io.confluent.connect.avro.field.doc.ts=this is a doc, io.confluent.connect.avro.field.doc.user_id=this is a doc, io.confluent.connect.avro.field.doc.merge_source=this is a doc, io.confluent.connect.avro.field.doc.merge_destination=this is a doc, io.confluent.connect.avro.field.doc.merge_ts=this is a doc, io.confluent.connect.avro.field.doc.user_club_id=this is a doc, io.confluent.connect.avro.field.doc.user_club_authority=this is a doc, io.confluent.connect.avro.field.doc.gem=this is a doc, io.confluent.connect.avro.field.doc.free_gem=this is a doc} and target parameters: {io.confluent.connect.avro.record.doc=this is a doc, io.confluent.connect.avro.field.doc.action=this is a doc, io.confluent.connect.avro.field.doc.adid=this is a doc, io.confluent.connect.avro.field.doc.client_number_version=this is a doc, io.confluent.connect.avro.field.doc.idfa_or_gps_adid=this is a doc, io.confluent.connect.avro.field.doc.network=this is a doc, io.confluent.connect.avro.field.doc.campaign=this is a doc, io.confluent.connect.avro.field.doc.adgroup=this is a doc, io.confluent.connect.avro.field.doc.creative=this is a doc, io.confluent.connect.avro.field.doc.sn_type=this is a doc, io.confluent.connect.avro.field.doc.user_sn_id=this is a doc, io.confluent.connect.avro.field.doc.session_id=this is a doc, io.confluent.connect.avro.field.doc.exp=this is a doc, io.confluent.connect.avro.field.doc.rp=this is a doc, io.confluent.connect.avro.field.doc.coin=this is a doc, io.confluent.connect.avro.field.doc.day=this is a doc, io.confluent.connect.avro.field.doc.device_id=this is a doc, io.confluent.connect.avro.field.doc.event_id=this is a doc, io.confluent.connect.avro.field.doc.id=this is a doc, io.confluent.connect.avro.field.doc.level=this is a doc, io.confluent.connect.avro.field.doc.login_ct=this is a doc, io.confluent.connect.avro.field.doc.ltv=this is a doc, io.confluent.connect.avro.field.doc.os=this is a doc, io.confluent.connect.avro.field.doc.purchase_ct=this is a doc, io.confluent.connect.avro.field.doc.reg_ts=this is a doc, io.confluent.connect.avro.field.doc.spt=this is a doc, io.confluent.connect.avro.field.doc.tier=this is a doc, io.confluent.connect.avro.field.doc.total_spt=this is a doc, io.confluent.connect.avro.field.doc.ts=this is a doc, io.confluent.connect.avro.field.doc.user_id=this is a doc, io.confluent.connect.avro.field.doc.merge_source=this is a doc, io.confluent.connect.avro.field.doc.merge_destination=this is a doc, io.confluent.connect.avro.field.doc.merge_ts=this is a doc, io.confluent.connect.avro.field.doc.user_club_id=this is a doc, io.confluent.connect.avro.field.doc.user_club_authority=this is a doc, io.confluent.connect.avro.field.doc.gem=this is a doc, io.confluent.connect.avro.field.doc.free_gem=this is a doc, io.confluent.connect.avro.field.doc.tracker_name=my added field}
+#         at org.apache.kafka.connect.data.SchemaProjector.checkMaybeCompatible(SchemaProjector.java:133)
+#         at org.apache.kafka.connect.data.SchemaProjector.project(SchemaProjector.java:60)
+#         at org.apache.kafka.connect.data.SchemaProjector.projectStruct(SchemaProjector.java:110)
+#         ... 20 more

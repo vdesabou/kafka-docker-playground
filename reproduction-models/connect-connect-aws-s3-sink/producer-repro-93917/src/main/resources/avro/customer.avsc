@@ -1,0 +1,670 @@
+[
+    {
+        "doc": "this is a doc",
+        "fields": [
+            {
+                "default": null,
+                "doc": "this is a doc",
+                "name": "action",
+                "type": [
+                    "null",
+                    "string"
+                ]
+            },
+            {
+                "default": null,
+                "doc": "this is a doc",
+                "name": "adid",
+                "type": [
+                    "null",
+                    "string"
+                ]
+            },
+            {
+                "default": null,
+                "doc": "this is a doc",
+                "name": "client_number_version",
+                "type": [
+                    "null",
+                    "long"
+                ]
+            },
+            {
+                "default": null,
+                "doc": "this is a doc",
+                "name": "idfa_or_gps_adid",
+                "type": [
+                    "null",
+                    "string"
+                ]
+            },
+            {
+                "default": null,
+                "doc": "this is a doc",
+                "name": "network",
+                "type": [
+                    "null",
+                    "string"
+                ]
+            },
+            {
+                "default": null,
+                "doc": "this is a doc",
+                "name": "campaign",
+                "type": [
+                    "null",
+                    "string"
+                ]
+            },
+            {
+                "default": null,
+                "doc": "this is a doc",
+                "name": "adgroup",
+                "type": [
+                    "null",
+                    "string"
+                ]
+            },
+            {
+                "default": null,
+                "doc": "this is a doc",
+                "name": "creative",
+                "type": [
+                    "null",
+                    "string"
+                ]
+            },
+            {
+                "default": null,
+                "doc": "this is a doc",
+                "name": "sn_type",
+                "type": [
+                    "null",
+                    "string"
+                ]
+            },
+            {
+                "default": null,
+                "doc": "this is a doc",
+                "name": "user_sn_id",
+                "type": [
+                    "null",
+                    "string"
+                ]
+            },
+            {
+                "default": null,
+                "doc": "this is a doc",
+                "name": "session_id",
+                "type": [
+                    "null",
+                    "string"
+                ]
+            },
+            {
+                "default": null,
+                "doc": "this is a doc",
+                "name": "exp",
+                "type": [
+                    "null",
+                    "long"
+                ]
+            },
+            {
+                "default": null,
+                "doc": "this is a doc",
+                "name": "rp",
+                "type": [
+                    "null",
+                    "long"
+                ]
+            },
+            {
+                "default": null,
+                "doc": "this is a doc",
+                "name": "coin",
+                "type": [
+                    "null",
+                    "long"
+                ]
+            },
+            {
+                "default": null,
+                "doc": "this is a doc",
+                "name": "day",
+                "type": [
+                    "null",
+                    "long"
+                ]
+            },
+            {
+                "default": null,
+                "doc": "this is a doc",
+                "name": "device_id",
+                "type": [
+                    "null",
+                    "string"
+                ]
+            },
+            {
+                "doc": "this is a doc",
+                "name": "event_id",
+                "type": {
+                    "name": "event_id_client_background_music_option",
+                    "symbols": [
+                        "client_background_music_option"
+                    ],
+                    "type": "enum"
+                }
+            },
+            {
+                "default": null,
+                "doc": "this is a doc",
+                "name": "id",
+                "type": [
+                    "null",
+                    "string"
+                ]
+            },
+            {
+                "default": null,
+                "doc": "this is a doc",
+                "name": "level",
+                "type": [
+                    "null",
+                    "long"
+                ]
+            },
+            {
+                "default": null,
+                "doc": "this is a doc",
+                "name": "login_ct",
+                "type": [
+                    "null",
+                    "long"
+                ]
+            },
+            {
+                "default": null,
+                "doc": "this is a doc",
+                "name": "ltv",
+                "type": [
+                    "null",
+                    "long"
+                ]
+            },
+            {
+                "default": null,
+                "doc": "this is a doc",
+                "name": "os",
+                "type": [
+                    "null",
+                    "string"
+                ]
+            },
+            {
+                "default": null,
+                "doc": "this is a doc",
+                "name": "purchase_ct",
+                "type": [
+                    "null",
+                    "long"
+                ]
+            },
+            {
+                "default": null,
+                "doc": "this is a doc",
+                "name": "reg_ts",
+                "type": [
+                    "null",
+                    "long"
+                ]
+            },
+            {
+                "default": null,
+                "doc": "this is a doc",
+                "name": "spt",
+                "type": [
+                    "null",
+                    "long"
+                ]
+            },
+            {
+                "default": null,
+                "doc": "this is a doc",
+                "name": "tier",
+                "type": [
+                    "null",
+                    "long"
+                ]
+            },
+            {
+                "default": null,
+                "doc": "this is a doc",
+                "name": "total_spt",
+                "type": [
+                    "null",
+                    "long"
+                ]
+            },
+            {
+                "default": null,
+                "doc": "this is a doc",
+                "name": "ts",
+                "type": [
+                    "null",
+                    "long"
+                ]
+            },
+            {
+                "default": null,
+                "doc": "this is a doc",
+                "name": "user_id",
+                "type": [
+                    "null",
+                    "string"
+                ]
+            },
+            {
+                "default": null,
+                "doc": "this is a doc",
+                "name": "merge_source",
+                "type": [
+                    "null",
+                    "string"
+                ]
+            },
+            {
+                "default": null,
+                "doc": "this is a doc",
+                "name": "merge_destination",
+                "type": [
+                    "null",
+                    "string"
+                ]
+            },
+            {
+                "default": null,
+                "doc": "this is a doc",
+                "name": "merge_ts",
+                "type": [
+                    "null",
+                    "long"
+                ]
+            },
+            {
+                "default": null,
+                "doc": "this is a doc",
+                "name": "user_club_id",
+                "type": [
+                    "null",
+                    "string"
+                ]
+            },
+            {
+                "default": null,
+                "doc": "this is a doc",
+                "name": "user_club_authority",
+                "type": [
+                    "null",
+                    "int"
+                ]
+            },
+            {
+                "default": null,
+                "doc": "this is a doc",
+                "name": "gem",
+                "type": [
+                    "null",
+                    "long"
+                ]
+            },
+            {
+                "default": null,
+                "doc": "this is a doc",
+                "name": "free_gem",
+                "type": [
+                    "null",
+                    "long"
+                ]
+            }
+        ],
+        "name": "client_background_music_option",
+        "namespace": "com.github.vdesabou",
+        "type": "record"
+    },
+    {
+        "doc": "this is a doc",
+        "fields": [
+            {
+                "default": null,
+                "doc": "this is a doc",
+                "name": "adid",
+                "type": [
+                    "null",
+                    "string"
+                ]
+            },
+            {
+                "default": null,
+                "doc": "this is a doc",
+                "name": "client_number_version",
+                "type": [
+                    "null",
+                    "long"
+                ]
+            },
+            {
+                "default": null,
+                "doc": "this is a doc",
+                "name": "idfa_or_gps_adid",
+                "type": [
+                    "null",
+                    "string"
+                ]
+            },
+            {
+                "default": null,
+                "doc": "this is a doc",
+                "name": "network",
+                "type": [
+                    "null",
+                    "string"
+                ]
+            },
+            {
+                "default": null,
+                "doc": "this is a doc",
+                "name": "campaign",
+                "type": [
+                    "null",
+                    "string"
+                ]
+            },
+            {
+                "default": null,
+                "doc": "this is a doc",
+                "name": "adgroup",
+                "type": [
+                    "null",
+                    "string"
+                ]
+            },
+            {
+                "default": null,
+                "doc": "this is a doc",
+                "name": "creative",
+                "type": [
+                    "null",
+                    "string"
+                ]
+            },
+            {
+                "default": null,
+                "doc": "this is a doc",
+                "name": "sn_type",
+                "type": [
+                    "null",
+                    "string"
+                ]
+            },
+            {
+                "default": null,
+                "doc": "this is a doc",
+                "name": "user_sn_id",
+                "type": [
+                    "null",
+                    "string"
+                ]
+            },
+            {
+                "default": null,
+                "doc": "this is a doc",
+                "name": "session_id",
+                "type": [
+                    "null",
+                    "string"
+                ]
+            },
+            {
+                "default": null,
+                "doc": "this is a doc",
+                "name": "exp",
+                "type": [
+                    "null",
+                    "long"
+                ]
+            },
+            {
+                "default": null,
+                "doc": "this is a doc",
+                "name": "rp",
+                "type": [
+                    "null",
+                    "long"
+                ]
+            },
+            {
+                "default": null,
+                "doc": "this is a doc",
+                "name": "coin",
+                "type": [
+                    "null",
+                    "long"
+                ]
+            },
+            {
+                "default": null,
+                "doc": "this is a doc",
+                "name": "day",
+                "type": [
+                    "null",
+                    "long"
+                ]
+            },
+            {
+                "default": null,
+                "doc": "this is a doc",
+                "name": "device_id",
+                "type": [
+                    "null",
+                    "string"
+                ]
+            },
+            {
+                "doc": "this is a doc",
+                "name": "event_id",
+                "type": {
+                    "name": "event_id_client_click_customer_support",
+                    "symbols": [
+                        "client_click_customer_support"
+                    ],
+                    "type": "enum"
+                }
+            },
+            {
+                "default": null,
+                "doc": "this is a doc",
+                "name": "id",
+                "type": [
+                    "null",
+                    "string"
+                ]
+            },
+            {
+                "default": null,
+                "doc": "this is a doc",
+                "name": "level",
+                "type": [
+                    "null",
+                    "long"
+                ]
+            },
+            {
+                "default": null,
+                "doc": "this is a doc",
+                "name": "login_ct",
+                "type": [
+                    "null",
+                    "long"
+                ]
+            },
+            {
+                "default": null,
+                "doc": "this is a doc",
+                "name": "ltv",
+                "type": [
+                    "null",
+                    "long"
+                ]
+            },
+            {
+                "default": null,
+                "doc": "this is a doc",
+                "name": "os",
+                "type": [
+                    "null",
+                    "string"
+                ]
+            },
+            {
+                "default": null,
+                "doc": "this is a doc",
+                "name": "purchase_ct",
+                "type": [
+                    "null",
+                    "long"
+                ]
+            },
+            {
+                "default": null,
+                "doc": "this is a doc",
+                "name": "reg_ts",
+                "type": [
+                    "null",
+                    "long"
+                ]
+            },
+            {
+                "default": null,
+                "doc": "this is a doc",
+                "name": "spt",
+                "type": [
+                    "null",
+                    "long"
+                ]
+            },
+            {
+                "default": null,
+                "doc": "this is a doc",
+                "name": "tier",
+                "type": [
+                    "null",
+                    "long"
+                ]
+            },
+            {
+                "default": null,
+                "doc": "this is a doc",
+                "name": "total_spt",
+                "type": [
+                    "null",
+                    "long"
+                ]
+            },
+            {
+                "default": null,
+                "doc": "this is a doc",
+                "name": "ts",
+                "type": [
+                    "null",
+                    "long"
+                ]
+            },
+            {
+                "default": null,
+                "doc": "this is a doc",
+                "name": "user_id",
+                "type": [
+                    "null",
+                    "string"
+                ]
+            },
+            {
+                "default": null,
+                "doc": "this is a doc",
+                "name": "merge_source",
+                "type": [
+                    "null",
+                    "string"
+                ]
+            },
+            {
+                "default": null,
+                "doc": "this is a doc",
+                "name": "merge_destination",
+                "type": [
+                    "null",
+                    "string"
+                ]
+            },
+            {
+                "default": null,
+                "doc": "this is a doc",
+                "name": "merge_ts",
+                "type": [
+                    "null",
+                    "long"
+                ]
+            },
+            {
+                "default": null,
+                "doc": "this is a doc",
+                "name": "user_club_id",
+                "type": [
+                    "null",
+                    "string"
+                ]
+            },
+            {
+                "default": null,
+                "doc": "this is a doc",
+                "name": "user_club_authority",
+                "type": [
+                    "null",
+                    "int"
+                ]
+            },
+            {
+                "default": null,
+                "doc": "this is a doc",
+                "name": "gem",
+                "type": [
+                    "null",
+                    "long"
+                ]
+            },
+            {
+                "default": null,
+                "doc": "this is a doc",
+                "name": "free_gem",
+                "type": [
+                    "null",
+                    "long"
+                ]
+            },
+            {
+                "default": null,
+                "doc": "this is a doc",
+                "name": "trigger_type",
+                "type": [
+                    "null",
+                    "string"
+                ]
+            }
+        ],
+        "name": "client_click_customer_support",
+        "namespace": "com.github.vdesabou",
+        "type": "record"
+    }
+]
