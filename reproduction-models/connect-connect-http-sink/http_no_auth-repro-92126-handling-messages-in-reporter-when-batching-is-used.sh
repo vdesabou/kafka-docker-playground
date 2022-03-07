@@ -26,19 +26,19 @@ curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
           "topics": "http-messages",
-               "tasks.max": "1",
-               "connector.class": "io.confluent.connect.http.HttpSinkConnector",
-               "key.converter": "org.apache.kafka.connect.storage.StringConverter",
-               "value.converter": "org.apache.kafka.connect.storage.StringConverter",
-               "confluent.topic.bootstrap.servers": "broker:9092",
-               "confluent.topic.replication.factor": "1",
-               "reporter.bootstrap.servers": "broker:9092",
-               "reporter.error.topic.name": "errorA",
-               "reporter.error.topic.replication.factor": 1,
-               "reporter.result.topic.name": "successA",
-               "reporter.result.topic.replication.factor": 1,
-               "http.api.url": "http://http-service-no-auth:8080/api/messages",
-               "batch.max.size": "10"
+          "tasks.max": "1",
+          "connector.class": "io.confluent.connect.http.HttpSinkConnector",
+          "key.converter": "org.apache.kafka.connect.storage.StringConverter",
+          "value.converter": "org.apache.kafka.connect.storage.StringConverter",
+          "confluent.topic.bootstrap.servers": "broker:9092",
+          "confluent.topic.replication.factor": "1",
+          "reporter.bootstrap.servers": "broker:9092",
+          "reporter.error.topic.name": "errorA",
+          "reporter.error.topic.replication.factor": 1,
+          "reporter.result.topic.name": "successA",
+          "reporter.result.topic.replication.factor": 1,
+          "http.api.url": "http://http-service-no-auth:8080/api/messages",
+          "batch.max.size": "10"
           }' \
      http://localhost:8083/connectors/connectorA/config | jq .
 
@@ -47,19 +47,19 @@ curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
           "topics": "http-messages",
-               "tasks.max": "1",
-               "connector.class": "io.confluent.connect.http.HttpSinkConnector",
-               "key.converter": "org.apache.kafka.connect.storage.StringConverter",
-               "value.converter": "org.apache.kafka.connect.storage.StringConverter",
-               "confluent.topic.bootstrap.servers": "broker:9092",
-               "confluent.topic.replication.factor": "1",
-               "reporter.bootstrap.servers": "broker:9092",
-               "reporter.error.topic.name": "errorB",
-               "reporter.error.topic.replication.factor": 1,
-               "reporter.result.topic.name": "successB",
-               "reporter.result.topic.replication.factor": 1,
-               "http.api.url": "http://http-service-no-auth:8080/api/messages",
-               "batch.max.size": "15"
+          "tasks.max": "1",
+          "connector.class": "io.confluent.connect.http.HttpSinkConnector",
+          "key.converter": "org.apache.kafka.connect.storage.StringConverter",
+          "value.converter": "org.apache.kafka.connect.storage.StringConverter",
+          "confluent.topic.bootstrap.servers": "broker:9092",
+          "confluent.topic.replication.factor": "1",
+          "reporter.bootstrap.servers": "broker:9092",
+          "reporter.error.topic.name": "errorB",
+          "reporter.error.topic.replication.factor": 1,
+          "reporter.result.topic.name": "successB",
+          "reporter.result.topic.replication.factor": 1,
+          "http.api.url": "http://http-service-no-auth:8080/api/messages",
+          "batch.max.size": "15"
           }' \
      http://localhost:8083/connectors/connectorB/config | jq .
 
@@ -70,6 +70,8 @@ sleep 10
 
 log "Run the Java consumer. Logs are in consumer.log."
 docker exec consumer-repro-92126 bash -c "java -jar consumer-1.0.0-jar-with-dependencies.jar" > consumer.log 2>&1 &
+
+sleep 20
 
 log "Sending 150 messages to topic http-messages"
 seq 150 | docker exec -i broker kafka-console-producer --broker-list broker:9092 --topic http-messages
