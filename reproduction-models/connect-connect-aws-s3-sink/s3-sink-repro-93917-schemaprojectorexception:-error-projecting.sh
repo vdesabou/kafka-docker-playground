@@ -71,7 +71,7 @@ curl -X PUT \
                "format.class": "io.confluent.connect.s3.format.json.JsonFormat",
                "schema.compatibility": "BACKWARD",
                "behavior.on.null.values": "ignore",
-               "connect.meta.data": "true",
+               "connect.meta.data": "false",
                "enhanced.avro.schema.support": "true",
                "rotate.interval.ms": "180000",
                "schemas.cache.config": "1000",
