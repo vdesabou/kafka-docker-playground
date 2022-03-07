@@ -69,6 +69,11 @@ curl -X PUT \
                "key.converter": "org.apache.kafka.connect.converters.ByteArrayConverter",
                "storage.class": "io.confluent.connect.s3.storage.S3Storage",
                "format.class": "io.confluent.connect.s3.format.json.JsonFormat",
+
+               "value.converter": "io.confluent.connect.avro.AvroConverter",
+               "value.converter.schema.registry.url": "http://schema-registry:8081",
+               "value.converter.connect.meta.data": "false",
+
                "schema.compatibility": "BACKWARD",
                "behavior.on.null.values": "ignore",
                "connect.meta.data": "false",
