@@ -112,7 +112,7 @@ curl -X POST http://localhost:8081/subjects/customer_avro-value/versions \
 --header 'Content-Type: application/vnd.schemaregistry.v1+json' \
 --data @/tmp/final.json
 
-log "✨ Run a java producer which produces to topic customer_avro, it runs 1 message per second"
+log "✨ Run a java producer with schema v1 which produces to topic customer_avro, it runs 1 message per second"
 docker exec -d producer-repro-93917 bash -c "java -jar producer-1.0.0-jar-with-dependencies.jar"
 
 sleep 10
@@ -129,7 +129,7 @@ curl -X POST http://localhost:8081/subjects/customer_avro-value/versions \
 --header 'Content-Type: application/vnd.schemaregistry.v1+json' \
 --data @/tmp/final.json
 
-log "✨ Run a java producer which produces to topic customer_avro, it runs 1 message per second"
+log "✨ Run a java producer with schema v2 which produces to topic customer_avro, it runs 1 message per second"
 docker exec -d producer-repro-93917-2 bash -c "java -jar producer-1.0.0-jar-with-dependencies.jar"
 
 
