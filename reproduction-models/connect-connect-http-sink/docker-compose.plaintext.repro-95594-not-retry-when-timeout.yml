@@ -1,0 +1,18 @@
+---
+version: '3.5'
+services:
+
+  connect:
+    volumes:
+      - ../../reproduction-models/connect-connect-http-sink/security:/tmp
+    environment:
+      CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-http
+
+  http-service-no-auth:
+    image: vdesabou/http-sink-demo # created from https://github.com/vdesabou/kafka-connect-http-demo with mvn clean install -DskipTests && docker build -t vdesabou/http-sink-demo:latest . && docker push vdesabou/http-sink-demo:latest
+    hostname: http-service-no-auth
+    container_name: http-service-no-auth
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_PROFILES_ACTIVE: 'simple-auth'
