@@ -107,16 +107,12 @@ cat << EOF > /tmp/final.json
 {"schema":$escaped_json}
 EOF
 
-log "Register new version v$i for schema customer_avro-value"
+log "Register new version v1 for schema customer_avro-value"
 curl -X POST http://localhost:8081/subjects/customer_avro-value/versions \
 --header 'Content-Type: application/vnd.schemaregistry.v1+json' \
 --data @/tmp/final.json
 
-log "✨ Run 5 java producers which produces to topic customer_avro"
-docker exec -d producer-repro-93917 bash -c "java -jar producer-1.0.0-jar-with-dependencies.jar"
-docker exec -d producer-repro-93917 bash -c "java -jar producer-1.0.0-jar-with-dependencies.jar"
-docker exec -d producer-repro-93917 bash -c "java -jar producer-1.0.0-jar-with-dependencies.jar"
-docker exec -d producer-repro-93917 bash -c "java -jar producer-1.0.0-jar-with-dependencies.jar"
+log "✨ Run a java producer which produces to topic customer_avro, it runs 1 message per second"
 docker exec -d producer-repro-93917 bash -c "java -jar producer-1.0.0-jar-with-dependencies.jar"
 
 sleep 10
@@ -128,17 +124,14 @@ cat << EOF > /tmp/final.json
 {"schema":$escaped_json}
 EOF
 
-log "Register new version v$i for schema customer_avro-value"
+log "Register new version v2 for schema customer_avro-value"
 curl -X POST http://localhost:8081/subjects/customer_avro-value/versions \
 --header 'Content-Type: application/vnd.schemaregistry.v1+json' \
 --data @/tmp/final.json
 
-log "✨ Run 5 java producers-2 which produces to topic customer_avro"
+log "✨ Run a java producer which produces to topic customer_avro, it runs 1 message per second"
 docker exec -d producer-repro-93917-2 bash -c "java -jar producer-1.0.0-jar-with-dependencies.jar"
-docker exec -d producer-repro-93917-2 bash -c "java -jar producer-1.0.0-jar-with-dependencies.jar"
-docker exec -d producer-repro-93917-2 bash -c "java -jar producer-1.0.0-jar-with-dependencies.jar"
-docker exec -d producer-repro-93917-2 bash -c "java -jar producer-1.0.0-jar-with-dependencies.jar"
-docker exec -d producer-repro-93917-2 bash -c "java -jar producer-1.0.0-jar-with-dependencies.jar"
+
 
 # [2022-03-07 14:13:34,799] WARN [s3-sink|task-0] Errant record written to DLQ due to: Error projecting client_background_music_option (io.confluent.connect.s3.TopicPartitionWriter:204)
 # [2022-03-07 14:13:34,799] ERROR [s3-sink|task-0] Error encountered in task s3-sink-0. Executing stage 'TASK_PUT' with class 'org.apache.kafka.connect.sink.SinkTask'. (org.apache.kafka.connect.runtime.errors.LogReporter:66)
