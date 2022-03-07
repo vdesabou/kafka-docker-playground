@@ -20,8 +20,8 @@ import java.util.Properties;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
-import com.github.vdesabou.client_background_music_option;
-import com.github.vdesabou.client_click_customer_support;
+import com.github.vdesabou.Customer;
+import com.github.vdesabou.Product;
 import io.confluent.kafka.serializers.AbstractKafkaAvroSerDeConfig;
 import uk.co.jemos.podam.api.PodamFactoryImpl;
 import uk.co.jemos.podam.api.PodamFactory;
@@ -75,19 +75,19 @@ public class SimpleProducer {
                 .ignoreRandomizationErrors(false);
         EasyRandom generator = new EasyRandom(parameters);
 
-        Producer<Long, client_background_music_option> producer1 = new KafkaProducer<>(properties);
-        Producer<Long, client_click_customer_support> producer2 = new KafkaProducer<>(properties);
+        Producer<Long, Customer> producer1 = new KafkaProducer<>(properties);
+        Producer<Long, Product> producer2 = new KafkaProducer<>(properties);
 
         long id = 0;
         while (id < nbMessages) {
-            client_background_music_option client_background_music_option = generator.nextObject(client_background_music_option.class);
-            client_click_customer_support client_click_customer_support = generator.nextObject(client_click_customer_support.class);
+            Customer Customer = generator.nextObject(Customer.class);
+            Product Product = generator.nextObject(Product.class);
 
-            ProducerRecord<Long, client_background_music_option> record1 = new ProducerRecord<>(topicName, id, client_background_music_option);
+            ProducerRecord<Long, Customer> record1 = new ProducerRecord<>(topicName, id, Customer);
             logger.info("Sending Key = {}, Value = {}", record1.key(), record1.value());
             producer1.send(record1, (recordMetadata, exception) -> sendCallback1(record1, recordMetadata, exception));
 
-            ProducerRecord<Long, client_click_customer_support> record2 = new ProducerRecord<>(topicName, id, client_click_customer_support);
+            ProducerRecord<Long, Product> record2 = new ProducerRecord<>(topicName, id, Product);
             logger.info("Sending Key = {}, Value = {}", record2.key(), record2.value());
             producer2.send(record2, (recordMetadata, exception) -> sendCallback2(record2, recordMetadata, exception));
 
@@ -96,19 +96,19 @@ public class SimpleProducer {
         }
     }
 
-    private void sendCallback1(ProducerRecord<Long, client_background_music_option> record, RecordMetadata recordMetadata, Exception e) {
+    private void sendCallback1(ProducerRecord<Long, Customer> record, RecordMetadata recordMetadata, Exception e) {
         if (e == null) {
-            logger.debug("client_background_music_option succeeded sending. offset: {}", recordMetadata.offset());
+            logger.debug("Customer succeeded sending. offset: {}", recordMetadata.offset());
         } else {
-            logger.error("client_background_music_option failed sending key: {}" + record.key(), e);
+            logger.error("Customer failed sending key: {}" + record.key(), e);
         }
     }
 
-    private void sendCallback2(ProducerRecord<Long, client_click_customer_support> record, RecordMetadata recordMetadata, Exception e) {
+    private void sendCallback2(ProducerRecord<Long, Product> record, RecordMetadata recordMetadata, Exception e) {
         if (e == null) {
-            logger.debug("client_click_customer_support succeeded sending. offset: {}", recordMetadata.offset());
+            logger.debug("Product succeeded sending. offset: {}", recordMetadata.offset());
         } else {
-            logger.error("client_click_customer_support failed sending key: {}" + record.key(), e);
+            logger.error("Product failed sending key: {}" + record.key(), e);
         }
     }
 
