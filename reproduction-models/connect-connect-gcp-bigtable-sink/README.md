@@ -1,0 +1,1 @@
+/Users/vsaboulin/Documents/github/kafka-docker-playground/scripts/../connect/connect-gcp-bigtable-sink/README.md

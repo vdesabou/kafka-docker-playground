@@ -1,0 +1,1 @@
+/Users/vsaboulin/Documents/github/kafka-docker-playground/scripts/../other/schema-format-avro/README.md

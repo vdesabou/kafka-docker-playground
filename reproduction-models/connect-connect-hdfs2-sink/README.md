@@ -1,0 +1,1 @@
+/Users/vsaboulin/Documents/github/kafka-docker-playground/scripts/../connect/connect-hdfs2-sink/README.md

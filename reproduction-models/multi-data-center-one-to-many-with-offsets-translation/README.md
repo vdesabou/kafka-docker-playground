@@ -1,0 +1,1 @@
+/Users/vsaboulin/Documents/github/kafka-docker-playground/scripts/../multi-data-center/one-to-many-with-offsets-translation/README.md

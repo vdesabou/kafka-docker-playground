@@ -1,0 +1,1 @@
+/Users/vsaboulin/Documents/github/kafka-docker-playground/scripts/../ccloud/fully-managed-connect-ibm-mq-source/README.md
