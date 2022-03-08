@@ -1,1 +1,0 @@
-/Users/vsaboulin/Documents/github/kafka-docker-playground/scripts/../connect/connect-solace-sink/README.md

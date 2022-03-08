@@ -1,1 +1,0 @@
-/Users/vsaboulin/Documents/github/kafka-docker-playground/scripts/../connect/connect-elasticsearch-sink/README.md

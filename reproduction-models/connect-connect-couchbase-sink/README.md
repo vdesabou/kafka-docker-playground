@@ -1,1 +1,0 @@
-/Users/vsaboulin/Documents/github/kafka-docker-playground/scripts/../connect/connect-couchbase-sink/README.md

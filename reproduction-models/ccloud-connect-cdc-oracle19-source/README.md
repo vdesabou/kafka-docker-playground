@@ -1,1 +1,0 @@
-/Users/vsaboulin/Documents/github/kafka-docker-playground/scripts/../ccloud/connect-cdc-oracle19-source/README.md

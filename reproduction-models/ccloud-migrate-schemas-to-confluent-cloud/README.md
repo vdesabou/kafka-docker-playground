@@ -1,1 +1,0 @@
-/Users/vsaboulin/Documents/github/kafka-docker-playground/scripts/../ccloud/migrate-schemas-to-confluent-cloud/README.md

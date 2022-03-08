@@ -1,1 +1,0 @@
-/Users/vsaboulin/Documents/github/kafka-docker-playground/scripts/../other/ldap-authorizer-with-ldap-failover/README.md
