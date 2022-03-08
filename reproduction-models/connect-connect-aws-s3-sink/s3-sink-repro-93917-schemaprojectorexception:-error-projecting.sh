@@ -166,3 +166,32 @@ docker exec -d producer-repro-93917-2 bash -c "java -jar producer-1.0.0-jar-with
 #         at org.apache.kafka.connect.data.SchemaProjector.project(SchemaProjector.java:60)
 #         at org.apache.kafka.connect.data.SchemaProjector.projectStruct(SchemaProjector.java:110)
 #         ... 20 more
+
+
+# Note: with "format.class": "io.confluent.connect.s3.format.avro.AvroFormat", I often get:
+
+# [2022-03-08 08:06:21,739] ERROR [s3-sink|task-0] WorkerSinkTask{id=s3-sink-0} Task threw an uncaught and unrecoverable exception. Task is being killed and will not recover until manually restarted (org.apache.kafka.connect.runtime.WorkerTask:206)
+# org.apache.kafka.connect.errors.ConnectException: Exiting WorkerSinkTask due to unrecoverable exception.
+#         at org.apache.kafka.connect.runtime.WorkerSinkTask.deliverMessages(WorkerSinkTask.java:638)
+#         at org.apache.kafka.connect.runtime.WorkerSinkTask.poll(WorkerSinkTask.java:334)
+#         at org.apache.kafka.connect.runtime.WorkerSinkTask.iteration(WorkerSinkTask.java:235)
+#         at org.apache.kafka.connect.runtime.WorkerSinkTask.execute(WorkerSinkTask.java:204)
+#         at org.apache.kafka.connect.runtime.WorkerTask.doRun(WorkerTask.java:199)
+#         at org.apache.kafka.connect.runtime.WorkerTask.run(WorkerTask.java:254)
+#         at java.base/java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:515)
+#         at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:264)
+#         at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1128)
+#         at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:628)
+#         at java.base/java.lang.Thread.run(Thread.java:829)
+# Caused by: org.apache.kafka.connect.errors.ConnectException: Expected compressionFilter to be a DeflaterOutputStream, but was passed an instance that does not match that type.
+#         at io.confluent.connect.s3.storage.CompressionType$1.finalize(CompressionType.java:77)
+#         at io.confluent.connect.s3.storage.S3OutputStream.commit(S3OutputStream.java:163)
+#         at io.confluent.connect.s3.format.avro.AvroRecordWriterProvider$1.commit(AvroRecordWriterProvider.java:102)
+#         at io.confluent.connect.s3.format.KeyValueHeaderRecordWriterProvider$1.commit(KeyValueHeaderRecordWriterProvider.java:126)
+#         at io.confluent.connect.s3.TopicPartitionWriter.commitFile(TopicPartitionWriter.java:629)
+#         at io.confluent.connect.s3.TopicPartitionWriter.commitFiles(TopicPartitionWriter.java:602)
+#         at io.confluent.connect.s3.TopicPartitionWriter.executeState(TopicPartitionWriter.java:258)
+#         at io.confluent.connect.s3.TopicPartitionWriter.write(TopicPartitionWriter.java:198)
+#         at io.confluent.connect.s3.S3SinkTask.put(S3SinkTask.java:234)
+#         at org.apache.kafka.connect.runtime.WorkerSinkTask.deliverMessages(WorkerSinkTask.java:604)
+#         ... 10 more
