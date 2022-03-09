@@ -17,7 +17,7 @@ services:
       - mosquitto
     environment:
       CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-mqtt
-      CONNECT_CONFLUENT_TOPIC: "my_license_topic"
+      # CONNECT_CONFLUENT_TOPIC: "my_license_topic"
       CONNECT_CONFLUENT_LICENSE: "your license here"
       CONNECT_CONFLUENT_TOPIC_BOOTSTRAP_SERVERS: "$BOOTSTRAP_SERVERS"
       CONNECT_CONFLUENT_TOPIC_SECURITY_PROTOCOL: "SASL_SSL"

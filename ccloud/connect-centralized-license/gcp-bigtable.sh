@@ -21,7 +21,7 @@ then
 fi
 
 set +e
-delete_topic my_license_topic
+delete_topic _confluent-command
 set -e
 
 log "Creating topic in Confluent Cloud (auto.create.topics.enable=false)"
