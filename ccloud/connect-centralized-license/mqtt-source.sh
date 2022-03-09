@@ -13,7 +13,7 @@ else
 fi
 
 set +e
-delete_topic my_license_topic
+delete_topic _confluent-command
 set -e
 
 MQTT_TOPIC=kafka_docker_pg_mqtt$TAG
