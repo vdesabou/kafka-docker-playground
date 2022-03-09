@@ -1,0 +1,1 @@
+../../ccloud/cp-helm-chart/README.md

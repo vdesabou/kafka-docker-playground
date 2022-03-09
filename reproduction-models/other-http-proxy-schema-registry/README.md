@@ -1,0 +1,1 @@
+../../other/http-proxy-schema-registry/README.md

@@ -1,0 +1,1 @@
+../../other/schema-format-avro/README.md
