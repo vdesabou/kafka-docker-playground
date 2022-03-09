@@ -1,1 +1,0 @@
-other/create-topic-policy/README.md
