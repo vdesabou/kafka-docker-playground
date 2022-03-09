@@ -144,3 +144,19 @@ services:
   # User:339785 | sa-ld2rdd        | ALLOW      | WRITE            | TOPIC    | my_schemas_topic      | LITERAL  
   # User:339785 | sa-ld2rdd        | ALLOW      | DESCRIBE         | CLUSTER  | kafka-cluster         | LITERAL  
   # User:339785 | sa-ld2rdd        | ALLOW      | READ             | GROUP    | myid                  | LITERAL
+
+
+
+# For connect:
+
+#     Principal    | Permission |    Operation     | Resource Type | Resource Name | Pattern Type  
+# -----------------+------------+------------------+---------------+---------------+---------------
+#   User:sa-xxxxxx | ALLOW      | READ             | TOPIC         | _confluent    | PREFIXED      
+#   User:sa-xxxxxx | ALLOW      | WRITE            | TOPIC         | _confluent    | PREFIXED      
+#   User:sa-xxxxxx | ALLOW      | CREATE           | TOPIC         | _confluent    | PREFIXED      
+#   User:sa-xxxxxx | ALLOW      | READ             | TOPIC         | connect-      | PREFIXED      
+#   User:sa-xxxxxx | ALLOW      | WRITE            | TOPIC         | connect-      | PREFIXED      
+#   User:sa-xxxxxx | ALLOW      | CREATE           | TOPIC         | connect-      | PREFIXED      
+#   User:sa-xxxxxx | ALLOW      | READ             | GROUP         | connect       | LITERAL       
+#   User:sa-xxxxxx | ALLOW      | DESCRIBE         | CLUSTER       | kafka-cluster | LITERAL       
+#   User:sa-xxxxxx | ALLOW      | IDEMPOTENT_WRITE | CLUSTER       | kafka-cluster | LITERAL 
