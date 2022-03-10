@@ -22,8 +22,14 @@ done
 ${DIR}/../../environment/mdc-plaintext/start.sh "$PWD/docker-compose.mdc-plaintext.repro-92626-avroconverter-and-topicrecordnamestrategy.yml"
 
 
-log "✨ Run the avro java producer which produces to topic customer_avro"
+log "✨ Run the avro java producer which produces in europe to topic customer_avro and using TopicRecordNameStrategy"
 docker exec producer-repro-92626 bash -c "java -jar producer-1.0.0-jar-with-dependencies.jar"
+
+log "check subjects in SR europe"
+curl --request GET \
+  --url http://localhost:18081/subjects
+
+# ["customer_avro-com.github.vdesabou.Customer"
 
 log "Consolidating all sales in the US"
 
@@ -35,17 +41,20 @@ curl -X PUT \
           "value.converter": "io.confluent.connect.avro.AvroConverter",
           "value.converter.schema.registry.url": "http://schema-registry-us:8081",
           "value.converter.connect.meta.data": "false",
+          "value.converter.value.subject.name.strategy": "io.confluent.kafka.serializers.subject.TopicRecordNameStrategy",
           "src.consumer.group.id": "replicate-europe-to-us",
           "src.consumer.interceptor.classes": "io.confluent.monitoring.clients.interceptor.MonitoringConsumerInterceptor",
           "src.consumer.confluent.monitoring.interceptor.bootstrap.servers": "broker-metrics:9092",
           "src.kafka.bootstrap.servers": "broker-europe:9092",
           "src.value.converter": "io.confluent.connect.avro.AvroConverter",
           "src.value.converter.schema.registry.url": "http://schema-registry-europe:8081",
+          "src.value.converter.value.subject.name.strategy": "io.confluent.kafka.serializers.subject.TopicRecordNameStrategy",
           "confluent.topic.replication.factor": 1,
           "provenance.header.enable": true,
           "topic.whitelist": "customer_avro"
           }' \
      http://localhost:8083/connectors/replicate-europe-to-us/config | jq .
+
 
 sleep 120
 
