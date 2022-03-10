@@ -1,9 +1,14 @@
 ---
 version: '3.5'
 services:
-  broker-us:
+
+  connect:
     environment:
-      DUMMY_VALUE: "DUMMY_VALUE"
+      CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-replicator
+      CONNECT_KEY_CONVERTER: "org.apache.kafka.connect.json.JsonConverter"
+      CONNECT_KEY_CONVERTER_SCHEMAS_ENABLE: "false"
+      CONNECT_VALUE_CONVERTER: "org.apache.kafka.connect.json.JsonConverter"
+      CONNECT_VALUE_CONVERTER_SCHEMAS_ENABLE: "false"
 
   producer-repro-92626:
     build:
@@ -11,7 +16,7 @@ services:
     hostname: producer-repro-92626
     container_name: producer-repro-92626
     environment:
-      KAFKA_BOOTSTRAP_SERVERS: broker-europe:9092
+      KAFKA_BOOTSTRAP_SERVERS: broker:9092
       TOPIC: "customer_avro"
       REPLICATION_FACTOR: 1
       NUMBER_OF_PARTITIONS: 1
@@ -21,7 +26,7 @@ services:
       KAFKA_REQUEST_TIMEOUT_MS: 20000
       KAFKA_RETRY_BACKOFF_MS: 500
       KAFKA_CLIENT_ID: "my-java-producer-repro-92626"
-      KAFKA_SCHEMA_REGISTRY_URL: "http://schema-registry-europe:8081"
+      KAFKA_SCHEMA_REGISTRY_URL: "http://schema-registry:8081"
       KAFKA_KEY_SUBJECT_NAME_STRATEGY: "io.confluent.kafka.serializers.subject.TopicRecordNameStrategy"
       KAFKA_VALUE_SUBJECT_NAME_STRATEGY: "io.confluent.kafka.serializers.subject.TopicRecordNameStrategy"
       EXTRA_ARGS: 
