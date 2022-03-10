@@ -41,7 +41,7 @@ curl -X PUT \
           "key.converter": "io.confluent.connect.avro.AvroConverter",
           "key.converter.schema.registry.url": "http://schema-registry-us:8081",
           "key.converter.connect.meta.data": "false",
-          "key.converter.value.subject.name.strategy": "io.confluent.kafka.serializers.subject.TopicRecordNameStrategy",
+          "key.converter.key.subject.name.strategy": "io.confluent.kafka.serializers.subject.TopicRecordNameStrategy",
           "value.converter": "io.confluent.connect.avro.AvroConverter",
           "value.converter.schema.registry.url": "http://schema-registry-us:8081",
           "value.converter.connect.meta.data": "false",
