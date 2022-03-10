@@ -21,7 +21,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import com.github.vdesabou.Customer;
-
+import com.github.vdesabou.MyKey;
 import uk.co.jemos.podam.api.PodamFactoryImpl;
 import uk.co.jemos.podam.api.PodamFactory;
 import org.jeasy.random.EasyRandom;
@@ -34,7 +34,6 @@ public class SimpleProducer {
     private final Properties properties;
     private final String topicName;
     private final Long messageBackOff;
-    private Long nbMessages;
 
     public static void main(String[] args) throws InterruptedException, ExecutionException {
         SimpleProducer simpleProducer = new SimpleProducer();
@@ -48,10 +47,6 @@ public class SimpleProducer {
 
         final Integer numberOfPartitions = Integer.valueOf(System.getenv().getOrDefault("NUMBER_OF_PARTITIONS", "2"));
         final Short replicationFactor = Short.valueOf(System.getenv().getOrDefault("REPLICATION_FACTOR", "3"));
-        nbMessages = Long.valueOf(System.getenv().getOrDefault("NB_MESSAGES", "10"));
-        if(nbMessages == -1) {
-            nbMessages = Long.MAX_VALUE;
-        }
 
         AdminClient adminClient = KafkaAdminClient.create(properties);
         createTopic(adminClient, topicName, numberOfPartitions, replicationFactor);
@@ -74,17 +69,15 @@ public class SimpleProducer {
                 .ignoreRandomizationErrors(false);
         EasyRandom generator = new EasyRandom(parameters);
 
-        try (Producer<Long, Customer> producer = new KafkaProducer<>(properties)) {
+        try (Producer<MyKey, Customer> producer = new KafkaProducer<>(properties)) {
             long id = 0;
-            while (id < nbMessages) {
+            while (id < 10) {
 
-                // This will use constructor with minimum arguments and
-                // then setters to populate POJO
-                // Customer customer = factory.manufacturePojo(Customer.class);
+                MyKey myKey = generator.nextObject(MyKey.class);
 
                 Customer customer = generator.nextObject(Customer.class);
 
-                ProducerRecord<Long, Customer> record = new ProducerRecord<>(topicName, id, customer);
+                ProducerRecord<MyKey, Customer> record = new ProducerRecord<>(topicName, myKey, customer);
                 logger.info("Sending Key = {}, Value = {}", record.key(), record.value());
                 producer.send(record, (recordMetadata, exception) -> sendCallback(record, recordMetadata, exception));
                 id++;
@@ -93,7 +86,7 @@ public class SimpleProducer {
         }
     }
 
-    private void sendCallback(ProducerRecord<Long, Customer> record, RecordMetadata recordMetadata, Exception e) {
+    private void sendCallback(ProducerRecord<MyKey, Customer> record, RecordMetadata recordMetadata, Exception e) {
         if (e == null) {
             logger.debug("succeeded sending. offset: {}", recordMetadata.offset());
         } else {
@@ -103,7 +96,7 @@ public class SimpleProducer {
 
     private Map<String, String> defaultProps = Map.of(
             ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, "broker:9092",
-            ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, "org.apache.kafka.common.serialization.LongSerializer",
+            ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, "io.confluent.kafka.serializers.KafkaAvroSerializer",
             ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, "io.confluent.kafka.serializers.KafkaAvroSerializer");
 
     private Properties buildProperties(Map<String, String> baseProps, Map<String, String> envProps, String prefix) {

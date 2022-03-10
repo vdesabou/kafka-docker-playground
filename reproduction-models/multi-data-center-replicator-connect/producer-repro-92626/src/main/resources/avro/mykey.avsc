@@ -1,0 +1,11 @@
+{
+    "fields": [
+        {
+            "name": "ID",
+            "type": "long"
+        }
+    ],
+    "name": "MyKey",
+    "namespace": "com.github.vdesabou",
+    "type": "record"
+}

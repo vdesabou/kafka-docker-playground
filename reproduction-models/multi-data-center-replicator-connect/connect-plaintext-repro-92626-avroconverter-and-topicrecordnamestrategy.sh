@@ -38,6 +38,10 @@ curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
           "connector.class":"io.confluent.connect.replicator.ReplicatorSourceConnector",
+          "key.converter": "io.confluent.connect.avro.AvroConverter",
+          "key.converter.schema.registry.url": "http://schema-registry-us:8081",
+          "key.converter.connect.meta.data": "false",
+          "key.converter.value.subject.name.strategy": "io.confluent.kafka.serializers.subject.TopicRecordNameStrategy",
           "value.converter": "io.confluent.connect.avro.AvroConverter",
           "value.converter.schema.registry.url": "http://schema-registry-us:8081",
           "value.converter.connect.meta.data": "false",
@@ -46,6 +50,9 @@ curl -X PUT \
           "src.consumer.interceptor.classes": "io.confluent.monitoring.clients.interceptor.MonitoringConsumerInterceptor",
           "src.consumer.confluent.monitoring.interceptor.bootstrap.servers": "broker-metrics:9092",
           "src.kafka.bootstrap.servers": "broker-europe:9092",
+          "src.key.converter": "io.confluent.connect.avro.AvroConverter",
+          "src.key.converter.schema.registry.url": "http://schema-registry-europe:8081",
+          "src.key.converter.key.subject.name.strategy": "io.confluent.kafka.serializers.subject.TopicRecordNameStrategy",
           "src.value.converter": "io.confluent.connect.avro.AvroConverter",
           "src.value.converter.schema.registry.url": "http://schema-registry-europe:8081",
           "src.value.converter.value.subject.name.strategy": "io.confluent.kafka.serializers.subject.TopicRecordNameStrategy",
@@ -56,7 +63,7 @@ curl -X PUT \
      http://localhost:8083/connectors/replicate-europe-to-us/config | jq .
 
 
-sleep 120
+sleep 30
 
 log "Verify we have received the data in topic customer_avro in US"
 timeout 60 docker container exec -i connect-us bash -c "kafka-avro-console-consumer --bootstrap-server broker-us:9092 --topic customer_avro --from-beginning --max-messages 10 --property schema.registry.url=http://schema-registry-us:8081"

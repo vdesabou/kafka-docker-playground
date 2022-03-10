@@ -22,6 +22,7 @@ services:
       KAFKA_RETRY_BACKOFF_MS: 500
       KAFKA_CLIENT_ID: "my-java-producer-repro-92626"
       KAFKA_SCHEMA_REGISTRY_URL: "http://schema-registry-europe:8081"
+      KAFKA_KEY_SUBJECT_NAME_STRATEGY: "io.confluent.kafka.serializers.subject.TopicRecordNameStrategy"
       KAFKA_VALUE_SUBJECT_NAME_STRATEGY: "io.confluent.kafka.serializers.subject.TopicRecordNameStrategy"
       EXTRA_ARGS: 
     volumes:
