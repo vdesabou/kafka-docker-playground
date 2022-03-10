@@ -35,7 +35,6 @@ curl -X PUT \
      --data '{
           "confluent.topic.replication.factor": 1,
           "connector.class":"io.confluent.connect.replicator.ReplicatorSourceConnector",
-          "key.converter.key.subject.name.strategy": "io.confluent.kafka.serializers.subject.TopicRecordNameStrategy",
           "key.converter.schema.registry.url": "http://schema-registry:8081",
           "key.converter": "io.confluent.connect.avro.AvroConverter",
           "key.converter.schema.registry.url": "http://schema-registry:8081",
