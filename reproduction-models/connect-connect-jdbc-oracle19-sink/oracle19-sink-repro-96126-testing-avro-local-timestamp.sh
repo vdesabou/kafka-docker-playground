@@ -56,16 +56,18 @@ curl -X PUT \
                     "topics": "ORDERS",
                     "auto.create": "true",
                     "insert.mode":"insert",
-                    "auto.evolve":"true"
+                    "auto.evolve":"true",
+                    "db.timezone": "Asia/Kolkata"
           }' \
      http://localhost:8083/connectors/oracle-sink/config | jq .
 
 
 log "Sending messages to topic ORDERS"
 docker exec -i connect kafka-avro-console-producer --broker-list broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic ORDERS --property value.schema='{"type":"record","name":"myrecord","fields":[{"name":"id","type":"int"},{"name":"product", "type": "string"}, {"name":"quantity", "type": "int"}, {"name":"price",
-"type": "float"},{"type":{"logicalType": "timestamp-millis","type": "long"},"name":"tsm"},{"type":{"logicalType": "local-timestamp-millis","type": "long"},"name":"ltsm"}]}' << EOF
-{"id": 999, "product": "foo", "quantity": 100, "price": 50, "tsm": 1646990993852, "ltsm": 1646990993852}
+"type": "float"},{"type":{"logicalType": "timestamp-millis","type": "long"},"name":"tsm"},{"type":{"logicalType": "local-timestamp-millis","type": "long"},"name":"ltsm"},{"type":{"logicalType": "date","type": "int"},"name":"mydate"}]}' << EOF
+{"id": 999, "product": "foo", "quantity": 100, "price": 50, "tsm": 1646990993852, "ltsm": 1646990993852, "mydate": 17000}
 EOF
+
 
 sleep 5
 
@@ -82,6 +84,14 @@ grep "foo" /tmp/result.log
 # "price" BINARY_FLOAT NOT NULL,
 # "tsm" TIMESTAMP NOT NULL,
 # "ltsm" NUMBER(19,0) NOT NULL
+# "mydate" DATE NOT NULL
 
 # 11-MAR-22 09.29.53.852000 AM
 # 1.6470E+12
+# 18-JUL-16
+
+
+# with "db.timezone": "Asia/Kolkata"
+# 11-MAR-22 02.59.53.852000 PM
+# 1.6470E+12 
+# 18-JUL-16
