@@ -26,6 +26,7 @@ import uk.co.jemos.podam.api.PodamFactoryImpl;
 import uk.co.jemos.podam.api.PodamFactory;
 import org.jeasy.random.EasyRandom;
 import org.jeasy.random.EasyRandomParameters;
+import java.nio.charset.Charset;
 
 public class SimpleProducer {
 
@@ -61,14 +62,16 @@ public class SimpleProducer {
         logger.info("creating producer with props: {}", properties);
 
         logger.info("Sending data to `{}` topic", topicName);
+        Charset charset = Charset.forName("EUC-KR");
 
         // PodamFactory factory = new PodamFactoryImpl();
         EasyRandomParameters parameters = new EasyRandomParameters()
                 // .seed(123L)
                 .objectPoolSize(10)
                 .randomizationDepth(10)
-                .stringLengthRange(1, 5)
-                .collectionSizeRange(1, 1)
+                .stringLengthRange(1, 30)
+                .collectionSizeRange(1, 10)
+                .charset(charset)
                 .scanClasspathForConcreteTypes(true)
                 .overrideDefaultInitialization(false)
                 .ignoreRandomizationErrors(false);
