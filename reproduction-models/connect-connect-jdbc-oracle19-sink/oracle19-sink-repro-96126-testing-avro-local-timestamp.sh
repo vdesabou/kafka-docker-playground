@@ -56,7 +56,8 @@ curl -X PUT \
                     "topics": "ORDERS",
                     "auto.create": "true",
                     "insert.mode":"insert",
-                    "auto.evolve":"true"
+                    "auto.evolve":"true",
+                    "db.timezone": "Asia/Kolkata"
           }' \
      http://localhost:8083/connectors/oracle-sink/config | jq .
 
@@ -87,4 +88,10 @@ grep "foo" /tmp/result.log
 
 # 11-MAR-22 09.29.53.852000 AM
 # 1.6470E+12
+# 18-JUL-16
+
+
+# with "db.timezone": "Asia/Kolkata"
+# 11-MAR-22 02.59.53.852000 PM
+# 1.6470E+12 
 # 18-JUL-16
