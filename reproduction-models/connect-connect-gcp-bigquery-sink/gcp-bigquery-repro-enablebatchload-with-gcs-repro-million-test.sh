@@ -122,6 +122,7 @@ curl -X PUT \
                "tasks.max" : "1",
                "topics" : "customer_avro",
                "gcsBucketName": "'"$GCS_BUCKET_NAME"'",
+               "gcsFolderName": "",
                "enableBatchLoad": "customer_avro",
                "batchLoadIntervalSec": "60",
                "sanitizeTopics" : "true",
@@ -129,8 +130,6 @@ curl -X PUT \
                "autoUpdateSchemas" : "true",
                "defaultDataset" : "'"$DATASET"'",
                "allBQFieldsNullable": "false",
-               "autoCreateTables": "true",
-               "autoUpdateSchemas": "true",
                "includeKafkaData": "true",
                "bufferSize": "100000",
                "project" : "'"$PROJECT"'",
@@ -142,11 +141,20 @@ curl -X PUT \
      http://localhost:8083/connectors/gcp-bigquery-sink-bulk/config | jq .
 
 
-log "Sleeping 125 seconds"
-sleep 125
+IP=$(nslookup bigquery.googleapis.com | grep Address | grep -v "#" | cut -d " " -f 2 | tail -1)
+CORRUPTION_PERCENTAGE="1%"
+log "Add $CORRUPTION_PERCENTAGE packet corruption from connect to nslookup bigquery.googleapis.com IP $IP"
+add_packet_corruption connect $IP $CORRUPTION_PERCENTAGE
+
+log "Sleeping 240 seconds"
+sleep 240
 
 log "Verify data is in GCP BigQuery:"
 docker run -i --volumes-from gcloud-config google/cloud-sdk:latest bq --project_id "$PROJECT" query "SELECT COUNT(*) FROM $DATASET.customer_avro;" > /tmp/result.log  2>&1
 cat /tmp/result.log
 grep "value1" /tmp/result.log
 
+# +---------+
+# |   f0_   |
+# +---------+
+# | 1000020 |

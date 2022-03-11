@@ -6,7 +6,7 @@ services:
         - ../../reproduction-models/connect-connect-gcp-bigquery-sink/keyfile.json:/tmp/keyfile.json:ro
     environment:
       CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/wepay-kafka-connect-bigquery
-      KAFKA_HEAP_OPTS: " -Xms256M -Xmx6G"
+      KAFKA_HEAP_OPTS: " -Xms2G -Xmx8G"
 
   producer-repro-milli:
     build:
