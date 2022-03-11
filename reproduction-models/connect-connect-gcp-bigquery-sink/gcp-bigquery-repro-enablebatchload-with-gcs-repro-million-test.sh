@@ -140,12 +140,6 @@ curl -X PUT \
           }' \
      http://localhost:8083/connectors/gcp-bigquery-sink-bulk/config | jq .
 
-
-IP=$(nslookup bigquery.googleapis.com | grep Address | grep -v "#" | cut -d " " -f 2 | tail -1)
-CORRUPTION_PERCENTAGE="1%"
-log "Add $CORRUPTION_PERCENTAGE packet corruption from connect to nslookup bigquery.googleapis.com IP $IP"
-add_packet_corruption connect $IP $CORRUPTION_PERCENTAGE
-
 log "Sleeping 240 seconds"
 sleep 240
 
@@ -158,3 +152,20 @@ grep "value1" /tmp/result.log
 # |   f0_   |
 # +---------+
 # | 1000020 |
+
+
+# With asian characters, it's looping inifitely with:
+
+
+# 2022-03-11 15:47:25,148] INFO [gcp-bigquery-sink-bulk|task-0] Successfully deleted 2703 blobs; failed to delete 0 blobs (com.wepay.kafka.connect.bigquery.GCSToBQLoadRunnable:301)
+# [2022-03-11 15:47:25,257] INFO [gcp-bigquery-sink-bulk|task-0] Batch loaded 53 rows (com.wepay.kafka.connect.bigquery.write.row.GCSToBQWriter:143)
+# [2022-03-11 15:47:25,262] INFO [gcp-bigquery-sink-bulk|task-0] Batch loaded 53 rows (com.wepay.kafka.connect.bigquery.write.row.GCSToBQWriter:143)
+# [2022-03-11 15:47:25,273] INFO [gcp-bigquery-sink-bulk|task-0] Batch loaded 53 rows (com.wepay.kafka.connect.bigquery.write.row.GCSToBQWriter:143)
+# [2022-03-11 15:47:25,394] INFO [gcp-bigquery-sink-bulk|task-0] Batch loaded 53 rows (com.wepay.kafka.connect.bigquery.write.row.GCSToBQWriter:143)
+# [2022-03-11 15:47:25,459] INFO [gcp-bigquery-sink-bulk|task-0] Batch loaded 53 rows (com.wepay.kafka.connect.bigquery.write.row.GCSToBQWriter:143)
+# [2022-03-11 15:47:25,577] INFO [gcp-bigquery-sink-bulk|task-0] Batch loaded 53 rows (com.wepay.kafka.connect.bigquery.write.row.GCSToBQWriter:143)
+# [2022-03-11 15:47:25,581] INFO [gcp-bigquery-sink-bulk|task-0] Batch loaded 53 rows (com.wepay.kafka.connect.bigquery.write.row.GCSToBQWriter:143)
+
+# |   f0_   |
+# +---------+
+# | 2539905 |
