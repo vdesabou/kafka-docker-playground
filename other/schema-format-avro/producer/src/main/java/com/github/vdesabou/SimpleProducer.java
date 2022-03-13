@@ -26,6 +26,7 @@ import uk.co.jemos.podam.api.PodamFactoryImpl;
 import uk.co.jemos.podam.api.PodamFactory;
 import org.jeasy.random.EasyRandom;
 import org.jeasy.random.EasyRandomParameters;
+import com.github.javafaker.Faker;
 
 public class SimpleProducer {
 
@@ -81,6 +82,13 @@ public class SimpleProducer {
                 // This will use constructor with minimum arguments and
                 // then setters to populate POJO
                 // Customer customer = factory.manufacturePojo(Customer.class);
+
+                // Customer customer = Customer.newBuilder()
+                //         .setCount(id)
+                //         .setFirstName(faker.name().firstName())
+                //         .setLastName(faker.name().lastName())
+                //         .setAddress(faker.address().streetAddress())
+                //         .build();
 
                 Customer customer = generator.nextObject(Customer.class);
 
