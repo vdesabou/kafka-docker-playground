@@ -154,7 +154,7 @@ grep "value1" /tmp/result.log
 # | 1000020 |
 
 
-# With asian characters, it's looping inifitely with:
+# With asian characters (commit e9d7b71961525de6b49a10b6eccae25a9140037f), it's looping inifitely with:
 
 
 # 2022-03-11 15:47:25,148] INFO [gcp-bigquery-sink-bulk|task-0] Successfully deleted 2703 blobs; failed to delete 0 blobs (com.wepay.kafka.connect.bigquery.GCSToBQLoadRunnable:301)
@@ -169,3 +169,5 @@ grep "value1" /tmp/result.log
 # |   f0_   |
 # +---------+
 # | 2539905 |
+
+# The consumer is being kicked out after 5 minutes, but keeps inserting requests to BQ
