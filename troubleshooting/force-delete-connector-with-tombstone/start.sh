@@ -61,8 +61,6 @@ then
      log "Sending string null (kafka-console-producer is not able to send tombstone, coming in https://cwiki.apache.org/confluence/pages/viewpage.action?pageId=199527475)"
 docker exec -i broker kafka-console-producer --broker-list broker:9092 --topic connect-configs --property parse.key=true --property key.separator=, << EOF
 connector-http-sink,null
-task-http-sink-0,null
-commit-http-sink,null
 EOF
 else
      log "Sending tombstone with kafkacat"
@@ -80,6 +78,8 @@ log "Get connector status"
 curl http://localhost:8083/connectors?expand=status&expand=info | jq .
 
 # {}
+
+sleep 2
 
 log "Show connect-configs"
 docker exec -i broker kafka-console-consumer --bootstrap-server localhost:9092 --topic connect-configs --from-beginning --property print.key=true --timeout-ms 10000 1> /tmp/connect-configs.backup
@@ -105,6 +105,8 @@ curl -X PUT \
                "batch.max.size": "10"
           }' \
      http://localhost:8083/connectors/http-sink/config | jq .
+
+sleep 5
 
 log "Get connector status"
 curl http://localhost:8083/connectors?expand=status&expand=info | jq .
