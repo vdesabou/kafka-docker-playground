@@ -430,7 +430,7 @@ else
                 version_to_get_from_hub="$TAG"
               else
                 version_to_get_from_hub="$REPLICATOR_TAG"
-                log "♻️ REPLICATOR_TAG is set with $REPLICATOR_TAG"
+                log "🌍 REPLICATOR_TAG is set with $REPLICATOR_TAG"
               fi
             fi
             if [ "$name" = "kafka-connect-jdbc" ]
@@ -447,7 +447,7 @@ else
               fi
             fi
 
-            log "👷♻️ Re-building Docker image vdesabou/kafka-docker-playground-connect:${CONNECT_TAG} to include $owner/$name:$version_to_get_from_hub"
+            log "👷🛠 Re-building Docker image vdesabou/kafka-docker-playground-connect:${CONNECT_TAG} to include $owner/$name:$version_to_get_from_hub"
             tmp_dir=$(mktemp -d -t ci-XXXXXXXXXX)
 cat << EOF > $tmp_dir/Dockerfile
 FROM vdesabou/kafka-docker-playground-connect:${CONNECT_TAG}
