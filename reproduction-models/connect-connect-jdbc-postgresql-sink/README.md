@@ -1,0 +1,1 @@
+../../connect/connect-jdbc-postgresql-sink/README.md

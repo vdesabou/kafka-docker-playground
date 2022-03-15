@@ -1,0 +1,1 @@
+../../connect/connect-aws-redshift-sink/README.md

@@ -1,0 +1,1 @@
+../../connect/connect-gcp-bigquery-sink/README.md

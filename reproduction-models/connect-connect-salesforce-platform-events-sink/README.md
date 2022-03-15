@@ -1,0 +1,1 @@
+../../connect/connect-salesforce-platform-events-sink/README.md

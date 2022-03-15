@@ -1,0 +1,1 @@
+../../connect/connect-hdfs3-sink/README.md

@@ -1,0 +1,1 @@
+../../connect/connect-ibm-mq-sink/README.md

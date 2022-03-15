@@ -1,0 +1,1 @@
+../../connect/connect-gcp-gcs-sink/README.md
