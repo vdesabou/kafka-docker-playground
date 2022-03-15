@@ -425,7 +425,13 @@ else
             version_to_get_from_hub="latest"
             if [ "$name" = "kafka-connect-replicator" ]
             then
-              version_to_get_from_hub="$TAG"
+              if [ -z "$REPLICATOR_TAG" ]
+              then
+                version_to_get_from_hub="$TAG"
+              else
+                version_to_get_from_hub="$REPLICATOR_TAG"
+                log "♻️ REPLICATOR_TAG is set with $REPLICATOR_TAG"
+              fi
             fi
             if [ "$name" = "kafka-connect-jdbc" ]
             then
