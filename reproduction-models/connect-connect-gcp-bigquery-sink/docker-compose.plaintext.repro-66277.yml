@@ -38,6 +38,6 @@ services:
 
   connect:
     volumes:
-        - ../../reproduction-models/connect-connect-gcp-bigquery-sink/keyfile.json:/tmp/keyfile.json:ro
+        - ../../connect/connect-gcp-bigquery-sink/keyfile.json:/tmp/keyfile.json:ro
     environment:
       CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/wepay-kafka-connect-bigquery

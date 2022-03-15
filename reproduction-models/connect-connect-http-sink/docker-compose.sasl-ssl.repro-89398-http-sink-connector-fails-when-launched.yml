@@ -4,7 +4,7 @@ services:
 
   connect:
     volumes:
-      - ../../reproduction-models/connect-connect-http-sink/security:/tmp
+      - ../../connect/connect-http-sink/security:/tmp
       - ../../environment/sasl-ssl/security:/etc/kafka/secrets
     environment:
       CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-http

@@ -21,6 +21,6 @@ services:
 
   connect:
     volumes:
-        - ../../reproduction-models/connect-connect-gcp-gcs-sink/keyfile-rcca-5246-quickly-expiring-key.json:/tmp/keyfile-rcca-5246-quickly-expiring-key.json:ro
+        - ../../connect/connect-gcp-gcs-sink/keyfile-rcca-5246-quickly-expiring-key.json:/tmp/keyfile-rcca-5246-quickly-expiring-key.json:ro
     environment:
       CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-gcs

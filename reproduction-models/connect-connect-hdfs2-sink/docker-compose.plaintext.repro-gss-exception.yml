@@ -14,8 +14,8 @@ services:
     entrypoint: /tmp/config.sh
     volumes:
       # krb5.conf is generated from config.sh
-      - ../../reproduction-models/connect-connect-hdfs2-sink/kerberos-repro-gss-exception/config.sh:/tmp/config.sh
-      - ../../reproduction-models/connect-connect-hdfs2-sink/kerberos-repro-gss-exception/kdc.conf:/var/kerberos/krb5kdc/kdc.conf
+      - ../../connect/connect-hdfs2-sink/kerberos-repro-gss-exception/config.sh:/tmp/config.sh
+      - ../../connect/connect-hdfs2-sink/kerberos-repro-gss-exception/kdc.conf:/var/kerberos/krb5kdc/kdc.conf
       - /dev/urandom:/dev/random
       - /etc/localtime:/etc/localtime:ro
 
@@ -32,7 +32,7 @@ services:
       FQDN: hadoop.kerberos-demo.local
       KERBEROS_ROOT_USER_PASSWORD: password
     volumes:
-      - ../../reproduction-models/connect-connect-hdfs2-sink/kerberos-repro-gss-exception/krb5.conf:/etc/krb5.conf
+      - ../../connect/connect-hdfs2-sink/kerberos-repro-gss-exception/krb5.conf:/etc/krb5.conf
       - /etc/localtime:/etc/localtime:ro
 
   connect:
@@ -43,8 +43,8 @@ services:
         CONNECTOR_TAG: ${CONNECTOR_TAG}
     hostname: connect.kerberos-demo.local
     volumes:
-      - ../../reproduction-models/connect-connect-hdfs2-sink/kerberos-repro-gss-exception/krb5.conf:/etc/krb5.conf
-      - ../../reproduction-models/connect-connect-hdfs2-sink/kerberos-repro-gss-exception/core-site.xml:/etc/hadoop/core-site.xml
+      - ../../connect/connect-hdfs2-sink/kerberos-repro-gss-exception/krb5.conf:/etc/krb5.conf
+      - ../../connect/connect-hdfs2-sink/kerberos-repro-gss-exception/core-site.xml:/etc/hadoop/core-site.xml
     environment:
       CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-hdfs
       KAFKA_OPTS: -Dsun.security.krb5.debug=true

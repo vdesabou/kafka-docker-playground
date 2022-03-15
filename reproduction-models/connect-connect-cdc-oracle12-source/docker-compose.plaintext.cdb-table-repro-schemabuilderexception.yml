@@ -10,8 +10,8 @@ services:
     ports:
       - "1521:1521"
     volumes:
-      - ../../reproduction-models/connect-connect-cdc-oracle12-source/ora-setup-scripts-cdb-table:/opt/oracle/scripts/setup
-      - ../../reproduction-models/connect-connect-cdc-oracle12-source/repro-schemabuilderexception/ora-startup-scripts-cdb-table:/opt/oracle/scripts/startup
+      - ../../connect/connect-cdc-oracle12-source/ora-setup-scripts-cdb-table:/opt/oracle/scripts/setup
+      - ../../connect/connect-cdc-oracle12-source/repro-schemabuilderexception/ora-startup-scripts-cdb-table:/opt/oracle/scripts/startup
     environment:
       ORACLE_PWD: Admin123
 

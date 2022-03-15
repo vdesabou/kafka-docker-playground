@@ -16,7 +16,7 @@ services:
     depends_on:
       - elasticsearch
     volumes:
-      - ../../reproduction-models/other-monitoring-demo/jmx-exporter:/usr/share/jmx_exporter/
+      - ../../other/monitoring-demo/jmx-exporter:/usr/share/jmx_exporter/
     environment:
       CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-elasticsearch
       # Allow overriding configs on the connector level

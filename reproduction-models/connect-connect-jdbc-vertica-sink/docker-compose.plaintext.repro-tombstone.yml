@@ -31,8 +31,8 @@ services:
       - schema-registry
       - vertica
     volumes:
-        - ../../reproduction-models/connect-connect-jdbc-vertica-sink/vertica-jdbc.jar:/usr/share/confluent-hub-components/confluentinc-kafka-connect-jdbc/lib/vertica-jdbc.jar
-        # - ../../reproduction-models/connect-connect-jdbc-vertica-sink/kafka-connect-jdbc-5.3.0.jar:/usr/share/confluent-hub-components/confluentinc-kafka-connect-jdbc/lib/kafka-connect-jdbc-5.5.1.jar
+        - ../../connect/connect-jdbc-vertica-sink/vertica-jdbc.jar:/usr/share/confluent-hub-components/confluentinc-kafka-connect-jdbc/lib/vertica-jdbc.jar
+        # - ../../connect/connect-jdbc-vertica-sink/kafka-connect-jdbc-5.3.0.jar:/usr/share/confluent-hub-components/confluentinc-kafka-connect-jdbc/lib/kafka-connect-jdbc-5.5.1.jar
     environment:
       CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-jdbc
       CONNECT_LOG4J_LOGGERS: org.reflections=ERROR,io.confluent.connect.jdbc=TRACE

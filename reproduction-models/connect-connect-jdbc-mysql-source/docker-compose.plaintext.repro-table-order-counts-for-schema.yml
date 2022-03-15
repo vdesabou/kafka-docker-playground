@@ -6,7 +6,7 @@ services:
     hostname: mysql
     container_name: mysql
     volumes:
-      - ../../reproduction-models/connect-connect-jdbc-mysql-source/mysql-init.sql:/docker-entrypoint-initdb.d/mysql-init.sql
+      - ../../connect/connect-jdbc-mysql-source/mysql-init.sql:/docker-entrypoint-initdb.d/mysql-init.sql
     environment:
       MYSQL_ROOT_PASSWORD: password
       MYSQL_DATABASE: db
@@ -19,7 +19,7 @@ services:
     hostname: mysql2
     container_name: mysql2
     volumes:
-      - ../../reproduction-models/connect-connect-jdbc-mysql-source/mysql-init-repro-table-order-counts-for-schema.sql:/docker-entrypoint-initdb.d/mysql-init.sql
+      - ../../connect/connect-jdbc-mysql-source/mysql-init-repro-table-order-counts-for-schema.sql:/docker-entrypoint-initdb.d/mysql-init.sql
     environment:
       MYSQL_ROOT_PASSWORD: password
       MYSQL_DATABASE: db
@@ -35,6 +35,6 @@ services:
       - mysql
       - mysql2
     volumes:
-        - ../../reproduction-models/connect-connect-jdbc-mysql-source/mysql-connector-java-5.1.45.jar:/usr/share/confluent-hub-components/confluentinc-kafka-connect-jdbc/lib/mysql-connector-java-5.1.45.jar
+        - ../../connect/connect-jdbc-mysql-source/mysql-connector-java-5.1.45.jar:/usr/share/confluent-hub-components/confluentinc-kafka-connect-jdbc/lib/mysql-connector-java-5.1.45.jar
     environment:
       CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-jdbc

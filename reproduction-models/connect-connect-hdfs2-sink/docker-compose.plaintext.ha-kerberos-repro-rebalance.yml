@@ -8,9 +8,9 @@ services:
     hostname: krb5.kerberos-demo.local
     container_name: krb5
     volumes:
-    - ../../reproduction-models/connect-connect-hdfs2-sink/ha-kerberos/krb5.conf:/etc/krb5.conf
+    - ../../connect/connect-hdfs2-sink/ha-kerberos/krb5.conf:/etc/krb5.conf
     # see fork https://github.com/vdesabou/issuer to avoid KrbException: Message stream modified (41) (https://stackoverflow.com/a/68212311/2381999)
-    - ../../reproduction-models/connect-connect-hdfs2-sink/ha-kerberos/issuer:/root/issuer
+    - ../../connect/connect-hdfs2-sink/ha-kerberos/issuer:/root/issuer
 
   namenode1:
     image: flokkr/hadoop:latest
@@ -26,9 +26,9 @@ services:
         # HADOOP_OPTS: "-Djava.net.preferIPv4Stack=true -Dsun.security.krb5.debug=true -Dsun.security.spnego.debug -Dsun.security.krb5.disableReferrals=true -Djdk.security.allowNonCaAnchor=true"
     command: ["hdfs", "namenode"]
     volumes:
-        - ../../reproduction-models/connect-connect-hdfs2-sink/ha-kerberos/krb5.conf:/opt/launcher/plugins/011_kerberos/krb5.conf
-        - ../../reproduction-models/connect-connect-hdfs2-sink/ha-kerberos/installer.sh:/opt/launcher/plugins/005_installer/installer.sh
-        - ../../reproduction-models/connect-connect-hdfs2-sink/hadoop-2.7.4.tar.gz:/opt/download/hadoop.tar.gz
+        - ../../connect/connect-hdfs2-sink/ha-kerberos/krb5.conf:/opt/launcher/plugins/011_kerberos/krb5.conf
+        - ../../connect/connect-hdfs2-sink/ha-kerberos/installer.sh:/opt/launcher/plugins/005_installer/installer.sh
+        - ../../connect/connect-hdfs2-sink/hadoop-2.7.4.tar.gz:/opt/download/hadoop.tar.gz
 
   namenode2:
     image: flokkr/hadoop:latest
@@ -45,9 +45,9 @@ services:
         # HADOOP_OPTS: "-Djava.net.preferIPv4Stack=true -Dsun.security.krb5.debug=true -Dsun.security.spnego.debug -Dsun.security.krb5.disableReferrals=true -Djdk.security.allowNonCaAnchor=true"
     command: ["hdfs", "namenode"]
     volumes:
-        - ../../reproduction-models/connect-connect-hdfs2-sink/ha-kerberos/krb5.conf:/opt/launcher/plugins/011_kerberos/krb5.conf
-        - ../../reproduction-models/connect-connect-hdfs2-sink/ha-kerberos/installer.sh:/opt/launcher/plugins/005_installer/installer.sh
-        - ../../reproduction-models/connect-connect-hdfs2-sink/hadoop-2.7.4.tar.gz:/opt/download/hadoop.tar.gz
+        - ../../connect/connect-hdfs2-sink/ha-kerberos/krb5.conf:/opt/launcher/plugins/011_kerberos/krb5.conf
+        - ../../connect/connect-hdfs2-sink/ha-kerberos/installer.sh:/opt/launcher/plugins/005_installer/installer.sh
+        - ../../connect/connect-hdfs2-sink/hadoop-2.7.4.tar.gz:/opt/download/hadoop.tar.gz
 
   journal1:
     image: flokkr/hadoop:latest
@@ -61,9 +61,9 @@ services:
         # HADOOP_OPTS: "-Djava.net.preferIPv4Stack=true -Dsun.security.krb5.debug=true -Dsun.security.spnego.debug -Dsun.security.krb5.disableReferrals=true -Djdk.security.allowNonCaAnchor=true"
     command: ["hdfs", "journalnode"]
     volumes:
-        - ../../reproduction-models/connect-connect-hdfs2-sink/ha-kerberos/krb5.conf:/opt/launcher/plugins/011_kerberos/krb5.conf
-        - ../../reproduction-models/connect-connect-hdfs2-sink/ha-kerberos/installer.sh:/opt/launcher/plugins/005_installer/installer.sh
-        - ../../reproduction-models/connect-connect-hdfs2-sink/hadoop-2.7.4.tar.gz:/opt/download/hadoop.tar.gz
+        - ../../connect/connect-hdfs2-sink/ha-kerberos/krb5.conf:/opt/launcher/plugins/011_kerberos/krb5.conf
+        - ../../connect/connect-hdfs2-sink/ha-kerberos/installer.sh:/opt/launcher/plugins/005_installer/installer.sh
+        - ../../connect/connect-hdfs2-sink/hadoop-2.7.4.tar.gz:/opt/download/hadoop.tar.gz
 
   journal2:
     image: flokkr/hadoop:latest
@@ -77,9 +77,9 @@ services:
         # HADOOP_OPTS: "-Djava.net.preferIPv4Stack=true -Dsun.security.krb5.debug=true -Dsun.security.spnego.debug -Dsun.security.krb5.disableReferrals=true -Djdk.security.allowNonCaAnchor=true"
     command: ["hdfs", "journalnode"]
     volumes:
-        - ../../reproduction-models/connect-connect-hdfs2-sink/ha-kerberos/krb5.conf:/opt/launcher/plugins/011_kerberos/krb5.conf
-        - ../../reproduction-models/connect-connect-hdfs2-sink/ha-kerberos/installer.sh:/opt/launcher/plugins/005_installer/installer.sh
-        - ../../reproduction-models/connect-connect-hdfs2-sink/hadoop-2.7.4.tar.gz:/opt/download/hadoop.tar.gz
+        - ../../connect/connect-hdfs2-sink/ha-kerberos/krb5.conf:/opt/launcher/plugins/011_kerberos/krb5.conf
+        - ../../connect/connect-hdfs2-sink/ha-kerberos/installer.sh:/opt/launcher/plugins/005_installer/installer.sh
+        - ../../connect/connect-hdfs2-sink/hadoop-2.7.4.tar.gz:/opt/download/hadoop.tar.gz
 
   journal3:
     image: flokkr/hadoop:latest
@@ -93,9 +93,9 @@ services:
     #environment:
          # HADOOP_OPTS: "-Djava.net.preferIPv4Stack=true -Dsun.security.krb5.debug=true -Dsun.security.spnego.debug -Dsun.security.krb5.disableReferrals=true -Djdk.security.allowNonCaAnchor=true"
     volumes:
-        - ../../reproduction-models/connect-connect-hdfs2-sink/ha-kerberos/krb5.conf:/opt/launcher/plugins/011_kerberos/krb5.conf
-        - ../../reproduction-models/connect-connect-hdfs2-sink/ha-kerberos/installer.sh:/opt/launcher/plugins/005_installer/installer.sh
-        - ../../reproduction-models/connect-connect-hdfs2-sink/hadoop-2.7.4.tar.gz:/opt/download/hadoop.tar.gz
+        - ../../connect/connect-hdfs2-sink/ha-kerberos/krb5.conf:/opt/launcher/plugins/011_kerberos/krb5.conf
+        - ../../connect/connect-hdfs2-sink/ha-kerberos/installer.sh:/opt/launcher/plugins/005_installer/installer.sh
+        - ../../connect/connect-hdfs2-sink/hadoop-2.7.4.tar.gz:/opt/download/hadoop.tar.gz
 
   datanode:
     image: flokkr/hadoop:latest
@@ -110,9 +110,9 @@ services:
         SLEEP_SECONDS: 60
         # HADOOP_OPTS: "-Djava.net.preferIPv4Stack=true -Dsun.security.krb5.debug=true -Dsun.security.spnego.debug -Dsun.security.krb5.disableReferrals=true -Djdk.security.allowNonCaAnchor=true"
     volumes:
-        - ../../reproduction-models/connect-connect-hdfs2-sink/ha-kerberos/krb5.conf:/opt/launcher/plugins/011_kerberos/krb5.conf
-        - ../../reproduction-models/connect-connect-hdfs2-sink/ha-kerberos/installer.sh:/opt/launcher/plugins/005_installer/installer.sh
-        - ../../reproduction-models/connect-connect-hdfs2-sink/hadoop-2.7.4.tar.gz:/opt/download/hadoop.tar.gz
+        - ../../connect/connect-hdfs2-sink/ha-kerberos/krb5.conf:/opt/launcher/plugins/011_kerberos/krb5.conf
+        - ../../connect/connect-hdfs2-sink/ha-kerberos/installer.sh:/opt/launcher/plugins/005_installer/installer.sh
+        - ../../connect/connect-hdfs2-sink/hadoop-2.7.4.tar.gz:/opt/download/hadoop.tar.gz
 
   resourcemanager:
     image: flokkr/hadoop:latest
@@ -124,9 +124,9 @@ services:
     env_file:
         - ../../reproduction-models/connect-connect-hdfs2-sink/ha-kerberos/config
     volumes:
-        - ../../reproduction-models/connect-connect-hdfs2-sink/ha-kerberos/krb5.conf:/opt/launcher/plugins/011_kerberos/krb5.conf
-        - ../../reproduction-models/connect-connect-hdfs2-sink/ha-kerberos/installer.sh:/opt/launcher/plugins/005_installer/installer.sh
-        - ../../reproduction-models/connect-connect-hdfs2-sink/hadoop-2.7.4.tar.gz:/opt/download/hadoop.tar.gz
+        - ../../connect/connect-hdfs2-sink/ha-kerberos/krb5.conf:/opt/launcher/plugins/011_kerberos/krb5.conf
+        - ../../connect/connect-hdfs2-sink/ha-kerberos/installer.sh:/opt/launcher/plugins/005_installer/installer.sh
+        - ../../connect/connect-hdfs2-sink/hadoop-2.7.4.tar.gz:/opt/download/hadoop.tar.gz
 
   activator:
     image: flokkr/hadoop:latest
@@ -140,15 +140,15 @@ services:
     environment:
         SLEEP_SECONDS: 70
     volumes:
-      - ../../reproduction-models/connect-connect-hdfs2-sink/ha-kerberos/installer.sh:/opt/launcher/plugins/005_installer/installer.sh
-      - ../../reproduction-models/connect-connect-hdfs2-sink/hadoop-2.7.4.tar.gz:/opt/download/hadoop.tar.gz
+      - ../../connect/connect-hdfs2-sink/ha-kerberos/installer.sh:/opt/launcher/plugins/005_installer/installer.sh
+      - ../../connect/connect-hdfs2-sink/hadoop-2.7.4.tar.gz:/opt/download/hadoop.tar.gz
 
   connect:
     hostname: connect.kerberos-demo.local
     volumes:
-      - ../../reproduction-models/connect-connect-hdfs2-sink/ha-kerberos/krb5.conf:/etc/krb5.conf
-      - ../../reproduction-models/connect-connect-hdfs2-sink/ha-kerberos/core-site.xml:/opt/hadoop/etc/hadoop/core-site.xml
-      - ../../reproduction-models/connect-connect-hdfs2-sink/ha-kerberos/hdfs-site.xml:/opt/hadoop/etc/hadoop/hdfs-site.xml
+      - ../../connect/connect-hdfs2-sink/ha-kerberos/krb5.conf:/etc/krb5.conf
+      - ../../connect/connect-hdfs2-sink/ha-kerberos/core-site.xml:/opt/hadoop/etc/hadoop/core-site.xml
+      - ../../connect/connect-hdfs2-sink/ha-kerberos/hdfs-site.xml:/opt/hadoop/etc/hadoop/hdfs-site.xml
     environment:
       CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-hdfs
       CONNECT_SCHEDULED_REBALANCE_MAX_DELAY_MS: 500
@@ -161,9 +161,9 @@ services:
     #     CONNECTOR_TAG: ${CONNECTOR_TAG}
     image: vdesabou/kafka-docker-playground-connect:${CONNECT_TAG}
     volumes:
-      - ../../reproduction-models/connect-connect-hdfs2-sink/ha-kerberos/krb5.conf:/etc/krb5.conf
-      - ../../reproduction-models/connect-connect-hdfs2-sink/ha-kerberos/core-site.xml:/opt/hadoop/etc/hadoop/core-site.xml
-      - ../../reproduction-models/connect-connect-hdfs2-sink/ha-kerberos/hdfs-site.xml:/opt/hadoop/etc/hadoop/hdfs-site.xml
+      - ../../connect/connect-hdfs2-sink/ha-kerberos/krb5.conf:/etc/krb5.conf
+      - ../../connect/connect-hdfs2-sink/ha-kerberos/core-site.xml:/opt/hadoop/etc/hadoop/core-site.xml
+      - ../../connect/connect-hdfs2-sink/ha-kerberos/hdfs-site.xml:/opt/hadoop/etc/hadoop/hdfs-site.xml
     hostname: connect2
     container_name: connect2
     depends_on:
@@ -209,9 +209,9 @@ services:
     #     CONNECTOR_TAG: ${CONNECTOR_TAG}
     image: vdesabou/kafka-docker-playground-connect:${CONNECT_TAG}
     volumes:
-      - ../../reproduction-models/connect-connect-hdfs2-sink/ha-kerberos/krb5.conf:/etc/krb5.conf
-      - ../../reproduction-models/connect-connect-hdfs2-sink/ha-kerberos/core-site.xml:/opt/hadoop/etc/hadoop/core-site.xml
-      - ../../reproduction-models/connect-connect-hdfs2-sink/ha-kerberos/hdfs-site.xml:/opt/hadoop/etc/hadoop/hdfs-site.xml
+      - ../../connect/connect-hdfs2-sink/ha-kerberos/krb5.conf:/etc/krb5.conf
+      - ../../connect/connect-hdfs2-sink/ha-kerberos/core-site.xml:/opt/hadoop/etc/hadoop/core-site.xml
+      - ../../connect/connect-hdfs2-sink/ha-kerberos/hdfs-site.xml:/opt/hadoop/etc/hadoop/hdfs-site.xml
     hostname: connect3
     container_name: connect3
     depends_on:

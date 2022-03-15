@@ -9,8 +9,8 @@ services:
     ports:
       - "1521:1521"
     volumes:
-      - ../../reproduction-models/connect-connect-jdbc-oracle11-source/00-oracle-init.sql:/docker-entrypoint-initdb.d/00-oracle-init.sql
-      - ../../reproduction-models/connect-connect-jdbc-oracle11-source/01-create-table.repro-90034-jdbc-source-connector-reading-records-from-specific-row-onwards.sh:/docker-entrypoint-initdb.d/01-create-table.sh
+      - ../../connect/connect-jdbc-oracle11-source/00-oracle-init.sql:/docker-entrypoint-initdb.d/00-oracle-init.sql
+      - ../../connect/connect-jdbc-oracle11-source/01-create-table.repro-90034-jdbc-source-connector-reading-records-from-specific-row-onwards.sh:/docker-entrypoint-initdb.d/01-create-table.sh
     environment:
       ORACLE_ALLOW_REMOTE: "true"
 
@@ -21,6 +21,6 @@ services:
       - schema-registry
       - oracle
     volumes:
-        - ../../reproduction-models/connect-connect-jdbc-oracle11-source/ojdbc6.jar:/usr/share/confluent-hub-components/confluentinc-kafka-connect-jdbc/lib/ojdbc6.jar
+        - ../../connect/connect-jdbc-oracle11-source/ojdbc6.jar:/usr/share/confluent-hub-components/confluentinc-kafka-connect-jdbc/lib/ojdbc6.jar
     environment:
       CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-jdbc

@@ -6,7 +6,7 @@ services:
     hostname: tibco-ems
     container_name: tibco-ems
     volumes:
-        - ../../reproduction-models/connect-connect-jms-tibco-source/tibjmsMsgProducer.java:/opt/tibco/ems/8.5/samples/java/tibjmsMsgProducer.java
+        - ../../connect/connect-jms-tibco-source/tibjmsMsgProducer.java:/opt/tibco/ems/8.5/samples/java/tibjmsMsgProducer.java
     ports:
       - '7222:7222'
 
@@ -17,8 +17,8 @@ services:
       - schema-registry
       - tibco-ems
     volumes:
-        - ../../reproduction-models/connect-connect-jms-tibco-source/tibjms.jar:/usr/share/confluent-hub-components/confluentinc-kafka-connect-jms/lib/tibjms.jar
-        - ../../reproduction-models/connect-connect-jms-tibco-source/jms-2.0.jar:/usr/share/confluent-hub-components/confluentinc-kafka-connect-jms/lib/jms-2.0.jar
+        - ../../connect/connect-jms-tibco-source/tibjms.jar:/usr/share/confluent-hub-components/confluentinc-kafka-connect-jms/lib/tibjms.jar
+        - ../../connect/connect-jms-tibco-source/jms-2.0.jar:/usr/share/confluent-hub-components/confluentinc-kafka-connect-jms/lib/jms-2.0.jar
     environment:
       CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-jms
       # CONNECT_LOG4J_ROOT_LOGLEVEL: TRACE

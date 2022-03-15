@@ -17,4 +17,4 @@ services:
     ports:
         - "9092:9092"
     volumes:
-        - ../../reproduction-models/ccloud-client-kafkajs/haproxy/haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg:ro
+        - ../../ccloud/client-kafkajs/haproxy/haproxy.cfg:/usr/local/etc/haproxy/haproxy.cfg:ro

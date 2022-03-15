@@ -10,8 +10,8 @@ services:
     ports:
       - "1521:1521"
     volumes:
-      - ../../reproduction-models/connect-connect-jdbc-oracle19-sink/ora-setup-scripts:/opt/oracle/scripts/setup
-      - ../../reproduction-models/connect-connect-jdbc-oracle19-sink/ora-startup-scripts:/opt/oracle/scripts/startup
+      - ../../connect/connect-jdbc-oracle19-sink/ora-setup-scripts:/opt/oracle/scripts/setup
+      - ../../connect/connect-jdbc-oracle19-sink/ora-startup-scripts:/opt/oracle/scripts/startup
     environment:
       ORACLE_PWD: Admin123
 

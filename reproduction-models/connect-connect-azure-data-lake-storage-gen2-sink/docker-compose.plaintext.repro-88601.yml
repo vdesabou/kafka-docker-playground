@@ -21,7 +21,7 @@ services:
 
   connect:
     volumes:
-        - ../../reproduction-models/connect-connect-hdfs3-sink/ha-kerberos/krb5.conf:/opt/launcher/plugins/011_kerberos/krb5.conf
-        - ../../reproduction-models/connect-connect-azure-data-lake-storage-gen2-sink/kafka-connect-transform-archive:/tmp/kafka-connect-transform-archive
+        - ../../connect/connect-hdfs3-sink/ha-kerberos/krb5.conf:/opt/launcher/plugins/011_kerberos/krb5.conf
+        - ../../connect/connect-azure-data-lake-storage-gen2-sink/kafka-connect-transform-archive:/tmp/kafka-connect-transform-archive
     environment:
       CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-azure-data-lake-gen2-storage,/tmp/kafka-connect-transform-archive

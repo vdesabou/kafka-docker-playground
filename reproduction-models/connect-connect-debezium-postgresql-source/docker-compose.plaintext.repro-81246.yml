@@ -11,7 +11,7 @@ services:
       - POSTGRES_PASSWORD=mypassword
       - POSTGRES_DB=postgres
     volumes:
-     - ../../reproduction-models/connect-connect-debezium-postgresql-source/customers-repro-81246.sql:/docker-entrypoint-initdb.d/z99_dump.sql
+     - ../../connect/connect-debezium-postgresql-source/customers-repro-81246.sql:/docker-entrypoint-initdb.d/z99_dump.sql
 
   connect:
     depends_on:

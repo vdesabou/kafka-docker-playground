@@ -16,7 +16,7 @@ services:
 
   connect:
     volumes:
-      - ../../reproduction-models/connect-connect-sftp-source/data:/data
+      - ../../connect/connect-sftp-source/data:/data
     environment:
       CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-sftp
       # CONNECT_LOG4J_LOGGERS: org.reflections=ERROR,io.confluent.connect.sftp=TRACE

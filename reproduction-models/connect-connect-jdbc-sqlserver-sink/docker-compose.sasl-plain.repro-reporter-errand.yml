@@ -16,7 +16,7 @@ services:
 
   broker:
     volumes:
-        - ../../reproduction-models/other-connect-override-policy-sftp-source/client.properties:/tmp/client.properties
+        - ../../other/connect-override-policy-sftp-source/client.properties:/tmp/client.properties
     environment:
       KAFKA_AUTHORIZER_CLASS_NAME: $KAFKA_AUTHORIZER_CLASS_NAME
       KAFKA_ZOOKEEPER_SET_ACL: "true"
@@ -26,13 +26,13 @@ services:
 
   schema-registry:
     volumes:
-        - ../../reproduction-models/other-connect-override-policy-sftp-source/client.properties:/tmp/client.properties
+        - ../../other/connect-override-policy-sftp-source/client.properties:/tmp/client.properties
 
 
   connect:
     volumes:
-        - ../../reproduction-models/connect-connect-jdbc-sqlserver-sink/sqljdbc_7.4/enu/mssql-jdbc-7.4.1.jre8.jar:/usr/share/confluent-hub-components/confluentinc-kafka-connect-jdbc/lib/mssql-jdbc-7.4.1.jre8.jar
-        - ../../reproduction-models/other-connect-override-policy-sftp-source/client.properties:/tmp/client.properties
+        - ../../connect/connect-jdbc-sqlserver-sink/sqljdbc_7.4/enu/mssql-jdbc-7.4.1.jre8.jar:/usr/share/confluent-hub-components/confluentinc-kafka-connect-jdbc/lib/mssql-jdbc-7.4.1.jre8.jar
+        - ../../other/connect-override-policy-sftp-source/client.properties:/tmp/client.properties
     environment:
       CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-jdbc
       

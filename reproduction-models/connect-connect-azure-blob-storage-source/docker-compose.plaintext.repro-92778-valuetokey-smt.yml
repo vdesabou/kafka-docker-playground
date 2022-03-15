@@ -3,6 +3,6 @@ version: '3.5'
 services:
   connect:
     volumes:
-        - ../../reproduction-models/connect-connect-azure-blob-storage-source/JsonFieldToKey/target/JsonFieldToKey-1.0.0-SNAPSHOT-jar-with-dependencies.jar:/usr/share/confluent-hub-components/confluentinc-kafka-connect-azure-blob-storage-source/lib/JsonFieldToKey-1.0.0-SNAPSHOT-jar-with-dependencies.jar
+        - ../../connect/connect-azure-blob-storage-source/JsonFieldToKey/target/JsonFieldToKey-1.0.0-SNAPSHOT-jar-with-dependencies.jar:/usr/share/confluent-hub-components/confluentinc-kafka-connect-azure-blob-storage-source/lib/JsonFieldToKey-1.0.0-SNAPSHOT-jar-with-dependencies.jar
     environment:
       CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-azure-blob-storage-source,/usr/share/confluent-hub-components/confluentinc-kafka-connect-azure-blob-storage

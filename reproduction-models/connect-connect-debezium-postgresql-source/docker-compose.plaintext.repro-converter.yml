@@ -11,7 +11,7 @@ services:
       - POSTGRES_PASSWORD=mypassword
       - POSTGRES_DB=postgres
     volumes:
-     - ../../reproduction-models/connect-connect-debezium-postgresql-source/customers.sql:/docker-entrypoint-initdb.d/z99_dump.sql
+     - ../../connect/connect-debezium-postgresql-source/customers.sql:/docker-entrypoint-initdb.d/z99_dump.sql
 
   connect:
     depends_on:
@@ -20,6 +20,6 @@ services:
       - schema-registry
       - postgres
     volumes:
-    - ../../reproduction-models/connect-connect-debezium-postgresql-source/AccessPermissionLocation/target/AccessPermissionLocation-1.0.0-SNAPSHOT.jar:/usr/share/confluent-hub-components/debezium-debezium-connector-postgresql/lib/AccessPermissionLocation-1.0.0-SNAPSHOT.jar
+    - ../../connect/connect-debezium-postgresql-source/AccessPermissionLocation/target/AccessPermissionLocation-1.0.0-SNAPSHOT.jar:/usr/share/confluent-hub-components/debezium-debezium-connector-postgresql/lib/AccessPermissionLocation-1.0.0-SNAPSHOT.jar
     environment:
       CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/debezium-debezium-connector-postgresql

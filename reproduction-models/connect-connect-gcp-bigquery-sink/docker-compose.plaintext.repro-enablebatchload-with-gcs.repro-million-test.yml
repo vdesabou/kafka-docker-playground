@@ -3,7 +3,7 @@ version: '3.5'
 services:
   connect:
     volumes:
-        - ../../reproduction-models/connect-connect-gcp-bigquery-sink/keyfile.json:/tmp/keyfile.json:ro
+        - ../../connect/connect-gcp-bigquery-sink/keyfile.json:/tmp/keyfile.json:ro
     environment:
       CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/wepay-kafka-connect-bigquery
       KAFKA_HEAP_OPTS: " -Xms2G -Xmx8G"

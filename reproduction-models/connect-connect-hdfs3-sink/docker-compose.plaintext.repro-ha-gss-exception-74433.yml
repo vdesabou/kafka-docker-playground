@@ -8,9 +8,9 @@ services:
     hostname: krb5.kerberos-demo.local
     container_name: krb5
     volumes:
-    - ../../reproduction-models/connect-connect-hdfs3-sink/ha-kerberos-repro-gss-exception/krb5.conf:/etc/krb5.conf
+    - ../../connect/connect-hdfs3-sink/ha-kerberos-repro-gss-exception/krb5.conf:/etc/krb5.conf
     # see fork https://github.com/vdesabou/issuer to avoid KrbException: Message stream modified (41) (https://stackoverflow.com/a/68212311/2381999)
-    - ../../reproduction-models/connect-connect-hdfs3-sink/ha-kerberos-repro-gss-exception/issuer:/root/issuer
+    - ../../connect/connect-hdfs3-sink/ha-kerberos-repro-gss-exception/issuer:/root/issuer
 
   namenode1:
     image: flokkr/hadoop:latest
@@ -28,7 +28,7 @@ services:
         #HADOOP_JAAS_DEBUG: "true"
     command: ["hdfs", "namenode"]
     volumes:
-        - ../../reproduction-models/connect-connect-hdfs3-sink/ha-kerberos-repro-gss-exception/krb5.conf:/opt/launcher/plugins/011_kerberos/krb5.conf
+        - ../../connect/connect-hdfs3-sink/ha-kerberos-repro-gss-exception/krb5.conf:/opt/launcher/plugins/011_kerberos/krb5.conf
 
   namenode2:
     image: flokkr/hadoop:latest
@@ -45,7 +45,7 @@ services:
         #HADOOP_OPTS: "-Djava.net.preferIPv4Stack=true -Dsun.security.krb5.debug=true -Dsun.security.spnego.debug"
     command: ["hdfs", "namenode"]
     volumes:
-        - ../../reproduction-models/connect-connect-hdfs3-sink/ha-kerberos-repro-gss-exception/krb5.conf:/opt/launcher/plugins/011_kerberos/krb5.conf
+        - ../../connect/connect-hdfs3-sink/ha-kerberos-repro-gss-exception/krb5.conf:/opt/launcher/plugins/011_kerberos/krb5.conf
 
   journal1:
     image: flokkr/hadoop:latest
@@ -59,7 +59,7 @@ services:
         HADOOP_OPTS: "-Djava.net.preferIPv4Stack=true -Dsun.security.krb5.debug=true -Dsun.security.spnego.debug"
     command: ["hdfs", "journalnode"]
     volumes:
-        - ../../reproduction-models/connect-connect-hdfs3-sink/ha-kerberos-repro-gss-exception/krb5.conf:/opt/launcher/plugins/011_kerberos/krb5.conf
+        - ../../connect/connect-hdfs3-sink/ha-kerberos-repro-gss-exception/krb5.conf:/opt/launcher/plugins/011_kerberos/krb5.conf
 
   journal2:
     image: flokkr/hadoop:latest
@@ -73,7 +73,7 @@ services:
         HADOOP_OPTS: "-Djava.net.preferIPv4Stack=true -Dsun.security.krb5.debug=true -Dsun.security.spnego.debug"
     command: ["hdfs", "journalnode"]
     volumes:
-        - ../../reproduction-models/connect-connect-hdfs3-sink/ha-kerberos-repro-gss-exception/krb5.conf:/opt/launcher/plugins/011_kerberos/krb5.conf
+        - ../../connect/connect-hdfs3-sink/ha-kerberos-repro-gss-exception/krb5.conf:/opt/launcher/plugins/011_kerberos/krb5.conf
 
   journal3:
     image: flokkr/hadoop:latest
@@ -87,7 +87,7 @@ services:
     environment:
          HADOOP_OPTS: "-Djava.net.preferIPv4Stack=true -Dsun.security.krb5.debug=true -Dsun.security.spnego.debug"
     volumes:
-        - ../../reproduction-models/connect-connect-hdfs3-sink/ha-kerberos-repro-gss-exception/krb5.conf:/opt/launcher/plugins/011_kerberos/krb5.conf
+        - ../../connect/connect-hdfs3-sink/ha-kerberos-repro-gss-exception/krb5.conf:/opt/launcher/plugins/011_kerberos/krb5.conf
 
   datanode:
     image: flokkr/hadoop:latest
@@ -102,7 +102,7 @@ services:
         SLEEP_SECONDS: 60
         HADOOP_OPTS: "-Djava.net.preferIPv4Stack=true -Dsun.security.krb5.debug=true -Dsun.security.spnego.debug"
     volumes:
-        - ../../reproduction-models/connect-connect-hdfs3-sink/ha-kerberos-repro-gss-exception/krb5.conf:/opt/launcher/plugins/011_kerberos/krb5.conf
+        - ../../connect/connect-hdfs3-sink/ha-kerberos-repro-gss-exception/krb5.conf:/opt/launcher/plugins/011_kerberos/krb5.conf
 
   resourcemanager:
     image: flokkr/hadoop:latest
@@ -114,7 +114,7 @@ services:
     env_file:
         - ../../reproduction-models/connect-connect-hdfs3-sink/ha-kerberos-repro-gss-exception/config
     volumes:
-        - ../../reproduction-models/connect-connect-hdfs3-sink/ha-kerberos-repro-gss-exception/krb5.conf:/opt/launcher/plugins/011_kerberos/krb5.conf
+        - ../../connect/connect-hdfs3-sink/ha-kerberos-repro-gss-exception/krb5.conf:/opt/launcher/plugins/011_kerberos/krb5.conf
 
   activator:
     image: flokkr/hadoop:latest
@@ -134,9 +134,9 @@ services:
       args:
         TAG: ${TAG}
     volumes:
-      - ../../reproduction-models/connect-connect-hdfs3-sink/ha-kerberos-repro-gss-exception/krb5.conf:/etc/krb5.conf
-      - ../../reproduction-models/connect-connect-hdfs3-sink/ha-kerberos-repro-gss-exception/core-site.xml:/opt/hadoop/etc/hadoop/core-site.xml
-      - ../../reproduction-models/connect-connect-hdfs3-sink/ha-kerberos-repro-gss-exception/hdfs-site.xml:/opt/hadoop/etc/hadoop/hdfs-site.xml
+      - ../../connect/connect-hdfs3-sink/ha-kerberos-repro-gss-exception/krb5.conf:/etc/krb5.conf
+      - ../../connect/connect-hdfs3-sink/ha-kerberos-repro-gss-exception/core-site.xml:/opt/hadoop/etc/hadoop/core-site.xml
+      - ../../connect/connect-hdfs3-sink/ha-kerberos-repro-gss-exception/hdfs-site.xml:/opt/hadoop/etc/hadoop/hdfs-site.xml
     environment:
       CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-hdfs3
       #KAFKA_OPTS: -Dsun.security.krb5.debug=true
@@ -147,9 +147,9 @@ services:
       args:
         TAG: ${TAG}
     volumes:
-      - ../../reproduction-models/connect-connect-hdfs3-sink/ha-kerberos-repro-gss-exception/krb5.conf:/etc/krb5.conf
-      - ../../reproduction-models/connect-connect-hdfs3-sink/ha-kerberos-repro-gss-exception/core-site.xml:/opt/hadoop/etc/hadoop/core-site.xml
-      - ../../reproduction-models/connect-connect-hdfs3-sink/ha-kerberos-repro-gss-exception/hdfs-site.xml:/opt/hadoop/etc/hadoop/hdfs-site.xml
+      - ../../connect/connect-hdfs3-sink/ha-kerberos-repro-gss-exception/krb5.conf:/etc/krb5.conf
+      - ../../connect/connect-hdfs3-sink/ha-kerberos-repro-gss-exception/core-site.xml:/opt/hadoop/etc/hadoop/core-site.xml
+      - ../../connect/connect-hdfs3-sink/ha-kerberos-repro-gss-exception/hdfs-site.xml:/opt/hadoop/etc/hadoop/hdfs-site.xml
     hostname: connect2
     container_name: connect2
     depends_on:
@@ -192,9 +192,9 @@ services:
       args:
         TAG: ${TAG}
     volumes:
-      - ../../reproduction-models/connect-connect-hdfs3-sink/ha-kerberos-repro-gss-exception/krb5.conf:/etc/krb5.conf
-      - ../../reproduction-models/connect-connect-hdfs3-sink/ha-kerberos-repro-gss-exception/core-site.xml:/opt/hadoop/etc/hadoop/core-site.xml
-      - ../../reproduction-models/connect-connect-hdfs3-sink/ha-kerberos-repro-gss-exception/hdfs-site.xml:/opt/hadoop/etc/hadoop/hdfs-site.xml
+      - ../../connect/connect-hdfs3-sink/ha-kerberos-repro-gss-exception/krb5.conf:/etc/krb5.conf
+      - ../../connect/connect-hdfs3-sink/ha-kerberos-repro-gss-exception/core-site.xml:/opt/hadoop/etc/hadoop/core-site.xml
+      - ../../connect/connect-hdfs3-sink/ha-kerberos-repro-gss-exception/hdfs-site.xml:/opt/hadoop/etc/hadoop/hdfs-site.xml
     hostname: connect3
     container_name: connect3
     depends_on:

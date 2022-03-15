@@ -21,7 +21,7 @@ services:
     ports:
       - "9191:9191"
     volumes:
-      - ../../reproduction-models/connect-connect-ibm-mq-sink/zazkia-repro-90709-error-mqrc-2009:/data
+      - ../../connect/connect-ibm-mq-sink/zazkia-repro-90709-error-mqrc-2009:/data
 
 
   connect:
@@ -36,7 +36,7 @@ services:
       - net.ipv4.tcp_keepalive_probes=15
       - net.ipv4.tcp_keepalive_time=60
     volumes:
-        - ../../reproduction-models/connect-connect-ibm-mq-sink/com.ibm.mq.allclient.jar:/usr/share/confluent-hub-components/confluentinc-kafka-connect-ibmmq-sink/lib/com.ibm.mq.allclient.jar
-        - ../../reproduction-models/connect-connect-ibm-mq-sink/jms.jar:/usr/share/confluent-hub-components/confluentinc-kafka-connect-ibmmq-sink/lib/jms.jar
+        - ../../connect/connect-ibm-mq-sink/com.ibm.mq.allclient.jar:/usr/share/confluent-hub-components/confluentinc-kafka-connect-ibmmq-sink/lib/com.ibm.mq.allclient.jar
+        - ../../connect/connect-ibm-mq-sink/jms.jar:/usr/share/confluent-hub-components/confluentinc-kafka-connect-ibmmq-sink/lib/jms.jar
     environment:
       CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-ibmmq-sink
