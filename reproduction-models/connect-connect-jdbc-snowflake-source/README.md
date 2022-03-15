@@ -1,1 +1,0 @@
-../../connect/connect-jdbc-snowflake-source/README.md

@@ -1,1 +1,0 @@
-../../connect/connect-mongodb-sink/README.md

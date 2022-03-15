@@ -1,1 +1,0 @@
-../../other/control-center-readonly-mode/README.md

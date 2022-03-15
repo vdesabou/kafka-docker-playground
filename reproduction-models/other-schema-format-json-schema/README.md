@@ -1,1 +1,0 @@
-../../other/schema-format-json-schema/README.md

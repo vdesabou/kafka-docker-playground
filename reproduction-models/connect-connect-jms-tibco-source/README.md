@@ -1,1 +1,0 @@
-../../connect/connect-jms-tibco-source/README.md

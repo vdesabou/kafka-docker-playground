@@ -1,1 +1,0 @@
-../../connect/connect-datagen-source/README.md

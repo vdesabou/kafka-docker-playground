@@ -1,1 +1,0 @@
-../../connect/connect-cdc-oracle11-source/README.md

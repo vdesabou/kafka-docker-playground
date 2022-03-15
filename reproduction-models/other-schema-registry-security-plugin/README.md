@@ -1,1 +1,0 @@
-../../other/schema-registry-security-plugin/README.md

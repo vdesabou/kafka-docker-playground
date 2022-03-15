@@ -1,1 +1,0 @@
-../../other/monitoring-sink-latency/README.md

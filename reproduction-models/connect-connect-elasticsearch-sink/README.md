@@ -1,1 +1,0 @@
-../../connect/connect-elasticsearch-sink/README.md

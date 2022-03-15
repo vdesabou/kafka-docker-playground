@@ -1,1 +1,0 @@
-../../other/connect-secret-registry/README.md

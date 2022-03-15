@@ -1,1 +1,0 @@
-../../connect/connect-filestream-source/README.md

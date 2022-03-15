@@ -1,1 +1,0 @@
-../../connect/connect-jdbc-mysql-sink/README.md

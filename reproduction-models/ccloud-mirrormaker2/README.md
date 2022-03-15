@@ -1,1 +1,0 @@
-../../ccloud/mirrormaker2/README.md

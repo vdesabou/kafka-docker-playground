@@ -1,1 +1,0 @@
-../../connect/connect-vertica-sink/README.md

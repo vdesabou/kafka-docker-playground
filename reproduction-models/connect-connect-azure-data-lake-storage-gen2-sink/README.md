@@ -1,1 +1,0 @@
-../../connect/connect-azure-data-lake-storage-gen2-sink/README.md

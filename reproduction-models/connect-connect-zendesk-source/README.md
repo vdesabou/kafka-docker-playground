@@ -1,1 +1,0 @@
-../../connect/connect-zendesk-source/README.md

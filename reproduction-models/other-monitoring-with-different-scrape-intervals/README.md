@@ -1,1 +1,0 @@
-../../other/monitoring-with-different-scrape-intervals/README.md

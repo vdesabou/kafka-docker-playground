@@ -1,1 +1,0 @@
-../../other/client-dotnet/README.md

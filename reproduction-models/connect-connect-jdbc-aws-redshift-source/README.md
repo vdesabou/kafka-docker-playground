@@ -1,1 +1,0 @@
-../../connect/connect-jdbc-aws-redshift-source/README.md

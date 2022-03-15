@@ -1,1 +1,0 @@
-../../other/multiple-event-types-in-topic/README.md

@@ -1,1 +1,0 @@
-../../connect/connect-salesforce-bulkapi-source/README.md

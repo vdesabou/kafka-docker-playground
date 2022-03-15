@@ -1,1 +1,0 @@
-../../other/schema-format-protobuf/README.md

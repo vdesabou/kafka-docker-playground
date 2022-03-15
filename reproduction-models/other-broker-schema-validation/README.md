@@ -1,1 +1,0 @@
-../../other/broker-schema-validation/README.md

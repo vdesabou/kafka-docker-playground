@@ -1,1 +1,0 @@
-../../connect/connect-cassandra-sink/README.md

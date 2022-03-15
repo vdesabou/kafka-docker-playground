@@ -1,1 +1,0 @@
-../../connect/connect-jdbc-vertica-sink/README.md

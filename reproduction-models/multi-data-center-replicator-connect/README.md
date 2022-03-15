@@ -1,1 +1,0 @@
-../../multi-data-center/replicator-connect/README.md

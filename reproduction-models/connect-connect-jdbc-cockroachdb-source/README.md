@@ -1,1 +1,0 @@
-../../connect/connect-jdbc-cockroachdb-source/README.md

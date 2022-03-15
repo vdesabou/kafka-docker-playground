@@ -1,1 +1,0 @@
-../../connect/connect-mqtt-sink/README.md
