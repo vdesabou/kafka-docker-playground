@@ -74,10 +74,6 @@ then
   rm -f $docker_compose_test_file
   cp $PWD/$docker_compose_file $docker_compose_test_file
 
-  sed -e "s|../../$dir2|../../reproduction-models/$final_dir|g" \
-      $docker_compose_test_file > /tmp/tmp
-  mv /tmp/tmp $docker_compose_test_file
-
   docker_compose_test_file_name=$(basename -- "$docker_compose_test_file")
 
   log "🎩 Creating file $repro_test_file"
