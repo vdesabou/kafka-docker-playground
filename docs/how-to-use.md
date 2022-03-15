@@ -89,7 +89,7 @@ cd connect/connect-ibm-mq-sink
 > * [Zendesk source connector](https://github.com/vdesabou/kafka-docker-playground/tree/master/connect/connect-zendesk-source#how-to-run): arguments `ZENDESK_URL`, `ZENDESK_USERNAME`and `ZENDESK_PASSWORD` are required (you can also pass them as enviroment variables)
 
 > [!ATTENTION]
-> Please ignore all the scripts containing `repro` in the name: they were used for reproduction models, and are **not maintained**.
+> Please ignore all the scripts containing `repro` in the name or in `reproduction-models` folder: they were used for reproduction models, and are **not maintained**.
 
 ## 🪄 Specify versions
 
@@ -113,7 +113,7 @@ By default, for each connector, the latest available version on [Confluent Hub](
 
 The only 2 exceptions are:
 
-* replicator which is using same version as CP
+* replicator which is using same version as CP (but you can force a version using `REPLICATOR_TAG` environment variable)
 * JDBC which is using same version as CP (but only for CP version lower than 6.x)
 
 Each latest version used is specified on the [Connectors list](https://kafka-docker-playground.io/#/content?id=connectors).
