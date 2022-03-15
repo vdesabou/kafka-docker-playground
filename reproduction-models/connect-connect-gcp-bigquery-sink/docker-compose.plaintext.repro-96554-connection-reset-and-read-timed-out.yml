@@ -4,27 +4,20 @@ services:
   connect:
     volumes:
         - ../../connect/connect-gcp-bigquery-sink/keyfile.json:/tmp/keyfile.json:ro
-        - ../../connect/connect-gcp-bigquery-sink/nginx-proxy/logging.properties:/tmp/logging.properties
+        - ../../reproduction-models/connect-connect-gcp-bigquery-sink/repro-96554-nginx-proxy/logging.properties:/tmp/logging.properties
     environment:
       CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/wepay-kafka-connect-bigquery
       #KAFKA_OPTS: -Dhttp.proxyHost=nginx-proxy -Dhttp.proxyPort=8888 -Dhttps.proxyHost=nginx-proxy -Dhttps.proxyPort=8888 -Djava.util.logging.config.file=/tmp/logging.properties
-      #KAFKA_OPTS: -Djava.util.logging.config.file=/tmp/logging.properties
-      #KAFKA_OPTS: -Dhttp.proxyHost=zazkia -Dhttp.proxyPort=49998 -Dhttps.proxyHost=zazkia -Dhttps.proxyPort=49998 -Djava.util.logging.config.file=/tmp/logging.properties
+      KAFKA_OPTS: -Djava.util.logging.config.file=/tmp/logging.properties
 
   nginx-proxy:
-    image: reiz/nginx_proxy:latest
+    build:
+      context: ../../reproduction-models/connect-connect-gcp-bigquery-sink/repro-96554-nginx-proxy/
     hostname: nginx-proxy
     container_name: nginx-proxy
+    cap_add:
+      - NET_ADMIN
     ports:
       - "8888:8888"
     volumes:
-      - ../../connect/connect-gcp-bigquery-sink/nginx-proxy/nginx_whitelist.conf:/usr/local/nginx/conf/nginx.conf
-
-  zazkia:
-    hostname: zazkia
-    container_name: zazkia
-    image: emicklei/zazkia
-    ports:
-      - "9191:9191"
-    volumes:
-      - ../../connect/connect-gcp-bigquery-sink/repro-96554-connection-reset-and-read-timed-out:/data
+      - ../../reproduction-models/connect-connect-gcp-bigquery-sink/repro-96554-nginx-proxy/nginx_whitelist.conf:/usr/local/nginx/conf/nginx.conf

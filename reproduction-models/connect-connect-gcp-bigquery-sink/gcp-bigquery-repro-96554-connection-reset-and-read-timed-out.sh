@@ -30,16 +30,42 @@ set -e
 log "Create dataset $PROJECT.$DATASET"
 docker run -i --volumes-from gcloud-config google/cloud-sdk:latest bq --project_id "$PROJECT" mk --dataset --description "used by playground" "$DATASET"
 
+# WARNING: must be used with a connector build with this code (to activate proxy support):
+
+#   public static class BigQueryBuilder extends GcpClientBuilder<BigQuery> {
+#     @Override
+#     protected BigQuery doBuild(String project, GoogleCredentials credentials) {
+
+#           HttpHost proxy = new HttpHost("nginx-proxy",8888);
+#           //HttpHost proxy = new HttpHost("zazkia", 49998);
+#           DefaultHttpClient httpClient = new DefaultHttpClient();
+
+#           httpClient.getParams().setParameter(ConnRoutePNames.DEFAULT_PROXY, proxy);
+
+#           ApacheHttpTransport mHttpTransport = new ApacheHttpTransport(httpClient);
+
+#                HttpTransportFactory hf = new HttpTransportFactory(){
+#                          @Override
+#                          public HttpTransport create() {
+#                               return mHttpTransport;
+#                          }
+#                     };
+
+#           TransportOptions options = HttpTransportOptions.newBuilder().setHttpTransportFactory(hf).build();
+
+#           BigQueryOptions.Builder builder = BigQueryOptions.newBuilder()
+#                .setTransportOptions(options)
+#                .setProjectId(project);
 
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.repro-96554-connection-reset-and-read-timed-out.yml"
 
-# curl --request PUT \
-#   --url http://localhost:8083/admin/loggers/com.google.cloud.bigquery \
-#   --header 'Accept: application/json' \
-#   --header 'Content-Type: application/json' \
-#   --data '{
-# 	"level": "TRACE"
-# }'
+curl --request PUT \
+  --url http://localhost:8083/admin/loggers/com.wepay.kafka.connect.bigquery \
+  --header 'Accept: application/json' \
+  --header 'Content-Type: application/json' \
+  --data '{
+	"level": "TRACE"
+}'
 
 
 log "Creating GCP BigQuery Sink connector"
@@ -62,6 +88,7 @@ curl -X PUT \
           }' \
      http://localhost:8083/connectors/gcp-bigquery-sink/config | jq .
 
+log "Sending a message"
 docker exec -i broker kafka-console-producer --broker-list broker:9092 --topic mytopic --property parse.key=true --property key.separator=, << EOF
 1,{"payload":{"price":25,"product":"foo1","id":100,"quantity":100},"schema":{"fields":[{"optional":false,"type":"int32","field":"id"},{"optional":false,"type":"string","field":"product"},{"optional":false,"type":"int32","field":"quantity"},{"optional":false,"type":"int32","field":"price"}],"type":"struct","name":"orders","optional":false}}
 EOF
@@ -76,7 +103,16 @@ grep "value1" /tmp/result.log
 
 exit 0
 
-docker exec -d --privileged --user root connect bash -c 'tcpdump -w /tmp/tcpdump.pcap -i eth0 -s 0 port 443'
+log "Sending a message"
+docker exec -i broker kafka-console-producer --broker-list broker:9092 --topic mytopic --property parse.key=true --property key.separator=, << EOF
+1,{"payload":{"price":25,"product":"foo1","id":100,"quantity":100},"schema":{"fields":[{"optional":false,"type":"int32","field":"id"},{"optional":false,"type":"string","field":"product"},{"optional":false,"type":"int32","field":"quantity"},{"optional":false,"type":"int32","field":"price"}],"type":"struct","name":"orders","optional":false}}
+EOF
 
-log "Connection timedout"
-docker exec --privileged --user root connect bash -c "iptables -D INPUT -p tcp --sport 443 -j DROP"
+log "Adding latency from nginx-proxy to connect to simulate a read timeout (hard-coded to 20 seconds)"
+add_latency nginx-proxy connect 25000ms
+
+
+# docker exec -d --privileged --user root connect bash -c 'tcpdump -w /tmp/tcpdump.pcap -i eth0 -s 0 port 443'
+
+# log "Connection timedout"
+# docker exec --privileged --user root connect bash -c "iptables -D INPUT -p tcp --sport 443 -j DROP"
