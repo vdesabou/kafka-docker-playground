@@ -81,6 +81,16 @@ then
   sed -e "s|$docker_compose_file|$docker_compose_test_file_name|g" \
       $test_file > $repro_test_file
 
+  for file in README.md docker-compose*.yml keyfile.json
+  do
+    if [ -f $file ]
+    then
+      cd $repro_dir > /dev/null
+      ln -sf ../../$dir2/$file .
+      cd - > /dev/null
+    fi
+  done
+  
   if [ "$schema_format" != "" ]
   then
     case "${schema_format}" in
@@ -111,8 +121,9 @@ then
         producer_hostname=${producer_hostname:0:20} 
         
         rm -rf $producer_hostname
-        cp -Ra ../../other/schema-format-$schema_format/producer/* $repro_dir/$producer_hostname
-        
+        mkdir -p $repro_dir/$producer_hostname/
+        cp -Ra ../../other/schema-format-$schema_format/producer/* $repro_dir/$producer_hostname/
+
         # update docker compose with producer container
         tmp_dir=$(mktemp -d -t ci-XXXXXXXXXX)
         cat << EOF > $tmp_dir/producer
@@ -182,4 +193,3 @@ else
 fi
 
 log "📂 The reproduction files are now available in: $repro_dir"
-cd $repro_dir
