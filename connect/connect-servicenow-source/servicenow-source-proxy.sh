@@ -135,9 +135,9 @@ docker exec -d --privileged --user root connect bash -c 'tcpdump -w /tmp/tcpdump
 
 # echo "$SERVICENOW_URL" | cut -d "/" -f3
 # ip=$(dig +short $(echo "$SERVICENOW_URL" | cut -d "/" -f3))
-# log "Blocking serviceNow response on nginx_proxy"
-# docker exec -i --privileged --user root nginx_proxy bash -c "apt-get update -y && apt-get install iptables -y"
-# docker exec -i --privileged --user root nginx_proxy bash -c "iptables -A INPUT -p tcp -s $ip -j DROP"
+# log "Blocking serviceNow response on nginx-proxy"
+# docker exec -i --privileged --user root nginx-proxy bash -c "apt-get update -y && apt-get install iptables -y"
+# docker exec -i --privileged --user root nginx-proxy bash -c "iptables -A INPUT -p tcp -s $ip -j DROP"
 
 
 # [2021-09-30 09:01:29,490] ERROR [servicenow-source|task-0] WorkerSourceTask{id=servicenow-source-0} Task threw an uncaught and unrecoverable exception. Task is being killed and will not recover until manually restarted (org.apache.kafka.connect.runtime.WorkerTask:184)

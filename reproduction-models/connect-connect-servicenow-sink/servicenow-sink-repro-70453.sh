@@ -169,7 +169,7 @@ log "Now simulate a 502 BAD Gateway by setting up a wrong NGINX config"
 cp ${DIR}/repro-70453/nginx_whitelist.conf /tmp/
 cp ${DIR}/repro-70453/nginx_whitelist_bad_gateway.conf ${DIR}/repro-70453/nginx_whitelist.conf
 log "Restart the proxy"
-docker restart nginx_proxy
+docker restart nginx-proxy
 
 log "Sending messages to topic test_table"
 docker exec -i connect kafka-avro-console-producer --broker-list broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic test_table --property value.schema='{"type":"record","name":"myrecord","fields":[{"name":"u_name","type":"string"},
@@ -185,7 +185,7 @@ sleep 10
 log "Now set back the original working NGINX config"
 cp /tmp/nginx_whitelist.conf ${DIR}/repro-70453/nginx_whitelist.conf
 log "Restart the proxy"
-docker restart nginx_proxy
+docker restart nginx-proxy
 
 log "Sending messages to topic test_table"
 docker exec -i connect kafka-avro-console-producer --broker-list broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic test_table --property value.schema='{"type":"record","name":"myrecord","fields":[{"name":"u_name","type":"string"},
@@ -533,4 +533,4 @@ log "The connector is now in a loop with Cannot retry request with a non-repeata
 # [2021-09-14 15:29:34,410] INFO [servicenow-sink|task-0] Closed monitoring interceptor for client_id=connector-consumer-servicenow-sink-0 client_type=CONSUMER session= cluster=p06BOwJ8SGmz9PrF3GsiBQ group=connect-servicenow-sink (io.confluent.monitoring.clients.interceptor.MonitoringInterceptor:320)
 # [2021-09-14 15:54:10,467] INFO [Worker clientId=connect-1, groupId=connect-cluster] Session key updated (org.apache.kafka.connect.runtime.distributed.DistributedHerder:1570)
 
-# 360fd6523852   plaintext_nginx_proxy                             "/bin/sh -c /usr/loc…"   3 minutes ago   Up 38 seconds   0.0.0.0:8888->8888/tcp, :::8888->8888/tcp                                                                                                 nginx_proxy
+# 360fd6523852   plaintext_nginx-proxy                             "/bin/sh -c /usr/loc…"   3 minutes ago   Up 38 seconds   0.0.0.0:8888->8888/tcp, :::8888->8888/tcp                                                                                                 nginx-proxy

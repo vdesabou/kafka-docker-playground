@@ -127,15 +127,15 @@ sleep 5
 log "Verify we have received the data in topic-servicenow topic"
 timeout 60 docker exec connect kafka-console-consumer -bootstrap-server broker:9092 --topic topic-servicenow --from-beginning --max-messages 1
 
-log "Adding latency from nginx_proxy to connect to simulate a read timeout (hard-coded to 20 seconds)"
+log "Adding latency from nginx-proxy to connect to simulate a read timeout (hard-coded to 20 seconds)"
 # connect
-latency_put=$(get_latency nginx_proxy connect)
-log "Latency from nginx_proxy to nginx_proxy BEFORE traffic control: $latency_put ms"
+latency_put=$(get_latency nginx-proxy connect)
+log "Latency from nginx-proxy to nginx-proxy BEFORE traffic control: $latency_put ms"
 
-add_latency nginx_proxy connect 25000ms
+add_latency nginx-proxy connect 25000ms
 
-latency_put=$(get_latency nginx_proxy connect)
-log "Latency from nginx_proxy to nginx_proxy AFTER traffic control: $latency_put ms"
+latency_put=$(get_latency nginx-proxy connect)
+log "Latency from nginx-proxy to nginx-proxy AFTER traffic control: $latency_put ms"
 
 docker exec --privileged --user root connect bash -c 'tcpdump -w tcpdump.pcap -i eth0 -s 0 port 8888'
 
@@ -205,10 +205,10 @@ docker exec --privileged --user root connect bash -c 'tcpdump -w tcpdump.pcap -i
 
 
 
-# With default connection.timeout.ms (50 seconds) and 60 seconds latency between nginx_proxy and connect, we get a connect timeout error (SocketTimeoutException: connect timed out), which makes sense:
+# With default connection.timeout.ms (50 seconds) and 60 seconds latency between nginx-proxy and connect, we get a connect timeout error (SocketTimeoutException: connect timed out), which makes sense:
 
 # [2021-08-02 15:42:54,104] ERROR [servicenow-source|task-0] WorkerSourceTask{id=servicenow-source-0} Task threw an uncaught and unrecoverable exception. Task is being killed and will not recover until manually restarted (org.apache.kafka.connect.runtime.WorkerTask:184)
-# io.confluent.connect.utils.retry.RetryCountExceeded: Failed after 4 attempts to send request to ServiceNow: Connect to nginx-proxy:8888 [nginx_proxy/172.19.0.3] failed: connect timed out
+# io.confluent.connect.utils.retry.RetryCountExceeded: Failed after 4 attempts to send request to ServiceNow: Connect to nginx-proxy:8888 [nginx-proxy/172.19.0.3] failed: connect timed out
 # 	at io.confluent.connect.utils.retry.RetryPolicy.callWith(RetryPolicy.java:429)
 # 	at io.confluent.connect.utils.retry.RetryPolicy.call(RetryPolicy.java:337)
 # 	at io.confluent.connect.servicenow.rest.ServiceNowClientImpl.executeRequest(ServiceNowClientImpl.java:229)
@@ -225,7 +225,7 @@ docker exec --privileged --user root connect bash -c 'tcpdump -w tcpdump.pcap -i
 # 	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1128)
 # 	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:628)
 # 	at java.base/java.lang.Thread.run(Thread.java:829)
-# Caused by: org.apache.http.conn.ConnectTimeoutException: Connect to nginx-proxy:8888 [nginx_proxy/172.19.0.3] failed: connect timed out
+# Caused by: org.apache.http.conn.ConnectTimeoutException: Connect to nginx-proxy:8888 [nginx-proxy/172.19.0.3] failed: connect timed out
 # 	at org.apache.http.impl.conn.DefaultHttpClientConnectionOperator.connect(DefaultHttpClientConnectionOperator.java:151)
 # 	at org.apache.http.impl.conn.PoolingHttpClientConnectionManager.connect(PoolingHttpClientConnectionManager.java:374)
 # 	at org.apache.http.impl.execchain.MainClientExec.establishRoute(MainClientExec.java:401)
@@ -254,7 +254,7 @@ docker exec --privileged --user root connect bash -c 'tcpdump -w tcpdump.pcap -i
 # 	at org.apache.http.impl.conn.DefaultHttpClientConnectionOperator.connect(DefaultHttpClientConnectionOperator.java:142)
 # 	... 30 more
 
-# With default connection.timeout.ms (50 seconds) and latency between nginx_proxy and connect > 20 seconds (which is the default Google HTTP read timeout value), we this error:
+# With default connection.timeout.ms (50 seconds) and latency between nginx-proxy and connect > 20 seconds (which is the default Google HTTP read timeout value), we this error:
 
 # [2021-08-02 18:17:30,818] ERROR [servicenow-source|task-0] WorkerSourceTask{id=servicenow-source-0} Task threw an uncaught and unrecoverable exception. Task is being killed and will not recover until manually restarted (org.apache.kafka.connect.runtime.WorkerTask:184)
 # io.confluent.connect.utils.retry.RetryCountExceeded: Failed after 4 attempts to send request to ServiceNow: Remote host terminated the handshake
