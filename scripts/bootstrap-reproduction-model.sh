@@ -111,7 +111,7 @@ then
         producer_hostname=${producer_hostname:0:20} 
         
         rm -rf $producer_hostname
-        cp -Ra ../../other/schema-format-$schema_format/producer $repro_dir/$producer_hostname
+        cp -Ra ../../other/schema-format-$schema_format/producer/* $repro_dir/$producer_hostname
         
         # update docker compose with producer container
         tmp_dir=$(mktemp -d -t ci-XXXXXXXXXX)
