@@ -1622,3 +1622,23 @@ function delete_ccloud_connector() {
   confluent connect delete $connectorId
   return 0
 }
+
+function wait_for_log () {
+     message="$1"
+     container=${2:-connect}
+     max_wait=${3:-600}
+     cur_wait=0
+     log "⌛ Waiting up to $max_wait seconds for message $message to be present in $container container logs..."
+     docker container logs connect > /tmp/out.txt 2>&1
+     while ! grep "$message" /tmp/out.txt > /dev/null;
+     do
+          sleep 10
+          docker container logs connect > /tmp/out.txt 2>&1
+          cur_wait=$(( cur_wait+10 ))
+          if [[ "$cur_wait" -gt "$max_wait" ]]; then
+               logerror "The logs in $container container do not show '$message' after $max_wait seconds. Please troubleshoot with 'docker container ps' and 'docker container logs'."
+               exit 1
+          fi
+     done
+     log "The message is there !"
+}
