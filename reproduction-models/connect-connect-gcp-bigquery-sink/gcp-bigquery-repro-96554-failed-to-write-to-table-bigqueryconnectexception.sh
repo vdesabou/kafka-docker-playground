@@ -131,7 +131,7 @@ sleep 125
 log "Verify data is in GCP BigQuery:"
 docker run -i --volumes-from gcloud-config google/cloud-sdk:latest bq --project_id "$PROJECT" query "SELECT * FROM $DATASET.mytopic;" > /tmp/result.log  2>&1
 cat /tmp/result.log
-grep "value1" /tmp/result.log
+grep "foo1" /tmp/result.log
 
 
 log "Simulating SocketTimeoutException: Read timed out, by pausing nginx-proxy container"
