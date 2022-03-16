@@ -8,7 +8,7 @@ services:
     environment:
       CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/wepay-kafka-connect-bigquery
       #KAFKA_OPTS: -Dhttp.proxyHost=nginx-proxy -Dhttp.proxyPort=8888 -Dhttps.proxyHost=nginx-proxy -Dhttps.proxyPort=8888 -Djava.util.logging.config.file=/tmp/logging.properties
-      KAFKA_OPTS: -Djava.util.logging.config.file=/tmp/logging.properties
+      #KAFKA_OPTS: -Djava.util.logging.config.file=/tmp/logging.properties
 
   nginx-proxy:
     build:
