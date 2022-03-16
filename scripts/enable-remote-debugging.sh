@@ -12,6 +12,9 @@ fi
 
 component=${1:-connect}
 
+# keep CONNECT TAG
+export CONNECT_TAG=$(docker inspect -f '{{.Config.Image}}' connect | cut -d ":" -f 2)
+
 if [ ! -f /tmp/playground-command ]
 then
   logerror "File containing restart command /tmp/playground-command does not exist!"
