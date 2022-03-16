@@ -1,0 +1,1 @@
+../../ccloud/fully-managed-connect-aws-s3-sink/README.md

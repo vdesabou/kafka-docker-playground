@@ -1,0 +1,57 @@
+---
+version: '3.5'
+services:
+
+  producer-repro-93917:
+    build:
+      context: ../../reproduction-models/ccloud-fully-managed-connect-aws-s3-sink/producer-repro-93917/
+    hostname: producer-repro-93917
+    container_name: producer-repro-93917
+    environment:
+      KAFKA_BOOTSTRAP_SERVERS: $BOOTSTRAP_SERVERS
+      KAFKA_SSL_ENDPOINT_IDENTIFICATION_ALGORITHM: "https"
+      KAFKA_SASL_MECHANISM: "PLAIN"
+      KAFKA_SASL_JAAS_CONFIG: $SASL_JAAS_CONFIG
+      KAFKA_SECURITY_PROTOCOL: "SASL_SSL"
+      TOPIC: "customer_avro"
+      REPLICATION_FACTOR: 1
+      NUMBER_OF_PARTITIONS: 1
+      NB_MESSAGES: -1 # -1 for MAX_VALUE
+      MESSAGE_BACKOFF: 1000 # Frequency of message injection
+      KAFKA_ACKS: "all" # default: "1"
+      KAFKA_REQUEST_TIMEOUT_MS: 20000
+      KAFKA_RETRY_BACKOFF_MS: 500
+      KAFKA_CLIENT_ID: "my-java-producer-repro-93917"
+      KAFKA_SCHEMA_REGISTRY_URL: $SCHEMA_REGISTRY_URL
+      KAFKA_BASIC_AUTH_CREDENTIALS_SOURCE: $BASIC_AUTH_CREDENTIALS_SOURCE
+      KAFKA_SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO: $SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO
+      EXTRA_ARGS: 
+    volumes:
+      - ../../environment/plaintext/jmx-exporter:/usr/share/jmx_exporter/
+
+  producer-repro-93917-2:
+    build:
+      context: ../../reproduction-models/ccloud-fully-managed-connect-aws-s3-sink/producer-repro-93917-2/
+    hostname: producer-repro-93917-2
+    container_name: producer-repro-93917-2
+    environment:
+      KAFKA_BOOTSTRAP_SERVERS: $BOOTSTRAP_SERVERS
+      KAFKA_SSL_ENDPOINT_IDENTIFICATION_ALGORITHM: "https"
+      KAFKA_SASL_MECHANISM: "PLAIN"
+      KAFKA_SASL_JAAS_CONFIG: $SASL_JAAS_CONFIG
+      KAFKA_SECURITY_PROTOCOL: "SASL_SSL"
+      TOPIC: "customer_avro"
+      REPLICATION_FACTOR: 1
+      NUMBER_OF_PARTITIONS: 1
+      NB_MESSAGES: -1 # -1 for MAX_VALUE
+      MESSAGE_BACKOFF: 1000 # Frequency of message injection
+      KAFKA_ACKS: "all" # default: "1"
+      KAFKA_REQUEST_TIMEOUT_MS: 20000
+      KAFKA_RETRY_BACKOFF_MS: 500
+      KAFKA_CLIENT_ID: "my-java-producer-repro-93917-2"
+      KAFKA_SCHEMA_REGISTRY_URL: $SCHEMA_REGISTRY_URL
+      KAFKA_BASIC_AUTH_CREDENTIALS_SOURCE: $BASIC_AUTH_CREDENTIALS_SOURCE
+      KAFKA_SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO: $SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO
+      EXTRA_ARGS: 
+    volumes:
+      - ../../environment/plaintext/jmx-exporter:/usr/share/jmx_exporter/
