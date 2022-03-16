@@ -4,6 +4,64 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
+if [ -z "$CONNECTOR_ZIP" ]
+then
+     logerror "CONNECTOR_ZIP must be set with a modified version of the connector which supports http proxy"
+
+     logerror "see https://stackoverflow.com/a/68265085/2381999"
+     logerror "  public static class BigQueryBuilder extends GcpClientBuilder<BigQuery> {"
+     logerror "    @Override"
+     logerror "    protected BigQuery doBuild(String project, GoogleCredentials credentials) {"
+     logerror ""
+     logerror "          HttpHost proxy = new HttpHost("nginx-proxy",8888);"
+     logerror "          //HttpHost proxy = new HttpHost("zazkia", 49998);"
+     logerror "          DefaultHttpClient httpClient = new DefaultHttpClient();"
+     logerror ""
+     logerror "          httpClient.getParams().setParameter(ConnRoutePNames.DEFAULT_PROXY, proxy);"
+     logerror ""
+     logerror "          ApacheHttpTransport mHttpTransport = new ApacheHttpTransport(httpClient);"
+     logerror ""
+     logerror "               HttpTransportFactory hf = new HttpTransportFactory(){"
+     logerror "                         @Override"
+     logerror "                         public HttpTransport create() {"
+     logerror "                              return mHttpTransport;"
+     logerror "                         }"
+     logerror "                    };"
+     logerror ""
+     logerror "          TransportOptions options = HttpTransportOptions.newBuilder().setHttpTransportFactory(hf).build();"
+     logerror ""
+     logerror "          BigQueryOptions.Builder builder = BigQueryOptions.newBuilder()"
+     logerror "               .setTransportOptions(options)"
+     logerror "               .setProjectId(project);"
+     exit 1
+fi
+# WARNING: must be used with a connector build with this code (to activate proxy support):
+# https://stackoverflow.com/a/68265085/2381999
+#   public static class BigQueryBuilder extends GcpClientBuilder<BigQuery> {
+#     @Override
+#     protected BigQuery doBuild(String project, GoogleCredentials credentials) {
+
+#           HttpHost proxy = new HttpHost("nginx-proxy",8888);
+#           //HttpHost proxy = new HttpHost("zazkia", 49998);
+#           DefaultHttpClient httpClient = new DefaultHttpClient();
+
+#           httpClient.getParams().setParameter(ConnRoutePNames.DEFAULT_PROXY, proxy);
+
+#           ApacheHttpTransport mHttpTransport = new ApacheHttpTransport(httpClient);
+
+#                HttpTransportFactory hf = new HttpTransportFactory(){
+#                          @Override
+#                          public HttpTransport create() {
+#                               return mHttpTransport;
+#                          }
+#                     };
+
+#           TransportOptions options = HttpTransportOptions.newBuilder().setHttpTransportFactory(hf).build();
+
+#           BigQueryOptions.Builder builder = BigQueryOptions.newBuilder()
+#                .setTransportOptions(options)
+#                .setProjectId(project);
+
 PROJECT=${1:-vincent-de-saboulin-lab}
 
 KEYFILE="${DIR}/keyfile.json"
@@ -30,32 +88,6 @@ set -e
 log "Create dataset $PROJECT.$DATASET"
 docker run -i --volumes-from gcloud-config google/cloud-sdk:latest bq --project_id "$PROJECT" mk --dataset --description "used by playground" "$DATASET"
 
-# WARNING: must be used with a connector build with this code (to activate proxy support):
-
-#   public static class BigQueryBuilder extends GcpClientBuilder<BigQuery> {
-#     @Override
-#     protected BigQuery doBuild(String project, GoogleCredentials credentials) {
-
-#           HttpHost proxy = new HttpHost("nginx-proxy",8888);
-#           //HttpHost proxy = new HttpHost("zazkia", 49998);
-#           DefaultHttpClient httpClient = new DefaultHttpClient();
-
-#           httpClient.getParams().setParameter(ConnRoutePNames.DEFAULT_PROXY, proxy);
-
-#           ApacheHttpTransport mHttpTransport = new ApacheHttpTransport(httpClient);
-
-#                HttpTransportFactory hf = new HttpTransportFactory(){
-#                          @Override
-#                          public HttpTransport create() {
-#                               return mHttpTransport;
-#                          }
-#                     };
-
-#           TransportOptions options = HttpTransportOptions.newBuilder().setHttpTransportFactory(hf).build();
-
-#           BigQueryOptions.Builder builder = BigQueryOptions.newBuilder()
-#                .setTransportOptions(options)
-#                .setProjectId(project);
 
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.repro-96554-connection-reset-and-read-timed-out.yml"
 
