@@ -1,0 +1,20 @@
+---
+version: '3.5'
+services:
+  connect:
+    volumes:
+        - ../../connect/connect-gcp-bigquery-sink/keyfile.json:/tmp/keyfile.json:ro
+        - ../../reproduction-models/connect-connect-gcp-bigquery-sink/repro-96554-nginx-proxy/logging.properties:/tmp/logging.properties
+    environment:
+      CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/wepay-kafka-connect-bigquery
+      #KAFKA_OPTS: -Dhttp.proxyHost=nginx-proxy -Dhttp.proxyPort=8888 -Dhttps.proxyHost=nginx-proxy -Dhttps.proxyPort=8888 -Djava.util.logging.config.file=/tmp/logging.properties
+      KAFKA_OPTS: -Djava.util.logging.config.file=/tmp/logging.properties
+
+  zazkia:
+    hostname: zazkia
+    container_name: zazkia
+    image: emicklei/zazkia
+    ports:
+      - "9191:9191"
+    volumes:
+      - ../../reproduction-models/connect-connect-gcp-bigquery-sink/repro-96554-zazkia:/data
