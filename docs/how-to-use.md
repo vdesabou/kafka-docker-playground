@@ -310,3 +310,41 @@ value.converter.schema.registry.url=http://schema-registry:8081
 value.converter.schemas.enable=false
 value.converter=io.confluent.connect.avro.AvroConverter
 ```
+
+## ♻️ Re-create containers
+
+Because the playground uses **[Docker override](/how-it-works?id=🐳-docker-override)**, not all configuration parameters are in same `docker-compose.yml` file and also `docker-compose` files in the playground depends on environment variables to be set.
+
+For these reasons, if you want to make a change in one of the `docker-compose` files (without restarting the test from scratch), it is not simply a matter of doing `docker-compose up -d` 😅 !
+
+However, when you execute an example, you get in the output the command to run in order to easily re-create modified container(s) 🥳.
+
+*Example:*
+
+```bash
+12:02:18 ℹ️ ✨If you modify a docker-compose file and want to re-create the container(s),
+ run ../../scripts/recreate-containers.sh or use this command:
+12:02:18 ℹ️ ✨source ../../scripts/utils.sh && docker-compose -f ../../environment/plaintext/docker-compose.yml -f docker-compose.plaintext.yml --profile control-center up -d
+```
+
+So you can modify one of the `docker-compose` files (in that case either [`environment/plaintext/docker-compose.yml`](https://github.com/vdesabou/kafka-docker-playground/blob/master/environment/plaintext/docker-compose.yml) or [`connect/connect-http-sink/docker-compose.plaintext.yml`](https://github.com/vdesabou/kafka-docker-playground/blob/master/connect/connect-http-sink/docker-compose.plaintext.yml)), and then run the suggested command:
+
+*Example:*
+
+After editing [`connect/connect-http-sink/docker-compose.plaintext.yml`](https://github.com/vdesabou/kafka-docker-playground/blob/master/connect/connect-http-sink/docker-compose.plaintext.yml) and updated both `connect` and `http-service-no-auth`, the suggested command was ran:
+
+```bash
+$ ../../scripts/recreate-containers.sh
+http-service-ssl-basic-auth is up-to-date
+http-service-oauth2-auth is up-to-date
+Recreating http-service-no-auth ... 
+zookeeper is up-to-date
+http-service-no-auth-500 is up-to-date
+http-service-mtls-auth is up-to-date
+http-service-basic-auth-204 is up-to-date
+http-service-basic-auth is up-to-date
+broker is up-to-date
+Recreating http-service-no-auth ... done
+Recreating connect              ... done
+control-center is up-to-date
+```
