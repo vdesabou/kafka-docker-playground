@@ -50,21 +50,27 @@ description_kebab_case=$(echo "$description_kebab_case" | tr '[:upper:]' '[:lowe
 
 if [ "${docker_compose_file}" != "" ] && [ -f "${docker_compose_file}" ]
 then
-  topic_name="customer-$schema_format"
-  topic_name=$(echo $topic_name | tr '-' '_')
-  filename=$(basename -- "$test_file")
-  extension="${filename##*.}"
-  filename="${filename%.*}"
-  
-  base1="${test_file_directory##*/}" # connect-cdc-oracle12-source
-  dir1="${test_file_directory%/*}" #connect
-  dir2="${dir1##*/}/$base1" # connect/connect-cdc-oracle12-source
-  final_dir=$(echo $dir2 | tr '/' '-') # connect-connect-cdc-oracle12-source
-  repro_dir=$root_folder/reproduction-models/$final_dir
-  mkdir -p $repro_dir
+  docker_compose_file=""
+  logwarn "📁 Could not determine docker-compose override file from $test_file !"
+fi
 
-  repro_test_file="$repro_dir/$filename-repro-$description_kebab_case.$extension"
+topic_name="customer-$schema_format"
+topic_name=$(echo $topic_name | tr '-' '_')
+filename=$(basename -- "$test_file")
+extension="${filename##*.}"
+filename="${filename%.*}"
 
+base1="${test_file_directory##*/}" # connect-cdc-oracle12-source
+dir1="${test_file_directory%/*}" #connect
+dir2="${dir1##*/}/$base1" # connect/connect-cdc-oracle12-source
+final_dir=$(echo $dir2 | tr '/' '-') # connect-connect-cdc-oracle12-source
+repro_dir=$root_folder/reproduction-models/$final_dir
+mkdir -p $repro_dir
+
+repro_test_file="$repro_dir/$filename-repro-$description_kebab_case.$extension"
+
+if [ "${docker_compose_file}" != "" ]
+then
   filename=$(basename -- "$PWD/$docker_compose_file")
   extension="${filename##*.}"
   filename="${filename%.*}"
@@ -75,58 +81,64 @@ then
   cp $PWD/$docker_compose_file $docker_compose_test_file
 
   docker_compose_test_file_name=$(basename -- "$docker_compose_test_file")
+fi
 
-  log "🎩 Creating file $repro_test_file"
-  rm -f $repro_test_file
+log "🎩 Creating file $repro_test_file"
+rm -f $repro_test_file
+if [ "${docker_compose_file}" != "" ]
+then
   sed -e "s|$docker_compose_file|$docker_compose_test_file_name|g" \
-      $test_file > $repro_test_file
+    $test_file > $repro_test_file
+else
+  cp $test_file $repro_test_file
+fi
 
-  for file in README.md docker-compose*.yml keyfile.json
-  do
-    if [ -f $file ]
-    then
-      cd $repro_dir > /dev/null
-      ln -sf ../../$dir2/$file .
-      cd - > /dev/null
-    fi
-  done
-  
-  if [ "$schema_format" != "" ]
+for file in README.md docker-compose*.yml keyfile.json
+do
+  if [ -f $file ]
   then
-    case "${schema_format}" in
-      avro)
-      ;;
-      json-schema)
-      ;;
-      protobuf)
-      ;;
-      *)
-        logerror "ERROR: schema_format name not valid ! Should be one of avro, json-schema or protobuf"
-        exit 1
-      ;;
-    esac
-        original_topic_name=$(grep "\"topics\"" $repro_test_file | cut -d "\"" -f 4)
-        if [ "$original_topic_name" != "" ]
-        then
-          tmp=$(echo $original_topic_name | tr '-' '\-')
-          sed -e "s|$tmp|$topic_name|g" \
-              $repro_test_file > /tmp/tmp
+    cd $repro_dir > /dev/null
+    ln -sf ../../$dir2/$file .
+    cd - > /dev/null
+  fi
+done
+  
+if [ "$schema_format" != "" ]
+then
+  case "${schema_format}" in
+    avro)
+    ;;
+    json-schema)
+    ;;
+    protobuf)
+    ;;
+    *)
+      logerror "ERROR: schema_format name not valid ! Should be one of avro, json-schema or protobuf"
+      exit 1
+    ;;
+  esac
+      original_topic_name=$(grep "\"topics\"" $repro_test_file | cut -d "\"" -f 4)
+      if [ "$original_topic_name" != "" ]
+      then
+        tmp=$(echo $original_topic_name | tr '-' '\-')
+        sed -e "s|$tmp|$topic_name|g" \
+            $repro_test_file > /tmp/tmp
 
-          mv /tmp/tmp $repro_test_file
-          # log "🎩 Replacing topic $original_topic_name with $topic_name"
-        fi
+        mv /tmp/tmp $repro_test_file
+        # log "🎩 Replacing topic $original_topic_name with $topic_name"
+      fi
 
-        # looks like there is a maximum size for hostname in docker (container init caused: sethostname: invalid argument: unknown)
-        producer_hostname="producer-repro-$description_kebab_case"
-        producer_hostname=${producer_hostname:0:20} 
-        
-        rm -rf $producer_hostname
-        mkdir -p $repro_dir/$producer_hostname/
-        cp -Ra ../../other/schema-format-$schema_format/producer/* $repro_dir/$producer_hostname/
+      # looks like there is a maximum size for hostname in docker (container init caused: sethostname: invalid argument: unknown)
+      producer_hostname="producer-repro-$description_kebab_case"
+      producer_hostname=${producer_hostname:0:20} 
+      
+      rm -rf $producer_hostname
+      mkdir -p $repro_dir/$producer_hostname/
+      cp -Ra ../../other/schema-format-$schema_format/producer/* $repro_dir/$producer_hostname/
 
-        # update docker compose with producer container
-        tmp_dir=$(mktemp -d -t ci-XXXXXXXXXX)
-        cat << EOF > $tmp_dir/producer
+      # update docker compose with producer container
+      tmp_dir=$(mktemp -d -t ci-XXXXXXXXXX)
+      cat << EOF > $tmp_dir/producer
 
 
   $producer_hostname:
@@ -150,10 +162,11 @@ then
     volumes:
       - ../../environment/plaintext/jmx-exporter:/usr/share/jmx_exporter/
 EOF
-      log "🎩 Adding Java $schema_format producer in $repro_dir/$producer_hostname"
-      cat $tmp_dir/producer >> $docker_compose_test_file
 
-        cat << EOF > $tmp_dir/build_producer
+  log "🎩 Adding Java $schema_format producer in $repro_dir/$producer_hostname"
+  cat $tmp_dir/producer >> $docker_compose_test_file
+
+  cat << EOF > $tmp_dir/build_producer
 for component in $producer_hostname
 do
     set +e
@@ -169,27 +182,24 @@ do
 done
 
 EOF
-      # log "🎩 Adding command to build jar for $producer_hostname to $repro_test_file"
-      cp $repro_test_file $tmp_dir/tmp_file
-      line=$(grep -n '${DIR}/../../environment' $repro_test_file | cut -d ":" -f 1 | head -n1)
-      
-      { head -n $(($line-1)) $tmp_dir/tmp_file; cat $tmp_dir/build_producer; tail -n +$line $tmp_dir/tmp_file; } > $repro_test_file
+  # log "🎩 Adding command to build jar for $producer_hostname to $repro_test_file"
+  cp $repro_test_file $tmp_dir/tmp_file
+  line=$(grep -n '${DIR}/../../environment' $repro_test_file | cut -d ":" -f 1 | head -n1)
+  
+  { head -n $(($line-1)) $tmp_dir/tmp_file; cat $tmp_dir/build_producer; tail -n +$line $tmp_dir/tmp_file; } > $repro_test_file
 
-        cat << EOF > $tmp_dir/java_producer
+    cat << EOF > $tmp_dir/java_producer
 
 # 🚨🚨🚨 FIXTHIS: move it to the correct place 🚨🚨🚨
 log "✨ Run the $schema_format java producer which produces to topic $topic_name"
 docker exec $producer_hostname bash -c "java -jar producer-1.0.0-jar-with-dependencies.jar"
 
 EOF
-      # log "🎩 Adding command to run producer to $repro_test_file"
-      cp $repro_test_file $tmp_dir/tmp_file
-      { head -n $(($line-1)) $tmp_dir/tmp_file; cat $tmp_dir/java_producer; tail -n +$line $tmp_dir/tmp_file; } > $repro_test_file
-  fi
-  chmod u+x $repro_test_file
-else
-  logerror "📁 Could not determine docker-compose override file from $test_file !"
-  exit 1
+  # log "🎩 Adding command to run producer to $repro_test_file"
+  cp $repro_test_file $tmp_dir/tmp_file
+  { head -n $(($line-1)) $tmp_dir/tmp_file; cat $tmp_dir/java_producer; tail -n +$line $tmp_dir/tmp_file; } > $repro_test_file
 fi
+
+chmod u+x $repro_test_file
 
 log "📂 The reproduction files are now available in: $repro_dir"
