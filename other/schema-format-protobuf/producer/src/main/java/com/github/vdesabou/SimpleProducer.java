@@ -27,6 +27,7 @@ import uk.co.jemos.podam.api.PodamFactoryImpl;
 import uk.co.jemos.podam.api.PodamFactory;
 import org.jeasy.random.EasyRandom;
 import org.jeasy.random.EasyRandomParameters;
+import com.github.javafaker.Faker;
 
 public class SimpleProducer {
 
@@ -44,15 +45,15 @@ public class SimpleProducer {
 
     public SimpleProducer() throws ExecutionException, InterruptedException {
         properties = buildProperties(defaultProps, System.getenv(), KAFKA_ENV_PREFIX);
-        topicName = System.getenv().getOrDefault("TOPIC","sample");
-        messageBackOff = Long.valueOf(System.getenv().getOrDefault("MESSAGE_BACKOFF","100"));
+        topicName = System.getenv().getOrDefault("TOPIC", "sample");
+        messageBackOff = Long.valueOf(System.getenv().getOrDefault("MESSAGE_BACKOFF", "100"));
+
+        final Integer numberOfPartitions = Integer.valueOf(System.getenv().getOrDefault("NUMBER_OF_PARTITIONS", "2"));
+        final Short replicationFactor = Short.valueOf(System.getenv().getOrDefault("REPLICATION_FACTOR", "3"));
         nbMessages = Long.valueOf(System.getenv().getOrDefault("NB_MESSAGES", "10"));
         if (nbMessages == -1) {
             nbMessages = Long.MAX_VALUE;
         }
-
-        final Integer numberOfPartitions =  Integer.valueOf(System.getenv().getOrDefault("NUMBER_OF_PARTITIONS","2"));
-        final Short replicationFactor =  Short.valueOf(System.getenv().getOrDefault("REPLICATION_FACTOR","3"));
 
         AdminClient adminClient = KafkaAdminClient.create(properties);
         createTopic(adminClient, topicName, numberOfPartitions, replicationFactor);
@@ -63,16 +64,16 @@ public class SimpleProducer {
 
         logger.info("Sending data to `{}` topic", topicName);
 
-       // PodamFactory factory = new PodamFactoryImpl();
+        // PodamFactory factory = new PodamFactoryImpl();
         EasyRandomParameters parameters = new EasyRandomParameters()
-        //.seed(123L)
-        .objectPoolSize(10)
-        .randomizationDepth(10)
-        .stringLengthRange(1, 5)
-        .collectionSizeRange(1, 1)
-        .scanClasspathForConcreteTypes(true)
-        .overrideDefaultInitialization(false)
-        .ignoreRandomizationErrors(false);
+                // .seed(123L)
+                .objectPoolSize(10)
+                .randomizationDepth(10)
+                .stringLengthRange(1, 15)
+                .collectionSizeRange(1, 1)
+                .scanClasspathForConcreteTypes(true)
+                .overrideDefaultInitialization(false)
+                .ignoreRandomizationErrors(false);
         EasyRandom generator = new EasyRandom(parameters);
 
         try (Producer<Long, Customer> producer = new KafkaProducer<>(properties)) {
@@ -81,13 +82,20 @@ public class SimpleProducer {
 
                 // This will use constructor with minimum arguments and
                 // then setters to populate POJO
-                //Customer customer = factory.manufacturePojo(Customer.class);
+                // Customer customer = factory.manufacturePojo(Customer.class);
+
+                // Customer customer = Customer.newBuilder()
+                // .setCount(id)
+                // .setFirstName(faker.name().firstName())
+                // .setLastName(faker.name().lastName())
+                // .setAddress(faker.address().streetAddress())
+                // .build();
 
                 Customer customer = generator.nextObject(Customer.class);
 
                 ProducerRecord<Long, Customer> record = new ProducerRecord<>(topicName, id, customer);
                 logger.info("Sending Key = {}, Value = {}", record.key(), record.value());
-                producer.send(record,(recordMetadata, exception) -> sendCallback(record, recordMetadata,exception));
+                producer.send(record, (recordMetadata, exception) -> sendCallback(record, recordMetadata, exception));
                 id++;
                 TimeUnit.MILLISECONDS.sleep(messageBackOff);
             }
@@ -111,14 +119,13 @@ public class SimpleProducer {
         Map<String, String> systemProperties = envProps.entrySet()
                 .stream()
                 .filter(e -> e.getKey().startsWith(prefix))
-                .filter(e -> ! e.getValue().isEmpty())
+                .filter(e -> !e.getValue().isEmpty())
                 .collect(Collectors.toMap(
                         e -> e.getKey()
                                 .replace(prefix, "")
                                 .toLowerCase()
-                                .replace("_", ".")
-                        , e -> e.getValue())
-                );
+                                .replace("_", "."),
+                        e -> e.getValue()));
 
         Properties props = new Properties();
         props.putAll(baseProps);
@@ -126,11 +133,14 @@ public class SimpleProducer {
         return props;
     }
 
-    private void createTopic(AdminClient adminClient, String topicName, Integer numberOfPartitions, Short replicationFactor) throws InterruptedException, ExecutionException {
+    private void createTopic(AdminClient adminClient, String topicName, Integer numberOfPartitions,
+            Short replicationFactor) throws InterruptedException, ExecutionException {
         if (!adminClient.listTopics().names().get().contains(topicName)) {
             logger.info("Creating topic {}", topicName);
 
-            final Map<String, String> configs = replicationFactor < 3 ? Map.of(TopicConfig.MIN_IN_SYNC_REPLICAS_CONFIG, "1") : Map.of();
+            final Map<String, String> configs = replicationFactor < 3
+                    ? Map.of(TopicConfig.MIN_IN_SYNC_REPLICAS_CONFIG, "1")
+                    : Map.of();
 
             final NewTopic newTopic = new NewTopic(topicName, numberOfPartitions, replicationFactor);
             newTopic.configs(configs);
@@ -138,7 +148,7 @@ public class SimpleProducer {
                 CreateTopicsResult topicsCreationResult = adminClient.createTopics(Collections.singleton(newTopic));
                 topicsCreationResult.all().get();
             } catch (ExecutionException e) {
-                //silent ignore if topic already exists
+                // silent ignore if topic already exists
             }
         }
     }

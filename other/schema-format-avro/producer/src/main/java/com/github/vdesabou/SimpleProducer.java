@@ -68,7 +68,7 @@ public class SimpleProducer {
                 // .seed(123L)
                 .objectPoolSize(10)
                 .randomizationDepth(10)
-                .stringLengthRange(1, 5)
+                .stringLengthRange(1, 15)
                 .collectionSizeRange(1, 1)
                 .scanClasspathForConcreteTypes(true)
                 .overrideDefaultInitialization(false)
