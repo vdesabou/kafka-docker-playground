@@ -44,11 +44,11 @@ fi
 test_file_directory="$(dirname "${test_file}")"
 
 # determining the connector from test_file
-docker_compose_file=$(grep "environment" "$test_file" | grep DIR | grep start.sh | cut -d "/" -f 7 | cut -d '"' -f 1 | head -n1)
+docker_compose_file=$(grep "environment" "$test_file" | grep DIR | grep start.sh | cut -d "/" -f 7 | cut -d '"' -f 1 | head -n1 | xargs)
 description_kebab_case="${description// /-}"
 description_kebab_case=$(echo "$description_kebab_case" | tr '[:upper:]' '[:lower:]')
 
-if [ "${docker_compose_file}" != "" ] && [ -f "${docker_compose_file}" ]
+if [ "${docker_compose_file}" != "" ] && [ ! -f "${docker_compose_file}" ]
 then
   docker_compose_file=""
   logwarn "📁 Could not determine docker-compose override file from $test_file !"
