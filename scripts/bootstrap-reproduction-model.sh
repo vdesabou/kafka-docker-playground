@@ -166,7 +166,11 @@ EOF
   if [ "${docker_compose_file}" != "" ]
   then
     log "🎩 Adding Java $schema_format producer in $repro_dir/$producer_hostname"
-    cat $tmp_dir/producer >> $docker_compose_test_file
+    cp $docker_compose_test_file $tmp_dir/tmp_file
+    line=$(grep -n 'services:' $docker_compose_test_file | cut -d ":" -f 1 | tail -n1)
+    
+    { head -n $(($line)) $tmp_dir/tmp_file; cat $tmp_dir/producer; tail -n +$(($line+1)) $tmp_dir/tmp_file; } > $docker_compose_test_file
+
   else 
     logwarn "As docker-compose override file could not be determined, you will need to add this manually:"
     cat $tmp_dir/producer
