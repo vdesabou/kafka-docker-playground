@@ -435,6 +435,7 @@ services:
     ports:
       - 3000:3000
     volumes:
-      - ../../other/monitoring-demo/grafana/provisioning/:/etc/grafana/provisioning/
+      - ./grafana/provisioning/:/etc/grafana/provisioning/
+      - ./grafana/config/grafana.ini:/etc/grafana/grafana.ini
     depends_on:
       - prometheus

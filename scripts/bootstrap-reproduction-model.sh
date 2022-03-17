@@ -157,7 +157,7 @@ then
       KAFKA_RETRY_BACKOFF_MS: 500
       KAFKA_CLIENT_ID: "my-java-$producer_hostname"
       KAFKA_SCHEMA_REGISTRY_URL: "http://schema-registry:8081"
-      EXTRA_ARGS: ${GRAFANA_AGENT_BROKER}
+      JAVA_OPTS: ${GRAFANA_AGENT_PRODUCER}
     volumes:
       - ../../environment/plaintext/jmx-exporter:/usr/share/jmx_exporter/
 
