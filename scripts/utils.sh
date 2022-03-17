@@ -192,10 +192,14 @@ then
   export GRAFANA_AGENT_ZK=""
   export GRAFANA_AGENT_BROKER=""
   export GRAFANA_AGENT_CONNECT=""
+  export GRAFANA_AGENT_PRODUCER=""
+  export GRAFANA_AGENT_CONSUMER=""
 else
   export GRAFANA_AGENT_ZK="-javaagent:/usr/share/jmx_exporter/jmx_prometheus_javaagent-0.16.1.jar=1234:/usr/share/jmx_exporter/zookeeper.yml"
   export GRAFANA_AGENT_BROKER="-javaagent:/usr/share/jmx_exporter/jmx_prometheus_javaagent-0.16.1.jar=1234:/usr/share/jmx_exporter/broker.yml"
   export GRAFANA_AGENT_CONNECT="-javaagent:/usr/share/jmx_exporter/jmx_prometheus_javaagent-0.16.1.jar=1234:/usr/share/jmx_exporter/connect.yml"
+  export GRAFANA_AGENT_PRODUCER="-javaagent:/usr/share/jmx_exporter/jmx_prometheus_javaagent-0.16.1.jar=1234:/usr/share/jmx_exporter/kafka-producer.yml"
+  export GRAFANA_AGENT_CONSUMER="-javaagent:/usr/share/jmx_exporter/jmx_prometheus_javaagent-0.16.1.jar=1234:/usr/share/jmx_exporter/kafka-consumer.yml"
 fi
 
 # Migrate SimpleAclAuthorizer to AclAuthorizer #1276
@@ -1035,7 +1039,7 @@ function display_jmx_info() {
   then
     log "📊 JMX metrics are available locally on those ports:"
   else
-    log "📊 Grafana is reachable at http://127.0.0.1:3000 (login/password is admin/admin) or JMX metrics are available locally on those ports:"
+    log "📊 Grafana is reachable at http://127.0.0.1:3000 or JMX metrics are available locally on those ports:"
   fi  
   log "    - zookeeper       : 9999"
   log "    - broker          : 10000"
