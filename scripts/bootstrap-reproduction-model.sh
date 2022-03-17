@@ -143,7 +143,7 @@ then
   $producer_hostname:
     build:
       context: ../../reproduction-models/$final_dir/$producer_hostname/
-    hostname: $producer_hostname
+    hostname: producer
     container_name: $producer_hostname
     environment:
       KAFKA_BOOTSTRAP_SERVERS: broker:9092
@@ -203,7 +203,7 @@ EOF
 
 # 🚨🚨🚨 FIXTHIS: move it to the correct place 🚨🚨🚨
 log "✨ Run the $schema_format java producer which produces to topic $topic_name"
-docker exec $producer_hostname bash -c "java -jar producer-1.0.0-jar-with-dependencies.jar"
+docker exec $producer_hostname bash -c "java \${JAVA_OPTS} -jar producer-1.0.0-jar-with-dependencies.jar"
 
 EOF
   # log "🎩 Adding command to run producer to $repro_test_file"
