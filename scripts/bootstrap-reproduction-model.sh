@@ -163,8 +163,14 @@ then
       - ../../environment/plaintext/jmx-exporter:/usr/share/jmx_exporter/
 EOF
 
-  log "🎩 Adding Java $schema_format producer in $repro_dir/$producer_hostname"
-  cat $tmp_dir/producer >> $docker_compose_test_file
+  if [ "${docker_compose_file}" != "" ]
+  then
+    log "🎩 Adding Java $schema_format producer in $repro_dir/$producer_hostname"
+    cat $tmp_dir/producer >> $docker_compose_test_file
+  else 
+    logwarn "As docker-compose override file could not be determined, you will need to add this manually:"
+    cat $tmp_dir/producer
+  fi
 
   cat << EOF > $tmp_dir/build_producer
 for component in $producer_hostname
