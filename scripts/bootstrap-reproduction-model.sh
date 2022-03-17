@@ -190,7 +190,7 @@ done
 EOF
   # log "🎩 Adding command to build jar for $producer_hostname to $repro_test_file"
   cp $repro_test_file $tmp_dir/tmp_file
-  line=$(grep -n '${DIR}/../../environment' $repro_test_file | cut -d ":" -f 1 | head -n1)
+  line=$(grep -n '${DIR}/../../environment' $repro_test_file | cut -d ":" -f 1 | tail -n1)
   
   { head -n $(($line-1)) $tmp_dir/tmp_file; cat $tmp_dir/build_producer; tail -n +$line $tmp_dir/tmp_file; } > $repro_test_file
 
