@@ -140,7 +140,6 @@ then
       tmp_dir=$(mktemp -d -t ci-XXXXXXXXXX)
       cat << EOF > $tmp_dir/producer
 
-
   $producer_hostname:
     build:
       context: ../../reproduction-models/$final_dir/$producer_hostname/
@@ -161,6 +160,8 @@ then
       EXTRA_ARGS: ${GRAFANA_AGENT_BROKER}
     volumes:
       - ../../environment/plaintext/jmx-exporter:/usr/share/jmx_exporter/
+
+
 EOF
 
   if [ "${docker_compose_file}" != "" ]
