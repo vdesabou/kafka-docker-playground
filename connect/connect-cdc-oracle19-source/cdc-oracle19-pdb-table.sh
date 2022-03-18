@@ -79,7 +79,7 @@ log "Waiting 60s for connector to read existing data"
 sleep 60
 
 log "Running SQL scripts"
-for script in ${DIR}/sample-sql-scripts/*.sh
+for script in ../../connect/connect-cdc-oracle19-source/sample-sql-scripts/*.sh
 do
      $script "ORCLPDB1"
 done
