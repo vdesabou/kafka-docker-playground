@@ -177,8 +177,8 @@ curl -X PUT \
           }' \
      http://localhost:8083/connectors/cdc-oracle-source-cdb/config | jq .
 
-log "Waiting 60s for connector to read existing data"
-sleep 60
+log "Waiting 20s for connector to read existing data"
+sleep 20
 
 log "Verifying topic ORCLCDB.C__MYUSER.CUSTOMERS: there should be 5 records"
 set +e

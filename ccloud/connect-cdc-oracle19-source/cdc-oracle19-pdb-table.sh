@@ -107,8 +107,8 @@ curl -X PUT \
           }' \
      http://localhost:8083/connectors/cdc-oracle-source-pdb-cloud/config | jq .
 
-log "Waiting 60s for connector to read existing data"
-sleep 60
+log "Waiting 20s for connector to read existing data"
+sleep 20
 
 log "Running SQL scripts"
 for script in ${DIR}/sample-sql-scripts/*.sh
