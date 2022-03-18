@@ -62,7 +62,7 @@ log "Waiting 10s for connector to read existing data"
 sleep 10
 
 log "Running SQL scripts"
-for script in ${DIR}/sample-sql-scripts/*.sh
+for script in ../../connect/connect-cdc-oracle11-source/sample-sql-scripts/*.sh
 do
      $script
 done
