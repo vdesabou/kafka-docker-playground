@@ -76,14 +76,14 @@ then
   filename="${filename%.*}"
 
   docker_compose_test_file="$repro_dir/$filename.repro-$description_kebab_case.$extension"
-  log "🎩 Creating file $docker_compose_test_file"
+  log "✨ Creating file $docker_compose_test_file"
   rm -f $docker_compose_test_file
   cp $PWD/$docker_compose_file $docker_compose_test_file
 
   docker_compose_test_file_name=$(basename -- "$docker_compose_test_file")
 fi
 
-log "🎩 Creating file $repro_test_file"
+log "✨ Creating file $repro_test_file"
 rm -f $repro_test_file
 if [ "${docker_compose_file}" != "" ]
 then
@@ -107,10 +107,42 @@ if [ "$schema_format" != "" ]
 then
   case "${schema_format}" in
     avro)
+      echo ""
+      log "value converter should be set with:"
+      echo "\"value.converter\": \"io.confluent.connect.avro.AvroConverter\","
+      echo "\"value.converter.schema.registry.url\": \"http://schema-registry:8081\","
+
+      echo ""
+      log "Examples to consume:"
+      log "1️⃣ Simplest"
+      echo "docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic a-topic --from-beginning --max-messages 1"
+      log "2️⃣ Displaying key:"
+      echo "docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic a-topic --property print.key=true --property key.separator=, --from-beginning --max-messages 1"
     ;;
     json-schema)
+      echo ""
+      log "value converter should be set with:"
+      echo "\"value.converter\": \"io.confluent.connect.json.JsonSchemaConverter\","
+      echo "\"value.converter.schema.registry.url\": \"http://schema-registry:8081\","
+
+      echo ""
+      log "Examples to consume:"
+      log "1️⃣ Simplest"
+      echo "docker exec connect kafka-json-schema-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic a-topic --from-beginning --max-messages 1"
+      log "2️⃣ Displaying key:"
+      echo "docker exec connect kafka-json-schema-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic a-topic --property print.key=true --property key.separator=, --from-beginning --max-messages 1"
     ;;
     protobuf)
+      log "value converter should be set with:"
+      echo "\"value.converter\": \"io.confluent.connect.protobuf.ProtobufConverter\","
+      echo "\"value.converter.schema.registry.url\": \"http://schema-registry:8081\","
+
+      echo ""
+      log "Examples to consume:"
+      log "1️⃣ Simplest"
+      echo "docker exec connect kafka-protobuf-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic a-topic --from-beginning --max-messages 1"
+      log "2️⃣ Displaying key:"
+      echo "docker exec connect kafka-protobuf-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic a-topic --property print.key=true --property key.separator=, --from-beginning --max-messages 1"
     ;;
     *)
       logerror "ERROR: schema_format name not valid ! Should be one of avro, json-schema or protobuf"
@@ -125,7 +157,7 @@ then
             $repro_test_file > /tmp/tmp
 
         mv /tmp/tmp $repro_test_file
-        # log "🎩 Replacing topic $original_topic_name with $topic_name"
+        # log "✨ Replacing topic $original_topic_name with $topic_name"
       fi
 
       # looks like there is a maximum size for hostname in docker (container init caused: sethostname: invalid argument: unknown)
@@ -166,7 +198,7 @@ EOF
 
   if [ "${docker_compose_file}" != "" ]
   then
-    log "🎩 Adding Java $schema_format producer in $repro_dir/$producer_hostname"
+    log "✨ Adding Java $schema_format producer in $repro_dir/$producer_hostname"
     cp $docker_compose_test_file $tmp_dir/tmp_file
     line=$(grep -n 'services:' $docker_compose_test_file | cut -d ":" -f 1 | tail -n1)
     
@@ -193,7 +225,7 @@ do
 done
 
 EOF
-  # log "🎩 Adding command to build jar for $producer_hostname to $repro_test_file"
+  # log "✨ Adding command to build jar for $producer_hostname to $repro_test_file"
   cp $repro_test_file $tmp_dir/tmp_file
   line=$(grep -n '${DIR}/../../environment' $repro_test_file | cut -d ":" -f 1 | tail -n1)
   
@@ -206,11 +238,11 @@ log "✨ Run the $schema_format java producer which produces to topic $topic_nam
 docker exec $producer_hostname bash -c "java \${JAVA_OPTS} -jar producer-1.0.0-jar-with-dependencies.jar"
 
 EOF
-  # log "🎩 Adding command to run producer to $repro_test_file"
+  # log "✨ Adding command to run producer to $repro_test_file"
   cp $repro_test_file $tmp_dir/tmp_file
   { head -n $(($line-1)) $tmp_dir/tmp_file; cat $tmp_dir/java_producer; tail -n +$line $tmp_dir/tmp_file; } > $repro_test_file
 fi
 
 chmod u+x $repro_test_file
 
-log "📂 The reproduction files are now available in: $repro_dir"
+log "📂 The reproduction files are now available in:\n$repro_dir"

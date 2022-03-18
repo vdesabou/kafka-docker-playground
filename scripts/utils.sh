@@ -140,8 +140,11 @@ then
     export TAG_BASE=$TAG
     if [ -z "$CP_KAFKA_IMAGE" ]
     then
-      log "💫 Using default CP version $TAG"
-      log "🎓 set TAG environment variable to specify different version, see https://kafka-docker-playground.io/#/how-to-use?id=🎯-for-confluent-platform-cp"
+      if [ -z "$IGNORE_CHECK_FOR_DOCKER_COMPOSE" ]
+      then
+        log "💫 Using default CP version $TAG"
+        log "🎓 set TAG environment variable to specify different version, see https://kafka-docker-playground.io/#/how-to-use?id=🎯-for-confluent-platform-cp"
+      fi
     fi
     export CP_KAFKA_IMAGE=confluentinc/cp-server
     export CP_BASE_IMAGE=confluentinc/cp-base-new
@@ -151,7 +154,10 @@ then
 else
     if [ -z "$CP_KAFKA_IMAGE" ]
     then
-      log "🚀 Using specified CP version $TAG"
+      if [ -z "$IGNORE_CHECK_FOR_DOCKER_COMPOSE" ]
+      then
+        log "🚀 Using specified CP version $TAG"
+      fi
     fi
     # to handle ubi8 images
     export TAG_BASE=$(echo $TAG | cut -d "-" -f1)
@@ -256,7 +262,10 @@ then
   then
     :
   else
-    log "🎯 CONNECTOR_TAG is set with version $CONNECTOR_TAG"
+    if [ -z "$IGNORE_CHECK_FOR_DOCKER_COMPOSE" ]
+    then
+      log "🎯 CONNECTOR_TAG is set with version $CONNECTOR_TAG"
+    fi
     # determining the connector from current path
     docker_compose_file=""
     if [ -f "$PWD/$0" ]
@@ -313,7 +322,10 @@ EOF
                 logerror "CONNECTOR_JAR $CONNECTOR_JAR does not exist!"
                 exit 1
               fi
-              log "🎯 CONNECTOR_JAR is set with $CONNECTOR_JAR"
+              if [ -z "$IGNORE_CHECK_FOR_DOCKER_COMPOSE" ]
+              then
+                log "🎯 CONNECTOR_JAR is set with $CONNECTOR_JAR"
+              fi
               connector_jar_name=$(basename ${CONNECTOR_JAR})
               current_jar_path="/usr/share/confluent-hub-components/$connector_path/lib/$name-$CONNECTOR_TAG.jar"
               set +e
