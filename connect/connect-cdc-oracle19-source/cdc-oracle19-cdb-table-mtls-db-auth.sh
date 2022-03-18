@@ -26,7 +26,7 @@ if [[ "$CUR_WAIT" -gt "$MAX_WAIT" ]]; then
 fi
 done
 log "Oracle DB has started!"
-sleep 60
+sleep 10
 
 log "Setting up SSL on oracle server..."
 # https://www.oracle.com/technetwork/topics/wp-oracle-jdbc-thin-ssl-130128.pdf

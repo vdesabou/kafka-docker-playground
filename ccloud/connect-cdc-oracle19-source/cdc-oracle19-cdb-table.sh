@@ -32,7 +32,7 @@ if [[ "$CUR_WAIT" -gt "$MAX_WAIT" ]]; then
 fi
 done
 log "Oracle DB has started!"
-sleep 60
+sleep 10
 
 log "Creating _confluent-monitoring topic in Confluent Cloud (auto.create.topics.enable=false)"
 set +e
