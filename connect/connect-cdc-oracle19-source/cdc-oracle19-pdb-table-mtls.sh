@@ -32,7 +32,7 @@ if [[ "$CUR_WAIT" -gt "$MAX_WAIT" ]]; then
 fi
 done
 log "Oracle DB has started!"
-sleep 60
+sleep 10
 
 log "Grant select on CUSTOMERS table"
 docker exec -i oracle sqlplus C\#\#MYUSER/mypassword@//localhost:1521/ORCLPDB1 << EOF

@@ -24,7 +24,7 @@ if [[ "$CUR_WAIT" -gt "$MAX_WAIT" ]]; then
 fi
 done
 log "Oracle DB has started!"
-sleep 60
+sleep 10
 
 # https://docs.oracle.com/cd/B19306_01/server.102/b14237/initparams100.htm#REFRN10086
 log "Set multiple LOG_ARCHIVE_DEST_x"
