@@ -557,8 +557,29 @@ docker exec --privileged --user root connect bash -c "iptables -A OUTPUT -p tcp 
 docker exec --privileged --user root connect bash -c 'iptables -A INPUT -p tcp -s 35.205.238.172 -j DROP'
 ```
 
+* Block incoming traffic from another container 
+
+```bash
+container="nginx-proxy"
+ip=$(docker inspect -f '{{.Name}} - {{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' $(docker ps -aq) | grep $container | cut -d " " -f 3)
+log "Block incoming traffic from $container (ip=$ip)"
+docker exec --privileged --user root connect bash -c "iptables -A INPUT -p tcp -s $ip -j DROP"
+```
+
+* Block ougoing traffic to another container 
+
+```bash
+container="nginx-proxy"
+ip=$(docker inspect -f '{{.Name}} - {{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' $(docker ps -aq) | grep $container | cut -d " " -f 3)
+log "Block outgoing traffic to $container (ip=$ip)"
+docker exec --privileged --user root connect bash -c "iptables -A OUTPUT -p tcp -d $ip -j DROP"
+```
+
 > [!TIP]
 > Notice the use of `--privileged --user root`.
+
+> [!TIP]
+> Use same command but with "-D" instead of "-A" to remove the rule.
 
 To drop random packets, you can use statistic module like this:
 
