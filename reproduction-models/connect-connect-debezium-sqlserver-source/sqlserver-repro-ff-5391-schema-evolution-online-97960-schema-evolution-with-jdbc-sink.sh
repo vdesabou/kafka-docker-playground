@@ -10,8 +10,8 @@ ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.rep
 log "Load ./repro-ff-5391/inventory.sql to SQL Server"
 cat ./repro-ff-5391/inventory.sql | docker exec -i sqlserver bash -c '/opt/mssql-tools/bin/sqlcmd -U sa -P Password!'
 
-# log "workaround: set compatibility to FORWARD_TRANSITIVE"
-# curl -X PUT -H "Content-Type: application/vnd.schemaregistry.v1+json" --data '{"compatibility": "FORWARD_TRANSITIVE"}' http://localhost:8081/config/server1.dbo.customers-value
+log "workaround: set compatibility to NONE"
+curl -X PUT -H "Content-Type: application/vnd.schemaregistry.v1+json" --data '{"compatibility": "NONE"}' http://localhost:8081/config/server1.dbo.customers-value
 
 log "Creating Debezium SQL Server source connector"
 curl -X PUT \
@@ -275,8 +275,8 @@ EOF
 
 sleep 5
 
-log "Verifying topic server1.dbo.customers, we should see the message with the phone_number"
-timeout 60 docker exec connect kafka-json-schema-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic server1.dbo.customers --from-beginning --max-messages 6
+log "Verifying topic server1.dbo.customers, we should see the message without the last_name"
+timeout 60 docker exec connect kafka-json-schema-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic server1.dbo.customers --from-beginning --max-messages 7
 
 
 log "Drop old capture (following https://debezium.io/documentation/reference/connectors/sqlserver.html#online-schema-updates)"
@@ -289,3 +289,22 @@ GO
 EOF
 cat /tmp/result.log
 
+
+# [2022-03-22 14:38:49,426] WARN [sqlserver-sink|task-0] Write of 1 records failed, remainingRetries=8 (io.confluent.connect.jdbc.sink.JdbcSinkTask:92)
+# java.sql.BatchUpdateException: Cannot insert the value NULL into column 'last_name', table 'master.dbo.customers'; column does not allow nulls. UPDATE fails.
+#         at net.sourceforge.jtds.jdbc.JtdsStatement.executeBatch(JtdsStatement.java:1069)
+#         at io.confluent.connect.jdbc.sink.BufferedRecords.executeUpdates(BufferedRecords.java:221)
+#         at io.confluent.connect.jdbc.sink.BufferedRecords.flush(BufferedRecords.java:187)
+#         at io.confluent.connect.jdbc.sink.JdbcDbWriter.write(JdbcDbWriter.java:80)
+#         at io.confluent.connect.jdbc.sink.JdbcSinkTask.put(JdbcSinkTask.java:84)
+#         at org.apache.kafka.connect.runtime.WorkerSinkTask.deliverMessages(WorkerSinkTask.java:604)
+#         at org.apache.kafka.connect.runtime.WorkerSinkTask.poll(WorkerSinkTask.java:334)
+#         at org.apache.kafka.connect.runtime.WorkerSinkTask.iteration(WorkerSinkTask.java:235)
+#         at org.apache.kafka.connect.runtime.WorkerSinkTask.execute(WorkerSinkTask.java:204)
+#         at org.apache.kafka.connect.runtime.WorkerTask.doRun(WorkerTask.java:199)
+#         at org.apache.kafka.connect.runtime.WorkerTask.run(WorkerTask.java:254)
+#         at java.base/java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:515)
+#         at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:264)
+#         at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1128)
+#         at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:628)
+#         at java.base/java.lang.Thread.run(Thread.java:829)
