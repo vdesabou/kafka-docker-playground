@@ -10,6 +10,9 @@ ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.rep
 log "Load ./repro-ff-5391/inventory.sql to SQL Server"
 cat ./repro-ff-5391/inventory.sql | docker exec -i sqlserver bash -c '/opt/mssql-tools/bin/sqlcmd -U sa -P Password!'
 
+log "workaround: set compatibility to FORWARD_TRANSITIVE"
+curl -X PUT -H "Content-Type: application/vnd.schemaregistry.v1+json" --data '{"compatibility": "FORWARD_TRANSITIVE"}' http://localhost:8081/config/server1.dbo.customers-value
+
 log "Creating Debezium SQL Server source connector"
 curl -X PUT \
      -H "Content-Type: application/json" \
@@ -25,14 +28,20 @@ curl -X PUT \
                "database.history.kafka.bootstrap.servers": "broker:9092",
                "database.history.kafka.topic": "schema-changes.inventory",
 
+               "key.converter": "io.confluent.connect.json.JsonSchemaConverter",
+               "key.converter.schema.registry.url": "http://schema-registry:8081",
+
                "value.converter": "io.confluent.connect.json.JsonSchemaConverter",
-               "value.converter.schema.registry.url": "http://schema-registry:8081"
+               "value.converter.schema.registry.url": "http://schema-registry:8081",
+
+               "transforms": "after_state_only",
+               "transforms.after_state_only.type": "io.debezium.transforms.ExtractNewRecordState"
           }' \
      http://localhost:8083/connectors/debezium-sqlserver-source/config | jq .
 
 sleep 5
 
-# without "value.converter.object.additional.properties" : "false"
+# without "value.converter.object.additional.properties" : "false" and default compatibility BACKWARD
 # [2022-03-22 12:05:48,051] ERROR [debezium-sqlserver-source|task-0] WorkerSourceTask{id=debezium-sqlserver-source-0} Task threw an uncaught and unrecoverable exception. Task is being killed and will not recover until manually restarted (org.apache.kafka.connect.runtime.WorkerTask:206)
 # org.apache.kafka.connect.errors.ConnectException: Tolerance exceeded in error handler
 #         at org.apache.kafka.connect.runtime.errors.RetryWithToleranceOperator.execAndHandleError(RetryWithToleranceOperator.java:220)
@@ -114,3 +123,45 @@ timeout 60 docker exec connect kafka-json-schema-console-consumer -bootstrap-ser
 
 log "Drop old capture (following https://debezium.io/documentation/reference/connectors/sqlserver.html#online-schema-updates)"
 cat ./repro-ff-5391/drop-old-capture.sql | docker exec -i sqlserver bash -c '/opt/mssql-tools/bin/sqlcmd -U sa -P Password!'
+
+
+log "Creating JDBC SQL Server (with JTDS driver) sink connector"
+curl -X PUT \
+     -H "Content-Type: application/json" \
+     --data '{
+               "connector.class": "io.confluent.connect.jdbc.JdbcSinkConnector",
+                    "tasks.max": "1",
+                    "connection.url": "jdbc:jtds:sqlserver://sqlserver:1433",
+                    "connection.user": "sa",
+                    "connection.password": "Password!",
+                    "topics": "server1.dbo.customers",
+                    "auto.create": "true",
+                    "key.converter": "io.confluent.connect.json.JsonSchemaConverter",
+                    "key.converter.schema.registry.url": "http://schema-registry:8081",
+                    "value.converter": "io.confluent.connect.json.JsonSchemaConverter",
+                    "value.converter.schema.registry.url": "http://schema-registry:8081",
+                    "auto.create": "true",
+                    "auto.evolve": "true",
+                    "pk.mode": "record_key",
+                    "insert.mode": "upsert",
+                    "delete.enabled" : "true",
+                    "auto.offset.reset": "latest",
+                    "table.name.format": "customers",
+                    "errors.deadletterqueue.context.headers.enable": "true",
+                    "errors.deadletterqueue.topic.name": "dlq",
+                    "errors.deadletterqueue.topic.replication.factor": "1",
+                    "errors.log.enable": "true",
+                    "errors.log.include.messages": "true",
+                    "errors.retry.delay.max.ms": "6000",
+                    "errors.retry.timeout": "0",
+                    "errors.tolerance": "all",
+                    "time.precision.mode": "connect"
+          }' \
+     http://localhost:8083/connectors/sqlserver-sink/config | jq .
+
+log "Show content of customers table:"
+docker exec -i sqlserver /opt/mssql-tools/bin/sqlcmd -U sa -P Password! > /tmp/result.log  2>&1 <<-EOF
+select * from dbo.customers
+GO
+EOF
+cat /tmp/result.log
