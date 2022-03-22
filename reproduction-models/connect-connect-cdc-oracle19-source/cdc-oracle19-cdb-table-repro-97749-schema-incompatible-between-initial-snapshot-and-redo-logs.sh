@@ -32,6 +32,8 @@ docker exec connect kafka-topics --create --topic redo-log-topic --bootstrap-ser
 log "redo-log-topic is created"
 sleep 5
 
+# log "workaround: set compatibility to NONE"
+# curl -X PUT -H "Content-Type: application/vnd.schemaregistry.v1+json" --data '{"compatibility": "NONE"}' http://localhost:8081/config/ORCLCDB.C__MYUSER.CUSTOMERS-value
 
 log "Creating Oracle source connector"
 curl -X PUT \
@@ -59,7 +61,9 @@ curl -X PUT \
                "numeric.mapping": "best_fit",
                "connection.pool.max.size": 20,
                "redo.log.row.fetch.size":1,
-               "oracle.dictionary.mode": "auto"
+               "oracle.dictionary.mode": "auto",
+               "output.op.ts.field": "",
+               "output.current.ts.field": ""
           }' \
      http://localhost:8083/connectors/cdc-oracle-source-cdb/config | jq .
 
