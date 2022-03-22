@@ -159,6 +159,8 @@ curl -X PUT \
           }' \
      http://localhost:8083/connectors/sqlserver-sink/config | jq .
 
+sleep 10
+
 log "Show content of customers table:"
 docker exec -i sqlserver /opt/mssql-tools/bin/sqlcmd -U sa -P Password! > /tmp/result.log  2>&1 <<-EOF
 select * from dbo.customers
