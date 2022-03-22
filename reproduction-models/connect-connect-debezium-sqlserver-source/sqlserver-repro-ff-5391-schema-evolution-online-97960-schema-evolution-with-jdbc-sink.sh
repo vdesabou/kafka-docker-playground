@@ -41,6 +41,92 @@ curl -X PUT \
 
 sleep 5
 
+log "Connector status: it is running"
+curl --request GET \
+  --url http://localhost:8083/connectors/debezium-sqlserver-source/status \
+  --header 'Accept: application/json' | jq .
+
+log "Make an insert"
+docker exec -i sqlserver /opt/mssql-tools/bin/sqlcmd -U sa -P Password! << EOF
+USE testDB;
+INSERT INTO customers(first_name,last_name,email) VALUES ('Pam2','Thomas','pam@office.com');
+GO
+EOF
+
+sleep 5
+
+log "Verifying topic server1.dbo.customers"
+timeout 60 docker exec connect kafka-json-schema-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic server1.dbo.customers --from-beginning --max-messages 5
+
+log "Creating JDBC SQL Server (with JTDS driver) sink connector"
+curl -X PUT \
+     -H "Content-Type: application/json" \
+     --data '{
+               "connector.class": "io.confluent.connect.jdbc.JdbcSinkConnector",
+               "tasks.max": "1",
+               "connection.url": "jdbc:jtds:sqlserver://sqlserver:1433",
+               "connection.user": "sa",
+               "connection.password": "Password!",
+               "topics": "server1.dbo.customers",
+               "auto.create": "true",
+               "key.converter": "io.confluent.connect.json.JsonSchemaConverter",
+               "key.converter.schema.registry.url": "http://schema-registry:8081",
+               "value.converter": "io.confluent.connect.json.JsonSchemaConverter",
+               "value.converter.schema.registry.url": "http://schema-registry:8081",
+               "auto.create": "true",
+               "auto.evolve": "true",
+               "pk.mode": "record_key",
+               "insert.mode": "upsert",
+               "delete.enabled" : "true",
+               "auto.offset.reset": "latest",
+               "table.name.format": "customers",
+               "errors.deadletterqueue.context.headers.enable": "true",
+               "errors.deadletterqueue.topic.name": "dlq",
+               "errors.deadletterqueue.topic.replication.factor": "1",
+               "errors.log.enable": "true",
+               "errors.log.include.messages": "true",
+               "errors.retry.delay.max.ms": "6000",
+               "errors.retry.timeout": "0",
+               "errors.tolerance": "all",
+               "time.precision.mode": "connect"
+          }' \
+     http://localhost:8083/connectors/sqlserver-sink/config | jq .
+
+sleep 10
+
+log "Show content of customers table:"
+docker exec -i sqlserver /opt/mssql-tools/bin/sqlcmd -U sa -P Password! > /tmp/result.log  2>&1 <<-EOF
+select * from dbo.customers
+GO
+EOF
+cat /tmp/result.log
+
+log "alter table (following https://debezium.io/documentation/reference/connectors/sqlserver.html#online-schema-updates)"
+cat ./repro-ff-5391/alter-table.sql | docker exec -i sqlserver bash -c '/opt/mssql-tools/bin/sqlcmd -U sa -P Password!'
+
+log "Create new capture (following https://debezium.io/documentation/reference/connectors/sqlserver.html#online-schema-updates)"
+cat ./repro-ff-5391/create-new-capture.sql | docker exec -i sqlserver bash -c '/opt/mssql-tools/bin/sqlcmd -U sa -P Password!'
+
+sleep 5
+
+log "Make an insert with phone_number"
+docker exec -i sqlserver /opt/mssql-tools/bin/sqlcmd -U sa -P Password! << EOF
+USE testDB;
+INSERT INTO customers(first_name,last_name,email,phone_number) VALUES ('John','Doe','john.doe@example.com', '+1-555-123456');
+GO
+EOF
+
+sleep 5
+
+log "Verifying topic server1.dbo.customers, we should see the message with the phone_number"
+timeout 60 docker exec connect kafka-json-schema-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic server1.dbo.customers --from-beginning --max-messages 6
+
+# {"before":null,"after":{"server1.dbo.customers.Value":{"id":1006,"first_name":"John","last_name":"Doe","email":"john.doe@example.com","phone_number":{"string":"+1-555-123456"}}},"source":{"version":"1.5.0.Final","connector":"sqlserver","name":"server1","ts_ms":1626081244747,"snapshot":{"string":"false"},"db":"testDB","sequence":null,"schema":"dbo","table":"customers","change_lsn":{"string":"00000025:00000d48:0003"},"commit_lsn":{"string":"00000025:00000d48:0005"},"event_serial_no":{"long":1}},"op":"c","ts_ms":{"long":1626081249542},"transaction":null}
+
+log "Drop old capture (following https://debezium.io/documentation/reference/connectors/sqlserver.html#online-schema-updates)"
+cat ./repro-ff-5391/drop-old-capture.sql | docker exec -i sqlserver bash -c '/opt/mssql-tools/bin/sqlcmd -U sa -P Password!'
+
+
 # without "value.converter.object.additional.properties" : "false" and default compatibility BACKWARD
 # [2022-03-22 12:05:48,051] ERROR [debezium-sqlserver-source|task-0] WorkerSourceTask{id=debezium-sqlserver-source-0} Task threw an uncaught and unrecoverable exception. Task is being killed and will not recover until manually restarted (org.apache.kafka.connect.runtime.WorkerTask:206)
 # org.apache.kafka.connect.errors.ConnectException: Tolerance exceeded in error handler
@@ -80,90 +166,3 @@ sleep 5
 #         at io.confluent.kafka.schemaregistry.client.CachedSchemaRegistryClient.register(CachedSchemaRegistryClient.java:337)
 #         at io.confluent.kafka.serializers.json.AbstractKafkaJsonSchemaSerializer.serializeImpl(AbstractKafkaJsonSchemaSerializer.java:106)
 #         ... 17 more
-
-log "Connector status: it is running"
-curl --request GET \
-  --url http://localhost:8083/connectors/debezium-sqlserver-source/status \
-  --header 'Accept: application/json' | jq .
-
-log "Make an insert"
-docker exec -i sqlserver /opt/mssql-tools/bin/sqlcmd -U sa -P Password! << EOF
-USE testDB;
-INSERT INTO customers(first_name,last_name,email) VALUES ('Pam2','Thomas','pam@office.com');
-GO
-EOF
-
-sleep 5
-
-log "Verifying topic server1.dbo.customers"
-timeout 60 docker exec connect kafka-json-schema-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic server1.dbo.customers --from-beginning --max-messages 5
-
-
-log "alter table (following https://debezium.io/documentation/reference/connectors/sqlserver.html#online-schema-updates)"
-cat ./repro-ff-5391/alter-table.sql | docker exec -i sqlserver bash -c '/opt/mssql-tools/bin/sqlcmd -U sa -P Password!'
-
-log "Create new capture (following https://debezium.io/documentation/reference/connectors/sqlserver.html#online-schema-updates)"
-cat ./repro-ff-5391/create-new-capture.sql | docker exec -i sqlserver bash -c '/opt/mssql-tools/bin/sqlcmd -U sa -P Password!'
-
-sleep 5
-
-log "Make an insert with phone_number"
-docker exec -i sqlserver /opt/mssql-tools/bin/sqlcmd -U sa -P Password! << EOF
-USE testDB;
-INSERT INTO customers(first_name,last_name,email,phone_number) VALUES ('John','Doe','john.doe@example.com', '+1-555-123456');
-GO
-EOF
-
-sleep 5
-
-log "Verifying topic server1.dbo.customers, we should see the message with the phone_number"
-timeout 60 docker exec connect kafka-json-schema-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic server1.dbo.customers --from-beginning --max-messages 6
-
-# {"before":null,"after":{"server1.dbo.customers.Value":{"id":1006,"first_name":"John","last_name":"Doe","email":"john.doe@example.com","phone_number":{"string":"+1-555-123456"}}},"source":{"version":"1.5.0.Final","connector":"sqlserver","name":"server1","ts_ms":1626081244747,"snapshot":{"string":"false"},"db":"testDB","sequence":null,"schema":"dbo","table":"customers","change_lsn":{"string":"00000025:00000d48:0003"},"commit_lsn":{"string":"00000025:00000d48:0005"},"event_serial_no":{"long":1}},"op":"c","ts_ms":{"long":1626081249542},"transaction":null}
-
-log "Drop old capture (following https://debezium.io/documentation/reference/connectors/sqlserver.html#online-schema-updates)"
-cat ./repro-ff-5391/drop-old-capture.sql | docker exec -i sqlserver bash -c '/opt/mssql-tools/bin/sqlcmd -U sa -P Password!'
-
-
-log "Creating JDBC SQL Server (with JTDS driver) sink connector"
-curl -X PUT \
-     -H "Content-Type: application/json" \
-     --data '{
-               "connector.class": "io.confluent.connect.jdbc.JdbcSinkConnector",
-                    "tasks.max": "1",
-                    "connection.url": "jdbc:jtds:sqlserver://sqlserver:1433",
-                    "connection.user": "sa",
-                    "connection.password": "Password!",
-                    "topics": "server1.dbo.customers",
-                    "auto.create": "true",
-                    "key.converter": "io.confluent.connect.json.JsonSchemaConverter",
-                    "key.converter.schema.registry.url": "http://schema-registry:8081",
-                    "value.converter": "io.confluent.connect.json.JsonSchemaConverter",
-                    "value.converter.schema.registry.url": "http://schema-registry:8081",
-                    "auto.create": "true",
-                    "auto.evolve": "true",
-                    "pk.mode": "record_key",
-                    "insert.mode": "upsert",
-                    "delete.enabled" : "true",
-                    "auto.offset.reset": "latest",
-                    "table.name.format": "customers",
-                    "errors.deadletterqueue.context.headers.enable": "true",
-                    "errors.deadletterqueue.topic.name": "dlq",
-                    "errors.deadletterqueue.topic.replication.factor": "1",
-                    "errors.log.enable": "true",
-                    "errors.log.include.messages": "true",
-                    "errors.retry.delay.max.ms": "6000",
-                    "errors.retry.timeout": "0",
-                    "errors.tolerance": "all",
-                    "time.precision.mode": "connect"
-          }' \
-     http://localhost:8083/connectors/sqlserver-sink/config | jq .
-
-sleep 10
-
-log "Show content of customers table:"
-docker exec -i sqlserver /opt/mssql-tools/bin/sqlcmd -U sa -P Password! > /tmp/result.log  2>&1 <<-EOF
-select * from dbo.customers
-GO
-EOF
-cat /tmp/result.log
