@@ -94,7 +94,7 @@ curl -X PUT \
 
 sleep 10
 
-log "Show content of customers table:"
+log "JDBC SINK: Show content of customers table:"
 docker exec -i sqlserver /opt/mssql-tools/bin/sqlcmd -U sa -P Password! > /tmp/result.log  2>&1 <<-EOF
 select * from dbo.customers
 GO
@@ -126,6 +126,12 @@ timeout 60 docker exec connect kafka-json-schema-console-consumer -bootstrap-ser
 log "Drop old capture (following https://debezium.io/documentation/reference/connectors/sqlserver.html#online-schema-updates)"
 cat ./repro-ff-5391/drop-old-capture.sql | docker exec -i sqlserver bash -c '/opt/mssql-tools/bin/sqlcmd -U sa -P Password!'
 
+log "JDBC SINK: Show content of customers table, we should see the message with the phone_numbe"
+docker exec -i sqlserver /opt/mssql-tools/bin/sqlcmd -U sa -P Password! > /tmp/result.log  2>&1 <<-EOF
+select * from dbo.customers
+GO
+EOF
+cat /tmp/result.log
 
 # without "value.converter.object.additional.properties" : "false" and default compatibility BACKWARD
 # [2022-03-22 12:05:48,051] ERROR [debezium-sqlserver-source|task-0] WorkerSourceTask{id=debezium-sqlserver-source-0} Task threw an uncaught and unrecoverable exception. Task is being killed and will not recover until manually restarted (org.apache.kafka.connect.runtime.WorkerTask:206)
@@ -166,3 +172,78 @@ cat ./repro-ff-5391/drop-old-capture.sql | docker exec -i sqlserver bash -c '/op
 #         at io.confluent.kafka.schemaregistry.client.CachedSchemaRegistryClient.register(CachedSchemaRegistryClient.java:337)
 #         at io.confluent.kafka.serializers.json.AbstractKafkaJsonSchemaSerializer.serializeImpl(AbstractKafkaJsonSchemaSerializer.java:106)
 #         ... 17 more
+
+
+
+log "alter table by removing last_name column (following https://debezium.io/documentation/reference/connectors/sqlserver.html#online-schema-updates)"
+cat ./repro-97960/alter-table.sql | docker exec -i sqlserver bash -c '/opt/mssql-tools/bin/sqlcmd -U sa -P Password!'
+
+log "Create new capture (following https://debezium.io/documentation/reference/connectors/sqlserver.html#online-schema-updates)"
+cat ./repro-97960/create-new-capture.sql | docker exec -i sqlserver bash -c '/opt/mssql-tools/bin/sqlcmd -U sa -P Password!'
+
+sleep 5
+
+log "Make an insert without last_name"
+docker exec -i sqlserver /opt/mssql-tools/bin/sqlcmd -U sa -P Password! << EOF
+USE testDB;
+INSERT INTO customers(first_name,email,phone_number) VALUES ('Vincent','vincent@example.com', '+1-555-123456');
+GO
+EOF
+
+# expected because FORWARD_TRANSITIVE is set and removing a mandatory column is not forxward compatible
+# [2022-03-22 14:12:36,548] ERROR [debezium-sqlserver-source|task-0] WorkerSourceTask{id=debezium-sqlserver-source-0} Task threw an uncaught and unrecoverable exception. Task is being killed and will not recover until manually restarted (org.apache.kafka.connect.runtime.WorkerTask:206)
+# org.apache.kafka.connect.errors.ConnectException: Tolerance exceeded in error handler
+#         at org.apache.kafka.connect.runtime.errors.RetryWithToleranceOperator.execAndHandleError(RetryWithToleranceOperator.java:220)
+#         at org.apache.kafka.connect.runtime.errors.RetryWithToleranceOperator.execute(RetryWithToleranceOperator.java:142)
+#         at org.apache.kafka.connect.runtime.WorkerSourceTask.convertTransformedRecord(WorkerSourceTask.java:333)
+#         at org.apache.kafka.connect.runtime.WorkerSourceTask.sendRecords(WorkerSourceTask.java:359)
+#         at org.apache.kafka.connect.runtime.WorkerSourceTask.execute(WorkerSourceTask.java:272)
+#         at org.apache.kafka.connect.runtime.WorkerTask.doRun(WorkerTask.java:199)
+#         at org.apache.kafka.connect.runtime.WorkerTask.run(WorkerTask.java:254)
+#         at java.base/java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:515)
+#         at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:264)
+#         at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1128)
+#         at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:628)
+#         at java.base/java.lang.Thread.run(Thread.java:829)
+# Caused by: org.apache.kafka.connect.errors.DataException: Converting Kafka Connect data to byte[] failed due to serialization error of topic server1.dbo.customers: 
+#         at io.confluent.connect.json.JsonSchemaConverter.fromConnectData(JsonSchemaConverter.java:92)
+#         at org.apache.kafka.connect.storage.Converter.fromConnectData(Converter.java:63)
+#         at org.apache.kafka.connect.runtime.WorkerSourceTask.lambda$convertTransformedRecord$4(WorkerSourceTask.java:333)
+#         at org.apache.kafka.connect.runtime.errors.RetryWithToleranceOperator.execAndRetry(RetryWithToleranceOperator.java:166)
+#         at org.apache.kafka.connect.runtime.errors.RetryWithToleranceOperator.execAndHandleError(RetryWithToleranceOperator.java:200)
+#         ... 11 more
+# Caused by: org.apache.kafka.common.errors.SerializationException: Error registering JSON schema: {"type":"object","title":"server1.dbo.customers.Value","properties":{"phone_number":{"connect.index":3,"oneOf":[{"type":"null"},{"type":"string"}]},"id":{"type":"integer","connect.index":0,"connect.type":"int32"},"first_name":{"type":"string","connect.index":1},"email":{"type":"string","connect.index":2}}}
+#         at io.confluent.kafka.serializers.AbstractKafkaSchemaSerDe.toKafkaException(AbstractKafkaSchemaSerDe.java:259)
+#         at io.confluent.kafka.serializers.json.AbstractKafkaJsonSchemaSerializer.serializeImpl(AbstractKafkaJsonSchemaSerializer.java:141)
+#         at io.confluent.connect.json.JsonSchemaConverter$Serializer.serialize(JsonSchemaConverter.java:149)
+#         at io.confluent.connect.json.JsonSchemaConverter.fromConnectData(JsonSchemaConverter.java:90)
+#         ... 15 more
+# Caused by: io.confluent.kafka.schemaregistry.client.rest.exceptions.RestClientException: Schema being registered is incompatible with an earlier schema for subject "server1.dbo.customers-value"; error code: 409
+#         at io.confluent.kafka.schemaregistry.client.rest.RestService.sendHttpRequest(RestService.java:297)
+#         at io.confluent.kafka.schemaregistry.client.rest.RestService.httpRequest(RestService.java:367)
+#         at io.confluent.kafka.schemaregistry.client.rest.RestService.registerSchema(RestService.java:544)
+#         at io.confluent.kafka.schemaregistry.client.rest.RestService.registerSchema(RestService.java:532)
+#         at io.confluent.kafka.schemaregistry.client.rest.RestService.registerSchema(RestService.java:490)
+#         at io.confluent.kafka.schemaregistry.client.CachedSchemaRegistryClient.registerAndGetId(CachedSchemaRegistryClient.java:257)
+#         at io.confluent.kafka.schemaregistry.client.CachedSchemaRegistryClient.register(CachedSchemaRegistryClient.java:366)
+#         at io.confluent.kafka.schemaregistry.client.CachedSchemaRegistryClient.register(CachedSchemaRegistryClient.java:337)
+#         at io.confluent.kafka.serializers.json.AbstractKafkaJsonSchemaSerializer.serializeImpl(AbstractKafkaJsonSchemaSerializer.java:106)
+#         ... 17 more
+
+sleep 5
+
+log "Verifying topic server1.dbo.customers, we should see the message with the phone_number"
+timeout 60 docker exec connect kafka-json-schema-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic server1.dbo.customers --from-beginning --max-messages 6
+
+# {"before":null,"after":{"server1.dbo.customers.Value":{"id":1006,"first_name":"John","last_name":"Doe","email":"john.doe@example.com","phone_number":{"string":"+1-555-123456"}}},"source":{"version":"1.5.0.Final","connector":"sqlserver","name":"server1","ts_ms":1626081244747,"snapshot":{"string":"false"},"db":"testDB","sequence":null,"schema":"dbo","table":"customers","change_lsn":{"string":"00000025:00000d48:0003"},"commit_lsn":{"string":"00000025:00000d48:0005"},"event_serial_no":{"long":1}},"op":"c","ts_ms":{"long":1626081249542},"transaction":null}
+
+log "Drop old capture (following https://debezium.io/documentation/reference/connectors/sqlserver.html#online-schema-updates)"
+cat ./repro-97960/drop-old-capture.sql | docker exec -i sqlserver bash -c '/opt/mssql-tools/bin/sqlcmd -U sa -P Password!'
+
+log "JDBC SINK: Show content of customers table, we should see the message with the phone_numbe"
+docker exec -i sqlserver /opt/mssql-tools/bin/sqlcmd -U sa -P Password! > /tmp/result.log  2>&1 <<-EOF
+select * from dbo.customers
+GO
+EOF
+cat /tmp/result.log
+
