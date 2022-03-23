@@ -78,7 +78,9 @@ curl -X PUT \
                "store.kafka.keys": "true",
                "keys.format.class": "io.confluent.connect.s3.format.json.JsonFormat",
                "store.kafka.headers": "true",
-               "headers.format.class": "io.confluent.connect.s3.format.json.JsonFormat"
+               "headers.format.class": "io.confluent.connect.s3.format.json.JsonFormat",
+
+               "s3.compression.type": "gzip"
           }' \
      http://localhost:8083/connectors/s3-sink/config | jq .
 
@@ -91,9 +93,11 @@ log "Listing objects of in S3"
 aws s3api list-objects --bucket "$AWS_BUCKET_NAME"
 
 log "Getting one of the json files locally"
-aws s3 cp --only-show-errors s3://$AWS_BUCKET_NAME/topics/customer_avro/partition=0/customer_avro+0+0000000000.json customer_avro+0+0000000000.json
-aws s3 cp --only-show-errors s3://$AWS_BUCKET_NAME/topics/customer_avro/partition=0/customer_avro+0+0000000000.headers.json customer_avro+0+0000000000.headers.json
-aws s3 cp --only-show-errors s3://$AWS_BUCKET_NAME/topics/customer_avro/partition=0/customer_avro+0+0000000000.keys.json customer_avro+0+0000000000.keys.json
+aws s3 cp --only-show-errors s3://$AWS_BUCKET_NAME/topics/customer_avro/partition=0/customer_avro+0+0000000000.json.gz customer_avro+0+0000000000.json.gz
+aws s3 cp --only-show-errors s3://$AWS_BUCKET_NAME/topics/customer_avro/partition=0/customer_avro+0+0000000000.headers.json.gz customer_avro+0+0000000000.headers.json.gz
+aws s3 cp --only-show-errors s3://$AWS_BUCKET_NAME/topics/customer_avro/partition=0/customer_avro+0+0000000000.keys.json.gz customer_avro+0+0000000000.keys.json.gz
+
+gunzip *.gz
 
 cat customer_avro+0+0000000000.json
 # {"count":-5106534569952410475,"first_name":"eOMtThyhVNL","last_name":"WUZNRcBaQKxIye","address":"dUsF"}
