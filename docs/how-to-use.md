@@ -213,7 +213,7 @@ By default, Grafana dashboard using JMX metrics is not started for every test. Y
 export ENABLE_JMX_GRAFANA=true
 ```
 
-📊 If set, Grafana is reachable at [http://127.0.0.1:3000](http://127.0.0.1:3000) (login/password is `admin`/`admin`).
+📊 If set, Grafana is reachable at [http://127.0.0.1:3000](http://127.0.0.1:3000).
 
 ## 🔢 JMX Metrics
 
