@@ -106,6 +106,7 @@ curl -X PUT \
                     "confluent.topic.bootstrap.servers": "broker:9092",
                     "confluent.topic.replication.factor": "1",
                     "jms.forward.kafka.headers": true,
+                    "jms.forward.kafka.metadata": true,
                     "transforms" : "headerToField",
                     "transforms.headerToField.type" : "com.github.jcustenborder.kafka.connect.transform.common.HeaderToField$Value",
                     "transforms.headerToField.header.mappings" : "file.path:STRING:file_path,file.name:STRING:file_name,file.last.modified:INT64(Timestamp):file_last_modified,file.length:INT32:file_length"
@@ -132,3 +133,55 @@ grep "Text=" /tmp/result.log
 
 # with "jms.forward.kafka.headers": true
 # Received message: TextMessage={ Header={ JMSMessageID={ID:E4EMS-SERVER.1623C95CC4:21} JMSDestination={Queue[connector-quickstart]} JMSReplyTo={null} JMSDeliveryMode={PERSISTENT} JMSRedelivered={false} JMSCorrelationID={null} JMSType={null} JMSTimestamp={Thu Mar 24 16:02:12 UTC 2022} JMSDeliveryTime={Thu Mar 24 16:02:12 UTC 2022} JMSExpiration={0} JMSPriority={4} } Properties={ file.path={String:/tmp/data/input/json-spooldir-source.json} file.name.without.extension={String:json-spooldir-source} JMSXDeliveryCount={Integer:1} file.parent.dir.name={String:input} file.name={String:json-spooldir-source.json} file.length={String:119269} file.last.modified={String:2022-03-24T16:01:56.636Z} file.offset={String:19} } Text={{"id":20,"first_name":"Mack","last_name":"Bellwood","email":"mbellwoodj@pcworld.com","gender":"Male","ip_address":"13.203.162.73","last_login":"2015-10-07T01:10:40Z","account_balance":10102.87,"country":"PT","favorite_color":"#90a5da","file_path":"/tmp/data/input/json-spooldir-source.json","file_name":"json-spooldir-source.json","file_last_modified":2022-03-24T16:01:56.636Z,"file_length":119269}} }
+
+
+# Received message: TextMessage={
+#      Header=
+#         { 
+#             JMSMessageID={ID:E4EMS-SERVER.1623C98004:21} 
+#             JMSDestination={Queue[connector-quickstart]} 
+#             JMSReplyTo={null} 
+#             JMSDeliveryMode={PERSISTENT} 
+#             JMSRedelivered={false} 
+#             JMSCorrelationID={null} 
+#             JMSType={null} 
+#             JMSTimestamp={Thu Mar 24 16:11:36 UTC 2022} 
+#             JMSDeliveryTime={Thu Mar 24 16:11:36 UTC 2022} 
+#             JMSExpiration={0} 
+#             JMSPriority={4} } 
+            
+#             Properties=
+#                 { 
+#                     file.path={String:/tmp/data/input/json-spooldir-source.json} 
+#                     file.name.without.extension={String:json-spooldir-source} 
+#                     JMSXDeliveryCount={Integer:1} 
+#                     file.parent.dir.name={String:input} 
+#                     file.name={String:json-spooldir-source.json} 
+#                     KAFKA_OFFSET={Long:19} 
+#                     file.length={String:119501} 
+#                     file.last.modified={String:2022-03-24T16:11:21.647Z} 
+#                     KAFKA_PARTITION={Integer:0} 
+#                     KAFKA_TOPIC={String:customer_avro} 
+#                     file.offset={String:19} 
+#                 } 
+                
+#             Text=
+#                 {
+#                     {
+#                         "id": 20,
+#                         "first_name": "Hamel",
+#                         "last_name": "Dimitresco",
+#                         "email": "hdimitrescoj@hp.com",
+#                         "gender": "Male",
+#                         "ip_address": "104.51.108.144",
+#                         "last_login": "2017-02-10T22:55:17Z",
+#                         "account_balance": 16510.27,
+#                         "country": "CA",
+#                         "favorite_color": "#a36d2d",
+#                         "file_path": "/tmp/data/input/json-spooldir-source.json",
+#                         "file_name": "json-spooldir-source.json",
+#                         "file_last_modified": 2022 - 03 - 24 T16: 11: 21.647 Z,
+#                         "file_length": 119501
+#                     }
+#                 }
+#             }
