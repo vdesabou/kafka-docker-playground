@@ -105,6 +105,7 @@ curl -X PUT \
                     "value.converter.schema.registry.url": "http://schema-registry:8081",
                     "confluent.topic.bootstrap.servers": "broker:9092",
                     "confluent.topic.replication.factor": "1",
+                    "jms.forward.kafka.headers": true,
                     "transforms" : "headerToField",
                     "transforms.headerToField.type" : "com.github.jcustenborder.kafka.connect.transform.common.HeaderToField$Value",
                     "transforms.headerToField.header.mappings" : "file.path:STRING:file_path,file.name:STRING:file_name,file.last.modified:INT64(Timestamp):file_last_modified,file.length:INT32:file_length"
@@ -126,5 +127,8 @@ java tibjmsMsgConsumer -user admin -queue connector-quickstart -nbmessages 20' >
 cat /tmp/result.log
 grep "Text=" /tmp/result.log
 
+# with "jms.forward.kafka.headers": false
 # Received message: TextMessage={ Header={ JMSMessageID={ID:E4EMS-SERVER.1623C94324:21} JMSDestination={Queue[connector-quickstart]} JMSReplyTo={null} JMSDeliveryMode={PERSISTENT} JMSRedelivered={false} JMSCorrelationID={null} JMSType={null} JMSTimestamp={Thu Mar 24 15:55:24 UTC 2022} JMSDeliveryTime={Thu Mar 24 15:55:24 UTC 2022} JMSExpiration={0} JMSPriority={4} } Properties={ JMSXDeliveryCount={Integer:1} } Text={{"id":20,"first_name":"Lorne","last_name":"Dysart","email":"ldysartj@topsy.com","gender":"Female","ip_address":"33.96.59.174","last_login":"2017-07-10T09:10:31Z","account_balance":14920.56,"country":"PH","favorite_color":"#ee9bb2","file_path":"/tmp/data/input/json-spooldir-source.json","file_name":"json-spooldir-source.json","file_last_modified":2022-03-24T15:55:08.365Z,"file_length":119554}} }
 
+# with "jms.forward.kafka.headers": true
+# Received message: TextMessage={ Header={ JMSMessageID={ID:E4EMS-SERVER.1623C95CC4:21} JMSDestination={Queue[connector-quickstart]} JMSReplyTo={null} JMSDeliveryMode={PERSISTENT} JMSRedelivered={false} JMSCorrelationID={null} JMSType={null} JMSTimestamp={Thu Mar 24 16:02:12 UTC 2022} JMSDeliveryTime={Thu Mar 24 16:02:12 UTC 2022} JMSExpiration={0} JMSPriority={4} } Properties={ file.path={String:/tmp/data/input/json-spooldir-source.json} file.name.without.extension={String:json-spooldir-source} JMSXDeliveryCount={Integer:1} file.parent.dir.name={String:input} file.name={String:json-spooldir-source.json} file.length={String:119269} file.last.modified={String:2022-03-24T16:01:56.636Z} file.offset={String:19} } Text={{"id":20,"first_name":"Mack","last_name":"Bellwood","email":"mbellwoodj@pcworld.com","gender":"Male","ip_address":"13.203.162.73","last_login":"2015-10-07T01:10:40Z","account_balance":10102.87,"country":"PT","favorite_color":"#90a5da","file_path":"/tmp/data/input/json-spooldir-source.json","file_name":"json-spooldir-source.json","file_last_modified":2022-03-24T16:01:56.636Z,"file_length":119269}} }
