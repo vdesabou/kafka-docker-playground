@@ -5,40 +5,40 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
 # Need to create the TIBCO EMS image using https://github.com/mikeschippers/docker-tibco
-cd ${DIR}/docker-tibco/
+cd ../../connect/connect-jms-tibco-source/docker-tibco/
 get_3rdparty_file "TIB_ems-ce_8.5.1_linux_x86_64.zip"
 cd -
-if [ ! -f ${DIR}/docker-tibco/TIB_ems-ce_8.5.1_linux_x86_64.zip ]
+if [ ! -f ../../connect/connect-jms-tibco-source/docker-tibco/TIB_ems-ce_8.5.1_linux_x86_64.zip ]
 then
-     logerror "ERROR: ${DIR}/docker-tibco/ does not contain TIBCO EMS zip file TIB_ems-ce_8.5.1_linux_x86_64.zip"
+     logerror "ERROR: ../../connect/connect-jms-tibco-source/docker-tibco/ does not contain TIBCO EMS zip file TIB_ems-ce_8.5.1_linux_x86_64.zip"
      exit 1
 fi
 
-if [ ! -f ${DIR}/tibjms.jar ]
+if [ ! -f ../../connect/connect-jms-tibco-source/tibjms.jar ]
 then
-     log "${DIR}/tibjms.jar missing, will get it from ${DIR}/docker-tibco/TIB_ems-ce_8.5.1_linux_x86_64.zip"
+     log "../../connect/connect-jms-tibco-source/tibjms.jar missing, will get it from ../../connect/connect-jms-tibco-source/docker-tibco/TIB_ems-ce_8.5.1_linux_x86_64.zip"
      rm -rf /tmp/TIB_ems-ce_8.5.1
-     unzip ${DIR}/docker-tibco/TIB_ems-ce_8.5.1_linux_x86_64.zip -d /tmp/
+     unzip ../../connect/connect-jms-tibco-source/docker-tibco/TIB_ems-ce_8.5.1_linux_x86_64.zip -d /tmp/
      tar xvfz /tmp/TIB_ems-ce_8.5.1/tar/TIB_ems-ce_8.5.1_linux_x86_64-java_client.tar.gz opt/tibco/ems/8.5/lib/tibjms.jar
-     cp ${DIR}/opt/tibco/ems/8.5/lib/tibjms.jar ${DIR}/
-     rm -rf ${DIR}/opt
-fi
-
-if [ ! -f ${DIR}/jms-2.0.jar ]
-then
-     log "${DIR}/jms-2.0.jar missing, will get it from ${DIR}/docker-tibco/TIB_ems-ce_8.5.1_linux_x86_64.zip"
-     rm -rf /tmp/TIB_ems-ce_8.5.1
-     unzip ${DIR}/docker-tibco/TIB_ems-ce_8.5.1_linux_x86_64.zip -d /tmp/
-     tar xvfz /tmp/TIB_ems-ce_8.5.1/tar/TIB_ems-ce_8.5.1_linux_x86_64-java_client.tar.gz opt/tibco/ems/8.5/lib/jms-2.0.jar
-     cp ${DIR}/opt/tibco/ems/8.5/lib/jms-2.0.jar ${DIR}/
-     rm -rf ${DIR}/opt
+     cp ../../connect/connect-jms-tibco-source/opt/tibco/ems/8.5/lib/tibjms.jar ../../connect/connect-jms-tibco-source/
+     rm -rf ../../connect/connect-jms-tibco-source/opt
 fi
 
 if test -z "$(docker images -q tibems:latest)"
 then
      log "Building TIBCO EMS docker image..it can take a while..."
      OLDDIR=$PWD
-     cd ${DIR}/docker-tibco
+     cd ../../connect/connect-jms-tibco-source/docker-tibco
+     docker build -t tibbase:1.0.0 ./tibbase
+     docker build -t tibems:latest . -f ./tibems/Dockerfile
+     cd ${OLDDIR}
+fi
+
+if test -z "$(docker images -q tibems:latest)"
+then
+     log "Building TIBCO EMS docker image..it can take a while..."
+     OLDDIR=$PWD
+     cd ../../connect/connect-jms-tibco-source/docker-tibco
      docker build -t tibbase:1.0.0 ./tibbase
      docker build -t tibems:latest . -f ./tibems/Dockerfile
      cd ${OLDDIR}
