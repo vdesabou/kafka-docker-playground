@@ -228,7 +228,7 @@ docker exec -i connect kafka-json-schema-console-producer --broker-list broker:9
 EOF
 
 log "Verify topic success-responses"
-timeout 60 docker exec broker kafka-console-consumer -bootstrap-server broker:9092 --topic success-responses --from-beginning --max-messages 1
+timeout 60 docker exec broker kafka-console-consumer -bootstrap-server broker:9092 --topic success-responses --from-beginning --max-messages 2
 
 # log "Verify topic error-responses"
 # timeout 20 docker exec broker kafka-console-consumer -bootstrap-server broker:9092 --topic error-responses --from-beginning --max-messages 1
