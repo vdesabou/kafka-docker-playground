@@ -189,12 +189,14 @@ curl -X PUT \
                     "confluent.license": "",
                     "confluent.topic.bootstrap.servers": "broker:9092",
                     "confluent.topic.replication.factor": "1",
-                    "behavior.on.api.errors": "log"
+                    "behavior.on.api.errors": "log",
+                    "request.max.retries.time.ms": "1000"
           }' \
      http://localhost:8083/connectors/salesforce-platform-events-sink/config | jq .
 
 sleep 10
 
+# It will retry for 15 minutes by default: request.max.retries.time.ms = 900000:
 # [2022-03-23 17:36:06,146] DEBUG [salesforce-platform-events-sink|task-0] Failed on initial attempt to write record to Salesforce (io.confluent.salesforce.platformevent.SalesforcePlatformEventSinkTask:65)
 # org.apache.kafka.connect.errors.ConnectException: Exception encountered while calling salesforce
 #         at io.confluent.salesforce.rest.SalesforceHttpClientUtil.postAndParse(SalesforceHttpClientUtil.java:122)
@@ -221,8 +223,42 @@ sleep 10
 #         at io.confluent.salesforce.rest.SalesforceHttpClientUtil.postAndParse(SalesforceHttpClientUtil.java:120)
 #         ... 16 more
 
+docker exec -i connect kafka-json-schema-console-producer --broker-list broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic a-topic-ok --property value.schema='{"type":"object","properties":{"EventUuid":{"connect.index":3,"oneOf":[{"type":"null"},{"type":"string"}]},"_ObjectType":{"connect.index":5,"oneOf":[{"type":"null"},{"type":"string"}]},"ReplayId":{"connect.index":0,"oneOf":[{"type":"null"},{"type":"string"}]},"CreatedById":{"connect.index":2,"oneOf":[{"type":"null"},{"type":"string"}]},"CreatedDate":{"connect.index":1,"oneOf":[{"type":"null"},{"type":"integer","connect.version":1,"connect.type":"int64","title":"org.apache.kafka.connect.data.Timestamp"}]},"Message__c":{"connect.index":4,"oneOf":[{"type":"null"},{"type":"string"}]},"_EventType":{"connect.index":6,"oneOf":[{"type":"null"},{"type":"string"}]}},"title":"io.confluent.salesforce.MyPlatformEvent__e"}' << EOF
+{"ReplayId":"9004015","CreatedDate":1644345809665,"CreatedById":"0053a00000L9RsbAAF","EventUuid":"a870010c-2fda-4057-b95d-e14db56a6af1","Message__c":"Vincent after","_ObjectType":"MyPlatformEvent__e","_EventType":"ir4e6bGYBtJYSX5x2vc4DQ"},"__confluent_index":59}
+EOF
+
 log "Verify topic success-responses"
 timeout 60 docker exec broker kafka-console-consumer -bootstrap-server broker:9092 --topic success-responses --from-beginning --max-messages 1
 
 # log "Verify topic error-responses"
 # timeout 20 docker exec broker kafka-console-consumer -bootstrap-server broker:9092 --topic error-responses --from-beginning --max-messages 1
+
+
+# with "request.max.retries.time.ms": "1000":
+
+# [2022-03-24 08:44:58,299] ERROR [salesforce-platform-events-sink|task-0] Retry timeout reached. No more retries. (io.confluent.salesforce.platformevent.SalesforcePlatformEventSinkTask:113)
+# [2022-03-24 08:44:58,313] INFO [salesforce-platform-events-sink|task-0] Skipping Bad record.  Kafka Record info topic: a-topic-ok, partition number: 0, offset: 0 (io.confluent.salesforce.platformevent.SalesforcePlatformEventSinkTask:77)
+# org.apache.kafka.connect.errors.ConnectException: Exception encountered while calling salesforce
+#         at io.confluent.salesforce.rest.SalesforceHttpClientUtil.postAndParse(SalesforceHttpClientUtil.java:122)
+#         at io.confluent.salesforce.rest.SalesforceRestClientImpl.publishPlatformEvent(SalesforceRestClientImpl.java:413)
+#         at io.confluent.salesforce.platformevent.SalesforcePlatformEventSinkTask.publishEvent(SalesforcePlatformEventSinkTask.java:95)
+#         at io.confluent.salesforce.platformevent.SalesforcePlatformEventSinkTask.lambda$put$2(SalesforcePlatformEventSinkTask.java:55)
+#         at java.base/java.util.ArrayList.forEach(ArrayList.java:1541)
+#         at io.confluent.salesforce.platformevent.SalesforcePlatformEventSinkTask.put(SalesforcePlatformEventSinkTask.java:53)
+#         at org.apache.kafka.connect.runtime.WorkerSinkTask.deliverMessages(WorkerSinkTask.java:604)
+#         at org.apache.kafka.connect.runtime.WorkerSinkTask.poll(WorkerSinkTask.java:334)
+#         at org.apache.kafka.connect.runtime.WorkerSinkTask.iteration(WorkerSinkTask.java:235)
+#         at org.apache.kafka.connect.runtime.WorkerSinkTask.execute(WorkerSinkTask.java:204)
+#         at org.apache.kafka.connect.runtime.WorkerTask.doRun(WorkerTask.java:199)
+#         at org.apache.kafka.connect.runtime.WorkerTask.run(WorkerTask.java:254)
+#         at java.base/java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:515)
+#         at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:264)
+#         at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1128)
+#         at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:628)
+#         at java.base/java.lang.Thread.run(Thread.java:829)
+# Caused by: com.google.api.client.http.HttpResponseException: 400 Bad Request
+# [{"message":"Value too long for field","errorCode":"STRING_TOO_LONG","fields":["Message__c"]}]
+#         at com.google.api.client.http.HttpRequest.execute(HttpRequest.java:1097)
+#         at io.confluent.salesforce.rest.SalesforceHttpClientUtil.executeAndParse(SalesforceHttpClientUtil.java:98)
+#         at io.confluent.salesforce.rest.SalesforceHttpClientUtil.postAndParse(SalesforceHttpClientUtil.java:120)
+#         ... 16 more
