@@ -14,6 +14,32 @@ ${DIR}/../../environment/rbac-sasl-plain/start.sh "${PWD}/docker-compose.plainte
 log "Sending messages to topic rbac_gcs_topic"
 seq -f "{\"f1\": \"This is a message sent with RBAC SASL/PLAIN authentication %g\"}" 10 | docker exec -i connect kafka-avro-console-producer --broker-list broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic rbac_gcs_topic --property value.schema='{"type":"record","name":"myrecord","fields":[{"name":"f1","type":"string"}]}' --property schema.registry.url=http://schema-registry:8081 --property basic.auth.credentials.source=USER_INFO --property schema.registry.basic.auth.user.info=clientAvroCli:clientAvroCli --producer.config /etc/kafka/secrets/client_sasl_plain.config
 
+# for rbac, needed to add:
+
+# declare -a ConnectResources=(
+#     "Topic:connect-configs"
+#     "Topic:connect-offsets"
+#     "Topic:connect-status"
+#     "Group:connect-cluster"
+#     "Topic:_confluent-monitoring"
+#     "Topic:_confluent-command"
+#     "Topic:rbac_gcs_topic-duplicate"
+#     "Topic:_confluent-secrets"
+#     "Group:secret-registry"
+# )
+
+# confluent iam rolebinding create \
+#     --principal $CONNECTOR_PRINCIPAL \
+#     --role ResourceOwner \
+#     --resource Group:my-rbac-connector \
+#     --kafka-cluster-id $KAFKA_CLUSTER_ID \
+
+# confluent iam rolebinding create \
+#     --principal $CONNECTOR_PRINCIPAL \
+#     --role ResourceOwner \
+#     --resource Topic:_confluent-command \
+#     --kafka-cluster-id $KAFKA_CLUSTER_ID
+
 log "Creating Replicator connector"
 curl -X PUT \
       -H "Content-Type: application/json" \
@@ -23,13 +49,23 @@ curl -X PUT \
             "key.converter": "io.confluent.connect.replicator.util.ByteArrayConverter",
             "value.converter": "io.confluent.connect.replicator.util.ByteArrayConverter",
             "header.converter": "io.confluent.connect.replicator.util.ByteArrayConverter",
-            "src.consumer.group.id": "duplicate-topic",
-            "provenance.header.enable": true,
+            "provenance.header.enable": false,
+            "offset.timestamps.commit": false,
+            "offset.translator.tasks.max": 0,
             "topic.whitelist": "rbac_gcs_topic",
             "topic.rename.format": "rbac_gcs_topic-duplicate",
-            "dest.kafka.bootstrap.servers": "broker:9092",
-            "src.kafka.bootstrap.servers": "broker:9092",
-            "consumer.override.sasl.jaas.config": "org.apache.kafka.common.security.oauthbearer.OAuthBearerLoginModule required username=\"connectorSA\" password=\"connectorSA\" metadataServerUrls=\"http://broker:8091\";"
+            "src.kafka.bootstrap.servers": "broker:10091",
+            "src.kafka.security.protocol" : "SASL_PLAINTEXT",
+            "src.kafka.sasl.jaas.config": "org.apache.kafka.common.security.oauthbearer.OAuthBearerLoginModule required username=\"connectorSA\" password=\"connectorSA\" metadataServerUrls=\"http://broker:8091\";",
+            "src.kafka.sasl.login.callback.handler.class": "io.confluent.kafka.clients.plugins.auth.token.TokenUserLoginCallbackHandler",
+            "src.kafka.sasl.mechanism": "OAUTHBEARER",
+            "dest.kafka.bootstrap.servers": "broker:10091",
+            "dest.kafka.security.protocol" : "SASL_PLAINTEXT",
+            "dest.kafka.sasl.jaas.config": "org.apache.kafka.common.security.oauthbearer.OAuthBearerLoginModule required username=\"connectorSA\" password=\"connectorSA\" metadataServerUrls=\"http://broker:8091\";",
+            "dest.kafka.sasl.mechanism": "OAUTHBEARER",
+            "dest.kafka.sasl.login.callback.handler.class": "io.confluent.kafka.clients.plugins.auth.token.TokenUserLoginCallbackHandler",
+            "consumer.override.sasl.jaas.config": "org.apache.kafka.common.security.oauthbearer.OAuthBearerLoginModule required username=\"connectorSA\" password=\"connectorSA\" metadataServerUrls=\"http://broker:8091\";",
+            "confluent.license": ""
            }' \
       http://localhost:8083/connectors/my-rbac-connector/config | jq .
 
