@@ -24,7 +24,6 @@ curl -X PUT \
             "value.converter": "io.confluent.connect.replicator.util.ByteArrayConverter",
             "header.converter": "io.confluent.connect.replicator.util.ByteArrayConverter",
             "src.consumer.group.id": "duplicate-topic",
-            "confluent.topic.replication.factor": 1,
             "provenance.header.enable": true,
             "topic.whitelist": "rbac_gcs_topic",
             "topic.rename.format": "rbac_gcs_topic-duplicate",
