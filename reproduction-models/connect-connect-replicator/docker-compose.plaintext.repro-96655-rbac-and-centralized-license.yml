@@ -1,0 +1,19 @@
+---
+version: '3.5'
+services:
+  connect:
+    volumes:
+        - ../../environment/rbac-sasl-plain/scripts/security/client_sasl_plain.config:/etc/kafka/secrets/client_sasl_plain.config
+    environment:
+      CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-replicator
+      CONNECT_CONFLUENT_LICENSE: ""
+      CONNECT_CONFLUENT_TOPIC_BOOTSTRAP_SERVERS: "broker:10091"
+      CONNECT_CONFLUENT_TOPIC_SECURITY_PROTOCOL: "SASL_PLAINTEXT"
+      CONNECT_CONFLUENT_TOPIC_REPLICATION_FACTOR: "1"
+      CONNECT_CONFLUENT_TOPIC_SASL_MECHANISM: 'OAUTHBEARER'
+      CONNECT_CONFLUENT_TOPIC_SASL_LOGIN_CALLBACK_HANDLER_CLASS: 'io.confluent.kafka.clients.plugins.auth.token.TokenUserLoginCallbackHandler'
+      CONNECT_CONFLUENT_TOPIC_SASL_JAAS_CONFIG: |
+              org.apache.kafka.common.security.oauthbearer.OAuthBearerLoginModule required \
+              username="connectAdmin" \
+              password="connectAdmin" \
+              metadataServerUrls="http://broker:8091";

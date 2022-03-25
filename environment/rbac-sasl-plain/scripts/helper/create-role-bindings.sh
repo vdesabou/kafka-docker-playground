@@ -103,6 +103,7 @@ declare -a ConnectResources=(
     "Topic:connect-status"
     "Group:connect-cluster"
     "Topic:_confluent-monitoring"
+    "Topic:_confluent-command"
     "Topic:_confluent-secrets"
     "Group:secret-registry"
 )
