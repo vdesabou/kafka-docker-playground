@@ -9,6 +9,13 @@ ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.jtd
 log "Load inventory-repro-98575.sql to SQL Server"
 cat inventory-repro-98575.sql | docker exec -i sqlserver bash -c '/opt/mssql-tools/bin/sqlcmd -U sa -P Password!'
 
+# it doesn't not work see https://stackoverflow.com/a/43556579/2381999
+# docker exec -i sqlserver /opt/mssql-tools/bin/sqlcmd -U sa -P Password! <<-EOF
+# use testDB;
+# SET IDENTITY_INSERT customers ON;
+# GO
+# EOF
+
 log "Creating JDBC SQL Server (with JTDS driver) sink connector"
 curl -X PUT \
      -H "Content-Type: application/json" \
@@ -53,6 +60,15 @@ GO
 EOF
 cat /tmp/result.log
 grep "vincent" /tmp/result.log
+
+# 11:33:43 ℹ️ Show content of customers table:
+# Changed database context to 'testDB'.
+# id          first_name          
+# ----------- --------------------
+#           1 Sally               
+#           2 George              
+#           3 Edward              
+#           4 Anne   
 
 
 # [2022-03-25 11:33:54,993] ERROR [sqlserver-sink|task-0] WorkerSinkTask{id=sqlserver-sink-0} RetriableException from SinkTask: (org.apache.kafka.connect.runtime.WorkerSinkTask:627)
