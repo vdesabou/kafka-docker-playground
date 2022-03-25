@@ -189,8 +189,7 @@ curl -X PUT \
                     "confluent.license": "",
                     "confluent.topic.bootstrap.servers": "broker:9092",
                     "confluent.topic.replication.factor": "1",
-                    "behavior.on.api.errors": "log",
-                    "request.max.retries.time.ms": "1000"
+                    "behavior.on.api.errors": "log"
           }' \
      http://localhost:8083/connectors/salesforce-platform-events-sink/config | jq .
 
