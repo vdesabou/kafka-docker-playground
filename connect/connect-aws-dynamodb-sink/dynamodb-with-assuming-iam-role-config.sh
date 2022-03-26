@@ -59,13 +59,18 @@ else
      export CONNECT_CONTAINER_HOME_DIR="/root"
 fi
 
-${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.with-assuming-iam-role-config.yml"
-
-log "Sending messages to topic a-topic"
-seq -f "{\"f1\": \"value%g\"}" 10 | docker exec -i connect kafka-avro-console-producer --broker-list broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic a-topic --property value.schema='{"type":"record","name":"myrecord","fields":[{"name":"f1","type":"string"}]}'
-
 AWS_REGION=$(aws configure get region | tr '\r' '\n')
 DYNAMODB_ENDPOINT="https://dynamodb.$AWS_REGION.amazonaws.com"
+
+set +e
+log "Delete table, this might fail"
+aws dynamodb delete-table --table-name mytable --region $AWS_REGION
+set -e
+
+${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.with-assuming-iam-role-config.yml"
+
+log "Sending messages to topic mytable"
+seq -f "{\"f1\": \"value%g\"}" 10 | docker exec -i connect kafka-avro-console-producer --broker-list broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic mytable --property value.schema='{"type":"record","name":"myrecord","fields":[{"name":"f1","type":"string"}]}'
 
 log "Creating AWS DynamoDB Sink connector"
 curl -X PUT \
@@ -73,7 +78,7 @@ curl -X PUT \
      --data '{
                "connector.class": "io.confluent.connect.aws.dynamodb.DynamoDbSinkConnector",
                "tasks.max": "1",
-               "topics": "a-topic",
+               "topics": "mytable",
                "aws.dynamodb.region": "'"$AWS_REGION"'",
                "aws.dynamodb.endpoint": "'"$DYNAMODB_ENDPOINT"'",
                "confluent.license": "",
@@ -90,6 +95,6 @@ log "Sleeping 120 seconds, waiting for table to be created"
 sleep 120
 
 log "Verify data is in DynamoDB"
-aws dynamodb scan --table-name a-topic --region $AWS_REGION  > /tmp/result.log  2>&1
+aws dynamodb scan --table-name mytable --region $AWS_REGION  > /tmp/result.log  2>&1
 cat /tmp/result.log
 grep "value1" /tmp/result.log
