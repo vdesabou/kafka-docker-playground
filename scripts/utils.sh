@@ -44,6 +44,15 @@ function jq() {
     fi
 }
 
+function yq() {
+    if [[ $(type -f yq 2>&1) =~ "not found" ]]
+    then
+      docker run --rm -i mikefarah/yq "$@"
+    else
+      $(which yq) "$@"
+    fi
+}
+
 # https://stackoverflow.com/a/24067243
 function version_gt() {
   test "$(printf '%s\n' "$@" | sort -V | head -n 1)" != "$1";
