@@ -72,6 +72,8 @@ docker exec namenode bash -c "/opt/hadoop-3.1.3/bin/hdfs dfs -ls /topics/custome
 log "✨ Run the avro java producer which produces to topic customer_avro, with additional fields ADDED_FIELD_1 and ADDED_FIELD_2"
 docker exec producer-repro-98764-2 bash -c "java ${JAVA_OPTS} -jar producer-1.0.0-jar-with-dependencies.jar"
 
+sleep 10
+
 log "Listing content of /topics/customer_avro in HDFS"
 docker exec namenode bash -c "/opt/hadoop-3.1.3/bin/hdfs dfs -ls /topics/customer_avro"
 
