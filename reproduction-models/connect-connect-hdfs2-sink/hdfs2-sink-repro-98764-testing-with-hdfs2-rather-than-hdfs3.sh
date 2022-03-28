@@ -126,6 +126,8 @@ then
 fi
 set -e
 
+# 12:00:43 ℹ️ Problem has been reproduced !
+
 # log "Check data with beeline"
 # docker exec -i hive-server beeline > /tmp/result.log  2>&1 <<-EOF
 # !connect jdbc:hive2://hive-server:10000/testhive
