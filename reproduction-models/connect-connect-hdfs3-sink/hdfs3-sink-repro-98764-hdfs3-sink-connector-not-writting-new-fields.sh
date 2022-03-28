@@ -67,20 +67,42 @@ sleep 10
 log "Listing content of /topics/customer_avro in HDFS"
 docker exec namenode bash -c "/opt/hadoop-3.1.3/bin/hdfs dfs -ls /topics/customer_avro"
 
-log "✨ Run the avro java producer which produces to topic customer_avro, with additional fields AddedField1 and AddedField2"
+log "✨ Run the avro java producer which produces to topic customer_avro, with additional fields ADDED_FIELD_1 and ADDED_FIELD_2"
 docker exec producer-repro-98764-2 bash -c "java ${JAVA_OPTS} -jar producer-1.0.0-jar-with-dependencies.jar"
 
 log "Listing content of /topics/customer_avro in HDFS"
 docker exec namenode bash -c "/opt/hadoop-3.1.3/bin/hdfs dfs -ls /topics/customer_avro"
 
-docker exec namenode bash -c "/opt/hadoop-3.1.3/bin/hadoop fs -copyToLocal /topics/customer_avro /tmp/customer_avro"
+docker exec namenode bash -c "rm -rf /tmp/customer_avro;/opt/hadoop-3.1.3/bin/hadoop fs -copyToLocal /topics/customer_avro /tmp/customer_avro"
 docker exec namenode tar cvfz file.tgz /tmp/customer_avro
 docker cp namenode:/file.tgz /tmp/
 
+rm -rf tmp
 tar xvfz /tmp/file.tgz
-# for file in $(find tmp/customer_avro -name *.avro)
-# do
-#      echo "$file"
-#      docker run --rm -v tmp/:/tmp actions/avro-tools tojson /tmp//$file
-# done
 
+
+set +e
+found=0
+for file in $(find tmp/customer_avro -name *.avro)
+do
+     grep ADDED_FIELD_1 $file
+     if [ $? = 0 ]
+     then
+          log "Found new field ADDED_FIELD_1 in $file"
+          found=1
+          continue
+     fi
+
+     grep ADDED_FIELD_2 $file
+     if [ $? = 0 ]
+     then
+          log "Found new field ADDED_FIELD_2 in $file"
+          found=1
+          continue
+     fi
+done
+if [ $found -eq 0 ]
+then
+     log "Problem has been reproduced !"
+fi
+set -e

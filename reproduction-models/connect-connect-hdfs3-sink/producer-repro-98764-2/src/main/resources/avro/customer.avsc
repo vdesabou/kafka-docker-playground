@@ -2,30 +2,9 @@
     "type": "record",
     "namespace": "com.github.vdesabou",
     "name": "Customer",
-    "version": "1",
     "fields": [
         {
-            "name": "count",
-            "type": "long",
-            "doc": "count"
-        },
-        {
-            "name": "first_name",
-            "type": "string",
-            "doc": "First Name of Customer"
-        },
-        {
-            "name": "last_name",
-            "type": "string",
-            "doc": "Last Name of Customer"
-        },
-        {
-            "name": "address",
-            "type": "string",
-            "doc": "Address of Customer"
-        },
-        {
-            "name": "AddedField1",
+            "name": "ID_CUSTOMER",
             "type": [
                 "null",
                 "string"
@@ -33,12 +12,30 @@
             "default": null
         },
         {
-            "name": "AddedField2",
+            "name": "IT_KAFKA",
+            "type": [
+                "null",
+                "long"
+            ],
+            "default": null
+        },
+        {
+            "name": "ADDED_FIELD_1",
+            "type": [
+                "null",
+                "string"
+            ],
+            "default": null
+        },
+        {
+            "name": "ADDED_FIELD_2",
             "type": [
                 "null",
                 "string"
             ],
             "default": null
         }
-    ]
+    ],
+    "connect.name": "aname",
+    "connect.version": 1
 }
