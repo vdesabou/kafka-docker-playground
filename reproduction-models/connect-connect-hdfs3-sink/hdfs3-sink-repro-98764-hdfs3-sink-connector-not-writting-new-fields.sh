@@ -73,6 +73,14 @@ docker exec producer-repro-98764-2 bash -c "java ${JAVA_OPTS} -jar producer-1.0.
 log "Listing content of /topics/customer_avro in HDFS"
 docker exec namenode bash -c "/opt/hadoop-3.1.3/bin/hdfs dfs -ls /topics/customer_avro"
 
+log "Get v1"
+curl --request GET \
+  --url http://localhost:8081/subjects/customer_avro-value/versions/1
+
+log "Get v2"
+curl --request GET \
+  --url http://localhost:8081/subjects/customer_avro-value/versions/2
+
 docker exec namenode bash -c "rm -rf /tmp/customer_avro;/opt/hadoop-3.1.3/bin/hadoop fs -copyToLocal /topics/customer_avro /tmp/customer_avro"
 docker exec namenode tar cvfz file.tgz /tmp/customer_avro
 docker cp namenode:/file.tgz /tmp/
