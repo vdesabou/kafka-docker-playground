@@ -54,7 +54,9 @@ curl -X PUT \
                "key.converter":"org.apache.kafka.connect.storage.StringConverter",
                "value.converter":"io.confluent.connect.avro.AvroConverter",
                "value.converter.schema.registry.url":"http://schema-registry:8081",
-               "schema.compatibility":"BACKWARD"
+               "schema.compatibility":"BACKWARD",
+               "connect.meta.data": "false",
+               "value.converter.connect.meta.data": "false"
           }' \
      http://localhost:8083/connectors/hdfs3-sink/config | jq .
 
@@ -114,3 +116,21 @@ then
      log "Problem has been reproduced !"
 fi
 set -e
+
+# When removing from the schema itself:
+
+#     "connect.name": "aname",
+#     "connect.version": 1
+
+# or updating "connect.version": 2
+
+# ...then it works:
+
+# 10:10:02 ℹ️ Found new field ADDED_FIELD_1 in tmp/customer_avro/year=2022/month=03/day=28/customer_avro+0+0000000010+0000000014.avro
+# 10:10:02 ℹ️ Found new field ADDED_FIELD_1 in tmp/customer_avro/year=2022/month=03/day=28/customer_avro+0+0000000015+0000000019.avro
+
+# event when setting, it does not work:
+
+#                "value.converter.connect.meta.data": "false"
+
+
