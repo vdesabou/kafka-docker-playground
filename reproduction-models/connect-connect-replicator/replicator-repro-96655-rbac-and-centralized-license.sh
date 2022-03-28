@@ -17,18 +17,10 @@ ${DIR}/../../environment/rbac-sasl-plain/start.sh "${PWD}/docker-compose.plainte
 log "Sending messages to topic rbac_gcs_topic"
 seq -f "{\"f1\": \"This is a message sent with RBAC SASL/PLAIN authentication %g\"}" 10 | docker exec -i connect kafka-avro-console-producer --broker-list broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic rbac_gcs_topic --property value.schema='{"type":"record","name":"myrecord","fields":[{"name":"f1","type":"string"}]}' --property schema.registry.url=http://schema-registry:8081 --property basic.auth.credentials.source=USER_INFO --property schema.registry.basic.auth.user.info=clientAvroCli:clientAvroCli --producer.config /etc/kafka/secrets/client_sasl_plain.config
 
-# for rbac, needed to add (repro-96655-create-role-bindings.sh):
+# for rbac, needed to add (repro-96655-create-role-bindings.sh), see diff with regular environment/rbac-sasl-plain/create-role-bindings.sh:
 
 # declare -a ConnectResources=(
-#     "Topic:connect-configs"
-#     "Topic:connect-offsets"
-#     "Topic:connect-status"
-#     "Group:connect-cluster"
-#     "Topic:_confluent-monitoring"
-#     "Topic:_confluent-command"
 #     "Topic:rbac_gcs_topic-duplicate"
-#     "Topic:_confluent-secrets"
-#     "Group:secret-registry"
 # )
 
 # confluent iam rolebinding create \
@@ -37,11 +29,6 @@ seq -f "{\"f1\": \"This is a message sent with RBAC SASL/PLAIN authentication %g
 #     --resource Group:my-rbac-connector \
 #     --kafka-cluster-id $KAFKA_CLUSTER_ID \
 
-# confluent iam rolebinding create \
-#     --principal $CONNECTOR_PRINCIPAL \
-#     --role ResourceOwner \
-#     --resource Topic:_confluent-command \
-#     --kafka-cluster-id $KAFKA_CLUSTER_ID
 
 log "Creating Replicator connector"
 curl -X PUT \
