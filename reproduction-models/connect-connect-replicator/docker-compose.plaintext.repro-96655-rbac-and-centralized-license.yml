@@ -5,8 +5,8 @@ services:
     volumes:
         - ../../environment/rbac-sasl-plain/scripts/security/client_sasl_plain.config:/etc/kafka/secrets/client_sasl_plain.config
     environment:
-      CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-replicator
-      CONNECT_CONFLUENT_LICENSE: ""
+      CONNECT_PLUGIN_PATH: /usr/share/java
+      CONNECT_CONFLUENT_LICENSE: "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdWQiOiJ2aW5jIiwiZXhwIjoxNjg2MzU1MjAwLCJpYXQiOjE2MzkwOTQ0MDAsImlzcyI6IkNvbmZsdWVudCIsIm1vbml0b3JpbmciOnRydWUsIm5iNCI6MTYzOTEyNjE3NSwic3ViIjoiY29udHJvbC1jZW50ZXIifQ.Wna61578__ZO0fd_fLKgVu6l91vu0dVcM7R5y0iiBU8In1v9WJ_ymwOpQca4eDS2ECi4jIfrTv__lDuUL_cWFqsBT_PajdLBsELtzVBzaSkLdcuKI732iIaDknpf16K5W9j2VsEUhVgEBXiKxHJZlu5JnmAN0ua64c-hpYSC2oPiHmRDx06WVVjkIWKjCTiCSY0aXgdILxO64xjYjF5QFUARiHtJ40tjl-op5njDQyYtlOM4s3F3KzeGAlSpqpH0Q6pRt82KaNI3GPPOyUJ7Rav6jjPOD52x-dUu00dFRd7S5hGCaUuwSHCmPZh2CmNxC-ALDSRI_uYpDC6Loo-1Kw"
       CONNECT_CONFLUENT_TOPIC_BOOTSTRAP_SERVERS: "broker:10091"
       CONNECT_CONFLUENT_TOPIC_SECURITY_PROTOCOL: "SASL_PLAINTEXT"
       CONNECT_CONFLUENT_TOPIC_REPLICATION_FACTOR: "1"
