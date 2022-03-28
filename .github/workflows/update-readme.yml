@@ -32,7 +32,7 @@ jobs:
 
       - name: Update README
         run: |
-          ./scripts/update-readme.sh "5.3.7 5.4.6 5.5.7 6.0.5 6.1.4 6.2.2 7.0.1"
+          ./scripts/update-readme.sh "5.3.8 5.4.6 5.5.7 6.0.5 6.1.4 6.2.2 7.0.1"
       - name: push
         uses: github-actions-x/commit@v2.6
         with:
