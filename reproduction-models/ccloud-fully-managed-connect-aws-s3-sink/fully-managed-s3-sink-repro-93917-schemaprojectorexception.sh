@@ -4,6 +4,30 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
+file="producer-repro-93917-customer.avsc"
+cd producer-repro-93917/src/main/resources/avro/
+get_3rdparty_file "$file"
+if [ ! -f $file ]
+then
+     logerror "ERROR: $file is missing"
+     exit 1
+else
+     mv $file customer.avsc
+fi
+cd -
+
+file="producer-repro-93917-2-customer.avsc"
+cd producer-repro-93917-2/src/main/resources/avro/
+get_3rdparty_file "$file"
+if [ ! -f $file ]
+then
+     logerror "ERROR: $file is missing"
+     exit 1
+else
+     mv $file customer.avsc
+fi
+cd -
+
 for component in producer-repro-93917 producer-repro-93917-2
 do
     set +e
@@ -102,7 +126,7 @@ cat << EOF > connector.json
      "s3.compression.level": "9",
      "locale": "en",
      "schema.compatibility": "BACKWARD",
-     "value.converter.connect.meta.data": "true",
+     "value.converter.connect.meta.data": "false",
      "tasks.max" : "1"
 }
 EOF
@@ -137,7 +161,7 @@ curl -X POST $SCHEMA_REGISTRY_URL/subjects/customer_avro-value/versions \
 log "✨ Run a java producer with schema v1 which produces to topic customer_avro, it runs 1 message per second"
 docker exec -d producer-repro-93917 bash -c "java -jar producer-1.0.0-jar-with-dependencies.jar"
 
-sleep 10
+sleep 30
 
 log "Register second version using producer-repro-93917-2/src/main/resources/avro/customer.avsc"
 escaped_json=$(jq -c -Rs '.' producer-repro-93917-2/src/main/resources/avro/customer.avsc)
