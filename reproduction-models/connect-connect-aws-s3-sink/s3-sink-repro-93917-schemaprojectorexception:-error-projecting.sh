@@ -5,6 +5,7 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
 file="producer-repro-93917-customer.avsc"
+mkdir -p producer-repro-93917/src/main/resources/avro/
 cd producer-repro-93917/src/main/resources/avro/
 get_3rdparty_file "$file"
 if [ ! -f $file ]
@@ -17,6 +18,7 @@ fi
 cd -
 
 file="producer-repro-93917-2-customer.avsc"
+mkdir -p producer-repro-93917-2/src/main/resources/avro/
 cd producer-repro-93917-2/src/main/resources/avro/
 get_3rdparty_file "$file"
 if [ ! -f $file ]
@@ -142,15 +144,15 @@ curl -X POST http://localhost:8081/subjects/customer_avro-value/versions \
 log "✨ Run a java producer with schema v1 which produces to topic customer_avro, it runs 1000 messages per second"
 docker exec -d producer-repro-93917 bash -c "java -jar producer-1.0.0-jar-with-dependencies.jar"
 
-log "sleeping 30 seconds"
-sleep 30
+log "sleeping 60 seconds"
+sleep 60
 
 log "Updating S3 Sink connector with value.converter.connect.meta.data=false"
 curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
                "connector.class": "io.confluent.connect.s3.S3SinkConnector",
-               "tasks.max": "1",
+               "tasks.max": "5",
                "topics": "customer_avro",
                "s3.region": "'"$AWS_REGION"'",
                "s3.bucket.name": "'"$AWS_BUCKET_NAME"'",
@@ -205,6 +207,9 @@ log "Register new version v2 for schema customer_avro-value"
 curl -X POST http://localhost:8081/subjects/customer_avro-value/versions \
 --header 'Content-Type: application/vnd.schemaregistry.v1+json' \
 --data @/tmp/final.json
+
+log "sleeping 60 seconds"
+sleep 60
 
 log "✨ Run a java producer with schema v2 which produces to topic customer_avro, it runs 1000 messages per second"
 docker exec -d producer-repro-93917-2 bash -c "java -jar producer-1.0.0-jar-with-dependencies.jar"
