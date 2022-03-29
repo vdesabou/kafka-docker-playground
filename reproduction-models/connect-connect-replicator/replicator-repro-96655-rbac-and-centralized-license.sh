@@ -82,3 +82,22 @@ docker exec -i connect kafka-avro-console-consumer --bootstrap-server broker:909
 #         ... 8 more
 # Caused by: org.apache.kafka.common.errors.TimeoutException: License topic could not be created
 # Caused by: org.apache.kafka.common.errors.TimeoutException: Timed out waiting for a node assignment. Call: createTopics
+
+# with "confluent.license":
+
+# [2022-03-28 15:14:49,146] ERROR [my-rbac-connector|worker] WorkerConnector{id=my-rbac-connector} Error while starting connector (org.apache.kafka.connect.runtime.WorkerConnector:193)
+# org.apache.kafka.common.errors.TopicAuthorizationException: Topic authorization failed.
+# [2022-03-28 15:14:49,187] ERROR [my-rbac-connector|worker] [Worker clientId=connect-1, groupId=connect-cluster] Failed to start connector 'my-rbac-connector' (org.apache.kafka.connect.runtime.distributed.DistributedHerder:1490)
+# org.apache.kafka.connect.errors.ConnectException: Failed to start connector: my-rbac-connector
+#         at org.apache.kafka.connect.runtime.distributed.DistributedHerder.lambda$startConnector$25(DistributedHerder.java:1461)
+#         at org.apache.kafka.connect.runtime.WorkerConnector.doTransitionTo(WorkerConnector.java:335)
+#         at org.apache.kafka.connect.runtime.WorkerConnector.doRun(WorkerConnector.java:141)
+#         at org.apache.kafka.connect.runtime.WorkerConnector.run(WorkerConnector.java:118)
+#         at java.base/java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:515)
+#         at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:264)
+#         at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1128)
+#         at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:628)
+#         at java.base/java.lang.Thread.run(Thread.java:829)
+# Caused by: org.apache.kafka.connect.errors.ConnectException: Failed to transition connector my-rbac-connector to state STARTED
+#         ... 8 more
+# Caused by: org.apache.kafka.common.errors.TopicAuthorizationException: Topic authorization failed.
