@@ -50,7 +50,7 @@ public class SimpleProducer {
         final Integer numberOfPartitions = Integer.valueOf(System.getenv().getOrDefault("NUMBER_OF_PARTITIONS", "2"));
         final Short replicationFactor = Short.valueOf(System.getenv().getOrDefault("REPLICATION_FACTOR", "3"));
         nbMessages = Long.valueOf(System.getenv().getOrDefault("NB_MESSAGES", "10"));
-        if(nbMessages == -1) {
+        if (nbMessages == -1) {
             nbMessages = Long.MAX_VALUE;
         }
 

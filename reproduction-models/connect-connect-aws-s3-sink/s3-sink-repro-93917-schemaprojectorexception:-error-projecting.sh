@@ -4,6 +4,30 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
+file="producer-repro-93917-customer.avsc"
+cd producer-repro-93917/src/main/resources/avro/
+get_3rdparty_file "$file"
+if [ ! -f $file ]
+then
+     logerror "ERROR: $file is missing"
+     exit 1
+else
+     mv $file customer.avsc
+fi
+cd -
+
+file="producer-repro-93917-2-customer.avsc"
+cd producer-repro-93917-2/src/main/resources/avro/
+get_3rdparty_file "$file"
+if [ ! -f $file ]
+then
+     logerror "ERROR: $file is missing"
+     exit 1
+else
+     mv $file customer.avsc
+fi
+cd -
+
 if [ ! -f $HOME/.aws/config ]
 then
      logerror "ERROR: $HOME/.aws/config is not set"
@@ -55,7 +79,7 @@ set +e
 aws s3 rm s3://$AWS_BUCKET_NAME --recursive --region $AWS_REGION
 set -e
 
-log "Creating S3 Sink connector with bucket name <$AWS_BUCKET_NAME>"
+log "Creating S3 Sink connector without value.converter.connect.meta.data=false"
 curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
@@ -75,7 +99,6 @@ curl -X PUT \
 
                "schema.compatibility": "BACKWARD",
                "behavior.on.null.values": "ignore",
-               "connect.meta.data": "false",
                "enhanced.avro.schema.support": "true",
                "rotate.interval.ms": "180000",
                "schemas.cache.config": "1000",
@@ -116,12 +139,13 @@ curl -X POST http://localhost:8081/subjects/customer_avro-value/versions \
 --header 'Content-Type: application/vnd.schemaregistry.v1+json' \
 --data @/tmp/final.json
 
-log "✨ Run a java producer with schema v1 which produces to topic customer_avro, it runs 1 message per second"
+log "✨ Run a java producer with schema v1 which produces to topic customer_avro, it runs 1000 messages per second"
 docker exec -d producer-repro-93917 bash -c "java -jar producer-1.0.0-jar-with-dependencies.jar"
 
-sleep 10
+log "sleeping 30 seconds"
+sleep 30
 
-log "Creating S3 Sink connector with bucket name <$AWS_BUCKET_NAME>"
+log "Updating S3 Sink connector with value.converter.connect.meta.data=false"
 curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
@@ -142,7 +166,6 @@ curl -X PUT \
                
                "schema.compatibility": "BACKWARD",
                "behavior.on.null.values": "ignore",
-               "connect.meta.data": "false",
                "enhanced.avro.schema.support": "true",
                "rotate.interval.ms": "180000",
                "schemas.cache.config": "1000",
@@ -183,9 +206,10 @@ curl -X POST http://localhost:8081/subjects/customer_avro-value/versions \
 --header 'Content-Type: application/vnd.schemaregistry.v1+json' \
 --data @/tmp/final.json
 
-log "✨ Run a java producer with schema v2 which produces to topic customer_avro, it runs 1 message per second"
+log "✨ Run a java producer with schema v2 which produces to topic customer_avro, it runs 1000 messages per second"
 docker exec -d producer-repro-93917-2 bash -c "java -jar producer-1.0.0-jar-with-dependencies.jar"
 
+# no more repro with value.converter.connect.meta.data=false
 # [2022-03-07 14:44:32,122] WARN [s3-sink|task-0] Errant record written to DLQ due to: Error projecting Customer (io.confluent.connect.s3.TopicPartitionWriter:204)
 # [2022-03-07 14:44:32,123] ERROR [s3-sink|task-0] Error encountered in task s3-sink-0. Executing stage 'TASK_PUT' with class 'org.apache.kafka.connect.sink.SinkTask'. (org.apache.kafka.connect.runtime.errors.LogReporter:66)
 # org.apache.kafka.connect.errors.SchemaProjectorException: Error projecting Customer
@@ -244,3 +268,10 @@ docker exec -d producer-repro-93917-2 bash -c "java -jar producer-1.0.0-jar-with
 #         at io.confluent.connect.s3.S3SinkTask.put(S3SinkTask.java:234)
 #         at org.apache.kafka.connect.runtime.WorkerSinkTask.deliverMessages(WorkerSinkTask.java:604)
 #         ... 10 more
+
+
+log "Check topic, messages should be different"
+docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic customer_avro --from-beginning --max-messages 20
+
+log "Check DLQ"
+timeout 10 docker exec broker kafka-console-consumer --bootstrap-server broker:9092 --topic dlq --from-beginning 
