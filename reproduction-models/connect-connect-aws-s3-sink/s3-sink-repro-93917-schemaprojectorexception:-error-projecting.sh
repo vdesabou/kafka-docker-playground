@@ -270,8 +270,8 @@ docker exec -d producer-repro-93917-2 bash -c "java -jar producer-1.0.0-jar-with
 #         ... 10 more
 
 
-log "Check DLQ"
-docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic customer_avro --from-beginning --max-messages 10
+log "Check topic, messages should be different"
+docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic customer_avro --from-beginning --max-messages 20
 
 log "Check DLQ"
 timeout 10 docker exec broker kafka-console-consumer --bootstrap-server broker:9092 --topic dlq --from-beginning 
