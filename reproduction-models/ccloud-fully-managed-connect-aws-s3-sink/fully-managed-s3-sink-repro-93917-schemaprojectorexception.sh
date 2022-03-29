@@ -85,11 +85,11 @@ docker-compose build
 docker-compose down -v --remove-orphans
 docker-compose up -d
 
-AWS_BUCKET_NAME=kafka-docker-playground-93917
+AWS_BUCKET_NAME=kafka-docker-playground-93917-cloud
 AWS_BUCKET_NAME=${AWS_BUCKET_NAME//[-.]/}
 
-#AWS_REGION=$(aws configure get region | tr '\r' '\n')
-AWS_REGION=us-west-2
+AWS_REGION=$(aws configure get region | tr '\r' '\n')
+#AWS_REGION=us-west-2
 log "Creating bucket name <$AWS_BUCKET_NAME>, if required"
 set +e
 aws s3api create-bucket --bucket $AWS_BUCKET_NAME --region $AWS_REGION --create-bucket-configuration LocationConstraint=$AWS_REGION

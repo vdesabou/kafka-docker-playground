@@ -848,6 +848,8 @@ public class SimpleProducer {
             server_hog_contribute_producer.send(server_hog_contribute_record);
             server_hog_deal_compensation_producer.send(server_hog_deal_compensation_record);
 
+            logger.info("Sending Key = {}, Value = {}", server_hog_deal_compensation_record.key(), server_hog_deal_compensation_record.value());
+
             id++;
             TimeUnit.MILLISECONDS.sleep(messageBackOff);
         }
