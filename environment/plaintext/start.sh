@@ -51,7 +51,7 @@ fi
 profile_connect_nodes_command=""
 if [ -z "$ENABLE_CONNECT_NODES" ]
 then
-  .
+  :
 elif [ ${nb_connect_services} -gt 1 ]
 then 
   log "🥉 Multiple Connect nodes mode is enabled, connect2 and connect 3 containers will be started"
