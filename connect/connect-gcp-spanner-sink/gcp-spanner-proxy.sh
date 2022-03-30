@@ -8,7 +8,7 @@ PROJECT=${1:-vincent-de-saboulin-lab}
 INSTANCE=${2:-test-instance}
 DATABASE=${3:-example-db}
 
-KEYFILE="../../connect/connect-gcp-spanner-sink/keyfile.json"
+KEYFILE="${DIR}/keyfile.json"
 if [ ! -f ${KEYFILE} ]
 then
      logerror "ERROR: the file ${KEYFILE} file is not present!"

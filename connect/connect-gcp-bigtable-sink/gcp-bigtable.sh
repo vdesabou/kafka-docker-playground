@@ -7,7 +7,7 @@ source ${DIR}/../../scripts/utils.sh
 PROJECT=${1:-vincent-de-saboulin-lab}
 INSTANCE=${2:-test-instance}
 
-KEYFILE="../../connect/connect-gcp-bigtable-sink/keyfile.json"
+KEYFILE="${DIR}/keyfile.json"
 if [ ! -f ${KEYFILE} ]
 then
      logerror "ERROR: the file ${KEYFILE} file is not present!"
