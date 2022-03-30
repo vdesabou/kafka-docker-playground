@@ -9,7 +9,7 @@ logerror "Connector must be deployed on a VM on same GCP subnet as the Dataproc 
 exit 1
 
 
-KEYFILE="../../connect/connect-gcp-dataproc-sink/keyfile.json"
+KEYFILE="${DIR}/keyfile.json"
 if [ ! -f ${KEYFILE} ]
 then
      logerror "ERROR: the file ${KEYFILE} file is not present!"
