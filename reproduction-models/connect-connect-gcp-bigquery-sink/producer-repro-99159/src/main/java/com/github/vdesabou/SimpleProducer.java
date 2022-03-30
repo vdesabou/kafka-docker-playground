@@ -83,14 +83,24 @@ public class SimpleProducer {
                 // This will use constructor with minimum arguments and
                 // then setters to populate POJO
                 // Customer customer = factory.manufacturePojo(Customer.class);
-
-                Customer customer = Customer.newBuilder()
+                Customer customer = null;
+                if (id==5) {
+                    customer = Customer.newBuilder()
+                            .setCount(id)
+                            .setFirstName(faker.name().firstName())
+                            .setLastName(faker.name().lastName())
+                            .setAddress(faker.address().streetAddress())
+                            .setPrice(Double.NaN)
+                            .build();
+                } else {
+                    customer = Customer.newBuilder()
                         .setCount(id)
                         .setFirstName(faker.name().firstName())
                         .setLastName(faker.name().lastName())
                         .setAddress(faker.address().streetAddress())
-                        .setMyDouble(Double.NaN)
+                        .setPrice(0.1)
                         .build();
+                }
 
                 //Customer customer = generator.nextObject(Customer.class);
 

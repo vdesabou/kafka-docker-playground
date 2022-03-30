@@ -25,9 +25,9 @@
             "doc": "Address of Customer"
         },
         {
-            "name": "my_double",
+            "name": "price",
             "type": "double",
-            "doc": "my Double"
+            "doc": "my price"
         }
     ]
 }

@@ -64,7 +64,15 @@ curl -X PUT \
 
                "allowNewBigQueryFields": "true",
                "project" : "'"$PROJECT"'",
-               "keyfile" : "/tmp/keyfile.json"
+               "keyfile" : "/tmp/keyfile.json",
+               "transforms": "Cast,filterNaNRecords,Cast2",
+               "transforms.Cast.type": "org.apache.kafka.connect.transforms.Cast$Value",
+               "transforms.Cast.spec": "price:string",
+               "transforms.filterNaNRecords.type": "io.confluent.connect.transforms.Filter$Value",
+               "transforms.filterNaNRecords.filter.condition": "$[?(@.price == \"NaN\")]",
+               "transforms.filterNaNRecords.filter.type": "exclude",
+               "transforms.Cast2.type": "org.apache.kafka.connect.transforms.Cast$Value",
+               "transforms.Cast2.spec": "price:float32"
           }' \
      http://localhost:8083/connectors/gcp-bigquery-sink/config | jq .
 
@@ -178,10 +186,52 @@ sleep 125
 #         at com.google.cloud.bigquery.BigQueryImpl.insertAll(BigQueryImpl.java:977)
 #         ... 6 more
 
+# [2022-03-30 14:12:26,043] ERROR [gcp-bigquery-sink|task-0] WorkerSinkTask{id=gcp-bigquery-sink-0} Task threw an uncaught and unrecoverable exception. Task is being killed and will not recover until manually restarted (org.apache.kafka.connect.runtime.WorkerTask:206)
+# org.apache.kafka.connect.errors.ConnectException: Tolerance exceeded in error handler
+#         at org.apache.kafka.connect.runtime.errors.RetryWithToleranceOperator.execAndHandleError(RetryWithToleranceOperator.java:220)
+#         at org.apache.kafka.connect.runtime.errors.RetryWithToleranceOperator.execute(RetryWithToleranceOperator.java:142)
+#         at org.apache.kafka.connect.runtime.TransformationChain.transformRecord(TransformationChain.java:70)
+#         at org.apache.kafka.connect.runtime.TransformationChain.apply(TransformationChain.java:50)
+#         at org.apache.kafka.connect.runtime.WorkerSinkTask.convertAndTransformRecord(WorkerSinkTask.java:543)
+#         at org.apache.kafka.connect.runtime.WorkerSinkTask.convertMessages(WorkerSinkTask.java:494)
+#         at org.apache.kafka.connect.runtime.WorkerSinkTask.poll(WorkerSinkTask.java:333)
+#         at org.apache.kafka.connect.runtime.WorkerSinkTask.iteration(WorkerSinkTask.java:235)
+#         at org.apache.kafka.connect.runtime.WorkerSinkTask.execute(WorkerSinkTask.java:204)
+#         at org.apache.kafka.connect.runtime.WorkerTask.doRun(WorkerTask.java:199)
+#         at org.apache.kafka.connect.runtime.WorkerTask.run(WorkerTask.java:254)
+#         at java.base/java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:515)
+#         at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:264)
+#         at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1128)
+#         at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:628)
+#         at java.base/java.lang.Thread.run(Thread.java:829)
+# Caused by: java.lang.NumberFormatException: Character I is neither a decimal digit number, decimal point, nor "e" notation exponential mark.
+#         at java.base/java.math.BigDecimal.<init>(BigDecimal.java:518)
+#         at java.base/java.math.BigDecimal.<init>(BigDecimal.java:401)
+#         at java.base/java.math.BigDecimal.<init>(BigDecimal.java:834)
+#         at com.jayway.jsonpath.internal.filter.ValueNodes$NumberNode.<init>(ValueNodes.java:287)
+#         at com.jayway.jsonpath.internal.filter.ValueNode.createNumberNode(ValueNode.java:191)
+#         at com.jayway.jsonpath.internal.filter.ValueNodes$PathNode.evaluate(ValueNodes.java:698)
+#         at com.jayway.jsonpath.internal.filter.RelationalExpressionNode.apply(RelationalExpressionNode.java:37)
+#         at com.jayway.jsonpath.internal.filter.FilterCompiler$CompiledFilter.apply(FilterCompiler.java:430)
+#         at com.jayway.jsonpath.internal.path.PredicatePathToken.accept(PredicatePathToken.java:77)
+#         at com.jayway.jsonpath.internal.path.PredicatePathToken.evaluate(PredicatePathToken.java:47)
+#         at com.jayway.jsonpath.internal.path.RootPathToken.evaluate(RootPathToken.java:62)
+#         at com.jayway.jsonpath.internal.path.CompiledPath.evaluate(CompiledPath.java:99)
+#         at com.jayway.jsonpath.internal.path.CompiledPath.evaluate(CompiledPath.java:107)
+#         at com.jayway.jsonpath.JsonPath.read(JsonPath.java:185)
+#         at io.confluent.connect.transforms.Filter.shouldDrop(Filter.java:225)
+#         at io.confluent.connect.transforms.Filter.apply(Filter.java:161)
+#         at org.apache.kafka.connect.runtime.TransformationChain.lambda$transformRecord$0(TransformationChain.java:70)
+#         at org.apache.kafka.connect.runtime.errors.RetryWithToleranceOperator.execAndRetry(RetryWithToleranceOperator.java:166)
+#         at org.apache.kafka.connect.runtime.errors.RetryWithToleranceOperator.execAndHandleError(RetryWithToleranceOperator.java:200)
+#         ... 15 more
+
 log "Verify data is in GCP BigQuery:"
-docker run -i --volumes-from gcloud-config google/cloud-sdk:latest bq --project_id "$PROJECT" query "SELECT * FROM $DATASET.kcbq_quickstart1;" > /tmp/result.log  2>&1
+docker run -i --volumes-from gcloud-config google/cloud-sdk:latest bq --project_id "$PROJECT" query "SELECT * FROM $DATASET.customer_avro;" > /tmp/result.log  2>&1
 cat /tmp/result.log
 grep "value1" /tmp/result.log
+
+# [2022-03-30 14:27:26,003] INFO [gcp-bigquery-sink|task-0] Attempting to create table `pgec2userds701`.`customer_avro` with schema Schema{fields=[Field{name=count, type=INTEGER, mode=REQUIRED, description=null, policyTags=null}, Field{name=first_name, type=STRING, mode=REQUIRED, description=null, policyTags=null}, Field{name=last_name, type=STRING, mode=REQUIRED, description=null, policyTags=null}, Field{name=address, type=STRING, mode=REQUIRED, description=null, policyTags=null}, Field{name=price, type=FLOAT, mode=REQUIRED, description=null, policyTags=null}]} (com.wepay.kafka.connect.bigquery.SchemaManager:241)
 
 log "Drop dataset $DATASET"
 docker run -i --volumes-from gcloud-config google/cloud-sdk:latest bq --project_id "$PROJECT" rm -r -f -d "$DATASET"
