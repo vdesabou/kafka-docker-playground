@@ -11,7 +11,7 @@ fi
 
 PROJECT=${1:-vincent-de-saboulin-lab}
 
-KEYFILE="${DIR}/keyfile.json"
+KEYFILE="../../connect/connect-gcp-gcs-sink/keyfile.json"
 if [ ! -f ${KEYFILE} ]
 then
      logerror "ERROR: the file ${KEYFILE} file is not present!"

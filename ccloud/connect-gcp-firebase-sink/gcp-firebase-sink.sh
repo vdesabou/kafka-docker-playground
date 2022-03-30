@@ -5,7 +5,7 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 PROJECT=${1:-vincent-de-saboulin-lab}
 
-KEYFILE="${DIR}/keyfile.json"
+KEYFILE="../ccloud/connect-gcp-firebase-sink/keyfile.json"
 if [ ! -f ${KEYFILE} ]
 then
      logerror "ERROR: the file ${KEYFILE} file is not present!"
