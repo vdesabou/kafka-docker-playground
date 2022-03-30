@@ -89,7 +89,7 @@ public class SimpleProducer {
                         .setFirstName(faker.name().firstName())
                         .setLastName(faker.name().lastName())
                         .setAddress(faker.address().streetAddress())
-                        .setMyDouble(Double.POSITIVE_INFINITY)
+                        .setMyDouble(Double.NaN)
                         .build();
 
                 //Customer customer = generator.nextObject(Customer.class);

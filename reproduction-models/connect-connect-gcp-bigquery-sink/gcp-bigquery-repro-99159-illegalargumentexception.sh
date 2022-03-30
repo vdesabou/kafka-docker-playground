@@ -115,6 +115,69 @@ sleep 125
 #         at org.apache.kafka.connect.runtime.WorkerSinkTask.deliverMessages(WorkerSinkTask.java:604)
 #         ... 10 more
 
+# with NaN:
+
+# [2022-03-30 10:00:13,261] ERROR WorkerSinkTask{id=gcp-bigquery-sink-0} Task threw an uncaught and unrecoverable exception (org.apache.kafka.connect.runtime.WorkerTask)
+# org.apache.kafka.connect.errors.ConnectException: Exiting WorkerSinkTask due to unrecoverable exception.
+#         at org.apache.kafka.connect.runtime.WorkerSinkTask.deliverMessages(WorkerSinkTask.java:562)
+#         at org.apache.kafka.connect.runtime.WorkerSinkTask.poll(WorkerSinkTask.java:323)
+#         at org.apache.kafka.connect.runtime.WorkerSinkTask.iteration(WorkerSinkTask.java:225)
+#         at org.apache.kafka.connect.runtime.WorkerSinkTask.execute(WorkerSinkTask.java:197)
+#         at org.apache.kafka.connect.runtime.WorkerTask.doRun(WorkerTask.java:177)
+#         at org.apache.kafka.connect.runtime.WorkerTask.run(WorkerTask.java:227)
+#         at java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:511)
+#         at java.util.concurrent.FutureTask.run(FutureTask.java:266)
+#         at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1149)
+#         at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:624)
+#         at java.lang.Thread.run(Thread.java:748)
+# Caused by: com.wepay.kafka.connect.bigquery.exception.BigQueryConnectException: A write thread has failed with an unrecoverable error
+# Caused by: Failed to write to table
+#         at com.wepay.kafka.connect.bigquery.write.batch.KCBQThreadPoolExecutor.lambda$maybeThrowEncounteredError$0(KCBQThreadPoolExecutor.java:101)
+#         at java.util.Optional.ifPresent(Optional.java:159)
+#         at com.wepay.kafka.connect.bigquery.write.batch.KCBQThreadPoolExecutor.maybeThrowEncounteredError(KCBQThreadPoolExecutor.java:100)
+#         at com.wepay.kafka.connect.bigquery.BigQuerySinkTask.put(BigQuerySinkTask.java:236)
+#         at org.apache.kafka.connect.runtime.WorkerSinkTask.deliverMessages(WorkerSinkTask.java:540)
+#         ... 10 more
+# Caused by: com.wepay.kafka.connect.bigquery.exception.BigQueryConnectException: Failed to write to table
+# Caused by: java.lang.IllegalArgumentException
+#         at com.wepay.kafka.connect.bigquery.write.batch.TableWriter.run(TableWriter.java:103)
+#         ... 3 more
+# Caused by: com.google.cloud.bigquery.BigQueryException: java.lang.IllegalArgumentException
+#         at com.google.cloud.bigquery.BigQueryException.translateAndThrow(BigQueryException.java:100)
+#         at com.google.cloud.bigquery.BigQueryImpl.insertAll(BigQueryImpl.java:989)
+#         at com.wepay.kafka.connect.bigquery.write.row.AdaptiveBigQueryWriter.performWriteRequest(AdaptiveBigQueryWriter.java:93)
+#         at com.wepay.kafka.connect.bigquery.write.row.BigQueryWriter.writeRows(BigQueryWriter.java:112)
+#         at com.wepay.kafka.connect.bigquery.write.batch.TableWriter.run(TableWriter.java:93)
+#         ... 3 more
+# Caused by: java.lang.IllegalArgumentException
+#         at com.google.common.base.Preconditions.checkArgument(Preconditions.java:128)
+#         at com.google.api.client.util.Preconditions.checkArgument(Preconditions.java:35)
+#         at com.google.api.client.json.JsonGenerator.serialize(JsonGenerator.java:134)
+#         at com.google.api.client.json.JsonGenerator.serialize(JsonGenerator.java:173)
+#         at com.google.api.client.json.JsonGenerator.serialize(JsonGenerator.java:173)
+#         at com.google.api.client.json.JsonGenerator.serialize(JsonGenerator.java:146)
+#         at com.google.api.client.json.JsonGenerator.serialize(JsonGenerator.java:173)
+#         at com.google.api.client.json.JsonGenerator.serialize(JsonGenerator.java:105)
+#         at com.google.api.client.http.json.JsonHttpContent.writeTo(JsonHttpContent.java:73)
+#         at com.google.api.client.http.GZipEncoding.encode(GZipEncoding.java:50)
+#         at com.google.api.client.http.HttpEncodingStreamingContent.writeTo(HttpEncodingStreamingContent.java:48)
+#         at com.google.api.client.http.javanet.NetHttpRequest$DefaultOutputWriter.write(NetHttpRequest.java:76)
+#         at com.google.api.client.http.javanet.NetHttpRequest.writeContentToOutputStream(NetHttpRequest.java:171)
+#         at com.google.api.client.http.javanet.NetHttpRequest.execute(NetHttpRequest.java:117)
+#         at com.google.api.client.http.javanet.NetHttpRequest.execute(NetHttpRequest.java:84)
+#         at com.google.api.client.http.HttpRequest.execute(HttpRequest.java:1012)
+#         at com.google.api.client.googleapis.services.AbstractGoogleClientRequest.executeUnparsed(AbstractGoogleClientRequest.java:541)
+#         at com.google.api.client.googleapis.services.AbstractGoogleClientRequest.executeUnparsed(AbstractGoogleClientRequest.java:474)
+#         at com.google.api.client.googleapis.services.AbstractGoogleClientRequest.execute(AbstractGoogleClientRequest.java:591)
+#         at com.google.cloud.bigquery.spi.v2.HttpBigQueryRpc.insertAll(HttpBigQueryRpc.java:487)
+#         at com.google.cloud.bigquery.BigQueryImpl$27.call(BigQueryImpl.java:981)
+#         at com.google.cloud.bigquery.BigQueryImpl$27.call(BigQueryImpl.java:978)
+#         at com.google.api.gax.retrying.DirectRetryingExecutor.submit(DirectRetryingExecutor.java:105)
+#         at com.google.cloud.RetryHelper.run(RetryHelper.java:76)
+#         at com.google.cloud.RetryHelper.runWithRetries(RetryHelper.java:50)
+#         at com.google.cloud.bigquery.BigQueryImpl.insertAll(BigQueryImpl.java:977)
+#         ... 6 more
+
 log "Verify data is in GCP BigQuery:"
 docker run -i --volumes-from gcloud-config google/cloud-sdk:latest bq --project_id "$PROJECT" query "SELECT * FROM $DATASET.kcbq_quickstart1;" > /tmp/result.log  2>&1
 cat /tmp/result.log
