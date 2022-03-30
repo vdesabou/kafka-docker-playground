@@ -36,26 +36,37 @@ else
   profile_grafana_command="--profile grafana"
 fi
 
+ENABLE_DOCKER_COMPOSE_FILE_OVERRIDE=""
+DOCKER_COMPOSE_FILE_OVERRIDE=$1
+nb_connect_services=0
+if [ -f "${DOCKER_COMPOSE_FILE_OVERRIDE}" ]
+then
+  ENABLE_DOCKER_COMPOSE_FILE_OVERRIDE="-f ${DOCKER_COMPOSE_FILE_OVERRIDE}"
+  set +e
+  nb_connect_services=$(egrep -c "connect[0-9]+:" ${DOCKER_COMPOSE_FILE_OVERRIDE})
+  set -e
+fi
+
 # defined 3 Connect variable and when profile is included/excluded
 profile_connect_nodes_command=""
 if [ -z "$ENABLE_CONNECT_NODES" ]
 then
-  log " Single connect node is being deployed"
-elif [ $(readlink -f "*.yml" | xargs -I {} -- sh -c "grep -hE  "connect.:" {} | wc -l") -gt 1 ] # Using grep and wc as simple grep with logical AND does not appear to work properly on yaml files. 
+  .
+elif [ ${nb_connect_services} -gt 1 ]
 then 
-  log " Found connect2 and connect3 in one or more of the following yaml files: $(readlink -f "*.yml" | xargs -I {} -- sh -c "grep -E  "connect.:" {} "). Multi node deployment will start shortly however it may still fail if services have missing configurations."
+  log "🥉 Multiple Connect nodes mode is enabled, connect2 and connect 3 containers will be started"
   profile_connect_nodes_command="--profile connect_nodes"
   export CONNECT_NODES_PROFILES="connect_nodes"
 else
-  log "🛑 Could not find connect2 and connect3 in any docker-compose*.yml override files. Update the yaml files to contain the connect2 && connect3 in $(readlink -f "*.yml") "
-  export CONNECT_NODES_PROFILES=""
-fi
-
-ENABLE_DOCKER_COMPOSE_FILE_OVERRIDE=""
-DOCKER_COMPOSE_FILE_OVERRIDE=$1
-if [ -f "${DOCKER_COMPOSE_FILE_OVERRIDE}" ]
-then
-  ENABLE_DOCKER_COMPOSE_FILE_OVERRIDE="-f ${DOCKER_COMPOSE_FILE_OVERRIDE}"
+  if [ ! -f "${DOCKER_COMPOSE_FILE_OVERRIDE}" ]
+  then
+    log "🥉 Multiple connect nodes mode is enabled, connect2 and connect 3 containers will be started"
+    profile_connect_nodes_command="--profile connect_nodes"
+    export CONNECT_NODES_PROFILES="connect_nodes"
+  else
+    logerror "🛑 Could not find connect2 and connect3 in ${DOCKER_COMPOSE_FILE_OVERRIDE}. Update the yaml files to contain the connect2 && connect3 in ${DOCKER_COMPOSE_FILE_OVERRIDE}"
+    exit 1
+  fi
 fi
 
 docker-compose -f ../../environment/plaintext/docker-compose.yml ${ENABLE_DOCKER_COMPOSE_FILE_OVERRIDE} build
