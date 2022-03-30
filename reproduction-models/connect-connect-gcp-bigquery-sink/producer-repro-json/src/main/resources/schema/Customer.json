@@ -1,0 +1,29 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "additionalProperties": false,
+  "$id": "http://lh.test/Customer.schema.json",
+  "title": "Customer",
+  "description": "Customer description",
+  "type": "object",
+  "properties": {
+    "name": {
+      "description": "Customer name",
+      "type": "string",
+      "maxLength": 25
+    },
+    "surname": {
+      "description": "Customer surname",
+      "type": "string",
+      "minLength": 2
+    },
+    "report_date": {
+      "description": "Source Date",
+      "format": "date",
+      "type": "string"
+    }
+  },
+  "required": [
+    "name",
+    "surname"
+  ]
+}
