@@ -33,6 +33,7 @@ jobs:
           rm secrets.tar
           mkdir -p $HOME/.aws
           mv aws_config $HOME/.aws/config
+          mv aws_credentials $HOME/.aws/credentials
           chmod -R a+rw $HOME/.aws
           mkdir -p $HOME/.confluent
           mv config.cc.travis $HOME/.confluent/config
