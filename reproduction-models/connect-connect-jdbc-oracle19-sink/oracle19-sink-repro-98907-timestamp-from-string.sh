@@ -57,6 +57,7 @@ curl -X PUT \
                "auto.create": "true",
                "insert.mode":"insert",
                "auto.evolve":"true",
+               "transforms": "timestampconversion",
                "transforms.timestampconversion.type": "org.apache.kafka.connect.transforms.TimestampConverter$Value",
                "transforms.timestampconversion.target.type": "Timestamp",
                "transforms.timestampconversion.format": "yyyy-MM-dd HH:mm:ss.SSS",
@@ -79,7 +80,7 @@ cat /tmp/result.log
 # SQL>  Name                                         Null?    Type
 #  ----------------------------------------- -------- ----------------------------
 #  id                                        NOT NULL NUMBER(10)
-#  tsm                                       NOT NULL CLOB
+#  tsm                                       NOT NULL TIMESTAMP(6)
 #  quantity                                  NOT NULL NUMBER(10)
 #  price                                     NOT NULL BINARY_FLOAT
 
@@ -92,9 +93,9 @@ cat /tmp/result.log
 #         id
 # ----------
 # tsm
-# --------------------------------------------------------------------------------
+# ---------------------------------------------------------------------------
 #   quantity      price
 # ---------- ----------
 #        999
-# 2022-10-27 23:59:59.999
+# 27-OCT-22 11.59.59.999000 PM
 #        100   5.0E+001
