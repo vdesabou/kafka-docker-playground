@@ -65,14 +65,7 @@ curl -X PUT \
                "allowNewBigQueryFields": "true",
                "project" : "'"$PROJECT"'",
                "keyfile" : "/tmp/keyfile.json",
-               "transforms": "Cast,filterNaNRecords,Cast2",
-               "transforms.Cast.type": "org.apache.kafka.connect.transforms.Cast$Value",
-               "transforms.Cast.spec": "price:string",
-               "transforms.filterNaNRecords.type": "io.confluent.connect.transforms.Filter$Value",
-               "transforms.filterNaNRecords.filter.condition": "$[?(@.price == \"NaN\")]",
-               "transforms.filterNaNRecords.filter.type": "exclude",
-               "transforms.Cast2.type": "org.apache.kafka.connect.transforms.Cast$Value",
-               "transforms.Cast2.spec": "price:float32"
+               "convertDoubleSpecialValues": "true"
           }' \
      http://localhost:8083/connectors/gcp-bigquery-sink/config | jq .
 
@@ -82,6 +75,23 @@ docker exec producer-repro-99159 bash -c "java ${JAVA_OPTS} -jar producer-1.0.0-
 
 log "Sleeping 125 seconds"
 sleep 125
+
+# SOLUTION: "convertDoubleSpecialValues": "true"
+
+# ---------------------+----------+
+# | count | first_name | last_name |         address         |  price   |
+# +-------+------------+-----------+-------------------------+----------+
+# |     3 | Belle      | MacGyver  | 3069 Kertzmann Corner   |      0.1 |
+# |     4 | Jairo      | Hirthe    | 957 Rashad Plains       |      0.1 |
+# |     5 | Raoul      | Mertz     | 554 Monserrat Branch    | 4.9E-324 |
+# |     6 | Ubaldo     | Stracke   | 33835 Hoeger Avenue     |      0.1 |
+# |     7 | Una        | Little    | 998 Hilma Corners       |      0.1 |
+# |     8 | David      | Mann      | 20378 Westley Gateway   |      0.1 |
+# |     9 | Royce      | Luettgen  | 91381 Jessy Springs     |      0.1 |
+# |     1 | Vladimir   | Schuppe   | 97779 Dickinson Union   |      0.1 |
+# |     2 | Erika      | Shields   | 8253 Felipa Pines       |      0.1 |
+# |     0 | Ford       | Miller    | 602 Rosenbaum Mountains |      0.1 |
+# +-------+------------+-----------+-------------------------+----------+
 
 # [2022-03-29 19:19:02,825] ERROR [gcp-bigquery-sink|task-0] WorkerSinkTask{id=gcp-bigquery-sink-0} Commit of offsets threw an unexpected exception for sequence number 1: null (org.apache.kafka.connect.runtime.WorkerSinkTask:270)
 # com.wepay.kafka.connect.bigquery.exception.BigQueryConnectException: Some write threads encountered unrecoverable errors: com.wepay.kafka.connect.bigquery.exception.BigQueryConnectException: Failed to write to table
