@@ -102,6 +102,7 @@ curl -X PUT \
                 "key.converter":"org.apache.kafka.connect.storage.StringConverter",
                 "value.converter":"org.apache.kafka.connect.storage.StringConverter",
                 "function.url": "'"$FUNCTIONS_URL"'",
+                "function.key": "",
                 "confluent.license": "",
                 "confluent.topic.bootstrap.servers": "broker:9092",
                 "confluent.topic.replication.factor": "1",
@@ -121,7 +122,7 @@ curl -X PUT \
 sleep 10
 
 log "Confirm that the messages were delivered to the result topic in Kafka"
-docker exec broker kafka-console-consumer --bootstrap-server broker:9092 --topic test-result --from-beginning --max-messages 3
+timeout 60 docker exec broker kafka-console-consumer --bootstrap-server broker:9092 --topic test-result --from-beginning --max-messages 3
 
 log "Deleting resource group"
 az group delete --name $AZURE_RESOURCE_GROUP --yes --no-wait
