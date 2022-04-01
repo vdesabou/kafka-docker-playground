@@ -72,10 +72,29 @@ docker exec -i connect kafka-avro-console-producer --broker-list broker:9092 --p
 EOF
 
 sleep 5
+log "DESCRIBE ORDERS table:"
+docker exec oracle bash -c "echo 'describe ORDERS;' | sqlplus myuser/mypassword@//localhost:1521/ORCLPDB1" > /tmp/result.log  2>&1
+cat /tmp/result.log
 
+# SQL>  Name                                         Null?    Type
+#  ----------------------------------------- -------- ----------------------------
+#  id                                        NOT NULL NUMBER(10)
+#  tsm                                       NOT NULL CLOB
+#  quantity                                  NOT NULL NUMBER(10)
+#  price                                     NOT NULL BINARY_FLOAT
 
 log "Show content of ORDERS table:"
 docker exec oracle bash -c "echo 'select * from ORDERS;' | sqlplus myuser/mypassword@//localhost:1521/ORCLPDB1" > /tmp/result.log  2>&1
 cat /tmp/result.log
 
 
+# SQL> 
+#         id
+# ----------
+# tsm
+# --------------------------------------------------------------------------------
+#   quantity      price
+# ---------- ----------
+#        999
+# 2022-10-27 23:59:59.999
+#        100   5.0E+001
