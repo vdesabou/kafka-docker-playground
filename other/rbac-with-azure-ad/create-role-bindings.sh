@@ -27,7 +27,7 @@ KSQLDB_ADMIN="User:ksqlDBAdmin"
 KSQLDB_USER="User:ksqlDBUser"
 KSQLDB_SERVER="User:controlCenterAndKsqlDBServer"
 CLIENT_AVRO_PRINCIPAL="User:clientAvroCli"
-LICENSE_RESOURCE="Topic:_confluent-license"
+LICENSE_RESOURCE="Topic:_confluent-license" # starting from 6.2.3 and 7.0.2, it is replaced by _confluent-command
 
 mds_login $MDS_URL ${SUPER_USER} ${SUPER_USER_PASSWORD} || exit 1
 
@@ -83,6 +83,13 @@ do
         --principal $SR_PRINCIPAL \
         --role $role \
         --resource $LICENSE_RESOURCE \
+        --kafka-cluster-id $KAFKA_CLUSTER_ID
+
+    # starting from 6.2.3 and 7.0.2, it is replaced by _confluent-command
+    confluent iam rolebinding create \
+        --principal $SR_PRINCIPAL \
+        --role $role \
+        --resource _confluent-command \
         --kafka-cluster-id $KAFKA_CLUSTER_ID
 done
 
