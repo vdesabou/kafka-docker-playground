@@ -97,6 +97,7 @@ sleep 10
 
 log "JDBC SINK: Show content of customers table:"
 docker exec -i sqlserver /opt/mssql-tools/bin/sqlcmd -U sa -P Password! > /tmp/result.log  2>&1 <<-EOF
+USE testDB;
 select * from dbo.customers
 GO
 EOF
@@ -129,6 +130,7 @@ cat ./repro-ff-5391/drop-old-capture.sql | docker exec -i sqlserver bash -c '/op
 
 log "JDBC SINK: Show content of customers table, we should see the message with the phone_numbe"
 docker exec -i sqlserver /opt/mssql-tools/bin/sqlcmd -U sa -P Password! > /tmp/result.log  2>&1 <<-EOF
+USE testDB;
 select * from dbo.customers
 GO
 EOF
