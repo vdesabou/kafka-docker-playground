@@ -33,7 +33,6 @@ curl -X PUT \
 
                "value.converter": "io.confluent.connect.avro.AvroConverter",
                "value.converter.schema.registry.url": "http://schema-registry:8081",
-               "value.converter.object.additional.properties" : "false",
 
                "transforms": "after_state_only",
                "transforms.after_state_only.type": "io.debezium.transforms.ExtractNewRecordState"
@@ -144,6 +143,9 @@ cat ./repro-97960/create-new-capture.sql | docker exec -i sqlserver bash -c '/op
 
 sleep 5
 
+log "alter destination table to drop column (JDBC sink is not doing it automatically) https://docs.confluent.io/kafka-connect-jdbc/current/sink-connector/index.html#auto-creation-and-auto-evolution"
+cat ./repro-97960/alter-dest-table-drop-column.sql | docker exec -i sqlserver bash -c '/opt/mssql-tools/bin/sqlcmd -U sa -P Password!'
+
 log "Make an insert without last_name"
 docker exec -i sqlserver /opt/mssql-tools/bin/sqlcmd -U sa -P Password! << EOF
 USE testDB;
@@ -160,7 +162,7 @@ timeout 60 docker exec connect kafka-avro-console-consumer -bootstrap-server bro
 log "Drop old capture (following https://debezium.io/documentation/reference/connectors/sqlserver.html#online-schema-updates)"
 cat ./repro-97960/drop-old-capture.sql | docker exec -i sqlserver bash -c '/opt/mssql-tools/bin/sqlcmd -U sa -P Password!'
 
-log "JDBC SINK: Show content of customers table, we should see the message with the phone_numbe"
+log "JDBC SINK: Show content of customers table, we should not see anymore the column last_name"
 docker exec -i sqlserver /opt/mssql-tools/bin/sqlcmd -U sa -P Password! > /tmp/result.log  2>&1 <<-EOF
 USE testDB;
 select * from master.dbo.customers
