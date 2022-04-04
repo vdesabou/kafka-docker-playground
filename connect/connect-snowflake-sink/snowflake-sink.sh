@@ -166,3 +166,32 @@ grep "scissors" /tmp/result.log
 
 # docker exec broker kafka-consumer-groups --bootstrap-server broker:9092 --group connect-snowflake-sink --to-earliest --topic test_table --reset-offsets --dry-run
 # docker exec broker kafka-consumer-groups --bootstrap-server broker:9092 --group connect-snowflake-sink --to-earliest --topic test_table --reset-offsets --execute
+
+
+# # note: with "value.converter": "com.snowflake.kafka.connector.records.SnowflakeAvroConverter", we get schema_id:
+
+# +--------------------------------+--------------------------+
+# | RECORD_METADATA                | RECORD_CONTENT           |
+# |--------------------------------+--------------------------|
+# | {                              | {                        |
+# |   "CreateTime": 1649071570542, |   "u_name": "scissors",  |
+# |   "offset": 0,                 |   "u_price": 2.75,       |
+# |   "partition": 0,              |   "u_quantity": 3        |
+# |   "schema_id": 1,              | }                        |
+# |   "topic": "test_table"        |                          |
+# | }                              |                          |
+# | {                              | {                        |
+# |   "CreateTime": 1649071570562, |   "u_name": "tape",      |
+# |   "offset": 1,                 |   "u_price": 0.99,       |
+# |   "partition": 0,              |   "u_quantity": 10       |
+# |   "schema_id": 1,              | }                        |
+# |   "topic": "test_table"        |                          |
+# | }                              |                          |
+# | {                              | {                        |
+# |   "CreateTime": 1649071570563, |   "u_name": "notebooks", |
+# |   "offset": 2,                 |   "u_price": 1.99,       |
+# |   "partition": 0,              |   "u_quantity": 5        |
+# |   "schema_id": 1,              | }                        |
+# |   "topic": "test_table"        |                          |
+# | }                              |                          |
+# +--------------------------------+--------------------------+
