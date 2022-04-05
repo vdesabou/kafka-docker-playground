@@ -73,8 +73,9 @@ curl -X PUT \
                "key.converter.schema.registry.url": "http://schema-registry:8081",
                "value.converter": "io.confluent.connect.avro.AvroConverter",
                "value.converter.schema.registry.url": "http://schema-registry:8081",
+               "value.converter.object.additional.properties" : "false",
                "auto.create": "true",
-               "auto.evolve": "true",
+               "auto.evolve": "false",
                "pk.mode": "record_key",
                "insert.mode": "upsert",
                "delete.enabled" : "true",
@@ -102,6 +103,60 @@ GO
 EOF
 cat /tmp/result.log
 
+# log "Change compatibility mode to NONE"
+# curl --request PUT \
+#   --url http://localhost:8081/config \
+#   --header 'Content-Type: application/vnd.schemaregistry.v1+json' \
+#   --data '{
+#     "compatibility": "NONE"
+# }'
+log "alter manually destination table to add column ( "auto.evolve": "false")"
+cat ./repro-97960/alter-dest-table-add-column.sql | docker exec -i sqlserver bash -c '/opt/mssql-tools/bin/sqlcmd -U sa -P Password!'
+
+
+# [{"topic":"dlq","partition":0,"offset":0,"timestamp":1649156641519,"timestampType":"CREATE_TIME","headers":[{"key":"__connect.errors.topic","stringValue":"server1.dbo.customers"},{"key":"__connect.errors.partition","stringValue":"0"},{"key":"__connect.errors.offset","stringValue":"5"},{"key":"__connect.errors.connector.name","stringValue":"sqlserver-sink"},{"key":"__connect.errors.task.id","stringValue":"0"},{"key":"__connect.errors.stage","stringValue":"TASK_PUT"},{"key":"__connect.errors.class.name","stringValue":"org.apache.kafka.connect.sink.SinkTask"},{"key":"__connect.errors.exception.class.name","stringValue":"io.confluent.connect.jdbc.sink.TableAlterOrCreateException"},{"key":"__connect.errors.exception.message","stringValue":"Table \"dbo\".\"customers\" is missing fields ([SinkRecordField{schema=Schema{STRING}, name='phone_number', isPrimaryKey=false}]) and auto-evolution is disabled"},{"key":"__connect.errors.exception.stacktrace","stringValue":"io.confluent.connect.jdbc.sink.TableAlterOrCreateException: Table \"dbo\".\"customers\" is missing fields ([SinkRecordField{schema=Schema{STRING}, name='phone_number', isPrimaryKey=false}]) and auto-evolution is disabled\n\tat io.confluent.connect.jdbc.sink.DbStructure.amendIfNecessary(DbStructure.java:193)\n\tat io.confluent.connect.jdbc.sink.DbStructure.createOrAmendIfNecessary(DbStructure.java:83)\n\tat io.confluent.connect.jdbc.sink.BufferedRecords.add(BufferedRecords.java:123)\n\tat io.confluent.connect.jdbc.sink.JdbcDbWriter.write(JdbcDbWriter.java:74)\n\tat io.confluent.connect.jdbc.sink.JdbcSinkTask.unrollAndRetry(JdbcSinkTask.java:133)\n\tat io.confluent.connect.jdbc.sink.JdbcSinkTask.put(JdbcSinkTask.java:87)\n\tat org.apache.kafka.connect.runtime.WorkerSinkTask.deliverMessages(WorkerSinkTask.java:604)\n\tat org.apache.kafka.connect.runtime.WorkerSinkTask.poll(WorkerSinkTask.java:334)\n\tat org.apache.kafka.connect.runtime.WorkerSinkTask.iteration(WorkerSinkTask.java:235)\n\tat org.apache.kafka.connect.runtime.WorkerSinkTask.execute(WorkerSinkTask.java:204)\n\tat org.apache.kafka.connect.runtime.WorkerTask.doRun(WorkerTask.java:199)\n\tat org.apache.kafka.connect.runtime.WorkerTask.run(WorkerTask.java:254)\n\tat java.base/java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:515)\n\tat java.base/java.util.concurrent.FutureTask.run(FutureTask.java:264)\n\tat java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1128)\n\tat java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:628)\n\tat java.base/java.lang.Thread.run(Thread.java:829)\n"}],"key":{"id":1006},"value":{"id":1006,"first_name":"John","last_name":"Doe","email":"john.doe@example.com","phone_number":{"string":"+1-555-123456"}},"__confluent_index":0}]
+
+
+# __connect.errors.topic:server1.dbo.customers,__connect.errors.partition:0,__connect.errors.offset:5,__connect.errors.connector.name:sqlserver-sink,__connect.errors.task.id:0,__connect.errors.stage:TASK_PUT,__connect.errors.class.name:org.apache.kafka.connect.sink.SinkTask,__connect.errors.exception.class.name:io.confluent.connect.jdbc.sink.TableAlterOrCreateException,__connect.errors.exception.message:Table "dbo"."customers" is missing fields ([SinkRecordField{schema=Schema{STRING}, name='phone_number', isPrimaryKey=false}]) and auto-evolution is disabled,__connect.errors.exception.stacktrace:io.confluent.connect.jdbc.sink.TableAlterOrCreateException: Table "dbo"."customers" is missing fields ([SinkRecordField{schema=Schema{STRING}, name='phone_number', isPrimaryKey=false}]) and auto-evolution is disabled
+#         at io.confluent.connect.jdbc.sink.DbStructure.amendIfNecessary(DbStructure.java:193)
+#         at io.confluent.connect.jdbc.sink.DbStructure.createOrAmendIfNecessary(DbStructure.java:83)
+#         at io.confluent.connect.jdbc.sink.BufferedRecords.add(BufferedRecords.java:123)
+#         at io.confluent.connect.jdbc.sink.JdbcDbWriter.write(JdbcDbWriter.java:74)
+#         at io.confluent.connect.jdbc.sink.JdbcSinkTask.unrollAndRetry(JdbcSinkTask.java:133)
+#         at io.confluent.connect.jdbc.sink.JdbcSinkTask.put(JdbcSinkTask.java:87)
+#         at org.apache.kafka.connect.runtime.WorkerSinkTask.deliverMessages(WorkerSinkTask.java:604)
+#         at org.apache.kafka.connect.runtime.WorkerSinkTask.poll(WorkerSinkTask.java:334)
+#         at org.apache.kafka.connect.runtime.WorkerSinkTask.iteration(WorkerSinkTask.java:235)
+#         at org.apache.kafka.connect.runtime.WorkerSinkTask.execute(WorkerSinkTask.java:204)
+#         at org.apache.kafka.connect.runtime.WorkerTask.doRun(WorkerTask.java:199)
+#         at org.apache.kafka.connect.runtime.WorkerTask.run(WorkerTask.java:254)
+#         at java.base/java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:515)
+#         at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:264)
+#         at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1128)
+#         at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:628)
+#         at java.base/java.lang.Thread.run(Thread.java:829)
+#         JohnDoe(john.doe@example.com+1-555-123456
+# __connect.errors.topic:server1.dbo.customers,__connect.errors.partition:0,__connect.errors.offset:6,__connect.errors.connector.name:sqlserver-sink,__connect.errors.task.id:0,__connect.errors.stage:TASK_PUT,__connect.errors.class.name:org.apache.kafka.connect.sink.SinkTask,__connect.errors.exception.class.name:io.confluent.connect.jdbc.sink.TableAlterOrCreateException,__connect.errors.exception.message:Cannot ALTER TABLE "dbo"."customers" to add missing field SinkRecordField{schema=Schema{STRING}, name='last_name', isPrimaryKey=false}, as the field is not optional and does not have a default value,__connect.errors.exception.stacktrace:io.confluent.connect.jdbc.sink.TableAlterOrCreateException: Cannot ALTER TABLE "dbo"."customers" to add missing field SinkRecordField{schema=Schema{STRING}, name='last_name', isPrimaryKey=false}, as the field is not optional and does not have a default value
+#         at io.confluent.connect.jdbc.sink.DbStructure.amendIfNecessary(DbStructure.java:182)
+#         at io.confluent.connect.jdbc.sink.DbStructure.createOrAmendIfNecessary(DbStructure.java:83)
+#         at io.confluent.connect.jdbc.sink.BufferedRecords.add(BufferedRecords.java:123)
+#         at io.confluent.connect.jdbc.sink.JdbcDbWriter.write(JdbcDbWriter.java:74)
+#         at io.confluent.connect.jdbc.sink.JdbcSinkTask.unrollAndRetry(JdbcSinkTask.java:133)
+#         at io.confluent.connect.jdbc.sink.JdbcSinkTask.put(JdbcSinkTask.java:87)
+#         at org.apache.kafka.connect.runtime.WorkerSinkTask.deliverMessages(WorkerSinkTask.java:604)
+#         at org.apache.kafka.connect.runtime.WorkerSinkTask.poll(WorkerSinkTask.java:334)
+#         at org.apache.kafka.connect.runtime.WorkerSinkTask.iteration(WorkerSinkTask.java:235)
+#         at org.apache.kafka.connect.runtime.WorkerSinkTask.execute(WorkerSinkTask.java:204)
+#         at org.apache.kafka.connect.runtime.WorkerTask.doRun(WorkerTask.java:199)
+#         at org.apache.kafka.connect.runtime.WorkerTask.run(WorkerTask.java:254)
+#         at java.base/java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:515)
+#         at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:264)
+#         at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1128)
+#         at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:628)
+#         at java.base/java.lang.Thread.run(Thread.java:829)
+#         �
+# JohnDoe2*john.2doe@example.com+1-555-123456
+
 log "alter table (following https://debezium.io/documentation/reference/connectors/sqlserver.html#online-schema-updates)"
 cat ./repro-ff-5391/alter-table.sql | docker exec -i sqlserver bash -c '/opt/mssql-tools/bin/sqlcmd -U sa -P Password!'
 
@@ -121,6 +176,9 @@ sleep 5
 
 log "Verifying topic server1.dbo.customers, we should see the message with the phone_number"
 timeout 60 docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic server1.dbo.customers --from-beginning --max-messages 6
+
+log "Check DLQ"
+timeout 60 docker exec broker kafka-console-consumer --bootstrap-server broker:9092 --topic dlq --from-beginning --property print.headers=true
 
 # {"before":null,"after":{"server1.dbo.customers.Value":{"id":1006,"first_name":"John","last_name":"Doe","email":"john.doe@example.com","phone_number":{"string":"+1-555-123456"}}},"source":{"version":"1.5.0.Final","connector":"sqlserver","name":"server1","ts_ms":1626081244747,"snapshot":{"string":"false"},"db":"testDB","sequence":null,"schema":"dbo","table":"customers","change_lsn":{"string":"00000025:00000d48:0003"},"commit_lsn":{"string":"00000025:00000d48:0005"},"event_serial_no":{"long":1}},"op":"c","ts_ms":{"long":1626081249542},"transaction":null}
 
