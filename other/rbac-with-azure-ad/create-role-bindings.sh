@@ -89,7 +89,7 @@ do
     confluent iam rolebinding create \
         --principal $SR_PRINCIPAL \
         --role $role \
-        --resource _confluent-command \
+        --resource Topic:_confluent-command \
         --kafka-cluster-id $KAFKA_CLUSTER_ID
 done
 
