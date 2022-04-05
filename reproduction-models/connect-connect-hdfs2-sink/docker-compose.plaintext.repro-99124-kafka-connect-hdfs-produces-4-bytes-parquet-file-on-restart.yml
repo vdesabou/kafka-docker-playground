@@ -11,7 +11,7 @@ services:
       KAFKA_BOOTSTRAP_SERVERS: broker:9092
       TOPIC: "customer_avro"
       REPLICATION_FACTOR: 1
-      NUMBER_OF_PARTITIONS: 1
+      NUMBER_OF_PARTITIONS: 5
       NB_MESSAGES: -1 # -1 for MAX_VALUE
       MESSAGE_BACKOFF: 10 # Frequency of message injection
       KAFKA_ACKS: "all" # default: "1"

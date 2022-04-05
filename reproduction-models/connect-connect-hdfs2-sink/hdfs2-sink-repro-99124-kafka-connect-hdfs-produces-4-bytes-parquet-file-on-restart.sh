@@ -6,6 +6,9 @@ export ENABLE_CONNECT_NODES=true
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
+NB_CONNECTORS=3
+NB_TASK_PER_CONNECTOR=5
+
 function wait_for_repro () {
      MAX_WAIT=43200
      CUR_WAIT=0
@@ -33,6 +36,8 @@ function wait_for_repro () {
                echo -e "\nERROR: The logs in all connect containers do not show 'is not a Parquet file' after $MAX_WAIT seconds. Please troubleshoot with 'docker container ps' and 'docker container logs'.\n"
                exit 1
           fi
+
+          curl http://localhost:8083/connectors?expand=status&expand=info | jq .
      done
      log "The problem has been reproduced !"
 }
@@ -65,51 +70,53 @@ sleep 10
 # Note in this simple example, if you get into an issue with permissions at the local HDFS level, it may be easiest to unlock the permissions unless you want to debug that more.
 docker exec namenode bash -c "/opt/hadoop-2.7.4/bin/hdfs dfs -chmod 777  /"
 
-log "Creating HDFS Sink connector"
-curl -X PUT \
-     -H "Content-Type: application/json" \
-     --data '{
-               "connector.class":"io.confluent.connect.hdfs.HdfsSinkConnector",
-               "tasks.max":"1",
-               "topics":"customer_avro",
-               "store.url":"hdfs://namenode:8020",
-               "flush.size":"20000",
-               "hadoop.conf.dir":"/etc/hadoop/",
-               "rotate.interval.ms": "300000",
-               "partition.duration.ms": "3600000",
-               "logs.dir": "/tmp/",
-               "confluent.license": "",
-               "confluent.topic.bootstrap.servers": "broker:9092",
-               "confluent.topic.replication.factor": "1",
-               "key.converter":"io.confluent.connect.avro.AvroConverter",
-               "key.converter.schema.registry.url":"http://schema-registry:8081",
-               "value.converter":"io.confluent.connect.avro.AvroConverter",
-               "value.converter.schema.registry.url":"http://schema-registry:8081",
-               "schema.compatibility":"BACKWARD",
+for((i=0;i<$NB_CONNECTORS;i++)); do
+     LOG_DIR="/logs$i"
+     TOPIC="customer_avro$i"
+     log "Creating HDFS Sink connector"
+     curl -X PUT \
+          -H "Content-Type: application/json" \
+          --data '{
+                    "connector.class":"io.confluent.connect.hdfs.HdfsSinkConnector",
+                    "tasks.max":"'"$NB_TASK_PER_CONNECTOR"'",
+                    "topics": "'"$TOPIC"'",
+                    "store.url":"hdfs://namenode:8020",
+                    "flush.size":"20000",
+                    "hadoop.conf.dir":"/etc/hadoop/",
+                    "rotate.interval.ms": "300000",
+                    "partition.duration.ms": "3600000",
+                    "logs.dir": "'"$LOG_DIR"'",
+                    "confluent.license": "",
+                    "confluent.topic.bootstrap.servers": "broker:9092",
+                    "confluent.topic.replication.factor": "1",
+                    "key.converter":"io.confluent.connect.avro.AvroConverter",
+                    "key.converter.schema.registry.url":"http://schema-registry:8081",
+                    "value.converter":"io.confluent.connect.avro.AvroConverter",
+                    "value.converter.schema.registry.url":"http://schema-registry:8081",
+                    "schema.compatibility":"BACKWARD",
 
-               "format.class": "io.confluent.connect.hdfs.parquet.ParquetFormat",
-               "path.format": "YYYY/MM/dd/HH",
-               "filename.offset.zero.pad.width": "1",
-               "locale": "en-US",
-               "max.retries": "5",
-               "partitioner.class": "io.confluent.connect.storage.partitioner.TimeBasedPartitioner",
-               "timezone": "UTC",
-               "transforms.InsertField.offset.field": "KafkaOffset",
-               "transforms.InsertField.partition.field": "KafkaPartition",
-               "transforms.InsertField.topic.field": "KafkaTopic",
-               "transforms.InsertField.type": "org.apache.kafka.connect.transforms.InsertField$Value",
-               "transforms": "InsertField"
+                    "format.class": "io.confluent.connect.hdfs.parquet.ParquetFormat",
+                    "path.format": "YYYY/MM/dd/HH",
+                    "filename.offset.zero.pad.width": "1",
+                    "locale": "en-US",
+                    "max.retries": "5",
+                    "partitioner.class": "io.confluent.connect.storage.partitioner.TimeBasedPartitioner",
+                    "timezone": "UTC",
+                    "transforms.InsertField.offset.field": "KafkaOffset",
+                    "transforms.InsertField.partition.field": "KafkaPartition",
+                    "transforms.InsertField.topic.field": "KafkaTopic",
+                    "transforms.InsertField.type": "org.apache.kafka.connect.transforms.InsertField$Value",
+                    "transforms": "InsertField"
 
-          }' \
-     http://localhost:8083/connectors/hdfs-sink/config | jq .
+               }' \
+          http://localhost:8083/connectors/hdfs-sink$i/config | jq .
 
-log "✨ Run the avro java producer which produces to topic customer_avro"
-docker exec -d producer-repro-99124 bash -c "java ${JAVA_OPTS} -jar producer-1.0.0-jar-with-dependencies.jar"
+          log "✨ Run the avro java producer which produces to topic $TOPIC"
+          docker exec -d producer-repro-99124 bash -c "export TOPIC=$TOPIC;java ${JAVA_OPTS} -jar producer-1.0.0-jar-with-dependencies.jar"
+done
 
-sleep 10
 
-log "Listing content of /topics/customer_avro in HDFS"
-docker exec namenode bash -c "/opt/hadoop-2.7.4/bin/hdfs dfs -ls /topics/customer_avro"
+sleep 30
 
 wait_for_repro
 
