@@ -1,8 +1,41 @@
 #!/bin/bash
 set -e
 
+export ENABLE_CONNECT_NODES=true
+
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
+
+function wait_for_repro () {
+     MAX_WAIT=43200
+     CUR_WAIT=0
+     log "⌛ Waiting up to $MAX_WAIT seconds for repro (it can take several hours)"
+     docker container logs connect > /tmp/out.txt 2>&1
+     docker container logs connect2 >> /tmp/out.txt 2>&1
+     docker container logs connect3 >> /tmp/out.txt 2>&1
+     while ! grep "is not a Parquet file" /tmp/out.txt > /dev/null;
+     do
+          log "Do a rolling update"
+          log "restart connect"
+          docker restart connect
+          sleep 60
+          log "restart connect2"
+          docker restart connect2
+          sleep 60
+          log "restart connect3"
+          docker restart connect3
+          sleep 60
+          docker container logs connect > /tmp/out.txt 2>&1
+          docker container logs connect2 >> /tmp/out.txt 2>&1
+          docker container logs connect3 >> /tmp/out.txt 2>&1
+          CUR_WAIT=$(( CUR_WAIT+10 ))
+          if [[ "$CUR_WAIT" -gt "$MAX_WAIT" ]]; then
+               echo -e "\nERROR: The logs in all connect containers do not show 'is not a Parquet file' after $MAX_WAIT seconds. Please troubleshoot with 'docker container ps' and 'docker container logs'.\n"
+               exit 1
+          fi
+     done
+     log "The problem has been reproduced !"
+}
 
 if [ ! -f ${DIR}/hive-jdbc-3.1.2-standalone.jar ]
 then
@@ -78,6 +111,7 @@ sleep 10
 log "Listing content of /topics/customer_avro in HDFS"
 docker exec namenode bash -c "/opt/hadoop-2.7.4/bin/hdfs dfs -ls /topics/customer_avro"
 
+wait_for_repro
 
 exit 0
 
@@ -236,3 +270,76 @@ log "Restart failed task"
 curl --request POST \
   --url http://localhost:8083/connectors/hdfs-sink/tasks/0/restart
 
+
+docker restart connect
+
+
+# I saw:
+
+# [2022-04-04 12:06:46,253] INFO [hdfs-sink|task-0] Stopping task hdfs-sink-0 (org.apache.kafka.connect.runtime.Worker:925)
+# [2022-04-04 12:06:46,253] INFO [hdfs-sink|worker] Stopping connector hdfs-sink (org.apache.kafka.connect.runtime.Worker:411)
+# [2022-04-04 12:06:46,253] INFO [hdfs-sink|worker] Scheduled shutdown for WorkerConnector{id=hdfs-sink} (org.apache.kafka.connect.runtime.WorkerConnector:249)
+# [2022-04-04 12:06:46,254] INFO [hdfs-sink|worker] Completed shutdown for WorkerConnector{id=hdfs-sink} (org.apache.kafka.connect.runtime.WorkerConnector:269)
+# [2022-04-04 12:06:46,284] ERROR [hdfs-sink|task-0] Error closing temp file hdfs://namenode:8020/topics//+tmp/customer_avro/2022/04/04/12/3df7c80c-5cbd-42b3-9236-26f78d12ae5b_tmp.parquet for customer_avro-0 2022/04/04/12 when closing TopicPartitionWriter: (io.confluent.connect.hdfs.TopicPartitionWriter:477)
+# org.apache.kafka.connect.errors.ConnectException: java.nio.channels.ClosedChannelException
+#         at io.confluent.connect.hdfs.parquet.ParquetRecordWriterProvider$1.close(ParquetRecordWriterProvider.java:112)
+#         at io.confluent.connect.hdfs.TopicPartitionWriter.closeTempFile(TopicPartitionWriter.java:763)
+#         at io.confluent.connect.hdfs.TopicPartitionWriter.close(TopicPartitionWriter.java:475)
+#         at io.confluent.connect.hdfs.DataWriter.close(DataWriter.java:469)
+#         at io.confluent.connect.hdfs.HdfsSinkTask.close(HdfsSinkTask.java:169)
+#         at org.apache.kafka.connect.runtime.WorkerSinkTask.commitOffsets(WorkerSinkTask.java:422)
+#         at org.apache.kafka.connect.runtime.WorkerSinkTask.closePartitions(WorkerSinkTask.java:673)
+#         at org.apache.kafka.connect.runtime.WorkerSinkTask.closeAllPartitions(WorkerSinkTask.java:668)
+#         at org.apache.kafka.connect.runtime.WorkerSinkTask.execute(WorkerSinkTask.java:205)
+#         at org.apache.kafka.connect.runtime.WorkerTask.doRun(WorkerTask.java:199)
+#         at org.apache.kafka.connect.runtime.WorkerTask.run(WorkerTask.java:254)
+#         at java.base/java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:515)
+#         at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:264)
+#         at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1128)
+#         at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:628)
+#         at java.base/java.lang.Thread.run(Thread.java:829)
+# Caused by: java.nio.channels.ClosedChannelException
+#         at org.apache.hadoop.hdfs.DataStreamer$LastExceptionInStreamer.throwException4Close(DataStreamer.java:324)
+#         at org.apache.hadoop.hdfs.DFSOutputStream.checkClosed(DFSOutputStream.java:151)
+#         at org.apache.hadoop.fs.FSOutputSummer.write(FSOutputSummer.java:105)
+#         at org.apache.hadoop.fs.FSDataOutputStream$PositionCache.write(FSDataOutputStream.java:58)
+#         at java.base/java.io.DataOutputStream.write(DataOutputStream.java:107)
+#         at java.base/java.io.FilterOutputStream.write(FilterOutputStream.java:108)
+#         at org.apache.parquet.hadoop.util.HadoopPositionOutputStream.write(HadoopPositionOutputStream.java:45)
+#         at org.apache.parquet.bytes.ConcatenatingByteArrayCollector.writeAllTo(ConcatenatingByteArrayCollector.java:46)
+#         at org.apache.parquet.hadoop.ParquetFileWriter.writeColumnChunk(ParquetFileWriter.java:620)
+#         at org.apache.parquet.hadoop.ColumnChunkPageWriteStore$ColumnChunkPageWriter.writeToFileWriter(ColumnChunkPageWriteStore.java:241)
+#         at org.apache.parquet.hadoop.ColumnChunkPageWriteStore.flushToFileWriter(ColumnChunkPageWriteStore.java:319)
+#         at org.apache.parquet.hadoop.InternalParquetRecordWriter.flushRowGroupToStore(InternalParquetRecordWriter.java:173)
+#         at org.apache.parquet.hadoop.InternalParquetRecordWriter.close(InternalParquetRecordWriter.java:114)
+#         at org.apache.parquet.hadoop.ParquetWriter.close(ParquetWriter.java:310)
+#         at io.confluent.connect.hdfs.parquet.ParquetRecordWriterProvider$1.close(ParquetRecordWriterProvider.java:110)
+#         ... 15 more
+# [2022-04-04 12:06:46,286] ERROR [hdfs-sink|task-0] Error deleting temp file hdfs://namenode:8020/topics//+tmp/customer_avro/2022/04/04/12/3df7c80c-5cbd-42b3-9236-26f78d12ae5b_tmp.parquet for customer_avro-0 2022/04/04/12 when closing TopicPartitionWriter: (io.confluent.connect.hdfs.TopicPartitionWriter:489)
+# org.apache.kafka.connect.errors.ConnectException: java.io.IOException: Filesystem closed
+#         at io.confluent.connect.hdfs.storage.HdfsStorage.delete(HdfsStorage.java:165)
+#         at io.confluent.connect.hdfs.TopicPartitionWriter.deleteTempFile(TopicPartitionWriter.java:900)
+#         at io.confluent.connect.hdfs.TopicPartitionWriter.close(TopicPartitionWriter.java:487)
+#         at io.confluent.connect.hdfs.DataWriter.close(DataWriter.java:469)
+#         at io.confluent.connect.hdfs.HdfsSinkTask.close(HdfsSinkTask.java:169)
+#         at org.apache.kafka.connect.runtime.WorkerSinkTask.commitOffsets(WorkerSinkTask.java:422)
+#         at org.apache.kafka.connect.runtime.WorkerSinkTask.closePartitions(WorkerSinkTask.java:673)
+#         at org.apache.kafka.connect.runtime.WorkerSinkTask.closeAllPartitions(WorkerSinkTask.java:668)
+#         at org.apache.kafka.connect.runtime.WorkerSinkTask.execute(WorkerSinkTask.java:205)
+#         at org.apache.kafka.connect.runtime.WorkerTask.doRun(WorkerTask.java:199)
+#         at org.apache.kafka.connect.runtime.WorkerTask.run(WorkerTask.java:254)
+#         at java.base/java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:515)
+#         at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:264)
+#         at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1128)
+#         at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:628)
+#         at java.base/java.lang.Thread.run(Thread.java:829)
+# Caused by: java.io.IOException: Filesystem closed
+#         at org.apache.hadoop.hdfs.DFSClient.checkOpen(DFSClient.java:484)
+#         at org.apache.hadoop.hdfs.DFSClient.delete(DFSClient.java:1612)
+#         at org.apache.hadoop.hdfs.DistributedFileSystem$19.doCall(DistributedFileSystem.java:882)
+#         at org.apache.hadoop.hdfs.DistributedFileSystem$19.doCall(DistributedFileSystem.java:879)
+#         at org.apache.hadoop.fs.FileSystemLinkResolver.resolve(FileSystemLinkResolver.java:81)
+#         at org.apache.hadoop.hdfs.DistributedFileSystem.delete(DistributedFileSystem.java:879)
+#         at io.confluent.connect.hdfs.storage.HdfsStorage.delete(HdfsStorage.java:163)
+#         ... 15 more
+# [2022-04-04 12:06:46,295] INFO [hdfs-sink|task-0] Stopping HDFS Sink Task hdfs-sink-0 (io.confluent.connect.hdfs.HdfsSinkTask:175)
