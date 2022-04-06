@@ -1,0 +1,41 @@
+{
+    "type": "record",
+    "namespace": "com.github.vdesabou",
+    "name": "Customer",
+    "fields": [
+        {
+            "name": "ID_CUSTOMER",
+            "type": [
+                "null",
+                "string"
+            ],
+            "default": null
+        },
+        {
+            "name": "IT_KAFKA",
+            "type": [
+                "null",
+                "long"
+            ],
+            "default": null
+        },
+        {
+            "name": "ADDED_FIELD_1",
+            "type": [
+                "null",
+                "string"
+            ],
+            "default": null
+        },
+        {
+            "name": "ADDED_FIELD_2",
+            "type": [
+                "null",
+                "string"
+            ],
+            "default": null
+        }
+    ],
+    "connect.name": "aname",
+    "connect.version": 2
+}
