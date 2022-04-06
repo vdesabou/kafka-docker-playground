@@ -1482,7 +1482,9 @@ function create_or_get_oracle_image() {
   then
       log "🏭 Prebuilt $ORACLE_IMAGE docker image does not exist, building it now..it can take a while..."
       log "🚦 Startup a container ${TEMP_CONTAINER} with setup folder $SETUP_FOLDER and create the database"
-      docker run -d -e ORACLE_PWD=Admin123 -v ${SETUP_FOLDER}:/opt/oracle/scripts/setup --name ${TEMP_CONTAINER} ${BASE_ORACLE_IMAGE}
+      cd $SETUP_FOLDER
+      docker run -d -e ORACLE_PWD=Admin123 -v $PWD:/opt/oracle/scripts/setup --name ${TEMP_CONTAINER} ${BASE_ORACLE_IMAGE}
+      cd -
 
       MAX_WAIT=2500
       CUR_WAIT=0
