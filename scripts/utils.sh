@@ -60,6 +60,11 @@ function version_gt() {
 
 function set_kafka_client_tag()
 {
+    if [[ $TAG_BASE = 7.1.* ]]
+    then
+      export KAFKA_CLIENT_TAG="3.1.0"
+    fi
+
     if [[ $TAG_BASE = 7.0.* ]]
     then
       export KAFKA_CLIENT_TAG="3.0.0"
@@ -772,7 +777,7 @@ function aws() {
       then
         log '$HOME/.aws/$AWS_CREDENTIALS_FILE_NAME does not exist.'
       fi
-      return 1
+      return 1^
     fi
 
     docker run --rm -iv $HOME/.aws:/root/.aws -e AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID -e AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY -v $(pwd):/aws -v /tmp:/tmp mikesir87/aws-cli:v2 aws "$@"
