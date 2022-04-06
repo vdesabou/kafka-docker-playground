@@ -65,7 +65,10 @@ curl -X PUT \
                "deleteEnabled": "true",
                "autoCreateTables" : "true",
                "kafkaKeyFieldName": "KEY",
-               "key.converter" : "org.apache.kafka.connect.storage.StringConverter"
+               "key.converter" : "org.apache.kafka.connect.storage.StringConverter",
+               "transforms": "HoistFieldKey",
+               "transforms.HoistFieldKey.type": "org.apache.kafka.connect.transforms.HoistField$Key",
+               "transforms.HoistFieldKey.field": "usr_user_id"
           }' \
      http://localhost:8083/connectors/gcp-bigquery-sink/config | jq .
 
@@ -73,6 +76,7 @@ curl -X PUT \
 log "✨ Run the avro java producer which produces to topic customer_avro"
 docker exec producer-repro-99859 bash -c "java ${JAVA_OPTS} -jar producer-1.0.0-jar-with-dependencies.jar"
 
+# without SMT HoistField:
 # repro: key is String "Struct{usr_user_id=1}"
 # [2022-04-06 12:51:13,662] ERROR [gcp-bigquery-sink|task-0] WorkerSinkTask{id=gcp-bigquery-sink-0} Task threw an uncaught and unrecoverable exception. Task is being killed and will not recover until manually restarted (org.apache.kafka.connect.runtime.WorkerTask:206)
 # org.apache.kafka.connect.errors.ConnectException: Exiting WorkerSinkTask due to unrecoverable exception.
@@ -97,6 +101,9 @@ docker exec producer-repro-99859 bash -c "java ${JAVA_OPTS} -jar producer-1.0.0-
 #         at org.apache.kafka.connect.runtime.WorkerSinkTask.deliverMessages(WorkerSinkTask.java:604)
 #         ... 10 more
 
+
+
+
 log "Sleeping 125 seconds"
 sleep 125
 
@@ -104,3 +111,22 @@ log "Verify data is in GCP BigQuery:"
 docker run -i --volumes-from gcloud-config google/cloud-sdk:latest bq --project_id "$PROJECT" query "SELECT * FROM $DATASET.customer_avro;" > /tmp/result.log  2>&1
 cat /tmp/result.log
 
+# with SMT:
+
+# [2022-04-06 13:00:03,213] INFO [gcp-bigquery-sink|task-0] Attempting to create intermediate table `pgec2userds702`.`customer_avro_tmp_0_17da2b67_5b09_43a2_aab1_376816f95d5b_1649249998706` with schema Schema{fields=[Field{name=value, type=RECORD, mode=NULLABLE, description=null, policyTags=null}, Field{name=key, type=RECORD, mode=REQUIRED, description=null, policyTags=null}, Field{name=i, type=INTEGER, mode=REQUIRED, description=null, policyTags=null}, Field{name=partitionTime, type=TIMESTAMP, mode=NULLABLE, description=null, policyTags=null}, Field{name=batchNumber, type=INTEGER, mode=REQUIRED, description=null, policyTags=null}]} (com.wepay.kafka.connect.bigquery.SchemaManager:241)
+# [2022-04-06 13:00:03,904] INFO [gcp-bigquery-sink|task-0] Attempting to create table `pgec2userds702`.`customer_avro` with schema Schema{fields=[Field{name=count, type=INTEGER, mode=REQUIRED, description=null, policyTags=null}, Field{name=first_name, type=STRING, mode=REQUIRED, description=null, policyTags=null}, Field{name=last_name, type=STRING, mode=REQUIRED, description=null, policyTags=null}, Field{name=address, type=STRING, mode=REQUIRED, description=null, policyTags=null}, Field{name=KEY, type=RECORD, mode=NULLABLE, description=null, policyTags=null}]} (com.wepay.kafka.connect.bigquery.SchemaManager:241)
+
+# ---+---------------+-----------------------+
+# |        count         |   first_name   |   last_name    |    address    |    KEY_usr_user_id    |
+# +----------------------+----------------+----------------+---------------+-----------------------+
+# |  4672433029010564658 | YtGKbgicZaH    | CB             | RQDSxVLhpfQG  | Struct{usr_user_id=2} |
+# |  -167885730524958550 | wdkelQbxe      | TeQOvaScfqIO   | OmaaJxkyvRnLR | Struct{usr_user_id=1} |
+# | -7216359497931550918 | TMDYpsBZx      | vfBoeygjbUMaA  | IKK           | Struct{usr_user_id=3} |
+# | -5106534569952410475 | eOMtThyhVNL    | WUZNRcBaQKxIye | dUsF          | Struct{usr_user_id=0} |
+# |  1326634973105178603 | Raj            | VfJN           | onEnOin       | Struct{usr_user_id=7} |
+# | -3758321679654915806 | ZjUfzQh        | dgL            | LfDTDGspD     | Struct{usr_user_id=8} |
+# | -5237980416576129062 | vKAXLhMLl      | NgNfZB         | dyFG          | Struct{usr_user_id=6} |
+# | -3581075550420886390 | IkknjWEXJUfPxx | Q              | H             | Struct{usr_user_id=4} |
+# | -2298228485105199876 | eW             | KEJdpH         | YZGhtgdntugzv | Struct{usr_user_id=5} |
+# | -7771300887898959616 | b              | QvBQYuxiXX     | VytGCxzVll    | Struct{usr_user_id=9} |
+# +----------------------+----------------+----------------+---------------+-----------------------+
