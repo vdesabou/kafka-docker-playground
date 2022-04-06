@@ -112,6 +112,7 @@ cat /tmp/result.log
 log "alter manually destination table to add column (auto.evolve: false)"
 cat ./repro-97960/alter-dest-table-add-column.sql | docker exec -i sqlserver bash -c '/opt/mssql-tools/bin/sqlcmd -U sa -P Password!'
 
+# it can be avoided by restarting the JDBC sink task:
 # __connect.errors.topic:server1.dbo.customers,__connect.errors.partition:0,__connect.errors.offset:5,__connect.errors.connector.name:sqlserver-sink,__connect.errors.task.id:0,__connect.errors.stage:TASK_PUT,__connect.errors.class.name:org.apache.kafka.connect.sink.SinkTask,__connect.errors.exception.class.name:io.confluent.connect.jdbc.sink.TableAlterOrCreateException,__connect.errors.exception.message:Table "dbo"."customers" is missing fields ([SinkRecordField{schema=Schema{STRING}, name='phone_number', isPrimaryKey=false}]) and auto-evolution is disabled,__connect.errors.exception.stacktrace:io.confluent.connect.jdbc.sink.TableAlterOrCreateException: Table "dbo"."customers" is missing fields ([SinkRecordField{schema=Schema{STRING}, name='phone_number', isPrimaryKey=false}]) and auto-evolution is disabled
 #         at io.confluent.connect.jdbc.sink.DbStructure.amendIfNecessary(DbStructure.java:193)
 #         at io.confluent.connect.jdbc.sink.DbStructure.createOrAmendIfNecessary(DbStructure.java:83)
@@ -131,6 +132,9 @@ cat ./repro-97960/alter-dest-table-add-column.sql | docker exec -i sqlserver bas
 #         at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:628)
 #         at java.base/java.lang.Thread.run(Thread.java:829)
 #         JohnDoe(john.doe@example.com+1-555-123456
+
+log "Restarting task to refresh table metadata and avoid error  Table dbo.customers is missing fields ([SinkRecordField{schema=Schema{STRING}, name='phone_number', isPrimaryKey=false}]) and auto-evolution is disabled "
+curl -X POST localhost:8083/connectors/sqlserver-sink/tasks/0/restart
 
 log "alter table (following https://debezium.io/documentation/reference/connectors/sqlserver.html#online-schema-updates)"
 cat ./repro-ff-5391/alter-table.sql | docker exec -i sqlserver bash -c '/opt/mssql-tools/bin/sqlcmd -U sa -P Password!'
@@ -202,27 +206,3 @@ select * from master.dbo.customers
 GO
 EOF
 cat /tmp/result.log
-
-# [2022-04-04 08:48:00,907] ERROR [sqlserver-sink|task-0] WorkerSinkTask{id=sqlserver-sink-0} RetriableException from SinkTask: (org.apache.kafka.connect.runtime.WorkerSinkTask:627)
-# org.apache.kafka.connect.errors.RetriableException: java.sql.SQLException: Exception chain:
-# java.sql.BatchUpdateException: Cannot insert the value NULL into column 'last_name', table 'master.dbo.customers'; column does not allow nulls. UPDATE fails.
-
-# 	at io.confluent.connect.jdbc.sink.JdbcSinkTask.put(JdbcSinkTask.java:108)
-# 	at org.apache.kafka.connect.runtime.WorkerSinkTask.deliverMessages(WorkerSinkTask.java:604)
-# 	at org.apache.kafka.connect.runtime.WorkerSinkTask.poll(WorkerSinkTask.java:334)
-# 	at org.apache.kafka.connect.runtime.WorkerSinkTask.iteration(WorkerSinkTask.java:235)
-# 	at org.apache.kafka.connect.runtime.WorkerSinkTask.execute(WorkerSinkTask.java:204)
-# 	at org.apache.kafka.connect.runtime.WorkerTask.doRun(WorkerTask.java:199)
-# 	at org.apache.kafka.connect.runtime.WorkerTask.run(WorkerTask.java:254)
-# 	at java.base/java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:515)
-# 	at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:264)
-# 	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1128)
-# 	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:628)
-# 	at java.base/java.lang.Thread.run(Thread.java:829)
-# Caused by: java.sql.SQLException: Exception chain:
-# java.sql.BatchUpdateException: Cannot insert the value NULL into column 'last_name', table 'master.dbo.customers'; column does not allow nulls. UPDATE fails.
-
-# 	at io.confluent.connect.jdbc.sink.JdbcSinkTask.getAllMessagesException(JdbcSinkTask.java:150)
-# 	at io.confluent.connect.jdbc.sink.JdbcSinkTask.put(JdbcSinkTask.java:102)
-# 	... 11 more
-
