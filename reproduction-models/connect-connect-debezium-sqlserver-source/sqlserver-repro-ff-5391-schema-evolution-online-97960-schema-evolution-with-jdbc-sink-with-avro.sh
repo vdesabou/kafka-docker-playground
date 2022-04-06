@@ -157,8 +157,9 @@ log "Verifying topic server1.dbo.customers, we should see the message with the p
 timeout 60 docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic server1.dbo.customers --from-beginning --max-messages 6
 
 log "Check DLQ"
+set +e
 timeout 60 docker exec broker kafka-console-consumer --bootstrap-server broker:9092 --topic dlq --from-beginning --property print.headers=true
-
+set -e
 # {"before":null,"after":{"server1.dbo.customers.Value":{"id":1006,"first_name":"John","last_name":"Doe","email":"john.doe@example.com","phone_number":{"string":"+1-555-123456"}}},"source":{"version":"1.5.0.Final","connector":"sqlserver","name":"server1","ts_ms":1626081244747,"snapshot":{"string":"false"},"db":"testDB","sequence":null,"schema":"dbo","table":"customers","change_lsn":{"string":"00000025:00000d48:0003"},"commit_lsn":{"string":"00000025:00000d48:0005"},"event_serial_no":{"long":1}},"op":"c","ts_ms":{"long":1626081249542},"transaction":null}
 
 log "Drop old capture (following https://debezium.io/documentation/reference/connectors/sqlserver.html#online-schema-updates)"
