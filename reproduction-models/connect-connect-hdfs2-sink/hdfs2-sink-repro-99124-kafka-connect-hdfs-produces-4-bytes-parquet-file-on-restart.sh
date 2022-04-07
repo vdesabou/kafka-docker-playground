@@ -6,7 +6,7 @@ export ENABLE_CONNECT_NODES=true
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
-NB_CONNECTORS=3
+NB_CONNECTORS=10
 NB_TASK_PER_CONNECTOR=5
 
 function wait_for_repro () {
@@ -20,12 +20,15 @@ function wait_for_repro () {
      do
           log "Do a rolling update"
           log "restart connect"
+          docker kill connect
           docker restart connect
           sleep 60
           log "restart connect2"
+          docker kill connect2
           docker restart connect2
           sleep 60
           log "restart connect3"
+          docker kill connect3
           docker restart connect3
           sleep 60
           docker container logs connect > /tmp/out.txt 2>&1
@@ -41,13 +44,6 @@ function wait_for_repro () {
      done
      log "The problem has been reproduced !"
 }
-
-if [ ! -f ${DIR}/hive-jdbc-3.1.2-standalone.jar ]
-then
-     log "Getting hive-jdbc-3.1.2-standalone.jar"
-     wget https://repo1.maven.org/maven2/org/apache/hive/hive-jdbc/3.1.2/hive-jdbc-3.1.2-standalone.jar
-fi
-
 
 for component in producer-repro-99124
 do
@@ -73,13 +69,14 @@ docker exec namenode bash -c "/opt/hadoop-2.7.4/bin/hdfs dfs -chmod 777  /"
 for((i=0;i<$NB_CONNECTORS;i++)); do
      LOG_DIR="/logs$i"
      TOPIC="customer_avro$i"
+     TOPICS_DIR="/topics$i"
      log "Creating HDFS Sink connector"
      curl -X PUT \
           -H "Content-Type: application/json" \
           --data '{
                     "connector.class":"io.confluent.connect.hdfs.HdfsSinkConnector",
                     "tasks.max":"'"$NB_TASK_PER_CONNECTOR"'",
-                    "topics": "'"$TOPIC"'",
+                    "topics": "customer_avro0,customer_avro1,customer_avro2",
                     "store.url":"hdfs://namenode:8020",
                     "flush.size":"20000",
                     "hadoop.conf.dir":"/etc/hadoop/",
