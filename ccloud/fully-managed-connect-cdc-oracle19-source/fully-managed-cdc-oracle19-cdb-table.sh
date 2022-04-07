@@ -95,7 +95,7 @@ set -e
 
 log "Creating fully managed connector"
 create_ccloud_connector connector.json
-wait_for_ccloud_connector_up connector.json 300
+wait_for_ccloud_connector_up connector.json 1800
 
 
 log "Waiting 20s for connector to read existing data"
