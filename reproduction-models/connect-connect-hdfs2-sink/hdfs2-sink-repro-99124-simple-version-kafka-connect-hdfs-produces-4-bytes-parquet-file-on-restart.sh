@@ -183,3 +183,55 @@ docker exec namenode bash -c "/opt/hadoop-2.7.4/bin/hdfs dfs -ls /topics/+tmp/te
 
 # Found 1 items
 # -rw-r--r--   3 appuser supergroup          4 2022-04-07 12:42 /topics/+tmp/test_hdfs/2022/6ae82507-fc0e-435d-b525-937a0d45a5ae_tmp.parquet
+
+
+
+
+
+
+# With AVRO: 
+
+# 14:20:33 ℹ️ Listing content of /topics/test_hdfs and /topics/+tmp in HDFS
+# Found 3 items
+# -rw-r--r--   3 appuser supergroup        213 2022-04-07 14:20 /topics/test_hdfs/2022/test_hdfs+0+0+2.avro
+# -rw-r--r--   3 appuser supergroup        213 2022-04-07 14:20 /topics/test_hdfs/2022/test_hdfs+0+3+5.avro
+# -rw-r--r--   3 appuser supergroup        213 2022-04-07 14:20 /topics/test_hdfs/2022/test_hdfs+0+6+8.avro
+# Found 1 items
+# -rw-r--r--   3 appuser supergroup          0 2022-04-07 14:20 /topics/+tmp/test_hdfs/2022/32422d34-33e6-4ed5-a9e8-219dacad8598_tmp.avro
+
+
+# 14:22:14 ℹ️ Listing content of /topics/test_hdfs and /topics/+tmp in HDFS
+# Found 3 items
+# -rw-r--r--   3 appuser supergroup        213 2022-04-07 14:20 /topics/test_hdfs/2022/test_hdfs+0+0+2.avro
+# -rw-r--r--   3 appuser supergroup        213 2022-04-07 14:20 /topics/test_hdfs/2022/test_hdfs+0+3+5.avro
+# -rw-r--r--   3 appuser supergroup        213 2022-04-07 14:20 /topics/test_hdfs/2022/test_hdfs+0+6+8.avro
+# Found 1 items
+# -rw-r--r--   3 appuser supergroup        200 2022-04-07 14:21 /topics/+tmp/test_hdfs/2022/32422d34-33e6-4ed5-a9e8-219dacad8598_tmp.avro
+
+# [2022-04-07 14:21:12,550] ERROR [hdfs-sink|task-0] Error deleting temp file hdfs://namenode:8020/topics//+tmp/test_hdfs/2022/32422d34-33e6-4ed5-a9e8-219dacad8598_tmp.avro for test_hdfs-0 2022 when closing TopicPartitionWriter: (io.confluent.connect.hdfs.TopicPartitionWriter:489)
+# org.apache.kafka.connect.errors.ConnectException: java.io.IOException: Filesystem closed
+# 	at io.confluent.connect.hdfs.storage.HdfsStorage.delete(HdfsStorage.java:165)
+# 	at io.confluent.connect.hdfs.TopicPartitionWriter.deleteTempFile(TopicPartitionWriter.java:900)
+# 	at io.confluent.connect.hdfs.TopicPartitionWriter.close(TopicPartitionWriter.java:487)
+# 	at io.confluent.connect.hdfs.DataWriter.close(DataWriter.java:469)
+# 	at io.confluent.connect.hdfs.HdfsSinkTask.close(HdfsSinkTask.java:169)
+# 	at org.apache.kafka.connect.runtime.WorkerSinkTask.commitOffsets(WorkerSinkTask.java:422)
+# 	at org.apache.kafka.connect.runtime.WorkerSinkTask.closePartitions(WorkerSinkTask.java:673)
+# 	at org.apache.kafka.connect.runtime.WorkerSinkTask.closeAllPartitions(WorkerSinkTask.java:668)
+# 	at org.apache.kafka.connect.runtime.WorkerSinkTask.execute(WorkerSinkTask.java:205)
+# 	at org.apache.kafka.connect.runtime.WorkerTask.doRun(WorkerTask.java:199)
+# 	at org.apache.kafka.connect.runtime.WorkerTask.run(WorkerTask.java:254)
+# 	at java.base/java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:515)
+# 	at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:264)
+# 	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1128)
+# 	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:628)
+# 	at java.base/java.lang.Thread.run(Thread.java:829)
+# Caused by: java.io.IOException: Filesystem closed
+# 	at org.apache.hadoop.hdfs.DFSClient.checkOpen(DFSClient.java:484)
+# 	at org.apache.hadoop.hdfs.DFSClient.delete(DFSClient.java:1612)
+# 	at org.apache.hadoop.hdfs.DistributedFileSystem$19.doCall(DistributedFileSystem.java:882)
+# 	at org.apache.hadoop.hdfs.DistributedFileSystem$19.doCall(DistributedFileSystem.java:879)
+# 	at org.apache.hadoop.fs.FileSystemLinkResolver.resolve(FileSystemLinkResolver.java:81)
+# 	at org.apache.hadoop.hdfs.DistributedFileSystem.delete(DistributedFileSystem.java:879)
+# 	at io.confluent.connect.hdfs.storage.HdfsStorage.delete(HdfsStorage.java:163)
+# 	... 15 more
