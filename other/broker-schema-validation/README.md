@@ -100,6 +100,10 @@ $ docker exec -i connect kafka-avro-console-producer \
      --topic topic-validation \
      --broker-list broker:9092 \
      --property schema.registry.url=https://schema-registry:8085 \
+     --property schema.registry.ssl.truststore.location=/etc/kafka/secrets/kafka.client.truststore.jks \
+     --property schema.registry.ssl.truststore.password=confluent \
+     --property schema.registry.ssl.keystore.location=/etc/kafka/secrets/kafka.client.keystore.jks \
+     --property schema.registry.ssl.keystore.password=confluent \
      --property value.schema='{"type":"record","name":"user","fields":[{"name":"userid","type":"long"},{"name":"username","type":"string"}]}' \
      --producer.config /etc/kafka/secrets/client_without_interceptors_2way_ssl.config << EOF
 {"userid":1,"username":"RODRIGUEZ"}
@@ -115,6 +119,10 @@ $ docker exec -i connect kafka-avro-console-producer \
      --property basic.auth.credentials.source=USER_INFO \
      --property schema.registry.basic.auth.user.info="write:write" \
      --property schema.registry.url=https://schema-registry:8085 \
+     --property schema.registry.ssl.truststore.location=/etc/kafka/secrets/kafka.client.truststore.jks \
+     --property schema.registry.ssl.truststore.password=confluent \
+     --property schema.registry.ssl.keystore.location=/etc/kafka/secrets/kafka.client.keystore.jks \
+     --property schema.registry.ssl.keystore.password=confluent \
      --property value.schema='{"type":"record","name":"user","fields":[{"name":"userid","type":"long"},{"name":"username","type":"string"}]}' \
      --producer.config /etc/kafka/secrets/client_without_interceptors_2way_ssl.config << EOF
 {"userid":1,"username":"RODRIGUEZ"}
