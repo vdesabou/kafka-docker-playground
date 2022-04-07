@@ -1,0 +1,153 @@
+#!/bin/bash
+set -e
+
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
+source ${DIR}/../../scripts/utils.sh
+
+NGROK_AUTH_TOKEN=${NGROK_AUTH_TOKEN:-$1}
+
+if [ -z "$NGROK_AUTH_TOKEN" ]
+then
+     logerror "NGROK_AUTH_TOKEN is not set. Export it as environment variable or pass it as argument"
+     logerror "Sign up at: https://dashboard.ngrok.com/signup"
+     logerror "If you have already signed up, make sure your authtoken is installed."
+     logerror "Your authtoken is available on your dashboard: https://dashboard.ngrok.com/get-started/your-authtoken"
+     exit 1
+fi
+
+logwarn "🚨WARNING🚨"
+logwarn "It is considered a security risk to run this example on your personal machine since you'll be exposing a TCP port over internet using Ngrok (https://ngrok.com)."
+logwarn "It is strongly encouraged to run it on a AWS EC2 instance where you'll use Confluent Static Egress IP Addresses (https://docs.confluent.io/cloud/current/networking/static-egress-ip-addresses.html#use-static-egress-ip-addresses-with-ccloud) (only available for public endpoints on AWS) to allow traffic from your Confluent Cloud cluster to your EC2 instance using EC2 Security Group."
+check_if_continue
+
+bootstrap_ccloud_environment
+
+if [ -f /tmp/delta_configs/env.delta ]
+then
+     source /tmp/delta_configs/env.delta
+else
+     logerror "ERROR: /tmp/delta_configs/env.delta has not been generated"
+     exit 1
+fi
+
+create_or_get_oracle_image "LINUX.X64_193000_db_home.zip" "../../ccloud/fully-managed-connect-cdc-oracle19-source/ora-setup-scripts-cdb-table"
+
+docker-compose build
+docker-compose down -v --remove-orphans
+docker-compose up -d
+
+# Verify Oracle DB has started within MAX_WAIT seconds
+MAX_WAIT=2500
+CUR_WAIT=0
+log "⌛ Waiting up to $MAX_WAIT seconds for Oracle DB to start"
+docker container logs oracle > /tmp/out.txt 2>&1
+while [[ ! $(cat /tmp/out.txt) =~ "DONE: Executing user defined scripts" ]]; do
+sleep 10
+docker container logs oracle > /tmp/out.txt 2>&1
+CUR_WAIT=$(( CUR_WAIT+10 ))
+if [[ "$CUR_WAIT" -gt "$MAX_WAIT" ]]; then
+     logerror "ERROR: The logs in oracle container do not show 'DONE: Executing user defined scripts' after $MAX_WAIT seconds. Please troubleshoot with 'docker container ps' and 'docker container logs'.\n"
+     exit 1
+fi
+done
+log "Oracle DB has started!"
+sleep 10
+
+log "Getting ngrok hostname and port"
+NGROK_URL=$(curl --silent http://127.0.0.1:4551/api/tunnels | jq -r '.tunnels[0].public_url')
+NGROK_HOSTNAME=$(echo $NGROK_URL | cut -d "/" -f3 | cut -d ":" -f 1)
+NGROK_PORT=$(echo $NGROK_URL | cut -d "/" -f3 | cut -d ":" -f 2)
+
+#confluent connect plugin describe IbmMQSource
+
+cat << EOF > connector.json
+{
+     "connector.class": "OracleCdcSource",
+     "name": "OracleCdcSource",
+     "kafka.auth.mode": "KAFKA_API_KEY",
+     "kafka.api.key": "$CLOUD_KEY",
+     "kafka.api.secret": "$CLOUD_SECRET",
+     "output.data.key.format": "AVRO",
+     "output.data.value.format": "AVRO",
+     "oracle.server": "$NGROK_HOSTNAME",
+     "oracle.port": "$NGROK_PORT",
+     "oracle.sid": "ORCLCDB",
+     "oracle.username": "C##MYUSER",
+     "oracle.password": "mypassword",
+     "table.inclusion.regex": ".*CUSTOMERS.*",
+     "start.from": "snapshot",
+     "query.timeout.ms": "60000",
+     "redo.log.row.fetch.size": "1",
+     "table.topic.name.template": "\${databaseName}.\${schemaName}.\${tableName}",
+     "lob.topic.name.template":"\${databaseName}.\${schemaName}.\${tableName}.\${columnName}",
+     "numeric.mapping": "best_fit_or_decimal",
+     "tasks.max" : "1"
+}
+EOF
+
+log "Connector configuration is:"
+cat connector.json
+
+set +e
+log "Deleting fully managed connector, it might fail..."
+delete_ccloud_connector connector.json
+set -e
+
+log "Creating fully managed connector"
+create_ccloud_connector connector.json
+wait_for_ccloud_connector_up connector.json 300
+
+
+log "Waiting 20s for connector to read existing data"
+sleep 20
+
+log "Running SQL scripts"
+for script in ../../ccloud/fully-managed-connect-cdc-oracle19-source/sample-sql-scripts/*.sh
+do
+     $script "ORCLCDB"
+done
+
+log "Waiting 60s for connector to read new data"
+sleep 60
+
+log "Verifying topic ORCLCDB.C__MYUSER.CUSTOMERS: there should be 13 records"
+set +e
+timeout 60 docker run --rm -e BOOTSTRAP_SERVERS="$BOOTSTRAP_SERVERS" -e SASL_JAAS_CONFIG="$SASL_JAAS_CONFIG" -e SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO="$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO" -e SCHEMA_REGISTRY_URL="$SCHEMA_REGISTRY_URL" vdesabou/kafka-docker-playground-connect:${CONNECT_TAG} kafka-avro-console-consumer --topic ORCLCDB.C__MYUSER.CUSTOMERS --bootstrap-server $BOOTSTRAP_SERVERS --consumer-property ssl.endpoint.identification.algorithm=https --consumer-property sasl.mechanism=PLAIN --consumer-property security.protocol=SASL_SSL --consumer-property sasl.jaas.config="$SASL_JAAS_CONFIG" --property basic.auth.credentials.source=USER_INFO --property schema.registry.basic.auth.user.info="$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO" --property schema.registry.url=$SCHEMA_REGISTRY_URL --from-beginning --max-messages 13 > /tmp/result.log  2>&1
+set -e
+cat /tmp/result.log
+log "Check there is 5 snapshots events"
+if [ $(grep -c "op_type\":{\"string\":\"R\"}" /tmp/result.log) -ne 5 ]
+then
+     logerror "Did not get expected results"
+     exit 1
+fi
+log "Check there is 3 insert events"
+if [ $(grep -c "op_type\":{\"string\":\"I\"}" /tmp/result.log) -ne 3 ]
+then
+     logerror "Did not get expected results"
+     exit 1
+fi
+log "Check there is 4 update events"
+if [ $(grep -c "op_type\":{\"string\":\"U\"}" /tmp/result.log) -ne 4 ]
+then
+     logerror "Did not get expected results"
+     exit 1
+fi
+log "Check there is 1 delete events"
+if [ $(grep -c "op_type\":{\"string\":\"D\"}" /tmp/result.log) -ne 1 ]
+then
+     logerror "Did not get expected results"
+     exit 1
+fi
+
+log "Verifying topic redo-log-topic: there should be 9 records"
+timeout 60 docker run --rm -e BOOTSTRAP_SERVERS="$BOOTSTRAP_SERVERS" -e SASL_JAAS_CONFIG="$SASL_JAAS_CONFIG" -e SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO="$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO" -e SCHEMA_REGISTRY_URL="$SCHEMA_REGISTRY_URL" vdesabou/kafka-docker-playground-connect:${CONNECT_TAG} kafka-avro-console-consumer --topic redo-log-topic --bootstrap-server $BOOTSTRAP_SERVERS --consumer-property ssl.endpoint.identification.algorithm=https --consumer-property sasl.mechanism=PLAIN --consumer-property security.protocol=SASL_SSL --consumer-property sasl.jaas.config="$SASL_JAAS_CONFIG" --property basic.auth.credentials.source=USER_INFO --property schema.registry.basic.auth.user.info="$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO" --property schema.registry.url=$SCHEMA_REGISTRY_URL --from-beginning --max-messages 9
+
+log "🚚 If you're planning to inject more data, have a look at https://github.com/vdesabou/kafka-docker-playground/blob/master/connect/connect-cdc-oracle19-source/README.md#note-on-redologrowfetchsize"
+
+
+log "Do you want to delete the fully managed connector ?"
+check_if_continue
+
+log "Deleting fully managed connector"
+delete_ccloud_connector connector.json
