@@ -1672,5 +1672,6 @@ function wait_for_log () {
                exit 1
           fi
      done
+     grep "$message" /tmp/out.txt
      log "The message is there !"
 }
