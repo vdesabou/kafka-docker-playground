@@ -32,6 +32,32 @@ docker exec connect kafka-topics --create --topic redo-log-topic --bootstrap-ser
 log "redo-log-topic is created"
 sleep 5
 
+docker exec -i oracle bash -c "ORACLE_SID=ORCLCDB;export ORACLE_SID;sqlplus /nolog" << EOF
+CONNECT sys/Admin123 AS SYSDBA
+GRANT CREATE ANY DIRECTORY TO C##MYUSER container=all;
+exit;
+EOF
+
+docker exec -i oracle sqlplus C\#\#MYUSER/mypassword@//localhost:1521/ORCLCDB << EOF
+  create directory DATA_TEST as '/tmp';
+  exit;
+EOF
+
+if [ ! -f member_billing.dmp ]
+then
+     get_3rdparty_file member_billing.dmp
+fi
+docker cp member_billing.dmp oracle:/tmp/
+docker exec -i oracle bash -c "ORACLE_SID=ORCLCDB;export ORACLE_SID;impdp C##MYUSER@ORCLCDB DIRECTORY=DATA_TEST DUMPFILE=member_billing.dmp REMAP_SCHEMA=WWNA:C##MYUSER REMAP_TABLESPACE=WW_COM_SCRATCH:USERS
+ TABLES=WWNA.MEMBER_BILLING_ORA_CDC logfile=member_billing_import.log" << EOF
+mypassword
+EOF
+
+docker exec -i oracle sqlplus C\#\#MYUSER/mypassword@//localhost:1521/ORCLCDB << EOF
+  select count(*) from MEMBER_BILLING_ORA_CDC;
+  exit;
+EOF
+
 
 log "Creating Oracle source connector"
 curl -X PUT \
@@ -54,7 +80,7 @@ curl -X PUT \
                "start.from":"snapshot",
                "redo.log.topic.name": "redo-log-topic",
                "redo.log.consumer.bootstrap.servers":"broker:9092",
-               "table.inclusion.regex": ".*CUSTOMERS.*",
+               "table.inclusion.regex": ".*MEMBER_BILLING_ORA_CDC.*",
                "table.topic.name.template": "${databaseName}.${schemaName}.${tableName}",
                "numeric.mapping": "best_fit",
                "connection.pool.max.size": 20,
@@ -73,85 +99,76 @@ curl -X PUT \
 log "Waiting 20s for connector to read existing data"
 sleep 20
 
-log "Running SQL scripts"
-for script in ../../connect/connect-cdc-oracle19-source/sample-sql-scripts/*.sh
-do
-     $script "ORCLCDB"
-done
-
-log "Waiting 60s for connector to read new data"
-sleep 60
-
-log "Verifying topic ORCLCDB.C__MYUSER.CUSTOMERS: there should be 13 records"
+log "Verifying topic ORCLCDB.C__MYUSER.MEMBER_BILLING_ORA_CDC: there should be 2 records"
 set +e
-timeout 60 docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic ORCLCDB.C__MYUSER.CUSTOMERS --from-beginning --max-messages 13 > /tmp/result.log  2>&1
+timeout 60 docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic ORCLCDB.C__MYUSER.MEMBER_BILLING_ORA_CDC --from-beginning --max-messages 2 > /tmp/result.log  2>&1
 set -e
 cat /tmp/result.log
-log "Check there is 5 snapshots events"
-if [ $(grep -c "op_type\":{\"string\":\"R\"}" /tmp/result.log) -ne 5 ]
-then
-     logerror "Did not get expected results"
-     exit 1
-fi
-log "Check there is 3 insert events"
-if [ $(grep -c "op_type\":{\"string\":\"I\"}" /tmp/result.log) -ne 3 ]
-then
-     logerror "Did not get expected results"
-     exit 1
-fi
-log "Check there is 4 update events"
-if [ $(grep -c "op_type\":{\"string\":\"U\"}" /tmp/result.log) -ne 4 ]
-then
-     logerror "Did not get expected results"
-     exit 1
-fi
-log "Check there is 1 delete events"
-if [ $(grep -c "op_type\":{\"string\":\"D\"}" /tmp/result.log) -ne 1 ]
-then
-     logerror "Did not get expected results"
-     exit 1
-fi
 
-log "Verifying topic redo-log-topic: there should be 9 records"
-timeout 60 docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic redo-log-topic --from-beginning --max-messages 9
+log "Verifying topic redo-log-topic: there should be 2 records"
+timeout 60 docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic redo-log-topic --from-beginning --max-messages 2
 
-log "🚚 If you're planning to inject more data, have a look at https://github.com/vdesabou/kafka-docker-playground/blob/master/connect/connect-cdc-oracle19-source/README.md#note-on-redologrowfetchsize"
-
-log "insert row with special characters"
+log "inject problematic record"
 docker exec -i oracle sqlplus C\#\#MYUSER/mypassword@//localhost:1521/ORCLCDB << EOF
-  insert into CUSTOMERS (first_name, last_name, email, gender, club_status, comments, CREDIT_CARD_NO) values ('Hansiain', 'Coda', 'hcoda4@senate.gov', 'Male', 'platinum', 'Centralized full-range approach', 'kZ*8~?????nM??f?K=Ie?Ta?');
+  insert into MEMBER_BILLING_ORA_CDC select member_no,charge_date,credit_card_no from MEMBER_BILLING_ORA_CDC where member_no='457693638' and rownum=1;
   exit;
 EOF
 
-log "insert row with special characters"
-docker exec -i oracle sqlplus C\#\#MYUSER/mypassword@//localhost:1521/ORCLCDB << EOF
-    insert into CUSTOMERS (first_name, last_name, email, gender, club_status, comments, CREDIT_CARD_NO) values ('Hansiain', 'Coda', 'hcoda4@senate.gov', 'Male', 'platinum', 'Centralized full-range approach', '?#*a?H??Q????D9????o?;?|j?P?{??');
-  exit;
-EOF
+wait_for_log "Encountered unparsable statement"
 
-docker exec -i oracle sqlplus C\#\#MYUSER/mypassword@//localhost:1521/ORCLCDB << EOF
-    insert into CUSTOMERS (first_name, last_name, email, gender, club_status, comments, CREDIT_CARD_NO) values ('Hansiain', 'Coda', 'hcoda4@senate.gov', 'Male', 'platinum', 'Centralized full-range approach', '?va?''
-U K??W?2v3?(x*8??_2?M');
-  exit;
-EOF
-
-docker exec -i oracle sqlplus C\#\#MYUSER/mypassword@//localhost:1521/ORCLCDB << EOF
-    insert into CUSTOMERS (first_name, last_name, email, gender, club_status, comments, CREDIT_CARD_NO) values ('Hansiain', 'Coda', 'hcoda4@senate.gov', 'Male', 'platinum', 'Centralized full-range approach', 'kZ*8~?????nM??f?K=Ie?Ta?');
-  exit;
-EOF
-
-docker exec -i oracle sqlplus C\#\#MYUSER/mypassword@//localhost:1521/ORCLCDB << EOF
-    insert into CUSTOMERS (first_name, last_name, email, gender, club_status, comments, CREDIT_CARD_NO) values ('Hansiain', 'Coda', 'hcoda4@senate.gov', 'Male', 'platinum', 'Centralized full-range approach', 'k^^Z*8~?^\^K????nM??f?K=Ie?Ta^_?');
-  exit;
-EOF
+# [2022-04-08 08:29:09,820] WARN [cdc-oracle-source-cdb|task-1|changeEvent] Encountered unparsable statement: insert into "C##MYUSER"."MEMBER_BILLING_ORA_CDC"("MEMBER_NO","CHARGE_DATE","CREDIT_CARD_NO") values ('457693638',TO_DATE('2022-04-01 00:00:00', 'YYYY-MM-DD HH24:MI:SS'),'kZ*8~�
+#               ���g�nM��f�K=Ie�g#Ta�'');. Logging and continuing (io.confluent.connect.oracle.cdc.record.OracleChangeEventSourceRecordConverter:341)
 
 
-docker exec -i oracle sqlplus C\#\#MYUSER/mypassword@//localhost:1521/ORCLCDB << EOF
-    insert into CUSTOMERS (first_name, last_name, email, gender, club_status, comments, CREDIT_CARD_NO) values ('Hansiain', 'Coda', 'hcoda4@senate.gov', 'Male', 'platinum', 'Centralized full-range approach', 'kZ*8~?????nM??f?K=Ie?Ta?');
-    insert into CUSTOMERS (first_name, last_name, email, gender, club_status, comments, CREDIT_CARD_NO) values ('Hansiain', 'Coda', 'hcoda4@senate.gov', 'Male', 'platinum', 'Centralized full-range approach', '?#*a?H??Q????D9????o?;?|j?P?{??');
-    insert into CUSTOMERS (first_name, last_name, email, gender, club_status, comments, CREDIT_CARD_NO) values ('Hansiain', 'Coda', 'hcoda4@senate.gov', 'Male', 'platinum', 'Centralized full-range approach', '?va?''
-U K??W?2v3?(x*8??_2?M');
-    insert into CUSTOMERS (first_name, last_name, email, gender, club_status, comments, CREDIT_CARD_NO) values ('Hansiain', 'Coda', 'hcoda4@senate.gov', 'Male', 'platinum', 'Centralized full-range approach', 'kZ*8~?????nM??f?K=Ie?Ta?');
-    COMMIT;
-  exit;
-EOF
+
+exit 0
+
+
+# docker exec -i oracle sqlplus C\#\#MYUSER/mypassword@//localhost:1521/ORCLCDB << EOF
+#   create table C##MYUSER.MEMBER_BILLING_ORA_CDC
+#   (
+#     MEMBER_NO       VARCHAR2(20 BYTE)  NOT NULL,
+#     CHARGE_DATE     DATE,
+#     CREDIT_CARD_NO  VARCHAR2(500 BYTE)
+#   );
+#   exit;
+# EOF
+
+# log "insert row with special characters"
+# docker exec -i oracle sqlplus C\#\#MYUSER/mypassword@//localhost:1521/ORCLCDB << EOF
+#   insert into CUSTOMERS (first_name, last_name, email, gender, club_status, comments, CREDIT_CARD_NO) values ('Hansiain', 'Coda', 'hcoda4@senate.gov', 'Male', 'platinum', 'Centralized full-range approach', 'kZ*8~?????nM??f?K=Ie?Ta?');
+#   exit;
+# EOF
+
+# log "insert row with special characters"
+# docker exec -i oracle sqlplus C\#\#MYUSER/mypassword@//localhost:1521/ORCLCDB << EOF
+#     insert into CUSTOMERS (first_name, last_name, email, gender, club_status, comments, CREDIT_CARD_NO) values ('Hansiain', 'Coda', 'hcoda4@senate.gov', 'Male', 'platinum', 'Centralized full-range approach', '?#*a?H??Q????D9????o?;?|j?P?{??');
+#   exit;
+# EOF
+
+# docker exec -i oracle sqlplus C\#\#MYUSER/mypassword@//localhost:1521/ORCLCDB << EOF
+#     insert into CUSTOMERS (first_name, last_name, email, gender, club_status, comments, CREDIT_CARD_NO) values ('Hansiain', 'Coda', 'hcoda4@senate.gov', 'Male', 'platinum', 'Centralized full-range approach', '?va?''
+# U K??W?2v3?(x*8??_2?M');
+#   exit;
+# EOF
+
+# docker exec -i oracle sqlplus C\#\#MYUSER/mypassword@//localhost:1521/ORCLCDB << EOF
+#     insert into CUSTOMERS (first_name, last_name, email, gender, club_status, comments, CREDIT_CARD_NO) values ('Hansiain', 'Coda', 'hcoda4@senate.gov', 'Male', 'platinum', 'Centralized full-range approach', 'kZ*8~?????nM??f?K=Ie?Ta?');
+#   exit;
+# EOF
+
+# docker exec -i oracle sqlplus C\#\#MYUSER/mypassword@//localhost:1521/ORCLCDB << EOF
+#     insert into CUSTOMERS (first_name, last_name, email, gender, club_status, comments, CREDIT_CARD_NO) values ('Hansiain', 'Coda', 'hcoda4@senate.gov', 'Male', 'platinum', 'Centralized full-range approach', 'k^^Z*8~?^\^K????nM??f?K=Ie?Ta^_?');
+#   exit;
+# EOF
+
+
+# docker exec -i oracle sqlplus C\#\#MYUSER/mypassword@//localhost:1521/ORCLCDB << EOF
+#     insert into CUSTOMERS (first_name, last_name, email, gender, club_status, comments, CREDIT_CARD_NO) values ('Hansiain', 'Coda', 'hcoda4@senate.gov', 'Male', 'platinum', 'Centralized full-range approach', 'kZ*8~?????nM??f?K=Ie?Ta?');
+#     insert into CUSTOMERS (first_name, last_name, email, gender, club_status, comments, CREDIT_CARD_NO) values ('Hansiain', 'Coda', 'hcoda4@senate.gov', 'Male', 'platinum', 'Centralized full-range approach', '?#*a?H??Q????D9????o?;?|j?P?{??');
+#     insert into CUSTOMERS (first_name, last_name, email, gender, club_status, comments, CREDIT_CARD_NO) values ('Hansiain', 'Coda', 'hcoda4@senate.gov', 'Male', 'platinum', 'Centralized full-range approach', '?va?''
+# U K??W?2v3?(x*8??_2?M');
+#     insert into CUSTOMERS (first_name, last_name, email, gender, club_status, comments, CREDIT_CARD_NO) values ('Hansiain', 'Coda', 'hcoda4@senate.gov', 'Male', 'platinum', 'Centralized full-range approach', 'kZ*8~?????nM??f?K=Ie?Ta?');
+#     COMMIT;
+#   exit;
+# EOF
