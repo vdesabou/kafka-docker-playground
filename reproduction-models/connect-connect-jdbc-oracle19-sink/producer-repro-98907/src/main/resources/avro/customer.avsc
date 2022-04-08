@@ -1,0 +1,28 @@
+{
+    "fields": [
+        {
+            "name": "tsm",
+            "type": "string"
+        },
+        {
+            "name": "quantity",
+            "type": "int"
+        },
+        {
+            "name": "account",
+            "type": {
+                "type": "record",
+                "name": "accountrecord",
+                "fields": [
+                    {
+                        "name": "bank",
+                        "type": "string"
+                    }
+                ]
+            }
+        }
+    ],
+    "namespace": "com.github.vdesabou",
+    "name": "Customer",
+    "type": "record"
+}
