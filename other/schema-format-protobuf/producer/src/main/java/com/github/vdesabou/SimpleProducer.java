@@ -75,7 +75,8 @@ public class SimpleProducer {
                 .overrideDefaultInitialization(false)
                 .ignoreRandomizationErrors(false);
         EasyRandom generator = new EasyRandom(parameters);
-
+        Faker faker = new Faker();
+        
         try (Producer<Long, Customer> producer = new KafkaProducer<>(properties)) {
             long id = 0;
             while (id < nbMessages) {

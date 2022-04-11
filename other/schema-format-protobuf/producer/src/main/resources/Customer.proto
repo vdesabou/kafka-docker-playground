@@ -4,8 +4,8 @@ package com.github.vdesabou;
 option java_outer_classname = "CustomerImpl";
 
 message Customer {
-    int64 customer_id = 1;
-    string customer_name = 2;
-    string customer_email = 3;
-    string customer_address = 4;
+    int64 count = 1;
+    string first_name = 2;
+    string last_name = 3;
+    string address = 4;
 }
