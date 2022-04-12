@@ -50,9 +50,9 @@ docker exec producer-repro-100863 bash -c "java ${JAVA_OPTS} -jar producer-1.0.0
 # [2022-04-11 13:49:41,197] INFO [sqlserver-sink|task-0] Setting metadata for table "dbo"."customer_protobuf" to Table{name='"dbo"."customer_protobuf"', type=TABLE columns=[Column{'field_second_optional', isPrimaryKey=false, allowsNull=true, sqlType=int}, Column{'field_no_optional', isPrimaryKey=false, allowsNull=true, sqlType=int}, Column{'field_third_optional', isPrimaryKey=false, allowsNull=true, sqlType=varchar}, Column{'field_first_optional', isPrimaryKey=false, allowsNull=true, sqlType=varchar}]} (io.confluent.connect.jdbc.util.TableDefinitions:64)
 
 # 13:49:46 ℹ️ Show content of customer_protobuf table:
-# field_no_optional field_first_optional                                                                                                                                                                                                                                             field_second_optional field_third_optional                                                                                                                                                                                                                                            
-# ----------------- ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- --------------------- ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-#                 1 test                                                                                                                                                                                                                                                                                 2 test2                                                                                         
+# field_no_optional field_first_optional field_second_optional field_third_optional
+# ------
+# 1 test 2 test2
 
 sleep 5
 
