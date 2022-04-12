@@ -20,10 +20,6 @@ if [ -z "$CI" ] && [ -z "$CLOUDFORMATION" ]
 then
      # not running with CI
      verify_installed "confluent"
-     check_confluent_version 2.0.0 || exit 1
-     verify_confluent_login  "confluent kafka cluster list"
-     verify_confluent_details
-     check_if_continue
      set +e
      # Offer to refresh images
      ret=$(docker images --format "{{.Repository}}|{{.Tag}}|{{.CreatedSince}}" | grep dabz/ccloudexporter | cut -d "|" -f 3)

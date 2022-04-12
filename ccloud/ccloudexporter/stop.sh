@@ -5,7 +5,6 @@ source ${DIR}/../../scripts/utils.sh
 
 verify_installed "confluent"
 verify_confluent_login  "confluent kafka cluster list"
-verify_confluent_details
 check_if_continue
 
 if [ -f api_key_cloud_to_delete ]
@@ -18,5 +17,7 @@ fi
 set +e
 delete_topic ccloudexporter
 set -e
+
+maybe_delete_ccloud_environment
 
 docker-compose down -v --remove-orphans

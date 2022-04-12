@@ -5,8 +5,6 @@ source ${DIR}/../../scripts/utils.sh
 
 verify_installed "confluent"
 verify_confluent_login  "confluent kafka cluster list"
-verify_confluent_details
-check_if_continue
 
 # Delete topic in Confluent Cloud
 delete_topic kafka-admin-acl-topic
