@@ -8,7 +8,6 @@ As of December 2021, Confluent recommends using the [export endpoint of the Conf
 
 This demo is using [dabz/ccloudexporter](https://github.com/Dabz/ccloudexporter) in order to pull [Metrics API](https://docs.confluent.io/current/cloud/metrics-api.html) data from Confluent Cloud cluster and be exported to Prometheus.
 
-![CCloud exporter](https://github.com/vdesabou/gifs/raw/master/ccloud/ccloud-demo/ccloudexporter.gif?raw=true)
 
 ## Prerequisites
 

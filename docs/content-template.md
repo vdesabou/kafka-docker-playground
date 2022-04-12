@@ -142,14 +142,6 @@
 \* You can change default connector version by setting `CONNECTOR_TAG` environment variable before starting a test, get more details [here](https://kafka-docker-playground.io/#/how-to-use?id=🔗-for-connectors)
 
 ## ☁️ Confluent Cloud
-
-### 💻️ Demo
-
-:ccloud/ccloud-demo:
-
-  - 🔌 How to [connect](https://github.com/vdesabou/kafka-docker-playground/tree/master/ccloud/ccloud-demo#connecting-components-to-confluent-cloud) your components to Confluent Cloud
-  - 📈 How to [monitor](https://github.com/vdesabou/kafka-docker-playground/tree/master/ccloud/ccloud-demo#monitoring) your Confluent Cloud cluster using Metrics API and Grafana, Splunk, New Relic, etc...
-
 ### 🤖 Full-Managed Connectors
 
   - <img src="https://github.com/vdesabou/kafka-docker-playground/raw/master/images/icons/s3.png" width="15"> [Amazon S3 Sink](https://github.com/vdesabou/kafka-docker-playground/tree/master/ccloud/fully-managed-connect-aws-s3-sink) ![not tested](https://img.shields.io/badge/CI-not%20tested!-violet)

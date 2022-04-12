@@ -1,7 +1,5 @@
 # Monitoring Demo
 
-This is OnPrem version of [Confluent Cloud Demo](../../ccloud/ccloud-demo/README.md), with 2 data centers `europe` and `us`:
-
 For each cluster, we have:
 
 * 2 zookeeper
@@ -23,7 +21,7 @@ N.B: we have dedicated zookepper and broker for metrics.
 
 * Create stack in AWS CloudFormation and upload [this](cloudformation/kafka-docker-playground-monitorin-demo.json?raw=true) template file:
 
-![AWS CloudFormation](../../ccloud/ccloud-demo/images/Screenshot4.png)
+![AWS CloudFormation](./images/Screenshot4.png)
 
 * Fill information as requested (default EC2 instance type and root volume are recommended):
 
@@ -31,4 +29,4 @@ N.B: we have dedicated zookepper and broker for metrics.
 
 * After about 15 minutes, the stack will be created and you can see in *outputs* tab the URLs for connecting to Control Center and Grafana (`admin`/`admin`)
 
-![AWS CloudFormation](../../ccloud/ccloud-demo/images/Screenshot6.png)
+![AWS CloudFormation](./images/Screenshot6.png)

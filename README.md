@@ -154,13 +154,6 @@ Fully automated Apache Kafka® and Confluent Docker based examples // Easily bui
 
 ## ☁️ Confluent Cloud
 
-### 💻️ Demo
-
-&nbsp; [![CI ok](https://img.shields.io/badge/8/8-ok!-green)](https://github.com/vdesabou/kafka-docker-playground/runs/5839634438?check_suite_focus=true) 
-
-  - 🔌 How to [connect](https://github.com/vdesabou/kafka-docker-playground/tree/master/ccloud/ccloud-demo#connecting-components-to-confluent-cloud) your components to Confluent Cloud
-  - 📈 How to [monitor](https://github.com/vdesabou/kafka-docker-playground/tree/master/ccloud/ccloud-demo#monitoring) your Confluent Cloud cluster using Metrics API and Grafana, Splunk, New Relic, etc...
-
 ### 🤖 Full-Managed Connectors
 
   - <img src="https://github.com/vdesabou/kafka-docker-playground/raw/master/images/icons/s3.png" width="15"> [Amazon S3 Sink](https://github.com/vdesabou/kafka-docker-playground/tree/master/ccloud/fully-managed-connect-aws-s3-sink) ![not tested](https://img.shields.io/badge/CI-not%20tested!-violet)
