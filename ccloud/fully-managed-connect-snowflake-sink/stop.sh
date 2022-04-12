@@ -10,3 +10,5 @@ check_if_continue
 
 log "Deleting fully managed connector"
 delete_ccloud_connector connector.json
+
+maybe_delete_ccloud_environment

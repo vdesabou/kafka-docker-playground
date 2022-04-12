@@ -1,5 +1,4 @@
 # scripts to ignore
-confluent-generate-env-vars.sh
 01-create-table.sh
 # cp-ansible-playground
 upgrade-test.sh

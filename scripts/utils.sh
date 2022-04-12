@@ -623,28 +623,28 @@ function verify_confluent_details()
     if [ "$(confluent prompt -f "%E")" = "(none)" ]
     then
         logerror "confluent command is badly configured: environment is not set"
-        log "Example: confluent kafka environment list"
-        log "then: confluent kafka environment use <environment id>"
+        logerror "Example: confluent kafka environment list"
+        logerror "then: confluent kafka environment use <environment id>"
         exit 1
     fi
 
     if [ "$(confluent prompt -f "%K")" = "(none)" ]
     then
         logerror "confluent command is badly configured: cluster is not set"
-        log "Example: confluent kafka cluster list"
-        log "then: confluent kafka cluster use <cluster id>"
+        logerror "Example: confluent kafka cluster list"
+        logerror "then: confluent kafka cluster use <cluster id>"
         exit 1
     fi
 
     if [ "$(confluent prompt -f "%a")" = "(none)" ]
     then
         logerror "confluent command is badly configured: api key is not set"
-        log "Example: confluent api-key store <api key> <password>"
-        log "then: confluent api-key use <api key>"
+        logerror "Example: confluent api-key store <api key> <password>"
+        logerror "then: confluent api-key use <api key>"
         exit 1
     fi
 
-    CCLOUD_PROMPT_FMT='You will be using Confluent Cloud config: user={{fgcolor "green" "%u"}}, environment={{fgcolor "red" "%E"}}, cluster={{fgcolor "cyan" "%K"}}, api key={{fgcolor "yellow" "%a"}}'
+    CCLOUD_PROMPT_FMT='You will be using Confluent Cloud cluster with user={{fgcolor "green" "%u"}}, environment={{fgcolor "red" "%E"}}, cluster={{fgcolor "cyan" "%K"}}, api key={{fgcolor "yellow" "%a"}}'
     confluent prompt -f "$CCLOUD_PROMPT_FMT"
 }
 
@@ -1528,46 +1528,119 @@ function create_or_get_oracle_image() {
   log "✨ Using Oracle prebuilt image $ORACLE_IMAGE (oracle version 🔢 $ORACLE_VERSION and 📂 setup folder $SETUP_FOLDER)"
 }
 
-function bootstrap_ccloud_environment () {
-  CONFIG_FILE=~/.confluent/config
+function print_code_pass() {
+  local MESSAGE=""
+	local CODE=""
+  OPTIND=1
+  while getopts ":c:m:" opt; do
+    case ${opt} in
+			c ) CODE=${OPTARG};;
+      m ) MESSAGE=${OPTARG};;
+		esac
+	done
+  shift $((OPTIND-1))
+	printf "${PRETTY_PASS}${PRETTY_CODE}%s\e[0m\n" "${CODE}"
+	[[ -z "$MESSAGE" ]] || printf "\t$MESSAGE\n"			
+}
+function print_code_error() {
+  local MESSAGE=""
+	local CODE=""
+  OPTIND=1
+  while getopts ":c:m:" opt; do
+    case ${opt} in
+			c ) CODE=${OPTARG};;
+      m ) MESSAGE=${OPTARG};;
+		esac
+	done
+  shift $((OPTIND-1))
+	printf "${PRETTY_ERROR}${PRETTY_CODE}%s\e[0m\n" "${CODE}"
+	[[ -z "$MESSAGE" ]] || printf "\t$MESSAGE\n"			
+}
 
-  if [ ! -f ${CONFIG_FILE} ]
+function exit_with_error()
+{
+  local USAGE="\nUsage: exit_with_error -c code -n name -m message -l line_number\n"
+  local NAME=""
+  local MESSAGE=""
+  local CODE=$UNSPECIFIED_ERROR
+  local LINE=
+  OPTIND=1
+  while getopts ":n:m:c:l:" opt; do
+    case ${opt} in
+      n ) NAME=${OPTARG};;
+      m ) MESSAGE=${OPTARG};;
+      c ) CODE=${OPTARG};;
+      l ) LINE=${OPTARG};;
+      ? ) printf $USAGE;return 1;;
+    esac
+  done
+  shift $((OPTIND-1))
+  print_error "error ${CODE} occurred in ${NAME} at line $LINE"
+	printf "\t${MESSAGE}\n"
+  exit $CODE
+}
+
+function maybe_delete_ccloud_environment () {
+  DELTA_CONFIGS_ENV=/tmp/delta_configs/env.delta
+  # https://docs.confluent.io/platform/current/tutorials/examples/ccloud/docs/ccloud-stack.html#automated-workflows
+  source ../../scripts/ccloud_library.sh
+
+  if [ -z "$CLUSTER_NAME" ]
   then
-      logerror "ERROR: ${CONFIG_FILE} is not set"
+    # 
+    # CLUSTER_NAME is not set
+    #
+    log "🧹❌ Confluent Cloud cluster will be deleted..."
+    verify_installed "confluent"
+    check_confluent_version 2.0.0 || exit 1
+    verify_confluent_login  "confluent kafka cluster list"
+
+    if [ -f $DELTA_CONFIGS_ENV ]
+    then
+      source $DELTA_CONFIGS_ENV
+    else
+      logerror "ERROR: $DELTA_CONFIGS_ENV has not been generated"
       exit 1
-  fi
+    fi
 
-  if [ -z "$BOOTSTRAP_SERVERS" ]
-  then
-      ${DIR}/../../ccloud/ccloud-demo/confluent-generate-env-vars.sh ${CONFIG_FILE}
+    export QUIET=true
 
-      if [ -f /tmp/delta_configs/env.delta ]
-      then
-            source /tmp/delta_configs/env.delta
-      else
-            logerror "ERROR: /tmp/delta_configs/env.delta has not been generated"
-            exit 1
-      fi
+    if [ ! -z "$ENVIRONMENT" ]
+    then
+      log "🌐 ENVIRONMENT $ENVIRONMENT is set, it will not be deleted"
+      export PRESERVE_ENVIRONMENT=true
+    else
+      export PRESERVE_ENVIRONMENT=false
+    fi
+    SERVICE_ACCOUNT_ID=$(ccloud:get_service_account_from_current_cluster_name)
+    set +e
+    ccloud::destroy_ccloud_stack $SERVICE_ACCOUNT_ID
+    set -e
   fi
+}
+
+function bootstrap_ccloud_environment () {
+  DELTA_CONFIGS_ENV=/tmp/delta_configs/env.delta
+  verify_installed "confluent"
+  check_confluent_version 2.0.0 || exit 1
+
+  # https://docs.confluent.io/platform/current/tutorials/examples/ccloud/docs/ccloud-stack.html#automated-workflows
+  source ../../scripts/ccloud_library.sh
 
   if [ -z "$CI" ] && [ -z "$CLOUDFORMATION" ]
   then
-      # not running with CI
-      verify_installed "confluent"
-      check_confluent_version 2.0.0 || exit 1
-      verify_confluent_login  "confluent kafka cluster list"
-      verify_confluent_details
-      check_if_continue
+    # not running with CI
+    verify_confluent_login  "confluent kafka cluster list"
   else
       if [ ! -z "$CI" ]
       then
-            # running with github actions
-            if [ ! -f ../../secrets.properties ]
-            then
-                logerror "../../secrets.properties is not present!"
-                exit 1
-            fi
-            source ../../secrets.properties > /dev/null 2>&1
+        # running with github actions
+        if [ ! -f ../../secrets.properties ]
+        then
+          logerror "../../secrets.properties is not present!"
+          exit 1
+        fi
+        source ../../secrets.properties > /dev/null 2>&1
       fi
       
       log "Installing confluent CLI"
@@ -1577,14 +1650,75 @@ function bootstrap_ccloud_environment () {
       log "Log in to Confluent Cloud"
       log "##################################################"
       confluent login --save
-      log "Use environment $ENVIRONMENT"
-      confluent environment use $ENVIRONMENT
-      log "Use cluster $CLUSTER_LKC"
-      confluent kafka cluster use $CLUSTER_LKC
-      log "Store api key $CLOUD_KEY"
-      confluent api-key store $CLOUD_KEY $CLOUD_SECRET --resource $CLUSTER_LKC --force
-      log "Use api key $CLOUD_KEY"
-      confluent api-key use $CLOUD_KEY --resource $CLUSTER_LKC
+  fi
+
+  if [ -z "$CLUSTER_NAME" ]
+  then
+    # 
+    # CLUSTER_NAME is not set
+    #
+    log "🛠👷‍♀️ CLUSTER_NAME is not set, a new Confluent Cloud cluster will be created..."
+    log "🎓 If you wanted to use an existing cluster, set CLUSTER_NAME, ENVIRONMENT, CLUSTER_CLOUD, CLUSTER_REGION and CLUSTER_CREDS (also optionnaly SCHEMA_REGISTRY_CREDS)"
+
+    if [ -z "$CLUSTER_CLOUD" ] || [ -z "$CLUSTER_REGION" ]
+    then
+      logwarn "CLUSTER_CLOUD and/or CLUSTER_REGION are not set, the cluster will be created 🌤 AWS provider and 🗺 eu-west-2 region"
+      export CLUSTER_CLOUD=aws 
+      export CLUSTER_REGION=eu-west-2
+    fi
+
+    if [ ! -z $ENVIRONMENT ]
+    then
+      log "🌐 ENVIRONMENT is set with $ENVIRONMENT and will be used"
+    fi
+    log "🌤  CLUSTER_CLOUD is set with $CLUSTER_CLOUD"
+    log "🗺  CLUSTER_REGION is set with $CLUSTER_REGION"
+
+    export EXAMPLE=$(basename $PWD)
+    export WARMUP_TIME=15
+    export QUIET=true
+  else
+    # 
+    # CLUSTER_NAME is set
+    #
+    log "🌱 CLUSTER_NAME is set, your existing Confluent Cloud cluster will be used..."
+    if [ -z $ENVIRONMENT ] || [ -z $CLUSTER_CLOUD ] || [ -z $CLUSTER_CLOUD ] || [ -z $CLUSTER_REGION ] || [ -z $CLUSTER_CREDS ]
+    then
+      logerror "One mandatory environment variable to use your cluster is missing:"
+      logerror "ENVIRONMENT=$ENVIRONMENT"
+      logerror "CLUSTER_NAME=$CLUSTER_NAME"
+      logerror "CLUSTER_CLOUD=$CLUSTER_CLOUD"
+      logerror "CLUSTER_REGION=$CLUSTER_REGION"
+      logerror "CLUSTER_CREDS=$CLUSTER_CREDS"
+      exit 1
+    fi
+
+    log "🌐 ENVIRONMENT is set with $ENVIRONMENT"
+    log "🎰 CLUSTER_NAME is set with $CLUSTER_NAME"
+    log "🌤  CLUSTER_CLOUD is set with $CLUSTER_CLOUD"
+    log "🗺  CLUSTER_REGION is set with $CLUSTER_REGION" 
+
+    export WARMUP_TIME=0
+  fi
+
+  check_if_continue
+
+  ccloud::create_ccloud_stack false  \
+    && print_code_pass -c "ccloud::create_ccloud_stack false"
+
+  CONFIG_FILE=/tmp/tmp.config
+  export CONFIG_FILE=$CONFIG_FILE
+  ccloud::validate_ccloud_config $CONFIG_FILE || exit 1
+
+  ccloud::generate_configs $CONFIG_FILE \
+    && print_code_pass -c "ccloud::generate_configs $CONFIG_FILE"
+
+  if [ -f $DELTA_CONFIGS_ENV ]
+  then
+    source $DELTA_CONFIGS_ENV
+  else
+    logerror "ERROR: $DELTA_CONFIGS_ENV has not been generated"
+    exit 1
   fi
 }
 
