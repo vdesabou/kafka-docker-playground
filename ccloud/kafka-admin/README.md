@@ -34,7 +34,7 @@ $ ./start.sh
 
 ## Details of what the script is doing
 
-Same as [Service Account and ACLs](https://github.com/vdesabou/kafka-docker-playground/tree/master/ccloud/ccloud-demo#service-account-and-acls), except that instead of using confluent CLI to create acl (confluent kafka acl create), we use [kafka admin](https://github.com/matt-mangia/kafka-admin):
+Instead of using confluent CLI to create acl (confluent kafka acl create), we use [kafka admin](https://github.com/matt-mangia/kafka-admin):
 
 ```bash
 java -jar ${DIR}/kafka-admin/target/kafka-admin-1.0-SNAPSHOT-jar-with-dependencies.jar -properties ${DIR}/kafka-admin.properties -config ${DIR}/config.yml -execute
