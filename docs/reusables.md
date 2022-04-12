@@ -836,20 +836,33 @@ Here are the steps to follow:
     build:
       context: ../../connect/connect-filestream-sink/
       args:
-        TAG: ${TAG}
+        CONNECT_TAG: ${CONNECT_TAG}
 ```
 > [!WARNING]
 > Make sure to update `context` above with the right path.
 
 3. Create a `Dockerfile` file in `context` directory above (`../../connect/connect-filestream-sink/`).
 
+Example with JDK 11:
+
 ```yml
-ARG TAG
-FROM vdesabou/kafka-docker-playground-connect:${TAG}
+ARG CONNECT_TAG
+FROM vdesabou/kafka-docker-playground-connect:${CONNECT_TAG}
 USER root
 RUN wget https://cdn.azul.com/zulu/bin/zulu11.48.21-ca-jdk11.0.11-linux.x86_64.rpm && yum install -y zulu11.48.21-ca-jdk11.0.11-linux.x86_64.rpm && alternatives --set java /usr/lib/jvm/zulu-11/bin/java
 USER appuser
 ```
+
+Another example with JDK 8:
+
+```yml
+ARG CONNECT_TAG
+FROM vdesabou/kafka-docker-playground-connect:${CONNECT_TAG}
+USER root
+RUN wget https://cdn.azul.com/zulu/bin/zulu8.60.0.21-ca-jdk8.0.322-linux.x86_64.rpm && yum install -y zulu8.60.0.21-ca-jdk8.0.322-linux.x86_64.rpm && alternatives --set java /usr/lib/jvm/zulu-8/jre/bin/java
+USER appuser
+```
+
 
 > [!WARNING]
 > Make sure to update `alternatives --set java` above with the right path.
@@ -876,7 +889,7 @@ Here are the steps to follow:
     build:
       context: ../../connect/connect-filestream-sink/
       args:
-        TAG: ${TAG}
+        CONNECT_TAG: ${CONNECT_TAG}
 ```
 > [!WARNING]
 > Make sure to update `context` above with the right path.
@@ -884,7 +897,7 @@ Here are the steps to follow:
 3. Create a `Dockerfile` file in `context` directory above (`../../connect/connect-filestream-sink/`).
 
 ```yml
-ARG TAG
+ARG CONNECT_TAG
 FROM vdesabou/kafka-docker-playground-connect:${TAG}
 COPY jdk-8u201-linux-x64.rpm /tmp/
 USER root
