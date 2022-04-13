@@ -1619,12 +1619,12 @@ function maybe_delete_ccloud_environment () {
 
 function bootstrap_ccloud_environment () {
   DELTA_CONFIGS_ENV=/tmp/delta_configs/env.delta
-  verify_installed "confluent"
-  check_confluent_version 2.0.0 || exit 1
 
   if [ -z "$CI" ] && [ -z "$CLOUDFORMATION" ]
   then
     # not running with CI
+    verify_installed "confluent"
+    check_confluent_version 2.0.0 || exit 1
     verify_confluent_login  "confluent kafka cluster list"
   else
       if [ ! -z "$CI" ]
