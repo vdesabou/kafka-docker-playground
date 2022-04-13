@@ -2129,7 +2129,7 @@ function ccloud::maybe_create_and_use_cluster() {
     # VINC: added
     if [[ ! -z "$CLUSTER_CREDS" ]]
     then
-      echo "ERROR: Could not find your $CLUSTER_CLOUD cluster $CLUSTER_NAME in region $CLUSTER_REGION)"
+      echo "ERROR: Could not find your $CLUSTER_CLOUD cluster $CLUSTER_NAME in region $CLUSTER_REGION"
       echo "Make sure CLUSTER_CLOUD and CLUSTER_REGION are set with values that correspond to your cluster!"
       exit 1
     else
