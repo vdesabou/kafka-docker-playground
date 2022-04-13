@@ -1,0 +1,9 @@
+syntax = "proto3";
+
+package com.github.vdesabou;
+option java_outer_classname = "AddressImpl";
+
+message Address {
+  string street = 1;
+  string other = 2;
+}

@@ -1,0 +1,60 @@
+---
+version: '3.5'
+services:
+
+  producer-repro-100645:
+    build:
+      context: ../../reproduction-models/connect-connect-aws-s3-sink/producer-repro-100645/
+    hostname: producer
+    container_name: producer-repro-100645
+    environment:
+      KAFKA_BOOTSTRAP_SERVERS: broker:9092
+      TOPIC: "customer_protobuf"
+      REPLICATION_FACTOR: 1
+      NUMBER_OF_PARTITIONS: 1
+      NB_MESSAGES: 10 # -1 for MAX_VALUE
+      MESSAGE_BACKOFF: 1000 # Frequency of message injection
+      KAFKA_ACKS: "all" # default: "1"
+      KAFKA_REQUEST_TIMEOUT_MS: 20000
+      KAFKA_RETRY_BACKOFF_MS: 500
+      KAFKA_CLIENT_ID: "my-java-producer-repro-100645"
+      KAFKA_SCHEMA_REGISTRY_URL: "http://schema-registry:8081"
+      KAFKA_AUTO_REGISTER_SCHEMAS: "false"
+      KAFKA_USE_LATEST_VERSION: "true"
+      KAFKA_LATEST_COMPATIBILITY_STRICT: "false"
+      # KAFKA_ID_COMPATIBILITY_STRICT: "false"
+      JAVA_OPTS: 
+    volumes:
+      - ../../environment/plaintext/jmx-exporter:/usr/share/jmx_exporter/
+
+  producer-repro-100645-2:
+    build:
+      context: ../../reproduction-models/connect-connect-aws-s3-sink/producer-repro-100645-2/
+    hostname: producer
+    container_name: producer-repro-100645-2
+    environment:
+      KAFKA_BOOTSTRAP_SERVERS: broker:9092
+      TOPIC: "customer_protobuf"
+      REPLICATION_FACTOR: 1
+      NUMBER_OF_PARTITIONS: 1
+      NB_MESSAGES: 10 # -1 for MAX_VALUE
+      MESSAGE_BACKOFF: 1000 # Frequency of message injection
+      KAFKA_ACKS: "all" # default: "1"
+      KAFKA_REQUEST_TIMEOUT_MS: 20000
+      KAFKA_RETRY_BACKOFF_MS: 500
+      KAFKA_CLIENT_ID: "my-java-producer-repro-100645-2"
+      KAFKA_SCHEMA_REGISTRY_URL: "http://schema-registry:8081"
+      KAFKA_AUTO_REGISTER_SCHEMAS: "false"
+      KAFKA_USE_LATEST_VERSION: "true"
+      KAFKA_LATEST_COMPATIBILITY_STRICT: "false"
+      KAFKA_ID_COMPATIBILITY_STRICT: "false"
+      JAVA_OPTS: 
+    volumes:
+      - ../../environment/plaintext/jmx-exporter:/usr/share/jmx_exporter/
+
+  connect:
+    volumes:
+      - $HOME/.aws/$AWS_CREDENTIALS_FILE_NAME:$CONNECT_CONTAINER_HOME_DIR/.aws/credentials
+      - $HOME/.aws/config:$CONNECT_CONTAINER_HOME_DIR/.aws/config
+    environment:
+      CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-s3
