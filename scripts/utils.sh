@@ -1583,6 +1583,18 @@ function exit_with_error()
 function maybe_delete_ccloud_environment () {
   DELTA_CONFIGS_ENV=/tmp/delta_configs/env.delta
 
+  if [ ! -z "$CI" ]
+  then
+    # running with github actions
+    if [ -f ../../secrets.properties ]
+    then
+      source ../../secrets.properties > /dev/null 2>&1
+    fi
+    if [ -f ../secrets.properties ]
+      source ../secrets.properties > /dev/null 2>&1
+    fi
+  fi
+
   if [ -z "$CLUSTER_NAME" ]
   then
     # 
@@ -1630,16 +1642,11 @@ function bootstrap_ccloud_environment () {
       if [ ! -z "$CI" ]
       then
         # running with github actions
-        if [ ! -f ../../secrets.properties ]
+        if [ -f ../../secrets.properties ]
         then
-          logwarn "../../secrets.properties is not present!"
-        else
           source ../../secrets.properties > /dev/null 2>&1
         fi
-        if [ ! -f ../secrets.properties ]
-        then
-          logwarn "../secrets.properties is not present!"
-        else
+        if [ -f ../secrets.properties ]
           source ../secrets.properties > /dev/null 2>&1
         fi
       fi
