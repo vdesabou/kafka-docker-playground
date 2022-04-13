@@ -138,6 +138,9 @@ select current_scn from v\$database;
 exit;
 EOF
 
+log "Pause the connector"
+curl -X PUT localhost:8083/connectors/cdc-oracle-source-cdb/pause
+
 # CURRENT_SCN
 # -----------
 #     1447201
@@ -169,10 +172,44 @@ EOF
 # -----------
 #     1447937
 
-sleep 10
+log "Follow next steps manually as you need to use the right SCN"
+exit 0
+
 
 log "restarting failed task"
 curl -X POST localhost:8083/connectors/cdc-oracle-source-cdb/tasks/0/restart
+
+curl -X PUT \
+     -H "Content-Type: application/json" \
+     --data '{
+               "connector.class": "io.confluent.connect.oracle.cdc.OracleCdcSourceConnector",
+               "tasks.max":2,
+               "key.converter": "io.confluent.connect.avro.AvroConverter",
+               "key.converter.schema.registry.url": "http://schema-registry:8081",
+               "value.converter": "io.confluent.connect.avro.AvroConverter",
+               "value.converter.schema.registry.url": "http://schema-registry:8081",
+               "confluent.license": "",
+               "confluent.topic.bootstrap.servers": "broker:9092",
+               "confluent.topic.replication.factor": "1",
+               "oracle.server": "oracle",
+               "oracle.port": 1521,
+               "oracle.sid": "ORCLCDB",
+               "oracle.username": "C##MYUSER",
+               "oracle.password": "mypassword",
+               "start.from":"1448154",
+               "redo.log.topic.name": "redo-log-topic",
+               "redo.log.consumer.bootstrap.servers":"broker:9092",
+               "table.inclusion.regex": ".*CUSTOMERS.*",
+               "table.topic.name.template": "${databaseName}.${schemaName}.${tableName}2",
+               "numeric.mapping": "best_fit",
+               "connection.pool.max.size": 20,
+               "redo.log.row.fetch.size":1,
+               "oracle.dictionary.mode": "auto"
+          }' \
+     http://localhost:8083/connectors/cdc-oracle-source-cdb/config | jq .
+
+log "Resume the connector"
+curl -X PUT localhost:8083/connectors/cdc-oracle-source-cdb/resume
 
 log "Running SQL scripts"
 for script in ../../connect/connect-cdc-oracle12-source/sample-sql-scripts/*.sh
