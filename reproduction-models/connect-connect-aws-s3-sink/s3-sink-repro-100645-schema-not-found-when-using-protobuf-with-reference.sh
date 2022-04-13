@@ -113,7 +113,7 @@ curl -X PUT \
 
                "storage.class": "io.confluent.connect.s3.storage.S3Storage",
                "format.class": "io.confluent.connect.s3.format.avro.AvroFormat",
-               "schema.compatibility": "NONE"
+               "schema.compatibility": "BACKWARD"
           }' \
      http://localhost:8083/connectors/s3-sink/config | jq .
 
@@ -139,7 +139,7 @@ curl -X POST -H "Content-Type: application/json" -d'
   "schemaType": "PROTOBUF",
   "schema": "syntax = \"proto3\";\n\npackage com.github.vdesabou;\n\nmessage Address {\nstring street = 1;\n// comment 2\nstring other = 2;\n}"
 }' \
-"http://localhost:8081/subjects/address.proto/versions (id=4)"
+"http://localhost:8081/subjects/address.proto/versions"
 
 log "Register schema v2 for customer (id=4)"
 curl -X POST -H "Content-Type: application/json" -d'{
@@ -167,12 +167,27 @@ curl --request POST \
   --header 'Content-Type: application/vnd.schemaregistry.v1+json' \
   --data "$output"
 
+log "Listing all versions for customer_protobuf-value"
+curl --url http://localhost:8081/subjects/customer_protobuf-value/versions
 
-# curl --request DELETE \
-#   --url http://localhost:8081/subjects/customer_protobuf-value/versions/1
+log "Delete customer_protobuf-value version 1"
+curl --request DELETE --url http://localhost:8081/subjects/customer_protobuf-value/versions/1
 
-# curl --request DELETE \
-#   --url http://localhost:8081/subjects/address.proto/versions/1
+log "Delete address.proto version 1"
+curl --request DELETE --url http://localhost:8081/subjects/address.proto/versions/1
+
+log "Fetch schema id 4"
+curl --request GET \
+  --url http://localhost:8081/schemas/ids/4
+
+output=$(curl --request GET --url http://localhost:8081/schemas/ids/4)
+
+log "find the Schema using a POST"
+curl --request POST \
+  --url http://localhost:8081/subjects/customer_protobuf-value \
+  --header 'Content-Type: application/vnd.schemaregistry.v1+json' \
+  --data "$output"
+
 
 log "✨ Run the protobuf java producer which produces to topic customer_protobuf"
-docker exec producer-repro-100645 bash -c "java ${JAVA_OPTS} -jar producer-1.0.0-jar-with-dependencies.jar"
+docker exec producer-repro-100645-2 bash -c "java ${JAVA_OPTS} -jar producer-1.0.0-jar-with-dependencies.jar"
