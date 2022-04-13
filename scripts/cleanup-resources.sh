@@ -166,13 +166,6 @@ done
 
 if [ ! -z "$CI" ]
 then
-     log "Installing confluent CLI"
-     curl -L --http1.1 https://cnfl.io/cli | sudo sh -s -- -b /usr/local/bin
-     export PATH=$PATH:/usr/local/bin
-     log "##################################################"
-     log "Log in to Confluent Cloud"
-     log "##################################################"
-     confluent login --save
      bootstrap_ccloud_environment
 
      set +e 
