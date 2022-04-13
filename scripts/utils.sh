@@ -1632,10 +1632,16 @@ function bootstrap_ccloud_environment () {
         # running with github actions
         if [ ! -f ../../secrets.properties ]
         then
-          logerror "../../secrets.properties is not present!"
-          exit 1
+          logwarn "../../secrets.properties is not present!"
+        else
+          source ../../secrets.properties > /dev/null 2>&1
         fi
-        source ../../secrets.properties > /dev/null 2>&1
+        if [ ! -f ../secrets.properties ]
+        then
+          logwarn "../secrets.properties is not present!"
+        else
+          source ../secrets.properties > /dev/null 2>&1
+        fi
       fi
       
       log "Installing confluent CLI"
