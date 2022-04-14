@@ -1591,6 +1591,7 @@ function maybe_delete_ccloud_environment () {
       source ../../secrets.properties > /dev/null 2>&1
     fi
     if [ -f ../secrets.properties ]
+    then
       source ../secrets.properties > /dev/null 2>&1
     fi
   fi
@@ -1647,6 +1648,7 @@ function bootstrap_ccloud_environment () {
           source ../../secrets.properties > /dev/null 2>&1
         fi
         if [ -f ../secrets.properties ]
+        then
           source ../secrets.properties > /dev/null 2>&1
         fi
       fi
