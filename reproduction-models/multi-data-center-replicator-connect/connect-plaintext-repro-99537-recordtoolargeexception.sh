@@ -49,8 +49,11 @@ curl -X PUT \
 #         at java.base/java.lang.Thread.run(Thread.java:834)
 # Caused by: org.apache.kafka.common.errors.RecordTooLargeException: The message is 155 bytes when serialized which is larger than 100, which is the value of the max.request.size configuration.
 
-log "restarting failed task"
-docker container exec connect-us curl --request POST --url 'http://localhost:8083/connectors/replicate-europe-to-us/restart?includeTasks=true&onlyFailed=true'
+exit 0
+
+
+log "restarting task"
+docker container exec connect-us curl -X POST localhost:8083/connectors/replicate-europe-to-us/tasks/0/restart
 
 exit 0
 sleep 120
