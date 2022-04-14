@@ -1,4 +1,4 @@
-filebeat.prospectors:
+filebeat.inputs:
 - type: log
   enabled: true
   tags:

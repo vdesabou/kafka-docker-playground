@@ -6,7 +6,7 @@ services:
     entrypoint: ["echo", "Service connect disabled"]
 
   filebeat:
-    image: docker.elastic.co/beats/filebeat:6.6.0
+    image: docker.elastic.co/beats/filebeat:7.16.2
     container_name: filebeat
     user: root
     environment:
