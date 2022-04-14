@@ -13,7 +13,7 @@ By default, a new Confluent Cloud environment with a Cluster will be created.
 
 You can configure the cluster by setting environment variables:
 
-* `CLUSTER_CLOUD`: The Cloud provider (possible values: `aws`, `gcp` and `azure`, default `aws`)
+* `CLUSTER_CLOUD`: The Cloud provider (possible values: `aws`, `gcp` and `azure`, default `aws`)
 * `CLUSTER_REGION`: The Cloud region (use `confluent kafka region list` to get the list, default `eu-west-2`)
 * `ENVIRONMENT` (optional): The environment id where want your new cluster (example: `env-xxxxx`) 
 
