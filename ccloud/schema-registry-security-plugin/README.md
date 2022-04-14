@@ -21,7 +21,7 @@ In case you want to use your own existing cluster, you need to setup these envir
 * `ENVIRONMENT`: The environment id where your cluster is located (example: `env-xxxxx`) 
 * `CLUSTER_NAME`: The cluster name
 * `CLUSTER_CLOUD`: The Cloud provider (possible values: `aws`, `gcp` and `azure`)
-* `CLUSTER_REGION`: The Cloud region (example `us-east-2)
+* `CLUSTER_REGION`: The Cloud region (example `us-east-2`)
 * `CLUSTER_CREDS`: The Kafka api key and secret to use, it should be separated with semi-colon (example: `<API_KEY>:<API_KEY_SECRET>`)
 * `SCHEMA_REGISTRY_CREDS` (optional, if not set, new one will be created): The Schema Registry api key and secret to use, it should be separated with semi-colon (example: `<SR_API_KEY>:<SR_API_KEY_SECRET>`)
 
