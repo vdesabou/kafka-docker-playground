@@ -110,7 +110,7 @@ services:
       - ../../environment/sasl-ssl/security:/etc/kafka/secrets
     environment:
       SCHEMA_REGISTRY_KAFKASTORE_BOOTSTRAP_SERVERS: "broker:9092,broker2:9092"
-      SCHEMA_REGISTRY_LISTENERS: "https://0.0.0.0:8085"
+      SCHEMA_REGISTRY_LISTENERS: "https://0.0.0.0:8081"
       SCHEMA_REGISTRY_KAFKASTORE_SECURITY_PROTOCOL: SASL_SSL
       SCHEMA_REGISTRY_KAFKASTORE_SASL_JAAS_CONFIG: "org.apache.kafka.common.security.plain.PlainLoginModule required \
         username=\"schema-registry\" \
@@ -143,7 +143,7 @@ services:
     environment:
       CONNECT_BOOTSTRAP_SERVERS: "broker:9092,broker2:9092"
       CONNECT_LISTENERS: "https://0.0.0.0:8083"
-      CONNECT_VALUE_CONVERTER_SCHEMA_REGISTRY_URL: "https://schema-registry:8085"
+      CONNECT_VALUE_CONVERTER_SCHEMA_REGISTRY_URL: "https://schema-registry:8081"
       # Starting with 5.4, Confluent Platform provides the Schema Registry dedicated client configuration properties
       CONNECT_VALUE_CONVERTER_SCHEMA_REGISTRY_SSL_TRUSTSTORE_LOCATION: /etc/kafka/secrets/kafka.connect.truststore.jks
       CONNECT_VALUE_CONVERTER_SCHEMA_REGISTRY_SSL_TRUSTSTORE_PASSWORD: confluent
@@ -270,7 +270,7 @@ services:
       CONTROL_CENTER_BOOTSTRAP_SERVERS: "broker:9092,broker2:9092"
       CONTROL_CENTER_CONNECT_CLUSTER: "https://connect:8083"
       CONTROL_CENTER_CONNECT_MYCONNECT_CLUSTER: https://connect:8083
-      CONTROL_CENTER_SCHEMA_REGISTRY_URL: "https://schema-registry:8085"
+      CONTROL_CENTER_SCHEMA_REGISTRY_URL: "https://schema-registry:8081"
       CONTROL_CENTER_STREAMS_SECURITY_PROTOCOL: SASL_SSL
       CONTROL_CENTER_STREAMS_SASL_JAAS_CONFIG: "org.apache.kafka.common.security.plain.PlainLoginModule required \
         username=\"client\" \
