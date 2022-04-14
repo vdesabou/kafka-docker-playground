@@ -2779,7 +2779,7 @@ function ccloud::create_ccloud_stack() {
   CLOUD_API_KEY=`echo $CLUSTER_CREDS | awk -F: '{print $1}'`
   CLOUD_API_SECRET=`echo $CLUSTER_CREDS | awk -F: '{print $2}'`
   # FIX THIS: added by me
-  confluent api-key store "$CLOUD_API_KEY" "$CLOUD_API_SECRET" --resource ${CLUSTER}
+  confluent api-key store "$CLOUD_API_KEY" "$CLOUD_API_SECRET" --resource ${CLUSTER} --force
   confluent api-key use $CLOUD_API_KEY --resource ${CLUSTER}
 
   if [[ -z "$SKIP_CONFIG_FILE_WRITE" ]]; then
