@@ -91,7 +91,7 @@ cd connect/connect-ibm-mq-sink
 > [!ATTENTION]
 > Please ignore all the scripts containing `repro` in the name or in `reproduction-models` folder: they were used for reproduction models, and are **not maintained**.
 
-## Confluent Cloud examples
+## 🌤️ Confluent Cloud examples
 
 All you have to do is to be already logged in with [confluent CLI](https://docs.confluent.io/confluent-cli/current/overview.html#confluent-cli-overview).
 
