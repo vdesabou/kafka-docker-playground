@@ -17,6 +17,11 @@ else
 fi
 #############
 
+set +e
+delete_topic ORCLCDB.C__MYUSER.CUSTOMERS
+delete_topic redo-log-topic
+set -e
+
 # Verify Oracle DB has started within MAX_WAIT seconds
 MAX_WAIT=2500
 CUR_WAIT=0
