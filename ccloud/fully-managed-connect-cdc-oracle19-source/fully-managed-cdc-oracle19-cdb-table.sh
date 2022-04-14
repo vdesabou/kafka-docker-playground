@@ -38,6 +38,10 @@ fi
 
 create_or_get_oracle_image "LINUX.X64_193000_db_home.zip" "../../ccloud/fully-managed-connect-cdc-oracle19-source/ora-setup-scripts-cdb-table"
 
+set +e
+delete_topic ORCLCDB.C__MYUSER.CUSTOMERS
+set -e
+
 docker-compose build
 docker-compose down -v --remove-orphans
 docker-compose up -d
