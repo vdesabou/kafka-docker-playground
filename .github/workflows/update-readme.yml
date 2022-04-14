@@ -8,6 +8,10 @@ jobs:
     name: Update README
     runs-on: ubuntu-latest
     steps:
+      # https://github.com/actions/checkout/issues/760
+      - name: work around permission issue
+        run: git config --global --add safe.directory /github/workspace
+        
       - name: Checkout code
         uses: actions/checkout@v2
         with:
