@@ -48,7 +48,7 @@ curl -X POST \
    --cert ../../environment/2way-ssl/security/connect.certificate.pem --key ../../environment/2way-ssl/security/connect.key --tlsv1.2 --cacert ../../environment/2way-ssl/security/snakeoil-ca-1.crt \
    -u write:write \
    --data '{ "schema": "[ { \"type\":\"record\", \"name\":\"user\", \"fields\": [ {\"name\":\"userid\",\"type\":\"long\"}, {\"name\":\"username\",\"type\":\"string\"} ]} ]" }' \
-   https://localhost:8085/subjects/topic-validation-value/versions
+   https://localhost:8081/subjects/topic-validation-value/versions
 
 log "Sending a non-Avro record, it should fail"
 docker exec -i connect kafka-console-producer \
@@ -64,7 +64,7 @@ docker exec -i connect kafka-avro-console-producer \
      --broker-list broker:9092 \
      --property basic.auth.credentials.source=USER_INFO \
      --property schema.registry.basic.auth.user.info="write:write" \
-     --property schema.registry.url=https://schema-registry:8085 \
+     --property schema.registry.url=https://schema-registry:8081 \
      --property schema.registry.ssl.truststore.location=/etc/kafka/secrets/kafka.client.truststore.jks \
      --property schema.registry.ssl.truststore.password=confluent \
      --property schema.registry.ssl.keystore.location=/etc/kafka/secrets/kafka.client.keystore.jks \
@@ -75,4 +75,4 @@ docker exec -i connect kafka-avro-console-producer \
 EOF
 
 log "Verify we have the record"
-docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property basic.auth.credentials.source=USER_INFO --property schema.registry.basic.auth.user.info="read:read" --topic topic-validation --from-beginning --max-messages 1 --property schema.registry.url=https://schema-registry:8085 --property schema.registry.ssl.truststore.location=/etc/kafka/secrets/kafka.client.truststore.jks --property schema.registry.ssl.truststore.password=confluent --property schema.registry.ssl.keystore.location=/etc/kafka/secrets/kafka.client.keystore.jks --property schema.registry.ssl.keystore.password=confluent --consumer.config /etc/kafka/secrets/client_without_interceptors_2way_ssl.config
+docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property basic.auth.credentials.source=USER_INFO --property schema.registry.basic.auth.user.info="read:read" --topic topic-validation --from-beginning --max-messages 1 --property schema.registry.url=https://schema-registry:8081 --property schema.registry.ssl.truststore.location=/etc/kafka/secrets/kafka.client.truststore.jks --property schema.registry.ssl.truststore.password=confluent --property schema.registry.ssl.keystore.location=/etc/kafka/secrets/kafka.client.keystore.jks --property schema.registry.ssl.keystore.password=confluent --consumer.config /etc/kafka/secrets/client_without_interceptors_2way_ssl.config

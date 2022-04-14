@@ -73,7 +73,7 @@ EOF
     # Create pem files and keys used for Schema Registry HTTPS testing
     #   openssl x509 -noout -modulus -in client.certificate.pem | openssl md5
     #   openssl rsa -noout -modulus -in client.key | openssl md5
-    #   log "GET /" | openssl s_client -connect localhost:8085/subjects -cert client.certificate.pem -key client.key -tls1
+    #   log "GET /" | openssl s_client -connect localhost:8081/subjects -cert client.certificate.pem -key client.key -tls1
     keytool -export -alias $i -file /tmp/$i.der -keystore /tmp/kafka.$i.keystore.jks -storepass confluent
     openssl x509 -inform der -in /tmp/$i.der -out /tmp/$i.certificate.pem
     keytool -importkeystore -srckeystore /tmp/kafka.$i.keystore.jks -destkeystore /tmp/$i.keystore.p12 -deststoretype PKCS12 -deststorepass confluent -srcstorepass confluent -noprompt

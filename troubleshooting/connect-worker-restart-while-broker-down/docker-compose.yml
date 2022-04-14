@@ -156,7 +156,7 @@ services:
       - broker2
       - broker3
     ports:
-      - "8085:8083"
+      - "8081:8083"
     sysctls:
         - net.ipv4.tcp_syn_retries=3
     environment:

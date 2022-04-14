@@ -26,7 +26,7 @@ Schema Registry is configured at broker level:
 ```yml
   broker:
     environment:
-      KAFKA_CONFLUENT_SCHEMA_REGISTRY_URL: "https://schema-registry:8085"
+      KAFKA_CONFLUENT_SCHEMA_REGISTRY_URL: "https://schema-registry:8081"
       KAFKA_CONFLUENT_SSL_TRUSTSTORE_LOCATION: /etc/kafka/secrets/kafka.client.truststore.jks
       KAFKA_CONFLUENT_SSL_TRUSTSTORE_PASSWORD: confluent
       KAFKA_CONFLUENT_SSL_KEYSTORE_LOCATION: /etc/kafka/secrets/kafka.client.keystore.jks
@@ -38,7 +38,7 @@ Schema Registry is configured at broker level:
 
   broker2:
     environment:
-      KAFKA_CONFLUENT_SCHEMA_REGISTRY_URL: "https://schema-registry:8085"
+      KAFKA_CONFLUENT_SCHEMA_REGISTRY_URL: "https://schema-registry:8081"
       KAFKA_CONFLUENT_SSL_TRUSTSTORE_LOCATION: /etc/kafka/secrets/kafka.client.truststore.jks
       KAFKA_CONFLUENT_SSL_TRUSTSTORE_PASSWORD: confluent
       KAFKA_CONFLUENT_SSL_KEYSTORE_LOCATION: /etc/kafka/secrets/kafka.client.keystore.jks
@@ -72,7 +72,7 @@ $ curl -X POST \
    -H "Content-Type: application/vnd.schemaregistry.v1+json" \
    --cert ../../environment/2way-ssl/security/connect.certificate.pem --key ../../environment/2way-ssl/security/connect.key --tlsv1.2 --cacert ../../environment/2way-ssl/security/snakeoil-ca-1.crt \
    --data '{ "schema": "[ { \"type\":\"record\", \"name\":\"user\", \"fields\": [ {\"name\":\"userid\",\"type\":\"long\"}, {\"name\":\"username\",\"type\":\"string\"} ]} ]" }' \
-   https://schema-registry:8085/subjects/topic-validation-value/versions
+   https://schema-registry:8081/subjects/topic-validation-value/versions
 ```
 
 Note: for `2way-ssl-and-security-plugin.sh`, we need to use user `write`
@@ -99,7 +99,7 @@ Sending a Avro record, it should work:
 $ docker exec -i connect kafka-avro-console-producer \
      --topic topic-validation \
      --broker-list broker:9092 \
-     --property schema.registry.url=https://schema-registry:8085 \
+     --property schema.registry.url=https://schema-registry:8081 \
      --property schema.registry.ssl.truststore.location=/etc/kafka/secrets/kafka.client.truststore.jks \
      --property schema.registry.ssl.truststore.password=confluent \
      --property schema.registry.ssl.keystore.location=/etc/kafka/secrets/kafka.client.keystore.jks \
@@ -118,7 +118,7 @@ $ docker exec -i connect kafka-avro-console-producer \
      --broker-list broker:9092 \
      --property basic.auth.credentials.source=USER_INFO \
      --property schema.registry.basic.auth.user.info="write:write" \
-     --property schema.registry.url=https://schema-registry:8085 \
+     --property schema.registry.url=https://schema-registry:8081 \
      --property schema.registry.ssl.truststore.location=/etc/kafka/secrets/kafka.client.truststore.jks \
      --property schema.registry.ssl.truststore.password=confluent \
      --property schema.registry.ssl.keystore.location=/etc/kafka/secrets/kafka.client.keystore.jks \

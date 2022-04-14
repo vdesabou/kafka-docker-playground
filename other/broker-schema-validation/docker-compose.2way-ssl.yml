@@ -3,7 +3,7 @@ version: '3.5'
 services:
   broker:
     environment:
-      KAFKA_CONFLUENT_SCHEMA_REGISTRY_URL: "https://schema-registry:8085"
+      KAFKA_CONFLUENT_SCHEMA_REGISTRY_URL: "https://schema-registry:8081"
       KAFKA_CONFLUENT_SSL_TRUSTSTORE_LOCATION: /etc/kafka/secrets/kafka.client.truststore.jks
       KAFKA_CONFLUENT_SSL_TRUSTSTORE_PASSWORD: confluent
       KAFKA_CONFLUENT_SSL_KEYSTORE_LOCATION: /etc/kafka/secrets/kafka.client.keystore.jks
@@ -12,7 +12,7 @@ services:
 
   broker2:
     environment:
-      KAFKA_CONFLUENT_SCHEMA_REGISTRY_URL: "https://schema-registry:8085"
+      KAFKA_CONFLUENT_SCHEMA_REGISTRY_URL: "https://schema-registry:8081"
       KAFKA_CONFLUENT_SSL_TRUSTSTORE_LOCATION: /etc/kafka/secrets/kafka.client.truststore.jks
       KAFKA_CONFLUENT_SSL_TRUSTSTORE_PASSWORD: confluent
       KAFKA_CONFLUENT_SSL_KEYSTORE_LOCATION: /etc/kafka/secrets/kafka.client.keystore.jks
@@ -21,4 +21,4 @@ services:
 
   schema-registry:
     ports:
-      - "8085:8085"
+      - "8081:8081"
