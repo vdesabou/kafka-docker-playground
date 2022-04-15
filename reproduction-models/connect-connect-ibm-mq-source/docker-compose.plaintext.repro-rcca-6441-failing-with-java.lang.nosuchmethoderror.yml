@@ -15,10 +15,6 @@ services:
       - '9443:9443'
 
   connect:
-    build:
-      context: ../../connect/connect-ibm-mq-source/
-      args:
-        CONNECT_TAG: ${CONNECT_TAG}
     depends_on:
       - zookeeper
       - broker
@@ -29,7 +25,6 @@ services:
         - ../../connect/connect-ibm-mq-source/jms.jar:/usr/share/confluent-hub-components/confluentinc-kafka-connect-ibmmq/lib/jms.jar
     environment:
       CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-ibmmq
-      CLASSPATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-ibmmq/lib/*
 
   broker2:
     image: ${CP_KAFKA_IMAGE}:${TAG}
