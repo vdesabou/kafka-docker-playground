@@ -1,0 +1,43 @@
+---
+version: '3.5'
+services:
+
+  producer-repro-100661:
+    build:
+      context: ../../reproduction-models/connect-connect-gcp-gcs-sink/producer-repro-100661/
+    hostname: producer
+    container_name: producer-repro-100661
+    environment:
+      KAFKA_BOOTSTRAP_SERVERS: broker:9092
+      TOPIC: "customer_avro"
+      REPLICATION_FACTOR: 1
+      NUMBER_OF_PARTITIONS: 1
+      NB_MESSAGES: 10 # -1 for MAX_VALUE
+      MESSAGE_BACKOFF: 1000 # Frequency of message injection
+      KAFKA_ACKS: "all" # default: "1"
+      KAFKA_REQUEST_TIMEOUT_MS: 20000
+      KAFKA_RETRY_BACKOFF_MS: 500
+      KAFKA_CLIENT_ID: "my-java-producer-repro-100661"
+      KAFKA_SCHEMA_REGISTRY_URL: "https://schema-registry:8081"
+      KAFKA_SCHEMA_REGISTRY_SSL_TRUSTSTORE_LOCATION: "/etc/kafka/secrets/kafka.client.truststore.jks"
+      KAFKA_SCHEMA_REGISTRY_SSL_TRUSTSTORE_PASSWORD: "confluent"
+      KAFKA_SCHEMA_REGISTRY_SSL_KEYSTORE_LOCATION: "/etc/kafka/secrets/kafka.client.keystore.jks"
+      KAFKA_SCHEMA_REGISTRY_SSL_KEYSTORE_PASSWORD: "confluent"
+      KAFKA_SECURITY_PROTOCOL: "SSL"
+      KAFKA_SSL_TRUSTSTORE_LOCATION: "/etc/kafka/secrets/kafka.client.truststore.jks"
+      KAFKA_SSL_TRUSTSTORE_PASSWORD: "confluent"
+      KAFKA_SSL_KEYSTORE_LOCATION: "/etc/kafka/secrets/kafka.client.keystore.jks"
+      KAFKA_SSL_KEYSTORE_PASSWORD: "confluent"
+      KAFKA_SSL_KEY_PASSWORD: "confluent"
+      KAFKA_VALUE_SUBJECT_NAME_STRATEGY: "io.confluent.kafka.serializers.subject.TopicRecordNameStrategy"
+      JAVA_OPTS: 
+    volumes:
+      - ../../environment/plaintext/jmx-exporter:/usr/share/jmx_exporter/
+      - ../../environment/2way-ssl/security:/etc/kafka/secrets
+
+  connect:
+    volumes:
+        - ../../connect/connect-gcp-gcs-sink/keyfile.json:/tmp/keyfile.json:ro
+        - ../../environment/2way-ssl/security:/etc/kafka/secrets
+    environment:
+      CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-gcs
