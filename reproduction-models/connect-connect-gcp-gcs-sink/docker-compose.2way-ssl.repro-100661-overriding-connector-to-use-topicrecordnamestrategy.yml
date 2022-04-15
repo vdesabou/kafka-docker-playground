@@ -2,6 +2,16 @@
 version: '3.5'
 services:
 
+  schema-registry:
+    environment:
+      SCHEMA_REGISTRY_AUTHENTICATION_METHOD: "BASIC"
+      SCHEMA_REGISTRY_AUTHENTICATION_ROLES: "write,read,admin"
+      SCHEMA_REGISTRY_AUTHENTICATION_REALM: "Schema"
+      SCHEMA_REGISTRY_OPTS: "-Djava.security.auth.login.config=/tmp/jaas_config.file"
+    volumes:
+      - ../../multi-data-center/replicator-connect/jaas_config.file:/tmp/jaas_config.file
+      - ../../multi-data-center/replicator-connect/password-file:/tmp/password-file
+
   producer-repro-100661:
     build:
       context: ../../reproduction-models/connect-connect-gcp-gcs-sink/producer-repro-100661/
@@ -30,6 +40,8 @@ services:
       KAFKA_SSL_KEYSTORE_PASSWORD: "confluent"
       KAFKA_SSL_KEY_PASSWORD: "confluent"
       KAFKA_VALUE_SUBJECT_NAME_STRATEGY: "io.confluent.kafka.serializers.subject.TopicRecordNameStrategy"
+      KAFKA_SCHEMA_REGISTRY_BASIC_AUTH_CREDENTIALS_SOURCE: USER_INFO
+      KAFKA_SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO: admin:admin
       JAVA_OPTS: 
     volumes:
       - ../../environment/plaintext/jmx-exporter:/usr/share/jmx_exporter/
@@ -41,3 +53,5 @@ services:
         - ../../environment/2way-ssl/security:/etc/kafka/secrets
     environment:
       CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-gcs
+      CONNECT_VALUE_CONVERTER_BASIC_AUTH_CREDENTIALS_SOURCE: USER_INFO
+      CONNECT_VALUE_CONVERTER_SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO: admin:admin

@@ -84,7 +84,9 @@ curl -X PUT \
                "confluent.topic.security.protocol" : "SSL",
                "value.converter": "io.confluent.connect.avro.AvroConverter",
                "value.converter.value.subject.name.strategy": "io.confluent.kafka.serializers.subject.TopicRecordNameStrategy",
-               "value.converter.schema.registry.url": "https://schema-registry:8081"
+               "value.converter.schema.registry.url": "https://schema-registry:8081",
+               "value.converter.basic.auth.credentials.source": "USER_INFO",
+               "value.converter.basic.auth.user.info": "admin:admin"
 
           }' \
      https://localhost:8083/connectors/gcs-sink/config | jq .
