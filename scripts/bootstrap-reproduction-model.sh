@@ -236,6 +236,7 @@ EOF
 # 🚨🚨🚨 FIXTHIS: move it to the correct place 🚨🚨🚨
 log "✨ Run the $schema_format java producer which produces to topic $topic_name"
 docker exec $producer_hostname bash -c "java \${JAVA_OPTS} -jar producer-1.0.0-jar-with-dependencies.jar"
+# 🚨🚨🚨 FIXTHIS: move it to the correct place 🚨🚨🚨
 
 EOF
   # log "✨ Adding command to run producer to $repro_test_file"
