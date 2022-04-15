@@ -109,6 +109,15 @@ docker exec -i connect kafka-protobuf-console-producer --broker-list broker:9092
 EOF
 ```
 
+* 3️⃣ Using a key:
+
+```bash
+docker exec -i connect kafka-protobuf-console-producer --broker-list broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic a-topic --property key.schema='syntax = "proto3"; message MyRecord { string ID = 1; }' --property value.schema='syntax = "proto3"; message MyRecord { string f1 = 1; }'  --property parse.key=true --property key.separator="|" << EOF
+{"ID": 111}|{"f1":"value1"}
+{"ID": 222}|{"f1":"value2"}
+{"ID": 333}|{"f1":"value3"}
+EOF
+
 > [!TIP]
 > If Protobuf schema is very complex, it is better to use [♨️ Protobuf Java producer](/reusables?id=♨%EF%B8%8F-protobuf-java-producer) below.
 
