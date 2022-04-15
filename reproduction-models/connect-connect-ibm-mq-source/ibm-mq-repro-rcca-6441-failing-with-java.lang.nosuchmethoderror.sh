@@ -1,8 +1,8 @@
 #!/bin/bash
 set -e
 
-log "This issue happens with CP 6.2.1 and 11.0.11"
-log "C3 must be disabled, and there should be at lease 2 brokers"
+echo "This issue happens with CP 6.2.1 and 11.0.11"
+echo "C3 must be disabled, and there should be at lease 2 brokers"
 export TAG=6.1.2
 #export CONNECTOR_TAG=11.0.11
 export DISABLE_CONTROL_CENTER=1
