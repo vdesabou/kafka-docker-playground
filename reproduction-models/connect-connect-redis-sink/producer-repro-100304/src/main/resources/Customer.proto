@@ -1,0 +1,11 @@
+syntax = "proto3";
+
+package com.github.vdesabou;
+option java_outer_classname = "CustomerImpl";
+
+message Customer {
+    int64 count = 1;
+    string first_name = 2;
+    string last_name = 3;
+    string address = 4;
+}

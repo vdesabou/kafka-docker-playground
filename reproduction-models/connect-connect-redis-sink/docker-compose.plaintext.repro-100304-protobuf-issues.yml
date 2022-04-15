@@ -1,0 +1,39 @@
+---
+version: '3.5'
+services:
+
+  producer-repro-100304:
+    build:
+      context: ../../reproduction-models/connect-connect-redis-sink/producer-repro-100304/
+    hostname: producer
+    container_name: producer-repro-100304
+    environment:
+      KAFKA_BOOTSTRAP_SERVERS: broker:9092
+      TOPIC: "customer_protobuf"
+      REPLICATION_FACTOR: 1
+      NUMBER_OF_PARTITIONS: 1
+      NB_MESSAGES: 10 # -1 for MAX_VALUE
+      MESSAGE_BACKOFF: 1000 # Frequency of message injection
+      KAFKA_ACKS: "all" # default: "1"
+      KAFKA_REQUEST_TIMEOUT_MS: 20000
+      KAFKA_RETRY_BACKOFF_MS: 500
+      KAFKA_CLIENT_ID: "my-java-producer-repro-100304"
+      KAFKA_SCHEMA_REGISTRY_URL: "http://schema-registry:8081"
+      JAVA_OPTS: 
+    volumes:
+      - ../../environment/plaintext/jmx-exporter:/usr/share/jmx_exporter/
+
+
+  redis:
+    image: redis:5.0.7
+    hostname: redis
+    container_name: redis
+
+  connect:
+    depends_on:
+      - zookeeper
+      - broker
+      - schema-registry
+      - redis
+    environment:
+      CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/jcustenborder-kafka-connect-redis
