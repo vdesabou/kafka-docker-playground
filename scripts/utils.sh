@@ -777,7 +777,7 @@ function aws() {
       then
         log '$HOME/.aws/$AWS_CREDENTIALS_FILE_NAME does not exist.'
       fi
-      return 1^
+      return 1
     fi
 
     docker run --rm -iv $HOME/.aws:/root/.aws -e AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID -e AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY -v $(pwd):/aws -v /tmp:/tmp mikesir87/aws-cli:v2 aws "$@"
@@ -1343,6 +1343,14 @@ function get_3rdparty_file () {
       aws s3 cp --only-show-errors "s3://kafka-docker-playground/3rdparty/$file" .
       if [ $? -eq 0 ]; then
         log "📄 <s3://kafka-docker-playground/3rdparty/$file> was downloaded from S3 bucket"
+      fi
+      if [[ "$OSTYPE" == "darwin"* ]]
+      then
+          # workaround for issue on linux, see https://github.com/vdesabou/kafka-docker-playground/issues/851#issuecomment-821151962
+          chmod a+rw $file
+      else
+          # on CI, docker is run as runneradmin user, need to use sudo
+          sudo chmod a+rw $file
       fi
   fi
   set -e
