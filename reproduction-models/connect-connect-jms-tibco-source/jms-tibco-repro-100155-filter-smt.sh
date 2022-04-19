@@ -124,10 +124,10 @@ curl -X PUT \
                     "confluent.license": "",
                     "confluent.topic.bootstrap.servers": "broker:9092",
                     "confluent.topic.replication.factor": "1",
-                    "transforms": "filterByGender",
-                    "transforms.filterByGender.type": "io.confluent.connect.transforms.Filter$Value",
-                    "transforms.filterByGender.filter.condition": "$[?(@.messageType == \"text\")]",
-                    "transforms.filterByGender.filter.type": "exclude"
+                    "transforms": "filterByMessageType",
+                    "transforms.filterByMessageType.type": "io.confluent.connect.transforms.Filter$Value",
+                    "transforms.filterByMessageType.filter.condition": "$[?(@.messageType == \"text\")]",
+                    "transforms.filterByMessageType.filter.type": "exclude"
           }' \
      http://localhost:8083/connectors/jms-tibco-source/config | jq .
 
