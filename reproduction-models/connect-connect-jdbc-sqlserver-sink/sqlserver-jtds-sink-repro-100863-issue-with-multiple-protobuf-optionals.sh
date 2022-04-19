@@ -11,7 +11,7 @@ log "Register schema for customers_protobuf-value"
 curl -X POST -H "Content-Type: application/json" -d'
 {
   "schemaType": "PROTOBUF",
-  "schema": "syntax = \"proto3\";\n\npackage server1.dbo.customers;\n\nmessage Value {\nint32 id = 1;\noptional string first_name = 2;\noptional string last_name = 3;\noptional string email = 4;\n}"
+  "schema": "syntax = \"proto3\";\n\npackage server1.dbo.customers;\n\n//doc entry\nmessage Value {\n//doc entry\nint32 field_no_optional = 1;\n//doc entry\noptional string field_first_optional = 2;\n//doc entry\noptional int32 field_second_optional = 3;\n//doc entry\noptional string field_third_optional = 4;\n}"
 }' \
 "http://localhost:8081/subjects/customers_protobuf-value/versions"
 
@@ -19,10 +19,10 @@ curl -X POST -H "Content-Type: application/json" -d'
 # package server1.dbo.customers;
 
 # message Value {
-#   int32 id = 1;
-#   optional string first_name = 2;
-#   optional string last_name = 3;
-#   optional string email = 4;
+#   int32 field_no_optional = 1;
+#   optional string field_first_optional = 2;
+#   optional int32 field_second_optional = 3;
+#   optional string field_third_optional = 4;
 # }
 
 log "Load inventory-repro-100863.sql to SQL Server"
@@ -67,7 +67,7 @@ sleep 5
 
 docker exec -i sqlserver /opt/mssql-tools/bin/sqlcmd -U sa -P Password! << EOF
 USE testDB;
-INSERT INTO customers(first_name,last_name,email) VALUES ('Pam','Thomas','pam@office.com');
+INSERT INTO customers(field_first_optional,field_second_optional,field_third_optional) VALUES ('Pam',1,'pam@office.com');
 GO
 EOF
 
@@ -98,11 +98,11 @@ curl -X PUT \
      http://localhost:8083/connectors/sqlserver-sink/config | jq .
 
 
-# [2022-04-19 08:02:29,196] INFO [sqlserver-sink|task-0] Creating table with sql: CREATE TABLE "dbo"."customers_protobuf" (
-# "id" int NULL,
-# "first_name" varchar(max) NULL,
-# "last_name" varchar(max) NULL,
-# "email" varchar(max) NULL) (io.confluent.connect.jdbc.sink.DbStructure:122)
+# [2022-04-19 08:34:33,199] INFO [sqlserver-sink|task-0] Creating table with sql: CREATE TABLE "dbo"."customers_protobuf" (
+# "field_no_optional" int NULL,
+# "field_first_optional" varchar(max) NULL,
+# "field_second_optional" int NULL,
+# "field_third_optional" varchar(max) NULL) (io.confluent.connect.jdbc.sink.DbStructure:122)
 
 
 sleep 5
@@ -114,15 +114,13 @@ GO
 EOF
 cat /tmp/result.log
 
-
-# 08:02:30 ℹ️ Show content of customers_protobuf table:
-# id          first_name                                                                                                                                                                                                                                                       last_name                                                                                                                                                                                                                                                        email                                                                                                                                                                                                                                                           
-# ----------- ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-#        1001 Sally                                                                                                                                                                                                                                                            Thomas                                                                                                                                                                                                                                                           sally.thomas@acme.com                                                                                                                                                                                                                                           
-#        1002 George                                                                                                                                                                                                                                                           Bailey                                                                                                                                                                                                                                                           gbailey@foobar.com                                                                                                                                                                                                                                              
-#        1003 Edward                                                                                                                                                                                                                                                           Walker                                                                                                                                                                                                                                                           ed@walker.com                                                                                                                                                                                                                                                   
-#        1004 Anne                                                                                                                                                                                                                                                             Kretchmar                                                                                                                                                                                                                                                        annek@noanswer.org                                                                                                                                                                                                                                              
-#        1005 Pam                                                                                                                                                                                                                                                              Thomas                                                                                                                                                                                                                                                           pam@office.com                                                                                                                                                                                                                                                  
+# 08:34:34 ℹ️ Show content of customers_protobuf table:
+# field_no_optional field_first_optional                                                                                                                                                                                                                                             field_second_optional field_third_optional                                                                                                                                                                                                                                            
+# ----------------- ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- --------------------- ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+#              1001 Sally                                                                                                                                                                                                                                                                                1 sally.thomas@acme.com                                                                                                                                                                                                                                           
+#              1002 George                                                                                                                                                                                                                                                                               1 gbailey@foobar.com                                                                                                                                                                                                                                              
+#              1003 Edward                                                                                                                                                                                                                                                                               1 ed@walker.com                                                                                                                                                                                                                                                   
+#              1004 Anne                                                                                                                                                                                                                                                                                 1 annek@noanswer.org                                                                                                                                                                                                                                              
+#              1005 Pam                                                                                                                                                                                                                                                                                  1 pam@office.com                                                                                                                                                                                                                                                  
 
 # (5 rows affected)
-#        1002 George                                                                                                                                                                                                                                                           Bailey                                                                                                                                                                                                                                                           gbailey@foobar.com                                                                                                                                        
