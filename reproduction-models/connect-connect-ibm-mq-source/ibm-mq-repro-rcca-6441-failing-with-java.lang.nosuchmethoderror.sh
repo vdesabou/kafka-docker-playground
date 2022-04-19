@@ -3,9 +3,9 @@ set -e
 
 echo "This issue happens with CP 6.2.1 and 11.0.11"
 echo "C3 must be disabled, and there should be at lease 2 brokers"
-export TAG=6.1.2
-#export CONNECTOR_TAG=11.0.11
-export DISABLE_CONTROL_CENTER=1
+# export TAG=6.1.2
+# #export CONNECTOR_TAG=11.0.11
+# export DISABLE_CONTROL_CENTER=1
 
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
@@ -37,6 +37,8 @@ fi
 
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.repro-rcca-6441-failing-with-java.lang.nosuchmethoderror.yml"
 
+log "Make sure JDK 8 is used"
+docker exec connect java -version
 
 log "Creating IBM MQ source connector"
 curl -X PUT \
