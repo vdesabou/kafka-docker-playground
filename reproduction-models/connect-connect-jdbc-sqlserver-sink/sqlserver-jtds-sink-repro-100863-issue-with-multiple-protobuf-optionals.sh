@@ -28,46 +28,42 @@ curl -X POST -H "Content-Type: application/json" -d'
 log "Load inventory-repro-100863.sql to SQL Server"
 cat inventory-repro-100863.sql | docker exec -i sqlserver bash -c '/opt/mssql-tools/bin/sqlcmd -U sa -P Password!'
 
-log "Creating Debezium SQL Server source connector"
+log "Creating JDBC SQL Server (with JTDS driver) source connector"
 curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
-                "connector.class": "io.debezium.connector.sqlserver.SqlServerConnector",
+               "connector.class": "io.confluent.connect.jdbc.JdbcSourceConnector",
                 "tasks.max": "1",
-                "database.hostname": "sqlserver",
-                "database.port": "1433",
-                "database.user": "sa",
-                "database.password": "Password!",
-                "database.server.name": "server1",
-                "database.dbname" : "testDB",
-                "database.history.kafka.bootstrap.servers": "broker:9092",
-                "database.history.kafka.topic": "schema-changes.inventory",
+                "connection.url": "jdbc:jtds:sqlserver://sqlserver:1433/testDB",
+                "connection.user": "sa",
+                "connection.password": "Password!",
+                "mode": "bulk",
+
+                "query": "select * from customers",
+                "poll.interval.ms": "5000",
+                "batch.max.rows": "1000",
+
+                "topic.prefix": "customers_protobuf",
+                "errors.retry.timeout": "3600000",
+                "errors.retry.delay.max.ms": "60000",
+                "errors.log.enable": "true",
+                "errors.log.include.messages": "true",
+
 
                 "value.converter": "io.confluent.connect.protobuf.ProtobufConverter",
                 "value.converter.schema.registry.url": "http://schema-registry:8081",
                 "value.converter.auto.register.schemas": "false",
                 "value.converter.connect.meta.data": "false",
                 "value.converter.use.latest.version": "true",
-                "value.converter.latest.compatibility.strict": "false",
-
-                "include.schema.changes": "false",
-
-                "transforms": "Reroute,unwrap",
-
-                "transforms.Reroute.type": "org.apache.kafka.connect.transforms.RegexRouter",
-                "transforms.Reroute.regex": "(.*)customers(.*)",
-                "transforms.Reroute.replacement": "customers_protobuf",
-
-                "transforms.unwrap.type": "io.debezium.transforms.ExtractNewRecordState",
-                "transforms.unwrap.drop.tombstones": "false"
+                "value.converter.latest.compatibility.strict": "false"
           }' \
-     http://localhost:8083/connectors/debezium-sqlserver-source/config | jq .
+     http://localhost:8083/connectors/sqlserver-source/config | jq .
 
 sleep 5
 
 docker exec -i sqlserver /opt/mssql-tools/bin/sqlcmd -U sa -P Password! << EOF
 USE testDB;
-INSERT INTO customers(field_first_optional,field_second_optional,field_third_optional) VALUES ('Pam',1,'pam@office.com');
+INSERT INTO customers([field_first_optional],[field_second_optional],[field_third_optional]) VALUES ('Pam',1,'pam@office.com');
 GO
 EOF
 
@@ -98,7 +94,7 @@ curl -X PUT \
      http://localhost:8083/connectors/sqlserver-sink/config | jq .
 
 
-# [2022-04-19 08:34:33,199] INFO [sqlserver-sink|task-0] Creating table with sql: CREATE TABLE "dbo"."customers_protobuf" (
+# [2022-04-19 09:38:38,048] INFO [sqlserver-sink|task-0] Creating table with sql: CREATE TABLE "dbo"."customers_protobuf" (
 # "field_no_optional" int NULL,
 # "field_first_optional" varchar(max) NULL,
 # "field_second_optional" int NULL,
@@ -114,13 +110,26 @@ GO
 EOF
 cat /tmp/result.log
 
-# 08:34:34 ℹ️ Show content of customers_protobuf table:
+# 09:38:39 ℹ️ Show content of customers_protobuf table:
 # field_no_optional field_first_optional                                                                                                                                                                                                                                             field_second_optional field_third_optional                                                                                                                                                                                                                                            
 # ----------------- ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- --------------------- ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 #              1001 Sally                                                                                                                                                                                                                                                                                1 sally.thomas@acme.com                                                                                                                                                                                                                                           
 #              1002 George                                                                                                                                                                                                                                                                               1 gbailey@foobar.com                                                                                                                                                                                                                                              
 #              1003 Edward                                                                                                                                                                                                                                                                               1 ed@walker.com                                                                                                                                                                                                                                                   
 #              1004 Anne                                                                                                                                                                                                                                                                                 1 annek@noanswer.org                                                                                                                                                                                                                                              
+#              1001 Sally                                                                                                                                                                                                                                                                                1 sally.thomas@acme.com                                                                                                                                                                                                                                           
+#              1002 George                                                                                                                                                                                                                                                                               1 gbailey@foobar.com                                                                                                                                                                                                                                              
+#              1003 Edward                                                                                                                                                                                                                                                                               1 ed@walker.com                                                                                                                                                                                                                                                   
+#              1004 Anne                                                                                                                                                                                                                                                                                 1 annek@noanswer.org                                                                                                                                                                                                                                              
+#              1001 Sally                                                                                                                                                                                                                                                                                1 sally.thomas@acme.com                                                                                                                                                                                                                                           
+#              1002 George                                                                                                                                                                                                                                                                               1 gbailey@foobar.com                                                                                                                                                                                                                                              
+#              1003 Edward                                                                                                                                                                                                                                                                               1 ed@walker.com                                                                                                                                                                                                                                                   
+#              1004 Anne                                                                                                                                                                                                                                                                                 1 annek@noanswer.org                                                                                                                                                                                                                                              
+#              1005 Pam                                                                                                                                                                                                                                                                                  1 pam@office.com                                                                                                                                                                                                                                                  
+#              1001 Sally                                                                                                                                                                                                                                                                                1 sally.thomas@acme.com                                                                                                                                                                                                                                           
+#              1002 George                                                                                                                                                                                                                                                                               1 gbailey@foobar.com                                                                                                                                                                                                                                              
+#              1003 Edward                                                                                                                                                                                                                                                                               1 ed@walker.com                                                                                                                                                                                                                                                   
+#              1004 Anne                                                                                                                                                                                                                                                                                 1 annek@noanswer.org                                                                                                                                                                                                                                              
 #              1005 Pam                                                                                                                                                                                                                                                                                  1 pam@office.com                                                                                                                                                                                                                                                  
 
-# (5 rows affected)
+# (18 rows affected)

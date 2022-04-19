@@ -7,9 +7,9 @@ EXEC sys.sp_cdc_enable_db;
 -- Create some customers ...
 CREATE TABLE customers (
   field_no_optional INTEGER IDENTITY(1001,1) NOT NULL PRIMARY KEY,
-  field_first_optional VARCHAR(255) NULL,
-  field_second_optional INTEGER NULL,
-  field_third_optional VARCHAR(255) NULL
+  field_first_optional [nvarchar](50) NULL,
+  field_second_optional [int] NULL,
+  field_third_optional [nvarchar](50) NULL
 );
 INSERT INTO customers(field_first_optional,field_second_optional,field_third_optional)
   VALUES ('Sally',1,'sally.thomas@acme.com');

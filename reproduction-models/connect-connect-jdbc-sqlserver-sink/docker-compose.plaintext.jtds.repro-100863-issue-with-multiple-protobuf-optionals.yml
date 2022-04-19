@@ -21,4 +21,4 @@ services:
       - schema-registry
       - sqlserver
     environment:
-      CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-jdbc,/usr/share/confluent-hub-components/debezium-debezium-connector-sqlserver
+      CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-jdbc
