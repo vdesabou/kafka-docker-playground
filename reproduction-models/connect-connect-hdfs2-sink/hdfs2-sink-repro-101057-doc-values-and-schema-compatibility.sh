@@ -5,6 +5,7 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
 file="producer-repro-101057-customer.avsc"
+mkdir -p producer-repro-101057/src/main/resources/avro
 cd producer-repro-101057/src/main/resources/avro/
 get_3rdparty_file "$file"
 if [ ! -f $file ]
@@ -17,7 +18,21 @@ fi
 cd -
 
 file="producer-repro-101057-2-customer.avsc"
+mkdir -p producer-repro-101057-2/src/main/resources/avro
 cd producer-repro-101057-2/src/main/resources/avro/
+get_3rdparty_file "$file"
+if [ ! -f $file ]
+then
+     logerror "ERROR: $file is missing"
+     exit 1
+else
+     mv $file customer.avsc
+fi
+cd -
+
+file="producer-repro-101057-3-customer.avsc"
+mkdir -p producer-repro-101057-3/src/main/resources/avro
+cd producer-repro-101057-3/src/main/resources/avro/
 get_3rdparty_file "$file"
 if [ ! -f $file ]
 then
@@ -35,7 +50,7 @@ then
 fi
 
 
-for component in producer-repro-101057 producer-repro-101057-2
+for component in producer-repro-101057 producer-repro-101057-2 producer-repro-101057-3
 do
     set +e
     log "🏗 Building jar for ${component}"
@@ -99,9 +114,17 @@ log "Listing content of /topics/customer_avro in HDFS"
 docker exec namenode bash -c "/opt/hadoop-2.7.4/bin/hdfs dfs -ls /topics/customer_avro"
 
 
-
 log "✨ Run the avro java producer which produces to topic customer_avro"
 docker exec producer-repro-101057-2 bash -c "java ${JAVA_OPTS} -jar producer-1.0.0-jar-with-dependencies.jar"
+
+sleep 10
+
+log "Listing content of /topics/customer_avro in HDFS"
+docker exec namenode bash -c "/opt/hadoop-2.7.4/bin/hdfs dfs -ls /topics/customer_avro"
+
+
+log "✨ Run the avro java producer which produces to topic customer_avro"
+docker exec producer-repro-101057-3 bash -c "java ${JAVA_OPTS} -jar producer-1.0.0-jar-with-dependencies.jar"
 
 
 log "Check data with beeline"

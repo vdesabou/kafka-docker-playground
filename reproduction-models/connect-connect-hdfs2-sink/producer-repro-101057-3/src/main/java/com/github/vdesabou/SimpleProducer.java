@@ -20,8 +20,7 @@ import java.util.Properties;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
-import com.github.vdesabou.CustomerImpl;
-import com.github.vdesabou.CustomerImpl.Customer;
+import com.github.vdesabou.Customer;
 
 import uk.co.jemos.podam.api.PodamFactoryImpl;
 import uk.co.jemos.podam.api.PodamFactory;
@@ -51,7 +50,7 @@ public class SimpleProducer {
         final Integer numberOfPartitions = Integer.valueOf(System.getenv().getOrDefault("NUMBER_OF_PARTITIONS", "2"));
         final Short replicationFactor = Short.valueOf(System.getenv().getOrDefault("REPLICATION_FACTOR", "3"));
         nbMessages = Long.valueOf(System.getenv().getOrDefault("NB_MESSAGES", "10"));
-        if (nbMessages == -1) {
+        if(nbMessages == -1) {
             nbMessages = Long.MAX_VALUE;
         }
 
@@ -75,8 +74,7 @@ public class SimpleProducer {
                 .overrideDefaultInitialization(false)
                 .ignoreRandomizationErrors(false);
         EasyRandom generator = new EasyRandom(parameters);
-        Faker faker = new Faker();
-        
+
         try (Producer<Long, Customer> producer = new KafkaProducer<>(properties)) {
             long id = 0;
             while (id < nbMessages) {
@@ -85,14 +83,14 @@ public class SimpleProducer {
                 // then setters to populate POJO
                 // Customer customer = factory.manufacturePojo(Customer.class);
 
-                Customer customer = Customer.newBuilder()
-                .setFieldNoOptional(1)
-                .setFieldFirstOptional("test")
-                .setFieldSecondOptional(2)
-                .setFieldThirdOptional("test2")
-                .build();
+                // Customer customer = Customer.newBuilder()
+                //         .setCount(id)
+                //         .setFirstName(faker.name().firstName())
+                //         .setLastName(faker.name().lastName())
+                //         .setAddress(faker.address().streetAddress())
+                //         .build();
 
-               // Customer customer = generator.nextObject(Customer.class);
+                Customer customer = generator.nextObject(Customer.class);
 
                 ProducerRecord<Long, Customer> record = new ProducerRecord<>(topicName, id, customer);
                 logger.info("Sending Key = {}, Value = {}", record.key(), record.value());
@@ -114,7 +112,7 @@ public class SimpleProducer {
     private Map<String, String> defaultProps = Map.of(
             ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, "broker:9092",
             ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, "org.apache.kafka.common.serialization.LongSerializer",
-            ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, "io.confluent.kafka.serializers.protobuf.KafkaProtobufSerializer");
+            ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, "io.confluent.kafka.serializers.KafkaAvroSerializer");
 
     private Properties buildProperties(Map<String, String> baseProps, Map<String, String> envProps, String prefix) {
         Map<String, String> systemProperties = envProps.entrySet()

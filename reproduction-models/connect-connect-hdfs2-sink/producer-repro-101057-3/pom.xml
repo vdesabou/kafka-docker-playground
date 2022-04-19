@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <groupId>com.github.vdesabou</groupId>
     <artifactId>producer</artifactId>
@@ -11,16 +10,15 @@
         <maven.compiler.target>1.8</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
-        <google.protobuf.version>3.16.1</google.protobuf.version>
-        <protoc.jar.maven.plugin>3.11.4</protoc.jar.maven.plugin>
+        <avro.version>1.10.2</avro.version>
         <kafka.tag>6.2.0</kafka.tag>
         <kafka.client.tag>2.8.0</kafka.client.tag>
     </properties>
     <repositories>
         <repository>
-          <id>confluent</id>
-          <name>Confluent</name>
-          <url>https://packages.confluent.io/maven/</url>
+            <id>confluent</id>
+            <name>Confluent</name>
+            <url>https://packages.confluent.io/maven/</url>
         </repository>
     </repositories>
     <dependencies>
@@ -32,15 +30,8 @@
 
         <dependency>
             <groupId>io.confluent</groupId>
-            <artifactId>kafka-protobuf-serializer</artifactId>
+            <artifactId>kafka-avro-serializer</artifactId>
             <version>${kafka.tag}</version>
-        </dependency>
-
-        <!-- https://github.com/vdesabou/kafka-docker-playground/issues/2037 -->
-        <dependency>
-            <groupId>com.fasterxml.jackson.core</groupId>
-            <artifactId>jackson-databind</artifactId>
-            <version>2.13.2.1</version>
         </dependency>
 
         <dependency>
@@ -55,10 +46,12 @@
             <version>${kafka.tag}</version>
         </dependency>
 
+        <!--Only dependency needed for the avro part-->
+        <!-- https://mvnrepository.com/artifact/org.apache.avro/avro -->
         <dependency>
-            <groupId>com.google.protobuf</groupId>
-            <artifactId>protobuf-java</artifactId>
-            <version>${google.protobuf.version}</version>
+            <groupId>org.apache.avro</groupId>
+            <artifactId>avro</artifactId>
+            <version>${avro.version}</version>
         </dependency>
 
 
@@ -105,28 +98,43 @@
 
             <!--for specific record-->
             <plugin>
-                <groupId>com.github.os72</groupId>
-                <artifactId>protoc-jar-maven-plugin</artifactId>
-                <version>${protoc.jar.maven.plugin}</version>
+                <groupId>org.apache.avro</groupId>
+                <artifactId>avro-maven-plugin</artifactId>
+                <version>${avro.version}</version>
                 <executions>
                     <execution>
                         <phase>generate-sources</phase>
                         <goals>
-                            <goal>run</goal>
+                            <goal>schema</goal>
+                            <goal>protocol</goal>
+                            <goal>idl-protocol</goal>
                         </goals>
                         <configuration>
-                            <protocVersion>3.15.0</protocVersion>
-                            <additionalParameters>--experimental_allow_proto3_optional</additionalParameters>
-                            <inputDirectories>
-                                <include>src/main/resources/</include>
-                            </inputDirectories>
-                            <outputTargets>
-                                <outputTarget>
-                                    <type>java</type>
-                                    <addSources>none</addSources>
-                                    <outputDirectory>src/main/java/</outputDirectory>
-                                </outputTarget>
-                            </outputTargets>
+                            <sourceDirectory>${project.basedir}/src/main/resources/avro</sourceDirectory>
+                            <stringType>String</stringType>
+                            <createSetters>false</createSetters>
+                            <enableDecimalLogicalType>true</enableDecimalLogicalType>
+                            <fieldVisibility>private</fieldVisibility>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+            <!--force discovery of generated classes-->
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>build-helper-maven-plugin</artifactId>
+                <version>3.0.0</version>
+                <executions>
+                    <execution>
+                        <id>add-source</id>
+                        <phase>generate-sources</phase>
+                        <goals>
+                            <goal>add-source</goal>
+                        </goals>
+                        <configuration>
+                            <sources>
+                                <source>target/generated-sources/avro</source>
+                            </sources>
                         </configuration>
                     </execution>
                 </executions>
