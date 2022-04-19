@@ -4,21 +4,75 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
-for component in producer-repro-100863
-do
-    set +e
-    log "🏗 Building jar for ${component}"
-    docker run -i --rm -e KAFKA_CLIENT_TAG=$KAFKA_CLIENT_TAG -e TAG=$TAG_BASE -v "${DIR}/${component}":/usr/src/mymaven -v "$HOME/.m2":/root/.m2 -v "${DIR}/${component}/target:/usr/src/mymaven/target" -w /usr/src/mymaven maven:3.6.1-jdk-11 mvn -Dkafka.tag=$TAG -Dkafka.client.tag=$KAFKA_CLIENT_TAG package > /tmp/result.log 2>&1
-    if [ $? != 0 ]
-    then
-        logerror "ERROR: failed to build java component "
-        tail -500 /tmp/result.log
-        exit 1
-    fi
-    set -e
-done
-
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.jtds.repro-100863-issue-with-multiple-protobuf-optionals.yml"
+
+
+log "Register schema for customers_protobuf-value"
+curl -X POST -H "Content-Type: application/json" -d'
+{
+  "schemaType": "PROTOBUF",
+  "schema": "syntax = \"proto3\";\n\npackage server1.dbo.customers;\n\nmessage Value {\nint32 id = 1;\noptional string first_name = 2;\noptional string last_name = 3;\noptional string email = 4;\n}"
+}' \
+"http://localhost:8081/subjects/customers_protobuf-value/versions"
+
+# syntax = "proto3";
+# package server1.dbo.customers;
+
+# message Value {
+#   int32 id = 1;
+#   optional string first_name = 2;
+#   optional string last_name = 3;
+#   optional string email = 4;
+# }
+
+log "Load inventory-repro-100863.sql to SQL Server"
+cat inventory-repro-100863.sql | docker exec -i sqlserver bash -c '/opt/mssql-tools/bin/sqlcmd -U sa -P Password!'
+
+log "Creating Debezium SQL Server source connector"
+curl -X PUT \
+     -H "Content-Type: application/json" \
+     --data '{
+                "connector.class": "io.debezium.connector.sqlserver.SqlServerConnector",
+                "tasks.max": "1",
+                "database.hostname": "sqlserver",
+                "database.port": "1433",
+                "database.user": "sa",
+                "database.password": "Password!",
+                "database.server.name": "server1",
+                "database.dbname" : "testDB",
+                "database.history.kafka.bootstrap.servers": "broker:9092",
+                "database.history.kafka.topic": "schema-changes.inventory",
+
+                "value.converter": "io.confluent.connect.protobuf.ProtobufConverter",
+                "value.converter.schema.registry.url": "http://schema-registry:8081",
+                "value.converter.auto.register.schemas": "false",
+                "value.converter.connect.meta.data": "false",
+                "value.converter.use.latest.version": "true",
+                "value.converter.latest.compatibility.strict": "false",
+
+                "include.schema.changes": "false",
+
+                "transforms": "Reroute,unwrap",
+
+                "transforms.Reroute.type": "org.apache.kafka.connect.transforms.RegexRouter",
+                "transforms.Reroute.regex": "(.*)customers(.*)",
+                "transforms.Reroute.replacement": "customers_protobuf",
+
+                "transforms.unwrap.type": "io.debezium.transforms.ExtractNewRecordState",
+                "transforms.unwrap.drop.tombstones": "false"
+          }' \
+     http://localhost:8083/connectors/debezium-sqlserver-source/config | jq .
+
+sleep 5
+
+docker exec -i sqlserver /opt/mssql-tools/bin/sqlcmd -U sa -P Password! << EOF
+USE testDB;
+INSERT INTO customers(first_name,last_name,email) VALUES ('Pam','Thomas','pam@office.com');
+GO
+EOF
+
+log "Verifying topic customers_protobuf"
+timeout 60 docker exec connect kafka-protobuf-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic customers_protobuf --from-beginning --max-messages 5
 
 log "Creating JDBC SQL Server (with JTDS driver) sink connector"
 curl -X PUT \
@@ -29,7 +83,7 @@ curl -X PUT \
                 "connection.url": "jdbc:jtds:sqlserver://sqlserver:1433",
                 "connection.user": "sa",
                 "connection.password": "Password!",
-                "topics": "customer_protobuf",
+                "topics": "customers_protobuf",
                 "auto.create": "true",
                 "auto.evolve": "true",
                 "value.converter": "io.confluent.connect.protobuf.ProtobufConverter",
@@ -43,23 +97,32 @@ curl -X PUT \
           }' \
      http://localhost:8083/connectors/sqlserver-sink/config | jq .
 
-log "✨ Run the protobuf java producer which produces to topic customer_protobuf"
-docker exec producer-repro-100863 bash -c "java ${JAVA_OPTS} -jar producer-1.0.0-jar-with-dependencies.jar"
 
+# [2022-04-19 08:02:29,196] INFO [sqlserver-sink|task-0] Creating table with sql: CREATE TABLE "dbo"."customers_protobuf" (
+# "id" int NULL,
+# "first_name" varchar(max) NULL,
+# "last_name" varchar(max) NULL,
+# "email" varchar(max) NULL) (io.confluent.connect.jdbc.sink.DbStructure:122)
 
-# [2022-04-11 13:49:41,197] INFO [sqlserver-sink|task-0] Setting metadata for table "dbo"."customer_protobuf" to Table{name='"dbo"."customer_protobuf"', type=TABLE columns=[Column{'field_second_optional', isPrimaryKey=false, allowsNull=true, sqlType=int}, Column{'field_no_optional', isPrimaryKey=false, allowsNull=true, sqlType=int}, Column{'field_third_optional', isPrimaryKey=false, allowsNull=true, sqlType=varchar}, Column{'field_first_optional', isPrimaryKey=false, allowsNull=true, sqlType=varchar}]} (io.confluent.connect.jdbc.util.TableDefinitions:64)
-
-# 13:49:46 ℹ️ Show content of customer_protobuf table:
-# field_no_optional field_first_optional field_second_optional field_third_optional
-# ------
-# 1 test 2 test2
 
 sleep 5
 
-log "Show content of customer_protobuf table:"
+log "Show content of customers_protobuf table:"
 docker exec -i sqlserver /opt/mssql-tools/bin/sqlcmd -U sa -P Password! > /tmp/result.log  2>&1 <<-EOF
-select * from customer_protobuf
+select * from customers_protobuf
 GO
 EOF
 cat /tmp/result.log
-grep "foo" /tmp/result.log
+
+
+# 08:02:30 ℹ️ Show content of customers_protobuf table:
+# id          first_name                                                                                                                                                                                                                                                       last_name                                                                                                                                                                                                                                                        email                                                                                                                                                                                                                                                           
+# ----------- ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+#        1001 Sally                                                                                                                                                                                                                                                            Thomas                                                                                                                                                                                                                                                           sally.thomas@acme.com                                                                                                                                                                                                                                           
+#        1002 George                                                                                                                                                                                                                                                           Bailey                                                                                                                                                                                                                                                           gbailey@foobar.com                                                                                                                                                                                                                                              
+#        1003 Edward                                                                                                                                                                                                                                                           Walker                                                                                                                                                                                                                                                           ed@walker.com                                                                                                                                                                                                                                                   
+#        1004 Anne                                                                                                                                                                                                                                                             Kretchmar                                                                                                                                                                                                                                                        annek@noanswer.org                                                                                                                                                                                                                                              
+#        1005 Pam                                                                                                                                                                                                                                                              Thomas                                                                                                                                                                                                                                                           pam@office.com                                                                                                                                                                                                                                                  
+
+# (5 rows affected)
+#        1002 George                                                                                                                                                                                                                                                           Bailey                                                                                                                                                                                                                                                           gbailey@foobar.com                                                                                                                                        
