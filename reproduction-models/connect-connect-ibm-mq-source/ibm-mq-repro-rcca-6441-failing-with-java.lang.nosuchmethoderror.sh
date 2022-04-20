@@ -4,7 +4,7 @@ set -e
 echo "This issue happens with JDK 8, CP 6.2.1 and 11.0.11"
 echo "C3 must be disabled, and there should be at lease 2 brokers"
 export TAG=6.1.2
-#export CONNECTOR_TAG=11.0.11
+export CONNECTOR_TAG=11.0.11
 export DISABLE_CONTROL_CENTER=1
 
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
