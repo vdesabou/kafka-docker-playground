@@ -32,7 +32,7 @@ $ ./sqlserver-microsoft-ssl.sh (with [Microsoft](https://docs.microsoft.com/en-u
 Load inventory.sql to SQL Server
 
 ```bash
-$ cat inventory.sql | docker exec -i sqlserver bash -c '/opt/mssql-tools/bin/sqlcmd -U sa -P Password!'
+$ cat ../../connect/connect-jdbc-sqlserver-source/inventory.sql | docker exec -i sqlserver bash -c '/opt/mssql-tools/bin/sqlcmd -U sa -P Password!'
 ```
 
 ### JTDS JDBC driver

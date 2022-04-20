@@ -30,7 +30,7 @@ $ ./sqlserver-standalone.sh
 Load inventory.sql to SQL Server
 
 ```bash
-$ cat inventory.sql | docker exec -i sqlserver bash -c '/opt/mssql-tools/bin/sqlcmd -U sa -P Password!'
+$ cat ../../connect/connect-debezium-sqlserver-source/inventory.sql | docker exec -i sqlserver bash -c '/opt/mssql-tools/bin/sqlcmd -U sa -P Password!'
 ```
 
 

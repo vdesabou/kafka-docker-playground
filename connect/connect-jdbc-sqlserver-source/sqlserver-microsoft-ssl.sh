@@ -71,7 +71,7 @@ log "sleeping 60 seconds"
 sleep 60
 
 log "Load inventory.sql to SQL Server"
-cat inventory.sql | docker exec -i sqlserver bash -c '/opt/mssql-tools/bin/sqlcmd -U sa -P Password!'
+cat ../../connect/connect-jdbc-sqlserver-source/inventory.sql | docker exec -i sqlserver bash -c '/opt/mssql-tools/bin/sqlcmd -U sa -P Password!'
 
 
 log "Creating JDBC SQL Server (with Microsoft driver) source connector"
