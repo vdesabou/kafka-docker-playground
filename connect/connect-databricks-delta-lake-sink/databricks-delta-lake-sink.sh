@@ -118,3 +118,9 @@ curl -X PUT \
 
 
 sleep 10
+
+
+log "Listing staging Amazon S3 bucket"
+export AWS_ACCESS_KEY_ID="$DATABRICKS_AWS_STAGING_S3_ACCESS_KEY_ID"
+export AWS_SECRET_ACCESS_KEY="$DATABRICKS_AWS_STAGING_S3_SECRET_ACCESS_KEY"
+aws s3api list-objects --bucket "$DATABRICKS_AWS_BUCKET_NAME"
