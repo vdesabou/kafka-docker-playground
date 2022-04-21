@@ -82,7 +82,7 @@ aws s3api list-objects --bucket "$DATABRICKS_AWS_BUCKET_NAME"
 
 You can also verify data is present in table using UI:
 
-![ui](./images/screenshot1.jpg)
+![ui](screenshot1.jpg)
 
 
 N.B: Control Center is reachable at [http://127.0.0.1:9021](http://127.0.0.1:9021])
