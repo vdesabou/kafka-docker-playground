@@ -13,8 +13,6 @@ then
      rm -f SimbaSparkJDBC42-2.6.22.1040.zip
 fi
 
-${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
-
 DATABRICKS_AWS_BUCKET_NAME=${DATABRICKS_AWS_BUCKET_NAME:-$1}
 DATABRICKS_AWS_BUCKET_REGION=${DATABRICKS_AWS_BUCKET_REGION:-$2}
 DATABRICKS_AWS_STAGING_S3_ACCESS_KEY_ID=${DATABRICKS_AWS_STAGING_S3_ACCESS_KEY_ID:-$3}
@@ -66,6 +64,8 @@ then
      exit 1
 fi
 
+${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
+
 log "Empty bucket <$DATABRICKS_AWS_BUCKET_NAME>, if required"
 set +e
 aws s3 rm s3://$DATABRICKS_AWS_BUCKET_NAME --recursive --region $DATABRICKS_AWS_BUCKET_REGION
@@ -88,7 +88,7 @@ curl -s -X PUT \
           }' \
      http://localhost:8083/connectors/datagen-orders/config | jq .
 
-wait_for_datagen_connector_to_inject_data "orders" "1"
+wait_for_datagen_connector_to_inject_data "pageviews" "1"
 
 log "Creating Databricks Delta Lake Sink connector"
 curl -X PUT \
