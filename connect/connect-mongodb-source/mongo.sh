@@ -48,6 +48,20 @@ db.customers.insert([
 ]);
 EOF
 
+# log "Update a record"
+# docker exec -i mongodb mongo << EOF
+# use inventory
+# db.customers.updateOne(
+#      { _id: 1 },
+#      {
+#            \$set: {
+#                 email : "thebob2@example.com"
+#                 }
+#      }
+     
+# );
+# EOF
+
 log "View record"
 docker exec -i mongodb mongo << EOF
 use inventory
