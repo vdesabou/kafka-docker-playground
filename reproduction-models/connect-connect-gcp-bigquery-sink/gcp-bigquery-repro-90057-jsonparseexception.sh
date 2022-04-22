@@ -76,6 +76,8 @@ docker run -i --volumes-from gcloud-config google/cloud-sdk:latest bq --project_
 cat /tmp/result.log
 grep "value1" /tmp/result.log
 
+# in fact this can work if table is already created !
+
 # [2022-01-27 14:22:28,459] ERROR [gcp-bigquery-sink|task-0] WorkerSinkTask{id=gcp-bigquery-sink-0} Task threw an uncaught and unrecoverable exception. Task is being killed and will not recover until manually restarted (org.apache.kafka.connect.runtime.WorkerTask:206)
 # org.apache.kafka.connect.errors.ConnectException: Exiting WorkerSinkTask due to unrecoverable exception.
 #         at org.apache.kafka.connect.runtime.WorkerSinkTask.deliverMessages(WorkerSinkTask.java:638)
