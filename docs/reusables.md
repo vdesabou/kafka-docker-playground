@@ -172,6 +172,16 @@ docker exec -i connect kafka-avro-console-producer --broker-list broker:9092 --p
 EOF
 ```
 
+If the key needs to be a string, you can use `key.serializer` to specify it:
+
+```bash
+docker exec -i connect kafka-avro-console-producer --broker-list broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic a-topic --property key.serializer=org.apache.kafka.common.serialization.StringSerializer --property value.schema='{"type":"record","name":"myrecordvalue","fields":[{"name":"ID","type":"long"},{"name":"product", "type": "string"}, {"name":"quantity", "type": "int"}, {"name":"price",
+"type": "float"}]}'  --property parse.key=true --property key.separator="|" << EOF
+111|{"ID": 111,"product": "foo", "quantity": 100, "price": 50}
+222|{"ID": 222,"product": "bar", "quantity": 100, "price": 50}
+EOF
+```
+
 ### 🌪 kafka-producer-perf-test
 
 ```bash
