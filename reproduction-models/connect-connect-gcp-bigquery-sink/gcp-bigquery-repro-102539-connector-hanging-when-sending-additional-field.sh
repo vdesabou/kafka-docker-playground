@@ -16,19 +16,19 @@ fi
 DATASET=pgds102539
 DATASET=${DATASET//[-._]/}
 
-log "Doing gsutil authentication"
-set +e
-docker rm -f gcloud-config
-set -e
-docker run -i -v ${KEYFILE}:/tmp/keyfile.json --name gcloud-config google/cloud-sdk:latest gcloud auth activate-service-account --project ${PROJECT} --key-file /tmp/keyfile.json
+# log "Doing gsutil authentication"
+# set +e
+# docker rm -f gcloud-config
+# set -e
+# docker run -i -v ${KEYFILE}:/tmp/keyfile.json --name gcloud-config google/cloud-sdk:latest gcloud auth activate-service-account --project ${PROJECT} --key-file /tmp/keyfile.json
 
-set +e
-log "Drop dataset $DATASET, this might fail"
-docker run -i --volumes-from gcloud-config google/cloud-sdk:latest bq --project_id "$PROJECT" rm -r -f -d "$DATASET"
-set -e
+# set +e
+# log "Drop dataset $DATASET, this might fail"
+# docker run -i --volumes-from gcloud-config google/cloud-sdk:latest bq --project_id "$PROJECT" rm -r -f -d "$DATASET"
+# set -e
 
-log "Create dataset $PROJECT.$DATASET"
-docker run -i --volumes-from gcloud-config google/cloud-sdk:latest bq --project_id "$PROJECT" mk --dataset --description "used by playground" "$DATASET"
+# log "Create dataset $PROJECT.$DATASET"
+# docker run -i --volumes-from gcloud-config google/cloud-sdk:latest bq --project_id "$PROJECT" mk --dataset --description "used by playground" "$DATASET"
 
 
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.repro-102539-connector-hanging-when-sending-additional-field.yml"
@@ -42,7 +42,7 @@ curl -X PUT \
                "tasks.max" : "1",
                "topics" : "mytable2",
                "sanitizeTopics" : "true",
-               "autoCreateTables" : "false",
+               "autoCreateTables" : "true",
                "defaultDataset" : "'"$DATASET"'",
                "mergeIntervalMs": "5000",
                "bufferSize": "100000",
@@ -92,6 +92,24 @@ docker exec -i broker kafka-console-producer --broker-list broker:9092 --topic m
 "1",{"f1":"value1","f2":"value2"}
 EOF
 
+#"autoCreateTables" : "true"
+# [2022-04-22 09:48:31,368] DEBUG [gcp-bigquery-sink|task-0] Putting 0 records in the sink. (com.wepay.kafka.connect.bigquery.BigQuerySinkTask:238)
+# [2022-04-22 09:48:35,866] TRACE [gcp-bigquery-sink|task-0] insertion failed (com.wepay.kafka.connect.bigquery.write.row.AdaptiveBigQueryWriter:114)
+# [2022-04-22 09:48:35,867] TRACE [gcp-bigquery-sink|task-0] write response contained errors: 
+# {0=[BigQueryError{reason=invalid, location=f2, message=no such field: f2.}]} (com.wepay.kafka.connect.bigquery.write.row.AdaptiveBigQueryWriter:178)
+# [2022-04-22 09:48:35,867] DEBUG [gcp-bigquery-sink|task-0] re-attempting insertion (com.wepay.kafka.connect.bigquery.write.row.AdaptiveBigQueryWriter:119)
+# [2022-04-22 09:49:06,073] TRACE [gcp-bigquery-sink|task-0] insertion failed (com.wepay.kafka.connect.bigquery.write.row.AdaptiveBigQueryWriter:114)
+# [2022-04-22 09:49:06,073] TRACE [gcp-bigquery-sink|task-0] write response contained errors: 
+# {0=[BigQueryError{reason=invalid, location=f2, message=no such field: f2.}]} (com.wepay.kafka.connect.bigquery.write.row.AdaptiveBigQueryWriter:178)
+# [2022-04-22 09:49:06,073] DEBUG [gcp-bigquery-sink|task-0] re-attempting insertion (com.wepay.kafka.connect.bigquery.write.row.AdaptiveBigQueryWriter:119)
+# [2022-04-22 09:49:36,276] TRACE [gcp-bigquery-sink|task-0] insertion failed (com.wepay.kafka.connect.bigquery.write.row.AdaptiveBigQueryWriter:114)
+# [2022-04-22 09:49:36,277] TRACE [gcp-bigquery-sink|task-0] write response contained errors: 
+# {0=[BigQueryError{reason=invalid, location=f2, message=no such field: f2.}]} (com.wepay.kafka.connect.bigquery.write.row.AdaptiveBigQueryWriter:178)
+# [2022-04-22 09:49:36,277] DEBUG [gcp-bigquery-sink|task-0] re-attempting insertion (com.wepay.kafka.connect.bigquery.write.row.AdaptiveBigQueryWriter:119)
+
+
+
+#"autoCreateTables" : "false"
 # [2022-04-22 09:33:08,245] DEBUG [gcp-bigquery-sink|task-0] Putting 0 records in the sink. (com.wepay.kafka.connect.bigquery.BigQuerySinkTask:238)
 # [2022-04-22 09:33:15,698] DEBUG [gcp-bigquery-sink|task-0] Putting 1 records in the sink. (com.wepay.kafka.connect.bigquery.BigQuerySinkTask:238)
 # [2022-04-22 09:33:15,699] DEBUG [gcp-bigquery-sink|task-0] writing 1 row to table GenericData{classInfo=[datasetId, projectId, tableId], {datasetId=pgds102539, tableId=mytable2$20220422}} (com.wepay.kafka.connect.bigquery.write.row.BigQueryWriter:101)
