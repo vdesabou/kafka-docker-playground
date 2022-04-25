@@ -97,7 +97,7 @@ curl -s -X PUT \
                "tasks.max": "1",
                "quickstart": "pageviews"
           }' \
-     http://localhost:8083/connectors/datagen-orders/config | jq .
+     http://localhost:8083/connectors/datagen-pageviews/config | jq .
 
 wait_for_datagen_connector_to_inject_data "pageviews" "1"
 
