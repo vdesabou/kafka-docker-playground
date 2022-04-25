@@ -98,6 +98,7 @@ curl -X PUT \
                "schema.compatibility":"FULL",
 
                "format.class":"io.confluent.connect.hdfs.avro.AvroFormat",
+               "connect.meta.data":"false",
                "value.converter.connect.meta.data":"false"
           }' \
      http://localhost:8083/connectors/hdfs-sink/config | jq .
@@ -107,6 +108,72 @@ curl -X PUT \
 log "✨ Run the avro java producer which produces to topic customer_avro"
 docker exec producer-repro-101057 bash -c "java ${JAVA_OPTS} -jar producer-1.0.0-jar-with-dependencies.jar"
 
+sleep 10
+
+# when connector is deleted and re-created, current schema will be taken from WAL file
+# https://github.com/confluentinc/kafka-connect-hdfs/blob/master/src/main/java/io/confluent/connect/hdfs/TopicPartitionWriter.java#L343-L359
+# if "connect.meta.data":"false", then version will not be set
+log "Deleting HDFS Sink connector"
+curl -X DELETE localhost:8083/connectors/hdfs-sink
+
+log "Creating HDFS Sink connector"
+curl -X PUT \
+     -H "Content-Type: application/json" \
+     --data '{
+               "connector.class":"io.confluent.connect.hdfs.HdfsSinkConnector",
+               "tasks.max":"1",
+               "topics":"customer_avro",
+               "store.url":"hdfs://namenode:8020",
+               "flush.size":"10",
+               "hadoop.conf.dir":"/etc/hadoop/",
+               "locale": "en-US",
+               "max.retries": "5",
+               "timezone": "UTC",
+               "rotate.interval.ms":"120000",
+               "logs.dir":"/tmp",
+               "hive.integration": "true",
+               "hive.metastore.uris": "thrift://hive-metastore:9083",
+               "hive.database": "testhive",
+               "confluent.license": "",
+               "confluent.topic.bootstrap.servers": "broker:9092",
+               "confluent.topic.replication.factor": "1",
+               "key.converter":"org.apache.kafka.connect.storage.StringConverter",
+               "value.converter":"io.confluent.connect.avro.AvroConverter",
+               "value.converter.schema.registry.url":"http://schema-registry:8081",
+               "schema.compatibility":"FULL",
+
+               "format.class":"io.confluent.connect.hdfs.avro.AvroFormat",
+               "value.converter.connect.meta.data":"false"
+          }' \
+     http://localhost:8083/connectors/hdfs-sink/config | jq .
+
+exit 0
+
+
+# [2022-04-25 09:32:14,691] ERROR [hdfs-sink|task-0] WorkerSinkTask{id=hdfs-sink-0} Task threw an uncaught and unrecoverable exception. Task is being killed and will not recover until manually restarted (org.apache.kafka.connect.runtime.WorkerTask:206)
+# org.apache.kafka.connect.errors.ConnectException: Exiting WorkerSinkTask due to unrecoverable exception.
+#         at org.apache.kafka.connect.runtime.WorkerSinkTask.deliverMessages(WorkerSinkTask.java:638)
+#         at org.apache.kafka.connect.runtime.WorkerSinkTask.poll(WorkerSinkTask.java:334)
+#         at org.apache.kafka.connect.runtime.WorkerSinkTask.iteration(WorkerSinkTask.java:235)
+#         at org.apache.kafka.connect.runtime.WorkerSinkTask.execute(WorkerSinkTask.java:204)
+#         at org.apache.kafka.connect.runtime.WorkerTask.doRun(WorkerTask.java:199)
+#         at org.apache.kafka.connect.runtime.WorkerTask.run(WorkerTask.java:254)
+#         at java.base/java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:515)
+#         at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:264)
+#         at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1128)
+#         at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:628)
+#         at java.base/java.lang.Thread.run(Thread.java:829)
+# Caused by: java.lang.RuntimeException: org.apache.kafka.connect.errors.SchemaProjectorException: Schema version required for FULL compatibility
+#         at io.confluent.connect.hdfs.TopicPartitionWriter.write(TopicPartitionWriter.java:410)
+#         at io.confluent.connect.hdfs.DataWriter.write(DataWriter.java:376)
+#         at io.confluent.connect.hdfs.HdfsSinkTask.put(HdfsSinkTask.java:133)
+#         at org.apache.kafka.connect.runtime.WorkerSinkTask.deliverMessages(WorkerSinkTask.java:604)
+#         ... 10 more
+# Caused by: org.apache.kafka.connect.errors.SchemaProjectorException: Schema version required for FULL compatibility
+#         at io.confluent.connect.storage.schema.StorageSchemaCompatibility.validateAndCheck(StorageSchemaCompatibility.java:157)
+#         at io.confluent.connect.storage.schema.StorageSchemaCompatibility.shouldChangeSchema(StorageSchemaCompatibility.java:320)
+#         at io.confluent.connect.hdfs.TopicPartitionWriter.write(TopicPartitionWriter.java:364)
+#         ... 13 more
 
 sleep 10
 
