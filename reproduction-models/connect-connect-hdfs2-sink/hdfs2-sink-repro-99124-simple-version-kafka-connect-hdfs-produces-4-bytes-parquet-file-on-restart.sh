@@ -59,8 +59,8 @@ docker exec namenode bash -c "/opt/hadoop-2.7.4/bin/hdfs dfs -ls /topics/+tmp/te
 # Found 1 items
 # -rw-r--r--   3 appuser supergroup          0 2022-04-07 12:41 /topics/+tmp/test_hdfs/2022/6ae82507-fc0e-435d-b525-937a0d45a5ae_tmp.parquet
 
-log "Sleep 35"
-sleep 35
+log "delete connector"
+curl -X DELETE localhost:8083/connectors/hdfs-sink
 
 log "restart connect"
 docker restart connect
