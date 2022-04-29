@@ -42,6 +42,50 @@ fi
 done
 log "Oracle DB has started!"
 
+# curl --request PUT \
+#   --url http://localhost:8083/admin/loggers/io.confluent.connect.jdbc \
+#   --header 'Accept: application/json' \
+#   --header 'Content-Type: application/json' \
+#   --data '{
+#  "level": "DEBUG"
+# }'
+
+# log "Show content of ORDERS table:"
+# docker exec oracle bash -c "echo 'select * from ORDERS;' | sqlplus myuser/mypassword@//localhost:1521/ORCLPDB1" > /tmp/result.log  2>&1
+# cat /tmp/result.log
+# grep "foo" /tmp/result.log
+
+# using dbVizualizer
+# docker exec -i oracle bash -c "ORACLE_SID=ORCLCDB;export ORACLE_SID;sqlplus /nolog" << EOF
+# CONNECT sys/Admin123 AS SYSDBA
+
+# CREATE OR REPLACE FUNCTION "MYUSER"."NAME_OF_ORACLE_FUNCTION"
+# RETURN VARCHAR2
+# AS
+# PRAGMA AUTONOMOUS_TRANSACTION;
+
+# BEGIN
+#     EXECUTE IMMEDIATE '
+#             DELETE FROM MYUSER.CUSTOMERS
+#             WHERE id < 10
+#         ';
+#     COMMIT;
+         
+#     RETURN 'here we go !';
+# END;
+# /
+
+# BEGIN
+#     EXECUTE IMMEDIATE
+#         'GRANT EXECUTE ON MYUSER.NAME_OF_ORACLE_FUNCTION TO MYUSER';
+# END;
+# /
+
+# exit;
+# EOF
+
+
+
 log "Creating Oracle source connector"
 curl -X PUT \
      -H "Content-Type: application/json" \
@@ -52,22 +96,28 @@ curl -X PUT \
                "connection.password": "mypassword",
                "connection.url": "jdbc:oracle:thin:@oracle:1521/ORCLPDB1",
                "numeric.mapping":"best_fit",
-               "mode":"timestamp",
-               "poll.interval.ms":"1000",
+               "mode":"bulk",
+               "query": "SELECT MYUSER.NAME_OF_ORACLE_FUNCTION FROM DUAL",
+               "poll.interval.ms": "259200000",
                "validate.non.null":"false",
-               "table.whitelist":"CUSTOMERS",
-               "timestamp.column.name":"UPDATE_TS",
-               "topic.prefix":"oracle-",
+               "topic.prefix":"oracle-output",
                "errors.log.enable": "true",
-               "errors.log.include.messages": "true"
+               "errors.log.include.messages": "true",
+
+               "connection.attempts": "360",
+               "connection.backoff.ms": "10000",
+               "db.timezone": "Europe/Paris",
+               "schema.pattern":"MYUSER",
+               "transforms.SetSchemaName.schema.name": "NAME_OF_ORACLE_FUNCTION",
+               "transforms.SetSchemaName.type": "org.apache.kafka.connect.transforms.SetSchemaMetadata$Value",
+               "transforms": "SetSchemaName"
           }' \
      http://localhost:8083/connectors/oracle-source/config | jq .
 
-
 sleep 5
 
-log "Verifying topic oracle-CUSTOMERS"
-timeout 60 docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic oracle-CUSTOMERS --from-beginning --max-messages 2
+log "Verifying topic oracle-output"
+timeout 60 docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic oracle-output --from-beginning --max-messages 2
 
 
 # the problem is present with 10.0.2 (not latest 10.4)
@@ -75,6 +125,8 @@ for((i=0;i<10;i++))
 do
      log "Restarting task"
      curl -X POST localhost:8083/connectors/oracle-source/tasks/0/restart
+
+     sleep 5
 
      log "getting resources"
 docker exec -i oracle bash -c "ORACLE_SID=ORCLCDB;export ORACLE_SID;sqlplus /nolog" << EOF
