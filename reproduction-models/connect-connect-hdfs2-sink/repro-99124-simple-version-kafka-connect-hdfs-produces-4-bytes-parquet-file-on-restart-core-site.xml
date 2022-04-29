@@ -1,6 +1,0 @@
-<configuration>
-<property>
-    <name>fs.automatic.close</name>
-    <value>false</value>
-</property>
-</configuration>
