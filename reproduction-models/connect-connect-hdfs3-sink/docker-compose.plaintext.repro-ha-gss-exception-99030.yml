@@ -1,0 +1,236 @@
+---
+version: '3.5'
+
+services:
+
+  krb5:
+    image: flokkr/krb5
+    hostname: krb5.kerberos-demo.local
+    container_name: krb5
+    volumes:
+    - ../../reproduction-models/connect-connect-hdfs3-sink/ha-kerberos-repro-gss-exception/krb5.conf:/etc/krb5.conf
+    # see fork https://github.com/vdesabou/issuer to avoid KrbException: Message stream modified (41) (https://stackoverflow.com/a/68212311/2381999)
+    - ../../reproduction-models/connect-connect-hdfs3-sink/ha-kerberos-repro-gss-exception/issuer:/root/issuer
+
+  namenode1:
+    image: flokkr/hadoop:latest
+    hostname: namenode1.kerberos-demo.local
+    container_name: namenode1
+    depends_on:
+      - krb5
+    env_file:
+      - ../../reproduction-models/connect-connect-hdfs3-sink/ha-kerberos-repro-gss-exception/config
+    environment:
+        ENSURE_NAMENODE_DIR: "/tmp/hadoop-hadoop/dfs/name"
+        SLEEP_SECONDS: 20
+        #HADOOP_OPTS: "-Djava.net.preferIPv4Stack=true -Dsun.security.krb5.debug=true -Dsun.security.spnego.debug"
+        #KRB5_TRACE: /tmp/kinit.log
+        #HADOOP_JAAS_DEBUG: "true"
+    command: ["hdfs", "namenode"]
+    volumes:
+        - ../../reproduction-models/connect-connect-hdfs3-sink/ha-kerberos-repro-gss-exception/krb5.conf:/opt/launcher/plugins/011_kerberos/krb5.conf
+
+  namenode2:
+    image: flokkr/hadoop:latest
+    hostname: namenode2.kerberos-demo.local
+    container_name: namenode2
+    env_file:
+      - ../../reproduction-models/connect-connect-hdfs3-sink/ha-kerberos-repro-gss-exception/config
+    depends_on:
+      - krb5
+    environment:
+        ENSURE_STANDBY_NAMENODE_DIR: "/tmp/hadoop-hadoop/dfs/name"
+        #ENSURE_NAMENODE_CLUSTERID: "sh"
+        SLEEP_SECONDS: 50
+        #HADOOP_OPTS: "-Djava.net.preferIPv4Stack=true -Dsun.security.krb5.debug=true -Dsun.security.spnego.debug"
+    command: ["hdfs", "namenode"]
+    volumes:
+        - ../../reproduction-models/connect-connect-hdfs3-sink/ha-kerberos-repro-gss-exception/krb5.conf:/opt/launcher/plugins/011_kerberos/krb5.conf
+
+  journal1:
+    image: flokkr/hadoop:latest
+    hostname: journal1.kerberos-demo.local
+    container_name: journal1
+    depends_on:
+      - krb5
+    env_file:
+      - ../../reproduction-models/connect-connect-hdfs3-sink/ha-kerberos-repro-gss-exception/config
+    environment:
+        HADOOP_OPTS: "-Djava.net.preferIPv4Stack=true -Dsun.security.krb5.debug=true -Dsun.security.spnego.debug"
+    command: ["hdfs", "journalnode"]
+    volumes:
+        - ../../reproduction-models/connect-connect-hdfs3-sink/ha-kerberos-repro-gss-exception/krb5.conf:/opt/launcher/plugins/011_kerberos/krb5.conf
+
+  journal2:
+    image: flokkr/hadoop:latest
+    hostname: journal2.kerberos-demo.local
+    container_name: journal2
+    depends_on:
+      - krb5
+    env_file:
+      - ../../reproduction-models/connect-connect-hdfs3-sink/ha-kerberos-repro-gss-exception/config
+    environment:
+        HADOOP_OPTS: "-Djava.net.preferIPv4Stack=true -Dsun.security.krb5.debug=true -Dsun.security.spnego.debug"
+    command: ["hdfs", "journalnode"]
+    volumes:
+        - ../../reproduction-models/connect-connect-hdfs3-sink/ha-kerberos-repro-gss-exception/krb5.conf:/opt/launcher/plugins/011_kerberos/krb5.conf
+
+  journal3:
+    image: flokkr/hadoop:latest
+    hostname: journal3.kerberos-demo.local
+    container_name: journal3
+    depends_on:
+      - krb5
+    env_file:
+      - ../../reproduction-models/connect-connect-hdfs3-sink/ha-kerberos-repro-gss-exception/config
+    command: ["hdfs", "journalnode"]
+    environment:
+         HADOOP_OPTS: "-Djava.net.preferIPv4Stack=true -Dsun.security.krb5.debug=true -Dsun.security.spnego.debug"
+    volumes:
+        - ../../reproduction-models/connect-connect-hdfs3-sink/ha-kerberos-repro-gss-exception/krb5.conf:/opt/launcher/plugins/011_kerberos/krb5.conf
+
+  datanode:
+    image: flokkr/hadoop:latest
+    command: ["hdfs", "datanode"]
+    hostname: datanode.kerberos-demo.local
+    container_name: datanode
+    depends_on:
+      - krb5
+    env_file:
+      - ../../reproduction-models/connect-connect-hdfs3-sink/ha-kerberos-repro-gss-exception/config
+    environment:
+        SLEEP_SECONDS: 60
+        HADOOP_OPTS: "-Djava.net.preferIPv4Stack=true -Dsun.security.krb5.debug=true -Dsun.security.spnego.debug"
+    volumes:
+        - ../../reproduction-models/connect-connect-hdfs3-sink/ha-kerberos-repro-gss-exception/krb5.conf:/opt/launcher/plugins/011_kerberos/krb5.conf
+
+  resourcemanager:
+    image: flokkr/hadoop:latest
+    hostname: resourcemanager.kerberos-demo.local
+    container_name: resourcemanager
+    depends_on:
+      - krb5
+    command: ["yarn", "resourcemanager"]
+    env_file:
+        - ../../reproduction-models/connect-connect-hdfs3-sink/ha-kerberos-repro-gss-exception/config
+    volumes:
+        - ../../reproduction-models/connect-connect-hdfs3-sink/ha-kerberos-repro-gss-exception/krb5.conf:/opt/launcher/plugins/011_kerberos/krb5.conf
+
+  activator:
+    image: flokkr/hadoop:latest
+    hostname: activator.kerberos-demo.local
+    container_name: activator
+    depends_on:
+      - krb5
+    command: kinit -kt /opt/hadoop/etc/hadoop/nn.keytab nn/activator.kerberos-demo.local;hdfs haadmin -transitionToActive nn1
+    env_file:
+      - ../../reproduction-models/connect-connect-hdfs3-sink/ha-kerberos-repro-gss-exception/config
+    environment:
+        SLEEP_SECONDS: 60
+
+  connect:
+    build:
+      context: ../../reproduction-models/connect-connect-hdfs3-sink/ha-kerberos-repro-gss-exception-99030/
+      args:
+        CONNECT_TAG: ${CONNECT_TAG}
+    volumes:
+      - ../../reproduction-models/connect-connect-hdfs3-sink/ha-kerberos-repro-gss-exception/krb5.conf:/etc/krb5.conf
+      - ../../reproduction-models/connect-connect-hdfs3-sink/ha-kerberos-repro-gss-exception/core-site.xml:/opt/hadoop/etc/hadoop/core-site.xml
+      - ../../reproduction-models/connect-connect-hdfs3-sink/ha-kerberos-repro-gss-exception/hdfs-site.xml:/opt/hadoop/etc/hadoop/hdfs-site.xml
+    environment:
+      CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-hdfs3
+      #KAFKA_OPTS: -Dsun.security.krb5.debug=true
+
+  connect2:
+    build:
+      context: ../../reproduction-models/connect-connect-hdfs3-sink/ha-kerberos-repro-gss-exception-99030/
+      args:
+        CONNECT_TAG: ${CONNECT_TAG}
+    volumes:
+      - ../../reproduction-models/connect-connect-hdfs3-sink/ha-kerberos-repro-gss-exception/krb5.conf:/etc/krb5.conf
+      - ../../reproduction-models/connect-connect-hdfs3-sink/ha-kerberos-repro-gss-exception/core-site.xml:/opt/hadoop/etc/hadoop/core-site.xml
+      - ../../reproduction-models/connect-connect-hdfs3-sink/ha-kerberos-repro-gss-exception/hdfs-site.xml:/opt/hadoop/etc/hadoop/hdfs-site.xml
+    hostname: connect2
+    container_name: connect2
+    depends_on:
+      - zookeeper
+      - broker
+      - schema-registry
+    ports:
+      - "18083:8083"
+    environment:
+      CONNECT_BOOTSTRAP_SERVERS: 'broker:9092'
+      CONNECT_REST_ADVERTISED_HOST_NAME: connect2
+      CONNECT_GROUP_ID: "connect-cluster"
+      CONNECT_PRODUCER_CLIENT_ID: "connect-worker-producer"
+      CONNECT_CONFIG_STORAGE_TOPIC: connect-configs
+      CONNECT_OFFSET_STORAGE_TOPIC: connect-offsets
+      CONNECT_STATUS_STORAGE_TOPIC: connect-status
+      CONNECT_CONFIG_STORAGE_REPLICATION_FACTOR: 1
+      CONNECT_OFFSET_STORAGE_REPLICATION_FACTOR: 1
+      CONNECT_STATUS_STORAGE_REPLICATION_FACTOR: 1
+      CONNECT_KEY_CONVERTER: "org.apache.kafka.connect.storage.StringConverter"
+      CONNECT_VALUE_CONVERTER: "io.confluent.connect.avro.AvroConverter"
+      CONNECT_VALUE_CONVERTER_SCHEMAS_ENABLE: "false"
+      CONNECT_VALUE_CONVERTER_SCHEMA_REGISTRY_URL: "http://schema-registry:8081"
+      CONNECT_INTERNAL_KEY_CONVERTER: "org.apache.kafka.connect.json.JsonConverter"
+      CONNECT_INTERNAL_VALUE_CONVERTER: "org.apache.kafka.connect.json.JsonConverter"
+      CONNECT_LOG4J_LOGGERS: org.apache.zookeeper=ERROR,org.I0Itec.zkclient=ERROR,org.reflections=ERROR
+      # Confluent Monitoring Interceptors for Control Center Streams Monitoring
+      CONNECT_PRODUCER_INTERCEPTOR_CLASSES: "io.confluent.monitoring.clients.interceptor.MonitoringProducerInterceptor"
+      CONNECT_PRODUCER_CONFLUENT_MONITORING_INTERCEPTOR_BOOTSTRAP_SERVERS: broker:9092
+      CONNECT_CONSUMER_INTERCEPTOR_CLASSES: "io.confluent.monitoring.clients.interceptor.MonitoringConsumerInterceptor"
+      CONNECT_CONSUMER_CONFLUENT_MONITORING_INTERCEPTOR_BOOTSTRAP_SERVERS: broker:9092
+      # CONNECT_LOG4J_ROOT_LOGLEVEL: DEBUG
+      CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-hdfs3
+      #KAFKA_OPTS: -Dsun.security.krb5.debug=true
+      CONNECT_LOG4J_APPENDER_STDOUT_LAYOUT_CONVERSIONPATTERN: "[%d] %p %X{connector.context}%m (%c:%L)%n"
+
+  connect3:
+    build:
+      context: ../../reproduction-models/connect-connect-hdfs3-sink/ha-kerberos-repro-gss-exception-99030/
+      args:
+        CONNECT_TAG: ${CONNECT_TAG}
+    volumes:
+      - ../../reproduction-models/connect-connect-hdfs3-sink/ha-kerberos-repro-gss-exception/krb5.conf:/etc/krb5.conf
+      - ../../reproduction-models/connect-connect-hdfs3-sink/ha-kerberos-repro-gss-exception/core-site.xml:/opt/hadoop/etc/hadoop/core-site.xml
+      - ../../reproduction-models/connect-connect-hdfs3-sink/ha-kerberos-repro-gss-exception/hdfs-site.xml:/opt/hadoop/etc/hadoop/hdfs-site.xml
+    hostname: connect3
+    container_name: connect3
+    depends_on:
+      - zookeeper
+      - broker
+      - schema-registry
+    ports:
+      - "28083:8083"
+    environment:
+      CONNECT_BOOTSTRAP_SERVERS: 'broker:9092'
+      CONNECT_REST_ADVERTISED_HOST_NAME: connect3
+      CONNECT_GROUP_ID: "connect-cluster"
+      CONNECT_PRODUCER_CLIENT_ID: "connect-worker-producer"
+      CONNECT_CONFIG_STORAGE_TOPIC: connect-configs
+      CONNECT_OFFSET_STORAGE_TOPIC: connect-offsets
+      CONNECT_STATUS_STORAGE_TOPIC: connect-status
+      CONNECT_CONFIG_STORAGE_REPLICATION_FACTOR: 1
+      CONNECT_OFFSET_STORAGE_REPLICATION_FACTOR: 1
+      CONNECT_STATUS_STORAGE_REPLICATION_FACTOR: 1
+      CONNECT_KEY_CONVERTER: "org.apache.kafka.connect.storage.StringConverter"
+      CONNECT_VALUE_CONVERTER: "io.confluent.connect.avro.AvroConverter"
+      CONNECT_VALUE_CONVERTER_SCHEMAS_ENABLE: "false"
+      CONNECT_VALUE_CONVERTER_SCHEMA_REGISTRY_URL: "http://schema-registry:8081"
+      CONNECT_INTERNAL_KEY_CONVERTER: "org.apache.kafka.connect.json.JsonConverter"
+      CONNECT_INTERNAL_VALUE_CONVERTER: "org.apache.kafka.connect.json.JsonConverter"
+      CONNECT_LOG4J_LOGGERS: org.apache.zookeeper=ERROR,org.I0Itec.zkclient=ERROR,org.reflections=ERROR
+      # Confluent Monitoring Interceptors for Control Center Streams Monitoring
+      CONNECT_PRODUCER_INTERCEPTOR_CLASSES: "io.confluent.monitoring.clients.interceptor.MonitoringProducerInterceptor"
+      CONNECT_PRODUCER_CONFLUENT_MONITORING_INTERCEPTOR_BOOTSTRAP_SERVERS: broker:9092
+      CONNECT_CONSUMER_INTERCEPTOR_CLASSES: "io.confluent.monitoring.clients.interceptor.MonitoringConsumerInterceptor"
+      CONNECT_CONSUMER_CONFLUENT_MONITORING_INTERCEPTOR_BOOTSTRAP_SERVERS: broker:9092
+      # CONNECT_LOG4J_ROOT_LOGLEVEL: DEBUG
+      CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-hdfs3
+      #KAFKA_OPTS: -Dsun.security.krb5.debug=true
+      CONNECT_LOG4J_APPENDER_STDOUT_LAYOUT_CONVERSIONPATTERN: "[%d] %p %X{connector.context}%m (%c:%L)%n"
+
+networks:
+  default:
+    name: kerberos-demo.local
