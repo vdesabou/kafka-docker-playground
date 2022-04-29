@@ -42,7 +42,7 @@ curl -X PUT \
                "tasks.max" : "1",
                "topics" : "mytable2",
                "sanitizeTopics" : "true",
-               "autoCreateTables" : "true",
+               "autoCreateTables" : "false",
                "defaultDataset" : "'"$DATASET"'",
                "mergeIntervalMs": "5000",
                "bufferSize": "100000",
@@ -61,9 +61,12 @@ curl -X PUT \
                "errors.log.include.messages": "true",
                "errors.deadletterqueue.topic.name": "dlq",
                "errors.deadletterqueue.topic.replication.factor": "1",
-               "errors.deadletterqueue.context.headers.enable": "true"
+               "errors.deadletterqueue.context.headers.enable": "true",
+
+               "allowNewBigQueryFields": "true",
+               "allowBigQueryRequiredFieldRelaxation": "true"
           }' \
-     http://localhost:8083/connectors/gcp-bigquery-sink/config | jq .
+     http://localhost:8083/connectors/gcp-bigquery-sink2/config | jq .
 
 log "Sending messages to topic mytable2"
 docker exec -i broker kafka-console-producer --broker-list broker:9092 --topic mytable2 --property parse.key=true --property key.separator=, << EOF
@@ -73,8 +76,14 @@ EOF
 log "Sleeping 125 seconds"
 sleep 125
 
+log "Doing gsutil authentication"
+set +e
+docker rm -f gcloud-config
+set -e
+docker run -i -v ${KEYFILE}:/tmp/keyfile.json --name gcloud-config google/cloud-sdk:latest gcloud auth activate-service-account --project ${PROJECT} --key-file /tmp/keyfile.json
+
 log "Verify data is in GCP BigQuery:"
-docker run -i --volumes-from gcloud-config google/cloud-sdk:latest bq --project_id "$PROJECT" query "SELECT * FROM $DATASET.mytable2 WHERE DATE(_PARTITIONTIME) = \"2022-04-22\";" > /tmp/result.log  2>&1
+docker run -i --volumes-from gcloud-config google/cloud-sdk:latest bq --project_id "$PROJECT" query "SELECT * FROM $DATASET.mytable2 WHERE DATE(_PARTITIONTIME) = \"2022-04-29\";" > /tmp/result.log  2>&1
 cat /tmp/result.log
 grep "value1" /tmp/result.log
 
@@ -91,6 +100,22 @@ log "Sending messages to topic mytable2"
 docker exec -i broker kafka-console-producer --broker-list broker:9092 --topic mytable2 --property parse.key=true --property key.separator=, << EOF
 "1",{"f1":"value1","f2":"value2"}
 EOF
+
+# when trying to use auto evolution with plain JSON, we get:
+
+# [2022-04-29 11:34:51,387] TRACE [gcp-bigquery-sink|task-0] write response contained errors: 
+# {0=[BigQueryError{reason=invalid, location=f2, message=no such field: f2.}]} (com.wepay.kafka.connect.bigquery.write.row.AdaptiveBigQueryWriter:178)
+# [2022-04-29 11:50:38,295] TRACE [gcp-bigquery-sink2|task-0] Reading schema for table `pgds102539`.`mytable2` (com.wepay.kafka.connect.bigquery.SchemaManager:701)
+# [2022-04-29 11:50:43,073] DEBUG [gcp-bigquery-sink2|task-0] Could not convert to BigQuery schema with a batch of tombstone records. Will fall back to existing schema. (com.wepay.kafka.connect.bigquery.SchemaManager:317)
+# [2022-04-29 11:50:43,078] TRACE [gcp-bigquery-sink2|task-0] Reading schema for table `pgds102539`.`mytable2` (com.wepay.kafka.connect.bigquery.SchemaManager:701)
+# [2022-04-29 11:50:43,392] DEBUG [gcp-bigquery-sink2|task-0] Skipping update of table `pgds102539`.`mytable2` since current schema should be compatible (com.wepay.kafka.connect.bigquery.SchemaManager:278)
+# it is not supported: 
+# For Avro, the connector provides the following configuration properties that support automated table creation and updates. You can select these properties in the UI or add them to the connector configuration, if using the Confluent CLI.
+
+# autoCreateTables: Automatically create BigQuery tables if they don’t already exist.
+# sanitizeTopics: Automatically sanitize topic names before using them as BigQuery table names. If not enabled, topic names are used as table names.
+# autoUpdateSchemas: Automatically update BigQuery tables.
+# sanitizeFieldNames Automatically sanitize field names before using them as column names in BigQuery. Note that Kafka field names become column names in BigQuery.
 
 #"autoCreateTables" : "true"
 # [2022-04-22 09:48:31,368] DEBUG [gcp-bigquery-sink|task-0] Putting 0 records in the sink. (com.wepay.kafka.connect.bigquery.BigQuerySinkTask:238)
