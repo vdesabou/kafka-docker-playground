@@ -1,0 +1,1 @@
+../../connect/connect-snowflake-sink/README.md
