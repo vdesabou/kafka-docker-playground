@@ -111,7 +111,7 @@ cat << EOF > connector.json
      "auto.create.tables" : "true",
      "sanitize.topics" : "true",
      "auto.update.schemas" : "true",
-     "sanitize.field.names" : "true",
+     "sanitize.field.names" : "false",
      "allow.schema.unionization" : "true",
      "tasks.max" : "1"
 }

@@ -92,7 +92,7 @@ curl -X PUT \
                "keyfile" : "/tmp/keyfile.json",
 
                "allowSchemaUnionization": "true",
-               "sanitize.field.names" : "false",
+               "sanitizeFieldNames" : "false",
                "upsertEnabled": "false",
                "deleteEnabled": "false",
                "errors.tolerance": "all",
@@ -112,8 +112,8 @@ log "✨ Run the avro java producer which produces to topic customer_avro"
 docker exec producer-repro-101365 bash -c "java ${JAVA_OPTS} -jar producer-1.0.0-jar-with-dependencies.jar"
 
 
-log "Sleeping 30 seconds"
-sleep 30
+log "Sleeping 120 seconds"
+sleep 120
 
 log "Verify data is in GCP BigQuery:"
 docker run -i --volumes-from gcloud-config google/cloud-sdk:latest bq --project_id "$PROJECT" query "SELECT * FROM $DATASET.customer_avro;" > /tmp/result.log  2>&1
