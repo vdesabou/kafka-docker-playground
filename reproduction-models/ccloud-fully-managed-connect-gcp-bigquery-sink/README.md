@@ -1,0 +1,1 @@
+../../ccloud/fully-managed-connect-gcp-bigquery-sink/README.md
