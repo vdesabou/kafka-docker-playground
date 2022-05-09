@@ -122,3 +122,22 @@ cat /tmp/result.log
 log "✨ Run the avro java producer which produces to topic customer_avro"
 docker exec producer-repro-101365-2 bash -c "java ${JAVA_OPTS} -jar producer-1.0.0-jar-with-dependencies.jar"
 
+# with 2.2.0-rc-dd4f439
+
+# [2022-05-09 12:23:45,900] ERROR [gcp-bigquery-sink|task-0] WorkerSinkTask{id=gcp-bigquery-sink-0} Commit of offsets threw an unexpected exception for sequence number 3: null (org.apache.kafka.connect.runtime.WorkerSinkTask:270)
+# com.wepay.kafka.connect.bigquery.exception.BigQueryConnectException: Some write threads encountered unrecoverable errors: com.wepay.kafka.connect.bigquery.exception.BigQueryConnectException: Failed to write rows after BQ table creation or schema update within 30 attempts for: GenericData{classInfo=[datasetId, projectId, tableId], {datasetId=pgec2userds711, tableId=customer_avro}}; See logs for more detail
+#         at com.wepay.kafka.connect.bigquery.write.batch.KCBQThreadPoolExecutor.maybeThrowEncounteredErrors(KCBQThreadPoolExecutor.java:108)
+#         at com.wepay.kafka.connect.bigquery.write.batch.KCBQThreadPoolExecutor.awaitCurrentTasks(KCBQThreadPoolExecutor.java:96)
+#         at com.wepay.kafka.connect.bigquery.BigQuerySinkTask.flush(BigQuerySinkTask.java:160)
+#         at com.wepay.kafka.connect.bigquery.BigQuerySinkTask.preCommit(BigQuerySinkTask.java:176)
+#         at org.apache.kafka.connect.runtime.WorkerSinkTask.commitOffsets(WorkerSinkTask.java:405)
+#         at org.apache.kafka.connect.runtime.WorkerSinkTask.closePartitions(WorkerSinkTask.java:653)
+#         at org.apache.kafka.connect.runtime.WorkerSinkTask.closeAllPartitions(WorkerSinkTask.java:648)
+#         at org.apache.kafka.connect.runtime.WorkerSinkTask.execute(WorkerSinkTask.java:205)
+#         at org.apache.kafka.connect.runtime.WorkerTask.doRun(WorkerTask.java:200)
+#         at org.apache.kafka.connect.runtime.WorkerTask.run(WorkerTask.java:255)
+#         at java.base/java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:515)
+#         at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:264)
+#         at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1128)
+#         at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:628)
+#         at java.base/java.lang.Thread.run(Thread.java:829)
