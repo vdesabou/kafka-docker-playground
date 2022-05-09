@@ -23,7 +23,7 @@ You can set variables for your cluster by modifying sub environment called `Conf
 ## REST Proxy API v3
 
 You can use [REST Proxy API v3](https://docs.confluent.io/platform/current/kafka-rest/api.html#crest-api-v3) with [insomnia](https://insomnia.rest/) (install it on Mac OS with `brew cask install insomnia`).
-Then go to Preferences->Data and import this [JSON file](./rest-proxy-api-v3?raw=true).
+Then go to Preferences->Data and import this [JSON file](./rest-proxy-api-v3.json?raw=true).
 
 You can set variables for your cluster by modifying sub environment called `REST Proxy API v3`:
 
