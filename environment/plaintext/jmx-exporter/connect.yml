@@ -40,3 +40,13 @@ rules:
       name: kafka_connect_$1_$3
       labels:
         connector: "$2"
+    - pattern: "kafka.(.+)<type=(.+), (.+)=(.+)><>(.+):"
+      name: kafka_$1_$2_$5
+      type: GAUGE
+      labels:
+        client_type: $1
+        $3: "$4"
+    - pattern: "kafka.(.+)<type=(.+)><>(.+):"
+      name: kafka_$1_$2_$3
+      labels:
+        client_type: $1
