@@ -162,7 +162,7 @@ for((i=0;i<$NB_CONNECTORS;i++)); do
                     "rotate.interval.ms":"120000",
                     "logs.dir": "'"$LOG_DIR"'",
                     "hdfs.authentication.kerberos": "true",
-                    "kerberos.ticket.renew.period.ms": "5000",
+                    "kerberos.ticket.renew.period.ms": "1000",
                     "connect.hdfs.principal": "connect@EXAMPLE.COM",
                     "connect.hdfs.keytab": "/tmp/connect.keytab",
                     "hdfs.namenode.principal": "nn/_HOST@EXAMPLE.COM",
