@@ -68,9 +68,11 @@ curl -X PUT \
           "topics": "mysql-application",
           "key.ignore": "true",
           "connection.url": "http://elasticsearch:9200",
-          "transforms":"Cast",
-          "transforms.Cast.type":"org.apache.kafka.connect.transforms.Cast$Value",
-          "transforms.Cast.spec":"myEpochTime:string"
+          "transforms":"TimestampConverter",
+          "transforms.TimestampConverter.type":"org.apache.kafka.connect.transforms.TimestampConverter$Value",
+          "transforms.TimestampConverter.format":"yyyy-MM-dd",
+          "transforms.TimestampConverter.target.type":"string",
+          "transforms.TimestampConverter.target.field":"last_modified"}
           }' \
      http://localhost:8083/connectors/elasticsearch-sink/config | jq .
 
@@ -80,6 +82,34 @@ sleep 5
 log "Check that the data is available in Elasticsearch"
 curl -XGET 'http://localhost:9200/mysql-application/_search?pretty' > /tmp/result.log  2>&1
 cat /tmp/result.log
+
+# with TimestampConverter
+# [2022-05-11 14:56:43,088] ERROR [elasticsearch-sink|task-0] WorkerSinkTask{id=elasticsearch-sink-0} Task threw an uncaught and unrecoverable exception. Task is being killed and will not recover until manually restarted (org.apache.kafka.connect.runtime.WorkerTask:207)
+# org.apache.kafka.connect.errors.ConnectException: Tolerance exceeded in error handler
+#         at org.apache.kafka.connect.runtime.errors.RetryWithToleranceOperator.execAndHandleError(RetryWithToleranceOperator.java:220)
+#         at org.apache.kafka.connect.runtime.errors.RetryWithToleranceOperator.execute(RetryWithToleranceOperator.java:142)
+#         at org.apache.kafka.connect.runtime.TransformationChain.transformRecord(TransformationChain.java:70)
+#         at org.apache.kafka.connect.runtime.TransformationChain.apply(TransformationChain.java:50)
+#         at org.apache.kafka.connect.runtime.WorkerSinkTask.convertAndTransformRecord(WorkerSinkTask.java:543)
+#         at org.apache.kafka.connect.runtime.WorkerSinkTask.convertMessages(WorkerSinkTask.java:494)
+#         at org.apache.kafka.connect.runtime.WorkerSinkTask.poll(WorkerSinkTask.java:333)
+#         at org.apache.kafka.connect.runtime.WorkerSinkTask.iteration(WorkerSinkTask.java:235)
+#         at org.apache.kafka.connect.runtime.WorkerSinkTask.execute(WorkerSinkTask.java:204)
+#         at org.apache.kafka.connect.runtime.WorkerTask.doRun(WorkerTask.java:200)
+#         at org.apache.kafka.connect.runtime.WorkerTask.run(WorkerTask.java:255)
+#         at java.base/java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:515)
+#         at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:264)
+#         at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1128)
+#         at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:628)
+#         at java.base/java.lang.Thread.run(Thread.java:829)
+# Caused by: org.apache.kafka.connect.errors.ConnectException: Schema Schema{application:STRUCT} does not correspond to a known timestamp type format
+#         at org.apache.kafka.connect.transforms.TimestampConverter.timestampTypeFromSchema(TimestampConverter.java:414)
+#         at org.apache.kafka.connect.transforms.TimestampConverter.applyWithSchema(TimestampConverter.java:339)
+#         at org.apache.kafka.connect.transforms.TimestampConverter.apply(TimestampConverter.java:280)
+#         at org.apache.kafka.connect.runtime.TransformationChain.lambda$transformRecord$0(TransformationChain.java:70)
+#         at org.apache.kafka.connect.runtime.errors.RetryWithToleranceOperator.execAndRetry(RetryWithToleranceOperator.java:166)
+#         at org.apache.kafka.connect.runtime.errors.RetryWithToleranceOperator.execAndHandleError(RetryWithToleranceOperator.java:200)
+#         ... 15 more
 
 
 # {
