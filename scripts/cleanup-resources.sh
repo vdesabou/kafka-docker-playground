@@ -174,6 +174,22 @@ then
         log "delete topic $topic"
         confluent kafka topic delete "$topic"
      done
+
+    for row in $(confluent iam service-account list --output json | /usr/local/bin/jq -r '.[] | @base64'); do
+        _jq() {
+        echo ${row} | base64 --decode | /usr/local/bin/jq -r ${1}
+        }
+        
+        description=$(echo $(_jq '.description'))
+        id=$(echo $(_jq '.id'))
+        name=$(echo $(_jq '.name'))
+
+        if [[ $description = *my-java-producer-app* ]] || [[ $description = *ccloud-stack-function* ]]
+        then
+            echo "deleting $id ($description)"
+            confluent iam service-account delete $id
+        fi
+    done
 fi
 
 # always exit with success
