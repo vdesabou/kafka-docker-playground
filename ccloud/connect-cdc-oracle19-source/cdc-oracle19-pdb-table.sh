@@ -25,6 +25,9 @@ fi
 #############
 
 set +e
+# delete subject as required
+curl -X DELETE -u $SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO $SCHEMA_REGISTRY_URL/subjects/ORCLCDB.C__MYUSER.CUSTOMERS-key
+curl -X DELETE -u $SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO $SCHEMA_REGISTRY_URL/subjects/ORCLCDB.C__MYUSER.CUSTOMERS-value
 delete_topic ORCLCDB.C__MYUSER.CUSTOMERS
 delete_topic redo-log-topic
 set -e
