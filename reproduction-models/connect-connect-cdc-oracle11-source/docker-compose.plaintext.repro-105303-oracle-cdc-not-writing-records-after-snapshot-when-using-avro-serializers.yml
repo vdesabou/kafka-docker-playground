@@ -25,8 +25,10 @@ services:
       - broker
       - schema-registry
       - oracle
+    volumes:
+      - ../../reproduction-models/connect-connect-cdc-oracle11-source/repro-105303/guava-31.1-jre.jar:/usr/share/confluent-hub-components/confluentinc-kafka-connect-avro-converter/lib/guava-31.1-jre.jar
     environment:
-      CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-oracle-cdc
+      CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-oracle-cdc,/usr/share/confluent-hub-components/confluentinc-kafka-connect-avro-converter
       # CONNECT_KEY_CONVERTER: "org.apache.kafka.connect.storage.StringConverter"
       # CONNECT_VALUE_CONVERTER: "org.apache.kafka.connect.storage.StringConverter"
       # https://github.com/vdesabou/kafka-docker-playground/issues/1461

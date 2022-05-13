@@ -4,6 +4,14 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
+if [ ! -f ${DIR}/repro-105303/guava-31.1-jre.jar ]
+then
+     log "Downloading guava-31.1-jre.jar"
+     cd repro-105303
+     wget https://repo1.maven.org/maven2/com/google/guava/guava/31.1-jre/guava-31.1-jre.jar
+     cd -
+fi
+
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.repro-105303-oracle-cdc-not-writing-records-after-snapshot-when-using-avro-serializers.yml"
 
 docker exec connect java -version
