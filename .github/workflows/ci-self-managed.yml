@@ -99,10 +99,6 @@ jobs:
         repository: vdesabou/kafka-docker-playground
         fetch-depth: 0
 
-    # https://github.com/actions/checkout/issues/760
-    - name: work around
-      run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
-
     - name: Decrypt secrets.tar
       run: |
         ./.github/scripts/decrypt_secret.sh
