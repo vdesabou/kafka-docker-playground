@@ -14,10 +14,6 @@ jobs:
           repository: vdesabou/kafka-docker-playground
           fetch-depth: 0
 
-      # https://github.com/actions/checkout/issues/760
-      - name: work around
-        run: git config --global --add safe.directory "$GITHUB_WORKSPACE"
-
       - name: Decrypt secrets.tar
         run: |
           ./.github/scripts/decrypt_secret.sh
@@ -33,6 +29,10 @@ jobs:
           echo "$DOCKER_PASSWORD" | docker login -u vdesabou --password-stdin
         env:
           SECRETS_ENCRYPTION_PASSWORD: ${{ secrets.SECRETS_ENCRYPTION_PASSWORD }}
+
+      - name: Update README
+        run: |
+          ./scripts/update-readme.sh "5.3.8 5.4.7 5.5.8 6.0.6 6.1.5 6.2.4 7.0.3 7.1.1"
 
       - name: push
         uses: github-actions-x/commit@v2.9
