@@ -6,6 +6,8 @@ source ${DIR}/../../scripts/utils.sh
 
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.repro-105303-oracle-cdc-not-writing-records-after-snapshot-when-using-avro-serializers.yml"
 
+docker exec connect java -version
+
 # Verify Oracle DB has started within MAX_WAIT seconds
 MAX_WAIT=900
 CUR_WAIT=0
@@ -28,6 +30,13 @@ docker exec connect kafka-topics --create --topic redo-log-topic --bootstrap-ser
 log "redo-log-topic is created"
 sleep 5
 
+curl --request PUT \
+  --url http://localhost:8083/admin/loggers/io.confluent.connect.oracle.cdc \
+  --header 'Accept: application/json' \
+  --header 'Content-Type: application/json' \
+  --data '{
+ "level": "TRACE"
+}'
 
 log "Creating Oracle source connector"
 curl -X PUT \
@@ -58,22 +67,17 @@ curl -X PUT \
           }' \
      http://localhost:8083/connectors/cdc-oracle11-source/config | jq .
 
-log "Waiting 10s for connector to read existing data"
-sleep 10
+log "Waiting 20s for connector to read new data"
+sleep 20
 
-log
+log "Injecting update"
 docker exec -i oracle bash -c "export ORACLE_HOME=/u01/app/oracle/product/11.2.0/xe && /u01/app/oracle/product/11.2.0/xe/bin/sqlplus MYUSER/password@//localhost:1521/XE" << EOF
   INSERT INTO CUSTOMERS ( XREG_DISTRIBUIDO, XDESCRIPCION, XSUBTIPO_CLASE, XSUBTIPO_ID, XFECHA_ALTA, XFECHA_MODIF, XUSUARIO_ALTA, XUSUARIO_MODIF) VALUES ('1','Prueba RRR','1','P_RR6',sysdate,'','Vincent','Vincent');
   exit;
 EOF
 
-log "Waiting 60s for connector to read new data"
-sleep 60
-
 log "Verifying topic XE.MYUSER.CUSTOMERS: there should be 6 records"
-set +e
 timeout 60 docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic XE.MYUSER.CUSTOMERS --from-beginning --max-messages 6 > /tmp/result.log  2>&1
-set -e
 cat /tmp/result.log
 
 log "Verifying topic redo-log-topic: there should be 1 records"

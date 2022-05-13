@@ -16,6 +16,10 @@ services:
       ORACLE_ALLOW_REMOTE: "true"
 
   connect:
+    build:
+      context: ../../reproduction-models/connect-connect-cdc-oracle11-source/repro-105303/
+      args:
+        CONNECT_TAG: ${CONNECT_TAG}
     depends_on:
       - zookeeper
       - broker
@@ -23,6 +27,8 @@ services:
       - oracle
     environment:
       CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-oracle-cdc
+      # CONNECT_KEY_CONVERTER: "org.apache.kafka.connect.storage.StringConverter"
+      # CONNECT_VALUE_CONVERTER: "org.apache.kafka.connect.storage.StringConverter"
       # https://github.com/vdesabou/kafka-docker-playground/issues/1461
       # On CP 5.x ORA-01882: timezone region not found
       KAFKA_OPTS: -Duser.timezone=GMT
