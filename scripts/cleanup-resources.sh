@@ -175,9 +175,9 @@ then
         confluent kafka topic delete "$topic"
      done
 
-    for row in $(confluent iam service-account list --output json | /usr/local/bin/jq -r '.[] | @base64'); do
+    for row in $(confluent iam service-account list --output json | jq -r '.[] | @base64'); do
         _jq() {
-        echo ${row} | base64 --decode | /usr/local/bin/jq -r ${1}
+        echo ${row} | base64 --decode | jq -r ${1}
         }
         
         description=$(echo $(_jq '.description'))
