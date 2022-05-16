@@ -4,14 +4,14 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
-if test -z "$(docker images -q store/oracle/weblogic:12.2.1.3-dev-200127)"
+if test -z "$(docker images -q container-registry.oracle.com/middleware/weblogic:12.2.1.3)"
 then
      if [ ! -z "$CI" ]
      then
           # if this is github actions, pull the image
-          docker pull store/oracle/weblogic:12.2.1.3-dev-200127
+          docker pull container-registry.oracle.com/middleware/weblogic:12.2.1.3
      else
-          logerror "Image store/oracle/weblogic:12.2.1.3-dev-200127 is not present. You must pull it from https://hub.docker.com/_/oracle-weblogic-server-12c"
+          logerror "Image container-registry.oracle.com/middleware/weblogic:12.2.1.3 is not present. You must pull it from https://container-registry.oracle.com"
           exit 1
      fi
 fi

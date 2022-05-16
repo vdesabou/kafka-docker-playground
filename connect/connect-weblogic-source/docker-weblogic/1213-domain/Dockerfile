@@ -23,7 +23,7 @@
 
 # Pull base image
 # ---------------
-FROM store/oracle/weblogic:12.2.1.3-dev-200127
+FROM container-registry.oracle.com/middleware/weblogic:12.2.1.3
 
 
 

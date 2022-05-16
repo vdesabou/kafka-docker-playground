@@ -6,7 +6,9 @@
 
 Quickly test [Oracle Weblogic Source](https://docs.confluent.io/kafka-connect-weblogic-source/current/index.html) connector.
 
-Using Oracle WebLogic Server (Developer Tier, version `12.2.1.3`) Docker [image](https://hub.docker.com/_/oracle-weblogic-server-12c). You need to register to get the image.
+Using Oracle WebLogic Server (Developer Tier, version `12.2.1.3`) Docker [image](https://container-registry.oracle.com). You need to register and acknoledge license terms and conditions to get the image.
+
+![image](screenshot3.jpg)
 
 ## How to run
 
