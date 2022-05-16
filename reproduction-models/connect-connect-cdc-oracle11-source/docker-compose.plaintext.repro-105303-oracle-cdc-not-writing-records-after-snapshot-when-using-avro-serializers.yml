@@ -16,6 +16,7 @@ services:
       ORACLE_ALLOW_REMOTE: "true"
 
   connect:
+    # create Vanilla Kafka image
     build:
       context: ../../reproduction-models/connect-connect-cdc-oracle11-source/repro-105303/
       args:
