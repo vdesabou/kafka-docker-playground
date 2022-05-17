@@ -2707,20 +2707,24 @@ function ccloud::create_ccloud_stack() {
     exit 1
   fi
 
-  if [[ -z "$SERVICE_ACCOUNT_ID" ]]; then
-    # Service Account is not received so it will be created
-    local RANDOM_NUM=$((1 + RANDOM % 1000000))
-    SERVICE_NAME=${SERVICE_NAME:-"pg-app-$RANDOM_NUM"}
-    SERVICE_ACCOUNT_ID=$(ccloud::create_service_account $SERVICE_NAME)
+  # VINC: added
+  if [[ -z "$CLUSTER_CREDS" ]]
+  then
+    if [[ -z "$SERVICE_ACCOUNT_ID" ]]; then
+      # Service Account is not received so it will be created
+      local RANDOM_NUM=$((1 + RANDOM % 1000000))
+      SERVICE_NAME=${SERVICE_NAME:-"pg-app-$RANDOM_NUM"}
+      SERVICE_ACCOUNT_ID=$(ccloud::create_service_account $SERVICE_NAME)
+    fi
+
+    if [[ "$SERVICE_NAME" == "" ]]; then
+      echo "ERROR: SERVICE_NAME is not defined. If you are providing the SERVICE_ACCOUNT_ID to this function please also provide the SERVICE_NAME"
+      exit 1
+    fi
+
+    echo "Creating Confluent Cloud stack for service account $SERVICE_NAME, ID: $SERVICE_ACCOUNT_ID."
   fi
-
-  if [[ "$SERVICE_NAME" == "" ]]; then
-    echo "ERROR: SERVICE_NAME is not defined. If you are providing the SERVICE_ACCOUNT_ID to this function please also provide the SERVICE_NAME"
-    exit 1
-  fi
-
-  echo "Creating Confluent Cloud stack for service account $SERVICE_NAME, ID: $SERVICE_ACCOUNT_ID."
-
+  
   if [[ -z "$ENVIRONMENT" ]]; 
   then
     # Environment is not received so it will be created
