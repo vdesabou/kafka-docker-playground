@@ -71,6 +71,14 @@ curl -X PUT \
 
 sleep 5
 
+curl --request PUT \
+  --url http://localhost:8083/admin/loggers/io.confluent.connect.mqtt \
+  --header 'Accept: application/json' \
+  --header 'Content-Type: application/json' \
+  --data '{
+ "level": "TRACE"
+}'
+
 log "Send message again to MQTT in my-mqtt-topic topic"
 docker exec mosquitto sh -c 'mosquitto_pub -h localhost -p 1883 -u "myuser" -P "mypassword" -t "my-mqtt-topic" -m "sample-msg-2"'
 
@@ -92,3 +100,11 @@ sleep 10
 
 log "jstack 2"
 docker exec connect jstack 1
+
+log "Get connector status"
+curl http://localhost:8083/connectors?expand=status&expand=info | jq .
+
+
+ps -ef
+
+netstat -an | grep 1883
