@@ -79,6 +79,22 @@ curl --request PUT \
  "level": "TRACE"
 }'
 
+curl --request PUT \
+  --url http://localhost:8083/admin/loggers/com.github.jcustenborder \
+  --header 'Accept: application/json' \
+  --header 'Content-Type: application/json' \
+  --data '{
+ "level": "TRACE"
+}'
+
+curl --request PUT \
+  --url http://localhost:8083/admin/loggers/org.eclipse \
+  --header 'Accept: application/json' \
+  --header 'Content-Type: application/json' \
+  --data '{
+ "level": "TRACE"
+}'
+
 log "Send message again to MQTT in my-mqtt-topic topic"
 docker exec mosquitto sh -c 'mosquitto_pub -h localhost -p 1883 -u "myuser" -P "mypassword" -t "my-mqtt-topic" -m "sample-msg-2"'
 
