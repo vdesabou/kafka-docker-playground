@@ -38,7 +38,7 @@ then
      docker run weblogic-jms:latest cat /u01/oracle/wlserver/server/lib/weblogic.jar > ${DIR}/jms-sender/lib/weblogic.jar
 fi
 
-for component in jms-sender JsonFieldToKey
+for component in jms-sender JsonFieldToHeader
 do
      set +e
      log "🏗 Building jar for ${component}"
@@ -75,16 +75,19 @@ curl -X PUT \
                "confluent.topic.bootstrap.servers": "broker:9092",
                "confluent.topic.replication.factor": "1",
 
-               "transforms": "JsonFieldToKey",
-               "transforms.JsonFieldToKey.type": "com.github.vdesabou.kafka.connect.transforms.JsonFieldToKey",
-               "transforms.JsonFieldToKey.field": "$[\"properties\"][\"titi\"][\"string\"]"
+               "transforms": "myHeader1,myHeader2",
+               "transforms.myHeader1.type": "com.github.vdesabou.kafka.connect.transforms.JsonFieldToHeader",
+               "transforms.myHeader1.field": "$[\"properties\"][\"myHeader1\"][\"string\"]",
+               "transforms.myHeader1.header": "myHeader1",
+               "transforms.myHeader2.type": "com.github.vdesabou.kafka.connect.transforms.JsonFieldToHeader",
+               "transforms.myHeader2.field": "$[\"properties\"][\"myHeader2\"][\"string\"]",
+               "transforms.myHeader2.header": "myHeader2"
           }' \
      http://localhost:8083/connectors/weblogic-source/config | jq .
 
 
 sleep 5
 
-# Struct{messageID=ID:<960507.1652715066739.0>,messageType=text,timestamp=1652715066739,deliveryMode=2,destination=Struct{destinationType=queue,name=mySystemModule!myJMSServer@MyDistributedQueue},redelivered=false,expiration=0,priority=4,properties={titi=Struct{propertyType=string,string=toto}, JMS_BEA_DeliveryTime=Struct{propertyType=long,long=1652715066739}, JMSXDeliveryCount=Struct{propertyType=integer,integer=1}},text=Hello Queue World!}
 
 log "Sending one message in JMS queue myQueue"
 docker exec jms-sender bash -c 'java -cp "/tmp/weblogic.jar:/tmp/wlthint3client.jar:/jms-sender-1.0.0.jar" com.sample.jms.toolkit.JMSSender'
@@ -92,6 +95,7 @@ docker exec jms-sender bash -c 'java -cp "/tmp/weblogic.jar:/tmp/wlthint3client.
 sleep 5
 
 log "Verify we have received the data in from-weblogic-messages topic"
-timeout 60 docker exec connect kafka-console-consumer -bootstrap-server broker:9092 --topic from-weblogic-messages --property print.key=true --from-beginning --max-messages 1
+timeout 60 docker exec connect kafka-console-consumer -bootstrap-server broker:9092 --topic from-weblogic-messages --property print.headers=true --from-beginning --max-messages 1
 
-
+# myHeader1:header 1,myHeader2:header 2   Struct{messageID=ID:<318393.1652799258622.0>,messageType=text,timestamp=1652799258622,deliveryMode=2,destination=Struct{destinationType=queue,name=mySystemModule!myJMSServer@MyDistributedQueue},redelivered=false,expiration=0,priority=4,properties={myHeader2=Struct{propertyType=string,string=header 2}, myHeader1=Struct{propertyType=string,string=header 1}, JMS_BEA_DeliveryTime=Struct{propertyType=long,long=1652799258622}, JMSXDeliveryCount=Struct{propertyType=integer,integer=1}},text=Hello Queue World!}
+# Processed a total of 1 messages

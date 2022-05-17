@@ -5,7 +5,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <groupId>com.github.vdesabou.kafka.connect.transforms</groupId>
-    <artifactId>JsonFieldToKey</artifactId>
+    <artifactId>JsonFieldToHeader</artifactId>
     <version>1.0.0-SNAPSHOT</version>
 
 
@@ -58,7 +58,7 @@
                     <archive>
                         <manifest>
                             <addClasspath>true</addClasspath>
-                            <mainClass>com.github.vdesabou.kafka.connect.transforms.JsonFieldToKey</mainClass>
+                            <mainClass>com.github.vdesabou.kafka.connect.transforms.JsonFieldToHeader</mainClass>
                         </manifest>
                     </archive>
                 </configuration>

@@ -43,10 +43,10 @@ public class JMSSender {
 			connection.start();
 			System.out.println("Create producer");
 			MessageProducer producer = session.createProducer(queue);
-			System.out.println("Create hello world message with header titi");
+			System.out.println("Create hello world message with header myHeader1 and myHeader2");
 			Message hellowWorldText = session.createTextMessage("Hello Queue World!");
-			/* set header titi with value toto */
-			hellowWorldText.setStringProperty("titi","toto");
+			hellowWorldText.setStringProperty("myHeader1","header 1");
+			hellowWorldText.setStringProperty("myHeader2","header 2");
 			System.out.println("Send hello world message");
 			producer.send(hellowWorldText);
 		} finally {
@@ -72,10 +72,10 @@ public class JMSSender {
 			);
 			System.out.println("Create publisher");
 			TopicPublisher publisher = session.createPublisher(messageTopic);
-			System.out.println("Create hello world message with header titi");
+			System.out.println("Create hello world message with header myHeader1 and myHeader2");
 			Message hellowWorldText = session.createTextMessage("Hello Topic World!");
-			/* set header titi with value toto */
-			hellowWorldText.setStringProperty("titi","toto");
+			hellowWorldText.setStringProperty("myHeader1","header 1");
+			hellowWorldText.setStringProperty("myHeader2","header 2");
 			System.out.println("Send hello world message");
 			publisher.publish(hellowWorldText);
 		} finally {

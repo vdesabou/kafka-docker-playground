@@ -28,12 +28,15 @@ import java.util.List;
 import java.util.ArrayList;
 import java.util.Map;
 import java.util.HashMap;
+import org.apache.kafka.connect.header.Headers;
+import org.apache.kafka.connect.data.Values;
 
-public class JsonFieldToKey<R extends ConnectRecord<R>> implements Transformation<R> {
+public class JsonFieldToHeader<R extends ConnectRecord<R>> implements Transformation<R> {
 
   public static final String FIELD_CONFIG = "field";
+  public static final String HEADER_CONFIG = "header";
 
-  private static final Logger log = LoggerFactory.getLogger(JsonFieldToKey.class);
+  private static final Logger log = LoggerFactory.getLogger(JsonFieldToHeader.class);
 
   public static final ConfigDef CONFIG_DEF = new ConfigDef()
       .define(
@@ -41,14 +44,21 @@ public class JsonFieldToKey<R extends ConnectRecord<R>> implements Transformatio
               ConfigDef.Type.STRING,
               "",
               ConfigDef.Importance.HIGH,
-              "Field to use as key (in jsonpath format, please refer to com.jayway.jsonpath java doc for correct use of jsonpath). Mandatory field."
+              "Field to use as header (in jsonpath format, please refer to com.jayway.jsonpath java doc for correct use of jsonpath). Mandatory field."
+      ).define(
+              HEADER_CONFIG,
+              ConfigDef.Type.STRING,
+              "",
+              ConfigDef.Importance.HIGH,
+              "Header name. Mandatory field."
       );
 
-  private static final String KEY_USE_PURPOSE = "use as key";
+  private static final String FIELD_USE_PURPOSE = "use as field";
   private static final String FIELD_EXTRACTION_PURPOSE = "field extraction";
 
-  private Function<R, Object> keyExtractor;
+  private Function<R, Object> fieldExtractor;
   private String fieldName;
+  private String headerName;
   private String fieldPathFormat;
 
   @Override
@@ -58,28 +68,35 @@ public class JsonFieldToKey<R extends ConnectRecord<R>> implements Transformatio
     if (fieldName.isEmpty()) {
       throw new ConfigException("The field configuration provided cannot be empty");
     }
-    keyExtractor = new FieldJsonPathExtractor(fieldName);
+    headerName = config.getString(HEADER_CONFIG);
+    if (headerName.isEmpty()) {
+      throw new ConfigException("The header configuration provided cannot be empty");
+    }
+    fieldExtractor = new FieldJsonPathExtractor(fieldName);
   }
 
   @Override
   public R apply(R record) {
-    Object keyObject = null;
+    Object fieldObject = null;
     if (record.value() != null) {
-      keyObject = keyExtractor.apply(record);
+      fieldObject = fieldExtractor.apply(record);
     }
 
-    if (keyObject == null) {
-      throw new DataException("Key could not be found, please check your json path");
+    if (fieldObject == null) {
+      throw new DataException("Field could not be found, please check your json path");
     }
+    Headers updatedHeaders = record.headers().duplicate();
+    updatedHeaders.add(headerName, Values.parseString(requireString(fieldObject, FIELD_USE_PURPOSE)));
 
     return record.newRecord(
         record.topic(),
         record.kafkaPartition(),
         null, // no key schema for string, assume key.converter=org.apache.kafka.connect.storage.StringConverter
-        requireString(keyObject, KEY_USE_PURPOSE),
+        record.key(),
         record.valueSchema(),
         record.value(),
-        record.timestamp()
+        record.timestamp(),
+        updatedHeaders
     );
   }
 
