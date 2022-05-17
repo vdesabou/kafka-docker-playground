@@ -164,11 +164,11 @@ do
     fi
 done
 
+set +e 
 if [ ! -z "$CI" ]
 then
      bootstrap_ccloud_environment
 
-     set +e 
      for topic in $(confluent kafka topic list)
      do
         log "delete topic $topic"
@@ -188,6 +188,7 @@ then
         then
             echo "deleting $id ($description)"
             confluent iam service-account delete $id
+            sleep 1
         fi
     done
 fi
