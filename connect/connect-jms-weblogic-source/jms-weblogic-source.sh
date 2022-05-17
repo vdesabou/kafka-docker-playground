@@ -9,7 +9,7 @@ then
      if [ ! -z "$CI" ]
      then
           # if this is github actions, pull the image
-          echo "$ORACLE_CONTAINER_REGISTRY_PASSWORD" | docker login container-registry.oracle.com -u $ORACLE_CONTAINER_REGISTRY_USERNAME --password-stdin
+          docker login container-registry.oracle.com -u $ORACLE_CONTAINER_REGISTRY_USERNAME -p "$ORACLE_CONTAINER_REGISTRY_PASSWORD"
           docker pull container-registry.oracle.com/middleware/weblogic:12.2.1.3
      else
           logerror "Image container-registry.oracle.com/middleware/weblogic:12.2.1.3 is not present. You must pull it from https://container-registry.oracle.com"
