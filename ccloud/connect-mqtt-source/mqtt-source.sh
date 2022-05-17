@@ -88,15 +88,19 @@ curl --request PUT \
 }'
 
 curl --request PUT \
-  --url http://localhost:8083/admin/loggers/org.eclipse \
+  --url http://localhost:8083/admin/loggers/org.apache.kafka.clients \
   --header 'Accept: application/json' \
   --header 'Content-Type: application/json' \
   --data '{
  "level": "TRACE"
 }'
 
-log "Send message again to MQTT in my-mqtt-topic topic"
-docker exec mosquitto sh -c 'mosquitto_pub -h localhost -p 1883 -u "myuser" -P "mypassword" -t "my-mqtt-topic" -m "sample-msg-2"'
+for((i=0;i<100;i++)); do
+     log "Send message again to MQTT in my-mqtt-topic topic"
+     docker exec mosquitto sh mosquitto_pub -h localhost -p 1883 -u "myuser" -P "mypassword" -t "my-mqtt-topic" -m "sample-msg-$i"
+done
+
+
 
 set +e
 log "Verify we have received the data in $MQTT_TOPIC topic"
