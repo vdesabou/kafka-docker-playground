@@ -1591,6 +1591,14 @@ function exit_with_error()
 function maybe_delete_ccloud_environment () {
   DELTA_CONFIGS_ENV=/tmp/delta_configs/env.delta
 
+  if [ -f $DELTA_CONFIGS_ENV ]
+  then
+    source $DELTA_CONFIGS_ENV
+  else
+    logerror "ERROR: $DELTA_CONFIGS_ENV has not been generated"
+    exit 1
+  fi
+
   if [ ! -z "$CI" ]
   then
     # running with github actions
@@ -1613,14 +1621,6 @@ function maybe_delete_ccloud_environment () {
     verify_installed "confluent"
     check_confluent_version 2.0.0 || exit 1
     verify_confluent_login  "confluent kafka cluster list"
-
-    if [ -f $DELTA_CONFIGS_ENV ]
-    then
-      source $DELTA_CONFIGS_ENV
-    else
-      logerror "ERROR: $DELTA_CONFIGS_ENV has not been generated"
-      exit 1
-    fi
 
     export QUIET=true
 
