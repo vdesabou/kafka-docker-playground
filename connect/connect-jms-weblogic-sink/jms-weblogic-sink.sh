@@ -8,7 +8,14 @@ if test -z "$(docker images -q container-registry.oracle.com/middleware/weblogic
 then
      if [ ! -z "$CI" ]
      then
-          # if this is github actions, pull the image
+          # running with github actions
+          if [ ! -f ../../secrets.properties ]
+          then
+               logerror "../../secrets.properties is not present!"
+               exit 1
+          fi
+          source ../../secrets.properties > /dev/null 2>&1
+
           docker login container-registry.oracle.com -u $ORACLE_CONTAINER_REGISTRY_USERNAME -p "$ORACLE_CONTAINER_REGISTRY_PASSWORD"
           docker pull container-registry.oracle.com/middleware/weblogic:12.2.1.3
      else
