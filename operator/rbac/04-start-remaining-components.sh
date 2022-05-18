@@ -83,25 +83,25 @@ log "KAFKA_ID=$KAFKA_ID"
 
 
 log "Schema Registry Role binding"
-confluent iam rolebinding create \
+confluent iam rbac role-binding create \
   --kafka-cluster-id $KAFKA_ID \
   --principal User:sr \
   --role ResourceOwner  \
   --resource Topic:_confluent-license
 
-confluent iam rolebinding create \
+confluent iam rbac role-binding create \
   --kafka-cluster-id $KAFKA_ID \
   --principal User:sr \
   --role SecurityAdmin \
   --schema-registry-cluster-id id_schemaregistry_confluent
 
-confluent iam rolebinding create \
+confluent iam rbac role-binding create \
   --kafka-cluster-id $KAFKA_ID \
   --principal User:sr \
   --role ResourceOwner \
   --resource Group:id_schemaregistry_confluent
 
-confluent iam rolebinding create \
+confluent iam rbac role-binding create \
   --kafka-cluster-id $KAFKA_ID \
   --principal User:sr \
   --role ResourceOwner \
@@ -120,26 +120,26 @@ helm upgrade --install sr -f $VALUES_FILE ${DIR}/confluent-operator/helm/conflue
     --wait
 
 log "Connect Role binding"
-confluent iam rolebinding create \
+confluent iam rbac role-binding create \
   --kafka-cluster-id $KAFKA_ID \
   --principal User:connect \
   --role SecurityAdmin \
   --connect-cluster-id id_connect_confluent
 
-confluent iam rolebinding create \
+confluent iam rbac role-binding create \
   --kafka-cluster-id $KAFKA_ID \
   --principal User:connect \
   --role ResourceOwner \
   --resource Group:confluent.connectors
 
-confluent iam rolebinding create \
+confluent iam rbac role-binding create \
   --kafka-cluster-id $KAFKA_ID \
   --principal User:connect \
   --role DeveloperWrite \
   --resource Topic:_confluent-monitoring \
   --prefix
 
-confluent iam rolebinding create \
+confluent iam rbac role-binding create \
   --kafka-cluster-id $KAFKA_ID \
   --principal User:connect \
   --role ResourceOwner \
@@ -182,27 +182,27 @@ log "Connect connectors-0 has started!"
 set -e
 
 log "KSQL Role binding"
-confluent iam rolebinding create \
+confluent iam rbac role-binding create \
   --kafka-cluster-id $KAFKA_ID \
   --principal User:ksql \
   --role ResourceOwner \
   --ksql-cluster-id confluent.ksql_ \
   --resource KsqlCluster:ksql-cluster
 
-confluent iam rolebinding create \
+confluent iam rbac role-binding create \
   --kafka-cluster-id $KAFKA_ID \
   --principal User:ksql \
   --role ResourceOwner \
   --resource Topic:_confluent-ksql-confluent.ksql_ \
   --prefix
 
-confluent iam rolebinding create \
+confluent iam rbac role-binding create \
     --principal User:ksql \
     --role ResourceOwner \
     --resource Topic:confluent.ksql_ksql_processing_log \
     --kafka-cluster-id $KAFKA_ID
 
-confluent iam rolebinding create \
+confluent iam rbac role-binding create \
   --principal User:ksql \
   --role DeveloperWrite \
   --resource TransactionalId:confluent.ksql_ \
@@ -210,56 +210,56 @@ confluent iam rolebinding create \
 
 # ksql-user
 # KSQLDB_USER=ksql-user
-# confluent iam rolebinding create \
+# confluent iam rbac role-binding create \
 #     --principal User:$KSQLDB_USER \
 #     --role DeveloperWrite \
 #     --resource KsqlCluster:ksql-cluster \
 #     --kafka-cluster-id $KAFKA_ID \
 #     --ksql-cluster-id confluent.ksql_
 
-# confluent iam rolebinding create \
+# confluent iam rbac role-binding create \
 #     --principal User:$KSQLDB_USER \
 #     --role DeveloperRead \
 #     --resource Group:_confluent-ksql \
 #     --prefix \
 #     --kafka-cluster-id $KAFKA_ID
 
-# confluent iam rolebinding create \
+# confluent iam rbac role-binding create \
 #     --principal User:$KSQLDB_USER \
 #     --role DeveloperRead \
 #     --resource Topic:confluent.ksql_ksql_processing_log \
 #     --kafka-cluster-id $KAFKA_ID
 
 
-# confluent iam rolebinding create \
+# confluent iam rbac role-binding create \
 #     --principal User:ksql \
 #     --role DeveloperRead \
 #     --resource Topic:SENSORS \
 #     --prefix \
 #     --kafka-cluster-id $KAFKA_ID
 
-# confluent iam rolebinding create \
+# confluent iam rbac role-binding create \
 #     --principal User:ksql \
 #     --role DeveloperWrite \
 #     --resource Topic:SENSORS \
 #     --prefix \
 #     --kafka-cluster-id $KAFKA_ID
 
-# confluent iam rolebinding create \
+# confluent iam rbac role-binding create \
 #     --principal User:$KSQLDB_USER \
 #     --role DeveloperRead \
 #     --resource Topic:SENSORS \
 #     --prefix \
 #     --kafka-cluster-id $KAFKA_ID
 
-# confluent iam rolebinding create \
+# confluent iam rbac role-binding create \
 #     --principal User:$ksql \
 #     --role ResourceOwner \
 #     --resource Topic:SENSORS \
 #     --prefix \
 #     --kafka-cluster-id $KAFKA_ID
 
-# confluent iam rolebinding create \
+# confluent iam rbac role-binding create \
 #     --principal User:$KSQLDB_USER \
 #     --role ResourceOwner \
 #     --resource Topic:_confluent-ksql-confluent.ksql_transient_ \
@@ -267,19 +267,19 @@ confluent iam rolebinding create \
 #     --kafka-cluster-id $KAFKA_ID
 
 
-confluent iam rolebinding create \
+confluent iam rbac role-binding create \
   --principal User:ksql \
   --role DeveloperWrite \
   --resource TransactionalId:confluent.ksql_ \
   --kafka-cluster-id $KAFKA_ID
 
-# confluent iam rolebinding create \
+# confluent iam rbac role-binding create \
 #     --principal User:$KSQLDB_USER \
 #     --role ResourceOwner \
 #     --resource Topic:_confluent-ksql-confluent.ksql__command_topic \
 #     --kafka-cluster-id $KAFKA_ID
 
-# confluent iam rolebinding create \
+# confluent iam rbac role-binding create \
 #     --principal User:$KSQLDB_USER \
 #     --role ResourceOwner \
 #     --resource Subject:example \
@@ -287,7 +287,7 @@ confluent iam rolebinding create \
 #     --kafka-cluster-id $KAFKA_ID \
 #     --schema-registry-cluster-id id_schemaregistry_confluent
 
-# confluent iam rolebinding create \
+# confluent iam rbac role-binding create \
 #     --principal User:$KSQLDB_USER \
 #     --role ResourceOwner \
 #     --resource Subject:_confluent-ksql-confluent.ksql_transient_ \
@@ -295,7 +295,7 @@ confluent iam rolebinding create \
 #     --kafka-cluster-id $KAFKA_ID \
 #     --schema-registry-cluster-id id_schemaregistry_confluent
 
-# confluent iam rolebinding create \
+# confluent iam rbac role-binding create \
 #     --principal $CLIENT_PRINCIPAL \
 #     --role ResourceOwner \
 #     --resource Group:wikipedia \
@@ -362,35 +362,35 @@ helm upgrade --install ksql -f $VALUES_FILE ${DIR}/confluent-operator/helm/confl
 
 log "Control Center Role binding"
 
-confluent iam rolebinding create \
+confluent iam rbac role-binding create \
   --principal User:c3 \
   --role SystemAdmin \
   --kafka-cluster-id $KAFKA_ID
 
-confluent iam rolebinding create \
+confluent iam rbac role-binding create \
   --kafka-cluster-id $KAFKA_ID \
   --role ClusterAdmin \
   --principal User:testadmin
 
-confluent iam rolebinding create \
+confluent iam rbac role-binding create \
   --kafka-cluster-id $KAFKA_ID \
   --schema-registry-cluster-id id_schemaregistry_confluent \
   --principal User:testadmin \
   --role SystemAdmin
 
-confluent iam rolebinding create \
+confluent iam rbac role-binding create \
   --kafka-cluster-id $KAFKA_ID \
   --connect-cluster-id confluent.connectors \
   --principal User:testadmin \
   --role SystemAdmin
 
-confluent iam rolebinding create \
+confluent iam rbac role-binding create \
   --kafka-cluster-id $KAFKA_ID \
   --connect-cluster-id confluent.replicator \
   --principal User:testadmin \
   --role SystemAdmin
 
-confluent iam rolebinding create \
+confluent iam rbac role-binding create \
   --kafka-cluster-id $KAFKA_ID \
   --ksql-cluster-id confluent.ksql_ \
   --resource KsqlCluster:ksql-cluster \
