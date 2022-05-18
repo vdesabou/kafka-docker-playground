@@ -18,6 +18,14 @@ function wait_for_repro () {
                echo -e "\nERROR: The logs in all connect containers do not show 'Cannot retry request with a non-repeatable request entity' after $MAX_WAIT seconds. Please troubleshoot with 'docker container ps' and 'docker container logs'.\n"
                exit 1
           fi
+
+          log "Sending messages to topic test_table"
+docker exec -i connect kafka-avro-console-producer --broker-list broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic test_table --property value.schema='{"type":"record","name":"myrecord","fields":[{"name":"u_name","type":"string"},
+{"name":"u_price", "type": "float"}, {"name":"u_quantity", "type": "int"}]}' << EOF
+{"u_name": "scissors", "u_price": 2.75, "u_quantity": 3}
+{"u_name": "tape", "u_price": 0.99, "u_quantity": 10}
+{"u_name": "notebooks", "u_price": 1.99, "u_quantity": 5}
+EOF
      done
      log "The problem has been reproduced !"
 }
@@ -160,3 +168,81 @@ EOF
 wait_for_repro
 
 log "The connector is now in a loop with Cannot retry request with a non-repeatable request entity"
+
+# [2022-05-18 15:47:50,541] ERROR [servicenow-sink-proxy|task-0] WorkerSinkTask{id=servicenow-sink-proxy-0} Task threw an uncaught and unrecoverable exception. Task is being killed and will not recover until manually restarted. Error: Failed after 4 attempts to send request to ServiceNow: null (org.apache.kafka.connect.runtime.WorkerSinkTask:616)
+# io.confluent.connect.utils.retry.RetryCountExceeded: Failed after 4 attempts to send request to ServiceNow: null
+#         at io.confluent.connect.utils.retry.RetryPolicy.callWith(RetryPolicy.java:429)
+#         at io.confluent.connect.utils.retry.RetryPolicy.call(RetryPolicy.java:337)
+#         at io.confluent.connect.servicenow.rest.ServiceNowClientImpl.executeRequest(ServiceNowClientImpl.java:245)
+#         at io.confluent.connect.servicenow.rest.ServiceNowClientImpl.doRequest(ServiceNowClientImpl.java:241)
+#         at io.confluent.connect.servicenow.rest.ServiceNowClientImpl.put(ServiceNowClientImpl.java:176)
+#         at io.confluent.connect.servicenow.ServiceNowSinkTask.put(ServiceNowSinkTask.java:58)
+#         at org.apache.kafka.connect.runtime.WorkerSinkTask.deliverMessages(WorkerSinkTask.java:584)
+#         at org.apache.kafka.connect.runtime.WorkerSinkTask.poll(WorkerSinkTask.java:334)
+#         at org.apache.kafka.connect.runtime.WorkerSinkTask.iteration(WorkerSinkTask.java:235)
+#         at org.apache.kafka.connect.runtime.WorkerSinkTask.execute(WorkerSinkTask.java:204)
+#         at org.apache.kafka.connect.runtime.WorkerTask.doRun(WorkerTask.java:200)
+#         at org.apache.kafka.connect.runtime.WorkerTask.run(WorkerTask.java:255)
+#         at java.base/java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:515)
+#         at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:264)
+#         at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1128)
+#         at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:628)
+#         at java.base/java.lang.Thread.run(Thread.java:829)
+# Caused by: org.apache.http.client.ClientProtocolException
+#         at org.apache.http.impl.client.InternalHttpClient.doExecute(InternalHttpClient.java:187)
+#         at org.apache.http.impl.client.CloseableHttpClient.execute(CloseableHttpClient.java:83)
+#         at org.apache.http.impl.client.CloseableHttpClient.execute(CloseableHttpClient.java:108)
+#         at org.apache.http.impl.client.CloseableHttpClient.execute(CloseableHttpClient.java:56)
+#         at com.google.api.client.http.apache.v2.ApacheHttpRequest.execute(ApacheHttpRequest.java:71)
+#         at com.google.api.client.http.HttpRequest.execute(HttpRequest.java:996)
+#         at io.confluent.connect.servicenow.rest.ServiceNowClientImpl.lambda$executeRequest$2(ServiceNowClientImpl.java:246)
+#         at io.confluent.connect.utils.retry.RetryPolicy.lambda$call$1(RetryPolicy.java:337)
+#         at io.confluent.connect.utils.retry.RetryPolicy.callWith(RetryPolicy.java:417)
+#         ... 16 more
+# Caused by: org.apache.http.client.NonRepeatableRequestException: Cannot retry request with a non-repeatable request entity.
+#         at org.apache.http.impl.execchain.MainClientExec.execute(MainClientExec.java:225)
+#         at org.apache.http.impl.execchain.ProtocolExec.execute(ProtocolExec.java:186)
+#         at org.apache.http.impl.execchain.RetryExec.execute(RetryExec.java:89)
+#         at org.apache.http.impl.execchain.RedirectExec.execute(RedirectExec.java:110)
+#         at org.apache.http.impl.client.InternalHttpClient.doExecute(InternalHttpClient.java:185)
+#         ... 24 more
+# [2022-05-18 15:47:50,543] ERROR [servicenow-sink-proxy|task-0] WorkerSinkTask{id=servicenow-sink-proxy-0} Task threw an uncaught and unrecoverable exception. Task is being killed and will not recover until manually restarted (org.apache.kafka.connect.runtime.WorkerTask:207)
+# org.apache.kafka.connect.errors.ConnectException: Exiting WorkerSinkTask due to unrecoverable exception.
+#         at org.apache.kafka.connect.runtime.WorkerSinkTask.deliverMessages(WorkerSinkTask.java:618)
+#         at org.apache.kafka.connect.runtime.WorkerSinkTask.poll(WorkerSinkTask.java:334)
+#         at org.apache.kafka.connect.runtime.WorkerSinkTask.iteration(WorkerSinkTask.java:235)
+#         at org.apache.kafka.connect.runtime.WorkerSinkTask.execute(WorkerSinkTask.java:204)
+#         at org.apache.kafka.connect.runtime.WorkerTask.doRun(WorkerTask.java:200)
+#         at org.apache.kafka.connect.runtime.WorkerTask.run(WorkerTask.java:255)
+#         at java.base/java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:515)
+#         at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:264)
+#         at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1128)
+#         at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:628)
+#         at java.base/java.lang.Thread.run(Thread.java:829)
+# Caused by: io.confluent.connect.utils.retry.RetryCountExceeded: Failed after 4 attempts to send request to ServiceNow: null
+#         at io.confluent.connect.utils.retry.RetryPolicy.callWith(RetryPolicy.java:429)
+#         at io.confluent.connect.utils.retry.RetryPolicy.call(RetryPolicy.java:337)
+#         at io.confluent.connect.servicenow.rest.ServiceNowClientImpl.executeRequest(ServiceNowClientImpl.java:245)
+#         at io.confluent.connect.servicenow.rest.ServiceNowClientImpl.doRequest(ServiceNowClientImpl.java:241)
+#         at io.confluent.connect.servicenow.rest.ServiceNowClientImpl.put(ServiceNowClientImpl.java:176)
+#         at io.confluent.connect.servicenow.ServiceNowSinkTask.put(ServiceNowSinkTask.java:58)
+#         at org.apache.kafka.connect.runtime.WorkerSinkTask.deliverMessages(WorkerSinkTask.java:584)
+#         ... 10 more
+# Caused by: org.apache.http.client.ClientProtocolException
+#         at org.apache.http.impl.client.InternalHttpClient.doExecute(InternalHttpClient.java:187)
+#         at org.apache.http.impl.client.CloseableHttpClient.execute(CloseableHttpClient.java:83)
+#         at org.apache.http.impl.client.CloseableHttpClient.execute(CloseableHttpClient.java:108)
+#         at org.apache.http.impl.client.CloseableHttpClient.execute(CloseableHttpClient.java:56)
+#         at com.google.api.client.http.apache.v2.ApacheHttpRequest.execute(ApacheHttpRequest.java:71)
+#         at com.google.api.client.http.HttpRequest.execute(HttpRequest.java:996)
+#         at io.confluent.connect.servicenow.rest.ServiceNowClientImpl.lambda$executeRequest$2(ServiceNowClientImpl.java:246)
+#         at io.confluent.connect.utils.retry.RetryPolicy.lambda$call$1(RetryPolicy.java:337)
+#         at io.confluent.connect.utils.retry.RetryPolicy.callWith(RetryPolicy.java:417)
+#         ... 16 more
+# Caused by: org.apache.http.client.NonRepeatableRequestException: Cannot retry request with a non-repeatable request entity.
+#         at org.apache.http.impl.execchain.MainClientExec.execute(MainClientExec.java:225)
+#         at org.apache.http.impl.execchain.ProtocolExec.execute(ProtocolExec.java:186)
+#         at org.apache.http.impl.execchain.RetryExec.execute(RetryExec.java:89)
+#         at org.apache.http.impl.execchain.RedirectExec.execute(RedirectExec.java:110)
+#         at org.apache.http.impl.client.InternalHttpClient.doExecute(InternalHttpClient.java:185)
+#         ... 24 more
