@@ -794,7 +794,7 @@ function timeout() {
 }
 
 function confluent() {
-    docker run -v $HOME/.confluent:/.confluent --rm -i confluentinc/confluent-cli confluent "$@"
+    docker run -v $HOME/.netrc:/root/.netrc -v $HOME/.confluent:/root/.confluent --rm -i confluentinc/confluent-cli confluent "$@"
 }
 
 function az() {
