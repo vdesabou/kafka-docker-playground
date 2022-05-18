@@ -9,7 +9,7 @@ KAFKA_CLUSTER_ID=$(get_kafka_cluster_id_from_container)
 echo "KAFKA_CLUSTER_ID: $KAFKA_CLUSTER_ID"
 
 ################################## SETUP VARIABLES #############################
-MDS_URL=http://broker:8091
+MDS_URL=http://localhost:8091
 CONNECT=connect-cluster
 SR=schema-registry
 C3=c3-cluster
@@ -37,7 +37,7 @@ for p in $SUPER_USER_PRINCIPAL $CONNECT_ADMIN $CONNECTOR_SUBMITTER $CONNECTOR_PR
   for c in " " " --schema-registry-cluster-id $SR" " --connect-cluster-id $CONNECT" " --ksql-cluster-id $KSQLDB"; do
     echo
     echo "Showing bindings for principal $p and --kafka-cluster-id $KAFKA_CLUSTER_ID $c"
-    confluent iam rolebinding list --principal $p --kafka-cluster-id $KAFKA_CLUSTER_ID $c
+    confluent iam rbac role-binding list --principal $p --kafka-cluster-id $KAFKA_CLUSTER_ID $c
     echo
   done
 done

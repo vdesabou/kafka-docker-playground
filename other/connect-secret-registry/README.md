@@ -29,7 +29,7 @@ declare -a ConnectResources=(
 )
 for resource in ${ConnectResources[@]}
 do
-    confluent iam rolebinding create \
+    confluent iam rbac role-binding create \
         --principal $CONNECT_ADMIN \
         --role ResourceOwner \
         --resource $resource \
