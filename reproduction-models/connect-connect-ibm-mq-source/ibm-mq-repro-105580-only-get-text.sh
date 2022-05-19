@@ -50,7 +50,7 @@ curl -X PUT \
                     "confluent.license": "",
                     "confluent.topic.bootstrap.servers": "broker:9092",
                     "confluent.topic.replication.factor": "1",
-
+                    "value.converter": "org.apache.kafka.connect.storage.StringConverter",
                     "transforms": "ExtractField",
                     "transforms.ExtractField.type": "org.apache.kafka.connect.transforms.ExtractField$Value",
                     "transforms.ExtractField.field": "text"
@@ -69,7 +69,7 @@ EOF
 sleep 5
 
 log "Verify we have received the data in MyKafkaTopicName topic"
-timeout 60 docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic MyKafkaTopicName --from-beginning --max-messages 2
+timeout 60 docker exec connect kafka-console-consumer -bootstrap-server broker:9092 --topic MyKafkaTopicName --from-beginning --max-messages 2
 
 
 # "Message 1"
