@@ -101,7 +101,10 @@ curl -X PUT \
                "maxWriteSize": "10000",
                "tableWriteWait": "1000",
                "project" : "'"$PROJECT"'",
-               "keyfile" : "/tmp/keyfile.json"
+               "keyfile" : "/tmp/keyfile.json",
+               "transforms": "ReplaceField",
+               "transforms.ReplaceField.type": "org.apache.kafka.connect.transforms.ReplaceField$Value",
+               "transforms.ReplaceField.blacklist": "addedField"
           }' \
      http://localhost:8083/connectors/gcp-bigquery-sink/config | jq .
 
