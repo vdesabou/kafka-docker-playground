@@ -119,7 +119,8 @@ curl -X PUT \
                "transforms.extractPayload.type": "org.apache.kafka.connect.transforms.ExtractField$Value",
                "transforms.extractPayload.field": "text",
                "transforms.xml.type": "com.github.vdesabou.kafka.connect.transforms.FromXmlToJson$Value",
-               "value.converter": "org.apache.kafka.connect.storage.StringConverter"
+               "value.converter": "io.confluent.connect.json.JsonSchemaConverter",
+               "value.converter.schema.registry.url": "http://schema-registry:8081"
           }' \
      http://localhost:8083/connectors/ibm-mq-source/config | jq .
 
@@ -133,4 +134,12 @@ EOF
 sleep 5
 
 log "Verify we have received the data in MyKafkaTopicName topic"
-timeout 60 docker exec connect kafka-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic MyKafkaTopicName --from-beginning --max-messages 2
+# timeout 60 docker exec connect kafka-console-consumer -bootstrap-server broker:9092 --topic MyKafkaTopicName --from-beginning --max-messages 1
+
+# with string converter
+# {"note":{"to":"Tove","from":"Jani","heading":"Reminder","body":"Don't forget me this weekend!"}}
+# Processed a total of 1 messages
+
+docker exec connect kafka-json-schema-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic MyKafkaTopicName --from-beginning --max-messages 1
+
+# "{\"note\":{\"to\":\"Tove\",\"from\":\"Jani\",\"heading\":\"Reminder\",\"body\":\"Don't forget me this weekend!\"}}"
