@@ -211,3 +211,17 @@ WHERE database_id = DB_ID('testDB')
 GO
 EOF
 cat /tmp/result.log
+
+exit 0
+
+curl -X POST localhost:8083/connectors/debezium-sqlserver-source/tasks/0/restart
+
+
+docker exec -i sqlserver /opt/mssql-tools/bin/sqlcmd -U sa -P Password! > /tmp/result.log  2>&1 <<-EOF
+USE testDB;
+
+KILL 55
+
+GO
+EOF
+cat /tmp/result.log
