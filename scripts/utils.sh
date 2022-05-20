@@ -794,7 +794,13 @@ function timeout() {
 }
 
 function confluent() {
+  if [[ $(type -f confluent 2>&1) =~ "not found" ]]; then
+    # ignore
+    shift
     docker run -v $HOME/.netrc:/root/.netrc -v $HOME/.confluent:/root/.confluent --rm -i confluentinc/confluent-cli confluent "$@"
+  else
+    $(which confluent) "$@"
+  fi
 }
 
 function az() {
@@ -2665,8 +2671,7 @@ function ccloud::set_kafka_cluster_use() {
 # https://docs.confluent.io/platform/current/tutorials/examples/ccloud/docs/ccloud-stack.html
 #
 function ccloud::create_ccloud_stack() {
-  ccloud::validate_version_cli $CLI_MIN_VERSION || exit 1
-
+  #ccloud::validate_version_cli $CLI_MIN_VERSION || exit 1
   QUIET="${QUIET:-false}"
   REPLICATION_FACTOR=${REPLICATION_FACTOR:-3}
   enable_ksqldb=${1:-false}
