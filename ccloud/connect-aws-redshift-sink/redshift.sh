@@ -48,19 +48,19 @@ sleep 3
 create_topic orders
 set -e
 
-CLUSTER_NAME=pg${USER}redshift${TAG}
-CLUSTER_NAME=${CLUSTER_NAME//[-._]/}
+# CLUSTER_NAME=pg${USER}redshift${TAG}
+# CLUSTER_NAME=${CLUSTER_NAME//[-._]/}
 
-set +e
-log "Delete AWS Redshift cluster, if required"
-aws redshift delete-cluster --cluster-identifier $CLUSTER_NAME --skip-final-cluster-snapshot
-log "Delete security group sg$CLUSTER_NAME, if required"
-aws ec2 delete-security-group --group-name sg$CLUSTER_NAME
-set -e
+# set +e
+# log "Delete AWS Redshift cluster, if required"
+# aws redshift delete-cluster --cluster-identifier $CLUSTER_NAME --skip-final-cluster-snapshot
+# log "Delete security group sg$CLUSTER_NAME, if required"
+# aws ec2 delete-security-group --group-name sg$CLUSTER_NAME
+# set -e
 
-log "Create AWS Redshift cluster"
-# https://docs.aws.amazon.com/redshift/latest/mgmt/getting-started-cli.html
-aws redshift create-cluster --cluster-identifier $CLUSTER_NAME --master-username masteruser --master-user-password myPassword1 --node-type dc2.large --cluster-type single-node --publicly-accessible
+# log "Create AWS Redshift cluster"
+# # https://docs.aws.amazon.com/redshift/latest/mgmt/getting-started-cli.html
+# aws redshift create-cluster --cluster-identifier $CLUSTER_NAME --master-username masteruser --master-user-password myPassword1 --node-type dc2.large --cluster-type single-node --publicly-accessible
 
 # Verify AWS Redshift cluster has started within MAX_WAIT seconds
 MAX_WAIT=480
@@ -87,8 +87,9 @@ aws redshift modify-cluster --cluster-identifier $CLUSTER_NAME --vpc-security-gr
 
 sleep 60
 
+CLUSTER="pgvsaboulinredshift711.ch0ou1z9c3sj.eu-west-3.redshift.amazonaws.com"
 # getting cluster URL
-CLUSTER=$(aws redshift describe-clusters --cluster-identifier $CLUSTER_NAME | jq -r .Clusters[0].Endpoint.Address)
+# CLUSTER=$(aws redshift describe-clusters --cluster-identifier $CLUSTER_NAME | jq -r .Clusters[0].Endpoint.Address)
 
 log "Sending messages to topic orders"
 docker exec -i -e BOOTSTRAP_SERVERS="$BOOTSTRAP_SERVERS" -e SASL_JAAS_CONFIG="$SASL_JAAS_CONFIG" -e SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO="$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO" -e SCHEMA_REGISTRY_URL="$SCHEMA_REGISTRY_URL" connect kafka-avro-console-producer --broker-list $BOOTSTRAP_SERVERS --producer-property ssl.endpoint.identification.algorithm=https --producer-property sasl.mechanism=PLAIN --producer-property security.protocol=SASL_SSL --producer-property sasl.jaas.config="$SASL_JAAS_CONFIG" --property basic.auth.credentials.source=USER_INFO --property schema.registry.basic.auth.user.info="$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO" --property schema.registry.url=$SCHEMA_REGISTRY_URL --topic orders --property value.schema='{"type":"record","name":"myrecord","fields":[{"name":"id","type":"int"},{"name":"product", "type": "string"}, {"name":"quantity", "type": "int"}, {"name":"price",
@@ -109,15 +110,9 @@ curl -X PUT \
                "aws.redshift.user": "masteruser",
                "aws.redshift.password": "myPassword1",
                "auto.create": "true",
-               "pk.mode": "kafka",
-               "confluent.topic.ssl.endpoint.identification.algorithm" : "https",
-               "confluent.topic.sasl.mechanism" : "PLAIN",
-               "confluent.topic.bootstrap.servers": "${file:/data:bootstrap.servers}",
-               "confluent.topic.sasl.jaas.config" : "org.apache.kafka.common.security.plain.PlainLoginModule required username=\"${file:/data:sasl.username}\" password=\"${file:/data:sasl.password}\";",
-               "confluent.topic.security.protocol" : "SASL_SSL",
-               "confluent.topic.replication.factor": "3"
+               "pk.mode": "kafka"
           }' \
-     http://localhost:8083/connectors/redshift-sink/config | jq .
+     http://localhost:8083/connectors/redshift-sink2/config | jq .
 
 sleep 20
 

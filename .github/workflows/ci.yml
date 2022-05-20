@@ -99,6 +99,7 @@ jobs:
           df -h
           sudo apt-get -qq purge build-essential ghc*
           sudo apt-get clean
+          sudo apt-get install expect -y
           docker system prune -af
           rm -rf /usr/share/dotnet
           rm -rf /opt/ghc
