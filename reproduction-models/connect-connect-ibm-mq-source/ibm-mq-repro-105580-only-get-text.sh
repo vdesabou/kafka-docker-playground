@@ -51,7 +51,10 @@ curl -X PUT \
                     "confluent.topic.bootstrap.servers": "broker:9092",
                     "confluent.topic.replication.factor": "1",
                     "key.converter": "org.apache.kafka.connect.storage.StringConverter", 
-                    "value.converter": "org.apache.kafka.connect.storage.StringConverter"
+                    "value.converter": "org.apache.kafka.connect.storage.StringConverter",
+                    "transforms": "ExtractField",
+                    "transforms.ExtractField.type": "org.apache.kafka.connect.transforms.ExtractField$Value",
+                    "transforms.ExtractField.field": "text"
           }' \
      http://localhost:8083/connectors/ibm-mq-source/config | jq .
 
