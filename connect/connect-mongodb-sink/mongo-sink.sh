@@ -12,7 +12,7 @@ docker exec -i mongodb mongo --eval 'rs.initiate({_id: "myuser", members:[{_id: 
 sleep 5
 
 log "Create a user profile"
-docker exec -i mongodb mongo << EOF
+docker exec -i mongodb mongosh << EOF
 use admin
 db.createUser(
 {
@@ -47,12 +47,12 @@ curl -X PUT \
 sleep 10
 
 log "View record"
-docker exec -i mongodb mongo << EOF
+docker exec -i mongodb mongosh << EOF
 use inventory
 db.customers.find().pretty();
 EOF
 
-docker exec -i mongodb mongo << EOF > output.txt
+docker exec -i mongodb mongosh << EOF > output.txt
 use inventory
 db.customers.find().pretty();
 EOF

@@ -12,7 +12,7 @@ until $(curl --output /dev/null --silent --fail localhost:27017); do printf '.';
 log "MongoDB DB has started!"
 
 log "Create a user profile"
-docker exec -i mongodb-sharded mongo << EOF
+docker exec -i mongodb-sharded mongosh << EOF
 use admin
 db.createUser(
   {
@@ -26,7 +26,7 @@ EOF
 # Example of upserting in a sharded collection
 # https://docs.mongodb.com/kafka-connector/current/kafka-sink-postprocessors/#replaceonebusinesskeystrategy-example
 log "Create a sharded collection"
-docker exec -i mongodb-sharded mongo << EOF
+docker exec -i mongodb-sharded mongosh << EOF
 use inventory
 db.createCollection("products")
 db.collection.createIndex({ "id": 1, "product": 1}, { unique: true })
@@ -62,12 +62,12 @@ log "Waiting 10s for the connector to start and process extisting records"
 sleep 10
 
 log "Verify records have been upserted"
-docker exec -i mongodb-sharded mongo << EOF
+docker exec -i mongodb-sharded mongosh << EOF
 use inventory;
 db.products.find().pretty();
 EOF
 
-docker exec -i mongodb-sharded mongo << EOF > output.txt
+docker exec -i mongodb-sharded mongosh << EOF > output.txt
 use inventory;
 db.products.find().pretty();
 EOF
@@ -76,7 +76,7 @@ rm output.txt
 
 # Reproducer of upsert in a sharded collection without actual shard filter
 log "Create a sharded collection"
-docker exec -i mongodb-sharded mongo << EOF
+docker exec -i mongodb-sharded mongosh << EOF
 use inventory
 db.createCollection("products-with-key")
 db.collection.createIndex({ "id": 1, "product": 1}, { unique: true })

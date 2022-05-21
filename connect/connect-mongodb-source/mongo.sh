@@ -12,7 +12,7 @@ docker exec -i mongodb mongo --eval 'rs.initiate({_id: "myuser", members:[{_id: 
 sleep 5
 
 log "Create a user profile"
-docker exec -i mongodb mongo << EOF
+docker exec -i mongodb mongosh << EOF
 use admin
 db.createUser(
 {
@@ -41,7 +41,7 @@ curl -X PUT \
 sleep 5
 
 log "Insert a record"
-docker exec -i mongodb mongo << EOF
+docker exec -i mongodb mongosh << EOF
 use inventory
 db.customers.insert([
 { _id : 1, first_name : 'Bob', last_name : 'Hopper', email : 'thebob@example.com' }
@@ -49,7 +49,7 @@ db.customers.insert([
 EOF
 
 # log "Update a record"
-# docker exec -i mongodb mongo << EOF
+# docker exec -i mongodb mongosh << EOF
 # use inventory
 # db.customers.updateOne(
 #      { _id: 1 },
@@ -63,7 +63,7 @@ EOF
 # EOF
 
 log "View record"
-docker exec -i mongodb mongo << EOF
+docker exec -i mongodb mongosh << EOF
 use inventory
 db.customers.find().pretty();
 EOF
