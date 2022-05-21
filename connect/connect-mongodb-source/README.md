@@ -31,7 +31,7 @@ Note: `mongodb:27017`is important here
 Create a user profile
 
 ```bash
-$ docker exec -i mongodb mongo << EOF
+$ docker exec -i mongodb mongosh << EOF
 use admin
 db.createUser(
 {
@@ -61,7 +61,7 @@ $ curl -X PUT \
 Insert a record
 
 ```bash
-$ docker exec -i mongodb mongo << EOF
+$ docker exec -i mongodb mongosh << EOF
 use inventory
 db.customers.insert([
 { _id : 1006, first_name : 'Bob', last_name : 'Hopper', email : 'thebob@example.com' }
@@ -72,7 +72,7 @@ EOF
 View the record
 
 ```bash
-$ docker exec -i mongodb mongo << EOF
+$ docker exec -i mongodb mongosh << EOF
 use inventory
 db.customers.find().pretty();
 EOF
