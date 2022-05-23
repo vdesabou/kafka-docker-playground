@@ -23,6 +23,11 @@ curl -X DELETE -u $SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO $SCHEMA_REGISTRY_URL/sub
 curl -X DELETE -u $SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO $SCHEMA_REGISTRY_URL/subjects/ORCLCDB.C__MYUSER.CUSTOMERS-value
 delete_topic ORCLCDB.C__MYUSER.CUSTOMERS
 delete_topic redo-log-topic
+for((i=2;i<50;i++)); do
+curl -X DELETE -u $SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO $SCHEMA_REGISTRY_URL/subjects/ORCLCDB.C__MYUSER.CUSTOMERS$i-key
+curl -X DELETE -u $SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO $SCHEMA_REGISTRY_URL/subjects/ORCLCDB.C__MYUSER.CUSTOMERS$i-value
+delete_topic ORCLCDB.C__MYUSER.CUSTOMERS$i
+done
 set -e
 
 # Verify Oracle DB has started within MAX_WAIT seconds
@@ -52,7 +57,7 @@ curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
                "connector.class": "io.confluent.connect.oracle.cdc.OracleCdcSourceConnector",
-               "tasks.max":2,
+               "tasks.max":50,
                "key.converter" : "io.confluent.connect.avro.AvroConverter",
                "key.converter.schema.registry.url": "'"$SCHEMA_REGISTRY_URL"'",
                "key.converter.basic.auth.user.info": "${file:/data:schema.registry.basic.auth.user.info}",
