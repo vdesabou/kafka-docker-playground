@@ -7,6 +7,5 @@ services:
     volumes:
       - $HOME/.aws/$AWS_CREDENTIALS_FILE_NAME:$CONNECT_CONTAINER_HOME_DIR/.aws/credentials
       - $HOME/.aws/config:$CONNECT_CONTAINER_HOME_DIR/.aws/config
-      - ../../connect/connect-aws-redshift-sink/RedshiftJDBC4-1.2.20.1043.jar:/usr/share/confluent-hub-components/confluentinc-kafka-connect-aws-redshift/lib/RedshiftJDBC4-1.2.20.1043.jar
     environment:
       CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-aws-redshift

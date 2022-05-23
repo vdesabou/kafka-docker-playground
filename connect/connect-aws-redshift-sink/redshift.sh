@@ -4,11 +4,6 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
-if [ ! -f ${DIR}/RedshiftJDBC4-1.2.20.1043.jar ]
-then
-     wget https://s3.amazonaws.com/redshift-downloads/drivers/jdbc/1.2.20.1043/RedshiftJDBC4-1.2.20.1043.jar
-fi
-
 if [ ! -f $HOME/.aws/config ]
 then
      logerror "ERROR: $HOME/.aws/config is not set"
