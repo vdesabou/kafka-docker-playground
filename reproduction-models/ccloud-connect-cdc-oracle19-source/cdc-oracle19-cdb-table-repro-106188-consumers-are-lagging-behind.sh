@@ -114,3 +114,31 @@ sleep 20
 log "Generating data for all tables"
 ./106188_generate_customers.sh  | grep Populating
 log "Done"
+
+
+# Note: seeing tasks failed with:
+
+# [2022-05-23 15:47:09,397] ERROR [cdc-oracle-source-cdb-cloud|task-45|changeEvent] Exception in RecordQueue thread (io.confluent.connect.oracle.cdc.util.RecordQueue:467)
+# org.apache.kafka.connect.errors.ConnectException: Exception converting redo to change event. SQL: 'insert into "C##MYUSER"."CUSTOMERS5"("ID","FIRST_NAME","LAST_NAME","EMAIL","GENDER","CLUB_STATUS","COMMENTS","CREATE_TS","UPDATE_TS") values ('1817','Syman','Frensche','sfrenschels@salon.com','Male','platinum','exploit open-source markets',TO_TIMESTAMP('2022-05-23 15:45:52.952'),TO_TIMESTAMP('2022-05-23 15:45:52.000'));' INFO: null
+# 	at io.confluent.connect.oracle.cdc.record.OracleChangeEventSourceRecordConverter.convert(OracleChangeEventSourceRecordConverter.java:347)
+# 	at io.confluent.connect.oracle.cdc.ChangeEventGenerator.processSingleRecord(ChangeEventGenerator.java:496)
+# 	at io.confluent.connect.oracle.cdc.ChangeEventGenerator.lambda$doGenerateChangeEvent$2(ChangeEventGenerator.java:419)
+# 	at java.base/java.util.stream.ReferencePipeline$3$1.accept(ReferencePipeline.java:195)
+# 	at java.base/java.util.Spliterators$ArraySpliterator.forEachRemaining(Spliterators.java:948)
+# 	at java.base/java.util.stream.AbstractPipeline.copyInto(AbstractPipeline.java:484)
+# 	at java.base/java.util.stream.AbstractPipeline.wrapAndCopyInto(AbstractPipeline.java:474)
+# 	at java.base/java.util.stream.ReduceOps$ReduceOp.evaluateSequential(ReduceOps.java:913)
+# 	at java.base/java.util.stream.AbstractPipeline.evaluate(AbstractPipeline.java:234)
+# 	at java.base/java.util.stream.ReferencePipeline.collect(ReferencePipeline.java:578)
+# 	at io.confluent.connect.oracle.cdc.ChangeEventGenerator.doGenerateChangeEvent(ChangeEventGenerator.java:421)
+# 	at io.confluent.connect.oracle.cdc.ChangeEventGenerator.execute(ChangeEventGenerator.java:221)
+# 	at io.confluent.connect.oracle.cdc.util.RecordQueue.lambda$createLoggingSupplier$0(RecordQueue.java:465)
+# 	at java.base/java.util.concurrent.CompletableFuture$AsyncSupply.run(CompletableFuture.java:1700)
+# 	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1128)
+# 	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:628)
+# 	at java.base/java.lang.Thread.run(Thread.java:829)
+# Caused by: org.apache.kafka.connect.errors.ConnectException: Could not convert field UPDATE_TS value TO_TIMESTAMP('2022-05-23 15:45:52.000') to type INT64
+# 	at io.confluent.connect.oracle.cdc.record.OracleChangeEventSourceRecordConverter.createRecord(OracleChangeEventSourceRecordConverter.java:433)
+# 	at io.confluent.connect.oracle.cdc.record.OracleChangeEventSourceRecordConverter.convertInsert(OracleChangeEventSourceRecordConverter.java:515)
+# 	at io.confluent.connect.oracle.cdc.record.OracleChangeEventSourceRecordConverter.convert(OracleChangeEventSourceRecordConverter.java:298)
+# 	... 16 more
