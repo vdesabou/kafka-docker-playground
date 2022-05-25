@@ -40,6 +40,17 @@ curl -X PUT \
 
 sleep 5
 
+# using pipeline:
+
+# {
+#     "connection.uri": "mongodb://myuser:mypassword@mongodb:27017",
+#     "connector.class": "com.mongodb.kafka.connect.MongoSourceConnector",
+#     "pipeline":"[{\"$match\": {\"ns.coll\": {\"$regex\": \"^(customers|goals)$\"}}}]",
+#     "database":"inventory",
+#     "tasks.max": "1",
+#     "topic.prefix": "mongo"
+# }
+
 log "Insert a record"
 docker exec -i mongodb mongosh << EOF
 use inventory
