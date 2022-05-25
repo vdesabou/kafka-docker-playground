@@ -65,7 +65,7 @@ retrycmd $MAX_WAIT 5 host_check_mds_up || exit 1
 sleep 5
 
 log "Creating role bindings for principals"
-../../environment/rbac-sasl-plain/scripts/helper/create-role-bindings.sh
+docker exec -i tools bash -c "/tmp/helper/create-role-bindings.sh"
 
 
 docker-compose -f ../../environment/plaintext/docker-compose.yml -f ../../environment/rbac-sasl-plain/docker-compose.yml -f "${PWD}/docker-compose.rbac-with-azure-ad.yml" ${profile_control_center_command} ${profile_ksqldb_command} ${profile_grafana_command} up -d

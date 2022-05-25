@@ -793,16 +793,6 @@ function timeout() {
   fi
 }
 
-function confluent() {
-  if [[ $(type -f confluent 2>&1) =~ "not found" ]]; then
-    # ignore
-    shift
-    docker run -v $HOME/.netrc:/root/.netrc -v $HOME/.confluent:/root/.confluent --rm -i confluentinc/confluent-cli confluent "$@"
-  else
-    $(which confluent) "$@"
-  fi
-}
-
 function az() {
     docker run -v /tmp:/tmp -v $HOME/.azure:/home/az/.azure -e HOME=/home/az --rm -i mcr.microsoft.com/azure-cli az "$@"
 }
@@ -895,6 +885,37 @@ function host_check_mds_up() {
     return 1
   fi
   return 0
+}
+
+# for RBAC, taken from cp-demo
+function mds_login() {
+  MDS_URL=$1
+  SUPER_USER=$2
+  SUPER_USER_PASSWORD=$3
+
+  # Log into MDS
+  if [[ $(type expect 2>&1) =~ "not found" ]]; then
+    echo "'expect' is not found. Install 'expect' and try again"
+    exit 1
+  fi
+  echo -e "\n# Login"
+  OUTPUT=$(
+  expect <<END
+    log_user 1
+    spawn confluent login --url $MDS_URL
+    expect "Username: "
+    send "${SUPER_USER}\r";
+    expect "Password: "
+    send "${SUPER_USER_PASSWORD}\r";
+    expect "Logged in as "
+    set result $expect_out(buffer)
+END
+  )
+  echo "$OUTPUT"
+  if [[ ! "$OUTPUT" =~ "Logged in as" ]]; then
+    echo "Failed to log into MDS.  Please check all parameters and run again"
+    exit 1
+  fi
 }
 
 # https://raw.githubusercontent.com/zlabjp/kubernetes-scripts/master/wait-until-pods-ready

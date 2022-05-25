@@ -23,7 +23,7 @@ seq -f "{\"f1\": \"This is a message sent with RBAC SASL/PLAIN authentication %g
 #     "Topic:rbac_gcs_topic-duplicate"
 # )
 
-# confluent iam rbac role-binding create \
+# confluent iam rolebinding create \
 #     --principal $CONNECTOR_PRINCIPAL \
 #     --role ResourceOwner \
 #     --resource Group:my-rbac-connector \
