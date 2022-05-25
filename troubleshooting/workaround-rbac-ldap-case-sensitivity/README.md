@@ -52,24 +52,24 @@ Create role binding for group `KafkaDevelopers`
 
 ```bash
 KAFKA_DEVELOPPERS_GROUP="Group:KafkaDevelopers"
-confluent iam rbac role-binding create \
+confluent iam rolebinding create \
     --principal "$KAFKA_DEVELOPPERS_GROUP"  \
     --role SystemAdmin \
     --kafka-cluster-id $KAFKA_CLUSTER_ID
 
-confluent iam rbac role-binding create \
+confluent iam rolebinding create \
     --principal "$KAFKA_DEVELOPPERS_GROUP" \
     --role SystemAdmin \
     --kafka-cluster-id $KAFKA_CLUSTER_ID \
     --schema-registry-cluster-id $SR
 
-confluent iam rbac role-binding create \
+confluent iam rolebinding create \
     --principal "$KAFKA_DEVELOPPERS_GROUP" \
     --role SystemAdmin \
     --kafka-cluster-id $KAFKA_CLUSTER_ID \
     --connect-cluster-id $CONNECT
 
-confluent iam rbac role-binding create \
+confluent iam rolebinding create \
     --principal "$KAFKA_DEVELOPPERS_GROUP" \
     --role SystemAdmin \
     --kafka-cluster-id $KAFKA_CLUSTER_ID \

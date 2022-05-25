@@ -79,9 +79,9 @@ chmod 644 ../../environment/rbac-sasl-plain/conf/keypair.pem
 # Bring up base cluster and Confluent CLI
 if [ -f "${DOCKER_COMPOSE_FILE_OVERRIDE}" ]
 then
-  docker-compose -f ../../environment/plaintext/docker-compose.yml -f ../../environment/rbac-sasl-plain/docker-compose.yml -f ${DOCKER_COMPOSE_FILE_OVERRIDE} up -d zookeeper broker openldap
+  docker-compose -f ../../environment/plaintext/docker-compose.yml -f ../../environment/rbac-sasl-plain/docker-compose.yml -f ${DOCKER_COMPOSE_FILE_OVERRIDE} up -d zookeeper broker tools openldap
 else
-  docker-compose -f ../../environment/plaintext/docker-compose.yml -f ../../environment/rbac-sasl-plain/docker-compose.yml up -d zookeeper broker openldap
+  docker-compose -f ../../environment/plaintext/docker-compose.yml -f ../../environment/rbac-sasl-plain/docker-compose.yml up -d zookeeper broker tools openldap
 fi
 
 ENABLE_DOCKER_COMPOSE_FILE_OVERRIDE=""
@@ -91,7 +91,7 @@ then
   ENABLE_DOCKER_COMPOSE_FILE_OVERRIDE="-f ${DOCKER_COMPOSE_FILE_OVERRIDE}"
 fi
 
-docker-compose -f ../../environment/plaintext/docker-compose.yml -f ../../environment/rbac-sasl-plain/docker-compose.yml ${ENABLE_DOCKER_COMPOSE_FILE_OVERRIDE} up -d zookeeper broker openldap
+docker-compose -f ../../environment/plaintext/docker-compose.yml -f ../../environment/rbac-sasl-plain/docker-compose.yml ${ENABLE_DOCKER_COMPOSE_FILE_OVERRIDE} up -d zookeeper broker tools openldap
 
 # Verify Kafka brokers have started
 MAX_WAIT=30
@@ -108,10 +108,10 @@ log "Available LDAP users:"
 docker exec openldap ldapsearch -x -h localhost -b dc=confluentdemo,dc=io -D "cn=admin,dc=confluentdemo,dc=io" -w admin | grep uid:
 
 log "Creating role bindings for principals"
-../../environment/rbac-sasl-plain/scripts/helper/create-role-bindings.sh
+docker exec -i tools bash -c "/tmp/helper/create-role-bindings.sh"
 
 log "Validate bindings"
-../../environment/rbac-sasl-plain/scripts/helper/validate_bindings.sh
+docker exec -i tools bash -c "/tmp/helper/validate_bindings.sh"
 
 docker-compose -f ../../environment/plaintext/docker-compose.yml -f ../../environment/rbac-sasl-plain/docker-compose.yml ${ENABLE_DOCKER_COMPOSE_FILE_OVERRIDE} build
 docker-compose -f ../../environment/plaintext/docker-compose.yml -f ../../environment/rbac-sasl-plain/docker-compose.yml ${ENABLE_DOCKER_COMPOSE_FILE_OVERRIDE} ${profile_control_center_command} ${profile_ksqldb_command} ${profile_grafana_command} up -d
