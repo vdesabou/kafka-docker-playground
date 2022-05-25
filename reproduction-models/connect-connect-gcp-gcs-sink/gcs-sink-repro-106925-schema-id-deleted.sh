@@ -41,6 +41,11 @@ log "Schema id 1"
 curl --request GET \
   --url http://localhost:8081/schemas/ids/1
 
+log "register schema"
+curl -X POST http://localhost:8081/subjects/gcs_topic-value/versions \
+  --header 'Content-Type: application/vnd.schemaregistry.v1+json' \
+  --data '{"schema":"{\"type\":\"record\",\"name\":\"myrecord\",\"fields\":[{\"name\":\"f1\",\"type\":\"string\"}]}"}'
+
 log "SOFT Delete version 1"
 curl --request DELETE \
   --url http://localhost:8081/subjects/gcs_topic-value/versions/1
@@ -75,13 +80,59 @@ curl -X PUT \
                "confluent.topic.replication.factor": "1",
 
                "value.converter": "io.confluent.connect.avro.AvroConverter",
-               "value.converter.schema.registry.url": "http://schema-registry:8081",
-               "value.converter.auto.register.schemas" : "false",
-               "value.converter.use.latest.version": "true"
+               "value.converter.schema.registry.url": "http://schema-registry:8081"
           }' \
      http://localhost:8083/connectors/gcs-sink/config | jq .
 
 exit 0
+
+# docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic gcs_topic --from-beginning --max-messages 20
+# Processed a total of 1 messages
+# [2022-05-25 13:24:45,212] ERROR Unknown error when running consumer:  (kafka.tools.ConsoleConsumer$:43)
+# org.apache.kafka.common.errors.SerializationException: Error retrieving Avro unknown schema for id 1
+#         at io.confluent.kafka.serializers.AbstractKafkaSchemaSerDe.toKafkaException(AbstractKafkaSchemaSerDe.java:259)
+#         at io.confluent.kafka.serializers.AbstractKafkaAvroDeserializer$DeserializationContext.schemaFromRegistry(AbstractKafkaAvroDeserializer.java:341)
+#         at io.confluent.kafka.serializers.AbstractKafkaAvroDeserializer.deserialize(AbstractKafkaAvroDeserializer.java:113)
+#         at io.confluent.kafka.serializers.AbstractKafkaAvroDeserializer.deserialize(AbstractKafkaAvroDeserializer.java:87)
+#         at io.confluent.kafka.formatter.AvroMessageFormatter$AvroMessageDeserializer.deserialize(AvroMessageFormatter.java:133)
+#         at io.confluent.kafka.formatter.AvroMessageFormatter.writeTo(AvroMessageFormatter.java:92)
+#         at io.confluent.kafka.formatter.SchemaMessageFormatter.writeTo(SchemaMessageFormatter.java:181)
+#         at kafka.tools.ConsoleConsumer$.process(ConsoleConsumer.scala:115)
+#         at kafka.tools.ConsoleConsumer$.run(ConsoleConsumer.scala:75)
+#         at kafka.tools.ConsoleConsumer$.main(ConsoleConsumer.scala:52)
+#         at kafka.tools.ConsoleConsumer.main(ConsoleConsumer.scala)
+# Caused by: io.confluent.kafka.schemaregistry.client.rest.exceptions.RestClientException: Schema 1 not found; error code: 40403
+#         at io.confluent.kafka.schemaregistry.client.rest.RestService.sendHttpRequest(RestService.java:297)
+#         at io.confluent.kafka.schemaregistry.client.rest.RestService.httpRequest(RestService.java:367)
+#         at io.confluent.kafka.schemaregistry.client.rest.RestService.getId(RestService.java:836)
+#         at io.confluent.kafka.schemaregistry.client.rest.RestService.getId(RestService.java:809)
+#         at io.confluent.kafka.schemaregistry.client.CachedSchemaRegistryClient.getSchemaByIdFromRegistry(CachedSchemaRegistryClient.java:277)
+#         at io.confluent.kafka.schemaregistry.client.CachedSchemaRegistryClient.getSchemaBySubjectAndId(CachedSchemaRegistryClient.java:409)
+#         at io.confluent.kafka.serializers.AbstractKafkaAvroDeserializer$DeserializationContext.schemaFromRegistry(AbstractKafkaAvroDeserializer.java:330)
+#         ... 9 more
+# [2022-05-25 13:24:45,212] ERROR Unknown error when running consumer:  (kafka.tools.ConsoleConsumer$:43)
+# org.apache.kafka.common.errors.SerializationException: Error retrieving Avro unknown schema for id 1
+#         at io.confluent.kafka.serializers.AbstractKafkaSchemaSerDe.toKafkaException(AbstractKafkaSchemaSerDe.java:259)
+#         at io.confluent.kafka.serializers.AbstractKafkaAvroDeserializer$DeserializationContext.schemaFromRegistry(AbstractKafkaAvroDeserializer.java:341)
+#         at io.confluent.kafka.serializers.AbstractKafkaAvroDeserializer.deserialize(AbstractKafkaAvroDeserializer.java:113)
+#         at io.confluent.kafka.serializers.AbstractKafkaAvroDeserializer.deserialize(AbstractKafkaAvroDeserializer.java:87)
+#         at io.confluent.kafka.formatter.AvroMessageFormatter$AvroMessageDeserializer.deserialize(AvroMessageFormatter.java:133)
+#         at io.confluent.kafka.formatter.AvroMessageFormatter.writeTo(AvroMessageFormatter.java:92)
+#         at io.confluent.kafka.formatter.SchemaMessageFormatter.writeTo(SchemaMessageFormatter.java:181)
+#         at kafka.tools.ConsoleConsumer$.process(ConsoleConsumer.scala:115)
+#         at kafka.tools.ConsoleConsumer$.run(ConsoleConsumer.scala:75)
+#         at kafka.tools.ConsoleConsumer$.main(ConsoleConsumer.scala:52)
+#         at kafka.tools.ConsoleConsumer.main(ConsoleConsumer.scala)
+# Caused by: io.confluent.kafka.schemaregistry.client.rest.exceptions.RestClientException: Schema 1 not found; error code: 40403
+#         at io.confluent.kafka.schemaregistry.client.rest.RestService.sendHttpRequest(RestService.java:297)
+#         at io.confluent.kafka.schemaregistry.client.rest.RestService.httpRequest(RestService.java:367)
+#         at io.confluent.kafka.schemaregistry.client.rest.RestService.getId(RestService.java:836)
+#         at io.confluent.kafka.schemaregistry.client.rest.RestService.getId(RestService.java:809)
+#         at io.confluent.kafka.schemaregistry.client.CachedSchemaRegistryClient.getSchemaByIdFromRegistry(CachedSchemaRegistryClient.java:277)
+#         at io.confluent.kafka.schemaregistry.client.CachedSchemaRegistryClient.getSchemaBySubjectAndId(CachedSchemaRegistryClient.java:409)
+#         at io.confluent.kafka.serializers.AbstractKafkaAvroDeserializer$DeserializationContext.schemaFromRegistry(AbstractKafkaAvroDeserializer.java:330)
+#         ... 9 more
+
 curl -X POST http://localhost:8081/subjects/gcs_topic-value/versions \
   --header 'Content-Type: application/vnd.schemaregistry.v1+json' \
   --data '{"schema":"{\"type\":\"record\",\"name\":\"myrecord\",\"fields\":[{\"name\":\"f1\",\"type\":\"string\"}]}"}'
