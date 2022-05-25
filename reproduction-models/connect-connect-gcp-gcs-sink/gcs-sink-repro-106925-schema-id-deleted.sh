@@ -37,6 +37,10 @@ set -e
 log "Sending messages to topic gcs_topic"
 seq -f "{\"f1\": \"value%g\"}" 10 | docker exec -i connect kafka-avro-console-producer --broker-list broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic gcs_topic --property value.schema='{"type":"record","name":"myrecord","fields":[{"name":"f1","type":"string"}]}'
 
+log "Schema id 1"
+curl --request GET \
+  --url http://localhost:8081/schemas/ids/1
+
 log "SOFT Delete version 1"
 curl --request DELETE \
   --url http://localhost:8081/subjects/gcs_topic-value/versions/1
@@ -45,13 +49,12 @@ log "HARD Delete version 1"
 curl --request DELETE \
   --url http://localhost:8081/subjects/gcs_topic-value/versions/1?permanent=true
 
-log "Show remaining version"
-curl --request GET \
-  --url http://localhost:8081/subjects/gcs_topic-value/versions 
-
 log "Sending messages to topic gcs_topic"
 seq -f "{\"f1\": \"value%g\"}" 10 | docker exec -i connect kafka-avro-console-producer --broker-list broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic gcs_topic --property value.schema='{"type":"record","name":"myrecord","fields":[{"name":"f1","type":"string","doc": "toc"}]}'
 
+log "Show remaining version"
+curl --request GET \
+  --url http://localhost:8081/subjects/gcs_topic-value/versions 
 
 log "Creating GCS Sink connector"
 curl -X PUT \
@@ -78,6 +81,10 @@ curl -X PUT \
           }' \
      http://localhost:8083/connectors/gcs-sink/config | jq .
 
+exit 0
+curl -X POST http://localhost:8081/subjects/gcs_topic-value/versions \
+  --header 'Content-Type: application/vnd.schemaregistry.v1+json' \
+  --data '{"schema":"{\"type\":\"record\",\"name\":\"myrecord\",\"fields\":[{\"name\":\"f1\",\"type\":\"string\"}]}"}'
 
 # [2022-05-25 11:14:02,226] ERROR [gcs-sink2|task-0] WorkerSinkTask{id=gcs-sink2-0} Task threw an uncaught and unrecoverable exception. Task is being killed and will not recover until manually restarted (org.apache.kafka.connect.runtime.WorkerTask:207)
 # org.apache.kafka.connect.errors.ConnectException: Tolerance exceeded in error handler
