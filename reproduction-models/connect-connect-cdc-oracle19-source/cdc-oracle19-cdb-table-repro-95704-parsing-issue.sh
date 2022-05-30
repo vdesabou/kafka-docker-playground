@@ -143,6 +143,62 @@ EOF
 #         at net.sf.jsqlparser.parser.CCJSqlParserUtil.parse(CCJSqlParserUtil.java:49)
 #         ... 19 more
 
+
+# with 2.0.5
+
+# [2022-05-30 13:33:42,141] ERROR [cdc-oracle-source-cdb|task-1|changeEvent] Exception in RecordQueue thread (io.confluent.connect.oracle.cdc.util.RecordQueue:467)
+# org.apache.kafka.connect.errors.ConnectException: Exception processing LOB column
+# 	at io.confluent.connect.oracle.cdc.record.OracleLobRecordConverter.convert(OracleLobRecordConverter.java:199)
+# 	at io.confluent.connect.oracle.cdc.ChangeEventGenerator.processSingleRecord(ChangeEventGenerator.java:511)
+# 	at io.confluent.connect.oracle.cdc.ChangeEventGenerator.lambda$doGenerateChangeEvent$2(ChangeEventGenerator.java:419)
+# 	at java.base/java.util.stream.ReferencePipeline$3$1.accept(ReferencePipeline.java:195)
+# 	at java.base/java.util.Spliterators$ArraySpliterator.forEachRemaining(Spliterators.java:948)
+# 	at java.base/java.util.stream.AbstractPipeline.copyInto(AbstractPipeline.java:484)
+# 	at java.base/java.util.stream.AbstractPipeline.wrapAndCopyInto(AbstractPipeline.java:474)
+# 	at java.base/java.util.stream.ReduceOps$ReduceOp.evaluateSequential(ReduceOps.java:913)
+# 	at java.base/java.util.stream.AbstractPipeline.evaluate(AbstractPipeline.java:234)
+# 	at java.base/java.util.stream.ReferencePipeline.collect(ReferencePipeline.java:578)
+# 	at io.confluent.connect.oracle.cdc.ChangeEventGenerator.doGenerateChangeEvent(ChangeEventGenerator.java:421)
+# 	at io.confluent.connect.oracle.cdc.ChangeEventGenerator.execute(ChangeEventGenerator.java:221)
+# 	at io.confluent.connect.oracle.cdc.util.RecordQueue.lambda$createLoggingSupplier$0(RecordQueue.java:465)
+# 	at java.base/java.util.concurrent.CompletableFuture$AsyncSupply.run(CompletableFuture.java:1700)
+# 	at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1128)
+# 	at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:628)
+# 	at java.base/java.lang.Thread.run(Thread.java:829)
+# Caused by: net.sf.jsqlparser.JSQLParserException
+# 	at net.sf.jsqlparser.parser.CCJSqlParserUtil.parse(CCJSqlParserUtil.java:51)
+# 	at net.sf.jsqlparser.parser.CCJSqlParserUtil.parse(CCJSqlParserUtil.java:40)
+# 	at io.confluent.connect.oracle.cdc.record.OracleLobRecordConverter.convertLobUpdate(OracleLobRecordConverter.java:270)
+# 	at io.confluent.connect.oracle.cdc.record.OracleLobRecordConverter.convert(OracleLobRecordConverter.java:99)
+# 	... 16 more
+# Caused by: net.sf.jsqlparser.parser.ParseException: Encountered unexpected token: "Female3" <S_IDENTIFIER>
+#     at line 1, column 250.
+
+# Was expecting one of:
+
+#     "&"
+#     "&&"
+#     "("
+#     "::"
+#     ";"
+#     "<<"
+#     ">>"
+#     "AND"
+#     "COLLATE"
+#     "LIMIT"
+#     "ORDER"
+#     "RETURNING"
+#     "["
+#     "^"
+#     "|"
+#     <EOF>
+
+# 	at net.sf.jsqlparser.parser.CCJSqlParser.generateParseException(CCJSqlParser.java:22439)
+# 	at net.sf.jsqlparser.parser.CCJSqlParser.jj_consume_token(CCJSqlParser.java:22286)
+# 	at net.sf.jsqlparser.parser.CCJSqlParser.Statement(CCJSqlParser.java:85)
+# 	at net.sf.jsqlparser.parser.CCJSqlParserUtil.parse(CCJSqlParserUtil.java:49)
+# 	... 19 more
+
 log "Verifying topic ORCLCDB.C__MYUSER.CUSTOMERS"
 set +e
 timeout 60 docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic ORCLCDB.C__MYUSER.CUSTOMERS --from-beginning --max-messages 1
