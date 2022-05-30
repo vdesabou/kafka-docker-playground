@@ -72,48 +72,63 @@ do
      $script "ORCLCDB"
 done
 
-log "Waiting 60s for connector to read new data"
-sleep 60
+log "Waiting 30s for connector to read new data"
+sleep 30
 
-log "Verifying topic ORCLCDB.C__MYUSER.CUSTOMERS: there should be 13 records"
-set +e
-timeout 60 docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic ORCLCDB.C__MYUSER.CUSTOMERS --from-beginning --max-messages 13 > /tmp/result.log  2>&1
-set -e
-cat /tmp/result.log
-log "Check there is 5 snapshots events"
-if [ $(grep -c "op_type\":{\"string\":\"R\"}" /tmp/result.log) -ne 5 ]
-then
-     logerror "Did not get expected results"
-     exit 1
-fi
-log "Check there is 3 insert events"
-if [ $(grep -c "op_type\":{\"string\":\"I\"}" /tmp/result.log) -ne 3 ]
-then
-     logerror "Did not get expected results"
-     exit 1
-fi
-log "Check there is 4 update events"
-if [ $(grep -c "op_type\":{\"string\":\"U\"}" /tmp/result.log) -ne 4 ]
-then
-     logerror "Did not get expected results"
-     exit 1
-fi
-log "Check there is 1 delete events"
-if [ $(grep -c "op_type\":{\"string\":\"D\"}" /tmp/result.log) -ne 1 ]
-then
-     logerror "Did not get expected results"
-     exit 1
-fi
+# log "Verifying topic ORCLCDB.C__MYUSER.CUSTOMERS: there should be 13 records"
+# set +e
+# timeout 60 docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic ORCLCDB.C__MYUSER.CUSTOMERS --from-beginning --max-messages 13 > /tmp/result.log  2>&1
+# set -e
+# cat /tmp/result.log
+# log "Check there is 5 snapshots events"
+# if [ $(grep -c "op_type\":{\"string\":\"R\"}" /tmp/result.log) -ne 5 ]
+# then
+#      logerror "Did not get expected results"
+#      exit 1
+# fi
+# log "Check there is 3 insert events"
+# if [ $(grep -c "op_type\":{\"string\":\"I\"}" /tmp/result.log) -ne 3 ]
+# then
+#      logerror "Did not get expected results"
+#      exit 1
+# fi
+# log "Check there is 4 update events"
+# if [ $(grep -c "op_type\":{\"string\":\"U\"}" /tmp/result.log) -ne 4 ]
+# then
+#      logerror "Did not get expected results"
+#      exit 1
+# fi
+# log "Check there is 1 delete events"
+# if [ $(grep -c "op_type\":{\"string\":\"D\"}" /tmp/result.log) -ne 1 ]
+# then
+#      logerror "Did not get expected results"
+#      exit 1
+# fi
 
-log "Verifying topic redo-log-topic: there should be 9 records"
-timeout 60 docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic redo-log-topic --from-beginning --max-messages 9
+# log "Verifying topic redo-log-topic: there should be 9 records"
+# timeout 60 docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic redo-log-topic --from-beginning --max-messages 9
 
-exit 0
 
 docker exec -i oracle sqlplus C\#\#MYUSER/mypassword@//localhost:1521/ORCLCDB << EOF
   select * from nls_database_parameters where parameter = 'NLS_DATE_FORMAT';
   update CUSTOMERS set create_ts = TO_TIMESTAMP_TZ('2022-05-24 13:02:25.792 +08:00','YYYY-MM-DD HH24:MI:SS.FF3 TZH:TZM') where email = 'rblaisdell0@rambler.ru';
   exit;
 EOF
+# update CUSTOMERS set create_ts = TO_TIMESTAMP_TZ('2022-05-24 11:02:25.792', 'yyyy-MM-dd HH:mi:ss.FF') where email = 'rblaisdell0@rambler.ru';
+
+exit 0
+docker exec -i oracle sqlplus C\#\#MYUSER/mypassword@//localhost:1521/ORCLCDB << EOF
+  select ROWID,create_ts from customers where email = 'rblaisdell0@rambler.ru';
+  exit;
+EOF
+
+# 24-MAY-22 01.02.25.792000 PM
+
+docker exec -i oracle sqlplus C\#\#MYUSER/mypassword@//localhost:1521/ORCLCDB << EOF
+  select * from nls_database_parameters where parameter = 'NLS_DATE_FORMAT';
+  update CUSTOMERS set gender = 'male' where create_ts = TO_TIMESTAMP_TZ('2022-05-24 13:02:25.792 +00:00','YYYY-MM-DD HH24:MI:SS.FF3 TZH:TZM') and ROWID = 'AAAR32AAHAAAAFeAAA';
+  exit;
+EOF
 
 # update CUSTOMERS set create_ts = TO_TIMESTAMP_TZ('2022-05-24 11:02:25.792', 'yyyy-MM-dd HH:mi:ss.FF') where email = 'rblaisdell0@rambler.ru';
+
