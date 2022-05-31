@@ -68,11 +68,11 @@ ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.rep
 
 
 log "Sending messages to topic test_table"
-docker exec -i connect kafka-avro-console-producer --broker-list broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic test_table --property key.schema='{"type":"record","namespace": "io.confluent.connect.avro","name":"myrecordkey","fields":[{"name":"ID","type":"long"}]}' --property value.schema='{"type":"record","name":"myrecord","fields":[{"name":"u_name","type":"string"},
+docker exec -i connect kafka-avro-console-producer --broker-list broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic test_table --property key.serializer=org.apache.kafka.common.serialization.StringSerializer --property value.schema='{"type":"record","name":"myrecord","fields":[{"name":"u_name","type":"string"},
 {"name":"u_price", "type": "float"}, {"name":"u_quantity", "type": "int"}]}' --property parse.key=true --property key.separator="|" << EOF
-{"ID": 111}|{"u_name": "scissors", "u_price": 2.75, "u_quantity": 3}
-{"ID": 222}|{"u_name": "tape", "u_price": 0.99, "u_quantity": 10}
-{"ID": 444}|{"u_name": "notebooks", "u_price": 1.1234567, "u_quantity": 5}
+id1|{"u_name": "scissors", "u_price": 2.75, "u_quantity": 3}
+id2|{"u_name": "tape", "u_price": 0.99, "u_quantity": 10}
+id3|{"u_name": "notebooks", "u_price": 1.1234567, "u_quantity": 5}
 EOF
 
 curl --request PUT \
@@ -102,8 +102,6 @@ curl -X PUT \
                     "servicenow.table": "u_test_table",
                     "servicenow.user": "admin",
                     "servicenow.password": "'"$SERVICENOW_PASSWORD"'",
-                    "key.converter": "io.confluent.connect.avro.AvroConverter",
-                    "key.converter.schema.registry.url": "http://schema-registry:8081",
                     "value.converter": "io.confluent.connect.avro.AvroConverter",
                     "value.converter.schema.registry.url": "http://schema-registry:8081",
                     "reporter.bootstrap.servers": "broker:9092",
@@ -120,6 +118,40 @@ curl -X PUT \
                     "confluent.topic.replication.factor": "1"
           }' \
      http://localhost:8083/connectors/servicenow-sink/config | jq .
+
+
+# repro:
+
+# [2022-05-31 14:27:55,777] ERROR [servicenow-sink|task-0] WorkerSinkTask{id=servicenow-sink-0} Task threw an uncaught and unrecoverable exception. Task is being killed and will not recover until manually restarted (org.apache.kafka.connect.runtime.WorkerTask:207)
+# org.apache.kafka.connect.errors.ConnectException: Exiting WorkerSinkTask due to unrecoverable exception.
+#         at org.apache.kafka.connect.runtime.WorkerSinkTask.deliverMessages(WorkerSinkTask.java:618)
+#         at org.apache.kafka.connect.runtime.WorkerSinkTask.poll(WorkerSinkTask.java:334)
+#         at org.apache.kafka.connect.runtime.WorkerSinkTask.iteration(WorkerSinkTask.java:235)
+#         at org.apache.kafka.connect.runtime.WorkerSinkTask.execute(WorkerSinkTask.java:204)
+#         at org.apache.kafka.connect.runtime.WorkerTask.doRun(WorkerTask.java:200)
+#         at org.apache.kafka.connect.runtime.WorkerTask.run(WorkerTask.java:255)
+#         at java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:511)
+#         at java.util.concurrent.FutureTask.run(FutureTask.java:266)
+#         at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1149)
+#         at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:624)
+#         at java.lang.Thread.run(Thread.java:750)
+# Caused by: io.confluent.connect.utils.retry.RetryCountExceeded: Failed after 4 attempts to send request to ServiceNow: 404 Not Found
+# {"error":{"message":"No Record found","detail":"Record doesn't exist or ACL restricts the record retrieval"},"status":"failure"}
+#         at io.confluent.connect.utils.retry.RetryPolicy.callWith(RetryPolicy.java:429)
+#         at io.confluent.connect.utils.retry.RetryPolicy.call(RetryPolicy.java:337)
+#         at io.confluent.connect.servicenow.rest.ServiceNowClientImpl.executeRequest(ServiceNowClientImpl.java:245)
+#         at io.confluent.connect.servicenow.rest.ServiceNowClientImpl.doRequest(ServiceNowClientImpl.java:241)
+#         at io.confluent.connect.servicenow.rest.ServiceNowClientImpl.put(ServiceNowClientImpl.java:176)
+#         at io.confluent.connect.servicenow.ServiceNowSinkTask.put(ServiceNowSinkTask.java:58)
+#         at org.apache.kafka.connect.runtime.WorkerSinkTask.deliverMessages(WorkerSinkTask.java:584)
+#         ... 10 more
+# Caused by: com.google.api.client.http.HttpResponseException: 404 Not Found
+# {"error":{"message":"No Record found","detail":"Record doesn't exist or ACL restricts the record retrieval"},"status":"failure"}
+#         at com.google.api.client.http.HttpRequest.execute(HttpRequest.java:1097)
+#         at io.confluent.connect.servicenow.rest.ServiceNowClientImpl.lambda$executeRequest$2(ServiceNowClientImpl.java:246)
+#         at io.confluent.connect.utils.retry.RetryPolicy.lambda$call$1(RetryPolicy.java:337)
+#         at io.confluent.connect.utils.retry.RetryPolicy.callWith(RetryPolicy.java:417)
+#         ... 16 more
 
 
 # [2022-05-31 08:15:32,120] INFO [servicenow-sink|task-0] json is configured (io.confluent.connect.formatter.json.JsonFormatter:35)
