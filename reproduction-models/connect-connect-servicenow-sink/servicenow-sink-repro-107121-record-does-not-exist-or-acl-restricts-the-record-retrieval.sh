@@ -115,7 +115,9 @@ curl -X PUT \
                     "reporter.result.topic.replication.factor": 1,
                     "confluent.license": "",
                     "confluent.topic.bootstrap.servers": "broker:9092",
-                    "confluent.topic.replication.factor": "1"
+                    "confluent.topic.replication.factor": "1",
+                    "transforms": "dropKey",
+                    "transforms.dropKey.type": "io.confluent.connect.transforms.Drop$Key"
           }' \
      http://localhost:8083/connectors/servicenow-sink/config | jq .
 
