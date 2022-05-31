@@ -147,3 +147,26 @@ seq -f "{\"f1\": \"value%g\"}" 10 | docker exec -i connect kafka-avro-console-pr
 #         at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1128)
 #         at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:628)
 #         at java.base/java.lang.Thread.run(Thread.java:829)
+
+
+docker exec namenode1 bash -c "kinit -kt /opt/hadoop/etc/hadoop/nn.keytab nn/namenode1.kerberos-demo.local && /opt/hadoop/bin/hdfs dfs -ls -R /logs"
+
+# drwxrwxrwx   - root supergroup          0 2022-05-31 11:13 /logs/test_hdfs
+# drwxrwxrwx   - root supergroup          0 2022-05-31 11:13 /logs/test_hdfs/0
+# -rw-r--r--   3 root supergroup       1897 2022-05-31 11:15 /logs/test_hdfs/0/log
+
+
+docker exec namenode1 bash -c "kinit -kt /opt/hadoop/etc/hadoop/nn.keytab nn/namenode1.kerberos-demo.local && /opt/hadoop/bin/hdfs dfs -ls -R /topics/"
+
+
+log "applying fix https://support.confluent.io/hc/en-us/articles/360051856272-How-to-bypass-java-lang-IllegalArgumentException-Wrong-FS-Error-with-HDFSSinkConnector"
+log "deleting WAL log"
+docker exec namenode1 bash -c "kinit -kt /opt/hadoop/etc/hadoop/nn.keytab nn/namenode1.kerberos-demo.local && /opt/hadoop/bin/hdfs dfs -rm /logs/test_hdfs/0/log"
+log "deleting +tmp folder"
+docker exec namenode1 bash -c "kinit -kt /opt/hadoop/etc/hadoop/nn.keytab nn/namenode1.kerberos-demo.local && /opt/hadoop/bin/hdfs dfs -rm -r /topics/+tmp"
+
+log "restart failed task"
+curl --request POST --url 'http://localhost:8083/connectors/hdfs2-sink-ha-kerberos/restart?includeTasks=true&onlyFailed=true'
+
+log "Sending messages to topic test_hdfs"
+seq -f "{\"f1\": \"value%g\"}" 10 | docker exec -i connect kafka-avro-console-producer --broker-list broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic test_hdfs --property value.schema='{"type":"record","name":"myrecord","fields":[{"name":"f1","type":"string"}]}'
