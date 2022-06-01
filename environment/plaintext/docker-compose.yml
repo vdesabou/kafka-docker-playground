@@ -58,7 +58,91 @@ services:
       EXTRA_ARGS: ${GRAFANA_AGENT_BROKER}
     volumes:
       - ../../environment/plaintext/jmx-exporter:/usr/share/jmx_exporter/
-  
+
+  broker2:
+    image: ${CP_KAFKA_IMAGE}:${TAG}
+    hostname: broker2
+    container_name: broker2
+    restart: always
+    profiles:
+      - "kafka_nodes"
+    ports:
+      - "9292:9292"
+      - "29292:29292"
+      - "12000:12000"
+    environment:
+      KAFKA_JMX_PORT: 12000
+      KAFKA_JMX_HOSTNAME: localhost
+      KAFKA_BROKER_ID: 2
+      KAFKA_ZOOKEEPER_CONNECT: 'zookeeper:2181'
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: BROKER:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_LISTENERS: BROKER://:9292,PLAINTEXT_HOST://:29292
+      KAFKA_ADVERTISED_LISTENERS: BROKER://broker2:9292,PLAINTEXT_HOST://localhost:29292
+      KAFKA_INTER_BROKER_LISTENER_NAME: BROKER
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      CONFLUENT_SUPPORT_CUSTOMER_ID: 'anonymous'
+      # Confluent Metrics Reporter for Control Center Cluster Monitoring
+      KAFKA_METRIC_REPORTERS: io.confluent.metrics.reporter.ConfluentMetricsReporter
+      CONFLUENT_METRICS_REPORTER_BOOTSTRAP_SERVERS: broker2:9292
+      CONFLUENT_METRICS_REPORTER_TOPIC_REPLICAS: 1
+      CONFLUENT_METRICS_ENABLE: 'true'
+      # for 5.4.x:
+      KAFKA_CONFLUENT_LICENSE_TOPIC_REPLICATION_FACTOR: 1
+      # for 6.0.0
+      KAFKA_CONFLUENT_BALANCER_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      # # For Confluent Telemetry Reporter (proactive support)
+      # KAFKA_CONFLUENT_TELEMETRY_ENABLED: 'true'
+      # KAFKA_CONFLUENT_TELEMETRY_API_KEY: 'CLOUD_API_KEY'
+      # KAFKA_CONFLUENT_TELEMETRY_API_SECRET: 'CLOUD_API_SECRET'
+      EXTRA_ARGS: ${GRAFANA_AGENT_BROKER}
+    volumes:
+      - ../../environment/plaintext/jmx-exporter:/usr/share/jmx_exporter/  
+
+  broker3:
+    image: ${CP_KAFKA_IMAGE}:${TAG}
+    hostname: broker3
+    container_name: broker3
+    restart: always
+    profiles:
+      - "kafka_nodes"
+    ports:
+      - "9392:9392"
+      - "29392:29392"
+      - "13000:13000"
+    environment:
+      KAFKA_JMX_PORT: 13000
+      KAFKA_JMX_HOSTNAME: localhost
+      KAFKA_BROKER_ID: 3
+      KAFKA_ZOOKEEPER_CONNECT: 'zookeeper:2181'
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: BROKER:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_LISTENERS: BROKER://:9392,PLAINTEXT_HOST://:29392
+      KAFKA_ADVERTISED_LISTENERS: BROKER://broker3:9392,PLAINTEXT_HOST://localhost:29392
+      KAFKA_INTER_BROKER_LISTENER_NAME: BROKER
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      CONFLUENT_SUPPORT_CUSTOMER_ID: 'anonymous'
+      # Confluent Metrics Reporter for Control Center Cluster Monitoring
+      KAFKA_METRIC_REPORTERS: io.confluent.metrics.reporter.ConfluentMetricsReporter
+      CONFLUENT_METRICS_REPORTER_BOOTSTRAP_SERVERS: broker3:9292
+      CONFLUENT_METRICS_REPORTER_TOPIC_REPLICAS: 1
+      CONFLUENT_METRICS_ENABLE: 'true'
+      # for 5.4.x:
+      KAFKA_CONFLUENT_LICENSE_TOPIC_REPLICATION_FACTOR: 1
+      # for 6.0.0
+      KAFKA_CONFLUENT_BALANCER_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      # # For Confluent Telemetry Reporter (proactive support)
+      # KAFKA_CONFLUENT_TELEMETRY_ENABLED: 'true'
+      # KAFKA_CONFLUENT_TELEMETRY_API_KEY: 'CLOUD_API_KEY'
+      # KAFKA_CONFLUENT_TELEMETRY_API_SECRET: 'CLOUD_API_SECRET'
+      EXTRA_ARGS: ${GRAFANA_AGENT_BROKER}
+    volumes:
+      - ../../environment/plaintext/jmx-exporter:/usr/share/jmx_exporter/
+
+
+
   schema-registry:
     image: confluentinc/cp-schema-registry:${TAG}
     hostname: schema-registry
