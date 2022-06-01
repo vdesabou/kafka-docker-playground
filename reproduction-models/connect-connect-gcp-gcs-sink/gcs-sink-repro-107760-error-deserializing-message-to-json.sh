@@ -47,7 +47,7 @@ curl -X PUT \
                     "topics" : "gcs_topic",
                     "gcs.bucket.name" : "'"$GCS_BUCKET_NAME"'",
                     "gcs.part.size": "5242880",
-                    "flush.size": "3",
+                    "flush.size": "1",
                     "gcs.credentials.path": "/tmp/keyfile.json",
                     "storage.class": "io.confluent.connect.gcs.storage.GcsStorage",
                     "format.class": "io.confluent.connect.gcs.format.json.JsonFormat",
@@ -64,15 +64,13 @@ curl -X PUT \
 sleep 10
 #  Simplest
 timeout 60 docker exec connect kafka-console-consumer --bootstrap-server broker:9092 --topic gcs_topic --from-beginning --max-messages 1
-
-exit 0
+# {"xpath":"href=\\#day"}
 
 log "Listing objects of in GCS"
 docker run -i --volumes-from gcloud-config google/cloud-sdk:latest gsutil ls gs://$GCS_BUCKET_NAME/topics/gcs_topic/partition=0/
 
-log "Getting one of the avro files locally and displaying content with avro-tools"
-docker run -i --volumes-from gcloud-config -v /tmp:/tmp/ google/cloud-sdk:latest gsutil cp gs://$GCS_BUCKET_NAME/topics/gcs_topic/partition=0/gcs_topic+0+0000000000.avro /tmp/gcs_topic+0+0000000000.avro
+log "Getting one of the json files locally"
+docker run -i --volumes-from gcloud-config -v /tmp:/tmp/ google/cloud-sdk:latest gsutil cp gs://$GCS_BUCKET_NAME/topics/gcs_topic/partition=0/gcs_topic+0+0000000000.json /tmp/gcs_topic+0+0000000000.json
 
-docker run --rm -v /tmp:/tmp actions/avro-tools tojson /tmp/gcs_topic+0+0000000000.avro
-
-docker rm -f gcloud-config
+cat /tmp/gcs_topic+0+0000000000.json
+# {"xpath":"href=\\#day"}
