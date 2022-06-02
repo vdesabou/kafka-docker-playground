@@ -36,66 +36,20 @@ curl -X POST -H "Content-Type: application/json" -d'
 log "Load inventory-repro-100863.sql to SQL Server"
 cat inventory-repro-100863.sql | docker exec -i sqlserver bash -c '/opt/mssql-tools/bin/sqlcmd -U sa -P Password!'
 
-# log "Creating Debezium SQL Server source connector"
-# curl -X PUT \
-#      -H "Content-Type: application/json" \
-#      --data '{
-#                 "connector.class": "io.debezium.connector.sqlserver.SqlServerConnector",
-#                 "tasks.max": "1",
-#                 "database.hostname": "sqlserver",
-#                 "database.port": "1433",
-#                 "database.user": "sa",
-#                 "database.password": "Password!",
-#                 "database.server.name": "server1",
-#                 "database.dbname" : "testDB",
-#                 "database.history.kafka.bootstrap.servers": "broker:9092",
-#                 "database.history.kafka.topic": "schema-changes.inventory",
-
-#                 "value.converter": "io.confluent.connect.protobuf.ProtobufConverter",
-#                 "value.converter.schema.registry.url": "http://schema-registry:8081",
-#                 "value.converter.auto.register.schemas": "false",
-#                 "value.converter.connect.meta.data": "false",
-#                 "value.converter.use.latest.version": "true",
-#                 "value.converter.latest.compatibility.strict": "false",
-#                 "value.converter.optional.for.nullables":"true",
-
-#                 "include.schema.changes": "false",
-
-#                 "transforms": "Reroute,unwrap,extractKeyfromStruct",
-
-#                 "transforms.Reroute.type": "org.apache.kafka.connect.transforms.RegexRouter",
-#                 "transforms.Reroute.regex": "(.*)customers(.*)",
-#                 "transforms.Reroute.replacement": "customers_protobuf",
-
-#                 "transforms.unwrap.type": "io.debezium.transforms.ExtractNewRecordState",
-#                 "transforms.unwrap.drop.tombstones": "false",
-
-#                "transforms.extractKeyfromStruct.type":"org.apache.kafka.connect.transforms.ValueToKey",
-#                "transforms.extractKeyfromStruct.fields":"field_no_optional"
-#           }' \
-#      http://localhost:8083/connectors/debezium-sqlserver-source/config | jq .
-
-log "Creating JDBC SQL Server (with Microsoft driver) source connector"
+log "Creating Debezium SQL Server source connector"
 curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
-               "connector.class": "io.confluent.connect.jdbc.JdbcSourceConnector",
+               "connector.class": "io.debezium.connector.sqlserver.SqlServerConnector",
                "tasks.max": "1",
-               "connection.url": "jdbc:sqlserver://sqlserver:1433;databaseName=testDB;selectMethod=cursor",
-               "connection.user": "sa",
-               "connection.password": "Password!",
-               "mode": "bulk",
-
-               "query": "select * from customers",
-               "poll.interval.ms": "5000",
-               "batch.max.rows": "1000",
-
-               "topic.prefix": "customers_protobuf",
-               "errors.retry.timeout": "3600000",
-               "errors.retry.delay.max.ms": "60000",
-               "errors.log.enable": "true",
-               "errors.log.include.messages": "true",
-
+               "database.hostname": "sqlserver",
+               "database.port": "1433",
+               "database.user": "sa",
+               "database.password": "Password!",
+               "database.server.name": "server1",
+               "database.dbname" : "testDB",
+               "database.history.kafka.bootstrap.servers": "broker:9092",
+               "database.history.kafka.topic": "schema-changes.inventory",
 
                "value.converter": "io.confluent.connect.protobuf.ProtobufConverter",
                "value.converter.schema.registry.url": "http://schema-registry:8081",
@@ -103,10 +57,56 @@ curl -X PUT \
                "value.converter.connect.meta.data": "false",
                "value.converter.use.latest.version": "true",
                "value.converter.latest.compatibility.strict": "false",
-               "transforms.flatten.type": "org.apache.kafka.connect.transforms.Flatten$Value",
-               "transforms.flatten.delimiter": "."
+               "value.converter.optional.for.nullables":"true",
+
+               "include.schema.changes": "false",
+
+               "transforms": "Reroute,unwrap,extractKeyfromStruct",
+
+               "transforms.Reroute.type": "org.apache.kafka.connect.transforms.RegexRouter",
+               "transforms.Reroute.regex": "(.*)customers(.*)",
+               "transforms.Reroute.replacement": "customers_protobuf",
+
+               "transforms.unwrap.type": "io.debezium.transforms.ExtractNewRecordState",
+               "transforms.unwrap.drop.tombstones": "false",
+
+               "transforms.extractKeyfromStruct.type":"org.apache.kafka.connect.transforms.ValueToKey",
+               "transforms.extractKeyfromStruct.fields":"field_no_optional"
           }' \
-     http://localhost:8083/connectors/sqlserver-source/config | jq .
+     http://localhost:8083/connectors/debezium-sqlserver-source/config | jq .
+
+# log "Creating JDBC SQL Server (with Microsoft driver) source connector"
+# curl -X PUT \
+#      -H "Content-Type: application/json" \
+#      --data '{
+#                "connector.class": "io.confluent.connect.jdbc.JdbcSourceConnector",
+#                "tasks.max": "1",
+#                "connection.url": "jdbc:sqlserver://sqlserver:1433;databaseName=testDB;selectMethod=cursor",
+#                "connection.user": "sa",
+#                "connection.password": "Password!",
+#                "mode": "bulk",
+
+#                "query": "select * from customers",
+#                "poll.interval.ms": "5000",
+#                "batch.max.rows": "1000",
+
+#                "topic.prefix": "customers_protobuf",
+#                "errors.retry.timeout": "3600000",
+#                "errors.retry.delay.max.ms": "60000",
+#                "errors.log.enable": "true",
+#                "errors.log.include.messages": "true",
+
+
+#                "value.converter": "io.confluent.connect.protobuf.ProtobufConverter",
+#                "value.converter.schema.registry.url": "http://schema-registry:8081",
+#                "value.converter.auto.register.schemas": "false",
+#                "value.converter.connect.meta.data": "false",
+#                "value.converter.use.latest.version": "true",
+#                "value.converter.latest.compatibility.strict": "false",
+#                "transforms.flatten.type": "org.apache.kafka.connect.transforms.Flatten$Value",
+#                "transforms.flatten.delimiter": "."
+#           }' \
+#      http://localhost:8083/connectors/sqlserver-source/config | jq .
 
 sleep 5
 
