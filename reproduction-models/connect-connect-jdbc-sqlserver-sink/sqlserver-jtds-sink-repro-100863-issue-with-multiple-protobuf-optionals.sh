@@ -4,6 +4,14 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
+if [ ! -f ${DIR}/sqljdbc_7.4/enu/mssql-jdbc-7.4.1.jre8.jar ]
+then
+     log "Downloading Microsoft JDBC driver mssql-jdbc-7.4.1.jre8.jar"
+     wget https://download.microsoft.com/download/6/9/9/699205CA-F1F1-4DE9-9335-18546C5C8CBD/sqljdbc_7.4.1.0_enu.tar.gz
+     tar xvfz sqljdbc_7.4.1.0_enu.tar.gz
+     rm -f sqljdbc_7.4.1.0_enu.tar.gz
+fi
+
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.jtds.repro-100863-issue-with-multiple-protobuf-optionals.yml"
 
 
@@ -28,36 +36,44 @@ curl -X POST -H "Content-Type: application/json" -d'
 log "Load inventory-repro-100863.sql to SQL Server"
 cat inventory-repro-100863.sql | docker exec -i sqlserver bash -c '/opt/mssql-tools/bin/sqlcmd -U sa -P Password!'
 
-log "Creating JDBC SQL Server (with JTDS driver) source connector"
+log "Creating Debezium SQL Server source connector"
 curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
-               "connector.class": "io.confluent.connect.jdbc.JdbcSourceConnector",
+                "connector.class": "io.debezium.connector.sqlserver.SqlServerConnector",
                 "tasks.max": "1",
-                "connection.url": "jdbc:jtds:sqlserver://sqlserver:1433/testDB",
-                "connection.user": "sa",
-                "connection.password": "Password!",
-                "mode": "bulk",
-
-                "query": "select * from customers",
-                "poll.interval.ms": "5000",
-                "batch.max.rows": "1000",
-
-                "topic.prefix": "customers_protobuf",
-                "errors.retry.timeout": "3600000",
-                "errors.retry.delay.max.ms": "60000",
-                "errors.log.enable": "true",
-                "errors.log.include.messages": "true",
-
+                "database.hostname": "sqlserver",
+                "database.port": "1433",
+                "database.user": "sa",
+                "database.password": "Password!",
+                "database.server.name": "server1",
+                "database.dbname" : "testDB",
+                "database.history.kafka.bootstrap.servers": "broker:9092",
+                "database.history.kafka.topic": "schema-changes.inventory",
 
                 "value.converter": "io.confluent.connect.protobuf.ProtobufConverter",
                 "value.converter.schema.registry.url": "http://schema-registry:8081",
                 "value.converter.auto.register.schemas": "false",
                 "value.converter.connect.meta.data": "false",
                 "value.converter.use.latest.version": "true",
-                "value.converter.latest.compatibility.strict": "false"
+                "value.converter.latest.compatibility.strict": "false",
+                "value.converter.optional.for.nullables":"true",
+
+                "include.schema.changes": "false",
+
+                "transforms": "Reroute,unwrap,extractKeyfromStruct",
+
+                "transforms.Reroute.type": "org.apache.kafka.connect.transforms.RegexRouter",
+                "transforms.Reroute.regex": "(.*)customers(.*)",
+                "transforms.Reroute.replacement": "customers_protobuf",
+
+                "transforms.unwrap.type": "io.debezium.transforms.ExtractNewRecordState",
+                "transforms.unwrap.drop.tombstones": "false",
+
+               "transforms.extractKeyfromStruct.type":"org.apache.kafka.connect.transforms.ValueToKey",
+               "transforms.extractKeyfromStruct.fields":"field_no_optional"
           }' \
-     http://localhost:8083/connectors/sqlserver-source/config | jq .
+     http://localhost:8083/connectors/debezium-sqlserver-source/config | jq .
 
 sleep 5
 
@@ -70,15 +86,15 @@ EOF
 log "Verifying topic customers_protobuf"
 timeout 60 docker exec connect kafka-protobuf-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic customers_protobuf --from-beginning --max-messages 5
 
-log "Creating JDBC SQL Server (with JTDS driver) sink connector"
+log "Creating JDBC SQL Server (with Microsoft driver) sink connector"
 curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
                "connector.class": "io.confluent.connect.jdbc.JdbcSinkConnector",
                 "tasks.max": "1",
-                "connection.url": "jdbc:jtds:sqlserver://sqlserver:1433",
-                "connection.user": "sa",
-                "connection.password": "Password!",
+               "connection.url": "jdbc:sqlserver://sqlserver:1433;databaseName=testDB;selectMethod=cursor",
+               "connection.user": "sa",
+               "connection.password": "Password!",
                 "topics": "customers_protobuf",
                 "auto.create": "true",
                 "auto.evolve": "true",
@@ -89,7 +105,16 @@ curl -X PUT \
                 "value.converter.connect.meta.data" : "false", 
                 "value.converter.use.latest.version" : "true", 
                 "value.converter.latest.compatibility.strict" : "false",
-                "quote.sql.identifiers": "always"
+               "batch.size": "10",
+               "auto.create": "true",
+               "auto.evolve": "true",
+               "quote.sql.identifiers": "always",
+
+               "insert.mode":"insert",
+               "transforms": "FlattenValue",
+               "transforms.FlattenValue.type": "org.apache.kafka.connect.transforms.Flatten$Value",
+               "transforms.Rename.type": "org.apache.kafka.connect.transforms.ReplaceField$Value",
+               "transforms.Rename.renames": "_field_first_optional_0.field_first_optional:field_first_optional,_field_second_optional_1.field_second_optional:field_second_optional,_field_third_optional_2.field_third_optional:field_third_optional"
           }' \
      http://localhost:8083/connectors/sqlserver-sink/config | jq .
 
@@ -105,6 +130,7 @@ sleep 5
 
 log "Show content of customers_protobuf table:"
 docker exec -i sqlserver /opt/mssql-tools/bin/sqlcmd -U sa -P Password! > /tmp/result.log  2>&1 <<-EOF
+USE testDB;
 select * from customers_protobuf
 GO
 EOF
