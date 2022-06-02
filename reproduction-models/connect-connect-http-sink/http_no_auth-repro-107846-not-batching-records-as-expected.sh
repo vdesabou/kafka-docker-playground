@@ -47,7 +47,10 @@ curl -X PUT \
                "http.api.url": "http://http-service-no-auth:8080/api/messages",
                "request.body.format": "json",
                "batch.json.as.array": "true",
-               "batch.max.size": "10"
+               "batch.max.size": "10",
+               "transforms": "dropMyHeader",
+               "transforms.dropMyHeader.type": "org.apache.kafka.connect.transforms.DropHeaders",
+               "transforms.dropMyHeader.headers": "MyHeader"
           }' \
      http://localhost:8083/connectors/http-sink/config | jq .
 

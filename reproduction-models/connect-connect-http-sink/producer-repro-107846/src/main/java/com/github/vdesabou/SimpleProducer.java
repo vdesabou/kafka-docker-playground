@@ -95,7 +95,7 @@ public class SimpleProducer {
 
                 ProducerRecord<Long, Customer> record = new ProducerRecord<>(topicName, id, customer);
                 String headerValue = "value" + id;
-                record.headers().add(new RecordHeader("key",headerValue.getBytes()));
+                record.headers().add(new RecordHeader("MyHeader",headerValue.getBytes()));
                 logger.info("Sending Key = {}, Value = {}", record.key(), record.value());
                 producer.send(record, (recordMetadata, exception) -> sendCallback(record, recordMetadata, exception));
                 id++;
