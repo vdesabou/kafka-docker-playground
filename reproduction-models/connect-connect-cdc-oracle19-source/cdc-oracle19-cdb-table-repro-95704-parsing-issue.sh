@@ -201,10 +201,20 @@ EOF
 
 log "Verifying topic ORCLCDB.C__MYUSER.CUSTOMERS"
 set +e
-timeout 60 docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic ORCLCDB.C__MYUSER.CUSTOMERS --from-beginning --max-messages 1
+timeout 60 docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic ORCLCDB.C__MYUSER.CUSTOMERS --from-beginning --max-messages 2
 set -e
 
-log "Verifying topic redo-log-topic: there should be 9 records"
-timeout 60 docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic redo-log-topic --from-beginning --max-messages 9
+# {"ID":42,"FIRST_NAME":{"string":"Rica3"},"LAST_NAME":{"string":"Blaisde32"},"EMAIL":{"string":"rblaisdell30@rambler.ru\\"},"GENDER":{"string":"Female3"},"CLUB_STATUS":{"string":"bronze3"},"CREATE_TS":{"long":1653918867084},"UPDATE_TS":{"long":1653918867000},"table":{"string":"ORCLCDB.C##MYUSER.CUSTOMERS"},"scn":{"string":"2159118"},"op_type":{"string":"I"},"op_ts":{"string":"1653918867000"},"current_ts":{"string":"1653918867742"},"row_id":{"string":"AAAAAAAAAAAAAAAAAA"},"username":{"string":"C##MYUSER"}}
 
-log "🚚 If you're planning to inject more data, have a look at https://github.com/vdesabou/kafka-docker-playground/blob/master/connect/connect-cdc-oracle19-source/README.md#note-on-redologrowfetchsize"
+log "Verifying topic redo-log-topic: there should be 3 records"
+timeout 60 docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic redo-log-topic --from-beginning --max-messages 3
+
+# {"SCN":{"long":2159118},"START_SCN":null,"COMMIT_SCN":null,"TIMESTAMP":{"long":1653918867000},"START_TIMESTAMP":null,"COMMIT_TIMESTAMP":null,"XIDUSN":{"long":4},"XIDSLT":{"long":21},"XIDSQN":{"long":828},"XID":{"bytes":"\u0004\u0000\u0015\u0000<\u0003\u0000\u0000"},"PXIDUSN":{"long":4},"PXIDSLT":{"long":21},"PXIDSQN":{"long":828},"PXID":{"bytes":"\u0004\u0000\u0015\u0000<\u0003\u0000\u0000"},"TX_NAME":null,"OPERATION":{"string":"UPDATE"},"OPERATION_CODE":{"int":3},"ROLLBACK":{"boolean":false},"SEG_OWNER":{"string":"C##MYUSER"},"SEG_NAME":{"string":"CUSTOMERS"},"TABLE_NAME":{"string":"CUSTOMERS"},"SEG_TYPE":{"int":2},"SEG_TYPE_NAME":{"string":"TABLE"},"TABLE_SPACE":{"string":"USERS"},"ROW_ID":{"string":"AAAR32AAHAAAAFeAAB"},"USERNAME":{"string":"C##MYUSER"},"OS_USERNAME":{"string":"oracle"},"MACHINE_NAME":{"string":"oracle"},"AUDIT_SESSIONID":{"long":120033},"SESSION_NUM":{"long":505},"SERIAL_NUM":{"long":63168},"SESSION_INFO":{"string":"login_username=C##MYUSER client_info= OS_username=oracle Machine_name=oracle OS_terminal=pts/0 OS_process_id=536 OS_program_name=sqlplus@oracle (TNS V1-V3)"},"THREAD_NUM":{"long":1},"SEQUENCE_NUM":{"long":2},"RBASQN":{"long":7},"RBABLK":{"long":98638},"RBABYTE":{"long":464},"UBAFIL":{"long":4},"UBABLK":{"long":16817403},"UBAREC":{"long":14},"UBASQN":{"long":189},"ABS_FILE_NUM":{"long":7},"REL_FILE_NUM":{"long":7},"DATA_BLK_NUM":{"long":350},"DATA_OBJ_NUM":{"long":73206},"DATA_OBJV_NUM":{"long":1},"DATA_OBJD_NUM":{"long":73206},"SQL_REDO":{"string":"update \"C##MYUSER\".\"CUSTOMERS\" set \"COMMENTS\" = HEXTORAW('556e6976657273616c206f7074696d616c2068696572617263687933') where \"ID\" = '42' and \"FIRST_NAME\" = 'Rica3' and \"LAST_NAME\" = 'Blaisde32' and \"EMAIL\" = 'rblaisdell30@rambler.ru\\' and \"GENDER\" = 'Female3' and \"CLUB_STATUS\" = 'bronze3' and \"CREATE_TS\" = TO_TIMESTAMP('2022-05-30 13:54:27.084') and \"UPDATE_TS\" = TO_TIMESTAMP('2022-05-30 13:54:27.000') and ROWID = 'AAAR32AAHAAAAFeAAB';"},"SQL_UNDO":{"string":"update \"C##MYUSER\".\"CUSTOMERS\" set \"COMMENTS\" = NULL where \"ID\" = '42' and \"FIRST_NAME\" = 'Rica3' and \"LAST_NAME\" = 'Blaisde32' and \"EMAIL\" = 'rblaisdell30@rambler.ru\\' and \"GENDER\" = 'Female3' and \"CLUB_STATUS\" = 'bronze3' and \"CREATE_TS\" = TO_TIMESTAMP('2022-05-30 13:54:27.084') and \"UPDATE_TS\" = TO_TIMESTAMP('2022-05-30 13:54:27.000') and ROWID = 'AAAR32AAHAAAAFeAAB';"},"RS_ID":{"string":" 0x000007.0001814e.01d0 "},"SSN":{"long":0},"CSF":{"boolean":false},"INFO":null,"STATUS":{"int":0},"REDO_VALUE":{"long":16},"UNDO_VALUE":{"long":17},"SAFE_RESUME_SCN":null,"CSCN":{"long":2159119},"OBJECT_ID":null,"EDITION_NAME":null,"CLIENT_ID":null,"SRC_CON_NAME":{"string":"CDB$ROOT"},"SRC_CON_ID":{"long":1},"SRC_CON_UID":{"long":1},"SRC_CON_DBID":{"long":0},"SRC_CON_GUID":null,"CON_ID":{"boolean":false}}
+
+log "Verifying topic CUSTOMERS-COMMENTS-testing-new"
+set +e
+timeout 60 docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic CUSTOMERS-COMMENTS-testing-new --from-beginning --max-messages 2
+set -e
+
+# "Universal optimal hierarchy"
+# "Universal optimal hierarchy3"
