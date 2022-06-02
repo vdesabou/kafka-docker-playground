@@ -80,29 +80,31 @@ curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
                "connector.class": "io.confluent.connect.jdbc.JdbcSourceConnector",
-                "tasks.max": "1",
-                "connection.url": "jdbc:sqlserver://sqlserver:1433;databaseName=testDB;selectMethod=cursor",
-                "connection.user": "sa",
-                "connection.password": "Password!",
-                "mode": "bulk",
+               "tasks.max": "1",
+               "connection.url": "jdbc:sqlserver://sqlserver:1433;databaseName=testDB;selectMethod=cursor",
+               "connection.user": "sa",
+               "connection.password": "Password!",
+               "mode": "bulk",
 
-                "query": "select * from customers",
-                "poll.interval.ms": "5000",
-                "batch.max.rows": "1000",
+               "query": "select * from customers",
+               "poll.interval.ms": "5000",
+               "batch.max.rows": "1000",
 
-                "topic.prefix": "customers_protobuf",
-                "errors.retry.timeout": "3600000",
-                "errors.retry.delay.max.ms": "60000",
-                "errors.log.enable": "true",
-                "errors.log.include.messages": "true",
+               "topic.prefix": "customers_protobuf",
+               "errors.retry.timeout": "3600000",
+               "errors.retry.delay.max.ms": "60000",
+               "errors.log.enable": "true",
+               "errors.log.include.messages": "true",
 
 
-                "value.converter": "io.confluent.connect.protobuf.ProtobufConverter",
-                "value.converter.schema.registry.url": "http://schema-registry:8081",
-                "value.converter.auto.register.schemas": "false",
-                "value.converter.connect.meta.data": "false",
-                "value.converter.use.latest.version": "true",
-                "value.converter.latest.compatibility.strict": "false"
+               "value.converter": "io.confluent.connect.protobuf.ProtobufConverter",
+               "value.converter.schema.registry.url": "http://schema-registry:8081",
+               "value.converter.auto.register.schemas": "false",
+               "value.converter.connect.meta.data": "false",
+               "value.converter.use.latest.version": "true",
+               "value.converter.latest.compatibility.strict": "false",
+               "transforms.flatten.type": "org.apache.kafka.connect.transforms.Flatten$Value",
+               "transforms.flatten.delimiter": "."
           }' \
      http://localhost:8083/connectors/sqlserver-source/config | jq .
 
@@ -122,24 +124,25 @@ curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
                "connector.class": "io.confluent.connect.jdbc.JdbcSinkConnector",
-                "tasks.max": "1",
+               "tasks.max": "1",
                "connection.url": "jdbc:sqlserver://sqlserver:1433;databaseName=testDB;selectMethod=cursor",
                "connection.user": "sa",
                "connection.password": "Password!",
-                "topics": "customers_protobuf",
-                "auto.create": "true",
-                "auto.evolve": "true",
-                "value.converter": "io.confluent.connect.protobuf.ProtobufConverter",
-                "value.converter.schema.registry.url": "http://schema-registry:8081",
-                "value.converter.auto.register.schemas" : "false", 
-                "value.converter.schemas.enable" : "false", 
-                "value.converter.connect.meta.data" : "false", 
-                "value.converter.use.latest.version" : "true", 
-                "value.converter.latest.compatibility.strict" : "false",
+               "topics": "customers_protobuf",
+               "auto.create": "true",
+               "auto.evolve": "true",
+               "value.converter": "io.confluent.connect.protobuf.ProtobufConverter",
+               "value.converter.schema.registry.url": "http://schema-registry:8081",
+               "value.converter.auto.register.schemas" : "false", 
+               "value.converter.schemas.enable" : "false", 
+               "value.converter.connect.meta.data" : "false", 
+               "value.converter.use.latest.version" : "true", 
+               "value.converter.latest.compatibility.strict" : "false",
                "batch.size": "10",
                "auto.create": "true",
                "auto.evolve": "true",
                "quote.sql.identifiers": "always",
+               "table.name.format": "customers_protobuf_sink",
 
                "insert.mode":"insert",
                "transforms": "FlattenValue",
@@ -150,7 +153,7 @@ curl -X PUT \
      http://localhost:8083/connectors/sqlserver-sink/config | jq .
 
 
-# [2022-04-19 09:38:38,048] INFO [sqlserver-sink|task-0] Creating table with sql: CREATE TABLE "dbo"."customers_protobuf" (
+# [2022-06-02 14:09:43,219] INFO [sqlserver-sink|task-0] Creating table with sql: CREATE TABLE "dbo"."customers_protobuf_sink" (
 # "field_no_optional" int NULL,
 # "field_first_optional" varchar(max) NULL,
 # "field_second_optional" int NULL,
@@ -159,10 +162,10 @@ curl -X PUT \
 
 sleep 5
 
-log "Show content of customers_protobuf table:"
+log "Show content of customers_protobuf_sink table:"
 docker exec -i sqlserver /opt/mssql-tools/bin/sqlcmd -U sa -P Password! > /tmp/result.log  2>&1 <<-EOF
 USE testDB;
-select * from customers_protobuf
+select * from customers_protobuf_sink
 GO
 EOF
 cat /tmp/result.log
