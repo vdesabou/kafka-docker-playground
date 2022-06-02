@@ -224,6 +224,19 @@ By default, [`control-center`](https://github.com/vdesabou/kafka-docker-playgrou
 export DISABLE_CONTROL_CENTER=true
 ```
 
+## 🟢 Enabling multiple brokers
+
+By default, there is only one kafka node enabled. To enable a three node count, we simply need to add an environment variable. You can enable this by setting environment variable `ENABLE_KAFKA_NODES`:
+
+*Example:*
+
+```bash
+export ENABLE_KAFKA_NODES=true
+```
+
+* broker: `10000`
+
+
 ## 🟢 Enabling JMX Grafana
 
 By default, Grafana dashboard using JMX metrics is not started for every test. You can enable this by setting environment variable `ENABLE_JMX_GRAFANA`:
