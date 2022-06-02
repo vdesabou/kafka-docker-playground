@@ -2,6 +2,29 @@
 version: '3.5'
 services:
 
+  producer-repro-107846:
+    build:
+      context: ../../reproduction-models/connect-connect-http-sink/producer-repro-107846/
+    hostname: producer
+    container_name: producer-repro-107846
+    environment:
+      KAFKA_BOOTSTRAP_SERVERS: broker:9092
+      TOPIC: "customer_avro"
+      REPLICATION_FACTOR: 1
+      NUMBER_OF_PARTITIONS: 1
+      NB_MESSAGES: 10 # -1 for MAX_VALUE
+      MESSAGE_BACKOFF: 1000 # Frequency of message injection
+      KAFKA_ACKS: "all" # default: "1"
+      KAFKA_REQUEST_TIMEOUT_MS: 20000
+      KAFKA_RETRY_BACKOFF_MS: 500
+      KAFKA_CLIENT_ID: "my-java-producer-repro-107846"
+      KAFKA_SCHEMA_REGISTRY_URL: "http://schema-registry:8081"
+      JAVA_OPTS: 
+    volumes:
+      - ../../environment/plaintext/jmx-exporter:/usr/share/jmx_exporter/
+
+
+
   connect:
     volumes:
       - ../../connect/connect-http-sink/security:/tmp
