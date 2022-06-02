@@ -66,6 +66,9 @@ sleep 10
 timeout 60 docker exec connect kafka-console-consumer --bootstrap-server broker:9092 --topic gcs_topic --from-beginning --max-messages 1
 # {"xpath":"href=\\#day"}
 
+docker exec kafkacat kafkacat -b broker:9092 -t gcs_topic -o 0 -p 0 -c 1 -C
+# {"xpath": "href=\\#day"}
+
 log "Listing objects of in GCS"
 docker run -i --volumes-from gcloud-config google/cloud-sdk:latest gsutil ls gs://$GCS_BUCKET_NAME/topics/gcs_topic/partition=0/
 
