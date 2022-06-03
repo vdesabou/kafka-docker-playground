@@ -23,6 +23,9 @@ import java.util.stream.Collectors;
 import com.github.vdesabou.CustomerImpl;
 import com.github.vdesabou.CustomerImpl.Customer;
 
+import com.github.vdesabou.OptionalTestImpl;
+import com.github.vdesabou.OptionalTestImpl.OptionalTest;
+
 import uk.co.jemos.podam.api.PodamFactoryImpl;
 import uk.co.jemos.podam.api.PodamFactory;
 import org.jeasy.random.EasyRandom;
@@ -81,19 +84,19 @@ public class SimpleProducer {
             long id = 0;
             while (id < nbMessages) {
 
-                // This will use constructor with minimum arguments and
-                // then setters to populate POJO
-                // Customer customer = factory.manufacturePojo(Customer.class);
-
-                Customer customer = Customer.newBuilder()
+                OptionalTest optionalTest = OptionalTest.newBuilder()
                 .setFieldNoOptional((int)id)
                 .setFieldFirstOptional("first field optional "+id)
                 .setFieldSecondOptional((int)id)
                 .setFieldThirdOptional("third field optional "+id)
                 .build();
 
-                //Customer customer = generator.nextObject(Customer.class);
-
+                Customer customer = Customer.newBuilder()
+                .setFirstName("firstName")
+                .setLastName("lastName")
+                .setOptionalTest(optionalTest)
+                .build();
+                
                 ProducerRecord<Long, Customer> record = new ProducerRecord<>(topicName, id, customer);
                 logger.info("Sending Key = {}, Value = {}", record.key(), record.value());
                 producer.send(record, (recordMetadata, exception) -> sendCallback(record, recordMetadata, exception));

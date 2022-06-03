@@ -1,0 +1,15 @@
+syntax = "proto3";
+
+package com.github.vdesabou;
+option java_outer_classname = "OptionalTestImpl";
+
+message OptionalTest {
+    //doc entry
+    int32 field_no_optional = 1;
+    //doc entry
+    optional string field_first_optional = 2;
+    //doc entry
+    optional int32 field_second_optional = 3;
+    //doc entry
+    optional string field_third_optional = 4;
+}
