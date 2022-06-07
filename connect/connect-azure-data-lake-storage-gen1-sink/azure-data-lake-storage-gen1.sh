@@ -54,7 +54,7 @@ az group create \
     --location $AZURE_REGION
 
 log "Registering active directory App $AZURE_AD_APP_NAME"
-AZURE_DATALAKE_CLIENT_ID=$(az ad app create --display-name "$AZURE_AD_APP_NAME" --is-fallback-public-client false --sign-in-audience PersonalMicrosoftAccount --query appId -o tsv)
+AZURE_DATALAKE_CLIENT_ID=$(az ad app create --display-name "$AZURE_AD_APP_NAME" --is-fallback-public-client false --sign-in-audience AzureADandPersonalMicrosoftAccount --query appId -o tsv)
 AZURE_DATALAKE_CLIENT_PASSWORD=$(az ad app credential reset --id $AZURE_DATALAKE_CLIENT_ID | jq -r '.password')
 
 log "Creating Service Principal associated to the App"

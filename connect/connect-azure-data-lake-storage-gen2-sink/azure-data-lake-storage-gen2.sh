@@ -57,7 +57,7 @@ az group create \
     --location $AZURE_REGION
 
 log "Registering active directory App $AZURE_AD_APP_NAME"
-AZURE_DATALAKE_CLIENT_ID=$(az ad app create --display-name "$AZURE_AD_APP_NAME" --is-fallback-public-client false --sign-in-audience PersonalMicrosoftAccount --query appId -o tsv)
+AZURE_DATALAKE_CLIENT_ID=$(az ad app create --display-name "$AZURE_AD_APP_NAME" --is-fallback-public-client false --sign-in-audience AzureADandPersonalMicrosoftAccount --query appId -o tsv)
 AZURE_DATALAKE_CLIENT_PASSWORD=$(az ad app credential reset --id $AZURE_DATALAKE_CLIENT_ID | jq -r '.password')
 
 log "Creating Service Principal associated to the App"
@@ -91,7 +91,7 @@ curl -X PUT \
                     "topics": "datalake_topic",
                     "flush.size": "3",
                     "azure.datalake.gen2.client.id": "'"$AZURE_DATALAKE_CLIENT_ID"'",
-                    "azure.datalake.gen2.client.key": "'"$AZURE_DATALAKE_CLIENT_PASSWORD"'",,
+                    "azure.datalake.gen2.client.key": "'"$AZURE_DATALAKE_CLIENT_PASSWORD"'",
                     "azure.datalake.gen2.account.name": "'"$AZURE_DATALAKE_ACCOUNT_NAME"'",
                     "azure.datalake.gen2.token.endpoint": "'"$AZURE_DATALAKE_TOKEN_ENDPOINT"'",
                     "format.class": "io.confluent.connect.azure.storage.format.avro.AvroFormat",
