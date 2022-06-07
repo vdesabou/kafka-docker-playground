@@ -58,7 +58,9 @@ timeout 60 docker exec connect kafka-console-consumer --bootstrap-server broker:
 
 log "Verify data with kafkacat"
 docker exec kafkacat kafkacat -b broker:9092 -t a-topic-1 -o 0 -p 0 -c 1 -C -f '\nKey (%K bytes): %k\t\nValue (%S bytes): %s\nTimestamp: %T\tPartition: %p\tOffset: %o\n--\n'
-# {"xpath": "href=\\#day"}
+# Key (-1 bytes): 
+# Value (23 bytes): {"xpath":"href=\\#day"}
+# Timestamp: 1654588173008        Partition: 0    Offset: 0
 
 
 
@@ -89,11 +91,12 @@ docker exec connect cat /tmp/output.json
 
 log "Verify data with kafka-console-consumer"
 timeout 60 docker exec connect kafka-console-consumer --bootstrap-server broker:9092 --topic a-topic-2 --from-beginning --max-messages 1
-# {"xpath":"href=\\#day"}
+# {"xpath":"href=\\\\#day"}
 
 log "Verify data with kafkacat"
-docker exec kafkacat kafkacat -b broker:9092 -t a-topic-2 -o 0 -p 0 -c 1 -C -f '\nKey (%K bytes): %k\t\nValue (%S bytes): %s\nTimestamp: %T\tPartition: %p\tOffset: %o\n--\n'
-# {"xpath": "href=\\#day"}
+# Key (-1 bytes): 
+# Value (25 bytes): {"xpath":"href=\\\\#day"}
+# Timestamp: 1654588876130        Partition: 0    Offset: 0
 
 
 log "Sending messages to topic a-topic-3"
@@ -123,8 +126,56 @@ docker exec connect cat /tmp/output.json
 
 log "Verify data with kafka-console-consumer"
 timeout 60 docker exec connect kafka-console-consumer --bootstrap-server broker:9092 --topic a-topic-3 --from-beginning --max-messages 1
-# {"xpath":"href=\\#day"}
+# {"xpath":"href=\\\\#day}
 
 log "Verify data with kafkacat"
 docker exec kafkacat kafkacat -b broker:9092 -t a-topic-3 -o 0 -p 0 -c 1 -C -f '\nKey (%K bytes): %k\t\nValue (%S bytes): %s\nTimestamp: %T\tPartition: %p\tOffset: %o\n--\n'
-# {"xpath": "href=\\#day"}
+# Key (-1 bytes): 
+# Value (24 bytes): {"xpath":"href=\\\\#day}
+# Timestamp: 1654588889732        Partition: 0    Offset: 0
+
+# [2022-06-07 08:01:33,167] ERROR [a-topic-3-sink|task-0] WorkerSinkTask{id=a-topic-3-sink-0} Task threw an uncaught and unrecoverable exception. Task is being killed and will not recover until manually restarted (org.apache.kafka.connect.runtime.WorkerTask:206)
+# org.apache.kafka.connect.errors.ConnectException: Tolerance exceeded in error handler
+#         at org.apache.kafka.connect.runtime.errors.RetryWithToleranceOperator.execAndHandleError(RetryWithToleranceOperator.java:220)
+#         at org.apache.kafka.connect.runtime.errors.RetryWithToleranceOperator.execute(RetryWithToleranceOperator.java:142)
+#         at org.apache.kafka.connect.runtime.WorkerSinkTask.convertAndTransformRecord(WorkerSinkTask.java:519)
+#         at org.apache.kafka.connect.runtime.WorkerSinkTask.convertMessages(WorkerSinkTask.java:494)
+#         at org.apache.kafka.connect.runtime.WorkerSinkTask.poll(WorkerSinkTask.java:333)
+#         at org.apache.kafka.connect.runtime.WorkerSinkTask.iteration(WorkerSinkTask.java:235)
+#         at org.apache.kafka.connect.runtime.WorkerSinkTask.execute(WorkerSinkTask.java:204)
+#         at org.apache.kafka.connect.runtime.WorkerTask.doRun(WorkerTask.java:199)
+#         at org.apache.kafka.connect.runtime.WorkerTask.run(WorkerTask.java:254)
+#         at java.base/java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:515)
+#         at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:264)
+#         at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1128)
+#         at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:628)
+#         at java.base/java.lang.Thread.run(Thread.java:829)
+# Caused by: org.apache.kafka.connect.errors.DataException: Converting byte[] to Kafka Connect data failed due to serialization error: 
+#         at org.apache.kafka.connect.json.JsonConverter.toConnectData(JsonConverter.java:324)
+#         at org.apache.kafka.connect.storage.Converter.toConnectData(Converter.java:87)
+#         at org.apache.kafka.connect.runtime.WorkerSinkTask.convertValue(WorkerSinkTask.java:563)
+#         at org.apache.kafka.connect.runtime.WorkerSinkTask.lambda$convertAndTransformRecord$5(WorkerSinkTask.java:519)
+#         at org.apache.kafka.connect.runtime.errors.RetryWithToleranceOperator.execAndRetry(RetryWithToleranceOperator.java:166)
+#         at org.apache.kafka.connect.runtime.errors.RetryWithToleranceOperator.execAndHandleError(RetryWithToleranceOperator.java:200)
+#         ... 13 more
+# Caused by: org.apache.kafka.common.errors.SerializationException: com.fasterxml.jackson.core.io.JsonEOFException: Unexpected end-of-input in VALUE_STRING
+#  at [Source: (byte[])"{"xpath":"href=\\\\#day}"; line: 1, column: 25]
+#         at org.apache.kafka.connect.json.JsonDeserializer.deserialize(JsonDeserializer.java:66)
+#         at org.apache.kafka.connect.json.JsonConverter.toConnectData(JsonConverter.java:322)
+#         ... 18 more
+# Caused by: com.fasterxml.jackson.core.io.JsonEOFException: Unexpected end-of-input in VALUE_STRING
+#  at [Source: (byte[])"{"xpath":"href=\\\\#day}"; line: 1, column: 25]
+#         at com.fasterxml.jackson.core.base.ParserMinimalBase._reportInvalidEOF(ParserMinimalBase.java:662)
+#         at com.fasterxml.jackson.core.base.ParserMinimalBase._reportInvalidEOF(ParserMinimalBase.java:639)
+#         at com.fasterxml.jackson.core.json.UTF8StreamJsonParser._loadMoreGuaranteed(UTF8StreamJsonParser.java:2406)
+#         at com.fasterxml.jackson.core.json.UTF8StreamJsonParser._finishString2(UTF8StreamJsonParser.java:2491)
+#         at com.fasterxml.jackson.core.json.UTF8StreamJsonParser._finishAndReturnString(UTF8StreamJsonParser.java:2471)
+#         at com.fasterxml.jackson.core.json.UTF8StreamJsonParser.getText(UTF8StreamJsonParser.java:302)
+#         at com.fasterxml.jackson.databind.deser.std.BaseNodeDeserializer.deserializeObject(JsonNodeDeserializer.java:286)
+#         at com.fasterxml.jackson.databind.deser.std.JsonNodeDeserializer.deserialize(JsonNodeDeserializer.java:69)
+#         at com.fasterxml.jackson.databind.deser.std.JsonNodeDeserializer.deserialize(JsonNodeDeserializer.java:16)
+#         at com.fasterxml.jackson.databind.deser.DefaultDeserializationContext.readRootValue(DefaultDeserializationContext.java:322)
+#         at com.fasterxml.jackson.databind.ObjectMapper._readTreeAndClose(ObjectMapper.java:4635)
+#         at com.fasterxml.jackson.databind.ObjectMapper.readTree(ObjectMapper.java:3056)
+#         at org.apache.kafka.connect.json.JsonDeserializer.deserialize(JsonDeserializer.java:64)
+#         ... 19 more
