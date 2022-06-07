@@ -1,0 +1,20 @@
+{
+    "fields": [
+        {
+            "default": null,
+            "name": "MyDecimal",
+            "type": [
+                "null",
+                {
+                    "logicalType": "decimal",
+                    "precision": 15,
+                    "scale": 2,
+                    "type": "bytes"
+                }
+            ]
+        }
+    ],
+    "namespace": "com.github.vdesabou",
+    "name": "Customer",
+    "type": "record"
+}
