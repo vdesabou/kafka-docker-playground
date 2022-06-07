@@ -81,7 +81,7 @@ curl -X PUT \
                     "topics": "datalake_topic",
                     "flush.size": "3",
                     "azure.datalake.client.id": "'"$AZURE_DATALAKE_CLIENT_ID"'",
-                    "azure.datalake.client.key": "mypassword",
+                    "azure.datalake.client.key": "'"$AZURE_DATALAKE_CLIENT_PASSWORD"'",
                     "azure.datalake.account.name": "'"$AZURE_DATALAKE_ACCOUNT_NAME"'",
                     "azure.datalake.token.endpoint": "'"$AZURE_DATALAKE_TOKEN_ENDPOINT"'",
                     "format.class": "io.confluent.connect.azure.storage.format.avro.AvroFormat",
