@@ -42,7 +42,7 @@ if [ -z "$ENABLE_KAFKA_NODES" ]
 then
   profile_kafka_nodes_command=""
 else
-  log "📊 Multi broker nodes enabled"
+  log "3️⃣  Multi broker nodes enabled"
   profile_kafka_nodes_command="--profile kafka_nodes"
 fi
 
