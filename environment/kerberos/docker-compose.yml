@@ -25,7 +25,6 @@ services:
     hostname: client.kerberos-demo.local
     depends_on:
       - broker
-      - broker2
       - kdc
     volumes:
       - secret:/var/lib/secret
