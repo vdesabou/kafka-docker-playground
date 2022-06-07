@@ -99,6 +99,8 @@ services:
     depends_on:
       - zookeeper
       - kdc
+    profiles:
+      - "kafka_nodes"
     # Required to wait for the keytab to get generated
     restart: on-failure
     volumes:
@@ -149,11 +151,69 @@ services:
         principal=\"admin/for-kafka@TEST.CONFLUENT.IO\";"
       CONFLUENT_METRICS_ENABLE: 'true'
 
+  broker3:
+    image: ${CP_KAFKA_IMAGE}:${TAG}
+    hostname: broker3.kerberos-demo.local
+    container_name: broker3
+    depends_on:
+      - zookeeper
+      - kdc
+    profiles:
+      - "kafka_nodes"
+    # Required to wait for the keytab to get generated
+    restart: on-failure
+    volumes:
+      - secret:/var/lib/secret
+      - ../../environment/kerberos/kdc/krb5.conf:/etc/krb5.conf
+      - ../../environment/kerberos/kafka/broker3.sasl.jaas.config:/etc/kafka/broker.sasl.jaas.config
+    environment:
+      KAFKA_BROKER_ID: 3
+      KAFKA_ZOOKEEPER_CONNECT: 'zookeeper.kerberos-demo.local:2181'
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: SASL_PLAINTEXT:SASL_PLAINTEXT
+      KAFKA_LISTENERS: SASL_PLAINTEXT://:9092
+      KAFKA_ADVERTISED_LISTENERS: SASL_PLAINTEXT://broker3.kerberos-demo.local:9092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      # for 5.4.x:
+      KAFKA_CONFLUENT_LICENSE_TOPIC_REPLICATION_FACTOR: 1
+      # for 6.0.0
+      KAFKA_CONFLUENT_BALANCER_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      CONFLUENT_SUPPORT_CUSTOMER_ID: 'anonymous'
+      # Kerberos / GSSAPI Authentication mechanism
+      KAFKA_SASL_ENABLED_MECHANISMS: GSSAPI
+      KAFKA_SASL_KERBEROS_SERVICE_NAME: kafka
+      # Configure replication to require Kerberos:
+      KAFKA_SASL_MECHANISM_INTER_BROKER_PROTOCOL: GSSAPI
+      KAFKA_INTER_BROKER_LISTENER_NAME: SASL_PLAINTEXT
+      # Authorization config:
+      KAFKA_AUTHORIZER_CLASS_NAME: $KAFKA_AUTHORIZER_CLASS_NAME
+      KAFKA_ZOOKEEPER_SET_ACL: "true"
+      KAFKA_ALLOW_EVERYONE_IF_NO_ACL_FOUND: "false"
+      KAFKA_LOG4J_LOGGERS: "kafka.authorizer.logger=INFO"
+      KAFKA_SUPER_USERS: User:admin;User:kafka;User:schemaregistry;User:connect;User:controlcenter;User:ksqldb
+      KAFKA_OPTS: -Djava.security.auth.login.config=/etc/kafka/broker.sasl.jaas.config
+                  # -Djdk.security.allowNonCaAnchor=true
+                  # -Dsun.security.krb5.disableReferrals=true
+
+      # Confluent Metrics Reporter for Control Center Cluster Monitoring
+      KAFKA_METRIC_REPORTERS: io.confluent.metrics.reporter.ConfluentMetricsReporter
+      CONFLUENT_METRICS_REPORTER_BOOTSTRAP_SERVERS: broker3:9092
+      CONFLUENT_METRICS_REPORTER_TOPIC_REPLICAS: 1
+      CONFLUENT_METRICS_REPORTER_SASL_MECHANISM: GSSAPI
+      CONFLUENT_METRICS_REPORTER_SECURITY_PROTOCOL: SASL_PLAINTEXT
+      CONFLUENT_METRICS_REPORTER_SASL_KERBEROS_SERVICE_NAME: kafka
+      CONFLUENT_METRICS_REPORTER_SASL_JAAS_CONFIG: "com.sun.security.auth.module.Krb5LoginModule required \
+        useKeyTab=true \
+        storeKey=true \
+        keyTab=\"/var/lib/secret/kafka-admin.key\" \
+        principal=\"admin/for-kafka@TEST.CONFLUENT.IO\";"
+      CONFLUENT_METRICS_ENABLE: 'true'
+
   connect:
     depends_on:
       - zookeeper
       - broker
-      - broker2
       - schema-registry
     # Required to wait for the keytab to get generated
     restart: on-failure
@@ -250,13 +310,12 @@ services:
     depends_on:
       - zookeeper
       - broker
-      - broker2
       - connect
     volumes:
       - secret:/var/lib/secret
       - ../../environment/kerberos/kdc/krb5.conf:/etc/krb5.conf
     environment:
-      CONTROL_CENTER_BOOTSTRAP_SERVERS: "broker:9092,broker2:9092"
+      CONTROL_CENTER_BOOTSTRAP_SERVERS: "broker:9092"
       CONTROL_CENTER_STREAMS_SECURITY_PROTOCOL: SASL_PLAINTEXT
       CONTROL_CENTER_STREAMS_SASL_JAAS_CONFIG: "com.sun.security.auth.module.Krb5LoginModule required \
         useKeyTab=true \

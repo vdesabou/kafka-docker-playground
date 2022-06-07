@@ -47,6 +47,8 @@ services:
     container_name: broker2
     depends_on:
       - zookeeper
+    profiles:
+      - "kafka_nodes"
     volumes:
       - ../../environment/2way-ssl/security:/etc/kafka/secrets
     environment:
@@ -86,11 +88,57 @@ services:
       KAFKA_SSL_PRINCIPAL_MAPPING_RULES: RULE:^CN=(.*?),OU=TEST.*$$/$$1/,DEFAULT
       # KAFKA_OPTS: -Djavax.net.debug=all
 
+  broker3:
+    image: ${CP_KAFKA_IMAGE}:${TAG}
+    hostname: broker3
+    container_name: broker3
+    depends_on:
+      - zookeeper
+    profiles:
+      - "kafka_nodes"
+    volumes:
+      - ../../environment/2way-ssl/security:/etc/kafka/secrets
+    environment:
+      KAFKA_ZOOKEEPER_CONNECT: "zookeeper:2181"
+      KAFKA_INTER_BROKER_LISTENER_NAME: SSL
+      KAFKA_LISTENERS: SSL://:9092
+      KAFKA_ADVERTISED_LISTENERS: SSL://broker3:9092
+      KAFKA_METRIC_REPORTERS: "io.confluent.metrics.reporter.ConfluentMetricsReporter"
+      KAFKA_BROKER_ID: 3
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      CONFLUENT_METRICS_REPORTER_BOOTSTRAP_SERVERS: "broker3:9092"
+      CONFLUENT_METRICS_REPORTER_SECURITY_PROTOCOL: SSL
+      CONFLUENT_METRICS_REPORTER_SSL_TRUSTSTORE_LOCATION: /etc/kafka/secrets/kafka.client.truststore.jks
+      CONFLUENT_METRICS_REPORTER_SSL_TRUSTSTORE_PASSWORD: confluent
+      CONFLUENT_METRICS_REPORTER_SSL_KEYSTORE_LOCATION: /etc/kafka/secrets/kafka.client.keystore.jks
+      CONFLUENT_METRICS_REPORTER_SSL_KEYSTORE_PASSWORD: confluent
+      CONFLUENT_METRICS_REPORTER_SSL_KEY_PASSWORD: confluent
+      CONFLUENT_METRICS_REPORTER_TOPIC_REPLICAS: 1
+      CONFLUENT_METRICS_REPORTER_MAX_REQUEST_SIZE: 10485760
+      # To avoid race condition with control-center
+      # CONFLUENT_METRICS_REPORTER_TOPIC_CREATE: 'false'
+      CONFLUENT_METRICS_REPORTER_TOPIC_CREATE: 'true'
+      # for 5.4.x:
+      KAFKA_CONFLUENT_LICENSE_TOPIC_REPLICATION_FACTOR: 1
+      # for 6.0.0
+      KAFKA_CONFLUENT_BALANCER_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_SSL_KEYSTORE_FILENAME: kafka.broker3.keystore.jks
+      KAFKA_SSL_KEYSTORE_CREDENTIALS: broker3_keystore_creds
+      KAFKA_SSL_KEY_CREDENTIALS: broker3_sslkey_creds
+      KAFKA_SSL_TRUSTSTORE_FILENAME: kafka.broker3.truststore.jks
+      KAFKA_SSL_TRUSTSTORE_CREDENTIALS: broker3_truststore_creds
+      # enables 2-way authentication
+      KAFKA_SSL_CLIENT_AUTH: "required"
+      KAFKA_SSL_ENDPOINT_IDENTIFICATION_ALGORITHM: "HTTPS"
+      KAFKA_SSL_PRINCIPAL_MAPPING_RULES: RULE:^CN=(.*?),OU=TEST.*$$/$$1/,DEFAULT
+      # KAFKA_OPTS: -Djavax.net.debug=all
+
   schema-registry:
     depends_on:
       - zookeeper
       - broker
-      - broker2
     volumes:
       - ../../environment/2way-ssl/security:/etc/kafka/secrets
     environment:
@@ -117,7 +165,6 @@ services:
     depends_on:
       - zookeeper
       - broker
-      - broker2
       - schema-registry
     volumes:
         - ../../environment/2way-ssl/security:/etc/kafka/secrets
@@ -209,7 +256,6 @@ services:
     depends_on:
       - zookeeper
       - broker
-      - broker2
       - connect
     ports:
       - "9021:9021"
@@ -217,7 +263,7 @@ services:
     volumes:
       - ../../environment/2way-ssl/security:/etc/kafka/secrets
     environment:
-      CONTROL_CENTER_BOOTSTRAP_SERVERS: "broker:9092,broker2:9092"
+      CONTROL_CENTER_BOOTSTRAP_SERVERS: "broker:9092"
       CONTROL_CENTER_CONNECT_CLUSTER: "https://connect:8083"
       CONTROL_CENTER_CONNECT_MYCONNECT_CLUSTER: https://connect:8083
       CONTROL_CENTER_SCHEMA_REGISTRY_URL: "https://schema-registry:8081"
