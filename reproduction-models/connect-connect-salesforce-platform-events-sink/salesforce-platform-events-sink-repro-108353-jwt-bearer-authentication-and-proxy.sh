@@ -56,9 +56,15 @@ fi
 
 # https://medium.com/@tou_sfdx/salesforce-oauth-jwt-bearer-flow-cc70bfc626c2
 
+# manual steps:
+
+# 1/ generate crt
 # keytool -genkey -noprompt -alias salesforce-confluent -dname "CN=ca1.test.confluent.io/OU=TEST/O=CONFLUENT/L=PaloAlto/ST=Ca/C=US" -keystore salesforce-confluent.keystore.jks -keyalg RSA -storepass confluent -keypass confluent -deststoretype pkcs12
 # keytool -keystore salesforce-confluent.keystore.jks -alias salesforce-confluent -export -file salesforce-confluent.crt -storepass confluent -keypass confluent -trustcacerts -noprompt
 
+# 2/ Create connected app and provide crt
+
+# 3/ approve app by opening:
 # $SALESFORCE_INSTANCE/services/oauth2/authorize?response_type=token&client_id=$CONSUMER_KEY_APP_WITH_JWT&redirect_uri=https://test.salesforce.com/services/oauth2/success
 
 ${DIR}/../../environment/sasl-ssl/start.sh "${PWD}/docker-compose.plaintext.repro-108353-jwt-bearer-authentication-and-proxy.yml"
@@ -84,8 +90,9 @@ curl -X PUT \
                     "salesforce.username" : "'"$SALESFORCE_USERNAME"'",
                     "salesforce.password" : "'"$SALESFORCE_PASSWORD"'",
                     "salesforce.password.token" : "'"$SECURITY_TOKEN"'",
-                    "salesforce.consumer.key" : "'"$CONSUMER_KEY"'",
-                    "salesforce.consumer.secret" : "'"$CONSUMER_PASSWORD"'",
+                    "salesforce.consumer.key" : "'"$CONSUMER_KEY_APP_WITH_JWT"'",
+                    "salesforce.jwt.keystore.path": "/tmp/salesforce-confluent.keystore.jks",
+                    "salesforce.jwt.keystore.password": "confluent",
                     "salesforce.initial.start" : "all",
                     "key.converter": "org.apache.kafka.connect.json.JsonConverter",
                     "value.converter": "org.apache.kafka.connect.json.JsonConverter",
@@ -108,6 +115,15 @@ sleep 10
 log "Verify we have received the data in sfdc-platform-events topic"
 timeout 60 docker exec connect kafka-console-consumer -bootstrap-server broker:9092 --topic sfdc-platform-events --from-beginning --max-messages 2 --consumer.config /etc/kafka/secrets/client_without_interceptors.config
 
+# curl --request PUT \
+#   --cert ../../environment/sasl-ssl/security/connect.certificate.pem --key ../../environment/sasl-ssl/security/connect.key --tlsv1.2 --cacert ../../environment/sasl-ssl/security/snakeoil-ca-1.crt \
+#   --url https://localhost:8083/admin/loggers/io.confluent.salesforce \
+#   --header 'Accept: application/json' \
+#   --header 'Content-Type: application/json' \
+#   --data '{
+#  "level": "TRACE"
+# }'
+
 log "Creating Salesforce Platform Events Sink connector"
 curl -X PUT \
      -H "Content-Type: application/json" \
@@ -124,7 +140,6 @@ curl -X PUT \
                     "salesforce.password" : "'"$SALESFORCE_PASSWORD"'",
                     "salesforce.password.token" : "'"$SECURITY_TOKEN"'",
                     "salesforce.consumer.key" : "'"$CONSUMER_KEY_APP_WITH_JWT"'",
-                    "salesforce.consumer.secret" : "'"$CONSUMER_SECRET_APP_WITH_JWT"'",
                     "salesforce.jwt.keystore.path": "/tmp/salesforce-confluent.keystore.jks",
                     "salesforce.jwt.keystore.password": "confluent",
                     "salesforce.initial.start" : "all",
