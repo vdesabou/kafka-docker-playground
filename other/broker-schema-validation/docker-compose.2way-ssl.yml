@@ -10,15 +10,6 @@ services:
       KAFKA_CONFLUENT_SSL_KEYSTORE_PASSWORD: confluent
       KAFKA_CONFLUENT_SSL_KEY_PASSWORD: confluent
 
-  broker2:
-    environment:
-      KAFKA_CONFLUENT_SCHEMA_REGISTRY_URL: "https://schema-registry:8081"
-      KAFKA_CONFLUENT_SSL_TRUSTSTORE_LOCATION: /etc/kafka/secrets/kafka.client.truststore.jks
-      KAFKA_CONFLUENT_SSL_TRUSTSTORE_PASSWORD: confluent
-      KAFKA_CONFLUENT_SSL_KEYSTORE_LOCATION: /etc/kafka/secrets/kafka.client.keystore.jks
-      KAFKA_CONFLUENT_SSL_KEYSTORE_PASSWORD: confluent
-      KAFKA_CONFLUENT_SSL_KEY_PASSWORD: confluent
-
   schema-registry:
     ports:
       - "8081:8081"
