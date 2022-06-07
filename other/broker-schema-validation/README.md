@@ -35,18 +35,6 @@ Schema Registry is configured at broker level:
       # for 2way-ssl-and-security-plugin.sh
       KAFKA_CONFLUENT_BASIC_AUTH_CREDENTIALS_SOURCE: USER_INFO
       KAFKA_CONFLUENT_BASIC_AUTH_USER_INFO: 'read:read'
-
-  broker2:
-    environment:
-      KAFKA_CONFLUENT_SCHEMA_REGISTRY_URL: "https://schema-registry:8081"
-      KAFKA_CONFLUENT_SSL_TRUSTSTORE_LOCATION: /etc/kafka/secrets/kafka.client.truststore.jks
-      KAFKA_CONFLUENT_SSL_TRUSTSTORE_PASSWORD: confluent
-      KAFKA_CONFLUENT_SSL_KEYSTORE_LOCATION: /etc/kafka/secrets/kafka.client.keystore.jks
-      KAFKA_CONFLUENT_SSL_KEYSTORE_PASSWORD: confluent
-      KAFKA_CONFLUENT_SSL_KEY_PASSWORD: confluent
-      # for 2way-ssl-and-security-plugin.sh
-      KAFKA_CONFLUENT_BASIC_AUTH_CREDENTIALS_SOURCE: USER_INFO
-      KAFKA_CONFLUENT_BASIC_AUTH_USER_INFO: 'read:read'
 ```
 
 Create topic topic-validation:
