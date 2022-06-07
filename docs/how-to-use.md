@@ -224,7 +224,7 @@ By default, [`control-center`](https://github.com/vdesabou/kafka-docker-playgrou
 export DISABLE_CONTROL_CENTER=true
 ```
 
-## 🟢 Enabling multiple brokers
+## 3️⃣ Enabling multiple brokers
 
 By default, there is only one kafka node enabled. To enable a three node count, we simply need to add an environment variable. You can enable this by setting environment variable `ENABLE_KAFKA_NODES`:
 
@@ -234,8 +234,18 @@ By default, there is only one kafka node enabled. To enable a three node count, 
 export ENABLE_KAFKA_NODES=true
 ```
 
-* broker: `10000`
+## 🥉 Enabling multiple connect workers
 
+By default, there is only one connect node enabled. To enable a three node count, we simply need to add an environment variable. You can enable this by setting environment variable `ENABLE_CONNECT_NODES`:
+
+*Example:*
+
+```bash
+export ENABLE_CONNECT_NODES=true
+```
+
+> [!WARNING]
+> It only works when [PLAINTEXT](https://github.com/vdesabou/kafka-docker-playground/tree/master/environment/plaintext) environment is used.
 
 ## 🟢 Enabling JMX Grafana
 
