@@ -16,7 +16,7 @@ docker exec -i rabbitmq rabbitmqadmin -u myuser -p mypassword -V / declare bindi
 log "Sending messages to topic rabbitmq-messages"
 seq 10 | docker exec -i broker kafka-console-producer --broker-list broker:9092 --topic rabbitmq-messages
 
-log "Creating RabbitMQ Source connector"
+log "Creating RabbitMQ Sink connector"
 curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
