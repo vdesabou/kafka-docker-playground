@@ -36,13 +36,13 @@ $ az group create \
 Registering active directory App $AZURE_AD_APP_NAME
 
 ```bash
-$ AZURE_DATALAKE_CLIENT_ID=$(az ad app create --display-name "$AZURE_AD_APP_NAME" --password mypassword --native-app false --available-to-other-tenants false --query appId -o tsv)
+$ AZURE_DATALAKE_CLIENT_ID=$(az ad app create --display-name "$AZURE_AD_APP_NAME" --is-fallback-public-client false --sign-in-audience AzureADandPersonalMicrosoftAccount --query appId -o tsv)
 ```
 
 Creating Service Principal associated to the App
 
 ```bash
-$ SERVICE_PRINCIPAL_ID=$(az ad sp create --id $AZURE_DATALAKE_CLIENT_ID | jq -r '.objectId')
+$ SERVICE_PRINCIPAL_ID=$(az ad sp create --id $AZURE_DATALAKE_CLIENT_ID | jq -r '.id')
 ```
 
 Creating data lake $AZURE_DATALAKE_ACCOUNT_NAME in resource $AZURE_RESOURCE_GROUP
@@ -68,7 +68,7 @@ $ curl -X PUT \
                     "topics": "datalake_topic",
                     "flush.size": "3",
                     "azure.datalake.client.id": "'"$AZURE_DATALAKE_CLIENT_ID"'",
-                    "azure.datalake.client.key": "mypassword",
+                    "azure.datalake.client.key": "'"$AZURE_DATALAKE_CLIENT_PASSWORD"'",
                     "azure.datalake.account.name": "'"$AZURE_DATALAKE_ACCOUNT_NAME"'",
                     "azure.datalake.token.endpoint": "'"$AZURE_DATALAKE_TOKEN_ENDPOINT"'",
                     "format.class": "io.confluent.connect.azure.storage.format.avro.AvroFormat",
