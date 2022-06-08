@@ -33,7 +33,7 @@ log "-> write:write  |  Global write access (SUBJECT_WRITE)"
 log "-> admin:admin  |  Global admin access (All operations, i.e $operations_list)"
 
 log "Create topic topic-validation"
-docker exec broker kafka-topics --bootstrap-server broker:9092 --create --topic topic-validation --partitions 1 --replication-factor 2 --command-config /etc/kafka/secrets/client_without_interceptors_2way_ssl.config --config confluent.key.schema.validation=true --config confluent.value.schema.validation=true
+docker exec broker kafka-topics --bootstrap-server broker:9092 --create --topic topic-validation --partitions 1 --replication-factor 1 --command-config /etc/kafka/secrets/client_without_interceptors_2way_ssl.config --config confluent.key.schema.validation=true --config confluent.value.schema.validation=true
 
 log "Describe topic"
 docker exec broker kafka-topics \
