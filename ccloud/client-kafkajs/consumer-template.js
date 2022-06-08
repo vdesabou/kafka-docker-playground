@@ -4,11 +4,11 @@ const kafka = new Kafka({
   clientId: 'my-kafkajs-consumer',
   brokers: [':BOOTSTRAP_SERVERS:'],
   ssl: true,
+  //    logLevel: logLevel.DEBUG,
   sasl: {
     mechanism: 'plain',
     username: ':CLOUD_KEY:',
-    password: ':CLOUD_SECRET:',
-    logLevel: logLevel.DEBUG
+    password: ':CLOUD_SECRET:'
   },
 })
 
@@ -22,7 +22,7 @@ const admin = kafka.admin()
 const run = async () => {
   await admin.connect()
   await admin.createTopics({
-    topics: [{ topic }],
+    topics: [{ topic: topic, numPartitions: 1, replicationFactor: 3 }],
     waitForLeaders: true,
   })
   await consumer.connect()

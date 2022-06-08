@@ -7,7 +7,7 @@ const kafka = new Kafka({
   brokers: [':BOOTSTRAP_SERVERS:'],
   connectionTimeout: 20000,
   ssl: true,
-  // logLevel: logLevel.DEBUG,
+  //logLevel: logLevel.DEBUG,
   enforceRequestTimeout: true,
   requestTimeout: 3000,
   retry: {
@@ -55,7 +55,7 @@ const sendMessage = () => {
 const run = async () => {
   await admin.connect()
   await admin.createTopics({
-    topics: [{ topic }],
+    topics: [{ topic: topic, numPartitions: 1, replicationFactor: 3 }],
     waitForLeaders: true,
   })
 
