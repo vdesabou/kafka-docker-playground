@@ -7,6 +7,7 @@ services:
     image: sequenceiq/kerberos
     hostname: kdc.kerberos-demo.local
     container_name: kdc
+    restart: always
     environment:
       REALM: EXAMPLE.COM
       DOMAIN_REALM: kdc.kerberos-demo.local
@@ -25,6 +26,7 @@ services:
       - kdc
     hostname: hadoop.kerberos-demo.local
     container_name: hadoop
+    restart: always
     environment:
       KRB_REALM: EXAMPLE.COM
       DOMAIN_REALM: kdc.kerberos-demo.local
