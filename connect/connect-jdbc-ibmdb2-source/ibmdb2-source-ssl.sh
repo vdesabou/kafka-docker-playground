@@ -50,18 +50,35 @@ log "Enable SSL on DB2"
 # https://medium.datadriveninvestor.com/configuring-secure-sockets-layer-ssl-for-db2-server-and-client-3b317a033d71
 docker exec -i ibmdb2 bash << EOF
 su - db2inst1
-gsk8capicmd_64 -keydb -create -db "server.kdb" -pw "my_secret_password" -stash
-gsk8capicmd_64 -cert -create -db "server.kdb" -pw "my_secret_password" -label "myLabel" -dn "CN=ibmdb2" -size 2048 -sigalg SHA256_WITH_RSA
-gsk8capicmd_64 -cert -extract -db "server.kdb" -pw "my_secret_password" -label "myLabel" -target "server.arm" -format ascii -fips
-gsk8capicmd_64 -cert -details -db "server.kdb" -pw "my_secret_password" -label "myLabel"
+gsk8capicmd_64 -keydb -create -db "server.kdb" -pw "confluent" -stash
+gsk8capicmd_64 -cert -create -db "server.kdb" -pw "confluent" -label "myLabel" -dn "CN=ibmdb2" -size 2048 -sigalg SHA256_WITH_RSA
+gsk8capicmd_64 -cert -extract -db "server.kdb" -pw "confluent" -label "myLabel" -target "server.arm" -format ascii -fips
+gsk8capicmd_64 -cert -details -db "server.kdb" -pw "confluent" -label "myLabel"
 db2 update dbm cfg using SSL_SVR_KEYDB /database/config/db2inst1/server.kdb
 db2 update dbm cfg using SSL_SVR_STASH /database/config/db2inst1/server.sth
 db2 update dbm cfg using SSL_SVCENAME 50002
-db2 update dbm cfg using SSL_SVR_LABEL mylabel
-db2set DB2COMM=SSL,TCPIP
+db2 update dbm cfg using SSL_VERSIONS TLSv12
+db2 update dbm cfg using SSL_SVR_LABEL myLabel
+db2set -i db2inst1 DB2COMM=SSL,TCPIP
 db2stop force
 db2start
 EOF
+
+log "verifying DB2 SSL config"
+docker exec -i ibmdb2 bash << EOF
+su - db2inst1
+gsk8capicmd_64 -cert -list -db "server.kdb" -stashed
+db2 get dbm cfg|grep SSL
+EOF
+#-       myLabel
+#  SSL server keydb file                   (SSL_SVR_KEYDB) = /database/config/db2inst1/server.kdb
+#  SSL server stash file                   (SSL_SVR_STASH) = /database/config/db2inst1/server.sth
+#  SSL server certificate label            (SSL_SVR_LABEL) = myLabel
+#  SSL service name                         (SSL_SVCENAME) = 50002
+#  SSL cipher specs                      (SSL_CIPHERSPECS) = 
+#  SSL versions                             (SSL_VERSIONS) = TLSv12
+#  SSL client keydb file                  (SSL_CLNT_KEYDB) = 
+#  SSL client stash file                  (SSL_CLNT_STASH) = 
 
 mkdir -p ${PWD}/security/
 rm -rf ${PWD}/security/*
@@ -79,15 +96,10 @@ else
     sudo chmod -R a+rw .
     ls -lrt
 fi
-docker run --rm -v $PWD:/tmp vdesabou/kafka-docker-playground-connect:${CONNECT_TAG} keytool -import -trustcacerts -v -noprompt -alias myLabel -file /tmp/server.arm -keystore /tmp/truststore.jks -storepass 'confluent'
+docker run --rm -v $PWD:/tmp vdesabou/kafka-docker-playground-connect:${CONNECT_TAG} keytool -import -trustcacerts -v -noprompt -alias myAlias -file /tmp/server.arm -keystore /tmp/truststore.jks -storepass 'confluent'
 log "Displaying truststore"
 docker run --rm -v $PWD:/tmp vdesabou/kafka-docker-playground-connect:${CONNECT_TAG} keytool -list -keystore /tmp/truststore.jks -storepass 'confluent' -v
 cd -
-
-docker exec -i ibmdb2 bash << EOF
-su - db2inst1
-db2 get dbm cfg|grep SSL
-EOF
 
 docker-compose -f ../../environment/plaintext/docker-compose.yml -f "${PWD}/docker-compose.plaintext.ssl.yml" ${profile_control_center_command} ${profile_ksqldb_command} ${profile_grafana_command} up -d
 
@@ -125,17 +137,6 @@ curl -X PUT \
           }' \
      http://localhost:8083/connectors/ibmdb2-source/config | jq .
 
-# 2022-06-09-11.07.54.306715+000 I301880E471           LEVEL: Error
-# PID     : 17357                TID : 140472450279168 PROC : db2sysc 0
-# INSTANCE: db2inst1             NODE : 000
-# APPHDL  : 0-17
-# HOSTNAME: ibmdb2
-# EDUID   : 26                   EDUNAME: db2agent () 0
-# FUNCTION: DB2 UDB, common communication, sqlccMapSSLErrorToDB2Error, probe:30
-# MESSAGE : DIA3604E The SSL function "gsk_secure_soc_init" failed with the 
-#           return code "407" in "sqlccSSLSocketSetup".
-
-# The return code 407 means the label specified by ssl_svr_label can not be found in the key file specified by ssl_svr_keydb. Since DB2 server does not find the label, 
 sleep 5
 
 log "Verifying topic db2-PURCHASEORDER"
