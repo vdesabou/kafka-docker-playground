@@ -57,6 +57,7 @@ gsk8capicmd_64 -cert -details -db "server.kdb" -pw "confluent" -label "myLabel"
 db2 update dbm cfg using SSL_SVR_KEYDB /database/config/db2inst1/server.kdb
 db2 update dbm cfg using SSL_SVR_STASH /database/config/db2inst1/server.sth
 db2 update dbm cfg using SSL_SVCENAME 50002
+db2 update dbm cfg using SSL_VERSIONS TLSv12
 db2 update dbm cfg using SSL_SVR_LABEL myLabel
 db2set -i db2inst1 DB2COMM=SSL,TCPIP
 db2stop force
@@ -75,7 +76,7 @@ EOF
 #  SSL server certificate label            (SSL_SVR_LABEL) = myLabel
 #  SSL service name                         (SSL_SVCENAME) = 50002
 #  SSL cipher specs                      (SSL_CIPHERSPECS) = 
-#  SSL versions                             (SSL_VERSIONS) = 
+#  SSL versions                             (SSL_VERSIONS) = TLSv12
 #  SSL client keydb file                  (SSL_CLNT_KEYDB) = 
 #  SSL client stash file                  (SSL_CLNT_STASH) = 
 
