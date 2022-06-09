@@ -13,6 +13,12 @@ Simply run:
 $ ./ibmdb2-sink.sh
 ```
 
+with SSL Encryption:
+
+```
+$ ./ibmdb2-sink-ssl.sh
+```
+
 N.B: IBM DB2 Console is reachable at [https://localhost:9443/ibmmq/console/login.html (admin/passw0rd)](https://localhost:9443/ibmmq/console/login.html])
 
 ## Details of what the script is doing
