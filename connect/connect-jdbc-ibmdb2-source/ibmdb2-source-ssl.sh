@@ -50,10 +50,10 @@ log "Enable SSL on DB2"
 # https://medium.datadriveninvestor.com/configuring-secure-sockets-layer-ssl-for-db2-server-and-client-3b317a033d71
 docker exec -i ibmdb2 bash << EOF
 su - db2inst1
-gsk8capicmd_64 -keydb -create -db "server.kdb" -pw "my_secret_password" -stash
-gsk8capicmd_64 -cert -create -db "server.kdb" -pw "my_secret_password" -label "myLabel" -dn "CN=ibmdb2" -size 2048 -sigalg SHA256_WITH_RSA
-gsk8capicmd_64 -cert -extract -db "server.kdb" -pw "my_secret_password" -label "myLabel" -target "server.arm" -format ascii -fips
-gsk8capicmd_64 -cert -details -db "server.kdb" -pw "my_secret_password" -label "myLabel"
+gsk8capicmd_64 -keydb -create -db "server.kdb" -pw "confluent" -stash
+gsk8capicmd_64 -cert -create -db "server.kdb" -pw "confluent" -label "myLabel" -dn "CN=ibmdb2" -size 2048 -sigalg SHA256_WITH_RSA
+gsk8capicmd_64 -cert -extract -db "server.kdb" -pw "confluent" -label "myLabel" -target "server.arm" -format ascii -fips
+gsk8capicmd_64 -cert -details -db "server.kdb" -pw "confluent" -label "myLabel"
 db2 update dbm cfg using SSL_SVR_KEYDB /database/config/db2inst1/server.kdb
 db2 update dbm cfg using SSL_SVR_STASH /database/config/db2inst1/server.sth
 db2 update dbm cfg using SSL_SVCENAME 50002
