@@ -819,7 +819,7 @@ function display_docker_container_error_log() {
 
 function retry() {
   local n=1
-  local max=2
+  local max=3
   while true; do
     "$@"
     ret=$?
@@ -833,12 +833,23 @@ function retry() {
     then
       return 107
     else
-      if [[ $n -lt $max ]]; then
-        ((n++))
-        logwarn "Command failed. Attempt $n/$max:"
-        display_docker_container_error_log
+      script=$(echo "$@" | cut -d " " -f 2)
+      # check for retriable scripts in scripts/tests-retriable.txt
+      grep "$script" ${DIR}/tests-retriable.txt > /dev/null
+      if [ $? = 0 ]
+      then
+        if [[ $n -lt $max ]]; then
+          ((n++))
+          logwarn "####################################################"
+          logwarn "🧟‍♂️ The test $script (retriable) has failed. Retrying (attempt $n/$max)"
+          logwarn "####################################################"
+          display_docker_container_error_log
+        else
+          logerror "💀 The test $script (retriable) has failed after $n attempts."
+          return 1
+        fi
       else
-        logerror "The command has failed after $n attempts."
+        logerror "💀 The test $script (non retriable) has failed."
         return 1
       fi
     fi
