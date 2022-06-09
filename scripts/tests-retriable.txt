@@ -1,0 +1,5 @@
+# scripts to retry
+hdfs2-source-kerberos.sh
+hdfs3-source-kerberos.sh
+hdfs2-sink-kerberos.sh
+hdfs3-sink-kerberos.sh
