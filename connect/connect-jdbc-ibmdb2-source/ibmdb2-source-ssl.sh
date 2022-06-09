@@ -51,7 +51,7 @@ log "Enable SSL on DB2"
 docker exec -i ibmdb2 bash << EOF
 su - db2inst1
 gsk8capicmd_64 -keydb -create -db "server.kdb" -pw "my_secret_password" -stash
-gsk8capicmd_64 -cert -create -db "server.kdb" -pw "my_secret_password" -label "myLabel" -dn "CN=myLabel" -size 2048 -sigalg SHA256_WITH_RSA
+gsk8capicmd_64 -cert -create -db "server.kdb" -pw "my_secret_password" -label "myLabel" -dn "CN=ibmdb2" -size 2048 -sigalg SHA256_WITH_RSA
 gsk8capicmd_64 -cert -extract -db "server.kdb" -pw "my_secret_password" -label "myLabel" -target "server.arm" -format ascii -fips
 gsk8capicmd_64 -cert -details -db "server.kdb" -pw "my_secret_password" -label "myLabel"
 db2 update dbm cfg using SSL_SVR_KEYDB /database/config/db2inst1/server.kdb
@@ -79,9 +79,9 @@ else
     sudo chmod -R a+rw .
     ls -lrt
 fi
-docker run --rm -v $PWD:/tmp vdesabou/kafka-docker-playground-connect:${CONNECT_TAG} keytool -import -v -noprompt -alias myLabel -file /tmp/server.arm -keystore /tmp/client.jks -storepass 'confluent'
+docker run --rm -v $PWD:/tmp vdesabou/kafka-docker-playground-connect:${CONNECT_TAG} keytool -import -trustcacerts -v -noprompt -alias myalias -file /tmp/server.arm -keystore /tmp/truststore.jks -storepass 'confluent'
 log "Displaying truststore"
-docker run --rm -v $PWD:/tmp vdesabou/kafka-docker-playground-connect:${CONNECT_TAG} keytool -list -keystore /tmp/client.jks -storepass 'confluent' -v
+docker run --rm -v $PWD:/tmp vdesabou/kafka-docker-playground-connect:${CONNECT_TAG} keytool -list -keystore /tmp/truststore.jks -storepass 'confluent' -v
 cd -
 
 docker exec -i ibmdb2 bash << EOF
@@ -115,7 +115,7 @@ curl -X PUT \
      --data '{
                "connector.class": "io.confluent.connect.jdbc.JdbcSourceConnector",
                "tasks.max": "1",
-               "connection.url":"jdbc:db2://ibmdb2:50002/sample:retrieveMessagesFromServerOnGetMessage=true;sslConnection=true;sslTrustStoreLocation=/etc/kafka/secrets/client.jks;sslTrustStorePassword=confluent;sslTrustStoreType=JKS;",
+               "connection.url":"jdbc:db2://ibmdb2:50002/sample:retrieveMessagesFromServerOnGetMessage=true;sslConnection=true;sslTrustStoreLocation=/etc/kafka/secrets/truststore.jks;sslTrustStorePassword=confluent;sslTrustStoreType=JKS;",
                "connection.user":"db2inst1",
                "connection.password":"passw0rd",
                "mode": "bulk",
