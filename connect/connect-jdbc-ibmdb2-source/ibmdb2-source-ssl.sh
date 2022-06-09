@@ -79,7 +79,7 @@ else
     sudo chmod -R a+rw .
     ls -lrt
 fi
-docker run --rm -v $PWD:/tmp vdesabou/kafka-docker-playground-connect:${CONNECT_TAG} keytool -import -trustcacerts -v -noprompt -alias myalias -file /tmp/server.arm -keystore /tmp/truststore.jks -storepass 'confluent'
+docker run --rm -v $PWD:/tmp vdesabou/kafka-docker-playground-connect:${CONNECT_TAG} keytool -import -trustcacerts -v -noprompt -alias myLabel -file /tmp/server.arm -keystore /tmp/truststore.jks -storepass 'confluent'
 log "Displaying truststore"
 docker run --rm -v $PWD:/tmp vdesabou/kafka-docker-playground-connect:${CONNECT_TAG} keytool -list -keystore /tmp/truststore.jks -storepass 'confluent' -v
 cd -

@@ -27,6 +27,6 @@ services:
         - ../../connect/connect-jdbc-ibmdb2-source/security:/etc/kafka/secrets
     environment:
       CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-jdbc
-      KAFKA_OPTS: -Djavax.net.ssl.trustStore=/etc/kafka/secrets/truststore.jks
-                  -Djavax.net.ssl.trustStorePassword=confluent
-                  -Djavax.net.debug=all
+      # KAFKA_OPTS: -Djavax.net.ssl.trustStore=/etc/kafka/secrets/truststore.jks
+      #             -Djavax.net.ssl.trustStorePassword=confluent
+      #             -Djavax.net.debug=all
