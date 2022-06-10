@@ -22,7 +22,7 @@ cd connect/connect-hdfs2-sink
 /Users/vsaboulin/Documents/github/kafka-docker-playground/reproduction-models/connect-connect-hdfs2-sink
 ```
 
-If you want to automatically generate a Java Producer, just add a third parameter (one of `avro`, `protobuf` or `json-schema`):
+If you want to automatically generate a Java Producer, just add a third parameter (one of `avro`, `protobuf` or `json-schema`):
 
 Example with `protobuf`:
 
@@ -212,6 +212,7 @@ Here are the steps to follow:
 # 🚨🚨🚨 FIXTHIS: move it to the correct place 🚨🚨🚨
 log "✨ Run the avro java producer which produces to topic customer_avro"
 docker exec producer-repro-12345 bash -c "java -jar producer-1.0.0-jar-with-dependencies.jar"
+# 🚨🚨🚨 FIXTHIS: move it to the correct place 🚨🚨🚨
 ```
 
 Make sure to move it in your script to the right place.
@@ -240,6 +241,7 @@ option java_outer_classname = "CustomerImpl";
 # 🚨🚨🚨 FIXTHIS: move it to the correct place 🚨🚨🚨
 log "✨ Run the protobuf java producer which produces to topic customer_protobuf"
 docker exec producer-repro-12345 bash -c "java -jar producer-1.0.0-jar-with-dependencies.jar"
+# 🚨🚨🚨 FIXTHIS: move it to the correct place 🚨🚨🚨
 ```
 
 ### ♨️ JSON Schema Java producer
@@ -293,6 +295,7 @@ Here are the steps to follow:
 # 🚨🚨🚨 FIXTHIS: move it to the correct place 🚨🚨🚨
 log "✨ Run the json-schema java producer which produces to topic customer_json_schema"
 docker exec producer-repro-12345 bash -c "java -jar producer-1.0.0-jar-with-dependencies.jar"
+# 🚨🚨🚨 FIXTHIS: move it to the correct place 🚨🚨🚨
 ```
 
 ## 👈 Consuming data
