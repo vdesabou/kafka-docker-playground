@@ -175,22 +175,22 @@ then
         confluent kafka topic delete "$topic"
      done
 
-    # for row in $(confluent iam service-account list --output json | jq -r '.[] | @base64'); do
-    #     _jq() {
-    #     echo ${row} | base64 --decode | jq -r ${1}
-    #     }
+    for row in $(confluent iam service-account list --output json | jq -r '.[] | @base64'); do
+        _jq() {
+        echo ${row} | base64 --decode | jq -r ${1}
+        }
         
-    #     description=$(echo $(_jq '.description'))
-    #     id=$(echo $(_jq '.id'))
-    #     name=$(echo $(_jq '.name'))
+        description=$(echo $(_jq '.description'))
+        id=$(echo $(_jq '.id'))
+        name=$(echo $(_jq '.name'))
 
-    #     if [[ $description = *my-java-producer-app* ]] || [[ $description = *ccloud-stack-function* ]]
-    #     then
-    #         echo "deleting $id ($description)"
-    #         confluent iam service-account delete $id
-    #         sleep 1
-    #     fi
-    # done
+        if [[ $description = *my-java-producer-app* ]] || [[ $description = *ccloud-stack-function* ]]
+        then
+            echo "deleting $id ($description)"
+            confluent iam service-account delete $id
+            sleep 5
+        fi
+    done
 fi
 
 # always exit with success
