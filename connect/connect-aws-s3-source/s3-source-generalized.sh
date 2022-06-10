@@ -71,6 +71,7 @@ curl -X PUT \
                "value.converter.schemas.enable": "false",
                "confluent.license": "",
                "mode": "GENERIC",
+               "topics.dir": "quickstart",
                "topic.regex.list": "quick-start-topic:.*",
                "confluent.topic.bootstrap.servers": "broker:9092",
                "confluent.topic.replication.factor": "1"
