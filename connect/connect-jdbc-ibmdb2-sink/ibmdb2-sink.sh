@@ -75,7 +75,7 @@ curl -X PUT \
      http://localhost:8083/connectors/ibmdb2-sink/config | jq .
 
 
-sleep 5
+sleep 15
 
 log "Check data is in IBM DB2"
 docker exec -i ibmdb2 bash << EOF > /tmp/result.log
