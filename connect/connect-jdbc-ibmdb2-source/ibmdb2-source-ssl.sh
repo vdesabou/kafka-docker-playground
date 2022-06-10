@@ -137,7 +137,7 @@ curl -X PUT \
           }' \
      http://localhost:8083/connectors/ibmdb2-source/config | jq .
 
-sleep 5
+sleep 15
 
 log "Verifying topic db2-PURCHASEORDER"
 timeout 60 docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic db2-PURCHASEORDER --from-beginning --max-messages 2
