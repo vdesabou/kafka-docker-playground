@@ -218,7 +218,7 @@ for warehouse in $(cat /tmp/result.log| grep PLAYGROUNDWAREHOUSE | cut -d "|" -f
 do
     log "Dropping warehouse $warehouse"
 docker run --rm -i -e SNOWSQL_PWD="$SNOWFLAKE_PASSWORD" -e RSA_PUBLIC_KEY="$RSA_PUBLIC_KEY" kurron/snowsql --username $SNOWFLAKE_USERNAME -a $SNOWFLAKE_ACCOUNT_NAME << EOF
-DROP DATABASE IF EXISTS $warehouse;
+DROP WAREHOUSE IF EXISTS $warehouse;
 EOF
 done
 
