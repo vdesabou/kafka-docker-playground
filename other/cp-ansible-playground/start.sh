@@ -38,8 +38,8 @@ then
   esac
 fi
 
-if ! version_gt $TAG_BASE "5.3.99"; then
-    logwarn "WARN: This example is working starting from CP 5.4 only"
+if ! version_gt $TAG_BASE "5.4.99"; then
+    logwarn "WARN: This example is working starting from CP 5.5 only"
     exit 111
 fi
 
