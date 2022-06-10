@@ -97,7 +97,7 @@ curl --request PUT \
 
 for((i=0;i<100;i++)); do
      log "Send message again to MQTT in my-mqtt-topic topic"
-     docker exec mosquitto sh mosquitto_pub -h localhost -p 1883 -u "myuser" -P "mypassword" -t "my-mqtt-topic" -m "sample-msg-$i"
+     docker exec mosquitto sh -c 'mosquitto_pub -h localhost -p 1883 -u "myuser" -P "mypassword" -t "my-mqtt-topic" -m "sample-msg-1"'
 done
 
 
