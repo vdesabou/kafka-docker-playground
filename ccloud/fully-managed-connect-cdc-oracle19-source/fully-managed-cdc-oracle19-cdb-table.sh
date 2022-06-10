@@ -40,6 +40,7 @@ create_or_get_oracle_image "LINUX.X64_193000_db_home.zip" "../../ccloud/fully-ma
 
 set +e
 delete_topic ORCLCDB.C__MYUSER.CUSTOMERS
+delete_topic redo-log-topic
 set -e
 
 docker-compose build
