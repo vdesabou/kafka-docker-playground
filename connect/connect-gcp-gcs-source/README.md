@@ -35,15 +35,23 @@ Rename it to `keyfile.json`and place it in `./keyfile.json`
 
 ## How to run
 
-Simply run:
+For [Backup and Restore GCS Source](https://docs.confluent.io/kafka-connect-gcs-source/current/backup-and-restore/overview.html):
 
 ```bash
-$ ./gcs-source.sh <PROJECT>
+$ ./gcs-source-backup-and-restore.sh <PROJECT>
+```
+
+For [Generalized GCS Source](https://docs.confluent.io/kafka-connect-gcs-source/current/generalized/overview.html) (it requires version 2.1.0 at minimum):
+
+```bash
+$ ./gcs-source-generalized.sh <PROJECT>
 ```
 
 Note: you can also export these values as environment variable
 
 ## Details of what the script is doing
+
+### Backup and Restore GCS Source
 
 Steps from [connect-gcp-gcs-sink](../connect/connect-gcp-gcs-sink/README.md)
 
@@ -86,6 +94,56 @@ Results:
 {"f1":"value7"}
 {"f1":"value8"}
 {"f1":"value9"}
+```
+
+### Generalized GCS S3 Source
+
+Copy generalized.quickstart.json to bucket $GCS_BUCKET_NAME/quickstart:
+
+```bash
+$ docker run -i -v ${PWD}:/tmp/ --volumes-from gcloud-config google/cloud-sdk:latest gsutil cp /tmp/generalized.quickstart.json gs://$GCS_BUCKET_NAME/quickstart/generalized.quickstart.json
+```
+
+Creating Generalized GCS Source connector:
+
+```bash
+curl -X PUT \
+     -H "Content-Type: application/json" \
+     --data '{
+               "connector.class": "io.confluent.connect.gcs.GcsSourceConnector",
+               "gcs.bucket.name" : "'"$GCS_BUCKET_NAME"'",
+               "gcs.credentials.path" : "/tmp/keyfile.json",
+               "format.class": "io.confluent.connect.gcs.format.json.JsonFormat",
+               "value.converter": "org.apache.kafka.connect.json.JsonConverter",
+               "value.converter.schemas.enable": "false",
+               "mode": "GENERIC",
+               "topic.regex.list": "quick-start-topic:.*",
+               "tasks.max" : "1",
+               "confluent.topic.bootstrap.servers" : "broker:9092",
+               "confluent.topic.replication.factor" : "1"
+          }' \
+     http://localhost:8083/connectors/gcs-source/config | jq .
+```
+
+Verifying topic `quick-start-topic`:
+
+```bash
+$ docker exec broker kafka-console-consumer -bootstrap-server broker:9092 --topic quick-start-topic --from-beginning --max-messages 9
+```
+
+Results:
+
+```json
+{"f1":"value1"}
+{"f1":"value2"}
+{"f1":"value3"}
+{"f1":"value4"}
+{"f1":"value5"}
+{"f1":"value6"}
+{"f1":"value7"}
+{"f1":"value8"}
+{"f1":"value9"}
+Processed a total of 9 messages
 ```
 
 N.B: Control Center is reachable at [http://127.0.0.1:9021](http://127.0.0.1:9021])

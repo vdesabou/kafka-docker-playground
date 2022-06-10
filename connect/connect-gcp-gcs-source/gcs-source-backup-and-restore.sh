@@ -19,7 +19,7 @@ then
      exit 1
 fi
 
-${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
+${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.backup-and-restore.yml"
 
 GCS_BUCKET_NAME=kafka-docker-playground-bucket-${USER}${TAG}
 GCS_BUCKET_NAME=${GCS_BUCKET_NAME//[-.]/}
@@ -84,23 +84,23 @@ docker rm -f gcloud-config
 ##########################
 ## SOURCE
 ##########################
-log "Creating GCS Source connector"
+log "Creating Backup and Restore GCS Source connector"
 curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
                "connector.class": "io.confluent.connect.gcs.GcsSourceConnector",
-                    "gcs.bucket.name" : "'"$GCS_BUCKET_NAME"'",
-                    "gcs.credentials.path" : "/tmp/keyfile.json",
-                    "format.class": "io.confluent.connect.gcs.format.avro.AvroFormat",
-                    "tasks.max" : "1",
-                    "confluent.topic.bootstrap.servers" : "broker:9092",
-                    "confluent.topic.replication.factor" : "1",
-                    "transforms" : "AddPrefix",
-                    "transforms.AddPrefix.type" : "org.apache.kafka.connect.transforms.RegexRouter",
-                    "transforms.AddPrefix.regex" : ".*",
-                    "transforms.AddPrefix.replacement" : "copy_of_$0"
+               "gcs.bucket.name" : "'"$GCS_BUCKET_NAME"'",
+               "gcs.credentials.path" : "/tmp/keyfile.json",
+               "format.class": "io.confluent.connect.gcs.format.avro.AvroFormat",
+               "tasks.max" : "1",
+               "confluent.topic.bootstrap.servers" : "broker:9092",
+               "confluent.topic.replication.factor" : "1",
+               "transforms" : "AddPrefix",
+               "transforms.AddPrefix.type" : "org.apache.kafka.connect.transforms.RegexRouter",
+               "transforms.AddPrefix.regex" : ".*",
+               "transforms.AddPrefix.replacement" : "copy_of_$0"
           }' \
-     http://localhost:8083/connectors/GCSSourceConnector/config | jq .
+     http://localhost:8083/connectors/gcs-source/config | jq .
 
 sleep 10
 
