@@ -188,6 +188,10 @@ then
         then
             echo "deleting $id ($description)"
             confluent iam service-account delete $id
+            if [ $? != 0 ]
+            then
+              break
+            fi
             sleep 5
         fi
     done
