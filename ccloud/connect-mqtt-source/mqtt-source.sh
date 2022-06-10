@@ -32,19 +32,11 @@ if ! version_gt $TAG_BASE "5.9.9"; then
 
      sleep 30
 fi
-set +e
+
 log "Send message to MQTT in my-mqtt-topic topic"
 docker exec mosquitto sh -c 'mosquitto_pub -h localhost -p 1883 -u "myuser" -P "mypassword" -t "my-mqtt-topic" -m "sample-msg-1"'
 
 sleep 5
-
-curl --request PUT \
-  --url http://localhost:8083/admin/loggers/io.confluent.connect.mqtt \
-  --header 'Accept: application/json' \
-  --header 'Content-Type: application/json' \
-  --data '{
- "level": "TRACE"
-}'
 
 log "Creating MQTT Source connector"
 curl -X PUT \
@@ -71,60 +63,10 @@ curl -X PUT \
 
 sleep 5
 
-curl --request PUT \
-  --url http://localhost:8083/admin/loggers/io.confluent.connect.mqtt \
-  --header 'Accept: application/json' \
-  --header 'Content-Type: application/json' \
-  --data '{
- "level": "TRACE"
-}'
-
-curl --request PUT \
-  --url http://localhost:8083/admin/loggers/com.github.jcustenborder \
-  --header 'Accept: application/json' \
-  --header 'Content-Type: application/json' \
-  --data '{
- "level": "TRACE"
-}'
-
-curl --request PUT \
-  --url http://localhost:8083/admin/loggers/org.apache.kafka.clients \
-  --header 'Accept: application/json' \
-  --header 'Content-Type: application/json' \
-  --data '{
- "level": "TRACE"
-}'
-
-for((i=0;i<100;i++)); do
+for((i=0;i<20;i++)); do
      log "Send message again to MQTT in my-mqtt-topic topic"
      docker exec mosquitto sh -c 'mosquitto_pub -h localhost -p 1883 -u "myuser" -P "mypassword" -t "my-mqtt-topic" -m "sample-msg-1"'
 done
 
-
-
-
 log "Verify we have received the data in $MQTT_TOPIC topic"
 timeout 60 docker container exec -e BOOTSTRAP_SERVERS="$BOOTSTRAP_SERVERS" -e SASL_JAAS_CONFIG="$SASL_JAAS_CONFIG" -e MQTT_TOPIC="$MQTT_TOPIC" connect bash -c 'kafka-console-consumer --topic $MQTT_TOPIC --bootstrap-server $BOOTSTRAP_SERVERS --consumer-property ssl.endpoint.identification.algorithm=https --consumer-property sasl.mechanism=PLAIN --consumer-property security.protocol=SASL_SSL --consumer-property sasl.jaas.config="$SASL_JAAS_CONFIG" --property basic.auth.credentials.source=USER_INFO --from-beginning --max-messages 1'
-
-log "VINC mosquitto logs"
-docker container logs mosquitto
-
-log "VINC connect logs"
-docker container logs connect
-
-
-log "jstack 1"
-docker exec connect jstack 1
-
-sleep 10
-
-log "jstack 2"
-docker exec connect jstack 1
-
-log "Get connector status"
-curl http://localhost:8083/connectors?expand=status&expand=info | jq .
-
-
-ps -ef
-
-netstat -an | grep 1883
