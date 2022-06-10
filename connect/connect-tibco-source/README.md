@@ -1,6 +1,6 @@
 # TIBCO Source connector
 
-![asciinema](https://github.com/vdesabou/gifs/blob/master/connect/connect-tibco-source/asciinema.gif?raw=true)
+
 
 ## Objective
 

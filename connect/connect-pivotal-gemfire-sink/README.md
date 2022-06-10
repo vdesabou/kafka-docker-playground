@@ -1,6 +1,6 @@
 # Pivotal Gemfire sink connector
 
-![asciinema](https://github.com/vdesabou/gifs/blob/master/connect/connect-pivotal-gemfire-sink/asciinema.gif?raw=true)
+
 
 ## Objective
 

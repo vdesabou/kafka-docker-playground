@@ -1,6 +1,6 @@
 # JDBC Oracle 19c Sink connector
 
-![asciinema](https://github.com/vdesabou/gifs/blob/master/connect/connect-jdbc-oracle19-sink/asciinema.gif?raw=true)
+
 
 ## Objective
 

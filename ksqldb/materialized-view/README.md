@@ -1,6 +1,6 @@
 # Materialized view/cache
 
-![asciinema](https://github.com/vdesabou/gifs/blob/master/ksqldb/materialized-view/asciinema.gif?raw=true)
+
 
 ## Objective
 

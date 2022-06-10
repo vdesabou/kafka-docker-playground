@@ -1,6 +1,6 @@
 # Marketo Source connector
 
-![asciinema](https://github.com/vdesabou/gifs/blob/master/connect/connect-marketo-source/asciinema.gif?raw=true)
+
 
 ## Objective
 

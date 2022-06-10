@@ -14,7 +14,7 @@
 
 ## 📽 Example 
 
-![asciinema](https://github.com/vdesabou/gifs/blob/master/connect/connect-cdc-oracle12-source/asciinema.gif?raw=true)
+
 
 ## 🏁 Getting Started
 

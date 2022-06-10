@@ -1,6 +1,6 @@
 # SNMP Trap Source connector
 
-![asciinema](https://github.com/vdesabou/gifs/blob/master/connect/connect-snmp-source/asciinema.gif?raw=true)
+
 
 ## Objective
 

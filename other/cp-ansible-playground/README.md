@@ -1,6 +1,6 @@
 # Using cp-ansible playground ![CI](https://github.com/vdesabou/cp-ansible-playground/workflows/CI/badge.svg?branch=master)
 
-![asciinema](https://github.com/vdesabou/cp-ansible-playground/blob/master/asciinema.gif?raw=true)
+
 
 ## Pre-requisites
 

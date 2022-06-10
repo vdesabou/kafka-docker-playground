@@ -1,6 +1,6 @@
 # Oracle Weblogic Source connector
 
-![asciinema](https://github.com/vdesabou/gifs/blob/master/connect/connect-weblogic-source/asciinema.gif?raw=true)
+
 
 ## Objective
 

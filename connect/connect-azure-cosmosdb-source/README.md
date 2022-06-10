@@ -1,6 +1,6 @@
 # Azure Cosmos DB Source connector
 
-![asciinema](https://github.com/vdesabou/gifs/blob/master/connect/connect-azure-cosmosdb-source/asciinema.gif?raw=true)
+
 
 ## Objective
 
