@@ -88,6 +88,7 @@ cat << EOF > connector.json
      "start.from": "snapshot",
      "query.timeout.ms": "60000",
      "redo.log.row.fetch.size": "1",
+     "redo.log.topic.name": "redo-log-topic",
      "table.topic.name.template": "\${databaseName}.\${schemaName}.\${tableName}",
      "lob.topic.name.template":"\${databaseName}.\${schemaName}.\${tableName}.\${columnName}",
      "numeric.mapping": "best_fit_or_decimal",
