@@ -164,6 +164,7 @@ then
     export CP_BASE_IMAGE=confluentinc/cp-base-new
     export CP_KSQL_IMAGE=confluentinc/cp-ksqldb-server
     export CP_KSQL_CLI_IMAGE=confluentinc/cp-ksqldb-cli:latest
+    export LEGACY_CONNECT_VALUE_CONVERTER_SCHEMA_REGISTRY_SSL=""
     set_kafka_client_tag
 else
     if [ -z "$CP_KAFKA_IMAGE" ]
@@ -201,6 +202,13 @@ else
     else
         export CP_KSQL_IMAGE=confluentinc/cp-ksql-server
         export CP_KSQL_CLI_IMAGE=confluentinc/cp-ksql-cli:${TAG_BASE}
+    fi
+    second_version=5.3.99
+    if version_gt $first_version $second_version; then
+        export LEGACY_CONNECT_VALUE_CONVERTER_SCHEMA_REGISTRY_SSL=""
+    else
+        log "👴 Legacy config for client connecting to HTTPS SR is set"
+        export LEGACY_CONNECT_VALUE_CONVERTER_SCHEMA_REGISTRY_SSL="-Djavax.net.ssl.trustStore=/etc/kafka/secrets/kafka.connect.truststore.jks -Djavax.net.ssl.trustStorePassword=confluent -Djavax.net.ssl.keyStore=/etc/kafka/secrets/kafka.connect.keystore.jks -Djavax.net.ssl.keyStorePassword=confluent"
     fi
     set_kafka_client_tag
 fi

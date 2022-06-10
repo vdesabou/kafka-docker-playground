@@ -260,15 +260,9 @@ services:
       CONNECT_CONSUMER_CONFLUENT_MONITORING_INTERCEPTOR_SSL_KEYSTORE_PASSWORD: confluent
       CONNECT_CONSUMER_CONFLUENT_MONITORING_INTERCEPTOR_SSL_KEY_PASSWORD: confluent
       # Required for Schema Registry HTTPS
-      # FIXTHIS: No more working since CP 7.1.0 ?
-      KAFKA_OPTS: -Djavax.net.ssl.trustStore=/etc/kafka/secrets/kafka.connect.truststore.jks
-                  -Djavax.net.ssl.trustStorePassword=confluent
-                  -Djavax.net.ssl.keyStore=/etc/kafka/secrets/kafka.connect.keystore.jks
-                  -Djavax.net.ssl.keyStorePassword=confluent
-      SCHEMA_REGISTRY_OPTS: -Djavax.net.ssl.trustStore=/etc/kafka/secrets/kafka.client.truststore.jks
-                  -Djavax.net.ssl.trustStorePassword=confluent
-                  -Djavax.net.ssl.keyStore=/etc/kafka/secrets/kafka.client.keystore.jks
-                  -Djavax.net.ssl.keyStorePassword=confluent
+      # Only set for CP versions < 5.4
+      KAFKA_OPTS: $LEGACY_CONNECT_VALUE_CONVERTER_SCHEMA_REGISTRY_SSL
+      SCHEMA_REGISTRY_OPTS: $LEGACY_CONNECT_VALUE_CONVERTER_SCHEMA_REGISTRY_SSL
       # https://github.com/vdesabou/kafka-docker-playground/issues/18
       CONNECT_SSL_CIPHER_SUITES: "TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256"
 
