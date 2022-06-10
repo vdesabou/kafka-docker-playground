@@ -193,5 +193,34 @@ then
     done
 fi
 
+#####
+## SNOWFLAKE
+####
+# https://<account_name>.<region_id>.snowflakecomputing.com:443
+SNOWFLAKE_URL="https://$SNOWFLAKE_ACCOUNT_NAME.snowflakecomputing.com"
+
+# Create encrypted Private key - keep this safe, do not share!
+openssl genrsa 2048 | openssl pkcs8 -topk8 -v2 aes256 -inform PEM -out snowflake_key.p8 -passout pass:confluent
+# Generate public key from private key. You can share your public key.
+openssl rsa -in snowflake_key.p8  -pubout -out snowflake_key.pub -passin pass:confluent
+
+
+RSA_PUBLIC_KEY=$(grep -v "BEGIN PUBLIC" snowflake_key.pub | grep -v "END PUBLIC"|tr -d '\n')
+RSA_PRIVATE_KEY=$(grep -v "BEGIN ENCRYPTED PRIVATE KEY" snowflake_key.p8 | grep -v "END ENCRYPTED PRIVATE KEY"|tr -d '\n')
+
+
+log "Drop warehouses"
+docker run --rm -i -e SNOWSQL_PWD="$SNOWFLAKE_PASSWORD" -e RSA_PUBLIC_KEY="$RSA_PUBLIC_KEY" kurron/snowsql --username $SNOWFLAKE_USERNAME -a $SNOWFLAKE_ACCOUNT_NAME << EOF > /tmp/result.log
+show warehouses like 'PLAYGROUNDWAREHOUSE%';
+EOF
+
+for warehouse in $(cat /tmp/result.log| grep PLAYGROUNDWAREHOUSE | cut -d "|" -f 2 | tr -d ' ')
+do
+    log "Dropping warehouse $warehouse"
+docker run --rm -i -e SNOWSQL_PWD="$SNOWFLAKE_PASSWORD" -e RSA_PUBLIC_KEY="$RSA_PUBLIC_KEY" kurron/snowsql --username $SNOWFLAKE_USERNAME -a $SNOWFLAKE_ACCOUNT_NAME << EOF
+DROP DATABASE IF EXISTS $warehouse;
+EOF
+done
+
 # always exit with success
 exit 0
