@@ -149,7 +149,7 @@ then
       exit 1
     ;;
   esac
-      original_topic_name=$(grep "\"topics\"" $repro_test_file | cut -d "\"" -f 4)
+      original_topic_name=$(grep "\"topics\"" $repro_test_file | cut -d "\"" -f 4 | head -1)
       if [ "$original_topic_name" != "" ]
       then
         tmp=$(echo $original_topic_name | tr '-' '\-')
