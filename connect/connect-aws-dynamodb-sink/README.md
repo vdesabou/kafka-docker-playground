@@ -1,6 +1,6 @@
 # AWS DynamoDB Sink connector
 
-![asciinema](https://github.com/vdesabou/gifs/blob/master/connect/connect-aws-dynamodb-sink/asciinema.gif?raw=true)
+
 
 ## Objective
 

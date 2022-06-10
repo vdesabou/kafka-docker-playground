@@ -1,6 +1,6 @@
 # GCP BigTable Sink connector
 
-![asciinema](https://github.com/vdesabou/gifs/blob/master/connect/connect-gcp-bigtable-sink/asciinema.gif?raw=true)
+
 
 ## Objective
 

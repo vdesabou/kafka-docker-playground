@@ -1,6 +1,6 @@
 # GCS Sink connector
 
-![asciinema](https://github.com/vdesabou/gifs/blob/master/connect/connect-gcp-gcs-sink/asciinema.gif?raw=true)
+
 
 ## Objective
 

@@ -1,6 +1,6 @@
 # Couchbase Source connector
 
-![asciinema](https://github.com/vdesabou/gifs/blob/master/connect/connect-couchbase-source/asciinema.gif?raw=true)
+
 
 ## Prerequisites
 

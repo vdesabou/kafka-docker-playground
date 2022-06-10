@@ -1,6 +1,6 @@
 # GCP Firebase Sink connector
 
-![asciinema](https://github.com/vdesabou/gifs/blob/master/connect/connect-gcp-firebase-sink/asciinema.gif?raw=true)
+
 
 ## Objective
 

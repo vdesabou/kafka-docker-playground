@@ -1,6 +1,6 @@
 # FileStream Sink connector
 
-![asciinema](https://github.com/vdesabou/gifs/blob/master/connect/connect-filestream-sink/asciinema.gif?raw=true)
+
 
 ## Objective
 

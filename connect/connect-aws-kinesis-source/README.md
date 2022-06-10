@@ -1,6 +1,6 @@
 # AWS Kinesis Source connector
 
-![asciinema](https://github.com/vdesabou/gifs/blob/master/connect/connect-aws-kinesis-source/asciinema.gif?raw=true)
+
 
 ## Objective
 
