@@ -1135,10 +1135,12 @@ function get_jmx_metrics() {
   * ) logerror "invalid component $component! it should be one of zookeeper, broker, schema-registry or connect";exit 1;;
   esac
 
+  docker cp $JMXTERM_UBER_JAR $component:$JMXTERM_UBER_JAR
   if [ "$domains" = "ALL" ]
   then
+
 log "This is the list of domains for component $component"
-java -jar $JMXTERM_UBER_JAR  -l localhost:$port -n -v silent << EOF
+docker exec -i $component java -jar $JMXTERM_UBER_JAR  -l localhost:$port -n -v silent << EOF
 domains
 exit
 EOF
@@ -1146,7 +1148,7 @@ EOF
 
 for domain in `echo $domains`
 do
-java -jar $JMXTERM_UBER_JAR  -l localhost:$port -n -v silent > /tmp/beans.log << EOF
+docker exec -i $component java -jar $JMXTERM_UBER_JAR  -l localhost:$port -n -v silent > /tmp/beans.log << EOF
 domain $domain
 beans
 exit
@@ -1154,7 +1156,7 @@ EOF
   while read line; do echo "get *"  -b $line; done < /tmp/beans.log >> /tmp/commands
 
   echo "####### domain $domain ########" >> /tmp/jmx_metrics.log
-  java -jar $JMXTERM_UBER_JAR  -l localhost:$port -n < /tmp/commands >> /tmp/jmx_metrics.log 2>&1
+  docker exec -i $component java -jar $JMXTERM_UBER_JAR  -l localhost:$port -n < /tmp/commands >> /tmp/jmx_metrics.log 2>&1
 done
 
   log "JMX metrics are available in /tmp/jmx_metrics.log file"
