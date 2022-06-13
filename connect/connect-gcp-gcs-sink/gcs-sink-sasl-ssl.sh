@@ -60,6 +60,8 @@ curl -X PUT \
                "schema.compatibility": "NONE",
                "confluent.topic.bootstrap.servers": "broker:9092",
                "confluent.topic.replication.factor": "1",
+               "confluent.topic.ssl.truststore.location" : "/etc/kafka/secrets/kafka.connect.truststore.jks",
+               "confluent.topic.ssl.truststore.password" : "confluent",
                "confluent.topic.ssl.keystore.location" : "/etc/kafka/secrets/kafka.connect.keystore.jks",
                "confluent.topic.ssl.keystore.password" : "confluent",
                "confluent.topic.ssl.key.password" : "confluent",
