@@ -109,9 +109,15 @@ curl -X PUT \
                     "timeseries.timefield": "mytimestamp",
                     "timeseries.metafield": "vinc",
 
-                    "transforms": "insert",
+                    "transforms": "insert,modify",
                     "transforms.insert.type": "org.apache.kafka.connect.transforms.InsertField$Value",
-                    "transforms.insert.timestamp.field": "mytimestamp"
+                    "transforms.insert.timestamp.field": "mytimestamp",
+
+                    "transforms.modify.type": "org.apache.kafka.connect.transforms.TimestampConverter$Value",
+                    "transforms.modify.target.type": "Timestamp",
+                    "transforms.modify.field": "mytimestamp",
+                    "transforms.modify.format": "yyyy-MM-dd HH:mm:ss.SSSSSSX",
+                    "timeseries.timefield.auto.convert.date.format" : "yyyy-MM-dd HH:mm:ss.SSSSSSX"
           }' \
      http://localhost:8083/connectors/mongodb-sink-json/config | jq .
 
@@ -166,6 +172,40 @@ EOF
 #         at com.mongodb.client.internal.MongoCollectionImpl.bulkWrite(MongoCollectionImpl.java:423)
 #         at com.mongodb.kafka.connect.sink.StartedMongoSinkTask.bulkWriteBatch(StartedMongoSinkTask.java:104)
 #         ... 14 more
+
+# myuser [direct: primary] inventory> [
+#   {
+#     mytimestamp: ISODate("2022-06-14T12:31:15.785Z"),
+#     _id: ObjectId("62a88280cc7f7b647aa7060d"),
+#     test: 'ok'
+#   },
+#   {
+#     mytimestamp: ISODate("2022-06-14T12:31:15.808Z"),
+#     _id: ObjectId("62a88280cc7f7b647aa7060e"),
+#     test: 'ok2'
+#   },
+#   {
+#     mytimestamp: ISODate("2022-06-14T12:31:15.808Z"),
+#     _id: ObjectId("62a88280cc7f7b647aa7060f"),
+#     test: 'ok'
+#   },
+#   {
+#     mytimestamp: ISODate("2022-06-14T12:35:29.905Z"),
+#     _id: ObjectId("62a88280cc7f7b647aa70610"),
+#     test: 'ok'
+#   },
+#   {
+#     mytimestamp: ISODate("2022-06-14T12:35:29.921Z"),
+#     _id: ObjectId("62a88280cc7f7b647aa70611"),
+#     test: 'ok2'
+#   },
+#   {
+#     mytimestamp: ISODate("2022-06-14T12:35:29.922Z"),
+#     _id: ObjectId("62a88280cc7f7b647aa70612"),
+#     test: 'ok'
+#   }
+# ]
+# myuser [direct: primary] inventory> %   
 
 # [
 #   {
