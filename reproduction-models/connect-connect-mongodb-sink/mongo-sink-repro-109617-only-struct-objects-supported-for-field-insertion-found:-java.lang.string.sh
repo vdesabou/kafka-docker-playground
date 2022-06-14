@@ -41,7 +41,8 @@ curl -X PUT \
                     "connection.uri" : "mongodb://myuser:mypassword@mongodb:27017",
 
                     "key.converter": "org.apache.kafka.connect.storage.StringConverter",
-                    "value.converter": "org.apache.kafka.connect.storage.StringConverter",
+                    "value.converter": "org.apache.kafka.connect.json.JsonConverter",
+                    "value.converter.schemas.enable": "false",
                     
                     "database":"inventory",
                     "collection":"customers",
@@ -81,6 +82,37 @@ curl -X PUT \
 #         at org.apache.kafka.connect.runtime.errors.RetryWithToleranceOperator.execAndHandleError(RetryWithToleranceOperator.java:200)
 #         ... 15 more
 
+
+log "Sending messages to topic orders_json"
+docker exec -i broker kafka-console-producer --broker-list broker:9092 --topic orders_json --property parse.key=true --property key.separator=, << EOF
+key1,{"test":"ok"}
+key1,{"test":"ok2"}
+key2,{"test":"ok"}
+EOF
+
+
+log "Creating MongoDB sink connector"
+curl -X PUT \
+     -H "Content-Type: application/json" \
+     --data '{
+               "connector.class" : "com.mongodb.kafka.connect.MongoSinkConnector",
+                    "tasks.max" : "1",
+                    "connection.uri" : "mongodb://myuser:mypassword@mongodb:27017",
+
+                    "key.converter": "org.apache.kafka.connect.storage.StringConverter",
+                    "value.converter": "org.apache.kafka.connect.json.JsonConverter",
+                    "value.converter.schemas.enable": "false",
+                    
+                    "database":"inventory",
+                    "collection":"customers",
+                    "topics":"orders_json",
+
+                    "transforms": "insert",
+                    "transforms.insert.type": "org.apache.kafka.connect.transforms.InsertField$Value",
+                    "transforms.insert.timestamp.field": "mytimestamp"
+          }' \
+     http://localhost:8083/connectors/mongodb-sink-json/config | jq .
+
 sleep 10
 
 log "View record"
@@ -89,9 +121,20 @@ use inventory
 db.customers.find().pretty();
 EOF
 
-docker exec -i mongodb mongosh << EOF > output.txt
-use inventory
-db.customers.find().pretty();
-EOF
-grep "foo" output.txt
-rm output.txt
+# [
+#   {
+#     _id: ObjectId("62a84231885d270b8092b0f9"),
+#     test: 'ok',
+#     mytimestamp: Long("1655194150126")
+#   },
+#   {
+#     _id: ObjectId("62a84231885d270b8092b0fa"),
+#     test: 'ok2',
+#     mytimestamp: Long("1655194150145")
+#   },
+#   {
+#     _id: ObjectId("62a84231885d270b8092b0fb"),
+#     test: 'ok',
+#     mytimestamp: Long("1655194150145")
+#   }
+# ]
