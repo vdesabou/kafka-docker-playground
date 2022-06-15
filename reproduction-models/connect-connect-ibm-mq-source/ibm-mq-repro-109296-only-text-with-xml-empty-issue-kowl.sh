@@ -60,6 +60,10 @@ curl -X PUT \
 
 sleep 5
 
+# to compile I did on my laptop:
+# CLASSPATH=.:$PWD/jms.jar:$PWD/com.ibm.mq.allclient.jar:${CLASSPATH}
+# export CLASSPATH
+# javac JMSProducer.java
 log "Sending multiline message to DEV.QUEUE.1 JMS queue:"
 docker cp repro-109296-JmsProducer.class.txt ibmmq:/opt/mqm/samp/jms/samples/JmsProducer.class
 docker exec -i ibmmq /opt/mqm/java/bin/runjms JmsProducer -m QM1 -d DEV.QUEUE.1 -h localhost -p 1414 -l DEV.APP.SVRCONN -u app -w passw0rd
