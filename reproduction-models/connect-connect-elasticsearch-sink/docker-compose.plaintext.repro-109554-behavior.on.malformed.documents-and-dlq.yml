@@ -1,0 +1,19 @@
+---
+version: '3.5'
+services:
+
+  elasticsearch:
+    image: elasticsearch:$ELASTIC_VERSION
+    hostname: elasticsearch
+    container_name: elasticsearch
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+    environment:
+      discovery.type: single-node
+
+  connect:
+    depends_on:
+      - elasticsearch
+    environment:
+      CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-elasticsearch
