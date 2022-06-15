@@ -1,0 +1,48 @@
+---
+version: '3.5'
+services:
+  ibmmq:
+    image: ibmcom/mq # https://hub.docker.com/r/ibmcom/mq/
+    hostname: ibmmq
+    container_name: ibmmq
+    environment:
+      LICENSE: accept
+      MQ_QMGR_NAME: QM1
+      MQ_ADMIN_PASSWORD: passw0rd
+      MQ_APP_PASSWORD: passw0rd
+    ports:
+      - '1414:1414'
+      - '9443:9443'
+
+  kowl:
+    image: docker.redpanda.com/vectorized/console:master-217260f
+    restart: on-failure
+    entrypoint: /bin/sh
+    ports:
+      - '8080:8080'
+    command: -c "echo \"$$CONSOLE_CONFIG_FILE\" > /tmp/config.yml; /app/console"
+    environment:
+      CONFIG_FILEPATH: /tmp/config.yml
+      CONSOLE_CONFIG_FILE: |
+        kafka:
+          brokers: ["broker:9092"]
+          schemaRegistry:
+            enabled: true
+            urls: ["http://schema-registry:8081"]
+        connect:
+          enabled: true
+          clusters:
+            - name: datagen
+              url: http://connect:8083
+
+  connect:
+    depends_on:
+      - zookeeper
+      - broker
+      - schema-registry
+      - ibmmq
+    volumes:
+        - ../../reproduction-models/connect-connect-ibm-mq-source/com.ibm.mq.allclient.jar:/usr/share/confluent-hub-components/confluentinc-kafka-connect-ibmmq/lib/com.ibm.mq.allclient.jar
+        - ../../reproduction-models/connect-connect-ibm-mq-source/jms.jar:/usr/share/confluent-hub-components/confluentinc-kafka-connect-ibmmq/lib/jms.jar
+    environment:
+      CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-ibmmq
