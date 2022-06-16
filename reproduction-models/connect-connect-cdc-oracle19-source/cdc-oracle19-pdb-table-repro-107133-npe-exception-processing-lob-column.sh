@@ -40,7 +40,7 @@ EOF
 
 # Create a redo-log-topic. Please make sure you create a topic with the same name you will use for "redo.log.topic.name": "redo-log-topic"
 # CC-13104
-docker exec connect kafka-topics --create --topic redo-log-topic --bootstrap-server broker:9092 --replication-factor 1 --partitions 1 --config cleanup.policy=delete --config retention.ms=120960000
+docker exec connect kafka-topics --create --topic redo-log-topic --bootstrap-server broker:9092 --replication-factor 1 --partitions 1 --config cleanup.policy=compact --config retention.ms=120960000
 log "redo-log-topic is created"
 sleep 5
 
@@ -216,3 +216,27 @@ EOF
 #     "SQL_REDO": {
 #         "string": "XML DOC BEGIN: select \"XMLRECORD\" from \"C##MYUSER\".\"CUSTOMERS\" where \"RECID\" = '3'"
 #     },
+
+# caused by redo topic in compact mode
+# [2022-06-16 14:57:44,886] ERROR [cdc-oracle-source-pdb|task-0] WorkerSourceTask{id=cdc-oracle-source-pdb-0} failed to send record to redo-log-topic:  (org.apache.kafka.connect.runtime.WorkerSourceTask:383)
+# org.apache.kafka.common.KafkaException: Failed to append record because it was part of a batch which had one more more invalid records
+# 	at org.apache.kafka.clients.producer.internals.Sender.lambda$failBatch$3(Sender.java:729)
+# 	at org.apache.kafka.clients.producer.internals.ProducerBatch.completeFutureAndFireCallbacks(ProducerBatch.java:272)
+# 	at org.apache.kafka.clients.producer.internals.ProducerBatch.done(ProducerBatch.java:234)
+# 	at org.apache.kafka.clients.producer.internals.ProducerBatch.completeExceptionally(ProducerBatch.java:198)
+# 	at org.apache.kafka.clients.producer.internals.Sender.failBatch(Sender.java:758)
+# 	at org.apache.kafka.clients.producer.internals.Sender.failBatch(Sender.java:734)
+# 	at org.apache.kafka.clients.producer.internals.Sender.completeBatch(Sender.java:634)
+# 	at org.apache.kafka.clients.producer.internals.Sender.lambda$null$1(Sender.java:575)
+# 	at java.base/java.util.ArrayList.forEach(ArrayList.java:1541)
+# 	at org.apache.kafka.clients.producer.internals.Sender.lambda$handleProduceResponse$2(Sender.java:562)
+# 	at java.base/java.lang.Iterable.forEach(Iterable.java:75)
+# 	at org.apache.kafka.clients.producer.internals.Sender.handleProduceResponse(Sender.java:562)
+# 	at org.apache.kafka.clients.producer.internals.Sender.lambda$sendProduceRequest$5(Sender.java:836)
+# 	at org.apache.kafka.clients.ClientResponse.onComplete(ClientResponse.java:109)
+# 	at org.apache.kafka.clients.NetworkClient.completeResponses(NetworkClient.java:667)
+# 	at org.apache.kafka.clients.NetworkClient.poll(NetworkClient.java:659)
+# 	at org.apache.kafka.clients.producer.internals.Sender.runOnce(Sender.java:328)
+# 	at org.apache.kafka.clients.producer.internals.Sender.run(Sender.java:243)
+# 	at java.base/java.lang.Thread.run(Thread.java:829)
+# 	at org.apache.kafka.common.utils.KafkaThread.run(KafkaThread.java:64)
