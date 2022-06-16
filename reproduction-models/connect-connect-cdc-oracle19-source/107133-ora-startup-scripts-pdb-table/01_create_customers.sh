@@ -1,0 +1,16 @@
+#!/bin/sh
+
+echo 'Creating CUSTOMERS table in PDB'
+
+sqlplus C\#\#MYUSER/mypassword@//localhost:1521/ORCLPDB1  <<- EOF
+
+  create table CUSTOMERS (
+          RECID VARCHAR2(255 BYTE),
+          XMLRECORD XMLTYPE
+  );
+
+  ALTER TABLE "CUSTOMERS" ADD CONSTRAINT "PK_CUSTOMERS" PRIMARY KEY ("RECID");
+  ALTER TABLE "CUSTOMERS" MODIFY ("RECID" NOT NULL ENABLE);
+
+EOF
+
