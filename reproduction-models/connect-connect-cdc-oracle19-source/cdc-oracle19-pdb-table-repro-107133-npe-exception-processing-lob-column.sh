@@ -96,71 +96,118 @@ curl -X PUT \
           }' \
      http://localhost:8083/connectors/cdc-oracle-source-pdb/config | jq .
 
+
 log "Waiting 20s for connector to read existing data"
 sleep 20
 
-
+log "Insert record id 3"
 docker exec -i oracle sqlplus C\#\#MYUSER/mypassword@//localhost:1521/ORCLPDB1 << EOF
-  insert into CUSTOMERS (RECID, XMLRECORD) values ('3',XMLType('<Warehouse whNo="100"> <Building>Owned</Building></Warehouse>'));
+  insert into CUSTOMERS (RECID, XMLRECORD) values ('3',XMLType('<Warehouse whNo="3"> <Building>Owned</Building></Warehouse>'));
   exit;
 EOF
 
+log "Insert record id 4"
 docker exec -i oracle sqlplus C\#\#MYUSER/mypassword@//localhost:1521/ORCLPDB1 << EOF
   insert into CUSTOMERS (RECID, XMLRECORD) values ('4',XMLType('<Warehouse whNo="4"> <Building>Owned</Building></Warehouse>'));
   exit;
 EOF
 
-docker exec -i oracle sqlplus C\#\#MYUSER/mypassword@//localhost:1521/ORCLPDB1 << EOF
-  insert into CUSTOMERS (RECID, XMLRECORD) values ('5',XMLType('<Warehouse whNo="5"> <Building>Owned</Building></Warehouse>'));
-  exit;
-EOF
-
-docker exec -i oracle sqlplus C\#\#MYUSER/mypassword@//localhost:1521/ORCLPDB1 << EOF
-  insert into CUSTOMERS (RECID, XMLRECORD) values ('6',XMLType('<Warehouse whNo="6"> <Building>Owned</Building></Warehouse>'));
-  exit;
-EOF
-
-docker exec -i oracle sqlplus C\#\#MYUSER/mypassword@//localhost:1521/ORCLPDB1 << EOF
-  insert into CUSTOMERS (RECID, XMLRECORD) values ('7',XMLType('<Warehouse whNo="7"> <Building>Owned</Building></Warehouse>'));
-  exit;
-EOF
-
-docker exec -i oracle sqlplus C\#\#MYUSER/mypassword@//localhost:1521/ORCLPDB1 << EOF
-  insert into CUSTOMERS (RECID, XMLRECORD) values ('9',XMLType('<Warehouse whNo="9"> <Building>Owned</Building></Warehouse>'));
-  exit;
-EOF
-
-docker exec -i oracle sqlplus C\#\#MYUSER/mypassword@//localhost:1521/ORCLPDB1 << EOF
-  insert into CUSTOMERS (RECID, XMLRECORD) values ('11',XMLType('<Warehouse whNo="10"> <Building>Owned</Building></Warehouse>'));
-  exit;
-EOF
-
 set +e
-timeout 20 docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic ORCLPDB1.C__MYUSER.CUSTOMERS --from-beginning
+log "Verifying table topic ORCLPDB1.C__MYUSER.CUSTOMERS: there should be 2 records"
+timeout 20 docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic ORCLPDB1.C__MYUSER.CUSTOMERS --from-beginning  --max-messages 2
 
-log "Verifying topic redo-log-topic: there should be 9 records"
-timeout 20 docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic redo-log-topic --from-beginning
+# {"RECID":"3","table":{"string":"ORCLPDB1.C##MYUSER.CUSTOMERS"},"scn":{"string":"2167694"},"op_type":{"string":"I"},"op_ts":{"string":"1655381241000"},"current_ts":{"string":"1655381242810"},"row_id":{"string":"AAAAAAAAAAAAAAAAAA"},"username":{"string":"C##MYUSER"}}
+# {"RECID":"4","table":{"string":"ORCLPDB1.C##MYUSER.CUSTOMERS"},"scn":{"string":"2167711"},"op_type":{"string":"I"},"op_ts":{"string":"1655381242000"},"current_ts":{"string":"1655381247593"},"row_id":{"string":"AAAAAAAAAAAAAAAAAA"},"username":{"string":"C##MYUSER"}
 
-timeout 20 docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic CUSTOMERS-XMLRECORD --from-beginning
+# {
+#   "fields": [
+#     {
+#       "name": "RECID",
+#       "type": "string"
+#     },
+#     {
+#       "default": null,
+#       "name": "table",
+#       "type": [
+#         "null",
+#         "string"
+#       ]
+#     },
+#     {
+#       "default": null,
+#       "name": "scn",
+#       "type": [
+#         "null",
+#         "string"
+#       ]
+#     },
+#     {
+#       "default": null,
+#       "name": "op_type",
+#       "type": [
+#         "null",
+#         "string"
+#       ]
+#     },
+#     {
+#       "default": null,
+#       "name": "op_ts",
+#       "type": [
+#         "null",
+#         "string"
+#       ]
+#     },
+#     {
+#       "default": null,
+#       "name": "current_ts",
+#       "type": [
+#         "null",
+#         "string"
+#       ]
+#     },
+#     {
+#       "default": null,
+#       "name": "row_id",
+#       "type": [
+#         "null",
+#         "string"
+#       ]
+#     },
+#     {
+#       "default": null,
+#       "name": "username",
+#       "type": [
+#         "null",
+#         "string"
+#       ]
+#     }
+#   ],
+#   "name": "ConnectDefault",
+#   "namespace": "io.confluent.connect.avro",
+#   "type": "record"
+# }
+
+log "Verifying topic redo-log-topic: there should be 10 records"
+timeout 20 docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic redo-log-topic --from-beginning --max-messages 10
+ 
+# {"SCN":{"long":2167694},"START_SCN":{"long":2167694},"COMMIT_SCN":{"long":2167698},"TIMESTAMP":{"long":1655381241000},"START_TIMESTAMP":{"long":1655381241000},"COMMIT_TIMESTAMP":{"long":1655381241000},"XIDUSN":{"long":10},"XIDSLT":{"long":19},"XIDSQN":{"long":648},"XID":{"bytes":"\n\u0000\u0013\u0000\u0002\u0000\u0000"},"PXIDUSN":{"long":10},"PXIDSLT":{"long":19},"PXIDSQN":{"long":648},"PXID":{"bytes":"\n\u0000\u0013\u0000\u0002\u0000\u0000"},"TX_NAME":null,"OPERATION":{"string":"INSERT"},"OPERATION_CODE":{"int":1},"ROLLBACK":{"boolean":false},"SEG_OWNER":{"string":"C##MYUSER"},"SEG_NAME":{"string":"CUSTOMERS"},"TABLE_NAME":{"string":"CUSTOMERS"},"SEG_TYPE":{"int":2},"SEG_TYPE_NAME":{"string":"TABLE"},"TABLE_SPACE":{"string":"USERS"},"ROW_ID":{"string":"AAAAAAAAAAAAAAAAAA"},"USERNAME":{"string":"C##MYUSER"},"OS_USERNAME":{"string":"oracle"},"MACHINE_NAME":{"string":"oracle"},"AUDIT_SESSIONID":{"long":29},"SESSION_NUM":{"long":186},"SERIAL_NUM":{"long":64715},"SESSION_INFO":{"string":"login_username=C##MYUSER client_info= OS_username=oracle Machine_name=oracle OS_terminal=pts/0 OS_process_id=548 OS_program_name=sqlplus@oracle (TNS V1-V3)"},"THREAD_NUM":{"long":1},"SEQUENCE_NUM":{"long":2},"RBASQN":{"long":7},"RBABLK":{"long":8907},"RBABYTE":{"long":384},"UBAFIL":{"long":11},"UBABLK":{"long":0},"UBAREC":{"long":0},"UBASQN":{"long":0},"ABS_FILE_NUM":{"long":0},"REL_FILE_NUM":{"long":0},"DATA_BLK_NUM":{"long":0},"DATA_OBJ_NUM":{"long":72994},"DATA_OBJV_NUM":{"long":2},"DATA_OBJD_NUM":{"long":0},"SQL_REDO":{"string":"insert into \"C##MYUSER\".\"CUSTOMERS\"(\"RECID\") values ('3');"},"SQL_UNDO":{"string":"delete from \"C##MYUSER\".\"CUSTOMERS\" a where a.\"RECID\" = '3' and a.ROWID = 'AAAAAAAAAAAAAAAAAA';"},"RS_ID":{"string":" 0x000007.000022cb.0180 "},"SSN":{"long":0},"CSF":{"boolean":false},"INFO":null,"STATUS":{"int":0},"REDO_VALUE":{"long":20},"UNDO_VALUE":{"long":21},"SAFE_RESUME_SCN":{"long":0},"CSCN":{"long":2167698},"OBJECT_ID":null,"EDITION_NAME":null,"CLIENT_ID":null,"SRC_CON_NAME":{"string":"ORCLPDB1"},"SRC_CON_ID":{"long":3},"SRC_CON_UID":{"long":280798746},"SRC_CON_DBID":{"long":0},"SRC_CON_GUID":null,"CON_ID":{"boolean":false}}
+# {"SCN":{"long":2167695},"START_SCN":{"long":2167694},"COMMIT_SCN":{"long":2167698},"TIMESTAMP":{"long":1655381241000},"START_TIMESTAMP":{"long":1655381241000},"COMMIT_TIMESTAMP":{"long":1655381241000},"XIDUSN":{"long":10},"XIDSLT":{"long":19},"XIDSQN":{"long":648},"XID":{"bytes":"\n\u0000\u0013\u0000\u0002\u0000\u0000"},"PXIDUSN":{"long":10},"PXIDSLT":{"long":19},"PXIDSQN":{"long":648},"PXID":{"bytes":"\n\u0000\u0013\u0000\u0002\u0000\u0000"},"TX_NAME":null,"OPERATION":{"string":"XML DOC BEGIN"},"OPERATION_CODE":{"int":68},"ROLLBACK":{"boolean":false},"SEG_OWNER":{"string":"C##MYUSER"},"SEG_NAME":{"string":"CUSTOMERS"},"TABLE_NAME":{"string":"CUSTOMERS"},"SEG_TYPE":{"int":2},"SEG_TYPE_NAME":{"string":"TABLE"},"TABLE_SPACE":{"string":"USERS"},"ROW_ID":{"string":"AAAAAAAAAAAAAAAAAA"},"USERNAME":{"string":"C##MYUSER"},"OS_USERNAME":{"string":"oracle"},"MACHINE_NAME":{"string":"oracle"},"AUDIT_SESSIONID":{"long":29},"SESSION_NUM":{"long":186},"SERIAL_NUM":{"long":64715},"SESSION_INFO":{"string":"login_username=C##MYUSER client_info= OS_username=oracle Machine_name=oracle OS_terminal=pts/0 OS_process_id=548 OS_program_name=sqlplus@oracle (TNS V1-V3)"},"THREAD_NUM":{"long":1},"SEQUENCE_NUM":{"long":3},"RBASQN":{"long":7},"RBABLK":{"long":8910},"RBABYTE":{"long":312},"UBAFIL":{"long":11},"UBABLK":{"long":0},"UBAREC":{"long":0},"UBASQN":{"long":0},"ABS_FILE_NUM":{"long":0},"REL_FILE_NUM":{"long":0},"DATA_BLK_NUM":{"long":0},"DATA_OBJ_NUM":{"long":72994},"DATA_OBJV_NUM":{"long":2},"DATA_OBJD_NUM":{"long":0},"SQL_REDO":{"string":"XML DOC BEGIN:  select \"XMLRECORD\" from \"C##MYUSER\".\"CUSTOMERS\" where \"RECID\" = '3'"},"SQL_UNDO":null,"RS_ID":{"string":" 0x000007.000022ce.0138 "},"SSN":{"long":0},"CSF":{"boolean":false},"INFO":{"string":"XML sql_redo not re-executable"},"STATUS":{"int":2},"REDO_VALUE":{"long":22},"UNDO_VALUE":{"long":23},"SAFE_RESUME_SCN":{"long":0},"CSCN":{"long":2167698},"OBJECT_ID":null,"EDITION_NAME":null,"CLIENT_ID":null,"SRC_CON_NAME":{"string":"ORCLPDB1"},"SRC_CON_ID":{"long":3},"SRC_CON_UID":{"long":280798746},"SRC_CON_DBID":{"long":0},"SRC_CON_GUID":null,"CON_ID":{"boolean":false}}
+# {"SCN":{"long":2167695},"START_SCN":{"long":2167694},"COMMIT_SCN":{"long":2167698},"TIMESTAMP":{"long":1655381241000},"START_TIMESTAMP":{"long":1655381241000},"COMMIT_TIMESTAMP":{"long":1655381241000},"XIDUSN":{"long":10},"XIDSLT":{"long":19},"XIDSQN":{"long":648},"XID":{"bytes":"\n\u0000\u0013\u0000\u0002\u0000\u0000"},"PXIDUSN":{"long":10},"PXIDSLT":{"long":19},"PXIDSQN":{"long":648},"PXID":{"bytes":"\n\u0000\u0013\u0000\u0002\u0000\u0000"},"TX_NAME":null,"OPERATION":{"string":"XML DOC WRITE"},"OPERATION_CODE":{"int":70},"ROLLBACK":{"boolean":false},"SEG_OWNER":{"string":"C##MYUSER"},"SEG_NAME":{"string":"CUSTOMERS"},"TABLE_NAME":{"string":"CUSTOMERS"},"SEG_TYPE":{"int":2},"SEG_TYPE_NAME":{"string":"TABLE"},"TABLE_SPACE":{"string":"USERS"},"ROW_ID":{"string":"AAAAAAAAAAAAAAAAAA"},"USERNAME":{"string":"C##MYUSER"},"OS_USERNAME":{"string":"oracle"},"MACHINE_NAME":{"string":"oracle"},"AUDIT_SESSIONID":{"long":29},"SESSION_NUM":{"long":186},"SERIAL_NUM":{"long":64715},"SESSION_INFO":{"string":"login_username=C##MYUSER client_info= OS_username=oracle Machine_name=oracle OS_terminal=pts/0 OS_process_id=548 OS_program_name=sqlplus@oracle (TNS V1-V3)"},"THREAD_NUM":{"long":1},"SEQUENCE_NUM":{"long":4},"RBASQN":{"long":7},"RBABLK":{"long":8910},"RBABYTE":{"long":312},"UBAFIL":{"long":11},"UBABLK":{"long":0},"UBAREC":{"long":0},"UBASQN":{"long":0},"ABS_FILE_NUM":{"long":0},"REL_FILE_NUM":{"long":0},"DATA_BLK_NUM":{"long":0},"DATA_OBJ_NUM":{"long":72994},"DATA_OBJV_NUM":{"long":2},"DATA_OBJD_NUM":{"long":0},"SQL_REDO":{"string":"XML_REDO := '<Warehouse whNo=\"3\"> <Building>Owned</Building></Warehouse>'\n amount: 59"},"SQL_UNDO":null,"RS_ID":{"string":" 0x000007.000022ce.0138 "},"SSN":{"long":0},"CSF":{"boolean":false},"INFO":{"string":"XML sql_redo not re-executable"},"STATUS":{"int":2},"REDO_VALUE":{"long":24},"UNDO_VALUE":{"long":25},"SAFE_RESUME_SCN":{"long":0},"CSCN":{"long":2167698},"OBJECT_ID":null,"EDITION_NAME":null,"CLIENT_ID":null,"SRC_CON_NAME":{"string":"ORCLPDB1"},"SRC_CON_ID":{"long":3},"SRC_CON_UID":{"long":280798746},"SRC_CON_DBID":{"long":0},"SRC_CON_GUID":null,"CON_ID":{"boolean":false}}
+# {"SCN":{"long":2167695},"START_SCN":{"long":2167694},"COMMIT_SCN":{"long":2167698},"TIMESTAMP":{"long":1655381241000},"START_TIMESTAMP":{"long":1655381241000},"COMMIT_TIMESTAMP":{"long":1655381241000},"XIDUSN":{"long":10},"XIDSLT":{"long":19},"XIDSQN":{"long":648},"XID":{"bytes":"\n\u0000\u0013\u0000\u0002\u0000\u0000"},"PXIDUSN":{"long":10},"PXIDSLT":{"long":19},"PXIDSQN":{"long":648},"PXID":{"bytes":"\n\u0000\u0013\u0000\u0002\u0000\u0000"},"TX_NAME":null,"OPERATION":{"string":"XML DOC END"},"OPERATION_CODE":{"int":71},"ROLLBACK":{"boolean":false},"SEG_OWNER":{"string":"C##MYUSER"},"SEG_NAME":{"string":"CUSTOMERS"},"TABLE_NAME":{"string":"CUSTOMERS"},"SEG_TYPE":{"int":2},"SEG_TYPE_NAME":{"string":"TABLE"},"TABLE_SPACE":{"string":"USERS"},"ROW_ID":{"string":"AAAAAAAAAAAAAAAAAA"},"USERNAME":{"string":"C##MYUSER"},"OS_USERNAME":{"string":"oracle"},"MACHINE_NAME":{"string":"oracle"},"AUDIT_SESSIONID":{"long":29},"SESSION_NUM":{"long":186},"SERIAL_NUM":{"long":64715},"SESSION_INFO":{"string":"login_username=C##MYUSER client_info= OS_username=oracle Machine_name=oracle OS_terminal=pts/0 OS_process_id=548 OS_program_name=sqlplus@oracle (TNS V1-V3)"},"THREAD_NUM":{"long":1},"SEQUENCE_NUM":{"long":5},"RBASQN":{"long":7},"RBABLK":{"long":8910},"RBABYTE":{"long":312},"UBAFIL":{"long":11},"UBABLK":{"long":0},"UBAREC":{"long":0},"UBASQN":{"long":0},"ABS_FILE_NUM":{"long":0},"REL_FILE_NUM":{"long":0},"DATA_BLK_NUM":{"long":0},"DATA_OBJ_NUM":{"long":72994},"DATA_OBJV_NUM":{"long":2},"DATA_OBJD_NUM":{"long":0},"SQL_REDO":null,"SQL_UNDO":null,"RS_ID":{"string":" 0x000007.000022ce.0138 "},"SSN":{"long":0},"CSF":{"boolean":false},"INFO":null,"STATUS":{"int":0},"REDO_VALUE":{"long":26},"UNDO_VALUE":{"long":27},"SAFE_RESUME_SCN":{"long":0},"CSCN":{"long":2167698},"OBJECT_ID":null,"EDITION_NAME":null,"CLIENT_ID":null,"SRC_CON_NAME":{"string":"ORCLPDB1"},"SRC_CON_ID":{"long":3},"SRC_CON_UID":{"long":280798746},"SRC_CON_DBID":{"long":0},"SRC_CON_GUID":null,"CON_ID":{"boolean":false}}
+# {"SCN":{"long":2167698},"START_SCN":{"long":2167694},"COMMIT_SCN":{"long":2167698},"TIMESTAMP":{"long":1655381241000},"START_TIMESTAMP":{"long":1655381241000},"COMMIT_TIMESTAMP":{"long":1655381241000},"XIDUSN":{"long":10},"XIDSLT":{"long":19},"XIDSQN":{"long":648},"XID":{"bytes":"\n\u0000\u0013\u0000\u0002\u0000\u0000"},"PXIDUSN":{"long":10},"PXIDSLT":{"long":19},"PXIDSQN":{"long":648},"PXID":{"bytes":"\n\u0000\u0013\u0000\u0002\u0000\u0000"},"TX_NAME":null,"OPERATION":{"string":"COMMIT"},"OPERATION_CODE":{"int":7},"ROLLBACK":{"boolean":false},"SEG_OWNER":null,"SEG_NAME":null,"TABLE_NAME":null,"SEG_TYPE":{"int":0},"SEG_TYPE_NAME":null,"TABLE_SPACE":null,"ROW_ID":{"string":"AAAAAAAAAAAAAAAAAA"},"USERNAME":{"string":"C##MYUSER"},"OS_USERNAME":{"string":"oracle"},"MACHINE_NAME":{"string":"oracle"},"AUDIT_SESSIONID":{"long":29},"SESSION_NUM":{"long":186},"SERIAL_NUM":{"long":64715},"SESSION_INFO":{"string":"login_username=C##MYUSER client_info= OS_username=oracle Machine_name=oracle OS_terminal=pts/0 OS_process_id=548 OS_program_name=sqlplus@oracle (TNS V1-V3)"},"THREAD_NUM":{"long":1},"SEQUENCE_NUM":{"long":7},"RBASQN":{"long":7},"RBABLK":{"long":8912},"RBABYTE":{"long":276},"UBAFIL":{"long":11},"UBABLK":{"long":0},"UBAREC":{"long":0},"UBASQN":{"long":0},"ABS_FILE_NUM":{"long":11},"REL_FILE_NUM":{"long":0},"DATA_BLK_NUM":{"long":0},"DATA_OBJ_NUM":{"long":0},"DATA_OBJV_NUM":{"long":0},"DATA_OBJD_NUM":{"long":0},"SQL_REDO":{"string":"commit;"},"SQL_UNDO":null,"RS_ID":{"string":" 0x000007.000022d0.0114 "},"SSN":{"long":0},"CSF":{"boolean":false},"INFO":null,"STATUS":{"int":0},"REDO_VALUE":{"long":30},"UNDO_VALUE":{"long":31},"SAFE_RESUME_SCN":{"long":2167698},"CSCN":{"long":2167698},"OBJECT_ID":null,"EDITION_NAME":null,"CLIENT_ID":null,"SRC_CON_NAME":{"string":"ORCLPDB1"},"SRC_CON_ID":{"long":3},"SRC_CON_UID":{"long":280798746},"SRC_CON_DBID":{"long":0},"SRC_CON_GUID":null,"CON_ID":{"boolean":false}}
+# {"SCN":{"long":2167711},"START_SCN":{"long":2167711},"COMMIT_SCN":{"long":2167714},"TIMESTAMP":{"long":1655381242000},"START_TIMESTAMP":{"long":1655381242000},"COMMIT_TIMESTAMP":{"long":1655381242000},"XIDUSN":{"long":10},"XIDSLT":{"long":21},"XIDSQN":{"long":648},"XID":{"bytes":"\n\u0000\u0015\u0000\u0002\u0000\u0000"},"PXIDUSN":{"long":10},"PXIDSLT":{"long":21},"PXIDSQN":{"long":648},"PXID":{"bytes":"\n\u0000\u0015\u0000\u0002\u0000\u0000"},"TX_NAME":null,"OPERATION":{"string":"INSERT"},"OPERATION_CODE":{"int":1},"ROLLBACK":{"boolean":false},"SEG_OWNER":{"string":"C##MYUSER"},"SEG_NAME":{"string":"CUSTOMERS"},"TABLE_NAME":{"string":"CUSTOMERS"},"SEG_TYPE":{"int":2},"SEG_TYPE_NAME":{"string":"TABLE"},"TABLE_SPACE":{"string":"USERS"},"ROW_ID":{"string":"AAAAAAAAAAAAAAAAAA"},"USERNAME":{"string":"C##MYUSER"},"OS_USERNAME":{"string":"oracle"},"MACHINE_NAME":{"string":"oracle"},"AUDIT_SESSIONID":{"long":30},"SESSION_NUM":{"long":186},"SERIAL_NUM":{"long":7500},"SESSION_INFO":{"string":"login_username=C##MYUSER client_info= OS_username=oracle Machine_name=oracle OS_terminal=pts/0 OS_process_id=557 OS_program_name=sqlplus@oracle (TNS V1-V3)"},"THREAD_NUM":{"long":1},"SEQUENCE_NUM":{"long":2},"RBASQN":{"long":7},"RBABLK":{"long":8920},"RBABYTE":{"long":384},"UBAFIL":{"long":11},"UBABLK":{"long":0},"UBAREC":{"long":0},"UBASQN":{"long":0},"ABS_FILE_NUM":{"long":0},"REL_FILE_NUM":{"long":0},"DATA_BLK_NUM":{"long":0},"DATA_OBJ_NUM":{"long":72994},"DATA_OBJV_NUM":{"long":2},"DATA_OBJD_NUM":{"long":0},"SQL_REDO":{"string":"insert into \"C##MYUSER\".\"CUSTOMERS\"(\"RECID\") values ('4');"},"SQL_UNDO":{"string":"delete from \"C##MYUSER\".\"CUSTOMERS\" a where a.\"RECID\" = '4' and a.ROWID = 'AAAAAAAAAAAAAAAAAA';"},"RS_ID":{"string":" 0x000007.000022d8.0180 "},"SSN":{"long":0},"CSF":{"boolean":false},"INFO":null,"STATUS":{"int":0},"REDO_VALUE":{"long":14},"UNDO_VALUE":{"long":15},"SAFE_RESUME_SCN":{"long":0},"CSCN":{"long":2167714},"OBJECT_ID":null,"EDITION_NAME":null,"CLIENT_ID":null,"SRC_CON_NAME":{"string":"ORCLPDB1"},"SRC_CON_ID":{"long":3},"SRC_CON_UID":{"long":280798746},"SRC_CON_DBID":{"long":0},"SRC_CON_GUID":null,"CON_ID":{"boolean":false}}
+# {"SCN":{"long":2167711},"START_SCN":{"long":2167711},"COMMIT_SCN":{"long":2167714},"TIMESTAMP":{"long":1655381242000},"START_TIMESTAMP":{"long":1655381242000},"COMMIT_TIMESTAMP":{"long":1655381242000},"XIDUSN":{"long":10},"XIDSLT":{"long":21},"XIDSQN":{"long":648},"XID":{"bytes":"\n\u0000\u0015\u0000\u0002\u0000\u0000"},"PXIDUSN":{"long":10},"PXIDSLT":{"long":21},"PXIDSQN":{"long":648},"PXID":{"bytes":"\n\u0000\u0015\u0000\u0002\u0000\u0000"},"TX_NAME":null,"OPERATION":{"string":"XML DOC BEGIN"},"OPERATION_CODE":{"int":68},"ROLLBACK":{"boolean":false},"SEG_OWNER":{"string":"C##MYUSER"},"SEG_NAME":{"string":"CUSTOMERS"},"TABLE_NAME":{"string":"CUSTOMERS"},"SEG_TYPE":{"int":2},"SEG_TYPE_NAME":{"string":"TABLE"},"TABLE_SPACE":{"string":"USERS"},"ROW_ID":{"string":"AAAAAAAAAAAAAAAAAA"},"USERNAME":{"string":"C##MYUSER"},"OS_USERNAME":{"string":"oracle"},"MACHINE_NAME":{"string":"oracle"},"AUDIT_SESSIONID":{"long":30},"SESSION_NUM":{"long":186},"SERIAL_NUM":{"long":7500},"SESSION_INFO":{"string":"login_username=C##MYUSER client_info= OS_username=oracle Machine_name=oracle OS_terminal=pts/0 OS_process_id=557 OS_program_name=sqlplus@oracle (TNS V1-V3)"},"THREAD_NUM":{"long":1},"SEQUENCE_NUM":{"long":3},"RBASQN":{"long":7},"RBABLK":{"long":8921},"RBABYTE":{"long":352},"UBAFIL":{"long":11},"UBABLK":{"long":0},"UBAREC":{"long":0},"UBASQN":{"long":0},"ABS_FILE_NUM":{"long":0},"REL_FILE_NUM":{"long":0},"DATA_BLK_NUM":{"long":0},"DATA_OBJ_NUM":{"long":72994},"DATA_OBJV_NUM":{"long":2},"DATA_OBJD_NUM":{"long":0},"SQL_REDO":{"string":"XML DOC BEGIN:  select \"XMLRECORD\" from \"C##MYUSER\".\"CUSTOMERS\" where \"RECID\" = '4'"},"SQL_UNDO":null,"RS_ID":{"string":" 0x000007.000022d9.0160 "},"SSN":{"long":0},"CSF":{"boolean":false},"INFO":{"string":"XML sql_redo not re-executable"},"STATUS":{"int":2},"REDO_VALUE":{"long":16},"UNDO_VALUE":{"long":17},"SAFE_RESUME_SCN":{"long":0},"CSCN":{"long":2167714},"OBJECT_ID":null,"EDITION_NAME":null,"CLIENT_ID":null,"SRC_CON_NAME":{"string":"ORCLPDB1"},"SRC_CON_ID":{"long":3},"SRC_CON_UID":{"long":280798746},"SRC_CON_DBID":{"long":0},"SRC_CON_GUID":null,"CON_ID":{"boolean":false}}
+# {"SCN":{"long":2167711},"START_SCN":{"long":2167711},"COMMIT_SCN":{"long":2167714},"TIMESTAMP":{"long":1655381242000},"START_TIMESTAMP":{"long":1655381242000},"COMMIT_TIMESTAMP":{"long":1655381242000},"XIDUSN":{"long":10},"XIDSLT":{"long":21},"XIDSQN":{"long":648},"XID":{"bytes":"\n\u0000\u0015\u0000\u0002\u0000\u0000"},"PXIDUSN":{"long":10},"PXIDSLT":{"long":21},"PXIDSQN":{"long":648},"PXID":{"bytes":"\n\u0000\u0015\u0000\u0002\u0000\u0000"},"TX_NAME":null,"OPERATION":{"string":"XML DOC WRITE"},"OPERATION_CODE":{"int":70},"ROLLBACK":{"boolean":false},"SEG_OWNER":{"string":"C##MYUSER"},"SEG_NAME":{"string":"CUSTOMERS"},"TABLE_NAME":{"string":"CUSTOMERS"},"SEG_TYPE":{"int":2},"SEG_TYPE_NAME":{"string":"TABLE"},"TABLE_SPACE":{"string":"USERS"},"ROW_ID":{"string":"AAAAAAAAAAAAAAAAAA"},"USERNAME":{"string":"C##MYUSER"},"OS_USERNAME":{"string":"oracle"},"MACHINE_NAME":{"string":"oracle"},"AUDIT_SESSIONID":{"long":30},"SESSION_NUM":{"long":186},"SERIAL_NUM":{"long":7500},"SESSION_INFO":{"string":"login_username=C##MYUSER client_info= OS_username=oracle Machine_name=oracle OS_terminal=pts/0 OS_process_id=557 OS_program_name=sqlplus@oracle (TNS V1-V3)"},"THREAD_NUM":{"long":1},"SEQUENCE_NUM":{"long":4},"RBASQN":{"long":7},"RBABLK":{"long":8921},"RBABYTE":{"long":352},"UBAFIL":{"long":11},"UBABLK":{"long":0},"UBAREC":{"long":0},"UBASQN":{"long":0},"ABS_FILE_NUM":{"long":0},"REL_FILE_NUM":{"long":0},"DATA_BLK_NUM":{"long":0},"DATA_OBJ_NUM":{"long":72994},"DATA_OBJV_NUM":{"long":2},"DATA_OBJD_NUM":{"long":0},"SQL_REDO":{"string":"XML_REDO := '<Warehouse whNo=\"4\"> <Building>Owned</Building></Warehouse>'\n amount: 59"},"SQL_UNDO":null,"RS_ID":{"string":" 0x000007.000022d9.0160 "},"SSN":{"long":0},"CSF":{"boolean":false},"INFO":{"string":"XML sql_redo not re-executable"},"STATUS":{"int":2},"REDO_VALUE":{"long":18},"UNDO_VALUE":{"long":19},"SAFE_RESUME_SCN":{"long":0},"CSCN":{"long":2167714},"OBJECT_ID":null,"EDITION_NAME":null,"CLIENT_ID":null,"SRC_CON_NAME":{"string":"ORCLPDB1"},"SRC_CON_ID":{"long":3},"SRC_CON_UID":{"long":280798746},"SRC_CON_DBID":{"long":0},"SRC_CON_GUID":null,"CON_ID":{"boolean":false}}
+# {"SCN":{"long":2167711},"START_SCN":{"long":2167711},"COMMIT_SCN":{"long":2167714},"TIMESTAMP":{"long":1655381242000},"START_TIMESTAMP":{"long":1655381242000},"COMMIT_TIMESTAMP":{"long":1655381242000},"XIDUSN":{"long":10},"XIDSLT":{"long":21},"XIDSQN":{"long":648},"XID":{"bytes":"\n\u0000\u0015\u0000\u0002\u0000\u0000"},"PXIDUSN":{"long":10},"PXIDSLT":{"long":21},"PXIDSQN":{"long":648},"PXID":{"bytes":"\n\u0000\u0015\u0000\u0002\u0000\u0000"},"TX_NAME":null,"OPERATION":{"string":"XML DOC END"},"OPERATION_CODE":{"int":71},"ROLLBACK":{"boolean":false},"SEG_OWNER":{"string":"C##MYUSER"},"SEG_NAME":{"string":"CUSTOMERS"},"TABLE_NAME":{"string":"CUSTOMERS"},"SEG_TYPE":{"int":2},"SEG_TYPE_NAME":{"string":"TABLE"},"TABLE_SPACE":{"string":"USERS"},"ROW_ID":{"string":"AAAAAAAAAAAAAAAAAA"},"USERNAME":{"string":"C##MYUSER"},"OS_USERNAME":{"string":"oracle"},"MACHINE_NAME":{"string":"oracle"},"AUDIT_SESSIONID":{"long":30},"SESSION_NUM":{"long":186},"SERIAL_NUM":{"long":7500},"SESSION_INFO":{"string":"login_username=C##MYUSER client_info= OS_username=oracle Machine_name=oracle OS_terminal=pts/0 OS_process_id=557 OS_program_name=sqlplus@oracle (TNS V1-V3)"},"THREAD_NUM":{"long":1},"SEQUENCE_NUM":{"long":5},"RBASQN":{"long":7},"RBABLK":{"long":8921},"RBABYTE":{"long":352},"UBAFIL":{"long":11},"UBABLK":{"long":0},"UBAREC":{"long":0},"UBASQN":{"long":0},"ABS_FILE_NUM":{"long":0},"REL_FILE_NUM":{"long":0},"DATA_BLK_NUM":{"long":0},"DATA_OBJ_NUM":{"long":72994},"DATA_OBJV_NUM":{"long":2},"DATA_OBJD_NUM":{"long":0},"SQL_REDO":null,"SQL_UNDO":null,"RS_ID":{"string":" 0x000007.000022d9.0160 "},"SSN":{"long":0},"CSF":{"boolean":false},"INFO":null,"STATUS":{"int":0},"REDO_VALUE":{"long":20},"UNDO_VALUE":{"long":21},"SAFE_RESUME_SCN":{"long":0},"CSCN":{"long":2167714},"OBJECT_ID":null,"EDITION_NAME":null,"CLIENT_ID":null,"SRC_CON_NAME":{"string":"ORCLPDB1"},"SRC_CON_ID":{"long":3},"SRC_CON_UID":{"long":280798746},"SRC_CON_DBID":{"long":0},"SRC_CON_GUID":null,"CON_ID":{"boolean":false}}
+# {"SCN":{"long":2167714},"START_SCN":{"long":2167711},"COMMIT_SCN":{"long":2167714},"TIMESTAMP":{"long":1655381242000},"START_TIMESTAMP":{"long":1655381242000},"COMMIT_TIMESTAMP":{"long":1655381242000},"XIDUSN":{"long":10},"XIDSLT":{"long":21},"XIDSQN":{"long":648},"XID":{"bytes":"\n\u0000\u0015\u0000\u0002\u0000\u0000"},"PXIDUSN":{"long":10},"PXIDSLT":{"long":21},"PXIDSQN":{"long":648},"PXID":{"bytes":"\n\u0000\u0015\u0000\u0002\u0000\u0000"},"TX_NAME":null,"OPERATION":{"string":"COMMIT"},"OPERATION_CODE":{"int":7},"ROLLBACK":{"boolean":false},"SEG_OWNER":null,"SEG_NAME":null,"TABLE_NAME":null,"SEG_TYPE":{"int":0},"SEG_TYPE_NAME":null,"TABLE_SPACE":null,"ROW_ID":{"string":"AAAAAAAAAAAAAAAAAA"},"USERNAME":{"string":"C##MYUSER"},"OS_USERNAME":{"string":"oracle"},"MACHINE_NAME":{"string":"oracle"},"AUDIT_SESSIONID":{"long":30},"SESSION_NUM":{"long":186},"SERIAL_NUM":{"long":7500},"SESSION_INFO":{"string":"login_username=C##MYUSER client_info= OS_username=oracle Machine_name=oracle OS_terminal=pts/0 OS_process_id=557 OS_program_name=sqlplus@oracle (TNS V1-V3)"},"THREAD_NUM":{"long":1},"SEQUENCE_NUM":{"long":7},"RBASQN":{"long":7},"RBABLK":{"long":8924},"RBABYTE":{"long":276},"UBAFIL":{"long":11},"UBABLK":{"long":0},"UBAREC":{"long":0},"UBASQN":{"long":0},"ABS_FILE_NUM":{"long":11},"REL_FILE_NUM":{"long":0},"DATA_BLK_NUM":{"long":0},"DATA_OBJ_NUM":{"long":0},"DATA_OBJV_NUM":{"long":0},"DATA_OBJD_NUM":{"long":0},"SQL_REDO":{"string":"commit;"},"SQL_UNDO":null,"RS_ID":{"string":" 0x000007.000022dc.0114 "},"SSN":{"long":0},"CSF":{"boolean":false},"INFO":null,"STATUS":{"int":0},"REDO_VALUE":{"long":24},"UNDO_VALUE":{"long":25},"SAFE_RESUME_SCN":{"long":2167714},"CSCN":{"long":2167714},"OBJECT_ID":null,"EDITION_NAME":null,"CLIENT_ID":null,"SRC_CON_NAME":{"string":"ORCLPDB1"},"SRC_CON_ID":{"long":3},"SRC_CON_UID":{"long":280798746},"SRC_CON_DBID":{"long":0},"SRC_CON_GUID":null,"CON_ID":{"boolean":false}}
+
+log "Verifying lob topic CUSTOMERS-XMLRECORD: there should be 2 records"
+timeout 20 docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic CUSTOMERS-XMLRECORD --from-beginning  --max-messages 2
+# "<Warehouse whNo=\"3\"> <Building>Owned</Building></Warehouse>"
+# "<Warehouse whNo=\"4\"> <Building>Owned</Building></Warehouse>"
 
 
-exit 0
 
-# https://confluent.slack.com/archives/C03KEUWN8EL/p1655376778232009
-# curl -X POST localhost:8083/connectors/cdc-oracle-source-pdb/tasks/0/restart
-# curl -X POST localhost:8083/connectors/cdc-oracle-source-pdb/tasks/1/restart
-
-# After restart of tasks:
-
-# [2022-06-16 10:32:37,276] TRACE [cdc-oracle-source-pdb|task-1|changeEvent] Received record from redo log (io.confluent.connect.oracle.cdc.ChangeEventGenerator:373)
-# [2022-06-16 10:32:37,276] TRACE [cdc-oracle-source-pdb|task-1|changeEvent] Converting value of struct type (io.confluent.connect.oracle.cdc.ChangeEventGenerator:381)
-# [2022-06-16 10:32:37,277] TRACE [cdc-oracle-source-pdb|task-1|changeEvent] Redo log record received: Struct{SCN=2173963,START_SCN=2173962,COMMIT_SCN=2173966,TIMESTAMP=Thu Jun 16 10:32:04 GMT 2022,START_TIMESTAMP=Thu Jun 16 10:32:04 GMT 2022,COMMIT_TIMESTAMP=Thu Jun 16 10:32:04 GMT 2022,XIDUSN=10,XIDSLT=2,XIDSQN=650,XID=java.nio.HeapByteBuffer[pos=0 lim=8 cap=8],PXIDUSN=10,PXIDSLT=2,PXIDSQN=650,PXID=java.nio.HeapByteBuffer[pos=0 lim=8 cap=8],OPERATION=XML DOC WRITE,OPERATION_CODE=70,ROLLBACK=false,SEG_OWNER=C##MYUSER,SEG_NAME=CUSTOMERS,TABLE_NAME=CUSTOMERS,SEG_TYPE=2,SEG_TYPE_NAME=TABLE,TABLE_SPACE=USERS,ROW_ID=AAAAAAAAAAAAAAAAAA,USERNAME=C##MYUSER,OS_USERNAME=oracle,MACHINE_NAME=oracle,AUDIT_SESSIONID=10014,SESSION_NUM=367,SERIAL_NUM=37507,SESSION_INFO=login_username=C##MYUSER client_info= OS_username=oracle Machine_name=oracle OS_terminal=pts/0 OS_process_id=1099 OS_program_name=sqlplus@oracle (TNS V1-V3),THREAD_NUM=1,SEQUENCE_NUM=4,RBASQN=7,RBABLK=35242,RBABYTE=312,UBAFIL=11,UBABLK=0,UBAREC=0,UBASQN=0,ABS_FILE_NUM=0,REL_FILE_NUM=0,DATA_BLK_NUM=0,DATA_OBJ_NUM=72994,DATA_OBJV_NUM=2,DATA_OBJD_NUM=0,SQL_REDO=XML_REDO := '<Warehouse whNo="8"> <Building>Owned</Building></Warehouse>'
-#  amount: 59,RS_ID= 0x000007.000089aa.0138 ,SSN=0,CSF=false,INFO=XML sql_redo not re-executable,STATUS=2,REDO_VALUE=30,UNDO_VALUE=31,SAFE_RESUME_SCN=0,CSCN=2173966,SRC_CON_NAME=ORCLPDB1,SRC_CON_ID=3,SRC_CON_UID=280798746,SRC_CON_DBID=0,CON_ID=false} (io.confluent.connect.oracle.cdc.ChangeEventGenerator:394)
-# [2022-06-16 10:32:37,277] TRACE [cdc-oracle-source-pdb|task-1|changeEvent] Record is self-contained, returning verbatim (io.confluent.connect.oracle.cdc.record.RedoLogRecordCombiner:151)
-# [2022-06-16 10:32:37,277] TRACE [cdc-oracle-source-pdb|task-1|changeEvent] Processing combined multi-part record: Struct{SCN=2173963,START_SCN=2173962,COMMIT_SCN=2173966,TIMESTAMP=Thu Jun 16 10:32:04 GMT 2022,START_TIMESTAMP=Thu Jun 16 10:32:04 GMT 2022,COMMIT_TIMESTAMP=Thu Jun 16 10:32:04 GMT 2022,XIDUSN=10,XIDSLT=2,XIDSQN=650,XID=java.nio.HeapByteBuffer[pos=0 lim=8 cap=8],PXIDUSN=10,PXIDSLT=2,PXIDSQN=650,PXID=java.nio.HeapByteBuffer[pos=0 lim=8 cap=8],OPERATION=XML DOC WRITE,OPERATION_CODE=70,ROLLBACK=false,SEG_OWNER=C##MYUSER,SEG_NAME=CUSTOMERS,TABLE_NAME=CUSTOMERS,SEG_TYPE=2,SEG_TYPE_NAME=TABLE,TABLE_SPACE=USERS,ROW_ID=AAAAAAAAAAAAAAAAAA,USERNAME=C##MYUSER,OS_USERNAME=oracle,MACHINE_NAME=oracle,AUDIT_SESSIONID=10014,SESSION_NUM=367,SERIAL_NUM=37507,SESSION_INFO=login_username=C##MYUSER client_info= OS_username=oracle Machine_name=oracle OS_terminal=pts/0 OS_process_id=1099 OS_program_name=sqlplus@oracle (TNS V1-V3),THREAD_NUM=1,SEQUENCE_NUM=4,RBASQN=7,RBABLK=35242,RBABYTE=312,UBAFIL=11,UBABLK=0,UBAREC=0,UBASQN=0,ABS_FILE_NUM=0,REL_FILE_NUM=0,DATA_BLK_NUM=0,DATA_OBJ_NUM=72994,DATA_OBJV_NUM=2,DATA_OBJD_NUM=0,SQL_REDO=XML_REDO := '<Warehouse whNo="8"> <Building>Owned</Building></Warehouse>'
-#  amount: 59,RS_ID= 0x000007.000089aa.0138 ,SSN=0,CSF=false,INFO=XML sql_redo not re-executable,STATUS=2,REDO_VALUE=30,UNDO_VALUE=31,SAFE_RESUME_SCN=0,CSCN=2173966,SRC_CON_NAME=ORCLPDB1,SRC_CON_ID=3,SRC_CON_UID=280798746,SRC_CON_DBID=0,CON_ID=false} (io.confluent.connect.oracle.cdc.ChangeEventGenerator:485)
-# [2022-06-16 10:32:37,277] TRACE [cdc-oracle-source-pdb|task-1|changeEvent] Change event record convertor skipping XML records (io.confluent.connect.oracle.cdc.record.OracleChangeEventSourceRecordConverter:335)
-# [2022-06-16 10:32:37,277] TRACE [cdc-oracle-source-pdb|task-1|changeEvent] Change event records: [] (io.confluent.connect.oracle.cdc.ChangeEventGenerator:506)
-# [2022-06-16 10:32:37,277] TRACE [cdc-oracle-source-pdb|task-1|changeEvent] Table schema Schema{STRUCT} did not contain LOB fields, skipping LOB convertor for Struct{SCN=2173963,START_SCN=2173962,COMMIT_SCN=2173966,TIMESTAMP=Thu Jun 16 10:32:04 GMT 2022,START_TIMESTAMP=Thu Jun 16 10:32:04 GMT 2022,COMMIT_TIMESTAMP=Thu Jun 16 10:32:04 GMT 2022,XIDUSN=10,XIDSLT=2,XIDSQN=650,XID=java.nio.HeapByteBuffer[pos=0 lim=8 cap=8],PXIDUSN=10,PXIDSLT=2,PXIDSQN=650,PXID=java.nio.HeapByteBuffer[pos=0 lim=8 cap=8],OPERATION=XML DOC WRITE,OPERATION_CODE=70,ROLLBACK=false,SEG_OWNER=C##MYUSER,SEG_NAME=CUSTOMERS,TABLE_NAME=CUSTOMERS,SEG_TYPE=2,SEG_TYPE_NAME=TABLE,TABLE_SPACE=USERS,ROW_ID=AAAAAAAAAAAAAAAAAA,USERNAME=C##MYUSER,OS_USERNAME=oracle,MACHINE_NAME=oracle,AUDIT_SESSIONID=10014,SESSION_NUM=367,SERIAL_NUM=37507,SESSION_INFO=login_username=C##MYUSER client_info= OS_username=oracle Machine_name=oracle OS_terminal=pts/0 OS_process_id=1099 OS_program_name=sqlplus@oracle (TNS V1-V3),THREAD_NUM=1,SEQUENCE_NUM=4,RBASQN=7,RBABLK=35242,RBABYTE=312,UBAFIL=11,UBABLK=0,UBAREC=0,UBASQN=0,ABS_FILE_NUM=0,REL_FILE_NUM=0,DATA_BLK_NUM=0,DATA_OBJ_NUM=72994,DATA_OBJV_NUM=2,DATA_OBJD_NUM=0,SQL_REDO=XML_REDO := '<Warehouse whNo="8"> <Building>Owned</Building></Warehouse>'
-#  amount: 59,RS_ID= 0x000007.000089aa.0138 ,SSN=0,CSF=false,INFO=XML sql_redo not re-executable,STATUS=2,REDO_VALUE=30,UNDO_VALUE=31,SAFE_RESUME_SCN=0,CSCN=2173966,SRC_CON_NAME=ORCLPDB1,SRC_CON_ID=3,SRC_CON_UID=280798746,SRC_CON_DBID=0,CON_ID=false} (io.confluent.connect.oracle.cdc.record.OracleLobRecordConverter:85)
-# [2022-06-16 10:32:37,277] TRACE [cdc-oracle-source-pdb|task-1|changeEvent] LOB records: [] (io.confluent.connect.oracle.cdc.ChangeEventGenerator:513)
+#     "SQL_REDO": {
+#         "string": "XML DOC BEGIN: select \"XMLRECORD\" from \"C##MYUSER\".\"CUSTOMERS\" where \"RECID\" = '3'"
+#     },
