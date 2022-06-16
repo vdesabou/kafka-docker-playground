@@ -4,6 +4,45 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
+function wait_for_repro () {
+     set +e
+     MAX_WAIT=1200
+     COUNTER=0
+     CUR_WAIT=0
+     log "⌛ Waiting up to $MAX_WAIT seconds for error NullPointerException to happen"
+     docker container logs connect > /tmp/out.txt 2>&1
+     while ! grep "NullPointerException" /tmp/out.txt > /dev/null;
+     do
+          
+          sleep 10
+          docker container logs connect > /tmp/out.txt 2>&1
+          CUR_WAIT=$(( CUR_WAIT+10 ))
+          if [[ "$CUR_WAIT" -gt "$MAX_WAIT" ]]; then
+               echo -e "\nERROR: The logs in all connect containers do not show 'NullPointerException' after $MAX_WAIT seconds. Please troubleshoot with 'docker container ps' and 'docker container logs'.\n"
+               exit 1
+          fi
+
+log "restart"
+curl -X POST localhost:8083/connectors/cdc-oracle-source-pdb/tasks/0/restart
+log "inject"
+# docker exec -i oracle sqlplus C\#\#MYUSER/mypassword@//localhost:1521/ORCLPDB1 << EOF
+#   insert into CUSTOMERS (RECID, XMLRECORD) values ('VINCENT$COUNTER',XMLType('<Warehouse whNo="$COUNTER"> <Building>Owned</Building></Warehouse>'));
+#   exit;
+# EOF
+docker exec -i oracle sqlplus C\#\#MYUSER/mypassword@//localhost:1521/ORCLPDB1 << EOF
+  insert into CUSTOMERS (RECID,XMLRECORD) select concat('VINCENT$COUNTER',RECID) as RECID ,XMLRECORD from CUSTOMERS;
+  exit;
+EOF
+curl http://localhost:8083/connectors?expand=status&expand=info | jq .
+sleep 4
+     (( COUNTER++ ))
+     done
+     log "The problem has been reproduced !"
+}
+
+wait_for_repro
+exit 0
+
 if [ ! -z "$GITHUB_RUN_NUMBER" ]
 then
      # running with github actions
@@ -281,3 +320,9 @@ EOF
 #         at io.confluent.connect.oracle.cdc.record.OracleLobRecordConverter.convertXmlDocEnd(OracleLobRecordConverter.java:222)
 #         at io.confluent.connect.oracle.cdc.record.OracleLobRecordConverter.convert(OracleLobRecordConverter.java:193)
 #         ... 16 more
+
+wait_for_repro
+
+# {"cdc-oracle-source-pdb":{"status":{"name":"cdc-oracle-source-pdb","connector":{"state":"RUNNING","worker_id":"connect:8083"},"tasks":[{"id":0,"state":"RUNNING","worker_id":"connect:8083"},{"id":1,"state":"FAILED","worker_id":"connect:8083","trace":"org.apache.kafka.connect.errors.ConnectException: Error while polling for records\n\tat io.confluent.connect.oracle.cdc.util.RecordQueue.poll(RecordQueue.java:372)\n\tat io.confluent.connect.oracle.cdc.OracleCdcSourceTask.poll(OracleCdcSourceTask.java:500)\n\tat org.apache.kafka.connect.runtime.WorkerSourceTask.poll(WorkerSourceTask.java:307)\n\tat org.apache.kafka.connect.runtime.WorkerSourceTask.execute(WorkerSourceTask.java:263)\n\tat org.apache.kafka.connect.runtime.WorkerTask.doRun(WorkerTask.java:200)\n\tat org.apache.kafka.connect.runtime.WorkerTask.run(WorkerTask.java:255)\n\tat java.base/java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:515)\n\tat java.base/java.util.concurrent.FutureTask.run(FutureTask.java:264)\n\tat java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1128)\n\tat java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:628)\n\tat java.base/java.lang.Thread.run(Thread.java:829)\nCaused by: org.apache.kafka.connect.errors.ConnectException: Exception processing LOB column\n\tat io.confluent.connect.oracle.cdc.record.OracleLobRecordConverter.convert(OracleLobRecordConverter.java:201)\n\tat io.confluent.connect.oracle.cdc.ChangeEventGenerator.processSingleRecord(ChangeEventGenerator.java:511)\n\tat io.confluent.connect.oracle.cdc.ChangeEventGenerator.lambda$doGenerateChangeEvent$2(ChangeEventGenerator.java:419)\n\tat java.base/java.util.stream.ReferencePipeline$3$1.accept(ReferencePipeline.java:195)\n\tat java.base/java.util.Spliterators$ArraySpliterator.forEachRemaining(Spliterators.java:948)\n\tat java.base/java.util.stream.AbstractPipeline.copyInto(AbstractPipeline.java:484)\n\tat java.base/java.util.stream.AbstractPipeline.wrapAndCopyInto(AbstractPipeline.java:474)\n\tat java.base/java.util.stream.ReduceOps$ReduceOp.evaluateSequential(ReduceOps.java:913)\n\tat java.base/java.util.stream.AbstractPipeline.evaluate(AbstractPipeline.java:234)\n\tat java.base/java.util.stream.ReferencePipeline.collect(ReferencePipeline.java:578)\n\tat io.confluent.connect.oracle.cdc.ChangeEventGenerator.doGenerateChangeEvent(ChangeEventGenerator.java:421)\n\tat io.confluent.connect.oracle.cdc.ChangeEventGenerator.execute(ChangeEventGenerator.java:221)\n\tat io.confluent.connect.oracle.cdc.util.RecordQueue.lambda$createLoggingSupplier$0(RecordQueue.java:465)\n\tat java.base/java.util.concurrent.CompletableFuture$AsyncSupply.run(CompletableFuture.java:1700)\n\t... 3 more\nCaused by: java.lang.NullPointerException\n\tat io.confluent.connect.oracle.cdc.record.OracleLobRecordConverter.convertXmlDocEnd(OracleLobRecordConverter.java:222)\n\tat io.confluent.connect.oracle.cdc.record.OracleLobRecordConverter.convert(OracleLobRecordConverter.java:193)\n\t... 16 more\n"}],"type":"source"}}}16:52:10 ℹ️ The problem has been reproduced !
+
+exit 0
