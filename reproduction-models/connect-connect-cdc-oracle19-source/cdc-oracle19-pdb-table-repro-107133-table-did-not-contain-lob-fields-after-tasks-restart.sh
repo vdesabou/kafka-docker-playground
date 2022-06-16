@@ -230,6 +230,84 @@ timeout 20 docker exec connect kafka-avro-console-consumer -bootstrap-server bro
 # "XMLRECORD":null !!
 # {"RECID":"5","XMLRECORD":null,"table":{"string":"ORCLPDB1.C##MYUSER.CUSTOMERS"},"scn":{"string":"2169562"},"op_type":{"string":"I"},"op_ts":{"string":"1655381738000"},"current_ts":{"string":"1655381743114"},"row_id":{"string":"AAAAAAAAAAAAAAAAAA"},"username":{"string":"C##MYUSER"}
 
+# schema is updated with XMLRECORD:
+
+# {
+#   "fields": [
+#     {
+#       "name": "RECID",
+#       "type": "string"
+#     },
+#     {
+#       "default": null,
+#       "name": "XMLRECORD",
+#       "type": [
+#         "null",
+#         "bytes"
+#       ]
+#     },
+#     {
+#       "default": null,
+#       "name": "table",
+#       "type": [
+#         "null",
+#         "string"
+#       ]
+#     },
+#     {
+#       "default": null,
+#       "name": "scn",
+#       "type": [
+#         "null",
+#         "string"
+#       ]
+#     },
+#     {
+#       "default": null,
+#       "name": "op_type",
+#       "type": [
+#         "null",
+#         "string"
+#       ]
+#     },
+#     {
+#       "default": null,
+#       "name": "op_ts",
+#       "type": [
+#         "null",
+#         "string"
+#       ]
+#     },
+#     {
+#       "default": null,
+#       "name": "current_ts",
+#       "type": [
+#         "null",
+#         "string"
+#       ]
+#     },
+#     {
+#       "default": null,
+#       "name": "row_id",
+#       "type": [
+#         "null",
+#         "string"
+#       ]
+#     },
+#     {
+#       "default": null,
+#       "name": "username",
+#       "type": [
+#         "null",
+#         "string"
+#       ]
+#     }
+#   ],
+#   "name": "ConnectDefault",
+#   "namespace": "io.confluent.connect.avro",
+#   "type": "record"
+# }
+
 log "Verifying lob topic CUSTOMERS-XMLRECORD: there should be 3 records, but there is only 2 !!"
 timeout 20 docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic CUSTOMERS-XMLRECORD --from-beginning  --max-messages 3
 # "<Warehouse whNo=\"3\"> <Building>Owned</Building></Warehouse>"
