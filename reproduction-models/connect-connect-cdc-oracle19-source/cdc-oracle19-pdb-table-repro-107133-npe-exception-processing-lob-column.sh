@@ -206,6 +206,11 @@ timeout 20 docker exec connect kafka-avro-console-consumer -bootstrap-server bro
 # "<Warehouse whNo=\"3\"> <Building>Owned</Building></Warehouse>"
 # "<Warehouse whNo=\"4\"> <Building>Owned</Building></Warehouse>"
 
+log "Re-insert existing data using "
+docker exec -i oracle sqlplus C\#\#MYUSER/mypassword@//localhost:1521/ORCLPDB1 << EOF
+  insert into CUSTOMERS (RECID,XMLRECORD) select concat('VINC_',RECID) as RECID ,XMLRECORD from CUSTOMERS;
+  exit;
+EOF
 
 
 #     "SQL_REDO": {
