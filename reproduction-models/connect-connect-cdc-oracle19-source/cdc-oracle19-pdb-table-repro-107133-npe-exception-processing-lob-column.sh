@@ -40,6 +40,8 @@ EOF
 
 # Create a redo-log-topic. Please make sure you create a topic with the same name you will use for "redo.log.topic.name": "redo-log-topic"
 # CC-13104
+
+log "Creating the redo topic with compact mode: THIS IS THE CAUSE OF THE ISSUE"
 docker exec connect kafka-topics --create --topic redo-log-topic --bootstrap-server broker:9092 --replication-factor 1 --partitions 1 --config cleanup.policy=compact --config retention.ms=120960000
 log "redo-log-topic is created"
 sleep 5
@@ -49,7 +51,7 @@ curl --request PUT \
   --header 'Accept: application/json' \
   --header 'Content-Type: application/json' \
   --data '{
- "level": "TRACE"
+ "level": "INFO"
 }'
 
 log "Creating Oracle source connector"
@@ -240,3 +242,42 @@ EOF
 # 	at org.apache.kafka.clients.producer.internals.Sender.run(Sender.java:243)
 # 	at java.base/java.lang.Thread.run(Thread.java:829)
 # 	at org.apache.kafka.common.utils.KafkaThread.run(KafkaThread.java:64)
+
+
+# Then after multiple restart, we get
+# curl -X POST localhost:8083/connectors/cdc-oracle-source-pdb/tasks/0/restart
+
+
+# [2022-06-16 15:06:03,970] ERROR [cdc-oracle-source-pdb|task-1] WorkerSourceTask{id=cdc-oracle-source-pdb-1} Task threw an uncaught and unrecoverable exception. Task is being killed and will not recover until manually restarted (org.apache.kafka.connect.runtime.WorkerTask:207)
+# org.apache.kafka.connect.errors.ConnectException: Error while polling for records
+#         at io.confluent.connect.oracle.cdc.util.RecordQueue.poll(RecordQueue.java:372)
+#         at io.confluent.connect.oracle.cdc.OracleCdcSourceTask.poll(OracleCdcSourceTask.java:500)
+#         at org.apache.kafka.connect.runtime.WorkerSourceTask.poll(WorkerSourceTask.java:307)
+#         at org.apache.kafka.connect.runtime.WorkerSourceTask.execute(WorkerSourceTask.java:263)
+#         at org.apache.kafka.connect.runtime.WorkerTask.doRun(WorkerTask.java:200)
+#         at org.apache.kafka.connect.runtime.WorkerTask.run(WorkerTask.java:255)
+#         at java.base/java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:515)
+#         at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:264)
+#         at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1128)
+#         at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:628)
+#         at java.base/java.lang.Thread.run(Thread.java:829)
+# Caused by: org.apache.kafka.connect.errors.ConnectException: Exception processing LOB column
+#         at io.confluent.connect.oracle.cdc.record.OracleLobRecordConverter.convert(OracleLobRecordConverter.java:201)
+#         at io.confluent.connect.oracle.cdc.ChangeEventGenerator.processSingleRecord(ChangeEventGenerator.java:511)
+#         at io.confluent.connect.oracle.cdc.ChangeEventGenerator.lambda$doGenerateChangeEvent$2(ChangeEventGenerator.java:419)
+#         at java.base/java.util.stream.ReferencePipeline$3$1.accept(ReferencePipeline.java:195)
+#         at java.base/java.util.Spliterators$ArraySpliterator.forEachRemaining(Spliterators.java:948)
+#         at java.base/java.util.stream.AbstractPipeline.copyInto(AbstractPipeline.java:484)
+#         at java.base/java.util.stream.AbstractPipeline.wrapAndCopyInto(AbstractPipeline.java:474)
+#         at java.base/java.util.stream.ReduceOps$ReduceOp.evaluateSequential(ReduceOps.java:913)
+#         at java.base/java.util.stream.AbstractPipeline.evaluate(AbstractPipeline.java:234)
+#         at java.base/java.util.stream.ReferencePipeline.collect(ReferencePipeline.java:578)
+#         at io.confluent.connect.oracle.cdc.ChangeEventGenerator.doGenerateChangeEvent(ChangeEventGenerator.java:421)
+#         at io.confluent.connect.oracle.cdc.ChangeEventGenerator.execute(ChangeEventGenerator.java:221)
+#         at io.confluent.connect.oracle.cdc.util.RecordQueue.lambda$createLoggingSupplier$0(RecordQueue.java:465)
+#         at java.base/java.util.concurrent.CompletableFuture$AsyncSupply.run(CompletableFuture.java:1700)
+#         ... 3 more
+# Caused by: java.lang.NullPointerException
+#         at io.confluent.connect.oracle.cdc.record.OracleLobRecordConverter.convertXmlDocEnd(OracleLobRecordConverter.java:222)
+#         at io.confluent.connect.oracle.cdc.record.OracleLobRecordConverter.convert(OracleLobRecordConverter.java:193)
+#         ... 16 more
