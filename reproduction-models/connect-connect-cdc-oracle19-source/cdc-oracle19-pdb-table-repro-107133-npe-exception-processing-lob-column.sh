@@ -40,8 +40,6 @@ sleep 4
      log "The problem has been reproduced !"
 }
 
-wait_for_repro
-exit 0
 
 if [ ! -z "$GITHUB_RUN_NUMBER" ]
 then
