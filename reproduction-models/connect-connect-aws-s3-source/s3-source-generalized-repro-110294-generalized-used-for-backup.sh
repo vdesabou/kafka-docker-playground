@@ -102,8 +102,7 @@ curl -X PUT \
                "confluent.topic.bootstrap.servers": "broker:9092",
                "confluent.topic.replication.factor": "1",
                "mode": "GENERIC",
-               "topics.dir": " ",
-               "topic.regex.list": "copy_of_s3_topic:.*"
+               "topic.regex.list": "copy_of_s3_topic:topics\\/s3_topic\\/year=\\d\\d\\d\\d\\/month=\\d\\d\\/day=\\d\\d"
           }' \
      http://localhost:8083/connectors/s3-source/config | jq .
 
