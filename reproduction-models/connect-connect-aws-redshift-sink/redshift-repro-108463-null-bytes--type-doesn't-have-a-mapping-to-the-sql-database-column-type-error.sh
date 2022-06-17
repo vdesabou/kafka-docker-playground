@@ -71,24 +71,10 @@ sleep 60
 CLUSTER=$(aws redshift describe-clusters --cluster-identifier $CLUSTER_NAME | jq -r .Clusters[0].Endpoint.Address)
 
 
-log "✨ Run the json-schema java producer which produces to topic orders"
-
-# Using Heredoc
 docker exec -i connect kafka-json-schema-console-producer --broker-list broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic orders --property value.schema='{"type":"object","properties":{"f1":{"type":"string"},"f2":{"oneOf": [ {"type": "null"},{"connect.type": "bytes","type": "string"}]}}}' << EOF
 {"f1": "1","f2":"ZG1Gc2RXVXg="}
 {"f1": "2","f2":"ZG1Gc2RXVXg="}
 {"f1": "3","f2":"ZG1Gc2RXVXg="}
-EOF
-
-
-# Using seq
-seq -f "{\"f1\": \"value%g\"}" 10 | docker exec -i connect kafka-json-schema-console-producer --broker-list broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic orders --property value.schema='{"type":"object","properties":{"f1":{"type":"string"}}}'
-
-# Using Heredoc
-docker exec -i connect kafka-json-schema-console-producer --broker-list broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic orders --property value.schema='{"type":"object","properties":{"f1":{"type":"string"}}}' << EOF
-{"f1":"value1"}
-{"f1":"value2"}
-{"f1":"value3"}
 EOF
 
 log "Creating AWS Redshift Sink connector with cluster url $CLUSTER"
