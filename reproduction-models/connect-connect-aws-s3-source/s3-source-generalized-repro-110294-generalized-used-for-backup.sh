@@ -81,6 +81,14 @@ aws s3api list-objects --bucket "$AWS_BUCKET_NAME"
 
 # topics/s3_topic/year=2022/month=06/day=17/s3_topic+0+0000000521.avro
 
+curl --request PUT \
+  --url http://localhost:8083/admin/loggers/io.confluent.connect.s3.source \
+  --header 'Accept: application/json' \
+  --header 'Content-Type: application/json' \
+  --data '{
+ "level": "TRACE"
+}'
+
 log "Creating GENERIC S3 Source connector with bucket name <$AWS_BUCKET_NAME>"
 curl -X PUT \
      -H "Content-Type: application/json" \
@@ -94,7 +102,7 @@ curl -X PUT \
                "confluent.topic.bootstrap.servers": "broker:9092",
                "confluent.topic.replication.factor": "1",
                "mode": "GENERIC",
-               "topics.dir": "topics\\/s3_topic\\/year=\\d\\d\\d\\d\\/month=\\d\\d\\/day=\\d\\d\\/.*\\.avro",
+               "topics.dir": " ",
                "topic.regex.list": "copy_of_s3_topic:.*"
           }' \
      http://localhost:8083/connectors/s3-source/config | jq .
