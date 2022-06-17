@@ -13,18 +13,22 @@ curl -X PUT \
                "connector.class": "io.confluent.connect.jdbc.JdbcSinkConnector",
                "tasks.max": "1",
                "connection.url": "jdbc:postgresql://postgres/postgres?user=myuser&password=mypassword&ssl=false",
-               "topics": "orders",
+               "topics": "order",
                "auto.create": "true",
-               "transforms": "dateFilter",
+               "transforms": "T1,dateFilter",
                "transforms.dateFilter.type": "io.confluent.connect.transforms.Filter$Value",
                "transforms.dateFilter.filter.type": "exclude",
-               "transforms.dateFilter.filter.condition": "$[?(@.tsm < 1592300893)]"
+               "transforms.dateFilter.filter.condition": "$[?(@.tsm < 1592300893000)]",
+
+               "transforms.T1.type": "org.apache.kafka.connect.transforms.TimestampConverter$Value",
+               "transforms.T1.target.type": "unix",
+               "transforms.T1.field": "tsm"
           }' \
      http://localhost:8083/connectors/postgres-sink/config | jq .
 
 
-log "Sending messages to topic orders"
-docker exec -i connect kafka-avro-console-producer --broker-list broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic orders --property value.schema='{"fields":[{"type":"int","name":"id"},{"type":"string","name":"product"},{"type":"int","name":"quantity"},{"type":"float","name":"price"},{"type":{"logicalType": "timestamp-millis","type": "long"},"name":"tsm"}],"type":"record","name":"myrecord"}' << EOF
+log "Sending messages to topic order"
+docker exec -i connect kafka-avro-console-producer --broker-list broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic order --property value.schema='{"fields":[{"type":"int","name":"id"},{"type":"string","name":"product"},{"type":"int","name":"quantity"},{"type":"float","name":"price"},{"type":{"logicalType": "timestamp-millis","type": "long"},"name":"tsm"}],"type":"record","name":"myrecord"}' << EOF
 {"id": 1000, "product": "foo", "quantity": 100, "price": 50, "tsm": 1583471561000}
 EOF
 
