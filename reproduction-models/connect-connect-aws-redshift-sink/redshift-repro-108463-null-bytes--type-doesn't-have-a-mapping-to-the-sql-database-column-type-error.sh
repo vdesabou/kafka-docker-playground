@@ -71,16 +71,25 @@ sleep 60
 CLUSTER=$(aws redshift describe-clusters --cluster-identifier $CLUSTER_NAME | jq -r .Clusters[0].Endpoint.Address)
 
 
-log "✨ Run the json-schema java producer which produces to topic a-topic"
+log "✨ Run the json-schema java producer which produces to topic orders"
 
 # Using Heredoc
-docker exec -i connect kafka-json-schema-console-producer --broker-list broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic a-topic --property value.schema='{"type":"object","properties":{"f1":{"oneOf": [ {"type": "null"},{"connect.type": "bytes","type": "string"}]}}}' << EOF
-{"f1":"ZG1Gc2RXVXg="}
-{"f1":"ZG1Gc2RXVXg="}
-{"f1":"ZG1Gc2RXVXg="}
+docker exec -i connect kafka-json-schema-console-producer --broker-list broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic orders --property value.schema='{"type":"object","properties":{"f1":{"type":"string"},"f2":{"oneOf": [ {"type": "null"},{"connect.type": "bytes","type": "string"}]}}}' << EOF
+{"f1": "1","f2":"ZG1Gc2RXVXg="}
+{"f1": "2","f2":"ZG1Gc2RXVXg="}
+{"f1": "3","f2":"ZG1Gc2RXVXg="}
 EOF
 
 
+# Using seq
+seq -f "{\"f1\": \"value%g\"}" 10 | docker exec -i connect kafka-json-schema-console-producer --broker-list broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic orders --property value.schema='{"type":"object","properties":{"f1":{"type":"string"}}}'
+
+# Using Heredoc
+docker exec -i connect kafka-json-schema-console-producer --broker-list broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic orders --property value.schema='{"type":"object","properties":{"f1":{"type":"string"}}}' << EOF
+{"f1":"value1"}
+{"f1":"value2"}
+{"f1":"value3"}
+EOF
 
 log "Creating AWS Redshift Sink connector with cluster url $CLUSTER"
 curl -X PUT \
@@ -88,7 +97,7 @@ curl -X PUT \
      --data '{
                "connector.class": "io.confluent.connect.aws.redshift.RedshiftSinkConnector",
                "tasks.max": "1",
-               "topics": "a-topic",
+               "topics": "orders",
                "aws.redshift.domain": "'"$CLUSTER"'",
                "aws.redshift.port": "5439",
                "aws.redshift.database": "dev",
@@ -101,7 +110,11 @@ curl -X PUT \
                "confluent.topic.replication.factor": "1",
 
                "value.converter": "io.confluent.connect.json.JsonSchemaConverter",
-               "value.converter.schema.registry.url": "http://schema-registry:8081"
+               "value.converter.schema.registry.url": "http://schema-registry:8081",
+
+               "transforms": "ReplaceField",
+               "transforms.ReplaceField.type": "org.apache.kafka.connect.transforms.ReplaceField$Value",
+               "transforms.ReplaceField.blacklist": "f2"
           }' \
      http://localhost:8083/connectors/redshift-sink/config | jq .
 
@@ -110,7 +123,7 @@ sleep 20
 log "Verify data is in Redshift"
 timeout 30 docker run -i debezium/postgres:10 psql -h $CLUSTER -U masteruser -d dev -p 5439 << EOF > /tmp/result.log
 myPassword1
-SELECT * from a-topic;
+SELECT * from orders;
 EOF
 cat /tmp/result.log
 grep "foo" /tmp/result.log
