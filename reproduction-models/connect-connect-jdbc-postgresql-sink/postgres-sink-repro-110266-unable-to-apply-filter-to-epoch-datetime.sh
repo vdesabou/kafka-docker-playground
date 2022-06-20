@@ -13,23 +13,33 @@ curl -X PUT \
                "connector.class": "io.confluent.connect.jdbc.JdbcSinkConnector",
                "tasks.max": "1",
                "connection.url": "jdbc:postgresql://postgres/postgres?user=myuser&password=mypassword&ssl=false",
-               "topics": "order",
+               "topics": "orders_topic",
                "auto.create": "true",
-               "transforms": "T1,dateFilter",
+
+               "transforms": "T1,dateFilter,T2",
                "transforms.dateFilter.type": "io.confluent.connect.transforms.Filter$Value",
                "transforms.dateFilter.filter.type": "exclude",
                "transforms.dateFilter.filter.condition": "$[?(@.tsm < 1592300893000)]",
 
                "transforms.T1.type": "org.apache.kafka.connect.transforms.TimestampConverter$Value",
                "transforms.T1.target.type": "unix",
-               "transforms.T1.field": "tsm"
+               "transforms.T1.field": "tsm",
+
+               "transforms.T2.type": "org.apache.kafka.connect.transforms.TimestampConverter$Value",
+               "transforms.T2.target.type": "Timestamp",
+               "transforms.T2.field": "tsm"
           }' \
      http://localhost:8083/connectors/postgres-sink/config | jq .
 
 
-log "Sending messages to topic order"
-docker exec -i connect kafka-avro-console-producer --broker-list broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic order --property value.schema='{"fields":[{"type":"int","name":"id"},{"type":"string","name":"product"},{"type":"int","name":"quantity"},{"type":"float","name":"price"},{"type":{"logicalType": "timestamp-millis","type": "long"},"name":"tsm"}],"type":"record","name":"myrecord"}' << EOF
-{"id": 1000, "product": "foo", "quantity": 100, "price": 50, "tsm": 1583471561000}
+log "Sending messages to topic orders_topic (it is filtered as tsm < 1592300893000"
+docker exec -i connect kafka-avro-console-producer --broker-list broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic orders_topic --property value.schema='{"fields":[{"type":"int","name":"id"},{"type":"string","name":"product"},{"type":"int","name":"quantity"},{"type":"float","name":"price"},{"type":{"logicalType": "timestamp-millis","type": "long"},"name":"tsm"}],"type":"record","name":"myrecord"}' << EOF
+{"id": 1, "product": "filtered", "quantity": 100, "price": 50, "tsm": 1583471561000}
+EOF
+
+log "Sending messages to topic orders_topic (it is not filtered as tsm > 1592300893000"
+docker exec -i connect kafka-avro-console-producer --broker-list broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic orders_topic --property value.schema='{"fields":[{"type":"int","name":"id"},{"type":"string","name":"product"},{"type":"int","name":"quantity"},{"type":"float","name":"price"},{"type":{"logicalType": "timestamp-millis","type": "long"},"name":"tsm"}],"type":"record","name":"myrecord"}' << EOF
+{"id": 2, "product": "not filtered", "quantity": 100, "price": 50, "tsm": 1592300993000}
 EOF
 
 # [2022-06-17 12:57:09,230] ERROR [postgres-sink|task-0] WorkerSinkTask{id=postgres-sink-0} Task threw an uncaught and unrecoverable exception. Task is being killed and will not recover until manually restarted (org.apache.kafka.connect.runtime.WorkerTask:207)
@@ -68,7 +78,6 @@ EOF
 #         ... 15 more
 sleep 5
 
-log "Show content of ORDERS table:"
-docker exec postgres bash -c "psql -U myuser -d postgres -c 'SELECT * FROM ORDERS'" > /tmp/result.log  2>&1
+log "Show content of orders_topic table:"
+docker exec postgres bash -c "psql -U myuser -d postgres -c 'SELECT * FROM orders_topic'" > /tmp/result.log  2>&1
 cat /tmp/result.log
-grep "foo" /tmp/result.log | grep "100"
