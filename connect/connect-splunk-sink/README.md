@@ -4,7 +4,7 @@
 
 ## Objective
 
-Quickly test [Splunk Sink](https://docs.confluent.io/current/connect/kafka-connect-solace/sink/index.html#quick-start) connector.
+Quickly test [Splunk Sink](https://docs.confluent.io/kafka-connect-splunk-sink/current/overview.html) connector.
 
 
 
