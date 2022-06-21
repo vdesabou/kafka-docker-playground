@@ -61,3 +61,6 @@ timeout 60 docker exec broker kafka-console-consumer --bootstrap-server broker:9
 
 
 docker logs http-service-no-auth | grep "MESSAGE RECEIVED"
+
+# 2022-06-21 08:59:40.754  INFO 1 --- [nio-8080-exec-1] i.c.c.http.controller.MessageController  : MESSAGE RECEIVED: {"ID":111,"product":"foo","quantity":100,"price":50.0}
+# 2022-06-21 08:59:40.963  INFO 1 --- [nio-8080-exec-2] i.c.c.http.controller.MessageController  : MESSAGE RECEIVED: {"ID":222,"product":"bar","quantity":100,"price":50.0}
