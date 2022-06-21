@@ -26,11 +26,11 @@ curl -X PUT \
                "database.history.kafka.bootstrap.servers": "broker:9092",
                "database.history.kafka.topic": "schema-changes.inventory",
 
-               "_transforms": "ExtractField",
+               "transforms": "ExtractField",
                "transforms.ExtractField.type": "org.apache.kafka.connect.transforms.ExtractField$Value",
                "transforms.ExtractField.field": "after",
 
-               "transforms": "after_state_only",
+               "_transforms": "after_state_only",
                "transforms.after_state_only.type": "io.debezium.transforms.ExtractNewRecordState"
 
           }' \
