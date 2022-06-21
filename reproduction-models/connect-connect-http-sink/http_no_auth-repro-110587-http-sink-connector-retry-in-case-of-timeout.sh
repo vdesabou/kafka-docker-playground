@@ -32,7 +32,6 @@ curl -X PUT \
           "errors.deadletterqueue.topic.name": "dlq",
           "errors.deadletterqueue.topic.replication.factor": "1",
 
-          "event.batch.maxsize": "1",
           "behavior.on.null.values": "ignore",
           "behavior.on.error": "log",
           "report.errors.as": "error_string",
@@ -104,7 +103,6 @@ curl -X PUT \
           "errors.deadletterqueue.topic.name": "dlq",
           "errors.deadletterqueue.topic.replication.factor": "1",
 
-          "event.batch.maxsize": "1",
           "behavior.on.null.values": "ignore",
           "behavior.on.error": "fail",
           "report.errors.as": "error_string",
@@ -212,7 +210,6 @@ curl -X PUT \
           "errors.deadletterqueue.topic.name": "dlq",
           "errors.deadletterqueue.topic.replication.factor": "1",
 
-          "event.batch.maxsize": "1",
           "behavior.on.null.values": "ignore",
           "behavior.on.error": "log",
           "report.errors.as": "error_string",
@@ -270,7 +267,6 @@ curl -X PUT \
           "errors.deadletterqueue.topic.name": "dlq",
           "errors.deadletterqueue.topic.replication.factor": "1",
 
-          "event.batch.maxsize": "1",
           "behavior.on.null.values": "ignore",
           "behavior.on.error": "fail",
           "report.errors.as": "error_string",
