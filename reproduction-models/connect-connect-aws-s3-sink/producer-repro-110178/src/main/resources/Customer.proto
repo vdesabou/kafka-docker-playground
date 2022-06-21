@@ -1,0 +1,14 @@
+syntax = "proto3";
+
+package com.github.vdesabou;
+option java_outer_classname = "CustomerImpl";
+
+
+message Customer {
+   UInt32Value myInt32 = 202;
+}
+
+message UInt32Value {
+  // The uint32 value.
+  uint32 value = 1;
+}
