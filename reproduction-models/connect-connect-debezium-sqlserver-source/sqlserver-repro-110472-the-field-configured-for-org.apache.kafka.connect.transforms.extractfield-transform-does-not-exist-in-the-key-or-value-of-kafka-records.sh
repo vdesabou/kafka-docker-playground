@@ -29,6 +29,11 @@ curl -X PUT \
                "transforms": "ExtractField",
                "transforms.ExtractField.type": "org.apache.kafka.connect.transforms.ExtractField$Value",
                "transforms.ExtractField.field": "after",
+               "transforms.ExtractField.predicate": "isCUSTOMERS",
+
+               "predicates": "isCUSTOMERS",
+               "predicates.isCUSTOMERS.pattern": "server1.dbo.customers",
+               "predicates.isCUSTOMERS.type": "org.apache.kafka.connect.transforms.predicates.TopicNameMatches",
 
                "_transforms": "after_state_only",
                "transforms.after_state_only.type": "io.debezium.transforms.ExtractNewRecordState"
@@ -44,7 +49,7 @@ INSERT INTO customers(first_name,last_name,email) VALUES ('Pam','Thomas','pam@of
 GO
 EOF
 
-
+# This does not work without predicate isCUSTOMERS because SMT will process messages from topic schema-changes.inventory
 # [2022-06-20 09:45:10,904] ERROR [debezium-sqlserver-source|task-0] WorkerSourceTask{id=debezium-sqlserver-source-0} Task threw an uncaught and unrecoverable exception. Task is being killed and will not recover until manually restarted (org.apache.kafka.connect.runtime.WorkerTask:207)
 # org.apache.kafka.connect.errors.ConnectException: Tolerance exceeded in error handler
 #         at org.apache.kafka.connect.runtime.errors.RetryWithToleranceOperator.execAndHandleError(RetryWithToleranceOperator.java:220)
@@ -105,3 +110,178 @@ EOF
 
 log "Verifying topic server1.dbo.customers"
 timeout 60 docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic server1.dbo.customers --from-beginning --max-messages 5
+
+
+# [2022-06-21 15:56:17,012] TRACE [debezium-sqlserver-source|task-0] Applying transformation org.apache.kafka.connect.transforms.ExtractField$Value to SourceRecord{sourcePartition={server=server1}, sourceOffset={commit_lsn=00000025:000006a8:0001, snapshot=true, snapshot_completed=false}} ConnectRecord{topic='server1', kafkaPartition=0, key=Struct{databaseName=testDB}, keySchema=Schema{io.debezium.connector.sqlserver.SchemaChangeKey:STRUCT}, value=Struct{source=Struct{version=1.9.2.Final,connector=sqlserver,name=server1,ts_ms=1655826976572,snapshot=true,db=testDB,schema=dbo,table=customers,commit_lsn=00000025:000006a8:0001},databaseName=testDB,schemaName=dbo,tableChanges=[Struct{type=CREATE,id="testDB"."dbo"."customers",table=Struct{primaryKeyColumnNames=[id],columns=[Struct{name=id,jdbcType=4,typeName=int identity,typeExpression=int identity,length=10,scale=0,position=1,optional=false,autoIncremented=true,generated=false}, Struct{name=first_name,jdbcType=12,typeName=varchar,typeExpression=varchar,length=255,position=2,optional=false,autoIncremented=false,generated=false}, Struct{name=last_name,jdbcType=12,typeName=varchar,typeExpression=varchar,length=255,position=3,optional=false,autoIncremented=false,generated=false}, Struct{name=email,jdbcType=12,typeName=varchar,typeExpression=varchar,length=255,position=4,optional=false,autoIncremented=false,generated=false}]}}]}, valueSchema=Schema{io.debezium.connector.sqlserver.SchemaChangeValue:STRUCT}, timestamp=null, headers=ConnectHeaders(headers=)} (org.apache.kafka.connect.runtime.TransformationChain:47)
+
+
+# {sourcePartition={server=server1}, 
+# sourceOffset={commit_lsn=00000025:000006a8:0001, snapshot=true, snapshot_completed=false}} 
+# ConnectRecord{topic='server1', kafkaPartition=0, key=Struct{databaseName=testDB}, keySchema=Schema{io.debezium.connector.sqlserver.SchemaChangeKey:STRUCT}, 
+
+
+# value=Struct{
+#     source=Struct{
+#         version=1.9.2.Final,
+#         connector=sqlserver,
+#         name=server1,
+#         ts_ms=1655826976572,
+#         snapshot=true,
+#         db=testDB,
+#         schema=dbo,
+#         table=customers,
+#         commit_lsn=00000025:000006a8:0001
+#     },
+#     databaseName=testDB,
+#     schemaName=dbo,
+#     tableChanges=[Struct{
+#         type=CREATE,
+#         id="testDB"."dbo"."customers",
+#         table=Struct{
+#             primaryKeyColumnNames=[id],
+#             columns=[Struct{
+#                 name=id,
+#                 jdbcType=4,
+#                 typeName=int identity,
+#                 typeExpression=int identity,
+#                 length=10,
+#                 scale=0,
+#                 position=1,
+#                 optional=false,
+#                 autoIncremented=true,
+#                 generated=false}, 
+#                 Struct{
+#                     name=first_name,
+#                     jdbcType=12,
+#                     typeName=varchar,
+#                     typeExpression=varchar,
+#                     length=255,
+#                     position=2,
+#                     optional=false,
+#                     autoIncremented=false,
+#                     generated=false}, 
+#                     Struct{
+#                         name=last_name,
+#                         jdbcType=12,
+#                         typeName=varchar,
+#                         typeExpression=varchar,
+#                         length=255,position=3,
+#                         optional=false,
+#                         autoIncremented=false,
+#                         generated=false}, 
+#                     Struct{
+#                         name=email,
+#                         jdbcType=12,
+#                         typeName=varchar,
+#                         typeExpression=varchar,
+#                         length=255,
+#                         position=4,
+#                         optional=false,
+#                         autoIncremented=false,
+#                         generated=false
+#             }]}}]}, 
+#         valueSchema=Schema{io.debezium.connector.sqlserver.SchemaChangeValue:STRUCT}, timestamp=null, headers=ConnectHeaders(headers=)}
+
+
+# topic schema-changes.inventory
+
+# [
+#     {
+#         "__confluent_index": 0,
+#         "headers": [],
+#         "key": null,
+#         "offset": 0,
+#         "partition": 0,
+#         "timestamp": 1655827670272,
+#         "timestampType": "CREATE_TIME",
+#         "topic": "schema-changes.inventory",
+#         "value": {
+#             "databaseName": "testDB",
+#             "position": {
+#                 "commit_lsn": "00000025:00000408:0003",
+#                 "snapshot": true,
+#                 "snapshot_completed": false
+#             },
+#             "schemaName": "dbo",
+#             "source": {
+#                 "server": "server1"
+#             },
+#             "tableChanges": [
+#                 {
+#                     "comment": null,
+#                     "id": "\"testDB\".\"dbo\".\"customers\"",
+#                     "table": {
+#                         "columns": [
+#                             {
+#                                 "autoIncremented": true,
+#                                 "charsetName": null,
+#                                 "comment": null,
+#                                 "enumValues": [],
+#                                 "generated": false,
+#                                 "hasDefaultValue": false,
+#                                 "jdbcType": 4,
+#                                 "length": 10,
+#                                 "name": "id",
+#                                 "optional": false,
+#                                 "position": 1,
+#                                 "scale": 0,
+#                                 "typeExpression": "int identity",
+#                                 "typeName": "int identity"
+#                             },
+#                             {
+#                                 "autoIncremented": false,
+#                                 "charsetName": null,
+#                                 "comment": null,
+#                                 "enumValues": [],
+#                                 "generated": false,
+#                                 "hasDefaultValue": false,
+#                                 "jdbcType": 12,
+#                                 "length": 255,
+#                                 "name": "first_name",
+#                                 "optional": false,
+#                                 "position": 2,
+#                                 "typeExpression": "varchar",
+#                                 "typeName": "varchar"
+#                             },
+#                             {
+#                                 "autoIncremented": false,
+#                                 "charsetName": null,
+#                                 "comment": null,
+#                                 "enumValues": [],
+#                                 "generated": false,
+#                                 "hasDefaultValue": false,
+#                                 "jdbcType": 12,
+#                                 "length": 255,
+#                                 "name": "last_name",
+#                                 "optional": false,
+#                                 "position": 3,
+#                                 "typeExpression": "varchar",
+#                                 "typeName": "varchar"
+#                             },
+#                             {
+#                                 "autoIncremented": false,
+#                                 "charsetName": null,
+#                                 "comment": null,
+#                                 "enumValues": [],
+#                                 "generated": false,
+#                                 "hasDefaultValue": false,
+#                                 "jdbcType": 12,
+#                                 "length": 255,
+#                                 "name": "email",
+#                                 "optional": false,
+#                                 "position": 4,
+#                                 "typeExpression": "varchar",
+#                                 "typeName": "varchar"
+#                             }
+#                         ],
+#                         "defaultCharsetName": null,
+#                         "primaryKeyColumnNames": [
+#                             "id"
+#                         ]
+#                     },
+#                     "type": "CREATE"
+#                 }
+#             ]
+#         }
+#     }
+# ]
