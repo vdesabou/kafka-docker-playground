@@ -62,7 +62,6 @@ function create_input_topic () {
   set -e
 }
 
-# https://confluentinc.atlassian.net/wiki/spaces/CSH/pages/1679458811/Benchmarking+ksqlDB+on+CCloud
 # https://github.com/confluentinc/kafka-connect-datagen
 # https://github.com/confluentinc/avro-random-generator
 
