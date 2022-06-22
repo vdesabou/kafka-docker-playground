@@ -33,7 +33,7 @@ log "redo-log-topic is created"
 sleep 5
 
 
-log "Creating Oracle source connector"
+log "Creating Oracle source connector numeric.mapping=best_fit "
 curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
@@ -59,11 +59,7 @@ curl -X PUT \
                "numeric.mapping": "best_fit",
                "connection.pool.max.size": 20,
                "redo.log.row.fetch.size":1,
-               "oracle.dictionary.mode": "auto",
-
-               "transforms": "Cast",
-               "transforms.Cast.spec": "MYNUMBER:string",
-               "transforms.Cast.type": "org.apache.kafka.connect.transforms.Cast$Value"
+               "oracle.dictionary.mode": "auto"
           }' \
      http://localhost:8083/connectors/cdc-oracle-source-cdb/config | jq .
 
@@ -79,40 +75,447 @@ done
 log "Waiting 20s for connector to read new data"
 sleep 20
 
-log "Verifying topic ORCLCDB.C__MYUSER.CUSTOMERS: there should be 13 records"
-
-
-# "MYNUMBER":{"string":"1.23456789E8"},
+log "Verifying topic ORCLCDB.C__MYUSER.CUSTOMERS"
 set +e
-timeout 60 docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic ORCLCDB.C__MYUSER.CUSTOMERS --from-beginning --max-messages 13 > /tmp/result.log  2>&1
-set -e
-cat /tmp/result.log
-log "Check there is 5 snapshots events"
-if [ $(grep -c "op_type\":{\"string\":\"R\"}" /tmp/result.log) -ne 5 ]
-then
-     logerror "Did not get expected results"
-     exit 1
-fi
-log "Check there is 3 insert events"
-if [ $(grep -c "op_type\":{\"string\":\"I\"}" /tmp/result.log) -ne 3 ]
-then
-     logerror "Did not get expected results"
-     exit 1
-fi
-log "Check there is 4 update events"
-if [ $(grep -c "op_type\":{\"string\":\"U\"}" /tmp/result.log) -ne 4 ]
-then
-     logerror "Did not get expected results"
-     exit 1
-fi
-log "Check there is 1 delete events"
-if [ $(grep -c "op_type\":{\"string\":\"D\"}" /tmp/result.log) -ne 1 ]
-then
-     logerror "Did not get expected results"
-     exit 1
-fi
+timeout 60 docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic ORCLCDB.C__MYUSER.CUSTOMERS --from-beginning --max-messages 1
+# log "Verifying topic redo-log-topic"
+# timeout 60 docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic redo-log-topic --from-beginning --max-messages 1
+#"MYNUMBER":{"double":1.245169279E9}
 
-log "Verifying topic redo-log-topic: there should be 9 records"
-timeout 60 docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic redo-log-topic --from-beginning --max-messages 9
+#     {
+#       "default": null,
+#       "name": "MYNUMBER",
+#       "type": [
+#         "null",
+#         "double"
+#       ]
+#     },
 
-log "🚚 If you're planning to inject more data, have a look at https://github.com/vdesabou/kafka-docker-playground/blob/master/connect/connect-cdc-oracle19-source/README.md#note-on-redologrowfetchsize"
+##########################
+##########################
+##########################
+
+docker exec connect kafka-topics --create --topic redo-log-topic2 --bootstrap-server broker:9092 --replication-factor 1 --partitions 1 --config cleanup.policy=delete --config retention.ms=120960000
+log "redo-log-topic2 is created"
+sleep 5
+
+log "Creating Oracle source connector numeric.mapping=best_fist and cast to string"
+curl -X PUT \
+     -H "Content-Type: application/json" \
+     --data '{
+               "connector.class": "io.confluent.connect.oracle.cdc.OracleCdcSourceConnector",
+               "tasks.max":2,
+               "key.converter": "io.confluent.connect.avro.AvroConverter",
+               "key.converter.schema.registry.url": "http://schema-registry:8081",
+               "value.converter": "io.confluent.connect.avro.AvroConverter",
+               "value.converter.schema.registry.url": "http://schema-registry:8081",
+               "confluent.license": "",
+               "confluent.topic.bootstrap.servers": "broker:9092",
+               "confluent.topic.replication.factor": "1",
+               "oracle.server": "oracle",
+               "oracle.port": 1521,
+               "oracle.sid": "ORCLCDB",
+               "oracle.username": "C##MYUSER",
+               "oracle.password": "mypassword",
+               "start.from":"snapshot",
+               "redo.log.topic.name": "redo-log-topic2",
+               "redo.log.consumer.bootstrap.servers":"broker:9092",
+               "table.inclusion.regex": ".*CUSTOMERS.*",
+               "table.topic.name.template": "${databaseName}.${schemaName}.${tableName}_2",
+               "numeric.mapping": "best_fit",
+               "connection.pool.max.size": 20,
+               "redo.log.row.fetch.size":1,
+               "oracle.dictionary.mode": "auto",
+
+               "transforms": "Cast",
+               "transforms.Cast.spec": "MYNUMBER:string",
+               "transforms.Cast.type": "org.apache.kafka.connect.transforms.Cast$Value"
+          }' \
+     http://localhost:8083/connectors/cdc-oracle-source-cdb2/config | jq .
+
+log "Verifying topic ORCLCDB.C__MYUSER.CUSTOMERS_2"
+timeout 60 docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic ORCLCDB.C__MYUSER.CUSTOMERS_2 --from-beginning --max-messages 1
+# log "Verifying topic redo-log-topic2"
+# timeout 60 docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic redo-log-topic2 --from-beginning --max-messages 1
+
+# "MYNUMBER":{"string":"1.245169279E9"},
+
+#     {
+#       "default": null,
+#       "name": "MYNUMBER",
+#       "type": [
+#         "null",
+#         "string"
+#       ]
+#     },
+##########################
+##########################
+##########################
+
+docker exec connect kafka-topics --create --topic redo-log-topic3 --bootstrap-server broker:9092 --replication-factor 1 --partitions 1 --config cleanup.policy=delete --config retention.ms=120960000
+log "redo-log-topic3 is created"
+sleep 5
+
+log "Creating Oracle source connector numeric.mapping=best_fist and numeric.default.scale=0"
+curl -X PUT \
+     -H "Content-Type: application/json" \
+     --data '{
+               "connector.class": "io.confluent.connect.oracle.cdc.OracleCdcSourceConnector",
+               "tasks.max":2,
+               "key.converter": "io.confluent.connect.avro.AvroConverter",
+               "key.converter.schema.registry.url": "http://schema-registry:8081",
+               "value.converter": "io.confluent.connect.avro.AvroConverter",
+               "value.converter.schema.registry.url": "http://schema-registry:8081",
+               "confluent.license": "",
+               "confluent.topic.bootstrap.servers": "broker:9092",
+               "confluent.topic.replication.factor": "1",
+               "oracle.server": "oracle",
+               "oracle.port": 1521,
+               "oracle.sid": "ORCLCDB",
+               "oracle.username": "C##MYUSER",
+               "oracle.password": "mypassword",
+               "start.from":"snapshot",
+               "redo.log.topic.name": "redo-log-topic3",
+               "redo.log.consumer.bootstrap.servers":"broker:9092",
+               "table.inclusion.regex": ".*CUSTOMERS.*",
+               "table.topic.name.template": "${databaseName}.${schemaName}.${tableName}_3",
+               "numeric.mapping": "best_fit",
+               "numeric.default.scale": "0",
+               "connection.pool.max.size": 20,
+               "redo.log.row.fetch.size":1,
+               "oracle.dictionary.mode": "auto"
+          }' \
+     http://localhost:8083/connectors/cdc-oracle-source-cdb3/config | jq .
+
+log "Verifying topic ORCLCDB.C__MYUSER.CUSTOMERS_3"
+timeout 60 docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic ORCLCDB.C__MYUSER.CUSTOMERS_3 --from-beginning --max-messages 1
+# log "Verifying topic redo-log-topic3"
+# timeout 60 docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic redo-log-topic3 --from-beginning --max-messages 1
+
+# "MYNUMBER":{"bytes":"J7Æ"}
+
+#     {
+#       "default": null,
+#       "name": "MYNUMBER",
+#       "type": [
+#         "null",
+#         {
+#           "connect.name": "org.apache.kafka.connect.data.Decimal",
+#           "connect.parameters": {
+#             "scale": "0"
+#           },
+#           "connect.version": 1,
+#           "logicalType": "decimal",
+#           "precision": 64,
+#           "scale": 0,
+#           "type": "bytes"
+#         }
+#       ]
+#     },
+
+##########################
+##########################
+##########################
+
+docker exec connect kafka-topics --create --topic redo-log-topic4 --bootstrap-server broker:9092 --replication-factor 1 --partitions 1 --config cleanup.policy=delete --config retention.ms=120960000
+log "redo-log-topic4 is created"
+sleep 5
+
+log "Creating Oracle source connector numeric.mapping=best_fit_or_string"
+curl -X PUT \
+     -H "Content-Type: application/json" \
+     --data '{
+               "connector.class": "io.confluent.connect.oracle.cdc.OracleCdcSourceConnector",
+               "tasks.max":2,
+               "key.converter": "io.confluent.connect.avro.AvroConverter",
+               "key.converter.schema.registry.url": "http://schema-registry:8081",
+               "value.converter": "io.confluent.connect.avro.AvroConverter",
+               "value.converter.schema.registry.url": "http://schema-registry:8081",
+               "confluent.license": "",
+               "confluent.topic.bootstrap.servers": "broker:9092",
+               "confluent.topic.replication.factor": "1",
+               "oracle.server": "oracle",
+               "oracle.port": 1521,
+               "oracle.sid": "ORCLCDB",
+               "oracle.username": "C##MYUSER",
+               "oracle.password": "mypassword",
+               "start.from":"snapshot",
+               "redo.log.topic.name": "redo-log-topic4",
+               "redo.log.consumer.bootstrap.servers":"broker:9092",
+               "table.inclusion.regex": ".*CUSTOMERS.*",
+               "table.topic.name.template": "${databaseName}.${schemaName}.${tableName}_4",
+               "numeric.mapping": "best_fit_or_string",
+               "_numeric.default.scale": "0",
+               "connection.pool.max.size": 20,
+               "redo.log.row.fetch.size":1,
+               "oracle.dictionary.mode": "auto"
+          }' \
+     http://localhost:8083/connectors/cdc-oracle-source-cdb4/config | jq .
+
+log "Verifying topic ORCLCDB.C__MYUSER.CUSTOMERS_4"
+timeout 60 docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic ORCLCDB.C__MYUSER.CUSTOMERS_4 --from-beginning --max-messages 1
+# log "Verifying topic redo-log-topic4"
+# timeout 60 docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic redo-log-topic4 --from-beginning --max-messages 1
+
+# "MYNUMBER":{"double":1.245169279E9}
+
+#     {
+#       "default": null,
+#       "name": "MYNUMBER",
+#       "type": [
+#         "null",
+#         "double"
+#       ]
+#     },
+
+
+##########################
+##########################
+##########################
+
+docker exec connect kafka-topics --create --topic redo-log-topic5 --bootstrap-server broker:9092 --replication-factor 1 --partitions 1 --config cleanup.policy=delete --config retention.ms=120960000
+log "redo-log-topic5 is created"
+sleep 5
+
+log "Creating Oracle source connector numeric.mapping=precision_only"
+curl -X PUT \
+     -H "Content-Type: application/json" \
+     --data '{
+               "connector.class": "io.confluent.connect.oracle.cdc.OracleCdcSourceConnector",
+               "tasks.max":2,
+               "key.converter": "io.confluent.connect.avro.AvroConverter",
+               "key.converter.schema.registry.url": "http://schema-registry:8081",
+               "value.converter": "io.confluent.connect.avro.AvroConverter",
+               "value.converter.schema.registry.url": "http://schema-registry:8081",
+               "confluent.license": "",
+               "confluent.topic.bootstrap.servers": "broker:9092",
+               "confluent.topic.replication.factor": "1",
+               "oracle.server": "oracle",
+               "oracle.port": 1521,
+               "oracle.sid": "ORCLCDB",
+               "oracle.username": "C##MYUSER",
+               "oracle.password": "mypassword",
+               "start.from":"snapshot",
+               "redo.log.topic.name": "redo-log-topic5",
+               "redo.log.consumer.bootstrap.servers":"broker:9092",
+               "table.inclusion.regex": ".*CUSTOMERS.*",
+               "table.topic.name.template": "${databaseName}.${schemaName}.${tableName}_5",
+               "numeric.mapping": "precision_only",
+               "_numeric.default.scale": "0",
+               "connection.pool.max.size": 20,
+               "redo.log.row.fetch.size":1,
+               "oracle.dictionary.mode": "auto"
+          }' \
+     http://localhost:8083/connectors/cdc-oracle-source-cdb5/config | jq .
+
+log "Verifying topic ORCLCDB.C__MYUSER.CUSTOMERS_5"
+timeout 60 docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic ORCLCDB.C__MYUSER.CUSTOMERS_5 --from-beginning --max-messages 1
+# log "Verifying topic redo-log-topic5"
+# timeout 60 docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic redo-log-topic5 --from-beginning --max-messages 1
+
+# "MYNUMBER":{"bytes":"\u0011!í6\u0007\u0004\u001AK²µÿ¦%GH_)\u0018Í<MöÜËe´Sèú£¬7\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000\u0000"}
+
+#     {
+#       "default": null,
+#       "name": "MYNUMBER",
+#       "type": [
+#         "null",
+#         {
+#           "connect.name": "org.apache.kafka.connect.data.Decimal",
+#           "connect.parameters": {
+#             "scale": "127"
+#           },
+#           "connect.version": 1,
+#           "logicalType": "decimal",
+#           "precision": 64,
+#           "scale": 127,
+#           "type": "bytes"
+#         }
+#       ]
+#     },
+
+
+##########################
+##########################
+##########################
+
+docker exec connect kafka-topics --create --topic redo-log-topic6 --bootstrap-server broker:9092 --replication-factor 1 --partitions 1 --config cleanup.policy=delete --config retention.ms=120960000
+log "redo-log-topic6 is created"
+sleep 5
+
+log "Creating Oracle source connector numeric.mapping=precision_only and numeric.default.scale=0"
+curl -X PUT \
+     -H "Content-Type: application/json" \
+     --data '{
+               "connector.class": "io.confluent.connect.oracle.cdc.OracleCdcSourceConnector",
+               "tasks.max":2,
+               "key.converter": "io.confluent.connect.avro.AvroConverter",
+               "key.converter.schema.registry.url": "http://schema-registry:8081",
+               "value.converter": "io.confluent.connect.avro.AvroConverter",
+               "value.converter.schema.registry.url": "http://schema-registry:8081",
+               "confluent.license": "",
+               "confluent.topic.bootstrap.servers": "broker:9092",
+               "confluent.topic.replication.factor": "1",
+               "oracle.server": "oracle",
+               "oracle.port": 1521,
+               "oracle.sid": "ORCLCDB",
+               "oracle.username": "C##MYUSER",
+               "oracle.password": "mypassword",
+               "start.from":"snapshot",
+               "redo.log.topic.name": "redo-log-topic6",
+               "redo.log.consumer.bootstrap.servers":"broker:9092",
+               "table.inclusion.regex": ".*CUSTOMERS.*",
+               "table.topic.name.template": "${databaseName}.${schemaName}.${tableName}_6",
+               "numeric.mapping": "precision_only",
+               "numeric.default.scale": "0",
+               "connection.pool.max.size": 20,
+               "redo.log.row.fetch.size":1,
+               "oracle.dictionary.mode": "auto"
+          }' \
+     http://localhost:8083/connectors/cdc-oracle-source-cdb6/config | jq .
+
+log "Verifying topic ORCLCDB.C__MYUSER.CUSTOMERS_6"
+timeout 60 docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic ORCLCDB.C__MYUSER.CUSTOMERS_6 --from-beginning --max-messages 1
+# log "Verifying topic redo-log-topic6"
+# timeout 60 docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic redo-log-topic6 --from-beginning --max-messages 1
+
+# ,"MYNUMBER":{"bytes":"J7Æ"}
+
+#     {
+#       "default": null,
+#       "name": "MYNUMBER",
+#       "type": [
+#         "null",
+#         {
+#           "connect.name": "org.apache.kafka.connect.data.Decimal",
+#           "connect.parameters": {
+#             "scale": "0"
+#           },
+#           "connect.version": 1,
+#           "logicalType": "decimal",
+#           "precision": 64,
+#           "scale": 0,
+#           "type": "bytes"
+#         }
+#       ]
+#     },
+
+
+##########################
+##########################
+##########################
+
+docker exec connect kafka-topics --create --topic redo-log-topic8 --bootstrap-server broker:9092 --replication-factor 1 --partitions 1 --config cleanup.policy=delete --config retention.ms=120960000
+log "redo-log-topic8 is created"
+sleep 5
+
+log "Creating Oracle source connector numeric.mapping=best_fist and cast to int64"
+curl -X PUT \
+     -H "Content-Type: application/json" \
+     --data '{
+               "connector.class": "io.confluent.connect.oracle.cdc.OracleCdcSourceConnector",
+               "tasks.max":2,
+               "key.converter": "io.confluent.connect.avro.AvroConverter",
+               "key.converter.schema.registry.url": "http://schema-registry:8081",
+               "value.converter": "io.confluent.connect.avro.AvroConverter",
+               "value.converter.schema.registry.url": "http://schema-registry:8081",
+               "confluent.license": "",
+               "confluent.topic.bootstrap.servers": "broker:9092",
+               "confluent.topic.replication.factor": "1",
+               "oracle.server": "oracle",
+               "oracle.port": 1521,
+               "oracle.sid": "ORCLCDB",
+               "oracle.username": "C##MYUSER",
+               "oracle.password": "mypassword",
+               "start.from":"snapshot",
+               "redo.log.topic.name": "redo-log-topic8",
+               "redo.log.consumer.bootstrap.servers":"broker:9092",
+               "table.inclusion.regex": ".*CUSTOMERS.*",
+               "table.topic.name.template": "${databaseName}.${schemaName}.${tableName}_8",
+               "numeric.mapping": "best_fit",
+               "connection.pool.max.size": 20,
+               "redo.log.row.fetch.size":1,
+               "oracle.dictionary.mode": "auto",
+
+               "transforms": "Cast",
+               "transforms.Cast.spec": "MYNUMBER:int64",
+               "transforms.Cast.type": "org.apache.kafka.connect.transforms.Cast$Value"
+          }' \
+     http://localhost:8083/connectors/cdc-oracle-source-cdb8/config | jq .
+
+log "Verifying topic ORCLCDB.C__MYUSER.CUSTOMERS_8"
+timeout 60 docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic ORCLCDB.C__MYUSER.CUSTOMERS_8 --from-beginning --max-messages 1
+# log "Verifying topic redo-log-topic7"
+# timeout 60 docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic redo-log-topic7 --from-beginning --max-messages 1
+
+#"MYNUMBER":{"long":1245169279}
+
+#     {
+#       "default": null,
+#       "name": "MYNUMBER",
+#       "type": [
+#         "null",
+#         "long"
+#       ]
+#     },
+
+
+##########################
+##########################
+##########################
+
+docker exec connect kafka-topics --create --topic redo-log-topic9 --bootstrap-server broker:9092 --replication-factor 1 --partitions 1 --config cleanup.policy=delete --config retention.ms=120960000
+log "redo-log-topic9 is created"
+sleep 5
+
+log "Creating Oracle source connector numeric.mapping=best_fist and cast to int64"
+curl -X PUT \
+     -H "Content-Type: application/json" \
+     --data '{
+               "connector.class": "io.confluent.connect.oracle.cdc.OracleCdcSourceConnector",
+               "tasks.max":2,
+               "key.converter": "io.confluent.connect.avro.AvroConverter",
+               "key.converter.schema.registry.url": "http://schema-registry:8081",
+               "value.converter": "io.confluent.connect.avro.AvroConverter",
+               "value.converter.schema.registry.url": "http://schema-registry:8081",
+               "confluent.license": "",
+               "confluent.topic.bootstrap.servers": "broker:9092",
+               "confluent.topic.replication.factor": "1",
+               "oracle.server": "oracle",
+               "oracle.port": 1521,
+               "oracle.sid": "ORCLCDB",
+               "oracle.username": "C##MYUSER",
+               "oracle.password": "mypassword",
+               "start.from":"snapshot",
+               "redo.log.topic.name": "redo-log-topic9",
+               "redo.log.consumer.bootstrap.servers":"broker:9092",
+               "table.inclusion.regex": ".*CUSTOMERS.*",
+               "table.topic.name.template": "${databaseName}.${schemaName}.${tableName}_9",
+               "numeric.mapping": "best_fit",
+               "connection.pool.max.size": 20,
+               "redo.log.row.fetch.size":1,
+               "oracle.dictionary.mode": "auto",
+
+               "transforms": "CastToInt64,CastToString",
+               "transforms.CastToInt64.spec": "MYNUMBER:int64",
+               "transforms.CastToInt64.type": "org.apache.kafka.connect.transforms.Cast$Value",
+               "transforms.CastToString.spec": "MYNUMBER:string",
+               "transforms.CastToString.type": "org.apache.kafka.connect.transforms.Cast$Value"
+          }' \
+     http://localhost:8083/connectors/cdc-oracle-source-cdb9/config | jq .
+
+log "Verifying topic ORCLCDB.C__MYUSER.CUSTOMERS_9"
+timeout 60 docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic ORCLCDB.C__MYUSER.CUSTOMERS_9 --from-beginning --max-messages 1
+# log "Verifying topic redo-log-topic7"
+# timeout 60 docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic redo-log-topic7 --from-beginning --max-messages 1
+
+# "MYNUMBER":{"string":"1245169279"}
+
+#     {
+#       "default": null,
+#       "name": "MYNUMBER",
+#       "type": [
+#         "null",
+#         "string"
+#       ]
+#     },
