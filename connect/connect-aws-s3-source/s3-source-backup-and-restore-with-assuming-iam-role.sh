@@ -5,7 +5,7 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
 # KNOWN ISSUE
-logerror "💀 KNOWN ISSUE: https://confluentinc.atlassian.net/browse/CCMSG-1015"
+logerror "💀 KNOWN ISSUE: DDNTH-1015"
 exit 1
 
 export AWS_CREDENTIALS_FILE_NAME=credentials-with-assuming-iam-role

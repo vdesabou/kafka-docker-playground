@@ -73,7 +73,7 @@ EOF
     keytool -importkeystore -srckeystore /tmp/kafka.$i.keystore.jks -destkeystore /tmp/$i.keystore.p12 -deststoretype PKCS12 -deststorepass confluent -srcstorepass confluent -noprompt
     openssl pkcs12 -in /tmp/$i.keystore.p12 -nodes -nocerts -out /tmp/$i.key -passin pass:confluent
 
-    # https://confluentinc.atlassian.net/browse/DOCS-2541
+    
     cacerts_path=$(bash -c "find /usr/lib/jvm -name cacerts" | tail -1)
     keytool -noprompt -destkeystore /tmp/kafka.$i.truststore.jks -importkeystore -srckeystore $cacerts_path -srcstorepass changeit -deststorepass confluent
 done

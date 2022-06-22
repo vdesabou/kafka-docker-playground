@@ -52,7 +52,7 @@ timeout 60 docker exec connect kafka-protobuf-console-consumer -bootstrap-server
 # {"payload":"ASNF","eventType":"OrderCreated"}
 # Processed a total of 1 messages
 
-# FIXTHIS: this will be fixed with https://confluentinc.atlassian.net/browse/DGS-2621
+# FIXTHIS: this will be fixed with FHT-2621
 # if using "transforms.outbox.table.fields.additional.placement" : "type:header:eventType":
 # Results:
 # [2021-12-16 09:11:40,238] ERROR [debezium-mysql-source|task-0] WorkerSourceTask{id=debezium-mysql-source-0} Task threw an uncaught and unrecoverable exception. Task is being killed and will not recover until manually restarted (org.apache.kafka.connect.runtime.WorkerTask:206)

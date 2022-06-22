@@ -58,7 +58,6 @@ timeout 60 docker container exec -e BOOTSTRAP_SERVERS="$BOOTSTRAP_SERVERS" -e SA
 
 tail -f mirrormaker.log | grep "ERROR"
 
-# https://confluentinc.atlassian.net/browse/CCDB-3071
 # https://issues.apache.org/jira/browse/KAFKA-12226
 
 

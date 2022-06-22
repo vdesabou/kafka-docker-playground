@@ -143,7 +143,7 @@ docker exec namenode bash -c "/opt/hadoop-2.7.4/bin/hdfs dfs -ls /topics/my_topi
 
 # Notes:
 # - issue is the same without Hive integration
-# - https://confluentinc.atlassian.net/browse/DGS-486 ? see related GH issue https://github.com/confluentinc/schema-registry/issues/1042 (CP 5.5.3 contains the fix)
+# - EHT-486 ? see related GH issue https://github.com/confluentinc/schema-registry/issues/1042 (CP 5.5.3 contains the fix)
 
 # [2021-07-28 07:42:05,120] ERROR WorkerSinkTask{id=hdfs-sink-repro-0} Task threw an uncaught and unrecoverable exception. Task is being killed and will not recover until manually restarted. Error: org.apache.kafka.connect.errors.SchemaProjectorException: Error projecting appOS (org.apache.kafka.connect.runtime.WorkerSinkTask)
 # java.lang.RuntimeException: org.apache.kafka.connect.errors.SchemaProjectorException: Error projecting appOS

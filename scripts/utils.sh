@@ -181,7 +181,7 @@ else
     if version_gt $first_version $second_version; then
         if [ "$first_version" = "5.3.6" ]
         then
-          logwarn "Workaround for ST-6539, using custom image vdesabou/cp-server !"
+          logwarn "Workaround for 5.3.6 image broker, using custom image vdesabou/cp-server !"
           export CP_KAFKA_IMAGE=vdesabou/cp-server
         else
           export CP_KAFKA_IMAGE=confluentinc/cp-server

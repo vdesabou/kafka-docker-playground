@@ -216,7 +216,7 @@ sleep 10
 #         ... 14 more
 # [2022-06-07 12:17:35,184] INFO AbstractConfig values: 
 #  (org.apache.kafka.common.config.AbstractConfig:376)
-# see https://confluentinc.atlassian.net/browse/CCDB-4534
+# see DDEC-4534
 
 # when getting "user hasn't approved this consumer"
 # need to open this in browser: $SALESFORCE_INSTANCE/services/oauth2/authorize?response_type=token&client_id=$CONSUMER_KEY_APP_WITH_JWT&redirect_uri=https://test.salesforce.com/services/oauth2/success
