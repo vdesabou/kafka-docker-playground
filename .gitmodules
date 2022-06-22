@@ -1,0 +1,3 @@
+[submodule "my-private-repo"]
+	path = reproduction-models-private
+	url = https://github.com/vdesabou/my-private-repo.git
