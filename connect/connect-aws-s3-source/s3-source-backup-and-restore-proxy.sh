@@ -107,7 +107,7 @@ log "Verifying topic copy_of_s3_topic"
 timeout 60 docker exec broker kafka-console-consumer -bootstrap-server broker:9092 --topic copy_of_s3_topic --from-beginning --max-messages 9
 
 
-# FIXTHIS: https://confluentinc.atlassian.net/browse/CCMSG-1361
+# FIXTHIS: DDNTH-1361
 # [2021-09-16 13:37:22,275] ERROR [s3-source|worker] WorkerConnector{id=s3-source} Error while starting connector (org.apache.kafka.connect.runtime.WorkerConnector:193)
 # java.lang.IllegalArgumentException: No enum constant com.amazonaws.Protocol.https
 #         at java.base/java.lang.Enum.valueOf(Enum.java:240)
