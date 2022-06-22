@@ -14,7 +14,7 @@ sqlplus C\#\#MYUSER/mypassword@//localhost:1521/ORCLCDB  <<- EOF
           comments VARCHAR(90),
           create_ts timestamp DEFAULT CURRENT_TIMESTAMP ,
           update_ts timestamp,
-          mynumber NUMBER(20,5) DEFAULT 123456789.00000
+          mynumber NUMBER DEFAULT 1245169279
   );
 
   CREATE OR REPLACE TRIGGER TRG_CUSTOMERS_UPD
