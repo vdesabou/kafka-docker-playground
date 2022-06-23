@@ -81,6 +81,41 @@ log "✨ Run the protobuf java producer which produces to topic customer_protobu
 docker exec producer-repro-110178 bash -c "java ${JAVA_OPTS} -jar producer-1.0.0-jar-with-dependencies.jar"
 
 
+# [2022-06-23 12:22:18,837] INFO Sending Key = 1, Value = uint32_wrapper_value {
+#   value: 1295249578
+# }
+#  (com.github.vdesabou.SimpleProducer)
+# [2022-06-23 12:22:19,840] INFO Sending Key = 2, Value = uint32_wrapper_value {
+#   value: 2614777669
+# }
+#  (com.github.vdesabou.SimpleProducer)
+# [2022-06-23 12:22:20,841] INFO Sending Key = 3, Value = uint32_wrapper_value {
+#   value: 2673056906
+# }
+#  (com.github.vdesabou.SimpleProducer)
+# [2022-06-23 12:22:21,843] INFO Sending Key = 4, Value = uint32_wrapper_value {
+#   value: 3075404944
+# }
+#  (com.github.vdesabou.SimpleProducer)
+# [2022-06-23 12:22:22,845] INFO Sending Key = 5, Value = uint32_wrapper_value {
+#   value: 2928363499
+# }
+
+# schema is 
+
+# syntax = "proto3";
+# package com.github.vdesabou;
+
+# import "google/protobuf/wrappers.proto";
+
+# option java_outer_classname = "CustomerImpl";
+
+# message Customer {
+#   .google.protobuf.UInt32Value uint32_wrapper_value = 1;
+# }
+
+
+
 # [2022-06-23 12:22:19,759] ERROR [s3-sink|task-0] WorkerSinkTask{id=s3-sink-0} Task threw an uncaught and unrecoverable exception. Task is being killed and will not recover until manually restarted (org.apache.kafka.connect.runtime.WorkerTask:207)
 # org.apache.kafka.connect.errors.ConnectException: Tolerance exceeded in error handler
 #         at org.apache.kafka.connect.runtime.errors.RetryWithToleranceOperator.execAndHandleError(RetryWithToleranceOperator.java:220)
