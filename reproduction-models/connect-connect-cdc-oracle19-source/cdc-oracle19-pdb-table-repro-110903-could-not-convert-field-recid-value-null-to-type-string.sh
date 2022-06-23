@@ -149,3 +149,218 @@ timeout 20 docker exec connect kafka-avro-console-consumer -bootstrap-server bro
 # {"SCN":{"long":2172854},"START_SCN":{"long":2172853},"COMMIT_SCN":{"long":2172854},"TIMESTAMP":{"long":1655974754000},"START_TIMESTAMP":{"long":1655974754000},"COMMIT_TIMESTAMP":{"long":1655974754000},"XIDUSN":{"long":3},"XIDSLT":{"long":14},"XIDSQN":{"long":716},"XID":{"bytes":"\u0003\u0000\u000E\u0000Ì\u0002\u0000\u0000"},"PXIDUSN":{"long":3},"PXIDSLT":{"long":14},"PXIDSQN":{"long":716},"PXID":{"bytes":"\u0003\u0000\u000E\u0000Ì\u0002\u0000\u0000"},"TX_NAME":null,"OPERATION":{"string":"COMMIT"},"OPERATION_CODE":{"int":7},"ROLLBACK":{"boolean":false},"SEG_OWNER":null,"SEG_NAME":null,"TABLE_NAME":null,"SEG_TYPE":{"int":0},"SEG_TYPE_NAME":null,"TABLE_SPACE":null,"ROW_ID":{"string":"AAAAAAAAAAAAAAAAAA"},"USERNAME":{"string":"C##MYUSER"},"OS_USERNAME":{"string":"UNKNOWN"},"MACHINE_NAME":{"string":"UNKNOWN"},"AUDIT_SESSIONID":{"long":40001},"SESSION_NUM":{"long":501},"SERIAL_NUM":{"long":47243},"SESSION_INFO":{"string":"UNKNOWN"},"THREAD_NUM":{"long":1},"SEQUENCE_NUM":{"long":3},"RBASQN":{"long":7},"RBABLK":{"long":141497},"RBABYTE":{"long":16},"UBAFIL":{"long":11},"UBABLK":{"long":0},"UBAREC":{"long":0},"UBASQN":{"long":0},"ABS_FILE_NUM":{"long":11},"REL_FILE_NUM":{"long":0},"DATA_BLK_NUM":{"long":0},"DATA_OBJ_NUM":{"long":0},"DATA_OBJV_NUM":{"long":0},"DATA_OBJD_NUM":{"long":0},"SQL_REDO":{"string":"commit;"},"SQL_UNDO":null,"RS_ID":{"string":" 0x000007.000228b9.0010 "},"SSN":{"long":0},"CSF":{"boolean":false},"INFO":null,"STATUS":{"int":0},"REDO_VALUE":{"long":4},"UNDO_VALUE":{"long":5},"SAFE_RESUME_SCN":{"long":2172854},"CSCN":{"long":2172854},"OBJECT_ID":null,"EDITION_NAME":null,"CLIENT_ID":{"string":"UNKNOWN"},"SRC_CON_NAME":{"string":"ORCLPDB1"},"SRC_CON_ID":{"long":3},"SRC_CON_UID":{"long":2068062479},"SRC_CON_DBID":{"long":0},"SRC_CON_GUID":null,"CON_ID":{"boolean":false}}
 
 # "SQL_REDO":{"string":"delete from \"C##MYUSER\".\"CUSTOMERS\" a where a.\"RECID\" = '1' and a.ROWID = 'AAAR1AAAMAAAACFAAA';"}
+
+
+log "Insert record id 4"
+docker exec -i oracle sqlplus C\#\#MYUSER/mypassword@//localhost:1521/ORCLPDB1 << EOF
+  insert into CUSTOMERS (RECID, XMLRECORD) values ('9',XMLType('<Warehouse whNo="4"> <Building>Owned</Building></Warehouse>'));
+  exit;
+EOF
+
+log "Grab ROWID"
+docker exec -i oracle sqlplus C\#\#MYUSER/mypassword@//localhost:1521/ORCLPDB1 << EOF
+  SELECT DBMS_ROWID.ROWID_BLOCK_NUMBER(rowid),rowid FROM CUSTOMERS;
+  exit;
+EOF
+
+
+log "delete record id 1"
+docker exec -i oracle sqlplus C\#\#MYUSER/mypassword@//localhost:1521/ORCLPDB1 << EOF
+  delete from CUSTOMERS where ROWID = 'AAAR1AAAMAAAACFAAC';
+  exit;
+EOF
+
+
+
+# {
+#     "ABS_FILE_NUM": {
+#         "long": 11
+#     },
+#     "AUDIT_SESSIONID": {
+#         "long": 110007
+#     },
+#     "CLIENT_ID": null,
+#     "COMMIT_SCN": {
+#         "long": 2201519
+#     },
+#     "COMMIT_TIMESTAMP": {
+#         "long": 1655981097000
+#     },
+#     "CON_ID": {
+#         "boolean": false
+#     },
+#     "CSCN": {
+#         "long": 2201519
+#     },
+#     "CSF": {
+#         "boolean": false
+#     },
+#     "DATA_BLK_NUM": {
+#         "long": 133
+#     },
+#     "DATA_OBJD_NUM": {
+#         "long": 73024
+#     },
+#     "DATA_OBJV_NUM": {
+#         "long": 2
+#     },
+#     "DATA_OBJ_NUM": {
+#         "long": 73024
+#     },
+#     "EDITION_NAME": null,
+#     "INFO": null,
+#     "MACHINE_NAME": {
+#         "string": "oracle"
+#     },
+#     "OBJECT_ID": null,
+#     "OPERATION": {
+#         "string": "DELETE"
+#     },
+#     "OPERATION_CODE": {
+#         "int": 2
+#     },
+#     "OS_USERNAME": {
+#         "string": "oracle"
+#     },
+#     "PXID": {
+#         "bytes": "\u0003\u0000\u000b\u0000\u00ce\u0002\u0000\u0000"
+#     },
+#     "PXIDSLT": {
+#         "long": 11
+#     },
+#     "PXIDSQN": {
+#         "long": 718
+#     },
+#     "PXIDUSN": {
+#         "long": 3
+#     },
+#     "RBABLK": {
+#         "long": 189779
+#     },
+#     "RBABYTE": {
+#         "long": 16
+#     },
+#     "RBASQN": {
+#         "long": 7
+#     },
+#     "REDO_VALUE": {
+#         "long": 14
+#     },
+#     "REL_FILE_NUM": {
+#         "long": 12
+#     },
+#     "ROLLBACK": {
+#         "boolean": false
+#     },
+#     "ROW_ID": {
+#         "string": "AAAR1AAAMAAAACFAAC"
+#     },
+#     "RS_ID": {
+#         "string": " 0x000007.0002e553.0010 "
+#     },
+#     "SAFE_RESUME_SCN": {
+#         "long": 0
+#     },
+#     "SCN": {
+#         "long": 2201518
+#     },
+#     "SEG_NAME": {
+#         "string": "CUSTOMERS"
+#     },
+#     "SEG_OWNER": {
+#         "string": "C##MYUSER"
+#     },
+#     "SEG_TYPE": {
+#         "int": 2
+#     },
+#     "SEG_TYPE_NAME": {
+#         "string": "TABLE"
+#     },
+#     "SEQUENCE_NUM": {
+#         "long": 2
+#     },
+#     "SERIAL_NUM": {
+#         "long": 36414
+#     },
+#     "SESSION_INFO": {
+#         "string": "login_username=C##MYUSER client_info= OS_username=oracle Machine_name=oracle OS_terminal=pts/0 OS_process_id=3812 OS_program_name=sqlplus@oracle (TNS V1-V3)"
+#     },
+#     "SESSION_NUM": {
+#         "long": 875
+#     },
+#     "SQL_REDO": {
+#         "string": "delete from \"C##MYUSER\".\"CUSTOMERS\" a where a.\"RECID\" = '9' and a.ROWID = 'AAAR1AAAMAAAACFAAC';"
+#     },
+#     "SQL_UNDO": {
+#         "string": "insert into \"C##MYUSER\".\"CUSTOMERS\"(\"RECID\") values ('9');"
+#     },
+#     "SRC_CON_DBID": {
+#         "long": 0
+#     },
+#     "SRC_CON_GUID": null,
+#     "SRC_CON_ID": {
+#         "long": 3
+#     },
+#     "SRC_CON_NAME": {
+#         "string": "ORCLPDB1"
+#     },
+#     "SRC_CON_UID": {
+#         "long": 2068062479
+#     },
+#     "SSN": {
+#         "long": 0
+#     },
+#     "START_SCN": {
+#         "long": 2201518
+#     },
+#     "START_TIMESTAMP": {
+#         "long": 1655981097000
+#     },
+#     "STATUS": {
+#         "int": 0
+#     },
+#     "TABLE_NAME": {
+#         "string": "CUSTOMERS"
+#     },
+#     "TABLE_SPACE": {
+#         "string": "USERS"
+#     },
+#     "THREAD_NUM": {
+#         "long": 1
+#     },
+#     "TIMESTAMP": {
+#         "long": 1655981097000
+#     },
+#     "TX_NAME": null,
+#     "UBABLK": {
+#         "long": 0
+#     },
+#     "UBAFIL": {
+#         "long": 11
+#     },
+#     "UBAREC": {
+#         "long": 0
+#     },
+#     "UBASQN": {
+#         "long": 0
+#     },
+#     "UNDO_VALUE": {
+#         "long": 15
+#     },
+#     "USERNAME": {
+#         "string": "C##MYUSER"
+#     },
+#     "XID": {
+#         "bytes": "\u0003\u0000\u000b\u0000\u00ce\u0002\u0000\u0000"
+#     },
+#     "XIDSLT": {
+#         "long": 11
+#     },
+#     "XIDSQN": {
+#         "long": 718
+#     },
+#     "XIDUSN": {
+#         "long": 3
+#     }
+# }
+
