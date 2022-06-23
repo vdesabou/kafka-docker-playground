@@ -2,13 +2,8 @@ syntax = "proto3";
 
 package com.github.vdesabou;
 option java_outer_classname = "CustomerImpl";
-
+import "google/protobuf/wrappers.proto";
 
 message Customer {
-   UInt32Value myInt32 = 202;
-}
-
-message UInt32Value {
-  // The uint32 value.
-  uint32 value = 1;
+  google.protobuf.UInt32Value uint32_wrapper_value = 1;
 }

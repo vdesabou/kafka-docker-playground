@@ -81,6 +81,36 @@ log "✨ Run the protobuf java producer which produces to topic customer_protobu
 docker exec producer-repro-110178 bash -c "java ${JAVA_OPTS} -jar producer-1.0.0-jar-with-dependencies.jar"
 
 
+# [2022-06-23 12:22:19,759] ERROR [s3-sink|task-0] WorkerSinkTask{id=s3-sink-0} Task threw an uncaught and unrecoverable exception. Task is being killed and will not recover until manually restarted (org.apache.kafka.connect.runtime.WorkerTask:207)
+# org.apache.kafka.connect.errors.ConnectException: Tolerance exceeded in error handler
+#         at org.apache.kafka.connect.runtime.errors.RetryWithToleranceOperator.execAndHandleError(RetryWithToleranceOperator.java:220)
+#         at org.apache.kafka.connect.runtime.errors.RetryWithToleranceOperator.execute(RetryWithToleranceOperator.java:142)
+#         at org.apache.kafka.connect.runtime.WorkerSinkTask.convertAndTransformRecord(WorkerSinkTask.java:519)
+#         at org.apache.kafka.connect.runtime.WorkerSinkTask.convertMessages(WorkerSinkTask.java:494)
+#         at org.apache.kafka.connect.runtime.WorkerSinkTask.poll(WorkerSinkTask.java:333)
+#         at org.apache.kafka.connect.runtime.WorkerSinkTask.iteration(WorkerSinkTask.java:235)
+#         at org.apache.kafka.connect.runtime.WorkerSinkTask.execute(WorkerSinkTask.java:204)
+#         at org.apache.kafka.connect.runtime.WorkerTask.doRun(WorkerTask.java:200)
+#         at org.apache.kafka.connect.runtime.WorkerTask.run(WorkerTask.java:255)
+#         at java.base/java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:515)
+#         at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:264)
+#         at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1128)
+#         at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:628)
+#         at java.base/java.lang.Thread.run(Thread.java:829)
+# Caused by: org.apache.kafka.connect.errors.DataException: Invalid Java object for schema with type INT64: class java.lang.Integer for field: "uint32_wrapper_value"
+#         at org.apache.kafka.connect.data.ConnectSchema.validateValue(ConnectSchema.java:242)
+#         at org.apache.kafka.connect.data.Struct.put(Struct.java:216)
+#         at org.apache.kafka.connect.data.Struct.put(Struct.java:203)
+#         at io.confluent.connect.protobuf.ProtobufData.setStructField(ProtobufData.java:1307)
+#         at io.confluent.connect.protobuf.ProtobufData.toConnectData(ProtobufData.java:1255)
+#         at io.confluent.connect.protobuf.ProtobufData.toConnectData(ProtobufData.java:1123)
+#         at io.confluent.connect.protobuf.ProtobufConverter.toConnectData(ProtobufConverter.java:121)
+#         at org.apache.kafka.connect.storage.Converter.toConnectData(Converter.java:87)
+#         at org.apache.kafka.connect.runtime.WorkerSinkTask.lambda$convertAndTransformRecord$5(WorkerSinkTask.java:519)
+#         at org.apache.kafka.connect.runtime.errors.RetryWithToleranceOperator.execAndRetry(RetryWithToleranceOperator.java:166)
+#         at org.apache.kafka.connect.runtime.errors.RetryWithToleranceOperator.execAndHandleError(RetryWithToleranceOperator.java:200)
+#         ... 13 more
+
 sleep 10
 
 log "Listing objects of in S3"
@@ -91,7 +121,3 @@ aws s3 cp --only-show-errors s3://$AWS_BUCKET_NAME/topics/customer_protobuf/part
 
 docker run --rm -v ${DIR}:/tmp actions/avro-tools tojson /tmp/customer_protobuf+0+0000000000.avro
 rm -f customer_protobuf+0+0000000000.avro
-
-# {"myInt32":{"UInt32Value":{"value":{"long":3106009565}}}}
-# {"myInt32":{"UInt32Value":{"value":{"long":1295249578}}}}
-# {"myInt32":{"UInt32Value":{"value":{"long":2614777669}}}}
