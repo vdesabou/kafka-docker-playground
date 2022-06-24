@@ -17,6 +17,14 @@ ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.mic
 log "Load inventory-repro-110836.sql to SQL Server"
 cat inventory-repro-110836.sql | docker exec -i sqlserver bash -c '/opt/mssql-tools/bin/sqlcmd -U sa -P Password!'
 
+curl --request PUT \
+  --url http://localhost:8083/admin/loggers/io.confluent.connect.jdbc \
+  --header 'Accept: application/json' \
+  --header 'Content-Type: application/json' \
+  --data '{
+ "level": "TRACE"
+}'
+
 log "Creating JDBC SQL Server (with Microsoft driver) sink connector"
 curl -X PUT \
      -H "Content-Type: application/json" \
@@ -75,9 +83,14 @@ GO
 EOF
 cat /tmp/result.log
 
+sleep 10
+
+log "send message with null for binary field"
 docker exec -i connect kafka-json-schema-console-producer --broker-list broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic customers --property key.schema='{"type":"object","properties":{"f0":{"type":"string"}}}' --property value.schema='{"type":"object","properties":{"f1":{"type":"string"},"f2":{"oneOf": [ {"type": "null"},{"connect.type": "bytes","type": "string"}]}}}'  --property parse.key=true --property key.separator="|" << EOF
-{"f0": "3"}|{"f1": "2","f2":null}
+{"f0": "3"}|{"f1": "3","f2":null}
 EOF
+
+sleep 10
 
 log "Check DLQ"
 set +e
@@ -129,3 +142,12 @@ set -e
 #         at io.confluent.connect.jdbc.sink.JdbcSinkTask.getAllMessagesException(JdbcSinkTask.java:150)
 #         at io.confluent.connect.jdbc.sink.JdbcSinkTask.put(JdbcSinkTask.java:102)
 #         ... 11 more
+
+
+log "Show content of customers table:"
+docker exec -i sqlserver /opt/mssql-tools/bin/sqlcmd -U sa -P Password! > /tmp/result.log  2>&1 <<-EOF
+use testDB
+select * from customers
+GO
+EOF
+cat /tmp/result.log
