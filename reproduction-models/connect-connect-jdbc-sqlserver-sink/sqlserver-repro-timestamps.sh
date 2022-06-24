@@ -14,12 +14,7 @@ fi
 
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.microsoft.yml"
 
-# Removed pre-installed JTDS driver
-docker exec connect rm -f /usr/share/confluent-hub-components/confluentinc-kafka-connect-jdbc/lib/jtds-1.3.1.jar
-docker container restart connect
 
-log "sleeping 60 seconds"
-sleep 60
 
 log "Creating JDBC SQL Server (with Microsoft driver) sink connector"
 curl -X PUT \

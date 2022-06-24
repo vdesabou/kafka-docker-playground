@@ -15,12 +15,7 @@ fi
 
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.jtds.repro-89256-timestamp-mode-not-working.yml"
 
-# Removed pre-installed JTDS driver
-docker exec connect rm -f /usr/share/confluent-hub-components/confluentinc-kafka-connect-jdbc/lib/jtds-1.3.1.jar
-docker container restart connect
 
-log "sleeping 60 seconds"
-sleep 60
 
 log "Load inventory.sql to SQL Server"
 cat inventory-repro-89256-timestamp-mode-not-working.sql | docker exec -i sqlserver bash -c '/opt/mssql-tools/bin/sqlcmd -U sa -P Password!'
