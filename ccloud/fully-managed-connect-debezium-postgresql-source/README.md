@@ -1,4 +1,4 @@
-# Fully-Manafged Debezium PostgreSQL source connector
+# Fully-Managed Debezium PostgreSQL source connector
 
 ## Objective
 
