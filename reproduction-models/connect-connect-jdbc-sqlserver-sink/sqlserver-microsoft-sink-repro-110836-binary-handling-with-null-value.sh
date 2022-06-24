@@ -28,8 +28,10 @@ curl -X PUT \
                "connection.password": "Password!",
                "topics": "customers",
                "auto.create": "false",
+               "auto.evolve": "false",
                "value.converter": "io.confluent.connect.json.JsonSchemaConverter",
                "value.converter.schema.registry.url": "http://schema-registry:8081",
+               "value.converter.object.additional.properties" : "false",
 
                "binary.handling.mode": "bytes",
                "delete.enabled" : "true",
@@ -72,3 +74,58 @@ select * from customers
 GO
 EOF
 cat /tmp/result.log
+
+docker exec -i connect kafka-json-schema-console-producer --broker-list broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic customers --property key.schema='{"type":"object","properties":{"f0":{"type":"string"}}}' --property value.schema='{"type":"object","properties":{"f1":{"type":"string"},"f2":{"oneOf": [ {"type": "null"},{"connect.type": "bytes","type": "string"}]}}}'  --property parse.key=true --property key.separator="|" << EOF
+{"f0": "3"}|{"f1": "2","f2":null}
+EOF
+
+log "Check DLQ"
+set +e
+timeout 30 docker exec broker kafka-console-consumer --bootstrap-server broker:9092 --topic dlq --from-beginning --property print.headers=true
+set -e
+
+# __connect.errors.topic:customers,__connect.errors.partition:0,__connect.errors.offset:6,__connect.errors.connector.name:sqlserver-sink,__connect.errors.task.id:0,__connect.errors.stage:TASK_PUT,__connect.errors.class.name:org.apache.kafka.connect.sink.SinkTask,__connect.errors.exception.class.name:java.sql.SQLException,__connect.errors.exception.message:Exception chain:
+# java.sql.BatchUpdateException: Implicit conversion from data type nvarchar to binary is not allowed. Use the CONVERT function to run this query.
+# ,__connect.errors.exception.stacktrace:java.sql.SQLException: Exception chain:
+# java.sql.BatchUpdateException: Implicit conversion from data type nvarchar to binary is not allowed. Use the CONVERT function to run this query.
+
+#         at io.confluent.connect.jdbc.sink.JdbcSinkTask.getAllMessagesException(JdbcSinkTask.java:150)
+#         at io.confluent.connect.jdbc.sink.JdbcSinkTask.unrollAndRetry(JdbcSinkTask.java:138)
+#         at io.confluent.connect.jdbc.sink.JdbcSinkTask.put(JdbcSinkTask.java:111)
+#         at org.apache.kafka.connect.runtime.WorkerSinkTask.deliverMessages(WorkerSinkTask.java:584)
+#         at org.apache.kafka.connect.runtime.WorkerSinkTask.poll(WorkerSinkTask.java:334)
+#         at org.apache.kafka.connect.runtime.WorkerSinkTask.iteration(WorkerSinkTask.java:235)
+#         at org.apache.kafka.connect.runtime.WorkerSinkTask.execute(WorkerSinkTask.java:204)
+#         at org.apache.kafka.connect.runtime.WorkerTask.doRun(WorkerTask.java:200)
+#         at org.apache.kafka.connect.runtime.WorkerTask.run(WorkerTask.java:255)
+#         at java.base/java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:515)
+#         at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:264)
+#         at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1128)
+#         at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:628)
+#         at java.base/java.lang.Thread.run(Thread.java:829)
+#         {"f1":"2","f2":null}
+
+
+
+# [2022-06-24 21:29:33,376] ERROR [sqlserver-sink|task-0] WorkerSinkTask{id=sqlserver-sink-0} RetriableException from SinkTask: (org.apache.kafka.connect.runtime.WorkerSinkTask:607)
+# org.apache.kafka.connect.errors.RetriableException: java.sql.SQLException: Exception chain:
+# java.sql.BatchUpdateException: Implicit conversion from data type nvarchar to binary is not allowed. Use the CONVERT function to run this query.
+
+#         at io.confluent.connect.jdbc.sink.JdbcSinkTask.put(JdbcSinkTask.java:108)
+#         at org.apache.kafka.connect.runtime.WorkerSinkTask.deliverMessages(WorkerSinkTask.java:584)
+#         at org.apache.kafka.connect.runtime.WorkerSinkTask.poll(WorkerSinkTask.java:334)
+#         at org.apache.kafka.connect.runtime.WorkerSinkTask.iteration(WorkerSinkTask.java:235)
+#         at org.apache.kafka.connect.runtime.WorkerSinkTask.execute(WorkerSinkTask.java:204)
+#         at org.apache.kafka.connect.runtime.WorkerTask.doRun(WorkerTask.java:200)
+#         at org.apache.kafka.connect.runtime.WorkerTask.run(WorkerTask.java:255)
+#         at java.base/java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:515)
+#         at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:264)
+#         at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1128)
+#         at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:628)
+#         at java.base/java.lang.Thread.run(Thread.java:829)
+# Caused by: java.sql.SQLException: Exception chain:
+# java.sql.BatchUpdateException: Implicit conversion from data type nvarchar to binary is not allowed. Use the CONVERT function to run this query.
+
+#         at io.confluent.connect.jdbc.sink.JdbcSinkTask.getAllMessagesException(JdbcSinkTask.java:150)
+#         at io.confluent.connect.jdbc.sink.JdbcSinkTask.put(JdbcSinkTask.java:102)
+#         ... 11 more
