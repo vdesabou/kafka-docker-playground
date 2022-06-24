@@ -70,6 +70,22 @@ select current_scn from v\$database;
 exit;
 EOF
 
+# log "IMPLEMENT WORKAROUND"
+# docker exec -i oracle sqlplus C\#\#MYUSER/mypassword@//localhost:1521/ORCLPDB1 << EOF
+#   ALTER TABLE CUSTOMERS ADD UPDATED_AT TIMESTAMP;
+#   CREATE OR REPLACE TRIGGER TRG_CUSTOMERS_UPD
+#   BEFORE INSERT OR UPDATE ON CUSTOMERS
+#   REFERENCING NEW AS NEW_ROW
+#     FOR EACH ROW
+#   BEGIN
+#     SELECT SYSDATE
+#           INTO :NEW_ROW.UPDATED_AT
+#           FROM DUAL;
+#   END;
+#   /
+#   exit;
+# EOF
+
 log "Creating Oracle source connector"
 curl -X PUT \
      -H "Content-Type: application/json" \
@@ -181,5 +197,5 @@ log "Verifying table topic ORCLPDB1.C__MYUSER.CUSTOMERS: there should be 1 recor
 timeout 20 docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic ORCLPDB1.C__MYUSER.CUSTOMERS --from-beginning  --max-messages 1
 
 log "Verifying lob topic CUSTOMERS-XMLRECORD: there should be 1 records"
-timeout 20 docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic CUSTOMERS-XMLRECORD --from-beginning  --max-messages 2
+timeout 20 docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic CUSTOMERS-XMLRECORD --from-beginning  --max-messages 1
 # "<Warehouse whNo=\"3\"> <Building>Owned</Building></Warehouse>"
