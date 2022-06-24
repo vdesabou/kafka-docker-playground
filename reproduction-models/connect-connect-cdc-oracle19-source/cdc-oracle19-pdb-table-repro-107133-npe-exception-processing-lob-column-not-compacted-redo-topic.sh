@@ -47,21 +47,21 @@ docker exec connect kafka-topics --create --topic redo-log-topic --bootstrap-ser
 log "redo-log-topic is created"
 sleep 5
 
-curl --request PUT \
-  --url http://localhost:8083/admin/loggers/io.confluent.connect.oracle.cdc \
-  --header 'Accept: application/json' \
-  --header 'Content-Type: application/json' \
-  --data '{
- "level": "INFO"
-}'
+# curl --request PUT \
+#   --url http://localhost:8083/admin/loggers/io.confluent.connect.oracle.cdc \
+#   --header 'Accept: application/json' \
+#   --header 'Content-Type: application/json' \
+#   --data '{
+#  "level": "INFO"
+# }'
 
-curl --request PUT \
-  --url http://localhost:8083/admin/loggers/org.apache.kafka.connect.runtime.WorkerSourceTask \
-  --header 'Accept: application/json' \
-  --header 'Content-Type: application/json' \
-  --data '{
- "level": "TRACE"
-}'
+# curl --request PUT \
+#   --url http://localhost:8083/admin/loggers/org.apache.kafka.connect.runtime.WorkerSourceTask \
+#   --header 'Accept: application/json' \
+#   --header 'Content-Type: application/json' \
+#   --data '{
+#  "level": "TRACE"
+# }'
 
 
 docker exec -i oracle bash -c "mkdir -p /home/oracle/db_recovery_file_dest;ORACLE_SID=ORCLCDB;export ORACLE_SID;sqlplus /nolog" << EOF
@@ -124,6 +124,29 @@ docker exec -i oracle sqlplus C\#\#MYUSER/mypassword@//localhost:1521/ORCLPDB1 <
   exit;
 EOF
 
+# a workaround is to add a field UPDATED_AT
+#   create table CUSTOMERS (
+#           RECID VARCHAR2(255 BYTE),
+#           XMLRECORD XMLTYPE,
+#           UPDATED_AT timestamp DEFAULT CURRENT_TIMESTAMP
+#   ) XMLTYPE XMLRECORD STORE AS BINARY XML;
+
+#   ALTER TABLE "CUSTOMERS" ADD CONSTRAINT "PK_CUSTOMERS" PRIMARY KEY ("RECID");
+#   ALTER TABLE "CUSTOMERS" MODIFY ("RECID" NOT NULL ENABLE);
+
+#   CREATE OR REPLACE TRIGGER TRG_CUSTOMERS_UPD
+#   BEFORE INSERT OR UPDATE ON CUSTOMERS
+#   REFERENCING NEW AS NEW_ROW
+#     FOR EACH ROW
+#   BEGIN
+#     SELECT SYSDATE
+#           INTO :NEW_ROW.UPDATED_AT
+#           FROM DUAL;
+#   END;
+#   /
+# no NPE and LOG update received 14:02:55 ℹ️ Verifying lob topic CUSTOMERS-XMLRECORD: there should be 2 records
+# "<Warehouse whNo=\"3\"> <Building>Owned</Building></Warehouse>"
+
 # [2022-06-23 07:36:35,201] ERROR [cdc-oracle-source-pdb|task-1|changeEvent] Exception in RecordQueue thread (io.confluent.connect.oracle.cdc.util.RecordQueue:467)
 # org.apache.kafka.connect.errors.ConnectException: Exception processing LOB column
 # 	at io.confluent.connect.oracle.cdc.record.OracleLobRecordConverter.convert(OracleLobRecordConverter.java:201)
@@ -157,7 +180,6 @@ set +e
 log "Verifying table topic ORCLPDB1.C__MYUSER.CUSTOMERS: there should be 1 record"
 timeout 20 docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic ORCLPDB1.C__MYUSER.CUSTOMERS --from-beginning  --max-messages 1
 
-log "Verifying lob topic CUSTOMERS-XMLRECORD: there should be 2 records"
+log "Verifying lob topic CUSTOMERS-XMLRECORD: there should be 1 records"
 timeout 20 docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic CUSTOMERS-XMLRECORD --from-beginning  --max-messages 2
 # "<Warehouse whNo=\"3\"> <Building>Owned</Building></Warehouse>"
-# "<Warehouse whNo=\"4\"> <Building>Owned</Building></Warehouse>"
