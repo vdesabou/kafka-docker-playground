@@ -1,0 +1,32 @@
+---
+version: '3.5'
+services:
+  mysql:
+    image: mysql:5.7
+    hostname: mysql
+    container_name: mysql
+    volumes:
+      - ../../ccloud/fully-managed-connect-debezium-mysql-source/mysql.cnf:/etc/mysql/conf.d/custom.cnf
+      - ../../ccloud/fully-managed-connect-debezium-mysql-source/mysql-init.sql:/docker-entrypoint-initdb.d/mysql-init.sql
+    environment:
+      MYSQL_ROOT_PASSWORD: password
+      MYSQL_DATABASE: db
+      MYSQL_USER: user
+      MYSQL_PASSWORD: password
+      MYSQL_ROOT_HOST: 172.%  # Allow docker containers to connect to mysql
+
+  ngrok:
+    image: shkoliar/ngrok:latest
+    hostname: ngrok
+    container_name: ngrok
+    ports:
+      - 4551:4551
+    links:
+      - mysql
+    environment:
+      DOMAIN: mysql
+      PORT: 3306
+      PROTOCOL: tcp
+      REGION: eu
+      AUTH_TOKEN: $NGROK_AUTH_TOKEN
+      DEBUG: "true"
