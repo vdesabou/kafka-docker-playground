@@ -89,6 +89,7 @@ log "send message with null for binary field"
 docker exec -i connect kafka-json-schema-console-producer --broker-list broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic customers --property key.schema='{"type":"object","properties":{"f0":{"type":"string"}}}' --property value.schema='{"type":"object","properties":{"f1":{"type":"string"},"f2":{"oneOf": [ {"type": "null"},{"connect.type": "bytes","type": "string"}]}}}'  --property parse.key=true --property key.separator="|" << EOF
 {"f0": "3"}|{"f1": "3","f2":null}
 EOF
+# if more than one record, example if I add {"f0": "4"}|{"f1": "4","f2":"ZG1Gc2RXVXg="} then it does not fail !
 
 sleep 10
 
