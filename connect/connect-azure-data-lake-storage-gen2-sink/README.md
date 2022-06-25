@@ -13,7 +13,7 @@ Quickly test [Azure Data Lake Storage Gen2 Sink](https://docs.confluent.io/curre
 Simply run:
 
 ```
-$ ./azure-data-lake-storage-gen2.sh
+$ ./azure-data-lake-storage-gen2-sink.sh
 ```
 
 Or using 2 way SSL authentication:

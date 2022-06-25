@@ -148,7 +148,7 @@ curl -X PUT \
                "value.converter": "io.confluent.connect.avro.AvroConverter",
                "value.converter.schema.registry.url": "http://schema-registry:8081"
           }' \
-     http://localhost:8083/connectors/snowflake-sink-proxy/config | jq .
+     http://localhost:8083/connectors/snowflake-sink/config | jq .
 
 
 sleep 120

@@ -131,8 +131,8 @@ cd ${DIR}
 
 log "Alter user 'C##MYUSER' in order to be identified as 'CN=connect,C=US'"
 docker exec -i oracle sqlplus sys/Admin123@//localhost:1521/ORCLCDB as sysdba <<- EOF
-	ALTER USER C##MYUSER IDENTIFIED EXTERNALLY AS 'CN=connect,C=US';
-	exit;
+     ALTER USER C##MYUSER IDENTIFIED EXTERNALLY AS 'CN=connect,C=US';
+     exit;
 EOF
 
 log "Update listener.ora, sqlnet.ora and tnsnames.ora"
@@ -152,9 +152,6 @@ sleep 60
 docker-compose -f ../../environment/plaintext/docker-compose.yml -f "${PWD}/docker-compose.plaintext.pdb-table-mtls.yml" up -d
 
 ../../scripts/wait-for-connect-and-controlcenter.sh
-
-docker exec connect kafka-topics --create --topic redo-log-topic --bootstrap-server broker:9092 --replication-factor 1 --partitions 1 --config cleanup.policy=delete --config retention.ms=120960000
-log "redo-log-topic is created"
 
 sleep 15
 
@@ -188,6 +185,14 @@ curl -X PUT \
                "numeric.mapping": "best_fit",
                "connection.pool.max.size": 20,
                "redo.log.row.fetch.size":1
+               "topic.creation.redo.include": "redo-log-topic",
+               "topic.creation.redo.replication.factor": 1,
+               "topic.creation.redo.partitions": 1,
+               "topic.creation.redo.cleanup.policy": "delete",
+               "topic.creation.redo.retention.ms": 1209600000,
+               "topic.creation.default.replication.factor": 1,
+               "topic.creation.default.partitions": 1,
+               "topic.creation.default.cleanup.policy": "compact"
           }' \
      http://localhost:8083/connectors/cdc-oracle-source-pdb/config | jq .
 

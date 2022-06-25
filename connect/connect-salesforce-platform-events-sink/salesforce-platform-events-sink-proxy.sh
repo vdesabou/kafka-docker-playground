@@ -89,7 +89,7 @@ curl -X PUT \
                     "confluent.topic.bootstrap.servers": "broker:9092",
                     "confluent.topic.replication.factor": "1"
           }' \
-     http://localhost:8083/connectors/salesforce-platform-events-source-proxy/config | jq .
+     http://localhost:8083/connectors/salesforce-platform-events-source/config | jq .
 
 
 
@@ -130,7 +130,7 @@ curl -X PUT \
                     "confluent.topic.bootstrap.servers": "broker:9092",
                     "confluent.topic.replication.factor": "1"
           }' \
-     http://localhost:8083/connectors/salesforce-platform-events-sink-proxy/config | jq .
+     http://localhost:8083/connectors/salesforce-platform-events-sink/config | jq .
 
 
 sleep 10

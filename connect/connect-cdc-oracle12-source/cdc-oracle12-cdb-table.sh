@@ -24,14 +24,6 @@ if [[ "$CUR_WAIT" -gt "$MAX_WAIT" ]]; then
 fi
 done
 log "Oracle DB has started!"
-sleep 10
-
-# Create a redo-log-topic. Please make sure you create a topic with the same name you will use for "redo.log.topic.name": "redo-log-topic"
-# CC-13104
-docker exec connect kafka-topics --create --topic redo-log-topic --bootstrap-server broker:9092 --replication-factor 1 --partitions 1 --config cleanup.policy=delete --config retention.ms=120960000
-log "redo-log-topic is created"
-sleep 5
-
 
 log "Creating Oracle source connector"
 curl -X PUT \
@@ -59,6 +51,14 @@ curl -X PUT \
                "numeric.mapping": "best_fit",
                "connection.pool.max.size": 20,
                "redo.log.row.fetch.size":1
+               "topic.creation.redo.include": "redo-log-topic",
+               "topic.creation.redo.replication.factor": 1,
+               "topic.creation.redo.partitions": 1,
+               "topic.creation.redo.cleanup.policy": "delete",
+               "topic.creation.redo.retention.ms": 1209600000,
+               "topic.creation.default.replication.factor": 1,
+               "topic.creation.default.partitions": 1,
+               "topic.creation.default.cleanup.policy": "compact"
           }' \
      http://localhost:8083/connectors/cdc-oracle-source-cdb/config | jq .
 
@@ -71,8 +71,8 @@ do
      $script "ORCLCDB"
 done
 
-log "Waiting 60s for connector to read new data"
-sleep 60
+log "Waiting 20s for connector to read new data"
+sleep 20
 
 log "Verifying topic ORCLCDB.C__MYUSER.CUSTOMERS: there should be 13 records"
 set +e

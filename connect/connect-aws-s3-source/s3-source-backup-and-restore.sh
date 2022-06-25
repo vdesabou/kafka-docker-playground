@@ -62,7 +62,10 @@ curl -X PUT \
                "storage.class": "io.confluent.connect.s3.storage.S3Storage",
                "format.class": "io.confluent.connect.s3.format.avro.AvroFormat",
                "partitioner.class": "io.confluent.connect.storage.partitioner.DefaultPartitioner",
-               "schema.compatibility": "NONE"
+               "schema.compatibility": "NONE",
+               "errors.tolerance": "all",
+               "errors.log.enable": "true",
+               "errors.log.include.messages": "true"
           }' \
      http://localhost:8083/connectors/s3-sink/config | jq .
 

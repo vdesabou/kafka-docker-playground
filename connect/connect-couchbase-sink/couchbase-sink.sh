@@ -33,19 +33,19 @@ curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
                "connector.class": "com.couchbase.connect.kafka.CouchbaseSinkConnector",
-                    "tasks.max": "2",
-                    "topics": "couchbase-sink-example",
-                    "couchbase.seed.nodes": "couchbase",
-                    "couchbase.bootstrap.timeout": "2000ms",
-                    "couchbase.bucket": "travel-data",
-                    "couchbase.username": "Administrator",
-                    "couchbase.password": "password",
-                    "couchbase.persist.to": "NONE",
-                    "couchbase.replicate.to": "NONE",
-                    "couchbase.document.id": "/airport",
-                    "key.converter": "org.apache.kafka.connect.storage.StringConverter",
-                    "value.converter": "org.apache.kafka.connect.json.JsonConverter",
-                    "value.converter.schemas.enable": "false"
+               "tasks.max": "2",
+               "topics": "couchbase-sink-example",
+               "couchbase.seed.nodes": "couchbase",
+               "couchbase.bootstrap.timeout": "2000ms",
+               "couchbase.bucket": "travel-data",
+               "couchbase.username": "Administrator",
+               "couchbase.password": "password",
+               "couchbase.persist.to": "NONE",
+               "couchbase.replicate.to": "NONE",
+               "couchbase.document.id": "/airport",
+               "key.converter": "org.apache.kafka.connect.storage.StringConverter",
+               "value.converter": "org.apache.kafka.connect.json.JsonConverter",
+               "value.converter.schemas.enable": "false"
           }' \
      http://localhost:8083/connectors/couchbase-sink/config | jq .
 

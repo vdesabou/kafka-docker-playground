@@ -14,13 +14,7 @@ Quickly test [Debezium SQL Server](https://docs.confluent.io/current/connect/deb
 Simply run:
 
 ```
-$ ./sqlserver.sh
-```
-
-or with standalone mode:
-
-```
-$ ./sqlserver-standalone.sh
+$ ./debezium-sqlserver-source.sh
 ```
 
 ## Details of what the script is doing

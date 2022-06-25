@@ -118,11 +118,6 @@ docker-compose -f ../../environment/plaintext/docker-compose.yml -f "${PWD}/dock
 
 ../../scripts/wait-for-connect-and-controlcenter.sh
 
-docker exec connect kafka-topics --create --topic redo-log-topic --bootstrap-server broker:9092 --replication-factor 1 --partitions 1 --config cleanup.policy=delete --config retention.ms=120960000
-log "redo-log-topic is created"
-
-sleep 15
-
 log "Creating Oracle source connector"
 curl -X PUT \
      -H "Content-Type: application/json" \
@@ -153,6 +148,14 @@ curl -X PUT \
                "connection.pool.max.size": 20,
                "redo.log.row.fetch.size":1,
                "oracle.dictionary.mode": "auto"
+               "topic.creation.redo.include": "redo-log-topic",
+               "topic.creation.redo.replication.factor": 1,
+               "topic.creation.redo.partitions": 1,
+               "topic.creation.redo.cleanup.policy": "delete",
+               "topic.creation.redo.retention.ms": 1209600000,
+               "topic.creation.default.replication.factor": 1,
+               "topic.creation.default.partitions": 1,
+               "topic.creation.default.cleanup.policy": "compact"
           }' \
      http://localhost:8083/connectors/cdc-oracle-source-pdb/config | jq .
 
@@ -165,8 +168,8 @@ do
      $script "ORCLPDB1"
 done
 
-log "Waiting 60s for connector to read new data"
-sleep 60
+log "Waiting 20s for connector to read new data"
+sleep 20
 
 log "Verifying topic ORCLPDB1.C__MYUSER.CUSTOMERS: there should be 13 records"
 set +e

@@ -13,19 +13,19 @@ Simply run:
 Without SSL:
 
 ```
-$ ./postgres.sh
+$ ./debezium-postgres-source.sh
 ```
 
 with SSL encryption:
 
 ```
-$ ./postgres-ssl.sh
+$ ./debezium-postgres-source-ssl.sh
 ```
 
 with SSL encryption + Mutual TLS authentication:
 
 ```
-$ ./postgres-mtls.sh
+$ ./debezium-postgres-source-mtls.sh
 ```
 
 ## Details of what the script is doing

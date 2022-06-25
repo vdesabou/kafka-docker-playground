@@ -37,7 +37,7 @@ curl -X PUT \
                "connection.user": "admin",
                "connection.password": "password"
           }' \
-     http://localhost:8083/connectors/http-proxy/config | jq .
+     http://localhost:8083/connectors/http/config | jq .
 
 
 sleep 10

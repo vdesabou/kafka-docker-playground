@@ -83,9 +83,12 @@ curl -X PUT \
                 "format.class": "io.confluent.connect.azure.blob.format.avro.AvroFormat",
                 "confluent.license": "",
                 "confluent.topic.bootstrap.servers": "broker:9092",
-                "confluent.topic.replication.factor": "1"
+                "confluent.topic.replication.factor": "1",
+                "errors.tolerance": "all",
+                "errors.log.enable": "true",
+                "errors.log.include.messages": "true"
           }' \
-     http://localhost:8083/connectors/azure-blob-sink-proxy/config | jq .
+     http://localhost:8083/connectors/azure-blob-sink/config | jq .
 
 
 log "Sending messages to topic blob_topic"
@@ -121,7 +124,7 @@ curl -X PUT \
                 "transforms.AddPrefix.regex" : ".*",
                 "transforms.AddPrefix.replacement" : "copy_of_$0"
           }' \
-     http://localhost:8083/connectors/azure-blob-source-proxy/config | jq .
+     http://localhost:8083/connectors/azure-blob-source/config | jq .
 
 sleep 5
 

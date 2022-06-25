@@ -117,8 +117,8 @@ cd ${DIR}
 
 log "Alter user 'C##MYUSER' in order to be identified as 'CN=connect,C=US'"
 docker exec -i oracle sqlplus sys/Admin123@//localhost:1521/ORCLCDB as sysdba <<- EOF
-	ALTER USER C##MYUSER IDENTIFIED EXTERNALLY AS 'CN=connect,C=US';
-	exit;
+    ALTER USER C##MYUSER IDENTIFIED EXTERNALLY AS 'CN=connect,C=US';
+    exit;
 EOF
 
 log "Update listener.ora, sqlnet.ora and tnsnames.ora"
@@ -139,41 +139,47 @@ docker-compose -f ../../environment/plaintext/docker-compose.yml -f "${PWD}/dock
 
 ../../scripts/wait-for-connect-and-controlcenter.sh
 
-
-docker exec connect kafka-topics --create --topic redo-log-topic --bootstrap-server broker:9092 --replication-factor 1 --partitions 1 --config cleanup.policy=delete --config retention.ms=120960000
-log "redo-log-topic is created"
-
-sleep 15
-
 log "Creating Oracle source connector"
 curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
-               "connector.class": "io.confluent.connect.oracle.cdc.OracleCdcSourceConnector",
-               "tasks.max":2,
-               "key.converter": "io.confluent.connect.avro.AvroConverter",
-               "key.converter.schema.registry.url": "http://schema-registry:8081",
-               "value.converter": "io.confluent.connect.avro.AvroConverter",
-               "value.converter.schema.registry.url": "http://schema-registry:8081",
-               "confluent.license": "",
-               "confluent.topic.bootstrap.servers": "broker:9092",
-               "confluent.topic.replication.factor": "1",
-               "oracle.server": "oracle",
-               "oracle.port": 1532,
-               "oracle.sid": "ORCLCDB",
-               "oracle.ssl.truststore.file": "/tmp/truststore.jks",
-               "oracle.ssl.truststore.password": "welcome123",
-               "oracle.connection.javax.net.ssl.keyStore": "/tmp/keystore.jks",
-               "oracle.connection.javax.net.ssl.keyStorePassword": "welcome123",
-               "oracle.connection.oracle.net.authentication_services": "(TCPS)",
-               "start.from":"snapshot",
-               "redo.log.topic.name": "redo-log-topic",
-               "redo.log.consumer.bootstrap.servers":"broker:9092",
-               "table.inclusion.regex": ".*CUSTOMERS.*",
-               "table.topic.name.template": "${databaseName}.${schemaName}.${tableName}",
-               "numeric.mapping": "best_fit",
-               "connection.pool.max.size": 20,
-               "redo.log.row.fetch.size":1
+                "connector.class": "io.confluent.connect.oracle.cdc.OracleCdcSourceConnector",
+                "tasks.max":2,
+                "key.converter": "io.confluent.connect.avro.AvroConverter",
+                "key.converter.schema.registry.url": "http://schema-registry:8081",
+                "value.converter": "io.confluent.connect.avro.AvroConverter",
+                "value.converter.schema.registry.url": "http://schema-registry:8081",
+                "confluent.license": "",
+                "confluent.topic.bootstrap.servers": "broker:9092",
+                "confluent.topic.replication.factor": "1",
+                "oracle.server": "oracle",
+                "oracle.port": 1532,
+                "oracle.sid": "ORCLCDB",
+                "oracle.ssl.truststore.file": "/tmp/truststore.jks",
+                "oracle.ssl.truststore.password": "welcome123",
+                "oracle.connection.javax.net.ssl.keyStore": "/tmp/keystore.jks",
+                "oracle.connection.javax.net.ssl.keyStorePassword": "welcome123",
+                "oracle.connection.oracle.net.authentication_services": "(TCPS)",
+                "start.from":"snapshot",
+                "redo.log.topic.name": "redo-log-topic",
+                "redo.log.consumer.bootstrap.servers":"broker:9092",
+                "table.inclusion.regex": ".*CUSTOMERS.*",
+                "table.topic.name.template": "${databaseName}.${schemaName}.${tableName}",
+                "numeric.mapping": "best_fit",
+                "connection.pool.max.size": 20,
+                "redo.log.row.fetch.size":1,
+                "errors.tolerance": "all",
+                "errors.log.enable": "true",
+                "errors.log.include.messages": "true",
+                "topic.creation.groups": "redo",
+                "topic.creation.redo.include": "redo-log-topic",
+                "topic.creation.redo.replication.factor": 1,
+                "topic.creation.redo.partitions": 1,
+                "topic.creation.redo.cleanup.policy": "delete",
+                "topic.creation.redo.retention.ms": 1209600000,
+                "topic.creation.default.replication.factor": 1,
+                "topic.creation.default.partitions": 1,
+                "topic.creation.default.cleanup.policy": "compact"
           }' \
      http://localhost:8083/connectors/cdc-oracle-source-cdb/config | jq .
 

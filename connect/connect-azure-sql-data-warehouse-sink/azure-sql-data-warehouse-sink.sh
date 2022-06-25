@@ -94,19 +94,22 @@ log "Creating Azure SQL Data Warehouse Sink connector"
 curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
-               "connector.class": "io.confluent.connect.azuresqldw.AzureSqlDwSinkConnector",
-                    "tasks.max": "1",
-                    "topics": "products",
-                    "auto.create": "true",
-                    "auto.evolve": "true",
-                    "table.name.format": "kafka_${topic}",
-                    "azure.sql.dw.url": "'"$AZURE_SQL_URL"'",
-                    "azure.sql.dw.user": "myadmin",
-                    "azure.sql.dw.password": "'"$PASSWORD"'",
-                    "azure.sql.dw.database.name": "'"$AZURE_DATA_WAREHOUSE_NAME"'",
-                    "confluent.license": "",
-                    "confluent.topic.bootstrap.servers": "broker:9092",
-                    "confluent.topic.replication.factor": "1"
+                "connector.class": "io.confluent.connect.azuresqldw.AzureSqlDwSinkConnector",
+                "tasks.max": "1",
+                "topics": "products",
+                "auto.create": "true",
+                "auto.evolve": "true",
+                "table.name.format": "kafka_${topic}",
+                "azure.sql.dw.url": "'"$AZURE_SQL_URL"'",
+                "azure.sql.dw.user": "myadmin",
+                "azure.sql.dw.password": "'"$PASSWORD"'",
+                "azure.sql.dw.database.name": "'"$AZURE_DATA_WAREHOUSE_NAME"'",
+                "confluent.license": "",
+                "confluent.topic.bootstrap.servers": "broker:9092",
+                "confluent.topic.replication.factor": "1",
+                "errors.tolerance": "all",
+                "errors.log.enable": "true",
+                "errors.log.include.messages": "true"
           }' \
      http://localhost:8083/connectors/azure-sql-dw-sink/config | jq .
 

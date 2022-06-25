@@ -11,7 +11,7 @@ Quickly test [AWS Redshift](https://docs.confluent.io/current/connect/kafka-conn
 Simply run:
 
 ```bash
-$ ./redshift.sh
+$ ./redshift-sink.sh
 ```
 
 ## Details of what the script is doing

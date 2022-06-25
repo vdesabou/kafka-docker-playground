@@ -37,12 +37,15 @@ curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
                "connector.class" : "io.confluent.connect.firebase.FirebaseSourceConnector",
-                    "tasks.max" : "1",
-                    "gcp.firebase.credentials.path": "/tmp/keyfile.json",
-                    "gcp.firebase.database.reference": "https://'"$PROJECT"'.firebaseio.com/musicBlog",
-                    "gcp.firebase.snapshot":"true",
-                    "confluent.topic.bootstrap.servers": "broker:9092",
-                    "confluent.topic.replication.factor": "1"
+               "tasks.max" : "1",
+               "gcp.firebase.credentials.path": "/tmp/keyfile.json",
+               "gcp.firebase.database.reference": "https://'"$PROJECT"'.firebaseio.com/musicBlog",
+               "gcp.firebase.snapshot":"true",
+               "confluent.topic.bootstrap.servers": "broker:9092",
+               "confluent.topic.replication.factor": "1",
+               "errors.tolerance": "all",
+               "errors.log.enable": "true",
+               "errors.log.include.messages": "true"
           }' \
      http://localhost:8083/connectors/firebase-source/config | jq .
 

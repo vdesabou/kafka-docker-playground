@@ -25,17 +25,17 @@ curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
                "connector.class": "io.confluent.connect.hbase.HBaseSinkConnector",
-                    "tasks.max": "1",
-                    "key.converter":"org.apache.kafka.connect.storage.StringConverter",
-                    "value.converter":"org.apache.kafka.connect.storage.StringConverter",
-                    "confluent.topic.bootstrap.servers": "broker:9092",
-                    "confluent.topic.replication.factor":1,
-                    "hbase.zookeeper.quorum": "hbase",
-                    "hbase.zookeeper.property.clientPort": "2181",
-                    "auto.create.tables": "true",
-                    "auto.create.column.families": "true",
-                    "table.name.format": "example_table",
-                    "topics": "hbase-test"
+               "tasks.max": "1",
+               "key.converter":"org.apache.kafka.connect.storage.StringConverter",
+               "value.converter":"org.apache.kafka.connect.storage.StringConverter",
+               "confluent.topic.bootstrap.servers": "broker:9092",
+               "confluent.topic.replication.factor":1,
+               "hbase.zookeeper.quorum": "hbase",
+               "hbase.zookeeper.property.clientPort": "2181",
+               "auto.create.tables": "true",
+               "auto.create.column.families": "true",
+               "table.name.format": "example_table",
+               "topics": "hbase-test"
           }' \
      http://localhost:8083/connectors/hbase-sink/config | jq .
 

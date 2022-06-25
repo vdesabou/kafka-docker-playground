@@ -57,7 +57,7 @@ curl -X PUT \
                "format.class": "io.confluent.connect.s3.format.avro.AvroFormat",
                "schema.compatibility": "NONE"
           }' \
-     http://localhost:8083/connectors/s3-sink-proxy/config | jq .
+     http://localhost:8083/connectors/s3-sink/config | jq .
 
 
 log "Sending messages to topic s3_topic"

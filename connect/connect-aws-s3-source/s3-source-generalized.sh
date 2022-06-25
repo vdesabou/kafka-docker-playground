@@ -74,7 +74,10 @@ curl -X PUT \
                "topics.dir": "quickstart",
                "topic.regex.list": "quick-start-topic:.*",
                "confluent.topic.bootstrap.servers": "broker:9092",
-               "confluent.topic.replication.factor": "1"
+               "confluent.topic.replication.factor": "1",
+               "errors.tolerance": "all",
+               "errors.log.enable": "true",
+               "errors.log.include.messages": "true"
           }' \
      http://localhost:8083/connectors/s3-source-generalized/config | jq .
 
