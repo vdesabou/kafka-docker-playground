@@ -14,7 +14,7 @@ Quickly test [Elasticsearch Sink](https://docs.confluent.io/current/connect/kafk
 Simply run:
 
 ```
-$ ./elasticsearch.sh
+$ ./elasticsearch-sink.sh
 ```
 
 ## Details of what the script is doing

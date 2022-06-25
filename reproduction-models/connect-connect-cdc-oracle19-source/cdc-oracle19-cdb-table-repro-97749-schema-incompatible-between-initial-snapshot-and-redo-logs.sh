@@ -114,8 +114,8 @@ EOF
 #         at io.confluent.kafka.serializers.AbstractKafkaAvroSerializer.serializeImpl(AbstractKafkaAvroSerializer.java:115)
 #         ... 17 more
 
-log "Waiting 60s for connector to read new data"
-sleep 60
+log "Waiting 20s for connector to read new data"
+sleep 20
 
 log "Verifying topic ORCLCDB.C__MYUSER.CUSTOMERS: there should be 2 records"
 set +e

@@ -109,7 +109,10 @@ curl -X PUT \
                 "connect.cosmos.master.key": "'"$AZURE_COSMOSDB_PRIMARY_CONNECTION_KEY"'",
                 "connect.cosmos.databasename": "'"$AZURE_COSMOSDB_DB_NAME"'",
                 "connect.cosmos.containers.topicmap": "'"$TOPIC_MAP"'",
-                "connect.cosmos.offset.useLatest": false
+                "connect.cosmos.offset.useLatest": false,
+                "errors.tolerance": "all",
+                "errors.log.enable": "true",
+                "errors.log.include.messages": "true"
           }' \
      http://localhost:8083/connectors/azure-cosmosdb-source/config | jq .
 

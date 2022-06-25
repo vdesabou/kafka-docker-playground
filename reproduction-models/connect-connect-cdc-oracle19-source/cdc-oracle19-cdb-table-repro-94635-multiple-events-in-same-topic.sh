@@ -144,8 +144,8 @@ insert into OTHERTABLE (id, first_name) values (2, 'Vincent 2');
   exit;
 EOF
 
-log "Waiting 60s for connector to read new data"
-sleep 60
+log "Waiting 20s for connector to read new data"
+sleep 20
 
 log "Verifying topic MyUnifiedTopic"
 set +e

@@ -35,17 +35,17 @@ curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
                "connector.class" : "io.confluent.connect.firebase.FirebaseSinkConnector",
-                    "tasks.max" : "1",
-                    "topics":"artists,songs",
-                    "gcp.firebase.credentials.path": "/tmp/keyfile.json",
-                    "gcp.firebase.database.reference": "https://'"$PROJECT"'.firebaseio.com/musicBlog",
-                    "insert.mode":"update",
-                    "key.converter" : "io.confluent.connect.avro.AvroConverter",
-                    "key.converter.schema.registry.url":"http://schema-registry:8081",
-                    "value.converter" : "io.confluent.connect.avro.AvroConverter",
-                    "value.converter.schema.registry.url":"http://schema-registry:8081",
-                    "confluent.topic.bootstrap.servers": "broker:9092",
-                    "confluent.topic.replication.factor": "1"
+               "tasks.max" : "1",
+               "topics":"artists,songs",
+               "gcp.firebase.credentials.path": "/tmp/keyfile.json",
+               "gcp.firebase.database.reference": "https://'"$PROJECT"'.firebaseio.com/musicBlog",
+               "insert.mode":"update",
+               "key.converter" : "io.confluent.connect.avro.AvroConverter",
+               "key.converter.schema.registry.url":"http://schema-registry:8081",
+               "value.converter" : "io.confluent.connect.avro.AvroConverter",
+               "value.converter.schema.registry.url":"http://schema-registry:8081",
+               "confluent.topic.bootstrap.servers": "broker:9092",
+               "confluent.topic.replication.factor": "1"
           }' \
      http://localhost:8083/connectors/firebase-sink/config | jq .
 

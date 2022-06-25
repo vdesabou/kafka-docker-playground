@@ -37,7 +37,7 @@ Make sure that region corresponds to the one used by the test (eu-west-3 by defa
 Simply run:
 
 ```
-$ ./kinesis.sh
+$ ./kinesis-source.sh
 ```
 
 ## Details of what the script is doing

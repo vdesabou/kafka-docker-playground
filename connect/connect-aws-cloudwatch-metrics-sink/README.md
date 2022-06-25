@@ -27,7 +27,7 @@ This project assumes `~/.aws/credentials` is set, see `docker-compose.yml`file f
 Simply run:
 
 ```bash
-$ ./cloudwatch-metrics.sh
+$ ./cloudwatch-metrics-sink.sh
 ```
 
 

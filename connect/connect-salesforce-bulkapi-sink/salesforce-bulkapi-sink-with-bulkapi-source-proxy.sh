@@ -124,7 +124,7 @@ curl -X PUT \
                     "confluent.topic.bootstrap.servers": "broker:9092",
                     "confluent.topic.replication.factor": "1"
           }' \
-     http://localhost:8083/connectors/salesforce-bulkapi-source-proxy/config | jq .
+     http://localhost:8083/connectors/salesforce-bulkapi-source/config | jq .
 
 
 
@@ -165,7 +165,7 @@ curl -X PUT \
                     "confluent.topic.bootstrap.servers": "broker:9092",
                     "confluent.topic.replication.factor": "1"
           }' \
-     http://localhost:8083/connectors/salesforce-bulkapi-sink-proxy/config | jq .
+     http://localhost:8083/connectors/salesforce-bulkapi-sink/config | jq .
 
 
 

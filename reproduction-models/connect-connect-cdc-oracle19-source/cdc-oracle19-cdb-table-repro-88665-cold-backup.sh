@@ -72,8 +72,8 @@ do
      $script "ORCLCDB"
 done
 
-log "Waiting 60s for connector to read new data"
-sleep 60
+log "Waiting 20s for connector to read new data"
+sleep 20
 
 log "Verifying topic ORCLCDB.C__MYUSER.CUSTOMERS: there should be 13 records"
 set +e
@@ -260,8 +260,8 @@ do
      $script "ORCLCDB"
 done
 
-log "Waiting 60s for connector to read new data"
-sleep 60
+log "Waiting 20s for connector to read new data"
+sleep 20
 
 log "Verifying topic ORCLCDB.C__MYUSER.CUSTOMERS: there should be 24 records"
 set +e

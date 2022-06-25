@@ -132,7 +132,7 @@ curl -X PUT \
      http://localhost:8083/connectors/salesforce-pushtopic-source-proxy-basic-auth/config | jq .
 
 # [2022-01-21 13:47:19,274] DEBUG Using HTTP(S) proxy: nginx-proxy:8888 (io.confluent.salesforce.rest.SalesforceHttpClientUtil:40)
-# [2022-01-21 13:47:19,292] ERROR Uncaught exception in REST call to /connectors/salesforce-pushtopic-source-proxy/config (org.apache.kafka.connect.runtime.rest.errors.ConnectExceptionMapper:61)
+# [2022-01-21 13:47:19,292] ERROR Uncaught exception in REST call to /connectors/salesforce-pushtopic-source/config (org.apache.kafka.connect.runtime.rest.errors.ConnectExceptionMapper:61)
 # org.apache.kafka.common.config.ConfigException: Unknown configuration 'http.proxy.user'
 #         at org.apache.kafka.common.config.AbstractConfig.get(AbstractConfig.java:163)
 #         at org.apache.kafka.common.config.AbstractConfig.getString(AbstractConfig.java:198)

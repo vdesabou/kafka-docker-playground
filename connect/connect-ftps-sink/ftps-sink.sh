@@ -23,7 +23,7 @@ log "Creating JSON file with schema FTPS Sink connector"
 curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
-               "tasks.max": "3",
+               "tasks.max": "1",
                "connector.class": "io.confluent.connect.ftps.FtpsSinkConnector",
                "ftps.working.dir": "/",
                "ftps.username":"bob",

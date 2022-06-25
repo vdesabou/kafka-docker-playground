@@ -29,7 +29,7 @@ https://user-images.githubusercontent.com/4061923/139914676-e34fae34-0f5c-4240-9
 ## How to run
 
 ```
-$ ./cdc-oracle11.sh
+$ ./cdc-oracle11-source.sh
 ```
 
 Note:

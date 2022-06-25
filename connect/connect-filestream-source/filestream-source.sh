@@ -18,7 +18,10 @@ curl -X PUT \
                "file": "/tmp/kafka-connect/examples/file.json",
                "key.converter": "org.apache.kafka.connect.storage.StringConverter",
                "value.converter": "org.apache.kafka.connect.json.JsonConverter",
-               "value.converter.schemas.enable": "false"
+               "value.converter.schemas.enable": "false",
+               "errors.tolerance": "all",
+               "errors.log.enable": "true",
+               "errors.log.include.messages": "true"
           }' \
      http://localhost:8083/connectors/filestream-source/config | jq .
 

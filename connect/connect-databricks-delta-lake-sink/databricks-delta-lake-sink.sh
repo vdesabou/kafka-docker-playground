@@ -123,7 +123,6 @@ curl -X PUT \
                "staging.bucket.name": "'"$DATABRICKS_AWS_BUCKET_NAME"'",
                "flush.interval.ms": "100",
                "tasks.max": "1"
-
           }' \
      http://localhost:8083/connectors/databricks-delta-lake-sink/config | jq .
 
