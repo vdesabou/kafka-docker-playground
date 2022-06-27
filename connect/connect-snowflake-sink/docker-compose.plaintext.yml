@@ -3,6 +3,8 @@ version: '3.5'
 services:
 
   connect:
+    volumes:
+      - ../../connect/connect-snowflake-sink/data:/data
     environment:
       CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/snowflakeinc-snowflake-kafka-connector,/usr/share/confluent-hub-components/confluentinc-connect-transforms
       # CONNECT_LOG4J_ROOT_LOGLEVEL: DEBUG
