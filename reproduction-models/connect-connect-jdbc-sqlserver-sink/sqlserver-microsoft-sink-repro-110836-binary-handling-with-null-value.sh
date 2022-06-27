@@ -41,7 +41,6 @@ curl -X PUT \
                "value.converter.schema.registry.url": "http://schema-registry:8081",
                "value.converter.object.additional.properties" : "false",
 
-               "binary.handling.mode": "bytes",
                "delete.enabled" : "true",
                "errors.tolerance": "all",
                "errors.deadletterqueue.topic.name":"dlq",
@@ -49,14 +48,8 @@ curl -X PUT \
                "errors.deadletterqueue.context.headers.enable":true,
                "errors.log.enable": "true",
                "errors.log.include.messages": "true",
-               "errors.retry.delay.max.ms": "6000",
-               "errors.retry.timeout": "0",
-               "errors.tolerance": "all",
                "insert.mode": "upsert",
-               "time.precision.mode": "connect",
-               "transforms.ReplaceField.blacklist": "", 
-               "transforms.ReplaceField.type": "org.apache.kafka.connect.transforms.ReplaceField$Value",
-               "transforms": "ReplaceField",
+               "_time.precision.mode": "connect",
                "pk.mode": "record_key",
                "pk.fields": "f0"
           }' \
@@ -96,7 +89,7 @@ sleep 10
 
 log "send message with null for binary field"
 docker exec -i connect kafka-json-schema-console-producer --broker-list broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic customers --property key.schema='{"type":"object","properties":{"f0":{"type":"string"}}}' --property value.schema='{"type":"object","properties":{"f1":{"type":"string"},"f2":{"oneOf": [ {"type": "null"},{"connect.type": "bytes","type": "string"}]}}}'  --property parse.key=true --property key.separator="|" << EOF
-{"f0": "3"}|{"f1": "3","f2":null}
+{"f0": "4"}|{"f1": "3","f2":null}
 EOF
 # if more than one record, example if I add {"f0": "4"}|{"f1": "4","f2":"ZG1Gc2RXVXg="} then it does not fail !
 
