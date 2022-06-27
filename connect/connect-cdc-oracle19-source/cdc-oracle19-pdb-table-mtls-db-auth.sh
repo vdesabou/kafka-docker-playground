@@ -184,7 +184,7 @@ curl -X PUT \
                "numeric.mapping": "best_fit",
                "connection.pool.max.size": 20,
                "redo.log.row.fetch.size":1,
-               "oracle.dictionary.mode": "auto"
+               "oracle.dictionary.mode": "auto",
                "topic.creation.redo.include": "redo-log-topic",
                "topic.creation.redo.replication.factor": 1,
                "topic.creation.redo.partitions": 1,
@@ -192,7 +192,7 @@ curl -X PUT \
                "topic.creation.redo.retention.ms": 1209600000,
                "topic.creation.default.replication.factor": 1,
                "topic.creation.default.partitions": 1,
-               "topic.creation.default.cleanup.policy": "compact"
+               "topic.creation.default.cleanup.policy": "delete"
           }' \
      http://localhost:8083/connectors/cdc-oracle-source-pdb/config | jq .
 
