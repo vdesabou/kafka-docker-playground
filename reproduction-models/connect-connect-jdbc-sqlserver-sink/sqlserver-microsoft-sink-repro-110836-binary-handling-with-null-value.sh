@@ -41,7 +41,6 @@ curl -X PUT \
                "value.converter.schema.registry.url": "http://schema-registry:8081",
                "value.converter.object.additional.properties" : "false",
 
-               "binary.handling.mode": "bytes",
                "delete.enabled" : "true",
                "errors.tolerance": "all",
                "errors.deadletterqueue.topic.name":"dlq",
@@ -49,14 +48,8 @@ curl -X PUT \
                "errors.deadletterqueue.context.headers.enable":true,
                "errors.log.enable": "true",
                "errors.log.include.messages": "true",
-               "errors.retry.delay.max.ms": "6000",
-               "errors.retry.timeout": "0",
-               "errors.tolerance": "all",
                "insert.mode": "upsert",
-               "time.precision.mode": "connect",
-               "transforms.ReplaceField.blacklist": "", 
-               "transforms.ReplaceField.type": "org.apache.kafka.connect.transforms.ReplaceField$Value",
-               "transforms": "ReplaceField",
+               "_time.precision.mode": "connect",
                "pk.mode": "record_key",
                "pk.fields": "f0"
           }' \
@@ -68,6 +61,15 @@ docker exec -i connect kafka-json-schema-console-producer --broker-list broker:9
 {"f0": "1"}|{"f1": "1","f2":"ZG1Gc2RXVXg="}
 {"f0": "2"}|{"f1": "2","f2":null}
 EOF
+
+
+# [2022-06-27 09:30:39,660] DEBUG [sqlserver-sink|task-0] UPSERT sql: merge into "dbo"."customers" with (HOLDLOCK) AS target using (select ? AS "f0", ? AS "f1", ? AS "f2") AS incoming on (target."f0"=incoming."f0") when matched then update set "f1"=incoming."f1","f2"=incoming."f2" when not matched then insert ("f1", "f2", "f0") values (incoming."f1",incoming."f2",incoming."f0"); deleteSql: DELETE FROM "dbo"."customers" WHERE "f0" = ? meta: FieldsMetadata{keyFieldNames=[f0], nonKeyFieldNames=[f1, f2], allFields={f1=SinkRecordField{schema=Schema{STRING}, name='f1', isPrimaryKey=false}, f2=SinkRecordField{schema=Schema{BYTES}, name='f2', isPrimaryKey=false}, f0=SinkRecordField{schema=Schema{STRING}, name='f0', isPrimaryKey=true}}} (io.confluent.connect.jdbc.sink.BufferedRecords:130)
+# [2022-06-27 09:30:39,660] DEBUG [sqlserver-sink|task-0] Closing BufferedRecords with updatePreparedStatement: null deletePreparedStatement: null (io.confluent.connect.jdbc.sink.BufferedRecords:218)
+# [2022-06-27 09:30:39,660] TRACE [sqlserver-sink|task-0] Creating a PreparedStatement 'merge into "dbo"."customers" with (HOLDLOCK) AS target using (select ? AS "f0", ? AS "f1", ? AS "f2") AS incoming on (target."f0"=incoming."f0") when matched then update set "f1"=incoming."f1","f2"=incoming."f2" when not matched then insert ("f1", "f2", "f0") values (incoming."f1",incoming."f2",incoming."f0");' (io.confluent.connect.jdbc.dialect.GenericDatabaseDialect:367)
+# [2022-06-27 09:30:39,661] TRACE [sqlserver-sink|task-0] Creating a PreparedStatement 'DELETE FROM "dbo"."customers" WHERE "f0" = ?' (io.confluent.connect.jdbc.dialect.GenericDatabaseDialect:367)
+# [2022-06-27 09:30:39,662] DEBUG [sqlserver-sink|task-0] Flushing records in JDBC Writer for table ID: "dbo"."customers" (io.confluent.connect.jdbc.sink.JdbcDbWriter:79)
+# [2022-06-27 09:30:39,662] DEBUG [sqlserver-sink|task-0] Flushing 2 buffered records (io.confluent.connect.jdbc.sink.BufferedRecords:178)
+# [2022-06-27 09:30:39,675] DEBUG [sqlserver-sink|task-0] Closing BufferedRecords with updatePreparedStatement: SQLServerPreparedStatement:7 deletePreparedStatement: SQLServerPreparedStatement:8 (io.confluent.connect.jdbc.sink.BufferedRecords:218)
 
 #  Creating table with sql: CREATE TABLE "dbo"."customers" (
 # "f1" varchar(max) NOT NULL,
@@ -87,7 +89,7 @@ sleep 10
 
 log "send message with null for binary field"
 docker exec -i connect kafka-json-schema-console-producer --broker-list broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic customers --property key.schema='{"type":"object","properties":{"f0":{"type":"string"}}}' --property value.schema='{"type":"object","properties":{"f1":{"type":"string"},"f2":{"oneOf": [ {"type": "null"},{"connect.type": "bytes","type": "string"}]}}}'  --property parse.key=true --property key.separator="|" << EOF
-{"f0": "3"}|{"f1": "3","f2":null}
+{"f0": "4"}|{"f1": "3","f2":null}
 EOF
 # if more than one record, example if I add {"f0": "4"}|{"f1": "4","f2":"ZG1Gc2RXVXg="} then it does not fail !
 
@@ -97,6 +99,12 @@ log "Check DLQ"
 set +e
 timeout 30 docker exec broker kafka-console-consumer --bootstrap-server broker:9092 --topic dlq --from-beginning --property print.headers=true
 set -e
+
+
+# [2022-06-27 09:31:27,609] DEBUG [sqlserver-sink|task-0] UPSERT sql: merge into "dbo"."customers" with (HOLDLOCK) AS target using (select ? AS "f0", ? AS "f1", ? AS "f2") AS incoming on (target."f0"=incoming."f0") when matched then update set "f1"=incoming."f1","f2"=incoming."f2" when not matched then insert ("f1", "f2", "f0") values (incoming."f1",incoming."f2",incoming."f0"); deleteSql: DELETE FROM "dbo"."customers" WHERE "f0" = ? meta: FieldsMetadata{keyFieldNames=[f0], nonKeyFieldNames=[f1, f2], allFields={f1=SinkRecordField{schema=Schema{STRING}, name='f1', isPrimaryKey=false}, f2=SinkRecordField{schema=Schema{BYTES}, name='f2', isPrimaryKey=false}, f0=SinkRecordField{schema=Schema{STRING}, name='f0', isPrimaryKey=true}}} (io.confluent.connect.jdbc.sink.BufferedRecords:130)
+# [2022-06-27 09:31:27,609] DEBUG [sqlserver-sink|task-0] Closing BufferedRecords with updatePreparedStatement: null deletePreparedStatement: null (io.confluent.connect.jdbc.sink.BufferedRecords:218)
+# [2022-06-27 09:31:27,609] TRACE [sqlserver-sink|task-0] Creating a PreparedStatement 'merge into "dbo"."customers" with (HOLDLOCK) AS target using (select ? AS "f0", ? AS "f1", ? AS "f2") AS incoming on (target."f0"=incoming."f0") when matched then update set "f1"=incoming."f1","f2"=incoming."f2" when not matched then insert ("f1", "f2", "f0") values (incoming."f1",incoming."f2",incoming."f0");' (io.confluent.connect.jdbc.dialect.GenericDatabaseDialect:367)
+# [2022-06-27 09:31:27,609] TRACE [sqlserver-sink|task-0] Creating a PreparedStatement 'DELETE FROM "dbo"."customers" WHERE "f0" = ?' (io.confluent.connect.jdbc.dialect.GenericDatabaseDialect:367)
 
 # __connect.errors.topic:customers,__connect.errors.partition:0,__connect.errors.offset:6,__connect.errors.connector.name:sqlserver-sink,__connect.errors.task.id:0,__connect.errors.stage:TASK_PUT,__connect.errors.class.name:org.apache.kafka.connect.sink.SinkTask,__connect.errors.exception.class.name:java.sql.SQLException,__connect.errors.exception.message:Exception chain:
 # java.sql.BatchUpdateException: Implicit conversion from data type nvarchar to binary is not allowed. Use the CONVERT function to run this query.
