@@ -12,4 +12,4 @@ then
 fi
 
 
-./kinesis.sh "$@"
+./kinesis-source.sh "$@"

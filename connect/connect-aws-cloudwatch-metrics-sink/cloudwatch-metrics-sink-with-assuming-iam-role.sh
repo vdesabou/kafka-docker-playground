@@ -12,4 +12,4 @@ then
 fi
 
 
-./cloudwatch-metrics.sh "$@"
+./cloudwatch-metrics-source.sh "$@"
