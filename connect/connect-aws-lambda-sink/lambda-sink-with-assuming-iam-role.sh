@@ -12,4 +12,4 @@ then
 fi
 
 
-./lambda.sh "$@"
+./lambda-sink.sh "$@"

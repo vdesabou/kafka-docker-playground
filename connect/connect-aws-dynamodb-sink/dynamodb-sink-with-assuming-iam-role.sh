@@ -12,4 +12,4 @@ then
 fi
 
 
-./dynamodb.sh "$@"
+./dynamodb-sink.sh "$@"

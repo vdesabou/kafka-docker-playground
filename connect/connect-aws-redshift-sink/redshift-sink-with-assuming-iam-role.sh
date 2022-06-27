@@ -12,4 +12,4 @@ then
 fi
 
 
-./redshift.sh "$@"
+./redshift-sink.sh "$@"
