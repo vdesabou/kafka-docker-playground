@@ -2800,6 +2800,12 @@ function ccloud::create_ccloud_stack() {
   # VINC: added
   if [[ -z "$SCHEMA_REGISTRY_CREDS" ]]
   then
+    if [[ -z "$SERVICE_ACCOUNT_ID" ]]; then
+      # Service Account is not received so it will be created
+      local RANDOM_NUM=$((1 + RANDOM % 1000000))
+      SERVICE_NAME=${SERVICE_NAME:-"pg-app-$RANDOM_NUM"}
+      SERVICE_ACCOUNT_ID=$(ccloud::create_service_account $SERVICE_NAME)
+    fi
     SCHEMA_REGISTRY_CREDS=$(ccloud::maybe_create_credentials_resource $SERVICE_ACCOUNT_ID $SCHEMA_REGISTRY)
   fi
   
