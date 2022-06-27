@@ -55,7 +55,7 @@ curl -X PUT \
                "topic.creation.redo.retention.ms": 1209600000,
                "topic.creation.default.replication.factor": 1,
                "topic.creation.default.partitions": 1,
-               "topic.creation.default.cleanup.policy": "compact"
+               "topic.creation.default.cleanup.policy": "delete"
           }' \
      http://localhost:8083/connectors/cdc-oracle11-source/config | jq .
 
