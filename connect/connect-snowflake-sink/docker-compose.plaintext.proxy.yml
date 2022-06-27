@@ -9,6 +9,8 @@ services:
       - "3128:3128"
 
   connect:
+    volumes:
+      - ../../connect/connect-snowflake-sink/data:/data
     environment:
       CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/snowflakeinc-snowflake-kafka-connector,/usr/share/confluent-hub-components/confluentinc-connect-transforms
       JDBC_TRACE: "true"

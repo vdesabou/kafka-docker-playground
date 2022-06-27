@@ -61,6 +61,9 @@ openssl rsa -in snowflake_key.p8  -pubout -out snowflake_key.pub -passin pass:co
 RSA_PUBLIC_KEY=$(grep -v "BEGIN PUBLIC" snowflake_key.pub | grep -v "END PUBLIC"|tr -d '\n')
 RSA_PRIVATE_KEY=$(grep -v "BEGIN ENCRYPTED PRIVATE KEY" snowflake_key.p8 | grep -v "END ENCRYPTED PRIVATE KEY"|tr -d '\n')
 
+# generate data file for externalizing secrets
+sed -e "s|:RSA_PRIVATE_KEY:|$RSA_PRIVATE_KEY|g" \
+    ${DIR}/data.template > ${DIR}/data
 
 log "Create a Snowflake DB"
 docker run --rm -i -e SNOWSQL_PWD="$SNOWFLAKE_PASSWORD" -e RSA_PUBLIC_KEY="$RSA_PUBLIC_KEY" kurron/snowsql --username $SNOWFLAKE_USERNAME -a $SNOWFLAKE_ACCOUNT_NAME << EOF
@@ -136,7 +139,7 @@ curl -X PUT \
                "snowflake.url.name": "'"$SNOWFLAKE_URL"'",
                "snowflake.user.name": "'"$PLAYGROUND_USER"'",
                "snowflake.user.role": "'"$PLAYGROUND_CONNECTOR_ROLE"'",
-               "snowflake.private.key":"'"$RSA_PRIVATE_KEY"'",
+               "snowflake.private.key":"${file:/data:private.key}",
                "snowflake.private.key.passphrase": "confluent",
                "snowflake.database.name": "'"$PLAYGROUND_DB"'",
                "snowflake.schema.name":"PUBLIC",
