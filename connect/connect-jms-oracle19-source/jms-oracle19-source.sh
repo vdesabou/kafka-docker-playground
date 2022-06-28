@@ -20,7 +20,7 @@ MAX_WAIT=2500
 CUR_WAIT=0
 log "⌛ Waiting up to $MAX_WAIT seconds for Oracle DB to start"
 docker container logs oracle > /tmp/out.txt 2>&1
-while [[ ! $(cat /tmp/out.txt) =~ "DONE: Executing user defined scripts" ]]; do
+while [[ ! $(cat /tmp/out.txt) =~ "Completed: ALTER DATABASE OPEN" ]]; do
 sleep 10
 docker container logs oracle > /tmp/out.txt 2>&1
 CUR_WAIT=$(( CUR_WAIT+10 ))
@@ -30,6 +30,14 @@ if [[ "$CUR_WAIT" -gt "$MAX_WAIT" ]]; then
 fi
 done
 log "Oracle DB has started!"
+
+log "Setting up Oracle Database Prerequisites"
+docker exec -i oracle bash -c "ORACLE_SID=ORCLCDB;export ORACLE_SID;sqlplus /nolog" << EOF
+     CONNECT sys/Admin123 AS SYSDBA
+     CREATE USER C##MYUSER IDENTIFIED BY mypassword DEFAULT TABLESPACE USERS;
+     ALTER USER C##MYUSER QUOTA UNLIMITED ON USERS;
+     exit;
+EOF
 
 if [ ! -f aqapi.jar ]
 then

@@ -39,7 +39,7 @@ MAX_WAIT=900
 CUR_WAIT=0
 log "⌛ Waiting up to $MAX_WAIT seconds for Oracle DB to start"
 docker container logs oracle > /tmp/out.txt 2>&1
-while [[ ! $(cat /tmp/out.txt) =~ "DONE: Executing user defined scripts" ]]; do
+while [[ ! $(cat /tmp/out.txt) =~ "Completed: ALTER DATABASE OPEN" ]]; do
 sleep 10
 docker container logs oracle > /tmp/out.txt 2>&1
 CUR_WAIT=$(( CUR_WAIT+10 ))
@@ -49,6 +49,18 @@ if [[ "$CUR_WAIT" -gt "$MAX_WAIT" ]]; then
 fi
 done
 log "Oracle DB has started!"
+log "Setting up Oracle Database Prerequisites"
+docker exec -i oracle bash -c "ORACLE_SID=ORCLCDB;export ORACLE_SID;sqlplus /nolog" << EOF
+     CONNECT sys/Admin123 AS SYSDBA
+     CREATE USER  C##MYUSER IDENTIFIED BY mypassword;
+     GRANT CONNECT TO  C##MYUSER;
+     GRANT CREATE SESSION TO  C##MYUSER;
+     GRANT CREATE TABLE TO  C##MYUSER;
+     GRANT CREATE SEQUENCE TO  C##MYUSER;
+     GRANT CREATE TRIGGER TO  C##MYUSER;
+     ALTER USER  C##MYUSER QUOTA 100M ON users;
+     exit;
+EOF
 
 log "Setting up SSL on oracle server..."
 # https://www.oracle.com/technetwork/topics/wp-oracle-jdbc-thin-ssl-130128.pdf
@@ -169,10 +181,10 @@ curl -X PUT \
      --data '{
                "connector.class": "io.confluent.connect.jdbc.JdbcSinkConnector",
                "tasks.max": "1",
-               "connection.user": "myuser",
+               "connection.user": "C##MYUSER",
                "connection.password": "mypassword",
                "connection.oracle.net.ssl_server_dn_match": "true",
-               "connection.url": "jdbc:oracle:thin:@(DESCRIPTION=(ADDRESS=(PROTOCOL=TCPS)(HOST=oracle)(PORT=1532))(CONNECT_DATA=(SERVICE_NAME=ORCLPDB1))(SECURITY=(SSL_SERVER_CERT_DN=\"CN=server,C=US\")))",
+               "connection.url": "jdbc:oracle:thin:@(DESCRIPTION=(ADDRESS=(PROTOCOL=TCPS)(HOST=oracle)(PORT=1532))(CONNECT_DATA=(SERVICE_NAME=ORCLCDB))(SECURITY=(SSL_SERVER_CERT_DN=\"CN=server,C=US\")))",
                "topics": "ORDERS",
                "auto.create": "true",
                "insert.mode":"insert",
@@ -190,7 +202,7 @@ EOF
 sleep 10
 
 log "Show content of ORDERS table:"
-docker exec oracle bash -c "echo 'select * from ORDERS;' | sqlplus myuser/mypassword@//localhost:1521/ORCLPDB1" > /tmp/result.log  2>&1
+docker exec oracle bash -c "echo 'select * from ORDERS;' | sqlplus C##MYUSER/mypassword@//localhost:1521/ORCLCDB" > /tmp/result.log  2>&1
 cat /tmp/result.log
 grep "foo" /tmp/result.log
 

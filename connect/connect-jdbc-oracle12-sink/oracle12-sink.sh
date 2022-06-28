@@ -31,7 +31,7 @@ MAX_WAIT=900
 CUR_WAIT=0
 log "⌛ Waiting up to $MAX_WAIT seconds for Oracle DB to start"
 docker container logs oracle > /tmp/out.txt 2>&1
-while [[ ! $(cat /tmp/out.txt) =~ "DONE: Executing user defined scripts" ]]; do
+while [[ ! $(cat /tmp/out.txt) =~ "Completed: ALTER DATABASE OPEN" ]]; do
 sleep 10
 docker container logs oracle > /tmp/out.txt 2>&1
 CUR_WAIT=$(( CUR_WAIT+10 ))
@@ -41,6 +41,18 @@ if [[ "$CUR_WAIT" -gt "$MAX_WAIT" ]]; then
 fi
 done
 log "Oracle DB has started!"
+log "Setting up Oracle Database Prerequisites"
+docker exec -i oracle bash -c "ORACLE_SID=ORCLCDB;export ORACLE_SID;sqlplus /nolog" << EOF
+     CONNECT sys/Admin123 AS SYSDBA
+     CREATE USER  C##MYUSER IDENTIFIED BY mypassword;
+     GRANT CONNECT TO  C##MYUSER;
+     GRANT CREATE SESSION TO  C##MYUSER;
+     GRANT CREATE TABLE TO  C##MYUSER;
+     GRANT CREATE SEQUENCE TO  C##MYUSER;
+     GRANT CREATE TRIGGER TO  C##MYUSER;
+     ALTER USER  C##MYUSER QUOTA 100M ON users;
+     exit;
+EOF
 
 log "Creating Oracle sink connector"
 
@@ -48,14 +60,14 @@ curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
                "connector.class": "io.confluent.connect.jdbc.JdbcSinkConnector",
-                    "tasks.max": "1",
-                    "connection.user": "myuser",
-                    "connection.password": "mypassword",
-                    "connection.url": "jdbc:oracle:thin:@oracle:1521/ORCLPDB1",
-                    "topics": "ORDERS",
-                    "auto.create": "true",
-                    "insert.mode":"insert",
-                    "auto.evolve":"true"
+               "tasks.max": "1",
+               "connection.user": "C##MYUSER",
+               "connection.password": "mypassword",
+               "connection.url": "jdbc:oracle:thin:@oracle:1521/ORCLCDB",
+               "topics": "ORDERS",
+               "auto.create": "true",
+               "insert.mode":"insert",
+               "auto.evolve":"true"
           }' \
      http://localhost:8083/connectors/oracle-sink/config | jq .
 
@@ -70,7 +82,7 @@ sleep 5
 
 
 log "Show content of ORDERS table:"
-docker exec oracle bash -c "echo 'select * from ORDERS;' | sqlplus myuser/mypassword@//localhost:1521/ORCLPDB1" > /tmp/result.log  2>&1
+docker exec oracle bash -c "echo 'select * from ORDERS;' | sqlplus C##MYUSER/mypassword@//localhost:1521/ORCLCDB" > /tmp/result.log  2>&1
 cat /tmp/result.log
 grep "foo" /tmp/result.log
 

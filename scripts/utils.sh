@@ -1522,7 +1522,7 @@ function create_or_get_oracle_image() {
       CUR_WAIT=0
       log "⌛ Waiting up to $MAX_WAIT seconds for ${TEMP_CONTAINER} to start"
       docker container logs ${TEMP_CONTAINER} > /tmp/out.txt 2>&1
-      while [[ ! $(cat /tmp/out.txt) =~ "DONE: Executing user defined scripts" ]]; do
+      while [[ ! $(cat /tmp/out.txt) =~ "Completed: ALTER DATABASE OPEN" ]]; do
       sleep 10
       docker container logs ${TEMP_CONTAINER} > /tmp/out.txt 2>&1
       CUR_WAIT=$(( CUR_WAIT+10 ))

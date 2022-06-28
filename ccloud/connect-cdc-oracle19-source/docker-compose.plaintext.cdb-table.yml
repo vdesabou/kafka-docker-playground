@@ -11,7 +11,6 @@ services:
       - "1521:1521"
     volumes:
       - ../../ccloud/connect-cdc-oracle19-source/ora-setup-scripts-cdb-table:/opt/oracle/scripts/setup
-      - ../../ccloud/connect-cdc-oracle19-source/ora-startup-scripts-cdb-table:/opt/oracle/scripts/startup
     environment:
       ORACLE_PWD: Admin123
 
