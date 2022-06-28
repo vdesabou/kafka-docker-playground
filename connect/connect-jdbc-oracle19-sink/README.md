@@ -61,14 +61,14 @@ $ curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
                "connector.class": "io.confluent.connect.jdbc.JdbcSinkConnector",
-                    "tasks.max": "1",
-                    "connection.user": "myuser",
-                    "connection.password": "mypassword",
-                    "connection.url": "jdbc:oracle:thin:@oracle:1521/ORCLPDB1",
-                    "topics": "ORDERS",
-                    "auto.create": "true",
-                    "insert.mode":"insert",
-                    "auto.evolve":"true"
+               "tasks.max": "1",
+               "connection.user": "C##MYUSER",
+               "connection.password": "mypassword",
+               "connection.url": "jdbc:oracle:thin:@oracle:1521/ORCLCDB",
+               "topics": "ORDERS",
+               "auto.create": "true",
+               "insert.mode":"insert",
+               "auto.evolve":"true"
           }' \
      http://localhost:8083/connectors/oracle-sink/config | jq .
 ```

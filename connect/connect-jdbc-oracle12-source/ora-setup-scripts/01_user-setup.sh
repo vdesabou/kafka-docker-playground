@@ -6,15 +6,16 @@ echo 'Configuring Oracle for user myuser'
 ORACLE_SID=ORCLCDB
 export ORACLE_SID
 
-# Create test user
-sqlplus sys/Admin123@//localhost:1521/ORCLPDB1 as sysdba <<- EOF
-	CREATE USER myuser IDENTIFIED BY mypassword;
-	GRANT CONNECT TO myuser;
-	GRANT CREATE SESSION TO myuser;
-	GRANT CREATE TABLE TO myuser;
-	GRANT CREATE SEQUENCE TO myuser;
-	GRANT CREATE TRIGGER TO myuser;
-	ALTER USER myuser QUOTA 100M ON users;
-
+sqlplus /nolog <<- EOF
+	CONNECT sys/Admin123 AS SYSDBA
+	-- Turn on Archivelog Mode
+	SHUTDOWN IMMEDIATE
+	STARTUP MOUNT
+	ALTER DATABASE ARCHIVELOG;
+	ALTER DATABASE FLASHBACK ON;
+	ALTER DATABASE OPEN;
+	-- Should show "Database log mode: Archive Mode"
+	ARCHIVE LOG LIST
 	exit;
 EOF
+
