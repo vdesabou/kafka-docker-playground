@@ -70,11 +70,7 @@ cd -
 
 # Generating public and private keys for token signing
 log "Generating public and private keys for token signing"
-mkdir -p ../../environment/rbac-sasl-plain/conf
-openssl genrsa -out ../../environment/rbac-sasl-plain/conf/keypair.pem 2048
-openssl rsa -in ../../environment/rbac-sasl-plain/conf/keypair.pem -outform PEM -pubout -out ../../environment/rbac-sasl-plain/conf/public.pem
-log "Enable Docker appuser to read files when created by a different UID"
-chmod 644 ../../environment/rbac-sasl-plain/conf/keypair.pem
+docker run -v $PWD:/tmp -u0 ${CP_KAFKA_IMAGE}:${TAG} bash -c "mkdir -p /tmp/conf; openssl genrsa -out /tmp/conf/keypair.pem 2048; openssl rsa -in /tmp/conf/keypair.pem -outform PEM -pubout -out /tmp/conf/public.pem && chown -R $(id -u $USER):$(id -g $USER) /tmp/conf"
 
 # Bring up base cluster and Confluent CLI
 if [ -f "${DOCKER_COMPOSE_FILE_OVERRIDE}" ]
