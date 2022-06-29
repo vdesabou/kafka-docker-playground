@@ -65,7 +65,7 @@ do
 done
 
 # remove azure ad apps
-for fn in `az ad app list --filter "startswith(displayName, 'pgrunner')" --query '[].appId'`
+for fn in `az ad app list --filter "startswith(displayName, 'pg')" --query '[].appId'`
 do
   if [ "$fn" == "[" ] || [ "$fn" == "]" ] || [ "$fn" == "[]" ]
   then
