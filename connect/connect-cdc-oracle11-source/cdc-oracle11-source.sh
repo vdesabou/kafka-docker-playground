@@ -47,7 +47,7 @@ curl -X PUT \
                "table.topic.name.template": "${databaseName}.${schemaName}.${tableName}",
                "numeric.mapping": "best_fit",
                "connection.pool.max.size": 20,
-               "redo.log.row.fetch.size": 1
+               "redo.log.row.fetch.size": 1,
                "topic.creation.redo.include": "redo-log-topic",
                "topic.creation.redo.replication.factor": 1,
                "topic.creation.redo.partitions": 1,
