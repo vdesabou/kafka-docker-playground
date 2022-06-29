@@ -183,9 +183,9 @@ docker run --rm -v $PWD:/tmp vdesabou/kafka-docker-playground-connect:${CONNECT_
 
 cd ${DIR}
 
-log "Alter user 'myuser' in order to be identified as 'CN=connect,C=US'"
-docker exec -i oracle sqlplus sys/Admin123@//localhost:1521/ORCLPDB1 as sysdba <<- EOF
-	ALTER USER myuser IDENTIFIED EXTERNALLY AS 'CN=connect,C=US';
+log "Alter user 'C##MYUSER' in order to be identified as 'CN=connect,C=US'"
+docker exec -i oracle sqlplus sys/Admin123@//localhost:1521/ORCLCDB as sysdba <<- EOF
+	ALTER USER C##MYUSER IDENTIFIED EXTERNALLY AS 'CN=connect,C=US';
 	exit;
 EOF
 

@@ -150,10 +150,10 @@ docker run --rm -v $PWD:/tmp vdesabou/kafka-docker-playground-connect:${CONNECT_
 
 cd ${DIR}
 
-log "Alter user 'myuser' in order to be identified as 'CN=connect,C=US'"
-docker exec -i oracle sqlplus sys/Admin123@//localhost:1521/ORCLPDB1 as sysdba <<- EOF
-	ALTER USER myuser IDENTIFIED EXTERNALLY AS 'CN=connect,C=US';
-	exit;
+log "Alter user 'C##MYUSER' in order to be identified as 'CN=connect,C=US'"
+docker exec -i oracle sqlplus sys/Admin123@//localhost:1521/ORCLCDB as sysdba <<- EOF
+     ALTER USER C##MYUSER IDENTIFIED EXTERNALLY AS 'CN=connect,C=US';
+     exit;
 EOF
 
 log "Update listener.ora, sqlnet.ora and tnsnames.ora"
@@ -189,7 +189,7 @@ curl -X PUT \
                "tasks.max": "1",
                "connection.oracle.net.ssl_server_dn_match": "true",
                "connection.oracle.net.authentication_services": "(TCPS)",
-               "connection.url": "jdbc:oracle:thin:@(DESCRIPTION=(ADDRESS=(PROTOCOL=TCPS)(HOST=oracle)(PORT=1532))(CONNECT_DATA=(SERVICE_NAME=ORCLPDB1))(SECURITY=(SSL_SERVER_CERT_DN=\"CN=server,C=US\")))",
+               "connection.url": "jdbc:oracle:thin:@(DESCRIPTION=(ADDRESS=(PROTOCOL=TCPS)(HOST=oracle)(PORT=1532))(CONNECT_DATA=(SERVICE_NAME=ORCLCDB))(SECURITY=(SSL_SERVER_CERT_DN=\"CN=server,C=US\")))",
                "topics": "ORDERS",
                "auto.create": "true",
                "insert.mode":"insert",
@@ -206,10 +206,10 @@ EOF
 
 sleep 10
 
-log "Alter user 'myuser' in order to be identified as by password (in order to use sqlplus)"
-docker exec -i oracle sqlplus sys/Admin123@//localhost:1521/ORCLPDB1 as sysdba <<- EOF
-	ALTER USER myuser IDENTIFIED BY mypassword;
-	exit;
+log "Alter user 'C##MYUSER' in order to be identified as by password (in order to use sqlplus)"
+docker exec -i oracle sqlplus sys/Admin123@//localhost:1521/ORCLCDB as sysdba <<- EOF
+     ALTER USER C##MYUSER IDENTIFIED BY mypassword;
+     exit;
 EOF
 
 log "Show content of ORDERS table:"
