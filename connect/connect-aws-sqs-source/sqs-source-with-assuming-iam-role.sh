@@ -12,4 +12,4 @@ then
 fi
 
 
-./sqs.sh "$@"
+./sqs-source.sh "$@"
