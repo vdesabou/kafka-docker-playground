@@ -13,6 +13,7 @@ jobs:
         with:
           repository: vdesabou/kafka-docker-playground
           fetch-depth: 0
+          submodules: recursive
 
       - name: Decrypt secrets.tar
         run: |

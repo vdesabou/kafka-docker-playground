@@ -345,6 +345,7 @@ jobs:
         with:
           repository: vdesabou/kafka-docker-playground
           fetch-depth: 0
+          submodules: recursive
 
       - name: Decrypt secrets.tar
         run: |
@@ -378,7 +379,7 @@ jobs:
           SNOWFLAKE_ACCOUNT_NAME: ${{ secrets.SNOWFLAKE_ACCOUNT_NAME}}
           SNOWFLAKE_USERNAME: ${{ secrets.SNOWFLAKE_USERNAME}}
           SNOWFLAKE_PASSWORD: ${{ secrets.SNOWFLAKE_PASSWORD}}
-          
+
       - name: Update README
         run: |
           ./scripts/update-readme.sh "7.1.1"
