@@ -39,7 +39,7 @@ fi
 
 # Generating public and private keys for token signing
 log "Generating public and private keys for token signing"
-docker run -v $PWD:/tmp -u0 ${CP_KAFKA_IMAGE}:${TAG} bash -c "mkdir -p /tmp/conf; openssl genrsa -out /tmp/conf/keypair.pem 2048; openssl rsa -in /tmp/conf/keypair.pem -outform PEM -pubout -out /tmp/conf/public.pem && chown -R $(id -u $USER):$(id -g $USER) /tmp/conf"
+docker run -v $DIR:/tmp -u0 ${CP_KAFKA_IMAGE}:${TAG} bash -c "mkdir -p /tmp/conf; openssl genrsa -out /tmp/conf/keypair.pem 2048; openssl rsa -in /tmp/conf/keypair.pem -outform PEM -pubout -out /tmp/conf/public.pem && chown -R $(id -u $USER):$(id -g $USER) /tmp/conf"
 
 # Bring up base cluster and Confluent CLI
 docker-compose -f ../../environment/plaintext/docker-compose.yml -f ../../environment/rbac-sasl-plain/docker-compose.yml -f "${PWD}/docker-compose.rbac-with-azure-ad.yml" up -d zookeeper broker tools openldap
