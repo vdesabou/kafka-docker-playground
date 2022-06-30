@@ -10,16 +10,7 @@ if ! version_gt $TAG_BASE "5.9.99"; then
     exit 111
 fi
 
-if [ ! -z "$CI" ]
-then
-     # running with github actions
-     if [ ! -f ../../secrets.properties ]
-     then
-          logerror "../../secrets.properties is not present!"
-          exit 1
-     fi
-     source ../../secrets.properties > /dev/null 2>&1
-fi
+
 
 if [ ! -z "$AZ_USER" ] && [ ! -z "$AZ_PASS" ]
 then

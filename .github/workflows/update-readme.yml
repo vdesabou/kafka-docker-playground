@@ -25,7 +25,6 @@ jobs:
           chmod -R a+rw $HOME/.aws
           mkdir -p $HOME/.confluent
           mv config.cc.travis $HOME/.confluent/config
-          source secrets.properties > /dev/null 2>&1
           echo "$DOCKER_PASSWORD" | docker login -u vdesabou --password-stdin
         env:
           SECRETS_ENCRYPTION_PASSWORD: ${{ secrets.SECRETS_ENCRYPTION_PASSWORD }}
@@ -33,11 +32,14 @@ jobs:
       - name: Update README
         run: |
           ./scripts/update-readme.sh "5.4.7 5.5.9 6.0.7 6.1.5 6.2.4 7.0.3 7.1.1"
+        env:
+          CI_GITHUB_TOKEN: ${{ secrets.CI_GITHUB_TOKEN }}
+
 
       - name: push
         uses: github-actions-x/commit@v2.9
         with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
+          github-token: ${{ secrets.CI_GITHUB_TOKEN }}
           push-branch: 'master'
           commit-message: 'updating with latest versions'
           files: ./README.md ./docs/content.md ./docs/introduction.md

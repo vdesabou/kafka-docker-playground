@@ -24,17 +24,6 @@ function logwarn() {
   echo -e "$PURPLE$@$NC"
 }
 
-if [ ! -z "$CI" ]
-then
-     # running with github actions
-     if [ ! -f secrets.properties ]
-     then
-          logerror "secrets.properties is not present!"
-          exit 1
-     fi
-     source secrets.properties > /dev/null 2>&1
-fi
-
 if [ ! -z "$AZ_USER" ] && [ ! -z "$AZ_PASS" ]
 then
     log "Logging to Azure using environment variables AZ_USER and AZ_PASS"

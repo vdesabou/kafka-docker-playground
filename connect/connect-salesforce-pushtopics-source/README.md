@@ -51,7 +51,7 @@ Find your Security Token (emailed to you from Salesforce.com). If you need to re
 Simply run:
 
 ```
-$ ./salesforce-pushtopic-source.sh <SALESFORCE_USERNAME> <SALESFORCE_PASSWORD> <CONSUMER_KEY> <CONSUMER_PASSWORD> <SECURITY_TOKEN>
+$ ./salesforce-pushtopic-source.sh <SALESFORCE_USERNAME> <SALESFORCE_PASSWORD> <SALESFORCE_CONSUMER_KEY> <SALESFORCE_CONSUMER_PASSWORD> <SALESFORCE_SECURITY_TOKEN>
 ```
 
 Note: you can also export these values as environment variable
@@ -62,7 +62,7 @@ Note: you can also export these values as environment variable
 Login with sfdx CLI
 
 ```bash
-$ docker exec sfdx-cli sh -c "sfdx sfpowerkit:auth:login -u \"$SALESFORCE_USERNAME\" -p \"$SALESFORCE_PASSWORD\" -r \"$SALESFORCE_INSTANCE\" -s \"$SECURITY_TOKEN\""
+$ docker exec sfdx-cli sh -c "sfdx sfpowerkit:auth:login -u \"$SALESFORCE_USERNAME\" -p \"$SALESFORCE_PASSWORD\" -r \"$SALESFORCE_INSTANCE\" -s \"$SALESFORCE_SECURITY_TOKEN\""
 ```
 
 Delete MyLeadPushTopics, if required
@@ -101,9 +101,9 @@ $ curl -X PUT \
                     "salesforce.instance" : "'"$SALESFORCE_INSTANCE"'",
                     "salesforce.username" : "'"$SALESFORCE_USERNAME"'",
                     "salesforce.password" : "'"$SALESFORCE_PASSWORD"'",
-                    "salesforce.password.token" : "'"$SECURITY_TOKEN"'",
-                    "salesforce.consumer.key" : "'"$CONSUMER_KEY"'",
-                    "salesforce.consumer.secret" : "'"$CONSUMER_PASSWORD"'",
+                    "salesforce.password.token" : "'"$SALESFORCE_SECURITY_TOKEN"'",
+                    "salesforce.consumer.key" : "'"$SALESFORCE_CONSUMER_KEY"'",
+                    "salesforce.consumer.secret" : "'"$SALESFORCE_CONSUMER_PASSWORD"'",
                     "salesforce.initial.start" : "all",
                     "key.converter": "org.apache.kafka.connect.json.JsonConverter",
                     "value.converter": "org.apache.kafka.connect.json.JsonConverter",

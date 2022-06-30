@@ -20,15 +20,15 @@ function logwarn() {
   echo -e "$PURPLE$@$NC"
 }
 
-if [ -z "$GITHUB_TOKEN" ]
+if [ -z "$CI_GITHUB_TOKEN" ]
 then
-  logerror "GITHUB_TOKEN is not set !"
+  logerror "CI_GITHUB_TOKEN is not set !"
   exit 1
 fi
 
 log "Calling github action"
 curl -H "Accept: application/vnd.github.v3+json" \
-    -H "Authorization: token $GITHUB_TOKEN" \
+    -H "Authorization: token $CI_GITHUB_TOKEN" \
     --request POST \
     "https://api.github.com/repos/vdesabou/kafka-docker-playground/actions/workflows/ci.yml/dispatches" \
     -d '{"ref":"master"}'

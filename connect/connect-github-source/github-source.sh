@@ -4,22 +4,13 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
-if [ ! -z "$CI" ]
-then
-     # running with github actions
-     if [ ! -f ../../secrets.properties ]
-     then
-          logerror "../../secrets.properties is not present!"
-          exit 1
-     fi
-     source ../../secrets.properties > /dev/null 2>&1
-fi
 
-GITHUB_ACCESS_TOKEN=${GITHUB_ACCESS_TOKEN:-$1}
 
-if [ -z "$GITHUB_ACCESS_TOKEN" ]
+CONNECTOR_GITHUB_ACCESS_TOKEN=${CONNECTOR_GITHUB_ACCESS_TOKEN:-$1}
+
+if [ -z "$CONNECTOR_GITHUB_ACCESS_TOKEN" ]
 then
-     logerror "GITHUB_ACCESS_TOKEN is not set. Export it as environment variable or pass it as argument"
+     logerror "CONNECTOR_GITHUB_ACCESS_TOKEN is not set. Export it as environment variable or pass it as argument"
      exit 1
 fi
 
@@ -38,7 +29,7 @@ then
                     "github.repositories":"apache/kafka",
                     "github.resources":"stargazers",
                     "github.since":"2019-01-01",
-                    "github.access.token": "'"$GITHUB_ACCESS_TOKEN"'",
+                    "github.access.token": "'"$CONNECTOR_GITHUB_ACCESS_TOKEN"'",
                     "key.converter": "io.confluent.connect.avro.AvroConverter",
                     "key.converter.schema.registry.url":"http://schema-registry:8081",
                     "value.converter": "io.confluent.connect.avro.AvroConverter",
@@ -63,7 +54,7 @@ else
                     "github.repositories":"apache/kafka",
                     "github.tables":"stargazers",
                     "github.since":"2019-01-01",
-                    "github.access.token": "'"$GITHUB_ACCESS_TOKEN"'",
+                    "github.access.token": "'"$CONNECTOR_GITHUB_ACCESS_TOKEN"'",
                     "key.converter": "io.confluent.connect.avro.AvroConverter",
                     "key.converter.schema.registry.url":"http://schema-registry:8081",
                     "value.converter": "io.confluent.connect.avro.AvroConverter",

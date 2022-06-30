@@ -4,28 +4,19 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
-if [ ! -z "$CI" ]
-then
-     # running with github actions
-     if [ ! -f ../../secrets.properties ]
-     then
-          logerror "../../secrets.properties is not present!"
-          exit 1
-     fi
-     source ../../secrets.properties > /dev/null 2>&1
-fi
+
 
 SALESFORCE_USERNAME=${SALESFORCE_USERNAME:-$1}
 SALESFORCE_PASSWORD=${SALESFORCE_PASSWORD:-$2}
-CONSUMER_KEY=${CONSUMER_KEY:-$3}
-CONSUMER_PASSWORD=${CONSUMER_PASSWORD:-$4}
-SECURITY_TOKEN=${SECURITY_TOKEN:-$5}
+SALESFORCE_CONSUMER_KEY=${SALESFORCE_CONSUMER_KEY:-$3}
+SALESFORCE_CONSUMER_PASSWORD=${SALESFORCE_CONSUMER_PASSWORD:-$4}
+SALESFORCE_SECURITY_TOKEN=${SALESFORCE_SECURITY_TOKEN:-$5}
 SALESFORCE_INSTANCE=${SALESFORCE_INSTANCE:-"https://login.salesforce.com"}
 
 # second account (for Bulk API sink)
 SALESFORCE_USERNAME_ACCOUNT2=${SALESFORCE_USERNAME_ACCOUNT2:-$6}
 SALESFORCE_PASSWORD_ACCOUNT2=${SALESFORCE_PASSWORD_ACCOUNT2:-$7}
-SECURITY_TOKEN_ACCOUNT2=${SECURITY_TOKEN_ACCOUNT2:-$8}
+SALESFORCE_SECURITY_TOKEN_ACCOUNT2=${SALESFORCE_SECURITY_TOKEN_ACCOUNT2:-$8}
 SALESFORCE_INSTANCE_ACCOUNT2=${SALESFORCE_INSTANCE_ACCOUNT2:-"https://login.salesforce.com"}
 
 if [ -z "$SALESFORCE_USERNAME" ]
@@ -41,21 +32,21 @@ then
 fi
 
 
-if [ -z "$CONSUMER_KEY" ]
+if [ -z "$SALESFORCE_CONSUMER_KEY" ]
 then
-     logerror "CONSUMER_KEY is not set. Export it as environment variable or pass it as argument"
+     logerror "SALESFORCE_CONSUMER_KEY is not set. Export it as environment variable or pass it as argument"
      exit 1
 fi
 
-if [ -z "$CONSUMER_PASSWORD" ]
+if [ -z "$SALESFORCE_CONSUMER_PASSWORD" ]
 then
-     logerror "CONSUMER_PASSWORD is not set. Export it as environment variable or pass it as argument"
+     logerror "SALESFORCE_CONSUMER_PASSWORD is not set. Export it as environment variable or pass it as argument"
      exit 1
 fi
 
-if [ -z "$SECURITY_TOKEN" ]
+if [ -z "$SALESFORCE_SECURITY_TOKEN" ]
 then
-     logerror "SECURITY_TOKEN is not set. Export it as environment variable or pass it as argument"
+     logerror "SALESFORCE_SECURITY_TOKEN is not set. Export it as environment variable or pass it as argument"
      exit 1
 fi
 
@@ -71,9 +62,9 @@ then
      exit 1
 fi
 
-if [ -z "$SECURITY_TOKEN_ACCOUNT2" ]
+if [ -z "$SALESFORCE_SECURITY_TOKEN_ACCOUNT2" ]
 then
-     logerror "SECURITY_TOKEN_ACCOUNT2 is not set. Export it as environment variable or pass it as argument"
+     logerror "SALESFORCE_SECURITY_TOKEN_ACCOUNT2 is not set. Export it as environment variable or pass it as argument"
      exit 1
 fi
 
@@ -88,7 +79,7 @@ ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml
 # the Salesforce PushTopic source connector is used to get data into Kafka and the Salesforce Bulk API sink connector is used to export data from Kafka to Salesforce
 
 log "Login with sfdx CLI"
-docker exec sfdx-cli sh -c "sfdx sfpowerkit:auth:login -u \"$SALESFORCE_USERNAME\" -p \"$SALESFORCE_PASSWORD\" -r \"$SALESFORCE_INSTANCE\" -s \"$SECURITY_TOKEN\""
+docker exec sfdx-cli sh -c "sfdx sfpowerkit:auth:login -u \"$SALESFORCE_USERNAME\" -p \"$SALESFORCE_PASSWORD\" -r \"$SALESFORCE_INSTANCE\" -s \"$SALESFORCE_SECURITY_TOKEN\""
 
 log "Delete $PUSH_TOPICS_NAME, if required"
 set +e
@@ -118,9 +109,9 @@ curl -X PUT \
                     "salesforce.instance" : "'"$SALESFORCE_INSTANCE"'",
                     "salesforce.username" : "'"$SALESFORCE_USERNAME"'",
                     "salesforce.password" : "'"$SALESFORCE_PASSWORD"'",
-                    "salesforce.password.token" : "'"$SECURITY_TOKEN"'",
-                    "salesforce.consumer.key" : "'"$CONSUMER_KEY"'",
-                    "salesforce.consumer.secret" : "'"$CONSUMER_PASSWORD"'",
+                    "salesforce.password.token" : "'"$SALESFORCE_SECURITY_TOKEN"'",
+                    "salesforce.consumer.key" : "'"$SALESFORCE_CONSUMER_KEY"'",
+                    "salesforce.consumer.secret" : "'"$SALESFORCE_CONSUMER_PASSWORD"'",
                     "salesforce.initial.start" : "all",
                     "connection.max.message.size": "10048576",
                     "key.converter": "org.apache.kafka.connect.json.JsonConverter",
@@ -151,7 +142,7 @@ curl -X PUT \
                     "salesforce.instance" : "'"$SALESFORCE_INSTANCE_ACCOUNT2"'",
                     "salesforce.username" : "'"$SALESFORCE_USERNAME_ACCOUNT2"'",
                     "salesforce.password" : "'"$SALESFORCE_PASSWORD_ACCOUNT2"'",
-                    "salesforce.password.token" : "'"$SECURITY_TOKEN_ACCOUNT2"'",
+                    "salesforce.password.token" : "'"$SALESFORCE_SECURITY_TOKEN_ACCOUNT2"'",
                     "salesforce.ignore.fields" : "CleanStatus",
                     "salesforce.ignore.reference.fields" : "true",
                     "connection.max.message.size": "10048576",
@@ -179,7 +170,7 @@ timeout 60 docker exec broker kafka-console-consumer -bootstrap-server broker:90
 # timeout 20 docker exec broker kafka-console-consumer -bootstrap-server broker:9092 --topic error-responses --from-beginning --max-messages 1
 
 log "Login with sfdx CLI on the account #2"
-docker exec sfdx-cli sh -c "sfdx sfpowerkit:auth:login -u \"$SALESFORCE_USERNAME_ACCOUNT2\" -p \"$SALESFORCE_PASSWORD_ACCOUNT2\" -r \"$SALESFORCE_INSTANCE_ACCOUNT2\" -s \"$SECURITY_TOKEN_ACCOUNT2\""
+docker exec sfdx-cli sh -c "sfdx sfpowerkit:auth:login -u \"$SALESFORCE_USERNAME_ACCOUNT2\" -p \"$SALESFORCE_PASSWORD_ACCOUNT2\" -r \"$SALESFORCE_INSTANCE_ACCOUNT2\" -s \"$SALESFORCE_SECURITY_TOKEN_ACCOUNT2\""
 
 log "Get the Lead created on account #2"
 docker exec sfdx-cli sh -c "sfdx force:data:record:get  -u \"$SALESFORCE_USERNAME_ACCOUNT2\" -s Lead -w \"FirstName='$LEAD_FIRSTNAME' LastName='$LEAD_LASTNAME' Company=Confluent\"" > /tmp/result.log  2>&1

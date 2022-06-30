@@ -15,12 +15,7 @@ fi
 if [ ! -z "$CI" ]
 then
      # running with github actions
-     if [ ! -f ../../secrets.properties ]
-     then
-          logerror "../../secrets.properties is not present!"
-          exit 1
-     fi
-     source ../../secrets.properties > /dev/null 2>&1
+
      
      # if this is github actions
      log "Removing all data"

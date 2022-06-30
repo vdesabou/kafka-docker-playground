@@ -21,12 +21,12 @@ Go to [Salesforce developer portal](https://developer.salesforce.com/signup/) an
 Simply run:
 
 ```
-$ ./salesforce-bukapi-source.sh <SALESFORCE_USERNAME> <SALESFORCE_PASSWORD> <SECURITY_TOKEN>
+$ ./salesforce-bukapi-source.sh <SALESFORCE_USERNAME> <SALESFORCE_PASSWORD> <SALESFORCE_SECURITY_TOKEN>
 ```
 
 Note: you can also export these values as environment variable
 
-<SECURITY_TOKEN>: you can get it from `Settings->My Personal Information->Reset My Security Token`:
+<SALESFORCE_SECURITY_TOKEN>: you can get it from `Settings->My Personal Information->Reset My Security Token`:
 
 ![security token](Screenshot1.png)
 
@@ -36,7 +36,7 @@ Note: you can also export these values as environment variable
 Login with sfdx CLI
 
 ```bash
-$ docker exec sfdx-cli sh -c "sfdx sfpowerkit:auth:login -u \"$SALESFORCE_USERNAME\" -p \"$SALESFORCE_PASSWORD\" -r \"$SALESFORCE_INSTANCE\" -s \"$SECURITY_TOKEN\""
+$ docker exec sfdx-cli sh -c "sfdx sfpowerkit:auth:login -u \"$SALESFORCE_USERNAME\" -p \"$SALESFORCE_PASSWORD\" -r \"$SALESFORCE_INSTANCE\" -s \"$SALESFORCE_SECURITY_TOKEN\""
 ```
 
 Add a Lead to Salesforce
@@ -59,7 +59,7 @@ $ curl -X PUT \
                     "salesforce.instance" : "'"$SALESFORCE_INSTANCE"'",
                     "salesforce.username" : "'"$SALESFORCE_USERNAME"'",
                     "salesforce.password" : "'"$SALESFORCE_PASSWORD"'",
-                    "salesforce.password.token" : "'"$SECURITY_TOKEN"'",
+                    "salesforce.password.token" : "'"$SALESFORCE_SECURITY_TOKEN"'",
                     "key.converter": "org.apache.kafka.connect.json.JsonConverter",
                     "value.converter": "org.apache.kafka.connect.json.JsonConverter",
                     "confluent.license": "",

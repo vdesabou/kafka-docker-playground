@@ -1623,19 +1623,6 @@ function maybe_delete_ccloud_environment () {
     exit 1
   fi
 
-  if [ ! -z "$CI" ]
-  then
-    # running with github actions
-    if [ -f ../../secrets.properties ]
-    then
-      source ../../secrets.properties > /dev/null 2>&1
-    fi
-    if [ -f ../secrets.properties ]
-    then
-      source ../secrets.properties > /dev/null 2>&1
-    fi
-  fi
-
   if [ -z "$CLUSTER_NAME" ]
   then
     # 
@@ -1672,19 +1659,6 @@ function bootstrap_ccloud_environment () {
     check_confluent_version 2.0.0 || exit 1
     verify_confluent_login  "confluent kafka cluster list"
   else
-      if [ ! -z "$CI" ]
-      then
-        # running with github actions
-        if [ -f ../../secrets.properties ]
-        then
-          source ../../secrets.properties > /dev/null 2>&1
-        fi
-        if [ -f ../secrets.properties ]
-        then
-          source ../secrets.properties > /dev/null 2>&1
-        fi
-      fi
-      
       log "Installing confluent CLI"
       curl -L --http1.1 https://cnfl.io/cli | sudo sh -s -- -b /usr/local/bin
       export PATH=$PATH:/usr/local/bin

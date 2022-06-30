@@ -8,16 +8,7 @@ source ${DIR}/../../scripts/utils.sh
 logerror "💀 KNOWN ISSUE: DD-14617"
 exit 1
 
-if [ ! -z "$CI" ]
-then
-     # running with github actions
-     if [ ! -f ../../secrets.properties ]
-     then
-          logerror "../../secrets.properties is not present!"
-          exit 1
-     fi
-     source ../../secrets.properties > /dev/null 2>&1
-fi
+
 
 AWS_STS_ROLE_ARN=${AWS_STS_ROLE_ARN:-$1}
 

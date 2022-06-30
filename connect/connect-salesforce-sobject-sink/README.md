@@ -60,7 +60,7 @@ Follow instructions [here](https://docs.confluent.io/current/connect/kafka-conne
 Simply run:
 
 ```
-$ ./salesforce-sobject-sink.sh <SALESFORCE_USERNAME> <SALESFORCE_PASSWORD> <CONSUMER_KEY> <CONSUMER_PASSWORD> <SECURITY_TOKEN> <SALESFORCE_USERNAME_ACCOUNT2> <SALESFORCE_PASSWORD_ACCOUNT2> <SECURITY_TOKEN_ACCOUNT2> <CONSUMER_KEY_ACCOUNT2> <CONSUMER_PASSWORD_ACCOUNT2>
+$ ./salesforce-sobject-sink.sh <SALESFORCE_USERNAME> <SALESFORCE_PASSWORD> <SALESFORCE_CONSUMER_KEY> <SALESFORCE_CONSUMER_PASSWORD> <SALESFORCE_SECURITY_TOKEN> <SALESFORCE_USERNAME_ACCOUNT2> <SALESFORCE_PASSWORD_ACCOUNT2> <SALESFORCE_SECURITY_TOKEN_ACCOUNT2> <SALESFORCE_CONSUMER_KEY_ACCOUNT2> <SALESFORCE_CONSUMER_PASSWORD_ACCOUNT2>
 ```
 
 Note: you can also export these values as environment variable
@@ -73,7 +73,7 @@ The Salesforce PushTopic source connector is used to get data into Kafka and the
 Login with sfdx CLI
 
 ```bash
-$ docker exec sfdx-cli sh -c "sfdx sfpowerkit:auth:login -u \"$SALESFORCE_USERNAME\" -p \"$SALESFORCE_PASSWORD\" -r \"$SALESFORCE_INSTANCE\" -s \"$SECURITY_TOKEN\""
+$ docker exec sfdx-cli sh -c "sfdx sfpowerkit:auth:login -u \"$SALESFORCE_USERNAME\" -p \"$SALESFORCE_PASSWORD\" -r \"$SALESFORCE_INSTANCE\" -s \"$SALESFORCE_SECURITY_TOKEN\""
 ```
 
 Delete MyLeadPushTopics, if required
@@ -112,9 +112,9 @@ $ curl -X PUT \
                     "salesforce.instance" : "'"$SALESFORCE_INSTANCE"'",
                     "salesforce.username" : "'"$SALESFORCE_USERNAME"'",
                     "salesforce.password" : "'"$SALESFORCE_PASSWORD"'",
-                    "salesforce.password.token" : "'"$SECURITY_TOKEN"'",
-                    "salesforce.consumer.key" : "'"$CONSUMER_KEY"'",
-                    "salesforce.consumer.secret" : "'"$CONSUMER_PASSWORD"'",
+                    "salesforce.password.token" : "'"$SALESFORCE_SECURITY_TOKEN"'",
+                    "salesforce.consumer.key" : "'"$SALESFORCE_CONSUMER_KEY"'",
+                    "salesforce.consumer.secret" : "'"$SALESFORCE_CONSUMER_PASSWORD"'",
                     "salesforce.initial.start" : "all",
                     "key.converter": "org.apache.kafka.connect.json.JsonConverter",
                     "value.converter": "org.apache.kafka.connect.json.JsonConverter",
@@ -145,9 +145,9 @@ $ curl -X PUT \
                     "salesforce.instance" : "'"$SALESFORCE_INSTANCE_ACCOUNT2"'",
                     "salesforce.username" : "'"$SALESFORCE_USERNAME_ACCOUNT2"'",
                     "salesforce.password" : "'"$SALESFORCE_PASSWORD_ACCOUNT2"'",
-                    "salesforce.password.token" : "'"$SECURITY_TOKEN_ACCOUNT2"'",
-                    "salesforce.consumer.key" : "'"$CONSUMER_KEY_ACCOUNT2"'",
-                    "salesforce.consumer.secret" : "'"$CONSUMER_PASSWORD_ACCOUNT2"'",
+                    "salesforce.password.token" : "'"$SALESFORCE_SECURITY_TOKEN_ACCOUNT2"'",
+                    "salesforce.consumer.key" : "'"$SALESFORCE_CONSUMER_KEY_ACCOUNT2"'",
+                    "salesforce.consumer.secret" : "'"$SALESFORCE_CONSUMER_PASSWORD_ACCOUNT2"'",
                     "salesforce.use.custom.id.field" : "true",
                     "salesforce.custom.id.field.name" : "CustomId__c",
                     "key.converter": "org.apache.kafka.connect.json.JsonConverter",
@@ -184,7 +184,7 @@ Results:
 Login with sfdx CLI on the account #2
 
 ```bash
-$ docker exec sfdx-cli sh -c "sfdx sfpowerkit:auth:login -u \"$SALESFORCE_USERNAME_ACCOUNT2\" -p \"$SALESFORCE_PASSWORD_ACCOUNT2\" -r \"$SALESFORCE_INSTANCE_ACCOUNT2\" -s \"$SECURITY_TOKEN_ACCOUNT2\""
+$ docker exec sfdx-cli sh -c "sfdx sfpowerkit:auth:login -u \"$SALESFORCE_USERNAME_ACCOUNT2\" -p \"$SALESFORCE_PASSWORD_ACCOUNT2\" -r \"$SALESFORCE_INSTANCE_ACCOUNT2\" -s \"$SALESFORCE_SECURITY_TOKEN_ACCOUNT2\""
 ```
 
 Get the Lead created on account #2

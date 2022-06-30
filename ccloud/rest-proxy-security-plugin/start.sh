@@ -5,16 +5,7 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
-if [ ! -z "$CI" ]
-then
-     # running with github actions
-     if [ ! -f ../../secrets.properties ]
-     then
-          logerror "../../secrets.properties is not present!"
-          exit 1
-     fi
-     source ../../secrets.properties > /dev/null 2>&1
-fi
+
 
 
 CCLOUD_REST_PROXY_SECURITY_PLUGIN_API_KEY=${CCLOUD_REST_PROXY_SECURITY_PLUGIN_API_KEY:-$1}
