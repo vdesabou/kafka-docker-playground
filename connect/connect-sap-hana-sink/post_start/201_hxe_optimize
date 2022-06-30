@@ -1,0 +1,16 @@
+#!/bin/bash
+
+set -euo pipefail
+
+# Run hxe_optimize.sh
+function main() {
+    case "$_HOOK_START_TYPE" in
+        initial)
+            echo "Optimizing HDB server..."
+            /hana/hooks/post_start/hxe_scripts/hxe_optimize.sh -d
+            ;;
+    esac
+}
+
+main
+

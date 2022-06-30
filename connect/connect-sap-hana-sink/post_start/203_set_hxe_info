@@ -1,0 +1,15 @@
+#!/bin/bash
+
+set -euo pipefail
+
+# Set INSTALL_DATE in hxe_info.txt
+function main() {
+    case "$_HOOK_START_TYPE" in
+        initial|update)
+            install_date=`date --utc`
+            sed -i "s/^INSTALL_DATE.*=.*/INSTALL_DATE=$install_date/" /usr/sap/${SAPSYSTEMNAME}/SYS/global/hdb/hxe_info.txt
+            ;;
+    esac
+}
+
+main
