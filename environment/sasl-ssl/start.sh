@@ -49,7 +49,7 @@ fi
 OLDDIR=$PWD
 cd ${OLDDIR}/../../environment/sasl-ssl/security
 log "🔐 Generate keys and certificates used for SSL"
-docker run -u0 --rm -v $PWD:/tmp vdesabou/kafka-docker-playground-connect:${CONNECT_TAG} bash -c "/tmp/certs-create.sh > /dev/null 2>&1 && chown -R $(id -u $USER):$(id -g $USER) /tmp/"
+docker run -u0 --rm -v $DIR:/tmp vdesabou/kafka-docker-playground-connect:${CONNECT_TAG} bash -c "/tmp/certs-create.sh > /dev/null 2>&1 && chown -R $(id -u $USER):$(id -g $USER) /tmp/"
 cd ${OLDDIR}/../../environment/sasl-ssl
 
 ENABLE_DOCKER_COMPOSE_FILE_OVERRIDE=""
