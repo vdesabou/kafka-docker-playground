@@ -388,6 +388,8 @@ jobs:
       - name: Update README
         run: |
           ./scripts/update-readme.sh "7.1.1"
+        env:
+          CI_GITHUB_TOKEN: ${{ secrets.CI_GITHUB_TOKEN }}
       - name: push
         uses: github-actions-x/commit@v2.9
         with:
@@ -396,5 +398,3 @@ jobs:
           commit-message: 'updating with latest versions'
           files: ./README.md ./docs/content.md ./docs/introduction.md
           name: Vincent de Saboulin
-        env:
-          CI_GITHUB_TOKEN: ${{ secrets.CI_GITHUB_TOKEN }}
