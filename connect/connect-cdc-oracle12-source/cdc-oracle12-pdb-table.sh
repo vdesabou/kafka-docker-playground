@@ -72,6 +72,7 @@ docker exec -i oracle bash -c "ORACLE_SID=ORCLCDB;export ORACLE_SID;sqlplus /nol
      GRANT CREATE TABLE TO C##MYUSER container=all;
      GRANT CREATE SEQUENCE TO C##MYUSER container=all;
      GRANT CREATE TRIGGER TO C##MYUSER container=all;
+     GRANT FLASHBACK ANY TABLE TO C##MYUSER container=all;
 
      -- Enable Supplemental Logging for All Columns
      ALTER SESSION SET CONTAINER=cdb\$root;
