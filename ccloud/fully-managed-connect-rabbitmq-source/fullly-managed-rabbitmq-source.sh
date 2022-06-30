@@ -20,10 +20,10 @@ logwarn "🚨WARNING🚨"
 logwarn "It is considered a security risk to run this example on your personal machine since you'll be exposing a TCP port over internet using Ngrok (https://ngrok.com)."
 logwarn "It is strongly encouraged to run it on a AWS EC2 instance where you'll use Confluent Static Egress IP Addresses (https://docs.confluent.io/cloud/current/networking/static-egress-ip-addresses.html#use-static-egress-ip-addresses-with-ccloud) (only available for public endpoints on AWS) to allow traffic from your Confluent Cloud cluster to your EC2 instance using EC2 Security Group."
 logwarn ""
-logwarn "Example in order to set EC2 Security Group with Confluent Static Egress IP Addresses and port 1414:"
+logwarn "Example in order to set EC2 Security Group with Confluent Static Egress IP Addresses and port 5672:"
 logwarn "group=\$(aws ec2 describe-instances --instance-id <\$ec2-instance-id> --output=json | jq '.Reservations[] | .Instances[] | {SecurityGroups: .SecurityGroups}' | jq -r '.SecurityGroups[] | .GroupName')"
-logwarn "aws ec2 authorize-security-group-ingress --group-name "\$group" --protocol tcp --port 1414 --cidr 13.36.88.88/32"
-logwarn "aws ec2 authorize-security-group-ingress --group-name "\$group" --protocol tcp --port 1414 --cidr 13.36.88.89/32"
+logwarn "aws ec2 authorize-security-group-ingress --group-name "\$group" --protocol tcp --port 5672 --cidr 13.36.88.88/32"
+logwarn "aws ec2 authorize-security-group-ingress --group-name "\$group" --protocol tcp --port 5672 --cidr 13.36.88.89/32"
 logwarn "etc..."
 
 check_if_continue
@@ -50,6 +50,9 @@ NGROK_HOSTNAME=$(echo $NGROK_URL | cut -d "/" -f3 | cut -d ":" -f 1)
 NGROK_PORT=$(echo $NGROK_URL | cut -d "/" -f3 | cut -d ":" -f 2)
 
 #confluent connect plugin describe IbmMQSource
+
+log "Send message to RabbitMQ in myqueue"
+docker exec rabbitmq_producer bash -c "python /producer.py myqueue 5"
 
 cat << EOF > connector.json
 {
@@ -82,18 +85,12 @@ wait_for_ccloud_connector_up connector.json 300
 
 sleep 5
 
-
-log "Send message to RabbitMQ in myqueue"
-docker exec rabbitmq_producer bash -c "python /producer.py myqueue 5"
-
-sleep 5
-
 log "Verifying topic rabbitmq"
 timeout 60 docker run --rm -e BOOTSTRAP_SERVERS="$BOOTSTRAP_SERVERS" -e SASL_JAAS_CONFIG="$SASL_JAAS_CONFIG" vdesabou/kafka-docker-playground-connect:${CONNECT_TAG} kafka-console-consumer --topic rabbitmq --bootstrap-server $BOOTSTRAP_SERVERS --consumer-property ssl.endpoint.identification.algorithm=https --consumer-property sasl.mechanism=PLAIN --consumer-property security.protocol=SASL_SSL --consumer-property sasl.jaas.config="$SASL_JAAS_CONFIG" --from-beginning --max-messages 5
 
 
 #log "Consume messages in RabbitMQ"
-#docker exec -i rabbitmq_consumer bash -c "python /consumer.py myqueue"
+#docker exec -it rabbitmq_consumer bash -c "python /consumer.py myqueue"
 
 log "Do you want to delete the fully managed connector ?"
 check_if_continue
