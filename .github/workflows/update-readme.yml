@@ -29,6 +29,7 @@ jobs:
           echo "$DOCKER_PASSWORD" | docker login -u vdesabou --password-stdin
         env:
           SECRETS_ENCRYPTION_PASSWORD: ${{ secrets.SECRETS_ENCRYPTION_PASSWORD }}
+          DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD}}
 
       - name: Update README
         run: |

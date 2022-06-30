@@ -40,6 +40,7 @@ jobs:
           echo "$DOCKER_PASSWORD" | docker login -u vdesabou --password-stdin
         env:
           SECRETS_ENCRYPTION_PASSWORD: ${{ secrets.SECRETS_ENCRYPTION_PASSWORD }}
+          DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD}}
 
       - name: Cleanup resources
         run: |
@@ -136,6 +137,7 @@ jobs:
           echo "$DOCKER_PASSWORD" | docker login -u vdesabou --password-stdin
         env:
           SECRETS_ENCRYPTION_PASSWORD: ${{ secrets.SECRETS_ENCRYPTION_PASSWORD }}
+          DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD}}
 
       - name: Build and Test
         run: bash scripts/run-tests.sh "${{ matrix.test_list }}" "${{ matrix.tag }}"
@@ -258,6 +260,7 @@ jobs:
           echo "$DOCKER_PASSWORD" | docker login -u vdesabou --password-stdin
         env:
           SECRETS_ENCRYPTION_PASSWORD: ${{ secrets.SECRETS_ENCRYPTION_PASSWORD }}
+          DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD}}
 
       - name: Build and Test
         run: bash scripts/run-tests.sh "${{ matrix.test_list }}" "${{ matrix.tag }}"
@@ -361,6 +364,7 @@ jobs:
           echo "$DOCKER_PASSWORD" | docker login -u vdesabou --password-stdin
         env:
           SECRETS_ENCRYPTION_PASSWORD: ${{ secrets.SECRETS_ENCRYPTION_PASSWORD }}
+          DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD}}
 
       - name: Cleanup resources
         run: |
