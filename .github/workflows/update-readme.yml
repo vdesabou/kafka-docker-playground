@@ -36,7 +36,7 @@ jobs:
         run: |
           ./scripts/update-readme.sh "5.4.8 5.5.10 6.0.8 6.1.6 6.2.5 7.0.4 7.1.2"
         env:
-          CI_GITHUB_TOKEN: ${{ secrets.CI_GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.CI_GITHUB_TOKEN }}
 
 
       - name: push
