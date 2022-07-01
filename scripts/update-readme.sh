@@ -4,12 +4,6 @@ IGNORE_CHECK_FOR_DOCKER_COMPOSE=true
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../scripts/utils.sh
 
-if [ -z "$CI_GITHUB_TOKEN" ]
-then
-  logerror "ERROR: CI_GITHUB_TOKEN is not set. Export it as environment variable"
-  exit 1
-fi
-
 image_versions="$1"
 
 if [ "$image_versions" = "" ]
