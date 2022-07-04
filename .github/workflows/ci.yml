@@ -390,11 +390,21 @@ jobs:
           ./scripts/update-readme.sh "5.4.8 5.5.10 6.0.8 6.1.6 6.2.5 7.0.4 7.1.2"
         env:
           GH_TOKEN: ${{ secrets.CI_GITHUB_TOKEN }}
-      - name: push
+
+      - name: push master
         uses: github-actions-x/commit@v2.9
         with:
           github-token: ${{ secrets.CI_GITHUB_TOKEN }}
           push-branch: 'master'
           commit-message: 'updating with latest versions'
-          files: ./README.md ./docs/content.md ./docs/introduction.md
+          files: ./README.md
+          name: Vincent de Saboulin
+          
+      - name: push gh-pages
+        uses: github-actions-x/commit@v2.9
+        with:
+          github-token: ${{ secrets.CI_GITHUB_TOKEN }}
+          push-branch: 'gh-pages'
+          commit-message: 'updating with latest versions'
+          files: ./docs/content.md ./docs/introduction.md
           name: Vincent de Saboulin
