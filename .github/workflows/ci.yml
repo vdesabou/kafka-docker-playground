@@ -406,5 +406,6 @@ jobs:
           github-token: ${{ secrets.CI_GITHUB_TOKEN }}
           push-branch: 'gh-pages'
           commit-message: 'updating with latest versions'
+          rebase: 'true'
           files: ./docs/content.md ./docs/introduction.md
           name: Vincent de Saboulin
