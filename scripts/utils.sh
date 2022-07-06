@@ -1819,7 +1819,7 @@ function wait_for_log () {
           cur_wait=$(( cur_wait+10 ))
           if [[ "$cur_wait" -gt "$max_wait" ]]; then
                logerror "The logs in $container container do not show '$message' after $max_wait seconds. Please troubleshoot with 'docker container ps' and 'docker container logs'."
-               exit 1
+               return 1
           fi
      done
      grep "$message" /tmp/out.txt
