@@ -390,12 +390,26 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.CI_GITHUB_TOKEN }}
           
-      - name: push docs
-        uses: actions-x/commit@v6
+      - name: Pushes content.md
+        uses: dmnemec/copy_file_to_another_repo_action@main
+        env:
+          API_TOKEN_GITHUB: ${{ secrets.CI_GITHUB_TOKEN }}
         with:
-          token: ${{ secrets.CI_GITHUB_TOKEN }}
-          repository: https://github.com/vdesabou/kafka-docker-playground-docs
-          message: 'updating with latest versions'
-          files: ./docs/content.md ./docs/introduction.md
-          name: Vincent de Saboulin
-          directory: docs
+          source_file: './docs/content.md'
+          destination_repo: 'vdesabou/kafka-docker-playground-docs'
+          destination_folder: 'docs'
+          user_email: 'vincent.desaboulin@gmail.com'
+          user_name: 'vdesabou'
+          commit_message: 'updating with latest versions'
+
+      - name: Pushes introduction.md
+        uses: dmnemec/copy_file_to_another_repo_action@main
+        env:
+          API_TOKEN_GITHUB: ${{ secrets.CI_GITHUB_TOKEN }}
+        with:
+          source_file: './docs/introduction.md'
+          destination_repo: 'vdesabou/kafka-docker-playground-docs'
+          destination_folder: 'docs'
+          user_email: 'vincent.desaboulin@gmail.com'
+          user_name: 'vdesabou'
+          commit_message: 'updating with latest versions'

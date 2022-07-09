@@ -31,12 +31,11 @@ jobs:
           SECRETS_ENCRYPTION_PASSWORD: ${{ secrets.SECRETS_ENCRYPTION_PASSWORD }}
           DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD}}
 
-      # - name: Update README
-      #   run: |
-      #     ./scripts/update-readme.sh "5.4.8 5.5.10 6.0.8 6.1.6 6.2.5 7.0.4 7.1.2"
-      #   env:
-      #     GH_TOKEN: ${{ secrets.CI_GITHUB_TOKEN }}
-
+      - name: Update README
+        run: |
+          ./scripts/update-readme.sh "5.4.8 5.5.10 6.0.8 6.1.6 6.2.5 7.0.4 7.1.2"
+        env:
+          GH_TOKEN: ${{ secrets.CI_GITHUB_TOKEN }}
 
       - name: Pushes content.md
         uses: dmnemec/copy_file_to_another_repo_action@main
@@ -61,13 +60,3 @@ jobs:
           user_email: 'vincent.desaboulin@gmail.com'
           user_name: 'vdesabou'
           commit_message: 'updating with latest versions'
-
-      # - name: push docs
-      #   uses: actions-x/commit@v6
-      #   with:
-      #     token: ${{ secrets.CI_GITHUB_TOKEN }}
-      #     repository: https://github.com/vdesabou/kafka-docker-playground-docs
-      #     message: 'updating with latest versions'
-      #     files: ./docs/content.md ./docs/introduction.md
-      #     name: Vincent de Saboulin
-      #     directory: docs
