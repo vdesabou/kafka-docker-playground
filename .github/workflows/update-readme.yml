@@ -45,4 +45,4 @@ jobs:
           message: 'updating with latest versions'
           files: ./docs/content.md ./docs/introduction.md
           name: Vincent de Saboulin
-          force: true
+          directory: docs
