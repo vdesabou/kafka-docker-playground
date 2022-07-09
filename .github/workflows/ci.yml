@@ -348,6 +348,7 @@ jobs:
         with:
           repository: vdesabou/kafka-docker-playground
           fetch-depth: 0
+          submodules: recursive
           token: ${{ secrets.CI_GITHUB_TOKEN }}
 
       - name: Decrypt secrets.tar
