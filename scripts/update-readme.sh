@@ -17,9 +17,6 @@ then
   logerror "ERROR: List of CP versions is not provided as argument!"
   exit 1
 fi
-readme_template_file=README-template.md
-readme_file=README.md
-readme_tmp_file=/tmp/README.md
 content_template_file=./docs/content-template.md
 content_file=./docs/content.md
 content_tmp_file=/tmp/content.md
@@ -29,7 +26,6 @@ badges_tmp_file=/tmp/badges.md
 gh_msg_file=/tmp/gh.txt
 gh_msg_file_intro=/tmp/gh_intro.txt
 
-cp $readme_template_file $readme_file
 cp $content_template_file $content_file
 cp $badges_template_file $badges_file
 
@@ -433,10 +429,6 @@ sed -e "s|:nb_total_success:|$nb_total_success|g" \
     -e "s|:nb_repros:|$nb_repros|g" \
     $badges_file > $badges_tmp_file
 cp $badges_tmp_file $badges_file
-
-# Add content and badges to README
-cat $badges_file >> $readme_file
-cat $content_file >> $readme_file
 
 # Create docs/introduction.md
 cat ./docs/introduction-header.md > ./docs/introduction.md
