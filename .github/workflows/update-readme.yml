@@ -13,7 +13,6 @@ jobs:
         with:
           repository: vdesabou/kafka-docker-playground
           fetch-depth: 0
-          ref: gh-pages
           token: ${{ secrets.CI_GITHUB_TOKEN }}
 
       - name: Decrypt secrets.tar
@@ -38,11 +37,12 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.CI_GITHUB_TOKEN }}
           
-      - name: push gh-pages
+      - name: push docs
         uses: actions-x/commit@v6
         with:
           token: ${{ secrets.CI_GITHUB_TOKEN }}
-          branch: 'gh-pages'
+          repository: https://github.com/vdesabou/kafka-docker-playground-docs
           message: 'updating with latest versions'
           files: ./docs/content.md ./docs/introduction.md
           name: Vincent de Saboulin
+          force: true
