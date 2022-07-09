@@ -348,7 +348,7 @@ jobs:
         with:
           repository: vdesabou/kafka-docker-playground
           fetch-depth: 0
-          submodules: recursive
+          ref: gh-pages
           token: ${{ secrets.CI_GITHUB_TOKEN }}
 
       - name: Decrypt secrets.tar
@@ -390,15 +390,6 @@ jobs:
           ./scripts/update-readme.sh "5.4.8 5.5.10 6.0.8 6.1.6 6.2.5 7.0.4 7.1.2"
         env:
           GH_TOKEN: ${{ secrets.CI_GITHUB_TOKEN }}
-
-      - name: push master
-        uses: github-actions-x/commit@v2.9
-        with:
-          github-token: ${{ secrets.CI_GITHUB_TOKEN }}
-          push-branch: 'master'
-          commit-message: 'updating with latest versions'
-          files: ./README.md
-          name: Vincent de Saboulin
           
       - name: push gh-pages
         uses: actions-x/commit@v6
