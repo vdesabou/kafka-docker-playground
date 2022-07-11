@@ -1,8 +1,16 @@
+<p align="center">
+  <br>
+    <img src="images/icons/docker_whale.png" width="110"/>
+  <br>
+</p>
+
 # 🐳 kafka-docker-playground
 
 Fully automated Apache Kafka® and Confluent Docker based examples // Easily build reproduction models
 
-🔥 Check out [kafka-docker-playground.io](https://kafka-docker-playground.io/) to learn how to use the playground, how it works and how to build your own reproduction models ! 
+## 📚 Documentation
+
+Check out [kafka-docker-playground.io](https://kafka-docker-playground.io/) to learn how to use the playground, how it works and how to build your own reproduction models ! 
 
 ## ✨ Features
 
