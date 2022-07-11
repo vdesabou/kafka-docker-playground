@@ -2125,8 +2125,9 @@ function ccloud::create_and_use_cluster() {
   CLUSTER_NAME=$1
   CLUSTER_CLOUD=$2
   CLUSTER_REGION=$3
+  CLUSTER_TYPE=$4
 
-  OUTPUT=$(confluent kafka cluster create "$CLUSTER_NAME" --cloud $CLUSTER_CLOUD --region $CLUSTER_REGION --output json 2>&1)
+  OUTPUT=$(confluent kafka cluster create "$CLUSTER_NAME" --cloud $CLUSTER_CLOUD --region $CLUSTER_REGION --type $CLUSTER_TYPE --output json 2>&1)
   (($? != 0)) && { echo "$OUTPUT"; exit 1; }
   CLUSTER=$(echo "$OUTPUT" | jq -r .id)
   confluent kafka cluster use $CLUSTER 2>/dev/null
@@ -2139,6 +2140,7 @@ function ccloud::maybe_create_and_use_cluster() {
   CLUSTER_NAME=$1
   CLUSTER_CLOUD=$2
   CLUSTER_REGION=$3
+  CLUSTER_TYPE=$4
   CLUSTER_ID=$(ccloud::find_cluster $CLUSTER_NAME $CLUSTER_CLOUD $CLUSTER_REGION)
   if [ $? -eq 0 ]
   then
@@ -2153,7 +2155,7 @@ function ccloud::maybe_create_and_use_cluster() {
       echo "Make sure CLUSTER_CLOUD and CLUSTER_REGION are set with values that correspond to your cluster!"
       exit 1
     else
-      OUTPUT=$(ccloud::create_and_use_cluster "$CLUSTER_NAME" "$CLUSTER_CLOUD" "$CLUSTER_REGION")
+      OUTPUT=$(ccloud::create_and_use_cluster "$CLUSTER_NAME" "$CLUSTER_CLOUD" "$CLUSTER_REGION" "$CLUSTER_TYPE")
       (($? != 0)) && { echo "$OUTPUT"; exit 1; }
       echo "$OUTPUT"
     fi
@@ -2740,7 +2742,8 @@ function ccloud::create_ccloud_stack() {
   CLUSTER_NAME=${CLUSTER_NAME:-"pg-cluster-$SERVICE_ACCOUNT_ID"}
   CLUSTER_CLOUD="${CLUSTER_CLOUD:-aws}"
   CLUSTER_REGION="${CLUSTER_REGION:-us-west-2}"
-  CLUSTER=$(ccloud::maybe_create_and_use_cluster "$CLUSTER_NAME" $CLUSTER_CLOUD $CLUSTER_REGION)
+  CLUSTER_TYPE="${CLUSTER_TYPE:-basic}"
+  CLUSTER=$(ccloud::maybe_create_and_use_cluster "$CLUSTER_NAME" $CLUSTER_CLOUD $CLUSTER_REGION $CLUSTER_TYPE)
   (($? != 0)) && { echo "$CLUSTER"; exit 1; }
   if [[ "$CLUSTER" == "" ]] ; then
     echo "Kafka cluster id is empty"
