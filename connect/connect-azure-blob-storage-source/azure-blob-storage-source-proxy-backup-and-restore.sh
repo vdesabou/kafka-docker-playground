@@ -57,7 +57,7 @@ az storage container create \
     --name $AZURE_CONTAINER_NAME
 
 
-${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
+${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.proxy.backup-and-restore.yml"
 
 log "Creating Azure Blob Storage Sink connector"
 curl -X PUT \
@@ -70,6 +70,7 @@ curl -X PUT \
                 "azblob.account.name": "'"$AZURE_ACCOUNT_NAME"'",
                 "azblob.account.key": "'"$AZURE_ACCOUNT_KEY"'",
                 "azblob.container.name": "'"$AZURE_CONTAINER_NAME"'",
+                "azblob.proxy.url" : "https://nginx-proxy:8888",
                 "format.class": "io.confluent.connect.azure.blob.format.avro.AvroFormat",
                 "confluent.license": "",
                 "confluent.topic.bootstrap.servers": "broker:9092",
@@ -104,6 +105,7 @@ curl -X PUT \
                 "azblob.account.name": "'"$AZURE_ACCOUNT_NAME"'",
                 "azblob.account.key": "'"$AZURE_ACCOUNT_KEY"'",
                 "azblob.container.name": "'"$AZURE_CONTAINER_NAME"'",
+                "azblob.proxy.url" : "https://nginx-proxy:8888",
                 "format.class": "io.confluent.connect.cloud.storage.source.format.CloudStorageAvroFormat",
                 "confluent.license": "",
                 "confluent.topic.bootstrap.servers": "broker:9092",
