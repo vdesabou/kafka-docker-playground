@@ -63,7 +63,7 @@ log "Creating Azure Blob Storage Sink connector"
 curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
-                "connector.class": "io.confluent.connect.azure.blob.AzureBlobStorageSinkConnector",
+                "connector.class": "io.confluent.connect.cloud.storage.source.format.CloudStorageAvroFormat",
                 "tasks.max": "1",
                 "topics": "blob_topic",
                 "flush.size": "3",
