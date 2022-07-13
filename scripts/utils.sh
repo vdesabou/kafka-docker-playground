@@ -317,25 +317,34 @@ then
         #  Loop on all connectors in CONNECT_PLUGIN_PATH and install latest version from Confluent Hub (except for JDBC and replicator)
         ###
         first_loop=true
+        i=0
+        my_array_connector_tag=($(echo $CONNECTOR_TAG | tr "," "\n"))
         for connector_path in ${connector_paths//,/ }
         do
           connector_path=$(echo "$connector_path" | cut -d "/" -f 5)
           owner=$(echo "$connector_path" | cut -d "-" -f 1)
           name=$(echo "$connector_path" | cut -d "-" -f 2-)
 
+          CONNECTOR_VERSION="${my_array_connector_tag[$i]}"
+          if [ "$CONNECTOR_VERSION" = "" ]
+          then
+            logwarn "CONNECTOR_TAG was not set for element $i, setting it to latest"
+            CONNECTOR_VERSION="latest"
+          fi
           if [ "$first_loop" = true ]
           then
-            export CONNECT_TAG="$name-cp-$TAG-$CONNECTOR_TAG"
+            export CONNECT_TAG="$TAG"
           else
-            export CONNECTOR_TAG="latest"
+            export CONNECT_TAG="cp-$TAG-$(echo $CONNECTOR_TAG | tr "," "-")"
           fi
 
-          log "👷 Building Docker image vdesabou/kafka-docker-playground-connect:${CONNECT_TAG}"
           tmp_dir=$(mktemp -d -t ci-XXXXXXXXXX)
 cat << EOF > $tmp_dir/Dockerfile
-FROM vdesabou/kafka-docker-playground-connect:${TAG}
-RUN confluent-hub install --no-prompt $owner/$name:$CONNECTOR_TAG
+FROM vdesabou/kafka-docker-playground-connect:${CONNECT_TAG}
+RUN confluent-hub install --no-prompt $owner/$name:$CONNECTOR_VERSION
 EOF
+          export CONNECT_TAG="cp-$TAG-$(echo $CONNECTOR_TAG | tr "," "-")"
+          log "👷 Building Docker image vdesabou/kafka-docker-playground-connect:${CONNECT_TAG}"
           docker build -t vdesabou/kafka-docker-playground-connect:$CONNECT_TAG $tmp_dir
           rm -rf $tmp_dir
 
@@ -382,6 +391,7 @@ EOF
               rm -rf $tmp_dir
             fi
           fi
+          ((i=i+1))
         done
       fi
     else
