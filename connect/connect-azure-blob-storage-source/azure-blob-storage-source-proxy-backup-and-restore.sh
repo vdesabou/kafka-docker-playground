@@ -63,7 +63,7 @@ log "Creating Azure Blob Storage Sink connector"
 curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
-                "connector.class": "io.confluent.connect.cloud.storage.source.format.CloudStorageAvroFormat",
+                "connector.class": "io.confluent.connect.azure.blob.storage.AzureBlobStorageSourceConnector",
                 "tasks.max": "1",
                 "topics": "blob_topic",
                 "flush.size": "3",
@@ -71,7 +71,7 @@ curl -X PUT \
                 "azblob.account.key": "'"$AZURE_ACCOUNT_KEY"'",
                 "azblob.container.name": "'"$AZURE_CONTAINER_NAME"'",
                 "azblob.proxy.url" : "https://nginx-proxy:8888",
-                "format.class": "io.confluent.connect.azure.blob.format.avro.AvroFormat",
+                "format.class": "io.confluent.connect.cloud.storage.source.format.CloudStorageAvroFormat",
                 "confluent.license": "",
                 "confluent.topic.bootstrap.servers": "broker:9092",
                 "confluent.topic.replication.factor": "1",
