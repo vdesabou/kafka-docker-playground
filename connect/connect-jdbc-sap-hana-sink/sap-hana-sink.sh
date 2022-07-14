@@ -54,7 +54,7 @@ curl -X PUT \
           }' \
      http://localhost:8083/connectors/jdbc-sap-hana-sink/config | jq .
 
-sleep 15
+sleep 30
 
 log "Check data is in SAP HANA"
 docker exec -i sap /usr/sap/HXE/HDB90/exe/hdbsql -i 90 -d HXE -u LOCALDEV -p Localdev1  > /tmp/result.log  2>&1 <<-EOF
