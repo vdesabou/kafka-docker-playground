@@ -44,6 +44,9 @@ AZURE_ACCOUNT_KEY=$(az storage account keys list \
     --account-name $AZURE_ACCOUNT_NAME \
     --resource-group $AZURE_RESOURCE_GROUP \
     --query "[0].value" | sed -e 's/^"//' -e 's/"$//')
+# generate data file for externalizing secrets
+sed -e "s|:AZURE_ACCOUNT_KEY:|$AZURE_ACCOUNT_KEY|g" \
+    ../../connect/connect-azure-blob-storage-sink/data.template > ../../connect/connect-azure-blob-storage-sink/data
 log "Creating Azure Storage Container $AZURE_CONTAINER_NAME"
 az storage container create \
     --account-name $AZURE_ACCOUNT_NAME \
@@ -61,7 +64,7 @@ curl -X PUT \
                 "topics": "blob_topic",
                 "flush.size": "3",
                 "azblob.account.name": "'"$AZURE_ACCOUNT_NAME"'",
-                "azblob.account.key": "'"$AZURE_ACCOUNT_KEY"'",
+                "azblob.account.key": "${file:/data:AZURE_ACCOUNT_KEY}",
                 "azblob.container.name": "'"$AZURE_CONTAINER_NAME"'",
                 "azblob.proxy.url" : "https://nginx-proxy:8888",
                 "format.class": "io.confluent.connect.azure.blob.format.avro.AvroFormat",

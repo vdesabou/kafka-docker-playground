@@ -2,5 +2,7 @@
 version: '3.5'
 services:
   connect:
+    volumes:
+      - ../../connect/connect-azure-blob-storage-sink/data:/data
     environment:
       CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-azure-blob-storage
