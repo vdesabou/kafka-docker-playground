@@ -4,7 +4,7 @@
 
 ## Objective
 
-Quickly test [IBM MQ Source](https://docs.confluent.io/current/connect/kafka-connect-ibmmq/index.html) connector.
+Quickly test [IBM MQ Source](https://docs.confluent.io/kafka-connect-ibmmq-source/current/overview.html) connector.
 
 Using IBM MQ Docker [image](https://hub.docker.com/r/ibmcom/mq/)
 
