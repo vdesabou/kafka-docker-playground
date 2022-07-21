@@ -418,7 +418,6 @@ fi
 last_run=${last_run// /%20}
 last_run=${last_run//-/--}
 
-nb_repros=$(find ${DIR}/.. -name *repro*.sh | wc -l)
 # handle shields badges
 sed -e "s|:nb_total_success:|$nb_total_success|g" \
     -e "s|:nb_total_tests:|$nb_total_tests|g" \
@@ -426,7 +425,6 @@ sed -e "s|:nb_total_success:|$nb_total_success|g" \
     -e "s|:cp_version_tested:|$cp_version_tested|g" \
     -e "s|:tests_color:|$tests_color|g" \
     -e "s|:last_run:|$last_run|g" \
-    -e "s|:nb_repros:|$nb_repros|g" \
     $badges_file > $badges_tmp_file
 cp $badges_tmp_file $badges_file
 
