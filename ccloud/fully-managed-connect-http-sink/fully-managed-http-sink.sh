@@ -32,6 +32,7 @@ cat << EOF > connector.json
      "topics": "http-topic",
      "input.data.format": "AVRO",
      "http.api.url": "http://httpstat.us/200/",
+     "behavior.on.error": "fail",
      "tasks.max" : "1"
 }
 EOF
