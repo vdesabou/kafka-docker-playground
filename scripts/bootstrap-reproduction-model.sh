@@ -247,7 +247,7 @@ fi
 chmod u+x $repro_test_file
 
 log "📂 The reproduction files are now available in:\n$repro_dir"
-if [ "$(whoami)" = "vsaboulin" ] || [ "$(whoami)" = "ec2user" ]
+if [ "$(whoami)" = "vsaboulin" ] || [ "$(whoami)" = "ec2-user" ]
 then
   echo ""
   echo "cd $repro_dir"
