@@ -23,6 +23,7 @@ jobs:
           NB=$(find . -name *repro*.sh | wc -l)
           echo "NB=$NB" >> $GITHUB_ENV
 
+      # https://github.com/marketplace/actions/dynamic-badges
       - name: Create Badge
         uses: schneegans/dynamic-badges-action@v1.4.0
         with:
@@ -32,3 +33,4 @@ jobs:
           label: reproduction models
           message: ${{ env.NB }}
           color: green
+          namedLogo: files
