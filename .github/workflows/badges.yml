@@ -1,0 +1,35 @@
+name: Create Badge
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  create-badge:
+    name: Create Badge
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+        with:
+          repository: vdesabou/kafka-docker-playground
+          fetch-depth: 0
+          submodules: recursive
+          token: ${{ secrets.CI_GITHUB_TOKEN }}
+
+      - name: Get number of reproduction models
+        run: |
+          NB=$(find . -name *repro*.sh | wc -l)
+          echo "NB=$NB" >> $GITHUB_ENV
+
+      - name: Create Badge
+        uses: schneegans/dynamic-badges-action@v1.4.0
+        with:
+          auth: ${{ secrets.GIST_SECRET }}
+          gistID: b7d51da11b2e8a7bdd1d2e45d4aaa2e5
+          filename: badges.json
+          label: reproduction models
+          message: ${{ env.NB }}
+          color: green
