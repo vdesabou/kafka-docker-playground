@@ -54,17 +54,17 @@ AZURE_ACCOUNT_KEY=$(az storage account keys list \
     --account-name $AZURE_ACCOUNT_NAME \
     --resource-group $AZURE_RESOURCE_GROUP \
     --query "[0].value" | sed -e 's/^"//' -e 's/"$//')
-# generate data file for externalizing secrets
-sed -e "s|:AZURE_ACCOUNT_NAME:|$AZURE_ACCOUNT_NAME|g" \
-    -e "s|:AZURE_ACCOUNT_KEY:|$AZURE_ACCOUNT_KEY|g" \
-    -e "s|:AZURE_CONTAINER_NAME:|$AZURE_CONTAINER_NAME|g" \
-    ../../connect/connect-azure-blob-storage-source/data.template > ../../connect/connect-azure-blob-storage-source/data
 log "Creating Azure Storage Container $AZURE_CONTAINER_NAME"
 az storage container create \
     --account-name $AZURE_ACCOUNT_NAME \
     --account-key $AZURE_ACCOUNT_KEY \
     --name $AZURE_CONTAINER_NAME
 
+# generate data file for externalizing secrets
+sed -e "s|:AZURE_ACCOUNT_NAME:|$AZURE_ACCOUNT_NAME|g" \
+    -e "s|:AZURE_ACCOUNT_KEY:|$AZURE_ACCOUNT_KEY|g" \
+    -e "s|:AZURE_CONTAINER_NAME:|$AZURE_CONTAINER_NAME|g" \
+    ../../connect/connect-azure-blob-storage-source/data.template > ../../connect/connect-azure-blob-storage-source/data
 
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.generalized.yml"
 

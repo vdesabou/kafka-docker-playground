@@ -56,6 +56,11 @@ az storage container create \
     --account-key $AZURE_ACCOUNT_KEY \
     --name $AZURE_CONTAINER_NAME
 
+# generate data file for externalizing secrets
+sed -e "s|:AZURE_ACCOUNT_NAME:|$AZURE_ACCOUNT_NAME|g" \
+    -e "s|:AZURE_ACCOUNT_KEY:|$AZURE_ACCOUNT_KEY|g" \
+    -e "s|:AZURE_CONTAINER_NAME:|$AZURE_CONTAINER_NAME|g" \
+    ../../connect/connect-azure-blob-storage-source/data.template > ../../connect/connect-azure-blob-storage-source/data
 
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.proxy.backup-and-restore.yml"
 
