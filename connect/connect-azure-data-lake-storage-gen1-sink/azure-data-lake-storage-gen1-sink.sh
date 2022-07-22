@@ -60,25 +60,32 @@ az dls account create --account $AZURE_DATALAKE_ACCOUNT_NAME --resource-group $A
 log "Giving permission to app $AZURE_AD_APP_NAME to get access to data lake $AZURE_DATALAKE_ACCOUNT_NAME"
 az dls fs access set-entry --account $AZURE_DATALAKE_ACCOUNT_NAME  --acl-spec user:$SERVICE_PRINCIPAL_ID:rwx --path /
 
-${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
+# generate data file for externalizing secrets
+sed -e "s|:AZURE_DATALAKE_CLIENT_ID:|$AZURE_DATALAKE_CLIENT_ID|g" \
+    -e "s|:AZURE_DATALAKE_CLIENT_PASSWORD:|$AZURE_DATALAKE_CLIENT_PASSWORD|g" \
+    -e "s|:AZURE_DATALAKE_ACCOUNT_NAME:|$AZURE_DATALAKE_ACCOUNT_NAME|g" \
+    -e "s|:AZURE_DATALAKE_TOKEN_ENDPOINT:|$AZURE_DATALAKE_TOKEN_ENDPOINT|g" \
+    ../../connect/connect-azure-data-lake-storage-gen1-sink/data.template > ../../connect/connect-azure-data-lake-storage-gen1-sink/data
 
+
+${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
 
 log "Creating Data Lake Storage Gen1 Sink connector"
 curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
-               "connector.class": "io.confluent.connect.azure.datalake.gen1.AzureDataLakeGen1StorageSinkConnector",
-               "tasks.max": "1",
-               "topics": "datalake_topic",
-               "flush.size": "3",
-               "azure.datalake.client.id": "'"$AZURE_DATALAKE_CLIENT_ID"'",
-               "azure.datalake.client.key": "'"$AZURE_DATALAKE_CLIENT_PASSWORD"'",
-               "azure.datalake.account.name": "'"$AZURE_DATALAKE_ACCOUNT_NAME"'",
-               "azure.datalake.token.endpoint": "'"$AZURE_DATALAKE_TOKEN_ENDPOINT"'",
-               "format.class": "io.confluent.connect.azure.storage.format.avro.AvroFormat",
-               "confluent.license": "",
-               "confluent.topic.bootstrap.servers": "broker:9092",
-               "confluent.topic.replication.factor": "1"
+            "connector.class": "io.confluent.connect.azure.datalake.gen1.AzureDataLakeGen1StorageSinkConnector",
+            "tasks.max": "1",
+            "topics": "datalake_topic",
+            "flush.size": "3",
+            "azure.datalake.client.id": "${file:/data:AZURE_DATALAKE_CLIENT_ID}",
+            "azure.datalake.client.key": "${file:/data:AZURE_DATALAKE_CLIENT_PASSWORD}",
+            "azure.datalake.account.name": "${file:/data:AZURE_DATALAKE_ACCOUNT_NAME}",
+            "azure.datalake.token.endpoint": "${file:/data:AZURE_DATALAKE_TOKEN_ENDPOINT}",
+            "format.class": "io.confluent.connect.azure.storage.format.avro.AvroFormat",
+            "confluent.license": "",
+            "confluent.topic.bootstrap.servers": "broker:9092",
+            "confluent.topic.replication.factor": "1"
           }' \
      http://localhost:8083/connectors/azure-datalake-gen1-sink/config | jq .
 

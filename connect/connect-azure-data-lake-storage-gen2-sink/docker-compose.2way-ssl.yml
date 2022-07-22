@@ -1,9 +1,0 @@
----
-version: '3.5'
-services:
-  connect:
-    volumes:
-        - ../../environment/2way-ssl/security:/etc/kafka/secrets
-    environment:
-      CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-azure-data-lake-gen2-storage
-      # KAFKA_OPTS: -Djavax.net.debug=all
