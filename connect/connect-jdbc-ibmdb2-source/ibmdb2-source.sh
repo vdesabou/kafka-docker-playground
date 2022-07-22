@@ -57,6 +57,7 @@ log "✨ $command"
 # Keep it for utils.sh
 # ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
 
+# sample DB is used https://www.ibm.com/docs/en/db2/11.5?topic=samples-sample-database
 log "List tables"
 docker exec -i ibmdb2 bash << EOF
 su - db2inst1
