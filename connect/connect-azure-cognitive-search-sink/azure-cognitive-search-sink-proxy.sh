@@ -58,6 +58,11 @@ curl -X POST \
   ]
 }'
 
+# generate data file for externalizing secrets
+sed -e "s|:AZURE_SEARCH_SERVICE_NAME:|$AZURE_SEARCH_SERVICE_NAME|g" \
+    -e "s|:AZURE_SEARCH_ADMIN_PRIMARY_KEY:|$AZURE_SEARCH_ADMIN_PRIMARY_KEY|g" \
+    ../../connect/cconnect-azure-cognitive-search-sink/data.template > ../../connect/cconnect-azure-cognitive-search-sink/data
+
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.proxy.yml"
 
 log "Sending messages to topic hotels-sample"
@@ -79,8 +84,8 @@ curl -X PUT \
                 "key.converter.schema.registry.url": "http://schema-registry:8081",
                 "value.converter": "io.confluent.connect.avro.AvroConverter",
                 "value.converter.schema.registry.url": "http://schema-registry:8081",
-                "azure.search.service.name": "'"$AZURE_SEARCH_SERVICE_NAME"'",
-                "azure.search.api.key": "'"$AZURE_SEARCH_ADMIN_PRIMARY_KEY"'",
+                "azure.search.service.name": "${file:/data:AZURE_SEARCH_SERVICE_NAME}",
+                "azure.search.api.key": "${file:/data:AZURE_SEARCH_ADMIN_PRIMARY_KEY}",
                 "proxy.host": "nginx-proxy",
                 "proxy.port": "8888",
                 "index.name": "${topic}-index",
