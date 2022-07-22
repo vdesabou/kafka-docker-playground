@@ -2,6 +2,8 @@
 version: '3.5'
 services:
   connect:
+    volumes:
+      - ../../connect/connect-azure-cosmosdb-source/data:/data
     environment:
       CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/microsoftcorporation-kafka-connect-cosmos
 

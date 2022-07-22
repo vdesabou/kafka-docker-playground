@@ -73,6 +73,14 @@ log "Cosmos DB endpoint URI is $AZURE_COSMOSDB_DB_ENDPOINT_URI"
 
 # get Cosmos DB primary connection key
 AZURE_COSMOSDB_PRIMARY_CONNECTION_KEY=$(az cosmosdb keys list -n $AZURE_COSMOSDB_DB_NAME -g $AZURE_RESOURCE_GROUP --query primaryMasterKey -o tsv)
+TOPIC_MAP="hotels#${AZURE_COSMOSDB_DB_NAME}"
+
+# generate data file for externalizing secrets
+sed -e "s|:AZURE_COSMOSDB_DB_ENDPOINT_URI:|$AZURE_COSMOSDB_DB_ENDPOINT_URI|g" \
+    -e "s|:AZURE_COSMOSDB_PRIMARY_CONNECTION_KEY:|$AZURE_COSMOSDB_PRIMARY_CONNECTION_KEY|g" \
+    -e "s|:AZURE_COSMOSDB_DB_NAME:|$AZURE_COSMOSDB_DB_NAME|g" \
+    -e "s|:TOPIC_MAP:|$TOPIC_MAP|g" \
+    ../../connect/connect-azure-cosmosdb-sink/data.template > ../../connect/connect-azure-cosmosdb-sink/data
 
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
 
@@ -82,8 +90,6 @@ docker exec -i broker kafka-console-producer --broker-list broker:9092 --topic h
 {"id": "h2", "HotelName": "HolidayInn", "Description": "HolidayInn description"}
 {"id": "h3", "HotelName": "Motel8", "Description": "Motel8 description"}
 EOF
-
-TOPIC_MAP="hotels#${AZURE_COSMOSDB_DB_NAME}"
 
 # https://github.com/microsoft/kafka-connect-cosmosdb/blob/dev/doc/README_Sink.md
 log "Creating Azure Cosmos DB Sink connector"
@@ -97,10 +103,10 @@ curl -X PUT \
                 "value.converter": "org.apache.kafka.connect.json.JsonConverter",
                 "value.converter.schemas.enable": "false",
                 "key.converter.schemas.enable": "false",
-                "connect.cosmos.connection.endpoint": "'"$AZURE_COSMOSDB_DB_ENDPOINT_URI"'",
-                "connect.cosmos.master.key": "'"$AZURE_COSMOSDB_PRIMARY_CONNECTION_KEY"'",
-                "connect.cosmos.databasename": "'"$AZURE_COSMOSDB_DB_NAME"'",
-                "connect.cosmos.containers.topicmap": "'"$TOPIC_MAP"'"
+                "connect.cosmos.connection.endpoint": "${file:/data:AZURE_COSMOSDB_DB_ENDPOINT_URI}",
+                "connect.cosmos.master.key": "${file:/data:AZURE_COSMOSDB_PRIMARY_CONNECTION_KEY}",
+                "connect.cosmos.databasename": "${file:/data:AZURE_COSMOSDB_DB_NAME}",
+                "connect.cosmos.containers.topicmap": "${file:/data:TOPIC_MAP}"
           }' \
      http://localhost:8083/connectors/azure-cosmosdb-sink/config | jq .
 

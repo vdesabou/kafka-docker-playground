@@ -74,21 +74,21 @@ $ TOPIC_MAP="apparels#${AZURE_COSMOSDB_DB_NAME}"
 $ curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
-               "connector.class": "com.azure.cosmos.kafka.connect.source.CosmosDBSourceConnector",
+                "connector.class": "com.azure.cosmos.kafka.connect.source.CosmosDBSourceConnector",
                 "tasks.max": "1",
                 "key.converter": "org.apache.kafka.connect.json.JsonConverter",
                 "value.converter": "org.apache.kafka.connect.json.JsonConverter",
                 "value.converter.schemas.enable": "false",
                 "key.converter.schemas.enable": "false",
                 "connect.cosmos.task.poll.interval": "100",
-                "connect.cosmos.connection.endpoint": "'"$AZURE_COSMOSDB_DB_ENDPOINT_URI"'",
-                "connect.cosmos.master.key": "'"$AZURE_COSMOSDB_PRIMARY_CONNECTION_KEY"'",
-                "connect.cosmos.databasename": "'"$AZURE_COSMOSDB_DB_NAME"'",
-                "connect.cosmos.containers.topicmap": "'"$TOPIC_MAP"'",
+                "connect.cosmos.connection.endpoint": "${file:/data:AZURE_COSMOSDB_DB_ENDPOINT_URI}",
+                "connect.cosmos.master.key": "${file:/data:AZURE_COSMOSDB_PRIMARY_CONNECTION_KEY}",
+                "connect.cosmos.databasename": "${file:/data:AZURE_COSMOSDB_DB_NAME}",
+                "connect.cosmos.containers.topicmap": "${file:/data:TOPIC_MAP}"
                 "connect.cosmos.offset.useLatest": false,
-                "confluent.license": "",
-                "confluent.topic.bootstrap.servers": "broker:9092",
-                "confluent.topic.replication.factor": "1"
+                "errors.tolerance": "all",
+                "errors.log.enable": "true",
+                "errors.log.include.messages": "true"
           }' \
      http://localhost:8083/connectors/azure-cosmosdb-source/config | jq .
 ```
