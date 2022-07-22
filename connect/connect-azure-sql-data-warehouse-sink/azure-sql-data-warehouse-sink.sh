@@ -26,7 +26,7 @@ AZURE_FIREWALL_RULL_NAME=$AZURE_NAME
 AZURE_DATA_WAREHOUSE_NAME=$AZURE_NAME
 AZURE_REGION=westeurope
 AZURE_SQL_URL="jdbc:sqlserver://$AZURE_SQL_NAME.database.windows.net:1433"
-PASSWORD="KoCCPcx>XmRuxM6qt3us"
+PASSWORD=$(date +%s | sha256sum | base64 | head -c 32 ; echo)
 
 set +e
 az group delete --name $AZURE_RESOURCE_GROUP --yes
@@ -71,6 +71,12 @@ az sql dw create \
     --resource-group $AZURE_RESOURCE_GROUP \
     --server $AZURE_SQL_NAME
 
+# generate data file for externalizing secrets
+sed -e "s|:AZURE_SQL_URL:|$AZURE_SQL_URL|g" \
+    -e "s|:PASSWORD:|$PASSWORD|g" \
+    -e "s|:AZURE_DATA_WAREHOUSE_NAME:|$AZURE_DATA_WAREHOUSE_NAME|g" \
+    ../../connect/connect-azure-sql-data-warehouse-sink/data.template > ../../connect/connect-azure-sql-data-warehouse-sink/data
+
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
 
 log "Sending messages to topic products"
@@ -91,10 +97,10 @@ curl -X PUT \
                 "auto.create": "true",
                 "auto.evolve": "true",
                 "table.name.format": "kafka_${topic}",
-                "azure.sql.dw.url": "'"$AZURE_SQL_URL"'",
+                "azure.sql.dw.url": "${file:/data:AZURE_SQL_URL}",
                 "azure.sql.dw.user": "myadmin",
-                "azure.sql.dw.password": "'"$PASSWORD"'",
-                "azure.sql.dw.database.name": "'"$AZURE_DATA_WAREHOUSE_NAME"'",
+                "azure.sql.dw.password": "${file:/data:PASSWORD}",
+                "azure.sql.dw.database.name": "${file:/data:AZURE_DATA_WAREHOUSE_NAME}",
                 "confluent.license": "",
                 "confluent.topic.bootstrap.servers": "broker:9092",
                 "confluent.topic.replication.factor": "1",

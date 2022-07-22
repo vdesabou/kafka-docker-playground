@@ -34,7 +34,7 @@ AZURE_FIREWALL_RULL_NAME=$AZURE_NAME
 AZURE_DATA_WAREHOUSE_NAME=$AZURE_NAME
 AZURE_REGION=westeurope
 AZURE_SQL_URL="jdbc:sqlserver://$AZURE_SQL_NAME.database.windows.net:1433"
-PASSWORD="KoCCPcx>XmRuxM6qt3us"
+PASSWORD=$(date +%s | sha256sum | base64 | head -c 32 ; echo)
 
 # Creating Azure Resource Group $AZURE_RESOURCE_GROUP
 az group create \
@@ -69,18 +69,18 @@ $ curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
                "connector.class": "io.confluent.connect.azuresqldw.AzureSqlDwSinkConnector",
-                    "tasks.max": "1",
-                    "topics": "products",
-                    "auto.create": "true",
-                    "auto.evolve": "true",
-                    "table.name.format": "kafka_${topic}",
-                    "azure.sql.dw.url": "'"$AZURE_SQL_URL"'",
-                    "azure.sql.dw.user": "myadmin",
-                    "azure.sql.dw.password": "'"$PASSWORD"'",
-                    "azure.sql.dw.database.name": "'"$AZURE_DATA_WAREHOUSE_NAME"'",
-                    "confluent.license": "",
-                    "confluent.topic.bootstrap.servers": "broker:9092",
-                    "confluent.topic.replication.factor": "1"
+                "tasks.max": "1",
+                "topics": "products",
+                "auto.create": "true",
+                "auto.evolve": "true",
+                "table.name.format": "kafka_${topic}",
+                "azure.sql.dw.url": "${file:/data:AZURE_SQL_URL}",
+                "azure.sql.dw.user": "myadmin",
+                "azure.sql.dw.password": "${file:/data:PASSWORD}",
+                "azure.sql.dw.database.name": "${file:/data:AZURE_DATA_WAREHOUSE_NAME}",
+                "confluent.license": "",
+                "confluent.topic.bootstrap.servers": "broker:9092",
+                "confluent.topic.replication.factor": "1"
           }' \
      http://localhost:8083/connectors/azure-sql-dw-sink/config | jq .
 ```

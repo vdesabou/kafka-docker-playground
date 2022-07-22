@@ -69,7 +69,13 @@ AZURE_EVENT_CONNECTION_STRING=$(az eventhubs namespace authorization-rule keys l
     --resource-group $AZURE_RESOURCE_GROUP \
     --namespace-name $AZURE_EVENT_HUBS_NAMESPACE \
     --name "RootManageSharedAccessKey" | jq -r '.primaryConnectionString')
-    
+
+# generate data file for externalizing secrets
+sed -e "s|:AZURE_SAS_KEY:|$AZURE_SAS_KEY|g" \
+    -e "s|:AZURE_EVENT_HUBS_NAMESPACE:|$AZURE_EVENT_HUBS_NAMESPACE|g" \
+    -e "s|:AZURE_EVENT_HUBS_NAME:|$AZURE_EVENT_HUBS_NAME|g" \
+    ../../connect/connect-azure-event-hubs-source/data.template > ../../connect/connect-azure-event-hubs-source/data
+
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
 
 log "Creating Azure Event Hubs Source connector"
@@ -81,9 +87,9 @@ curl -X PUT \
                 "tasks.max": "1",
                 "max.events": "1",
                 "azure.eventhubs.sas.keyname": "RootManageSharedAccessKey",
-                "azure.eventhubs.sas.key": "'"$AZURE_SAS_KEY"'",
-                "azure.eventhubs.namespace": "'"$AZURE_EVENT_HUBS_NAMESPACE"'",
-                "azure.eventhubs.hub.name": "'"$AZURE_EVENT_HUBS_NAME"'",
+                "azure.eventhubs.sas.key": "${file:/data:AZURE_SAS_KEY}",
+                "azure.eventhubs.namespace": "${file:/data:AZURE_EVENT_HUBS_NAMESPACE}",
+                "azure.eventhubs.hub.name": "${file:/data:AZURE_EVENT_HUBS_NAME}",
                 "confluent.license": "",
                 "confluent.topic.bootstrap.servers": "broker:9092",
                 "confluent.topic.replication.factor": "1",
