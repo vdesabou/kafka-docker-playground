@@ -61,7 +61,7 @@ curl -X POST \
 # generate data file for externalizing secrets
 sed -e "s|:AZURE_SEARCH_SERVICE_NAME:|$AZURE_SEARCH_SERVICE_NAME|g" \
     -e "s|:AZURE_SEARCH_ADMIN_PRIMARY_KEY:|$AZURE_SEARCH_ADMIN_PRIMARY_KEY|g" \
-    ../../connect/cconnect-azure-cognitive-search-sink/data.template > ../../connect/cconnect-azure-cognitive-search-sink/data
+    ../../connect/connect-azure-cognitive-search-sink/data.template > ../../connect/connect-azure-cognitive-search-sink/data
 
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
 
