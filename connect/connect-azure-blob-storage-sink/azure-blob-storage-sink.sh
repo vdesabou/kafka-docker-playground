@@ -68,7 +68,7 @@ curl -X PUT \
                 "flush.size": "3",
                 "azblob.account.name": "${file:/data:AZURE_ACCOUNT_NAME}",
                 "azblob.account.key": "${file:/data:AZURE_ACCOUNT_KEY}",
-                "azblob.container.name": "${file:/data:AZURE_CONTAINER_NAME}"
+                "azblob.container.name": "${file:/data:AZURE_CONTAINER_NAME}",
                 "format.class": "io.confluent.connect.azure.blob.format.avro.AvroFormat",
                 "confluent.license": "",
                 "confluent.topic.bootstrap.servers": "broker:9092",

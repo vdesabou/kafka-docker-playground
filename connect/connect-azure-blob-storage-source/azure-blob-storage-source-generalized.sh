@@ -81,7 +81,7 @@ curl -X PUT \
                 "tasks.max": "1",
                 "azblob.account.name": "${file:/data:AZURE_ACCOUNT_NAME}",
                 "azblob.account.key": "${file:/data:AZURE_ACCOUNT_KEY}",
-                "azblob.container.name": "${file:/data:AZURE_CONTAINER_NAME}"
+                "azblob.container.name": "${file:/data:AZURE_CONTAINER_NAME}",
                 "format.class": "io.confluent.connect.cloud.storage.source.format.CloudStorageJsonFormat",
                 "value.converter": "org.apache.kafka.connect.json.JsonConverter",
                 "value.converter.schemas.enable": "false",
