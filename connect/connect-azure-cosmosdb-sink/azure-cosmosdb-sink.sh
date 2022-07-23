@@ -106,7 +106,7 @@ curl -X PUT \
                 "connect.cosmos.connection.endpoint": "${file:/data:AZURE_COSMOSDB_DB_ENDPOINT_URI}",
                 "connect.cosmos.master.key": "${file:/data:AZURE_COSMOSDB_PRIMARY_CONNECTION_KEY}",
                 "connect.cosmos.databasename": "${file:/data:AZURE_COSMOSDB_DB_NAME}",
-                "connect.cosmos.containers.topicmap": "${file:/data:TOPIC_MAP}"
+                "connect.cosmos.containers.topicmap": "${file:/data:TOPIC_MAP}",
           }' \
      http://localhost:8083/connectors/azure-cosmosdb-sink/config | jq .
 
