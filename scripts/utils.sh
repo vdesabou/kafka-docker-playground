@@ -845,7 +845,7 @@ function display_docker_container_error_log() {
 
 function retry() {
   local n=1
-  local max=3
+  local max=4
   while true; do
     "$@"
     ret=$?
