@@ -1374,14 +1374,19 @@ function get_3rdparty_file () {
     return
   fi
 
+  folder="3rdparty"
+  if [[ "$file" == *repro* ]]
+  then
+    folder="repro-files"
+  fi
   set +e
-  aws s3 ls s3://kafka-docker-playground/3rdparty/$file > /dev/null 2>&1
+  aws s3 ls s3://kafka-docker-playground/$folder/$file > /dev/null 2>&1
   if [ $? -eq 0 ]
   then
-      log "Downloading <s3://kafka-docker-playground/3rdparty/$file> from S3 bucket"
-      aws s3 cp --only-show-errors "s3://kafka-docker-playground/3rdparty/$file" .
+      log "Downloading <s3://kafka-docker-playground/$folder/$file> from S3 bucket"
+      aws s3 cp --only-show-errors "s3://kafka-docker-playground/$folder/$file" .
       if [ $? -eq 0 ]; then
-        log "📄 <s3://kafka-docker-playground/3rdparty/$file> was downloaded from S3 bucket"
+        log "📄 <s3://kafka-docker-playground/$folder/$file> was downloaded from S3 bucket"
       fi
       if [[ "$OSTYPE" == "darwin"* ]]
       then
