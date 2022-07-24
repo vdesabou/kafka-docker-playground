@@ -36,7 +36,6 @@ jobs:
           mv aws_credentials $HOME/.aws/credentials
           chmod -R a+rw $HOME/.aws
           mkdir -p $HOME/.confluent
-          mv config.cc.travis $HOME/.confluent/config
           echo "$DOCKER_PASSWORD" | docker login -u vdesabou --password-stdin
         env:
           SECRETS_ENCRYPTION_PASSWORD: ${{ secrets.SECRETS_ENCRYPTION_PASSWORD }}
@@ -134,7 +133,6 @@ jobs:
           mv aws_credentials_aws_account_with_assume_role $HOME/.aws/credentials_aws_account_with_assume_role
           chmod -R a+rw $HOME/.aws
           mkdir -p $HOME/.confluent
-          mv config.cc.travis $HOME/.confluent/config
           echo "$DOCKER_PASSWORD" | docker login -u vdesabou --password-stdin
         env:
           SECRETS_ENCRYPTION_PASSWORD: ${{ secrets.SECRETS_ENCRYPTION_PASSWORD }}
@@ -257,7 +255,6 @@ jobs:
           mv aws_credentials_aws_account_with_assume_role $HOME/.aws/credentials_aws_account_with_assume_role
           chmod -R a+rw $HOME/.aws
           mkdir -p $HOME/.confluent
-          mv config.cc.travis $HOME/.confluent/config
           echo "$DOCKER_PASSWORD" | docker login -u vdesabou --password-stdin
         env:
           SECRETS_ENCRYPTION_PASSWORD: ${{ secrets.SECRETS_ENCRYPTION_PASSWORD }}
@@ -362,7 +359,6 @@ jobs:
           mv aws_credentials $HOME/.aws/credentials
           chmod -R a+rw $HOME/.aws
           mkdir -p $HOME/.confluent
-          mv config.cc.travis $HOME/.confluent/config
           echo "$DOCKER_PASSWORD" | docker login -u vdesabou --password-stdin
         env:
           SECRETS_ENCRYPTION_PASSWORD: ${{ secrets.SECRETS_ENCRYPTION_PASSWORD }}
