@@ -14,10 +14,15 @@ PROJECT=${1:-vincent-de-saboulin-lab}
 INSTANCE=${2:-test-instance}
 
 KEYFILE="${DIR}/keyfile.json"
-if [ ! -f ${KEYFILE} ]
+if [ ! -f ${KEYFILE} ] && [ -z "$KEYFILE_CONTENT" ]
 then
-     logerror "ERROR: the file ${KEYFILE} file is not present!"
+     logerror "ERROR: either the file ${KEYFILE} is not present or environment variable KEYFILE_CONTENT is not set!"
      exit 1
+else 
+    if [ -f ${KEYFILE} ]
+    then
+        KEYFILE_CONTENT=`cat keyfile.json | jq -aRs .`
+    fi
 fi
 
 set +e
@@ -71,7 +76,7 @@ curl -X PUT \
                "tasks.max" : "1",
                "topics" : "stats",
                "auto.create" : "true",
-               "gcp.bigtable.credentials.path": "/tmp/keyfile.json",
+               "gcp.bigtable.credentials.path": "'"$KEYFILE_CONTENT"'",
                "gcp.bigtable.instance.id": "'"$INSTANCE"'",
                "gcp.bigtable.project.id": "'"$PROJECT"'",
                "auto.create.tables": "true",

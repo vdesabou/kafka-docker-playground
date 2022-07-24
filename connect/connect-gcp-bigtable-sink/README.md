@@ -36,7 +36,7 @@ Download it as JSON:
 
 ![Service Account setup](Screenshot4.png)
 
-Rename it to `keyfile.json`and place it in `./keyfile.json`
+Rename it to `keyfile.json`and place it in `./keyfile.json` or use environment variable `KEYFILE_CONTENT` with content generated with `KEYFILE_CONTENT=`cat keyfile.json | jq -aRs .`
 
 
 ## How to run
@@ -77,7 +77,7 @@ curl -X PUT \
                "tasks.max" : "1",
                "topics" : "stats",
                "auto.create" : "true",
-               "gcp.bigtable.credentials.path": "/tmp/keyfile.json",
+               "gcp.bigtable.credentials.path": "'"$KEYFILE_CONTENT"'",
                "gcp.bigtable.instance.id": "'"$INSTANCE"'",
                "gcp.bigtable.project.id": "'"$PROJECT"'",
                "auto.create.tables": "true",

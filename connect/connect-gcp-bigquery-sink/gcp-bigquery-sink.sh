@@ -7,10 +7,15 @@ source ${DIR}/../../scripts/utils.sh
 PROJECT=${1:-vincent-de-saboulin-lab}
 
 KEYFILE="${DIR}/keyfile.json"
-if [ ! -f ${KEYFILE} ]
+if [ ! -f ${KEYFILE} ] && [ -z "$KEYFILE_CONTENT" ]
 then
-     logerror "ERROR: the file ${KEYFILE} file is not present!"
+     logerror "ERROR: either the file ${KEYFILE} is not present or environment variable KEYFILE_CONTENT is not set!"
      exit 1
+else 
+    if [ -f ${KEYFILE} ]
+    then
+        KEYFILE_CONTENT=`cat keyfile.json | jq -aRs .`
+    fi
 fi
 
 DATASET=pg${USER}ds${GITHUB_RUN_NUMBER}${TAG}
@@ -50,7 +55,7 @@ then
                     "maxWriteSize": "10000",
                     "tableWriteWait": "1000",
                     "project" : "'"$PROJECT"'",
-                    "keyfile" : "/tmp/keyfile.json"
+                    "keyfile" : "'"$KEYFILE_CONTENT"'"
                }' \
           http://localhost:8083/connectors/gcp-bigquery-sink/config | jq .
 else
@@ -72,7 +77,7 @@ else
                     "maxWriteSize": "10000",
                     "tableWriteWait": "1000",
                     "project" : "'"$PROJECT"'",
-                    "keyfile" : "/tmp/keyfile.json"
+                    "keyfile" : "'"$KEYFILE_CONTENT"'",
                }' \
           http://localhost:8083/connectors/gcp-bigquery-sink/config | jq .
 fi

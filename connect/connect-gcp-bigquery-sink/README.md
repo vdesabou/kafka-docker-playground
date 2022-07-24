@@ -30,7 +30,7 @@ Download it as JSON:
 
 ![Service Account setup](Screenshot4.png)
 
-Rename it to `keyfile.json`and place it in `./keyfile.json`
+Rename it to `keyfile.json`and place it in `./keyfile.json` or use environment variable `KEYFILE_CONTENT` with content generated with `KEYFILE_CONTENT=`cat keyfile.json | jq -aRs .`
 
 
 ## How to run
@@ -74,7 +74,7 @@ curl -X PUT \
                "maxWriteSize": "10000",
                "tableWriteWait": "1000",
                "project" : "'"$PROJECT"'",
-               "keyfile" : "/tmp/keyfile.json"
+               "keyfile" : "'"$KEYFILE_CONTENT"'",
           }' \
      http://localhost:8083/connectors/gcp-bigquery-sink/config | jq .
 ```

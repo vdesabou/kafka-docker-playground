@@ -7,13 +7,16 @@ source ${DIR}/../../scripts/utils.sh
 PROJECT=${1:-vincent-de-saboulin-lab}
 
 KEYFILE="${DIR}/keyfile.json"
-if [ ! -f ${KEYFILE} ]
+if [ ! -f ${KEYFILE} ] && [ -z "$KEYFILE_CONTENT" ]
 then
-     logerror "ERROR: the file ${KEYFILE} file is not present!"
+     logerror "ERROR: either the file ${KEYFILE} is not present or environment variable KEYFILE_CONTENT is not set!"
      exit 1
+else 
+    if [ -f ${KEYFILE} ]
+    then
+        KEYFILE_CONTENT=`cat keyfile.json | jq -aRs .`
+    fi
 fi
-
-KEYFILE_CONTENT=`cat keyfile.json | jq -aRs .`
 
 bootstrap_ccloud_environment
 

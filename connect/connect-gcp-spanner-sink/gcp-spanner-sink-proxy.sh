@@ -9,10 +9,15 @@ INSTANCE=${2:-test-instance}
 DATABASE=${3:-example-db}
 
 KEYFILE="${DIR}/keyfile.json"
-if [ ! -f ${KEYFILE} ]
+if [ ! -f ${KEYFILE} ] && [ -z "$KEYFILE_CONTENT" ]
 then
-     logerror "ERROR: the file ${KEYFILE} file is not present!"
+     logerror "ERROR: either the file ${KEYFILE} is not present or environment variable KEYFILE_CONTENT is not set!"
      exit 1
+else 
+    if [ -f ${KEYFILE} ]
+    then
+        KEYFILE_CONTENT=`cat keyfile.json | jq -aRs .`
+    fi
 fi
 
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.proxy.yml"
