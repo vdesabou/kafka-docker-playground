@@ -13,7 +13,7 @@ then
      logerror "ERROR: $HOME/.aws/config is not set"
      exit 1
 fi
-# this is only used for AWS CLI
+
 if [ -z "$AWS_CREDENTIALS_FILE_NAME" ]
 then
     export AWS_CREDENTIALS_FILE_NAME="credentials_aws_account_with_assume_role"

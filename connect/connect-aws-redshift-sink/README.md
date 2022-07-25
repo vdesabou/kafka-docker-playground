@@ -6,6 +6,15 @@
 
 Quickly test [AWS Redshift](https://docs.confluent.io/current/connect/kafka-connect-aws-redshift/index.html#kconnect-long-aws-redshift-sink-connector) connector.
 
+## AWS Setup
+
+* Make sure you have an [AWS account](https://docs.aws.amazon.com/streams/latest/dev/before-you-begin.html#setting-up-sign-up-for-aws).
+* Set up [AWS Credentials](https://docs.confluent.io/current/connect/kafka-connect-kinesis/quickstart.html#aws-credentials)
+
+You can either export environment variables `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY` or set file `~/.aws/credentials`.   - $HOME/.aws/config:$CONNECT_CONTAINER_HOME_DIR/.aws/config
+```
+
+
 ## How to run
 
 Simply run:

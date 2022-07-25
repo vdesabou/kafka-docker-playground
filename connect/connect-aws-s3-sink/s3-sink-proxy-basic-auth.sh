@@ -4,19 +4,24 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
-if [ ! -f $HOME/.aws/config ]
+if [ ! -f $HOME/.aws/credentials ] && ( [ -z "$AWS_ACCESS_KEY_ID" ] || [ -z "$AWS_SECRET_ACCESS_KEY" ] )
 then
-     logerror "ERROR: $HOME/.aws/config is not set"
+     logerror "ERROR: either the file $HOME/.aws/credentials is not present or environment variables AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY are not set!"
      exit 1
-fi
-if [ -z "$AWS_CREDENTIALS_FILE_NAME" ]
-then
-    export AWS_CREDENTIALS_FILE_NAME="credentials"
-fi
-if [ ! -f $HOME/.aws/$AWS_CREDENTIALS_FILE_NAME ]
-then
-     logerror "ERROR: $HOME/.aws/$AWS_CREDENTIALS_FILE_NAME is not set"
-     exit 1
+else
+    if [ ! -z "$AWS_ACCESS_KEY_ID" ] && [ ! -z "$AWS_SECRET_ACCESS_KEY" ]
+    then
+        log "Using environment variables AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY"
+        export AWS_ACCESS_KEY_ID
+        export AWS_SECRET_ACCESS_KEY
+    else
+        if [ -f $HOME/.aws/credentials ]
+        then
+            logwarn "AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY are set based on $HOME/.aws/credentials"
+            export AWS_ACCESS_KEY_ID=$( grep "^aws_access_key_id" $HOME/.aws/credentials| awk -F'=' '{print $2;}' )
+            export AWS_SECRET_ACCESS_KEY=$( grep "^aws_secret_access_key" $HOME/.aws/credentials| awk -F'=' '{print $2;}' ) 
+        fi
+    fi
 fi
 
 if [[ "$TAG" == *ubi8 ]] || version_gt $TAG_BASE "5.9.0"
@@ -52,6 +57,8 @@ curl -X PUT \
                "s3.bucket.name": "'"$AWS_BUCKET_NAME"'",
                "s3.part.size": 52428801,
                "flush.size": "3",
+               "aws.access.key.id" : "'"$AWS_ACCESS_KEY_ID"'",
+               "aws.secret.access.key": "'"$AWS_SECRET_ACCESS_KEY"'",
                "s3.proxy.url": "https://nginx-proxy:8888",
                "s3.proxy.user": "myuser",
                "s3.proxy.password": "mypassword",

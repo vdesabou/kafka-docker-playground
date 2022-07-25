@@ -13,14 +13,7 @@ Quickly test [AWS CloudWatch Logs](https://docs.confluent.io/current/connect/kaf
 * Make sure you have an [AWS account](https://docs.aws.amazon.com/streams/latest/dev/before-you-begin.html#setting-up-sign-up-for-aws).
 * Set up [AWS Credentials](https://docs.confluent.io/current/connect/kafka-connect-kinesis/quickstart.html#aws-credentials)
 
-This project assumes `~/.aws/credentials` is set, see `docker-compose.yml`file for connect:
-
-```yaml
-    connect:
-    <snip>
-    volumes:
-        - $HOME/.aws/$AWS_CREDENTIALS_FILE_NAME:$CONNECT_CONTAINER_HOME_DIR/.aws/credentials
-```
+You can either export environment variables `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY` or set file `~/.aws/credentials`.
 
 ## How to run
 

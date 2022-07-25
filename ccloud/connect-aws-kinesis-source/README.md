@@ -34,14 +34,7 @@ In case you want to use your own existing cluster, you need to setup these envir
 * Make sure you have an [AWS account](https://docs.aws.amazon.com/streams/latest/dev/before-you-begin.html#setting-up-sign-up-for-aws).
 * Set up [AWS Credentials](https://docs.confluent.io/current/connect/kafka-connect-kinesis/index.html#aws-credentials)
 
-This project assumes `~/.aws/credentials` and `~/.aws/config` are set, see `docker-compose.yml`file for connect:
-
-```yaml
-    connect:
-    <snip>
-    volumes:
-        - $HOME/.aws/$AWS_CREDENTIALS_FILE_NAME:$CONNECT_CONTAINER_HOME_DIR/.aws/credentials
-        - $HOME/.aws/config:$CONNECT_CONTAINER_HOME_DIR/.aws/config
+You can either export environment variables `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY` or set file `~/.aws/credentials`.   - $HOME/.aws/config:$CONNECT_CONTAINER_HOME_DIR/.aws/config
 ```
 
 ## How to run
