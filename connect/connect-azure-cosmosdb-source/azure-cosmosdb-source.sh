@@ -80,7 +80,7 @@ sed -e "s|:AZURE_COSMOSDB_DB_ENDPOINT_URI:|$AZURE_COSMOSDB_DB_ENDPOINT_URI|g" \
     -e "s|:AZURE_COSMOSDB_PRIMARY_CONNECTION_KEY:|$AZURE_COSMOSDB_PRIMARY_CONNECTION_KEY|g" \
     -e "s|:AZURE_COSMOSDB_DB_NAME:|$AZURE_COSMOSDB_DB_NAME|g" \
     -e "s|:TOPIC_MAP:|$TOPIC_MAP|g" \
-    ../../connect/connect-azure-cosmosdb-source/data.template > ../../connect/connect-azure-cosmosdb-sink/data
+    ../../connect/connect-azure-cosmosdb-source/data.template > ../../connect/connect-azure-cosmosdb-source/data
 
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
 
