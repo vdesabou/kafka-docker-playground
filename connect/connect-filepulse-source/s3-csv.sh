@@ -48,9 +48,6 @@ fi
 
 AWS_BUCKET_NAME=kafka-docker-playground-filepulse-bucket-${USER}${TAG}
 AWS_BUCKET_NAME=${AWS_BUCKET_NAME//[-.]/}
-
-export AWS_ACCESS_KEY_ID=$( grep "^aws_access_key_id" $HOME/.aws/$AWS_CREDENTIALS_FILE_NAME | awk -F'=' '{print $2;}' )
-export AWS_SECRET_ACCESS_KEY=$( grep "^aws_secret_access_key" $HOME/.aws/$AWS_CREDENTIALS_FILE_NAME | awk -F'=' '{print $2;}' )
 AWS_REGION=$(aws configure get region | tr '\r' '\n')
 
 log "Creating bucket name <$AWS_BUCKET_NAME>, if required"
