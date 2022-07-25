@@ -9,39 +9,27 @@ if ! version_gt $TAG_BASE "5.3.99"; then
     exit 111
 fi
 
-if [ ! -f $HOME/.aws/config ]
+if [ ! -f $HOME/.aws/credentials ] && ( [ -z "$AWS_ACCESS_KEY_ID" ] || [ -z "$AWS_SECRET_ACCESS_KEY" ] )
 then
-     logerror "ERROR: $HOME/.aws/config is not set"
+     logerror "ERROR: either the file $HOME/.aws/credentials is not present or environment variables AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY are not set!"
      exit 1
-fi
-AWS_CREDENTIAL_FILE=$HOME/.aws/credentials
-if [ ! -f $AWS_CREDENTIAL_FILE ]
-then
-     logerror "ERROR: $AWS_CREDENTIAL_FILE is not set"
-     exit 1
+else
+    if [ ! -z "$AWS_ACCESS_KEY_ID" ] && [ ! -z "$AWS_SECRET_ACCESS_KEY" ]
+    then
+        log "Using environment variables AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY"
+        export AWS_ACCESS_KEY_ID
+        export AWS_SECRET_ACCESS_KEY
+    else
+        if [ -f $HOME/.aws/credentials ]
+        then
+            logwarn "AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY are set based on $HOME/.aws/credentials"
+            export AWS_ACCESS_KEY_ID=$( grep "^aws_access_key_id" $HOME/.aws/credentials| awk -F'=' '{print $2;}' )
+            export AWS_SECRET_ACCESS_KEY=$( grep "^aws_secret_access_key" $HOME/.aws/credentials| awk -F'=' '{print $2;}' ) 
+        fi
+    fi
 fi
 
-export AWS_ACCESS_KEY_ID=$( grep "^aws_access_key_id" $AWS_CREDENTIAL_FILE | awk -F'=' '{print $2;}' )
-export AWS_SECRET_ACCESS_KEY=$( grep "^aws_secret_access_key" $AWS_CREDENTIAL_FILE | awk -F'=' '{print $2;}' )
 export AWS_REGION=$(aws configure get region | tr '\r' '\n')
-
-if [ -z "$AWS_ACCESS_KEY_ID" ]
-then
-     logerror "AWS_ACCESS_KEY_ID is not set. Check your $AWS_CREDENTIAL_FILE file"
-     exit 1
-fi
-
-if [ -z "$AWS_SECRET_ACCESS_KEY" ]
-then
-     logerror "AWS_SECRET_ACCESS_KEY is not set. Check your $AWS_CREDENTIAL_FILE file"
-     exit 1
-fi
-
-if [ -z "$AWS_REGION" ]
-then
-     logerror "AWS_REGION is not set. Check your $HOME/.aws/config file"
-     exit 1
-fi
 
 AWS_BUCKET_TIERED_STORAGE=aws-playground-tiered-storage$TAG
 AWS_BUCKET_TIERED_STORAGE=${AWS_BUCKET_TIERED_STORAGE//[-.]/}

@@ -12,7 +12,8 @@ Quickly test [Tiered Storage](https://docs.confluent.io/current/kafka/tiered-sto
 * Make sure you have an [AWS account](https://docs.aws.amazon.com/streams/latest/dev/before-you-begin.html#setting-up-sign-up-for-aws).
 * Set up [AWS Credentials](https://docs.confluent.io/current/connect/kafka-connect-kinesis/quickstart.html#aws-credentials)
 
-This project assumes `~/.aws/credentials` is set
+You can either export environment variables `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY` or set file `~/.aws/credentials`.   - $HOME/.aws/config:$CONNECT_CONTAINER_HOME_DIR/.aws/config
+```
 
 ## How to run
 
