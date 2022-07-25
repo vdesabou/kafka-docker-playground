@@ -16,21 +16,6 @@ jobs:
           submodules: recursive
           token: ${{ secrets.CI_GITHUB_TOKEN }}
 
-      - name: Decrypt secrets.tar
-        run: |
-          ./.github/scripts/decrypt_secret.sh
-          tar xvf secrets.tar
-          rm secrets.tar
-          mkdir -p $HOME/.aws
-          mv aws_config $HOME/.aws/config
-          mv aws_credentials $HOME/.aws/credentials
-          chmod -R a+rw $HOME/.aws
-          mkdir -p $HOME/.confluent
-          echo "$DOCKER_PASSWORD" | docker login -u vdesabou --password-stdin
-        env:
-          SECRETS_ENCRYPTION_PASSWORD: ${{ secrets.SECRETS_ENCRYPTION_PASSWORD }}
-          DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD}}
-
       - name: Update README
         run: |
           ./scripts/update-readme.sh "5.4.8 5.5.10 6.0.8 6.1.6 6.2.6 7.0.5 7.1.3 7.2.0"

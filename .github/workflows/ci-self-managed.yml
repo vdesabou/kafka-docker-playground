@@ -29,7 +29,6 @@ jobs:
         tar xvf secrets.tar
         rm secrets.tar
         mkdir -p $HOME/.aws
-        mv aws_config $HOME/.aws/config
         mv aws_credentials $HOME/.aws/credentials
         chmod -R a+rw $HOME/.aws
         mkdir -p $HOME/.confluent
@@ -66,8 +65,6 @@ jobs:
           tar xvf secrets.tar
           rm secrets.tar
           mkdir -p $HOME/.aws
-          mv aws_config $HOME/.aws/config
-          mv aws_credentials $HOME/.aws/credentials
           mv aws_credentials_with_assuming_iam_role $HOME/.aws/credentials-with-assuming-iam-role
           chmod -R a+rw $HOME/.aws
           mkdir -p $HOME/.confluent
@@ -172,8 +169,6 @@ jobs:
         tar xvf secrets.tar
         rm secrets.tar
         mkdir -p $HOME/.aws
-        mv aws_config $HOME/.aws/config
-        mv aws_credentials $HOME/.aws/credentials
         mv aws_credentials_with_assuming_iam_role $HOME/.aws/credentials-with-assuming-iam-role
         chmod -R a+rw $HOME/.aws
         mkdir -p $HOME/.confluent
