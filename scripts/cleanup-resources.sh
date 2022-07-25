@@ -67,7 +67,9 @@ do
 done
 
 log "Cleanup GCP GCS buckets"
-KEYFILE="${DIR}/../connect/connect-gcp-gcs-sink/keyfile.json"
+KEYFILE="/tmp/keyfile.json"
+# create keyfile based on env variable
+echo "$KEYFILE_CONTENT" | sed 's/\\"/"/g' > $KEYFILE
 PROJECT="vincent-de-saboulin-lab"
 set +e
 docker rm -f gcloud-config-cleanup-resources
@@ -84,7 +86,6 @@ do
 done
 
 log "Cleanup GCP BQ datasets"
-KEYFILE="${DIR}/../connect/connect-gcp-bigquery-sink/keyfile.json"
 PROJECT="vincent-de-saboulin-lab"
 set +e
 docker rm -f gcloud-config-cleanup-resources
