@@ -23,7 +23,7 @@ docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --
 ## ksqldb
 * Connect to SQL Server
 ```
-docker exec -i ksqldb-cli ksql http://ksqldb-server:8088
+docker exec -it ksqldb-cli ksql http://ksqldb-server:8088
 ```
 
 ## Other tests / examples

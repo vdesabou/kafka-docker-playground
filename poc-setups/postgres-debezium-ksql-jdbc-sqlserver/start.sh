@@ -15,7 +15,7 @@ curl -X PUT \
                     "connection.url": "jdbc:jtds:sqlserver://sqlserver:1433",
                     "connection.user": "sa",
                     "connection.password": "Password!",
-                    "topics": "customers_flat",
+                    "topics": "CUSTOMERS_FLAT",
                     "auto.create": "true"
           }' \
      http://localhost:8083/connectors/sqlserver-sink/config | jq .
@@ -47,13 +47,15 @@ sleep 5
 
 log "Setting up ksqldb pipeline"
 docker exec -i ksqldb-cli ksql http://ksqldb-server:8088 <<-EOF
-CREATE STREAM CUSTOMERS_RAW
+SET 'auto.offset.reset' = 'earliest';
+
+CREATE OR REPLACE STREAM CUSTOMERS_RAW
 WITH (
     KAFKA_TOPIC = 'asgard.public.customers-raw',
     VALUE_FORMAT = 'AVRO'
 );
 
-CREATE STREAM CUSTOMERS_FLAT AS
+CREATE OR REPLACE STREAM CUSTOMERS_FLAT
 AS SELECT after->id as id,
           after->first_name as first_name,
           after->last_name as last_name,
