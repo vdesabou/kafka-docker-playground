@@ -26,6 +26,10 @@ docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --
 ```
 docker exec -it ksqldb-cli ksql http://ksqldb-server:8088
 ```
+* (Re-)deploy the ksql-pipeline
+```
+./setup_ksql-pipeline.sh
+```
 
 ## Other tests / examples
 * example to illustrate tombstones in debezium: `./test-debezium-tombstone.sh`
