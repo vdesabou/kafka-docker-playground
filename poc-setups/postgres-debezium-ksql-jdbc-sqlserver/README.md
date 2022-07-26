@@ -18,18 +18,13 @@ docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --
 # look at ksql-transformed messages
 docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic CUSTOMERS_FLAT --from-beginning --property print.key=true --property key.separator=" : " --timeout-ms 5000
 ```
-* use `./query-psql.sh` to look at the source table
-* use `./query-sqlserver.sh` to look at the target table
+* use `./query-psql.sh` to look at the source DB table
+* use `./query-sqlserver.sh` to look at the target DB table
 
 ## ksqldb
-* Connect to SQL Server
-```
-docker exec -it ksqldb-cli ksql http://ksqldb-server:8088
-```
-* (Re-)deploy the ksql-pipeline
-```
-./setup_ksql-pipeline.sh
-```
+* Connect to SQL Server: `docker exec -it ksqldb-cli ksql http://ksqldb-server:8088`
+* (Re-)deploy the ksql-pipeline: `./setup_ksql-pipeline.sh`
 
 ## Other tests / examples
 * example to illustrate tombstones in debezium: `./test-debezium-tombstone.sh`
+* example script to insert same datasets into the source database: `./insert_datasets.sh`
