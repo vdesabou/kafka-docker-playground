@@ -6,7 +6,7 @@ Data flow is: **postgresql -> CDC with debezium -> flatten entries in ksqldb -> 
 ## Setup
 Have docker running and enter `./start.sh`
 This will start up the docker images, set up the connectors pipeline and insert some example data into the source database.
-After a few seconds, the CDC messages will be processed and corresponding lines will be inserted into the sink database. You can cross-check the connect log via `docker logs connect` and/or look at the intermediate topics and streams.
+After a few seconds, the CDC messages will be processed and corresponding lines will be inserted into the sink database. Have a look at the connect log via `docker logs connect` and/or look at the intermediate topics and streams to see what is happening in the background.
 
 ## Checking the output / intermediate messages
 * You can cross-check ksqldb and topics in C3 on `localhost:9021`
