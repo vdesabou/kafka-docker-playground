@@ -18,6 +18,9 @@ else
     if [ -f ${KEYFILE} ]
     then
         KEYFILE_CONTENT=`cat keyfile.json | jq -aRs .`
+    else
+        log "Creating ${KEYFILE} based on environment variable KEYFILE_CONTENT"
+        echo -e "$KEYFILE_CONTENT" | sed 's/\\"/"/g' > ${KEYFILE}
     fi
 fi
 
