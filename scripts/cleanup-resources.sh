@@ -68,8 +68,8 @@ done
 
 log "Cleanup GCP GCS buckets"
 KEYFILE="/tmp/keyfile.json"
-# create keyfile based on env variable
-echo "$KEYFILE_CONTENT" > $KEYFILE
+log "Creating ${KEYFILE} based on environment variable KEYFILE_CONTENT"
+echo -e "$KEYFILE_CONTENT" | sed 's/\\"/"/g' > ${KEYFILE}
 PROJECT="vincent-de-saboulin-lab"
 set +e
 docker rm -f gcloud-config-cleanup-resources
