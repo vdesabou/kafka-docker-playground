@@ -47,19 +47,19 @@ sleep 5
 
 log "Setting up ksqldb pipeline"
 docker exec -i ksqldb-cli ksql http://ksqldb-server:8088 <<-EOF
-CREATE STREAM customers_raw
+CREATE STREAM CUSTOMERS_RAW
 WITH (
     KAFKA_TOPIC = 'asgard.public.customers-raw',
     VALUE_FORMAT = 'AVRO'
 );
 
-CREATE STREAM CUSTOMERS_FLAT
+CREATE STREAM CUSTOMERS_FLAT AS
 AS SELECT after->id as id,
           after->first_name as first_name,
-          after->last_name as last_name
---           after->email as email,
---           after->gender as gender,
---           after->club_status as club_status,
---           after->comments as comments
+          after->last_name as last_name,
+          after->email as email,
+          after->gender as gender,
+          after->club_status as club_status,
+          after->comments as comments
    FROM CUSTOMERS_RAW EMIT CHANGES;
 EOF
