@@ -108,6 +108,7 @@ jobs:
           rm -rf "/usr/local/share/boost"
           rm -rf "$AGENT_TOOLSDIRECTORY"
           df -h
+          sudo /etc/init.d/apparmor stop
 
       - name: Decrypt secrets.tar
         run: |
@@ -229,6 +230,7 @@ jobs:
           rm -rf "/usr/local/share/boost"
           rm -rf "$AGENT_TOOLSDIRECTORY"
           df -h
+          sudo /etc/init.d/apparmor stop
 
       - name: Decrypt secrets.tar
         run: |
