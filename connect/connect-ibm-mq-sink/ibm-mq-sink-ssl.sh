@@ -4,6 +4,7 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
+cd ../../connect/connect-ibm-mq-sink
 get_3rdparty_file "IBM-MQ-Install-Java-All.jar"
 
 if [ ! -f ${DIR}/IBM-MQ-Install-Java-All.jar ]
@@ -28,6 +29,7 @@ then
      cp ${DIR}/install/wmq/JavaSE/lib/jms.jar ${DIR}/
      cp ${DIR}/install/wmq/JavaSE/lib/com.ibm.mq.allclient.jar ${DIR}/
 fi
+cd -
 
 cd ${DIR}/security
 log "🔐 Generate keys and certificates used for SSL"
