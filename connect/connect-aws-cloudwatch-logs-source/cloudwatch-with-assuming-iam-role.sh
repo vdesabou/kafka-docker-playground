@@ -49,7 +49,7 @@ do
      aws logs put-log-events --log-group $LOG_GROUP --log-stream $LOG_STREAM --log-events timestamp=`date +%s000`,message="This is a log #${i}" --sequence-token ${token}
 done
 
-AWS_REGION=$(aws configure get region | tr '\r' '\n')
+
 CLOUDWATCH_LOGS_URL="https://logs.$AWS_REGION.amazonaws.com"
 
 log "Creating AWS CloudWatch Logs Source connector"

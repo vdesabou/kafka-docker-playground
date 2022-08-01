@@ -19,7 +19,7 @@ else
      export CONNECT_CONTAINER_HOME_DIR="/root"
 fi
 
-AWS_REGION=$(aws configure get region | tr '\r' '\n')
+
 DYNAMODB_ENDPOINT="https://dynamodb.$AWS_REGION.amazonaws.com"
 
 set +e

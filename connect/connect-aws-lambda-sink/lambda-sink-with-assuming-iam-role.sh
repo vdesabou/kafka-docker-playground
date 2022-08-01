@@ -48,7 +48,7 @@ cp add.zip /tmp/
 aws lambda create-function --function-name "$LAMBDA_FUNCTION_NAME" --zip-file fileb:///tmp/add.zip --handler add.lambda_handler --runtime python3.8 --role "$LAMBDA_ROLE"
 cd -
 
-AWS_REGION=$(aws configure get region | tr '\r' '\n')
+
 
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.with-assuming-iam-role.yml"
 

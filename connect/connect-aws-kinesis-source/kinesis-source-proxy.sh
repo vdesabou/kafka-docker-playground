@@ -22,6 +22,12 @@ else
             export AWS_SECRET_ACCESS_KEY=$( grep "^aws_secret_access_key" $HOME/.aws/credentials| awk -F'=' '{print $2;}' ) 
         fi
     fi
+    AWS_REGION=$(aws configure get region | tr '\r' '\n')
+    if [ -z "$AWS_REGION" ]
+    then
+        logerror "ERROR: either the file $HOME/.aws/config is not present or environment variables AWS_REGION is not set!"
+        exit 1
+    fi
 fi
 
 if [[ "$TAG" == *ubi8 ]] || version_gt $TAG_BASE "5.9.0"
@@ -53,7 +59,7 @@ log "Insert records in Kinesis stream"
 # The example shows that a record containing partition key 123 and data "test-message-1" is inserted into kafka_docker_playground.
 aws kinesis put-record --stream-name $KINESIS_STREAM_NAME --partition-key 123 --data test-message-1
 
-AWS_REGION=$(aws configure get region | tr '\r' '\n')
+
 
 log "Creating Kinesis Source connector"
 curl -X PUT \

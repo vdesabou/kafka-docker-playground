@@ -24,6 +24,12 @@ else
             export AWS_SECRET_ACCESS_KEY=$( grep "^aws_secret_access_key" $HOME/.aws/credentials| awk -F'=' '{print $2;}' ) 
         fi
     fi
+    AWS_REGION=$(aws configure get region | tr '\r' '\n')
+    if [ -z "$AWS_REGION" ]
+    then
+        logerror "ERROR: either the file $HOME/.aws/config is not present or environment variables AWS_REGION is not set!"
+        exit 1
+    fi
 fi
 
 bootstrap_ccloud_environment
@@ -39,7 +45,7 @@ fi
 AWS_BUCKET_NAME=kafka-docker-playground-bucket-${USER}${TAG}
 AWS_BUCKET_NAME=${AWS_BUCKET_NAME//[-.]/}
 
-AWS_REGION=$(aws configure get region | tr '\r' '\n')
+
 log "Creating bucket name <$AWS_BUCKET_NAME>, if required"
 set +e
 aws s3api create-bucket --bucket $AWS_BUCKET_NAME --region $AWS_REGION --create-bucket-configuration LocationConstraint=$AWS_REGION

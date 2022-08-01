@@ -22,6 +22,12 @@ else
             export AWS_SECRET_ACCESS_KEY=$( grep "^aws_secret_access_key" $HOME/.aws/credentials| awk -F'=' '{print $2;}' ) 
         fi
     fi
+    AWS_REGION=$(aws configure get region | tr '\r' '\n')
+    if [ -z "$AWS_REGION" ]
+    then
+        logerror "ERROR: either the file $HOME/.aws/config is not present or environment variables AWS_REGION is not set!"
+        exit 1
+    fi
 fi
 
 if [[ "$TAG" == *ubi8 ]] || version_gt $TAG_BASE "5.9.0"
@@ -35,7 +41,7 @@ ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml
 
 QUEUE_NAME=pg${USER}sqs${TAG}
 QUEUE_NAME=${QUEUE_NAME//[-._]/}
-AWS_REGION=$(aws configure get region | tr '\r' '\n')
+
 QUEUE_URL_RAW=$(aws sqs create-queue --queue-name $QUEUE_NAME | jq .QueueUrl)
 AWS_ACCOUNT_NUMBER=$(echo "$QUEUE_URL_RAW" | cut -d "/" -f 4)
 # https://docs.amazonaws.cn/sdk-for-net/v3/developer-guide/how-to/sqs/QueueURL.html

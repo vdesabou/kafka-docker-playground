@@ -22,6 +22,12 @@ else
             export AWS_SECRET_ACCESS_KEY=$( grep "^aws_secret_access_key" $HOME/.aws/credentials| awk -F'=' '{print $2;}' ) 
         fi
     fi
+    AWS_REGION=$(aws configure get region | tr '\r' '\n')
+    if [ -z "$AWS_REGION" ]
+    then
+        logerror "ERROR: either the file $HOME/.aws/config is not present or environment variables AWS_REGION is not set!"
+        exit 1
+    fi
 fi
 
 if [[ "$TAG" == *ubi8 ]] || version_gt $TAG_BASE "5.9.0"
@@ -61,7 +67,7 @@ do
      aws logs put-log-events --log-group $LOG_GROUP --log-stream $LOG_STREAM --log-events timestamp=`date +%s000`,message="This is a log #${i}" --sequence-token ${token}
 done
 
-AWS_REGION=$(aws configure get region | tr '\r' '\n')
+
 CLOUDWATCH_LOGS_URL="https://logs.$AWS_REGION.amazonaws.com"
 
 log "Creating AWS CloudWatch Logs Source connector"

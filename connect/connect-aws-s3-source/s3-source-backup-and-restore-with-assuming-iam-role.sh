@@ -33,7 +33,7 @@ ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.bac
 AWS_BUCKET_NAME=kafka-docker-playground-bucket-${USER}${TAG}
 AWS_BUCKET_NAME=${AWS_BUCKET_NAME//[-.]/}
 
-AWS_REGION=$(aws configure get region | tr '\r' '\n')
+
 
 log "Creating bucket name <$AWS_BUCKET_NAME>, if required"
 set +e
