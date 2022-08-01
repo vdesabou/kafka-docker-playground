@@ -131,37 +131,38 @@ else
     fi
 fi
 
-for bucket in $(aws s3api list-buckets | jq .Buckets[].Name -r)
+log "Cleanup AWS buckets"
+for bucket in $(aws s3api list-buckets --region $AWS_REGION | jq .Buckets[].Name -r)
 do
     if [[ $bucket = *kafkadockerplaygroundbucketrunner* ]] || [[ $bucket = *kafkadockerplaygroundfilepulsebucket* ]]
     then
       set +e
       log "Removing bucket $bucket"
-      aws s3 rb s3://$bucket --force 
+      aws s3 rb s3://$bucket --force --region $AWS_REGION
       set -e
     fi
 done
 
 log "Cleanup AWS Kinesis streams"
-for stream in $(aws kinesis list-streams | jq '.StreamNames[]' -r)
+for stream in $(aws kinesis list-streams --region $AWS_REGION | jq '.StreamNames[]' -r)
 do
     if [[ $stream = *kafka_docker_playground* ]]
     then
       log "Removing stream $stream"
-      aws kinesis delete-stream --stream-name $stream
+      aws kinesis delete-stream --stream-name $stream --region $AWS_REGION
     fi
 done
 
 log "Cleanup AWS Redshift clusters"
-for cluster in $(aws redshift describe-clusters | jq '.Clusters[].ClusterIdentifier' -r)
+for cluster in $(aws redshift describe-clusters --region $AWS_REGION | jq '.Clusters[].ClusterIdentifier' -r)
 do
     if [[ $cluster = pg*redshift* ]]
     then
       set +e
       log "Delete AWS Redshift $cluster"
-      aws redshift delete-cluster --cluster-identifier $cluster --skip-final-cluster-snapshot
+      aws redshift delete-cluster --cluster-identifier $cluster --skip-final-cluster-snapshot --region $AWS_REGION
       log "Delete security group sg$cluster"
-      aws ec2 delete-security-group --group-name sg$cluster
+      aws ec2 delete-security-group --group-name sg$cluster --region $AWS_REGION
       set -e
     fi
 done
