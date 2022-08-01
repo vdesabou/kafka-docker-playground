@@ -811,7 +811,7 @@ function aws() {
           tmp_dir=$(mktemp -d -t pg-XXXXXXXXXX)
 cat << EOF > $tmp_dir/config
 [default]
-region = $AWS_CONFIG
+region = $AWS_REGION
 EOF
     fi
 
