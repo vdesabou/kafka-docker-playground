@@ -123,6 +123,7 @@ else
 fi
 
 AWS_REGION=$(aws configure get region | tr '\r' '\n')
+log "AWS_REGION is $AWS_REGION"
 
 for bucket in $(aws s3api list-buckets | jq .Buckets[].Name -r)
 do
