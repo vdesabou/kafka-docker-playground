@@ -64,7 +64,7 @@ cat << EOF > connector.json
      "kafka.api.secret": "$CLOUD_SECRET",
      "topics": "s3_topic",
      "aws.access.key.id" : "$AWS_ACCESS_KEY_ID",
-     "aws.secret.access.key": "$AWS_SECRET_ACCESS_KEY",
+     "aws.secret.key.id": "$AWS_SECRET_ACCESS_KEY",
      "input.data.format": "AVRO",
      "output.data.format": "AVRO",
      "s3.bucket.name": "$AWS_BUCKET_NAME",

@@ -87,7 +87,7 @@ curl -X PUT \
      --data '{
           "connector.class":"io.streamthoughts.kafka.connect.filepulse.source.FilePulseSourceConnector",
           "aws.access.key.id": "${file:/data:aws.access.key.id}",
-          "aws.secret.access.key": "${file:/data:aws.secret.access.key}",
+          "aws.secret.key.id": "${file:/data:aws.secret.key.id}",
           "aws.s3.bucket.name": "'"$AWS_BUCKET_NAME"'",
           "aws.s3.region": "'"$AWS_REGION"'",
           "fs.listing.class": "io.streamthoughts.kafka.connect.filepulse.fs.AmazonS3FileSystemListing",

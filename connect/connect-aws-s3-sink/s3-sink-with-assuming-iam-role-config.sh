@@ -88,7 +88,7 @@ curl -X PUT \
                "s3.credentials.provider.sts.role.session.name": "session-name",
                "s3.credentials.provider.sts.role.external.id": "123",
                "aws.access.key.id": "'"$AWS_ACCOUNT_WITH_ASSUME_ROLE_AWS_ACCESS_KEY_ID"'",
-               "aws.secret.access.key": "'"$AWS_ACCOUNT_WITH_ASSUME_ROLE_AWS_SECRET_ACCESS_KEY"'",
+               "aws.secret.key.id": "'"$AWS_ACCOUNT_WITH_ASSUME_ROLE_AWS_SECRET_ACCESS_KEY"'",
                "schema.compatibility": "NONE"
           }' \
      http://localhost:8083/connectors/s3-sink/config | jq .

@@ -71,7 +71,7 @@ cat << EOF > connector.json
      "topics.dir": "quickstart",
      "topic.regex.list": "quick-start-topic:.*",
      "aws.access.key.id" : "$AWS_ACCESS_KEY_ID",
-     "aws.secret.access.key": "$AWS_SECRET_ACCESS_KEY",
+     "aws.secret.key.id": "$AWS_SECRET_ACCESS_KEY",
      "input.data.format": "JSON",
      "output.data.format": "JSON",
      "s3.bucket.name": "$AWS_BUCKET_NAME",

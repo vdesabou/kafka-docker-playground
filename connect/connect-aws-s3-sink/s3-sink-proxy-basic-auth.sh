@@ -67,7 +67,7 @@ curl -X PUT \
                "s3.part.size": 52428801,
                "flush.size": "3",
                "aws.access.key.id" : "'"$AWS_ACCESS_KEY_ID"'",
-               "aws.secret.access.key": "'"$AWS_SECRET_ACCESS_KEY"'",
+               "aws.secret.key.id": "'"$AWS_SECRET_ACCESS_KEY"'",
                "s3.proxy.url": "https://nginx-proxy:8888",
                "s3.proxy.user": "myuser",
                "s3.proxy.password": "mypassword",
