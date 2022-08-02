@@ -58,7 +58,7 @@ curl -X PUT \
                "tasks.max" : "1",
                "topics" : "stats",
                "auto.create" : "true",
-               "gcp.bigtable.credentials.path": "'"$KEYFILE_CONTENT"'",
+               "gcp.bigtable.credentials.path": "/tmp/keyfile.json",
                "gcp.bigtable.instance.id": "'"$INSTANCE"'",
                "gcp.bigtable.project.id": "'"$PROJECT"'",
                "proxy.url": "https://nginx-proxy:8888",
