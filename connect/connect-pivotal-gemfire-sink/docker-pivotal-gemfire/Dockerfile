@@ -25,8 +25,8 @@ USER root
 
 #Setup environment variables :
 ENV JAVA_HOME /opt/pivotal/current_java
-ENV PATH $PATH:/opt/pivotal/current_java:/opt/pivotal/current_java/bin:/opt/pivotal/pivotal-gemfire-9.15.1/bin
-ENV GEMFIRE /opt/pivotal/pivotal-gemfire-9.15.1
+ENV PATH $PATH:/opt/pivotal/current_java:/opt/pivotal/current_java/bin:/opt/pivotal/vmware-gemfire-9.15.1/bin
+ENV GEMFIRE /opt/pivotal/vmware-gemfire-9.15.1
 ENV GF_JAVA /opt/pivotal/current_java/bin/java
 
 #classpath setting
