@@ -4,9 +4,9 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
-if ! version_gt $TAG_BASE "5.9.99" && version_gt $CONNECTOR_TAG "1.9.9"
+if ! version_gt $TAG_BASE "5.9.99"
 then
-    logwarn "WARN: connector version >= 2.0.0 do not support CP versions < 6.0.0"
+    logwarn "WARN: This connector does not support CP versions < 6.0.0"
     logwarn "see https://github.com/vdesabou/kafka-docker-playground/issues/2753#issuecomment-1194115633"
     exit 111
 fi
