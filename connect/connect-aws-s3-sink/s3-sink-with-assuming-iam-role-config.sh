@@ -46,6 +46,15 @@ then
      exit 1
 fi
 
+if [ -z "$AWS_REGION" ]
+then
+     AWS_REGION=$(aws configure get region | tr '\r' '\n')
+     if [ "$AWS_REGION" == "" ]
+     then
+          logerror "ERROR: either the file $HOME/.aws/config is not present or environment variables AWS_REGION is not set!"
+          exit 1
+     fi
+fi
 
 if [[ "$TAG" == *ubi8 ]] || version_gt $TAG_BASE "5.9.0"
 then
