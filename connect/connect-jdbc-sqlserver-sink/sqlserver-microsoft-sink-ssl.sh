@@ -63,18 +63,18 @@ cd -
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.microsoft-ssl.yml"
 
 
-
+# https://docs.microsoft.com/en-us/sql/connect/jdbc/connecting-with-ssl-encryption?view=sql-server-ver16
 log "Creating JDBC SQL Server (with Microsoft driver) sink connector"
 curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
-               "connector.class": "io.confluent.connect.jdbc.JdbcSinkConnector",
-                    "tasks.max": "1",
-                    "connection.url": "jdbc:sqlserver://sqlserver:1433;encrypt=true;trustServerCertificate=false;",
-                    "connection.user": "sa",
-                    "connection.password": "Password!",
-                    "topics": "orders",
-                    "auto.create": "true"
+                "connector.class": "io.confluent.connect.jdbc.JdbcSinkConnector",
+                "tasks.max": "1",
+                "connection.url": "jdbc:sqlserver://sqlserver:1433;encrypt=true;trustServerCertificate=false;trustStore=/tmp/truststore.jks;trustStorePassword=confluent;",
+                "connection.user": "sa",
+                "connection.password": "Password!",
+                "topics": "orders",
+                "auto.create": "true"
           }' \
      http://localhost:8083/connectors/sqlserver-sink-ssl/config | jq .
 
