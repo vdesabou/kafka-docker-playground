@@ -13,3 +13,4 @@ kinesis-proxy-with-assuming-iam-role.sh
 start-ldaps.sh
 update_run.sh
 get_logminer_memory_stats.sh 
+s3-sink-with-assuming-iam-role-config.sh
