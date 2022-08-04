@@ -83,7 +83,7 @@ curl -X PUT \
                "kafka.topic": "test-sqs-source-sasl-ssl",
                "sqs.url": "'"$QUEUE_URL"'",
                "aws.access.key.id" : "'"$AWS_ACCESS_KEY_ID"'",
-               "aws.secret.key.id": "'"$AWS_SECRET_ACCESS_KEY"'",
+               "aws.secret.access.key": "'"$AWS_SECRET_ACCESS_KEY"'",
                "confluent.license": "",
                "confluent.topic.bootstrap.servers": "broker:9092",
                "confluent.topic.replication.factor": "1",

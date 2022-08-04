@@ -95,7 +95,7 @@ curl -X PUT \
                "kinesis.stream": "'"$KINESIS_STREAM_NAME"'",
                "kinesis.region": "'"$AWS_REGION"'",
                "aws.access.key.id" : "'"$AWS_ACCESS_KEY_ID"'",
-               "aws.secret.key.id": "'"$AWS_SECRET_ACCESS_KEY"'",
+               "aws.secret.access.key": "'"$AWS_SECRET_ACCESS_KEY"'",
                "confluent.license": "",
                "topic.creation.default.replication.factor": "-1",
                "topic.creation.default.partitions": "-1",

@@ -77,7 +77,7 @@ curl -X PUT \
                "kafka.topic": "test-sqs-source",
                "sqs.url": "'"$QUEUE_URL"'",
                "aws.access.key.id" : "'"$AWS_ACCESS_KEY_ID"'",
-               "aws.secret.key.id": "'"$AWS_SECRET_ACCESS_KEY"'",
+               "aws.secret.access.key": "'"$AWS_SECRET_ACCESS_KEY"'",
                "confluent.license": "",
                "sqs.proxy.url": "https://nginx-proxy:8888",
                "confluent.topic.bootstrap.servers": "broker:9092",

@@ -81,7 +81,7 @@ curl -X PUT \
                "s3.region": "'"$AWS_REGION"'",
                "s3.bucket.name": "'"$AWS_BUCKET_NAME"'",
                "aws.access.key.id" : "'"$AWS_ACCESS_KEY_ID"'",
-               "aws.secret.key.id": "'"$AWS_SECRET_ACCESS_KEY"'",
+               "aws.secret.access.key": "'"$AWS_SECRET_ACCESS_KEY"'",
                "format.class": "io.confluent.connect.s3.format.json.JsonFormat",
                "value.converter": "org.apache.kafka.connect.json.JsonConverter",
                "value.converter.schemas.enable": "false",

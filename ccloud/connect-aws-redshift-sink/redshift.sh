@@ -119,7 +119,7 @@ curl -X PUT \
                "aws.redshift.user": "masteruser",
                "aws.redshift.password": "myPassword1",
                "aws.access.key.id" : "'"$AWS_ACCESS_KEY_ID"'",
-               "aws.secret.key.id": "'"$AWS_SECRET_ACCESS_KEY"'",
+               "aws.secret.access.key": "'"$AWS_SECRET_ACCESS_KEY"'",
                "auto.create": "true",
                "pk.mode": "kafka"
           }' \
