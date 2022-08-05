@@ -29,7 +29,6 @@ services:
     volumes:
         - ../../connect/connect-jms-sag-um-sink/nClient.jar:/usr/share/confluent-hub-components/confluentinc-kafka-connect-jms-sink/lib/nClient.jar
         - ../../connect/connect-jms-sag-um-sink/nJMS.jar:/usr/share/confluent-hub-components/confluentinc-kafka-connect-jms-sink/lib/nJMS.jar
-        - ../../connect/connect-jms-sag-um-sink/nAdminAPI.jar:/usr/share/confluent-hub-components/confluentinc-kafka-connect-jms-sink/lib/nAdminAPI.jar
     environment:
       CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-jms-sink
       CONNECT_LOG4J_LOGGERS: org.reflections=ERROR,io.confluent.connect.jms=DEBUG,com.pcbsys.nirvana.nJMS=DEBUG
