@@ -4,6 +4,9 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
+# required to make utils.sh script being able to work, do not remove:
+# ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
+
 function wait_for_um () {
      MAX_WAIT=240
      CUR_WAIT=0
@@ -59,23 +62,23 @@ curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
                "connector.class": "io.confluent.connect.jms.JmsSinkConnector",
-                    "tasks.max": "1",
-                    "topics": "sink-messages",
-                    "java.naming.provider.url": "nsp://umserver:9000",
-                    "java.naming.factory.initial": "com.pcbsys.nirvana.nSpace.NirvanaContextFactory",
-                    "connection.factory.name": "QueueConnectionFactory",
-                    "java.naming.security.principal": "admin",
-                    "java.naming.security.credentials": "admin",
-                    "jms.destination.type": "queue",
-                    "jms.destination.name": "test-queue",
-                    "key.converter": "org.apache.kafka.connect.storage.StringConverter",
-                    "value.converter": "org.apache.kafka.connect.storage.StringConverter",
-                    "confluent.topic.bootstrap.servers": "broker:9092",
-                    "confluent.topic.replication.factor": "1"
+               "tasks.max": "1",
+               "topics": "sink-messages",
+               "java.naming.provider.url": "nsp://umserver:9000",
+               "java.naming.factory.initial": "com.pcbsys.nirvana.nSpace.NirvanaContextFactory",
+               "connection.factory.name": "QueueConnectionFactory",
+               "java.naming.security.principal": "admin",
+               "java.naming.security.credentials": "admin",
+               "jms.destination.type": "queue",
+               "jms.destination.name": "test-queue",
+               "key.converter": "org.apache.kafka.connect.storage.StringConverter",
+               "value.converter": "org.apache.kafka.connect.storage.StringConverter",
+               "confluent.topic.bootstrap.servers": "broker:9092",
+               "confluent.topic.replication.factor": "1"
           }' \
      http://localhost:8083/connectors/jms-sag-um-sink/config | jq .
 
 sleep 10
 
 log "Confirm the messages were delivered to the test-queue queue "
-docker exec -it umserver timeout 30 runUMTool.sh JMSSubscribe -rname=nsp://localhost:9000 -connectionfactory=QueueConnectionFactory -destination=test-queue  
+docker exec -i umserver timeout 30 runUMTool.sh JMSSubscribe -rname=nsp://localhost:9000 -connectionfactory=QueueConnectionFactory -destination=test-queue
