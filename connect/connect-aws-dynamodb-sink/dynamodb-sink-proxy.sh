@@ -59,7 +59,7 @@ curl -X PUT \
                "aws.dynamodb.endpoint": "'"$DYNAMODB_ENDPOINT"'",
                "aws.dynamodb.proxy.url": "https://nginx-proxy:8888",
                "aws.access.key.id" : "'"$AWS_ACCESS_KEY_ID"'",
-               "aws.secret.access.key": "'"$AWS_SECRET_ACCESS_KEY"'",
+               "aws.secret.key.id": "'"$AWS_SECRET_ACCESS_KEY"'",
                "confluent.license": "",
                "confluent.topic.bootstrap.servers": "broker:9092",
                "confluent.topic.replication.factor": "1"
