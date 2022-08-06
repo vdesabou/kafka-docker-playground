@@ -113,6 +113,8 @@ $ curl -X PUT \
                "aws.lambda.invocation.type" : "sync",
                "aws.lambda.batch.size" : "50",
                "aws.lambda.region": "'"$AWS_REGION"'",
+               "aws.access.key.id" : "'"$AWS_ACCESS_KEY_ID"'",
+               "aws.secret.access.key": "'"$AWS_SECRET_ACCESS_KEY"'",
                "behavior.on.error" : "fail",
                "reporter.bootstrap.servers": "broker:9092",
                "reporter.error.topic.name": "error-responses",
