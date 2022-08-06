@@ -23,13 +23,13 @@ then
 else
     if [ ! -z "$AWS_ACCESS_KEY_ID" ] && [ ! -z "$AWS_SECRET_ACCESS_KEY" ]
     then
-        log "Using environment variables AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY"
+        log "💭 Using environment variables AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY"
         export AWS_ACCESS_KEY_ID
         export AWS_SECRET_ACCESS_KEY
     else
         if [ -f $HOME/.aws/credentials ]
         then
-            logwarn "AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY are set based on $HOME/.aws/credentials"
+            logwarn "💭 AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY are set based on $HOME/.aws/credentials"
             export AWS_ACCESS_KEY_ID=$( grep "^aws_access_key_id" $HOME/.aws/credentials| awk -F'=' '{print $2;}' )
             export AWS_SECRET_ACCESS_KEY=$( grep "^aws_secret_access_key" $HOME/.aws/credentials| awk -F'=' '{print $2;}' ) 
         fi
@@ -54,18 +54,18 @@ fi
 
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.generalized.yml"
 
-AWS_BUCKET_NAME=kafka-docker-playground-bucket-${USER}${TAG}
+AWS_BUCKET_NAME=pg-bucket-${USER}
 AWS_BUCKET_NAME=${AWS_BUCKET_NAME//[-.]/}
 
 
 
-log "Creating bucket name <$AWS_BUCKET_NAME>, if required"
+log "Empty bucket <$AWS_BUCKET_NAME/$TAG>, if required"
 set +e
 aws s3api create-bucket --bucket $AWS_BUCKET_NAME --region $AWS_REGION --create-bucket-configuration LocationConstraint=$AWS_REGION
 set -e
 log "Empty bucket <$AWS_BUCKET_NAME>, if required"
 set +e
-aws s3 rm s3://$AWS_BUCKET_NAME --recursive --region $AWS_REGION
+aws s3 rm s3://$AWS_BUCKET_NAME/$TAG --recursive --region $AWS_REGION
 set -e
 
 

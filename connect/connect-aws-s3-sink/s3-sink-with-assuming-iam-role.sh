@@ -30,17 +30,17 @@ fi
 
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.with-assuming-iam-role.yml"
 
-AWS_BUCKET_NAME=kafka-docker-playground-bucket-${USER}${TAG}
+AWS_BUCKET_NAME=pg-bucket-${USER}
 AWS_BUCKET_NAME=${AWS_BUCKET_NAME//[-.]/}
 
 
-log "Creating bucket name <$AWS_BUCKET_NAME>, if required"
+log "Empty bucket <$AWS_BUCKET_NAME/$TAG>, if required"
 set +e
 aws s3api create-bucket --bucket $AWS_BUCKET_NAME --region $AWS_REGION --create-bucket-configuration LocationConstraint=$AWS_REGION
 set -e
 log "Empty bucket <$AWS_BUCKET_NAME>, if required"
 set +e
-aws s3 rm s3://$AWS_BUCKET_NAME --recursive --region $AWS_REGION
+aws s3 rm s3://$AWS_BUCKET_NAME/$TAG --recursive --region $AWS_REGION
 set -e
 
 log "Creating S3 Sink connector with bucket name <$AWS_BUCKET_NAME>"
@@ -53,6 +53,7 @@ curl -X PUT \
                "s3.region": "'"$AWS_REGION"'",
                "s3.bucket.name": "'"$AWS_BUCKET_NAME"'",
                "s3.part.size": 52428801,
+               "topics.dir": "'"$TAG"'",
                "flush.size": "3",
                "storage.class": "io.confluent.connect.s3.storage.S3Storage",
                "format.class": "io.confluent.connect.s3.format.avro.AvroFormat",
@@ -70,7 +71,7 @@ log "Listing objects of in S3"
 aws s3api list-objects --bucket "$AWS_BUCKET_NAME"
 
 log "Getting one of the avro files locally and displaying content with avro-tools"
-aws s3 cp --only-show-errors s3://$AWS_BUCKET_NAME/topics/s3_topic/partition=0/s3_topic+0+0000000000.avro s3_topic+0+0000000000.avro
+aws s3 cp --only-show-errors s3://$AWS_BUCKET_NAME/$TAG/s3_topic/partition=0/s3_topic+0+0000000000.avro s3_topic+0+0000000000.avro
 
 docker run --rm -v ${DIR}:/tmp actions/avro-tools tojson /tmp/s3_topic+0+0000000000.avro
 rm -f s3_topic+0+0000000000.avro
