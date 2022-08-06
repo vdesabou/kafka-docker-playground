@@ -68,6 +68,8 @@ $ curl -X PUT \
                "aws.cloudwatch.logs.url": "'"$CLOUDWATCH_LOGS_URL"'",
                "aws.cloudwatch.log.group": "'"$LOG_GROUP"'",
                "aws.cloudwatch.log.streams": "'"$LOG_STREAM"'",
+               "aws.access.key.id" : "'"$AWS_ACCESS_KEY_ID"'",
+               "aws.secret.access.key": "'"$AWS_SECRET_ACCESS_KEY"'",
                "confluent.license": "",
                "confluent.topic.bootstrap.servers": "broker:9092",
                "confluent.topic.replication.factor": "1"
