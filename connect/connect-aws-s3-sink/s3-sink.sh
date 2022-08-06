@@ -46,7 +46,7 @@ AWS_BUCKET_NAME=pg-bucket-${USER}
 AWS_BUCKET_NAME=${AWS_BUCKET_NAME//[-.]/}
 
 
-log "Empty bucket <$AWS_BUCKET_NAME/$TAG>, if required"
+log "Create bucket <$AWS_BUCKET_NAME>, if required"
 set +e
 aws s3api create-bucket --bucket $AWS_BUCKET_NAME --region $AWS_REGION --create-bucket-configuration LocationConstraint=$AWS_REGION
 set -e
