@@ -523,3 +523,13 @@ services:
       - ./grafana/config/grafana.ini:/etc/grafana/grafana.ini
     depends_on:
       - prometheus
+
+  kcat:
+    image: confluentinc/cp-kcat:latest
+    hostname: kcat
+    container_name: kcat
+    depends_on:
+      - broker
+    entrypoint: [ "sh", "-c", "sleep infinity" ]
+    profiles:
+      - "kcat"
