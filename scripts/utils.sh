@@ -795,10 +795,6 @@ function aws() {
       then
         log 'AWS_SECRET_ACCESS_KEY environment variable is not set.'
       fi
-      if [ ! -f $HOME/.aws/config ]
-      then
-        log '$HOME/.aws/config does not exist.'
-      fi
       if [ ! -f $HOME/.aws/credentials ]
       then
         log '$HOME/.aws/credentials does not exist.'
