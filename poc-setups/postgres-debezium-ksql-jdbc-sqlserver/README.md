@@ -28,3 +28,20 @@ docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --
 ## Other tests / examples
 * example to illustrate tombstones in debezium: `./test-debezium-tombstone.sh`
 * example script to insert same datasets into the source database: `./insert_datasets.sh`
+* example JDBC config to set the correct PK and add whitelisting, i.e. only writing whitelisted fields to the sink:
+    ```
+    curl -X PUT \
+         -H "Content-Type: application/json" \
+         --data '{
+                   "connector.class": "io.confluent.connect.jdbc.JdbcSinkConnector",
+                        "tasks.max": "1",
+                        "connection.url": "jdbc:jtds:sqlserver://sqlserver:1433",
+                        "connection.user": "sa",
+                        "connection.password": "Password!",
+                        "topics": "CUSTOMERS_FLAT",
+                        "auto.create": "true",
+                        "pk.fields":"id",
+                        "fields.whitelist": "id, LAST_NAME, FIRST_NAME"
+              }' \
+         http://localhost:8083/connectors/sqlserver-sink/config | jq .
+    ```
