@@ -40,6 +40,14 @@ else
   log "📊 Grafana is enabled"
   profile_grafana_command="--profile grafana"
 fi
+profile_kcat_command=""
+if [ -z "$ENABLE_KCAT" ]
+then
+  log "🛑 kcat is disabled"
+else
+  log "🧰 kcat is enabled"
+  profile_kcat_command="--profile kcat"
+fi
 
 mkdir -p ${DIR}/scripts/security/ldap_certs
 cd ${DIR}/scripts/security/ldap_certs
@@ -113,9 +121,9 @@ log "Validate bindings"
 docker exec -i tools bash -c "/tmp/helper/validate_bindings.sh"
 
 docker-compose -f ../../environment/plaintext/docker-compose.yml -f ../../environment/rbac-sasl-plain/docker-compose.yml ${ENABLE_DOCKER_COMPOSE_FILE_OVERRIDE} build
-docker-compose -f ../../environment/plaintext/docker-compose.yml -f ../../environment/rbac-sasl-plain/docker-compose.yml ${ENABLE_DOCKER_COMPOSE_FILE_OVERRIDE} ${profile_control_center_command} ${profile_ksqldb_command} ${profile_grafana_command} up -d
+docker-compose -f ../../environment/plaintext/docker-compose.yml -f ../../environment/rbac-sasl-plain/docker-compose.yml ${ENABLE_DOCKER_COMPOSE_FILE_OVERRIDE} ${profile_control_center_command} ${profile_ksqldb_command} ${profile_grafana_command} ${profile_kcat_command} up -d
 log "📝 To see the actual properties file, use ../../scripts/get-properties.sh <container>"
-command="source ../../scripts/utils.sh && docker-compose -f ../../environment/plaintext/docker-compose.yml -f ../../environment/rbac-sasl-plain/docker-compose.yml ${ENABLE_DOCKER_COMPOSE_FILE_OVERRIDE} ${profile_control_center_command} ${profile_ksqldb_command} ${profile_grafana_command} up -d"
+command="source ../../scripts/utils.sh && docker-compose -f ../../environment/plaintext/docker-compose.yml -f ../../environment/rbac-sasl-plain/docker-compose.yml ${ENABLE_DOCKER_COMPOSE_FILE_OVERRIDE} ${profile_control_center_command} ${profile_ksqldb_command} ${profile_grafana_command} ${profile_kcat_command} up -d"
 echo "$command" > /tmp/playground-command
 log "✨ If you modify a docker-compose file and want to re-create the container(s), run ../../scripts/recreate-containers.sh or use this command:"
 log "✨ $command"

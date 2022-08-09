@@ -98,12 +98,12 @@ do
         file="$TAG-$testdir-$THE_CONNECTOR_TAG-$script"
         s3_file="s3://kafka-docker-playground/ci/$file"
         set +e
-        exists=$(aws s3 ls $s3_file)
+        exists=$(aws s3 ls $s3_file --region us-east-1)
         if [ -z "$exists" ]; then
             # log "DEBUG: $s3_file does not exist, run the test"
             :
         else
-            aws s3 cp $s3_file .
+            aws s3 cp $s3_file . --region us-east-1
             if [ ! -f $file ]
             then
                 logwarn "Error getting $s3_file"
@@ -177,20 +177,20 @@ do
                 log "####################################################"
                 log "⌛ Test with CP $TAG and connector $THE_CONNECTOR_TAG has already been executed successfully $(displaytime $elapsed_time) ago, more than 4 days ago...re-running. Test url: $html_url"
                 log "####################################################"
-                aws s3 rm $s3_file
+                aws s3 rm $s3_file --region us-east-1
             # run at least every 14 days, even with no changes
             elif [[ $elapsed_time -gt 1209600 ]]
             then
                 log "####################################################"
                 log "⌛ Test with CP $TAG and connector $THE_CONNECTOR_TAG has already been executed successfully $(displaytime $elapsed_time) ago, more than 14 days ago...re-running. Test url: $html_url"
                 log "####################################################"
-                aws s3 rm $s3_file
+                aws s3 rm $s3_file --region us-east-1
             elif [ "$status" = "failure" ]
             then
                 log "####################################################"
                 log "🔥 Test with CP $TAG and connector $THE_CONNECTOR_TAG was failing $(displaytime $elapsed_time) ago...re-running. Test url: $html_url"
                 log "####################################################"
-                aws s3 rm $s3_file
+                aws s3 rm $s3_file --region us-east-1
             else
                 # get last commit time unix timestamp for the folder
                 now=$(date +%s)
@@ -201,7 +201,7 @@ do
                     log "####################################################"
                     log "🆕 Test with CP $TAG and connector $THE_CONNECTOR_TAG has already been executed successfully $(displaytime $elapsed_time) ago, but a change has been noticed $(displaytime $elapsed_git_time) ago. Test url: $html_url"
                     log "####################################################"
-                    aws s3 rm $s3_file
+                    aws s3 rm $s3_file --region us-east-1
                 else
                     log "####################################################"
                     log "✅ Skipping as test with CP $TAG and connector $THE_CONNECTOR_TAG has already been executed successfully $(displaytime $elapsed_time) ago. Test url: $html_url"
@@ -261,7 +261,7 @@ do
         fi
         if [ -f "$file" ]
         then
-            aws s3 cp "$file" "s3://kafka-docker-playground/ci/"
+            aws s3 cp "$file" "s3://kafka-docker-playground/ci/" --region us-east-1
             log "📄 INFO: <$file> was uploaded to S3 bucket"
         else
             logerror "ERROR: $file could not be created"

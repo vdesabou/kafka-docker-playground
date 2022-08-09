@@ -4,6 +4,7 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
+cd ../../connect/connect-ibm-mq-sink
 get_3rdparty_file "IBM-MQ-Install-Java-All.jar"
 
 if [ ! -f ${DIR}/IBM-MQ-Install-Java-All.jar ]
@@ -12,6 +13,7 @@ then
      logerror "ERROR: ${DIR}/IBM-MQ-Install-Java-All.jar is missing. It must be downloaded manually in order to acknowledge user agreement"
      exit 1
 fi
+
 if [ ! -f ${DIR}/com.ibm.mq.allclient.jar ]
 then
      # install deps
@@ -27,6 +29,7 @@ then
      cp ${DIR}/install/wmq/JavaSE/lib/jms.jar ${DIR}/
      cp ${DIR}/install/wmq/JavaSE/lib/com.ibm.mq.allclient.jar ${DIR}/
 fi
+cd -
 
 cd ${DIR}/security
 log "🔐 Generate keys and certificates used for SSL"

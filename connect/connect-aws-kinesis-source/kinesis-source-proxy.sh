@@ -11,15 +11,24 @@ then
 else
     if [ ! -z "$AWS_ACCESS_KEY_ID" ] && [ ! -z "$AWS_SECRET_ACCESS_KEY" ]
     then
-        log "Using environment variables AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY"
+        log "💭 Using environment variables AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY"
         export AWS_ACCESS_KEY_ID
         export AWS_SECRET_ACCESS_KEY
     else
         if [ -f $HOME/.aws/credentials ]
         then
-            logwarn "AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY are set based on $HOME/.aws/credentials"
+            logwarn "💭 AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY are set based on $HOME/.aws/credentials"
             export AWS_ACCESS_KEY_ID=$( grep "^aws_access_key_id" $HOME/.aws/credentials| awk -F'=' '{print $2;}' )
             export AWS_SECRET_ACCESS_KEY=$( grep "^aws_secret_access_key" $HOME/.aws/credentials| awk -F'=' '{print $2;}' ) 
+        fi
+    fi
+    if [ -z "$AWS_REGION" ]
+    then
+        AWS_REGION=$(aws configure get region | tr '\r' '\n')
+        if [ "$AWS_REGION" == "" ]
+        then
+            logerror "ERROR: either the file $HOME/.aws/config is not present or environment variables AWS_REGION is not set!"
+            exit 1
         fi
     fi
 fi
@@ -53,7 +62,7 @@ log "Insert records in Kinesis stream"
 # The example shows that a record containing partition key 123 and data "test-message-1" is inserted into kafka_docker_playground.
 aws kinesis put-record --stream-name $KINESIS_STREAM_NAME --partition-key 123 --data test-message-1
 
-AWS_REGION=$(aws configure get region | tr '\r' '\n')
+
 
 log "Creating Kinesis Source connector"
 curl -X PUT \
@@ -65,7 +74,7 @@ curl -X PUT \
                "kinesis.stream": "'"$KINESIS_STREAM_NAME"'",
                "kinesis.region": "'"$AWS_REGION"'",
                "aws.access.key.id" : "'"$AWS_ACCESS_KEY_ID"'",
-               "aws.secret.access.key": "'"$AWS_SECRET_ACCESS_KEY"'",
+               "aws.secret.key.id": "'"$AWS_SECRET_ACCESS_KEY"'",
                "kinesis.proxy.url": "https://nginx-proxy:8888",
                "confluent.license": "",
                "confluent.topic.bootstrap.servers": "broker:9092",

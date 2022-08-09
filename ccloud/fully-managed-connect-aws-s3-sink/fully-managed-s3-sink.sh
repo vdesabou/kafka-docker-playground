@@ -11,15 +11,24 @@ then
 else
     if [ ! -z "$AWS_ACCESS_KEY_ID" ] && [ ! -z "$AWS_SECRET_ACCESS_KEY" ]
     then
-        log "Using environment variables AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY"
+        log "💭 Using environment variables AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY"
         export AWS_ACCESS_KEY_ID
         export AWS_SECRET_ACCESS_KEY
     else
         if [ -f $HOME/.aws/credentials ]
         then
-            logwarn "AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY are set based on $HOME/.aws/credentials"
+            logwarn "💭 AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY are set based on $HOME/.aws/credentials"
             export AWS_ACCESS_KEY_ID=$( grep "^aws_access_key_id" $HOME/.aws/credentials| awk -F'=' '{print $2;}' )
             export AWS_SECRET_ACCESS_KEY=$( grep "^aws_secret_access_key" $HOME/.aws/credentials| awk -F'=' '{print $2;}' ) 
+        fi
+    fi
+    if [ -z "$AWS_REGION" ]
+    then
+        AWS_REGION=$(aws configure get region | tr '\r' '\n')
+        if [ "$AWS_REGION" == "" ]
+        then
+            logerror "ERROR: either the file $HOME/.aws/config is not present or environment variables AWS_REGION is not set!"
+            exit 1
         fi
     fi
 fi
@@ -34,17 +43,17 @@ else
      exit 1
 fi
 
-AWS_BUCKET_NAME=kafka-docker-playground-bucket-${USER}${TAG}
+AWS_BUCKET_NAME=pg-bucket-${USER}
 AWS_BUCKET_NAME=${AWS_BUCKET_NAME//[-.]/}
 
-AWS_REGION=$(aws configure get region | tr '\r' '\n')
-log "Creating bucket name <$AWS_BUCKET_NAME>, if required"
+
+log "Empty bucket <$AWS_BUCKET_NAME/$TAG>, if required"
 set +e
 aws s3api create-bucket --bucket $AWS_BUCKET_NAME --region $AWS_REGION --create-bucket-configuration LocationConstraint=$AWS_REGION
 set -e
 log "Empty bucket <$AWS_BUCKET_NAME>, if required"
 set +e
-aws s3 rm s3://$AWS_BUCKET_NAME --recursive --region $AWS_REGION
+aws s3 rm s3://$AWS_BUCKET_NAME/$TAG --recursive --region $AWS_REGION
 set -e
 
 log "Creating s3_topic topic in Confluent Cloud (auto.create.topics.enable=false)"
@@ -63,6 +72,7 @@ cat << EOF > connector.json
      "kafka.api.key": "$CLOUD_KEY",
      "kafka.api.secret": "$CLOUD_SECRET",
      "topics": "s3_topic",
+     "topics.dir": "$TAG",
      "aws.access.key.id" : "$AWS_ACCESS_KEY_ID",
      "aws.secret.access.key": "$AWS_SECRET_ACCESS_KEY",
      "input.data.format": "AVRO",

@@ -142,12 +142,12 @@ $ curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
                "connector.class": "io.confluent.connect.jdbc.JdbcSinkConnector",
-                    "tasks.max": "1",
-                    "connection.url": "jdbc:sqlserver://sqlserver:1433;encrypt=true;trustServerCertificate=false;",
-                    "connection.user": "sa",
-                    "connection.password": "Password!",
-                    "topics": "orders",
-                    "auto.create": "true"
+               "tasks.max": "1",
+               "connection.url": "jdbc:sqlserver://sqlserver:1433;encrypt=true;trustServerCertificate=false;trustStore=/tmp/truststore.jks;trustStorePassword=confluent;",
+               "connection.user": "sa",
+               "connection.password": "Password!",
+               "topics": "orders",
+               "auto.create": "true"
           }' \
      http://localhost:8083/connectors/sqlserver-sink-ssl/config | jq .
 ```

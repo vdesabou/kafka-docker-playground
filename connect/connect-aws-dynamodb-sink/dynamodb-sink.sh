@@ -11,15 +11,24 @@ then
 else
     if [ ! -z "$AWS_ACCESS_KEY_ID" ] && [ ! -z "$AWS_SECRET_ACCESS_KEY" ]
     then
-        log "Using environment variables AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY"
+        log "💭 Using environment variables AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY"
         export AWS_ACCESS_KEY_ID
         export AWS_SECRET_ACCESS_KEY
     else
         if [ -f $HOME/.aws/credentials ]
         then
-            logwarn "AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY are set based on $HOME/.aws/credentials"
+            logwarn "💭 AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY are set based on $HOME/.aws/credentials"
             export AWS_ACCESS_KEY_ID=$( grep "^aws_access_key_id" $HOME/.aws/credentials| awk -F'=' '{print $2;}' )
             export AWS_SECRET_ACCESS_KEY=$( grep "^aws_secret_access_key" $HOME/.aws/credentials| awk -F'=' '{print $2;}' ) 
+        fi
+    fi
+    if [ -z "$AWS_REGION" ]
+    then
+        AWS_REGION=$(aws configure get region | tr '\r' '\n')
+        if [ "$AWS_REGION" == "" ]
+        then
+            logerror "ERROR: either the file $HOME/.aws/config is not present or environment variables AWS_REGION is not set!"
+            exit 1
         fi
     fi
 fi
@@ -31,7 +40,7 @@ else
      export CONNECT_CONTAINER_HOME_DIR="/root"
 fi
 
-AWS_REGION=$(aws configure get region | tr '\r' '\n')
+
 DYNAMODB_ENDPOINT="https://dynamodb.$AWS_REGION.amazonaws.com"
 
 set +e
@@ -54,7 +63,7 @@ curl -X PUT \
                "aws.dynamodb.region": "'"$AWS_REGION"'",
                "aws.dynamodb.endpoint": "'"$DYNAMODB_ENDPOINT"'",
                "aws.access.key.id" : "'"$AWS_ACCESS_KEY_ID"'",
-               "aws.secret.access.key": "'"$AWS_SECRET_ACCESS_KEY"'",
+               "aws.secret.key.id": "'"$AWS_SECRET_ACCESS_KEY"'",
                "confluent.license": "",
                "confluent.topic.bootstrap.servers": "broker:9092",
                "confluent.topic.replication.factor": "1"

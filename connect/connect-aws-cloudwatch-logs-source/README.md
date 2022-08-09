@@ -13,7 +13,7 @@ Quickly test [AWS CloudWatch Logs](https://docs.confluent.io/current/connect/kaf
 * Make sure you have an [AWS account](https://docs.aws.amazon.com/streams/latest/dev/before-you-begin.html#setting-up-sign-up-for-aws).
 * Set up [AWS Credentials](https://docs.confluent.io/current/connect/kafka-connect-kinesis/quickstart.html#aws-credentials)
 
-You can either export environment variables `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY` or set file `~/.aws/credentials`.
+You can either export environment variables `AWS_REGION`, `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY` or set files `~/.aws/credentials` and `~/.aws/config`.
 
 ## How to run
 
@@ -68,6 +68,8 @@ $ curl -X PUT \
                "aws.cloudwatch.logs.url": "'"$CLOUDWATCH_LOGS_URL"'",
                "aws.cloudwatch.log.group": "'"$LOG_GROUP"'",
                "aws.cloudwatch.log.streams": "'"$LOG_STREAM"'",
+               "aws.access.key.id" : "'"$AWS_ACCESS_KEY_ID"'",
+               "aws.secret.access.key": "'"$AWS_SECRET_ACCESS_KEY"'",
                "confluent.license": "",
                "confluent.topic.bootstrap.servers": "broker:9092",
                "confluent.topic.replication.factor": "1"

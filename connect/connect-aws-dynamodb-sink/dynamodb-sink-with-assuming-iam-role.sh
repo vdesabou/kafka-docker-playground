@@ -11,6 +11,15 @@ then
      exit 1
 fi
 
+if [ -z "$AWS_REGION" ]
+then
+     AWS_REGION=$(aws configure get region | tr '\r' '\n')
+     if [ "$AWS_REGION" == "" ]
+     then
+          logerror "ERROR: either the file $HOME/.aws/config is not present or environment variables AWS_REGION is not set!"
+          exit 1
+     fi
+fi
 
 if [[ "$TAG" == *ubi8 ]] || version_gt $TAG_BASE "5.9.0"
 then
@@ -19,7 +28,7 @@ else
      export CONNECT_CONTAINER_HOME_DIR="/root"
 fi
 
-AWS_REGION=$(aws configure get region | tr '\r' '\n')
+
 DYNAMODB_ENDPOINT="https://dynamodb.$AWS_REGION.amazonaws.com"
 
 set +e
@@ -27,7 +36,7 @@ log "Delete table, this might fail"
 aws dynamodb delete-table --table-name mytable --region $AWS_REGION
 set -e
 
-${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
+${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.with-assuming-iam-role.yml"
 
 log "Sending messages to topic mytable"
 seq -f "{\"f1\": \"value%g\"}" 10 | docker exec -i connect kafka-avro-console-producer --broker-list broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic mytable --property value.schema='{"type":"record","name":"myrecord","fields":[{"name":"f1","type":"string"}]}'

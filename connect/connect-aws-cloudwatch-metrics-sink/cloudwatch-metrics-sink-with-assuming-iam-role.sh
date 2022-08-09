@@ -11,6 +11,16 @@ then
      exit 1
 fi
 
+if [ -z "$AWS_REGION" ]
+then
+     AWS_REGION=$(aws configure get region | tr '\r' '\n')
+     if [ "$AWS_REGION" == "" ]
+     then
+          logerror "ERROR: either the file $HOME/.aws/config is not present or environment variables AWS_REGION is not set!"
+          exit 1
+     fi
+fi
+
 if [[ "$TAG" == *ubi8 ]] || version_gt $TAG_BASE "5.9.0"
 then
      export CONNECT_CONTAINER_HOME_DIR="/home/appuser"
@@ -26,7 +36,7 @@ docker exec -i connect kafka-avro-console-producer --broker-list broker:9092 --p
 "key1", {"name" : "test_meter","type" : "meter", "timestamp" : $TIMESTAMP, "dimensions" : {"dimensions1" : "InstanceID","dimensions2" : "i-aaba32d4"},"values" : {"count" : 32423.0,"oneMinuteRate" : 342342.2,"fiveMinuteRate" : 34234.2,"fifteenMinuteRate" : 2123123.1,"meanRate" : 2312312.1}}
 EOF
 
-AWS_REGION=$(aws configure get region | tr '\r' '\n')
+
 CLOUDWATCH_METRICS_URL="https://monitoring.$AWS_REGION.amazonaws.com"
 
 log "Creating AWS CloudWatch metrics Sink connector"

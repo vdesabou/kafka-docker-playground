@@ -154,7 +154,7 @@ function choosejar()
 if [ -z "$TAG" ]
 then
     # TAG is not set, use default:
-    export TAG=7.2.0
+    export TAG=7.2.1
     # to handle ubi8 images
     export TAG_BASE=$TAG
     if [ -z "$CP_KAFKA_IMAGE" ]
@@ -784,9 +784,9 @@ function remove_partition() {
 
 function aws() {
 
-    if [ -z "$AWS_ACCESS_KEY_ID" ] && [ -z "$AWS_SECRET_ACCESS_KEY" ] && [ ! -f $HOME/.aws/config ] && [ ! -f $HOME/.aws/$AWS_CREDENTIALS_FILE_NAME ]
+    if [ -z "$AWS_ACCESS_KEY_ID" ] && [ -z "$AWS_SECRET_ACCESS_KEY" ] && [ ! -f $HOME/.aws/config ] && [ ! -f $HOME/.aws/credentials ]
     then
-      logerror 'ERROR: Neither AWS_ACCESS_KEY_ID/AWS_SECRET_ACCESS_KEY or $HOME/.aws/$AWS_CREDENTIALS_FILE_NAME are set. AWS credentials must be set !'
+      logerror 'ERROR: Neither AWS_ACCESS_KEY_ID/AWS_SECRET_ACCESS_KEY or $HOME/.aws/credentials are set. AWS credentials must be set !'
       if [ -z "$AWS_ACCESS_KEY_ID" ]
       then
         log 'AWS_ACCESS_KEY_ID environment variable is not set.'
@@ -795,18 +795,31 @@ function aws() {
       then
         log 'AWS_SECRET_ACCESS_KEY environment variable is not set.'
       fi
-      if [ ! -f $HOME/.aws/config ]
+      if [ ! -f $HOME/.aws/credentials ]
       then
-        log '$HOME/.aws/config does not exist.'
-      fi
-      if [ ! -f $HOME/.aws/$AWS_CREDENTIALS_FILE_NAME ]
-      then
-        log '$HOME/.aws/$AWS_CREDENTIALS_FILE_NAME does not exist.'
+        log '$HOME/.aws/credentials does not exist.'
       fi
       return 1
     fi
 
-    docker run --rm -iv $HOME/.aws:/root/.aws -e AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID -e AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY -v $(pwd):/aws -v /tmp:/tmp mikesir87/aws-cli:v2 aws "$@"
+    if [ ! -f $HOME/.aws/config ]
+    then
+          tmp_dir=$(mktemp -d -t pg-XXXXXXXXXX)
+cat << EOF > $tmp_dir/config
+[default]
+region = $AWS_REGION
+EOF
+    fi
+
+    if [ ! -f $HOME/.aws/credentials ]
+    then
+      #log "Using aws cli with environment variables AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY"
+      docker run --rm -iv $tmp_dir/config:/root/.aws/config -e AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID -e AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY -v $(pwd):/aws -v /tmp:/tmp mikesir87/aws-cli:v2 aws "$@"
+      rm -rf $tmp_dir
+    else
+      #log "Using aws cli with credentials file"
+      docker run --rm -iv $HOME/.aws:/root/.aws -v $(pwd):/aws -v /tmp:/tmp mikesir87/aws-cli:v2 aws "$@"
+    fi
 }
 
 function timeout() {
@@ -845,7 +858,8 @@ function display_docker_container_error_log() {
 
 function retry() {
   local n=1
-  local max=4
+  local max_retriable=4
+  local max_default_retry=2
   while true; do
     "$@"
     ret=$?
@@ -864,7 +878,7 @@ function retry() {
       grep "$script" ${DIR}/tests-retriable.txt > /dev/null
       if [ $? = 0 ]
       then
-        if [[ $n -lt $max ]]; then
+        if [[ $n -lt $max_retriable ]]; then
           ((n++))
           logwarn "####################################################"
           logwarn "🧟‍♂️ The test $script (retriable) has failed. Retrying (attempt $n/$max)"
@@ -875,8 +889,16 @@ function retry() {
           return 1
         fi
       else
-        logerror "💀 The test $script (non retriable) has failed."
-        return 1
+        if [[ $n -lt $max_default_retry ]]; then
+          ((n++))
+          logwarn "####################################################"
+          logwarn "🎰 The test $script (default_retry) has failed. Retrying (attempt $n/$max_default_retry)"
+          logwarn "####################################################"
+          display_docker_container_error_log
+        else
+          logerror "💀 The test $script (default_retry) has failed after $n attempts."
+          return 1
+        fi
       fi
     fi
   done

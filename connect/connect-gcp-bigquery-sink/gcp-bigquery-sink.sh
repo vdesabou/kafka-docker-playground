@@ -58,7 +58,7 @@ then
                     "maxWriteSize": "10000",
                     "tableWriteWait": "1000",
                     "project" : "'"$PROJECT"'",
-                    "keyfile" : "'"$KEYFILE_CONTENT"'"
+                    "keyfile" : "/tmp/keyfile.json"
                }' \
           http://localhost:8083/connectors/gcp-bigquery-sink/config | jq .
 else
@@ -80,7 +80,7 @@ else
                     "maxWriteSize": "10000",
                     "tableWriteWait": "1000",
                     "project" : "'"$PROJECT"'",
-                    "keyfile" : "'"$KEYFILE_CONTENT"'",
+                    "keyfile" : "/tmp/keyfile.json"
                }' \
           http://localhost:8083/connectors/gcp-bigquery-sink/config | jq .
 fi

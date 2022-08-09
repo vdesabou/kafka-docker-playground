@@ -4,6 +4,7 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
+cd ../../connect/connect-ibm-mq-source
 get_3rdparty_file "IBM-MQ-Install-Java-All.jar"
 
 if [ ! -f ${DIR}/IBM-MQ-Install-Java-All.jar ]
@@ -28,6 +29,7 @@ then
      cp ${DIR}/install/wmq/JavaSE/lib/jms.jar ${DIR}/
      cp ${DIR}/install/wmq/JavaSE/lib/com.ibm.mq.allclient.jar ${DIR}/
 fi
+cd -
 
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
 
@@ -58,11 +60,10 @@ sleep 5
 log "Sending messages to DEV.QUEUE.1 JMS queue:"
 docker exec -i ibmmq /opt/mqm/samp/bin/amqsput DEV.QUEUE.1 << EOF
 Message 1
-Message 2
-
+Message 1
 EOF
 
 sleep 5
 
 log "Verify we have received the data in MyKafkaTopicName topic"
-timeout 60 docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic MyKafkaTopicName --from-beginning --max-messages 2
+timeout 60 docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic MyKafkaTopicName --from-beginning --property key.deserializer=org.apache.kafka.common.serialization.StringDeserializer --property print.key=true --max-messages 2

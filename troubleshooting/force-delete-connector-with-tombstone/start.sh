@@ -4,11 +4,12 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
+export ENABLE_KCAT=1
 CLI=${1:-kafka-console-producer}
 
-if [ "$CLI" != "kafka-console-producer" ] && [ "$CLI" != "kafkacat" ]
+if [ "$CLI" != "kafka-console-producer" ] && [ "$CLI" != "kcat" ]
 then
-     logerror "CLI should be either kafka-console-producer (default) or kafkacat"
+     logerror "CLI should be either kafka-console-producer (default) or kcat"
      exit 1
 fi
 
@@ -63,8 +64,8 @@ docker exec -i broker kafka-console-producer --broker-list broker:9092 --topic c
 connector-http-sink,null
 EOF
 else
-     log "Sending tombstone with kafkacat"
-     echo 'connector-http-sink#' | docker exec -i kafkacat kafkacat -b broker:9092 -t connect-configs -P -Z -K#
+     log "Sending tombstone with kcat"
+     echo 'connector-http-sink#' | docker exec -i kcat kcat -b broker:9092 -t connect-configs -P -Z -K#
 fi
 
 log "Starting worker"
@@ -127,7 +128,7 @@ cat /tmp/connect-configs.backup
 # [2022-03-14 09:34:31,029] INFO Successfully processed removal of connector 'http-sink' (org.apache.kafka.connect.storage.KafkaConfigBackingStore:633)
 
 
-# with kafkacat:
+# with kcat:
 
 # [2022-03-14 09:43:27,120] INFO Successfully processed removal of connector 'http-sink' (org.apache.kafka.connect.storage.KafkaConfigBackingStore:633)
 

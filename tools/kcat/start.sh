@@ -4,13 +4,15 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
+export ENABLE_KCAT=1
+
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
 
 log "Metadata Listing Mode"
-docker exec kafkacat kafkacat -b broker:9092 -L
+docker exec kcat kcat -b broker:9092 -L
 
 log "Metadata Listing Mode (JSON)"
-docker exec kafkacat kafkacat -b broker:9092 -L -J | jq .
+docker exec kcat kcat -b broker:9092 -L -J | jq .
 
 
 log "Producer mode with file"
@@ -20,20 +22,20 @@ cat >> orders.txt << EOF
 3:{"order_id":3,"order_ts":1534772742276,"total_amount":21.00,"customer_name":"Emma Turner"}
 EOF
 
-docker exec -i kafkacat kafkacat -P -b broker:9092 -t orders -K: -T  -l /data/orders.txt
+docker exec -i kcat kcat -P -b broker:9092 -t orders -K: -T  -l /data/orders.txt
 rm orders.txt
 
 log "Consumer Mode"
-docker exec -i kafkacat kafkacat -C -b broker:9092 -t orders -K: -f '\nKey (%K bytes): %k\t\nValue (%S bytes): %s\n\Partition: %p\tOffset: %o\n--\n' -c 3
+docker exec -i kcat kcat -C -b broker:9092 -t orders -K: -f '\nKey (%K bytes): %k\t\nValue (%S bytes): %s\n\Partition: %p\tOffset: %o\n--\n' -c 3
 
 
 log "Producer mode input"
 
-docker exec -i kafkacat kafkacat -P -b broker:9092 -t orders -K: -T << EOF
+docker exec -i kcat kcat -P -b broker:9092 -t orders -K: -T << EOF
 4:{"order_id":4,"order_ts":1534772801276,"total_amount":11.50,"customer_name":"Alina Smith"}
 5:{"order_id":5,"order_ts":1534772905276,"total_amount":13.32,"customer_name":"Alex Black"}
 6:{"order_id":6,"order_ts":1534773042276,"total_amount":31.00,"customer_name":"Emma Watson"}
 EOF
 
 log "Query Mode"
-docker exec -i kafkacat kafkacat -Q -b broker:9092 -t orders:0:-1
+docker exec -i kcat kcat -Q -b broker:9092 -t orders:0:-1

@@ -1,0 +1,7 @@
+---
+version: '3.5'
+services:
+
+  kcat:
+    volumes:
+    - ../../tools/kcat:/data

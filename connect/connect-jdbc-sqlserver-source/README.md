@@ -153,17 +153,17 @@ $ curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
                "connector.class": "io.confluent.connect.jdbc.JdbcSourceConnector",
-                    "tasks.max": "1",
-                    "connection.url": "jdbc:sqlserver://sqlserver:1433;databaseName=testDB;encrypt=true;trustServerCertificate=false;",
-                    "connection.user": "sa",
-                    "connection.password": "Password!",
-                    "table.whitelist": "customers",
-                    "mode": "incrementing",
-                    "incrementing.column.name": "id",
-                    "topic.prefix": "sqlserver-",
-                    "validate.non.null":"false",
-                    "errors.log.enable": "true",
-                    "errors.log.include.messages": "true"
+               "tasks.max": "1",
+               "connection.url": "jdbc:sqlserver://sqlserver:1433;databaseName=testDB;encrypt=true;trustServerCertificate=false;trustStore=/tmp/truststore.jks;trustStorePassword=confluent;",
+               "connection.user": "sa",
+               "connection.password": "Password!",
+               "table.whitelist": "customers",
+               "mode": "incrementing",
+               "incrementing.column.name": "id",
+               "topic.prefix": "sqlserver-",
+               "validate.non.null":"false",
+               "errors.log.enable": "true",
+               "errors.log.include.messages": "true"
           }' \
      http://localhost:8083/connectors/sqlserver-source-ssl/config | jq .
 ```

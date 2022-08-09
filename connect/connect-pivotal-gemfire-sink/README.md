@@ -8,9 +8,9 @@ Quickly test [Pivotal Gemfire sink](https://docs.confluent.io/current/connect/ka
 
 N.B: if you're a Confluent employee, please check this [link](https://confluent.slack.com/archives/C0116NM415F/p1636391410032900).
 
-* Create an account [here](https://account.run.pivotal.io/z/uaa/sign-up) and download from [here](https://network.pivotal.io/products/pivotal-gemfire#/releases/692529) `[Pivotal GemFire Tar]` version `9.10.2`, then rename it to `pivotal-gemfire.tgz` and put it into `docker-pivotal-gemfire` directory
+* Create an account [here](https://account.run.pivotal.io/z/uaa/sign-up) and download from [here](https://network.pivotal.io/products/pivotal-gemfire#/releases/692529) `[Pivotal GemFire Tar]` version `9.15.1`, then rename it to `pivotal-gemfire.tgz` and put it into `docker-pivotal-gemfire` directory
 
-![Download](Screenshot1.png)
+![Download](Screenshot1.jpg)
 
 ## How to run
 
@@ -90,7 +90,7 @@ Results:
    / _____/ ______/ ______/ /____/ /
   / /  __/ /___  /_____  / _____  /
  / /__/ / ____/  _____/ / /    / /
-/______/_/      /______/_/    /_/    9.10.2
+/______/_/      /______/_/    /_/    9.15.1
 
 Monitor and Manage Pivotal GemFire
 gfsh>connect --locator=localhost[10334]
