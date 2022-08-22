@@ -281,7 +281,7 @@ then
       export CONNECT_TAG="$TAG"
     fi
     :
-  elif [[ $0 == *"stop"* ]]
+  elif [[ $0 == *"stop.sh"* ]]
   then
     if [ -z "$CONNECT_TAG" ]
     then
@@ -427,7 +427,7 @@ else
       export CONNECT_TAG="$TAG"
     fi
     :
-  elif [[ $0 == *"stop"* ]]
+  elif [[ $0 == *"stop.sh"* ]]
   then
     if [ -z "$CONNECT_TAG" ]
     then
