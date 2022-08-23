@@ -1,6 +1,6 @@
 ## ✨ Features
 
-- 🔗 130+ connectors [examples](/content?id=🔗-connectors)
+- 🔗 140+ connectors [examples](/content?id=🔗-connectors)
 - 🔐 10+ secured [environments](/content?id=%F0%9F%94%90-environments) (SASL, RBAC, SSL...)
 - ☁️ Confluent Cloud [examples](/content?id=☁%EF%B8%8F-confluent-cloud)
 - 💸 Confluent commercial [features](/content?id=💸-confluent-commercial) (Tiered Storage, Control Center, Audit logs...)
@@ -19,3 +19,9 @@ Check out the **[How to Use](/how-to-use.md)** section, then select an example i
 ## 💡 Ideology
 
 Most of the examples in the playground are very basic, but it allows to quickly test components in an automated way (and with any [versions](/how-to-use?id=🪄-specify-versions)) and most importantly to easily [build](/reusables) your own reproduction models !
+
+## ⭐️ Support my work
+
+Love it? Give it a ⭐️ by clicking below:
+
+<a href="https://github.com/vdesabou/kafka-docker-playground/stargazers"><img src="https://img.shields.io/github/stars/vdesabou/kafka-docker-playground?style=social" style="margin-left:0;box-shadow:none;border-radius:0;height:24px"></a>
