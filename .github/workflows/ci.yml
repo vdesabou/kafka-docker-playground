@@ -82,6 +82,7 @@ jobs:
                       "🚀 ccloud/replicator ccloud/connect-debezium-mongodb-source ccloud/connect-debezium-mysql-source ccloud/connect-aws-kinesis-source ccloud/connect-servicenow-sink ccloud/connect-servicenow-source ccloud/connect-mqtt-source ccloud/connect-gcp-firebase-sink ccloud/kafka-admin ccloud/rest-proxy-security-plugin ccloud/schema-registry-security-plugin ccloud/audit-log-connector ccloud/client-dotnet ccloud/client-go ccloud/client-kafkajs ccloud/client-python ccloud/mirrormaker2",
                       "🚀 connect/connect-cdc-oracle12-source",
                       "🚀 connect/connect-cdc-oracle19-source",
+                      "🚀 connect/connect-cdc-oracle18-source",
                       "🚀 other/cp-ansible-playground",
                       "🚀 connect/connect-weblogic-source connect/connect-jms-weblogic-sink connect/connect-jms-weblogic-source",
                       "🚀 connect/connect-azure-cosmosdb-source connect/connect-azure-cosmosdb-sink connect/connect-jdbc-cockroachdb-source connect/connect-jdbc-ibmdb2-source connect/connect-jdbc-ibmdb2-sink",
