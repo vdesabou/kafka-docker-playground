@@ -203,4 +203,8 @@ Verify topic success-responses
 $ docker exec broker kafka-console-consumer -bootstrap-server broker:9092 --topic success-responses --from-beginning --max-messages 2
 ```
 
+To check events on Salesforce side, you can use [workbench](https://workbench.developerforce.com/streaming.php) and subscribe to `/event/MyPlatformEvent__e`:
+
+![workbench](Screenshot11.jpg)
+
 N.B: Control Center is reachable at [http://127.0.0.1:9021](http://127.0.0.1:9021])
