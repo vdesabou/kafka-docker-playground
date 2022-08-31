@@ -7,10 +7,10 @@ source ${DIR}/../../scripts/utils.sh
 if [ ! -z "$GITHUB_RUN_NUMBER" ]
 then
      # running with github actions
-     remove_cdb_oracle_image "linuxx64_12201_database.zip" "../../connect/connect-cdc-oracle12-source/ora-setup-scripts-cdb-table"
+     remove_cdb_oracle_image "LINUX.X64_180000_db_home.zip" "../../connect/connect-cdc-oracle12-source/ora-setup-scripts-cdb-table"
 fi
 
-create_or_get_oracle_image "linuxx64_12201_database.zip" "../../connect/connect-cdc-oracle12-source/ora-setup-scripts-pdb-table"
+create_or_get_oracle_image "LINUX.X64_180000_db_home.zip" "../../connect/connect-cdc-oracle12-source/ora-setup-scripts-pdb-table"
 
 # required to make utils.sh script being able to work, do not remove:
 # ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.pdb-table.yml"
