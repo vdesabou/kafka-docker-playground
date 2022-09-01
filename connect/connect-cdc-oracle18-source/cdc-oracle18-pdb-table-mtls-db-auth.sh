@@ -9,10 +9,10 @@ source ${DIR}/../../scripts/utils.sh
 if [ ! -z "$GITHUB_RUN_NUMBER" ]
 then
      # running with github actions
-     remove_cdb_oracle_image "LINUX.X64_180000_db_home.zip" "../../connect/connect-cdc-oracle12-source/ora-setup-scripts-cdb-table"
+     remove_cdb_oracle_image "LINUX.X64_180000_db_home.zip" "../../connect/connect-cdc-oracle18-source/ora-setup-scripts-cdb-table"
 fi
 
-create_or_get_oracle_image "LINUX.X64_180000_db_home.zip" "../../connect/connect-cdc-oracle12-source/ora-setup-scripts-pdb-table"
+create_or_get_oracle_image "LINUX.X64_180000_db_home.zip" "../../connect/connect-cdc-oracle18-source/ora-setup-scripts-pdb-table"
 
 # required to make utils.sh script being able to work, do not remove:
 # ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.pdb-table.yml"
@@ -295,7 +295,7 @@ log "Waiting 20s for connector to read existing data"
 sleep 20
 
 log "Running SQL scripts"
-for script in ../../connect/connect-cdc-oracle12-source/sample-sql-scripts/*.sh
+for script in ../../connect/connect-cdc-oracle18-source/sample-sql-scripts/*.sh
 do
      $script "ORCLPDB1"
 done
@@ -389,4 +389,4 @@ fi
 log "Verifying topic redo-log-topic: there should be 9 records"
 timeout 60 docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic redo-log-topic --from-beginning --max-messages 9 --property print.key=true
 
-log "🚚 If you're planning to inject more data, have a look at https://github.com/vdesabou/kafka-docker-playground/blob/master/connect/connect-cdc-oracle12-source/README.md#note-on-redologrowfetchsize"
+log "🚚 If you're planning to inject more data, have a look at https://github.com/vdesabou/kafka-docker-playground/blob/master/connect/connect-cdc-oracle18-source/README.md#note-on-redologrowfetchsize"

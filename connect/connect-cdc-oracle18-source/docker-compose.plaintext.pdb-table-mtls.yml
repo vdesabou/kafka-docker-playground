@@ -10,7 +10,7 @@ services:
     ports:
       - "1521:1521"
     volumes:
-      - ../../connect/connect-cdc-oracle12-source/ora-setup-scripts-pdb-table:/opt/oracle/scripts/setup
+      - ../../connect/connect-cdc-oracle18-source/ora-setup-scripts-pdb-table:/opt/oracle/scripts/setup
     environment:
       ORACLE_PWD: Admin123
 
@@ -21,7 +21,7 @@ services:
       - schema-registry
       - oracle
     volumes:
-      - ../../connect/connect-cdc-oracle12-source/mtls/truststore.jks:/tmp/truststore.jks
-      - ../../connect/connect-cdc-oracle12-source/mtls/keystore.jks:/tmp/keystore.jks
+      - ../../connect/connect-cdc-oracle18-source/mtls/truststore.jks:/tmp/truststore.jks
+      - ../../connect/connect-cdc-oracle18-source/mtls/keystore.jks:/tmp/keystore.jks
     environment:
       CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-oracle-cdc

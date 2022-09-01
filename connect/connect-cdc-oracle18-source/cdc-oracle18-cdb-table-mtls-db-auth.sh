@@ -4,7 +4,7 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
-create_or_get_oracle_image "LINUX.X64_180000_db_home.zip" "../../connect/connect-cdc-oracle12-source/ora-setup-scripts-cdb-table"
+create_or_get_oracle_image "LINUX.X64_180000_db_home.zip" "../../connect/connect-cdc-oracle18-source/ora-setup-scripts-cdb-table"
 
 # required to make utils.sh script being able to work, do not remove:
 # ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.cdb-table.yml"

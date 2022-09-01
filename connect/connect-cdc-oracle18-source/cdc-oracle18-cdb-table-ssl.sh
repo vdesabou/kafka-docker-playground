@@ -4,7 +4,7 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
-create_or_get_oracle_image "LINUX.X64_180000_db_home.zip" "../../connect/connect-cdc-oracle12-source/ora-setup-scripts-cdb-table"
+create_or_get_oracle_image "LINUX.X64_180000_db_home.zip" "../../connect/connect-cdc-oracle18-source/ora-setup-scripts-cdb-table"
 
 # required to make utils.sh script being able to work, do not remove:
 # ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.cdb-table.yml"
@@ -243,7 +243,7 @@ log "Waiting 20s for connector to read existing data"
 sleep 20
 
 log "Running SQL scripts"
-for script in ../../connect/connect-cdc-oracle12-source/sample-sql-scripts/*.sh
+for script in ../../connect/connect-cdc-oracle18-source/sample-sql-scripts/*.sh
 do
      $script "ORCLCDB"
 done
@@ -281,4 +281,4 @@ fi
 log "Verifying topic redo-log-topic: there should be 9 records"
 timeout 60 docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic redo-log-topic --from-beginning --max-messages 9 --property print.key=true
 
-log "🚚 If you're planning to inject more data, have a look at https://github.com/vdesabou/kafka-docker-playground/blob/master/connect/connect-cdc-oracle12-source/README.md#note-on-redologrowfetchsize"
+log "🚚 If you're planning to inject more data, have a look at https://github.com/vdesabou/kafka-docker-playground/blob/master/connect/connect-cdc-oracle18-source/README.md#note-on-redologrowfetchsize"
