@@ -26,7 +26,7 @@ if ! version_gt $TAG_BASE "5.9.9"; then
 fi
 
 log "Initialize MongoDB replica set"
-docker exec -i mongodb mongo --eval 'rs.initiate({_id: "debezium", members:[{_id: 0, host: "mongodb:27017"}]})'
+docker exec -i mongodb mongosh --eval 'rs.initiate({_id: "debezium", members:[{_id: 0, host: "mongodb:27017"}]})'
 
 sleep 5
 
