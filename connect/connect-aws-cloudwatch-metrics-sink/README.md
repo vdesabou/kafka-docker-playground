@@ -49,6 +49,8 @@ $ curl -X PUT \
                "value.converter.schema.registry.url": "http://schema-registry:8081",
                "aws.cloudwatch.metrics.url": "'"$CLOUDWATCH_METRICS_URL"'",
                "aws.cloudwatch.metrics.namespace": "service-namespace",
+               "aws.access.key.id" : "'"$AWS_ACCESS_KEY_ID"'",
+               "aws.secret.access.key": "'"$AWS_SECRET_ACCESS_KEY"'",
                "behavior.on.malformed.metric": "FAIL",
                "confluent.license": "",
                "confluent.topic.bootstrap.servers": "broker:9092",
