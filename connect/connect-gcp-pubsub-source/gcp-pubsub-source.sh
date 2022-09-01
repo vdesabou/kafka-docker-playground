@@ -35,7 +35,7 @@ set +e
 log "Delete topic and subscription, if required"
 docker run -i --volumes-from gcloud-config google/cloud-sdk:latest gcloud pubsub --project ${PROJECT} topics delete topic-1
 docker run -i --volumes-from gcloud-config google/cloud-sdk:latest gcloud pubsub --project ${PROJECT} subscriptions delete subscription-1
-set - e
+set -e
 
 log "Create a Pub/Sub topic called topic-1"
 docker run -i --volumes-from gcloud-config google/cloud-sdk:latest gcloud pubsub --project ${PROJECT} topics create topic-1
