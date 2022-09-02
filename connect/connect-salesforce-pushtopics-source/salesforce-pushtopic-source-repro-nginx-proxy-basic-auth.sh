@@ -73,12 +73,6 @@ set -e
 log "Create $PUSH_TOPICS_NAME"
 docker exec sfdx-cli sh -c "sfdx force:apex:execute  -u \"$SALESFORCE_USERNAME\" -f \"/tmp/MyLeadPushTopics.apex\""
 
-
-LEAD_FIRSTNAME=John_$RANDOM
-LEAD_LASTNAME=Doe_$RANDOM
-log "Add a Lead to Salesforce: $LEAD_FIRSTNAME $LEAD_LASTNAME"
-docker exec sfdx-cli sh -c "sfdx force:data:record:create  -u \"$SALESFORCE_USERNAME\" -s Lead -v \"FirstName='$LEAD_FIRSTNAME' LastName='$LEAD_LASTNAME' Company=Confluent\""
-
 DOMAIN=$(echo $SALESFORCE_INSTANCE | cut -d "/" -f 3)
 IP=$(nslookup $DOMAIN | grep Address | grep -v "#" | cut -d " " -f 2 | tail -1)
 log "Blocking $DOMAIN IP $IP to make sure proxy is used"
@@ -112,7 +106,7 @@ curl -X PUT \
                     "http.proxy.auth.scheme": "BASIC",
                     "http.proxy.user": "myuser",
                     "http.proxy.password": "mypassword",
-                    "salesforce.initial.start" : "all",
+                    "salesforce.initial.start" : "latest",
                     "connection.max.message.size": "10048576",
                     "key.converter": "org.apache.kafka.connect.json.JsonConverter",
                     "value.converter": "org.apache.kafka.connect.json.JsonConverter",
@@ -160,7 +154,7 @@ curl -X PUT \
 # 	request.max.retries.time.ms = 900000
 # 	salesforce.consumer.key = 3MVG9lsAlIP.W_V.k0nr8DU2tp2TITctLGpiBlCaIVY1jac6hN2Zp0jqlLuUQ9UopxJsW72pLdFBu40TLRd7l
 # 	salesforce.consumer.secret = [hidden]
-# 	salesforce.initial.start = all
+# 	salesforce.initial.start = latest
 # 	salesforce.instance = xxxx
 # 	salesforce.jwt.keystore.password = null
 # 	salesforce.jwt.keystore.path = null
@@ -175,6 +169,14 @@ curl -X PUT \
 # 	salesforce.push.topic.notify.update = true
 # 	salesforce.username = vsaboulin@confluent.io.sumup
 # 	salesforce.version = latest
+
+sleep 5
+
+
+LEAD_FIRSTNAME=John_$RANDOM
+LEAD_LASTNAME=Doe_$RANDOM
+log "Add a Lead to Salesforce: $LEAD_FIRSTNAME $LEAD_LASTNAME"
+docker exec sfdx-cli sh -c "sfdx force:data:record:create  -u \"$SALESFORCE_USERNAME\" -s Lead -v \"FirstName='$LEAD_FIRSTNAME' LastName='$LEAD_LASTNAME' Company=Confluent\""
 
 sleep 10
 

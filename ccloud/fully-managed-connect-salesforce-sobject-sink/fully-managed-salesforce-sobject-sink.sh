@@ -121,11 +121,6 @@ set -e
 log "Create $PUSH_TOPICS_NAME"
 docker exec sfdx-cli sh -c "sfdx force:apex:execute  -u \"$SALESFORCE_USERNAME\" -f \"/tmp/MyLeadPushTopics.apex\""
 
-LEAD_FIRSTNAME=John_$RANDOM
-LEAD_LASTNAME=Doe_$RANDOM
-log "Add a Lead to Salesforce: $LEAD_FIRSTNAME $LEAD_LASTNAME"
-docker exec sfdx-cli sh -c "sfdx force:data:record:create  -u \"$SALESFORCE_USERNAME\" -s Lead -v \"FirstName='$LEAD_FIRSTNAME' LastName='$LEAD_LASTNAME' Company=Confluent\""
-
 log "Creating Salesforce PushTopics Source connector"
 cat << EOF > connector.json
 {
@@ -143,7 +138,7 @@ cat << EOF > connector.json
      "salesforce.password.token" : "$SALESFORCE_SECURITY_TOKEN",
      "salesforce.consumer.key" : "$SALESFORCE_CONSUMER_KEY",
      "salesforce.consumer.secret" : "$SALESFORCE_CONSUMER_PASSWORD",
-     "salesforce.initial.start" : "all",
+     "salesforce.initial.start" : "latest",
      "output.data.format": "AVRO",
      "tasks.max": "1"
 }
@@ -161,6 +156,10 @@ log "Creating fully managed connector"
 create_ccloud_connector connector.json
 wait_for_ccloud_connector_up connector.json 300
 
+LEAD_FIRSTNAME=John_$RANDOM
+LEAD_LASTNAME=Doe_$RANDOM
+log "Add a Lead to Salesforce: $LEAD_FIRSTNAME $LEAD_LASTNAME"
+docker exec sfdx-cli sh -c "sfdx force:data:record:create  -u \"$SALESFORCE_USERNAME\" -s Lead -v \"FirstName='$LEAD_FIRSTNAME' LastName='$LEAD_LASTNAME' Company=Confluent\""
 
 sleep 10
 
