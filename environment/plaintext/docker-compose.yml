@@ -163,6 +163,8 @@ services:
       # SCHEMA_REGISTRY_CONFLUENT_TELEMETRY_ENABLED: 'true'
       # SCHEMA_REGISTRY_CONFLUENT_TELEMETRY_API_KEY: 'CLOUD_API_KEY'
       # SCHEMA_REGISTRY_CONFLUENT_TELEMETRY_API_SECRET: 'CLOUD_API_SECRET'
+      # https://github.com/confluentinc/schema-registry/issues/2213
+      SCHEMA_REGISTRY_SCHEMA_PROVIDERS_AVRO_VALIDATE_DEFAULTS: "true"
 
   connect:
     image: vdesabou/kafka-docker-playground-connect:${CONNECT_TAG}
