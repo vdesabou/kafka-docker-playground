@@ -6,6 +6,8 @@ services:
     image: debezium/postgres:10
     hostname: postgres
     container_name: postgres
+    ports:
+      - "5432:5432"
     environment:
       - POSTGRES_USER=myuser
       - POSTGRES_PASSWORD=mypassword
@@ -20,4 +22,4 @@ services:
       - schema-registry
       - postgres
     environment:
-      CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/debezium-debezium-connector-postgresql
+      CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/debezium-debezium-connector-postgresql,/usr/share/confluent-hub-components/confluentinc-kafka-connect-jdbc
