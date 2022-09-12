@@ -7,27 +7,27 @@ source ${DIR}/../../scripts/utils.sh
 cd ../../connect/connect-ibm-mq-source
 get_3rdparty_file "IBM-MQ-Install-Java-All.jar"
 
-if [ ! -f ${DIR}/IBM-MQ-Install-Java-All.jar ]
+if [ ! -f ${PWD}/IBM-MQ-Install-Java-All.jar ]
 then
      # not running with github actions
-     logerror "ERROR: ${DIR}/IBM-MQ-Install-Java-All.jar is missing. It must be downloaded manually in order to acknowledge user agreement"
+     logerror "ERROR: ${PWD}/IBM-MQ-Install-Java-All.jar is missing. It must be downloaded manually in order to acknowledge user agreement"
      exit 1
 fi
 
-if [ ! -f ${DIR}/com.ibm.mq.allclient.jar ]
+if [ ! -f ${PWD}/com.ibm.mq.allclient.jar ]
 then
      # install deps
      log "Getting com.ibm.mq.allclient.jar and jms.jar from IBM-MQ-Install-Java-All.jar"
      if [[ "$OSTYPE" == "darwin"* ]]
      then
           # workaround for issue on linux, see https://github.com/vdesabou/kafka-docker-playground/issues/851#issuecomment-821151962
-          rm -rf ${DIR}/install/
+          rm -rf ${PWD}/install/
      else
-          sudo rm -rf ${DIR}/install/
+          sudo rm -rf ${PWD}/install/
      fi
-     docker run --rm -v ${DIR}/IBM-MQ-Install-Java-All.jar:/tmp/IBM-MQ-Install-Java-All.jar -v ${DIR}/install:/tmp/install openjdk:8 java -jar /tmp/IBM-MQ-Install-Java-All.jar --acceptLicense /tmp/install
-     cp ${DIR}/install/wmq/JavaSE/lib/jms.jar ${DIR}/
-     cp ${DIR}/install/wmq/JavaSE/lib/com.ibm.mq.allclient.jar ${DIR}/
+     docker run --rm -v ${PWD}/IBM-MQ-Install-Java-All.jar:/tmp/IBM-MQ-Install-Java-All.jar -v ${PWD}/install:/tmp/install openjdk:8 java -jar /tmp/IBM-MQ-Install-Java-All.jar --acceptLicense /tmp/install
+     cp ${PWD}/install/wmq/JavaSE/lib/jms.jar ${PWD}/
+     cp ${PWD}/install/wmq/JavaSE/lib/com.ibm.mq.allclient.jar ${PWD}/
 fi
 cd -
 
