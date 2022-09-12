@@ -1,0 +1,9 @@
+{
+    "topicFilters": [
+        {
+            "name": "demo",
+            "patternType": "PREFIXED",
+            "filterType": "INCLUDE"
+        }
+    ]
+}
