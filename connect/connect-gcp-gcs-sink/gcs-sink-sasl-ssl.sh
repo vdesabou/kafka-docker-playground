@@ -66,6 +66,8 @@ curl -X PUT \
                "format.class": "io.confluent.connect.gcs.format.avro.AvroFormat",
                "partitioner.class": "io.confluent.connect.storage.partitioner.DefaultPartitioner",
                "schema.compatibility": "NONE",
+"value.converter": "io.confluent.connect.avro.AvroConverter",
+"value.converter.schema.registry.url": "https://schema-registry:8081",
                "confluent.topic.bootstrap.servers": "broker:9092",
                "confluent.topic.replication.factor": "1",
                "confluent.topic.ssl.truststore.location" : "/etc/kafka/secrets/kafka.connect.truststore.jks",
