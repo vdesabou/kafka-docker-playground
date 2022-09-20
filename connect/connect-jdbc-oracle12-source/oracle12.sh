@@ -4,7 +4,7 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
-create_or_get_oracle_image "linuxx64_12201_database.zip" "$(pwd)/ora-setup-scripts"
+create_or_get_oracle_image "linuxx64_12201_database.zip" "../../connect/connect-jdbc-oracle12-source/ora-setup-scripts"
 
 if [ ! -z "$CONNECTOR_TAG" ]
 then
