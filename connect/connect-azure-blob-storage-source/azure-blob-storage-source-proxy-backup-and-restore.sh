@@ -64,6 +64,11 @@ sed -e "s|:AZURE_ACCOUNT_NAME:|$AZURE_ACCOUNT_NAME|g" \
 
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.proxy.backup-and-restore.yml"
 
+DOMAIN="$AZURE_CONTAINER_NAME.blob.core.windows.net"
+IP=$(nslookup $DOMAIN | grep Address | grep -v "#" | cut -d " " -f 2 | tail -1)
+log "Blocking $DOMAIN IP $IP to make sure proxy is used"
+docker exec --privileged --user root connect bash -c "iptables -A INPUT -p tcp -s $IP -j DROP"
+
 log "Creating Azure Blob Storage Sink connector"
 curl -X PUT \
      -H "Content-Type: application/json" \
@@ -126,6 +131,6 @@ sleep 5
 
 log "Verifying topic copy_of_blob_topic"
 timeout 60 docker exec broker kafka-console-consumer -bootstrap-server broker:9092 --topic copy_of_blob_topic --from-beginning --max-messages 3
-
+exit 0
 log "Deleting resource group"
 az group delete --name $AZURE_RESOURCE_GROUP --yes --no-wait
