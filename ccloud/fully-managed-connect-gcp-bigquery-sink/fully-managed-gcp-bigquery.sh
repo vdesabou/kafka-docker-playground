@@ -43,6 +43,9 @@ docker run -i -v ${KEYFILE}:/tmp/keyfile.json --name gcloud-config google/cloud-
 set +e
 log "Drop dataset $DATASET, this might fail"
 docker run -i --volumes-from gcloud-config google/cloud-sdk:latest bq --project_id "$PROJECT" rm -r -f -d "$DATASET"
+sleep 1
+# https://github.com/GoogleCloudPlatform/terraform-google-secured-data-warehouse/issues/35
+docker run -i --volumes-from gcloud-config google/cloud-sdk:latest bq --project_id "$PROJECT" rm -r -f -d "$DATASET"
 set -e
 
 log "Create dataset $PROJECT.$DATASET"
