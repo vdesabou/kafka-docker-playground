@@ -1,0 +1,46 @@
+organization:
+  name: kafka-docker-playground
+clusters:
+  - id: local
+    name: My Cluster
+    color: "#0013E7"
+    ignoreUntrustedCertificate: false
+    bootstrapServers: "broker:9092"
+    properties: |
+      client.id=conduktor
+      default.api.timeout.ms=15000
+      request.timeout.ms=5000
+      ssl.truststore.location=/etc/kafka/secrets/kafka.conduktor.truststore.jks
+      ssl.truststore.password=confluent
+      ssl.keystore.location=/etc/kafka/secrets/kafka.conduktor.keystore.jks
+      ssl.keystore.password=confluent
+      ssl.key.password=confluent
+      security.protocol=SASL_SSL
+      sasl.jaas.config=org.apache.kafka.common.security.plain.PlainLoginModule required username="client" password="client-secret";
+      sasl.mechanism=PLAIN
+    schemaRegistry:
+      id: Local SR
+      url: "https://schema-registry:8081"
+      ignoreUntrustedCertificate: false
+      properties: |
+        acks=all
+        client.id=conduktor
+        default.api.timeout.ms=15000
+        request.timeout.ms=5000
+        schema.registry.ssl.truststore.location=/etc/kafka/secrets/kafka.conduktor.truststore.jks
+        schema.registry.ssl.truststore.password=confluent
+        schema.registry.ssl.keystore.location=/etc/kafka/secrets/kafka.conduktor.keystore.jks
+        schema.registry.ssl.keystore.password=confluent
+        schema.registry.ssl.key.password=confluent  
+    labels:
+      env: default
+    kafkaConnects:
+      - url: "https://connect:8083"
+        id: kafka-connect
+        name: kafkConnect
+auth:
+  demo-users:
+    - email: admin
+      password: admin
+      groups:
+        - ADMIN

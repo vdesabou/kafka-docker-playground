@@ -112,3 +112,8 @@ services:
                 username=\"client\" \
                 password=\"client-secret\";"
             CONTROL_CENTER_KAFKA_MYCLUSTER_SASL_MECHANISM: SCRAM-SHA-256
+
+    # https://github.com/conduktor/conduktor-platform/blob/main/doc/Configuration.md
+    conduktor:
+        volumes:
+            - ../../environment/sasl-scram/conduktor/platform-config.yaml:/tmp/platform-config.yaml

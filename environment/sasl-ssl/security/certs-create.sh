@@ -11,7 +11,7 @@ rm -f /tmp/*.crt /tmp/*.csr /tmp/*_creds /tmp/*.jks /tmp/*.srl /tmp/*.key /tmp/*
 # Generate CA key
 openssl req -new -x509 -keyout /tmp/snakeoil-ca-1.key -out /tmp/snakeoil-ca-1.crt -days 365 -subj '/CN=ca1.test.confluent.io/OU=TEST/O=CONFLUENT/L=PaloAlto/ST=Ca/C=US' -passin pass:confluent -passout pass:confluent
 
-for i in broker broker2 broker3 client schema-registry restproxy connect connect2 connect3 control-center clientrestproxy ksqldb-server
+for i in broker broker2 broker3 client schema-registry restproxy connect connect2 connect3 control-center clientrestproxy ksqldb-server conduktor
 do
     echo "------------------------------- $i -------------------------------"
 

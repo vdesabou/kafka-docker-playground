@@ -356,3 +356,9 @@ services:
                   -Djavax.net.ssl.trustStorePassword=confluent
                   -Djavax.net.ssl.keyStore=/etc/kafka/secrets/kafka.control-center.keystore.jks
                   -Djavax.net.ssl.keyStorePassword=confluent
+
+    # https://github.com/conduktor/conduktor-platform/blob/main/doc/Configuration.md
+  conduktor:
+    volumes:
+      - ../../environment/sasl-ssl/conduktor/platform-config.yaml:/tmp/platform-config.yaml
+      - ../../environment/sasl-ssl/security:/etc/kafka/secrets

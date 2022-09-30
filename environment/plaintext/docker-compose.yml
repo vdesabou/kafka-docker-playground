@@ -535,3 +535,20 @@ services:
     entrypoint: [ "sh", "-c", "sleep infinity" ]
     profiles:
       - "kcat"
+
+  # https://github.com/conduktor/conduktor-platform/blob/main/doc/Configuration.md
+  conduktor:
+    image: conduktor/conduktor-platform:latest
+    hostname: conduktor
+    container_name: conduktor
+    depends_on:
+      - broker
+    ports:
+      - 8080:80
+    volumes:
+      - ../../environment/plaintext/conduktor/platform-config.yaml:/tmp/platform-config.yaml
+    environment:
+      CDK_IN_CONF_FILE: /tmp/platform-config.yaml
+      RUN_MODE: "nano"
+    profiles:
+      - "conduktor"
