@@ -49,13 +49,13 @@ AWS_BUCKET_NAME=pg-bucket-${USER}
 AWS_BUCKET_NAME=${AWS_BUCKET_NAME//[-.]/}
 
 
-log "Empty bucket <$AWS_BUCKET_NAME/$TAG>, if required"
+log "Create bucket <$AWS_BUCKET_NAME>, if required"
 set +e
 aws s3api create-bucket --bucket $AWS_BUCKET_NAME --region $AWS_REGION --create-bucket-configuration LocationConstraint=$AWS_REGION
 set -e
-log "Empty bucket <$AWS_BUCKET_NAME>, if required"
+log "Empty bucket <$AWS_BUCKET_NAME/quickstart>, if required"
 set +e
-aws s3 rm s3://$AWS_BUCKET_NAME/$TAG --recursive --region $AWS_REGION
+aws s3 rm s3://$AWS_BUCKET_NAME/quickstart --recursive --region $AWS_REGION
 set -e
 
 log "Copy generalized.quickstart.json to bucket $AWS_BUCKET_NAME/quickstart"
