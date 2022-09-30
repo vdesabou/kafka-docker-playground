@@ -64,7 +64,7 @@ az storage account create \
     --location $AZURE_REGION \
     --sku Standard_LRS \
     --kind StorageV2 \
-    --hns true
+    --tags owner_email=$AZ_USER
 
 sleep 20
 
