@@ -50,7 +50,8 @@ log "Creating Cosmos DB server $AZURE_COSMOSDB_SERVER_NAME"
 az cosmosdb create \
     --name $AZURE_COSMOSDB_SERVER_NAME \
     --resource-group $AZURE_RESOURCE_GROUP \
-    --locations regionName=$AZURE_REGION
+    --locations regionName=$AZURE_REGION \
+    --tags owner_email=$AZ_USER
 
 log "Create the database"
 az cosmosdb sql database create \

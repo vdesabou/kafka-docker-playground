@@ -52,7 +52,8 @@ log "Creating Azure Service Bus namespace"
 az servicebus namespace create \
     --name $AZURE_SERVICE_BUS_NAMESPACE \
     --resource-group $AZURE_RESOURCE_GROUP \
-    --location $AZURE_REGION
+    --location $AZURE_REGION \
+    --tags owner_email=$AZ_USER
 log "Creating Azure Service Bus Queue"
 az servicebus queue create \
     --name $AZURE_SERVICE_BUS_QUEUE_NAME \

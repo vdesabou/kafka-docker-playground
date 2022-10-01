@@ -42,7 +42,8 @@ az sql server create \
     --resource-group $AZURE_RESOURCE_GROUP \
     --location $AZURE_REGION  \
     --admin-user myadmin \
-    --admin-password $PASSWORD
+    --admin-password $PASSWORD \
+    --tags owner_email=$AZ_USER
 if [ ! -z "$CI" ]
 then
     # running with CI

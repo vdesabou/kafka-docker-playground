@@ -40,7 +40,8 @@ az storage account create \
     --name $AZURE_STORAGE_NAME \
     --resource-group $AZURE_RESOURCE_GROUP \
     --location $AZURE_REGION \
-    --sku Standard_LRS
+    --sku Standard_LRS \
+    --tags owner_email=$AZ_USER
 
 rm -rf $PWD/LocalFunctionProj
 log "Creating local functions project with HTTP trigger"
