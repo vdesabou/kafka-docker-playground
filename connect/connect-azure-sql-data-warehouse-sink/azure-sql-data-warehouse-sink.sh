@@ -42,8 +42,7 @@ az sql server create \
     --resource-group $AZURE_RESOURCE_GROUP \
     --location $AZURE_REGION  \
     --admin-user myadmin \
-    --admin-password $PASSWORD \
-    --tags owner_email=$AZ_USER
+    --admin-password $PASSWORD
 if [ ! -z "$CI" ]
 then
     # running with CI
@@ -70,7 +69,8 @@ log "Create a SQL Data Warehouse instance"
 az sql dw create \
     --name $AZURE_DATA_WAREHOUSE_NAME \
     --resource-group $AZURE_RESOURCE_GROUP \
-    --server $AZURE_SQL_NAME
+    --server $AZURE_SQL_NAME \
+    --tags owner_email=$AZ_USER
 
 # generate data file for externalizing secrets
 sed -e "s|:AZURE_SQL_URL:|$AZURE_SQL_URL|g" \
