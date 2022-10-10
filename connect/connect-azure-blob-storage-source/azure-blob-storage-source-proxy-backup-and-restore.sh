@@ -38,15 +38,15 @@ set -e
 log "Creating Azure Resource Group $AZURE_RESOURCE_GROUP"
 az group create \
     --name $AZURE_RESOURCE_GROUP \
-    --location $AZURE_REGION
+    --location $AZURE_REGION \
+    --tags owner_email=$AZ_USER
 log "Creating Azure Storage Account $AZURE_ACCOUNT_NAME"
 az storage account create \
     --name $AZURE_ACCOUNT_NAME \
     --resource-group $AZURE_RESOURCE_GROUP \
     --location $AZURE_REGION \
     --sku Standard_LRS \
-    --encryption-services blob \
-    --tags owner_email=$AZ_USER
+    --encryption-services blob
 AZURE_ACCOUNT_KEY=$(az storage account keys list \
     --account-name $AZURE_ACCOUNT_NAME \
     --resource-group $AZURE_RESOURCE_GROUP \

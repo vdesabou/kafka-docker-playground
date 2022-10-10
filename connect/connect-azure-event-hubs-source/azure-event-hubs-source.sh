@@ -52,8 +52,7 @@ log "Creating Azure Event Hubs namespace"
 az eventhubs namespace create \
     --name $AZURE_EVENT_HUBS_NAMESPACE \
     --resource-group $AZURE_RESOURCE_GROUP \
-    --enable-kafka true \
-    --tags owner_email=$AZ_USER
+    --enable-kafka true
 log "Creating Azure Event Hubs"
 az eventhubs eventhub create \
     --name $AZURE_EVENT_HUBS_NAME \

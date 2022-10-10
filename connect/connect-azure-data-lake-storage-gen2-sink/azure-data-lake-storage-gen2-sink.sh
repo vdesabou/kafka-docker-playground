@@ -45,7 +45,8 @@ az extension add --name storage-preview
 log "Creating resource $AZURE_RESOURCE_GROUP in $AZURE_REGION"
 az group create \
     --name $AZURE_RESOURCE_GROUP \
-    --location $AZURE_REGION
+    --location $AZURE_REGION \
+    --tags owner_email=$AZ_USER
 
 log "Registering active directory App $AZURE_AD_APP_NAME"
 AZURE_DATALAKE_CLIENT_ID=$(az ad app create --display-name "$AZURE_AD_APP_NAME" --is-fallback-public-client false --sign-in-audience AzureADandPersonalMicrosoftAccount --query appId -o tsv)
@@ -63,8 +64,7 @@ az storage account create \
     --resource-group $AZURE_RESOURCE_GROUP \
     --location $AZURE_REGION \
     --sku Standard_LRS \
-    --kind StorageV2 \
-    --tags owner_email=$AZ_USER
+    --kind StorageV2
 
 sleep 20
 

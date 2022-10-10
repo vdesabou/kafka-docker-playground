@@ -35,7 +35,8 @@ set -e
 log "Creating Azure Resource Group $AZURE_RESOURCE_GROUP"
 az group create \
     --name $AZURE_RESOURCE_GROUP \
-    --location $AZURE_REGION
+    --location $AZURE_REGION \
+    --tags owner_email=$AZ_USER
 log "Creating SQL server instance $AZURE_SQL_NAME"
 az sql server create \
     --name $AZURE_SQL_NAME \
@@ -69,8 +70,7 @@ log "Create a SQL Data Warehouse instance"
 az sql dw create \
     --name $AZURE_DATA_WAREHOUSE_NAME \
     --resource-group $AZURE_RESOURCE_GROUP \
-    --server $AZURE_SQL_NAME \
-    --tags owner_email=$AZ_USER
+    --server $AZURE_SQL_NAME
 
 # generate data file for externalizing secrets
 sed -e "s|:AZURE_SQL_URL:|$AZURE_SQL_URL|g" \

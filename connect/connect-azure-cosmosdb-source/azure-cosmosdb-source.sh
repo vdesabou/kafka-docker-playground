@@ -42,7 +42,8 @@ set -e
 log "Creating Azure Resource Group $AZURE_RESOURCE_GROUP"
 az group create \
     --name $AZURE_RESOURCE_GROUP \
-    --location $AZURE_REGION
+    --location $AZURE_REGION \
+    --tags owner_email=$AZ_USER
 
 sleep 10
 
@@ -50,8 +51,7 @@ log "Creating Cosmos DB server $AZURE_COSMOSDB_SERVER_NAME"
 az cosmosdb create \
     --name $AZURE_COSMOSDB_SERVER_NAME \
     --resource-group $AZURE_RESOURCE_GROUP \
-    --locations regionName=$AZURE_REGION \
-    --tags owner_email=$AZ_USER
+    --locations regionName=$AZURE_REGION
 
 log "Create the database"
 az cosmosdb sql database create \
