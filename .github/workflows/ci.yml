@@ -17,6 +17,7 @@ on:
 
 jobs:
   pre-build:
+    if: ${{ github.event.inputs.test_name == '' }}
     name: Cleanup resources
     runs-on: ubuntu-latest
     steps:
