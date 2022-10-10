@@ -1,0 +1,39 @@
+organization:
+  name: kafka-docker-playground
+clusters:
+  - id: local
+    name: My Cluster
+    color: "#0013E7"
+    ignoreUntrustedCertificate: false
+    bootstrapServers: "$BOOTSTRAP_SERVERS"
+    properties: |
+      client.id=conduktor
+      default.api.timeout.ms=15000
+      request.timeout.ms=5000
+      security.protocol=SASL_SSL
+      sasl.mechanism=PLAIN
+      sasl.jaas.config=$SASL_JAAS_CONFIG
+    schemaRegistry:
+      id: Local SR
+      url: "$SCHEMA_REGISTRY_URL"
+      ignoreUntrustedCertificate: false
+      properties: |
+        acks=all
+        client.id=conduktor
+        default.api.timeout.ms=15000
+        request.timeout.ms=5000
+      security:
+        username: "$SR_USER"
+        password: "$SR_PASSWORD"
+    labels:
+      env: default
+    kafkaConnects:
+      - url: "http://connect:8083"
+        id: kafka-connect
+        name: kafkaConnect
+auth:
+  demo-users:
+    - email: admin
+      password: admin
+      groups:
+        - ADMIN
