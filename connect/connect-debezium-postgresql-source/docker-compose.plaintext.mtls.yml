@@ -12,7 +12,6 @@ services:
       - POSTGRES_PASSWORD=mypassword
       - POSTGRES_DB=postgres
     volumes:
-     - ../../connect/connect-debezium-postgresql-source/customers.sql:/docker-entrypoint-initdb.d/z99_dump.sql
      - ../../connect/connect-debezium-postgresql-source/mtls/my-postgres.conf:/etc/postgresql/postgresql.conf
      - ../../connect/connect-debezium-postgresql-source/mtls/pg_hba.conf:/etc/postgresql/pg_hba.conf
     command: postgres -c config_file=/etc/postgresql/postgresql.conf -c hba_file=/etc/postgresql/pg_hba.conf
