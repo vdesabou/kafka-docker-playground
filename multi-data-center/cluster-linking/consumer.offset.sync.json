@@ -3,5 +3,9 @@
         "name": "my-consumer-group",
         "patternType": "LITERAL",
         "filterType": "INCLUDE"
+    },{
+        "name": "connect-filestream-sink",
+        "patternType": "LITERAL",
+        "filterType": "INCLUDE"
     }]
 }
