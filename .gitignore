@@ -70,3 +70,4 @@ myenv
 *.log
 secrets.properties
 secrets.tar
+*.hprof
