@@ -54,7 +54,7 @@ Click on `Enable`:
 Simply run:
 
 ```bash
-$ ./gcp-firebase-source.sh <PROJECT>
+$ ./gcp-firebase-source.sh <GCP_PROJECT>
 ```
 
 ### Verify data has been pushed to Firebase

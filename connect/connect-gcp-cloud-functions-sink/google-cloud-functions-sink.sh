@@ -3,7 +3,11 @@ set -e
 
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
-PROJECT=${1:-vincent-de-saboulin-lab}
+if [ -z "$GCP_PROJECT" ]
+then
+     logerror "GCP_PROJECT is not set. Export it as environment variable or pass it as argument"
+     exit 1
+fi
 REGION=${2:-us-central1}
 FUNCTION=${3:-function-1}
 

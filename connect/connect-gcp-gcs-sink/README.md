@@ -30,7 +30,7 @@ Download it as JSON:
 
 ![Service Account setup](Screenshot4.png)
 
-Rename it to `keyfile.json`and place it in `./keyfile.json` or use environment variable `KEYFILE_CONTENT` with content generated with `KEYFILE_CONTENT=`cat keyfile.json | jq -aRs .`
+Rename it to `keyfile.json`and place it in `./keyfile.json` or use environment variable `GCP_KEYFILE_CONTENT` with content generated with `GCP_KEYFILE_CONTENT=`cat keyfile.json | jq -aRs .`
 
 
 ## How to run
@@ -38,38 +38,38 @@ Rename it to `keyfile.json`and place it in `./keyfile.json` or use environment v
 Simply run:
 
 ```bash
-$ ./gcs-sink.sh <PROJECT>
+$ ./gcs-sink.sh <GCP_PROJECT>
 ```
 
 Or using SASL_SSL:
 
 ```bash
-$ ./gcs-sink-sasl-ssl.sh <PROJECT>
+$ ./gcs-sink-sasl-ssl.sh <GCP_PROJECT>
 ```
 
 Or using 2 way SSL authentication:
 
 ```bash
-$ ./gcs-sink-2way-ssl.sh <PROJECT>
+$ ./gcs-sink-2way-ssl.sh <GCP_PROJECT>
 ```
 
 
 Or using kerberos:
 
 ```bash
-$ ./gcs-sink-kerberos.sh <PROJECT>
+$ ./gcs-sink-kerberos.sh <GCP_PROJECT>
 ```
 
 Or using LDAP Authorizer with SASL/PLAIN:
 
 ```bash
-$ ./gcs-sink-ldap-authorizer-sasl-plain.sh <PROJECT>
+$ ./gcs-sink-ldap-authorizer-sasl-plain.sh <GCP_PROJECT>
 ```
 
 Or using RBAC environment with SASL/PLAIN:
 
 ```bash
-$ ./gcs-sink-rbac-sasl-plain.sh <PROJECT>
+$ ./gcs-sink-rbac-sasl-plain.sh <GCP_PROJECT>
 ```
 
 Note: you can also export these values as environment variable
@@ -116,7 +116,7 @@ $ gsutil ls gs://$GCS_BUCKET_NAME/topics/gcs_topic/partition=0/
 Doing `gsutil` authentication:
 
 ```bash
-$ gcloud auth activate-service-account --key-file ${KEYFILE}
+$ gcloud auth activate-service-account --key-file ${GCP_KEYFILE}
 ```
 
 Getting one of the avro files locally and displaying content with avro-tools:

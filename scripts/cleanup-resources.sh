@@ -67,14 +67,14 @@ do
 done
 
 log "Cleanup GCP GCS buckets"
-KEYFILE="/tmp/keyfile.json"
-log "Creating ${KEYFILE} based on environment variable KEYFILE_CONTENT"
-echo -e "$KEYFILE_CONTENT" | sed 's/\\"/"/g' > ${KEYFILE}
+GCP_KEYFILE="/tmp/keyfile.json"
+log "Creating ${GCP_KEYFILE} based on environment variable GCP_KEYFILE_CONTENT"
+echo -e "$GCP_KEYFILE_CONTENT" | sed 's/\\"/"/g' > ${GCP_KEYFILE}
 PROJECT="vincent-de-saboulin-lab"
 set +e
 docker rm -f gcloud-config-cleanup-resources
 set -e
-docker run -i -v ${KEYFILE}:/tmp/keyfile.json --name gcloud-config-cleanup-resources google/cloud-sdk:latest gcloud auth activate-service-account --project ${PROJECT} --key-file /tmp/keyfile.json
+docker run -i -v ${GCP_KEYFILE}:/tmp/keyfile.json --name gcloud-config-cleanup-resources google/cloud-sdk:latest gcloud auth activate-service-account --project ${PROJECT} --key-file /tmp/keyfile.json
 
 for bucket in $(docker run -i --volumes-from gcloud-config-cleanup-resources google/cloud-sdk:latest gsutil ls)
 do
@@ -90,7 +90,7 @@ PROJECT="vincent-de-saboulin-lab"
 set +e
 docker rm -f gcloud-config-cleanup-resources
 set -e
-docker run -i -v ${KEYFILE}:/tmp/keyfile.json --name gcloud-config-cleanup-resources google/cloud-sdk:latest gcloud auth activate-service-account --project ${PROJECT} --key-file /tmp/keyfile.json
+docker run -i -v ${GCP_KEYFILE}:/tmp/keyfile.json --name gcloud-config-cleanup-resources google/cloud-sdk:latest gcloud auth activate-service-account --project ${PROJECT} --key-file /tmp/keyfile.json
 
 for dataset in $(docker run -i --volumes-from gcloud-config-cleanup-resources google/cloud-sdk:latest bq --project_id "$PROJECT" ls)
 do
