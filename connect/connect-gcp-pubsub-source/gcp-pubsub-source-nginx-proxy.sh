@@ -61,7 +61,7 @@ curl -X PUT \
                "connector.class" : "io.confluent.connect.gcp.pubsub.PubSubSourceConnector",
                "tasks.max" : "1",
                "kafka.topic" : "pubsub-topic",
-               "gcp.pubsub.project.id" : "'"$PROJECT"'",
+               "gcp.pubsub.project.id" : "'"$GCP_PROJECT"'",
                "gcp.pubsub.topic.id" : "topic-1",
                "gcp.pubsub.subscription.id" : "subscription-1",
                "gcp.pubsub.credentials.path" : "/tmp/keyfile.json",

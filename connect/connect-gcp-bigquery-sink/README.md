@@ -73,7 +73,7 @@ curl -X PUT \
                "bufferSize": "100000",
                "maxWriteSize": "10000",
                "tableWriteWait": "1000",
-               "project" : "'"$PROJECT"'",
+               "project" : "'"$GCP_PROJECT"'",
                "keyfile" : "/tmp/keyfile.json",
           }' \
      http://localhost:8083/connectors/gcp-bigquery-sink/config | jq .

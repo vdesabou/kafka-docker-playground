@@ -59,7 +59,7 @@ curl -X PUT \
                "sanitizeTopics" : "true",
                "autoCreateTables" : "true",
                "defaultDataset" : "'"$DATASET"'",
-               "project" : "'"$PROJECT"'",
+               "project" : "'"$GCP_PROJECT"'",
                "keyfile" : "/tmp/keyfile.json"
           }' \
      http://localhost:8083/connectors/gcp-bigquery-sink/config | jq .

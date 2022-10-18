@@ -64,7 +64,7 @@ curl -X PUT \
                "auto.create" : "true",
                "gcp.bigtable.credentials.path": "/tmp/keyfile.json",
                "gcp.bigtable.instance.id": "'"$INSTANCE"'",
-               "gcp.bigtable.project.id": "'"$PROJECT"'",
+               "gcp.bigtable.project.id": "'"$GCP_PROJECT"'",
                "proxy.url": "https://nginx-proxy:8888",
                "auto.create.tables": "true",
                "auto.create.column.families": "true",

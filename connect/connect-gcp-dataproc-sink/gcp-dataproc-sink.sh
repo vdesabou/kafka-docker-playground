@@ -55,7 +55,7 @@ curl -X PUT \
                "tasks.max" : "1",
                "flush.size": "3",
                "topics" : "test_dataproc",
-               "gcp.dataproc.projectId": "'"$PROJECT"'",
+               "gcp.dataproc.projectId": "'"$GCP_PROJECT"'",
                "gcp.dataproc.region": "us-east1",
                "gcp.dataproc.cluster": "'"$CLUSTER_NAME"'",
                "gcp.dataproc.credentials.path" : "/tmp/keyfile.json",

@@ -33,7 +33,7 @@ curl -X PUT \
                "confluent.topic.bootstrap.servers": "broker:9092",
                "confluent.topic.replication.factor":1,
                "function.name": "'"$FUNCTION"'",
-               "project.id": "'"$PROJECT"'",
+               "project.id": "'"$GCP_PROJECT"'",
                "region": "'"$REGION"'",
                "reporter.bootstrap.servers": "broker:9092",
                "reporter.error.topic.name": "test-error",
