@@ -54,7 +54,9 @@ log "Create a FIFO queue $QUEUE_NAME"
 aws sqs create-queue --queue-name $QUEUE_NAME
 
 log "Sending messages to $QUEUE_URL"
+cd ../../connect/connect-aws-sqs-source
 aws sqs send-message-batch --queue-url $QUEUE_URL --entries file://send-message-batch.json
+cd -
 
 log "Creating SQS Source connector"
 curl -X PUT \
