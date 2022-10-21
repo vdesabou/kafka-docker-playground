@@ -43,10 +43,10 @@ $ ./gcp-bigquery.sh <GCP_PROJECT>
 
 ## Details of what the script is doing
 
-Create dataset $PROJECT.$DATASET
+Create dataset $GCP_PROJECT.$DATASET
 
 ```bash
-$ docker run -i --volumes-from gcloud-config google/cloud-sdk:latest bq --project_id "$PROJECT" mk --dataset --description "used by playground" "$DATASET"
+$ docker run -i --volumes-from gcloud-config google/cloud-sdk:latest bq --project_id "$GCP_PROJECT" mk --dataset --description "used by playground" "$DATASET"
 ```
 
 Messages are sent to `kcbq-quickstart1` topic using:
@@ -84,7 +84,7 @@ curl -X PUT \
 After 120 seconds, data should be in GCP BigQuery:
 
 ```bash
-$ bq --project_id "$PROJECT" query "SELECT * FROM $DATASET.kcbq_quickstart1;"
+$ bq --project_id "$GCP_PROJECT" query "SELECT * FROM $DATASET.kcbq_quickstart1;"
 Waiting on bqjob_r1bbecb24663a3f7c_0000016d825065f1_1 ... (0s) Current status: DONE
 +---------+
 |   f1    |

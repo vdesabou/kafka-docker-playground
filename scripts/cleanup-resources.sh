@@ -92,12 +92,12 @@ docker rm -f gcloud-config-cleanup-resources
 set -e
 docker run -i -v ${GCP_KEYFILE}:/tmp/keyfile.json --name gcloud-config-cleanup-resources google/cloud-sdk:latest gcloud auth activate-service-account --project ${PROJECT} --key-file /tmp/keyfile.json
 
-for dataset in $(docker run -i --volumes-from gcloud-config-cleanup-resources google/cloud-sdk:latest bq --project_id "$PROJECT" ls)
+for dataset in $(docker run -i --volumes-from gcloud-config-cleanup-resources google/cloud-sdk:latest bq --project_id "$GCP_PROJECT" ls)
 do
     if [[ $dataset = *pgrunnerds* ]] || [[ $dataset = *pg*vinc* ]]
     then
       log "Remove dataset $dataset"
-      docker run -i --volumes-from gcloud-config-cleanup-resources google/cloud-sdk:latest bq --project_id "$PROJECT" rm -r -f -d "$dataset"
+      docker run -i --volumes-from gcloud-config-cleanup-resources google/cloud-sdk:latest bq --project_id "$GCP_PROJECT" rm -r -f -d "$dataset"
     fi
 done
 

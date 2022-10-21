@@ -31,7 +31,7 @@ then
      
      # if this is github actions
      log "Removing all data"
-     docker run -p 9005:9005 -e FIREBASE_TOKEN="$FIREBASE_TOKEN" -e PROJECT=$PROJECT -i kamshak/firebase-tools-docker firebase database:remove / -y --token "$FIREBASE_TOKEN" --project "$PROJECT"
+     docker run -p 9005:9005 -e FIREBASE_TOKEN="$FIREBASE_TOKEN" -e PROJECT=$GCP_PROJECT -i kamshak/firebase-tools-docker firebase database:remove / -y --token "$FIREBASE_TOKEN" --project "$GCP_PROJECT"
 fi
 
 
@@ -45,7 +45,7 @@ curl -X PUT \
                "tasks.max" : "1",
                "topics":"artists,songs",
                "gcp.firebase.credentials.path": "/tmp/keyfile.json",
-               "gcp.firebase.database.reference": "https://'"$PROJECT"'.firebaseio.com/musicBlog",
+               "gcp.firebase.database.reference": "https://'"$GCP_PROJECT"'.firebaseio.com/musicBlog",
                "insert.mode":"update",
                "key.converter" : "io.confluent.connect.avro.AvroConverter",
                "key.converter.schema.registry.url":"http://schema-registry:8081",
@@ -77,7 +77,7 @@ if [ ! -z "$CI" ]
 then
      # if this is github actions
      log "Verifying data is in Firebase"
-     docker run -p 9005:9005 -e FIREBASE_TOKEN=$FIREBASE_TOKEN -e PROJECT=$PROJECT -i kamshak/firebase-tools-docker firebase database:get / --token "$FIREBASE_TOKEN" --project "$PROJECT" | jq . > /tmp/result.log  2>&1
+     docker run -p 9005:9005 -e FIREBASE_TOKEN=$FIREBASE_TOKEN -e PROJECT=$GCP_PROJECT -i kamshak/firebase-tools-docker firebase database:get / --token "$FIREBASE_TOKEN" --project "$GCP_PROJECT" | jq . > /tmp/result.log  2>&1
      cat /tmp/result.log
      grep "Michael Jackson" /tmp/result.log
 fi

@@ -46,14 +46,14 @@ docker run -i -v ${GCP_KEYFILE}:/tmp/keyfile.json --name gcloud-config google/cl
 
 set +e
 log "Drop dataset $DATASET, this might fail"
-docker run -i --volumes-from gcloud-config google/cloud-sdk:latest bq --project_id "$PROJECT" rm -r -f -d "$DATASET"
+docker run -i --volumes-from gcloud-config google/cloud-sdk:latest bq --project_id "$GCP_PROJECT" rm -r -f -d "$DATASET"
 sleep 1
 # https://github.com/GoogleCloudPlatform/terraform-google-secured-data-warehouse/issues/35
-docker run -i --volumes-from gcloud-config google/cloud-sdk:latest bq --project_id "$PROJECT" rm -r -f -d "$DATASET"
+docker run -i --volumes-from gcloud-config google/cloud-sdk:latest bq --project_id "$GCP_PROJECT" rm -r -f -d "$DATASET"
 set -e
 
-log "Create dataset $PROJECT.$DATASET"
-docker run -i --volumes-from gcloud-config google/cloud-sdk:latest bq --project_id "$PROJECT" mk --dataset --description "used by playground" "$DATASET"
+log "Create dataset $GCP_PROJECT.$DATASET"
+docker run -i --volumes-from gcloud-config google/cloud-sdk:latest bq --project_id "$GCP_PROJECT" mk --dataset --description "used by playground" "$DATASET"
 
 log "Creating bqtopic topic in Confluent Cloud"
 set +e
@@ -72,7 +72,7 @@ cat << EOF > connector.json
      "kafka.api.secret": "$CLOUD_SECRET",
      "topics": "bqtopic",
      "keyfile" : $GCP_KEYFILE_CONTENT,
-     "project" : "$PROJECT",
+     "project" : "$GCP_PROJECT",
      "datasets" : "$DATASET",
      "input.data.format" : "AVRO",
      "auto.create.tables" : "true",
@@ -100,7 +100,7 @@ log "Sleeping 120 seconds"
 sleep 120
 
 log "Verify data is in GCP BigQuery:"
-docker run -i --volumes-from gcloud-config google/cloud-sdk:latest bq --project_id "$PROJECT" query "SELECT * FROM $DATASET.bqtopic;" > /tmp/result.log  2>&1
+docker run -i --volumes-from gcloud-config google/cloud-sdk:latest bq --project_id "$GCP_PROJECT" query "SELECT * FROM $DATASET.bqtopic;" > /tmp/result.log  2>&1
 cat /tmp/result.log
 grep "value1" /tmp/result.log
 
@@ -111,6 +111,6 @@ log "Deleting fully managed connector"
 delete_ccloud_connector connector.json
 
 log "Drop dataset $DATASET"
-docker run -i --volumes-from gcloud-config google/cloud-sdk:latest bq --project_id "$PROJECT" rm -r -f -d "$DATASET"
+docker run -i --volumes-from gcloud-config google/cloud-sdk:latest bq --project_id "$GCP_PROJECT" rm -r -f -d "$DATASET"
 
 docker rm -f gcloud-config

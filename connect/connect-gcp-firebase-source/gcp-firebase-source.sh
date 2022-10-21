@@ -30,11 +30,11 @@ then
 
 
      log "Removing all data"
-     docker run -p 9005:9005 -e FIREBASE_TOKEN="$FIREBASE_TOKEN" -e PROJECT=$PROJECT -i kamshak/firebase-tools-docker firebase database:remove / -y --token "$FIREBASE_TOKEN" --project "$PROJECT"
+     docker run -p 9005:9005 -e FIREBASE_TOKEN="$FIREBASE_TOKEN" -e PROJECT=$GCP_PROJECT -i kamshak/firebase-tools-docker firebase database:remove / -y --token "$FIREBASE_TOKEN" --project "$GCP_PROJECT"
      log "Adding data from musicBlog.json"
-     docker run -p 9005:9005 -v ${DIR}/musicBlog.json:/tmp/musicBlog.json -e FIREBASE_TOKEN="$FIREBASE_TOKEN" -e PROJECT=$PROJECT -i kamshak/firebase-tools-docker firebase database:set / /tmp/musicBlog.json -y --token "$FIREBASE_TOKEN" --project "$PROJECT"
+     docker run -p 9005:9005 -v ${DIR}/musicBlog.json:/tmp/musicBlog.json -e FIREBASE_TOKEN="$FIREBASE_TOKEN" -e PROJECT=$GCP_PROJECT -i kamshak/firebase-tools-docker firebase database:set / /tmp/musicBlog.json -y --token "$FIREBASE_TOKEN" --project "$GCP_PROJECT"
      log "Verifying data is in Firebase"
-     docker run -p 9005:9005 -e FIREBASE_TOKEN="$FIREBASE_TOKEN" -e PROJECT=$PROJECT -i kamshak/firebase-tools-docker firebase database:get / --token "$FIREBASE_TOKEN" --project "$PROJECT" | jq .
+     docker run -p 9005:9005 -e FIREBASE_TOKEN="$FIREBASE_TOKEN" -e PROJECT=$GCP_PROJECT -i kamshak/firebase-tools-docker firebase database:get / --token "$FIREBASE_TOKEN" --project "$GCP_PROJECT" | jq .
 fi
 
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
@@ -46,7 +46,7 @@ curl -X PUT \
                "connector.class" : "io.confluent.connect.firebase.FirebaseSourceConnector",
                "tasks.max" : "1",
                "gcp.firebase.credentials.path": "/tmp/keyfile.json",
-               "gcp.firebase.database.reference": "https://'"$PROJECT"'.firebaseio.com/musicBlog",
+               "gcp.firebase.database.reference": "https://'"$GCP_PROJECT"'.firebaseio.com/musicBlog",
                "gcp.firebase.snapshot":"true",
                "confluent.topic.bootstrap.servers": "broker:9092",
                "confluent.topic.replication.factor": "1",

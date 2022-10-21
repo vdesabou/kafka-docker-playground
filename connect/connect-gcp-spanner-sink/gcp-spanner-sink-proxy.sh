@@ -37,16 +37,16 @@ docker run -i -v ${GCP_KEYFILE}:/tmp/keyfile.json --name gcloud-config google/cl
 
 set +e
 log "Deleting Database and Instance, if required"
-docker run -i --volumes-from gcloud-config google/cloud-sdk:latest gcloud spanner databases delete $DATABASE --instance $INSTANCE --project $PROJECT << EOF
+docker run -i --volumes-from gcloud-config google/cloud-sdk:latest gcloud spanner databases delete $DATABASE --instance $INSTANCE --project $GCP_PROJECT << EOF
 Y
 EOF
-docker run -i --volumes-from gcloud-config google/cloud-sdk:latest gcloud spanner instances delete $INSTANCE --project $PROJECT  << EOF
+docker run -i --volumes-from gcloud-config google/cloud-sdk:latest gcloud spanner instances delete $INSTANCE --project $GCP_PROJECT  << EOF
 Y
 EOF
 set -e
 log "Create a Spanner Instance and Database"
-docker run -i --volumes-from gcloud-config google/cloud-sdk:latest gcloud spanner instances create $INSTANCE --project $PROJECT --config=regional-us-east1 --description=playground-spanner-instance --nodes=1
-docker run -i --volumes-from gcloud-config google/cloud-sdk:latest gcloud spanner databases create $DATABASE --instance $INSTANCE --project $PROJECT
+docker run -i --volumes-from gcloud-config google/cloud-sdk:latest gcloud spanner instances create $INSTANCE --project $GCP_PROJECT --config=regional-us-east1 --description=playground-spanner-instance --nodes=1
+docker run -i --volumes-from gcloud-config google/cloud-sdk:latest gcloud spanner databases create $DATABASE --instance $INSTANCE --project $GCP_PROJECT
 
 log "Sending messages to topic products"
 docker exec -i connect kafka-avro-console-producer --broker-list broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic products --property value.schema='{"type":"record","name":"myrecord","fields":[{"name":"name","type":"string"},
@@ -82,15 +82,15 @@ curl -X PUT \
 sleep 60
 
 log "Verify data is in GCP Spanner"
-docker run -i --volumes-from gcloud-config google/cloud-sdk:latest gcloud spanner databases execute-sql $DATABASE --instance $INSTANCE --project $PROJECT --sql='select * from kafka_products' > /tmp/result.log  2>&1
+docker run -i --volumes-from gcloud-config google/cloud-sdk:latest gcloud spanner databases execute-sql $DATABASE --instance $INSTANCE --project $GCP_PROJECT --sql='select * from kafka_products' > /tmp/result.log  2>&1
 cat /tmp/result.log
 grep "notebooks" /tmp/result.log
 
 log "Deleting Database and Instance"
-docker run -i --volumes-from gcloud-config google/cloud-sdk:latest gcloud spanner databases delete $DATABASE --instance $INSTANCE --project $PROJECT << EOF
+docker run -i --volumes-from gcloud-config google/cloud-sdk:latest gcloud spanner databases delete $DATABASE --instance $INSTANCE --project $GCP_PROJECT << EOF
 Y
 EOF
-docker run -i --volumes-from gcloud-config google/cloud-sdk:latest gcloud spanner instances delete $INSTANCE --project $PROJECT  << EOF
+docker run -i --volumes-from gcloud-config google/cloud-sdk:latest gcloud spanner instances delete $INSTANCE --project $GCP_PROJECT  << EOF
 Y
 EOF
 

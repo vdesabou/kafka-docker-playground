@@ -41,7 +41,7 @@ docker run -i -v ${GCP_KEYFILE}:/tmp/keyfile.json --name gcloud-config google/cl
 
 
 log "Creating Dataproc cluster $CLUSTER_NAME"
-docker run -i --volumes-from gcloud-config google/cloud-sdk:latest gcloud dataproc clusters create "$CLUSTER_NAME" --region us-east1 --project "$PROJECT"
+docker run -i --volumes-from gcloud-config google/cloud-sdk:latest gcloud dataproc clusters create "$CLUSTER_NAME" --region us-east1 --project "$GCP_PROJECT"
 
 log "Sending messages to topic test_dataproc"
 seq -f "{\"f1\": \"value%g-`date`\"}" 10 | docker exec -i connect kafka-avro-console-producer --broker-list broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic test_dataproc --property value.schema='{"type":"record","name":"myrecord","fields":[{"name":"f1","type":"string"}]}'
@@ -120,4 +120,4 @@ docker run --rm -v /tmp:/tmp actions/avro-tools tojson /tmp/test_hdfs+0+00000000
 docker rm -f gcloud-config
 
 log "Deleting Dataproc cluster $CLUSTER_NAME"
-docker run -i --volumes-from gcloud-config google/cloud-sdk:latest echo y | gcloud dataproc clusters delete "$CLUSTER_NAME" --region us-east1 --project "$PROJECT"
+docker run -i --volumes-from gcloud-config google/cloud-sdk:latest echo y | gcloud dataproc clusters delete "$CLUSTER_NAME" --region us-east1 --project "$GCP_PROJECT"
