@@ -10,6 +10,7 @@ root_folder=${root_folder//\/scripts\/\.\./}
 test_file="$PWD/$1"
 description="$2"
 schema_format="$3"
+nb_producers="$4"
 
 if [ "$test_file" = "" ]
 then
@@ -39,6 +40,11 @@ if [ "$description" = "" ]
 then
   logerror "ERROR: description is not provided as argument!"
   exit 1
+fi
+
+if [ "$nb_producers" == "" ]
+then
+  nb_producers=1
 fi
 
 test_file_directory="$(dirname "${test_file}")"
@@ -160,17 +166,21 @@ then
         # log "✨ Replacing topic $original_topic_name with $topic_name"
       fi
 
-      # looks like there is a maximum size for hostname in docker (container init caused: sethostname: invalid argument: unknown)
-      producer_hostname="producer-repro-$description_kebab_case"
-      producer_hostname=${producer_hostname:0:21} 
-      
-      rm -rf $producer_hostname
-      mkdir -p $repro_dir/$producer_hostname/
-      cp -Ra ../../other/schema-format-$schema_format/producer/* $repro_dir/$producer_hostname/
-
-      # update docker compose with producer container
       tmp_dir=$(mktemp -d -t ci-XXXXXXXXXX)
-      cat << EOF > $tmp_dir/producer
+      for((i=1;i<=$nb_producers;i++)); do
+        # looks like there is a maximum size for hostname in docker (container init caused: sethostname: invalid argument: unknown)
+        producer_hostname=""
+        producer_hostname="producer-repro-$description_kebab_case"
+        producer_hostname=${producer_hostname:0:21} 
+        producer_hostname="${producer_hostname}$i"
+
+        rm -rf $producer_hostname
+        mkdir -p $repro_dir/$producer_hostname/
+        cp -Ra ../../other/schema-format-$schema_format/producer/* $repro_dir/$producer_hostname/
+
+        # update docker compose with producer container
+        
+        cat << EOF >> $tmp_dir/producer
 
   $producer_hostname:
     build:
@@ -195,10 +205,11 @@ then
 
 
 EOF
+        done
+
 
   if [ "${docker_compose_file}" != "" ]
   then
-    log "✨ Adding Java $schema_format producer in $repro_dir/$producer_hostname"
     cp $docker_compose_test_file $tmp_dir/tmp_file
     line=$(grep -n 'services:' $docker_compose_test_file | cut -d ":" -f 1 | tail -n1)
     
@@ -209,8 +220,18 @@ EOF
     cat $tmp_dir/producer
   fi
 
-  cat << EOF > $tmp_dir/build_producer
-for component in $producer_hostname
+  for((i=1;i<=$nb_producers;i++)); do
+    log "✨ Adding Java $schema_format producer in $repro_dir/$producer_hostname"
+    producer_hostname=""
+    producer_hostname="producer-repro-$description_kebab_case"
+    producer_hostname=${producer_hostname:0:21} 
+    producer_hostname="${producer_hostname}$i"
+
+    list="$list $producer_hostname"
+
+  done
+    cat << EOF > $tmp_dir/build_producer
+for component in $list
 do
     set +e
     log "🏗 Building jar for \${component}"
@@ -234,8 +255,19 @@ EOF
     cat << EOF > $tmp_dir/java_producer
 
 # 🚨🚨🚨 FIXTHIS: move it to the correct place 🚨🚨🚨
-log "✨ Run the $schema_format java producer which produces to topic $topic_name"
+EOF
+
+  for((i=1;i<=$nb_producers;i++)); do
+    producer_hostname=""
+    producer_hostname="producer-repro-$description_kebab_case"
+    producer_hostname=${producer_hostname:0:21} 
+    producer_hostname="${producer_hostname}$i"
+    cat << EOF >> $tmp_dir/java_producer
+log "✨ Run the $schema_format java producer v$i which produces to topic $topic_name"
 docker exec $producer_hostname bash -c "java \${JAVA_OPTS} -jar producer-1.0.0-jar-with-dependencies.jar"
+EOF
+  done
+    cat << EOF >> $tmp_dir/java_producer
 # 🚨🚨🚨 FIXTHIS: move it to the correct place 🚨🚨🚨
 
 EOF
