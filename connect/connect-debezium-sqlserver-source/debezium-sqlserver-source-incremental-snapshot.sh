@@ -112,7 +112,7 @@ curl -X PUT \
               "database.history.kafka.bootstrap.servers": "broker:9092",
               "database.history.kafka.topic": "schema-changes.inventory",
               "table.include.list" : "dbo.customers,dbo.debezium_signal,dbo.customers2",
-              "signal.data.collection": "dbo.debezium_signal"
+              "signal.data.collection": "testDB.dbo.debezium_signal"
           }' \
      http://localhost:8083/connectors/debezium-sqlserver-source/config | jq .
 
@@ -124,7 +124,7 @@ set -e
 log "Trigger Ad hoc snapshot"
 docker exec -i sqlserver /opt/mssql-tools/bin/sqlcmd -U sa -P Password! << EOF
 USE testDB;
-INSERT INTO debezium_signal (id, type, data) VALUES('captain adhoc $RANDOM', 'execute-snapshot', '{"data-collections": ["dbo.customers2"], "type":"incremental"}');
+INSERT INTO debezium_signal (id, type, data) VALUES('captain adhoc $RANDOM', 'execute-snapshot', '{"data-collections": ["testDB.dbo.customers2"], "type":"incremental"}');
 GO
 EOF
 
