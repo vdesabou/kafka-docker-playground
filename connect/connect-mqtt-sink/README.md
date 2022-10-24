@@ -15,6 +15,12 @@ Simply run:
 $ ./mqtt-sink.sh
 ```
 
+or with mTLS:
+
+```
+$ ./mqtt-sink-mtls.sh
+```
+
 ## Details of what the script is doing
 
 Note: The `./password` file was created with (`myuser/mypassword`) and command:

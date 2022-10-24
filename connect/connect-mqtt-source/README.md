@@ -15,20 +15,10 @@ Simply run:
 $ ./mqtt.sh
 ```
 
-or using SMT [jcustenborder/kafka-connect-json-schema](https://www.confluent.io/hub/jcustenborder/kafka-connect-json-schema) in order to be able to workaround MQTT connector only able to handle ByteArray or String:
+or with MTLS
 
 ```
-$ ./mqtt-avro.sh
-```
-
-SMT:
-
-```json
-"transforms" : "fromJson",
-"transforms.fromJson.type" : "com.github.jcustenborder.kafka.connect.json.FromJson$Value",
-"transforms.fromJson.json.schema.location" : "Inline",
-"transforms.fromJson.json.schema.inline" : "{\n  \"$id\": \"https://example.com/person.schema.json\",\n  \"$schema\": \"http://json-schema.org/draft-07/schema#\",\n  \"title\": \"Person\",\n  \"type\": \"object\",\n  \"properties\": {\n    \"firstName\": {\n      \"type\": \"string\",\n      \"description\": \"The person first name.\"\n    },\n    \"lastName\": {\n      \"type\": \"string\",\n      \"description\": \"The person last name.\"\n    },\n    \"age\": {\n      \"description\": \"Age in years which must be equal to or greater than zero.\",\n      \"type\": \"integer\",\n      \"minimum\": 0\n    }\n  }\n}",
-"confluent.license": "",
+$ ./mqtt-source-mtls.sh
 ```
 
 ## Details of what the script is doing

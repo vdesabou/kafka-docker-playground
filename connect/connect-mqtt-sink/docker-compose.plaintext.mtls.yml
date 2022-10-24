@@ -1,0 +1,29 @@
+---
+version: '3.5'
+services:
+
+  mosquitto:
+    image: eclipse-mosquitto:1.6.13
+    hostname: mosquitto
+    container_name: mosquitto
+    ports:
+      - 9001:9001
+      - 8883:8883
+    volumes:
+      - ../../connect/connect-mqtt-sink/mtls/mosquitto.conf:/mosquitto/config/mosquitto.conf
+      - ../../connect/connect-mqtt-sink/password:/etc/mosquitto/passwd
+      - ../../connect/connect-mqtt-sink/security/snakeoil-ca-1.crt:/tmp/ca.crt
+      - ../../connect/connect-mqtt-sink/security/mosquitto.certificate.pem:/tmp/server.crt
+      - ../../connect/connect-mqtt-sink/security/mosquitto.key:/tmp/server.key
+
+  connect:
+    depends_on:
+      - zookeeper
+      - broker
+      - schema-registry
+      - mosquitto
+    volumes:
+      - ../../connect/connect-mqtt-sink/security/kafka.connect.truststore.jks:/tmp/truststore.jks
+      - ../../connect/connect-mqtt-sink/security/kafka.connect.keystore.jks:/tmp/keystore.jks
+    environment:
+      CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-mqtt
