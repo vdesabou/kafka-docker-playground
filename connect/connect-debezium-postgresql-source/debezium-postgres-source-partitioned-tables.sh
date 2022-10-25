@@ -60,10 +60,6 @@ insert into CUSTOMERS (id, first_name, last_name, email, gender, club_status, co
 insert into CUSTOMERS (id, first_name, last_name, email, gender, club_status, comments,create_ts) values (18, 'Waldon', 'Keddey', 'wkeddeyh@weather.com', 'Male', 'gold', 'Business-focused multi-state functionalities','2022-04-02 00:00:00+00');
 insert into CUSTOMERS (id, first_name, last_name, email, gender, club_status, comments,create_ts) values (19, 'Josiah', 'Brockett', 'jbrocketti@com.com', 'Male', 'gold', 'Realigned didactic info-mediaries','2022-04-02 00:00:00+00');
 insert into CUSTOMERS (id, first_name, last_name, email, gender, club_status, comments,create_ts) values (20, 'Anselma', 'Rook', 'arookj@europa.eu', 'Female', 'gold', 'Cross-group 24/7 application','2022-04-02 00:00:00+00');
-
-
-ALTER TABLE CUSTOMERS REPLICA IDENTITY FULL;
-
 EOF
 
 log "Create a Publication with publish_via_partition_root = true:"
