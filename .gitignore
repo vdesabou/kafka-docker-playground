@@ -71,3 +71,4 @@ myenv
 secrets.properties
 secrets.tar
 *.hprof
+*.pcap
