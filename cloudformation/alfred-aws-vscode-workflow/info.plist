@@ -1675,7 +1675,7 @@ echo "$ip"</string>
 		</dict>
 	</array>
 	<key>version</key>
-	<string>1.0</string>
+	<string>1.1</string>
 	<key>webaddress</key>
 	<string>https://github.com/vdesabou/kafka-docker-playground/tree/master/cloudformation/alfred-aws-vscode-workflow</string>
 </dict>
