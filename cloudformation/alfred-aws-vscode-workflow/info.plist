@@ -48,7 +48,7 @@
 			</dict>
 			<dict>
 				<key>destinationuid</key>
-				<string>8CA1BE1D-7163-46BD-A014-01209FB6205B</string>
+				<string>C82BD2C6-06B3-4923-8F92-B82E9F1D3548</string>
 				<key>modifiers</key>
 				<integer>0</integer>
 				<key>modifiersubtext</key>
@@ -152,19 +152,6 @@
 				<false/>
 			</dict>
 		</array>
-		<key>8CA1BE1D-7163-46BD-A014-01209FB6205B</key>
-		<array>
-			<dict>
-				<key>destinationuid</key>
-				<string>59413F48-E1A7-47C9-AAF7-88D22E448F18</string>
-				<key>modifiers</key>
-				<integer>0</integer>
-				<key>modifiersubtext</key>
-				<string></string>
-				<key>vitoclose</key>
-				<false/>
-			</dict>
-		</array>
 		<key>8D09DE34-3943-46D5-9510-89E3F6AAEBC8</key>
 		<array>
 			<dict>
@@ -259,6 +246,19 @@
 				<integer>1048576</integer>
 				<key>modifiersubtext</key>
 				<string>Terminate instance ⚰</string>
+				<key>vitoclose</key>
+				<false/>
+			</dict>
+		</array>
+		<key>C82BD2C6-06B3-4923-8F92-B82E9F1D3548</key>
+		<array>
+			<dict>
+				<key>destinationuid</key>
+				<string>59413F48-E1A7-47C9-AAF7-88D22E448F18</string>
+				<key>modifiers</key>
+				<integer>0</integer>
+				<key>modifiersubtext</key>
+				<string></string>
 				<key>vitoclose</key>
 				<false/>
 			</dict>
@@ -445,11 +445,9 @@ fi</string>
 				<key>argumenttype</key>
 				<integer>2</integer>
 				<key>fixedorder</key>
-				<false/>
+				<true/>
 				<key>items</key>
-				<string>[{"title":"👍","arg":"yes"},{"title":"❌"}]</string>
-				<key>keyword</key>
-				<string>are you sure ?</string>
+				<string>[{"title":"Are you sure ?"},{"title":"👍","arg":"yes"},{"title":"❌"}]</string>
 				<key>matchmode</key>
 				<integer>0</integer>
 				<key>runningsubtext</key>
@@ -457,7 +455,7 @@ fi</string>
 				<key>subtext</key>
 				<string></string>
 				<key>title</key>
-				<string></string>
+				<string>Are you sure ?</string>
 				<key>withspace</key>
 				<false/>
 			</dict>
@@ -927,37 +925,6 @@ echo "$ip"</string>
 		<dict>
 			<key>config</key>
 			<dict>
-				<key>argumenttrimmode</key>
-				<integer>0</integer>
-				<key>argumenttype</key>
-				<integer>2</integer>
-				<key>fixedorder</key>
-				<false/>
-				<key>items</key>
-				<string>[{"title":"👍","arg":"yes"},{"title":"❌"}]</string>
-				<key>keyword</key>
-				<string>are you sure ?</string>
-				<key>matchmode</key>
-				<integer>0</integer>
-				<key>runningsubtext</key>
-				<string></string>
-				<key>subtext</key>
-				<string></string>
-				<key>title</key>
-				<string></string>
-				<key>withspace</key>
-				<false/>
-			</dict>
-			<key>type</key>
-			<string>alfred.workflow.input.listfilter</string>
-			<key>uid</key>
-			<string>8CA1BE1D-7163-46BD-A014-01209FB6205B</string>
-			<key>version</key>
-			<integer>1</integer>
-		</dict>
-		<dict>
-			<key>config</key>
-			<dict>
 				<key>argumenttype</key>
 				<integer>2</integer>
 				<key>keyword</key>
@@ -973,6 +940,35 @@ echo "$ip"</string>
 			<string>alfred.workflow.input.keyword</string>
 			<key>uid</key>
 			<string>3AFF95CB-4FA8-4F17-9596-9240B61F581C</string>
+			<key>version</key>
+			<integer>1</integer>
+		</dict>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>argumenttrimmode</key>
+				<integer>0</integer>
+				<key>argumenttype</key>
+				<integer>2</integer>
+				<key>fixedorder</key>
+				<true/>
+				<key>items</key>
+				<string>[{"title":"Are you sure ?"},{"title":"👍","arg":"yes"},{"title":"❌"}]</string>
+				<key>matchmode</key>
+				<integer>0</integer>
+				<key>runningsubtext</key>
+				<string></string>
+				<key>subtext</key>
+				<string></string>
+				<key>title</key>
+				<string>Are you sure ?</string>
+				<key>withspace</key>
+				<false/>
+			</dict>
+			<key>type</key>
+			<string>alfred.workflow.input.listfilter</string>
+			<key>uid</key>
+			<string>C82BD2C6-06B3-4923-8F92-B82E9F1D3548</string>
 			<key>version</key>
 			<integer>1</integer>
 		</dict>
@@ -1225,13 +1221,6 @@ echo "$ip"</string>
 			<key>ypos</key>
 			<real>155</real>
 		</dict>
-		<key>8CA1BE1D-7163-46BD-A014-01209FB6205B</key>
-		<dict>
-			<key>xpos</key>
-			<real>1180</real>
-			<key>ypos</key>
-			<real>870</real>
-		</dict>
 		<key>8D09DE34-3943-46D5-9510-89E3F6AAEBC8</key>
 		<dict>
 			<key>colorindex</key>
@@ -1279,6 +1268,13 @@ echo "$ip"</string>
 			<real>575</real>
 			<key>ypos</key>
 			<real>400</real>
+		</dict>
+		<key>C82BD2C6-06B3-4923-8F92-B82E9F1D3548</key>
+		<dict>
+			<key>xpos</key>
+			<real>1125</real>
+			<key>ypos</key>
+			<real>870</real>
 		</dict>
 		<key>D937265C-BC71-4283-81A0-05591F9BBFDF</key>
 		<dict>
