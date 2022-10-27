@@ -26,6 +26,9 @@ then
     return
 fi
 
+username=$(whoami)
+name="kafka-docker-playground-${username}"
+
 print "<?xml version=\"1.0\"?>"
 print "<items>"
 for row in $($aws_cli ec2 describe-instances | /usr/local/bin/jq '[.Reservations | .[] | .Instances | .[] | select(.State.Name!="terminated") | {KeyName: .KeyName, LaunchTime: .LaunchTime, PublicDnsName: .PublicDnsName, InstanceId: .InstanceId, InstanceType: .InstanceType,State: .State.Name, Name: (.Tags[]|select(.Key=="Name")|.Value)}]' | /usr/local/bin/jq -r '.[] | @base64'); do
@@ -40,6 +43,11 @@ for row in $($aws_cli ec2 describe-instances | /usr/local/bin/jq '[.Reservations
     InstanceId=$(echo $(_jq '.InstanceId'))
     InstanceType=$(echo $(_jq '.InstanceType'))
     State=$(echo $(_jq '.State'))
+
+    if [ "$only_see_your_instance" = "1" ] && [[ $Name != $name* ]]
+    then
+        continue
+    fi
 
     if [ "$State" = "stopped" ]
     then
