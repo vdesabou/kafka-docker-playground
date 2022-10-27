@@ -12,7 +12,7 @@
 		<array>
 			<dict>
 				<key>destinationuid</key>
-				<string>B40AFBFF-CB92-4FFD-B417-432D0164F397</string>
+				<string>8D09DE34-3943-46D5-9510-89E3F6AAEBC8</string>
 				<key>modifiers</key>
 				<integer>0</integer>
 				<key>modifiersubtext</key>
@@ -60,19 +60,6 @@
 				<false/>
 			</dict>
 		</array>
-		<key>43800EAF-E219-4DB5-B520-5088B3E5F30D</key>
-		<array>
-			<dict>
-				<key>destinationuid</key>
-				<string>8D09DE34-3943-46D5-9510-89E3F6AAEBC8</string>
-				<key>modifiers</key>
-				<integer>0</integer>
-				<key>modifiersubtext</key>
-				<string></string>
-				<key>vitoclose</key>
-				<false/>
-			</dict>
-		</array>
 		<key>581FEBB5-582A-4CB8-B12D-D614B9879C4C</key>
 		<array>
 			<dict>
@@ -101,19 +88,6 @@
 			<dict>
 				<key>destinationuid</key>
 				<string>95299685-5E13-487D-BE62-1BDAD8C6B8C1</string>
-				<key>modifiers</key>
-				<integer>0</integer>
-				<key>modifiersubtext</key>
-				<string></string>
-				<key>vitoclose</key>
-				<false/>
-			</dict>
-		</array>
-		<key>617F14A0-7B39-497F-8F6F-2367CA588F9D</key>
-		<array>
-			<dict>
-				<key>destinationuid</key>
-				<string>9990F669-7B0E-485A-9755-2E0EA3235A7E</string>
 				<key>modifiers</key>
 				<integer>0</integer>
 				<key>modifiersubtext</key>
@@ -178,7 +152,7 @@
 		<array>
 			<dict>
 				<key>destinationuid</key>
-				<string>617F14A0-7B39-497F-8F6F-2367CA588F9D</string>
+				<string>D937265C-BC71-4283-81A0-05591F9BBFDF</string>
 				<key>modifiers</key>
 				<integer>0</integer>
 				<key>modifiersubtext</key>
@@ -213,37 +187,11 @@
 				<false/>
 			</dict>
 		</array>
-		<key>9990F669-7B0E-485A-9755-2E0EA3235A7E</key>
-		<array>
-			<dict>
-				<key>destinationuid</key>
-				<string>D937265C-BC71-4283-81A0-05591F9BBFDF</string>
-				<key>modifiers</key>
-				<integer>0</integer>
-				<key>modifiersubtext</key>
-				<string></string>
-				<key>vitoclose</key>
-				<false/>
-			</dict>
-		</array>
 		<key>A0E694E1-0BC9-41CA-AF45-E915531AA9E0</key>
 		<array>
 			<dict>
 				<key>destinationuid</key>
 				<string>95299685-5E13-487D-BE62-1BDAD8C6B8C1</string>
-				<key>modifiers</key>
-				<integer>0</integer>
-				<key>modifiersubtext</key>
-				<string></string>
-				<key>vitoclose</key>
-				<false/>
-			</dict>
-		</array>
-		<key>B40AFBFF-CB92-4FFD-B417-432D0164F397</key>
-		<array>
-			<dict>
-				<key>destinationuid</key>
-				<string>43800EAF-E219-4DB5-B520-5088B3E5F30D</string>
 				<key>modifiers</key>
 				<integer>0</integer>
 				<key>modifiersubtext</key>
@@ -741,86 +689,6 @@ echo "$ip"</string>
 		<dict>
 			<key>config</key>
 			<dict>
-				<key>alfredfiltersresults</key>
-				<false/>
-				<key>alfredfiltersresultsmatchmode</key>
-				<integer>0</integer>
-				<key>argumenttreatemptyqueryasnil</key>
-				<false/>
-				<key>argumenttrimmode</key>
-				<integer>0</integer>
-				<key>argumenttype</key>
-				<integer>1</integer>
-				<key>escaping</key>
-				<integer>63</integer>
-				<key>keyword</key>
-				<string>aws_cloud_formation_create</string>
-				<key>queuedelaycustom</key>
-				<integer>1</integer>
-				<key>queuedelayimmediatelyinitially</key>
-				<false/>
-				<key>queuedelaymode</key>
-				<integer>0</integer>
-				<key>queuemode</key>
-				<integer>1</integer>
-				<key>runningsubtext</key>
-				<string></string>
-				<key>script</key>
-				<string>ksh create-cloudformation.ksh "$1"</string>
-				<key>scriptargtype</key>
-				<integer>1</integer>
-				<key>scriptfile</key>
-				<string></string>
-				<key>subtext</key>
-				<string>This will use AWS CloudFormation to create EC2 instance for kafka-docker-playground</string>
-				<key>title</key>
-				<string>Create EC2 instance using AWS CloudFormation</string>
-				<key>type</key>
-				<integer>0</integer>
-				<key>withspace</key>
-				<true/>
-			</dict>
-			<key>type</key>
-			<string>alfred.workflow.input.scriptfilter</string>
-			<key>uid</key>
-			<string>8EBB65A4-621E-4D19-8231-B689352F6957</string>
-			<key>version</key>
-			<integer>3</integer>
-		</dict>
-		<dict>
-			<key>config</key>
-			<dict>
-				<key>argumenttrimmode</key>
-				<integer>0</integer>
-				<key>argumenttype</key>
-				<integer>2</integer>
-				<key>fixedorder</key>
-				<false/>
-				<key>items</key>
-				<string>[{"title":"👍","arg":"yes"},{"title":"❌"}]</string>
-				<key>keyword</key>
-				<string>are you sure ?</string>
-				<key>matchmode</key>
-				<integer>0</integer>
-				<key>runningsubtext</key>
-				<string></string>
-				<key>subtext</key>
-				<string></string>
-				<key>title</key>
-				<string>🤑 Creating AWS EC2 instances will induce charges</string>
-				<key>withspace</key>
-				<false/>
-			</dict>
-			<key>type</key>
-			<string>alfred.workflow.input.listfilter</string>
-			<key>uid</key>
-			<string>617F14A0-7B39-497F-8F6F-2367CA588F9D</string>
-			<key>version</key>
-			<integer>1</integer>
-		</dict>
-		<dict>
-			<key>config</key>
-			<dict>
 				<key>alignment</key>
 				<integer>0</integer>
 				<key>backgroundcolor</key>
@@ -873,21 +741,51 @@ echo "$ip"</string>
 		<dict>
 			<key>config</key>
 			<dict>
-				<key>inputstring</key>
-				<string></string>
-				<key>matchcasesensitive</key>
-				<true/>
-				<key>matchmode</key>
+				<key>alfredfiltersresults</key>
+				<false/>
+				<key>alfredfiltersresultsmatchmode</key>
 				<integer>0</integer>
-				<key>matchstring</key>
-				<string>yes</string>
+				<key>argumenttreatemptyqueryasnil</key>
+				<false/>
+				<key>argumenttrimmode</key>
+				<integer>0</integer>
+				<key>argumenttype</key>
+				<integer>1</integer>
+				<key>escaping</key>
+				<integer>63</integer>
+				<key>keyword</key>
+				<string>aws_cloud_formation_create</string>
+				<key>queuedelaycustom</key>
+				<integer>1</integer>
+				<key>queuedelayimmediatelyinitially</key>
+				<false/>
+				<key>queuedelaymode</key>
+				<integer>0</integer>
+				<key>queuemode</key>
+				<integer>1</integer>
+				<key>runningsubtext</key>
+				<string></string>
+				<key>script</key>
+				<string>ksh create-cloudformation.ksh "$1"</string>
+				<key>scriptargtype</key>
+				<integer>1</integer>
+				<key>scriptfile</key>
+				<string></string>
+				<key>subtext</key>
+				<string>🤑 Creating AWS EC2 instances will induce charges</string>
+				<key>title</key>
+				<string>Create kafka-docker-playground EC2 instance using AWS CloudFormation</string>
+				<key>type</key>
+				<integer>0</integer>
+				<key>withspace</key>
+				<true/>
 			</dict>
 			<key>type</key>
-			<string>alfred.workflow.utility.filter</string>
+			<string>alfred.workflow.input.scriptfilter</string>
 			<key>uid</key>
-			<string>9990F669-7B0E-485A-9755-2E0EA3235A7E</string>
+			<string>8EBB65A4-621E-4D19-8231-B689352F6957</string>
 			<key>version</key>
-			<integer>1</integer>
+			<integer>3</integer>
 		</dict>
 		<dict>
 			<key>config</key>
@@ -963,6 +861,58 @@ echo "$ip"</string>
 		<dict>
 			<key>config</key>
 			<dict>
+				<key>alignment</key>
+				<integer>0</integer>
+				<key>backgroundcolor</key>
+				<string></string>
+				<key>fadespeed</key>
+				<integer>0</integer>
+				<key>fillmode</key>
+				<integer>0</integer>
+				<key>font</key>
+				<string></string>
+				<key>ignoredynamicplaceholders</key>
+				<false/>
+				<key>largetypetext</key>
+				<string>{query}</string>
+				<key>textcolor</key>
+				<string></string>
+				<key>wrapat</key>
+				<integer>50</integer>
+			</dict>
+			<key>type</key>
+			<string>alfred.workflow.output.largetype</string>
+			<key>uid</key>
+			<string>1396DB3B-2A78-46CD-8879-FC478D6EDCB4</string>
+			<key>version</key>
+			<integer>3</integer>
+		</dict>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>concurrently</key>
+				<false/>
+				<key>escaping</key>
+				<integer>102</integer>
+				<key>script</key>
+				<string>$aws_cli cloudformation delete-stack --stack-name "$1"</string>
+				<key>scriptargtype</key>
+				<integer>1</integer>
+				<key>scriptfile</key>
+				<string></string>
+				<key>type</key>
+				<integer>0</integer>
+			</dict>
+			<key>type</key>
+			<string>alfred.workflow.action.script</string>
+			<key>uid</key>
+			<string>8D09DE34-3943-46D5-9510-89E3F6AAEBC8</string>
+			<key>version</key>
+			<integer>2</integer>
+		</dict>
+		<dict>
+			<key>config</key>
+			<dict>
 				<key>alfredfiltersresults</key>
 				<false/>
 				<key>alfredfiltersresultsmatchmode</key>
@@ -1009,113 +959,31 @@ echo "$ip"</string>
 			<key>version</key>
 			<integer>3</integer>
 		</dict>
-		<dict>
-			<key>config</key>
-			<dict>
-				<key>alignment</key>
-				<integer>0</integer>
-				<key>backgroundcolor</key>
-				<string></string>
-				<key>fadespeed</key>
-				<integer>0</integer>
-				<key>fillmode</key>
-				<integer>0</integer>
-				<key>font</key>
-				<string></string>
-				<key>ignoredynamicplaceholders</key>
-				<false/>
-				<key>largetypetext</key>
-				<string>{query}</string>
-				<key>textcolor</key>
-				<string></string>
-				<key>wrapat</key>
-				<integer>50</integer>
-			</dict>
-			<key>type</key>
-			<string>alfred.workflow.output.largetype</string>
-			<key>uid</key>
-			<string>1396DB3B-2A78-46CD-8879-FC478D6EDCB4</string>
-			<key>version</key>
-			<integer>3</integer>
-		</dict>
-		<dict>
-			<key>config</key>
-			<dict>
-				<key>argumenttrimmode</key>
-				<integer>0</integer>
-				<key>argumenttype</key>
-				<integer>2</integer>
-				<key>fixedorder</key>
-				<false/>
-				<key>items</key>
-				<string>[{"title":"👍","arg":"yes"},{"title":"❌"}]</string>
-				<key>keyword</key>
-				<string>are you sure ?</string>
-				<key>matchmode</key>
-				<integer>0</integer>
-				<key>runningsubtext</key>
-				<string></string>
-				<key>subtext</key>
-				<string></string>
-				<key>title</key>
-				<string>This will delete your cloud formation and associated EC2 instance</string>
-				<key>withspace</key>
-				<false/>
-			</dict>
-			<key>type</key>
-			<string>alfred.workflow.input.listfilter</string>
-			<key>uid</key>
-			<string>B40AFBFF-CB92-4FFD-B417-432D0164F397</string>
-			<key>version</key>
-			<integer>1</integer>
-		</dict>
-		<dict>
-			<key>config</key>
-			<dict>
-				<key>concurrently</key>
-				<false/>
-				<key>escaping</key>
-				<integer>102</integer>
-				<key>script</key>
-				<string>$aws_cli cloudformation delete-stack --stack-name "$1"</string>
-				<key>scriptargtype</key>
-				<integer>1</integer>
-				<key>scriptfile</key>
-				<string></string>
-				<key>type</key>
-				<integer>0</integer>
-			</dict>
-			<key>type</key>
-			<string>alfred.workflow.action.script</string>
-			<key>uid</key>
-			<string>8D09DE34-3943-46D5-9510-89E3F6AAEBC8</string>
-			<key>version</key>
-			<integer>2</integer>
-		</dict>
-		<dict>
-			<key>config</key>
-			<dict>
-				<key>inputstring</key>
-				<string></string>
-				<key>matchcasesensitive</key>
-				<true/>
-				<key>matchmode</key>
-				<integer>0</integer>
-				<key>matchstring</key>
-				<string>yes</string>
-			</dict>
-			<key>type</key>
-			<string>alfred.workflow.utility.filter</string>
-			<key>uid</key>
-			<string>43800EAF-E219-4DB5-B520-5088B3E5F30D</string>
-			<key>version</key>
-			<integer>1</integer>
-		</dict>
 	</array>
 	<key>readme</key>
-	<string>Create AWS EC2 instances easily with CloudFormation
+	<string># ☁️ AWS EC2 Alfred workflow
 
-Stop/Start your AWS EC2 instances, and open your AWS EC2 instances directly in Visual Studio Code</string>
+* ✨ Create and manage AWS EC2 instances to run kafka-docker-playground
+
+* 🪄 Open EC2 instances directly in Visual Studio code using [Remote Development](https://code.visualstudio.com/docs/remote/ssh) (over SSH)
+
+![Example](example.png)
+
+## 🎯 Commands available
+
+![Example](commands.png)
+
+## ☑️ Prerequisites
+
+* AWS CLI should be [installed](https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html) and correctly [configured](https://docs.aws.amazon.com/cli/latest/userguide/getting-started-prereqs.html) with credentials.
+
+## 🛠 Configuration
+
+Configure directly within Alfred
+
+![Example](config.png)
+
+## ⬇️ Download</string>
 	<key>uidata</key>
 	<dict>
 		<key>08DD2140-3367-4084-AA48-409407DC371E</key>
@@ -1125,9 +993,9 @@ Stop/Start your AWS EC2 instances, and open your AWS EC2 instances directly in V
 			<key>note</key>
 			<string>delete</string>
 			<key>xpos</key>
-			<real>45</real>
+			<real>155</real>
 			<key>ypos</key>
-			<real>960</real>
+			<real>965</real>
 		</dict>
 		<key>1181120C-5AC8-4B05-9D4C-A89BA4DF908E</key>
 		<dict>
@@ -1178,13 +1046,6 @@ Stop/Start your AWS EC2 instances, and open your AWS EC2 instances directly in V
 			<key>ypos</key>
 			<real>405</real>
 		</dict>
-		<key>43800EAF-E219-4DB5-B520-5088B3E5F30D</key>
-		<dict>
-			<key>xpos</key>
-			<real>360</real>
-			<key>ypos</key>
-			<real>965</real>
-		</dict>
 		<key>581FEBB5-582A-4CB8-B12D-D614B9879C4C</key>
 		<dict>
 			<key>xpos</key>
@@ -1198,13 +1059,6 @@ Stop/Start your AWS EC2 instances, and open your AWS EC2 instances directly in V
 			<real>1340</real>
 			<key>ypos</key>
 			<real>890</real>
-		</dict>
-		<key>617F14A0-7B39-497F-8F6F-2367CA588F9D</key>
-		<dict>
-			<key>xpos</key>
-			<real>235</real>
-			<key>ypos</key>
-			<real>770</real>
 		</dict>
 		<key>62A7A0E2-4832-45B0-9B95-1F71BB0B3211</key>
 		<dict>
@@ -1239,7 +1093,7 @@ Stop/Start your AWS EC2 instances, and open your AWS EC2 instances directly in V
 			<key>colorindex</key>
 			<integer>5</integer>
 			<key>xpos</key>
-			<real>470</real>
+			<real>450</real>
 			<key>ypos</key>
 			<real>965</real>
 		</dict>
@@ -1250,9 +1104,9 @@ Stop/Start your AWS EC2 instances, and open your AWS EC2 instances directly in V
 			<key>note</key>
 			<string>create</string>
 			<key>xpos</key>
-			<real>75</real>
+			<real>160</real>
 			<key>ypos</key>
-			<real>770</real>
+			<real>795</real>
 		</dict>
 		<key>9257CCB5-E7E2-4DF3-886D-939FD48D1355</key>
 		<dict>
@@ -1268,26 +1122,12 @@ Stop/Start your AWS EC2 instances, and open your AWS EC2 instances directly in V
 			<key>ypos</key>
 			<real>735</real>
 		</dict>
-		<key>9990F669-7B0E-485A-9755-2E0EA3235A7E</key>
-		<dict>
-			<key>xpos</key>
-			<real>390</real>
-			<key>ypos</key>
-			<real>800</real>
-		</dict>
 		<key>A0E694E1-0BC9-41CA-AF45-E915531AA9E0</key>
 		<dict>
 			<key>xpos</key>
 			<real>1090</real>
 			<key>ypos</key>
 			<real>685</real>
-		</dict>
-		<key>B40AFBFF-CB92-4FFD-B417-432D0164F397</key>
-		<dict>
-			<key>xpos</key>
-			<real>185</real>
-			<key>ypos</key>
-			<real>960</real>
 		</dict>
 		<key>BD08B53F-8A52-4C57-9CD9-8A5C08998D4C</key>
 		<dict>
@@ -1669,6 +1509,25 @@ Stop/Start your AWS EC2 instances, and open your AWS EC2 instances directly in V
 			<string>textfield</string>
 			<key>variable</key>
 			<string>aws_cli</string>
+		</dict>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>default</key>
+				<true/>
+				<key>required</key>
+				<false/>
+				<key>text</key>
+				<string>uncheck to see all EC2 instances</string>
+			</dict>
+			<key>description</key>
+			<string></string>
+			<key>label</key>
+			<string>Only see your playground EC2 instances</string>
+			<key>type</key>
+			<string>checkbox</string>
+			<key>variable</key>
+			<string>only_see_your_instance</string>
 		</dict>
 	</array>
 	<key>version</key>

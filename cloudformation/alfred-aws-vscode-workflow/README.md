@@ -1,4 +1,4 @@
-# ☁️ AWS Alfred workflow
+# ☁️ AWS EC2 Alfred workflow
 
 * ✨ Create and manage AWS EC2 instances to run kafka-docker-playground
 
