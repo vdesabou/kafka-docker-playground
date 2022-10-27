@@ -6,6 +6,8 @@
 
 ![Example](example.png)
 
+❗ You need [Alfred](https://www.alfredapp.com) [powerpack](https://www.alfredapp.com/shop/) to be able to use that workflow.
+
 ## 🎯 Commands available
 
 ![Example](commands.png)
@@ -20,4 +22,6 @@ Configure directly within Alfred
 
 ![Example](config.png)
 
-## ⬇️ Download 
+## ⬇️ Download
+
+Click [here](https://github.com/vdesabou/kafka-docker-playground/raw/master/cloudformation/aws-ec2-kafka-docker-playground.alfred5workflow)
