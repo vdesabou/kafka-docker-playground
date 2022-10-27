@@ -3,7 +3,7 @@
 <plist version="1.0">
 <dict>
 	<key>bundleid</key>
-	<string></string>
+	<string>com.vdesabou.aws.vscode</string>
 	<key>category</key>
 	<string>Productivity</string>
 	<key>connections</key>
@@ -38,6 +38,16 @@
 		<array>
 			<dict>
 				<key>destinationuid</key>
+				<string>881B92E8-9A98-4925-A4FC-2A2E8149C5A2</string>
+				<key>modifiers</key>
+				<integer>0</integer>
+				<key>modifiersubtext</key>
+				<string></string>
+				<key>vitoclose</key>
+				<false/>
+			</dict>
+			<dict>
+				<key>destinationuid</key>
 				<string>8CA1BE1D-7163-46BD-A014-01209FB6205B</string>
 				<key>modifiers</key>
 				<integer>0</integer>
@@ -62,6 +72,16 @@
 		</array>
 		<key>581FEBB5-582A-4CB8-B12D-D614B9879C4C</key>
 		<array>
+			<dict>
+				<key>destinationuid</key>
+				<string>881B92E8-9A98-4925-A4FC-2A2E8149C5A2</string>
+				<key>modifiers</key>
+				<integer>0</integer>
+				<key>modifiersubtext</key>
+				<string></string>
+				<key>vitoclose</key>
+				<false/>
+			</dict>
 			<dict>
 				<key>destinationuid</key>
 				<string>E6A7C669-E98C-49B5-B1D2-CE3A3A8FDE77</string>
@@ -111,6 +131,16 @@
 		</array>
 		<key>7CD3C910-6B8B-4A74-BA93-02255231A4DB</key>
 		<array>
+			<dict>
+				<key>destinationuid</key>
+				<string>881B92E8-9A98-4925-A4FC-2A2E8149C5A2</string>
+				<key>modifiers</key>
+				<integer>0</integer>
+				<key>modifiersubtext</key>
+				<string></string>
+				<key>vitoclose</key>
+				<false/>
+			</dict>
 			<dict>
 				<key>destinationuid</key>
 				<string>37098AD4-0E49-415E-B6A3-73B0F73D5A6C</string>
@@ -204,6 +234,16 @@
 		<array>
 			<dict>
 				<key>destinationuid</key>
+				<string>881B92E8-9A98-4925-A4FC-2A2E8149C5A2</string>
+				<key>modifiers</key>
+				<integer>0</integer>
+				<key>modifiersubtext</key>
+				<string></string>
+				<key>vitoclose</key>
+				<false/>
+			</dict>
+			<dict>
+				<key>destinationuid</key>
 				<string>1181120C-5AC8-4B05-9D4C-A89BA4DF908E</string>
 				<key>modifiers</key>
 				<integer>0</integer>
@@ -255,18 +295,115 @@
 	<key>createdby</key>
 	<string>vdesabou</string>
 	<key>description</key>
-	<string>Browse and open your AWS EC2 instances</string>
+	<string>Create and manage AWS EC2 instances to run kafka-docker-playground</string>
 	<key>disabled</key>
 	<false/>
 	<key>name</key>
-	<string>AWS</string>
+	<string>AWS EC2</string>
 	<key>objects</key>
 	<array>
 		<dict>
 			<key>config</key>
 			<dict>
-				<key>availableviaurlhandler</key>
+				<key>concurrently</key>
 				<false/>
+				<key>escaping</key>
+				<integer>0</integer>
+				<key>script</key>
+				<string># THESE VARIABLES MUST BE SET. SEE THE ONEUPDATER README FOR AN EXPLANATION OF EACH.
+readonly remote_info_plist='https://github.com/vdesabou/kafka-docker-playground/raw/master/cloudformation/alfred-aws-vscode-workflow/info.plist'
+readonly workflow_url='https://github.com/vdesabou/kafka-docker-playground/raw/master/cloudformation/aws-ec2-kafka-docker-playground.alfred5workflow'
+readonly download_type='direct'
+readonly frequency_check='0'
+
+# FROM HERE ON, CODE SHOULD BE LEFT UNTOUCHED!
+function abort {
+  echo "${1}" &gt;&amp;2
+  exit 1
+}
+
+function url_exists {
+  curl --silent --location --output /dev/null --fail --range 0-0 "${1}"
+}
+
+function notification {
+  local -r notificator="$(find . -type f -name 'notificator')"
+
+  if [[ -f "${notificator}" &amp;&amp; "$(/usr/bin/file --brief --mime-type "${notificator}")" == 'text/x-shellscript' ]]; then
+    "${notificator}" --message "${1}" --title "${alfred_workflow_name}" --subtitle 'A new version is available'
+    return
+  fi
+
+  osascript -e "display notification \"${1}\" with title \"${alfred_workflow_name}\" subtitle \"A new version is available\""
+}
+
+# Local sanity checks
+readonly local_info_plist='info.plist'
+readonly local_version="$(/usr/libexec/PlistBuddy -c 'print version' "${local_info_plist}")"
+
+[[ -n "${local_version}" ]] || abort 'You need to set a workflow version in the configuration sheet.'
+[[ "${download_type}" =~ ^(direct|page|github_release)$ ]] || abort "'download_type' (${download_type}) needs to be one of 'direct', 'page', or 'github_release'."
+[[ "${frequency_check}" =~ ^[0-9]+$ ]] || abort "'frequency_check' (${frequency_check}) needs to be a number."
+
+# Check for updates
+if [[ $(find "${local_info_plist}" -mtime +"${frequency_check}"d) ]]; then
+  # Remote sanity check
+  if ! url_exists "${remote_info_plist}"; then
+    abort "'remote_info_plist' (${remote_info_plist}) appears to not be reachable."
+  fi
+
+  readonly tmp_file="$(mktemp)"
+  curl --silent --location --output "${tmp_file}" "${remote_info_plist}"
+  readonly remote_version="$(/usr/libexec/PlistBuddy -c 'print version' "${tmp_file}")"
+  rm "${tmp_file}"
+
+  if [[ "${local_version}" == "${remote_version}" ]]; then
+    touch "${local_info_plist}" # Reset timer by touching local file
+    exit 0
+  fi
+
+  if [[ "${download_type}" == 'page' ]]; then
+    notification 'Opening download page…'
+    open "${workflow_url}"
+    exit 0
+  fi
+
+  readonly download_url="$(
+    if [[ "${download_type}" == 'github_release' ]]; then
+      osascript -l JavaScript -e 'function run(argv) { return JSON.parse(argv[0])["assets"].find(asset =&gt; asset["browser_download_url"].endsWith(".alfredworkflow"))["browser_download_url"] }' "$(curl --silent "https://api.github.com/repos/${workflow_url}/releases/latest")"
+    else
+      echo "${workflow_url}"
+    fi
+  )"
+
+  if url_exists "${download_url}"; then
+    notification 'Downloading and installing…'
+    readonly download_name="$(basename "${download_url}")"
+    curl --silent --location --output "${HOME}/Downloads/${download_name}" "${download_url}"
+    open "${HOME}/Downloads/${download_name}"
+  else
+    abort "'workflow_url' (${download_url}) appears to not be reachable."
+  fi
+fi</string>
+				<key>scriptargtype</key>
+				<integer>1</integer>
+				<key>scriptfile</key>
+				<string></string>
+				<key>type</key>
+				<integer>0</integer>
+			</dict>
+			<key>type</key>
+			<string>alfred.workflow.action.script</string>
+			<key>uid</key>
+			<string>881B92E8-9A98-4925-A4FC-2A2E8149C5A2</string>
+			<key>version</key>
+			<integer>2</integer>
+		</dict>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>availableviaurlhandler</key>
+				<true/>
 				<key>triggerid</key>
 				<string>awsec2stopall</string>
 			</dict>
@@ -341,7 +478,7 @@
 				<key>subtext</key>
 				<string>Only your kafka-docker-playground instances will be stopped</string>
 				<key>text</key>
-				<string>Stop all your kafka-docker-playground AWS EC2 instances</string>
+				<string>🛑 Stop all your kafka-docker-playground AWS EC2 instances</string>
 				<key>withspace</key>
 				<false/>
 			</dict>
@@ -417,7 +554,7 @@
 				<key>subtext</key>
 				<string>You can stop or start EC2 instance</string>
 				<key>title</key>
-				<string>Start or stop AWS EC2 instances</string>
+				<string>🚦 Start or stop AWS EC2 instances</string>
 				<key>type</key>
 				<integer>0</integer>
 				<key>withspace</key>
@@ -510,9 +647,9 @@ $aws_cli ec2 $command-instances --instance-ids $id</string>
 				<key>scriptfile</key>
 				<string></string>
 				<key>subtext</key>
-				<string>This will use VSCode Remote Development using SSH</string>
+				<string>If the instance is stopped, it will start it</string>
 				<key>title</key>
-				<string>Open AWS EC2 instance in Visual Studio</string>
+				<string>📂 Open AWS EC2 instance in Visual Studio</string>
 				<key>type</key>
 				<integer>0</integer>
 				<key>withspace</key>
@@ -623,7 +760,7 @@ echo "$ip"</string>
 			<key>config</key>
 			<dict>
 				<key>availableviaurlhandler</key>
-				<false/>
+				<true/>
 				<key>triggerid</key>
 				<string>awsec2startall</string>
 			</dict>
@@ -772,9 +909,9 @@ echo "$ip"</string>
 				<key>scriptfile</key>
 				<string></string>
 				<key>subtext</key>
-				<string>🤑 Creating AWS EC2 instances will induce charges</string>
+				<string>❗Creating AWS EC2 instances will induce charges</string>
 				<key>title</key>
-				<string>Create kafka-docker-playground EC2 instance using AWS CloudFormation</string>
+				<string>👷Create kafka-docker-playground EC2 instance using AWS CloudFormation</string>
 				<key>type</key>
 				<integer>0</integer>
 				<key>withspace</key>
@@ -828,7 +965,7 @@ echo "$ip"</string>
 				<key>subtext</key>
 				<string>Only your kafka-docker-playground instances will be started</string>
 				<key>text</key>
-				<string>Start all your kafka-docker-playground AWS EC2 instances</string>
+				<string>🟢 Start all your kafka-docker-playground AWS EC2 instances</string>
 				<key>withspace</key>
 				<false/>
 			</dict>
@@ -946,7 +1083,7 @@ echo "$ip"</string>
 				<key>subtext</key>
 				<string>WARNING:  This will delete your cloud formation and associated EC2 instance</string>
 				<key>title</key>
-				<string>Delete EC2 instance using AWS CloudFormation</string>
+				<string>💀 Delete EC2 instance using AWS CloudFormation</string>
 				<key>type</key>
 				<integer>0</integer>
 				<key>withspace</key>
@@ -1024,7 +1161,7 @@ echo "$ip"</string>
 		<key>3AFF95CB-4FA8-4F17-9596-9240B61F581C</key>
 		<dict>
 			<key>xpos</key>
-			<real>995</real>
+			<real>930</real>
 			<key>ypos</key>
 			<real>870</real>
 		</dict>
@@ -1077,6 +1214,17 @@ echo "$ip"</string>
 			<key>ypos</key>
 			<real>375</real>
 		</dict>
+		<key>881B92E8-9A98-4925-A4FC-2A2E8149C5A2</key>
+		<dict>
+			<key>colorindex</key>
+			<integer>12</integer>
+			<key>note</key>
+			<string>OneUpdater</string>
+			<key>xpos</key>
+			<real>960</real>
+			<key>ypos</key>
+			<real>155</real>
+		</dict>
 		<key>8CA1BE1D-7163-46BD-A014-01209FB6205B</key>
 		<dict>
 			<key>xpos</key>
@@ -1121,9 +1269,9 @@ echo "$ip"</string>
 		<key>A0E694E1-0BC9-41CA-AF45-E915531AA9E0</key>
 		<dict>
 			<key>xpos</key>
-			<real>1090</real>
+			<real>1145</real>
 			<key>ypos</key>
-			<real>685</real>
+			<real>620</real>
 		</dict>
 		<key>BD08B53F-8A52-4C57-9CD9-8A5C08998D4C</key>
 		<dict>
@@ -1529,6 +1677,6 @@ echo "$ip"</string>
 	<key>version</key>
 	<string>1.0</string>
 	<key>webaddress</key>
-	<string></string>
+	<string>https://github.com/vdesabou/kafka-docker-playground/tree/master/cloudformation/alfred-aws-vscode-workflow</string>
 </dict>
 </plist>
