@@ -1,5 +1,8 @@
 #!/bin/ksh
 
+username=$(whoami)
+name="kafka-docker-playground-${username}"
+
 for row in $($aws_cli ec2 describe-instances | /usr/local/bin/jq '[.Reservations | .[] | .Instances | .[] | select(.State.Name=="running") | {KeyName: .KeyName, LaunchTime: .LaunchTime, PublicDnsName: .PublicDnsName, InstanceId: .InstanceId, InstanceType: .InstanceType,State: .State.Name, Name: (.Tags[]|select(.Key=="Name")|.Value)}]' | /usr/local/bin/jq -r '.[] | @base64'); do
     _jq() {
      echo ${row} | base64 --decode | /usr/local/bin/jq -r ${1}
@@ -13,7 +16,7 @@ for row in $($aws_cli ec2 describe-instances | /usr/local/bin/jq '[.Reservations
     InstanceType=$(echo $(_jq '.InstanceType'))
     State=$(echo $(_jq '.State'))
 
-    if [[ $Name = kafka-docker-playground-$USERNAME* ]]
+    if [[ $Name = $name* ]]
     then
         echo "Stopping $Name ($InstanceId)"
         $aws_cli ec2 stop-instances --instance-ids $InstanceId &
