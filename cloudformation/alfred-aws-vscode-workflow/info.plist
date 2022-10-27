@@ -979,11 +979,7 @@ echo "$ip"</string>
 
 ## 🛠 Configuration
 
-Configure directly within Alfred
-
-![Example](config.png)
-
-## ⬇️ Download</string>
+👈 Click on `Configure Workflow..` button.</string>
 	<key>uidata</key>
 	<dict>
 		<key>08DD2140-3367-4084-AA48-409407DC371E</key>

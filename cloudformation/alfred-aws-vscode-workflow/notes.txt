@@ -1,0 +1,1 @@
+zip -r ../aws-ec2-kafka-docker-playground.alfred5workflow * -x \*.git\* -x \*.json\* -x \prefs.plist\* 
