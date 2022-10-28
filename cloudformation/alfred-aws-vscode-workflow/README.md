@@ -14,7 +14,12 @@
 
 ## ☑️ Prerequisites
 
-* AWS CLI should be [installed](https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html) and correctly [configured](https://docs.aws.amazon.com/cli/latest/userguide/getting-started-prereqs.html) with credentials.
+* `aws` should be installed: `brew install awscli` and correctly [configured](https://docs.aws.amazon.com/cli/latest/userguide/getting-started-prereqs.html) with credentials.
+* `jq` should be installed: `brew install jq`
+* `code` should be installed: 
+  * open Visual Studio Code
+  * Then press the keys command-shift-P (or ⌘-⇧-P), a text field should appear, stating with a &gt;. 
+  * Now, type "Shell Command: Install ‘code’ command in PATH", and click on the option.
 
 ## 🛠 Configuration
 
