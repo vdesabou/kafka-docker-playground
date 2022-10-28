@@ -26,6 +26,18 @@ then
     return
 fi
 
+if [ ! -f /usr/local/bin/jq ]
+then
+    print "<?xml version=\"1.0\"?>"
+    print "<items>"
+        print "<item arg=\"\" valid=\"no\">"
+        print "<title>⚠️ jq /usr/local/bin/jq is not installed !</title>"
+        print "<subtitle>Make sure to have Visual Studio Code installed </subtitle>"
+        print "</item>"
+    print "</items>"
+    return
+fi
+
 username=$(whoami)
 name="kafka-docker-playground-${username}"
 
