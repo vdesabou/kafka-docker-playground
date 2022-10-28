@@ -30,7 +30,7 @@ username=$(whoami)
         print "</item>"
     else
         today=$(date +%F)
-        print "<item  arg=\"$arg_kebab\" valid=\"yes\">"
+        print "<item  arg=\"$today\" valid=\"yes\">"
         print "<title>Create EC2 instance with name kafka-docker-playground-$username-${today}</title>"
         print "<subtitle>This will use AWS CloudFormation to create EC2 instance</subtitle>"
         print "</item>"
