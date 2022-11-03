@@ -58,11 +58,8 @@ aws kinesis create-stream --stream-name $KINESIS_STREAM_NAME --shard-count 1
 log "Sleep 60 seconds to let the Kinesis stream being fully started"
 sleep 60
 
-log "Insert records in Kinesis stream"
-# The example shows that a record containing partition key 123 and data "test-message-1" is inserted into kafka_docker_playground.
+log "Insert records in Kinesis stream".
 aws kinesis put-record --stream-name $KINESIS_STREAM_NAME --partition-key 123 --data test-message-1
-
-
 
 log "Creating Kinesis Source connector"
 curl -X PUT \
@@ -82,7 +79,9 @@ curl -X PUT \
      http://localhost:8083/connectors/kinesis-source/config | jq .
 
 log "Verify we have received the data in kinesis_topic topic"
-timeout 60 docker exec broker kafka-console-consumer --bootstrap-server broker:9092 --topic kinesis_topic --from-beginning --max-messages 1
+timeout 60 docker exec broker kafka-console-consumer --bootstrap-server broker:9092 --topic kinesis_topic --from-beginning --property print.key=true --max-messages 1
+# 123     ��-��,j�
+# Processed a total of 1 messages
 
 log "Delete the stream"
 aws kinesis delete-stream --stream-name $KINESIS_STREAM_NAME
