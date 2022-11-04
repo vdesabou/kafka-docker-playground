@@ -1,8 +1,8 @@
-# How to use kafka-avro-console-producer and kafka-avro-console-consumer when Schema Registry is behind a proxy
+# How to use Kafka clients when Schema Registry is behind a proxy
 
 ## Objective
 
-Quickly test how to use kafka-avro-console-producer and kafka-avro-console-consumer when Schema Registry is behind a proxy.
+Quickly test how to use Kafka clients when Schema Registry is behind a proxy.
 
 
 ## How to run
