@@ -46,3 +46,32 @@ Verify data was sent to broker using `--property schema.proxy.host=nginx-proxy -
 ```bash
 docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.proxy.host=nginx-proxy -property schema.registry.proxy.port=8888 --property schema.registry.url=http://schema-registry:8081 --topic a-topic --from-beginning --max-messages 20
 ```
+
+With connector:
+
+```
+log "Creating FileStream Sink connector"
+curl -X PUT \
+     -H "Content-Type: application/json" \
+     --data '{
+               "tasks.max": "1",
+               "connector.class": "FileStreamSink",
+               "topics": "a-topic",
+               "file": "/tmp/output.json",
+               "key.converter": "org.apache.kafka.connect.storage.StringConverter",
+               "value.converter": "io.confluent.connect.avro.AvroConverter",
+               "value.converter.schema.registry.url": "http://schema-registry:8081",
+               "value.converter.proxy.host": "nginx-proxy",
+               "value.converter.proxy.port": "8888"
+          }' \
+     http://localhost:8083/connectors/filestream-sink/config | jq .
+```
+
+
+With Java producer `schema.registry.proxy.host` and `schema.registry.proxy.port` should be set:
+
+```
+      KAFKA_SCHEMA_REGISTRY_PROXY_HOST: "nginx-proxy"
+      KAFKA_SCHEMA_REGISTRY_PROXY_PORT: "8888"
+```
+
