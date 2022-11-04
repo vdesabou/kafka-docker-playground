@@ -26,3 +26,26 @@ timeout 60 docker exec connect kafka-avro-console-consumer -bootstrap-server bro
 
 log "Verify data was sent to broker using --property schema.proxy.host=nginx-proxy -property schema.proxy.port=8888"
 timeout 60 docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.proxy.host=nginx-proxy -property schema.registry.proxy.port=8888 --property schema.registry.url=http://schema-registry:8081 --topic a-topic --from-beginning --max-messages 20
+
+
+log "Creating FileStream Sink connector"
+curl -X PUT \
+     -H "Content-Type: application/json" \
+     --data '{
+               "tasks.max": "1",
+               "connector.class": "FileStreamSink",
+               "topics": "a-topic",
+               "file": "/tmp/output.json",
+               "key.converter": "org.apache.kafka.connect.storage.StringConverter",
+               "value.converter": "io.confluent.connect.avro.AvroConverter",
+               "value.converter.schema.registry.url": "http://schema-registry:8081",
+               "value.converter.proxy.host": "nginx-proxy",
+               "value.converter.proxy.port": "8888"
+          }' \
+     http://localhost:8083/connectors/filestream-sink/config | jq .
+
+
+sleep 5
+
+log "Verify we have received the data in file"
+docker exec connect cat /tmp/output.json
