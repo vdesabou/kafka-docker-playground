@@ -4,12 +4,6 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
-# KNOWN ISSUE
-logerror "💀 KNOWN ISSUE: DD-14617"
-exit 1
-
-
-
 AWS_STS_ROLE_ARN=${AWS_STS_ROLE_ARN:-$1}
 
 if [ ! -f $HOME/.aws/config ]
