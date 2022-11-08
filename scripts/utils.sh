@@ -154,7 +154,7 @@ function choosejar()
 if [ -z "$TAG" ]
 then
     # TAG is not set, use default:
-    export TAG=7.2.2
+    export TAG=7.3.0
     # to handle ubi8 images
     export TAG_BASE=$TAG
     if [ -z "$CP_KAFKA_IMAGE" ]
