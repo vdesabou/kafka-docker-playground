@@ -4,6 +4,11 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
+if ! version_gt $TAG_BASE "5.9.99"; then
+    logwarn "WARN: Skipped before 6.x"
+    exit 111
+fi
+
 HOSTS_FILE=${1:-hosts-plaintext.yml}
 if [ ! -f ${HOSTS_FILE} ]
 then
