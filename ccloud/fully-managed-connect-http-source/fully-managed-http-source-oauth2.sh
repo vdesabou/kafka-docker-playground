@@ -19,10 +19,10 @@ logwarn "🚨WARNING🚨"
 logwarn "It is considered a security risk to run this example on your personal machine since you'll be exposing a TCP port over internet using Ngrok (https://ngrok.com)."
 logwarn "It is strongly encouraged to run it on a AWS EC2 instance where you'll use Confluent Static Egress IP Addresses (https://docs.confluent.io/cloud/current/networking/static-egress-ip-addresses.html#use-static-egress-ip-addresses-with-ccloud) (only available for public endpoints on AWS) to allow traffic from your Confluent Cloud cluster to your EC2 instance using EC2 Security Group."
 logwarn ""
-logwarn "Example in order to set EC2 Security Group with Confluent Static Egress IP Addresses and port 1414:"
+logwarn "Example in order to set EC2 Security Group with Confluent Static Egress IP Addresses and port 8080:"
 logwarn "group=\$(aws ec2 describe-instances --instance-id <\$ec2-instance-id> --output=json | jq '.Reservations[] | .Instances[] | {SecurityGroups: .SecurityGroups}' | jq -r '.SecurityGroups[] | .GroupName')"
-logwarn "aws ec2 authorize-security-group-ingress --group-name "\$group" --protocol tcp --port 1414 --cidr 13.36.88.88/32"
-logwarn "aws ec2 authorize-security-group-ingress --group-name "\$group" --protocol tcp --port 1414 --cidr 13.36.88.89/32"
+logwarn "aws ec2 authorize-security-group-ingress --group-name "\$group" --protocol tcp --port 8080 --cidr 13.36.88.88/32"
+logwarn "aws ec2 authorize-security-group-ingress --group-name "\$group" --protocol tcp --port 8080 --cidr 13.36.88.89/32"
 logwarn "etc..."
 
 check_if_continue
@@ -86,12 +86,6 @@ set -e
 log "Creating fully managed connector"
 create_ccloud_connector connector.json
 wait_for_ccloud_connector_up connector.json 300
-
-curl --location --request POST "http://$NGROK_HOSTNAME:$NGROK_PORT/oauth/token" \
---header 'Content-Type: application/x-www-form-urlencoded' \
---data-urlencode 'client_id=kc-client' \
---data-urlencode 'client_secret=kc-secret' \
---data-urlencode 'grant_type=client_credentials'
 
 exit 0
 
