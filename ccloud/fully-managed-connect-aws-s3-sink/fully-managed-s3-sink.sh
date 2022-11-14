@@ -33,27 +33,6 @@ else
     fi
 fi
 
-AWS_STS_ROLE_ARN=${AWS_STS_ROLE_ARN:-$1}
-
-if [ -z "$AWS_STS_ROLE_ARN" ]
-then
-     logerror "AWS_STS_ROLE_ARN is not set. Export it as environment variable or pass it as argument"
-     exit 1
-fi
-
-if [ -z "$AWS_ACCOUNT_WITH_ASSUME_ROLE_AWS_ACCESS_KEY_ID" ]
-then
-     logerror "AWS_ACCOUNT_WITH_ASSUME_ROLE_AWS_ACCESS_KEY_ID is not set. Export it as environment variable or pass it as argument"
-     exit 1
-fi
-
-if [ -z "$AWS_ACCOUNT_WITH_ASSUME_ROLE_AWS_SECRET_ACCESS_KEY" ]
-then
-     logerror "AWS_ACCOUNT_WITH_ASSUME_ROLE_AWS_SECRET_ACCESS_KEY is not set. Export it as environment variable or pass it as argument"
-     exit 1
-fi
-
-
 bootstrap_ccloud_environment
 
 if [ -f /tmp/delta_configs/env.delta ]
@@ -94,18 +73,14 @@ cat << EOF > connector.json
      "kafka.api.secret": "$CLOUD_SECRET",
      "topics": "s3_topic",
      "topics.dir": "$TAG",
-     "aws.access.key.id" : "$AWS_ACCOUNT_WITH_ASSUME_ROLE_AWS_ACCESS_KEY_ID",
-     "aws.secret.access.key": "$AWS_ACCOUNT_WITH_ASSUME_ROLE_AWS_SECRET_ACCESS_KEY",
+     "aws.access.key.id" : "$AWS_ACCESS_KEY_ID",
+     "aws.secret.access.key": "$AWS_SECRET_ACCESS_KEY",
      "input.data.format": "AVRO",
      "output.data.format": "AVRO",
      "s3.bucket.name": "$AWS_BUCKET_NAME",
      "time.interval" : "HOURLY",
      "flush.size": "1000",
      "schema.compatibility": "NONE",
-    "sts.role.arn": "$AWS_STS_ROLE_ARN",
-    "sts.role.session.name": "session-name",
-    "sts.role.external.id": "123",
-
      "tasks.max" : "1"
 }
 EOF
