@@ -38,7 +38,7 @@ create_topic client_python_avro_$TAG
 set -e
 
 log "Building docker image"
-docker build -t vdesabou/python-ccloud-example-docker .
+docker build -t vdesabou/python-ccloud-example-docker . > /dev/null 2>&1
 
 log "Starting producer"
 docker run --name python-ccloud-producer --rm -v ${DIR}/librdkafka.config:/tmp/librdkafka.config -e TAG=$TAG vdesabou/python-ccloud-example-docker ./producer.py -f /tmp/librdkafka.config -t client_python_$TAG

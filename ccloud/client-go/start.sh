@@ -33,7 +33,7 @@ create_topic client_go_$TAG
 set -e
 
 log "Building docker image"
-docker build -t vdesabou/go-ccloud-example-docker .
+docker build -t vdesabou/go-ccloud-example-docker . > /dev/null 2>&1
 
 log "Starting producer"
 docker run --name go-ccloud-producer -v ${DIR}/librdkafka.config:/tmp/librdkafka.config -e TAG=$TAG vdesabou/go-ccloud-example-docker ./producer -f /tmp/librdkafka.config -t client_go_$TAG
