@@ -40,6 +40,24 @@
       "Default": "0.0.0.0/0",
       "AllowedPattern": "(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})\\.(\\d{1,3})/(\\d{1,2})",
       "ConstraintDescription": "must be a valid IP CIDR range of the form x.x.x.x/x."
+    },
+    "GithubSshKeyFile": {
+      "Description": "github_ssh_key_file",
+      "Type": "String",
+      "Default": "",
+      "NoEcho" : "true"
+    },
+    "SecretsEncryptionPassword": {
+      "Description": "SECRETS_ENCRYPTION_PASSWORD",
+      "Type": "String",
+      "Default": "",
+      "NoEcho" : "true"
+    },
+    "DockerPassword": {
+      "Description": "DOCKER_PASSWORD",
+      "Type": "String",
+      "Default": "",
+      "NoEcho" : "true"
     }
   },
 
@@ -137,8 +155,6 @@
       "c4.2xlarge"  : { "Arch" : "NATHVM64"  },
       "c4.4xlarge"  : { "Arch" : "NATHVM64"  },
       "c4.8xlarge"  : { "Arch" : "NATHVM64"  },
-      "g2.2xlarge"  : { "Arch" : "NATHVMG2"  },
-      "g2.8xlarge"  : { "Arch" : "NATHVMG2"  },
       "r3.large"    : { "Arch" : "NATHVM64"  },
       "r3.xlarge"   : { "Arch" : "NATHVM64"  },
       "r3.2xlarge"  : { "Arch" : "NATHVM64"  },
@@ -207,7 +223,7 @@
             "files" : {
               "/home/ec2-user/clone.sh" : {
                 "content" : { "Fn::Join" : [ "", [
-                  "#!/bin/bash\nset -e\n\n# run as ec2-user\ncat << EOF | su ec2-user\n\ncd \ngit clone https://github.com/robbyrussell/oh-my-zsh.git /home/ec2-user/.oh-my-zsh\ncp /home/ec2-user/.oh-my-zsh/templates/zshrc.zsh-template /home/ec2-user/.zshrc \ncurl -fsSL https://starship.rs/install.sh -o install.sh \nsudo sh ./install.sh -y \necho 'export PATH=$HOME/bin:/usr/local/bin:$PATH' >> ~/.zshrc \necho 'eval \"\\$(starship init zsh)\"' >> ~/.zshrc \nsudo chsh -s /bin/zsh \ngit clone https://github.com/vdesabou/kafka-docker-playground.git\n\n\nEOF"
+                  "#!/bin/bash\nset -e\n\n# run as ec2-user\ncat << EOF | su ec2-user\n\ncd \ngit clone https://github.com/robbyrussell/oh-my-zsh.git /home/ec2-user/.oh-my-zsh\ncp /home/ec2-user/.oh-my-zsh/templates/zshrc.zsh-template /home/ec2-user/.zshrc \ncurl -fsSL https://starship.rs/install.sh -o install.sh \nsudo sh ./install.sh -y \necho 'export PATH=$HOME/bin:/usr/local/bin:$PATH' >> ~/.zshrc \necho 'eval \"\\$(starship init zsh)\"' >> ~/.zshrc \nsudo chsh -s /bin/zsh \necho \"", { "Ref" : "GithubSshKeyFile" },"\" > /home/ec2-user/.ssh/id_rsa\nchmod 600 /home/ec2-user/.ssh/id_rsa\nssh-keyscan -t rsa github.com >> /home/ec2-user/.ssh/known_hosts\ngit clone https://github.com/vdesabou/kafka-docker-playground.git\n\n\nEOF"
                 ]]},
                 "mode"  : "000744",
                 "owner" : "ec2-user",
@@ -257,7 +273,7 @@
                   "command": "yum update -y"
               },
               "02start_docker": {
-                "command": "service docker start && usermod -a -G docker ec2-user"
+                "command": "service docker start && usermod -a -G docker ec2-user && newgrp docker && chmod 666 /var/run/docker.sock"
               },
               "03install_docker_compose": {
                   "command": "yum install -y python38 python38-devel.$(uname -m) libffi-devel openssl-devel && python3 -m pip install -U pip && python3 -m pip install docker-compose"
@@ -320,12 +336,8 @@
     "KafkaDockerPlaygroundSecurityGroup" : {
       "Type" : "AWS::EC2::SecurityGroup",
       "Properties" : {
-        "GroupDescription" : "Enable SSH, Connect API, C3, Grafana and Prometheus access",
+        "GroupDescription" : "Enable SSH access",
         "SecurityGroupIngress" : [
-          {"IpProtocol" : "tcp", "FromPort" : "9021", "ToPort" : "9021", "CidrIp" : { "Ref" : "IPAddressRange"}},
-          {"IpProtocol" : "tcp", "FromPort" : "3000", "ToPort" : "3000", "CidrIp" : { "Ref" : "IPAddressRange"}},
-          {"IpProtocol" : "tcp", "FromPort" : "8083", "ToPort" : "8083", "CidrIp" : { "Ref" : "IPAddressRange"}},
-          {"IpProtocol" : "tcp", "FromPort" : "9090", "ToPort" : "9090", "CidrIp" : { "Ref" : "IPAddressRange"}},
           {"IpProtocol" : "tcp", "FromPort" : "22", "ToPort" : "22", "CidrIp" : { "Ref" : "IPAddressRange"}}
         ]
       }
