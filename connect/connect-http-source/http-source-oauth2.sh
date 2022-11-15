@@ -64,7 +64,7 @@ curl -X PUT \
                "topic.name.pattern":"http-topic-${entityName}",
                "entity.names": "messages",
                "http.offset.mode": "SIMPLE_INCREMENTING",
-               "http.initial.offset": "0",
+               "http.initial.offset": "1",
                "auth.type": "oauth2",
                "oauth2.token.url": "'"$TOKEN_URL"'",
                "oauth2.client.id": "kc-client",
@@ -79,9 +79,18 @@ sleep 3
 #   "message": "Connector configuration is invalid and contains the following 6 error(s):\nInvalid credentials, the connector received a `401 Unauthorized` response status code for the initial request.\nInvalid credentials, the connector received a `401 Unauthorized` response status code for the initial request.\nInvalid credentials, the connector received a `401 Unauthorized` response status code for the initial request.\nInvalid credentials, the connector received a `401 Unauthorized` response status code for the initial request.\nInvalid credentials, the connector received a `401 Unauthorized` response status code for the initial request.\nInvalid credentials, the connector received a `401 Unauthorized` response status code for the initial request.\nYou can also find the above list of errors at the endpoint `/connector-plugins/{connectorType}/config/validate`"
 # }
 
+# create token, see https://github.com/confluentinc/kafka-connect-http-demo#oauth2
+token=$(curl -X POST \
+  http://localhost:8080/oauth/token \
+  -H 'Content-Type: application/x-www-form-urlencoded' \
+  -H 'Authorization: Basic a2MtY2xpZW50OmtjLXNlY3JldA==' \
+  -d 'grant_type=client_credentials&scope=any' | jq -r '.access_token')
+
+
 log "Send a message to HTTP server"
 curl -X PUT \
      -H "Content-Type: application/json" \
+     -H "Authorization: Bearer ${token}" \
      --data '{"test":"value"}' \
      http://localhost:8080/api/messages | jq .
 
