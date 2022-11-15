@@ -14,7 +14,8 @@ jobs:
           repository: vdesabou/kafka-docker-playground
           fetch-depth: 0
           submodules: recursive
-          token: ${{ secrets.CI_GITHUB_TOKEN }}
+          ssh-key: ${{ secrets.GH_SSH_KEY_FILE }}
+          ssh-strict: 'false'
 
       - name: Update README
         run: |
