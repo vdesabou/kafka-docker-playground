@@ -35,6 +35,20 @@ $aws_cli ec2 authorize-security-group-ingress --group-name "$group" --protocol t
 # $aws_cli ec2 authorize-security-group-ingress --group-name "$group" --protocol tcp --port 1414 --cidr 35.181.19.147/32 > /dev/null 2>&1 &
 # $aws_cli ec2 authorize-security-group-ingress --group-name "$group" --protocol tcp --port 1414 --cidr 35.181.144.237/32 > /dev/null 2>&1 &
 
+# # egress IPs for my AWS cluster playground:
+# $aws_cli ec2 authorize-security-group-ingress --group-name "$group" --protocol tcp --port 8080 --cidr 13.36.97.85/32 > /dev/null 2>&1 &
+# $aws_cli ec2 authorize-security-group-ingress --group-name "$group" --protocol tcp --port 8080 --cidr 13.36.104.9/32 > /dev/null 2>&1 &
+# $aws_cli ec2 authorize-security-group-ingress --group-name "$group" --protocol tcp --port 8080 --cidr 13.36.132.239/32 > /dev/null 2>&1 &
+# $aws_cli ec2 authorize-security-group-ingress --group-name "$group" --protocol tcp --port 8080 --cidr 13.37.18.182/32 > /dev/null 2>&1 &
+# $aws_cli ec2 authorize-security-group-ingress --group-name "$group" --protocol tcp --port 8080 --cidr 15.188.179.40/32 > /dev/null 2>&1 &
+# $aws_cli ec2 authorize-security-group-ingress --group-name "$group" --protocol tcp --port 8080 --cidr 15.236.107.72/32 > /dev/null 2>&1 &
+# $aws_cli ec2 authorize-security-group-ingress --group-name "$group" --protocol tcp --port 8080 --cidr 15.236.121.33/32 > /dev/null 2>&1 &
+# $aws_cli ec2 authorize-security-group-ingress --group-name "$group" --protocol tcp --port 8080 --cidr 15.236.192.85/32 > /dev/null 2>&1 &
+# $aws_cli ec2 authorize-security-group-ingress --group-name "$group" --protocol tcp --port 8080 --cidr 35.180.176.16/32 > /dev/null 2>&1 &
+# $aws_cli ec2 authorize-security-group-ingress --group-name "$group" --protocol tcp --port 8080 --cidr 35.181.12.7/32 > /dev/null 2>&1 &
+# $aws_cli ec2 authorize-security-group-ingress --group-name "$group" --protocol tcp --port 8080 --cidr 35.181.19.147/32 > /dev/null 2>&1 &
+# $aws_cli ec2 authorize-security-group-ingress --group-name "$group" --protocol tcp --port 8080 --cidr 35.181.144.237/32 > /dev/null 2>&1 &
+
 # # egress ip cluster cdc oracle
 # $aws_cli ec2 authorize-security-group-ingress --group-name "$group" --protocol tcp --port 1521 --cidr 3.14.223.77/32 > /dev/null 2>&1 &
 # $aws_cli ec2 authorize-security-group-ingress --group-name "$group" --protocol tcp --port 1521 --cidr 3.19.107.110/32 > /dev/null 2>&1 &

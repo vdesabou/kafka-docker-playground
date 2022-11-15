@@ -1674,9 +1674,72 @@ echo "$ip"</string>
 			<key>variable</key>
 			<string>only_see_your_instance</string>
 		</dict>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>default</key>
+				<string></string>
+				<key>placeholder</key>
+				<string>not required</string>
+				<key>required</key>
+				<false/>
+				<key>trim</key>
+				<true/>
+			</dict>
+			<key>description</key>
+			<string></string>
+			<key>label</key>
+			<string>GITHUB_TOKEN</string>
+			<key>type</key>
+			<string>textfield</string>
+			<key>variable</key>
+			<string>GITHUB_TOKEN</string>
+		</dict>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>default</key>
+				<string></string>
+				<key>placeholder</key>
+				<string>not required</string>
+				<key>required</key>
+				<false/>
+				<key>trim</key>
+				<true/>
+			</dict>
+			<key>description</key>
+			<string></string>
+			<key>label</key>
+			<string>SECRETS_ENCRYPTION_PASSWORD</string>
+			<key>type</key>
+			<string>textfield</string>
+			<key>variable</key>
+			<string>SECRETS_ENCRYPTION_PASSWORD</string>
+		</dict>
+		<dict>
+			<key>config</key>
+			<dict>
+				<key>default</key>
+				<string></string>
+				<key>placeholder</key>
+				<string>not required</string>
+				<key>required</key>
+				<false/>
+				<key>trim</key>
+				<true/>
+			</dict>
+			<key>description</key>
+			<string></string>
+			<key>label</key>
+			<string>DOCKER_PASSWORD</string>
+			<key>type</key>
+			<string>textfield</string>
+			<key>variable</key>
+			<string>DOCKER_PASSWORD</string>
+		</dict>
 	</array>
 	<key>version</key>
-	<string>1.2</string>
+	<string>1.3</string>
 	<key>webaddress</key>
 	<string>https://github.com/vdesabou/kafka-docker-playground/tree/master/cloudformation/alfred-aws-vscode-workflow</string>
 </dict>
