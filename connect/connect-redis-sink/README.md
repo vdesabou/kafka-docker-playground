@@ -4,7 +4,7 @@
 
 ## Objective
 
-Quickly test [Redis Sink](https://docs.confluent.io/current/connect/kafka-connect-hbase/index.html#quick-start) connector.
+Quickly test [Redis Sink](https://docs.confluent.io/kafka-connectors/redis/current/overview.html) connector.
 
 
 
