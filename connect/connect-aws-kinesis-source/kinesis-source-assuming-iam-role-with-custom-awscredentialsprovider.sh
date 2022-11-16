@@ -4,6 +4,8 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
+logwarn "⚠️ This example and associated custom code is not supported, use at your own risks !"
+
 AWS_STS_ROLE_ARN=${AWS_STS_ROLE_ARN:-$1}
 
 if [ -z "$AWS_STS_ROLE_ARN" ]

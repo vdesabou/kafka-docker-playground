@@ -22,7 +22,7 @@ Simply run:
 $ ./s3-sink.sh
 ```
 
-If you want to [assume](https://docs.confluent.io/kafka-connect-s3-sink/current/index.html#using-trusted-account-credentials) IAM roles:
+If you want to assume IAM roles:
 
 ```
 $ ./s3-sink-with-assuming-iam-role.sh (in that case `~/.aws/credentials-with-assuming-iam-role` file must be set)
@@ -32,6 +32,12 @@ or
 
 ```
 $ ./s3-sink-with-assuming-iam-role-config.sh <AWS_STS_ROLE_ARN>
+```
+
+or with AssumeRole using custom AWS credentials provider (⚠️ custom code is just an example, there is no support for it):
+
+```
+$ ./s3-sink-backup-and-restore-assuming-iam-role-with-customer-aws-credential-provider.sh
 ```
 
 Note: you can also export these values as environment variable

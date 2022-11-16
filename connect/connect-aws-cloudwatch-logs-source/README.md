@@ -23,6 +23,12 @@ Simply run:
 $ ./cloudwatch.sh
 ```
 
+If you want to assume IAM roles:
+
+```
+$ ./cloudwatch-with-assuming-iam-role.sh (in that case `~/.aws/credentials-with-assuming-iam-role` file must be set)
+```
+
 
 ## Details of what the script is doing
 

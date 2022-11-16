@@ -31,6 +31,18 @@ For [Generalized Amazon S3 Source](https://docs.confluent.io/kafka-connect-s3-so
 $ ./s3-source-generalized.sh
 ```
 
+If you want to assume IAM roles:
+
+```
+$ ./s3-source-backup-and-restore-with-assuming-iam-role.sh (in that case `~/.aws/credentials-with-assuming-iam-role` file must be set)
+```
+
+or with AssumeRole using custom AWS credentials provider (⚠️ custom code is just an example, there is no support for it):
+
+```
+$ ./s3-source-backup-and-restore-assuming-iam-role-with-customer-aws-credential-provider.sh
+```
+
 ## Details of what the script is doing
 
 ### Backup and Restore Amazon S3 Source

@@ -35,6 +35,12 @@ Or using 2 way SSL authentication:
 $ ./sqs-2way-ssl.sh
 ```
 
+If you want to [assume](https://docs.confluent.io/kafka-connect-s3-sink/current/index.html#using-trusted-account-credentials) IAM roles:
+
+```
+$ ./sqs-source-with-assuming-iam-role.sh (in that case `~/.aws/credentials-with-assuming-iam-role` file must be set)
+```
+
 ## Details of what the script is doing
 
 ### With no security in place:

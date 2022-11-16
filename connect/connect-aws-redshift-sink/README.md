@@ -22,6 +22,12 @@ Simply run:
 $ ./redshift-sink.sh
 ```
 
+If you want to assume IAM roles:
+
+```
+$ ./redshift-sink-with-assuming-iam-role.sh (in that case `~/.aws/credentials-with-assuming-iam-role` file must be set)
+```
+
 ## Details of what the script is doing
 
 Create AWS Redshift cluster

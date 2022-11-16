@@ -23,6 +23,17 @@ Simply run:
 $ ./dynamodb.sh
 ```
 
+If you want to assume IAM roles:
+
+```
+$ ./dynamodb-sink-with-assuming-iam-role.sh (in that case `~/.aws/credentials-with-assuming-iam-role` file must be set)
+```
+
+or
+
+```
+$ ./dynamodb-sink-with-assuming-iam-role-config.sh <AWS_STS_ROLE_ARN>
+```
 
 ## Details of what the script is doing
 
