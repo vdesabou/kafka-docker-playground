@@ -106,7 +106,7 @@ seq -f "{\"f1\": \"value%g\"}" 10 | docker exec -i connect kafka-avro-console-pr
 sleep 20
 
 log "Listing ${AZURE_DATALAKE_ACCOUNT_NAME} in Azure Data Lake"
-az storage blob list --account-name "${AZURE_DATALAKE_ACCOUNT_NAME}" --container-name topics
+az storage fs file list --account-name "${AZURE_DATALAKE_ACCOUNT_NAME}" --file-system topics
 
 log "Getting one of the avro files locally and displaying content with avro-tools"
 az storage blob download  --container-name topics --name datalake_topic/partition=0/datalake_topic+0+0000000000.avro --file /tmp/datalake_topic+0+0000000000.avro --account-name "${AZURE_DATALAKE_ACCOUNT_NAME}"
