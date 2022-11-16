@@ -52,12 +52,6 @@
       "Type": "String",
       "Default": "",
       "NoEcho" : "true"
-    },
-    "DockerPassword": {
-      "Description": "DOCKER_PASSWORD",
-      "Type": "String",
-      "Default": "",
-      "NoEcho" : "true"
     }
   },
 

@@ -27,7 +27,7 @@ tasks:
 
   - name: playground
     init: gp sync-await prebuild
-    command: if [ -z "$SECRETS_ENCRYPTION_PASSWORD" ]; then echo "🚀 Enjoy the playground"; else echo "ℹ️ SECRETS_ENCRYPTION_PASSWORD environment variable is set"; ./.github/scripts/decrypt_secret.sh;tar xvf secrets.tar;rm secrets.tar;mkdir -p $HOME/.aws;mv aws_credentials_with_assuming_iam_role $HOME/.aws/credentials-with-assuming-iam-role;chmod -R a+rw $HOME/.aws;mkdir -p $HOME/.confluent;echo "$DOCKER_PASSWORD" | docker login -u vdesabou --password-stdin;fi
+    command: if [ -z "$SECRETS_ENCRYPTION_PASSWORD" ]; then echo "🚀 Enjoy the playground"; else echo "ℹ️ SECRETS_ENCRYPTION_PASSWORD environment variable is set"; ./.github/scripts/decrypt_secret.sh;tar xvf secrets.tar;rm secrets.tar;mkdir -p $HOME/.aws;mv aws_credentials_with_assuming_iam_role $HOME/.aws/credentials-with-assuming-iam-role;chmod -R a+rw $HOME/.aws;mkdir -p $HOME/.confluent;echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin;fi
 
 vscode:
   extensions:

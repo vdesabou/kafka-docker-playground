@@ -123,7 +123,7 @@ jobs:
           mv aws_credentials_aws_account_with_assume_role $HOME/.aws/credentials_aws_account_with_assume_role
           chmod -R a+rw $HOME/.aws
           mkdir -p $HOME/.confluent
-          echo "$DOCKER_PASSWORD" | docker login -u vdesabou --password-stdin
+          echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
         env:
           SECRETS_ENCRYPTION_PASSWORD: ${{ secrets.SECRETS_ENCRYPTION_PASSWORD }}
           DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD}}
@@ -245,7 +245,7 @@ jobs:
           mv aws_credentials_aws_account_with_assume_role $HOME/.aws/credentials_aws_account_with_assume_role
           chmod -R a+rw $HOME/.aws
           mkdir -p $HOME/.confluent
-          echo "$DOCKER_PASSWORD" | docker login -u vdesabou --password-stdin
+          echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
         env:
           SECRETS_ENCRYPTION_PASSWORD: ${{ secrets.SECRETS_ENCRYPTION_PASSWORD }}
           DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD}}
@@ -350,7 +350,7 @@ jobs:
           mkdir -p $HOME/.aws
           chmod -R a+rw $HOME/.aws
           mkdir -p $HOME/.confluent
-          echo "$DOCKER_PASSWORD" | docker login -u vdesabou --password-stdin
+          echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
         env:
           SECRETS_ENCRYPTION_PASSWORD: ${{ secrets.SECRETS_ENCRYPTION_PASSWORD }}
           DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD}}
