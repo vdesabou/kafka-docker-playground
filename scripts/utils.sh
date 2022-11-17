@@ -699,7 +699,7 @@ function create_topic()
 {
   local topic="$1"
   log "Check if topic $topic exists"
-  confluent kafka topic create "$topic" --dry-run 2>/dev/null
+  confluent kafka topic create "$topic" --partitions 1 --dry-run 2>/dev/null
   if [[ $? == 0 ]]; then
     log "Create topic $topic"
     log "confluent kafka topic create $topic --partitions 1"
@@ -713,7 +713,7 @@ function delete_topic()
 {
   local topic="$1"
   log "Check if topic $topic exists"
-  confluent kafka topic create "$topic" --dry-run 2>/dev/null
+  confluent kafka topic create "$topic" --partitions 1 --dry-run 2>/dev/null
   if [[ $? != 0 ]]; then
     log "Delete topic $topic"
     log "confluent kafka topic delete $topic"
@@ -2665,7 +2665,7 @@ function ccloud::create_acls_connect_topics() {
   
 
   for TOPIC in _confluent-monitoring _confluent-command ; do
-    confluent kafka topic create $TOPIC &>/dev/null
+    confluent kafka topic create $TOPIC --partitions 1 &>/dev/null
     confluent kafka acl create --allow --service-account $serviceAccount --operation WRITE --topic $TOPIC --prefix
     confluent kafka acl create --allow --service-account $serviceAccount --operation READ --topic $TOPIC --prefix
   done
