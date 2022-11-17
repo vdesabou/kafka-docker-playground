@@ -19,7 +19,7 @@ CREATE TABLE customers (
   id INTEGER IDENTITY(1001,1) NOT NULL PRIMARY KEY,
   first_name VARCHAR(255) NOT NULL,
   last_name VARCHAR(255) NOT NULL,
-  email VARCHAR(255) NOT NULL UNIQUE
+  email VARCHAR(255) NOT NULL
 );
 INSERT INTO customers(first_name,last_name,email)
   VALUES ('Sally','Thomas','sally.thomas@acme.com');
