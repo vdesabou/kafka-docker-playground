@@ -230,7 +230,12 @@ EOF
     producer_hostname=""
     producer_hostname="producer-repro-$description_kebab_case"
     producer_hostname=${producer_hostname:0:21} 
-    producer_hostname="${producer_hostname}$i"
+    if [ $nb_producers -eq 1 ]
+    then
+      producer_hostname="${producer_hostname}"
+    else
+      producer_hostname="${producer_hostname}$i"
+    fi
 
     list="$list $producer_hostname"
 
@@ -266,7 +271,12 @@ EOF
     producer_hostname=""
     producer_hostname="producer-repro-$description_kebab_case"
     producer_hostname=${producer_hostname:0:21} 
-    producer_hostname="${producer_hostname}$i"
+    if [ $nb_producers -eq 1 ]
+    then
+      producer_hostname="${producer_hostname}"
+    else
+      producer_hostname="${producer_hostname}$i"
+    fi
     cat << EOF >> $tmp_dir/java_producer
 log "✨ Run the $schema_format java producer v$i which produces to topic $topic_name"
 docker exec $producer_hostname bash -c "java \${JAVA_OPTS} -jar producer-1.0.0-jar-with-dependencies.jar"
