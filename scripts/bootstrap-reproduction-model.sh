@@ -171,8 +171,13 @@ then
         # looks like there is a maximum size for hostname in docker (container init caused: sethostname: invalid argument: unknown)
         producer_hostname=""
         producer_hostname="producer-repro-$description_kebab_case"
-        producer_hostname=${producer_hostname:0:21} 
-        producer_hostname="${producer_hostname}$i"
+        producer_hostname=${producer_hostname:0:21}
+        if [ $nb_producers -eq 1 ]
+        then
+          producer_hostname="${producer_hostname}"
+        else
+          producer_hostname="${producer_hostname}$i"
+        fi
 
         rm -rf $producer_hostname
         mkdir -p $repro_dir/$producer_hostname/
