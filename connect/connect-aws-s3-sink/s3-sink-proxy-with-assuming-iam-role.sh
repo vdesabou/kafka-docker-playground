@@ -4,11 +4,6 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
-if [ ! -f $HOME/.aws/config ]
-then
-     logerror "ERROR: $HOME/.aws/config is not set"
-     exit 1
-fi
 export AWS_CREDENTIALS_FILE_NAME=credentials-with-assuming-iam-role
 if [ ! -f $HOME/.aws/$AWS_CREDENTIALS_FILE_NAME ]
 then
