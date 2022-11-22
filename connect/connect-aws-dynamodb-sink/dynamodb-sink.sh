@@ -62,8 +62,6 @@ curl -X PUT \
                "topics": "mytable",
                "aws.dynamodb.region": "'"$AWS_REGION"'",
                "aws.dynamodb.endpoint": "'"$DYNAMODB_ENDPOINT"'",
-               "aws.access.key.id" : "'"$AWS_ACCESS_KEY_ID"'",
-               "aws.secret.key.id": "'"$AWS_SECRET_ACCESS_KEY"'",
                "confluent.license": "",
                "confluent.topic.bootstrap.servers": "broker:9092",
                "confluent.topic.replication.factor": "1"
