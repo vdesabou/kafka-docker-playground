@@ -1327,22 +1327,22 @@ echo "$ip"</string>
 			<key>config</key>
 			<dict>
 				<key>default</key>
-				<string>kafka-docker-playground.json</string>
+				<string>kafka-docker-playground.yml</string>
 				<key>filtermode</key>
 				<integer>2</integer>
 				<key>placeholder</key>
-				<string>kafka-docker-playground.json</string>
+				<string>kafka-docker-playground.yml</string>
 				<key>required</key>
 				<false/>
 			</dict>
 			<key>description</key>
-			<string>By default it will use kafka-docker-playground.json</string>
+			<string>By default it will use kafka-docker-playground.yml</string>
 			<key>label</key>
 			<string>Cloud Formation template</string>
 			<key>type</key>
 			<string>filepicker</string>
 			<key>variable</key>
-			<string>cloud_formation_json_file</string>
+			<string>cloud_formation_yml_file</string>
 		</dict>
 		<dict>
 			<key>config</key>
@@ -1718,7 +1718,7 @@ echo "$ip"</string>
 		</dict>
 	</array>
 	<key>version</key>
-	<string>1.5</string>
+	<string>1.6</string>
 	<key>webaddress</key>
 	<string>https://github.com/vdesabou/kafka-docker-playground/tree/master/cloudformation/alfred-aws-vscode-workflow</string>
 </dict>

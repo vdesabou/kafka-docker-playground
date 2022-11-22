@@ -4,7 +4,7 @@ If you don't want to run the playground locally, you can run it easily on a EC2 
 
 ## Using AWS console
 
-* Create stack in AWS CloudFormation and upload [this](./kafka-docker-playground.json?raw=true) template file:
+* Create stack in AWS CloudFormation and upload [this](./kafka-docker-playground.yml?raw=true) template file:
 
 ![AWS CloudFormation](./Screenshot1.png)
 
@@ -21,9 +21,9 @@ If you don't want to run the playground locally, you can run it easily on a EC2 
 For example, this is how I start it using aws CLI:
 
 ```bash
-$ cp kafka-docker-playground/cloudformation/kafka-docker-playground.json tmp.json
+$ cp kafka-docker-playground/cloudformation/kafka-docker-playground.yml tmp.yml
 $ aws cloudformation create-stack  --stack-name kafka-docker-playground-$USER \
-    --template-body file://tmp.json --region eu-west-3 \ 
+    --template-body file://tmp.yml --region eu-west-3 \ 
     --parameters ParameterKey=KeyName,ParameterValue=$KEY_NAME \
     ParameterKey=InstanceName,ParameterValue=kafka-docker-playground-$USER
 ```
