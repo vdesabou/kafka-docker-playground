@@ -126,6 +126,7 @@ jobs:
           echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
         env:
           SECRETS_ENCRYPTION_PASSWORD: ${{ secrets.SECRETS_ENCRYPTION_PASSWORD }}
+          DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME}}
           DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD}}
 
       - name: Build and Test
@@ -164,6 +165,7 @@ jobs:
           SALESFORCE_CONSUMER_PASSWORD_ACCOUNT2: ${{ secrets.SALESFORCE_CONSUMER_PASSWORD_ACCOUNT2}}
           DD_API_KEY: ${{ secrets.DD_API_KEY}}
           DD_APP_KEY: ${{ secrets.DD_APP_KEY}}
+          DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME}}
           DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD}}
           FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN}}
           JIRA_URL: ${{ secrets.JIRA_URL}}
@@ -248,6 +250,7 @@ jobs:
           echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
         env:
           SECRETS_ENCRYPTION_PASSWORD: ${{ secrets.SECRETS_ENCRYPTION_PASSWORD }}
+          DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME}}
           DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD}}
 
       - name: Build and Test
@@ -286,6 +289,7 @@ jobs:
           SALESFORCE_CONSUMER_PASSWORD_ACCOUNT2: ${{ secrets.SALESFORCE_CONSUMER_PASSWORD_ACCOUNT2}}
           DD_API_KEY: ${{ secrets.DD_API_KEY}}
           DD_APP_KEY: ${{ secrets.DD_APP_KEY}}
+          DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME}}
           DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD}}
           FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN}}
           JIRA_URL: ${{ secrets.JIRA_URL}}
@@ -353,6 +357,7 @@ jobs:
           echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
         env:
           SECRETS_ENCRYPTION_PASSWORD: ${{ secrets.SECRETS_ENCRYPTION_PASSWORD }}
+          DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME}}
           DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD}}
 
       - name: Cleanup resources
