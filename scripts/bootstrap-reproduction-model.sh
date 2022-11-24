@@ -99,7 +99,7 @@ else
   cp $test_file $repro_test_file
 fi
 
-for file in README.md docker-compose*.yml keyfile.json
+for file in README.md docker-compose*.yml keyfile.json stop.sh .gitignore
 do
   if [ -f $file ]
   then
