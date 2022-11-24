@@ -91,7 +91,7 @@
             <plugin>
                 <groupId>org.jsonschema2pojo</groupId>
                 <artifactId>jsonschema2pojo-maven-plugin</artifactId>
-                <version>1.1.1</version>
+                <version>1.1.2</version>
                 <configuration>
                     <sourceDirectory>${basedir}/src/main/resources/schema/</sourceDirectory>
                     <outputDirectory>${basedir}/src/main/java</outputDirectory>
