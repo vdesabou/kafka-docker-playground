@@ -185,6 +185,18 @@ then
       curl --request DELETE -u "$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO" "$SCHEMA_REGISTRY_URL/subjects/$subject?permanent=true"
     done
 
+    for row in $(confluent connect list --output json | jq -r '.[] | @base64'); do
+        _jq() {
+        echo ${row} | base64 --decode | jq -r ${1}
+        }
+        
+        id=$(echo $(_jq '.id'))
+        name=$(echo $(_jq '.name'))
+
+        log "deleting connector $id ($name)"
+        confluent connect delete $id
+    done
+
     for row in $(confluent iam service-account list --output json | jq -r '.[] | @base64'); do
         _jq() {
         echo ${row} | base64 --decode | jq -r ${1}
@@ -196,7 +208,7 @@ then
 
         if [[ $description = *my-java-producer-app* ]] || [[ $description = *ccloud-stack-function* ]]
         then
-            echo "deleting $id ($description)"
+            log "deleting $id ($description)"
             confluent iam service-account delete $id
             if [ $? != 0 ]
             then
