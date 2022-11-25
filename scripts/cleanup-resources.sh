@@ -170,13 +170,20 @@ done
 set +e 
 if [ ! -z "$CI" ]
 then
-     bootstrap_ccloud_environment
+    bootstrap_ccloud_environment
 
-     for topic in $(confluent kafka topic list)
-     do
-        log "delete topic $topic"
-        confluent kafka topic delete "$topic"
-     done
+    for topic in $(confluent kafka topic list)
+    do
+      log "delete topic $topic"
+      confluent kafka topic delete "$topic"
+    done
+
+    for subject in $(curl -u "$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO" "$SCHEMA_REGISTRY_URL/subjects" | jq -r '.[]')
+    do
+      log "delete subject $subject"
+      curl --request DELETE -u "$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO" "$SCHEMA_REGISTRY_URL/subjects/$subject"
+      curl --request DELETE -u "$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO" "$SCHEMA_REGISTRY_URL/subjects/$subject?permanent=true"
+    done
 
     for row in $(confluent iam service-account list --output json | jq -r '.[] | @base64'); do
         _jq() {
