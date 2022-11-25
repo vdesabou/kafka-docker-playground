@@ -1,0 +1,29 @@
+---
+version: '3.5'
+services:
+
+  postgres:
+    image: postgres:15
+    hostname: postgres
+    container_name: postgres
+    environment:
+      - POSTGRES_USER=myuser
+      - POSTGRES_PASSWORD=mypassword
+      - POSTGRES_DB=postgres
+
+  # https://github.com/shkoliar/docker-ngrok
+  ngrok:
+    image: shkoliar/ngrok:latest
+    hostname: ngrok
+    container_name: ngrok
+    ports:
+      - 4551:4551
+    links:
+      - postgres
+    environment:
+      DOMAIN: postgres
+      PORT: 5432
+      PROTOCOL: tcp
+      REGION: eu
+      AUTH_TOKEN: $NGROK_AUTH_TOKEN
+      DEBUG: "true"
