@@ -4,6 +4,12 @@ Description: >-
   instance. **WARNING** This template creates an Amazon EC2 instance. You will
   be billed for the AWS resources used if you create a stack from this template.
 Parameters:
+  # LatestAmiId:
+  #   Type: AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>
+  #   Default: "/aws/service/ami-amazon-linux-latest/amzn2-ami-kernel-5.10-hvm-x86_64-gp2"
+  LatestUbuntuFocalAMI:
+    Type: AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>
+    Default: "/aws/service/canonical/ubuntu/server/focal/stable/current/amd64/hvm/ebs-gp2/ami-id"
   KeyName:
     Description: Name of an existing EC2 KeyPair to enable SSH access to the instance
     Type: 'AWS::EC2::KeyPair::KeyName'
@@ -95,279 +101,7 @@ Parameters:
     Type: String
     Default: ''
     NoEcho: 'true'
-Mappings:
-  AWSInstanceType2Arch:
-    t1.micro:
-      Arch: HVM64
-    t2.nano:
-      Arch: HVM64
-    t2.micro:
-      Arch: HVM64
-    t2.small:
-      Arch: HVM64
-    t2.medium:
-      Arch: HVM64
-    t2.large:
-      Arch: HVM64
-    t3.2xlarge:
-      Arch: HVM64
-    m1.small:
-      Arch: HVM64
-    m1.medium:
-      Arch: HVM64
-    m1.large:
-      Arch: HVM64
-    m1.xlarge:
-      Arch: HVM64
-    m2.xlarge:
-      Arch: HVM64
-    m2.2xlarge:
-      Arch: HVM64
-    m2.4xlarge:
-      Arch: HVM64
-    m3.medium:
-      Arch: HVM64
-    m3.large:
-      Arch: HVM64
-    m3.xlarge:
-      Arch: HVM64
-    m3.2xlarge:
-      Arch: HVM64
-    m4.large:
-      Arch: HVM64
-    m4.xlarge:
-      Arch: HVM64
-    m4.2xlarge:
-      Arch: HVM64
-    m4.4xlarge:
-      Arch: HVM64
-    m4.10xlarge:
-      Arch: HVM64
-    c1.medium:
-      Arch: HVM64
-    c1.xlarge:
-      Arch: HVM64
-    c3.large:
-      Arch: HVM64
-    c3.xlarge:
-      Arch: HVM64
-    c3.2xlarge:
-      Arch: HVM64
-    c3.4xlarge:
-      Arch: HVM64
-    c3.8xlarge:
-      Arch: HVM64
-    c4.large:
-      Arch: HVM64
-    c4.xlarge:
-      Arch: HVM64
-    c4.2xlarge:
-      Arch: HVM64
-    c4.4xlarge:
-      Arch: HVM64
-    c4.8xlarge:
-      Arch: HVM64
-    g2.2xlarge:
-      Arch: HVMG2
-    g2.8xlarge:
-      Arch: HVMG2
-    r3.large:
-      Arch: HVM64
-    r3.xlarge:
-      Arch: HVM64
-    r3.2xlarge:
-      Arch: HVM64
-    r3.4xlarge:
-      Arch: HVM64
-    r3.8xlarge:
-      Arch: HVM64
-    i2.xlarge:
-      Arch: HVM64
-    i2.2xlarge:
-      Arch: HVM64
-    i2.4xlarge:
-      Arch: HVM64
-    i2.8xlarge:
-      Arch: HVM64
-    d2.xlarge:
-      Arch: HVM64
-    d2.2xlarge:
-      Arch: HVM64
-    d2.4xlarge:
-      Arch: HVM64
-    d2.8xlarge:
-      Arch: HVM64
-    hi1.4xlarge:
-      Arch: HVM64
-    hs1.8xlarge:
-      Arch: HVM64
-    cr1.8xlarge:
-      Arch: HVM64
-    cc2.8xlarge:
-      Arch: HVM64
-  AWSInstanceType2NATArch:
-    t1.micro:
-      Arch: NATHVM64
-    t2.nano:
-      Arch: NATHVM64
-    t2.micro:
-      Arch: NATHVM64
-    t2.small:
-      Arch: NATHVM64
-    t2.medium:
-      Arch: NATHVM64
-    t2.large:
-      Arch: NATHVM64
-    t3.2xlarge:
-      Arch: NATHVM64
-    m1.small:
-      Arch: NATHVM64
-    m1.medium:
-      Arch: NATHVM64
-    m1.large:
-      Arch: NATHVM64
-    m1.xlarge:
-      Arch: NATHVM64
-    m2.xlarge:
-      Arch: NATHVM64
-    m2.2xlarge:
-      Arch: NATHVM64
-    m2.4xlarge:
-      Arch: NATHVM64
-    m3.medium:
-      Arch: NATHVM64
-    m3.large:
-      Arch: NATHVM64
-    m3.xlarge:
-      Arch: NATHVM64
-    m3.2xlarge:
-      Arch: NATHVM64
-    m4.large:
-      Arch: NATHVM64
-    m4.xlarge:
-      Arch: NATHVM64
-    m4.2xlarge:
-      Arch: NATHVM64
-    m4.4xlarge:
-      Arch: NATHVM64
-    m4.10xlarge:
-      Arch: NATHVM64
-    c1.medium:
-      Arch: NATHVM64
-    c1.xlarge:
-      Arch: NATHVM64
-    c3.large:
-      Arch: NATHVM64
-    c3.xlarge:
-      Arch: NATHVM64
-    c3.2xlarge:
-      Arch: NATHVM64
-    c3.4xlarge:
-      Arch: NATHVM64
-    c3.8xlarge:
-      Arch: NATHVM64
-    c4.large:
-      Arch: NATHVM64
-    c4.xlarge:
-      Arch: NATHVM64
-    c4.2xlarge:
-      Arch: NATHVM64
-    c4.4xlarge:
-      Arch: NATHVM64
-    c4.8xlarge:
-      Arch: NATHVM64
-    r3.large:
-      Arch: NATHVM64
-    r3.xlarge:
-      Arch: NATHVM64
-    r3.2xlarge:
-      Arch: NATHVM64
-    r3.4xlarge:
-      Arch: NATHVM64
-    r3.8xlarge:
-      Arch: NATHVM64
-    i2.xlarge:
-      Arch: NATHVM64
-    i2.2xlarge:
-      Arch: NATHVM64
-    i2.4xlarge:
-      Arch: NATHVM64
-    i2.8xlarge:
-      Arch: NATHVM64
-    d2.xlarge:
-      Arch: NATHVM64
-    d2.2xlarge:
-      Arch: NATHVM64
-    d2.4xlarge:
-      Arch: NATHVM64
-    d2.8xlarge:
-      Arch: NATHVM64
-    hi1.4xlarge:
-      Arch: NATHVM64
-    hs1.8xlarge:
-      Arch: NATHVM64
-    cr1.8xlarge:
-      Arch: NATHVM64
-    cc2.8xlarge:
-      Arch: NATHVM64
-  AWSRegionArch2AMI:
-    us-east-1:
-      HVM64: ami-0080e4c5bc078760e
-      HVMG2: ami-0aeb704d503081ea6
-    us-west-2:
-      HVM64: ami-01e24be29428c15b2
-      HVMG2: ami-0fe84a5b4563d8f27
-    us-west-1:
-      HVM64: ami-0ec6517f6edbf8044
-      HVMG2: ami-0a7fc72dc0e51aa77
-    eu-west-1:
-      HVM64: ami-08935252a36e25f85
-      HVMG2: ami-0d5299b1c6112c3c7
-    eu-west-2:
-      HVM64: ami-01419b804382064e4
-      HVMG2: NOT_SUPPORTED
-    eu-west-3:
-      HVM64: ami-0dd7e7ed60da8fb83
-      HVMG2: NOT_SUPPORTED
-    eu-central-1:
-      HVM64: ami-0cfbf4f6db41068ac
-      HVMG2: ami-0aa1822e3eb913a11
-    eu-north-1:
-      HVM64: ami-86fe70f8
-      HVMG2: ami-32d55b4c
-    ap-northeast-1:
-      HVM64: ami-00a5245b4816c38e6
-      HVMG2: ami-09d0e0e099ecabba2
-    ap-northeast-2:
-      HVM64: ami-00dc207f8ba6dc919
-      HVMG2: NOT_SUPPORTED
-    ap-northeast-3:
-      HVM64: ami-0b65f69a5c11f3522
-      HVMG2: NOT_SUPPORTED
-    ap-southeast-1:
-      HVM64: ami-05b3bcf7f311194b3
-      HVMG2: ami-0e46ce0d6a87dc979
-    ap-southeast-2:
-      HVM64: ami-02fd0b06f06d93dfc
-      HVMG2: ami-0c0ab057a101d8ff2
-    ap-south-1:
-      HVM64: ami-0ad42f4f66f6c1cc9
-      HVMG2: ami-0244c1d42815af84a
-    us-east-2:
-      HVM64: ami-0cd3dfa4e37921605
-      HVMG2: NOT_SUPPORTED
-    ca-central-1:
-      HVM64: ami-07423fb63ea0a0930
-      HVMG2: NOT_SUPPORTED
-    sa-east-1:
-      HVM64: ami-05145e0b28ad8e0b2
-      HVMG2: NOT_SUPPORTED
-    cn-north-1:
-      HVM64: ami-053617c9d818c1189
-      HVMG2: NOT_SUPPORTED
-    cn-northwest-1:
-      HVM64: ami-0f7937761741dc640
-      HVMG2: NOT_SUPPORTED
+
 Resources:
   AWSInstance:
     Type: 'AWS::EC2::Instance'
@@ -378,16 +112,8 @@ Resources:
             - Install
             - Configure
         Install:
-          packages:
-            yum:
-              git: []
-              docker: []
-              zip: []
-              zsh: []
-              jq: []
-              expect: []
           files:
-            /home/ec2-user/clone.sh:
+            /home/ubuntu/clone.sh:
               content:
                 'Fn::Join':
                   - ''
@@ -397,126 +123,66 @@ Resources:
                       set -e
 
 
-                      # run as ec2-user
+                      # run as ubuntu
 
-                      cat << EOF | su ec2-user
+                      cat << EOF | su ubuntu
 
+                      dockerd-rootless-setuptool.sh install
 
                       cd 
 
-                      git clone https://github.com/robbyrussell/oh-my-zsh.git
-                      /home/ec2-user/.oh-my-zsh
+                      git clone https://github.com/robbyrussell/oh-my-zsh.git /home/ubuntu/.oh-my-zsh
 
-                      cp /home/ec2-user/.oh-my-zsh/templates/zshrc.zsh-template
-                      /home/ec2-user/.zshrc 
+                      cp /home/ubuntu/.oh-my-zsh/templates/zshrc.zsh-template /home/ubuntu/.zshrc
 
                       curl -fsSL https://starship.rs/install.sh -o install.sh 
 
                       sudo sh ./install.sh -y 
 
-                      echo 'export PATH=$HOME/bin:/usr/local/bin:$PATH' >>
-                      ~/.zshrc 
+                      echo 'export PATH=$HOME/bin:/usr/local/bin:$PATH' >> ~/.zshrc
 
-                      echo 'eval "\$(starship init zsh)"' >> ~/.zshrc 
+                      echo 'eval "\$(starship init zsh)"' >> ~/.zshrc
 
                       sudo chsh -s /bin/zsh 
 
                       echo "
                     - Ref: GithubSshKeyFile
                     - >-
-                      " > /home/ec2-user/.ssh/id_rsa
+                      " > /home/ubuntu/.ssh/id_rsa
 
-                      chmod 600 /home/ec2-user/.ssh/id_rsa
+                      chmod 600 /home/ubuntu/.ssh/id_rsa
 
-                      ssh-keyscan -t rsa github.com >>
-                      /home/ec2-user/.ssh/known_hosts
+                      ssh-keyscan -t rsa github.com >> /home/ubuntu/.ssh/known_hosts
 
-                      git clone
-                      https://github.com/vdesabou/kafka-docker-playground.git
+                      git clone https://github.com/vdesabou/kafka-docker-playground.git
 
 
 
                       EOF
               mode: '000744'
-              owner: ec2-user
-              group: ec2-user
-            /etc/cfn/cfn-hup.conf:
-              content:
-                'Fn::Join':
-                  - ''
-                  - - |
-                      [main]
-                    - stack=
-                    - Ref: 'AWS::StackId'
-                    - |+
-
-                    - region=
-                    - Ref: 'AWS::Region'
-                    - |+
-
-              mode: '000400'
-              owner: root
-              group: root
-            /etc/cfn/hooks.d/cfn-auto-reloader.conf:
-              content:
-                'Fn::Join':
-                  - ''
-                  - - |
-                      [cfn-auto-reloader-hook]
-                    - |
-                      triggers=post.update
-                    - >
-                      path=Resources.AWSInstance.Metadata.AWS::CloudFormation::Init
-                    - 'action=/opt/aws/bin/cfn-init -v '
-                    - '         --stack '
-                    - Ref: 'AWS::StackName'
-                    - '         --resource AWSInstance '
-                    - '         --configsets InstallAndRun '
-                    - '         --region '
-                    - Ref: 'AWS::Region'
-                    - |+
-
-                    - |
-                      runas=root
-              mode: '000400'
-              owner: root
-              group: root
-          services:
-            sysvinit:
-              cfn-hup:
-                enabled: 'true'
-                ensureRunning: 'true'
-                files:
-                  - /etc/cfn/cfn-hup.conf
-                  - /etc/cfn/hooks.d/cfn-auto-reloader.conf
+              owner: ubuntu
+              group: ubuntu
         Configure:
           commands:
             01update_pkgs:
-              command: yum update -y
-            02start_docker:
+              command: apt update -y
+            02install_docker:
               command: >-
-                service docker start && usermod -a -G docker ec2-user && newgrp
-                docker && chmod 666 /var/run/docker.sock
-            03install_docker_compose:
+                apt install zip -y
+                apt install zsh -y
+                apt install jq -y
+                apt install expect -y
+                apt install docker.io -y
+                apt install docker-compose -y
+            03install_ansible:
               command: >-
-                yum install -y python38 python38-devel.$(uname -m) libffi-devel
-                openssl-devel && python3 -m pip install -U pip && python3 -m pip
-                install docker-compose
-            04install_ansible:
-              command: >-
-                curl https://bootstrap.pypa.io/pip/2.7/get-pip.py -o get-pip.py
-                && python get-pip.py && python -m pip install ansible
+                apt-add-repository ppa:ansible/ansible -y
+                apt update -y
+                apt install ansible -y
             05clone_repo:
-              command: /home/ec2-user/clone.sh > /home/ec2-user/output.log 2>&1
+              command: /home/ubuntu/clone.sh > /home/ubuntu/output.log 2>&1
     Properties:
-      ImageId:
-        'Fn::FindInMap':
-          - AWSRegionArch2AMI
-          - Ref: 'AWS::Region'
-          - 'Fn::FindInMap':
-              - AWSInstanceType2Arch
-              - Ref: InstanceType
-              - Arch
+      ImageId: !Ref LatestUbuntuFocalAMI
       InstanceType:
         Ref: InstanceType
       Tags:
@@ -533,35 +199,6 @@ Resources:
             DeleteOnTermination: 'true'
             VolumeSize:
               Ref: Ec2RootVolumeSize
-      UserData:
-        'Fn::Base64':
-          'Fn::Join':
-            - ''
-            - - |
-                #!/bin/bash -xe
-              - |
-                yum update -y aws-cfn-bootstrap
-              - |
-                # Install the files and packages from the metadata
-              - '/opt/aws/bin/cfn-init -v '
-              - '         --stack '
-              - Ref: 'AWS::StackName'
-              - '         --resource AWSInstance '
-              - '         --configsets InstallAndRun '
-              - '         --region '
-              - Ref: 'AWS::Region'
-              - |+
-
-              - |
-                # Signal the status from cfn-init
-              - '/opt/aws/bin/cfn-signal -e $? '
-              - '         --stack '
-              - Ref: 'AWS::StackName'
-              - '         --resource AWSInstance '
-              - '         --region '
-              - Ref: 'AWS::Region'
-              - |+
-
     CreationPolicy:
       ResourceSignal:
         Timeout: PT30M

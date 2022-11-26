@@ -118,11 +118,11 @@ fi
 mkdir -p $HOME/.ssh
 SSH_CONFIG_FILE=$HOME/.ssh/config
 
-instanceuser="ec2-user"
-if [[ "$name" == *runner* ]]
-then
-    instanceuser="ubuntu"
-fi
+instanceuser="ubuntu"
+# if [[ "$name" == *runner* ]]
+# then
+#     instanceuser="ubuntu"
+# fi
 
 grep "$name" $SSH_CONFIG_FILE > /dev/null
 if [ $? = 0 ]
