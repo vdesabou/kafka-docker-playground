@@ -1,12 +1,7 @@
 AWSTemplateFormatVersion: '2010-09-09'
 Description: >-
-  AWS CloudFormation Template for kafka-docker-playground using a single EC2
-  instance. **WARNING** This template creates an Amazon EC2 instance. You will
-  be billed for the AWS resources used if you create a stack from this template.
+  kafka-docker-playground using Ubuntu 20 EC2 instance.
 Parameters:
-  # LatestAmiId:
-  #   Type: AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>
-  #   Default: "/aws/service/ami-amazon-linux-latest/amzn2-ami-kernel-5.10-hvm-x86_64-gp2"
   LatestUbuntuFocalAMI:
     Type: AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>
     Default: "/aws/service/canonical/ubuntu/server/focal/stable/current/amd64/hvm/ebs-gp2/ami-id"
@@ -84,7 +79,7 @@ Parameters:
     Type: String
     Default: kafka-docker-playground
   IPAddressRange:
-    Description: ' The IP address range that can be used to connect to the EC2 instances'
+    Description: 'The IP address range that can be used to connect to the EC2 instances'
     Type: String
     MinLength: '9'
     MaxLength: '18'
@@ -127,8 +122,6 @@ Resources:
 
                       cat << EOF | su ubuntu
 
-                      dockerd-rootless-setuptool.sh install
-
                       cd 
 
                       git clone https://github.com/robbyrussell/oh-my-zsh.git /home/ubuntu/.oh-my-zsh
@@ -156,31 +149,56 @@ Resources:
 
                       git clone https://github.com/vdesabou/kafka-docker-playground.git
 
-
-
                       EOF
               mode: '000744'
               owner: ubuntu
               group: ubuntu
+
         Configure:
+          packages:
+            apt:
+              ca-certificates: []
+              curl: []
+              gnupg: []
+              lsb-release: []
+              php-mysql: []
+              zip: []
+              zsh: []
+              jq: []
+              expect: []
           commands:
-            01update_pkgs:
-              command: apt update -y
-            02install_docker:
+            a_add_repo_gpg_key:
+              command: |
+                curl -fsSL https://download.docker.com/linux/ubuntu/gpg \
+                | sudo gpg --dearmor -o \
+                /usr/share/keyrings/docker-archive-keyring.gpg
+            b_add_docker_repo:
+              command: |
+                echo "deb [arch=$(dpkg --print-architecture) \
+                signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] \
+                https://download.docker.com/linux/ubuntu $(lsb_release -cs) \
+                stable" | sudo tee /etc/apt/sources.list.d/docker.list \
+                > /dev/null
+            c_install_docker:
+              command: |
+                sudo apt-get update \
+                && sudo apt-get install -y docker-ce docker-ce-cli \
+                containerd.io docker-compose-plugin docker-compose
+            d_enable_and_start_docker:
+              command: |
+                sudo systemctl enable docker && sudo systemctl start docker
+            e_add_ubuntu_user_to_docker_group:
+              command: |
+                sudo groupadd docker
+                sudo usermod -aG docker ubuntu
+                newgrp docker && sudo chmod 666 /var/run/docker.sock
+            f_install_ansible:
               command: >-
-                apt install zip -y
-                apt install zsh -y
-                apt install jq -y
-                apt install expect -y
-                apt install docker.io -y
-                apt install docker-compose -y
-            03install_ansible:
-              command: >-
-                apt-add-repository ppa:ansible/ansible -y
-                apt update -y
-                apt install ansible -y
-            05clone_repo:
-              command: /home/ubuntu/clone.sh > /home/ubuntu/output.log 2>&1
+                sudo apt-add-repository ppa:ansible/ansible -y
+                sudo apt-get update -y
+                sudo apt-get install ansible -y
+            g_clone_repo:
+              command: sudo /home/ubuntu/clone.sh > /home/ubuntu/output.log 2>&1
     Properties:
       ImageId: !Ref LatestUbuntuFocalAMI
       InstanceType:
@@ -199,6 +217,22 @@ Resources:
             DeleteOnTermination: 'true'
             VolumeSize:
               Ref: Ec2RootVolumeSize
+      UserData:
+        Fn::Base64: !Sub |
+          #!/bin/bash -xe
+          apt-get update -y
+          mkdir -p /opt/aws/bin
+          wget https://s3.amazonaws.com/cloudformation-examples/aws-cfn-bootstrap-py3-latest.tar.gz
+          python3 -m easy_install --script-dir /opt/aws/bin aws-cfn-bootstrap-py3-latest.tar.gz
+          /opt/aws/bin/cfn-init -v \
+            --stack ${AWS::StackName} \
+            --resource AWSInstance \
+            --configsets InstallAndRun \
+            --region ${AWS::Region}
+          /opt/aws/bin/cfn-signal -e $? \
+            --stack ${AWS::StackName} \
+            --resource AWSInstance \
+            --region ${AWS::Region}
     CreationPolicy:
       ResourceSignal:
         Timeout: PT30M
