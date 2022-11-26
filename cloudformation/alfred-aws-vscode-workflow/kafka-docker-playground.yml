@@ -183,7 +183,9 @@ Resources:
               command: |
                 sudo apt-get update \
                 && sudo apt-get install -y docker-ce docker-ce-cli \
-                containerd.io docker-compose-plugin docker-compose
+                containerd.io
+                sudo curl -SL https://github.com/docker/compose/releases/download/v2.13.0/docker-compose-linux-x86_64 -o /usr/local/bin/docker-compose
+                sudo chmod a+x /usr/local/bin/docker-compose
             d_enable_and_start_docker:
               command: |
                 sudo systemctl enable docker && sudo systemctl start docker
@@ -191,9 +193,9 @@ Resources:
               command: |
                 sudo groupadd docker
                 sudo usermod -aG docker ubuntu
-                newgrp docker && sudo chmod 666 /var/run/docker.sock
+                sudo chmod 666 /var/run/docker.sock
             f_install_ansible:
-              command: >-
+              command: |
                 sudo apt-add-repository ppa:ansible/ansible -y
                 sudo apt-get update -y
                 sudo apt-get install ansible -y
