@@ -48,7 +48,12 @@ $ ./fully-managed-s3-sink.sh
 Creating bucket name <$AWS_BUCKET_NAME>, if required
 
 ```bash
-$ aws s3api create-bucket --bucket $AWS_BUCKET_NAME --region $AWS_REGION --create-bucket-configuration LocationConstraint=$AWS_REGION
+$ if [ "$AWS_REGION" == "us-east-1" ]
+then
+    aws s3api create-bucket --bucket $AWS_BUCKET_NAME --region $AWS_REGION
+else
+    aws s3api create-bucket --bucket $AWS_BUCKET_NAME --region $AWS_REGION --create-bucket-configuration LocationConstraint=$AWS_REGION
+fi
 ```
 
 
