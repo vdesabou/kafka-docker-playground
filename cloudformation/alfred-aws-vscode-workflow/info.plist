@@ -1338,7 +1338,7 @@ echo "$ip"</string>
 			<key>description</key>
 			<string>By default it will use kafka-docker-playground.yml</string>
 			<key>label</key>
-			<string>Cloud Formation template</string>
+			<string>📝Cloud Formation template</string>
 			<key>type</key>
 			<string>filepicker</string>
 			<key>variable</key>
@@ -1359,7 +1359,7 @@ echo "$ip"</string>
 			<key>description</key>
 			<string>Name of an existing AWS EC2 PEM to enable SSH access to the instance</string>
 			<key>label</key>
-			<string>AWS EC2 pem file</string>
+			<string>🔐AWS EC2 pem file</string>
 			<key>type</key>
 			<string>filepicker</string>
 			<key>variable</key>
@@ -1513,7 +1513,7 @@ echo "$ip"</string>
 			<key>description</key>
 			<string>Type of the EC2 instance</string>
 			<key>label</key>
-			<string>EC2 Instance Type</string>
+			<string>🖥️EC2 Instance Type</string>
 			<key>type</key>
 			<string>popupbutton</string>
 			<key>variable</key>
@@ -1607,7 +1607,7 @@ echo "$ip"</string>
 			<key>description</key>
 			<string>AWS region to use</string>
 			<key>label</key>
-			<string>AWS Region</string>
+			<string>🌍AWS Region</string>
 			<key>type</key>
 			<string>popupbutton</string>
 			<key>variable</key>
@@ -1628,7 +1628,7 @@ echo "$ip"</string>
 			<key>description</key>
 			<string>Size in Gb</string>
 			<key>label</key>
-			<string>EC2 Instance Size</string>
+			<string>💾EC2 Instance Size</string>
 			<key>type</key>
 			<string>textfield</string>
 			<key>variable</key>
@@ -1649,7 +1649,7 @@ echo "$ip"</string>
 			<key>description</key>
 			<string>It is generally set with /usr/local/bin/aws</string>
 			<key>label</key>
-			<string>Path of aws CLI</string>
+			<string>📍Path of aws CLI</string>
 			<key>type</key>
 			<string>textfield</string>
 			<key>variable</key>
@@ -1668,7 +1668,7 @@ echo "$ip"</string>
 			<key>description</key>
 			<string></string>
 			<key>label</key>
-			<string>Only see your playground EC2 instances</string>
+			<string>🙈Only see your playground EC2 instances</string>
 			<key>type</key>
 			<string>checkbox</string>
 			<key>variable</key>
@@ -1689,7 +1689,7 @@ echo "$ip"</string>
 			<key>description</key>
 			<string>SSH private key used to connect to Github (for reproduction-models private module only)</string>
 			<key>label</key>
-			<string>Github SSH Key</string>
+			<string>🔏Github SSH Key</string>
 			<key>type</key>
 			<string>filepicker</string>
 			<key>variable</key>
@@ -1708,9 +1708,9 @@ echo "$ip"</string>
 				<true/>
 			</dict>
 			<key>description</key>
-			<string></string>
+			<string>🚫 Used only by me</string>
 			<key>label</key>
-			<string>SECRETS_ENCRYPTION_PASSWORD</string>
+			<string>🔏SECRETS_ENCRYPTION_PASSWORD</string>
 			<key>type</key>
 			<string>textfield</string>
 			<key>variable</key>
@@ -1718,7 +1718,7 @@ echo "$ip"</string>
 		</dict>
 	</array>
 	<key>version</key>
-	<string>1.6</string>
+	<string>1.7</string>
 	<key>webaddress</key>
 	<string>https://github.com/vdesabou/kafka-docker-playground/tree/master/cloudformation/alfred-aws-vscode-workflow</string>
 </dict>

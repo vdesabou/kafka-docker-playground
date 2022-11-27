@@ -216,14 +216,14 @@ Resources:
       UserData:
         Fn::Base64: !Sub |
           #!/bin/bash -xe
-                sudo adduser --disabled-password --gecos 'my user' --home /home/${LinuxUserName} ${LinuxUserName}
-                sudo usermod -aG sudo ${LinuxUserName}
-                echo "${LinuxUserName} ALL=(ALL:ALL) NOPASSWD: ALL" | sudo tee /etc/sudoers.d/${LinuxUserName}
+                if [ "${LinuxUserName}" != "ubuntu" ]; then sudo adduser --disabled-password --gecos 'my user' --home /home/${LinuxUserName} ${LinuxUserName};fi
+                if [ "${LinuxUserName}" != "ubuntu" ]; then sudo usermod -aG sudo ${LinuxUserName};fi
+                if [ "${LinuxUserName}" != "ubuntu" ]; then echo "${LinuxUserName} ALL=(ALL:ALL) NOPASSWD: ALL" | sudo tee /etc/sudoers.d/${LinuxUserName};fi
                 mkdir -p /home/${LinuxUserName}/.ssh
-                sudo cp /home/ubuntu/.ssh/authorized_keys /home/${LinuxUserName}/.ssh/
+                if [ "${LinuxUserName}" != "ubuntu" ]; then sudo cp /home/ubuntu/.ssh/authorized_keys /home/${LinuxUserName}/.ssh/;fi
                 echo "${GithubSshKeyFile}" > /home/${LinuxUserName}/.ssh/id_rsa
                 chmod 600 /home/${LinuxUserName}/.ssh/id_rsa
-                sudo chown ${LinuxUserName} /home/${LinuxUserName}/.ssh/*
+                if [ "${LinuxUserName}" != "ubuntu" ]; then sudo chown ${LinuxUserName} /home/${LinuxUserName}/.ssh/*;fi
                 ssh-keyscan -t rsa github.com >> /home/${LinuxUserName}/.ssh/known_hosts
                 sudo groupadd docker
                 sudo usermod -aG docker ${LinuxUserName}

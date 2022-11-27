@@ -4,7 +4,7 @@ If you don't want to run the playground locally, you can run it easily on a EC2 
 
 ## Using AWS console
 
-* Create stack in AWS CloudFormation and upload [this](./kafka-docker-playground.yml?raw=true) template file:
+* Create stack in AWS CloudFormation and upload [this](./alfred-aws-vscode-workflow/kafka-docker-playground.yml?raw=true) template file:
 
 ![AWS CloudFormation](./Screenshot1.png)
 
@@ -12,7 +12,7 @@ If you don't want to run the playground locally, you can run it easily on a EC2 
 
 ![AWS CloudFormation](./Screenshot2.png)
 
-* After about 3 minutes, the stack will be created and you can see in *outputs* tab the public IP address of the EC2 instance and the Control Center URL:
+* After about 3 minutes, the stack will be created and you can see in *outputs* tab the public IP address of the EC2 instance:
 
 ![AWS CloudFormation](./Screenshot3.png)
 
@@ -21,11 +21,12 @@ If you don't want to run the playground locally, you can run it easily on a EC2 
 For example, this is how I start it using aws CLI:
 
 ```bash
-$ cp kafka-docker-playground/cloudformation/kafka-docker-playground.yml tmp.yml
+$ cp kafka-docker-playground/cloudformation/alfred-aws-vscode-workflow/kafka-docker-playground.yml tmp.yml
 $ aws cloudformation create-stack  --stack-name kafka-docker-playground-$USER \
     --template-body file://tmp.yml --region eu-west-3 \ 
     --parameters ParameterKey=KeyName,ParameterValue=$KEY_NAME \
-    ParameterKey=InstanceName,ParameterValue=kafka-docker-playground-$USER
+    ParameterKey=InstanceName,ParameterValue=kafka-docker-playground-$USER,
+    ParameterKey=LinuxUserName,ParameterValue="$USER"
 ```
 
 ## Using AWS EC2 Alfred workflow
