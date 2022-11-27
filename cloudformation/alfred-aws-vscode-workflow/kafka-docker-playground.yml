@@ -3,6 +3,7 @@ Description: >-
   kafka-docker-playground using Ubuntu 20 EC2 instance.
 Parameters:
   LatestUbuntuFocalAMI:
+    # https://ubuntu.com/server/docs/cloud-images/amazon-ec2
     Type: AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>
     Default: "/aws/service/canonical/ubuntu/server/focal/stable/current/amd64/hvm/ebs-gp2/ami-id"
   KeyName:
@@ -208,8 +209,9 @@ Resources:
       KeyName:
         Ref: KeyName
       BlockDeviceMappings:
-        - DeviceName: /dev/xvda
+        - DeviceName: /dev/sda1
           Ebs:
+            VolumeType: gp2
             DeleteOnTermination: 'true'
             VolumeSize:
               Ref: Ec2RootVolumeSize
