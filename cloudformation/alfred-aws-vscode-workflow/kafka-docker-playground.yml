@@ -216,17 +216,17 @@ Resources:
       UserData:
         Fn::Base64: !Sub |
           #!/bin/bash -xe
-                if [ "${LinuxUserName}" != "ubuntu" ]; then sudo adduser --disabled-password --gecos 'my user' --home /home/${LinuxUserName} ${LinuxUserName};fi
-                if [ "${LinuxUserName}" != "ubuntu" ]; then sudo usermod -aG sudo ${LinuxUserName};fi
-                if [ "${LinuxUserName}" != "ubuntu" ]; then echo "${LinuxUserName} ALL=(ALL:ALL) NOPASSWD: ALL" | sudo tee /etc/sudoers.d/${LinuxUserName};fi
-                mkdir -p /home/${LinuxUserName}/.ssh
-                if [ "${LinuxUserName}" != "ubuntu" ]; then sudo cp /home/ubuntu/.ssh/authorized_keys /home/${LinuxUserName}/.ssh/;fi
-                echo "${GithubSshKeyFile}" > /home/${LinuxUserName}/.ssh/id_rsa
-                chmod 600 /home/${LinuxUserName}/.ssh/id_rsa
-                if [ "${LinuxUserName}" != "ubuntu" ]; then sudo chown ${LinuxUserName} /home/${LinuxUserName}/.ssh/*;fi
-                ssh-keyscan -t rsa github.com >> /home/${LinuxUserName}/.ssh/known_hosts
-                sudo groupadd docker
-                sudo usermod -aG docker ${LinuxUserName}
+          if [ "${LinuxUserName}" != "ubuntu" ]; then sudo adduser --disabled-password --gecos 'my user' --home /home/${LinuxUserName} ${LinuxUserName};fi
+          if [ "${LinuxUserName}" != "ubuntu" ]; then sudo usermod -aG sudo ${LinuxUserName};fi
+          if [ "${LinuxUserName}" != "ubuntu" ]; then echo "${LinuxUserName} ALL=(ALL:ALL) NOPASSWD: ALL" | sudo tee /etc/sudoers.d/${LinuxUserName};fi
+          mkdir -p /home/${LinuxUserName}/.ssh
+          if [ "${LinuxUserName}" != "ubuntu" ]; then sudo cp /home/ubuntu/.ssh/authorized_keys /home/${LinuxUserName}/.ssh/;fi
+          echo "${GithubSshKeyFile}" > /home/${LinuxUserName}/.ssh/id_rsa
+          chmod 600 /home/${LinuxUserName}/.ssh/id_rsa
+          if [ "${LinuxUserName}" != "ubuntu" ]; then sudo chown ${LinuxUserName} /home/${LinuxUserName}/.ssh/*;fi
+          ssh-keyscan -t rsa github.com >> /home/${LinuxUserName}/.ssh/known_hosts
+          sudo groupadd docker
+          sudo usermod -aG docker ${LinuxUserName}
           apt-get update -y
           mkdir -p /opt/aws/bin
           wget https://s3.amazonaws.com/cloudformation-examples/aws-cfn-bootstrap-py3-latest.tar.gz
