@@ -11,5 +11,5 @@ then
 fi
 
 cp "$cloud_formation_yml_file" tmp.yml
-aws cloudformation create-stack --stack-name kafka-docker-playground-${username}-${arg} --template-body "file://tmp.yml" --region ${aws_region} --parameters ParameterKey=InstanceType,ParameterValue=${instance_type} ParameterKey=Ec2RootVolumeSize,ParameterValue=${ec2_size} ParameterKey=KeyName,ParameterValue=${key_name} ParameterKey=InstanceName,ParameterValue=kafka-docker-playground-${username}-${arg} ParameterKey=IPAddressRange,ParameterValue=${myip}/32 ParameterKey=SecretsEncryptionPassword,ParameterValue="${SECRETS_ENCRYPTION_PASSWORD}" ParameterKey=GithubSshKeyFile,ParameterValue="${github_ssh_key_file_content}"
+aws cloudformation create-stack --stack-name kafka-docker-playground-${username}-${arg} --template-body "file://tmp.yml" --region ${aws_region} --parameters ParameterKey=InstanceType,ParameterValue=${instance_type} ParameterKey=Ec2RootVolumeSize,ParameterValue=${ec2_size} ParameterKey=KeyName,ParameterValue=${key_name} ParameterKey=InstanceName,ParameterValue=kafka-docker-playground-${username}-${arg} ParameterKey=IPAddressRange,ParameterValue=${myip}/32 ParameterKey=SecretsEncryptionPassword,ParameterValue="${SECRETS_ENCRYPTION_PASSWORD}" ParameterKey=GithubSshKeyFile,ParameterValue="${github_ssh_key_file_content}" ParameterKey=LinuxUserName,ParameterValue="${username}"
 rm -f tmp.yml

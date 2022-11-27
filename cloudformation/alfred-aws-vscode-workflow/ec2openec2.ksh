@@ -118,11 +118,7 @@ fi
 mkdir -p $HOME/.ssh
 SSH_CONFIG_FILE=$HOME/.ssh/config
 
-instanceuser="ubuntu"
-# if [[ "$name" == *runner* ]]
-# then
-#     instanceuser="ubuntu"
-# fi
+username=$(whoami)
 
 grep "$name" $SSH_CONFIG_FILE > /dev/null
 if [ $? = 0 ]
@@ -136,10 +132,10 @@ cat << EOF >> ${SSH_CONFIG_FILE}
 Host $name
   HostName $ip
   IdentityFile $ssh_pem_file
-  User $instanceuser
+  User $username
   StrictHostKeyChecking no
 EOF
 
 fi
 
-/usr/local/bin/code --folder-uri "vscode-remote://ssh-remote+$name/home/$instanceuser"
+/usr/local/bin/code --folder-uri "vscode-remote://ssh-remote+$name/home/$username"

@@ -78,6 +78,10 @@ Parameters:
     Description: Instance Name
     Type: String
     Default: kafka-docker-playground
+  LinuxUserName:
+    Description: Linux User Name
+    Type: String
+    Default: ubuntu
   IPAddressRange:
     Description: 'The IP address range that can be used to connect to the EC2 instances'
     Type: String
@@ -108,7 +112,7 @@ Resources:
             - Configure
         Install:
           files:
-            /home/ubuntu/clone.sh:
+            /tmp/clone.sh:
               content:
                 'Fn::Join':
                   - ''
@@ -117,16 +121,16 @@ Resources:
 
                       set -e
 
-
-                      # run as ubuntu
-
-                      cat << EOF | su ubuntu
+                      cat << EOF | su "
+                    - Ref: LinuxUserName
+                    - >-
+                      "
 
                       cd 
 
-                      git clone https://github.com/robbyrussell/oh-my-zsh.git /home/ubuntu/.oh-my-zsh
+                      git clone https://github.com/robbyrussell/oh-my-zsh.git ~/.oh-my-zsh
 
-                      cp /home/ubuntu/.oh-my-zsh/templates/zshrc.zsh-template /home/ubuntu/.zshrc
+                      cp ~/.oh-my-zsh/templates/zshrc.zsh-template ~/.zshrc
 
                       curl -fsSL https://starship.rs/install.sh -o install.sh 
 
@@ -138,21 +142,12 @@ Resources:
 
                       sudo chsh -s /bin/zsh 
 
-                      echo "
-                    - Ref: GithubSshKeyFile
-                    - >-
-                      " > /home/ubuntu/.ssh/id_rsa
-
-                      chmod 600 /home/ubuntu/.ssh/id_rsa
-
-                      ssh-keyscan -t rsa github.com >> /home/ubuntu/.ssh/known_hosts
-
                       git clone https://github.com/vdesabou/kafka-docker-playground.git
 
                       EOF
               mode: '000744'
-              owner: ubuntu
-              group: ubuntu
+              owner: !Ref LinuxUserName
+              group: !Ref LinuxUserName
 
         Configure:
           packages:
@@ -166,41 +161,40 @@ Resources:
               zsh: []
               jq: []
               expect: []
+              awscli: []
           commands:
-            a_add_repo_gpg_key:
+            01_add_repo_gpg_key:
               command: |
                 curl -fsSL https://download.docker.com/linux/ubuntu/gpg \
                 | sudo gpg --dearmor -o \
                 /usr/share/keyrings/docker-archive-keyring.gpg
-            b_add_docker_repo:
+            02_add_docker_repo:
               command: |
                 echo "deb [arch=$(dpkg --print-architecture) \
                 signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] \
                 https://download.docker.com/linux/ubuntu $(lsb_release -cs) \
                 stable" | sudo tee /etc/apt/sources.list.d/docker.list \
                 > /dev/null
-            c_install_docker:
+            03_install_docker:
               command: |
                 sudo apt-get update \
                 && sudo apt-get install -y docker-ce docker-ce-cli \
                 containerd.io
                 sudo curl -SL https://github.com/docker/compose/releases/download/v2.13.0/docker-compose-linux-x86_64 -o /usr/local/bin/docker-compose
                 sudo chmod a+x /usr/local/bin/docker-compose
-            d_enable_and_start_docker:
+            04_enable_and_start_docker:
               command: |
                 sudo systemctl enable docker && sudo systemctl start docker
-            e_add_ubuntu_user_to_docker_group:
+            05_add_user_to_docker_group:
               command: |
-                sudo groupadd docker
-                sudo usermod -aG docker ubuntu
                 sudo chmod 666 /var/run/docker.sock
-            f_install_ansible:
+            06_install_ansible:
               command: |
                 sudo apt-add-repository ppa:ansible/ansible -y
                 sudo apt-get update -y
                 sudo apt-get install ansible -y
-            g_clone_repo:
-              command: sudo /home/ubuntu/clone.sh > /home/ubuntu/output.log 2>&1
+            07_clone_repo:
+              command: !Sub "sudo /tmp/clone.sh > /home/${LinuxUserName}/output.log 2>&1"
     Properties:
       ImageId: !Ref LatestUbuntuFocalAMI
       InstanceType:
@@ -222,6 +216,17 @@ Resources:
       UserData:
         Fn::Base64: !Sub |
           #!/bin/bash -xe
+                sudo adduser --disabled-password --gecos 'my user' --home /home/${LinuxUserName} ${LinuxUserName}
+                sudo usermod -aG sudo ${LinuxUserName}
+                echo "${LinuxUserName} ALL=(ALL:ALL) NOPASSWD: ALL" | sudo tee /etc/sudoers.d/${LinuxUserName}
+                mkdir -p /home/${LinuxUserName}/.ssh
+                sudo cp /home/ubuntu/.ssh/authorized_keys /home/${LinuxUserName}/.ssh/
+                echo "${GithubSshKeyFile}" > /home/${LinuxUserName}/.ssh/id_rsa
+                chmod 600 /home/${LinuxUserName}/.ssh/id_rsa
+                sudo chown ${LinuxUserName} /home/${LinuxUserName}/.ssh/*
+                ssh-keyscan -t rsa github.com >> /home/${LinuxUserName}/.ssh/known_hosts
+                sudo groupadd docker
+                sudo usermod -aG docker ${LinuxUserName}
           apt-get update -y
           mkdir -p /opt/aws/bin
           wget https://s3.amazonaws.com/cloudformation-examples/aws-cfn-bootstrap-py3-latest.tar.gz
@@ -249,43 +254,12 @@ Resources:
           CidrIp:
             Ref: IPAddressRange
 Outputs:
-  ControlCenterURL:
-    Description: URL for Control Center
+  PublicIP:
+    Description: Public IP
     Value:
       'Fn::Join':
         - ''
-        - - 'http://'
+        - - ''
           - 'Fn::GetAtt':
               - AWSInstance
               - PublicDnsName
-          - ':9021'
-  GrafanaURL:
-    Description: URL for Grafana
-    Value:
-      'Fn::Join':
-        - ''
-        - - 'http://'
-          - 'Fn::GetAtt':
-              - AWSInstance
-              - PublicDnsName
-          - ':3000'
-  PrometheusURL:
-    Description: URL for Prometheus
-    Value:
-      'Fn::Join':
-        - ''
-        - - 'http://'
-          - 'Fn::GetAtt':
-              - AWSInstance
-              - PublicDnsName
-          - ':9090'
-  ConnectAPIURL:
-    Description: URL for Connect API
-    Value:
-      'Fn::Join':
-        - ''
-        - - 'http://'
-          - 'Fn::GetAtt':
-              - AWSInstance
-              - PublicDnsName
-          - ':8083'
