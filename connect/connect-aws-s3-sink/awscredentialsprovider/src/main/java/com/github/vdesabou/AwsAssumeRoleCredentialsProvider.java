@@ -28,6 +28,8 @@ import java.util.Map;
 import com.amazonaws.services.securitytoken.AWSSecurityTokenService;
 import com.amazonaws.auth.AWSStaticCredentialsProvider;
 import org.apache.kafka.common.config.types.Password;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * AWS credentials provider that uses the AWS Security Token Service to assume a Role and create a
@@ -35,6 +37,8 @@ import org.apache.kafka.common.config.types.Password;
  * support refreshing the credentials in a background thread.
  */
 public class AwsAssumeRoleCredentialsProvider implements AWSCredentialsProvider, Configurable {
+
+  private final Logger logger = LoggerFactory.getLogger(AwsAssumeRoleCredentialsProvider.class);
 
   public static final String ROLE_EXTERNAL_ID_CONFIG = "sts.role.external.id";
   public static final String ROLE_ARN_CONFIG = "sts.role.arn";
@@ -90,6 +94,8 @@ public class AwsAssumeRoleCredentialsProvider implements AWSCredentialsProvider,
   @Override
   public AWSCredentials getCredentials() {
 
+    logger.info("getCredentials is called");
+
     BasicAWSCredentials basicAWSCredentials = new BasicAWSCredentials(accessKeyId, secretKeyId.value());
 
     AWSSecurityTokenService sts = AWSSecurityTokenServiceClientBuilder
@@ -108,5 +114,4 @@ public class AwsAssumeRoleCredentialsProvider implements AWSCredentialsProvider,
   public void refresh() {
     // Nothing to do really, since we acquire a new session every getCredentials() call.
   }
-
 }
