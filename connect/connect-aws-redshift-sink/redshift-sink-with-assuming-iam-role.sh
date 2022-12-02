@@ -28,6 +28,11 @@ else
      export CONNECT_CONTAINER_HOME_DIR="/root"
 fi
 
+PASSWORD=$(tr -dc A-Za-z0-9 </dev/urandom | head -c 13 ; echo '')
+# generate data file for externalizing secrets
+sed -e "s|:PASSWORD:|$PASSWORD|g" \
+    ${DIR}/data.template > ${DIR}/data
+
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.with-assuming-iam-role.yml"
 
 CLUSTER_NAME=pg${USER}redshift${TAG}
@@ -41,12 +46,8 @@ aws ec2 delete-security-group --group-name sg$CLUSTER_NAME
 set -e
 
 log "Create AWS Redshift cluster"
-PASSWORD=$(tr -dc A-Za-z0-9 </dev/urandom | head -c 13 ; echo '')
 # https://docs.aws.amazon.com/redshift/latest/mgmt/getting-started-cli.html
 aws redshift create-cluster --cluster-identifier $CLUSTER_NAME --master-username masteruser --master-user-password "$PASSWORD" --node-type dc2.large --cluster-type single-node --publicly-accessible
-# generate data file for externalizing secrets
-sed -e "s|:PASSWORD:|$PASSWORD|g" \
-    ${DIR}/data.template > ${DIR}/data
 
 # Verify AWS Redshift cluster has started within MAX_WAIT seconds
 MAX_WAIT=480
@@ -106,7 +107,7 @@ sleep 20
 
 log "Verify data is in Redshift"
 timeout 30 docker run -i debezium/postgres:10 psql -h $CLUSTER -U masteruser -d dev -p 5439 << EOF > /tmp/result.log
-myPassword1
+$PASSWORD
 SELECT * from orders;
 EOF
 cat /tmp/result.log
