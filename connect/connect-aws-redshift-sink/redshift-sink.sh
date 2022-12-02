@@ -53,8 +53,12 @@ aws ec2 delete-security-group --group-name sg$CLUSTER_NAME
 set -e
 
 log "Create AWS Redshift cluster"
+PASSWORD=$(tr -dc A-Za-z0-9 </dev/urandom | head -c 13 ; echo '')
 # https://docs.aws.amazon.com/redshift/latest/mgmt/getting-started-cli.html
-aws redshift create-cluster --cluster-identifier $CLUSTER_NAME --master-username masteruser --master-user-password myPassword1 --node-type dc2.large --cluster-type single-node --publicly-accessible
+aws redshift create-cluster --cluster-identifier $CLUSTER_NAME --master-username masteruser --master-user-password "$PASSWORD" --node-type dc2.large --cluster-type single-node --publicly-accessible
+# generate data file for externalizing secrets
+sed -e "s|:PASSWORD:|$PASSWORD|g" \
+    ${DIR}/data.template > ${DIR}/data
 
 # Verify AWS Redshift cluster has started within MAX_WAIT seconds
 MAX_WAIT=480
@@ -101,7 +105,7 @@ curl -X PUT \
                "aws.redshift.port": "5439",
                "aws.redshift.database": "dev",
                "aws.redshift.user": "masteruser",
-               "aws.redshift.password": "myPassword1",
+               "aws.redshift.password": "${file:/data:password}",
                "aws.access.key.id" : "'"$AWS_ACCESS_KEY_ID"'",
                "aws.secret.key.id": "'"$AWS_SECRET_ACCESS_KEY"'",
                "auto.create": "true",
