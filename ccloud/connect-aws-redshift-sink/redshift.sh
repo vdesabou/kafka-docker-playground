@@ -57,19 +57,19 @@ sleep 3
 create_topic orders
 set -e
 
-# CLUSTER_NAME=pg${USER}redshift${TAG}
-# CLUSTER_NAME=${CLUSTER_NAME//[-._]/}
+CLUSTER_NAME=pg${USER}redshift${TAG}
+CLUSTER_NAME=${CLUSTER_NAME//[-._]/}
 
-# set +e
-# log "Delete AWS Redshift cluster, if required"
-# aws redshift delete-cluster --cluster-identifier $CLUSTER_NAME --skip-final-cluster-snapshot
-# log "Delete security group sg$CLUSTER_NAME, if required"
-# aws ec2 delete-security-group --group-name sg$CLUSTER_NAME
-# set -e
+set +e
+log "Delete AWS Redshift cluster, if required"
+aws redshift delete-cluster --cluster-identifier $CLUSTER_NAME --skip-final-cluster-snapshot
+log "Delete security group sg$CLUSTER_NAME, if required"
+aws ec2 delete-security-group --group-name sg$CLUSTER_NAME
+set -e
 
-# log "Create AWS Redshift cluster"
-# # https://docs.aws.amazon.com/redshift/latest/mgmt/getting-started-cli.html
-# aws redshift create-cluster --cluster-identifier $CLUSTER_NAME --master-username masteruser --master-user-password myPassword1 --node-type dc2.large --cluster-type single-node --publicly-accessible
+log "Create AWS Redshift cluster"
+# https://docs.aws.amazon.com/redshift/latest/mgmt/getting-started-cli.html
+aws redshift create-cluster --cluster-identifier $CLUSTER_NAME --master-username masteruser --master-user-password myPassword1 --node-type dc2.large --cluster-type single-node --publicly-accessible
 
 # Verify AWS Redshift cluster has started within MAX_WAIT seconds
 MAX_WAIT=480
