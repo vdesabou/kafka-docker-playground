@@ -5,6 +5,7 @@ set -e
 username=$(whoami)
 name="kafka-docker-playground-${username}"
 
+nb_results=0
 print "<?xml version=\"1.0\"?>"
 print "<items>"
 for row in $($aws_cli ec2 describe-instances | /usr/local/bin/jq '[.Reservations | .[] | .Instances | .[] | select(.State.Name!="terminated") | {KeyName: .KeyName, LaunchTime: .LaunchTime, PublicDnsName: .PublicDnsName, InstanceId: .InstanceId, InstanceType: .InstanceType,State: .State.Name, Name: (.Tags[]|select(.Key=="Name")|.Value)}]' | /usr/local/bin/jq -r '.[] | @base64'); do
@@ -40,7 +41,18 @@ for row in $($aws_cli ec2 describe-instances | /usr/local/bin/jq '[.Reservations
     print "<subtitle>🕐 $LaunchTime 🔑 $KeyName 💻 $InstanceType 🔢 $InstanceId</subtitle>"
     print "<icon>aws.png</icon>"
     print "</item>"
+    (( nb_results++ ))
 done
+
+if [ $nb_results -eq 0 ]
+then
+    print "<item uid=\"\" valid=\"no\">"
+    print "<title>Something wrong happened !</title>"
+    print "<subtitle>No results found... </subtitle>"
+    print "<icon>error.png</icon>"
+    print "</item>"
+fi
+
 print "</items>"
 
 exit 0
