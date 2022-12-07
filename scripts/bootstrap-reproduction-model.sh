@@ -113,7 +113,6 @@ if [ "$schema_format" != "" ]
 then
   case "${schema_format}" in
     avro)
-      echo ""
       log "value converter should be set with:"
       echo "\"value.converter\": \"io.confluent.connect.avro.AvroConverter\","
       echo "\"value.converter.schema.registry.url\": \"http://schema-registry:8081\","
@@ -126,7 +125,6 @@ then
       echo "docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic a-topic --property print.key=true --property key.separator=, --from-beginning --max-messages 1"
     ;;
     avro-with-key)
-      echo ""
       log "key converter should be set with:"
       echo "\"key.converter\": \"io.confluent.connect.avro.AvroConverter\","
       echo "\"key.converter.schema.registry.url\": \"http://schema-registry:8081\","
@@ -155,6 +153,22 @@ then
       log "2️⃣ Displaying key:"
       echo "docker exec connect kafka-json-schema-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic a-topic --property print.key=true --property key.separator=, --from-beginning --max-messages 1"
     ;;
+    json-schema-with-key)
+      log "key converter should be set with:"
+      echo "\"key.converter\": \"io.confluent.connect.json.JsonSchemaConverter\","
+      echo "\"key.converter.schema.registry.url\": \"http://schema-registry:8081\","
+      echo ""
+      log "value converter should be set with:"
+      echo "\"value.converter\": \"io.confluent.connect.json.JsonSchemaConverter\","
+      echo "\"value.converter.schema.registry.url\": \"http://schema-registry:8081\","
+
+      echo ""
+      log "Examples to consume:"
+      log "1️⃣ Simplest"
+      echo "docker exec connect kafka-json-schema-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic a-topic --from-beginning --max-messages 1"
+      log "2️⃣ Displaying key:"
+      echo "docker exec connect kafka-json-schema-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic a-topic --property print.key=true --property key.separator=, --from-beginning --max-messages 1"
+    ;;
     protobuf)
       log "value converter should be set with:"
       echo "\"value.converter\": \"io.confluent.connect.protobuf.ProtobufConverter\","
@@ -167,8 +181,23 @@ then
       log "2️⃣ Displaying key:"
       echo "docker exec connect kafka-protobuf-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic a-topic --property print.key=true --property key.separator=, --from-beginning --max-messages 1"
     ;;
+    protobuf-with-key)
+      log "key converter should be set with:"
+      echo "\"key.converter\": \"io.confluent.connect.protobuf.ProtobufConverter\","
+      echo "\"key.converter.schema.registry.url\": \"http://schema-registry:8081\","
+      log "value converter should be set with:"
+      echo "\"value.converter\": \"io.confluent.connect.protobuf.ProtobufConverter\","
+      echo "\"value.converter.schema.registry.url\": \"http://schema-registry:8081\","
+
+      echo ""
+      log "Examples to consume:"
+      log "1️⃣ Simplest"
+      echo "docker exec connect kafka-protobuf-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic a-topic --from-beginning --max-messages 1"
+      log "2️⃣ Displaying key:"
+      echo "docker exec connect kafka-protobuf-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic a-topic --property print.key=true --property key.separator=, --from-beginning --max-messages 1"
+    ;;
     *)
-      logerror "ERROR: schema_format name not valid ! Should be one of avro, json-schema or protobuf"
+      logerror "ERROR: schema_format name not valid ! Should be one of avro, avro-with-key, json-schema, json-schema-with-key, protobuf or protobuf-with-key"
       exit 1
     ;;
   esac
