@@ -1,0 +1,17 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "additionalProperties": false,
+  "$id": "http://lh.test/Customer.schema.json",
+  "title": "ID",
+  "description": "ID description",
+  "type": "object",
+  "properties": {
+    "ID": {
+      "description": "ID",
+      "type": "integer"
+    }
+  },
+  "required": [
+    "ID"
+  ]
+}

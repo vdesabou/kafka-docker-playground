@@ -1,0 +1,24 @@
+---
+version: '3.5'
+services:
+
+  producer:
+    build:
+      context: ../../other/schema-format-json-schema-with-key/producer/
+    hostname: producer
+    container_name: producer
+    environment:
+      KAFKA_BOOTSTRAP_SERVERS: broker:9092
+      TOPIC: "customer-json-schema"
+      REPLICATION_FACTOR: 1
+      NUMBER_OF_PARTITIONS: 1
+      NB_MESSAGES: 10 # -1 for MAX_VALUE
+      MESSAGE_BACKOFF: 100 # Frequency of message injection
+      KAFKA_ACKS: "all" # default: "1"
+      KAFKA_REQUEST_TIMEOUT_MS: 20000
+      KAFKA_RETRY_BACKOFF_MS: 500
+      KAFKA_CLIENT_ID: "my-java-producer"
+      KAFKA_SCHEMA_REGISTRY_URL: "http://schema-registry:8081"
+      EXTRA_ARGS: ${GRAFANA_AGENT_BROKER}
+    volumes:
+      - ../../environment/plaintext/jmx-exporter:/usr/share/jmx_exporter/
