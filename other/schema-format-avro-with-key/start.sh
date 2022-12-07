@@ -24,10 +24,15 @@ log "Produce avro data using Java producer"
 docker exec producer bash -c "java -jar producer-1.0.0-jar-with-dependencies.jar"
 
 log "Verify we have received the avro data in customer-avro topic"
-timeout 60 docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic customer-avro --from-beginning --max-messages 5
+timeout 60 docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic customer-avro --from-beginning --property print.key=true --property key.separator=, --max-messages 5
 
 log "Produce avro data using kafka-avro-console-producer"
-seq -f "{\"f1\": \"value%g\"}" 10 | docker exec -i connect kafka-avro-console-producer --broker-list broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic avro-topic --property value.schema='{"type":"record","name":"myrecord","fields":[{"name":"f1","type":"string"}]}'
+docker exec -i connect kafka-avro-console-producer --broker-list broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic avro-topic --property key.schema='{"type":"record","namespace": "io.confluent.connect.avro","name":"myrecordkey","fields":[{"name":"ID","type":"long"}]}' --property value.schema='{"type":"record","name":"myrecordvalue","fields":[{"name":"ID","type":"long"},{"name":"product", "type": "string"}, {"name":"quantity", "type": "int"}, {"name":"price",
+"type": "float"}]}'  --property parse.key=true --property key.separator="|" << EOF
+{"ID": 111}|{"ID": 111,"product": "foo", "quantity": 100, "price": 50}
+{"ID": 222}|{"ID": 222,"product": "bar", "quantity": 100, "price": 50}
+EOF
+
 
 log "Verify we have received the avro data in avro-topic topic"
-timeout 60 docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic avro-topic --from-beginning --max-messages 5
+timeout 60 docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic avro-topic --from-beginning --property print.key=true --property key.separator=, --max-messages 5

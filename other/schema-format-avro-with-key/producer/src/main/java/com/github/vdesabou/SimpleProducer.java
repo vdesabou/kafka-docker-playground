@@ -21,7 +21,7 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import com.github.vdesabou.Customer;
-
+import com.github.vdesabou.MyKey;
 import uk.co.jemos.podam.api.PodamFactoryImpl;
 import uk.co.jemos.podam.api.PodamFactory;
 import org.jeasy.random.EasyRandom;
@@ -74,9 +74,8 @@ public class SimpleProducer {
                 .overrideDefaultInitialization(false)
                 .ignoreRandomizationErrors(false);
         EasyRandom generator = new EasyRandom(parameters);
-        Faker faker = new Faker();
 
-        try (Producer<Long, Customer> producer = new KafkaProducer<>(properties)) {
+        try (Producer<MyKey, Customer> producer = new KafkaProducer<>(properties)) {
             long id = 0;
             while (id < nbMessages) {
 
@@ -90,11 +89,11 @@ public class SimpleProducer {
                 //         .setLastName(faker.name().lastName())
                 //         .setAddress(faker.address().streetAddress())
                 //         .build();
-
+                MyKey myKey = generator.nextObject(MyKey.class);
                 Customer customer = generator.nextObject(Customer.class);
 
-                ProducerRecord<Long, Customer> record = new ProducerRecord<>(topicName, id, customer);
-                logger.info("Sending Key = {}, Value = {}", record.key(), record.value());
+                ProducerRecord<MyKey, Customer> record = new ProducerRecord<>(topicName, myKey, customer);
+                //logger.info("Sending Key = {}, Value = {}", record.key(), record.value());
                 producer.send(record, (recordMetadata, exception) -> sendCallback(record, recordMetadata, exception));
                 id++;
                 TimeUnit.MILLISECONDS.sleep(messageBackOff);
@@ -102,7 +101,7 @@ public class SimpleProducer {
         }
     }
 
-    private void sendCallback(ProducerRecord<Long, Customer> record, RecordMetadata recordMetadata, Exception e) {
+    private void sendCallback(ProducerRecord<MyKey, Customer> record, RecordMetadata recordMetadata, Exception e) {
         if (e == null) {
             logger.debug("succeeded sending. offset: {}", recordMetadata.offset());
         } else {
@@ -112,7 +111,7 @@ public class SimpleProducer {
 
     private Map<String, String> defaultProps = Map.of(
             ProducerConfig.BOOTSTRAP_SERVERS_CONFIG, "broker:9092",
-            ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, "org.apache.kafka.common.serialization.LongSerializer",
+            ProducerConfig.KEY_SERIALIZER_CLASS_CONFIG, "io.confluent.kafka.serializers.KafkaAvroSerializer",
             ProducerConfig.VALUE_SERIALIZER_CLASS_CONFIG, "io.confluent.kafka.serializers.KafkaAvroSerializer");
 
     private Properties buildProperties(Map<String, String> baseProps, Map<String, String> envProps, String prefix) {

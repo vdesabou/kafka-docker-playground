@@ -4,7 +4,7 @@ services:
 
   producer:
     build:
-      context: ../../other/schema-format-avro/producer/
+      context: ../../other/schema-format-avro-with-key/producer/
     hostname: producer
     container_name: producer
     environment:
