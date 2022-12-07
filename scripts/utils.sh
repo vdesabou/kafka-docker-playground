@@ -1491,6 +1491,8 @@ function create_or_get_oracle_image() {
           log "🧹 Removing /tmp/$ORACLE_IMAGE.tar"
           rm -f /tmp/$ORACLE_IMAGE.tar
         fi
+    else
+        logwarn "If you're a Confluent employee, please check this link https://confluent.slack.com/archives/C0116NM415F/p1636391410032900 and also here https://confluent.slack.com/archives/C0116NM415F/p1636389483030900."
     fi
     set -e
   fi
@@ -1578,7 +1580,7 @@ function create_or_get_oracle_image() {
       docker container logs ${TEMP_CONTAINER} > /tmp/out.txt 2>&1
       CUR_WAIT=$(( CUR_WAIT+10 ))
       if [[ "$CUR_WAIT" -gt "$MAX_WAIT" ]]; then
-            logerror "ERROR: The logs in ${TEMP_CONTAINER} container do not show 'DONE: Executing user defined scripts' after $MAX_WAIT seconds. Please troubleshoot with 'docker container ps' and 'docker container logs'.\n"
+            logerror "ERROR: The logs in ${TEMP_CONTAINER} container do not show 'Completed: ALTER DATABASE OPEN' after $MAX_WAIT seconds. Please troubleshoot with 'docker container ps' and 'docker container logs'.\n"
             exit 1
       fi
       done
