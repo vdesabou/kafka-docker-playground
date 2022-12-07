@@ -125,6 +125,23 @@ then
       log "2️⃣ Displaying key:"
       echo "docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic a-topic --property print.key=true --property key.separator=, --from-beginning --max-messages 1"
     ;;
+    avro-with-key)
+      echo ""
+      log "key converter should be set with:"
+      echo "\"key.converter\": \"io.confluent.connect.avro.AvroConverter\","
+      echo "\"key.converter.schema.registry.url\": \"http://schema-registry:8081\","
+      echo ""
+      log "value converter should be set with:"
+      echo "\"value.converter\": \"io.confluent.connect.avro.AvroConverter\","
+      echo "\"value.converter.schema.registry.url\": \"http://schema-registry:8081\","
+
+      echo ""
+      log "Examples to consume:"
+      log "1️⃣ Simplest"
+      echo "docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic a-topic --from-beginning --max-messages 1"
+      log "2️⃣ Displaying key:"
+      echo "docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic a-topic --property print.key=true --property key.separator=, --from-beginning --max-messages 1"
+    ;;
     json-schema)
       echo ""
       log "value converter should be set with:"
