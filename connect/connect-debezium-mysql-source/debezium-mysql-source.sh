@@ -6,29 +6,51 @@ source ${DIR}/../../scripts/utils.sh
 
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
 
+log "Create table"
+docker exec -i mysql mysql --user=root --password=password --database=mydb << EOF
+USE mydb;
 
-log "Describing the team table in DB 'mydb':"
-docker exec mysql bash -c "mysql --user=root --password=password --database=mydb -e 'describe team'"
+CREATE TABLE team (
+  id            INT          NOT NULL PRIMARY KEY AUTO_INCREMENT,
+  name          VARCHAR(255) NOT NULL,
+  email         VARCHAR(255) NOT NULL,
+  last_modified DATETIME     NOT NULL
+);
 
-log "Show content of team table:"
-docker exec mysql bash -c "mysql --user=root --password=password --database=mydb -e 'select * from team'"
+
+INSERT INTO team (
+  id,
+  name,
+  email,
+  last_modified
+) VALUES (
+  1,
+  'kafka',
+  'kafka@apache.org',
+  NOW()
+);
+
+ALTER TABLE team AUTO_INCREMENT = 101;
+describe team;
+select * from team;
+EOF
 
 log "Adding an element to the table"
-docker exec mysql mysql --user=root --password=password --database=mydb -e "
-INSERT INTO team (   \
-  id,   \
-  name, \
-  email,   \
-  last_modified \
-) VALUES (  \
-  2,    \
-  'another',  \
-  'another@apache.org',   \
-  NOW() \
-); "
+docker exec -i mysql mysql --user=root --password=password --database=mydb << EOF
+USE mydb;
 
-log "Show content of team table:"
-docker exec mysql bash -c "mysql --user=root --password=password --database=mydb -e 'select * from team'"
+INSERT INTO team (
+  id,
+  name,
+  email,
+  last_modified
+) VALUES (
+  2,
+  'another',
+  'another@apache.org',
+  NOW()
+);
+EOF
 
 log "Creating Debezium MySQL source connector"
 curl -X PUT \
