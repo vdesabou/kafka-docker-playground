@@ -62,7 +62,7 @@ log "Sleeping 30 seconds to let the role being propagated by AWS"
 sleep 30
 log "Creating AWS Lambda function"
 # https://docs.aws.amazon.com/lambda/latest/dg/python-package-create.html
-cd ${DIR}/my-add-function
+cd ../../connect/connect-aws-lambda-sink/my-add-function
 rm -f add.zip
 zip add.zip add.py
 cp add.zip /tmp/
