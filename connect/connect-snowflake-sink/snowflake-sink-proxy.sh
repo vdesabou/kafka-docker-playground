@@ -55,7 +55,7 @@ RSA_PRIVATE_KEY=$(grep -v "BEGIN ENCRYPTED PRIVATE KEY" snowflake_key.p8 | grep 
 cd ../../connect/connect-snowflake-sink
 # generate data file for externalizing secrets
 sed -e "s|:RSA_PRIVATE_KEY:|$RSA_PRIVATE_KEY|g" \
-    ${DIR}/data.template > ${DIR}/data
+    ${PWD}/data.template > ${PWD}/data
 cd -
 
 log "Create a Snowflake DB"
