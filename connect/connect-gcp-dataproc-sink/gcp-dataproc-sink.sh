@@ -9,7 +9,8 @@ logerror "Connector must be deployed on a VM on same GCP subnet as the Dataproc 
 exit 1
 
 
-GCP_KEYFILE="${DIR}/keyfile.json"
+cd ../../connect/connect-gcp-cloud-functions-sink
+GCP_KEYFILE="${PWD}/keyfile.json"
 if [ ! -f ${GCP_KEYFILE} ] && [ -z "$GCP_KEYFILE_CONTENT" ]
 then
      logerror "ERROR: either the file ${GCP_KEYFILE} is not present or environment variable GCP_KEYFILE_CONTENT is not set!"
@@ -23,6 +24,7 @@ else
         echo -e "$GCP_KEYFILE_CONTENT" | sed 's/\\"/"/g' > ${GCP_KEYFILE}
     fi
 fi
+cd -
 
 if [ -z "$GCP_PROJECT" ]
 then
