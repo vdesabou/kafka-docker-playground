@@ -4,6 +4,11 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
+if ! version_gt $TAG_BASE "5.99.99"; then
+    logwarn "WARN: JDK 11 is required for new versions"
+    exit 111
+fi
+
 if [ ! -f ${DIR}/neo4j-streams-sink-tester-1.0.jar ]
 then
      log "Downloading neo4j-streams-sink-tester-1.0.jar"
