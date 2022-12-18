@@ -8,7 +8,7 @@ Quickly test [Databricks Delta Lake Sink](https://docs.confluent.io/kafka-connec
 
 ## Databricks Setup
 
-Follow all steps from [here](https://docs.confluent.io/kafka-connect-databricks-delta-lake-sink/current/databricks-aws-setup.html#set-up-databricks-delta-lake-aws)
+Follow all steps from [here](https://docs.confluent.io/kafka-connectors/databricks-delta-lake-sink/current/databricks-aws-setup.html#set-up-databricks-delta-lake-aws)
 
 ## How to run
 
