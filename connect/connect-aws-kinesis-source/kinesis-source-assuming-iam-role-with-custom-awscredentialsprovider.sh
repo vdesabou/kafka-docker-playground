@@ -4,6 +4,12 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
+if ! version_gt $TAG_BASE "5.9.99" && version_gt $CONNECTOR_TAG "1.3.14"
+then
+    logwarn "WARN: connector version >= 1.3.15 do not support CP versions < 6.0.0"
+    exit 111
+fi
+
 logwarn "⚠️ This example and associated custom code is not supported, use at your own risks !"
 
 AWS_STS_ROLE_ARN=${AWS_STS_ROLE_ARN:-$1}
