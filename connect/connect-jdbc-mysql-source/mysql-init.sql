@@ -1,6 +1,6 @@
-CREATE DATABASE IF NOT EXISTS db;
+CREATE DATABASE IF NOT EXISTS mydb;
 
-USE db;
+USE mydb;
 
 -- used for ssl case: tells the server to permit only encrypted connections
 GRANT ALL PRIVILEGES ON *.* TO 'userssl'@'%' IDENTIFIED BY 'password' REQUIRE SSL;
