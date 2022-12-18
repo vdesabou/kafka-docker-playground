@@ -118,51 +118,7 @@ curl -X PUT \
      http://localhost:8083/connectors/databricks-delta-lake-sink/config | jq .
 
 
-sleep 10
-
-# [2022-11-21 12:39:45,985] ERROR [databricks-delta-lake-sink|task-0] WorkerSinkTask{id=databricks-delta-lake-sink-0} Task threw an uncaught and unrecoverable exception. Task is being killed and will not recover until manually restarted (org.apache.kafka.connect.runtime.WorkerTask:208)
-# org.apache.kafka.connect.errors.ConnectException: java.sql.SQLException: [Simba][SparkJDBCDriver](500593) Communication link failure. Failed to connect to server. Reason: HTTP Response code: 404, Error message: RESOURCE_DOES_NOT_EXIST: No cluster found matching: 0421-092205-z1fu2aus.
-#         at io.confluent.connect.databricks.deltalake.DatabricksDeltaLakeSinkTask.deltaLakeConnection(DatabricksDeltaLakeSinkTask.java:397)
-#         at io.confluent.connect.databricks.deltalake.DatabricksDeltaLakeSinkTask.start(DatabricksDeltaLakeSinkTask.java:124)
-#         at org.apache.kafka.connect.runtime.WorkerSinkTask.initializeAndStart(WorkerSinkTask.java:313)
-#         at org.apache.kafka.connect.runtime.WorkerTask.doRun(WorkerTask.java:199)
-#         at org.apache.kafka.connect.runtime.WorkerTask.run(WorkerTask.java:256)
-#         at java.base/java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:515)
-#         at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:264)
-#         at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1128)
-#         at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:628)
-#         at java.base/java.lang.Thread.run(Thread.java:829)
-# Caused by: java.sql.SQLException: [Simba][SparkJDBCDriver](500593) Communication link failure. Failed to connect to server. Reason: HTTP Response code: 404, Error message: RESOURCE_DOES_NOT_EXIST: No cluster found matching: 0421-092205-z1fu2aus.
-#         at com.simba.spark.hivecommon.api.HS2Client.handleTTransportException(Unknown Source)
-#         at com.simba.spark.spark.jdbc.DowloadableFetchClient.handleTTransportException(Unknown Source)
-#         at com.simba.spark.hivecommon.api.HS2Client.openSession(Unknown Source)
-#         at com.simba.spark.hivecommon.api.HS2Client.<init>(Unknown Source)
-#         at com.simba.spark.spark.jdbc.DowloadableFetchClient.<init>(Unknown Source)
-#         at com.simba.spark.spark.jdbc.DownloadableFetchClientFactory.createClient(Unknown Source)
-#         at com.simba.spark.hivecommon.core.HiveJDBCCommonConnection.establishConnection(Unknown Source)
-#         at com.simba.spark.spark.core.SparkJDBCConnection.establishConnection(Unknown Source)
-#         at com.simba.spark.jdbc.core.LoginTimeoutConnection$1.call(Unknown Source)
-#         at com.simba.spark.jdbc.core.LoginTimeoutConnection$1.call(Unknown Source)
-#         ... 4 more
-# Caused by: com.simba.spark.support.exceptions.ErrorException: [Simba][SparkJDBCDriver](500593) Communication link failure. Failed to connect to server. Reason: HTTP Response code: 404, Error message: RESOURCE_DOES_NOT_EXIST: No cluster found matching: 0421-092205-z1fu2aus.
-#         ... 14 more
-# Caused by: com.simba.spark.jdbc42.internal.apache.thrift.transport.TTransportException: HTTP Response code: 404, Error message: RESOURCE_DOES_NOT_EXIST: No cluster found matching: 0421-092205-z1fu2aus
-#         at com.simba.spark.hivecommon.api.TETHttpClient.handleHeaderErrorMessage(Unknown Source)
-#         at com.simba.spark.hivecommon.api.TETHttpClient.handleErrorResponse(Unknown Source)
-#         at com.simba.spark.hivecommon.api.TETHttpClient.flushUsingHttpClient(Unknown Source)
-#         at com.simba.spark.hivecommon.api.TETHttpClient.flush(Unknown Source)
-#         at com.simba.spark.jdbc42.internal.apache.thrift.TServiceClient.sendBase(TServiceClient.java:73)
-#         at com.simba.spark.jdbc42.internal.apache.thrift.TServiceClient.sendBase(TServiceClient.java:62)
-#         at com.simba.spark.jdbc42.internal.apache.hive.service.rpc.thrift.TCLIService$Client.send_OpenSession(TCLIService.java:147)
-#         at com.simba.spark.hivecommon.api.HS2ClientWrapper.send_OpenSession(Unknown Source)
-#         at com.simba.spark.jdbc42.internal.apache.hive.service.rpc.thrift.TCLIService$Client.OpenSession(TCLIService.java:139)
-#         at com.simba.spark.hivecommon.api.HS2ClientWrapper.callOpenSession(Unknown Source)
-#         at com.simba.spark.hivecommon.api.HS2ClientWrapper.access$1700(Unknown Source)
-#         at com.simba.spark.hivecommon.api.HS2ClientWrapper$18.clientCall(Unknown Source)
-#         at com.simba.spark.hivecommon.api.HS2ClientWrapper$18.clientCall(Unknown Source)
-#         at com.simba.spark.hivecommon.api.HS2ClientWrapper.executeWithRetry(Unknown Source)
-#         at com.simba.spark.hivecommon.api.HS2ClientWrapper.OpenSession(Unknown Source)
-#         ... 12 more
+sleep 30
 
 log "Listing staging Amazon S3 bucket"
 export AWS_ACCESS_KEY_ID="$DATABRICKS_AWS_STAGING_S3_ACCESS_KEY_ID"
