@@ -4,3 +4,4 @@ services:
   connect:
     environment:
       CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-s3
+      AWS_REGION: $AWS_REGION
