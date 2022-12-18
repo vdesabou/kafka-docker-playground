@@ -118,7 +118,7 @@ curl -X PUT \
      http://localhost:8083/connectors/databricks-delta-lake-sink/config | jq .
 
 
-sleep 60
+sleep 90
 
 log "Listing staging Amazon S3 bucket"
 export AWS_ACCESS_KEY_ID="$DATABRICKS_AWS_STAGING_S3_ACCESS_KEY_ID"
