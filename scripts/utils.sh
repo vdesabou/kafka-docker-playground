@@ -887,7 +887,7 @@ function retry() {
         if [[ $n -lt $max_retriable ]]; then
           ((n++))
           logwarn "####################################################"
-          logwarn "🧟‍♂️ The test $script (retriable) has failed. Retrying (attempt $n/$max)"
+          logwarn "🧟‍♂️ The test $script (retriable) has failed. Retrying (attempt $n/$max_retriable)"
           logwarn "####################################################"
           display_docker_container_error_log
         else
