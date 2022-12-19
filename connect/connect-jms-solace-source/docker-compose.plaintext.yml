@@ -15,12 +15,11 @@ services:
       nofile:
         soft: 2448
         hard: 38048
-    security_opt:
-      - seccomp:unconfined
     environment:
       username_admin_globalaccesslevel: admin
       username_admin_password: admin
       system_scaling_maxconnectioncount: 100
+      security-opt: "apparmor:unconfined"
 
   connect:
     depends_on:

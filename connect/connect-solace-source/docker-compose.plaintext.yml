@@ -18,6 +18,7 @@ services:
     environment:
       username_admin_globalaccesslevel: admin
       username_admin_password: admin
+      security-opt: "apparmor:unconfined"
 
   connect:
     depends_on:
