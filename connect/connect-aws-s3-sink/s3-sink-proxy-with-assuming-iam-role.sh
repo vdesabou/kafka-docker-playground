@@ -87,6 +87,37 @@ curl -X PUT \
           }' \
      http://localhost:8083/connectors/s3-sink/config | jq .
 
+# [2022-12-19 16:58:00,112] ERROR [s3-sink|task-0] WorkerSinkTask{id=s3-sink-0} Task threw an uncaught and unrecoverable exception. Task is being killed and will not recover until manually restarted (org.apache.kafka.connect.runtime.WorkerTask:208)
+# org.apache.kafka.connect.errors.ConnectException: com.amazonaws.SdkClientException: Unable to load AWS credentials from any provider in the chain: [EnvironmentVariableCredentialsProvider: Unable to load AWS credentials from environment variables (AWS_ACCESS_KEY_ID (or AWS_ACCESS_KEY) and AWS_SECRET_KEY (or AWS_SECRET_ACCESS_KEY)), SystemPropertiesCredentialsProvider: Unable to load AWS credentials from Java system properties (aws.accessKeyId and aws.secretKey), WebIdentityTokenCredentialsProvider: You must specify a value for roleArn and roleSessionName, com.amazonaws.auth.profile.ProfileCredentialsProvider@6a597493: Unable to execute HTTP request: sts.amazonaws.com, com.amazonaws.auth.EC2ContainerCredentialsProviderWrapper@44eaefac: The requested metadata is not found at http://169.254.169.254/latest/meta-data/iam/security-credentials/]
+#         at io.confluent.connect.s3.S3SinkTask.start(S3SinkTask.java:138)
+#         at org.apache.kafka.connect.runtime.WorkerSinkTask.initializeAndStart(WorkerSinkTask.java:313)
+#         at org.apache.kafka.connect.runtime.WorkerTask.doRun(WorkerTask.java:199)
+#         at org.apache.kafka.connect.runtime.WorkerTask.run(WorkerTask.java:256)
+#         at java.base/java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:515)
+#         at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:264)
+#         at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1128)
+#         at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:628)
+#         at java.base/java.lang.Thread.run(Thread.java:829)
+# Caused by: com.amazonaws.SdkClientException: Unable to load AWS credentials from any provider in the chain: [EnvironmentVariableCredentialsProvider: Unable to load AWS credentials from environment variables (AWS_ACCESS_KEY_ID (or AWS_ACCESS_KEY) and AWS_SECRET_KEY (or AWS_SECRET_ACCESS_KEY)), SystemPropertiesCredentialsProvider: Unable to load AWS credentials from Java system properties (aws.accessKeyId and aws.secretKey), WebIdentityTokenCredentialsProvider: You must specify a value for roleArn and roleSessionName, com.amazonaws.auth.profile.ProfileCredentialsProvider@6a597493: Unable to execute HTTP request: sts.amazonaws.com, com.amazonaws.auth.EC2ContainerCredentialsProviderWrapper@44eaefac: The requested metadata is not found at http://169.254.169.254/latest/meta-data/iam/security-credentials/]
+#         at com.amazonaws.auth.AWSCredentialsProviderChain.getCredentials(AWSCredentialsProviderChain.java:136)
+#         at com.amazonaws.http.AmazonHttpClient$RequestExecutor.getCredentialsFromContext(AmazonHttpClient.java:1269)
+#         at com.amazonaws.http.AmazonHttpClient$RequestExecutor.runBeforeRequestHandlers(AmazonHttpClient.java:845)
+#         at com.amazonaws.http.AmazonHttpClient$RequestExecutor.doExecute(AmazonHttpClient.java:794)
+#         at com.amazonaws.http.AmazonHttpClient$RequestExecutor.executeWithTimer(AmazonHttpClient.java:781)
+#         at com.amazonaws.http.AmazonHttpClient$RequestExecutor.execute(AmazonHttpClient.java:755)
+#         at com.amazonaws.http.AmazonHttpClient$RequestExecutor.access$500(AmazonHttpClient.java:715)
+#         at com.amazonaws.http.AmazonHttpClient$RequestExecutionBuilderImpl.execute(AmazonHttpClient.java:697)
+#         at com.amazonaws.http.AmazonHttpClient.execute(AmazonHttpClient.java:561)
+#         at com.amazonaws.http.AmazonHttpClient.execute(AmazonHttpClient.java:541)
+#         at com.amazonaws.services.s3.AmazonS3Client.invoke(AmazonS3Client.java:5456)
+#         at com.amazonaws.services.s3.AmazonS3Client.invoke(AmazonS3Client.java:5403)
+#         at com.amazonaws.services.s3.AmazonS3Client.getAcl(AmazonS3Client.java:4062)
+#         at com.amazonaws.services.s3.AmazonS3Client.getBucketAcl(AmazonS3Client.java:1278)
+#         at com.amazonaws.services.s3.AmazonS3Client.getBucketAcl(AmazonS3Client.java:1268)
+#         at com.amazonaws.services.s3.AmazonS3Client.doesBucketExistV2(AmazonS3Client.java:1406)
+#         at io.confluent.connect.s3.storage.S3Storage.bucketExists(S3Storage.java:184)
+#         at io.confluent.connect.s3.S3SinkTask.start(S3SinkTask.java:112)
+#         ... 8 more
 
 log "Sending messages to topic s3_topic"
 seq -f "{\"f1\": \"value%g\"}" 10 | docker exec -i connect kafka-avro-console-producer --broker-list broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic s3_topic --property value.schema='{"type":"record","name":"myrecord","fields":[{"name":"f1","type":"string"}]}'
