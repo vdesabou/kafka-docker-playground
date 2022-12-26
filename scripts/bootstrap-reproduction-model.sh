@@ -230,7 +230,8 @@ then
         cp -Ra ../../other/schema-format-$schema_format/producer/* $repro_dir/$producer_hostname/
 
         # update docker compose with producer container
-        
+        if [[ "$dir1" = *connect ]]
+        then
         cat << EOF >> $tmp_dir/producer
 
   $producer_hostname:
@@ -250,12 +251,50 @@ then
       KAFKA_RETRY_BACKOFF_MS: 500
       KAFKA_CLIENT_ID: "my-java-$producer_hostname"
       KAFKA_SCHEMA_REGISTRY_URL: "http://schema-registry:8081"
-      JAVA_OPTS: ${GRAFANA_AGENT_PRODUCER}
+      JAVA_OPTS: \${GRAFANA_AGENT_PRODUCER}
     volumes:
       - ../../environment/plaintext/jmx-exporter:/usr/share/jmx_exporter/
 
 
 EOF
+fi
+
+        if [[ "$dir1" = *ccloud ]]
+        then
+        cat << EOF >> $tmp_dir/producer
+
+  $producer_hostname:
+    build:
+      context: ../../reproduction-models/$final_dir/$producer_hostname/
+    hostname: producer
+    container_name: $producer_hostname
+    environment:
+      KAFKA_BOOTSTRAP_SERVERS: \$BOOTSTRAP_SERVERS
+      KAFKA_SSL_ENDPOINT_IDENTIFICATION_ALGORITHM: "https"
+      KAFKA_SASL_MECHANISM: "PLAIN"
+      KAFKA_SASL_JAAS_CONFIG: \$SASL_JAAS_CONFIG
+      KAFKA_SECURITY_PROTOCOL: "SASL_SSL"
+      TOPIC: "$topic_name"
+      REPLICATION_FACTOR: 3
+      NUMBER_OF_PARTITIONS: 1
+      NB_MESSAGES: 10 # -1 for MAX_VALUE
+      MESSAGE_BACKOFF: 100 # Frequency of message injection
+      KAFKA_ACKS: "all" # default: "1"
+      KAFKA_REQUEST_TIMEOUT_MS: 20000
+      KAFKA_RETRY_BACKOFF_MS: 500
+      KAFKA_CLIENT_ID: "my-java-$producer_hostname"
+      KAFKA_SCHEMA_REGISTRY_URL: \$SCHEMA_REGISTRY_URL
+      KAFKA_BASIC_AUTH_CREDENTIALS_SOURCE: \$BASIC_AUTH_CREDENTIALS_SOURCE
+      KAFKA_SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO: \$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO
+      JAVA_OPTS: \${GRAFANA_AGENT_PRODUCER}
+      EXTRA_ARGS: 
+    volumes:
+      - ../../environment/plaintext/jmx-exporter:/usr/share/jmx_exporter/
+
+
+EOF
+fi
+
         done
 
 
