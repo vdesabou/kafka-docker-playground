@@ -13,7 +13,16 @@ public class MyCustomSMT<R extends ConnectRecord<R>> implements Transformation<R
 
     @Override
     public R apply(R record) {
-        return null;
+        // add your logic here
+        return record.newRecord(
+            record.topic(),
+            record.kafkaPartition(),
+            record.keySchema(),
+            record.key(),
+            record.valueSchema(),
+            record.value(),
+            record.timestamp()
+        );
     }
 
     @Override
