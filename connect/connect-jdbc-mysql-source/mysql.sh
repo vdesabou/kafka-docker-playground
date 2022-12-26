@@ -59,7 +59,7 @@ INSERT INTO team (
 EOF
 
 log "Show content of team table:"
-docker exec mysql bash -c "mysql --user=root --password=password --database=db -e 'select * from team'"
+docker exec mysql bash -c "mysql --user=root --password=password --database=mydb -e 'select * from team'"
 
 log "Creating MySQL source connector"
 curl -X PUT \

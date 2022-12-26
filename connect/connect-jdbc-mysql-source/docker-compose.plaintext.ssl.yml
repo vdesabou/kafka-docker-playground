@@ -9,7 +9,7 @@ services:
       - ../../connect/connect-jdbc-mysql-source/mysql-init.sql:/docker-entrypoint-initdb.d/mysql-init.sql
     environment:
       MYSQL_ROOT_PASSWORD: password
-      MYSQL_DATABASE: db
+      MYSQL_DATABASE: mydb
       MYSQL_USER: user
       MYSQL_PASSWORD: password
       MYSQL_ROOT_HOST: 172.%  # Allow docker containers to connect to mysql
