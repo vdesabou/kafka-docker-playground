@@ -4,6 +4,7 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
+cd ../../connect/connect-jdbc-sqlserver-sink
 if [ ! -f ${DIR}/sqljdbc_7.4/enu/mssql-jdbc-7.4.1.jre8.jar ]
 then
      log "Downloading Microsoft JDBC driver mssql-jdbc-7.4.1.jre8.jar"
@@ -11,6 +12,7 @@ then
      tar xvfz sqljdbc_7.4.1.0_enu.tar.gz
      rm -f sqljdbc_7.4.1.0_enu.tar.gz
 fi
+cd -
 
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.microsoft.yml"
 
