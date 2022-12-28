@@ -51,6 +51,7 @@ curl -X PUT \
               "database.user": "sa",
               "database.password": "Password!",
               "database.names" : "testDB",
+              
               "_comment": "old version before 2.x",
               "database.server.name": "server1",
               "database.history.kafka.bootstrap.servers": "broker:9092",

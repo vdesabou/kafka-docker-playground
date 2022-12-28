@@ -52,7 +52,12 @@ curl -X PUT \
                "connector.class" : "io.debezium.connector.mongodb.MongoDbConnector",
                "tasks.max" : "1",
                "mongodb.hosts" : "debezium/mongodb:27017",
-               "mongodb.name" : "dbserver1",
+
+               "_comment": "old version before 2.x",
+               "mongodb.name": "dbserver1",
+               "_comment": "new version since 2.x",
+               "topic.prefix": "dbserver1",
+
                "mongodb.user" : "debezium",
                "mongodb.password" : "dbz"
           }' \

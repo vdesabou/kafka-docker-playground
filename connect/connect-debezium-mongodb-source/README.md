@@ -69,11 +69,16 @@ $ curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
                "connector.class" : "io.debezium.connector.mongodb.MongoDbConnector",
-                    "tasks.max" : "1",
-                    "mongodb.hosts" : "debezium/mongodb:27017",
-                    "mongodb.name" : "dbserver1",
-                    "mongodb.user" : "debezium",
-                    "mongodb.password" : "dbz"
+               "tasks.max" : "1",
+               "mongodb.hosts" : "debezium/mongodb:27017",
+
+               "_comment": "old version before 2.x",
+               "mongodb.name": "dbserver1",
+               "_comment": "new version since 2.x",
+               "topic.prefix": "dbserver1",
+
+               "mongodb.user" : "debezium",
+               "mongodb.password" : "dbz"
           }' \
      http://localhost:8083/connectors/debezium-mongodb-source/config | jq .
 ```
