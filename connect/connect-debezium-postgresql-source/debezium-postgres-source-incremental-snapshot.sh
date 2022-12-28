@@ -146,7 +146,12 @@ curl -X PUT \
                     "database.user": "myuser",
                     "database.password": "mypassword",
                     "database.dbname" : "postgres",
+
+                    "_comment": "old version before 2.x",
                     "database.server.name": "asgard",
+                    "_comment": "new version since 2.x",
+                    "topic.prefix": "asgard",
+
                     "key.converter" : "io.confluent.connect.avro.AvroConverter",
                     "key.converter.schema.registry.url": "http://schema-registry:8081",
                     "value.converter" : "io.confluent.connect.avro.AvroConverter",
@@ -170,20 +175,25 @@ log "Creating Debezium PostgreSQL source connector with customers and customers2
 curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
-               "connector.class": "io.debezium.connector.postgresql.PostgresConnector",
-                    "tasks.max": "1",
-                    "database.hostname": "postgres",
-                    "database.port": "5432",
-                    "database.user": "myuser",
-                    "database.password": "mypassword",
-                    "database.dbname" : "postgres",
-                    "database.server.name": "asgard",
-                    "key.converter" : "io.confluent.connect.avro.AvroConverter",
-                    "key.converter.schema.registry.url": "http://schema-registry:8081",
-                    "value.converter" : "io.confluent.connect.avro.AvroConverter",
-                    "value.converter.schema.registry.url": "http://schema-registry:8081",
-                    "table.include.list" : "public.customers,public.debezium_signal,public.customers2",
-                    "signal.data.collection": "public.debezium_signal"
+              "connector.class": "io.debezium.connector.postgresql.PostgresConnector",
+              "tasks.max": "1",
+              "database.hostname": "postgres",
+              "database.port": "5432",
+              "database.user": "myuser",
+              "database.password": "mypassword",
+              "database.dbname" : "postgres",
+
+              "_comment": "old version before 2.x",
+              "database.server.name": "asgard",
+              "_comment": "new version since 2.x",
+              "topic.prefix": "asgard",
+              
+              "key.converter" : "io.confluent.connect.avro.AvroConverter",
+              "key.converter.schema.registry.url": "http://schema-registry:8081",
+              "value.converter" : "io.confluent.connect.avro.AvroConverter",
+              "value.converter.schema.registry.url": "http://schema-registry:8081",
+              "table.include.list" : "public.customers,public.debezium_signal,public.customers2",
+              "signal.data.collection": "public.debezium_signal"
           }' \
      http://localhost:8083/connectors/debezium-postgres-source/config | jq .
 
