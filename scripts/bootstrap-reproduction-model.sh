@@ -71,14 +71,16 @@ dir1="${test_file_directory%/*}" #connect
 dir2="${dir1##*/}/$base1" # connect/connect-cdc-oracle12-source
 final_dir=$(echo $dir2 | tr '/' '-') # connect-connect-cdc-oracle12-source
 
-repro_folder="reproduction-models"
-if [ ! -z "$REPRO_FOLDER" ]
+output_folder="reproduction-models"
+if [ ! -z "$OUTPUT_FOLDER" ]
 then
-    log "Reproduction folder is set with REPRO_FOLDER environment variable"
-    repro_folder="$REPRO_FOLDER"
+    log "📂 Output folder is set with OUTPUT_FOLDER environment variable"
+    output_folder="$OUTPUT_FOLDER"
+else
+    log "📂 Output folder is default $output_folder (you can change it by setting OUTPUT_FOLDER environment variable)"
 fi
 
-repro_dir=$root_folder/$repro_folder/$final_dir
+repro_dir=$root_folder/$output_folder/$final_dir
 mkdir -p $repro_dir
 
 repro_test_file="$repro_dir/$filename-repro-$description_kebab_case.$extension"
@@ -244,7 +246,7 @@ then
 
   $producer_hostname:
     build:
-      context: ../../$repro_folder/$final_dir/$producer_hostname/
+      context: ../../$output_folder/$final_dir/$producer_hostname/
     hostname: producer
     container_name: $producer_hostname
     environment:
@@ -273,7 +275,7 @@ fi
 
   $producer_hostname:
     build:
-      context: ../../$repro_folder/$final_dir/$producer_hostname/
+      context: ../../$output_folder/$final_dir/$producer_hostname/
     hostname: producer
     container_name: $producer_hostname
     environment:
