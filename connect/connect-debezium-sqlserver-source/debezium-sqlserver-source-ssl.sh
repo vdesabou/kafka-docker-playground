@@ -94,18 +94,26 @@ log "Creating Debezium SQL Server source connector"
 curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
-                "connector.class": "io.debezium.connector.sqlserver.SqlServerConnector",
-                "tasks.max": "1",
-                "database.hostname": "sqlserver",
-                "database.port": "1433",
-                "database.user": "sa",
-                "database.password": "Password!",
-                "database.server.name": "server1",
-                "database.dbname" : "testDB",
-                "database.history.kafka.bootstrap.servers": "broker:9092",
-                "database.history.kafka.topic": "schema-changes.inventory",
-                "database.trustStore": "/tmp/truststore.jks",
-                "database.trustStorePassword": "confluent"
+              "connector.class": "io.debezium.connector.sqlserver.SqlServerConnector",
+              "tasks.max": "1",
+              "database.hostname": "sqlserver",
+              "database.port": "1433",
+              "database.user": "sa",
+              "database.password": "Password!",
+              "database.names" : "testDB",
+              "_comment": "old version before 2.x",
+              "database.server.name": "server1",
+              "database.history.kafka.bootstrap.servers": "broker:9092",
+              "database.history.kafka.topic": "schema-changes.inventory",
+              "database.trustStore": "/tmp/truststore.jks",
+              "database.trustStorePassword": "confluent",
+              "_comment": "new version since 2.x",
+              "database.encrypt": "true",
+              "topic.prefix": "server1",
+              "schema.history.internal.kafka.bootstrap.servers": "broker:9092",
+              "schema.history.internal.kafka.topic": "schema-changes.inventory",
+              "database.ssl.truststore": "/tmp/truststore.jks",
+              "database.ssl.truststore.password": "confluent"
           }' \
      http://localhost:8083/connectors/debezium-sqlserver-source-ssl/config | jq .
 
@@ -117,5 +125,5 @@ INSERT INTO customers(first_name,last_name,email) VALUES ('Pam','Thomas','pam@of
 GO
 EOF
 
-log "Verifying topic server1.dbo.customers"
-timeout 60 docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic server1.dbo.customers --from-beginning --max-messages 5
+log "Verifying topic server1.testDB.dbo.customers"
+timeout 60 docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic server1.testDB.dbo.customers --from-beginning --max-messages 5

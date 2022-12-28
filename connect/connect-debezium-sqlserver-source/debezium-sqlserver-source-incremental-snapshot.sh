@@ -53,18 +53,27 @@ log "Creating Debezium SQL Server source connector"
 curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
+
               "connector.class": "io.debezium.connector.sqlserver.SqlServerConnector",
               "tasks.max": "1",
               "database.hostname": "sqlserver",
               "database.port": "1433",
               "database.user": "sa",
               "database.password": "Password!",
+              "database.names" : "testDB",
+
+              "table.include.list" : "dbo.customers,dbo.debezium_signal",
+              "signal.data.collection": "dbo.debezium_signal",
+
+              "_comment": "old version before 2.x",
               "database.server.name": "server1",
-              "database.dbname" : "testDB",
               "database.history.kafka.bootstrap.servers": "broker:9092",
               "database.history.kafka.topic": "schema-changes.inventory",
-              "table.include.list" : "dbo.customers,dbo.debezium_signal",
-              "signal.data.collection": "dbo.debezium_signal"
+              "_comment": "new version since 2.x",
+              "database.encrypt": "false",
+              "topic.prefix": "server1",
+              "schema.history.internal.kafka.bootstrap.servers": "broker:9092",
+              "schema.history.internal.kafka.topic": "schema-changes.inventory"
           }' \
      http://localhost:8083/connectors/debezium-sqlserver-source/config | jq .
 
@@ -77,8 +86,8 @@ INSERT INTO customers(first_name,last_name,email) VALUES ('Pam','Thomas','pam@of
 GO
 EOF
 
-log "Verifying topic server1.dbo.customers"
-timeout 60 docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic server1.dbo.customers --from-beginning --max-messages 5
+log "Verifying topic server1.testDB.dbo.customers"
+timeout 60 docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic server1.testDB.dbo.customers --from-beginning --max-messages 5
 
 
 log "Add another table customers2"
@@ -113,18 +122,26 @@ curl -X PUT \
               "database.port": "1433",
               "database.user": "sa",
               "database.password": "Password!",
+              "database.names" : "testDB",
+
+              "table.include.list" : "dbo.customers,dbo.debezium_signal,dbo.customers2",
+              "signal.data.collection": "testDB.dbo.debezium_signal",
+
+              "_comment": "old version before 2.x",
               "database.server.name": "server1",
-              "database.dbname" : "testDB",
               "database.history.kafka.bootstrap.servers": "broker:9092",
               "database.history.kafka.topic": "schema-changes.inventory",
-              "table.include.list" : "dbo.customers,dbo.debezium_signal,dbo.customers2",
-              "signal.data.collection": "testDB.dbo.debezium_signal"
+              "_comment": "new version since 2.x",
+              "database.encrypt": "false",
+              "topic.prefix": "server1",
+              "schema.history.internal.kafka.bootstrap.servers": "broker:9092",
+              "schema.history.internal.kafka.topic": "schema-changes.inventory"
           }' \
      http://localhost:8083/connectors/debezium-sqlserver-source/config | jq .
 
 set +e
-log "Verifying topic server1.dbo.customers2: it should be empty"
-timeout 20 docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic server1.dbo.customers2 --from-beginning --max-messages 4
+log "Verifying topic server1.testDB.dbo.customers2: it should be empty"
+timeout 20 docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic server1.testDB.dbo.customers2 --from-beginning --max-messages 4
 set -e
 
 log "Trigger Ad hoc snapshot"
@@ -137,5 +154,5 @@ EOF
 
 sleep 5
 
-log "Verifying topic server1.dbo.customers2: it should have snapshot"
-timeout 20 docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic server1.dbo.customers2 --from-beginning --max-messages 4
+log "Verifying topic server1.testDB.dbo.customers2: it should have snapshot"
+timeout 20 docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic server1.testDB.dbo.customers2 --from-beginning --max-messages 4
