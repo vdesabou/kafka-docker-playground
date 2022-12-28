@@ -4,6 +4,10 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
+# https://github.com/aws/aws-sdk-java/issues/2558
+logwarn "WARN: This is not working due to https://github.com/aws/aws-sdk-java/issues/2558"
+exit 111
+
 # this is only used for AWS CLI
 if [ ! -f $HOME/.aws/credentials ] && ( [ -z "$AWS_ACCESS_KEY_ID" ] || [ -z "$AWS_SECRET_ACCESS_KEY" ] )
 then
