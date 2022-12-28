@@ -26,12 +26,10 @@ CREATE TABLE team (
 
 
 INSERT INTO team (
-  id,
   name,
   email,
   last_modified
 ) VALUES (
-  1,
   'kafka',
   'kafka@apache.org',
   NOW()
@@ -47,12 +45,10 @@ docker exec -i mysql mysql --user=root --password=password --database=mydb << EO
 USE mydb;
 
 INSERT INTO team (
-  id,
   name,
   email,
   last_modified
 ) VALUES (
-  2,
   'another',
   'another@apache.org',
   NOW()
@@ -71,24 +67,20 @@ CREATE TABLE customers (
 
 
 INSERT INTO customers (
-  id,
   name,
   email,
   last_modified
 ) VALUES (
-  1,
   'Roger',
   'roger@apache.org',
   NOW()
 );
 
 INSERT INTO customers (
-  id,
   name,
   email,
   last_modified
 ) VALUES (
-  2,
   'James',
   'james@apache.org',
   NOW()
@@ -109,10 +101,17 @@ curl -X PUT \
                     "database.user": "debezium",
                     "database.password": "dbz",
                     "database.server.id": "223344",
-                    "database.server.name": "dbserver1",
-                    "database.whitelist": "mydb",
+
+                    "database.names" : "mydb",
+                    "_comment": "old version before 2.x",
+                    "database.server.name": "server1",
                     "database.history.kafka.bootstrap.servers": "broker:9092",
                     "database.history.kafka.topic": "schema-changes.mydb",
+                    "_comment": "new version since 2.x",
+                    "topic.prefix": "server1",
+                    "schema.history.internal.kafka.bootstrap.servers": "broker:9092",
+                    "schema.history.internal.kafka.topic": "schema-changes.mydb",
+
                     "table.include.list": "mydb.team",
                     "transforms": "RemoveDots",
                     "transforms.RemoveDots.type": "org.apache.kafka.connect.transforms.RegexRouter",
@@ -123,8 +122,8 @@ curl -X PUT \
 
 sleep 5
 
-log "Verifying topic dbserver1_mydb_team"
-timeout 60 docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic dbserver1_mydb_team --from-beginning --max-messages 2
+log "Verifying topic server1_mydb_team"
+timeout 60 docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic server1_mydb_team --from-beginning --max-messages 2
 
 log "Show content of customer table:"
 docker exec mysql bash -c "mysql --user=root --password=password --database=mydb -e 'select * from customers'"
@@ -141,10 +140,18 @@ curl -X PUT \
                     "database.user": "debezium",
                     "database.password": "dbz",
                     "database.server.id": "223344",
-                    "database.server.name": "dbserver1",
-                    "database.whitelist": "mydb",
+                    "database.server.name": "server1",
+
+                    "database.names" : "mydb",
+                    "_comment": "old version before 2.x",
+                    "database.server.name": "server1",
                     "database.history.kafka.bootstrap.servers": "broker:9092",
                     "database.history.kafka.topic": "schema-changes.mydb",
+                    "_comment": "new version since 2.x",
+                    "topic.prefix": "server1",
+                    "schema.history.internal.kafka.bootstrap.servers": "broker:9092",
+                    "schema.history.internal.kafka.topic": "schema-changes.mydb",
+
                     "table.include.list": "mydb.team,mydb.customers",
                     "read.only": "true",
                     "signal.kafka.topic": "dbz-signals",
@@ -157,16 +164,16 @@ curl -X PUT \
      http://localhost:8083/connectors/debezium-mysql-source/config | jq .
      
 set +e
-log "Verifying topic dbserver1_mydb_customers : it should be empty"
-timeout 20 docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic dbserver1_mydb_customers --from-beginning --max-messages 1
+log "Verifying topic server1_mydb_customers : it should be empty"
+timeout 20 docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic server1_mydb_customers --from-beginning --max-messages 1
 set -e
 
 log "Send Signal to the topic to start incremental snapshot"
 docker exec -i connect kafka-console-producer --broker-list broker:9092 --property "parse.key=true" --property "key.serializer=org.apache.kafka.common.serialization.StringSerializer" --property "key.separator=;" --topic dbz-signals --property "value.serializer=org.apache.kafka.common.serialization.StringSerializer" << EOF
-dbserver1;{"type":"execute-snapshot","data": {"data-collections": ["mydb.customers"], "type": "INCREMENTAL"}}
+server1;{"type":"execute-snapshot","data": {"data-collections": ["mydb.customers"], "type": "INCREMENTAL"}}
 EOF
 
 sleep 20
 
-log "Verifying topic dbserver1_mydb_customer again "
-timeout 60 docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic dbserver1_mydb_customers --from-beginning --max-messages 2
+log "Verifying topic server1_mydb_customer again"
+timeout 60 docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic server1_mydb_customers --from-beginning --max-messages 2
