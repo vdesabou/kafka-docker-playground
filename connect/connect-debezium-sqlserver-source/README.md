@@ -34,16 +34,23 @@ Creating Debezium SQL Server source connector
 $ curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
-               "connector.class": "io.debezium.connector.sqlserver.SqlServerConnector",
-                    "tasks.max": "1",
-                    "database.hostname": "sqlserver",
-                    "database.port": "1433",
-                    "database.user": "sa",
-                    "database.password": "Password!",
-                    "database.server.name": "server1",
-                    "database.dbname" : "testDB",
-                    "database.history.kafka.bootstrap.servers": "broker:9092",
-                    "database.history.kafka.topic": "schema-changes.inventory"
+              "connector.class": "io.debezium.connector.sqlserver.SqlServerConnector",
+              "tasks.max": "1",
+              "database.hostname": "sqlserver",
+              "database.port": "1433",
+              "database.user": "sa",
+              "database.password": "Password!",
+              "database.names" : "testDB",
+              
+              "_comment": "old version before 2.x",
+              "database.server.name": "server1",
+              "database.history.kafka.bootstrap.servers": "broker:9092",
+              "database.history.kafka.topic": "schema-changes.inventory",
+              "_comment": "new version since 2.x",
+              "database.encrypt": "false",
+              "topic.prefix": "server1",
+              "schema.history.internal.kafka.bootstrap.servers": "broker:9092",
+              "schema.history.internal.kafka.topic": "schema-changes.inventory"
           }' \
      http://localhost:8083/connectors/debezium-sqlserver-source/config | jq .
 ```
