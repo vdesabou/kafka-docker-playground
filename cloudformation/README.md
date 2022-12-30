@@ -25,7 +25,7 @@ $ cp kafka-docker-playground/cloudformation/alfred-aws-vscode-workflow/kafka-doc
 $ aws cloudformation create-stack  --stack-name kafka-docker-playground-$USER \
     --template-body file://tmp.yml --region eu-west-3 \ 
     --parameters ParameterKey=KeyName,ParameterValue=$KEY_NAME \
-    ParameterKey=InstanceName,ParameterValue=kafka-docker-playground-$USER,
+    ParameterKey=InstanceName,ParameterValue=kafka-docker-playground-$USER \
     ParameterKey=LinuxUserName,ParameterValue="$USER"
 ```
 
