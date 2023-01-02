@@ -1,0 +1,19 @@
+---
+version: '3.5'
+services:
+
+  connect:
+    volumes:
+      - ../../connect/connect-http-cdc-source/security:/tmp
+    environment:
+      CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/castorm-kafka-connect-http
+
+  http-service-mtls-auth:
+    image: vdesabou/http-sink-demo
+    hostname: http-service-mtls-auth
+    container_name: http-service-mtls-auth
+    ports:
+      - "8643:8443"
+    environment:
+      SPRING_PROFILES_ACTIVE: 'ssl-auth'
+      
