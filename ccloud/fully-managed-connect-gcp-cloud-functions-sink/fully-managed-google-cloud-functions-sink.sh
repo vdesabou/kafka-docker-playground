@@ -58,7 +58,6 @@ cat << EOF > connector.json
      "topics": "functions-messages",
      "function.name": "$FUNCTION",
      "project.id": "$GCP_PROJECT",
-     "region": "$REGION",
      "input.data.format" : "AVRO",
      "gcf.credentials.json" : $GCP_KEYFILE_CONTENT,
      "tasks.max" : "1"
