@@ -28,7 +28,7 @@ curl -X PUT \
 sleep 3
 
 log "Send a message to HTTP server"
-curl --cert ./security/http-service-mtls-auth.certificate.pem --key ./security/http-service-mtls-auth.key --tlsv1.2 --cacert ./security/snakeoil-ca-1.crt  -X PUT \
+curl --cert ../../connect/connect-http-sink/security/http-service-mtls-auth.certificate.pem --key ../../connect/connect-http-sink/security/http-service-mtls-auth.key --tlsv1.2 --cacert ../../connect/connect-http-sink/security/snakeoil-ca-1.crt  -X PUT \
      -H "Content-Type: application/json" \
      --data '{"test":"value"}' \
      https://localhost:8643/api/messages | jq .
