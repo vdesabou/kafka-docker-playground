@@ -22,6 +22,9 @@ else
 fi
 #############
 
+set +e
+delete_topic server1.testDB.dbo.customers
+set -e
 
 log "Create table"
 docker exec -i sqlserver /opt/mssql-tools/bin/sqlcmd -U sa -P Password! << EOF
