@@ -1,6 +1,7 @@
 ## ✨ Features
 
-- 🔗 140+ connectors [examples](/content?id=🔗-connectors)
+- 🔗 150+ self-managed connectors [examples](/content?id=🔗-connectors)
+- 🌤️ 20+ fully-managed connectors [examples](/content?id=%f0%9f%a4%96-fully-managed-connectors)
 - 🔐 10+ secured [environments](/content?id=%F0%9F%94%90-environments) (SASL, RBAC, SSL...)
 - ☁️ Confluent Cloud [examples](/content?id=☁%EF%B8%8F-confluent-cloud)
 - 💸 Confluent commercial [features](/content?id=💸-confluent-commercial) (Tiered Storage, Control Center, Audit logs...)
@@ -9,6 +10,7 @@
 - 🎓 Learn how the playground [works](/how-it-works)
 - 👷‍♂️ Build your own reproduction models with [reusables](/reusables)
 - 📱 Work directly in your browser using [Gitpod.io](/how-to-use?id=🪄-gitpodio)
+- 🎩 Work remotely with VS Code using [AWS EC2 Alfred workflow](/how-to-use?id=%f0%9f%8e%a9-aws-ec2-alfred-workflow)
 - 🤖 Automated testing using Github Actions [CI](/how-it-works?id=🤖-how-ci-works)
 - 👾 And even more [playgrounds](/content?id=👾-other-playgrounds)...
 
