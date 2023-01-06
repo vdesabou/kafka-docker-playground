@@ -19,10 +19,10 @@ curl -X PUT \
                "http.request.url": "https://http-service-mtls-auth:8443/api/messages",
                "kafka.topic": "http-topic-messages",
 
-               "http.client.keystore": "/tmp/keystore.http-service-mtls-auth.jks",
+               "http.client.keystore": "/tmp/keystore.http-service-mtls-auth.p12",
                "http.client.keystore.password": "confluent"
           }' \
-     http://localhost:8083/connectors/http-cdc-source/config | jq .
+     http://localhost:8083/connectors/http-cdc-sourc2e/config | jq .
 
 
 sleep 3
@@ -108,3 +108,8 @@ sleep 2
 
 log "Verify we have received the data in http-topic-messages topic"
 timeout 60 docker exec connect kafka-console-consumer -bootstrap-server broker:9092 --topic http-topic-messages --from-beginning --property print.key=true --max-messages 1
+
+
+exit 0
+
+docker exec -d --privileged --user root connect bash -c 'tcpdump -w /tmp/tcpdump.pcap -i eth0 -s 0'
