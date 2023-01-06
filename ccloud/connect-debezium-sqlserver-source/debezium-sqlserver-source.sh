@@ -83,12 +83,12 @@ curl -X PUT \
               "topic.prefix": "server1",
               "schema.history.internal.kafka.bootstrap.servers": "${file:/data:bootstrap.servers}",
               "schema.history.internal.kafka.topic": "schema-changes.inventory",
-              "schema.history.producer.sasl.jaas.config": "org.apache.kafka.common.security.plain.PlainLoginModule required username=\"${file:/data:sasl.username}\" password=\"${file:/data:sasl.password}\";",
-              "schema.history.producer.sasl.mechanism": "PLAIN",
-              "schema.history.producer.security.protocol": "SASL_SSL",
-              "schema.history.consumer.sasl.jaas.config": "org.apache.kafka.common.security.plain.PlainLoginModule required username=\"${file:/data:sasl.username}\" password=\"${file:/data:sasl.password}\";",
-              "schema.history.consumer.sasl.mechanism": "PLAIN",
-              "schema.history.consumer.security.protocol": "SASL_SSL"
+              "schema.history.internal.producer.sasl.jaas.config": "org.apache.kafka.common.security.plain.PlainLoginModule required username=\"${file:/data:sasl.username}\" password=\"${file:/data:sasl.password}\";",
+              "schema.history.internal.producer.sasl.mechanism": "PLAIN",
+              "schema.history.internal.producer.security.protocol": "SASL_SSL",
+              "schema.history.internal.consumer.sasl.jaas.config": "org.apache.kafka.common.security.plain.PlainLoginModule required username=\"${file:/data:sasl.username}\" password=\"${file:/data:sasl.password}\";",
+              "schema.history.internal.consumer.sasl.mechanism": "PLAIN",
+              "schema.history.internal.consumer.security.protocol": "SASL_SSL"
           }' \
      http://localhost:8083/connectors/debezium-sqlserver-source/config | jq .
 
