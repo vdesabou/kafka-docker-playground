@@ -4,7 +4,7 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
-cd ../../connect/connect-jdbc-mysql-sink
+cd ../../connect/connect-jdbc-mysql-source
 if [ ! -f ${DIR}/mysql-connector-java-5.1.45.jar ]
 then
      log "Downloading mysql-connector-java-5.1.45.jar"
