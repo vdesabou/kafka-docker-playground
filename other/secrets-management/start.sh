@@ -9,6 +9,7 @@ if ! version_gt $TAG_BASE "5.2.99"; then
     exit 111
 fi
 
+cd ../../other/secrets-management
 rm -f ${DIR}/secrets/secret.txt
 rm -f ${DIR}/secrets/CONFLUENT_SECURITY_MASTER_KEY
 docker run -i --rm -v ${DIR}/secrets:/secrets cnfldemos/tools:0.3 bash -c '
@@ -20,6 +21,7 @@ echo "$CONFLUENT_SECURITY_MASTER_KEY" > /secrets/CONFLUENT_SECURITY_MASTER_KEY
 echo "Encrypting my-secret-property in file my-config-file.properties"
 confluent-v1 secret file encrypt --local-secrets-file /secrets/secret.txt --remote-secrets-file /etc/kafka/secrets/secret.txt --config my-secret-property --config-file /secrets/my-config-file.properties
 '
+cd -
 
 export CONFLUENT_SECURITY_MASTER_KEY=$(cat ${DIR}/secrets/CONFLUENT_SECURITY_MASTER_KEY | sed 's/ //g' | tail -1 | tr -d '\n')
 log "Exporting CONFLUENT_SECURITY_MASTER_KEY=$CONFLUENT_SECURITY_MASTER_KEY"
