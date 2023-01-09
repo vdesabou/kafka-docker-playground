@@ -70,7 +70,7 @@ INSERT INTO team (   \
   email,   \
   last_modified \
 ) VALUES (  \
-  2,    \
+  4,    \
   'another',  \
   'another@apache.org',   \
   NOW() \
