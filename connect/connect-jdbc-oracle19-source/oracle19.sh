@@ -6,6 +6,26 @@ source ${DIR}/../../scripts/utils.sh
 
 create_or_get_oracle_image "LINUX.X64_193000_db_home.zip" "../../connect/connect-jdbc-oracle19-source/ora-setup-scripts"
 
+if [ ! -z "$ORACLE_DATAGEN" ]
+then
+     log "🌪️ ORACLE_DATAGEN is set"
+     for component in oracle-datagen
+     do
+     set +e
+     log "🏗 Building jar for ${component}"
+     docker run -i --rm -e KAFKA_CLIENT_TAG=$KAFKA_CLIENT_TAG -e TAG=$TAG_BASE -v "${DIR}/${component}":/usr/src/mymaven -v "$HOME/.m2":/root/.m2 -v "${DIR}/${component}/target:/usr/src/mymaven/target" -w /usr/src/mymaven maven:3.6.1-jdk-11 mvn -Dkafka.tag=$TAG -Dkafka.client.tag=$KAFKA_CLIENT_TAG package > /tmp/result.log 2>&1
+     if [ $? != 0 ]
+     then
+          logerror "ERROR: failed to build java component "
+          tail -500 /tmp/result.log
+          exit 1
+     fi
+     set -e
+     done
+else
+     log "🌪️ ORACLE_DATAGEN is not set"
+fi
+
 if [ ! -z "$CONNECTOR_TAG" ]
 then
      JDBC_CONNECTOR_VERSION=$CONNECTOR_TAG
@@ -117,3 +137,9 @@ log "Verifying topic oracle-CUSTOMERS"
 timeout 60 docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic oracle-CUSTOMERS --from-beginning --max-messages 2
 
 
+if [ ! -z "$ORACLE_DATAGEN" ]
+then
+     DURATION=600
+     log "Injecting data for $DURATION seconds"
+     docker exec -d oracle-datagen bash -c "java ${JAVA_OPTS} -jar oracle-datagen-1.0-SNAPSHOT-jar-with-dependencies.jar --host oracle --username C##MYUSER --password mypassword --sidOrServerName sid --sidOrServerNameVal ORCLCDB --maxPoolSize 10 --durationTimeMin $DURATION"
+fi

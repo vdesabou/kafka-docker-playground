@@ -18,6 +18,20 @@ Note: The first time you'll run the script, it will build (using this [project](
 
 ![Docker image disk](Screenshot1.png)
 
+## Performance testing
+
+You can set environment variable `ORACLE_DATAGEN` before running the example and it will use a Java based datagen tool:
+
+Example:
+
+```
+DURATION=600
+log "Injecting data for $DURATION seconds"
+docker exec -d oracle-datagen bash -c "java ${JAVA_OPTS} -jar oracle-datagen-1.0-SNAPSHOT-jar-with-dependencies.jar --host oracle --username C##MYUSER --password mypassword --sidOrServerName sid --sidOrServerNameVal ORCLCDB --maxPoolSize 10 --durationTimeMin $DURATION"
+```
+
+You can increase thoughtput with `maxPoolSize`.
+
 ## How to run
 
 Without SSL:

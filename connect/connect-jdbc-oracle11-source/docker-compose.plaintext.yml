@@ -1,6 +1,13 @@
 ---
 version: '3.5'
 services:
+
+  oracle-datagen:
+    build:
+      context: ../../connect/connect-jdbc-oracle11-source/oracle-datagen/
+    hostname: oracle-datagen
+    container_name: oracle-datagen
+
   oracle:
     # https://github.com/wnameless/docker-oracle-xe-11g
     image: wnameless/oracle-xe-11g-r2
@@ -10,7 +17,6 @@ services:
       - "1521:1521"
     volumes:
       - ../../connect/connect-jdbc-oracle11-source/00-oracle-init.sql:/docker-entrypoint-initdb.d/00-oracle-init.sql
-      - ../../connect/connect-jdbc-oracle11-source/01-create-table.sh:/docker-entrypoint-initdb.d/01-create-table.sh
     environment:
       ORACLE_ALLOW_REMOTE: "true"
 
