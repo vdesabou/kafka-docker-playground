@@ -1,7 +1,14 @@
 ---
 version: '3.5'
 services:
-  oracle:    
+
+  oracle-datagen:
+    build:
+      context: ../../connect/connect-cdc-oracle11-source/oracle-datagen/
+    hostname: oracle-datagen
+    container_name: oracle-datagen
+
+  oracle:
     image: wnameless/oracle-xe-11g-r2
     hostname: oracle
     container_name: oracle

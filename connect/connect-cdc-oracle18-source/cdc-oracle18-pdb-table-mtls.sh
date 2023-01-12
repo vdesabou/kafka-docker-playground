@@ -325,5 +325,3 @@ fi
 
 log "Verifying topic redo-log-topic: there should be 9 records"
 timeout 60 docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic redo-log-topic --from-beginning --max-messages 9 --property print.key=true
-
-log "🚚 If you're planning to inject more data, have a look at https://github.com/vdesabou/kafka-docker-playground/blob/master/connect/connect-cdc-oracle18-source/README.md#note-on-redologrowfetchsize"
