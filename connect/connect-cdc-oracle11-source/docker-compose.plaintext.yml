@@ -17,8 +17,6 @@ services:
     volumes:
       - ../../connect/connect-cdc-oracle11-source/ora-setup-scripts/01_init.sql:/docker-entrypoint-initdb.d/01_init.sql
       - ../../connect/connect-cdc-oracle11-source/ora-setup-scripts/02_init.sql:/docker-entrypoint-initdb.d/02_init.sql
-      - ../../connect/connect-cdc-oracle11-source/ora-startup-scripts/01_create_customers.sh:/docker-entrypoint-initdb.d/03_create_customers.sh
-      - ../../connect/connect-cdc-oracle11-source/ora-startup-scripts/02_populate_customer.sh:/docker-entrypoint-initdb.d/04_populate_customer.sh
     environment:
       ORACLE_ALLOW_REMOTE: "true"
 

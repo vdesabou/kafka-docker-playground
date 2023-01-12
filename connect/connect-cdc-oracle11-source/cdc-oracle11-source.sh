@@ -42,6 +42,51 @@ fi
 done
 log "Oracle DB has started!"
 
+log "create table"
+docker exec -i oracle bash -c "ORACLE_SID=XE;export ORACLE_SID;export ORACLE_HOME=/u01/app/oracle/product/11.2.0/xe;/u01/app/oracle/product/11.2.0/xe/bin/sqlplus MYUSER/password@//localhost:1521/XE" << EOF
+create table CUSTOMERS (
+        id NUMBER(10) NOT NULL PRIMARY KEY,
+        first_name VARCHAR(50),
+        last_name VARCHAR(50),
+        email VARCHAR(50),
+        gender VARCHAR(50),
+        club_status VARCHAR(20),
+        comments VARCHAR(4000),
+        create_ts timestamp DEFAULT CURRENT_TIMESTAMP,
+        update_ts timestamp
+);
+
+CREATE SEQUENCE CUSTOMERS_SEQ START WITH 1;
+
+CREATE OR REPLACE TRIGGER CUSTOMERS_TRIGGER_ID
+BEFORE INSERT ON CUSTOMERS
+FOR EACH ROW
+
+BEGIN
+  SELECT CUSTOMERS_SEQ.NEXTVAL
+  INTO   :new.id
+  FROM   dual;
+END;
+/
+
+CREATE OR REPLACE TRIGGER CUSTOMERS_TRIGGER_TS
+BEFORE INSERT OR UPDATE ON CUSTOMERS
+REFERENCING NEW AS NEW_ROW
+  FOR EACH ROW
+BEGIN
+  SELECT SYSDATE
+        INTO :NEW_ROW.UPDATE_TS
+        FROM DUAL;
+END;
+/
+
+insert into CUSTOMERS (id, first_name, last_name, email, gender, club_status, comments) values (1, 'Rica', 'Blaisdell', 'rblaisdell0@rambler.ru', 'Female', 'bronze', 'Universal optimal hierarchy');
+insert into CUSTOMERS (id, first_name, last_name, email, gender, club_status, comments) values (2, 'Ruthie', 'Brockherst', 'rbrockherst1@ow.ly', 'Female', 'platinum', 'Reverse-engineered tangible interface');
+insert into CUSTOMERS (id, first_name, last_name, email, gender, club_status, comments) values (3, 'Mariejeanne', 'Cocci', 'mcocci2@techcrunch.com', 'Female', 'bronze', 'Multi-tiered bandwidth-monitored capability');
+insert into CUSTOMERS (id, first_name, last_name, email, gender, club_status, comments) values (4, 'Hashim', 'Rumke', 'hrumke3@sohu.com', 'Male', 'platinum', 'Self-enabling 24/7 firmware');
+insert into CUSTOMERS (id, first_name, last_name, email, gender, club_status, comments) values (5, 'Hansiain', 'Coda', 'hcoda4@senate.gov', 'Male', 'platinum', 'Centralized full-range approach');
+EOF
+
 log "Creating Oracle source connector"
 curl -X PUT \
      -H "Content-Type: application/json" \
