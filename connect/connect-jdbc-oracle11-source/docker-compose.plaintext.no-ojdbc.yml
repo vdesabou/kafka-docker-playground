@@ -7,6 +7,8 @@ services:
       context: ../../connect/connect-jdbc-oracle11-source/oracle-datagen/
     hostname: oracle-datagen
     container_name: oracle-datagen
+    profiles:
+    - oracle_datagen
     
   oracle:
     # https://github.com/wnameless/docker-oracle-xe-11g

@@ -7,6 +7,8 @@ services:
       context: ../../connect/connect-cdc-oracle18-source/oracle-datagen/
     hostname: oracle-datagen
     container_name: oracle-datagen
+    profiles:
+    - oracle_datagen
     
   oracle:
     # You need to build this image first, following the instructions at

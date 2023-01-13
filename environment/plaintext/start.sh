@@ -52,6 +52,11 @@ else
   log "Use http://localhost:8080/console (admin/admin) to login"
   profile_conduktor_command="--profile conduktor"
 fi
+profile_oracle_datagen_command=""
+if [ ! -z "$ORACLE_DATAGEN" ]
+then
+  profile_oracle_datagen_command="--profile oracle_datagen"
+fi
 
 #define kafka_nodes variable and when profile is included/excluded
 profile_kafka_nodes_command=""
@@ -98,9 +103,9 @@ fi
 
 docker-compose -f ../../environment/plaintext/docker-compose.yml ${ENABLE_DOCKER_COMPOSE_FILE_OVERRIDE} build
 docker-compose -f ../../environment/plaintext/docker-compose.yml ${ENABLE_DOCKER_COMPOSE_FILE_OVERRIDE} down -v --remove-orphans
-docker-compose -f ../../environment/plaintext/docker-compose.yml ${ENABLE_DOCKER_COMPOSE_FILE_OVERRIDE} ${profile_control_center_command} ${profile_ksqldb_command} ${profile_grafana_command} ${profile_kcat_command} ${profile_conduktor_command} ${profile_connect_nodes_command} ${profile_kafka_nodes_command} up -d
+docker-compose -f ../../environment/plaintext/docker-compose.yml ${ENABLE_DOCKER_COMPOSE_FILE_OVERRIDE} ${profile_control_center_command} ${profile_ksqldb_command} ${profile_grafana_command} ${profile_kcat_command} ${profile_conduktor_command} ${profile_oracle_datagen_command} ${profile_connect_nodes_command} ${profile_kafka_nodes_command} up -d
 log "📝 To see the actual properties file, use ../../scripts/get-properties.sh <container>"
-command="source ../../scripts/utils.sh && docker-compose -f ../../environment/plaintext/docker-compose.yml ${ENABLE_DOCKER_COMPOSE_FILE_OVERRIDE} ${profile_control_center_command} ${profile_ksqldb_command} ${profile_grafana_command} ${profile_kcat_command} ${profile_conduktor_command} ${profile_connect_nodes_command} ${profile_kafka_nodes_command} up -d"
+command="source ../../scripts/utils.sh && docker-compose -f ../../environment/plaintext/docker-compose.yml ${ENABLE_DOCKER_COMPOSE_FILE_OVERRIDE} ${profile_control_center_command} ${profile_ksqldb_command} ${profile_grafana_command} ${profile_kcat_command} ${profile_conduktor_command} ${profile_oracle_datagen_command} ${profile_connect_nodes_command} ${profile_kafka_nodes_command} up -d"
 echo "$command" > /tmp/playground-command
 log "✨ If you modify a docker-compose file and want to re-create the container(s), run ../../scripts/recreate-containers.sh or use this command:"
 log "✨ $command"
