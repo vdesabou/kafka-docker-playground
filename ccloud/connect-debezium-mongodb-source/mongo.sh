@@ -65,9 +65,14 @@ curl -X PUT \
                "connector.class" : "io.debezium.connector.mongodb.MongoDbConnector",
                "tasks.max" : "1",
                "mongodb.hosts" : "debezium/mongodb:27017",
-               "mongodb.name" : "dbserver1",
                "mongodb.user" : "debezium",
                "mongodb.password" : "dbz",
+
+               "_comment": "old version before 2.x",
+               "mongodb.name": "dbserver1",
+               "_comment": "new version since 2.x",
+               "topic.prefix": "dbserver1",
+
                "topic.creation.default.replication.factor": "-1",
                "topic.creation.default.partitions": "-1"
           }' \
