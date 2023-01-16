@@ -57,7 +57,7 @@ fi
 
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
 
-TODAY=$(date '+%Y-%m-%d')
+TODAY=$(date -u '+%Y-%m-%d')
 
 log "Creating ServiceNow Source connector"
 curl -X PUT \
