@@ -64,7 +64,7 @@ curl -X PUT \
 
               "transforms": "unwrap,RemoveDots",
               "transforms.RemoveDots.type": "org.apache.kafka.connect.transforms.RegexRouter",
-              "transforms.RemoveDots.regex": "(.*)",
+              "transforms.RemoveDots.regex": "(.*)\\.(.*)\\.(.*)",
               "transforms.RemoveDots.replacement": "mytable",
               "transforms.unwrap.type": "io.debezium.transforms.ExtractNewRecordState"
           }' \
@@ -80,7 +80,11 @@ EOF
 
 log "Verifying topic mytable"
 timeout 60 docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic mytable --from-beginning --max-messages 5
-
+# {"id":1001,"first_name":"Sally","last_name":"Thomas","email":"sally.thomas@acme.com"}
+# {"id":1002,"first_name":"George","last_name":"Bailey","email":"gbailey@foobar.com"}
+# {"id":1003,"first_name":"Edward","last_name":"Walker","email":"ed@walker.com"}
+# {"id":1004,"first_name":"Anne","last_name":"Kretchmar","email":"annek@noanswer.org"}
+# {"id":1005,"first_name":"Pam","last_name":"Thomas","email":"pam@office.com"}
 
 log "Creating JDBC PostgreSQL sink connector"
 curl -X PUT \
@@ -103,7 +107,11 @@ sleep 5
 log "Show content of mytable table:"
 docker exec postgres bash -c "psql -U myuser -d postgres -c 'SELECT * FROM mytable'" > /tmp/result.log  2>&1
 cat /tmp/result.log
-#   id  | first_name | last_name |     email      
-# ------+------------+-----------+----------------
-#  1007 | Pam        | Thomas    | pam@office.com
-# (1 row)
+#   id  | first_name | last_name |         email         
+# ------+------------+-----------+-----------------------
+#  1001 | Sally      | Thomas    | sally.thomas@acme.com
+#  1002 | George     | Bailey    | gbailey@foobar.com
+#  1003 | Edward     | Walker    | ed@walker.com
+#  1004 | Anne       | Kretchmar | annek@noanswer.org
+#  1005 | Pam        | Thomas    | pam@office.com
+# (5 rows)
