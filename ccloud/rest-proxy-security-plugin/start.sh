@@ -36,7 +36,7 @@ fi
 # generate kafka-admin.properties config
 sed -e "s|:CCLOUD_REST_PROXY_SECURITY_PLUGIN_API_KEY:|$CCLOUD_REST_PROXY_SECURITY_PLUGIN_API_KEY|g" \
     -e "s|:CCLOUD_REST_PROXY_SECURITY_PLUGIN_API_SECRET:|$CCLOUD_REST_PROXY_SECURITY_PLUGIN_API_SECRET|g" \
-    ${DIR}/kafka-rest.jaas-template.conf > ${DIR}/kafka-rest.jaas.conf
+    ../../ccloud/rest-proxy-security-plugin/kafka-rest.jaas-template.conf > ../../ccloud/rest-proxy-security-plugin/kafka-rest.jaas.conf
 
 cd ${DIR}/security
 log "🔐 Generate keys and certificates used for SSL"

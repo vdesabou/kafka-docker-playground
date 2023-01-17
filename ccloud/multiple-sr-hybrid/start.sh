@@ -13,7 +13,7 @@ ${DIR}/../../ccloud/environment/start.sh "${PWD}/docker-compose.yml"
 
 # generate sr.json config
 sed -e "s|:SCHEMA_REGISTRY_URL:|$SCHEMA_REGISTRY_URL|g" \
-    ${DIR}/sr-template.json > ${DIR}/sr.json
+    ../../ccloud/multiple-sr-hybrid/sr-template.json > ../../ccloud/multiple-sr-hybrid/sr.json
 
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.yml"
 

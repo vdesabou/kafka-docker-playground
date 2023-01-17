@@ -26,7 +26,7 @@ fi
 sed -e "s|:BOOTSTRAP_SERVERS:|$BOOTSTRAP_SERVERS|g" \
     -e "s|:CLOUD_KEY:|$CLOUD_KEY|g" \
     -e "s|:CLOUD_SECRET:|$CLOUD_SECRET|g" \
-    ${DIR}/connect-mirror-maker-template.properties > ${DIR}/connect-mirror-maker.properties
+    ../../ccloud/mirrormaker2/connect-mirror-maker-template.properties > ../../ccloud/mirrormaker2/connect-mirror-maker.properties
 
 log "Creating topic sales_A in Confluent Cloud"
 set +e

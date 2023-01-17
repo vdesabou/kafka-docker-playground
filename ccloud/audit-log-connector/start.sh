@@ -32,7 +32,7 @@ fi
 sed -e "s|:AUDIT_LOG_CLUSTER_BOOTSTRAP_SERVERS:|$AUDIT_LOG_CLUSTER_BOOTSTRAP_SERVERS|g" \
     -e "s|:AUDIT_LOG_CLUSTER_API_KEY:|$AUDIT_LOG_CLUSTER_API_KEY|g" \
     -e "s|:AUDIT_LOG_CLUSTER_API_SECRET:|$AUDIT_LOG_CLUSTER_API_SECRET|g" \
-    ${DIR}/data_audit_cluster.template > ${DIR}/data_audit_cluster
+    ../../ccloud/audit-log-connector/data_audit_cluster.template > ../../ccloud/audit-log-connector/data_audit_cluster
 
 #############
 ${DIR}/../../ccloud/environment/start.sh "${PWD}/docker-compose.yml"
