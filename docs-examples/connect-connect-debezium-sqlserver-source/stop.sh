@@ -1,0 +1,1 @@
+../../connect/connect-debezium-sqlserver-source/stop.sh
