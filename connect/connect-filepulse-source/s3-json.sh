@@ -76,7 +76,7 @@ set -e
 # generate data file for externalizing secrets
 sed -e "s|:AWS_ACCESS_KEY_ID:|$AWS_ACCESS_KEY_ID|g" \
     -e "s|:AWS_SECRET_ACCESS_KEY:|$AWS_SECRET_ACCESS_KEY|g" \
-    ${DIR}/data.template > ${DIR}/data
+    ../../connect/connect-filepulse-source/data.template > ../../connect/connect-filepulse-source/data
 
 log "Generating data"
 cat <<EOF > /tmp/track.json

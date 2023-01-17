@@ -6,9 +6,9 @@ source ${DIR}/../../scripts/utils.sh
 
 NOW="$(date +%s)000"
 sed -e "s|:NOW:|$NOW|g" \
-    ${DIR}/../../connect/connect-datagen-source/schemas/orders-template.avro > ${DIR}/../../connect/connect-datagen-source/schemas/orders.avro
+    ../../connect/connect-datagen-source/schemas/orders-template.avro > ../../connect/connect-datagen-source/schemas/orders.avro
 sed -e "s|:NOW:|$NOW|g" \
-    ${DIR}/../../connect/connect-datagen-source/schemas/shipments-template.avro > ${DIR}/../../connect/connect-datagen-source/schemas/shipments.avro
+    ../../connect/connect-datagen-source/schemas/shipments-template.avro > ../../connect/connect-datagen-source/schemas/shipments.avro
 
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
 

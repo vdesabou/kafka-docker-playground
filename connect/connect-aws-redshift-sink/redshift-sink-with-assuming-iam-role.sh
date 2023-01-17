@@ -31,7 +31,7 @@ fi
 PASSWORD=$(tr -dc A-Za-z0-9 </dev/urandom | head -c 13 ; echo '')
 # generate data file for externalizing secrets
 sed -e "s|:PASSWORD:|$PASSWORD|g" \
-    ${DIR}/data.template > ${DIR}/data
+    ../../connect/connect-aws-redshift-sink/data.template > ../../connect/connect-aws-redshift-sink/data
 
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.with-assuming-iam-role.yml"
 

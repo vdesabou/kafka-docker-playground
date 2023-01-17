@@ -39,7 +39,7 @@ then
     log "generating $HOME/.aws/$AWS_CREDENTIALS_FILE_NAME"
     sed -e "s|:AWS_ACCESS_KEY_ID:|$AWS_ACCESS_KEY_ID|g" \
         -e "s|:AWS_SECRET_ACCESS_KEY:|$AWS_SECRET_ACCESS_KEY|g" \
-        ${DIR}/aws-credentials.template > $HOME/.aws/$AWS_CREDENTIALS_FILE_NAME
+        ../../connect/connect-aws-dynamodb-sink/aws-credentials.template > $HOME/.aws/$AWS_CREDENTIALS_FILE_NAME
 fi
 
 if [[ "$TAG" == *ubi8 ]] || version_gt $TAG_BASE "5.9.0"
