@@ -79,7 +79,7 @@ curl --request PUT \
 	"level": "TRACE"
 }'
 
-TODAY=$(date '+%Y-%m-%d')
+TODAY=$(date -u '+%Y-%m-%d')
 
 log "Creating ServiceNow Source connector"
 curl -X PUT \
