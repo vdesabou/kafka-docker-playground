@@ -162,10 +162,23 @@ curl -X PUT \
                     "transforms.RemoveDots.replacement": "$1_$2_$3"
           }' \
      http://localhost:8083/connectors/debezium-mysql-source/config | jq .
-     
+
+log "insert a record in customers"
+docker exec -i mysql mysql --user=root --password=password --database=mydb << EOF
+INSERT INTO customers (
+  name,
+  email,
+  last_modified
+) VALUES (
+  'Roger',
+  'roger@apache.org',
+  NOW()
+);
+EOF
+
 set +e
-log "Verifying topic server1_mydb_customers : it should be empty"
-timeout 20 docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic server1_mydb_customers --from-beginning --max-messages 1
+log "Verifying topic server1_mydb_customers : there will be only the new record"
+timeout 20 docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic server1_mydb_customers --from-beginning --max-messages 3
 set -e
 
 log "Send Signal to the topic to start incremental snapshot"
@@ -175,5 +188,5 @@ EOF
 
 sleep 20
 
-log "Verifying topic server1_mydb_customer again"
-timeout 60 docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic server1_mydb_customers --from-beginning --max-messages 2
+log "Verifying topic server1_mydb_customer again, the 3 records are there"
+timeout 60 docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic server1_mydb_customers --from-beginning --max-messages 3

@@ -199,9 +199,14 @@ curl -X PUT \
 
 sleep 10
 
-log "Verifying topic asgard.public.customers2 has no data"
+log "insert a record in customers2"
+docker exec -i postgres psql -U myuser -d postgres << EOF
+insert into customers2 (id, first_name, last_name, email, gender, club_status, comments) values (21, 'Anselma2', 'Rook2', 'arook2j@europa.eu', 'Female2', 'gold2', 'Cross-group 24/7 application');
+EOF
+
+log "Verifying topic asgard.public.customers2 : there will be only the new record"
 set +e
-timeout 20 docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic asgard.public.customers2 --from-beginning --property print.key=true --max-messages 5
+timeout 20 docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic asgard.public.customers2 --from-beginning --property print.key=true --max-messages 6
 set -e
 
 sleep 10
@@ -213,5 +218,5 @@ EOF
 
 sleep 10
 
-log "Checking topic asgard.public.customers2 for data"
-timeout 20 docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic asgard.public.customers2 --from-beginning --property print.key=true --max-messages 5
+log "Checking topic asgard.public.customers2 for data, the 6 records are there"
+timeout 20 docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic asgard.public.customers2 --from-beginning --property print.key=true --max-messages 6

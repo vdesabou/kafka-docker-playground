@@ -139,9 +139,17 @@ curl -X PUT \
           }' \
      http://localhost:8083/connectors/debezium-sqlserver-source/config | jq .
 
+log "Add another table customers2"
+docker exec -i sqlserver /opt/mssql-tools/bin/sqlcmd -U sa -P Password! << EOF
+USE testDB;
+INSERT INTO customers2(first_name,last_name,email)
+  VALUES ('Anne2','Kretchmar2','annek2@noanswer.org');
+GO
+EOF
+
 set +e
-log "Verifying topic server1.testDB.dbo.customers2: it should be empty"
-timeout 20 docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic server1.testDB.dbo.customers2 --from-beginning --max-messages 4
+log "Verifying topic server1.testDB.dbo.customers2 : there will be only the new record"
+timeout 20 docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic server1.testDB.dbo.customers2 --from-beginning --max-messages 5
 set -e
 
 log "Trigger Ad hoc snapshot"
@@ -154,5 +162,5 @@ EOF
 
 sleep 5
 
-log "Verifying topic server1.testDB.dbo.customers2: it should have snapshot"
-timeout 20 docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic server1.testDB.dbo.customers2 --from-beginning --max-messages 4
+log "Verifying topic server1.testDB.dbo.customers2: it should have all records"
+timeout 20 docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic server1.testDB.dbo.customers2 --from-beginning --max-messages 5
