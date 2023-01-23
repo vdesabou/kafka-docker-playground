@@ -9,5 +9,8 @@ services:
     command: "sleep infinity"
 
   connect:
+    volumes:
+      - ../../connect/connect-servicenow-source/nginx-proxy/logging.properties:/tmp/logging.properties
     environment:
       CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-salesforce
+      KAFKA_OPTS: -Djava.util.logging.config.file=/tmp/logging.properties
