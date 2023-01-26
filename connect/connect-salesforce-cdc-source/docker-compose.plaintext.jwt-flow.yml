@@ -9,5 +9,7 @@ services:
     command: "sleep infinity"
 
   connect:
+    volumes:
+      - ../../connect/connect-salesforce-cdc-source/salesforce-confluent.keystore.jks:/tmp/salesforce-confluent.keystore.jks
     environment:
       CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-salesforce
