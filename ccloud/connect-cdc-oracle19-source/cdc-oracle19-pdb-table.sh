@@ -11,7 +11,7 @@ then
 fi
 
 
-create_or_get_oracle_image "LINUX.X64_193000_db_home.zip" "$(pwd)/ora-setup-scripts-pdb-table"
+create_or_get_oracle_image "LINUX.X64_193000_db_home.zip" "../../connect/connect-cdc-oracle19-source/ora-setup-scripts-cdb-table"
 
 ${DIR}/../../ccloud/environment/start.sh "${PWD}/docker-compose.plaintext.pdb-table.yml"
 
@@ -214,7 +214,7 @@ log "Waiting 20s for connector to read existing data"
 sleep 20
 
 log "Running SQL scripts"
-for script in ${DIR}/sample-sql-scripts/*.sh
+for script in ../../ccloud/connect-cdc-oracle19-source/sample-sql-scripts/*.sh
 do
      $script "ORCLPDB1"
 done
