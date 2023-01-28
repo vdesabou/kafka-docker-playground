@@ -22,7 +22,7 @@ cd ../../connect/connect-jdbc-snowflake-source
 if [ ! -f ${PWD}/snowflake-jdbc-3.13.26.jar ]
 then
      log "Downloading snowflake-jdbc-3.13.26.jar"
-     wget https://repo1.maven.org/maven2/net/snowflake/snowflake-jdbc/3.13.4/snowflake-jdbc-3.13.26.jar
+     wget https://repo1.maven.org/maven2/net/snowflake/snowflake-jdbc/3.13.26/snowflake-jdbc-3.13.26.jar
 fi
 cd -
 
