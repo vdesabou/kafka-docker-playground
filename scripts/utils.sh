@@ -716,8 +716,8 @@ function delete_topic()
   confluent kafka topic create "$topic" --partitions 1 --dry-run 2>/dev/null
   if [[ $? != 0 ]]; then
     log "Delete topic $topic"
-    log "confluent kafka topic delete $topic"
-    confluent kafka topic delete "$topic" || true
+    log "confluent kafka topic delete $topic --force"
+    confluent kafka topic delete "$topic" --force || true
   else
     log "Topic $topic does not exist"
   fi
