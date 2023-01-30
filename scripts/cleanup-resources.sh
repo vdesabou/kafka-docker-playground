@@ -185,7 +185,7 @@ then
       curl --request DELETE -u "$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO" "$SCHEMA_REGISTRY_URL/subjects/$subject?permanent=true"
     done
 
-    for row in $(confluent connect list --output json | jq -r '.[] | @base64'); do
+    for row in $(confluent connect cluster list --output json | jq -r '.[] | @base64'); do
         _jq() {
         echo ${row} | base64 --decode | jq -r ${1}
         }
@@ -194,7 +194,7 @@ then
         name=$(echo $(_jq '.name'))
 
         log "deleting connector $id ($name)"
-        confluent connect delete $id
+        confluent connect cluster delete $id
     done
 
     for row in $(confluent iam service-account list --output json | jq -r '.[] | @base64'); do
