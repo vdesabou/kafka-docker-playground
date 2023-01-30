@@ -6,7 +6,7 @@ source ${DIR}/../../scripts/utils.sh
 
 
 cd ../../connect/connect-jdbc-sqlserver-source
-if [ ! -f ${DIR}/sqljdbc_7.4/enu/mssql-jdbc-7.4.1.jre8.jar ]
+if [ ! -f ${PWD}/sqljdbc_7.4/enu/mssql-jdbc-7.4.1.jre8.jar ]
 then
      log "Downloading Microsoft JDBC driver mssql-jdbc-7.4.1.jre8.jar"
      wget https://download.microsoft.com/download/6/9/9/699205CA-F1F1-4DE9-9335-18546C5C8CBD/sqljdbc_7.4.1.0_enu.tar.gz
