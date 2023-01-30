@@ -194,7 +194,7 @@ then
         name=$(echo $(_jq '.name'))
 
         log "deleting connector $id ($name)"
-        confluent connect cluster delete $id
+        confluent connect cluster delete $id --force
     done
 
     for row in $(confluent iam service-account list --output json | jq -r '.[] | @base64'); do

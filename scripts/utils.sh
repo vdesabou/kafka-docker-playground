@@ -1854,7 +1854,7 @@ function delete_ccloud_connector() {
   connectorId=$(get_ccloud_connector_lcc $connectorName)
 
   log "Deleting connector $connectorName ($connectorId)"
-  confluent connect cluster delete $connectorId
+  confluent connect cluster delete $connectorId --force
   return 0
 }
 
@@ -2934,7 +2934,7 @@ function ccloud::destroy_ccloud_stack() {
 
   # Delete connectors associated to this Kafka cluster, otherwise cluster deletion fails
   local cluster_id=$(confluent kafka cluster list -o json | jq -r 'map(select(.name == "'"$CLUSTER_NAME"'")) | .[].id')
-  confluent connect cluster list --cluster $cluster_id -o json | jq -r '.[].id' | xargs -I{} confluent connect cluster delete {}
+  confluent connect cluster list --cluster $cluster_id -o json | jq -r '.[].id' | xargs -I{} confluent connect cluster delete --force {}
 
   echo "Deleting CLUSTER: $CLUSTER_NAME : $cluster_id"
   confluent kafka cluster delete $cluster_id &> "$REDIRECT_TO"
