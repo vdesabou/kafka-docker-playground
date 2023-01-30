@@ -1795,7 +1795,7 @@ function create_ccloud_connector() {
   file=$1
 
   log "Creating connector from $file"
-  confluent connect create --config $file
+  confluent connect cluster create --config-file $file
   if [[ $? != 0 ]]
   then
     logerror "Exit status was not 0 while creating connector from $file.  Please troubleshoot and try again"
@@ -1805,11 +1805,11 @@ function create_ccloud_connector() {
 }
 
 function validate_ccloud_connector_up() {
-  confluent connect list -o json | jq -e 'map(select(.name == "'"$1"'" and .status == "RUNNING")) | .[]' > /dev/null 2>&1
+  confluent connect cluster list -o json | jq -e 'map(select(.name == "'"$1"'" and .status == "RUNNING")) | .[]' > /dev/null 2>&1
 }
 
 function get_ccloud_connector_lcc() {
-  confluent connect list -o json | jq -r -e 'map(select(.name == "'"$1"'")) | .[].id'
+  confluent connect cluster list -o json | jq -r -e 'map(select(.name == "'"$1"'")) | .[].id'
 }
 
 function ccloud::retry() {
@@ -1854,7 +1854,7 @@ function delete_ccloud_connector() {
   connectorId=$(get_ccloud_connector_lcc $connectorName)
 
   log "Deleting connector $connectorName ($connectorId)"
-  confluent connect delete $connectorId
+  confluent connect cluster delete $connectorId
   return 0
 }
 
@@ -2481,12 +2481,12 @@ function ccloud::create_connector() {
 
   echo -e "\nCreating connector from $file\n"
 
-  # About the Confluent CLI command 'confluent connect create':
-  # - Typical usage of this CLI would be 'confluent connect create --config <filename>'
+  # About the Confluent CLI command 'confluent connect cluster create':
+  # - Typical usage of this CLI would be 'confluent connect cluster create --config-file <filename>'
   # - However, in this example, the connector's configuration file contains parameters that need to be first substituted
   #   so the CLI command includes eval and heredoc.
   # - The '-vvv' is added for verbose output
-  confluent connect create -vvv --config <(eval "cat <<EOF
+  confluent connect cluster create -vvv --config <(eval "cat <<EOF
 $(<$file)
 EOF
 ")
@@ -2499,7 +2499,7 @@ EOF
 }
 
 function ccloud::validate_connector_up() {
-  confluent connect list -o json | jq -e 'map(select(.name == "'"$1"'" and .status == "RUNNING")) | .[]' > /dev/null 2>&1
+  confluent connect cluster list -o json | jq -e 'map(select(.name == "'"$1"'" and .status == "RUNNING")) | .[]' > /dev/null 2>&1
 }
 
 function ccloud::wait_for_connector_up() {
@@ -2934,7 +2934,7 @@ function ccloud::destroy_ccloud_stack() {
 
   # Delete connectors associated to this Kafka cluster, otherwise cluster deletion fails
   local cluster_id=$(confluent kafka cluster list -o json | jq -r 'map(select(.name == "'"$CLUSTER_NAME"'")) | .[].id')
-  confluent connect list --cluster $cluster_id -o json | jq -r '.[].id' | xargs -I{} confluent connect delete {}
+  confluent connect cluster list --cluster $cluster_id -o json | jq -r '.[].id' | xargs -I{} confluent connect cluster delete {}
 
   echo "Deleting CLUSTER: $CLUSTER_NAME : $cluster_id"
   confluent kafka cluster delete $cluster_id &> "$REDIRECT_TO"
