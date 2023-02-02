@@ -750,7 +750,7 @@ function get_ansible_version() {
 }
 
 function check_confluent_version() {
-  REQUIRED_CONFLUENT_VER=${1:-"2.0.0"}
+  REQUIRED_CONFLUENT_VER=${1:-"3.0.0"}
   CONFLUENT_VER=$(get_confluent_version)
 
   if version_gt $REQUIRED_CONFLUENT_VER $CONFLUENT_VER; then
