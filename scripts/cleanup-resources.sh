@@ -175,7 +175,7 @@ then
     for topic in $(confluent kafka topic list)
     do
       log "delete topic $topic"
-      confluent kafka topic delete "$topic"
+      confluent kafka topic delete "$topic" --force
     done
 
     for subject in $(curl -u "$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO" "$SCHEMA_REGISTRY_URL/subjects" | jq -r '.[]')
@@ -209,7 +209,7 @@ then
         if [[ $description = *my-java-producer-app* ]] || [[ $description = *ccloud-stack-function* ]]
         then
             log "deleting $id ($description)"
-            confluent iam service-account delete $id
+            confluent iam service-account delete $id --force
             if [ $? != 0 ]
             then
               break

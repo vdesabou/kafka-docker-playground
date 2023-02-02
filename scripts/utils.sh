@@ -750,7 +750,7 @@ function get_ansible_version() {
 }
 
 function check_confluent_version() {
-  REQUIRED_CONFLUENT_VER=${1:-"2.0.0"}
+  REQUIRED_CONFLUENT_VER=${1:-"3.0.0"}
   CONFLUENT_VER=$(get_confluent_version)
 
   if version_gt $REQUIRED_CONFLUENT_VER $CONFLUENT_VER; then
@@ -1709,7 +1709,7 @@ function bootstrap_ccloud_environment () {
   then
     # not running with CI
     verify_installed "confluent"
-    check_confluent_version 2.0.0 || exit 1
+    check_confluent_version 3.0.0 || exit 1
     verify_confluent_login  "confluent kafka cluster list"
   else
       log "Installing confluent CLI"
