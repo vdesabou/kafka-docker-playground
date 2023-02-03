@@ -2250,7 +2250,7 @@ function ccloud::find_credentials_resource() {
   local FOUND_CRED=$(confluent api-key list -o json | jq -c -r 'map(select((.resource_id == "'"$RESOURCE"'") and (.owner_resource_id == "'"$SERVICE_ACCOUNT_ID"'")))')
   local FOUND_COUNT=$(echo "$FOUND_CRED" | jq 'length')
   [[ $FOUND_COUNT -ne 0 ]] && {
-      echo "$FOUND_CRED" | jq -r '.[0].key'
+      echo "$FOUND_CRED" | jq -r '.[0].api_key'
       return 0 
     } || {
       return 1
@@ -2261,8 +2261,8 @@ function ccloud::create_credentials_resource() {
   RESOURCE=$2
 
   OUTPUT=$(confluent api-key create --service-account $SERVICE_ACCOUNT_ID --resource $RESOURCE -o json)
-  API_KEY_SA=$(echo "$OUTPUT" | jq -r ".key")
-  API_SECRET_SA=$(echo "$OUTPUT" | jq -r ".secret")
+  API_KEY_SA=$(echo "$OUTPUT" | jq -r ".api_key")
+  API_SECRET_SA=$(echo "$OUTPUT" | jq -r ".api_secret")
   echo "${API_KEY_SA}:${API_SECRET_SA}"
 
   # vinc
@@ -2586,7 +2586,7 @@ function ccloud::get_service_account() {
 
   local key="$1"
 
-  serviceAccount=$(confluent api-key list -o json | jq -r -c 'map(select((.key == "'"$key"'"))) | .[].owner_resource_id')
+  serviceAccount=$(confluent api-key list -o json | jq -r -c 'map(select((.api_key == "'"$key"'"))) | .[].owner_resource_id')
   if [[ "$serviceAccount" == "" ]]; then
     echo "ERROR: Could not associate key $key to a service account. Verify your credentials, ensure the API key has a set resource type, and try again."
     exit 1
@@ -2718,7 +2718,7 @@ function ccloud::set_kafka_cluster_use_from_api_key() {
 
   local key="$1"
 
-  local kafkaCluster=$(confluent api-key list -o json | jq -r -c 'map(select((.key == "'"$key"'" and .resource_type == "kafka"))) | .[].resource_id')
+  local kafkaCluster=$(confluent api-key list -o json | jq -r -c 'map(select((.api_key == "'"$key"'" and .resource_type == "kafka"))) | .[].resource_id')
   if [[ "$kafkaCluster" == "" ]]; then
     echo "ERROR: Could not associate key $key to a Confluent Cloud Kafka cluster. Verify your credentials, ensure the API key has a set resource type, and try again."
     exit 1
@@ -2940,7 +2940,7 @@ function ccloud::destroy_ccloud_stack() {
   confluent kafka cluster delete $cluster_id &> "$REDIRECT_TO"
 
   # Delete API keys associated to the service account
-  confluent api-key list --service-account $SERVICE_ACCOUNT_ID -o json | jq -r '.[].key' | xargs -I{} confluent api-key delete {}
+  confluent api-key list --service-account $SERVICE_ACCOUNT_ID -o json | jq -r '.[].api_key' | xargs -I{} confluent api-key delete {}
 
   # Delete service account
   confluent iam service-account delete $SERVICE_ACCOUNT_ID &>"$REDIRECT_TO" 
