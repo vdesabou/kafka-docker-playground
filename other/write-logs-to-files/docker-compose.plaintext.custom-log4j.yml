@@ -5,41 +5,35 @@ services:
   zookeeper:
     volumes:
       - ../../other/write-logs-to-files/zookeeper/log4j-rolling.properties:/opt/zookeeper/log4j-rolling.properties
-      - ../../other/write-logs-to-files/zookeeper/logs:/var/log/zookeeper/
     environment:
       KAFKA_LOG4J_OPTS: "-Dlog4j.configuration=file:/opt/zookeeper/log4j-rolling.properties"
 
   broker:
     volumes:
       - ../../other/write-logs-to-files/broker/log4j-rolling.properties:/opt/broker/log4j-rolling.properties
-      - ../../other/write-logs-to-files/broker/logs:/var/log/broker/
     environment:
       KAFKA_LOG4J_OPTS: "-Dlog4j.configuration=file:/opt/broker/log4j-rolling.properties"
 
   schema-registry:
     volumes:
       - ../../other/write-logs-to-files/schema-registry/log4j-rolling.properties:/opt/schema-registry/log4j-rolling.properties
-      - ../../other/write-logs-to-files/schema-registry/logs:/var/log/schema-registry/
     environment:
       SCHEMA_REGISTRY_LOG4J_OPTS: "-Dlog4j.configuration=file:/opt/schema-registry/log4j-rolling.properties"
 
   connect:
     volumes:
       - ../../other/write-logs-to-files/connect/log4j-rolling.properties:/opt/connect/log4j-rolling.properties
-      - ../../other/write-logs-to-files/connect/logs:/var/log/connect/
     environment:
       KAFKA_LOG4J_OPTS: "-Dlog4j.configuration=file:/opt/connect/log4j-rolling.properties"
 
   control-center:
     volumes:
       - ../../other/write-logs-to-files/control-center/log4j-rolling.properties:/opt/control-center/log4j-rolling.properties
-      - ../../other/write-logs-to-files/control-center/logs:/var/log/control-center/
     environment:
       CONTROL_CENTER_LOG4J_OPTS: "-Dlog4j.configuration=file:/opt/control-center/log4j-rolling.properties"
 
   ksqldb-server:
     volumes:
       - ../../other/write-logs-to-files/ksql-server/log4j-rolling.properties:/opt/ksql-server/log4j-rolling.properties
-      - ../../other/write-logs-to-files/ksql-server/logs:/var/log/ksql-server/
     environment:
       KSQL_LOG4J_OPTS: "-Dlog4j.configuration=file:/opt/ksql-server/log4j-rolling.properties"

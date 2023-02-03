@@ -16,7 +16,6 @@ The general idea is to mount as volume the directory where you want to store the
   zookeeper:
     volumes:
       - ../../other/write-logs-to-files/zookeeper/log4j-rolling.properties:/opt/zookeeper/log4j-rolling.properties
-      - ../../other/write-logs-to-files/zookeeper/logs:/var/log/zookeeper/
     environment:
       KAFKA_LOG4J_OPTS: "-Dlog4j.configuration=file:/opt/zookeeper/log4j-rolling.properties"
 ```
@@ -77,8 +76,5 @@ Example:
 
 ### Results
 
-You should see logs in Docker container in `/var/log/<component>` and also in mounted volumes as following:
-
-![Logs](Screenshot1.png)
-
+You should see logs in Docker container in `/tmp/<component>`.
 
