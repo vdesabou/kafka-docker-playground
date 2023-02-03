@@ -2340,23 +2340,13 @@ function ccloud::create_acls_all_resources_full_access() {
     local REDIRECT_TO="/dev/null" ||
     local REDIRECT_TO="/dev/tty"
 
-  confluent kafka acl create --allow --service-account $SERVICE_ACCOUNT_ID --operation CREATE --topic '*' &>"$REDIRECT_TO"
-  confluent kafka acl create --allow --service-account $SERVICE_ACCOUNT_ID --operation DELETE --topic '*' &>"$REDIRECT_TO"
-  confluent kafka acl create --allow --service-account $SERVICE_ACCOUNT_ID --operation WRITE --topic '*' &>"$REDIRECT_TO"
-  confluent kafka acl create --allow --service-account $SERVICE_ACCOUNT_ID --operation READ --topic '*' &>"$REDIRECT_TO"
-  confluent kafka acl create --allow --service-account $SERVICE_ACCOUNT_ID --operation DESCRIBE --topic '*' &>"$REDIRECT_TO"
-  confluent kafka acl create --allow --service-account $SERVICE_ACCOUNT_ID --operation DESCRIBE_CONFIGS --topic '*' &>"$REDIRECT_TO"
+  confluent kafka acl create --allow --service-account $SERVICE_ACCOUNT_ID --operations CREATE,DELETE,WRITE,READ,DESCRIBE,DESCRIBE_CONFIGS --topic '*' &>"$REDIRECT_TO"
 
-  confluent kafka acl create --allow --service-account $SERVICE_ACCOUNT_ID --operation READ --consumer-group '*' &>"$REDIRECT_TO"
-  confluent kafka acl create --allow --service-account $SERVICE_ACCOUNT_ID --operation WRITE --consumer-group '*' &>"$REDIRECT_TO"
-  confluent kafka acl create --allow --service-account $SERVICE_ACCOUNT_ID --operation CREATE --consumer-group '*' &>"$REDIRECT_TO"
-  confluent kafka acl create --allow --service-account $SERVICE_ACCOUNT_ID --operation DESCRIBE --consumer-group '*' &>"$REDIRECT_TO"
+  confluent kafka acl create --allow --service-account $SERVICE_ACCOUNT_ID --operations READ,WRITE,CREATE,DESCRIBE --consumer-group '*' &>"$REDIRECT_TO"
 
-  confluent kafka acl create --allow --service-account $SERVICE_ACCOUNT_ID --operation DESCRIBE --transactional-id '*' &>"$REDIRECT_TO"
-  confluent kafka acl create --allow --service-account $SERVICE_ACCOUNT_ID --operation WRITE --transactional-id '*' &>"$REDIRECT_TO"
+  confluent kafka acl create --allow --service-account $SERVICE_ACCOUNT_ID --operations DESCRIBE,WRITE --transactional-id '*' &>"$REDIRECT_TO"
   
-  confluent kafka acl create --allow --service-account $SERVICE_ACCOUNT_ID --operation IDEMPOTENT-WRITE --cluster-scope &>"$REDIRECT_TO"
-  confluent kafka acl create --allow --service-account $SERVICE_ACCOUNT_ID --operation DESCRIBE --cluster-scope &>"$REDIRECT_TO"
+  confluent kafka acl create --allow --service-account $SERVICE_ACCOUNT_ID --operations IDEMPOTENT-WRITE,DESCRIBE --cluster-scope &>"$REDIRECT_TO"
 
   return 0
 }
@@ -2371,23 +2361,13 @@ function ccloud::delete_acls_ccloud_stack() {
 
   echo "Deleting ACLs for service account ID $SERVICE_ACCOUNT_ID"
 
-  confluent kafka acl delete --allow --service-account $SERVICE_ACCOUNT_ID --operation CREATE --topic '*' &>"$REDIRECT_TO"
-  confluent kafka acl delete --allow --service-account $SERVICE_ACCOUNT_ID --operation DELETE --topic '*' &>"$REDIRECT_TO"
-  confluent kafka acl delete --allow --service-account $SERVICE_ACCOUNT_ID --operation WRITE --topic '*' &>"$REDIRECT_TO"
-  confluent kafka acl delete --allow --service-account $SERVICE_ACCOUNT_ID --operation READ --topic '*' &>"$REDIRECT_TO"
-  confluent kafka acl delete --allow --service-account $SERVICE_ACCOUNT_ID --operation DESCRIBE --topic '*' &>"$REDIRECT_TO"
-  confluent kafka acl delete --allow --service-account $SERVICE_ACCOUNT_ID --operation DESCRIBE_CONFIGS --topic '*' &>"$REDIRECT_TO"
+  confluent kafka acl delete --allow --service-account $SERVICE_ACCOUNT_ID --operations CREATE,DELETE,WRITE,READ,DESCRIBE,DESCRIBE_CONFIGS --topic '*' &>"$REDIRECT_TO"
 
-  confluent kafka acl delete --allow --service-account $SERVICE_ACCOUNT_ID --operation READ --consumer-group '*' &>"$REDIRECT_TO"
-  confluent kafka acl delete --allow --service-account $SERVICE_ACCOUNT_ID --operation WRITE --consumer-group '*' &>"$REDIRECT_TO"
-  confluent kafka acl delete --allow --service-account $SERVICE_ACCOUNT_ID --operation CREATE --consumer-group '*' &>"$REDIRECT_TO"
-  confluent kafka acl delete --allow --service-account $SERVICE_ACCOUNT_ID --operation DESCRIBE --consumer-group '*' &>"$REDIRECT_TO"
+  confluent kafka acl delete --allow --service-account $SERVICE_ACCOUNT_ID --operations READ,WRITE,CREATE,DESCRIBE --consumer-group '*' &>"$REDIRECT_TO"
 
-  confluent kafka acl delete --allow --service-account $SERVICE_ACCOUNT_ID --operation DESCRIBE --transactional-id '*' &>"$REDIRECT_TO"
-  confluent kafka acl delete --allow --service-account $SERVICE_ACCOUNT_ID --operation WRITE --transactional-id '*' &>"$REDIRECT_TO"
+  confluent kafka acl delete --allow --service-account $SERVICE_ACCOUNT_ID --operations DESCRIBE,WRITE --transactional-id '*' &>"$REDIRECT_TO"
 
-  confluent kafka acl delete --allow --service-account $SERVICE_ACCOUNT_ID --operation IDEMPOTENT-WRITE --cluster-scope &>"$REDIRECT_TO"
-  confluent kafka acl delete --allow --service-account $SERVICE_ACCOUNT_ID --operation DESCRIBE --cluster-scope &>"$REDIRECT_TO"
+  confluent kafka acl delete --allow --service-account $SERVICE_ACCOUNT_ID --operations IDEMPOTENT-WRITE,DESCRIBE --cluster-scope &>"$REDIRECT_TO"
 
   return 0
 }
@@ -2604,10 +2584,9 @@ function ccloud::get_service_account() {
 function ccloud::create_acls_connector() {
   serviceAccount=$1
 
-  confluent kafka acl create --allow --service-account $serviceAccount --operation DESCRIBE --cluster-scope
-  confluent kafka acl create --allow --service-account $serviceAccount --operation CREATE --prefix --topic dlq-lcc
-  confluent kafka acl create --allow --service-account $serviceAccount --operation WRITE --prefix --topic dlq-lcc
-  confluent kafka acl create --allow --service-account $serviceAccount --operation READ --prefix --consumer-group connect-lcc
+  confluent kafka acl create --allow --service-account $serviceAccount --operations DESCRIBE --cluster-scope
+  confluent kafka acl create --allow --service-account $serviceAccount --operations CREATE,WRITE --prefix --topic dlq-lcc
+  confluent kafka acl create --allow --service-account $serviceAccount --operations READ --prefix --consumer-group connect-lcc
 
   return 0
 }
@@ -2618,13 +2597,9 @@ function ccloud::create_acls_control_center() {
   echo "Confluent Control Center: creating _confluent-command and ACLs for service account $serviceAccount"
   confluent kafka topic create _confluent-command --partitions 1
 
-  confluent kafka acl create --allow --service-account $serviceAccount --operation WRITE --topic _confluent --prefix
-  confluent kafka acl create --allow --service-account $serviceAccount --operation READ --topic _confluent --prefix
-  confluent kafka acl create --allow --service-account $serviceAccount --operation CREATE --topic _confluent --prefix
+  confluent kafka acl create --allow --service-account $serviceAccount --operations WRITE,READ,CREATE --topic _confluent --prefix
 
-  confluent kafka acl create --allow --service-account $serviceAccount --operation READ --consumer-group _confluent --prefix
-  confluent kafka acl create --allow --service-account $serviceAccount --operation WRITE --consumer-group _confluent --prefix
-  confluent kafka acl create --allow --service-account $serviceAccount --operation CREATE --consumer-group _confluent --prefix
+  confluent kafka acl create --allow --service-account $serviceAccount --operations READ,WRITE,CREATE --consumer-group _confluent --prefix
 
   return 0
 }
@@ -2634,13 +2609,7 @@ function ccloud::create_acls_replicator() {
   serviceAccount=$1
   topic=$2
 
-  confluent kafka acl create --allow --service-account $serviceAccount --operation CREATE --topic $topic
-  confluent kafka acl create --allow --service-account $serviceAccount --operation WRITE --topic $topic
-  confluent kafka acl create --allow --service-account $serviceAccount --operation READ --topic $topic
-  confluent kafka acl create --allow --service-account $serviceAccount --operation DESCRIBE --topic $topic
-  confluent kafka acl create --allow --service-account $serviceAccount --operation DESCRIBE-CONFIGS --topic $topic
-  confluent kafka acl create --allow --service-account $serviceAccount --operation ALTER-CONFIGS --topic $topic
-  confluent kafka acl create --allow --service-account $serviceAccount --operation DESCRIBE --cluster-scope
+  confluent kafka acl create --allow --service-account $serviceAccount --operations CREATE,WRITE,READ,DESCRIBE,DESCRIBE_CONFIGS,ALTER-CONFIGS,DESCRIBE --topic $topic
 
   return 0
 }
@@ -2652,31 +2621,26 @@ function ccloud::create_acls_connect_topics() {
 
   TOPIC=connect-demo-configs
   confluent kafka topic create $TOPIC --partitions 1 --config "cleanup.policy=compact"
-  confluent kafka acl create --allow --service-account $serviceAccount --operation WRITE --topic $TOPIC --prefix
-  confluent kafka acl create --allow --service-account $serviceAccount --operation READ --topic $TOPIC --prefix
+  confluent kafka acl create --allow --service-account $serviceAccount --operations WRITE,READ --topic $TOPIC --prefix
 
   TOPIC=connect-demo-offsets
   confluent kafka topic create $TOPIC --partitions 6 --config "cleanup.policy=compact"
-  confluent kafka acl create --allow --service-account $serviceAccount --operation WRITE --topic $TOPIC --prefix
-  confluent kafka acl create --allow --service-account $serviceAccount --operation READ --topic $TOPIC --prefix
+  confluent kafka acl create --allow --service-account $serviceAccount --operations WRITE,READ --topic $TOPIC --prefix
   
   TOPIC=connect-demo-statuses 
   confluent kafka topic create $TOPIC --partitions 3 --config "cleanup.policy=compact"
-  confluent kafka acl create --allow --service-account $serviceAccount --operation WRITE --topic $TOPIC --prefix
-  confluent kafka acl create --allow --service-account $serviceAccount --operation READ --topic $TOPIC --prefix
-  
+  confluent kafka acl create --allow --service-account $serviceAccount --operations WRITE,READ  --topic $TOPIC --prefix
 
   for TOPIC in _confluent-monitoring _confluent-command ; do
     confluent kafka topic create $TOPIC --partitions 1 &>/dev/null
-    confluent kafka acl create --allow --service-account $serviceAccount --operation WRITE --topic $TOPIC --prefix
-    confluent kafka acl create --allow --service-account $serviceAccount --operation READ --topic $TOPIC --prefix
+    confluent kafka acl create --allow --service-account $serviceAccount --operations WRITE,READ  --topic $TOPIC --prefix
   done
  
-  confluent kafka acl create --allow --service-account $serviceAccount --operation READ --consumer-group connect-cloud
+  confluent kafka acl create --allow --service-account $serviceAccount --operations READ --consumer-group connect-cloud
 
   echo "Connectors: creating topics and ACLs for service account $serviceAccount"
-  confluent kafka acl create --allow --service-account $serviceAccount --operation READ --consumer-group connect-replicator
-  confluent kafka acl create --allow --service-account $serviceAccount --operation describe --cluster-scope
+  confluent kafka acl create --allow --service-account $serviceAccount --operations READ --consumer-group connect-replicator
+  confluent kafka acl create --allow --service-account $serviceAccount --operations DESCRIBE --cluster-scope
 
   return 0
 }
@@ -2838,7 +2802,12 @@ function ccloud::create_ccloud_stack() {
     fi
     SCHEMA_REGISTRY_CREDS=$(ccloud::maybe_create_credentials_resource $SERVICE_ACCOUNT_ID $SCHEMA_REGISTRY)
   fi
-  
+
+  # VINC
+  set +e
+  log "Adding ResourceOwner RBAC role for all subjects"
+  confluent iam rbac role-binding create --principal User:$SERVICE_ACCOUNT_ID --role ResourceOwner --environment $ENVIRONMENT --schema-registry-cluster $SCHEMA_REGISTRY --resource Subject:*
+
   if $enable_ksqldb ; then
     KSQLDB_NAME=${KSQLDB_NAME:-"demo-ksqldb-$SERVICE_ACCOUNT_ID"}
     KSQLDB=$(ccloud::maybe_create_ksqldb_app "$KSQLDB_NAME" $CLUSTER "$CLUSTER_CREDS")
