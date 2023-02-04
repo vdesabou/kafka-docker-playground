@@ -67,7 +67,7 @@ Example:
   connect:
     volumes:
       - ../../other/write-logs-to-files/connect/log4j.template.properties:/etc/confluent/docker/log4j.properties.template
-      - ../../other/write-logs-to-files/connect/logs:/var/log/connect/
+      - ../../other/write-logs-to-files/connect/logs:/tmp/connect/
     environment:
       CONNECT_LOG4J_ROOT_LOGLEVEL: "TRACE"
       CONNECT_LOG4J_LOGGERS: "org.apache.zookeeper=ERROR,org.I0Itec.zkclient=ERROR,org.reflections=ERROR"
