@@ -2903,16 +2903,16 @@ function ccloud::destroy_ccloud_stack() {
 
   # Delete connectors associated to this Kafka cluster, otherwise cluster deletion fails
   local cluster_id=$(confluent kafka cluster list -o json | jq -r 'map(select(.name == "'"$CLUSTER_NAME"'")) | .[].id')
-  confluent connect cluster list --cluster $cluster_id -o json | jq -r '.[].id' | xargs -I{} confluent connect cluster delete --force {}
+  confluent connect cluster list --cluster $cluster_id -o json | jq -r '.[].id' | xargs -I{} confluent connect cluster delete {} --force
 
   echo "Deleting CLUSTER: $CLUSTER_NAME : $cluster_id"
   confluent kafka cluster delete $cluster_id &> "$REDIRECT_TO"
 
   # Delete API keys associated to the service account
-  confluent api-key list --service-account $SERVICE_ACCOUNT_ID -o json | jq -r '.[].api_key' | xargs -I{} confluent api-key delete {}
+  confluent api-key list --service-account $SERVICE_ACCOUNT_ID -o json | jq -r '.[].api_key' | xargs -I{} confluent api-key delete {} --force
 
   # Delete service account
-  confluent iam service-account delete $SERVICE_ACCOUNT_ID &>"$REDIRECT_TO" 
+  confluent iam service-account delete $SERVICE_ACCOUNT_ID --force &>"$REDIRECT_TO" 
 
   if [[ $PRESERVE_ENVIRONMENT == "false" ]]; then
     local environment_id=$(confluent environment list -o json | jq -r 'map(select(.name | startswith("'"$ENVIRONMENT_NAME_PREFIX"'"))) | .[].id')
