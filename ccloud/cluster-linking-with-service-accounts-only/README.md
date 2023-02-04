@@ -127,15 +127,15 @@ See summary table [there](https://docs.confluent.io/platform/current/multi-dc-de
 > If the user or client application is authenticated with a service account, then their service account needs an ACL to allow them to ALTER the destination cluster. To list the cluster links that exist on a destination cluster, their service account needs an ACL to allow them to DESCRIBE the destination cluster.
 
 ```bash
-confluent kafka acl create --service-account $destination_service_account --allow --operation alter --cluster-scope
-confluent kafka acl create --service-account $destination_service_account --allow --operation describe --cluster-scope
-confluent kafka acl create --service-account $destination_service_account --allow --operation alter-configs --cluster-scope
+confluent kafka acl create --service-account $destination_service_account --allow --operations alter --cluster-scope
+confluent kafka acl create --service-account $destination_service_account --allow --operations describe --cluster-scope
+confluent kafka acl create --service-account $destination_service_account --allow --operations alter-configs --cluster-scope
 ```
 
 To allow to create and alter mirror topic:
 
 ```bash
-confluent kafka acl create --allow --service-account $destination_service_account --operation CREATE --operation ALTER --topic "topic-to-link" --cluster $destination_id
+confluent kafka acl create --allow --service-account $destination_service_account --operations CREATE --operations ALTER --topic "topic-to-link" --cluster $destination_id
 
     Principal    | Permission | Operation | ResourceType | ResourceName  | PatternType  
 -----------------+------------+-----------+--------------+---------------+--------------
@@ -150,7 +150,7 @@ confluent kafka acl create --allow --service-account $destination_service_accoun
 > Allowed to READ and DESCRIBE_CONFIGS for all topics you want to mirror (“source topics”). This will let the cluster link mirror topic data from the source topic to the mirror topic. You could allow the link to read all topics by passing in *, or for specific topics whose names match a prefix, or for specific topic names. Here is an example CLI command to give the cluster link READ access to all topics:
 
 ```bash
-confluent kafka acl create --allow --service-account $source_service_account --operation READ --operation DESCRIBE_CONFIGS --topic "topic-to-link" --cluster $source_id
+confluent kafka acl create --allow --service-account $source_service_account --operations READ --operations DESCRIBE_CONFIGS --topic "topic-to-link" --cluster $source_id
 
     Principal    | Permission |    Operation     | ResourceType | ResourceName  | PatternType  
 -----------------+------------+------------------+--------------+---------------+--------------
@@ -161,7 +161,7 @@ confluent kafka acl create --allow --service-account $source_service_account --o
 > To sync ACLs (optional), the cluster link must have permissions to DESCRIBE the source cluster. Here is an example of how to specify these permissions.
 
 ```bash
-confluent kafka acl create --allow --service-account $source_service_account --operation DESCRIBE --cluster-scope --cluster $source_id
+confluent kafka acl create --allow --service-account $source_service_account --operations DESCRIBE --cluster-scope --cluster $source_id
     Principal    | Permission | Operation | ResourceType | ResourceName  | PatternType  
 -----------------+------------+-----------+--------------+---------------+--------------
   User:sa-81g8qq | ALLOW      | DESCRIBE  | CLUSTER      | kafka-cluster | LITERAL  
@@ -170,14 +170,14 @@ confluent kafka acl create --allow --service-account $source_service_account --o
 > To sync consumer group offsets (optional), the cluster link must have permissions to DESCRIBE source topics, and READ and DESCRIBE consumer groups on the source cluster. Here is an example of how to specify these permissions, each of which has to be specified in a separate command:
 
 ```bash
-confluent kafka acl create --allow --service-account $source_service_account --operation DESCRIBE --topic "topic-to-link" --cluster $source_id
+confluent kafka acl create --allow --service-account $source_service_account --operations DESCRIBE --topic "topic-to-link" --cluster $source_id
     Principal    | Permission | Operation | ResourceType | ResourceName  | PatternType  
 -----------------+------------+-----------+--------------+---------------+--------------
   User:sa-81g8qq | ALLOW      | DESCRIBE  | TOPIC        | topic-to-link | LITERAL 
 ```
 
 ```bash
-confluent kafka acl create --allow --service-account $source_service_account --operation READ --operation DESCRIBE --consumer-group "*" --cluster $source_id
+confluent kafka acl create --allow --service-account $source_service_account --operations READ --operations DESCRIBE --consumer-group "*" --cluster $source_id
     Principal    | Permission | Operation | ResourceType | ResourceName | PatternType  
 -----------------+------------+-----------+--------------+--------------+--------------
   User:sa-81g8qq | ALLOW      | READ      | GROUP        | *            | LITERAL      
@@ -347,8 +347,8 @@ Continue to read from destination cluster:
 PS: need to set ACLs to do that first:
 
 ```bash
-confluent kafka acl create --allow --service-account $destination_service_account --operation READ --topic "topic-to-link" --cluster $destination_id
-confluent kafka acl create --allow --service-account $destination_service_account --operation READ --operation DESCRIBE --consumer-group "my-consumer-group" --cluster $destination_id
+confluent kafka acl create --allow --service-account $destination_service_account --operations READ --topic "topic-to-link" --cluster $destination_id
+confluent kafka acl create --allow --service-account $destination_service_account --operations READ --operations DESCRIBE --consumer-group "my-consumer-group" --cluster $destination_id
 ```
 
 ```bash
@@ -373,7 +373,7 @@ Updated `max.message.bytes` to `2097999` on source cluster, it was also updated 
 On source cluster create an ACL:
 
 ```bash
-confluent kafka acl create --allow --service-account $source_service_account --operation READ --operation DESCRIBE_CONFIGS --topic "test-acl-sync" --cluster $source_id
+confluent kafka acl create --allow --service-account $source_service_account --operations READ --operations DESCRIBE_CONFIGS --topic "test-acl-sync" --cluster $source_id
 ```
 
 Verify it is present in destination cluster:
