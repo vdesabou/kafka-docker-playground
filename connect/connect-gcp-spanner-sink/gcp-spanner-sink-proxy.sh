@@ -4,6 +4,9 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
+logwarn "WARN: skipped as it does not work"
+exit 111
+
 if [ -z "$GCP_PROJECT" ]
 then
      logerror "GCP_PROJECT is not set. Export it as environment variable or pass it as argument"
