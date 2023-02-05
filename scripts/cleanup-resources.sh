@@ -172,6 +172,21 @@ if [ ! -z "$CI" ]
 then
     bootstrap_ccloud_environment
 
+    for row in $(confluent environment list --output json | jq -r '.[] | @base64'); do
+        _jq() {
+        echo ${row} | base64 --decode | jq -r ${1}
+        }
+        
+        id=$(echo $(_jq '.id'))
+        name=$(echo $(_jq '.name'))
+
+        if [[ $name = pg-sa-* ]]
+        then
+          log "deleting environment $id ($name)"
+          confluent environment delete $id --force
+        fi
+    done
+
     for topic in $(confluent kafka topic list)
     do
       log "delete topic $topic"
