@@ -42,30 +42,6 @@ else
     fi
 fi
 
-export AWS_CREDENTIALS_FILE_NAME=credentials-with-assuming-iam-role
-if [ ! -f $HOME/.aws/$AWS_CREDENTIALS_FILE_NAME ]
-then
-     logerror "ERROR: $HOME/.aws/$AWS_CREDENTIALS_FILE_NAME is not set"
-     exit 1
-fi
-
-if [[ "$TAG" == *ubi8 ]] || version_gt $TAG_BASE "5.9.0"
-then
-     export CONNECT_CONTAINER_HOME_DIR="/home/appuser"
-else
-     export CONNECT_CONTAINER_HOME_DIR="/root"
-fi
-
-if [ -z "$AWS_CREDENTIALS_FILE_NAME" ]
-then
-    export AWS_CREDENTIALS_FILE_NAME="credentials_aws_account_with_assume_role"
-fi
-if [ ! -f $HOME/.aws/$AWS_CREDENTIALS_FILE_NAME ]
-then
-     logerror "ERROR: $HOME/.aws/$AWS_CREDENTIALS_FILE_NAME is not set"
-     exit 1
-fi
-
 if [ -z "$AWS_STS_ROLE_ARN" ]
 then
      logerror "AWS_STS_ROLE_ARN is not set. Export it as environment variable or pass it as argument"
