@@ -22,7 +22,7 @@ connection = pika.BlockingConnection(pika.ConnectionParameters('rabbitmq',5672,'
 channel = connection.channel()
 channel.queue_declare(queue = queue)
 
-properties = pika.BasicProperties(content_type='application/json', delivery_mode='csdcsd', priority=1, content_encoding='utf-8', correlation_id='vince')
+properties = pika.BasicProperties(content_type='application/json', delivery_mode=1, priority=1, content_encoding='utf-8')
 for i in range(count):
     msgBody["id"] = i
     jsonStr = json.dumps(msgBody)
