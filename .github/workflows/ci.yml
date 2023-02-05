@@ -52,7 +52,7 @@ jobs:
 
   build:
     if: ${{ github.event.inputs.test_name == '' }}
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-latest
     needs: pre-build
     name: ${{ matrix.tag }} ${{ matrix.test_list }}
     strategy:
