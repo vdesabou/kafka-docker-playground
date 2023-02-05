@@ -57,7 +57,7 @@ docker exec -i connect kafka-avro-console-producer --broker-list broker:9092 --p
 {"ID": 222}|{"ID": 222,"product": "bar", "quantity": 100, "price": 50}
 EOF
 
-sleep 30
+sleep 120
 
 log "Check data is in SAP HANA"
 docker exec -i sap /usr/sap/HXE/HDB90/exe/hdbsql -i 90 -d HXE -u LOCALDEV -p Localdev1  > /tmp/result.log  2>&1 <<-EOF
