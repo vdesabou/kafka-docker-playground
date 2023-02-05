@@ -64,4 +64,7 @@ docker exec -i sap /usr/sap/HXE/HDB90/exe/hdbsql -i 90 -d HXE -u LOCALDEV -p Loc
 select * from "LOCALDEV"."testtopic";
 EOF
 cat /tmp/result.log
+docker exec -i sap /usr/sap/HXE/HDB90/exe/hdbsql -i 90 -d HXE -u LOCALDEV -p Localdev1 << EOF
+select * from "LOCALDEV"."testtopic";
+EOF
 grep "foo" /tmp/result.log
