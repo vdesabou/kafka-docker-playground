@@ -6,6 +6,7 @@ upgrade-test.sh
 cdc-oracle12-pdb-table-mtls-db-auth.sh
 cdc-oracle18-pdb-table-mtls-db-auth.sh
 cdc-oracle19-pdb-table-mtls-db-auth.sh
+cdc-oracle21-pdb-table-mtls-db-auth.sh
 # see https://github.com/vdesabou/kafka-docker-playground/blob/master/other/ldap-authorizer-with-ldap-failover/README.md#using-dns-srv-records-with-ldap-over-tls
 start-ldaps.sh
 update_run.sh
