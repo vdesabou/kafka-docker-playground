@@ -85,6 +85,7 @@ jobs:
                       "🚀 connect/connect-cdc-oracle12-source",
                       "🚀 connect/connect-cdc-oracle19-source",
                       "🚀 connect/connect-cdc-oracle18-source",
+                      "🚀 connect/connect-cdc-oracle21-source",
                       "🚀 other/cp-ansible-playground",
                       "🚀 connect/connect-weblogic-source connect/connect-jms-weblogic-sink connect/connect-jms-weblogic-source",
                       "🚀 connect/connect-azure-cosmosdb-source connect/connect-azure-cosmosdb-sink connect/connect-jdbc-cockroachdb-source connect/connect-jdbc-ibmdb2-source connect/connect-jdbc-ibmdb2-sink connect/connect-jdbc-sybase-source connect/connect-jdbc-sybase-sink",
