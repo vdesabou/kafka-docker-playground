@@ -1460,6 +1460,9 @@ function create_or_get_oracle_image() {
   elif [ "$ZIP_FILE" == "LINUX.X64_180000_db_home.zip" ]
   then
       ORACLE_VERSION="18.3.0-ee"
+  elif [ "$ZIP_FILE" == "LINUX.X64_213000_db_home.zip" ]
+  then
+      ORACLE_VERSION="21.3.0-ee"
   else
       ORACLE_VERSION="19.3.0-ee"
   fi
