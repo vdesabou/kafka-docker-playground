@@ -74,9 +74,9 @@ curl -X PUT \
                "flush.size": "3",
                "aws.access.key.id" : "'"$AWS_ACCESS_KEY_ID"'",
                "aws.secret.access.key": "'"$AWS_SECRET_ACCESS_KEY"'",
-               "s3.proxy.url": "https://nginx-proxy:8888",
-               "s3.proxy.user": "myuser",
-               "s3.proxy.password": "mypassword",
+               "s3.proxy.url": "https://squid:8888",
+               "s3.proxy.user": "admin",
+               "s3.proxy.password": "1234",
                "storage.class": "io.confluent.connect.s3.storage.S3Storage",
                "format.class": "io.confluent.connect.s3.format.avro.AvroFormat",
                "schema.compatibility": "NONE"
