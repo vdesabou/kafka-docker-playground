@@ -225,6 +225,6 @@ timeout 60 docker exec connect kafka-avro-console-consumer -bootstrap-server bro
 if [ ! -z "$ORACLE_DATAGEN" ]
 then
      DURATION=10
-     log "Injecting data for $DURATION seconds"
+     log "Injecting data for $DURATION minutes"
      docker exec -d oracle-datagen bash -c "java ${JAVA_OPTS} -jar oracle-datagen-1.0-SNAPSHOT-jar-with-dependencies.jar --host oracle --username C##MYUSER --password mypassword --sidOrServerName sid --sidOrServerNameVal ORCLCDB --maxPoolSize 10 --durationTimeMin $DURATION"
 fi
