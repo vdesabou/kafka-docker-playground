@@ -851,7 +851,7 @@ function display_docker_container_error_log() {
   do
       logerror "####################################################"
       logerror "$container logs"
-      if [[ "$container" == "connect" ]]
+      if [[ "$container" == "connect" ]] || [[ "$container" == "sap" ]]
       then
           # always show all logs for connect
           docker container logs --tail=100 $container | grep -v "was supplied but isn't a known config"
