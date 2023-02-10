@@ -79,6 +79,26 @@ curl -X PUT \
           }' \
      http://localhost:8083/connectors/salesforce-platform-events-source/config | jq .
 
+# [2023-02-10 16:33:43,918] ERROR Invalid url entered, enter a valid url. (io.confluent.salesforce.common.AbstractSalesforceValidation:102)
+# java.io.IOException: Unable to tunnel through proxy. Proxy returns "HTTP/1.1 401 Unauthorized"
+#         at java.base/sun.net.www.protocol.http.HttpURLConnection.doTunneling(HttpURLConnection.java:2192)
+#         at java.base/sun.net.www.protocol.https.AbstractDelegateHttpsURLConnection.connect(AbstractDelegateHttpsURLConnection.java:199)
+#         at java.base/sun.net.www.protocol.https.HttpsURLConnectionImpl.connect(HttpsURLConnectionImpl.java:168)
+#         at io.confluent.salesforce.common.AbstractSalesforceValidation.validateConnection(AbstractSalesforceValidation.java:92)
+#         at io.confluent.salesforce.common.AbstractSalesforceValidation.performValidation(AbstractSalesforceValidation.java:63)
+#         at io.confluent.salesforce.platformevent.validation.AbstractPlatformEventValidation.performValidation(AbstractPlatformEventValidation.java:37)
+#         at io.confluent.salesforce.platformevent.validation.SalesforcePlatformEventSinkValidation.performValidation(SalesforcePlatformEventSinkValidation.java:42)
+#         at io.confluent.connect.utils.validators.all.ConfigValidation.validate(ConfigValidation.java:185)
+#         at io.confluent.salesforce.SalesforcePlatformEventSinkConnector.validate(SalesforcePlatformEventSinkConnector.java:65)
+#         at org.apache.kafka.connect.runtime.AbstractHerder.validateConnectorConfig(AbstractHerder.java:564)
+#         at org.apache.kafka.connect.runtime.AbstractHerder.lambda$validateConnectorConfig$4(AbstractHerder.java:442)
+#         at java.base/java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:515)
+#         at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:264)
+#         at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1128)
+#         at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:628)
+#         at java.base/java.lang.Thread.run(Thread.java:829)
+# [2023-02-10 16:33:43,918] INFO AbstractConfig values: 
+
 sleep 5
 
 
