@@ -4,16 +4,6 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
-# This is not a supported option
-
-# https://docs.nginx.com/nginx/admin-guide/security-controls/configuring-http-basic-authentication/
-# htpasswd was created with 
-# htpasswd -c htpasswd myuser
-# mypassword
-
-
-
-
 SALESFORCE_USERNAME=${SALESFORCE_USERNAME:-$1}
 SALESFORCE_PASSWORD=${SALESFORCE_PASSWORD:-$2}
 SALESFORCE_CONSUMER_KEY=${SALESFORCE_CONSUMER_KEY:-$3}
@@ -102,10 +92,10 @@ curl -X PUT \
                     "salesforce.password.token" : "'"$SALESFORCE_SECURITY_TOKEN"'",
                     "salesforce.consumer.key" : "'"$SALESFORCE_CONSUMER_KEY"'",
                     "salesforce.consumer.secret" : "'"$SALESFORCE_CONSUMER_PASSWORD"'",
-                    "http.proxy": "nginx-proxy:8888",
+                    "http.proxy": "squid:8888",
                     "http.proxy.auth.scheme": "BASIC",
-                    "http.proxy.user": "myuser",
-                    "http.proxy.password": "mypassword",
+                    "http.proxy.user": "admin",
+                    "http.proxy.password": "1234",
                     "salesforce.initial.start" : "latest",
                     "connection.max.message.size": "10048576",
                     "key.converter": "org.apache.kafka.connect.json.JsonConverter",
