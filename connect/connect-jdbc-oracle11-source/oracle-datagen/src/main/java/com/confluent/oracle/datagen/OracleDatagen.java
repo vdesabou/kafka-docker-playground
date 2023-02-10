@@ -65,7 +65,7 @@ public class OracleDatagen {
                         stmt.setString(3, faker.internet().emailAddress());
                         stmt.setString(4, faker.name().prefix());
                         stmt.setString(5, faker.color().name());
-                        stmt.setString(6, faker.lorem() .sentence());
+                        stmt.setString(6, faker.lorem().word());
                         stmt.executeUpdate();
                         connection.commit();
                         stmt.close();
