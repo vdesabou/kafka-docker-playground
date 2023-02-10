@@ -78,7 +78,7 @@ docker exec -i oracle bash -c "ORACLE_SID=ORCLCDB;export ORACLE_SID;sqlplus /nol
      GRANT CREATE TRIGGER TO C##MYUSER container=all;
      GRANT FLASHBACK ANY TABLE TO C##MYUSER container=all;
 
-     -- The following privileges are required additionally for 19c compared to 12c.
+     -- The following privileges are required additionally for 21c compared to 12c.
      GRANT SELECT ON V_\$ARCHIVED_LOG TO C##CDC_PRIVS CONTAINER=ALL;
      GRANT SELECT ON V_\$LOG TO C##CDC_PRIVS CONTAINER=ALL;
      GRANT SELECT ON V_\$LOGFILE TO C##CDC_PRIVS CONTAINER=ALL;

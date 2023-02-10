@@ -76,7 +76,7 @@ docker exec -i oracle bash -c "ORACLE_SID=ORCLCDB;export ORACLE_SID;sqlplus /nol
    --  GRANT SELECT ON SYS.ENC\$ TO C##CDC_PRIVS;
      GRANT SELECT ANY TABLE TO C##CDC_PRIVS;
 
-     -- Following privileges are required additionally for 19c compared to 12c.
+     -- Following privileges are required additionally for 21c compared to 12c.
      GRANT SELECT ON V_\$ARCHIVED_LOG TO C##CDC_PRIVS;
      GRANT SELECT ON V_\$LOG TO C##CDC_PRIVS;
      GRANT SELECT ON V_\$LOGFILE TO C##CDC_PRIVS;

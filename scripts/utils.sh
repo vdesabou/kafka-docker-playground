@@ -1435,6 +1435,12 @@ function remove_cdb_oracle_image() {
   if [ "$ZIP_FILE" == "linuxx64_12201_database.zip" ]
   then
       ORACLE_VERSION="12.2.0.1-ee"
+  elif [ "$ZIP_FILE" == "LINUX.X64_180000_db_home.zip" ]
+  then
+      ORACLE_VERSION="18.3.0-ee"
+  elif [ "$ZIP_FILE" == "LINUX.X64_213000_db_home.zip" ]
+  then
+      ORACLE_VERSION="21.3.0-ee"
   else
       ORACLE_VERSION="19.3.0-ee"
   fi
