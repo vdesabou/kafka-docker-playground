@@ -2,15 +2,15 @@
 version: '3.5'
 services:
 
-  nginx-proxy:
-    image: reiz/nginx_proxy:latest
-    hostname: nginx-proxy
-    container_name: nginx-proxy
+  squid:
+    image: ubuntu/squid
+    hostname: squid
+    container_name: squid
     ports:
       - "8888:8888"
     volumes:
-      - ../../connect/connect-salesforce-platform-events-sink/nginx-proxy-basic-auth/htpasswd:/tmp/htpasswd
-      - ../../connect/connect-salesforce-platform-events-sink/nginx-proxy-basic-auth/nginx_whitelist.conf:/usr/local/nginx/conf/nginx.conf
+      - ../../connect/connect-salesforce-platform-events-sink/squid/passwords:/etc/squid/passwords
+      - ../../connect/connect-salesforce-platform-events-sink/squid/squid.conf:/etc/squid/squid.conf
 
   sfdx-cli:
     image: vdesabou/sfdx-cli:latest # forked from salestrip/sfdx-cli to add plugin sfpowerkit

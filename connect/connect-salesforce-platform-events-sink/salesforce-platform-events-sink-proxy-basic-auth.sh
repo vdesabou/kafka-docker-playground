@@ -51,6 +51,7 @@ IP=$(nslookup $DOMAIN | grep Address | grep -v "#" | cut -d " " -f 2 | tail -1)
 log "Blocking $DOMAIN IP $IP to make sure proxy is used"
 docker exec --privileged --user root connect bash -c "iptables -A INPUT -p tcp -s $IP -j DROP"
 
+
 log "Creating Salesforce Platform Events Source connector"
 curl -X PUT \
      -H "Content-Type: application/json" \
@@ -66,10 +67,10 @@ curl -X PUT \
                     "salesforce.password.token" : "'"$SALESFORCE_SECURITY_TOKEN"'",
                     "salesforce.consumer.key" : "'"$SALESFORCE_CONSUMER_KEY"'",
                     "salesforce.consumer.secret" : "'"$SALESFORCE_CONSUMER_PASSWORD"'",
-                    "http.proxy": "nginx-proxy:8888",
+                    "http.proxy": "squid:8888",
                     "http.proxy.auth.scheme": "BASIC",
-                    "http.proxy.user": "myuser",
-                    "http.proxy.password": "mypassword",
+                    "http.proxy.user": "admin",
+                    "http.proxy.password": "1234",
                     "salesforce.initial.start" : "latest",
                     "key.converter": "org.apache.kafka.connect.json.JsonConverter",
                     "value.converter": "org.apache.kafka.connect.json.JsonConverter",
@@ -79,17 +80,16 @@ curl -X PUT \
           }' \
      http://localhost:8083/connectors/salesforce-platform-events-source/config | jq .
 
-# [2023-02-10 16:33:43,918] ERROR Invalid url entered, enter a valid url. (io.confluent.salesforce.common.AbstractSalesforceValidation:102)
-# java.io.IOException: Unable to tunnel through proxy. Proxy returns "HTTP/1.1 401 Unauthorized"
+# [2023-02-10 21:06:40,921] ERROR Invalid url entered, enter a valid url. (io.confluent.salesforce.common.AbstractSalesforceValidation:102)
+# java.io.IOException: Unable to tunnel through proxy. Proxy returns "HTTP/1.1 407 Proxy Authentication Required"
 #         at java.base/sun.net.www.protocol.http.HttpURLConnection.doTunneling(HttpURLConnection.java:2192)
 #         at java.base/sun.net.www.protocol.https.AbstractDelegateHttpsURLConnection.connect(AbstractDelegateHttpsURLConnection.java:199)
 #         at java.base/sun.net.www.protocol.https.HttpsURLConnectionImpl.connect(HttpsURLConnectionImpl.java:168)
 #         at io.confluent.salesforce.common.AbstractSalesforceValidation.validateConnection(AbstractSalesforceValidation.java:92)
 #         at io.confluent.salesforce.common.AbstractSalesforceValidation.performValidation(AbstractSalesforceValidation.java:63)
 #         at io.confluent.salesforce.platformevent.validation.AbstractPlatformEventValidation.performValidation(AbstractPlatformEventValidation.java:37)
-#         at io.confluent.salesforce.platformevent.validation.SalesforcePlatformEventSinkValidation.performValidation(SalesforcePlatformEventSinkValidation.java:42)
 #         at io.confluent.connect.utils.validators.all.ConfigValidation.validate(ConfigValidation.java:185)
-#         at io.confluent.salesforce.SalesforcePlatformEventSinkConnector.validate(SalesforcePlatformEventSinkConnector.java:65)
+#         at io.confluent.salesforce.SalesforcePlatformEventSourceConnector.validate(SalesforcePlatformEventSourceConnector.java:135)
 #         at org.apache.kafka.connect.runtime.AbstractHerder.validateConnectorConfig(AbstractHerder.java:564)
 #         at org.apache.kafka.connect.runtime.AbstractHerder.lambda$validateConnectorConfig$4(AbstractHerder.java:442)
 #         at java.base/java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:515)
@@ -97,7 +97,7 @@ curl -X PUT \
 #         at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1128)
 #         at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:628)
 #         at java.base/java.lang.Thread.run(Thread.java:829)
-# [2023-02-10 16:33:43,918] INFO AbstractConfig values: 
+
 
 sleep 5
 
@@ -132,10 +132,10 @@ curl -X PUT \
                     "salesforce.password.token" : "'"$SALESFORCE_SECURITY_TOKEN"'",
                     "salesforce.consumer.key" : "'"$SALESFORCE_CONSUMER_KEY"'",
                     "salesforce.consumer.secret" : "'"$SALESFORCE_CONSUMER_PASSWORD"'",
-                    "http.proxy": "nginx-proxy:8888",
+                    "http.proxy": "squid:8888",
                     "http.proxy.auth.scheme": "BASIC",
-                    "http.proxy.user": "myuser",
-                    "http.proxy.password": "mypassword",
+                    "http.proxy.user": "admin",
+                    "http.proxy.password": "1234",
                     "connection.max.message.size": "10048576",
                     "key.converter": "org.apache.kafka.connect.json.JsonConverter",
                     "value.converter": "org.apache.kafka.connect.json.JsonConverter",
