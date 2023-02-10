@@ -1,0 +1,35 @@
+---
+version: '3.5'
+services:
+  oracle:
+    # You need to build this image first, following the instructions at
+    # https://github.com/oracle/docker-images/blob/master/OracleDatabase/SingleInstance/README.md
+    image: ${ORACLE_IMAGE}
+    hostname: oracle
+    container_name: oracle
+    ports:
+      - "1521:1521"
+    volumes:
+      - ../../connect/connect-jdbc-oracle21-sink/ora-setup-scripts:/opt/oracle/scripts/setup
+    environment:
+      ORACLE_PWD: Admin123
+
+  connect:
+    depends_on:
+      - zookeeper
+      - broker
+      - schema-registry
+      - oracle
+    volumes:
+        - ../../connect/connect-jdbc-oracle21-sink/ojdbc8.jar:/usr/share/confluent-hub-components/confluentinc-kafka-connect-jdbc/lib/ojdbc8.jar
+        - ../../connect/connect-jdbc-oracle21-sink/mtls/truststore.jks:/tmp/truststore.jks
+        - ../../connect/connect-jdbc-oracle21-sink/mtls/keystore.jks:/tmp/keystore.jks
+    environment:
+      CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-jdbc
+      # need to set oracle variables at JVM level because DDEC-2996 (Allow additional properties to be passed to the JDBC driver) was only added in 10.x
+      KAFKA_OPTS: -Djavax.net.ssl.trustStore=/tmp/truststore.jks
+                  -Djavax.net.ssl.trustStorePassword=welcome123
+                  -Djavax.net.ssl.keyStore=/tmp/keystore.jks
+                  -Djavax.net.ssl.keyStorePassword=welcome123
+                  -Doracle.net.ssl_server_dn_match=true
+                  # -Djavax.net.debug=all

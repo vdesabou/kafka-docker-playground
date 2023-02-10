@@ -1,5 +1,7 @@
 # Oracle CDC Source (Oracle 21c) Source connector
 
+# ⚠️⚠️⚠️⚠️⚠️⚠️⚠️ ORACLE CDC DOES NOT SUPPORT ORACLE 21C ⚠️⚠️⚠️⚠️⚠️⚠️⚠️
+
 ## Objective
 
 Quickly test [Oracle CDC Source Connector](https://docs.confluent.io/kafka-connect-oracle-cdc/current/) with Oracle 21c.
