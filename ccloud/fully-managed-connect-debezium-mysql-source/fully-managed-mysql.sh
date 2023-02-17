@@ -56,28 +56,47 @@ NGROK_HOSTNAME=$(echo $NGROK_URL | cut -d "/" -f3 | cut -d ":" -f 1)
 NGROK_PORT=$(echo $NGROK_URL | cut -d "/" -f3 | cut -d ":" -f 2)
 
 
-log "Describing the team table in DB 'mydb':"
-docker exec mysql bash -c "mysql --user=root --password=password --database=mydb -e 'describe team'"
+log "Create table"
+docker exec -i mysql mysql --user=root --password=password --database=mydb << EOF
+USE mydb;
 
-log "Show content of team table:"
-docker exec mysql bash -c "mysql --user=root --password=password --database=mydb -e 'select * from team'"
+CREATE TABLE team (
+  id            INT          NOT NULL PRIMARY KEY AUTO_INCREMENT,
+  name          VARCHAR(255) NOT NULL,
+  email         VARCHAR(255) NOT NULL,
+  last_modified DATETIME     NOT NULL
+);
+
+
+INSERT INTO team (
+  name,
+  email,
+  last_modified
+) VALUES (
+  'kafka',
+  'kafka@apache.org',
+  NOW()
+);
+
+ALTER TABLE team AUTO_INCREMENT = 101;
+describe team;
+select * from team;
+EOF
 
 log "Adding an element to the table"
-docker exec mysql mysql --user=root --password=password --database=mydb -e "
-INSERT INTO team (   \
-  id,   \
-  name, \
-  email,   \
-  last_modified \
-) VALUES (  \
-  4,    \
-  'another',  \
-  'another@apache.org',   \
-  NOW() \
-); "
+docker exec -i mysql mysql --user=root --password=password --database=mydb << EOF
+USE mydb;
 
-log "Show content of team table:"
-docker exec mysql bash -c "mysql --user=root --password=password --database=mydb -e 'select * from team'"
+INSERT INTO team (
+  name,
+  email,
+  last_modified
+) VALUES (
+  'another',
+  'another@apache.org',
+  NOW()
+);
+EOF
 
 cat << EOF > connector.json
 {

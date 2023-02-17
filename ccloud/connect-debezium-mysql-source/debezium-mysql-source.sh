@@ -40,12 +40,10 @@ CREATE TABLE team (
 
 
 INSERT INTO team (
-  id,
   name,
   email,
   last_modified
 ) VALUES (
-  1,
   'kafka',
   'kafka@apache.org',
   NOW()

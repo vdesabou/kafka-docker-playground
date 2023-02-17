@@ -27,12 +27,10 @@ CREATE TABLE team (
 
 
 INSERT INTO team (
-  id,
   name,
   email,
   last_modified
 ) VALUES (
-  1,
   'kafka',
   'kafka@apache.org',
   NOW()
@@ -48,12 +46,10 @@ docker exec -i mysql mysql --user=root --password=password --database=mydb << EO
 USE mydb;
 
 INSERT INTO team (
-  id,
   name,
   email,
   last_modified
 ) VALUES (
-  2,
   'another',
   'another@apache.org',
   NOW()
