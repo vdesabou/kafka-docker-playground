@@ -6,7 +6,7 @@ services:
     hostname: mysql
     container_name: mysql
     volumes:
-      - ../../ccloud/fully-managed-connect-debezium-mysql-source/mysql.cnf:/etc/mysql/conf.d/custom.cnf
+      - ../../reproduction-models/ccloud-fully-managed-connect-debezium-mysql-source/repro-143550-mysql.cnf:/etc/mysql/conf.d/custom.cnf
       - ../../ccloud/fully-managed-connect-debezium-mysql-source/mysql-init.sql:/docker-entrypoint-initdb.d/mysql-init.sql
     environment:
       MYSQL_ROOT_PASSWORD: password
