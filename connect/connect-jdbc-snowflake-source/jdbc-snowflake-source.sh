@@ -60,6 +60,18 @@ docker run -u0 --rm -v $PWD:/tmp vdesabou/kafka-docker-playground-connect:${CONN
 # Generate public key from private key. You can share your public key.
 docker run -u0 --rm -v $PWD:/tmp vdesabou/kafka-docker-playground-connect:${CONNECT_TAG} bash -c "openssl rsa -in /tmp/snowflake_key.p8 -pubout -out /tmp/snowflake_key.pub -passin pass:confluent && chown -R $(id -u $USER):$(id -g $USER) /tmp/"
 
+if [ -z "$CI" ]
+then
+    # not running with github actions
+    # workaround for issue on linux, see https://github.com/vdesabou/kafka-docker-playground/issues/851#issuecomment-821151962
+    chmod a+rw snowflake_key.p8
+else
+    # docker is run as runneradmin user, need to use sudo
+    ls -lrt
+    sudo chmod a+rw snowflake_key.p8
+    ls -lrt
+fi
+
 RSA_PUBLIC_KEY=$(grep -v "BEGIN PUBLIC" snowflake_key.pub | grep -v "END PUBLIC"|tr -d '\n')
 RSA_PRIVATE_KEY=$(grep -v "BEGIN ENCRYPTED PRIVATE KEY" snowflake_key.p8 | grep -v "END ENCRYPTED PRIVATE KEY"|tr -d '\n')
 cd -

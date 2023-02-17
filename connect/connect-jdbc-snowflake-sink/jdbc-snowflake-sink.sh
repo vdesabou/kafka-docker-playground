@@ -64,6 +64,18 @@ RSA_PUBLIC_KEY=$(grep -v "BEGIN PUBLIC" snowflake_key.pub | grep -v "END PUBLIC"
 RSA_PRIVATE_KEY=$(grep -v "BEGIN ENCRYPTED PRIVATE KEY" snowflake_key.p8 | grep -v "END ENCRYPTED PRIVATE KEY"|tr -d '\n')
 cd -
 
+if [ -z "$CI" ]
+then
+    # not running with github actions
+    # workaround for issue on linux, see https://github.com/vdesabou/kafka-docker-playground/issues/851#issuecomment-821151962
+    chmod a+rw snowflake_key.p8
+else
+    # docker is run as runneradmin user, need to use sudo
+    ls -lrt
+    sudo chmod a+rw snowflake_key.p8
+    ls -lrt
+fi
+
 log "Create a Snowflake DB"
 docker run --rm -i -e SNOWSQL_PWD="$SNOWFLAKE_PASSWORD" -e RSA_PUBLIC_KEY="$RSA_PUBLIC_KEY" kurron/snowsql --username $SNOWFLAKE_USERNAME -a $SNOWFLAKE_ACCOUNT_NAME << EOF
 DROP DATABASE IF EXISTS $PLAYGROUND_DB;
