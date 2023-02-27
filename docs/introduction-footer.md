@@ -7,6 +7,7 @@
 - 💸 Confluent commercial [features](/content?id=💸-confluent-commercial) (Tiered Storage, Control Center, Audit logs...)
 - ♻️ Cluster Linking, Replicator and MirrorMaker 2 [examples](/content?id=🌍-multi-data-center-deployments)
 - 🎯 Run examples with any Confluent Platform or connector [versions](/how-to-use?id=🪄-specify-versions)
+- 🧠 Easily run commands with playground [CLI](https://kafka-docker-playground.io/#/how-to-use?id=%f0%9f%a7%a0-cli)
 - 🎓 Learn how the playground [works](/how-it-works)
 - 👷‍♂️ Build your own reproduction models with [reusables](/reusables)
 - 📱 Work directly in your browser using [Gitpod.io](/how-to-use?id=🪄-gitpodio)
