@@ -1,16 +1,14 @@
-#!/bin/bash
-
 IGNORE_CHECK_FOR_DOCKER_COMPOSE=true
-DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
-source ${DIR}/../scripts/utils.sh
+
+container="${args[container]}"
+
+log "Enable remote debugging for $container"
 
 # For ccloud case
 if [ -f /tmp/delta_configs/env.delta ]
 then
      source /tmp/delta_configs/env.delta
 fi
-
-component=${1:-connect}
 
 # keep CONNECT TAG
 export CONNECT_TAG=$(docker inspect -f '{{.Config.Image}}' connect | cut -d ":" -f 2)
@@ -21,20 +19,8 @@ then
   exit 1
 fi
 
-tmp_dir=$(mktemp -d -t ci-XXXXXXXXXX)
-cat << EOF > $tmp_dir/docker-compose-remote-debugging.yml
-version: '3.5'
-services:
-  $component:
-    environment:
-      # https://kafka-docker-playground.io/#/reusables?id=✨-remote-debugging
-      KAFKA_DEBUG: 'true'
-      # With JDK9+, need to specify address=*:5005, see https://www.baeldung.com/java-application-remote-debugging#from-java9
-      JAVA_DEBUG_OPTS: '-agentlib:jdwp=transport=dt_socket,server=y,suspend=n,address=0.0.0.0:5005'
-EOF
-
-sed -e "s|up -d|-f $tmp_dir/docker-compose-remote-debugging.yml up -d|g" \
-    /tmp/playground-command > /tmp/playground-command-debugging
+# see heredocs.sh
+get_remote_debugging_command_heredoc "$container"
 
 bash /tmp/playground-command-debugging
 

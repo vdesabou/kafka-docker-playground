@@ -156,11 +156,11 @@ then
 fi
 # Starting zookeeper and kafka now that the keytab has been created with the required credentials and services
 docker-compose -f ../../environment/plaintext/docker-compose.yml -f ../../environment/ssl_kerberos/docker-compose.yml ${ENABLE_DOCKER_COMPOSE_FILE_OVERRIDE} ${profile_control_center_command} ${profile_ksqldb_command} ${profile_grafana_command} ${profile_kcat_command} ${profile_conduktor_command} up -d
-log "📝 To see the actual properties file, use ../../scripts/get-properties.sh <container>"
+log "📝 To see the actual properties file, use cli command playground get-properties <container>"
 command="source ../../scripts/utils.sh && docker-compose -f ../../environment/plaintext/docker-compose.yml -f ../../environment/ssl_kerberos/docker-compose.yml ${ENABLE_DOCKER_COMPOSE_FILE_OVERRIDE} ${profile_control_center_command} ${profile_ksqldb_command} ${profile_grafana_command} ${profile_kcat_command} ${profile_conduktor_command} up -d"
 echo "$command" > /tmp/playground-command
-log "✨ If you modify a docker-compose file and want to re-create the container(s), run ../../scripts/recreate-containers.sh or use this command:"
-log "✨ $command"
+log "✨ If you modify a docker-compose file and want to re-create the container(s), run cli command playground recreate-container"
+
 
 
 cd ${OLDDIR}

@@ -1,17 +1,7 @@
-#!/bin/bash
-
 IGNORE_CHECK_FOR_DOCKER_COMPOSE=true
-DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
-source ${DIR}/../scripts/utils.sh
 
-component="$1"
-domain="$2"
-
-if [ "$component" = "" ]
-then
-  logerror "ERROR: component name is not provided as argument!"
-  exit 1
-fi
+component="${args[component]}"
+domain="${args[domain]}"
 
 case "${component}" in
   zookeeper|broker|schema-registry|connect)

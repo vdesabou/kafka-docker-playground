@@ -1,16 +1,13 @@
-#!/bin/bash
-
 IGNORE_CHECK_FOR_DOCKER_COMPOSE=true
-DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
-source ${DIR}/../scripts/utils.sh
 
-root_folder=${DIR}/..
-root_folder=${root_folder//\/scripts\/\.\./}
+DIR_CLI="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 
-test_file="$PWD/$1"
-description="$2"
-schema_format="$3"
-nb_producers="$4"
+root_folder=${DIR_CLI}/../..
+
+test_file="$PWD/${args[test_file]}"
+description="${args[description]}"
+producer="${args[--producer]}"
+nb_producers="${args[--nb-producers]}"
 
 if [ "$test_file" = "" ]
 then
@@ -49,6 +46,7 @@ fi
 
 test_file_directory="$(dirname "${test_file}")"
 
+
 # determining the connector from test_file
 docker_compose_file=$(grep "environment" "$test_file" | grep DIR | grep start.sh | cut -d "/" -f 7 | cut -d '"' -f 1 | tail -n1 | xargs)
 description_kebab_case="${description// /-}"
@@ -60,7 +58,7 @@ then
   logwarn "📁 Could not determine docker-compose override file from $test_file !"
 fi
 
-topic_name="customer-$schema_format"
+topic_name="customer-$producer"
 topic_name=$(echo $topic_name | tr '-' '_')
 filename=$(basename -- "$test_file")
 extension="${filename##*.}"
@@ -119,9 +117,9 @@ do
   fi
 done
   
-if [ "$schema_format" != "" ]
+if [ "$producer" != "none" ]
 then
-  case "${schema_format}" in
+  case "${producer}" in
     avro)
       log "value converter should be set with:"
       echo "\"value.converter\": \"io.confluent.connect.avro.AvroConverter\","
@@ -206,8 +204,10 @@ then
       log "2️⃣ Displaying key:"
       echo "docker exec connect kafka-protobuf-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic a-topic --property print.key=true --property key.separator=, --from-beginning --max-messages 1"
     ;;
+    none)
+    ;;
     *)
-      logerror "ERROR: schema_format name not valid ! Should be one of avro, avro-with-key, json-schema, json-schema-with-key, protobuf or protobuf-with-key"
+      logerror "ERROR: producer name not valid ! Should be one of avro, avro-with-key, json-schema, json-schema-with-key, protobuf or protobuf-with-key"
       exit 1
     ;;
   esac
@@ -237,72 +237,17 @@ then
 
         rm -rf $producer_hostname
         mkdir -p $repro_dir/$producer_hostname/
-        cp -Ra ../../other/schema-format-$schema_format/producer/* $repro_dir/$producer_hostname/
+        cp -Ra ../../other/schema-format-$producer/producer/* $repro_dir/$producer_hostname/
 
         # update docker compose with producer container
         if [[ "$dir1" = *connect ]]
         then
-        cat << EOF >> $tmp_dir/producer
-
-  $producer_hostname:
-    build:
-      context: ../../$output_folder/$final_dir/$producer_hostname/
-    hostname: producer
-    container_name: $producer_hostname
-    environment:
-      KAFKA_BOOTSTRAP_SERVERS: broker:9092
-      TOPIC: "$topic_name"
-      REPLICATION_FACTOR: 1
-      NUMBER_OF_PARTITIONS: 1
-      NB_MESSAGES: 10 # -1 for MAX_VALUE
-      MESSAGE_BACKOFF: 100 # Frequency of message injection
-      KAFKA_ACKS: "all" # default: "1"
-      KAFKA_REQUEST_TIMEOUT_MS: 20000
-      KAFKA_RETRY_BACKOFF_MS: 500
-      KAFKA_CLIENT_ID: "my-java-$producer_hostname"
-      KAFKA_SCHEMA_REGISTRY_URL: "http://schema-registry:8081"
-      JAVA_OPTS: \${GRAFANA_AGENT_PRODUCER}
-    volumes:
-      - ../../environment/plaintext/jmx-exporter:/usr/share/jmx_exporter/
-
-
-EOF
+          get_producer_heredoc
 fi
 
         if [[ "$dir1" = *ccloud ]]
         then
-        cat << EOF >> $tmp_dir/producer
-
-  $producer_hostname:
-    build:
-      context: ../../$output_folder/$final_dir/$producer_hostname/
-    hostname: producer
-    container_name: $producer_hostname
-    environment:
-      KAFKA_BOOTSTRAP_SERVERS: \$BOOTSTRAP_SERVERS
-      KAFKA_SSL_ENDPOINT_IDENTIFICATION_ALGORITHM: "https"
-      KAFKA_SASL_MECHANISM: "PLAIN"
-      KAFKA_SASL_JAAS_CONFIG: \$SASL_JAAS_CONFIG
-      KAFKA_SECURITY_PROTOCOL: "SASL_SSL"
-      TOPIC: "$topic_name"
-      REPLICATION_FACTOR: 3
-      NUMBER_OF_PARTITIONS: 1
-      NB_MESSAGES: 10 # -1 for MAX_VALUE
-      MESSAGE_BACKOFF: 100 # Frequency of message injection
-      KAFKA_ACKS: "all" # default: "1"
-      KAFKA_REQUEST_TIMEOUT_MS: 20000
-      KAFKA_RETRY_BACKOFF_MS: 500
-      KAFKA_CLIENT_ID: "my-java-$producer_hostname"
-      KAFKA_SCHEMA_REGISTRY_URL: \$SCHEMA_REGISTRY_URL
-      KAFKA_BASIC_AUTH_CREDENTIALS_SOURCE: \$BASIC_AUTH_CREDENTIALS_SOURCE
-      KAFKA_SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO: \$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO
-      JAVA_OPTS: \${GRAFANA_AGENT_PRODUCER}
-      EXTRA_ARGS: 
-    volumes:
-      - ../../environment/plaintext/jmx-exporter:/usr/share/jmx_exporter/
-
-
-EOF
+          get_producer_ccloud_heredoc
 fi
 
         done
@@ -321,7 +266,7 @@ fi
   fi
 
   for((i=1;i<=$nb_producers;i++)); do
-    log "✨ Adding Java $schema_format producer in $repro_dir/$producer_hostname"
+    log "✨ Adding Java $producer producer in $repro_dir/$producer_hostname"
     producer_hostname=""
     producer_hostname="producer-repro-$description_kebab_case"
     producer_hostname=${producer_hostname:0:21} 
@@ -335,32 +280,13 @@ fi
     list="$list $producer_hostname"
 
   done
-    cat << EOF > $tmp_dir/build_producer
-for component in $list
-do
-    set +e
-    log "🏗 Building jar for \${component}"
-    docker run -i --rm -e KAFKA_CLIENT_TAG=\$KAFKA_CLIENT_TAG -e TAG=\$TAG_BASE -v "\${DIR}/\${component}":/usr/src/mymaven -v "\$HOME/.m2":/root/.m2 -v "\${DIR}/\${component}/target:/usr/src/mymaven/target" -w /usr/src/mymaven maven:3.6.1-jdk-11 mvn -Dkafka.tag=\$TAG -Dkafka.client.tag=\$KAFKA_CLIENT_TAG package > /tmp/result.log 2>&1
-    if [ \$? != 0 ]
-    then
-        logerror "ERROR: failed to build java component $component"
-        tail -500 /tmp/result.log
-        exit 1
-    fi
-    set -e
-done
-
-EOF
+      get_producer_build_heredoc
   # log "✨ Adding command to build jar for $producer_hostname to $repro_test_file"
   cp $repro_test_file $tmp_dir/tmp_file
   line=$(grep -n '${DIR}/../../environment' $repro_test_file | cut -d ":" -f 1 | tail -n1)
   
   { head -n $(($line-1)) $tmp_dir/tmp_file; cat $tmp_dir/build_producer; tail -n +$line $tmp_dir/tmp_file; } > $repro_test_file
-
-    cat << EOF > $tmp_dir/java_producer
-
-# 🚨🚨🚨 FIXTHIS: move it to the correct place 🚨🚨🚨
-EOF
+    get_producer_fixthis_heredoc
 
   for((i=1;i<=$nb_producers;i++)); do
     producer_hostname=""
@@ -372,15 +298,9 @@ EOF
     else
       producer_hostname="${producer_hostname}$i"
     fi
-    cat << EOF >> $tmp_dir/java_producer
-log "✨ Run the $schema_format java producer v$i which produces to topic $topic_name"
-docker exec $producer_hostname bash -c "java \${JAVA_OPTS} -jar producer-1.0.0-jar-with-dependencies.jar"
-EOF
+    get_producer_run_heredoc
   done
-    cat << EOF >> $tmp_dir/java_producer
-# 🚨🚨🚨 FIXTHIS: move it to the correct place 🚨🚨🚨
-
-EOF
+    get_producer_fixthis_heredoc
   # log "✨ Adding command to run producer to $repro_test_file"
   cp $repro_test_file $tmp_dir/tmp_file
   { head -n $(($line-1)) $tmp_dir/tmp_file; cat $tmp_dir/java_producer; tail -n +$line $tmp_dir/tmp_file; } > $repro_test_file
@@ -401,3 +321,4 @@ then
   log "🆗 Once ready, run it with:"
 fi
 echo "./$repro_test_filename"
+
