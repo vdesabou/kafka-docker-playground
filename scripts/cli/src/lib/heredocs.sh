@@ -94,8 +94,7 @@ EOF
 }
 
 function get_producer_fixthis_heredoc () {
-    cat << EOF > $tmp_dir/java_producer
-
+    cat << EOF >> $tmp_dir/java_producer
 # 🚨🚨🚨 FIXTHIS: move it to the correct place 🚨🚨🚨
 EOF
 }
