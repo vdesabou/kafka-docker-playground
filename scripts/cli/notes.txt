@@ -3,3 +3,4 @@ bashly generate
 rm /home/vsaboulin/kafka-docker-playground/scripts/cli/completions.bash
 bashly add completions_script
 source /home/vsaboulin/kafka-docker-playground/scripts/cli/completions.bash
+cd -

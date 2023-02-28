@@ -1,4 +1,4 @@
-container="${args[container]}"
+container="${args[--container]}"
 
 log "Displaying properties file for $container"
 # see heredocs.sh

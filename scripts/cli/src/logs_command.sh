@@ -1,9 +1,8 @@
-container="${args[container]}"
+container="${args[--container]}"
 editor="${args[--open]}"
 
 if [[ -n "$editor" ]]
 then
-  verify_installed $editor
   filename="/tmp/${container}-`date '+%Y-%m-%d-%H-%M-%S'`.log"
   log "Opening $filename with editor $editor"
   docker container logs "$container" > "$filename" 2>&1

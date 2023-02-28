@@ -1,6 +1,6 @@
 IGNORE_CHECK_FOR_DOCKER_COMPOSE=true
 
-container="${args[container]}"
+container="${args[--container]}"
 
 log "Enable remote debugging for $container"
 

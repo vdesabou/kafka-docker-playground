@@ -4,8 +4,8 @@ DIR_CLI="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 
 root_folder=${DIR_CLI}/../..
 
-test_file="$PWD/${args[test_file]}"
-description="${args[description]}"
+test_file="$PWD/${args[--file]}"
+description="${args[--description]}"
 producer="${args[--producer]}"
 nb_producers="${args[--nb-producers]}"
 

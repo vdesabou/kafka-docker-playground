@@ -5,7 +5,7 @@ then
   logerror "File containing restart command /tmp/playground-command does not exist!"
   exit 1 
 fi
-connect_url="$connect_url"
+connect_url="http://localhost:8083"
 security_certs=""
 if [ "$environment" != "plaintext" ]
 then
@@ -15,7 +15,7 @@ then
     security_certs="--cert $DIR_CLI/../../environment/$environment/security/connect.certificate.pem --key $DIR_CLI/../../environment/$environment/security/connect.key --tlsv1.2 --cacert $DIR_CLI/../../environment/$environment/security/snakeoil-ca-1.crt"
 fi
 
-connector="${args[connector]}"
+connector="${args[--connector]}"
 log "Resuming connector $connector"
 curl $security_certs -s -X PUT -H "Content-Type: application/json" "$connect_url/connectors/$connector/resume"  | jq .
 

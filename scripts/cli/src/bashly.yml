@@ -1,10 +1,20 @@
 name: playground
 help: cli for Kafka Docker Playground
-version: 1.0.0
+version: 1.0.1
 dependencies:
   docker: Check documentation https://tinyurl.com/4rpcmpjj
 
 commands:
+
+### private commands for completion
+- name: get-connector-list
+  help: Return some completion for connector list
+  private: true
+
+- name: get-topic-list
+  help: Return some completion for topic list
+  private: true
+
 - name: bootstrap-reproduction-model
   environment_variables:
   - name: OUTPUT_FOLDER 
@@ -17,19 +27,25 @@ commands:
     
     Check documentation https://tinyurl.com/bdfs25my
 
-  args:
-  - name: test_file
+  flags:
+  - long: --file
+    short: -f
     required: true
     validate: file_exists
+    arg: file
+    completions:
+      - $(ls *.sh)
     help: |-
       Test file to use as basis.
 
-  - name: description
+  - long: --description
+    short: -d
     required: true
+    validate: not_empty
+    arg: description
     help: |-
       Description.
 
-  flags:
   - long: --producer
     short: -p
     arg: producer-type
@@ -57,10 +73,10 @@ commands:
       Number of java producers to generate.
 
   examples:
-  - playground bootstrap-reproduction-model hdfs2-sink.sh "123456 testing with parquet format"
-  - playground bootstrap-reproduction-model hdfs2-sink.sh "123456 testing with parquet format and avro producer" --producer avro
-  - playground bootstrap-reproduction-model hdfs2-sink.sh "123456 testing with parquet format and 2 protobuf producers" --producer protobuf --nb-producers 2
-  - playground bootstrap-reproduction-model hdfs2-sink.sh "123456 testing with parquet format and 2 protobuf producers" -p protobuf -n 2
+  - playground bootstrap-reproduction-model -f hdfs2-sink.sh -d "123456 testing with parquet format"
+  - playground bootstrap-reproduction-model -f hdfs2-sink.sh -d "123456 testing with parquet format and avro producer" --producer avro
+  - playground bootstrap-reproduction-model -f hdfs2-sink.sh -d "123456 testing with parquet format and 2 protobuf producers" --producer protobuf --nb-producers 2
+  - playground bootstrap-reproduction-model -f hdfs2-sink.sh -d "123456 testing with parquet format and 2 protobuf producers" -p protobuf -n 2
 
 - name: get-properties
   group: Tools
@@ -68,29 +84,36 @@ commands:
     Get properties file from a container.
     
     Check documentation https://tinyurl.com/4vj7tm2b
-  args:
-  - name: container
-    help: Container name.
-    allowed: [zookeeper, broker, connect, schema-registry, control-center]
+
+  flags:
+  - &container
+    long: --container
+    short: -c
+    required: false
     default: "connect"
+    arg: container
+    completions:
+      - $(docker ps --format '{{.Names}}')
+    help: |-
+      Container name.
+
   examples:
-  - playground get-properties connect
-  - playground get-properties broker
+  - playground get-properties
+  - playground get-properties --container broker
+  - playground get-properties -c broker
 
 - name: enable-remote-debugging
   group: Tools
   help: |-
-    Get properties file from a container.
+    Enable java remote debugging for container.
     
     Check documentation https://tinyurl.com/bdz843d4
-  args:
-  - name: container
-    help: Container name.
-    allowed: [zookeeper, broker, connect, schema-registry, control-center]
-    default: "connect"
+  flags:
+    - *container
   examples:
-  - playground enable-remote-debugging connect
-  - playground enable-remote-debugging broker
+  - playground enable-remote-debugging
+  - playground enable-remote-debugging --container broker
+  - playground enable-remote-debugging -c broker
 
 - name: get-jmx-metrics
   group: Tools
@@ -98,18 +121,28 @@ commands:
     Get JMX metrics from a component.
     
     Check documentation https://tinyurl.com/yc2myws9
-  args:
-  - name: component
-    help: Component name.
-    allowed: [zookeeper, broker, connect, schema-registry]
 
-  - name: domain
-    help: Domain name.
+  flags:
+  - long: --component
+    short: -c
+    default: "connect"
+    required: false
+    arg: component
+    allowed: [zookeeper, broker, connect, schema-registry]
+    help: |-
+      Component name.
+
+  - long: --domain
+    short: -d
+    required: false
+    arg: domain
+    help: |-
+      Domain name.
 
   examples:
-  - playground get-jmx-metrics connect
-  - playground get-jmx-metrics connect "kafka.connect kafka.consumer kafka.producer"
-  - playground get-jmx-metrics broker
+  - playground get-jmx-metrics --component connect
+  - playground get-jmx-metrics --component connect --domain "kafka.connect kafka.consumer kafka.producer"
+  - playground get-jmx-metrics -c broker
 
 - name: recreate-container
   group: Tools
@@ -122,6 +155,8 @@ commands:
   group: Tools
   help: |-
     Get IP address of running containers.
+  examples:
+  - playground get-ip-address-container
 
 - name: kill-all-containers
   group: Tools
@@ -133,85 +168,98 @@ commands:
   help: |-
     Get number of records in a topic.
 
-  args:
-  - name: topic
+  flags:
+  - long: --topic
+    short: -t
     required: true
+    arg: topic
+    completions:
+      - $(playground get-topic-list)
     help: |-
       Topic name.
+
+  examples:
+  - playground get-number-records-topic --topic a-topic
+  - playground get-number-records-topic -t a-topic
 
 - name: logs
   group: Tools
   help: |-
     Tail and follow container logs.
 
-  args:
-  - name: container
-    required: true
-    help: |-
-      Container name.
-
   flags:
+  - *container
   - long: --open
     short: -o
     arg: editor
+    validate: editor_exists
     help: Save output to a file and open with editor passed as argument (default is code).
 
   examples:
-  - playground logs connect
-  - playground logs connect -o code
-  - playground logs connect -o vim
+  - playground logs --container connect
+  - playground logs -c connect -o code
+  - playground logs -c connect -o vim
 
 - name: ssh
   group: Tools
   help: |-
     SSH into container.
 
-  args:
-  - name: container
-    required: true
-    help: |-
-      Container name.
+  flags:
+  - *container
 
-  - name: shell
+  - long: --shell
+    short: -s
     required: false
     default: "bash"
+    arg: shell
+    allowed: 
+      - bash
+      - sh
+      - ksh
+      - zsh
     help: |-
       Shell to use (default is bash).
 
   examples:
-  - playground ssh connect
-  - playground ssh connect sh
+  - playground ssh -c connect
+  - playground ssh -c connect -s sh
+  - playground ssh --container connect --shell sh
 
 - name: exec
   group: Tools
   help: |-
     Execute command in a container.
 
-  args:
-  - name: container
-    required: true
-    help: |-
-      Container name.
+  flags:
+  - *container
 
-  - name: command
+  - long: --command
+    short: -d
     required: true
+    validate: not_empty
+    arg: description
     help: |-
       Command to execute.
 
-  flags:
   - long: --root
     help: Run command as root.
 
   - long: --shell
     default: "bash"
     arg: shell
+    allowed: 
+      - bash
+      - sh
+      - ksh
+      - zsh
     help: |-
       Shell to use (default is bash).
 
   examples:
-  - playground exec connect "date"
-  - playground exec connect "whoami" --root
-  - playground exec connect "whoami" --shell sh
+  - playground exec -c connect -d "date"
+  - playground exec -c connect -d "whoami" --root
+  - playground exec --container connect --command "whoami" --shell sh
 
 - name: connector
   group: Connector
@@ -231,30 +279,33 @@ commands:
 
   - name: pause
     help: Pause connector
-    args:
-    - name: connector
-      help: Connector name.
+    flags:
+    - &connector
+      long: --connector
+      short: -c
       required: true
+      arg: connector
+      completions:
+        - $(playground get-connector-list)
+      help: |-
+        Connector name.
 
   - name: resume
     help: Resume connector
-    args:
-    - name: connector
-      help: Connector name.
-      required: true
+    flags:
+    - *connector
 
   - name: delete
     help: Delete connector
-    args:
-    - name: connector
-      help: Connector name.
-      required: true
+    flags:
+    - *connector
 
   examples:
   - playground connector status
   - playground connector status --json
-  - playground connector pause <connector-name>
-  - playground connector delete <connector-name>
+  - playground connector resume --connector <connector-name>
+  - playground connector pause -c <connector-name>
+  - playground connector delete -c <connector-name>
 
 - name: connect-log-level
   group: Connector
@@ -266,37 +317,36 @@ commands:
   commands:
   - name: get
     help: Get log levels.
-    args:
-    - name: logger
-      help: Logger name.
+    flags:
+    - long: --package
+      short: -p
       required: false
+      validate: not_empty
+      arg: package
+      help: |-
+        Package name.
 
   - name: set
     help: Set log level for specific logger.
-    args:
-    - name: logger
-      help: Logger name.
+    flags:
+    - long: --package
+      short: -p
       required: true
+      validate: not_empty
+      arg: package
+      help: |-
+        Package name.
 
-    - name: level
+    - long: --level
+      short: -l
       help: Log level.
+      arg: level
       allowed: [INFO, WARN, DEBUG, TRACE]
       required: true
 
   examples:
   - playground connect-log-level get
-  - playground connect-log-level get io.confluent.connect.oracle.cdc
-  - playground connect-log-level set io.confluent.connect.oracle.cdc.logging.LogUtils TRACE
-  
-# - name: produce
-#   group: Snippets
-#   help: |-
-#     kafka console CLI examples.
-
-#   args:
-#   - name: type
-#     required: true
-#     allowed: [kafka-console-producer, kafka-avro-console-producer, kafka-protobuf-console-producer, kafka-json-schema-console-producer, kafka-producer-perf-test]
-#     help: |-
-#       Description.
+  - playground connect-log-level get -p io.confluent.connect.oracle.cdc
+  - playground connect-log-level get --package io.confluent.connect.oracle.cdc
+  - playground connect-log-level set -p io.confluent.connect.oracle.cdc.logging.LogUtils -l TRACE
 

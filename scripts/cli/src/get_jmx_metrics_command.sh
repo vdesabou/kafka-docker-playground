@@ -1,7 +1,7 @@
 IGNORE_CHECK_FOR_DOCKER_COMPOSE=true
 
-component="${args[component]}"
-domain="${args[domain]}"
+component="${args[--component]}"
+domain="${args[--domain]}"
 
 case "${component}" in
   zookeeper|broker|schema-registry|connect)

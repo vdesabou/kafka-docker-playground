@@ -5,7 +5,7 @@ then
   logerror "File containing restart command /tmp/playground-command does not exist!"
   exit 1 
 fi
-connect_url="$connect_url"
+connect_url="http://localhost:8083"
 security_certs=""
 if [ "$environment" != "plaintext" ]
 then

@@ -1,5 +1,5 @@
-container="${args[container]}"
-command="${args[command]}"
+container="${args[--container]}"
+command="${args[--command]}"
 root="${args[--root]}"
 shell="${args[--shell]}"
 
