@@ -1,0 +1,30 @@
+{
+    "type": "record",
+    "namespace": "com.github.vdesabou",
+    "name": "Customer",
+    "fields": [
+        {
+            "name": "physicalCharacteristic",
+            "type": [
+                "null",
+                {
+                    "type": "record",
+                    "name": "PhysicalCharacteristic",
+                    "fields": [
+                        {
+                            "name": "children",
+                            "type": [
+                                "null",
+                                {
+                                    "type": "array",
+                                    "items": "PhysicalCharacteristic"
+                                }
+                            ],
+                            "default": null
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}
