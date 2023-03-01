@@ -195,6 +195,20 @@ commands:
     arg: editor
     validate: editor_exists
     help: Save output to a file and open with editor passed as argument (default is code).
+    conflicts: [--wait-for-log]
+  - long: --wait-for-log
+    short: -w
+    arg: log
+    validate: not_empty
+    help: Wait until log appears.
+    conflicts: [--open]
+  - long: --max-wait
+    short: -m
+    arg: max_wait
+    validate: integer
+    default: "600"
+    help: Max time in seconds to wait when using --wait-for-log (default 600s).
+    conflicts: [--open]
 
   examples:
   - playground logs --container connect

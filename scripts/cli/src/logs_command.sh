@@ -1,5 +1,7 @@
 container="${args[--container]}"
 editor="${args[--open]}"
+log="${args[--wait-for-log]}"
+max_wait="${args[--max-wait]}"
 
 if [[ -n "$editor" ]]
 then
@@ -10,6 +12,9 @@ then
   then
     $editor "$filename"
   fi
+elif [[ -n "$log" ]]
+then
+  wait_for_log "$log" "$container" "$max_wait"
 else 
   docker container logs --tail=200 -f "$container"
 fi

@@ -518,6 +518,17 @@ playground_logs_usage() {
     printf "    Save output to a file and open with editor passed as argument (default is\n    code).\n"
     echo
 
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--wait-for-log, -w LOG")"
+    printf "    Wait until log appears.\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--max-wait, -m MAX_WAIT")"
+    printf "    Max time in seconds to wait when using --wait-for-log (default 600s).\n"
+    printf "    Default: 600\n"
+    echo
+
     # :command.usage_fixed_flags
     printf "  %s\n" "$(magenta "--help, -h")"
     printf "    Show this help\n"
@@ -2776,7 +2787,7 @@ function wait_for_log () {
           fi
      done
      grep "$message" /tmp/out.txt
-     log "The message is there !"
+     log "The log is there !"
 }
 
 
@@ -5045,6 +5056,8 @@ playground_logs_command() {
   # src/logs_command.sh
   container="${args[--container]}"
   editor="${args[--open]}"
+  log="${args[--wait-for-log]}"
+  max_wait="${args[--max-wait]}"
 
   if [[ -n "$editor" ]]
   then
@@ -5055,6 +5068,9 @@ playground_logs_command() {
     then
       $editor "$filename"
     fi
+  elif [[ -n "$log" ]]
+  then
+    wait_for_log "$log" "$container" "$max_wait"
   else
 
     docker container logs --tail=200 -f "$container"
@@ -6144,6 +6160,11 @@ playground_logs_parse_requirements() {
 
       # :flag.case
       --open | -o)
+        # :flag.conflicts
+        if [[ -n "${args['--wait-for-log']:-}" ]]; then
+          printf "conflicting options: %s cannot be used with %s\n" "$key" "--wait-for-log" >&2
+          exit 1
+        fi
 
         # :flag.case_arg
         if [[ -n ${2+x} ]]; then
@@ -6158,6 +6179,56 @@ playground_logs_parse_requirements() {
           shift
         else
           printf "%s\n" "--open requires an argument: --open, -o EDITOR" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --wait-for-log | -w)
+        # :flag.conflicts
+        if [[ -n "${args['--open']:-}" ]]; then
+          printf "conflicting options: %s cannot be used with %s\n" "$key" "--open" >&2
+          exit 1
+        fi
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          # :flag.validations
+          if [[ -n $(validate_not_empty "$2") ]]; then
+            printf "validation error in %s:\n%s\n" "--wait-for-log, -w LOG" "$(validate_not_empty "$2")" >&2
+            exit 1
+          fi
+
+          args['--wait-for-log']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--wait-for-log requires an argument: --wait-for-log, -w LOG" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --max-wait | -m)
+        # :flag.conflicts
+        if [[ -n "${args['--open']:-}" ]]; then
+          printf "conflicting options: %s cannot be used with %s\n" "$key" "--open" >&2
+          exit 1
+        fi
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          # :flag.validations
+          if [[ -n $(validate_integer "$2") ]]; then
+            printf "validation error in %s:\n%s\n" "--max-wait, -m MAX_WAIT" "$(validate_integer "$2")" >&2
+            exit 1
+          fi
+
+          args['--max-wait']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--max-wait requires an argument: --max-wait, -m MAX_WAIT" >&2
           exit 1
         fi
         ;;
@@ -6180,6 +6251,7 @@ playground_logs_parse_requirements() {
 
   # :command.default_assignments
   [[ -n ${args['--container']:-} ]] || args['--container']="connect"
+  [[ -n ${args['--max-wait']:-} ]] || args['--max-wait']="600"
 
 }
 
