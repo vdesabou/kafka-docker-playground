@@ -238,7 +238,7 @@ commands:
     short: -d
     required: true
     validate: not_empty
-    arg: description
+    arg: command
     help: |-
       Command to execute.
 
