@@ -606,7 +606,7 @@ playground_exec_usage() {
     echo
 
     # :flag.usage
-    printf "  %s\n" "$(magenta "--command, -d DESCRIPTION (required)")"
+    printf "  %s\n" "$(magenta "--command, -d COMMAND (required)")"
     printf "    Command to execute.\n"
     echo
 
@@ -4574,7 +4574,9 @@ playground_get_connector_list_command() {
 # :command.function
 playground_get_topic_list_command() {
   # src/get_topic_list_command.sh
-  docker exec broker kafka-topics --bootstrap-server broker:9092 --list | grep -v "^_"
+  #docker exec broker kafka-topics --bootstrap-server broker:9092 --list | grep -v "^_"
+  # trick to be faster
+  docker exec broker ls /var/lib/kafka/data | grep -v "checkpoint" | grep -v "meta.properties" | grep -v "^_" | sed 's/[^-]*$//' | sed 's/.$//' | sort | uniq
 }
 
 # :command.function
@@ -6305,7 +6307,7 @@ playground_exec_parse_requirements() {
         if [[ -n ${2+x} ]]; then
           # :flag.validations
           if [[ -n $(validate_not_empty "$2") ]]; then
-            printf "validation error in %s:\n%s\n" "--command, -d DESCRIPTION" "$(validate_not_empty "$2")" >&2
+            printf "validation error in %s:\n%s\n" "--command, -d COMMAND" "$(validate_not_empty "$2")" >&2
             exit 1
           fi
 
@@ -6313,7 +6315,7 @@ playground_exec_parse_requirements() {
           shift
           shift
         else
-          printf "%s\n" "--command requires an argument: --command, -d DESCRIPTION" >&2
+          printf "%s\n" "--command requires an argument: --command, -d COMMAND" >&2
           exit 1
         fi
         ;;
@@ -6359,7 +6361,7 @@ playground_exec_parse_requirements() {
 
   # :command.required_flags_filter
   if [[ -z ${args['--command']+x} ]]; then
-    printf "missing required flag: --command, -d DESCRIPTION\n" >&2
+    printf "missing required flag: --command, -d COMMAND\n" >&2
     exit 1
   fi
 
