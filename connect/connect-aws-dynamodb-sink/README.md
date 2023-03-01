@@ -35,6 +35,12 @@ or
 $ ./dynamodb-sink-with-assuming-iam-role-config.sh <AWS_STS_ROLE_ARN>
 ```
 
+or with BasicAwsCredentialsProvider using custom AWS credentials provider (⚠️ custom code is just an example, there is no support for it):
+
+```
+$ ./dynamodb-sink-with-custom-basic-aws-credentials-provider.sh
+```
+
 ## Details of what the script is doing
 
 Sending messages to topic topic1
