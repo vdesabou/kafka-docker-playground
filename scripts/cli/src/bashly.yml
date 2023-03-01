@@ -169,7 +169,8 @@ commands:
     Get number of records in a topic.
 
   flags:
-  - long: --topic
+  - &topic
+    long: --topic
     short: -t
     required: true
     arg: topic
@@ -349,4 +350,3 @@ commands:
   - playground connect-log-level get -p io.confluent.connect.oracle.cdc
   - playground connect-log-level get --package io.confluent.connect.oracle.cdc
   - playground connect-log-level set -p io.confluent.connect.oracle.cdc.logging.LogUtils -l TRACE
-
