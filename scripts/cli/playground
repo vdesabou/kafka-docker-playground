@@ -33,20 +33,26 @@ playground_usage() {
   printf "  playground --version | -v\n"
   echo
   # :command.usage_commands
-  printf "%s\n" "$(bold "Build your own.. Commands:")"
+  printf "%s\n" "$(bold "Bootstrap Commands:")"
   printf "  %s   Bootstrap reproduction model.\n" "$(green "bootstrap-reproduction-model")"
   echo
-  printf "%s\n" "$(bold "Tools Commands:")"
+  printf "%s\n" "$(bold "Kafka Commands:")"
   printf "  %s   Get properties file from a container.\n" "$(green "get-properties")              "
-  printf "  %s   Enable java remote debugging for container.\n" "$(green "enable-remote-debugging")     "
   printf "  %s   Get JMX metrics from a component.\n" "$(green "get-jmx-metrics")             "
+  echo
+  printf "%s\n" "$(bold "Debug Commands:")"
+  printf "  %s   Enable java remote debugging for container.\n" "$(green "enable-remote-debugging")     "
+  echo
+  printf "%s\n" "$(bold "Container Commands:")"
   printf "  %s   Recreate container(s).\n" "$(green "recreate-container")          "
   printf "  %s   Get IP address of running containers.\n" "$(green "get-ip-address-container")    "
   printf "  %s   Kill all containers.\n" "$(green "kill-all-containers")         "
-  printf "  %s   Get number of records in a topic.\n" "$(green "get-number-records-topic")    "
   printf "  %s   Tail and follow container logs.\n" "$(green "logs")                        "
   printf "  %s   SSH into container.\n" "$(green "ssh")                         "
   printf "  %s   Execute command in a container.\n" "$(green "exec")                        "
+  echo
+  printf "%s\n" "$(bold "Topic Commands:")"
+  printf "  %s   Get number of records in a topic.\n" "$(green "get-number-records-topic")    "
   echo
   printf "%s\n" "$(bold "Connector Commands:")"
   printf "  %s   Connector commands.\n" "$(green "connector")                   "

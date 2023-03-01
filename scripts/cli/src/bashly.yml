@@ -20,7 +20,7 @@ commands:
   - name: OUTPUT_FOLDER 
     help: Output folder where to generate bootstrapped files.
     default: reproduction-models
-  group: Build your own..
+  group: Bootstrap
 
   help: |-
     Bootstrap reproduction model.
@@ -79,7 +79,7 @@ commands:
   - playground bootstrap-reproduction-model -f hdfs2-sink.sh -d "123456 testing with parquet format and 2 protobuf producers" -p protobuf -n 2
 
 - name: get-properties
-  group: Tools
+  group: Kafka
   help: |-
     Get properties file from a container.
     
@@ -103,7 +103,7 @@ commands:
   - playground get-properties -c broker
 
 - name: enable-remote-debugging
-  group: Tools
+  group: Debug
   help: |-
     Enable java remote debugging for container.
     
@@ -116,7 +116,7 @@ commands:
   - playground enable-remote-debugging -c broker
 
 - name: get-jmx-metrics
-  group: Tools
+  group: Kafka
   help: |-
     Get JMX metrics from a component.
     
@@ -145,26 +145,26 @@ commands:
   - playground get-jmx-metrics -c broker
 
 - name: recreate-container
-  group: Tools
+  group: Container
   help: |-
     Recreate container(s).
     
     Check documentation https://tinyurl.com/3rhjxfbs
 
 - name: get-ip-address-container
-  group: Tools
+  group: Container
   help: |-
     Get IP address of running containers.
   examples:
   - playground get-ip-address-container
 
 - name: kill-all-containers
-  group: Tools
+  group: Container
   help: |-
     Kill all containers.
 
 - name: get-number-records-topic
-  group: Tools
+  group: Topic
   help: |-
     Get number of records in a topic.
 
@@ -183,7 +183,7 @@ commands:
   - playground get-number-records-topic -t a-topic
 
 - name: logs
-  group: Tools
+  group: Container
   help: |-
     Tail and follow container logs.
 
@@ -201,7 +201,7 @@ commands:
   - playground logs -c connect -o vim
 
 - name: ssh
-  group: Tools
+  group: Container
   help: |-
     SSH into container.
 
@@ -227,7 +227,7 @@ commands:
   - playground ssh --container connect --shell sh
 
 - name: exec
-  group: Tools
+  group: Container
   help: |-
     Execute command in a container.
 
