@@ -110,7 +110,7 @@ services:
       CONTROL_CENTER_METRICS_TOPIC_REPLICATION: 1
 
   mysql:
-    image: mysql:5.7
+    image: mysql:latest
     hostname: mysql
     container_name: mysql
     volumes:
