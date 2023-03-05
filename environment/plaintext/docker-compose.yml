@@ -458,7 +458,7 @@ services:
       # CONTROL_CENTER_ID: 32
 
   kafka-lag-exporter:
-    image: lightbend/kafka-lag-exporter:0.6.6
+    image: lightbend/kafka-lag-exporter:latest
     hostname: kafka-lag-exporter
     container_name: kafka-lag-exporter
     profiles:
@@ -471,7 +471,7 @@ services:
       - ./kafka-lag-exporter/logback.xml:/opt/docker/conf/logback.xml
 
   alertmanager:
-    image: prom/alertmanager:v0.18.0
+    image: prom/alertmanager:latest
     hostname: alertmanager
     container_name: alertmanager
     profiles:
@@ -480,7 +480,7 @@ services:
       - 9093:9093
 
   node-exporter:
-    image: prom/node-exporter:v0.18.1
+    image: prom/node-exporter:latest
     hostname: node-exporter
     container_name: node-exporter
     profiles:
@@ -496,7 +496,7 @@ services:
       - '^(aufs|proc|nsfs|shm|cgroup|tmpfs|binfmt_misc|debugfs|devpts|fusectl|hugetlbfs|fuse.lxcfs|mqueue|pstore|securityfs|sysfs|autofs|devtmpfs|configfs)'
 
   prometheus:
-    image: prom/prometheus
+    image: prom/prometheus:latest
     hostname: prometheus
     container_name: prometheus
     profiles:
@@ -511,7 +511,7 @@ services:
       - alertmanager
 
   grafana:
-    image: grafana/grafana:7.4.1
+    image: grafana/grafana:latest
     hostname: grafana
     container_name: grafana
     profiles:
