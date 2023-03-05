@@ -1,8 +1,8 @@
 name: playground
-help: cli for Kafka Docker Playground
+help: 🐳🧠 CLI for Kafka Docker Playground
 version: 1.0.1
 dependencies:
-  docker: Check documentation https://tinyurl.com/4rpcmpjj
+  docker: 👉 Check documentation https://tinyurl.com/4rpcmpjj
 
 commands:
 
@@ -18,14 +18,14 @@ commands:
 - name: bootstrap-reproduction-model
   environment_variables:
   - name: OUTPUT_FOLDER 
-    help: Output folder where to generate bootstrapped files.
+    help: 📁 Output folder where to generate bootstrapped files.
     default: reproduction-models
   group: Bootstrap
 
   help: |-
-    Bootstrap reproduction model.
+    🛠 Bootstrap reproduction model.
     
-    Check documentation https://tinyurl.com/bdfs25my
+    👉 Check documentation https://tinyurl.com/bdfs25my
 
   flags:
   - long: --file
@@ -81,9 +81,9 @@ commands:
 - name: get-properties
   group: Kafka
   help: |-
-    Get properties file from a container.
+    📝 Get properties file from a container.
     
-    Check documentation https://tinyurl.com/4vj7tm2b
+    👉 Check documentation https://tinyurl.com/4vj7tm2b
 
   flags:
   - &container
@@ -105,9 +105,9 @@ commands:
 - name: enable-remote-debugging
   group: Debug
   help: |-
-    Enable java remote debugging for container.
+    ✨ Enable java remote debugging for container.
     
-    Check documentation https://tinyurl.com/bdz843d4
+    👉 Check documentation https://tinyurl.com/bdz843d4
   flags:
     - *container
   examples:
@@ -118,9 +118,9 @@ commands:
 - name: get-jmx-metrics
   group: Kafka
   help: |-
-    Get JMX metrics from a component.
+    🔢 Get JMX metrics from a component.
     
-    Check documentation https://tinyurl.com/yc2myws9
+    👉 Check documentation https://tinyurl.com/yc2myws9
 
   flags:
   - long: --component
@@ -147,26 +147,26 @@ commands:
 - name: recreate-container
   group: Container
   help: |-
-    Recreate container(s).
+    ♻️ Recreate container(s).
     
-    Check documentation https://tinyurl.com/3rhjxfbs
+    👉 Check documentation https://tinyurl.com/3rhjxfbs
 
 - name: get-ip-address-container
   group: Container
   help: |-
-    Get IP address of running containers.
+    🖥️ Get IP address of running containers.
   examples:
   - playground get-ip-address-container
 
 - name: kill-all-containers
   group: Container
   help: |-
-    Kill all containers.
+    💀 Kill all containers.
 
 - name: get-number-records-topic
   group: Topic
   help: |-
-    Get number of records in a topic.
+    💯 Get number of records in a topic.
 
   flags:
   - &topic
@@ -186,7 +186,7 @@ commands:
 - name: logs
   group: Container
   help: |-
-    Tail and follow container logs.
+    👨‍💻 Tail and follow container logs.
 
   flags:
   - *container
@@ -218,7 +218,7 @@ commands:
 - name: ssh
   group: Container
   help: |-
-    SSH into container.
+    🚀 SSH into container.
 
   flags:
   - *container
@@ -244,7 +244,7 @@ commands:
 - name: exec
   group: Container
   help: |-
-    Execute command in a container.
+    🪄 Execute command in a container.
 
   flags:
   - *container
@@ -279,7 +279,7 @@ commands:
 - name: connector
   group: Connector
   help: |-
-    Connector commands.
+    🔗 Connector commands.
 
   commands:
   - name: status
@@ -325,9 +325,9 @@ commands:
 - name: connect-log-level
   group: Connector
   help: |-
-    Set connect log level.
+    🧬 Set connect log level.
 
-    Check documentation https://tinyurl.com/yc78tr8a
+    👉 Check documentation https://tinyurl.com/yc78tr8a
 
   commands:
   - name: get
