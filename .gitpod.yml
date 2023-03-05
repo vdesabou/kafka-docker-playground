@@ -19,7 +19,7 @@ tasks:
     init: |
       cd environment/kerberos && source ../../scripts/utils.sh && docker-compose -f ../../environment/plaintext/docker-compose.yml --profile control-center --profile ksqldb pull && cd - 
       docker pull google/cloud-sdk:latest
-      docker pull mikesir87/aws-cli:v2
+      docker pull amazon/aws-cli
       docker pull mcr.microsoft.com/azure-cli
       docker pull imega/jq
       docker pull vdesabou/avro-tools
