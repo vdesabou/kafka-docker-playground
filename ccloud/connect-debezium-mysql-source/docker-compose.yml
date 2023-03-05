@@ -2,7 +2,7 @@
 version: '3.5'
 services:
   mysql:
-    image: mysql:5.7
+    image: mysql:latest
     hostname: mysql
     container_name: mysql
     volumes:
