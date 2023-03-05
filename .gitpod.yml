@@ -22,7 +22,7 @@ tasks:
       docker pull mikesir87/aws-cli:v2
       docker pull mcr.microsoft.com/azure-cli
       docker pull imega/jq
-      docker pull actions/avro-tools
+      docker pull vdesabou/avro-tools
       gp sync-done prebuild
 
   - name: playground

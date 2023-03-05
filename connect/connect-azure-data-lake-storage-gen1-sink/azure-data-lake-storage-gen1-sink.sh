@@ -102,7 +102,7 @@ az dls fs list --account "${AZURE_DATALAKE_ACCOUNT_NAME}" --path /topics
 log "Getting one of the avro files locally and displaying content with avro-tools"
 az dls fs download --account "${AZURE_DATALAKE_ACCOUNT_NAME}" --overwrite --source-path /topics/datalake_topic/partition=0/datalake_topic+0+0000000000.avro --destination-path /tmp/datalake_topic+0+0000000000.avro
 
-docker run --rm -v /tmp:/tmp actions/avro-tools tojson /tmp/datalake_topic+0+0000000000.avro
+docker run --rm -v /tmp:/tmp vdesabou/avro-tools tojson /tmp/datalake_topic+0+0000000000.avro
 
 log "Deleting resource group"
 az group delete --name $AZURE_RESOURCE_GROUP --yes --no-wait

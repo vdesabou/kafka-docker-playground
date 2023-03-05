@@ -55,7 +55,7 @@ log "Getting one of the avro files locally and displaying content with avro-tool
 docker exec namenode bash -c "/opt/hadoop-2.7.4/bin/hadoop fs -copyToLocal /topics/test_hdfs/f1=value1/test_hdfs+0+0000000000+0000000000.avro /tmp"
 docker cp namenode:/tmp/test_hdfs+0+0000000000+0000000000.avro /tmp/
 
-docker run --rm -v /tmp:/tmp actions/avro-tools tojson /tmp/test_hdfs+0+0000000000+0000000000.avro
+docker run --rm -v /tmp:/tmp vdesabou/avro-tools tojson /tmp/test_hdfs+0+0000000000+0000000000.avro
 
 log "Check data with beeline"
 docker exec -i hive-server beeline > /tmp/result.log  2>&1 <<-EOF

@@ -111,7 +111,7 @@ aws s3api list-objects --bucket "$AWS_BUCKET_NAME"
 log "Getting one of the avro files locally and displaying content with avro-tools"
 aws s3 cp --only-show-errors s3://$AWS_BUCKET_NAME/$TAG/customer_avro/partition=0/customer_avro+0+0000000000.avro customer_avro+0+0000000000.avro
 
-docker run --rm -v ${DIR}:/tmp actions/avro-tools tojson /tmp/customer_avro+0+0000000000.avro
+docker run --rm -v ${DIR}:/tmp vdesabou/avro-tools tojson /tmp/customer_avro+0+0000000000.avro
 rm -f customer_avro+0+0000000000.avro
 
 exit 0

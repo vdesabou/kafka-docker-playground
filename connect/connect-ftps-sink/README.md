@@ -78,7 +78,7 @@ test_ftps_sink+0+0000000009.avro
 ```
 
 ```bash
-docker run --rm -v /tmp:/tmp actions/avro-tools tojson /tmp/test_ftps_sink+0+0000000000.avro
+docker run --rm -v /tmp:/tmp vdesabou/avro-tools tojson /tmp/test_ftps_sink+0+0000000000.avro
 {"f1":"value1"}
 ```
 
