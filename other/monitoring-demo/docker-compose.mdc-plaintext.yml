@@ -262,7 +262,7 @@ services:
       - streams
 
   kafka-lag-exporter:
-    image: lightbend/kafka-lag-exporter:latest
+    image: lightbend/kafka-lag-exporter:0.6.8
     hostname: kafka-lag-exporter
     container_name: kafka-lag-exporter
     restart: always
