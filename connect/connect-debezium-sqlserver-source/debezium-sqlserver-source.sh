@@ -12,17 +12,9 @@ fi
 
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
 
-docker exec -i sqlserver bash << EOF
-mkdir -p /opt/mssql-tools/bin && cd /opt/mssql-tools/bin && wget https://github.com/microsoft/go-sqlcmd/releases/download/v0.8.0/sqlcmd-v0.8.0-linux-arm64.tar.bz2 && bzip2 -d sqlcmd-v0.8.0-linux-arm64.tar.bz2 && tar -xvf sqlcmd-v0.8.0-linux-arm64.tar && chmod 755 sqlcmd
-EOF
 
 log "Create table"
-docker exec -e SQLCMDPASSWORD='Password!' -i sqlserver /opt/mssql-tools/bin/sqlcmd -U sa << EOF
-
-EXEC sp_configure 'clr enabled', 1;  
-RECONFIGURE;  
-GO 
-
+docker exec -i sqlserver /opt/mssql-tools/bin/sqlcmd -U sa -P Password! << EOF
 -- Create the test database
 CREATE DATABASE testDB;
 GO
@@ -74,7 +66,7 @@ curl -X PUT \
 
 sleep 5
 
-docker exec -e SQLCMDPASSWORD='Password!' -i sqlserver /opt/mssql-tools/bin/sqlcmd -U sa << EOF
+docker exec -i sqlserver /opt/mssql-tools/bin/sqlcmd -U sa -P Password! << EOF
 USE testDB;
 INSERT INTO customers(first_name,last_name,email) VALUES ('Pam','Thomas','pam@office.com');
 GO
