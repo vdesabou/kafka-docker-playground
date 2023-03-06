@@ -88,19 +88,19 @@ aws redshift modify-cluster --cluster-identifier $CLUSTER_NAME --vpc-security-gr
 CLUSTER=$(aws redshift describe-clusters --cluster-identifier $CLUSTER_NAME | jq -r .Clusters[0].Endpoint.Address)
 
 set +e
-docker run -i -e CLUSTER="$CLUSTER" -v "${DIR}/customers.sql":/tmp/customers.sql debezium/postgres:15 psql -h "$CLUSTER" -U "masteruser" -d "dev" -p "5439" << EOF
+docker run -i -e CLUSTER="$CLUSTER" -v "${DIR}/customers.sql":/tmp/customers.sql debezium/postgres:15-alpine psql -h "$CLUSTER" -U "masteruser" -d "dev" -p "5439" << EOF
 myPassword1
 DROP TABLE CUSTOMERS;
 EOF
 set -e
 
 log "Create database in Redshift"
-docker run -i -e CLUSTER="$CLUSTER" -v "${DIR}/customers.sql":/tmp/customers.sql debezium/postgres:15 psql -h "$CLUSTER" -U "masteruser" -d "dev" -p "5439" -f "/tmp/customers.sql" << EOF
+docker run -i -e CLUSTER="$CLUSTER" -v "${DIR}/customers.sql":/tmp/customers.sql debezium/postgres:15-alpine psql -h "$CLUSTER" -U "masteruser" -d "dev" -p "5439" -f "/tmp/customers.sql" << EOF
 myPassword1
 EOF
 
 log "Verify data is in Redshift"
-docker run -i -e CLUSTER="$CLUSTER" -v "${DIR}/customers.sql":/tmp/customers.sql debezium/postgres:15 psql -h "$CLUSTER" -U "masteruser" -d "dev" -p "5439" << EOF
+docker run -i -e CLUSTER="$CLUSTER" -v "${DIR}/customers.sql":/tmp/customers.sql debezium/postgres:15-alpine psql -h "$CLUSTER" -U "masteruser" -d "dev" -p "5439" << EOF
 myPassword1
 SELECT * from CUSTOMERS;
 EOF

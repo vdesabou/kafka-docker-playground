@@ -46,7 +46,7 @@ $ CLUSTER=$(aws redshift describe-clusters --cluster-identifier $CLUSTER_NAME | 
 Create database in Redshift:
 
 ```bash
-docker run -i -e CLUSTER="$CLUSTER" -v "${DIR}/customers.sql":/tmp/customers.sql debezium/postgres:15 psql -h "$CLUSTER" -U "masteruser" -d "dev" -p "5439" -f "/tmp/customers.sql" << EOF
+docker run -i -e CLUSTER="$CLUSTER" -v "${DIR}/customers.sql":/tmp/customers.sql debezium/postgres:15-alpine psql -h "$CLUSTER" -U "masteruser" -d "dev" -p "5439" -f "/tmp/customers.sql" << EOF
 myPassword1
 EOF
 ```
@@ -54,7 +54,7 @@ EOF
 Verify data is in Redshift:
 
 ```bash
-docker run -i -e CLUSTER="$CLUSTER" -v "${DIR}/customers.sql":/tmp/customers.sql debezium/postgres:15 psql -h "$CLUSTER" -U "masteruser" -d "dev" -p "5439" << EOF
+docker run -i -e CLUSTER="$CLUSTER" -v "${DIR}/customers.sql":/tmp/customers.sql debezium/postgres:15-alpine psql -h "$CLUSTER" -U "masteruser" -d "dev" -p "5439" << EOF
 myPassword1
 SELECT * from CUSTOMERS;
 EOF
