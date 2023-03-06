@@ -34,16 +34,6 @@ then
      cd ${OLDDIR}
 fi
 
-if test -z "$(docker images -q tibems:latest)"
-then
-     log "Building TIBCO EMS docker image..it can take a while..."
-     OLDDIR=$PWD
-     cd ../../connect/connect-jms-tibco-source/docker-tibco
-     docker build -t tibbase:1.0.0 ./tibbase
-     docker build -t tibems:latest . -f ./tibems/Dockerfile
-     cd ${OLDDIR}
-fi
-
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
 
 log "Sending EMS messages m1 m2 m3 m4 m5 in queue connector-quickstart"

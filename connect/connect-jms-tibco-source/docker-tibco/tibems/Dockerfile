@@ -1,4 +1,4 @@
-FROM tibbase:1.0.0
+FROM --platform=linux/amd64 tibbase:1.0.0
 
 ADD --chown=tibusr:tibgrp ./TIB_ems-ce_8.5.1_linux_x86_64.zip /tmp/install/
 

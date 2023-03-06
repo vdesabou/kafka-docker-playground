@@ -24,11 +24,9 @@ connect/connect-jdbc-sqlserver-source
 connect/connect-jms-active-mq-sink
 connect/connect-jms-sag-um-sink
 connect/connect-jms-sag-um-source
-
-
-
 connect/connect-jms-tibco-sink
 connect/connect-jms-tibco-source
+
 connect/connect-jms-weblogic-sink
 connect/connect-jms-weblogic-source
 connect/connect-kudu-sink
