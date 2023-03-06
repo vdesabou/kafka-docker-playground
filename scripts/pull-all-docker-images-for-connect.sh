@@ -6,7 +6,7 @@ source ${DIR}/../scripts/utils.sh
 
 OLDIFS="$IFS"
 IFS=$'\n' # bash specific
-for image in $(grep -h "image:\s.*\/.*" $(find ${DIR}/.. -name "*.yml"))
+for image in $(grep -h "image:\s.*\/.*" $(find ${DIR}/../connect -name "*.yml"))
 do
   image=$(echo $image | tr -s " " | cut -d " " -f 3)
 
