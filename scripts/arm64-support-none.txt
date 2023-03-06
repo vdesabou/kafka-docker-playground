@@ -48,9 +48,3 @@ connect/connect-jdbc-singlestore-source
 # /opt/sybase/ASE-15_0/install/RUN_DKSYBASE: line 30:     9 Segmentation fault      /opt/sybase/ASE-15_0/bin/dataserver -d${DATA_FILE} -e/opt/sybase/ASE-15_0/install/DKSYBASE.log -c/opt/sybase/ASE-15_0/DKSYBASE.cfg -M/opt/sybase/ASE-15_0 -sDKSYBASE
 connect/connect-jdbc-sybase-sink
 connect/connect-jdbc-sybase-source
-
-
-connect/connect-jms-solace-sink
-connect/connect-jms-solace-source
-connect/connect-solace-sink
-connect/connect-solace-source
