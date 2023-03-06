@@ -386,13 +386,49 @@ do
     release_date_encoded=$(echo $release_date_encoded | tr "-" "_")
     connector_badge="[![version](https://img.shields.io/badge/v-$versionencoded%20($release_date_encoded)-pink)]($documentation_url)"
 
+    # M1 Mac arm64 support
+    grep "${test}" ${DIR}/arm64-support-with-emulation.txt > /dev/null
+    if [ $? = 0 ]
+    then
+        arm64="![arm64](https://img.shields.io/badge/arm64-emulation%20required-orange)"
+    fi
+
+    grep "${test}" ${DIR}/arm64-support-none.txt > /dev/null
+    if [ $? = 0 ]
+    then
+        arm64="![arm64](https://img.shields.io/badge/arm64-not%20working-red)"
+    fi
+
+    if [ -z $arm64 ]
+    then
+        arm64="![arm64](https://img.shields.io/badge/arm64-native%20support-green)"
+    fi
+
     let "nb_connector_tests++"
-    sed -e "s|:${test}:|\&nbsp; $connector_badge $owner_badge $ci |g" \
+    sed -e "s|:${test}:|\&nbsp; $connector_badge $owner_badge $arm64 $ci |g" \
         $content_file > $content_tmp_file
 
     cp $content_tmp_file $content_file
   else
-    sed -e "s|:${test}:|\&nbsp; $ci |g" \
+    # M1 Mac arm64 support
+    grep "${test}" ${DIR}/arm64-support-with-emulation.txt > /dev/null
+    if [ $? = 0 ]
+    then
+        arm64="![arm64](https://img.shields.io/badge/arm64-emulation%20required-orange)"
+    fi
+
+    grep "${test}" ${DIR}/arm64-support-none.txt > /dev/null
+    if [ $? = 0 ]
+    then
+        arm64="![arm64](https://img.shields.io/badge/arm64-not%20working-red)"
+    fi
+
+    if [ -z $arm64 ]
+    then
+        arm64="![arm64](https://img.shields.io/badge/arm64-native%20support-green)"
+    fi
+
+    sed -e "s|:${test}:|\&nbsp; $arm64 $ci |g" \
         $content_file > $content_tmp_file
 
     cp $content_tmp_file $content_file

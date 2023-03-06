@@ -1,0 +1,56 @@
+# --> will be released in version in 2.46 (source)
+connect/connect-azure-blob-storage-sink
+connect/connect-azure-blob-storage-source
+connect/connect-azure-cognitive-search-sink
+connect/connect-azure-cosmosdb-sink
+connect/connect-azure-cosmosdb-source
+connect/connect-azure-data-lake-storage-gen1-sink
+connect/connect-azure-data-lake-storage-gen2-sink
+connect/connect-azure-event-hubs-source
+connect/connect-azure-functions-sink
+connect/connect-azure-service-bus-source
+connect/connect-azure-sql-data-warehouse-sink
+
+connect/connect-cdc-oracle11-source
+connect/connect-cdc-oracle12-source
+connect/connect-cdc-oracle18-source
+connect/connect-cdc-oracle19-source
+connect/connect-cdc-oracle21-source
+connect/connect-jdbc-oracle11-sink
+connect/connect-jdbc-oracle11-source
+connect/connect-jdbc-oracle12-sink
+connect/connect-jdbc-oracle12-source
+connect/connect-jdbc-oracle19-sink
+connect/connect-jdbc-oracle19-source
+connect/connect-jdbc-oracle21-sink
+connect/connect-jdbc-oracle21-source
+connect/connect-jms-oracle19-sink
+connect/connect-jms-oracle19-source
+connect/connect-jms-oracle21-sink
+connect/connect-jms-oracle21-source
+
+# requires CP 
+connect/connect-hbase-sink
+
+# https://integration-development.ideas.ibm.com/ideas/MESNS-I-369
+connect/connect-ibm-mq-sink
+connect/connect-ibm-mq-source
+
+connect/connect-jdbc-ibmdb2-sink
+connect/connect-jdbc-ibmdb2-source
+
+connect/connect-jdbc-sap-hana-sink
+connect/connect-jdbc-sap-hana-source
+
+connect/connect-jdbc-singlestore-source
+
+
+# /opt/sybase/ASE-15_0/install/RUN_DKSYBASE: line 30:     9 Segmentation fault      /opt/sybase/ASE-15_0/bin/dataserver -d${DATA_FILE} -e/opt/sybase/ASE-15_0/install/DKSYBASE.log -c/opt/sybase/ASE-15_0/DKSYBASE.cfg -M/opt/sybase/ASE-15_0 -sDKSYBASE
+connect/connect-jdbc-sybase-sink
+connect/connect-jdbc-sybase-source
+
+
+connect/connect-jms-solace-sink
+connect/connect-jms-solace-source
+connect/connect-solace-sink
+connect/connect-solace-source
