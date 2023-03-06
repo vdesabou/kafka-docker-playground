@@ -84,9 +84,17 @@ curl -X PUT \
           }' \
      http://localhost:8083/connectors/kinesis-source/config | jq .
 
+docker exec -i connect kafka-avro-console-producer --broker-list broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic a-topic --property value.schema='{"type":"record","name":"myrecord","fields":[{"name":"u_name","type":"string"},
+{"name":"u_price", "type": "float"}, {"name":"u_quantity", "type": "int"}]}' << EOF
+{"u_name": "scissors", "u_price": 2.75, "u_quantity": 3}
+{"u_name": "tape", "u_price": 0.99, "u_quantity": 10}
+{"u_name": "notebooks", "u_price": 1.99, "u_quantity": 5}
+EOF
+
+
 log "Verify we have received the data in kinesis_topic topic"
-timeout 60 docker exec broker kafka-console-consumer --bootstrap-server broker:9092 --topic kinesis_topic --from-beginning --property print.key=true --max-messages 1
-# 123     ��-��,j�
+timeout 60 docker exec connect kafka-avro-console-consumer --bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic kinesis_topic --from-beginning --property print.key=true --property key.deserializer=org.apache.kafka.common.serialization.StringDeserializer --max-messages 1
+# 123     "µë-ë,j\u0007µ"
 # Processed a total of 1 messages
 
 log "Delete the stream"
