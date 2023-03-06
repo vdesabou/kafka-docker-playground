@@ -6,8 +6,6 @@ services:
     image: ifnazar/sybase_15_7:latest
     hostname: dksybase
     container_name: sybase
-    ports:
-        - "5000:5000"
     command: ["bash", "/sybase/start"]
 
   connect:
