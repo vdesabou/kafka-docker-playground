@@ -1,5 +1,4 @@
-FROM adoptopenjdk/openjdk8:alpine
-RUN apk add bash
+FROM adoptopenjdk/openjdk11:slim
 COPY ./target/*.jar ./
 ENV JAVA_OPTS ""
 CMD sleep infinity

@@ -23,7 +23,7 @@
 
 # Pull base image
 # ---------------
-FROM container-registry.oracle.com/middleware/weblogic:12.2.1.3
+FROM --platform=linux/amd64 container-registry.oracle.com/middleware/weblogic:12.2.1.3
 
 
 

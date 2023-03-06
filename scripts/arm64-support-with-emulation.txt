@@ -26,9 +26,14 @@ connect/connect-jms-sag-um-sink
 connect/connect-jms-sag-um-source
 connect/connect-jms-tibco-sink
 connect/connect-jms-tibco-source
-
+connect/connect-tibco-sink
+connect/connect-tibco-source
 connect/connect-jms-weblogic-sink
 connect/connect-jms-weblogic-source
+connect/connect-weblogic-source
+
+
+
 connect/connect-kudu-sink
 connect/connect-kudu-source
 connect/connect-mapr-sink
@@ -53,7 +58,6 @@ connect/connect-salesforce-platform-events-sink
 connect/connect-salesforce-platform-events-source
 connect/connect-salesforce-pushtopics-source
 connect/connect-salesforce-sobject-sink
-connect/connect-sap-hana-sink
 connect/connect-servicenow-sink
 connect/connect-servicenow-source
 connect/connect-sftp-sink
@@ -66,8 +70,5 @@ connect/connect-splunk-sink
 connect/connect-splunk-source
 connect/connect-spool-dir-source
 connect/connect-syslog-source
-connect/connect-tibco-sink
-connect/connect-tibco-source
 connect/connect-vertica-sink
-connect/connect-weblogic-source
 connect/connect-zendesk-source

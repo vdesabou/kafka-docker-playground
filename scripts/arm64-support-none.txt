@@ -41,6 +41,7 @@ connect/connect-jdbc-ibmdb2-source
 
 connect/connect-jdbc-sap-hana-sink
 connect/connect-jdbc-sap-hana-source
+connect/connect-sap-hana-sink
 
 connect/connect-jdbc-singlestore-source
 
