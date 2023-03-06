@@ -35,13 +35,13 @@ $ ./cloudwatch-with-assuming-iam-role.sh (in that case `~/.aws/credentials-with-
 Create a log group in AWS CloudWatch Logs.
 
 ```bash
-$ aws logs create-log-group --log-group my-log-group
+$ aws logs create-log-group --log-group-name my-log-group
 ```
 
 Create a log stream in AWS CloudWatch Logs.
 
 ```bash
-$ aws logs create-log-stream --log-group my-log-group --log-stream my-log-stream
+$ aws logs create-log-stream --log-group-name my-log-group --log-stream my-log-stream
 ```
 
 Insert Records into your log stream.
@@ -50,7 +50,7 @@ Note: If this is the first time inserting logs into a new log stream, then no se
 However, after the first put, there will be a sequence token returned that will be needed as a parameter in the next put.
 
 ```bash
-$ aws logs put-log-events --log-group my-log-group --log-stream my-log-stream --log-events timestamp=`date +%s000`,message="This is a log #0"
+$ aws logs put-log-events --log-group-name my-log-group --log-stream my-log-stream --log-events timestamp=`date +%s000`,message="This is a log #0"
 ```
 
 Injecting more messages
@@ -58,8 +58,8 @@ Injecting more messages
 ```bash
 for i in $(seq 1 10)
 do
-     token=$($ aws logs describe-log-streams --log-group my-log-group | jq -r .logStreams[0].uploadSequenceToken)
-     $ aws logs put-log-events --log-group my-log-group --log-stream my-log-stream --log-events timestamp=`date +%s000`,message="This is a log #${i}" --sequence-token ${token}
+     token=$($ aws logs describe-log-streams --log-group-name my-log-group | jq -r .logStreams[0].uploadSequenceToken)
+     $ aws logs put-log-events --log-group-name my-log-group --log-stream my-log-stream --log-events timestamp=`date +%s000`,message="This is a log #${i}" --sequence-token ${token}
 done
 ```
 
