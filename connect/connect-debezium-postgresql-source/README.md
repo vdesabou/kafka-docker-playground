@@ -176,10 +176,10 @@ openssl req -new -nodes -out /tmp/server.csr -keyout /tmp/server.key -subj "/CN=
 openssl x509 -req -in /tmp/server.csr -days 365 -CA /tmp/ca.crt -CAkey /tmp/ca.key -CAcreateserial -out /tmp/server.crt
 ```
 
-Build custom image from `debezium/postgres:10`:
+Build custom image from `debezium/postgres:15`:
 
 ```dockerfile
-FROM debezium/postgres:10
+FROM debezium/postgres:15
 LABEL "Product"="PostgreSQL (SSL enabled)"
 COPY server.key /var/lib/postgresql/server.key
 COPY server.crt /var/lib/postgresql/server.crt

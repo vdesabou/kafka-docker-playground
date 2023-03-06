@@ -128,7 +128,7 @@ curl -X PUT \
 sleep 20
 
 log "Verify data is in Redshift"
-timeout 30 docker run -i debezium/postgres:10 psql -h $CLUSTER -U masteruser -d dev -p 5439 << EOF > /tmp/result.log
+timeout 30 docker run -i debezium/postgres:15 psql -h $CLUSTER -U masteruser -d dev -p 5439 << EOF > /tmp/result.log
 myPassword1
 SELECT * from orders;
 EOF

@@ -102,7 +102,7 @@ $ curl -X PUT \
 Verify data is in Redshift
 
 ```bash
-$ docker run -i debezium/postgres:10 psql -h $CLUSTER -U masteruser -d dev -p 5439 << EOF
+$ docker run -i debezium/postgres:15 psql -h $CLUSTER -U masteruser -d dev -p 5439 << EOF
 myPassword1
 SELECT * from orders;
 EOF
