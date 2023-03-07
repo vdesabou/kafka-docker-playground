@@ -3257,3 +3257,29 @@ function ccloud::version_gt() {
 ## ccloud-utils functions
 ## END
 ##############
+
+function check_arm64_support() { 
+  DIR="$1"
+  DOCKER_COMPOSE_FILE="$2"
+  set +e
+  if [ `uname -m` = "arm64" ]
+  then
+    test=$(echo "$DOCKER_COMPOSE_FILE" | awk -F"/" '{ print $(NF-2)"/"$(NF-1) }')
+    grep "${test}" ${DIR}/../../scripts/arm64-support-none.txt > /dev/null
+    if [ $? = 0 ]
+    then
+        logerror "🖥️ This example is not working with ARM64 !"
+        exit 1
+    fi
+
+    grep "${test}" ${DIR}/../../scripts/arm64-support-with-emulation.txt > /dev/null
+    if [ $? = 0 ]
+    then
+        logwarn "🖥️ This example is working with ARM64 but requires emulation."
+        exit 1
+    fi
+
+    log "🖥️ This example should work natively with ARM64."
+  fi
+  set -e
+}

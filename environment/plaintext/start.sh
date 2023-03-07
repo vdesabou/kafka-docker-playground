@@ -77,6 +77,7 @@ then
   set +e
   nb_connect_services=$(egrep -c "connect[0-9]+:" ${DOCKER_COMPOSE_FILE_OVERRIDE})
   set -e
+  check_arm64_support "${DIR}" "${DOCKER_COMPOSE_FILE_OVERRIDE}"
 fi
 
 # defined 3 Connect variable and when profile is included/excluded
