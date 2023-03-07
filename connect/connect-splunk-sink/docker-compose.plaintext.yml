@@ -5,6 +5,7 @@ services:
     image: splunk/splunk:latest
     hostname: splunk
     container_name: splunk
+    platform: linux/amd64
     ports:
       - 8000:8000
     volumes:

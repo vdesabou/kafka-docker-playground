@@ -7,6 +7,24 @@ source ${DIR}/../../scripts/utils.sh
 
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
 
+
+# Verify SPLUNK has started within MAX_WAIT seconds
+MAX_WAIT=2500
+CUR_WAIT=0
+log "⌛ Waiting up to $MAX_WAIT seconds for SPLUNK to start"
+docker container logs splunk > /tmp/out.txt 2>&1
+while [[ ! $(cat /tmp/out.txt) =~ "Ansible playbook complete, will begin streaming splunkd_stderr.log" ]]; do
+sleep 10
+docker container logs splunk > /tmp/out.txt 2>&1
+CUR_WAIT=$(( CUR_WAIT+10 ))
+if [[ "$CUR_WAIT" -gt "$MAX_WAIT" ]]; then
+     logerror "ERROR: The logs in splunk container do not show 'Ansible playbook complete, will begin streaming splunkd_stderr.log' after $MAX_WAIT seconds. Please troubleshoot with 'docker container ps' and 'docker container logs'.\n"
+     exit 1
+fi
+done
+log "SPLUNK has started!"
+
+
 log "Splunk UI is accessible at http://127.0.0.1:8000 (admin/password)"
 
 # log "Setting minfreemb to 1Gb (by default 5Gb)"
@@ -23,15 +41,15 @@ curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
                "connector.class": "com.splunk.kafka.connect.SplunkSinkConnector",
-                    "tasks.max": "1",
-                    "topics": "splunk-qs",
-                    "splunk.indexes": "main",
-                    "splunk.hec.uri": "http://splunk:8088",
-                    "splunk.hec.token": "99582090-3ac3-4db1-9487-e17b17a05081",
-                    "splunk.sourcetypes": "my_sourcetype",
-                    "value.converter": "org.apache.kafka.connect.storage.StringConverter",
-                    "confluent.topic.bootstrap.servers": "broker:9092",
-                    "confluent.topic.replication.factor": "1"
+               "tasks.max": "1",
+               "topics": "splunk-qs",
+               "splunk.indexes": "main",
+               "splunk.hec.uri": "http://splunk:8088",
+               "splunk.hec.token": "99582090-3ac3-4db1-9487-e17b17a05081",
+               "splunk.sourcetypes": "my_sourcetype",
+               "value.converter": "org.apache.kafka.connect.storage.StringConverter",
+               "confluent.topic.bootstrap.servers": "broker:9092",
+               "confluent.topic.replication.factor": "1"
           }' \
      http://localhost:8083/connectors/splunk-sink/config | jq .
 
