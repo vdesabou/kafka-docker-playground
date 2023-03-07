@@ -387,6 +387,7 @@ do
     connector_badge="[![version](https://img.shields.io/badge/v-$versionencoded%20($release_date_encoded)-pink)]($documentation_url)"
 
     # M1 Mac arm64 support
+    arm64=""
     grep "${test}" ${DIR}/arm64-support-with-emulation.txt > /dev/null
     if [ $? = 0 ]
     then
@@ -399,7 +400,7 @@ do
         arm64="![arm64](https://img.shields.io/badge/arm64-not%20working-red)"
     fi
 
-    if [ -z $arm64 ]
+    if [ "$arm64" == "" ]
     then
         arm64="![arm64](https://img.shields.io/badge/arm64-native%20support-green)"
     fi
@@ -410,7 +411,7 @@ do
 
     cp $content_tmp_file $content_file
   else
-    # M1 Mac arm64 support
+    arm64=""
     grep "${test}" ${DIR}/arm64-support-with-emulation.txt > /dev/null
     if [ $? = 0 ]
     then
@@ -423,7 +424,7 @@ do
         arm64="![arm64](https://img.shields.io/badge/arm64-not%20working-red)"
     fi
 
-    if [ -z $arm64 ]
+    if [ "$arm64" == "" ]
     then
         arm64="![arm64](https://img.shields.io/badge/arm64-native%20support-green)"
     fi
