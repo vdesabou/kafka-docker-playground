@@ -5,6 +5,8 @@ services:
     image: splunk/universalforwarder:8.1.2
     hostname: splunk-uf
     container_name: splunk-uf
+    platform: linux/amd64
+    user: root
     environment:
       SPLUNK_START_ARGS: "--accept-license"
       SPLUNK_PASSWORD: "password"
