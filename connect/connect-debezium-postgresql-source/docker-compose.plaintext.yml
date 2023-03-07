@@ -3,7 +3,7 @@ version: '3.5'
 services:
 
   postgres:
-    image: debezium/postgres:15-alpine
+    image: ${POSTGRES_IMAGE}
     hostname: postgres
     container_name: postgres
     environment:

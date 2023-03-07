@@ -1,4 +1,5 @@
-FROM debezium/postgres:15-alpine
+ARG POSTGRES_IMAGE
+FROM ${POSTGRES_IMAGE}
 LABEL "Product"="PostgreSQL (SSL enabled)"
 COPY server.key /var/lib/postgresql/server.key
 COPY server.crt /var/lib/postgresql/server.crt

@@ -5,6 +5,8 @@ services:
   postgres:
     build:
       context: ../../connect/connect-debezium-postgresql-source/ssl
+      args:
+        POSTGRES_IMAGE: ${POSTGRES_IMAGE}
     hostname: postgres
     container_name: postgres
     environment:
