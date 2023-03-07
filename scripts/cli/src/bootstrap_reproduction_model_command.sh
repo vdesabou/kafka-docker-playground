@@ -286,7 +286,33 @@ fi
   line=$(grep -n '${DIR}/../../environment' $repro_test_file | cut -d ":" -f 1 | tail -n1)
   
   { head -n $(($line-1)) $tmp_dir/tmp_file; cat $tmp_dir/build_producer; tail -n +$line $tmp_dir/tmp_file; } > $repro_test_file
+
+  line_kafka_cli_producer=$(egrep -n "kafka-console-producer|kafka-avro-console-producer|kafka-json-schema-console-producer|kafka-protobuf-console-producer" $repro_test_file | cut -d ":" -f 1 | tail -n1)
+  kafka_cli_producer_error=0
+  kafka_cli_producer_eof=0
+  set +e
+  egrep "kafka-console-producer|kafka-avro-console-producer|kafka-json-schema-console-producer|kafka-protobuf-console-producer" $repro_test_file | grep EOF > /dev/null
+  if [ $? = 0 ]
+  then
+      kafka_cli_producer_eof=1
+
+      sed -n "$line_kafka_cli_producer,$(($line_kafka_cli_producer + 10))p" $repro_test_file > /tmp/tmp
+      tmp=$(grep -n "^EOF" /tmp/tmp | cut -d ":" -f 1 | tail -n1)
+      if [ $tmp == "" ]
+      then
+        logwarn "Could not determine EOF for kafka cli producer!"
+        kafka_cli_producer_error=1
+      fi
+      line_kafka_cli_producer_end=$(($line_kafka_cli_producer + $tmp))
+  else
+      logwarn "Could not find kafka cli producer!"
+      kafka_cli_producer_error=1
+  fi
+  set -e
+  if [ $kafka_cli_producer_error = 1 ]
+  then
     get_producer_fixthis_heredoc
+  fi
 
   for((i=1;i<=$nb_producers;i++)); do
     producer_hostname=""
@@ -300,10 +326,26 @@ fi
     fi
     get_producer_run_heredoc
   done
+  if [ $kafka_cli_producer_error = 1 ]
+  then
     get_producer_fixthis_heredoc
+  fi
   # log "✨ Adding command to run producer to $repro_test_file"
   cp $repro_test_file $tmp_dir/tmp_file
-  { head -n $(($line-1)) $tmp_dir/tmp_file; cat $tmp_dir/java_producer; tail -n +$line $tmp_dir/tmp_file; } > $repro_test_file
+
+  if [ $kafka_cli_producer_error == 1 ]
+  then
+      { head -n $(($line-1)) $tmp_dir/tmp_file; cat $tmp_dir/java_producer; tail -n +$line $tmp_dir/tmp_file; } > $repro_test_file
+  else
+    if [ $kafka_cli_producer_eof == 0 ]
+    then
+      line_kafka_cli_producer_end=$(($line_kafka_cli_producer + 1))
+    fi
+    { head -n $(($line_kafka_cli_producer - 2)) $tmp_dir/tmp_file; cat $tmp_dir/java_producer; tail -n +$line_kafka_cli_producer_end $tmp_dir/tmp_file; } > $repro_test_file
+  fi
+  set +x
+
+
 fi
 
 chmod u+x $repro_test_file
