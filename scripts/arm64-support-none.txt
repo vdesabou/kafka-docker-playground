@@ -44,8 +44,13 @@ connect/connect-jdbc-sap-hana-source
 connect/connect-sap-hana-sink
 
 connect/connect-jdbc-singlestore-source
-
+connect/connect-singlestore-sink
 
 # /opt/sybase/ASE-15_0/install/RUN_DKSYBASE: line 30:     9 Segmentation fault      /opt/sybase/ASE-15_0/bin/dataserver -d${DATA_FILE} -e/opt/sybase/ASE-15_0/install/DKSYBASE.log -c/opt/sybase/ASE-15_0/DKSYBASE.cfg -M/opt/sybase/ASE-15_0 -sDKSYBASE
 connect/connect-jdbc-sybase-sink
 connect/connect-jdbc-sybase-source
+
+connect/connect-kudu-sink
+connect/connect-kudu-source
+connect/connect-mapr-sink
+connect/connect-pivotal-gemfire-sink
