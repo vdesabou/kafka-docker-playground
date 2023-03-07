@@ -118,7 +118,7 @@
                             <includeStdTypes>true</includeStdTypes>
                             <protocVersion>3.15.0</protocVersion>
                             <inputDirectories>
-                                <include>src/main/resources/</include>
+                                <include>src/main/resources/schema/</include>
                             </inputDirectories>
                             <outputTargets>
                                 <outputTarget>
