@@ -3,7 +3,7 @@ version: '3.5'
 services:
 
   neo4j:
-    image: neo4j:4.2-enterprise
+    image: neo4j:4.4.18-enterprise
     hostname: neo4j
     container_name: neo4j
     ports:
