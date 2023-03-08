@@ -40,3 +40,8 @@ connect/connect-splunk-s2s-source
 connect/connect-splunk-sink
 connect/connect-syslog-source
 connect/connect-vertica-sink
+
+environment/kerberos
+environment/ssl_kerberos
+environment/mdc-kerberos
+environment/rbac-sasl-plain
