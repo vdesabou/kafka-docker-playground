@@ -77,34 +77,6 @@ curl -X PUT \
           }' \
      http://localhost:8083/connectors/s3-sink/config | jq .
 
-# [2022-11-09 08:36:47,871] ERROR Unable to read objects using the configured S3 credentials, bucket, and path. (io.confluent.connect.s3.source.S3SourceConnectorValidation:105)
-# com.amazonaws.SdkClientException: Unable to load AWS credentials from any provider in the chain: [EnvironmentVariableCredentialsProvider: Unable to load AWS credentials from environment variables (AWS_ACCESS_KEY_ID (or AWS_ACCESS_KEY) and AWS_SECRET_KEY (or AWS_SECRET_ACCESS_KEY)), SystemPropertiesCredentialsProvider: Unable to load AWS credentials from Java system properties (aws.accessKeyId and aws.secretKey), WebIdentityTokenCredentialsProvider: class com.amazonaws.services.securitytoken.internal.STSProfileCredentialsService cannot be cast to class com.amazonaws.auth.profile.internal.securitytoken.ProfileCredentialsService (com.amazonaws.services.securitytoken.internal.STSProfileCredentialsService is in unnamed module of loader 'app'; com.amazonaws.auth.profile.internal.securitytoken.ProfileCredentialsService is in unnamed module of loader org.apache.kafka.connect.runtime.isolation.PluginClassLoader @bff34c6), com.amazonaws.auth.profile.ProfileCredentialsProvider@151e92a3: class com.amazonaws.services.securitytoken.internal.STSProfileCredentialsService cannot be cast to class com.amazonaws.auth.profile.internal.securitytoken.ProfileCredentialsService (com.amazonaws.services.securitytoken.internal.STSProfileCredentialsService is in unnamed module of loader 'app'; com.amazonaws.auth.profile.internal.securitytoken.ProfileCredentialsService is in unnamed module of loader org.apache.kafka.connect.runtime.isolation.PluginClassLoader @bff34c6), com.amazonaws.auth.EC2ContainerCredentialsProviderWrapper@37ec24f5: The requested metadata is not found at http://169.254.169.254/latest/meta-data/iam/security-credentials/]
-#         at com.amazonaws.auth.AWSCredentialsProviderChain.getCredentials(AWSCredentialsProviderChain.java:136)
-#         at com.amazonaws.http.AmazonHttpClient$RequestExecutor.getCredentialsFromContext(AmazonHttpClient.java:1251)
-#         at com.amazonaws.http.AmazonHttpClient$RequestExecutor.runBeforeRequestHandlers(AmazonHttpClient.java:827)
-#         at com.amazonaws.http.AmazonHttpClient$RequestExecutor.doExecute(AmazonHttpClient.java:777)
-#         at com.amazonaws.http.AmazonHttpClient$RequestExecutor.executeWithTimer(AmazonHttpClient.java:764)
-#         at com.amazonaws.http.AmazonHttpClient$RequestExecutor.execute(AmazonHttpClient.java:738)
-#         at com.amazonaws.http.AmazonHttpClient$RequestExecutor.access$500(AmazonHttpClient.java:698)
-#         at com.amazonaws.http.AmazonHttpClient$RequestExecutionBuilderImpl.execute(AmazonHttpClient.java:680)
-#         at com.amazonaws.http.AmazonHttpClient.execute(AmazonHttpClient.java:544)
-#         at com.amazonaws.http.AmazonHttpClient.execute(AmazonHttpClient.java:524)
-#         at com.amazonaws.services.s3.AmazonS3Client.invoke(AmazonS3Client.java:5052)
-#         at com.amazonaws.services.s3.AmazonS3Client.invoke(AmazonS3Client.java:4998)
-#         at com.amazonaws.services.s3.AmazonS3Client.invoke(AmazonS3Client.java:4992)
-#         at com.amazonaws.services.s3.AmazonS3Client.listObjectsV2(AmazonS3Client.java:938)
-#         at io.confluent.connect.s3.source.S3Storage.listUpToMaxObjects(S3Storage.java:127)
-#         at io.confluent.connect.s3.source.S3SourceConnectorValidation.validateS3ReadPermissions(S3SourceConnectorValidation.java:98)
-#         at io.confluent.connect.s3.source.S3SourceConnectorValidation.performValidation(S3SourceConnectorValidation.java:55)
-#         at io.confluent.connect.utils.validators.all.ConfigValidation.validate(ConfigValidation.java:185)
-#         at io.confluent.connect.cloud.storage.source.CompositeSourceConnector.validate(CompositeSourceConnector.java:101)
-#         at org.apache.kafka.connect.runtime.AbstractHerder.validateConnectorConfig(AbstractHerder.java:564)
-#         at org.apache.kafka.connect.runtime.AbstractHerder.lambda$validateConnectorConfig$4(AbstractHerder.java:442)
-#         at java.base/java.util.concurrent.Executors$RunnableAdapter.call(Executors.java:515)
-#         at java.base/java.util.concurrent.FutureTask.run(FutureTask.java:264)
-#         at java.base/java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1128)
-#         at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:628)
-#         at java.base/java.lang.Thread.run(Thread.java:829)
 
 log "Sending messages to topic s3_topic"
 seq -f "{\"f1\": \"value%g\"}" 10 | docker exec -i connect kafka-avro-console-producer --broker-list broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic s3_topic --property value.schema='{"type":"record","name":"myrecord","fields":[{"name":"f1","type":"string"}]}'
