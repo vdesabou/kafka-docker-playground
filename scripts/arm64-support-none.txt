@@ -1,16 +1,3 @@
-# --> will be released in version in 2.46 (source)
-connect/connect-azure-blob-storage-sink
-connect/connect-azure-blob-storage-source
-connect/connect-azure-cognitive-search-sink
-connect/connect-azure-cosmosdb-sink
-connect/connect-azure-cosmosdb-source
-connect/connect-azure-data-lake-storage-gen1-sink
-connect/connect-azure-data-lake-storage-gen2-sink
-connect/connect-azure-event-hubs-source
-connect/connect-azure-functions-sink
-connect/connect-azure-service-bus-source
-connect/connect-azure-sql-data-warehouse-sink
-
 connect/connect-cdc-oracle11-source
 connect/connect-cdc-oracle12-source
 connect/connect-cdc-oracle18-source
