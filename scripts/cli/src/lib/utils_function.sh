@@ -241,7 +241,7 @@ function check_if_continue()
     read -p "Continue (y/n)?" choice
     case "$choice" in
     y|Y ) ;;
-    n|N ) exit 0;;
+    n|N ) exit 1;;
     * ) logerror "invalid response!";exit 1;;
     esac
 }
