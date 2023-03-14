@@ -73,4 +73,4 @@ services:
     container_name: control-center
     privileged: true
     ports:
-      - "9021:9021"
+      - "${C3_PORT:-9021}:9021"

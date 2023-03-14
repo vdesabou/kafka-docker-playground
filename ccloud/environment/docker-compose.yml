@@ -75,7 +75,7 @@ services:
     depends_on:
       - connect
     ports:
-      - "9021:9021"
+      - "${C3_PORT:-9021}:9021"
     profiles:
     - control-center
     environment:

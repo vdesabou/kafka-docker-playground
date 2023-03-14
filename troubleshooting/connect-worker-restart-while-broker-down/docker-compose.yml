@@ -198,7 +198,7 @@ services:
       - connect2
       - connect3
     ports:
-      - "9021:9021"
+      - "${C3_PORT:-9021}:9021"
     environment:
       CONTROL_CENTER_BOOTSTRAP_SERVERS: 'broker1:9092,broker2:9092,broker2:9092'
       CONTROL_CENTER_ZOOKEEPER_CONNECT: 'zookeeper:2181'

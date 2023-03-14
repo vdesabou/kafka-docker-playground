@@ -24,7 +24,7 @@ services:
     container_name: control-center
     privileged: true
     ports:
-      - "9021:9021"
+      - "${C3_PORT:-9021}:9021"
 
   rest-proxy:
     image: vdesabou/cp-ansible-playground-rest-proxy:${TAG}

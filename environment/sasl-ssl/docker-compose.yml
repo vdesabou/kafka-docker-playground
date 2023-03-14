@@ -310,7 +310,7 @@ services:
       - broker
       - connect
     ports:
-      - "9021:9021"
+      - "${C3_PORT:-9021}:9021"
       - "9022:9022"
     volumes:
       - ../../environment/sasl-ssl/security:/etc/kafka/secrets
