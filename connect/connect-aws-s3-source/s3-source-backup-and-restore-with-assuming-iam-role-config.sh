@@ -148,8 +148,6 @@ curl -X PUT \
                "s3.credentials.provider.sts.role.arn": "'"$AWS_STS_ROLE_ARN"'",
                "s3.credentials.provider.sts.role.session.name": "session-name",
                "s3.credentials.provider.sts.role.external.id": "123",
-               "aws.access.key.id": "'"$AWS_ACCOUNT_WITH_ASSUME_ROLE_AWS_ACCESS_KEY_ID"'",
-               "aws.secret.access.key": "'"$AWS_ACCOUNT_WITH_ASSUME_ROLE_AWS_SECRET_ACCESS_KEY"'",
                "transforms": "AddPrefix",
                "transforms.AddPrefix.type": "org.apache.kafka.connect.transforms.RegexRouter",
                "transforms.AddPrefix.regex": ".*",
