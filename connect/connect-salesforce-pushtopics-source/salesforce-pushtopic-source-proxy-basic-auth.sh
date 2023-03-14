@@ -4,6 +4,11 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
+
+logerror "This example is not supposed to work since the connector does not support it"
+exit 0
+
+
 SALESFORCE_USERNAME=${SALESFORCE_USERNAME:-$1}
 SALESFORCE_PASSWORD=${SALESFORCE_PASSWORD:-$2}
 SALESFORCE_CONSUMER_KEY=${SALESFORCE_CONSUMER_KEY:-$3}
