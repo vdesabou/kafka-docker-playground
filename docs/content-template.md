@@ -157,6 +157,11 @@
 
 \* You can change default connector version by setting `CONNECTOR_TAG` environment variable before starting a test, get more details [here](https://kafka-docker-playground.io/#/how-to-use?id=🔗-for-connectors)
 
+### 🔂 Standalone connector examples
+
+* <img src="https://github.com/vdesabou/kafka-docker-playground/raw/master/images/icons/sql_server.png" width="15"> Self Managed example with [Debezium CDC Microsoft SQL Server Source](https://github.com/vdesabou/kafka-docker-playground/blob/master/connect/connect-debezium-sqlserver-source/debezium-sqlserver-source-standalone-worker.sh)
+* <img src="https://github.com/vdesabou/kafka-docker-playground/raw/master/images/icons/sql_server.png" width="15"> CCloud example with [Debezium CDC Microsoft SQL Server Source](https://github.com/vdesabou/kafka-docker-playground/blob/master/ccloud/connect-debezium-sqlserver-source/debezium-sqlserver-source-standalone-worker.sh)
+
 ## ☁️ Confluent Cloud
 ### 🤖 Fully-Managed Connectors
 
