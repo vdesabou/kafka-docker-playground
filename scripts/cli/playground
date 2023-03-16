@@ -180,6 +180,11 @@ playground_bootstrap_reproduction_model_usage() {
     printf "    Default: \n"
     echo
 
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--add-custom-smt, -s")"
+    printf "    Add a custom SMT (no-op).\n"
+    echo
+
     # :command.usage_fixed_flags
     printf "  %s\n" "$(magenta "--help, -h")"
     printf "    Show this help\n"
@@ -200,6 +205,7 @@ playground_bootstrap_reproduction_model_usage() {
     printf "  playground bootstrap-reproduction-model -f hdfs2-sink.sh -d \"123456 testing\n  with parquet format and avro producer\" --producer avro\n"
     printf "  playground bootstrap-reproduction-model -f hdfs2-sink.sh -d \"123456 testing\n  with parquet format and 2 protobuf producers\" --producer protobuf\n  --nb-producers 2\n"
     printf "  playground bootstrap-reproduction-model -f hdfs2-sink.sh -d \"123456 testing\n  with parquet format and 2 protobuf producers\" -p protobuf -n 2\n"
+    printf "  playground bootstrap-reproduction-model -f hdfs2-sink.sh -d \"123456 testing\n  with parquet format and custom smt\" --add-custom-smt\n"
     echo
 
   fi
@@ -1252,6 +1258,25 @@ sed -e "s|up -d|-f $tmp_dir/docker-compose-remote-debugging.yml up -d|g" \
     /tmp/playground-command > /tmp/playground-command-debugging
 }
 
+function get_custom_smt_build_heredoc () {
+    cat << EOF > $tmp_dir/build_custom_smt
+for component in $custom_smt_name
+do
+    set +e
+    log "🏗 Building jar for \${component}"
+    docker run -i --rm -e KAFKA_CLIENT_TAG=\$KAFKA_CLIENT_TAG -e TAG=\$TAG_BASE -v "\${DIR}/\${component}":/usr/src/mymaven -v "\$HOME/.m2":/root/.m2 -v "\${DIR}/\${component}/target:/usr/src/mymaven/target" -w /usr/src/mymaven maven:3.6.1-jdk-11 mvn -Dkafka.tag=\$TAG -Dkafka.client.tag=\$KAFKA_CLIENT_TAG package > /tmp/result.log 2>&1
+    if [ \$? != 0 ]
+    then
+        logerror "ERROR: failed to build java component $component"
+        tail -500 /tmp/result.log
+        exit 1
+    fi
+    set -e
+done
+
+EOF
+}
+
 # src/lib/send_completions.sh
 send_completions() {
   echo $'# playground completion                                    -*- shell-script -*-'
@@ -1580,7 +1605,7 @@ function check_if_continue()
     read -p "Continue (y/n)?" choice
     case "$choice" in
     y|Y ) ;;
-    n|N ) exit 0;;
+    n|N ) exit 1;;
     * ) logerror "invalid response!";exit 1;;
     esac
 }
@@ -4552,6 +4577,33 @@ function ccloud::version_gt() {
 }
 
 
+function check_arm64_support() {
+
+  DIR="$1"
+  DOCKER_COMPOSE_FILE="$2"
+  set +e
+  if [ `uname -m` = "arm64" ]
+  then
+    test=$(echo "$DOCKER_COMPOSE_FILE" | awk -F"/" '{ print $(NF-2)"/"$(NF-1) }')
+    grep "${test}" ${DIR}/../../scripts/arm64-support-none.txt > /dev/null
+    if [ $? = 0 ]
+    then
+        logerror "🖥️ This example is not working with ARM64 !"
+        log "Do you want to start test anyway ?"
+        check_if_continue
+    fi
+
+    grep "${test}" ${DIR}/../../scripts/arm64-support-with-emulation.txt > /dev/null
+    if [ $? = 0 ]
+    then
+        logwarn "🖥️ This example is working with ARM64 but requires emulation."
+    fi
+
+    log "🖥️ This example should work natively with ARM64."
+  fi
+  set -e
+}
+
 # src/lib/validations/validate_dir_exists.sh
 validate_dir_exists() {
   [[ -d "$1" ]] || echo "must be an existing directory"
@@ -4609,6 +4661,7 @@ playground_bootstrap_reproduction_model_command() {
   description="${args[--description]}"
   producer="${args[--producer]}"
   nb_producers="${args[--nb-producers]}"
+  add_custom_smt="${args[--add-custom-smt]}"
 
   if [ "$test_file" = "" ]
   then
@@ -4843,14 +4896,13 @@ playground_bootstrap_reproduction_model_command() {
           if [[ "$dir1" = *connect ]]
           then
             get_producer_heredoc
-  fi
+          fi
 
           if [[ "$dir1" = *ccloud ]]
           then
             get_producer_ccloud_heredoc
-  fi
-
-          done
+          fi
+        done
 
     if [ "${docker_compose_file}" != "" ]
     then
@@ -4881,7 +4933,7 @@ playground_bootstrap_reproduction_model_command() {
       list="$list $producer_hostname"
 
     done
-        get_producer_build_heredoc
+    get_producer_build_heredoc
     # log "✨ Adding command to build jar for $producer_hostname to $repro_test_file"
     cp $repro_test_file $tmp_dir/tmp_file
     line=$(grep -n '${DIR}/../../environment' $repro_test_file | cut -d ":" -f 1 | tail -n1)
@@ -4945,7 +4997,55 @@ playground_bootstrap_reproduction_model_command() {
       fi
       { head -n $(($line_kafka_cli_producer - 2)) $tmp_dir/tmp_file; cat $tmp_dir/java_producer; tail -n +$line_kafka_cli_producer_end $tmp_dir/tmp_file; } > $repro_test_file
     fi
-    set +x
+  fi
+
+  if [[ -n "$add_custom_smt" ]]
+  then
+    custom_smt_name=""
+    custom_smt_name="MyCustomSMT-$description_kebab_case"
+    custom_smt_name=${custom_smt_name:0:18}
+    mkdir -p $repro_dir/$custom_smt_name/
+    cp -Ra ../../other/custom-smt/MyCustomSMT/* $repro_dir/$custom_smt_name/
+
+    tmp_dir=$(mktemp -d -t ci-XXXXXXXXXX)
+
+    get_custom_smt_build_heredoc
+    # log "✨ Adding command to build jar for $custom_smt_name to $repro_test_file"
+    cp $repro_test_file $tmp_dir/tmp_file
+    line=$(grep -n '${DIR}/../../environment' $repro_test_file | cut -d ":" -f 1 | tail -n1)
+
+    { head -n $(($line-1)) $tmp_dir/tmp_file; cat $tmp_dir/build_custom_smt; tail -n +$line $tmp_dir/tmp_file; } > $repro_test_file
+
+    connector_paths=$(grep "CONNECT_PLUGIN_PATH" "${docker_compose_file}" | grep -v "KSQL_CONNECT_PLUGIN_PATH" | cut -d ":" -f 2  | tr -s " " | head -1)
+    if [ "$connector_paths" == "" ]
+    then
+      logerror "ERROR: not a connector test"
+      exit 1
+    else
+      #  Loop on all connectors in CONNECT_PLUGIN_PATH and install custom SMT jar in lib folder
+      my_array_connector_tag=($(echo $CONNECTOR_TAG | tr "," "\n"))
+      for connector_path in ${connector_paths//,/ }
+      do
+        echo "log \"📂 Copying custom jar to connector folder $connector_path/lib/\"" >> $tmp_dir/build_custom_docker_cp_smt
+        echo "docker cp $repro_dir/$custom_smt_name/target/MyCustomSMT-1.0.0-SNAPSHOT-jar-with-dependencies.jar connect:$connector_path/lib/" >> $tmp_dir/build_custom_docker_cp_smt
+      done
+      echo "log \"♻️ Restart connect worker to load\"" >> $tmp_dir/build_custom_docker_cp_smt
+      echo "docker restart connect" >> $tmp_dir/build_custom_docker_cp_smt
+      echo "sleep 45" >> $tmp_dir/build_custom_docker_cp_smt
+    fi
+
+    cp $repro_test_file $tmp_dir/tmp_file
+    line=$(grep -n '${DIR}/../../environment' $repro_test_file | cut -d ":" -f 1 | tail -n1)
+
+    { head -n $(($line+2)) $tmp_dir/tmp_file; cat $tmp_dir/build_custom_docker_cp_smt; tail -n +$(($line+2)) $tmp_dir/tmp_file; } > $repro_test_file
+
+    echo "              \"transforms\": \"MyCustomSMT\"," >> $tmp_dir/build_custom_smt_json_config
+    echo "              \"transforms.MyCustomSMT.type\": \"com.github.vdesabou.kafka.connect.transforms.MyCustomSMT\"," >> $tmp_dir/build_custom_smt_json_config
+
+    cp $repro_test_file $tmp_dir/tmp_file
+    line=$(grep -n 'connector.class' $repro_test_file | cut -d ":" -f 1 | tail -n1)
+
+    { head -n $(($line)) $tmp_dir/tmp_file; cat $tmp_dir/build_custom_smt_json_config; tail -n +$(($line+1)) $tmp_dir/tmp_file; } > $repro_test_file
 
   fi
 
@@ -5719,6 +5819,14 @@ playground_bootstrap_reproduction_model_parse_requirements() {
           printf "%s\n" "--nb-producers requires an argument: --nb-producers, -n NB-PRODUCERS" >&2
           exit 1
         fi
+        ;;
+
+      # :flag.case
+      --add-custom-smt | -s)
+
+        # :flag.case_no_arg
+        args['--add-custom-smt']=1
+        shift
         ;;
 
       -?*)

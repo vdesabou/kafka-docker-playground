@@ -8,6 +8,7 @@ test_file="$PWD/${args[--file]}"
 description="${args[--description]}"
 producer="${args[--producer]}"
 nb_producers="${args[--nb-producers]}"
+add_custom_smt="${args[--add-custom-smt]}"
 
 if [ "$test_file" = "" ]
 then
@@ -243,15 +244,13 @@ then
         if [[ "$dir1" = *connect ]]
         then
           get_producer_heredoc
-fi
+        fi
 
         if [[ "$dir1" = *ccloud ]]
         then
           get_producer_ccloud_heredoc
-fi
-
-        done
-
+        fi
+      done
 
   if [ "${docker_compose_file}" != "" ]
   then
@@ -280,7 +279,7 @@ fi
     list="$list $producer_hostname"
 
   done
-      get_producer_build_heredoc
+  get_producer_build_heredoc
   # log "✨ Adding command to build jar for $producer_hostname to $repro_test_file"
   cp $repro_test_file $tmp_dir/tmp_file
   line=$(grep -n '${DIR}/../../environment' $repro_test_file | cut -d ":" -f 1 | tail -n1)
@@ -343,8 +342,58 @@ fi
     fi
     { head -n $(($line_kafka_cli_producer - 2)) $tmp_dir/tmp_file; cat $tmp_dir/java_producer; tail -n +$line_kafka_cli_producer_end $tmp_dir/tmp_file; } > $repro_test_file
   fi
-  set +x
+fi
 
+if [[ -n "$add_custom_smt" ]]
+then
+  custom_smt_name=""
+  custom_smt_name="MyCustomSMT-$description_kebab_case"
+  custom_smt_name=${custom_smt_name:0:18}
+  mkdir -p $repro_dir/$custom_smt_name/
+  cp -Ra ../../other/custom-smt/MyCustomSMT/* $repro_dir/$custom_smt_name/
+
+  tmp_dir=$(mktemp -d -t ci-XXXXXXXXXX)
+
+  get_custom_smt_build_heredoc
+  # log "✨ Adding command to build jar for $custom_smt_name to $repro_test_file"
+  cp $repro_test_file $tmp_dir/tmp_file
+  line=$(grep -n '${DIR}/../../environment' $repro_test_file | cut -d ":" -f 1 | tail -n1)
+  
+  { head -n $(($line-1)) $tmp_dir/tmp_file; cat $tmp_dir/build_custom_smt; tail -n +$line $tmp_dir/tmp_file; } > $repro_test_file
+
+
+  connector_paths=$(grep "CONNECT_PLUGIN_PATH" "${docker_compose_file}" | grep -v "KSQL_CONNECT_PLUGIN_PATH" | cut -d ":" -f 2  | tr -s " " | head -1)
+  if [ "$connector_paths" == "" ]
+  then
+    logerror "ERROR: not a connector test"
+    exit 1
+  else
+    ###
+    #  Loop on all connectors in CONNECT_PLUGIN_PATH and install custom SMT jar in lib folder
+    ###
+    my_array_connector_tag=($(echo $CONNECTOR_TAG | tr "," "\n"))
+    for connector_path in ${connector_paths//,/ }
+    do
+      echo "log \"📂 Copying custom jar to connector folder $connector_path/lib/\"" >> $tmp_dir/build_custom_docker_cp_smt
+      echo "docker cp $repro_dir/$custom_smt_name/target/MyCustomSMT-1.0.0-SNAPSHOT-jar-with-dependencies.jar connect:$connector_path/lib/" >> $tmp_dir/build_custom_docker_cp_smt
+    done
+    echo "log \"♻️ Restart connect worker to load\"" >> $tmp_dir/build_custom_docker_cp_smt
+    echo "docker restart connect" >> $tmp_dir/build_custom_docker_cp_smt
+    echo "sleep 45" >> $tmp_dir/build_custom_docker_cp_smt
+  fi
+
+  cp $repro_test_file $tmp_dir/tmp_file
+  line=$(grep -n '${DIR}/../../environment' $repro_test_file | cut -d ":" -f 1 | tail -n1)
+  
+  { head -n $(($line+2)) $tmp_dir/tmp_file; cat $tmp_dir/build_custom_docker_cp_smt; tail -n +$(($line+2)) $tmp_dir/tmp_file; } > $repro_test_file
+
+  echo "              \"transforms\": \"MyCustomSMT\"," >> $tmp_dir/build_custom_smt_json_config
+  echo "              \"transforms.MyCustomSMT.type\": \"com.github.vdesabou.kafka.connect.transforms.MyCustomSMT\"," >> $tmp_dir/build_custom_smt_json_config
+
+  cp $repro_test_file $tmp_dir/tmp_file
+  line=$(grep -n 'connector.class' $repro_test_file | cut -d ":" -f 1 | tail -n1)
+  
+  { head -n $(($line)) $tmp_dir/tmp_file; cat $tmp_dir/build_custom_smt_json_config; tail -n +$(($line+1)) $tmp_dir/tmp_file; } > $repro_test_file
 
 fi
 

@@ -57,7 +57,7 @@ _playground_completions() {
       ;;
 
     'bootstrap-reproduction-model'*)
-      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "--description --file --help --nb-producers --producer -d -f -h -n -p")" -- "$cur" )
+      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "--add-custom-smt --description --file --help --nb-producers --producer -d -f -h -n -p -s")" -- "$cur" )
       ;;
 
     'connector resume'*'--connector')

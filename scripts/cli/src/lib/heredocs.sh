@@ -135,3 +135,23 @@ EOF
 sed -e "s|up -d|-f $tmp_dir/docker-compose-remote-debugging.yml up -d|g" \
     /tmp/playground-command > /tmp/playground-command-debugging
 }
+
+
+function get_custom_smt_build_heredoc () {
+    cat << EOF > $tmp_dir/build_custom_smt
+for component in $custom_smt_name
+do
+    set +e
+    log "🏗 Building jar for \${component}"
+    docker run -i --rm -e KAFKA_CLIENT_TAG=\$KAFKA_CLIENT_TAG -e TAG=\$TAG_BASE -v "\${DIR}/\${component}":/usr/src/mymaven -v "\$HOME/.m2":/root/.m2 -v "\${DIR}/\${component}/target:/usr/src/mymaven/target" -w /usr/src/mymaven maven:3.6.1-jdk-11 mvn -Dkafka.tag=\$TAG -Dkafka.client.tag=\$KAFKA_CLIENT_TAG package > /tmp/result.log 2>&1
+    if [ \$? != 0 ]
+    then
+        logerror "ERROR: failed to build java component $component"
+        tail -500 /tmp/result.log
+        exit 1
+    fi
+    set -e
+done
+
+EOF
+}
