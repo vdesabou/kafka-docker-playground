@@ -3283,3 +3283,7 @@ function check_arm64_support() {
   fi
   set -e
 }
+
+function playground() {
+  ../../scripts/cli/playground "$@"
+}
