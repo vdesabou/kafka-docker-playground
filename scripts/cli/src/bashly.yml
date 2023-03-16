@@ -282,6 +282,38 @@ commands:
   - playground exec -c connect -d "whoami" --root
   - playground exec --container connect --command "whoami" --shell sh
 
+- name: restart
+  group: Container
+  help: |-
+    ♻️ Restart a container.
+
+  flags:
+  - *container
+
+- name: pause
+  group: Container
+  help: |-
+    ⏸️ Pause a container.
+
+  flags:
+  - *container
+
+- name: resume
+  group: Container
+  help: |-
+    ⏯️ Resume a container.
+
+  flags:
+  - *container
+
+- name: kill
+  group: Container
+  help: |-
+    🔫 Kill a container.
+
+  flags:
+  - *container
+
 - name: connector
   group: Connector
   help: |-
