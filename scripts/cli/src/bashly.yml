@@ -1,6 +1,6 @@
 name: playground
-help: 🐳🧠 CLI for Kafka Docker Playground
-version: 1.0.1
+help: 🧠 CLI for Kafka Docker Playground 🐳
+version: 1.0.2
 dependencies:
   docker: 👉 Check documentation https://tinyurl.com/4rpcmpjj
 
@@ -23,7 +23,7 @@ commands:
   group: Bootstrap
 
   help: |-
-    🛠 Bootstrap reproduction model.
+    🛠  Bootstrap reproduction model.
     
     👉 Check documentation https://tinyurl.com/bdfs25my
 
@@ -153,14 +153,14 @@ commands:
 - name: recreate-container
   group: Container
   help: |-
-    ♻️ Recreate container(s).
+    💫 Recreate container(s).
     
     👉 Check documentation https://tinyurl.com/3rhjxfbs
 
 - name: get-ip-address-container
   group: Container
   help: |-
-    🖥️ Get IP address of running containers.
+    🖥️  Get IP address of running containers.
   examples:
   - playground get-ip-address-container
 
@@ -202,7 +202,7 @@ commands:
 - name: describe-topic
   group: Topic
   help: |-
-    ⚙️ Describe topic.
+    🔎 Describe topic.
 
   flags:
   - *topic
@@ -210,7 +210,7 @@ commands:
 - name: logs
   group: Container
   help: |-
-    👨‍💻 Tail and follow container logs.
+    🕵️  Tail and follow container logs.
 
   flags:
   - *container
@@ -268,7 +268,7 @@ commands:
 - name: exec
   group: Container
   help: |-
-    🪄 Execute command in a container.
+    🪄  Execute command in a container.
 
   flags:
   - *container
@@ -303,7 +303,7 @@ commands:
 - name: restart
   group: Container
   help: |-
-    ♻️ Restart a container.
+    🔁 Restart a container.
 
   flags:
   - *container
@@ -311,7 +311,7 @@ commands:
 - name: pause
   group: Container
   help: |-
-    ⏸️ Pause a container.
+    ⏸️  Pause a container.
 
   flags:
   - *container
@@ -319,7 +319,7 @@ commands:
 - name: resume
   group: Container
   help: |-
-    ⏯️ Resume a container.
+    ⏯️  Resume a container.
 
   flags:
   - *container
@@ -339,17 +339,17 @@ commands:
 
   commands:
   - name: status
-    help: Show status of all connectors.
+    help: ℹ️  Show status of all connectors.
 
     flags:
     - long: --json
       help: Show output as JSON.
 
   - name: plugins
-    help: Show all plugins installed.
+    help: 🔖 Show all plugins installed.
 
   - name: pause
-    help: Pause connector
+    help: ⏸️  Pause connector
     flags:
     - &connector
       long: --connector
@@ -362,12 +362,17 @@ commands:
         Connector name.
 
   - name: resume
-    help: Resume connector
+    help: ⏯️  Resume connector
     flags:
     - *connector
 
   - name: delete
-    help: Delete connector
+    help: 🗑️  Delete connector
+    flags:
+    - *connector
+
+  - name: show-lag
+    help: 🐢 Show lag of sink connector
     flags:
     - *connector
 

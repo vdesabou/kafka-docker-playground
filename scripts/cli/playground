@@ -18,11 +18,11 @@ version_command() {
 # :command.usage
 playground_usage() {
   if [[ -n $long_usage ]]; then
-    printf "playground - 🐳🧠 CLI for Kafka Docker Playground\n"
+    printf "playground - 🧠 CLI for Kafka Docker Playground 🐳\n"
     echo
 
   else
-    printf "playground - 🐳🧠 CLI for Kafka Docker Playground\n"
+    printf "playground - 🧠 CLI for Kafka Docker Playground 🐳\n"
     echo
 
   fi
@@ -34,7 +34,7 @@ playground_usage() {
   echo
   # :command.usage_commands
   printf "%s\n" "$(bold "Bootstrap Commands:")"
-  printf "  %s   🛠 Bootstrap reproduction model.\n" "$(green "bootstrap-reproduction-model")  "
+  printf "  %s   🛠  Bootstrap reproduction model.\n" "$(green "bootstrap-reproduction-model")  "
   echo
   printf "%s\n" "$(bold "Kafka Commands:")"
   printf "  %s   📝 Get properties file from a container.\n" "$(green "get-properties")                "
@@ -44,22 +44,22 @@ playground_usage() {
   printf "  %s   ✨ Enable java remote debugging for container.\n" "$(green "enable-remote-debugging")       "
   echo
   printf "%s\n" "$(bold "Container Commands:")"
-  printf "  %s   ♻️ Recreate container(s).\n" "$(green "recreate-container")            "
-  printf "  %s   🖥️ Get IP address of running containers.\n" "$(green "get-ip-address-container")      "
+  printf "  %s   💫 Recreate container(s).\n" "$(green "recreate-container")            "
+  printf "  %s   🖥️  Get IP address of running containers.\n" "$(green "get-ip-address-container")      "
   printf "  %s   💀 Kill all containers.\n" "$(green "kill-all-containers")           "
-  printf "  %s   👨‍💻 Tail and follow container logs.\n" "$(green "logs")                          "
+  printf "  %s   🕵️  Tail and follow container logs.\n" "$(green "logs")                          "
   printf "  %s   🚀 SSH into container.\n" "$(green "ssh")                           "
-  printf "  %s   🪄 Execute command in a container.\n" "$(green "exec")                          "
-  printf "  %s   ♻️ Restart a container.\n" "$(green "restart")                       "
-  printf "  %s   ⏸️ Pause a container.\n" "$(green "pause")                         "
-  printf "  %s   ⏯️ Resume a container.\n" "$(green "resume")                        "
+  printf "  %s   🪄  Execute command in a container.\n" "$(green "exec")                          "
+  printf "  %s   🔁 Restart a container.\n" "$(green "restart")                       "
+  printf "  %s   ⏸️  Pause a container.\n" "$(green "pause")                         "
+  printf "  %s   ⏯️  Resume a container.\n" "$(green "resume")                        "
   printf "  %s   🔫 Kill a container.\n" "$(green "kill")                          "
   echo
   printf "%s\n" "$(bold "Topic Commands:")"
   printf "  %s   💯 Get number of records in a topic.\n" "$(green "get-number-records-topic")      "
   printf "  %s   🔺 Display content of connect offsets topic.\n" "$(green "display-connect-offsets-topic") "
   printf "  %s   🔻 Display content of __consumer_offsets topic.\n" "$(green "display-consumer-offsets-topic")"
-  printf "  %s   ⚙️ Describe topic.\n" "$(green "describe-topic")                "
+  printf "  %s   🔎 Describe topic.\n" "$(green "describe-topic")                "
   echo
   printf "%s\n" "$(bold "Connector Commands:")"
   printf "  %s   🔗 Connector commands.\n" "$(green "connector")                     "
@@ -145,11 +145,11 @@ playground_bootstrap_reproduction_model_usage() {
     printf "playground bootstrap-reproduction-model\n"
     echo
 
-    printf "  🛠 Bootstrap reproduction model.\n  \n  👉 Check documentation https://tinyurl.com/bdfs25my\n"
+    printf "  🛠  Bootstrap reproduction model.\n  \n  👉 Check documentation https://tinyurl.com/bdfs25my\n"
     echo
 
   else
-    printf "playground bootstrap-reproduction-model - 🛠 Bootstrap reproduction model.\n"
+    printf "playground bootstrap-reproduction-model - 🛠  Bootstrap reproduction model.\n"
     echo
 
   fi
@@ -368,11 +368,11 @@ playground_recreate_container_usage() {
     printf "playground recreate-container\n"
     echo
 
-    printf "  ♻️ Recreate container(s).\n  \n  👉 Check documentation https://tinyurl.com/3rhjxfbs\n"
+    printf "  💫 Recreate container(s).\n  \n  👉 Check documentation https://tinyurl.com/3rhjxfbs\n"
     echo
 
   else
-    printf "playground recreate-container - ♻️ Recreate container(s).\n"
+    printf "playground recreate-container - 💫 Recreate container(s).\n"
     echo
 
   fi
@@ -397,11 +397,11 @@ playground_recreate_container_usage() {
 # :command.usage
 playground_get_ip_address_container_usage() {
   if [[ -n $long_usage ]]; then
-    printf "playground get-ip-address-container - 🖥️ Get IP address of running containers.\n"
+    printf "playground get-ip-address-container - 🖥️  Get IP address of running containers.\n"
     echo
 
   else
-    printf "playground get-ip-address-container - 🖥️ Get IP address of running containers.\n"
+    printf "playground get-ip-address-container - 🖥️  Get IP address of running containers.\n"
     echo
 
   fi
@@ -559,11 +559,11 @@ playground_display_consumer_offsets_topic_usage() {
 # :command.usage
 playground_describe_topic_usage() {
   if [[ -n $long_usage ]]; then
-    printf "playground describe-topic - ⚙️ Describe topic.\n"
+    printf "playground describe-topic - 🔎 Describe topic.\n"
     echo
 
   else
-    printf "playground describe-topic - ⚙️ Describe topic.\n"
+    printf "playground describe-topic - 🔎 Describe topic.\n"
     echo
 
   fi
@@ -594,11 +594,11 @@ playground_describe_topic_usage() {
 # :command.usage
 playground_logs_usage() {
   if [[ -n $long_usage ]]; then
-    printf "playground logs - 👨‍💻 Tail and follow container logs.\n"
+    printf "playground logs - 🕵️  Tail and follow container logs.\n"
     echo
 
   else
-    printf "playground logs - 👨‍💻 Tail and follow container logs.\n"
+    printf "playground logs - 🕵️  Tail and follow container logs.\n"
     echo
 
   fi
@@ -703,11 +703,11 @@ playground_ssh_usage() {
 # :command.usage
 playground_exec_usage() {
   if [[ -n $long_usage ]]; then
-    printf "playground exec - 🪄 Execute command in a container.\n"
+    printf "playground exec - 🪄  Execute command in a container.\n"
     echo
 
   else
-    printf "playground exec - 🪄 Execute command in a container.\n"
+    printf "playground exec - 🪄  Execute command in a container.\n"
     echo
 
   fi
@@ -763,11 +763,11 @@ playground_exec_usage() {
 # :command.usage
 playground_restart_usage() {
   if [[ -n $long_usage ]]; then
-    printf "playground restart - ♻️ Restart a container.\n"
+    printf "playground restart - 🔁 Restart a container.\n"
     echo
 
   else
-    printf "playground restart - ♻️ Restart a container.\n"
+    printf "playground restart - 🔁 Restart a container.\n"
     echo
 
   fi
@@ -799,11 +799,11 @@ playground_restart_usage() {
 # :command.usage
 playground_pause_usage() {
   if [[ -n $long_usage ]]; then
-    printf "playground pause - ⏸️ Pause a container.\n"
+    printf "playground pause - ⏸️  Pause a container.\n"
     echo
 
   else
-    printf "playground pause - ⏸️ Pause a container.\n"
+    printf "playground pause - ⏸️  Pause a container.\n"
     echo
 
   fi
@@ -835,11 +835,11 @@ playground_pause_usage() {
 # :command.usage
 playground_resume_usage() {
   if [[ -n $long_usage ]]; then
-    printf "playground resume - ⏯️ Resume a container.\n"
+    printf "playground resume - ⏯️  Resume a container.\n"
     echo
 
   else
-    printf "playground resume - ⏯️ Resume a container.\n"
+    printf "playground resume - ⏯️  Resume a container.\n"
     echo
 
   fi
@@ -922,11 +922,12 @@ playground_connector_usage() {
   echo
   # :command.usage_commands
   printf "%s\n" "$(bold "Commands:")"
-  printf "  %s   Show status of all connectors.\n" "$(green "status") "
-  printf "  %s   Show all plugins installed.\n" "$(green "plugins")"
-  printf "  %s   Pause connector\n" "$(green "pause")  "
-  printf "  %s   Resume connector\n" "$(green "resume") "
-  printf "  %s   Delete connector\n" "$(green "delete") "
+  printf "  %s   ℹ️  Show status of all connectors.\n" "$(green "status")  "
+  printf "  %s   🔖 Show all plugins installed.\n" "$(green "plugins") "
+  printf "  %s   ⏸️  Pause connector\n" "$(green "pause")   "
+  printf "  %s   ⏯️  Resume connector\n" "$(green "resume")  "
+  printf "  %s   🗑️  Delete connector\n" "$(green "delete")  "
+  printf "  %s   🐢 Show lag of sink connector\n" "$(green "show-lag")"
   echo
 
   # :command.long_usage
@@ -953,11 +954,11 @@ playground_connector_usage() {
 # :command.usage
 playground_connector_status_usage() {
   if [[ -n $long_usage ]]; then
-    printf "playground connector status - Show status of all connectors.\n"
+    printf "playground connector status - ℹ️  Show status of all connectors.\n"
     echo
 
   else
-    printf "playground connector status - Show status of all connectors.\n"
+    printf "playground connector status - ℹ️  Show status of all connectors.\n"
     echo
 
   fi
@@ -988,11 +989,11 @@ playground_connector_status_usage() {
 # :command.usage
 playground_connector_plugins_usage() {
   if [[ -n $long_usage ]]; then
-    printf "playground connector plugins - Show all plugins installed.\n"
+    printf "playground connector plugins - 🔖 Show all plugins installed.\n"
     echo
 
   else
-    printf "playground connector plugins - Show all plugins installed.\n"
+    printf "playground connector plugins - 🔖 Show all plugins installed.\n"
     echo
 
   fi
@@ -1017,11 +1018,11 @@ playground_connector_plugins_usage() {
 # :command.usage
 playground_connector_pause_usage() {
   if [[ -n $long_usage ]]; then
-    printf "playground connector pause - Pause connector\n"
+    printf "playground connector pause - ⏸️  Pause connector\n"
     echo
 
   else
-    printf "playground connector pause - Pause connector\n"
+    printf "playground connector pause - ⏸️  Pause connector\n"
     echo
 
   fi
@@ -1052,11 +1053,11 @@ playground_connector_pause_usage() {
 # :command.usage
 playground_connector_resume_usage() {
   if [[ -n $long_usage ]]; then
-    printf "playground connector resume - Resume connector\n"
+    printf "playground connector resume - ⏯️  Resume connector\n"
     echo
 
   else
-    printf "playground connector resume - Resume connector\n"
+    printf "playground connector resume - ⏯️  Resume connector\n"
     echo
 
   fi
@@ -1087,11 +1088,11 @@ playground_connector_resume_usage() {
 # :command.usage
 playground_connector_delete_usage() {
   if [[ -n $long_usage ]]; then
-    printf "playground connector delete - Delete connector\n"
+    printf "playground connector delete - 🗑️  Delete connector\n"
     echo
 
   else
-    printf "playground connector delete - Delete connector\n"
+    printf "playground connector delete - 🗑️  Delete connector\n"
     echo
 
   fi
@@ -1099,6 +1100,41 @@ playground_connector_delete_usage() {
   printf "%s\n" "$(bold "Usage:")"
   printf "  playground connector delete [OPTIONS]\n"
   printf "  playground connector delete --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n $long_usage ]]; then
+    printf "%s\n" "$(bold "Options:")"
+
+    # :command.usage_flags
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--connector, -c CONNECTOR (required)")"
+    printf "    Connector name.\n"
+    echo
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_connector_show_lag_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground connector show-lag - 🐢 Show lag of sink connector\n"
+    echo
+
+  else
+    printf "playground connector show-lag - 🐢 Show lag of sink connector\n"
+    echo
+
+  fi
+
+  printf "%s\n" "$(bold "Usage:")"
+  printf "  playground connector show-lag [OPTIONS]\n"
+  printf "  playground connector show-lag --help | -h\n"
   echo
 
   # :command.long_usage
@@ -5693,6 +5729,40 @@ playground_connector_delete_command() {
 }
 
 # :command.function
+playground_connector_show_lag_command() {
+  # src/connector_show_lag_command.sh
+  environment=`get_environment_used`
+  connector="${args[--connector]}"
+
+  if [ "$environment" == "error" ]
+  then
+    logerror "File containing restart command /tmp/playground-command does not exist!"
+    exit 1
+
+  fi
+  connect_url="http://localhost:8083"
+  security_certs=""
+  if [ "$environment" != "plaintext" ]
+  then
+      connect_url="https://localhost:8083"
+      DIR_CLI="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
+
+      security_certs="--cert $DIR_CLI/../../environment/$environment/security/connect.certificate.pem --key $DIR_CLI/../../environment/$environment/security/connect.key --tlsv1.2 --cacert $DIR_CLI/../../environment/$environment/security/snakeoil-ca-1.crt"
+  fi
+
+  type=$(curl -s http://localhost:8083/connectors\?expand\=status\&expand\=info | jq -r '. | to_entries[] | [ .value.info.type]|join(":|:")')
+  if [ "$type" != "sink" ]
+  then
+    logerror "Connector $connector is a $type connector, it must be a sink to show the lag !"
+    exit 1
+
+  fi
+
+  log "Show lag for sink connector $connector"
+  docker exec broker kafka-consumer-groups --bootstrap-server broker:9092 --group connect-$connector --describe
+}
+
+# :command.function
 playground_connect_log_level_get_command() {
   # src/connect_log_level_get_command.sh
   environment=`get_environment_used`
@@ -7461,6 +7531,13 @@ playground_connector_parse_requirements() {
       shift $#
       ;;
 
+    show-lag)
+      action="show-lag"
+      shift
+      playground_connector_show_lag_parse_requirements "$@"
+      shift $#
+      ;;
+
     # :command.command_fallback
     "")
       playground_connector_usage >&2
@@ -7795,6 +7872,72 @@ playground_connector_delete_parse_requirements() {
 }
 
 # :command.parse_requirements
+playground_connector_show_lag_parse_requirements() {
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    case "${1:-}" in
+      --help | -h)
+        long_usage=yes
+        playground_connector_show_lag_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.dependencies_filter
+
+  # :command.command_filter
+  action="connector show-lag"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      # :flag.case
+      --connector | -c)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+
+          args['--connector']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--connector requires an argument: --connector, -c CONNECTOR" >&2
+          exit 1
+        fi
+        ;;
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+  # :command.required_flags_filter
+  if [[ -z ${args['--connector']+x} ]]; then
+    printf "missing required flag: --connector, -c CONNECTOR\n" >&2
+    exit 1
+  fi
+
+}
+
+# :command.parse_requirements
 playground_connect_log_level_parse_requirements() {
   # :command.fixed_flags_filter
   while [[ $# -gt 0 ]]; do
@@ -8033,7 +8176,7 @@ playground_connect_log_level_set_parse_requirements() {
 
 # :command.initialize
 initialize() {
-  version="1.0.1"
+  version="1.0.2"
   long_usage=''
   set -e
 
@@ -8282,6 +8425,15 @@ run() {
         playground_connector_delete_usage
       else
         playground_connector_delete_command
+      fi
+      ;;
+
+    "connector show-lag")
+      if [[ ${args['--help']:-} ]]; then
+        long_usage=yes
+        playground_connector_show_lag_usage
+      else
+        playground_connector_show_lag_command
       fi
       ;;
 
