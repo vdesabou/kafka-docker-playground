@@ -34,33 +34,36 @@ playground_usage() {
   echo
   # :command.usage_commands
   printf "%s\n" "$(bold "Bootstrap Commands:")"
-  printf "  %s   🛠 Bootstrap reproduction model.\n" "$(green "bootstrap-reproduction-model")"
+  printf "  %s   🛠 Bootstrap reproduction model.\n" "$(green "bootstrap-reproduction-model")  "
   echo
   printf "%s\n" "$(bold "Kafka Commands:")"
-  printf "  %s   📝 Get properties file from a container.\n" "$(green "get-properties")              "
-  printf "  %s   🔢 Get JMX metrics from a component.\n" "$(green "get-jmx-metrics")             "
+  printf "  %s   📝 Get properties file from a container.\n" "$(green "get-properties")                "
+  printf "  %s   🔢 Get JMX metrics from a component.\n" "$(green "get-jmx-metrics")               "
   echo
   printf "%s\n" "$(bold "Debug Commands:")"
-  printf "  %s   ✨ Enable java remote debugging for container.\n" "$(green "enable-remote-debugging")     "
+  printf "  %s   ✨ Enable java remote debugging for container.\n" "$(green "enable-remote-debugging")       "
   echo
   printf "%s\n" "$(bold "Container Commands:")"
-  printf "  %s   ♻️ Recreate container(s).\n" "$(green "recreate-container")          "
-  printf "  %s   🖥️ Get IP address of running containers.\n" "$(green "get-ip-address-container")    "
-  printf "  %s   💀 Kill all containers.\n" "$(green "kill-all-containers")         "
-  printf "  %s   👨‍💻 Tail and follow container logs.\n" "$(green "logs")                        "
-  printf "  %s   🚀 SSH into container.\n" "$(green "ssh")                         "
-  printf "  %s   🪄 Execute command in a container.\n" "$(green "exec")                        "
-  printf "  %s   ♻️ Restart a container.\n" "$(green "restart")                     "
-  printf "  %s   ⏸️ Pause a container.\n" "$(green "pause")                       "
-  printf "  %s   ⏯️ Resume a container.\n" "$(green "resume")                      "
-  printf "  %s   🔫 Kill a container.\n" "$(green "kill")                        "
+  printf "  %s   ♻️ Recreate container(s).\n" "$(green "recreate-container")            "
+  printf "  %s   🖥️ Get IP address of running containers.\n" "$(green "get-ip-address-container")      "
+  printf "  %s   💀 Kill all containers.\n" "$(green "kill-all-containers")           "
+  printf "  %s   👨‍💻 Tail and follow container logs.\n" "$(green "logs")                          "
+  printf "  %s   🚀 SSH into container.\n" "$(green "ssh")                           "
+  printf "  %s   🪄 Execute command in a container.\n" "$(green "exec")                          "
+  printf "  %s   ♻️ Restart a container.\n" "$(green "restart")                       "
+  printf "  %s   ⏸️ Pause a container.\n" "$(green "pause")                         "
+  printf "  %s   ⏯️ Resume a container.\n" "$(green "resume")                        "
+  printf "  %s   🔫 Kill a container.\n" "$(green "kill")                          "
   echo
   printf "%s\n" "$(bold "Topic Commands:")"
-  printf "  %s   💯 Get number of records in a topic.\n" "$(green "get-number-records-topic")    "
+  printf "  %s   💯 Get number of records in a topic.\n" "$(green "get-number-records-topic")      "
+  printf "  %s   🔺 Display content of connect offsets topic.\n" "$(green "display-connect-offsets-topic") "
+  printf "  %s   🔻 Display content of __consumer_offsets topic.\n" "$(green "display-consumer-offsets-topic")"
+  printf "  %s   ⚙️ Describe topic.\n" "$(green "describe-topic")                "
   echo
   printf "%s\n" "$(bold "Connector Commands:")"
-  printf "  %s   🔗 Connector commands.\n" "$(green "connector")                   "
-  printf "  %s   🧬 Set connect log level.\n" "$(green "connect-log-level")           "
+  printf "  %s   🔗 Connector commands.\n" "$(green "connector")                     "
+  printf "  %s   🧬 Set connect log level.\n" "$(green "connect-log-level")             "
   echo
 
   # :command.long_usage
@@ -490,6 +493,99 @@ playground_get_number_records_topic_usage() {
     printf "%s\n" "$(bold "Examples:")"
     printf "  playground get-number-records-topic --topic a-topic\n"
     printf "  playground get-number-records-topic -t a-topic\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_display_connect_offsets_topic_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground display-connect-offsets-topic - 🔺 Display content of connect offsets topic.\n"
+    echo
+
+  else
+    printf "playground display-connect-offsets-topic - 🔺 Display content of connect offsets topic.\n"
+    echo
+
+  fi
+
+  printf "%s\n" "$(bold "Usage:")"
+  printf "  playground display-connect-offsets-topic\n"
+  printf "  playground display-connect-offsets-topic --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n $long_usage ]]; then
+    printf "%s\n" "$(bold "Options:")"
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_display_consumer_offsets_topic_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground display-consumer-offsets-topic - 🔻 Display content of __consumer_offsets topic.\n"
+    echo
+
+  else
+    printf "playground display-consumer-offsets-topic - 🔻 Display content of __consumer_offsets topic.\n"
+    echo
+
+  fi
+
+  printf "%s\n" "$(bold "Usage:")"
+  printf "  playground display-consumer-offsets-topic\n"
+  printf "  playground display-consumer-offsets-topic --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n $long_usage ]]; then
+    printf "%s\n" "$(bold "Options:")"
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_describe_topic_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground describe-topic - ⚙️ Describe topic.\n"
+    echo
+
+  else
+    printf "playground describe-topic - ⚙️ Describe topic.\n"
+    echo
+
+  fi
+
+  printf "%s\n" "$(bold "Usage:")"
+  printf "  playground describe-topic [OPTIONS]\n"
+  printf "  playground describe-topic --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n $long_usage ]]; then
+    printf "%s\n" "$(bold "Options:")"
+
+    # :command.usage_flags
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--topic, -t TOPIC (required)")"
+    printf "    Topic name.\n"
+    echo
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
     echo
 
   fi
@@ -5339,12 +5435,34 @@ playground_kill_all_containers_command() {
 # :command.function
 playground_get_number_records_topic_command() {
   # src/get_number_records_topic_command.sh
-
   topic="${args[--topic]}"
 
   log "Get number of records in a topic $topic"
   # see heredocs.sh
   get_number_records_topic_command_heredoc "$topic"
+}
+
+# :command.function
+playground_display_connect_offsets_topic_command() {
+  # src/display_connect_offsets_topic_command.sh
+  log "Display content of connect offsets topic, press crtl-c to stop..."
+  docker exec connect kafka-console-consumer -bootstrap-server broker:9092 --topic connect-offsets --from-beginning --property print.key=true --property print.timestamp=true
+}
+
+# :command.function
+playground_display_consumer_offsets_topic_command() {
+  # src/display_consumer_offsets_topic_command.sh
+  log "Display content of __consumer_offsets topic, press crtl-c to stop..."
+  docker exec -i broker bash -c 'kafka-console-consumer --bootstrap-server broker:9092 --topic __consumer_offsets --from-beginning --formatter "kafka.coordinator.group.GroupMetadataManager\$OffsetsMessageFormatter" | grep -v "_confluent-controlcenter"'
+}
+
+# :command.function
+playground_describe_topic_command() {
+  # src/describe_topic_command.sh
+  topic="${args[--topic]}"
+
+  log "Description of topic $topic"
+  docker exec broker kafka-topics --describe --topic $topic --bootstrap-server broker:9092
 }
 
 # :command.function
@@ -5748,6 +5866,27 @@ parse_requirements() {
       action="get-number-records-topic"
       shift
       playground_get_number_records_topic_parse_requirements "$@"
+      shift $#
+      ;;
+
+    display-connect-offsets-topic)
+      action="display-connect-offsets-topic"
+      shift
+      playground_display_connect_offsets_topic_parse_requirements "$@"
+      shift $#
+      ;;
+
+    display-consumer-offsets-topic)
+      action="display-consumer-offsets-topic"
+      shift
+      playground_display_consumer_offsets_topic_parse_requirements "$@"
+      shift $#
+      ;;
+
+    describe-topic)
+      action="describe-topic"
+      shift
+      playground_describe_topic_parse_requirements "$@"
       shift $#
       ;;
 
@@ -6464,6 +6603,164 @@ playground_get_number_records_topic_parse_requirements() {
 
   # :command.command_filter
   action="get-number-records-topic"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      # :flag.case
+      --topic | -t)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+
+          args['--topic']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--topic requires an argument: --topic, -t TOPIC" >&2
+          exit 1
+        fi
+        ;;
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+  # :command.required_flags_filter
+  if [[ -z ${args['--topic']+x} ]]; then
+    printf "missing required flag: --topic, -t TOPIC\n" >&2
+    exit 1
+  fi
+
+}
+
+# :command.parse_requirements
+playground_display_connect_offsets_topic_parse_requirements() {
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    case "${1:-}" in
+      --help | -h)
+        long_usage=yes
+        playground_display_connect_offsets_topic_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.dependencies_filter
+
+  # :command.command_filter
+  action="display-connect-offsets-topic"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+}
+
+# :command.parse_requirements
+playground_display_consumer_offsets_topic_parse_requirements() {
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    case "${1:-}" in
+      --help | -h)
+        long_usage=yes
+        playground_display_consumer_offsets_topic_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.dependencies_filter
+
+  # :command.command_filter
+  action="display-consumer-offsets-topic"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+}
+
+# :command.parse_requirements
+playground_describe_topic_parse_requirements() {
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    case "${1:-}" in
+      --help | -h)
+        long_usage=yes
+        playground_describe_topic_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.dependencies_filter
+
+  # :command.command_filter
+  action="describe-topic"
 
   # :command.parse_requirements_while
   while [[ $# -gt 0 ]]; do
@@ -7841,6 +8138,33 @@ run() {
         playground_get_number_records_topic_usage
       else
         playground_get_number_records_topic_command
+      fi
+      ;;
+
+    "display-connect-offsets-topic")
+      if [[ ${args['--help']:-} ]]; then
+        long_usage=yes
+        playground_display_connect_offsets_topic_usage
+      else
+        playground_display_connect_offsets_topic_command
+      fi
+      ;;
+
+    "display-consumer-offsets-topic")
+      if [[ ${args['--help']:-} ]]; then
+        long_usage=yes
+        playground_display_consumer_offsets_topic_usage
+      else
+        playground_display_consumer_offsets_topic_command
+      fi
+      ;;
+
+    "describe-topic")
+      if [[ ${args['--help']:-} ]]; then
+        long_usage=yes
+        playground_describe_topic_usage
+      else
+        playground_describe_topic_command
       fi
       ;;
 

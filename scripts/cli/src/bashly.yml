@@ -189,6 +189,24 @@ commands:
   - playground get-number-records-topic --topic a-topic
   - playground get-number-records-topic -t a-topic
 
+- name: display-connect-offsets-topic
+  group: Topic
+  help: |-
+    🔺 Display content of connect offsets topic.
+
+- name: display-consumer-offsets-topic
+  group: Topic
+  help: |-
+    🔻 Display content of __consumer_offsets topic.
+
+- name: describe-topic
+  group: Topic
+  help: |-
+    ⚙️ Describe topic.
+
+  flags:
+  - *topic
+
 - name: logs
   group: Container
   help: |-
