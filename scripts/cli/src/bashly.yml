@@ -376,52 +376,52 @@ commands:
     flags:
     - *connector
 
+
+  - name: log-level
+    help: |-
+      🧬 Set connect log level.
+
+      👉 Check documentation https://tinyurl.com/yc78tr8a
+
+    commands:
+    - name: get
+      help: Get log levels.
+      flags:
+      - long: --package
+        short: -p
+        required: false
+        validate: not_empty
+        arg: package
+        help: |-
+          Package name.
+
+    - name: set
+      help: Set log level for specific logger.
+      flags:
+      - long: --package
+        short: -p
+        required: true
+        validate: not_empty
+        arg: package
+        help: |-
+          Package name.
+
+      - long: --level
+        short: -l
+        help: Log level.
+        arg: level
+        allowed: [INFO, WARN, DEBUG, TRACE]
+        required: true
+
+    examples:
+    - playground connect-log-level get
+    - playground connect-log-level get -p io.confluent.connect.oracle.cdc
+    - playground connect-log-level get --package io.confluent.connect.oracle.cdc
+    - playground connect-log-level set -p io.confluent.connect.oracle.cdc.logging.LogUtils -l TRACE
+
   examples:
   - playground connector status
   - playground connector status --json
   - playground connector resume --connector <connector-name>
   - playground connector pause -c <connector-name>
   - playground connector delete -c <connector-name>
-
-- name: connect-log-level
-  group: Connector
-  help: |-
-    🧬 Set connect log level.
-
-    👉 Check documentation https://tinyurl.com/yc78tr8a
-
-  commands:
-  - name: get
-    help: Get log levels.
-    flags:
-    - long: --package
-      short: -p
-      required: false
-      validate: not_empty
-      arg: package
-      help: |-
-        Package name.
-
-  - name: set
-    help: Set log level for specific logger.
-    flags:
-    - long: --package
-      short: -p
-      required: true
-      validate: not_empty
-      arg: package
-      help: |-
-        Package name.
-
-    - long: --level
-      short: -l
-      help: Log level.
-      arg: level
-      allowed: [INFO, WARN, DEBUG, TRACE]
-      required: true
-
-  examples:
-  - playground connect-log-level get
-  - playground connect-log-level get -p io.confluent.connect.oracle.cdc
-  - playground connect-log-level get --package io.confluent.connect.oracle.cdc
-  - playground connect-log-level set -p io.confluent.connect.oracle.cdc.logging.LogUtils -l TRACE
