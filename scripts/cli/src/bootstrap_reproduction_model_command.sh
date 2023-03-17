@@ -9,6 +9,7 @@ description="${args[--description]}"
 producer="${args[--producer]}"
 nb_producers="${args[--nb-producers]}"
 add_custom_smt="${args[--custom-smt]}"
+sink_file="${args[--pipeline]}"
 
 if [ "$test_file" = "" ]
 then
@@ -48,7 +49,7 @@ fi
 test_file_directory="$(dirname "${test_file}")"
 
 
-# determining the connector from test_file
+# determining the docker-compose file from from test_file
 docker_compose_file=$(grep "environment" "$test_file" | grep DIR | grep start.sh | cut -d "/" -f 7 | cut -d '"' -f 1 | tail -n1 | xargs)
 description_kebab_case="${description// /-}"
 description_kebab_case=$(echo "$description_kebab_case" | tr '[:upper:]' '[:lower:]')
@@ -69,6 +70,15 @@ base1="${test_file_directory##*/}" # connect-cdc-oracle12-source
 dir1="${test_file_directory%/*}" #connect
 dir2="${dir1##*/}/$base1" # connect/connect-cdc-oracle12-source
 final_dir=$(echo $dir2 | tr '/' '-') # connect-connect-cdc-oracle12-source
+
+if [[ -n "$sink_file" ]]
+then
+  if [[ "$base1" != *source ]]
+  then
+    logerror "ERROR: basis example <$base1> must be source connector example when building a pipeline !"
+    exit 1
+  fi
+fi
 
 output_folder="reproduction-models"
 if [ ! -z "$OUTPUT_FOLDER" ]
@@ -286,9 +296,14 @@ then
   
   { head -n $(($line-1)) $tmp_dir/tmp_file; cat $tmp_dir/build_producer; tail -n +$line $tmp_dir/tmp_file; } > $repro_test_file
 
-  line_kafka_cli_producer=$(egrep -n "kafka-console-producer|kafka-avro-console-producer|kafka-json-schema-console-producer|kafka-protobuf-console-producer" $repro_test_file | cut -d ":" -f 1 | tail -n1)
   kafka_cli_producer_error=0
   kafka_cli_producer_eof=0
+  line_kafka_cli_producer=$(egrep -n "kafka-console-producer|kafka-avro-console-producer|kafka-json-schema-console-producer|kafka-protobuf-console-producer" $repro_test_file | cut -d ":" -f 1 | tail -n1)
+  if [ $? != 0 ]
+  then
+      logwarn "Could not find kafka cli producer!"
+      kafka_cli_producer_error=1
+  fi
   set +e
   egrep "kafka-console-producer|kafka-avro-console-producer|kafka-json-schema-console-producer|kafka-protobuf-console-producer" $repro_test_file | grep EOF > /dev/null
   if [ $? = 0 ]
@@ -303,9 +318,6 @@ then
         kafka_cli_producer_error=1
       fi
       line_kafka_cli_producer_end=$(($line_kafka_cli_producer + $tmp))
-  else
-      logwarn "Could not find kafka cli producer!"
-      kafka_cli_producer_error=1
   fi
   set -e
   if [ $kafka_cli_producer_error = 1 ]
@@ -395,6 +407,102 @@ then
   
   { head -n $(($line)) $tmp_dir/tmp_file; cat $tmp_dir/build_custom_smt_json_config; tail -n +$(($line+1)) $tmp_dir/tmp_file; } > $repro_test_file
 
+fi
+####
+#### pipeline
+if [[ -n "$sink_file" ]]
+then
+  tmp_dir=$(mktemp -d -t ci-XXXXXXXXXX)
+  test_sink_file_directory="$(dirname "${sink_file}")"
+
+  ## 
+  # docker-compose part
+  # determining the docker-compose file from from test_file
+  docker_compose_sink_file=$(grep "environment" "$sink_file" | grep DIR | grep start.sh | cut -d "/" -f 7 | cut -d '"' -f 1 | tail -n1 | xargs)
+  docker_compose_sink_file="${test_sink_file_directory}/${docker_compose_sink_file}"
+  cp $docker_compose_test_file $tmp_dir/tmp_file
+
+  yq ". *= load(\"$tmp_dir/tmp_file\")" ${docker_compose_sink_file} > $docker_compose_test_file
+
+  connector_paths=$(grep "CONNECT_PLUGIN_PATH" "${docker_compose_file}" | grep -v "KSQL_CONNECT_PLUGIN_PATH" | cut -d ":" -f 2  | tr -s " " | head -1)
+  sink_connector_paths=$(grep "CONNECT_PLUGIN_PATH" "${docker_compose_sink_file}" | grep -v "KSQL_CONNECT_PLUGIN_PATH" | cut -d ":" -f 2  | tr -s " " | head -1)
+  if [ "$sink_connector_paths" == "" ]
+  then
+    logerror "ERROR: cannot find CONNECT_PLUGIN_PATH in  ${docker_compose_sink_file}"
+    exit 1
+  else
+    tmp_new_connector_paths="$connector_paths,$sink_connector_paths"
+    new_connector_paths=$(echo "$tmp_new_connector_paths" | sed 's/ //g')
+    yq -i ".services.connect.environment.CONNECT_PLUGIN_PATH = \"$new_connector_paths\"" $docker_compose_test_file
+  fi
+
+  ## 
+  # sh part
+  
+  line_final_source=$(grep -n 'source ${DIR}/../../scripts/utils.sh' $repro_test_file | cut -d ":" -f 1 | tail -n1)
+  line_final_environment=$(grep -n '${DIR}/../../environment' $repro_test_file | cut -d ":" -f 1 | tail -n1)
+  line_sink_source=$(grep -n 'source ${DIR}/../../scripts/utils.sh' $sink_file | cut -d ":" -f 1 | tail -n1) 
+  line_sink_environment=$(grep -n '${DIR}/../../environment' $sink_file | cut -d ":" -f 1 | tail -n1)
+
+  sed -n "$(($line_sink_source+1)),$(($line_sink_environment-1))p" $sink_file > $tmp_dir/pre_sink
+  cp $repro_test_file $tmp_dir/tmp_file
+
+  { head -n $(($line_final_environment-1)) $tmp_dir/tmp_file; cat $tmp_dir/pre_sink; tail -n +$line_final_environment $tmp_dir/tmp_file; } > $repro_test_file
+
+  sed -n "$(($line_sink_environment+1)),$ p" $sink_file > $tmp_dir/tmp_file
+
+  # need to remove cli which produces and change topic
+  kafka_cli_producer_error=0
+  kafka_cli_producer_eof=0
+  line_kafka_cli_producer=$(egrep -n "kafka-console-producer|kafka-avro-console-producer|kafka-json-schema-console-producer|kafka-protobuf-console-producer" $tmp_dir/tmp_file | cut -d ":" -f 1 | tail -n1)
+  if [ $? != 0 ]
+  then
+      logwarn "Could not find kafka cli producer!"
+      kafka_cli_producer_error=1
+  fi
+  set +e
+  egrep "kafka-console-producer|kafka-avro-console-producer|kafka-json-schema-console-producer|kafka-protobuf-console-producer" $tmp_dir/tmp_file | grep EOF > /dev/null
+  if [ $? = 0 ]
+  then
+      kafka_cli_producer_eof=1
+
+      sed -n "$line_kafka_cli_producer,$(($line_kafka_cli_producer + 10))p" $tmp_dir/tmp_file > /tmp/tmp
+      tmp=$(grep -n "^EOF" /tmp/tmp | cut -d ":" -f 1 | tail -n1)
+      if [ $tmp == "" ]
+      then
+        logwarn "Could not determine EOF for kafka cli producer!"
+        kafka_cli_producer_error=1
+      fi
+      line_kafka_cli_producer_end=$(($line_kafka_cli_producer + $tmp))
+  fi
+
+
+  if [ $kafka_cli_producer_error == 0 ]
+  then
+    if [ $kafka_cli_producer_eof == 0 ]
+    then
+      line_kafka_cli_producer_end=$(($line_kafka_cli_producer + 1))
+    fi
+    { head -n $(($line_kafka_cli_producer - 2)) $tmp_dir/tmp_file; tail -n +$line_kafka_cli_producer_end $tmp_dir/tmp_file; } >  $tmp_dir/tmp_file2
+    cat  $tmp_dir/tmp_file2 >> $repro_test_file
+  fi
+  set -e
+
+  awk -F'--topic ' '{print $2}' $repro_test_file > $tmp_dir/tmp
+  sed '/^$/d' $tmp_dir/tmp > $tmp_dir/tmp2
+  original_topic_name=$(cat $tmp_dir/tmp2 | cut -d " " -f1)
+
+  if [ "$original_topic_name" != "" ]
+  then
+    cp $repro_test_file $tmp_dir/tmp_file
+    line=$(grep -n '"topics"' $repro_test_file | cut -d ":" -f 1 | tail -n1)
+    
+    echo "               \"topics\": \"$original_topic_name\"," > $tmp_dir/topic_line
+    { head -n $(($line)) $tmp_dir/tmp_file; cat $tmp_dir/topic_line; tail -n +$(($line+1)) $tmp_dir/tmp_file; } > $repro_test_file
+  else 
+    logwarn "Could not find original topic name! "
+    logwarn "You would need to change topics config for sink by yourself."
+  fi
 fi
 
 chmod u+x $repro_test_file

@@ -36,7 +36,7 @@ commands:
     completions:
       - $(ls *.sh)
     help: |-
-      Test file to use as basis.
+      Example file to use as basis.
 
   - long: --description
     short: -d
@@ -49,6 +49,7 @@ commands:
   - long: --producer
     short: -p
     arg: producer-type
+    conflicts: [--pipeline]
     default: "none"
     allowed: 
       - none
@@ -76,6 +77,16 @@ commands:
     short: -s
     help: |-
       Add a custom SMT (no-op).
+
+  - long: --pipeline
+    required: true
+    validate: file_exists
+    arg: sink_file
+    conflicts: [--producer]
+    completions:
+      - $(ls ../../connect/connect-*sink/*.sh)
+    help: |-
+      Sink example file to use for creating a pipeline.
 
   examples:
   - playground bootstrap-reproduction-model -f hdfs2-sink.sh -d "123456 testing with parquet format"
