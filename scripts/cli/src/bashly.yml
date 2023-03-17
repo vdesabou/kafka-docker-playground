@@ -333,6 +333,7 @@ commands:
   - *container
 
 - name: connector
+  expose: true
   group: Connector
   help: |-
     🔗 Connector commands.

@@ -63,6 +63,13 @@ playground_usage() {
   echo
   printf "%s\n" "$(bold "Connector Commands:")"
   printf "  %s   🔗 Connector commands.\n" "$(green "connector")                     "
+  [[ -n $long_usage ]] && printf "  %s   ℹ️  Show status of all connectors.\n" "$(green "connector status")              "
+  [[ -n $long_usage ]] && printf "  %s   🔖 Show all plugins installed.\n" "$(green "connector plugins")             "
+  [[ -n $long_usage ]] && printf "  %s   ⏸️  Pause connector\n" "$(green "connector pause")               "
+  [[ -n $long_usage ]] && printf "  %s   ⏯️  Resume connector\n" "$(green "connector resume")              "
+  [[ -n $long_usage ]] && printf "  %s   🗑️  Delete connector\n" "$(green "connector delete")              "
+  [[ -n $long_usage ]] && printf "  %s   🐢 Show lag of sink connector\n" "$(green "connector show-lag")            "
+  [[ -n $long_usage ]] && printf "  %s   🧬 Set connect log level.\n" "$(green "connector log-level")           "
   echo
 
   # :command.long_usage
@@ -4892,6 +4899,10 @@ function check_arm64_support() {
   set -e
 }
 
+function playground() {
+  ../../scripts/cli/playground "$@"
+}
+
 # src/lib/validations/validate_dir_exists.sh
 validate_dir_exists() {
   [[ -d "$1" ]] || echo "must be an existing directory"
@@ -5828,7 +5839,7 @@ playground_connector_log_level_set_command() {
    \"level\": \"$level\"
   }" | jq .
 
-  playground connect-log-level get -p "$package"
+  playground connector log-level get -p "$package"
 }
 
 # :command.parse_requirements
