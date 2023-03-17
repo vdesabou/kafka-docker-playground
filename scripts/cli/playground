@@ -196,7 +196,7 @@ playground_bootstrap_reproduction_model_usage() {
     echo
 
     # :flag.usage
-    printf "  %s\n" "$(magenta "--add-custom-smt, -s")"
+    printf "  %s\n" "$(magenta "--custom-smt, -s")"
     printf "    Add a custom SMT (no-op).\n"
     echo
 
@@ -215,12 +215,12 @@ playground_bootstrap_reproduction_model_usage() {
     echo
 
     # :command.usage_examples
-    printf "%s\n" "$(bold "Examples:")"
+    printf "%s\n" "$(bold "Examples")"
     printf "  playground bootstrap-reproduction-model -f hdfs2-sink.sh -d \"123456 testing\n  with parquet format\"\n"
     printf "  playground bootstrap-reproduction-model -f hdfs2-sink.sh -d \"123456 testing\n  with parquet format and avro producer\" --producer avro\n"
     printf "  playground bootstrap-reproduction-model -f hdfs2-sink.sh -d \"123456 testing\n  with parquet format and 2 protobuf producers\" --producer protobuf\n  --nb-producers 2\n"
     printf "  playground bootstrap-reproduction-model -f hdfs2-sink.sh -d \"123456 testing\n  with parquet format and 2 protobuf producers\" -p protobuf -n 2\n"
-    printf "  playground bootstrap-reproduction-model -f hdfs2-sink.sh -d \"123456 testing\n  with parquet format and custom smt\" --add-custom-smt\n"
+    printf "  playground bootstrap-reproduction-model -f hdfs2-sink.sh -d \"123456 testing\n  with parquet format and custom smt\" --custom-smt\n"
     echo
 
   fi
@@ -263,7 +263,7 @@ playground_get_properties_usage() {
     echo
 
     # :command.usage_examples
-    printf "%s\n" "$(bold "Examples:")"
+    printf "%s\n" "$(bold "Examples")"
     printf "  playground get-properties\n"
     printf "  playground get-properties --container broker\n"
     printf "  playground get-properties -c broker\n"
@@ -309,7 +309,7 @@ playground_enable_remote_debugging_usage() {
     echo
 
     # :command.usage_examples
-    printf "%s\n" "$(bold "Examples:")"
+    printf "%s\n" "$(bold "Examples")"
     printf "  playground enable-remote-debugging\n"
     printf "  playground enable-remote-debugging --container broker\n"
     printf "  playground enable-remote-debugging -c broker\n"
@@ -361,7 +361,7 @@ playground_get_jmx_metrics_usage() {
     echo
 
     # :command.usage_examples
-    printf "%s\n" "$(bold "Examples:")"
+    printf "%s\n" "$(bold "Examples")"
     printf "  playground get-jmx-metrics --component connect\n"
     printf "  playground get-jmx-metrics --component connect --domain \"kafka.connect\n  kafka.consumer kafka.producer\"\n"
     printf "  playground get-jmx-metrics -c broker\n"
@@ -471,7 +471,7 @@ playground_container_get_ip_addresses_usage() {
     echo
 
     # :command.usage_examples
-    printf "%s\n" "$(bold "Examples:")"
+    printf "%s\n" "$(bold "Examples")"
     printf "  playground get-ip-address-container\n"
     echo
 
@@ -557,7 +557,7 @@ playground_container_logs_usage() {
     echo
 
     # :command.usage_examples
-    printf "%s\n" "$(bold "Examples:")"
+    printf "%s\n" "$(bold "Examples")"
     printf "  playground logs --container connect\n"
     printf "  playground logs -c connect -o code\n"
     printf "  playground logs -c connect -o vim\n"
@@ -607,7 +607,7 @@ playground_container_ssh_usage() {
     echo
 
     # :command.usage_examples
-    printf "%s\n" "$(bold "Examples:")"
+    printf "%s\n" "$(bold "Examples")"
     printf "  playground ssh -c connect\n"
     printf "  playground ssh -c connect -s sh\n"
     printf "  playground ssh --container connect --shell sh\n"
@@ -667,7 +667,7 @@ playground_container_exec_usage() {
     echo
 
     # :command.usage_examples
-    printf "%s\n" "$(bold "Examples:")"
+    printf "%s\n" "$(bold "Examples")"
     printf "  playground exec -c connect -d \"date\"\n"
     printf "  playground exec -c connect -d \"whoami\" --root\n"
     printf "  playground exec --container connect --command \"whoami\" --shell sh\n"
@@ -889,7 +889,7 @@ playground_topic_get_number_records_usage() {
     echo
 
     # :command.usage_examples
-    printf "%s\n" "$(bold "Examples:")"
+    printf "%s\n" "$(bold "Examples")"
     printf "  playground get-number-records --topic a-topic\n"
     printf "  playground get-number-records -t a-topic\n"
     echo
@@ -1027,7 +1027,7 @@ playground_connector_usage() {
     echo
 
     # :command.usage_examples
-    printf "%s\n" "$(bold "Examples:")"
+    printf "%s\n" "$(bold "Examples")"
     printf "  playground connector status\n"
     printf "  playground connector status --json\n"
     printf "  playground connector resume --connector <connector-name>\n"
@@ -1277,7 +1277,7 @@ playground_connector_log_level_usage() {
     echo
 
     # :command.usage_examples
-    printf "%s\n" "$(bold "Examples:")"
+    printf "%s\n" "$(bold "Examples")"
     printf "  playground connect-log-level get\n"
     printf "  playground connect-log-level get -p io.confluent.connect.oracle.cdc\n"
     printf "  playground connect-log-level get --package io.confluent.connect.oracle.cdc\n"
@@ -5040,7 +5040,7 @@ playground_bootstrap_reproduction_model_command() {
   description="${args[--description]}"
   producer="${args[--producer]}"
   nb_producers="${args[--nb-producers]}"
-  add_custom_smt="${args[--add-custom-smt]}"
+  add_custom_smt="${args[--custom-smt]}"
 
   if [ "$test_file" = "" ]
   then
@@ -6256,10 +6256,10 @@ playground_bootstrap_reproduction_model_parse_requirements() {
         ;;
 
       # :flag.case
-      --add-custom-smt | -s)
+      --custom-smt | -s)
 
         # :flag.case_no_arg
-        args['--add-custom-smt']=1
+        args['--custom-smt']=1
         shift
         ;;
 

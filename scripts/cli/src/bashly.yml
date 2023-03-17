@@ -72,7 +72,7 @@ commands:
     help: |-
       Number of java producers to generate.
 
-  - long: --add-custom-smt
+  - long: --custom-smt
     short: -s
     help: |-
       Add a custom SMT (no-op).
@@ -82,7 +82,7 @@ commands:
   - playground bootstrap-reproduction-model -f hdfs2-sink.sh -d "123456 testing with parquet format and avro producer" --producer avro
   - playground bootstrap-reproduction-model -f hdfs2-sink.sh -d "123456 testing with parquet format and 2 protobuf producers" --producer protobuf --nb-producers 2
   - playground bootstrap-reproduction-model -f hdfs2-sink.sh -d "123456 testing with parquet format and 2 protobuf producers" -p protobuf -n 2
-  - playground bootstrap-reproduction-model -f hdfs2-sink.sh -d "123456 testing with parquet format and custom smt" --add-custom-smt
+  - playground bootstrap-reproduction-model -f hdfs2-sink.sh -d "123456 testing with parquet format and custom smt" --custom-smt
 
 - name: get-properties
   group: Kafka

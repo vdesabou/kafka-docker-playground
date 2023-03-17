@@ -8,7 +8,7 @@ test_file="$PWD/${args[--file]}"
 description="${args[--description]}"
 producer="${args[--producer]}"
 nb_producers="${args[--nb-producers]}"
-add_custom_smt="${args[--add-custom-smt]}"
+add_custom_smt="${args[--custom-smt]}"
 
 if [ "$test_file" = "" ]
 then
