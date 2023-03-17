@@ -150,24 +150,156 @@ commands:
   - playground get-jmx-metrics --component connect --domain "kafka.connect kafka.consumer kafka.producer"
   - playground get-jmx-metrics -c broker
 
-- name: recreate-container
+- name: container
+  expose: true
   group: Container
   help: |-
-    💫 Recreate container(s).
-    
-    👉 Check documentation https://tinyurl.com/3rhjxfbs
+    🐳 Container commands.
+  commands:
 
-- name: get-ip-address-container
-  group: Container
-  help: |-
-    🖥️  Get IP address of running containers.
-  examples:
-  - playground get-ip-address-container
+    - name: recreate
+      group: Container
+      help: |-
+        💫 Recreate container(s).
+        
+        👉 Check documentation https://tinyurl.com/3rhjxfbs
 
-- name: kill-all-containers
-  group: Container
-  help: |-
-    💀 Kill all containers.
+    - name: get-ip-addresses
+      group: Container
+      help: |-
+        🖥️  Get IP address of running containers.
+      examples:
+      - playground get-ip-address-container
+
+    - name: kill-all
+      group: Container
+      help: |-
+        💀 Kill all containers.
+
+    - name: logs
+      group: Container
+      help: |-
+        🕵️  Tail and follow container logs.
+
+      flags:
+      - *container
+      - long: --open
+        short: -o
+        arg: editor
+        validate: editor_exists
+        help: Save output to a file and open with editor passed as argument (default is code).
+        conflicts: [--wait-for-log]
+      - long: --wait-for-log
+        short: -w
+        arg: log
+        validate: not_empty
+        help: Wait until log appears.
+        conflicts: [--open]
+      - long: --max-wait
+        short: -m
+        arg: max_wait
+        validate: integer
+        default: "600"
+        help: Max time in seconds to wait when using --wait-for-log (default 600s).
+        conflicts: [--open]
+
+      examples:
+      - playground logs --container connect
+      - playground logs -c connect -o code
+      - playground logs -c connect -o vim
+
+    - name: ssh
+      group: Container
+      help: |-
+        🚀 SSH into container.
+
+      flags:
+      - *container
+
+      - long: --shell
+        short: -s
+        required: false
+        default: "bash"
+        arg: shell
+        allowed: 
+          - bash
+          - sh
+          - ksh
+          - zsh
+        help: |-
+          Shell to use (default is bash).
+
+      examples:
+      - playground ssh -c connect
+      - playground ssh -c connect -s sh
+      - playground ssh --container connect --shell sh
+
+    - name: exec
+      group: Container
+      help: |-
+        🪄  Execute command in a container.
+
+      flags:
+      - *container
+
+      - long: --command
+        short: -d
+        required: true
+        validate: not_empty
+        arg: command
+        help: |-
+          Command to execute.
+
+      - long: --root
+        help: Run command as root.
+
+      - long: --shell
+        default: "bash"
+        arg: shell
+        allowed: 
+          - bash
+          - sh
+          - ksh
+          - zsh
+        help: |-
+          Shell to use (default is bash).
+
+      examples:
+      - playground exec -c connect -d "date"
+      - playground exec -c connect -d "whoami" --root
+      - playground exec --container connect --command "whoami" --shell sh
+
+    - name: restart
+      group: Container
+      help: |-
+        🔁 Restart a container.
+
+      flags:
+      - *container
+
+    - name: pause
+      group: Container
+      help: |-
+        ⏸️  Pause a container.
+
+      flags:
+      - *container
+
+    - name: resume
+      group: Container
+      help: |-
+        ⏯️  Resume a container.
+
+      flags:
+      - *container
+
+    - name: kill
+      group: Container
+      help: |-
+        🔫 Kill a container.
+
+      flags:
+      - *container
 
 - name: topic
   expose: true
@@ -214,130 +346,6 @@ commands:
       flags:
       - *topic
 
-- name: logs
-  group: Container
-  help: |-
-    🕵️  Tail and follow container logs.
-
-  flags:
-  - *container
-  - long: --open
-    short: -o
-    arg: editor
-    validate: editor_exists
-    help: Save output to a file and open with editor passed as argument (default is code).
-    conflicts: [--wait-for-log]
-  - long: --wait-for-log
-    short: -w
-    arg: log
-    validate: not_empty
-    help: Wait until log appears.
-    conflicts: [--open]
-  - long: --max-wait
-    short: -m
-    arg: max_wait
-    validate: integer
-    default: "600"
-    help: Max time in seconds to wait when using --wait-for-log (default 600s).
-    conflicts: [--open]
-
-  examples:
-  - playground logs --container connect
-  - playground logs -c connect -o code
-  - playground logs -c connect -o vim
-
-- name: ssh
-  group: Container
-  help: |-
-    🚀 SSH into container.
-
-  flags:
-  - *container
-
-  - long: --shell
-    short: -s
-    required: false
-    default: "bash"
-    arg: shell
-    allowed: 
-      - bash
-      - sh
-      - ksh
-      - zsh
-    help: |-
-      Shell to use (default is bash).
-
-  examples:
-  - playground ssh -c connect
-  - playground ssh -c connect -s sh
-  - playground ssh --container connect --shell sh
-
-- name: exec
-  group: Container
-  help: |-
-    🪄  Execute command in a container.
-
-  flags:
-  - *container
-
-  - long: --command
-    short: -d
-    required: true
-    validate: not_empty
-    arg: command
-    help: |-
-      Command to execute.
-
-  - long: --root
-    help: Run command as root.
-
-  - long: --shell
-    default: "bash"
-    arg: shell
-    allowed: 
-      - bash
-      - sh
-      - ksh
-      - zsh
-    help: |-
-      Shell to use (default is bash).
-
-  examples:
-  - playground exec -c connect -d "date"
-  - playground exec -c connect -d "whoami" --root
-  - playground exec --container connect --command "whoami" --shell sh
-
-- name: restart
-  group: Container
-  help: |-
-    🔁 Restart a container.
-
-  flags:
-  - *container
-
-- name: pause
-  group: Container
-  help: |-
-    ⏸️  Pause a container.
-
-  flags:
-  - *container
-
-- name: resume
-  group: Container
-  help: |-
-    ⏯️  Resume a container.
-
-  flags:
-  - *container
-
-- name: kill
-  group: Container
-  help: |-
-    🔫 Kill a container.
-
-  flags:
-  - *container
 
 - name: connector
   expose: true
