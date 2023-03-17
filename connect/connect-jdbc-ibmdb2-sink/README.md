@@ -43,9 +43,8 @@ removed
 Sending messages to topic `ORDERS`:
 
 ```bash
-$ docker exec -i connect kafka-avro-console-producer --broker-list broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic ORDERS --property value.schema='{"type":"record","name":"myrecord","fields":[{"name":"ID","type":"int"},{"name":"PRODUCT", "type": "string"}, {"name":"QUANTITY", "type": "int"}, {"name":"PRICE",
-"type": "float"}]}' << EOF
-{"ID": 999, "PRODUCT": "foo", "QUANTITY": 100, "PRICE": 50}
+$ docker exec -i connect kafka-avro-console-producer --broker-list broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic ORDERS --property value.schema='{"type":"record","name":"myrecord","fields":[{"name":"ID","type":"int"},{"name":"PRODUCT", "type": "string"}, {"name":"quantity", "type": "int"}, {"name":"price","type": "float"}]}' << EOF
+{"id": 999, "product": "foo", "quantity": 100, "price": 50}
 EOF
 
 Creating JDBC IBM DB2 sink connector:
