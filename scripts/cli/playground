@@ -27,23 +27,23 @@ playground_usage() {
 
   fi
 
-  printf "%s\n" "$(bold "Usage:")"
+  printf "%s\n" "$(bold "== Usage ==")"
   printf "  playground COMMAND\n"
   printf "  playground [COMMAND] --help | -h\n"
   printf "  playground --version | -v\n"
   echo
   # :command.usage_commands
-  printf "%s\n" "$(bold "Bootstrap Commands:")"
+  printf "%s\n" "$(bold "Bootstrap commands:")"
   printf "  %s   🛠  Bootstrap reproduction model.\n" "$(green "bootstrap-reproduction-model")  "
   echo
-  printf "%s\n" "$(bold "Kafka Commands:")"
+  printf "%s\n" "$(bold "Kafka commands:")"
   printf "  %s   📝 Get properties file from a container.\n" "$(green "get-properties")                "
   printf "  %s   🔢 Get JMX metrics from a component.\n" "$(green "get-jmx-metrics")               "
   echo
-  printf "%s\n" "$(bold "Debug Commands:")"
+  printf "%s\n" "$(bold "Debug commands:")"
   printf "  %s   ✨ Enable java remote debugging for container.\n" "$(green "enable-remote-debugging")       "
   echo
-  printf "%s\n" "$(bold "Container Commands:")"
+  printf "%s\n" "$(bold "Container commands:")"
   printf "  %s   🐳 Container commands.\n" "$(green "container")                     "
   [[ -n $long_usage ]] && printf "  %s   💫 Recreate container(s).\n" "$(green "container recreate")            "
   [[ -n $long_usage ]] && printf "  %s   🖥️  Get IP address of running containers.\n" "$(green "container get-ip-addresses")    "
@@ -56,14 +56,14 @@ playground_usage() {
   [[ -n $long_usage ]] && printf "  %s   ⏯️  Resume a container.\n" "$(green "container resume")              "
   [[ -n $long_usage ]] && printf "  %s   🔫 Kill a container.\n" "$(green "container kill")                "
   echo
-  printf "%s\n" "$(bold "Topic Commands:")"
+  printf "%s\n" "$(bold "Topic commands:")"
   printf "  %s   📁 Topic commands.\n" "$(green "topic")                         "
   [[ -n $long_usage ]] && printf "  %s   💯 Get number of records in a topic.\n" "$(green "topic get-number-records")      "
   [[ -n $long_usage ]] && printf "  %s   🔺 Display content of connect offsets topic.\n" "$(green "topic display-connect-offsets") "
   [[ -n $long_usage ]] && printf "  %s   🔻 Display content of __consumer_offsets topic.\n" "$(green "topic display-consumer-offsets")"
   [[ -n $long_usage ]] && printf "  %s   🔎 Describe topic.\n" "$(green "topic describe")                "
   echo
-  printf "%s\n" "$(bold "Connector Commands:")"
+  printf "%s\n" "$(bold "Connector commands:")"
   printf "  %s   🔗 Connector commands.\n" "$(green "connector")                     "
   [[ -n $long_usage ]] && printf "  %s   ℹ️  Show status of all connectors.\n" "$(green "connector status")              "
   [[ -n $long_usage ]] && printf "  %s   🔖 Show all plugins installed.\n" "$(green "connector plugins")             "
@@ -76,7 +76,7 @@ playground_usage() {
 
   # :command.long_usage
   if [[ -n $long_usage ]]; then
-    printf "%s\n" "$(bold "Options:")"
+    printf "%s\n" "$(bold "== Options ==")"
 
     # :command.usage_fixed_flags
     printf "  %s\n" "$(magenta "--help, -h")"
@@ -101,14 +101,14 @@ playground_get_connector_list_usage() {
 
   fi
 
-  printf "%s\n" "$(bold "Usage:")"
+  printf "%s\n" "$(bold "== Usage ==")"
   printf "  playground get-connector-list\n"
   printf "  playground get-connector-list --help | -h\n"
   echo
 
   # :command.long_usage
   if [[ -n $long_usage ]]; then
-    printf "%s\n" "$(bold "Options:")"
+    printf "%s\n" "$(bold "== Options ==")"
 
     # :command.usage_fixed_flags
     printf "  %s\n" "$(magenta "--help, -h")"
@@ -130,14 +130,14 @@ playground_get_topic_list_usage() {
 
   fi
 
-  printf "%s\n" "$(bold "Usage:")"
+  printf "%s\n" "$(bold "== Usage ==")"
   printf "  playground get-topic-list\n"
   printf "  playground get-topic-list --help | -h\n"
   echo
 
   # :command.long_usage
   if [[ -n $long_usage ]]; then
-    printf "%s\n" "$(bold "Options:")"
+    printf "%s\n" "$(bold "== Options ==")"
 
     # :command.usage_fixed_flags
     printf "  %s\n" "$(magenta "--help, -h")"
@@ -162,14 +162,14 @@ playground_bootstrap_reproduction_model_usage() {
 
   fi
 
-  printf "%s\n" "$(bold "Usage:")"
+  printf "%s\n" "$(bold "== Usage ==")"
   printf "  playground bootstrap-reproduction-model [OPTIONS]\n"
   printf "  playground bootstrap-reproduction-model --help | -h\n"
   echo
 
   # :command.long_usage
   if [[ -n $long_usage ]]; then
-    printf "%s\n" "$(bold "Options:")"
+    printf "%s\n" "$(bold "== Options ==")"
 
     # :command.usage_flags
     # :flag.usage
@@ -241,14 +241,14 @@ playground_get_properties_usage() {
 
   fi
 
-  printf "%s\n" "$(bold "Usage:")"
+  printf "%s\n" "$(bold "== Usage ==")"
   printf "  playground get-properties [OPTIONS]\n"
   printf "  playground get-properties --help | -h\n"
   echo
 
   # :command.long_usage
   if [[ -n $long_usage ]]; then
-    printf "%s\n" "$(bold "Options:")"
+    printf "%s\n" "$(bold "== Options ==")"
 
     # :command.usage_flags
     # :flag.usage
@@ -287,14 +287,14 @@ playground_enable_remote_debugging_usage() {
 
   fi
 
-  printf "%s\n" "$(bold "Usage:")"
+  printf "%s\n" "$(bold "== Usage ==")"
   printf "  playground enable-remote-debugging [OPTIONS]\n"
   printf "  playground enable-remote-debugging --help | -h\n"
   echo
 
   # :command.long_usage
   if [[ -n $long_usage ]]; then
-    printf "%s\n" "$(bold "Options:")"
+    printf "%s\n" "$(bold "== Options ==")"
 
     # :command.usage_flags
     # :flag.usage
@@ -333,14 +333,14 @@ playground_get_jmx_metrics_usage() {
 
   fi
 
-  printf "%s\n" "$(bold "Usage:")"
+  printf "%s\n" "$(bold "== Usage ==")"
   printf "  playground get-jmx-metrics [OPTIONS]\n"
   printf "  playground get-jmx-metrics --help | -h\n"
   echo
 
   # :command.long_usage
   if [[ -n $long_usage ]]; then
-    printf "%s\n" "$(bold "Options:")"
+    printf "%s\n" "$(bold "== Options ==")"
 
     # :command.usage_flags
     # :flag.usage
@@ -382,12 +382,12 @@ playground_container_usage() {
 
   fi
 
-  printf "%s\n" "$(bold "Usage:")"
+  printf "%s\n" "$(bold "== Usage ==")"
   printf "  playground container COMMAND\n"
   printf "  playground container [COMMAND] --help | -h\n"
   echo
   # :command.usage_commands
-  printf "%s\n" "$(bold "Container Commands:")"
+  printf "%s\n" "$(bold "Container commands:")"
   printf "  %s   💫 Recreate container(s).\n" "$(green "recreate")        "
   printf "  %s   🖥️  Get IP address of running containers.\n" "$(green "get-ip-addresses")"
   printf "  %s   💀 Kill all containers.\n" "$(green "kill-all")        "
@@ -402,7 +402,7 @@ playground_container_usage() {
 
   # :command.long_usage
   if [[ -n $long_usage ]]; then
-    printf "%s\n" "$(bold "Options:")"
+    printf "%s\n" "$(bold "== Options ==")"
 
     # :command.usage_fixed_flags
     printf "  %s\n" "$(magenta "--help, -h")"
@@ -427,14 +427,14 @@ playground_container_recreate_usage() {
 
   fi
 
-  printf "%s\n" "$(bold "Usage:")"
+  printf "%s\n" "$(bold "== Usage ==")"
   printf "  playground container recreate\n"
   printf "  playground container recreate --help | -h\n"
   echo
 
   # :command.long_usage
   if [[ -n $long_usage ]]; then
-    printf "%s\n" "$(bold "Options:")"
+    printf "%s\n" "$(bold "== Options ==")"
 
     # :command.usage_fixed_flags
     printf "  %s\n" "$(magenta "--help, -h")"
@@ -456,14 +456,14 @@ playground_container_get_ip_addresses_usage() {
 
   fi
 
-  printf "%s\n" "$(bold "Usage:")"
+  printf "%s\n" "$(bold "== Usage ==")"
   printf "  playground container get-ip-addresses\n"
   printf "  playground container get-ip-addresses --help | -h\n"
   echo
 
   # :command.long_usage
   if [[ -n $long_usage ]]; then
-    printf "%s\n" "$(bold "Options:")"
+    printf "%s\n" "$(bold "== Options ==")"
 
     # :command.usage_fixed_flags
     printf "  %s\n" "$(magenta "--help, -h")"
@@ -490,14 +490,14 @@ playground_container_kill_all_usage() {
 
   fi
 
-  printf "%s\n" "$(bold "Usage:")"
+  printf "%s\n" "$(bold "== Usage ==")"
   printf "  playground container kill-all\n"
   printf "  playground container kill-all --help | -h\n"
   echo
 
   # :command.long_usage
   if [[ -n $long_usage ]]; then
-    printf "%s\n" "$(bold "Options:")"
+    printf "%s\n" "$(bold "== Options ==")"
 
     # :command.usage_fixed_flags
     printf "  %s\n" "$(magenta "--help, -h")"
@@ -519,14 +519,14 @@ playground_container_logs_usage() {
 
   fi
 
-  printf "%s\n" "$(bold "Usage:")"
+  printf "%s\n" "$(bold "== Usage ==")"
   printf "  playground container logs [OPTIONS]\n"
   printf "  playground container logs --help | -h\n"
   echo
 
   # :command.long_usage
   if [[ -n $long_usage ]]; then
-    printf "%s\n" "$(bold "Options:")"
+    printf "%s\n" "$(bold "== Options ==")"
 
     # :command.usage_flags
     # :flag.usage
@@ -578,14 +578,14 @@ playground_container_ssh_usage() {
 
   fi
 
-  printf "%s\n" "$(bold "Usage:")"
+  printf "%s\n" "$(bold "== Usage ==")"
   printf "  playground container ssh [OPTIONS]\n"
   printf "  playground container ssh --help | -h\n"
   echo
 
   # :command.long_usage
   if [[ -n $long_usage ]]; then
-    printf "%s\n" "$(bold "Options:")"
+    printf "%s\n" "$(bold "== Options ==")"
 
     # :command.usage_flags
     # :flag.usage
@@ -628,14 +628,14 @@ playground_container_exec_usage() {
 
   fi
 
-  printf "%s\n" "$(bold "Usage:")"
+  printf "%s\n" "$(bold "== Usage ==")"
   printf "  playground container exec [OPTIONS]\n"
   printf "  playground container exec --help | -h\n"
   echo
 
   # :command.long_usage
   if [[ -n $long_usage ]]; then
-    printf "%s\n" "$(bold "Options:")"
+    printf "%s\n" "$(bold "== Options ==")"
 
     # :command.usage_flags
     # :flag.usage
@@ -688,14 +688,14 @@ playground_container_restart_usage() {
 
   fi
 
-  printf "%s\n" "$(bold "Usage:")"
+  printf "%s\n" "$(bold "== Usage ==")"
   printf "  playground container restart [OPTIONS]\n"
   printf "  playground container restart --help | -h\n"
   echo
 
   # :command.long_usage
   if [[ -n $long_usage ]]; then
-    printf "%s\n" "$(bold "Options:")"
+    printf "%s\n" "$(bold "== Options ==")"
 
     # :command.usage_flags
     # :flag.usage
@@ -724,14 +724,14 @@ playground_container_pause_usage() {
 
   fi
 
-  printf "%s\n" "$(bold "Usage:")"
+  printf "%s\n" "$(bold "== Usage ==")"
   printf "  playground container pause [OPTIONS]\n"
   printf "  playground container pause --help | -h\n"
   echo
 
   # :command.long_usage
   if [[ -n $long_usage ]]; then
-    printf "%s\n" "$(bold "Options:")"
+    printf "%s\n" "$(bold "== Options ==")"
 
     # :command.usage_flags
     # :flag.usage
@@ -760,14 +760,14 @@ playground_container_resume_usage() {
 
   fi
 
-  printf "%s\n" "$(bold "Usage:")"
+  printf "%s\n" "$(bold "== Usage ==")"
   printf "  playground container resume [OPTIONS]\n"
   printf "  playground container resume --help | -h\n"
   echo
 
   # :command.long_usage
   if [[ -n $long_usage ]]; then
-    printf "%s\n" "$(bold "Options:")"
+    printf "%s\n" "$(bold "== Options ==")"
 
     # :command.usage_flags
     # :flag.usage
@@ -796,14 +796,14 @@ playground_container_kill_usage() {
 
   fi
 
-  printf "%s\n" "$(bold "Usage:")"
+  printf "%s\n" "$(bold "== Usage ==")"
   printf "  playground container kill [OPTIONS]\n"
   printf "  playground container kill --help | -h\n"
   echo
 
   # :command.long_usage
   if [[ -n $long_usage ]]; then
-    printf "%s\n" "$(bold "Options:")"
+    printf "%s\n" "$(bold "== Options ==")"
 
     # :command.usage_flags
     # :flag.usage
@@ -832,12 +832,12 @@ playground_topic_usage() {
 
   fi
 
-  printf "%s\n" "$(bold "Usage:")"
+  printf "%s\n" "$(bold "== Usage ==")"
   printf "  playground topic COMMAND\n"
   printf "  playground topic [COMMAND] --help | -h\n"
   echo
   # :command.usage_commands
-  printf "%s\n" "$(bold "Topic Commands:")"
+  printf "%s\n" "$(bold "Topic commands:")"
   printf "  %s   💯 Get number of records in a topic.\n" "$(green "get-number-records")      "
   printf "  %s   🔺 Display content of connect offsets topic.\n" "$(green "display-connect-offsets") "
   printf "  %s   🔻 Display content of __consumer_offsets topic.\n" "$(green "display-consumer-offsets")"
@@ -846,7 +846,7 @@ playground_topic_usage() {
 
   # :command.long_usage
   if [[ -n $long_usage ]]; then
-    printf "%s\n" "$(bold "Options:")"
+    printf "%s\n" "$(bold "== Options ==")"
 
     # :command.usage_fixed_flags
     printf "  %s\n" "$(magenta "--help, -h")"
@@ -868,14 +868,14 @@ playground_topic_get_number_records_usage() {
 
   fi
 
-  printf "%s\n" "$(bold "Usage:")"
+  printf "%s\n" "$(bold "== Usage ==")"
   printf "  playground topic get-number-records [OPTIONS]\n"
   printf "  playground topic get-number-records --help | -h\n"
   echo
 
   # :command.long_usage
   if [[ -n $long_usage ]]; then
-    printf "%s\n" "$(bold "Options:")"
+    printf "%s\n" "$(bold "== Options ==")"
 
     # :command.usage_flags
     # :flag.usage
@@ -909,14 +909,14 @@ playground_topic_display_connect_offsets_usage() {
 
   fi
 
-  printf "%s\n" "$(bold "Usage:")"
+  printf "%s\n" "$(bold "== Usage ==")"
   printf "  playground topic display-connect-offsets\n"
   printf "  playground topic display-connect-offsets --help | -h\n"
   echo
 
   # :command.long_usage
   if [[ -n $long_usage ]]; then
-    printf "%s\n" "$(bold "Options:")"
+    printf "%s\n" "$(bold "== Options ==")"
 
     # :command.usage_fixed_flags
     printf "  %s\n" "$(magenta "--help, -h")"
@@ -938,14 +938,14 @@ playground_topic_display_consumer_offsets_usage() {
 
   fi
 
-  printf "%s\n" "$(bold "Usage:")"
+  printf "%s\n" "$(bold "== Usage ==")"
   printf "  playground topic display-consumer-offsets\n"
   printf "  playground topic display-consumer-offsets --help | -h\n"
   echo
 
   # :command.long_usage
   if [[ -n $long_usage ]]; then
-    printf "%s\n" "$(bold "Options:")"
+    printf "%s\n" "$(bold "== Options ==")"
 
     # :command.usage_fixed_flags
     printf "  %s\n" "$(magenta "--help, -h")"
@@ -967,14 +967,14 @@ playground_topic_describe_usage() {
 
   fi
 
-  printf "%s\n" "$(bold "Usage:")"
+  printf "%s\n" "$(bold "== Usage ==")"
   printf "  playground topic describe [OPTIONS]\n"
   printf "  playground topic describe --help | -h\n"
   echo
 
   # :command.long_usage
   if [[ -n $long_usage ]]; then
-    printf "%s\n" "$(bold "Options:")"
+    printf "%s\n" "$(bold "== Options ==")"
 
     # :command.usage_flags
     # :flag.usage
@@ -1002,12 +1002,12 @@ playground_connector_usage() {
 
   fi
 
-  printf "%s\n" "$(bold "Usage:")"
+  printf "%s\n" "$(bold "== Usage ==")"
   printf "  playground connector COMMAND\n"
   printf "  playground connector [COMMAND] --help | -h\n"
   echo
   # :command.usage_commands
-  printf "%s\n" "$(bold "Commands:")"
+  printf "%s\n" "$(bold "== Commands ==")"
   printf "  %s   ℹ️  Show status of all connectors.\n" "$(green "status")   "
   printf "  %s   🔖 Show all plugins installed.\n" "$(green "plugins")  "
   printf "  %s   ⏸️  Pause connector\n" "$(green "pause")    "
@@ -1019,7 +1019,7 @@ playground_connector_usage() {
 
   # :command.long_usage
   if [[ -n $long_usage ]]; then
-    printf "%s\n" "$(bold "Options:")"
+    printf "%s\n" "$(bold "== Options ==")"
 
     # :command.usage_fixed_flags
     printf "  %s\n" "$(magenta "--help, -h")"
@@ -1050,14 +1050,14 @@ playground_connector_status_usage() {
 
   fi
 
-  printf "%s\n" "$(bold "Usage:")"
+  printf "%s\n" "$(bold "== Usage ==")"
   printf "  playground connector status [OPTIONS]\n"
   printf "  playground connector status --help | -h\n"
   echo
 
   # :command.long_usage
   if [[ -n $long_usage ]]; then
-    printf "%s\n" "$(bold "Options:")"
+    printf "%s\n" "$(bold "== Options ==")"
 
     # :command.usage_flags
     # :flag.usage
@@ -1085,14 +1085,14 @@ playground_connector_plugins_usage() {
 
   fi
 
-  printf "%s\n" "$(bold "Usage:")"
+  printf "%s\n" "$(bold "== Usage ==")"
   printf "  playground connector plugins\n"
   printf "  playground connector plugins --help | -h\n"
   echo
 
   # :command.long_usage
   if [[ -n $long_usage ]]; then
-    printf "%s\n" "$(bold "Options:")"
+    printf "%s\n" "$(bold "== Options ==")"
 
     # :command.usage_fixed_flags
     printf "  %s\n" "$(magenta "--help, -h")"
@@ -1114,14 +1114,14 @@ playground_connector_pause_usage() {
 
   fi
 
-  printf "%s\n" "$(bold "Usage:")"
+  printf "%s\n" "$(bold "== Usage ==")"
   printf "  playground connector pause [OPTIONS]\n"
   printf "  playground connector pause --help | -h\n"
   echo
 
   # :command.long_usage
   if [[ -n $long_usage ]]; then
-    printf "%s\n" "$(bold "Options:")"
+    printf "%s\n" "$(bold "== Options ==")"
 
     # :command.usage_flags
     # :flag.usage
@@ -1149,14 +1149,14 @@ playground_connector_resume_usage() {
 
   fi
 
-  printf "%s\n" "$(bold "Usage:")"
+  printf "%s\n" "$(bold "== Usage ==")"
   printf "  playground connector resume [OPTIONS]\n"
   printf "  playground connector resume --help | -h\n"
   echo
 
   # :command.long_usage
   if [[ -n $long_usage ]]; then
-    printf "%s\n" "$(bold "Options:")"
+    printf "%s\n" "$(bold "== Options ==")"
 
     # :command.usage_flags
     # :flag.usage
@@ -1184,14 +1184,14 @@ playground_connector_delete_usage() {
 
   fi
 
-  printf "%s\n" "$(bold "Usage:")"
+  printf "%s\n" "$(bold "== Usage ==")"
   printf "  playground connector delete [OPTIONS]\n"
   printf "  playground connector delete --help | -h\n"
   echo
 
   # :command.long_usage
   if [[ -n $long_usage ]]; then
-    printf "%s\n" "$(bold "Options:")"
+    printf "%s\n" "$(bold "== Options ==")"
 
     # :command.usage_flags
     # :flag.usage
@@ -1219,14 +1219,14 @@ playground_connector_show_lag_usage() {
 
   fi
 
-  printf "%s\n" "$(bold "Usage:")"
+  printf "%s\n" "$(bold "== Usage ==")"
   printf "  playground connector show-lag [OPTIONS]\n"
   printf "  playground connector show-lag --help | -h\n"
   echo
 
   # :command.long_usage
   if [[ -n $long_usage ]]; then
-    printf "%s\n" "$(bold "Options:")"
+    printf "%s\n" "$(bold "== Options ==")"
 
     # :command.usage_flags
     # :flag.usage
@@ -1257,19 +1257,19 @@ playground_connector_log_level_usage() {
 
   fi
 
-  printf "%s\n" "$(bold "Usage:")"
+  printf "%s\n" "$(bold "== Usage ==")"
   printf "  playground connector log-level COMMAND\n"
   printf "  playground connector log-level [COMMAND] --help | -h\n"
   echo
   # :command.usage_commands
-  printf "%s\n" "$(bold "Commands:")"
+  printf "%s\n" "$(bold "== Commands ==")"
   printf "  %s   Get log levels.\n" "$(green "get")"
   printf "  %s   Set log level for specific logger.\n" "$(green "set")"
   echo
 
   # :command.long_usage
   if [[ -n $long_usage ]]; then
-    printf "%s\n" "$(bold "Options:")"
+    printf "%s\n" "$(bold "== Options ==")"
 
     # :command.usage_fixed_flags
     printf "  %s\n" "$(magenta "--help, -h")"
@@ -1299,14 +1299,14 @@ playground_connector_log_level_get_usage() {
 
   fi
 
-  printf "%s\n" "$(bold "Usage:")"
+  printf "%s\n" "$(bold "== Usage ==")"
   printf "  playground connector log-level get [OPTIONS]\n"
   printf "  playground connector log-level get --help | -h\n"
   echo
 
   # :command.long_usage
   if [[ -n $long_usage ]]; then
-    printf "%s\n" "$(bold "Options:")"
+    printf "%s\n" "$(bold "== Options ==")"
 
     # :command.usage_flags
     # :flag.usage
@@ -1334,14 +1334,14 @@ playground_connector_log_level_set_usage() {
 
   fi
 
-  printf "%s\n" "$(bold "Usage:")"
+  printf "%s\n" "$(bold "== Usage ==")"
   printf "  playground connector log-level set [OPTIONS]\n"
   printf "  playground connector log-level set --help | -h\n"
   echo
 
   # :command.long_usage
   if [[ -n $long_usage ]]; then
-    printf "%s\n" "$(bold "Options:")"
+    printf "%s\n" "$(bold "== Options ==")"
 
     # :command.usage_flags
     # :flag.usage
@@ -5555,11 +5555,8 @@ playground_container_get_ip_addresses_command() {
 # :command.function
 playground_container_kill_all_command() {
   # src/container_kill_all_command.sh
-  echo "# this file is located in 'src/container_kill_all_command.sh'"
-  echo "# code for 'playground container kill-all' goes here"
-  echo "# you can edit it freely and regenerate (it will not be overwritten)"
-  inspect_args
-
+  log "Kill all docker containers"
+  docker rm -f $(docker ps -qa)
 }
 
 # :command.function
