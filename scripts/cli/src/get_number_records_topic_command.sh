@@ -1,4 +1,3 @@
-
 topic="${args[--topic]}"
 
 log "Get number of records in a topic $topic"
