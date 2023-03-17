@@ -169,43 +169,50 @@ commands:
   help: |-
     💀 Kill all containers.
 
-- name: get-number-records-topic
+- name: topic
+  expose: true
   group: Topic
   help: |-
-    💯 Get number of records in a topic.
+    📁 Topic commands.
+  commands:
 
-  flags:
-  - &topic
-    long: --topic
-    short: -t
-    required: true
-    arg: topic
-    completions:
-      - $(playground get-topic-list)
-    help: |-
-      Topic name.
+    - name: get-number-records
+      group: Topic
+      help: |-
+        💯 Get number of records in a topic.
 
-  examples:
-  - playground get-number-records-topic --topic a-topic
-  - playground get-number-records-topic -t a-topic
+      flags:
+      - &topic
+        long: --topic
+        short: -t
+        required: true
+        arg: topic
+        completions:
+          - $(playground get-topic-list)
+        help: |-
+          Topic name.
 
-- name: display-connect-offsets-topic
-  group: Topic
-  help: |-
-    🔺 Display content of connect offsets topic.
+      examples:
+      - playground get-number-records --topic a-topic
+      - playground get-number-records -t a-topic
 
-- name: display-consumer-offsets-topic
-  group: Topic
-  help: |-
-    🔻 Display content of __consumer_offsets topic.
+    - name: display-connect-offsets
+      group: Topic
+      help: |-
+        🔺 Display content of connect offsets topic.
 
-- name: describe-topic
-  group: Topic
-  help: |-
-    🔎 Describe topic.
+    - name: display-consumer-offsets
+      group: Topic
+      help: |-
+        🔻 Display content of __consumer_offsets topic.
 
-  flags:
-  - *topic
+    - name: describe
+      group: Topic
+      help: |-
+        🔎 Describe topic.
+
+      flags:
+      - *topic
 
 - name: logs
   group: Container
