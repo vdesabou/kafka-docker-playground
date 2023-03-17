@@ -47,7 +47,7 @@ function jq() {
 function yq() {
     if [[ $(type -f yq 2>&1) =~ "not found" ]]
     then
-      docker run --rm -i mikefarah/yq "$@"
+      docker run -u0 -v /tmp:/tmp --rm -i mikefarah/yq "$@"
     else
       $(which yq) "$@"
     fi

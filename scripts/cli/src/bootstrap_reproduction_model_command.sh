@@ -414,15 +414,14 @@ if [[ -n "$sink_file" ]]
 then
   tmp_dir=$(mktemp -d -t ci-XXXXXXXXXX)
   test_sink_file_directory="$(dirname "${sink_file}")"
-
   ## 
   # docker-compose part
   # determining the docker-compose file from from test_file
   docker_compose_sink_file=$(grep "environment" "$sink_file" | grep DIR | grep start.sh | cut -d "/" -f 7 | cut -d '"' -f 1 | tail -n1 | xargs)
   docker_compose_sink_file="${test_sink_file_directory}/${docker_compose_sink_file}"
-  cp $docker_compose_test_file $tmp_dir/tmp_file
-
-  yq ". *= load(\"$tmp_dir/tmp_file\")" ${docker_compose_sink_file} > $docker_compose_test_file
+  cp $docker_compose_test_file /tmp/1.yml
+  cp $docker_compose_sink_file /tmp/2.yml
+  yq ". *= load(\"/tmp/1.yml\")" /tmp/2.yml > $docker_compose_test_file
 
   connector_paths=$(grep "CONNECT_PLUGIN_PATH" "${docker_compose_file}" | grep -v "KSQL_CONNECT_PLUGIN_PATH" | cut -d ":" -f 2  | tr -s " " | head -1)
   sink_connector_paths=$(grep "CONNECT_PLUGIN_PATH" "${docker_compose_sink_file}" | grep -v "KSQL_CONNECT_PLUGIN_PATH" | cut -d ":" -f 2  | tr -s " " | head -1)
@@ -433,7 +432,10 @@ then
   else
     tmp_new_connector_paths="$connector_paths,$sink_connector_paths"
     new_connector_paths=$(echo "$tmp_new_connector_paths" | sed 's/ //g')
-    yq -i ".services.connect.environment.CONNECT_PLUGIN_PATH = \"$new_connector_paths\"" $docker_compose_test_file
+    cp $docker_compose_test_file /tmp/1.yml
+
+    yq -i ".services.connect.environment.CONNECT_PLUGIN_PATH = \"$new_connector_paths\"" /tmp/1.yml
+    cp /tmp/1.yml $docker_compose_test_file
   fi
 
   ## 
