@@ -75,7 +75,16 @@ if [[ -n "$sink_file" ]]
 then
   if [[ "$base1" != *source ]]
   then
-    logerror "ERROR: basis example <$base1> must be source connector example when building a pipeline !"
+    logerror "ERROR: example <$base1> must be source connector example when building a pipeline !"
+    exit 1
+  fi
+fi
+
+if [ "$producer" != "none" ]
+then
+  if [[ "$base1" != *sink ]]
+  then
+    logerror "ERROR: example <$base1> must be sink connector example when using a java producer !"
     exit 1
   fi
 fi
