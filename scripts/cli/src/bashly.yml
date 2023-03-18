@@ -79,7 +79,7 @@ commands:
       Add a custom SMT (no-op).
 
   - long: --pipeline
-    required: true
+    required: false
     validate: file_exists
     arg: sink_file
     conflicts: [--producer]

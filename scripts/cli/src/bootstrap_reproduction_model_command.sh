@@ -130,13 +130,13 @@ done
   
 if [ "$producer" != "none" ]
 then
+  tmp_dir=$(mktemp -d -t ci-XXXXXXXXXX)
   case "${producer}" in
     avro)
-      log "value converter should be set with:"
-      echo "\"value.converter\": \"io.confluent.connect.avro.AvroConverter\","
-      echo "\"value.converter.schema.registry.url\": \"http://schema-registry:8081\","
+      echo "               \"key.converter\": \"org.apache.kafka.connect.storage.StringConverter\"," > $tmp_dir/key_converter
+      echo "               \"value.converter\": \"io.confluent.connect.avro.AvroConverter\"," > $tmp_dir/value_converter
+      echo "               \"value.converter.schema.registry.url\": \"http://schema-registry:8081\"," >> $tmp_dir/value_converter
 
-      echo ""
       log "Examples to consume:"
       log "1️⃣ Simplest"
       echo "docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic a-topic --from-beginning --max-messages 1"
@@ -144,15 +144,11 @@ then
       echo "docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic a-topic --property print.key=true --property key.separator=, --from-beginning --max-messages 1"
     ;;
     avro-with-key)
-      log "key converter should be set with:"
-      echo "\"key.converter\": \"io.confluent.connect.avro.AvroConverter\","
-      echo "\"key.converter.schema.registry.url\": \"http://schema-registry:8081\","
-      echo ""
-      log "value converter should be set with:"
-      echo "\"value.converter\": \"io.confluent.connect.avro.AvroConverter\","
-      echo "\"value.converter.schema.registry.url\": \"http://schema-registry:8081\","
+      echo "               \"key.converter\": \"io.confluent.connect.avro.AvroConverter\"," > $tmp_dir/key_converter
+      echo "               \"key.converter.schema.registry.url\": \"http://schema-registry:8081\"," >> $tmp_dir/key_converter
+      echo "               \"value.converter\": \"io.confluent.connect.avro.AvroConverter\"," > $tmp_dir/value_converter
+      echo "               \"value.converter.schema.registry.url\": \"http://schema-registry:8081\"," >> $tmp_dir/value_converter
 
-      echo ""
       log "Examples to consume:"
       log "1️⃣ Simplest"
       echo "docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic a-topic --from-beginning --max-messages 1"
@@ -160,12 +156,10 @@ then
       echo "docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic a-topic --property print.key=true --property key.separator=, --from-beginning --max-messages 1"
     ;;
     json-schema)
-      echo ""
-      log "value converter should be set with:"
-      echo "\"value.converter\": \"io.confluent.connect.json.JsonSchemaConverter\","
-      echo "\"value.converter.schema.registry.url\": \"http://schema-registry:8081\","
+      echo "               \"key.converter\": \"org.apache.kafka.connect.storage.StringConverter\"," > $tmp_dir/key_converter
+      echo "               \"value.converter\": \"io.confluent.connect.json.JsonSchemaConverter\"," > $tmp_dir/value_converter
+      echo "               \"value.converter.schema.registry.url\": \"http://schema-registry:8081\"," >> $tmp_dir/value_converter
 
-      echo ""
       log "Examples to consume:"
       log "1️⃣ Simplest"
       echo "docker exec connect kafka-json-schema-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic a-topic --from-beginning --max-messages 1"
@@ -173,15 +167,11 @@ then
       echo "docker exec connect kafka-json-schema-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic a-topic --property print.key=true --property key.separator=, --from-beginning --max-messages 1"
     ;;
     json-schema-with-key)
-      log "key converter should be set with:"
-      echo "\"key.converter\": \"io.confluent.connect.json.JsonSchemaConverter\","
-      echo "\"key.converter.schema.registry.url\": \"http://schema-registry:8081\","
-      echo ""
-      log "value converter should be set with:"
-      echo "\"value.converter\": \"io.confluent.connect.json.JsonSchemaConverter\","
-      echo "\"value.converter.schema.registry.url\": \"http://schema-registry:8081\","
+      echo "               \"key.converter\": \"io.confluent.connect.json.JsonSchemaConverter\"," > $tmp_dir/key_converter
+      echo "               \"key.converter.schema.registry.url\": \"http://schema-registry:8081\"," >> $tmp_dir/key_converter
+      echo "               \"value.converter\": \"io.confluent.connect.json.JsonSchemaConverter\"," > $tmp_dir/value_converter
+      echo "               \"value.converter.schema.registry.url\": \"http://schema-registry:8081\"," >> $tmp_dir/value_converter
 
-      echo ""
       log "Examples to consume:"
       log "1️⃣ Simplest"
       echo "docker exec connect kafka-json-schema-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic a-topic --from-beginning --max-messages 1"
@@ -189,11 +179,10 @@ then
       echo "docker exec connect kafka-json-schema-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic a-topic --property print.key=true --property key.separator=, --from-beginning --max-messages 1"
     ;;
     protobuf)
-      log "value converter should be set with:"
-      echo "\"value.converter\": \"io.confluent.connect.protobuf.ProtobufConverter\","
-      echo "\"value.converter.schema.registry.url\": \"http://schema-registry:8081\","
-
-      echo ""
+      echo "               \"key.converter\": \"org.apache.kafka.connect.storage.StringConverter\"," > $tmp_dir/key_converter
+      echo "               \"value.converter\": \"io.confluent.connect.protobuf.ProtobufConverter\"," > $tmp_dir/value_converter
+      echo "               \"value.converter.schema.registry.url\": \"http://schema-registry:8081\"," >> $tmp_dir/value_converter
+      
       log "Examples to consume:"
       log "1️⃣ Simplest"
       echo "docker exec connect kafka-protobuf-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic a-topic --from-beginning --max-messages 1"
@@ -201,14 +190,11 @@ then
       echo "docker exec connect kafka-protobuf-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic a-topic --property print.key=true --property key.separator=, --from-beginning --max-messages 1"
     ;;
     protobuf-with-key)
-      log "key converter should be set with:"
-      echo "\"key.converter\": \"io.confluent.connect.protobuf.ProtobufConverter\","
-      echo "\"key.converter.schema.registry.url\": \"http://schema-registry:8081\","
-      log "value converter should be set with:"
-      echo "\"value.converter\": \"io.confluent.connect.protobuf.ProtobufConverter\","
-      echo "\"value.converter.schema.registry.url\": \"http://schema-registry:8081\","
+      echo "               \"key.converter\": \"io.confluent.connect.protobuf.ProtobufConverter\"," > $tmp_dir/key_converter
+      echo "               \"key.converter.schema.registry.url\": \"http://schema-registry:8081\"," >> $tmp_dir/key_converter
+      echo "               \"value.converter\": \"io.confluent.connect.protobuf.ProtobufConverter\"," > $tmp_dir/value_converter
+      echo "               \"value.converter.schema.registry.url\": \"http://schema-registry:8081\"," >> $tmp_dir/value_converter
 
-      echo ""
       log "Examples to consume:"
       log "1️⃣ Simplest"
       echo "docker exec connect kafka-protobuf-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic a-topic --from-beginning --max-messages 1"
@@ -222,45 +208,45 @@ then
       exit 1
     ;;
   esac
-      original_topic_name=$(grep "\"topics\"" $repro_test_file | cut -d "\"" -f 4 | head -1)
-      if [ "$original_topic_name" != "" ]
-      then
-        tmp=$(echo $original_topic_name | tr '-' '\-')
-        sed -e "s|$tmp|$topic_name|g" \
-            $repro_test_file > /tmp/tmp
 
-        mv /tmp/tmp $repro_test_file
-        # log "✨ Replacing topic $original_topic_name with $topic_name"
-      fi
+  original_topic_name=$(grep "\"topics\"" $repro_test_file | cut -d "\"" -f 4 | head -1)
+  if [ "$original_topic_name" != "" ]
+  then
+    tmp=$(echo $original_topic_name | tr '-' '\-')
+    sed -e "s|$tmp|$topic_name|g" \
+        $repro_test_file > /tmp/tmp
 
-      tmp_dir=$(mktemp -d -t ci-XXXXXXXXXX)
-      for((i=1;i<=$nb_producers;i++)); do
-        # looks like there is a maximum size for hostname in docker (container init caused: sethostname: invalid argument: unknown)
-        producer_hostname=""
-        producer_hostname="producer-repro-$description_kebab_case"
-        producer_hostname=${producer_hostname:0:21}
-        if [ $nb_producers -eq 1 ]
-        then
-          producer_hostname="${producer_hostname}"
-        else
-          producer_hostname="${producer_hostname}$i"
-        fi
+    mv /tmp/tmp $repro_test_file
+    # log "✨ Replacing topic $original_topic_name with $topic_name"
+  fi
 
-        rm -rf $producer_hostname
-        mkdir -p $repro_dir/$producer_hostname/
-        cp -Ra ../../other/schema-format-$producer/producer/* $repro_dir/$producer_hostname/
+  for((i=1;i<=$nb_producers;i++)); do
+    # looks like there is a maximum size for hostname in docker (container init caused: sethostname: invalid argument: unknown)
+    producer_hostname=""
+    producer_hostname="producer-repro-$description_kebab_case"
+    producer_hostname=${producer_hostname:0:21}
+    if [ $nb_producers -eq 1 ]
+    then
+      producer_hostname="${producer_hostname}"
+    else
+      producer_hostname="${producer_hostname}$i"
+    fi
 
-        # update docker compose with producer container
-        if [[ "$dir1" = *connect ]]
-        then
-          get_producer_heredoc
-        fi
+    rm -rf $producer_hostname
+    mkdir -p $repro_dir/$producer_hostname/
+    cp -Ra ../../other/schema-format-$producer/producer/* $repro_dir/$producer_hostname/
 
-        if [[ "$dir1" = *ccloud ]]
-        then
-          get_producer_ccloud_heredoc
-        fi
-      done
+    # update docker compose with producer container
+    if [[ "$dir1" = *connect ]]
+    then
+      get_producer_heredoc
+    fi
+
+    if [[ "$dir1" = *ccloud ]]
+    then
+      get_producer_ccloud_heredoc
+    fi
+  done
 
   if [ "${docker_compose_file}" != "" ]
   then
@@ -354,7 +340,88 @@ then
     fi
     { head -n $(($line_kafka_cli_producer - 2)) $tmp_dir/tmp_file; cat $tmp_dir/java_producer; tail -n +$line_kafka_cli_producer_end $tmp_dir/tmp_file; } > $repro_test_file
   fi
+
+  # deal with converters
+
+  sink_key_converter=$(grep "\"key.converter\"" $repro_test_file | cut -d '"' -f 4)
+  if [ "$sink_key_converter" == "" ]
+  then
+    log "💱 Sink connector is using default key.converter, i.e org.apache.kafka.connect.storage.StringConverter"
+  else
+    if [ "$sink_key_converter" == "org.apache.kafka.connect.json.JsonConverter" ]
+    then
+      # check schemas.enable
+      sink_key_json_converter_schemas_enable=$(grep "\"key.converter.schemas.enable\"" $repro_test_file | cut -d '"' -f 4)
+      if [ "$sink_key_json_converter_schemas_enable" == "" ]
+      then
+        log "💱 Sink connector is using key.converter $sink_key_converter with schemas.enable=true"
+      else
+        log "💱 Sink connector is using key.converter $sink_key_converter with schemas.enable=$sink_key_json_converter_schemas_enable"
+      fi
+    else
+      log "💱 Sink connector is using key.converter $sink_key_converter"
+    fi
+  fi
+
+  sink_value_converter=$(grep "\"value.converter\"" $repro_test_file | cut -d '"' -f 4)
+  if [ "$sink_value_converter" == "" ]
+  then
+    log "💱 Sink connector is using default value.converter, i.e io.confluent.connect.avro.AvroConverter"
+  else
+    if [ "$sink_value_converter" == "org.apache.kafka.connect.json.JsonConverter" ]
+    then
+      # check schemas.enable
+      sink_value_json_converter_schemas_enable=$(grep "\"value.converter.schemas.enable\"" $repro_test_file | cut -d '"' -f 4)
+      if [ "$sink_value_json_converter_schemas_enable" == "" ]
+      then
+        log "💱 Sink connector is using value.converter $sink_value_converter with schemas.enable=true"
+      else
+        log "💱 Sink connector is using value.converter $sink_value_converter with schemas.enable=$sink_value_json_converter_schemas_enable"
+      fi
+    else
+      log "💱 Sink connector is using value.converter $sink_value_converter"
+    fi
+  fi
+
+  if [ "$sink_value_converter" == "" ]
+  then
+    line=$(grep -n 'connector.class' $repro_test_file | cut -d ":" -f 1 | tail -n1)
+    
+    { head -n $(($line)) $repro_test_file; cat $tmp_dir/value_converter; tail -n +$(($line+1)) $repro_test_file; } > $tmp_dir/tmp_file2
+    cp $tmp_dir/tmp_file2 $repro_test_file
+  else
+    # remove existing value.converter
+    grep -vwE "\"value.converter" $repro_test_file > $tmp_dir/tmp_file2
+    cp $tmp_dir/tmp_file2 $repro_test_file
+
+    line=$(grep -n 'connector.class' $repro_test_file | cut -d ":" -f 1 | tail -n1)
+    
+    { head -n $(($line)) $repro_test_file; cat $tmp_dir/value_converter; tail -n +$(($line+1)) $repro_test_file; } > $tmp_dir/tmp_file2
+    cp $tmp_dir/tmp_file2 $repro_test_file
+  fi
+  log "🧑‍🏭 Changing Sink connector value.converter to use same as producer:"
+  cat $tmp_dir/value_converter
+
+  if [ "$sink_key_converter" == "" ]
+  then
+    line=$(grep -n 'connector.class' $repro_test_file | cut -d ":" -f 1 | tail -n1)
+    
+    { head -n $(($line)) $repro_test_file; cat $tmp_dir/key_converter; tail -n +$(($line+1)) $repro_test_file; } > $tmp_dir/tmp_file2
+    cp $tmp_dir/tmp_file2 $repro_test_file
+  else
+    # remove existing key.converter
+    grep -vwE "\"key.converter" $repro_test_file > $tmp_dir/tmp_file2
+    cp $tmp_dir/tmp_file2 $repro_test_file
+
+    line=$(grep -n 'connector.class' $repro_test_file | cut -d ":" -f 1 | tail -n1)
+    
+    { head -n $(($line)) $repro_test_file; cat $tmp_dir/key_converter; tail -n +$(($line+1)) $repro_test_file; } > $tmp_dir/tmp_file2
+    cp $tmp_dir/tmp_file2 $repro_test_file
+  fi
+  log "🧑‍🏭 Changing Sink connector key.converter to use same as producer:"
+  cat $tmp_dir/key_converter
 fi
+
 
 if [[ -n "$add_custom_smt" ]]
 then
@@ -632,7 +699,7 @@ then
     cp $repro_test_file $tmp_dir/tmp_file
     line=$(grep -n '"topics"' $repro_test_file | cut -d ":" -f 1 | tail -n1)
     
-    echo "               \"topics\": \"$original_topic_name\"," > $tmp_dir/topic_line
+    echo "              \"topics\": \"$original_topic_name\"," > $tmp_dir/topic_line
     { head -n $(($line)) $tmp_dir/tmp_file; cat $tmp_dir/topic_line; tail -n +$(($line+1)) $tmp_dir/tmp_file; } > $repro_test_file
   else 
     logwarn "Could not find original topic name! "
