@@ -406,7 +406,6 @@ then
   line=$(grep -n 'connector.class' $repro_test_file | cut -d ":" -f 1 | tail -n1)
   
   { head -n $(($line)) $tmp_dir/tmp_file; cat $tmp_dir/build_custom_smt_json_config; tail -n +$(($line+1)) $tmp_dir/tmp_file; } > $repro_test_file
-
 fi
 ####
 #### pipeline
@@ -450,7 +449,7 @@ then
   source_key_converter=$(grep "\"key.converter\"" $repro_test_file | cut -d '"' -f 4)
   if [ "$source_key_converter" == "" ]
   then
-    log "Source connector is using default key.converter, i.e org.apache.kafka.connect.storage.StringConverter"
+    log "💱 Source connector is using default key.converter, i.e org.apache.kafka.connect.storage.StringConverter"
   else
     if [ "$source_key_converter" == "org.apache.kafka.connect.json.JsonConverter" ]
     then
@@ -458,19 +457,19 @@ then
       source_key_json_converter_schemas_enable=$(grep "\"key.converter.schemas.enable\"" $repro_test_file | cut -d '"' -f 4)
       if [ "$source_key_json_converter_schemas_enable" == "" ]
       then
-        log "Source connector is using key.converter $source_key_converter with schemas.enable=true"
+        log "💱 Source connector is using key.converter $source_key_converter with schemas.enable=true"
       else
-        log "Source connector is using key.converter $source_key_converter with schemas.enable=$source_key_json_converter_schemas_enable"
+        log "💱 Source connector is using key.converter $source_key_converter with schemas.enable=$source_key_json_converter_schemas_enable"
       fi
     else
-      log "Source connector is using key.converter $source_key_converter"
+      log "💱 Source connector is using key.converter $source_key_converter"
     fi
   fi
 
   source_value_converter=$(grep "\"value.converter\"" $repro_test_file | cut -d '"' -f 4)
   if [ "$source_value_converter" == "" ]
   then
-    log "Source connector is using default value.converter, i.e io.confluent.connect.avro.AvroConverter"
+    log "💱 Source connector is using default value.converter, i.e io.confluent.connect.avro.AvroConverter"
   else
     if [ "$source_value_converter" == "org.apache.kafka.connect.json.JsonConverter" ]
     then
@@ -478,12 +477,52 @@ then
       source_value_json_converter_schemas_enable=$(grep "\"value.converter.schemas.enable\"" $repro_test_file | cut -d '"' -f 4)
       if [ "$source_value_json_converter_schemas_enable" == "" ]
       then
-        log "Source connector is using value.converter $source_value_converter with schemas.enable=true"
+        log "💱 Source connector is using value.converter $source_value_converter with schemas.enable=true"
       else
-        log "Source connector is using value.converter $source_value_converter with schemas.enable=$source_value_json_converter_schemas_enable"
+        log "💱 Source connector is using value.converter $source_value_converter with schemas.enable=$source_value_json_converter_schemas_enable"
       fi
     else
-      log "Source connector is using value.converter $source_value_converter"
+      log "💱 Source connector is using value.converter $source_value_converter"
+    fi
+  fi
+
+  sink_key_converter=$(grep "\"key.converter\"" $sink_file | cut -d '"' -f 4)
+  if [ "$sink_key_converter" == "" ]
+  then
+    log "💱 Sink connector is using default key.converter, i.e org.apache.kafka.connect.storage.StringConverter"
+  else
+    if [ "$sink_key_converter" == "org.apache.kafka.connect.json.JsonConverter" ]
+    then
+      # check schemas.enable
+      sink_key_json_converter_schemas_enable=$(grep "\"key.converter.schemas.enable\"" $sink_file | cut -d '"' -f 4)
+      if [ "$sink_key_json_converter_schemas_enable" == "" ]
+      then
+        log "💱 Sink connector is using key.converter $sink_key_converter with schemas.enable=true"
+      else
+        log "💱 Sink connector is using key.converter $sink_key_converter with schemas.enable=$sink_key_json_converter_schemas_enable"
+      fi
+    else
+      log "💱 Sink connector is using key.converter $sink_key_converter"
+    fi
+  fi
+
+  sink_value_converter=$(grep "\"value.converter\"" $sink_file | cut -d '"' -f 4)
+  if [ "$sink_value_converter" == "" ]
+  then
+    log "💱 Sink connector is using default value.converter, i.e io.confluent.connect.avro.AvroConverter"
+  else
+    if [ "$sink_value_converter" == "org.apache.kafka.connect.json.JsonConverter" ]
+    then
+      # check schemas.enable
+      sink_value_json_converter_schemas_enable=$(grep "\"value.converter.schemas.enable\"" $sink_file | cut -d '"' -f 4)
+      if [ "$sink_value_json_converter_schemas_enable" == "" ]
+      then
+        log "💱 Sink connector is using value.converter $sink_value_converter with schemas.enable=true"
+      else
+        log "💱 Sink connector is using value.converter $sink_value_converter with schemas.enable=$sink_value_json_converter_schemas_enable"
+      fi
+    else
+      log "💱 Sink connector is using value.converter $sink_value_converter"
     fi
   fi
 
@@ -494,6 +533,59 @@ then
 
   sed -n "$(($line_sink_environment+1)),$ p" $sink_file > $tmp_dir/tmp_file
 
+  # deal with converters
+  set +e
+  if [ "$source_value_converter" == "" ] && [ "$sink_value_converter" == "" ]
+  then
+    # do nothing
+    :
+  else
+    grep "\"value.converter" $repro_test_file > $tmp_dir/source_value_converter
+    if [ "$sink_value_converter" == "" ]
+    then
+      line=$(grep -n 'connector.class' $tmp_dir/tmp_file | cut -d ":" -f 1 | tail -n1)
+      
+      { head -n $(($line)) $tmp_dir/tmp_file; cat $tmp_dir/source_value_converter; tail -n +$(($line+1)) $tmp_dir/tmp_file; } > $tmp_dir/tmp_file2
+      cp $tmp_dir/tmp_file2 $tmp_dir/tmp_file
+    else
+      # remove existing value.converter
+      grep -vwE "\"value.converter" $tmp_dir/tmp_file > $tmp_dir/tmp_file2
+      cp $tmp_dir/tmp_file2 $tmp_dir/tmp_file
+
+      line=$(grep -n 'connector.class' $tmp_dir/tmp_file | cut -d ":" -f 1 | tail -n1)
+      
+      { head -n $(($line)) $tmp_dir/tmp_file; cat $tmp_dir/source_value_converter; tail -n +$(($line+1)) $tmp_dir/tmp_file; } > $tmp_dir/tmp_file2
+      cp $tmp_dir/tmp_file2 $tmp_dir/tmp_file
+    fi
+    log "🧑‍🏭 Changing Sink connector value.converter to use same as source:"
+    cat $tmp_dir/source_value_converter
+  fi
+  if [ "$source_key_converter" == "" ] && [ "$sink_key_converter" == "" ]
+  then
+    # do nothing
+    :
+  else
+    grep "\"key.converter" $repro_test_file > $tmp_dir/source_key_converter
+    if [ "$sink_key_converter" == "" ]
+    then
+      line=$(grep -n 'connector.class' $tmp_dir/tmp_file | cut -d ":" -f 1 | tail -n1)
+      
+      { head -n $(($line)) $tmp_dir/tmp_file; cat $tmp_dir/source_key_converter; tail -n +$(($line+1)) $tmp_dir/tmp_file; } > $tmp_dir/tmp_file2
+      cp $tmp_dir/tmp_file2 $tmp_dir/tmp_file
+    else
+      # remove existing key.converter
+      grep -vwE "\"key.converter" $tmp_dir/tmp_file > $tmp_dir/tmp_file2
+      cp $tmp_dir/tmp_file2 $tmp_dir/tmp_file
+
+      line=$(grep -n 'connector.class' $tmp_dir/tmp_file | cut -d ":" -f 1 | tail -n1)
+      
+      { head -n $(($line)) $tmp_dir/tmp_file; cat $tmp_dir/source_key_converter; tail -n +$(($line+1)) $tmp_dir/tmp_file; } > $tmp_dir/tmp_file2
+      cp $tmp_dir/tmp_file2 $tmp_dir/tmp_file
+    fi
+    log "🧑‍🏭 Changing Sink connector key.converter to use same as source:"
+    cat $tmp_dir/source_key_converter
+  fi
+  set -e
   # need to remove cli which produces and change topic
   kafka_cli_producer_error=0
   kafka_cli_producer_eof=0
