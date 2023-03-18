@@ -692,7 +692,7 @@ then
 
   awk -F'--topic ' '{print $2}' $repro_test_file > $tmp_dir/tmp
   sed '/^$/d' $tmp_dir/tmp > $tmp_dir/tmp2
-  original_topic_name=$(cat $tmp_dir/tmp2 | cut -d " " -f1)
+  original_topic_name=$(head -1 $tmp_dir/tmp2 | cut -d " " -f1)
 
   if [ "$original_topic_name" != "" ]
   then
