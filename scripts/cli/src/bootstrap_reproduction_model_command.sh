@@ -81,7 +81,7 @@ then
 fi
 
 output_folder="reproduction-models"
-if [ ! -z "$OUTPUT_FOLDER" ]
+if [ -z "$OUTPUT_FOLDER" ]
 then
     log "📂 Output folder is set with OUTPUT_FOLDER environment variable"
     output_folder="$OUTPUT_FOLDER"
@@ -445,6 +445,47 @@ then
   line_final_environment=$(grep -n '${DIR}/../../environment' $repro_test_file | cut -d ":" -f 1 | tail -n1)
   line_sink_source=$(grep -n 'source ${DIR}/../../scripts/utils.sh' $sink_file | cut -d ":" -f 1 | tail -n1) 
   line_sink_environment=$(grep -n '${DIR}/../../environment' $sink_file | cut -d ":" -f 1 | tail -n1)
+
+  # get converter info
+  source_key_converter=$(grep "\"key.converter\"" $repro_test_file | cut -d '"' -f 4)
+  if [ "$source_key_converter" == "" ]
+  then
+    log "Source connector is using default key.converter, i.e org.apache.kafka.connect.storage.StringConverter"
+  else
+    if [ "$source_key_converter" == "org.apache.kafka.connect.json.JsonConverter" ]
+    then
+      # check schemas.enable
+      source_key_json_converter_schemas_enable=$(grep "\"key.converter.schemas.enable\"" $repro_test_file | cut -d '"' -f 4)
+      if [ "$source_key_json_converter_schemas_enable" == "" ]
+      then
+        log "Source connector is using key.converter $source_key_converter with schemas.enable=true"
+      else
+        log "Source connector is using key.converter $source_key_converter with schemas.enable=$source_key_json_converter_schemas_enable"
+      fi
+    else
+      log "Source connector is using key.converter $source_key_converter"
+    fi
+  fi
+
+  source_value_converter=$(grep "\"value.converter\"" $repro_test_file | cut -d '"' -f 4)
+  if [ "$source_value_converter" == "" ]
+  then
+    log "Source connector is using default value.converter, i.e io.confluent.connect.avro.AvroConverter"
+  else
+    if [ "$source_value_converter" == "org.apache.kafka.connect.json.JsonConverter" ]
+    then
+      # check schemas.enable
+      source_value_json_converter_schemas_enable=$(grep "\"value.converter.schemas.enable\"" $repro_test_file | cut -d '"' -f 4)
+      if [ "$source_value_json_converter_schemas_enable" == "" ]
+      then
+        log "Source connector is using value.converter $source_value_converter with schemas.enable=true"
+      else
+        log "Source connector is using value.converter $source_value_converter with schemas.enable=$source_value_json_converter_schemas_enable"
+      fi
+    else
+      log "Source connector is using value.converter $source_value_converter"
+    fi
+  fi
 
   sed -n "$(($line_sink_source+1)),$(($line_sink_environment-1))p" $sink_file > $tmp_dir/pre_sink
   cp $repro_test_file $tmp_dir/tmp_file
