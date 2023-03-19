@@ -5510,13 +5510,32 @@ playground_bootstrap_reproduction_model_command() {
 
     { head -n $(($line+2)) $tmp_dir/tmp_file; cat $tmp_dir/build_custom_docker_cp_smt; tail -n +$(($line+2)) $tmp_dir/tmp_file; } > $repro_test_file
 
-    echo "              \"transforms\": \"MyCustomSMT\"," >> $tmp_dir/build_custom_smt_json_config
-    echo "              \"transforms.MyCustomSMT.type\": \"com.github.vdesabou.kafka.connect.transforms.MyCustomSMT\"," >> $tmp_dir/build_custom_smt_json_config
+    existing_transforms=$(grep "\"transforms\"" $repro_test_file | cut -d '"' -f 4)
+    if [ "$existing_transforms" == "" ]
+    then
+      echo "              \"transforms\": \"MyCustomSMT\"," >> $tmp_dir/build_custom_smt_json_config
+      echo "              \"transforms.MyCustomSMT.type\": \"com.github.vdesabou.kafka.connect.transforms.MyCustomSMT\"," >> $tmp_dir/build_custom_smt_json_config
 
-    cp $repro_test_file $tmp_dir/tmp_file
-    line=$(grep -n 'connector.class' $repro_test_file | cut -d ":" -f 1 | tail -n1)
+      cp $repro_test_file $tmp_dir/tmp_file
+      line=$(grep -n 'connector.class' $repro_test_file | cut -d ":" -f 1 | tail -n1)
 
-    { head -n $(($line)) $tmp_dir/tmp_file; cat $tmp_dir/build_custom_smt_json_config; tail -n +$(($line+1)) $tmp_dir/tmp_file; } > $repro_test_file
+      { head -n $(($line)) $tmp_dir/tmp_file; cat $tmp_dir/build_custom_smt_json_config; tail -n +$(($line+1)) $tmp_dir/tmp_file; } > $repro_test_file
+    else
+      log "🤖 Connector is using existing transforms $existing_transforms, the new custom SMT will be added to the list."
+
+      # remove existing transforms
+      grep -vwE "\"transforms\"" $repro_test_file > $tmp_dir/tmp_file2
+      cp $tmp_dir/tmp_file2 $repro_test_file
+
+      echo "              \"transforms\": \"MyCustomSMT,$existing_transforms\"," >> $tmp_dir/build_custom_smt_json_config
+      echo "              \"transforms.MyCustomSMT.type\": \"com.github.vdesabou.kafka.connect.transforms.MyCustomSMT\"," >> $tmp_dir/build_custom_smt_json_config
+
+      cp $repro_test_file $tmp_dir/tmp_file
+      line=$(grep -n 'connector.class' $repro_test_file | cut -d ":" -f 1 | tail -n1)
+
+      { head -n $(($line)) $tmp_dir/tmp_file; cat $tmp_dir/build_custom_smt_json_config; tail -n +$(($line+1)) $tmp_dir/tmp_file; } > $repro_test_file
+    fi
+
   fi
   if [[ -n "$sink_file" ]]
   then
