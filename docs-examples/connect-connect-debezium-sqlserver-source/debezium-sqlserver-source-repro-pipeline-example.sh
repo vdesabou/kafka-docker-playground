@@ -10,6 +10,7 @@ then
     exit 111
 fi
 
+
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.repro-pipeline-example.yml"
 
 
@@ -100,6 +101,7 @@ curl -X PUT \
                "transforms.flatten.delimiter": "."
           }' \
      http://localhost:8083/connectors/postgres-sink/config | jq .
+
 
 
 sleep 5
