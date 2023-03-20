@@ -94,6 +94,7 @@ commands:
   - playground bootstrap-reproduction-model -f hdfs2-sink.sh -d "123456 testing with parquet format and 2 protobuf producers" --producer protobuf --nb-producers 2
   - playground bootstrap-reproduction-model -f hdfs2-sink.sh -d "123456 testing with parquet format and 2 protobuf producers" -p protobuf -n 2
   - playground bootstrap-reproduction-model -f hdfs2-sink.sh -d "123456 testing with parquet format and custom smt" --custom-smt
+  - playground bootstrap-reproduction-model -f debezium-postgres-source.sh -d "create pipeline" --pipeline ../../connect/connect-jdbc-sqlserver-sink/sqlserver-microsoft-sink.sh
 
 - name: get-properties
   group: Kafka
