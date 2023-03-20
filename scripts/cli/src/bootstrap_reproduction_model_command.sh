@@ -89,13 +89,13 @@ then
   fi
 fi
 
-output_folder="reproduction-models"
-if [ -z "$OUTPUT_FOLDER" ]
+if [ ! -z "$OUTPUT_FOLDER" ]
 then
-    log "📂 Output folder is set with OUTPUT_FOLDER environment variable"
-    output_folder="$OUTPUT_FOLDER"
+  output_folder="$OUTPUT_FOLDER"
+  log "📂 Output folder is $output_folder (set with OUTPUT_FOLDER environment variable)"
 else
-    log "📂 Output folder is default $output_folder (you can change it by setting OUTPUT_FOLDER environment variable)"
+  output_folder="reproduction-models"
+  log "📂 Output folder is default $output_folder (you can change it by setting OUTPUT_FOLDER environment variable)"
 fi
 
 repro_dir=$root_folder/$output_folder/$final_dir
