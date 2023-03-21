@@ -40,6 +40,11 @@ else
      export CONNECT_CONTAINER_HOME_DIR="/root"
 fi
 
+PASSWORD=$(date +%s | sha256sum | base64 | head -c 32 ; echo)
+# generate data file for externalizing secrets
+sed -e "s|:PASSWORD:|$PASSWORD|g" \
+    ../../connect/connect-aws-redshift-sink/data.template > ../../connect/connect-aws-redshift-sink/data
+
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
 
 CLUSTER_NAME=pg${USER}redshift${TAG}
@@ -54,7 +59,7 @@ set -e
 
 log "Create AWS Redshift cluster"
 # https://docs.aws.amazon.com/redshift/latest/mgmt/getting-started-cli.html
-aws redshift create-cluster --cluster-identifier $CLUSTER_NAME --master-username masteruser --master-user-password myPassword1 --node-type dc2.large --cluster-type single-node --publicly-accessible
+aws redshift create-cluster --cluster-identifier $CLUSTER_NAME --master-username masteruser --master-user-password "$PASSWORD" --node-type dc2.large --cluster-type single-node --publicly-accessible
 
 # Verify AWS Redshift cluster has started within MAX_WAIT seconds
 MAX_WAIT=480
@@ -85,8 +90,7 @@ sleep 60
 CLUSTER=$(aws redshift describe-clusters --cluster-identifier $CLUSTER_NAME | jq -r .Clusters[0].Endpoint.Address)
 
 log "Sending messages to topic orders"
-docker exec -i connect kafka-avro-console-producer --broker-list broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic orders --property value.schema='{"type":"record","name":"myrecord","fields":[{"name":"id","type":"int"},{"name":"product", "type": "string"}, {"name":"quantity", "type": "int"}, {"name":"price",
-"type": "float"}]}' << EOF
+docker exec -i connect kafka-avro-console-producer --broker-list broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic orders --property value.schema='{"type":"record","name":"myrecord","fields":[{"name":"id","type":"int"},{"name":"product", "type": "string"}, {"name":"quantity", "type": "int"}, {"name":"price","type": "float"}]}' << EOF
 {"id": 999, "product": "foo", "quantity": 100, "price": 50}
 EOF
 
@@ -101,7 +105,7 @@ curl -X PUT \
                "aws.redshift.port": "5439",
                "aws.redshift.database": "dev",
                "aws.redshift.user": "masteruser",
-               "aws.redshift.password": "myPassword1",
+               "aws.redshift.password": "${file:/data:password}",
                "aws.access.key.id" : "'"$AWS_ACCESS_KEY_ID"'",
                "aws.secret.key.id": "'"$AWS_SECRET_ACCESS_KEY"'",
                "auto.create": "true",
@@ -115,8 +119,8 @@ curl -X PUT \
 sleep 20
 
 log "Verify data is in Redshift"
-timeout 30 docker run -i debezium/postgres:10 psql -h $CLUSTER -U masteruser -d dev -p 5439 << EOF > /tmp/result.log
-myPassword1
+timeout 30 docker run -i postgres:15 psql -h $CLUSTER -U masteruser -d dev -p 5439 << EOF > /tmp/result.log
+$PASSWORD
 SELECT * from orders;
 EOF
 cat /tmp/result.log

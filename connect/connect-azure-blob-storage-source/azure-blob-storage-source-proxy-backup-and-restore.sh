@@ -38,7 +38,8 @@ set -e
 log "Creating Azure Resource Group $AZURE_RESOURCE_GROUP"
 az group create \
     --name $AZURE_RESOURCE_GROUP \
-    --location $AZURE_REGION
+    --location $AZURE_REGION \
+    --tags owner_email=$AZ_USER
 log "Creating Azure Storage Account $AZURE_ACCOUNT_NAME"
 az storage account create \
     --name $AZURE_ACCOUNT_NAME \
@@ -63,6 +64,11 @@ sed -e "s|:AZURE_ACCOUNT_NAME:|$AZURE_ACCOUNT_NAME|g" \
     ../../connect/connect-azure-blob-storage-source/data.template > ../../connect/connect-azure-blob-storage-source/data
 
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.proxy.backup-and-restore.yml"
+
+DOMAIN="$AZURE_CONTAINER_NAME.blob.core.windows.net"
+IP=$(nslookup $DOMAIN | grep Address | grep -v "#" | cut -d " " -f 2 | tail -1)
+log "Blocking $DOMAIN IP $IP to make sure proxy is used"
+docker exec --privileged --user root connect bash -c "iptables -A INPUT -p tcp -s $IP -j DROP"
 
 log "Creating Azure Blob Storage Sink connector"
 curl -X PUT \
@@ -93,12 +99,12 @@ seq -f "{\"f1\": \"value%g\"}" 10 | docker exec -i connect kafka-avro-console-pr
 sleep 10
 
 log "Listing objects of container ${AZURE_CONTAINER_NAME} in Azure Blob Storage"
-az storage blob list --account-name "${AZURE_ACCOUNT_NAME}" --account-key "${AZURE_ACCOUNT_KEY}" --container-name "${AZURE_CONTAINER_NAME}" --output table
+az storage fs file list --account-name "${AZURE_ACCOUNT_NAME}" --account-key "${AZURE_ACCOUNT_KEY}" -f "${AZURE_CONTAINER_NAME}" --output table
 
 log "Getting one of the avro files locally and displaying content with avro-tools"
 az storage blob download --account-name "${AZURE_ACCOUNT_NAME}" --account-key "${AZURE_ACCOUNT_KEY}" --container-name "${AZURE_CONTAINER_NAME}" --name topics/blob_topic/partition=0/blob_topic+0+0000000000.avro --file /tmp/blob_topic+0+0000000000.avro
 
-docker run --rm -v /tmp:/tmp actions/avro-tools tojson /tmp/blob_topic+0+0000000000.avro
+docker run --rm -v /tmp:/tmp vdesabou/avro-tools tojson /tmp/blob_topic+0+0000000000.avro
 
 
 log "Creating Azure Blob Storage Source connector"
@@ -126,6 +132,6 @@ sleep 5
 
 log "Verifying topic copy_of_blob_topic"
 timeout 60 docker exec broker kafka-console-consumer -bootstrap-server broker:9092 --topic copy_of_blob_topic --from-beginning --max-messages 3
-
+exit 0
 log "Deleting resource group"
 az group delete --name $AZURE_RESOURCE_GROUP --yes --no-wait

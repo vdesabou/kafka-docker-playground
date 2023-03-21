@@ -11,8 +11,6 @@ docker exec -i broker kafka-console-producer --broker-list broker:9092 --topic f
 {"customer_name":"Ed", "complaint_type":"Dirty car", "trip_cost": 29.10, "new_customer": false, "number_of_rides": 22}
 EOF
 
-OUTPUT_FILE="${CONNECT_CONTAINER_HOME_DIR}/data/ouput/file.json"
-
 log "Creating FileStream Sink connector"
 curl -X PUT \
      -H "Content-Type: application/json" \

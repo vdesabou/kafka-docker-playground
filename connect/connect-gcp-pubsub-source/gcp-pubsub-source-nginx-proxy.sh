@@ -4,22 +4,28 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
-PROJECT=${1:-vincent-de-saboulin-lab}
-
-KEYFILE="${DIR}/keyfile.json"
-if [ ! -f ${KEYFILE} ] && [ -z "$KEYFILE_CONTENT" ]
+if [ -z "$GCP_PROJECT" ]
 then
-     logerror "ERROR: either the file ${KEYFILE} is not present or environment variable KEYFILE_CONTENT is not set!"
+     logerror "GCP_PROJECT is not set. Export it as environment variable or pass it as argument"
+     exit 1
+fi
+
+cd ../../connect/connect-gcp-pubsub-source
+GCP_KEYFILE="${PWD}/keyfile.json"
+if [ ! -f ${GCP_KEYFILE} ] && [ -z "$GCP_KEYFILE_CONTENT" ]
+then
+     logerror "ERROR: either the file ${GCP_KEYFILE} is not present or environment variable GCP_KEYFILE_CONTENT is not set!"
      exit 1
 else 
-    if [ -f ${KEYFILE} ]
+    if [ -f ${GCP_KEYFILE} ]
     then
-        KEYFILE_CONTENT=`cat keyfile.json | jq -aRs .`
+        GCP_KEYFILE_CONTENT=`cat keyfile.json | jq -aRs .`
     else
-        log "Creating ${KEYFILE} based on environment variable KEYFILE_CONTENT"
-        echo -e "$KEYFILE_CONTENT" | sed 's/\\"/"/g' > ${KEYFILE}
+        log "Creating ${GCP_KEYFILE} based on environment variable GCP_KEYFILE_CONTENT"
+        echo -e "$GCP_KEYFILE_CONTENT" | sed 's/\\"/"/g' > ${GCP_KEYFILE}
     fi
 fi
+cd -
 
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.nginx-proxy.yml"
 
@@ -27,26 +33,26 @@ log "Doing gsutil authentication"
 set +e
 docker rm -f gcloud-config
 set -e
-docker run -i -v ${KEYFILE}:/tmp/keyfile.json --name gcloud-config google/cloud-sdk:latest gcloud auth activate-service-account --project ${PROJECT} --key-file /tmp/keyfile.json
+docker run -i -v ${GCP_KEYFILE}:/tmp/keyfile.json --name gcloud-config google/cloud-sdk:latest gcloud auth activate-service-account --project ${GCP_PROJECT} --key-file /tmp/keyfile.json
 
 
 # cleanup if required
 set +e
 log "Delete topic and subscription, if required"
-docker run -i --volumes-from gcloud-config google/cloud-sdk:latest gcloud pubsub --project ${PROJECT} topics delete topic-1
-docker run -i --volumes-from gcloud-config google/cloud-sdk:latest gcloud pubsub --project ${PROJECT} subscriptions delete subscription-1
-set - e
+docker run -i --volumes-from gcloud-config google/cloud-sdk:latest gcloud pubsub --project ${GCP_PROJECT} topics delete topic-1
+docker run -i --volumes-from gcloud-config google/cloud-sdk:latest gcloud pubsub --project ${GCP_PROJECT} subscriptions delete subscription-1
+set -e
 
 log "Create a Pub/Sub topic called topic-1"
-docker run -i --volumes-from gcloud-config google/cloud-sdk:latest gcloud pubsub --project ${PROJECT} topics create topic-1
+docker run -i --volumes-from gcloud-config google/cloud-sdk:latest gcloud pubsub --project ${GCP_PROJECT} topics create topic-1
 
 log "Create a Pub/Sub subscription called subscription-1"
-docker run -i --volumes-from gcloud-config google/cloud-sdk:latest gcloud pubsub --project ${PROJECT} subscriptions create --topic topic-1 subscription-1
+docker run -i --volumes-from gcloud-config google/cloud-sdk:latest gcloud pubsub --project ${GCP_PROJECT} subscriptions create --topic topic-1 subscription-1
 
 log "Publish three messages to topic-1"
-docker run -i --volumes-from gcloud-config google/cloud-sdk:latest gcloud pubsub --project ${PROJECT} topics publish topic-1 --message "Peter"
-docker run -i --volumes-from gcloud-config google/cloud-sdk:latest gcloud pubsub --project ${PROJECT} topics publish topic-1 --message "Megan"
-docker run -i --volumes-from gcloud-config google/cloud-sdk:latest gcloud pubsub --project ${PROJECT} topics publish topic-1 --message "Erin"
+docker run -i --volumes-from gcloud-config google/cloud-sdk:latest gcloud pubsub --project ${GCP_PROJECT} topics publish topic-1 --message "Peter"
+docker run -i --volumes-from gcloud-config google/cloud-sdk:latest gcloud pubsub --project ${GCP_PROJECT} topics publish topic-1 --message "Megan"
+docker run -i --volumes-from gcloud-config google/cloud-sdk:latest gcloud pubsub --project ${GCP_PROJECT} topics publish topic-1 --message "Erin"
 
 sleep 10
 
@@ -57,7 +63,7 @@ curl -X PUT \
                "connector.class" : "io.confluent.connect.gcp.pubsub.PubSubSourceConnector",
                "tasks.max" : "1",
                "kafka.topic" : "pubsub-topic",
-               "gcp.pubsub.project.id" : "'"$PROJECT"'",
+               "gcp.pubsub.project.id" : "'"$GCP_PROJECT"'",
                "gcp.pubsub.topic.id" : "topic-1",
                "gcp.pubsub.subscription.id" : "subscription-1",
                "gcp.pubsub.credentials.path" : "/tmp/keyfile.json",
@@ -76,7 +82,7 @@ log "Verify messages are in topic pubsub-topic"
 timeout 60 docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic pubsub-topic --from-beginning --max-messages 3
 
 log "Delete topic and subscription"
-docker run -i --volumes-from gcloud-config google/cloud-sdk:latest gcloud pubsub --project ${PROJECT} topics delete topic-1
-docker run -i --volumes-from gcloud-config google/cloud-sdk:latest gcloud pubsub --project ${PROJECT} subscriptions delete subscription-1
+docker run -i --volumes-from gcloud-config google/cloud-sdk:latest gcloud pubsub --project ${GCP_PROJECT} topics delete topic-1
+docker run -i --volumes-from gcloud-config google/cloud-sdk:latest gcloud pubsub --project ${GCP_PROJECT} subscriptions delete subscription-1
 
 docker rm -f gcloud-config

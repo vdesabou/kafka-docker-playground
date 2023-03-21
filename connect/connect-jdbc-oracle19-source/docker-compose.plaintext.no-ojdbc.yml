@@ -1,6 +1,15 @@
 ---
 version: '3.5'
 services:
+
+  oracle-datagen:
+    build:
+      context: ../../connect/connect-jdbc-oracle19-source/oracle-datagen/
+    hostname: oracle-datagen
+    container_name: oracle-datagen
+    profiles:
+    - oracle_datagen
+    
   oracle:
     # You need to build this image first, following the instructions at
     # https://github.com/oracle/docker-images/blob/master/OracleDatabase/SingleInstance/README.md

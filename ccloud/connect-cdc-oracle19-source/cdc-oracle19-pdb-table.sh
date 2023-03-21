@@ -11,7 +11,7 @@ then
 fi
 
 
-create_or_get_oracle_image "LINUX.X64_193000_db_home.zip" "$(pwd)/ora-setup-scripts-pdb-table"
+create_or_get_oracle_image "LINUX.X64_193000_db_home.zip" "../../connect/connect-cdc-oracle19-source/ora-setup-scripts-cdb-table"
 
 ${DIR}/../../ccloud/environment/start.sh "${PWD}/docker-compose.plaintext.pdb-table.yml"
 
@@ -37,12 +37,12 @@ MAX_WAIT=2500
 CUR_WAIT=0
 log "⌛ Waiting up to $MAX_WAIT seconds for Oracle DB to start"
 docker container logs oracle > /tmp/out.txt 2>&1
-while [[ ! $(cat /tmp/out.txt) =~ "Completed: ALTER DATABASE OPEN" ]]; do
+while [[ ! $(cat /tmp/out.txt) =~ "DATABASE IS READY TO USE" ]]; do
 sleep 10
 docker container logs oracle > /tmp/out.txt 2>&1
 CUR_WAIT=$(( CUR_WAIT+10 ))
 if [[ "$CUR_WAIT" -gt "$MAX_WAIT" ]]; then
-     logerror "ERROR: The logs in oracle container do not show 'DONE: Executing user defined scripts' after $MAX_WAIT seconds. Please troubleshoot with 'docker container ps' and 'docker container logs'.\n"
+     logerror "ERROR: The logs in oracle container do not show 'DATABASE IS READY TO USE' after $MAX_WAIT seconds. Please troubleshoot with 'docker container ps' and 'docker container logs'.\n"
      exit 1
 fi
 done
@@ -99,7 +99,7 @@ docker exec -i oracle bash -c "ORACLE_SID=ORCLCDB;export ORACLE_SID;sqlplus /nol
      GRANT EXECUTE ON SYS.DBMS_LOGMNR TO C##CDC_PRIVS;
      GRANT EXECUTE ON SYS.DBMS_LOGMNR_D TO C##CDC_PRIVS;
      GRANT EXECUTE ON SYS.DBMS_LOGMNR_LOGREP_DICT TO C##CDC_PRIVS;
-     GRANT EXECUTE ON SYS.DBMS_LOGMNR_SESSION TO C##CDC_PRIVS;
+     ;
      
      -- Enable Supplemental Logging for All Columns
      ALTER SESSION SET CONTAINER=cdb\$root;
@@ -214,7 +214,7 @@ log "Waiting 20s for connector to read existing data"
 sleep 20
 
 log "Running SQL scripts"
-for script in ${DIR}/sample-sql-scripts/*.sh
+for script in ../../ccloud/connect-cdc-oracle19-source/sample-sql-scripts/*.sh
 do
      $script "ORCLPDB1"
 done

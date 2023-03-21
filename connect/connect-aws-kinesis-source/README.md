@@ -32,6 +32,18 @@ Simply run:
 $ ./kinesis-source.sh
 ```
 
+If you want to assume IAM roles:
+
+```
+$ ./kinesis-source-with-assuming-iam-role.sh (in that case `~/.aws/credentials-with-assuming-iam-role` file must be set)
+```
+
+or with AssumeRole using custom AWS credentials provider (⚠️ custom code is just an example, there is no support for it):
+
+```
+$ ./kinesis-source-with-assuming-iam-role.sh
+```
+
 ## Details of what the script is doing
 
 Create a Kinesis stream `kafka_docker_playground` in $AWS_REGION region:

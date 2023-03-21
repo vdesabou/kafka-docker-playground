@@ -72,7 +72,7 @@ PUSH_TOPICS_NAME=MyLeadPushTopics${TAG}
 PUSH_TOPICS_NAME=${PUSH_TOPICS_NAME//[-._]/}
 
 sed -e "s|:PUSH_TOPIC_NAME:|$PUSH_TOPICS_NAME|g" \
-    ${DIR}/MyLeadPushTopics-template.apex > ${DIR}/MyLeadPushTopics.apex
+     ../../connect/connect-salesforce-bulkapi-sink/MyLeadPushTopics-template.apex > ../../connect/connect-salesforce-bulkapi-sink/MyLeadPushTopics.apex
 
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
 
@@ -83,18 +83,13 @@ docker exec sfdx-cli sh -c "sfdx sfpowerkit:auth:login -u \"$SALESFORCE_USERNAME
 
 log "Delete $PUSH_TOPICS_NAME, if required"
 set +e
-docker exec -i sfdx-cli sh -c "sfdx force:apex:execute  -u \"$SALESFORCE_USERNAME\"" << EOF
+docker exec -i sfdx-cli sh -c "sfdx apex run --target-org \"$SALESFORCE_USERNAME\"" << EOF
 List<PushTopic> pts = [SELECT Id FROM PushTopic WHERE Name = '$PUSH_TOPICS_NAME'];
 Database.delete(pts);
 EOF
 set -e
 log "Create $PUSH_TOPICS_NAME"
-docker exec sfdx-cli sh -c "sfdx force:apex:execute  -u \"$SALESFORCE_USERNAME\" -f \"/tmp/MyLeadPushTopics.apex\""
-
-LEAD_FIRSTNAME=John_$RANDOM
-LEAD_LASTNAME=Doe_$RANDOM
-log "Add a Lead to Salesforce: $LEAD_FIRSTNAME $LEAD_LASTNAME"
-docker exec sfdx-cli sh -c "sfdx force:data:record:create  -u \"$SALESFORCE_USERNAME\" -s Lead -v \"FirstName='$LEAD_FIRSTNAME' LastName='$LEAD_LASTNAME' Company=Confluent\""
+docker exec sfdx-cli sh -c "sfdx apex run --target-org \"$SALESFORCE_USERNAME\" -f \"/tmp/MyLeadPushTopics.apex\""
 
 log "Creating Salesforce PushTopics Source connector"
 curl -X PUT \
@@ -112,7 +107,7 @@ curl -X PUT \
                     "salesforce.password.token" : "'"$SALESFORCE_SECURITY_TOKEN"'",
                     "salesforce.consumer.key" : "'"$SALESFORCE_CONSUMER_KEY"'",
                     "salesforce.consumer.secret" : "'"$SALESFORCE_CONSUMER_PASSWORD"'",
-                    "salesforce.initial.start" : "all",
+                    "salesforce.initial.start" : "latest",
                     "connection.max.message.size": "10048576",
                     "key.converter": "org.apache.kafka.connect.json.JsonConverter",
                     "value.converter": "org.apache.kafka.connect.json.JsonConverter",
@@ -122,9 +117,14 @@ curl -X PUT \
           }' \
      http://localhost:8083/connectors/salesforce-pushtopic-source/config | jq .
 
+sleep 5
 
+LEAD_FIRSTNAME=John_$RANDOM
+LEAD_LASTNAME=Doe_$RANDOM
+log "Add a Lead to Salesforce: $LEAD_FIRSTNAME $LEAD_LASTNAME"
+docker exec sfdx-cli sh -c "sfdx data:create:record  --target-org \"$SALESFORCE_USERNAME\" -s Lead -v \"FirstName='$LEAD_FIRSTNAME' LastName='$LEAD_LASTNAME' Company=Confluent\""
 
-sleep 10
+sleep 30
 
 log "Verify we have received the data in sfdc-pushtopic-leads topic"
 timeout 60 docker exec broker kafka-console-consumer -bootstrap-server broker:9092 --topic sfdc-pushtopic-leads --from-beginning --max-messages 1

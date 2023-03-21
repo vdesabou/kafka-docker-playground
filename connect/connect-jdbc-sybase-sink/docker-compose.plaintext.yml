@@ -1,0 +1,18 @@
+---
+version: '3.5'
+services:
+
+  sybase:
+    image: ifnazar/sybase_15_7:latest
+    hostname: dksybase
+    container_name: sybase
+    command: ["bash", "/sybase/start"]
+
+  connect:
+    depends_on:
+      - zookeeper
+      - broker
+      - schema-registry
+      - sybase
+    environment:
+      CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-jdbc

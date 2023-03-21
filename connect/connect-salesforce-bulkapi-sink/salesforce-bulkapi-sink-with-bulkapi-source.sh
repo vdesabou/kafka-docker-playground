@@ -72,7 +72,7 @@ PUSH_TOPICS_NAME=MyLeadPushTopics${TAG}
 PUSH_TOPICS_NAME=${PUSH_TOPICS_NAME//[-._]/}
 
 sed -e "s|:PUSH_TOPIC_NAME:|$PUSH_TOPICS_NAME|g" \
-    ${DIR}/MyLeadPushTopics-template.apex > ${DIR}/MyLeadPushTopics.apex
+     ../../connect/connect-salesforce-bulkapi-sink/MyLeadPushTopics-template.apex > ../../connect/connect-salesforce-bulkapi-sink/MyLeadPushTopics.apex
 
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
 
@@ -82,7 +82,7 @@ docker exec sfdx-cli sh -c "sfdx sfpowerkit:auth:login -u \"$SALESFORCE_USERNAME
 LEAD_FIRSTNAME=John_$RANDOM
 LEAD_LASTNAME=Doe_$RANDOM
 log "Add a Lead to Salesforce: $LEAD_FIRSTNAME $LEAD_LASTNAME"
-docker exec sfdx-cli sh -c "sfdx force:data:record:create  -u \"$SALESFORCE_USERNAME\" -s Lead -v \"FirstName='$LEAD_FIRSTNAME' LastName='$LEAD_LASTNAME' Company=Confluent\""
+docker exec sfdx-cli sh -c "sfdx data:create:record  --target-org \"$SALESFORCE_USERNAME\" -s Lead -v \"FirstName='$LEAD_FIRSTNAME' LastName='$LEAD_LASTNAME' Company=Confluent\""
 
 log "Creating Salesforce Bulk API Source connector"
 curl -X PUT \

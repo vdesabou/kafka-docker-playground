@@ -84,7 +84,7 @@ PUSH_TOPICS_NAME=MyLeadPushTopics${TAG}
 PUSH_TOPICS_NAME=${PUSH_TOPICS_NAME//[-._]/}
 
 sed -e "s|:PUSH_TOPIC_NAME:|$PUSH_TOPICS_NAME|g" \
-    ${DIR}/MyLeadPushTopics-template.apex > ${DIR}/MyLeadPushTopics.apex
+    ../../ccloud/fully-managed-connect-salesforce-sobject-sink/MyLeadPushTopics-template.apex > ../../ccloud/fully-managed-connect-salesforce-sobject-sink/MyLeadPushTopics.apex
 
 bootstrap_ccloud_environment
 
@@ -113,18 +113,13 @@ docker exec sfdx-cli sh -c "sfdx sfpowerkit:auth:login -u \"$SALESFORCE_USERNAME
 
 log "Delete $PUSH_TOPICS_NAME, if required"
 set +e
-docker exec -i sfdx-cli sh -c "sfdx force:apex:execute  -u \"$SALESFORCE_USERNAME\"" << EOF
+docker exec -i sfdx-cli sh -c "sfdx apex run --target-org \"$SALESFORCE_USERNAME\"" << EOF
 List<PushTopic> pts = [SELECT Id FROM PushTopic WHERE Name = '$PUSH_TOPICS_NAME'];
 Database.delete(pts);
 EOF
 set -e
 log "Create $PUSH_TOPICS_NAME"
-docker exec sfdx-cli sh -c "sfdx force:apex:execute  -u \"$SALESFORCE_USERNAME\" -f \"/tmp/MyLeadPushTopics.apex\""
-
-LEAD_FIRSTNAME=John_$RANDOM
-LEAD_LASTNAME=Doe_$RANDOM
-log "Add a Lead to Salesforce: $LEAD_FIRSTNAME $LEAD_LASTNAME"
-docker exec sfdx-cli sh -c "sfdx force:data:record:create  -u \"$SALESFORCE_USERNAME\" -s Lead -v \"FirstName='$LEAD_FIRSTNAME' LastName='$LEAD_LASTNAME' Company=Confluent\""
+docker exec sfdx-cli sh -c "sfdx apex run --target-org \"$SALESFORCE_USERNAME\" -f \"/tmp/MyLeadPushTopics.apex\""
 
 log "Creating Salesforce PushTopics Source connector"
 cat << EOF > connector.json
@@ -143,7 +138,7 @@ cat << EOF > connector.json
      "salesforce.password.token" : "$SALESFORCE_SECURITY_TOKEN",
      "salesforce.consumer.key" : "$SALESFORCE_CONSUMER_KEY",
      "salesforce.consumer.secret" : "$SALESFORCE_CONSUMER_PASSWORD",
-     "salesforce.initial.start" : "all",
+     "salesforce.initial.start" : "latest",
      "output.data.format": "AVRO",
      "tasks.max": "1"
 }
@@ -161,8 +156,12 @@ log "Creating fully managed connector"
 create_ccloud_connector connector.json
 wait_for_ccloud_connector_up connector.json 300
 
+LEAD_FIRSTNAME=John_$RANDOM
+LEAD_LASTNAME=Doe_$RANDOM
+log "Add a Lead to Salesforce: $LEAD_FIRSTNAME $LEAD_LASTNAME"
+docker exec sfdx-cli sh -c "sfdx data:create:record  --target-org \"$SALESFORCE_USERNAME\" -s Lead -v \"FirstName='$LEAD_FIRSTNAME' LastName='$LEAD_LASTNAME' Company=Confluent\""
 
-sleep 10
+sleep 30
 
 log "Verify we have received the data in sfdc-pushtopic-leads topic"
 timeout 60 docker run --rm -e BOOTSTRAP_SERVERS="$BOOTSTRAP_SERVERS" -e SASL_JAAS_CONFIG="$SASL_JAAS_CONFIG" -e SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO="$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO" -e SCHEMA_REGISTRY_URL="$SCHEMA_REGISTRY_URL" vdesabou/kafka-docker-playground-connect:${CONNECT_TAG} kafka-avro-console-consumer --topic sfdc-pushtopic-leads --bootstrap-server $BOOTSTRAP_SERVERS --consumer-property ssl.endpoint.identification.algorithm=https --consumer-property sasl.mechanism=PLAIN --consumer-property security.protocol=SASL_SSL --consumer-property sasl.jaas.config="$SASL_JAAS_CONFIG" --property basic.auth.credentials.source=USER_INFO --property schema.registry.basic.auth.user.info="$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO" --property schema.registry.url=$SCHEMA_REGISTRY_URL --from-beginning --max-messages 1 

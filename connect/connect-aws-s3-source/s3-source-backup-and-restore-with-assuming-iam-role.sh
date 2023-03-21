@@ -4,11 +4,6 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
-
-# KNOWN ISSUE
-logerror "💀 KNOWN ISSUE: DDNTH-1015"
-exit 1
-
 if ! version_gt $TAG_BASE "5.9.99" && version_gt $CONNECTOR_TAG "1.9.9"
 then
     logwarn "WARN: connector version >= 2.0.0 do not support CP versions < 6.0.0"
@@ -48,7 +43,12 @@ AWS_BUCKET_NAME=${AWS_BUCKET_NAME//[-.]/}
 
 log "Empty bucket <$AWS_BUCKET_NAME/$TAG>, if required"
 set +e
-aws s3api create-bucket --bucket $AWS_BUCKET_NAME --region $AWS_REGION --create-bucket-configuration LocationConstraint=$AWS_REGION
+if [ "$AWS_REGION" == "us-east-1" ]
+then
+    aws s3api create-bucket --bucket $AWS_BUCKET_NAME --region $AWS_REGION
+else
+    aws s3api create-bucket --bucket $AWS_BUCKET_NAME --region $AWS_REGION --create-bucket-configuration LocationConstraint=$AWS_REGION
+fi
 set -e
 log "Empty bucket <$AWS_BUCKET_NAME>, if required"
 set +e
@@ -89,7 +89,7 @@ aws s3api list-objects --bucket "$AWS_BUCKET_NAME"
 log "Getting one of the avro files locally and displaying content with avro-tools"
 aws s3 cp --only-show-errors s3://$AWS_BUCKET_NAME/$TAG/s3_topic/partition=0/s3_topic+0+0000000000.avro s3_topic+0+0000000000.avro
 
-docker run --rm -v ${DIR}:/tmp actions/avro-tools tojson /tmp/s3_topic+0+0000000000.avro
+docker run --rm -v ${DIR}:/tmp vdesabou/avro-tools tojson /tmp/s3_topic+0+0000000000.avro
 rm -f s3_topic+0+0000000000.avro
 
 log "Creating Backup and Restore S3 Source connector with bucket name <$AWS_BUCKET_NAME>"

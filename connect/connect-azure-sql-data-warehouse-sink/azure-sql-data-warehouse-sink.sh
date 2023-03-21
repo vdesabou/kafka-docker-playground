@@ -35,7 +35,8 @@ set -e
 log "Creating Azure Resource Group $AZURE_RESOURCE_GROUP"
 az group create \
     --name $AZURE_RESOURCE_GROUP \
-    --location $AZURE_REGION
+    --location $AZURE_REGION \
+    --tags owner_email=$AZ_USER
 log "Creating SQL server instance $AZURE_SQL_NAME"
 az sql server create \
     --name $AZURE_SQL_NAME \

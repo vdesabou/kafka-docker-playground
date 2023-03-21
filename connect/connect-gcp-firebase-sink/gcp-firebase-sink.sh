@@ -3,22 +3,28 @@ set -e
 
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
-PROJECT=${1:-vincent-de-saboulin-lab}
-
-KEYFILE="${DIR}/keyfile.json"
-if [ ! -f ${KEYFILE} ] && [ -z "$KEYFILE_CONTENT" ]
+if [ -z "$GCP_PROJECT" ]
 then
-     logerror "ERROR: either the file ${KEYFILE} is not present or environment variable KEYFILE_CONTENT is not set!"
+     logerror "GCP_PROJECT is not set. Export it as environment variable or pass it as argument"
+     exit 1
+fi
+
+cd ../../connect/connect-gcp-firebase-sink
+GCP_KEYFILE="${PWD}/keyfile.json"
+if [ ! -f ${GCP_KEYFILE} ] && [ -z "$GCP_KEYFILE_CONTENT" ]
+then
+     logerror "ERROR: either the file ${GCP_KEYFILE} is not present or environment variable GCP_KEYFILE_CONTENT is not set!"
      exit 1
 else 
-    if [ -f ${KEYFILE} ]
+    if [ -f ${GCP_KEYFILE} ]
     then
-        KEYFILE_CONTENT=`cat keyfile.json | jq -aRs .`
+        GCP_KEYFILE_CONTENT=`cat keyfile.json | jq -aRs .`
     else
-        log "Creating ${KEYFILE} based on environment variable KEYFILE_CONTENT"
-        echo -e "$KEYFILE_CONTENT" | sed 's/\\"/"/g' > ${KEYFILE}
+        log "Creating ${GCP_KEYFILE} based on environment variable GCP_KEYFILE_CONTENT"
+        echo -e "$GCP_KEYFILE_CONTENT" | sed 's/\\"/"/g' > ${GCP_KEYFILE}
     fi
 fi
+cd -
 
 if [ ! -z "$CI" ]
 then
@@ -27,7 +33,7 @@ then
      
      # if this is github actions
      log "Removing all data"
-     docker run -p 9005:9005 -e FIREBASE_TOKEN="$FIREBASE_TOKEN" -e PROJECT=$PROJECT -i kamshak/firebase-tools-docker firebase database:remove / -y --token "$FIREBASE_TOKEN" --project "$PROJECT"
+     docker run -p 9005:9005 -e FIREBASE_TOKEN="$FIREBASE_TOKEN" -e PROJECT=$GCP_PROJECT -i kamshak/firebase-tools-docker firebase database:remove / -y --token "$FIREBASE_TOKEN" --project "$GCP_PROJECT"
 fi
 
 
@@ -41,7 +47,7 @@ curl -X PUT \
                "tasks.max" : "1",
                "topics":"artists,songs",
                "gcp.firebase.credentials.path": "/tmp/keyfile.json",
-               "gcp.firebase.database.reference": "https://'"$PROJECT"'.firebaseio.com/musicBlog",
+               "gcp.firebase.database.reference": "https://'"$GCP_PROJECT"'.firebaseio.com/musicBlog",
                "insert.mode":"update",
                "key.converter" : "io.confluent.connect.avro.AvroConverter",
                "key.converter.schema.registry.url":"http://schema-registry:8081",
@@ -73,7 +79,7 @@ if [ ! -z "$CI" ]
 then
      # if this is github actions
      log "Verifying data is in Firebase"
-     docker run -p 9005:9005 -e FIREBASE_TOKEN=$FIREBASE_TOKEN -e PROJECT=$PROJECT -i kamshak/firebase-tools-docker firebase database:get / --token "$FIREBASE_TOKEN" --project "$PROJECT" | jq . > /tmp/result.log  2>&1
+     docker run -p 9005:9005 -e FIREBASE_TOKEN=$FIREBASE_TOKEN -e PROJECT=$GCP_PROJECT -i kamshak/firebase-tools-docker firebase database:get / --token "$FIREBASE_TOKEN" --project "$GCP_PROJECT" | jq . > /tmp/result.log  2>&1
      cat /tmp/result.log
      grep "Michael Jackson" /tmp/result.log
 fi

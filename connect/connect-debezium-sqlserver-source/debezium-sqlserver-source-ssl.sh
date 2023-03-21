@@ -4,6 +4,12 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
+if ! version_gt $TAG_BASE "5.9.99" && version_gt $CONNECTOR_TAG "1.9.9"
+then
+    logwarn "WARN: connector version >= 2.0.0 do not support CP versions < 6.0.0"
+    exit 111
+fi
+
 cd ${DIR}/ssl
 if [[ "$OSTYPE" == "darwin"* ]]
 then
@@ -56,26 +62,58 @@ cd -
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.ssl.yml"
 
 
-log "Load inventory.sql to SQL Server"
-cat ../../connect/connect-debezium-sqlserver-source/inventory.sql | docker exec -i sqlserver bash -c '/opt/mssql-tools/bin/sqlcmd -U sa -P Password!'
+log "Create table"
+docker exec -i sqlserver /opt/mssql-tools/bin/sqlcmd -U sa -P Password! << EOF
+-- Create the test database
+CREATE DATABASE testDB;
+GO
+USE testDB;
+EXEC sys.sp_cdc_enable_db;
+
+-- Create some customers ...
+CREATE TABLE customers (
+  id INTEGER IDENTITY(1001,1) NOT NULL PRIMARY KEY,
+  first_name VARCHAR(255) NOT NULL,
+  last_name VARCHAR(255) NOT NULL,
+  email VARCHAR(255) NOT NULL
+);
+INSERT INTO customers(first_name,last_name,email)
+  VALUES ('Sally','Thomas','sally.thomas@acme.com');
+INSERT INTO customers(first_name,last_name,email)
+  VALUES ('George','Bailey','gbailey@foobar.com');
+INSERT INTO customers(first_name,last_name,email)
+  VALUES ('Edward','Walker','ed@walker.com');
+INSERT INTO customers(first_name,last_name,email)
+  VALUES ('Anne','Kretchmar','annek@noanswer.org');
+EXEC sys.sp_cdc_enable_table @source_schema = 'dbo', @source_name = 'customers', @role_name = NULL, @supports_net_changes = 0;
+GO
+EOF
 
 
 log "Creating Debezium SQL Server source connector"
 curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
-                "connector.class": "io.debezium.connector.sqlserver.SqlServerConnector",
-                "tasks.max": "1",
-                "database.hostname": "sqlserver",
-                "database.port": "1433",
-                "database.user": "sa",
-                "database.password": "Password!",
-                "database.server.name": "server1",
-                "database.dbname" : "testDB",
-                "database.history.kafka.bootstrap.servers": "broker:9092",
-                "database.history.kafka.topic": "schema-changes.inventory",
-                "database.trustStore": "/tmp/truststore.jks",
-                "database.trustStorePassword": "confluent"
+              "connector.class": "io.debezium.connector.sqlserver.SqlServerConnector",
+              "tasks.max": "1",
+              "database.hostname": "sqlserver",
+              "database.port": "1433",
+              "database.user": "sa",
+              "database.password": "Password!",
+              "database.names" : "testDB",
+              "_comment": "old version before 2.x",
+              "database.server.name": "server1",
+              "database.history.kafka.bootstrap.servers": "broker:9092",
+              "database.history.kafka.topic": "schema-changes.inventory",
+              "database.trustStore": "/tmp/truststore.jks",
+              "database.trustStorePassword": "confluent",
+              "_comment": "new version since 2.x",
+              "database.encrypt": "true",
+              "topic.prefix": "server1",
+              "schema.history.internal.kafka.bootstrap.servers": "broker:9092",
+              "schema.history.internal.kafka.topic": "schema-changes.inventory",
+              "database.ssl.truststore": "/tmp/truststore.jks",
+              "database.ssl.truststore.password": "confluent"
           }' \
      http://localhost:8083/connectors/debezium-sqlserver-source-ssl/config | jq .
 
@@ -87,5 +125,5 @@ INSERT INTO customers(first_name,last_name,email) VALUES ('Pam','Thomas','pam@of
 GO
 EOF
 
-log "Verifying topic server1.dbo.customers"
-timeout 60 docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic server1.dbo.customers --from-beginning --max-messages 5
+log "Verifying topic server1.testDB.dbo.customers"
+timeout 60 docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic server1.testDB.dbo.customers --from-beginning --max-messages 5

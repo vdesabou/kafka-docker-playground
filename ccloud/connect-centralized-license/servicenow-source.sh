@@ -78,7 +78,7 @@ if ! version_gt $TAG_BASE "5.9.9"; then
      set -e
 fi
 
-TODAY=$(date '+%Y-%m-%d')
+TODAY=$(date -u '+%Y-%m-%d')
 
 log "Creating ServiceNow Source connector"
 curl -X PUT \

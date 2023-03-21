@@ -2,13 +2,15 @@
 version: '3.5'
 services:
   solace:
-    image: solace/solace-pubsub-standard:9.1.0.77
+    image: solace/solace-pubsub-standard:10.2
     hostname: solace
     container_name: solace
+    user: root
     volumes:
       - ../../connect/connect-solace-source/create_queue_cmd:/usr/sw/jail/cliscripts/create_queue_cmd
     ports:
       - 8080:8080
+      - 8008:8008
       - 9000:9000
     tmpfs: /dev/shm
     ulimits:
@@ -18,6 +20,7 @@ services:
     environment:
       username_admin_globalaccesslevel: admin
       username_admin_password: admin
+      security-opt: "apparmor:unconfined"
 
   connect:
     depends_on:

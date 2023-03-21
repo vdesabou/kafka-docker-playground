@@ -1,0 +1,52 @@
+---
+version: '3.5'
+services:
+
+  zookeeper:
+    profiles:
+    - zookeeper
+
+  controller:
+    image: ${CP_KAFKA_IMAGE}:${TAG}
+    hostname: controller
+    container_name: controller
+    restart: always
+    ports:
+      - "9093:9093"
+      - "29093:29093"
+      - "20000:20000"
+    environment:
+      KAFKA_JMX_PORT: 20000
+      KAFKA_JMX_HOSTNAME: localhost
+      CLUSTER_ID: xtzWWN4bTjitpL3kfd9s5g
+      KAFKA_PROCESS_ROLES: 'controller'
+      KAFKA_NODE_ID: 1000
+      KAFKA_LISTENERS: CONTROLLER://controller:9093      
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT
+      KAFKA_CONTROLLER_QUORUM_VOTERS: '1000@controller:9093'                  
+      KAFKA_CONTROLLER_LISTENER_NAMES: 'CONTROLLER'
+      # To avoid confluent.cluster.link.enable cannot be enabled with KRaft brokers at this time
+      KAFKA_CONFLUENT_CLUSTER_LINK_ENABLE: "false"
+      # To avoid confluent.balancer.enable cannot be enabled with KRaft brokers at this time
+      KAFKA_CONFLUENT_BALANCER_ENABLE: "false"
+    volumes:
+      - ../../environment/kraft-external-plaintext/update_run.sh:/tmp/update_run.sh    
+    command: "bash -c 'if [ ! -f /tmp/update_run.sh ]; then echo \"ERROR: Did you forget the update_run.sh file that came with this docker-compose.yml file?\" && exit 1 ; else /tmp/update_run.sh && /etc/confluent/docker/run ; fi'"
+  
+  broker:
+    environment:
+      CLUSTER_ID: xtzWWN4bTjitpL3kfd9s5g
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,BROKER:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_LISTENERS: BROKER://:9092,PLAINTEXT_HOST://:29092
+      KAFKA_ADVERTISED_LISTENERS: BROKER://broker:9092,PLAINTEXT_HOST://localhost:29092
+      KAFKA_PROCESS_ROLES: 'broker'
+      KAFKA_NODE_ID: 1
+      KAFKA_CONTROLLER_QUORUM_VOTERS: '1000@controller:9093'
+      KAFKA_CONTROLLER_LISTENER_NAMES: 'CONTROLLER'
+      # To avoid confluent.cluster.link.enable cannot be enabled with KRaft brokers at this time
+      KAFKA_CONFLUENT_CLUSTER_LINK_ENABLE: "false"
+      # To avoid confluent.balancer.enable cannot be enabled with KRaft brokers at this time
+      KAFKA_CONFLUENT_BALANCER_ENABLE: "false"
+    volumes:
+      - ../../environment/kraft-external-plaintext/update_run.sh:/tmp/update_run.sh
+    command: "bash -c 'if [ ! -f /tmp/update_run.sh ]; then echo \"ERROR: Did you forget the update_run.sh file that came with this docker-compose.yml file?\" && exit 1 ; else /tmp/update_run.sh && /etc/confluent/docker/run ; fi'"

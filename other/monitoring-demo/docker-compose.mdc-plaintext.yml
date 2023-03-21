@@ -110,7 +110,7 @@ services:
       CONTROL_CENTER_METRICS_TOPIC_REPLICATION: 1
 
   mysql:
-    image: mysql:5.7
+    image: mysql:latest
     hostname: mysql
     container_name: mysql
     volumes:
@@ -262,7 +262,7 @@ services:
       - streams
 
   kafka-lag-exporter:
-    image: lightbend/kafka-lag-exporter:0.6.6
+    image: lightbend/kafka-lag-exporter:0.6.8
     hostname: kafka-lag-exporter
     container_name: kafka-lag-exporter
     restart: always
@@ -273,14 +273,14 @@ services:
       - ../../other/monitoring-demo/kafka-lag-exporter/logback.xml:/opt/docker/conf/logback.xml
 
   alertmanager:
-    image: prom/alertmanager:v0.18.0
+    image: prom/alertmanager:latest
     hostname: alertmanager
     container_name: alertmanager
     ports:
       - 9093:9093
 
   node-exporter:
-    image: prom/node-exporter:v0.18.1
+    image: prom/node-exporter:latest
     hostname: node-exporter
     container_name: node-exporter
     volumes:
@@ -307,7 +307,7 @@ services:
       - alertmanager
 
   grafana:
-    image: grafana/grafana:7.4.1
+    image: grafana/grafana:latest
     hostname: grafana
     container_name: grafana
     environment:

@@ -68,7 +68,7 @@ $ az storage account create \
     --location $AZURE_REGION \
     --sku Standard_LRS \
     --kind StorageV2 \
-    --hns true
+    --tags owner_email=$AZ_USER
 ```
 
 Assigning Storage Blob Data Owner role to Service Principal $SERVICE_PRINCIPAL_ID

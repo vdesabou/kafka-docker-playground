@@ -1,0 +1,25 @@
+---
+version: '3.5'
+services:
+  mysql:
+    image: mysql:latest
+    hostname: mysql
+    container_name: mysql
+    volumes:
+      - ../../connect/connect-debezium-mysql-source/mysql-gtid.cnf:/etc/mysql/conf.d/custom.cnf
+      - ../../connect/connect-debezium-mysql-source/mysql-init.sql:/docker-entrypoint-initdb.d/mysql-init.sql
+    environment:
+      MYSQL_ROOT_PASSWORD: password
+      MYSQL_DATABASE: db
+      MYSQL_USER: user
+      MYSQL_PASSWORD: password
+      MYSQL_ROOT_HOST: 172.%  # Allow docker containers to connect to mysql
+
+  connect:
+    depends_on:
+      - zookeeper
+      - broker
+      - schema-registry
+      - mysql
+    environment:
+      CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/debezium-debezium-connector-mysql

@@ -6,6 +6,26 @@ source ${DIR}/../../scripts/utils.sh
 
 create_or_get_oracle_image "LINUX.X64_193000_db_home.zip" "../../connect/connect-cdc-oracle19-source/ora-setup-scripts-cdb-table"
 
+if [ ! -z "$ORACLE_DATAGEN" ]
+then
+     log "🌪️ ORACLE_DATAGEN is set, make sure to increase redo.log.row.fetch.size, have a look at https://github.com/vdesabou/kafka-docker-playground/blob/master/connect/connect-cdc-oracle19-source/README.md#note-on-redologrowfetchsize"
+     for component in oracle-datagen
+     do
+     set +e
+     log "🏗 Building jar for ${component}"
+     docker run -i --rm -e KAFKA_CLIENT_TAG=$KAFKA_CLIENT_TAG -e TAG=$TAG_BASE -v "${DIR}/${component}":/usr/src/mymaven -v "$HOME/.m2":/root/.m2 -v "${DIR}/${component}/target:/usr/src/mymaven/target" -w /usr/src/mymaven maven:3.6.1-jdk-11 mvn -Dkafka.tag=$TAG -Dkafka.client.tag=$KAFKA_CLIENT_TAG package > /tmp/result.log 2>&1
+     if [ $? != 0 ]
+     then
+          logerror "ERROR: failed to build java component "
+          tail -500 /tmp/result.log
+          exit 1
+     fi
+     set -e
+     done
+else
+     log "🌪️ ORACLE_DATAGEN is not set"
+fi
+
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.cdb-table.yml"
 
 
@@ -14,12 +34,12 @@ MAX_WAIT=2500
 CUR_WAIT=0
 log "⌛ Waiting up to $MAX_WAIT seconds for Oracle DB to start"
 docker container logs oracle > /tmp/out.txt 2>&1
-while [[ ! $(cat /tmp/out.txt) =~ "Completed: ALTER DATABASE OPEN" ]]; do
+while [[ ! $(cat /tmp/out.txt) =~ "DATABASE IS READY TO USE" ]]; do
 sleep 10
 docker container logs oracle > /tmp/out.txt 2>&1
 CUR_WAIT=$(( CUR_WAIT+10 ))
 if [[ "$CUR_WAIT" -gt "$MAX_WAIT" ]]; then
-     logerror "ERROR: The logs in oracle container do not show 'Completed: ALTER DATABASE OPEN' after $MAX_WAIT seconds. Please troubleshoot with 'docker container ps' and 'docker container logs'.\n"
+     logerror "ERROR: The logs in oracle container do not show 'DATABASE IS READY TO USE' after $MAX_WAIT seconds. Please troubleshoot with 'docker container ps' and 'docker container logs'.\n"
      exit 1
 fi
 done
@@ -38,22 +58,22 @@ docker exec -i oracle bash -c "ORACLE_SID=ORCLCDB;export ORACLE_SID;sqlplus /nol
      GRANT SELECT ON V_\$PARAMETER TO C##CDC_PRIVS;
      GRANT SELECT ON V_\$NLS_PARAMETERS TO C##CDC_PRIVS;
      GRANT SELECT ON V_\$TIMEZONE_NAMES TO C##CDC_PRIVS;
-     GRANT SELECT ON ALL_INDEXES TO C##CDC_PRIVS;
-     GRANT SELECT ON ALL_OBJECTS TO C##CDC_PRIVS;
-     GRANT SELECT ON ALL_USERS TO C##CDC_PRIVS;
-     GRANT SELECT ON ALL_CATALOG TO C##CDC_PRIVS;
-     GRANT SELECT ON ALL_CONSTRAINTS TO C##CDC_PRIVS;
-     GRANT SELECT ON ALL_CONS_COLUMNS TO C##CDC_PRIVS;
-     GRANT SELECT ON ALL_TAB_COLS TO C##CDC_PRIVS;
-     GRANT SELECT ON ALL_IND_COLUMNS TO C##CDC_PRIVS;
-     GRANT SELECT ON ALL_ENCRYPTED_COLUMNS TO C##CDC_PRIVS;
-     GRANT SELECT ON ALL_LOG_GROUPS TO C##CDC_PRIVS;
-     GRANT SELECT ON ALL_TAB_PARTITIONS TO C##CDC_PRIVS;
-     GRANT SELECT ON SYS.DBA_REGISTRY TO C##CDC_PRIVS;
+   --  GRANT SELECT ON ALL_INDEXES TO C##CDC_PRIVS;
+   --  GRANT SELECT ON ALL_OBJECTS TO C##CDC_PRIVS;
+   --  GRANT SELECT ON ALL_USERS TO C##CDC_PRIVS;
+   --  GRANT SELECT ON ALL_CATALOG TO C##CDC_PRIVS;
+   --  GRANT SELECT ON ALL_CONSTRAINTS TO C##CDC_PRIVS;
+   --  GRANT SELECT ON ALL_CONS_COLUMNS TO C##CDC_PRIVS;
+   --  GRANT SELECT ON ALL_TAB_COLS TO C##CDC_PRIVS;
+   --  GRANT SELECT ON ALL_IND_COLUMNS TO C##CDC_PRIVS;
+   --  GRANT SELECT ON ALL_ENCRYPTED_COLUMNS TO C##CDC_PRIVS;
+   --  GRANT SELECT ON ALL_LOG_GROUPS TO C##CDC_PRIVS;
+   --  GRANT SELECT ON ALL_TAB_PARTITIONS TO C##CDC_PRIVS;
+   --  GRANT SELECT ON SYS.DBA_REGISTRY TO C##CDC_PRIVS;
      GRANT SELECT ON SYS.OBJ\$ TO C##CDC_PRIVS;
-     GRANT SELECT ON DBA_TABLESPACES TO C##CDC_PRIVS;
-     GRANT SELECT ON DBA_OBJECTS TO C##CDC_PRIVS;
-     GRANT SELECT ON SYS.ENC\$ TO C##CDC_PRIVS;
+   --  GRANT SELECT ON DBA_TABLESPACES TO C##CDC_PRIVS;
+   --  GRANT SELECT ON DBA_OBJECTS TO C##CDC_PRIVS;
+   --  GRANT SELECT ON SYS.ENC\$ TO C##CDC_PRIVS;
      GRANT SELECT ANY TABLE TO C##CDC_PRIVS;
 
      -- Following privileges are required additionally for 19c compared to 12c.
@@ -74,7 +94,7 @@ docker exec -i oracle bash -c "ORACLE_SID=ORCLCDB;export ORACLE_SID;sqlplus /nol
      GRANT EXECUTE ON SYS.DBMS_LOGMNR TO C##CDC_PRIVS;
      GRANT EXECUTE ON SYS.DBMS_LOGMNR_D TO C##CDC_PRIVS;
      GRANT EXECUTE ON SYS.DBMS_LOGMNR_LOGREP_DICT TO C##CDC_PRIVS;
-     GRANT EXECUTE ON SYS.DBMS_LOGMNR_SESSION TO C##CDC_PRIVS;
+     ;
      
      -- Enable Supplemental Logging for All Columns
      ALTER SESSION SET CONTAINER=cdb\$root;
@@ -200,4 +220,9 @@ fi
 log "Verifying topic redo-log-topic: there should be 9 records"
 timeout 60 docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic redo-log-topic --from-beginning --max-messages 9 --property print.key=true
 
-log "🚚 If you're planning to inject more data, have a look at https://github.com/vdesabou/kafka-docker-playground/blob/master/connect/connect-cdc-oracle19-source/README.md#note-on-redologrowfetchsize"
+if [ ! -z "$ORACLE_DATAGEN" ]
+then
+     DURATION=10
+     log "Injecting data for $DURATION minutes"
+     docker exec -d oracle-datagen bash -c "java ${JAVA_OPTS} -jar oracle-datagen-1.0-SNAPSHOT-jar-with-dependencies.jar --host oracle --username C##MYUSER --password mypassword --sidOrServerName sid --sidOrServerNameVal ORCLCDB --maxPoolSize 10 --durationTimeMin $DURATION"
+fi

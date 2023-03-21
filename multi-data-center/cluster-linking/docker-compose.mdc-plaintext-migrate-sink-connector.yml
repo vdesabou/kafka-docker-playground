@@ -1,0 +1,16 @@
+---
+version: '3.5'
+services:
+  broker-europe:
+    environment:
+      KAFKA_CONFLUENT_CLUSTER_LINK_ENABLE : "true"
+
+  connect-europe:
+    environment:
+      # in newer version, it is located in /usr/share/filestream-connectors
+      CONNECT_PLUGIN_PATH: /usr/share/java/,/usr/share/confluent-hub-components/,/usr/share/filestream-connectors
+
+  connect-us:
+    environment:
+      # in newer version, it is located in /usr/share/filestream-connectors
+      CONNECT_PLUGIN_PATH: /usr/share/java/,/usr/share/confluent-hub-components/,/usr/share/filestream-connectors

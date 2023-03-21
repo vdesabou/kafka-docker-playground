@@ -4,3 +4,5 @@ hdfs3-source-kerberos.sh
 hdfs2-sink-kerberos.sh
 hdfs3-sink-kerberos.sh
 azure-service-bus-source.sh
+sap-hana-sink.sh
+databricks-delta-lake-sink.sh

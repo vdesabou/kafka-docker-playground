@@ -77,7 +77,7 @@ services:
       KAFKA_ZOOKEEPER_SET_ACL: "true"
       KAFKA_ALLOW_EVERYONE_IF_NO_ACL_FOUND: "false"
       KAFKA_LOG4J_LOGGERS: "kafka.authorizer.logger=INFO"
-      KAFKA_SUPER_USERS: User:admin;User:kafka;User:schemaregistry;User:connect;User:controlcenter;User:ksqldb
+      KAFKA_SUPER_USERS: User:admin;User:kafka;User:schemaregistry;User:connect;User:controlcenter;User:ksqldb;User:conduktor
       KAFKA_OPTS: -Djava.security.auth.login.config=/etc/kafka/broker.sasl.jaas.config
                   # -Djdk.security.allowNonCaAnchor=true
                   # -Dsun.security.krb5.disableReferrals=true
@@ -131,7 +131,7 @@ services:
       KAFKA_ZOOKEEPER_SET_ACL: "true"
       KAFKA_ALLOW_EVERYONE_IF_NO_ACL_FOUND: "false"
       KAFKA_LOG4J_LOGGERS: "kafka.authorizer.logger=INFO"
-      KAFKA_SUPER_USERS: User:admin;User:kafka;User:schemaregistry;User:connect;User:controlcenter;User:ksqldb
+      KAFKA_SUPER_USERS: User:admin;User:kafka;User:schemaregistry;User:connect;User:controlcenter;User:ksqldb;User:conduktor
       KAFKA_OPTS: -Djava.security.auth.login.config=/etc/kafka/broker.sasl.jaas.config
                   # -Djdk.security.allowNonCaAnchor=true
                   # -Dsun.security.krb5.disableReferrals=true
@@ -190,7 +190,7 @@ services:
       KAFKA_ZOOKEEPER_SET_ACL: "true"
       KAFKA_ALLOW_EVERYONE_IF_NO_ACL_FOUND: "false"
       KAFKA_LOG4J_LOGGERS: "kafka.authorizer.logger=INFO"
-      KAFKA_SUPER_USERS: User:admin;User:kafka;User:schemaregistry;User:connect;User:controlcenter;User:ksqldb
+      KAFKA_SUPER_USERS: User:admin;User:kafka;User:schemaregistry;User:connect;User:controlcenter;User:ksqldb;User:conduktor
       KAFKA_OPTS: -Djava.security.auth.login.config=/etc/kafka/broker.sasl.jaas.config
                   # -Djdk.security.allowNonCaAnchor=true
                   # -Dsun.security.krb5.disableReferrals=true
@@ -332,6 +332,21 @@ services:
         principal=\"controlcenter@TEST.CONFLUENT.IO\";"
       CONTROL_CENTER_KAFKA_MYCLUSTER_SASL_MECHANISM: GSSAPI
       CONTROL_CENTER_KAFKA_MYCLUSTER_SASL_KERBEROS_SERVICE_NAME: kafka
+
+    # https://github.com/conduktor/conduktor-platform/blob/main/doc/Configuration.md
+  conduktor:
+    hostname: conduktor.kerberos-demo.local
+    volumes:
+      - ../../environment/kerberos/conduktor/platform-config.yaml:/tmp/platform-config.yaml
+      - secret:/var/lib/secret
+      - ../../environment/kerberos/kdc/krb5.conf:/etc/kdc/krb5.conf
+# FIXTHIS: Caused by: org.apache.kafka.common.KafkaException: javax.security.auth.login.LoginException: Cannot locate KDC
+#         at org.apache.kafka.common.network.SaslChannelBuilder.configure(SaslChannelBuilder.java:172)
+#         at org.apache.kafka.common.network.ChannelBuilders.create(ChannelBuilders.java:157)
+#         at org.apache.kafka.common.network.ChannelBuilders.clientChannelBuilder(ChannelBuilders.java:73)
+#         at org.apache.kafka.clients.ClientUtils.createChannelBuilder(ClientUtils.java:105)
+#         at org.apache.kafka.clients.consumer.KafkaConsumer.<init>(KafkaConsumer.java:743)
+#         ... 25 common frames omitted
 
 volumes:
   secret: {}

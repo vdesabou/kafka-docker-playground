@@ -4,11 +4,13 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
-if [ ! -f ${DIR}/ngdbc-2.12.9.jar ]
+cd ../../connect/connect-jdbc-sap-hana-sink
+if [ ! -f ${PWD}/ngdbc-2.12.9.jar ]
 then
      log "Downloading ngdbc-2.12.9.jar "
      wget https://repo1.maven.org/maven2/com/sap/cloud/db/jdbc/ngdbc/2.12.9/ngdbc-2.12.9.jar
 fi
+cd -
 
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
 
@@ -29,13 +31,6 @@ fi
 done
 log "SAP HANA has started!"
 
-log "Sending records to testtopic topic"
-docker exec -i connect kafka-avro-console-producer --broker-list broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic testtopic --property key.schema='{"type":"record","namespace": "io.confluent.connect.avro","name":"myrecordkey","fields":[{"name":"ID","type":"long"}]}' --property value.schema='{"type":"record","name":"myrecordvalue","fields":[{"name":"ID","type":"long"},{"name":"product", "type": "string"}, {"name":"quantity", "type": "int"}, {"name":"price",
-"type": "float"}]}'  --property parse.key=true --property key.separator="|" << EOF
-{"ID": 111}|{"ID": 111,"product": "foo", "quantity": 100, "price": 50}
-{"ID": 222}|{"ID": 222,"product": "bar", "quantity": 100, "price": 50}
-EOF
-
 log "Creating SAP HANA JDBC Sink connector"
 curl -X PUT \
      -H "Content-Type: application/json" \
@@ -54,9 +49,20 @@ curl -X PUT \
           }' \
      http://localhost:8083/connectors/jdbc-sap-hana-sink/config | jq .
 
-sleep 30
+sleep 5
+
+log "Sending records to testtopic topic"
+docker exec -i connect kafka-avro-console-producer --broker-list broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic testtopic --property key.schema='{"type":"record","namespace": "io.confluent.connect.avro","name":"myrecordkey","fields":[{"name":"ID","type":"long"}]}' --property value.schema='{"type":"record","name":"myrecordvalue","fields":[{"name":"ID","type":"long"},{"name":"product", "type": "string"}, {"name":"quantity", "type": "int"}, {"name":"price","type": "float"}]}'  --property parse.key=true --property key.separator="|" << EOF
+{"ID": 111}|{"ID": 111,"product": "foo", "quantity": 100, "price": 50}
+{"ID": 222}|{"ID": 222,"product": "bar", "quantity": 100, "price": 50}
+EOF
+
+sleep 120
 
 log "Check data is in SAP HANA"
+docker exec -i sap /usr/sap/HXE/HDB90/exe/hdbsql -i 90 -d HXE -u LOCALDEV -p Localdev1 << EOF
+select * from "LOCALDEV"."testtopic";
+EOF
 docker exec -i sap /usr/sap/HXE/HDB90/exe/hdbsql -i 90 -d HXE -u LOCALDEV -p Localdev1  > /tmp/result.log  2>&1 <<-EOF
 select * from "LOCALDEV"."testtopic";
 EOF

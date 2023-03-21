@@ -254,7 +254,7 @@ services:
       - broker
       - connect
     ports:
-      - "9021:9021"
+      - "${C3_PORT:-9021}:9021"
       - "9022:9022"
     volumes:
       - ../../environment/2way-ssl/security:/etc/kafka/secrets
@@ -292,3 +292,9 @@ services:
                   -Djavax.net.ssl.trustStorePassword=confluent
                   -Djavax.net.ssl.keyStore=/etc/kafka/secrets/kafka.control-center.keystore.jks
                   -Djavax.net.ssl.keyStorePassword=confluent
+
+    # https://github.com/conduktor/conduktor-platform/blob/main/doc/Configuration.md
+  conduktor:
+    volumes:
+      - ../../environment/2way-ssl/conduktor/platform-config.yaml:/tmp/platform-config.yaml
+      - ../../environment/2way-ssl/security:/etc/kafka/secrets

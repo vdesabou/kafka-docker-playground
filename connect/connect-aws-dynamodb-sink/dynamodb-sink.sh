@@ -4,6 +4,12 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
+if ! version_gt $TAG_BASE "5.9.99" && version_gt $CONNECTOR_TAG "1.2.99"
+then
+    logwarn "WARN: connector version >= 1.3.0 do not support CP versions < 6.0.0"
+    exit 111
+fi
+
 if [ ! -f $HOME/.aws/credentials ] && ( [ -z "$AWS_ACCESS_KEY_ID" ] || [ -z "$AWS_SECRET_ACCESS_KEY" ] )
 then
      logerror "ERROR: either the file $HOME/.aws/credentials is not present or environment variables AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY are not set!"
@@ -31,6 +37,16 @@ else
             exit 1
         fi
     fi
+fi
+
+export AWS_CREDENTIALS_FILE_NAME=credentials
+if [ ! -f $HOME/.aws/$AWS_CREDENTIALS_FILE_NAME ]
+then
+    log "generating $HOME/.aws/$AWS_CREDENTIALS_FILE_NAME"
+    mkdir -p $HOME/.aws
+    sed -e "s|:AWS_ACCESS_KEY_ID:|$AWS_ACCESS_KEY_ID|g" \
+        -e "s|:AWS_SECRET_ACCESS_KEY:|$AWS_SECRET_ACCESS_KEY|g" \
+        ../../connect/connect-aws-dynamodb-sink/aws-credentials.template > $HOME/.aws/$AWS_CREDENTIALS_FILE_NAME
 fi
 
 if [[ "$TAG" == *ubi8 ]] || version_gt $TAG_BASE "5.9.0"
@@ -62,8 +78,6 @@ curl -X PUT \
                "topics": "mytable",
                "aws.dynamodb.region": "'"$AWS_REGION"'",
                "aws.dynamodb.endpoint": "'"$DYNAMODB_ENDPOINT"'",
-               "aws.access.key.id" : "'"$AWS_ACCESS_KEY_ID"'",
-               "aws.secret.key.id": "'"$AWS_SECRET_ACCESS_KEY"'",
                "confluent.license": "",
                "confluent.topic.bootstrap.servers": "broker:9092",
                "confluent.topic.replication.factor": "1"

@@ -43,6 +43,14 @@ else
   log "🧰 kcat is enabled"
   profile_kcat_command="--profile kcat"
 fi
+if [ -z "$ENABLE_CONDUKTOR" ]
+then
+  log "🛑 conduktor is disabled"
+else
+  log "🐺 conduktor is enabled"
+  log "Use http://localhost:8080/console (admin/admin) to login"
+  profile_conduktor_command="--profile conduktor"
+fi
 
 #define kafka_nodes variable and when profile is included/excluded
 profile_kafka_nodes_command=""
@@ -61,6 +69,7 @@ DOCKER_COMPOSE_FILE_OVERRIDE=$1
 if [ -f "${DOCKER_COMPOSE_FILE_OVERRIDE}" ]
 then
   ENABLE_DOCKER_COMPOSE_FILE_OVERRIDE="-f ${DOCKER_COMPOSE_FILE_OVERRIDE}"
+  check_arm64_support "${DIR}" "${DOCKER_COMPOSE_FILE_OVERRIDE}"
 fi
 
 docker-compose -f ../../environment/plaintext/docker-compose.yml -f ../../environment/kerberos/docker-compose.yml ${ENABLE_DOCKER_COMPOSE_FILE_OVERRIDE} down -v --remove-orphans
@@ -102,6 +111,8 @@ docker exec -i kdc kadmin.local -w password -q "add_principal -randkey ksqldb@TE
 docker exec -i kdc kadmin.local -w password -q "modprinc -maxlife 11days -maxrenewlife 11days +allow_renewable ksqldb@TEST.CONFLUENT.IO"  > /dev/null
 docker exec -i kdc kadmin.local -w password -q "add_principal -randkey controlcenter@TEST.CONFLUENT.IO"  > /dev/null
 docker exec -i kdc kadmin.local -w password -q "modprinc -maxlife 11days -maxrenewlife 11days +allow_renewable controlcenter@TEST.CONFLUENT.IO"  > /dev/null
+docker exec -i kdc kadmin.local -w password -q "add_principal -randkey conduktor@TEST.CONFLUENT.IO"  > /dev/null
+docker exec -i kdc kadmin.local -w password -q "modprinc -maxlife 11days -maxrenewlife 11days +allow_renewable conduktor@TEST.CONFLUENT.IO"  > /dev/null
 
 # Create an admin principal for the cluster, which we'll use to setup ACLs.
 # Look after this - its also declared a super user in broker config.
@@ -121,6 +132,7 @@ docker exec -i kdc rm -f /var/lib/secret/kafka-connect.key 2>&1 > /dev/null
 docker exec -i kdc rm -f /var/lib/secret/kafka-schemaregistry.key 2>&1 > /dev/null
 docker exec -i kdc rm -f /var/lib/secret/kafka-ksqldb.key 2>&1 > /dev/null
 docker exec -i kdc rm -f /var/lib/secret/kafka-controlcenter.key 2>&1 > /dev/null
+docker exec -i kdc rm -f /var/lib/secret/kafka-conduktor.key 2>&1 > /dev/null
 
 docker exec -i kdc kadmin.local -w password -q "ktadd  -k /var/lib/secret/broker.key -norandkey kafka/broker.kerberos-demo.local@TEST.CONFLUENT.IO " > /dev/null
 docker exec -i kdc kadmin.local -w password -q "ktadd  -k /var/lib/secret/broker2.key -norandkey kafka/broker2.kerberos-demo.local@TEST.CONFLUENT.IO " > /dev/null
@@ -135,6 +147,7 @@ docker exec -i kdc kadmin.local -w password -q "ktadd  -k /var/lib/secret/kafka-
 docker exec -i kdc kadmin.local -w password -q "ktadd  -k /var/lib/secret/kafka-schemaregistry.key -norandkey schemaregistry@TEST.CONFLUENT.IO " > /dev/null
 docker exec -i kdc kadmin.local -w password -q "ktadd  -k /var/lib/secret/kafka-ksqldb.key -norandkey ksqldb@TEST.CONFLUENT.IO " > /dev/null
 docker exec -i kdc kadmin.local -w password -q "ktadd  -k /var/lib/secret/kafka-controlcenter.key -norandkey controlcenter@TEST.CONFLUENT.IO " > /dev/null
+docker exec -i kdc kadmin.local -w password -q "ktadd  -k /var/lib/secret/kafka-conduktor.key -norandkey conduktor@TEST.CONFLUENT.IO " > /dev/null
 
 if [[ "$TAG" == *ubi8 ]] || version_gt $TAG_BASE "5.9.0"
 then
@@ -153,16 +166,17 @@ then
   docker exec -i kdc chmod a+r /var/lib/secret/kafka-schemaregistry.key
   docker exec -i kdc chmod a+r /var/lib/secret/kafka-ksqldb.key
   docker exec -i kdc chmod a+r /var/lib/secret/kafka-controlcenter.key
+  docker exec -i kdc chmod a+r /var/lib/secret/kafka-conduktor.key
 fi
 
 # Starting zookeeper and kafka now that the keytab has been created with the required credentials and services
 docker-compose -f ../../environment/plaintext/docker-compose.yml -f ../../environment/kerberos/docker-compose.yml ${ENABLE_DOCKER_COMPOSE_FILE_OVERRIDE} build
-docker-compose -f ../../environment/plaintext/docker-compose.yml -f ../../environment/kerberos/docker-compose.yml ${ENABLE_DOCKER_COMPOSE_FILE_OVERRIDE} ${profile_control_center_command} ${profile_ksqldb_command} ${profile_grafana_command} ${profile_kcat_command} ${profile_kafka_nodes_command} up -d
-log "📝 To see the actual properties file, use ../../scripts/get-properties.sh <container>"
-command="source ../../scripts/utils.sh && docker-compose -f ../../environment/plaintext/docker-compose.yml -f ../../environment/kerberos/docker-compose.yml ${ENABLE_DOCKER_COMPOSE_FILE_OVERRIDE} ${profile_control_center_command} ${profile_ksqldb_command} ${profile_grafana_command} ${profile_kcat_command} ${profile_kafka_nodes_command} up -d"
+docker-compose -f ../../environment/plaintext/docker-compose.yml -f ../../environment/kerberos/docker-compose.yml ${ENABLE_DOCKER_COMPOSE_FILE_OVERRIDE} ${profile_control_center_command} ${profile_ksqldb_command} ${profile_grafana_command} ${profile_kcat_command} ${profile_conduktor_command} ${profile_kafka_nodes_command} up -d
+log "📝 To see the actual properties file, use cli command playground get-properties -c <container>"
+command="source ../../scripts/utils.sh && docker-compose -f ../../environment/plaintext/docker-compose.yml -f ../../environment/kerberos/docker-compose.yml ${ENABLE_DOCKER_COMPOSE_FILE_OVERRIDE} ${profile_control_center_command} ${profile_ksqldb_command} ${profile_grafana_command} ${profile_kcat_command} ${profile_conduktor_command} ${profile_kafka_nodes_command} up -d"
 echo "$command" > /tmp/playground-command
-log "✨ If you modify a docker-compose file and want to re-create the container(s), run ../../scripts/recreate-containers.sh or use this command:"
-log "✨ $command"
+log "✨ If you modify a docker-compose file and want to re-create the container(s), run cli command playground recreate-container"
+
 
 if [ "$#" -ne 0 ]
 then

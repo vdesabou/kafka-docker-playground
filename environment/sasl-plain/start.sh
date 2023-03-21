@@ -43,22 +43,31 @@ else
   log "🧰 kcat is enabled"
   profile_kcat_command="--profile kcat"
 fi
+if [ -z "$ENABLE_CONDUKTOR" ]
+then
+  log "🛑 conduktor is disabled"
+else
+  log "🐺 conduktor is enabled"
+  log "Use http://localhost:8080/console (admin/admin) to login"
+  profile_conduktor_command="--profile conduktor"
+fi
 
 ENABLE_DOCKER_COMPOSE_FILE_OVERRIDE=""
 DOCKER_COMPOSE_FILE_OVERRIDE=$1
 if [ -f "${DOCKER_COMPOSE_FILE_OVERRIDE}" ]
 then
   ENABLE_DOCKER_COMPOSE_FILE_OVERRIDE="-f ${DOCKER_COMPOSE_FILE_OVERRIDE}"
+  check_arm64_support "${DIR}" "${DOCKER_COMPOSE_FILE_OVERRIDE}"
 fi
 
 docker-compose -f ../../environment/plaintext/docker-compose.yml -f ../../environment/sasl-plain/docker-compose.yml ${ENABLE_DOCKER_COMPOSE_FILE_OVERRIDE} build
 docker-compose -f ../../environment/plaintext/docker-compose.yml -f ../../environment/sasl-plain/docker-compose.yml ${ENABLE_DOCKER_COMPOSE_FILE_OVERRIDE} down -v --remove-orphans
-docker-compose -f ../../environment/plaintext/docker-compose.yml -f ../../environment/sasl-plain/docker-compose.yml ${ENABLE_DOCKER_COMPOSE_FILE_OVERRIDE} ${profile_control_center_command} ${profile_ksqldb_command} ${profile_grafana_command} ${profile_kcat_command} up -d
-log "📝 To see the actual properties file, use ../../scripts/get-properties.sh <container>"
-command="source ../../scripts/utils.sh && docker-compose -f ../../environment/plaintext/docker-compose.yml -f ../../environment/sasl-plain/docker-compose.yml ${ENABLE_DOCKER_COMPOSE_FILE_OVERRIDE} ${profile_control_center_command} ${profile_ksqldb_command} ${profile_grafana_command} ${profile_kcat_command} up -d"
+docker-compose -f ../../environment/plaintext/docker-compose.yml -f ../../environment/sasl-plain/docker-compose.yml ${ENABLE_DOCKER_COMPOSE_FILE_OVERRIDE} ${profile_control_center_command} ${profile_ksqldb_command} ${profile_grafana_command} ${profile_conduktor_command}  up -d
+log "📝 To see the actual properties file, use cli command playground get-properties -c <container>"
+command="source ../../scripts/utils.sh && docker-compose -f ../../environment/plaintext/docker-compose.yml -f ../../environment/sasl-plain/docker-compose.yml ${ENABLE_DOCKER_COMPOSE_FILE_OVERRIDE} ${profile_control_center_command} ${profile_ksqldb_command} ${profile_grafana_command} ${profile_conduktor_command}  up -d"
 echo "$command" > /tmp/playground-command
-log "✨ If you modify a docker-compose file and want to re-create the container(s), run ../../scripts/recreate-containers.sh or use this command:"
-log "✨ $command"
+log "✨ If you modify a docker-compose file and want to re-create the container(s), run cli command playground recreate-container"
+
 
 if [ "$#" -ne 0 ]
 then

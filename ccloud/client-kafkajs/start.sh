@@ -38,7 +38,7 @@ create_topic client_kafkajs_$TAG
 set -e
 
 log "Building docker image"
-docker build -t vdesabou/kafkajs-ccloud-example-docker .
+docker build -t vdesabou/kafkajs-ccloud-example-docker . > /dev/null 2>&1
 
 log "Starting producer"
 docker run -i --name kafkajs-ccloud-producer -e TAG=$TAG vdesabou/kafkajs-ccloud-example-docker node /usr/src/app/producer.js client_kafkajs_$TAG > /dev/null 2>&1 &

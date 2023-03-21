@@ -19,7 +19,7 @@
 
 # Pull base image
 # ---------------
-FROM 1213-domain
+FROM --platform=linux/amd64 1213-domain
 
 # Environment variables required for this build (do NOT change)
 # -------------------------------------------------------------

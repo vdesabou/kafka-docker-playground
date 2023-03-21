@@ -20,7 +20,7 @@ then
     docker exec sfdx-cli sh -c "sfdx sfpowerkit:auth:login -u \"$SALESFORCE_USERNAME_ACCOUNT2\" -p \"$SALESFORCE_PASSWORD_ACCOUNT2\" -r \"$SALESFORCE_INSTANCE_ACCOUNT2\" -s \"$SALESFORCE_SECURITY_TOKEN_ACCOUNT2\""
 
     log "Bulk delete leads"
-    docker exec sfdx-cli sh -c "sfdx force:data:soql:query -u \"$SALESFORCE_USERNAME_ACCOUNT2\" -q \"SELECT Id FROM Lead\" --resultformat csv" > /tmp/out.csv
+    docker exec sfdx-cli sh -c "sfdx data:query --target-org \"$SALESFORCE_USERNAME_ACCOUNT2\" -q \"SELECT Id FROM Lead\" --result-format csv" > /tmp/out.csv
     docker cp /tmp/out.csv sfdx-cli:/tmp/out.csv
     docker exec  sfdx-cli sh -c "sfdx force:data:bulk:delete -u \"$SALESFORCE_USERNAME_ACCOUNT2\" -s Lead -f /tmp/out.csv"
 fi

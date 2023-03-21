@@ -61,7 +61,12 @@ AWS_BUCKET_NAME=${AWS_BUCKET_NAME//[-.]/}
 
 log "Empty bucket <$AWS_BUCKET_NAME/$TAG>, if required"
 set +e
-aws s3api create-bucket --bucket $AWS_BUCKET_NAME --region $AWS_REGION --create-bucket-configuration LocationConstraint=$AWS_REGION
+if [ "$AWS_REGION" == "us-east-1" ]
+then
+    aws s3api create-bucket --bucket $AWS_BUCKET_NAME --region $AWS_REGION
+else
+    aws s3api create-bucket --bucket $AWS_BUCKET_NAME --region $AWS_REGION --create-bucket-configuration LocationConstraint=$AWS_REGION
+fi
 set -e
 log "Empty bucket <$AWS_BUCKET_NAME>, if required"
 set +e
@@ -71,7 +76,7 @@ set -e
 # generate data file for externalizing secrets
 sed -e "s|:AWS_ACCESS_KEY_ID:|$AWS_ACCESS_KEY_ID|g" \
     -e "s|:AWS_SECRET_ACCESS_KEY:|$AWS_SECRET_ACCESS_KEY|g" \
-    ${DIR}/data.template > ${DIR}/data
+    ../../connect/connect-filepulse-source/data.template > ../../connect/connect-filepulse-source/data
 
 log "Generating data"
 cat <<EOF > /tmp/track.json

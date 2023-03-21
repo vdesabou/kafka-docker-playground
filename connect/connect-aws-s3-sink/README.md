@@ -9,7 +9,7 @@ Quickly test [S3 Sink](https://docs.confluent.io/current/connect/kafka-connect-s
 ## AWS Setup
 
 * Make sure you have an [AWS account](https://docs.aws.amazon.com/streams/latest/dev/before-you-begin.html#setting-up-sign-up-for-aws).
-* Set up [AWS Credentials](https://docs.confluent.io/current/connect/kafka-connect-kinesis/quickstart.html#aws-credentials)
+* Set up [AWS Credentials](https://docs.confluent.io/kafka-connectors/s3-sink/current/overview.html#aws-credentials)
 
 You can either export environment variables `AWS_REGION`, `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY` or set files `~/.aws/credentials` and `~/.aws/config`.
 
@@ -22,7 +22,7 @@ Simply run:
 $ ./s3-sink.sh
 ```
 
-If you want to [assume](https://docs.confluent.io/kafka-connect-s3-sink/current/index.html#using-trusted-account-credentials) IAM roles:
+If you want to assume IAM roles:
 
 ```
 $ ./s3-sink-with-assuming-iam-role.sh (in that case `~/.aws/credentials-with-assuming-iam-role` file must be set)
@@ -34,6 +34,12 @@ or
 $ ./s3-sink-with-assuming-iam-role-config.sh <AWS_STS_ROLE_ARN>
 ```
 
+or with AssumeRole using custom AWS credentials provider (⚠️ custom code is just an example, there is no support for it):
+
+```
+$ ./s3-sink-backup-and-restore-assuming-iam-role-with-custom-aws-credential-provider.sh
+```
+
 Note: you can also export these values as environment variable
 
 ## Details of what the script is doing
@@ -41,7 +47,12 @@ Note: you can also export these values as environment variable
 Creating bucket name <$AWS_BUCKET_NAME>, if required
 
 ```bash
-$ aws s3api create-bucket --bucket $AWS_BUCKET_NAME --region $AWS_REGION --create-bucket-configuration LocationConstraint=$AWS_REGION
+$ if [ "$AWS_REGION" == "us-east-1" ]
+then
+    aws s3api create-bucket --bucket $AWS_BUCKET_NAME --region $AWS_REGION
+else
+    aws s3api create-bucket --bucket $AWS_BUCKET_NAME --region $AWS_REGION --create-bucket-configuration LocationConstraint=$AWS_REGION
+fi
 ```
 
 The connector is created with:

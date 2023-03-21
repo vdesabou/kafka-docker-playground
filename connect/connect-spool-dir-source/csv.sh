@@ -15,7 +15,7 @@ curl -X PUT \
      --data '{
           "tasks.max": "1",
           "connector.class": "com.github.jcustenborder.kafka.connect.spooldir.SpoolDirCsvSourceConnector",
-          "input.file.pattern": "csv-spooldir-source.csv",
+          "input.file.pattern": ".*\\.csv",
           "input.path": "/tmp/data/input",
           "error.path": "/tmp/data/error",
           "finished.path": "/tmp/data/finished",

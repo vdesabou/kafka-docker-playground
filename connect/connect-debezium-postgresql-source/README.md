@@ -57,22 +57,27 @@ Creating Debezium PostgreSQL source connector
 curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
-               "connector.class": "io.debezium.connector.postgresql.PostgresConnector",
-                    "tasks.max": "1",
-                    "database.hostname": "postgres",
-                    "database.port": "5432",
-                    "database.user": "myuser",
-                    "database.password": "mypassword",
-                    "database.dbname" : "postgres",
-                    "database.server.name": "asgard",
-                    "key.converter" : "io.confluent.connect.avro.AvroConverter",
-                    "key.converter.schema.registry.url": "http://schema-registry:8081",
-                    "value.converter" : "io.confluent.connect.avro.AvroConverter",
-                    "value.converter.schema.registry.url": "http://schema-registry:8081",
-                    "transforms": "addTopicSuffix",
-                    "transforms.addTopicSuffix.type":"org.apache.kafka.connect.transforms.RegexRouter",
-                    "transforms.addTopicSuffix.regex":"(.*)",
-                    "transforms.addTopicSuffix.replacement":"$1-raw"
+                "connector.class": "io.debezium.connector.postgresql.PostgresConnector",
+                "tasks.max": "1",
+                "database.hostname": "postgres",
+                "database.port": "5432",
+                "database.user": "myuser",
+                "database.password": "mypassword",
+                "database.dbname" : "postgres",
+
+                "_comment": "old version before 2.x",
+                "database.server.name": "asgard",
+                "_comment": "new version since 2.x",
+                "topic.prefix": "asgard",
+
+                "key.converter" : "io.confluent.connect.avro.AvroConverter",
+                "key.converter.schema.registry.url": "http://schema-registry:8081",
+                "value.converter" : "io.confluent.connect.avro.AvroConverter",
+                "value.converter.schema.registry.url": "http://schema-registry:8081",
+                "transforms": "addTopicSuffix",
+                "transforms.addTopicSuffix.type":"org.apache.kafka.connect.transforms.RegexRouter",
+                "transforms.addTopicSuffix.regex":"(.*)",
+                "transforms.addTopicSuffix.replacement":"$1-raw"
           }' \
      http://localhost:8083/connectors/debezium-postgres-source/config | jq .
 ```
@@ -171,10 +176,10 @@ openssl req -new -nodes -out /tmp/server.csr -keyout /tmp/server.key -subj "/CN=
 openssl x509 -req -in /tmp/server.csr -days 365 -CA /tmp/ca.crt -CAkey /tmp/ca.key -CAcreateserial -out /tmp/server.crt
 ```
 
-Build custom image from `debezium/postgres:10`:
+Build custom image from `debezium/postgres:15-alpine`:
 
 ```dockerfile
-FROM debezium/postgres:10
+FROM debezium/postgres:15-alpine
 LABEL "Product"="PostgreSQL (SSL enabled)"
 COPY server.key /var/lib/postgresql/server.key
 COPY server.crt /var/lib/postgresql/server.crt

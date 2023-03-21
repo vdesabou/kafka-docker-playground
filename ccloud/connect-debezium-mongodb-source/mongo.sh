@@ -26,7 +26,7 @@ if ! version_gt $TAG_BASE "5.9.9"; then
 fi
 
 log "Initialize MongoDB replica set"
-docker exec -i mongodb mongo --eval 'rs.initiate({_id: "debezium", members:[{_id: 0, host: "mongodb:27017"}]})'
+docker exec -i mongodb mongosh --eval 'rs.initiate({_id: "debezium", members:[{_id: 0, host: "mongodb:27017"}]})'
 
 sleep 5
 
@@ -65,9 +65,14 @@ curl -X PUT \
                "connector.class" : "io.debezium.connector.mongodb.MongoDbConnector",
                "tasks.max" : "1",
                "mongodb.hosts" : "debezium/mongodb:27017",
-               "mongodb.name" : "dbserver1",
                "mongodb.user" : "debezium",
                "mongodb.password" : "dbz",
+
+               "_comment": "old version before 2.x",
+               "mongodb.name": "dbserver1",
+               "_comment": "new version since 2.x",
+               "topic.prefix": "dbserver1",
+
                "topic.creation.default.replication.factor": "-1",
                "topic.creation.default.partitions": "-1"
           }' \

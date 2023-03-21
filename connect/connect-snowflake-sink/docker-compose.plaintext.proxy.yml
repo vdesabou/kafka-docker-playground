@@ -2,7 +2,7 @@
 version: '3.5'
 services:
   squid:
-    image: datadog/squid
+    image: ubuntu/squid
     hostname: squid
     container_name: squid
     ports:

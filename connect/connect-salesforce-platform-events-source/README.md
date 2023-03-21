@@ -118,7 +118,7 @@ $ docker exec sfdx-cli sh -c "sfdx sfpowerkit:auth:login -u \"$SALESFORCE_USERNA
 Send Platform Events
 
 ```bash
-$ docker exec sfdx-cli sh -c "sfdx force:apex:execute  -u \"$SALESFORCE_USERNAME\" -f \"/tmp/event.apex\""
+$ docker exec sfdx-cli sh -c "sfdx apex run --target-org \"$SALESFORCE_USERNAME\" -f \"/tmp/event.apex\""
 ```
 
 Creating Salesforce Platform Events Source connector
@@ -138,7 +138,7 @@ $ curl -X PUT \
                     "salesforce.password.token" : "'"$SALESFORCE_SECURITY_TOKEN"'",
                     "salesforce.consumer.key" : "'"$SALESFORCE_CONSUMER_KEY"'",
                     "salesforce.consumer.secret" : "'"$SALESFORCE_CONSUMER_PASSWORD"'",
-                    "salesforce.initial.start" : "all",
+                    "salesforce.initial.start" : "latest",
                     "key.converter": "org.apache.kafka.connect.json.JsonConverter",
                     "value.converter": "org.apache.kafka.connect.json.JsonConverter",
                     "confluent.license": "",

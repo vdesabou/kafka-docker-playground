@@ -9,7 +9,7 @@ Quickly test [AWS Redshift](https://docs.confluent.io/current/connect/kafka-conn
 ## AWS Setup
 
 * Make sure you have an [AWS account](https://docs.aws.amazon.com/streams/latest/dev/before-you-begin.html#setting-up-sign-up-for-aws).
-* Set up [AWS Credentials](https://docs.confluent.io/current/connect/kafka-connect-kinesis/quickstart.html#aws-credentials)
+* Set up [AWS Credentials](https://docs.confluent.io/kafka-connectors/s3-sink/current/overview.html#aws-credentials)
 
 You can either export environment variables `AWS_REGION`, `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY` or set files `~/.aws/credentials` and `~/.aws/config`.
 
@@ -20,6 +20,12 @@ Simply run:
 
 ```bash
 $ ./redshift-sink.sh
+```
+
+If you want to assume IAM roles:
+
+```
+$ ./redshift-sink-with-assuming-iam-role.sh (in that case `~/.aws/credentials-with-assuming-iam-role` file must be set)
 ```
 
 ## Details of what the script is doing
@@ -57,8 +63,7 @@ $ CLUSTER=$(aws redshift describe-clusters --cluster-identifier $CLUSTER_NAME | 
 Sending messages to topic `orders`
 
 ```bash
-$ docker exec -i connect kafka-avro-console-producer --broker-list broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic orders --property value.schema='{"type":"record","name":"myrecord","fields":[{"name":"id","type":"int"},{"name":"product", "type": "string"}, {"name":"quantity", "type": "int"}, {"name":"price",
-"type": "float"}]}' << EOF
+$ docker exec -i connect kafka-avro-console-producer --broker-list broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic orders --property value.schema='{"type":"record","name":"myrecord","fields":[{"name":"id","type":"int"},{"name":"product", "type": "string"}, {"name":"quantity", "type": "int"}, {"name":"price","type": "float"}]}' << EOF
 {"id": 999, "product": "foo", "quantity": 100, "price": 50}
 EOF
 ```
@@ -89,7 +94,7 @@ $ curl -X PUT \
 Verify data is in Redshift
 
 ```bash
-$ docker run -i debezium/postgres:10 psql -h $CLUSTER -U masteruser -d dev -p 5439 << EOF
+$ docker run -i debezium/postgres:15-alpine psql -h $CLUSTER -U masteruser -d dev -p 5439 << EOF
 myPassword1
 SELECT * from orders;
 EOF

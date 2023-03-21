@@ -42,7 +42,8 @@ set -e
 log "Creating Azure Resource Group $AZURE_RESOURCE_GROUP"
 az group create \
     --name $AZURE_RESOURCE_GROUP \
-    --location $AZURE_REGION
+    --location $AZURE_REGION \
+    --tags owner_email=$AZ_USER
 
 sleep 10
 

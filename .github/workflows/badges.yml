@@ -4,6 +4,9 @@ on:
   push:
     branches:
       - master
+  schedule:
+      - cron: '0 * * * *' # every hour
+
   workflow_dispatch:
 
 jobs:
@@ -16,7 +19,8 @@ jobs:
         with:
           repository: confluentinc/kafka-docker-playground-internal
           fetch-depth: 0
-          token: ${{ secrets.CI_GITHUB_TOKEN }}
+          ssh-key: ${{ secrets.GH_SSH_KEY_FILE }}
+          ssh-strict: 'false'
 
       - name: Get number of reproduction models
         run: |

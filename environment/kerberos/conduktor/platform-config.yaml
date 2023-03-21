@@ -1,0 +1,37 @@
+organization:
+  name: kafka-docker-playground
+clusters:
+  - id: local
+    name: My Cluster
+    color: "#0013E7"
+    ignoreUntrustedCertificate: false
+    bootstrapServers: "broker:9092"
+    properties: |
+      client.id=conduktor
+      default.api.timeout.ms=15000
+      request.timeout.ms=5000
+      sasl.jaas.config=com.sun.security.auth.module.Krb5LoginModule required useKeyTab=true storeKey=true keyTab="/var/lib/secret/kafka-controlcenter.key" principal="controlcenter@TEST.CONFLUENT.IO";
+      sasl.mechanism=GSSAPI
+      security.protocol=SASL_PLAINTEXT
+      sasl.kerberos.service.name=kafka
+    schemaRegistry:
+      id: Local SR
+      url: "http://schema-registry:8081"
+      ignoreUntrustedCertificate: false
+      properties: |
+        acks=all
+        client.id=conduktor
+        default.api.timeout.ms=15000
+        request.timeout.ms=5000
+    labels:
+      env: default
+    kafkaConnects:
+      - url: "http://connect:8083"
+        id: kafka-connect
+        name: kafkConnect
+auth:
+  demo-users:
+    - email: admin
+      password: admin
+      groups:
+        - ADMIN

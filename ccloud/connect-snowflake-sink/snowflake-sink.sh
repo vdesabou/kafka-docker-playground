@@ -1,0 +1,207 @@
+#!/bin/bash
+set -e
+
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
+source ${DIR}/../../scripts/utils.sh
+
+PLAYGROUND_DB=PLAYGROUND_DB${TAG}
+PLAYGROUND_DB=${PLAYGROUND_DB//[-._]/}
+
+PLAYGROUND_WAREHOUSE=PLAYGROUND_WAREHOUSE${TAG}
+PLAYGROUND_WAREHOUSE=${PLAYGROUND_WAREHOUSE//[-._]/}
+
+PLAYGROUND_CONNECTOR_ROLE=PLAYGROUND_CONNECTOR_ROLE${TAG}
+PLAYGROUND_CONNECTOR_ROLE=${PLAYGROUND_CONNECTOR_ROLE//[-._]/}
+
+PLAYGROUND_USER=PLAYGROUND_USER${TAG}
+PLAYGROUND_USER=${PLAYGROUND_USER//[-._]/}
+
+SNOWFLAKE_ACCOUNT_NAME=${SNOWFLAKE_ACCOUNT_NAME:-$1}
+SNOWFLAKE_USERNAME=${SNOWFLAKE_USERNAME:-$2}
+SNOWFLAKE_PASSWORD=${SNOWFLAKE_PASSWORD:-$3}
+
+if [ -z "$SNOWFLAKE_ACCOUNT_NAME" ]
+then
+     logerror "SNOWFLAKE_ACCOUNT_NAME is not set. Export it as environment variable or pass it as argument"
+     exit 1
+fi
+
+if [ -z "$SNOWFLAKE_USERNAME" ]
+then
+     logerror "SNOWFLAKE_USERNAME is not set. Export it as environment variable or pass it as argument"
+     exit 1
+fi
+
+if [ -z "$SNOWFLAKE_PASSWORD" ]
+then
+     logerror "SNOWFLAKE_PASSWORD is not set. Export it as environment variable or pass it as argument"
+     exit 1
+fi
+
+# https://<account_name>.<region_id>.snowflakecomputing.com:443
+SNOWFLAKE_URL="https://$SNOWFLAKE_ACCOUNT_NAME.snowflakecomputing.com"
+
+cd ../../ccloud/connect-snowflake-sink
+# using v1 PBE-SHA1-RC4-128, see https://community.snowflake.com/s/article/Private-key-provided-is-invalid-or-not-supported-rsa-key-p8--data-isn-t-an-object-ID
+# Create encrypted Private key - keep this safe, do not share!
+docker run -u0 --rm -v $PWD:/tmp vdesabou/kafka-docker-playground-connect:${CONNECT_TAG} bash -c "openssl genrsa 2048 | openssl pkcs8 -topk8 -inform PEM -v1 PBE-SHA1-RC4-128 -out /tmp/snowflake_key.p8 -passout pass:confluent && chown -R $(id -u $USER):$(id -g $USER) /tmp/"
+# Generate public key from private key. You can share your public key.
+docker run -u0 --rm -v $PWD:/tmp vdesabou/kafka-docker-playground-connect:${CONNECT_TAG} bash -c "openssl rsa -in /tmp/snowflake_key.p8 -pubout -out /tmp/snowflake_key.pub -passin pass:confluent && chown -R $(id -u $USER):$(id -g $USER) /tmp/"
+
+RSA_PUBLIC_KEY=$(grep -v "BEGIN PUBLIC" snowflake_key.pub | grep -v "END PUBLIC"|tr -d '\n')
+RSA_PRIVATE_KEY=$(grep -v "BEGIN ENCRYPTED PRIVATE KEY" snowflake_key.p8 | grep -v "END ENCRYPTED PRIVATE KEY"|tr -d '\n')
+cd -
+
+# generate data file for externalizing secrets
+sed -e "s|:RSA_PRIVATE_KEY:|$RSA_PRIVATE_KEY|g" \
+    ../../ccloud/connect-snowflake-sink/data.template > ../../ccloud/connect-snowflake-sink/data
+
+log "Create a Snowflake DB"
+docker run --rm -i -e SNOWSQL_PWD="$SNOWFLAKE_PASSWORD" -e RSA_PUBLIC_KEY="$RSA_PUBLIC_KEY" kurron/snowsql --username $SNOWFLAKE_USERNAME -a $SNOWFLAKE_ACCOUNT_NAME << EOF
+DROP DATABASE IF EXISTS $PLAYGROUND_DB;
+CREATE OR REPLACE DATABASE $PLAYGROUND_DB COMMENT = 'Database for Docker Playground';
+EOF
+
+log "Create a Snowflake ROLE"
+docker run --rm -i -e SNOWSQL_PWD="$SNOWFLAKE_PASSWORD" -e RSA_PUBLIC_KEY="$RSA_PUBLIC_KEY" kurron/snowsql --username $SNOWFLAKE_USERNAME -a $SNOWFLAKE_ACCOUNT_NAME << EOF
+USE ROLE SECURITYADMIN;
+DROP ROLE IF EXISTS $PLAYGROUND_CONNECTOR_ROLE;
+CREATE ROLE $PLAYGROUND_CONNECTOR_ROLE;
+GRANT USAGE ON DATABASE $PLAYGROUND_DB TO ROLE $PLAYGROUND_CONNECTOR_ROLE;
+GRANT USAGE ON DATABASE $PLAYGROUND_DB TO ACCOUNTADMIN;
+GRANT USAGE ON SCHEMA $PLAYGROUND_DB.PUBLIC TO ROLE $PLAYGROUND_CONNECTOR_ROLE;
+GRANT ALL ON FUTURE TABLES IN SCHEMA $PLAYGROUND_DB.PUBLIC TO $PLAYGROUND_CONNECTOR_ROLE;
+GRANT USAGE ON SCHEMA $PLAYGROUND_DB.PUBLIC TO ROLE ACCOUNTADMIN;
+GRANT CREATE TABLE ON SCHEMA $PLAYGROUND_DB.PUBLIC TO ROLE $PLAYGROUND_CONNECTOR_ROLE;
+GRANT CREATE STAGE ON SCHEMA $PLAYGROUND_DB.PUBLIC TO ROLE $PLAYGROUND_CONNECTOR_ROLE;
+GRANT CREATE PIPE ON SCHEMA $PLAYGROUND_DB.PUBLIC TO ROLE $PLAYGROUND_CONNECTOR_ROLE;
+EOF
+
+log "Create a Snowflake WAREHOUSE (for admin purpose as KafkaConnect is Serverless)"
+docker run --rm -i -e SNOWSQL_PWD="$SNOWFLAKE_PASSWORD" -e RSA_PUBLIC_KEY="$RSA_PUBLIC_KEY" kurron/snowsql --username $SNOWFLAKE_USERNAME -a $SNOWFLAKE_ACCOUNT_NAME << EOF
+USE ROLE SYSADMIN;
+CREATE OR REPLACE WAREHOUSE $PLAYGROUND_WAREHOUSE
+  WAREHOUSE_SIZE = 'XSMALL'
+  WAREHOUSE_TYPE = 'STANDARD'
+  AUTO_SUSPEND = 60
+  AUTO_RESUME = TRUE
+  MIN_CLUSTER_COUNT = 1
+  MAX_CLUSTER_COUNT = 1
+  INITIALLY_SUSPENDED = TRUE
+  COMMENT = 'Warehouse for Kafka Playground';
+GRANT USAGE ON WAREHOUSE $PLAYGROUND_WAREHOUSE TO ROLE $PLAYGROUND_CONNECTOR_ROLE;
+EOF
+
+log "Create a Snowflake USER"
+docker run --rm -i -e SNOWSQL_PWD="$SNOWFLAKE_PASSWORD" -e RSA_PUBLIC_KEY="$RSA_PUBLIC_KEY" kurron/snowsql --username $SNOWFLAKE_USERNAME -a $SNOWFLAKE_ACCOUNT_NAME << EOF
+USE ROLE USERADMIN;
+DROP USER IF EXISTS $PLAYGROUND_USER;
+CREATE USER $PLAYGROUND_USER
+ PASSWORD = 'Password123!'
+ LOGIN_NAME = $PLAYGROUND_USER
+ DISPLAY_NAME = $PLAYGROUND_USER
+ DEFAULT_WAREHOUSE = $PLAYGROUND_WAREHOUSE
+ DEFAULT_ROLE = $PLAYGROUND_CONNECTOR_ROLE
+ DEFAULT_NAMESPACE = $PLAYGROUND_DB
+ MUST_CHANGE_PASSWORD = FALSE
+ RSA_PUBLIC_KEY="$RSA_PUBLIC_KEY";
+USE ROLE SECURITYADMIN;
+GRANT ROLE $PLAYGROUND_CONNECTOR_ROLE TO USER $PLAYGROUND_USER;
+EOF
+
+${DIR}/../../ccloud/environment/start.sh "${PWD}/docker-compose.yml"
+
+if [ -f /tmp/delta_configs/env.delta ]
+then
+     source /tmp/delta_configs/env.delta
+else
+     logerror "ERROR: /tmp/delta_configs/env.delta has not been generated"
+     exit 1
+fi
+#############
+
+log "Creating topic in Confluent Cloud"
+set +e
+create_topic test_table
+set -e
+
+sleep 2
+
+log "Sending messages to topic test_table"
+docker exec -i -e BOOTSTRAP_SERVERS="$BOOTSTRAP_SERVERS" -e SASL_JAAS_CONFIG="$SASL_JAAS_CONFIG" -e SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO="$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO" -e SCHEMA_REGISTRY_URL="$SCHEMA_REGISTRY_URL" connect kafka-avro-console-producer --broker-list $BOOTSTRAP_SERVERS --producer-property ssl.endpoint.identification.algorithm=https --producer-property sasl.mechanism=PLAIN --producer-property security.protocol=SASL_SSL --producer-property sasl.jaas.config="$SASL_JAAS_CONFIG" --property basic.auth.credentials.source=USER_INFO --property schema.registry.basic.auth.user.info="$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO" --property schema.registry.url=$SCHEMA_REGISTRY_URL --topic test_table --property value.schema='{"type":"record","name":"myrecord","fields":[{"name":"u_name","type":"string"},{"name":"u_price", "type": "float"}, {"name":"u_quantity", "type": "int"}]}' << EOF
+{"u_name": "scissors", "u_price": 2.75, "u_quantity": 3}
+{"u_name": "tape", "u_price": 0.99, "u_quantity": 10}
+{"u_name": "notebooks", "u_price": 1.99, "u_quantity": 5}
+EOF
+
+log "Creating Snowflake Sink connector"
+curl -X PUT \
+     -H "Content-Type: application/json" \
+     --data '{
+               "connector.class": "com.snowflake.kafka.connector.SnowflakeSinkConnector",
+               "topics": "test_table",
+               "tasks.max": "1",
+               "snowflake.url.name": "'"$SNOWFLAKE_URL"'",
+               "snowflake.user.name": "'"$PLAYGROUND_USER"'",
+               "snowflake.user.role": "'"$PLAYGROUND_CONNECTOR_ROLE"'",
+               "snowflake.private.key":"${file:/data_snow:private.key}",
+               "snowflake.private.key.passphrase": "confluent",
+               "snowflake.database.name": "'"$PLAYGROUND_DB"'",
+               "snowflake.schema.name":"PUBLIC",
+               "buffer.count.records": "3",
+               "buffer.flush.time" : "10",
+               "key.converter":"org.apache.kafka.connect.storage.StringConverter",
+               "value.converter" : "io.confluent.connect.avro.AvroConverter",
+               "value.converter.schema.registry.url": "'"$SCHEMA_REGISTRY_URL"'",
+               "value.converter.basic.auth.user.info": "${file:/data:schema.registry.basic.auth.user.info}",
+               "value.converter.basic.auth.credentials.source": "USER_INFO"
+          }' \
+     http://localhost:8083/connectors/snowflake-sink/config | jq .
+
+
+sleep 120
+
+log "Confirm that the messages were delivered to the Snowflake table (logged as $PLAYGROUND_USER user)"
+docker run --rm -i -e SNOWSQL_PWD='Password123!' -e RSA_PUBLIC_KEY="$RSA_PUBLIC_KEY" kurron/snowsql --username $PLAYGROUND_USER -a $SNOWFLAKE_ACCOUNT_NAME > /tmp/result.log  2>&1 <<-EOF
+USE ROLE $PLAYGROUND_CONNECTOR_ROLE;
+USE DATABASE $PLAYGROUND_DB;
+USE SCHEMA PUBLIC;
+USE WAREHOUSE $PLAYGROUND_WAREHOUSE;
+SELECT * FROM $PLAYGROUND_DB.PUBLIC.TEST_TABLE;
+EOF
+cat /tmp/result.log
+grep "scissors" /tmp/result.log
+
+# docker exec broker kafka-consumer-groups --bootstrap-server broker:9092 --group connect-snowflake-sink --describe
+
+# docker exec broker kafka-consumer-groups --bootstrap-server broker:9092 --group connect-snowflake-sink --to-earliest --topic test_table --reset-offsets --dry-run
+# docker exec broker kafka-consumer-groups --bootstrap-server broker:9092 --group connect-snowflake-sink --to-earliest --topic test_table --reset-offsets --execute
+
+
+# # note: with "value.converter": "com.snowflake.kafka.connector.records.SnowflakeAvroConverter", we get schema_id:
+
+# +--------------------------------+--------------------------+
+# | RECORD_METADATA                | RECORD_CONTENT           |
+# |--------------------------------+--------------------------|
+# | {                              | {                        |
+# |   "CreateTime": 1649071570542, |   "u_name": "scissors",  |
+# |   "offset": 0,                 |   "u_price": 2.75,       |
+# |   "partition": 0,              |   "u_quantity": 3        |
+# |   "schema_id": 1,              | }                        |
+# |   "topic": "test_table"        |                          |
+# | }                              |                          |
+# | {                              | {                        |
+# |   "CreateTime": 1649071570562, |   "u_name": "tape",      |
+# |   "offset": 1,                 |   "u_price": 0.99,       |
+# |   "partition": 0,              |   "u_quantity": 10       |
+# |   "schema_id": 1,              | }                        |
+# |   "topic": "test_table"        |                          |
+# | }                              |                          |
+# | {                              | {                        |
+# |   "CreateTime": 1649071570563, |   "u_name": "notebooks", |
+# |   "offset": 2,                 |   "u_price": 1.99,       |
+# |   "partition": 0,              |   "u_quantity": 5        |
+# |   "schema_id": 1,              | }                        |
+# |   "topic": "test_table"        |                          |
+# | }                              |                          |
+# +--------------------------------+--------------------------+

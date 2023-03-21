@@ -42,7 +42,8 @@ set -e
 log "Creating resource $AZURE_RESOURCE_GROUP in $AZURE_REGION"
 az group create \
     --name $AZURE_RESOURCE_GROUP \
-    --location $AZURE_REGION
+    --location $AZURE_REGION \
+    --tags owner_email=$AZ_USER
 
 log "Registering active directory App $AZURE_AD_APP_NAME"
 AZURE_DATALAKE_CLIENT_ID=$(az ad app create --display-name "$AZURE_AD_APP_NAME" --is-fallback-public-client false --sign-in-audience AzureADandPersonalMicrosoftAccount --query appId -o tsv)
@@ -101,7 +102,7 @@ az dls fs list --account "${AZURE_DATALAKE_ACCOUNT_NAME}" --path /topics
 log "Getting one of the avro files locally and displaying content with avro-tools"
 az dls fs download --account "${AZURE_DATALAKE_ACCOUNT_NAME}" --overwrite --source-path /topics/datalake_topic/partition=0/datalake_topic+0+0000000000.avro --destination-path /tmp/datalake_topic+0+0000000000.avro
 
-docker run --rm -v /tmp:/tmp actions/avro-tools tojson /tmp/datalake_topic+0+0000000000.avro
+docker run --rm -v /tmp:/tmp vdesabou/avro-tools tojson /tmp/datalake_topic+0+0000000000.avro
 
 log "Deleting resource group"
 az group delete --name $AZURE_RESOURCE_GROUP --yes --no-wait

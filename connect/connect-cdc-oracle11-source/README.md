@@ -6,24 +6,20 @@ Quickly test [Oracle CDC Source Connector](https://docs.confluent.io/kafka-conne
 
 ## Note on `redo.log.row.fetch.size`
 
-The connector is configured with `"redo.log.row.fetch.size":1` for demo purpose only. If you're planning to inject more data, it is recommended to increase the value.
+The connector is configured with `"redo.log.row.fetch.size":1` for demo purpose only. 
+If you're planning to inject more data, it is recommended to increase the value.
 
-Example with included script [`07_generate_customers.sh`](https://github.com/vdesabou/kafka-docker-playground/blob/master/connect/connect-cdc-oracle19-source/sample-sql-scripts/07_generate_customers.sh.zip) (packaged as `.zip`in order to not be run automatically), which inserts around 7000 customer rows, in that case you would need to set `"redo.log.row.fetch.size":1000`:
+You can set environment variable `ORACLE_DATAGEN` before running the example and it will use a Java based datagen tool:
+
+Example:
 
 ```
-cd sample-sql-scripts
-unzip 07_generate_customers.sh.zip 
-cd -
-# insert new customer every 500ms
-./sample-sql-scripts/07_generate_customers.sh 0.5
-# insert new customer every second (default)
-./sample-sql-scripts/07_generate_customers.sh 
+DURATION=10
+log "Injecting data for $DURATION minutes"
+docker exec -d oracle-datagen bash -c "java ${JAVA_OPTS} -jar oracle-datagen-1.0-SNAPSHOT-jar-with-dependencies.jar --host oracle --username C##MYUSER --password mypassword --sidOrServerName sid --sidOrServerNameVal ORCLCDB --maxPoolSize 10 --durationTimeMin $DURATION"
 ```
 
-See screencast below:
-
-
-https://user-images.githubusercontent.com/4061923/139914676-e34fae34-0f5c-4240-9690-d1d486236457.mp4
+You can increase thoughtput with `maxPoolSize`.
 
 
 ## How to run

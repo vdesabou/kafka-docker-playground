@@ -163,6 +163,8 @@ services:
       # SCHEMA_REGISTRY_CONFLUENT_TELEMETRY_ENABLED: 'true'
       # SCHEMA_REGISTRY_CONFLUENT_TELEMETRY_API_KEY: 'CLOUD_API_KEY'
       # SCHEMA_REGISTRY_CONFLUENT_TELEMETRY_API_SECRET: 'CLOUD_API_SECRET'
+      # https://github.com/confluentinc/schema-registry/issues/2213
+      SCHEMA_REGISTRY_SCHEMA_PROVIDERS_AVRO_VALIDATE_DEFAULTS: "true"
 
   connect:
     image: vdesabou/kafka-docker-playground-connect:${CONNECT_TAG}
@@ -185,6 +187,7 @@ services:
       CONNECT_REST_ADVERTISED_HOST_NAME: connect
       CONNECT_GROUP_ID: "connect-cluster"
       CONNECT_PRODUCER_CLIENT_ID: "connect-worker-producer"
+      CONNECT_CLIENT_ID: "connect-adminclient-producer"
       CONNECT_CONFIG_STORAGE_TOPIC: connect-configs
       CONNECT_OFFSET_STORAGE_TOPIC: connect-offsets
       CONNECT_STATUS_STORAGE_TOPIC: connect-status
@@ -193,7 +196,6 @@ services:
       CONNECT_STATUS_STORAGE_REPLICATION_FACTOR: 1
       CONNECT_KEY_CONVERTER: "org.apache.kafka.connect.storage.StringConverter"
       CONNECT_VALUE_CONVERTER: "io.confluent.connect.avro.AvroConverter"
-      CONNECT_VALUE_CONVERTER_SCHEMAS_ENABLE: "false"
       CONNECT_VALUE_CONVERTER_SCHEMA_REGISTRY_URL: "http://schema-registry:8081"
       CONNECT_INTERNAL_KEY_CONVERTER: "org.apache.kafka.connect.json.JsonConverter"
       CONNECT_INTERNAL_VALUE_CONVERTER: "org.apache.kafka.connect.json.JsonConverter"
@@ -425,7 +427,7 @@ services:
       - schema-registry
       - connect
     ports:
-      - "9021:9021"
+      - "${C3_PORT:-9021}:9021"
     profiles:
     - control-center
     environment:
@@ -456,7 +458,7 @@ services:
       # CONTROL_CENTER_ID: 32
 
   kafka-lag-exporter:
-    image: lightbend/kafka-lag-exporter:0.6.6
+    image: lightbend/kafka-lag-exporter:0.6.8
     hostname: kafka-lag-exporter
     container_name: kafka-lag-exporter
     profiles:
@@ -469,7 +471,7 @@ services:
       - ./kafka-lag-exporter/logback.xml:/opt/docker/conf/logback.xml
 
   alertmanager:
-    image: prom/alertmanager:v0.18.0
+    image: prom/alertmanager:latest
     hostname: alertmanager
     container_name: alertmanager
     profiles:
@@ -478,7 +480,7 @@ services:
       - 9093:9093
 
   node-exporter:
-    image: prom/node-exporter:v0.18.1
+    image: prom/node-exporter:latest
     hostname: node-exporter
     container_name: node-exporter
     profiles:
@@ -494,7 +496,7 @@ services:
       - '^(aufs|proc|nsfs|shm|cgroup|tmpfs|binfmt_misc|debugfs|devpts|fusectl|hugetlbfs|fuse.lxcfs|mqueue|pstore|securityfs|sysfs|autofs|devtmpfs|configfs)'
 
   prometheus:
-    image: prom/prometheus
+    image: prom/prometheus:latest
     hostname: prometheus
     container_name: prometheus
     profiles:
@@ -509,7 +511,7 @@ services:
       - alertmanager
 
   grafana:
-    image: grafana/grafana:7.4.1
+    image: grafana/grafana:latest
     hostname: grafana
     container_name: grafana
     profiles:
@@ -533,3 +535,20 @@ services:
     entrypoint: [ "sh", "-c", "sleep infinity" ]
     profiles:
       - "kcat"
+
+  # https://github.com/conduktor/conduktor-platform/blob/main/doc/Configuration.md
+  conduktor:
+    image: conduktor/conduktor-platform:latest
+    hostname: conduktor
+    container_name: conduktor
+    depends_on:
+      - broker
+    ports:
+      - 8080:80
+    volumes:
+      - ../../environment/plaintext/conduktor/platform-config.yaml:/tmp/platform-config.yaml
+    environment:
+      CDK_IN_CONF_FILE: /tmp/platform-config.yaml
+      RUN_MODE: "nano"
+    profiles:
+      - "conduktor"

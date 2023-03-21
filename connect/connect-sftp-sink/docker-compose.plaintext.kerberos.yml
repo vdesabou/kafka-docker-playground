@@ -6,6 +6,7 @@ services:
   kdc-server:
     hostname: kdc-server.kerberos-demo.local
     container_name: kdc-server
+    restart: always
     build: ../../connect/connect-sftp-sink/kerberos/kdc-server
     volumes:
       # This is needed otherwise there won't be enough entropy to generate a new kerberos realm
@@ -17,6 +18,7 @@ services:
   ssh-server:
     hostname: ssh-server.kerberos-demo.local
     container_name: ssh-server
+    restart: always
     build: ../../connect/connect-sftp-sink/kerberos/ssh-server
     volumes:
         - ../../connect/connect-sftp-sink/kerberos/connect-krb5.conf:/etc/krb5.conf

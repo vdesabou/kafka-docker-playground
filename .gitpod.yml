@@ -19,15 +19,15 @@ tasks:
     init: |
       cd environment/kerberos && source ../../scripts/utils.sh && docker-compose -f ../../environment/plaintext/docker-compose.yml --profile control-center --profile ksqldb pull && cd - 
       docker pull google/cloud-sdk:latest
-      docker pull mikesir87/aws-cli:v2
+      docker pull amazon/aws-cli
       docker pull mcr.microsoft.com/azure-cli
       docker pull imega/jq
-      docker pull actions/avro-tools
+      docker pull vdesabou/avro-tools
       gp sync-done prebuild
 
   - name: playground
     init: gp sync-await prebuild
-    command: if [ -z "$SECRETS_ENCRYPTION_PASSWORD" ]; then echo "🚀 Enjoy the playground"; else echo "ℹ️ SECRETS_ENCRYPTION_PASSWORD environment variable is set"; ./.github/scripts/decrypt_secret.sh;tar xvf secrets.tar;rm secrets.tar;mkdir -p $HOME/.aws;mv aws_credentials_with_assuming_iam_role $HOME/.aws/credentials-with-assuming-iam-role;chmod -R a+rw $HOME/.aws;mkdir -p $HOME/.confluent;echo "$DOCKER_PASSWORD" | docker login -u vdesabou --password-stdin;fi
+    command: if [ -z "$SECRETS_ENCRYPTION_PASSWORD" ]; then echo "🚀 Enjoy the playground"; else echo "ℹ️ SECRETS_ENCRYPTION_PASSWORD environment variable is set"; ./.github/scripts/decrypt_secret.sh;tar xvf secrets.tar;rm secrets.tar;mkdir -p $HOME/.aws;mv aws_credentials_with_assuming_iam_role $HOME/.aws/credentials-with-assuming-iam-role;chmod -R a+rw $HOME/.aws;mkdir -p $HOME/.confluent;echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin;fi
 
 vscode:
   extensions:

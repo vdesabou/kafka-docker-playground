@@ -11,7 +11,7 @@ Quickly test [AWS CloudWatch Metrics](https://docs.confluent.io/current/connect/
 ## AWS Setup
 
 * Make sure you have an [AWS account](https://docs.aws.amazon.com/streams/latest/dev/before-you-begin.html#setting-up-sign-up-for-aws).
-* Set up [AWS Credentials](https://docs.confluent.io/current/connect/kafka-connect-kinesis/quickstart.html#aws-credentials)
+* Set up [AWS Credentials](https://docs.confluent.io/kafka-connectors/s3-sink/current/overview.html#aws-credentials)
 
 You can either export environment variables `AWS_REGION`, `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY` or set files `~/.aws/credentials` and `~/.aws/config`.
 
@@ -49,6 +49,8 @@ $ curl -X PUT \
                "value.converter.schema.registry.url": "http://schema-registry:8081",
                "aws.cloudwatch.metrics.url": "'"$CLOUDWATCH_METRICS_URL"'",
                "aws.cloudwatch.metrics.namespace": "service-namespace",
+               "aws.access.key.id" : "'"$AWS_ACCESS_KEY_ID"'",
+               "aws.secret.access.key": "'"$AWS_SECRET_ACCESS_KEY"'",
                "behavior.on.malformed.metric": "FAIL",
                "confluent.license": "",
                "confluent.topic.bootstrap.servers": "broker:9092",

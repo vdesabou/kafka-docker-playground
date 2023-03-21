@@ -23,6 +23,7 @@ DOCKER_COMPOSE_FILE_OVERRIDE=$1
 if [ -f "${DOCKER_COMPOSE_FILE_OVERRIDE}" ]
 then
   ENABLE_DOCKER_COMPOSE_FILE_OVERRIDE="-f ${DOCKER_COMPOSE_FILE_OVERRIDE}"
+  check_arm64_support "${DIR}" "${DOCKER_COMPOSE_FILE_OVERRIDE}"
 fi
 
 DISABLE_REPLICATOR_MONITORING=""
@@ -34,11 +35,11 @@ fi
 docker-compose -f ../../environment/mdc-plaintext/docker-compose.yml ${ENABLE_DOCKER_COMPOSE_FILE_OVERRIDE} ${DISABLE_REPLICATOR_MONITORING} build
 docker-compose -f ../../environment/mdc-plaintext/docker-compose.yml ${ENABLE_DOCKER_COMPOSE_FILE_OVERRIDE} ${DISABLE_REPLICATOR_MONITORING} down -v --remove-orphans
 docker-compose -f ../../environment/mdc-plaintext/docker-compose.yml ${ENABLE_DOCKER_COMPOSE_FILE_OVERRIDE} ${DISABLE_REPLICATOR_MONITORING} ${profile_control_center_command} up -d
-log "📝 To see the actual properties file, use ../../scripts/get-properties.sh <container>"
+log "📝 To see the actual properties file, use cli command playground get-properties -c <container>"
 command="source ../../scripts/utils.sh && docker-compose -f ../../environment/mdc-plaintext/docker-compose.yml ${ENABLE_DOCKER_COMPOSE_FILE_OVERRIDE} ${DISABLE_REPLICATOR_MONITORING} ${profile_control_center_command} up -d"
 echo "$command" > /tmp/playground-command
-log "✨ If you modify a docker-compose file and want to re-create the container(s), run ../../scripts/recreate-containers.sh or use this command:"
-log "✨ $command"
+log "✨ If you modify a docker-compose file and want to re-create the container(s), run cli command playground recreate-container"
+
 
 if [ "$#" -ne 0 ]
 then

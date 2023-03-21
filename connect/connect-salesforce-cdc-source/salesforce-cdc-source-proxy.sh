@@ -46,12 +46,6 @@ fi
 
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.proxy.yml"
 
-log "Login with sfdx CLI"
-docker exec sfdx-cli sh -c "sfdx sfpowerkit:auth:login -u \"$SALESFORCE_USERNAME\" -p \"$SALESFORCE_PASSWORD\" -r \"$SALESFORCE_INSTANCE\" -s \"$SALESFORCE_SECURITY_TOKEN\""
-
-log "Add a Contact to Salesforce"
-docker exec sfdx-cli sh -c "sfdx force:data:record:create  -u \"$SALESFORCE_USERNAME\" -s Contact -v \"FirstName='John_$RANDOM' LastName='Doe_$RANDOM'\""
-
 DOMAIN=$(echo $SALESFORCE_INSTANCE | cut -d "/" -f 3)
 IP=$(nslookup $DOMAIN | grep Address | grep -v "#" | cut -d " " -f 2 | tail -1)
 log "Blocking $DOMAIN IP $IP to make sure proxy is used"
@@ -75,7 +69,7 @@ curl -X PUT \
                     "salesforce.consumer.key" : "'"$SALESFORCE_CONSUMER_KEY"'",
                     "salesforce.consumer.secret" : "'"$SALESFORCE_CONSUMER_PASSWORD"'",
                     "http.proxy": "nginx-proxy:8888",
-                    "salesforce.initial.start" : "all",
+                    "salesforce.initial.start" : "latest",
                     "connection.max.message.size": "10048576",
                     "key.converter": "org.apache.kafka.connect.json.JsonConverter",
                     "value.converter": "org.apache.kafka.connect.json.JsonConverter",
@@ -85,7 +79,13 @@ curl -X PUT \
           }' \
      http://localhost:8083/connectors/salesforce-cdc-source/config | jq .
 
+sleep 5
 
+log "Login with sfdx CLI"
+docker exec sfdx-cli sh -c "sfdx sfpowerkit:auth:login -u \"$SALESFORCE_USERNAME\" -p \"$SALESFORCE_PASSWORD\" -r \"$SALESFORCE_INSTANCE\" -s \"$SALESFORCE_SECURITY_TOKEN\""
+
+log "Add a Contact to Salesforce"
+docker exec sfdx-cli sh -c "sfdx data:create:record  --target-org \"$SALESFORCE_USERNAME\" -s Contact -v \"FirstName='John_$RANDOM' LastName='Doe_$RANDOM'\""
 
 sleep 10
 

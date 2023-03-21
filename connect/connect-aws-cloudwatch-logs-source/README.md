@@ -11,7 +11,7 @@ Quickly test [AWS CloudWatch Logs](https://docs.confluent.io/current/connect/kaf
 ## AWS Setup
 
 * Make sure you have an [AWS account](https://docs.aws.amazon.com/streams/latest/dev/before-you-begin.html#setting-up-sign-up-for-aws).
-* Set up [AWS Credentials](https://docs.confluent.io/current/connect/kafka-connect-kinesis/quickstart.html#aws-credentials)
+* Set up [AWS Credentials](https://docs.confluent.io/kafka-connectors/s3-sink/current/overview.html#aws-credentials)
 
 You can either export environment variables `AWS_REGION`, `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY` or set files `~/.aws/credentials` and `~/.aws/config`.
 
@@ -23,19 +23,25 @@ Simply run:
 $ ./cloudwatch.sh
 ```
 
+If you want to assume IAM roles:
+
+```
+$ ./cloudwatch-with-assuming-iam-role.sh (in that case `~/.aws/credentials-with-assuming-iam-role` file must be set)
+```
+
 
 ## Details of what the script is doing
 
 Create a log group in AWS CloudWatch Logs.
 
 ```bash
-$ aws logs create-log-group --log-group my-log-group
+$ aws logs create-log-group --log-group-name my-log-group
 ```
 
 Create a log stream in AWS CloudWatch Logs.
 
 ```bash
-$ aws logs create-log-stream --log-group my-log-group --log-stream my-log-stream
+$ aws logs create-log-stream --log-group-name my-log-group --log-stream my-log-stream
 ```
 
 Insert Records into your log stream.
@@ -44,7 +50,7 @@ Note: If this is the first time inserting logs into a new log stream, then no se
 However, after the first put, there will be a sequence token returned that will be needed as a parameter in the next put.
 
 ```bash
-$ aws logs put-log-events --log-group my-log-group --log-stream my-log-stream --log-events timestamp=`date +%s000`,message="This is a log #0"
+$ aws logs put-log-events --log-group-name my-log-group --log-stream my-log-stream --log-events timestamp=`date +%s000`,message="This is a log #0"
 ```
 
 Injecting more messages
@@ -52,8 +58,8 @@ Injecting more messages
 ```bash
 for i in $(seq 1 10)
 do
-     token=$($ aws logs describe-log-streams --log-group my-log-group | jq -r .logStreams[0].uploadSequenceToken)
-     $ aws logs put-log-events --log-group my-log-group --log-stream my-log-stream --log-events timestamp=`date +%s000`,message="This is a log #${i}" --sequence-token ${token}
+     token=$($ aws logs describe-log-streams --log-group-name my-log-group | jq -r .logStreams[0].uploadSequenceToken)
+     $ aws logs put-log-events --log-group-name my-log-group --log-stream my-log-stream --log-events timestamp=`date +%s000`,message="This is a log #${i}" --sequence-token ${token}
 done
 ```
 

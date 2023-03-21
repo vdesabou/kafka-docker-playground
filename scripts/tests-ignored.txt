@@ -4,14 +4,10 @@
 upgrade-test.sh
 # https://github.com/vdesabou/kafka-docker-playground/issues/833 :
 cdc-oracle12-pdb-table-mtls-db-auth.sh
+cdc-oracle18-pdb-table-mtls-db-auth.sh
 cdc-oracle19-pdb-table-mtls-db-auth.sh
-# https://github.com/vdesabou/kafka-docker-playground/issues/920#issuecomment-830157555
-s3-sink-proxy-with-assuming-iam-role.sh
-# https://github.com/vdesabou/kafka-docker-playground/issues/920#issuecomment-830157555
-kinesis-proxy-with-assuming-iam-role.sh
+cdc-oracle21-pdb-table-mtls-db-auth.sh
 # see https://github.com/vdesabou/kafka-docker-playground/blob/master/other/ldap-authorizer-with-ldap-failover/README.md#using-dns-srv-records-with-ldap-over-tls
 start-ldaps.sh
 update_run.sh
-get_logminer_memory_stats.sh 
-s3-sink-with-assuming-iam-role-config.sh
-s3-source-backup-and-restore-with-assuming-iam-role.sh
+get_logminer_memory_stats.sh

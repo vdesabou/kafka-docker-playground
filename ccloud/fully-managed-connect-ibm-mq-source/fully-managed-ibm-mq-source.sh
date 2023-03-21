@@ -37,6 +37,10 @@ else
      exit 1
 fi
 
+set +e
+delete_topic MyKafkaTopicName
+set -e
+
 docker-compose build
 docker-compose down -v --remove-orphans
 docker-compose up -d

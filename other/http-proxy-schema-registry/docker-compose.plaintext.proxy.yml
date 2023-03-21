@@ -12,3 +12,31 @@ services:
       - "8888:8888"
     volumes:
       - ../../other/http-proxy-schema-registry/nginx-proxy/nginx_whitelist.conf:/usr/local/nginx/conf/nginx.conf
+
+  connect:
+    environment:
+      # in newer version, it is located in /usr/share/filestream-connectors
+      CONNECT_PLUGIN_PATH: /usr/share/java/,/usr/share/confluent-hub-components/,/usr/share/filestream-connectors
+
+  producer:
+    build:
+      context: ../../other/http-proxy-schema-registry/producer/
+    hostname: producer
+    container_name: producer
+    environment:
+      KAFKA_BOOTSTRAP_SERVERS: broker:9092
+      TOPIC: "customer-avro"
+      REPLICATION_FACTOR: 1
+      NUMBER_OF_PARTITIONS: 1
+      NB_MESSAGES: 10 # -1 for MAX_VALUE
+      MESSAGE_BACKOFF: 100 # Frequency of message injection
+      KAFKA_ACKS: "all" # default: "1"
+      KAFKA_REQUEST_TIMEOUT_MS: 20000
+      KAFKA_RETRY_BACKOFF_MS: 500
+      KAFKA_CLIENT_ID: "my-java-producer"
+      KAFKA_SCHEMA_REGISTRY_URL: "http://schema-registry:8081"
+      KAFKA_SCHEMA_REGISTRY_PROXY_HOST: "nginx-proxy"
+      KAFKA_SCHEMA_REGISTRY_PROXY_PORT: "8888"
+      EXTRA_ARGS: ${GRAFANA_AGENT_BROKER}
+    volumes:
+      - ../../environment/plaintext/jmx-exporter:/usr/share/jmx_exporter/

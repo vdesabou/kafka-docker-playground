@@ -57,19 +57,19 @@ sleep 3
 create_topic orders
 set -e
 
-# CLUSTER_NAME=pg${USER}redshift${TAG}
-# CLUSTER_NAME=${CLUSTER_NAME//[-._]/}
+CLUSTER_NAME=pg${USER}redshift${TAG}
+CLUSTER_NAME=${CLUSTER_NAME//[-._]/}
 
-# set +e
-# log "Delete AWS Redshift cluster, if required"
-# aws redshift delete-cluster --cluster-identifier $CLUSTER_NAME --skip-final-cluster-snapshot
-# log "Delete security group sg$CLUSTER_NAME, if required"
-# aws ec2 delete-security-group --group-name sg$CLUSTER_NAME
-# set -e
+set +e
+log "Delete AWS Redshift cluster, if required"
+aws redshift delete-cluster --cluster-identifier $CLUSTER_NAME --skip-final-cluster-snapshot
+log "Delete security group sg$CLUSTER_NAME, if required"
+aws ec2 delete-security-group --group-name sg$CLUSTER_NAME
+set -e
 
-# log "Create AWS Redshift cluster"
-# # https://docs.aws.amazon.com/redshift/latest/mgmt/getting-started-cli.html
-# aws redshift create-cluster --cluster-identifier $CLUSTER_NAME --master-username masteruser --master-user-password myPassword1 --node-type dc2.large --cluster-type single-node --publicly-accessible
+log "Create AWS Redshift cluster"
+# https://docs.aws.amazon.com/redshift/latest/mgmt/getting-started-cli.html
+aws redshift create-cluster --cluster-identifier $CLUSTER_NAME --master-username masteruser --master-user-password myPassword1 --node-type dc2.large --cluster-type single-node --publicly-accessible
 
 # Verify AWS Redshift cluster has started within MAX_WAIT seconds
 MAX_WAIT=480
@@ -101,8 +101,7 @@ CLUSTER="pgvsaboulinredshift711.ch0ou1z9c3sj.eu-west-3.redshift.amazonaws.com"
 # CLUSTER=$(aws redshift describe-clusters --cluster-identifier $CLUSTER_NAME | jq -r .Clusters[0].Endpoint.Address)
 
 log "Sending messages to topic orders"
-docker exec -i -e BOOTSTRAP_SERVERS="$BOOTSTRAP_SERVERS" -e SASL_JAAS_CONFIG="$SASL_JAAS_CONFIG" -e SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO="$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO" -e SCHEMA_REGISTRY_URL="$SCHEMA_REGISTRY_URL" connect kafka-avro-console-producer --broker-list $BOOTSTRAP_SERVERS --producer-property ssl.endpoint.identification.algorithm=https --producer-property sasl.mechanism=PLAIN --producer-property security.protocol=SASL_SSL --producer-property sasl.jaas.config="$SASL_JAAS_CONFIG" --property basic.auth.credentials.source=USER_INFO --property schema.registry.basic.auth.user.info="$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO" --property schema.registry.url=$SCHEMA_REGISTRY_URL --topic orders --property value.schema='{"type":"record","name":"myrecord","fields":[{"name":"id","type":"int"},{"name":"product", "type": "string"}, {"name":"quantity", "type": "int"}, {"name":"price",
-"type": "float"}]}' << EOF
+docker exec -i -e BOOTSTRAP_SERVERS="$BOOTSTRAP_SERVERS" -e SASL_JAAS_CONFIG="$SASL_JAAS_CONFIG" -e SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO="$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO" -e SCHEMA_REGISTRY_URL="$SCHEMA_REGISTRY_URL" connect kafka-avro-console-producer --broker-list $BOOTSTRAP_SERVERS --producer-property ssl.endpoint.identification.algorithm=https --producer-property sasl.mechanism=PLAIN --producer-property security.protocol=SASL_SSL --producer-property sasl.jaas.config="$SASL_JAAS_CONFIG" --property basic.auth.credentials.source=USER_INFO --property schema.registry.basic.auth.user.info="$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO" --property schema.registry.url=$SCHEMA_REGISTRY_URL --topic orders --property value.schema='{"type":"record","name":"myrecord","fields":[{"name":"id","type":"int"},{"name":"product", "type": "string"}, {"name":"quantity", "type": "int"}, {"name":"price","type": "float"}]}' << EOF
 {"id": 999, "product": "foo", "quantity": 100, "price": 50}
 EOF
 
@@ -128,7 +127,7 @@ curl -X PUT \
 sleep 20
 
 log "Verify data is in Redshift"
-timeout 30 docker run -i debezium/postgres:10 psql -h $CLUSTER -U masteruser -d dev -p 5439 << EOF > /tmp/result.log
+timeout 30 docker run -i debezium/postgres:15-alpine psql -h $CLUSTER -U masteruser -d dev -p 5439 << EOF > /tmp/result.log
 myPassword1
 SELECT * from orders;
 EOF

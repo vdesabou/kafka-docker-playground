@@ -9,22 +9,28 @@ logerror "Connector must be deployed on a VM on same GCP subnet as the Dataproc 
 exit 1
 
 
-KEYFILE="${DIR}/keyfile.json"
-if [ ! -f ${KEYFILE} ] && [ -z "$KEYFILE_CONTENT" ]
+cd ../../connect/connect-gcp-cloud-functions-sink
+GCP_KEYFILE="${PWD}/keyfile.json"
+if [ ! -f ${GCP_KEYFILE} ] && [ -z "$GCP_KEYFILE_CONTENT" ]
 then
-     logerror "ERROR: either the file ${KEYFILE} is not present or environment variable KEYFILE_CONTENT is not set!"
+     logerror "ERROR: either the file ${GCP_KEYFILE} is not present or environment variable GCP_KEYFILE_CONTENT is not set!"
      exit 1
 else 
-    if [ -f ${KEYFILE} ]
+    if [ -f ${GCP_KEYFILE} ]
     then
-        KEYFILE_CONTENT=`cat keyfile.json | jq -aRs .`
+        GCP_KEYFILE_CONTENT=`cat keyfile.json | jq -aRs .`
     else
-        log "Creating ${KEYFILE} based on environment variable KEYFILE_CONTENT"
-        echo -e "$KEYFILE_CONTENT" | sed 's/\\"/"/g' > ${KEYFILE}
+        log "Creating ${GCP_KEYFILE} based on environment variable GCP_KEYFILE_CONTENT"
+        echo -e "$GCP_KEYFILE_CONTENT" | sed 's/\\"/"/g' > ${GCP_KEYFILE}
     fi
 fi
+cd -
 
-PROJECT=${1:-vincent-de-saboulin-lab}
+if [ -z "$GCP_PROJECT" ]
+then
+     logerror "GCP_PROJECT is not set. Export it as environment variable or pass it as argument"
+     exit 1
+fi
 CLUSTER_NAME=${2:-playground-cluster}
 
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
@@ -33,11 +39,11 @@ log "Doing gsutil authentication"
 set +e
 docker rm -f gcloud-config
 set -e
-docker run -i -v ${KEYFILE}:/tmp/keyfile.json --name gcloud-config google/cloud-sdk:latest gcloud auth activate-service-account --project ${PROJECT} --key-file /tmp/keyfile.json
+docker run -i -v ${GCP_KEYFILE}:/tmp/keyfile.json --name gcloud-config google/cloud-sdk:latest gcloud auth activate-service-account --project ${GCP_PROJECT} --key-file /tmp/keyfile.json
 
 
 log "Creating Dataproc cluster $CLUSTER_NAME"
-docker run -i --volumes-from gcloud-config google/cloud-sdk:latest gcloud dataproc clusters create "$CLUSTER_NAME" --region us-east1 --project "$PROJECT"
+docker run -i --volumes-from gcloud-config google/cloud-sdk:latest gcloud dataproc clusters create "$CLUSTER_NAME" --region us-east1 --project "$GCP_PROJECT"
 
 log "Sending messages to topic test_dataproc"
 seq -f "{\"f1\": \"value%g-`date`\"}" 10 | docker exec -i connect kafka-avro-console-producer --broker-list broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic test_dataproc --property value.schema='{"type":"record","name":"myrecord","fields":[{"name":"f1","type":"string"}]}'
@@ -51,7 +57,7 @@ curl -X PUT \
                "tasks.max" : "1",
                "flush.size": "3",
                "topics" : "test_dataproc",
-               "gcp.dataproc.projectId": "'"$PROJECT"'",
+               "gcp.dataproc.projectId": "'"$GCP_PROJECT"'",
                "gcp.dataproc.region": "us-east1",
                "gcp.dataproc.cluster": "'"$CLUSTER_NAME"'",
                "gcp.dataproc.credentials.path" : "/tmp/keyfile.json",
@@ -111,9 +117,9 @@ sleep 10
 # docker cp hadoop:/tmp/test_hdfs+0+0000000000+0000000000.avro /tmp/
 
 
-docker run --rm -v /tmp:/tmp actions/avro-tools tojson /tmp/test_hdfs+0+0000000000+0000000000.avro
+docker run --rm -v /tmp:/tmp vdesabou/avro-tools tojson /tmp/test_hdfs+0+0000000000+0000000000.avro
 
 docker rm -f gcloud-config
 
 log "Deleting Dataproc cluster $CLUSTER_NAME"
-docker run -i --volumes-from gcloud-config google/cloud-sdk:latest echo y | gcloud dataproc clusters delete "$CLUSTER_NAME" --region us-east1 --project "$PROJECT"
+docker run -i --volumes-from gcloud-config google/cloud-sdk:latest echo y | gcloud dataproc clusters delete "$CLUSTER_NAME" --region us-east1 --project "$GCP_PROJECT"

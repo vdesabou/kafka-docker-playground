@@ -11,7 +11,7 @@ Quickly test [AWS Lambda](https://docs.confluent.io/current/connect/kafka-connec
 ## AWS Setup
 
 * Make sure you have an [AWS account](https://docs.aws.amazon.com/streams/latest/dev/before-you-begin.html#setting-up-sign-up-for-aws).
-* Set up [AWS Credentials](https://docs.confluent.io/current/connect/kafka-connect-kinesis/quickstart.html#aws-credentials)
+* Set up [AWS Credentials](https://docs.confluent.io/kafka-connectors/s3-sink/current/overview.html#aws-credentials)
 
 You can either export environment variables `AWS_REGION`, `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY` or set files `~/.aws/credentials` and `~/.aws/config`.
 
@@ -21,6 +21,12 @@ Simply run:
 
 ```bash
 $ ./lambda.sh
+```
+
+If you want to assume IAM roles:
+
+```
+$ ./lambda-sink-with-assuming-iam-role.sh (in that case `~/.aws/credentials-with-assuming-iam-role` file must be set)
 ```
 
 ## Details of what the script is doing

@@ -46,12 +46,6 @@ fi
 
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
 
-log "Login with sfdx CLI"
-docker exec sfdx-cli sh -c "sfdx sfpowerkit:auth:login -u \"$SALESFORCE_USERNAME\" -p \"$SALESFORCE_PASSWORD\" -r \"$SALESFORCE_INSTANCE\" -s \"$SALESFORCE_SECURITY_TOKEN\""
-
-log "Send Platform Events"
-docker exec sfdx-cli sh -c "sfdx force:apex:execute  -u \"$SALESFORCE_USERNAME\" -f \"/tmp/event.apex\""
-
 log "Creating Salesforce Platform Events Source connector"
 curl -X PUT \
      -H "Content-Type: application/json" \
@@ -67,7 +61,7 @@ curl -X PUT \
                     "salesforce.password.token" : "'"$SALESFORCE_SECURITY_TOKEN"'",
                     "salesforce.consumer.key" : "'"$SALESFORCE_CONSUMER_KEY"'",
                     "salesforce.consumer.secret" : "'"$SALESFORCE_CONSUMER_PASSWORD"'",
-                    "salesforce.initial.start" : "all",
+                    "salesforce.initial.start" : "latest",
                     "connection.max.message.size": "10048576",
                     "key.converter": "org.apache.kafka.connect.json.JsonConverter",
                     "value.converter": "org.apache.kafka.connect.json.JsonConverter",
@@ -77,7 +71,13 @@ curl -X PUT \
           }' \
      http://localhost:8083/connectors/salesforce-platform-events-source/config | jq .
 
+sleep 5
 
+log "Login with sfdx CLI"
+docker exec sfdx-cli sh -c "sfdx sfpowerkit:auth:login -u \"$SALESFORCE_USERNAME\" -p \"$SALESFORCE_PASSWORD\" -r \"$SALESFORCE_INSTANCE\" -s \"$SALESFORCE_SECURITY_TOKEN\""
+
+log "Send Platform Events"
+docker exec sfdx-cli sh -c "sfdx apex run --target-org \"$SALESFORCE_USERNAME\" -f \"/tmp/event.apex\""
 
 sleep 10
 

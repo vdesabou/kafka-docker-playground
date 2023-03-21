@@ -29,7 +29,7 @@ Download it as JSON:
 
 ![Service Account setup](Screenshot4.png)
 
-Rename it to `keyfile.json`and place it in `./keyfile.json` or use environment variable `KEYFILE_CONTENT` with content generated with `KEYFILE_CONTENT=`cat keyfile.json | jq -aRs .`
+Rename it to `keyfile.json`and place it in `./keyfile.json` or use environment variable `GCP_KEYFILE_CONTENT` with content generated with `GCP_KEYFILE_CONTENT=`cat keyfile.json | jq -aRs .`
 
 
 ## How to run
@@ -37,7 +37,7 @@ Rename it to `keyfile.json`and place it in `./keyfile.json` or use environment v
 Simply run:
 
 ```bash
-$ ./gcp-pubsub.sh <PROJECT>
+$ ./gcp-pubsub.sh <GCP_PROJECT>
 ```
 
 ## Details of what the script is doing
@@ -45,7 +45,7 @@ $ ./gcp-pubsub.sh <PROJECT>
 Doing gsutil authentication
 
 ```bash
-$ gcloud auth activate-service-account --key-file ${KEYFILE}
+$ gcloud auth activate-service-account --key-file ${GCP_KEYFILE}
 ```
 
 Create a Pub/Sub topic called topic-1
@@ -77,7 +77,7 @@ $ curl -X PUT \
                "connector.class" : "io.confluent.connect.gcp.pubsub.PubSubSourceConnector",
                     "tasks.max" : "1",
                     "kafka.topic" : "pubsub-topic",
-                    "gcp.pubsub.project.id" : "'"$PROJECT"'",
+                    "gcp.pubsub.project.id" : "'"$GCP_PROJECT"'",
                     "gcp.pubsub.topic.id" : "topic-1",
                     "gcp.pubsub.subscription.id" : "subscription-1",
                     "gcp.pubsub.credentials.path" : "/tmp/keyfile.json",

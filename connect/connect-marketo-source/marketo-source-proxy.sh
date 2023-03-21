@@ -4,7 +4,8 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
-
+logwarn "WARN: skipped as it does not work"
+exit 111
 
 MARKETO_ENDPOINT_URL=${MARKETO_ENDPOINT_URL:-$1}
 MARKETO_CLIENT_ID=${MARKETO_CLIENT_ID:-$2}

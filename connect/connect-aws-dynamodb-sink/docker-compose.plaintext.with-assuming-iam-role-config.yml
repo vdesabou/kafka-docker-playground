@@ -2,8 +2,8 @@
 version: '3.5'
 services:
   connect:
-    volumes:
-      - $HOME/.aws/$AWS_CREDENTIALS_FILE_NAME:$CONNECT_CONTAINER_HOME_DIR/.aws/credentials
-      - $HOME/.aws/config:$CONNECT_CONTAINER_HOME_DIR/.aws/config
     environment:
       CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-aws-dynamodb
+      AWS_REGION: $AWS_REGION
+      AWS_ACCESS_KEY_ID: $AWS_ACCOUNT_WITH_ASSUME_ROLE_AWS_ACCESS_KEY_ID
+      AWS_SECRET_ACCESS_KEY: $AWS_ACCOUNT_WITH_ASSUME_ROLE_AWS_SECRET_ACCESS_KEY

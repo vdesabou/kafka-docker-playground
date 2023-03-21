@@ -4,7 +4,7 @@ services:
 
   sap:
     # https://github.com/mpern/hana-docker
-    image: "store/saplabs/hanaexpress:2.00.054.00.20210603.1"
+    image: "saplabs/hanaexpress:2.00.061.00.20220519.1"
     restart: "unless-stopped"
     hostname: sap
     container_name: sap

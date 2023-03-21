@@ -67,7 +67,7 @@ You should see:
 Simply run:
 
 ```bash
-$ ./gcp-firebase-source.sh <PROJECT>
+$ ./gcp-firebase-source.sh <GCP_PROJECT>
 ```
 
 ## Details of what the script is doing
@@ -82,7 +82,7 @@ $ curl -X PUT \
                "connector.class" : "io.confluent.connect.firebase.FirebaseSourceConnector",
                     "tasks.max" : "1",
                     "gcp.firebase.credentials.path": "/tmp/keyfile.json",
-                    "gcp.firebase.database.reference": "https://'"$PROJECT"'.firebaseio.com/musicBlog",
+                    "gcp.firebase.database.reference": "https://'"$GCP_PROJECT"'.firebaseio.com/musicBlog",
                     "gcp.firebase.snapshot":"true",
                     "confluent.topic.bootstrap.servers": "broker:9092",
                     "confluent.topic.replication.factor": "1"

@@ -18,11 +18,15 @@ PLAYGROUND_CONNECTOR_ROLE=${PLAYGROUND_CONNECTOR_ROLE//[-._]/}
 PLAYGROUND_USER=PLAYGROUND_USER${TAG}
 PLAYGROUND_USER=${PLAYGROUND_USER//[-._]/}
 
-if [ ! -f ${DIR}/snowflake-jdbc-3.13.4.jar ]
+cd ../../connect/connect-jdbc-snowflake-sink
+if [ ! -f ${PWD}/snowflake-jdbc-3.13.16.jar ]
 then
-     log "Downloading snowflake-jdbc-3.13.4.jar"
-     wget https://repo1.maven.org/maven2/net/snowflake/snowflake-jdbc/3.13.4/snowflake-jdbc-3.13.4.jar
+     # newest versions do not work well with timestamp date, getting:
+     # WARN JDBC type 2014 (TIMESTAMPIZ) not currently supported
+     log "Downloading snowflake-jdbc-3.13.16.jar"
+     wget https://repo1.maven.org/maven2/net/snowflake/snowflake-jdbc/3.13.16/snowflake-jdbc-3.13.16.jar
 fi
+cd -
 
 SNOWFLAKE_ACCOUNT_NAME=${SNOWFLAKE_ACCOUNT_NAME:-$1}
 SNOWFLAKE_USERNAME=${SNOWFLAKE_USERNAME:-$2}
@@ -49,11 +53,16 @@ fi
 # https://<account_name>.<region_id>.snowflakecomputing.com:443
 SNOWFLAKE_URL="https://$SNOWFLAKE_ACCOUNT_NAME.snowflakecomputing.com"
 
+cd ../../connect/connect-jdbc-snowflake-sink
 # using v1 PBE-SHA1-RC4-128, see https://community.snowflake.com/s/article/Private-key-provided-is-invalid-or-not-supported-rsa-key-p8--data-isn-t-an-object-ID
 # Create encrypted Private key - keep this safe, do not share!
-openssl genrsa 2048 | openssl pkcs8 -topk8 -inform PEM -v1 PBE-SHA1-RC4-128 -out snowflake_key.p8 -passout pass:confluent
+docker run -u0 --rm -v $PWD:/tmp vdesabou/kafka-docker-playground-connect:${CONNECT_TAG} bash -c "openssl genrsa 2048 | openssl pkcs8 -topk8 -inform PEM -v1 PBE-SHA1-RC4-128 -out /tmp/snowflake_key.p8 -passout pass:confluent && chown -R $(id -u $USER):$(id -g $USER) /tmp/"
 # Generate public key from private key. You can share your public key.
-openssl rsa -in snowflake_key.p8 -pubout -out snowflake_key.pub -passin pass:confluent
+docker run -u0 --rm -v $PWD:/tmp vdesabou/kafka-docker-playground-connect:${CONNECT_TAG} bash -c "openssl rsa -in /tmp/snowflake_key.p8 -pubout -out /tmp/snowflake_key.pub -passin pass:confluent && chown -R $(id -u $USER):$(id -g $USER) /tmp/"
+
+RSA_PUBLIC_KEY=$(grep -v "BEGIN PUBLIC" snowflake_key.pub | grep -v "END PUBLIC"|tr -d '\n')
+RSA_PRIVATE_KEY=$(grep -v "BEGIN ENCRYPTED PRIVATE KEY" snowflake_key.p8 | grep -v "END ENCRYPTED PRIVATE KEY"|tr -d '\n')
+cd -
 
 if [ -z "$CI" ]
 then
@@ -66,10 +75,6 @@ else
     sudo chmod a+rw snowflake_key.p8
     ls -lrt
 fi
-
-RSA_PUBLIC_KEY=$(grep -v "BEGIN PUBLIC" snowflake_key.pub | grep -v "END PUBLIC"|tr -d '\n')
-RSA_PRIVATE_KEY=$(grep -v "BEGIN ENCRYPTED PRIVATE KEY" snowflake_key.p8 | grep -v "END ENCRYPTED PRIVATE KEY"|tr -d '\n')
-
 
 log "Create a Snowflake DB"
 docker run --rm -i -e SNOWSQL_PWD="$SNOWFLAKE_PASSWORD" -e RSA_PUBLIC_KEY="$RSA_PUBLIC_KEY" kurron/snowsql --username $SNOWFLAKE_USERNAME -a $SNOWFLAKE_ACCOUNT_NAME << EOF
@@ -102,7 +107,6 @@ CREATE OR REPLACE WAREHOUSE $PLAYGROUND_WAREHOUSE
   AUTO_RESUME = TRUE
   MIN_CLUSTER_COUNT = 1
   MAX_CLUSTER_COUNT = 1
-  SCALING_POLICY = 'STANDARD'
   INITIALLY_SUSPENDED = TRUE
   COMMENT = 'Warehouse for Kafka Playground';
 GRANT USAGE ON WAREHOUSE $PLAYGROUND_WAREHOUSE TO ROLE $PLAYGROUND_CONNECTOR_ROLE;

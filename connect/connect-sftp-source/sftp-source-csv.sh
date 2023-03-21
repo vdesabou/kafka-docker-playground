@@ -30,7 +30,7 @@ curl -X PUT \
                "input.path": "/home/foo/upload/input",
                "error.path": "/home/foo/upload/error",
                "finished.path": "/home/foo/upload/finished",
-               "input.file.pattern": "csv-sftp-source.csv",
+               "input.file.pattern": ".*\\.csv",
                "sftp.username":"foo",
                "sftp.password":"pass",
                "sftp.host":"sftp-server",

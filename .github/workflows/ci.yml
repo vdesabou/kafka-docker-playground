@@ -17,6 +17,7 @@ on:
 
 jobs:
   pre-build:
+    if: ${{ github.event.inputs.test_name == '' }}
     name: Cleanup resources
     runs-on: ubuntu-latest
     steps:
@@ -43,10 +44,11 @@ jobs:
           SNOWFLAKE_ACCOUNT_NAME: ${{ secrets.SNOWFLAKE_ACCOUNT_NAME}}
           SNOWFLAKE_USERNAME: ${{ secrets.SNOWFLAKE_USERNAME}}
           SNOWFLAKE_PASSWORD: ${{ secrets.SNOWFLAKE_PASSWORD}}
-          KEYFILE_CONTENT: ${{ secrets.KEYFILE_CONTENT}}
+          GCP_KEYFILE_CONTENT: ${{ secrets.GCP_KEYFILE_CONTENT}}
+          GCP_PROJECT: ${{ secrets.GCP_PROJECT}}
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID}}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY}}
-          AWS_REGION: 'eu-west-3'
+          AWS_REGION: ${{ secrets.AWS_REGION}}
 
   build:
     if: ${{ github.event.inputs.test_name == '' }}
@@ -56,7 +58,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        tag: ["5.4.9","5.5.11","6.0.9","6.1.7","6.2.6","7.0.5","7.1.3","7.2.1"]
+        tag: ["6.0.11","6.1.9","6.2.8","7.0.7","7.1.5","7.2.3","7.3.2"]
         test_list : [
                       "🚀 connect/connect-servicenow-sink connect/connect-servicenow-source connect/connect-datagen-source",
                       "🚀 connect/connect-salesforce-bulkapi-sink connect/connect-salesforce-bulkapi-source connect/connect-salesforce-pushtopics-source connect/connect-salesforce-sobject-sink connect/connect-salesforce-cdc-source connect/connect-salesforce-platform-events-sink connect/connect-salesforce-platform-events-source",
@@ -68,6 +70,7 @@ jobs:
                       "🚀 connect/connect-jdbc-sqlserver-source connect/connect-jdbc-vertica-sink connect/connect-singlestore-sink connect/connect-jdbc-singlestore-source connect/connect-jms-active-mq-sink connect/connect-jms-solace-sink connect/connect-jms-solace-source connect/connect-mongodb-sink connect/connect-mongodb-source connect/connect-mqtt-sink connect/connect-mqtt-source connect/connect-neo4j-sink connect/connect-omnisci-sink connect/connect-tibco-sink connect/connect-tibco-source",
                       "🚀 connect/connect-jdbc-oracle12-source connect/connect-jdbc-oracle12-sink",
                       "🚀 connect/connect-jdbc-oracle19-source connect/connect-jdbc-oracle19-sink connect/connect-jms-oracle19-sink connect/connect-jms-oracle19-source",
+                      "🚀 connect/connect-jdbc-oracle21-source connect/connect-jdbc-oracle21-sink connect/connect-jms-oracle21-sink connect/connect-jms-oracle21-source",
                       "🚀 connect/connect-rabbitmq-source connect/connect-redis-sink connect/connect-replicator connect/connect-sftp-source connect/connect-solace-sink connect/connect-solace-source",
                       "🚀 connect/connect-aws-cloudwatch-logs-source connect/connect-aws-cloudwatch-metrics-sink connect/connect-aws-dynamodb-sink connect/connect-aws-kinesis-source connect/connect-aws-lambda-sink connect/connect-aws-redshift-sink connect/connect-jdbc-aws-redshift-source connect/connect-sftp-sink",
                       "🚀 connect/connect-gcp-bigquery-sink connect/connect-gcp-cloud-functions-sink connect/connect-vertica-sink connect/connect-prometheus-sink connect/connect-aws-sqs-source connect/connect-aws-s3-sink connect/connect-aws-s3-source connect/connect-databricks-delta-lake-sink",
@@ -79,12 +82,14 @@ jobs:
                       "🚀 multi-data-center/replicator-executable",
                       "🚀 multi-data-center/mirrormaker2 ksqldb/materialized-view connect/connect-pagerduty-sink connect/connect-zendesk-source connect/connect-datadog-metrics-sink connect/connect-gcp-spanner-sink connect/connect-gcp-firebase-source connect/connect-gcp-firebase-sink",
                       "🚀 other/filebeat-to-kafka other/rest-proxy-security-plugin other/tiered-storage-with-aws other/write-logs-to-files other/audit-logs other/multiple-event-types-in-topic other/broker-schema-validation other/schema-registry-security-plugin multi-data-center/cluster-linking other/secrets-management other/connect-secret-registry other/ldap-authorizer-with-ldap-failover other/schema-format-protobuf other/schema-format-json-schema other/schema-format-avro other/http-proxy-schema-registry other/client-dotnet other/client-kafkajs",
-                      "🚀 ccloud/replicator ccloud/connect-debezium-mongodb-source ccloud/connect-debezium-mysql-source ccloud/connect-aws-kinesis-source ccloud/connect-servicenow-sink ccloud/connect-servicenow-source ccloud/connect-mqtt-source ccloud/connect-gcp-firebase-sink ccloud/kafka-admin ccloud/rest-proxy-security-plugin ccloud/schema-registry-security-plugin ccloud/audit-log-connector ccloud/client-dotnet ccloud/client-go ccloud/client-kafkajs ccloud/client-python ccloud/mirrormaker2",
+                      "🚀 ccloud/replicator ccloud/connect-debezium-mongodb-source ccloud/connect-debezium-mysql-source ccloud/connect-aws-kinesis-source ccloud/connect-servicenow-sink ccloud/connect-servicenow-source ccloud/connect-mqtt-source ccloud/connect-gcp-firebase-sink ccloud/rest-proxy-security-plugin ccloud/schema-registry-security-plugin ccloud/audit-log-connector ccloud/client-dotnet ccloud/client-go ccloud/client-kafkajs ccloud/client-python",
                       "🚀 connect/connect-cdc-oracle12-source",
                       "🚀 connect/connect-cdc-oracle19-source",
+                      "🚀 connect/connect-cdc-oracle18-source",
+                      "🚀 connect/connect-cdc-oracle21-source",
                       "🚀 other/cp-ansible-playground",
                       "🚀 connect/connect-weblogic-source connect/connect-jms-weblogic-sink connect/connect-jms-weblogic-source",
-                      "🚀 connect/connect-azure-cosmosdb-source connect/connect-azure-cosmosdb-sink connect/connect-jdbc-cockroachdb-source connect/connect-jdbc-ibmdb2-source connect/connect-jdbc-ibmdb2-sink",
+                      "🚀 connect/connect-azure-cosmosdb-source connect/connect-azure-cosmosdb-sink connect/connect-jdbc-cockroachdb-source connect/connect-jdbc-ibmdb2-source connect/connect-jdbc-ibmdb2-sink connect/connect-jdbc-sybase-source connect/connect-jdbc-sybase-sink",
                       "🚀 environment/plaintext environment/2way-ssl environment/kerberos environment/ldap-authorizer-sasl-plain environment/ldap-sasl-plain environment/mdc-kerberos environment/mdc-plaintext environment/mdc-sasl-plain environment/rbac-sasl-plain environment/sasl-plain environment/sasl-scram environment/sasl-ssl environment/ssl_kerberos environment/kraft-plaintext connect/connect-snowflake-sink connect/connect-jdbc-snowflake-source connect/connect-jdbc-snowflake-sink connect/connect-filestream-source connect/connect-filestream-sink connect/connect-filepulse-source",
                       "🚀 connect/connect-mapr-sink",
                       "🚀 other/syslog-logstash-ksqldb",
@@ -120,9 +125,10 @@ jobs:
           mv aws_credentials_aws_account_with_assume_role $HOME/.aws/credentials_aws_account_with_assume_role
           chmod -R a+rw $HOME/.aws
           mkdir -p $HOME/.confluent
-          echo "$DOCKER_PASSWORD" | docker login -u vdesabou --password-stdin
+          echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
         env:
           SECRETS_ENCRYPTION_PASSWORD: ${{ secrets.SECRETS_ENCRYPTION_PASSWORD }}
+          DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME}}
           DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD}}
 
       - name: Build and Test
@@ -132,7 +138,7 @@ jobs:
           DISABLE_CONTROL_CENTER: "yes"
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID}}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY}}
-          AWS_REGION: 'eu-west-3'
+          AWS_REGION: ${{ secrets.AWS_REGION}}
           AWS_ACCOUNT_WITH_ASSUME_ROLE_AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCOUNT_WITH_ASSUME_ROLE_AWS_ACCESS_KEY_ID}}
           AWS_ACCOUNT_WITH_ASSUME_ROLE_AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_ACCOUNT_WITH_ASSUME_ROLE_AWS_SECRET_ACCESS_KEY}}
           AWS_STS_ROLE_ARN: ${{ secrets.AWS_STS_ROLE_ARN}}
@@ -159,8 +165,11 @@ jobs:
           SALESFORCE_SECURITY_TOKEN_ACCOUNT2: ${{ secrets.SALESFORCE_SECURITY_TOKEN_ACCOUNT2}}
           SALESFORCE_CONSUMER_KEY_ACCOUNT2: ${{ secrets.SALESFORCE_CONSUMER_KEY_ACCOUNT2}}
           SALESFORCE_CONSUMER_PASSWORD_ACCOUNT2: ${{ secrets.SALESFORCE_CONSUMER_PASSWORD_ACCOUNT2}}
+          SALESFORCE_CONSUMER_KEY_WITH_JWT: ${{ secrets.SALESFORCE_CONSUMER_KEY_WITH_JWT}}
+          SALESFORCE_CONSUMER_PASSWORD_WITH_JWT: ${{ secrets.SALESFORCE_CONSUMER_PASSWORD_WITH_JWT}}
           DD_API_KEY: ${{ secrets.DD_API_KEY}}
           DD_APP_KEY: ${{ secrets.DD_APP_KEY}}
+          DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME}}
           DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD}}
           FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN}}
           JIRA_URL: ${{ secrets.JIRA_URL}}
@@ -199,17 +208,17 @@ jobs:
           DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN}}
           ORACLE_CONTAINER_REGISTRY_USERNAME: ${{ secrets.ORACLE_CONTAINER_REGISTRY_USERNAME}}
           ORACLE_CONTAINER_REGISTRY_PASSWORD: ${{ secrets.ORACLE_CONTAINER_REGISTRY_PASSWORD}}
-          KEYFILE_CONTENT: ${{ secrets.KEYFILE_CONTENT}}
+          GCP_KEYFILE_CONTENT: ${{ secrets.GCP_KEYFILE_CONTENT}}
+          GCP_PROJECT: ${{ secrets.GCP_PROJECT}}
 
   execute_one_test:
     if: ${{ github.event.inputs.test_name != '' }}
     runs-on: ubuntu-latest
-    needs: pre-build
     name: ${{ matrix.tag }} ${{ matrix.test_list }}
     strategy:
       fail-fast: false
       matrix:
-        tag: ["5.4.9","5.5.11","6.0.9","6.1.7","6.2.6","7.0.5","7.1.3","7.2.1"]
+        tag: ["6.0.11","6.1.9","6.2.8","7.0.7","7.1.5","7.2.3","7.3.2"]
         test_list : [
                       "🚀 ${{ github.event.inputs.test_name }}"
                     ]
@@ -242,9 +251,10 @@ jobs:
           mv aws_credentials_aws_account_with_assume_role $HOME/.aws/credentials_aws_account_with_assume_role
           chmod -R a+rw $HOME/.aws
           mkdir -p $HOME/.confluent
-          echo "$DOCKER_PASSWORD" | docker login -u vdesabou --password-stdin
+          echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
         env:
           SECRETS_ENCRYPTION_PASSWORD: ${{ secrets.SECRETS_ENCRYPTION_PASSWORD }}
+          DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME}}
           DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD}}
 
       - name: Build and Test
@@ -254,7 +264,7 @@ jobs:
           DISABLE_CONTROL_CENTER: "yes"
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID}}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY}}
-          AWS_REGION: 'eu-west-3'
+          AWS_REGION: ${{ secrets.AWS_REGION}}
           AWS_ACCOUNT_WITH_ASSUME_ROLE_AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCOUNT_WITH_ASSUME_ROLE_AWS_ACCESS_KEY_ID}}
           AWS_ACCOUNT_WITH_ASSUME_ROLE_AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_ACCOUNT_WITH_ASSUME_ROLE_AWS_SECRET_ACCESS_KEY}}
           AWS_STS_ROLE_ARN: ${{ secrets.AWS_STS_ROLE_ARN}}
@@ -281,8 +291,11 @@ jobs:
           SALESFORCE_SECURITY_TOKEN_ACCOUNT2: ${{ secrets.SALESFORCE_SECURITY_TOKEN_ACCOUNT2}}
           SALESFORCE_CONSUMER_KEY_ACCOUNT2: ${{ secrets.SALESFORCE_CONSUMER_KEY_ACCOUNT2}}
           SALESFORCE_CONSUMER_PASSWORD_ACCOUNT2: ${{ secrets.SALESFORCE_CONSUMER_PASSWORD_ACCOUNT2}}
+          SALESFORCE_CONSUMER_KEY_WITH_JWT: ${{ secrets.SALESFORCE_CONSUMER_KEY_WITH_JWT}}
+          SALESFORCE_CONSUMER_PASSWORD_WITH_JWT: ${{ secrets.SALESFORCE_CONSUMER_PASSWORD_WITH_JWT}}
           DD_API_KEY: ${{ secrets.DD_API_KEY}}
           DD_APP_KEY: ${{ secrets.DD_APP_KEY}}
+          DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME}}
           DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD}}
           FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN}}
           JIRA_URL: ${{ secrets.JIRA_URL}}
@@ -321,7 +334,8 @@ jobs:
           DATABRICKS_TOKEN: ${{ secrets.DATABRICKS_TOKEN}}
           ORACLE_CONTAINER_REGISTRY_USERNAME: ${{ secrets.ORACLE_CONTAINER_REGISTRY_USERNAME}}
           ORACLE_CONTAINER_REGISTRY_PASSWORD: ${{ secrets.ORACLE_CONTAINER_REGISTRY_PASSWORD}}
-          KEYFILE_CONTENT: ${{ secrets.KEYFILE_CONTENT}}
+          GCP_KEYFILE_CONTENT: ${{ secrets.GCP_KEYFILE_CONTENT}}
+          GCP_PROJECT: ${{ secrets.GCP_PROJECT}}
 
   post-build:
     name: Cleanup resources and Update README
@@ -335,7 +349,8 @@ jobs:
           repository: vdesabou/kafka-docker-playground
           fetch-depth: 0
           submodules: recursive
-          token: ${{ secrets.CI_GITHUB_TOKEN }}
+          ssh-key: ${{ secrets.GH_SSH_KEY_FILE }}
+          ssh-strict: 'false'
 
       - name: Decrypt secrets.tar
         run: |
@@ -345,9 +360,10 @@ jobs:
           mkdir -p $HOME/.aws
           chmod -R a+rw $HOME/.aws
           mkdir -p $HOME/.confluent
-          echo "$DOCKER_PASSWORD" | docker login -u vdesabou --password-stdin
+          echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
         env:
           SECRETS_ENCRYPTION_PASSWORD: ${{ secrets.SECRETS_ENCRYPTION_PASSWORD }}
+          DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME}}
           DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD}}
 
       - name: Cleanup resources
@@ -367,19 +383,20 @@ jobs:
           SNOWFLAKE_ACCOUNT_NAME: ${{ secrets.SNOWFLAKE_ACCOUNT_NAME}}
           SNOWFLAKE_USERNAME: ${{ secrets.SNOWFLAKE_USERNAME}}
           SNOWFLAKE_PASSWORD: ${{ secrets.SNOWFLAKE_PASSWORD}}
-          KEYFILE_CONTENT: ${{ secrets.KEYFILE_CONTENT}}
+          GCP_KEYFILE_CONTENT: ${{ secrets.GCP_KEYFILE_CONTENT}}
+          GCP_PROJECT: ${{ secrets.GCP_PROJECT}}
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID}}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY}}
-          AWS_REGION: 'eu-west-3'
+          AWS_REGION: ${{ secrets.AWS_REGION}}
 
       - name: Update README
         run: |
-          ./scripts/update-readme.sh "5.4.9 5.5.11 6.0.9 6.1.7 6.2.6 7.0.5 7.1.3 7.2.1"
+          ./scripts/update-readme.sh "6.0.11 6.1.9 6.2.8 7.0.7 7.1.5 7.2.3 7.3.2"
         env:
           GH_TOKEN: ${{ secrets.CI_GITHUB_TOKEN }}
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID}}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY}}
-          AWS_REGION: 'eu-west-3'
+          AWS_REGION: ${{ secrets.AWS_REGION}}
 
       - name: Pushes content.md
         uses: dmnemec/copy_file_to_another_repo_action@main

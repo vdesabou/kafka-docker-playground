@@ -29,7 +29,7 @@ Note down the project id, the region (example `us-central1`), and the function n
 Simply run:
 
 ```bash
-$ ./google-cloud-functions.sh <PROJECT> <REGION> <FUNCTION>
+$ ./google-cloud-functions.sh <GCP_PROJECT> <REGION> <FUNCTION>
 ```
 
 ## Details of what the script is doing
@@ -58,7 +58,7 @@ $ curl -X PUT \
                     "confluent.topic.bootstrap.servers": "broker:9092",
                     "confluent.topic.replication.factor":1,
                     "function.name": "'"$FUNCTION"'",
-                    "project.id": "'"$PROJECT"'",
+                    "project.id": "'"$GCP_PROJECT"'",
                     "region": "'"$REGION"'",
                     "reporter.bootstrap.servers": "broker:9092",
                     "reporter.error.topic.name": "test-error",

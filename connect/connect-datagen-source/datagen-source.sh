@@ -6,9 +6,9 @@ source ${DIR}/../../scripts/utils.sh
 
 NOW="$(date +%s)000"
 sed -e "s|:NOW:|$NOW|g" \
-    ${DIR}/../../connect/connect-datagen-source/schemas/orders-template.avro > ${DIR}/../../connect/connect-datagen-source/schemas/orders.avro
+    ../../connect/connect-datagen-source/schemas/orders-template.avro > ../../connect/connect-datagen-source/schemas/orders.avro
 sed -e "s|:NOW:|$NOW|g" \
-    ${DIR}/../../connect/connect-datagen-source/schemas/shipments-template.avro > ${DIR}/../../connect/connect-datagen-source/schemas/shipments.avro
+    ../../connect/connect-datagen-source/schemas/shipments-template.avro > ../../connect/connect-datagen-source/schemas/shipments.avro
 
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
 
@@ -28,7 +28,7 @@ curl -s -X PUT \
                 "schema.filename" : "/tmp/schemas/orders.avro",
                 "schema.keyfield" : "orderid"
             }' \
-      http://localhost:8083/connectors/datagen-orders/config | jq
+      http://localhost:8083/connectors/datagen-orders/config | jq .
 
 wait_for_datagen_connector_to_inject_data "orders" "10"
 
@@ -46,7 +46,7 @@ curl -s -X PUT \
                 "tasks.max": "10",
                 "schema.filename" : "/tmp/schemas/shipments.avro"
             }' \
-      http://localhost:8083/connectors/datagen-shipments/config | jq
+      http://localhost:8083/connectors/datagen-shipments/config | jq .
 
 wait_for_datagen_connector_to_inject_data "shipments" "10"
 
@@ -65,7 +65,7 @@ curl -s -X PUT \
                 "schema.filename" : "/tmp/schemas/products.avro",
                 "schema.keyfield" : "productid"
             }' \
-      http://localhost:8083/connectors/datagen-products/config | jq
+      http://localhost:8083/connectors/datagen-products/config | jq .
 
 wait_for_datagen_connector_to_inject_data "products" "10"
 
@@ -84,7 +84,7 @@ curl -s -X PUT \
                 "schema.filename" : "/tmp/schemas/customers.avro",
                 "schema.keyfield" : "customerid"
             }' \
-      http://localhost:8083/connectors/datagen-customers/config | jq
+      http://localhost:8083/connectors/datagen-customers/config | jq .
 
 wait_for_datagen_connector_to_inject_data "customers" "10"
 

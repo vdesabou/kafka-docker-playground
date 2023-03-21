@@ -31,7 +31,7 @@ curl -X PUT \
                "input.path": "/home/foo/upload/input",
                "error.path": "/home/foo/upload/error",
                "finished.path": "/home/foo/upload/finished",
-               "input.file.pattern": "json-sftp-source.json",
+               "input.file.pattern": ".*\\.json",
                "sftp.username":"foo",
                "sftp.password":"pass",
                "sftp.host":"sftp-server",

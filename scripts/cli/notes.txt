@@ -1,0 +1,17 @@
+cd /home/vsaboulin/kafka-docker-playground/scripts/cli
+bashly generate
+rm /home/vsaboulin/kafka-docker-playground/scripts/cli/completions.bash
+bashly add completions_script
+source /home/vsaboulin/kafka-docker-playground/scripts/cli/completions.bash
+cd -
+
+# mac
+cd /Users/vsaboulin/Documents/github/kafka-docker-playground/scripts/cli
+bashly generate
+rm /Users/vsaboulin/Documents/github/kafka-docker-playground/scripts/cli/completions.bash
+bashly add completions_script
+source /Users/vsaboulin/Documents/github/kafka-docker-playground/scripts/cli/completions.bash
+cd -
+
+
+# brew gem install bashly

@@ -4,7 +4,27 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
-create_or_get_oracle_image "linuxx64_12201_database.zip" "$(pwd)/ora-setup-scripts"
+create_or_get_oracle_image "linuxx64_12201_database.zip" "../../connect/connect-jdbc-oracle12-source/ora-setup-scripts"
+
+if [ ! -z "$ORACLE_DATAGEN" ]
+then
+     log "🌪️ ORACLE_DATAGEN is set"
+     for component in oracle-datagen
+     do
+     set +e
+     log "🏗 Building jar for ${component}"
+     docker run -i --rm -e KAFKA_CLIENT_TAG=$KAFKA_CLIENT_TAG -e TAG=$TAG_BASE -v "${DIR}/${component}":/usr/src/mymaven -v "$HOME/.m2":/root/.m2 -v "${DIR}/${component}/target:/usr/src/mymaven/target" -w /usr/src/mymaven maven:3.6.1-jdk-11 mvn -Dkafka.tag=$TAG -Dkafka.client.tag=$KAFKA_CLIENT_TAG package > /tmp/result.log 2>&1
+     if [ $? != 0 ]
+     then
+          logerror "ERROR: failed to build java component "
+          tail -500 /tmp/result.log
+          exit 1
+     fi
+     set -e
+     done
+else
+     log "🌪️ ORACLE_DATAGEN is not set"
+fi
 
 if [ ! -z "$CONNECTOR_TAG" ]
 then
@@ -31,12 +51,12 @@ MAX_WAIT=900
 CUR_WAIT=0
 log "⌛ Waiting up to $MAX_WAIT seconds for Oracle DB to start"
 docker container logs oracle > /tmp/out.txt 2>&1
-while [[ ! $(cat /tmp/out.txt) =~ "Completed: ALTER DATABASE OPEN" ]]; do
+while [[ ! $(cat /tmp/out.txt) =~ "DATABASE IS READY TO USE" ]]; do
 sleep 10
 docker container logs oracle > /tmp/out.txt 2>&1
 CUR_WAIT=$(( CUR_WAIT+10 ))
 if [[ "$CUR_WAIT" -gt "$MAX_WAIT" ]]; then
-     logerror "ERROR: The logs in oracle container do not show 'DONE: Executing user defined scripts' after $MAX_WAIT seconds. Please troubleshoot with 'docker container ps' and 'docker container logs'.\n"
+     logerror "ERROR: The logs in oracle container do not show 'DATABASE IS READY TO USE' after $MAX_WAIT seconds. Please troubleshoot with 'docker container ps' and 'docker container logs'.\n"
      exit 1
 fi
 done
@@ -116,4 +136,11 @@ sleep 5
 log "Verifying topic oracle-CUSTOMERS"
 timeout 60 docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic oracle-CUSTOMERS --from-beginning --max-messages 2
 
+
+if [ ! -z "$ORACLE_DATAGEN" ]
+then
+     DURATION=10
+     log "Injecting data for $DURATION minutes"
+     docker exec -d oracle-datagen bash -c "java ${JAVA_OPTS} -jar oracle-datagen-1.0-SNAPSHOT-jar-with-dependencies.jar --host oracle --username C##MYUSER --password mypassword --sidOrServerName sid --sidOrServerNameVal ORCLCDB --maxPoolSize 10 --durationTimeMin $DURATION"
+fi
 

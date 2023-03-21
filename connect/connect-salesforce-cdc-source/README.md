@@ -38,7 +38,7 @@ Example:
 ![Create a connected app](Screenshot3.png)
 
 * Save the new app and press Continue at the prompt.
-* Look for the Consumer Key and Consumer Secret in the displayed form. Save these so you can put them in the configuration properties file for the Salesforce connect worker.
+* Look for the Consumer Key and Consumer Secret in the displayed form. Save these so you can put them in the configuration for the Salesforce connect or
 
 ### Find your Security token
 
@@ -60,6 +60,12 @@ Simply run:
 $ ./salesforce-cdc-source.sh <SALESFORCE_USERNAME> <SALESFORCE_PASSWORD> <SALESFORCE_CONSUMER_KEY> <SALESFORCE_CONSUMER_PASSWORD> <SALESFORCE_SECURITY_TOKEN>
 ```
 
+or with JWT flow:
+
+```
+$ ./salesforce-cdc-source-jwt-flow.sh <SALESFORCE_USERNAME> <SALESFORCE_PASSWORD> <SALESFORCE_CONSUMER_KEY_WITH_JWT> <SALESFORCE_CONSUMER_PASSWORD_WITH_JWT> <SALESFORCE_SECURITY_TOKEN>
+```
+
 Note: you can also export these values as environment variable
 
 
@@ -74,7 +80,7 @@ $ docker exec sfdx-cli sh -c "sfdx sfpowerkit:auth:login -u \"$SALESFORCE_USERNA
 Add a Contact to Salesforce
 
 ```bash
-$ docker exec sfdx-cli sh -c "sfdx force:data:record:create  -u \"$SALESFORCE_USERNAME\" -s Lead -v \"FirstName='John_$RANDOM' LastName='Doe_$RANDOM'\""
+$ docker exec sfdx-cli sh -c "sfdx data:create:record  --target-org \"$SALESFORCE_USERNAME\" -s Lead -v \"FirstName='John_$RANDOM' LastName='Doe_$RANDOM'\""
 ```
 
 Creating Salesforce CDC Source connector
@@ -96,7 +102,7 @@ $ curl -X PUT \
                     "salesforce.password.token" : "'"$SALESFORCE_SECURITY_TOKEN"'",
                     "salesforce.consumer.key" : "'"$SALESFORCE_CONSUMER_KEY"'",
                     "salesforce.consumer.secret" : "'"$SALESFORCE_CONSUMER_PASSWORD"'",
-                    "salesforce.initial.start" : "all",
+                    "salesforce.initial.start" : "latest",
                     "key.converter": "org.apache.kafka.connect.json.JsonConverter",
                     "value.converter": "org.apache.kafka.connect.json.JsonConverter",
                     "confluent.license": "",
@@ -645,4 +651,73 @@ Results:
     }
 }
 ```
+
+## OAuth with JWT Bearer Flow
+
+### Generate a private Key and a Certificate
+
+The private key is used by the external app to sign the JWT and the digital certificate is used by Salesforce to validate the signature and issue an access token.
+
+Install OpenSSL and generate a private key and a digital certificate using the command line terminal.
+
+For example:
+
+```bash
+keytool -genkey -noprompt -alias salesforce-confluent -dname "CN=ca1.test.confluent.io/OU=TEST/O=CONFLUENT/L=PaloAlto/ST=Ca/C=US" -keystore salesforce-confluent.keystore.jks -keyalg RSA -storepass confluent -keypass confluent -deststoretype pkcs12
+keytool -keystore salesforce-confluent.keystore.jks -alias salesforce-confluent -export -file salesforce-confluent.crt -storepass confluent -keypass confluent -trustcacerts -noprompt
+```
+
+### Create a new Connected App
+
+Steps are:
+
+* Select the gear icon in the upper right hand corner and choose Setup.
+
+* Enter App in the Quick Find search box, and choose *App Manager* in the filtered results.
+
+* Click the *New Connected App* button in the upper right corner of the Setup panel.
+
+![Create a connected app](Screenshot2.png)
+
+* Supply a Connected App Name, API Name, and Contact Email.
+
+* Select *Enable OAuth Settings* checkbox and select the *Enable for Device Flow* checkbox. These selections enable the connector to use the Salesforce API.
+* Enable OAuth Settings
+* Set the callback URL to `sfdc://oauth/jwt/success`
+* Enable `Use digital signatures` and upload the digital certificate created in the previous step (`salesforce-confluent.crt` file)
+* Selected OAuth Scopes : `Manage user data via APIs (api)` + `Perform requests at any time (refresh_token, offline_access)`
+
+Example:
+
+![Create a connected app](jwt-bearer-authentication1.jpg)
+
+* Save the connected app, it takes between 2 and 10 minutes to be activated.
+* Look for the Consumer Key `SALESFORCE_CONSUMER_KEY_WITH_JWT` and Consumer Secret `SALESFORCE_CONSUMER_PASSWORD_WITH_JWT`in the displayed form. Save these so you can put them in the configuration for the Salesforce connector.
+
+### Pre-Approve the connected app with the User-Agent OAuth Flow
+
+One way to pre-approve the connected is by using another simple OAuth Flow. We will use the User-Agent OAuth Flow in this example.
+
+
+
+With your environment variables correctly set, do:
+
+```bash
+echo "$SALESFORCE_INSTANCE/services/oauth2/authorize?response_type=token&client_id=$SALESFORCE_CONSUMER_KEY_WITH_JWT&redirect_uri=sfdc://oauth/jwt/success"
+```
+
+Copy and paste this link in the browser
+
+Login to Salesforce and authorize the connected app.
+
+![Approve connected app](jwt-bearer-authentication2.jpg)
+
+### Relax IP restrictions
+
+Go to `Manage Connected Apps` and Relax IP restrictions:
+
+![Relax IP restrictions](jwt-bearer-authentication3.jpg)
+
+
+
 N.B: Control Center is reachable at [http://127.0.0.1:9021](http://127.0.0.1:9021])

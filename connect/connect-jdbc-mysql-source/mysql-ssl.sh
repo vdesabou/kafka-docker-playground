@@ -4,12 +4,13 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
-if [ ! -f ${DIR}/mysql-connector-java-5.1.45.jar ]
+cd ../../connect/connect-jdbc-mysql-source
+if [ ! -f ${PWD}/mysql-connector-java-5.1.45.jar ]
 then
      log "Downloading mysql-connector-java-5.1.45.jar"
      wget https://repo1.maven.org/maven2/mysql/mysql-connector-java/5.1.45/mysql-connector-java-5.1.45.jar
 fi
-
+cd -
 # required to make utils.sh script being able to work, do not remove:
 # ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
 
@@ -50,28 +51,47 @@ docker-compose -f ../../environment/plaintext/docker-compose.yml -f "${PWD}/dock
 ../../scripts/wait-for-connect-and-controlcenter.sh
 
 
-log "Describing the application table in DB 'db':"
-docker exec mysql bash -c "mysql --user=userssl --password=password --ssl-mode=VERIFY_CA --ssl-ca=/var/lib/mysql/ca.pem --ssl-cert=/var/lib/mysql/client-cert.pem --ssl-key=/var/lib/mysql/client-key.pem --database=db -e 'describe application'"
+log "Create table"
+docker exec -i mysql mysql --user=root --password=password --user=userssl --password=password --ssl-mode=VERIFY_CA --ssl-ca=/var/lib/mysql/ca.pem --ssl-cert=/var/lib/mysql/client-cert.pem --ssl-key=/var/lib/mysql/client-key.pem --database=mydb << EOF
+USE mydb;
 
-log "Show content of application table:"
-docker exec mysql bash -c "mysql --user=userssl --password=password --ssl-mode=VERIFY_CA --ssl-ca=/var/lib/mysql/ca.pem --ssl-cert=/var/lib/mysql/client-cert.pem --ssl-key=/var/lib/mysql/client-key.pem --database=db -e 'select * from application'"
+CREATE TABLE team (
+  id            INT          NOT NULL PRIMARY KEY AUTO_INCREMENT,
+  name          VARCHAR(255) NOT NULL,
+  email         VARCHAR(255) NOT NULL,
+  last_modified DATETIME     NOT NULL
+);
+
+
+INSERT INTO team (
+  name,
+  email,
+  last_modified
+) VALUES (
+  'kafka',
+  'kafka@apache.org',
+  NOW()
+);
+
+ALTER TABLE team AUTO_INCREMENT = 101;
+describe team;
+select * from team;
+EOF
 
 log "Adding an element to the table"
-docker exec mysql mysql --user=userssl --password=password --ssl-mode=VERIFY_CA --ssl-ca=/var/lib/mysql/ca.pem --ssl-cert=/var/lib/mysql/client-cert.pem --ssl-key=/var/lib/mysql/client-key.pem --database=db -e "
-INSERT INTO application (   \
-  id,   \
-  name, \
-  team_email,   \
-  last_modified \
-) VALUES (  \
-  2,    \
-  'another',  \
-  'another@apache.org',   \
-  NOW() \
-); "
+docker exec -i mysql mysql --user=root --password=password --user=userssl --password=password --ssl-mode=VERIFY_CA --ssl-ca=/var/lib/mysql/ca.pem --ssl-cert=/var/lib/mysql/client-cert.pem --ssl-key=/var/lib/mysql/client-key.pem --database=mydb << EOF
+USE mydb;
 
-log "Show content of application table:"
-docker exec mysql bash -c "mysql --user=userssl --password=password --ssl-mode=VERIFY_CA --ssl-ca=/var/lib/mysql/ca.pem --ssl-cert=/var/lib/mysql/client-cert.pem --ssl-key=/var/lib/mysql/client-key.pem --database=db -e 'select * from application'"
+INSERT INTO team (
+  name,
+  email,
+  last_modified
+) VALUES (
+  'another',
+  'another@apache.org',
+  NOW()
+);
+EOF
 
 log "Creating MySQL source connector"
 curl -X PUT \
@@ -79,8 +99,8 @@ curl -X PUT \
      --data '{
                "connector.class":"io.confluent.connect.jdbc.JdbcSourceConnector",
                "tasks.max":"10",
-               "connection.url": "jdbc:mysql://mysql:3306/db?user=userssl&password=password&verifyServerCertificate=true&useSSL=true&requireSSL=true&enabledTLSProtocols=TLSv1,TLSv1.1,TLSv1.2,TLSv1.3",
-               "table.whitelist":"application",
+               "connection.url": "jdbc:mysql://mysql:3306/mydb?user=userssl&password=password&verifyServerCertificate=true&useSSL=true&requireSSL=true&enabledTLSProtocols=TLSv1,TLSv1.1,TLSv1.2,TLSv1.3",
+               "table.whitelist":"team",
                "mode":"timestamp+incrementing",
                "timestamp.column.name":"last_modified",
                "incrementing.column.name":"id",
@@ -90,7 +110,7 @@ curl -X PUT \
 
 sleep 5
 
-log "Verifying topic mysql-application"
-timeout 60 docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic mysql-application --from-beginning --max-messages 2
+log "Verifying topic mysql-team"
+timeout 60 docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic mysql-team --from-beginning --max-messages 2
 
 

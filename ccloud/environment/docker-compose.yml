@@ -13,6 +13,8 @@ services:
     environment:
       CONNECT_BOOTSTRAP_SERVERS: $BOOTSTRAP_SERVERS
       CONNECT_GROUP_ID: "connect-${TAG}"
+      CONNECT_PRODUCER_CLIENT_ID: "connect-worker-producer"
+      CONNECT_CLIENT_ID: "connect-adminclient-producer"
       CONNECT_CONFIG_STORAGE_TOPIC: connect-configs-${TAG}
       CONNECT_OFFSET_STORAGE_TOPIC: connect-offsets-${TAG}
       CONNECT_STATUS_STORAGE_TOPIC: connect-status-${TAG}
@@ -73,7 +75,7 @@ services:
     depends_on:
       - connect
     ports:
-      - "9021:9021"
+      - "${C3_PORT:-9021}:9021"
     profiles:
     - control-center
     environment:
@@ -115,7 +117,29 @@ services:
       # CONTROL_CENTER_MAIL_BOUNCE_ADDRESS: "toto@gmail.com"
       # starting from 7.0
       CONTROL_CENTER_MODE_ENABLE: management
-      
+
+  # https://github.com/conduktor/conduktor-platform/blob/main/doc/Configuration.md
+  conduktor:
+    image: conduktor/conduktor-platform:latest
+    hostname: conduktor
+    container_name: conduktor
+    depends_on:
+      - connect
+    ports:
+      - 8080:80
+    volumes:
+      - ../../ccloud/environment/conduktor/platform-config.yaml:/tmp/platform-config.yaml
+    environment:
+      CDK_IN_CONF_FILE: /tmp/platform-config.yaml
+      RUN_MODE: "nano"
+      BOOTSTRAP_SERVERS: $BOOTSTRAP_SERVERS
+      SASL_JAAS_CONFIG: $SASL_JAAS_CONFIG
+      SCHEMA_REGISTRY_URL: $SCHEMA_REGISTRY_URL
+      SR_USER: $SR_USER
+      SR_PASSWORD: $SR_PASSWORD
+    profiles:
+      - "conduktor"
+
   # 75147
   # schema-registry:
   #   image: confluentinc/cp-schema-registry:${TAG}

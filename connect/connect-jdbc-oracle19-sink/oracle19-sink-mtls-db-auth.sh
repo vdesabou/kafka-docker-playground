@@ -39,12 +39,12 @@ MAX_WAIT=2500
 CUR_WAIT=0
 log "⌛ Waiting up to $MAX_WAIT seconds for Oracle DB to start"
 docker container logs oracle > /tmp/out.txt 2>&1
-while [[ ! $(cat /tmp/out.txt) =~ "Completed: ALTER DATABASE OPEN" ]]; do
+while [[ ! $(cat /tmp/out.txt) =~ "DATABASE IS READY TO USE" ]]; do
 sleep 10
 docker container logs oracle > /tmp/out.txt 2>&1
 CUR_WAIT=$(( CUR_WAIT+10 ))
 if [[ "$CUR_WAIT" -gt "$MAX_WAIT" ]]; then
-     logerror "ERROR: The logs in oracle container do not show 'DONE: Executing user defined scripts' after $MAX_WAIT seconds. Please troubleshoot with 'docker container ps' and 'docker container logs'.\n"
+     logerror "ERROR: The logs in oracle container do not show 'DATABASE IS READY TO USE' after $MAX_WAIT seconds. Please troubleshoot with 'docker container ps' and 'docker container logs'.\n"
      exit 1
 fi
 done
@@ -199,8 +199,7 @@ curl -X PUT \
 
 
 log "Sending messages to topic ORDERS"
-docker exec -i connect kafka-avro-console-producer --broker-list broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic ORDERS --property value.schema='{"type":"record","name":"myrecord","fields":[{"name":"id","type":"int"},{"name":"product", "type": "string"}, {"name":"quantity", "type": "int"}, {"name":"price",
-"type": "float"}]}' << EOF
+docker exec -i connect kafka-avro-console-producer --broker-list broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic ORDERS --property value.schema='{"type":"record","name":"myrecord","fields":[{"name":"id","type":"int"},{"name":"product", "type": "string"}, {"name":"quantity", "type": "int"}, {"name":"price","type": "float"}]}' << EOF
 {"id": 999, "product": "foo", "quantity": 100, "price": 50}
 EOF
 

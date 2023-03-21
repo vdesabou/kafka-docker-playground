@@ -3,15 +3,13 @@ version: '3.5'
 services:
 
   postgres:
-    image: postgres:10
+    image: postgres:15
     hostname: postgres
     container_name: postgres
     environment:
       - POSTGRES_USER=myuser
       - POSTGRES_PASSWORD=mypassword
       - POSTGRES_DB=postgres
-    volumes:
-     - ../../connect/connect-jdbc-postgresql-source/customers.sql:/docker-entrypoint-initdb.d/z99_dump.sql
 
   connect:
     depends_on:

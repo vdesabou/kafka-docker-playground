@@ -46,10 +46,6 @@ aws_config
 3rdparty
 connect/connect-vertica-sink/vertica-stream-writer/
 *.cast
-ccloud/kafka-admin/before.yml
-ccloud/kafka-admin/config.yml
-ccloud/kafka-admin/kafka-admin.properties
-ccloud/kafka-admin/kafka-admin/
 *.tgz
 ccloud/client-dotnet/librdkafka.config
 ccloud/client-go/librdkafka.config
@@ -70,3 +66,7 @@ myenv
 *.log
 secrets.properties
 secrets.tar
+*.hprof
+*.pcap
+github_ssh_key_file
+._github_ssh_key_file

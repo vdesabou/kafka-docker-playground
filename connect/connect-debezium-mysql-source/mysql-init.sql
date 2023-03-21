@@ -1,33 +1,10 @@
-GRANT REPLICATION SLAVE, REPLICATION CLIENT ON *.* TO 'replicator' IDENTIFIED BY 'replpass';
+CREATE USER 'repl'@'localhost' IDENTIFIED BY 'password';
+GRANT REPLICATION SLAVE ON *.* TO 'repl'@'localhost';
 
-GRANT SELECT, RELOAD, SHOW DATABASES, REPLICATION SLAVE, REPLICATION CLIENT  ON *.* TO 'debezium' IDENTIFIED BY 'dbz';
-
+CREATE USER 'debezium'@'%' IDENTIFIED WITH mysql_native_password BY 'dbz';
+GRANT SELECT, RELOAD, SHOW DATABASES, REPLICATION SLAVE, REPLICATION CLIENT ON *.* TO 'debezium'@'%';
+FLUSH PRIVILEGES;
 
 CREATE DATABASE mydb;
 
-GRANT ALL PRIVILEGES ON mydb.* TO 'user'@'%';
-
-USE mydb;
-
-CREATE TABLE team (
-  id            INT          NOT NULL PRIMARY KEY AUTO_INCREMENT,
-  name          VARCHAR(255) NOT NULL,
-  email         VARCHAR(255) NOT NULL,
-  last_modified DATETIME     NOT NULL
-);
-
-
-INSERT INTO team (
-  id,
-  name,
-  email,
-  last_modified
-) VALUES (
-  1,
-  'kafka',
-  'kafka@apache.org',
-  NOW()
-);
-
-ALTER TABLE team AUTO_INCREMENT = 101;
-
+GRANT ALL PRIVILEGES ON mydb.* TO 'debezium'@'%';

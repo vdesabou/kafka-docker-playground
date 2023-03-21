@@ -86,7 +86,7 @@ PUSH_TOPICS_NAME=MyLeadPushTopics${TAG}
 PUSH_TOPICS_NAME=${PUSH_TOPICS_NAME//[-._]/}
 
 sed -e "s|:PUSH_TOPIC_NAME:|$PUSH_TOPICS_NAME|g" \
-    ${DIR}/MyLeadPushTopics-template.apex > ${DIR}/MyLeadPushTopics.apex
+    ../../connect/connect-salesforce-sobject-sink/MyLeadPushTopics-template.apex > ../../connect/connect-salesforce-sobject-sink/MyLeadPushTopics.apex
 
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
 
@@ -97,18 +97,13 @@ docker exec sfdx-cli sh -c "sfdx sfpowerkit:auth:login -u \"$SALESFORCE_USERNAME
 
 log "Delete $PUSH_TOPICS_NAME, if required"
 set +e
-docker exec -i sfdx-cli sh -c "sfdx force:apex:execute  -u \"$SALESFORCE_USERNAME\"" << EOF
+docker exec -i sfdx-cli sh -c "sfdx apex run --target-org \"$SALESFORCE_USERNAME\"" << EOF
 List<PushTopic> pts = [SELECT Id FROM PushTopic WHERE Name = '$PUSH_TOPICS_NAME'];
 Database.delete(pts);
 EOF
 set -e
 log "Create $PUSH_TOPICS_NAME"
-docker exec sfdx-cli sh -c "sfdx force:apex:execute  -u \"$SALESFORCE_USERNAME\" -f \"/tmp/MyLeadPushTopics.apex\""
-
-LEAD_FIRSTNAME=John_$RANDOM
-LEAD_LASTNAME=Doe_$RANDOM
-log "Add a Lead to Salesforce: $LEAD_FIRSTNAME $LEAD_LASTNAME"
-docker exec sfdx-cli sh -c "sfdx force:data:record:create  -u \"$SALESFORCE_USERNAME\" -s Lead -v \"FirstName='$LEAD_FIRSTNAME' LastName='$LEAD_LASTNAME' Company=Confluent\""
+docker exec sfdx-cli sh -c "sfdx apex run --target-org \"$SALESFORCE_USERNAME\" -f \"/tmp/MyLeadPushTopics.apex\""
 
 log "Creating Salesforce PushTopics Source connector"
 curl -X PUT \
@@ -126,7 +121,7 @@ curl -X PUT \
                     "salesforce.password.token" : "'"$SALESFORCE_SECURITY_TOKEN"'",
                     "salesforce.consumer.key" : "'"$SALESFORCE_CONSUMER_KEY"'",
                     "salesforce.consumer.secret" : "'"$SALESFORCE_CONSUMER_PASSWORD"'",
-                    "salesforce.initial.start" : "all",
+                    "salesforce.initial.start" : "latest",
                     "connection.max.message.size": "10048576",
                     "key.converter": "org.apache.kafka.connect.json.JsonConverter",
                     "value.converter": "org.apache.kafka.connect.json.JsonConverter",
@@ -136,13 +131,502 @@ curl -X PUT \
           }' \
      http://localhost:8083/connectors/salesforce-pushtopic-source/config | jq .
 
+sleep 5
 
+LEAD_FIRSTNAME=John_$RANDOM
+LEAD_LASTNAME=Doe_$RANDOM
+log "Add a Lead to Salesforce: $LEAD_FIRSTNAME $LEAD_LASTNAME"
+docker exec sfdx-cli sh -c "sfdx data:create:record  --target-org \"$SALESFORCE_USERNAME\" -s Lead -v \"FirstName='$LEAD_FIRSTNAME' LastName='$LEAD_LASTNAME' Company=Confluent\""
 
-sleep 10
+sleep 30
 
 log "Verify we have received the data in sfdc-pushtopic-leads topic"
-timeout 60 docker exec broker kafka-console-consumer -bootstrap-server broker:9092 --topic sfdc-pushtopic-leads --from-beginning --max-messages 1
+timeout 60 docker exec broker kafka-console-consumer -bootstrap-server broker:9092 --topic sfdc-pushtopic-leads --from-beginning --property print.key=true --property key.separator=, --max-messages 1
 
+# {
+#   "schema": {
+#     "type": "struct",
+#     "fields": [
+#       {
+#         "type": "string",
+#         "optional": false,
+#         "doc": "Unique identifier for the object.",
+#         "field": "Id"
+#       }
+#     ],
+#     "optional": false,
+#     "name": "io.confluent.salesforce.LeadKey"
+#   },
+#   "payload": {
+#     "Id": "00Q7R00001lsWLiUAM"
+#   }
+# }
+
+# {
+#   "schema": {
+#     "type": "struct",
+#     "fields": [
+#       {
+#         "type": "string",
+#         "optional": false,
+#         "doc": "Unique identifier for the object.",
+#         "field": "Id"
+#       },
+#       {
+#         "type": "boolean",
+#         "optional": true,
+#         "field": "IsDeleted"
+#       },
+#       {
+#         "type": "string",
+#         "optional": true,
+#         "field": "MasterRecordId"
+#       },
+#       {
+#         "type": "string",
+#         "optional": true,
+#         "field": "LastName"
+#       },
+#       {
+#         "type": "string",
+#         "optional": true,
+#         "field": "FirstName"
+#       },
+#       {
+#         "type": "string",
+#         "optional": true,
+#         "field": "Salutation"
+#       },
+#       {
+#         "type": "string",
+#         "optional": true,
+#         "field": "Name"
+#       },
+#       {
+#         "type": "string",
+#         "optional": true,
+#         "field": "Title"
+#       },
+#       {
+#         "type": "string",
+#         "optional": true,
+#         "field": "Company"
+#       },
+#       {
+#         "type": "string",
+#         "optional": true,
+#         "field": "Street"
+#       },
+#       {
+#         "type": "string",
+#         "optional": true,
+#         "field": "City"
+#       },
+#       {
+#         "type": "string",
+#         "optional": true,
+#         "field": "State"
+#       },
+#       {
+#         "type": "string",
+#         "optional": true,
+#         "field": "PostalCode"
+#       },
+#       {
+#         "type": "string",
+#         "optional": true,
+#         "field": "Country"
+#       },
+#       {
+#         "type": "double",
+#         "optional": true,
+#         "field": "Latitude"
+#       },
+#       {
+#         "type": "double",
+#         "optional": true,
+#         "field": "Longitude"
+#       },
+#       {
+#         "type": "string",
+#         "optional": true,
+#         "field": "GeocodeAccuracy"
+#       },
+#       {
+#         "type": "struct",
+#         "fields": [
+#           {
+#             "type": "string",
+#             "optional": true,
+#             "field": "GeocodeAccuracy"
+#           },
+#           {
+#             "type": "string",
+#             "optional": true,
+#             "doc": "",
+#             "field": "State"
+#           },
+#           {
+#             "type": "string",
+#             "optional": true,
+#             "field": "Street"
+#           },
+#           {
+#             "type": "string",
+#             "optional": true,
+#             "field": "PostalCode"
+#           },
+#           {
+#             "type": "string",
+#             "optional": true,
+#             "field": "Country"
+#           },
+#           {
+#             "type": "double",
+#             "optional": true,
+#             "field": "Latitude"
+#           },
+#           {
+#             "type": "string",
+#             "optional": true,
+#             "field": "City"
+#           },
+#           {
+#             "type": "double",
+#             "optional": true,
+#             "field": "Longitude"
+#           },
+#           {
+#             "type": "string",
+#             "optional": true,
+#             "field": "CountryCode"
+#           },
+#           {
+#             "type": "string",
+#             "optional": true,
+#             "field": "StateCode"
+#           }
+#         ],
+#         "optional": true,
+#         "name": "io.confluent.salesforce.Address",
+#         "field": "Address"
+#       },
+#       {
+#         "type": "string",
+#         "optional": true,
+#         "field": "Phone"
+#       },
+#       {
+#         "type": "string",
+#         "optional": true,
+#         "field": "MobilePhone"
+#       },
+#       {
+#         "type": "string",
+#         "optional": true,
+#         "field": "Fax"
+#       },
+#       {
+#         "type": "string",
+#         "optional": true,
+#         "field": "Email"
+#       },
+#       {
+#         "type": "string",
+#         "optional": true,
+#         "field": "Website"
+#       },
+#       {
+#         "type": "string",
+#         "optional": true,
+#         "field": "PhotoUrl"
+#       },
+#       {
+#         "type": "string",
+#         "optional": true,
+#         "field": "Description"
+#       },
+#       {
+#         "type": "string",
+#         "optional": true,
+#         "field": "LeadSource"
+#       },
+#       {
+#         "type": "string",
+#         "optional": true,
+#         "field": "Status"
+#       },
+#       {
+#         "type": "string",
+#         "optional": true,
+#         "field": "Industry"
+#       },
+#       {
+#         "type": "string",
+#         "optional": true,
+#         "field": "Rating"
+#       },
+#       {
+#         "type": "string",
+#         "optional": true,
+#         "field": "AnnualRevenue"
+#       },
+#       {
+#         "type": "int32",
+#         "optional": true,
+#         "field": "NumberOfEmployees"
+#       },
+#       {
+#         "type": "string",
+#         "optional": true,
+#         "field": "OwnerId"
+#       },
+#       {
+#         "type": "boolean",
+#         "optional": true,
+#         "field": "IsConverted"
+#       },
+#       {
+#         "type": "int32",
+#         "optional": true,
+#         "name": "org.apache.kafka.connect.data.Date",
+#         "version": 1,
+#         "field": "ConvertedDate"
+#       },
+#       {
+#         "type": "string",
+#         "optional": true,
+#         "field": "ConvertedAccountId"
+#       },
+#       {
+#         "type": "string",
+#         "optional": true,
+#         "field": "ConvertedContactId"
+#       },
+#       {
+#         "type": "string",
+#         "optional": true,
+#         "field": "ConvertedOpportunityId"
+#       },
+#       {
+#         "type": "boolean",
+#         "optional": true,
+#         "field": "IsUnreadByOwner"
+#       },
+#       {
+#         "type": "int64",
+#         "optional": true,
+#         "name": "org.apache.kafka.connect.data.Timestamp",
+#         "version": 1,
+#         "field": "CreatedDate"
+#       },
+#       {
+#         "type": "string",
+#         "optional": true,
+#         "field": "CreatedById"
+#       },
+#       {
+#         "type": "int64",
+#         "optional": true,
+#         "name": "org.apache.kafka.connect.data.Timestamp",
+#         "version": 1,
+#         "field": "LastModifiedDate"
+#       },
+#       {
+#         "type": "string",
+#         "optional": true,
+#         "field": "LastModifiedById"
+#       },
+#       {
+#         "type": "int64",
+#         "optional": true,
+#         "name": "org.apache.kafka.connect.data.Timestamp",
+#         "version": 1,
+#         "field": "SystemModstamp"
+#       },
+#       {
+#         "type": "int32",
+#         "optional": true,
+#         "name": "org.apache.kafka.connect.data.Date",
+#         "version": 1,
+#         "field": "LastActivityDate"
+#       },
+#       {
+#         "type": "int64",
+#         "optional": true,
+#         "name": "org.apache.kafka.connect.data.Timestamp",
+#         "version": 1,
+#         "field": "LastViewedDate"
+#       },
+#       {
+#         "type": "int64",
+#         "optional": true,
+#         "name": "org.apache.kafka.connect.data.Timestamp",
+#         "version": 1,
+#         "field": "LastReferencedDate"
+#       },
+#       {
+#         "type": "string",
+#         "optional": true,
+#         "field": "Jigsaw"
+#       },
+#       {
+#         "type": "string",
+#         "optional": true,
+#         "field": "JigsawContactId"
+#       },
+#       {
+#         "type": "string",
+#         "optional": true,
+#         "field": "CleanStatus"
+#       },
+#       {
+#         "type": "string",
+#         "optional": true,
+#         "field": "CompanyDunsNumber"
+#       },
+#       {
+#         "type": "string",
+#         "optional": true,
+#         "field": "DandbCompanyId"
+#       },
+#       {
+#         "type": "string",
+#         "optional": true,
+#         "field": "EmailBouncedReason"
+#       },
+#       {
+#         "type": "int64",
+#         "optional": true,
+#         "name": "org.apache.kafka.connect.data.Timestamp",
+#         "version": 1,
+#         "field": "EmailBouncedDate"
+#       },
+#       {
+#         "type": "string",
+#         "optional": true,
+#         "field": "IndividualId"
+#       },
+#       {
+#         "type": "string",
+#         "optional": true,
+#         "field": "SICCode__c"
+#       },
+#       {
+#         "type": "string",
+#         "optional": true,
+#         "field": "ProductInterest__c"
+#       },
+#       {
+#         "type": "string",
+#         "optional": true,
+#         "field": "Primary__c"
+#       },
+#       {
+#         "type": "string",
+#         "optional": true,
+#         "field": "CurrentGenerators__c"
+#       },
+#       {
+#         "type": "double",
+#         "optional": true,
+#         "field": "NumberofLocations__c"
+#       },
+#       {
+#         "type": "string",
+#         "optional": true,
+#         "field": "CustomId__c"
+#       },
+#       {
+#         "type": "string",
+#         "optional": true,
+#         "field": "_ObjectType"
+#       },
+#       {
+#         "type": "string",
+#         "optional": true,
+#         "field": "_EventType"
+#       }
+#     ],
+#     "optional": false,
+#     "name": "io.confluent.salesforce.Lead"
+#   },
+#   "payload": {
+#     "Id": "00Q7R00001lsWLiUAM",
+#     "IsDeleted": false,
+#     "MasterRecordId": null,
+#     "LastName": "Doe_28736",
+#     "FirstName": "John_5872",
+#     "Salutation": null,
+#     "Name": "John_5872 Doe_28736",
+#     "Title": null,
+#     "Company": "Confluent",
+#     "Street": null,
+#     "City": null,
+#     "State": null,
+#     "PostalCode": null,
+#     "Country": null,
+#     "Latitude": null,
+#     "Longitude": null,
+#     "GeocodeAccuracy": null,
+#     "Address": {
+#       "GeocodeAccuracy": null,
+#       "State": null,
+#       "Street": null,
+#       "PostalCode": null,
+#       "Country": null,
+#       "Latitude": null,
+#       "City": null,
+#       "Longitude": null,
+#       "CountryCode": null,
+#       "StateCode": null
+#     },
+#     "Phone": null,
+#     "MobilePhone": null,
+#     "Fax": null,
+#     "Email": null,
+#     "Website": null,
+#     "PhotoUrl": null,
+#     "Description": null,
+#     "LeadSource": null,
+#     "Status": "Open - Not Contacted",
+#     "Industry": null,
+#     "Rating": null,
+#     "AnnualRevenue": null,
+#     "NumberOfEmployees": null,
+#     "OwnerId": "0052X00000AJGNCQA5",
+#     "IsConverted": false,
+#     "ConvertedDate": null,
+#     "ConvertedAccountId": null,
+#     "ConvertedContactId": null,
+#     "ConvertedOpportunityId": null,
+#     "IsUnreadByOwner": true,
+#     "CreatedDate": 1670582776000,
+#     "CreatedById": "0052X00000AJGNCQA5",
+#     "LastModifiedDate": 1670582776000,
+#     "LastModifiedById": "0052X00000AJGNCQA5",
+#     "SystemModstamp": 1670582776000,
+#     "LastActivityDate": null,
+#     "LastViewedDate": null,
+#     "LastReferencedDate": null,
+#     "Jigsaw": null,
+#     "JigsawContactId": null,
+#     "CleanStatus": "5",
+#     "CompanyDunsNumber": null,
+#     "DandbCompanyId": null,
+#     "EmailBouncedReason": null,
+#     "EmailBouncedDate": null,
+#     "IndividualId": null,
+#     "SICCode__c": null,
+#     "ProductInterest__c": null,
+#     "Primary__c": null,
+#     "CurrentGenerators__c": null,
+#     "NumberofLocations__c": null,
+#     "CustomId__c": null,
+#     "_ObjectType": "Lead",
+#     "_EventType": "created"
+#   }
+# }
 
 log "Creating Salesforce SObject Sink connector"
 curl -X PUT \

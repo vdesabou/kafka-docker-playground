@@ -42,18 +42,18 @@ curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
                "connector.class": "io.confluent.connect.jms.SolaceSinkConnector",
-                    "tasks.max": "1",
-                    "topics": "sink-messages",
-                    "solace.host": "smf://solace:55555",
-                    "solace.username": "admin",
-                    "solace.password": "admin",
-                    "solace.dynamic.durables": "true",
-                    "jms.destination.type": "queue",
-                    "jms.destination.name": "connector-quickstart",
-                    "key.converter": "org.apache.kafka.connect.storage.StringConverter",
-                    "value.converter": "org.apache.kafka.connect.storage.StringConverter",
-                    "confluent.topic.bootstrap.servers": "broker:9092",
-                    "confluent.topic.replication.factor": "1"
+               "tasks.max": "1",
+               "topics": "sink-messages",
+               "solace.host": "smf://solace:55555",
+               "solace.username": "admin",
+               "solace.password": "admin",
+               "solace.dynamic.durables": "true",
+               "jms.destination.type": "queue",
+               "jms.destination.name": "connector-quickstart",
+               "key.converter": "org.apache.kafka.connect.storage.StringConverter",
+               "value.converter": "org.apache.kafka.connect.storage.StringConverter",
+               "confluent.topic.bootstrap.servers": "broker:9092",
+               "confluent.topic.replication.factor": "1"
           }' \
      http://localhost:8083/connectors/SolaceSinkConnector/config | jq .
 

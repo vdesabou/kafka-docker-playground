@@ -1,0 +1,31 @@
+---
+version: '3.5'
+services:
+
+  mosquitto:
+    image: eclipse-mosquitto:1.6.13
+    hostname: mosquitto
+    container_name: mosquitto
+    ports:
+      - 9001:9001
+      - 1883:1883
+    volumes:
+      - ../../ccloud/fully-managed-connect-mqtt-source/mosquitto.conf:/mosquitto/config/mosquitto.conf
+      - ../../ccloud/fully-managed-connect-mqtt-source/password:/etc/mosquitto/passwd
+
+  # https://github.com/shkoliar/docker-ngrok
+  ngrok:
+    image: shkoliar/ngrok:latest
+    hostname: ngrok
+    container_name: ngrok
+    ports:
+      - 4551:4551
+    links:
+      - mosquitto
+    environment:
+      DOMAIN: mosquitto
+      PORT: 1883
+      PROTOCOL: tcp
+      REGION: eu
+      AUTH_TOKEN: $NGROK_AUTH_TOKEN
+      DEBUG: "true"

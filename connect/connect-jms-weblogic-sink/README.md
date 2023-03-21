@@ -4,7 +4,7 @@
 
 Quickly test [Oracle Weblogic JMS](https://docs.confluent.io/current/connect/kafka-connect-jms/sink/index.html) with JMS connector.
 
-Using Oracle WebLogic Server (Developer Tier, version `12.2.1.3`) Docker [image](https://container-registry.oracle.com). You need to register and acknoledge license terms and conditions to get the image.
+Using Oracle WebLogic Server (Developer Tier, version `12.2.1.3`) Docker [image](https://container-registry.oracle.com). You need to register and acknowledge license terms and conditions to get the image.
 
 ![image](screenshot3.jpg)
 

@@ -6,10 +6,31 @@ source ${DIR}/../../scripts/utils.sh
 
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.jtds.yml"
 
+log "Create table"
+docker exec -i sqlserver /opt/mssql-tools/bin/sqlcmd -U sa -P Password! << EOF
+-- Create the test database
+CREATE DATABASE testDB;
+GO
+USE testDB;
+EXEC sys.sp_cdc_enable_db;
 
-log "Load inventory.sql to SQL Server"
-cat ../../connect/connect-jdbc-sqlserver-source/inventory.sql | docker exec -i sqlserver bash -c '/opt/mssql-tools/bin/sqlcmd -U sa -P Password!'
-
+-- Create some customers ...
+CREATE TABLE customers (
+  id INTEGER IDENTITY(1001,1) NOT NULL PRIMARY KEY,
+  first_name VARCHAR(255) NOT NULL,
+  last_name VARCHAR(255) NOT NULL,
+  email VARCHAR(255) NOT NULL
+);
+INSERT INTO customers(first_name,last_name,email)
+  VALUES ('Sally','Thomas','sally.thomas@acme.com');
+INSERT INTO customers(first_name,last_name,email)
+  VALUES ('George','Bailey','gbailey@foobar.com');
+INSERT INTO customers(first_name,last_name,email)
+  VALUES ('Edward','Walker','ed@walker.com');
+INSERT INTO customers(first_name,last_name,email)
+  VALUES ('Anne','Kretchmar','annek@noanswer.org');
+GO
+EOF
 
 log "Creating JDBC SQL Server (with JTDS driver) source connector"
 curl -X PUT \

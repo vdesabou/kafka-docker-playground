@@ -1115,7 +1115,7 @@
       "timeFrom": null,
       "timeRegions": [],
       "timeShift": null,
-      "title": "JVM Memory Used",
+      "title": "Garbage Collector time",
       "tooltip": {
         "shared": true,
         "sort": 0,

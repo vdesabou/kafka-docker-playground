@@ -31,8 +31,7 @@ N.B: IBM DB2 Console is reachable at [https://localhost:9443/ibmmq/console/login
     hostname: ibmdb2
     container_name: ibmdb2
     privileged: true
-    ports:
-      - 50000:50000
+removed
     environment:
       LICENSE: accept
       DB2INST1_PASSWORD: passw0rd

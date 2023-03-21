@@ -10,7 +10,7 @@ Quickly test [S3 Source](https://docs.confluent.io/kafka-connect-s3-source/curre
 ## AWS Setup
 
 * Make sure you have an [AWS account](https://docs.aws.amazon.com/streams/latest/dev/before-you-begin.html#setting-up-sign-up-for-aws).
-* Set up [AWS Credentials](https://docs.confluent.io/current/connect/kafka-connect-kinesis/quickstart.html#aws-credentials)
+* Set up [AWS Credentials](https://docs.confluent.io/kafka-connectors/s3-sink/current/overview.html#aws-credentials)
 
 You can either export environment variables `AWS_REGION`, `AWS_ACCESS_KEY_ID` and `AWS_SECRET_ACCESS_KEY` or set files `~/.aws/credentials` and `~/.aws/config`.
 
@@ -29,6 +29,18 @@ For [Generalized Amazon S3 Source](https://docs.confluent.io/kafka-connect-s3-so
 
 ```bash
 $ ./s3-source-generalized.sh
+```
+
+If you want to assume IAM roles:
+
+```
+$ ./s3-source-backup-and-restore-with-assuming-iam-role.sh (in that case `~/.aws/credentials-with-assuming-iam-role` file must be set)
+```
+
+or with AssumeRole using custom AWS credentials provider (⚠️ custom code is just an example, there is no support for it):
+
+```
+$ ./s3-source-backup-and-restore-assuming-iam-role-with-custom-aws-credential-provider.sh
 ```
 
 ## Details of what the script is doing

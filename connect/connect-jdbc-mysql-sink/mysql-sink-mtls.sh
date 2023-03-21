@@ -4,11 +4,13 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
-if [ ! -f ${DIR}/mysql-connector-java-5.1.45.jar ]
+cd ../../connect/connect-jdbc-mysql-sink
+if [ ! -f ${PWD}/mysql-connector-java-5.1.45.jar ]
 then
      log "Downloading mysql-connector-java-5.1.45.jar"
      wget https://repo1.maven.org/maven2/mysql/mysql-connector-java/5.1.45/mysql-connector-java-5.1.45.jar
 fi
+cd -
 
 # required to make utils.sh script being able to work, do not remove:
 # ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
@@ -63,8 +65,7 @@ curl -X PUT \
 
 
 log "Sending messages to topic orders"
-docker exec -i connect kafka-avro-console-producer --broker-list broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic orders --property value.schema='{"type":"record","name":"myrecord","fields":[{"name":"id","type":"int"},{"name":"product", "type": "string"}, {"name":"quantity", "type": "int"}, {"name":"price",
-"type": "float"}]}' << EOF
+docker exec -i connect kafka-avro-console-producer --broker-list broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic orders --property value.schema='{"type":"record","name":"myrecord","fields":[{"name":"id","type":"int"},{"name":"product", "type": "string"}, {"name":"quantity", "type": "int"}, {"name":"price","type": "float"}]}' << EOF
 {"id": 999, "product": "foo", "quantity": 100, "price": 50}
 EOF
 

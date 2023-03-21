@@ -44,7 +44,8 @@ az storage account create \
     --resource-group $AZURE_RESOURCE_GROUP \
     --location $AZURE_REGION \
     --sku Standard_LRS \
-    --encryption-services blob
+    --encryption-services blob \
+    --tags owner_email=$AZ_USER
 AZURE_ACCOUNT_KEY=$(az storage account keys list \
     --account-name $AZURE_ACCOUNT_NAME \
     --resource-group $AZURE_RESOURCE_GROUP \
@@ -85,7 +86,7 @@ $ seq -f "{\"f1\": \"value%g\"}" 10 | docker exec -i connect kafka-avro-console-
 Listing objects of container in Azure Blob Storage:
 
 ```bash
-$ az storage blob list --account-name "${AZURE_ACCOUNT_NAME}" --account-key "${AZURE_ACCOUNT_KEY}" --container-name "${AZURE_CONTAINER_NAME}" --output table
+$ az storage fs file list --account-name "${AZURE_ACCOUNT_NAME}" --account-key "${AZURE_ACCOUNT_KEY}" -f "${AZURE_CONTAINER_NAME}" --output table
 ```
 
 Results:

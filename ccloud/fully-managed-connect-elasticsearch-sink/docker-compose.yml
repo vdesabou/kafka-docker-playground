@@ -1,0 +1,29 @@
+---
+version: '3.5'
+services:
+
+  elasticsearch:
+    image: elasticsearch:7.12.0
+    hostname: elasticsearch
+    container_name: elasticsearch
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+    environment:
+      discovery.type: single-node
+
+  ngrok:
+    image: shkoliar/ngrok:latest
+    hostname: ngrok
+    container_name: ngrok
+    ports:
+      - 4551:4551
+    links:
+      - elasticsearch
+    environment:
+      DOMAIN: elasticsearch
+      PORT: 9200
+      PROTOCOL: tcp
+      REGION: eu
+      AUTH_TOKEN: $NGROK_AUTH_TOKEN
+      DEBUG: "true"

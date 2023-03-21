@@ -4,6 +4,12 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
+if ! version_gt $TAG_BASE "5.9.99" && version_gt $CONNECTOR_TAG "1.3.14"
+then
+    logwarn "WARN: connector version >= 1.3.15 do not support CP versions < 6.0.0"
+    exit 111
+fi
+
 if [ ! -f $HOME/.aws/credentials ] && ( [ -z "$AWS_ACCESS_KEY_ID" ] || [ -z "$AWS_SECRET_ACCESS_KEY" ] )
 then
      logerror "ERROR: either the file $HOME/.aws/credentials is not present or environment variables AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY are not set!"
@@ -58,11 +64,8 @@ aws kinesis create-stream --stream-name $KINESIS_STREAM_NAME --shard-count 1
 log "Sleep 60 seconds to let the Kinesis stream being fully started"
 sleep 60
 
-log "Insert records in Kinesis stream"
-# The example shows that a record containing partition key 123 and data "test-message-1" is inserted into kafka_docker_playground.
+log "Insert records in Kinesis stream".
 aws kinesis put-record --stream-name $KINESIS_STREAM_NAME --partition-key 123 --data test-message-1
-
-
 
 log "Creating Kinesis Source connector"
 curl -X PUT \
@@ -81,8 +84,18 @@ curl -X PUT \
           }' \
      http://localhost:8083/connectors/kinesis-source/config | jq .
 
+docker exec -i connect kafka-avro-console-producer --broker-list broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic a-topic --property value.schema='{"type":"record","name":"myrecord","fields":[{"name":"u_name","type":"string"},
+{"name":"u_price", "type": "float"}, {"name":"u_quantity", "type": "int"}]}' << EOF
+{"u_name": "scissors", "u_price": 2.75, "u_quantity": 3}
+{"u_name": "tape", "u_price": 0.99, "u_quantity": 10}
+{"u_name": "notebooks", "u_price": 1.99, "u_quantity": 5}
+EOF
+
+
 log "Verify we have received the data in kinesis_topic topic"
-timeout 60 docker exec broker kafka-console-consumer --bootstrap-server broker:9092 --topic kinesis_topic --from-beginning --max-messages 1
+timeout 60 docker exec connect kafka-avro-console-consumer --bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic kinesis_topic --from-beginning --property print.key=true --property key.deserializer=org.apache.kafka.common.serialization.StringDeserializer --max-messages 1
+# 123     "µë-ë,j\u0007µ"
+# Processed a total of 1 messages
 
 log "Delete the stream"
 aws kinesis delete-stream --stream-name $KINESIS_STREAM_NAME

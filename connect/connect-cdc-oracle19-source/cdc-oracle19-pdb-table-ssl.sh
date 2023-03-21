@@ -22,12 +22,12 @@ MAX_WAIT=2500
 CUR_WAIT=0
 log "⌛ Waiting up to $MAX_WAIT seconds for Oracle DB to start"
 docker container logs oracle > /tmp/out.txt 2>&1
-while [[ ! $(cat /tmp/out.txt) =~ "Completed: ALTER DATABASE OPEN" ]]; do
+while [[ ! $(cat /tmp/out.txt) =~ "DATABASE IS READY TO USE" ]]; do
 sleep 10
 docker container logs oracle > /tmp/out.txt 2>&1
 CUR_WAIT=$(( CUR_WAIT+10 ))
 if [[ "$CUR_WAIT" -gt "$MAX_WAIT" ]]; then
-     logerror "ERROR: The logs in oracle container do not show 'DONE: Executing user defined scripts' after $MAX_WAIT seconds. Please troubleshoot with 'docker container ps' and 'docker container logs'.\n"
+     logerror "ERROR: The logs in oracle container do not show 'DATABASE IS READY TO USE' after $MAX_WAIT seconds. Please troubleshoot with 'docker container ps' and 'docker container logs'.\n"
      exit 1
 fi
 done
@@ -84,7 +84,7 @@ docker exec -i oracle bash -c "ORACLE_SID=ORCLCDB;export ORACLE_SID;sqlplus /nol
      GRANT EXECUTE ON SYS.DBMS_LOGMNR TO C##CDC_PRIVS;
      GRANT EXECUTE ON SYS.DBMS_LOGMNR_D TO C##CDC_PRIVS;
      GRANT EXECUTE ON SYS.DBMS_LOGMNR_LOGREP_DICT TO C##CDC_PRIVS;
-     GRANT EXECUTE ON SYS.DBMS_LOGMNR_SESSION TO C##CDC_PRIVS;
+     ;
      
      -- Enable Supplemental Logging for All Columns
      ALTER SESSION SET CONTAINER=cdb\$root;
@@ -298,5 +298,3 @@ fi
 
 log "Verifying topic redo-log-topic: there should be 9 records"
 timeout 60 docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic redo-log-topic --from-beginning --max-messages 9 --property print.key=true
-
-log "🚚 If you're planning to inject more data, have a look at https://github.com/vdesabou/kafka-docker-playground/blob/master/connect/connect-cdc-oracle19-source/README.md#note-on-redologrowfetchsize"

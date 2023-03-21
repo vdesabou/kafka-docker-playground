@@ -31,7 +31,8 @@ set -e
 log "Creating Azure Resource Group $AZURE_RESOURCE_GROUP"
 az group create \
     --name $AZURE_RESOURCE_GROUP \
-    --location $AZURE_REGION
+    --location $AZURE_REGION \
+    --tags owner_email=$AZ_USER
 log "Creating Azure Search service"
 az search service create \
     --name $AZURE_SEARCH_SERVICE_NAME \
@@ -111,7 +112,7 @@ log "Searching Azure Search index"
 curl -X GET \
 "https://${AZURE_SEARCH_SERVICE_NAME}.search.windows.net/indexes/hotels-sample-index/docs?api-version=2019-05-06&search=*" \
 -H 'Content-Type: application/json' \
--H "api-key: $AZURE_SEARCH_ADMIN_PRIMARY_KEY" | jq > /tmp/result.log  2>&1
+-H "api-key: $AZURE_SEARCH_ADMIN_PRIMARY_KEY" | jq . > /tmp/result.log  2>&1
 
 cat /tmp/result.log
 grep "Marriott" /tmp/result.log

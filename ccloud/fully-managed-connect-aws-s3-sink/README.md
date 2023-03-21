@@ -9,7 +9,7 @@ Quickly test [Fully Managed S3 Sink](https://docs.confluent.io/cloud/current/con
 ## AWS Setup
 
 * Make sure you have an [AWS account](https://docs.aws.amazon.com/streams/latest/dev/before-you-begin.html#setting-up-sign-up-for-aws).
-* Set up [AWS Credentials](https://docs.confluent.io/current/connect/kafka-connect-kinesis/quickstart.html#aws-credentials)
+* Set up [AWS Credentials](https://docs.confluent.io/kafka-connectors/s3-sink/current/overview.html#aws-credentials)
 
 This project assumes `~/.aws/credentials` and `~/.aws/config` are set.
 
@@ -48,7 +48,12 @@ $ ./fully-managed-s3-sink.sh
 Creating bucket name <$AWS_BUCKET_NAME>, if required
 
 ```bash
-$ aws s3api create-bucket --bucket $AWS_BUCKET_NAME --region $AWS_REGION --create-bucket-configuration LocationConstraint=$AWS_REGION
+$ if [ "$AWS_REGION" == "us-east-1" ]
+then
+    aws s3api create-bucket --bucket $AWS_BUCKET_NAME --region $AWS_REGION
+else
+    aws s3api create-bucket --bucket $AWS_BUCKET_NAME --region $AWS_REGION --create-bucket-configuration LocationConstraint=$AWS_REGION
+fi
 ```
 
 

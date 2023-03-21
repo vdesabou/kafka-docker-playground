@@ -30,7 +30,7 @@ Download it as JSON:
 
 ![Service Account setup](Screenshot4.png)
 
-Rename it to `keyfile.json`and place it in `./keyfile.json` or use environment variable `KEYFILE_CONTENT` with content generated with `KEYFILE_CONTENT=`cat keyfile.json | jq -aRs .`
+Rename it to `keyfile.json`and place it in `./keyfile.json` or use environment variable `GCP_KEYFILE_CONTENT` with content generated with `GCP_KEYFILE_CONTENT=`cat keyfile.json | jq -aRs .`
 
 
 ## How to run
@@ -38,13 +38,13 @@ Rename it to `keyfile.json`and place it in `./keyfile.json` or use environment v
 For [Backup and Restore GCS Source](https://docs.confluent.io/kafka-connect-gcs-source/current/backup-and-restore/overview.html):
 
 ```bash
-$ ./gcs-source-backup-and-restore.sh <PROJECT>
+$ ./gcs-source-backup-and-restore.sh <GCP_PROJECT>
 ```
 
 For [Generalized GCS Source](https://docs.confluent.io/kafka-connect-gcs-source/current/generalized/overview.html) (it requires version 2.1.0 at minimum):
 
 ```bash
-$ ./gcs-source-generalized.sh <PROJECT>
+$ ./gcs-source-generalized.sh <GCP_PROJECT>
 ```
 
 Note: you can also export these values as environment variable

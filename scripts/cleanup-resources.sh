@@ -37,7 +37,7 @@ fi
 log "Cleanup Azure Resource groups"
 for group in $(az group list --query '[].name' --output tsv)
 do
-  if [[ $group = pgrunner* ]] || [[ $group = pgec2user* ]]
+  if [[ $group = pgrunner* ]] || [[ $group = pgec2user* ]] || [[ $group = pgvsaboulin* ]]
   then
     if [ ! -z "$GITHUB_RUN_NUMBER" ]
     then
@@ -67,14 +67,14 @@ do
 done
 
 log "Cleanup GCP GCS buckets"
-KEYFILE="/tmp/keyfile.json"
-log "Creating ${KEYFILE} based on environment variable KEYFILE_CONTENT"
-echo -e "$KEYFILE_CONTENT" | sed 's/\\"/"/g' > ${KEYFILE}
+GCP_KEYFILE="/tmp/keyfile.json"
+log "Creating ${GCP_KEYFILE} based on environment variable GCP_KEYFILE_CONTENT"
+echo -e "$GCP_KEYFILE_CONTENT" | sed 's/\\"/"/g' > ${GCP_KEYFILE}
 PROJECT="vincent-de-saboulin-lab"
 set +e
 docker rm -f gcloud-config-cleanup-resources
 set -e
-docker run -i -v ${KEYFILE}:/tmp/keyfile.json --name gcloud-config-cleanup-resources google/cloud-sdk:latest gcloud auth activate-service-account --project ${PROJECT} --key-file /tmp/keyfile.json
+docker run -i -v ${GCP_KEYFILE}:/tmp/keyfile.json --name gcloud-config-cleanup-resources google/cloud-sdk:latest gcloud auth activate-service-account --project ${GCP_PROJECT} --key-file /tmp/keyfile.json
 
 for bucket in $(docker run -i --volumes-from gcloud-config-cleanup-resources google/cloud-sdk:latest gsutil ls)
 do
@@ -90,14 +90,14 @@ PROJECT="vincent-de-saboulin-lab"
 set +e
 docker rm -f gcloud-config-cleanup-resources
 set -e
-docker run -i -v ${KEYFILE}:/tmp/keyfile.json --name gcloud-config-cleanup-resources google/cloud-sdk:latest gcloud auth activate-service-account --project ${PROJECT} --key-file /tmp/keyfile.json
+docker run -i -v ${GCP_KEYFILE}:/tmp/keyfile.json --name gcloud-config-cleanup-resources google/cloud-sdk:latest gcloud auth activate-service-account --project ${GCP_PROJECT} --key-file /tmp/keyfile.json
 
-for dataset in $(docker run -i --volumes-from gcloud-config-cleanup-resources google/cloud-sdk:latest bq --project_id "$PROJECT" ls)
+for dataset in $(docker run -i --volumes-from gcloud-config-cleanup-resources google/cloud-sdk:latest bq --project_id "$GCP_PROJECT" ls)
 do
-    if [[ $dataset = *pgrunnerds* ]] || [[ $dataset = *pg*vinc* ]]
+    if [[ $dataset = *pgrunnerds* ]] || [[ $dataset = *pg*vinc* ]] || [[ $dataset = *pg*vsaboulin* ]]
     then
       log "Remove dataset $dataset"
-      docker run -i --volumes-from gcloud-config-cleanup-resources google/cloud-sdk:latest bq --project_id "$PROJECT" rm -r -f -d "$dataset"
+      docker run -i --volumes-from gcloud-config-cleanup-resources google/cloud-sdk:latest bq --project_id "$GCP_PROJECT" rm -r -f -d "$dataset"
     fi
 done
 
@@ -170,13 +170,62 @@ done
 set +e 
 if [ ! -z "$CI" ]
 then
-     bootstrap_ccloud_environment
+    bootstrap_ccloud_environment
 
-     for topic in $(confluent kafka topic list)
-     do
-        log "delete topic $topic"
-        confluent kafka topic delete "$topic"
-     done
+    for row in $(confluent api-key list --output json | jq -r '.[] | @base64'); do
+        _jq() {
+        echo ${row} | base64 --decode | jq -r ${1}
+        }
+        
+        key=$(echo $(_jq '.key'))
+        resource_type=$(echo $(_jq '.resource_type'))
+
+        if [[ $resource_type = cloud ]]
+        then
+          log "deleting cloud api key $key"
+          confluent api-key delete $key --force
+        fi
+    done
+
+    for row in $(confluent environment list --output json | jq -r '.[] | @base64'); do
+        _jq() {
+        echo ${row} | base64 --decode | jq -r ${1}
+        }
+        
+        id=$(echo $(_jq '.id'))
+        name=$(echo $(_jq '.name'))
+
+        if [[ $name = pg-sa-* ]]
+        then
+          log "deleting environment $id ($name)"
+          confluent environment delete $id --force
+        fi
+    done
+
+    for topic in $(confluent kafka topic list)
+    do
+      log "delete topic $topic"
+      confluent kafka topic delete "$topic" --force
+    done
+
+    for subject in $(curl -u "$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO" "$SCHEMA_REGISTRY_URL/subjects" | jq -r '.[]')
+    do
+      log "delete subject $subject"
+      curl --request DELETE -u "$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO" "$SCHEMA_REGISTRY_URL/subjects/$subject"
+      curl --request DELETE -u "$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO" "$SCHEMA_REGISTRY_URL/subjects/$subject?permanent=true"
+    done
+
+    for row in $(confluent connect cluster list --output json | jq -r '.[] | @base64'); do
+        _jq() {
+        echo ${row} | base64 --decode | jq -r ${1}
+        }
+        
+        id=$(echo $(_jq '.id'))
+        name=$(echo $(_jq '.name'))
+
+        log "deleting connector $id ($name)"
+        confluent connect cluster delete $id --force
+    done
 
     for row in $(confluent iam service-account list --output json | jq -r '.[] | @base64'); do
         _jq() {
@@ -189,8 +238,8 @@ then
 
         if [[ $description = *my-java-producer-app* ]] || [[ $description = *ccloud-stack-function* ]]
         then
-            echo "deleting $id ($description)"
-            confluent iam service-account delete $id
+            log "deleting $id ($description)"
+            confluent iam service-account delete $id --force
             if [ $? != 0 ]
             then
               break
@@ -207,14 +256,12 @@ fi
 SNOWFLAKE_URL="https://$SNOWFLAKE_ACCOUNT_NAME.snowflakecomputing.com"
 
 # Create encrypted Private key - keep this safe, do not share!
-openssl genrsa 2048 | openssl pkcs8 -topk8 -v2 aes256 -inform PEM -out snowflake_key.p8 -passout pass:confluent
+docker run -u0 --rm -v $PWD:/tmp vdesabou/kafka-docker-playground-connect:${CONNECT_TAG} bash -c "openssl genrsa 2048 | openssl pkcs8 -topk8 -inform PEM -v1 PBE-SHA1-RC4-128 -out /tmp/snowflake_key.p8 -passout pass:confluent && chown -R $(id -u $USER):$(id -g $USER) /tmp/"
 # Generate public key from private key. You can share your public key.
-openssl rsa -in snowflake_key.p8  -pubout -out snowflake_key.pub -passin pass:confluent
-
+docker run -u0 --rm -v $PWD:/tmp vdesabou/kafka-docker-playground-connect:${CONNECT_TAG} bash -c "openssl rsa -in /tmp/snowflake_key.p8 -pubout -out /tmp/snowflake_key.pub -passin pass:confluent && chown -R $(id -u $USER):$(id -g $USER) /tmp/"
 
 RSA_PUBLIC_KEY=$(grep -v "BEGIN PUBLIC" snowflake_key.pub | grep -v "END PUBLIC"|tr -d '\n')
 RSA_PRIVATE_KEY=$(grep -v "BEGIN ENCRYPTED PRIVATE KEY" snowflake_key.p8 | grep -v "END ENCRYPTED PRIVATE KEY"|tr -d '\n')
-
 
 log "Drop warehouses"
 docker run --rm -i -e SNOWSQL_PWD="$SNOWFLAKE_PASSWORD" -e RSA_PUBLIC_KEY="$RSA_PUBLIC_KEY" kurron/snowsql --username $SNOWFLAKE_USERNAME -a $SNOWFLAKE_ACCOUNT_NAME << EOF > /tmp/result.log

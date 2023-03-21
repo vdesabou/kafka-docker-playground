@@ -104,6 +104,18 @@ Simply run:
 $ ./salesforce-Platform-events-sink.sh <SALESFORCE_USERNAME> <SALESFORCE_PASSWORD> <SALESFORCE_CONSUMER_KEY> <SALESFORCE_CONSUMER_PASSWORD> <SALESFORCE_SECURITY_TOKEN>
 ```
 
+or with proxy:
+
+```
+$ ./salesforce-Platform-events-sink-proxy.sh <SALESFORCE_USERNAME> <SALESFORCE_PASSWORD> <SALESFORCE_CONSUMER_KEY> <SALESFORCE_CONSUMER_PASSWORD> <SALESFORCE_SECURITY_TOKEN>
+```
+
+or with proxy with Basic Auth:
+
+```
+$ ./salesforce-Platform-events-sink-proxy-basic-auth.sh <SALESFORCE_USERNAME> <SALESFORCE_PASSWORD> <SALESFORCE_CONSUMER_KEY> <SALESFORCE_CONSUMER_PASSWORD> <SALESFORCE_SECURITY_TOKEN>
+```
+
 Note: you can also export these values as environment variable
 
 
@@ -118,7 +130,7 @@ $ docker exec sfdx-cli sh -c "sfdx sfpowerkit:auth:login -u \"$SALESFORCE_USERNA
 Send Platform Events
 
 ```bash
-$ docker exec sfdx-cli sh -c "sfdx force:apex:execute  -u \"$SALESFORCE_USERNAME\" -f \"/tmp/event.apex\""
+$ docker exec sfdx-cli sh -c "sfdx apex run --target-org \"$SALESFORCE_USERNAME\" -f \"/tmp/event.apex\""
 ```
 
 Creating Salesforce Platform Events Source connector
@@ -138,7 +150,7 @@ $ curl -X PUT \
                     "salesforce.password.token" : "'"$SALESFORCE_SECURITY_TOKEN"'",
                     "salesforce.consumer.key" : "'"$SALESFORCE_CONSUMER_KEY"'",
                     "salesforce.consumer.secret" : "'"$SALESFORCE_CONSUMER_PASSWORD"'",
-                    "salesforce.initial.start" : "all",
+                    "salesforce.initial.start" : "latest",
                     "key.converter": "org.apache.kafka.connect.json.JsonConverter",
                     "value.converter": "org.apache.kafka.connect.json.JsonConverter",
                     "confluent.license": "",
@@ -179,7 +191,6 @@ $ curl -X PUT \
                     "salesforce.password.token" : "'"$SALESFORCE_SECURITY_TOKEN"'",
                     "salesforce.consumer.key" : "'"$SALESFORCE_CONSUMER_KEY"'",
                     "salesforce.consumer.secret" : "'"$SALESFORCE_CONSUMER_PASSWORD"'",
-                    "salesforce.initial.start" : "all",
                     "connection.max.message.size": "10048576",
                     "key.converter": "org.apache.kafka.connect.json.JsonConverter",
                     "value.converter": "org.apache.kafka.connect.json.JsonConverter",
@@ -203,5 +214,9 @@ Verify topic success-responses
 ```bash
 $ docker exec broker kafka-console-consumer -bootstrap-server broker:9092 --topic success-responses --from-beginning --max-messages 2
 ```
+
+To check events on Salesforce side, you can use [workbench](https://workbench.developerforce.com/streaming.php) and subscribe to `/event/MyPlatformEvent__e`:
+
+![workbench](Screenshot11.jpg)
 
 N.B: Control Center is reachable at [http://127.0.0.1:9021](http://127.0.0.1:9021])

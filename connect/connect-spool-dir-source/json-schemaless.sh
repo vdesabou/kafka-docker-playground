@@ -15,7 +15,7 @@ curl -X PUT \
      --data '{
                "tasks.max": "1",
                "connector.class": "com.github.jcustenborder.kafka.connect.spooldir.SpoolDirSchemaLessJsonSourceConnector",
-               "input.file.pattern": "json-spooldir-source.json",
+               "input.file.pattern": ".*\\.json",
                "input.path": "/tmp/data/input",
                "error.path": "/tmp/data/error",
                "finished.path": "/tmp/data/finished",

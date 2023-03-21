@@ -1,5 +1,4 @@
-FROM adoptopenjdk/openjdk11:alpine
-RUN apk add bash
+FROM adoptopenjdk/openjdk11:slim
 WORKDIR /app
 
 COPY ./jmx_prometheus_httpserver-0.16.1-jar-with-dependencies.jar /app/jmx_prometheus_httpserver-0.16.1-jar-with-dependencies.jar

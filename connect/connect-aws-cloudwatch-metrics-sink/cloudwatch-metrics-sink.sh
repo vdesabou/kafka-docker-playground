@@ -65,7 +65,7 @@ curl -X PUT \
                "aws.cloudwatch.metrics.url": "'"$CLOUDWATCH_METRICS_URL"'",
                "aws.cloudwatch.metrics.namespace": "service-namespace",
                "aws.access.key.id" : "'"$AWS_ACCESS_KEY_ID"'",
-               "aws.secret.key.id": "'"$AWS_SECRET_ACCESS_KEY"'",
+               "aws.secret.access.key": "'"$AWS_SECRET_ACCESS_KEY"'",
                "behavior.on.malformed.metric": "FAIL",
                "confluent.license": "",
                "confluent.topic.bootstrap.servers": "broker:9092",
@@ -76,6 +76,6 @@ curl -X PUT \
 sleep 10
 
 log "View the metrics being produced to Amazon CloudWatch"
-aws cloudwatch list-metrics --namespace service-namespace > /tmp/result.log  2>&1
+aws cloudwatch list-metrics --namespace service-namespace --region $AWS_REGION > /tmp/result.log  2>&1
 cat /tmp/result.log
 grep "test_meter_fifteenMinuteRate" /tmp/result.log

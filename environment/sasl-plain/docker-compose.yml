@@ -130,3 +130,8 @@ services:
                 username=\"client\" \
                 password=\"client-secret\";"
             CONTROL_CENTER_KAFKA_MYCLUSTER_SASL_MECHANISM: PLAIN
+
+    # https://github.com/conduktor/conduktor-platform/blob/main/doc/Configuration.md
+    conduktor:
+        volumes:
+            - ../../environment/sasl-plain/conduktor/platform-config.yaml:/tmp/platform-config.yaml

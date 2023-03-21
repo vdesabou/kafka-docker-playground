@@ -10,6 +10,20 @@ Quickly test [JDBC Source](https://docs.confluent.io/current/connect/kafka-conne
 
 N.B: if you're a Confluent employee, please check this [link](https://confluent.slack.com/archives/C0116NM415F/p1636391410032900).
 
+## Performance testing
+
+You can set environment variable `ORACLE_DATAGEN` before running the example and it will use a Java based datagen tool:
+
+Example:
+
+```
+DURATION=10
+log "Injecting data for $DURATION minutes"
+docker exec -d oracle-datagen bash -c "java ${JAVA_OPTS} -jar oracle-datagen-1.0-SNAPSHOT-jar-with-dependencies.jar --host oracle --username C##MYUSER --password mypassword --sidOrServerName sid --sidOrServerNameVal XE --maxPoolSize 10 --durationTimeMin $DURATION"
+```
+
+You can increase thoughtput with `maxPoolSize`.
+
 ## How to run
 
 Simply run:

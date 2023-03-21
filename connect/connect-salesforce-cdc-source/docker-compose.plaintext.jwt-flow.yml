@@ -1,0 +1,15 @@
+---
+version: '3.5'
+services:
+
+  sfdx-cli:
+    image: vdesabou/sfdx-cli:latest # forked from salestrip/sfdx-cli to add plugin sfpowerkit
+    hostname: sfdx-cli
+    container_name: sfdx-cli
+    command: "sleep infinity"
+
+  connect:
+    volumes:
+      - ../../connect/connect-salesforce-cdc-source/salesforce-confluent.keystore.jks:/tmp/salesforce-confluent.keystore.jks
+    environment:
+      CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-salesforce

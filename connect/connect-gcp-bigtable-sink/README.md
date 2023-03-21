@@ -36,7 +36,7 @@ Download it as JSON:
 
 ![Service Account setup](Screenshot4.png)
 
-Rename it to `keyfile.json`and place it in `./keyfile.json` or use environment variable `KEYFILE_CONTENT` with content generated with `KEYFILE_CONTENT=`cat keyfile.json | jq -aRs .`
+Rename it to `keyfile.json`and place it in `./keyfile.json` or use environment variable `GCP_KEYFILE_CONTENT` with content generated with `GCP_KEYFILE_CONTENT=`cat keyfile.json | jq -aRs .`
 
 
 ## How to run
@@ -44,7 +44,7 @@ Rename it to `keyfile.json`and place it in `./keyfile.json` or use environment v
 Simply run:
 
 ```bash
-$ ./gcp-bigtable.sh <PROJECT> <INSTANCE>
+$ ./gcp-bigtable.sh <GCP_PROJECT> <INSTANCE>
 ```
 
 Note: you can also export these values as environment variable
@@ -54,7 +54,7 @@ Note: you can also export these values as environment variable
 Create a BigTable Instance and Database
 
 ```bash
-$ docker run -i --volumes-from gcloud-config google/cloud-sdk:latest gcloud bigtable instances create $INSTANCE --project $PROJECT --cluster $INSTANCE --cluster-zone=us-east1-c --display-name="playground-bigtable-instance" --instance-type=DEVELOPMENT
+$ docker run -i --volumes-from gcloud-config google/cloud-sdk:latest gcloud bigtable instances create $INSTANCE --project $GCP_PROJECT --cluster $INSTANCE --cluster-zone=us-east1-c --display-name="playground-bigtable-instance" --instance-type=DEVELOPMENT
 ```
 
 Sending messages to topic `stats`
@@ -79,7 +79,7 @@ curl -X PUT \
                "auto.create" : "true",
                "gcp.bigtable.credentials.path": "/tmp/keyfile.json",
                "gcp.bigtable.instance.id": "'"$INSTANCE"'",
-               "gcp.bigtable.project.id": "'"$PROJECT"'",
+               "gcp.bigtable.project.id": "'"$GCP_PROJECT"'",
                "auto.create.tables": "true",
                "auto.create.column.families": "true",
                "table.name.format" : "kafka_${topic}",
@@ -93,7 +93,7 @@ curl -X PUT \
 Verify data is in GCP BigTable
 
 ```bash
-$ docker run -i --volumes-from gcloud-config google/cloud-sdk:latest cbt -project $PROJECT -instance $INSTANCE read kafka_stats
+$ docker run -i --volumes-from gcloud-config google/cloud-sdk:latest cbt -project $GCP_PROJECT -instance $INSTANCE read kafka_stats
 ```
 
 Results:
@@ -116,13 +116,13 @@ simple-key-2
 Delete table
 
 ```bash
-$ docker run -i --volumes-from gcloud-config google/cloud-sdk:latest cbt -project $PROJECT -instance $INSTANCE deletetable kafka_stats
+$ docker run -i --volumes-from gcloud-config google/cloud-sdk:latest cbt -project $GCP_PROJECT -instance $INSTANCE deletetable kafka_stats
 ```
 
 Deleting instance
 
 ```bash
-$ docker run -i --volumes-from gcloud-config google/cloud-sdk:latest gcloud bigtable instances delete $INSTANCE --project $PROJECT  << EOF
+$ docker run -i --volumes-from gcloud-config google/cloud-sdk:latest gcloud bigtable instances delete $INSTANCE --project $GCP_PROJECT  << EOF
 Y
 EOF
 ```

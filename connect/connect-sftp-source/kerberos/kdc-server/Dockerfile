@@ -1,4 +1,4 @@
-FROM debian:jessie
+FROM --platform=linux/amd64 debian:stretch
 
 EXPOSE 749 88/udp
 
