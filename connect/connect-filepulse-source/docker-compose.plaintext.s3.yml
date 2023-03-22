@@ -4,5 +4,6 @@ services:
   connect:
     volumes:
       - ../../connect/connect-filepulse-source/data:/data
+      - ../../connect/connect-filepulse-source/streamthoughts-kafka-connect-file-pulse-2.9.0:/tmp/streamthoughts-kafka-connect-file-pulse-2.9.0
     environment:
-      CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/streamthoughts-kafka-connect-file-pulse
+      CONNECT_PLUGIN_PATH: /usr/share/java/,/tmp/streamthoughts-kafka-connect-file-pulse-2.9.0

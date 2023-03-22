@@ -4,14 +4,21 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
-if ! version_gt $TAG_BASE "5.9.0"
+# if ! version_gt $TAG_BASE "5.9.0"
+# then
+#     if version_gt $CONNECTOR_TAG "1.9.9"
+#     then
+#         log "This connector does not support JDK 8 starting from version 2.0"
+#         exit 111
+#     fi
+# fi
+
+if [ ! -d streamthoughts-kafka-connect-file-pulse-2.9.0 ]
 then
-    if version_gt $CONNECTOR_TAG "1.9.9"
-    then
-        log "This connector does not support JDK 8 starting from version 2.0"
-        exit 111
-    fi
+    curl -L -o streamthoughts-kafka-connect-file-pulse-2.9.0.zip https://github.com/streamthoughts/kafka-connect-file-pulse/releases/download/v2.9.0/streamthoughts-kafka-connect-file-pulse-2.9.0.zip
+    unzip streamthoughts-kafka-connect-file-pulse-2.9.0.zip
 fi
+
 
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
 
@@ -32,31 +39,31 @@ EOFCONNECT
 
 
 log "Creating JSON FilePulse Source connector"
-if ! version_gt $CONNECTOR_TAG "1.9.9"
-then
-  # Version 1.x
-  curl -X PUT \
-      -H "Content-Type: application/json" \
-      --data '{
-              "connector.class":"io.streamthoughts.kafka.connect.filepulse.source.FilePulseSourceConnector",
-              "fs.scan.directory.path":"/tmp/kafka-connect/examples/",
-              "fs.scan.interval.ms":"10000",
-              "fs.scan.filters":"io.streamthoughts.kafka.connect.filepulse.scanner.local.filter.RegexFileListFilter",
-              "file.filter.regex.pattern":".*\\.json$",
-              "task.reader.class": "io.streamthoughts.kafka.connect.filepulse.reader.BytesArrayInputReader",
-              "offset.strategy":"name",
-              "topic":"tracks-filepulse-json-00",
-              "internal.kafka.reporter.bootstrap.servers": "broker:9092",
-              "internal.kafka.reporter.topic":"connect-file-pulse-status",
-              "fs.cleanup.policy.class": "io.streamthoughts.kafka.connect.filepulse.clean.DeleteCleanupPolicy",
-              "filters": "ParseJSON",
-              "filters.ParseJSON.type":"io.streamthoughts.kafka.connect.filepulse.filter.JSONFilter",
-              "filters.ParseJSON.source":"message",
-              "filters.ParseJSON.merge":"true",
-              "tasks.max": 1
-            }' \
-      http://localhost:8083/connectors/filepulse-source-json/config | jq .
-else
+# if ! version_gt $CONNECTOR_TAG "1.9.9"
+# then
+#   # Version 1.x
+#   curl -X PUT \
+#       -H "Content-Type: application/json" \
+#       --data '{
+#               "connector.class":"io.streamthoughts.kafka.connect.filepulse.source.FilePulseSourceConnector",
+#               "fs.scan.directory.path":"/tmp/kafka-connect/examples/",
+#               "fs.scan.interval.ms":"10000",
+#               "fs.scan.filters":"io.streamthoughts.kafka.connect.filepulse.scanner.local.filter.RegexFileListFilter",
+#               "file.filter.regex.pattern":".*\\.json$",
+#               "task.reader.class": "io.streamthoughts.kafka.connect.filepulse.reader.BytesArrayInputReader",
+#               "offset.strategy":"name",
+#               "topic":"tracks-filepulse-json-00",
+#               "internal.kafka.reporter.bootstrap.servers": "broker:9092",
+#               "internal.kafka.reporter.topic":"connect-file-pulse-status",
+#               "fs.cleanup.policy.class": "io.streamthoughts.kafka.connect.filepulse.clean.DeleteCleanupPolicy",
+#               "filters": "ParseJSON",
+#               "filters.ParseJSON.type":"io.streamthoughts.kafka.connect.filepulse.filter.JSONFilter",
+#               "filters.ParseJSON.source":"message",
+#               "filters.ParseJSON.merge":"true",
+#               "tasks.max": 1
+#             }' \
+#       http://localhost:8083/connectors/filepulse-source-json/config | jq .
+# else
   # Version 2.x
   curl -X PUT \
       -H "Content-Type: application/json" \
@@ -85,7 +92,7 @@ else
               "tasks.max": 1
             }' \
       http://localhost:8083/connectors/filepulse-source-json/config | jq .
-fi
+# fi
 
 sleep 5
 
