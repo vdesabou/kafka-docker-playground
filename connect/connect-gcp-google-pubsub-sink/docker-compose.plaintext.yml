@@ -1,0 +1,9 @@
+---
+version: '3.5'
+services:
+  connect:
+    volumes:
+        - ../../connect/connect-gcp-google-pubsub-sink/keyfile.json:/tmp/keyfile.json:ro
+        - ../../connect/connect-gcp-google-pubsub-sink/pubsub-group-kafka-connector-1.0.0.jar:/usr/share/confluent-hub-components/pubsub-group-kafka-connector/pubsub-group-kafka-connector-1.0.0.jar
+    environment:
+      CONNECT_PLUGIN_PATH: /usr/share/java/,/usr/share/confluent-hub-components/
