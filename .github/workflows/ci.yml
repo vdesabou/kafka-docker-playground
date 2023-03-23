@@ -58,7 +58,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        tag: ["6.0.12","6.1.10","6.2.9","7.0.8","7.1.6","7.2.3","7.3.2"]
+        tag: ["6.0.12","6.1.10","6.2.9","7.0.8","7.1.6","7.2.4","7.3.2"]
         test_list : [
                       "🚀 connect/connect-servicenow-sink connect/connect-servicenow-source connect/connect-datagen-source",
                       "🚀 connect/connect-salesforce-bulkapi-sink connect/connect-salesforce-bulkapi-source connect/connect-salesforce-pushtopics-source connect/connect-salesforce-sobject-sink connect/connect-salesforce-cdc-source connect/connect-salesforce-platform-events-sink connect/connect-salesforce-platform-events-source",
@@ -218,7 +218,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        tag: ["6.0.12","6.1.10","6.2.9","7.0.8","7.1.6","7.2.3","7.3.2"]
+        tag: ["6.0.12","6.1.10","6.2.9","7.0.8","7.1.6","7.2.4","7.3.2"]
         test_list : [
                       "🚀 ${{ github.event.inputs.test_name }}"
                     ]
@@ -391,7 +391,7 @@ jobs:
 
       - name: Update README
         run: |
-          ./scripts/update-readme.sh "6.0.12 6.1.10 6.2.9 7.0.8 7.1.6 7.2.3 7.3.2"
+          ./scripts/update-readme.sh "6.0.12 6.1.10 6.2.9 7.0.8 7.1.6 7.2.4 7.3.2"
         env:
           GH_TOKEN: ${{ secrets.CI_GITHUB_TOKEN }}
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID}}
