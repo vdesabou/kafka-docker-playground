@@ -149,66 +149,37 @@ do
       fi
       testdir=$(echo "$test" | sed 's/\//-/g')
       ci_file="ci/${image_version}-${testdir}-${version}-${script_name}"
+
       if [ -f ${ci_file} ]
       then
         last_execution_time=$(grep "$connector_path" ${ci_file} | tail -1 | cut -d "|" -f 2)
         status=$(grep "$connector_path" ${ci_file} | tail -1 | cut -d "|" -f 3)
         gh_run_id=$(grep "$connector_path" ${ci_file} | tail -1 | cut -d "|" -f 4)
+        
         if [ ! -f /tmp/${gh_run_id}_1.json ]
         then
-          curl -s -u vdesabou:$GH_TOKEN -H "Accept: application/vnd.github.v3+json" -o "/tmp/${gh_run_id}_1.json" "https://api.github.com/repos/vdesabou/kafka-docker-playground/actions/runs/${gh_run_id}/jobs?per_page=100&page=1"
-          curl -s -u vdesabou:$GH_TOKEN -H "Accept: application/vnd.github.v3+json" -o "/tmp/${gh_run_id}_2.json" "https://api.github.com/repos/vdesabou/kafka-docker-playground/actions/runs/${gh_run_id}/jobs?per_page=100&page=2"
-          curl -s -u vdesabou:$GH_TOKEN -H "Accept: application/vnd.github.v3+json" -o "/tmp/${gh_run_id}_3.json" "https://api.github.com/repos/vdesabou/kafka-docker-playground/actions/runs/${gh_run_id}/jobs?per_page=100&page=3"
-          curl -s -u vdesabou:$GH_TOKEN -H "Accept: application/vnd.github.v3+json" -o "/tmp/${gh_run_id}_4.json" "https://api.github.com/repos/vdesabou/kafka-docker-playground/actions/runs/${gh_run_id}/jobs?per_page=100&page=4"
-          curl -s -u vdesabou:$GH_TOKEN -H "Accept: application/vnd.github.v3+json" -o "/tmp/${gh_run_id}_5.json" "https://api.github.com/repos/vdesabou/kafka-docker-playground/actions/runs/${gh_run_id}/jobs?per_page=100&page=5"
-          curl -s -u vdesabou:$GH_TOKEN -H "Accept: application/vnd.github.v3+json" -o "/tmp/${gh_run_id}_6.json" "https://api.github.com/repos/vdesabou/kafka-docker-playground/actions/runs/${gh_run_id}/jobs?per_page=100&page=6"
-          curl -s -u vdesabou:$GH_TOKEN -H "Accept: application/vnd.github.v3+json" -o "/tmp/${gh_run_id}_7.json" "https://api.github.com/repos/vdesabou/kafka-docker-playground/actions/runs/${gh_run_id}/jobs?per_page=100&page=7"
-          curl -s -u vdesabou:$GH_TOKEN -H "Accept: application/vnd.github.v3+json" -o "/tmp/${gh_run_id}_8.json" "https://api.github.com/repos/vdesabou/kafka-docker-playground/actions/runs/${gh_run_id}/jobs?per_page=100&page=8"
+          for i in {1..10}; do
+            curl -s -u vdesabou:$GH_TOKEN -H "Accept: application/vnd.github.v3+json" \
+            -o "/tmp/${gh_run_id}_${i}.json" \
+            "https://api.github.com/repos/vdesabou/kafka-docker-playground/actions/runs/${gh_run_id}/jobs?per_page=100&page=${i}"
+          done
         fi
+        
         v=$(echo $image_version | sed -e 's/\./[.]/g')
-        html_url=$(cat "/tmp/${gh_run_id}_1.json" | jq ".jobs |= map(select(.name | test(\"${v}.*${test}\")))" | jq '[.jobs | .[] | {name: .name, html_url: .html_url }]' | jq '.[0].html_url')
-        html_url=$(echo "$html_url" | sed -e 's/^"//' -e 's/"$//')
+        for i in {1..10}; do
+          html_url=$(cat "/tmp/${gh_run_id}_${i}.json" | jq ".jobs |= map(select(.name | test(\"${v}.*${test}\")))" | jq '[.jobs | .[] | {name: .name, html_url: .html_url }]' | jq '.[0].html_url' | sed -e 's/^"//' -e 's/"$//')
+          if [ "$html_url" != "" ] && [ "$html_url" != "null" ]; then 
+              break
+          fi
+        done
+
         if [ "$html_url" = "" ] || [ "$html_url" = "null" ]
         then
-          html_url=$(cat "/tmp/${gh_run_id}_2.json" | jq ".jobs |= map(select(.name | test(\"${v}.*${test}\")))" | jq '[.jobs | .[] | {name: .name, html_url: .html_url }]' | jq '.[0].html_url')
-          html_url=$(echo "$html_url" | sed -e 's/^"//' -e 's/"$//')
-          if [ "$html_url" = "" ] || [ "$html_url" = "null" ]
-          then
-            html_url=$(cat "/tmp/${gh_run_id}_3.json" | jq ".jobs |= map(select(.name | test(\"${v}.*${test}\")))" | jq '[.jobs | .[] | {name: .name, html_url: .html_url }]' | jq '.[0].html_url')
-            html_url=$(echo "$html_url" | sed -e 's/^"//' -e 's/"$//')
-            if [ "$html_url" = "" ] || [ "$html_url" = "null" ]
-            then
-              html_url=$(cat "/tmp/${gh_run_id}_4.json" | jq ".jobs |= map(select(.name | test(\"${v}.*${test}\")))" | jq '[.jobs | .[] | {name: .name, html_url: .html_url }]' | jq '.[0].html_url')
-              html_url=$(echo "$html_url" | sed -e 's/^"//' -e 's/"$//')
-              if [ "$html_url" = "" ] || [ "$html_url" = "null" ]
-              then
-                html_url=$(cat "/tmp/${gh_run_id}_5.json" | jq ".jobs |= map(select(.name | test(\"${v}.*${test}\")))" | jq '[.jobs | .[] | {name: .name, html_url: .html_url }]' | jq '.[0].html_url')
-                html_url=$(echo "$html_url" | sed -e 's/^"//' -e 's/"$//')
-                if [ "$html_url" = "" ] || [ "$html_url" = "null" ]
-                then
-                  html_url=$(cat "/tmp/${gh_run_id}_6.json" | jq ".jobs |= map(select(.name | test(\"${v}.*${test}\")))" | jq '[.jobs | .[] | {name: .name, html_url: .html_url }]' | jq '.[0].html_url')
-                  html_url=$(echo "$html_url" | sed -e 's/^"//' -e 's/"$//')
-                  if [ "$html_url" = "" ] || [ "$html_url" = "null" ]
-                  then
-                    html_url=$(cat "/tmp/${gh_run_id}_7.json" | jq ".jobs |= map(select(.name | test(\"${v}.*${test}\")))" | jq '[.jobs | .[] | {name: .name, html_url: .html_url }]' | jq '.[0].html_url')
-                    html_url=$(echo "$html_url" | sed -e 's/^"//' -e 's/"$//')
-                    if [ "$html_url" = "" ] || [ "$html_url" = "null" ]
-                    then
-                      html_url=$(cat "/tmp/${gh_run_id}_8.json" | jq ".jobs |= map(select(.name | test(\"${v}.*${test}\")))" | jq '[.jobs | .[] | {name: .name, html_url: .html_url }]' | jq '.[0].html_url')
-                      html_url=$(echo "$html_url" | sed -e 's/^"//' -e 's/"$//')
-                      if [ "$html_url" = "" ] || [ "$html_url" = "null" ]
-                      then
-                        logerror "ERROR: Could not retrieve job url! Forcing re-run for next time..."
-                        s3_file="s3://kafka-docker-playground/ci/${image_version}-${testdir}-${version}-${script_name}"
-                        aws s3 rm $s3_file --region us-east-1
-                      fi
-                    fi
-                  fi
-                fi
-              fi
-            fi
-          fi
+          logerror "ERROR: Could not retrieve job url! Forcing re-run for next time..."
+          s3_file="s3://kafka-docker-playground/ci/${image_version}-${testdir}-${version}-${script_name}"
+          aws s3 rm $s3_file --region us-east-1
         fi
+      fi
         if [ "$last_execution_time" != "" ]
         then
           if [[ "$OSTYPE" == "darwin"* ]]
