@@ -1,24 +1,31 @@
 #!/bin/bash
 set -e
 
+if [ -z "$CONNECTOR_TAG" ]
+then
+    CONNECTOR_TAG=2.9.0
+fi
+
+if [ ! -f streamthoughts-kafka-connect-file-pulse-${CONNECTOR_TAG}.zip ]
+then
+    curl -L -o streamthoughts-kafka-connect-file-pulse-${CONNECTOR_TAG}.zip https://github.com/streamthoughts/kafka-connect-file-pulse/releases/download/v${CONNECTOR_TAG}/streamthoughts-kafka-connect-file-pulse-${CONNECTOR_TAG}.zip
+fi
+
+export CONNECTOR_ZIP=$PWD/streamthoughts-kafka-connect-file-pulse-${CONNECTOR_TAG}.zip
+VERSION=$CONNECTOR_TAG
+unset CONNECTOR_TAG
+
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
-# if ! version_gt $TAG_BASE "5.9.0"
-# then
-#     if version_gt $CONNECTOR_TAG "1.9.9"
-#     then
-#         log "This connector does not support JDK 8 starting from version 2.0"
-#         exit 111
-#     fi
-# fi
-
-if [ ! -d streamthoughts-kafka-connect-file-pulse-2.9.0 ]
+if ! version_gt $TAG_BASE "5.9.0"
 then
-    curl -L -o streamthoughts-kafka-connect-file-pulse-2.9.0.zip https://github.com/streamthoughts/kafka-connect-file-pulse/releases/download/v2.9.0/streamthoughts-kafka-connect-file-pulse-2.9.0.zip
-    unzip streamthoughts-kafka-connect-file-pulse-2.9.0.zip
+    if version_gt $VERSION "1.9.9"
+    then
+        log "This connector does not support JDK 8 starting from version 2.0"
+        exit 111
+    fi
 fi
-
 
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
 

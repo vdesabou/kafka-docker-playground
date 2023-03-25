@@ -1,22 +1,30 @@
 #!/bin/bash
 set -e
 
+if [ -z "$CONNECTOR_TAG" ]
+then
+    CONNECTOR_TAG=2.9.0
+fi
+
+if [ ! -f streamthoughts-kafka-connect-file-pulse-${CONNECTOR_TAG}.zip ]
+then
+    curl -L -o streamthoughts-kafka-connect-file-pulse-${CONNECTOR_TAG}.zip https://github.com/streamthoughts/kafka-connect-file-pulse/releases/download/v${CONNECTOR_TAG}/streamthoughts-kafka-connect-file-pulse-${CONNECTOR_TAG}.zip
+fi
+
+export CONNECTOR_ZIP=$PWD/streamthoughts-kafka-connect-file-pulse-${CONNECTOR_TAG}.zip
+VERSION=$CONNECTOR_TAG
+unset CONNECTOR_TAG
+
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
-# if ! version_gt $TAG_BASE "5.9.0"
-# then
-#     if version_gt $CONNECTOR_TAG "1.9.9"
-#     then
-#         log "This connector does not support JDK 8 starting from version 2.0"
-#         exit 111
-#     fi
-# fi
-
-if [ ! -d streamthoughts-kafka-connect-file-pulse-2.9.0 ]
+if ! version_gt $TAG_BASE "5.9.0"
 then
-    curl -L -o streamthoughts-kafka-connect-file-pulse-2.9.0.zip https://github.com/streamthoughts/kafka-connect-file-pulse/releases/download/v2.9.0/streamthoughts-kafka-connect-file-pulse-2.9.0.zip
-    unzip streamthoughts-kafka-connect-file-pulse-2.9.0.zip
+    if version_gt $VERSION "1.9.9"
+    then
+        log "This connector does not support JDK 8 starting from version 2.0"
+        exit 111
+    fi
 fi
 
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
@@ -47,27 +55,27 @@ EOFCONNECT
 
 
 log "Creating XML FilePulse Source connector"
-# if ! version_gt $CONNECTOR_TAG "1.9.9"
-# then
-#     # Version 1.x
-#     curl -X PUT \
-#         -H "Content-Type: application/json" \
-#         --data '{
-#             "connector.class":"io.streamthoughts.kafka.connect.filepulse.source.FilePulseSourceConnector",
-#             "fs.scan.directory.path":"/tmp/kafka-connect/examples/",
-#             "fs.scan.interval.ms":"10000",
-#             "fs.scan.filters":"io.streamthoughts.kafka.connect.filepulse.scanner.local.filter.RegexFileListFilter",
-#             "file.filter.regex.pattern":".*\\.xml$",
-#             "task.reader.class": "io.streamthoughts.kafka.connect.filepulse.reader.XMLFileInputReader",
-#             "offset.strategy":"name",
-#             "topic":"playlists-filepulse-xml-00",
-#             "internal.kafka.reporter.bootstrap.servers": "broker:9092",
-#             "internal.kafka.reporter.topic":"connect-file-pulse-status",
-#             "fs.cleanup.policy.class": "io.streamthoughts.kafka.connect.filepulse.clean.LogCleanupPolicy",
-#             "tasks.max": 1
-#             }' \
-#         http://localhost:8083/connectors/filepulse-source-xml/config | jq .
-# else
+if ! version_gt $VERSION "1.9.9"
+then
+    # Version 1.x
+    curl -X PUT \
+        -H "Content-Type: application/json" \
+        --data '{
+            "connector.class":"io.streamthoughts.kafka.connect.filepulse.source.FilePulseSourceConnector",
+            "fs.scan.directory.path":"/tmp/kafka-connect/examples/",
+            "fs.scan.interval.ms":"10000",
+            "fs.scan.filters":"io.streamthoughts.kafka.connect.filepulse.scanner.local.filter.RegexFileListFilter",
+            "file.filter.regex.pattern":".*\\.xml$",
+            "task.reader.class": "io.streamthoughts.kafka.connect.filepulse.reader.XMLFileInputReader",
+            "offset.strategy":"name",
+            "topic":"playlists-filepulse-xml-00",
+            "internal.kafka.reporter.bootstrap.servers": "broker:9092",
+            "internal.kafka.reporter.topic":"connect-file-pulse-status",
+            "fs.cleanup.policy.class": "io.streamthoughts.kafka.connect.filepulse.clean.LogCleanupPolicy",
+            "tasks.max": 1
+            }' \
+        http://localhost:8083/connectors/filepulse-source-xml/config | jq .
+else
     # Version 2.x
     curl -X PUT \
         -H "Content-Type: application/json" \
@@ -92,7 +100,7 @@ log "Creating XML FilePulse Source connector"
             "tasks.max": 1
             }' \
         http://localhost:8083/connectors/filepulse-source-xml/config | jq .
-# fi
+fi
 
 sleep 5
 
