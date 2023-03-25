@@ -179,6 +179,8 @@ do
           s3_file="s3://kafka-docker-playground/ci/${image_version}-${testdir}-${version}-${script_name}"
           aws s3 rm $s3_file --region us-east-1
         fi
+      else
+        logerror "ERROR: result_file: ${ci_file} does not exist !"
       fi
         if [ "$last_execution_time" != "" ]
         then
@@ -232,9 +234,6 @@ do
           echo -e "👍 CP ${image_version}${connector_version} 🕐 ${time_day_hour} 📄 [${script_name}](https://github.com/vdesabou/kafka-docker-playground/blob/master/$test/$script_name) 🔗 $html_url\n" >> ${gh_msg_file}
           log "👍 CP $image_version 🕐 ${time_day_hour} 📄 ${script_name} 🔗 $html_url"
         fi
-      else
-        logerror "ERROR: result_file: ${ci_file} does not exist !"
-      fi
     done #end image_version
   done #end script
 
