@@ -353,6 +353,38 @@ else
               export CONNECT_TAG="$TAG"
             fi
 
+            ###
+            #  CONNECTOR_ZIP is set
+            ###
+            if [ ! -z "$CONNECTOR_ZIP" ] && [ "$first_loop" = true ]
+            then
+              if [ ! -f "$CONNECTOR_ZIP" ]
+              then
+                logerror "CONNECTOR_ZIP $CONNECTOR_ZIP does not exist!"
+                exit 1
+              fi
+              log "🎯 CONNECTOR_ZIP is set with $CONNECTOR_ZIP"
+              connector_zip_name=$(basename ${CONNECTOR_ZIP})
+              export CONNECT_TAG="CP-$TAG-$connector_zip_name"
+
+              log "👷 Building Docker image ${CP_CONNECT_IMAGE}:${CONNECT_TAG}"
+              tmp_dir=$(mktemp -d -t ci-XXXXXXXXXX)
+              cp $CONNECTOR_ZIP $tmp_dir/
+cat << EOF > $tmp_dir/Dockerfile
+FROM ${CP_CONNECT_IMAGE}:${TAG}
+USER root
+RUN ${CONNECT_3RDPARTY_INSTALL}
+RUN touch /tmp/done
+USER ${CONNECT_USER}
+COPY --chown=$CONNECT_USER:$CONNECT_USER ${connector_zip_name} /tmp
+RUN confluent-hub install --no-prompt /tmp/${connector_zip_name}
+EOF
+              docker build -t ${CP_CONNECT_IMAGE}:${CONNECT_TAG} $tmp_dir
+              rm -rf $tmp_dir
+              first_loop=false
+              continue
+            fi
+
             version_to_get_from_hub="latest"
             if [ "$name" = "kafka-connect-replicator" ]
             then
@@ -431,34 +463,6 @@ RUN ${CONNECT_3RDPARTY_INSTALL}
 RUN touch /tmp/done
 USER ${CONNECT_USER}
 COPY $connector_jar_name $current_jar_path
-EOF
-              docker build -t ${CP_CONNECT_IMAGE}:${CONNECT_TAG} $tmp_dir
-              rm -rf $tmp_dir
-            ###
-            #  CONNECTOR_ZIP is set
-            ###
-            elif [ ! -z "$CONNECTOR_ZIP" ] && [ "$first_loop" = true ]
-            then
-              if [ ! -f "$CONNECTOR_ZIP" ]
-              then
-                logerror "CONNECTOR_ZIP $CONNECTOR_ZIP does not exist!"
-                exit 1
-              fi
-              log "🎯 CONNECTOR_ZIP is set with $CONNECTOR_ZIP"
-              connector_zip_name=$(basename ${CONNECTOR_ZIP})
-              export CONNECT_TAG="CP-$TAG-$connector_zip_name"
-
-              log "👷 Building Docker image ${CP_CONNECT_IMAGE}:${CONNECT_TAG}"
-              tmp_dir=$(mktemp -d -t ci-XXXXXXXXXX)
-              cp $CONNECTOR_ZIP $tmp_dir/
-cat << EOF > $tmp_dir/Dockerfile
-FROM ${CP_CONNECT_IMAGE}:${TAG}
-USER root
-RUN ${CONNECT_3RDPARTY_INSTALL}
-RUN touch /tmp/done
-USER ${CONNECT_USER}
-COPY --chown=$CONNECT_USER:$CONNECT_USER ${connector_zip_name} /tmp
-RUN confluent-hub install --no-prompt /tmp/${connector_zip_name}
 EOF
               docker build -t ${CP_CONNECT_IMAGE}:${CONNECT_TAG} $tmp_dir
               rm -rf $tmp_dir
