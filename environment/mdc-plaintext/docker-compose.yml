@@ -112,6 +112,7 @@ services:
       context: ../../environment/mdc-plaintext/
       args:
         TAG_BASE: ${TAG_BASE}
+        CP_CONNECT_IMAGE: ${CP_CONNECT_IMAGE}
         CONNECT_TAG: ${CONNECT_TAG}
     hostname: connect-us
     container_name: connect-us
