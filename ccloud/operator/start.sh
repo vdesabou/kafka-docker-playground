@@ -119,7 +119,7 @@ helm upgrade --install \
   --set global.sasl.plain.username="${CLOUD_KEY}" \
   --set global.sasl.plain.password="${CLOUD_SECRET}" \
   --set connect.imagePullPolicy="IfNotPresent" \
-  --set connect.image.repository="vdesabou/kafka-docker-playground-connect-operator" \
+  --set connect.image.repository="${CP_CONNECT_IMAGE}-operator" \
   --set connect.image.tag="${TAG}" \
   --set connect.dependencies.kafka.tls.enabled=true \
   --set connect.dependencies.kafka.tls.internal=true \

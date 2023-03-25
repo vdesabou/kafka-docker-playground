@@ -72,7 +72,7 @@ helm upgrade --install \
   --namespace cp-helm-charts \
   --set kafka.bootstrapServers="${BOOTSTRAP_SERVERS}" \
   --set imagePullPolicy="IfNotPresent" \
-  --set image="vdesabou/kafka-docker-playground-connect" \
+  --set image="${CP_CONNECT_IMAGE}" \
   --set imageTag="${TAG}" \
   --set configurationOverrides."ssl\.endpoint\.identification\.algorithm"=https \
   --set configurationOverrides."security\.protocol"=SASL_SSL \

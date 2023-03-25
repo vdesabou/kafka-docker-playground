@@ -29,7 +29,7 @@ services:
   connect-with-fetch-latency:
     cap_add:
       - NET_ADMIN
-    image: vdesabou/kafka-docker-playground-connect:${CONNECT_TAG}
+    image: ${CP_CONNECT_IMAGE}:${CONNECT_TAG}
     hostname: connect-with-fetch-latency
     container_name: connect-with-fetch-latency
     restart: always
@@ -76,7 +76,7 @@ services:
   connect-with-put-latency:
     cap_add:
       - NET_ADMIN
-    image: vdesabou/kafka-docker-playground-connect:${CONNECT_TAG}
+    image: ${CP_CONNECT_IMAGE}:${CONNECT_TAG}
     hostname: connect-with-put-latency
     container_name: connect-with-put-latency
     restart: always

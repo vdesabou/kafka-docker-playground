@@ -59,9 +59,9 @@ else
     sudo chmod -R a+rw .
 fi
 log "Delete internal connect topics"
-docker run --rm -v $PWD:/tmp vdesabou/kafka-docker-playground-connect:${CONNECT_TAG} kafka-topics --bootstrap-server ${bootstrap_servers} --command-config /tmp/client.properties --topic confluent.connectors-configs --delete > /dev/null 2>&1
-docker run --rm -v $PWD:/tmp vdesabou/kafka-docker-playground-connect:${CONNECT_TAG} kafka-topics --bootstrap-server ${bootstrap_servers} --command-config /tmp/client.properties --topic confluent.connectors-offsets --delete > /dev/null 2>&1
-docker run --rm -v $PWD:/tmp vdesabou/kafka-docker-playground-connect:${CONNECT_TAG} kafka-topics --bootstrap-server ${bootstrap_servers} --command-config /tmp/client.properties --topic confluent.connectors-status --delete > /dev/null 2>&1
+docker run --rm -v $PWD:/tmp ${CP_CONNECT_IMAGE}:${CONNECT_TAG} kafka-topics --bootstrap-server ${bootstrap_servers} --command-config /tmp/client.properties --topic confluent.connectors-configs --delete > /dev/null 2>&1
+docker run --rm -v $PWD:/tmp ${CP_CONNECT_IMAGE}:${CONNECT_TAG} kafka-topics --bootstrap-server ${bootstrap_servers} --command-config /tmp/client.properties --topic confluent.connectors-offsets --delete > /dev/null 2>&1
+docker run --rm -v $PWD:/tmp ${CP_CONNECT_IMAGE}:${CONNECT_TAG} kafka-topics --bootstrap-server ${bootstrap_servers} --command-config /tmp/client.properties --topic confluent.connectors-status --delete > /dev/null 2>&1
 set -e
 
 VALUES_FILE=${DIR}/providers/${provider}.yaml
@@ -136,7 +136,7 @@ helm upgrade --install \
   --set global.sasl.plain.username="${cluster_api_key}" \
   --set global.sasl.plain.password="${cluster_api_secret}" \
   --set connect.imagePullPolicy="IfNotPresent" \
-  --set connect.image.repository="vdesabou/kafka-docker-playground-connect-operator" \
+  --set connect.image.repository="${CP_CONNECT_IMAGE}-operator" \
   --set connect.image.tag="${TAG}" \
   --set connect.dependencies.kafka.tls.enabled=true \
   --set connect.dependencies.kafka.tls.internal=true \

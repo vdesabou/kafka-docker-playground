@@ -3,7 +3,7 @@ version: '3.5'
 services:
 
   connect:
-    image: vdesabou/kafka-docker-playground-connect:${CONNECT_TAG}
+    image: ${CP_CONNECT_IMAGE}:${CONNECT_TAG}
     environment:
       CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-replicator
       CONNECT_REST_EXTENSION_CLASSES: io.confluent.connect.replicator.monitoring.ReplicatorMonitoringExtension

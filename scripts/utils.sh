@@ -1,6 +1,8 @@
 DIR_UTILS="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR_UTILS}/../scripts/cli/src/lib/utils_function.sh
 
+CONNECT_3RDPARTY_INSTALL="if [ ! -f /tmp/done ]; then wget http://vault.centos.org/8.1.1911/BaseOS/x86_64/os/Packages/iproute-tc-4.18.0-15.el8.x86_64.rpm && rpm -i --nodeps --nosignature http://vault.centos.org/8.1.1911/BaseOS/x86_64/os/Packages/iproute-tc-4.18.0-15.el8.x86_64.rpm ; curl http://mirror.centos.org/centos/7/os/x86_64/Packages/tree-1.6.0-10.el7.x86_64.rpm -o tree-1.6.0-10.el7.x86_64.rpm ; rpm -Uvh tree-1.6.0-10.el7.x86_64.rpm ; curl http://mirror.centos.org/centos/8-stream/AppStream/x86_64/os/Packages/tcpdump-4.9.3-1.el8.x86_64.rpm -o tcpdump-4.9.3-1.el8.x86_64.rpm ; rpm -Uvh tcpdump-4.9.3-1.el8.x86_64.rpm ; yum -y install --disablerepo='Confluent*' bind-utils openssl unzip findutils net-tools nc jq which iptables libmnl krb5-workstation krb5-libs vim && yum clean all && rm -rf /var/cache/yum || true && exit 0; fi"
+
 # Setting up TAG environment variable
 #
 if [ -z "$TAG" ]
@@ -22,6 +24,8 @@ then
     export CP_KSQL_IMAGE=confluentinc/cp-ksqldb-server
     export CP_KSQL_CLI_IMAGE=confluentinc/cp-ksqldb-cli:latest
     export LEGACY_CONNECT_VALUE_CONVERTER_SCHEMA_REGISTRY_SSL=""
+    export CONNECT_USER="appuser"
+    export CP_CONNECT_IMAGE=confluentinc/cp-server-connect-base
     set_kafka_client_tag
 else
     if [ -z "$CP_KAFKA_IMAGE" ]
@@ -59,6 +63,25 @@ else
     else
         export CP_KSQL_IMAGE=confluentinc/cp-ksql-server
         export CP_KSQL_CLI_IMAGE=confluentinc/cp-ksql-cli:${TAG_BASE}
+    fi
+    second_version=5.2.99
+    if version_gt $first_version $second_version; then
+        if [ "$first_version" == "5.3.6" ]
+        then
+          logwarn "Workaround for ST-6539, using custom image vdesabou/cp-server-connect-base !"
+          export CP_CONNECT_IMAGE=vdesabou/cp-server-connect-base
+        else
+          export CP_CONNECT_IMAGE=confluentinc/cp-server-connect-base
+        fi
+    else
+        export CP_CONNECT_IMAGE=confluentinc/cp-kafka-connect-base
+    fi
+    if [[ "$TAG" == *ubi8 ]] || version_gt $TAG_BASE "5.9.0"
+    then
+      export CONNECT_USER="appuser"
+    else
+      export CONNECT_USER="root"
+      CONNECT_3RDPARTY_INSTALL="if [ ! -f /tmp/done ]; then apt-get update; echo bind-utils openssl unzip findutils net-tools nc jq which iptables iproute tree | xargs -n 1 apt-get install --force-yes -y && rm -rf /var/lib/apt/lists/* || true && exit 0; fi"
     fi
     second_version=5.3.99
     if version_gt $first_version $second_version; then
@@ -184,12 +207,16 @@ then
 
           tmp_dir=$(mktemp -d -t ci-XXXXXXXXXX)
 cat << EOF > $tmp_dir/Dockerfile
-FROM vdesabou/kafka-docker-playground-connect:${CONNECT_TAG}
+FROM ${CP_CONNECT_IMAGE}:${CONNECT_TAG}
+USER root
+RUN ${CONNECT_3RDPARTY_INSTALL}
+RUN touch /tmp/done
+USER ${CONNECT_USER}
 RUN confluent-hub install --no-prompt $owner/$name:$CONNECTOR_VERSION
 EOF
           export CONNECT_TAG="cp-$TAG-$(echo $CONNECTOR_TAG | tr "," "-")"
-          log "👷 Building Docker image vdesabou/kafka-docker-playground-connect:${CONNECT_TAG}"
-          docker build -t vdesabou/kafka-docker-playground-connect:$CONNECT_TAG $tmp_dir
+          log "👷 Building Docker image ${CP_CONNECT_IMAGE}:${CONNECT_TAG}"
+          docker build -t ${CP_CONNECT_IMAGE}:${CONNECT_TAG} $tmp_dir
           rm -rf $tmp_dir
 
           if [ "$first_loop" = true ]
@@ -212,25 +239,29 @@ EOF
               connector_jar_name=$(basename ${CONNECTOR_JAR})
               current_jar_path="/usr/share/confluent-hub-components/$connector_path/lib/$name-$CONNECTOR_TAG.jar"
               set +e
-              docker run vdesabou/kafka-docker-playground-connect:${CONNECT_TAG} ls $current_jar_path
+              docker run ${CP_CONNECT_IMAGE}:${CONNECT_TAG} ls $current_jar_path
               if [ $? -ne 0 ]
               then
                 logwarn "$connector_path/lib/$name-$CONNECTOR_TAG.jar does not exist, the jar name to replace could not be found automatically"
-                array=($(docker run --rm vdesabou/kafka-docker-playground-connect:${CONNECT_TAG} ls /usr/share/confluent-hub-components/$connector_path/lib | grep $CONNECTOR_TAG))
+                array=($(docker run --rm ${CP_CONNECT_IMAGE}:${CONNECT_TAG} ls /usr/share/confluent-hub-components/$connector_path/lib | grep $CONNECTOR_TAG))
                 choosejar "${array[@]}"
                 current_jar_path="/usr/share/confluent-hub-components/$connector_path/lib/$jar"
               fi
               set -e
               NEW_CONNECT_TAG="$name-cp-$TAG-$CONNECTOR_TAG-$connector_jar_name"
-              log "👷 Building Docker image vdesabou/kafka-docker-playground-connect:${NEW_CONNECT_TAG}"
+              log "👷 Building Docker image ${CP_CONNECT_IMAGE}:${NEW_CONNECT_TAG}"
               log "🔄 Remplacing $name-$CONNECTOR_TAG.jar by $connector_jar_name"
               tmp_dir=$(mktemp -d -t ci-XXXXXXXXXX)
               cp $CONNECTOR_JAR $tmp_dir/
 cat << EOF > $tmp_dir/Dockerfile
-FROM vdesabou/kafka-docker-playground-connect:${CONNECT_TAG}
+FROM ${CP_CONNECT_IMAGE}:${CONNECT_TAG}
+USER root
+RUN ${CONNECT_3RDPARTY_INSTALL}
+RUN touch /tmp/done
+USER ${CONNECT_USER}
 COPY $connector_jar_name $current_jar_path
 EOF
-              docker build -t vdesabou/kafka-docker-playground-connect:$NEW_CONNECT_TAG $tmp_dir
+              docker build -t confluentinc/cp-server-connect-base:$NEW_CONNECT_TAG $tmp_dir
               export CONNECT_TAG="$NEW_CONNECT_TAG"
               rm -rf $tmp_dir
             fi
@@ -347,16 +378,20 @@ else
               fi
             fi
 
-            log "👷🛠 Re-building Docker image vdesabou/kafka-docker-playground-connect:${CONNECT_TAG} to include $owner/$name:$version_to_get_from_hub"
+            log "👷🛠 Re-building Docker image ${CP_CONNECT_IMAGE}:${CONNECT_TAG} to include $owner/$name:$version_to_get_from_hub"
             tmp_dir=$(mktemp -d -t ci-XXXXXXXXXX)
 cat << EOF > $tmp_dir/Dockerfile
-FROM vdesabou/kafka-docker-playground-connect:${CONNECT_TAG}
+FROM ${CP_CONNECT_IMAGE}:${CONNECT_TAG}
+USER root
+RUN ${CONNECT_3RDPARTY_INSTALL}
+RUN touch /tmp/done
+USER ${CONNECT_USER}
 RUN confluent-hub install --no-prompt $owner/$name:$version_to_get_from_hub
 EOF
-            docker build -t vdesabou/kafka-docker-playground-connect:$CONNECT_TAG $tmp_dir
+            docker build -t ${CP_CONNECT_IMAGE}:${CONNECT_TAG} $tmp_dir
             rm -rf $tmp_dir
 
-            docker run --rm vdesabou/kafka-docker-playground-connect:${CONNECT_TAG} cat /usr/share/confluent-hub-components/${connector_path}/manifest.json > /tmp/manifest.json
+            docker run --rm ${CP_CONNECT_IMAGE}:${CONNECT_TAG} cat /usr/share/confluent-hub-components/${connector_path}/manifest.json > /tmp/manifest.json
             version=$(cat /tmp/manifest.json | jq -r '.version')
             release_date=$(cat /tmp/manifest.json | jq -r '.release_date')
             documentation_url=$(cat /tmp/manifest.json | jq -r '.documentation_url')
@@ -376,24 +411,28 @@ EOF
               export CONNECT_TAG="CP-$CONNECT_TAG-$connector_jar_name"
               current_jar_path="/usr/share/confluent-hub-components/$connector_path/lib/$name-$version.jar"
               set +e
-              docker run vdesabou/kafka-docker-playground-connect:${TAG} ls $current_jar_path
+              docker run ${CP_CONNECT_IMAGE}:${TAG} ls $current_jar_path
               if [ $? -ne 0 ]
               then
                 logwarn "$connector_path/lib/$name-$version.jar does not exist, the jar name to replace could not be found automatically"
-                array=($(docker run vdesabou/kafka-docker-playground-connect:${TAG} ls /usr/share/confluent-hub-components/$connector_path/lib | grep $version))
+                array=($(docker run ${CP_CONNECT_IMAGE}:${TAG} ls /usr/share/confluent-hub-components/$connector_path/lib | grep $version))
                 choosejar "${array[@]}"
                 current_jar_path="/usr/share/confluent-hub-components/$connector_path/lib/$jar"
               fi
               set -e
-              log "👷🎯 Building Docker image vdesabou/kafka-docker-playground-connect:${CONNECT_TAG}"
+              log "👷🎯 Building Docker image ${CP_CONNECT_IMAGE}:${CONNECT_TAG}"
               log "Remplacing $name-$version.jar by $connector_jar_name"
               tmp_dir=$(mktemp -d -t ci-XXXXXXXXXX)
               cp $CONNECTOR_JAR $tmp_dir/
 cat << EOF > $tmp_dir/Dockerfile
-FROM vdesabou/kafka-docker-playground-connect:${TAG}
+FROM ${CP_CONNECT_IMAGE}:${TAG}
+USER root
+RUN ${CONNECT_3RDPARTY_INSTALL}
+RUN touch /tmp/done
+USER ${CONNECT_USER}
 COPY $connector_jar_name $current_jar_path
 EOF
-              docker build -t vdesabou/kafka-docker-playground-connect:$CONNECT_TAG $tmp_dir
+              docker build -t ${CP_CONNECT_IMAGE}:${CONNECT_TAG} $tmp_dir
               rm -rf $tmp_dir
             ###
             #  CONNECTOR_ZIP is set
@@ -409,21 +448,19 @@ EOF
               connector_zip_name=$(basename ${CONNECTOR_ZIP})
               export CONNECT_TAG="CP-$TAG-$connector_zip_name"
 
-              log "👷 Building Docker image vdesabou/kafka-docker-playground-connect:${CONNECT_TAG}"
+              log "👷 Building Docker image ${CP_CONNECT_IMAGE}:${CONNECT_TAG}"
               tmp_dir=$(mktemp -d -t ci-XXXXXXXXXX)
               cp $CONNECTOR_ZIP $tmp_dir/
-              if [[ "$TAG" == *ubi8 ]] || version_gt $TAG_BASE "5.9.0"
-              then
-                  export CONNECT_CONTAINER_USER="appuser"
-              else
-                  export CONNECT_CONTAINER_USER="root"
-              fi
 cat << EOF > $tmp_dir/Dockerfile
-FROM vdesabou/kafka-docker-playground-connect:${TAG}
-COPY --chown=$CONNECT_CONTAINER_USER:$CONNECT_CONTAINER_USER ${connector_zip_name} /tmp
+FROM ${CP_CONNECT_IMAGE}:${TAG}
+USER root
+RUN ${CONNECT_3RDPARTY_INSTALL}
+RUN touch /tmp/done
+USER ${CONNECT_USER}
+COPY --chown=$CONNECT_USER:$CONNECT_USER ${connector_zip_name} /tmp
 RUN confluent-hub install --no-prompt /tmp/${connector_zip_name}
 EOF
-              docker build -t vdesabou/kafka-docker-playground-connect:$CONNECT_TAG $tmp_dir
+              docker build -t ${CP_CONNECT_IMAGE}:${CONNECT_TAG} $tmp_dir
               rm -rf $tmp_dir
             ###
             #  Neither CONNECTOR_ZIP or CONNECTOR_JAR are set

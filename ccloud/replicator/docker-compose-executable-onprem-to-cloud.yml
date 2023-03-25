@@ -48,5 +48,5 @@ services:
       SCHEMA_REGISTRY_KAFKASTORE_BOOTSTRAP_SERVERS: broker:9092
 
   connect:
-    image: vdesabou/kafka-docker-playground-connect:${CONNECT_TAG}
+    image: ${CP_CONNECT_IMAGE}:${CONNECT_TAG}
     entrypoint: ["sh", "-c", "sleep 2073600"]

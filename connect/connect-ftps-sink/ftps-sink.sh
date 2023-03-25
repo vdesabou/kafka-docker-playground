@@ -6,7 +6,7 @@ source ${DIR}/../../scripts/utils.sh
 
 cd ${DIR}/security
 log "🔐 Generate keys and certificates used for SSL"
-docker run -u0 --rm -v $PWD:/tmp vdesabou/kafka-docker-playground-connect:${CONNECT_TAG} bash -c "/tmp/certs-create.sh > /dev/null 2>&1 && chown -R $(id -u $USER):$(id -g $USER) /tmp/"
+docker run -u0 --rm -v $PWD:/tmp ${CP_CONNECT_IMAGE}:${CONNECT_TAG} bash -c "/tmp/certs-create.sh > /dev/null 2>&1 && chown -R $(id -u $USER):$(id -g $USER) /tmp/"
 cd ${DIR}
 
 if [ ! -z "$CI" ]

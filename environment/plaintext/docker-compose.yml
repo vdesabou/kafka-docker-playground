@@ -167,7 +167,7 @@ services:
       SCHEMA_REGISTRY_SCHEMA_PROVIDERS_AVRO_VALIDATE_DEFAULTS: "true"
 
   connect:
-    image: vdesabou/kafka-docker-playground-connect:${CONNECT_TAG}
+    image: ${CP_CONNECT_IMAGE}:${CONNECT_TAG}
     hostname: connect
     container_name: connect
     restart: always
@@ -232,7 +232,7 @@ services:
                   -XX:MaxInlineLevel=15 -Djava.awt.headless=true
 
   connect2:
-    image: vdesabou/kafka-docker-playground-connect:${CONNECT_TAG}
+    image: ${CP_CONNECT_IMAGE}:${CONNECT_TAG}
     hostname: connect2
     container_name: connect2
     restart: always
@@ -300,7 +300,7 @@ services:
                   -XX:MaxInlineLevel=15 -Djava.awt.headless=true
 
   connect3:
-    image: vdesabou/kafka-docker-playground-connect:${CONNECT_TAG}
+    image: ${CP_CONNECT_IMAGE}:${CONNECT_TAG}
     hostname: connect3
     container_name: connect3
     restart: always

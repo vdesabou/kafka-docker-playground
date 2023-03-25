@@ -8,7 +8,7 @@ if [ ! -z "$CONNECTOR_TAG" ]
 then
      JDBC_CONNECTOR_VERSION=$CONNECTOR_TAG
 else
-     JDBC_CONNECTOR_VERSION=$(docker run vdesabou/kafka-docker-playground-connect:${CONNECT_TAG} cat /usr/share/confluent-hub-components/confluentinc-kafka-connect-jdbc/manifest.json | jq -r '.version')
+     JDBC_CONNECTOR_VERSION=$(docker run ${CP_CONNECT_IMAGE}:${CONNECT_TAG} cat /usr/share/confluent-hub-components/confluentinc-kafka-connect-jdbc/manifest.json | jq -r '.version')
 fi
 log "JDBC Connector version is $JDBC_CONNECTOR_VERSION"
 if ! version_gt $JDBC_CONNECTOR_VERSION "9.9.9"; then

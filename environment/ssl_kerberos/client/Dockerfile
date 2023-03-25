@@ -1,5 +1,5 @@
 ARG TAG
-FROM vdesabou/kafka-docker-playground-connect:${TAG}
+FROM ${CP_CONNECT_IMAGE}:${TAG}
 
 # 4. Copy in required settings for client access to Kafka
 COPY consumer.properties /etc/kafka/consumer.properties
