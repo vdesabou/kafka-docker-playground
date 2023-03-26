@@ -1,4 +1,5 @@
 ARG TAG
+ARG CP_CONNECT_IMAGE
 FROM ${CP_CONNECT_IMAGE}:${TAG}
 
 # 4. Copy in required settings for client access to Kafka

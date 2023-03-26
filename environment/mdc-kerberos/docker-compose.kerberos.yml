@@ -21,6 +21,7 @@ services:
     build:
       context: ../../environment/mdc-kerberos/client
       args:
+        CP_CONNECT_IMAGE: ${CP_CONNECT_IMAGE}
         TAG: ${TAG}
     container_name: client
     depends_on:

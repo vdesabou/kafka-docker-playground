@@ -20,6 +20,7 @@ services:
     build:
       context: ../../environment/ssl_kerberos/client
       args:
+        CP_CONNECT_IMAGE: ${CP_CONNECT_IMAGE}
         TAG: ${TAG}
     container_name: client
     hostname: client.kerberos-demo.local
