@@ -198,13 +198,7 @@ then
             logwarn "CONNECTOR_TAG was not set for element $i, setting it to latest"
             CONNECTOR_VERSION="latest"
           fi
-          if [ "$first_loop" = true ]
-          then
-            export CONNECT_TAG="$TAG"
-          else
-            export CONNECT_TAG="cp-$TAG-$(echo $CONNECTOR_TAG | tr "," "-")"
-          fi
-
+          export CONNECT_TAG="$TAG"
           tmp_dir=$(mktemp -d -t ci-XXXXXXXXXX)
 cat << EOF > $tmp_dir/Dockerfile
 FROM ${CP_CONNECT_IMAGE}:${CONNECT_TAG}
@@ -214,7 +208,6 @@ RUN touch /tmp/done
 USER ${CONNECT_USER}
 RUN confluent-hub install --no-prompt $owner/$name:$CONNECTOR_VERSION
 EOF
-          export CONNECT_TAG="cp-$TAG-$(echo $CONNECTOR_TAG | tr "," "-")"
           log "👷 Building Docker image ${CP_CONNECT_IMAGE}:${CONNECT_TAG}"
           docker build -t ${CP_CONNECT_IMAGE}:${CONNECT_TAG} $tmp_dir
           rm -rf $tmp_dir
@@ -248,7 +241,6 @@ EOF
                 current_jar_path="/usr/share/confluent-hub-components/$connector_path/lib/$jar"
               fi
               set -e
-              NEW_CONNECT_TAG="$name-cp-$TAG-$CONNECTOR_TAG-$connector_jar_name"
               log "👷 Building Docker image ${CP_CONNECT_IMAGE}:${NEW_CONNECT_TAG}"
               log "🔄 Remplacing $name-$CONNECTOR_TAG.jar by $connector_jar_name"
               tmp_dir=$(mktemp -d -t ci-XXXXXXXXXX)
@@ -261,8 +253,7 @@ RUN touch /tmp/done
 USER ${CONNECT_USER}
 COPY $connector_jar_name $current_jar_path
 EOF
-              docker build -t confluentinc/cp-server-connect-base:$NEW_CONNECT_TAG $tmp_dir
-              export CONNECT_TAG="$NEW_CONNECT_TAG"
+              docker build -t ${CP_CONNECT_IMAGE}:${CONNECT_TAG} $tmp_dir
               rm -rf $tmp_dir
             fi
           fi
@@ -365,7 +356,6 @@ else
               fi
               log "🎯 CONNECTOR_ZIP is set with $CONNECTOR_ZIP"
               connector_zip_name=$(basename ${CONNECTOR_ZIP})
-              export CONNECT_TAG="CP-$TAG-$connector_zip_name"
 
               log "👷 Building Docker image ${CP_CONNECT_IMAGE}:${CONNECT_TAG}"
               tmp_dir=$(mktemp -d -t ci-XXXXXXXXXX)
