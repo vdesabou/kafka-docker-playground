@@ -42,3 +42,8 @@ function get_connector_list() {
 
   curl $security_certs -s "$connect_url/connectors" | jq -r '.[]'
 }
+
+function get_examples_list_with_fzf() {
+  DIR_CLI="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
+  find $DIR_CLI/../.. -name \*.sh ! -name 'stop.sh' -type f | fzf
+}

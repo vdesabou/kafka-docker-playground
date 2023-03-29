@@ -15,6 +15,69 @@ commands:
   help: Return some completion for topic list
   private: true
 
+- name: get-examples-list-with-fzf
+  help: Return some completion for examples list
+  private: true
+
+- name: run
+  group: Run
+
+  help: |-
+    🛠  Run example.
+    
+    👉 Check documentation xxx
+
+  flags:
+  - long: --file
+    short: -f
+    required: true
+    validate: file_exists
+    arg: file
+    completions:
+      - $(playground get-examples-list-with-fzf)
+    help: |-
+      Example file to run.
+  - long: --tag
+    arg: tag
+    required: false
+    help: CP version to use
+  - long: --connector-tag
+    arg: connector_tag
+    required: false
+    help: Connector version to use
+    conflicts: [--connector-zip]
+  - long: --connector-zip
+    arg: connector_zip
+    required: false
+    help: Connector zip to use
+    conflicts: [--connector-tag]
+  - long: --connector-jar
+    arg: connector_jar
+    validate: file_exists
+    required: false
+    help: Connector jar to use
+  - long: --disable-ksqldb
+    required: false
+    help: Disable ksqlDB
+  - long: --disable-control-center
+    required: false
+    help: Disable Control Center
+  - long: --enable-conduktor
+    required: false
+    help: Enable Conduktor
+  - long: --enable-multiple-brokers
+    required: false
+    help: Enable Multiple brokers
+  - long: --enable-multiple-connect-workers
+    required: false
+    help: Enable Multiple Connect Workers
+  - long: --enable-jmx-grafana
+    required: false
+    help: Enable Grafana
+  - long: --enable-kcat
+    required: false
+    help: Enable kcat
+
 - name: bootstrap-reproduction-model
   environment_variables:
   - name: OUTPUT_FOLDER 
@@ -74,7 +137,6 @@ commands:
       Number of java producers to generate.
 
   - long: --custom-smt
-    short: -s
     help: |-
       Add a custom SMT (no-op).
 
