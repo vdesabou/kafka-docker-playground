@@ -1,7 +1,7 @@
 DIR_UTILS="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR_UTILS}/../scripts/cli/src/lib/utils_function.sh
 
-CONNECT_3RDPARTY_INSTALL="if [ ! -f /tmp/done ]; then wget http://vault.centos.org/8.1.1911/BaseOS/x86_64/os/Packages/iproute-tc-4.18.0-15.el8.x86_64.rpm && rpm -i --nodeps --nosignature http://vault.centos.org/8.1.1911/BaseOS/x86_64/os/Packages/iproute-tc-4.18.0-15.el8.x86_64.rpm ; curl http://mirror.centos.org/centos/7/os/x86_64/Packages/tree-1.6.0-10.el7.x86_64.rpm -o tree-1.6.0-10.el7.x86_64.rpm ; rpm -Uvh tree-1.6.0-10.el7.x86_64.rpm ; curl http://mirror.centos.org/centos/8-stream/AppStream/x86_64/os/Packages/tcpdump-4.9.3-1.el8.x86_64.rpm -o tcpdump-4.9.3-1.el8.x86_64.rpm ; rpm -Uvh tcpdump-4.9.3-1.el8.x86_64.rpm ; yum -y install --disablerepo='Confluent*' bind-utils openssl unzip findutils net-tools nc jq which iptables libmnl krb5-workstation krb5-libs vim && yum clean all && rm -rf /var/cache/yum || true && exit 0; fi"
+CONNECT_3RDPARTY_INSTALL="if [ ! -f /tmp/done ]; then wget http://vault.centos.org/8.1.1911/BaseOS/x86_64/os/Packages/iproute-tc-4.18.0-15.el8.x86_64.rpm && rpm -i --nodeps --nosignature http://vault.centos.org/8.1.1911/BaseOS/x86_64/os/Packages/iproute-tc-4.18.0-15.el8.x86_64.rpm & curl http://mirror.centos.org/centos/7/os/x86_64/Packages/tree-1.6.0-10.el7.x86_64.rpm -o tree-1.6.0-10.el7.x86_64.rpm && rpm -Uvh tree-1.6.0-10.el7.x86_64.rpm && curl http://mirror.centos.org/centos/8-stream/AppStream/x86_64/os/Packages/tcpdump-4.9.3-1.el8.x86_64.rpm -o tcpdump-4.9.3-1.el8.x86_64.rpm && rpm -Uvh tcpdump-4.9.3-1.el8.x86_64.rpm && yum -y install --disablerepo='Confluent*' bind-utils openssl unzip findutils net-tools nc jq which iptables libmnl krb5-workstation krb5-libs vim && yum clean all && rm -rf /var/cache/yum && touch /tmp/done|| true && exit 0; fi"
 
 # Setting up TAG environment variable
 #
@@ -81,7 +81,7 @@ else
       export CONNECT_USER="appuser"
     else
       export CONNECT_USER="root"
-      CONNECT_3RDPARTY_INSTALL="if [ ! -f /tmp/done ]; then apt-get update; echo bind-utils openssl unzip findutils net-tools nc jq which iptables iproute tree | xargs -n 1 apt-get install --force-yes -y && rm -rf /var/lib/apt/lists/* || true && exit 0; fi"
+      CONNECT_3RDPARTY_INSTALL="if [ ! -f /tmp/done ]; then apt-get update && echo bind-utils openssl unzip findutils net-tools nc jq which iptables iproute tree | xargs -n 1 apt-get install --force-yes -y && rm -rf /var/lib/apt/lists/* && touch /tmp/done || true && exit 0; fi"
     fi
     second_version=5.3.99
     if version_gt $first_version $second_version; then
@@ -204,7 +204,6 @@ cat << EOF > $tmp_dir/Dockerfile
 FROM ${CP_CONNECT_IMAGE}:${CONNECT_TAG}
 USER root
 RUN ${CONNECT_3RDPARTY_INSTALL}
-RUN touch /tmp/done
 USER ${CONNECT_USER}
 RUN confluent-hub install --no-prompt $owner/$name:$CONNECTOR_VERSION
 EOF
@@ -249,7 +248,6 @@ cat << EOF > $tmp_dir/Dockerfile
 FROM ${CP_CONNECT_IMAGE}:${CONNECT_TAG}
 USER root
 RUN ${CONNECT_3RDPARTY_INSTALL}
-RUN touch /tmp/done
 USER ${CONNECT_USER}
 COPY $connector_jar_name $current_jar_path
 EOF
@@ -364,7 +362,6 @@ cat << EOF > $tmp_dir/Dockerfile
 FROM ${CP_CONNECT_IMAGE}:${TAG}
 USER root
 RUN ${CONNECT_3RDPARTY_INSTALL}
-RUN touch /tmp/done
 USER ${CONNECT_USER}
 COPY --chown=$CONNECT_USER:$CONNECT_USER ${connector_zip_name} /tmp
 RUN confluent-hub install --no-prompt /tmp/${connector_zip_name}
@@ -406,7 +403,6 @@ cat << EOF > $tmp_dir/Dockerfile
 FROM ${CP_CONNECT_IMAGE}:${CONNECT_TAG}
 USER root
 RUN ${CONNECT_3RDPARTY_INSTALL}
-RUN touch /tmp/done
 USER ${CONNECT_USER}
 RUN confluent-hub install --no-prompt $owner/$name:$version_to_get_from_hub
 EOF
@@ -450,7 +446,6 @@ cat << EOF > $tmp_dir/Dockerfile
 FROM ${CP_CONNECT_IMAGE}:${TAG}
 USER root
 RUN ${CONNECT_3RDPARTY_INSTALL}
-RUN touch /tmp/done
 USER ${CONNECT_USER}
 COPY $connector_jar_name $current_jar_path
 EOF
