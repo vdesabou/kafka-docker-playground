@@ -80,6 +80,16 @@ then
   check_arm64_support "${DIR}" "${DOCKER_COMPOSE_FILE_OVERRIDE}"
 fi
 
+# Adding Schema Registry plugin profile
+profile_schema_registry_command=""
+if [ -z "$ENABLE_SR_MAVEN_PLUGIN_NODE" ]
+then
+  profile_schema_registry_command=""
+else
+  log " Starting Schema Registry plugin profile"
+  profile_schema_registry_command="--profile sr_plugin_app"
+fi
+
 # defined 3 Connect variable and when profile is included/excluded
 profile_connect_nodes_command=""
 if [ -z "$ENABLE_CONNECT_NODES" ]
@@ -104,9 +114,9 @@ fi
 
 docker-compose -f ../../environment/plaintext/docker-compose.yml ${ENABLE_DOCKER_COMPOSE_FILE_OVERRIDE} build
 docker-compose -f ../../environment/plaintext/docker-compose.yml ${ENABLE_DOCKER_COMPOSE_FILE_OVERRIDE} down -v --remove-orphans
-docker-compose -f ../../environment/plaintext/docker-compose.yml ${ENABLE_DOCKER_COMPOSE_FILE_OVERRIDE} ${profile_control_center_command} ${profile_ksqldb_command} ${profile_grafana_command} ${profile_kcat_command} ${profile_conduktor_command} ${profile_oracle_datagen_command} ${profile_connect_nodes_command} ${profile_kafka_nodes_command} up -d
+docker-compose -f ../../environment/plaintext/docker-compose.yml ${ENABLE_DOCKER_COMPOSE_FILE_OVERRIDE} ${profile_control_center_command} ${profile_ksqldb_command} ${profile_grafana_command} ${profile_kcat_command} ${profile_conduktor_command} ${profile_oracle_datagen_command} ${profile_connect_nodes_command} ${profile_kafka_nodes_command} ${profile_schema_registry_command} up -d
 log "📝 To see the actual properties file, use cli command playground get-properties -c <container>"
-command="source ../../scripts/utils.sh && docker-compose -f ../../environment/plaintext/docker-compose.yml ${ENABLE_DOCKER_COMPOSE_FILE_OVERRIDE} ${profile_control_center_command} ${profile_ksqldb_command} ${profile_grafana_command} ${profile_kcat_command} ${profile_conduktor_command} ${profile_oracle_datagen_command} ${profile_connect_nodes_command} ${profile_kafka_nodes_command} up -d"
+command="source ../../scripts/utils.sh && docker-compose -f ../../environment/plaintext/docker-compose.yml ${ENABLE_DOCKER_COMPOSE_FILE_OVERRIDE} ${profile_control_center_command} ${profile_ksqldb_command} ${profile_grafana_command} ${profile_kcat_command} ${profile_conduktor_command} ${profile_oracle_datagen_command} ${profile_connect_nodes_command} ${profile_kafka_nodes_command} ${profile_schema_registry_command} up -d"
 echo "$command" > /tmp/playground-command
 log "✨ If you modify a docker-compose file and want to re-create the container(s), run cli command playground recreate-container"
 

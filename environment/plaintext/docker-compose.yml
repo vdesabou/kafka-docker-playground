@@ -552,3 +552,14 @@ services:
       RUN_MODE: "nano"
     profiles:
       - "conduktor"
+
+  sr_plugin:
+    image: cdpop001/sr_plugins:v1-release
+    hostname: sr_plugin
+    container_name: sr_plugin
+    depends_on:
+      - broker
+    ports:
+      - 8080:8080
+    profiles:
+      - "sr_plugin_app"
