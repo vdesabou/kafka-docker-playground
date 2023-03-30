@@ -553,10 +553,10 @@ services:
     profiles:
       - "conduktor"
 
-  sr_plugin:
+  sr_plugins:
     image: cdpop001/sr_plugins:v1-release
-    hostname: sr_plugin
-    container_name: sr_plugin
+    hostname: sr_plugins
+    container_name: sr_plugins
     depends_on:
       - broker
     ports:
