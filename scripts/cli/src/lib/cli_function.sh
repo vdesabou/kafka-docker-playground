@@ -44,6 +44,16 @@ function get_connector_list() {
 }
 
 function get_examples_list_with_fzf() {
+  without_repro="$1"
+
   DIR_CLI="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
-  find $DIR_CLI/../.. -name \*.sh ! -name 'stop.sh' -type f | fzf
+  dir1=$(echo ${DIR_CLI%/*})
+  dir2=$(echo ${dir1%/*})
+
+  if [ $without_repro == "true" ]
+  then
+    find $dir2 -name \*.sh ! -name 'stop.sh' ! -path '*/scripts/*' ! -path '*/reproduction-models/*' | fzf
+  else
+    find $dir2 -name \*.sh ! -name 'stop.sh' ! -path '*/scripts/*' | fzf
+  fi
 }

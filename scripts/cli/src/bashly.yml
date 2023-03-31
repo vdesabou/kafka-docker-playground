@@ -18,6 +18,9 @@ commands:
 - name: get-examples-list-with-fzf
   help: Return some completion for examples list
   private: true
+  flags:
+  - long: --without-repro
+    required: false
 
 - name: run
   group: Run
@@ -86,7 +89,8 @@ commands:
     help: 📁 Output folder where to generate bootstrapped files.
     default: reproduction-models
   group: Bootstrap
-
+  dependencies:
+  - fzf
   help: |-
     🛠  Bootstrap reproduction model.
     
@@ -99,7 +103,7 @@ commands:
     validate: file_exists
     arg: file
     completions:
-      - $(ls *.sh)
+      - $(playground get-examples-list-with-fzf --without-repro)
     help: |-
       Example file to use as basis.
 

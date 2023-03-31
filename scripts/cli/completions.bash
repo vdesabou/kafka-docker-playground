@@ -37,7 +37,7 @@ _playground_completions() {
       ;;
 
     'bootstrap-reproduction-model'*'--file')
-      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "$(ls *.sh)")" -- "$cur" )
+      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "$(playground get-examples-list-with-fzf --without-repro)")" -- "$cur" )
       ;;
 
     'enable-remote-debugging'*'--container')
@@ -49,7 +49,7 @@ _playground_completions() {
       ;;
 
     'bootstrap-reproduction-model'*'-f')
-      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "$(ls *.sh)")" -- "$cur" )
+      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "$(playground get-examples-list-with-fzf --without-repro)")" -- "$cur" )
       ;;
 
     'bootstrap-reproduction-model'*'-p')
@@ -109,7 +109,7 @@ _playground_completions() {
       ;;
 
     'get-examples-list-with-fzf'*)
-      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "--help -h")" -- "$cur" )
+      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "--help --without-repro -h")" -- "$cur" )
       ;;
 
     'get-properties'*'--container')

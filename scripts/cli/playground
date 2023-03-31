@@ -163,13 +163,19 @@ playground_get_examples_list_with_fzf_usage() {
   fi
 
   printf "%s\n" "$(bold "== Usage ==")"
-  printf "  playground get-examples-list-with-fzf\n"
+  printf "  playground get-examples-list-with-fzf [OPTIONS]\n"
   printf "  playground get-examples-list-with-fzf --help | -h\n"
   echo
 
   # :command.long_usage
   if [[ -n $long_usage ]]; then
     printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_flags
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--without-repro")"
+    printf "\n"
+    echo
 
     # :command.usage_fixed_flags
     printf "  %s\n" "$(magenta "--help, -h")"
@@ -1587,8 +1593,18 @@ function get_connector_list() {
 }
 
 function get_examples_list_with_fzf() {
+  without_repro="$1"
+
   DIR_CLI="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
-  find $DIR_CLI/../.. -name \*.sh ! -name 'stop.sh' -type f | fzf
+  dir1=$(echo ${DIR_CLI%/*})
+  dir2=$(echo ${dir1%/*})
+
+  if [ $without_repro == "true" ]
+  then
+    find $dir2 -name \*.sh ! -name 'stop.sh' ! -path '*/scripts/*' ! -path '*/reproduction-models/*' | fzf
+  else
+    find $dir2 -name \*.sh ! -name 'stop.sh' ! -path '*/scripts/*' | fzf
+  fi
 }
 
 # src/lib/colors.sh
@@ -5168,7 +5184,14 @@ playground_get_topic_list_command() {
 # :command.function
 playground_get_examples_list_with_fzf_command() {
   # src/get_examples_list_with_fzf_command.sh
-  get_examples_list_with_fzf
+  without_repro="${args[--without-repro]}"
+
+  if [[ -n "$without_repro" ]]
+  then
+      get_examples_list_with_fzf "true"
+  else
+      get_examples_list_with_fzf
+  fi
 }
 
 # :command.function
@@ -5329,27 +5352,15 @@ playground_bootstrap_reproduction_model_command() {
   IGNORE_CHECK_FOR_DOCKER_COMPOSE=true
 
   DIR_CLI="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
+  dir1=$(echo ${DIR_CLI%/*})
+  root_folder=$(echo ${dir1%/*})
 
-  root_folder=${DIR_CLI}/../..
-
-  test_file="$PWD/${args[--file]}"
+  test_file="${args[--file]}"
   description="${args[--description]}"
   producer="${args[--producer]}"
   nb_producers="${args[--nb-producers]}"
   add_custom_smt="${args[--custom-smt]}"
   sink_file="${args[--pipeline]}"
-
-  if [ "$test_file" = "" ]
-  then
-    logerror "ERROR: test_file is not provided as argument!"
-    exit 1
-  fi
-
-  if [ ! -f "$test_file" ]
-  then
-    logerror "ERROR: test_file $test_file does not exist!"
-    exit 1
-  fi
 
   if [[ "$test_file" != *".sh" ]]
   then
@@ -5357,9 +5368,9 @@ playground_bootstrap_reproduction_model_command() {
     exit 1
   fi
 
-  if [[ "$(dirname $test_file)" == *. ]]
+  if [[ "$(dirname $test_file)" != /* ]]
   then
-    logerror "ERROR: do not use './' for the test file!"
+    logerror "ERROR: do not use relative path for test file!"
     exit 1
   fi
 
@@ -6063,7 +6074,6 @@ playground_bootstrap_reproduction_model_command() {
   chmod u+x $repro_test_file
   repro_test_filename=$(basename -- "$repro_test_file")
 
-  log "📂 The reproduction files are now available in:\n$repro_dir"
   playground run -f $repro_dir/$repro_test_filename
 
 }
@@ -6804,6 +6814,13 @@ playground_get_examples_list_with_fzf_parse_requirements() {
   while [[ $# -gt 0 ]]; do
     key="$1"
     case "$key" in
+      # :flag.case
+      --without-repro)
+
+        # :flag.case_no_arg
+        args['--without-repro']=1
+        shift
+        ;;
 
       -?*)
         printf "invalid option: %s\n" "$key" >&2
@@ -7050,6 +7067,12 @@ playground_bootstrap_reproduction_model_parse_requirements() {
   # :command.environment_variables_filter
   # :command.environment_variables_default
   export OUTPUT_FOLDER="${OUTPUT_FOLDER:-reproduction-models}"
+
+  # :command.dependencies_filter
+  if ! command -v fzf >/dev/null 2>&1; then
+    printf "missing dependency: fzf\n" >&2
+    exit 1
+  fi
 
   # :command.command_filter
   action="bootstrap-reproduction-model"

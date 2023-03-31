@@ -1,27 +1,15 @@
 IGNORE_CHECK_FOR_DOCKER_COMPOSE=true
 
 DIR_CLI="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
+dir1=$(echo ${DIR_CLI%/*})
+root_folder=$(echo ${dir1%/*})
 
-root_folder=${DIR_CLI}/../..
-
-test_file="$PWD/${args[--file]}"
+test_file="${args[--file]}"
 description="${args[--description]}"
 producer="${args[--producer]}"
 nb_producers="${args[--nb-producers]}"
 add_custom_smt="${args[--custom-smt]}"
 sink_file="${args[--pipeline]}"
-
-if [ "$test_file" = "" ]
-then
-  logerror "ERROR: test_file is not provided as argument!"
-  exit 1
-fi
-
-if [ ! -f "$test_file" ]
-then
-  logerror "ERROR: test_file $test_file does not exist!"
-  exit 1
-fi
 
 if [[ "$test_file" != *".sh" ]]
 then
@@ -29,9 +17,9 @@ then
   exit 1
 fi
 
-if [[ "$(dirname $test_file)" == *. ]]
+if [[ "$(dirname $test_file)" != /* ]]
 then
-  logerror "ERROR: do not use './' for the test file!"
+  logerror "ERROR: do not use relative path for test file!"
   exit 1
 fi
 
@@ -739,5 +727,4 @@ fi
 chmod u+x $repro_test_file
 repro_test_filename=$(basename -- "$repro_test_file")
 
-log "📂 The reproduction files are now available in:\n$repro_dir"
 playground run -f $repro_dir/$repro_test_filename
