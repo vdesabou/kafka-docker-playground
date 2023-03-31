@@ -246,6 +246,16 @@ function check_if_continue()
     esac
 }
 
+function really_check_if_continue()
+{
+    read -p "Continue (y/n)?" choice
+    case "$choice" in
+    y|Y ) ;;
+    n|N ) exit 1;;
+    * ) logerror "invalid response!";exit 1;;
+    esac
+}
+
 function create_topic()
 {
   local topic="$1"

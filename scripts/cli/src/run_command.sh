@@ -39,7 +39,7 @@ test_file_directory="$(dirname "${test_file}")"
 # determining the docker-compose file from from test_file
 docker_compose_file=$(grep "environment" "$test_file" | grep DIR | grep start.sh | cut -d "/" -f 7 | cut -d '"' -f 1 | tail -n1 | xargs)
 
-if [ "${docker_compose_file}" != "" ] && [ ! -f "${docker_compose_file}" ]
+if [ "${docker_compose_file}" != "" ] && [ ! -f "${test_file_directory}/${docker_compose_file}" ]
 then
   docker_compose_file=""
   logwarn "📁 Could not determine docker-compose override file from $test_file !"
@@ -120,6 +120,27 @@ then
   export ENABLE_KCAT=true
 fi
 
-log "Starting example with $environment_variables_list"
+if [ ! -z $EDITOR ]
+then
+  log "Opening ${test_file} using EDITOR environment variable"
+  $EDITOR ${test_file}
+else
+  if [[ $(type code 2>&1) =~ "not found" ]]
+  then
+    logerror "Could not determine an editor to use, you can set EDITOR environment variable with your preferred choice"
+    exit 1
+  else
+    log "Opening ${test_file} with code (you can change editor by setting EDITOR environment variable)"
+    code ${test_file}
+  fi
+fi
+
+if [ "$environment_variables_list" != "" ]
+then
+  log "Run example with $environment_variables_list"
+else
+  log "Run example with all default values"
+fi
+really_check_if_continue
 cd $test_file_directory
 ./$filename

@@ -22,6 +22,8 @@ commands:
 - name: run
   group: Run
 
+  dependencies:
+  - fzf
   help: |-
     🛠  Run example.
     
