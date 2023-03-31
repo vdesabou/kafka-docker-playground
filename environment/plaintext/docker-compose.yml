@@ -554,7 +554,7 @@ services:
       - "conduktor"
 
   sr_plugins:
-    image: cdpop001/sr_plugins:v1-release
+    image: cdpop001/sr_plugins:latest
     hostname: sr_plugins
     container_name: sr_plugins
     depends_on:
