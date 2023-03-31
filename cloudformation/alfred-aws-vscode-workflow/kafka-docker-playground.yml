@@ -163,6 +163,7 @@ Resources:
               jq: []
               expect: []
               awscli: []
+              fzf: []
           commands:
             01_add_repo_gpg_key:
               command: |
