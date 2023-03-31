@@ -740,15 +740,4 @@ chmod u+x $repro_test_file
 repro_test_filename=$(basename -- "$repro_test_file")
 
 log "📂 The reproduction files are now available in:\n$repro_dir"
-log "🚀 Copy/paste the following to get it right away:"
-echo ""
-echo "cd $repro_dir"
-echo "code $repro_test_filename"
-if [ "$(whoami)" != "vsaboulin" ] && [ "$(whoami)" != "ec2-user" ]
-then
-  echo ""
-
-  log "🆗 Once ready, run it with:"
-fi
-echo "./$repro_test_filename"
-
+playground run -f $repro_dir/$repro_test_filename

@@ -5296,10 +5296,9 @@ playground_run_command() {
     export ENABLE_KCAT=true
   fi
 
-  log "Opening ${test_file}"
   if [ ! -z $EDITOR ]
   then
-    log "Opening ${test_file} using EDITOR environment variable"
+    log "📖 Opening ${test_file} using EDITOR environment variable"
     $EDITOR ${test_file}
   else
     if [[ $(type code 2>&1) =~ "not found" ]]
@@ -5307,18 +5306,16 @@ playground_run_command() {
       logerror "Could not determine an editor to use, you can set EDITOR environment variable with your preferred choice"
       exit 1
     else
-      log "Opening ${test_file} with code (you can change editor by setting EDITOR environment variable)"
+      log "📖 Opening ${test_file} with code (you can change editor by setting EDITOR environment variable)"
       code ${test_file}
     fi
   fi
 
-  # log "Opening ${test_file_directory}/${docker_compose_file}"
-  # $editor ${test_file_directory}/${docker_compose_file}
   if [ "$environment_variables_list" != "" ]
   then
-    log "Run example with $environment_variables_list"
+    log "🚀 Running example with $environment_variables_list"
   else
-    log "Run example with all default values"
+    log "🚀 Running example with all default values"
   fi
   really_check_if_continue
   cd $test_file_directory
@@ -6067,17 +6064,7 @@ playground_bootstrap_reproduction_model_command() {
   repro_test_filename=$(basename -- "$repro_test_file")
 
   log "📂 The reproduction files are now available in:\n$repro_dir"
-  log "🚀 Copy/paste the following to get it right away:"
-  echo ""
-  echo "cd $repro_dir"
-  echo "code $repro_test_filename"
-  if [ "$(whoami)" != "vsaboulin" ] && [ "$(whoami)" != "ec2-user" ]
-  then
-    echo ""
-
-    log "🆗 Once ready, run it with:"
-  fi
-  echo "./$repro_test_filename"
+  playground run -f $repro_dir/$repro_test_filename
 
 }
 

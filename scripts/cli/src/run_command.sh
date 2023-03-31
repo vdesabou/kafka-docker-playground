@@ -122,7 +122,7 @@ fi
 
 if [ ! -z $EDITOR ]
 then
-  log "Opening ${test_file} using EDITOR environment variable"
+  log "📖 Opening ${test_file} using EDITOR environment variable"
   $EDITOR ${test_file}
 else
   if [[ $(type code 2>&1) =~ "not found" ]]
@@ -130,16 +130,16 @@ else
     logerror "Could not determine an editor to use, you can set EDITOR environment variable with your preferred choice"
     exit 1
   else
-    log "Opening ${test_file} with code (you can change editor by setting EDITOR environment variable)"
+    log "📖 Opening ${test_file} with code (you can change editor by setting EDITOR environment variable)"
     code ${test_file}
   fi
 fi
 
 if [ "$environment_variables_list" != "" ]
 then
-  log "Run example with $environment_variables_list"
+  log "🚀 Running example with $environment_variables_list"
 else
-  log "Run example with all default values"
+  log "🚀 Running example with all default values"
 fi
 really_check_if_continue
 cd $test_file_directory
