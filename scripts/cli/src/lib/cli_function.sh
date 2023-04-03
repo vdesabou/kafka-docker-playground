@@ -50,10 +50,20 @@ function get_examples_list_with_fzf() {
   dir1=$(echo ${DIR_CLI%/*})
   dir2=$(echo ${dir1%/*})
 
-  if [ $without_repro == "true" ]
+  if [[ $(type -f bat 2>&1) =~ "not found" ]]
   then
-    find $dir2 -name \*.sh ! -name 'stop.sh' ! -path '*/scripts/*' ! -path '*/reproduction-models/*' | fzf
+    if [ "$without_repro" == "true" ]
+    then
+      find $dir2 -name \*.sh ! -name 'stop.sh' ! -path '*/scripts/*' ! -path '*/reproduction-models/*' | fzf --delimiter / --with-nth '-3,-2,-1' --preview 'cat {}'
+    else
+      find $dir2 -name \*.sh ! -name 'stop.sh' ! -path '*/scripts/*' | fzf --delimiter / --with-nth '-3,-2,-1' --preview 'cat {}'
+    fi
   else
-    find $dir2 -name \*.sh ! -name 'stop.sh' ! -path '*/scripts/*' | fzf
+    if [ "$without_repro" == "true" ]
+    then
+      find $dir2 -name \*.sh ! -name 'stop.sh' ! -path '*/scripts/*' ! -path '*/reproduction-models/*' | fzf --delimiter / --with-nth '-3,-2,-1' --preview 'bat --style=numbers --color=always --line-range :500 {}'
+    else
+      find $dir2 -name \*.sh ! -name 'stop.sh' ! -path '*/scripts/*' | fzf --delimiter / --with-nth '-3,-2,-1' --preview 'bat --style=numbers --color=always --line-range :500 {}'
+    fi    
   fi
 }
