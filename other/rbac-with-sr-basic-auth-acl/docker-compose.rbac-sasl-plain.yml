@@ -1,0 +1,45 @@
+---
+version: '3.5'
+services:
+  schema-registry:
+    environment:
+
+      # RBAC and MDS
+      #SCHEMA_REGISTRY_SCHEMA_REGISTRY_RESOURCE_EXTENSION_CLASS:
+      #SCHEMA_REGISTRY_CONFLUENT_SCHEMA_REGISTRY_AUTHORIZER_CLASS:
+      SCHEMA_REGISTRY_REST_SERVLET_INITIALIZOR_CLASSES: 
+      SCHEMA_REGISTRY_CONFLUENT_METADATA_BOOTSTRAP_SERVER_URLS: 
+      SCHEMA_REGISTRY_CONFLUENT_METADATA_HTTP_AUTH_CREDENTIALS_PROVIDER: 
+      SCHEMA_REGISTRY_CONFLUENT_METADATA_BASIC_AUTH_USER_INFO: 
+
+      # public key to verify tokens during authentication
+      SCHEMA_REGISTRY_PUBLIC_KEY_PATH: /tmp/conf/public.pem
+
+      # Just BASIC Auth
+      SCHEMA_REGISTRY_OPTS: "-Djava.security.auth.login.config=/tmp/jaas_config.file"
+      SCHEMA_REGISTRY_AUTHENTICATION_METHOD: BASIC
+      SCHEMA_REGISTRY_AUTHENTICATION_REALM: SchemaRegistry
+      SCHEMA_REGISTRY_AUTHENTICATION_ROLES: admin,developer,user,sr-user
+
+      # BASIC Auth and Acl Authorizer
+      SCHEMA_REGISTRY_SCHEMA_REGISTRY_RESOURCE_EXTENSION_CLASS: io.confluent.kafka.schemaregistry.security.SchemaRegistrySecurityResourceExtension
+      SCHEMA_REGISTRY_CONFLUENT_SCHEMA_REGISTRY_AUTHORIZER_CLASS: io.confluent.kafka.schemaregistry.security.authorizer.schemaregistryacl.SchemaRegistryAclAuthorizer
+      SCHEMA_REGISTRY_CONFLUENT_SCHEMA_REGISTRY_AUTH_MECHANISMS: JETTY_AUTH
+
+    volumes:
+      - ../../other/rbac-with-sr-basic-auth-acl/jaas_config.file:/tmp/jaas_config.file
+      - ../../other/rbac-with-sr-basic-auth-acl/password-file:/tmp/password-file
+      - ../../other/rbac-with-sr-basic-auth-acl/scripts/create-acls.sh:/tmp/create-acls.sh
+    
+  tools:
+    volumes:
+      - ../../other/rbac-with-sr-basic-auth-acl/scripts/create-role-bindings-acl.sh:/create-role-bindings-acl.sh
+
+  ksqldb-server:
+    environment:
+        # Overrides for BASIC SR
+        KSQL_KSQL_SECURITY_EXTENSION_SR-PERMISSIONS_VALIDATOR_ENABLED : 'false'
+        KSQL_KSQL_SECURITY_EXTENSION_USER_IMPERSONATION_ENABLED : 'false'
+        KSQL_KSQL_SCHEMA_REGISTRY_BASIC_AUTH_CREDENTIALS_SOURCE: 'USER_INFO'
+        KSQL_KSQL_SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO: 'sr-user:sr-user'
+        
