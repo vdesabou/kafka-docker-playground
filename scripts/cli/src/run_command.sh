@@ -131,7 +131,7 @@ else
     exit 1
   else
     log "📖 Opening ${test_file} with code (you can change editor by setting EDITOR environment variable)"
-    code ${test_file}
+    code ${test_file} &
   fi
 fi
 

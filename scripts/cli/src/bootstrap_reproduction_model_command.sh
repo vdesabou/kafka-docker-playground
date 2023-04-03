@@ -42,7 +42,7 @@ docker_compose_file=$(grep "environment" "$test_file" | grep DIR | grep start.sh
 description_kebab_case="${description// /-}"
 description_kebab_case=$(echo "$description_kebab_case" | tr '[:upper:]' '[:lower:]')
 
-if [ "${docker_compose_file}" != "" ] && [ ! -f "${docker_compose_file}" ]
+if [ "${docker_compose_file}" != "" ] && [ ! -f "${test_file_directory}/${docker_compose_file}" ]
 then
   docker_compose_file=""
   logwarn "📁 Could not determine docker-compose override file from $test_file !"
@@ -93,14 +93,14 @@ repro_test_file="$repro_dir/$filename-repro-$description_kebab_case.$extension"
 
 if [ "${docker_compose_file}" != "" ]
 then
-  filename=$(basename -- "$PWD/$docker_compose_file")
+  filename=$(basename -- "${test_file_directory}/${docker_compose_file}")
   extension="${filename##*.}"
   filename="${filename%.*}"
 
   docker_compose_test_file="$repro_dir/$filename.repro-$description_kebab_case.$extension"
   log "✨ Creating file $docker_compose_test_file"
   rm -f $docker_compose_test_file
-  cp $PWD/$docker_compose_file $docker_compose_test_file
+  cp ${test_file_directory}/${docker_compose_file} $docker_compose_test_file
 
   docker_compose_test_file_name=$(basename -- "$docker_compose_test_file")
 fi
@@ -120,7 +120,7 @@ do
   if [ -f $file ]
   then
     cd $repro_dir > /dev/null
-    ln -sf ../../$dir2/$file .
+    ln -sf ${test_file_directory}/../../$dir2/$file .
     cd - > /dev/null
   fi
 done
@@ -231,7 +231,7 @@ then
 
     rm -rf $producer_hostname
     mkdir -p $repro_dir/$producer_hostname/
-    cp -Ra ../../other/schema-format-$producer/producer/* $repro_dir/$producer_hostname/
+    cp -Ra ${test_file_directory}/../../other/schema-format-$producer/producer/* $repro_dir/$producer_hostname/
 
     # update docker compose with producer container
     if [[ "$dir1" = *connect ]]

@@ -3295,5 +3295,10 @@ function check_arm64_support() {
 }
 
 function playground() {
-  ../../scripts/cli/playground "$@"
+  if [[ $(type -f playground 2>&1) =~ "not found" ]]
+  then
+    ../../scripts/cli/playground "$@"
+  else
+    $(which playground) "$@"
+  fi
 }
