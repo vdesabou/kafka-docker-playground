@@ -396,7 +396,7 @@ then
     { head -n $(($line)) $repro_test_file; cat $tmp_dir/value_converter; tail -n +$(($line+1)) $repro_test_file; } > $tmp_dir/tmp_file2
     cp $tmp_dir/tmp_file2 $repro_test_file
   fi
-  log "🧑‍🏭 Changing Sink connector value.converter to use same as producer:"
+  log "🔮 Changing Sink connector value.converter to use same as producer:"
   cat $tmp_dir/value_converter
 
   if [ "$sink_key_converter" == "" ]
@@ -415,7 +415,7 @@ then
     { head -n $(($line)) $repro_test_file; cat $tmp_dir/key_converter; tail -n +$(($line+1)) $repro_test_file; } > $tmp_dir/tmp_file2
     cp $tmp_dir/tmp_file2 $repro_test_file
   fi
-  log "🧑‍🏭 Changing Sink connector key.converter to use same as producer:"
+  log "🔮 Changing Sink connector key.converter to use same as producer:"
   cat $tmp_dir/key_converter
 fi
 
@@ -506,7 +506,7 @@ then
   cp $docker_compose_sink_file /tmp/2.yml
   yq ". *= load(\"/tmp/1.yml\")" /tmp/2.yml > $docker_compose_test_file
 
-  connector_paths=$(grep "CONNECT_PLUGIN_PATH" "${docker_compose_file}" | grep -v "KSQL_CONNECT_PLUGIN_PATH" | cut -d ":" -f 2  | tr -s " " | head -1)
+  connector_paths=$(grep "CONNECT_PLUGIN_PATH" "${test_file_directory}/${docker_compose_file}" | grep -v "KSQL_CONNECT_PLUGIN_PATH" | cut -d ":" -f 2  | tr -s " " | head -1)
   sink_connector_paths=$(grep "CONNECT_PLUGIN_PATH" "${docker_compose_sink_file}" | grep -v "KSQL_CONNECT_PLUGIN_PATH" | cut -d ":" -f 2  | tr -s " " | head -1)
   if [ "$sink_connector_paths" == "" ]
   then
@@ -641,7 +641,7 @@ then
       { head -n $(($line)) $tmp_dir/tmp_file; cat $tmp_dir/source_value_converter; tail -n +$(($line+1)) $tmp_dir/tmp_file; } > $tmp_dir/tmp_file2
       cp $tmp_dir/tmp_file2 $tmp_dir/tmp_file
     fi
-    log "🧑‍🏭 Changing Sink connector value.converter to use same as source:"
+    log "🔮 Changing Sink connector value.converter to use same as source:"
     cat $tmp_dir/source_value_converter
   fi
   if [ "$source_key_converter" == "" ] && [ "$sink_key_converter" == "" ]
@@ -666,7 +666,7 @@ then
       { head -n $(($line)) $tmp_dir/tmp_file; cat $tmp_dir/source_key_converter; tail -n +$(($line+1)) $tmp_dir/tmp_file; } > $tmp_dir/tmp_file2
       cp $tmp_dir/tmp_file2 $tmp_dir/tmp_file
     fi
-    log "🧑‍🏭 Changing Sink connector key.converter to use same as source:"
+    log "🔮 Changing Sink connector key.converter to use same as source:"
     cat $tmp_dir/source_key_converter
   fi
   set -e
@@ -727,4 +727,6 @@ fi
 chmod u+x $repro_test_file
 repro_test_filename=$(basename -- "$repro_test_file")
 
+log "🌟 Command to run generated example"
+echo "playground run -f $repro_dir/$repro_test_filename"
 playground run -f $repro_dir/$repro_test_filename

@@ -1612,9 +1612,9 @@ function get_examples_list_with_fzf() {
 
   if [[ $(type -f bat 2>&1) =~ "not found" ]]
   then
-    find $dir2 -name \*.sh ! -name 'stop.sh' ! -path '*/scripts/*' ! -path '*/docs-examples/*' ! -path '*/sample-sql-scripts/*' | fzf --delimiter / --with-nth '-3,-2,-1' --preview 'cat {}'
+    find $dir2 -name \*.sh ! -name 'stop.sh' ! -path '*/scripts/*' ! -path '*/docs-examples/*' ! -path '*/sample-sql-scripts/*' ! -path '*/ora-setup-scripts/*' | fzf --delimiter / --with-nth '-3,-2,-1' --preview 'cat {}'
   else
-    find $dir2 -name \*.sh ! -name 'stop.sh' ! -path '*/scripts/*' ! -path '*/docs-examples/*' ! -path '*/sample-sql-scripts/*' | fzf --delimiter / --with-nth '-3,-2,-1' --preview 'bat --style=numbers --color=always --line-range :500 {}'
+    find $dir2 -name \*.sh ! -name 'stop.sh' ! -path '*/scripts/*' ! -path '*/docs-examples/*' ! -path '*/sample-sql-scripts/*' ! -path '*/ora-setup-scripts/*' | fzf --delimiter / --with-nth '-3,-2,-1' --preview 'bat --style=numbers --color=always --line-range :500 {}'
   fi
 }
 
@@ -1625,9 +1625,9 @@ function get_examples_list_with_fzf_without_repro() {
 
   if [[ $(type -f bat 2>&1) =~ "not found" ]]
   then
-    find $dir2 -name \*.sh ! -name 'stop.sh' ! -path '*/scripts/*' ! -path '*/docs-examples/*' ! -path '*/sample-sql-scripts/*' ! -path '*/reproduction-models/*' | fzf --delimiter / --with-nth '-3,-2,-1' --preview 'cat {}'
+    find $dir2 -name \*.sh ! -name 'stop.sh' ! -path '*/scripts/*' ! -path '*/docs-examples/*' ! -path '*/sample-sql-scripts/*' ! -path '*/ora-setup-scripts/*' ! -path '*/reproduction-models/*' | fzf --delimiter / --with-nth '-3,-2,-1' --preview 'cat {}'
   else
-    find $dir2 -name \*.sh ! -name 'stop.sh' ! -path '*/scripts/*' ! -path '*/docs-examples/*' ! -path '*/sample-sql-scripts/*' ! -path '*/reproduction-models/*' | fzf --delimiter / --with-nth '-3,-2,-1' --preview 'bat --style=numbers --color=always --line-range :500 {}'
+    find $dir2 -name \*.sh ! -name 'stop.sh' ! -path '*/scripts/*' ! -path '*/docs-examples/*' ! -path '*/sample-sql-scripts/*' ! -path '*/ora-setup-scripts/*' ! -path '*/reproduction-models/*' | fzf --delimiter / --with-nth '-3,-2,-1' --preview 'bat --style=numbers --color=always --line-range :500 {}'
   fi
 }
 
@@ -1638,9 +1638,9 @@ function get_examples_list_with_fzf_without_repro_sink_only() {
 
   if [[ $(type -f bat 2>&1) =~ "not found" ]]
   then
-    find $dir2 -name \*.sh ! -name 'stop.sh' -path '*/connect-*-sink/*' ! -path '*/scripts/*' ! -path '*/docs-examples/*' ! -path '*/sample-sql-scripts/*' ! -path '*/reproduction-models/*' | fzf --delimiter / --with-nth '-3,-2,-1' --preview 'cat {}'
+    find $dir2 -name \*.sh ! -name 'stop.sh' -path '*/connect-*-sink/*' ! -path '*/scripts/*' ! -path '*/docs-examples/*' ! -path '*/sample-sql-scripts/*' ! -path '*/ora-setup-scripts/*' ! -path '*/reproduction-models/*' | fzf --delimiter / --with-nth '-3,-2,-1' --preview 'cat {}'
   else
-    find $dir2 -name \*.sh ! -name 'stop.sh' -path '*/connect-*-sink/*' ! -path '*/scripts/*' ! -path '*/docs-examples/*' ! -path '*/sample-sql-scripts/*' ! -path '*/reproduction-models/*' | fzf --delimiter / --with-nth '-3,-2,-1' --preview 'bat --style=numbers --color=always --line-range :500 {}'
+    find $dir2 -name \*.sh ! -name 'stop.sh' -path '*/connect-*-sink/*' ! -path '*/scripts/*' ! -path '*/docs-examples/*' ! -path '*/sample-sql-scripts/*' ! -path '*/ora-setup-scripts/*' ! -path '*/reproduction-models/*' | fzf --delimiter / --with-nth '-3,-2,-1' --preview 'bat --style=numbers --color=always --line-range :500 {}'
   fi
 }
 
@@ -5229,7 +5229,7 @@ playground_get_examples_list_with_fzf_command() {
   without_repro="${args[--without-repro]}"
   sink_only="${args[--sink-only]}"
 
-  if [[ -n "$without_repro" ]] && [[ -n "$without_repro" ]]
+  if [[ -n "$without_repro" ]] && [[ -n "$sink_only" ]]
   then
       get_examples_list_with_fzf_without_repro_sink_only
       return
@@ -5380,15 +5380,15 @@ playground_run_command() {
       exit 1
     else
       log "📖 Opening ${test_file} with code (you can change editor by setting EDITOR environment variable)"
-      code ${test_file} &
+      code ${test_file}
     fi
   fi
 
   if [ "$environment_variables_list" != "" ]
   then
-    log "🚀 Running example with $environment_variables_list"
+    log "🚀 Running example with $environment_variables_list ?"
   else
-    log "🚀 Running example with all default values"
+    log "🚀 Running example with all default values ?"
   fi
   really_check_if_continue
   cd $test_file_directory
@@ -5799,7 +5799,7 @@ playground_bootstrap_reproduction_model_command() {
       { head -n $(($line)) $repro_test_file; cat $tmp_dir/value_converter; tail -n +$(($line+1)) $repro_test_file; } > $tmp_dir/tmp_file2
       cp $tmp_dir/tmp_file2 $repro_test_file
     fi
-    log "🧑‍🏭 Changing Sink connector value.converter to use same as producer:"
+    log "🔮 Changing Sink connector value.converter to use same as producer:"
     cat $tmp_dir/value_converter
 
     if [ "$sink_key_converter" == "" ]
@@ -5818,7 +5818,7 @@ playground_bootstrap_reproduction_model_command() {
       { head -n $(($line)) $repro_test_file; cat $tmp_dir/key_converter; tail -n +$(($line+1)) $repro_test_file; } > $tmp_dir/tmp_file2
       cp $tmp_dir/tmp_file2 $repro_test_file
     fi
-    log "🧑‍🏭 Changing Sink connector key.converter to use same as producer:"
+    log "🔮 Changing Sink connector key.converter to use same as producer:"
     cat $tmp_dir/key_converter
   fi
 
@@ -5902,7 +5902,7 @@ playground_bootstrap_reproduction_model_command() {
     cp $docker_compose_sink_file /tmp/2.yml
     yq ". *= load(\"/tmp/1.yml\")" /tmp/2.yml > $docker_compose_test_file
 
-    connector_paths=$(grep "CONNECT_PLUGIN_PATH" "${docker_compose_file}" | grep -v "KSQL_CONNECT_PLUGIN_PATH" | cut -d ":" -f 2  | tr -s " " | head -1)
+    connector_paths=$(grep "CONNECT_PLUGIN_PATH" "${test_file_directory}/${docker_compose_file}" | grep -v "KSQL_CONNECT_PLUGIN_PATH" | cut -d ":" -f 2  | tr -s " " | head -1)
     sink_connector_paths=$(grep "CONNECT_PLUGIN_PATH" "${docker_compose_sink_file}" | grep -v "KSQL_CONNECT_PLUGIN_PATH" | cut -d ":" -f 2  | tr -s " " | head -1)
     if [ "$sink_connector_paths" == "" ]
     then
@@ -6038,7 +6038,7 @@ playground_bootstrap_reproduction_model_command() {
         { head -n $(($line)) $tmp_dir/tmp_file; cat $tmp_dir/source_value_converter; tail -n +$(($line+1)) $tmp_dir/tmp_file; } > $tmp_dir/tmp_file2
         cp $tmp_dir/tmp_file2 $tmp_dir/tmp_file
       fi
-      log "🧑‍🏭 Changing Sink connector value.converter to use same as source:"
+      log "🔮 Changing Sink connector value.converter to use same as source:"
       cat $tmp_dir/source_value_converter
     fi
     if [ "$source_key_converter" == "" ] && [ "$sink_key_converter" == "" ]
@@ -6063,7 +6063,7 @@ playground_bootstrap_reproduction_model_command() {
         { head -n $(($line)) $tmp_dir/tmp_file; cat $tmp_dir/source_key_converter; tail -n +$(($line+1)) $tmp_dir/tmp_file; } > $tmp_dir/tmp_file2
         cp $tmp_dir/tmp_file2 $tmp_dir/tmp_file
       fi
-      log "🧑‍🏭 Changing Sink connector key.converter to use same as source:"
+      log "🔮 Changing Sink connector key.converter to use same as source:"
       cat $tmp_dir/source_key_converter
     fi
     set -e
@@ -6124,6 +6124,8 @@ playground_bootstrap_reproduction_model_command() {
   chmod u+x $repro_test_file
   repro_test_filename=$(basename -- "$repro_test_file")
 
+  log "🌟 Command to run generated example"
+  echo "playground run -f $repro_dir/$repro_test_filename"
   playground run -f $repro_dir/$repro_test_filename
 
 }
