@@ -177,6 +177,11 @@ playground_get_examples_list_with_fzf_usage() {
     printf "\n"
     echo
 
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--sink-only")"
+    printf "\n"
+    echo
+
     # :command.usage_fixed_flags
     printf "  %s\n" "$(magenta "--help, -h")"
     printf "    Show this help\n"
@@ -1601,28 +1606,41 @@ function get_connector_list() {
 }
 
 function get_examples_list_with_fzf() {
-  without_repro="$1"
-
   DIR_CLI="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
   dir1=$(echo ${DIR_CLI%/*})
   dir2=$(echo ${dir1%/*})
 
   if [[ $(type -f bat 2>&1) =~ "not found" ]]
   then
-    if [ "$without_repro" == "true" ]
-    then
-      find $dir2 -name \*.sh ! -name 'stop.sh' ! -path '*/scripts/*' ! -path '*/reproduction-models/*' | fzf --delimiter / --with-nth '-3,-2,-1' --preview 'cat {}'
-    else
-      find $dir2 -name \*.sh ! -name 'stop.sh' ! -path '*/scripts/*' | fzf --delimiter / --with-nth '-3,-2,-1' --preview 'cat {}'
-    fi
+    find $dir2 -name \*.sh ! -name 'stop.sh' ! -path '*/scripts/*' ! -path '*/docs-examples/*' ! -path '*/sample-sql-scripts/*' | fzf --delimiter / --with-nth '-3,-2,-1' --preview 'cat {}'
   else
-    if [ "$without_repro" == "true" ]
-    then
-      find $dir2 -name \*.sh ! -name 'stop.sh' ! -path '*/scripts/*' ! -path '*/reproduction-models/*' | fzf --delimiter / --with-nth '-3,-2,-1' --preview 'bat --style=numbers --color=always --line-range :500 {}'
-    else
-      find $dir2 -name \*.sh ! -name 'stop.sh' ! -path '*/scripts/*' | fzf --delimiter / --with-nth '-3,-2,-1' --preview 'bat --style=numbers --color=always --line-range :500 {}'
-    fi
+    find $dir2 -name \*.sh ! -name 'stop.sh' ! -path '*/scripts/*' ! -path '*/docs-examples/*' ! -path '*/sample-sql-scripts/*' | fzf --delimiter / --with-nth '-3,-2,-1' --preview 'bat --style=numbers --color=always --line-range :500 {}'
+  fi
+}
 
+function get_examples_list_with_fzf_without_repro() {
+  DIR_CLI="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
+  dir1=$(echo ${DIR_CLI%/*})
+  dir2=$(echo ${dir1%/*})
+
+  if [[ $(type -f bat 2>&1) =~ "not found" ]]
+  then
+    find $dir2 -name \*.sh ! -name 'stop.sh' ! -path '*/scripts/*' ! -path '*/docs-examples/*' ! -path '*/sample-sql-scripts/*' ! -path '*/reproduction-models/*' | fzf --delimiter / --with-nth '-3,-2,-1' --preview 'cat {}'
+  else
+    find $dir2 -name \*.sh ! -name 'stop.sh' ! -path '*/scripts/*' ! -path '*/docs-examples/*' ! -path '*/sample-sql-scripts/*' ! -path '*/reproduction-models/*' | fzf --delimiter / --with-nth '-3,-2,-1' --preview 'bat --style=numbers --color=always --line-range :500 {}'
+  fi
+}
+
+function get_examples_list_with_fzf_without_repro_sink_only() {
+  DIR_CLI="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
+  dir1=$(echo ${DIR_CLI%/*})
+  dir2=$(echo ${dir1%/*})
+
+  if [[ $(type -f bat 2>&1) =~ "not found" ]]
+  then
+    find $dir2 -name \*.sh ! -name 'stop.sh' -path '*/connect-*-sink/*' ! -path '*/scripts/*' ! -path '*/docs-examples/*' ! -path '*/sample-sql-scripts/*' ! -path '*/reproduction-models/*' | fzf --delimiter / --with-nth '-3,-2,-1' --preview 'cat {}'
+  else
+    find $dir2 -name \*.sh ! -name 'stop.sh' -path '*/connect-*-sink/*' ! -path '*/scripts/*' ! -path '*/docs-examples/*' ! -path '*/sample-sql-scripts/*' ! -path '*/reproduction-models/*' | fzf --delimiter / --with-nth '-3,-2,-1' --preview 'bat --style=numbers --color=always --line-range :500 {}'
   fi
 }
 
@@ -5209,13 +5227,21 @@ playground_get_topic_list_command() {
 playground_get_examples_list_with_fzf_command() {
   # src/get_examples_list_with_fzf_command.sh
   without_repro="${args[--without-repro]}"
+  sink_only="${args[--sink-only]}"
+
+  if [[ -n "$without_repro" ]] && [[ -n "$without_repro" ]]
+  then
+      get_examples_list_with_fzf_without_repro_sink_only
+      return
+  fi
 
   if [[ -n "$without_repro" ]]
   then
-      get_examples_list_with_fzf "true"
-  else
-      get_examples_list_with_fzf
+      get_examples_list_with_fzf_without_repro
+      return
   fi
+
+  get_examples_list_with_fzf
 }
 
 # :command.function
@@ -6851,6 +6877,14 @@ playground_get_examples_list_with_fzf_parse_requirements() {
 
         # :flag.case_no_arg
         args['--without-repro']=1
+        shift
+        ;;
+
+      # :flag.case
+      --sink-only)
+
+        # :flag.case_no_arg
+        args['--sink-only']=1
         shift
         ;;
 

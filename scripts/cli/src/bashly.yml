@@ -21,6 +21,8 @@ commands:
   flags:
   - long: --without-repro
     required: false
+  - long: --sink-only
+    required: false
 
 - name: run
   group: Run
@@ -152,7 +154,7 @@ commands:
     arg: sink_file
     conflicts: [--producer]
     completions:
-      - $(ls ../../connect/connect-*sink/*.sh)
+      - $(playground get-examples-list-with-fzf --without-repro --sink-only)
     help: |-
       Sink example file to use for creating a pipeline.
 
