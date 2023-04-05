@@ -120,7 +120,7 @@ do
   if [ -f $file ]
   then
     cd $repro_dir > /dev/null
-    ln -sf ${test_file_directory}/../../$dir2/$file .
+    ln -sf ../../$dir2/$file .
     cd - > /dev/null
   fi
 done
