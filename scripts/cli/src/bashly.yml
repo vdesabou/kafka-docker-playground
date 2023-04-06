@@ -30,9 +30,9 @@ commands:
   dependencies:
   - fzf
   help: |-
-    🛠  Run example.
+    🚀  Run example.
     
-    👉 Check documentation xxx
+    👉 Check documentation https://tinyurl.com/yx3vbwu5
 
   flags:
   - long: --file
@@ -458,6 +458,11 @@ commands:
         - $(playground get-connector-list)
       help: |-
         Connector name.
+
+  - name: restart
+    help: ♻️  Restart connector
+    flags:
+    - *connector
 
   - name: resume
     help: ⏯️  Resume connector

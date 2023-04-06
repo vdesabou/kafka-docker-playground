@@ -34,7 +34,7 @@ playground_usage() {
   echo
   # :command.usage_commands
   printf "%s\n" "$(bold "Run commands:")"
-  printf "  %s   🛠  Run example.\n" "$(green "run")                           "
+  printf "  %s   🚀  Run example.\n" "$(green "run")                           "
   echo
   printf "%s\n" "$(bold "Bootstrap commands:")"
   printf "  %s   🛠  Bootstrap reproduction model.\n" "$(green "bootstrap-reproduction-model")  "
@@ -71,6 +71,7 @@ playground_usage() {
   [[ -n $long_usage ]] && printf "  %s   ℹ️  Show status of all connectors.\n" "$(green "connector status")              "
   [[ -n $long_usage ]] && printf "  %s   🔖 Show all plugins installed.\n" "$(green "connector plugins")             "
   [[ -n $long_usage ]] && printf "  %s   ⏸️  Pause connector\n" "$(green "connector pause")               "
+  [[ -n $long_usage ]] && printf "  %s   ♻️  Restart connector\n" "$(green "connector restart")             "
   [[ -n $long_usage ]] && printf "  %s   ⏯️  Resume connector\n" "$(green "connector resume")              "
   [[ -n $long_usage ]] && printf "  %s   🗑️  Delete connector\n" "$(green "connector delete")              "
   [[ -n $long_usage ]] && printf "  %s   🐢 Show lag of sink connector\n" "$(green "connector show-lag")            "
@@ -196,11 +197,11 @@ playground_run_usage() {
     printf "playground run\n"
     echo
 
-    printf "  🛠  Run example.\n  \n  👉 Check documentation xxx\n"
+    printf "  🚀  Run example.\n  \n  👉 Check documentation https://tinyurl.com/yx3vbwu5\n"
     echo
 
   else
-    printf "playground run - 🛠  Run example.\n"
+    printf "playground run - 🚀  Run example.\n"
     echo
 
   fi
@@ -1153,6 +1154,7 @@ playground_connector_usage() {
   printf "  %s   ℹ️  Show status of all connectors.\n" "$(green "status")   "
   printf "  %s   🔖 Show all plugins installed.\n" "$(green "plugins")  "
   printf "  %s   ⏸️  Pause connector\n" "$(green "pause")    "
+  printf "  %s   ♻️  Restart connector\n" "$(green "restart")  "
   printf "  %s   ⏯️  Resume connector\n" "$(green "resume")   "
   printf "  %s   🗑️  Delete connector\n" "$(green "delete")   "
   printf "  %s   🐢 Show lag of sink connector\n" "$(green "show-lag") "
@@ -1259,6 +1261,41 @@ playground_connector_pause_usage() {
   printf "%s\n" "$(bold "== Usage ==")"
   printf "  playground connector pause [OPTIONS]\n"
   printf "  playground connector pause --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n $long_usage ]]; then
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_flags
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--connector, -c CONNECTOR (required)")"
+    printf "    Connector name.\n"
+    echo
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_connector_restart_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground connector restart - ♻️  Restart connector\n"
+    echo
+
+  else
+    printf "playground connector restart - ♻️  Restart connector\n"
+    echo
+
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground connector restart [OPTIONS]\n"
+  printf "  playground connector restart --help | -h\n"
   echo
 
   # :command.long_usage
@@ -6448,6 +6485,32 @@ playground_connector_pause_command() {
 }
 
 # :command.function
+playground_connector_restart_command() {
+  # src/connector_restart_command.sh
+  environment=`get_environment_used`
+
+  if [ "$environment" == "error" ]
+  then
+    logerror "File containing restart command /tmp/playground-command does not exist!"
+    exit 1
+
+  fi
+  connect_url="http://localhost:8083"
+  security_certs=""
+  if [ "$environment" != "plaintext" ]
+  then
+      connect_url="https://localhost:8083"
+      DIR_CLI="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
+
+      security_certs="--cert $DIR_CLI/../../environment/$environment/security/connect.certificate.pem --key $DIR_CLI/../../environment/$environment/security/connect.key --tlsv1.2 --cacert $DIR_CLI/../../environment/$environment/security/snakeoil-ca-1.crt"
+  fi
+
+  connector="${args[--connector]}"
+  log "Restarting connector $connector"
+  curl $security_certs -s -X POST -H "Content-Type: application/json" "$connect_url/connectors/$connector/restart?includeTasks=true&onlyFailed=false" | jq .
+}
+
+# :command.function
 playground_connector_resume_command() {
   # src/connector_resume_command.sh
   environment=`get_environment_used`
@@ -8740,6 +8803,13 @@ playground_connector_parse_requirements() {
       shift $#
       ;;
 
+    restart)
+      action="restart"
+      shift
+      playground_connector_restart_parse_requirements "$@"
+      shift $#
+      ;;
+
     resume)
       action="resume"
       shift
@@ -8925,6 +8995,72 @@ playground_connector_pause_parse_requirements() {
 
   # :command.command_filter
   action="connector pause"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      # :flag.case
+      --connector | -c)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+
+          args['--connector']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--connector requires an argument: --connector, -c CONNECTOR" >&2
+          exit 1
+        fi
+        ;;
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+  # :command.required_flags_filter
+  if [[ -z ${args['--connector']+x} ]]; then
+    printf "missing required flag: --connector, -c CONNECTOR\n" >&2
+    exit 1
+  fi
+
+}
+
+# :command.parse_requirements
+playground_connector_restart_parse_requirements() {
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    case "${1:-}" in
+      --help | -h)
+        long_usage=yes
+        playground_connector_restart_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.dependencies_filter
+
+  # :command.command_filter
+  action="connector restart"
 
   # :command.parse_requirements_while
   while [[ $# -gt 0 ]]; do
@@ -9673,6 +9809,15 @@ run() {
         playground_connector_pause_usage
       else
         playground_connector_pause_command
+      fi
+      ;;
+
+    "connector restart")
+      if [[ ${args['--help']:-} ]]; then
+        long_usage=yes
+        playground_connector_restart_usage
+      else
+        playground_connector_restart_command
       fi
       ;;
 
