@@ -1,0 +1,13 @@
+---
+version: '3.5'
+services:
+  wiremock:
+    image: wiremock/wiremock:2.35.0
+    hostname: wiremock
+    container_name: wiremock
+    depends_on:
+      - schema-registry
+    ports:
+      - 8080:8080
+    volumes:
+      - ../../other/recover-from-schema-hard-deletion/__files:/home/wiremock/__files
