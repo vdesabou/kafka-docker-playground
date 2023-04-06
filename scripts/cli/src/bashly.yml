@@ -84,6 +84,9 @@ commands:
   - long: --enable-kcat
     required: false
     help: Enable kcat
+  - long: --enable-sr-maven-plugin-app
+    required: false
+    help: Enable Schema Registry Maven plugin App
 
 - name: bootstrap-reproduction-model
   environment_variables:

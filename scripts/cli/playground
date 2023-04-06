@@ -276,6 +276,11 @@ playground_run_usage() {
     printf "    Enable kcat\n"
     echo
 
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--enable-sr-maven-plugin-app")"
+    printf "    Enable Schema Registry Maven plugin App\n"
+    echo
+
     # :command.usage_fixed_flags
     printf "  %s\n" "$(magenta "--help, -h")"
     printf "    Show this help\n"
@@ -5301,6 +5306,7 @@ playground_run_command() {
   enable_multiple_connect_workers="${args[--enable-multiple-connect-workers]}"
   enable_jmx_grafana="${args[--enable-jmx-grafana]}"
   enable_kcat="${args[--enable-kcat]}"
+  enable_sr_maven_plugin_app="${args[--enable-sr-maven-plugin-app]}"
 
   if [ "$test_file" = "" ]
   then
@@ -5404,6 +5410,12 @@ playground_run_command() {
   then
     environment_variables_list="$environment_variables_list ENABLE_KCAT=true"
     export ENABLE_KCAT=true
+  fi
+
+  if [[ -n "$enable_sr_maven_plugin_app" ]]
+  then
+    environment_variables_list="$environment_variables_list ENABLE_SR_MAVEN_PLUGIN_NODE=true"
+    export ENABLE_SR_MAVEN_PLUGIN_NODE=true
   fi
 
   if [ ! -z $EDITOR ]
@@ -7152,6 +7164,14 @@ playground_run_parse_requirements() {
 
         # :flag.case_no_arg
         args['--enable-kcat']=1
+        shift
+        ;;
+
+      # :flag.case
+      --enable-sr-maven-plugin-app)
+
+        # :flag.case_no_arg
+        args['--enable-sr-maven-plugin-app']=1
         shift
         ;;
 
