@@ -141,7 +141,10 @@ Resources:
 
                       echo 'eval "\$(starship init zsh)"' >> ~/.zshrc
 
-                      sudo chsh -s /bin/zsh 
+                      sudo chsh -s /bin/zsh
+
+                      mkdir -p ~/.local/bin
+                      ln -s /usr/bin/batcat ~/.local/bin/bat
 
                       git clone https://github.com/vdesabou/kafka-docker-playground.git
 
@@ -164,6 +167,7 @@ Resources:
               expect: []
               awscli: []
               fzf: []
+              bat: []
           commands:
             01_add_repo_gpg_key:
               command: |
