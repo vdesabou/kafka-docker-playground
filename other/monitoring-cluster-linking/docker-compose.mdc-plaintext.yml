@@ -1,0 +1,131 @@
+---
+version: '3.5'
+services:
+
+  zookeeper-europe:
+    image: confluentinc/cp-zookeeper:${TAG}
+    hostname: zookeeper-europe
+    container_name: zookeeper-europe
+    restart: always
+    volumes:
+      - ../../other/monitoring-cluster-linking/jmx-exporter:/usr/share/jmx_exporter/
+    ports:
+      - 19000:19000
+    environment:
+      KAFKA_JMX_PORT: 19000
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+      EXTRA_ARGS: "-javaagent:/usr/share/jmx_exporter/jmx_prometheus_javaagent-0.16.1.jar=1234:/usr/share/jmx_exporter/zookeeper.yml"    
+
+  zookeeper-us:
+    image: confluentinc/cp-zookeeper:${TAG}
+    hostname: zookeeper-us
+    container_name: zookeeper-us
+    restart: always
+    volumes:
+      - ../../other/monitoring-cluster-linking/jmx-exporter:/usr/share/jmx_exporter/
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+      EXTRA_ARGS: "-javaagent:/usr/share/jmx_exporter/jmx_prometheus_javaagent-0.16.1.jar=1234:/usr/share/jmx_exporter/zookeeper.yml"    
+
+  broker-europe:
+    image: ${CP_KAFKA_IMAGE}:${TAG}
+    hostname: broker-europe
+    container_name: broker-europe
+    depends_on:
+      - zookeeper-europe
+    volumes:
+      - ../../other/monitoring-cluster-linking/jmx-exporter:/usr/share/jmx_exporter/
+    ports:
+      - 11000:11000
+    environment:
+      KAFKA_JMX_PORT: 11000
+      KAFKA_JMX_HOSTNAME: localhost
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: 'zookeeper-europe:2181'
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://broker-europe:9092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      CONFLUENT_SUPPORT_CUSTOMER_ID: 'anonymous'
+      CONFLUENT_METRICS_ENABLE: 'false'
+      KAFKA_CONFLUENT_CLUSTER_LINK_ENABLE : "true"
+      EXTRA_ARGS: "-javaagent:/usr/share/jmx_exporter/jmx_prometheus_javaagent-0.16.1.jar=1234:/usr/share/jmx_exporter/broker.yml"
+
+  broker-us:
+    image: ${CP_KAFKA_IMAGE}:${TAG}
+    hostname: broker-us
+    container_name: broker-us
+    depends_on:
+      - zookeeper-us
+    volumes:
+      - ../../other/monitoring-cluster-linking/jmx-exporter:/usr/share/jmx_exporter/
+    ports:
+      - 12000:12000
+    environment:
+      KAFKA_JMX_PORT: 12000
+      KAFKA_JMX_HOSTNAME: localhost
+      KAFKA_BROKER_ID: 2
+      KAFKA_ZOOKEEPER_CONNECT: 'zookeeper-us:2181'
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://broker-us:9092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      CONFLUENT_SUPPORT_CUSTOMER_ID: 'anonymous'
+      CONFLUENT_METRICS_ENABLE: 'false'
+      EXTRA_ARGS: "-javaagent:/usr/share/jmx_exporter/jmx_prometheus_javaagent-0.16.1.jar=1234:/usr/share/jmx_exporter/broker.yml"
+  
+  kafka-lag-exporter:
+    image: lightbend/kafka-lag-exporter:0.6.6
+    hostname: kafka-lag-exporter
+    container_name: kafka-lag-exporter
+    restart: always
+    ports:
+      - 9998:9998
+    volumes:
+      - ../../other/monitoring-cluster-linking/kafka-lag-exporter/application.conf:/opt/docker/conf/application.conf
+      - ../../other/monitoring-cluster-linking/kafka-lag-exporter/logback.xml:/opt/docker/conf/logback.xml
+
+  alertmanager:
+    image: prom/alertmanager:v0.18.0
+    hostname: alertmanager
+    container_name: alertmanager
+    ports:
+      - 9093:9093
+
+  node-exporter:
+    image: prom/node-exporter:v0.18.1
+    hostname: node-exporter
+    container_name: node-exporter
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/rootfs:ro
+    command:
+      - '--path.procfs=/host/proc'
+      - '--path.sysfs=/host/sys'
+      - '--collector.filesystem.ignored-mount-points'
+      - '^(aufs|proc|nsfs|shm|cgroup|tmpfs|binfmt_misc|debugfs|devpts|fusectl|hugetlbfs|fuse.lxcfs|mqueue|pstore|securityfs|sysfs|autofs|devtmpfs|configfs)'
+
+  prometheus:
+    image: prom/prometheus
+    hostname: prometheus
+    container_name: prometheus
+    ports:
+      - 9090:9090
+    volumes:
+      - ../../other/monitoring-cluster-linking/prometheus/:/etc/prometheus/
+    depends_on:
+      - node-exporter
+      - kafka-lag-exporter
+      - alertmanager
+
+  grafana:
+    image: grafana/grafana:7.4.1
+    hostname: grafana
+    container_name: grafana
+    environment:
+      GF_INSTALL_PLUGINS: grafana-piechart-panel
+    ports:
+      - 3000:3000
+    volumes:
+      - ../../other/monitoring-cluster-linking/grafana/provisioning/:/etc/grafana/provisioning/
+    depends_on:
+      - prometheus
