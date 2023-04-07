@@ -110,7 +110,8 @@ log "✨ Creating file $repro_test_file"
 rm -f $repro_test_file
 if [ "${docker_compose_file}" != "" ]
 then
-  sed -e "s|$docker_compose_file|$docker_compose_test_file_name|g" \
+  filename=$(basename -- "${docker_compose_file}")
+  sed -e "s|$filename|$docker_compose_test_file_name|g" \
     $test_file > $repro_test_file
 else
   cp $test_file $repro_test_file
