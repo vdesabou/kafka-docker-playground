@@ -5485,13 +5485,15 @@ playground_bootstrap_reproduction_model_command() {
   fi
 
   test_file_directory="$(dirname "${test_file}")"
+  cd ${test_file_directory}
 
   # determining the docker-compose file from from test_file
   docker_compose_file=$(grep "environment" "$test_file" | grep DIR | grep start.sh | cut -d "/" -f 7 | cut -d '"' -f 1 | tail -n1 | xargs)
+  docker_compose_file="${test_file_directory}/${docker_compose_file}"
   description_kebab_case="${description// /-}"
   description_kebab_case=$(echo "$description_kebab_case" | tr '[:upper:]' '[:lower:]')
 
-  if [ "${docker_compose_file}" != "" ] && [ ! -f "${test_file_directory}/${docker_compose_file}" ]
+  if [ "${docker_compose_file}" != "" ] && [ ! -f "${docker_compose_file}" ]
   then
     docker_compose_file=""
     logwarn "📁 Could not determine docker-compose override file from $test_file !"
@@ -5540,16 +5542,16 @@ playground_bootstrap_reproduction_model_command() {
 
   repro_test_file="$repro_dir/$filename-repro-$description_kebab_case.$extension"
 
-  if [ "${docker_compose_file}" != "" ]
+  if [ "${docker_compose_file}" != "" ] && [ -f "${docker_compose_file}" ]
   then
-    filename=$(basename -- "${test_file_directory}/${docker_compose_file}")
+    filename=$(basename -- "${docker_compose_file}")
     extension="${filename##*.}"
     filename="${filename%.*}"
 
     docker_compose_test_file="$repro_dir/$filename.repro-$description_kebab_case.$extension"
     log "✨ Creating file $docker_compose_test_file"
     rm -f $docker_compose_test_file
-    cp ${test_file_directory}/${docker_compose_file} $docker_compose_test_file
+    cp ${docker_compose_file} $docker_compose_test_file
 
     docker_compose_test_file_name=$(basename -- "$docker_compose_test_file")
   fi
@@ -5951,7 +5953,7 @@ playground_bootstrap_reproduction_model_command() {
     cp $docker_compose_sink_file /tmp/2.yml
     yq ". *= load(\"/tmp/1.yml\")" /tmp/2.yml > $docker_compose_test_file
 
-    connector_paths=$(grep "CONNECT_PLUGIN_PATH" "${test_file_directory}/${docker_compose_file}" | grep -v "KSQL_CONNECT_PLUGIN_PATH" | cut -d ":" -f 2  | tr -s " " | head -1)
+    connector_paths=$(grep "CONNECT_PLUGIN_PATH" "${docker_compose_file}" | grep -v "KSQL_CONNECT_PLUGIN_PATH" | cut -d ":" -f 2  | tr -s " " | head -1)
     sink_connector_paths=$(grep "CONNECT_PLUGIN_PATH" "${docker_compose_sink_file}" | grep -v "KSQL_CONNECT_PLUGIN_PATH" | cut -d ":" -f 2  | tr -s " " | head -1)
     if [ "$sink_connector_paths" == "" ]
     then
