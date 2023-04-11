@@ -3,6 +3,7 @@ DIR_CLI="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 root_folder=${DIR_CLI}/../..
 
 test_file="${args[--file]}"
+skip_editor="${args[--skip-editor]}"
 tag="${args[--tag]}"
 connector_tag="${args[--connector-tag]}"
 connector_zip="${args[--connector-zip]}"
@@ -127,18 +128,21 @@ then
   export ENABLE_SR_MAVEN_PLUGIN_NODE=true
 fi
 
-if [ ! -z $EDITOR ]
+if [[ ! -n "$skip_editor" ]]
 then
-  log "📖 Opening ${test_file} using EDITOR environment variable"
-  $EDITOR ${test_file}
-else
-  if [[ $(type code 2>&1) =~ "not found" ]]
+  if [ ! -z $EDITOR ]
   then
-    logerror "Could not determine an editor to use, you can set EDITOR environment variable with your preferred choice"
-    exit 1
+    log "📖 Opening ${test_file} using EDITOR environment variable"
+    $EDITOR ${test_file}
   else
-    log "📖 Opening ${test_file} with code (you can change editor by setting EDITOR environment variable)"
-    code ${test_file}
+    if [[ $(type code 2>&1) =~ "not found" ]]
+    then
+      logerror "Could not determine an editor to use, you can set EDITOR environment variable with your preferred choice"
+      exit 1
+    else
+      log "📖 Opening ${test_file} with code (you can change editor by setting EDITOR environment variable)"
+      code ${test_file}
+    fi
   fi
 fi
 

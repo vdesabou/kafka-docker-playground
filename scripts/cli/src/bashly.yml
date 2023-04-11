@@ -26,7 +26,9 @@ commands:
 
 - name: run
   group: Run
-
+  environment_variables:
+  - name: EDITOR 
+    help: 🔖 Editor to use to open the example file.
   dependencies:
   - fzf
   help: |-
@@ -44,6 +46,10 @@ commands:
       - $(playground get-examples-list-with-fzf)
     help: |-
       Example file to run.
+  - long: --skip-editor
+    short: -s
+    required: false
+    help: Skip opening example file with text editor
   - long: --tag
     arg: tag
     required: false

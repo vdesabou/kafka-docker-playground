@@ -222,6 +222,11 @@ playground_run_usage() {
     echo
 
     # :flag.usage
+    printf "  %s\n" "$(magenta "--skip-editor, -s")"
+    printf "    Skip opening example file with text editor\n"
+    echo
+
+    # :flag.usage
     printf "  %s\n" "$(magenta "--tag TAG")"
     printf "    CP version to use\n"
     echo
@@ -284,6 +289,14 @@ playground_run_usage() {
     # :command.usage_fixed_flags
     printf "  %s\n" "$(magenta "--help, -h")"
     printf "    Show this help\n"
+    echo
+
+    # :command.usage_environment_variables
+    printf "%s\n" "$(bold "Environment Variables:")"
+
+    # :environment_variable.usage
+    printf "  %s\n" "$(cyan "EDITOR")"
+    printf "    🔖 Editor to use to open the example file.\n"
     echo
 
   fi
@@ -5294,6 +5307,7 @@ playground_run_command() {
   root_folder=${DIR_CLI}/../..
 
   test_file="${args[--file]}"
+  skip_editor="${args[--skip-editor]}"
   tag="${args[--tag]}"
   connector_tag="${args[--connector-tag]}"
   connector_zip="${args[--connector-zip]}"
@@ -5418,18 +5432,21 @@ playground_run_command() {
     export ENABLE_SR_MAVEN_PLUGIN_NODE=true
   fi
 
-  if [ ! -z $EDITOR ]
+  if [[ ! -n "$skip_editor" ]]
   then
-    log "📖 Opening ${test_file} using EDITOR environment variable"
-    $EDITOR ${test_file}
-  else
-    if [[ $(type code 2>&1) =~ "not found" ]]
+    if [ ! -z $EDITOR ]
     then
-      logerror "Could not determine an editor to use, you can set EDITOR environment variable with your preferred choice"
-      exit 1
+      log "📖 Opening ${test_file} using EDITOR environment variable"
+      $EDITOR ${test_file}
     else
-      log "📖 Opening ${test_file} with code (you can change editor by setting EDITOR environment variable)"
-      code ${test_file}
+      if [[ $(type code 2>&1) =~ "not found" ]]
+      then
+        logerror "Could not determine an editor to use, you can set EDITOR environment variable with your preferred choice"
+        exit 1
+      else
+        log "📖 Opening ${test_file} with code (you can change editor by setting EDITOR environment variable)"
+        code ${test_file}
+      fi
     fi
   fi
 
@@ -7037,6 +7054,14 @@ playground_run_parse_requirements() {
           printf "%s\n" "--file requires an argument: --file, -f FILE" >&2
           exit 1
         fi
+        ;;
+
+      # :flag.case
+      --skip-editor | -s)
+
+        # :flag.case_no_arg
+        args['--skip-editor']=1
+        shift
         ;;
 
       # :flag.case
