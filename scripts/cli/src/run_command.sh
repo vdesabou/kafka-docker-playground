@@ -15,6 +15,7 @@ enable_multiple_brokers="${args[--enable-multiple-brokers]}"
 enable_multiple_connect_workers="${args[--enable-multiple-connect-workers]}"
 enable_jmx_grafana="${args[--enable-jmx-grafana]}"
 enable_kcat="${args[--enable-kcat]}"
+enable_sr_maven_plugin_app="${args[--enable-sr-maven-plugin-app]}"
 
 if [ "$test_file" = "" ]
 then
@@ -120,6 +121,12 @@ then
   export ENABLE_KCAT=true
 fi
 
+if [[ -n "$enable_sr_maven_plugin_app" ]]
+then
+  environment_variables_list="$environment_variables_list ENABLE_SR_MAVEN_PLUGIN_NODE=true"
+  export ENABLE_SR_MAVEN_PLUGIN_NODE=true
+fi
+
 if [ ! -z $EDITOR ]
 then
   log "📖 Opening ${test_file} using EDITOR environment variable"
@@ -137,9 +144,9 @@ fi
 
 if [ "$environment_variables_list" != "" ]
 then
-  log "🚀 Running example with $environment_variables_list"
+  log "🚀 Running example with $environment_variables_list ?"
 else
-  log "🚀 Running example with all default values"
+  log "🚀 Running example with all default values ?"
 fi
 really_check_if_continue
 cd $test_file_directory

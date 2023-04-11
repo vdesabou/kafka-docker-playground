@@ -18,7 +18,11 @@ RUN curl -o /usr/local/bin/docker-compose -fsSL https://github.com/docker/compos
 # share env see https://github.com/gitpod-io/workspace-images/issues/472
 RUN echo "PATH="${PATH}"" | sudo tee /etc/environment
 
+RUN apt update && apt install fzf -y && apt install bat -y
 USER gitpod
+RUN mkdir -p ~/.local/bin && ln -s /usr/bin/batcat ~/.local/bin/bat
+RUN echo "export PATH=~/.local/bin:/workspace/kafka-docker-playground/scripts/cli:$PATH"  >> ~/.bashrc
+RUN echo "source /workspace/kafka-docker-playground/scripts/cli/completions.bash"  >> ~/.bashrc
 
 # Install Confluent Cloud CLI, with shell auto completion
 RUN mkdir -p ~/.local/share/bash-completion/

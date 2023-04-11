@@ -44,26 +44,40 @@ function get_connector_list() {
 }
 
 function get_examples_list_with_fzf() {
-  without_repro="$1"
-
   DIR_CLI="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
   dir1=$(echo ${DIR_CLI%/*})
   dir2=$(echo ${dir1%/*})
 
   if [[ $(type -f bat 2>&1) =~ "not found" ]]
   then
-    if [ "$without_repro" == "true" ]
-    then
-      find $dir2 -name \*.sh ! -name 'stop.sh' ! -path '*/scripts/*' ! -path '*/reproduction-models/*' | fzf --delimiter / --with-nth '-3,-2,-1' --preview 'cat {}'
-    else
-      find $dir2 -name \*.sh ! -name 'stop.sh' ! -path '*/scripts/*' | fzf --delimiter / --with-nth '-3,-2,-1' --preview 'cat {}'
-    fi
+    find $dir2 -name \*.sh ! -name 'stop.sh' ! -path '*/scripts/*' ! -path '*/docs-examples/*' ! -path '*/sample-sql-scripts/*' ! -path '*/ora-setup-scripts/*' | fzf --delimiter / --with-nth '-3,-2,-1' --preview 'cat {}'
   else
-    if [ "$without_repro" == "true" ]
-    then
-      find $dir2 -name \*.sh ! -name 'stop.sh' ! -path '*/scripts/*' ! -path '*/reproduction-models/*' | fzf --delimiter / --with-nth '-3,-2,-1' --preview 'bat --style=numbers --color=always --line-range :500 {}'
-    else
-      find $dir2 -name \*.sh ! -name 'stop.sh' ! -path '*/scripts/*' | fzf --delimiter / --with-nth '-3,-2,-1' --preview 'bat --style=numbers --color=always --line-range :500 {}'
-    fi    
+    find $dir2 -name \*.sh ! -name 'stop.sh' ! -path '*/scripts/*' ! -path '*/docs-examples/*' ! -path '*/sample-sql-scripts/*' ! -path '*/ora-setup-scripts/*' | fzf --delimiter / --with-nth '-3,-2,-1' --preview 'bat --style=numbers --color=always --line-range :500 {}'
+  fi
+}
+
+function get_examples_list_with_fzf_without_repro() {
+  DIR_CLI="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
+  dir1=$(echo ${DIR_CLI%/*})
+  dir2=$(echo ${dir1%/*})
+
+  if [[ $(type -f bat 2>&1) =~ "not found" ]]
+  then
+    find $dir2 -name \*.sh ! -name 'stop.sh' ! -path '*/scripts/*' ! -path '*/docs-examples/*' ! -path '*/sample-sql-scripts/*' ! -path '*/ora-setup-scripts/*' ! -path '*/reproduction-models/*' | fzf --delimiter / --with-nth '-3,-2,-1' --preview 'cat {}'
+  else
+    find $dir2 -name \*.sh ! -name 'stop.sh' ! -path '*/scripts/*' ! -path '*/docs-examples/*' ! -path '*/sample-sql-scripts/*' ! -path '*/ora-setup-scripts/*' ! -path '*/reproduction-models/*' | fzf --delimiter / --with-nth '-3,-2,-1' --preview 'bat --style=numbers --color=always --line-range :500 {}'
+  fi
+}
+
+function get_examples_list_with_fzf_without_repro_sink_only() {
+  DIR_CLI="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
+  dir1=$(echo ${DIR_CLI%/*})
+  dir2=$(echo ${dir1%/*})
+
+  if [[ $(type -f bat 2>&1) =~ "not found" ]]
+  then
+    find $dir2 -name \*.sh ! -name 'stop.sh' -path '*/connect-*-sink/*' ! -path '*/scripts/*' ! -path '*/docs-examples/*' ! -path '*/sample-sql-scripts/*' ! -path '*/ora-setup-scripts/*' ! -path '*/reproduction-models/*' | fzf --delimiter / --with-nth '-3,-2,-1' --preview 'cat {}'
+  else
+    find $dir2 -name \*.sh ! -name 'stop.sh' -path '*/connect-*-sink/*' ! -path '*/scripts/*' ! -path '*/docs-examples/*' ! -path '*/sample-sql-scripts/*' ! -path '*/ora-setup-scripts/*' ! -path '*/reproduction-models/*' | fzf --delimiter / --with-nth '-3,-2,-1' --preview 'bat --style=numbers --color=always --line-range :500 {}'
   fi
 }

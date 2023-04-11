@@ -35,10 +35,11 @@ then
 fi
 
 test_file_directory="$(dirname "${test_file}")"
-
+cd ${test_file_directory}
 
 # determining the docker-compose file from from test_file
 docker_compose_file=$(grep "environment" "$test_file" | grep DIR | grep start.sh | cut -d "/" -f 7 | cut -d '"' -f 1 | tail -n1 | xargs)
+docker_compose_file="${test_file_directory}/${docker_compose_file}"
 description_kebab_case="${description// /-}"
 description_kebab_case=$(echo "$description_kebab_case" | tr '[:upper:]' '[:lower:]')
 
@@ -91,16 +92,16 @@ mkdir -p $repro_dir
 
 repro_test_file="$repro_dir/$filename-repro-$description_kebab_case.$extension"
 
-if [ "${docker_compose_file}" != "" ]
+if [ "${docker_compose_file}" != "" ] && [ -f "${docker_compose_file}" ]
 then
-  filename=$(basename -- "$PWD/$docker_compose_file")
+  filename=$(basename -- "${docker_compose_file}")
   extension="${filename##*.}"
   filename="${filename%.*}"
 
   docker_compose_test_file="$repro_dir/$filename.repro-$description_kebab_case.$extension"
   log "✨ Creating file $docker_compose_test_file"
   rm -f $docker_compose_test_file
-  cp $PWD/$docker_compose_file $docker_compose_test_file
+  cp ${docker_compose_file} $docker_compose_test_file
 
   docker_compose_test_file_name=$(basename -- "$docker_compose_test_file")
 fi
@@ -109,7 +110,8 @@ log "✨ Creating file $repro_test_file"
 rm -f $repro_test_file
 if [ "${docker_compose_file}" != "" ]
 then
-  sed -e "s|$docker_compose_file|$docker_compose_test_file_name|g" \
+  filename=$(basename -- "${docker_compose_file}")
+  sed -e "s|$filename|$docker_compose_test_file_name|g" \
     $test_file > $repro_test_file
 else
   cp $test_file $repro_test_file
@@ -231,7 +233,7 @@ then
 
     rm -rf $producer_hostname
     mkdir -p $repro_dir/$producer_hostname/
-    cp -Ra ../../other/schema-format-$producer/producer/* $repro_dir/$producer_hostname/
+    cp -Ra ${test_file_directory}/../../other/schema-format-$producer/producer/* $repro_dir/$producer_hostname/
 
     # update docker compose with producer container
     if [[ "$dir1" = *connect ]]
@@ -396,7 +398,7 @@ then
     { head -n $(($line)) $repro_test_file; cat $tmp_dir/value_converter; tail -n +$(($line+1)) $repro_test_file; } > $tmp_dir/tmp_file2
     cp $tmp_dir/tmp_file2 $repro_test_file
   fi
-  log "🧑‍🏭 Changing Sink connector value.converter to use same as producer:"
+  log "🔮 Changing Sink connector value.converter to use same as producer:"
   cat $tmp_dir/value_converter
 
   if [ "$sink_key_converter" == "" ]
@@ -415,7 +417,7 @@ then
     { head -n $(($line)) $repro_test_file; cat $tmp_dir/key_converter; tail -n +$(($line+1)) $repro_test_file; } > $tmp_dir/tmp_file2
     cp $tmp_dir/tmp_file2 $repro_test_file
   fi
-  log "🧑‍🏭 Changing Sink connector key.converter to use same as producer:"
+  log "🔮 Changing Sink connector key.converter to use same as producer:"
   cat $tmp_dir/key_converter
 fi
 
@@ -641,7 +643,7 @@ then
       { head -n $(($line)) $tmp_dir/tmp_file; cat $tmp_dir/source_value_converter; tail -n +$(($line+1)) $tmp_dir/tmp_file; } > $tmp_dir/tmp_file2
       cp $tmp_dir/tmp_file2 $tmp_dir/tmp_file
     fi
-    log "🧑‍🏭 Changing Sink connector value.converter to use same as source:"
+    log "🔮 Changing Sink connector value.converter to use same as source:"
     cat $tmp_dir/source_value_converter
   fi
   if [ "$source_key_converter" == "" ] && [ "$sink_key_converter" == "" ]
@@ -666,7 +668,7 @@ then
       { head -n $(($line)) $tmp_dir/tmp_file; cat $tmp_dir/source_key_converter; tail -n +$(($line+1)) $tmp_dir/tmp_file; } > $tmp_dir/tmp_file2
       cp $tmp_dir/tmp_file2 $tmp_dir/tmp_file
     fi
-    log "🧑‍🏭 Changing Sink connector key.converter to use same as source:"
+    log "🔮 Changing Sink connector key.converter to use same as source:"
     cat $tmp_dir/source_key_converter
   fi
   set -e
@@ -727,4 +729,6 @@ fi
 chmod u+x $repro_test_file
 repro_test_filename=$(basename -- "$repro_test_file")
 
+log "🌟 Command to run generated example"
+echo "playground run -f $repro_dir/$repro_test_filename"
 playground run -f $repro_dir/$repro_test_filename

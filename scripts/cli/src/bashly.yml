@@ -21,6 +21,8 @@ commands:
   flags:
   - long: --without-repro
     required: false
+  - long: --sink-only
+    required: false
 
 - name: run
   group: Run
@@ -28,9 +30,9 @@ commands:
   dependencies:
   - fzf
   help: |-
-    🛠  Run example.
+    🚀  Run example.
     
-    👉 Check documentation xxx
+    👉 Check documentation https://tinyurl.com/yx3vbwu5
 
   flags:
   - long: --file
@@ -82,6 +84,9 @@ commands:
   - long: --enable-kcat
     required: false
     help: Enable kcat
+  - long: --enable-sr-maven-plugin-app
+    required: false
+    help: Enable Schema Registry Maven plugin App
 
 - name: bootstrap-reproduction-model
   environment_variables:
@@ -152,7 +157,7 @@ commands:
     arg: sink_file
     conflicts: [--producer]
     completions:
-      - $(ls ../../connect/connect-*sink/*.sh)
+      - $(playground get-examples-list-with-fzf --without-repro --sink-only)
     help: |-
       Sink example file to use for creating a pipeline.
 
@@ -456,6 +461,11 @@ commands:
         - $(playground get-connector-list)
       help: |-
         Connector name.
+
+  - name: restart
+    help: ♻️  Restart connector
+    flags:
+    - *connector
 
   - name: resume
     help: ⏯️  Resume connector

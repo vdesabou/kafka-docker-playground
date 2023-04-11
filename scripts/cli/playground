@@ -34,7 +34,7 @@ playground_usage() {
   echo
   # :command.usage_commands
   printf "%s\n" "$(bold "Run commands:")"
-  printf "  %s   🛠  Run example.\n" "$(green "run")                           "
+  printf "  %s   🚀  Run example.\n" "$(green "run")                           "
   echo
   printf "%s\n" "$(bold "Bootstrap commands:")"
   printf "  %s   🛠  Bootstrap reproduction model.\n" "$(green "bootstrap-reproduction-model")  "
@@ -71,6 +71,7 @@ playground_usage() {
   [[ -n $long_usage ]] && printf "  %s   ℹ️  Show status of all connectors.\n" "$(green "connector status")              "
   [[ -n $long_usage ]] && printf "  %s   🔖 Show all plugins installed.\n" "$(green "connector plugins")             "
   [[ -n $long_usage ]] && printf "  %s   ⏸️  Pause connector\n" "$(green "connector pause")               "
+  [[ -n $long_usage ]] && printf "  %s   ♻️  Restart connector\n" "$(green "connector restart")             "
   [[ -n $long_usage ]] && printf "  %s   ⏯️  Resume connector\n" "$(green "connector resume")              "
   [[ -n $long_usage ]] && printf "  %s   🗑️  Delete connector\n" "$(green "connector delete")              "
   [[ -n $long_usage ]] && printf "  %s   🐢 Show lag of sink connector\n" "$(green "connector show-lag")            "
@@ -177,6 +178,11 @@ playground_get_examples_list_with_fzf_usage() {
     printf "\n"
     echo
 
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--sink-only")"
+    printf "\n"
+    echo
+
     # :command.usage_fixed_flags
     printf "  %s\n" "$(magenta "--help, -h")"
     printf "    Show this help\n"
@@ -191,11 +197,11 @@ playground_run_usage() {
     printf "playground run\n"
     echo
 
-    printf "  🛠  Run example.\n  \n  👉 Check documentation xxx\n"
+    printf "  🚀  Run example.\n  \n  👉 Check documentation https://tinyurl.com/yx3vbwu5\n"
     echo
 
   else
-    printf "playground run - 🛠  Run example.\n"
+    printf "playground run - 🚀  Run example.\n"
     echo
 
   fi
@@ -268,6 +274,11 @@ playground_run_usage() {
     # :flag.usage
     printf "  %s\n" "$(magenta "--enable-kcat")"
     printf "    Enable kcat\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--enable-sr-maven-plugin-app")"
+    printf "    Enable Schema Registry Maven plugin App\n"
     echo
 
     # :command.usage_fixed_flags
@@ -1148,6 +1159,7 @@ playground_connector_usage() {
   printf "  %s   ℹ️  Show status of all connectors.\n" "$(green "status")   "
   printf "  %s   🔖 Show all plugins installed.\n" "$(green "plugins")  "
   printf "  %s   ⏸️  Pause connector\n" "$(green "pause")    "
+  printf "  %s   ♻️  Restart connector\n" "$(green "restart")  "
   printf "  %s   ⏯️  Resume connector\n" "$(green "resume")   "
   printf "  %s   🗑️  Delete connector\n" "$(green "delete")   "
   printf "  %s   🐢 Show lag of sink connector\n" "$(green "show-lag") "
@@ -1254,6 +1266,41 @@ playground_connector_pause_usage() {
   printf "%s\n" "$(bold "== Usage ==")"
   printf "  playground connector pause [OPTIONS]\n"
   printf "  playground connector pause --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n $long_usage ]]; then
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_flags
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--connector, -c CONNECTOR (required)")"
+    printf "    Connector name.\n"
+    echo
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_connector_restart_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground connector restart - ♻️  Restart connector\n"
+    echo
+
+  else
+    printf "playground connector restart - ♻️  Restart connector\n"
+    echo
+
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground connector restart [OPTIONS]\n"
+  printf "  playground connector restart --help | -h\n"
   echo
 
   # :command.long_usage
@@ -1601,28 +1648,41 @@ function get_connector_list() {
 }
 
 function get_examples_list_with_fzf() {
-  without_repro="$1"
-
   DIR_CLI="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
   dir1=$(echo ${DIR_CLI%/*})
   dir2=$(echo ${dir1%/*})
 
   if [[ $(type -f bat 2>&1) =~ "not found" ]]
   then
-    if [ "$without_repro" == "true" ]
-    then
-      find $dir2 -name \*.sh ! -name 'stop.sh' ! -path '*/scripts/*' ! -path '*/reproduction-models/*' | fzf --delimiter / --with-nth '-3,-2,-1' --preview 'cat {}'
-    else
-      find $dir2 -name \*.sh ! -name 'stop.sh' ! -path '*/scripts/*' | fzf --delimiter / --with-nth '-3,-2,-1' --preview 'cat {}'
-    fi
+    find $dir2 -name \*.sh ! -name 'stop.sh' ! -path '*/scripts/*' ! -path '*/docs-examples/*' ! -path '*/sample-sql-scripts/*' ! -path '*/ora-setup-scripts/*' | fzf --delimiter / --with-nth '-3,-2,-1' --preview 'cat {}'
   else
-    if [ "$without_repro" == "true" ]
-    then
-      find $dir2 -name \*.sh ! -name 'stop.sh' ! -path '*/scripts/*' ! -path '*/reproduction-models/*' | fzf --delimiter / --with-nth '-3,-2,-1' --preview 'bat --style=numbers --color=always --line-range :500 {}'
-    else
-      find $dir2 -name \*.sh ! -name 'stop.sh' ! -path '*/scripts/*' | fzf --delimiter / --with-nth '-3,-2,-1' --preview 'bat --style=numbers --color=always --line-range :500 {}'
-    fi
+    find $dir2 -name \*.sh ! -name 'stop.sh' ! -path '*/scripts/*' ! -path '*/docs-examples/*' ! -path '*/sample-sql-scripts/*' ! -path '*/ora-setup-scripts/*' | fzf --delimiter / --with-nth '-3,-2,-1' --preview 'bat --style=numbers --color=always --line-range :500 {}'
+  fi
+}
 
+function get_examples_list_with_fzf_without_repro() {
+  DIR_CLI="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
+  dir1=$(echo ${DIR_CLI%/*})
+  dir2=$(echo ${dir1%/*})
+
+  if [[ $(type -f bat 2>&1) =~ "not found" ]]
+  then
+    find $dir2 -name \*.sh ! -name 'stop.sh' ! -path '*/scripts/*' ! -path '*/docs-examples/*' ! -path '*/sample-sql-scripts/*' ! -path '*/ora-setup-scripts/*' ! -path '*/reproduction-models/*' | fzf --delimiter / --with-nth '-3,-2,-1' --preview 'cat {}'
+  else
+    find $dir2 -name \*.sh ! -name 'stop.sh' ! -path '*/scripts/*' ! -path '*/docs-examples/*' ! -path '*/sample-sql-scripts/*' ! -path '*/ora-setup-scripts/*' ! -path '*/reproduction-models/*' | fzf --delimiter / --with-nth '-3,-2,-1' --preview 'bat --style=numbers --color=always --line-range :500 {}'
+  fi
+}
+
+function get_examples_list_with_fzf_without_repro_sink_only() {
+  DIR_CLI="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
+  dir1=$(echo ${DIR_CLI%/*})
+  dir2=$(echo ${dir1%/*})
+
+  if [[ $(type -f bat 2>&1) =~ "not found" ]]
+  then
+    find $dir2 -name \*.sh ! -name 'stop.sh' -path '*/connect-*-sink/*' ! -path '*/scripts/*' ! -path '*/docs-examples/*' ! -path '*/sample-sql-scripts/*' ! -path '*/ora-setup-scripts/*' ! -path '*/reproduction-models/*' | fzf --delimiter / --with-nth '-3,-2,-1' --preview 'cat {}'
+  else
+    find $dir2 -name \*.sh ! -name 'stop.sh' -path '*/connect-*-sink/*' ! -path '*/scripts/*' ! -path '*/docs-examples/*' ! -path '*/sample-sql-scripts/*' ! -path '*/ora-setup-scripts/*' ! -path '*/reproduction-models/*' | fzf --delimiter / --with-nth '-3,-2,-1' --preview 'bat --style=numbers --color=always --line-range :500 {}'
   fi
 }
 
@@ -5153,7 +5213,12 @@ function check_arm64_support() {
 }
 
 function playground() {
-  ../../scripts/cli/playground "$@"
+  if [[ $(type -f playground 2>&1) =~ "not found" ]]
+  then
+    ../../scripts/cli/playground "$@"
+  else
+    $(which playground) "$@"
+  fi
 }
 
 # src/lib/validations/validate_dir_exists.sh
@@ -5204,13 +5269,21 @@ playground_get_topic_list_command() {
 playground_get_examples_list_with_fzf_command() {
   # src/get_examples_list_with_fzf_command.sh
   without_repro="${args[--without-repro]}"
+  sink_only="${args[--sink-only]}"
+
+  if [[ -n "$without_repro" ]] && [[ -n "$sink_only" ]]
+  then
+      get_examples_list_with_fzf_without_repro_sink_only
+      return
+  fi
 
   if [[ -n "$without_repro" ]]
   then
-      get_examples_list_with_fzf "true"
-  else
-      get_examples_list_with_fzf
+      get_examples_list_with_fzf_without_repro
+      return
   fi
+
+  get_examples_list_with_fzf
 }
 
 # :command.function
@@ -5233,6 +5306,7 @@ playground_run_command() {
   enable_multiple_connect_workers="${args[--enable-multiple-connect-workers]}"
   enable_jmx_grafana="${args[--enable-jmx-grafana]}"
   enable_kcat="${args[--enable-kcat]}"
+  enable_sr_maven_plugin_app="${args[--enable-sr-maven-plugin-app]}"
 
   if [ "$test_file" = "" ]
   then
@@ -5338,6 +5412,12 @@ playground_run_command() {
     export ENABLE_KCAT=true
   fi
 
+  if [[ -n "$enable_sr_maven_plugin_app" ]]
+  then
+    environment_variables_list="$environment_variables_list ENABLE_SR_MAVEN_PLUGIN_NODE=true"
+    export ENABLE_SR_MAVEN_PLUGIN_NODE=true
+  fi
+
   if [ ! -z $EDITOR ]
   then
     log "📖 Opening ${test_file} using EDITOR environment variable"
@@ -5355,9 +5435,9 @@ playground_run_command() {
 
   if [ "$environment_variables_list" != "" ]
   then
-    log "🚀 Running example with $environment_variables_list"
+    log "🚀 Running example with $environment_variables_list ?"
   else
-    log "🚀 Running example with all default values"
+    log "🚀 Running example with all default values ?"
   fi
   really_check_if_continue
   cd $test_file_directory
@@ -5405,9 +5485,11 @@ playground_bootstrap_reproduction_model_command() {
   fi
 
   test_file_directory="$(dirname "${test_file}")"
+  cd ${test_file_directory}
 
   # determining the docker-compose file from from test_file
   docker_compose_file=$(grep "environment" "$test_file" | grep DIR | grep start.sh | cut -d "/" -f 7 | cut -d '"' -f 1 | tail -n1 | xargs)
+  docker_compose_file="${test_file_directory}/${docker_compose_file}"
   description_kebab_case="${description// /-}"
   description_kebab_case=$(echo "$description_kebab_case" | tr '[:upper:]' '[:lower:]')
 
@@ -5460,16 +5542,16 @@ playground_bootstrap_reproduction_model_command() {
 
   repro_test_file="$repro_dir/$filename-repro-$description_kebab_case.$extension"
 
-  if [ "${docker_compose_file}" != "" ]
+  if [ "${docker_compose_file}" != "" ] && [ -f "${docker_compose_file}" ]
   then
-    filename=$(basename -- "$PWD/$docker_compose_file")
+    filename=$(basename -- "${docker_compose_file}")
     extension="${filename##*.}"
     filename="${filename%.*}"
 
     docker_compose_test_file="$repro_dir/$filename.repro-$description_kebab_case.$extension"
     log "✨ Creating file $docker_compose_test_file"
     rm -f $docker_compose_test_file
-    cp $PWD/$docker_compose_file $docker_compose_test_file
+    cp ${docker_compose_file} $docker_compose_test_file
 
     docker_compose_test_file_name=$(basename -- "$docker_compose_test_file")
   fi
@@ -5478,7 +5560,8 @@ playground_bootstrap_reproduction_model_command() {
   rm -f $repro_test_file
   if [ "${docker_compose_file}" != "" ]
   then
-    sed -e "s|$docker_compose_file|$docker_compose_test_file_name|g" \
+    filename=$(basename -- "${docker_compose_file}")
+    sed -e "s|$filename|$docker_compose_test_file_name|g" \
       $test_file > $repro_test_file
   else
     cp $test_file $repro_test_file
@@ -5600,7 +5683,7 @@ playground_bootstrap_reproduction_model_command() {
 
       rm -rf $producer_hostname
       mkdir -p $repro_dir/$producer_hostname/
-      cp -Ra ../../other/schema-format-$producer/producer/* $repro_dir/$producer_hostname/
+      cp -Ra ${test_file_directory}/../../other/schema-format-$producer/producer/* $repro_dir/$producer_hostname/
 
       # update docker compose with producer container
       if [[ "$dir1" = *connect ]]
@@ -5768,7 +5851,7 @@ playground_bootstrap_reproduction_model_command() {
       { head -n $(($line)) $repro_test_file; cat $tmp_dir/value_converter; tail -n +$(($line+1)) $repro_test_file; } > $tmp_dir/tmp_file2
       cp $tmp_dir/tmp_file2 $repro_test_file
     fi
-    log "🧑‍🏭 Changing Sink connector value.converter to use same as producer:"
+    log "🔮 Changing Sink connector value.converter to use same as producer:"
     cat $tmp_dir/value_converter
 
     if [ "$sink_key_converter" == "" ]
@@ -5787,7 +5870,7 @@ playground_bootstrap_reproduction_model_command() {
       { head -n $(($line)) $repro_test_file; cat $tmp_dir/key_converter; tail -n +$(($line+1)) $repro_test_file; } > $tmp_dir/tmp_file2
       cp $tmp_dir/tmp_file2 $repro_test_file
     fi
-    log "🧑‍🏭 Changing Sink connector key.converter to use same as producer:"
+    log "🔮 Changing Sink connector key.converter to use same as producer:"
     cat $tmp_dir/key_converter
   fi
 
@@ -6007,7 +6090,7 @@ playground_bootstrap_reproduction_model_command() {
         { head -n $(($line)) $tmp_dir/tmp_file; cat $tmp_dir/source_value_converter; tail -n +$(($line+1)) $tmp_dir/tmp_file; } > $tmp_dir/tmp_file2
         cp $tmp_dir/tmp_file2 $tmp_dir/tmp_file
       fi
-      log "🧑‍🏭 Changing Sink connector value.converter to use same as source:"
+      log "🔮 Changing Sink connector value.converter to use same as source:"
       cat $tmp_dir/source_value_converter
     fi
     if [ "$source_key_converter" == "" ] && [ "$sink_key_converter" == "" ]
@@ -6032,7 +6115,7 @@ playground_bootstrap_reproduction_model_command() {
         { head -n $(($line)) $tmp_dir/tmp_file; cat $tmp_dir/source_key_converter; tail -n +$(($line+1)) $tmp_dir/tmp_file; } > $tmp_dir/tmp_file2
         cp $tmp_dir/tmp_file2 $tmp_dir/tmp_file
       fi
-      log "🧑‍🏭 Changing Sink connector key.converter to use same as source:"
+      log "🔮 Changing Sink connector key.converter to use same as source:"
       cat $tmp_dir/source_key_converter
     fi
     set -e
@@ -6093,6 +6176,8 @@ playground_bootstrap_reproduction_model_command() {
   chmod u+x $repro_test_file
   repro_test_filename=$(basename -- "$repro_test_file")
 
+  log "🌟 Command to run generated example"
+  echo "playground run -f $repro_dir/$repro_test_filename"
   playground run -f $repro_dir/$repro_test_filename
 
 }
@@ -6412,6 +6497,32 @@ playground_connector_pause_command() {
   curl $security_certs -s -X PUT -H "Content-Type: application/json" "$connect_url/connectors/$connector/pause" | jq .
 
   playground connector status
+}
+
+# :command.function
+playground_connector_restart_command() {
+  # src/connector_restart_command.sh
+  environment=`get_environment_used`
+
+  if [ "$environment" == "error" ]
+  then
+    logerror "File containing restart command /tmp/playground-command does not exist!"
+    exit 1
+
+  fi
+  connect_url="http://localhost:8083"
+  security_certs=""
+  if [ "$environment" != "plaintext" ]
+  then
+      connect_url="https://localhost:8083"
+      DIR_CLI="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
+
+      security_certs="--cert $DIR_CLI/../../environment/$environment/security/connect.certificate.pem --key $DIR_CLI/../../environment/$environment/security/connect.key --tlsv1.2 --cacert $DIR_CLI/../../environment/$environment/security/snakeoil-ca-1.crt"
+  fi
+
+  connector="${args[--connector]}"
+  log "Restarting connector $connector"
+  curl $security_certs -s -X POST -H "Content-Type: application/json" "$connect_url/connectors/$connector/restart?includeTasks=true&onlyFailed=false" | jq .
 }
 
 # :command.function
@@ -6849,6 +6960,14 @@ playground_get_examples_list_with_fzf_parse_requirements() {
         shift
         ;;
 
+      # :flag.case
+      --sink-only)
+
+        # :flag.case_no_arg
+        args['--sink-only']=1
+        shift
+        ;;
+
       -?*)
         printf "invalid option: %s\n" "$key" >&2
         exit 1
@@ -7048,6 +7167,14 @@ playground_run_parse_requirements() {
 
         # :flag.case_no_arg
         args['--enable-kcat']=1
+        shift
+        ;;
+
+      # :flag.case
+      --enable-sr-maven-plugin-app)
+
+        # :flag.case_no_arg
+        args['--enable-sr-maven-plugin-app']=1
         shift
         ;;
 
@@ -8699,6 +8826,13 @@ playground_connector_parse_requirements() {
       shift $#
       ;;
 
+    restart)
+      action="restart"
+      shift
+      playground_connector_restart_parse_requirements "$@"
+      shift $#
+      ;;
+
     resume)
       action="resume"
       shift
@@ -8884,6 +9018,72 @@ playground_connector_pause_parse_requirements() {
 
   # :command.command_filter
   action="connector pause"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      # :flag.case
+      --connector | -c)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+
+          args['--connector']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--connector requires an argument: --connector, -c CONNECTOR" >&2
+          exit 1
+        fi
+        ;;
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+  # :command.required_flags_filter
+  if [[ -z ${args['--connector']+x} ]]; then
+    printf "missing required flag: --connector, -c CONNECTOR\n" >&2
+    exit 1
+  fi
+
+}
+
+# :command.parse_requirements
+playground_connector_restart_parse_requirements() {
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    case "${1:-}" in
+      --help | -h)
+        long_usage=yes
+        playground_connector_restart_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.dependencies_filter
+
+  # :command.command_filter
+  action="connector restart"
 
   # :command.parse_requirements_while
   while [[ $# -gt 0 ]]; do
@@ -9632,6 +9832,15 @@ run() {
         playground_connector_pause_usage
       else
         playground_connector_pause_command
+      fi
+      ;;
+
+    "connector restart")
+      if [[ ${args['--help']:-} ]]; then
+        long_usage=yes
+        playground_connector_restart_usage
+      else
+        playground_connector_restart_command
       fi
       ;;
 

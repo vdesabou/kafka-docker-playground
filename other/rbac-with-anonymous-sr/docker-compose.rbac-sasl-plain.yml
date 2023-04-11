@@ -1,0 +1,12 @@
+---
+version: '3.5'
+services:
+
+  schema-registry:
+    environment:
+      SCHEMA_REGISTRY_CONFLUENT_SCHEMA_REGISTRY_ANONYMOUS_PRINCIPAL: 'true'
+      SCHEMA_REGISTRY_AUTHENTICATION_SKIP_PATHS: '/*'
+
+  tools:
+    volumes:
+      - ../../other/rbac-with-anonymous-sr/scripts/create-role-bindings-anonymous.sh:/create-role-bindings-anonymous.sh
