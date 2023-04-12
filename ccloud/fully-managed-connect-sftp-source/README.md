@@ -1,104 +1,40 @@
-# SFTP Source connector
+# Fully Managed SFTP Source connector
 
 
 
 ## Objective
 
-Quickly test [SFTP Source](https://docs.confluent.io/current/connect/kafka-connect-sftp/source-connector/index.html#quick-start) connector.
+Quickly test [Fully Managed SFTP Source](https://docs.confluent.io/cloud/current/connectors/cc-sftp-source.html#step-1-list-the-available-connectors) connector.
 
 
 
+
+## Prerequisites
+
+All you have to do is to be already logged in with [confluent CLI](https://docs.confluent.io/confluent-cli/current/overview.html#confluent-cli-overview).
+
+By default, a new Confluent Cloud environment with a Cluster will be created.
+
+You can configure the cluster by setting environment variables:
+
+* `CLUSTER_CLOUD`: The Cloud provider (possible values: `aws`, `gcp` and `azure`, default `aws`)
+* `CLUSTER_REGION`: The Cloud region (use `confluent kafka region list` to get the list, default `eu-west-2`)
+* `CLUSTER_TYPE`: The type of cluster (possible values: `basic`, `standard` and `dedicated`, default `basic`)
+* `ENVIRONMENT` (optional): The environment id where want your new cluster (example: `env-xxxxx`) 
+
+In case you want to use your own existing cluster, you need to setup these environment variables:
+
+* `ENVIRONMENT`: The environment id where your cluster is located (example: `env-xxxxx`) 
+* `CLUSTER_NAME`: The cluster name
+* `CLUSTER_CLOUD`: The Cloud provider (possible values: `aws`, `gcp` and `azure`)
+* `CLUSTER_REGION`: The Cloud region (example `us-east-2`)
+* `CLUSTER_CREDS`: The Kafka api key and secret to use, it should be separated with semi-colon (example: `<API_KEY>:<API_KEY_SECRET>`)
+* `SCHEMA_REGISTRY_CREDS` (optional, if not set, new one will be created): The Schema Registry api key and secret to use, it should be separated with semi-colon (example: `<SR_API_KEY>:<SR_API_KEY_SECRET>`)
 
 ## How to run
 
-* With CSV (no schema)
+Simply run:
 
-```bash
-$ ./sftp-source-csv.sh
 ```
-
-* With CSV (with schema)
-
-```bash
-$ ./sftp-source-csv-with-schema.sh
+$ ./fully-managed-sftp-source-json.sh.sh
 ```
-
-* With TSV
-
-```bash
-$ ./sftp-source-tsv.sh
-```
-
-* With JSON (no schema)
-
-```bash
-$ ./sftp-source-json.sh
-```
-
-* With JSON (with schema)
-
-```bash
-$ ./sftp-source-json-with-schema.sh
-```
-
-* With Kerberos:
-
-```bash
-$ ./sftp-source-kerberos.sh
-```
-
-* With SSH key
-
-```bash
-$ ./sftp-source-ssh-key.sh
-```
-
-* With SSH PEM file
-
-```bash
-$ ./sftp-source-ssh-pem-file.sh
-```
-
-
-## Details of what the script is doing
-
-Creating CSV SFTP Source connector
-
-```bash
-$ curl -X PUT \
-     -H "Content-Type: application/json" \
-     --data '{
-        "topics": "test_sftp_sink",
-               "tasks.max": "1",
-               "connector.class": "io.confluent.connect.sftp.SftpCsvSourceConnector",
-               "cleanup.policy":"NONE",
-               "behavior.on.error":"IGNORE",
-               "input.path": "/home/foo/upload/input",
-               "error.path": "/home/foo/upload/error",
-               "finished.path": "/home/foo/upload/finished",
-               "input.file.pattern": ".*\\.csv",
-               "sftp.username":"foo",
-               "sftp.password":"pass",
-               "sftp.host":"sftp-server",
-               "sftp.port":"22",
-               "kafka.topic": "sftp-testing-topic",
-               "csv.first.row.as.header": "true",
-               "schema.generation.enabled": "true"
-          }' \
-     http://localhost:8083/connectors/sftp-source-csv/config | jq .
-```
-
-Verifying topic `sftp-testing-topic`
-
-```bash
-$ docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic sftp-testing-topic --from-beginning --max-messages 2
-```
-
-Results:
-
-```json
-{"id":{"string":"1"},"first_name":{"string":"Salmon"},"last_name":{"string":"Baitman"},"email":{"string":"sbaitman0@feedburner.com"},"gender":{"string":"Male"},"ip_address":{"string":"120.181.75.98"},"last_login":{"string":"2015-03-01T06:01:15Z"},"account_balance":{"string":"17462.66"},"country":{"string":"IT"},"favorite_color":{"string":"#f09bc0"}}
-{"id":{"string":"2"},"first_name":{"string":"Debby"},"last_name":{"string":"Brea"},"email":{"string":"dbrea1@icio.us"},"gender":{"string":"Female"},"ip_address":{"string":"153.239.187.49"},"last_login":{"string":"2018-10-21T12:27:12Z"},"account_balance":{"string":"14693.49"},"country":{"string":"CZ"},"favorite_color":{"string":"#73893a"}}
-```
-
-N.B: Control Center is reachable at [http://127.0.0.1:9021](http://127.0.0.1:9021])
