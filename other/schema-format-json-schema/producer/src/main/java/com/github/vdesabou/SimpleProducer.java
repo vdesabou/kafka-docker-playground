@@ -62,6 +62,7 @@ public class SimpleProducer {
         logger.info("creating producer with props: {}", properties);
 
         logger.info("Sending data to `{}` topic", topicName);
+        Faker faker = new Faker();
 
         // PodamFactory factory = new PodamFactoryImpl();
         EasyRandomParameters parameters = new EasyRandomParameters()
@@ -79,16 +80,10 @@ public class SimpleProducer {
             long id = 0;
             while (id < nbMessages) {
 
-                // This will use constructor with minimum arguments and
-                // then setters to populate POJO
-                // Customer customer = factory.manufacturePojo(Customer.class);
-
-                // Customer customer = Customer.newBuilder()
-                // .setCount(id)
-                // .setFirstName(faker.name().firstName())
-                // .setLastName(faker.name().lastName())
-                // .setAddress(faker.address().streetAddress())
-                // .build();
+                // Customer customer = new Customer();
+                // customer.setName(faker.name().firstName());
+                // customer.setSurname(faker.name().lastName());
+                // customer.setEmail(faker.internet().emailAddress());
 
                 Customer customer = generator.nextObject(Customer.class);
 
