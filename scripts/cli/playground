@@ -227,7 +227,7 @@ playground_run_usage() {
     # :command.usage_flags
     # :flag.usage
     printf "  %s\n" "$(magenta "--file, -f FILE (required)")"
-    printf "    Example file to run.\n"
+    printf "    Example file to run.\n    It must be absolute full path. \n    \n    🎓 Tip: use <tab> completion to trigger fzf completion.\n"
     echo
 
     # :flag.usage
@@ -375,7 +375,7 @@ playground_bootstrap_reproduction_model_usage() {
     # :command.usage_flags
     # :flag.usage
     printf "  %s\n" "$(magenta "--file, -f FILE (required)")"
-    printf "    Example file to use as basis.\n"
+    printf "    Example file to use as basis.\n    It must be absolute full path. \n    \n    🎓 Tip: use <tab> completion to trigger fzf completion.\n"
     echo
 
     # :flag.usage
@@ -403,7 +403,7 @@ playground_bootstrap_reproduction_model_usage() {
 
     # :flag.usage
     printf "  %s\n" "$(magenta "--pipeline SINK_FILE")"
-    printf "    Sink example file to use for creating a pipeline.\n"
+    printf "    Sink example file to use for creating a pipeline.\n    It must be absolute full path. \n    \n    🎓 Tip: use <tab> completion to trigger fzf completion.\n"
     echo
 
     # :command.usage_fixed_flags
@@ -422,12 +422,11 @@ playground_bootstrap_reproduction_model_usage() {
 
     # :command.usage_examples
     printf "%s\n" "$(bold "Examples")"
-    printf "  playground bootstrap-reproduction-model -f hdfs2-sink.sh -d \"123456 testing\n  with parquet format\"\n"
-    printf "  playground bootstrap-reproduction-model -f hdfs2-sink.sh -d \"123456 testing\n  with parquet format and avro producer\" --producer avro\n"
-    printf "  playground bootstrap-reproduction-model -f hdfs2-sink.sh -d \"123456 testing\n  with parquet format and 2 protobuf producers\" --producer protobuf\n  --nb-producers 2\n"
-    printf "  playground bootstrap-reproduction-model -f hdfs2-sink.sh -d \"123456 testing\n  with parquet format and 2 protobuf producers\" -p protobuf -n 2\n"
-    printf "  playground bootstrap-reproduction-model -f hdfs2-sink.sh -d \"123456 testing\n  with parquet format and custom smt\" --custom-smt\n"
-    printf "  playground bootstrap-reproduction-model -f debezium-postgres-source.sh -d\n  \"create pipeline\" --pipeline\n  ../../connect/connect-jdbc-sqlserver-sink/sqlserver-microsoft-sink.sh\n"
+    printf "  playground bootstrap-reproduction-model -f hdfs2<tab> -d \"simple test\"\n"
+    printf "  playground bootstrap-reproduction-model -f /full/path/hdfs2-sink.sh -d\n  \"testing with avro producer\" --producer avro\n"
+    printf "  playground bootstrap-reproduction-model -f hdfs2<tab> -d \"testing with 2\n  protobuf producers\" --producer protobuf --nb-producers 2\n"
+    printf "  playground bootstrap-reproduction-model -f hdfs2<tab> -d \"testing custom smt\"\n  --custom-smt\n"
+    printf "  playground bootstrap-reproduction-model -f debeziumpostgres<tab> -d \"create\n  pipeline\" --pipeline jdbcsink<tab>\n"
     echo
 
   fi

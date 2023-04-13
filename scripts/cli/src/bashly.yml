@@ -50,6 +50,9 @@ commands:
       - $(playground get-examples-list-with-fzf "$cur")
     help: |-
       Example file to run.
+      It must be absolute full path. 
+
+      🎓 Tip: use <tab> completion to trigger fzf completion.
   - long: --skip-editor
     short: -s
     required: false
@@ -129,6 +132,9 @@ commands:
       - $(playground get-examples-list-with-fzf --without-repro "$cur")
     help: |-
       Example file to use as basis.
+      It must be absolute full path. 
+
+      🎓 Tip: use <tab> completion to trigger fzf completion.
 
   - long: --description
     short: -d
@@ -178,14 +184,16 @@ commands:
       - $(playground get-examples-list-with-fzf --without-repro --sink-only "$cur")
     help: |-
       Sink example file to use for creating a pipeline.
+      It must be absolute full path. 
+
+      🎓 Tip: use <tab> completion to trigger fzf completion.
 
   examples:
-  - playground bootstrap-reproduction-model -f hdfs2-sink.sh -d "123456 testing with parquet format"
-  - playground bootstrap-reproduction-model -f hdfs2-sink.sh -d "123456 testing with parquet format and avro producer" --producer avro
-  - playground bootstrap-reproduction-model -f hdfs2-sink.sh -d "123456 testing with parquet format and 2 protobuf producers" --producer protobuf --nb-producers 2
-  - playground bootstrap-reproduction-model -f hdfs2-sink.sh -d "123456 testing with parquet format and 2 protobuf producers" -p protobuf -n 2
-  - playground bootstrap-reproduction-model -f hdfs2-sink.sh -d "123456 testing with parquet format and custom smt" --custom-smt
-  - playground bootstrap-reproduction-model -f debezium-postgres-source.sh -d "create pipeline" --pipeline ../../connect/connect-jdbc-sqlserver-sink/sqlserver-microsoft-sink.sh
+  - playground bootstrap-reproduction-model -f hdfs2<tab> -d "simple test"
+  - playground bootstrap-reproduction-model -f /full/path/hdfs2-sink.sh -d "testing with avro producer" --producer avro
+  - playground bootstrap-reproduction-model -f hdfs2<tab> -d "testing with 2 protobuf producers" --producer protobuf --nb-producers 2
+  - playground bootstrap-reproduction-model -f hdfs2<tab> -d "testing custom smt" --custom-smt
+  - playground bootstrap-reproduction-model -f debeziumpostgres<tab> -d "create pipeline" --pipeline jdbcsink<tab>
 
 - name: get-properties
   group: Kafka
