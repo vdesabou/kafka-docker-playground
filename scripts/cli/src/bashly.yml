@@ -98,6 +98,14 @@ commands:
     required: false
     help: Enable Schema Registry Maven plugin App
 
+- name: re-run
+  group: Run
+  environment_variables:
+  - name: EDITOR 
+    help: 🔖 Editor to use to open the example file.
+  help: |-
+    🛸  Re-run last example.
+    
 - name: bootstrap-reproduction-model
   environment_variables:
   - name: OUTPUT_FOLDER 

@@ -58,75 +58,88 @@ dir2="${dir1##*/}/$base1" # connect/connect-cdc-oracle12-source
 final_dir=$(echo $dir2 | tr '/' '-') # connect-connect-cdc-oracle12-source
 
 environment_variables_list=""
+argument_list=""
 if [[ -n "$tag" ]]
 then
   environment_variables_list="TAG=$tag"
+  argument_list="--tag=$tag"
   export TAG=$tag
 fi
 
 if [[ -n "$connector_tag" ]]
 then
   environment_variables_list="$environment_variables_list CONNECTOR_TAG=$connector_tag"
+  argument_list="$argument_list --connector-tag=$connector_tag"
   export CONNECTOR_TAG=$connector_tag
 fi
 
 if [[ -n "$connector_zip" ]]
 then
   environment_variables_list="$environment_variables_list CONNECTOR_ZIP=$connector_zip"
+  argument_list="$argument_list --connector-zip=$connector_zip"
   export CONNECTOR_ZIP=$connector_zip
 fi
 
 if [[ -n "$connector_jar" ]]
 then
   environment_variables_list="$environment_variables_list CONNECTOR_JAR=$connector_jar"
+  argument_list="$argument_list --connector-jar=$connector_jar"
   export CONNECTOR_JAR=$connector_jar
 fi
 
 if [[ -n "$disable_ksqldb" ]]
 then
   environment_variables_list="$environment_variables_list DISABLE_KSQLDB=true"
+  argument_list="$argument_list --disable-ksqldb"
   export DISABLE_KSQLDB=true
 fi
 
 if [[ -n "$disable_c3" ]]
 then
   environment_variables_list="$environment_variables_list DISABLE_CONTROL_CENTER=true"
+  argument_list="$argument_list --disable-control-center"
   export DISABLE_CONTROL_CENTER=true
 fi
 
 if [[ -n "$enable_conduktor" ]]
 then
   environment_variables_list="$environment_variables_list ENABLE_CONDUKTOR=true"
+  argument_list="$argument_list --enable-conduktor"
   export ENABLE_CONDUKTOR=true
 fi
 
 if [[ -n "$enable_multiple_brokers" ]]
 then
   environment_variables_list="$environment_variables_list ENABLE_KAFKA_NODES=true"
+  argument_list="$argument_list --enable-multiple-broker"
   export ENABLE_KAFKA_NODES=true
 fi
 
 if [[ -n "$enable_multiple_connect_workers" ]]
 then
   environment_variables_list="$environment_variables_list ENABLE_CONNECT_NODES=true"
+  argument_list="$argument_list --enable-multiple-connect-workers"
   export ENABLE_CONNECT_NODES=true
 fi
 
 if [[ -n "$enable_jmx_grafana" ]]
 then
   environment_variables_list="$environment_variables_list ENABLE_JMX_GRAFANA=true"
+  argument_list="$argument_list --enable-jmx-grafana"
   export ENABLE_JMX_GRAFANA=true
 fi
 
 if [[ -n "$enable_kcat" ]]
 then
   environment_variables_list="$environment_variables_list ENABLE_KCAT=true"
+  argument_list="$argument_list --enable-kcat"
   export ENABLE_KCAT=true
 fi
 
 if [[ -n "$enable_sr_maven_plugin_app" ]]
 then
   environment_variables_list="$environment_variables_list ENABLE_SR_MAVEN_PLUGIN_NODE=true"
+  argument_list="$argument_list --enable-sr-maven-plugin-app"
   export ENABLE_SR_MAVEN_PLUGIN_NODE=true
 fi
 
@@ -155,5 +168,6 @@ else
   log "🚀 Running example with all default values ?"
 fi
 really_check_if_continue
+echo "playground run -f $test_file $argument_list" > /tmp/playground-run
 cd $test_file_directory
 ./$filename

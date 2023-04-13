@@ -35,6 +35,7 @@ playground_usage() {
   # :command.usage_commands
   printf "%s\n" "$(bold "Run commands:")"
   printf "  %s   🚀  Run example.\n" "$(green "run")                           "
+  printf "  %s   🛸  Re-run last example.\n" "$(green "re-run")                        "
   echo
   printf "%s\n" "$(bold "Bootstrap commands:")"
   printf "  %s   🛠  Bootstrap reproduction model.\n" "$(green "bootstrap-reproduction-model")  "
@@ -293,6 +294,43 @@ playground_run_usage() {
     printf "  %s\n" "$(magenta "--enable-sr-maven-plugin-app")"
     printf "    Enable Schema Registry Maven plugin App\n"
     echo
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+    # :command.usage_environment_variables
+    printf "%s\n" "$(bold "Environment Variables:")"
+
+    # :environment_variable.usage
+    printf "  %s\n" "$(cyan "EDITOR")"
+    printf "    🔖 Editor to use to open the example file.\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_re_run_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground re-run - 🛸  Re-run last example.\n"
+    echo
+
+  else
+    printf "playground re-run - 🛸  Re-run last example.\n"
+    echo
+
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground re-run\n"
+  printf "  playground re-run --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n $long_usage ]]; then
+    printf "%s\n" "$(bold "== Options ==")"
 
     # :command.usage_fixed_flags
     printf "  %s\n" "$(magenta "--help, -h")"
@@ -5381,75 +5419,88 @@ playground_run_command() {
   final_dir=$(echo $dir2 | tr '/' '-') # connect-connect-cdc-oracle12-source
 
   environment_variables_list=""
+  argument_list=""
   if [[ -n "$tag" ]]
   then
     environment_variables_list="TAG=$tag"
+    argument_list="--tag=$tag"
     export TAG=$tag
   fi
 
   if [[ -n "$connector_tag" ]]
   then
     environment_variables_list="$environment_variables_list CONNECTOR_TAG=$connector_tag"
+    argument_list="$argument_list --connector-tag=$connector_tag"
     export CONNECTOR_TAG=$connector_tag
   fi
 
   if [[ -n "$connector_zip" ]]
   then
     environment_variables_list="$environment_variables_list CONNECTOR_ZIP=$connector_zip"
+    argument_list="$argument_list --connector-zip=$connector_zip"
     export CONNECTOR_ZIP=$connector_zip
   fi
 
   if [[ -n "$connector_jar" ]]
   then
     environment_variables_list="$environment_variables_list CONNECTOR_JAR=$connector_jar"
+    argument_list="$argument_list --connector-jar=$connector_jar"
     export CONNECTOR_JAR=$connector_jar
   fi
 
   if [[ -n "$disable_ksqldb" ]]
   then
     environment_variables_list="$environment_variables_list DISABLE_KSQLDB=true"
+    argument_list="$argument_list --disable-ksqldb"
     export DISABLE_KSQLDB=true
   fi
 
   if [[ -n "$disable_c3" ]]
   then
     environment_variables_list="$environment_variables_list DISABLE_CONTROL_CENTER=true"
+    argument_list="$argument_list --disable-control-center"
     export DISABLE_CONTROL_CENTER=true
   fi
 
   if [[ -n "$enable_conduktor" ]]
   then
     environment_variables_list="$environment_variables_list ENABLE_CONDUKTOR=true"
+    argument_list="$argument_list --enable-conduktor"
     export ENABLE_CONDUKTOR=true
   fi
 
   if [[ -n "$enable_multiple_brokers" ]]
   then
     environment_variables_list="$environment_variables_list ENABLE_KAFKA_NODES=true"
+    argument_list="$argument_list --enable-multiple-broker"
     export ENABLE_KAFKA_NODES=true
   fi
 
   if [[ -n "$enable_multiple_connect_workers" ]]
   then
     environment_variables_list="$environment_variables_list ENABLE_CONNECT_NODES=true"
+    argument_list="$argument_list --enable-multiple-connect-workers"
     export ENABLE_CONNECT_NODES=true
   fi
 
   if [[ -n "$enable_jmx_grafana" ]]
   then
     environment_variables_list="$environment_variables_list ENABLE_JMX_GRAFANA=true"
+    argument_list="$argument_list --enable-jmx-grafana"
     export ENABLE_JMX_GRAFANA=true
   fi
 
   if [[ -n "$enable_kcat" ]]
   then
     environment_variables_list="$environment_variables_list ENABLE_KCAT=true"
+    argument_list="$argument_list --enable-kcat"
     export ENABLE_KCAT=true
   fi
 
   if [[ -n "$enable_sr_maven_plugin_app" ]]
   then
     environment_variables_list="$environment_variables_list ENABLE_SR_MAVEN_PLUGIN_NODE=true"
+    argument_list="$argument_list --enable-sr-maven-plugin-app"
     export ENABLE_SR_MAVEN_PLUGIN_NODE=true
   fi
 
@@ -5478,9 +5529,24 @@ playground_run_command() {
     log "🚀 Running example with all default values ?"
   fi
   really_check_if_continue
+  echo "playground run -f $test_file $argument_list" > /tmp/playground-run
   cd $test_file_directory
   ./$filename
 
+}
+
+# :command.function
+playground_re_run_command() {
+  # src/re_run_command.sh
+  if [ ! -f /tmp/playground-run ]
+  then
+    logerror "File containing re-run command /tmp/playground-run does not exist!"
+    exit 1
+  fi
+
+  log "Run command again:"
+  cat /tmp/playground-run
+  bash /tmp/playground-run
 }
 
 # :command.function
@@ -6219,6 +6285,7 @@ playground_bootstrap_reproduction_model_command() {
 
   log "🌟 Command to run generated example"
   echo "playground run -f $repro_dir/$repro_test_filename"
+  echo "playground run -f $repro_dir/$repro_test_filename" > /tmp/playground-run
   playground run -f $repro_dir/$repro_test_filename
 
 }
@@ -6789,6 +6856,13 @@ parse_requirements() {
       shift $#
       ;;
 
+    re-run)
+      action="re-run"
+      shift
+      playground_re_run_parse_requirements "$@"
+      shift $#
+      ;;
+
     bootstrap-reproduction-model)
       action="bootstrap-reproduction-model"
       shift
@@ -7254,6 +7328,52 @@ playground_run_parse_requirements() {
     printf "missing required flag: --file, -f FILE\n" >&2
     exit 1
   fi
+
+}
+
+# :command.parse_requirements
+playground_re_run_parse_requirements() {
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    case "${1:-}" in
+      --help | -h)
+        long_usage=yes
+        playground_re_run_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.dependencies_filter
+
+  # :command.command_filter
+  action="re-run"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
 
 }
 
@@ -9671,6 +9791,15 @@ run() {
         playground_run_usage
       else
         playground_run_command
+      fi
+      ;;
+
+    "re-run")
+      if [[ ${args['--help']:-} ]]; then
+        long_usage=yes
+        playground_re_run_usage
+      else
+        playground_re_run_command
       fi
       ;;
 
