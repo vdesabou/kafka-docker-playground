@@ -40,7 +40,7 @@ Schema Registry is configured at broker level:
 Create topic topic-validation:
 
 ```bash
-$ docker exec broker kafka-topics --bootstrap-server broker:9092 --create --topic topic-validation --partitions 1 --replication-factor 2 --command-config /etc/kafka/secrets/client_without_interceptors_2way_ssl.config --config confluent.key.schema.validation=true --config confluent.value.schema.validation=true
+$ docker exec broker kafka-topics --bootstrap-server broker:9092 --create --topic topic-validation --partitions 1 --replication-factor 2 --command-config /etc/kafka/secrets/client_without_interceptors.config --config confluent.key.schema.validation=true --config confluent.value.schema.validation=true
 ```
 
 Describe topic:
@@ -50,7 +50,7 @@ $ docker exec broker kafka-topics \
    --describe \
    --topic topic-validation \
    --bootstrap-server broker:9092 \
-   --command-config /etc/kafka/secrets/client_without_interceptors_2way_ssl.config
+   --command-config /etc/kafka/secrets/client_without_interceptors.config
 ```
 
 Register schema:
@@ -71,7 +71,7 @@ Sending a non-Avro record, it should fail:
 $ docker exec -i connect kafka-console-producer \
      --topic topic-validation \
      --broker-list broker:9092 \
-     --producer.config /etc/kafka/secrets/client_without_interceptors_2way_ssl.config << EOF
+     --producer.config /etc/kafka/secrets/client_without_interceptors.config << EOF
 {"userid":1,"username":"RODRIGUEZ"}
 EOF
 ```
@@ -93,7 +93,7 @@ $ docker exec -i connect kafka-avro-console-producer \
      --property schema.registry.ssl.keystore.location=/etc/kafka/secrets/kafka.client.keystore.jks \
      --property schema.registry.ssl.keystore.password=confluent \
      --property value.schema='{"type":"record","name":"user","fields":[{"name":"userid","type":"long"},{"name":"username","type":"string"}]}' \
-     --producer.config /etc/kafka/secrets/client_without_interceptors_2way_ssl.config << EOF
+     --producer.config /etc/kafka/secrets/client_without_interceptors.config << EOF
 {"userid":1,"username":"RODRIGUEZ"}
 EOF
 ```
@@ -112,7 +112,7 @@ $ docker exec -i connect kafka-avro-console-producer \
      --property schema.registry.ssl.keystore.location=/etc/kafka/secrets/kafka.client.keystore.jks \
      --property schema.registry.ssl.keystore.password=confluent \
      --property value.schema='{"type":"record","name":"user","fields":[{"name":"userid","type":"long"},{"name":"username","type":"string"}]}' \
-     --producer.config /etc/kafka/secrets/client_without_interceptors_2way_ssl.config << EOF
+     --producer.config /etc/kafka/secrets/client_without_interceptors.config << EOF
 {"userid":1,"username":"RODRIGUEZ"}
 EOF
 ```

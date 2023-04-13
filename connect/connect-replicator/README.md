@@ -71,7 +71,7 @@ docker exec broker kafka-console-consumer --bootstrap-server broker:9092 --topic
 Sending messages to topic test-topic-ssl
 
 ```bash
-$ seq 10 | docker exec -i broker kafka-console-producer --broker-list broker:9092 --topic test-topic-ssl --producer.config /etc/kafka/secrets/client_without_interceptors_2way_ssl.config
+$ seq 10 | docker exec -i broker kafka-console-producer --broker-list broker:9092 --topic test-topic-ssl --producer.config /etc/kafka/secrets/client_without_interceptors.config
 ```
 
 Creating Confluent Replicator connector with SSL authentication
@@ -120,7 +120,7 @@ $ curl -X PUT \
 Verify we have received the data in test-topic-ssl-duplicate topic
 
 ```bash
-$ docker exec broker kafka-console-consumer --bootstrap-server broker:9092 --topic test-topic-ssl-duplicate --from-beginning --max-messages 10 --consumer.config /etc/kafka/secrets/client_without_interceptors_2way_ssl.config
+$ docker exec broker kafka-console-consumer --bootstrap-server broker:9092 --topic test-topic-ssl-duplicate --from-beginning --max-messages 10 --consumer.config /etc/kafka/secrets/client_without_interceptors.config
 ```
 
 ### With SASL_SSL authentication:
