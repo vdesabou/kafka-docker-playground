@@ -423,7 +423,6 @@ commands:
       group: Topic
       help: |-
         💯 Get number of records in a topic.
-
       flags:
       - &topic
         long: --topic
@@ -434,7 +433,6 @@ commands:
           - $(playground get-topic-list)
         help: |-
           Topic name.
-
       examples:
       - playground get-number-records --topic a-topic
       - playground get-number-records -t a-topic
@@ -453,10 +451,13 @@ commands:
       group: Topic
       help: |-
         🔎 Describe topic.
-
       flags:
       - *topic
 
+    - name: consume
+      group: Topic
+      help: |-
+        ↘️ Consumer topic(s) from current running examples
 
 - name: connector
   expose: true

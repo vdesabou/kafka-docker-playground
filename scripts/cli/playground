@@ -66,6 +66,7 @@ playground_usage() {
   [[ -n $long_usage ]] && printf "  %s   🔺 Display content of connect offsets topic.\n" "$(green "topic display-connect-offsets") "
   [[ -n $long_usage ]] && printf "  %s   🔻 Display content of __consumer_offsets topic.\n" "$(green "topic display-consumer-offsets")"
   [[ -n $long_usage ]] && printf "  %s   🔎 Describe topic.\n" "$(green "topic describe")                "
+  [[ -n $long_usage ]] && printf "  %s   ↘️ Consumer topic(s) from current running examples\n" "$(green "topic consume")                 "
   echo
   printf "%s\n" "$(bold "Connector commands:")"
   printf "  %s   🔗 Connector commands.\n" "$(green "connector")                     "
@@ -1048,6 +1049,7 @@ playground_topic_usage() {
   printf "  %s   🔺 Display content of connect offsets topic.\n" "$(green "display-connect-offsets") "
   printf "  %s   🔻 Display content of __consumer_offsets topic.\n" "$(green "display-consumer-offsets")"
   printf "  %s   🔎 Describe topic.\n" "$(green "describe")                "
+  printf "  %s   ↘️ Consumer topic(s) from current running examples\n" "$(green "consume")                 "
   echo
 
   # :command.long_usage
@@ -1187,6 +1189,35 @@ playground_topic_describe_usage() {
     printf "  %s\n" "$(magenta "--topic, -t TOPIC (required)")"
     printf "    Topic name.\n"
     echo
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_topic_consume_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground topic consume - ↘️ Consumer topic(s) from current running examples\n"
+    echo
+
+  else
+    printf "playground topic consume - ↘️ Consumer topic(s) from current running examples\n"
+    echo
+
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground topic consume\n"
+  printf "  playground topic consume --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n $long_usage ]]; then
+    printf "%s\n" "$(bold "== Options ==")"
 
     # :command.usage_fixed_flags
     printf "  %s\n" "$(magenta "--help, -h")"
@@ -5540,6 +5571,7 @@ playground_re_run_command() {
   if [ ! -f /tmp/playground-run ]
   then
     logerror "File containing re-run command /tmp/playground-run does not exist!"
+    logerror "Make sure to run playground run command !"
     exit 1
   fi
 
@@ -6521,6 +6553,88 @@ playground_topic_describe_command() {
   # src/topic_describe_command.sh
   log "Display content of connect offsets topic, press crtl-c to stop..."
   docker exec connect kafka-console-consumer -bootstrap-server broker:9092 --topic connect-offsets --from-beginning --property print.key=true --property print.timestamp=true
+}
+
+# :command.function
+playground_topic_consume_command() {
+  # src/topic_consume_command.sh
+  if [ ! -f /tmp/playground-run ]
+  then
+    logerror "File containing re-run command /tmp/playground-run does not exist!"
+    logerror "Make sure to run playground run command !"
+    exit 1
+  fi
+
+  test_file=$(cat /tmp/playground-run |tr '\t' ' ' |cut -d' ' -f4)
+  if [ ! -f $test_file ]
+  then
+    logerror "Could not find test file in /tmp/playground-run"
+    cat /tmp/playground-run
+    exit 1
+  fi
+
+  tmp_dir=$(mktemp -d -t ci-XXXXXXXXXX)
+  awk -F'--topic ' '{print $2}' $test_file > $tmp_dir/tmp
+  sed '/^$/d' $tmp_dir/tmp > $tmp_dir/tmp2
+  topic_name=$(head -1 $tmp_dir/tmp2 | cut -d " " -f1)
+
+  if [ "$topic_name" != "" ]
+  then
+    log "Consuming topic $topic_name"
+
+    # deal with converters
+
+    key_converter=$(grep "\"key.converter\"" $test_file | cut -d '"' -f 4)
+    if [ "$key_converter" == "" ]
+    then
+      log "💱 connector is using default key.converter, i.e org.apache.kafka.connect.storage.StringConverter"
+      key_converter="io.confluent.connect.avro.AvroConverter"
+    else
+      log "💱 connector is using key.converter $key_converter"
+    fi
+
+    value_converter=$(grep "\"value.converter\"" $test_file | cut -d '"' -f 4)
+    if [ "$value_converter" == "" ]
+    then
+      log "💱 connector is using default value.converter, i.e io.confluent.connect.avro.AvroConverter"
+      value_converter="io.confluent.connect.avro.AvroConverter"
+    else
+      log "💱 connector is using value.converter $value_converter"
+    fi
+    log "Display content of topic $topic_name, press crtl-c to stop..."
+    type=""
+    case "${value_converter}" in
+      io.confluent.connect.json.JsonSchemaConverter)
+          type="json-schema"
+      ;;
+      io.confluent.connect.protobuf.ProtobufConverter)
+          type="protobuf"
+      ;;
+      io.confluent.connect.avro.AvroConverter)
+          type="avro"
+          ;;
+      *)
+      ;;
+    esac
+
+    case "${type}" in
+      avro|protobuf|json-schema)
+          if [ "$key_converter" == "io.confluent.connect.avro.AvroConverter" ]
+          then
+              docker exec connect kafka-$type-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic $topic_name --property print.partition=true --property print.offset=true --property print.headers=true --property print.timestamp=true --property print.key=true --property key.separator="|" --from-beginning
+          else
+              docker exec connect kafka-$type-console-consumer --bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic $topic_name --property print.partition=true --property print.offset=true --property print.headers=true --property print.timestamp=true --property print.key=true --property key.separator="|" --property key.deserializer=org.apache.kafka.common.serialization.StringDeserializer --from-beginning
+          fi
+          ;;
+      *)
+          docker exec connect kafka-console-consumer --bootstrap-server broker:9092 --topic $topic_name --property print.partition=true --property print.offset=true --property print.headers=true --property print.timestamp=true --property print.key=true --property key.separator="|" --from-beginning
+      ;;
+    esac
+  else
+
+    logwarn "Could not find topic name !"
+    exit 1
+  fi
 }
 
 # :command.function
@@ -8693,6 +8807,13 @@ playground_topic_parse_requirements() {
       shift $#
       ;;
 
+    consume)
+      action="consume"
+      shift
+      playground_topic_consume_parse_requirements "$@"
+      shift $#
+      ;;
+
     # :command.command_fallback
     "")
       playground_topic_usage >&2
@@ -8950,6 +9071,52 @@ playground_topic_describe_parse_requirements() {
     printf "missing required flag: --topic, -t TOPIC\n" >&2
     exit 1
   fi
+
+}
+
+# :command.parse_requirements
+playground_topic_consume_parse_requirements() {
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    case "${1:-}" in
+      --help | -h)
+        long_usage=yes
+        playground_topic_consume_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.dependencies_filter
+
+  # :command.command_filter
+  action="topic consume"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
 
 }
 
@@ -9979,6 +10146,15 @@ run() {
         playground_topic_describe_usage
       else
         playground_topic_describe_command
+      fi
+      ;;
+
+    "topic consume")
+      if [[ ${args['--help']:-} ]]; then
+        long_usage=yes
+        playground_topic_consume_usage
+      else
+        playground_topic_consume_command
       fi
       ;;
 
