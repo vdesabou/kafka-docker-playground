@@ -119,6 +119,12 @@ kafka-run-class kafka.tools.GetOffsetShell --broker-list broker:9092 --topic "$1
 EOF
 }
 
+function get_number_records_topic_command_heredoc_with_security () {
+docker exec -i broker bash << EOF
+kafka-run-class kafka.tools.GetOffsetShell --broker-list broker:9092 --command-config /etc/kafka/secrets/client_without_interceptors.config --topic "$1" --time -1 | awk -F ":" '{sum += \$3} END {print sum}'
+EOF
+}
+
 function get_remote_debugging_command_heredoc () {
 tmp_dir=$(mktemp -d -t ci-XXXXXXXXXX)
 cat << EOF > $tmp_dir/docker-compose-remote-debugging.yml

@@ -1931,6 +1931,12 @@ kafka-run-class kafka.tools.GetOffsetShell --broker-list broker:9092 --topic "$1
 EOF
 }
 
+function get_number_records_topic_command_heredoc_with_security () {
+docker exec -i broker bash << EOF
+kafka-run-class kafka.tools.GetOffsetShell --broker-list broker:9092 --command-config /etc/kafka/secrets/client_without_interceptors.config --topic "$1" --time -1 | awk -F ":" '{sum += \$3} END {print sum}'
+EOF
+}
+
 function get_remote_debugging_command_heredoc () {
 tmp_dir=$(mktemp -d -t ci-XXXXXXXXXX)
 cat << EOF > $tmp_dir/docker-compose-remote-debugging.yml
@@ -6529,30 +6535,87 @@ playground_topic_get_number_records_command() {
   # src/topic_get_number_records_command.sh
   topic="${args[--topic]}"
 
+  if [ "$environment" == "error" ]
+  then
+    logerror "File containing restart command /tmp/playground-command does not exist!"
+    exit 1
+
+  fi
+
   log "Get number of records in a topic $topic"
-  # see heredocs.sh
-  get_number_records_topic_command_heredoc "$topic"
+  if [ "$environment" != "plaintext" ]
+  then
+      # see heredocs.sh
+      get_number_records_topic_command_heredoc_with_security "$topic"
+  else
+      # see heredocs.sh
+      get_number_records_topic_command_heredoc "$topic"
+  fi
 }
 
 # :command.function
 playground_topic_display_connect_offsets_command() {
   # src/topic_display_connect_offsets_command.sh
+  environment=`get_environment_used`
+
+  if [ "$environment" == "error" ]
+  then
+    logerror "File containing restart command /tmp/playground-command does not exist!"
+    exit 1
+
+  fi
+
+  security_broker=""
+  if [ "$environment" != "plaintext" ]
+  then
+      security_broker="--consumer.config /etc/kafka/secrets/client_without_interceptors.config"
+  fi
+
   log "Display content of connect offsets topic, press crtl-c to stop..."
-  docker exec connect kafka-console-consumer -bootstrap-server broker:9092 --topic connect-offsets --from-beginning --property print.key=true --property print.timestamp=true
+  docker exec connect kafka-console-consumer -bootstrap-server broker:9092 --topic connect-offsets --from-beginning --property print.key=true --property print.timestamp=true $security_broker
 }
 
 # :command.function
 playground_topic_display_consumer_offsets_command() {
   # src/topic_display_consumer_offsets_command.sh
+  if [ "$environment" == "error" ]
+  then
+    logerror "File containing restart command /tmp/playground-command does not exist!"
+    exit 1
+
+  fi
+
   log "Display content of __consumer_offsets topic, press crtl-c to stop..."
-  docker exec -i broker bash -c 'kafka-console-consumer --bootstrap-server broker:9092 --topic __consumer_offsets --from-beginning --formatter "kafka.coordinator.group.GroupMetadataManager\$OffsetsMessageFormatter" | grep -v "_confluent-controlcenter"'
+  if [ "$environment" != "plaintext" ]
+  then
+      docker exec -i broker bash -c 'kafka-console-consumer --bootstrap-server broker:9092 --topic __consumer_offsets --from-beginning --formatter "kafka.coordinator.group.GroupMetadataManager\$OffsetsMessageFormatter" --consumer.config /etc/kafka/secrets/client_without_interceptors.config | grep -v "_confluent-controlcenter"'
+  else
+      docker exec -i broker bash -c 'kafka-console-consumer --bootstrap-server broker:9092 --topic __consumer_offsets --from-beginning --formatter "kafka.coordinator.group.GroupMetadataManager\$OffsetsMessageFormatter" | grep -v "_confluent-controlcenter"'
+  fi
 }
 
 # :command.function
 playground_topic_describe_command() {
   # src/topic_describe_command.sh
-  log "Display content of connect offsets topic, press crtl-c to stop..."
-  docker exec connect kafka-console-consumer -bootstrap-server broker:9092 --topic connect-offsets --from-beginning --property print.key=true --property print.timestamp=true
+  topic="${args[--topic]}"
+
+  environment=`get_environment_used`
+
+  if [ "$environment" == "error" ]
+  then
+    logerror "File containing restart command /tmp/playground-command does not exist!"
+    exit 1
+
+  fi
+
+  security_broker=""
+  if [ "$environment" != "plaintext" ]
+  then
+      security_broker="--command-config /etc/kafka/secrets/client_without_interceptors.config"
+  fi
+
+  log "Describing topic $topic"
+  docker exec broker kafka-topics --describe --topic $topic --bootstrap-server broker:9092 $security_broker
 }
 
 # :command.function
