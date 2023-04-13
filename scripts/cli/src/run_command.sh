@@ -24,6 +24,8 @@ then
   exit 1
 fi
 
+test_file=$(echo "$test_file" | cut -d "@" -f 2)
+  
 if [ ! -f "$test_file" ]
 then
   logerror "ERROR: test_file $test_file does not exist!"

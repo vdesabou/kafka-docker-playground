@@ -11,6 +11,8 @@ nb_producers="${args[--nb-producers]}"
 add_custom_smt="${args[--custom-smt]}"
 sink_file="${args[--pipeline]}"
 
+test_file=$(echo "$test_file" | cut -d "@" -f 2)
+
 if [[ "$test_file" != *".sh" ]]
 then
   logerror "ERROR: test_file $test_file is not a .sh file!"
@@ -498,6 +500,7 @@ fi
 if [[ -n "$sink_file" ]]
 then
   tmp_dir=$(mktemp -d -t ci-XXXXXXXXXX)
+  sink_file=$(echo "$sink_file" | cut -d "@" -f 2)
   test_sink_file_directory="$(dirname "${sink_file}")"
   ## 
   # docker-compose part

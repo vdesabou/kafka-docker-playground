@@ -164,7 +164,7 @@ playground_get_examples_list_with_fzf_usage() {
   fi
 
   printf "%s\n" "$(bold "== Usage ==")"
-  printf "  playground get-examples-list-with-fzf [OPTIONS]\n"
+  printf "  playground get-examples-list-with-fzf [CUR] [OPTIONS]\n"
   printf "  playground get-examples-list-with-fzf --help | -h\n"
   echo
 
@@ -186,6 +186,14 @@ playground_get_examples_list_with_fzf_usage() {
     # :command.usage_fixed_flags
     printf "  %s\n" "$(magenta "--help, -h")"
     printf "    Show this help\n"
+    echo
+
+    # :command.usage_args
+    printf "%s\n" "$(bold "== Arguments ==")"
+
+    # :argument.usage
+    printf "  %s\n" "$(blue "CUR")"
+    printf "    correspond to completion $cur\n"
     echo
 
   fi
@@ -1665,11 +1673,12 @@ function get_examples_list_with_fzf() {
   dir1=$(echo ${DIR_CLI%/*})
   dir2=$(echo ${dir1%/*})
 
+  cur="$1"
   if [[ $(type -f bat 2>&1) =~ "not found" ]]
   then
-    find $dir2 -name \*.sh ! -name 'stop.sh' ! -path '*/scripts/*' ! -path '*/docs-examples/*' ! -path '*/sample-sql-scripts/*' ! -path '*/ora-setup-scripts/*' | fzf --delimiter / --with-nth '-3,-2,-1' --preview 'cat {}'
+    res=$(find $dir2 -name \*.sh ! -name 'stop.sh' ! -path '*/scripts/*' ! -path '*/docs-examples/*' ! -path '*/sample-sql-scripts/*' ! -path '*/ora-setup-scripts/*' | fzf --query "$cur" --delimiter / --with-nth '-3,-2,-1' --preview 'cat {}');echo "$cur@$res"
   else
-    find $dir2 -name \*.sh ! -name 'stop.sh' ! -path '*/scripts/*' ! -path '*/docs-examples/*' ! -path '*/sample-sql-scripts/*' ! -path '*/ora-setup-scripts/*' | fzf --delimiter / --with-nth '-3,-2,-1' --preview 'bat --style=numbers --color=always --line-range :500 {}'
+    res=$(find $dir2 -name \*.sh ! -name 'stop.sh' ! -path '*/scripts/*' ! -path '*/docs-examples/*' ! -path '*/sample-sql-scripts/*' ! -path '*/ora-setup-scripts/*' | fzf --query "$cur" --delimiter / --with-nth '-3,-2,-1' --preview 'bat --style=numbers --color=always --line-range :500 {}');echo "$cur@$res"
   fi
 }
 
@@ -1678,11 +1687,12 @@ function get_examples_list_with_fzf_without_repro() {
   dir1=$(echo ${DIR_CLI%/*})
   dir2=$(echo ${dir1%/*})
 
+  cur="$1"
   if [[ $(type -f bat 2>&1) =~ "not found" ]]
   then
-    find $dir2 -name \*.sh ! -name 'stop.sh' ! -path '*/scripts/*' ! -path '*/docs-examples/*' ! -path '*/sample-sql-scripts/*' ! -path '*/ora-setup-scripts/*' ! -path '*/reproduction-models/*' | fzf --delimiter / --with-nth '-3,-2,-1' --preview 'cat {}'
+    res=$(find $dir2 -name \*.sh ! -name 'stop.sh' ! -path '*/scripts/*' ! -path '*/docs-examples/*' ! -path '*/sample-sql-scripts/*' ! -path '*/ora-setup-scripts/*' ! -path '*/reproduction-models/*' | fzf --query "$cur" --delimiter / --with-nth '-3,-2,-1' --preview 'cat {}');echo "$cur@$res"
   else
-    find $dir2 -name \*.sh ! -name 'stop.sh' ! -path '*/scripts/*' ! -path '*/docs-examples/*' ! -path '*/sample-sql-scripts/*' ! -path '*/ora-setup-scripts/*' ! -path '*/reproduction-models/*' | fzf --delimiter / --with-nth '-3,-2,-1' --preview 'bat --style=numbers --color=always --line-range :500 {}'
+    res=$(find $dir2 -name \*.sh ! -name 'stop.sh' ! -path '*/scripts/*' ! -path '*/docs-examples/*' ! -path '*/sample-sql-scripts/*' ! -path '*/ora-setup-scripts/*' ! -path '*/reproduction-models/*' | fzf --query "$cur" --delimiter / --with-nth '-3,-2,-1' --preview 'bat --style=numbers --color=always --line-range :500 {}');echo "$cur@$res"
   fi
 }
 
@@ -1691,11 +1701,12 @@ function get_examples_list_with_fzf_without_repro_sink_only() {
   dir1=$(echo ${DIR_CLI%/*})
   dir2=$(echo ${dir1%/*})
 
+  cur="$1"
   if [[ $(type -f bat 2>&1) =~ "not found" ]]
   then
-    find $dir2 -name \*.sh ! -name 'stop.sh' -path '*/connect-*-sink/*' ! -path '*/scripts/*' ! -path '*/docs-examples/*' ! -path '*/sample-sql-scripts/*' ! -path '*/ora-setup-scripts/*' ! -path '*/reproduction-models/*' | fzf --delimiter / --with-nth '-3,-2,-1' --preview 'cat {}'
+    res=$(find $dir2 -name \*.sh ! -name 'stop.sh' -path '*/connect-*-sink/*' ! -path '*/scripts/*' ! -path '*/docs-examples/*' ! -path '*/sample-sql-scripts/*' ! -path '*/ora-setup-scripts/*' ! -path '*/reproduction-models/*' | fzf --query "$cur" --delimiter / --with-nth '-3,-2,-1' --preview 'cat {}');echo "$cur@$res"
   else
-    find $dir2 -name \*.sh ! -name 'stop.sh' -path '*/connect-*-sink/*' ! -path '*/scripts/*' ! -path '*/docs-examples/*' ! -path '*/sample-sql-scripts/*' ! -path '*/ora-setup-scripts/*' ! -path '*/reproduction-models/*' | fzf --delimiter / --with-nth '-3,-2,-1' --preview 'bat --style=numbers --color=always --line-range :500 {}'
+    res=$(find $dir2 -name \*.sh ! -name 'stop.sh' -path '*/connect-*-sink/*' ! -path '*/scripts/*' ! -path '*/docs-examples/*' ! -path '*/sample-sql-scripts/*' ! -path '*/ora-setup-scripts/*' ! -path '*/reproduction-models/*' | fzf --query "$cur" --delimiter / --with-nth '-3,-2,-1' --preview 'bat --style=numbers --color=always --line-range :500 {}');echo "$cur@$res"
   fi
 }
 
@@ -5253,6 +5264,13 @@ validate_file_exists() {
   [[ -f "$1" ]] || echo "must be an existing file"
 }
 
+# src/lib/validations/validate_file_exists_with_trick.sh
+validate_file_exists_with_trick() {
+  file="$1"
+  real_file=$(echo "$file" | cut -d "@" -f 2)
+  [[ -f "$real_file" ]] || echo "must be an existing file"
+}
+
 # src/lib/validations/validate_integer.sh
 validate_integer() {
   [[ "$1" =~ ^[0-9]+$ ]] || echo "must be an integer"
@@ -5283,20 +5301,21 @@ playground_get_examples_list_with_fzf_command() {
   # src/get_examples_list_with_fzf_command.sh
   without_repro="${args[--without-repro]}"
   sink_only="${args[--sink-only]}"
+  cur="${args[cur]}"
 
   if [[ -n "$without_repro" ]] && [[ -n "$sink_only" ]]
   then
-      get_examples_list_with_fzf_without_repro_sink_only
+      get_examples_list_with_fzf_without_repro_sink_only "$cur"
       return
   fi
 
   if [[ -n "$without_repro" ]]
   then
-      get_examples_list_with_fzf_without_repro
+      get_examples_list_with_fzf_without_repro "$cur"
       return
   fi
 
-  get_examples_list_with_fzf
+  get_examples_list_with_fzf "$cur"
 }
 
 # :command.function
@@ -5327,6 +5346,8 @@ playground_run_command() {
     logerror "ERROR: test_file is not provided as argument!"
     exit 1
   fi
+
+  test_file=$(echo "$test_file" | cut -d "@" -f 2)
 
   if [ ! -f "$test_file" ]
   then
@@ -5477,6 +5498,8 @@ playground_bootstrap_reproduction_model_command() {
   nb_producers="${args[--nb-producers]}"
   add_custom_smt="${args[--custom-smt]}"
   sink_file="${args[--pipeline]}"
+
+  test_file=$(echo "$test_file" | cut -d "@" -f 2)
 
   if [[ "$test_file" != *".sh" ]]
   then
@@ -5961,6 +5984,7 @@ playground_bootstrap_reproduction_model_command() {
   if [[ -n "$sink_file" ]]
   then
     tmp_dir=$(mktemp -d -t ci-XXXXXXXXXX)
+    sink_file=$(echo "$sink_file" | cut -d "@" -f 2)
     test_sink_file_directory="$(dirname "${sink_file}")"
 
     # docker-compose part
@@ -6993,8 +7017,14 @@ playground_get_examples_list_with_fzf_parse_requirements() {
       *)
         # :command.parse_requirements_case
         # :command.parse_requirements_case_simple
-        printf "invalid argument: %s\n" "$key" >&2
-        exit 1
+        if [[ -z ${args['cur']+x} ]]; then
+
+          args['cur']=$1
+          shift
+        else
+          printf "invalid argument: %s\n" "$key" >&2
+          exit 1
+        fi
 
         ;;
 
@@ -7042,8 +7072,8 @@ playground_run_parse_requirements() {
         # :flag.case_arg
         if [[ -n ${2+x} ]]; then
           # :flag.validations
-          if [[ -n $(validate_file_exists "$2") ]]; then
-            printf "validation error in %s:\n%s\n" "--file, -f FILE" "$(validate_file_exists "$2")" >&2
+          if [[ -n $(validate_file_exists_with_trick "$2") ]]; then
+            printf "validation error in %s:\n%s\n" "--file, -f FILE" "$(validate_file_exists_with_trick "$2")" >&2
             exit 1
           fi
 
@@ -7270,8 +7300,8 @@ playground_bootstrap_reproduction_model_parse_requirements() {
         # :flag.case_arg
         if [[ -n ${2+x} ]]; then
           # :flag.validations
-          if [[ -n $(validate_file_exists "$2") ]]; then
-            printf "validation error in %s:\n%s\n" "--file, -f FILE" "$(validate_file_exists "$2")" >&2
+          if [[ -n $(validate_file_exists_with_trick "$2") ]]; then
+            printf "validation error in %s:\n%s\n" "--file, -f FILE" "$(validate_file_exists_with_trick "$2")" >&2
             exit 1
           fi
 
@@ -7363,8 +7393,8 @@ playground_bootstrap_reproduction_model_parse_requirements() {
         # :flag.case_arg
         if [[ -n ${2+x} ]]; then
           # :flag.validations
-          if [[ -n $(validate_file_exists "$2") ]]; then
-            printf "validation error in %s:\n%s\n" "--pipeline SINK_FILE" "$(validate_file_exists "$2")" >&2
+          if [[ -n $(validate_file_exists_with_trick "$2") ]]; then
+            printf "validation error in %s:\n%s\n" "--pipeline SINK_FILE" "$(validate_file_exists_with_trick "$2")" >&2
             exit 1
           fi
 
@@ -9590,7 +9620,7 @@ playground_connector_log_level_set_parse_requirements() {
 
 # :command.initialize
 initialize() {
-  version="1.0.2"
+  version="1.0.3"
   long_usage=''
   set -e
 
