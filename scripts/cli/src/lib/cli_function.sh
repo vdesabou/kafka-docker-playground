@@ -33,6 +33,13 @@ function get_environment_used() {
     return
   fi
 
+  grep "environment/ssl_kerberos" /tmp/playground-command > /dev/null
+  if [ $? = 0 ]
+  then
+    echo "ssl_kerberos"
+    return
+  fi
+
   echo "plaintext"
 }
 
@@ -46,7 +53,7 @@ function get_connect_url_and_security() {
   fi
   connect_url="http://localhost:8083"
   security=""
-  if [[ "$environment" == *"ssl"* ]]
+  if [[ "$environment" == "sasl-ssl" ]] || [[ "$environment" == "2way-ssl" ]]
   then
       connect_url="https://localhost:8083"
       DIR_CLI="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
@@ -74,7 +81,7 @@ function get_sr_url_and_security() {
   sr_url="http://localhost:8081"
   security_sr=""
 
-  if [[ "$environment" == *"ssl"* ]]
+  if [[ "$environment" == "sasl-ssl" ]] || [[ "$environment" == "2way-ssl" ]]
   then
       sr_url="https://localhost:8081"
       DIR_CLI="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
@@ -101,7 +108,7 @@ function get_security_broker() {
   fi
   container="broker"
   security=""
-  if [[ "$environment" == "kerberos" ]]
+  if [[ "$environment" == "kerberos" ]] || [[ "$environment" == "ssl_kerberos" ]]
   then
       container="client"
       security="$config_file_name /etc/kafka/consumer.properties"
