@@ -5,7 +5,7 @@ function get_environment_used() {
     return
   fi
 
-  patterns=("environment/2way-ssl" "environment/sasl-ssl" "environment/rbac-sasl-plain" "environment/kerberos" "environment/ssl_kerberos" "environment/ldap-authorizer-sasl-plain")
+  patterns=("environment/2way-ssl" "environment/sasl-ssl" "environment/rbac-sasl-plain" "environment/kerberos" "environment/ssl_kerberos" "environment/ldap-authorizer-sasl-plain" "environment/sasl-plain" "environment/ldap-sasl-plain")
 
   for pattern in "${patterns[@]}"; do
     if grep -q "$pattern" /tmp/playground-command; then
@@ -92,6 +92,9 @@ function get_security_broker() {
   elif [ "$environment" == "ldap-authorizer-sasl-plain" ]
   then
       security="$config_file_name /service/kafka/users/kafka.properties"
+  elif [ "$environment" == "ldap-sasl-plain" ] || [ "$environment" == "sasl-plain" ]
+  then
+      security="$config_file_name /tmp/client.properties"
   elif [ "$environment" != "plaintext" ]
   then
       security="$config_file_name /etc/kafka/secrets/client_without_interceptors.config"
