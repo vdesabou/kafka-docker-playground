@@ -10,7 +10,7 @@ log "Sending messages to topic filestream"
 docker exec -i broker kafka-console-producer --broker-list broker:9092 --topic filestream << EOF
 {"customer_name":"Ed", "complaint_type":"Dirty car", "trip_cost": 29.10, "new_customer": false, "number_of_rides": 22}
 EOF
-
+exit 1
 log "Creating FileStream Sink connector"
 curl -X PUT \
      -H "Content-Type: application/json" \
