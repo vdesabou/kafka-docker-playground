@@ -113,18 +113,6 @@ docker exec $producer_hostname bash -c "java \${JAVA_OPTS} -jar producer-1.0.0-j
 EOF
 }
 
-function get_number_records_topic_command_heredoc () {
-docker exec -i broker bash << EOF
-kafka-run-class kafka.tools.GetOffsetShell --broker-list broker:9092 --topic "$1" --time -1 | awk -F ":" '{sum += \$3} END {print sum}'
-EOF
-}
-
-function get_number_records_topic_command_heredoc_with_security () {
-docker exec -i broker bash << EOF
-kafka-run-class kafka.tools.GetOffsetShell --broker-list broker:9092 --command-config /etc/kafka/secrets/client_without_interceptors.config --topic "$1" --time -1 | awk -F ":" '{sum += \$3} END {print sum}'
-EOF
-}
-
 function get_remote_debugging_command_heredoc () {
 tmp_dir=$(mktemp -d -t ci-XXXXXXXXXX)
 cat << EOF > $tmp_dir/docker-compose-remote-debugging.yml
@@ -141,7 +129,6 @@ EOF
 sed -e "s|up -d|-f $tmp_dir/docker-compose-remote-debugging.yml up -d|g" \
     /tmp/playground-command > /tmp/playground-command-debugging
 }
-
 
 function get_custom_smt_build_heredoc () {
     cat << EOF > $tmp_dir/build_custom_smt

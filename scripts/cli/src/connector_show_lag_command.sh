@@ -12,7 +12,10 @@ then
   exit 1 
 fi
 
-security_broker=$(get_security_broker)
+ret=$(get_security_broker "--command-config")
+
+container=$(echo "$ret" | cut -d "@" -f 1)
+security=$(echo "$ret" | cut -d "@" -f 2)
 
 log "Show lag for sink connector $connector"
-docker exec broker kafka-consumer-groups --bootstrap-server broker:9092 --group connect-$connector --describe $security_broker
+docker exec $container kafka-consumer-groups --bootstrap-server broker:9092 --group connect-$connector --describe $security

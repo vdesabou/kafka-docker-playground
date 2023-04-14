@@ -26,6 +26,13 @@ function get_environment_used() {
     return
   fi
 
+  grep "environment/kerberos" /tmp/playground-command > /dev/null
+  if [ $? = 0 ]
+  then
+    echo "kerberos"
+    return
+  fi
+
   echo "plaintext"
 }
 
@@ -84,6 +91,7 @@ function get_sr_url_and_security() {
 }
 
 function get_security_broker() {
+  config_file_name="$1"
   environment=`get_environment_used`
 
   if [ "$environment" == "error" ]
@@ -91,13 +99,19 @@ function get_security_broker() {
     logerror "File containing restart command /tmp/playground-command does not exist!"
     exit 1 
   fi
-
-  security_broker=""
-  if [ "$environment" != "plaintext" ]
+  container="broker"
+  security=""
+  if [[ "$environment" == "kerberos" ]]
   then
-      security_broker="--command-config /etc/kafka/secrets/client_without_interceptors.config"
+      container="client"
+      security="$config_file_name /etc/kafka/consumer.properties"
+
+      docker exec -i client kinit -k -t /var/lib/secret/kafka-connect.key connect
+  elif [ "$environment" != "plaintext" ]
+  then
+      security="$config_file_name /etc/kafka/secrets/client_without_interceptors.config"
   fi
-  echo "$security_broker"
+  echo "$container@$security"
 }
 
 function get_connector_list() {

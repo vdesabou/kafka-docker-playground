@@ -1756,6 +1756,13 @@ function get_environment_used() {
     return
   fi
 
+  grep "environment/kerberos" /tmp/playground-command > /dev/null
+  if [ $? = 0 ]
+  then
+    echo "kerberos"
+    return
+  fi
+
   echo "plaintext"
 }
 
@@ -1816,6 +1823,7 @@ function get_sr_url_and_security() {
 }
 
 function get_security_broker() {
+  config_file_name="$1"
   environment=`get_environment_used`
 
   if [ "$environment" == "error" ]
@@ -1824,13 +1832,19 @@ function get_security_broker() {
     exit 1
 
   fi
-
-  security_broker=""
-  if [ "$environment" != "plaintext" ]
+  container="broker"
+  security=""
+  if [[ "$environment" == "kerberos" ]]
   then
-      security_broker="--command-config /etc/kafka/secrets/client_without_interceptors.config"
+      container="client"
+      security="$config_file_name /etc/kafka/consumer.properties"
+
+      docker exec -i client kinit -k -t /var/lib/secret/kafka-connect.key connect
+  elif [ "$environment" != "plaintext" ]
+  then
+      security="$config_file_name /etc/kafka/secrets/client_without_interceptors.config"
   fi
-  echo "$security_broker"
+  echo "$container@$security"
 }
 
 function get_connector_list() {
@@ -2028,18 +2042,6 @@ function get_producer_run_heredoc () {
     cat << EOF >> $tmp_dir/java_producer
 log "✨ Run the $schema_format java producer v$i which produces to topic $topic_name"
 docker exec $producer_hostname bash -c "java \${JAVA_OPTS} -jar producer-1.0.0-jar-with-dependencies.jar"
-EOF
-}
-
-function get_number_records_topic_command_heredoc () {
-docker exec -i broker bash << EOF
-kafka-run-class kafka.tools.GetOffsetShell --broker-list broker:9092 --topic "$1" --time -1 | awk -F ":" '{sum += \$3} END {print sum}'
-EOF
-}
-
-function get_number_records_topic_command_heredoc_with_security () {
-docker exec -i broker bash << EOF
-kafka-run-class kafka.tools.GetOffsetShell --broker-list broker:9092 --command-config /etc/kafka/secrets/client_without_interceptors.config --topic "$1" --time -1 | awk -F ":" '{sum += \$3} END {print sum}'
 EOF
 }
 
@@ -6701,50 +6703,37 @@ playground_topic_get_number_records_command() {
   # src/topic_get_number_records_command.sh
   topic="${args[--topic]}"
 
-  if [ "$environment" == "error" ]
-  then
-    logerror "File containing restart command /tmp/playground-command does not exist!"
-    exit 1
+  ret=$(get_security_broker "--command-config")
 
-  fi
+  container=$(echo "$ret" | cut -d "@" -f 1)
+  security=$(echo "$ret" | cut -d "@" -f 2)
 
   log "Get number of records in a topic $topic"
-  if [ "$environment" != "plaintext" ]
-  then
-      # see heredocs.sh
-      get_number_records_topic_command_heredoc_with_security "$topic"
-  else
-      # see heredocs.sh
-      get_number_records_topic_command_heredoc "$topic"
-  fi
+  docker exec $container kafka-run-class kafka.tools.GetOffsetShell --broker-list broker:9092 $security --topic $topic --time -1 | awk -F ":" '{sum += $3} END {print sum}'
 }
 
 # :command.function
 playground_topic_display_connect_offsets_command() {
   # src/topic_display_connect_offsets_command.sh
-  security_broker=$(get_security_broker)
+  ret=$(get_security_broker "--consumer.config")
+
+  container=$(echo "$ret" | cut -d "@" -f 1)
+  security=$(echo "$ret" | cut -d "@" -f 2)
 
   log "Display content of connect offsets topic, press crtl-c to stop..."
-  docker exec connect kafka-console-consumer -bootstrap-server broker:9092 --topic connect-offsets --from-beginning --property print.key=true --property print.timestamp=true $security_broker
+  docker exec $container kafka-console-consumer -bootstrap-server broker:9092 --topic connect-offsets --from-beginning --property print.key=true --property print.timestamp=true $security
 }
 
 # :command.function
 playground_topic_display_consumer_offsets_command() {
   # src/topic_display_consumer_offsets_command.sh
-  if [ "$environment" == "error" ]
-  then
-    logerror "File containing restart command /tmp/playground-command does not exist!"
-    exit 1
+  ret=$(get_security_broker "--consumer.config")
 
-  fi
+  container=$(echo "$ret" | cut -d "@" -f 1)
+  security=$(echo "$ret" | cut -d "@" -f 2)
 
   log "Display content of __consumer_offsets topic, press crtl-c to stop..."
-  if [ "$environment" != "plaintext" ]
-  then
-      docker exec -i broker bash -c 'kafka-console-consumer --bootstrap-server broker:9092 --topic __consumer_offsets --from-beginning --formatter "kafka.coordinator.group.GroupMetadataManager\$OffsetsMessageFormatter" --consumer.config /etc/kafka/secrets/client_without_interceptors.config | grep -v "_confluent-controlcenter"'
-  else
-      docker exec -i broker bash -c 'kafka-console-consumer --bootstrap-server broker:9092 --topic __consumer_offsets --from-beginning --formatter "kafka.coordinator.group.GroupMetadataManager\$OffsetsMessageFormatter" | grep -v "_confluent-controlcenter"'
-  fi
+  docker exec -i $container kafka-console-consumer --bootstrap-server broker:9092 --topic __consumer_offsets --from-beginning --formatter "kafka.coordinator.group.GroupMetadataManager\$OffsetsMessageFormatter" $security | grep -v "_confluent-controlcenter"
 }
 
 # :command.function
@@ -6752,10 +6741,13 @@ playground_topic_describe_command() {
   # src/topic_describe_command.sh
   topic="${args[--topic]}"
 
-  security_broker=$(get_security_broker)
+  ret=$(get_security_broker "--command-config")
+
+  container=$(echo "$ret" | cut -d "@" -f 1)
+  security=$(echo "$ret" | cut -d "@" -f 2)
 
   log "Describing topic $topic"
-  docker exec broker kafka-topics --describe --topic $topic --bootstrap-server broker:9092 $security_broker
+  docker exec $container kafka-topics --describe --topic $topic --bootstrap-server broker:9092 $security
 }
 
 # :command.function
@@ -6785,6 +6777,7 @@ playground_topic_consume_command() {
 
   fi
 
+  container="connect"
   sr_url="http://schema-registry:8081"
   security=""
   if [[ "$environment" == *"ssl"* ]]
@@ -6795,6 +6788,13 @@ playground_topic_consume_command() {
   then
       sr_url="http://schema-registry:8081"
       security="--property basic.auth.credentials.source=USER_INFO --property schema.registry.basic.auth.user.info=clientAvroCli:clientAvroCli --consumer.config /etc/kafka/secrets/client_without_interceptors.config"
+  elif [[ "$environment" == "kerberos" ]]
+  then
+      container="client"
+      sr_url="http://schema-registry:8081"
+      security="--consumer.config /etc/kafka/consumer.properties"
+
+      docker exec -i client kinit -k -t /var/lib/secret/kafka-connect.key connect
   fi
 
   tmp_dir=$(mktemp -d -t ci-XXXXXXXXXX)
@@ -6843,13 +6843,13 @@ playground_topic_consume_command() {
       avro|protobuf|json-schema)
           if [ "$key_converter" == "io.confluent.connect.avro.AvroConverter" ]
           then
-              docker exec connect kafka-$type-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=$sr_url --topic $topic_name --property print.partition=true --property print.offset=true --property print.headers=true --property print.timestamp=true --property print.key=true --property key.separator="|" $security --from-beginning > "$fifo_path" &
+              docker exec $container kafka-$type-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=$sr_url --topic $topic_name --property print.partition=true --property print.offset=true --property print.headers=true --property print.timestamp=true --property print.key=true --property key.separator="|" $security --from-beginning > "$fifo_path" &
           else
-              docker exec connect kafka-$type-console-consumer --bootstrap-server broker:9092 --property schema.registry.url=$sr_url --topic $topic_name --property print.partition=true --property print.offset=true --property print.headers=true --property print.timestamp=true --property print.key=true --property key.separator="|" --property key.deserializer=org.apache.kafka.common.serialization.StringDeserializer $security --from-beginning > "$fifo_path" &
+              docker exec $container kafka-$type-console-consumer --bootstrap-server broker:9092 --property schema.registry.url=$sr_url --topic $topic_name --property print.partition=true --property print.offset=true --property print.headers=true --property print.timestamp=true --property print.key=true --property key.separator="|" --property key.deserializer=org.apache.kafka.common.serialization.StringDeserializer $security --from-beginning > "$fifo_path" &
           fi
           ;;
       *)
-          docker exec connect kafka-console-consumer --bootstrap-server broker:9092 --topic $topic_name --property print.partition=true --property print.offset=true --property print.headers=true --property print.timestamp=true --property print.key=true --property key.separator="|" $security --from-beginning > "$fifo_path" &
+          docker exec $container kafka-console-consumer --bootstrap-server broker:9092 --topic $topic_name --property print.partition=true --property print.offset=true --property print.headers=true --property print.timestamp=true --property print.key=true --property key.separator="|" $security --from-beginning > "$fifo_path" &
       ;;
     esac
 
@@ -6987,10 +6987,13 @@ playground_connector_show_lag_command() {
 
   fi
 
-  security_broker=$(get_security_broker)
+  ret=$(get_security_broker "--command-config")
+
+  container=$(echo "$ret" | cut -d "@" -f 1)
+  security=$(echo "$ret" | cut -d "@" -f 2)
 
   log "Show lag for sink connector $connector"
-  docker exec broker kafka-consumer-groups --bootstrap-server broker:9092 --group connect-$connector --describe $security_broker
+  docker exec $container kafka-consumer-groups --bootstrap-server broker:9092 --group connect-$connector --describe $security
 }
 
 # :command.function
