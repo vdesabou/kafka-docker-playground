@@ -8,7 +8,7 @@ CONNECT_3RDPARTY_INSTALL="if [ ! -f /tmp/done ]; then wget http://vault.centos.o
 if [ -z "$TAG" ]
 then
     # TAG is not set, use default:
-    export TAG=7.3.2
+    export TAG=7.3.3
     # to handle ubi8 images
     export TAG_BASE=$TAG
     if [ -z "$CP_KAFKA_IMAGE" ]
