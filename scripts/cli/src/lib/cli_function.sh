@@ -19,10 +19,17 @@ function get_environment_used() {
     return
   fi
 
+  grep "environment/rbac-sasl-plain" /tmp/playground-command > /dev/null
+  if [ $? = 0 ]
+  then
+    echo "rbac-sasl-plain"
+    return
+  fi
+
   echo "plaintext"
 }
 
-function get_connector_list() {
+function get_connect_url_and_security() {
   environment=`get_environment_used`
 
   if [ "$environment" == "error" ]
@@ -31,16 +38,75 @@ function get_connector_list() {
     exit 1 
   fi
   connect_url="http://localhost:8083"
-  security_certs=""
-  if [ "$environment" != "plaintext" ]
+  security=""
+  if [[ "$environment" == *"ssl"* ]]
   then
       connect_url="https://localhost:8083"
       DIR_CLI="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 
-      security_certs="--cert $DIR_CLI/../../environment/$environment/security/connect.certificate.pem --key $DIR_CLI/../../environment/$environment/security/connect.key --tlsv1.2 --cacert $DIR_CLI/../../environment/$environment/security/snakeoil-ca-1.crt"
+      security="--cert $DIR_CLI/../../environment/$environment/security/connect.certificate.pem --key $DIR_CLI/../../environment/$environment/security/connect.key --tlsv1.2 --cacert $DIR_CLI/../../environment/$environment/security/snakeoil-ca-1.crt"
+  elif [[ "$environment" == "rbac-sasl-plain" ]]
+  then
+      DIR_CLI="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
+
+      security="-u connectorSubmitter:connectorSubmitter"
   fi
 
-  curl $security_certs -s "$connect_url/connectors" | jq -r '.[]'
+  echo "$connect_url@$security"
+}
+
+function get_sr_url_and_security() {
+  environment=`get_environment_used`
+
+  if [ "$environment" == "error" ]
+  then
+    logerror "File containing restart command /tmp/playground-command does not exist!"
+    exit 1 
+  fi
+
+  sr_url="http://localhost:8081"
+  security_sr=""
+
+  if [[ "$environment" == *"ssl"* ]]
+  then
+      sr_url="https://localhost:8081"
+      DIR_CLI="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
+
+      security="--cert $DIR_CLI/../../environment/$environment/security/schema-registry.certificate.pem --key $DIR_CLI/../../environment/$environment/security/schema-registry.key --tlsv1.2 --cacert $DIR_CLI/../../environment/$environment/security/snakeoil-ca-1.crt"
+  elif [[ "$environment" == "rbac-sasl-plain" ]]
+  then
+      DIR_CLI="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
+
+      security="-u superUser:superUser"
+  fi
+
+  echo "$sr_url@$security"
+}
+
+function get_security_broker() {
+  environment=`get_environment_used`
+
+  if [ "$environment" == "error" ]
+  then
+    logerror "File containing restart command /tmp/playground-command does not exist!"
+    exit 1 
+  fi
+
+  security_broker=""
+  if [ "$environment" != "plaintext" ]
+  then
+      security_broker="--command-config /etc/kafka/secrets/client_without_interceptors.config"
+  fi
+  echo "$security_broker"
+}
+
+function get_connector_list() {
+  ret=$(get_connect_url_and_security)
+
+  connect_url=$(echo "$ret" | cut -d "@" -f 1)
+  security=$(echo "$ret" | cut -d "@" -f 2)
+
+  curl $security -s "$connect_url/connectors" | jq -r '.[]'
 }
 
 function get_examples_list_with_fzf() {

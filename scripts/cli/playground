@@ -1749,10 +1749,17 @@ function get_environment_used() {
     return
   fi
 
+  grep "environment/rbac-sasl-plain" /tmp/playground-command > /dev/null
+  if [ $? = 0 ]
+  then
+    echo "rbac-sasl-plain"
+    return
+  fi
+
   echo "plaintext"
 }
 
-function get_connector_list() {
+function get_connect_url_and_security() {
   environment=`get_environment_used`
 
   if [ "$environment" == "error" ]
@@ -1762,16 +1769,77 @@ function get_connector_list() {
 
   fi
   connect_url="http://localhost:8083"
-  security_certs=""
-  if [ "$environment" != "plaintext" ]
+  security=""
+  if [[ "$environment" == *"ssl"* ]]
   then
       connect_url="https://localhost:8083"
       DIR_CLI="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 
-      security_certs="--cert $DIR_CLI/../../environment/$environment/security/connect.certificate.pem --key $DIR_CLI/../../environment/$environment/security/connect.key --tlsv1.2 --cacert $DIR_CLI/../../environment/$environment/security/snakeoil-ca-1.crt"
+      security="--cert $DIR_CLI/../../environment/$environment/security/connect.certificate.pem --key $DIR_CLI/../../environment/$environment/security/connect.key --tlsv1.2 --cacert $DIR_CLI/../../environment/$environment/security/snakeoil-ca-1.crt"
+  elif [[ "$environment" == "rbac-sasl-plain" ]]
+  then
+      DIR_CLI="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
+
+      security="-u connectorSubmitter:connectorSubmitter"
   fi
 
-  curl $security_certs -s "$connect_url/connectors" | jq -r '.[]'
+  echo "$connect_url@$security"
+}
+
+function get_sr_url_and_security() {
+  environment=`get_environment_used`
+
+  if [ "$environment" == "error" ]
+  then
+    logerror "File containing restart command /tmp/playground-command does not exist!"
+    exit 1
+
+  fi
+
+  sr_url="http://localhost:8081"
+  security_sr=""
+
+  if [[ "$environment" == *"ssl"* ]]
+  then
+      sr_url="https://localhost:8081"
+      DIR_CLI="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
+
+      security="--cert $DIR_CLI/../../environment/$environment/security/schema-registry.certificate.pem --key $DIR_CLI/../../environment/$environment/security/schema-registry.key --tlsv1.2 --cacert $DIR_CLI/../../environment/$environment/security/snakeoil-ca-1.crt"
+  elif [[ "$environment" == "rbac-sasl-plain" ]]
+  then
+      DIR_CLI="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
+
+      security="-u superUser:superUser"
+  fi
+
+  echo "$sr_url@$security"
+}
+
+function get_security_broker() {
+  environment=`get_environment_used`
+
+  if [ "$environment" == "error" ]
+  then
+    logerror "File containing restart command /tmp/playground-command does not exist!"
+    exit 1
+
+  fi
+
+  security_broker=""
+  if [ "$environment" != "plaintext" ]
+  then
+      security_broker="--command-config /etc/kafka/secrets/client_without_interceptors.config"
+  fi
+  echo "$security_broker"
+}
+
+function get_connector_list() {
+  ret=$(get_connect_url_and_security)
+
+  connect_url=$(echo "$ret" | cut -d "@" -f 1)
+  security=$(echo "$ret" | cut -d "@" -f 2)
+
+  curl $security -s "$connect_url/connectors" | jq -r '.[]'
 }
 
 function get_examples_list_with_fzf() {
@@ -6378,37 +6446,23 @@ playground_get_properties_command() {
 # :command.function
 playground_get_all_schemas_command() {
   # src/get_all_schemas_command.sh
-  environment=`get_environment_used`
+  ret=$(get_sr_url_and_security)
 
-  if [ "$environment" == "error" ]
-  then
-    logerror "File containing restart command /tmp/playground-command does not exist!"
-    exit 1
-
-  fi
-
-  sr_url="http://localhost:8081"
-  security_sr=""
-  if [ "$environment" != "plaintext" ]
-  then
-      sr_url="https://localhost:8081"
-      DIR_CLI="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
-
-      security_certs="--cert $DIR_CLI/../../environment/$environment/security/schema-registry.certificate.pem --key $DIR_CLI/../../environment/$environment/security/schema-registry.key --tlsv1.2 --cacert $DIR_CLI/../../environment/$environment/security/snakeoil-ca-1.crt"
-  fi
+  sr_url=$(echo "$ret" | cut -d "@" -f 1)
+  security=$(echo "$ret" | cut -d "@" -f 2)
 
   # Get a list of all subjects in the schema registry
-  subjects=$(curl $security_certs -s "${sr_url}/subjects")
+  subjects=$(curl $security -s "${sr_url}/subjects")
 
   log "Displaying all subjects 🔰 and versions 💯"
   # Loop through each subject and retrieve all its schema versions and definitions
   for subject in $(echo "${subjects}" | jq -r '.[]'); do
     # Get a list of all schema versions for the subject
-    versions=$(curl $security_certs -s "${sr_url}/subjects/${subject}/versions")
+    versions=$(curl $security -s "${sr_url}/subjects/${subject}/versions")
 
     # Loop through each version and retrieve the schema
     for version in $(echo "${versions}" | jq -r '.[]'); do
-      schema=$(curl $security_certs -s "${sr_url}/subjects/${subject}/versions/${version}/schema" | jq .)
+      schema=$(curl $security -s "${sr_url}/subjects/${subject}/versions/${version}/schema" | jq .)
       log "🔰 ${subject} 💯 ${version}"
       echo "${schema}"
     done
@@ -6634,20 +6688,7 @@ playground_topic_get_number_records_command() {
 # :command.function
 playground_topic_display_connect_offsets_command() {
   # src/topic_display_connect_offsets_command.sh
-  environment=`get_environment_used`
-
-  if [ "$environment" == "error" ]
-  then
-    logerror "File containing restart command /tmp/playground-command does not exist!"
-    exit 1
-
-  fi
-
-  security_broker=""
-  if [ "$environment" != "plaintext" ]
-  then
-      security_broker="--consumer.config /etc/kafka/secrets/client_without_interceptors.config"
-  fi
+  security_broker=$(get_security_broker)
 
   log "Display content of connect offsets topic, press crtl-c to stop..."
   docker exec connect kafka-console-consumer -bootstrap-server broker:9092 --topic connect-offsets --from-beginning --property print.key=true --property print.timestamp=true $security_broker
@@ -6677,20 +6718,7 @@ playground_topic_describe_command() {
   # src/topic_describe_command.sh
   topic="${args[--topic]}"
 
-  environment=`get_environment_used`
-
-  if [ "$environment" == "error" ]
-  then
-    logerror "File containing restart command /tmp/playground-command does not exist!"
-    exit 1
-
-  fi
-
-  security_broker=""
-  if [ "$environment" != "plaintext" ]
-  then
-      security_broker="--command-config /etc/kafka/secrets/client_without_interceptors.config"
-  fi
+  security_broker=$(get_security_broker)
 
   log "Describing topic $topic"
   docker exec broker kafka-topics --describe --topic $topic --bootstrap-server broker:9092 $security_broker
@@ -6724,11 +6752,15 @@ playground_topic_consume_command() {
   fi
 
   sr_url="http://schema-registry:8081"
-  security_sr=""
-  if [ "$environment" != "plaintext" ]
+  security=""
+  if [[ "$environment" == *"ssl"* ]]
   then
       sr_url="https://schema-registry:8081"
-      security_sr="--property schema.registry.ssl.truststore.location=/etc/kafka/secrets/kafka.client.truststore.jks --property schema.registry.ssl.truststore.password=confluent --property schema.registry.ssl.keystore.location=/etc/kafka/secrets/kafka.client.keystore.jks --property schema.registry.ssl.keystore.password=confluent --consumer.config /etc/kafka/secrets/client_without_interceptors.config"
+      security="--property schema.registry.ssl.truststore.location=/etc/kafka/secrets/kafka.client.truststore.jks --property schema.registry.ssl.truststore.password=confluent --property schema.registry.ssl.keystore.location=/etc/kafka/secrets/kafka.client.keystore.jks --property schema.registry.ssl.keystore.password=confluent --consumer.config /etc/kafka/secrets/client_without_interceptors.config"
+  elif [[ "$environment" == "rbac-sasl-plain" ]]
+  then
+      sr_url="http://schema-registry:8081"
+      security="--property basic.auth.credentials.source=USER_INFO --property schema.registry.basic.auth.user.info=clientAvroCli:clientAvroCli --consumer.config /etc/kafka/secrets/client_without_interceptors.config"
   fi
 
   tmp_dir=$(mktemp -d -t ci-XXXXXXXXXX)
@@ -6777,13 +6809,13 @@ playground_topic_consume_command() {
       avro|protobuf|json-schema)
           if [ "$key_converter" == "io.confluent.connect.avro.AvroConverter" ]
           then
-              docker exec connect kafka-$type-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=$sr_url --topic $topic_name --property print.partition=true --property print.offset=true --property print.headers=true --property print.timestamp=true --property print.key=true --property key.separator="|" $security_sr --from-beginning > "$fifo_path" &
+              docker exec connect kafka-$type-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=$sr_url --topic $topic_name --property print.partition=true --property print.offset=true --property print.headers=true --property print.timestamp=true --property print.key=true --property key.separator="|" $security --from-beginning > "$fifo_path" &
           else
-              docker exec connect kafka-$type-console-consumer --bootstrap-server broker:9092 --property schema.registry.url=$sr_url --topic $topic_name --property print.partition=true --property print.offset=true --property print.headers=true --property print.timestamp=true --property print.key=true --property key.separator="|" --property key.deserializer=org.apache.kafka.common.serialization.StringDeserializer $security_sr --from-beginning > "$fifo_path" &
+              docker exec connect kafka-$type-console-consumer --bootstrap-server broker:9092 --property schema.registry.url=$sr_url --topic $topic_name --property print.partition=true --property print.offset=true --property print.headers=true --property print.timestamp=true --property print.key=true --property key.separator="|" --property key.deserializer=org.apache.kafka.common.serialization.StringDeserializer $security --from-beginning > "$fifo_path" &
           fi
           ;;
       *)
-          docker exec connect kafka-console-consumer --bootstrap-server broker:9092 --topic $topic_name --property print.partition=true --property print.offset=true --property print.headers=true --property print.timestamp=true --property print.key=true --property key.separator="|" $security_sr --from-beginning > "$fifo_path" &
+          docker exec connect kafka-console-consumer --bootstrap-server broker:9092 --topic $topic_name --property print.partition=true --property print.offset=true --property print.headers=true --property print.timestamp=true --property print.key=true --property key.separator="|" $security --from-beginning > "$fifo_path" &
       ;;
     esac
 
@@ -6807,10 +6839,8 @@ playground_topic_consume_command() {
 
       readable_date="$($date_command ${timestamp_sec} "+%Y-%m-%d %H:%M:%S.${milliseconds}")"
 
-      # Remove the 13 numbers after "CreateTime:" using sed
       line_with_date=$(echo "$line" | sed -E "s/CreateTime:[0-9]{13}/CreateTime: ${readable_date}/")
 
-      # Print the line with the readable date
       echo "$line_with_date"
     done < "$fifo_path"
   else
@@ -6823,82 +6853,43 @@ playground_topic_consume_command() {
 # :command.function
 playground_connector_status_command() {
   # src/connector_status_command.sh
-  environment=`get_environment_used`
+  ret=$(get_connect_url_and_security)
 
-  if [ "$environment" == "error" ]
-  then
-    logerror "File containing restart command /tmp/playground-command does not exist!"
-    exit 1
-
-  fi
-  connect_url="http://localhost:8083"
-  security_certs=""
-  if [ "$environment" != "plaintext" ]
-  then
-      connect_url="https://localhost:8083"
-      DIR_CLI="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
-
-      security_certs="--cert $DIR_CLI/../../environment/$environment/security/connect.certificate.pem --key $DIR_CLI/../../environment/$environment/security/connect.key --tlsv1.2 --cacert $DIR_CLI/../../environment/$environment/security/snakeoil-ca-1.crt"
-  fi
+  connect_url=$(echo "$ret" | cut -d "@" -f 1)
+  security=$(echo "$ret" | cut -d "@" -f 2)
 
   json="${args[--json]}"
 
   if [[ -n "$json" ]]
   then
-    curl $security_certs -s "$connect_url/connectors?expand=status&expand=info" | jq .
+    curl $security -s "$connect_url/connectors?expand=status&expand=info" | jq .
   else
-    curl $security_certs -s "$connect_url/connectors?expand=info&expand=status" | jq '. | to_entries[] | [ .value.info.type, .key, .value.status.connector.state,.value.status.tasks[].state,.value.info.config."connector.class"]|join(":|:")' | column -s : -t| sed 's/\"//g'| sort
+    curl $security -s "$connect_url/connectors?expand=info&expand=status" | jq '. | to_entries[] | [ .value.info.type, .key, .value.status.connector.state,.value.status.tasks[].state,.value.info.config."connector.class"]|join(":|:")' | column -s : -t| sed 's/\"//g'| sort
   fi
 }
 
 # :command.function
 playground_connector_plugins_command() {
   # src/connector_plugins_command.sh
-  environment=`get_environment_used`
+  ret=$(get_connect_url_and_security)
 
-  if [ "$environment" == "error" ]
-  then
-    logerror "File containing restart command /tmp/playground-command does not exist!"
-    exit 1
+  connect_url=$(echo "$ret" | cut -d "@" -f 1)
+  security=$(echo "$ret" | cut -d "@" -f 2)
 
-  fi
-  connect_url="http://localhost:8083"
-  security_certs=""
-  if [ "$environment" != "plaintext" ]
-  then
-      connect_url="https://localhost:8083"
-      DIR_CLI="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
-
-      security_certs="--cert $DIR_CLI/../../environment/$environment/security/connect.certificate.pem --key $DIR_CLI/../../environment/$environment/security/connect.key --tlsv1.2 --cacert $DIR_CLI/../../environment/$environment/security/snakeoil-ca-1.crt"
-  fi
-
-  curl $security_certs -s -X GET -H "Content-Type: application/json" "$connect_url/connector-plugins" | jq .
+  curl $security -s -X GET -H "Content-Type: application/json" "$connect_url/connector-plugins" | jq .
 }
 
 # :command.function
 playground_connector_pause_command() {
   # src/connector_pause_command.sh
-  environment=`get_environment_used`
+  ret=$(get_connect_url_and_security)
 
-  if [ "$environment" == "error" ]
-  then
-    logerror "File containing restart command /tmp/playground-command does not exist!"
-    exit 1
-
-  fi
-  connect_url="http://localhost:8083"
-  security_certs=""
-  if [ "$environment" != "plaintext" ]
-  then
-      connect_url="https://localhost:8083"
-      DIR_CLI="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
-
-      security_certs="--cert $DIR_CLI/../../environment/$environment/security/connect.certificate.pem --key $DIR_CLI/../../environment/$environment/security/connect.key --tlsv1.2 --cacert $DIR_CLI/../../environment/$environment/security/snakeoil-ca-1.crt"
-  fi
+  connect_url=$(echo "$ret" | cut -d "@" -f 1)
+  security=$(echo "$ret" | cut -d "@" -f 2)
 
   connector="${args[--connector]}"
   log "Pausing connector $connector"
-  curl $security_certs -s -X PUT -H "Content-Type: application/json" "$connect_url/connectors/$connector/pause" | jq .
+  curl $security -s -X PUT -H "Content-Type: application/json" "$connect_url/connectors/$connector/pause" | jq .
 
   playground connector status
 }
@@ -6906,53 +6897,27 @@ playground_connector_pause_command() {
 # :command.function
 playground_connector_restart_command() {
   # src/connector_restart_command.sh
-  environment=`get_environment_used`
+  ret=$(get_connect_url_and_security)
 
-  if [ "$environment" == "error" ]
-  then
-    logerror "File containing restart command /tmp/playground-command does not exist!"
-    exit 1
-
-  fi
-  connect_url="http://localhost:8083"
-  security_certs=""
-  if [ "$environment" != "plaintext" ]
-  then
-      connect_url="https://localhost:8083"
-      DIR_CLI="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
-
-      security_certs="--cert $DIR_CLI/../../environment/$environment/security/connect.certificate.pem --key $DIR_CLI/../../environment/$environment/security/connect.key --tlsv1.2 --cacert $DIR_CLI/../../environment/$environment/security/snakeoil-ca-1.crt"
-  fi
+  connect_url=$(echo "$ret" | cut -d "@" -f 1)
+  security=$(echo "$ret" | cut -d "@" -f 2)
 
   connector="${args[--connector]}"
   log "Restarting connector $connector"
-  curl $security_certs -s -X POST -H "Content-Type: application/json" "$connect_url/connectors/$connector/restart?includeTasks=true&onlyFailed=false" | jq .
+  curl $security -s -X POST -H "Content-Type: application/json" "$connect_url/connectors/$connector/restart?includeTasks=true&onlyFailed=false" | jq .
 }
 
 # :command.function
 playground_connector_resume_command() {
   # src/connector_resume_command.sh
-  environment=`get_environment_used`
+  ret=$(get_connect_url_and_security)
 
-  if [ "$environment" == "error" ]
-  then
-    logerror "File containing restart command /tmp/playground-command does not exist!"
-    exit 1
-
-  fi
-  connect_url="http://localhost:8083"
-  security_certs=""
-  if [ "$environment" != "plaintext" ]
-  then
-      connect_url="https://localhost:8083"
-      DIR_CLI="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
-
-      security_certs="--cert $DIR_CLI/../../environment/$environment/security/connect.certificate.pem --key $DIR_CLI/../../environment/$environment/security/connect.key --tlsv1.2 --cacert $DIR_CLI/../../environment/$environment/security/snakeoil-ca-1.crt"
-  fi
+  connect_url=$(echo "$ret" | cut -d "@" -f 1)
+  security=$(echo "$ret" | cut -d "@" -f 2)
 
   connector="${args[--connector]}"
   log "Resuming connector $connector"
-  curl $security_certs -s -X PUT -H "Content-Type: application/json" "$connect_url/connectors/$connector/resume"  | jq .
+  curl $security -s -X PUT -H "Content-Type: application/json" "$connect_url/connectors/$connector/resume"  | jq .
 
   playground connector status
 }
@@ -6960,52 +6925,27 @@ playground_connector_resume_command() {
 # :command.function
 playground_connector_delete_command() {
   # src/connector_delete_command.sh
-  environment=`get_environment_used`
+  ret=$(get_connect_url_and_security)
 
-  if [ "$environment" == "error" ]
-  then
-    logerror "File containing restart command /tmp/playground-command does not exist!"
-    exit 1
-
-  fi
-  connect_url="http://localhost:8083"
-  security_certs=""
-  if [ "$environment" != "plaintext" ]
-  then
-      connect_url="https://localhost:8083"
-      DIR_CLI="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
-
-      security_certs="--cert $DIR_CLI/../../environment/$environment/security/connect.certificate.pem --key $DIR_CLI/../../environment/$environment/security/connect.key --tlsv1.2 --cacert $DIR_CLI/../../environment/$environment/security/snakeoil-ca-1.crt"
-  fi
+  connect_url=$(echo "$ret" | cut -d "@" -f 1)
+  security=$(echo "$ret" | cut -d "@" -f 2)
 
   connector="${args[--connector]}"
   log "Deleting connector $connector"
-  curl $security_certs -s -X DELETE "$connect_url/connectors/$connector" | jq .
+  curl $security -s -X DELETE "$connect_url/connectors/$connector" | jq .
 }
 
 # :command.function
 playground_connector_show_lag_command() {
   # src/connector_show_lag_command.sh
-  environment=`get_environment_used`
   connector="${args[--connector]}"
 
-  if [ "$environment" == "error" ]
-  then
-    logerror "File containing restart command /tmp/playground-command does not exist!"
-    exit 1
+  ret=$(get_connect_url_and_security)
 
-  fi
-  connect_url="http://localhost:8083"
-  security_certs=""
-  if [ "$environment" != "plaintext" ]
-  then
-      connect_url="https://localhost:8083"
-      DIR_CLI="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
+  connect_url=$(echo "$ret" | cut -d "@" -f 1)
+  security=$(echo "$ret" | cut -d "@" -f 2)
 
-      security_certs="--cert $DIR_CLI/../../environment/$environment/security/connect.certificate.pem --key $DIR_CLI/../../environment/$environment/security/connect.key --tlsv1.2 --cacert $DIR_CLI/../../environment/$environment/security/snakeoil-ca-1.crt"
-  fi
-
-  type=$(curl -s http://localhost:8083/connectors\?expand\=status\&expand\=info | jq -r '. | to_entries[] | [ .value.info.type]|join(":|:")')
+  type=$(curl $security -s $connect_url/connectors\?expand\=status\&expand\=info | jq -r '. | to_entries[] | [ .value.info.type]|join(":|:")')
   if [ "$type" != "sink" ]
   then
     logerror "Connector $connector is a $type connector, it must be a sink to show the lag !"
@@ -7013,69 +6953,45 @@ playground_connector_show_lag_command() {
 
   fi
 
+  security_broker=$(get_security_broker)
+
   log "Show lag for sink connector $connector"
-  docker exec broker kafka-consumer-groups --bootstrap-server broker:9092 --group connect-$connector --describe
+  docker exec broker kafka-consumer-groups --bootstrap-server broker:9092 --group connect-$connector --describe $security_broker
 }
 
 # :command.function
 playground_connector_log_level_get_command() {
   # src/connector_log_level_get_command.sh
-  environment=`get_environment_used`
+  ret=$(get_connect_url_and_security)
 
-  if [ "$environment" == "error" ]
-  then
-    logerror "File containing restart command /tmp/playground-command does not exist!"
-    exit 1
-
-  fi
-  connect_url="http://localhost:8083"
-  security_certs=""
-  if [ "$environment" != "plaintext" ]
-  then
-      connect_url="https://localhost:8083"
-      DIR_CLI="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
-
-      security_certs="--cert $DIR_CLI/../../environment/$environment/security/connect.certificate.pem --key $DIR_CLI/../../environment/$environment/security/connect.key --tlsv1.2 --cacert $DIR_CLI/../../environment/$environment/security/snakeoil-ca-1.crt"
-  fi
+  connect_url=$(echo "$ret" | cut -d "@" -f 1)
+  security=$(echo "$ret" | cut -d "@" -f 2)
 
   package="${args[--package]}"
 
   if [[ -n "$package" ]]
   then
     log "Get log level for package $package"
-    curl $security_certs -s "$connect_url/admin/loggers/$package" | jq .
+    curl $security -s "$connect_url/admin/loggers/$package" | jq .
   else
     log "Get log level for all packages"
-    curl $security_certs -s "$connect_url/admin/loggers" | jq .
+    curl $security -s "$connect_url/admin/loggers" | jq .
   fi
 }
 
 # :command.function
 playground_connector_log_level_set_command() {
   # src/connector_log_level_set_command.sh
-  environment=`get_environment_used`
+  ret=$(get_connect_url_and_security)
 
-  if [ "$environment" == "error" ]
-  then
-    logerror "File containing restart command /tmp/playground-command does not exist!"
-    exit 1
-
-  fi
-  connect_url="http://localhost:8083"
-  security_certs=""
-  if [ "$environment" != "plaintext" ]
-  then
-      connect_url="https://localhost:8083"
-      DIR_CLI="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
-
-      security_certs="--cert $DIR_CLI/../../environment/$environment/security/connect.certificate.pem --key $DIR_CLI/../../environment/$environment/security/connect.key --tlsv1.2 --cacert $DIR_CLI/../../environment/$environment/security/snakeoil-ca-1.crt"
-  fi
+  connect_url=$(echo "$ret" | cut -d "@" -f 1)
+  security=$(echo "$ret" | cut -d "@" -f 2)
 
   package="${args[--package]}"
   level="${args[--level]}"
 
   log "Set log level for package $package to $level"
-  curl $security_certs -s --request PUT \
+  curl $security -s --request PUT \
     --url "$connect_url/admin/loggers/$package" \
     --header 'Accept: application/json' \
     --header 'Content-Type: application/json' \
