@@ -92,7 +92,7 @@ function get_security_broker() {
   elif [ "$environment" == "ldap-authorizer-sasl-plain" ]
   then
       security="$config_file_name /service/kafka/users/kafka.properties"
-  elif [ "$environment" == "ldap-sasl-plain" ] || [ "$environment" == "sasl-plain" ]
+  elif [ "$environment" == "ldap-sasl-plain" ] || [ "$environment" == "sasl-plain" ] || [ "$environment" == "sasl-scram" ]
   then
       security="$config_file_name /tmp/client.properties"
   elif [ "$environment" != "plaintext" ]

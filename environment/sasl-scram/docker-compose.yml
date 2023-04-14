@@ -19,6 +19,7 @@ services:
     broker:
         volumes:
           - ../../environment/sasl-scram/kafka/kafka.jaas.conf:/etc/kafka/kafka_server_jaas.conf
+          - ../../environment/sasl-scram/client.properties:/tmp/client.properties
         depends_on:
         - zookeeper
         environment:
@@ -36,6 +37,8 @@ services:
             KAFKA_OPTS: "-Djava.security.auth.login.config=/etc/kafka/kafka_server_jaas.conf"
 
     connect:
+        volumes:
+          - ../../environment/sasl-scram/client.properties:/tmp/client.properties
         depends_on:
         - zookeeper
         environment:
@@ -72,6 +75,8 @@ services:
                 password=\"connect-secret\";"
 
     schema-registry:
+        volumes:
+          - ../../environment/sasl-scram/client.properties:/tmp/client.properties
         environment:
             SCHEMA_REGISTRY_KAFKASTORE_SECURITY_PROTOCOL: SASL_PLAINTEXT
             SCHEMA_REGISTRY_KAFKASTORE_SASL_MECHANISM: SCRAM-SHA-256
