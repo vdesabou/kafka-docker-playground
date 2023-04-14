@@ -219,6 +219,16 @@ commands:
   - playground get-properties --container broker
   - playground get-properties -c broker
 
+- name: get-all-schemas
+  group: Kafka
+  help: |-
+    🔰 Get all schemas versions for all subjects.
+    
+    👉 Check documentation xxxx
+
+  examples:
+  - playground get-all-schemas
+
 - name: enable-remote-debugging
   group: Debug
   help: |-

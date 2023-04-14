@@ -42,6 +42,7 @@ playground_usage() {
   echo
   printf "%s\n" "$(bold "Kafka commands:")"
   printf "  %s   📝 Get properties file from a container.\n" "$(green "get-properties")                "
+  printf "  %s   🔰 Get all schemas versions for all subjects.\n" "$(green "get-all-schemas")               "
   printf "  %s   🔢 Get JMX metrics from a component.\n" "$(green "get-jmx-metrics")               "
   echo
   printf "%s\n" "$(bold "Debug commands:")"
@@ -474,6 +475,43 @@ playground_get_properties_usage() {
     printf "  playground get-properties\n"
     printf "  playground get-properties --container broker\n"
     printf "  playground get-properties -c broker\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_get_all_schemas_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground get-all-schemas\n"
+    echo
+
+    printf "  🔰 Get all schemas versions for all subjects.\n  \n  👉 Check documentation xxxx\n"
+    echo
+
+  else
+    printf "playground get-all-schemas - 🔰 Get all schemas versions for all subjects.\n"
+    echo
+
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground get-all-schemas\n"
+  printf "  playground get-all-schemas --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n $long_usage ]]; then
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+    # :command.usage_examples
+    printf "%s\n" "$(bold "Examples")"
+    printf "  playground get-all-schemas\n"
     echo
 
   fi
@@ -6338,6 +6376,46 @@ playground_get_properties_command() {
 }
 
 # :command.function
+playground_get_all_schemas_command() {
+  # src/get_all_schemas_command.sh
+  environment=`get_environment_used`
+
+  if [ "$environment" == "error" ]
+  then
+    logerror "File containing restart command /tmp/playground-command does not exist!"
+    exit 1
+
+  fi
+
+  sr_url="http://localhost:8081"
+  security_sr=""
+  if [ "$environment" != "plaintext" ]
+  then
+      sr_url="https://localhost:8081"
+      DIR_CLI="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
+
+      security_certs="--cert $DIR_CLI/../../environment/$environment/security/schema-registry.certificate.pem --key $DIR_CLI/../../environment/$environment/security/schema-registry.key --tlsv1.2 --cacert $DIR_CLI/../../environment/$environment/security/snakeoil-ca-1.crt"
+  fi
+
+  # Get a list of all subjects in the schema registry
+  subjects=$(curl $security_certs -s "${sr_url}/subjects")
+
+  log "Displaying all subjects 🔰 and versions 💯"
+  # Loop through each subject and retrieve all its schema versions and definitions
+  for subject in $(echo "${subjects}" | jq -r '.[]'); do
+    # Get a list of all schema versions for the subject
+    versions=$(curl $security_certs -s "${sr_url}/subjects/${subject}/versions")
+
+    # Loop through each version and retrieve the schema
+    for version in $(echo "${versions}" | jq -r '.[]'); do
+      schema=$(curl $security_certs -s "${sr_url}/subjects/${subject}/versions/${version}/schema" | jq .)
+      log "🔰 ${subject} 💯 ${version}"
+      echo "${schema}"
+    done
+  done
+}
+
+# :command.function
 playground_enable_remote_debugging_command() {
   # src/enable_remote_debugging_command.sh
   IGNORE_CHECK_FOR_DOCKER_COMPOSE=true
@@ -7063,6 +7141,13 @@ parse_requirements() {
       action="get-properties"
       shift
       playground_get_properties_parse_requirements "$@"
+      shift $#
+      ;;
+
+    get-all-schemas)
+      action="get-all-schemas"
+      shift
+      playground_get_all_schemas_parse_requirements "$@"
       shift $#
       ;;
 
@@ -7814,6 +7899,52 @@ playground_get_properties_parse_requirements() {
 
   # :command.default_assignments
   [[ -n ${args['--container']:-} ]] || args['--container']="connect"
+
+}
+
+# :command.parse_requirements
+playground_get_all_schemas_parse_requirements() {
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    case "${1:-}" in
+      --help | -h)
+        long_usage=yes
+        playground_get_all_schemas_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.dependencies_filter
+
+  # :command.command_filter
+  action="get-all-schemas"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
 
 }
 
@@ -10060,6 +10191,15 @@ run() {
         playground_get_properties_usage
       else
         playground_get_properties_command
+      fi
+      ;;
+
+    "get-all-schemas")
+      if [[ ${args['--help']:-} ]]; then
+        long_usage=yes
+        playground_get_all_schemas_usage
+      else
+        playground_get_all_schemas_command
       fi
       ;;
 
