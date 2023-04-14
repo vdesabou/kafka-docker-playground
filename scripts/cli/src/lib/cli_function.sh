@@ -116,12 +116,13 @@ function get_examples_list_with_fzf() {
   dir1=$(echo ${DIR_CLI%/*})
   dir2=$(echo ${dir1%/*})
 
+
   cur="$1"
   if [[ $(type -f bat 2>&1) =~ "not found" ]]
   then
-    res=$(find $dir2 -name \*.sh ! -name 'stop.sh' ! -path '*/scripts/*' ! -path '*/docs-examples/*' ! -path '*/sample-sql-scripts/*' ! -path '*/ora-setup-scripts/*' | fzf --query "$cur" --delimiter / --with-nth '-3,-2,-1' --preview 'cat {}');echo "$cur@$res"
+    res=$(find $dir2 -name \*.sh ! -name 'stop.sh' ! -path '*/scripts/*' ! -path '*/docs-examples/*' ! -path '*/sample-sql-scripts/*' ! -path '*/ora-setup-scripts/*' | fzf --query "$cur" --margin=1%,1%,1%,1% --border=rounded --info=inline --prompt='🍺' --pointer='👉' --header='ctrl-c or esc to quit' --color="bg+:-1,fg:magenta,fg+:yellow,border:black,spinner:0,hl:yellow,header:blue,info:green,pointer:red,marker:blue,prompt:cyan" --delimiter / --with-nth '-3,-2,-1' --preview-window=40%,wrap --preview 'cat {}');echo "$cur@$res"
   else
-    res=$(find $dir2 -name \*.sh ! -name 'stop.sh' ! -path '*/scripts/*' ! -path '*/docs-examples/*' ! -path '*/sample-sql-scripts/*' ! -path '*/ora-setup-scripts/*' | fzf --query "$cur" --delimiter / --with-nth '-3,-2,-1' --preview 'bat --style=numbers --color=always --line-range :500 {}');echo "$cur@$res"
+    res=$(find $dir2 -name \*.sh ! -name 'stop.sh' ! -path '*/scripts/*' ! -path '*/docs-examples/*' ! -path '*/sample-sql-scripts/*' ! -path '*/ora-setup-scripts/*' | fzf --query "$cur" --margin=1%,1%,1%,1% --border=rounded --info=inline --prompt='🍺' --pointer='👉' --header='ctrl-c or esc to quit' --color="bg+:-1,fg:magenta,fg+:yellow,border:black,spinner:0,hl:yellow,header:blue,info:green,pointer:red,marker:blue,prompt:cyan" --delimiter / --with-nth '-3,-2,-1' --preview-window=40%,wrap --preview 'bat --style=plain --color=always --line-range :500 {}');echo "$cur@$res"
   fi
 }
 
@@ -133,9 +134,9 @@ function get_examples_list_with_fzf_without_repro() {
   cur="$1"
   if [[ $(type -f bat 2>&1) =~ "not found" ]]
   then
-    res=$(find $dir2 -name \*.sh ! -name 'stop.sh' ! -path '*/scripts/*' ! -path '*/docs-examples/*' ! -path '*/sample-sql-scripts/*' ! -path '*/ora-setup-scripts/*' ! -path '*/reproduction-models/*' | fzf --query "$cur" --delimiter / --with-nth '-3,-2,-1' --preview 'cat {}');echo "$cur@$res"
+    res=$(find $dir2 -name \*.sh ! -name 'stop.sh' ! -path '*/scripts/*' ! -path '*/docs-examples/*' ! -path '*/sample-sql-scripts/*' ! -path '*/ora-setup-scripts/*' ! -path '*/reproduction-models/*' | fzf --query "$cur" --margin=1%,1%,1%,1% --border=rounded --info=inline --prompt='🍺' --pointer='👉' --header='ctrl-c or esc to quit' --color="bg+:-1,fg:magenta,fg+:yellow,border:black,spinner:0,hl:yellow,header:blue,info:green,pointer:red,marker:blue,prompt:cyan" --delimiter / --with-nth '-3,-2,-1' --preview-window=40%,wrap --preview 'cat {}');echo "$cur@$res"
   else
-    res=$(find $dir2 -name \*.sh ! -name 'stop.sh' ! -path '*/scripts/*' ! -path '*/docs-examples/*' ! -path '*/sample-sql-scripts/*' ! -path '*/ora-setup-scripts/*' ! -path '*/reproduction-models/*' | fzf --query "$cur" --delimiter / --with-nth '-3,-2,-1' --preview 'bat --style=numbers --color=always --line-range :500 {}');echo "$cur@$res"
+    res=$(find $dir2 -name \*.sh ! -name 'stop.sh' ! -path '*/scripts/*' ! -path '*/docs-examples/*' ! -path '*/sample-sql-scripts/*' ! -path '*/ora-setup-scripts/*' ! -path '*/reproduction-models/*' | fzf --query "$cur" --margin=1%,1%,1%,1% --border=rounded --info=inline --prompt='🍺' --pointer='👉' --header='ctrl-c or esc to quit' --color="bg+:-1,fg:magenta,fg+:yellow,border:black,spinner:0,hl:yellow,header:blue,info:green,pointer:red,marker:blue,prompt:cyan" --delimiter / --with-nth '-3,-2,-1' --preview-window=40%,wrap --preview 'bat --style=plain --color=always --line-range :500 {}');echo "$cur@$res"
   fi
 }
 
@@ -147,9 +148,9 @@ function get_examples_list_with_fzf_without_repro_sink_only() {
   cur="$1"
   if [[ $(type -f bat 2>&1) =~ "not found" ]]
   then
-    res=$(find $dir2 -name \*.sh ! -name 'stop.sh' -path '*/connect-*-sink/*' ! -path '*/scripts/*' ! -path '*/docs-examples/*' ! -path '*/sample-sql-scripts/*' ! -path '*/ora-setup-scripts/*' ! -path '*/reproduction-models/*' | fzf --query "$cur" --delimiter / --with-nth '-3,-2,-1' --preview 'cat {}');echo "$cur@$res"
+    res=$(find $dir2 -name \*.sh ! -name 'stop.sh' -path '*/connect-*-sink/*' ! -path '*/scripts/*' ! -path '*/docs-examples/*' ! -path '*/sample-sql-scripts/*' ! -path '*/ora-setup-scripts/*' ! -path '*/reproduction-models/*' | fzf --query "$cur" --margin=1%,1%,1%,1% --border=rounded --info=inline --prompt='🍺' --pointer='👉' --header='ctrl-c or esc to quit' --color="bg+:-1,fg:magenta,fg+:yellow,border:black,spinner:0,hl:yellow,header:blue,info:green,pointer:red,marker:blue,prompt:cyan" --delimiter / --with-nth '-3,-2,-1' --preview-window=40%,wrap --preview 'cat {}');echo "$cur@$res"
   else
-    res=$(find $dir2 -name \*.sh ! -name 'stop.sh' -path '*/connect-*-sink/*' ! -path '*/scripts/*' ! -path '*/docs-examples/*' ! -path '*/sample-sql-scripts/*' ! -path '*/ora-setup-scripts/*' ! -path '*/reproduction-models/*' | fzf --query "$cur" --delimiter / --with-nth '-3,-2,-1' --preview 'bat --style=numbers --color=always --line-range :500 {}');echo "$cur@$res"
+    res=$(find $dir2 -name \*.sh ! -name 'stop.sh' -path '*/connect-*-sink/*' ! -path '*/scripts/*' ! -path '*/docs-examples/*' ! -path '*/sample-sql-scripts/*' ! -path '*/ora-setup-scripts/*' ! -path '*/reproduction-models/*' | fzf --query "$cur" --margin=1%,1%,1%,1% --border=rounded --info=inline --prompt='🍺' --pointer='👉' --header='ctrl-c or esc to quit' --color="bg+:-1,fg:magenta,fg+:yellow,border:black,spinner:0,hl:yellow,header:blue,info:green,pointer:red,marker:blue,prompt:cyan" --delimiter / --with-nth '-3,-2,-1' --preview-window=40%,wrap --preview 'bat --style=plain --color=always --line-range :500 {}');echo "$cur@$res"
   fi
 }
 
