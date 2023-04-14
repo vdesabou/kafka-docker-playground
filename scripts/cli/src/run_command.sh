@@ -24,7 +24,10 @@ then
   exit 1
 fi
 
-test_file=$(echo "$test_file" | cut -d "@" -f 2)
+if [[ $test_file == *"@"* ]]
+then
+  test_file=$(echo "$test_file" | cut -d "@" -f 2)
+fi
   
 if [ ! -f "$test_file" ]
 then
@@ -169,5 +172,24 @@ else
 fi
 really_check_if_continue
 echo "playground run -f $test_file $argument_list" > /tmp/playground-run
+log "####################################################"
+log "🚀 Executing $filename in dir $test_file_directory"
+log "####################################################"
+SECONDS=0
 cd $test_file_directory
-./$filename
+bash $filename
+ret=$?
+ELAPSED="took: $((($SECONDS / 60) % 60))min $(($SECONDS % 60))sec"
+let ELAPSED_TOTAL+=$SECONDS
+if [ $ret -eq 0 ]
+then
+    log "####################################################"
+    log "✅ RESULT: SUCCESS for $filename ($ELAPSED - $CUMULATED)"
+    log "####################################################"
+else
+    logerror "####################################################"
+    logerror "🔥 RESULT: FAILURE for $filename ($ELAPSED - $CUMULATED)"
+    logerror "####################################################"
+
+    display_docker_container_error_log
+fi

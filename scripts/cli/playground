@@ -5447,8 +5447,14 @@ validate_file_exists() {
 # src/lib/validations/validate_file_exists_with_trick.sh
 validate_file_exists_with_trick() {
   file="$1"
-  real_file=$(echo "$file" | cut -d "@" -f 2)
-  [[ -f "$real_file" ]] || echo "must be an existing file"
+
+  real_file=$file
+  if [[ $file == *"@"* ]]
+  then
+    real_file=$(echo "$file" | cut -d "@" -f 2)
+  fi
+
+  [[ -f "$real_file" ]] || echo "$real_file must be an existing file"
 }
 
 # src/lib/validations/validate_integer.sh
@@ -5527,7 +5533,10 @@ playground_run_command() {
     exit 1
   fi
 
-  test_file=$(echo "$test_file" | cut -d "@" -f 2)
+  if [[ $test_file == *"@"* ]]
+  then
+    test_file=$(echo "$test_file" | cut -d "@" -f 2)
+  fi
 
   if [ ! -f "$test_file" ]
   then
@@ -5672,9 +5681,27 @@ playground_run_command() {
   fi
   really_check_if_continue
   echo "playground run -f $test_file $argument_list" > /tmp/playground-run
+  log "####################################################"
+  log "🚀 Executing $filename in dir $test_file_directory"
+  log "####################################################"
+  SECONDS=0
   cd $test_file_directory
-  ./$filename
+  bash $filename
+  ret=$?
+  ELAPSED="took: $((($SECONDS / 60) % 60))min $(($SECONDS % 60))sec"
+  let ELAPSED_TOTAL+=$SECONDS
+  if [ $ret -eq 0 ]
+  then
+      log "####################################################"
+      log "✅ RESULT: SUCCESS for $filename ($ELAPSED - $CUMULATED)"
+      log "####################################################"
+  else
+      logerror "####################################################"
+      logerror "🔥 RESULT: FAILURE for $filename ($ELAPSED - $CUMULATED)"
+      logerror "####################################################"
 
+      display_docker_container_error_log
+  fi
 }
 
 # :command.function
@@ -5708,7 +5735,10 @@ playground_bootstrap_reproduction_model_command() {
   add_custom_smt="${args[--custom-smt]}"
   sink_file="${args[--pipeline]}"
 
-  test_file=$(echo "$test_file" | cut -d "@" -f 2)
+  if [[ $test_file == *"@"* ]]
+  then
+    test_file=$(echo "$test_file" | cut -d "@" -f 2)
+  fi
 
   if [[ "$test_file" != *".sh" ]]
   then

@@ -11,7 +11,10 @@ nb_producers="${args[--nb-producers]}"
 add_custom_smt="${args[--custom-smt]}"
 sink_file="${args[--pipeline]}"
 
-test_file=$(echo "$test_file" | cut -d "@" -f 2)
+if [[ $test_file == *"@"* ]]
+then
+  test_file=$(echo "$test_file" | cut -d "@" -f 2)
+fi
 
 if [[ "$test_file" != *".sh" ]]
 then
