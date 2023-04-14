@@ -221,6 +221,8 @@ commands:
 
 - name: get-all-schemas
   group: Kafka
+  filters:
+  - not_mdc_environment
   help: |-
     🔰 Get all schemas versions for all subjects.
     
@@ -425,6 +427,8 @@ commands:
 - name: topic
   expose: true
   group: Topic
+  filters:
+  - not_mdc_environment
   help: |-
     📁 Topic commands.
   commands:
@@ -472,6 +476,8 @@ commands:
 - name: connector
   expose: true
   group: Connector
+  filters:
+  - not_mdc_environment
   help: |-
     🔗 Connector commands.
 
