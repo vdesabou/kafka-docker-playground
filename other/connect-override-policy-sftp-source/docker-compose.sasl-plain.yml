@@ -3,8 +3,6 @@ version: '3.5'
 services:
 
   broker:
-    volumes:
-        - ../../other/connect-override-policy-sftp-source/client.properties:/tmp/client.properties
     environment:
       KAFKA_AUTHORIZER_CLASS_NAME: $KAFKA_AUTHORIZER_CLASS_NAME
       KAFKA_ZOOKEEPER_SET_ACL: "true"
@@ -12,9 +10,6 @@ services:
       KAFKA_LOG4J_LOGGERS: "kafka.authorizer.logger=INFO"
       KAFKA_SUPER_USERS: User:broker;User:schemaregistry;User:client;User:connect
 
-  schema-registry:
-    volumes:
-        - ../../other/connect-override-policy-sftp-source/client.properties:/tmp/client.properties
 
   # getting weird "Couldn't create directory: Failure", so created image from this PR https://github.com/atmoz/sftp/pull/164
   # https://github.com/amaysim-au/docker-sftp/tree/chroot-user
@@ -29,8 +24,6 @@ services:
     command: foo:pass:::upload
 
   connect:
-    volumes:
-        - ../../other/connect-override-policy-sftp-source/client.properties:/tmp/client.properties
     environment:
       CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-sftp
       CONNECT_CONNECTOR_CLIENT_CONFIG_OVERRIDE_POLICY: Principal
