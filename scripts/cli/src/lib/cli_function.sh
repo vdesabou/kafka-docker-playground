@@ -5,40 +5,14 @@ function get_environment_used() {
     return
   fi
 
-  grep "environment/2way-ssl" /tmp/playground-command > /dev/null
-  if [ $? = 0 ]
-  then
-    echo "2way-ssl"
-    return
-  fi
+  patterns=("environment/2way-ssl" "environment/sasl-ssl" "environment/rbac-sasl-plain" "environment/kerberos" "environment/ssl_kerberos" "environment/ldap-authorizer-sasl-plain")
 
-  grep "environment/sasl-ssl" /tmp/playground-command > /dev/null
-  if [ $? = 0 ]
-  then
-    echo "sasl-ssl"
-    return
-  fi
-
-  grep "environment/rbac-sasl-plain" /tmp/playground-command > /dev/null
-  if [ $? = 0 ]
-  then
-    echo "rbac-sasl-plain"
-    return
-  fi
-
-  grep "environment/kerberos" /tmp/playground-command > /dev/null
-  if [ $? = 0 ]
-  then
-    echo "kerberos"
-    return
-  fi
-
-  grep "environment/ssl_kerberos" /tmp/playground-command > /dev/null
-  if [ $? = 0 ]
-  then
-    echo "ssl_kerberos"
-    return
-  fi
+  for pattern in "${patterns[@]}"; do
+    if grep -q "$pattern" /tmp/playground-command; then
+      echo "${pattern#*/}"
+      return
+    fi
+  done
 
   echo "plaintext"
 }
@@ -106,6 +80,7 @@ function get_security_broker() {
     logerror "File containing restart command /tmp/playground-command does not exist!"
     exit 1 
   fi
+
   container="broker"
   security=""
   if [[ "$environment" == "kerberos" ]] || [[ "$environment" == "ssl_kerberos" ]]
@@ -114,6 +89,9 @@ function get_security_broker() {
       security="$config_file_name /etc/kafka/consumer.properties"
 
       docker exec -i client kinit -k -t /var/lib/secret/kafka-connect.key connect
+  elif [ "$environment" == "ldap-authorizer-sasl-plain" ]
+  then
+      security="$config_file_name /service/kafka/users/kafka.properties"
   elif [ "$environment" != "plaintext" ]
   then
       security="$config_file_name /etc/kafka/secrets/client_without_interceptors.config"
