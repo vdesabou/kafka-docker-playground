@@ -6771,19 +6771,48 @@ playground_topic_consume_command() {
       ;;
     esac
 
+    fifo_path="$tmp_dir/kafka_output_fifo"
+    mkfifo "$fifo_path"
     case "${type}" in
       avro|protobuf|json-schema)
           if [ "$key_converter" == "io.confluent.connect.avro.AvroConverter" ]
           then
-              docker exec connect kafka-$type-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=$sr_url --topic $topic_name --property print.partition=true --property print.offset=true --property print.headers=true --property print.timestamp=true --property print.key=true --property key.separator="|" $security_sr --from-beginning
+              docker exec connect kafka-$type-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=$sr_url --topic $topic_name --property print.partition=true --property print.offset=true --property print.headers=true --property print.timestamp=true --property print.key=true --property key.separator="|" $security_sr --from-beginning > "$fifo_path" &
           else
-              docker exec connect kafka-$type-console-consumer --bootstrap-server broker:9092 --property schema.registry.url=$sr_url --topic $topic_name --property print.partition=true --property print.offset=true --property print.headers=true --property print.timestamp=true --property print.key=true --property key.separator="|" --property key.deserializer=org.apache.kafka.common.serialization.StringDeserializer $security_sr --from-beginning
+              docker exec connect kafka-$type-console-consumer --bootstrap-server broker:9092 --property schema.registry.url=$sr_url --topic $topic_name --property print.partition=true --property print.offset=true --property print.headers=true --property print.timestamp=true --property print.key=true --property key.separator="|" --property key.deserializer=org.apache.kafka.common.serialization.StringDeserializer $security_sr --from-beginning > "$fifo_path" &
           fi
           ;;
       *)
-          docker exec connect kafka-console-consumer --bootstrap-server broker:9092 --topic $topic_name --property print.partition=true --property print.offset=true --property print.headers=true --property print.timestamp=true --property print.key=true --property key.separator="|" $security_sr --from-beginning
+          docker exec connect kafka-console-consumer --bootstrap-server broker:9092 --topic $topic_name --property print.partition=true --property print.offset=true --property print.headers=true --property print.timestamp=true --property print.key=true --property key.separator="|" $security_sr --from-beginning > "$fifo_path" &
       ;;
     esac
+
+    # Detect the platform (macOS or Linux) and set the date command accordingly
+    if [[ "$(uname)" == "Darwin" ]]; then
+      # macOS
+      date_command="date -r"
+    else
+      # Linux
+      date_command="date -d@"
+    fi
+
+    # Loop through each line in the named pipe
+    while read -r line; do
+      # Extract the timestamp from the line
+      timestamp_ms=$(echo "$line" | cut -d ":" -f 2 | cut -d "|" -f 1)
+
+      # Convert milliseconds to seconds
+      timestamp_sec=$((timestamp_ms / 1000))
+      milliseconds=$((timestamp_ms % 1000))
+
+      readable_date="$($date_command ${timestamp_sec} "+%Y-%m-%d %H:%M:%S.${milliseconds}")"
+
+      # Remove the 13 numbers after "CreateTime:" using sed
+      line_with_date=$(echo "$line" | sed -E "s/CreateTime:[0-9]{13}/CreateTime: ${readable_date}/")
+
+      # Print the line with the readable date
+      echo "$line_with_date"
+    done < "$fifo_path"
   else
 
     logwarn "Could not find topic name !"
