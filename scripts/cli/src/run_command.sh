@@ -177,6 +177,8 @@ log "🚀 Executing $filename in dir $test_file_directory"
 log "####################################################"
 SECONDS=0
 cd $test_file_directory
+trap 'rm /tmp/playground-run-command-used' EXIT
+touch /tmp/playground-run-command-used
 bash $filename
 ret=$?
 ELAPSED="took: $((($SECONDS / 60) % 60))min $(($SECONDS % 60))sec"
