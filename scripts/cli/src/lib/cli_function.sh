@@ -154,7 +154,7 @@ function get_examples_list_with_fzf_without_repro_sink_only() {
   fi
 }
 
-filter_not_mdc_environment() {
+function filter_not_mdc_environment() {
   environment=`get_environment_used`
 
   if [ "$environment" == "error" ]

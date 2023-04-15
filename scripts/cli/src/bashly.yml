@@ -485,10 +485,6 @@ commands:
   - name: status
     help: ℹ️  Show status of all connectors.
 
-    flags:
-    - long: --json
-      help: Show output as JSON.
-
   - name: plugins
     help: 🔖 Show all plugins installed.
 
