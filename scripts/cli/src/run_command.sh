@@ -170,7 +170,7 @@ then
 else
   log "🚀 Running example with all default values ?"
 fi
-really_check_if_continue
+check_if_continue
 echo "playground run -f $test_file $argument_list" > /tmp/playground-run
 log "####################################################"
 log "🚀 Executing $filename in dir $test_file_directory"

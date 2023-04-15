@@ -2418,16 +2418,6 @@ function check_if_continue()
     esac
 }
 
-function really_check_if_continue()
-{
-    read -p "Continue (y/n)?" choice
-    case "$choice" in
-    y|Y ) ;;
-    n|N ) exit 1;;
-    * ) logerror "invalid response!";exit 1;;
-    esac
-}
-
 function create_topic()
 {
   local topic="$1"
@@ -5689,7 +5679,7 @@ playground_run_command() {
   else
     log "🚀 Running example with all default values ?"
   fi
-  really_check_if_continue
+  check_if_continue
   echo "playground run -f $test_file $argument_list" > /tmp/playground-run
   log "####################################################"
   log "🚀 Executing $filename in dir $test_file_directory"

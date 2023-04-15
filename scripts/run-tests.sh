@@ -1,9 +1,10 @@
 #!/bin/bash
 
 tag="$2"
+flag_tag=""
 if [ "$tag" != "" ]
 then
-    export TAG=$tag
+    flag_tag="--tag $tag"
 fi
 
 IGNORE_CHECK_FOR_DOCKER_COMPOSE=true
@@ -217,7 +218,7 @@ do
         log "🚀 Executing $script in dir $dir"
         log "####################################################"
         SECONDS=0
-        retry bash $script
+        retry playground run -f "$PWD/$script" $flag_tag --skip-editor --disable-control-center --disable-ksqldb
         ret=$?
         ELAPSED="took: $((($SECONDS / 60) % 60))min $(($SECONDS % 60))sec"
         let ELAPSED_TOTAL+=$SECONDS
@@ -253,8 +254,6 @@ do
             logerror "####################################################"
 
             echo "$connector_path|`date +%s`|failure|$GITHUB_RUN_ID" > $file
-
-            display_docker_container_error_log
 
             failed_tests=$failed_tests"$dir[$script]\n"
             let "nb_test_failed++"
