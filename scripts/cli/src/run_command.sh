@@ -194,4 +194,6 @@ else
     logerror "####################################################"
 
     display_docker_container_error_log
+
+    playground connector status
 fi
