@@ -85,7 +85,9 @@ curl -X PUT \
 sleep 120
 
 log "Get messages from topic-1"
-docker run -i --volumes-from gcloud-config google/cloud-sdk:latest gcloud pubsub --project ${GCP_PROJECT} subscriptions pull subscription-1
+docker run -i --volumes-from gcloud-config google/cloud-sdk:latest gcloud pubsub --project ${GCP_PROJECT} subscriptions pull subscription-1 > /tmp/result.log  2>&1
+cat /tmp/result.log
+grep "scissors" /tmp/result.log
 
 # ┌──────────────────────────────────────────────────────────┬──────────────────┬──────────────┬───────────────────────────────┬──────────────────┬─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
 # │                           DATA                           │    MESSAGE_ID    │ ORDERING_KEY │           ATTRIBUTES          │ DELIVERY_ATTEMPT │                                                                                              ACK_ID                                                                                             │
