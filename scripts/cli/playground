@@ -6893,10 +6893,10 @@ playground_topic_consume_command() {
     # Detect the platform (macOS or Linux) and set the date command accordingly
     if [[ "$(uname)" == "Darwin" ]]; then
       # macOS
-      date_command="date -r"
+      date_command="date -r "
     else
       # Linux
-      date_command="date -d@"
+      date_command="date -d @"
     fi
 
     # Loop through each line in the named pipe
@@ -6908,7 +6908,7 @@ playground_topic_consume_command() {
       timestamp_sec=$((timestamp_ms / 1000))
       milliseconds=$((timestamp_ms % 1000))
 
-      readable_date="$($date_command ${timestamp_sec} "+%Y-%m-%d %H:%M:%S.${milliseconds}")"
+      readable_date="$(${date_command}${timestamp_sec} "+%Y-%m-%d %H:%M:%S.${milliseconds}")"
 
       line_with_date=$(echo "$line" | sed -E "s/CreateTime:[0-9]{13}/CreateTime: ${readable_date}/")
 
