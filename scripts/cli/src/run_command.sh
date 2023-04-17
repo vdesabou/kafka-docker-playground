@@ -188,6 +188,8 @@ then
     log "####################################################"
     log "✅ RESULT: SUCCESS for $filename ($ELAPSED - $CUMULATED)"
     log "####################################################"
+
+    playground connector status
 else
     logerror "####################################################"
     logerror "🔥 RESULT: FAILURE for $filename ($ELAPSED - $CUMULATED)"
