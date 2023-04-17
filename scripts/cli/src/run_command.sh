@@ -177,7 +177,7 @@ log "🚀 Executing $filename in dir $test_file_directory"
 log "####################################################"
 SECONDS=0
 cd $test_file_directory
-trap 'rm /tmp/playground-run-command-used' EXIT
+trap 'rm /tmp/playground-run-command-used;echo "";log "🧩 Displaying connector status";playground connector status' EXIT
 touch /tmp/playground-run-command-used
 bash $filename
 ret=$?
@@ -188,14 +188,11 @@ then
     log "####################################################"
     log "✅ RESULT: SUCCESS for $filename ($ELAPSED - $CUMULATED)"
     log "####################################################"
-
-    playground connector status
 else
     logerror "####################################################"
     logerror "🔥 RESULT: FAILURE for $filename ($ELAPSED - $CUMULATED)"
     logerror "####################################################"
 
     display_docker_container_error_log
-
     playground connector status
 fi
