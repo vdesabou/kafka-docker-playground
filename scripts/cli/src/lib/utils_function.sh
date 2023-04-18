@@ -233,9 +233,9 @@ function verify_confluent_details()
 
 function check_if_continue()
 {
-    if [ ! -z "$CI" ] || [ ! -z "$CLOUDFORMATION" ]
+    if [ ! -z "$CI" ]
     then
-        # running with github actions or cloudformation, continue
+        # running with github actions, continue
         return
     fi
     read -p "Continue (y/n)?" choice
