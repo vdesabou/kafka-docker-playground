@@ -3,7 +3,7 @@ DIR_CLI="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 root_folder=${DIR_CLI}/../..
 
 test_file="${args[--file]}"
-skip_editor="${args[--skip-editor]}"
+editor="${args[--open]}"
 tag="${args[--tag]}"
 connector_tag="${args[--connector-tag]}"
 connector_zip="${args[--connector-zip]}"
@@ -146,7 +146,7 @@ then
   export ENABLE_SR_MAVEN_PLUGIN_NODE=true
 fi
 
-if [[ ! -n "$skip_editor" ]]
+if [[ -n "$editor" ]]
 then
   if [ ! -z $EDITOR ]
   then

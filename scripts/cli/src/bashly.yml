@@ -53,10 +53,9 @@ commands:
       It must be absolute full path. 
 
       🎓 Tip: use <tab> completion to trigger fzf completion.
-  - long: --skip-editor
-    short: -s
-    required: false
-    help: Skip opening example file with text editor
+  - long: --open
+    short: -o
+    help: Opening example file with text editor set with EDITOR environment variable (default is code).
   - long: --tag
     arg: tag
     required: false
@@ -69,6 +68,7 @@ commands:
   - long: --connector-zip
     arg: connector_zip
     required: false
+    validate: file_exists
     help: Connector zip to use
     conflicts: [--connector-tag]
   - long: --connector-jar
@@ -308,8 +308,6 @@ commands:
       - *container
       - long: --open
         short: -o
-        arg: editor
-        validate: editor_exists
         help: Save output to a file and open with editor passed as argument (default is code).
         conflicts: [--wait-for-log]
       - long: --wait-for-log
