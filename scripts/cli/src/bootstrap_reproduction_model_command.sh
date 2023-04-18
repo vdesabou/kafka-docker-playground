@@ -742,4 +742,4 @@ repro_test_filename=$(basename -- "$repro_test_file")
 log "🌟 Command to run generated example"
 echo "playground run -f $repro_dir/$repro_test_filename"
 echo "playground run -f $repro_dir/$repro_test_filename" > /tmp/playground-run
-playground run -f $repro_dir/$repro_test_filename
+playground run -f $repro_dir/$repro_test_filename --open

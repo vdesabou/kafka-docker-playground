@@ -6496,7 +6496,7 @@ playground_bootstrap_reproduction_model_command() {
   log "🌟 Command to run generated example"
   echo "playground run -f $repro_dir/$repro_test_filename"
   echo "playground run -f $repro_dir/$repro_test_filename" > /tmp/playground-run
-  playground run -f $repro_dir/$repro_test_filename
+  playground run -f $repro_dir/$repro_test_filename --open
 
 }
 
