@@ -244,10 +244,48 @@ commands:
   - playground enable-remote-debugging --container broker
   - playground enable-remote-debugging -c broker
 
-- name: display-all-errors
+- name: log-level
   group: Debug
   help: |-
-    ⚠️ Display all errors for each container.
+    🧬 Set log level for any package.
+
+    👉 Check documentation https://tinyurl.com/yc78tr8a
+
+  commands:
+  - name: get
+    help: Get log levels.
+    flags:
+    - long: --package
+      short: -p
+      required: false
+      validate: not_empty
+      arg: package
+      help: |-
+        Package name.
+
+  - name: set
+    help: Set log level for specific logger.
+    flags:
+    - long: --package
+      short: -p
+      required: true
+      validate: not_empty
+      arg: package
+      help: |-
+        Package name.
+
+    - long: --level
+      short: -l
+      help: Log level.
+      arg: level
+      allowed: [INFO, WARN, DEBUG, TRACE]
+      required: true
+
+  examples:
+  - playground log-level get
+  - playground log-level get -p io.confluent.connect.oracle.cdc
+  - playground log-level get --package io.confluent.connect.oracle.cdc
+  - playground log-level set -p io.confluent.connect.oracle.cdc.logging.LogUtils -l TRACE
 
 - name: get-jmx-metrics
   group: Kafka
@@ -497,7 +535,7 @@ commands:
     - &connector
       long: --connector
       short: -c
-      required: true
+      required: false
       arg: connector
       completions:
         - $(playground get-connector-list)

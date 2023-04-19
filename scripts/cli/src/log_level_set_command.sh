@@ -15,4 +15,4 @@ curl $security -s --request PUT \
  \"level\": \"$level\"
 }" | jq .
 
-playground connect-log-level get -p "$package"
+playground connector log-level get -p "$package"
