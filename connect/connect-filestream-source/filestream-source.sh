@@ -13,7 +13,7 @@ curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
                "tasks.max": "1",
-               "connector.class": "FileStreamSource",
+               "connector.class": "org.apache.kafka.connect.file.FileStreamSourceConnector",
                "topic": "filestream",
                "file": "/tmp/kafka-connect/examples/file.json",
                "key.converter": "org.apache.kafka.connect.storage.StringConverter",
