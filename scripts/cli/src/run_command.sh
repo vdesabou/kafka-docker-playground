@@ -176,7 +176,7 @@ log "🚀 Executing $filename in dir $test_file_directory"
 log "####################################################"
 SECONDS=0
 cd $test_file_directory
-trap 'rm /tmp/playground-run-command-used;echo "";log "🧩 Displaying connector status";playground connector status' EXIT
+trap 'rm /tmp/playground-run-command-used;echo "";sleep 3;log "🧩 Displaying connector status";playground connector status' EXIT
 touch /tmp/playground-run-command-used
 bash $filename
 ret=$?
@@ -193,5 +193,4 @@ else
     logerror "####################################################"
 
     display_docker_container_error_log
-    playground connector status
 fi
