@@ -541,6 +541,11 @@ commands:
       help: |-
         Connector name.
 
+  - name: versions
+    help:  🧞 Get current version used in example and latest available
+    flags:
+    - *connector
+
   - name: restart
     help: ♻️  Restart connector
     flags:
