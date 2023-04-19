@@ -166,11 +166,10 @@ fi
 
 if [ "$environment_variables_list" != "" ]
 then
-  log "🚀 Running example with $environment_variables_list ?"
+  log "🚀 Running example with $environment_variables_list"
 else
-  log "🚀 Running example with all default values ?"
+  log "🚀 Running example with all default values"
 fi
-check_if_continue
 echo "playground run -f $test_file $argument_list" > /tmp/playground-run
 log "####################################################"
 log "🚀 Executing $filename in dir $test_file_directory"
