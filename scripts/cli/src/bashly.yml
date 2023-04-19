@@ -351,7 +351,7 @@ commands:
       - *container
       - long: --open
         short: -o
-        help: Save output to a file and open with editor passed as argument (default is code).
+        help: Save output to a file and open with text editor set with EDITOR environment variable (default is code).
         conflicts: [--wait-for-log]
       - long: --wait-for-log
         short: -w
@@ -368,9 +368,8 @@ commands:
         conflicts: [--open]
 
       examples:
-      - playground logs --container connect
-      - playground logs -c connect -o code
-      - playground logs -c connect -o vim
+      - playground container logs --container connect
+      - playground container logs -c connect --open
 
     - name: ssh
       group: Container
@@ -562,48 +561,21 @@ commands:
     flags:
     - *connector
 
-
   - name: log-level
     help: |-
       🧬 Set connect log level.
-
-      👉 Check documentation https://tinyurl.com/yc78tr8a
-
-    commands:
-    - name: get
-      help: Get log levels.
-      flags:
-      - long: --package
-        short: -p
-        required: false
-        validate: not_empty
-        arg: package
-        help: |-
-          Package name.
-
-    - name: set
-      help: Set log level for specific logger.
-      flags:
-      - long: --package
-        short: -p
-        required: true
-        validate: not_empty
-        arg: package
-        help: |-
-          Package name.
-
-      - long: --level
-        short: -l
-        help: Log level.
-        arg: level
-        allowed: [INFO, WARN, DEBUG, TRACE]
-        required: true
+    flags:
+    - *connector
+    - long: --level
+      short: -l
+      help: Log level.
+      arg: level
+      allowed: [INFO, WARN, DEBUG, TRACE]
+      required: true
 
     examples:
-    - playground connect-log-level get
-    - playground connect-log-level get -p io.confluent.connect.oracle.cdc
-    - playground connect-log-level get --package io.confluent.connect.oracle.cdc
-    - playground connect-log-level set -p io.confluent.connect.oracle.cdc.logging.LogUtils -l TRACE
+    - playground connector log-level --connector <connector-name> --level TRACE
+    - playground connector log-level --level DEBUG
 
   examples:
   - playground connector status

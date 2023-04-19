@@ -6,13 +6,20 @@ security=$(echo "$ret" | cut -d "@" -f 2)
 package="${args[--package]}"
 level="${args[--level]}"
 
-log "Set log level for package $package to $level"
-curl $security -s --request PUT \
-  --url "$connect_url/admin/loggers/$package" \
-  --header 'Accept: application/json' \
-  --header 'Content-Type: application/json' \
-  --data "{
- \"level\": \"$level\"
-}" | jq .
+current_level=$(curl $security -s "$connect_url/admin/loggers/$package" | jq -r '.level')
 
-playground connector log-level get -p "$package"
+if [ "$current_level" != "$level" ]
+then
+    log "🧬 Set log level for package $package to $level"
+    curl $security -s --request PUT \
+    --url "$connect_url/admin/loggers/$package" \
+    --header 'Accept: application/json' \
+    --header 'Content-Type: application/json' \
+    --data "{
+    \"level\": \"$level\"
+    }" | jq .
+
+    playground log-level get -p "$package"
+else
+    log "🧬⏭️ Skipping as log level for package $package was already set to $level"
+fi
