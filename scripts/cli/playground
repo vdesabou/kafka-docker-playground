@@ -904,7 +904,7 @@ playground_container_logs_usage() {
 
     # :flag.usage
     printf "  %s\n" "$(magenta "--open, -o")"
-    printf "    Save output to a file and open with editor passed as argument (default is\n    code).\n"
+    printf "    Save output to a file and open with text editor set with EDITOR environment\n    variable (default is code).\n"
     echo
 
     # :flag.usage
@@ -925,9 +925,8 @@ playground_container_logs_usage() {
 
     # :command.usage_examples
     printf "%s\n" "$(bold "Examples")"
-    printf "  playground logs --container connect\n"
-    printf "  playground logs -c connect -o code\n"
-    printf "  playground logs -c connect -o vim\n"
+    printf "  playground container logs --container connect\n"
+    printf "  playground container logs -c connect --open\n"
     echo
 
   fi
@@ -1672,10 +1671,7 @@ playground_connector_show_lag_usage() {
 # :command.usage
 playground_connector_log_level_usage() {
   if [[ -n $long_usage ]]; then
-    printf "playground connector log-level\n"
-    echo
-
-    printf "  🧬 Set connect log level.\n  \n  👉 Check documentation https://tinyurl.com/yc78tr8a\n"
+    printf "playground connector log-level - 🧬 Set connect log level.\n"
     echo
 
   else
@@ -1685,50 +1681,8 @@ playground_connector_log_level_usage() {
   fi
 
   printf "%s\n" "$(bold "== Usage ==")"
-  printf "  playground connector log-level COMMAND\n"
-  printf "  playground connector log-level [COMMAND] --help | -h\n"
-  echo
-  # :command.usage_commands
-  printf "%s\n" "$(bold "== Commands ==")"
-  printf "  %s   Get log levels.\n" "$(green "get")"
-  printf "  %s   Set log level for specific logger.\n" "$(green "set")"
-  echo
-
-  # :command.long_usage
-  if [[ -n $long_usage ]]; then
-    printf "%s\n" "$(bold "== Options ==")"
-
-    # :command.usage_fixed_flags
-    printf "  %s\n" "$(magenta "--help, -h")"
-    printf "    Show this help\n"
-    echo
-
-    # :command.usage_examples
-    printf "%s\n" "$(bold "Examples")"
-    printf "  playground connect-log-level get\n"
-    printf "  playground connect-log-level get -p io.confluent.connect.oracle.cdc\n"
-    printf "  playground connect-log-level get --package io.confluent.connect.oracle.cdc\n"
-    printf "  playground connect-log-level set -p\n  io.confluent.connect.oracle.cdc.logging.LogUtils -l TRACE\n"
-    echo
-
-  fi
-}
-
-# :command.usage
-playground_connector_log_level_get_usage() {
-  if [[ -n $long_usage ]]; then
-    printf "playground connector log-level get - Get log levels.\n"
-    echo
-
-  else
-    printf "playground connector log-level get - Get log levels.\n"
-    echo
-
-  fi
-
-  printf "%s\n" "$(bold "== Usage ==")"
-  printf "  playground connector log-level get [OPTIONS]\n"
-  printf "  playground connector log-level get --help | -h\n"
+  printf "  playground connector log-level [OPTIONS]\n"
+  printf "  playground connector log-level --help | -h\n"
   echo
 
   # :command.long_usage
@@ -1737,43 +1691,8 @@ playground_connector_log_level_get_usage() {
 
     # :command.usage_flags
     # :flag.usage
-    printf "  %s\n" "$(magenta "--package, -p PACKAGE")"
-    printf "    Package name.\n"
-    echo
-
-    # :command.usage_fixed_flags
-    printf "  %s\n" "$(magenta "--help, -h")"
-    printf "    Show this help\n"
-    echo
-
-  fi
-}
-
-# :command.usage
-playground_connector_log_level_set_usage() {
-  if [[ -n $long_usage ]]; then
-    printf "playground connector log-level set - Set log level for specific logger.\n"
-    echo
-
-  else
-    printf "playground connector log-level set - Set log level for specific logger.\n"
-    echo
-
-  fi
-
-  printf "%s\n" "$(bold "== Usage ==")"
-  printf "  playground connector log-level set [OPTIONS]\n"
-  printf "  playground connector log-level set --help | -h\n"
-  echo
-
-  # :command.long_usage
-  if [[ -n $long_usage ]]; then
-    printf "%s\n" "$(bold "== Options ==")"
-
-    # :command.usage_flags
-    # :flag.usage
-    printf "  %s\n" "$(magenta "--package, -p PACKAGE (required)")"
-    printf "    Package name.\n"
+    printf "  %s\n" "$(magenta "--connector, -c CONNECTOR")"
+    printf "    Connector name.\n"
     echo
 
     # :flag.usage
@@ -1785,6 +1704,12 @@ playground_connector_log_level_set_usage() {
     # :command.usage_fixed_flags
     printf "  %s\n" "$(magenta "--help, -h")"
     printf "    Show this help\n"
+    echo
+
+    # :command.usage_examples
+    printf "%s\n" "$(bold "Examples")"
+    printf "  playground connector log-level --connector <connector-name> --level TRACE\n"
+    printf "  playground connector log-level --level DEBUG\n"
     echo
 
   fi
@@ -6732,10 +6657,10 @@ playground_log_level_get_command() {
 
   if [[ -n "$package" ]]
   then
-    log "Get log level for package $package"
-    curl $security -s "$connect_url/admin/loggers/$package" | jq .
+    log "🧬 Get log level for package $package"
+    curl $security -s "$connect_url/admin/loggers/$package"
   else
-    log "Get log level for all packages"
+    log "🧬 Get log level for all packages"
     curl $security -s "$connect_url/admin/loggers" | jq .
   fi
 }
@@ -6751,16 +6676,23 @@ playground_log_level_set_command() {
   package="${args[--package]}"
   level="${args[--level]}"
 
-  log "Set log level for package $package to $level"
-  curl $security -s --request PUT \
-    --url "$connect_url/admin/loggers/$package" \
-    --header 'Accept: application/json' \
-    --header 'Content-Type: application/json' \
-    --data "{
-   \"level\": \"$level\"
-  }" | jq .
+  current_level=$(curl $security -s "$connect_url/admin/loggers/$package" | jq -r '.level')
 
-  playground connector log-level get -p "$package"
+  if [ "$current_level" != "$level" ]
+  then
+      log "🧬 Set log level for package $package to $level"
+      curl $security -s --request PUT \
+      --url "$connect_url/admin/loggers/$package" \
+      --header 'Accept: application/json' \
+      --header 'Content-Type: application/json' \
+      --data "{
+      \"level\": \"$level\"
+      }" | jq .
+
+      playground log-level get -p "$package"
+  else
+      log "🧬⏭️ Skipping as log level for package $package was already set to $level"
+  fi
 }
 
 # :command.function
@@ -7115,69 +7047,69 @@ playground_connector_status_command() {
 
   connectors=$(curl -s $security "$connect_url/connectors/" | jq -r '.[]')
 
-  printf "%-30s %-12s %-30s %-50s\n" "Name" "Status" "Tasks" "Stack Trace"
-  echo "------------------------------------------------------------------------------------------------------------------------"
+  log "🧩 Displaying connector(s) status"
+  if [ -z "$connectors" ]
+  then
+      log "💤 there are no connectors running !"
+  else
+      printf "%-30s %-12s %-30s %-50s\n" "Name" "Status" "Tasks" "Stack Trace"
+      echo "-------------------------------------------------------------------------------------------------------------"
 
-  for connector in $connectors
-  do
-      # Get the status of the connector and pretty-print using jq
-      status=$(curl -s $security "$connect_url/connectors/$connector/status" | jq -r '.connector.state')
+      for connector in $connectors
+      do
+          status=$(curl -s $security "$connect_url/connectors/$connector/status" | jq -r '.connector.state')
 
-      # Add emoji based on status
-      if [ "$status" == "RUNNING" ]
-      then
-          status="✅ RUNNING"
-      elif [ "$status" == "PAUSED" ]
-      then
-          status="⏸️  PAUSED"
-      elif [ "$status" == "FAILED" ]
-      then
-          status="❌ FAILED"
-      else
-          status="🤔 UNKNOWN"
-      fi
+          if [ "$status" == "RUNNING" ]
+          then
+              status="✅ RUNNING"
+          elif [ "$status" == "PAUSED" ]
+          then
+              status="⏸️  PAUSED"
+          elif [ "$status" == "FAILED" ]
+          then
+              status="❌ FAILED"
+          else
+              status="🤔 UNKNOWN"
+          fi
 
-      tasks=$(curl -s $security "$connect_url/connectors/$connector/status" | jq -r '.tasks[] | "\(.id):\(.state)"' | tr '\n' ',' | sed 's/,$/\n/')
+          tasks=$(curl -s $security "$connect_url/connectors/$connector/status" | jq -r '.tasks[] | "\(.id):\(.state)"' | tr '\n' ',' | sed 's/,$/\n/')
 
-      # Add emoji based on tasks
-      if [[ "$tasks" == *"RUNNING"* ]]
-      then
-          tasks="${tasks//RUNNING/🟢 RUNNING}"
-      elif [[ "$tasks" == *"PAUSED"* ]]
-      then
-          tasks="${tasks//PAUSED/⏸️  PAUSED}"
-      elif [[ "$tasks" == *"FAILED"* ]]
-      then
-          tasks="${tasks//FAILED/🛑 FAILED}"
-      else
-          tasks="🤔 N/A"
-      fi
+          if [[ "$tasks" == *"RUNNING"* ]]
+          then
+              tasks="${tasks//RUNNING/🟢 RUNNING}"
+          elif [[ "$tasks" == *"PAUSED"* ]]
+          then
+              tasks="${tasks//PAUSED/⏸️  PAUSED}"
+          elif [[ "$tasks" == *"FAILED"* ]]
+          then
+              tasks="${tasks//FAILED/🛑 FAILED}"
+          else
+              tasks="🤔 N/A"
+          fi
 
-      stacktrace_connector=$(curl -s $security "$connect_url/connectors/$connector/status" | jq -r '.connector.trace | select(length > 0)')
+          stacktrace_connector=$(curl -s $security "$connect_url/connectors/$connector/status" | jq -r '.connector.trace | select(length > 0)')
+          stacktrace_tasks=$(curl -s $security "$connect_url/connectors/$connector/status" | jq -r '.tasks[].trace | select(length > 0)')
+          stacktrace=""
+          if [ "$stacktrace_connector" != "" ]
+          then
+              stacktrace="connector: $stacktrace_connector"
+          fi
 
-      stacktrace_tasks=$(curl -s $security "$connect_url/connectors/$connector/status" | jq -r '.tasks[].trace | select(length > 0)')
+          if [ "$stacktrace_tasks" != "" ]
+          then
+              stacktrace="$stacktrace tasks: $stacktrace_tasks"
+          fi
 
-      stacktrace=""
-      if [ "$stacktrace_connector" != "" ]
-      then
-          stacktrace="connector: $stacktrace_connector"
-      fi
+          if [ -z "$stacktrace" ]
+          then
+              stacktrace="-"
+          fi
 
-      if [ "$stacktrace_tasks" != "" ]
-      then
-          stacktrace="$stacktrace tasks: $stacktrace_tasks"
-      fi
+          printf "%-30s %-12s %-30s %-50s\n" "$connector" "$status" "$tasks" "$stacktrace"
+          echo "-------------------------------------------------------------------------------------------------------------"
+      done
+  fi
 
-      if [ -z "$stacktrace" ]
-      then
-          stacktrace="-"
-      fi
-
-      # Print the data for each connector in row format
-      printf "%-30s %-12s %-30s %-50s\n" "$connector" "$status" "$tasks" "$stacktrace"
-
-      echo "------------------------------------------------------------------------------------------------------------------------"
-  done
 }
 
 # :command.function
@@ -7357,46 +7289,34 @@ playground_connector_show_lag_command() {
 }
 
 # :command.function
-playground_connector_log_level_get_command() {
-  # src/connector_log_level_get_command.sh
+playground_connector_log_level_command() {
+  # src/connector_log_level_command.sh
   ret=$(get_connect_url_and_security)
 
   connect_url=$(echo "$ret" | cut -d "@" -f 1)
   security=$(echo "$ret" | cut -d "@" -f 2)
 
-  package="${args[--package]}"
-
-  if [[ -n "$package" ]]
-  then
-    log "Get log level for package $package"
-    curl $security -s "$connect_url/admin/loggers/$package" | jq .
-  else
-    log "Get log level for all packages"
-    curl $security -s "$connect_url/admin/loggers" | jq .
-  fi
-}
-
-# :command.function
-playground_connector_log_level_set_command() {
-  # src/connector_log_level_set_command.sh
-  ret=$(get_connect_url_and_security)
-
-  connect_url=$(echo "$ret" | cut -d "@" -f 1)
-  security=$(echo "$ret" | cut -d "@" -f 2)
-
-  package="${args[--package]}"
   level="${args[--level]}"
+  connector="${args[--connector]}"
 
-  log "Set log level for package $package to $level"
-  curl $security -s --request PUT \
-    --url "$connect_url/admin/loggers/$package" \
-    --header 'Accept: application/json' \
-    --header 'Content-Type: application/json' \
-    --data "{
-   \"level\": \"$level\"
-  }" | jq .
+  if [[ ! -n "$connector" ]]
+  then
+      logwarn "--connector flag was not provided, applying command to all connectors"
+      connector=$(playground get-connector-list)
+      if [ "$connector" == "" ]
+      then
+          logerror "💤 No connector is running !"
+          exit 1
+      fi
+  fi
 
-  playground connector log-level get -p "$package"
+  items=($connector)
+  for connector in ${items[@]}
+  do
+      package=$(curl -s $security "$connect_url/connectors/$connector" | jq -r '.config."connector.class"')
+      # log "🧬 Set log level for connector $connector to $level"
+      playground log-level set -p "$package" -l $level
+  done
 }
 
 # :command.parse_requirements
@@ -10458,169 +10378,23 @@ playground_connector_log_level_parse_requirements() {
   # :command.dependencies_filter
 
   # :command.command_filter
-  action=${1:-}
-
-  case $action in
-    -*) ;;
-
-    get)
-      action="get"
-      shift
-      playground_connector_log_level_get_parse_requirements "$@"
-      shift $#
-      ;;
-
-    set)
-      action="set"
-      shift
-      playground_connector_log_level_set_parse_requirements "$@"
-      shift $#
-      ;;
-
-    # :command.command_fallback
-    "")
-      playground_connector_log_level_usage >&2
-      exit 1
-      ;;
-
-    *)
-      printf "invalid command: %s\n" "$action" >&2
-      exit 1
-      ;;
-
-  esac
-
-  # :command.parse_requirements_while
-  while [[ $# -gt 0 ]]; do
-    key="$1"
-    case "$key" in
-
-      -?*)
-        printf "invalid option: %s\n" "$key" >&2
-        exit 1
-        ;;
-
-      *)
-        # :command.parse_requirements_case
-        # :command.parse_requirements_case_simple
-        printf "invalid argument: %s\n" "$key" >&2
-        exit 1
-
-        ;;
-
-    esac
-  done
-
-}
-
-# :command.parse_requirements
-playground_connector_log_level_get_parse_requirements() {
-  # :command.fixed_flags_filter
-  while [[ $# -gt 0 ]]; do
-    case "${1:-}" in
-      --help | -h)
-        long_usage=yes
-        playground_connector_log_level_get_usage
-        exit
-        ;;
-
-      *)
-        break
-        ;;
-
-    esac
-  done
-
-  # :command.dependencies_filter
-
-  # :command.command_filter
-  action="connector log-level get"
+  action="connector log-level"
 
   # :command.parse_requirements_while
   while [[ $# -gt 0 ]]; do
     key="$1"
     case "$key" in
       # :flag.case
-      --package | -p)
+      --connector | -c)
 
         # :flag.case_arg
         if [[ -n ${2+x} ]]; then
-          # :flag.validations
-          if [[ -n $(validate_not_empty "$2") ]]; then
-            printf "validation error in %s:\n%s\n" "--package, -p PACKAGE" "$(validate_not_empty "$2")" >&2
-            exit 1
-          fi
 
-          args['--package']="$2"
+          args['--connector']="$2"
           shift
           shift
         else
-          printf "%s\n" "--package requires an argument: --package, -p PACKAGE" >&2
-          exit 1
-        fi
-        ;;
-
-      -?*)
-        printf "invalid option: %s\n" "$key" >&2
-        exit 1
-        ;;
-
-      *)
-        # :command.parse_requirements_case
-        # :command.parse_requirements_case_simple
-        printf "invalid argument: %s\n" "$key" >&2
-        exit 1
-
-        ;;
-
-    esac
-  done
-
-}
-
-# :command.parse_requirements
-playground_connector_log_level_set_parse_requirements() {
-  # :command.fixed_flags_filter
-  while [[ $# -gt 0 ]]; do
-    case "${1:-}" in
-      --help | -h)
-        long_usage=yes
-        playground_connector_log_level_set_usage
-        exit
-        ;;
-
-      *)
-        break
-        ;;
-
-    esac
-  done
-
-  # :command.dependencies_filter
-
-  # :command.command_filter
-  action="connector log-level set"
-
-  # :command.parse_requirements_while
-  while [[ $# -gt 0 ]]; do
-    key="$1"
-    case "$key" in
-      # :flag.case
-      --package | -p)
-
-        # :flag.case_arg
-        if [[ -n ${2+x} ]]; then
-          # :flag.validations
-          if [[ -n $(validate_not_empty "$2") ]]; then
-            printf "validation error in %s:\n%s\n" "--package, -p PACKAGE" "$(validate_not_empty "$2")" >&2
-            exit 1
-          fi
-
-          args['--package']="$2"
-          shift
-          shift
-        else
-          printf "%s\n" "--package requires an argument: --package, -p PACKAGE" >&2
+          printf "%s\n" "--connector requires an argument: --connector, -c CONNECTOR" >&2
           exit 1
         fi
         ;;
@@ -10657,10 +10431,6 @@ playground_connector_log_level_set_parse_requirements() {
   done
 
   # :command.required_flags_filter
-  if [[ -z ${args['--package']+x} ]]; then
-    printf "missing required flag: --package, -p PACKAGE\n" >&2
-    exit 1
-  fi
   if [[ -z ${args['--level']+x} ]]; then
     printf "missing required flag: --level, -l LEVEL\n" >&2
     exit 1
@@ -11042,24 +10812,6 @@ run() {
         playground_connector_log_level_usage
       else
         playground_connector_log_level_command
-      fi
-      ;;
-
-    "connector log-level get")
-      if [[ ${args['--help']:-} ]]; then
-        long_usage=yes
-        playground_connector_log_level_get_usage
-      else
-        playground_connector_log_level_get_command
-      fi
-      ;;
-
-    "connector log-level set")
-      if [[ ${args['--help']:-} ]]; then
-        long_usage=yes
-        playground_connector_log_level_set_usage
-      else
-        playground_connector_log_level_set_command
       fi
       ;;
 
