@@ -244,6 +244,11 @@ commands:
   - playground enable-remote-debugging --container broker
   - playground enable-remote-debugging -c broker
 
+- name: display-all-errors
+  group: Debug
+  help: |-
+    ⚠️ Display all errors for each container.
+
 - name: get-jmx-metrics
   group: Kafka
   help: |-
