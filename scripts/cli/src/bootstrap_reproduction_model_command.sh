@@ -742,6 +742,22 @@ repro_test_filename=$(basename -- "$repro_test_file")
 log "🌟 Command to run generated example"
 echo "playground run -f $repro_dir/$repro_test_filename"
 echo "playground run -f $repro_dir/$repro_test_filename" > /tmp/playground-run
+
+if [ ! -z $EDITOR ]
+then
+  log "📖 Opening ${repro_test_filename} using EDITOR environment variable"
+  $EDITOR $repro_dir/$repro_test_filename
+else
+  if [[ $(type code 2>&1) =~ "not found" ]]
+  then
+    logerror "Could not determine an editor to use, you can set EDITOR environment variable with your preferred choice"
+    exit 1
+  else
+    log "📖 Opening ${repro_test_filename} with code (you can change editor by setting EDITOR environment variable)"
+    code $repro_dir/$repro_test_filename
+  fi
+fi
+
 log "🕹️ Ready? Run it now ?"
 check_if_continue
-playground run -f $repro_dir/$repro_test_filename --open
+playground run -f $repro_dir/$repro_test_filename
