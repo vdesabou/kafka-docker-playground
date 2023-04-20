@@ -33,6 +33,8 @@ services:
     image: ${CP_KAFKA_IMAGE}:${TAG}
     hostname: broker-europe
     container_name: broker-europe
+    cap_add:
+      - NET_ADMIN
     depends_on:
       - zookeeper-europe
     volumes:
@@ -49,12 +51,17 @@ services:
       CONFLUENT_SUPPORT_CUSTOMER_ID: 'anonymous'
       CONFLUENT_METRICS_ENABLE: 'false'
       KAFKA_CONFLUENT_CLUSTER_LINK_ENABLE : "true"
+      KAFKA_CLUSTER_LINK_RETRY_TIMEOUT_MS: 10000 #10s
+      KAFKA_AVAIBILITY_CHECK_MS: 10000 # 10s
+      KAFKA_AVAILABILITY_CHECK_CONSECUTIVE_FAILURE_THRESHOLD: 2
       EXTRA_ARGS: "-javaagent:/usr/share/jmx_exporter/jmx_prometheus_javaagent-0.16.1.jar=1234:/usr/share/jmx_exporter/broker.yml"
 
   broker-us:
     image: ${CP_KAFKA_IMAGE}:${TAG}
     hostname: broker-us
     container_name: broker-us
+    cap_add:
+      - NET_ADMIN
     depends_on:
       - zookeeper-us
     volumes:
@@ -71,6 +78,10 @@ services:
       CONFLUENT_SUPPORT_CUSTOMER_ID: 'anonymous'
       CONFLUENT_METRICS_ENABLE: 'false'
       EXTRA_ARGS: "-javaagent:/usr/share/jmx_exporter/jmx_prometheus_javaagent-0.16.1.jar=1234:/usr/share/jmx_exporter/broker.yml"
+      
+  # connect-us:
+  #   environment:      
+  #           CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-datagen
   
   kafka-lag-exporter:
     image: lightbend/kafka-lag-exporter:0.6.6
