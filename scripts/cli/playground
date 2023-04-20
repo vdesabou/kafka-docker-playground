@@ -75,6 +75,7 @@ playground_usage() {
   [[ -n $long_usage ]] && printf "  %s   ℹ️  Show status of all connectors.\n" "$(green "connector status")              "
   [[ -n $long_usage ]] && printf "  %s   🔖 Show all plugins installed.\n" "$(green "connector plugins")             "
   [[ -n $long_usage ]] && printf "  %s   ⏸️  Pause connector\n" "$(green "connector pause")               "
+  [[ -n $long_usage ]] && printf "  %s   🧞 Get current version used in example and latest available\n" "$(green "connector versions")            "
   [[ -n $long_usage ]] && printf "  %s   ♻️  Restart connector\n" "$(green "connector restart")             "
   [[ -n $long_usage ]] && printf "  %s   ⏯️  Resume connector\n" "$(green "connector resume")              "
   [[ -n $long_usage ]] && printf "  %s   🗑️  Delete connector\n" "$(green "connector delete")              "
@@ -285,7 +286,7 @@ playground_run_usage() {
 
     # :flag.usage
     printf "  %s\n" "$(magenta "--enable-jmx-grafana")"
-    printf "    Enable Grafana\n"
+    printf "    Enable Grafana, Prometheus and Pyroscope\n    \n    📊 Grafana is reachable at http://127.0.0.1:3000\n    🛡️ Prometheus is reachable at http://127.0.0.1:9090\n    📛 Pyroscope is reachable at http://127.0.0.1:4040\n"
     echo
 
     # :flag.usage
@@ -1407,6 +1408,7 @@ playground_connector_usage() {
   printf "  %s   ℹ️  Show status of all connectors.\n" "$(green "status")   "
   printf "  %s   🔖 Show all plugins installed.\n" "$(green "plugins")  "
   printf "  %s   ⏸️  Pause connector\n" "$(green "pause")    "
+  printf "  %s   🧞 Get current version used in example and latest available\n" "$(green "versions") "
   printf "  %s   ♻️  Restart connector\n" "$(green "restart")  "
   printf "  %s   ⏯️  Resume connector\n" "$(green "resume")   "
   printf "  %s   🗑️  Delete connector\n" "$(green "delete")   "
@@ -1508,6 +1510,41 @@ playground_connector_pause_usage() {
   printf "%s\n" "$(bold "== Usage ==")"
   printf "  playground connector pause [OPTIONS]\n"
   printf "  playground connector pause --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n $long_usage ]]; then
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_flags
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--connector, -c CONNECTOR")"
+    printf "    Connector name.\n"
+    echo
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_connector_versions_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground connector versions - 🧞 Get current version used in example and latest available\n"
+    echo
+
+  else
+    printf "playground connector versions - 🧞 Get current version used in example and latest available\n"
+    echo
+
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground connector versions [OPTIONS]\n"
+  printf "  playground connector versions --help | -h\n"
   echo
 
   # :command.long_usage
@@ -2940,6 +2977,8 @@ function display_jmx_info() {
   then
     log "📊 JMX metrics are available locally on those ports:"
   else
+    log "🛡️ Prometheus is reachable at http://127.0.0.1:9090"
+    log "📛 Pyroscope is reachable at http://127.0.0.1:4040"
     log "📊 Grafana is reachable at http://127.0.0.1:3000 or JMX metrics are available locally on those ports:"
   fi
 
@@ -7121,7 +7160,7 @@ playground_connector_plugins_command() {
   security=$(echo "$ret" | cut -d "@" -f 2)
 
   log "🧩 Displaying all connector plugins installed"
-  curl $security -s -X GET -H "Content-Type: application/json" "$connect_url/connector-plugins" | jq .
+  curl $security -s -X GET -H "Content-Type: application/json" "$connect_url/connector-plugins" | jq -r '.[] | [.class , .version , .type] | @tsv' | column -t
 }
 
 # :command.function
@@ -7152,6 +7191,36 @@ playground_connector_pause_command() {
       curl $security -s -X PUT -H "Content-Type: application/json" "$connect_url/connectors/$connector/pause" | jq .
   done
   playground connector status
+}
+
+# :command.function
+playground_connector_versions_command() {
+  # src/connector_versions_command.sh
+  ret=$(get_connect_url_and_security)
+
+  connect_url=$(echo "$ret" | cut -d "@" -f 1)
+  security=$(echo "$ret" | cut -d "@" -f 2)
+
+  connector="${args[--connector]}"
+
+  if [[ ! -n "$connector" ]]
+  then
+      logwarn "--connector flag was not provided, applying command to all connectors"
+      connector=$(playground get-connector-list)
+      if [ "$connector" == "" ]
+      then
+          logerror "💤 No connector is running !"
+          exit 1
+      fi
+  fi
+
+  items=($connector)
+  for connector in ${items[@]}
+  do
+      log "Current version:"
+      package=$(curl -s $security "$connect_url/connectors/$connector" | jq -r '.config."connector.class"')
+      curl $security -s -X GET -H "Content-Type: application/json" "$connect_url/connector-plugins" | jq -r ".[] | select(.class == \"$package\").version"
+  done
 }
 
 # :command.function
@@ -9887,6 +9956,13 @@ playground_connector_parse_requirements() {
       shift $#
       ;;
 
+    versions)
+      action="versions"
+      shift
+      playground_connector_versions_parse_requirements "$@"
+      shift $#
+      ;;
+
     restart)
       action="restart"
       shift
@@ -10079,6 +10155,66 @@ playground_connector_pause_parse_requirements() {
 
   # :command.command_filter
   action="connector pause"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      # :flag.case
+      --connector | -c)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+
+          args['--connector']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--connector requires an argument: --connector, -c CONNECTOR" >&2
+          exit 1
+        fi
+        ;;
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+}
+
+# :command.parse_requirements
+playground_connector_versions_parse_requirements() {
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    case "${1:-}" in
+      --help | -h)
+        long_usage=yes
+        playground_connector_versions_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.dependencies_filter
+
+  # :command.command_filter
+  action="connector versions"
 
   # :command.parse_requirements_while
   while [[ $# -gt 0 ]]; do
@@ -10767,6 +10903,15 @@ run() {
         playground_connector_pause_usage
       else
         playground_connector_pause_command
+      fi
+      ;;
+
+    "connector versions")
+      if [[ ${args['--help']:-} ]]; then
+        long_usage=yes
+        playground_connector_versions_usage
+      else
+        playground_connector_versions_command
       fi
       ;;
 

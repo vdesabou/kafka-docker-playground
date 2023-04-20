@@ -93,7 +93,12 @@ commands:
     help: Enable Multiple Connect Workers
   - long: --enable-jmx-grafana
     required: false
-    help: Enable Grafana
+    help: |-
+      Enable Grafana, Prometheus and Pyroscope
+
+      📊 Grafana is reachable at http://127.0.0.1:3000
+      🛡️  Prometheus is reachable at http://127.0.0.1:9090
+      📛 Pyroscope is reachable at http://127.0.0.1:4040
   - long: --enable-kcat
     required: false
     help: Enable kcat

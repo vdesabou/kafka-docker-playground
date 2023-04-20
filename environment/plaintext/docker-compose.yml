@@ -19,7 +19,8 @@ services:
       KAFKA_JMX_HOSTNAME: localhost
       # for 5.4.x:
       KAFKA_OPTS: -Dzookeeper.4lw.commands.whitelist=*
-
+      PYROSCOPE_APPLICATION_NAME: "zookeeper"
+      PYROSCOPE_SERVER_ADDRESS: "http://pyroscope:4040"
   broker:
     image: ${CP_KAFKA_IMAGE}:${TAG}
     hostname: broker
@@ -56,6 +57,8 @@ services:
       # KAFKA_CONFLUENT_TELEMETRY_API_KEY: 'CLOUD_API_KEY'
       # KAFKA_CONFLUENT_TELEMETRY_API_SECRET: 'CLOUD_API_SECRET'
       EXTRA_ARGS: ${GRAFANA_AGENT_BROKER}
+      PYROSCOPE_APPLICATION_NAME: "broker"
+      PYROSCOPE_SERVER_ADDRESS: "http://pyroscope:4040"
     volumes:
       - ../../environment/plaintext/jmx-exporter:/usr/share/jmx_exporter/
 
@@ -97,6 +100,8 @@ services:
       # KAFKA_CONFLUENT_TELEMETRY_API_KEY: 'CLOUD_API_KEY'
       # KAFKA_CONFLUENT_TELEMETRY_API_SECRET: 'CLOUD_API_SECRET'
       EXTRA_ARGS: ${GRAFANA_AGENT_BROKER}
+      PYROSCOPE_APPLICATION_NAME: "broker2"
+      PYROSCOPE_SERVER_ADDRESS: "http://pyroscope:4040"
     volumes:
       - ../../environment/plaintext/jmx-exporter:/usr/share/jmx_exporter/  
 
@@ -138,6 +143,8 @@ services:
       # KAFKA_CONFLUENT_TELEMETRY_API_KEY: 'CLOUD_API_KEY'
       # KAFKA_CONFLUENT_TELEMETRY_API_SECRET: 'CLOUD_API_SECRET'
       EXTRA_ARGS: ${GRAFANA_AGENT_BROKER}
+      PYROSCOPE_APPLICATION_NAME: "broker3"
+      PYROSCOPE_SERVER_ADDRESS: "http://pyroscope:4040"
     volumes:
       - ../../environment/plaintext/jmx-exporter:/usr/share/jmx_exporter/
 
@@ -165,7 +172,8 @@ services:
       # SCHEMA_REGISTRY_CONFLUENT_TELEMETRY_API_SECRET: 'CLOUD_API_SECRET'
       # https://github.com/confluentinc/schema-registry/issues/2213
       SCHEMA_REGISTRY_SCHEMA_PROVIDERS_AVRO_VALIDATE_DEFAULTS: "true"
-
+      PYROSCOPE_APPLICATION_NAME: "schema-registry"
+      PYROSCOPE_SERVER_ADDRESS: "http://pyroscope:4040"
   connect:
     image: ${CP_CONNECT_IMAGE}:${CONNECT_TAG}
     hostname: connect
@@ -230,6 +238,8 @@ services:
                   -XX:MinHeapFreeRatio=10 -XX:MaxHeapFreeRatio=20
                   -XX:MaxGCPauseMillis=10000 -XX:InitiatingHeapOccupancyPercent=35 -XX:+ExplicitGCInvokesConcurrent
                   -XX:MaxInlineLevel=15 -Djava.awt.headless=true
+      PYROSCOPE_APPLICATION_NAME: "connect"
+      PYROSCOPE_SERVER_ADDRESS: "http://pyroscope:4040"
 
   connect2:
     image: ${CP_CONNECT_IMAGE}:${CONNECT_TAG}
@@ -298,6 +308,8 @@ services:
                   -XX:MinHeapFreeRatio=10 -XX:MaxHeapFreeRatio=20
                   -XX:MaxGCPauseMillis=10000 -XX:InitiatingHeapOccupancyPercent=35 -XX:+ExplicitGCInvokesConcurrent
                   -XX:MaxInlineLevel=15 -Djava.awt.headless=true
+      PYROSCOPE_APPLICATION_NAME: "connect2"
+      PYROSCOPE_SERVER_ADDRESS: "http://pyroscope:4040"
 
   connect3:
     image: ${CP_CONNECT_IMAGE}:${CONNECT_TAG}
@@ -366,6 +378,8 @@ services:
                   -XX:MinHeapFreeRatio=10 -XX:MaxHeapFreeRatio=20
                   -XX:MaxGCPauseMillis=10000 -XX:InitiatingHeapOccupancyPercent=35 -XX:+ExplicitGCInvokesConcurrent
                   -XX:MaxInlineLevel=15 -Djava.awt.headless=true
+      PYROSCOPE_APPLICATION_NAME: "connect3"
+      PYROSCOPE_SERVER_ADDRESS: "http://pyroscope:4040"
 
   ksqldb-server:
     image: ${CP_KSQL_IMAGE}:${TAG}
@@ -563,3 +577,14 @@ services:
       - 8080:8080
     profiles:
       - "sr_plugin_app"
+
+  pyroscope:
+    hostname: pyroscope
+    image: pyroscope/pyroscope:0.37.2
+    profiles:
+      - "grafana"
+    ports:
+      - '4040:4040'
+    command:
+      - "server"
+      - "-no-self-profiling"
