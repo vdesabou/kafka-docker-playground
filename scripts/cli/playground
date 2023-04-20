@@ -35,16 +35,19 @@ playground_usage() {
   # :command.usage_commands
   printf "%s\n" "$(bold "Run commands:")"
   printf "  %s   🚀  Run example.\n" "$(green "run")                           "
+  printf "  %s   🛸  Re-run last example.\n" "$(green "re-run")                        "
   echo
   printf "%s\n" "$(bold "Bootstrap commands:")"
   printf "  %s   🛠  Bootstrap reproduction model.\n" "$(green "bootstrap-reproduction-model")  "
   echo
   printf "%s\n" "$(bold "Kafka commands:")"
   printf "  %s   📝 Get properties file from a container.\n" "$(green "get-properties")                "
+  printf "  %s   🔰 Get all schemas versions for all subjects.\n" "$(green "get-all-schemas")               "
   printf "  %s   🔢 Get JMX metrics from a component.\n" "$(green "get-jmx-metrics")               "
   echo
   printf "%s\n" "$(bold "Debug commands:")"
   printf "  %s   ✨ Enable java remote debugging for container.\n" "$(green "enable-remote-debugging")       "
+  printf "  %s   🧬 Set log level for any package.\n" "$(green "log-level")                     "
   echo
   printf "%s\n" "$(bold "Container commands:")"
   printf "  %s   🐳 Container commands.\n" "$(green "container")                     "
@@ -65,12 +68,14 @@ playground_usage() {
   [[ -n $long_usage ]] && printf "  %s   🔺 Display content of connect offsets topic.\n" "$(green "topic display-connect-offsets") "
   [[ -n $long_usage ]] && printf "  %s   🔻 Display content of __consumer_offsets topic.\n" "$(green "topic display-consumer-offsets")"
   [[ -n $long_usage ]] && printf "  %s   🔎 Describe topic.\n" "$(green "topic describe")                "
+  [[ -n $long_usage ]] && printf "  %s   ↘️ Consumer topic(s) from current running examples\n" "$(green "topic consume")                 "
   echo
   printf "%s\n" "$(bold "Connector commands:")"
   printf "  %s   🔗 Connector commands.\n" "$(green "connector")                     "
   [[ -n $long_usage ]] && printf "  %s   ℹ️  Show status of all connectors.\n" "$(green "connector status")              "
   [[ -n $long_usage ]] && printf "  %s   🔖 Show all plugins installed.\n" "$(green "connector plugins")             "
   [[ -n $long_usage ]] && printf "  %s   ⏸️  Pause connector\n" "$(green "connector pause")               "
+  [[ -n $long_usage ]] && printf "  %s   🧞 Get current version used in example and latest available\n" "$(green "connector versions")            "
   [[ -n $long_usage ]] && printf "  %s   ♻️  Restart connector\n" "$(green "connector restart")             "
   [[ -n $long_usage ]] && printf "  %s   ⏯️  Resume connector\n" "$(green "connector resume")              "
   [[ -n $long_usage ]] && printf "  %s   🗑️  Delete connector\n" "$(green "connector delete")              "
@@ -164,7 +169,7 @@ playground_get_examples_list_with_fzf_usage() {
   fi
 
   printf "%s\n" "$(bold "== Usage ==")"
-  printf "  playground get-examples-list-with-fzf [OPTIONS]\n"
+  printf "  playground get-examples-list-with-fzf [CUR] [OPTIONS]\n"
   printf "  playground get-examples-list-with-fzf --help | -h\n"
   echo
 
@@ -186,6 +191,14 @@ playground_get_examples_list_with_fzf_usage() {
     # :command.usage_fixed_flags
     printf "  %s\n" "$(magenta "--help, -h")"
     printf "    Show this help\n"
+    echo
+
+    # :command.usage_args
+    printf "%s\n" "$(bold "== Arguments ==")"
+
+    # :argument.usage
+    printf "  %s\n" "$(blue "CUR")"
+    printf "    correspond to completion $cur\n"
     echo
 
   fi
@@ -218,7 +231,12 @@ playground_run_usage() {
     # :command.usage_flags
     # :flag.usage
     printf "  %s\n" "$(magenta "--file, -f FILE (required)")"
-    printf "    Example file to run.\n"
+    printf "    Example file to run.\n    It must be absolute full path. \n    \n    🎓 Tip: use <tab> completion to trigger fzf completion.\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--open, -o")"
+    printf "    Opening example file with text editor set with EDITOR environment variable\n    (default is code).\n"
     echo
 
     # :flag.usage
@@ -268,7 +286,7 @@ playground_run_usage() {
 
     # :flag.usage
     printf "  %s\n" "$(magenta "--enable-jmx-grafana")"
-    printf "    Enable Grafana\n"
+    printf "    Enable Grafana, Prometheus and Pyroscope\n    \n    📊 Grafana is reachable at http://127.0.0.1:3000\n    🛡️ Prometheus is reachable at http://127.0.0.1:9090\n    📛 Pyroscope is reachable at http://127.0.0.1:4040\n"
     echo
 
     # :flag.usage
@@ -284,6 +302,51 @@ playground_run_usage() {
     # :command.usage_fixed_flags
     printf "  %s\n" "$(magenta "--help, -h")"
     printf "    Show this help\n"
+    echo
+
+    # :command.usage_environment_variables
+    printf "%s\n" "$(bold "Environment Variables:")"
+
+    # :environment_variable.usage
+    printf "  %s\n" "$(cyan "EDITOR")"
+    printf "    🔖 Editor to use to open the example file.\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_re_run_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground re-run - 🛸  Re-run last example.\n"
+    echo
+
+  else
+    printf "playground re-run - 🛸  Re-run last example.\n"
+    echo
+
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground re-run\n"
+  printf "  playground re-run --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n $long_usage ]]; then
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+    # :command.usage_environment_variables
+    printf "%s\n" "$(bold "Environment Variables:")"
+
+    # :environment_variable.usage
+    printf "  %s\n" "$(cyan "EDITOR")"
+    printf "    🔖 Editor to use to open the example file.\n"
     echo
 
   fi
@@ -316,7 +379,7 @@ playground_bootstrap_reproduction_model_usage() {
     # :command.usage_flags
     # :flag.usage
     printf "  %s\n" "$(magenta "--file, -f FILE (required)")"
-    printf "    Example file to use as basis.\n"
+    printf "    Example file to use as basis.\n    It must be absolute full path. \n    \n    🎓 Tip: use <tab> completion to trigger fzf completion.\n"
     echo
 
     # :flag.usage
@@ -344,7 +407,7 @@ playground_bootstrap_reproduction_model_usage() {
 
     # :flag.usage
     printf "  %s\n" "$(magenta "--pipeline SINK_FILE")"
-    printf "    Sink example file to use for creating a pipeline.\n"
+    printf "    Sink example file to use for creating a pipeline.\n    It must be absolute full path. \n    \n    🎓 Tip: use <tab> completion to trigger fzf completion.\n"
     echo
 
     # :command.usage_fixed_flags
@@ -363,12 +426,11 @@ playground_bootstrap_reproduction_model_usage() {
 
     # :command.usage_examples
     printf "%s\n" "$(bold "Examples")"
-    printf "  playground bootstrap-reproduction-model -f hdfs2-sink.sh -d \"123456 testing\n  with parquet format\"\n"
-    printf "  playground bootstrap-reproduction-model -f hdfs2-sink.sh -d \"123456 testing\n  with parquet format and avro producer\" --producer avro\n"
-    printf "  playground bootstrap-reproduction-model -f hdfs2-sink.sh -d \"123456 testing\n  with parquet format and 2 protobuf producers\" --producer protobuf\n  --nb-producers 2\n"
-    printf "  playground bootstrap-reproduction-model -f hdfs2-sink.sh -d \"123456 testing\n  with parquet format and 2 protobuf producers\" -p protobuf -n 2\n"
-    printf "  playground bootstrap-reproduction-model -f hdfs2-sink.sh -d \"123456 testing\n  with parquet format and custom smt\" --custom-smt\n"
-    printf "  playground bootstrap-reproduction-model -f debezium-postgres-source.sh -d\n  \"create pipeline\" --pipeline\n  ../../connect/connect-jdbc-sqlserver-sink/sqlserver-microsoft-sink.sh\n"
+    printf "  playground bootstrap-reproduction-model -f hdfs2<tab> -d \"simple test\"\n"
+    printf "  playground bootstrap-reproduction-model -f /full/path/hdfs2-sink.sh -d\n  \"testing with avro producer\" --producer avro\n"
+    printf "  playground bootstrap-reproduction-model -f hdfs2<tab> -d \"testing with 2\n  protobuf producers\" --producer protobuf --nb-producers 2\n"
+    printf "  playground bootstrap-reproduction-model -f hdfs2<tab> -d \"testing custom smt\"\n  --custom-smt\n"
+    printf "  playground bootstrap-reproduction-model -f debeziumpostgres<tab> -d \"create\n  pipeline\" --pipeline jdbcsink<tab>\n"
     echo
 
   fi
@@ -421,6 +483,43 @@ playground_get_properties_usage() {
 }
 
 # :command.usage
+playground_get_all_schemas_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground get-all-schemas\n"
+    echo
+
+    printf "  🔰 Get all schemas versions for all subjects.\n  \n  👉 Check documentation xxxx\n"
+    echo
+
+  else
+    printf "playground get-all-schemas - 🔰 Get all schemas versions for all subjects.\n"
+    echo
+
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground get-all-schemas\n"
+  printf "  playground get-all-schemas --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n $long_usage ]]; then
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+    # :command.usage_examples
+    printf "%s\n" "$(bold "Examples")"
+    printf "  playground get-all-schemas\n"
+    echo
+
+  fi
+}
+
+# :command.usage
 playground_enable_remote_debugging_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground enable-remote-debugging\n"
@@ -461,6 +560,127 @@ playground_enable_remote_debugging_usage() {
     printf "  playground enable-remote-debugging\n"
     printf "  playground enable-remote-debugging --container broker\n"
     printf "  playground enable-remote-debugging -c broker\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_log_level_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground log-level\n"
+    echo
+
+    printf "  🧬 Set log level for any package.\n  \n  👉 Check documentation https://tinyurl.com/yc78tr8a\n"
+    echo
+
+  else
+    printf "playground log-level - 🧬 Set log level for any package.\n"
+    echo
+
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground log-level COMMAND\n"
+  printf "  playground log-level [COMMAND] --help | -h\n"
+  echo
+  # :command.usage_commands
+  printf "%s\n" "$(bold "== Commands ==")"
+  printf "  %s   Get log levels.\n" "$(green "get")"
+  printf "  %s   Set log level for specific logger.\n" "$(green "set")"
+  echo
+
+  # :command.long_usage
+  if [[ -n $long_usage ]]; then
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+    # :command.usage_examples
+    printf "%s\n" "$(bold "Examples")"
+    printf "  playground log-level get\n"
+    printf "  playground log-level get -p io.confluent.connect.oracle.cdc\n"
+    printf "  playground log-level get --package io.confluent.connect.oracle.cdc\n"
+    printf "  playground log-level set -p io.confluent.connect.oracle.cdc.logging.LogUtils\n  -l TRACE\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_log_level_get_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground log-level get - Get log levels.\n"
+    echo
+
+  else
+    printf "playground log-level get - Get log levels.\n"
+    echo
+
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground log-level get [OPTIONS]\n"
+  printf "  playground log-level get --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n $long_usage ]]; then
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_flags
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--package, -p PACKAGE")"
+    printf "    Package name.\n"
+    echo
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_log_level_set_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground log-level set - Set log level for specific logger.\n"
+    echo
+
+  else
+    printf "playground log-level set - Set log level for specific logger.\n"
+    echo
+
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground log-level set [OPTIONS]\n"
+  printf "  playground log-level set --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n $long_usage ]]; then
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_flags
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--package, -p PACKAGE (required)")"
+    printf "    Package name.\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--level, -l LEVEL (required)")"
+    printf "    Log level.\n"
+    printf "    Allowed: INFO, WARN, DEBUG, TRACE\n"
+    echo
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
     echo
 
   fi
@@ -684,8 +904,8 @@ playground_container_logs_usage() {
     echo
 
     # :flag.usage
-    printf "  %s\n" "$(magenta "--open, -o EDITOR")"
-    printf "    Save output to a file and open with editor passed as argument (default is\n    code).\n"
+    printf "  %s\n" "$(magenta "--open, -o")"
+    printf "    Save output to a file and open with text editor set with EDITOR environment\n    variable (default is code).\n"
     echo
 
     # :flag.usage
@@ -706,9 +926,8 @@ playground_container_logs_usage() {
 
     # :command.usage_examples
     printf "%s\n" "$(bold "Examples")"
-    printf "  playground logs --container connect\n"
-    printf "  playground logs -c connect -o code\n"
-    printf "  playground logs -c connect -o vim\n"
+    printf "  playground container logs --container connect\n"
+    printf "  playground container logs -c connect --open\n"
     echo
 
   fi
@@ -990,6 +1209,7 @@ playground_topic_usage() {
   printf "  %s   🔺 Display content of connect offsets topic.\n" "$(green "display-connect-offsets") "
   printf "  %s   🔻 Display content of __consumer_offsets topic.\n" "$(green "display-consumer-offsets")"
   printf "  %s   🔎 Describe topic.\n" "$(green "describe")                "
+  printf "  %s   ↘️ Consumer topic(s) from current running examples\n" "$(green "consume")                 "
   echo
 
   # :command.long_usage
@@ -1139,6 +1359,35 @@ playground_topic_describe_usage() {
 }
 
 # :command.usage
+playground_topic_consume_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground topic consume - ↘️ Consumer topic(s) from current running examples\n"
+    echo
+
+  else
+    printf "playground topic consume - ↘️ Consumer topic(s) from current running examples\n"
+    echo
+
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground topic consume\n"
+  printf "  playground topic consume --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n $long_usage ]]; then
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+  fi
+}
+
+# :command.usage
 playground_connector_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground connector - 🔗 Connector commands.\n"
@@ -1159,6 +1408,7 @@ playground_connector_usage() {
   printf "  %s   ℹ️  Show status of all connectors.\n" "$(green "status")   "
   printf "  %s   🔖 Show all plugins installed.\n" "$(green "plugins")  "
   printf "  %s   ⏸️  Pause connector\n" "$(green "pause")    "
+  printf "  %s   🧞 Get current version used in example and latest available\n" "$(green "versions") "
   printf "  %s   ♻️  Restart connector\n" "$(green "restart")  "
   printf "  %s   ⏯️  Resume connector\n" "$(green "resume")   "
   printf "  %s   🗑️  Delete connector\n" "$(green "delete")   "
@@ -1200,19 +1450,13 @@ playground_connector_status_usage() {
   fi
 
   printf "%s\n" "$(bold "== Usage ==")"
-  printf "  playground connector status [OPTIONS]\n"
+  printf "  playground connector status\n"
   printf "  playground connector status --help | -h\n"
   echo
 
   # :command.long_usage
   if [[ -n $long_usage ]]; then
     printf "%s\n" "$(bold "== Options ==")"
-
-    # :command.usage_flags
-    # :flag.usage
-    printf "  %s\n" "$(magenta "--json")"
-    printf "    Show output as JSON.\n"
-    echo
 
     # :command.usage_fixed_flags
     printf "  %s\n" "$(magenta "--help, -h")"
@@ -1274,7 +1518,42 @@ playground_connector_pause_usage() {
 
     # :command.usage_flags
     # :flag.usage
-    printf "  %s\n" "$(magenta "--connector, -c CONNECTOR (required)")"
+    printf "  %s\n" "$(magenta "--connector, -c CONNECTOR")"
+    printf "    Connector name.\n"
+    echo
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_connector_versions_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground connector versions - 🧞 Get current version used in example and latest available\n"
+    echo
+
+  else
+    printf "playground connector versions - 🧞 Get current version used in example and latest available\n"
+    echo
+
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground connector versions [OPTIONS]\n"
+  printf "  playground connector versions --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n $long_usage ]]; then
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_flags
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--connector, -c CONNECTOR")"
     printf "    Connector name.\n"
     echo
 
@@ -1309,7 +1588,7 @@ playground_connector_restart_usage() {
 
     # :command.usage_flags
     # :flag.usage
-    printf "  %s\n" "$(magenta "--connector, -c CONNECTOR (required)")"
+    printf "  %s\n" "$(magenta "--connector, -c CONNECTOR")"
     printf "    Connector name.\n"
     echo
 
@@ -1344,7 +1623,7 @@ playground_connector_resume_usage() {
 
     # :command.usage_flags
     # :flag.usage
-    printf "  %s\n" "$(magenta "--connector, -c CONNECTOR (required)")"
+    printf "  %s\n" "$(magenta "--connector, -c CONNECTOR")"
     printf "    Connector name.\n"
     echo
 
@@ -1379,7 +1658,7 @@ playground_connector_delete_usage() {
 
     # :command.usage_flags
     # :flag.usage
-    printf "  %s\n" "$(magenta "--connector, -c CONNECTOR (required)")"
+    printf "  %s\n" "$(magenta "--connector, -c CONNECTOR")"
     printf "    Connector name.\n"
     echo
 
@@ -1414,7 +1693,7 @@ playground_connector_show_lag_usage() {
 
     # :command.usage_flags
     # :flag.usage
-    printf "  %s\n" "$(magenta "--connector, -c CONNECTOR (required)")"
+    printf "  %s\n" "$(magenta "--connector, -c CONNECTOR")"
     printf "    Connector name.\n"
     echo
 
@@ -1429,10 +1708,7 @@ playground_connector_show_lag_usage() {
 # :command.usage
 playground_connector_log_level_usage() {
   if [[ -n $long_usage ]]; then
-    printf "playground connector log-level\n"
-    echo
-
-    printf "  🧬 Set connect log level.\n  \n  👉 Check documentation https://tinyurl.com/yc78tr8a\n"
+    printf "playground connector log-level - 🧬 Set connect log level.\n"
     echo
 
   else
@@ -1442,50 +1718,8 @@ playground_connector_log_level_usage() {
   fi
 
   printf "%s\n" "$(bold "== Usage ==")"
-  printf "  playground connector log-level COMMAND\n"
-  printf "  playground connector log-level [COMMAND] --help | -h\n"
-  echo
-  # :command.usage_commands
-  printf "%s\n" "$(bold "== Commands ==")"
-  printf "  %s   Get log levels.\n" "$(green "get")"
-  printf "  %s   Set log level for specific logger.\n" "$(green "set")"
-  echo
-
-  # :command.long_usage
-  if [[ -n $long_usage ]]; then
-    printf "%s\n" "$(bold "== Options ==")"
-
-    # :command.usage_fixed_flags
-    printf "  %s\n" "$(magenta "--help, -h")"
-    printf "    Show this help\n"
-    echo
-
-    # :command.usage_examples
-    printf "%s\n" "$(bold "Examples")"
-    printf "  playground connect-log-level get\n"
-    printf "  playground connect-log-level get -p io.confluent.connect.oracle.cdc\n"
-    printf "  playground connect-log-level get --package io.confluent.connect.oracle.cdc\n"
-    printf "  playground connect-log-level set -p\n  io.confluent.connect.oracle.cdc.logging.LogUtils -l TRACE\n"
-    echo
-
-  fi
-}
-
-# :command.usage
-playground_connector_log_level_get_usage() {
-  if [[ -n $long_usage ]]; then
-    printf "playground connector log-level get - Get log levels.\n"
-    echo
-
-  else
-    printf "playground connector log-level get - Get log levels.\n"
-    echo
-
-  fi
-
-  printf "%s\n" "$(bold "== Usage ==")"
-  printf "  playground connector log-level get [OPTIONS]\n"
-  printf "  playground connector log-level get --help | -h\n"
+  printf "  playground connector log-level [OPTIONS]\n"
+  printf "  playground connector log-level --help | -h\n"
   echo
 
   # :command.long_usage
@@ -1494,43 +1728,8 @@ playground_connector_log_level_get_usage() {
 
     # :command.usage_flags
     # :flag.usage
-    printf "  %s\n" "$(magenta "--package, -p PACKAGE")"
-    printf "    Package name.\n"
-    echo
-
-    # :command.usage_fixed_flags
-    printf "  %s\n" "$(magenta "--help, -h")"
-    printf "    Show this help\n"
-    echo
-
-  fi
-}
-
-# :command.usage
-playground_connector_log_level_set_usage() {
-  if [[ -n $long_usage ]]; then
-    printf "playground connector log-level set - Set log level for specific logger.\n"
-    echo
-
-  else
-    printf "playground connector log-level set - Set log level for specific logger.\n"
-    echo
-
-  fi
-
-  printf "%s\n" "$(bold "== Usage ==")"
-  printf "  playground connector log-level set [OPTIONS]\n"
-  printf "  playground connector log-level set --help | -h\n"
-  echo
-
-  # :command.long_usage
-  if [[ -n $long_usage ]]; then
-    printf "%s\n" "$(bold "== Options ==")"
-
-    # :command.usage_flags
-    # :flag.usage
-    printf "  %s\n" "$(magenta "--package, -p PACKAGE (required)")"
-    printf "    Package name.\n"
+    printf "  %s\n" "$(magenta "--connector, -c CONNECTOR")"
+    printf "    Connector name.\n"
     echo
 
     # :flag.usage
@@ -1542,6 +1741,12 @@ playground_connector_log_level_set_usage() {
     # :command.usage_fixed_flags
     printf "  %s\n" "$(magenta "--help, -h")"
     printf "    Show this help\n"
+    echo
+
+    # :command.usage_examples
+    printf "%s\n" "$(bold "Examples")"
+    printf "  playground connector log-level --connector <connector-name> --level TRACE\n"
+    printf "  playground connector log-level --level DEBUG\n"
     echo
 
   fi
@@ -1608,24 +1813,19 @@ function get_environment_used() {
     return
   fi
 
-  grep "environment/2way-ssl" /tmp/playground-command > /dev/null
-  if [ $? = 0 ]
-  then
-    echo "2way-ssl"
-    return
-  fi
+  patterns=("environment/2way-ssl" "environment/sasl-ssl" "environment/rbac-sasl-plain" "environment/kerberos" "environment/ssl_kerberos" "environment/ldap-authorizer-sasl-plain" "environment/sasl-plain" "environment/ldap-sasl-plain" "environment/sasl-scram" "environment/mdc-plaintext" "environment/mdc-sasl-plain" "environment/mdc-kerberos")
 
-  grep "environment/sasl-ssl" /tmp/playground-command > /dev/null
-  if [ $? = 0 ]
-  then
-    echo "sasl-ssl"
-    return
-  fi
+  for pattern in "${patterns[@]}"; do
+    if grep -q "$pattern" /tmp/playground-command; then
+      echo "${pattern#*/}"
+      return
+    fi
+  done
 
   echo "plaintext"
 }
 
-function get_connector_list() {
+function get_connect_url_and_security() {
   environment=`get_environment_used`
 
   if [ "$environment" == "error" ]
@@ -1635,16 +1835,96 @@ function get_connector_list() {
 
   fi
   connect_url="http://localhost:8083"
-  security_certs=""
-  if [ "$environment" != "plaintext" ]
+  security=""
+  if [[ "$environment" == "sasl-ssl" ]] || [[ "$environment" == "2way-ssl" ]]
   then
       connect_url="https://localhost:8083"
       DIR_CLI="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 
-      security_certs="--cert $DIR_CLI/../../environment/$environment/security/connect.certificate.pem --key $DIR_CLI/../../environment/$environment/security/connect.key --tlsv1.2 --cacert $DIR_CLI/../../environment/$environment/security/snakeoil-ca-1.crt"
+      security="--cert $DIR_CLI/../../environment/$environment/security/connect.certificate.pem --key $DIR_CLI/../../environment/$environment/security/connect.key --tlsv1.2 --cacert $DIR_CLI/../../environment/$environment/security/snakeoil-ca-1.crt"
+  elif [[ "$environment" == "rbac-sasl-plain" ]]
+  then
+      DIR_CLI="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
+
+      security="-u connectorSubmitter:connectorSubmitter"
   fi
 
-  curl $security_certs -s "$connect_url/connectors" | jq -r '.[]'
+  echo "$connect_url@$security"
+}
+
+function get_sr_url_and_security() {
+  environment=`get_environment_used`
+
+  if [ "$environment" == "error" ]
+  then
+    logerror "File containing restart command /tmp/playground-command does not exist!"
+    exit 1
+
+  fi
+
+  sr_url="http://localhost:8081"
+  security_sr=""
+
+  if [[ "$environment" == "sasl-ssl" ]] || [[ "$environment" == "2way-ssl" ]]
+  then
+      sr_url="https://localhost:8081"
+      DIR_CLI="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
+
+      security="--cert $DIR_CLI/../../environment/$environment/security/schema-registry.certificate.pem --key $DIR_CLI/../../environment/$environment/security/schema-registry.key --tlsv1.2 --cacert $DIR_CLI/../../environment/$environment/security/snakeoil-ca-1.crt"
+  elif [[ "$environment" == "rbac-sasl-plain" ]]
+  then
+      DIR_CLI="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
+
+      security="-u superUser:superUser"
+  fi
+
+  echo "$sr_url@$security"
+}
+
+function get_security_broker() {
+  config_file_name="$1"
+  environment=`get_environment_used`
+
+  if [ "$environment" == "error" ]
+  then
+    logerror "File containing restart command /tmp/playground-command does not exist!"
+    exit 1
+
+  fi
+
+  container="broker"
+  security=""
+  if [[ "$environment" == "kerberos" ]] || [[ "$environment" == "ssl_kerberos" ]]
+  then
+      container="client"
+      security="$config_file_name /etc/kafka/consumer.properties"
+
+      docker exec -i client kinit -k -t /var/lib/secret/kafka-connect.key connect
+  elif [ "$environment" == "ldap-authorizer-sasl-plain" ]
+  then
+      security="$config_file_name /service/kafka/users/kafka.properties"
+  elif [ "$environment" == "ldap-sasl-plain" ] || [ "$environment" == "sasl-plain" ] || [ "$environment" == "sasl-scram" ]
+  then
+      security="$config_file_name /tmp/client.properties"
+  elif [ "$environment" != "plaintext" ]
+  then
+      security="$config_file_name /etc/kafka/secrets/client_without_interceptors.config"
+  fi
+  echo "$container@$security"
+}
+
+function get_connector_list() {
+  ret=$(get_connect_url_and_security)
+
+  connect_url=$(echo "$ret" | cut -d "@" -f 1)
+  security=$(echo "$ret" | cut -d "@" -f 2)
+
+  curl $security -s "$connect_url/connectors" | jq -r '.[]' | tr '\n' ' ' | sed -e 's/[[:space:]]*$//'
+}
+
+function get_fzf_version() {
+    version=$(fzf --version | grep -oE "[0-9]+\.[0-9]+\.[0-9]+" | cut -d " " -f 1)
+    echo "$version"
 }
 
 function get_examples_list_with_fzf() {
@@ -1652,11 +1932,25 @@ function get_examples_list_with_fzf() {
   dir1=$(echo ${DIR_CLI%/*})
   dir2=$(echo ${dir1%/*})
 
+  cur="$1"
+
+  fzf_version=$(get_fzf_version)
+  if version_gt $fzf_version "0.38"
+  then
+    fzf_option_wrap="--preview-window=40%,wrap"
+    fzf_option_pointer="--pointer=👉"
+    fzf_option_rounded="--border=rounded"
+  else
+    fzf_options=""
+    fzf_option_pointer=""
+    fzf_option_rounded=""
+  fi
+
   if [[ $(type -f bat 2>&1) =~ "not found" ]]
   then
-    find $dir2 -name \*.sh ! -name 'stop.sh' ! -path '*/scripts/*' ! -path '*/docs-examples/*' ! -path '*/sample-sql-scripts/*' ! -path '*/ora-setup-scripts/*' | fzf --delimiter / --with-nth '-3,-2,-1' --preview 'cat {}'
+    res=$(find $dir2 -name \*.sh ! -name 'stop.sh' ! -path '*/scripts/*' ! -path '*/docs-examples/*' ! -path '*/sample-sql-scripts/*' ! -path '*/ora-setup-scripts/*' | fzf --query "$cur" --margin=1%,1%,1%,1% $fzf_option_rounded --info=inline --prompt="🍺" --header="ctrl-c or esc to quit" --color="bg:-1,bg+:-1,info:#BDBB72,border:#FFFFFF,spinner:0,hl:#beb665,fg:#00f7f7,header:#5CC9F5,fg+:#beb665,pointer:#E12672,marker:#5CC9F5,prompt:#98BEDE" --delimiter / --with-nth "-3,-2,-1" $fzf_option_wrap $fzf_option_pointer --preview 'cat {}');echo "$cur@$res"
   else
-    find $dir2 -name \*.sh ! -name 'stop.sh' ! -path '*/scripts/*' ! -path '*/docs-examples/*' ! -path '*/sample-sql-scripts/*' ! -path '*/ora-setup-scripts/*' | fzf --delimiter / --with-nth '-3,-2,-1' --preview 'bat --style=numbers --color=always --line-range :500 {}'
+    res=$(find $dir2 -name \*.sh ! -name 'stop.sh' ! -path '*/scripts/*' ! -path '*/docs-examples/*' ! -path '*/sample-sql-scripts/*' ! -path '*/ora-setup-scripts/*' | fzf --query "$cur" --margin=1%,1%,1%,1% $fzf_option_rounded --info=inline --prompt="🍺" --header="ctrl-c or esc to quit" --color="bg:-1,bg+:-1,info:#BDBB72,border:#FFFFFF,spinner:0,hl:#beb665,fg:#00f7f7,header:#5CC9F5,fg+:#beb665,pointer:#E12672,marker:#5CC9F5,prompt:#98BEDE" --delimiter / --with-nth "-3,-2,-1" $fzf_option_wrap $fzf_option_pointer --preview 'bat --style=plain --color=always --line-range :500 {}');echo "$cur@$res"
   fi
 }
 
@@ -1665,11 +1959,25 @@ function get_examples_list_with_fzf_without_repro() {
   dir1=$(echo ${DIR_CLI%/*})
   dir2=$(echo ${dir1%/*})
 
+  cur="$1"
+
+  fzf_version=$(get_fzf_version)
+  if version_gt $fzf_version "0.38"
+  then
+    fzf_option_wrap="--preview-window=40%,wrap"
+    fzf_option_pointer="--pointer=👉"
+    fzf_option_rounded="--border=rounded"
+  else
+    fzf_options=""
+    fzf_option_pointer=""
+    fzf_option_rounded=""
+  fi
+
   if [[ $(type -f bat 2>&1) =~ "not found" ]]
   then
-    find $dir2 -name \*.sh ! -name 'stop.sh' ! -path '*/scripts/*' ! -path '*/docs-examples/*' ! -path '*/sample-sql-scripts/*' ! -path '*/ora-setup-scripts/*' ! -path '*/reproduction-models/*' | fzf --delimiter / --with-nth '-3,-2,-1' --preview 'cat {}'
+    res=$(find $dir2 -name \*.sh ! -name 'stop.sh' ! -path '*/scripts/*' ! -path '*/docs-examples/*' ! -path '*/sample-sql-scripts/*' ! -path '*/ora-setup-scripts/*' ! -path '*/reproduction-models/*' | fzf --query "$cur" --margin=1%,1%,1%,1% $fzf_option_rounded --info=inline --prompt="🍺" --header="ctrl-c or esc to quit" --color="bg:-1,bg+:-1,info:#BDBB72,border:#FFFFFF,spinner:0,hl:#beb665,fg:#00f7f7,header:#5CC9F5,fg+:#beb665,pointer:#E12672,marker:#5CC9F5,prompt:#98BEDE" --delimiter / --with-nth "-3,-2,-1" $fzf_option_wrap $fzf_option_pointer --preview 'cat {}');echo "$cur@$res"
   else
-    find $dir2 -name \*.sh ! -name 'stop.sh' ! -path '*/scripts/*' ! -path '*/docs-examples/*' ! -path '*/sample-sql-scripts/*' ! -path '*/ora-setup-scripts/*' ! -path '*/reproduction-models/*' | fzf --delimiter / --with-nth '-3,-2,-1' --preview 'bat --style=numbers --color=always --line-range :500 {}'
+    res=$(find $dir2 -name \*.sh ! -name 'stop.sh' ! -path '*/scripts/*' ! -path '*/docs-examples/*' ! -path '*/sample-sql-scripts/*' ! -path '*/ora-setup-scripts/*' ! -path '*/reproduction-models/*' | fzf --query "$cur" --margin=1%,1%,1%,1% $fzf_option_rounded --info=inline --prompt="🍺" --header="ctrl-c or esc to quit" --color="bg:-1,bg+:-1,info:#BDBB72,border:#FFFFFF,spinner:0,hl:#beb665,fg:#00f7f7,header:#5CC9F5,fg+:#beb665,pointer:#E12672,marker:#5CC9F5,prompt:#98BEDE" --delimiter / --with-nth "-3,-2,-1" $fzf_option_wrap $fzf_option_pointer --preview 'bat --style=plain --color=always --line-range :500 {}');echo "$cur@$res"
   fi
 }
 
@@ -1678,11 +1986,41 @@ function get_examples_list_with_fzf_without_repro_sink_only() {
   dir1=$(echo ${DIR_CLI%/*})
   dir2=$(echo ${dir1%/*})
 
+  cur="$1"
+
+  fzf_version=$(get_fzf_version)
+  if version_gt $fzf_version "0.38"
+  then
+    fzf_option_wrap="--preview-window=40%,wrap"
+    fzf_option_pointer="--pointer=👉"
+    fzf_option_rounded="--border=rounded"
+  else
+    fzf_options=""
+    fzf_option_pointer=""
+    fzf_option_rounded=""
+  fi
+
   if [[ $(type -f bat 2>&1) =~ "not found" ]]
   then
-    find $dir2 -name \*.sh ! -name 'stop.sh' -path '*/connect-*-sink/*' ! -path '*/scripts/*' ! -path '*/docs-examples/*' ! -path '*/sample-sql-scripts/*' ! -path '*/ora-setup-scripts/*' ! -path '*/reproduction-models/*' | fzf --delimiter / --with-nth '-3,-2,-1' --preview 'cat {}'
+    res=$(find $dir2 -name \*.sh ! -name 'stop.sh' -path '*/connect-*-sink/*' ! -path '*/scripts/*' ! -path '*/docs-examples/*' ! -path '*/sample-sql-scripts/*' ! -path '*/ora-setup-scripts/*' ! -path '*/reproduction-models/*' | fzf --query "$cur" --margin=1%,1%,1%,1% $fzf_option_rounded --info=inline --prompt="🍺" --header="ctrl-c or esc to quit" --color="bg:-1,bg+:-1,info:#BDBB72,border:#FFFFFF,spinner:0,hl:#beb665,fg:#00f7f7,header:#5CC9F5,fg+:#beb665,pointer:#E12672,marker:#5CC9F5,prompt:#98BEDE" --delimiter / --with-nth "-3,-2,-1" $fzf_option_wrap $fzf_option_pointer --preview 'cat {}');echo "$cur@$res"
   else
-    find $dir2 -name \*.sh ! -name 'stop.sh' -path '*/connect-*-sink/*' ! -path '*/scripts/*' ! -path '*/docs-examples/*' ! -path '*/sample-sql-scripts/*' ! -path '*/ora-setup-scripts/*' ! -path '*/reproduction-models/*' | fzf --delimiter / --with-nth '-3,-2,-1' --preview 'bat --style=numbers --color=always --line-range :500 {}'
+    res=$(find $dir2 -name \*.sh ! -name 'stop.sh' -path '*/connect-*-sink/*' ! -path '*/scripts/*' ! -path '*/docs-examples/*' ! -path '*/sample-sql-scripts/*' ! -path '*/ora-setup-scripts/*' ! -path '*/reproduction-models/*' | fzf --query "$cur" --margin=1%,1%,1%,1% $fzf_option_rounded --info=inline --prompt="🍺" --header="ctrl-c or esc to quit" --color="bg:-1,bg+:-1,info:#BDBB72,border:#FFFFFF,spinner:0,hl:#beb665,fg:#00f7f7,header:#5CC9F5,fg+:#beb665,pointer:#E12672,marker:#5CC9F5,prompt:#98BEDE" --delimiter / --with-nth "-3,-2,-1" $fzf_option_wrap $fzf_option_pointer --preview 'bat --style=plain --color=always --line-range :500 {}');echo "$cur@$res"
+  fi
+}
+
+function filter_not_mdc_environment() {
+  environment=`get_environment_used`
+
+  if [ "$environment" == "error" ]
+  then
+    logerror "File containing restart command /tmp/playground-command does not exist!"
+    exit 1
+
+  fi
+
+  if [[ "$environment" == "mdc"* ]]
+  then
+    echo "$environment is not supported with this command !"
   fi
 }
 
@@ -1830,12 +2168,6 @@ function get_producer_run_heredoc () {
     cat << EOF >> $tmp_dir/java_producer
 log "✨ Run the $schema_format java producer v$i which produces to topic $topic_name"
 docker exec $producer_hostname bash -c "java \${JAVA_OPTS} -jar producer-1.0.0-jar-with-dependencies.jar"
-EOF
-}
-
-function get_number_records_topic_command_heredoc () {
-docker exec -i broker bash << EOF
-kafka-run-class kafka.tools.GetOffsetShell --broker-list broker:9092 --topic "$1" --time -1 | awk -F ":" '{sum += \$3} END {print sum}'
 EOF
 }
 
@@ -2195,21 +2527,11 @@ function verify_confluent_details()
 
 function check_if_continue()
 {
-    if [ ! -z "$CI" ] || [ ! -z "$CLOUDFORMATION" ]
+    if [ ! -z "$CI" ]
     then
-        # running with github actions or cloudformation, continue
+        # running with github actions, continue
         return
     fi
-    read -p "Continue (y/n)?" choice
-    case "$choice" in
-    y|Y ) ;;
-    n|N ) exit 1;;
-    * ) logerror "invalid response!";exit 1;;
-    esac
-}
-
-function really_check_if_continue()
-{
     read -p "Continue (y/n)?" choice
     case "$choice" in
     y|Y ) ;;
@@ -2366,6 +2688,7 @@ function az() {
 }
 
 function display_docker_container_error_log() {
+  set +e
   logerror "####################################################"
   logerror "🐳 docker ps"
   docker ps
@@ -2377,9 +2700,10 @@ function display_docker_container_error_log() {
       if [[ "$container" == "connect" ]] || [[ "$container" == "sap" ]]
       then
           # always show all logs for connect
-          docker container logs --tail=100 $container | grep -v "was supplied but isn't a known config"
+          docker container logs --tail=100 $container 2>&1 | grep -v "was supplied but isn't a known config"
       else
-          docker container logs $container | egrep "ERROR|FATAL"
+          docker container logs $container 2>&1 | egrep "ERROR|FATAL"
+
       fi
       logwarn "####################################################"
   done
@@ -2653,6 +2977,8 @@ function display_jmx_info() {
   then
     log "📊 JMX metrics are available locally on those ports:"
   else
+    log "🛡️ Prometheus is reachable at http://127.0.0.1:9090"
+    log "📛 Pyroscope is reachable at http://127.0.0.1:4040"
     log "📊 Grafana is reachable at http://127.0.0.1:3000 or JMX metrics are available locally on those ports:"
   fi
 
@@ -5240,6 +5566,19 @@ validate_file_exists() {
   [[ -f "$1" ]] || echo "must be an existing file"
 }
 
+# src/lib/validations/validate_file_exists_with_trick.sh
+validate_file_exists_with_trick() {
+  file="$1"
+
+  real_file=$file
+  if [[ $file == *"@"* ]]
+  then
+    real_file=$(echo "$file" | cut -d "@" -f 2)
+  fi
+
+  [[ -f "$real_file" ]] || echo "$real_file must be an existing file"
+}
+
 # src/lib/validations/validate_integer.sh
 validate_integer() {
   [[ "$1" =~ ^[0-9]+$ ]] || echo "must be an integer"
@@ -5262,7 +5601,11 @@ playground_get_topic_list_command() {
   # src/get_topic_list_command.sh
   #docker exec broker kafka-topics --bootstrap-server broker:9092 --list | grep -v "^_"
   # trick to be faster
-  docker exec broker ls /var/lib/kafka/data | grep -v "checkpoint" | grep -v "meta.properties" | grep -v "^_" | sed 's/[^-]*$//' | sed 's/.$//' | sort | uniq
+  docker exec broker ls /var/lib/kafka/data > /dev/null 2>&1
+  if [ $? -eq 0 ]
+  then
+    docker exec broker ls /var/lib/kafka/data | grep -v "checkpoint" | grep -v "meta.properties" | grep -v "^_" | sed 's/[^-]*$//' | sed 's/.$//' | sort | uniq
+  fi
 }
 
 # :command.function
@@ -5270,20 +5613,21 @@ playground_get_examples_list_with_fzf_command() {
   # src/get_examples_list_with_fzf_command.sh
   without_repro="${args[--without-repro]}"
   sink_only="${args[--sink-only]}"
+  cur="${args[cur]}"
 
   if [[ -n "$without_repro" ]] && [[ -n "$sink_only" ]]
   then
-      get_examples_list_with_fzf_without_repro_sink_only
+      get_examples_list_with_fzf_without_repro_sink_only "$cur"
       return
   fi
 
   if [[ -n "$without_repro" ]]
   then
-      get_examples_list_with_fzf_without_repro
+      get_examples_list_with_fzf_without_repro "$cur"
       return
   fi
 
-  get_examples_list_with_fzf
+  get_examples_list_with_fzf "$cur"
 }
 
 # :command.function
@@ -5294,6 +5638,7 @@ playground_run_command() {
   root_folder=${DIR_CLI}/../..
 
   test_file="${args[--file]}"
+  editor="${args[--open]}"
   tag="${args[--tag]}"
   connector_tag="${args[--connector-tag]}"
   connector_zip="${args[--connector-zip]}"
@@ -5312,6 +5657,11 @@ playground_run_command() {
   then
     logerror "ERROR: test_file is not provided as argument!"
     exit 1
+  fi
+
+  if [[ $test_file == *"@"* ]]
+  then
+    test_file=$(echo "$test_file" | cut -d "@" -f 2)
   fi
 
   if [ ! -f "$test_file" ]
@@ -5346,103 +5696,154 @@ playground_run_command() {
   final_dir=$(echo $dir2 | tr '/' '-') # connect-connect-cdc-oracle12-source
 
   environment_variables_list=""
+  argument_list=""
   if [[ -n "$tag" ]]
   then
     environment_variables_list="TAG=$tag"
+    argument_list="--tag=$tag"
     export TAG=$tag
   fi
 
   if [[ -n "$connector_tag" ]]
   then
     environment_variables_list="$environment_variables_list CONNECTOR_TAG=$connector_tag"
+    argument_list="$argument_list --connector-tag=$connector_tag"
     export CONNECTOR_TAG=$connector_tag
   fi
 
   if [[ -n "$connector_zip" ]]
   then
     environment_variables_list="$environment_variables_list CONNECTOR_ZIP=$connector_zip"
+    argument_list="$argument_list --connector-zip=$connector_zip"
     export CONNECTOR_ZIP=$connector_zip
   fi
 
   if [[ -n "$connector_jar" ]]
   then
     environment_variables_list="$environment_variables_list CONNECTOR_JAR=$connector_jar"
+    argument_list="$argument_list --connector-jar=$connector_jar"
     export CONNECTOR_JAR=$connector_jar
   fi
 
   if [[ -n "$disable_ksqldb" ]]
   then
     environment_variables_list="$environment_variables_list DISABLE_KSQLDB=true"
+    argument_list="$argument_list --disable-ksqldb"
     export DISABLE_KSQLDB=true
   fi
 
   if [[ -n "$disable_c3" ]]
   then
     environment_variables_list="$environment_variables_list DISABLE_CONTROL_CENTER=true"
+    argument_list="$argument_list --disable-control-center"
     export DISABLE_CONTROL_CENTER=true
   fi
 
   if [[ -n "$enable_conduktor" ]]
   then
     environment_variables_list="$environment_variables_list ENABLE_CONDUKTOR=true"
+    argument_list="$argument_list --enable-conduktor"
     export ENABLE_CONDUKTOR=true
   fi
 
   if [[ -n "$enable_multiple_brokers" ]]
   then
     environment_variables_list="$environment_variables_list ENABLE_KAFKA_NODES=true"
+    argument_list="$argument_list --enable-multiple-broker"
     export ENABLE_KAFKA_NODES=true
   fi
 
   if [[ -n "$enable_multiple_connect_workers" ]]
   then
     environment_variables_list="$environment_variables_list ENABLE_CONNECT_NODES=true"
+    argument_list="$argument_list --enable-multiple-connect-workers"
     export ENABLE_CONNECT_NODES=true
   fi
 
   if [[ -n "$enable_jmx_grafana" ]]
   then
     environment_variables_list="$environment_variables_list ENABLE_JMX_GRAFANA=true"
+    argument_list="$argument_list --enable-jmx-grafana"
     export ENABLE_JMX_GRAFANA=true
   fi
 
   if [[ -n "$enable_kcat" ]]
   then
     environment_variables_list="$environment_variables_list ENABLE_KCAT=true"
+    argument_list="$argument_list --enable-kcat"
     export ENABLE_KCAT=true
   fi
 
   if [[ -n "$enable_sr_maven_plugin_app" ]]
   then
     environment_variables_list="$environment_variables_list ENABLE_SR_MAVEN_PLUGIN_NODE=true"
+    argument_list="$argument_list --enable-sr-maven-plugin-app"
     export ENABLE_SR_MAVEN_PLUGIN_NODE=true
   fi
 
-  if [ ! -z $EDITOR ]
+  if [[ -n "$editor" ]]
   then
-    log "📖 Opening ${test_file} using EDITOR environment variable"
-    $EDITOR ${test_file}
-  else
-    if [[ $(type code 2>&1) =~ "not found" ]]
+    if [ ! -z $EDITOR ]
     then
-      logerror "Could not determine an editor to use, you can set EDITOR environment variable with your preferred choice"
-      exit 1
+      log "📖 Opening ${test_file} using EDITOR environment variable"
+      $EDITOR ${test_file}
     else
-      log "📖 Opening ${test_file} with code (you can change editor by setting EDITOR environment variable)"
-      code ${test_file}
+      if [[ $(type code 2>&1) =~ "not found" ]]
+      then
+        logerror "Could not determine an editor to use, you can set EDITOR environment variable with your preferred choice"
+        exit 1
+      else
+        log "📖 Opening ${test_file} with code (you can change editor by setting EDITOR environment variable)"
+        code ${test_file}
+      fi
     fi
   fi
 
   if [ "$environment_variables_list" != "" ]
   then
-    log "🚀 Running example with $environment_variables_list ?"
+    log "🚀 Running example with $environment_variables_list"
   else
-    log "🚀 Running example with all default values ?"
+    log "🚀 Running example with all default values"
   fi
-  really_check_if_continue
+  echo "playground run -f $test_file $argument_list" > /tmp/playground-run
+  log "####################################################"
+  log "🚀 Executing $filename in dir $test_file_directory"
+  log "####################################################"
+  SECONDS=0
   cd $test_file_directory
-  ./$filename
+  trap 'rm /tmp/playground-run-command-used;echo "";sleep 3;log "🧩 Displaying connector status";playground connector status' EXIT
+  touch /tmp/playground-run-command-used
+  bash $filename
+  ret=$?
+  ELAPSED="took: $((($SECONDS / 60) % 60))min $(($SECONDS % 60))sec"
+  let ELAPSED_TOTAL+=$SECONDS
+  if [ $ret -eq 0 ]
+  then
+      log "####################################################"
+      log "✅ RESULT: SUCCESS for $filename ($ELAPSED - $CUMULATED)"
+      log "####################################################"
+  else
+      logerror "####################################################"
+      logerror "🔥 RESULT: FAILURE for $filename ($ELAPSED - $CUMULATED)"
+      logerror "####################################################"
 
+      display_docker_container_error_log
+  fi
+}
+
+# :command.function
+playground_re_run_command() {
+  # src/re_run_command.sh
+  if [ ! -f /tmp/playground-run ]
+  then
+    logerror "File containing re-run command /tmp/playground-run does not exist!"
+    logerror "Make sure to run playground run command !"
+    exit 1
+  fi
+
+  log "Run command again:"
+  cat /tmp/playground-run
+  bash /tmp/playground-run
 }
 
 # :command.function
@@ -5460,6 +5861,11 @@ playground_bootstrap_reproduction_model_command() {
   nb_producers="${args[--nb-producers]}"
   add_custom_smt="${args[--custom-smt]}"
   sink_file="${args[--pipeline]}"
+
+  if [[ $test_file == *"@"* ]]
+  then
+    test_file=$(echo "$test_file" | cut -d "@" -f 2)
+  fi
 
   if [[ "$test_file" != *".sh" ]]
   then
@@ -5944,6 +6350,11 @@ playground_bootstrap_reproduction_model_command() {
   if [[ -n "$sink_file" ]]
   then
     tmp_dir=$(mktemp -d -t ci-XXXXXXXXXX)
+
+    if [[ $sink_file == *"@"* ]]
+    then
+      sink_file=$(echo "$sink_file" | cut -d "@" -f 2)
+    fi
     test_sink_file_directory="$(dirname "${sink_file}")"
 
     # docker-compose part
@@ -6178,7 +6589,10 @@ playground_bootstrap_reproduction_model_command() {
 
   log "🌟 Command to run generated example"
   echo "playground run -f $repro_dir/$repro_test_filename"
-  playground run -f $repro_dir/$repro_test_filename
+  echo "playground run -f $repro_dir/$repro_test_filename" > /tmp/playground-run
+  log "🕹️ Ready? Run it now ?"
+  check_if_continue
+  playground run -f $repro_dir/$repro_test_filename --open
 
 }
 
@@ -6190,6 +6604,32 @@ playground_get_properties_command() {
   log "Displaying properties file for $container"
   # see heredocs.sh
   get_properties_command_heredoc "$container"
+}
+
+# :command.function
+playground_get_all_schemas_command() {
+  # src/get_all_schemas_command.sh
+  ret=$(get_sr_url_and_security)
+
+  sr_url=$(echo "$ret" | cut -d "@" -f 1)
+  security=$(echo "$ret" | cut -d "@" -f 2)
+
+  # Get a list of all subjects in the schema registry
+  subjects=$(curl $security -s "${sr_url}/subjects")
+
+  log "Displaying all subjects 🔰 and versions 💯"
+  # Loop through each subject and retrieve all its schema versions and definitions
+  for subject in $(echo "${subjects}" | jq -r '.[]'); do
+    # Get a list of all schema versions for the subject
+    versions=$(curl $security -s "${sr_url}/subjects/${subject}/versions")
+
+    # Loop through each version and retrieve the schema
+    for version in $(echo "${versions}" | jq -r '.[]'); do
+      schema=$(curl $security -s "${sr_url}/subjects/${subject}/versions/${version}/schema" | jq .)
+      log "🔰 ${subject} 💯 ${version}"
+      echo "${schema}"
+    done
+  done
 }
 
 # :command.function
@@ -6242,6 +6682,56 @@ playground_enable_remote_debugging_command() {
   "
 
   log "See https://kafka-docker-playground.io/#/reusables?id=✨-remote-debugging"
+}
+
+# :command.function
+playground_log_level_get_command() {
+  # src/log_level_get_command.sh
+  ret=$(get_connect_url_and_security)
+
+  connect_url=$(echo "$ret" | cut -d "@" -f 1)
+  security=$(echo "$ret" | cut -d "@" -f 2)
+
+  package="${args[--package]}"
+
+  if [[ -n "$package" ]]
+  then
+    log "🧬 Get log level for package $package"
+    curl $security -s "$connect_url/admin/loggers/$package"
+  else
+    log "🧬 Get log level for all packages"
+    curl $security -s "$connect_url/admin/loggers" | jq .
+  fi
+}
+
+# :command.function
+playground_log_level_set_command() {
+  # src/log_level_set_command.sh
+  ret=$(get_connect_url_and_security)
+
+  connect_url=$(echo "$ret" | cut -d "@" -f 1)
+  security=$(echo "$ret" | cut -d "@" -f 2)
+
+  package="${args[--package]}"
+  level="${args[--level]}"
+
+  current_level=$(curl $security -s "$connect_url/admin/loggers/$package" | jq -r '.level')
+
+  if [ "$current_level" != "$level" ]
+  then
+      log "🧬 Set log level for package $package to $level"
+      curl $security -s --request PUT \
+      --url "$connect_url/admin/loggers/$package" \
+      --header 'Accept: application/json' \
+      --header 'Content-Type: application/json' \
+      --data "{
+      \"level\": \"$level\"
+      }" | jq .
+
+      playground log-level get -p "$package"
+  else
+      log "🧬⏭️ Skipping as log level for package $package was already set to $level"
+  fi
 }
 
 # :command.function
@@ -6310,7 +6800,22 @@ playground_container_logs_command() {
     docker container logs "$container" > "$filename" 2>&1
     if [ $? -eq 0 ]
     then
-      $editor "$filename"
+      if [ ! -z $EDITOR ]
+      then
+        log "📖 Opening ${filename} using EDITOR environment variable"
+        $EDITOR ${filename}
+      else
+        if [[ $(type code 2>&1) =~ "not found" ]]
+        then
+          logerror "Could not determine an editor to use, you can set EDITOR environment variable with your preferred choice"
+          exit 1
+        else
+          log "📖 Opening ${filename} with code (you can change editor by setting EDITOR environment variable)"
+          code ${filename}
+        fi
+      fi
+    else
+      logerror "Failed to get logs using container logs $container"
     fi
   elif [[ -n "$log" ]]
   then
@@ -6390,296 +6895,497 @@ playground_topic_get_number_records_command() {
   # src/topic_get_number_records_command.sh
   topic="${args[--topic]}"
 
+  ret=$(get_security_broker "--command-config")
+
+  container=$(echo "$ret" | cut -d "@" -f 1)
+  security=$(echo "$ret" | cut -d "@" -f 2)
+
   log "Get number of records in a topic $topic"
-  # see heredocs.sh
-  get_number_records_topic_command_heredoc "$topic"
+  docker exec $container kafka-run-class kafka.tools.GetOffsetShell --broker-list broker:9092 $security --topic $topic --time -1 | awk -F ":" '{sum += $3} END {print sum}'
 }
 
 # :command.function
 playground_topic_display_connect_offsets_command() {
   # src/topic_display_connect_offsets_command.sh
+  ret=$(get_security_broker "--consumer.config")
+
+  container=$(echo "$ret" | cut -d "@" -f 1)
+  security=$(echo "$ret" | cut -d "@" -f 2)
+
   log "Display content of connect offsets topic, press crtl-c to stop..."
-  docker exec connect kafka-console-consumer -bootstrap-server broker:9092 --topic connect-offsets --from-beginning --property print.key=true --property print.timestamp=true
+  docker exec $container kafka-console-consumer -bootstrap-server broker:9092 --topic connect-offsets --from-beginning --property print.key=true --property print.timestamp=true $security
 }
 
 # :command.function
 playground_topic_display_consumer_offsets_command() {
   # src/topic_display_consumer_offsets_command.sh
+  ret=$(get_security_broker "--consumer.config")
+
+  container=$(echo "$ret" | cut -d "@" -f 1)
+  security=$(echo "$ret" | cut -d "@" -f 2)
+
   log "Display content of __consumer_offsets topic, press crtl-c to stop..."
-  docker exec -i broker bash -c 'kafka-console-consumer --bootstrap-server broker:9092 --topic __consumer_offsets --from-beginning --formatter "kafka.coordinator.group.GroupMetadataManager\$OffsetsMessageFormatter" | grep -v "_confluent-controlcenter"'
+  docker exec -i $container kafka-console-consumer --bootstrap-server broker:9092 --topic __consumer_offsets --from-beginning --formatter "kafka.coordinator.group.GroupMetadataManager\$OffsetsMessageFormatter" $security | grep -v "_confluent-controlcenter"
 }
 
 # :command.function
 playground_topic_describe_command() {
   # src/topic_describe_command.sh
-  log "Display content of connect offsets topic, press crtl-c to stop..."
-  docker exec connect kafka-console-consumer -bootstrap-server broker:9092 --topic connect-offsets --from-beginning --property print.key=true --property print.timestamp=true
+  topic="${args[--topic]}"
+
+  ret=$(get_security_broker "--command-config")
+
+  container=$(echo "$ret" | cut -d "@" -f 1)
+  security=$(echo "$ret" | cut -d "@" -f 2)
+
+  log "Describing topic $topic"
+  docker exec $container kafka-topics --describe --topic $topic --bootstrap-server broker:9092 $security
+}
+
+# :command.function
+playground_topic_consume_command() {
+  # src/topic_consume_command.sh
+  if [ ! -f /tmp/playground-run ]
+  then
+    logerror "File containing re-run command /tmp/playground-run does not exist!"
+    logerror "Make sure to run playground run command !"
+    exit 1
+  fi
+
+  test_file=$(cat /tmp/playground-run |tr '\t' ' ' |cut -d' ' -f4)
+  if [ ! -f $test_file ]
+  then
+    logerror "Could not find test file in /tmp/playground-run"
+    cat /tmp/playground-run
+    exit 1
+  fi
+
+  environment=`get_environment_used`
+
+  if [ "$environment" == "error" ]
+  then
+    logerror "File containing restart command /tmp/playground-command does not exist!"
+    exit 1
+
+  fi
+
+  container="connect"
+  sr_url="http://schema-registry:8081"
+  security=""
+  if [[ "$environment" == *"ssl"* ]]
+  then
+      sr_url="https://schema-registry:8081"
+      security="--property schema.registry.ssl.truststore.location=/etc/kafka/secrets/kafka.client.truststore.jks --property schema.registry.ssl.truststore.password=confluent --property schema.registry.ssl.keystore.location=/etc/kafka/secrets/kafka.client.keystore.jks --property schema.registry.ssl.keystore.password=confluent --consumer.config /etc/kafka/secrets/client_without_interceptors.config"
+  elif [[ "$environment" == "rbac-sasl-plain" ]]
+  then
+      sr_url="http://schema-registry:8081"
+      security="--property basic.auth.credentials.source=USER_INFO --property schema.registry.basic.auth.user.info=clientAvroCli:clientAvroCli --consumer.config /etc/kafka/secrets/client_without_interceptors.config"
+  elif [[ "$environment" == "kerberos" ]]
+  then
+      container="client"
+      sr_url="http://schema-registry:8081"
+      security="--consumer.config /etc/kafka/consumer.properties"
+
+      docker exec -i client kinit -k -t /var/lib/secret/kafka-connect.key connect
+  fi
+
+  tmp_dir=$(mktemp -d -t ci-XXXXXXXXXX)
+  awk -F'--topic ' '{print $2}' $test_file > $tmp_dir/tmp
+  sed '/^$/d' $tmp_dir/tmp > $tmp_dir/tmp2
+  topic_name=$(head -1 $tmp_dir/tmp2 | cut -d " " -f1)
+
+  if [ "$topic_name" != "" ]
+  then
+    key_converter=$(grep "\"key.converter\"" $test_file | cut -d '"' -f 4)
+    if [ "$key_converter" == "" ]
+    then
+      log "🔮 connector is using default key.converter, i.e org.apache.kafka.connect.storage.StringConverter"
+      key_converter="io.confluent.connect.avro.AvroConverter"
+    else
+      log "🔮 connector is using key.converter $key_converter"
+    fi
+
+    value_converter=$(grep "\"value.converter\"" $test_file | cut -d '"' -f 4)
+    if [ "$value_converter" == "" ]
+    then
+      log "🔮 connector is using default value.converter, i.e io.confluent.connect.avro.AvroConverter"
+      value_converter="io.confluent.connect.avro.AvroConverter"
+    else
+      log "🔮 connector is using value.converter $value_converter"
+    fi
+    log "✨ Display content of topic $topic_name, press crtl-c to stop..."
+    type=""
+    case "${value_converter}" in
+      io.confluent.connect.json.JsonSchemaConverter)
+          type="json-schema"
+      ;;
+      io.confluent.connect.protobuf.ProtobufConverter)
+          type="protobuf"
+      ;;
+      io.confluent.connect.avro.AvroConverter)
+          type="avro"
+          ;;
+      *)
+      ;;
+    esac
+
+    fifo_path="$tmp_dir/kafka_output_fifo"
+    mkfifo "$fifo_path"
+    case "${type}" in
+      avro|protobuf|json-schema)
+          if [ "$key_converter" == "io.confluent.connect.avro.AvroConverter" ]
+          then
+              docker exec $container kafka-$type-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=$sr_url --topic $topic_name --property print.partition=true --property print.offset=true --property print.headers=true --property print.timestamp=true --property print.key=true --property key.separator="|" $security --from-beginning > "$fifo_path" &
+          else
+              docker exec $container kafka-$type-console-consumer --bootstrap-server broker:9092 --property schema.registry.url=$sr_url --topic $topic_name --property print.partition=true --property print.offset=true --property print.headers=true --property print.timestamp=true --property print.key=true --property key.separator="|" --property key.deserializer=org.apache.kafka.common.serialization.StringDeserializer $security --from-beginning > "$fifo_path" &
+          fi
+          ;;
+      *)
+          docker exec $container kafka-console-consumer --bootstrap-server broker:9092 --topic $topic_name --property print.partition=true --property print.offset=true --property print.headers=true --property print.timestamp=true --property print.key=true --property key.separator="|" $security --from-beginning > "$fifo_path" &
+      ;;
+    esac
+
+    # Detect the platform (macOS or Linux) and set the date command accordingly
+    if [[ "$(uname)" == "Darwin" ]]; then
+      # macOS
+      date_command="date -r "
+    else
+      # Linux
+      date_command="date -d @"
+    fi
+
+    # Loop through each line in the named pipe
+    while read -r line; do
+      # Extract the timestamp from the line
+      timestamp_ms=$(echo "$line" | cut -d ":" -f 2 | cut -d "|" -f 1)
+
+      # Convert milliseconds to seconds
+      timestamp_sec=$((timestamp_ms / 1000))
+      milliseconds=$((timestamp_ms % 1000))
+
+      readable_date="$(${date_command}${timestamp_sec} "+%Y-%m-%d %H:%M:%S.${milliseconds}")"
+
+      line_with_date=$(echo "$line" | sed -E "s/CreateTime:[0-9]{13}/CreateTime: ${readable_date}/")
+
+      echo "$line_with_date"
+    done < "$fifo_path"
+  else
+
+    logwarn "Could not find topic name !"
+    exit 1
+  fi
 }
 
 # :command.function
 playground_connector_status_command() {
   # src/connector_status_command.sh
-  environment=`get_environment_used`
+  ret=$(get_connect_url_and_security)
 
-  if [ "$environment" == "error" ]
+  connect_url=$(echo "$ret" | cut -d "@" -f 1)
+  security=$(echo "$ret" | cut -d "@" -f 2)
+
+  connectors=$(curl -s $security "$connect_url/connectors/" | jq -r '.[]')
+
+  log "🧩 Displaying connector(s) status"
+  if [ -z "$connectors" ]
   then
-    logerror "File containing restart command /tmp/playground-command does not exist!"
-    exit 1
-
-  fi
-  connect_url="http://localhost:8083"
-  security_certs=""
-  if [ "$environment" != "plaintext" ]
-  then
-      connect_url="https://localhost:8083"
-      DIR_CLI="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
-
-      security_certs="--cert $DIR_CLI/../../environment/$environment/security/connect.certificate.pem --key $DIR_CLI/../../environment/$environment/security/connect.key --tlsv1.2 --cacert $DIR_CLI/../../environment/$environment/security/snakeoil-ca-1.crt"
-  fi
-
-  json="${args[--json]}"
-
-  if [[ -n "$json" ]]
-  then
-    curl $security_certs -s "$connect_url/connectors?expand=status&expand=info" | jq .
+      log "💤 there are no connectors running !"
   else
-    curl $security_certs -s "$connect_url/connectors?expand=info&expand=status" | jq '. | to_entries[] | [ .value.info.type, .key, .value.status.connector.state,.value.status.tasks[].state,.value.info.config."connector.class"]|join(":|:")' | column -s : -t| sed 's/\"//g'| sort
+      printf "%-30s %-12s %-30s %-50s\n" "Name" "Status" "Tasks" "Stack Trace"
+      echo "-------------------------------------------------------------------------------------------------------------"
+
+      for connector in $connectors
+      do
+          status=$(curl -s $security "$connect_url/connectors/$connector/status" | jq -r '.connector.state')
+
+          if [ "$status" == "RUNNING" ]
+          then
+              status="✅ RUNNING"
+          elif [ "$status" == "PAUSED" ]
+          then
+              status="⏸️  PAUSED"
+          elif [ "$status" == "FAILED" ]
+          then
+              status="❌ FAILED"
+          else
+              status="🤔 UNKNOWN"
+          fi
+
+          tasks=$(curl -s $security "$connect_url/connectors/$connector/status" | jq -r '.tasks[] | "\(.id):\(.state)"' | tr '\n' ',' | sed 's/,$/\n/')
+
+          if [[ "$tasks" == *"RUNNING"* ]]
+          then
+              tasks="${tasks//RUNNING/🟢 RUNNING}"
+          elif [[ "$tasks" == *"PAUSED"* ]]
+          then
+              tasks="${tasks//PAUSED/⏸️  PAUSED}"
+          elif [[ "$tasks" == *"FAILED"* ]]
+          then
+              tasks="${tasks//FAILED/🛑 FAILED}"
+          else
+              tasks="🤔 N/A"
+          fi
+
+          stacktrace_connector=$(curl -s $security "$connect_url/connectors/$connector/status" | jq -r '.connector.trace | select(length > 0)')
+          stacktrace_tasks=$(curl -s $security "$connect_url/connectors/$connector/status" | jq -r '.tasks[].trace | select(length > 0)')
+          stacktrace=""
+          if [ "$stacktrace_connector" != "" ]
+          then
+              stacktrace="connector: $stacktrace_connector"
+          fi
+
+          if [ "$stacktrace_tasks" != "" ]
+          then
+              stacktrace="$stacktrace tasks: $stacktrace_tasks"
+          fi
+
+          if [ -z "$stacktrace" ]
+          then
+              stacktrace="-"
+          fi
+
+          printf "%-30s %-12s %-30s %-50s\n" "$connector" "$status" "$tasks" "$stacktrace"
+          echo "-------------------------------------------------------------------------------------------------------------"
+      done
   fi
+
 }
 
 # :command.function
 playground_connector_plugins_command() {
   # src/connector_plugins_command.sh
-  environment=`get_environment_used`
+  ret=$(get_connect_url_and_security)
 
-  if [ "$environment" == "error" ]
-  then
-    logerror "File containing restart command /tmp/playground-command does not exist!"
-    exit 1
+  connect_url=$(echo "$ret" | cut -d "@" -f 1)
+  security=$(echo "$ret" | cut -d "@" -f 2)
 
-  fi
-  connect_url="http://localhost:8083"
-  security_certs=""
-  if [ "$environment" != "plaintext" ]
-  then
-      connect_url="https://localhost:8083"
-      DIR_CLI="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
-
-      security_certs="--cert $DIR_CLI/../../environment/$environment/security/connect.certificate.pem --key $DIR_CLI/../../environment/$environment/security/connect.key --tlsv1.2 --cacert $DIR_CLI/../../environment/$environment/security/snakeoil-ca-1.crt"
-  fi
-
-  curl $security_certs -s -X GET -H "Content-Type: application/json" "$connect_url/connector-plugins" | jq .
+  log "🧩 Displaying all connector plugins installed"
+  curl $security -s -X GET -H "Content-Type: application/json" "$connect_url/connector-plugins" | jq -r '.[] | [.class , .version , .type] | @tsv' | column -t
 }
 
 # :command.function
 playground_connector_pause_command() {
   # src/connector_pause_command.sh
-  environment=`get_environment_used`
+  ret=$(get_connect_url_and_security)
 
-  if [ "$environment" == "error" ]
-  then
-    logerror "File containing restart command /tmp/playground-command does not exist!"
-    exit 1
-
-  fi
-  connect_url="http://localhost:8083"
-  security_certs=""
-  if [ "$environment" != "plaintext" ]
-  then
-      connect_url="https://localhost:8083"
-      DIR_CLI="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
-
-      security_certs="--cert $DIR_CLI/../../environment/$environment/security/connect.certificate.pem --key $DIR_CLI/../../environment/$environment/security/connect.key --tlsv1.2 --cacert $DIR_CLI/../../environment/$environment/security/snakeoil-ca-1.crt"
-  fi
+  connect_url=$(echo "$ret" | cut -d "@" -f 1)
+  security=$(echo "$ret" | cut -d "@" -f 2)
 
   connector="${args[--connector]}"
-  log "Pausing connector $connector"
-  curl $security_certs -s -X PUT -H "Content-Type: application/json" "$connect_url/connectors/$connector/pause" | jq .
 
+  if [[ ! -n "$connector" ]]
+  then
+      logwarn "--connector flag was not provided, applying command to all connectors"
+      connector=$(playground get-connector-list)
+      if [ "$connector" == "" ]
+      then
+          logerror "💤 No connector is running !"
+          exit 1
+      fi
+  fi
+
+  items=($connector)
+  for connector in ${items[@]}
+  do
+      log "⏸️ Pausing connector $connector"
+      curl $security -s -X PUT -H "Content-Type: application/json" "$connect_url/connectors/$connector/pause" | jq .
+  done
   playground connector status
+}
+
+# :command.function
+playground_connector_versions_command() {
+  # src/connector_versions_command.sh
+  ret=$(get_connect_url_and_security)
+
+  connect_url=$(echo "$ret" | cut -d "@" -f 1)
+  security=$(echo "$ret" | cut -d "@" -f 2)
+
+  connector="${args[--connector]}"
+
+  if [[ ! -n "$connector" ]]
+  then
+      logwarn "--connector flag was not provided, applying command to all connectors"
+      connector=$(playground get-connector-list)
+      if [ "$connector" == "" ]
+      then
+          logerror "💤 No connector is running !"
+          exit 1
+      fi
+  fi
+
+  items=($connector)
+  for connector in ${items[@]}
+  do
+      log "Current version:"
+      package=$(curl -s $security "$connect_url/connectors/$connector" | jq -r '.config."connector.class"')
+      curl $security -s -X GET -H "Content-Type: application/json" "$connect_url/connector-plugins" | jq -r ".[] | select(.class == \"$package\").version"
+  done
 }
 
 # :command.function
 playground_connector_restart_command() {
   # src/connector_restart_command.sh
-  environment=`get_environment_used`
+  ret=$(get_connect_url_and_security)
 
-  if [ "$environment" == "error" ]
-  then
-    logerror "File containing restart command /tmp/playground-command does not exist!"
-    exit 1
-
-  fi
-  connect_url="http://localhost:8083"
-  security_certs=""
-  if [ "$environment" != "plaintext" ]
-  then
-      connect_url="https://localhost:8083"
-      DIR_CLI="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
-
-      security_certs="--cert $DIR_CLI/../../environment/$environment/security/connect.certificate.pem --key $DIR_CLI/../../environment/$environment/security/connect.key --tlsv1.2 --cacert $DIR_CLI/../../environment/$environment/security/snakeoil-ca-1.crt"
-  fi
+  connect_url=$(echo "$ret" | cut -d "@" -f 1)
+  security=$(echo "$ret" | cut -d "@" -f 2)
 
   connector="${args[--connector]}"
-  log "Restarting connector $connector"
-  curl $security_certs -s -X POST -H "Content-Type: application/json" "$connect_url/connectors/$connector/restart?includeTasks=true&onlyFailed=false" | jq .
+
+  if [[ ! -n "$connector" ]]
+  then
+      logwarn "--connector flag was not provided, applying command to all connectors"
+      connector=$(playground get-connector-list)
+      if [ "$connector" == "" ]
+      then
+          logerror "💤 No connector is running !"
+          exit 1
+      fi
+  fi
+
+  items=($connector)
+  for connector in ${items[@]}
+  do
+      log "🔄 Restarting connector $connector"
+      curl $security -s -X POST -H "Content-Type: application/json" "$connect_url/connectors/$connector/restart?includeTasks=true&onlyFailed=false" | jq .
+  done
+  sleep 2
+  playground connector status
 }
 
 # :command.function
 playground_connector_resume_command() {
   # src/connector_resume_command.sh
-  environment=`get_environment_used`
+  ret=$(get_connect_url_and_security)
 
-  if [ "$environment" == "error" ]
-  then
-    logerror "File containing restart command /tmp/playground-command does not exist!"
-    exit 1
-
-  fi
-  connect_url="http://localhost:8083"
-  security_certs=""
-  if [ "$environment" != "plaintext" ]
-  then
-      connect_url="https://localhost:8083"
-      DIR_CLI="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
-
-      security_certs="--cert $DIR_CLI/../../environment/$environment/security/connect.certificate.pem --key $DIR_CLI/../../environment/$environment/security/connect.key --tlsv1.2 --cacert $DIR_CLI/../../environment/$environment/security/snakeoil-ca-1.crt"
-  fi
+  connect_url=$(echo "$ret" | cut -d "@" -f 1)
+  security=$(echo "$ret" | cut -d "@" -f 2)
 
   connector="${args[--connector]}"
-  log "Resuming connector $connector"
-  curl $security_certs -s -X PUT -H "Content-Type: application/json" "$connect_url/connectors/$connector/resume"  | jq .
 
+  if [[ ! -n "$connector" ]]
+  then
+      logwarn "--connector flag was not provided, applying command to all connectors"
+      connector=$(playground get-connector-list)
+      if [ "$connector" == "" ]
+      then
+          logerror "💤 No connector is running !"
+          exit 1
+      fi
+  fi
+
+  items=($connector)
+  for connector in ${items[@]}
+  do
+      log "⏯️ Resuming connector $connector"
+      curl $security -s -X PUT -H "Content-Type: application/json" "$connect_url/connectors/$connector/resume"  | jq .
+  done
   playground connector status
 }
 
 # :command.function
 playground_connector_delete_command() {
   # src/connector_delete_command.sh
-  environment=`get_environment_used`
+  ret=$(get_connect_url_and_security)
 
-  if [ "$environment" == "error" ]
-  then
-    logerror "File containing restart command /tmp/playground-command does not exist!"
-    exit 1
-
-  fi
-  connect_url="http://localhost:8083"
-  security_certs=""
-  if [ "$environment" != "plaintext" ]
-  then
-      connect_url="https://localhost:8083"
-      DIR_CLI="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
-
-      security_certs="--cert $DIR_CLI/../../environment/$environment/security/connect.certificate.pem --key $DIR_CLI/../../environment/$environment/security/connect.key --tlsv1.2 --cacert $DIR_CLI/../../environment/$environment/security/snakeoil-ca-1.crt"
-  fi
+  connect_url=$(echo "$ret" | cut -d "@" -f 1)
+  security=$(echo "$ret" | cut -d "@" -f 2)
 
   connector="${args[--connector]}"
-  log "Deleting connector $connector"
-  curl $security_certs -s -X DELETE "$connect_url/connectors/$connector" | jq .
+
+  if [[ ! -n "$connector" ]]
+  then
+      logwarn "--connector flag was not provided, applying command to all connectors"
+      check_if_continue
+      connector=$(playground get-connector-list)
+      if [ "$connector" == "" ]
+      then
+          logerror "💤 No connector is running !"
+          exit 1
+      fi
+  fi
+
+  items=($connector)
+  for connector in ${items[@]}
+  do
+      log "❌ Deleting connector $connector"
+      curl $security -s -X DELETE "$connect_url/connectors/$connector" | jq .
+  done
+  playground connector status
 }
 
 # :command.function
 playground_connector_show_lag_command() {
   # src/connector_show_lag_command.sh
-  environment=`get_environment_used`
   connector="${args[--connector]}"
 
-  if [ "$environment" == "error" ]
+  ret=$(get_connect_url_and_security)
+
+  connect_url=$(echo "$ret" | cut -d "@" -f 1)
+  security=$(echo "$ret" | cut -d "@" -f 2)
+
+  if [[ ! -n "$connector" ]]
   then
-    logerror "File containing restart command /tmp/playground-command does not exist!"
-    exit 1
-
-  fi
-  connect_url="http://localhost:8083"
-  security_certs=""
-  if [ "$environment" != "plaintext" ]
-  then
-      connect_url="https://localhost:8083"
-      DIR_CLI="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
-
-      security_certs="--cert $DIR_CLI/../../environment/$environment/security/connect.certificate.pem --key $DIR_CLI/../../environment/$environment/security/connect.key --tlsv1.2 --cacert $DIR_CLI/../../environment/$environment/security/snakeoil-ca-1.crt"
-  fi
-
-  type=$(curl -s http://localhost:8083/connectors\?expand\=status\&expand\=info | jq -r '. | to_entries[] | [ .value.info.type]|join(":|:")')
-  if [ "$type" != "sink" ]
-  then
-    logerror "Connector $connector is a $type connector, it must be a sink to show the lag !"
-    exit 1
-
+      logwarn "--connector flag was not provided, applying command to all connectors"
+      connector=$(playground get-connector-list)
+      if [ "$connector" == "" ]
+      then
+          logerror "💤 No connector is running !"
+          exit 1
+      fi
   fi
 
-  log "Show lag for sink connector $connector"
-  docker exec broker kafka-consumer-groups --bootstrap-server broker:9092 --group connect-$connector --describe
+  ret=$(get_security_broker "--command-config")
+
+  container=$(echo "$ret" | cut -d "@" -f 1)
+  security=$(echo "$ret" | cut -d "@" -f 2)
+
+  items=($connector)
+  for connector in ${items[@]}
+  do
+    type=$(curl -s $security "$connect_url/connectors/$connector/status" | jq -r '.type')
+    if [ "$type" != "sink" ]
+    then
+      logwarn "⏭️ Skipping $type connector $connector, it must be a sink to show the lag"
+      continue
+
+    fi
+
+    log "🐢 Show lag for sink connector $connector"
+    docker exec $container kafka-consumer-groups --bootstrap-server broker:9092 --group connect-$connector --describe $security
+  done
 }
 
 # :command.function
-playground_connector_log_level_get_command() {
-  # src/connector_log_level_get_command.sh
-  environment=`get_environment_used`
+playground_connector_log_level_command() {
+  # src/connector_log_level_command.sh
+  ret=$(get_connect_url_and_security)
 
-  if [ "$environment" == "error" ]
-  then
-    logerror "File containing restart command /tmp/playground-command does not exist!"
-    exit 1
+  connect_url=$(echo "$ret" | cut -d "@" -f 1)
+  security=$(echo "$ret" | cut -d "@" -f 2)
 
-  fi
-  connect_url="http://localhost:8083"
-  security_certs=""
-  if [ "$environment" != "plaintext" ]
-  then
-      connect_url="https://localhost:8083"
-      DIR_CLI="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
-
-      security_certs="--cert $DIR_CLI/../../environment/$environment/security/connect.certificate.pem --key $DIR_CLI/../../environment/$environment/security/connect.key --tlsv1.2 --cacert $DIR_CLI/../../environment/$environment/security/snakeoil-ca-1.crt"
-  fi
-
-  package="${args[--package]}"
-
-  if [[ -n "$package" ]]
-  then
-    log "Get log level for package $package"
-    curl $security_certs -s "$connect_url/admin/loggers/$package" | jq .
-  else
-    log "Get log level for all packages"
-    curl $security_certs -s "$connect_url/admin/loggers" | jq .
-  fi
-}
-
-# :command.function
-playground_connector_log_level_set_command() {
-  # src/connector_log_level_set_command.sh
-  environment=`get_environment_used`
-
-  if [ "$environment" == "error" ]
-  then
-    logerror "File containing restart command /tmp/playground-command does not exist!"
-    exit 1
-
-  fi
-  connect_url="http://localhost:8083"
-  security_certs=""
-  if [ "$environment" != "plaintext" ]
-  then
-      connect_url="https://localhost:8083"
-      DIR_CLI="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
-
-      security_certs="--cert $DIR_CLI/../../environment/$environment/security/connect.certificate.pem --key $DIR_CLI/../../environment/$environment/security/connect.key --tlsv1.2 --cacert $DIR_CLI/../../environment/$environment/security/snakeoil-ca-1.crt"
-  fi
-
-  package="${args[--package]}"
   level="${args[--level]}"
+  connector="${args[--connector]}"
 
-  log "Set log level for package $package to $level"
-  curl $security_certs -s --request PUT \
-    --url "$connect_url/admin/loggers/$package" \
-    --header 'Accept: application/json' \
-    --header 'Content-Type: application/json' \
-    --data "{
-   \"level\": \"$level\"
-  }" | jq .
+  if [[ ! -n "$connector" ]]
+  then
+      logwarn "--connector flag was not provided, applying command to all connectors"
+      connector=$(playground get-connector-list)
+      if [ "$connector" == "" ]
+      then
+          logerror "💤 No connector is running !"
+          exit 1
+      fi
+  fi
 
-  playground connector log-level get -p "$package"
+  items=($connector)
+  for connector in ${items[@]}
+  do
+      package=$(curl -s $security "$connect_url/connectors/$connector" | jq -r '.config."connector.class"')
+      # log "🧬 Set log level for connector $connector to $level"
+      playground log-level set -p "$package" -l $level
+  done
 }
 
 # :command.parse_requirements
@@ -6748,6 +7454,13 @@ parse_requirements() {
       shift $#
       ;;
 
+    re-run)
+      action="re-run"
+      shift
+      playground_re_run_parse_requirements "$@"
+      shift $#
+      ;;
+
     bootstrap-reproduction-model)
       action="bootstrap-reproduction-model"
       shift
@@ -6762,10 +7475,24 @@ parse_requirements() {
       shift $#
       ;;
 
+    get-all-schemas)
+      action="get-all-schemas"
+      shift
+      playground_get_all_schemas_parse_requirements "$@"
+      shift $#
+      ;;
+
     enable-remote-debugging)
       action="enable-remote-debugging"
       shift
       playground_enable_remote_debugging_parse_requirements "$@"
+      shift $#
+      ;;
+
+    log-level)
+      action="log-level"
+      shift
+      playground_log_level_parse_requirements "$@"
       shift $#
       ;;
 
@@ -6976,8 +7703,14 @@ playground_get_examples_list_with_fzf_parse_requirements() {
       *)
         # :command.parse_requirements_case
         # :command.parse_requirements_case_simple
-        printf "invalid argument: %s\n" "$key" >&2
-        exit 1
+        if [[ -z ${args['cur']+x} ]]; then
+
+          args['cur']=$1
+          shift
+        else
+          printf "invalid argument: %s\n" "$key" >&2
+          exit 1
+        fi
 
         ;;
 
@@ -7025,8 +7758,8 @@ playground_run_parse_requirements() {
         # :flag.case_arg
         if [[ -n ${2+x} ]]; then
           # :flag.validations
-          if [[ -n $(validate_file_exists "$2") ]]; then
-            printf "validation error in %s:\n%s\n" "--file, -f FILE" "$(validate_file_exists "$2")" >&2
+          if [[ -n $(validate_file_exists_with_trick "$2") ]]; then
+            printf "validation error in %s:\n%s\n" "--file, -f FILE" "$(validate_file_exists_with_trick "$2")" >&2
             exit 1
           fi
 
@@ -7037,6 +7770,14 @@ playground_run_parse_requirements() {
           printf "%s\n" "--file requires an argument: --file, -f FILE" >&2
           exit 1
         fi
+        ;;
+
+      # :flag.case
+      --open | -o)
+
+        # :flag.case_no_arg
+        args['--open']=1
+        shift
         ;;
 
       # :flag.case
@@ -7084,6 +7825,11 @@ playground_run_parse_requirements() {
 
         # :flag.case_arg
         if [[ -n ${2+x} ]]; then
+          # :flag.validations
+          if [[ -n $(validate_file_exists "$2") ]]; then
+            printf "validation error in %s:\n%s\n" "--connector-zip CONNECTOR_ZIP" "$(validate_file_exists "$2")" >&2
+            exit 1
+          fi
 
           args['--connector-zip']="$2"
           shift
@@ -7203,6 +7949,52 @@ playground_run_parse_requirements() {
 }
 
 # :command.parse_requirements
+playground_re_run_parse_requirements() {
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    case "${1:-}" in
+      --help | -h)
+        long_usage=yes
+        playground_re_run_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.dependencies_filter
+
+  # :command.command_filter
+  action="re-run"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+}
+
+# :command.parse_requirements
 playground_bootstrap_reproduction_model_parse_requirements() {
   # :command.fixed_flags_filter
   while [[ $# -gt 0 ]]; do
@@ -7245,8 +8037,8 @@ playground_bootstrap_reproduction_model_parse_requirements() {
         # :flag.case_arg
         if [[ -n ${2+x} ]]; then
           # :flag.validations
-          if [[ -n $(validate_file_exists "$2") ]]; then
-            printf "validation error in %s:\n%s\n" "--file, -f FILE" "$(validate_file_exists "$2")" >&2
+          if [[ -n $(validate_file_exists_with_trick "$2") ]]; then
+            printf "validation error in %s:\n%s\n" "--file, -f FILE" "$(validate_file_exists_with_trick "$2")" >&2
             exit 1
           fi
 
@@ -7338,8 +8130,8 @@ playground_bootstrap_reproduction_model_parse_requirements() {
         # :flag.case_arg
         if [[ -n ${2+x} ]]; then
           # :flag.validations
-          if [[ -n $(validate_file_exists "$2") ]]; then
-            printf "validation error in %s:\n%s\n" "--pipeline SINK_FILE" "$(validate_file_exists "$2")" >&2
+          if [[ -n $(validate_file_exists_with_trick "$2") ]]; then
+            printf "validation error in %s:\n%s\n" "--pipeline SINK_FILE" "$(validate_file_exists_with_trick "$2")" >&2
             exit 1
           fi
 
@@ -7454,6 +8246,59 @@ playground_get_properties_parse_requirements() {
 }
 
 # :command.parse_requirements
+playground_get_all_schemas_parse_requirements() {
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    case "${1:-}" in
+      --help | -h)
+        long_usage=yes
+        playground_get_all_schemas_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.dependencies_filter
+
+  # :command.command_filter
+  action="get-all-schemas"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+  # :command.user_filter
+  filter_error=$(filter_not_mdc_environment)
+  if [[ -n $filter_error ]]; then
+    echo "$filter_error" >&2
+    exit 1
+  fi
+
+}
+
+# :command.parse_requirements
 playground_enable_remote_debugging_parse_requirements() {
   # :command.fixed_flags_filter
   while [[ $# -gt 0 ]]; do
@@ -7513,6 +8358,243 @@ playground_enable_remote_debugging_parse_requirements() {
 
   # :command.default_assignments
   [[ -n ${args['--container']:-} ]] || args['--container']="connect"
+
+}
+
+# :command.parse_requirements
+playground_log_level_parse_requirements() {
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    case "${1:-}" in
+      --help | -h)
+        long_usage=yes
+        playground_log_level_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.dependencies_filter
+
+  # :command.command_filter
+  action=${1:-}
+
+  case $action in
+    -*) ;;
+
+    get)
+      action="get"
+      shift
+      playground_log_level_get_parse_requirements "$@"
+      shift $#
+      ;;
+
+    set)
+      action="set"
+      shift
+      playground_log_level_set_parse_requirements "$@"
+      shift $#
+      ;;
+
+    # :command.command_fallback
+    "")
+      playground_log_level_usage >&2
+      exit 1
+      ;;
+
+    *)
+      printf "invalid command: %s\n" "$action" >&2
+      exit 1
+      ;;
+
+  esac
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+}
+
+# :command.parse_requirements
+playground_log_level_get_parse_requirements() {
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    case "${1:-}" in
+      --help | -h)
+        long_usage=yes
+        playground_log_level_get_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.dependencies_filter
+
+  # :command.command_filter
+  action="log-level get"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      # :flag.case
+      --package | -p)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          # :flag.validations
+          if [[ -n $(validate_not_empty "$2") ]]; then
+            printf "validation error in %s:\n%s\n" "--package, -p PACKAGE" "$(validate_not_empty "$2")" >&2
+            exit 1
+          fi
+
+          args['--package']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--package requires an argument: --package, -p PACKAGE" >&2
+          exit 1
+        fi
+        ;;
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+}
+
+# :command.parse_requirements
+playground_log_level_set_parse_requirements() {
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    case "${1:-}" in
+      --help | -h)
+        long_usage=yes
+        playground_log_level_set_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.dependencies_filter
+
+  # :command.command_filter
+  action="log-level set"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      # :flag.case
+      --package | -p)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          # :flag.validations
+          if [[ -n $(validate_not_empty "$2") ]]; then
+            printf "validation error in %s:\n%s\n" "--package, -p PACKAGE" "$(validate_not_empty "$2")" >&2
+            exit 1
+          fi
+
+          args['--package']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--package requires an argument: --package, -p PACKAGE" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --level | -l)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+
+          args['--level']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--level requires an argument: --level, -l LEVEL" >&2
+          exit 1
+        fi
+        ;;
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+  # :command.required_flags_filter
+  if [[ -z ${args['--package']+x} ]]; then
+    printf "missing required flag: --package, -p PACKAGE\n" >&2
+    exit 1
+  fi
+  if [[ -z ${args['--level']+x} ]]; then
+    printf "missing required flag: --level, -l LEVEL\n" >&2
+    exit 1
+  fi
+
+  # :command.whitelist_filter
+  if [[ ! ${args['--level']} =~ ^(INFO|WARN|DEBUG|TRACE)$ ]]; then
+    printf "%s\n" "--level must be one of: INFO, WARN, DEBUG, TRACE" >&2
+    exit 1
+  fi
 
 }
 
@@ -7920,21 +9002,9 @@ playground_container_logs_parse_requirements() {
           exit 1
         fi
 
-        # :flag.case_arg
-        if [[ -n ${2+x} ]]; then
-          # :flag.validations
-          if [[ -n $(validate_editor_exists "$2") ]]; then
-            printf "validation error in %s:\n%s\n" "--open, -o EDITOR" "$(validate_editor_exists "$2")" >&2
-            exit 1
-          fi
-
-          args['--open']="$2"
-          shift
-          shift
-        else
-          printf "%s\n" "--open requires an argument: --open, -o EDITOR" >&2
-          exit 1
-        fi
+        # :flag.case_no_arg
+        args['--open']=1
+        shift
         ;;
 
       # :flag.case
@@ -8519,6 +9589,13 @@ playground_topic_parse_requirements() {
       shift $#
       ;;
 
+    consume)
+      action="consume"
+      shift
+      playground_topic_consume_parse_requirements "$@"
+      shift $#
+      ;;
+
     # :command.command_fallback
     "")
       playground_topic_usage >&2
@@ -8552,6 +9629,13 @@ playground_topic_parse_requirements() {
 
     esac
   done
+
+  # :command.user_filter
+  filter_error=$(filter_not_mdc_environment)
+  if [[ -n $filter_error ]]; then
+    echo "$filter_error" >&2
+    exit 1
+  fi
 
 }
 
@@ -8780,6 +9864,52 @@ playground_topic_describe_parse_requirements() {
 }
 
 # :command.parse_requirements
+playground_topic_consume_parse_requirements() {
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    case "${1:-}" in
+      --help | -h)
+        long_usage=yes
+        playground_topic_consume_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.dependencies_filter
+
+  # :command.command_filter
+  action="topic consume"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+}
+
+# :command.parse_requirements
 playground_connector_parse_requirements() {
   # :command.fixed_flags_filter
   while [[ $# -gt 0 ]]; do
@@ -8823,6 +9953,13 @@ playground_connector_parse_requirements() {
       action="pause"
       shift
       playground_connector_pause_parse_requirements "$@"
+      shift $#
+      ;;
+
+    versions)
+      action="versions"
+      shift
+      playground_connector_versions_parse_requirements "$@"
       shift $#
       ;;
 
@@ -8895,6 +10032,13 @@ playground_connector_parse_requirements() {
     esac
   done
 
+  # :command.user_filter
+  filter_error=$(filter_not_mdc_environment)
+  if [[ -n $filter_error ]]; then
+    echo "$filter_error" >&2
+    exit 1
+  fi
+
 }
 
 # :command.parse_requirements
@@ -8924,13 +10068,6 @@ playground_connector_status_parse_requirements() {
   while [[ $# -gt 0 ]]; do
     key="$1"
     case "$key" in
-      # :flag.case
-      --json)
-
-        # :flag.case_no_arg
-        args['--json']=1
-        shift
-        ;;
 
       -?*)
         printf "invalid option: %s\n" "$key" >&2
@@ -9054,11 +10191,65 @@ playground_connector_pause_parse_requirements() {
     esac
   done
 
-  # :command.required_flags_filter
-  if [[ -z ${args['--connector']+x} ]]; then
-    printf "missing required flag: --connector, -c CONNECTOR\n" >&2
-    exit 1
-  fi
+}
+
+# :command.parse_requirements
+playground_connector_versions_parse_requirements() {
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    case "${1:-}" in
+      --help | -h)
+        long_usage=yes
+        playground_connector_versions_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.dependencies_filter
+
+  # :command.command_filter
+  action="connector versions"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      # :flag.case
+      --connector | -c)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+
+          args['--connector']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--connector requires an argument: --connector, -c CONNECTOR" >&2
+          exit 1
+        fi
+        ;;
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
 
 }
 
@@ -9120,12 +10311,6 @@ playground_connector_restart_parse_requirements() {
     esac
   done
 
-  # :command.required_flags_filter
-  if [[ -z ${args['--connector']+x} ]]; then
-    printf "missing required flag: --connector, -c CONNECTOR\n" >&2
-    exit 1
-  fi
-
 }
 
 # :command.parse_requirements
@@ -9185,12 +10370,6 @@ playground_connector_resume_parse_requirements() {
 
     esac
   done
-
-  # :command.required_flags_filter
-  if [[ -z ${args['--connector']+x} ]]; then
-    printf "missing required flag: --connector, -c CONNECTOR\n" >&2
-    exit 1
-  fi
 
 }
 
@@ -9252,12 +10431,6 @@ playground_connector_delete_parse_requirements() {
     esac
   done
 
-  # :command.required_flags_filter
-  if [[ -z ${args['--connector']+x} ]]; then
-    printf "missing required flag: --connector, -c CONNECTOR\n" >&2
-    exit 1
-  fi
-
 }
 
 # :command.parse_requirements
@@ -9318,12 +10491,6 @@ playground_connector_show_lag_parse_requirements() {
     esac
   done
 
-  # :command.required_flags_filter
-  if [[ -z ${args['--connector']+x} ]]; then
-    printf "missing required flag: --connector, -c CONNECTOR\n" >&2
-    exit 1
-  fi
-
 }
 
 # :command.parse_requirements
@@ -9347,169 +10514,23 @@ playground_connector_log_level_parse_requirements() {
   # :command.dependencies_filter
 
   # :command.command_filter
-  action=${1:-}
-
-  case $action in
-    -*) ;;
-
-    get)
-      action="get"
-      shift
-      playground_connector_log_level_get_parse_requirements "$@"
-      shift $#
-      ;;
-
-    set)
-      action="set"
-      shift
-      playground_connector_log_level_set_parse_requirements "$@"
-      shift $#
-      ;;
-
-    # :command.command_fallback
-    "")
-      playground_connector_log_level_usage >&2
-      exit 1
-      ;;
-
-    *)
-      printf "invalid command: %s\n" "$action" >&2
-      exit 1
-      ;;
-
-  esac
-
-  # :command.parse_requirements_while
-  while [[ $# -gt 0 ]]; do
-    key="$1"
-    case "$key" in
-
-      -?*)
-        printf "invalid option: %s\n" "$key" >&2
-        exit 1
-        ;;
-
-      *)
-        # :command.parse_requirements_case
-        # :command.parse_requirements_case_simple
-        printf "invalid argument: %s\n" "$key" >&2
-        exit 1
-
-        ;;
-
-    esac
-  done
-
-}
-
-# :command.parse_requirements
-playground_connector_log_level_get_parse_requirements() {
-  # :command.fixed_flags_filter
-  while [[ $# -gt 0 ]]; do
-    case "${1:-}" in
-      --help | -h)
-        long_usage=yes
-        playground_connector_log_level_get_usage
-        exit
-        ;;
-
-      *)
-        break
-        ;;
-
-    esac
-  done
-
-  # :command.dependencies_filter
-
-  # :command.command_filter
-  action="connector log-level get"
+  action="connector log-level"
 
   # :command.parse_requirements_while
   while [[ $# -gt 0 ]]; do
     key="$1"
     case "$key" in
       # :flag.case
-      --package | -p)
+      --connector | -c)
 
         # :flag.case_arg
         if [[ -n ${2+x} ]]; then
-          # :flag.validations
-          if [[ -n $(validate_not_empty "$2") ]]; then
-            printf "validation error in %s:\n%s\n" "--package, -p PACKAGE" "$(validate_not_empty "$2")" >&2
-            exit 1
-          fi
 
-          args['--package']="$2"
+          args['--connector']="$2"
           shift
           shift
         else
-          printf "%s\n" "--package requires an argument: --package, -p PACKAGE" >&2
-          exit 1
-        fi
-        ;;
-
-      -?*)
-        printf "invalid option: %s\n" "$key" >&2
-        exit 1
-        ;;
-
-      *)
-        # :command.parse_requirements_case
-        # :command.parse_requirements_case_simple
-        printf "invalid argument: %s\n" "$key" >&2
-        exit 1
-
-        ;;
-
-    esac
-  done
-
-}
-
-# :command.parse_requirements
-playground_connector_log_level_set_parse_requirements() {
-  # :command.fixed_flags_filter
-  while [[ $# -gt 0 ]]; do
-    case "${1:-}" in
-      --help | -h)
-        long_usage=yes
-        playground_connector_log_level_set_usage
-        exit
-        ;;
-
-      *)
-        break
-        ;;
-
-    esac
-  done
-
-  # :command.dependencies_filter
-
-  # :command.command_filter
-  action="connector log-level set"
-
-  # :command.parse_requirements_while
-  while [[ $# -gt 0 ]]; do
-    key="$1"
-    case "$key" in
-      # :flag.case
-      --package | -p)
-
-        # :flag.case_arg
-        if [[ -n ${2+x} ]]; then
-          # :flag.validations
-          if [[ -n $(validate_not_empty "$2") ]]; then
-            printf "validation error in %s:\n%s\n" "--package, -p PACKAGE" "$(validate_not_empty "$2")" >&2
-            exit 1
-          fi
-
-          args['--package']="$2"
-          shift
-          shift
-        else
-          printf "%s\n" "--package requires an argument: --package, -p PACKAGE" >&2
+          printf "%s\n" "--connector requires an argument: --connector, -c CONNECTOR" >&2
           exit 1
         fi
         ;;
@@ -9546,10 +10567,6 @@ playground_connector_log_level_set_parse_requirements() {
   done
 
   # :command.required_flags_filter
-  if [[ -z ${args['--package']+x} ]]; then
-    printf "missing required flag: --package, -p PACKAGE\n" >&2
-    exit 1
-  fi
   if [[ -z ${args['--level']+x} ]]; then
     printf "missing required flag: --level, -l LEVEL\n" >&2
     exit 1
@@ -9565,7 +10582,7 @@ playground_connector_log_level_set_parse_requirements() {
 
 # :command.initialize
 initialize() {
-  version="1.0.2"
+  version="1.0.3"
   long_usage=''
   set -e
 
@@ -9619,6 +10636,15 @@ run() {
       fi
       ;;
 
+    "re-run")
+      if [[ ${args['--help']:-} ]]; then
+        long_usage=yes
+        playground_re_run_usage
+      else
+        playground_re_run_command
+      fi
+      ;;
+
     "bootstrap-reproduction-model")
       if [[ ${args['--help']:-} ]]; then
         long_usage=yes
@@ -9637,12 +10663,48 @@ run() {
       fi
       ;;
 
+    "get-all-schemas")
+      if [[ ${args['--help']:-} ]]; then
+        long_usage=yes
+        playground_get_all_schemas_usage
+      else
+        playground_get_all_schemas_command
+      fi
+      ;;
+
     "enable-remote-debugging")
       if [[ ${args['--help']:-} ]]; then
         long_usage=yes
         playground_enable_remote_debugging_usage
       else
         playground_enable_remote_debugging_command
+      fi
+      ;;
+
+    "log-level")
+      if [[ ${args['--help']:-} ]]; then
+        long_usage=yes
+        playground_log_level_usage
+      else
+        playground_log_level_command
+      fi
+      ;;
+
+    "log-level get")
+      if [[ ${args['--help']:-} ]]; then
+        long_usage=yes
+        playground_log_level_get_usage
+      else
+        playground_log_level_get_command
+      fi
+      ;;
+
+    "log-level set")
+      if [[ ${args['--help']:-} ]]; then
+        long_usage=yes
+        playground_log_level_set_usage
+      else
+        playground_log_level_set_command
       fi
       ;;
 
@@ -9799,6 +10861,15 @@ run() {
       fi
       ;;
 
+    "topic consume")
+      if [[ ${args['--help']:-} ]]; then
+        long_usage=yes
+        playground_topic_consume_usage
+      else
+        playground_topic_consume_command
+      fi
+      ;;
+
     "connector")
       if [[ ${args['--help']:-} ]]; then
         long_usage=yes
@@ -9832,6 +10903,15 @@ run() {
         playground_connector_pause_usage
       else
         playground_connector_pause_command
+      fi
+      ;;
+
+    "connector versions")
+      if [[ ${args['--help']:-} ]]; then
+        long_usage=yes
+        playground_connector_versions_usage
+      else
+        playground_connector_versions_command
       fi
       ;;
 
@@ -9877,24 +10957,6 @@ run() {
         playground_connector_log_level_usage
       else
         playground_connector_log_level_command
-      fi
-      ;;
-
-    "connector log-level get")
-      if [[ ${args['--help']:-} ]]; then
-        long_usage=yes
-        playground_connector_log_level_get_usage
-      else
-        playground_connector_log_level_get_command
-      fi
-      ;;
-
-    "connector log-level set")
-      if [[ ${args['--help']:-} ]]; then
-        long_usage=yes
-        playground_connector_log_level_set_usage
-      else
-        playground_connector_log_level_set_command
       fi
       ;;
 

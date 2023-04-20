@@ -11,6 +11,11 @@ nb_producers="${args[--nb-producers]}"
 add_custom_smt="${args[--custom-smt]}"
 sink_file="${args[--pipeline]}"
 
+if [[ $test_file == *"@"* ]]
+then
+  test_file=$(echo "$test_file" | cut -d "@" -f 2)
+fi
+
 if [[ "$test_file" != *".sh" ]]
 then
   logerror "ERROR: test_file $test_file is not a .sh file!"
@@ -498,6 +503,11 @@ fi
 if [[ -n "$sink_file" ]]
 then
   tmp_dir=$(mktemp -d -t ci-XXXXXXXXXX)
+
+  if [[ $sink_file == *"@"* ]]
+  then
+    sink_file=$(echo "$sink_file" | cut -d "@" -f 2)
+  fi
   test_sink_file_directory="$(dirname "${sink_file}")"
   ## 
   # docker-compose part
@@ -731,4 +741,7 @@ repro_test_filename=$(basename -- "$repro_test_file")
 
 log "🌟 Command to run generated example"
 echo "playground run -f $repro_dir/$repro_test_filename"
-playground run -f $repro_dir/$repro_test_filename
+echo "playground run -f $repro_dir/$repro_test_filename" > /tmp/playground-run
+log "🕹️ Ready? Run it now ?"
+check_if_continue
+playground run -f $repro_dir/$repro_test_filename --open

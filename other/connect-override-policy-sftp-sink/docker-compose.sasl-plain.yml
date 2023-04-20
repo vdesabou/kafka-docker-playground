@@ -3,8 +3,6 @@ version: '3.5'
 services:
 
   broker:
-    volumes:
-        - ../../other/connect-override-policy-sftp-sink/client.properties:/tmp/client.properties
     environment:
       KAFKA_AUTHORIZER_CLASS_NAME: $KAFKA_AUTHORIZER_CLASS_NAME
       KAFKA_ZOOKEEPER_SET_ACL: "true"
@@ -12,9 +10,6 @@ services:
       KAFKA_LOG4J_LOGGERS: "kafka.authorizer.logger=INFO"
       KAFKA_SUPER_USERS: User:broker;User:schemaregistry;User:client;User:connect
 
-  schema-registry:
-    volumes:
-        - ../../other/connect-override-policy-sftp-sink/client.properties:/tmp/client.properties
 
   sftp-server:
     image: atmoz/sftp
@@ -25,8 +20,6 @@ services:
     command: foo:pass:::upload
 
   connect:
-    volumes:
-        - ../../other/connect-override-policy-sftp-sink/client.properties:/tmp/client.properties
     environment:
       CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-sftp
       CONNECT_CONNECTOR_CLIENT_CONFIG_OVERRIDE_POLICY: Principal

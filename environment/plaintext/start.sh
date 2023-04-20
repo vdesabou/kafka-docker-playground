@@ -118,7 +118,7 @@ docker-compose -f ../../environment/plaintext/docker-compose.yml ${ENABLE_DOCKER
 log "📝 To see the actual properties file, use cli command playground get-properties -c <container>"
 command="source ../../scripts/utils.sh && docker-compose -f ../../environment/plaintext/docker-compose.yml ${ENABLE_DOCKER_COMPOSE_FILE_OVERRIDE} ${profile_control_center_command} ${profile_ksqldb_command} ${profile_grafana_command} ${profile_kcat_command} ${profile_conduktor_command} ${profile_oracle_datagen_command} ${profile_connect_nodes_command} ${profile_kafka_nodes_command} ${profile_schema_registry_command} up -d"
 echo "$command" > /tmp/playground-command
-log "✨ If you modify a docker-compose file and want to re-create the container(s), run cli command playground recreate-container"
+log "✨ If you modify a docker-compose file and want to re-create the container(s), run cli command playground container recreate"
 
 
 if [ "$#" -ne 0 ]

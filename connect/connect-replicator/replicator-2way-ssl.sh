@@ -12,7 +12,7 @@ log "##  SSL authentication"
 log "########"
 
 log "Sending messages to topic test-topic-ssl"
-seq 10 | docker exec -i broker kafka-console-producer --broker-list broker:9092 --topic test-topic-ssl --producer.config /etc/kafka/secrets/client_without_interceptors_2way_ssl.config
+seq 10 | docker exec -i broker kafka-console-producer --broker-list broker:9092 --topic test-topic-ssl --producer.config /etc/kafka/secrets/client_without_interceptors.config
 
 log "Creating Confluent Replicator connector with SSL authentication"
 curl -X PUT \
@@ -59,4 +59,4 @@ curl -X PUT \
 sleep 10
 
 log "Verify we have received the data in test-topic-ssl-duplicate topic"
-timeout 60 docker exec broker kafka-console-consumer --bootstrap-server broker:9092 --topic test-topic-ssl-duplicate --from-beginning --max-messages 10 --consumer.config /etc/kafka/secrets/client_without_interceptors_2way_ssl.config
+timeout 60 docker exec broker kafka-console-consumer --bootstrap-server broker:9092 --topic test-topic-ssl-duplicate --from-beginning --max-messages 10 --consumer.config /etc/kafka/secrets/client_without_interceptors.config

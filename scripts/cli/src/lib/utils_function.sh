@@ -233,21 +233,11 @@ function verify_confluent_details()
 
 function check_if_continue()
 {
-    if [ ! -z "$CI" ] || [ ! -z "$CLOUDFORMATION" ]
+    if [ ! -z "$CI" ]
     then
-        # running with github actions or cloudformation, continue
+        # running with github actions, continue
         return
     fi
-    read -p "Continue (y/n)?" choice
-    case "$choice" in
-    y|Y ) ;;
-    n|N ) exit 1;;
-    * ) logerror "invalid response!";exit 1;;
-    esac
-}
-
-function really_check_if_continue()
-{
     read -p "Continue (y/n)?" choice
     case "$choice" in
     y|Y ) ;;
@@ -404,6 +394,7 @@ function az() {
 }
 
 function display_docker_container_error_log() {
+  set +e
   logerror "####################################################"
   logerror "🐳 docker ps"
   docker ps
@@ -415,9 +406,9 @@ function display_docker_container_error_log() {
       if [[ "$container" == "connect" ]] || [[ "$container" == "sap" ]]
       then
           # always show all logs for connect
-          docker container logs --tail=100 $container | grep -v "was supplied but isn't a known config"
+          docker container logs --tail=100 $container 2>&1 | grep -v "was supplied but isn't a known config"
       else
-          docker container logs $container | egrep "ERROR|FATAL"
+          docker container logs $container 2>&1 | egrep "ERROR|FATAL" 
       fi
       logwarn "####################################################"
   done
@@ -691,13 +682,15 @@ function display_jmx_info() {
   then
     log "📊 JMX metrics are available locally on those ports:"
   else
+    log "🛡️ Prometheus is reachable at http://127.0.0.1:9090"
+    log "📛 Pyroscope is reachable at http://127.0.0.1:4040"
     log "📊 Grafana is reachable at http://127.0.0.1:3000 or JMX metrics are available locally on those ports:"
   fi  
   log "    - zookeeper       : 9999"
   log "    - broker          : 10000"
   log "    - schema-registry : 10001"
   log "    - connect         : 10002"
-
+    
   if [ -z "$DISABLE_KSQLDB" ]
   then
     log "    - ksqldb-server   : 10003"

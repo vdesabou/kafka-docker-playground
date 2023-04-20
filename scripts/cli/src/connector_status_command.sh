@@ -1,25 +1,69 @@
-environment=`get_environment_used`
+ret=$(get_connect_url_and_security)
 
-if [ "$environment" == "error" ]
+connect_url=$(echo "$ret" | cut -d "@" -f 1)
+security=$(echo "$ret" | cut -d "@" -f 2)
+
+connectors=$(curl -s $security "$connect_url/connectors/" | jq -r '.[]')
+
+log "🧩 Displaying connector(s) status"
+if [ -z "$connectors" ]
 then
-  logerror "File containing restart command /tmp/playground-command does not exist!"
-  exit 1 
-fi
-connect_url="http://localhost:8083"
-security_certs=""
-if [ "$environment" != "plaintext" ]
-then
-    connect_url="https://localhost:8083"
-    DIR_CLI="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
-
-    security_certs="--cert $DIR_CLI/../../environment/$environment/security/connect.certificate.pem --key $DIR_CLI/../../environment/$environment/security/connect.key --tlsv1.2 --cacert $DIR_CLI/../../environment/$environment/security/snakeoil-ca-1.crt"
-fi
-
-json="${args[--json]}"
-
-if [[ -n "$json" ]]
-then
-  curl $security_certs -s "$connect_url/connectors?expand=status&expand=info" | jq .
+    log "💤 there are no connectors running !"
 else
-  curl $security_certs -s "$connect_url/connectors?expand=info&expand=status" | jq '. | to_entries[] | [ .value.info.type, .key, .value.status.connector.state,.value.status.tasks[].state,.value.info.config."connector.class"]|join(":|:")' | column -s : -t| sed 's/\"//g'| sort
+    printf "%-30s %-12s %-30s %-50s\n" "Name" "Status" "Tasks" "Stack Trace"
+    echo "-------------------------------------------------------------------------------------------------------------"
+
+    for connector in $connectors
+    do
+        status=$(curl -s $security "$connect_url/connectors/$connector/status" | jq -r '.connector.state')
+
+        if [ "$status" == "RUNNING" ]
+        then
+            status="✅ RUNNING"
+        elif [ "$status" == "PAUSED" ]
+        then
+            status="⏸️  PAUSED"
+        elif [ "$status" == "FAILED" ]
+        then
+            status="❌ FAILED"
+        else
+            status="🤔 UNKNOWN"
+        fi
+        
+        tasks=$(curl -s $security "$connect_url/connectors/$connector/status" | jq -r '.tasks[] | "\(.id):\(.state)"' | tr '\n' ',' | sed 's/,$/\n/')
+        
+        if [[ "$tasks" == *"RUNNING"* ]]
+        then
+            tasks="${tasks//RUNNING/🟢 RUNNING}"
+        elif [[ "$tasks" == *"PAUSED"* ]]
+        then
+            tasks="${tasks//PAUSED/⏸️  PAUSED}"
+        elif [[ "$tasks" == *"FAILED"* ]]
+        then
+            tasks="${tasks//FAILED/🛑 FAILED}"
+        else
+            tasks="🤔 N/A"
+        fi
+        
+        stacktrace_connector=$(curl -s $security "$connect_url/connectors/$connector/status" | jq -r '.connector.trace | select(length > 0)')
+        stacktrace_tasks=$(curl -s $security "$connect_url/connectors/$connector/status" | jq -r '.tasks[].trace | select(length > 0)')
+        stacktrace=""
+        if [ "$stacktrace_connector" != "" ]
+        then
+            stacktrace="connector: $stacktrace_connector"
+        fi
+
+        if [ "$stacktrace_tasks" != "" ]
+        then
+            stacktrace="$stacktrace tasks: $stacktrace_tasks"
+        fi
+
+        if [ -z "$stacktrace" ]
+        then
+            stacktrace="-"
+        fi
+
+        printf "%-30s %-12s %-30s %-50s\n" "$connector" "$status" "$tasks" "$stacktrace"
+        echo "-------------------------------------------------------------------------------------------------------------"
+    done
 fi

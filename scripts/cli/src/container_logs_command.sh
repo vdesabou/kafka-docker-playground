@@ -10,7 +10,22 @@ then
   docker container logs "$container" > "$filename" 2>&1
   if [ $? -eq 0 ]
   then
-    $editor "$filename"
+    if [ ! -z $EDITOR ]
+    then
+      log "📖 Opening ${filename} using EDITOR environment variable"
+      $EDITOR ${filename}
+    else
+      if [[ $(type code 2>&1) =~ "not found" ]]
+      then
+        logerror "Could not determine an editor to use, you can set EDITOR environment variable with your preferred choice"
+        exit 1
+      else
+        log "📖 Opening ${filename} with code (you can change editor by setting EDITOR environment variable)"
+        code ${filename}
+      fi
+    fi
+  else
+    logerror "Failed to get logs using container logs $container"
   fi
 elif [[ -n "$log" ]]
 then

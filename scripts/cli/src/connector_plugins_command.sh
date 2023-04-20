@@ -1,18 +1,7 @@
-environment=`get_environment_used`
+ret=$(get_connect_url_and_security)
 
-if [ "$environment" == "error" ]
-then
-  logerror "File containing restart command /tmp/playground-command does not exist!"
-  exit 1 
-fi
-connect_url="http://localhost:8083"
-security_certs=""
-if [ "$environment" != "plaintext" ]
-then
-    connect_url="https://localhost:8083"
-    DIR_CLI="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
+connect_url=$(echo "$ret" | cut -d "@" -f 1)
+security=$(echo "$ret" | cut -d "@" -f 2)
 
-    security_certs="--cert $DIR_CLI/../../environment/$environment/security/connect.certificate.pem --key $DIR_CLI/../../environment/$environment/security/connect.key --tlsv1.2 --cacert $DIR_CLI/../../environment/$environment/security/snakeoil-ca-1.crt"
-fi
-
-curl $security_certs -s -X GET -H "Content-Type: application/json" "$connect_url/connector-plugins" | jq .
+log "🧩 Displaying all connector plugins installed"
+curl $security -s -X GET -H "Content-Type: application/json" "$connect_url/connector-plugins" | jq -r '.[] | [.class , .version , .type] | @tsv' | column -t

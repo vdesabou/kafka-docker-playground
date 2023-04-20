@@ -78,8 +78,6 @@ jobs:
       - name: Build and Test
         run: bash scripts/run-tests.sh "${{ matrix.test_list }}" "${{ matrix.tag }}"
         env:
-          DISABLE_KSQLDB: "yes"
-          DISABLE_CONTROL_CENTER: "yes"
           AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID}}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY}}
           AWS_ACCOUNT_WITH_ASSUME_ROLE_AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCOUNT_WITH_ASSUME_ROLE_AWS_ACCESS_KEY_ID}}

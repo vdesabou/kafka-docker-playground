@@ -38,7 +38,7 @@ curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
                "tasks.max": "1",
-               "connector.class": "FileStreamSink",
+               "connector.class": "org.apache.kafka.connect.file.FileStreamSinkConnector",
                "topics": "${securepass:/etc/kafka/secrets/secret.txt:my-config-file.properties/my-secret-property}",
                "file": "/tmp/output.json",
                "key.converter": "org.apache.kafka.connect.storage.StringConverter",

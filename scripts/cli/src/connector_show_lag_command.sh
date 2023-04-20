@@ -1,27 +1,36 @@
-environment=`get_environment_used`
 connector="${args[--connector]}"
 
-if [ "$environment" == "error" ]
-then
-  logerror "File containing restart command /tmp/playground-command does not exist!"
-  exit 1 
-fi
-connect_url="http://localhost:8083"
-security_certs=""
-if [ "$environment" != "plaintext" ]
-then
-    connect_url="https://localhost:8083"
-    DIR_CLI="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
+ret=$(get_connect_url_and_security)
 
-    security_certs="--cert $DIR_CLI/../../environment/$environment/security/connect.certificate.pem --key $DIR_CLI/../../environment/$environment/security/connect.key --tlsv1.2 --cacert $DIR_CLI/../../environment/$environment/security/snakeoil-ca-1.crt"
-fi
+connect_url=$(echo "$ret" | cut -d "@" -f 1)
+security=$(echo "$ret" | cut -d "@" -f 2)
 
-type=$(curl -s http://localhost:8083/connectors\?expand\=status\&expand\=info | jq -r '. | to_entries[] | [ .value.info.type]|join(":|:")')
-if [ "$type" != "sink" ]
+if [[ ! -n "$connector" ]]
 then
-  logerror "Connector $connector is a $type connector, it must be a sink to show the lag !"
-  exit 1 
+    logwarn "--connector flag was not provided, applying command to all connectors"
+    connector=$(playground get-connector-list)
+    if [ "$connector" == "" ]
+    then
+        logerror "💤 No connector is running !"
+        exit 1
+    fi
 fi
 
-log "Show lag for sink connector $connector"
-docker exec broker kafka-consumer-groups --bootstrap-server broker:9092 --group connect-$connector --describe
+ret=$(get_security_broker "--command-config")
+
+container=$(echo "$ret" | cut -d "@" -f 1)
+security=$(echo "$ret" | cut -d "@" -f 2)
+
+items=($connector)
+for connector in ${items[@]}
+do
+  type=$(curl -s $security "$connect_url/connectors/$connector/status" | jq -r '.type')
+  if [ "$type" != "sink" ]
+  then
+    logwarn "⏭️ Skipping $type connector $connector, it must be a sink to show the lag"
+    continue 
+  fi
+
+  log "🐢 Show lag for sink connector $connector"
+  docker exec $container kafka-consumer-groups --bootstrap-server broker:9092 --group connect-$connector --describe $security
+done

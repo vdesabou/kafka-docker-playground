@@ -1,6 +1,6 @@
 name: playground
 help: 🧠 CLI for Kafka Docker Playground 🐳
-version: 1.0.2
+version: 1.0.3
 dependencies:
   docker: 👉 Check documentation https://tinyurl.com/4rpcmpjj
 
@@ -18,6 +18,10 @@ commands:
 - name: get-examples-list-with-fzf
   help: Return some completion for examples list
   private: true
+  args:
+  - name: cur
+    required: false
+    help: correspond to completion $cur
   flags:
   - long: --without-repro
     required: false
@@ -26,7 +30,9 @@ commands:
 
 - name: run
   group: Run
-
+  environment_variables:
+  - name: EDITOR 
+    help: 🔖 Editor to use to open the example file.
   dependencies:
   - fzf
   help: |-
@@ -38,12 +44,18 @@ commands:
   - long: --file
     short: -f
     required: true
-    validate: file_exists
+    validate: file_exists_with_trick
     arg: file
     completions:
-      - $(playground get-examples-list-with-fzf)
+      - $(playground get-examples-list-with-fzf "$cur")
     help: |-
       Example file to run.
+      It must be absolute full path. 
+
+      🎓 Tip: use <tab> completion to trigger fzf completion.
+  - long: --open
+    short: -o
+    help: Opening example file with text editor set with EDITOR environment variable (default is code).
   - long: --tag
     arg: tag
     required: false
@@ -56,6 +68,7 @@ commands:
   - long: --connector-zip
     arg: connector_zip
     required: false
+    validate: file_exists
     help: Connector zip to use
     conflicts: [--connector-tag]
   - long: --connector-jar
@@ -80,7 +93,12 @@ commands:
     help: Enable Multiple Connect Workers
   - long: --enable-jmx-grafana
     required: false
-    help: Enable Grafana
+    help: |-
+      Enable Grafana, Prometheus and Pyroscope
+
+      📊 Grafana is reachable at http://127.0.0.1:3000
+      🛡️  Prometheus is reachable at http://127.0.0.1:9090
+      📛 Pyroscope is reachable at http://127.0.0.1:4040
   - long: --enable-kcat
     required: false
     help: Enable kcat
@@ -88,6 +106,14 @@ commands:
     required: false
     help: Enable Schema Registry Maven plugin App
 
+- name: re-run
+  group: Run
+  environment_variables:
+  - name: EDITOR 
+    help: 🔖 Editor to use to open the example file.
+  help: |-
+    🛸  Re-run last example.
+    
 - name: bootstrap-reproduction-model
   environment_variables:
   - name: OUTPUT_FOLDER 
@@ -105,12 +131,15 @@ commands:
   - long: --file
     short: -f
     required: true
-    validate: file_exists
+    validate: file_exists_with_trick
     arg: file
     completions:
-      - $(playground get-examples-list-with-fzf --without-repro)
+      - $(playground get-examples-list-with-fzf --without-repro "$cur")
     help: |-
       Example file to use as basis.
+      It must be absolute full path. 
+
+      🎓 Tip: use <tab> completion to trigger fzf completion.
 
   - long: --description
     short: -d
@@ -153,21 +182,23 @@ commands:
 
   - long: --pipeline
     required: false
-    validate: file_exists
+    validate: file_exists_with_trick
     arg: sink_file
     conflicts: [--producer]
     completions:
-      - $(playground get-examples-list-with-fzf --without-repro --sink-only)
+      - $(playground get-examples-list-with-fzf --without-repro --sink-only "$cur")
     help: |-
       Sink example file to use for creating a pipeline.
+      It must be absolute full path. 
+
+      🎓 Tip: use <tab> completion to trigger fzf completion.
 
   examples:
-  - playground bootstrap-reproduction-model -f hdfs2-sink.sh -d "123456 testing with parquet format"
-  - playground bootstrap-reproduction-model -f hdfs2-sink.sh -d "123456 testing with parquet format and avro producer" --producer avro
-  - playground bootstrap-reproduction-model -f hdfs2-sink.sh -d "123456 testing with parquet format and 2 protobuf producers" --producer protobuf --nb-producers 2
-  - playground bootstrap-reproduction-model -f hdfs2-sink.sh -d "123456 testing with parquet format and 2 protobuf producers" -p protobuf -n 2
-  - playground bootstrap-reproduction-model -f hdfs2-sink.sh -d "123456 testing with parquet format and custom smt" --custom-smt
-  - playground bootstrap-reproduction-model -f debezium-postgres-source.sh -d "create pipeline" --pipeline ../../connect/connect-jdbc-sqlserver-sink/sqlserver-microsoft-sink.sh
+  - playground bootstrap-reproduction-model -f hdfs2<tab> -d "simple test"
+  - playground bootstrap-reproduction-model -f /full/path/hdfs2-sink.sh -d "testing with avro producer" --producer avro
+  - playground bootstrap-reproduction-model -f hdfs2<tab> -d "testing with 2 protobuf producers" --producer protobuf --nb-producers 2
+  - playground bootstrap-reproduction-model -f hdfs2<tab> -d "testing custom smt" --custom-smt
+  - playground bootstrap-reproduction-model -f debeziumpostgres<tab> -d "create pipeline" --pipeline jdbcsink<tab>
 
 - name: get-properties
   group: Kafka
@@ -193,6 +224,18 @@ commands:
   - playground get-properties --container broker
   - playground get-properties -c broker
 
+- name: get-all-schemas
+  group: Kafka
+  filters:
+  - not_mdc_environment
+  help: |-
+    🔰 Get all schemas versions for all subjects.
+    
+    👉 Check documentation xxxx
+
+  examples:
+  - playground get-all-schemas
+
 - name: enable-remote-debugging
   group: Debug
   help: |-
@@ -205,6 +248,49 @@ commands:
   - playground enable-remote-debugging
   - playground enable-remote-debugging --container broker
   - playground enable-remote-debugging -c broker
+
+- name: log-level
+  group: Debug
+  help: |-
+    🧬 Set log level for any package.
+
+    👉 Check documentation https://tinyurl.com/yc78tr8a
+
+  commands:
+  - name: get
+    help: Get log levels.
+    flags:
+    - long: --package
+      short: -p
+      required: false
+      validate: not_empty
+      arg: package
+      help: |-
+        Package name.
+
+  - name: set
+    help: Set log level for specific logger.
+    flags:
+    - long: --package
+      short: -p
+      required: true
+      validate: not_empty
+      arg: package
+      help: |-
+        Package name.
+
+    - long: --level
+      short: -l
+      help: Log level.
+      arg: level
+      allowed: [INFO, WARN, DEBUG, TRACE]
+      required: true
+
+  examples:
+  - playground log-level get
+  - playground log-level get -p io.confluent.connect.oracle.cdc
+  - playground log-level get --package io.confluent.connect.oracle.cdc
+  - playground log-level set -p io.confluent.connect.oracle.cdc.logging.LogUtils -l TRACE
 
 - name: get-jmx-metrics
   group: Kafka
@@ -270,9 +356,7 @@ commands:
       - *container
       - long: --open
         short: -o
-        arg: editor
-        validate: editor_exists
-        help: Save output to a file and open with editor passed as argument (default is code).
+        help: Save output to a file and open with text editor set with EDITOR environment variable (default is code).
         conflicts: [--wait-for-log]
       - long: --wait-for-log
         short: -w
@@ -289,9 +373,8 @@ commands:
         conflicts: [--open]
 
       examples:
-      - playground logs --container connect
-      - playground logs -c connect -o code
-      - playground logs -c connect -o vim
+      - playground container logs --container connect
+      - playground container logs -c connect --open
 
     - name: ssh
       group: Container
@@ -389,6 +472,8 @@ commands:
 - name: topic
   expose: true
   group: Topic
+  filters:
+  - not_mdc_environment
   help: |-
     📁 Topic commands.
   commands:
@@ -397,7 +482,6 @@ commands:
       group: Topic
       help: |-
         💯 Get number of records in a topic.
-
       flags:
       - &topic
         long: --topic
@@ -408,7 +492,6 @@ commands:
           - $(playground get-topic-list)
         help: |-
           Topic name.
-
       examples:
       - playground get-number-records --topic a-topic
       - playground get-number-records -t a-topic
@@ -427,24 +510,25 @@ commands:
       group: Topic
       help: |-
         🔎 Describe topic.
-
       flags:
       - *topic
 
+    - name: consume
+      group: Topic
+      help: |-
+        ↘️ Consumer topic(s) from current running examples
 
 - name: connector
   expose: true
   group: Connector
+  filters:
+  - not_mdc_environment
   help: |-
     🔗 Connector commands.
 
   commands:
   - name: status
     help: ℹ️  Show status of all connectors.
-
-    flags:
-    - long: --json
-      help: Show output as JSON.
 
   - name: plugins
     help: 🔖 Show all plugins installed.
@@ -455,12 +539,17 @@ commands:
     - &connector
       long: --connector
       short: -c
-      required: true
+      required: false
       arg: connector
       completions:
         - $(playground get-connector-list)
       help: |-
         Connector name.
+
+  - name: versions
+    help:  🧞 Get current version used in example and latest available
+    flags:
+    - *connector
 
   - name: restart
     help: ♻️  Restart connector
@@ -482,48 +571,21 @@ commands:
     flags:
     - *connector
 
-
   - name: log-level
     help: |-
       🧬 Set connect log level.
-
-      👉 Check documentation https://tinyurl.com/yc78tr8a
-
-    commands:
-    - name: get
-      help: Get log levels.
-      flags:
-      - long: --package
-        short: -p
-        required: false
-        validate: not_empty
-        arg: package
-        help: |-
-          Package name.
-
-    - name: set
-      help: Set log level for specific logger.
-      flags:
-      - long: --package
-        short: -p
-        required: true
-        validate: not_empty
-        arg: package
-        help: |-
-          Package name.
-
-      - long: --level
-        short: -l
-        help: Log level.
-        arg: level
-        allowed: [INFO, WARN, DEBUG, TRACE]
-        required: true
+    flags:
+    - *connector
+    - long: --level
+      short: -l
+      help: Log level.
+      arg: level
+      allowed: [INFO, WARN, DEBUG, TRACE]
+      required: true
 
     examples:
-    - playground connect-log-level get
-    - playground connect-log-level get -p io.confluent.connect.oracle.cdc
-    - playground connect-log-level get --package io.confluent.connect.oracle.cdc
-    - playground connect-log-level set -p io.confluent.connect.oracle.cdc.logging.LogUtils -l TRACE
+    - playground connector log-level --connector <connector-name> --level TRACE
+    - playground connector log-level --level DEBUG
 
   examples:
   - playground connector status

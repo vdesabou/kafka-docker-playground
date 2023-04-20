@@ -1,2 +1,9 @@
-log "Display content of connect offsets topic, press crtl-c to stop..."
-docker exec connect kafka-console-consumer -bootstrap-server broker:9092 --topic connect-offsets --from-beginning --property print.key=true --property print.timestamp=true
+topic="${args[--topic]}"
+
+ret=$(get_security_broker "--command-config")
+
+container=$(echo "$ret" | cut -d "@" -f 1)
+security=$(echo "$ret" | cut -d "@" -f 2)
+
+log "Describing topic $topic"
+docker exec $container kafka-topics --describe --topic $topic --bootstrap-server broker:9092 $security
