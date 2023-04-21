@@ -17,6 +17,7 @@ enable_multiple_connect_workers="${args[--enable-multiple-connect-workers]}"
 enable_jmx_grafana="${args[--enable-jmx-grafana]}"
 enable_kcat="${args[--enable-kcat]}"
 enable_sr_maven_plugin_app="${args[--enable-sr-maven-plugin-app]}"
+enable_sql_datagen="${args[--enable-sql-datagen]}"
 
 if [ "$test_file" = "" ]
 then
@@ -144,6 +145,13 @@ then
   environment_variables_list="$environment_variables_list ENABLE_SR_MAVEN_PLUGIN_NODE=true"
   argument_list="$argument_list --enable-sr-maven-plugin-app"
   export ENABLE_SR_MAVEN_PLUGIN_NODE=true
+fi
+
+if [[ -n "$enable_sql_datagen" ]]
+then
+  environment_variables_list="$environment_variables_list SQL_DATAGEN=true"
+  argument_list="$argument_list --enable-sql-datagen"
+  export SQL_DATAGEN=true
 fi
 
 if [[ -n "$editor" ]]

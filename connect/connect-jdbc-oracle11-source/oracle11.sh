@@ -4,10 +4,10 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
-if [ ! -z "$ORACLE_DATAGEN" ]
+if [ ! -z "$SQL_DATAGEN" ]
 then
-     log "🌪️ ORACLE_DATAGEN is set"
-     for component in oracle-datagen
+     log "🌪️ SQL_DATAGEN is set"
+     for component in sql-datagen
      do
      set +e
      log "🏗 Building jar for ${component}"
@@ -21,7 +21,7 @@ then
      set -e
      done
 else
-     log "🌪️ ORACLE_DATAGEN is not set"
+     log "🌪️ SQL_DATAGEN is not set"
 fi
 
 if [ ! -z "$CONNECTOR_TAG" ]
@@ -114,9 +114,9 @@ sleep 5
 log "Verifying topic oracle-CUSTOMERS"
 timeout 60 docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic oracle-CUSTOMERS --from-beginning --max-messages 1
 
-if [ ! -z "$ORACLE_DATAGEN" ]
+if [ ! -z "$SQL_DATAGEN" ]
 then
      DURATION=10
      log "Injecting data for $DURATION minutes"
-     docker exec oracle-datagen bash -c "java ${JAVA_OPTS} -jar oracle-datagen-1.0-SNAPSHOT-jar-with-dependencies.jar --host oracle --username myuser --password mypassword --sidOrServerName sid --sidOrServerNameVal XE --maxPoolSize 10 --durationTimeMin $DURATION"
+     docker exec sql-datagen bash -c "java ${JAVA_OPTS} -jar sql-datagen-1.0-SNAPSHOT-jar-with-dependencies.jar --host oracle --username myuser --password mypassword --sidOrServerName sid --sidOrServerNameVal XE --maxPoolSize 10 --durationTimeMin $DURATION"
 fi

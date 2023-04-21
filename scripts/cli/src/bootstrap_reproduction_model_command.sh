@@ -122,7 +122,7 @@ else
   cp $test_file $repro_test_file
 fi
 
-for file in README.md docker-compose*.yml keyfile.json stop.sh .gitignore oracle-datagen
+for file in README.md docker-compose*.yml keyfile.json stop.sh .gitignore sql-datagen
 do
   if [ -f $file ]
   then

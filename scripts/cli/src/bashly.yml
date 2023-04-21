@@ -109,6 +109,12 @@ commands:
   - long: --enable-sr-maven-plugin-app
     required: false
     help: Enable Schema Registry Maven plugin App
+  - long: --enable-sql-datagen
+    required: false
+    help: |-
+      🌪️ Enable SQL Datagen injection
+
+      This only works for Oracle source connector examples.
 
 - name: re-run
   group: Run

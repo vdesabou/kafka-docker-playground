@@ -328,6 +328,11 @@ playground_run_usage() {
     printf "    Enable Schema Registry Maven plugin App\n"
     echo
 
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--enable-sql-datagen")"
+    printf "    🌪️ Enable SQL Datagen injection\n    \n    This only works for Oracle source connector examples.\n"
+    echo
+
     # :command.usage_fixed_flags
     printf "  %s\n" "$(magenta "--help, -h")"
     printf "    Show this help\n"
@@ -5695,6 +5700,7 @@ playground_run_command() {
   enable_jmx_grafana="${args[--enable-jmx-grafana]}"
   enable_kcat="${args[--enable-kcat]}"
   enable_sr_maven_plugin_app="${args[--enable-sr-maven-plugin-app]}"
+  enable_sql_datagen="${args[--enable-sql-datagen]}"
 
   if [ "$test_file" = "" ]
   then
@@ -5822,6 +5828,13 @@ playground_run_command() {
     environment_variables_list="$environment_variables_list ENABLE_SR_MAVEN_PLUGIN_NODE=true"
     argument_list="$argument_list --enable-sr-maven-plugin-app"
     export ENABLE_SR_MAVEN_PLUGIN_NODE=true
+  fi
+
+  if [[ -n "$enable_sql_datagen" ]]
+  then
+    environment_variables_list="$environment_variables_list SQL_DATAGEN=true"
+    argument_list="$argument_list --enable-sql-datagen"
+    export SQL_DATAGEN=true
   fi
 
   if [[ -n "$editor" ]]
@@ -6016,7 +6029,7 @@ playground_bootstrap_reproduction_model_command() {
     cp $test_file $repro_test_file
   fi
 
-  for file in README.md docker-compose*.yml keyfile.json stop.sh .gitignore oracle-datagen
+  for file in README.md docker-compose*.yml keyfile.json stop.sh .gitignore sql-datagen
   do
     if [ -f $file ]
     then
@@ -8039,6 +8052,14 @@ playground_run_parse_requirements() {
 
         # :flag.case_no_arg
         args['--enable-sr-maven-plugin-app']=1
+        shift
+        ;;
+
+      # :flag.case
+      --enable-sql-datagen)
+
+        # :flag.case_no_arg
+        args['--enable-sql-datagen']=1
         shift
         ;;
 
