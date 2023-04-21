@@ -19,6 +19,7 @@ import java.util.logging.Level;
 
 import static java.time.Duration.*;
 
+
 public class MySqlDatagen {
 
     private static final Logger log = LogManager.getLogger(MySqlDatagen.class);
@@ -37,7 +38,7 @@ public class MySqlDatagen {
                 return;
             }
         } catch (Exception e) {
-            System.out.println("\n" + e.getMessage() + " \n\n");
+            System.out.println("\n"+e.getMessage() +" \n\n");
             jc.usage();
             return;
         }
@@ -49,7 +50,7 @@ public class MySqlDatagen {
         MySqlDatabase database = new MySqlDatabase(params);
         Faker faker = new Faker();
         long startTime = new Date().getTime();
-        long endTime = startTime + (durationTimeMin * 60 * 1000) + (10 * 1000);
+        long endTime = startTime + (durationTimeMin*60*1000) + (10*1000);
         log.info("startTime::{}", new Date(startTime));
         log.info("endTime::{}", new Date(endTime));
         for (int i = 0; i < params.getPoolSize() - 1; i++) {
@@ -57,8 +58,7 @@ public class MySqlDatagen {
                 try (Connection connection = database.getConnection()) {
                     while (!finishExecution.get()) {
                         connection.setAutoCommit(false);
-                        PreparedStatement stmt = connection
-                                .prepareStatement("insert into team (name, email, last_modified) values (?, ?, NOW())");
+                        PreparedStatement stmt = connection.prepareStatement("insert into team (name, email, last_modified) values (?, ?, NOW())");
                         stmt.setString(1, faker.name().firstName());
                         stmt.setString(2, faker.internet().emailAddress());
                         stmt.executeUpdate();
@@ -80,7 +80,7 @@ public class MySqlDatagen {
                 break;
             }
         }
-        log.info("End load test at: {}", new Date());
+        log.info("End load test at: {}",new Date());
         log.info("Num Transactions clocked:{}", numTransactions.get());
         System.exit(0);
     }
