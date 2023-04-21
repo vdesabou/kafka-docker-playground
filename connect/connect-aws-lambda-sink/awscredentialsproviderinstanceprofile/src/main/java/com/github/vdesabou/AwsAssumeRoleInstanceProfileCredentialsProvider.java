@@ -16,18 +16,13 @@
 package com.github.vdesabou;
 
 import com.amazonaws.auth.AWSCredentials;
-import com.amazonaws.auth.AWSCredentialsProvider;
+import com.amazonaws.auth.InstanceProfileCredentialsProvider;
 import com.amazonaws.auth.STSAssumeRoleSessionCredentialsProvider;
 import com.amazonaws.services.securitytoken.AWSSecurityTokenServiceClientBuilder;
 import com.amazonaws.auth.InstanceProfileCredentialsProvider;
 import org.apache.kafka.common.Configurable;
 import org.apache.kafka.common.config.AbstractConfig;
 import org.apache.kafka.common.config.ConfigDef;
-import com.amazonaws.auth.BasicAWSCredentials;
-import java.util.Map;
-import com.amazonaws.services.securitytoken.AWSSecurityTokenService;
-import com.amazonaws.auth.AWSStaticCredentialsProvider;
-import org.apache.kafka.common.config.types.Password;
 
 /**
  * AWS credentials provider that uses the AWS Security Token Service to assume a Role and create a
@@ -39,7 +34,7 @@ public class AwsAssumeRoleInstanceProfileCredentialsProvider implements AWSCrede
   public static final String ROLE_EXTERNAL_ID_CONFIG = "sts.role.external.id";
   public static final String ROLE_ARN_CONFIG = "sts.role.arn";
   public static final String ROLE_SESSION_NAME_CONFIG = "sts.role.session.name";
-  public static final String ROLE_REGION_CONFIG = "sts.role.region";
+  public static final String ROLE_REGION_CONFIG = "sts.region";
 
   private static final ConfigDef STS_CONFIG_DEF = new ConfigDef()
       .define(
@@ -85,12 +80,16 @@ public class AwsAssumeRoleInstanceProfileCredentialsProvider implements AWSCrede
 
     stsCredentialProvider = new STSAssumeRoleSessionCredentialsProvider.Builder(roleArn, roleSessionName)
         .withStsClient(AWSSecurityTokenServiceClientBuilder.standard()
-            .withCredentials(new InstanceProfileCredentialsProvider(false))
+            .withCredentials(new InstanceProfileCredentialsProvider(true))
             .withRegion(
                 roleRegion)
             .build())
         .withExternalId(roleExternalId)
         .build();
+
+    AWSCredentials creds = stsCredentialProvider.getCredentials();
+    System.out.println("Access Key: " + creds.getAWSAccessKeyId());
+    System.out.println("Secret Key: " + creds.getAWSSecretKey());
   }
 
   @Override
