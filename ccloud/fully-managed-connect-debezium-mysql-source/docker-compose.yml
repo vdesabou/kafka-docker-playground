@@ -1,6 +1,15 @@
 ---
 version: '3.5'
 services:
+
+  sql-datagen:
+    build:
+      context: ../../ccloud/fully-managed-connect-debezium-mysql-source/mysql-datagen/
+    hostname: sql-datagen
+    container_name: sql-datagen
+    profiles:
+    - sql_datagen
+
   mysql:
     image: mysql:latest
     hostname: mysql
