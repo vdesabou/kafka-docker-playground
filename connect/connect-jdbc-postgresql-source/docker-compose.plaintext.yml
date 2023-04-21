@@ -2,6 +2,14 @@
 version: '3.5'
 services:
 
+  sql-datagen:
+    build:
+      context: ../../connect/connect-jdbc-postgresql-source/postgres-datagen/
+    hostname: sql-datagen
+    container_name: sql-datagen
+    profiles:
+    - sql_datagen
+
   postgres:
     image: postgres:15
     hostname: postgres
