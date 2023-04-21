@@ -218,7 +218,7 @@ do
         log "🚀 Executing $script in dir $dir"
         log "####################################################"
         SECONDS=0
-        retry playground run -f "$PWD/$script" $flag_tag --skip-editor --disable-control-center --disable-ksqldb
+        retry playground run -f "$PWD/$script" $flag_tag --disable-control-center --disable-ksqldb
         ret=$?
         ELAPSED="took: $((($SECONDS / 60) % 60))min $(($SECONDS % 60))sec"
         let ELAPSED_TOTAL+=$SECONDS
