@@ -1,6 +1,15 @@
 ---
 version: '3.5'
 services:
+
+  sql-datagen:
+    build:
+      context: ../../connect/connect-jdbc-mysql-source/mysql-datagen/
+    hostname: sql-datagen
+    container_name: sql-datagen
+    profiles:
+    - sql_datagen
+
   mysql:
     image: mysql:latest
     hostname: mysql
