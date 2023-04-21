@@ -42,6 +42,7 @@ services:
     ports:
       - 11000:11000
     environment:
+      KAFKA_LOG4J_LOGGERS: "kafka.server.link.ClusterLinkClientManager=DEBUG,kafka.utils.KafkaScheduler=DEBUG"
       KAFKA_JMX_PORT: 11000
       KAFKA_JMX_HOSTNAME: localhost
       KAFKA_BROKER_ID: 1
@@ -54,6 +55,7 @@ services:
       KAFKA_CLUSTER_LINK_RETRY_TIMEOUT_MS: 10000 #10s
       KAFKA_AVAIBILITY_CHECK_MS: 10000 # 10s
       KAFKA_AVAILABILITY_CHECK_CONSECUTIVE_FAILURE_THRESHOLD: 2
+      KAFKA_PASSWORD_ENCODER_SECRET: 'somePassword'
       EXTRA_ARGS: "-javaagent:/usr/share/jmx_exporter/jmx_prometheus_javaagent-0.16.1.jar=1234:/usr/share/jmx_exporter/broker.yml"
 
   broker-us:
@@ -79,9 +81,9 @@ services:
       CONFLUENT_METRICS_ENABLE: 'false'
       EXTRA_ARGS: "-javaagent:/usr/share/jmx_exporter/jmx_prometheus_javaagent-0.16.1.jar=1234:/usr/share/jmx_exporter/broker.yml"
       
-  # connect-us:
-  #   environment:      
-  #           CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-datagen
+  connect-us:
+    environment:      
+            CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-datagen
   
   kafka-lag-exporter:
     image: lightbend/kafka-lag-exporter:0.6.6
