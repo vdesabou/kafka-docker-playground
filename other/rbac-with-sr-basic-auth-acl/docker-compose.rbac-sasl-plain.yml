@@ -30,7 +30,56 @@ services:
       - ../../other/rbac-with-sr-basic-auth-acl/jaas_config.file:/tmp/jaas_config.file
       - ../../other/rbac-with-sr-basic-auth-acl/password-file:/tmp/password-file
       - ../../other/rbac-with-sr-basic-auth-acl/scripts/create-acls.sh:/tmp/create-acls.sh
-    
+
+  schema-registry2:
+    image: confluentinc/cp-schema-registry:${TAG}
+    hostname: schema-registry2
+    container_name: schema-registry2
+    restart: always
+    depends_on:
+      - broker
+    ports:
+      - "8082:8081"
+      - "10004:10001"
+    volumes:
+      - ../../environment/rbac-sasl-plain/conf:/tmp/conf
+      - ../../environment/rbac-sasl-plain/scripts/helper:/tmp/helper
+      - ../../environment/rbac-sasl-plain/scripts/security/client_without_interceptors.config:/etc/kafka/secrets/client_without_interceptors.config
+    environment:
+      SCHEMA_REGISTRY_JMX_PORT: 10001
+      SCHEMA_REGISTRY_JMX_HOSTNAME: localhost
+      SCHEMA_REGISTRY_HOST_NAME: schema-registry2
+      SCHEMA_REGISTRY_LISTENERS: http://0.0.0.0:8081
+      SCHEMA_REGISTRY_SCHEMA_PROVIDERS_AVRO_VALIDATE_DEFAULTS: "true"
+      PYROSCOPE_APPLICATION_NAME: "schema-registry"
+      PYROSCOPE_SERVER_ADDRESS: "http://pyroscope:4040"
+
+      CUB_CLASSPATH: '/etc/confluent/docker/docker-utils.jar:/usr/share/java/cp-base-new/*:/usr/share/java/confluent-security/schema-registry/*:/usr/share/java/schema-registry/*'
+      SCHEMA_REGISTRY_KAFKASTORE_BOOTSTRAP_SERVERS: broker:10091
+      SCHEMA_REGISTRY_KAFKASTORE_CONNECTION_URL: zookeeper:2181
+      SCHEMA_REGISTRY_KAFKASTORE_SECURITY_PROTOCOL: SASL_PLAINTEXT
+
+      SCHEMA_REGISTRY_LEADER_ELIGIBILITY: "false"
+      #SCHEMA_REGISTRY_SCHEMA_REGISTRY_GROUP_ID: id_schemaregistry
+
+      SCHEMA_REGISTRY_KAFKASTORE_SASL_MECHANISM: OAUTHBEARER
+      SCHEMA_REGISTRY_KAFKASTORE_SASL_LOGIN_CALLBACK_HANDLER_CLASS: io.confluent.kafka.clients.plugins.auth.token.TokenUserLoginCallbackHandler
+      SCHEMA_REGISTRY_KAFKASTORE_SASL_JAAS_CONFIG: |
+        org.apache.kafka.common.security.oauthbearer.OAuthBearerLoginModule required \
+        username="schemaregistryUser" \
+        password="schemaregistryUser" \
+        metadataServerUrls="http://broker:8091";
+
+      # RBAC and MDS
+      SCHEMA_REGISTRY_SCHEMA_REGISTRY_RESOURCE_EXTENSION_CLASS: io.confluent.kafka.schemaregistry.security.SchemaRegistrySecurityResourceExtension
+      SCHEMA_REGISTRY_CONFLUENT_SCHEMA_REGISTRY_AUTHORIZER_CLASS: io.confluent.kafka.schemaregistry.security.authorizer.rbac.RbacAuthorizer
+      SCHEMA_REGISTRY_REST_SERVLET_INITIALIZOR_CLASSES: io.confluent.common.security.jetty.initializer.InstallBearerOrBasicSecurityHandler
+      SCHEMA_REGISTRY_CONFLUENT_METADATA_BOOTSTRAP_SERVER_URLS: http://broker:8091
+      SCHEMA_REGISTRY_CONFLUENT_METADATA_HTTP_AUTH_CREDENTIALS_PROVIDER: BASIC
+      SCHEMA_REGISTRY_CONFLUENT_METADATA_BASIC_AUTH_USER_INFO: schemaregistryUser:schemaregistryUser
+      # public key to verify tokens during authentication
+      SCHEMA_REGISTRY_PUBLIC_KEY_PATH: /tmp/conf/public.pem
+
   tools:
     volumes:
       - ../../other/rbac-with-sr-basic-auth-acl/scripts/create-role-bindings-acl.sh:/create-role-bindings-acl.sh
@@ -42,4 +91,7 @@ services:
         KSQL_KSQL_SECURITY_EXTENSION_USER_IMPERSONATION_ENABLED : 'false'
         KSQL_KSQL_SCHEMA_REGISTRY_BASIC_AUTH_CREDENTIALS_SOURCE: 'USER_INFO'
         KSQL_KSQL_SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO: 'sr-user:sr-user'
-        
+
+  control-center:
+    environment:
+      CONTROL_CENTER_SCHEMA_REGISTRY_URL: "http://schema-registry2:8081"
