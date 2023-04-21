@@ -2,13 +2,13 @@
 version: '3.5'
 services:
 
-  oracle-datagen:
+  sql-datagen:
     build:
-      context: ../../connect/connect-jdbc-oracle11-source/oracle-datagen/
-    hostname: oracle-datagen
-    container_name: oracle-datagen
+      context: ../../connect/connect-jdbc-oracle11-source/sql-datagen/
+    hostname: sql-datagen
+    container_name: sql-datagen
     profiles:
-    - oracle_datagen
+    - sql_datagen
     
   oracle:
     # https://github.com/wnameless/docker-oracle-xe-11g

@@ -21,7 +21,7 @@ create table customers (
         last_name VARCHAR(50),
         email VARCHAR(50),
         gender VARCHAR(50),
-        club_status VARCHAR(8),
+        club_status VARCHAR(20),
         comments VARCHAR(90),
         create_ts timestamp DEFAULT CURRENT_TIMESTAMP,
         update_ts timestamp DEFAULT CURRENT_TIMESTAMP
@@ -71,7 +71,7 @@ create table customers2 (
         last_name VARCHAR(50),
         email VARCHAR(50),
         gender VARCHAR(50),
-        club_status VARCHAR(8),
+        club_status VARCHAR(20),
         comments VARCHAR(90),
         create_ts timestamp DEFAULT CURRENT_TIMESTAMP ,
         update_ts timestamp DEFAULT CURRENT_TIMESTAMP

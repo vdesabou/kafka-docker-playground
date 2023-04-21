@@ -2,13 +2,13 @@
 version: '3.5'
 services:
 
-  oracle-datagen:
+  sql-datagen:
     build:
-      context: ../../connect/connect-jdbc-oracle19-source/oracle-datagen/
-    hostname: oracle-datagen
-    container_name: oracle-datagen
+      context: ../../connect/connect-jdbc-oracle19-source/sql-datagen/
+    hostname: sql-datagen
+    container_name: sql-datagen
     profiles:
-    - oracle_datagen
+    - sql_datagen
 
   oracle:
     # You need to build this image first, following the instructions at

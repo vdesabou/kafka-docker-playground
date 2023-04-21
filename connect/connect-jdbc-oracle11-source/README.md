@@ -12,14 +12,14 @@ N.B: if you're a Confluent employee, please check this [link](https://confluent.
 
 ## Performance testing
 
-You can set environment variable `ORACLE_DATAGEN` before running the example and it will use a Java based datagen tool:
+You can set environment variable `SQL_DATAGEN` before running the example and it will use a Java based datagen tool:
 
 Example:
 
 ```
 DURATION=10
 log "Injecting data for $DURATION minutes"
-docker exec -d oracle-datagen bash -c "java ${JAVA_OPTS} -jar oracle-datagen-1.0-SNAPSHOT-jar-with-dependencies.jar --host oracle --username C##MYUSER --password mypassword --sidOrServerName sid --sidOrServerNameVal XE --maxPoolSize 10 --durationTimeMin $DURATION"
+docker exec -d sql-datagen bash -c "java ${JAVA_OPTS} -jar sql-datagen-1.0-SNAPSHOT-jar-with-dependencies.jar --host oracle --username C##MYUSER --password mypassword --sidOrServerName sid --sidOrServerNameVal XE --maxPoolSize 10 --durationTimeMin $DURATION"
 ```
 
 You can increase thoughtput with `maxPoolSize`.

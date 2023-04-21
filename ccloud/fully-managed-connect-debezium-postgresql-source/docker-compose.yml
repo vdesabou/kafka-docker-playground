@@ -2,6 +2,14 @@
 version: '3.5'
 services:
 
+  sql-datagen:
+    build:
+      context: ../../ccloud/fully-managed-connect-debezium-postgresql-source/postgres-datagen/
+    hostname: sql-datagen
+    container_name: sql-datagen
+    profiles:
+    - sql_datagen
+
   postgres:
     image: debezium/postgres:15-alpine
     hostname: postgres

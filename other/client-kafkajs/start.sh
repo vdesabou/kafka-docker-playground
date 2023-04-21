@@ -19,5 +19,5 @@ docker exec -i client-kafkajs node /usr/src/app/producer.js > /dev/null 2>&1 &
 log "Starting consumer. Logs are in /tmp/result.log"
 docker exec -i client-kafkajs node /usr/src/app/consumer.js > /tmp/result.log 2>&1 &
 sleep 15
-cat /tmp/result.log
+tail -10 /tmp/result.log
 grep "kafkajs" /tmp/result.log

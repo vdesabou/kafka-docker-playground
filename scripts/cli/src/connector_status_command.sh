@@ -8,7 +8,7 @@ connectors=$(curl -s $security "$connect_url/connectors/" | jq -r '.[]')
 log "🧩 Displaying connector(s) status"
 if [ -z "$connectors" ]
 then
-    log "💤 there are no connectors running !"
+    log "💤 There are no connectors running !"
 else
     printf "%-30s %-12s %-30s %-50s\n" "Name" "Status" "Tasks" "Stack Trace"
     echo "-------------------------------------------------------------------------------------------------------------"
