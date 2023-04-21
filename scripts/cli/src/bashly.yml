@@ -27,6 +27,10 @@ commands:
     required: false
   - long: --sink-only
     required: false
+- name: bashly-reload
+  private: true
+  dependencies:
+  - bashly
 
 - name: run
   group: Run

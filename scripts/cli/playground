@@ -205,6 +205,35 @@ playground_get_examples_list_with_fzf_usage() {
 }
 
 # :command.usage
+playground_bashly_reload_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground bashly-reload\n"
+    echo
+
+  else
+    printf "playground bashly-reload\n"
+    echo
+
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground bashly-reload\n"
+  printf "  playground bashly-reload --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n $long_usage ]]; then
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+  fi
+}
+
+# :command.usage
 playground_run_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground run\n"
@@ -5631,6 +5660,20 @@ playground_get_examples_list_with_fzf_command() {
 }
 
 # :command.function
+playground_bashly_reload_command() {
+  # src/bashly_reload_command.sh
+  DIR_CLI="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
+  dir1=$(echo ${DIR_CLI%/*})
+  root_folder=$(echo ${dir1%/*})
+
+  cd $root_folder/scripts/cli
+  bashly generate
+  rm -f $root_folder/scripts/cli/completions.bash
+  bashly add completions_script
+  cd - > /dev/null
+}
+
+# :command.function
 playground_run_command() {
   # src/run_command.sh
   DIR_CLI="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
@@ -7105,7 +7148,7 @@ playground_connector_status_command() {
   log "🧩 Displaying connector(s) status"
   if [ -z "$connectors" ]
   then
-      log "💤 there are no connectors running !"
+      log "💤 There are no connectors running !"
   else
       printf "%-30s %-12s %-30s %-50s\n" "Name" "Status" "Tasks" "Stack Trace"
       echo "-------------------------------------------------------------------------------------------------------------"
@@ -7463,6 +7506,13 @@ parse_requirements() {
       shift $#
       ;;
 
+    bashly-reload)
+      action="bashly-reload"
+      shift
+      playground_bashly_reload_parse_requirements "$@"
+      shift $#
+      ;;
+
     run)
       action="run"
       shift
@@ -7727,6 +7777,58 @@ playground_get_examples_list_with_fzf_parse_requirements() {
           printf "invalid argument: %s\n" "$key" >&2
           exit 1
         fi
+
+        ;;
+
+    esac
+  done
+
+}
+
+# :command.parse_requirements
+playground_bashly_reload_parse_requirements() {
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    case "${1:-}" in
+      --help | -h)
+        long_usage=yes
+        playground_bashly_reload_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.dependencies_filter
+  if command -v bashly >/dev/null 2>&1; then
+    deps['bashly']="$(command -v bashly | head -n1)"
+  else
+    printf "missing dependency: bashly\n" >&2
+    exit 1
+  fi
+
+  # :command.command_filter
+  action="bashly-reload"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
 
         ;;
 
@@ -10640,6 +10742,15 @@ run() {
         playground_get_examples_list_with_fzf_usage
       else
         playground_get_examples_list_with_fzf_command
+      fi
+      ;;
+
+    "bashly-reload")
+      if [[ ${args['--help']:-} ]]; then
+        long_usage=yes
+        playground_bashly_reload_usage
+      else
+        playground_bashly_reload_command
       fi
       ;;
 
