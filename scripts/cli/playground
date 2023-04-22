@@ -205,6 +205,50 @@ playground_get_examples_list_with_fzf_usage() {
 }
 
 # :command.usage
+playground_get_zip_or_jar_with_fzf_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground get-zip-or-jar-with-fzf - Return some completion for zip or jar list\n"
+    echo
+
+  else
+    printf "playground get-zip-or-jar-with-fzf - Return some completion for zip or jar list\n"
+    echo
+
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground get-zip-or-jar-with-fzf [CUR] [OPTIONS]\n"
+  printf "  playground get-zip-or-jar-with-fzf --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n $long_usage ]]; then
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_flags
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--type TYPE")"
+    printf "\n"
+    printf "    Allowed: zip, jar\n"
+    echo
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+    # :command.usage_args
+    printf "%s\n" "$(bold "== Arguments ==")"
+
+    # :argument.usage
+    printf "  %s\n" "$(blue "CUR")"
+    printf "    correspond to completion $cur\n"
+    echo
+
+  fi
+}
+
+# :command.usage
 playground_bashly_reload_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground bashly-reload\n"
@@ -260,7 +304,7 @@ playground_run_usage() {
     # :command.usage_flags
     # :flag.usage
     printf "  %s\n" "$(magenta "--file, -f FILE (required)")"
-    printf "    🔖 Example file to run\n    It must be absolute full path\n    \n    🎓 Tip: use <tab> completion to trigger fzf completion\n"
+    printf "    🔖 Example file to run\n    \n    It must be absolute full path\n    \n    🎓 Tip: use <tab> completion to trigger fzf completion\n"
     echo
 
     # :flag.usage
@@ -280,12 +324,12 @@ playground_run_usage() {
 
     # :flag.usage
     printf "  %s\n" "$(magenta "--connector-zip CONNECTOR_ZIP")"
-    printf "    🤐 Connector zip to use\n    \n    It must be absolute full path\n"
+    printf "    🤐 Connector zip to use\n    \n    It must be absolute full path\n    \n    🎓 Tip: use <tab> completion to trigger fzf completion \n            use folder_zip_or_jar (default: ~/Downloads) in config.ini file to\n    configure where to search the files\n"
     echo
 
     # :flag.usage
     printf "  %s\n" "$(magenta "--connector-jar CONNECTOR_JAR")"
-    printf "    ♨️ Connector jar to use\n    \n    It must be absolute full path\n"
+    printf "    ♨️ Connector jar to use\n    \n    It must be absolute full path\n    \n    🎓 Tip: use <tab> completion to trigger fzf completion \n            use folder_zip_or_jar (default: ~/Downloads) in config.ini file to\n    configure where to search the files\n"
     echo
 
     # :flag.usage
@@ -2049,6 +2093,41 @@ function get_examples_list_with_fzf_without_repro_sink_only() {
   fi
 }
 
+function get_zip_or_jar_with_fzf() {
+  cur="$1"
+  type="$2"
+
+  fzf_version=$(get_fzf_version)
+  if version_gt $fzf_version "0.38"
+  then
+    fzf_option_wrap="--preview-window=40%,wrap"
+    fzf_option_pointer="--pointer=👉"
+    fzf_option_rounded="--border=rounded"
+  else
+    fzf_options=""
+    fzf_option_pointer=""
+    fzf_option_rounded=""
+  fi
+
+  if config_has_key "folder_zip_or_jar"
+  then
+    folder_zip_or_jar=$(config_get "folder_zip_or_jar")
+  else
+    logerror "Could not find config value <folder_zip_or_jar> !"
+    exit 1
+  fi
+
+  folder_zip_or_jar=${folder_zip_or_jar/\~/$HOME}
+
+  if [ ! -d $folder_zip_or_jar ]
+  then
+    logerror "<folder_zip_or_jar> directory $folder_zip_or_jar does not exist !"
+    exit 1
+  fi
+
+  res=$(find $folder_zip_or_jar -name \*.$type ! -path '*/\.*' | fzf --query "$cur" --margin=1%,1%,1%,1% $fzf_option_rounded --info=inline --prompt="🍺" --header="ctrl-c or esc to quit" --color="bg:-1,bg+:-1,info:#BDBB72,border:#FFFFFF,spinner:0,hl:#beb665,fg:#00f7f7,header:#5CC9F5,fg+:#beb665,pointer:#E12672,marker:#5CC9F5,prompt:#98BEDE" --delimiter / --with-nth "-2,-1" $fzf_option_wrap $fzf_option_pointer --preview 'stat {}');echo "$cur@$res"
+}
+
 function filter_not_mdc_environment() {
   environment=`get_environment_used`
 
@@ -2096,6 +2175,102 @@ yellow_underlined() { print_in_color "\e[4;33m" "$*"; }
 blue_underlined() { print_in_color "\e[4;34m" "$*"; }
 magenta_underlined() { print_in_color "\e[4;35m" "$*"; }
 cyan_underlined() { print_in_color "\e[4;36m" "$*"; }
+
+# src/lib/config.sh
+config_init() {
+  CONFIG_FILE=${CONFIG_FILE:=config.ini}
+  [[ -f "$CONFIG_FILE" ]] || touch "$CONFIG_FILE"
+}
+
+config_get() {
+  local key=$1
+  local regex="^$key *= *(.+)$"
+  local value=""
+
+  config_init
+
+  while IFS= read -r line || [ -n "$line" ]; do
+    if [[ $line =~ $regex ]]; then
+      value="${BASH_REMATCH[1]}"
+      break
+    fi
+  done <"$CONFIG_FILE"
+
+  echo "$value"
+}
+
+config_set() {
+  local key=$1
+  shift
+  local value="$*"
+
+  config_init
+
+  local regex="^($key) *= *.+$"
+  local output=""
+  local found_key=""
+  local newline
+
+  while IFS= read -r line || [ -n "$line" ]; do
+    newline=$line
+    if [[ $line =~ $regex ]]; then
+      found_key="${BASH_REMATCH[1]}"
+      newline="$key = $value"
+      output="$output$newline\n"
+    elif [[ $line ]]; then
+      output="$output$line\n"
+    fi
+  done <"$CONFIG_FILE"
+
+  if [[ -z $found_key ]]; then
+    output="$output$key = $value\n"
+  fi
+
+  printf "%b\n" "$output" >"$CONFIG_FILE"
+}
+
+config_del() {
+  local key=$1
+
+  local regex="^($key) *="
+  local output=""
+
+  config_init
+
+  while IFS= read -r line || [ -n "$line" ]; do
+    if [[ $line ]] && [[ ! $line =~ $regex ]]; then
+      output="$output$line\n"
+    fi
+  done <"$CONFIG_FILE"
+
+  printf "%b\n" "$output" >"$CONFIG_FILE"
+}
+
+config_show() {
+  config_init
+  cat "$CONFIG_FILE"
+}
+
+config_keys() {
+  local regex="^([a-zA-Z0-9_\-\/\.]+) *="
+
+  config_init
+
+  local keys=()
+  local key
+
+  while IFS= read -r line || [ -n "$line" ]; do
+    if [[ $line =~ $regex ]]; then
+      key="${BASH_REMATCH[1]}"
+      keys+=("$key")
+    fi
+  done <"$CONFIG_FILE"
+  echo "${keys[@]}"
+}
+
+config_has_key() {
+  [[ $(config_get "$1") ]]
+}
 
 # src/lib/heredocs.sh
 function get_properties_command_heredoc () {
@@ -5672,6 +5847,15 @@ playground_get_examples_list_with_fzf_command() {
 }
 
 # :command.function
+playground_get_zip_or_jar_with_fzf_command() {
+  # src/get_zip_or_jar_with_fzf_command.sh
+  cur="${args[cur]}"
+  type="${args[--type]}"
+
+  get_zip_or_jar_with_fzf "$cur" "$type"
+}
+
+# :command.function
 playground_bashly_reload_command() {
   # src/bashly_reload_command.sh
   DIR_CLI="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
@@ -5769,6 +5953,10 @@ playground_run_command() {
 
   if [[ -n "$connector_zip" ]]
   then
+    if [[ $connector_zip == *"@"* ]]
+    then
+      connector_zip=$(echo "$connector_zip" | cut -d "@" -f 2)
+    fi
     environment_variables_list="$environment_variables_list CONNECTOR_ZIP=$connector_zip"
     argument_list="$argument_list --connector-zip=$connector_zip"
     export CONNECTOR_ZIP=$connector_zip
@@ -5776,6 +5964,10 @@ playground_run_command() {
 
   if [[ -n "$connector_jar" ]]
   then
+    if [[ $connector_jar == *"@"* ]]
+    then
+      connector_jar=$(echo "$connector_jar" | cut -d "@" -f 2)
+    fi
     environment_variables_list="$environment_variables_list CONNECTOR_JAR=$connector_jar"
     argument_list="$argument_list --connector-jar=$connector_jar"
     export CONNECTOR_JAR=$connector_jar
@@ -7526,6 +7718,13 @@ parse_requirements() {
       shift $#
       ;;
 
+    get-zip-or-jar-with-fzf)
+      action="get-zip-or-jar-with-fzf"
+      shift
+      playground_get_zip_or_jar_with_fzf_parse_requirements "$@"
+      shift $#
+      ;;
+
     bashly-reload)
       action="bashly-reload"
       shift
@@ -7806,6 +8005,78 @@ playground_get_examples_list_with_fzf_parse_requirements() {
 }
 
 # :command.parse_requirements
+playground_get_zip_or_jar_with_fzf_parse_requirements() {
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    case "${1:-}" in
+      --help | -h)
+        long_usage=yes
+        playground_get_zip_or_jar_with_fzf_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.dependencies_filter
+
+  # :command.command_filter
+  action="get-zip-or-jar-with-fzf"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      # :flag.case
+      --type)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+
+          args['--type']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--type requires an argument: --type TYPE" >&2
+          exit 1
+        fi
+        ;;
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        if [[ -z ${args['cur']+x} ]]; then
+
+          args['cur']=$1
+          shift
+        else
+          printf "invalid argument: %s\n" "$key" >&2
+          exit 1
+        fi
+
+        ;;
+
+    esac
+  done
+
+  # :command.whitelist_filter
+  if [[ ! ${args['--type']} =~ ^(zip|jar)$ ]]; then
+    printf "%s\n" "--type must be one of: zip, jar" >&2
+    exit 1
+  fi
+
+}
+
+# :command.parse_requirements
 playground_bashly_reload_parse_requirements() {
   # :command.fixed_flags_filter
   while [[ $# -gt 0 ]]; do
@@ -7964,8 +8235,8 @@ playground_run_parse_requirements() {
         # :flag.case_arg
         if [[ -n ${2+x} ]]; then
           # :flag.validations
-          if [[ -n $(validate_file_exists "$2") ]]; then
-            printf "validation error in %s:\n%s\n" "--connector-zip CONNECTOR_ZIP" "$(validate_file_exists "$2")" >&2
+          if [[ -n $(validate_file_exists_with_trick "$2") ]]; then
+            printf "validation error in %s:\n%s\n" "--connector-zip CONNECTOR_ZIP" "$(validate_file_exists_with_trick "$2")" >&2
             exit 1
           fi
 
@@ -7984,8 +8255,8 @@ playground_run_parse_requirements() {
         # :flag.case_arg
         if [[ -n ${2+x} ]]; then
           # :flag.validations
-          if [[ -n $(validate_file_exists "$2") ]]; then
-            printf "validation error in %s:\n%s\n" "--connector-jar CONNECTOR_JAR" "$(validate_file_exists "$2")" >&2
+          if [[ -n $(validate_file_exists_with_trick "$2") ]]; then
+            printf "validation error in %s:\n%s\n" "--connector-jar CONNECTOR_JAR" "$(validate_file_exists_with_trick "$2")" >&2
             exit 1
           fi
 
@@ -10776,6 +11047,15 @@ run() {
         playground_get_examples_list_with_fzf_usage
       else
         playground_get_examples_list_with_fzf_command
+      fi
+      ;;
+
+    "get-zip-or-jar-with-fzf")
+      if [[ ${args['--help']:-} ]]; then
+        long_usage=yes
+        playground_get_zip_or_jar_with_fzf_usage
+      else
+        playground_get_zip_or_jar_with_fzf_command
       fi
       ;;
 

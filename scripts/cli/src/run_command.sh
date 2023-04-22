@@ -79,6 +79,10 @@ fi
 
 if [[ -n "$connector_zip" ]]
 then
+  if [[ $connector_zip == *"@"* ]]
+  then
+    connector_zip=$(echo "$connector_zip" | cut -d "@" -f 2)
+  fi
   environment_variables_list="$environment_variables_list CONNECTOR_ZIP=$connector_zip"
   argument_list="$argument_list --connector-zip=$connector_zip"
   export CONNECTOR_ZIP=$connector_zip
@@ -86,6 +90,10 @@ fi
 
 if [[ -n "$connector_jar" ]]
 then
+  if [[ $connector_jar == *"@"* ]]
+  then
+    connector_jar=$(echo "$connector_jar" | cut -d "@" -f 2)
+  fi
   environment_variables_list="$environment_variables_list CONNECTOR_JAR=$connector_jar"
   argument_list="$argument_list --connector-jar=$connector_jar"
   export CONNECTOR_JAR=$connector_jar

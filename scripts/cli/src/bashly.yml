@@ -27,6 +27,20 @@ commands:
     required: false
   - long: --sink-only
     required: false
+
+- name: get-zip-or-jar-with-fzf
+  help: Return some completion for zip or jar list
+  private: true
+  args:
+  - name: cur
+    required: false
+    help: correspond to completion $cur
+  flags:
+  - long: --type
+    required: false
+    arg: type
+    allowed: [zip, jar]
+
 - name: bashly-reload
   private: true
   dependencies:
@@ -58,6 +72,7 @@ commands:
       - $(playground get-examples-list-with-fzf "$cur")
     help: |-
       🔖 Example file to run
+
       It must be absolute full path
 
       🎓 Tip: use <tab> completion to trigger fzf completion
@@ -82,21 +97,32 @@ commands:
   - long: --connector-zip
     arg: connector_zip
     required: false
-    validate: file_exists
+    validate: file_exists_with_trick
+    completions:
+      - $(playground get-zip-or-jar-with-fzf --type zip "$cur")
+    conflicts: [--connector-tag]
     help: |- 
       🤐 Connector zip to use
 
       It must be absolute full path
 
-    conflicts: [--connector-tag]
+      🎓 Tip: use <tab> completion to trigger fzf completion 
+              use folder_zip_or_jar (default: ~/Downloads) in config.ini file to configure where to search the files
+
   - long: --connector-jar
     arg: connector_jar
-    validate: file_exists
     required: false
+    validate: file_exists_with_trick
+    completions:
+      - $(playground get-zip-or-jar-with-fzf --type jar "$cur")
     help: |-
       ♨️ Connector jar to use
 
       It must be absolute full path
+
+      🎓 Tip: use <tab> completion to trigger fzf completion 
+              use folder_zip_or_jar (default: ~/Downloads) in config.ini file to configure where to search the files
+
   - long: --disable-ksqldb
     required: false
     help: |-
