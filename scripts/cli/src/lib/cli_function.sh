@@ -221,13 +221,8 @@ function get_zip_or_jar_with_fzf() {
     exit 1
   fi
 
-  folder_zip_or_jar=${folder_zip_or_jar/\~/$HOME}
-
-  if [ ! -d $folder_zip_or_jar ]
-  then
-    logerror "<folder_zip_or_jar> directory $folder_zip_or_jar does not exist !"
-    exit 1
-  fi
+  folder_zip_or_jar=${folder_zip_or_jar//\~/$HOME}
+  folder_zip_or_jar=${folder_zip_or_jar//,/ }
   
   res=$(find $folder_zip_or_jar -name \*.$type ! -path '*/\.*' | fzf --query "$cur" --margin=1%,1%,1%,1% $fzf_option_rounded --info=inline --prompt="🍺" --header="ctrl-c or esc to quit" --color="bg:-1,bg+:-1,info:#BDBB72,border:#FFFFFF,spinner:0,hl:#beb665,fg:#00f7f7,header:#5CC9F5,fg+:#beb665,pointer:#E12672,marker:#5CC9F5,prompt:#98BEDE" --delimiter / --with-nth "-3,-2,-1" $fzf_option_wrap $fzf_option_pointer --preview 'stat {}');echo "$cur@$res"
 }
