@@ -13,7 +13,7 @@ Quickly test [HDFS 2 Source](https://docs.confluent.io/current/connect/kafka-con
 Simply run:
 
 ```
-$ ./hdfs2.sh
+$ playground run -f hdfs2<tab>
 ```
 
 ## Details of what the script is doing

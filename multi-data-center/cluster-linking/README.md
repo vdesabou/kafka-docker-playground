@@ -9,13 +9,13 @@ Quickly test [Cluster Linking](https://docs.confluent.io/platform/current/multi-
 Simply run:
 
 ```
-$ ./start-plaintext.sh
+$ playground run -f start-plaintext<tab>
 ```
 
 or with SASL_PLAINTEXT and ACLs:
 
 ```
-$ ./start-sasl-plain-acl.sh
+$ playground run -f start-sasl-plain-acl<tab>
 ```
 ## Details of what the script is doing
 

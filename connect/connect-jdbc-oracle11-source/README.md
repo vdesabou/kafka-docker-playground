@@ -29,7 +29,7 @@ You can increase thoughtput with `maxPoolSize`.
 Simply run:
 
 ```
-$ ./oracle11.sh
+$ playground run -f oracle11<tab>
 ```
 
 ## Details of what the script is doing

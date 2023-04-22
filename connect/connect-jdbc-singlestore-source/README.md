@@ -10,7 +10,7 @@ Quickly test [JDBC Singlestore](https://docs.confluent.io/current/connect/kafka-
 Simply run:
 
 ```
-$ ./jdbc-singlestore-sink.sh
+$ playground run -f jdbc-singlestore-sink<tab>
 ```
 
 ## Details of what the script is doing

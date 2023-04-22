@@ -14,7 +14,7 @@ Quickly test [JMS Source - Solace](https://docs.confluent.io/kafka-connect-jms-s
 Simply run:
 
 ```
-$ ./jms-solace-source.sh
+$ playground run -f jms-solace-source<tab>
 ```
 
 Solace UI is available at [127.0.0.1:8080](http://127.0.0.1:8080) `admin/admin`

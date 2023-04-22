@@ -29,7 +29,7 @@ In case you want to use your own existing cluster, you need to setup these envir
 ## How to run
 
 ```
-$ ./mirrormaker2.sh
+$ playground run -f mirrormaker2<tab>
 ```
 
 ## Details of what the script is doing

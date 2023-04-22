@@ -75,7 +75,7 @@ Click on `Enable`:
 Simply run:
 
 ```bash
-$ ./gcp-firebase-source.sh <GCP_PROJECT>
+$ playground run -f gcp-firebase-source<tab> <GCP_PROJECT>
 ```
 
 ### Verify data has been pushed to Firebase

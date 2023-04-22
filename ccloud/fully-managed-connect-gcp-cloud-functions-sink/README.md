@@ -51,5 +51,5 @@ In case you want to use your own existing cluster, you need to setup these envir
 Simply run:
 
 ```bash
-$ ./fully-managed-google-cloud-functions.sh <GCP_PROJECT> <REGION> <FUNCTION>
+$ playground run -f fully-managed-google-cloud-functions<tab> <GCP_PROJECT> <REGION> <FUNCTION>
 ```

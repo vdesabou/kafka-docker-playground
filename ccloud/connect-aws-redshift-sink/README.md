@@ -32,7 +32,7 @@ In case you want to use your own existing cluster, you need to setup these envir
 Simply run:
 
 ```bash
-$ ./redshift.sh
+$ playground run -f redshift<tab>
 ```
 
 ## Details of what the script is doing

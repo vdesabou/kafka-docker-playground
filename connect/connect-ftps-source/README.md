@@ -14,7 +14,7 @@ Quickly test [FTPS Source](https://docs.confluent.io/current/connect/kafka-conne
 Simply run:
 
 ```bash
-$ ./ftps-source-json.sh
+$ playground run -f ftps-source-json<tab>
 ```
 
 

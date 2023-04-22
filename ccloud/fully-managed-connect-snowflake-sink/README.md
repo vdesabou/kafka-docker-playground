@@ -35,7 +35,7 @@ In case you want to use your own existing cluster, you need to setup these envir
 Simply run:
 
 ```bash
-$ ./fully-managed-snowflake-sink.sh <SNOWFLAKE_ACCOUNT_NAME> <SNOWFLAKE_USERNAME> <SNOWFLAKE_PASSWORD>
+$ playground run -f fully-managed-snowflake-sink<tab> <SNOWFLAKE_ACCOUNT_NAME> <SNOWFLAKE_USERNAME> <SNOWFLAKE_PASSWORD>
 ```
 
 Note: you can also export these values as environment variable

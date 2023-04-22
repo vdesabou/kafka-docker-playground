@@ -15,7 +15,7 @@ N.B: if you're a Confluent employee, please check this [link](https://confluent.
 Simply run:
 
 ```
-$ ./kudu-source.sh
+$ playground run -f kudu-source<tab>
 ```
 
 ## Details of what the script is doing

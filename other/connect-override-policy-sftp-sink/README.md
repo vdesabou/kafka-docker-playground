@@ -29,7 +29,7 @@ ACLs are setup:
 Simply run:
 
 ```bash
-$ ./sftp-sink.sh
+$ playground run -f sftp-sink<tab>
 ```
 
 ## Details of what the script is doing

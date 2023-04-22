@@ -57,13 +57,13 @@ Search for "Change Data Capture" in Settings and then select `Contact`:
 Simply run:
 
 ```
-$ ./salesforce-cdc-source.sh <SALESFORCE_USERNAME> <SALESFORCE_PASSWORD> <SALESFORCE_CONSUMER_KEY> <SALESFORCE_CONSUMER_PASSWORD> <SALESFORCE_SECURITY_TOKEN>
+$ playground run -f salesforce-cdc-source<tab> <SALESFORCE_USERNAME> <SALESFORCE_PASSWORD> <SALESFORCE_CONSUMER_KEY> <SALESFORCE_CONSUMER_PASSWORD> <SALESFORCE_SECURITY_TOKEN>
 ```
 
 or with JWT flow:
 
 ```
-$ ./salesforce-cdc-source-jwt-flow.sh <SALESFORCE_USERNAME> <SALESFORCE_PASSWORD> <SALESFORCE_CONSUMER_KEY_WITH_JWT> <SALESFORCE_CONSUMER_PASSWORD_WITH_JWT> <SALESFORCE_SECURITY_TOKEN>
+$ playground run -f salesforce-cdc-source-jwt-flow<tab> <SALESFORCE_USERNAME> <SALESFORCE_PASSWORD> <SALESFORCE_CONSUMER_KEY_WITH_JWT> <SALESFORCE_CONSUMER_PASSWORD_WITH_JWT> <SALESFORCE_SECURITY_TOKEN>
 ```
 
 Note: you can also export these values as environment variable

@@ -13,7 +13,7 @@
 Simply run:
 
 ```
-$ ./repro-no-compaction-idle-topic.sh
+$ playground run -f repro-no-compaction-idle-topic<tab>
 ```
 
 

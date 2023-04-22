@@ -12,7 +12,7 @@ Quickly test [Syslog Source](https://docs.confluent.io/current/connect/kafka-con
 Simply run:
 
 ```
-$ ./syslog.sh
+$ playground run -f syslog<tab>
 ```
 
 ## Details of what the script is doing

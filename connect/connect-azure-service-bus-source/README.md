@@ -12,7 +12,7 @@ Quickly test [Azure Service Bus Source](https://docs.confluent.io/current/connec
 Simply run:
 
 ```
-$ ./azure-service-bus.sh
+$ playground run -f azure-service-bus<tab>
 ```
 
 ## Details of what the script is doing

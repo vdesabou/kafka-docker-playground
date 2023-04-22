@@ -14,19 +14,19 @@ Quickly test [JDBC Source](https://docs.confluent.io/current/connect/kafka-conne
 Without SSL:
 
 ```
-$ ./mysql.sh
+$ playground run -f mysql<tab>
 ```
 
 with SSL encryption:
 
 ```
-$ ./mysql-ssl.sh
+$ playground run -f mysql-ssl<tab>
 ```
 
 with SSL encryption + Mutual TLS authentication:
 
 ```
-$ ./mysql-mtls.sh
+$ playground run -f mysql-mtls<tab>
 ```
 
 ### Without SSL

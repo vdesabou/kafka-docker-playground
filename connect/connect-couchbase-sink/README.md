@@ -14,7 +14,7 @@ Quickly test [Couchbase Sink](https://docs.couchbase.com/kafka-connector/3.4/ind
 Simply run:
 
 ```
-$ ./couchbase-sink.sh
+$ playground run -f couchbase-sink<tab>
 ```
 
 Couchbase UI is available at [127.0.0.1:8091](http://127.0.0.1:8091) `Administrator/password`

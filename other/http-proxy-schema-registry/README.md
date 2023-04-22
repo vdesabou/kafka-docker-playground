@@ -10,7 +10,7 @@ Quickly test how to use Kafka clients when Schema Registry is behind a proxy.
 Simply run:
 
 ```
-$ ./start.sh
+$ playground run -f start<tab>
 ```
 
 ## Details of what the script is doing

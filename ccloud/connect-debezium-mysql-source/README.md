@@ -34,7 +34,7 @@ In case you want to use your own existing cluster, you need to setup these envir
 Simply run:
 
 ```
-$ ./debezium-mysql-source.sh
+$ playground run -f debezium-mysql-source<tab>
 ```
 
 N.B: Control Center is reachable at [http://127.0.0.1:9021](http://127.0.0.1:9021])

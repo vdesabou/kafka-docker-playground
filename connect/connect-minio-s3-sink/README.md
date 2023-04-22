@@ -13,7 +13,7 @@ Quickly test [S3 Sink](https://docs.confluent.io/current/connect/kafka-connect-s
 Simply run:
 
 ```
-$ ./minio-sink.sh
+$ playground run -f minio-sink<tab>
 ```
 
 Minio UI is accessible at [http://127.0.0.1:9000](http://127.0.0.1:9000]) (`AKIAIOSFODNN7EXAMPLE`/`wJalrXUtnFEMI7K7MDENG8bPxRfiCYEXAMPLEKEY`)

@@ -19,7 +19,7 @@ Note: The first time you'll run the script, it will build (using this [project](
 ## How to run
 
 ```
-$ ./jms-oracle19-source.sh
+$ playground run -f jms-oracle19-source<tab>
 ```
 
 ## Details of what the script is doing

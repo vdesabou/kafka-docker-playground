@@ -10,7 +10,7 @@ Quickly test [JDBC CockroachDB](https://docs.confluent.io/current/connect/kafka-
 Simply run:
 
 ```
-$ ./cockroachdb.sh
+$ playground run -f cockroachdb<tab>
 ```
 
 N.B: CockroachDB DB Console is reachable at [http://127.0.0.1:8080](http://127.0.0.1:8080])

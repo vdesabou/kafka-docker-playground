@@ -17,5 +17,5 @@ It also showcases a connector example (SpoolDir) and Prometheus/Grafana example.
 Simply run:
 
 ```
-$ ./start.sh
+$ playground run -f start<tab>
 ```

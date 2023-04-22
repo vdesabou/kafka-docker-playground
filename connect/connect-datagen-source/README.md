@@ -11,7 +11,7 @@ Quickly test [Datagen Source](https://docs.confluent.io/kafka-connect-datagen/cu
 Simply run:
 
 ```
-$ ./datagen-source.sh
+$ playground run -f datagen-source<tab>
 ```
 
 ## Details of what the script is doing

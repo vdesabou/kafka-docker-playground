@@ -36,5 +36,5 @@ In case you want to use your own existing cluster, you need to setup these envir
 Simply run:
 
 ```
-$ ./fully-managed-sftp-source-json.sh.sh
+$ playground run -f fully-managed-sftp-source-json.sh<tab>
 ```

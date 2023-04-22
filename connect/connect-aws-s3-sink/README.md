@@ -19,25 +19,25 @@ You can either export environment variables `AWS_REGION`, `AWS_ACCESS_KEY_ID` an
 Simply run:
 
 ```
-$ ./s3-sink.sh
+$ playground run -f s3-sink<tab>
 ```
 
 If you want to assume IAM roles:
 
 ```
-$ ./s3-sink-with-assuming-iam-role.sh (in that case `~/.aws/credentials-with-assuming-iam-role` file must be set)
+$ playground run -f s3-sink-with-assuming-iam-role<tab> (in that case `~/.aws/credentials-with-assuming-iam-role` file must be set)
 ```
 
 or
 
 ```
-$ ./s3-sink-with-assuming-iam-role-config.sh <AWS_STS_ROLE_ARN>
+$ playground run -f s3-sink-with-assuming-iam-role-config<tab> <AWS_STS_ROLE_ARN>
 ```
 
 or with AssumeRole using custom AWS credentials provider (⚠️ custom code is just an example, there is no support for it):
 
 ```
-$ ./s3-sink-backup-and-restore-assuming-iam-role-with-custom-aws-credential-provider.sh
+$ playground run -f s3-sink-backup-and-restore-assuming-iam-role-with-custom-aws-credential-provider<tab>
 ```
 
 Note: you can also export these values as environment variable

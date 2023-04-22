@@ -38,7 +38,7 @@ Select `Configuration`->`API Access` and create New API Key:
 Simply run:
 
 ```bash
-$ ./pagerduty-sink.sh <PAGERDUTY_USER_EMAIL> <PAGERDUTY_API_KEY> <PAGERDUTY_SERVICE_ID>
+$ playground run -f pagerduty-sink<tab> <PAGERDUTY_USER_EMAIL> <PAGERDUTY_API_KEY> <PAGERDUTY_SERVICE_ID>
 ```
 
 Note: you can also export these values as environment variable

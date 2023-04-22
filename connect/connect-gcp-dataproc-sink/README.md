@@ -43,7 +43,7 @@ Rename it to `keyfile.json`and place it in `./keyfile.json` or use environment v
 Simply run:
 
 ```bash
-$ ./gcp-dataproc.sh <GCP_PROJECT> <CLUSTER_NAME>
+$ playground run -f gcp-dataproc<tab> <GCP_PROJECT> <CLUSTER_NAME>
 ```
 
 ## Details of what the script is doing

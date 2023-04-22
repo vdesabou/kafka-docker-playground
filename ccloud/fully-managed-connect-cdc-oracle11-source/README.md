@@ -74,7 +74,7 @@ https://user-images.githubusercontent.com/4061923/139914676-e34fae34-0f5c-4240-9
 ## How to run
 
 ```
-$ ./fully-managed-cdc-oracle11-source.sh <NGROK_AUTH_TOKEN>
+$ playground run -f fully-managed-cdc-oracle11-source<tab> <NGROK_AUTH_TOKEN>
 ```
 
 Note:

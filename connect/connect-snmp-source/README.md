@@ -12,7 +12,7 @@ Quickly test [SNMP Trap Source](https://docs.confluent.io/current/connect/kafka-
 Simply run:
 
 ```
-$ ./snmp-trap-source.sh
+$ playground run -f snmp-trap-source<tab>
 ```
 
 ## Details of what the script is doing

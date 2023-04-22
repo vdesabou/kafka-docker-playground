@@ -14,7 +14,7 @@ Quickly test [Azure Cognitive Search Sink](https://docs.confluent.io/kafka-conne
 Simply run:
 
 ```
-$ ./azure-cognitive-search.sh
+$ playground run -f azure-cognitive-search<tab>
 ```
 
 ## Details of what the script is doing

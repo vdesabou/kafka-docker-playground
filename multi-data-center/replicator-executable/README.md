@@ -16,17 +16,17 @@ We want on each region to have a way to see **all** sales in **all** regions.
 With no security in place (PLAINTEXT):
 
 ```
-$ ./executable-plaintext.sh
+$ playground run -f executable-plaintext<tab>
 ```
 
 With no SSL encryption, SASL/PLAIN authentication:
 
 ```
-$ ./executable-sasl-plain.sh
+$ playground run -f executable-sasl-plain<tab>
 ```
 
 With no SSL encryption, Kerberos GSSAPI authentication:
 
 ```
-$ ./executable-kerberos.sh
+$ playground run -f executable-kerberos<tab>
 ```

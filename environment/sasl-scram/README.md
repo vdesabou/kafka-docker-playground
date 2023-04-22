@@ -15,5 +15,5 @@ This is a deployment with no encryption but with SASL/SCRAM-SHA-256 authenticati
 Simply run:
 
 ```
-$ ./start.sh
+$ playground run -f start<tab>
 ```

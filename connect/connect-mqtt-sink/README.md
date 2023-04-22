@@ -12,13 +12,13 @@ Quickly test [MQTT Sink](https://docs.confluent.io/current/connect/kafka-connect
 Simply run:
 
 ```
-$ ./mqtt-sink.sh
+$ playground run -f mqtt-sink<tab>
 ```
 
 or with mTLS:
 
 ```
-$ ./mqtt-sink-mtls.sh
+$ playground run -f mqtt-sink-mtls<tab>
 ```
 
 ## Details of what the script is doing

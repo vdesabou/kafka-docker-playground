@@ -28,7 +28,7 @@ ACLs are setup:
 ## How to run
 
 ```bash
-$ ./sftp-source-csv.sh
+$ playground run -f sftp-source-csv<tab>
 ```
 
 ## Details of what the script is doing

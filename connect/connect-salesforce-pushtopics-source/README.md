@@ -51,7 +51,7 @@ Find your Security Token (emailed to you from Salesforce.com). If you need to re
 Simply run:
 
 ```
-$ ./salesforce-pushtopic-source.sh <SALESFORCE_USERNAME> <SALESFORCE_PASSWORD> <SALESFORCE_CONSUMER_KEY> <SALESFORCE_CONSUMER_PASSWORD> <SALESFORCE_SECURITY_TOKEN>
+$ playground run -f salesforce-pushtopic-source<tab> <SALESFORCE_USERNAME> <SALESFORCE_PASSWORD> <SALESFORCE_CONSUMER_KEY> <SALESFORCE_CONSUMER_PASSWORD> <SALESFORCE_SECURITY_TOKEN>
 ```
 
 Note: you can also export these values as environment variable

@@ -67,7 +67,7 @@ You should see:
 Simply run:
 
 ```bash
-$ ./gcp-firebase-source.sh <GCP_PROJECT>
+$ playground run -f gcp-firebase-source<tab> <GCP_PROJECT>
 ```
 
 ## Details of what the script is doing

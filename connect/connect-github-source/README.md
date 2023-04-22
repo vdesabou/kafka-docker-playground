@@ -30,7 +30,7 @@ Generate new token with `repo` and `user` selected:
 Simply run:
 
 ```
-$ ./github-source.sh <CONNECTOR_GITHUB_ACCESS_TOKEN>
+$ playground run -f github-source<tab> <CONNECTOR_GITHUB_ACCESS_TOKEN>
 ```
 
 Note: you can also export these values as environment variable

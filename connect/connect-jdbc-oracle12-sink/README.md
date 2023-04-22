@@ -23,25 +23,25 @@ Note: The first time you'll run the script, it will build (using this [project](
 Without SSL:
 
 ```
-$ ./oracle12-sink.sh
+$ playground run -f oracle12-sink<tab>
 ```
 
 with SSL encryption:
 
 ```
-$ ./oracle12-sink-ssl.sh
+$ playground run -f oracle12-sink-ssl<tab>
 ```
 
 with SSL encryption + Mutual TLS (case #3 in this [document](https://www.oracle.com/technetwork/database/enterprise-edition/wp-oracle-jdbc-thin-ssl-130128.pdf)):
 
 ```
-$ ./oracle12-sink-mtls.sh
+$ playground run -f oracle12-sink-mtls<tab>
 ```
 
 with SSL encryption + Mutual TLS + DB authentication (case #4 in this [document](https://www.oracle.com/technetwork/database/enterprise-edition/wp-oracle-jdbc-thin-ssl-130128.pdf):
 
 ```
-$ ./oracle12-sink-mtls-db-auth.sh
+$ playground run -f oracle12-sink-mtls-db-auth<tab>
 ```
 
 N.B: this is the [best resource](https://www.oracle.com/technetwork/topics/wp-oracle-jdbc-thin-ssl-130128.pdf) I found for Oracle DB and SSL.

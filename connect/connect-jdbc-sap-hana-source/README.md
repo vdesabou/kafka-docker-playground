@@ -12,7 +12,7 @@ Quickly test [JDBC Sap Hana Source](https://docs.confluent.io/current/connect/ka
 Simply run:
 
 ```
-$ ./sap-hana-source.sh
+$ playground run -f sap-hana-source<tab>
 ```
 
 ## Details of what the script is doing

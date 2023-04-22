@@ -59,5 +59,5 @@ Rename it to `keyfile.json`and place it in `./keyfile.json` or use environment v
 Simply run:
 
 ```bash
-$ ./fully-managed-gcp-bigquery.sh <GCP_PROJECT>
+$ playground run -f fully-managed-gcp-bigquery<tab> <GCP_PROJECT>
 ```

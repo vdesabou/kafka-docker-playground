@@ -10,19 +10,19 @@ Quickly test [Principal Propagation](https://docs.confluent.io/current/confluent
 Simply run:
 
 ```
-$ ./start-sasl-ssl.sh
+$ playground run -f start-sasl-ssl<tab>
 ```
 
 or
 
 ```
-$ ./start-2way-ssl.sh
+$ playground run -f start-2way-ssl<tab>
 ```
 
 or
 
 ```
-$ ./start-sasl-plain-with-basic-auth.sh
+$ playground run -f start-sasl-plain-with-basic-auth<tab>
 ```
 
 ## With SASL

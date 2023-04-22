@@ -33,7 +33,7 @@ In case you want to use your own existing cluster, you need to setup these envir
 Simply run:
 
 ```
-$ ./fully-managed-azure-event-hubs.sh
+$ playground run -f fully-managed-azure-event-hubs<tab>
 ```
 
 ## Details of what the script is doing

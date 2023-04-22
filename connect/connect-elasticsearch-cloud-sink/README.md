@@ -25,7 +25,7 @@ Quickly test [Elasticsearch Sink](https://docs.confluent.io/current/connect/kafk
 Simply run:
 
 ```
-$ ./elasticsearch-cloud-sink.sh <ELASTICSEARCH_CLOUD_ENDPOINT> <ELASTICSEARCH_CLOUD_USERNAME> <ELASTICSEARCH_CLOUD_PASSWORD>
+$ playground run -f elasticsearch-cloud-sink<tab> <ELASTICSEARCH_CLOUD_ENDPOINT> <ELASTICSEARCH_CLOUD_USERNAME> <ELASTICSEARCH_CLOUD_PASSWORD>
 ```
 
 Note: you can also export these values as environment variable

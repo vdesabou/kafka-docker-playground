@@ -38,7 +38,7 @@ Rename it to `keyfile.json`and place it in `./keyfile.json` or use environment v
 Simply run:
 
 ```bash
-$ ./gcp-bigquery.sh <GCP_PROJECT>
+$ playground run -f gcp-bigquery<tab> <GCP_PROJECT>
 ```
 
 ## Details of what the script is doing

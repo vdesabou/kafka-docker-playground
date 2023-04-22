@@ -38,38 +38,38 @@ Rename it to `keyfile.json`and place it in `./keyfile.json` or use environment v
 Simply run:
 
 ```bash
-$ ./gcs-sink.sh <GCP_PROJECT>
+$ playground run -f gcs-sink<tab> <GCP_PROJECT>
 ```
 
 Or using SASL_SSL:
 
 ```bash
-$ ./gcs-sink-sasl-ssl.sh <GCP_PROJECT>
+$ playground run -f gcs-sink-sasl-ssl<tab> <GCP_PROJECT>
 ```
 
 Or using 2 way SSL authentication:
 
 ```bash
-$ ./gcs-sink-2way-ssl.sh <GCP_PROJECT>
+$ playground run -f gcs-sink-2way-ssl<tab> <GCP_PROJECT>
 ```
 
 
 Or using kerberos:
 
 ```bash
-$ ./gcs-sink-kerberos.sh <GCP_PROJECT>
+$ playground run -f gcs-sink-kerberos<tab> <GCP_PROJECT>
 ```
 
 Or using LDAP Authorizer with SASL/PLAIN:
 
 ```bash
-$ ./gcs-sink-ldap-authorizer-sasl-plain.sh <GCP_PROJECT>
+$ playground run -f gcs-sink-ldap-authorizer-sasl-plain<tab> <GCP_PROJECT>
 ```
 
 Or using RBAC environment with SASL/PLAIN:
 
 ```bash
-$ ./gcs-sink-rbac-sasl-plain.sh <GCP_PROJECT>
+$ playground run -f gcs-sink-rbac-sasl-plain<tab> <GCP_PROJECT>
 ```
 
 Note: you can also export these values as environment variable

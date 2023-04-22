@@ -12,7 +12,7 @@ Quickly test [Azure Cosmos DB Sink](https://github.com/microsoft/kafka-connect-c
 Simply run:
 
 ```
-$ ./azure-cosmosdb-sink.sh
+$ playground run -f azure-cosmosdb-sink<tab>
 ```
 
 ## Details of what the script is doing

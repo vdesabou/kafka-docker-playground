@@ -10,7 +10,7 @@ Quickly test [JDBC Sybase](https://docs.confluent.io/current/connect/kafka-conne
 Simply run:
 
 ```
-$ ./sybase-sink.sh
+$ playground run -f sybase-sink<tab>
 ```
 
 ## Details of what the script is doing

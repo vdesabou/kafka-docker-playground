@@ -40,7 +40,7 @@ Click on `Manage`->`Instance` and register for a New-York instance. After some t
 Simply run:
 
 ```
-$ ./servicenow-source.sh <SERVICENOW_URL> <SERVICENOW_PASSWORD>
+$ playground run -f servicenow-source<tab> <SERVICENOW_URL> <SERVICENOW_PASSWORD>
 ```
 
 Note: you can also export these values as environment variable

@@ -13,7 +13,7 @@ Note: This can only be run with version greater than 5.5
 Simply run:
 
 ```
-$ ./start.sh
+$ playground run -f start<tab>
 ```
 
 ## Details of what the script is doing

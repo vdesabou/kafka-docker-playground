@@ -15,13 +15,13 @@ Using Oracle WebLogic Server (Developer Tier, version `12.2.1.3`) Docker [image]
 Simply run:
 
 ```
-$ ./weblogic-queue.sh
+$ playground run -f weblogic-queue<tab>
 ```
 
 or
 
 ```
-$ ./weblogic-topic.sh
+$ playground run -f weblogic-topic<tab>
 ```
 
 N.B: Weblogic console is reachable at [http://127.0.0.1:7001/console](http://127.0.0.1:7001/console]) (`weblogic`/`welcome1`)

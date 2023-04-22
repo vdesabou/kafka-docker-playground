@@ -27,7 +27,7 @@ Available tags are `6.0.0`
 2. Then you just need to run:
 
 ```
-$ ./start.sh
+$ playground run -f start<tab>
 ```
 
 `hosts-ccloud` host file is automatically generated with your confluent cloud details from `$HOME/.confluent/config`

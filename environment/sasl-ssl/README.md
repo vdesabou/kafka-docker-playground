@@ -17,5 +17,5 @@ This is a deployment with SSL encryption, and SASL/PLAIN authentication:
 Simply run:
 
 ```
-$ ./start.sh
+$ playground run -f start<tab>
 ```

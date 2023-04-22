@@ -34,6 +34,6 @@ In case you want to use your own existing cluster, you need to setup these envir
 Simply run:
 
 ```
-$ ./fully-managed-http-source-oauth2.sh
+$ playground run -f fully-managed-http-source-oauth2<tab>
 ```
 

@@ -38,13 +38,13 @@ Rename it to `keyfile.json`and place it in `./keyfile.json` or use environment v
 For [Backup and Restore GCS Source](https://docs.confluent.io/kafka-connect-gcs-source/current/backup-and-restore/overview.html):
 
 ```bash
-$ ./gcs-source-backup-and-restore.sh <GCP_PROJECT>
+$ playground run -f gcs-source-backup-and-restore<tab> <GCP_PROJECT>
 ```
 
 For [Generalized GCS Source](https://docs.confluent.io/kafka-connect-gcs-source/current/generalized/overview.html) (it requires version 2.1.0 at minimum):
 
 ```bash
-$ ./gcs-source-generalized.sh <GCP_PROJECT>
+$ playground run -f gcs-source-generalized<tab> <GCP_PROJECT>
 ```
 
 Note: you can also export these values as environment variable

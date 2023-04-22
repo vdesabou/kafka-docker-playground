@@ -46,7 +46,7 @@ sasl.jaas.config=org.apache.kafka.common.security.plain.PlainLoginModule require
 2. Simply run:
 
 ```
-$ ./start.sh <2.2 or 3.1> (Core .NET version, default is 2.1)
+$ playground run -f start<tab> <2.2 or 3.1> (Core .NET version, default is 2.1)
 ```
 
 ## Details of what the script is doing

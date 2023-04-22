@@ -62,13 +62,13 @@ https://user-images.githubusercontent.com/4061923/139914676-e34fae34-0f5c-4240-9
 Without SSL:
 
 ```
-$ ./cdc-oracle19-cdb-table.sh
+$ playground run -f cdc-oracle19-cdb-table<tab>
 ```
 
 or
 
 ```
-$ ./cdc-oracle19-pdb-table.sh
+$ playground run -f cdc-oracle19-pdb-table<tab>
 ```
 
 Note:

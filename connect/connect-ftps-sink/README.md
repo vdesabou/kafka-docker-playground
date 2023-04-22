@@ -14,7 +14,7 @@ Quickly test [FTPS Sink](https://docs.confluent.io/current/connect/kafka-connect
 Simply run:
 
 ```bash
-$ ./ftps-sink.sh
+$ playground run -f ftps-sink<tab>
 ```
 
 

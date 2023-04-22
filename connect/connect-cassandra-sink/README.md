@@ -16,7 +16,7 @@ Cassandra `3.0` is used.
 Simply run:
 
 ```
-$ ./cassandra.sh
+$ playground run -f cassandra<tab>
 ```
 
 ## Details of what the script is doing

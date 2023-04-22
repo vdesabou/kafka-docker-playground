@@ -10,7 +10,7 @@ Quickly test [Audit logs](https://docs.confluent.io/current/security/audit-logs.
 Simply run:
 
 ```
-$ ./start-rbac-sasl-plain.sh
+$ playground run -f start-rbac-sasl-plain<tab>
 ```
 
 ## Details of what the script is doing

@@ -19,7 +19,7 @@ You can either export environment variables `AWS_REGION`, `AWS_ACCESS_KEY_ID` an
 Simply run:
 
 ```
-$ ./start.sh
+$ playground run -f start<tab>
 ```
 
 ## Details of what the script is doing

@@ -10,5 +10,5 @@ Quickly test [KafkaJS](https://kafka.js.org)
 Simply run:
 
 ```
-$ ./start.sh
+$ playground run -f start<tab>
 ```

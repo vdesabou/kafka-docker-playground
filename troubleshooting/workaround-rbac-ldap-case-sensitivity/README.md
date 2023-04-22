@@ -37,13 +37,13 @@ The end goal is the following:
 Simply run:
 
 ```
-$ ./start-with-group-based-search.sh
+$ playground run -f start-with-group-based-search<tab>
 ```
 
 or
 
 ```
-$ ./start-with-user-based-search.sh
+$ playground run -f start-with-user-based-search<tab>
 ```
 
 ## Details of what the script is doing

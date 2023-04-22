@@ -16,19 +16,19 @@ Simply run:
 Without SSL:
 
 ```
-$ ./postgres-sink.sh
+$ playground run -f postgres-sink<tab>
 ```
 
 with SSL encryption:
 
 ```
-$ ./postgres-sink-ssl.sh
+$ playground run -f postgres-sink-ssl<tab>
 ```
 
 with SSL encryption + Mutual TLS authentication:
 
 ```
-$ ./postgres-sink-mtls.sh
+$ playground run -f postgres-sink-mtls<tab>
 ```
 
 ## Details of what the script is doing

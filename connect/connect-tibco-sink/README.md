@@ -17,7 +17,7 @@ N.B: if you're a Confluent employee, please check this [link](https://confluent.
 Simply run:
 
 ```
-$ ./tibco-ems-sink.sh
+$ playground run -f tibco-ems-sink<tab>
 ```
 
 ## Details of what the script is doing

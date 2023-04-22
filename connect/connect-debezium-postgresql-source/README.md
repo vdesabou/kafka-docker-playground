@@ -13,19 +13,19 @@ Simply run:
 Without SSL:
 
 ```
-$ ./debezium-postgres-source.sh
+$ playground run -f debezium-postgres-source<tab>
 ```
 
 with SSL encryption:
 
 ```
-$ ./debezium-postgres-source-ssl.sh
+$ playground run -f debezium-postgres-source-ssl<tab>
 ```
 
 with SSL encryption + Mutual TLS authentication:
 
 ```
-$ ./debezium-postgres-source-mtls.sh
+$ playground run -f debezium-postgres-source-mtls<tab>
 ```
 
 ## Details of what the script is doing

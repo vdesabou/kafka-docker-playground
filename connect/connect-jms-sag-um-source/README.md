@@ -12,7 +12,7 @@ Quickly test [JMS Source - SAG Universal Messaging](https://docs.confluent.io/ka
 Simply run:
 
 ```
-$ ./jms-sag-um-source.sh
+$ playground run -f jms-sag-um-source<tab>
 ```
 
 ## Details of what the script is doing

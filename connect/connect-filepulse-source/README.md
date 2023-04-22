@@ -10,31 +10,31 @@ Quickly test [File Pulse Source](https://github.com/streamthoughts/kafka-connect
 Simply run:
 
 ```
-$ ./csv.sh
+$ playground run -f csv<tab>
 ```
 
 or
 
 ```
-$ ./xml.sh
+$ playground run -f xml<tab>
 ```
 
 or
 
 ```
-$ ./json.sh
+$ playground run -f json<tab>
 ```
 
 With AWS S3:
 
 ```
-$ ./s3-csv.sh
+$ playground run -f s3-csv<tab>
 ```
 
 or
 
 ```
-$ ./s3-json.sh
+$ playground run -f s3-json<tab>
 ```
 
 ## Details of what the script is doing

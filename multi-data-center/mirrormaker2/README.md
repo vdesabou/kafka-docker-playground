@@ -11,7 +11,7 @@
 With no security in place (PLAINTEXT):
 
 ```
-$ ./mirrormaker2-plaintext.sh
+$ playground run -f mirrormaker2-plaintext<tab>
 ```
 
 ## Details of what the script is doing

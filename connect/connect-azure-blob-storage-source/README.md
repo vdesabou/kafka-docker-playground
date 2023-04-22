@@ -12,7 +12,7 @@ Quickly test [Azure Blob Storage Source](https://docs.confluent.io/current/conne
 Simply run:
 
 ```
-$ ./azure-blob-storage-source-backup-and-restore.sh
+$ playground run -f azure-blob-storage-source-backup-and-restore<tab>
 ```
 
 Simply run:
@@ -20,13 +20,13 @@ Simply run:
 For [Backup and Restore Azure Blob Storage Source](https://docs.confluent.io/kafka-connect-azure-blob-storage-source/current/backup-and-restore/index.html):
 
 ```bash
-$ ./azure-blob-storage-source-backup-and-restore.sh
+$ playground run -f azure-blob-storage-source-backup-and-restore<tab>
 ```
 
 For [Generalized Azure Blob Storage Source](https://docs.confluent.io/kafka-connect-azure-blob-storage-source/current/generalized/overview.html#) (it requires version 2.2.0 at minimum):
 
 ```bash
-$ ./azure-blob-storage-source-generalized.sh
+$ playground run -f azure-blob-storage-source-generalized<tab>
 ```
 
 ## Details of what the script is doing

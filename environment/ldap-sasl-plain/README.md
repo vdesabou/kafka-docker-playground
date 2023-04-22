@@ -17,5 +17,5 @@ This is a deployment with no encryption but with [Client Authentication with LDA
 Simply run:
 
 ```
-$ ./start.sh
+$ playground run -f start<tab>
 ```

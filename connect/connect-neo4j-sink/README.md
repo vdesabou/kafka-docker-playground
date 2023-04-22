@@ -12,7 +12,7 @@ Quickly test [Neo4j Sink](https://neo4j.com/labs/kafka/4.0/kafka-connect/) conne
 Simply run:
 
 ```
-$ ./neo4j.sh
+$ playground run -f neo4j<tab>
 ```
 
 Neo4j UI is available at [127.0.0.1:7474](http://127.0.0.1:7474) `neo4j/connect`

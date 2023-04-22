@@ -56,5 +56,5 @@ In case you want to use your own existing cluster, you need to setup these envir
 ## How to run
 
 ```
-$ ./fully-managed-postgres-sink.sh <NGROK_AUTH_TOKEN>
+$ playground run -f fully-managed-postgres-sink<tab> <NGROK_AUTH_TOKEN>
 ```

@@ -10,7 +10,7 @@ Quickly test [Confluent Schema Registry Security Plugin](https://docs.confluent.
 Simply run:
 
 ```
-$ ./start.sh
+$ playground run -f start<tab>
 ```
 
 ## Details of what the script is doing

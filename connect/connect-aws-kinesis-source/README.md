@@ -29,19 +29,19 @@ Make sure that region corresponds to the one used by the test (eu-west-3 by defa
 Simply run:
 
 ```
-$ ./kinesis-source.sh
+$ playground run -f kinesis-source<tab>
 ```
 
 If you want to assume IAM roles:
 
 ```
-$ ./kinesis-source-with-assuming-iam-role.sh (in that case `~/.aws/credentials-with-assuming-iam-role` file must be set)
+$ playground run -f kinesis-source-with-assuming-iam-role<tab> (in that case `~/.aws/credentials-with-assuming-iam-role` file must be set)
 ```
 
 or with AssumeRole using custom AWS credentials provider (⚠️ custom code is just an example, there is no support for it):
 
 ```
-$ ./kinesis-source-with-assuming-iam-role.sh
+$ playground run -f kinesis-source-with-assuming-iam-role<tab>
 ```
 
 ## Details of what the script is doing

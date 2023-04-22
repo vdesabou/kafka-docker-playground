@@ -35,6 +35,6 @@ In case you want to use your own existing cluster, you need to setup these envir
 Simply run:
 
 ```
-$ ./fully-managed-azure-service-bus.sh
+$ playground run -f fully-managed-azure-service-bus<tab>
 ```
 

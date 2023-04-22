@@ -13,13 +13,13 @@ Quickly test [Azure Data Lake Storage Gen2 Sink](https://docs.confluent.io/curre
 Simply run:
 
 ```
-$ ./azure-data-lake-storage-gen2-sink.sh
+$ playground run -f azure-data-lake-storage-gen2-sink<tab>
 ```
 
 Or using 2 way SSL authentication:
 
 ```bash
-$ ./azure-data-lake-storage-gen2-2way-ssl.sh
+$ playground run -f azure-data-lake-storage-gen2-2way-ssl<tab>
 ```
 
 **Note**: You need to provide the tenant name by providing AZURE_TENANT_NAME environment variable. Check the list of tenants using `az account list`.

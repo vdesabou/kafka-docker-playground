@@ -11,7 +11,7 @@ Quickly test [Confluent Rebalancer](https://docs.confluent.io/current/kafka/reba
 Simply run:
 
 ```
-$ ./rebalancer.sh
+$ playground run -f rebalancer<tab>
 ```
 
 Control Center is reachable at [http://127.0.0.1:9021](http://127.0.0.1:9021])

@@ -20,25 +20,25 @@ You can either export environment variables `AWS_REGION`, `AWS_ACCESS_KEY_ID` an
 Simply run:
 
 ```bash
-$ ./sqs.sh
+$ playground run -f sqs<tab>
 ```
 
 Or using SASL_SSL authentication:
 
 ```bash
-$ ./sqs-sasl-ssl.sh
+$ playground run -f sqs-sasl-ssl<tab>
 ```
 
 Or using 2 way SSL authentication:
 
 ```bash
-$ ./sqs-2way-ssl.sh
+$ playground run -f sqs-2way-ssl<tab>
 ```
 
 If you want to [assume](https://docs.confluent.io/kafka-connect-s3-sink/current/index.html#using-trusted-account-credentials) IAM roles:
 
 ```
-$ ./sqs-source-with-assuming-iam-role.sh (in that case `~/.aws/credentials-with-assuming-iam-role` file must be set)
+$ playground run -f sqs-source-with-assuming-iam-role<tab> (in that case `~/.aws/credentials-with-assuming-iam-role` file must be set)
 ```
 
 ## Details of what the script is doing

@@ -18,13 +18,13 @@ java.lang.ClassCastException: class [Ljava.lang.Object; cannot be cast to class 
 Simply run:
 
 ```
-$ ./hdfs3-sink.sh
+$ playground run -f hdfs3-sink<tab>
 ```
 
 or with Kerberos:
 
 ```
-$ ./hdfs2-sink-kerberos.sh (without Hive support)
+$ playground run -f hdfs2-sink-kerberos<tab> (without Hive support)
 ```
 
 ## Details of what the script is doing

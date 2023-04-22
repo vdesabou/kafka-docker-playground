@@ -29,7 +29,7 @@ In case you want to use your own existing cluster, you need to setup these envir
 ## How to run
 
 ```
-$ ./mqtt-source.sh
+$ playground run -f mqtt-source<tab>
 ```
 
 ## Details of what the script is doing

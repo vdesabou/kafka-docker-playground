@@ -12,17 +12,17 @@ We want on each region to have a way to see **all** sales in **all** regions.
 With no security in place (PLAINTEXT):
 
 ```
-$ ./connect-plaintext.sh
+$ playground run -f connect-plaintext<tab>
 ```
 
 With no SSL encryption, SASL/PLAIN authentication:
 
 ```
-$ ./connect-sasl-plain.sh
+$ playground run -f connect-sasl-plain<tab>
 ```
 
 With no SSL encryption, Kerberos GSSAPI authentication:
 
 ```
-$ ./connect-kerberos.sh
+$ playground run -f connect-kerberos<tab>
 ```

@@ -14,7 +14,7 @@ Quickly test [MongoDB](https://docs.mongodb.com/ecosystem/connectors/kafka/) con
 Simply run:
 
 ```
-$ ./mongo.sh
+$ playground run -f mongo<tab>
 ```
 
 ## Details of what the script is doing

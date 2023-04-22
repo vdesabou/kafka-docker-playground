@@ -12,7 +12,7 @@ Quickly test [RabbitMQ Source](https://docs.confluent.io/current/connect/kafka-c
 Simply run:
 
 ```
-$ ./rabbitmq.sh
+$ playground run -f rabbitmq<tab>
 ```
 
 ## Details of what the script is doing

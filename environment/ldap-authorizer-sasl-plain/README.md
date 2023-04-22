@@ -19,7 +19,7 @@ The goal is to test [LDAP authorizer](https://docs.confluent.io/current/security
 Simply run:
 
 ```
-$ ./start.sh
+$ playground run -f start<tab>
 ```
 
 ## Explanations

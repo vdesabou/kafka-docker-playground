@@ -19,13 +19,13 @@ You can either export environment variables `AWS_REGION`, `AWS_ACCESS_KEY_ID` an
 Simply run:
 
 ```bash
-$ ./redshift-sink.sh
+$ playground run -f redshift-sink<tab>
 ```
 
 If you want to assume IAM roles:
 
 ```
-$ ./redshift-sink-with-assuming-iam-role.sh (in that case `~/.aws/credentials-with-assuming-iam-role` file must be set)
+$ playground run -f redshift-sink-with-assuming-iam-role<tab> (in that case `~/.aws/credentials-with-assuming-iam-role` file must be set)
 ```
 
 ## Details of what the script is doing

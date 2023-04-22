@@ -11,7 +11,7 @@ Test bad timestamp in microseconds (https://issues.apache.org/jira/browse/KAFKA-
 Simply run:
 
 ```
-$ ./start.sh
+$ playground run -f start<tab>
 ```
 
 Results:

@@ -38,7 +38,7 @@ Rename it to `keyfile.json`and place it in `./keyfile.json` or use environment v
 Simply run:
 
 ```bash
-$ ./gcp-spanner.sh <GCP_PROJECT> <INSTANCE> <DATABASE>
+$ playground run -f gcp-spanner<tab> <GCP_PROJECT> <INSTANCE> <DATABASE>
 ```
 
 ## Details of what the script is doing

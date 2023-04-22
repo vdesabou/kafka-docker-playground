@@ -33,7 +33,7 @@ In case you want to use your own existing cluster, you need to setup these envir
 Simply run:
 
 ```
-$ ./mongo.sh
+$ playground run -f mongo<tab>
 ```
 
 ## Details of what the script is doing

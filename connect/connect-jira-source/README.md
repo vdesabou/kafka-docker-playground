@@ -27,7 +27,7 @@ Create the API token:
 Simply run:
 
 ```
-$ ./jira-source.sh <JIRA_URL> <JIRA_USERNAME> <JIRA_API_TOKEN>
+$ playground run -f jira-source<tab> <JIRA_URL> <JIRA_USERNAME> <JIRA_API_TOKEN>
 ```
 
 Note: you can also export these values as environment variable

@@ -14,7 +14,7 @@ Quickly test [OmniSci Sink](https://docs.confluent.io/current/connect/kafka-conn
 Simply run:
 
 ```
-$ ./omnisci-sink.sh
+$ playground run -f omnisci-sink<tab>
 ```
 
 ## Details of what the script is doing

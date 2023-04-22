@@ -12,7 +12,7 @@ Quickly test [Azure Cosmos DB Source](https://github.com/microsoft/kafka-connect
 Simply run:
 
 ```
-$ ./azure-cosmosdb-source.sh
+$ playground run -f azure-cosmosdb-source<tab>
 ```
 
 ## Details of what the script is doing

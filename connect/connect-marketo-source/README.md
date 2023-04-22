@@ -42,7 +42,7 @@ The REST API Endpoint URL (`MARKETO_ENDPOINT_URL`) can be found within `Admin`->
 Simply run:
 
 ```
-$ ./marketo-source.sh <MARKETO_ENDPOINT_URL> <MARKETO_CLIENT_ID> <MARKETO_CLIENT_SECRET>
+$ playground run -f marketo-source<tab> <MARKETO_ENDPOINT_URL> <MARKETO_CLIENT_ID> <MARKETO_CLIENT_SECRET>
 ```
 
 Note: you can also export these values as environment variable

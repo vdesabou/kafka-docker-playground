@@ -14,7 +14,7 @@ Quickly test [InfluxDB Sink](https://docs.confluent.io/current/connect/kafka-con
 Simply run:
 
 ```
-$ ./influxdb-sink.sh
+$ playground run -f influxdb-sink<tab>
 ```
 
 ## Details of what the script is doing

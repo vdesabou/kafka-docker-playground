@@ -13,7 +13,7 @@ Using Oracle WebLogic Server (Developer Tier, version `12.2.1.3`) Docker [image]
 Simply run:
 
 ```
-$ ./jms-weblogic-source.sh
+$ playground run -f jms-weblogic-source<tab>
 ```
 
 N.B: Weblogic console is reachable at [http://127.0.0.1:7001/console](http://127.0.0.1:7001/console]) (`weblogic`/`welcome1`)

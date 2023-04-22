@@ -20,5 +20,5 @@ N.B: we have dedicated zookepper and broker for metrics.
 Simply run:
 
 ```
-$ ./start.sh
+$ playground run -f start<tab>
 ```

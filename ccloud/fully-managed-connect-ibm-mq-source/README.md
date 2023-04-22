@@ -54,7 +54,7 @@ In case you want to use your own existing cluster, you need to setup these envir
 ## How to run
 
 ```
-$ ./fully-managed-ibm-mq-source.sh <NGROK_AUTH_TOKEN>
+$ playground run -f fully-managed-ibm-mq-source<tab> <NGROK_AUTH_TOKEN>
 ```
 
 Note: you can also export the value as environment variable

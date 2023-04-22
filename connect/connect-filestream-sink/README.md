@@ -12,7 +12,7 @@ Quickly test [FileStream Sink](https://docs.confluent.io/home/connect/filestream
 Simply run:
 
 ```
-$ ./filestream-sink.sh
+$ playground run -f filestream-sink<tab>
 ```
 
 ## Details of what the script is doing

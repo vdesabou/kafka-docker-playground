@@ -10,13 +10,13 @@ Quickly test [fail.on.production.error](https://docs.ksqldb.io/en/latest/referen
 Simply run:
 
 ```
-$ ./start-auth-error.sh
+$ playground run -f start-auth-error<tab>
 ```
 
 or 
 
 ```
-$ ./start-maxmessage-error.sh
+$ playground run -f start-maxmessage-error<tab>
 ```
 
 ## start-auth-error.sh

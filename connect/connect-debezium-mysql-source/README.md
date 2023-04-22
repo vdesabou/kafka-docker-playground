@@ -14,7 +14,7 @@ Quickly test [Debezium MySQL](https://docs.confluent.io/current/connect/debezium
 Simply run:
 
 ```
-$ ./debezium-mysql-source.sh
+$ playground run -f debezium-mysql-source<tab>
 ```
 
 ## Details of what the script is doing

@@ -30,7 +30,7 @@ Available tags are listed [here](https://github.com/vdesabou/cp-ansible-playgrou
 ## How to run
 
 ```
-$ ./start.sh <host yml file>
+$ playground run -f start<tab> <host yml file>
 ```
 
 `hosts-plaintext.yml` host file should be used as the base file, then you can modify it to include your changes:
@@ -44,7 +44,7 @@ ssl_enabled: true
 sasl_protocol: plain
 
 # run the script
-$ ./start.sh hosts-custom.yml
+$ playground run -f start<tab> hosts-custom.yml
 ```
 
 Once the script has been run, you will have all the docker container running with your changes.

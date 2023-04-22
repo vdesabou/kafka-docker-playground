@@ -27,7 +27,7 @@ CREATE OR REPLACE TABLE SSH_TABLE_LOGS
 
 Start command:
 ```
-$ ./start.sh
+$ playground run -f start<tab>
 ```
 
 At the end of the `start.sh` log ouput, you have something similar like this :
@@ -66,6 +66,6 @@ admin| admin
 
 Stop command:
 ```
-$ ./stop.sh
+$ playground run -f stop<tab>
 ```
 

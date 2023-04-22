@@ -14,7 +14,7 @@ Quickly test [Redis Sink](https://docs.confluent.io/kafka-connectors/redis/curre
 Simply run:
 
 ```
-$ ./redis-sink.sh
+$ playground run -f redis-sink<tab>
 ```
 
 ## Details of what the script is doing

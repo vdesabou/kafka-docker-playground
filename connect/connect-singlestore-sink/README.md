@@ -10,7 +10,7 @@ Quickly test [Singlestore](https://github.com/memsql/singlestore-kafka-connector
 Simply run:
 
 ```
-$ ./singlestore-sink.sh
+$ playground run -f singlestore-sink<tab>
 ```
 
 ## Details of what the script is doing

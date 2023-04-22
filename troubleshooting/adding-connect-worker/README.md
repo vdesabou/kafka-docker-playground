@@ -10,7 +10,7 @@ Verify that a task rebalance is happening when a new Kafka Connect worker is add
 Simply run:
 
 ```bash
-$ ./start.sh
+$ playground run -f start<tab>
 ```
 
 ## Details of what the script is doing

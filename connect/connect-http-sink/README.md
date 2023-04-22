@@ -18,36 +18,36 @@ Note: A great resource to test different HTTP status code is [http://httpstat.us
 ### No Authentication
 
 ```bash
-$ ./http_no_auth.sh
+$ playground run -f http_no_auth<tab>
 ```
 
 ### Basic Authentication
 
 ```bash
-$ ./http_basic_auth.sh
+$ playground run -f http_basic_auth<tab>
 ```
 
 ### Oauth2 Authentication
 
 ```bash
-$ ./http_oauth2_auth.sh
+$ playground run -f http_oauth2_auth<tab>
 ```
 
 ### SSL + Basic Authentication
 
 ```bash
-$ ./http_ssl_basic_auth.sh
+$ playground run -f http_ssl_basic_auth<tab>
 ```
 ### SSL Authentication (mutual TLS)
 
 ```bash
-$ ./http_mtls_auth.sh
+$ playground run -f http_mtls_auth<tab>
 ```
 
 ### JSON Converter Example
 
 ```bash
-$ ./http_json_basic_auth.sh
+$ playground run -f http_json_basic_auth<tab>
 ```
 
 Sending using:
@@ -84,7 +84,7 @@ curl admin:password@localhost:9083/api/messages | jq .
 ### AVRO Converter Example
 
 ```
-$ ./http_avro_basic_auth.sh
+$ playground run -f http_avro_basic_auth<tab>
 ```
 
 Sending using:

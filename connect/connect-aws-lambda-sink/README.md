@@ -20,13 +20,13 @@ You can either export environment variables `AWS_REGION`, `AWS_ACCESS_KEY_ID` an
 Simply run:
 
 ```bash
-$ ./lambda.sh
+$ playground run -f lambda<tab>
 ```
 
 If you want to assume IAM roles:
 
 ```
-$ ./lambda-sink-with-assuming-iam-role.sh (in that case `~/.aws/credentials-with-assuming-iam-role` file must be set)
+$ playground run -f lambda-sink-with-assuming-iam-role<tab> (in that case `~/.aws/credentials-with-assuming-iam-role` file must be set)
 ```
 
 ## Details of what the script is doing

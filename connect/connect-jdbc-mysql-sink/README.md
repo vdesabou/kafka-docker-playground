@@ -11,19 +11,19 @@ Quickly test [JDBC Sink](https://docs.confluent.io/current/connect/kafka-connect
 Without SSL:
 
 ```
-$ ./mysql-sink.sh
+$ playground run -f mysql-sink<tab>
 ```
 
 with SSL encryption:
 
 ```
-$ ./mysql-sink-ssl.sh
+$ playground run -f mysql-sink-ssl<tab>
 ```
 
 with SSL encryption + Mutual TLS authentication:
 
 ```
-$ ./mysql-sink-mtls.sh
+$ playground run -f mysql-sink-mtls<tab>
 ```
 
 ## Details of what the script is doing

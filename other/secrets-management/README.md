@@ -9,7 +9,7 @@ Quickly test [Secrets Management](https://docs.confluent.io/platform/current/sec
 Simply run:
 
 ```
-$ ./start.sh
+$ playground run -f start<tab>
 ```
 
 ## Details of what the script is doing

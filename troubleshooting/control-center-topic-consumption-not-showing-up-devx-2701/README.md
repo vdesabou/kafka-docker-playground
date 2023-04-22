@@ -5,13 +5,13 @@
 Simply run:
 
 ```
-$ ./start-plaintext.sh
+$ playground run -f start-plaintext<tab>
 ```
 
 or
 
 ```
-$ ./start-rbac.sh
+$ playground run -f start-rbac<tab>
 ```
 
 ## With PLAINTEXT

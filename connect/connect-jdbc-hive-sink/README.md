@@ -18,13 +18,13 @@ Quickly test [JDBC Sink](https://docs.confluent.io/current/connect/kafka-connect
 Simply run:
 
 ```
-$ ./hive-sink.sh (not working)
+$ playground run -f hive-sink<tab> (not working)
 ```
 
 or
 
 ```
-$ ./hive-sink-datadirect.sh (working, but with license)
+$ playground run -f hive-sink-datadirect<tab> (working, but with license)
 ```
 
 

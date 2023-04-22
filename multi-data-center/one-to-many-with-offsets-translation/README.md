@@ -8,7 +8,7 @@ In others words, verifying differents instances of replicators are not sharing a
 ## How to run
 
 ```
-$ ./start.sh
+$ playground run -f start<tab>
 ```
 
 ## Details of what the script is doing

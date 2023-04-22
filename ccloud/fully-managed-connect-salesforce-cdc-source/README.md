@@ -76,7 +76,7 @@ Search for "Change Data Capture" in Settings and then select `Contact`:
 Simply run:
 
 ```
-$ ./fully-managed-salesforce-cdc-source.sh <SALESFORCE_USERNAME> <SALESFORCE_PASSWORD> <SALESFORCE_CONSUMER_KEY> <SALESFORCE_CONSUMER_PASSWORD> <SALESFORCE_SECURITY_TOKEN>
+$ playground run -f fully-managed-salesforce-cdc-source<tab> <SALESFORCE_USERNAME> <SALESFORCE_PASSWORD> <SALESFORCE_CONSUMER_KEY> <SALESFORCE_CONSUMER_PASSWORD> <SALESFORCE_SECURITY_TOKEN>
 ```
 
 Note: you can also export these values as environment variable

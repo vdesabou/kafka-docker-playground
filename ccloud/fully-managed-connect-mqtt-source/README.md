@@ -54,5 +54,5 @@ In case you want to use your own existing cluster, you need to setup these envir
 ## How to run
 
 ```
-$ ./fully-managed-mqtt-source.sh <NGROK_AUTH_TOKEN>
+$ playground run -f fully-managed-mqtt-source<tab> <NGROK_AUTH_TOKEN>
 ```

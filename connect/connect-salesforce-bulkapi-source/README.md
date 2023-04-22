@@ -21,7 +21,7 @@ Go to [Salesforce developer portal](https://developer.salesforce.com/signup/) an
 Simply run:
 
 ```
-$ ./salesforce-bukapi-source.sh <SALESFORCE_USERNAME> <SALESFORCE_PASSWORD> <SALESFORCE_SECURITY_TOKEN>
+$ playground run -f salesforce-bukapi-source<tab> <SALESFORCE_USERNAME> <SALESFORCE_PASSWORD> <SALESFORCE_SECURITY_TOKEN>
 ```
 
 Note: you can also export these values as environment variable

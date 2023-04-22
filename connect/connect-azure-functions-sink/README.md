@@ -14,7 +14,7 @@ Quickly test [Azure Functions Sink](https://docs.confluent.io/current/connect/ka
 Simply run:
 
 ```
-$ ./azure-functions.sh
+$ playground run -f azure-functions<tab>
 ```
 
 ## Details of what the script is doing

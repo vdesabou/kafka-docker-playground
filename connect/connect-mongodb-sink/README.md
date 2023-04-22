@@ -14,7 +14,7 @@ Quickly test [MongoDB](https://docs.mongodb.com/kafka-connector/current/) connec
 Simply run:
 
 ```
-$ ./mongo-sink.sh
+$ playground run -f mongo-sink<tab>
 ```
 
 ## Details of what the script is doing

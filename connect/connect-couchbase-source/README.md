@@ -11,13 +11,13 @@ Quickly test [Couchbase Source](https://docs.couchbase.com/kafka-connector/curre
 Simply run:
 
 ```
-$ ./couchbase.sh
+$ playground run -f couchbase<tab>
 ```
 
 Note: if you want to test with a custom `couchbase.event.filter` class, use:
 
 ```
-$ ./couchbase-with-key-filter.sh
+$ playground run -f couchbase-with-key-filter<tab>
 ```
 
 It will filter using key starting with `airline`
@@ -25,7 +25,7 @@ It will filter using key starting with `airline`
 Note: if you want to test with some [SMT](https://docs.confluent.io/current/connect/transforms/index.html) `ExtractTopic$Key` and `RegexRouter`, use:
 
 ```
-$ ./couchbase-with-transforms.sh
+$ playground run -f couchbase-with-transforms<tab>
 ```
 
 The transforms are defined with:

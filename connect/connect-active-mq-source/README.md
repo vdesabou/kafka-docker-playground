@@ -13,13 +13,13 @@ Using ActiveMQ Docker [image](https://hub.docker.com/r/rmohr/activemq/)
 Simply run:
 
 ```
-$ ./active-mq-source.sh
+$ playground run -f active-mq-source<tab>
 ```
 
 with SSL encryption + Mutual TLS authentication:
 
 ```
-$ ./active-mq-source-mtls.sh
+$ playground run -f active-mq-source-mtls<tab>
 ```
 
 ## Details of what the script is doing

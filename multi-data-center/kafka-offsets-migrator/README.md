@@ -7,7 +7,7 @@ Quickly test [kafka-offsets-migrator](https://github.com/bb01100100/kafka-offset
 ## How to run
 
 ```
-$ ./start.sh
+$ playground run -f start<tab>
 ```
 
 ## Details of what the script is doing

@@ -43,5 +43,5 @@ In case you want to use your own existing cluster, you need to setup these envir
 Simply run:
 
 ```bash
-$ ./cloudwatch.sh
+$ playground run -f cloudwatch<tab>
 ```

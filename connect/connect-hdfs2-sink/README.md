@@ -13,13 +13,13 @@ Note: it also contains Hive integration
 Simply run:
 
 ```
-$ ./hdfs2-sink.sh
+$ playground run -f hdfs2-sink<tab>
 ```
 
 or with Kerberos:
 
 ```
-$ ./hdfs2-sink-kerberos.sh (without Hive support)
+$ playground run -f hdfs2-sink-kerberos<tab> (without Hive support)
 ```
 
 ## Details of what the script is doing

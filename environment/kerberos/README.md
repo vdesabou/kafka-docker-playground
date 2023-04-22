@@ -17,7 +17,7 @@ This is a deployment with no SSL encryption, and Kerberos GSSAPI authentication:
 Simply run:
 
 ```
-$ ./start.sh
+$ playground run -f start<tab>
 ```
 
 ## Credits

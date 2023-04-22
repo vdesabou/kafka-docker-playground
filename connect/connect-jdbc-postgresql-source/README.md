@@ -12,19 +12,19 @@ Quickly test [JDBC PostGreSQL](https://docs.confluent.io/current/connect/kafka-c
 Without SSL:
 
 ```
-$ ./postgres.sh
+$ playground run -f postgres<tab>
 ```
 
 with SSL encryption:
 
 ```
-$ ./postgres-ssl.sh
+$ playground run -f postgres-ssl<tab>
 ```
 
 with SSL encryption + Mutual TLS authentication:
 
 ```
-$ ./postgres-mtls.sh
+$ playground run -f postgres-mtls<tab>
 ```
 ## Details of what the script is doing
 

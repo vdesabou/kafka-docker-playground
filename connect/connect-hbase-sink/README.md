@@ -11,13 +11,13 @@ Quickly test [HBase Sink](https://docs.confluent.io/current/connect/kafka-connec
 Simply run:
 
 ```
-$ ./hbase-sink-1.2.0.sh
+$ playground run -f hbase-sink-1.2.0<tab>
 ```
 
 or
 
 ```
-$ ./hbase-sink-2.2.4.sh
+$ playground run -f hbase-sink-2.2.4<tab>
 ```
 
 ## Details of what the script is doing

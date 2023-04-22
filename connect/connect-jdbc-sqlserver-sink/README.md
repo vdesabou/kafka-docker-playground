@@ -14,17 +14,17 @@ Quickly test [JDBC SQL Server](https://docs.confluent.io/current/connect/kafka-c
 Without SSL:
 
 ```
-$ ./sqlserver-jtds-sink.sh (with [JTDS](http://jtds.sourceforge.net) driver)
+$ playground run -f sqlserver-jtds-sink<tab> (with [JTDS](http://jtds.sourceforge.net) driver)
 
-$ ./sqlserver-microsoft-sink.sh (with [Microsoft](https://docs.microsoft.com/en-us/sql/connect/jdbc/microsoft-jdbc-driver-for-sql-server) driver)
+$ playground run -f sqlserver-microsoft-sink<tab> (with [Microsoft](https://docs.microsoft.com/en-us/sql/connect/jdbc/microsoft-jdbc-driver-for-sql-server) driver)
 ```
 
 with SSL encryption:
 
 ```
-$ ./sqlserver-jtds-sink-ssl.sh (with [JTDS](http://jtds.sourceforge.net) driver)
+$ playground run -f sqlserver-jtds-sink-ssl<tab> (with [JTDS](http://jtds.sourceforge.net) driver)
 
-$ ./sqlserver-microsoft-sink-ssl.sh (with [Microsoft](https://docs.microsoft.com/en-us/sql/connect/jdbc/microsoft-jdbc-driver-for-sql-server) driver)
+$ playground run -f sqlserver-microsoft-sink-ssl<tab> (with [Microsoft](https://docs.microsoft.com/en-us/sql/connect/jdbc/microsoft-jdbc-driver-for-sql-server) driver)
 ```
 
 ## Details of what the script is doing

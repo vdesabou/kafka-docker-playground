@@ -29,7 +29,7 @@ Note down the project id, the region (example `us-central1`), and the function n
 Simply run:
 
 ```bash
-$ ./google-cloud-functions.sh <GCP_PROJECT> <REGION> <FUNCTION>
+$ playground run -f google-cloud-functions<tab> <GCP_PROJECT> <REGION> <FUNCTION>
 ```
 
 ## Details of what the script is doing

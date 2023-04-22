@@ -14,7 +14,7 @@ Quickly test [JDBC Sink](https://docs.confluent.io/current/connect/kafka-connect
 Simply run:
 
 ```
-$ ./vertica-sink.sh
+$ playground run -f vertica-sink<tab>
 ```
 
 ## Details of what the script is doing

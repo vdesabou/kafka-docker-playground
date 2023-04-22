@@ -14,49 +14,49 @@ Quickly test [SFTP Source](https://docs.confluent.io/current/connect/kafka-conne
 * With CSV (no schema)
 
 ```bash
-$ ./sftp-source-csv.sh
+$ playground run -f sftp-source-csv<tab>
 ```
 
 * With CSV (with schema)
 
 ```bash
-$ ./sftp-source-csv-with-schema.sh
+$ playground run -f sftp-source-csv-with-schema<tab>
 ```
 
 * With TSV
 
 ```bash
-$ ./sftp-source-tsv.sh
+$ playground run -f sftp-source-tsv<tab>
 ```
 
 * With JSON (no schema)
 
 ```bash
-$ ./sftp-source-json.sh
+$ playground run -f sftp-source-json<tab>
 ```
 
 * With JSON (with schema)
 
 ```bash
-$ ./sftp-source-json-with-schema.sh
+$ playground run -f sftp-source-json-with-schema<tab>
 ```
 
 * With Kerberos:
 
 ```bash
-$ ./sftp-source-kerberos.sh
+$ playground run -f sftp-source-kerberos<tab>
 ```
 
 * With SSH key
 
 ```bash
-$ ./sftp-source-ssh-key.sh
+$ playground run -f sftp-source-ssh-key<tab>
 ```
 
 * With SSH PEM file
 
 ```bash
-$ ./sftp-source-ssh-pem-file.sh
+$ playground run -f sftp-source-ssh-pem-file<tab>
 ```
 
 

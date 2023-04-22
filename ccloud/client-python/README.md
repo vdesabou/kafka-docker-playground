@@ -46,7 +46,7 @@ sasl.jaas.config=org.apache.kafka.common.security.plain.PlainLoginModule require
 2. Simply run:
 
 ```
-$ ./start.sh
+$ playground run -f start<tab>
 ```
 
 ## Details of what the script is doing

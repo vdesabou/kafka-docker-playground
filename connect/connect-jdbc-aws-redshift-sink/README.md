@@ -9,7 +9,7 @@ Quickly test [JDBC Source](https://docs.confluent.io/current/connect/kafka-conne
 Simply run:
 
 ```bash
-$ ./redshift-jdbc-sink.sh
+$ playground run -f redshift-jdbc-sink<tab>
 ```
 ## Details of what the script is doing
 

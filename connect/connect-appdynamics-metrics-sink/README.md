@@ -14,7 +14,7 @@ Quickly test [AppDynamics Metrics sink](https://docs.confluent.io/current/connec
 Simply run:
 
 ```
-$ ./appdynamics-metrics-sink.sh
+$ playground run -f appdynamics-metrics-sink<tab>
 ```
 
 ## Details of what the script is doing

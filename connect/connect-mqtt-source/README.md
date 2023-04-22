@@ -12,13 +12,13 @@ Quickly test [MQTT Source](https://docs.confluent.io/current/connect/kafka-conne
 Simply run:
 
 ```
-$ ./mqtt.sh
+$ playground run -f mqtt<tab>
 ```
 
 or with MTLS
 
 ```
-$ ./mqtt-source-mtls.sh
+$ playground run -f mqtt-source-mtls<tab>
 ```
 
 ## Details of what the script is doing

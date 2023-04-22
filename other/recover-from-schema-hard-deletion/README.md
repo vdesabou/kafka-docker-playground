@@ -32,11 +32,11 @@ _Note: Wiremock proposes also a stubbing feature not detailled in this example._
 
 Simplly run
 ```
-$ ./start.sh
+$ playground run -f start<tab>
 ```
 When done run the stop script to tears everything down
 ```
-$ ./stop.sh
+$ playground run -f stop<tab>
 ```
 
 ### Use a custom `SchemaRegistryClient` implementation

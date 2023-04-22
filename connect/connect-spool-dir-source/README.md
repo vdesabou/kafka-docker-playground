@@ -12,7 +12,7 @@ Quickly test [Spool Dir Source](https://docs.confluent.io/current/connect/kafka-
 Simply run:
 
 ```
-$ ./csv.sh
+$ playground run -f csv<tab>
 ```
 
 ## Details of what the script is doing

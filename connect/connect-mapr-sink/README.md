@@ -17,7 +17,7 @@ export TAG=6.0.0-1-ubi8
 Simply run:
 
 ```
-$ ./mapr-sink.sh
+$ playground run -f mapr-sink<tab>
 ```
 
 ## Details of what the script is doing

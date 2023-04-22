@@ -21,7 +21,7 @@ Create an API key (`DD_API_KEY`) and an Application key (`DD_APP_KEY`):
 Simply run:
 
 ```
-$ ./datadog-metrics-sink-sink.sh <DD_API_KEY> <DD_APP_KEY>
+$ playground run -f datadog-metrics-sink-sink<tab> <DD_API_KEY> <DD_APP_KEY>
 
 Note: you can also export these values as environment variable
 

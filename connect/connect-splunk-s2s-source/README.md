@@ -11,7 +11,7 @@ Quickly test [Splunk S2S Source](https://docs.confluent.io/kafka-connect-splunk-
 Simply run:
 
 ```
-$ ./splunk-s2s-source.sh
+$ playground run -f splunk-s2s-source<tab>
 ```
 
 ## Details of what the script is doing

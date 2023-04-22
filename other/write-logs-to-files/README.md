@@ -5,7 +5,7 @@
 To run:
 
 ```
-$ ./start-custom-log4j.sh
+$ playground run -f start-custom-log4j<tab>
 ```
 
 Example using `docker-compose` on how to write logs to files by providing custom `log4j.properties` files.
@@ -41,7 +41,7 @@ In summary, we have:
 To run:
 
 ```
-$ ./start-template-log4j.sh
+$ playground run -f start-template-log4j<tab>
 ```
 
 This is explained [here](https://docs.confluent.io/current/installation/docker/development.html#log-to-external-volumes)

@@ -10,7 +10,7 @@ Showcase how to use loggers in a ksqlDB User Defined Function (aka. UDF) and rel
 Simply run:
 
 ```
-$ ./start.sh
+$ playground run -f start<tab>
 ```
 
 ## Out of the box Log4j 1 logging

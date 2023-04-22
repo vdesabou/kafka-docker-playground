@@ -40,7 +40,7 @@ In case you want to use your own existing cluster, you need to setup these envir
 Simply run:
 
 ```
-$ ./fully-managed-s3-sink.sh
+$ playground run -f fully-managed-s3-sink<tab>
 ```
 
 ## Details of what the script is doing

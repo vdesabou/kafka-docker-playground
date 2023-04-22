@@ -17,7 +17,7 @@ N.B: if you're a Confluent employee, please check this [link](https://confluent.
 Simply run:
 
 ```
-$ ./jms-tibco.sh
+$ playground run -f jms-tibco<tab>
 ```
 
 ## Details of what the script is doing

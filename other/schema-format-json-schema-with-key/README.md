@@ -10,5 +10,5 @@ Quickly test [JSON Schema Serializer and Deserializer](https://docs.confluent.io
 Simply run:
 
 ```
-$ ./start.sh
+$ playground run -f start<tab>
 ```

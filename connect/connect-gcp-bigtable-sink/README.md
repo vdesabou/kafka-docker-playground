@@ -44,7 +44,7 @@ Rename it to `keyfile.json`and place it in `./keyfile.json` or use environment v
 Simply run:
 
 ```bash
-$ ./gcp-bigtable.sh <GCP_PROJECT> <INSTANCE>
+$ playground run -f gcp-bigtable<tab> <GCP_PROJECT> <INSTANCE>
 ```
 
 Note: you can also export these values as environment variable

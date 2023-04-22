@@ -23,7 +23,7 @@ In your Zendesk account, create a token (if you're only an agent you need to ask
 Simply run:
 
 ```
-$ ./zendesk-source.sh <ZENDESK_URL> <ZENDESK_USERNAME> <ZENDESK_PASSWORD>
+$ playground run -f zendesk-source<tab> <ZENDESK_URL> <ZENDESK_USERNAME> <ZENDESK_PASSWORD>
 ```
 
 Note: you can also export these values as environment variable

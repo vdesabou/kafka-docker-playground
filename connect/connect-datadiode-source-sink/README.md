@@ -12,7 +12,7 @@ Quickly test [ata Diode (Source & Sink)](https://docs.confluent.io/current/conne
 Simply run:
 
 ```
-$ ./datadiode.sh
+$ playground run -f datadiode<tab>
 ```
 
 ## Details of what the script is doing

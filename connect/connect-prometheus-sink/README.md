@@ -12,7 +12,7 @@ Quickly test [Prometheus Sink](https://docs.confluent.io/current/connect/kafka-c
 Simply run:
 
 ```
-$ ./prometheus-sink.sh
+$ playground run -f prometheus-sink<tab>
 ```
 
 ## Details of what the script is doing

@@ -37,25 +37,25 @@ You can increase thoughtput with `maxPoolSize`.
 Without SSL:
 
 ```
-$ ./oracle12.sh
+$ playground run -f oracle12<tab>
 ```
 
 with SSL encryption:
 
 ```
-$ ./oracle12-ssl.sh
+$ playground run -f oracle12-ssl<tab>
 ```
 
 with SSL encryption + Mutual TLS (case #3 in this [document](https://www.oracle.com/technetwork/database/enterprise-edition/wp-oracle-jdbc-thin-ssl-130128.pdf)):
 
 ```
-$ ./oracle12-mtls.sh
+$ playground run -f oracle12-mtls<tab>
 ```
 
 with SSL encryption + Mutual TLS + DB authentication (case #4 in this [document](https://www.oracle.com/technetwork/database/enterprise-edition/wp-oracle-jdbc-thin-ssl-130128.pdf):
 
 ```
-$ ./oracle12-mtls-db-auth.sh
+$ playground run -f oracle12-mtls-db-auth<tab>
 ```
 
 N.B: this is the [best resource](https://www.oracle.com/technetwork/topics/wp-oracle-jdbc-thin-ssl-130128.pdf) I found for Oracle DB and SSL.

@@ -19,7 +19,7 @@ N.B: if you're a Confluent employee, please check this [link](https://confluent.
 Simply run:
 
 ```
-$ ./amps-source.sh
+$ playground run -f amps-source<tab>
 ```
 
 ## Details of what the script is doing

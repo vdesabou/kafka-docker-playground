@@ -31,7 +31,7 @@ In case you want to use your own existing cluster, you need to setup these envir
 Simply run:
 
 ```
-$ ./start.sh <AUDIT_LOG_CLUSTER_BOOTSTRAP_SERVERS> <AUDIT_LOG_CLUSTER_API_KEY> <AUDIT_LOG_CLUSTER_API_SECRET>
+$ playground run -f start<tab> <AUDIT_LOG_CLUSTER_BOOTSTRAP_SERVERS> <AUDIT_LOG_CLUSTER_API_KEY> <AUDIT_LOG_CLUSTER_API_SECRET>
 ```
 
 Note: you can also export these values as environment variable

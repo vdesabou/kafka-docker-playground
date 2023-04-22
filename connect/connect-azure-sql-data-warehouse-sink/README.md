@@ -12,7 +12,7 @@ Quickly test [Azure SQL Data Warehouse Sink](https://docs.confluent.io/current/c
 Simply run:
 
 ```
-$ ./azure-sql-data-warehouse-sink.sh
+$ playground run -f azure-sql-data-warehouse-sink<tab>
 ```
 
 ## Details of what the script is doing

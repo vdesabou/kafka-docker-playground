@@ -10,13 +10,13 @@ Quickly test [Schema Validation on Confluent Server](https://docs.confluent.io/p
 Simply run:
 
 ```
-$ ./2way-ssl.sh
+$ playground run -f 2way-ssl<tab>
 ```
 
 or
 
 ```
-$ ./2way-ssl-and-security-plugin.sh
+$ playground run -f 2way-ssl-and-security-plugin<tab>
 ```
 
 ## Details of what the script is doing

@@ -12,7 +12,7 @@ Producer --> topic testtopic --> Consumer (with Producer) --> topic outputtestto
 Simply run:
 
 ```
-$ ./start.sh
+$ playground run -f start<tab>
 ```
 
 ## Details of what the script is doing

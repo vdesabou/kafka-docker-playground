@@ -44,7 +44,7 @@ Message timestamps are used in order to check if it is *expired*, so a producer 
 Simply run:
 
 ```
-$ ./no-activity.sh
+$ playground run -f no-activity<tab>
 ```
 
 Create a topic `testtopic` with 30 seconds retention:
@@ -112,7 +112,7 @@ Result: **CLEANUP**
 Simply run:
 
 ```
-$ ./activity.sh
+$ playground run -f activity<tab>
 ```
 
 Create a topic `testtopic` with 30 seconds retention:
@@ -166,7 +166,7 @@ One minute after last message (no activity), cleanup is done:
 Simply run:
 
 ```
-$ ./activity-small-segment-ms.sh
+$ playground run -f activity-small-segment-ms<tab>
 ```
 
 Create a topic `testtopic` with 30 seconds retention and `segment.ms` 15000:
@@ -231,7 +231,7 @@ If you can't fix the producer timestamps, you can set at topic level the config 
 If you want to test, simply run:
 
 ```
-$ ./old-timestamp.sh
+$ playground run -f old-timestamp<tab>
 ```
 
 * Test with `message.timestamp.type=CreateTime` (default)

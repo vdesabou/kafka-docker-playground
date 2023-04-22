@@ -9,13 +9,13 @@ Quickly test [DNS SRV Records for LDAP](https://ldap.com/dns-srv-records-for-lda
 Simply run:
 
 ```
-$ ./start-ldap.sh
+$ playground run -f start-ldap<tab>
 ```
 
 or with LDAPS (**this is not working**, see [here](https://github.com/vdesabou/kafka-docker-playground/blob/master/other/ldap-authorizer-with-ldap-failover/README.md#using-dns-srv-records-with-ldap-over-tls) for details):
 
 ```
-$ ./start-ldaps.sh
+$ playground run -f start-ldaps<tab>
 ```
 
 ## Details of what the script is doing

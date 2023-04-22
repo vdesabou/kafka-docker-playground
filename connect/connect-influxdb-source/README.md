@@ -14,7 +14,7 @@ Quickly test [InfluxDB Source](https://docs.confluent.io/current/connect/kafka-c
 Simply run:
 
 ```
-$ ./influxdb.sh
+$ playground run -f influxdb<tab>
 ```
 
 ## Details of what the script is doing

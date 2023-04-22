@@ -14,7 +14,7 @@ Quickly test [JMS Sink - SAG Universal Messaging](https://docs.confluent.io/kafk
 Simply run:
 
 ```
-$ ./jms-sag-um-sink.sh
+$ playground run -f jms-sag-um-sink<tab>
 ```
 
 

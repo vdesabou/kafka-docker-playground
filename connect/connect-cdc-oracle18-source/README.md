@@ -39,43 +39,43 @@ You can increase thoughtput with `maxPoolSize`.
 Without SSL:
 
 ```
-$ ./cdc-oracle18-cdb-table.sh
+$ playground run -f cdc-oracle18-cdb-table<tab>
 ```
 
 or
 
 ```
-$ ./cdc-oracle18-pdb-table.sh
+$ playground run -f cdc-oracle18-pdb-table<tab>
 ```
 
 with SSL encryption:
 
 ```
-$ ./cdc-oracle18-cdb-table-ssl.sh
+$ playground run -f cdc-oracle18-cdb-table-ssl<tab>
 ```
 
 or
 
 ```
-$ ./cdc-oracle18-pdb-table-ssl.sh
+$ playground run -f cdc-oracle18-pdb-table-ssl<tab>
 ```
 
 with SSL encryption + Mutual TLS (case #3 in this [document](https://www.oracle.com/technetwork/database/enterprise-edition/wp-oracle-jdbc-thin-ssl-130128.pdf)):
 
 ```
-$ ./cdc-oracle18-cdb-table-mtls.sh
+$ playground run -f cdc-oracle18-cdb-table-mtls<tab>
 ```
 
 or
 
 ```
-$ ./cdc-oracle18-pdb-table-mtls.sh
+$ playground run -f cdc-oracle18-pdb-table-mtls<tab>
 ```
 
 with SSL encryption + Mutual TLS + DB authentication (case #4 in this [document](https://www.oracle.com/technetwork/database/enterprise-edition/wp-oracle-jdbc-thin-ssl-130128.pdf):
 
 ```
-$ ./cdc-oracle18-cdb-table-mtls-db-auth.sh
+$ playground run -f cdc-oracle18-cdb-table-mtls-db-auth<tab>
 ```
 
 N.B: `./cdc-oracle18-pdb-table-mtls-db-auth.sh` does not work, see [Oracle CDC: mTLS with DB authentication cannot work with PDB](https://github.com/vdesabou/kafka-docker-playground/issues/833)

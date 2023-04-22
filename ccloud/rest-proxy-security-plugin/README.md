@@ -33,7 +33,7 @@ In case you want to use your own existing cluster, you need to setup these envir
 Simply run:
 
 ```
-$ ./start.sh <CCLOUD_REST_PROXY_SECURITY_PLUGIN_API_KEY> <CCLOUD_REST_PROXY_SECURITY_PLUGIN_API_SECRET>
+$ playground run -f start<tab> <CCLOUD_REST_PROXY_SECURITY_PLUGIN_API_KEY> <CCLOUD_REST_PROXY_SECURITY_PLUGIN_API_SECRET>
 ```
 
 ## Details of what the script is doing

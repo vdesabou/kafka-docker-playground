@@ -13,5 +13,5 @@ The HTTP service is using [vdesabou/kafka-connect-http-demo](https://github.com/
 ### No Authentication
 
 ```bash
-$ ./http-source-no-auth.sh
+$ playground run -f http-source-no-auth<tab>
 ```

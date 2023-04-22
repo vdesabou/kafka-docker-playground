@@ -14,7 +14,7 @@ Quickly test [Solace Sink](https://docs.confluent.io/current/connect/kafka-conne
 Simply run:
 
 ```
-$ ./jms-solace-sink.sh
+$ playground run -f jms-solace-sink<tab>
 ```
 
 Solace UI is available at [127.0.0.1:8080](http://127.0.0.1:8080) `admin/admin`

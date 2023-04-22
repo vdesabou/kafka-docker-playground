@@ -10,7 +10,7 @@ Quickly test [FileStream Source](https://docs.confluent.io/home/connect/filestre
 Simply run:
 
 ```
-$ ./filestream-source.sh
+$ playground run -f filestream-source<tab>
 ```
 
 ## Details of what the script is doing

@@ -29,13 +29,13 @@ In case you want to use your own existing cluster, you need to setup these envir
 With Connect:
 
 ```
-$ ./connect-onprem-to-cloud.sh
+$ playground run -f connect-onprem-to-cloud<tab>
 ```
 
 With Replicator executable:
 
 ```
-$ ./executable-onprem-to-cloud.sh
+$ playground run -f executable-onprem-to-cloud<tab>
 ```
 ## OnPrem to Cloud examples with AvroConverter
 
@@ -50,13 +50,13 @@ This is documented [here](https://docs.confluent.io/platform/current/multi-dc-de
 With Connect:
 
 ```
-$ ./connect-onprem-to-cloud-avro.sh
+$ playground run -f connect-onprem-to-cloud-avro<tab>
 ```
 
 With Replicator executable:
 
 ```
-$ ./executable-onprem-to-cloud-avro.sh
+$ playground run -f executable-onprem-to-cloud-avro<tab>
 ```
 
 N.B: Control Center is reachable at [http://127.0.0.1:9021](http://127.0.0.1:9021])

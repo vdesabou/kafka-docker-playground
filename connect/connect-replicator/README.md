@@ -14,19 +14,19 @@ N.B: This is just to test security configurations with replicator. More useful e
 Simply run:
 
 ```
-$ ./replicator.sh
+$ playground run -f replicator<tab>
 ```
 
 Or using SASL_SSL authentications:
 
 ```bash
-$ ./replicator-sasl-ssl.sh
+$ playground run -f replicator-sasl-ssl<tab>
 ```
 
 Or using 2 way SSL authentications:
 
 ```bash
-$ ./replicator-2way-ssl.sh
+$ playground run -f replicator-2way-ssl<tab>
 ```
 
 ## Details of what the script is doing

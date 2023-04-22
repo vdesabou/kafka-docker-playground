@@ -12,7 +12,7 @@ Quickly test [Azure Event Hubs Source](https://docs.confluent.io/current/connect
 Simply run:
 
 ```
-$ ./azure-event-hubs.sh
+$ playground run -f azure-event-hubs<tab>
 ```
 
 ## Details of what the script is doing

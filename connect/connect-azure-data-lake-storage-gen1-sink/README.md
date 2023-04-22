@@ -12,7 +12,7 @@ Quickly test [Azure Data Lake Storage Gen1 Sink](https://docs.confluent.io/curre
 Simply run:
 
 ```
-$ ./azure-data-lake-storage-gen1-sink.sh
+$ playground run -f azure-data-lake-storage-gen1-sink<tab>
 ```
 
 **Note**: You need to provide the tenant name by providing AZURE_TENANT_NAME environment variable. Check the list of tenants using `az account list`.

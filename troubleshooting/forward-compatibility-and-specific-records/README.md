@@ -7,7 +7,7 @@ TL;DR: Existing data reprocessing should be considered in your data compatibilit
 # Show me the code
 You can find a full reproducer at [start.sh](./start.sh) and you can run it by runnng:
 ```
-$ ./start.sh
+$ playground run -f start<tab>
 ```
 
 # Initial Situation

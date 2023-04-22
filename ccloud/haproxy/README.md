@@ -15,7 +15,7 @@ Using iptables, communication between `client`and Confluent Cloud bootstrap serv
 Simply run:
 
 ```
-$ ./start.sh <PKC_ENDPOINT> <CLOUD_KEY> <CLOUD_SECRET> optional: [<PKAC_ENDPOINT>] [<SCHEMA_REGISTRY_ENDPOINT>] [<SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO>]
+$ playground run -f start<tab> <PKC_ENDPOINT> <CLOUD_KEY> <CLOUD_SECRET> optional: [<PKAC_ENDPOINT>] [<SCHEMA_REGISTRY_ENDPOINT>] [<SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO>]
 
 ```
 
@@ -30,7 +30,7 @@ $ export CLOUD_SECRET=xxxx
 $ export PKAC_ENDPOINT=pkac-xxxxx.eu-west-2.aws.confluent.cloud
 $ export SCHEMA_REGISTRY_ENDPOINT=psrc-xxxxx.eu-central-1.aws.confluent.cloud
 $ export SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO="<SR API KEY>:<SR API SECRET>"
-$ ./start.sh
+$ playground run -f start<tab>
 ```
 
 ## Details of what the script is doing

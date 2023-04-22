@@ -19,19 +19,19 @@ Download [IBM-MQ-Install-Java-All.jar](https://ibm.biz/mq92javaclient) (for exam
 Without SSL:
 
 ```
-$ ./ibm-mq-sink.sh
+$ playground run -f ibm-mq-sink<tab>
 ```
 
 with SSL encryption:
 
 ```
-$ ./ibm-mq-sink-ssl.sh
+$ playground run -f ibm-mq-sink-ssl<tab>
 ```
 
 with SSL encryption + Mutual TLS authentication:
 
 ```
-$ ./ibm-mq-sink-mtls.sh
+$ playground run -f ibm-mq-sink-mtls<tab>
 ```
 
 ## Details of what the script is doing

@@ -13,25 +13,25 @@ Quickly test [SFTP Sink](https://docs.confluent.io/current/connect/kafka-connect
 Simply run:
 
 ```bash
-$ ./sftp-sink.sh
+$ playground run -f sftp-sink<tab>
 ```
 
 or with Kerberos
 
 ```bash
-$ ./sftp-sink-kerberos.sh
+$ playground run -f sftp-sink-kerberos<tab>
 ```
 
 or with SSH key
 
 ```bash
-$ ./sftp-sink-ssh-key.sh
+$ playground run -f sftp-sink-ssh-key<tab>
 ```
 
 or with SSH PEM file
 
 ```bash
-$ ./sftp-sink-ssh-pem-file.sh
+$ playground run -f sftp-sink-ssh-pem-file<tab>
 ```
 
 ## Details of what the script is doing

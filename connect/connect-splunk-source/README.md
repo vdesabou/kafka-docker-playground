@@ -12,7 +12,7 @@ Quickly test [Splunk Source](https://docs.confluent.io/current/connect/kafka-con
 Simply run:
 
 ```
-$ ./splunk.sh
+$ playground run -f splunk<tab>
 ```
 
 ## Details of what the script is doing

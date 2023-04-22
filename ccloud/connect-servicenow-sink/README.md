@@ -43,7 +43,7 @@ Click on `Manage`->`Instance` and register for a New-York instance. After some t
 Simply run:
 
 ```bash
-$ ./servicenow-sink.sh <SERVICENOW_URL> <SERVICENOW_PASSWORD>
+$ playground run -f servicenow-sink<tab> <SERVICENOW_URL> <SERVICENOW_PASSWORD>
 ```
 
 Note: you can also export these values as environment variable

@@ -10,5 +10,5 @@ Quickly test [Protobuf Schema Serializer and Deserializer](https://docs.confluen
 Simply run:
 
 ```
-$ ./start.sh
+$ playground run -f start<tab>
 ```

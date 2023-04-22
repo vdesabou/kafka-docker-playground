@@ -15,7 +15,7 @@ N.B: if you're a Confluent employee, please check this [link](https://confluent.
 Simply run:
 
 ```
-$ ./kudu-sink.sh
+$ playground run -f kudu-sink<tab>
 ```
 
 ## Details of what the script is doing

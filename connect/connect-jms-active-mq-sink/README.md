@@ -16,7 +16,7 @@ Using ActiveMQ Docker [image](https://hub.docker.com/r/rmohr/activemq/)
 Simply run:
 
 ```
-$ ./jms-active-mq-sink.sh
+$ playground run -f jms-active-mq-sink<tab>
 ```
 
 ## Details of what the script is doing

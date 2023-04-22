@@ -9,7 +9,7 @@ Quickly test [Connect Secret Registry](https://docs.confluent.io/platform/curren
 Simply run:
 
 ```
-$ ./start.sh
+$ playground run -f start<tab>
 ```
 
 ## Details of what the script is doing

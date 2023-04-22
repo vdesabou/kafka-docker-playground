@@ -14,7 +14,7 @@ Quickly test [Debezium MongoDB](https://docs.confluent.io/current/connect/debezi
 Simply run:
 
 ```
-$ ./mongo.sh
+$ playground run -f mongo<tab>
 ```
 
 ## Details of what the script is doing

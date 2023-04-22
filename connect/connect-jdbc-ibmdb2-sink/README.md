@@ -10,13 +10,13 @@ Quickly test [JDBC IBM DB2](https://docs.confluent.io/current/connect/kafka-conn
 Simply run:
 
 ```
-$ ./ibmdb2-sink.sh
+$ playground run -f ibmdb2-sink<tab>
 ```
 
 with SSL Encryption:
 
 ```
-$ ./ibmdb2-sink-ssl.sh
+$ playground run -f ibmdb2-sink-ssl<tab>
 ```
 
 N.B: IBM DB2 Console is reachable at [https://localhost:9443/ibmmq/console/login.html (admin/passw0rd)](https://localhost:9443/ibmmq/console/login.html])

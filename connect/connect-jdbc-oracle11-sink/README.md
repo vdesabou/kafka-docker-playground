@@ -16,7 +16,7 @@ N.B: if you're a Confluent employee, please check this [link](https://confluent.
 Simply run:
 
 ```
-$ ./oracle11-sink.sh
+$ playground run -f oracle11-sink<tab>
 ```
 
 ## Details of what the script is doing

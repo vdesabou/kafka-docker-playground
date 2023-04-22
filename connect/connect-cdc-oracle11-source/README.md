@@ -25,7 +25,7 @@ You can increase thoughtput with `maxPoolSize`.
 ## How to run
 
 ```
-$ ./cdc-oracle11-source.sh
+$ playground run -f cdc-oracle11-source<tab>
 ```
 
 Note:

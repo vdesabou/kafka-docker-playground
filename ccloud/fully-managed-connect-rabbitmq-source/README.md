@@ -57,7 +57,7 @@ In case you want to use your own existing cluster, you need to setup these envir
 Simply run:
 
 ```
-$ ./fullly-managed-rabbitmq-source.sh
+$ playground run -f fullly-managed-rabbitmq-source<tab>
 ```
 
 

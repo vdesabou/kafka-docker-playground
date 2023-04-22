@@ -14,7 +14,7 @@ Quickly test [Debezium SQL Server](https://docs.confluent.io/current/connect/deb
 Simply run:
 
 ```
-$ ./debezium-sqlserver-source.sh
+$ playground run -f debezium-sqlserver-source<tab>
 ```
 
 ## Details of what the script is doing

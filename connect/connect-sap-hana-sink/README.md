@@ -12,7 +12,7 @@ Quickly test [Sap Hana Sink](https://github.com/SAP/kafka-connect-sap) connector
 Simply run:
 
 ```
-$ ./sap-hana-sink.sh
+$ playground run -f sap-hana-sink<tab>
 ```
 
 ## Details of what the script is doing

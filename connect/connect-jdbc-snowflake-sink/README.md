@@ -15,7 +15,7 @@ Go to [Snowflake](https://www.snowflake.com) and register an account. You'll rec
 Simply run:
 
 ```bash
-$ ./jdbc-snowflake-sink.sh <SNOWFLAKE_ACCOUNT_NAME> <SNOWFLAKE_USERNAME> <SNOWFLAKE_PASSWORD>
+$ playground run -f jdbc-snowflake-sink<tab> <SNOWFLAKE_ACCOUNT_NAME> <SNOWFLAKE_USERNAME> <SNOWFLAKE_PASSWORD>
 ```
 
 Note: you can also export these values as environment variable

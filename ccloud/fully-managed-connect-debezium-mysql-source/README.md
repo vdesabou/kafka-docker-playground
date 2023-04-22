@@ -12,7 +12,7 @@ Quickly test [Debezium MySQL](https://docs.confluent.io/cloud/current/connectors
 Simply run:
 
 ```
-$ ./fully-managed-mysql.sh
+$ playground run -f fully-managed-mysql<tab>
 ```
 
 ## Exposing docker container over internet

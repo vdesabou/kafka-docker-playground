@@ -10,5 +10,5 @@ Quickly test [AVRO Serializer and Deserializer](https://docs.confluent.io/platfo
 Simply run:
 
 ```
-$ ./start.sh
+$ playground run -f start<tab>
 ```

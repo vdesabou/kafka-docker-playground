@@ -14,7 +14,7 @@ Quickly test [Azure Blob Storage Sink](https://docs.confluent.io/current/connect
 Simply run:
 
 ```
-$ ./azure-blob-storage-sink.sh
+$ playground run -f azure-blob-storage-sink<tab>
 ```
 
 ## Details of what the script is doing
