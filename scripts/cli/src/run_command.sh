@@ -186,7 +186,7 @@ SECONDS=0
 cd $test_file_directory
 trap 'rm /tmp/playground-run-command-used;echo "";sleep 3;playground connector status' EXIT
 touch /tmp/playground-run-command-used
-bash $filename
+bash $filename ${other_args[*]}
 ret=$?
 ELAPSED="took: $((($SECONDS / 60) % 60))min $(($SECONDS % 60))sec"
 let ELAPSED_TOTAL+=$SECONDS

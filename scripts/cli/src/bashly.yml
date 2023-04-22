@@ -34,6 +34,10 @@ commands:
 
 - name: run
   group: Run
+  catch_all:
+    label: arguments
+    help: Arguments to use by example script.
+    required: false
   environment_variables:
   - name: EDITOR 
     help: 🔖 Editor to use to open the example file.
