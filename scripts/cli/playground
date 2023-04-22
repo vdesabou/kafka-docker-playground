@@ -34,53 +34,53 @@ playground_usage() {
   echo
   # :command.usage_commands
   printf "%s\n" "$(bold "Run commands:")"
-  printf "  %s   🚀  Run example.\n" "$(green "run")                           "
-  printf "  %s   🛸  Re-run last example.\n" "$(green "re-run")                        "
+  printf "  %s   🚀 Run example\n" "$(green "run")                           "
+  printf "  %s   ⚡ Simply re-run last example you ran with <playground run>\n" "$(green "re-run")                        "
   echo
   printf "%s\n" "$(bold "Bootstrap commands:")"
-  printf "  %s   🛠  Bootstrap reproduction model.\n" "$(green "bootstrap-reproduction-model")  "
+  printf "  %s   🛠  Bootstrap reproduction model\n" "$(green "bootstrap-reproduction-model")  "
   echo
   printf "%s\n" "$(bold "Kafka commands:")"
-  printf "  %s   📝 Get properties file from a container.\n" "$(green "get-properties")                "
-  printf "  %s   🔰 Get all schemas versions for all subjects.\n" "$(green "get-all-schemas")               "
-  printf "  %s   🔢 Get JMX metrics from a component.\n" "$(green "get-jmx-metrics")               "
+  printf "  %s   📝 Get properties file from a container\n" "$(green "get-properties")                "
+  printf "  %s   🔰 Get all schemas versions for all subjects\n" "$(green "get-all-schemas")               "
+  printf "  %s   🔢 Get JMX metrics from a component\n" "$(green "get-jmx-metrics")               "
   echo
   printf "%s\n" "$(bold "Debug commands:")"
-  printf "  %s   ✨ Enable java remote debugging for container.\n" "$(green "enable-remote-debugging")       "
-  printf "  %s   🧬 Set log level for any package.\n" "$(green "log-level")                     "
+  printf "  %s   ✨ Enable java remote debugging for container\n" "$(green "enable-remote-debugging")       "
+  printf "  %s   🧬 Set log level for any package\n" "$(green "log-level")                     "
   echo
   printf "%s\n" "$(bold "Container commands:")"
-  printf "  %s   🐳 Container commands.\n" "$(green "container")                     "
-  [[ -n $long_usage ]] && printf "  %s   💫 Recreate container(s).\n" "$(green "container recreate")            "
-  [[ -n $long_usage ]] && printf "  %s   🖥️  Get IP address of running containers.\n" "$(green "container get-ip-addresses")    "
-  [[ -n $long_usage ]] && printf "  %s   💀 Kill all containers.\n" "$(green "container kill-all")            "
-  [[ -n $long_usage ]] && printf "  %s   🕵️  Tail and follow container logs.\n" "$(green "container logs")                "
-  [[ -n $long_usage ]] && printf "  %s   🚀 SSH into container.\n" "$(green "container ssh")                 "
-  [[ -n $long_usage ]] && printf "  %s   🪄  Execute command in a container.\n" "$(green "container exec")                "
-  [[ -n $long_usage ]] && printf "  %s   🔁 Restart a container.\n" "$(green "container restart")             "
-  [[ -n $long_usage ]] && printf "  %s   ⏸️  Pause a container.\n" "$(green "container pause")               "
-  [[ -n $long_usage ]] && printf "  %s   ⏯️  Resume a container.\n" "$(green "container resume")              "
-  [[ -n $long_usage ]] && printf "  %s   🔫 Kill a container.\n" "$(green "container kill")                "
+  printf "  %s   🐳 Container commands\n" "$(green "container")                     "
+  [[ -n $long_usage ]] && printf "  %s   💫 Recreate container(s)\n" "$(green "container recreate")            "
+  [[ -n $long_usage ]] && printf "  %s   🖥️  Get ip address of running containers\n" "$(green "container get-ip-addresses")    "
+  [[ -n $long_usage ]] && printf "  %s   💀 Kill all containers\n" "$(green "container kill-all")            "
+  [[ -n $long_usage ]] && printf "  %s   🕵️  Tail and follow container logs\n" "$(green "container logs")                "
+  [[ -n $long_usage ]] && printf "  %s   🛬 SSH into container\n" "$(green "container ssh")                 "
+  [[ -n $long_usage ]] && printf "  %s   🪄  Execute command in a container\n" "$(green "container exec")                "
+  [[ -n $long_usage ]] && printf "  %s   🔁 Restart a container\n" "$(green "container restart")             "
+  [[ -n $long_usage ]] && printf "  %s   ⏸️  Pause a container\n" "$(green "container pause")               "
+  [[ -n $long_usage ]] && printf "  %s   ⏯️  Resume a container\n" "$(green "container resume")              "
+  [[ -n $long_usage ]] && printf "  %s   🔫 Kill a container\n" "$(green "container kill")                "
   echo
   printf "%s\n" "$(bold "Topic commands:")"
-  printf "  %s   📁 Topic commands.\n" "$(green "topic")                         "
-  [[ -n $long_usage ]] && printf "  %s   💯 Get number of records in a topic.\n" "$(green "topic get-number-records")      "
-  [[ -n $long_usage ]] && printf "  %s   🔺 Display content of connect offsets topic.\n" "$(green "topic display-connect-offsets") "
-  [[ -n $long_usage ]] && printf "  %s   🔻 Display content of __consumer_offsets topic.\n" "$(green "topic display-consumer-offsets")"
-  [[ -n $long_usage ]] && printf "  %s   🔎 Describe topic.\n" "$(green "topic describe")                "
-  [[ -n $long_usage ]] && printf "  %s   ↘️ Consumer topic(s) from current running examples\n" "$(green "topic consume")                 "
+  printf "  %s   🗳 Topic commands\n" "$(green "topic")                         "
+  [[ -n $long_usage ]] && printf "  %s   💯 Get number of records in a topic\n" "$(green "topic get-number-records")      "
+  [[ -n $long_usage ]] && printf "  %s   📬 Display content of connect offsets topic\n" "$(green "topic display-connect-offsets") "
+  [[ -n $long_usage ]] && printf "  %s   📭 Display content of __consumer_offsets topic\n" "$(green "topic display-consumer-offsets")"
+  [[ -n $long_usage ]] && printf "  %s   🔬 Describe topic\n" "$(green "topic describe")                "
+  [[ -n $long_usage ]] && printf "  %s   📥 Consume topic(s) from current running examples\n" "$(green "topic consume")                 "
   echo
   printf "%s\n" "$(bold "Connector commands:")"
-  printf "  %s   🔗 Connector commands.\n" "$(green "connector")                     "
-  [[ -n $long_usage ]] && printf "  %s   ℹ️  Show status of all connectors.\n" "$(green "connector status")              "
-  [[ -n $long_usage ]] && printf "  %s   🔖 Show all plugins installed.\n" "$(green "connector plugins")             "
+  printf "  %s   🔗 Connector commands\n" "$(green "connector")                     "
+  [[ -n $long_usage ]] && printf "  %s   🧩 Show status of all connectors\n" "$(green "connector status")              "
+  [[ -n $long_usage ]] && printf "  %s   🎨 Show all plugins installed\n" "$(green "connector plugins")             "
   [[ -n $long_usage ]] && printf "  %s   ⏸️  Pause connector\n" "$(green "connector pause")               "
-  [[ -n $long_usage ]] && printf "  %s   🧞 Get current version used in example and latest available\n" "$(green "connector versions")            "
+  [[ -n $long_usage ]] && printf "  %s   🧞 Get current version used in example\n" "$(green "connector versions")            "
   [[ -n $long_usage ]] && printf "  %s   ♻️  Restart connector\n" "$(green "connector restart")             "
   [[ -n $long_usage ]] && printf "  %s   ⏯️  Resume connector\n" "$(green "connector resume")              "
   [[ -n $long_usage ]] && printf "  %s   🗑️  Delete connector\n" "$(green "connector delete")              "
   [[ -n $long_usage ]] && printf "  %s   🐢 Show lag of sink connector\n" "$(green "connector show-lag")            "
-  [[ -n $long_usage ]] && printf "  %s   🧬 Set connect log level.\n" "$(green "connector log-level")           "
+  [[ -n $long_usage ]] && printf "  %s   🧬 Set connect log level\n" "$(green "connector log-level")           "
   echo
 
   # :command.long_usage
@@ -239,11 +239,11 @@ playground_run_usage() {
     printf "playground run\n"
     echo
 
-    printf "  🚀  Run example.\n  \n  👉 Check documentation https://tinyurl.com/yx3vbwu5\n"
+    printf "  🚀 Run example\n  \n  👉 Check documentation https://tinyurl.com/yx3vbwu5\n"
     echo
 
   else
-    printf "playground run - 🚀  Run example.\n"
+    printf "playground run - 🚀 Run example\n"
     echo
 
   fi
@@ -260,77 +260,77 @@ playground_run_usage() {
     # :command.usage_flags
     # :flag.usage
     printf "  %s\n" "$(magenta "--file, -f FILE (required)")"
-    printf "    Example file to run.\n    It must be absolute full path. \n    \n    🎓 Tip: use <tab> completion to trigger fzf completion.\n"
+    printf "    🔖 Example file to run\n    It must be absolute full path\n    \n    🎓 Tip: use <tab> completion to trigger fzf completion\n"
     echo
 
     # :flag.usage
     printf "  %s\n" "$(magenta "--open, -o")"
-    printf "    Opening example file with text editor set with EDITOR environment variable\n    (default is code).\n"
+    printf "    📖 Opening example file with text editor set with EDITOR environment variable\n    (default is vscode)\n"
     echo
 
     # :flag.usage
     printf "  %s\n" "$(magenta "--tag TAG")"
-    printf "    CP version to use\n"
+    printf "    🎯 Confluent Platform (CP) version to use\n    \n    Must be greater or equal to 5.0.0\n"
     echo
 
     # :flag.usage
     printf "  %s\n" "$(magenta "--connector-tag CONNECTOR_TAG")"
-    printf "    Connector version to use\n"
+    printf "    🔗 Connector version to use\n    \n    By default, for each connector, the latest available version on Confluent\n    Hub is used\n"
     echo
 
     # :flag.usage
     printf "  %s\n" "$(magenta "--connector-zip CONNECTOR_ZIP")"
-    printf "    Connector zip to use\n"
+    printf "    🤐 Connector zip to use\n    \n    It must be absolute full path\n"
     echo
 
     # :flag.usage
     printf "  %s\n" "$(magenta "--connector-jar CONNECTOR_JAR")"
-    printf "    Connector jar to use\n"
+    printf "    ♨️ Connector jar to use\n    \n    It must be absolute full path\n"
     echo
 
     # :flag.usage
     printf "  %s\n" "$(magenta "--disable-ksqldb")"
-    printf "    Disable ksqlDB\n"
+    printf "    🛑 Disable ksqlDB\n    \n    By default, ksqldb-server and ksqldb-cli containers are started for every\n    test\n"
     echo
 
     # :flag.usage
     printf "  %s\n" "$(magenta "--disable-control-center")"
-    printf "    Disable Control Center\n"
+    printf "    🛑 Disable Control Center\n    \n    By default, control-center container is started for every test\n    \n    Control Center is reachable at http://127.0.0.1:9021\n"
     echo
 
     # :flag.usage
     printf "  %s\n" "$(magenta "--enable-conduktor")"
-    printf "    Enable Conduktor\n"
+    printf "    🐺 Enable Conduktor Platform\n    \n    By default, Conduktor Platform container is not started for every test\n    \n    Conduktor is reachable at http://127.0.0.1:8080/console (admin/admin)\n"
     echo
 
     # :flag.usage
     printf "  %s\n" "$(magenta "--enable-multiple-brokers")"
-    printf "    Enable Multiple brokers\n"
+    printf "    3️⃣ Enable multiple brokers\n    \n    By default, there is only one broker node enabled\n"
     echo
 
     # :flag.usage
     printf "  %s\n" "$(magenta "--enable-multiple-connect-workers")"
-    printf "    Enable Multiple Connect Workers\n"
+    printf "    🥉 Enable multiple connect node\n    \n    By default, there is only one connect node enabled\n    \n    It only works when plaintext environment is used\n"
     echo
 
     # :flag.usage
     printf "  %s\n" "$(magenta "--enable-jmx-grafana")"
-    printf "    Enable Grafana, Prometheus and Pyroscope\n    \n    📊 Grafana is reachable at http://127.0.0.1:3000\n    🛡️  Prometheus is reachable at http://127.0.0.1:9090\n    📛 Pyroscope is reachable at http://127.0.0.1:4040\n"
+    printf "    Enable Grafana, Prometheus and Pyroscope\n    \n    📊 Grafana is reachable at http://127.0.0.1:3000\n    🛡️ Prometheus is reachable at http://127.0.0.1:9090\n    📛 Pyroscope is reachable at http://127.0.0.1:4040\n"
     echo
 
     # :flag.usage
     printf "  %s\n" "$(magenta "--enable-kcat")"
-    printf "    Enable kcat\n"
+    printf "    🐈‍⬛ Enable kcat\n    \n    You can use it with:\n    \n    $ docker exec kcat kcat -b broker:9092 -L\n"
     echo
 
     # :flag.usage
     printf "  %s\n" "$(magenta "--enable-sr-maven-plugin-app")"
-    printf "    Enable Schema Registry Maven plugin App\n"
+    printf "    🔰 Enable Schema Registry Maven plugin App\n"
     echo
 
     # :flag.usage
     printf "  %s\n" "$(magenta "--enable-sql-datagen")"
-    printf "    🌪️ Enable SQL Datagen injection\n    \n    This only works for Oracle source connector examples.\n"
+    printf "    🌪️ Enable SQL Datagen injection\n    \n    This only works for Oracle, MySql, Postgres and Microsoft Sql Server source\n    connector examples with JDBC and Debezium\n"
     echo
 
     # :command.usage_fixed_flags
@@ -342,7 +342,7 @@ playground_run_usage() {
     printf "%s\n" "$(bold "== Arguments ==")"
 
     echo "  ARGUMENTS..."
-    printf "    Arguments to use by example script.\n"
+    printf "    Arguments to use by example script\n"
     echo
 
     # :command.usage_environment_variables
@@ -350,7 +350,7 @@ playground_run_usage() {
 
     # :environment_variable.usage
     printf "  %s\n" "$(cyan "EDITOR")"
-    printf "    🔖 Editor to use to open the example file.\n"
+    printf "    🔖 Editor to use to open the example file\n"
     echo
 
   fi
@@ -359,11 +359,11 @@ playground_run_usage() {
 # :command.usage
 playground_re_run_usage() {
   if [[ -n $long_usage ]]; then
-    printf "playground re-run - 🛸  Re-run last example.\n"
+    printf "playground re-run - ⚡ Simply re-run last example you ran with <playground run>\n"
     echo
 
   else
-    printf "playground re-run - 🛸  Re-run last example.\n"
+    printf "playground re-run - ⚡ Simply re-run last example you ran with <playground run>\n"
     echo
 
   fi
@@ -387,7 +387,7 @@ playground_re_run_usage() {
 
     # :environment_variable.usage
     printf "  %s\n" "$(cyan "EDITOR")"
-    printf "    🔖 Editor to use to open the example file.\n"
+    printf "    🔖 Editor to use to open the example file\n"
     echo
 
   fi
@@ -399,11 +399,11 @@ playground_bootstrap_reproduction_model_usage() {
     printf "playground bootstrap-reproduction-model\n"
     echo
 
-    printf "  🛠  Bootstrap reproduction model.\n  \n  👉 Check documentation https://tinyurl.com/bdfs25my\n"
+    printf "  🛠  Bootstrap reproduction model\n  \n  👉 Check documentation https://tinyurl.com/bdfs25my\n"
     echo
 
   else
-    printf "playground bootstrap-reproduction-model - 🛠  Bootstrap reproduction model.\n"
+    printf "playground bootstrap-reproduction-model - 🛠  Bootstrap reproduction model\n"
     echo
 
   fi
@@ -420,35 +420,35 @@ playground_bootstrap_reproduction_model_usage() {
     # :command.usage_flags
     # :flag.usage
     printf "  %s\n" "$(magenta "--file, -f FILE (required)")"
-    printf "    Example file to use as basis.\n    It must be absolute full path. \n    \n    🎓 Tip: use <tab> completion to trigger fzf completion.\n"
+    printf "    🔖 Example file to use as basis\n    \n    It must be absolute full path\n    \n    🎓 Tip: use <tab> completion to trigger fzf completion\n"
     echo
 
     # :flag.usage
     printf "  %s\n" "$(magenta "--description, -d DESCRIPTION (required)")"
-    printf "    Description.\n"
+    printf "    💭 Description for the reproduction model\n"
     echo
 
     # :flag.usage
     printf "  %s\n" "$(magenta "--producer, -p PRODUCER-TYPE")"
-    printf "    Java producer type to use. \n    One of avro, avro-with-key, protobuf, protobuf-with-key, json-schema,\n    json-schema-with-key.\n    \n    Note: 'with-key' will also produce key with selected converter, otherwise\n    LongConverter is used.\n"
+    printf "    ♨️ Java producer type to use\n    \n    One of avro, avro-with-key, protobuf, protobuf-with-key, json-schema,\n    json-schema-with-key\n    \n    🎓 Tip: 'with-key' will also produce key with selected converter, otherwise\n    LongConverter is used\n"
     printf "    Allowed: none, avro, avro-with-key, protobuf, protobuf-with-key, json-schema, json-schema-with-key\n"
     printf "    Default: none\n"
     echo
 
     # :flag.usage
     printf "  %s\n" "$(magenta "--nb-producers, -n NB-PRODUCERS")"
-    printf "    Number of java producers to generate.\n"
+    printf "    2️⃣ Number of java producers to generate\n"
     printf "    Default: \n"
     echo
 
     # :flag.usage
     printf "  %s\n" "$(magenta "--custom-smt")"
-    printf "    Add a custom SMT (no-op).\n"
+    printf "    ⚙️ Add a custom SMT (which is a no-op)\n"
     echo
 
     # :flag.usage
     printf "  %s\n" "$(magenta "--pipeline SINK_FILE")"
-    printf "    Sink example file to use for creating a pipeline.\n    It must be absolute full path. \n    \n    🎓 Tip: use <tab> completion to trigger fzf completion.\n"
+    printf "    🔖 Sink example file to use for creating a pipeline\n    \n    It must be absolute full path. \n    \n    🎓 Tip: use <tab> completion to trigger fzf completion\n"
     echo
 
     # :command.usage_fixed_flags
@@ -461,7 +461,7 @@ playground_bootstrap_reproduction_model_usage() {
 
     # :environment_variable.usage
     printf "  %s\n" "$(cyan "OUTPUT_FOLDER")"
-    printf "    📁 Output folder where to generate bootstrapped files.\n"
+    printf "    📁 Output folder where to generate bootstrapped files\n"
     printf "    Default: reproduction-models\n"
     echo
 
@@ -483,11 +483,11 @@ playground_get_properties_usage() {
     printf "playground get-properties\n"
     echo
 
-    printf "  📝 Get properties file from a container.\n  \n  👉 Check documentation https://tinyurl.com/4vj7tm2b\n"
+    printf "  📝 Get properties file from a container\n  \n  👉 Check documentation https://tinyurl.com/4vj7tm2b\n"
     echo
 
   else
-    printf "playground get-properties - 📝 Get properties file from a container.\n"
+    printf "playground get-properties - 📝 Get properties file from a container\n"
     echo
 
   fi
@@ -504,7 +504,7 @@ playground_get_properties_usage() {
     # :command.usage_flags
     # :flag.usage
     printf "  %s\n" "$(magenta "--container, -c CONTAINER")"
-    printf "    Container name.\n"
+    printf "    🐳 Container name\n"
     printf "    Default: connect\n"
     echo
 
@@ -529,11 +529,11 @@ playground_get_all_schemas_usage() {
     printf "playground get-all-schemas\n"
     echo
 
-    printf "  🔰 Get all schemas versions for all subjects.\n  \n  👉 Check documentation xxxx\n"
+    printf "  🔰 Get all schemas versions for all subjects\n  \n  👉 Check documentation xxxx\n"
     echo
 
   else
-    printf "playground get-all-schemas - 🔰 Get all schemas versions for all subjects.\n"
+    printf "playground get-all-schemas - 🔰 Get all schemas versions for all subjects\n"
     echo
 
   fi
@@ -566,11 +566,11 @@ playground_enable_remote_debugging_usage() {
     printf "playground enable-remote-debugging\n"
     echo
 
-    printf "  ✨ Enable java remote debugging for container.\n  \n  👉 Check documentation https://tinyurl.com/bdz843d4\n"
+    printf "  ✨ Enable java remote debugging for container\n  \n  👉 Check documentation https://tinyurl.com/bdz843d4\n"
     echo
 
   else
-    printf "playground enable-remote-debugging - ✨ Enable java remote debugging for container.\n"
+    printf "playground enable-remote-debugging - ✨ Enable java remote debugging for container\n"
     echo
 
   fi
@@ -587,7 +587,7 @@ playground_enable_remote_debugging_usage() {
     # :command.usage_flags
     # :flag.usage
     printf "  %s\n" "$(magenta "--container, -c CONTAINER")"
-    printf "    Container name.\n"
+    printf "    🐳 Container name\n"
     printf "    Default: connect\n"
     echo
 
@@ -612,11 +612,11 @@ playground_log_level_usage() {
     printf "playground log-level\n"
     echo
 
-    printf "  🧬 Set log level for any package.\n  \n  👉 Check documentation https://tinyurl.com/yc78tr8a\n"
+    printf "  🧬 Set log level for any package\n  \n  👉 Check documentation https://tinyurl.com/yc78tr8a\n"
     echo
 
   else
-    printf "playground log-level - 🧬 Set log level for any package.\n"
+    printf "playground log-level - 🧬 Set log level for any package\n"
     echo
 
   fi
@@ -627,8 +627,8 @@ playground_log_level_usage() {
   echo
   # :command.usage_commands
   printf "%s\n" "$(bold "== Commands ==")"
-  printf "  %s   Get log levels.\n" "$(green "get")"
-  printf "  %s   Set log level for specific logger.\n" "$(green "set")"
+  printf "  %s   Get log levels\n" "$(green "get")"
+  printf "  %s   Set log level for specific logger\n" "$(green "set")"
   echo
 
   # :command.long_usage
@@ -654,11 +654,11 @@ playground_log_level_usage() {
 # :command.usage
 playground_log_level_get_usage() {
   if [[ -n $long_usage ]]; then
-    printf "playground log-level get - Get log levels.\n"
+    printf "playground log-level get - Get log levels\n"
     echo
 
   else
-    printf "playground log-level get - Get log levels.\n"
+    printf "playground log-level get - Get log levels\n"
     echo
 
   fi
@@ -675,7 +675,7 @@ playground_log_level_get_usage() {
     # :command.usage_flags
     # :flag.usage
     printf "  %s\n" "$(magenta "--package, -p PACKAGE")"
-    printf "    Package name.\n"
+    printf "    Package name\n"
     echo
 
     # :command.usage_fixed_flags
@@ -689,11 +689,11 @@ playground_log_level_get_usage() {
 # :command.usage
 playground_log_level_set_usage() {
   if [[ -n $long_usage ]]; then
-    printf "playground log-level set - Set log level for specific logger.\n"
+    printf "playground log-level set - Set log level for specific logger\n"
     echo
 
   else
-    printf "playground log-level set - Set log level for specific logger.\n"
+    printf "playground log-level set - Set log level for specific logger\n"
     echo
 
   fi
@@ -710,12 +710,12 @@ playground_log_level_set_usage() {
     # :command.usage_flags
     # :flag.usage
     printf "  %s\n" "$(magenta "--package, -p PACKAGE (required)")"
-    printf "    Package name.\n"
+    printf "    📦 Package name\n"
     echo
 
     # :flag.usage
     printf "  %s\n" "$(magenta "--level, -l LEVEL (required)")"
-    printf "    Log level.\n"
+    printf "    ❕Log level\n"
     printf "    Allowed: INFO, WARN, DEBUG, TRACE\n"
     echo
 
@@ -733,11 +733,11 @@ playground_get_jmx_metrics_usage() {
     printf "playground get-jmx-metrics\n"
     echo
 
-    printf "  🔢 Get JMX metrics from a component.\n  \n  👉 Check documentation https://tinyurl.com/yc2myws9\n"
+    printf "  🔢 Get JMX metrics from a component\n  \n  👉 Check documentation https://tinyurl.com/yc2myws9\n"
     echo
 
   else
-    printf "playground get-jmx-metrics - 🔢 Get JMX metrics from a component.\n"
+    printf "playground get-jmx-metrics - 🔢 Get JMX metrics from a component\n"
     echo
 
   fi
@@ -754,14 +754,14 @@ playground_get_jmx_metrics_usage() {
     # :command.usage_flags
     # :flag.usage
     printf "  %s\n" "$(magenta "--component, -c COMPONENT")"
-    printf "    Component name.\n"
+    printf "    Component name\n"
     printf "    Allowed: zookeeper, broker, connect, schema-registry\n"
     printf "    Default: connect\n"
     echo
 
     # :flag.usage
     printf "  %s\n" "$(magenta "--domain, -d DOMAIN")"
-    printf "    Domain name.\n"
+    printf "    Domain name\n"
     echo
 
     # :command.usage_fixed_flags
@@ -782,11 +782,11 @@ playground_get_jmx_metrics_usage() {
 # :command.usage
 playground_container_usage() {
   if [[ -n $long_usage ]]; then
-    printf "playground container - 🐳 Container commands.\n"
+    printf "playground container - 🐳 Container commands\n"
     echo
 
   else
-    printf "playground container - 🐳 Container commands.\n"
+    printf "playground container - 🐳 Container commands\n"
     echo
 
   fi
@@ -797,16 +797,16 @@ playground_container_usage() {
   echo
   # :command.usage_commands
   printf "%s\n" "$(bold "Container commands:")"
-  printf "  %s   💫 Recreate container(s).\n" "$(green "recreate")        "
-  printf "  %s   🖥️  Get IP address of running containers.\n" "$(green "get-ip-addresses")"
-  printf "  %s   💀 Kill all containers.\n" "$(green "kill-all")        "
-  printf "  %s   🕵️  Tail and follow container logs.\n" "$(green "logs")            "
-  printf "  %s   🚀 SSH into container.\n" "$(green "ssh")             "
-  printf "  %s   🪄  Execute command in a container.\n" "$(green "exec")            "
-  printf "  %s   🔁 Restart a container.\n" "$(green "restart")         "
-  printf "  %s   ⏸️  Pause a container.\n" "$(green "pause")           "
-  printf "  %s   ⏯️  Resume a container.\n" "$(green "resume")          "
-  printf "  %s   🔫 Kill a container.\n" "$(green "kill")            "
+  printf "  %s   💫 Recreate container(s)\n" "$(green "recreate")        "
+  printf "  %s   🖥️  Get ip address of running containers\n" "$(green "get-ip-addresses")"
+  printf "  %s   💀 Kill all containers\n" "$(green "kill-all")        "
+  printf "  %s   🕵️  Tail and follow container logs\n" "$(green "logs")            "
+  printf "  %s   🛬 SSH into container\n" "$(green "ssh")             "
+  printf "  %s   🪄  Execute command in a container\n" "$(green "exec")            "
+  printf "  %s   🔁 Restart a container\n" "$(green "restart")         "
+  printf "  %s   ⏸️  Pause a container\n" "$(green "pause")           "
+  printf "  %s   ⏯️  Resume a container\n" "$(green "resume")          "
+  printf "  %s   🔫 Kill a container\n" "$(green "kill")            "
   echo
 
   # :command.long_usage
@@ -827,11 +827,11 @@ playground_container_recreate_usage() {
     printf "playground container recreate\n"
     echo
 
-    printf "  💫 Recreate container(s).\n  \n  👉 Check documentation https://tinyurl.com/3rhjxfbs\n"
+    printf "  💫 Recreate container(s)\n  \n  👉 Check documentation https://tinyurl.com/3rhjxfbs\n"
     echo
 
   else
-    printf "playground container recreate - 💫 Recreate container(s).\n"
+    printf "playground container recreate - 💫 Recreate container(s)\n"
     echo
 
   fi
@@ -856,11 +856,11 @@ playground_container_recreate_usage() {
 # :command.usage
 playground_container_get_ip_addresses_usage() {
   if [[ -n $long_usage ]]; then
-    printf "playground container get-ip-addresses - 🖥️  Get IP address of running containers.\n"
+    printf "playground container get-ip-addresses - 🖥️  Get ip address of running containers\n"
     echo
 
   else
-    printf "playground container get-ip-addresses - 🖥️  Get IP address of running containers.\n"
+    printf "playground container get-ip-addresses - 🖥️  Get ip address of running containers\n"
     echo
 
   fi
@@ -890,11 +890,11 @@ playground_container_get_ip_addresses_usage() {
 # :command.usage
 playground_container_kill_all_usage() {
   if [[ -n $long_usage ]]; then
-    printf "playground container kill-all - 💀 Kill all containers.\n"
+    printf "playground container kill-all - 💀 Kill all containers\n"
     echo
 
   else
-    printf "playground container kill-all - 💀 Kill all containers.\n"
+    printf "playground container kill-all - 💀 Kill all containers\n"
     echo
 
   fi
@@ -919,11 +919,11 @@ playground_container_kill_all_usage() {
 # :command.usage
 playground_container_logs_usage() {
   if [[ -n $long_usage ]]; then
-    printf "playground container logs - 🕵️  Tail and follow container logs.\n"
+    printf "playground container logs - 🕵️  Tail and follow container logs\n"
     echo
 
   else
-    printf "playground container logs - 🕵️  Tail and follow container logs.\n"
+    printf "playground container logs - 🕵️  Tail and follow container logs\n"
     echo
 
   fi
@@ -940,23 +940,23 @@ playground_container_logs_usage() {
     # :command.usage_flags
     # :flag.usage
     printf "  %s\n" "$(magenta "--container, -c CONTAINER")"
-    printf "    Container name.\n"
+    printf "    🐳 Container name\n"
     printf "    Default: connect\n"
     echo
 
     # :flag.usage
     printf "  %s\n" "$(magenta "--open, -o")"
-    printf "    Save output to a file and open with text editor set with EDITOR environment\n    variable (default is code).\n"
+    printf "    🔖 Save output to a file and open with text editor set with EDITOR\n    environment variable (default is vscode)\n"
     echo
 
     # :flag.usage
     printf "  %s\n" "$(magenta "--wait-for-log, -w LOG")"
-    printf "    Wait until log appears.\n"
+    printf "    😴 Wait until log appears\n"
     echo
 
     # :flag.usage
     printf "  %s\n" "$(magenta "--max-wait, -m MAX_WAIT")"
-    printf "    Max time in seconds to wait when using --wait-for-log (default 600s).\n"
+    printf "    ⏳ Max time in seconds to wait when using --wait-for-log (default 600s)\n"
     printf "    Default: 600\n"
     echo
 
@@ -977,11 +977,11 @@ playground_container_logs_usage() {
 # :command.usage
 playground_container_ssh_usage() {
   if [[ -n $long_usage ]]; then
-    printf "playground container ssh - 🚀 SSH into container.\n"
+    printf "playground container ssh - 🛬 SSH into container\n"
     echo
 
   else
-    printf "playground container ssh - 🚀 SSH into container.\n"
+    printf "playground container ssh - 🛬 SSH into container\n"
     echo
 
   fi
@@ -998,13 +998,13 @@ playground_container_ssh_usage() {
     # :command.usage_flags
     # :flag.usage
     printf "  %s\n" "$(magenta "--container, -c CONTAINER")"
-    printf "    Container name.\n"
+    printf "    🐳 Container name\n"
     printf "    Default: connect\n"
     echo
 
     # :flag.usage
     printf "  %s\n" "$(magenta "--shell, -s SHELL")"
-    printf "    Shell to use (default is bash).\n"
+    printf "    💾 Shell to use (default is bash)\n"
     printf "    Allowed: bash, sh, ksh, zsh\n"
     printf "    Default: bash\n"
     echo
@@ -1027,11 +1027,11 @@ playground_container_ssh_usage() {
 # :command.usage
 playground_container_exec_usage() {
   if [[ -n $long_usage ]]; then
-    printf "playground container exec - 🪄  Execute command in a container.\n"
+    printf "playground container exec - 🪄  Execute command in a container\n"
     echo
 
   else
-    printf "playground container exec - 🪄  Execute command in a container.\n"
+    printf "playground container exec - 🪄  Execute command in a container\n"
     echo
 
   fi
@@ -1048,23 +1048,23 @@ playground_container_exec_usage() {
     # :command.usage_flags
     # :flag.usage
     printf "  %s\n" "$(magenta "--container, -c CONTAINER")"
-    printf "    Container name.\n"
+    printf "    🐳 Container name\n"
     printf "    Default: connect\n"
     echo
 
     # :flag.usage
     printf "  %s\n" "$(magenta "--command, -d COMMAND (required)")"
-    printf "    Command to execute.\n"
+    printf "    📲 Command to execute\n"
     echo
 
     # :flag.usage
     printf "  %s\n" "$(magenta "--root")"
-    printf "    Run command as root.\n"
+    printf "    👑 Run command as root\n"
     echo
 
     # :flag.usage
     printf "  %s\n" "$(magenta "--shell SHELL")"
-    printf "    Shell to use (default is bash).\n"
+    printf "    💾 Shell to use (default is bash)\n"
     printf "    Allowed: bash, sh, ksh, zsh\n"
     printf "    Default: bash\n"
     echo
@@ -1087,11 +1087,11 @@ playground_container_exec_usage() {
 # :command.usage
 playground_container_restart_usage() {
   if [[ -n $long_usage ]]; then
-    printf "playground container restart - 🔁 Restart a container.\n"
+    printf "playground container restart - 🔁 Restart a container\n"
     echo
 
   else
-    printf "playground container restart - 🔁 Restart a container.\n"
+    printf "playground container restart - 🔁 Restart a container\n"
     echo
 
   fi
@@ -1108,7 +1108,7 @@ playground_container_restart_usage() {
     # :command.usage_flags
     # :flag.usage
     printf "  %s\n" "$(magenta "--container, -c CONTAINER")"
-    printf "    Container name.\n"
+    printf "    🐳 Container name\n"
     printf "    Default: connect\n"
     echo
 
@@ -1123,11 +1123,11 @@ playground_container_restart_usage() {
 # :command.usage
 playground_container_pause_usage() {
   if [[ -n $long_usage ]]; then
-    printf "playground container pause - ⏸️  Pause a container.\n"
+    printf "playground container pause - ⏸️  Pause a container\n"
     echo
 
   else
-    printf "playground container pause - ⏸️  Pause a container.\n"
+    printf "playground container pause - ⏸️  Pause a container\n"
     echo
 
   fi
@@ -1144,7 +1144,7 @@ playground_container_pause_usage() {
     # :command.usage_flags
     # :flag.usage
     printf "  %s\n" "$(magenta "--container, -c CONTAINER")"
-    printf "    Container name.\n"
+    printf "    🐳 Container name\n"
     printf "    Default: connect\n"
     echo
 
@@ -1159,11 +1159,11 @@ playground_container_pause_usage() {
 # :command.usage
 playground_container_resume_usage() {
   if [[ -n $long_usage ]]; then
-    printf "playground container resume - ⏯️  Resume a container.\n"
+    printf "playground container resume - ⏯️  Resume a container\n"
     echo
 
   else
-    printf "playground container resume - ⏯️  Resume a container.\n"
+    printf "playground container resume - ⏯️  Resume a container\n"
     echo
 
   fi
@@ -1180,7 +1180,7 @@ playground_container_resume_usage() {
     # :command.usage_flags
     # :flag.usage
     printf "  %s\n" "$(magenta "--container, -c CONTAINER")"
-    printf "    Container name.\n"
+    printf "    🐳 Container name\n"
     printf "    Default: connect\n"
     echo
 
@@ -1195,11 +1195,11 @@ playground_container_resume_usage() {
 # :command.usage
 playground_container_kill_usage() {
   if [[ -n $long_usage ]]; then
-    printf "playground container kill - 🔫 Kill a container.\n"
+    printf "playground container kill - 🔫 Kill a container\n"
     echo
 
   else
-    printf "playground container kill - 🔫 Kill a container.\n"
+    printf "playground container kill - 🔫 Kill a container\n"
     echo
 
   fi
@@ -1216,7 +1216,7 @@ playground_container_kill_usage() {
     # :command.usage_flags
     # :flag.usage
     printf "  %s\n" "$(magenta "--container, -c CONTAINER")"
-    printf "    Container name.\n"
+    printf "    🐳 Container name\n"
     printf "    Default: connect\n"
     echo
 
@@ -1231,11 +1231,11 @@ playground_container_kill_usage() {
 # :command.usage
 playground_topic_usage() {
   if [[ -n $long_usage ]]; then
-    printf "playground topic - 📁 Topic commands.\n"
+    printf "playground topic - 🗳 Topic commands\n"
     echo
 
   else
-    printf "playground topic - 📁 Topic commands.\n"
+    printf "playground topic - 🗳 Topic commands\n"
     echo
 
   fi
@@ -1246,11 +1246,11 @@ playground_topic_usage() {
   echo
   # :command.usage_commands
   printf "%s\n" "$(bold "Topic commands:")"
-  printf "  %s   💯 Get number of records in a topic.\n" "$(green "get-number-records")      "
-  printf "  %s   🔺 Display content of connect offsets topic.\n" "$(green "display-connect-offsets") "
-  printf "  %s   🔻 Display content of __consumer_offsets topic.\n" "$(green "display-consumer-offsets")"
-  printf "  %s   🔎 Describe topic.\n" "$(green "describe")                "
-  printf "  %s   ↘️ Consumer topic(s) from current running examples\n" "$(green "consume")                 "
+  printf "  %s   💯 Get number of records in a topic\n" "$(green "get-number-records")      "
+  printf "  %s   📬 Display content of connect offsets topic\n" "$(green "display-connect-offsets") "
+  printf "  %s   📭 Display content of __consumer_offsets topic\n" "$(green "display-consumer-offsets")"
+  printf "  %s   🔬 Describe topic\n" "$(green "describe")                "
+  printf "  %s   📥 Consume topic(s) from current running examples\n" "$(green "consume")                 "
   echo
 
   # :command.long_usage
@@ -1268,11 +1268,11 @@ playground_topic_usage() {
 # :command.usage
 playground_topic_get_number_records_usage() {
   if [[ -n $long_usage ]]; then
-    printf "playground topic get-number-records - 💯 Get number of records in a topic.\n"
+    printf "playground topic get-number-records - 💯 Get number of records in a topic\n"
     echo
 
   else
-    printf "playground topic get-number-records - 💯 Get number of records in a topic.\n"
+    printf "playground topic get-number-records - 💯 Get number of records in a topic\n"
     echo
 
   fi
@@ -1289,7 +1289,7 @@ playground_topic_get_number_records_usage() {
     # :command.usage_flags
     # :flag.usage
     printf "  %s\n" "$(magenta "--topic, -t TOPIC (required)")"
-    printf "    Topic name.\n"
+    printf "    🗳 Topic name\n"
     echo
 
     # :command.usage_fixed_flags
@@ -1309,11 +1309,11 @@ playground_topic_get_number_records_usage() {
 # :command.usage
 playground_topic_display_connect_offsets_usage() {
   if [[ -n $long_usage ]]; then
-    printf "playground topic display-connect-offsets - 🔺 Display content of connect offsets topic.\n"
+    printf "playground topic display-connect-offsets - 📬 Display content of connect offsets topic\n"
     echo
 
   else
-    printf "playground topic display-connect-offsets - 🔺 Display content of connect offsets topic.\n"
+    printf "playground topic display-connect-offsets - 📬 Display content of connect offsets topic\n"
     echo
 
   fi
@@ -1338,11 +1338,11 @@ playground_topic_display_connect_offsets_usage() {
 # :command.usage
 playground_topic_display_consumer_offsets_usage() {
   if [[ -n $long_usage ]]; then
-    printf "playground topic display-consumer-offsets - 🔻 Display content of __consumer_offsets topic.\n"
+    printf "playground topic display-consumer-offsets - 📭 Display content of __consumer_offsets topic\n"
     echo
 
   else
-    printf "playground topic display-consumer-offsets - 🔻 Display content of __consumer_offsets topic.\n"
+    printf "playground topic display-consumer-offsets - 📭 Display content of __consumer_offsets topic\n"
     echo
 
   fi
@@ -1367,11 +1367,11 @@ playground_topic_display_consumer_offsets_usage() {
 # :command.usage
 playground_topic_describe_usage() {
   if [[ -n $long_usage ]]; then
-    printf "playground topic describe - 🔎 Describe topic.\n"
+    printf "playground topic describe - 🔬 Describe topic\n"
     echo
 
   else
-    printf "playground topic describe - 🔎 Describe topic.\n"
+    printf "playground topic describe - 🔬 Describe topic\n"
     echo
 
   fi
@@ -1388,7 +1388,7 @@ playground_topic_describe_usage() {
     # :command.usage_flags
     # :flag.usage
     printf "  %s\n" "$(magenta "--topic, -t TOPIC (required)")"
-    printf "    Topic name.\n"
+    printf "    🗳 Topic name\n"
     echo
 
     # :command.usage_fixed_flags
@@ -1402,11 +1402,11 @@ playground_topic_describe_usage() {
 # :command.usage
 playground_topic_consume_usage() {
   if [[ -n $long_usage ]]; then
-    printf "playground topic consume - ↘️ Consumer topic(s) from current running examples\n"
+    printf "playground topic consume - 📥 Consume topic(s) from current running examples\n"
     echo
 
   else
-    printf "playground topic consume - ↘️ Consumer topic(s) from current running examples\n"
+    printf "playground topic consume - 📥 Consume topic(s) from current running examples\n"
     echo
 
   fi
@@ -1431,11 +1431,11 @@ playground_topic_consume_usage() {
 # :command.usage
 playground_connector_usage() {
   if [[ -n $long_usage ]]; then
-    printf "playground connector - 🔗 Connector commands.\n"
+    printf "playground connector - 🔗 Connector commands\n"
     echo
 
   else
-    printf "playground connector - 🔗 Connector commands.\n"
+    printf "playground connector - 🔗 Connector commands\n"
     echo
 
   fi
@@ -1446,15 +1446,15 @@ playground_connector_usage() {
   echo
   # :command.usage_commands
   printf "%s\n" "$(bold "== Commands ==")"
-  printf "  %s   ℹ️  Show status of all connectors.\n" "$(green "status")   "
-  printf "  %s   🔖 Show all plugins installed.\n" "$(green "plugins")  "
+  printf "  %s   🧩 Show status of all connectors\n" "$(green "status")   "
+  printf "  %s   🎨 Show all plugins installed\n" "$(green "plugins")  "
   printf "  %s   ⏸️  Pause connector\n" "$(green "pause")    "
-  printf "  %s   🧞 Get current version used in example and latest available\n" "$(green "versions") "
+  printf "  %s   🧞 Get current version used in example\n" "$(green "versions") "
   printf "  %s   ♻️  Restart connector\n" "$(green "restart")  "
   printf "  %s   ⏯️  Resume connector\n" "$(green "resume")   "
   printf "  %s   🗑️  Delete connector\n" "$(green "delete")   "
   printf "  %s   🐢 Show lag of sink connector\n" "$(green "show-lag") "
-  printf "  %s   🧬 Set connect log level.\n" "$(green "log-level")"
+  printf "  %s   🧬 Set connect log level\n" "$(green "log-level")"
   echo
 
   # :command.long_usage
@@ -1481,11 +1481,11 @@ playground_connector_usage() {
 # :command.usage
 playground_connector_status_usage() {
   if [[ -n $long_usage ]]; then
-    printf "playground connector status - ℹ️  Show status of all connectors.\n"
+    printf "playground connector status - 🧩 Show status of all connectors\n"
     echo
 
   else
-    printf "playground connector status - ℹ️  Show status of all connectors.\n"
+    printf "playground connector status - 🧩 Show status of all connectors\n"
     echo
 
   fi
@@ -1510,11 +1510,11 @@ playground_connector_status_usage() {
 # :command.usage
 playground_connector_plugins_usage() {
   if [[ -n $long_usage ]]; then
-    printf "playground connector plugins - 🔖 Show all plugins installed.\n"
+    printf "playground connector plugins - 🎨 Show all plugins installed\n"
     echo
 
   else
-    printf "playground connector plugins - 🔖 Show all plugins installed.\n"
+    printf "playground connector plugins - 🎨 Show all plugins installed\n"
     echo
 
   fi
@@ -1560,7 +1560,7 @@ playground_connector_pause_usage() {
     # :command.usage_flags
     # :flag.usage
     printf "  %s\n" "$(magenta "--connector, -c CONNECTOR")"
-    printf "    Connector name.\n"
+    printf "    🔗 Connector name\n"
     echo
 
     # :command.usage_fixed_flags
@@ -1574,11 +1574,11 @@ playground_connector_pause_usage() {
 # :command.usage
 playground_connector_versions_usage() {
   if [[ -n $long_usage ]]; then
-    printf "playground connector versions - 🧞 Get current version used in example and latest available\n"
+    printf "playground connector versions - 🧞 Get current version used in example\n"
     echo
 
   else
-    printf "playground connector versions - 🧞 Get current version used in example and latest available\n"
+    printf "playground connector versions - 🧞 Get current version used in example\n"
     echo
 
   fi
@@ -1595,7 +1595,7 @@ playground_connector_versions_usage() {
     # :command.usage_flags
     # :flag.usage
     printf "  %s\n" "$(magenta "--connector, -c CONNECTOR")"
-    printf "    Connector name.\n"
+    printf "    🔗 Connector name\n"
     echo
 
     # :command.usage_fixed_flags
@@ -1630,7 +1630,7 @@ playground_connector_restart_usage() {
     # :command.usage_flags
     # :flag.usage
     printf "  %s\n" "$(magenta "--connector, -c CONNECTOR")"
-    printf "    Connector name.\n"
+    printf "    🔗 Connector name\n"
     echo
 
     # :command.usage_fixed_flags
@@ -1665,7 +1665,7 @@ playground_connector_resume_usage() {
     # :command.usage_flags
     # :flag.usage
     printf "  %s\n" "$(magenta "--connector, -c CONNECTOR")"
-    printf "    Connector name.\n"
+    printf "    🔗 Connector name\n"
     echo
 
     # :command.usage_fixed_flags
@@ -1700,7 +1700,7 @@ playground_connector_delete_usage() {
     # :command.usage_flags
     # :flag.usage
     printf "  %s\n" "$(magenta "--connector, -c CONNECTOR")"
-    printf "    Connector name.\n"
+    printf "    🔗 Connector name\n"
     echo
 
     # :command.usage_fixed_flags
@@ -1735,7 +1735,7 @@ playground_connector_show_lag_usage() {
     # :command.usage_flags
     # :flag.usage
     printf "  %s\n" "$(magenta "--connector, -c CONNECTOR")"
-    printf "    Connector name.\n"
+    printf "    🔗 Connector name\n"
     echo
 
     # :command.usage_fixed_flags
@@ -1749,11 +1749,11 @@ playground_connector_show_lag_usage() {
 # :command.usage
 playground_connector_log_level_usage() {
   if [[ -n $long_usage ]]; then
-    printf "playground connector log-level - 🧬 Set connect log level.\n"
+    printf "playground connector log-level - 🧬 Set connect log level\n"
     echo
 
   else
-    printf "playground connector log-level - 🧬 Set connect log level.\n"
+    printf "playground connector log-level - 🧬 Set connect log level\n"
     echo
 
   fi
@@ -1770,12 +1770,12 @@ playground_connector_log_level_usage() {
     # :command.usage_flags
     # :flag.usage
     printf "  %s\n" "$(magenta "--connector, -c CONNECTOR")"
-    printf "    Connector name.\n"
+    printf "    🔗 Connector name\n"
     echo
 
     # :flag.usage
     printf "  %s\n" "$(magenta "--level, -l LEVEL (required)")"
-    printf "    Log level.\n"
+    printf "    Log level\n"
     printf "    Allowed: INFO, WARN, DEBUG, TRACE\n"
     echo
 

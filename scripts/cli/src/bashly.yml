@@ -36,15 +36,15 @@ commands:
   group: Run
   catch_all:
     label: arguments
-    help: Arguments to use by example script.
+    help: Arguments to use by example script
     required: false
   environment_variables:
   - name: EDITOR 
-    help: 🔖 Editor to use to open the example file.
+    help: 🔖 Editor to use to open the example file
   dependencies:
   - fzf
   help: |-
-    🚀  Run example.
+    🚀 Run example
     
     👉 Check documentation https://tinyurl.com/yx3vbwu5
 
@@ -57,87 +57,127 @@ commands:
     completions:
       - $(playground get-examples-list-with-fzf "$cur")
     help: |-
-      Example file to run.
-      It must be absolute full path. 
+      🔖 Example file to run
+      It must be absolute full path
 
-      🎓 Tip: use <tab> completion to trigger fzf completion.
+      🎓 Tip: use <tab> completion to trigger fzf completion
   - long: --open
     short: -o
-    help: Opening example file with text editor set with EDITOR environment variable (default is code).
+    help: 📖 Opening example file with text editor set with EDITOR environment variable (default is vscode)
   - long: --tag
     arg: tag
     required: false
-    help: CP version to use
+    help: |-
+      🎯 Confluent Platform (CP) version to use
+
+      Must be greater or equal to 5.0.0
   - long: --connector-tag
     arg: connector_tag
     required: false
-    help: Connector version to use
+    help: |- 
+      🔗 Connector version to use
+
+      By default, for each connector, the latest available version on Confluent Hub is used
     conflicts: [--connector-zip]
   - long: --connector-zip
     arg: connector_zip
     required: false
     validate: file_exists
-    help: Connector zip to use
+    help: |- 
+      🤐 Connector zip to use
+
+      It must be absolute full path
+
     conflicts: [--connector-tag]
   - long: --connector-jar
     arg: connector_jar
     validate: file_exists
     required: false
-    help: Connector jar to use
+    help: |-
+      ♨️ Connector jar to use
+
+      It must be absolute full path
   - long: --disable-ksqldb
     required: false
-    help: Disable ksqlDB
+    help: |-
+      🛑 Disable ksqlDB
+
+      By default, ksqldb-server and ksqldb-cli containers are started for every test
   - long: --disable-control-center
     required: false
-    help: Disable Control Center
+    help: |-
+      🛑 Disable Control Center
+
+      By default, control-center container is started for every test
+
+      Control Center is reachable at http://127.0.0.1:9021
   - long: --enable-conduktor
     required: false
-    help: Enable Conduktor
+    help: |- 
+      🐺 Enable Conduktor Platform
+
+      By default, Conduktor Platform container is not started for every test
+
+      Conduktor is reachable at http://127.0.0.1:8080/console (admin/admin)
   - long: --enable-multiple-brokers
     required: false
-    help: Enable Multiple brokers
+    help: |- 
+      3️⃣ Enable multiple brokers
+
+      By default, there is only one broker node enabled
   - long: --enable-multiple-connect-workers
     required: false
-    help: Enable Multiple Connect Workers
+    help: |-
+      🥉 Enable multiple connect node
+
+      By default, there is only one connect node enabled
+
+      It only works when plaintext environment is used
   - long: --enable-jmx-grafana
     required: false
     help: |-
       Enable Grafana, Prometheus and Pyroscope
 
       📊 Grafana is reachable at http://127.0.0.1:3000
-      🛡️  Prometheus is reachable at http://127.0.0.1:9090
+      🛡️ Prometheus is reachable at http://127.0.0.1:9090
       📛 Pyroscope is reachable at http://127.0.0.1:4040
   - long: --enable-kcat
     required: false
-    help: Enable kcat
+    help: |-
+      🐈‍⬛ Enable kcat
+
+      You can use it with:
+
+      $ docker exec kcat kcat -b broker:9092 -L
   - long: --enable-sr-maven-plugin-app
     required: false
-    help: Enable Schema Registry Maven plugin App
+    help: |- 
+      🔰 Enable Schema Registry Maven plugin App
   - long: --enable-sql-datagen
     required: false
     help: |-
       🌪️ Enable SQL Datagen injection
 
-      This only works for Oracle source connector examples.
+      This only works for Oracle, MySql, Postgres and Microsoft Sql Server source connector examples with JDBC and Debezium
 
 - name: re-run
   group: Run
   environment_variables:
   - name: EDITOR 
-    help: 🔖 Editor to use to open the example file.
+    help: 🔖 Editor to use to open the example file
   help: |-
-    🛸  Re-run last example.
+    ⚡ Simply re-run last example you ran with <playground run>
     
 - name: bootstrap-reproduction-model
   environment_variables:
   - name: OUTPUT_FOLDER 
-    help: 📁 Output folder where to generate bootstrapped files.
+    help: 📁 Output folder where to generate bootstrapped files
     default: reproduction-models
   group: Bootstrap
   dependencies:
   - fzf
   help: |-
-    🛠  Bootstrap reproduction model.
+    🛠  Bootstrap reproduction model
     
     👉 Check documentation https://tinyurl.com/bdfs25my
 
@@ -150,10 +190,11 @@ commands:
     completions:
       - $(playground get-examples-list-with-fzf --without-repro "$cur")
     help: |-
-      Example file to use as basis.
-      It must be absolute full path. 
+      🔖 Example file to use as basis
+      
+      It must be absolute full path
 
-      🎓 Tip: use <tab> completion to trigger fzf completion.
+      🎓 Tip: use <tab> completion to trigger fzf completion
 
   - long: --description
     short: -d
@@ -161,7 +202,7 @@ commands:
     validate: not_empty
     arg: description
     help: |-
-      Description.
+      💭 Description for the reproduction model
 
   - long: --producer
     short: -p
@@ -177,10 +218,11 @@ commands:
       - json-schema
       - json-schema-with-key
     help: |-
-      Java producer type to use. 
-      One of avro, avro-with-key, protobuf, protobuf-with-key, json-schema, json-schema-with-key.
+      ♨️ Java producer type to use
+      
+      One of avro, avro-with-key, protobuf, protobuf-with-key, json-schema, json-schema-with-key
 
-      Note: 'with-key' will also produce key with selected converter, otherwise LongConverter is used.
+      🎓 Tip: 'with-key' will also produce key with selected converter, otherwise LongConverter is used
 
   - long: --nb-producers
     short: -n
@@ -188,11 +230,11 @@ commands:
     validate: integer
     default: ""
     help: |-
-      Number of java producers to generate.
+      2️⃣ Number of java producers to generate
 
   - long: --custom-smt
     help: |-
-      Add a custom SMT (no-op).
+      ⚙️ Add a custom SMT (which is a no-op)
 
   - long: --pipeline
     required: false
@@ -202,10 +244,11 @@ commands:
     completions:
       - $(playground get-examples-list-with-fzf --without-repro --sink-only "$cur")
     help: |-
-      Sink example file to use for creating a pipeline.
+      🔖 Sink example file to use for creating a pipeline
+      
       It must be absolute full path. 
 
-      🎓 Tip: use <tab> completion to trigger fzf completion.
+      🎓 Tip: use <tab> completion to trigger fzf completion
 
   examples:
   - playground bootstrap-reproduction-model -f hdfs2<tab> -d "simple test"
@@ -217,7 +260,7 @@ commands:
 - name: get-properties
   group: Kafka
   help: |-
-    📝 Get properties file from a container.
+    📝 Get properties file from a container
     
     👉 Check documentation https://tinyurl.com/4vj7tm2b
 
@@ -231,7 +274,7 @@ commands:
     completions:
       - $(docker ps --format '{{.Names}}')
     help: |-
-      Container name.
+      🐳 Container name
 
   examples:
   - playground get-properties
@@ -243,7 +286,7 @@ commands:
   filters:
   - not_mdc_environment
   help: |-
-    🔰 Get all schemas versions for all subjects.
+    🔰 Get all schemas versions for all subjects
     
     👉 Check documentation xxxx
 
@@ -253,7 +296,7 @@ commands:
 - name: enable-remote-debugging
   group: Debug
   help: |-
-    ✨ Enable java remote debugging for container.
+    ✨ Enable java remote debugging for container
     
     👉 Check documentation https://tinyurl.com/bdz843d4
   flags:
@@ -266,13 +309,13 @@ commands:
 - name: log-level
   group: Debug
   help: |-
-    🧬 Set log level for any package.
+    🧬 Set log level for any package
 
     👉 Check documentation https://tinyurl.com/yc78tr8a
 
   commands:
   - name: get
-    help: Get log levels.
+    help: Get log levels
     flags:
     - long: --package
       short: -p
@@ -280,10 +323,10 @@ commands:
       validate: not_empty
       arg: package
       help: |-
-        Package name.
+        Package name
 
   - name: set
-    help: Set log level for specific logger.
+    help: Set log level for specific logger
     flags:
     - long: --package
       short: -p
@@ -291,14 +334,15 @@ commands:
       validate: not_empty
       arg: package
       help: |-
-        Package name.
+        📦 Package name
 
     - long: --level
       short: -l
-      help: Log level.
       arg: level
       allowed: [INFO, WARN, DEBUG, TRACE]
       required: true
+      help: |-
+        ❕Log level
 
   examples:
   - playground log-level get
@@ -309,7 +353,7 @@ commands:
 - name: get-jmx-metrics
   group: Kafka
   help: |-
-    🔢 Get JMX metrics from a component.
+    🔢 Get JMX metrics from a component
     
     👉 Check documentation https://tinyurl.com/yc2myws9
 
@@ -321,14 +365,14 @@ commands:
     arg: component
     allowed: [zookeeper, broker, connect, schema-registry]
     help: |-
-      Component name.
+      Component name
 
   - long: --domain
     short: -d
     required: false
     arg: domain
     help: |-
-      Domain name.
+      Domain name
 
   examples:
   - playground get-jmx-metrics --component connect
@@ -339,51 +383,54 @@ commands:
   expose: true
   group: Container
   help: |-
-    🐳 Container commands.
+    🐳 Container commands
   commands:
 
     - name: recreate
       group: Container
       help: |-
-        💫 Recreate container(s).
+        💫 Recreate container(s)
         
         👉 Check documentation https://tinyurl.com/3rhjxfbs
 
     - name: get-ip-addresses
       group: Container
       help: |-
-        🖥️  Get IP address of running containers.
+        🖥️  Get ip address of running containers
       examples:
       - playground get-ip-address-container
 
     - name: kill-all
       group: Container
       help: |-
-        💀 Kill all containers.
+        💀 Kill all containers
 
     - name: logs
       group: Container
       help: |-
-        🕵️  Tail and follow container logs.
+        🕵️  Tail and follow container logs
 
       flags:
       - *container
       - long: --open
         short: -o
-        help: Save output to a file and open with text editor set with EDITOR environment variable (default is code).
+        help: |- 
+          🔖 Save output to a file and open with text editor set with EDITOR environment variable (default is vscode)
         conflicts: [--wait-for-log]
       - long: --wait-for-log
         short: -w
         arg: log
         validate: not_empty
-        help: Wait until log appears.
+        help: |- 
+          😴 Wait until log appears
         conflicts: [--open]
       - long: --max-wait
         short: -m
         arg: max_wait
         validate: integer
         default: "600"
-        help: Max time in seconds to wait when using --wait-for-log (default 600s).
+        help: |- 
+          ⏳ Max time in seconds to wait when using --wait-for-log (default 600s)
         conflicts: [--open]
 
       examples:
@@ -393,7 +440,7 @@ commands:
     - name: ssh
       group: Container
       help: |-
-        🚀 SSH into container.
+        🛬 SSH into container
 
       flags:
       - *container
@@ -409,7 +456,7 @@ commands:
           - ksh
           - zsh
         help: |-
-          Shell to use (default is bash).
+          💾 Shell to use (default is bash)
 
       examples:
       - playground ssh -c connect
@@ -419,7 +466,7 @@ commands:
     - name: exec
       group: Container
       help: |-
-        🪄  Execute command in a container.
+        🪄  Execute command in a container
 
       flags:
       - *container
@@ -430,10 +477,11 @@ commands:
         validate: not_empty
         arg: command
         help: |-
-          Command to execute.
+          📲 Command to execute
 
       - long: --root
-        help: Run command as root.
+        help: |-
+          👑 Run command as root
 
       - long: --shell
         default: "bash"
@@ -444,7 +492,7 @@ commands:
           - ksh
           - zsh
         help: |-
-          Shell to use (default is bash).
+          💾 Shell to use (default is bash)
 
       examples:
       - playground exec -c connect -d "date"
@@ -454,7 +502,7 @@ commands:
     - name: restart
       group: Container
       help: |-
-        🔁 Restart a container.
+        🔁 Restart a container
 
       flags:
       - *container
@@ -462,7 +510,7 @@ commands:
     - name: pause
       group: Container
       help: |-
-        ⏸️  Pause a container.
+        ⏸️  Pause a container
 
       flags:
       - *container
@@ -470,7 +518,7 @@ commands:
     - name: resume
       group: Container
       help: |-
-        ⏯️  Resume a container.
+        ⏯️  Resume a container
 
       flags:
       - *container
@@ -478,7 +526,7 @@ commands:
     - name: kill
       group: Container
       help: |-
-        🔫 Kill a container.
+        🔫 Kill a container
 
       flags:
       - *container
@@ -489,13 +537,13 @@ commands:
   filters:
   - not_mdc_environment
   help: |-
-    📁 Topic commands.
+    🗳 Topic commands
   commands:
 
     - name: get-number-records
       group: Topic
       help: |-
-        💯 Get number of records in a topic.
+        💯 Get number of records in a topic
       flags:
       - &topic
         long: --topic
@@ -505,7 +553,7 @@ commands:
         completions:
           - $(playground get-topic-list)
         help: |-
-          Topic name.
+          🗳 Topic name
       examples:
       - playground get-number-records --topic a-topic
       - playground get-number-records -t a-topic
@@ -513,24 +561,24 @@ commands:
     - name: display-connect-offsets
       group: Topic
       help: |-
-        🔺 Display content of connect offsets topic.
+        📬 Display content of connect offsets topic
 
     - name: display-consumer-offsets
       group: Topic
       help: |-
-        🔻 Display content of __consumer_offsets topic.
+        📭 Display content of __consumer_offsets topic
 
     - name: describe
       group: Topic
       help: |-
-        🔎 Describe topic.
+        🔬 Describe topic
       flags:
       - *topic
 
     - name: consume
       group: Topic
       help: |-
-        ↘️ Consumer topic(s) from current running examples
+        📥 Consume topic(s) from current running examples
 
 - name: connector
   expose: true
@@ -538,14 +586,14 @@ commands:
   filters:
   - not_mdc_environment
   help: |-
-    🔗 Connector commands.
+    🔗 Connector commands
 
   commands:
   - name: status
-    help: ℹ️  Show status of all connectors.
+    help: 🧩 Show status of all connectors
 
   - name: plugins
-    help: 🔖 Show all plugins installed.
+    help: 🎨 Show all plugins installed
 
   - name: pause
     help: ⏸️  Pause connector
@@ -558,10 +606,10 @@ commands:
       completions:
         - $(playground get-connector-list)
       help: |-
-        Connector name.
+        🔗 Connector name
 
   - name: versions
-    help:  🧞 Get current version used in example and latest available
+    help:  🧞 Get current version used in example
     flags:
     - *connector
 
@@ -587,12 +635,12 @@ commands:
 
   - name: log-level
     help: |-
-      🧬 Set connect log level.
+      🧬 Set connect log level
     flags:
     - *connector
     - long: --level
       short: -l
-      help: Log level.
+      help: Log level
       arg: level
       allowed: [INFO, WARN, DEBUG, TRACE]
       required: true
