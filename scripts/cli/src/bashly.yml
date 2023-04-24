@@ -202,6 +202,14 @@ commands:
   help: |-
     ⚡ Simply re-run last example you ran with <playground run>
     
+- name: open
+  group: Run
+  environment_variables:
+  - name: EDITOR 
+    help: 🔖 Editor to use to open the example file
+  help: |-
+    👐 Simply open last example you ran with <playground run>
+
 - name: bootstrap-reproduction-model
   environment_variables:
   - name: OUTPUT_FOLDER 
