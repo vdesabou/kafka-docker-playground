@@ -52,10 +52,6 @@ services:
       CONFLUENT_SUPPORT_CUSTOMER_ID: 'anonymous'
       CONFLUENT_METRICS_ENABLE: 'false'
       KAFKA_CONFLUENT_CLUSTER_LINK_ENABLE : "true"
-      KAFKA_CLUSTER_LINK_RETRY_TIMEOUT_MS: 10000 #10s
-      KAFKA_AVAIBILITY_CHECK_MS: 10000 # 10s
-      KAFKA_AVAILABILITY_CHECK_CONSECUTIVE_FAILURE_THRESHOLD: 2
-      KAFKA_PASSWORD_ENCODER_SECRET: 'somePassword'
       EXTRA_ARGS: "-javaagent:/usr/share/jmx_exporter/jmx_prometheus_javaagent-0.16.1.jar=1234:/usr/share/jmx_exporter/broker.yml"
 
   broker-us:

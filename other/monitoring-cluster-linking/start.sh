@@ -63,7 +63,7 @@ docker container exec -i connect-us bash -c "kafka-console-consumer --bootstrap-
 
 log "Create the cluster link on the destination cluster (with metadata.max.age.ms=5 seconds + consumer.offset.sync.enable=true + consumer.offset.sync.ms=3000 + consumer.offset.sync.json set to all consumer groups)"
 docker cp consumer.offset.sync.json broker-europe:/tmp/consumer.offset.sync.json
-docker exec broker-europe kafka-cluster-links --bootstrap-server broker-europe:9092 --create --link link-us-to-europe --config bootstrap.servers=broker-us:9092,default.api.timeout.ms=5000,request.timeout.ms=2000,metadata.max.age.ms=5000,consumer.offset.sync.enable=true,consumer.offset.sync.ms=3000,availability.check.ms=10000,availability.check.consecutive.failure.threshold=3 --consumer-group-filters-json-file /tmp/consumer.offset.sync.json
+docker exec broker-europe kafka-cluster-links --bootstrap-server broker-europe:9092 --create --link link-us-to-europe --config bootstrap.servers=broker-us:9092,request.timeout.ms=2000,metadata.max.age.ms=5000,consumer.offset.sync.enable=true,consumer.offset.sync.ms=3000 --consumer-group-filters-json-file /tmp/consumer.offset.sync.json
 
 log "Initialize the topic mirror for topic purchases"
 docker exec broker-europe kafka-mirrors --create --mirror-topic purchases --link link-us-to-europe --bootstrap-server broker-europe:9092
@@ -78,15 +78,5 @@ log "Wait 6 seconds for consumer.offset sync to happen (2 times consumer.offset.
 sleep 6
 
 log "Verify that current offset is consistent in source and destination"
-log "Describe consumer group my-consumer-group at Source cluster"
+log "Describe consumer group my-consumer-group at source cluster"
 docker exec broker-europe kafka-consumer-groups --bootstrap-server broker-us:9092 --describe --group my-replicated-consumer-group
-
-log "Wait 10 seconds to get some monitoring data"
-sleep 10
-
-log "Disconnecting $container from the network"
-container="broker-us"
-network=$(docker inspect -f '{{.Name}} - {{range $k, $v := .NetworkSettings.Networks}}{{println $k}}{{end}}' $(docker ps -aq) | grep $container | cut -d " " -f 3)
-docker network disconnect $network $container
-
-
