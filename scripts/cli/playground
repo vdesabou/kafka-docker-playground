@@ -249,6 +249,43 @@ playground_get_zip_or_jar_with_fzf_usage() {
 }
 
 # :command.usage
+playground_get_schema_with_fzf_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground get-schema-with-fzf - Return some completion for schema files\n"
+    echo
+
+  else
+    printf "playground get-schema-with-fzf - Return some completion for schema files\n"
+    echo
+
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground get-schema-with-fzf [CUR]\n"
+  printf "  playground get-schema-with-fzf --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n $long_usage ]]; then
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+    # :command.usage_args
+    printf "%s\n" "$(bold "== Arguments ==")"
+
+    # :argument.usage
+    printf "  %s\n" "$(blue "CUR")"
+    printf "    correspond to completion $cur\n"
+    echo
+
+  fi
+}
+
+# :command.usage
 playground_bashly_reload_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground bashly-reload\n"
@@ -483,6 +520,16 @@ playground_bootstrap_reproduction_model_usage() {
     printf "  %s\n" "$(magenta "--nb-producers, -n NB-PRODUCERS")"
     printf "    2️⃣ Number of java producers to generate\n"
     printf "    Default: \n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--producer-schema-key PRODUCER_SCHEMA")"
+    printf "    ♨️ Schema file to use for the key\n    \n    It must be absolute full path\n    \n    🎓 Tip: use <tab> completion to trigger fzf completion \n            use folder_producer_schema (default: ~/Downloads) in config.ini file\n    to configure where to search the files\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--producer-schema-value PRODUCER_SCHEMA")"
+    printf "    ♨️ Schema file to use for the value\n    \n    It must be absolute full path\n    \n    🎓 Tip: use <tab> completion to trigger fzf completion \n            use folder_producer_schema (default: ~/Downloads) in config.ini file\n    to configure where to search the files\n"
     echo
 
     # :flag.usage
@@ -2117,15 +2164,44 @@ function get_zip_or_jar_with_fzf() {
     exit 1
   fi
 
-  folder_zip_or_jar=${folder_zip_or_jar/\~/$HOME}
+  folder_zip_or_jar=${folder_zip_or_jar//\~/$HOME}
+  folder_zip_or_jar=${folder_zip_or_jar//,/ }
 
-  if [ ! -d $folder_zip_or_jar ]
+  res=$(find $folder_zip_or_jar -name \*.$type ! -path '*/\.*' | fzf --query "$cur" --margin=1%,1%,1%,1% $fzf_option_rounded --info=inline --prompt="🍺" --header="ctrl-c or esc to quit" --color="bg:-1,bg+:-1,info:#BDBB72,border:#FFFFFF,spinner:0,hl:#beb665,fg:#00f7f7,header:#5CC9F5,fg+:#beb665,pointer:#E12672,marker:#5CC9F5,prompt:#98BEDE" --delimiter / --with-nth "-3,-2,-1" $fzf_option_wrap $fzf_option_pointer --preview 'stat {}');echo "$cur@$res"
+}
+
+function get_schema_with_fzf() {
+  cur="$1"
+
+  fzf_version=$(get_fzf_version)
+  if version_gt $fzf_version "0.38"
   then
-    logerror "<folder_zip_or_jar> directory $folder_zip_or_jar does not exist !"
+    fzf_option_wrap="--preview-window=40%,wrap"
+    fzf_option_pointer="--pointer=👉"
+    fzf_option_rounded="--border=rounded"
+  else
+    fzf_options=""
+    fzf_option_pointer=""
+    fzf_option_rounded=""
+  fi
+
+  if config_has_key "folder_producer_schema"
+  then
+    folder_producer_schema=$(config_get "folder_producer_schema")
+  else
+    logerror "Could not find config value <folder_producer_schema> !"
     exit 1
   fi
 
-  res=$(find $folder_zip_or_jar -name \*.$type ! -path '*/\.*' | fzf --query "$cur" --margin=1%,1%,1%,1% $fzf_option_rounded --info=inline --prompt="🍺" --header="ctrl-c or esc to quit" --color="bg:-1,bg+:-1,info:#BDBB72,border:#FFFFFF,spinner:0,hl:#beb665,fg:#00f7f7,header:#5CC9F5,fg+:#beb665,pointer:#E12672,marker:#5CC9F5,prompt:#98BEDE" --delimiter / --with-nth "-3,-2,-1" $fzf_option_wrap $fzf_option_pointer --preview 'stat {}');echo "$cur@$res"
+  folder_producer_schema=${folder_producer_schema//\~/$HOME}
+  folder_producer_schema=${folder_producer_schema//,/ }
+
+  if [[ $(type -f bat 2>&1) =~ "not found" ]]
+  then
+    res=$(find $folder_producer_schema -type f \( -name "*.avsc" -o -name "*.json" -o -name "*.proto" -o -name "*.proto3" \) ! -path '*/\.*' | fzf --query "$cur" --margin=1%,1%,1%,1% $fzf_option_rounded --info=inline --prompt="🍺" --header="ctrl-c or esc to quit" --color="bg:-1,bg+:-1,info:#BDBB72,border:#FFFFFF,spinner:0,hl:#beb665,fg:#00f7f7,header:#5CC9F5,fg+:#beb665,pointer:#E12672,marker:#5CC9F5,prompt:#98BEDE" --delimiter / --with-nth "-3,-2,-1" $fzf_option_wrap $fzf_option_pointer --preview 'cat {}');echo "$cur@$res"
+  else
+    res=$(find $folder_producer_schema -type f \( -name "*.avsc" -o -name "*.json" -o -name "*.proto" -o -name "*.proto3" \) ! -path '*/\.*' | fzf --query "$cur" --margin=1%,1%,1%,1% $fzf_option_rounded --info=inline --prompt="🍺" --header="ctrl-c or esc to quit" --color="bg:-1,bg+:-1,info:#BDBB72,border:#FFFFFF,spinner:0,hl:#beb665,fg:#00f7f7,header:#5CC9F5,fg+:#beb665,pointer:#E12672,marker:#5CC9F5,prompt:#98BEDE" --delimiter / --with-nth "-3,-2,-1" $fzf_option_wrap $fzf_option_pointer --preview 'bat --style=plain --color=always --line-range :500 {}');echo "$cur@$res"
+  fi
 }
 
 function filter_not_mdc_environment() {
@@ -5856,6 +5932,14 @@ playground_get_zip_or_jar_with_fzf_command() {
 }
 
 # :command.function
+playground_get_schema_with_fzf_command() {
+  # src/get_schema_with_fzf_command.sh
+  cur="${args[cur]}"
+
+  get_schema_with_fzf "$cur"
+}
+
+# :command.function
 playground_bashly_reload_command() {
   # src/bashly_reload_command.sh
   DIR_CLI="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
@@ -6116,6 +6200,8 @@ playground_bootstrap_reproduction_model_command() {
   nb_producers="${args[--nb-producers]}"
   add_custom_smt="${args[--custom-smt]}"
   sink_file="${args[--pipeline]}"
+  schema_file_key="${args[--producer-schema-key]}"
+  schema_file_value="${args[--producer-schema-value]}"
 
   if [[ $test_file == *"@"* ]]
   then
@@ -6124,25 +6210,49 @@ playground_bootstrap_reproduction_model_command() {
 
   if [[ "$test_file" != *".sh" ]]
   then
-    logerror "ERROR: test_file $test_file is not a .sh file!"
+    logerror "test_file $test_file is not a .sh file!"
     exit 1
   fi
 
   if [[ "$(dirname $test_file)" != /* ]]
   then
-    logerror "ERROR: do not use relative path for test file!"
+    logerror "do not use relative path for test file!"
     exit 1
   fi
 
   if [ "$description" = "" ]
   then
-    logerror "ERROR: description is not provided as argument!"
+    logerror "description is not provided as argument!"
     exit 1
   fi
 
   if [ "$nb_producers" == "" ]
   then
     nb_producers=1
+  fi
+
+  if [[ -n "$schema_file_key" ]]
+  then
+    if [ "$producer" == "none" ]
+    then
+      logerror "--producer-schema-key is set but not --producer"
+      exit 1
+    fi
+
+    if [[ "$producer" != *"with-key" ]]
+    then
+      logerror "--producer-schema-key is set but --producer is not set with <with-key>"
+      exit 1
+    fi
+  fi
+
+  if [[ -n "$schema_file_value" ]]
+  then
+    if [ "$producer" == "none" ]
+    then
+      logerror "--producer-schema-value is set but not --producer"
+      exit 1
+    fi
   fi
 
   test_file_directory="$(dirname "${test_file}")"
@@ -6175,7 +6285,7 @@ playground_bootstrap_reproduction_model_command() {
   then
     if [[ "$base1" != *source ]]
     then
-      logerror "ERROR: example <$base1> must be source connector example when building a pipeline !"
+      logerror "example <$base1> must be source connector example when building a pipeline !"
       exit 1
     fi
   fi
@@ -6184,7 +6294,7 @@ playground_bootstrap_reproduction_model_command() {
   then
     if [[ "$base1" != *sink ]]
     then
-      logerror "ERROR: example <$base1> must be sink connector example when using a java producer !"
+      logerror "example <$base1> must be sink connector example when using a java producer !"
       exit 1
     fi
   fi
@@ -6314,7 +6424,7 @@ playground_bootstrap_reproduction_model_command() {
       none)
       ;;
       *)
-        logerror "ERROR: producer name not valid ! Should be one of avro, avro-with-key, json-schema, json-schema-with-key, protobuf or protobuf-with-key"
+        logerror "producer name not valid ! Should be one of avro, avro-with-key, json-schema, json-schema-with-key, protobuf or protobuf-with-key"
         exit 1
       ;;
     esac
@@ -6345,6 +6455,86 @@ playground_bootstrap_reproduction_model_command() {
       rm -rf $producer_hostname
       mkdir -p $repro_dir/$producer_hostname/
       cp -Ra ${test_file_directory}/../../other/schema-format-$producer/producer/* $repro_dir/$producer_hostname/
+
+      if [[ -n "$schema_file_value" ]]
+      then
+        if [[ $schema_file_value == *"@"* ]]
+        then
+          schema_file_value=$(echo "$schema_file_value" | cut -d "@" -f 2)
+        fi
+        cp $schema_file_value $tmp_dir/schema
+
+        case "${producer}" in
+          avro|avro-with-key)
+            original_namespace=$(grep "\"namespace\"" $tmp_dir/schema | cut -d "\"" -f 4 | head -1)
+            if [ "$original_namespace" != "" ]
+            then
+              sed -e "s|$original_namespace|com.github.vdesabou|g" \
+                  $tmp_dir/schema  > /tmp/tmp
+
+              mv /tmp/tmp $tmp_dir/schema
+              log "✨ Replacing namespace $original_namespace with com.github.vdesabou"
+            else
+              # need to add namespace
+              cp $tmp_dir/schema /tmp/tmp
+              line=2
+              { head -n $(($line-1)) /tmp/tmp; echo "    \"namespace\": \"com.github.vdesabou\","; tail -n +$line /tmp/tmp; } > $tmp_dir/schema
+            fi
+            # replace record name with Customer
+            jq '.name = "Customer"' $tmp_dir/schema > /tmp/tmp
+            mv /tmp/tmp $tmp_dir/schema
+
+            cp $tmp_dir/schema $repro_dir/$producer_hostname/src/main/resources/schema/customer.avsc
+          ;;
+          json-schema|json-schema-with-key)
+            # replace title name with Customer
+            jq '.title = "Customer"' $tmp_dir/schema > /tmp/tmp
+            mv /tmp/tmp $tmp_dir/schema
+
+            cp $tmp_dir/schema $repro_dir/$producer_hostname/src/main/resources/schema/Customer.json
+          ;;
+          protobuf|protobuf-with-key)
+            original_package=$(grep "package " $tmp_dir/schema | cut -d " " -f 2 | cut -d ";" -f 1 | head -1)
+            if [ "$original_package" != "" ]
+            then
+              sed -e "s|$original_package|com.github.vdesabou|g" \
+                  $tmp_dir/schema  > /tmp/tmp
+
+              mv /tmp/tmp $tmp_dir/schema
+              log "✨ Replacing package $original_package with com.github.vdesabou"
+            else
+              # need to add package
+              cp $tmp_dir/schema /tmp/tmp
+              line=2
+              { head -n $(($line-1)) /tmp/tmp; echo "package com.github.vdesabou;"; tail -n +$line /tmp/tmp; } > $tmp_dir/schema
+            fi
+
+            original_java_outer_classname=$(grep "java_outer_classname" $tmp_dir/schema | cut -d "\"" -f 2 | cut -d "\"" -f 1 | head -1)
+            if [ "$original_java_outer_classname" != "" ]
+            then
+              sed -e "s|$original_java_outer_classname|CustomerImpl|g" \
+                  $tmp_dir/schema  > /tmp/tmp
+
+              mv /tmp/tmp $tmp_dir/schema
+              log "✨ Replacing java_outer_classname $original_java_outer_classname with CustomerImpl"
+            else
+              # need to add java_outer_classname
+              cp $tmp_dir/schema /tmp/tmp
+              line=3
+              { head -n $(($line-1)) /tmp/tmp; echo "option java_outer_classname = \"CustomerImpl\";"; tail -n +$line /tmp/tmp; } > $tmp_dir/schema
+            fi
+
+            cp $tmp_dir/schema $repro_dir/$producer_hostname/src/main/resources/schema/Customer.proto
+          ;;
+
+          none)
+          ;;
+          *)
+            logerror "producer name not valid ! Should be one of avro, avro-with-key, json-schema, json-schema-with-key, protobuf or protobuf-with-key"
+            exit 1
+          ;;
+        esac
+      fi
 
       # update docker compose with producer container
       if [[ "$dir1" = *connect ]]
@@ -6555,7 +6745,7 @@ playground_bootstrap_reproduction_model_command() {
     connector_paths=$(grep "CONNECT_PLUGIN_PATH" "${docker_compose_file}" | grep -v "KSQL_CONNECT_PLUGIN_PATH" | cut -d ":" -f 2  | tr -s " " | head -1)
     if [ "$connector_paths" == "" ]
     then
-      logerror "ERROR: not a connector test"
+      logerror "not a connector test"
       exit 1
     else
       #  Loop on all connectors in CONNECT_PLUGIN_PATH and install custom SMT jar in lib folder
@@ -6624,7 +6814,7 @@ playground_bootstrap_reproduction_model_command() {
     sink_connector_paths=$(grep "CONNECT_PLUGIN_PATH" "${docker_compose_sink_file}" | grep -v "KSQL_CONNECT_PLUGIN_PATH" | cut -d ":" -f 2  | tr -s " " | head -1)
     if [ "$sink_connector_paths" == "" ]
     then
-      logerror "ERROR: cannot find CONNECT_PLUGIN_PATH in  ${docker_compose_sink_file}"
+      logerror "cannot find CONNECT_PLUGIN_PATH in  ${docker_compose_sink_file}"
       exit 1
     else
       tmp_new_connector_paths="$connector_paths,$sink_connector_paths"
@@ -7725,6 +7915,13 @@ parse_requirements() {
       shift $#
       ;;
 
+    get-schema-with-fzf)
+      action="get-schema-with-fzf"
+      shift
+      playground_get_schema_with_fzf_parse_requirements "$@"
+      shift $#
+      ;;
+
     bashly-reload)
       action="bashly-reload"
       shift
@@ -8073,6 +8270,58 @@ playground_get_zip_or_jar_with_fzf_parse_requirements() {
     printf "%s\n" "--type must be one of: zip, jar" >&2
     exit 1
   fi
+
+}
+
+# :command.parse_requirements
+playground_get_schema_with_fzf_parse_requirements() {
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    case "${1:-}" in
+      --help | -h)
+        long_usage=yes
+        playground_get_schema_with_fzf_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.dependencies_filter
+
+  # :command.command_filter
+  action="get-schema-with-fzf"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        if [[ -z ${args['cur']+x} ]]; then
+
+          args['cur']=$1
+          shift
+        else
+          printf "invalid argument: %s\n" "$key" >&2
+          exit 1
+        fi
+
+        ;;
+
+    esac
+  done
 
 }
 
@@ -8530,6 +8779,46 @@ playground_bootstrap_reproduction_model_parse_requirements() {
           shift
         else
           printf "%s\n" "--nb-producers requires an argument: --nb-producers, -n NB-PRODUCERS" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --producer-schema-key)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          # :flag.validations
+          if [[ -n $(validate_file_exists_with_trick "$2") ]]; then
+            printf "validation error in %s:\n%s\n" "--producer-schema-key PRODUCER_SCHEMA" "$(validate_file_exists_with_trick "$2")" >&2
+            exit 1
+          fi
+
+          args['--producer-schema-key']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--producer-schema-key requires an argument: --producer-schema-key PRODUCER_SCHEMA" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --producer-schema-value)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          # :flag.validations
+          if [[ -n $(validate_file_exists_with_trick "$2") ]]; then
+            printf "validation error in %s:\n%s\n" "--producer-schema-value PRODUCER_SCHEMA" "$(validate_file_exists_with_trick "$2")" >&2
+            exit 1
+          fi
+
+          args['--producer-schema-value']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--producer-schema-value requires an argument: --producer-schema-value PRODUCER_SCHEMA" >&2
           exit 1
         fi
         ;;
@@ -11056,6 +11345,15 @@ run() {
         playground_get_zip_or_jar_with_fzf_usage
       else
         playground_get_zip_or_jar_with_fzf_command
+      fi
+      ;;
+
+    "get-schema-with-fzf")
+      if [[ ${args['--help']:-} ]]; then
+        long_usage=yes
+        playground_get_schema_with_fzf_usage
+      else
+        playground_get_schema_with_fzf_command
       fi
       ;;
 

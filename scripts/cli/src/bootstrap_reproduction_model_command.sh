@@ -10,6 +10,8 @@ producer="${args[--producer]}"
 nb_producers="${args[--nb-producers]}"
 add_custom_smt="${args[--custom-smt]}"
 sink_file="${args[--pipeline]}"
+schema_file_key="${args[--producer-schema-key]}"
+schema_file_value="${args[--producer-schema-value]}"
 
 if [[ $test_file == *"@"* ]]
 then
@@ -18,25 +20,49 @@ fi
 
 if [[ "$test_file" != *".sh" ]]
 then
-  logerror "ERROR: test_file $test_file is not a .sh file!"
+  logerror "test_file $test_file is not a .sh file!"
   exit 1
 fi
 
 if [[ "$(dirname $test_file)" != /* ]]
 then
-  logerror "ERROR: do not use relative path for test file!"
+  logerror "do not use relative path for test file!"
   exit 1
 fi
 
 if [ "$description" = "" ]
 then
-  logerror "ERROR: description is not provided as argument!"
+  logerror "description is not provided as argument!"
   exit 1
 fi
 
 if [ "$nb_producers" == "" ]
 then
   nb_producers=1
+fi
+
+if [[ -n "$schema_file_key" ]]
+then
+  if [ "$producer" == "none" ]
+  then
+    logerror "--producer-schema-key is set but not --producer"
+    exit 1
+  fi
+
+  if [[ "$producer" != *"with-key" ]]
+  then
+    logerror "--producer-schema-key is set but --producer is not set with <with-key>"
+    exit 1
+  fi
+fi
+
+if [[ -n "$schema_file_value" ]]
+then
+  if [ "$producer" == "none" ]
+  then
+    logerror "--producer-schema-value is set but not --producer"
+    exit 1
+  fi
 fi
 
 test_file_directory="$(dirname "${test_file}")"
@@ -69,7 +95,7 @@ if [[ -n "$sink_file" ]]
 then
   if [[ "$base1" != *source ]]
   then
-    logerror "ERROR: example <$base1> must be source connector example when building a pipeline !"
+    logerror "example <$base1> must be source connector example when building a pipeline !"
     exit 1
   fi
 fi
@@ -78,7 +104,7 @@ if [ "$producer" != "none" ]
 then
   if [[ "$base1" != *sink ]]
   then
-    logerror "ERROR: example <$base1> must be sink connector example when using a java producer !"
+    logerror "example <$base1> must be sink connector example when using a java producer !"
     exit 1
   fi
 fi
@@ -208,7 +234,7 @@ then
     none)
     ;;
     *)
-      logerror "ERROR: producer name not valid ! Should be one of avro, avro-with-key, json-schema, json-schema-with-key, protobuf or protobuf-with-key"
+      logerror "producer name not valid ! Should be one of avro, avro-with-key, json-schema, json-schema-with-key, protobuf or protobuf-with-key"
       exit 1
     ;;
   esac
@@ -239,6 +265,88 @@ then
     rm -rf $producer_hostname
     mkdir -p $repro_dir/$producer_hostname/
     cp -Ra ${test_file_directory}/../../other/schema-format-$producer/producer/* $repro_dir/$producer_hostname/
+
+    ####
+    #### schema_file_value
+    if [[ -n "$schema_file_value" ]]
+    then
+      if [[ $schema_file_value == *"@"* ]]
+      then
+        schema_file_value=$(echo "$schema_file_value" | cut -d "@" -f 2)
+      fi
+      cp $schema_file_value $tmp_dir/schema
+
+      case "${producer}" in
+        avro|avro-with-key)
+          original_namespace=$(grep "\"namespace\"" $tmp_dir/schema | cut -d "\"" -f 4 | head -1)
+          if [ "$original_namespace" != "" ]
+          then
+            sed -e "s|$original_namespace|com.github.vdesabou|g" \
+                $tmp_dir/schema  > /tmp/tmp
+
+            mv /tmp/tmp $tmp_dir/schema
+            log "✨ Replacing namespace $original_namespace with com.github.vdesabou"
+          else
+            # need to add namespace
+            cp $tmp_dir/schema /tmp/tmp
+            line=2
+            { head -n $(($line-1)) /tmp/tmp; echo "    \"namespace\": \"com.github.vdesabou\","; tail -n +$line /tmp/tmp; } > $tmp_dir/schema
+          fi
+          # replace record name with Customer
+          jq '.name = "Customer"' $tmp_dir/schema > /tmp/tmp
+          mv /tmp/tmp $tmp_dir/schema
+
+          cp $tmp_dir/schema $repro_dir/$producer_hostname/src/main/resources/schema/customer.avsc
+        ;;
+        json-schema|json-schema-with-key)
+          # replace title name with Customer
+          jq '.title = "Customer"' $tmp_dir/schema > /tmp/tmp
+          mv /tmp/tmp $tmp_dir/schema
+
+          cp $tmp_dir/schema $repro_dir/$producer_hostname/src/main/resources/schema/Customer.json
+        ;;
+        protobuf|protobuf-with-key)
+          original_package=$(grep "package " $tmp_dir/schema | cut -d " " -f 2 | cut -d ";" -f 1 | head -1)
+          if [ "$original_package" != "" ]
+          then
+            sed -e "s|$original_package|com.github.vdesabou|g" \
+                $tmp_dir/schema  > /tmp/tmp
+
+            mv /tmp/tmp $tmp_dir/schema
+            log "✨ Replacing package $original_package with com.github.vdesabou"
+          else
+            # need to add package
+            cp $tmp_dir/schema /tmp/tmp
+            line=2
+            { head -n $(($line-1)) /tmp/tmp; echo "package com.github.vdesabou;"; tail -n +$line /tmp/tmp; } > $tmp_dir/schema
+          fi
+
+          original_java_outer_classname=$(grep "java_outer_classname" $tmp_dir/schema | cut -d "\"" -f 2 | cut -d "\"" -f 1 | head -1)
+          if [ "$original_java_outer_classname" != "" ]
+          then
+            sed -e "s|$original_java_outer_classname|CustomerImpl|g" \
+                $tmp_dir/schema  > /tmp/tmp
+
+            mv /tmp/tmp $tmp_dir/schema
+            log "✨ Replacing java_outer_classname $original_java_outer_classname with CustomerImpl"
+          else
+            # need to add java_outer_classname
+            cp $tmp_dir/schema /tmp/tmp
+            line=3
+            { head -n $(($line-1)) /tmp/tmp; echo "option java_outer_classname = \"CustomerImpl\";"; tail -n +$line /tmp/tmp; } > $tmp_dir/schema
+          fi
+
+          cp $tmp_dir/schema $repro_dir/$producer_hostname/src/main/resources/schema/Customer.proto
+        ;;
+
+        none)
+        ;;
+        *)
+          logerror "producer name not valid ! Should be one of avro, avro-with-key, json-schema, json-schema-with-key, protobuf or protobuf-with-key"
+          exit 1
+        ;;
+      esac
+    fi
 
     # update docker compose with producer container
     if [[ "$dir1" = *connect ]]
@@ -448,7 +556,7 @@ then
   connector_paths=$(grep "CONNECT_PLUGIN_PATH" "${docker_compose_file}" | grep -v "KSQL_CONNECT_PLUGIN_PATH" | cut -d ":" -f 2  | tr -s " " | head -1)
   if [ "$connector_paths" == "" ]
   then
-    logerror "ERROR: not a connector test"
+    logerror "not a connector test"
     exit 1
   else
     ###
@@ -522,7 +630,7 @@ then
   sink_connector_paths=$(grep "CONNECT_PLUGIN_PATH" "${docker_compose_sink_file}" | grep -v "KSQL_CONNECT_PLUGIN_PATH" | cut -d ":" -f 2  | tr -s " " | head -1)
   if [ "$sink_connector_paths" == "" ]
   then
-    logerror "ERROR: cannot find CONNECT_PLUGIN_PATH in  ${docker_compose_sink_file}"
+    logerror "cannot find CONNECT_PLUGIN_PATH in  ${docker_compose_sink_file}"
     exit 1
   else
     tmp_new_connector_paths="$connector_paths,$sink_connector_paths"
