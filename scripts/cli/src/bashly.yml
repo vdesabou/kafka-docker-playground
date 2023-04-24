@@ -273,7 +273,7 @@ commands:
     completions:
       - $(playground get-schema-with-fzf "$cur")
     help: |-
-      ♨️ Schema file to use for the key
+      🔰 Schema file to use for the key
 
       It must be absolute full path
 
@@ -287,7 +287,7 @@ commands:
     completions:
       - $(playground get-schema-with-fzf "$cur")
     help: |-
-      ♨️ Schema file to use for the value
+      🔰 Schema file to use for the value
 
       It must be absolute full path
 
@@ -314,7 +314,7 @@ commands:
 
   examples:
   - playground bootstrap-reproduction-model -f hdfs2<tab> -d "simple test"
-  - playground bootstrap-reproduction-model -f /full/path/hdfs2-sink.sh -d "testing with avro producer" --producer avro
+  - playground bootstrap-reproduction-model -f /full/path/hdfs2-sink.sh -d "testing with avro producer" --producer avro --producer-schema-value myschema<tab>
   - playground bootstrap-reproduction-model -f hdfs2<tab> -d "testing with 2 protobuf producers" --producer protobuf --nb-producers 2
   - playground bootstrap-reproduction-model -f hdfs2<tab> -d "testing custom smt" --custom-smt
   - playground bootstrap-reproduction-model -f debeziumpostgres<tab> -d "create pipeline" --pipeline jdbcsink<tab>

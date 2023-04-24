@@ -267,6 +267,88 @@ then
     cp -Ra ${test_file_directory}/../../other/schema-format-$producer/producer/* $repro_dir/$producer_hostname/
 
     ####
+    #### schema_file_key
+    if [[ -n "$schema_file_key" ]]
+    then
+      if [[ $schema_file_key == *"@"* ]]
+      then
+        schema_file_key=$(echo "$schema_file_key" | cut -d "@" -f 2)
+      fi
+      cp $schema_file_key $tmp_dir/schema
+
+      case "${producer}" in
+        avro-with-key)
+          original_namespace=$(cat $tmp_dir/schema | jq -r .namespace)
+          if [ "$original_namespace" != "null" ]
+          then
+            sed -e "s|$original_namespace|com.github.vdesabou|g" \
+                $tmp_dir/schema  > /tmp/tmp
+
+            mv /tmp/tmp $tmp_dir/schema
+            log "✨ Replacing namespace $original_namespace with com.github.vdesabou"
+          else
+            # need to add namespace
+            cp $tmp_dir/schema /tmp/tmp
+            line=2
+            { head -n $(($line-1)) /tmp/tmp; echo "    \"namespace\": \"com.github.vdesabou\","; tail -n +$line /tmp/tmp; } > $tmp_dir/schema
+          fi
+          # replace record name with MyKey
+          jq '.name = "MyKey"' $tmp_dir/schema > /tmp/tmp
+          mv /tmp/tmp $tmp_dir/schema
+
+          cp $tmp_dir/schema $repro_dir/$producer_hostname/src/main/resources/schema/mykey.avsc
+        ;;
+        json-schema-with-key)
+          # replace title name with ID
+          jq '.title = "ID"' $tmp_dir/schema > /tmp/tmp
+          mv /tmp/tmp $tmp_dir/schema
+
+          cp $tmp_dir/schema $repro_dir/$producer_hostname/src/main/resources/schema/Id.json
+        ;;
+        protobuf-with-key)
+          original_package=$(grep "package " $tmp_dir/schema | cut -d " " -f 2 | cut -d ";" -f 1 | head -1)
+          if [ "$original_package" != "" ]
+          then
+            sed -e "s|$original_package|com.github.vdesabou|g" \
+                $tmp_dir/schema  > /tmp/tmp
+
+            mv /tmp/tmp $tmp_dir/schema
+            log "✨ Replacing package $original_package with com.github.vdesabou"
+          else
+            # need to add package
+            cp $tmp_dir/schema /tmp/tmp
+            line=2
+            { head -n $(($line-1)) /tmp/tmp; echo "package com.github.vdesabou;"; tail -n +$line /tmp/tmp; } > $tmp_dir/schema
+          fi
+
+          original_java_outer_classname=$(grep "java_outer_classname" $tmp_dir/schema | cut -d "\"" -f 2 | cut -d "\"" -f 1 | head -1)
+          if [ "$original_java_outer_classname" != "" ]
+          then
+            sed -e "s|$original_java_outer_classname|IdImpl|g" \
+                $tmp_dir/schema  > /tmp/tmp
+
+            mv /tmp/tmp $tmp_dir/schema
+            log "✨ Replacing java_outer_classname $original_java_outer_classname with IdImpl"
+          else
+            # need to add java_outer_classname
+            cp $tmp_dir/schema /tmp/tmp
+            line=3
+            { head -n $(($line-1)) /tmp/tmp; echo "option java_outer_classname = \"IdImpl\";"; tail -n +$line /tmp/tmp; } > $tmp_dir/schema
+          fi
+
+          cp $tmp_dir/schema $repro_dir/$producer_hostname/src/main/resources/schema/Id.proto
+        ;;
+
+        none)
+        ;;
+        *)
+          logerror "producer name not valid ! Should be one of avro, avro-with-key, json-schema, json-schema-with-key, protobuf or protobuf-with-key"
+          exit 1
+        ;;
+      esac
+    fi
+
+    ####
     #### schema_file_value
     if [[ -n "$schema_file_value" ]]
     then
@@ -278,8 +360,8 @@ then
 
       case "${producer}" in
         avro|avro-with-key)
-          original_namespace=$(grep "\"namespace\"" $tmp_dir/schema | cut -d "\"" -f 4 | head -1)
-          if [ "$original_namespace" != "" ]
+          original_namespace=$(cat $tmp_dir/schema | jq -r .namespace)
+          if [ "$original_namespace" != "null" ]
           then
             sed -e "s|$original_namespace|com.github.vdesabou|g" \
                 $tmp_dir/schema  > /tmp/tmp
