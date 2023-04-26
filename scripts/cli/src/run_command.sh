@@ -168,6 +168,7 @@ then
   then
     log "📖 Opening ${test_file} using EDITOR environment variable"
     $EDITOR ${test_file}
+    check_if_continue  
   else
     if [[ $(type code 2>&1) =~ "not found" ]]
     then
@@ -176,6 +177,7 @@ then
     else
       log "📖 Opening ${test_file} with code (you can change editor by setting EDITOR environment variable)"
       code ${test_file}
+      check_if_continue
     fi
   fi
 fi

@@ -362,12 +362,12 @@ playground_run_usage() {
 
     # :flag.usage
     printf "  %s\n" "$(magenta "--connector-zip CONNECTOR_ZIP")"
-    printf "    🤐 Connector zip to use\n    \n    It must be absolute full path\n    \n    🎓 Tip: use <tab> completion to trigger fzf completion \n            use folder_zip_or_jar (default: ~/Downloads) in config.ini file to\n    configure where to search the files\n"
+    printf "    🤐 Connector zip to use\n    \n    It must be absolute full path\n    \n    🎓 Tip: use <tab> completion to trigger fzf completion \n            use folder_zip_or_jar (default: ~/Downloads) in config.ini file to\n    configure where to search the files (current folder is always used)\n"
     echo
 
     # :flag.usage
     printf "  %s\n" "$(magenta "--connector-jar CONNECTOR_JAR")"
-    printf "    ♨️ Connector jar to use\n    \n    It must be absolute full path\n    \n    🎓 Tip: use <tab> completion to trigger fzf completion \n            use folder_zip_or_jar (default: ~/Downloads) in config.ini file to\n    configure where to search the files\n"
+    printf "    ♨️ Connector jar to use\n    \n    It must be absolute full path\n    \n    🎓 Tip: use <tab> completion to trigger fzf completion \n            use folder_zip_or_jar (default: ~/Downloads) in config.ini file to\n    configure where to search the files (current folder is always used)\n"
     echo
 
     # :flag.usage
@@ -472,12 +472,12 @@ playground_re_run_usage() {
 
     # :flag.usage
     printf "  %s\n" "$(magenta "--connector-zip CONNECTOR_ZIP")"
-    printf "    🤐 Connector zip to use\n    \n    It must be absolute full path\n    \n    🎓 Tip: use <tab> completion to trigger fzf completion \n            use folder_zip_or_jar (default: ~/Downloads) in config.ini file to\n    configure where to search the files\n"
+    printf "    🤐 Connector zip to use\n    \n    It must be absolute full path\n    \n    🎓 Tip: use <tab> completion to trigger fzf completion \n            use folder_zip_or_jar (default: ~/Downloads) in config.ini file to\n    configure where to search the files (current folder is always used)\n"
     echo
 
     # :flag.usage
     printf "  %s\n" "$(magenta "--connector-jar CONNECTOR_JAR")"
-    printf "    ♨️ Connector jar to use\n    \n    It must be absolute full path\n    \n    🎓 Tip: use <tab> completion to trigger fzf completion \n            use folder_zip_or_jar (default: ~/Downloads) in config.ini file to\n    configure where to search the files\n"
+    printf "    ♨️ Connector jar to use\n    \n    It must be absolute full path\n    \n    🎓 Tip: use <tab> completion to trigger fzf completion \n            use folder_zip_or_jar (default: ~/Downloads) in config.ini file to\n    configure where to search the files (current folder is always used)\n"
     echo
 
     # :flag.usage
@@ -622,12 +622,12 @@ playground_bootstrap_reproduction_model_usage() {
 
     # :flag.usage
     printf "  %s\n" "$(magenta "--connector-zip CONNECTOR_ZIP")"
-    printf "    🤐 Connector zip to use\n    \n    It must be absolute full path\n    \n    🎓 Tip: use <tab> completion to trigger fzf completion \n            use folder_zip_or_jar (default: ~/Downloads) in config.ini file to\n    configure where to search the files\n"
+    printf "    🤐 Connector zip to use\n    \n    It must be absolute full path\n    \n    🎓 Tip: use <tab> completion to trigger fzf completion \n            use folder_zip_or_jar (default: ~/Downloads) in config.ini file to\n    configure where to search the files (current folder is always used)\n"
     echo
 
     # :flag.usage
     printf "  %s\n" "$(magenta "--connector-jar CONNECTOR_JAR")"
-    printf "    ♨️ Connector jar to use\n    \n    It must be absolute full path\n    \n    🎓 Tip: use <tab> completion to trigger fzf completion \n            use folder_zip_or_jar (default: ~/Downloads) in config.ini file to\n    configure where to search the files\n"
+    printf "    ♨️ Connector jar to use\n    \n    It must be absolute full path\n    \n    🎓 Tip: use <tab> completion to trigger fzf completion \n            use folder_zip_or_jar (default: ~/Downloads) in config.ini file to\n    configure where to search the files (current folder is always used)\n"
     echo
 
     # :flag.usage
@@ -6304,6 +6304,8 @@ playground_run_command() {
     then
       log "📖 Opening ${test_file} using EDITOR environment variable"
       $EDITOR ${test_file}
+      check_if_continue
+
     else
       if [[ $(type code 2>&1) =~ "not found" ]]
       then
@@ -6312,6 +6314,7 @@ playground_run_command() {
       else
         log "📖 Opening ${test_file} with code (you can change editor by setting EDITOR environment variable)"
         code ${test_file}
+        check_if_continue
       fi
     fi
   fi
@@ -10188,6 +10191,12 @@ playground_get_jmx_metrics_parse_requirements() {
   done
 
   # :command.dependencies_filter
+  if command -v java >/dev/null 2>&1; then
+    deps['java']="$(command -v java | head -n1)"
+  else
+    printf "missing dependency: java\n" >&2
+    exit 1
+  fi
 
   # :command.command_filter
   action="get-jmx-metrics"

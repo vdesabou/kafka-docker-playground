@@ -118,7 +118,7 @@ commands:
       It must be absolute full path
 
       🎓 Tip: use <tab> completion to trigger fzf completion 
-              use folder_zip_or_jar (default: ~/Downloads) in config.ini file to configure where to search the files
+              use folder_zip_or_jar (default: ~/Downloads) in config.ini file to configure where to search the files (current folder is always used)
 
   - &connector-jar
     long: --connector-jar
@@ -133,7 +133,7 @@ commands:
       It must be absolute full path
 
       🎓 Tip: use <tab> completion to trigger fzf completion 
-              use folder_zip_or_jar (default: ~/Downloads) in config.ini file to configure where to search the files
+              use folder_zip_or_jar (default: ~/Downloads) in config.ini file to configure where to search the files (current folder is always used)
 
   - &disable-ksqldb
     long: --disable-ksqldb
@@ -473,7 +473,8 @@ commands:
     🔢 Get JMX metrics from a component
     
     👉 Check documentation https://tinyurl.com/yc2myws9
-
+  dependencies:
+  - java
   flags:
   - long: --component
     short: -c
