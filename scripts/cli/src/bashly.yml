@@ -87,14 +87,16 @@ commands:
   - long: --open
     short: -o
     help: 📖 Opening example file with text editor set with EDITOR environment variable (default is vscode)
-  - long: --tag
+  - &tag
+    long: --tag
     arg: tag
     required: false
     help: |-
       🎯 Confluent Platform (CP) version to use
 
       Must be greater or equal to 5.0.0
-  - long: --connector-tag
+  - &connector-tag
+    long: --connector-tag
     arg: connector_tag
     required: false
     help: |- 
@@ -102,7 +104,8 @@ commands:
 
       By default, for each connector, the latest available version on Confluent Hub is used
     conflicts: [--connector-zip]
-  - long: --connector-zip
+  - &connector-zip
+    long: --connector-zip
     arg: connector_zip
     required: false
     validate: file_exists_with_trick
@@ -117,7 +120,8 @@ commands:
       🎓 Tip: use <tab> completion to trigger fzf completion 
               use folder_zip_or_jar (default: ~/Downloads) in config.ini file to configure where to search the files
 
-  - long: --connector-jar
+  - &connector-jar
+    long: --connector-jar
     arg: connector_jar
     required: false
     validate: file_exists_with_trick
@@ -131,13 +135,15 @@ commands:
       🎓 Tip: use <tab> completion to trigger fzf completion 
               use folder_zip_or_jar (default: ~/Downloads) in config.ini file to configure where to search the files
 
-  - long: --disable-ksqldb
+  - &disable-ksqldb
+    long: --disable-ksqldb
     required: false
     help: |-
       🛑 Disable ksqlDB
 
       By default, ksqldb-server and ksqldb-cli containers are started for every test
-  - long: --disable-control-center
+  - &disable-control-center
+    long: --disable-control-center
     required: false
     help: |-
       🛑 Disable Control Center
@@ -145,7 +151,8 @@ commands:
       By default, control-center container is started for every test
 
       Control Center is reachable at http://127.0.0.1:9021
-  - long: --enable-conduktor
+  - &enable-conduktor
+    long: --enable-conduktor
     required: false
     help: |- 
       🐺 Enable Conduktor Platform
@@ -153,13 +160,15 @@ commands:
       By default, Conduktor Platform container is not started for every test
 
       Conduktor is reachable at http://127.0.0.1:8080/console (admin/admin)
-  - long: --enable-multiple-brokers
+  - &enable-multiple-brokers
+    long: --enable-multiple-brokers
     required: false
     help: |- 
       3️⃣ Enable multiple brokers
 
       By default, there is only one broker node enabled
-  - long: --enable-multiple-connect-workers
+  - &enable-multiple-connect-workers
+    long: --enable-multiple-connect-workers
     required: false
     help: |-
       🥉 Enable multiple connect node
@@ -167,7 +176,8 @@ commands:
       By default, there is only one connect node enabled
 
       It only works when plaintext environment is used
-  - long: --enable-jmx-grafana
+  - &enable-jmx-grafana
+    long: --enable-jmx-grafana
     required: false
     help: |-
       Enable Grafana, Prometheus and Pyroscope
@@ -175,7 +185,8 @@ commands:
       📊 Grafana is reachable at http://127.0.0.1:3000
       🛡️ Prometheus is reachable at http://127.0.0.1:9090
       📛 Pyroscope is reachable at http://127.0.0.1:4040
-  - long: --enable-kcat
+  - &enable-kcat
+    long: --enable-kcat
     required: false
     help: |-
       🐈‍⬛ Enable kcat
@@ -183,11 +194,13 @@ commands:
       You can use it with:
 
       $ docker exec kcat kcat -b broker:9092 -L
-  - long: --enable-sr-maven-plugin-app
+  - &enable-sr-maven-plugin-app
+    long: --enable-sr-maven-plugin-app
     required: false
     help: |- 
       🔰 Enable Schema Registry Maven plugin App
-  - long: --enable-sql-datagen
+  - &enable-sql-datagen
+    long: --enable-sql-datagen
     required: false
     help: |-
       🌪️ Enable SQL Datagen injection
@@ -201,7 +214,25 @@ commands:
     help: 🔖 Editor to use to open the example file
   help: |-
     ⚡ Simply re-run last example you ran with <playground run>
-    
+  catch_all:
+    label: arguments
+    help: Arguments to use by example script
+    required: false
+  flags:
+    - *tag
+    - *connector-tag
+    - *connector-zip
+    - *connector-jar
+    - *disable-ksqldb
+    - *disable-control-center
+    - *enable-conduktor
+    - *enable-multiple-brokers
+    - *enable-multiple-connect-workers
+    - *enable-jmx-grafana
+    - *enable-kcat
+    - *enable-sr-maven-plugin-app
+    - *enable-sql-datagen
+
 - name: open
   group: Run
   environment_variables:
@@ -222,8 +253,24 @@ commands:
     🛠  Bootstrap reproduction model
     
     👉 Check documentation https://tinyurl.com/bdfs25my
-
+  catch_all:
+    label: arguments
+    help: Arguments to use by example script
+    required: false
   flags:
+  - *tag
+  - *connector-tag
+  - *connector-zip
+  - *connector-jar
+  - *disable-ksqldb
+  - *disable-control-center
+  - *enable-conduktor
+  - *enable-multiple-brokers
+  - *enable-multiple-connect-workers
+  - *enable-jmx-grafana
+  - *enable-kcat
+  - *enable-sr-maven-plugin-app
+  - *enable-sql-datagen
   - long: --file
     short: -f
     required: true

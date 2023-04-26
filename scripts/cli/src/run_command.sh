@@ -62,18 +62,18 @@ dir2="${dir1##*/}/$base1" # connect/connect-cdc-oracle12-source
 final_dir=$(echo $dir2 | tr '/' '-') # connect-connect-cdc-oracle12-source
 
 environment_variables_list=""
-argument_list=""
+flag_list=""
 if [[ -n "$tag" ]]
 then
   environment_variables_list="TAG=$tag"
-  argument_list="--tag=$tag"
+  flag_list="--tag=$tag"
   export TAG=$tag
 fi
 
 if [[ -n "$connector_tag" ]]
 then
   environment_variables_list="$environment_variables_list CONNECTOR_TAG=$connector_tag"
-  argument_list="$argument_list --connector-tag=$connector_tag"
+  flag_list="$flag_list --connector-tag=$connector_tag"
   export CONNECTOR_TAG=$connector_tag
 fi
 
@@ -84,7 +84,7 @@ then
     connector_zip=$(echo "$connector_zip" | cut -d "@" -f 2)
   fi
   environment_variables_list="$environment_variables_list CONNECTOR_ZIP=$connector_zip"
-  argument_list="$argument_list --connector-zip=$connector_zip"
+  flag_list="$flag_list --connector-zip=$connector_zip"
   export CONNECTOR_ZIP=$connector_zip
 fi
 
@@ -95,70 +95,70 @@ then
     connector_jar=$(echo "$connector_jar" | cut -d "@" -f 2)
   fi
   environment_variables_list="$environment_variables_list CONNECTOR_JAR=$connector_jar"
-  argument_list="$argument_list --connector-jar=$connector_jar"
+  flag_list="$flag_list --connector-jar=$connector_jar"
   export CONNECTOR_JAR=$connector_jar
 fi
 
 if [[ -n "$disable_ksqldb" ]]
 then
   environment_variables_list="$environment_variables_list DISABLE_KSQLDB=true"
-  argument_list="$argument_list --disable-ksqldb"
+  flag_list="$flag_list --disable-ksqldb"
   export DISABLE_KSQLDB=true
 fi
 
 if [[ -n "$disable_c3" ]]
 then
   environment_variables_list="$environment_variables_list DISABLE_CONTROL_CENTER=true"
-  argument_list="$argument_list --disable-control-center"
+  flag_list="$flag_list --disable-control-center"
   export DISABLE_CONTROL_CENTER=true
 fi
 
 if [[ -n "$enable_conduktor" ]]
 then
   environment_variables_list="$environment_variables_list ENABLE_CONDUKTOR=true"
-  argument_list="$argument_list --enable-conduktor"
+  flag_list="$flag_list --enable-conduktor"
   export ENABLE_CONDUKTOR=true
 fi
 
 if [[ -n "$enable_multiple_brokers" ]]
 then
   environment_variables_list="$environment_variables_list ENABLE_KAFKA_NODES=true"
-  argument_list="$argument_list --enable-multiple-broker"
+  flag_list="$flag_list --enable-multiple-broker"
   export ENABLE_KAFKA_NODES=true
 fi
 
 if [[ -n "$enable_multiple_connect_workers" ]]
 then
   environment_variables_list="$environment_variables_list ENABLE_CONNECT_NODES=true"
-  argument_list="$argument_list --enable-multiple-connect-workers"
+  flag_list="$flag_list --enable-multiple-connect-workers"
   export ENABLE_CONNECT_NODES=true
 fi
 
 if [[ -n "$enable_jmx_grafana" ]]
 then
   environment_variables_list="$environment_variables_list ENABLE_JMX_GRAFANA=true"
-  argument_list="$argument_list --enable-jmx-grafana"
+  flag_list="$flag_list --enable-jmx-grafana"
   export ENABLE_JMX_GRAFANA=true
 fi
 
 if [[ -n "$enable_kcat" ]]
 then
   environment_variables_list="$environment_variables_list ENABLE_KCAT=true"
-  argument_list="$argument_list --enable-kcat"
+  flag_list="$flag_list --enable-kcat"
   export ENABLE_KCAT=true
 fi
 
 if [[ -n "$enable_sr_maven_plugin_app" ]]
 then
   environment_variables_list="$environment_variables_list ENABLE_SR_MAVEN_PLUGIN_NODE=true"
-  argument_list="$argument_list --enable-sr-maven-plugin-app"
+  flag_list="$flag_list --enable-sr-maven-plugin-app"
   export ENABLE_SR_MAVEN_PLUGIN_NODE=true
 fi
 
 if [[ -n "$enable_sql_datagen" ]]
 then
   environment_variables_list="$environment_variables_list SQL_DATAGEN=true"
-  argument_list="$argument_list --enable-sql-datagen"
+  flag_list="$flag_list --enable-sql-datagen"
   export SQL_DATAGEN=true
 fi
 
@@ -180,13 +180,14 @@ then
   fi
 fi
 
-if [ "$environment_variables_list" != "" ]
+if [ "$flag_list" != "" ]
 then
-  log "🚀 Running example with $environment_variables_list"
+  log "🚀 Running example with flags"
+  log "⛳ Flags used are $flag_list"
 else
-  log "🚀 Running example with all default values"
+  log "🚀 Running example without any flags"
 fi
-echo "playground run -f $test_file $argument_list" > /tmp/playground-run
+echo "playground run -f $test_file $flag_list ${other_args[*]}" > /tmp/playground-run
 log "####################################################"
 log "🚀 Executing $filename in dir $test_file_directory"
 log "####################################################"
