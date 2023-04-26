@@ -60,9 +60,6 @@ commands:
     label: arguments
     help: Arguments to use by example script
     required: false
-  environment_variables:
-  - name: EDITOR 
-    help: 🔖 Editor to use to open the example file
   dependencies:
   - fzf
   help: |-
@@ -86,7 +83,7 @@ commands:
       🎓 Tip: use <tab> completion to trigger fzf completion
   - long: --open
     short: -o
-    help: 📖 Opening example file with text editor set with EDITOR environment variable (default is vscode)
+    help: 📖 Opening example file with text editor set with config.ini (default is code)
   - &tag
     long: --tag
     arg: tag
@@ -209,9 +206,6 @@ commands:
 
 - name: re-run
   group: Run
-  environment_variables:
-  - name: EDITOR 
-    help: 🔖 Editor to use to open the example file
   help: |-
     ⚡ Simply re-run last example you ran with <playground run>
   catch_all:
@@ -235,9 +229,6 @@ commands:
 
 - name: open
   group: Run
-  environment_variables:
-  - name: EDITOR 
-    help: 🔖 Editor to use to open the example file
   help: |-
     👐 Simply open last example you ran with <playground run>
 
@@ -533,7 +524,7 @@ commands:
       - long: --open
         short: -o
         help: |- 
-          🔖 Save output to a file and open with text editor set with EDITOR environment variable (default is vscode)
+          🔖 Save output to a file and open with text editor set with config.ini (default is code)
         conflicts: [--wait-for-log]
       - long: --wait-for-log
         short: -w

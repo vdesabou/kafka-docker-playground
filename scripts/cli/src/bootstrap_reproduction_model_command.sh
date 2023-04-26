@@ -948,17 +948,18 @@ log "🌟 Command to run generated example"
 echo "playground run -f $repro_dir/$repro_test_filename"
 echo "playground run -f $repro_dir/$repro_test_filename" > /tmp/playground-run
 
-if [ ! -z $EDITOR ]
+if config_has_key "editor"
 then
-  log "📖 Opening ${repro_test_filename} using EDITOR environment variable"
-  $EDITOR $repro_dir/$repro_test_filename
+  editor=$(config_get "editor")
+  log "📖 Opening ${repro_test_filename} using configured editor $editor"
+  $editor $repro_dir/$repro_test_filename
 else
   if [[ $(type code 2>&1) =~ "not found" ]]
   then
-    logerror "Could not determine an editor to use, you can set EDITOR environment variable with your preferred choice"
+    logerror "Could not determine an editor to use as default code is not found - you can change editor by updating config.ini"
     exit 1
   else
-    log "📖 Opening ${repro_test_filename} with code (you can change editor by setting EDITOR environment variable)"
+    log "📖 Opening ${repro_test_filename} with code (default) - you can change editor by updating config.ini"
     code $repro_dir/$repro_test_filename
   fi
 fi

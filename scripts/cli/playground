@@ -347,7 +347,7 @@ playground_run_usage() {
 
     # :flag.usage
     printf "  %s\n" "$(magenta "--open, -o")"
-    printf "    📖 Opening example file with text editor set with EDITOR environment variable\n    (default is vscode)\n"
+    printf "    📖 Opening example file with text editor set with config.ini (default is\n    code)\n"
     echo
 
     # :flag.usage
@@ -425,14 +425,6 @@ playground_run_usage() {
 
     echo "  ARGUMENTS..."
     printf "    Arguments to use by example script\n"
-    echo
-
-    # :command.usage_environment_variables
-    printf "%s\n" "$(bold "Environment Variables:")"
-
-    # :environment_variable.usage
-    printf "  %s\n" "$(cyan "EDITOR")"
-    printf "    🔖 Editor to use to open the example file\n"
     echo
 
   fi
@@ -537,14 +529,6 @@ playground_re_run_usage() {
     printf "    Arguments to use by example script\n"
     echo
 
-    # :command.usage_environment_variables
-    printf "%s\n" "$(bold "Environment Variables:")"
-
-    # :environment_variable.usage
-    printf "  %s\n" "$(cyan "EDITOR")"
-    printf "    🔖 Editor to use to open the example file\n"
-    echo
-
   fi
 }
 
@@ -572,14 +556,6 @@ playground_open_usage() {
     # :command.usage_fixed_flags
     printf "  %s\n" "$(magenta "--help, -h")"
     printf "    Show this help\n"
-    echo
-
-    # :command.usage_environment_variables
-    printf "%s\n" "$(bold "Environment Variables:")"
-
-    # :environment_variable.usage
-    printf "  %s\n" "$(cyan "EDITOR")"
-    printf "    🔖 Editor to use to open the example file\n"
     echo
 
   fi
@@ -1220,7 +1196,7 @@ playground_container_logs_usage() {
 
     # :flag.usage
     printf "  %s\n" "$(magenta "--open, -o")"
-    printf "    🔖 Save output to a file and open with text editor set with EDITOR\n    environment variable (default is vscode)\n"
+    printf "    🔖 Save output to a file and open with text editor set with config.ini\n    (default is code)\n"
     echo
 
     # :flag.usage
@@ -6139,7 +6115,7 @@ playground_run_command() {
   root_folder=${DIR_CLI}/../..
 
   test_file="${args[--file]}"
-  editor="${args[--open]}"
+  open="${args[--open]}"
   tag="${args[--tag]}"
   connector_tag="${args[--connector-tag]}"
   connector_zip="${args[--connector-zip]}"
@@ -6298,21 +6274,21 @@ playground_run_command() {
     export SQL_DATAGEN=true
   fi
 
-  if [[ -n "$editor" ]]
+  if [[ -n "$open" ]]
   then
-    if [ ! -z $EDITOR ]
+    if config_has_key "editor"
     then
-      log "📖 Opening ${test_file} using EDITOR environment variable"
-      $EDITOR ${test_file}
+      editor=$(config_get "editor")
+      log "📖 Opening ${test_file} using configured editor $editor"
+      $editor ${test_file}
       check_if_continue
-
     else
       if [[ $(type code 2>&1) =~ "not found" ]]
       then
-        logerror "Could not determine an editor to use, you can set EDITOR environment variable with your preferred choice"
+        logerror "Could not determine an editor to use as default code is not found - you can change editor by updating config.ini"
         exit 1
       else
-        log "📖 Opening ${test_file} with code (you can change editor by setting EDITOR environment variable)"
+        log "📖 Opening ${test_file} with code (default) - you can change editor by updating config.ini"
         code ${test_file}
         check_if_continue
       fi
@@ -6493,19 +6469,20 @@ playground_open_command() {
     exit 1
   fi
 
-  if [ ! -z $EDITOR ]
+  if config_has_key "editor"
   then
-      log "📖 Opening ${test_file} using EDITOR environment variable"
-      $EDITOR ${test_file}
+    editor=$(config_get "editor")
+    log "📖 Opening ${test_file} using configured editor $editor"
+    $editor ${test_file}
   else
-      if [[ $(type code 2>&1) =~ "not found" ]]
-      then
-          logerror "Could not determine an editor to use, you can set EDITOR environment variable with your preferred choice"
-          exit 1
-      else
-          log "📖 Opening ${test_file} with code (you can change editor by setting EDITOR environment variable)"
-          code ${test_file}
-      fi
+    if [[ $(type code 2>&1) =~ "not found" ]]
+    then
+      logerror "Could not determine an editor to use as default code is not found - you can change editor by updating config.ini"
+      exit 1
+    else
+      log "📖 Opening ${test_file} with code (default) - you can change editor by updating config.ini"
+      code ${test_file}
+    fi
   fi
 }
 
@@ -7455,17 +7432,18 @@ playground_bootstrap_reproduction_model_command() {
   echo "playground run -f $repro_dir/$repro_test_filename"
   echo "playground run -f $repro_dir/$repro_test_filename" > /tmp/playground-run
 
-  if [ ! -z $EDITOR ]
+  if config_has_key "editor"
   then
-    log "📖 Opening ${repro_test_filename} using EDITOR environment variable"
-    $EDITOR $repro_dir/$repro_test_filename
+    editor=$(config_get "editor")
+    log "📖 Opening ${repro_test_filename} using configured editor $editor"
+    $editor $repro_dir/$repro_test_filename
   else
     if [[ $(type code 2>&1) =~ "not found" ]]
     then
-      logerror "Could not determine an editor to use, you can set EDITOR environment variable with your preferred choice"
+      logerror "Could not determine an editor to use as default code is not found - you can change editor by updating config.ini"
       exit 1
     else
-      log "📖 Opening ${repro_test_filename} with code (you can change editor by setting EDITOR environment variable)"
+      log "📖 Opening ${repro_test_filename} with code (default) - you can change editor by updating config.ini"
       code $repro_dir/$repro_test_filename
     fi
   fi
@@ -7744,29 +7722,30 @@ playground_container_kill_all_command() {
 playground_container_logs_command() {
   # src/container_logs_command.sh
   container="${args[--container]}"
-  editor="${args[--open]}"
+  open="${args[--open]}"
   log="${args[--wait-for-log]}"
   max_wait="${args[--max-wait]}"
 
-  if [[ -n "$editor" ]]
+  if [[ -n "$open" ]]
   then
     filename="/tmp/${container}-`date '+%Y-%m-%d-%H-%M-%S'`.log"
     log "Opening $filename with editor $editor"
     docker container logs "$container" > "$filename" 2>&1
     if [ $? -eq 0 ]
     then
-      if [ ! -z $EDITOR ]
+      if config_has_key "editor"
       then
-        log "📖 Opening ${filename} using EDITOR environment variable"
-        $EDITOR ${filename}
+        editor=$(config_get "editor")
+        log "📖 Opening ${filename} using configured editor $editor"
+        $editor $filename
       else
         if [[ $(type code 2>&1) =~ "not found" ]]
         then
-          logerror "Could not determine an editor to use, you can set EDITOR environment variable with your preferred choice"
+          logerror "Could not determine an editor to use as default code is not found - you can change editor by updating config.ini"
           exit 1
         else
-          log "📖 Opening ${filename} with code (you can change editor by setting EDITOR environment variable)"
-          code ${filename}
+          log "📖 Opening ${filename} with code (default) - you can change editor by updating config.ini"
+          code $filename
         fi
       fi
     else

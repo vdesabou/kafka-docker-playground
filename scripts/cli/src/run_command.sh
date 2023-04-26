@@ -3,7 +3,7 @@ DIR_CLI="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 root_folder=${DIR_CLI}/../..
 
 test_file="${args[--file]}"
-editor="${args[--open]}"
+open="${args[--open]}"
 tag="${args[--tag]}"
 connector_tag="${args[--connector-tag]}"
 connector_zip="${args[--connector-zip]}"
@@ -162,20 +162,21 @@ then
   export SQL_DATAGEN=true
 fi
 
-if [[ -n "$editor" ]]
+if [[ -n "$open" ]]
 then
-  if [ ! -z $EDITOR ]
+  if config_has_key "editor"
   then
-    log "📖 Opening ${test_file} using EDITOR environment variable"
-    $EDITOR ${test_file}
-    check_if_continue  
+    editor=$(config_get "editor")
+    log "📖 Opening ${test_file} using configured editor $editor"
+    $editor ${test_file}
+    check_if_continue
   else
     if [[ $(type code 2>&1) =~ "not found" ]]
     then
-      logerror "Could not determine an editor to use, you can set EDITOR environment variable with your preferred choice"
+      logerror "Could not determine an editor to use as default code is not found - you can change editor by updating config.ini"
       exit 1
     else
-      log "📖 Opening ${test_file} with code (you can change editor by setting EDITOR environment variable)"
+      log "📖 Opening ${test_file} with code (default) - you can change editor by updating config.ini"
       code ${test_file}
       check_if_continue
     fi
