@@ -431,7 +431,8 @@ function retry() {
     then
       return 107
     else
-      script=$(echo "$@" | cut -d " " -f 2)
+      test_file=$(echo "$@" | awk '{ print $4}')
+      script=$(basename $test_file)
       # check for retriable scripts in scripts/tests-retriable.txt
       grep "$script" ${DIR}/tests-retriable.txt > /dev/null
       if [ $? = 0 ]
