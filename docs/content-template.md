@@ -281,6 +281,9 @@ Using Multi-Data-Center setup with 🇺🇸 and 🇪🇺 clusters
 - 🛂 [Schema Validation on Confluent Server](https://github.com/vdesabou/kafka-docker-playground/tree/master/other/broker-schema-validation) Schema Validation on Confluent Server :other/broker-schema-validation:
 - 🙊 [Secrets Management](https://github.com/vdesabou/kafka-docker-playground/tree/master/other/secrets-management) with Connect :other/secrets-management:
 - ⛓ [Connect Secret Registry](https://github.com/vdesabou/kafka-docker-playground/tree/master/other/connect-secret-registry) :other/connect-secret-registry:
+- 🧢 [RBAC with SR Basic Auth and ACLs](https://github.com/vdesabou/kafka-docker-playground/tree/master/other/rbac-with-sr-basic-auth-acl) ![not tested](https://img.shields.io/badge/CI-not%20tested!-violet)
+- 🤿 [Anonymous SR-example with RBAC](https://github.com/vdesabou/kafka-docker-playground/tree/master/other/rbac-with-anonymous-sr) ![not tested](https://img.shields.io/badge/CI-not%20tested!-violet)
+- 🖇️ [Monitoring cluster linking](https://github.com/vdesabou/kafka-docker-playground/tree/master/other/monitoring-cluster-linking) ![not tested](https://img.shields.io/badge/CI-not%20tested!-violet)
 
 ## 🪄 [CP-Ansible Playground](https://github.com/vdesabou/kafka-docker-playground/tree/master/other/cp-ansible-playground)
 
