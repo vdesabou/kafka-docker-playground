@@ -5,6 +5,7 @@ flag_tag=""
 if [ "$tag" != "" ]
 then
     flag_tag="--tag $tag"
+    export TAG=$tag
 fi
 
 IGNORE_CHECK_FOR_DOCKER_COMPOSE=true
