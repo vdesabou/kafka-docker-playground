@@ -1,8 +1,8 @@
 name: playground
 help: 🧠 CLI for Kafka Docker Playground 🐳
-version: 1.0.3
+version: 1.1.0
 dependencies:
-  docker: 👉 Check documentation https://tinyurl.com/4rpcmpjj
+  docker: 👉 Check documentation https://tinyurl.com/xxx
 
 commands:
 
@@ -63,9 +63,9 @@ commands:
   dependencies:
   - fzf
   help: |-
-    🚀 Run example
+    🕹️ Run any example
     
-    👉 Check documentation https://tinyurl.com/yx3vbwu5
+    👉 Check documentation https://tinyurl.com/xxx
 
   flags:
   - long: --file
@@ -243,7 +243,7 @@ commands:
   help: |-
     🛠  Bootstrap reproduction model
     
-    👉 Check documentation https://tinyurl.com/bdfs25my
+    👉 Check documentation https://tinyurl.com/xxx
   catch_all:
     label: arguments
     help: Arguments to use by example script
@@ -370,7 +370,7 @@ commands:
   help: |-
     📝 Get properties file from a container
     
-    👉 Check documentation https://tinyurl.com/4vj7tm2b
+    👉 Check documentation https://tinyurl.com/xxx
 
   flags:
   - &container
@@ -406,7 +406,7 @@ commands:
   help: |-
     ✨ Enable java remote debugging for container
     
-    👉 Check documentation https://tinyurl.com/bdz843d4
+    👉 Check documentation https://tinyurl.com/xxx
   flags:
     - *container
   examples:
@@ -419,7 +419,7 @@ commands:
   help: |-
     🧬 Set log level for any package
 
-    👉 Check documentation https://tinyurl.com/yc78tr8a
+    👉 Check documentation https://tinyurl.com/xxx
 
   commands:
   - name: get
@@ -463,7 +463,7 @@ commands:
   help: |-
     🔢 Get JMX metrics from a component
     
-    👉 Check documentation https://tinyurl.com/yc2myws9
+    👉 Check documentation https://tinyurl.com/xxx
   dependencies:
   - java
   flags:
@@ -500,7 +500,7 @@ commands:
       help: |-
         💫 Recreate container(s)
         
-        👉 Check documentation https://tinyurl.com/3rhjxfbs
+        👉 Check documentation https://tinyurl.com/xxx
 
     - name: get-ip-addresses
       group: Container
@@ -716,6 +716,8 @@ commands:
         - $(playground get-connector-list)
       help: |-
         🔗 Connector name
+
+        🎓 Tip: If not specified, the command will apply to all connectors
 
   - name: versions
     help:  🧞 Get current version used in example

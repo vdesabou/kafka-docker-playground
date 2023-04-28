@@ -13,5 +13,13 @@ bashly add completions_script
 source /Users/vsaboulin/Documents/github/kafka-docker-playground/scripts/cli/completions.bash
 cd -
 
+# update
+brew gem install bashly
 
-# brew gem install bashly
+#asciinema rec -c /bin/zsh /tmp/asciinema.cast --overwrite
+#asciicast2gif -w 80 -h 30 /tmp/asciinema.cast ~/Downloads/asciinema.gif
+
+# record
+asciinema rec -c /bin/zsh asciinema.cast --overwrite
+asciinema play asciinema.cast
+asciinema upload asciinema.cast 
