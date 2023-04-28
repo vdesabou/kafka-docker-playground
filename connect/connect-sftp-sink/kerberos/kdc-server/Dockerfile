@@ -1,4 +1,8 @@
 FROM --platform=linux/amd64 debian:stretch
+#Update stretch repositories
+RUN sed -i s/deb.debian.org/archive.debian.org/g /etc/apt/sources.list
+RUN sed -i 's|security.debian.org|archive.debian.org/|g' /etc/apt/sources.list
+RUN sed -i '/stretch-updates/d' /etc/apt/sources.list
 
 EXPOSE 749 88/udp
 
