@@ -47,7 +47,11 @@ sleep 60
 log "Configure Mapr Client"
 # Mapr sink is failing with CP 6.0 UBI8 #91
 docker exec -i --privileged --user root connect bash -c "ln -sf /usr/lib/jvm/jre-1.8.0-openjdk /usr/lib/jvm/java-8-openjdk"
+set +e
 docker exec -i --privileged --user root connect bash -c "alternatives --remove java /usr/lib/jvm/zulu11/bin/java"
+# with 7.3.3
+docker exec -i --privileged --user root connect bash -c "alternatives --remove java /usr/lib/jvm/java-11-zulu-openjdk/bin/java"
+set -e
 docker exec -i --privileged --user root connect bash -c "chown -R appuser:appuser /opt/mapr"
 set +e
 log "It will fail the first time for some reasons.."
