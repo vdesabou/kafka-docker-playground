@@ -7,7 +7,7 @@ source ${DIR}/../../scripts/utils.sh
 if [ ! -z "$SQL_DATAGEN" ]
 then
      log "🌪️ SQL_DATAGEN is set"
-     for component in sql-datagen
+     for component in oracle-datagen
      do
      set +e
      log "🏗 Building jar for ${component}"

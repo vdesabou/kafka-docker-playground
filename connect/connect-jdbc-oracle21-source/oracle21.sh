@@ -9,7 +9,7 @@ create_or_get_oracle_image "LINUX.X64_213000_db_home.zip" "../../connect/connect
 if [ ! -z "$SQL_DATAGEN" ]
 then
      log "🌪️ SQL_DATAGEN is set"
-     for component in sql-datagen
+     for component in oracle-datagen
      do
      set +e
      log "🏗 Building jar for ${component}"

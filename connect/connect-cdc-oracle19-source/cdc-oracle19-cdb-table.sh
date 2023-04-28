@@ -9,7 +9,7 @@ create_or_get_oracle_image "LINUX.X64_193000_db_home.zip" "../../connect/connect
 if [ ! -z "$SQL_DATAGEN" ]
 then
      log "🌪️ SQL_DATAGEN is set, make sure to increase redo.log.row.fetch.size, have a look at https://github.com/vdesabou/kafka-docker-playground/blob/master/connect/connect-cdc-oracle19-source/README.md#note-on-redologrowfetchsize"
-     for component in sql-datagen
+     for component in oracle-datagen
      do
      set +e
      log "🏗 Building jar for ${component}"
