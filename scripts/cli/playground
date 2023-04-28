@@ -3172,7 +3172,8 @@ function retry() {
     then
       return 107
     else
-      script=$(echo "$@" | cut -d " " -f 2)
+      test_file=$(echo "$@" | awk '{ print $4}')
+      script=$(basename $test_file)
       # check for retriable scripts in scripts/tests-retriable.txt
       grep "$script" ${DIR}/tests-retriable.txt > /dev/null
       if [ $? = 0 ]
@@ -6308,7 +6309,7 @@ playground_run_command() {
   log "####################################################"
   SECONDS=0
   cd $test_file_directory
-  trap 'rm /tmp/playground-run-command-used;echo "";sleep 3;playground connector status' EXIT
+  trap 'rm /tmp/playground-run-command-used;echo "";sleep 3;set +e;playground connector status' EXIT
   touch /tmp/playground-run-command-used
   bash $filename ${other_args[*]}
   ret=$?
