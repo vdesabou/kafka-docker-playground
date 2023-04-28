@@ -4,7 +4,7 @@ services:
 
   sql-datagen:
     build:
-      context: ../../connect/connect-jdbc-oracle21-source/sql-datagen/
+      context: ../../connect/connect-jdbc-oracle21-source/oracle-datagen/
     hostname: sql-datagen
     container_name: sql-datagen
     profiles:

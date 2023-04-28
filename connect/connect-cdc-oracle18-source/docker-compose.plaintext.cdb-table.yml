@@ -4,7 +4,7 @@ services:
 
   sql-datagen:
     build:
-      context: ../../connect/connect-cdc-oracle1\d-source/oracle-datagen/
+      context: ../../connect/connect-cdc-oracle18-source/oracle-datagen/
     hostname: sql-datagen
     container_name: sql-datagen
     profiles:
