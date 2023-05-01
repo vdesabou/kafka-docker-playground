@@ -381,7 +381,7 @@ playground_run_usage() {
     # :command.usage_flags
     # :flag.usage
     printf "  %s\n" "$(magenta "--file, -f FILE (required)")"
-    printf "    🔖 Example file to run\n    \n    It must be absolute full path\n    \n    🎓 Tip: use <tab> completion to trigger fzf completion\n"
+    printf "    🔖 Example file to run\n    \n    ❕ It must be absolute full path\n    \n    🎓 Tip: use <tab> completion to trigger fzf completion\n"
     echo
 
     # :flag.usage
@@ -401,12 +401,12 @@ playground_run_usage() {
 
     # :flag.usage
     printf "  %s\n" "$(magenta "--connector-zip CONNECTOR_ZIP")"
-    printf "    🤐 Connector zip to use\n    \n    It must be absolute full path\n    \n    🎓 Tip: use <tab> completion to trigger fzf completion \n            use folder_zip_or_jar (default: ~/Downloads) in config.ini file to\n    configure where to search the files (current folder is always used)\n"
+    printf "    🤐 Connector zip to use\n    \n    ❕ It must be absolute full path\n    \n    🎓 Tip: use <tab> completion to trigger fzf completion \n            use folder_zip_or_jar (default: ~/Downloads) in config.ini file to\n    configure where to search the files (current folder is always used)\n"
     echo
 
     # :flag.usage
     printf "  %s\n" "$(magenta "--connector-jar CONNECTOR_JAR")"
-    printf "    ♨️ Connector jar to use\n    \n    It must be absolute full path\n    \n    🎓 Tip: use <tab> completion to trigger fzf completion \n            use folder_zip_or_jar (default: ~/Downloads) in config.ini file to\n    configure where to search the files (current folder is always used)\n"
+    printf "    ♨️ Connector jar to use\n    \n    ❕ It must be absolute full path\n    \n    🎓 Tip: use <tab> completion to trigger fzf completion \n            use folder_zip_or_jar (default: ~/Downloads) in config.ini file to\n    configure where to search the files (current folder is always used)\n"
     echo
 
     # :flag.usage
@@ -509,12 +509,12 @@ playground_re_run_usage() {
 
     # :flag.usage
     printf "  %s\n" "$(magenta "--connector-zip CONNECTOR_ZIP")"
-    printf "    🤐 Connector zip to use\n    \n    It must be absolute full path\n    \n    🎓 Tip: use <tab> completion to trigger fzf completion \n            use folder_zip_or_jar (default: ~/Downloads) in config.ini file to\n    configure where to search the files (current folder is always used)\n"
+    printf "    🤐 Connector zip to use\n    \n    ❕ It must be absolute full path\n    \n    🎓 Tip: use <tab> completion to trigger fzf completion \n            use folder_zip_or_jar (default: ~/Downloads) in config.ini file to\n    configure where to search the files (current folder is always used)\n"
     echo
 
     # :flag.usage
     printf "  %s\n" "$(magenta "--connector-jar CONNECTOR_JAR")"
-    printf "    ♨️ Connector jar to use\n    \n    It must be absolute full path\n    \n    🎓 Tip: use <tab> completion to trigger fzf completion \n            use folder_zip_or_jar (default: ~/Downloads) in config.ini file to\n    configure where to search the files (current folder is always used)\n"
+    printf "    ♨️ Connector jar to use\n    \n    ❕ It must be absolute full path\n    \n    🎓 Tip: use <tab> completion to trigger fzf completion \n            use folder_zip_or_jar (default: ~/Downloads) in config.ini file to\n    configure where to search the files (current folder is always used)\n"
     echo
 
     # :flag.usage
@@ -610,7 +610,7 @@ playground_run_ccloud_usage() {
     # :command.usage_flags
     # :flag.usage
     printf "  %s\n" "$(magenta "--file, -f FILE (required)")"
-    printf "    🔖 Example file to run\n    \n    It must be absolute full path\n    \n    🎓 Tip: use <tab> completion to trigger fzf completion\n"
+    printf "    🔖 Example file to run\n    \n    ❕ It must be absolute full path\n    \n    🎓 Tip: use <tab> completion to trigger fzf completion\n"
     echo
 
     # :flag.usage
@@ -630,12 +630,12 @@ playground_run_ccloud_usage() {
 
     # :flag.usage
     printf "  %s\n" "$(magenta "--connector-zip CONNECTOR_ZIP")"
-    printf "    🤐 Connector zip to use\n    \n    It must be absolute full path\n    \n    🎓 Tip: use <tab> completion to trigger fzf completion \n            use folder_zip_or_jar (default: ~/Downloads) in config.ini file to\n    configure where to search the files (current folder is always used)\n"
+    printf "    🤐 Connector zip to use\n    \n    ❕ It must be absolute full path\n    \n    🎓 Tip: use <tab> completion to trigger fzf completion \n            use folder_zip_or_jar (default: ~/Downloads) in config.ini file to\n    configure where to search the files (current folder is always used)\n"
     echo
 
     # :flag.usage
     printf "  %s\n" "$(magenta "--connector-jar CONNECTOR_JAR")"
-    printf "    ♨️ Connector jar to use\n    \n    It must be absolute full path\n    \n    🎓 Tip: use <tab> completion to trigger fzf completion \n            use folder_zip_or_jar (default: ~/Downloads) in config.ini file to\n    configure where to search the files (current folder is always used)\n"
+    printf "    ♨️ Connector jar to use\n    \n    ❕ It must be absolute full path\n    \n    🎓 Tip: use <tab> completion to trigger fzf completion \n            use folder_zip_or_jar (default: ~/Downloads) in config.ini file to\n    configure where to search the files (current folder is always used)\n"
     echo
 
     # :flag.usage
@@ -801,12 +801,12 @@ playground_bootstrap_reproduction_model_usage() {
 
     # :flag.usage
     printf "  %s\n" "$(magenta "--connector-zip CONNECTOR_ZIP")"
-    printf "    🤐 Connector zip to use\n    \n    It must be absolute full path\n    \n    🎓 Tip: use <tab> completion to trigger fzf completion \n            use folder_zip_or_jar (default: ~/Downloads) in config.ini file to\n    configure where to search the files (current folder is always used)\n"
+    printf "    🤐 Connector zip to use\n    \n    ❕ It must be absolute full path\n    \n    🎓 Tip: use <tab> completion to trigger fzf completion \n            use folder_zip_or_jar (default: ~/Downloads) in config.ini file to\n    configure where to search the files (current folder is always used)\n"
     echo
 
     # :flag.usage
     printf "  %s\n" "$(magenta "--connector-jar CONNECTOR_JAR")"
-    printf "    ♨️ Connector jar to use\n    \n    It must be absolute full path\n    \n    🎓 Tip: use <tab> completion to trigger fzf completion \n            use folder_zip_or_jar (default: ~/Downloads) in config.ini file to\n    configure where to search the files (current folder is always used)\n"
+    printf "    ♨️ Connector jar to use\n    \n    ❕ It must be absolute full path\n    \n    🎓 Tip: use <tab> completion to trigger fzf completion \n            use folder_zip_or_jar (default: ~/Downloads) in config.ini file to\n    configure where to search the files (current folder is always used)\n"
     echo
 
     # :flag.usage
@@ -855,8 +855,34 @@ playground_bootstrap_reproduction_model_usage() {
     echo
 
     # :flag.usage
+    printf "  %s\n" "$(magenta "--cluster-region CLUSTER-REGION")"
+    printf "    🗺 The Cloud region. \n    \n    🎓 Tip: you can also use CLUSTER_REGION environment variable\n"
+    printf "    Default: eu-west-2\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--cluster-environment CLUSTER-ENVIRONMENT")"
+    printf "    🌐 The environment id where want your new cluster (example: env-xxxxx)\n    \n    ℹ️ Optional, if not set, new environment will be created\n    \n    🎓 Tip: you can also use ENVIRONMENT environment variable\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--cluster-name CLUSTER-NAME")"
+    printf "    🎰 The cluster name. \n    \n    ❣️ Only required if you want to use your own existing cluster\n    \n    🎓 Tip: you can also use CLUSTER_NAME environment variable\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--cluster-creds CLUSTER-CREDS")"
+    printf "    🔒 The Kafka api key and secret to use, it should be separated with\n    semi-colon (example: <API_KEY>:<API_KEY_SECRET>)\n    \n    ❣️ Only required if you want to use your own existing cluster\n    \n    🎓 Tip: you can also use CLUSTER_CREDS environment variable\n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--cluster-schema-registry-creds CLUSTER-SCHEMA-REGISTRY-CREDS")"
+    printf "    🔒 The Schema Registry api key and secret to use, it should be separated with\n    semi-colon (example: <SR_API_KEY>:<SR_API_KEY_SECRET>)\n    \n    ℹ️ Optional, if not set, new credentials will be created\n    \n    ❣️ Only required if you want to use your own existing cluster\n    \n    🎓 Tip: you can also use SCHEMA_REGISTRY_CREDS environment variable\n"
+    echo
+
+    # :flag.usage
     printf "  %s\n" "$(magenta "--file, -f FILE (required)")"
-    printf "    🔖 Example file to use as basis\n    \n    It must be absolute full path\n    \n    🎓 Tip: use <tab> completion to trigger fzf completion\n"
+    printf "    🔖 Example file to use as basis\n    \n    ❕ It must be absolute full path\n    \n    🎓 Tip: use <tab> completion to trigger fzf completion\n"
     echo
 
     # :flag.usage
@@ -879,12 +905,12 @@ playground_bootstrap_reproduction_model_usage() {
 
     # :flag.usage
     printf "  %s\n" "$(magenta "--producer-schema-key PRODUCER_SCHEMA")"
-    printf "    🔰 Schema file to use for the key\n    \n    It must be absolute full path\n    \n    🎓 Tip: use <tab> completion to trigger fzf completion \n            use folder_producer_schema (default: ~/Downloads) in config.ini file\n    to configure where to search the files\n"
+    printf "    🔰 Schema file to use for the key\n    \n    ❕ It must be absolute full path\n    \n    🎓 Tip: use <tab> completion to trigger fzf completion \n            use folder_producer_schema (default: ~/Downloads) in config.ini file\n    to configure where to search the files\n"
     echo
 
     # :flag.usage
     printf "  %s\n" "$(magenta "--producer-schema-value PRODUCER_SCHEMA")"
-    printf "    🔰 Schema file to use for the value\n    \n    It must be absolute full path\n    \n    🎓 Tip: use <tab> completion to trigger fzf completion \n            use folder_producer_schema (default: ~/Downloads) in config.ini file\n    to configure where to search the files\n"
+    printf "    🔰 Schema file to use for the value\n    \n    ❕ It must be absolute full path\n    \n    🎓 Tip: use <tab> completion to trigger fzf completion \n            use folder_producer_schema (default: ~/Downloads) in config.ini file\n    to configure where to search the files\n"
     echo
 
     # :flag.usage
@@ -894,7 +920,7 @@ playground_bootstrap_reproduction_model_usage() {
 
     # :flag.usage
     printf "  %s\n" "$(magenta "--pipeline SINK_FILE")"
-    printf "    🔖 Sink example file to use for creating a pipeline\n    \n    It must be absolute full path. \n    \n    🎓 Tip: use <tab> completion to trigger fzf completion\n"
+    printf "    🔖 Sink example file to use for creating a pipeline\n    \n    ❕ It must be absolute full path. \n    \n    🎓 Tip: use <tab> completion to trigger fzf completion\n"
     echo
 
     # :command.usage_fixed_flags
@@ -10520,6 +10546,101 @@ playground_bootstrap_reproduction_model_parse_requirements() {
         ;;
 
       # :flag.case
+      --cluster-region)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+
+          args['--cluster-region']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--cluster-region requires an argument: --cluster-region CLUSTER-REGION" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --cluster-environment)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          # :flag.validations
+          if [[ -n $(validate_not_empty "$2") ]]; then
+            printf "validation error in %s:\n%s\n" "--cluster-environment CLUSTER-ENVIRONMENT" "$(validate_not_empty "$2")" >&2
+            exit 1
+          fi
+
+          args['--cluster-environment']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--cluster-environment requires an argument: --cluster-environment CLUSTER-ENVIRONMENT" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --cluster-name)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          # :flag.validations
+          if [[ -n $(validate_not_empty "$2") ]]; then
+            printf "validation error in %s:\n%s\n" "--cluster-name CLUSTER-NAME" "$(validate_not_empty "$2")" >&2
+            exit 1
+          fi
+
+          args['--cluster-name']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--cluster-name requires an argument: --cluster-name CLUSTER-NAME" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --cluster-creds)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          # :flag.validations
+          if [[ -n $(validate_not_empty "$2") ]]; then
+            printf "validation error in %s:\n%s\n" "--cluster-creds CLUSTER-CREDS" "$(validate_not_empty "$2")" >&2
+            exit 1
+          fi
+
+          args['--cluster-creds']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--cluster-creds requires an argument: --cluster-creds CLUSTER-CREDS" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --cluster-schema-registry-creds)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          # :flag.validations
+          if [[ -n $(validate_not_empty "$2") ]]; then
+            printf "validation error in %s:\n%s\n" "--cluster-schema-registry-creds CLUSTER-SCHEMA-REGISTRY-CREDS" "$(validate_not_empty "$2")" >&2
+            exit 1
+          fi
+
+          args['--cluster-schema-registry-creds']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--cluster-schema-registry-creds requires an argument: --cluster-schema-registry-creds CLUSTER-SCHEMA-REGISTRY-CREDS" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
       --file | -f)
 
         # :flag.case_arg
@@ -10705,6 +10826,7 @@ playground_bootstrap_reproduction_model_parse_requirements() {
   fi
 
   # :command.default_assignments
+  [[ -n ${args['--cluster-region']:-} ]] || args['--cluster-region']="eu-west-2"
   [[ -n ${args['--producer']:-} ]] || args['--producer']="none"
   [[ -n ${args['--nb-producers']:-} ]] || args['--nb-producers']=""
 

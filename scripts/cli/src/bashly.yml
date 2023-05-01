@@ -96,7 +96,7 @@ commands:
     help: |-
       🔖 Example file to run
 
-      It must be absolute full path
+      ❕ It must be absolute full path
 
       🎓 Tip: use <tab> completion to trigger fzf completion
   - long: --open
@@ -131,7 +131,7 @@ commands:
     help: |- 
       🤐 Connector zip to use
 
-      It must be absolute full path
+      ❕ It must be absolute full path
 
       🎓 Tip: use <tab> completion to trigger fzf completion 
               use folder_zip_or_jar (default: ~/Downloads) in config.ini file to configure where to search the files (current folder is always used)
@@ -146,7 +146,7 @@ commands:
     help: |-
       ♨️ Connector jar to use
 
-      It must be absolute full path
+      ❕ It must be absolute full path
 
       🎓 Tip: use <tab> completion to trigger fzf completion 
               use folder_zip_or_jar (default: ~/Downloads) in config.ini file to configure where to search the files (current folder is always used)
@@ -308,7 +308,7 @@ commands:
       help: |-
         🔖 Example file to run
 
-        It must be absolute full path
+        ❕ It must be absolute full path
 
         🎓 Tip: use <tab> completion to trigger fzf completion
     - long: --open
@@ -440,6 +440,12 @@ commands:
   - *enable-kcat
   - *enable-sr-maven-plugin-app
   - *enable-sql-datagen
+  - *cluster-region
+  - *cluster-environment
+  - *cluster-name
+  - *cluster-creds
+  - *luster-schema-registry-creds
+
   - long: --file
     short: -f
     required: true
@@ -450,7 +456,7 @@ commands:
     help: |-
       🔖 Example file to use as basis
       
-      It must be absolute full path
+      ❕ It must be absolute full path
 
       🎓 Tip: use <tab> completion to trigger fzf completion
 
@@ -499,7 +505,7 @@ commands:
     help: |-
       🔰 Schema file to use for the key
 
-      It must be absolute full path
+      ❕ It must be absolute full path
 
       🎓 Tip: use <tab> completion to trigger fzf completion 
               use folder_producer_schema (default: ~/Downloads) in config.ini file to configure where to search the files
@@ -513,7 +519,7 @@ commands:
     help: |-
       🔰 Schema file to use for the value
 
-      It must be absolute full path
+      ❕ It must be absolute full path
 
       🎓 Tip: use <tab> completion to trigger fzf completion 
               use folder_producer_schema (default: ~/Downloads) in config.ini file to configure where to search the files
@@ -532,7 +538,7 @@ commands:
     help: |-
       🔖 Sink example file to use for creating a pipeline
       
-      It must be absolute full path. 
+      ❕ It must be absolute full path. 
 
       🎓 Tip: use <tab> completion to trigger fzf completion
 
