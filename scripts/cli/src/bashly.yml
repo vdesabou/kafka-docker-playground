@@ -27,6 +27,8 @@ commands:
     required: false
   - long: --sink-only
     required: false
+  - long: --ccloud-only
+    required: false
 
 - name: get-zip-or-jar-with-fzf
   help: Return some completion for zip or jar list
@@ -63,7 +65,7 @@ commands:
   dependencies:
   - fzf
   help: |-
-    🕹️ Run any example
+    🕹️ Run any example, except for Confluent Cloud (in this case use run-ccloud command)
     
     👉 Check documentation https://tinyurl.com/xxx
 
@@ -212,6 +214,8 @@ commands:
     label: arguments
     help: Arguments to use by example script
     required: false
+  dependencies:
+  - fzf
   flags:
     - *tag
     - *connector-tag
@@ -227,8 +231,124 @@ commands:
     - *enable-sr-maven-plugin-app
     - *enable-sql-datagen
 
+- name: run-ccloud
+  group: Run
+  catch_all:
+    label: arguments
+    help: Arguments to use by example script
+    required: false
+  dependencies:
+  - fzf
+  help: |-
+    ⛅ Run any Confluent Cloud (ccloud) example
+
+    All you have to do is to be already logged in with confluent CLI.
+
+    By default, a new Confluent Cloud environment with a Cluster will be created.
+
+    You can configure the new cluster by setting:
+
+    --cluster-cloud (or CLUSTER_CLOUD environment variable)
+    --cluster-region (or CLUSTER_REGION environment variable)
+    --cluster-environment (or ENVIRONMENT environment variable)
+
+    In case you want to use your own existing cluster, you need to setup, in addition to previous ones:
+
+    --cluster-name (or CLUSTER_NAME environment variable)
+    --cluster-creds (or CLUSTER_CREDS environment variable)
+    --cluster-schema-registry-creds (or SCHEMA_REGISTRY_CREDS environment variable)
+    
+    👉 Check documentation https://tinyurl.com/xxx
+  flags:
+    - long: --file
+      short: -f
+      required: true
+      validate: file_exists_with_trick
+      arg: file
+      completions:
+        - $(playground get-examples-list-with-fzf --ccloud-only "$cur")
+      help: |-
+        🔖 Example file to run
+
+        It must be absolute full path
+
+        🎓 Tip: use <tab> completion to trigger fzf completion
+    - long: --open
+      short: -o
+      help: 📖 Opening example file with text editor set with config.ini (default is code)
+    - *tag
+    - *connector-tag
+    - *connector-zip
+    - *connector-jar
+    - *disable-control-center
+    - *enable-conduktor
+    - *enable-kcat
+    - &cluster-cloud
+      long: --cluster-cloud
+      required: false
+      default: aws
+      arg: cluster-cloud
+      allowed: [aws, gcp, aws]
+      help: |-
+        🌤 The cloud provider (aws, gcp or azure). Default is aws
+
+        🎓 Tip: you can also use CLUSTER_CLOUD environment variable
+    - &cluster-region
+      long: --cluster-region
+      required: false
+      default: eu-west-2
+      arg: cluster-region
+      help: |-
+        🗺 The Cloud region. Use <confluent kafka region list> to get the list of possible regions
+
+        🎓 Tip: you can also use CLUSTER_REGION environment variable
+    - &cluster-environment
+      long: --cluster-environment
+      required: false
+      arg: cluster-environment
+      help: |-
+        🌐 The environment id where want your new cluster (example: env-xxxxx)
+
+        ℹ️ Optional, if not set, new environment will be created
+
+        🎓 Tip: you can also use ENVIRONMENT environment variable
+    - &cluster-name
+      long: --cluster-name
+      required: false
+      arg: cluster-name
+      help: |-
+        🎰 The cluster name. 
+        
+        ❣️ Only required if you want to use your own existing cluster
+
+        🎓 Tip: you can also use CLUSTER_NAME environment variable
+    - &cluster-creds
+      long: --cluster-creds
+      required: false
+      arg: cluster-creds
+      help: |-
+        🔒 The Kafka api key and secret to use, it should be separated with semi-colon (example: <API_KEY>:<API_KEY_SECRET>)
+
+        ❣️ Only required if you want to use your own existing cluster
+
+        🎓 Tip: you can also use CLUSTER_CREDS environment variable
+    - &luster-schema-registry-creds
+      long: --cluster-schema-registry-creds
+      required: false
+      arg: cluster-schema-registry-creds
+      help: |-
+        🔒 The Schema Registry api key and secret to use, it should be separated with semi-colon (example: <SR_API_KEY>:<SR_API_KEY_SECRET>)
+
+        ℹ️ Optional, if not set, new credentials will be created
+
+        ❣️ Only required if you want to use your own existing cluster
+        
+        🎓 Tip: you can also use SCHEMA_REGISTRY_CREDS environment variable
+
 - name: open
   group: Run
+  dependencies:
+  - fzf
   help: |-
     👐 Simply open last example you ran with <playground run>
 
