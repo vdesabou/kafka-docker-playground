@@ -10112,6 +10112,11 @@ playground_run_ccloud_parse_requirements() {
 
         # :flag.case_arg
         if [[ -n ${2+x} ]]; then
+          # :flag.validations
+          if [[ -n $(validate_not_empty "$2") ]]; then
+            printf "validation error in %s:\n%s\n" "--cluster-environment CLUSTER-ENVIRONMENT" "$(validate_not_empty "$2")" >&2
+            exit 1
+          fi
 
           args['--cluster-environment']="$2"
           shift
@@ -10127,6 +10132,11 @@ playground_run_ccloud_parse_requirements() {
 
         # :flag.case_arg
         if [[ -n ${2+x} ]]; then
+          # :flag.validations
+          if [[ -n $(validate_not_empty "$2") ]]; then
+            printf "validation error in %s:\n%s\n" "--cluster-name CLUSTER-NAME" "$(validate_not_empty "$2")" >&2
+            exit 1
+          fi
 
           args['--cluster-name']="$2"
           shift
@@ -10142,6 +10152,11 @@ playground_run_ccloud_parse_requirements() {
 
         # :flag.case_arg
         if [[ -n ${2+x} ]]; then
+          # :flag.validations
+          if [[ -n $(validate_not_empty "$2") ]]; then
+            printf "validation error in %s:\n%s\n" "--cluster-creds CLUSTER-CREDS" "$(validate_not_empty "$2")" >&2
+            exit 1
+          fi
 
           args['--cluster-creds']="$2"
           shift
@@ -10157,6 +10172,11 @@ playground_run_ccloud_parse_requirements() {
 
         # :flag.case_arg
         if [[ -n ${2+x} ]]; then
+          # :flag.validations
+          if [[ -n $(validate_not_empty "$2") ]]; then
+            printf "validation error in %s:\n%s\n" "--cluster-schema-registry-creds CLUSTER-SCHEMA-REGISTRY-CREDS" "$(validate_not_empty "$2")" >&2
+            exit 1
+          fi
 
           args['--cluster-schema-registry-creds']="$2"
           shift

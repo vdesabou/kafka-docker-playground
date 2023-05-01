@@ -343,6 +343,7 @@ commands:
       long: --cluster-environment
       required: false
       arg: cluster-environment
+      validate: not_empty
       help: |-
         🌐 The environment id where want your new cluster (example: env-xxxxx)
 
@@ -352,6 +353,7 @@ commands:
     - &cluster-name
       long: --cluster-name
       required: false
+      validate: not_empty
       arg: cluster-name
       help: |-
         🎰 The cluster name. 
@@ -362,6 +364,7 @@ commands:
     - &cluster-creds
       long: --cluster-creds
       required: false
+      validate: not_empty
       arg: cluster-creds
       help: |-
         🔒 The Kafka api key and secret to use, it should be separated with semi-colon (example: <API_KEY>:<API_KEY_SECRET>)
@@ -372,6 +375,7 @@ commands:
     - &luster-schema-registry-creds
       long: --cluster-schema-registry-creds
       required: false
+      validate: not_empty
       arg: cluster-schema-registry-creds
       help: |-
         🔒 The Schema Registry api key and secret to use, it should be separated with semi-colon (example: <SR_API_KEY>:<SR_API_KEY_SECRET>)
