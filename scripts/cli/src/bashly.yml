@@ -1,8 +1,11 @@
 name: playground
-help: 🧠 CLI for Kafka Docker Playground 🐳
 version: 1.0.0
 dependencies:
-  docker: 👉 Check documentation https://tinyurl.com/xxx
+- docker
+help: |-
+  🧠 CLI for Kafka Docker Playground 🐳
+
+  👉 Check documentation https://kafka-docker-playground.io/#/cli
 
 commands:
 
@@ -866,7 +869,7 @@ commands:
     - name: consume
       group: Topic
       help: |-
-        📥 Consume topic(s) from current running examples
+        📥 Consume topic(s) from running example
 
 - name: connector
   expose: true

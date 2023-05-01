@@ -18,7 +18,10 @@ version_command() {
 # :command.usage
 playground_usage() {
   if [[ -n $long_usage ]]; then
-    printf "playground - 🧠 CLI for Kafka Docker Playground 🐳\n"
+    printf "playground\n"
+    echo
+
+    printf "  🧠 CLI for Kafka Docker Playground 🐳\n  \n  👉 Check documentation https://kafka-docker-playground.io/#/cli\n"
     echo
 
   else
@@ -71,7 +74,7 @@ playground_usage() {
   [[ -n $long_usage ]] && printf "  %s   📬 Display content of connect offsets topic\n" "$(green "topic display-connect-offsets") "
   [[ -n $long_usage ]] && printf "  %s   📭 Display content of __consumer_offsets topic\n" "$(green "topic display-consumer-offsets")"
   [[ -n $long_usage ]] && printf "  %s   🔬 Describe topic\n" "$(green "topic describe")                "
-  [[ -n $long_usage ]] && printf "  %s   📥 Consume topic(s) from current running examples\n" "$(green "topic consume")                 "
+  [[ -n $long_usage ]] && printf "  %s   📥 Consume topic(s) from running example\n" "$(green "topic consume")                 "
   echo
   printf "%s\n" "$(bold "Connector commands:")"
   printf "  %s   🔗 Connector commands\n" "$(green "connector")                     "
@@ -1706,7 +1709,7 @@ playground_topic_usage() {
   printf "  %s   📬 Display content of connect offsets topic\n" "$(green "display-connect-offsets") "
   printf "  %s   📭 Display content of __consumer_offsets topic\n" "$(green "display-consumer-offsets")"
   printf "  %s   🔬 Describe topic\n" "$(green "describe")                "
-  printf "  %s   📥 Consume topic(s) from current running examples\n" "$(green "consume")                 "
+  printf "  %s   📥 Consume topic(s) from running example\n" "$(green "consume")                 "
   echo
 
   # :command.long_usage
@@ -1858,11 +1861,11 @@ playground_topic_describe_usage() {
 # :command.usage
 playground_topic_consume_usage() {
   if [[ -n $long_usage ]]; then
-    printf "playground topic consume - 📥 Consume topic(s) from current running examples\n"
+    printf "playground topic consume - 📥 Consume topic(s) from running example\n"
     echo
 
   else
-    printf "playground topic consume - 📥 Consume topic(s) from current running examples\n"
+    printf "playground topic consume - 📥 Consume topic(s) from running example\n"
     echo
 
   fi
@@ -8860,7 +8863,6 @@ parse_requirements() {
     deps['docker']="$(command -v docker | head -n1)"
   else
     printf "missing dependency: docker\n" >&2
-    printf "%s\n" "👉 Check documentation https://tinyurl.com/xxx" >&2
     exit 1
   fi
 
