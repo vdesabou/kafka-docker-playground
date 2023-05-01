@@ -10,7 +10,6 @@ if ! version_gt $TAG_BASE "6.9.9"; then
     exit 111
 fi
 
-export DISABLE_CONTROL_CENTER="true"
 ${DIR}/../../environment/mdc-plaintext/start.sh "${PWD}/docker-compose.mdc-plaintext.yml"
 
 log "Create topic purchases"

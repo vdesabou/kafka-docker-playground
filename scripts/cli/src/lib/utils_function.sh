@@ -692,7 +692,7 @@ function display_jmx_info() {
   log "    - schema-registry : 10001"
   log "    - connect         : 10002"
     
-  if [ -z "$DISABLE_KSQLDB" ]
+  if [ ! -z "$ENABLE_KSQLDB" ]
   then
     log "    - ksqldb-server   : 10003"
   fi

@@ -5,7 +5,7 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
 # make sure ksqlDB is not disabled
-unset DISABLE_KSQLDB
+export ENABLE_KSQLDB=true
 
 #${DIR}/../../environment/sasl-plain/start.sh "${PWD}/docker-compose.plaintext.autherror.yml"
 

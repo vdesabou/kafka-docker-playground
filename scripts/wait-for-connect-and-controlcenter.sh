@@ -99,9 +99,3 @@ if [[ $(docker container ps) =~ "Exit 137" ]]; then
   logerror "ERROR: At least one Docker container did not start properly, see <docker container ps>. Did you remember to increase the memory available to Docker to at least 8GB (default is 2GB)"
   exit 1
 fi
-
-if [ -z "$DISABLE_KSQLDB" ]
-then
-  log "🔧 You can use ksqlDB with CLI using:"
-  log "docker exec -i ksqldb-cli ksql http://ksqldb-server:8088"
-fi

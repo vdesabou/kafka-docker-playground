@@ -10,7 +10,7 @@ if ! version_gt $TAG_BASE "5.3.99"; then
 fi
 
 # make sure control-center is not disabled
-unset DISABLE_CONTROL_CENTER
+export ENABLE_CONTROL_CENTER=true
 
 ${DIR}/../../ccloud/environment/start.sh "${PWD}/docker-compose.plaintext.yml" -a -b
 

@@ -377,13 +377,13 @@ playground_run_usage() {
     echo
 
     # :flag.usage
-    printf "  %s\n" "$(magenta "--disable-ksqldb")"
-    printf "    🛑 Disable ksqlDB\n    \n    By default, ksqldb-server and ksqldb-cli containers are started for every\n    test\n"
+    printf "  %s\n" "$(magenta "--enable-ksqldb")"
+    printf "    🚀 Enable ksqlDB\n    \n    By default, ksqldb-server and ksqldb-cli containers are not started for\n    every test\n"
     echo
 
     # :flag.usage
-    printf "  %s\n" "$(magenta "--disable-control-center")"
-    printf "    🛑 Disable Control Center\n    \n    By default, control-center container is started for every test\n    \n    Control Center is reachable at http://127.0.0.1:9021\n"
+    printf "  %s\n" "$(magenta "--enable-control-center")"
+    printf "    💠 Enable Control Center\n    \n    By default, control-center container is not started for every test\n    \n    Control Center is reachable at http://127.0.0.1:9021\n"
     echo
 
     # :flag.usage
@@ -479,13 +479,13 @@ playground_re_run_usage() {
     echo
 
     # :flag.usage
-    printf "  %s\n" "$(magenta "--disable-ksqldb")"
-    printf "    🛑 Disable ksqlDB\n    \n    By default, ksqldb-server and ksqldb-cli containers are started for every\n    test\n"
+    printf "  %s\n" "$(magenta "--enable-ksqldb")"
+    printf "    🚀 Enable ksqlDB\n    \n    By default, ksqldb-server and ksqldb-cli containers are not started for\n    every test\n"
     echo
 
     # :flag.usage
-    printf "  %s\n" "$(magenta "--disable-control-center")"
-    printf "    🛑 Disable Control Center\n    \n    By default, control-center container is started for every test\n    \n    Control Center is reachable at http://127.0.0.1:9021\n"
+    printf "  %s\n" "$(magenta "--enable-control-center")"
+    printf "    💠 Enable Control Center\n    \n    By default, control-center container is not started for every test\n    \n    Control Center is reachable at http://127.0.0.1:9021\n"
     echo
 
     # :flag.usage
@@ -594,8 +594,8 @@ playground_run_ccloud_usage() {
     echo
 
     # :flag.usage
-    printf "  %s\n" "$(magenta "--disable-control-center")"
-    printf "    🛑 Disable Control Center\n    \n    By default, control-center container is started for every test\n    \n    Control Center is reachable at http://127.0.0.1:9021\n"
+    printf "  %s\n" "$(magenta "--enable-control-center")"
+    printf "    💠 Enable Control Center\n    \n    By default, control-center container is not started for every test\n    \n    Control Center is reachable at http://127.0.0.1:9021\n"
     echo
 
     # :flag.usage
@@ -731,13 +731,13 @@ playground_bootstrap_reproduction_model_usage() {
     echo
 
     # :flag.usage
-    printf "  %s\n" "$(magenta "--disable-ksqldb")"
-    printf "    🛑 Disable ksqlDB\n    \n    By default, ksqldb-server and ksqldb-cli containers are started for every\n    test\n"
+    printf "  %s\n" "$(magenta "--enable-ksqldb")"
+    printf "    🚀 Enable ksqlDB\n    \n    By default, ksqldb-server and ksqldb-cli containers are not started for\n    every test\n"
     echo
 
     # :flag.usage
-    printf "  %s\n" "$(magenta "--disable-control-center")"
-    printf "    🛑 Disable Control Center\n    \n    By default, control-center container is started for every test\n    \n    Control Center is reachable at http://127.0.0.1:9021\n"
+    printf "  %s\n" "$(magenta "--enable-control-center")"
+    printf "    💠 Enable Control Center\n    \n    By default, control-center container is not started for every test\n    \n    Control Center is reachable at http://127.0.0.1:9021\n"
     echo
 
     # :flag.usage
@@ -3585,7 +3585,7 @@ function display_jmx_info() {
   log "    - schema-registry : 10001"
   log "    - connect         : 10002"
 
-  if [ -z "$DISABLE_KSQLDB" ]
+  if [ ! -z "$ENABLE_KSQLDB" ]
   then
     log "    - ksqldb-server   : 10003"
   fi
@@ -6280,8 +6280,8 @@ playground_run_command() {
   connector_zip="${args[--connector-zip]}"
   connector_jar="${args[--connector-jar]}"
   connector_jar="${args[--connector-jar]}"
-  disable_ksqldb="${args[--disable-ksqldb]}"
-  disable_c3="${args[--disable-control-center]}"
+  enable_ksqldb="${args[--enable-ksqldb]}"
+  enable_c3="${args[--enable-control-center]}"
   enable_conduktor="${args[--enable-conduktor]}"
   enable_multiple_brokers="${args[--enable-multiple-brokers]}"
   enable_multiple_connect_workers="${args[--enable-multiple-connect-workers]}"
@@ -6355,16 +6355,16 @@ playground_run_command() {
     export CONNECTOR_JAR=$connector_jar
   fi
 
-  if [[ -n "$disable_ksqldb" ]]
+  if [[ -n "$enable_ksqldb" ]]
   then
-    flag_list="$flag_list --disable-ksqldb"
-    export DISABLE_KSQLDB=true
+    flag_list="$flag_list --enable-ksqldb"
+    export ENABLE_KSQLDB=true
   fi
 
-  if [[ -n "$disable_c3" ]]
+  if [[ -n "$enable_c3" ]]
   then
-    flag_list="$flag_list --disable-control-center"
-    export DISABLE_CONTROL_CENTER=true
+    flag_list="$flag_list --enable-control-center"
+    export ENABLE_CONTROL_CENTER=true
   fi
 
   if [[ -n "$enable_conduktor" ]]
@@ -6478,8 +6478,8 @@ playground_re_run_command() {
   connector_zip="${args[--connector-zip]}"
   connector_jar="${args[--connector-jar]}"
   connector_jar="${args[--connector-jar]}"
-  disable_ksqldb="${args[--disable-ksqldb]}"
-  disable_c3="${args[--disable-control-center]}"
+  enable_ksqldb="${args[--enable-ksqldb]}"
+  enable_c3="${args[--enable-control-center]}"
   enable_conduktor="${args[--enable-conduktor]}"
   enable_multiple_brokers="${args[--enable-multiple-brokers]}"
   enable_multiple_connect_workers="${args[--enable-multiple-connect-workers]}"
@@ -6517,14 +6517,14 @@ playground_re_run_command() {
     flag_list="$flag_list --connector-jar=$connector_jar"
   fi
 
-  if [[ -n "$disable_ksqldb" ]]
+  if [[ -n "$enable_ksqldb" ]]
   then
-    flag_list="$flag_list --disable-ksqldb"
+    flag_list="$flag_list --enable-ksqldb"
   fi
 
-  if [[ -n "$disable_c3" ]]
+  if [[ -n "$enable_c3" ]]
   then
-    flag_list="$flag_list --disable-control-center"
+    flag_list="$flag_list --enable-control-center"
   fi
 
   if [[ -n "$enable_conduktor" ]]
@@ -6598,7 +6598,7 @@ playground_run_ccloud_command() {
   connector_zip="${args[--connector-zip]}"
   connector_jar="${args[--connector-jar]}"
   connector_jar="${args[--connector-jar]}"
-  disable_c3="${args[--disable-control-center]}"
+  enable_c3="${args[--enable-control-center]}"
   enable_conduktor="${args[--enable-conduktor]}"
   enable_kcat="${args[--enable-kcat]}"
 
@@ -6673,10 +6673,10 @@ playground_run_ccloud_command() {
     export CONNECTOR_JAR=$connector_jar
   fi
 
-  if [[ -n "$disable_c3" ]]
+  if [[ -n "$enable_c3" ]]
   then
-    flag_list="$flag_list --disable-control-center"
-    export DISABLE_CONTROL_CENTER=true
+    flag_list="$flag_list --enable-control-center"
+    export ENABLE_CONTROL_CENTER=true
   fi
 
   if [[ -n "$enable_conduktor" ]]
@@ -6841,8 +6841,8 @@ playground_bootstrap_reproduction_model_command() {
   connector_zip="${args[--connector-zip]}"
   connector_jar="${args[--connector-jar]}"
   connector_jar="${args[--connector-jar]}"
-  disable_ksqldb="${args[--disable-ksqldb]}"
-  disable_c3="${args[--disable-control-center]}"
+  enable_ksqldb="${args[--enable-ksqldb]}"
+  enable_c3="${args[--enable-control-center]}"
   enable_conduktor="${args[--enable-conduktor]}"
   enable_multiple_brokers="${args[--enable-multiple-brokers]}"
   enable_multiple_connect_workers="${args[--enable-multiple-connect-workers]}"
@@ -7811,14 +7811,14 @@ playground_bootstrap_reproduction_model_command() {
     flag_list="$flag_list --connector-jar=$connector_jar"
   fi
 
-  if [[ -n "$disable_ksqldb" ]]
+  if [[ -n "$enable_ksqldb" ]]
   then
-    flag_list="$flag_list --disable-ksqldb"
+    flag_list="$flag_list --enable-ksqldb"
   fi
 
-  if [[ -n "$disable_c3" ]]
+  if [[ -n "$enable_c3" ]]
   then
-    flag_list="$flag_list --disable-control-center"
+    flag_list="$flag_list --enable-control-center"
   fi
 
   if [[ -n "$enable_conduktor" ]]
@@ -9336,18 +9336,18 @@ playground_run_parse_requirements() {
         ;;
 
       # :flag.case
-      --disable-ksqldb)
+      --enable-ksqldb)
 
         # :flag.case_no_arg
-        args['--disable-ksqldb']=1
+        args['--enable-ksqldb']=1
         shift
         ;;
 
       # :flag.case
-      --disable-control-center)
+      --enable-control-center)
 
         # :flag.case_no_arg
-        args['--disable-control-center']=1
+        args['--enable-control-center']=1
         shift
         ;;
 
@@ -9551,18 +9551,18 @@ playground_re_run_parse_requirements() {
         ;;
 
       # :flag.case
-      --disable-ksqldb)
+      --enable-ksqldb)
 
         # :flag.case_no_arg
-        args['--disable-ksqldb']=1
+        args['--enable-ksqldb']=1
         shift
         ;;
 
       # :flag.case
-      --disable-control-center)
+      --enable-control-center)
 
         # :flag.case_no_arg
-        args['--disable-control-center']=1
+        args['--enable-control-center']=1
         shift
         ;;
 
@@ -9788,10 +9788,10 @@ playground_run_ccloud_parse_requirements() {
         ;;
 
       # :flag.case
-      --disable-control-center)
+      --enable-control-center)
 
         # :flag.case_no_arg
-        args['--disable-control-center']=1
+        args['--enable-control-center']=1
         shift
         ;;
 
@@ -10111,18 +10111,18 @@ playground_bootstrap_reproduction_model_parse_requirements() {
         ;;
 
       # :flag.case
-      --disable-ksqldb)
+      --enable-ksqldb)
 
         # :flag.case_no_arg
-        args['--disable-ksqldb']=1
+        args['--enable-ksqldb']=1
         shift
         ;;
 
       # :flag.case
-      --disable-control-center)
+      --enable-control-center)
 
         # :flag.case_no_arg
-        args['--disable-control-center']=1
+        args['--enable-control-center']=1
         shift
         ;;
 
@@ -12719,7 +12719,7 @@ playground_connector_log_level_parse_requirements() {
 
 # :command.initialize
 initialize() {
-  version="1.1.0"
+  version="1.0.0"
   long_usage=''
   set -e
 

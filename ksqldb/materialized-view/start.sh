@@ -10,7 +10,7 @@ if ! version_gt $TAG_BASE "5.4.99"; then
 fi
 
 # make sure ksqlDB is not disabled
-unset DISABLE_KSQLDB
+export ENABLE_KSQLDB=true
 
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
 

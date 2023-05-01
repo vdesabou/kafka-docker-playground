@@ -9,8 +9,8 @@ connector_tag="${args[--connector-tag]}"
 connector_zip="${args[--connector-zip]}"
 connector_jar="${args[--connector-jar]}"
 connector_jar="${args[--connector-jar]}"
-disable_ksqldb="${args[--disable-ksqldb]}"
-disable_c3="${args[--disable-control-center]}"
+enable_ksqldb="${args[--enable-ksqldb]}"
+enable_c3="${args[--enable-control-center]}"
 enable_conduktor="${args[--enable-conduktor]}"
 enable_multiple_brokers="${args[--enable-multiple-brokers]}"
 enable_multiple_connect_workers="${args[--enable-multiple-connect-workers]}"
@@ -84,16 +84,16 @@ then
   export CONNECTOR_JAR=$connector_jar
 fi
 
-if [[ -n "$disable_ksqldb" ]]
+if [[ -n "$enable_ksqldb" ]]
 then
-  flag_list="$flag_list --disable-ksqldb"
-  export DISABLE_KSQLDB=true
+  flag_list="$flag_list --enable-ksqldb"
+  export ENABLE_KSQLDB=true
 fi
 
-if [[ -n "$disable_c3" ]]
+if [[ -n "$enable_c3" ]]
 then
-  flag_list="$flag_list --disable-control-center"
-  export DISABLE_CONTROL_CENTER=true
+  flag_list="$flag_list --enable-control-center"
+  export ENABLE_CONTROL_CENTER=true
 fi
 
 if [[ -n "$enable_conduktor" ]]

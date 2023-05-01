@@ -5,7 +5,7 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
 # make sure control-center is not disabled
-unset DISABLE_CONTROL_CENTER
+export ENABLE_CONTROL_CENTER=true
 
 ${DIR}/../../ccloud/environment/start.sh "${PWD}/docker-compose.plaintext.standalone-worker-docker-image.yml" -a -b
 

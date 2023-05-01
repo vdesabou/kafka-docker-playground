@@ -1,6 +1,6 @@
 name: playground
 help: 🧠 CLI for Kafka Docker Playground 🐳
-version: 1.1.0
+version: 1.0.0
 dependencies:
   docker: 👉 Check documentation https://tinyurl.com/xxx
 
@@ -134,20 +134,20 @@ commands:
       🎓 Tip: use <tab> completion to trigger fzf completion 
               use folder_zip_or_jar (default: ~/Downloads) in config.ini file to configure where to search the files (current folder is always used)
 
-  - &disable-ksqldb
-    long: --disable-ksqldb
+  - &enable-ksqldb
+    long: --enable-ksqldb
     required: false
     help: |-
-      🛑 Disable ksqlDB
+      🚀 Enable ksqlDB
 
-      By default, ksqldb-server and ksqldb-cli containers are started for every test
-  - &disable-control-center
-    long: --disable-control-center
+      By default, ksqldb-server and ksqldb-cli containers are not started for every test
+  - &enable-control-center
+    long: --enable-control-center
     required: false
     help: |-
-      🛑 Disable Control Center
+      💠 Enable Control Center
 
-      By default, control-center container is started for every test
+      By default, control-center container is not started for every test
 
       Control Center is reachable at http://127.0.0.1:9021
   - &enable-conduktor
@@ -221,8 +221,8 @@ commands:
     - *connector-tag
     - *connector-zip
     - *connector-jar
-    - *disable-ksqldb
-    - *disable-control-center
+    - *enable-ksqldb
+    - *enable-control-center
     - *enable-conduktor
     - *enable-multiple-brokers
     - *enable-multiple-connect-workers
@@ -280,7 +280,7 @@ commands:
     - *connector-tag
     - *connector-zip
     - *connector-jar
-    - *disable-control-center
+    - *enable-control-center
     - *enable-conduktor
     - *enable-kcat
     - &cluster-cloud
@@ -373,8 +373,8 @@ commands:
   - *connector-tag
   - *connector-zip
   - *connector-jar
-  - *disable-ksqldb
-  - *disable-control-center
+  - *enable-ksqldb
+  - *enable-control-center
   - *enable-conduktor
   - *enable-multiple-brokers
   - *enable-multiple-connect-workers
