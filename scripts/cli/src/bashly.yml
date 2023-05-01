@@ -523,6 +523,11 @@ commands:
     🔰 Get all schemas versions for all subjects
     
     👉 Check documentation xxxx
+  flags:
+    - long: --open
+      short: -o
+      help: |- 
+        🔖 Save output to a file and open with text editor set with config.ini (default is code)
 
   examples:
   - playground get-all-schemas
