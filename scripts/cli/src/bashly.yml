@@ -855,11 +855,6 @@ commands:
       - playground get-number-records --topic a-topic
       - playground get-number-records -t a-topic
 
-    - name: display-connect-offsets
-      group: Topic
-      help: |-
-        📬 Display content of connect offsets topic
-
     - name: display-consumer-offsets
       group: Topic
       help: |-
@@ -875,7 +870,9 @@ commands:
     - name: consume
       group: Topic
       help: |-
-        📥 Consume topic(s) from running example
+        📥 Consume topic from beginning
+      flags:
+      - *topic
 
 - name: connector
   expose: true
