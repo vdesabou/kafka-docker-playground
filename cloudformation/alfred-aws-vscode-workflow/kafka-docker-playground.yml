@@ -74,7 +74,7 @@ Parameters:
   Ec2RootVolumeSize:
     Description: Ec2 root volume size
     Type: String
-    Default: '300'
+    Default: '500'
   InstanceName:
     Description: Instance Name
     Type: String
@@ -142,8 +142,13 @@ Resources:
                       echo 'eval "\$(starship init zsh)"' >> ~/.zshrc
 
                       sudo chsh -s /bin/zsh
+                      
+                      mkdir -p ~/.confluent
+                      
+                      curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
 
                       mkdir -p ~/.local/bin
+                      
                       ln -s /usr/bin/batcat ~/.local/bin/bat
 
                       git clone https://github.com/vdesabou/kafka-docker-playground.git
