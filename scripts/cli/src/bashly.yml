@@ -581,7 +581,6 @@ commands:
       - *container
 
       - long: --command
-        short: -d
         required: true
         validate: not_empty
         arg: command
