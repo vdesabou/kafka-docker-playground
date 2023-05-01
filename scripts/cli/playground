@@ -131,6 +131,35 @@ playground_get_connector_list_usage() {
 }
 
 # :command.usage
+playground_get_kafka_region_list_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground get-kafka-region-list - Return some completion for confluent cloud kafka cluster region list\n"
+    echo
+
+  else
+    printf "playground get-kafka-region-list - Return some completion for confluent cloud kafka cluster region list\n"
+    echo
+
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground get-kafka-region-list\n"
+  printf "  playground get-kafka-region-list --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n $long_usage ]]; then
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+  fi
+}
+
+# :command.usage
 playground_get_topic_list_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground get-topic-list - Return some completion for topic list\n"
@@ -630,7 +659,7 @@ playground_run_ccloud_usage() {
 
     # :flag.usage
     printf "  %s\n" "$(magenta "--cluster-region CLUSTER-REGION")"
-    printf "    🗺 The Cloud region. \n    \n    🎓 Tip: use <confluent kafka region list> to get the list of possible regions\n    \n    🎓 Tip: you can also use CLUSTER_REGION environment variable\n"
+    printf "    🗺 The Cloud region. \n    \n    🎓 Tip: you can also use CLUSTER_REGION environment variable\n"
     printf "    Default: eu-west-2\n"
     echo
 
@@ -6259,6 +6288,12 @@ playground_get_connector_list_command() {
 }
 
 # :command.function
+playground_get_kafka_region_list_command() {
+  # src/get_kafka_region_list_command.sh
+  confluent kafka region list
+}
+
+# :command.function
 playground_get_topic_list_command() {
   # src/get_topic_list_command.sh
   #docker exec broker kafka-topics --bootstrap-server broker:9092 --list | grep -v "^_"
@@ -8842,6 +8877,13 @@ parse_requirements() {
       shift $#
       ;;
 
+    get-kafka-region-list)
+      action="get-kafka-region-list"
+      shift
+      playground_get_kafka_region_list_parse_requirements "$@"
+      shift $#
+      ;;
+
     get-topic-list)
       action="get-topic-list"
       shift
@@ -9031,6 +9073,58 @@ playground_get_connector_list_parse_requirements() {
 
   # :command.command_filter
   action="get-connector-list"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+}
+
+# :command.parse_requirements
+playground_get_kafka_region_list_parse_requirements() {
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    case "${1:-}" in
+      --help | -h)
+        long_usage=yes
+        playground_get_kafka_region_list_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.dependencies_filter
+  if command -v confluent >/dev/null 2>&1; then
+    deps['confluent']="$(command -v confluent | head -n1)"
+  else
+    printf "missing dependency: confluent\n" >&2
+    exit 1
+  fi
+
+  # :command.command_filter
+  action="get-kafka-region-list"
 
   # :command.parse_requirements_while
   while [[ $# -gt 0 ]]; do
@@ -9829,6 +9923,13 @@ playground_run_ccloud_parse_requirements() {
     deps['fzf']="$(command -v fzf | head -n1)"
   else
     printf "missing dependency: fzf\n" >&2
+    exit 1
+  fi
+
+  if command -v confluent >/dev/null 2>&1; then
+    deps['confluent']="$(command -v confluent | head -n1)"
+  else
+    printf "missing dependency: confluent\n" >&2
     exit 1
   fi
 
@@ -12959,6 +13060,7 @@ run() {
 
   case "$action" in
     "get-connector-list") playground_get_connector_list_command ;;
+    "get-kafka-region-list") playground_get_kafka_region_list_command ;;
     "get-topic-list") playground_get_topic_list_command ;;
     "get-examples-list-with-fzf") playground_get_examples_list_with_fzf_command ;;
     "get-zip-or-jar-with-fzf") playground_get_zip_or_jar_with_fzf_command ;;

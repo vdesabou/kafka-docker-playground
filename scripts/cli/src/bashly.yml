@@ -11,6 +11,12 @@ commands:
   help: Return some completion for connector list
   private: true
 
+- name: get-kafka-region-list
+  help: Return some completion for confluent cloud kafka cluster region list
+  private: true
+  dependencies:
+  - confluent
+
 - name: get-topic-list
   help: Return some completion for topic list
   private: true
@@ -267,6 +273,7 @@ commands:
     required: false
   dependencies:
   - fzf
+  - confluent
   help: |-
     ⛅ Run any Confluent Cloud (ccloud) example
 
@@ -326,11 +333,11 @@ commands:
       required: false
       default: eu-west-2
       arg: cluster-region
+      completions:
+        - $(playground get-kafka-region-list)
       help: |-
         🗺 The Cloud region. 
         
-        🎓 Tip: use <confluent kafka region list> to get the list of possible regions
-
         🎓 Tip: you can also use CLUSTER_REGION environment variable
     - &cluster-environment
       long: --cluster-environment
