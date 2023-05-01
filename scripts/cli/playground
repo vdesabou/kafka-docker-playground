@@ -6184,7 +6184,7 @@ validate_dir_exists() {
 validate_editor_exists() {
   local cmd="$1"
   if [[ $(type $cmd 2>&1) =~ "not found" ]]; then
-    echo -e "\nERROR: This script requires '$cmd'. Please install '$cmd' and run again.\n"
+    logerror "This script requires $cmd. Please install $cmd and run again."
     exit 1
   fi
 }
@@ -6210,6 +6210,17 @@ validate_file_exists_with_trick() {
 # src/lib/validations/validate_integer.sh
 validate_integer() {
   [[ "$1" =~ ^[0-9]+$ ]] || echo "must be an integer"
+}
+
+# src/lib/validations/validate_minimal_cp_version.sh
+validate_minimal_cp_version() {
+  version="$1"
+
+  if ! version_gt $version "4.9.99"
+  then
+      logerror "CP version (--tag) must be > 5.0.0"
+      exit 1
+  fi
 }
 
 # src/lib/validations/validate_not_empty.sh
@@ -9331,6 +9342,11 @@ playground_run_parse_requirements() {
 
         # :flag.case_arg
         if [[ -n ${2+x} ]]; then
+          # :flag.validations
+          if [[ -n $(validate_minimal_cp_version "$2") ]]; then
+            printf "validation error in %s:\n%s\n" "--tag TAG" "$(validate_minimal_cp_version "$2")" >&2
+            exit 1
+          fi
 
           args['--tag']="$2"
           shift
@@ -9546,6 +9562,11 @@ playground_re_run_parse_requirements() {
 
         # :flag.case_arg
         if [[ -n ${2+x} ]]; then
+          # :flag.validations
+          if [[ -n $(validate_minimal_cp_version "$2") ]]; then
+            printf "validation error in %s:\n%s\n" "--tag TAG" "$(validate_minimal_cp_version "$2")" >&2
+            exit 1
+          fi
 
           args['--tag']="$2"
           shift
@@ -9783,6 +9804,11 @@ playground_run_ccloud_parse_requirements() {
 
         # :flag.case_arg
         if [[ -n ${2+x} ]]; then
+          # :flag.validations
+          if [[ -n $(validate_minimal_cp_version "$2") ]]; then
+            printf "validation error in %s:\n%s\n" "--tag TAG" "$(validate_minimal_cp_version "$2")" >&2
+            exit 1
+          fi
 
           args['--tag']="$2"
           shift
@@ -10150,6 +10176,11 @@ playground_bootstrap_reproduction_model_parse_requirements() {
 
         # :flag.case_arg
         if [[ -n ${2+x} ]]; then
+          # :flag.validations
+          if [[ -n $(validate_minimal_cp_version "$2") ]]; then
+            printf "validation error in %s:\n%s\n" "--tag TAG" "$(validate_minimal_cp_version "$2")" >&2
+            exit 1
+          fi
 
           args['--tag']="$2"
           shift

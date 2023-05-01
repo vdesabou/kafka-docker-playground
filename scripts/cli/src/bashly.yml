@@ -90,6 +90,7 @@ commands:
     long: --tag
     arg: tag
     required: false
+    validate: minimal_cp_version
     help: |-
       🎯 Confluent Platform (CP) version to use
 
