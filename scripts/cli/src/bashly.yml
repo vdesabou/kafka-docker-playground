@@ -60,7 +60,14 @@ commands:
   group: Run
   catch_all:
     label: arguments
-    help: Arguments to use by example script
+    help: |-
+      Arguments to use by example script
+
+      Most of examples support to get required options either by using arguments or environment variables.
+      
+      Example with Zendesk:
+
+      playground run -f zendesk-source<tab> <ZENDESK_URL> <ZENDESK_USERNAME> <ZENDESK_PASSWORD>
     required: false
   dependencies:
   - fzf
@@ -206,14 +213,24 @@ commands:
       🌪️ Enable SQL Datagen injection
 
       This only works for Oracle, MySql, Postgres and Microsoft Sql Server source connector examples with JDBC and Debezium
+  examples:
+  - playground run -f zendesk-source<tab> --tag 7.2.1 --enable-control-center <ZENDESK_URL> <ZENDESK_USERNAME> <ZENDESK_PASSWORD>
+  - playground run -f jdbc<tab> --connector-tag 10.6.0 --enable-jmx-grafana --open
 
 - name: re-run
   group: Run
   help: |-
-    ⚡ Simply re-run last example you ran with <playground run>
+    ⚡ Simply re-run last example you ran with <playground run> or <playground run-ccloud>
   catch_all:
     label: arguments
-    help: Arguments to use by example script
+    help: |-
+      Arguments to use by example script
+
+      Most of examples support to get required options either by using arguments or environment variables.
+      
+      Example with Zendesk:
+
+      playground run -f zendesk-source<tab> <ZENDESK_URL> <ZENDESK_USERNAME> <ZENDESK_PASSWORD>
     required: false
   dependencies:
   - fzf
@@ -231,12 +248,22 @@ commands:
     - *enable-kcat
     - *enable-sr-maven-plugin-app
     - *enable-sql-datagen
+  examples:
+  - playground re-run
+  - playground re-run --tag=6.2.1
 
 - name: run-ccloud
   group: Run
   catch_all:
     label: arguments
-    help: Arguments to use by example script
+    help: |-
+      Arguments to use by example script
+
+      Most of examples support to get required options either by using arguments or environment variables.
+      
+      Example with Zendesk:
+
+      playground run -f zendesk-source<tab> <ZENDESK_URL> <ZENDESK_USERNAME> <ZENDESK_PASSWORD>
     required: false
   dependencies:
   - fzf
@@ -289,9 +316,9 @@ commands:
       required: false
       default: aws
       arg: cluster-cloud
-      allowed: [aws, gcp, aws]
+      allowed: [aws, gcp, azure]
       help: |-
-        🌤 The cloud provider (aws, gcp or azure). Default is aws
+        🌤 The cloud provider: aws, gcp or azure. Default is aws
 
         🎓 Tip: you can also use CLUSTER_CLOUD environment variable
     - &cluster-region
@@ -300,7 +327,9 @@ commands:
       default: eu-west-2
       arg: cluster-region
       help: |-
-        🗺 The Cloud region. Use <confluent kafka region list> to get the list of possible regions
+        🗺 The Cloud region. 
+        
+        🎓 Tip: use <confluent kafka region list> to get the list of possible regions
 
         🎓 Tip: you can also use CLUSTER_REGION environment variable
     - &cluster-environment
@@ -345,13 +374,15 @@ commands:
         ❣️ Only required if you want to use your own existing cluster
         
         🎓 Tip: you can also use SCHEMA_REGISTRY_CREDS environment variable
+  examples:
+  - playground run-ccloud mqtt<tab> --cluster-cloud aws --cluster-region eu-west-3 --enable-control-center --connector-tag 1.2.3
 
 - name: open
   group: Run
   dependencies:
   - fzf
   help: |-
-    👐 Simply open last example you ran with <playground run>
+    👐 Simply open last example you ran with <playground run> or <playground run-ccloud>
 
 - name: stop
   group: Run
@@ -372,7 +403,14 @@ commands:
     👉 Check documentation https://tinyurl.com/xxx
   catch_all:
     label: arguments
-    help: Arguments to use by example script
+    help: |-
+      Arguments to use by example script
+
+      Most of examples support to get required options either by using arguments or environment variables.
+      
+      Example with Zendesk:
+
+      playground run -f zendesk-source<tab> <ZENDESK_URL> <ZENDESK_USERNAME> <ZENDESK_PASSWORD>
     required: false
   flags:
   - *tag

@@ -35,9 +35,9 @@ playground_usage() {
   # :command.usage_commands
   printf "%s\n" "$(bold "Run commands:")"
   printf "  %s   🕹️ Run any example, except for Confluent Cloud (in this case use run-ccloud command)\n" "$(green "run")                           "
-  printf "  %s   ⚡ Simply re-run last example you ran with <playground run>\n" "$(green "re-run")                        "
+  printf "  %s   ⚡ Simply re-run last example you ran with <playground run> or <playground run-ccloud>\n" "$(green "re-run")                        "
   printf "  %s   ⛅ Run any Confluent Cloud (ccloud) example\n" "$(green "run-ccloud")                    "
-  printf "  %s   👐 Simply open last example you ran with <playground run>\n" "$(green "open")                          "
+  printf "  %s   👐 Simply open last example you ran with <playground run> or <playground run-ccloud>\n" "$(green "open")                          "
   printf "  %s   🛑 Stop currently running example\n" "$(green "stop")                          "
   echo
   printf "%s\n" "$(bold "Bootstrap commands:")"
@@ -431,7 +431,13 @@ playground_run_usage() {
     printf "%s\n" "$(bold "== Arguments ==")"
 
     echo "  ARGUMENTS..."
-    printf "    Arguments to use by example script\n"
+    printf "    Arguments to use by example script\n    \n    Most of examples support to get required options either by using arguments\n    or environment variables.\n    \n    Example with Zendesk:\n    \n    playground run -f zendesk-source<tab> <ZENDESK_URL> <ZENDESK_USERNAME>\n    <ZENDESK_PASSWORD>\n"
+    echo
+
+    # :command.usage_examples
+    printf "%s\n" "$(bold "Examples")"
+    printf "  playground run -f zendesk-source<tab> --tag 7.2.1 --enable-control-center\n  <ZENDESK_URL> <ZENDESK_USERNAME> <ZENDESK_PASSWORD>\n"
+    printf "  playground run -f jdbc<tab> --connector-tag 10.6.0 --enable-jmx-grafana --open\n"
     echo
 
   fi
@@ -440,11 +446,11 @@ playground_run_usage() {
 # :command.usage
 playground_re_run_usage() {
   if [[ -n $long_usage ]]; then
-    printf "playground re-run - ⚡ Simply re-run last example you ran with <playground run>\n"
+    printf "playground re-run - ⚡ Simply re-run last example you ran with <playground run> or <playground run-ccloud>\n"
     echo
 
   else
-    printf "playground re-run - ⚡ Simply re-run last example you ran with <playground run>\n"
+    printf "playground re-run - ⚡ Simply re-run last example you ran with <playground run> or <playground run-ccloud>\n"
     echo
 
   fi
@@ -533,7 +539,13 @@ playground_re_run_usage() {
     printf "%s\n" "$(bold "== Arguments ==")"
 
     echo "  ARGUMENTS..."
-    printf "    Arguments to use by example script\n"
+    printf "    Arguments to use by example script\n    \n    Most of examples support to get required options either by using arguments\n    or environment variables.\n    \n    Example with Zendesk:\n    \n    playground run -f zendesk-source<tab> <ZENDESK_URL> <ZENDESK_USERNAME>\n    <ZENDESK_PASSWORD>\n"
+    echo
+
+    # :command.usage_examples
+    printf "%s\n" "$(bold "Examples")"
+    printf "  playground re-run\n"
+    printf "  playground re-run --tag=6.2.1\n"
     echo
 
   fi
@@ -611,14 +623,14 @@ playground_run_ccloud_usage() {
 
     # :flag.usage
     printf "  %s\n" "$(magenta "--cluster-cloud CLUSTER-CLOUD")"
-    printf "    🌤 The cloud provider (aws, gcp or azure). Default is aws\n    \n    🎓 Tip: you can also use CLUSTER_CLOUD environment variable\n"
-    printf "    Allowed: aws, gcp, aws\n"
+    printf "    🌤 The cloud provider: aws, gcp or azure. Default is aws\n    \n    🎓 Tip: you can also use CLUSTER_CLOUD environment variable\n"
+    printf "    Allowed: aws, gcp, azure\n"
     printf "    Default: aws\n"
     echo
 
     # :flag.usage
     printf "  %s\n" "$(magenta "--cluster-region CLUSTER-REGION")"
-    printf "    🗺 The Cloud region. Use <confluent kafka region list> to get the list of\n    possible regions\n    \n    🎓 Tip: you can also use CLUSTER_REGION environment variable\n"
+    printf "    🗺 The Cloud region. \n    \n    🎓 Tip: use <confluent kafka region list> to get the list of possible regions\n    \n    🎓 Tip: you can also use CLUSTER_REGION environment variable\n"
     printf "    Default: eu-west-2\n"
     echo
 
@@ -651,7 +663,12 @@ playground_run_ccloud_usage() {
     printf "%s\n" "$(bold "== Arguments ==")"
 
     echo "  ARGUMENTS..."
-    printf "    Arguments to use by example script\n"
+    printf "    Arguments to use by example script\n    \n    Most of examples support to get required options either by using arguments\n    or environment variables.\n    \n    Example with Zendesk:\n    \n    playground run -f zendesk-source<tab> <ZENDESK_URL> <ZENDESK_USERNAME>\n    <ZENDESK_PASSWORD>\n"
+    echo
+
+    # :command.usage_examples
+    printf "%s\n" "$(bold "Examples")"
+    printf "  playground run-ccloud mqtt<tab> --cluster-cloud aws --cluster-region eu-west-3\n  --enable-control-center --connector-tag 1.2.3\n"
     echo
 
   fi
@@ -660,11 +677,11 @@ playground_run_ccloud_usage() {
 # :command.usage
 playground_open_usage() {
   if [[ -n $long_usage ]]; then
-    printf "playground open - 👐 Simply open last example you ran with <playground run>\n"
+    printf "playground open - 👐 Simply open last example you ran with <playground run> or <playground run-ccloud>\n"
     echo
 
   else
-    printf "playground open - 👐 Simply open last example you ran with <playground run>\n"
+    printf "playground open - 👐 Simply open last example you ran with <playground run> or <playground run-ccloud>\n"
     echo
 
   fi
@@ -857,7 +874,7 @@ playground_bootstrap_reproduction_model_usage() {
     printf "%s\n" "$(bold "== Arguments ==")"
 
     echo "  ARGUMENTS..."
-    printf "    Arguments to use by example script\n"
+    printf "    Arguments to use by example script\n    \n    Most of examples support to get required options either by using arguments\n    or environment variables.\n    \n    Example with Zendesk:\n    \n    playground run -f zendesk-source<tab> <ZENDESK_URL> <ZENDESK_USERNAME>\n    <ZENDESK_PASSWORD>\n"
     echo
 
     # :command.usage_environment_variables
@@ -10082,8 +10099,8 @@ playground_run_ccloud_parse_requirements() {
   [[ -n ${args['--cluster-region']:-} ]] || args['--cluster-region']="eu-west-2"
 
   # :command.whitelist_filter
-  if [[ ${args['--cluster-cloud']} ]] && [[ ! ${args['--cluster-cloud']} =~ ^(aws|gcp|aws)$ ]]; then
-    printf "%s\n" "--cluster-cloud must be one of: aws, gcp, aws" >&2
+  if [[ ${args['--cluster-cloud']} ]] && [[ ! ${args['--cluster-cloud']} =~ ^(aws|gcp|azure)$ ]]; then
+    printf "%s\n" "--cluster-cloud must be one of: aws, gcp, azure" >&2
     exit 1
   fi
 
