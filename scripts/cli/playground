@@ -6792,37 +6792,37 @@ playground_run_ccloud_command() {
 
   if [[ -n "$cluster_cloud" ]]
   then
-    flag_list="$flag_list --cluster-cloud $cluster_cloud]"
+    flag_list="$flag_list --cluster-cloud $cluster_cloud"
     export CLUSTER_CLOUD=$cluster_cloud
   fi
 
   if [[ -n "$cluster_region" ]]
   then
-    flag_list="$flag_list --cluster-region $cluster_region]"
+    flag_list="$flag_list --cluster-region $cluster_region"
     export CLUSTER_REGION=$cluster_region
   fi
 
   if [[ -n "$cluster_environment" ]]
   then
-    flag_list="$flag_list --cluster-environment $cluster_environment]"
+    flag_list="$flag_list --cluster-environment $cluster_environment"
     export ENVIRONMENT=$cluster_environment
   fi
 
   if [[ -n "$cluster_name" ]]
   then
-    flag_list="$flag_list --cluster-name $cluster_name]"
+    flag_list="$flag_list --cluster-name $cluster_name"
     export CLUSTER_NAME=$cluster_name
   fi
 
   if [[ -n "$cluster_creds" ]]
   then
-    flag_list="$flag_list --cluster-creds $cluster_creds]"
+    flag_list="$flag_list --cluster-creds $cluster_creds"
     export CLUSTER_CREDS=$cluster_creds
   fi
 
   if [[ -n "$cluster_schema_registry_creds" ]]
   then
-    flag_list="$flag_list --cluster-schema-registry-creds $cluster_schema_registry_creds]"
+    flag_list="$flag_list --cluster-schema-registry-creds $cluster_schema_registry_creds"
     export SCHEMA_REGISTRY_CREDS=$cluster_schema_registry_creds
   fi
 
