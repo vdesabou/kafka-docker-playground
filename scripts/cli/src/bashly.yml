@@ -352,6 +352,11 @@ commands:
   help: |-
     👐 Simply open last example you ran with <playground run>
 
+- name: stop
+  group: Run
+  help: |-
+    🛑 Stop currently running example
+
 - name: bootstrap-reproduction-model
   environment_variables:
   - name: OUTPUT_FOLDER 

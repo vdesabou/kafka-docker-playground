@@ -38,6 +38,7 @@ playground_usage() {
   printf "  %s   ⚡ Simply re-run last example you ran with <playground run>\n" "$(green "re-run")                        "
   printf "  %s   ⛅ Run any Confluent Cloud (ccloud) example\n" "$(green "run-ccloud")                    "
   printf "  %s   👐 Simply open last example you ran with <playground run>\n" "$(green "open")                          "
+  printf "  %s   🛑 Stop currently running example\n" "$(green "stop")                          "
   echo
   printf "%s\n" "$(bold "Bootstrap commands:")"
   printf "  %s   🛠  Bootstrap reproduction model\n" "$(green "bootstrap-reproduction-model")  "
@@ -671,6 +672,35 @@ playground_open_usage() {
   printf "%s\n" "$(bold "== Usage ==")"
   printf "  playground open\n"
   printf "  playground open --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n $long_usage ]]; then
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_stop_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground stop - 🛑 Stop currently running example\n"
+    echo
+
+  else
+    printf "playground stop - 🛑 Stop currently running example\n"
+    echo
+
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground stop\n"
+  printf "  playground stop --help | -h\n"
   echo
 
   # :command.long_usage
@@ -6786,7 +6816,7 @@ playground_open_command() {
   # src/open_command.sh
   if [ ! -f /tmp/playground-run ]
   then
-    logerror "File containing re-run command /tmp/playground-run does not exist!"
+    logerror "File containing run command /tmp/playground-run does not exist!"
     logerror "Make sure to use <playground run> command !"
     exit 1
   fi
@@ -6816,6 +6846,40 @@ playground_open_command() {
       code ${test_file}
     fi
   fi
+}
+
+# :command.function
+playground_stop_command() {
+  # src/stop_command.sh
+  if [ ! -f /tmp/playground-run ]
+  then
+    logerror "File containing run command /tmp/playground-run does not exist!"
+    logerror "Make sure to use <playground run> command !"
+    exit 1
+  fi
+
+  test_file=$(cat /tmp/playground-run | awk '{ print $4}')
+
+  if [ ! -f $test_file ]
+  then
+
+    logerror "File $test_file retrieved from /tmp/playground-run does not exist!"
+    logerror "Make sure to use <playground run> command !"
+    exit 1
+  fi
+  filename=$(basename -- "$test_file")
+  test_file_directory="$(dirname "${test_file}")"
+  cd ${test_file_directory}
+
+  if [ ! -f $test_file_directory/stop.sh ]
+  then
+
+    logerror "File stop.sh in directory $test_file_directory does not exist"
+    exit 1
+  fi
+
+  log "🛑 Stopping example $filename in dir $test_file_directory"
+  bash stop.sh
 }
 
 # :command.function
@@ -8762,6 +8826,13 @@ parse_requirements() {
       shift $#
       ;;
 
+    stop)
+      action="stop"
+      shift
+      playground_stop_parse_requirements "$@"
+      shift $#
+      ;;
+
     bootstrap-reproduction-model)
       action="bootstrap-reproduction-model"
       shift
@@ -9969,6 +10040,50 @@ playground_open_parse_requirements() {
 
   # :command.command_filter
   action="open"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+}
+
+# :command.parse_requirements
+playground_stop_parse_requirements() {
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    case "${1:-}" in
+      --help | -h)
+        long_usage=yes
+        playground_stop_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action="stop"
 
   # :command.parse_requirements_while
   while [[ $# -gt 0 ]]; do
@@ -12747,6 +12862,7 @@ run() {
     "re-run") playground_re_run_command ;;
     "run-ccloud") playground_run_ccloud_command ;;
     "open") playground_open_command ;;
+    "stop") playground_stop_command ;;
     "bootstrap-reproduction-model") playground_bootstrap_reproduction_model_command ;;
     "get-properties") playground_get_properties_command ;;
     "get-all-schemas") playground_get_all_schemas_command ;;
