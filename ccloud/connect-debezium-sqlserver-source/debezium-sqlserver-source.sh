@@ -27,7 +27,7 @@ then
      set -e
      done
 else
-     log "🌪️ SQL_DATAGEN is not set"
+     log "🛑 SQL_DATAGEN is not set"
 fi
 
 #############

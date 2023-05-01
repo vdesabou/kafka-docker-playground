@@ -23,7 +23,7 @@ then
      set -e
      done
 else
-     log "🌪️ SQL_DATAGEN is not set"
+     log "🛑 SQL_DATAGEN is not set"
 fi
 
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.cdb-table.yml"

@@ -27,7 +27,7 @@ then
      set -e
      done
 else
-     log "🌪️ SQL_DATAGEN is not set"
+     log "🛑 SQL_DATAGEN is not set"
 fi
 
 create_or_get_oracle_image "linuxx64_12201_database.zip" "../../connect/connect-cdc-oracle12-source/ora-setup-scripts-pdb-table"
