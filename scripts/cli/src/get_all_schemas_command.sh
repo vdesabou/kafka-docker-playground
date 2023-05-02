@@ -1,13 +1,13 @@
 open="${args[--open]}"
 
 function get_all_schemas() {
-  ret=$(get_sr_url_and_security)
+  ret=$(get_sr_url_and_sr_security)
 
   sr_url=$(echo "$ret" | cut -d "@" -f 1)
-  security=$(echo "$ret" | cut -d "@" -f 2)
+  sr_security=$(echo "$ret" | cut -d "@" -f 2)
 
   # Get a list of all subjects in the schema registry
-  subjects=$(curl $security -s "${sr_url}/subjects")
+  subjects=$(curl $sr_security -s "${sr_url}/subjects")
 
   if [[ -n "$open" ]]
   then
@@ -18,11 +18,11 @@ function get_all_schemas() {
   # Loop through each subject and retrieve all its schema versions and definitions
   for subject in $(echo "${subjects}" | jq -r '.[]'); do
     # Get a list of all schema versions for the subject
-    versions=$(curl $security -s "${sr_url}/subjects/${subject}/versions")
+    versions=$(curl $sr_security -s "${sr_url}/subjects/${subject}/versions")
     
     # Loop through each version and retrieve the schema
     for version in $(echo "${versions}" | jq -r '.[]'); do
-      schema=$(curl $security -s "${sr_url}/subjects/${subject}/versions/${version}/schema" | jq .)
+      schema=$(curl $sr_security -s "${sr_url}/subjects/${subject}/versions/${version}/schema" | jq .)
 
       if [[ -n "$open" ]]
       then
