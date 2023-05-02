@@ -2620,7 +2620,20 @@ function filter_schema_registry_running() {
   ret=$(curl $sr_security -s "${sr_url}/config")
   if [ $? != 0 ]
   then
-    echo "schema registry should be running to run this command"
+    echo "schema registry rest api should be running to run this command"
+  fi
+}
+
+function filter_connect_running() {
+  ret=$(get_connect_url_and_security)
+
+  connect_url=$(echo "$ret" | cut -d "@" -f 1)
+  security=$(echo "$ret" | cut -d "@" -f 2)
+
+  ret=$(curl $security -s "${connect_url}")
+  if [ $? != 0 ]
+  then
+    echo "connect rest api should be running to run this command"
   fi
 }
 
@@ -11078,6 +11091,13 @@ playground_log_level_parse_requirements() {
     esac
   done
 
+  # :command.user_filter
+  filter_error=$(filter_connect_running)
+  if [[ -n $filter_error ]]; then
+    echo "$filter_error" >&2
+    exit 1
+  fi
+
 }
 
 # :command.parse_requirements
@@ -12619,6 +12639,12 @@ playground_connector_parse_requirements() {
 
   # :command.user_filter
   filter_error=$(filter_not_mdc_environment)
+  if [[ -n $filter_error ]]; then
+    echo "$filter_error" >&2
+    exit 1
+  fi
+
+  filter_error=$(filter_connect_running)
   if [[ -n $filter_error ]]; then
     echo "$filter_error" >&2
     exit 1

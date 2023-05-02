@@ -307,6 +307,19 @@ function filter_schema_registry_running() {
   ret=$(curl $sr_security -s "${sr_url}/config")
   if [ $? != 0 ]
   then
-    echo "schema registry should be running to run this command"
+    echo "schema registry rest api should be running to run this command"
+  fi
+}
+
+function filter_connect_running() {
+  ret=$(get_connect_url_and_security)
+
+  connect_url=$(echo "$ret" | cut -d "@" -f 1)
+  security=$(echo "$ret" | cut -d "@" -f 2)
+
+  ret=$(curl $security -s "${connect_url}")
+  if [ $? != 0 ]
+  then
+    echo "connect rest api should be running to run this command"
   fi
 }

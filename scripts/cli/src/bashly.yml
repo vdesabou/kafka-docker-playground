@@ -610,7 +610,8 @@ commands:
     🧬 Set log level for any package
 
     👉 Check documentation https://tinyurl.com/xxx
-
+  filters:
+  - connect_running
   commands:
   - name: get
     help: Get log levels
@@ -882,6 +883,7 @@ commands:
   group: Connector
   filters:
   - not_mdc_environment
+  - connect_running
   help: |-
     🔗 Connector commands
 
