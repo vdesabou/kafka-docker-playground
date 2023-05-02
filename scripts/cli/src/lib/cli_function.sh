@@ -297,3 +297,16 @@ function filter_not_mdc_environment() {
     echo "$environment is not supported with this command !"
   fi
 }
+
+function filter_schema_registry_running() {
+  ret=$(get_sr_url_and_security)
+
+  sr_url=$(echo "$ret" | cut -d "@" -f 1)
+  sr_security=$(echo "$ret" | cut -d "@" -f 2)
+
+  ret=$(curl $sr_security -s "${sr_url}/config")
+  if [ $? != 0 ]
+  then
+    echo "schema registry should be running to run this command"
+  fi
+}

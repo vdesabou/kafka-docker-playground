@@ -577,6 +577,7 @@ commands:
   group: Kafka
   filters:
   - not_mdc_environment
+  - schema_registry_running
   help: |-
     🔰 Get all schemas versions for all subjects
     
@@ -868,6 +869,8 @@ commands:
       - *topic
 
     - name: consume
+      filters:
+      - schema_registry_running
       group: Topic
       help: |-
         📥 Consume topic from beginning

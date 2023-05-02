@@ -1,7 +1,7 @@
 open="${args[--open]}"
 
 function get_all_schemas() {
-  ret=$(get_sr_url_and_sr_security)
+  ret=$(get_sr_url_and_security)
 
   sr_url=$(echo "$ret" | cut -d "@" -f 1)
   sr_security=$(echo "$ret" | cut -d "@" -f 2)
@@ -15,14 +15,20 @@ function get_all_schemas() {
   else
     log "Displaying all subjects 🔰 and versions 💯"
   fi
-  # Loop through each subject and retrieve all its schema versions and definitions
   for subject in $(echo "${subjects}" | jq -r '.[]'); do
-    # Get a list of all schema versions for the subject
     versions=$(curl $sr_security -s "${sr_url}/subjects/${subject}/versions")
-    
-    # Loop through each version and retrieve the schema
-    for version in $(echo "${versions}" | jq -r '.[]'); do
-      schema=$(curl $sr_security -s "${sr_url}/subjects/${subject}/versions/${version}/schema" | jq .)
+
+    for version in $(echo "${versions}" | jq -r '.[]')
+    do
+      schema_type=$(curl $sr_security -s "${sr_url}/subjects/${subject}/versions/${version}"  | jq -r .schemaType)
+      case "${schema_type}" in
+        JSON|null)
+          schema=$(curl $sr_security -s "${sr_url}/subjects/${subject}/versions/${version}/schema" | jq .)
+        ;;
+        PROTOBUF)
+          schema=$(curl $sr_security -s "${sr_url}/subjects/${subject}/versions/${version}/schema")
+        ;;
+      esac
 
       if [[ -n "$open" ]]
       then

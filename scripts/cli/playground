@@ -2611,6 +2611,19 @@ function filter_not_mdc_environment() {
   fi
 }
 
+function filter_schema_registry_running() {
+  ret=$(get_sr_url_and_security)
+
+  sr_url=$(echo "$ret" | cut -d "@" -f 1)
+  sr_security=$(echo "$ret" | cut -d "@" -f 2)
+
+  ret=$(curl $sr_security -s "${sr_url}/config")
+  if [ $? != 0 ]
+  then
+    echo "schema registry should be running to run this command"
+  fi
+}
+
 # src/lib/colors.sh
 print_in_color() {
   local color="$1"
@@ -8017,10 +8030,10 @@ playground_get_all_schemas_command() {
     ret=$(get_sr_url_and_security)
 
     sr_url=$(echo "$ret" | cut -d "@" -f 1)
-    security=$(echo "$ret" | cut -d "@" -f 2)
+    sr_security=$(echo "$ret" | cut -d "@" -f 2)
 
     # Get a list of all subjects in the schema registry
-    subjects=$(curl $security -s "${sr_url}/subjects")
+    subjects=$(curl $sr_security -s "${sr_url}/subjects")
 
     if [[ -n "$open" ]]
     then
@@ -8028,14 +8041,20 @@ playground_get_all_schemas_command() {
     else
       log "Displaying all subjects 🔰 and versions 💯"
     fi
-    # Loop through each subject and retrieve all its schema versions and definitions
     for subject in $(echo "${subjects}" | jq -r '.[]'); do
-      # Get a list of all schema versions for the subject
-      versions=$(curl $security -s "${sr_url}/subjects/${subject}/versions")
+      versions=$(curl $sr_security -s "${sr_url}/subjects/${subject}/versions")
 
-      # Loop through each version and retrieve the schema
-      for version in $(echo "${versions}" | jq -r '.[]'); do
-        schema=$(curl $security -s "${sr_url}/subjects/${subject}/versions/${version}/schema" | jq .)
+      for version in $(echo "${versions}" | jq -r '.[]')
+      do
+        schema_type=$(curl $sr_security -s "${sr_url}/subjects/${subject}/versions/${version}"  | jq -r .schemaType)
+        case "${schema_type}" in
+          JSON|null)
+            schema=$(curl $sr_security -s "${sr_url}/subjects/${subject}/versions/${version}/schema" | jq .)
+          ;;
+          PROTOBUF)
+            schema=$(curl $sr_security -s "${sr_url}/subjects/${subject}/versions/${version}/schema")
+          ;;
+        esac
 
         if [[ -n "$open" ]]
         then
@@ -10918,6 +10937,12 @@ playground_get_all_schemas_parse_requirements() {
     exit 1
   fi
 
+  filter_error=$(filter_schema_registry_running)
+  if [[ -n $filter_error ]]; then
+    echo "$filter_error" >&2
+    exit 1
+  fi
+
 }
 
 # :command.parse_requirements
@@ -12459,6 +12484,13 @@ playground_topic_consume_parse_requirements() {
   # :command.required_flags_filter
   if [[ -z ${args['--topic']+x} ]]; then
     printf "missing required flag: --topic, -t TOPIC\n" >&2
+    exit 1
+  fi
+
+  # :command.user_filter
+  filter_error=$(filter_schema_registry_running)
+  if [[ -n $filter_error ]]; then
+    echo "$filter_error" >&2
     exit 1
   fi
 
