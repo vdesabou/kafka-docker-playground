@@ -2637,6 +2637,10 @@ function filter_connect_running() {
   fi
 }
 
+function filter_docker_running() {
+  docker info >/dev/null 2>&1 || echo "Docker must be running"
+}
+
 # src/lib/colors.sh
 print_in_color() {
   local color="$1"
@@ -9073,6 +9077,13 @@ parse_requirements() {
 
     esac
   done
+
+  # :command.user_filter
+  filter_error=$(filter_docker_running)
+  if [[ -n $filter_error ]]; then
+    echo "$filter_error" >&2
+    exit 1
+  fi
 
 }
 

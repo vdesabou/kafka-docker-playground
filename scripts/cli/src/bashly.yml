@@ -6,7 +6,8 @@ help: |-
   🧠 CLI for Kafka Docker Playground 🐳
 
   👉 Check documentation https://kafka-docker-playground.io/#/cli
-
+filters:
+- docker_running
 commands:
 
 ### private commands for completion

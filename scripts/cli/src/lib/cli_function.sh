@@ -323,3 +323,7 @@ function filter_connect_running() {
     echo "connect rest api should be running to run this command"
   fi
 }
+
+function filter_docker_running() {
+  docker info >/dev/null 2>&1 || echo "Docker must be running"
+}
