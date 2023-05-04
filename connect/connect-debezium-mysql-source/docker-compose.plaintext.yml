@@ -9,6 +9,8 @@ services:
     container_name: sql-datagen
     profiles:
     - sql_datagen
+    volumes:
+      - ../../connect/connect-debezium-mysql-source/mysql-datagen/target/sql-datagen-1.0-SNAPSHOT-jar-with-dependencies.jar:/sql-datagen-1.0-SNAPSHOT-jar-with-dependencies.jar
 
   mysql:
     image: mysql:latest

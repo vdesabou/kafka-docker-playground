@@ -9,6 +9,8 @@ services:
     container_name: sql-datagen
     profiles:
     - sql_datagen
+    volumes:
+      - ../../ccloud/fully-managed-connect-debezium-postgresql-source/postgres-datagen/target/sql-datagen-1.0-SNAPSHOT-jar-with-dependencies.jar:/sql-datagen-1.0-SNAPSHOT-jar-with-dependencies.jar
 
   postgres:
     image: debezium/postgres:15-alpine

@@ -9,7 +9,9 @@ services:
     container_name: sql-datagen
     profiles:
     - sql_datagen
-    
+    volumes:
+      - ../../connect/connect-cdc-oracle21-source/oracle-datagen/target/sql-datagen-1.0-SNAPSHOT-jar-with-dependencies.jar:/sql-datagen-1.0-SNAPSHOT-jar-with-dependencies.jar
+
   oracle:
     # You need to build this image first, following the instructions at
     # https://github.com/oracle/docker-images/blob/master/OracleDatabase/SingleInstance/README.md

@@ -9,6 +9,8 @@ services:
     container_name: sql-datagen
     profiles:
     - sql_datagen
+    volumes:
+      - ../../connect/connect-jdbc-postgresql-source/postgres-datagen/target/sql-datagen-1.0-SNAPSHOT-jar-with-dependencies.jar:/sql-datagen-1.0-SNAPSHOT-jar-with-dependencies.jar
 
   postgres:
     image: postgres:15

@@ -22,3 +22,4 @@ services:
       EXTRA_ARGS: ${GRAFANA_AGENT_BROKER}
     volumes:
       - ../../environment/plaintext/jmx-exporter:/usr/share/jmx_exporter/
+      - ../../other/schema-format-protobuf-with-key/producer/target/producer-1.0.0-jar-with-dependencies.jar:/producer-1.0.0-jar-with-dependencies.jar

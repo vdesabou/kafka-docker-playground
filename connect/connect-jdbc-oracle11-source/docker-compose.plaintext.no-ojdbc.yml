@@ -9,7 +9,9 @@ services:
     container_name: sql-datagen
     profiles:
     - sql_datagen
-    
+    volumes:
+      - ../../connect-jdbc-oracle11-source/oracle-datagen/target/sql-datagen-1.0-SNAPSHOT-jar-with-dependencies.jar:/sql-datagen-1.0-SNAPSHOT-jar-with-dependencies.jar
+
   oracle:
     # https://github.com/wnameless/docker-oracle-xe-11g
     image: wnameless/oracle-xe-11g-r2
