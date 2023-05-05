@@ -1,4 +1,4 @@
-# ksqlDB Schema Inference
+# ksqlDB Schema Inference with ID
 
 ## Objective
 
