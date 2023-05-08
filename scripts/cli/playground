@@ -1880,6 +1880,12 @@ playground_topic_consume_usage() {
     printf "    🗳 Topic name\n"
     echo
 
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--max-messages MAX-MESSAGES")"
+    printf "    Max number of messages to consume\n"
+    printf "    Default: \n"
+    echo
+
     # :command.usage_fixed_flags
     printf "  %s\n" "$(magenta "--help, -h")"
     printf "    Show this help\n"
@@ -2851,7 +2857,7 @@ for component in $list
 do
     set +e
     log "🏗 Building jar for \${component}"
-    docker run -i --rm -e KAFKA_CLIENT_TAG=\$KAFKA_CLIENT_TAG -e TAG=\$TAG_BASE -v "\${DIR}/\${component}":/usr/src/mymaven -v "\$HOME/.m2":/root/.m2 -v "\${DIR}/\${component}/target:/usr/src/mymaven/target" -w /usr/src/mymaven maven:3.6.1-jdk-11 mvn -Dkafka.tag=\$TAG -Dkafka.client.tag=\$KAFKA_CLIENT_TAG package > /tmp/result.log 2>&1
+    docker run -i --rm -e KAFKA_CLIENT_TAG=\$KAFKA_CLIENT_TAG -e TAG=\$TAG_BASE -v "\${DIR}/\${component}":/usr/src/mymaven -v "\$HOME/.m2":/root/.m2 -v "\$PWD/../../scripts/settings.xml:/tmp/settings.xml" -v "\${DIR}/\${component}/target:/usr/src/mymaven/target" -w /usr/src/mymaven maven:3.6.1-jdk-11 mvn -s /tmp/settings.xml -Dkafka.tag=\$TAG -Dkafka.client.tag=\$KAFKA_CLIENT_TAG package > /tmp/result.log 2>&1
     if [ \$? != 0 ]
     then
         logerror "ERROR: failed to build java component $component"
@@ -2907,7 +2913,7 @@ for component in $custom_smt_name
 do
     set +e
     log "🏗 Building jar for \${component}"
-    docker run -i --rm -e KAFKA_CLIENT_TAG=\$KAFKA_CLIENT_TAG -e TAG=\$TAG_BASE -v "\${DIR}/\${component}":/usr/src/mymaven -v "\$HOME/.m2":/root/.m2 -v "\${DIR}/\${component}/target:/usr/src/mymaven/target" -w /usr/src/mymaven maven:3.6.1-jdk-11 mvn -Dkafka.tag=\$TAG -Dkafka.client.tag=\$KAFKA_CLIENT_TAG package > /tmp/result.log 2>&1
+    docker run -i --rm -e KAFKA_CLIENT_TAG=\$KAFKA_CLIENT_TAG -e TAG=\$TAG_BASE -v "\${DIR}/\${component}":/usr/src/mymaven -v "\$HOME/.m2":/root/.m2 -v "\$PWD/../../scripts/settings.xml:/tmp/settings.xml" -v "\${DIR}/\${component}/target:/usr/src/mymaven/target" -w /usr/src/mymaven maven:3.6.1-jdk-11 mvn -s /tmp/settings.xml -Dkafka.tag=\$TAG -Dkafka.client.tag=\$KAFKA_CLIENT_TAG package > /tmp/result.log 2>&1
     if [ \$? != 0 ]
     then
         logerror "ERROR: failed to build java component $component"
@@ -3070,6 +3076,11 @@ function version_gt() {
 
 function set_kafka_client_tag()
 {
+    if [[ $TAG_BASE = 7.4.* ]]
+    then
+      export KAFKA_CLIENT_TAG="3.4.0"
+    fi
+
     if [[ $TAG_BASE = 7.3.* ]]
     then
       export KAFKA_CLIENT_TAG="3.3.0"
@@ -3151,7 +3162,7 @@ function displaytime {
 
 function choosejar()
 {
-  log "Select the jar to replace:"
+  log "☕ Select the jar to replace:"
   select jar
   do
     # Check the selected menu jar number
@@ -3171,6 +3182,40 @@ function verify_installed()
     echo -e "\nERROR: This script requires '$cmd'. Please install '$cmd' and run again.\n"
     exit 1
   fi
+}
+
+function maybe_create_image()
+{
+  set +e
+  docker run --rm ${CP_CONNECT_IMAGE}:${CONNECT_TAG} type unzip > /dev/null 2>&1
+  if [ $? != 0 ]
+  then
+    if [[ "$TAG" == *ubi8 ]] || version_gt $TAG_BASE "5.9.0"
+    then
+      export CONNECT_USER="appuser"
+      if [ `uname -m` = "arm64" ]
+      then
+        CONNECT_3RDPARTY_INSTALL="if [ ! -f /tmp/done ]; then yum -y install --disablerepo='Confluent*' bind-utils openssl unzip findutils net-tools nc jq which iptables libmnl krb5-workstation krb5-libs vim && yum clean all && rm -rf /var/cache/yum && dnf -y install iproute && rpm -i --nosignature http://mirror.centos.org/centos/8-stream/BaseOS/aarch64/os/Packages/iproute-tc-5.18.0-1.el8.aarch64.rpm && rpm -i --nosignature https://rpmfind.net/linux/centos/8-stream/AppStream/aarch64/os/Packages/tcpdump-4.9.3-2.el8.aarch64.rpm && touch /tmp/done; fi"
+      else
+        CONNECT_3RDPARTY_INSTALL="if [ ! -f /tmp/done ]; then wget http://vault.centos.org/8.1.1911/BaseOS/x86_64/os/Packages/iproute-tc-4.18.0-15.el8.x86_64.rpm && rpm -i --nodeps --nosignature http://vault.centos.org/8.1.1911/BaseOS/x86_64/os/Packages/iproute-tc-4.18.0-15.el8.x86_64.rpm && curl http://mirror.centos.org/centos/8-stream/AppStream/x86_64/os/Packages/tcpdump-4.9.3-1.el8.x86_64.rpm -o tcpdump-4.9.3-1.el8.x86_64.rpm && rpm -Uvh tcpdump-4.9.3-1.el8.x86_64.rpm && yum -y install --disablerepo='Confluent*' bind-utils openssl unzip findutils net-tools nc jq which iptables libmnl krb5-workstation krb5-libs vim && yum clean all && rm -rf /var/cache/yum && touch /tmp/done; fi"
+      fi
+    else
+      export CONNECT_USER="root"
+      CONNECT_3RDPARTY_INSTALL="if [ ! -f /tmp/done ]; then apt-get update && echo bind-utils openssl unzip findutils net-tools nc jq which iptables iproute tree | xargs -n 1 apt-get install --force-yes -y && rm -rf /var/lib/apt/lists/* && touch /tmp/done; fi"
+    fi
+
+    tmp_dir=$(mktemp -d -t ci-XXXXXXXXXX)
+cat << EOF > $tmp_dir/Dockerfile
+FROM ${CP_CONNECT_IMAGE}:${CONNECT_TAG}
+USER root
+RUN ${CONNECT_3RDPARTY_INSTALL}
+USER ${CONNECT_USER}
+EOF
+    log "👷📦 Re-building Docker image ${CP_CONNECT_IMAGE}:${CONNECT_TAG} to include additional tools"
+    docker build -t ${CP_CONNECT_IMAGE}:${CONNECT_TAG} $tmp_dir
+    rm -rf $tmp_dir
+  fi
+  set -e
 }
 
 function verify_docker_and_memory()
@@ -8416,6 +8461,7 @@ playground_topic_describe_command() {
 playground_topic_consume_command() {
   # src/topic_consume_command.sh
   topic="${args[--topic]}"
+  max_messages="${args[--max-messages]}"
 
   environment=`get_environment_used`
 
@@ -8501,9 +8547,16 @@ playground_topic_consume_command() {
       docker exec -i client kinit -k -t /var/lib/secret/kafka-connect.key connect
   fi
 
-  nb_messages=$(playground topic get-number-records -t $topic | tail -1)
+  if [[ -n "$max_messages" ]]
+  then
+    nb_messages=$(playground topic get-number-records -t $topic | tail -1)
+    log "✨ Display content of topic $topic, it contains $nb_messages messages, but displaying only --max-messages=$max_messages"
+    nb_messages=$max_messages
+  else
+    nb_messages=$(playground topic get-number-records -t $topic | tail -1)
+    log "✨ Display content of topic $topic, it contains $nb_messages messages"
+  fi
 
-  log "✨ Display content of topic $topic, it contains $nb_messages messages"
   type=""
   tmp_dir=$(mktemp -d -t ci-XXXXXXXXXX)
   fifo_path="$tmp_dir/kafka_output_fifo"
@@ -12496,6 +12549,26 @@ playground_topic_consume_parse_requirements() {
         fi
         ;;
 
+      # :flag.case
+      --max-messages)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          # :flag.validations
+          if [[ -n $(validate_integer "$2") ]]; then
+            printf "validation error in %s:\n%s\n" "--max-messages MAX-MESSAGES" "$(validate_integer "$2")" >&2
+            exit 1
+          fi
+
+          args['--max-messages']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--max-messages requires an argument: --max-messages MAX-MESSAGES" >&2
+          exit 1
+        fi
+        ;;
+
       -?*)
         printf "invalid option: %s\n" "$key" >&2
         exit 1
@@ -12517,6 +12590,9 @@ playground_topic_consume_parse_requirements() {
     printf "missing required flag: --topic, -t TOPIC\n" >&2
     exit 1
   fi
+
+  # :command.default_assignments
+  [[ -n ${args['--max-messages']:-} ]] || args['--max-messages']=""
 
   # :command.user_filter
   filter_error=$(filter_schema_registry_running)

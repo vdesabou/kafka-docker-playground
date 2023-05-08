@@ -1,4 +1,5 @@
 topic="${args[--topic]}"
+max_messages="${args[--max-messages]}"
 
 environment=`get_environment_used`
 
@@ -83,9 +84,16 @@ then
     docker exec -i client kinit -k -t /var/lib/secret/kafka-connect.key connect
 fi
 
-nb_messages=$(playground topic get-number-records -t $topic | tail -1)
+if [[ -n "$max_messages" ]]
+then
+  nb_messages=$(playground topic get-number-records -t $topic | tail -1)
+  log "✨ Display content of topic $topic, it contains $nb_messages messages, but displaying only --max-messages=$max_messages"
+  nb_messages=$max_messages
+else
+  nb_messages=$(playground topic get-number-records -t $topic | tail -1)
+  log "✨ Display content of topic $topic, it contains $nb_messages messages"
+fi
 
-log "✨ Display content of topic $topic, it contains $nb_messages messages"
 type=""
 tmp_dir=$(mktemp -d -t ci-XXXXXXXXXX)
 fifo_path="$tmp_dir/kafka_output_fifo"

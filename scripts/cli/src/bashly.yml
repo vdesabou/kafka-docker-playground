@@ -878,6 +878,13 @@ commands:
         📥 Consume topic from beginning
       flags:
       - *topic
+      - long: --max-messages
+        arg: max-messages
+        validate: integer
+        required: false
+        default: ""
+        help: |-
+          Max number of messages to consume
 
 - name: connector
   expose: true

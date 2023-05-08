@@ -433,7 +433,7 @@ _playground_completions() {
       ;;
 
     'topic consume'*)
-      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "--help --topic -h -t")" -- "$cur" )
+      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "--help --max-messages --topic -h -t")" -- "$cur" )
       ;;
 
     'bashly-reload'*)
