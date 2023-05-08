@@ -10,6 +10,7 @@ services:
       - "5005:5005"
     volumes:
       - ../../ccloud/environment/data:/data
+      - ../../confluent-hub:/usr/share/confluent-hub-components
     environment:
       CONNECT_BOOTSTRAP_SERVERS: $BOOTSTRAP_SERVERS
       CONNECT_GROUP_ID: "connect-${TAG}"

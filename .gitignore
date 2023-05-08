@@ -70,3 +70,4 @@ secrets.tar
 *.pcap
 github_ssh_key_file
 ._github_ssh_key_file
+confluent-hub

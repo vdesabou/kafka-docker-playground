@@ -60,6 +60,11 @@ function version_gt() {
 
 function set_kafka_client_tag()
 {
+    if [[ $TAG_BASE = 7.4.* ]]
+    then
+      export KAFKA_CLIENT_TAG="3.4.0"
+    fi
+
     if [[ $TAG_BASE = 7.3.* ]]
     then
       export KAFKA_CLIENT_TAG="3.3.0"
@@ -141,7 +146,7 @@ function displaytime {
 
 function choosejar()
 {
-  log "Select the jar to replace:"
+  log "☕ Select the jar to replace:"
   select jar
   do
     # Check the selected menu jar number
@@ -162,6 +167,40 @@ function verify_installed()
     echo -e "\nERROR: This script requires '$cmd'. Please install '$cmd' and run again.\n"
     exit 1
   fi
+}
+
+function maybe_create_image()
+{
+  set +e
+  docker run --rm ${CP_CONNECT_IMAGE}:${CONNECT_TAG} type unzip > /dev/null 2>&1
+  if [ $? != 0 ]
+  then
+    if [[ "$TAG" == *ubi8 ]] || version_gt $TAG_BASE "5.9.0"
+    then
+      export CONNECT_USER="appuser"
+      if [ `uname -m` = "arm64" ]
+      then
+        CONNECT_3RDPARTY_INSTALL="if [ ! -f /tmp/done ]; then yum -y install --disablerepo='Confluent*' bind-utils openssl unzip findutils net-tools nc jq which iptables libmnl krb5-workstation krb5-libs vim && yum clean all && rm -rf /var/cache/yum && dnf -y install iproute && rpm -i --nosignature http://mirror.centos.org/centos/8-stream/BaseOS/aarch64/os/Packages/iproute-tc-5.18.0-1.el8.aarch64.rpm && rpm -i --nosignature https://rpmfind.net/linux/centos/8-stream/AppStream/aarch64/os/Packages/tcpdump-4.9.3-2.el8.aarch64.rpm && touch /tmp/done; fi"
+      else
+        CONNECT_3RDPARTY_INSTALL="if [ ! -f /tmp/done ]; then wget http://vault.centos.org/8.1.1911/BaseOS/x86_64/os/Packages/iproute-tc-4.18.0-15.el8.x86_64.rpm && rpm -i --nodeps --nosignature http://vault.centos.org/8.1.1911/BaseOS/x86_64/os/Packages/iproute-tc-4.18.0-15.el8.x86_64.rpm && curl http://mirror.centos.org/centos/8-stream/AppStream/x86_64/os/Packages/tcpdump-4.9.3-1.el8.x86_64.rpm -o tcpdump-4.9.3-1.el8.x86_64.rpm && rpm -Uvh tcpdump-4.9.3-1.el8.x86_64.rpm && yum -y install --disablerepo='Confluent*' bind-utils openssl unzip findutils net-tools nc jq which iptables libmnl krb5-workstation krb5-libs vim && yum clean all && rm -rf /var/cache/yum && touch /tmp/done; fi"
+      fi
+    else
+      export CONNECT_USER="root"
+      CONNECT_3RDPARTY_INSTALL="if [ ! -f /tmp/done ]; then apt-get update && echo bind-utils openssl unzip findutils net-tools nc jq which iptables iproute tree | xargs -n 1 apt-get install --force-yes -y && rm -rf /var/lib/apt/lists/* && touch /tmp/done; fi"
+    fi
+
+    tmp_dir=$(mktemp -d -t ci-XXXXXXXXXX)
+cat << EOF > $tmp_dir/Dockerfile
+FROM ${CP_CONNECT_IMAGE}:${CONNECT_TAG}
+USER root
+RUN ${CONNECT_3RDPARTY_INSTALL}
+USER ${CONNECT_USER}
+EOF
+    log "👷📦 Re-building Docker image ${CP_CONNECT_IMAGE}:${CONNECT_TAG} to include additional tools"
+    docker build -t ${CP_CONNECT_IMAGE}:${CONNECT_TAG} $tmp_dir
+    rm -rf $tmp_dir
+  fi
+  set -e
 }
 
 

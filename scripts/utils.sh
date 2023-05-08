@@ -1,8 +1,6 @@
 DIR_UTILS="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR_UTILS}/../scripts/cli/src/lib/utils_function.sh
 
-CONNECT_3RDPARTY_INSTALL="if [ ! -f /tmp/done ]; then wget http://vault.centos.org/8.1.1911/BaseOS/x86_64/os/Packages/iproute-tc-4.18.0-15.el8.x86_64.rpm && rpm -i --nodeps --nosignature http://vault.centos.org/8.1.1911/BaseOS/x86_64/os/Packages/iproute-tc-4.18.0-15.el8.x86_64.rpm && curl http://mirror.centos.org/centos/8-stream/AppStream/x86_64/os/Packages/tcpdump-4.9.3-1.el8.x86_64.rpm -o tcpdump-4.9.3-1.el8.x86_64.rpm && rpm -Uvh tcpdump-4.9.3-1.el8.x86_64.rpm && yum -y install --disablerepo='Confluent*' bind-utils openssl unzip findutils net-tools nc jq which iptables libmnl krb5-workstation krb5-libs vim && yum clean all && rm -rf /var/cache/yum && touch /tmp/done|| true && exit 0; fi"
-
 # Setting up TAG environment variable
 #
 if [ -z "$TAG" ]
@@ -16,7 +14,7 @@ then
       if [ -z "$IGNORE_CHECK_FOR_DOCKER_COMPOSE" ]
       then
         log "💫 Using default CP version $TAG"
-        log "🎓 set TAG environment variable to specify different version, see https://kafka-docker-playground.io/#/how-to-use?id=🎯-for-confluent-platform-cp"
+        log "🎓 Use --tag option to specify different version, see https://kafka-docker-playground.io/#/how-to-use?id=🎯-for-confluent-platform-cp"
       fi
     fi
     export CP_KAFKA_IMAGE=confluentinc/cp-server
@@ -75,13 +73,6 @@ else
         fi
     else
         export CP_CONNECT_IMAGE=confluentinc/cp-kafka-connect-base
-    fi
-    if [[ "$TAG" == *ubi8 ]] || version_gt $TAG_BASE "5.9.0"
-    then
-      export CONNECT_USER="appuser"
-    else
-      export CONNECT_USER="root"
-      CONNECT_3RDPARTY_INSTALL="if [ ! -f /tmp/done ]; then apt-get update && echo bind-utils openssl unzip findutils net-tools nc jq which iptables iproute tree | xargs -n 1 apt-get install --force-yes -y && rm -rf /var/lib/apt/lists/* && touch /tmp/done || true && exit 0; fi"
     fi
     second_version=5.3.99
     if version_gt $first_version $second_version; then
@@ -161,7 +152,7 @@ then
   else
     if [ -z "$IGNORE_CHECK_FOR_DOCKER_COMPOSE" ]
     then
-      log "🎯 CONNECTOR_TAG is set with version $CONNECTOR_TAG"
+      log "🎯 CONNECTOR_TAG (--connector-tag option) is set with version $CONNECTOR_TAG"
     fi
     # determining the connector from current path
     docker_compose_file=""
@@ -195,21 +186,18 @@ then
           CONNECTOR_VERSION="${my_array_connector_tag[$i]}"
           if [ "$CONNECTOR_VERSION" = "" ]
           then
-            logwarn "CONNECTOR_TAG was not set for element $i, setting it to latest"
+            logwarn "CONNECTOR_TAG (--connector-tag option) was not set for element $i, setting it to latest"
             CONNECTOR_VERSION="latest"
           fi
           export CONNECT_TAG="$TAG"
-          tmp_dir=$(mktemp -d -t ci-XXXXXXXXXX)
-cat << EOF > $tmp_dir/Dockerfile
-FROM ${CP_CONNECT_IMAGE}:${CONNECT_TAG}
-USER root
-RUN ${CONNECT_3RDPARTY_INSTALL}
-USER ${CONNECT_USER}
-RUN confluent-hub install --no-prompt $owner/$name:$CONNECTOR_VERSION
-EOF
-          log "👷 Building Docker image ${CP_CONNECT_IMAGE}:${CONNECT_TAG}"
-          docker build -t ${CP_CONNECT_IMAGE}:${CONNECT_TAG} $tmp_dir
-          rm -rf $tmp_dir
+
+          maybe_create_image
+
+          if [ "$first_loop" = true ]
+          then
+              rm -rf ${DIR_UTILS}/../confluent-hub
+          fi
+          docker run -i --rm -v ${DIR_UTILS}/../confluent-hub:/usr/share/confluent-hub-components ${CP_CONNECT_IMAGE}:${CONNECT_TAG} confluent-hub install --no-prompt $owner/$name:$CONNECTOR_VERSION
 
           if [ "$first_loop" = true ]
           then
@@ -221,38 +209,28 @@ EOF
             then
               if [ ! -f "$CONNECTOR_JAR" ]
               then
-                logerror "CONNECTOR_JAR $CONNECTOR_JAR does not exist!"
+                logerror "☕ jar file specified by CONNECTOR_JAR (--connector-jar option) $CONNECTOR_JAR does not exist!"
                 exit 1
               fi
               if [ -z "$IGNORE_CHECK_FOR_DOCKER_COMPOSE" ]
               then
-                log "🎯 CONNECTOR_JAR is set with $CONNECTOR_JAR"
+                log "🎯☕ CONNECTOR_JAR (--connector-jar option) is set with $CONNECTOR_JAR"
               fi
               connector_jar_name=$(basename ${CONNECTOR_JAR})
-              current_jar_path="/usr/share/confluent-hub-components/$connector_path/lib/$name-$CONNECTOR_TAG.jar"
+              current_jar_path="${DIR_UTILS}/../confluent-hub/$connector_path/lib/$name-$CONNECTOR_TAG.jar"
               set +e
-              docker run ${CP_CONNECT_IMAGE}:${CONNECT_TAG} ls $current_jar_path
+              ls $current_jar_path
               if [ $? -ne 0 ]
               then
                 logwarn "$connector_path/lib/$name-$CONNECTOR_TAG.jar does not exist, the jar name to replace could not be found automatically"
-                array=($(docker run --rm ${CP_CONNECT_IMAGE}:${CONNECT_TAG} ls /usr/share/confluent-hub-components/$connector_path/lib | grep $CONNECTOR_TAG))
+                array=($(ls ${DIR_UTILS}/../confluent-hub/$connector_path/lib | grep $CONNECTOR_TAG))
                 choosejar "${array[@]}"
-                current_jar_path="/usr/share/confluent-hub-components/$connector_path/lib/$jar"
+                current_jar_path="${DIR_UTILS}/../confluent-hub/$connector_path/lib/$jar"
               fi
               set -e
-              log "👷 Building Docker image ${CP_CONNECT_IMAGE}:${NEW_CONNECT_TAG}"
-              log "🔄 Remplacing $name-$CONNECTOR_TAG.jar by $connector_jar_name"
-              tmp_dir=$(mktemp -d -t ci-XXXXXXXXXX)
-              cp $CONNECTOR_JAR $tmp_dir/
-cat << EOF > $tmp_dir/Dockerfile
-FROM ${CP_CONNECT_IMAGE}:${CONNECT_TAG}
-USER root
-RUN ${CONNECT_3RDPARTY_INSTALL}
-USER ${CONNECT_USER}
-COPY $connector_jar_name $current_jar_path
-EOF
-              docker build -t ${CP_CONNECT_IMAGE}:${CONNECT_TAG} $tmp_dir
-              rm -rf $tmp_dir
+              log "🔮 Remplacing $name-$CONNECTOR_TAG.jar by $connector_jar_name"
+              cp $CONNECTOR_JAR $current_jar_path
+              maybe_create_image
             fi
           fi
           ((i=i+1))
@@ -323,6 +301,8 @@ else
         #  Loop on all connectors in CONNECT_PLUGIN_PATH and install latest version from Confluent Hub (except for JDBC and replicator)
         ###
         first_loop=true
+        rm -rf ${DIR_UTILS}/../confluent-hub
+
         for connector_path in ${connector_paths//,/ }
         do
           connector_path=$(echo "$connector_path" | cut -d "/" -f 5)
@@ -352,21 +332,12 @@ else
                 logerror "CONNECTOR_ZIP $CONNECTOR_ZIP does not exist!"
                 exit 1
               fi
-              log "🎯 CONNECTOR_ZIP is set with $CONNECTOR_ZIP"
+              log "🎯🤐 CONNECTOR_ZIP (--connector-zip option) is set with $CONNECTOR_ZIP"
               connector_zip_name=$(basename ${CONNECTOR_ZIP})
 
-              log "👷 Building Docker image ${CP_CONNECT_IMAGE}:${CONNECT_TAG}"
-              tmp_dir=$(mktemp -d -t ci-XXXXXXXXXX)
-              cp $CONNECTOR_ZIP $tmp_dir/
-cat << EOF > $tmp_dir/Dockerfile
-FROM ${CP_CONNECT_IMAGE}:${TAG}
-USER root
-RUN ${CONNECT_3RDPARTY_INSTALL}
-USER ${CONNECT_USER}
-COPY --chown=$CONNECT_USER:$CONNECT_USER ${connector_zip_name} /tmp
-RUN confluent-hub install --no-prompt /tmp/${connector_zip_name}
-EOF
-              docker build -t ${CP_CONNECT_IMAGE}:${CONNECT_TAG} $tmp_dir
+              maybe_create_image
+
+              docker run -i --rm -v ${DIR_UTILS}/../confluent-hub:/usr/share/confluent-hub-components -v $tmp_dir:/tmp ${CP_CONNECT_IMAGE}:${CONNECT_TAG} RUN confluent-hub install --no-prompt /tmp/${connector_zip_name}
               rm -rf $tmp_dir
               first_loop=false
               continue
@@ -397,22 +368,15 @@ EOF
               fi
             fi
 
-            log "👷🛠 Re-building Docker image ${CP_CONNECT_IMAGE}:${CONNECT_TAG} to include $owner/$name:$version_to_get_from_hub"
-            tmp_dir=$(mktemp -d -t ci-XXXXXXXXXX)
-cat << EOF > $tmp_dir/Dockerfile
-FROM ${CP_CONNECT_IMAGE}:${CONNECT_TAG}
-USER root
-RUN ${CONNECT_3RDPARTY_INSTALL}
-USER ${CONNECT_USER}
-RUN confluent-hub install --no-prompt $owner/$name:$version_to_get_from_hub
-EOF
-            docker build -t ${CP_CONNECT_IMAGE}:${CONNECT_TAG} $tmp_dir
-            rm -rf $tmp_dir
+            maybe_create_image
 
-            docker run --rm ${CP_CONNECT_IMAGE}:${CONNECT_TAG} cat /usr/share/confluent-hub-components/${connector_path}/manifest.json > /tmp/manifest.json
+            docker run -i --rm -v ${DIR_UTILS}/../confluent-hub:/usr/share/confluent-hub-components ${CP_CONNECT_IMAGE}:${CONNECT_TAG} confluent-hub install --no-prompt $owner/$name:$version_to_get_from_hub
+
+            cat ${DIR_UTILS}/../confluent-hub/${connector_path}/manifest.json > /tmp/manifest.json
             version=$(cat /tmp/manifest.json | jq -r '.version')
             release_date=$(cat /tmp/manifest.json | jq -r '.release_date')
             documentation_url=$(cat /tmp/manifest.json | jq -r '.documentation_url')
+            rm -f /tmp/manifest.json
 
             ###
             #  CONNECTOR_JAR is set
@@ -421,36 +385,26 @@ EOF
             then
               if [ ! -f "$CONNECTOR_JAR" ]
               then
-                logerror "CONNECTOR_JAR $CONNECTOR_JAR does not exist!"
+                logerror "☕ CONNECTOR_JAR $CONNECTOR_JAR does not exist!"
                 exit 1
               fi
-              log "🎯 CONNECTOR_JAR is set with $CONNECTOR_JAR"
+              log "🎯☕ CONNECTOR_JAR (--connector-jar option) is set with $CONNECTOR_JAR"
               connector_jar_name=$(basename ${CONNECTOR_JAR})
-              export CONNECT_TAG="CP-$CONNECT_TAG-$connector_jar_name"
-              current_jar_path="/usr/share/confluent-hub-components/$connector_path/lib/$name-$version.jar"
+              current_jar_path="${DIR_UTILS}/../confluent-hub/$connector_path/lib/$name-$version.jar"
               set +e
-              docker run ${CP_CONNECT_IMAGE}:${TAG} ls $current_jar_path
+              ls $current_jar_path
               if [ $? -ne 0 ]
               then
-                logwarn "$connector_path/lib/$name-$version.jar does not exist, the jar name to replace could not be found automatically"
-                array=($(docker run ${CP_CONNECT_IMAGE}:${TAG} ls /usr/share/confluent-hub-components/$connector_path/lib | grep $version))
+                logwarn "☕ $connector_path/lib/$name-$version.jar does not exist, the jar name to replace could not be found automatically"
+                array=($(ls ${DIR_UTILS}/../confluent-hub/$connector_path/lib | grep $version))
                 choosejar "${array[@]}"
-                current_jar_path="/usr/share/confluent-hub-components/$connector_path/lib/$jar"
+                current_jar_path="${DIR_UTILS}/../confluent-hub/$connector_path/lib/$jar"
               fi
               set -e
-              log "👷🎯 Building Docker image ${CP_CONNECT_IMAGE}:${CONNECT_TAG}"
-              log "Remplacing $name-$version.jar by $connector_jar_name"
-              tmp_dir=$(mktemp -d -t ci-XXXXXXXXXX)
-              cp $CONNECTOR_JAR $tmp_dir/
-cat << EOF > $tmp_dir/Dockerfile
-FROM ${CP_CONNECT_IMAGE}:${TAG}
-USER root
-RUN ${CONNECT_3RDPARTY_INSTALL}
-USER ${CONNECT_USER}
-COPY $connector_jar_name $current_jar_path
-EOF
-              docker build -t ${CP_CONNECT_IMAGE}:${CONNECT_TAG} $tmp_dir
-              rm -rf $tmp_dir
+              log "🔮 Remplacing $name-$version.jar by $connector_jar_name"
+              cp $CONNECTOR_JAR $current_jar_path
+
+              maybe_create_image
             ###
             #  Neither CONNECTOR_ZIP or CONNECTOR_JAR are set
             ###
