@@ -69,7 +69,7 @@ function get_producer_ccloud_heredoc () {
       EXTRA_ARGS: 
     volumes:
       - ../../environment/plaintext/jmx-exporter:/usr/share/jmx_exporter/
-
+      - ../../$output_folder/$final_dir/$producer_hostname/target/producer-1.0.0-jar-with-dependencies.jar:/producer-1.0.0-jar-with-dependencies.jar
 
 EOF
 }
