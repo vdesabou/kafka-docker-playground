@@ -5,7 +5,7 @@ services:
   zookeeper:
     environment:
       KAFKA_JMX_PORT: 9999
-      KAFKA_JMX_HOSTNAME: zoookeeper
+      KAFKA_JMX_HOSTNAME: zookeeper
 
   broker:
     environment:
@@ -19,10 +19,25 @@ services:
 
   connect:
     environment:
-      CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-replicator
+      CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-replicator,/usr/share/confluent-hub-components/confluentinc-kafka-connect-datagen
       KAFKA_JMX_PORT: 10002
       KAFKA_JMX_HOSTNAME: connect
-
+  
+  ksqldb-server: 
+    environment:
+      KSQL_PRODUCER_INTERCEPTOR_CLASSES: "io.confluent.monitoring.clients.interceptor.MonitoringProducerInterceptor"
+      KSQL_CONSUMER_INTERCEPTOR_CLASSES: "io.confluent.monitoring.clients.interceptor.MonitoringConsumerInterceptor"
+      KSQL_JMX_OPTS: >
+        -Djava.rmi.server.hostname=ksqldb-server
+        -Dcom.sun.management.jmxremote
+        -Dcom.sun.management.jmxremote.port=10003
+        -Dcom.sun.management.jmxremote.authenticate=false
+        -Dcom.sun.management.jmxremote.ssl=false
+        -Dcom.sun.management.jmxremote.rmi.port=10003
+      KSQL_KSQL_LOGGING_PROCESSING_STREAM_AUTO_CREATE: "true"
+      KSQL_KSQL_LOGGING_PROCESSING_TOPIC_AUTO_CREATE: "true"
+      KSQL_JMX_HOSTNAME: ksqldb-server
+      KSQL_JMX_PORT: 10003
   datadog:
     build: ../../tools/datadog/datadog
     hostname: datadog
@@ -32,6 +47,7 @@ services:
      - broker
      - schema-registry
      - connect
+     - ksqldb-server
     environment:
      - DD_API_KEY=$DD_API_KEY
      - DD_SITE=$DD_SITE
