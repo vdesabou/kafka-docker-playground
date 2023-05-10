@@ -195,7 +195,12 @@ then
 
           if [ "$first_loop" = true ]
           then
-              rm -rf ${DIR_UTILS}/../confluent-hub
+              if [[ "$OSTYPE" == "darwin"* ]]
+              then
+                  rm -rf ${DIR_UTILS}/../confluent-hub
+              else
+                  sudo rm -rf ${DIR_UTILS}/../confluent-hub
+              fi
           fi
           log "🎱 Installing connector $owner/$name:$CONNECTOR_VERSION"
           docker run -u0 -i --rm -v ${DIR_UTILS}/../confluent-hub:/usr/share/confluent-hub-components ${CP_CONNECT_IMAGE}:${CONNECT_TAG} bash -c "confluent-hub install --no-prompt $owner/$name:$CONNECTOR_VERSION && chown -R $(id -u $USER):$(id -g $USER) /usr/share/confluent-hub-components"
