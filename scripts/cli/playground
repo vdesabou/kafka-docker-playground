@@ -356,10 +356,7 @@ playground_bashly_reload_usage() {
 # :command.usage
 playground_run_usage() {
   if [[ -n $long_usage ]]; then
-    printf "playground run\n"
-    echo
-
-    printf "  🕹️ Run any example, except for Confluent Cloud (in this case use run-ccloud\n  command)\n  \n  👉 Check documentation https://tinyurl.com/xxx\n"
+    printf "playground run - 🕹️ Run any example, except for Confluent Cloud (in this case use run-ccloud command)\n"
     echo
 
   else
@@ -588,7 +585,7 @@ playground_run_ccloud_usage() {
     printf "playground run-ccloud\n"
     echo
 
-    printf "  ⛅ Run any Confluent Cloud (ccloud) example\n  \n  All you have to do is to be already logged in with confluent CLI.\n  \n  By default, a new Confluent Cloud environment with a Cluster will be created.\n  \n  You can configure the new cluster by setting:\n  \n  --cluster-cloud (or CLUSTER_CLOUD environment variable)\n  --cluster-region (or CLUSTER_REGION environment variable)\n  --cluster-environment (or ENVIRONMENT environment variable)\n  \n  In case you want to use your own existing cluster, you need to setup, in\n  addition to previous ones:\n  \n  --cluster-name (or CLUSTER_NAME environment variable)\n  --cluster-creds (or CLUSTER_CREDS environment variable)\n  --cluster-schema-registry-creds (or SCHEMA_REGISTRY_CREDS environment\n  variable)\n  \n  👉 Check documentation https://tinyurl.com/xxx\n"
+    printf "  ⛅ Run any Confluent Cloud (ccloud) example\n  \n  All you have to do is to be already logged in with confluent CLI.\n  \n  By default, a new Confluent Cloud environment with a Cluster will be created.\n  \n  You can configure the new cluster by setting:\n  \n  --cluster-cloud (or CLUSTER_CLOUD environment variable)\n  --cluster-region (or CLUSTER_REGION environment variable)\n  --cluster-environment (or ENVIRONMENT environment variable)\n  \n  In case you want to use your own existing cluster, you need to setup, in\n  addition to previous ones:\n  \n  --cluster-name (or CLUSTER_NAME environment variable)\n  --cluster-creds (or CLUSTER_CREDS environment variable)\n  --cluster-schema-registry-creds (or SCHEMA_REGISTRY_CREDS environment\n  variable)\n"
     echo
 
   else
@@ -769,7 +766,7 @@ playground_bootstrap_reproduction_model_usage() {
     printf "playground bootstrap-reproduction-model\n"
     echo
 
-    printf "  🛠  Bootstrap reproduction model\n  \n  👉 Check documentation https://tinyurl.com/xxx\n"
+    printf "  🛠  Bootstrap reproduction model\n  \n  👉 Check documentation\n  https://kafka-docker-playground.io/#/reusables?id=%f0%9f%9b%a0-bootstrap-reproduction-model\n"
     echo
 
   else
@@ -961,7 +958,7 @@ playground_get_properties_usage() {
     printf "playground get-properties\n"
     echo
 
-    printf "  📝 Get properties file from a container\n  \n  👉 Check documentation https://tinyurl.com/xxx\n"
+    printf "  📝 Get properties file from a container\n  \n  👉 Check documentation\n  https://kafka-docker-playground.io/#/how-to-use?id=%f0%9f%93%9d-see-properties-file\n"
     echo
 
   else
@@ -1004,10 +1001,7 @@ playground_get_properties_usage() {
 # :command.usage
 playground_get_all_schemas_usage() {
   if [[ -n $long_usage ]]; then
-    printf "playground get-all-schemas\n"
-    echo
-
-    printf "  🔰 Get all schemas versions for all subjects\n  \n  👉 Check documentation xxxx\n"
+    printf "playground get-all-schemas - 🔰 Get all schemas versions for all subjects\n"
     echo
 
   else
@@ -1050,7 +1044,7 @@ playground_enable_remote_debugging_usage() {
     printf "playground enable-remote-debugging\n"
     echo
 
-    printf "  ✨ Enable java remote debugging for container\n  \n  👉 Check documentation https://tinyurl.com/xxx\n"
+    printf "  ✨ Enable java remote debugging for container\n  \n  👉 Check documentation\n  https://kafka-docker-playground.io/#/reusables?id=%e2%9c%a8-remote-debugging\n"
     echo
 
   else
@@ -1093,10 +1087,7 @@ playground_enable_remote_debugging_usage() {
 # :command.usage
 playground_log_level_usage() {
   if [[ -n $long_usage ]]; then
-    printf "playground log-level\n"
-    echo
-
-    printf "  🧬 Set log level for any package\n  \n  👉 Check documentation https://tinyurl.com/xxx\n"
+    printf "playground log-level - 🧬 Set log level for any package\n"
     echo
 
   else
@@ -1217,7 +1208,7 @@ playground_get_jmx_metrics_usage() {
     printf "playground get-jmx-metrics\n"
     echo
 
-    printf "  🔢 Get JMX metrics from a component\n  \n  👉 Check documentation https://tinyurl.com/xxx\n"
+    printf "  🔢 Get JMX metrics from a component\n  \n  👉 Check documentation\n  https://kafka-docker-playground.io/#/how-to-use?id=%f0%9f%94%a2-jmx-metrics\n"
     echo
 
   else
@@ -1311,7 +1302,7 @@ playground_container_recreate_usage() {
     printf "playground container recreate\n"
     echo
 
-    printf "  💫 Recreate container(s)\n  \n  👉 Check documentation https://tinyurl.com/xxx\n"
+    printf "  💫 Recreate container(s)\n  \n  👉 Check documentation\n  https://kafka-docker-playground.io/#/how-to-use?id=%e2%99%bb%ef%b8%8f-re-create-containers\n"
     echo
 
   else

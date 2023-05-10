@@ -83,8 +83,6 @@ commands:
   - fzf
   help: |-
     🕹️ Run any example, except for Confluent Cloud (in this case use run-ccloud command)
-    
-    👉 Check documentation https://tinyurl.com/xxx
 
   flags:
   - long: --file
@@ -297,7 +295,6 @@ commands:
     --cluster-creds (or CLUSTER_CREDS environment variable)
     --cluster-schema-registry-creds (or SCHEMA_REGISTRY_CREDS environment variable)
     
-    👉 Check documentation https://tinyurl.com/xxx
   flags:
     - long: --file
       short: -f
@@ -415,7 +412,7 @@ commands:
   help: |-
     🛠  Bootstrap reproduction model
     
-    👉 Check documentation https://tinyurl.com/xxx
+    👉 Check documentation https://kafka-docker-playground.io/#/reusables?id=%f0%9f%9b%a0-bootstrap-reproduction-model
   catch_all:
     label: arguments
     help: |-
@@ -555,7 +552,7 @@ commands:
   help: |-
     📝 Get properties file from a container
     
-    👉 Check documentation https://tinyurl.com/xxx
+    👉 Check documentation https://kafka-docker-playground.io/#/how-to-use?id=%f0%9f%93%9d-see-properties-file
 
   flags:
   - &container
@@ -581,8 +578,6 @@ commands:
   - schema_registry_running
   help: |-
     🔰 Get all schemas versions for all subjects
-    
-    👉 Check documentation xxxx
   flags:
     - long: --open
       short: -o
@@ -597,7 +592,7 @@ commands:
   help: |-
     ✨ Enable java remote debugging for container
     
-    👉 Check documentation https://tinyurl.com/xxx
+    👉 Check documentation https://kafka-docker-playground.io/#/reusables?id=%e2%9c%a8-remote-debugging
   flags:
     - *container
   examples:
@@ -609,8 +604,6 @@ commands:
   group: Debug
   help: |-
     🧬 Set log level for any package
-
-    👉 Check documentation https://tinyurl.com/xxx
   filters:
   - connect_running
   commands:
@@ -655,7 +648,7 @@ commands:
   help: |-
     🔢 Get JMX metrics from a component
     
-    👉 Check documentation https://tinyurl.com/xxx
+    👉 Check documentation https://kafka-docker-playground.io/#/how-to-use?id=%f0%9f%94%a2-jmx-metrics
   dependencies:
   - java
   flags:
@@ -692,7 +685,7 @@ commands:
       help: |-
         💫 Recreate container(s)
         
-        👉 Check documentation https://tinyurl.com/xxx
+        👉 Check documentation https://kafka-docker-playground.io/#/how-to-use?id=%e2%99%bb%ef%b8%8f-re-create-containers
 
     - name: get-ip-addresses
       group: Container
