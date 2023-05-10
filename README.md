@@ -17,13 +17,17 @@ Check out [kafka-docker-playground.io](https://kafka-docker-playground.io/) to l
 - 💸 Confluent commercial [features](https://kafka-docker-playground.io/#/content?id=💸-confluent-commercial) (Tiered Storage, Control Center, Audit logs...)
 - ♻️ Cluster Linking, Replicator and MirrorMaker 2 [examples](https://kafka-docker-playground.io/#/content?id=🌍-multi-data-center-deployments)
 - 🎯 Run examples with any Confluent Platform or connector [versions](https://kafka-docker-playground.io/#/how-to-use?id=🪄-specify-versions)
-- 🧠 Easily run commands with playground [CLI](https://kafka-docker-playground.io/#/how-to-use?id=%f0%9f%a7%a0-cli)
+- 🧠 Easily run commands with playground [CLI](https://kafka-docker-playground.io/#/cli)
 - 🎓 Learn how the playground [works](https://kafka-docker-playground.io/#/how-it-works)
 - 👷‍♂️ Build your own examples or reproduction models with [how-to-build-your-own](https://kafka-docker-playground.io/#/how-to-build-your-own) section
 - 📱 Work directly in your browser using [Gitpod.io](https://kafka-docker-playground.io/#/how-to-use?id=🪄-gitpodio)
 - 🎩 Work remotely with VS Code using [AWS EC2 Alfred workflow](https://kafka-docker-playground.io/#/how-to-use?id=%f0%9f%8e%a9-aws-ec2-alfred-workflow)
 - 🤖 Automated testing using Github Actions [CI](https://kafka-docker-playground.io/#/how-it-works?id=🤖-how-ci-works)
 - 👾 And even more [playgrounds](https://kafka-docker-playground.io/#/content?id=👾-other-playgrounds)...
+
+## 🍿 See CLI in action
+
+[![asciicast](https://asciinema.org/a/581275.svg)](https://asciinema.org/a/581275)
 
 ## 🏁 Getting Started
 
