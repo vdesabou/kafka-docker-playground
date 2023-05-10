@@ -280,7 +280,7 @@ function get_schema_with_fzf() {
   folder_producer_schema=${folder_producer_schema//\~/$HOME}
   folder_producer_schema=${folder_producer_schema//,/ }
   
-  res=$(find $folder_producer_schema $PWD -type f \( -name "*.avsc" -o -name "*.json" -o -name "*.proto" -o -name "*.proto3" \) ! -path '*/\.*' | fzf --query "$cur" --margin=1%,1%,1%,1% $fzf_option_rounded --info=inline --prompt="🍺" --header="ctrl-c or esc to quit" --color="bg:-1,bg+:-1,info:#BDBB72,border:#FFFFFF,spinner:0,hl:#beb665,fg:#00f7f7,header:#5CC9F5,fg+:#beb665,pointer:#E12672,marker:#5CC9F5,prompt:#98BEDE" $fzf_option_wrap $fzf_option_pointer)
+  res=$(find $folder_producer_schema $PWD -type f \( -name "*.avsc" -o -name "*.json" -o -name "*.proto" -o -name "*.proto3" \) ! -path '*/\.*' | fzf --query "$cur" --margin=1%,1%,1%,1% $fzf_option_rounded --info=inline --prompt="🍺" --header="ctrl-c or esc to quit" --color="bg:-1,bg+:-1,info:#BDBB72,border:#FFFFFF,spinner:0,hl:#beb665,fg:#00f7f7,header:#5CC9F5,fg+:#beb665,pointer:#E12672,marker:#5CC9F5,prompt:#98BEDE" $fzf_option_wrap $fzf_option_pointer);echo "$cur@$res"
 }
 
 function filter_not_mdc_environment() {
