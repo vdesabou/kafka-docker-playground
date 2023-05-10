@@ -1,0 +1,29 @@
+---
+version: '3.5'
+services:
+
+  producer-repro-000001:
+    build:
+      context: ../../docs-examples/connect-connect-aws-s3-sink/producer-repro-000001/
+    hostname: producer
+    container_name: producer-repro-000001
+    environment:
+      KAFKA_BOOTSTRAP_SERVERS: broker:9092
+      TOPIC: "customer_avro"
+      REPLICATION_FACTOR: 1
+      NUMBER_OF_PARTITIONS: 1
+      NB_MESSAGES: 10 # -1 for MAX_VALUE
+      MESSAGE_BACKOFF: 100 # Frequency of message injection
+      KAFKA_ACKS: "all" # default: "1"
+      KAFKA_REQUEST_TIMEOUT_MS: 20000
+      KAFKA_RETRY_BACKOFF_MS: 500
+      KAFKA_CLIENT_ID: "my-java-producer-repro-000001"
+      KAFKA_SCHEMA_REGISTRY_URL: "http://schema-registry:8081"
+      JAVA_OPTS: ${GRAFANA_AGENT_PRODUCER}
+    volumes:
+      - ../../environment/plaintext/jmx-exporter:/usr/share/jmx_exporter/
+      - ../../docs-examples/connect-connect-aws-s3-sink/producer-repro-000001/target/producer-1.0.0-jar-with-dependencies.jar:/producer-1.0.0-jar-with-dependencies.jar
+
+  connect:
+    environment:
+      CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-s3
