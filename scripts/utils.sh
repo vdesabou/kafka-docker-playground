@@ -375,11 +375,9 @@ else
             log "🎱 Installing connector $owner/$name:$version_to_get_from_hub"
             docker run -u0 -i --rm -v ${DIR_UTILS}/../confluent-hub:/usr/share/confluent-hub-components ${CP_CONNECT_IMAGE}:${CONNECT_TAG} bash -c "confluent-hub install --no-prompt $owner/$name:$version_to_get_from_hub && chown -R $(id -u $USER):$(id -g $USER) /usr/share/confluent-hub-components"
 
-            cat ${DIR_UTILS}/../confluent-hub/${connector_path}/manifest.json > /tmp/manifest.json
-            version=$(cat /tmp/manifest.json | jq -r '.version')
-            release_date=$(cat /tmp/manifest.json | jq -r '.release_date')
-            documentation_url=$(cat /tmp/manifest.json | jq -r '.documentation_url')
-            rm -f /tmp/manifest.json
+            version=$(cat ${DIR_UTILS}/../confluent-hub/${connector_path}/manifest.json | jq -r '.version')
+            release_date=$(cat ${DIR_UTILS}/../confluent-hub/${connector_path}/manifest.json | jq -r '.release_date')
+            documentation_url=$(cat ${DIR_UTILS}/../confluent-hub/${connector_path}/manifest.json | jq -r '.documentation_url')
 
             ###
             #  CONNECTOR_JAR is set
