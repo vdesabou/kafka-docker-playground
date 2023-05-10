@@ -108,12 +108,7 @@ services:
       KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
 
   connect-us:
-    build:
-      context: ../../environment/mdc-plaintext/
-      args:
-        TAG_BASE: ${TAG_BASE}
-        CP_CONNECT_IMAGE: ${CP_CONNECT_IMAGE}
-        CONNECT_TAG: ${CONNECT_TAG}
+    image: ${CP_CONNECT_IMAGE}:${CONNECT_TAG}
     hostname: connect-us
     container_name: connect-us
     ports:
@@ -159,12 +154,7 @@ services:
       - ../../confluent-hub:/usr/share/confluent-hub-components
 
   connect-europe:
-    build:
-      context: ../../environment/mdc-plaintext/
-      args:
-        TAG_BASE: ${TAG_BASE}
-        CP_CONNECT_IMAGE: ${CP_CONNECT_IMAGE}
-        CONNECT_TAG: ${CONNECT_TAG}
+    image: ${CP_CONNECT_IMAGE}:${CONNECT_TAG}
     hostname: connect-europe
     container_name: connect-europe
     ports:
