@@ -1,1 +1,0 @@
-../../connect/connect-aws-s3-sink/README.md
