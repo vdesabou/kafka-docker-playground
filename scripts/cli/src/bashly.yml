@@ -737,6 +737,7 @@ commands:
       examples:
       - playground container logs --container connect
       - playground container logs -c connect --open
+      - playground container logs -c connect --wait-for-log "StackOverflowError"
 
     - name: ssh
       group: Container

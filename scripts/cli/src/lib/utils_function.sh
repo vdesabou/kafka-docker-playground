@@ -735,8 +735,6 @@ function display_jmx_info() {
   then
     log "    - ksqldb-server   : 10003"
   fi
-
-  
 }
 function get_jmx_metrics() {
   JMXTERM_VERSION="1.0.2"
@@ -799,7 +797,21 @@ EOF
   docker exec -i $component java -jar $JMXTERM_UBER_JAR  -l localhost:$port -n < /tmp/commands >> /tmp/jmx_metrics.log 2>&1
 done
 
-  log "JMX metrics are available in /tmp/jmx_metrics.log file"
+  if config_has_key "editor"
+  then
+    editor=$(config_get "editor")
+    log "📖 Opening /tmp/jmx_metrics.log using configured editor $editor"
+    $editor /tmp/jmx_metrics.log
+  else
+    if [[ $(type code 2>&1) =~ "not found" ]]
+    then
+      logerror "Could not determine an editor to use as default code is not found - you can change editor by updating config.ini"
+      exit 1
+    else
+      log "📖 Opening /tmp/jmx_metrics.log with code (default) - you can change editor by updating config.ini"
+      code /tmp/jmx_metrics.log
+    fi
+  fi
 }
 
 # https://www.linuxjournal.com/content/validating-ip-address-bash-script
