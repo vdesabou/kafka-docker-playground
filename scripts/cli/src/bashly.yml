@@ -878,6 +878,28 @@ commands:
         help: |-
           Max number of messages to consume
 
+    - name: set-schema-compatibility
+      filters:
+      - schema_registry_running
+      group: Topic
+      help: |-
+        🛡️ Change topic's schema compatibility
+      flags:
+      - *topic
+      - long: --compatibility
+        arg: compatibility
+        allowed: 
+          - BACKWARD
+          - BACKWARD_TRANSITIVE
+          - FORWARD
+          - FORWARD_TRANSITIVE
+          - FULL
+          - FULL_TRANSITIVE
+          - NONE
+        required: true
+        help: |-
+          Schema Registry compatibility rule
+
 - name: connector
   expose: true
   group: Connector
