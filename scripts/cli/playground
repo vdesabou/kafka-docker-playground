@@ -9022,6 +9022,7 @@ parse_requirements() {
     deps['docker']="$(command -v docker | head -n1)"
   else
     printf "missing dependency: docker\n" >&2
+    printf "%s\n" "visit $(blue_underlined https://docs.docker.com/get-docker) to install" >&2
     exit 1
   fi
 
@@ -9288,6 +9289,7 @@ playground_get_kafka_region_list_parse_requirements() {
     deps['confluent']="$(command -v confluent | head -n1)"
   else
     printf "missing dependency: confluent\n" >&2
+    printf "%s\n" "visit $(blue_underlined https://docs.confluent.io/confluent-cli/current/overview.html) to install" >&2
     exit 1
   fi
 
@@ -9577,6 +9579,7 @@ playground_bashly_reload_parse_requirements() {
     deps['bashly']="$(command -v bashly | head -n1)"
   else
     printf "missing dependency: bashly\n" >&2
+    printf "%s\n" "visit $(blue_underlined https://bashly.dannyb.co/installation/) to install" >&2
     exit 1
   fi
 
@@ -9629,6 +9632,7 @@ playground_run_parse_requirements() {
     deps['fzf']="$(command -v fzf | head -n1)"
   else
     printf "missing dependency: fzf\n" >&2
+    printf "%s\n" "visit $(blue_underlined https://github.com/junegunn/fzf#installation) to install" >&2
     exit 1
   fi
 
@@ -9877,6 +9881,7 @@ playground_re_run_parse_requirements() {
     deps['fzf']="$(command -v fzf | head -n1)"
   else
     printf "missing dependency: fzf\n" >&2
+    printf "%s\n" "visit $(blue_underlined https://github.com/junegunn/fzf#installation) to install" >&2
     exit 1
   fi
 
@@ -10091,6 +10096,7 @@ playground_run_ccloud_parse_requirements() {
     deps['fzf']="$(command -v fzf | head -n1)"
   else
     printf "missing dependency: fzf\n" >&2
+    printf "%s\n" "visit $(blue_underlined https://github.com/junegunn/fzf#installation) to install" >&2
     exit 1
   fi
 
@@ -10098,6 +10104,7 @@ playground_run_ccloud_parse_requirements() {
     deps['confluent']="$(command -v confluent | head -n1)"
   else
     printf "missing dependency: confluent\n" >&2
+    printf "%s\n" "visit $(blue_underlined https://docs.confluent.io/confluent-cli/current/overview.html) to install" >&2
     exit 1
   fi
 
@@ -10414,6 +10421,7 @@ playground_open_parse_requirements() {
     deps['fzf']="$(command -v fzf | head -n1)"
   else
     printf "missing dependency: fzf\n" >&2
+    printf "%s\n" "visit $(blue_underlined https://github.com/junegunn/fzf#installation) to install" >&2
     exit 1
   fi
 
@@ -10514,6 +10522,7 @@ playground_bootstrap_reproduction_model_parse_requirements() {
     deps['fzf']="$(command -v fzf | head -n1)"
   else
     printf "missing dependency: fzf\n" >&2
+    printf "%s\n" "visit $(blue_underlined https://github.com/junegunn/fzf#installation) to install" >&2
     exit 1
   fi
 
@@ -11420,6 +11429,7 @@ playground_get_jmx_metrics_parse_requirements() {
     deps['java']="$(command -v java | head -n1)"
   else
     printf "missing dependency: java\n" >&2
+    printf "%s\n" "visit $(blue_underlined https://openjdk.org/install/) to install" >&2
     exit 1
   fi
 

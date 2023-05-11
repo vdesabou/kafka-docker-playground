@@ -1,7 +1,7 @@
 name: playground
 version: 1.0.0
 dependencies:
-- docker
+  docker: visit $(blue_underlined https://docs.docker.com/get-docker) to install
 help: |-
   🧠 CLI for Kafka Docker Playground 🐳
 
@@ -19,7 +19,7 @@ commands:
   help: Return some completion for confluent cloud kafka cluster region list
   private: true
   dependencies:
-  - confluent
+    confluent: visit $(blue_underlined https://docs.confluent.io/confluent-cli/current/overview.html) to install
 
 - name: get-topic-list
   help: Return some completion for topic list
@@ -64,7 +64,7 @@ commands:
 - name: bashly-reload
   private: true
   dependencies:
-  - bashly
+    bashly: visit $(blue_underlined https://bashly.dannyb.co/installation/) to install
 
 - name: run
   group: Run
@@ -80,7 +80,7 @@ commands:
       playground run -f zendesk-source<tab> <ZENDESK_URL> <ZENDESK_USERNAME> <ZENDESK_PASSWORD>
     required: false
   dependencies:
-  - fzf
+    fzf: visit $(blue_underlined https://github.com/junegunn/fzf#installation) to install
   help: |-
     🕹️ Run any example, except for Confluent Cloud (in this case use run-ccloud command)
 
@@ -241,7 +241,7 @@ commands:
       playground run -f zendesk-source<tab> <ZENDESK_URL> <ZENDESK_USERNAME> <ZENDESK_PASSWORD>
     required: false
   dependencies:
-  - fzf
+    fzf: visit $(blue_underlined https://github.com/junegunn/fzf#installation) to install
   flags:
     - *tag
     - *connector-tag
@@ -274,8 +274,8 @@ commands:
       playground run -f zendesk-source<tab> <ZENDESK_URL> <ZENDESK_USERNAME> <ZENDESK_PASSWORD>
     required: false
   dependencies:
-  - fzf
-  - confluent
+    fzf: visit $(blue_underlined https://github.com/junegunn/fzf#installation) to install
+    confluent: visit $(blue_underlined https://docs.confluent.io/confluent-cli/current/overview.html) to install
   help: |-
     ⛅ Run any Confluent Cloud (ccloud) example
 
@@ -390,7 +390,7 @@ commands:
 - name: open
   group: Run
   dependencies:
-  - fzf
+    fzf: visit $(blue_underlined https://github.com/junegunn/fzf#installation) to install
   help: |-
     👐 Simply open last example you ran with <playground run> or <playground run-ccloud>
 
@@ -406,7 +406,7 @@ commands:
     default: reproduction-models
   group: Bootstrap
   dependencies:
-  - fzf
+    fzf: visit $(blue_underlined https://github.com/junegunn/fzf#installation) to install
   help: |-
     🛠  Bootstrap reproduction model
     
@@ -648,7 +648,7 @@ commands:
     
     👉 Check documentation https://kafka-docker-playground.io/#/how-to-use?id=%f0%9f%94%a2-jmx-metrics
   dependencies:
-  - java
+    java: visit $(blue_underlined https://openjdk.org/install/) to install
   flags:
   - long: --component
     short: -c
