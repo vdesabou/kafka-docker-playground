@@ -106,12 +106,22 @@ if [[ -n "$cluster_cloud" ]]
 then
   flag_list="$flag_list --cluster-cloud $cluster_cloud"
   export CLUSTER_CLOUD=$cluster_cloud
+else
+  if [ -z "$CLUSTER_CLOUD" ]
+  then
+    export CLUSTER_CLOUD="aws"
+  fi
 fi
 
 if [[ -n "$cluster_region" ]]
 then
   flag_list="$flag_list --cluster-region $cluster_region"
   export CLUSTER_REGION=$cluster_region
+else
+  if [ -z "$CLUSTER_REGION" ]
+  then
+    export CLUSTER_REGION="eu-west-2"
+  fi
 fi
 
 if [[ -n "$cluster_environment" ]]

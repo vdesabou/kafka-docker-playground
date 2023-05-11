@@ -322,7 +322,6 @@ commands:
     - &cluster-cloud
       long: --cluster-cloud
       required: false
-      default: aws
       arg: cluster-cloud
       allowed: [aws, gcp, azure]
       help: |-
@@ -332,7 +331,6 @@ commands:
     - &cluster-region
       long: --cluster-region
       required: false
-      default: eu-west-2
       arg: cluster-region
       completions:
         - $(playground get-kafka-region-list)
