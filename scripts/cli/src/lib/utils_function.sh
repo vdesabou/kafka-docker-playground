@@ -1390,12 +1390,12 @@ function bootstrap_ccloud_environment () {
   ccloud::create_ccloud_stack false  \
     && print_code_pass -c "ccloud::create_ccloud_stack false"
 
-  CONFIG_FILE=/tmp/tmp.config
-  export CONFIG_FILE=$CONFIG_FILE
-  ccloud::validate_ccloud_config $CONFIG_FILE || exit 1
+  CCLOUD_CONFIG_FILE=/tmp/tmp.config
+  export CCLOUD_CONFIG_FILE=$CCLOUD_CONFIG_FILE
+  ccloud::validate_ccloud_config $CCLOUD_CONFIG_FILE || exit 1
 
-  ccloud::generate_configs $CONFIG_FILE \
-    && print_code_pass -c "ccloud::generate_configs $CONFIG_FILE"
+  ccloud::generate_configs $CCLOUD_CONFIG_FILE \
+    && print_code_pass -c "ccloud::generate_configs $CCLOUD_CONFIG_FILE"
 
   if [ -f $DELTA_CONFIGS_ENV ]
   then
@@ -2262,7 +2262,7 @@ function ccloud::create_acls_connect_topics() {
 
 function ccloud::validate_ccloud_stack_up() {
   CLOUD_KEY=$1
-  CONFIG_FILE=$2
+  CCLOUD_CONFIG_FILE=$2
   enable_ksqldb=$3
 
   if [ -z "$enable_ksqldb" ]; then
@@ -2274,7 +2274,7 @@ function ccloud::validate_ccloud_stack_up() {
   ccloud::validate_schema_registry_up "$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO" "$SCHEMA_REGISTRY_URL" || exit 1
   if $enable_ksqldb ; then
     ccloud::validate_ksqldb_up "$KSQLDB_ENDPOINT" || exit 1
-    ccloud::validate_credentials_ksqldb "$KSQLDB_ENDPOINT" "$CONFIG_FILE" "$KSQLDB_BASIC_AUTH_USER_INFO" || exit 1
+    ccloud::validate_credentials_ksqldb "$KSQLDB_ENDPOINT" "$CCLOUD_CONFIG_FILE" "$KSQLDB_BASIC_AUTH_USER_INFO" || exit 1
   fi
 }
 
@@ -2438,11 +2438,11 @@ function ccloud::create_ccloud_stack() {
   confluent api-key use $CLOUD_API_KEY --resource ${CLUSTER}
 
   if [[ -z "$SKIP_CONFIG_FILE_WRITE" ]]; then
-    if [[ -z "$CONFIG_FILE" ]]; then
-      CONFIG_FILE="/tmp/tmp.config"
+    if [[ -z "$CCLOUD_CONFIG_FILE" ]]; then
+      CCLOUD_CONFIG_FILE="/tmp/tmp.config"
     fi
   
-    cat <<EOF > $CONFIG_FILE
+    cat <<EOF > $CCLOUD_CONFIG_FILE
 # --------------------------------------
 # Confluent Cloud connection information
 # --------------------------------------
@@ -2452,11 +2452,11 @@ function ccloud::create_ccloud_stack() {
 # SCHEMA REGISTRY CLUSTER ID: ${SCHEMA_REGISTRY}
 EOF
     if $enable_ksqldb ; then
-      cat <<EOF >> $CONFIG_FILE
+      cat <<EOF >> $CCLOUD_CONFIG_FILE
 # KSQLDB APP ID: ${KSQLDB}
 EOF
     fi
-    cat <<EOF >> $CONFIG_FILE
+    cat <<EOF >> $CCLOUD_CONFIG_FILE
 # --------------------------------------
 sasl.mechanism=PLAIN
 security.protocol=SASL_SSL
@@ -2468,14 +2468,14 @@ basic.auth.user.info=`echo $SCHEMA_REGISTRY_CREDS | awk -F: '{print $1}'`:`echo 
 replication.factor=${REPLICATION_FACTOR}
 EOF
     if $enable_ksqldb ; then
-      cat <<EOF >> $CONFIG_FILE
+      cat <<EOF >> $CCLOUD_CONFIG_FILE
 ksql.endpoint=${KSQLDB_ENDPOINT}
 ksql.basic.auth.user.info=`echo $KSQLDB_CREDS | awk -F: '{print $1}'`:`echo $KSQLDB_CREDS | awk -F: '{print $2}'`
 EOF
     fi
 
     echo
-    echo "Client configuration file saved to: $CONFIG_FILE"
+    echo "Client configuration file saved to: $CCLOUD_CONFIG_FILE"
   fi
 
   return 0
@@ -2496,7 +2496,7 @@ function ccloud::destroy_ccloud_stack() {
 
   ENVIRONMENT_NAME_PREFIX=${ENVIRONMENT_NAME_PREFIX:-"pg-$SERVICE_ACCOUNT_ID"}
   CLUSTER_NAME=${CLUSTER_NAME:-"pg-cluster-$SERVICE_ACCOUNT_ID"}
-  CONFIG_FILE=${CONFIG_FILE:-"/tmp/tmp.config"}
+  CCLOUD_CONFIG_FILE=${CCLOUD_CONFIG_FILE:-"/tmp/tmp.config"}
   KSQLDB_NAME=${KSQLDB_NAME:-"demo-ksqldb-$SERVICE_ACCOUNT_ID"}
 
   # Setting default QUIET=false to surface potential errors
@@ -2539,7 +2539,7 @@ function ccloud::destroy_ccloud_stack() {
     fi
   fi
   
-  rm -f $CONFIG_FILE
+  rm -f $CCLOUD_CONFIG_FILE
 
   return 0
 }
@@ -2579,9 +2579,9 @@ function ccloud::destroy_ccloud_stack() {
 #
 # Arguments:
 #
-#   CONFIG_FILE, defaults to ~/.ccloud/config
+#   CCLOUD_CONFIG_FILE, defaults to ~/.ccloud/config
 #
-# Example CONFIG_FILE at ~/.ccloud/config
+# Example CCLOUD_CONFIG_FILE at ~/.ccloud/config
 #
 #   $ cat $HOME/.ccloud/config
 #
@@ -2603,27 +2603,27 @@ function ccloud::destroy_ccloud_stack() {
 #
 ################################################################################
 function ccloud::generate_configs() {
-  CONFIG_FILE=$1
-  if [[ -z "$CONFIG_FILE" ]]; then
-    CONFIG_FILE=~/.ccloud/config
+  CCLOUD_CONFIG_FILE=$1
+  if [[ -z "$CCLOUD_CONFIG_FILE" ]]; then
+    CCLOUD_CONFIG_FILE=~/.ccloud/config
   fi
-  if [[ ! -f "$CONFIG_FILE" ]]; then
-    echo "File $CONFIG_FILE is not found.  Please create this properties file to connect to your Confluent Cloud cluster and then try again"
+  if [[ ! -f "$CCLOUD_CONFIG_FILE" ]]; then
+    echo "File $CCLOUD_CONFIG_FILE is not found.  Please create this properties file to connect to your Confluent Cloud cluster and then try again"
     echo "See https://docs.confluent.io/current/cloud/connect/auto-generate-configs.html for more information"
     return 1
   fi
   
-  echo -e "\nGenerating component configurations from $CONFIG_FILE"
+  echo -e "\nGenerating component configurations from $CCLOUD_CONFIG_FILE"
   echo -e "\n(If you want to run any of these components to talk to Confluent Cloud, these are the configurations to add to the properties file for each component)"
   
   # Set permissions
   PERM=600
   if ls --version 2>/dev/null | grep -q 'coreutils' ; then
     # GNU binutils
-    PERM=$(stat -c "%a" $CONFIG_FILE)
+    PERM=$(stat -c "%a" $CCLOUD_CONFIG_FILE)
   else
     # BSD
-    PERM=$(stat -f "%OLp" $CONFIG_FILE)
+    PERM=$(stat -f "%OLp" $CCLOUD_CONFIG_FILE)
   fi
   
   # Make destination
@@ -2635,22 +2635,22 @@ function ccloud::generate_configs() {
   ################################################################################
   
   # Kafka cluster
-  BOOTSTRAP_SERVERS=$( grep "^bootstrap.server" $CONFIG_FILE | awk -F'=' '{print $2;}' )
+  BOOTSTRAP_SERVERS=$( grep "^bootstrap.server" $CCLOUD_CONFIG_FILE | awk -F'=' '{print $2;}' )
   BOOTSTRAP_SERVERS=${BOOTSTRAP_SERVERS/\\/}
-  SASL_JAAS_CONFIG=$( grep "^sasl.jaas.config" $CONFIG_FILE | cut -d'=' -f2- )
+  SASL_JAAS_CONFIG=$( grep "^sasl.jaas.config" $CCLOUD_CONFIG_FILE | cut -d'=' -f2- )
   SASL_JAAS_CONFIG_PROPERTY_FORMAT=${SASL_JAAS_CONFIG/username\\=/username=}
   SASL_JAAS_CONFIG_PROPERTY_FORMAT=${SASL_JAAS_CONFIG_PROPERTY_FORMAT/password\\=/password=}
   CLOUD_KEY=$( echo $SASL_JAAS_CONFIG | awk '{print $3}' | awk -F"'" '$0=$2' )
   CLOUD_SECRET=$( echo $SASL_JAAS_CONFIG | awk '{print $4}' | awk -F"'" '$0=$2' )
   
   # Schema Registry
-  BASIC_AUTH_CREDENTIALS_SOURCE=$( grep "^basic.auth.credentials.source" $CONFIG_FILE | awk -F'=' '{print $2;}' )
-  SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO=$( grep "^basic.auth.user.info" $CONFIG_FILE | awk -F'=' '{print $2;}' )
-  SCHEMA_REGISTRY_URL=$( grep "^schema.registry.url" $CONFIG_FILE | awk -F'=' '{print $2;}' )
+  BASIC_AUTH_CREDENTIALS_SOURCE=$( grep "^basic.auth.credentials.source" $CCLOUD_CONFIG_FILE | awk -F'=' '{print $2;}' )
+  SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO=$( grep "^basic.auth.user.info" $CCLOUD_CONFIG_FILE | awk -F'=' '{print $2;}' )
+  SCHEMA_REGISTRY_URL=$( grep "^schema.registry.url" $CCLOUD_CONFIG_FILE | awk -F'=' '{print $2;}' )
   
   # ksqlDB
-  KSQLDB_ENDPOINT=$( grep "^ksql.endpoint" $CONFIG_FILE | awk -F'=' '{print $2;}' )
-  KSQLDB_BASIC_AUTH_USER_INFO=$( grep "^ksql.basic.auth.user.info" $CONFIG_FILE | awk -F'=' '{print $2;}' )
+  KSQLDB_ENDPOINT=$( grep "^ksql.endpoint" $CCLOUD_CONFIG_FILE | awk -F'=' '{print $2;}' )
+  KSQLDB_BASIC_AUTH_USER_INFO=$( grep "^ksql.basic.auth.user.info" $CCLOUD_CONFIG_FILE | awk -F'=' '{print $2;}' )
   
   ################################################################################
   # Build configuration file with Confluent Cloud connection parameters and
@@ -2658,7 +2658,7 @@ function ccloud::generate_configs() {
   ################################################################################
   INTERCEPTORS_CONFIG_FILE=$DEST/interceptors-ccloud.config
   rm -f $INTERCEPTORS_CONFIG_FILE
-  echo "# Configuration derived from $CONFIG_FILE" > $INTERCEPTORS_CONFIG_FILE
+  echo "# Configuration derived from $CCLOUD_CONFIG_FILE" > $INTERCEPTORS_CONFIG_FILE
   while read -r line
   do
     # Skip lines that are commented out
@@ -2673,7 +2673,7 @@ function ccloud::generate_configs() {
       line=${line/\\/}
     fi
     echo $line >> $INTERCEPTORS_CONFIG_FILE
-  done < "$CONFIG_FILE"
+  done < "$CCLOUD_CONFIG_FILE"
   echo -e "\n# Confluent Monitoring Interceptor specific configuration" >> $INTERCEPTORS_CONFIG_FILE
   while read -r line
   do
@@ -2694,7 +2694,7 @@ function ccloud::generate_configs() {
           ${line:0:9} == 'bootstrap' ]]; then
       echo "confluent.monitoring.interceptor.$line" >> $INTERCEPTORS_CONFIG_FILE
     fi
-  done < "$CONFIG_FILE"
+  done < "$CCLOUD_CONFIG_FILE"
   chmod $PERM $INTERCEPTORS_CONFIG_FILE
   
   echo -e "\nConfluent Platform Components:"
@@ -2712,7 +2712,7 @@ function ccloud::generate_configs() {
         echo "kafkastore.$line" >> $SR_CONFIG_DELTA
       fi
     fi
-  done < "$CONFIG_FILE"
+  done < "$CCLOUD_CONFIG_FILE"
   chmod $PERM $SR_CONFIG_DELTA
   
   ################################################################################
@@ -2754,7 +2754,7 @@ function ccloud::generate_configs() {
     elif [[ ${line:0:15} == 'schema.registry' ]]; then
       echo "ksql.$line" >> $KSQLDB_SERVER_DELTA
     fi
-  done < $CONFIG_FILE
+  done < $CCLOUD_CONFIG_FILE
   chmod $PERM $KSQLDB_SERVER_DELTA
   
   ################################################################################
@@ -2774,7 +2774,7 @@ function ccloud::generate_configs() {
     elif [[ ${line:0:15} == 'schema.registry' ]]; then
       echo "ksql.$line" >> $KSQL_DATAGEN_DELTA
     fi
-  done < $CONFIG_FILE
+  done < $CCLOUD_CONFIG_FILE
   chmod $PERM $KSQL_DATAGEN_DELTA
   
   ################################################################################
@@ -2795,7 +2795,7 @@ function ccloud::generate_configs() {
         echo "confluent.controlcenter.streams.$line" >> $C3_DELTA
       fi
     fi
-  done < "$CONFIG_FILE"
+  done < "$CCLOUD_CONFIG_FILE"
   # max.message.bytes is enforced to 8MB in Confluent Cloud
   echo "confluent.metrics.topic.max.message.bytes=8388608" >> $C3_DELTA
   echo -e "\n# Confluent Schema Registry configuration for Confluent Control Center" >> $C3_DELTA
@@ -2806,7 +2806,7 @@ function ccloud::generate_configs() {
     elif [[ ${line:0:15} == 'schema.registry' ]]; then
       echo "confluent.controlcenter.$line" >> $C3_DELTA
     fi
-  done < $CONFIG_FILE
+  done < $CCLOUD_CONFIG_FILE
   chmod $PERM $C3_DELTA
   
   ################################################################################
@@ -2824,7 +2824,7 @@ function ccloud::generate_configs() {
         echo "confluent.metrics.reporter.$line" >> $METRICS_REPORTER_DELTA
       fi
     fi
-  done < "$CONFIG_FILE"
+  done < "$CCLOUD_CONFIG_FILE"
   chmod $PERM $METRICS_REPORTER_DELTA
   
   ################################################################################
@@ -2841,7 +2841,7 @@ function ccloud::generate_configs() {
         echo "client.$line" >> $REST_PROXY_DELTA
       fi
     fi
-  done < "$CONFIG_FILE"
+  done < "$CCLOUD_CONFIG_FILE"
   echo -e "\n# Confluent Schema Registry configuration for REST Proxy" >> $REST_PROXY_DELTA
   while read -r line
   do
@@ -2850,7 +2850,7 @@ function ccloud::generate_configs() {
     elif [[ ${line:0:19} == 'schema.registry.url' ]]; then
       echo "$line" >> $REST_PROXY_DELTA
     fi
-  done < $CONFIG_FILE
+  done < $CCLOUD_CONFIG_FILE
   chmod $PERM $REST_PROXY_DELTA
   
   ################################################################################
@@ -2878,7 +2878,7 @@ EOF
         echo "$line" >> $CONNECT_DELTA
       fi
     fi
-  done < "$CONFIG_FILE"
+  done < "$CCLOUD_CONFIG_FILE"
   
   for prefix in "producer" "consumer" "producer.confluent.monitoring.interceptor" "consumer.confluent.monitoring.interceptor" ; do
   
@@ -2893,7 +2893,7 @@ EOF
         echo "${prefix}.$line" >> $CONNECT_DELTA
       fi
     fi
-  done < "$CONFIG_FILE"
+  done < "$CCLOUD_CONFIG_FILE"
   
   done
   
@@ -2929,7 +2929,7 @@ EOF
   AK_TOOLS_DELTA=$DEST/ak-tools-ccloud.delta
   echo "$AK_TOOLS_DELTA"
   rm -f $AK_TOOLS_DELTA
-  cp $CONFIG_FILE $AK_TOOLS_DELTA
+  cp $CCLOUD_CONFIG_FILE $AK_TOOLS_DELTA
   chmod $PERM $AK_TOOLS_DELTA
   
   
