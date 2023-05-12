@@ -24,7 +24,6 @@ sr_cli_version=1.3.0
 if [ ! -f $sr_cli ]
 then
     log "⏳ $sr_cli is not installed, installing it now"
-    set -x
     cd /tmp
     rm -f schema-registry-statistics.tar.gz
     curl -L -o schema-registry-statistics.tar.gz https://github.com/EladLeev/schema-registry-statistics/releases/download/v${sr_cli_version}/schema-registry-statistics_${sr_cli_version}_`uname -s`_`uname -m`.tar.gz
