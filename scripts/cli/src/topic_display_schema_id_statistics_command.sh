@@ -38,8 +38,11 @@ nb_messages=$(playground topic get-number-records -t $topic | tail -1)
 log "✨ Display statistics of topic $topic, it contains $nb_messages messages"
 $sr_cli --bootstrap localhost:29092 --topic $topic --group $RANDOM --limit $nb_messages --chart
 
-if [ -f pie.html ]
+if [[ "$OSTYPE" == "darwin"* ]]
 then
-    mv pie.html /tmp/pie.html
-    open /tmp/pie.html
+    if [ -f pie.html ]
+    then
+        mv pie.html /tmp/pie.html
+        open /tmp/pie.html
+    fi
 fi
