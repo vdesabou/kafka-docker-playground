@@ -37,56 +37,57 @@ playground_usage() {
   echo
   # :command.usage_commands
   printf "%s\n" "$(bold "Run commands:")"
-  printf "  %s   🕹️ Run any example, except for Confluent Cloud (in this case use run-ccloud command)\n" "$(green "run")                           "
-  printf "  %s   ⚡ Simply re-run last example you ran with <playground run> or <playground run-ccloud>\n" "$(green "re-run")                        "
-  printf "  %s   ⛅ Run any Confluent Cloud (ccloud) example\n" "$(green "run-ccloud")                    "
-  printf "  %s   👐 Simply open last example you ran with <playground run> or <playground run-ccloud>\n" "$(green "open")                          "
-  printf "  %s   🛑 Stop currently running example\n" "$(green "stop")                          "
+  printf "  %s   🕹️ Run any example, except for Confluent Cloud (in this case use run-ccloud command)\n" "$(green "run")                               "
+  printf "  %s   ⚡ Simply re-run last example you ran with <playground run> or <playground run-ccloud>\n" "$(green "re-run")                            "
+  printf "  %s   ⛅ Run any Confluent Cloud (ccloud) example\n" "$(green "run-ccloud")                        "
+  printf "  %s   👐 Simply open last example you ran with <playground run> or <playground run-ccloud>\n" "$(green "open")                              "
+  printf "  %s   🛑 Stop currently running example\n" "$(green "stop")                              "
   echo
   printf "%s\n" "$(bold "Bootstrap commands:")"
-  printf "  %s   🛠  Bootstrap reproduction model\n" "$(green "bootstrap-reproduction-model")  "
+  printf "  %s   🛠  Bootstrap reproduction model\n" "$(green "bootstrap-reproduction-model")      "
   echo
   printf "%s\n" "$(bold "Kafka commands:")"
-  printf "  %s   📝 Get properties file from a container\n" "$(green "get-properties")                "
-  printf "  %s   🔰 Get all schemas versions for all subjects\n" "$(green "get-all-schemas")               "
-  printf "  %s   🔢 Get JMX metrics from a component\n" "$(green "get-jmx-metrics")               "
+  printf "  %s   📝 Get properties file from a container\n" "$(green "get-properties")                    "
+  printf "  %s   🔰 Get all schemas versions for all subjects\n" "$(green "get-all-schemas")                   "
+  printf "  %s   🔢 Get JMX metrics from a component\n" "$(green "get-jmx-metrics")                   "
   echo
   printf "%s\n" "$(bold "Debug commands:")"
-  printf "  %s   ✨ Enable java remote debugging for container\n" "$(green "enable-remote-debugging")       "
-  printf "  %s   🧬 Set log level for any package\n" "$(green "log-level")                     "
+  printf "  %s   ✨ Enable java remote debugging for container\n" "$(green "enable-remote-debugging")           "
+  printf "  %s   🧬 Set log level for any package\n" "$(green "log-level")                         "
   echo
   printf "%s\n" "$(bold "Container commands:")"
-  printf "  %s   🐳 Container commands\n" "$(green "container")                     "
-  [[ -n $long_usage ]] && printf "  %s   💫 Recreate container(s)\n" "$(green "container recreate")            "
-  [[ -n $long_usage ]] && printf "  %s   🖥️  Get ip address of running containers\n" "$(green "container get-ip-addresses")    "
-  [[ -n $long_usage ]] && printf "  %s   💀 Kill all containers\n" "$(green "container kill-all")            "
-  [[ -n $long_usage ]] && printf "  %s   🕵️  Tail and follow container logs\n" "$(green "container logs")                "
-  [[ -n $long_usage ]] && printf "  %s   🛬 SSH into container\n" "$(green "container ssh")                 "
-  [[ -n $long_usage ]] && printf "  %s   🪄  Execute command in a container\n" "$(green "container exec")                "
-  [[ -n $long_usage ]] && printf "  %s   🔁 Restart a container\n" "$(green "container restart")             "
-  [[ -n $long_usage ]] && printf "  %s   ⏸️  Pause a container\n" "$(green "container pause")               "
-  [[ -n $long_usage ]] && printf "  %s   ⏯️  Resume a container\n" "$(green "container resume")              "
-  [[ -n $long_usage ]] && printf "  %s   🔫 Kill a container\n" "$(green "container kill")                "
+  printf "  %s   🐳 Container commands\n" "$(green "container")                         "
+  [[ -n $long_usage ]] && printf "  %s   💫 Recreate container(s)\n" "$(green "container recreate")                "
+  [[ -n $long_usage ]] && printf "  %s   🖥️  Get ip address of running containers\n" "$(green "container get-ip-addresses")        "
+  [[ -n $long_usage ]] && printf "  %s   💀 Kill all containers\n" "$(green "container kill-all")                "
+  [[ -n $long_usage ]] && printf "  %s   🕵️  Tail and follow container logs\n" "$(green "container logs")                    "
+  [[ -n $long_usage ]] && printf "  %s   🛬 SSH into container\n" "$(green "container ssh")                     "
+  [[ -n $long_usage ]] && printf "  %s   🪄  Execute command in a container\n" "$(green "container exec")                    "
+  [[ -n $long_usage ]] && printf "  %s   🔁 Restart a container\n" "$(green "container restart")                 "
+  [[ -n $long_usage ]] && printf "  %s   ⏸️  Pause a container\n" "$(green "container pause")                   "
+  [[ -n $long_usage ]] && printf "  %s   ⏯️  Resume a container\n" "$(green "container resume")                  "
+  [[ -n $long_usage ]] && printf "  %s   🔫 Kill a container\n" "$(green "container kill")                    "
   echo
   printf "%s\n" "$(bold "Topic commands:")"
-  printf "  %s   🗳 Topic commands\n" "$(green "topic")                         "
-  [[ -n $long_usage ]] && printf "  %s   💯 Get number of records in a topic\n" "$(green "topic get-number-records")      "
-  [[ -n $long_usage ]] && printf "  %s   📭 Display content of __consumer_offsets topic\n" "$(green "topic display-consumer-offsets")"
-  [[ -n $long_usage ]] && printf "  %s   🔬 Describe topic\n" "$(green "topic describe")                "
-  [[ -n $long_usage ]] && printf "  %s   📥 Consume topic from beginning\n" "$(green "topic consume")                 "
-  [[ -n $long_usage ]] && printf "  %s   🛡️ Change topic's schema compatibility\n" "$(green "topic set-schema-compatibility")"
+  printf "  %s   🗳 Topic commands\n" "$(green "topic")                             "
+  [[ -n $long_usage ]] && printf "  %s   💯 Get number of records in a topic\n" "$(green "topic get-number-records")          "
+  [[ -n $long_usage ]] && printf "  %s   📭 Display content of __consumer_offsets topic\n" "$(green "topic display-consumer-offsets")    "
+  [[ -n $long_usage ]] && printf "  %s   🔬 Describe topic\n" "$(green "topic describe")                    "
+  [[ -n $long_usage ]] && printf "  %s   📥 Consume topic from beginning\n" "$(green "topic consume")                     "
+  [[ -n $long_usage ]] && printf "  %s   🛡️ Change topic's schema compatibility\n" "$(green "topic set-schema-compatibility")    "
+  [[ -n $long_usage ]] && printf "  %s   🧞 Easily identify the usage of different schema versions within a topic.\n" "$(green "topic display-schema-id-statistics")"
   echo
   printf "%s\n" "$(bold "Connector commands:")"
-  printf "  %s   🔗 Connector commands\n" "$(green "connector")                     "
-  [[ -n $long_usage ]] && printf "  %s   🧩 Show status of all connectors\n" "$(green "connector status")              "
-  [[ -n $long_usage ]] && printf "  %s   🎨 Show all plugins installed\n" "$(green "connector plugins")             "
-  [[ -n $long_usage ]] && printf "  %s   ⏸️  Pause connector\n" "$(green "connector pause")               "
-  [[ -n $long_usage ]] && printf "  %s   🧞 Get current version used in example\n" "$(green "connector versions")            "
-  [[ -n $long_usage ]] && printf "  %s   ♻️  Restart connector\n" "$(green "connector restart")             "
-  [[ -n $long_usage ]] && printf "  %s   ⏯️  Resume connector\n" "$(green "connector resume")              "
-  [[ -n $long_usage ]] && printf "  %s   🗑️  Delete connector\n" "$(green "connector delete")              "
-  [[ -n $long_usage ]] && printf "  %s   🐢 Show lag of sink connector\n" "$(green "connector show-lag")            "
-  [[ -n $long_usage ]] && printf "  %s   🧬 Set connect log level\n" "$(green "connector log-level")           "
+  printf "  %s   🔗 Connector commands\n" "$(green "connector")                         "
+  [[ -n $long_usage ]] && printf "  %s   🧩 Show status of all connectors\n" "$(green "connector status")                  "
+  [[ -n $long_usage ]] && printf "  %s   🎨 Show all plugins installed\n" "$(green "connector plugins")                 "
+  [[ -n $long_usage ]] && printf "  %s   ⏸️  Pause connector\n" "$(green "connector pause")                   "
+  [[ -n $long_usage ]] && printf "  %s   🧞 Get current version used in example\n" "$(green "connector versions")                "
+  [[ -n $long_usage ]] && printf "  %s   ♻️  Restart connector\n" "$(green "connector restart")                 "
+  [[ -n $long_usage ]] && printf "  %s   ⏯️  Resume connector\n" "$(green "connector resume")                  "
+  [[ -n $long_usage ]] && printf "  %s   🗑️  Delete connector\n" "$(green "connector delete")                  "
+  [[ -n $long_usage ]] && printf "  %s   🐢 Show lag of sink connector\n" "$(green "connector show-lag")                "
+  [[ -n $long_usage ]] && printf "  %s   🧬 Set connect log level\n" "$(green "connector log-level")               "
   echo
 
   # :command.long_usage
@@ -1720,11 +1721,12 @@ playground_topic_usage() {
   echo
   # :command.usage_commands
   printf "%s\n" "$(bold "Topic commands:")"
-  printf "  %s   💯 Get number of records in a topic\n" "$(green "get-number-records")      "
-  printf "  %s   📭 Display content of __consumer_offsets topic\n" "$(green "display-consumer-offsets")"
-  printf "  %s   🔬 Describe topic\n" "$(green "describe")                "
-  printf "  %s   📥 Consume topic from beginning\n" "$(green "consume")                 "
-  printf "  %s   🛡️ Change topic's schema compatibility\n" "$(green "set-schema-compatibility")"
+  printf "  %s   💯 Get number of records in a topic\n" "$(green "get-number-records")          "
+  printf "  %s   📭 Display content of __consumer_offsets topic\n" "$(green "display-consumer-offsets")    "
+  printf "  %s   🔬 Describe topic\n" "$(green "describe")                    "
+  printf "  %s   📥 Consume topic from beginning\n" "$(green "consume")                     "
+  printf "  %s   🛡️ Change topic's schema compatibility\n" "$(green "set-schema-compatibility")    "
+  printf "  %s   🧞 Easily identify the usage of different schema versions within a topic.\n" "$(green "display-schema-id-statistics")"
   echo
 
   # :command.long_usage
@@ -1916,6 +1918,44 @@ playground_topic_set_schema_compatibility_usage() {
     printf "  %s\n" "$(magenta "--compatibility COMPATIBILITY (required)")"
     printf "    Schema Registry compatibility rule\n"
     printf "    Allowed: BACKWARD, BACKWARD_TRANSITIVE, FORWARD, FORWARD_TRANSITIVE, FULL, FULL_TRANSITIVE, NONE\n"
+    echo
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_topic_display_schema_id_statistics_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground topic display-schema-id-statistics\n"
+    echo
+
+    printf "  🧞 Easily identify the usage of different schema versions within a topic.\n  \n  It makes use of https://github.com/EladLeev/schema-registry-statistics\n  \n  It only works when plaintext environment is used\n"
+    echo
+
+  else
+    printf "playground topic display-schema-id-statistics - 🧞 Easily identify the usage of different schema versions within a topic.\n"
+    echo
+
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground topic display-schema-id-statistics [OPTIONS]\n"
+  printf "  playground topic display-schema-id-statistics --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n $long_usage ]]; then
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_flags
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--topic, -t TOPIC (required)")"
+    printf "    🗳 Topic name\n"
     echo
 
     # :command.usage_fixed_flags
@@ -8683,6 +8723,57 @@ playground_topic_set_schema_compatibility_command() {
 }
 
 # :command.function
+playground_topic_display_schema_id_statistics_command() {
+  # src/topic_display_schema_id_statistics_command.sh
+  topic="${args[--topic]}"
+
+  environment=`get_environment_used`
+
+  if [ "$environment" == "error" ]
+  then
+      logerror "File containing restart command /tmp/playground-command does not exist!"
+      exit 1
+  fi
+
+  if [ "$environment" != "plaintext" ]
+  then
+      logerror "It only works when plaintext environment is used"
+      exit 1
+  fi
+
+  DIR_CLI="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
+  dir1=$(echo ${DIR_CLI%/*})
+  root_folder=$(echo ${dir1%/*})
+
+  sr_cli=$root_folder/scripts/cli/schema-registry-statistics
+  sr_cli_version=1.3.0
+
+  if [ ! -f $sr_cli ]
+  then
+      log "⏳ $sr_cli is not installed, installing it now"
+      set -x
+      cd /tmp
+      rm -f schema-registry-statistics.tar.gz
+      curl -L -o schema-registry-statistics.tar.gz https://github.com/EladLeev/schema-registry-statistics/releases/download/v${sr_cli_version}/schema-registry-statistics_${sr_cli_version}_`uname -s`_`uname -m`.tar.gz
+      tar xvfz schema-registry-statistics.tar.gz
+      mv schema-registry-statistics $sr_cli
+      rm -f chema-registry-statistics.tar.gz
+      chmod u+x $sr_cli
+      cd -
+  fi
+
+  nb_messages=$(playground topic get-number-records -t $topic | tail -1)
+  log "✨ Display statistics of topic $topic, it contains $nb_messages messages"
+  $sr_cli --bootstrap localhost:29092 --topic $topic --group $RANDOM --limit $nb_messages --chart
+
+  if [ -f pie.html ]
+  then
+      mv pie.html /tmp/pie.html
+      open /tmp/pie.html
+  fi
+}
+
+# :command.function
 playground_connector_status_command() {
   # src/connector_status_command.sh
   ret=$(get_connect_url_and_security)
@@ -12387,6 +12478,13 @@ playground_topic_parse_requirements() {
       shift $#
       ;;
 
+    display-schema-id-statistics)
+      action="display-schema-id-statistics"
+      shift
+      playground_topic_display_schema_id_statistics_parse_requirements "$@"
+      shift $#
+      ;;
+
     # :command.command_fallback
     "")
       playground_topic_usage >&2
@@ -12787,6 +12885,70 @@ playground_topic_set_schema_compatibility_parse_requirements() {
   filter_error=$(filter_schema_registry_running)
   if [[ -n $filter_error ]]; then
     echo "$filter_error" >&2
+    exit 1
+  fi
+
+}
+
+# :command.parse_requirements
+playground_topic_display_schema_id_statistics_parse_requirements() {
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    case "${1:-}" in
+      --help | -h)
+        long_usage=yes
+        playground_topic_display_schema_id_statistics_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action="topic display-schema-id-statistics"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      # :flag.case
+      --topic | -t)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+
+          args['--topic']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--topic requires an argument: --topic, -t TOPIC" >&2
+          exit 1
+        fi
+        ;;
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+  # :command.required_flags_filter
+  if [[ -z ${args['--topic']+x} ]]; then
+    printf "missing required flag: --topic, -t TOPIC\n" >&2
     exit 1
   fi
 
@@ -13506,6 +13668,7 @@ run() {
     "topic describe") playground_topic_describe_command ;;
     "topic consume") playground_topic_consume_command ;;
     "topic set-schema-compatibility") playground_topic_set_schema_compatibility_command ;;
+    "topic display-schema-id-statistics") playground_topic_display_schema_id_statistics_command ;;
     "connector") playground_connector_command ;;
     "connector status") playground_connector_status_command ;;
     "connector plugins") playground_connector_plugins_command ;;
