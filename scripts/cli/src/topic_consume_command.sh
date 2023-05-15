@@ -14,55 +14,6 @@ ret=$(get_sr_url_and_security)
 sr_url=$(echo "$ret" | cut -d "@" -f 1)
 sr_security=$(echo "$ret" | cut -d "@" -f 2)
 
-key_type=""
-version=$(curl $sr_security -s "${sr_url}/subjects/${topic}-key/versions/1" | jq -r .version)
-if [ "$version" != "null" ]
-then
-  schema_type=$(curl $sr_security -s "${sr_url}/subjects/${topic}-key/versions/1"  | jq -r .schemaType)
-  case "${schema_type}" in
-    JSON)
-      key_type="json-schema"
-    ;;
-    PROTOBUF)
-      key_type="protobuf"
-    ;;
-    null)
-      key_type="avro"
-    ;;
-  esac
-fi
-
-if [ "$key_type" != "" ]
-then
-  log "🔮🔰 topic is using $key_type for key"
-else
-  log "🔮🙅 topic is not using any schema for key"
-fi
-
-value_type=""
-version=$(curl $sr_security -s "${sr_url}/subjects/${topic}-value/versions/1" | jq -r .version)
-if [ "$version" != "null" ]
-then
-  schema_type=$(curl $sr_security -s "${sr_url}/subjects/${topic}-value/versions/1"  | jq -r .schemaType)
-  case "${schema_type}" in
-    JSON)
-      value_type="json-schema"
-    ;;
-    PROTOBUF)
-      value_type="protobuf"
-    ;;
-    null)
-      value_type="avro"
-    ;;
-  esac
-fi
-
-if [ "$value_type" != "" ]
-then
-  log "🔮🔰 topic is using $value_type for value"
-else
-  log "🔮🙅 topic is not using any schema for value"
-fi
 
 container="connect"
 sr_url="http://schema-registry:8081"
@@ -84,57 +35,123 @@ then
     docker exec -i client kinit -k -t /var/lib/secret/kafka-connect.key connect
 fi
 
-if [[ -n "$max_messages" ]]
+
+if [[ ! -n "$topic" ]]
 then
-  nb_messages=$(playground topic get-number-records -t $topic | tail -1)
-  log "✨ Display content of topic $topic, it contains $nb_messages messages, but displaying only --max-messages=$max_messages"
-  nb_messages=$max_messages
-else
-  nb_messages=$(playground topic get-number-records -t $topic | tail -1)
-  log "✨ Display content of topic $topic, it contains $nb_messages messages"
+    logwarn "--topic flag was not provided, applying command to all topics"
+    topic=$(playground get-topic-list --skip-connect-internal-topics)
+    if [ "$topic" == "" ]
+    then
+        logerror "❌ No topic found !"
+        exit 1
+    fi
 fi
 
-type=""
-tmp_dir=$(mktemp -d -t ci-XXXXXXXXXX)
-fifo_path="$tmp_dir/kafka_output_fifo"
-mkfifo "$fifo_path"
-case "${value_type}" in
-  avro|protobuf|json-schema)
-      if [ "$key_type" == "avro" ] || [ "$key_type" == "protobuf" ] || [ "$key_type" == "json-schema" ]
-      then
-          docker exec -e SCHEMA_REGISTRY_LOG4J_OPTS="-Dlog4j.configuration=file:/etc/kafka/tools-log4j.properties" $container kafka-$value_type-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=$sr_url --topic $topic --property print.partition=true --property print.offset=true --property print.headers=true --property print.timestamp=true --property print.key=true --property key.separator="|" $security --from-beginning --max-messages $nb_messages > "$fifo_path" &
-      else
-          docker exec -e SCHEMA_REGISTRY_LOG4J_OPTS="-Dlog4j.configuration=file:/etc/kafka/tools-log4j.properties" $container kafka-$value_type-console-consumer --bootstrap-server broker:9092 --property schema.registry.url=$sr_url --topic $topic --property print.partition=true --property print.offset=true --property print.headers=true --property print.timestamp=true --property print.key=true --property key.separator="|" --property key.deserializer=org.apache.kafka.common.serialization.StringDeserializer $security --from-beginning --max-messages $nb_messages > "$fifo_path" &
-      fi
-      ;;
-  *)
-      docker exec $container kafka-console-consumer --bootstrap-server broker:9092 --topic $topic --property print.partition=true --property print.offset=true --property print.headers=true --property print.timestamp=true --property print.key=true --property key.separator="|" $security --from-beginning --max-messages $nb_messages > "$fifo_path" &
-  ;;
-esac
-
-# Detect the platform (macOS or Linux) and set the date command accordingly
-if [[ "$(uname)" == "Darwin" ]]; then
-  # macOS
-  date_command="date -r "
-else
-  # Linux
-  date_command="date -d @"
-fi
-
-# Loop through each line in the named pipe
-while read -r line
+items=($topic)
+for topic in ${items[@]}
 do
-  if [[ $line =~ '^[0-9]+$' ]]
+  if [[ -n "$max_messages" ]]
   then
-    # Extract the timestamp from the line
-    timestamp_ms=$(echo "$line" | cut -d ":" -f 2 | cut -d "|" -f 1)
-    # Convert milliseconds to seconds
-    timestamp_sec=$((timestamp_ms / 1000))
-    milliseconds=$((timestamp_ms % 1000))
-    readable_date="$(${date_command}${timestamp_sec} "+%Y-%m-%d %H:%M:%S.${milliseconds}")"
-    line_with_date=$(echo "$line" | sed -E "s/CreateTime:[0-9]{13}/CreateTime: ${readable_date}/")
-    echo "$line_with_date"
+    nb_messages=$(playground topic get-number-records -t $topic | tail -1)
+    log "✨ Display content of topic $topic, it contains $nb_messages messages, but displaying only --max-messages=$max_messages"
+    nb_messages=$max_messages
   else
-    echo "$line"
+    nb_messages=$(playground topic get-number-records -t $topic | tail -1)
+    log "✨ Display content of topic $topic, it contains $nb_messages messages"
   fi
-done < "$fifo_path"
+
+  key_type=""
+  version=$(curl $sr_security -s "${sr_url}/subjects/${topic}-key/versions/1" | jq -r .version)
+  if [ "$version" != "null" ]
+  then
+    schema_type=$(curl $sr_security -s "${sr_url}/subjects/${topic}-key/versions/1"  | jq -r .schemaType)
+    case "${schema_type}" in
+      JSON)
+        key_type="json-schema"
+      ;;
+      PROTOBUF)
+        key_type="protobuf"
+      ;;
+      null)
+        key_type="avro"
+      ;;
+    esac
+  fi
+
+  if [ "$key_type" != "" ]
+  then
+    log "🔮🔰 topic is using $key_type for key"
+  else
+    log "🔮🙅 topic is not using any schema for key"
+  fi
+
+  value_type=""
+  version=$(curl $sr_security -s "${sr_url}/subjects/${topic}-value/versions/1" | jq -r .version)
+  if [ "$version" != "null" ]
+  then
+    schema_type=$(curl $sr_security -s "${sr_url}/subjects/${topic}-value/versions/1"  | jq -r .schemaType)
+    case "${schema_type}" in
+      JSON)
+        value_type="json-schema"
+      ;;
+      PROTOBUF)
+        value_type="protobuf"
+      ;;
+      null)
+        value_type="avro"
+      ;;
+    esac
+  fi
+
+  if [ "$value_type" != "" ]
+  then
+    log "🔮🔰 topic is using $value_type for value"
+  else
+    log "🔮🙅 topic is not using any schema for value"
+  fi
+
+  type=""
+  tmp_dir=$(mktemp -d -t ci-XXXXXXXXXX)
+  fifo_path="$tmp_dir/kafka_output_fifo"
+  mkfifo "$fifo_path"
+  case "${value_type}" in
+    avro|protobuf|json-schema)
+        if [ "$key_type" == "avro" ] || [ "$key_type" == "protobuf" ] || [ "$key_type" == "json-schema" ]
+        then
+            docker exec -e SCHEMA_REGISTRY_LOG4J_OPTS="-Dlog4j.configuration=file:/etc/kafka/tools-log4j.properties" $container kafka-$value_type-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=$sr_url --topic $topic --property print.partition=true --property print.offset=true --property print.headers=true --property print.timestamp=true --property print.key=true --property key.separator="|" $security --from-beginning --max-messages $nb_messages > "$fifo_path" &
+        else
+            docker exec -e SCHEMA_REGISTRY_LOG4J_OPTS="-Dlog4j.configuration=file:/etc/kafka/tools-log4j.properties" $container kafka-$value_type-console-consumer --bootstrap-server broker:9092 --property schema.registry.url=$sr_url --topic $topic --property print.partition=true --property print.offset=true --property print.headers=true --property print.timestamp=true --property print.key=true --property key.separator="|" --property key.deserializer=org.apache.kafka.common.serialization.StringDeserializer $security --from-beginning --max-messages $nb_messages > "$fifo_path" &
+        fi
+        ;;
+    *)
+        docker exec $container kafka-console-consumer --bootstrap-server broker:9092 --topic $topic --property print.partition=true --property print.offset=true --property print.headers=true --property print.timestamp=true --property print.key=true --property key.separator="|" $security --from-beginning --max-messages $nb_messages > "$fifo_path" &
+    ;;
+  esac
+
+  # Detect the platform (macOS or Linux) and set the date command accordingly
+  if [[ "$(uname)" == "Darwin" ]]; then
+    # macOS
+    date_command="date -r "
+  else
+    # Linux
+    date_command="date -d @"
+  fi
+
+  # Loop through each line in the named pipe
+  while read -r line
+  do
+    if [[ $line =~ '^[0-9]+$' ]]
+    then
+      # Extract the timestamp from the line
+      timestamp_ms=$(echo "$line" | cut -d ":" -f 2 | cut -d "|" -f 1)
+      # Convert milliseconds to seconds
+      timestamp_sec=$((timestamp_ms / 1000))
+      milliseconds=$((timestamp_ms % 1000))
+      readable_date="$(${date_command}${timestamp_sec} "+%Y-%m-%d %H:%M:%S.${milliseconds}")"
+      line_with_date=$(echo "$line" | sed -E "s/CreateTime:[0-9]{13}/CreateTime: ${readable_date}/")
+      echo "$line_with_date"
+    else
+      echo "$line"
+    fi
+  done < "$fifo_path"
+done

@@ -34,15 +34,30 @@ then
     cd -
 fi
 
-nb_messages=$(playground topic get-number-records -t $topic | tail -1)
-log "✨ Display statistics of topic $topic, it contains $nb_messages messages"
-$sr_cli --bootstrap localhost:29092 --topic $topic --group $RANDOM --limit $nb_messages --chart
-
-if [[ "$OSTYPE" == "darwin"* ]]
+if [[ ! -n "$topic" ]]
 then
-    if [ -f pie.html ]
+    logwarn "--topic flag was not provided, applying command to all topics"
+    topic=$(playground get-topic-list --skip-connect-internal-topics)
+    if [ "$topic" == "" ]
     then
-        mv pie.html /tmp/pie.html
-        open /tmp/pie.html
+        logerror "❌ No topic found !"
+        exit 1
     fi
 fi
+
+items=($topic)
+for topic in ${items[@]}
+do
+    nb_messages=$(playground topic get-number-records -t $topic | tail -1)
+    log "✨ Display statistics of topic $topic, it contains $nb_messages messages"
+    $sr_cli --bootstrap localhost:29092 --topic "$topic" --group "$RANDOM" --limit $nb_messages --chart
+
+    # if [[ "$OSTYPE" == "darwin"* ]]
+    # then
+    #     if [ -f pie.html ]
+    #     then
+    #         mv pie.html /tmp/pie.html
+    #         open /tmp/pie.html
+    #     fi
+    # fi
+done

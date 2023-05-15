@@ -24,6 +24,9 @@ commands:
 - name: get-topic-list
   help: Return some completion for topic list
   private: true
+  flags:
+  - long: --skip-connect-internal-topics
+    required: false
 
 - name: get-examples-list-with-fzf
   help: Return some completion for examples list
@@ -840,7 +843,7 @@ commands:
       - &topic
         long: --topic
         short: -t
-        required: true
+        required: false
         arg: topic
         completions:
           - $(playground get-topic-list)
