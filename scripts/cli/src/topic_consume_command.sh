@@ -122,17 +122,19 @@ else
 fi
 
 # Loop through each line in the named pipe
-while read -r line; do
-  # Extract the timestamp from the line
-  timestamp_ms=$(echo "$line" | cut -d ":" -f 2 | cut -d "|" -f 1)
-  
-  # Convert milliseconds to seconds
-  timestamp_sec=$((timestamp_ms / 1000))
-  milliseconds=$((timestamp_ms % 1000))
-  
-  readable_date="$(${date_command}${timestamp_sec} "+%Y-%m-%d %H:%M:%S.${milliseconds}")"
-
-  line_with_date=$(echo "$line" | sed -E "s/CreateTime:[0-9]{13}/CreateTime: ${readable_date}/")
-
-  echo "$line_with_date"
+while read -r line
+do
+  if [[ $line =~ '^[0-9]+$' ]]
+  then
+    # Extract the timestamp from the line
+    timestamp_ms=$(echo "$line" | cut -d ":" -f 2 | cut -d "|" -f 1)
+    # Convert milliseconds to seconds
+    timestamp_sec=$((timestamp_ms / 1000))
+    milliseconds=$((timestamp_ms % 1000))
+    readable_date="$(${date_command}${timestamp_sec} "+%Y-%m-%d %H:%M:%S.${milliseconds}")"
+    line_with_date=$(echo "$line" | sed -E "s/CreateTime:[0-9]{13}/CreateTime: ${readable_date}/")
+    echo "$line_with_date"
+  else
+    echo "$line"
+  fi
 done < "$fifo_path"
