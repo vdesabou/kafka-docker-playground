@@ -7,7 +7,7 @@ connector="${args[--connector]}"
 
 if [[ ! -n "$connector" ]]
 then
-    logwarn "--connector flag was not provided, applying command to all connectors"
+    log "✨ --connector flag was not provided, applying command to all connectors"
     connector=$(playground get-connector-list)
     if [ "$connector" == "" ]
     then

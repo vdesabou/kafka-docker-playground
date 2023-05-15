@@ -36,7 +36,7 @@ fi
 
 if [[ ! -n "$topic" ]]
 then
-    logwarn "--topic flag was not provided, applying command to all topics"
+    log "✨ --topic flag was not provided, applying command to all topics"
     topic=$(playground get-topic-list --skip-connect-internal-topics)
     if [ "$topic" == "" ]
     then

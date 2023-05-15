@@ -176,13 +176,19 @@ playground_get_topic_list_usage() {
   fi
 
   printf "%s\n" "$(bold "== Usage ==")"
-  printf "  playground get-topic-list\n"
+  printf "  playground get-topic-list [OPTIONS]\n"
   printf "  playground get-topic-list --help | -h\n"
   echo
 
   # :command.long_usage
   if [[ -n $long_usage ]]; then
     printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_flags
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--skip-connect-internal-topics")"
+    printf "\n"
+    echo
 
     # :command.usage_fixed_flags
     printf "  %s\n" "$(magenta "--help, -h")"
@@ -1764,7 +1770,7 @@ playground_topic_get_number_records_usage() {
 
     # :command.usage_flags
     # :flag.usage
-    printf "  %s\n" "$(magenta "--topic, -t TOPIC (required)")"
+    printf "  %s\n" "$(magenta "--topic, -t TOPIC")"
     printf "    🗳 Topic name\n"
     echo
 
@@ -1834,7 +1840,7 @@ playground_topic_describe_usage() {
 
     # :command.usage_flags
     # :flag.usage
-    printf "  %s\n" "$(magenta "--topic, -t TOPIC (required)")"
+    printf "  %s\n" "$(magenta "--topic, -t TOPIC")"
     printf "    🗳 Topic name\n"
     echo
 
@@ -1869,7 +1875,7 @@ playground_topic_consume_usage() {
 
     # :command.usage_flags
     # :flag.usage
-    printf "  %s\n" "$(magenta "--topic, -t TOPIC (required)")"
+    printf "  %s\n" "$(magenta "--topic, -t TOPIC")"
     printf "    🗳 Topic name\n"
     echo
 
@@ -1910,7 +1916,7 @@ playground_topic_set_schema_compatibility_usage() {
 
     # :command.usage_flags
     # :flag.usage
-    printf "  %s\n" "$(magenta "--topic, -t TOPIC (required)")"
+    printf "  %s\n" "$(magenta "--topic, -t TOPIC")"
     printf "    🗳 Topic name\n"
     echo
 
@@ -1954,7 +1960,7 @@ playground_topic_display_schema_id_statistics_usage() {
 
     # :command.usage_flags
     # :flag.usage
-    printf "  %s\n" "$(magenta "--topic, -t TOPIC (required)")"
+    printf "  %s\n" "$(magenta "--topic, -t TOPIC")"
     printf "    🗳 Topic name\n"
     echo
 
@@ -6460,12 +6466,18 @@ playground_get_kafka_region_list_command() {
 # :command.function
 playground_get_topic_list_command() {
   # src/get_topic_list_command.sh
-  #docker exec broker kafka-topics --bootstrap-server broker:9092 --list | grep -v "^_"
+  skip_connect_internal_topics="${args[--skip-connect-internal-topics]}"
+
   # trick to be faster
   docker exec broker ls /var/lib/kafka/data > /dev/null 2>&1
   if [ $? -eq 0 ]
   then
-    docker exec broker ls /var/lib/kafka/data | grep -v "checkpoint" | grep -v "meta.properties" | grep -v "^_" | sed 's/[^-]*$//' | sed 's/.$//' | sort | uniq
+    if [[ -n "$skip_connect_internal_topics" ]]
+    then
+      docker exec broker ls /var/lib/kafka/data | grep -v "checkpoint" | grep -v "meta.properties" | grep -v "connect-" | grep -v "^_" | sed 's/[^-]*$//' | sed 's/.$//' | sort | uniq
+    else
+      docker exec broker ls /var/lib/kafka/data | grep -v "checkpoint" | grep -v "meta.properties" | grep -v "^_" | sed 's/[^-]*$//' | sed 's/.$//' | sort | uniq
+    fi
   fi
 }
 
@@ -8524,8 +8536,23 @@ playground_topic_get_number_records_command() {
   container=$(echo "$ret" | cut -d "@" -f 1)
   security=$(echo "$ret" | cut -d "@" -f 2)
 
-  log "Get number of records in a topic $topic"
-  docker exec $container kafka-run-class kafka.tools.GetOffsetShell --broker-list broker:9092 $security --topic $topic --time -1 | awk -F ":" '{sum += $3} END {print sum}'
+  if [[ ! -n "$topic" ]]
+  then
+      log "✨ --topic flag was not provided, applying command to all topics"
+      topic=$(playground get-topic-list --skip-connect-internal-topics)
+      if [ "$topic" == "" ]
+      then
+          logerror "❌ No topic found !"
+          exit 1
+      fi
+  fi
+
+  items=($topic)
+  for topic in ${items[@]}
+  do
+      log "💯 Get number of records in a topic $topic"
+      docker exec $container kafka-run-class kafka.tools.GetOffsetShell --broker-list broker:9092 $security --topic $topic --time -1 | awk -F ":" '{sum += $3} END {print sum}'
+  done
 }
 
 # :command.function
@@ -8550,8 +8577,23 @@ playground_topic_describe_command() {
   container=$(echo "$ret" | cut -d "@" -f 1)
   security=$(echo "$ret" | cut -d "@" -f 2)
 
-  log "Describing topic $topic"
-  docker exec $container kafka-topics --describe --topic $topic --bootstrap-server broker:9092 $security
+  if [[ ! -n "$topic" ]]
+  then
+      log "✨ --topic flag was not provided, applying command to all topics"
+      topic=$(playground get-topic-list --skip-connect-internal-topics)
+      if [ "$topic" == "" ]
+      then
+          logerror "❌ No topic found !"
+          exit 1
+      fi
+  fi
+
+  items=($topic)
+  for topic in ${items[@]}
+  do
+      log "🔎 Describing topic $topic"
+      docker exec $container kafka-topics --describe --topic $topic --bootstrap-server broker:9092 $security
+  done
 }
 
 # :command.function
@@ -8574,56 +8616,6 @@ playground_topic_consume_command() {
   sr_url=$(echo "$ret" | cut -d "@" -f 1)
   sr_security=$(echo "$ret" | cut -d "@" -f 2)
 
-  key_type=""
-  version=$(curl $sr_security -s "${sr_url}/subjects/${topic}-key/versions/1" | jq -r .version)
-  if [ "$version" != "null" ]
-  then
-    schema_type=$(curl $sr_security -s "${sr_url}/subjects/${topic}-key/versions/1"  | jq -r .schemaType)
-    case "${schema_type}" in
-      JSON)
-        key_type="json-schema"
-      ;;
-      PROTOBUF)
-        key_type="protobuf"
-      ;;
-      null)
-        key_type="avro"
-      ;;
-    esac
-  fi
-
-  if [ "$key_type" != "" ]
-  then
-    log "🔮🔰 topic is using $key_type for key"
-  else
-    log "🔮🙅 topic is not using any schema for key"
-  fi
-
-  value_type=""
-  version=$(curl $sr_security -s "${sr_url}/subjects/${topic}-value/versions/1" | jq -r .version)
-  if [ "$version" != "null" ]
-  then
-    schema_type=$(curl $sr_security -s "${sr_url}/subjects/${topic}-value/versions/1"  | jq -r .schemaType)
-    case "${schema_type}" in
-      JSON)
-        value_type="json-schema"
-      ;;
-      PROTOBUF)
-        value_type="protobuf"
-      ;;
-      null)
-        value_type="avro"
-      ;;
-    esac
-  fi
-
-  if [ "$value_type" != "" ]
-  then
-    log "🔮🔰 topic is using $value_type for value"
-  else
-    log "🔮🙅 topic is not using any schema for value"
-  fi
-
   container="connect"
   sr_url="http://schema-registry:8081"
   security=""
@@ -8644,60 +8636,125 @@ playground_topic_consume_command() {
       docker exec -i client kinit -k -t /var/lib/secret/kafka-connect.key connect
   fi
 
-  if [[ -n "$max_messages" ]]
+  if [[ ! -n "$topic" ]]
   then
-    nb_messages=$(playground topic get-number-records -t $topic | tail -1)
-    log "✨ Display content of topic $topic, it contains $nb_messages messages, but displaying only --max-messages=$max_messages"
-    nb_messages=$max_messages
-  else
-    nb_messages=$(playground topic get-number-records -t $topic | tail -1)
-    log "✨ Display content of topic $topic, it contains $nb_messages messages"
+      log "✨ --topic flag was not provided, applying command to all topics"
+      topic=$(playground get-topic-list --skip-connect-internal-topics)
+      if [ "$topic" == "" ]
+      then
+          logerror "❌ No topic found !"
+          exit 1
+      fi
   fi
 
-  type=""
-  tmp_dir=$(mktemp -d -t ci-XXXXXXXXXX)
-  fifo_path="$tmp_dir/kafka_output_fifo"
-  mkfifo "$fifo_path"
-  case "${value_type}" in
-    avro|protobuf|json-schema)
-        if [ "$key_type" == "avro" ] || [ "$key_type" == "protobuf" ] || [ "$key_type" == "json-schema" ]
-        then
-            docker exec -e SCHEMA_REGISTRY_LOG4J_OPTS="-Dlog4j.configuration=file:/etc/kafka/tools-log4j.properties" $container kafka-$value_type-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=$sr_url --topic $topic --property print.partition=true --property print.offset=true --property print.headers=true --property print.timestamp=true --property print.key=true --property key.separator="|" $security --from-beginning --max-messages $nb_messages > "$fifo_path" &
-        else
-            docker exec -e SCHEMA_REGISTRY_LOG4J_OPTS="-Dlog4j.configuration=file:/etc/kafka/tools-log4j.properties" $container kafka-$value_type-console-consumer --bootstrap-server broker:9092 --property schema.registry.url=$sr_url --topic $topic --property print.partition=true --property print.offset=true --property print.headers=true --property print.timestamp=true --property print.key=true --property key.separator="|" --property key.deserializer=org.apache.kafka.common.serialization.StringDeserializer $security --from-beginning --max-messages $nb_messages > "$fifo_path" &
-        fi
-        ;;
-    *)
-        docker exec $container kafka-console-consumer --bootstrap-server broker:9092 --topic $topic --property print.partition=true --property print.offset=true --property print.headers=true --property print.timestamp=true --property print.key=true --property key.separator="|" $security --from-beginning --max-messages $nb_messages > "$fifo_path" &
-    ;;
-  esac
-
-  # Detect the platform (macOS or Linux) and set the date command accordingly
-  if [[ "$(uname)" == "Darwin" ]]; then
-    # macOS
-    date_command="date -r "
-  else
-    # Linux
-    date_command="date -d @"
-  fi
-
-  # Loop through each line in the named pipe
-  while read -r line
+  items=($topic)
+  for topic in ${items[@]}
   do
-    if [[ $line =~ '^[0-9]+$' ]]
+    if [[ -n "$max_messages" ]]
     then
-      # Extract the timestamp from the line
-      timestamp_ms=$(echo "$line" | cut -d ":" -f 2 | cut -d "|" -f 1)
-      # Convert milliseconds to seconds
-      timestamp_sec=$((timestamp_ms / 1000))
-      milliseconds=$((timestamp_ms % 1000))
-      readable_date="$(${date_command}${timestamp_sec} "+%Y-%m-%d %H:%M:%S.${milliseconds}")"
-      line_with_date=$(echo "$line" | sed -E "s/CreateTime:[0-9]{13}/CreateTime: ${readable_date}/")
-      echo "$line_with_date"
+      nb_messages=$(playground topic get-number-records -t $topic | tail -1)
+      log "✨ Display content of topic $topic, it contains $nb_messages messages, but displaying only --max-messages=$max_messages"
+      nb_messages=$max_messages
     else
-      echo "$line"
+      nb_messages=$(playground topic get-number-records -t $topic | tail -1)
+      log "✨ Display content of topic $topic, it contains $nb_messages messages"
     fi
-  done < "$fifo_path"
+
+    key_type=""
+    version=$(curl $sr_security -s "${sr_url}/subjects/${topic}-key/versions/1" | jq -r .version)
+    if [ "$version" != "null" ]
+    then
+      schema_type=$(curl $sr_security -s "${sr_url}/subjects/${topic}-key/versions/1"  | jq -r .schemaType)
+      case "${schema_type}" in
+        JSON)
+          key_type="json-schema"
+        ;;
+        PROTOBUF)
+          key_type="protobuf"
+        ;;
+        null)
+          key_type="avro"
+        ;;
+      esac
+    fi
+
+    if [ "$key_type" != "" ]
+    then
+      log "🔮🔰 topic is using $key_type for key"
+    else
+      log "🔮🙅 topic is not using any schema for key"
+    fi
+
+    value_type=""
+    version=$(curl $sr_security -s "${sr_url}/subjects/${topic}-value/versions/1" | jq -r .version)
+    if [ "$version" != "null" ]
+    then
+      schema_type=$(curl $sr_security -s "${sr_url}/subjects/${topic}-value/versions/1"  | jq -r .schemaType)
+      case "${schema_type}" in
+        JSON)
+          value_type="json-schema"
+        ;;
+        PROTOBUF)
+          value_type="protobuf"
+        ;;
+        null)
+          value_type="avro"
+        ;;
+      esac
+    fi
+
+    if [ "$value_type" != "" ]
+    then
+      log "🔮🔰 topic is using $value_type for value"
+    else
+      log "🔮🙅 topic is not using any schema for value"
+    fi
+
+    type=""
+    tmp_dir=$(mktemp -d -t ci-XXXXXXXXXX)
+    fifo_path="$tmp_dir/kafka_output_fifo"
+    mkfifo "$fifo_path"
+    case "${value_type}" in
+      avro|protobuf|json-schema)
+          if [ "$key_type" == "avro" ] || [ "$key_type" == "protobuf" ] || [ "$key_type" == "json-schema" ]
+          then
+              docker exec -e SCHEMA_REGISTRY_LOG4J_OPTS="-Dlog4j.configuration=file:/etc/kafka/tools-log4j.properties" $container kafka-$value_type-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=$sr_url --topic $topic --property print.partition=true --property print.offset=true --property print.headers=true --property print.timestamp=true --property print.key=true --property key.separator="|" $security --from-beginning --max-messages $nb_messages > "$fifo_path" &
+          else
+              docker exec -e SCHEMA_REGISTRY_LOG4J_OPTS="-Dlog4j.configuration=file:/etc/kafka/tools-log4j.properties" $container kafka-$value_type-console-consumer --bootstrap-server broker:9092 --property schema.registry.url=$sr_url --topic $topic --property print.partition=true --property print.offset=true --property print.headers=true --property print.timestamp=true --property print.key=true --property key.separator="|" --property key.deserializer=org.apache.kafka.common.serialization.StringDeserializer $security --from-beginning --max-messages $nb_messages > "$fifo_path" &
+          fi
+          ;;
+      *)
+          docker exec $container kafka-console-consumer --bootstrap-server broker:9092 --topic $topic --property print.partition=true --property print.offset=true --property print.headers=true --property print.timestamp=true --property print.key=true --property key.separator="|" $security --from-beginning --max-messages $nb_messages > "$fifo_path" &
+      ;;
+    esac
+
+    # Detect the platform (macOS or Linux) and set the date command accordingly
+    if [[ "$(uname)" == "Darwin" ]]; then
+      # macOS
+      date_command="date -r "
+    else
+      # Linux
+      date_command="date -d @"
+    fi
+
+    # Loop through each line in the named pipe
+    while read -r line
+    do
+      if [[ $line =~ '^[0-9]+$' ]]
+      then
+        # Extract the timestamp from the line
+        timestamp_ms=$(echo "$line" | cut -d ":" -f 2 | cut -d "|" -f 1)
+        # Convert milliseconds to seconds
+        timestamp_sec=$((timestamp_ms / 1000))
+        milliseconds=$((timestamp_ms % 1000))
+        readable_date="$(${date_command}${timestamp_sec} "+%Y-%m-%d %H:%M:%S.${milliseconds}")"
+        line_with_date=$(echo "$line" | sed -E "s/CreateTime:[0-9]{13}/CreateTime: ${readable_date}/")
+        echo "$line_with_date"
+      else
+        echo "$line"
+      fi
+    done < "$fifo_path"
+  done
 }
 
 # :command.function
@@ -8720,8 +8777,24 @@ playground_topic_set_schema_compatibility_command() {
   sr_url=$(echo "$ret" | cut -d "@" -f 1)
   sr_security=$(echo "$ret" | cut -d "@" -f 2)
 
-  log "🛡️ Set compatibility for subject ${topic}-value to $compatibility"
-  curl $sr_security -X PUT -H "Content-Type: application/vnd.schemaregistry.v1+json" --data "{\"compatibility\": \"$compatibility\"}" "${sr_url}/config/${topic}-value"
+  if [[ ! -n "$topic" ]]
+  then
+      logwarn "--topic flag was not provided, applying command to all topics"
+      check_if_continue
+      topic=$(playground get-topic-list --skip-connect-internal-topics)
+      if [ "$topic" == "" ]
+      then
+          logerror "❌ No topic found !"
+          exit 1
+      fi
+  fi
+
+  items=($topic)
+  for topic in ${items[@]}
+  do
+    log "🛡️ Set compatibility for subject ${topic}-value to $compatibility"
+    curl $sr_security -X PUT -H "Content-Type: application/vnd.schemaregistry.v1+json" --data "{\"compatibility\": \"$compatibility\"}" "${sr_url}/config/${topic}-value"
+  done
 }
 
 # :command.function
@@ -8763,18 +8836,33 @@ playground_topic_display_schema_id_statistics_command() {
       cd -
   fi
 
-  nb_messages=$(playground topic get-number-records -t $topic | tail -1)
-  log "✨ Display statistics of topic $topic, it contains $nb_messages messages"
-  $sr_cli --bootstrap localhost:29092 --topic $topic --group $RANDOM --limit $nb_messages --chart
-
-  if [[ "$OSTYPE" == "darwin"* ]]
+  if [[ ! -n "$topic" ]]
   then
-      if [ -f pie.html ]
+      log "✨ --topic flag was not provided, applying command to all topics"
+      topic=$(playground get-topic-list --skip-connect-internal-topics)
+      if [ "$topic" == "" ]
       then
-          mv pie.html /tmp/pie.html
-          open /tmp/pie.html
+          logerror "❌ No topic found !"
+          exit 1
       fi
   fi
+
+  items=($topic)
+  for topic in ${items[@]}
+  do
+      nb_messages=$(playground topic get-number-records -t $topic | tail -1)
+      log "✨ Display statistics of topic $topic, it contains $nb_messages messages"
+      $sr_cli --bootstrap localhost:29092 --topic "$topic" --group "$RANDOM" --limit $nb_messages --chart
+
+      # if [[ "$OSTYPE" == "darwin"* ]]
+      # then
+      #     if [ -f pie.html ]
+      #     then
+      #         mv pie.html /tmp/pie.html
+      #         open /tmp/pie.html
+      #     fi
+      # fi
+  done
 }
 
 # :command.function
@@ -8876,7 +8964,7 @@ playground_connector_pause_command() {
 
   if [[ ! -n "$connector" ]]
   then
-      logwarn "--connector flag was not provided, applying command to all connectors"
+      log "✨ --connector flag was not provided, applying command to all connectors"
       connector=$(playground get-connector-list)
       if [ "$connector" == "" ]
       then
@@ -8906,7 +8994,7 @@ playground_connector_versions_command() {
 
   if [[ ! -n "$connector" ]]
   then
-      logwarn "--connector flag was not provided, applying command to all connectors"
+      log "✨ --connector flag was not provided, applying command to all connectors"
       connector=$(playground get-connector-list)
       if [ "$connector" == "" ]
       then
@@ -8936,7 +9024,7 @@ playground_connector_restart_command() {
 
   if [[ ! -n "$connector" ]]
   then
-      logwarn "--connector flag was not provided, applying command to all connectors"
+      log "✨ --connector flag was not provided, applying command to all connectors"
       connector=$(playground get-connector-list)
       if [ "$connector" == "" ]
       then
@@ -8967,7 +9055,7 @@ playground_connector_resume_command() {
 
   if [[ ! -n "$connector" ]]
   then
-      logwarn "--connector flag was not provided, applying command to all connectors"
+      log "✨ --connector flag was not provided, applying command to all connectors"
       connector=$(playground get-connector-list)
       if [ "$connector" == "" ]
       then
@@ -9028,7 +9116,7 @@ playground_connector_show_lag_command() {
 
   if [[ ! -n "$connector" ]]
   then
-      logwarn "--connector flag was not provided, applying command to all connectors"
+      log "✨ --connector flag was not provided, applying command to all connectors"
       connector=$(playground get-connector-list)
       if [ "$connector" == "" ]
       then
@@ -9071,7 +9159,7 @@ playground_connector_log_level_command() {
 
   if [[ ! -n "$connector" ]]
   then
-      logwarn "--connector flag was not provided, applying command to all connectors"
+      log "✨ --connector flag was not provided, applying command to all connectors"
       connector=$(playground get-connector-list)
       if [ "$connector" == "" ]
       then
@@ -9439,6 +9527,13 @@ playground_get_topic_list_parse_requirements() {
   while [[ $# -gt 0 ]]; do
     key="$1"
     case "$key" in
+      # :flag.case
+      --skip-connect-internal-topics)
+
+        # :flag.case_no_arg
+        args['--skip-connect-internal-topics']=1
+        shift
+        ;;
 
       -?*)
         printf "invalid option: %s\n" "$key" >&2
@@ -12588,12 +12683,6 @@ playground_topic_get_number_records_parse_requirements() {
     esac
   done
 
-  # :command.required_flags_filter
-  if [[ -z ${args['--topic']+x} ]]; then
-    printf "missing required flag: --topic, -t TOPIC\n" >&2
-    exit 1
-  fi
-
 }
 
 # :command.parse_requirements
@@ -12696,12 +12785,6 @@ playground_topic_describe_parse_requirements() {
     esac
   done
 
-  # :command.required_flags_filter
-  if [[ -z ${args['--topic']+x} ]]; then
-    printf "missing required flag: --topic, -t TOPIC\n" >&2
-    exit 1
-  fi
-
 }
 
 # :command.parse_requirements
@@ -12779,12 +12862,6 @@ playground_topic_consume_parse_requirements() {
 
     esac
   done
-
-  # :command.required_flags_filter
-  if [[ -z ${args['--topic']+x} ]]; then
-    printf "missing required flag: --topic, -t TOPIC\n" >&2
-    exit 1
-  fi
 
   # :command.default_assignments
   [[ -n ${args['--max-messages']:-} ]] || args['--max-messages']=""
@@ -12870,10 +12947,6 @@ playground_topic_set_schema_compatibility_parse_requirements() {
   done
 
   # :command.required_flags_filter
-  if [[ -z ${args['--topic']+x} ]]; then
-    printf "missing required flag: --topic, -t TOPIC\n" >&2
-    exit 1
-  fi
   if [[ -z ${args['--compatibility']+x} ]]; then
     printf "missing required flag: --compatibility COMPATIBILITY\n" >&2
     exit 1
@@ -12949,12 +13022,6 @@ playground_topic_display_schema_id_statistics_parse_requirements() {
 
     esac
   done
-
-  # :command.required_flags_filter
-  if [[ -z ${args['--topic']+x} ]]; then
-    printf "missing required flag: --topic, -t TOPIC\n" >&2
-    exit 1
-  fi
 
 }
 
