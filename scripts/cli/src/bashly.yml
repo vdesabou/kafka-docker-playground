@@ -64,6 +64,14 @@ commands:
     required: false
     help: correspond to completion $cur
 
+- name: get-any-file-with-fzf
+  help: Return some completion for any files
+  private: true
+  args:
+  - name: cur
+    required: false
+    help: correspond to completion $cur
+
 - name: bashly-reload
   private: true
   dependencies:
@@ -395,7 +403,23 @@ commands:
   dependencies:
     fzf: visit $(blue_underlined https://github.com/junegunn/fzf#installation) to install
   help: |-
-    👐 Simply open last example you ran with <playground run> or <playground run-ccloud>
+    👐 When --file is not provided, simply open last example you ran with <playground run> or <playground run-ccloud>
+
+    Otherwise, open any file from the playground using --file.
+  flags:
+  - long: --file
+    short: -f
+    required: true
+    validate: file_exists_with_trick
+    arg: file
+    completions:
+      - $(playground get-any-file-with-fzf "$cur")
+    help: |-
+      🔎 Search any file and open it.
+      
+      ❕ It must be absolute full path
+
+      🎓 Tip: use <tab> completion to trigger fzf completion
 
 - name: stop
   group: Run

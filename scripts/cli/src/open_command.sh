@@ -1,17 +1,27 @@
-if [ ! -f /tmp/playground-run ]
+test_file="${args[--file]}"
+
+if [[ -n "$test_file" ]]
 then
-  logerror "File containing run command /tmp/playground-run does not exist!"
-  logerror "Make sure to use <playground run> command !"
-  exit 1
-fi
+  if [[ $test_file == *"@"* ]]
+  then
+    test_file=$(echo "$test_file" | cut -d "@" -f 2)
+  fi
+else
+  if [ ! -f /tmp/playground-run ]
+  then
+    logerror "File containing run command /tmp/playground-run does not exist!"
+    logerror "Make sure to use <playground run> command !"
+    exit 1
+  fi
 
-test_file=$(cat /tmp/playground-run | awk '{ print $4}')
+  test_file=$(cat /tmp/playground-run | awk '{ print $4}')
 
-if [ ! -f $test_file ]
-then 
-  logerror "File $test_file retrieved from /tmp/playground-run does not exist!"
-  logerror "Make sure to use <playground run> command !"
-  exit 1
+  if [ ! -f $test_file ]
+  then 
+    logerror "File $test_file retrieved from /tmp/playground-run does not exist!"
+    logerror "Make sure to use <playground run> command !"
+    exit 1
+  fi
 fi
 
 if config_has_key "editor"
