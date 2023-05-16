@@ -172,6 +172,8 @@ function verify_installed()
 function maybe_create_image()
 {
   set +e
+  log "🧰 Checking if Docker image ${CP_CONNECT_IMAGE}:${CONNECT_TAG} contains additional tools"
+  log "🧰 it can take a while if image is downloaded for the first time"
   docker run --rm ${CP_CONNECT_IMAGE}:${CONNECT_TAG} type unzip > /dev/null 2>&1
   if [ $? != 0 ]
   then
