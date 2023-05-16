@@ -14,27 +14,25 @@ ret=$(get_sr_url_and_security)
 sr_url=$(echo "$ret" | cut -d "@" -f 1)
 sr_security=$(echo "$ret" | cut -d "@" -f 2)
 
-
 container="connect"
-sr_url="http://schema-registry:8081"
+sr_url_cli="http://schema-registry:8081"
 security=""
 if [[ "$environment" == *"ssl"* ]]
 then
-    sr_url="https://schema-registry:8081"
+    sr_url_cli="https://schema-registry:8081"
     security="--property schema.registry.ssl.truststore.location=/etc/kafka/secrets/kafka.client.truststore.jks --property schema.registry.ssl.truststore.password=confluent --property schema.registry.ssl.keystore.location=/etc/kafka/secrets/kafka.client.keystore.jks --property schema.registry.ssl.keystore.password=confluent --consumer.config /etc/kafka/secrets/client_without_interceptors.config"
 elif [[ "$environment" == "rbac-sasl-plain" ]]
 then
-    sr_url="http://schema-registry:8081"
+    sr_url_cli="http://schema-registry:8081"
     security="--property basic.auth.credentials.source=USER_INFO --property schema.registry.basic.auth.user.info=clientAvroCli:clientAvroCli --consumer.config /etc/kafka/secrets/client_without_interceptors.config"
 elif [[ "$environment" == "kerberos" ]]
 then
     container="client"
-    sr_url="http://schema-registry:8081"
+    sr_url_cli="http://schema-registry:8081"
     security="--consumer.config /etc/kafka/consumer.properties"
 
     docker exec -i client kinit -k -t /var/lib/secret/kafka-connect.key connect
 fi
-
 
 if [[ ! -n "$topic" ]]
 then
@@ -118,9 +116,9 @@ do
     avro|protobuf|json-schema)
         if [ "$key_type" == "avro" ] || [ "$key_type" == "protobuf" ] || [ "$key_type" == "json-schema" ]
         then
-            docker exec -e SCHEMA_REGISTRY_LOG4J_OPTS="-Dlog4j.configuration=file:/etc/kafka/tools-log4j.properties" $container kafka-$value_type-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=$sr_url --topic $topic --property print.partition=true --property print.offset=true --property print.headers=true --property print.timestamp=true --property print.key=true --property key.separator="|" $security --from-beginning --max-messages $nb_messages > "$fifo_path" &
+            docker exec -e SCHEMA_REGISTRY_LOG4J_OPTS="-Dlog4j.configuration=file:/etc/kafka/tools-log4j.properties" $container kafka-$value_type-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=$sr_url_cli --topic $topic --property print.partition=true --property print.offset=true --property print.headers=true --property print.timestamp=true --property print.key=true --property key.separator="|" --skip-message-on-error $security --from-beginning --max-messages $nb_messages > "$fifo_path" &
         else
-            docker exec -e SCHEMA_REGISTRY_LOG4J_OPTS="-Dlog4j.configuration=file:/etc/kafka/tools-log4j.properties" $container kafka-$value_type-console-consumer --bootstrap-server broker:9092 --property schema.registry.url=$sr_url --topic $topic --property print.partition=true --property print.offset=true --property print.headers=true --property print.timestamp=true --property print.key=true --property key.separator="|" --property key.deserializer=org.apache.kafka.common.serialization.StringDeserializer $security --from-beginning --max-messages $nb_messages > "$fifo_path" &
+            docker exec -e SCHEMA_REGISTRY_LOG4J_OPTS="-Dlog4j.configuration=file:/etc/kafka/tools-log4j.properties" $container kafka-$value_type-console-consumer --bootstrap-server broker:9092 --property schema.registry.url=$sr_url_cli --topic $topic --property print.partition=true --property print.offset=true --property print.headers=true --property print.timestamp=true --property print.key=true --property key.separator="|" --property key.deserializer=org.apache.kafka.common.serialization.StringDeserializer --skip-message-on-error $security --from-beginning --max-messages $nb_messages > "$fifo_path" &
         fi
         ;;
     *)

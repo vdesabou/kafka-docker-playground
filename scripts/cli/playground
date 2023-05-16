@@ -40,7 +40,7 @@ playground_usage() {
   printf "  %s   🕹️ Run any example, except for Confluent Cloud (in this case use run-ccloud command)\n" "$(green "run")                               "
   printf "  %s   ⚡ Simply re-run last example you ran with <playground run> or <playground run-ccloud>\n" "$(green "re-run")                            "
   printf "  %s   ⛅ Run any Confluent Cloud (ccloud) example\n" "$(green "run-ccloud")                        "
-  printf "  %s   👐 Simply open last example you ran with <playground run> or <playground run-ccloud>\n" "$(green "open")                              "
+  printf "  %s   👐 When --file is not provided, simply open last example you ran with <playground run> or <playground run-ccloud>\n" "$(green "open")                              "
   printf "  %s   🛑 Stop currently running example\n" "$(green "stop")                              "
   echo
   printf "%s\n" "$(bold "Bootstrap commands:")"
@@ -748,11 +748,14 @@ playground_run_ccloud_usage() {
 # :command.usage
 playground_open_usage() {
   if [[ -n $long_usage ]]; then
-    printf "playground open - 👐 Simply open last example you ran with <playground run> or <playground run-ccloud>\n"
+    printf "playground open\n"
+    echo
+
+    printf "  👐 When --file is not provided, simply open last example you ran with\n  <playground run> or <playground run-ccloud>\n  \n  Otherwise, open any file from the playground using --file.\n"
     echo
 
   else
-    printf "playground open - 👐 Simply open last example you ran with <playground run> or <playground run-ccloud>\n"
+    printf "playground open - 👐 When --file is not provided, simply open last example you ran with <playground run> or <playground run-ccloud>\n"
     echo
 
   fi
@@ -8700,20 +8703,20 @@ playground_topic_consume_command() {
   sr_security=$(echo "$ret" | cut -d "@" -f 2)
 
   container="connect"
-  sr_url="http://schema-registry:8081"
+  sr_url_cli="http://schema-registry:8081"
   security=""
   if [[ "$environment" == *"ssl"* ]]
   then
-      sr_url="https://schema-registry:8081"
+      sr_url_cli="https://schema-registry:8081"
       security="--property schema.registry.ssl.truststore.location=/etc/kafka/secrets/kafka.client.truststore.jks --property schema.registry.ssl.truststore.password=confluent --property schema.registry.ssl.keystore.location=/etc/kafka/secrets/kafka.client.keystore.jks --property schema.registry.ssl.keystore.password=confluent --consumer.config /etc/kafka/secrets/client_without_interceptors.config"
   elif [[ "$environment" == "rbac-sasl-plain" ]]
   then
-      sr_url="http://schema-registry:8081"
+      sr_url_cli="http://schema-registry:8081"
       security="--property basic.auth.credentials.source=USER_INFO --property schema.registry.basic.auth.user.info=clientAvroCli:clientAvroCli --consumer.config /etc/kafka/secrets/client_without_interceptors.config"
   elif [[ "$environment" == "kerberos" ]]
   then
       container="client"
-      sr_url="http://schema-registry:8081"
+      sr_url_cli="http://schema-registry:8081"
       security="--consumer.config /etc/kafka/consumer.properties"
 
       docker exec -i client kinit -k -t /var/lib/secret/kafka-connect.key connect
@@ -8801,9 +8804,9 @@ playground_topic_consume_command() {
       avro|protobuf|json-schema)
           if [ "$key_type" == "avro" ] || [ "$key_type" == "protobuf" ] || [ "$key_type" == "json-schema" ]
           then
-              docker exec -e SCHEMA_REGISTRY_LOG4J_OPTS="-Dlog4j.configuration=file:/etc/kafka/tools-log4j.properties" $container kafka-$value_type-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=$sr_url --topic $topic --property print.partition=true --property print.offset=true --property print.headers=true --property print.timestamp=true --property print.key=true --property key.separator="|" $security --from-beginning --max-messages $nb_messages > "$fifo_path" &
+              docker exec -e SCHEMA_REGISTRY_LOG4J_OPTS="-Dlog4j.configuration=file:/etc/kafka/tools-log4j.properties" $container kafka-$value_type-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=$sr_url_cli --topic $topic --property print.partition=true --property print.offset=true --property print.headers=true --property print.timestamp=true --property print.key=true --property key.separator="|" --skip-message-on-error $security --from-beginning --max-messages $nb_messages > "$fifo_path" &
           else
-              docker exec -e SCHEMA_REGISTRY_LOG4J_OPTS="-Dlog4j.configuration=file:/etc/kafka/tools-log4j.properties" $container kafka-$value_type-console-consumer --bootstrap-server broker:9092 --property schema.registry.url=$sr_url --topic $topic --property print.partition=true --property print.offset=true --property print.headers=true --property print.timestamp=true --property print.key=true --property key.separator="|" --property key.deserializer=org.apache.kafka.common.serialization.StringDeserializer $security --from-beginning --max-messages $nb_messages > "$fifo_path" &
+              docker exec -e SCHEMA_REGISTRY_LOG4J_OPTS="-Dlog4j.configuration=file:/etc/kafka/tools-log4j.properties" $container kafka-$value_type-console-consumer --bootstrap-server broker:9092 --property schema.registry.url=$sr_url_cli --topic $topic --property print.partition=true --property print.offset=true --property print.headers=true --property print.timestamp=true --property print.key=true --property key.separator="|" --property key.deserializer=org.apache.kafka.common.serialization.StringDeserializer --skip-message-on-error $security --from-beginning --max-messages $nb_messages > "$fifo_path" &
           fi
           ;;
       *)
