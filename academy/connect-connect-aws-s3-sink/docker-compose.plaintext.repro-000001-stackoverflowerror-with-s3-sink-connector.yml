@@ -4,7 +4,7 @@ services:
 
   producer-repro-000001:
     build:
-      context: ../../docs-examples/connect-connect-aws-s3-sink/producer-repro-000001/
+      context: ../../academy/connect-connect-aws-s3-sink/producer-repro-000001/
     hostname: producer
     container_name: producer-repro-000001
     environment:
@@ -22,7 +22,7 @@ services:
       JAVA_OPTS: ${GRAFANA_AGENT_PRODUCER}
     volumes:
       - ../../environment/plaintext/jmx-exporter:/usr/share/jmx_exporter/
-      - ../../docs-examples/connect-connect-aws-s3-sink/producer-repro-000001/target/producer-1.0.0-jar-with-dependencies.jar:/producer-1.0.0-jar-with-dependencies.jar
+      - ../../academy/connect-connect-aws-s3-sink/producer-repro-000001/target/producer-1.0.0-jar-with-dependencies.jar:/producer-1.0.0-jar-with-dependencies.jar
 
   connect:
     environment:
