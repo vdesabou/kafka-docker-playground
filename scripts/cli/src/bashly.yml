@@ -409,7 +409,7 @@ commands:
   flags:
   - long: --file
     short: -f
-    required: true
+    required: false
     validate: file_exists_with_trick
     arg: file
     completions:

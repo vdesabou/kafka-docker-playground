@@ -771,7 +771,7 @@ playground_open_usage() {
 
     # :command.usage_flags
     # :flag.usage
-    printf "  %s\n" "$(magenta "--file, -f FILE (required)")"
+    printf "  %s\n" "$(magenta "--file, -f FILE")"
     printf "    🔎 Search any file and open it.\n    \n    ❕ It must be absolute full path\n    \n    🎓 Tip: use <tab> completion to trigger fzf completion\n"
     echo
 
@@ -3335,6 +3335,8 @@ function verify_installed()
 function maybe_create_image()
 {
   set +e
+  log "🧰 Checking if Docker image ${CP_CONNECT_IMAGE}:${CONNECT_TAG} contains additional tools"
+  log "🧰 it can take a while if image is downloaded for the first time"
   docker run --rm ${CP_CONNECT_IMAGE}:${CONNECT_TAG} type unzip > /dev/null 2>&1
   if [ $? != 0 ]
   then
@@ -10800,12 +10802,6 @@ playground_open_parse_requirements() {
 
     esac
   done
-
-  # :command.required_flags_filter
-  if [[ -z ${args['--file']+x} ]]; then
-    printf "missing required flag: --file, -f FILE\n" >&2
-    exit 1
-  fi
 
 }
 
