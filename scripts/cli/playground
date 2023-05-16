@@ -8806,7 +8806,9 @@ playground_topic_consume_command() {
           then
               docker exec -e SCHEMA_REGISTRY_LOG4J_OPTS="-Dlog4j.configuration=file:/etc/kafka/tools-log4j.properties" $container kafka-$value_type-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=$sr_url_cli --topic $topic --property print.partition=true --property print.offset=true --property print.headers=true --property print.timestamp=true --property print.key=true --property key.separator="|" --skip-message-on-error $security --from-beginning --max-messages $nb_messages > "$fifo_path" &
           else
+              set -x
               docker exec -e SCHEMA_REGISTRY_LOG4J_OPTS="-Dlog4j.configuration=file:/etc/kafka/tools-log4j.properties" $container kafka-$value_type-console-consumer --bootstrap-server broker:9092 --property schema.registry.url=$sr_url_cli --topic $topic --property print.partition=true --property print.offset=true --property print.headers=true --property print.timestamp=true --property print.key=true --property key.separator="|" --property key.deserializer=org.apache.kafka.common.serialization.StringDeserializer --skip-message-on-error $security --from-beginning --max-messages $nb_messages > "$fifo_path" &
+              set +x
           fi
           ;;
       *)
@@ -8826,7 +8828,7 @@ playground_topic_consume_command() {
     # Loop through each line in the named pipe
     while read -r line
     do
-      if [[ $line =~ '^[0-9]+$' ]]
+      if [[ $line =~ "CreateTime:" ]]
       then
         # Extract the timestamp from the line
         timestamp_ms=$(echo "$line" | cut -d ":" -f 2 | cut -d "|" -f 1)

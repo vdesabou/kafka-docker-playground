@@ -138,7 +138,7 @@ do
   # Loop through each line in the named pipe
   while read -r line
   do
-    if [[ $line =~ '^[0-9]+$' ]]
+    if [[ $line =~ "CreateTime:" ]]
     then
       # Extract the timestamp from the line
       timestamp_ms=$(echo "$line" | cut -d ":" -f 2 | cut -d "|" -f 1)
