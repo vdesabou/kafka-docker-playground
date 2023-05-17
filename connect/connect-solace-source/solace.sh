@@ -23,7 +23,7 @@ function wait_for_solace () {
      sleep 30
 }
 
-cd ../../connect-solace-source
+cd ../../connect/connect-solace-source
 if [ ! -f ${DIR}/sol-jms-10.6.4.jar ]
 then
      log "Downloading sol-jms-10.6.4.jar"
