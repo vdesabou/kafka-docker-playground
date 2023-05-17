@@ -27,8 +27,7 @@ curl -X PUT \
                "store.url":"hdfs://namenode:8020",
                "flush.size":"3",
                "hadoop.conf.dir":"/etc/hadoop/",
-               "partitioner.class":"io.confluent.connect.hdfs.partitioner.FieldPartitioner",
-               "partition.field.name":"f1",
+               "partitioner.class": "io.confluent.connect.storage.partitioner.DefaultPartitioner",
                "rotate.interval.ms":"120000",
                "logs.dir":"/tmp",
                "hive.integration": "true",
@@ -47,14 +46,14 @@ seq -f "{\"f1\": \"value%g\"}" 10 | docker exec -i connect kafka-avro-console-pr
 
 sleep 10
 
-log "Listing content of /topics/test_hdfs in HDFS"
-docker exec namenode bash -c "/opt/hadoop-2.7.4/bin/hdfs dfs -ls /topics/test_hdfs"
+log "Listing content of /topics/test_hdfs/partition=0 in HDFS"
+docker exec namenode bash -c "/opt/hadoop-2.7.4/bin/hdfs dfs -ls /topics/test_hdfs/partition=0"
 
 log "Getting one of the avro files locally and displaying content with avro-tools"
-docker exec namenode bash -c "/opt/hadoop-2.7.4/bin/hadoop fs -copyToLocal /topics/test_hdfs/f1=value1/test_hdfs+0+0000000000+0000000000.avro /tmp"
-docker cp namenode:/tmp/test_hdfs+0+0000000000+0000000000.avro /tmp/
+docker exec namenode bash -c "/opt/hadoop-2.7.4/bin/hadoop fs -copyToLocal /topics/test_hdfs/partition=0/test_hdfs+0+0000000000+0000000002.avro /tmp"
+docker cp namenode:/tmp/test_hdfs+0+0000000000+0000000002.avro /tmp/
 
-docker run --rm -v /tmp:/tmp vdesabou/avro-tools tojson /tmp/test_hdfs+0+0000000000+0000000000.avro
+docker run --rm -v /tmp:/tmp vdesabou/avro-tools tojson /tmp/test_hdfs+0+0000000000+0000000002.avro
 
 log "Check data with beeline"
 docker exec -i hive-server beeline > /tmp/result.log  2>&1 <<-EOF

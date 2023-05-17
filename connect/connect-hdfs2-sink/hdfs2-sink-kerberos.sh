@@ -60,8 +60,7 @@ curl -X PUT \
                "store.url":"hdfs://hadoop.kerberos-demo.local:9000",
                "flush.size":"3",
                "hadoop.conf.dir":"/etc/hadoop/",
-               "partitioner.class":"io.confluent.connect.hdfs.partitioner.FieldPartitioner",
-               "partition.field.name":"f1",
+               "partitioner.class": "io.confluent.connect.storage.partitioner.DefaultPartitioner",
                "rotate.interval.ms":"120000",
                "logs.dir":"/logs",
                "hdfs.authentication.kerberos": "true",
@@ -81,14 +80,14 @@ seq -f "{\"f1\": \"value%g\"}" 10 | docker exec -i connect kafka-avro-console-pr
 
 sleep 10
 
-log "Listing content of /topics/test_hdfs in HDFS"
-docker exec hadoop bash -c "/usr/local/hadoop/bin/hdfs dfs -ls /topics/test_hdfs"
+log "Listing content of /topics/test_hdfs/partition=0 in HDFS"
+docker exec hadoop bash -c "/usr/local/hadoop/bin/hdfs dfs -ls /topics/test_hdfs/partition=0"
 
 log "Getting one of the avro files locally and displaying content with avro-tools"
-docker exec hadoop bash -c "/usr/local/hadoop/bin/hadoop fs -copyToLocal /topics/test_hdfs/f1=value1/test_hdfs+0+0000000000+0000000000.avro /tmp"
-docker cp hadoop:/tmp/test_hdfs+0+0000000000+0000000000.avro /tmp/
+docker exec hadoop bash -c "/usr/local/hadoop/bin/hadoop fs -copyToLocal /topics/test_hdfs/partition=0/test_hdfs+0+0000000000+0000000002.avro /tmp"
+docker cp hadoop:/tmp/test_hdfs+0+0000000000+0000000002.avro /tmp/
 
-docker run --rm -v /tmp:/tmp vdesabou/avro-tools tojson /tmp/test_hdfs+0+0000000000+0000000000.avro
+docker run --rm -v /tmp:/tmp vdesabou/avro-tools tojson /tmp/test_hdfs+0+0000000000+0000000002.avro
 
 # renew ticket manually:
 # docker exec connect kinit -kt /tmp/connect.keytab connect/connect.kerberos-demo.local
