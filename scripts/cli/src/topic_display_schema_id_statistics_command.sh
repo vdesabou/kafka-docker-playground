@@ -68,5 +68,8 @@ do
     kill -SIGINT $pid
 
     sleep 2
+    grep "Schema ID" $output_file
     cat /tmp/results.json | jq .
+
+    rm -f /tmp/results.json $output_file
 done
