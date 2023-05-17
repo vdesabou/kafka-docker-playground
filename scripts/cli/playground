@@ -296,43 +296,6 @@ playground_get_zip_or_jar_with_fzf_usage() {
 }
 
 # :command.usage
-playground_get_schema_with_fzf_usage() {
-  if [[ -n $long_usage ]]; then
-    printf "playground get-schema-with-fzf - Return some completion for schema files\n"
-    echo
-
-  else
-    printf "playground get-schema-with-fzf - Return some completion for schema files\n"
-    echo
-
-  fi
-
-  printf "%s\n" "$(bold "== Usage ==")"
-  printf "  playground get-schema-with-fzf [CUR]\n"
-  printf "  playground get-schema-with-fzf --help | -h\n"
-  echo
-
-  # :command.long_usage
-  if [[ -n $long_usage ]]; then
-    printf "%s\n" "$(bold "== Options ==")"
-
-    # :command.usage_fixed_flags
-    printf "  %s\n" "$(magenta "--help, -h")"
-    printf "    Show this help\n"
-    echo
-
-    # :command.usage_args
-    printf "%s\n" "$(bold "== Arguments ==")"
-
-    # :argument.usage
-    printf "  %s\n" "$(blue "CUR")"
-    printf "    correspond to completion $cur\n"
-    echo
-
-  fi
-}
-
-# :command.usage
 playground_get_any_file_with_fzf_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground get-any-file-with-fzf - Return some completion for any files\n"
@@ -951,13 +914,13 @@ playground_bootstrap_reproduction_model_usage() {
     echo
 
     # :flag.usage
-    printf "  %s\n" "$(magenta "--producer-schema-key PRODUCER_SCHEMA")"
-    printf "    🔰 Schema file to use for the key\n    \n    ❕ It must be absolute full path\n    \n    🎓 Tip: use <tab> completion to trigger fzf completion \n            use folder_producer_schema (default: ~/Downloads) in config.ini file\n    to configure where to search the files\n"
+    printf "  %s\n" "$(magenta "--producer-schema-key")"
+    printf "    🔰 Schema to use for the key\n    \n    ✨ Copy and paste the schema you want to use for the key, save and close the\n    file to continue\n"
     echo
 
     # :flag.usage
-    printf "  %s\n" "$(magenta "--producer-schema-value PRODUCER_SCHEMA")"
-    printf "    🔰 Schema file to use for the value\n    \n    ❕ It must be absolute full path\n    \n    🎓 Tip: use <tab> completion to trigger fzf completion \n            use folder_producer_schema (default: ~/Downloads) in config.ini file\n    to configure where to search the files\n"
+    printf "  %s\n" "$(magenta "--producer-schema-value")"
+    printf "    🔰 Schema to use for the value\n    \n    ✨ Copy and paste the schema you want to use for the key, save and close the\n    file to continue\n"
     echo
 
     # :flag.usage
@@ -2694,35 +2657,6 @@ function get_zip_or_jar_with_fzf() {
   folder_zip_or_jar=${folder_zip_or_jar//,/ }
 
   res=$(find $folder_zip_or_jar $PWD -name \*.$type ! -path '*/\.*' | fzf --query "$cur" --margin=1%,1%,1%,1% $fzf_option_rounded --info=inline --prompt="🍺" --header="ctrl-c or esc to quit" --color="bg:-1,bg+:-1,info:#BDBB72,border:#FFFFFF,spinner:0,hl:#beb665,fg:#00f7f7,header:#5CC9F5,fg+:#beb665,pointer:#E12672,marker:#5CC9F5,prompt:#98BEDE" $fzf_option_wrap $fzf_option_pointer);echo "$cur@$res"
-}
-
-function get_schema_with_fzf() {
-  cur="$1"
-
-  fzf_version=$(get_fzf_version)
-  if version_gt $fzf_version "0.38"
-  then
-    fzf_option_wrap="--preview-window=40%,wrap"
-    fzf_option_pointer="--pointer=👉"
-    fzf_option_rounded="--border=rounded"
-  else
-    fzf_options=""
-    fzf_option_pointer=""
-    fzf_option_rounded=""
-  fi
-
-  if config_has_key "folder_producer_schema"
-  then
-    folder_producer_schema=$(config_get "folder_producer_schema")
-  else
-    logerror "Could not find config value <folder_producer_schema> !"
-    exit 1
-  fi
-
-  folder_producer_schema=${folder_producer_schema//\~/$HOME}
-  folder_producer_schema=${folder_producer_schema//,/ }
-
-  res=$(find $folder_producer_schema $PWD -type f \( -name "*.avsc" -o -name "*.json" -o -name "*.proto" -o -name "*.proto3" \) ! -path '*/\.*' | fzf --query "$cur" --margin=1%,1%,1%,1% $fzf_option_rounded --info=inline --prompt="🍺" --header="ctrl-c or esc to quit" --color="bg:-1,bg+:-1,info:#BDBB72,border:#FFFFFF,spinner:0,hl:#beb665,fg:#00f7f7,header:#5CC9F5,fg+:#beb665,pointer:#E12672,marker:#5CC9F5,prompt:#98BEDE" $fzf_option_wrap $fzf_option_pointer);echo "$cur@$res"
 }
 
 function get_any_files_with_fzf() {
@@ -6590,14 +6524,6 @@ playground_get_zip_or_jar_with_fzf_command() {
 }
 
 # :command.function
-playground_get_schema_with_fzf_command() {
-  # src/get_schema_with_fzf_command.sh
-  cur="${args[cur]}"
-
-  get_schema_with_fzf "$cur"
-}
-
-# :command.function
 playground_get_any_file_with_fzf_command() {
   # src/get_any_file_with_fzf_command.sh
   cur="${args[cur]}"
@@ -7513,73 +7439,88 @@ playground_bootstrap_reproduction_model_command() {
 
       if [[ -n "$schema_file_key" ]]
       then
-        if [[ $schema_file_key == *"@"* ]]
+        if config_has_key "editor"
         then
-          schema_file_key=$(echo "$schema_file_key" | cut -d "@" -f 2)
+          editor=$(config_get "editor")
+          log "✨ Copy and paste the schema you want to use for the key, save and close the file to continue"
+          if [ "$editor" = "code" ]
+          then
+            code --wait $tmp_dir/key_schema
+          else
+            $editor $tmp_dir/key_schema
+          fi
+        else
+          if [[ $(type code 2>&1) =~ "not found" ]]
+          then
+            logerror "Could not determine an editor to use as default code is not found - you can change editor by updating config.ini"
+            exit 1
+          else
+            log "✨ Copy and paste the schema you want to use for the key, save and close the file to continue"
+            code --wait $tmp_dir/key_schema
+          fi
         fi
-        cp $schema_file_key $tmp_dir/schema
 
         case "${producer}" in
           avro-with-key)
-            original_namespace=$(cat $tmp_dir/schema | jq -r .namespace)
+            original_namespace=$(cat $tmp_dir/key_schema | jq -r .namespace)
             if [ "$original_namespace" != "null" ]
             then
               sed -e "s|$original_namespace|com.github.vdesabou|g" \
-                  $tmp_dir/schema  > /tmp/tmp
+                  $tmp_dir/key_schema  > /tmp/tmp
 
-              mv /tmp/tmp $tmp_dir/schema
+              mv /tmp/tmp $tmp_dir/key_schema
               log "✨ Replacing namespace $original_namespace with com.github.vdesabou"
             else
               # need to add namespace
-              cp $tmp_dir/schema /tmp/tmp
+              cp $tmp_dir/key_schema /tmp/tmp
               line=2
-              { head -n $(($line-1)) /tmp/tmp; echo "    \"namespace\": \"com.github.vdesabou\","; tail -n +$line /tmp/tmp; } > $tmp_dir/schema
+              { head -n $(($line-1)) /tmp/tmp; echo "    \"namespace\": \"com.github.vdesabou\","; tail -n +$line /tmp/tmp; } > $tmp_dir/key_schema
             fi
             # replace record name with MyKey
-            jq '.name = "MyKey"' $tmp_dir/schema > /tmp/tmp
-            mv /tmp/tmp $tmp_dir/schema
+            jq '.name = "MyKey"' $tmp_dir/key_schema > /tmp/tmp
+            mv /tmp/tmp $tmp_dir/key_schema
 
-            cp $tmp_dir/schema $repro_dir/$producer_hostname/src/main/resources/schema/mykey.avsc
+            cp $tmp_dir/key_schema $repro_dir/$producer_hostname/src/main/resources/schema/mykey.avsc
           ;;
           json-schema-with-key)
             # replace title name with ID
-            jq '.title = "ID"' $tmp_dir/schema > /tmp/tmp
-            mv /tmp/tmp $tmp_dir/schema
+            jq '.title = "ID"' $tmp_dir/key_schema > /tmp/tmp
+            mv /tmp/tmp $tmp_dir/key_schema
 
-            cp $tmp_dir/schema $repro_dir/$producer_hostname/src/main/resources/schema/Id.json
+            cp $tmp_dir/key_schema $repro_dir/$producer_hostname/src/main/resources/schema/Id.json
           ;;
           protobuf-with-key)
-            original_package=$(grep "package " $tmp_dir/schema | cut -d " " -f 2 | cut -d ";" -f 1 | head -1)
+            original_package=$(grep "package " $tmp_dir/key_schema | cut -d " " -f 2 | cut -d ";" -f 1 | head -1)
             if [ "$original_package" != "" ]
             then
               sed -e "s|$original_package|com.github.vdesabou|g" \
-                  $tmp_dir/schema  > /tmp/tmp
+                  $tmp_dir/key_schema  > /tmp/tmp
 
-              mv /tmp/tmp $tmp_dir/schema
+              mv /tmp/tmp $tmp_dir/key_schema
               log "✨ Replacing package $original_package with com.github.vdesabou"
             else
               # need to add package
-              cp $tmp_dir/schema /tmp/tmp
+              cp $tmp_dir/key_schema /tmp/tmp
               line=2
-              { head -n $(($line-1)) /tmp/tmp; echo "package com.github.vdesabou;"; tail -n +$line /tmp/tmp; } > $tmp_dir/schema
+              { head -n $(($line-1)) /tmp/tmp; echo "package com.github.vdesabou;"; tail -n +$line /tmp/tmp; } > $tmp_dir/key_schema
             fi
 
-            original_java_outer_classname=$(grep "java_outer_classname" $tmp_dir/schema | cut -d "\"" -f 2 | cut -d "\"" -f 1 | head -1)
+            original_java_outer_classname=$(grep "java_outer_classname" $tmp_dir/key_schema | cut -d "\"" -f 2 | cut -d "\"" -f 1 | head -1)
             if [ "$original_java_outer_classname" != "" ]
             then
               sed -e "s|$original_java_outer_classname|IdImpl|g" \
-                  $tmp_dir/schema  > /tmp/tmp
+                  $tmp_dir/key_schema  > /tmp/tmp
 
-              mv /tmp/tmp $tmp_dir/schema
+              mv /tmp/tmp $tmp_dir/key_schema
               log "✨ Replacing java_outer_classname $original_java_outer_classname with IdImpl"
             else
               # need to add java_outer_classname
-              cp $tmp_dir/schema /tmp/tmp
+              cp $tmp_dir/key_schema /tmp/tmp
               line=3
-              { head -n $(($line-1)) /tmp/tmp; echo "option java_outer_classname = \"IdImpl\";"; tail -n +$line /tmp/tmp; } > $tmp_dir/schema
+              { head -n $(($line-1)) /tmp/tmp; echo "option java_outer_classname = \"IdImpl\";"; tail -n +$line /tmp/tmp; } > $tmp_dir/key_schema
             fi
 
-            cp $tmp_dir/schema $repro_dir/$producer_hostname/src/main/resources/schema/Id.proto
+            cp $tmp_dir/key_schema $repro_dir/$producer_hostname/src/main/resources/schema/Id.proto
           ;;
 
           none)
@@ -7593,73 +7534,88 @@ playground_bootstrap_reproduction_model_command() {
 
       if [[ -n "$schema_file_value" ]]
       then
-        if [[ $schema_file_value == *"@"* ]]
+        if config_has_key "editor"
         then
-          schema_file_value=$(echo "$schema_file_value" | cut -d "@" -f 2)
+          editor=$(config_get "editor")
+          log "✨ Copy and paste the schema you want to use for the value, save and close the file to continue"
+          if [ "$editor" = "code" ]
+          then
+            code --wait $tmp_dir/value_schema
+          else
+            $editor $tmp_dir/value_schema
+          fi
+        else
+          if [[ $(type code 2>&1) =~ "not found" ]]
+          then
+            logerror "Could not determine an editor to use as default code is not found - you can change editor by updating config.ini"
+            exit 1
+          else
+            log "✨ Copy and paste the schema you want to use for the value, save and close the file to continue"
+            code --wait $tmp_dir/value_schema
+          fi
         fi
-        cp $schema_file_value $tmp_dir/schema
 
         case "${producer}" in
           avro|avro-with-key)
-            original_namespace=$(cat $tmp_dir/schema | jq -r .namespace)
+            original_namespace=$(cat $tmp_dir/value_schema | jq -r .namespace)
             if [ "$original_namespace" != "null" ]
             then
               sed -e "s|$original_namespace|com.github.vdesabou|g" \
-                  $tmp_dir/schema  > /tmp/tmp
+                  $tmp_dir/value_schema  > /tmp/tmp
 
-              mv /tmp/tmp $tmp_dir/schema
+              mv /tmp/tmp $tmp_dir/value_schema
               log "✨ Replacing namespace $original_namespace with com.github.vdesabou"
             else
               # need to add namespace
-              cp $tmp_dir/schema /tmp/tmp
+              cp $tmp_dir/value_schema /tmp/tmp
               line=2
-              { head -n $(($line-1)) /tmp/tmp; echo "    \"namespace\": \"com.github.vdesabou\","; tail -n +$line /tmp/tmp; } > $tmp_dir/schema
+              { head -n $(($line-1)) /tmp/tmp; echo "    \"namespace\": \"com.github.vdesabou\","; tail -n +$line /tmp/tmp; } > $tmp_dir/value_schema
             fi
             # replace record name with Customer
-            jq '.name = "Customer"' $tmp_dir/schema > /tmp/tmp
-            mv /tmp/tmp $tmp_dir/schema
+            jq '.name = "Customer"' $tmp_dir/value_schema > /tmp/tmp
+            mv /tmp/tmp $tmp_dir/value_schema
 
-            cp $tmp_dir/schema $repro_dir/$producer_hostname/src/main/resources/schema/customer.avsc
+            cp $tmp_dir/value_schema $repro_dir/$producer_hostname/src/main/resources/schema/customer.avsc
           ;;
           json-schema|json-schema-with-key)
             # replace title name with Customer
-            jq '.title = "Customer"' $tmp_dir/schema > /tmp/tmp
-            mv /tmp/tmp $tmp_dir/schema
+            jq '.title = "Customer"' $tmp_dir/value_schema > /tmp/tmp
+            mv /tmp/tmp $tmp_dir/value_schema
 
-            cp $tmp_dir/schema $repro_dir/$producer_hostname/src/main/resources/schema/Customer.json
+            cp $tmp_dir/value_schema $repro_dir/$producer_hostname/src/main/resources/schema/Customer.json
           ;;
           protobuf|protobuf-with-key)
-            original_package=$(grep "package " $tmp_dir/schema | cut -d " " -f 2 | cut -d ";" -f 1 | head -1)
+            original_package=$(grep "package " $tmp_dir/value_schema | cut -d " " -f 2 | cut -d ";" -f 1 | head -1)
             if [ "$original_package" != "" ]
             then
               sed -e "s|$original_package|com.github.vdesabou|g" \
-                  $tmp_dir/schema  > /tmp/tmp
+                  $tmp_dir/value_schema  > /tmp/tmp
 
-              mv /tmp/tmp $tmp_dir/schema
+              mv /tmp/tmp $tmp_dir/value_schema
               log "✨ Replacing package $original_package with com.github.vdesabou"
             else
               # need to add package
-              cp $tmp_dir/schema /tmp/tmp
+              cp $tmp_dir/value_schema /tmp/tmp
               line=2
-              { head -n $(($line-1)) /tmp/tmp; echo "package com.github.vdesabou;"; tail -n +$line /tmp/tmp; } > $tmp_dir/schema
+              { head -n $(($line-1)) /tmp/tmp; echo "package com.github.vdesabou;"; tail -n +$line /tmp/tmp; } > $tmp_dir/value_schema
             fi
 
-            original_java_outer_classname=$(grep "java_outer_classname" $tmp_dir/schema | cut -d "\"" -f 2 | cut -d "\"" -f 1 | head -1)
+            original_java_outer_classname=$(grep "java_outer_classname" $tmp_dir/value_schema | cut -d "\"" -f 2 | cut -d "\"" -f 1 | head -1)
             if [ "$original_java_outer_classname" != "" ]
             then
               sed -e "s|$original_java_outer_classname|CustomerImpl|g" \
-                  $tmp_dir/schema  > /tmp/tmp
+                  $tmp_dir/value_schema  > /tmp/tmp
 
-              mv /tmp/tmp $tmp_dir/schema
+              mv /tmp/tmp $tmp_dir/value_schema
               log "✨ Replacing java_outer_classname $original_java_outer_classname with CustomerImpl"
             else
               # need to add java_outer_classname
-              cp $tmp_dir/schema /tmp/tmp
+              cp $tmp_dir/value_schema /tmp/tmp
               line=3
-              { head -n $(($line-1)) /tmp/tmp; echo "option java_outer_classname = \"CustomerImpl\";"; tail -n +$line /tmp/tmp; } > $tmp_dir/schema
+              { head -n $(($line-1)) /tmp/tmp; echo "option java_outer_classname = \"CustomerImpl\";"; tail -n +$line /tmp/tmp; } > $tmp_dir/value_schema
             fi
 
-            cp $tmp_dir/schema $repro_dir/$producer_hostname/src/main/resources/schema/Customer.proto
+            cp $tmp_dir/value_schema $repro_dir/$producer_hostname/src/main/resources/schema/Customer.proto
           ;;
 
           none)
@@ -9350,13 +9306,6 @@ parse_requirements() {
       shift $#
       ;;
 
-    get-schema-with-fzf)
-      action="get-schema-with-fzf"
-      shift
-      playground_get_schema_with_fzf_parse_requirements "$@"
-      shift $#
-      ;;
-
     get-any-file-with-fzf)
       action="get-any-file-with-fzf"
       shift
@@ -9800,56 +9749,6 @@ playground_get_zip_or_jar_with_fzf_parse_requirements() {
     printf "%s\n" "--type must be one of: zip, jar" >&2
     exit 1
   fi
-
-}
-
-# :command.parse_requirements
-playground_get_schema_with_fzf_parse_requirements() {
-  # :command.fixed_flags_filter
-  while [[ $# -gt 0 ]]; do
-    case "${1:-}" in
-      --help | -h)
-        long_usage=yes
-        playground_get_schema_with_fzf_usage
-        exit
-        ;;
-
-      *)
-        break
-        ;;
-
-    esac
-  done
-
-  # :command.command_filter
-  action="get-schema-with-fzf"
-
-  # :command.parse_requirements_while
-  while [[ $# -gt 0 ]]; do
-    key="$1"
-    case "$key" in
-
-      -?*)
-        printf "invalid option: %s\n" "$key" >&2
-        exit 1
-        ;;
-
-      *)
-        # :command.parse_requirements_case
-        # :command.parse_requirements_case_simple
-        if [[ -z ${args['cur']+x} ]]; then
-
-          args['cur']=$1
-          shift
-        else
-          printf "invalid argument: %s\n" "$key" >&2
-          exit 1
-        fi
-
-        ;;
-
-    esac
-  done
 
 }
 
@@ -11234,41 +11133,17 @@ playground_bootstrap_reproduction_model_parse_requirements() {
       # :flag.case
       --producer-schema-key)
 
-        # :flag.case_arg
-        if [[ -n ${2+x} ]]; then
-          # :flag.validations
-          if [[ -n $(validate_file_exists_with_trick "$2") ]]; then
-            printf "validation error in %s:\n%s\n" "--producer-schema-key PRODUCER_SCHEMA" "$(validate_file_exists_with_trick "$2")" >&2
-            exit 1
-          fi
-
-          args['--producer-schema-key']="$2"
-          shift
-          shift
-        else
-          printf "%s\n" "--producer-schema-key requires an argument: --producer-schema-key PRODUCER_SCHEMA" >&2
-          exit 1
-        fi
+        # :flag.case_no_arg
+        args['--producer-schema-key']=1
+        shift
         ;;
 
       # :flag.case
       --producer-schema-value)
 
-        # :flag.case_arg
-        if [[ -n ${2+x} ]]; then
-          # :flag.validations
-          if [[ -n $(validate_file_exists_with_trick "$2") ]]; then
-            printf "validation error in %s:\n%s\n" "--producer-schema-value PRODUCER_SCHEMA" "$(validate_file_exists_with_trick "$2")" >&2
-            exit 1
-          fi
-
-          args['--producer-schema-value']="$2"
-          shift
-          shift
-        else
-          printf "%s\n" "--producer-schema-value requires an argument: --producer-schema-value PRODUCER_SCHEMA" >&2
-          exit 1
-        fi
+        # :flag.case_no_arg
+        args['--producer-schema-value']=1
+        shift
         ;;
 
       # :flag.case
@@ -13883,7 +13758,6 @@ run() {
     "get-topic-list") playground_get_topic_list_command ;;
     "get-examples-list-with-fzf") playground_get_examples_list_with_fzf_command ;;
     "get-zip-or-jar-with-fzf") playground_get_zip_or_jar_with_fzf_command ;;
-    "get-schema-with-fzf") playground_get_schema_with_fzf_command ;;
     "get-any-file-with-fzf") playground_get_any_file_with_fzf_command ;;
     "bashly-reload") playground_bashly_reload_command ;;
     "run") playground_run_command ;;

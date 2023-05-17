@@ -56,14 +56,6 @@ commands:
     arg: type
     allowed: [zip, jar]
 
-- name: get-schema-with-fzf
-  help: Return some completion for schema files
-  private: true
-  args:
-  - name: cur
-    required: false
-    help: correspond to completion $cur
-
 - name: get-any-file-with-fzf
   help: Return some completion for any files
   private: true
@@ -520,32 +512,18 @@ commands:
       2️⃣ Number of java producers to generate
 
   - long: --producer-schema-key
-    arg: producer_schema
     required: false
-    validate: file_exists_with_trick
-    completions:
-      - $(playground get-schema-with-fzf "$cur")
     help: |-
-      🔰 Schema file to use for the key
+      🔰 Schema to use for the key
 
-      ❕ It must be absolute full path
-
-      🎓 Tip: use <tab> completion to trigger fzf completion 
-              use folder_producer_schema (default: ~/Downloads) in config.ini file to configure where to search the files
+      ✨ Copy and paste the schema you want to use for the key, save and close the file to continue
 
   - long: --producer-schema-value
-    arg: producer_schema
     required: false
-    validate: file_exists_with_trick
-    completions:
-      - $(playground get-schema-with-fzf "$cur")
     help: |-
-      🔰 Schema file to use for the value
+      🔰 Schema to use for the value
 
-      ❕ It must be absolute full path
-
-      🎓 Tip: use <tab> completion to trigger fzf completion 
-              use folder_producer_schema (default: ~/Downloads) in config.ini file to configure where to search the files
+      ✨ Copy and paste the schema you want to use for the key, save and close the file to continue
 
   - long: --custom-smt
     help: |-
