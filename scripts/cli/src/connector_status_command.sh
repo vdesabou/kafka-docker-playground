@@ -10,8 +10,8 @@ if [ -z "$connectors" ]
 then
     log "💤 There are no connectors running !"
 else
-    printf "%-30s %-12s %-30s %-50s\n" "Name" "Status" "Tasks" "Stack Trace"
-    echo "-------------------------------------------------------------------------------------------------------------"
+    printf "%-30s %-12s %-60s %-50s\n" "Name" "Status" "Tasks (Worker ID)" "Stack Trace"
+    echo "-----------------------------------------------------------------------------------------------------------------------------"
 
     for connector in $connectors
     do
@@ -30,7 +30,7 @@ else
             status="🤔 UNKNOWN"
         fi
         
-        tasks=$(curl -s $security "$connect_url/connectors/$connector/status" | jq -r '.tasks[] | "\(.id):\(.state)"' | tr '\n' ',' | sed 's/,$/\n/')
+        tasks=$(curl -s $security "$connect_url/connectors/$connector/status" | jq -r '.tasks[] | "\(.id):\(.state)[\(.worker_id)]"' | tr '\n' ',' | sed 's/,$/\n/' | sed 's/:8083//g' | sed 's/:8283//g' | sed 's/:8383//g')
         
         if [[ "$tasks" == *"RUNNING"* ]]
         then
