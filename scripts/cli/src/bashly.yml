@@ -382,7 +382,7 @@ commands:
         ❣️ Only required if you want to use your own existing cluster
 
         🎓 Tip: you can also use CLUSTER_CREDS environment variable
-    - &luster-schema-registry-creds
+    - &cluster-schema-registry-creds
       long: --cluster-schema-registry-creds
       required: false
       validate: not_empty
@@ -467,7 +467,7 @@ commands:
   - *cluster-environment
   - *cluster-name
   - *cluster-creds
-  - *luster-schema-registry-creds
+  - *cluster-schema-registry-creds
 
   - long: --file
     short: -f
