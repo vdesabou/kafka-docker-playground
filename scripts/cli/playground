@@ -8939,17 +8939,26 @@ playground_topic_display_schema_id_statistics_command() {
   for topic in ${items[@]}
   do
       nb_messages=$(playground topic get-number-records -t $topic | tail -1)
+      rm -f /tmp/results.json
       log "✨ Display statistics of topic $topic, it contains $nb_messages messages"
-      $sr_cli --bootstrap localhost:29092 --topic "$topic" --group "$RANDOM" --limit $nb_messages --chart
+      output_file="/tmp/output.txt"
+      $sr_cli --bootstrap localhost:29092 --topic "$topic" --group "$RANDOM" --limit $nb_messages --store true --path /tmp/results.json  > "$output_file" 2>&1 &
 
-      # if [[ "$OSTYPE" == "darwin"* ]]
-      # then
-      #     if [ -f pie.html ]
-      #     then
-      #         mv pie.html /tmp/pie.html
-      #         open /tmp/pie.html
-      #     fi
-      # fi
+      pid=$!
+
+      while true
+      do
+          if grep -q "Use SIGINT to stop consuming" "$output_file"
+          then
+              break
+          fi
+          sleep 1
+      done
+
+      kill -SIGINT $pid
+
+      sleep 2
+      cat /tmp/results.json | jq .
   done
 }
 
