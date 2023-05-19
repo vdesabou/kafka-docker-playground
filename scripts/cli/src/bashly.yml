@@ -882,6 +882,12 @@ commands:
         default: ""
         help: |-
           Max number of messages to consume
+      - long: --grep
+        arg: grep
+        required: false
+        default: ""
+        help: |-
+          Verify that topic content contains record which contains specified string
 
     - name: set-schema-compatibility
       filters:

@@ -1,5 +1,6 @@
 topic="${args[--topic]}"
 max_messages="${args[--max-messages]}"
+grep_string="${args[--grep]}"
 
 environment=`get_environment_used`
 
@@ -116,13 +117,13 @@ do
     avro|protobuf|json-schema)
         if [ "$key_type" == "avro" ] || [ "$key_type" == "protobuf" ] || [ "$key_type" == "json-schema" ]
         then
-            docker exec -e SCHEMA_REGISTRY_LOG4J_OPTS="-Dlog4j.configuration=file:/etc/kafka/tools-log4j.properties" $container kafka-$value_type-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=$sr_url_cli --topic $topic --property print.partition=true --property print.offset=true --property print.headers=true --property print.timestamp=true --property print.key=true --property key.separator="|" --skip-message-on-error $security --from-beginning --max-messages $nb_messages > "$fifo_path" &
+            docker exec -e SCHEMA_REGISTRY_LOG4J_OPTS="-Dlog4j.configuration=file:/etc/kafka/tools-log4j.properties" $container kafka-$value_type-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=$sr_url_cli --topic $topic --property print.partition=true --property print.offset=true --property print.headers=true --property print.timestamp=true --property print.key=true --property key.separator="|" --skip-message-on-error $security --from-beginning --max-messages $nb_messages > "$fifo_path" 2>&1 &
         else
-            docker exec -e SCHEMA_REGISTRY_LOG4J_OPTS="-Dlog4j.configuration=file:/etc/kafka/tools-log4j.properties" $container kafka-$value_type-console-consumer --bootstrap-server broker:9092 --property schema.registry.url=$sr_url_cli --topic $topic --property print.partition=true --property print.offset=true --property print.headers=true --property print.timestamp=true --property print.key=true --property key.separator="|" --property key.deserializer=org.apache.kafka.common.serialization.StringDeserializer --skip-message-on-error $security --from-beginning --max-messages $nb_messages > "$fifo_path" &
+            docker exec -e SCHEMA_REGISTRY_LOG4J_OPTS="-Dlog4j.configuration=file:/etc/kafka/tools-log4j.properties" $container kafka-$value_type-console-consumer --bootstrap-server broker:9092 --property schema.registry.url=$sr_url_cli --topic $topic --property print.partition=true --property print.offset=true --property print.headers=true --property print.timestamp=true --property print.key=true --property key.separator="|" --property key.deserializer=org.apache.kafka.common.serialization.StringDeserializer --skip-message-on-error $security --from-beginning --max-messages $nb_messages > "$fifo_path" 2>&1 &
         fi
         ;;
     *)
-        docker exec $container kafka-console-consumer --bootstrap-server broker:9092 --topic $topic --property print.partition=true --property print.offset=true --property print.headers=true --property print.timestamp=true --property print.key=true --property key.separator="|" $security --from-beginning --max-messages $nb_messages > "$fifo_path" &
+        docker exec $container kafka-console-consumer --bootstrap-server broker:9092 --topic $topic --property print.partition=true --property print.offset=true --property print.headers=true --property print.timestamp=true --property print.key=true --property key.separator="|" $security --from-beginning --max-messages $nb_messages > "$fifo_path" 2>&1  &
     ;;
   esac
 
@@ -135,6 +136,7 @@ do
     date_command="date -d @"
   fi
 
+  found=0
   # Loop through each line in the named pipe
   while read -r line
   do
@@ -148,8 +150,28 @@ do
       readable_date="$(${date_command}${timestamp_sec} "+%Y-%m-%d %H:%M:%S.${milliseconds}")"
       line_with_date=$(echo "$line" | sed -E "s/CreateTime:[0-9]{13}/CreateTime: ${readable_date}/")
       echo "$line_with_date"
+    elif [[ $line =~ "Processed a total of" ]]
+    then
+      continue
     else
       echo "$line"
     fi
+    if [[ -n "$grep_string" ]]
+    then
+      if [[ $line =~ "$grep_string" ]]
+      then
+        log "✅ found $grep_string in topic $topic"
+        found=1
+      fi
+    fi
   done < "$fifo_path"
+
+  if [[ -n "$grep_string" ]]
+  then
+    if [ $found != 1 ]
+    then
+      logerror "❌ could not find $grep_string in topic $topic"
+      exit 1
+    fi
+  fi
 done
