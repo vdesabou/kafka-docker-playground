@@ -5,7 +5,7 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
 
-
+cd ../../connect/connect-databricks-delta-lake-sink
 if [ ! -f ${DIR}/SparkJDBC42.jar ]
 then
      log "Getting SparkJDBC42.jar"
@@ -14,6 +14,7 @@ then
      rm -rf docs EULA.txt
      rm -f SimbaSparkJDBC42-2.6.22.1040.zip
 fi
+cd -
 
 DATABRICKS_AWS_BUCKET_NAME=${DATABRICKS_AWS_BUCKET_NAME:-$1}
 DATABRICKS_AWS_BUCKET_REGION=${DATABRICKS_AWS_BUCKET_REGION:-$2}
