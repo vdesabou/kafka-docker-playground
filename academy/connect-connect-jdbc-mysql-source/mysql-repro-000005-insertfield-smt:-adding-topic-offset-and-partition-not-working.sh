@@ -87,7 +87,7 @@ curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
                "connector.class":"io.confluent.connect.jdbc.JdbcSourceConnector",
-               "tasks.max":"10",
+               "tasks.max":"1",
                "connection.url":"jdbc:mysql://mysql:3306/mydb?user=user&password=password&useSSL=false",
                "table.whitelist":"team",
                "mode":"timestamp+incrementing",
@@ -96,7 +96,7 @@ curl -X PUT \
                "topic.prefix":"mysql-",
                "errors.log.enable": "true",
                "errors.log.include.messages": "true",
-               "transforms": "InsertTopic,InsertPartition,InsertTimestamp,TimestampConverter",
+               "transforms": "InsertTopic,InsertOffset,InsertPartition,InsertTimestamp,TimestampConverter",
                "transforms.InsertOffset.offset.field": "__kafka_offset",
                "transforms.InsertOffset.type": "org.apache.kafka.connect.transforms.InsertField$Value",
                "transforms.InsertPartition.partition.field": "__kafka_partition",
