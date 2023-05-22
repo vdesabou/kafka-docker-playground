@@ -2413,7 +2413,7 @@ function get_environment_used() {
     return
   fi
 
-  patterns=("environment/2way-ssl" "environment/sasl-ssl" "environment/rbac-sasl-plain" "environment/kerberos" "environment/ssl_kerberos" "environment/ldap-authorizer-sasl-plain" "environment/sasl-plain" "environment/ldap-sasl-plain" "environment/sasl-scram" "environment/mdc-plaintext" "environment/mdc-sasl-plain" "environment/mdc-kerberos")
+  patterns=("environment/2way-ssl" "environment/sasl-ssl" "environment/rbac-sasl-plain" "environment/kerberos" "environment/ssl_kerberos" "environment/ldap-authorizer-sasl-plain" "environment/sasl-plain" "environment/ldap-sasl-plain" "environment/sasl-scram" "environment/mdc-plaintext" "environment/mdc-sasl-plain" "environment/mdc-kerberos" "ccloud/environment")
 
   for pattern in "${patterns[@]}"; do
     if grep -q "$pattern" /tmp/playground-command; then
@@ -2476,6 +2476,17 @@ function get_sr_url_and_security() {
       DIR_CLI="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 
       security="-u superUser:superUser"
+  elif [[ "$environment" == "environment" ]]
+  then
+    if [ -f /tmp/delta_configs/env.delta ]
+    then
+        source /tmp/delta_configs/env.delta
+    else
+        logerror "ERROR: /tmp/delta_configs/env.delta has not been generated"
+        exit 1
+    fi
+    sr_url=$SCHEMA_REGISTRY_URL
+    security="-u $SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO"
   fi
 
   echo "$sr_url@$security"
@@ -6478,15 +6489,29 @@ playground_get_topic_list_command() {
   # src/get_topic_list_command.sh
   skip_connect_internal_topics="${args[--skip-connect-internal-topics]}"
 
-  # trick to be faster
-  docker exec broker ls /var/lib/kafka/data > /dev/null 2>&1
-  if [ $? -eq 0 ]
+  environment=`get_environment_used`
+
+  if [ "$environment" == "error" ]
   then
-    if [[ -n "$skip_connect_internal_topics" ]]
+    logerror "File containing restart command /tmp/playground-command does not exist!"
+    exit 1
+
+  fi
+
+  if [[ "$environment" == "environment" ]]
+  then
+    confluent kafka topic list | grep -v "^_" | grep -v "Name" | grep -v "\-\-\-"
+  else
+    # trick to be faster
+    docker exec broker ls /var/lib/kafka/data > /dev/null 2>&1
+    if [ $? -eq 0 ]
     then
-      docker exec broker ls /var/lib/kafka/data | grep -v "checkpoint" | grep -v "meta.properties" | grep -v "connect-" | grep -v "^_" | sed 's/[^-]*$//' | sed 's/.$//' | sort | uniq
-    else
-      docker exec broker ls /var/lib/kafka/data | grep -v "checkpoint" | grep -v "meta.properties" | grep -v "^_" | sed 's/[^-]*$//' | sed 's/.$//' | sort | uniq
+      if [[ -n "$skip_connect_internal_topics" ]]
+      then
+        docker exec broker ls /var/lib/kafka/data | grep -v "checkpoint" | grep -v "meta.properties" | grep -v "connect-" | grep -v "^_" | sed 's/[^-]*$//' | sed 's/.$//' | sort | uniq
+      else
+        docker exec broker ls /var/lib/kafka/data | grep -v "checkpoint" | grep -v "meta.properties" | grep -v "^_" | sed 's/[^-]*$//' | sed 's/.$//' | sort | uniq
+      fi
     fi
   fi
 }
@@ -8520,11 +8545,36 @@ playground_topic_get_number_records_command() {
       fi
   fi
 
+  environment=`get_environment_used`
+
+  if [ "$environment" == "error" ]
+  then
+    logerror "File containing restart command /tmp/playground-command does not exist!"
+    exit 1
+
+  fi
+
   items=($topic)
   for topic in ${items[@]}
   do
       log "💯 Get number of records in a topic $topic"
-      docker exec $container kafka-run-class kafka.tools.GetOffsetShell --broker-list broker:9092 $security --topic $topic --time -1 | awk -F ":" '{sum += $3} END {print sum}'
+      if [[ "$environment" == "environment" ]]
+      then
+          if [ ! -f /tmp/delta_configs/librdkafka.delta ]
+          then
+              logerror "ERROR: /tmp/delta_configs/librdkafka.delta has not been generated"
+              exit 1
+          fi
+          docker run -it --network=host \
+              -v /tmp/delta_configs/librdkafka.delta:/tmp/configuration/ccloud.properties \
+              confluentinc/cp-kcat:latest kcat \
+                  -F /tmp/configuration/ccloud.properties \
+                  -C -t $topic \
+                  -e -q \
+                  | grep -v "Reading configuration from file" | wc -l | tr -d ' '
+      else
+          docker exec $container kafka-run-class kafka.tools.GetOffsetShell --broker-list broker:9092 $security --topic $topic --time -1 | awk -F ":" '{sum += $3} END {print sum}'
+      fi
   done
 }
 
@@ -8536,8 +8586,42 @@ playground_topic_display_consumer_offsets_command() {
   container=$(echo "$ret" | cut -d "@" -f 1)
   security=$(echo "$ret" | cut -d "@" -f 2)
 
+  environment=`get_environment_used`
+
+  if [ "$environment" == "error" ]
+  then
+    logerror "File containing restart command /tmp/playground-command does not exist!"
+    exit 1
+
+  fi
+
   log "Display content of __consumer_offsets topic, press crtl-c to stop..."
-  docker exec -i $container kafka-console-consumer --bootstrap-server broker:9092 --topic __consumer_offsets --from-beginning --formatter "kafka.coordinator.group.GroupMetadataManager\$OffsetsMessageFormatter" $security | grep -v "_confluent-controlcenter"
+  if [[ "$environment" == "environment" ]]
+  then
+      if [ -f /tmp/delta_configs/env.delta ]
+      then
+          source /tmp/delta_configs/env.delta
+      else
+          logerror "ERROR: /tmp/delta_configs/env.delta has not been generated"
+          exit 1
+      fi
+      if [ ! -f /tmp/delta_configs/ak-tools-ccloud.delta ]
+      then
+          logerror "ERROR: /tmp/delta_configs/ak-tools-ccloud.delta has not been generated"
+          exit 1
+      fi
+
+      DIR_CLI="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
+      dir1=$(echo ${DIR_CLI%/*})
+      root_folder=$(echo ${dir1%/*})
+      IGNORE_CHECK_FOR_DOCKER_COMPOSE=true
+      source $root_folder/scripts/utils.sh
+
+      docker run --rm -v /tmp/delta_configs/ak-tools-ccloud.delta:/tmp/configuration/ccloud.properties -e BOOTSTRAP_SERVERS="$BOOTSTRAP_SERVERS" -e SASL_JAAS_CONFIG="$SASL_JAAS_CONFIG" ${CP_CONNECT_IMAGE}:${CONNECT_TAG} kafka-topics --describe --topic $topic --bootstrap-server $BOOTSTRAP_SERVERS --command-config /tmp/configuration/ccloud.properties
+  else
+      docker exec -i $container kafka-console-consumer --bootstrap-server broker:9092 --topic __consumer_offsets --from-beginning --formatter "kafka.coordinator.group.GroupMetadataManager\$OffsetsMessageFormatter" $security | grep -v "_confluent-controlcenter"
+  fi
+
 }
 
 # :command.function
@@ -8561,11 +8645,44 @@ playground_topic_describe_command() {
       fi
   fi
 
+  environment=`get_environment_used`
+
+  if [ "$environment" == "error" ]
+  then
+    logerror "File containing restart command /tmp/playground-command does not exist!"
+    exit 1
+
+  fi
+
   items=($topic)
   for topic in ${items[@]}
   do
       log "🔎 Describing topic $topic"
-      docker exec $container kafka-topics --describe --topic $topic --bootstrap-server broker:9092 $security
+      if [[ "$environment" == "environment" ]]
+      then
+          if [ -f /tmp/delta_configs/env.delta ]
+          then
+              source /tmp/delta_configs/env.delta
+          else
+              logerror "ERROR: /tmp/delta_configs/env.delta has not been generated"
+              exit 1
+          fi
+          if [ ! -f /tmp/delta_configs/ak-tools-ccloud.delta ]
+          then
+              logerror "ERROR: /tmp/delta_configs/ak-tools-ccloud.delta has not been generated"
+              exit 1
+          fi
+
+          DIR_CLI="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
+          dir1=$(echo ${DIR_CLI%/*})
+          root_folder=$(echo ${dir1%/*})
+          IGNORE_CHECK_FOR_DOCKER_COMPOSE=true
+          source $root_folder/scripts/utils.sh
+
+          docker run --rm -v /tmp/delta_configs/ak-tools-ccloud.delta:/tmp/configuration/ccloud.properties ${CP_CONNECT_IMAGE}:${CONNECT_TAG} kafka-topics --describe --topic $topic --bootstrap-server $BOOTSTRAP_SERVERS --command-config /tmp/configuration/ccloud.properties
+      else
+          docker exec $container kafka-topics --describe --topic $topic --bootstrap-server broker:9092 $security
+      fi
   done
 }
 
@@ -8590,6 +8707,7 @@ playground_topic_consume_command() {
   sr_url=$(echo "$ret" | cut -d "@" -f 1)
   sr_security=$(echo "$ret" | cut -d "@" -f 2)
 
+  bootstrap_server="broker:9092"
   container="connect"
   sr_url_cli="http://schema-registry:8081"
   security=""
@@ -8608,6 +8726,25 @@ playground_topic_consume_command() {
       security="--consumer.config /etc/kafka/consumer.properties"
 
       docker exec -i client kinit -k -t /var/lib/secret/kafka-connect.key connect
+  elif [[ "$environment" == "environment" ]]
+  then
+    if [ -f /tmp/delta_configs/env.delta ]
+    then
+        source /tmp/delta_configs/env.delta
+    else
+        logerror "ERROR: /tmp/delta_configs/env.delta has not been generated"
+        exit 1
+    fi
+    if [ ! -f /tmp/delta_configs/ak-tools-ccloud.delta ]
+    then
+        logerror "ERROR: /tmp/delta_configs/ak-tools-ccloud.delta has not been generated"
+        exit 1
+    fi
+    DIR_CLI="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
+    dir1=$(echo ${DIR_CLI%/*})
+    root_folder=$(echo ${dir1%/*})
+    IGNORE_CHECK_FOR_DOCKER_COMPOSE=true
+    source $root_folder/scripts/utils.sh
   fi
 
   if [[ ! -n "$topic" ]]
@@ -8692,13 +8829,28 @@ playground_topic_consume_command() {
       avro|protobuf|json-schema)
           if [ "$key_type" == "avro" ] || [ "$key_type" == "protobuf" ] || [ "$key_type" == "json-schema" ]
           then
-              docker exec -e SCHEMA_REGISTRY_LOG4J_OPTS="-Dlog4j.configuration=file:/etc/kafka/tools-log4j.properties" $container kafka-$value_type-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=$sr_url_cli --topic $topic --property print.partition=true --property print.offset=true --property print.headers=true --property print.timestamp=true --property print.key=true --property key.separator="|" --skip-message-on-error $security --from-beginning --max-messages $nb_messages > "$fifo_path" 2>&1 &
+              if [[ "$environment" == "environment" ]]
+              then
+                docker run --rm -e SCHEMA_REGISTRY_LOG4J_OPTS="-Dlog4j.configuration=file:/etc/kafka/tools-log4j.properties" -e value_type=$value_type -e BOOTSTRAP_SERVERS="$BOOTSTRAP_SERVERS" -e SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO="$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO" -e SCHEMA_REGISTRY_URL="$SCHEMA_REGISTRY_URL" ${CP_CONNECT_IMAGE}:${CONNECT_TAG} kafka-$value_type-console-consumer --bootstrap-server $BOOTSTRAP_SERVERS --topic $topic --consumer-property ssl.endpoint.identification.algorithm=https --consumer-property sasl.mechanism=PLAIN --consumer-property security.protocol=SASL_SSL --consumer-property sasl.jaas.config="$SASL_JAAS_CONFIG" --property basic.auth.credentials.source=USER_INFO --property schema.registry.basic.auth.user.info="$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO" --property schema.registry.url=$SCHEMA_REGISTRY_URL --property print.partition=true --property print.offset=true --property print.headers=true --property print.timestamp=true --property print.key=true --property key.separator="|" --skip-message-on-error $security --from-beginning --max-messages $nb_messages > "$fifo_path" 2>&1 &
+              else
+                docker exec -e SCHEMA_REGISTRY_LOG4J_OPTS="-Dlog4j.configuration=file:/etc/kafka/tools-log4j.properties" $container kafka-$value_type-console-consumer -bootstrap-server $bootstrap_server --property schema.registry.url=$sr_url_cli --topic $topic --property print.partition=true --property print.offset=true --property print.headers=true --property print.timestamp=true --property print.key=true --property key.separator="|" --skip-message-on-error $security --from-beginning --max-messages $nb_messages > "$fifo_path" 2>&1 &
+              fi
           else
-              docker exec -e SCHEMA_REGISTRY_LOG4J_OPTS="-Dlog4j.configuration=file:/etc/kafka/tools-log4j.properties" $container kafka-$value_type-console-consumer --bootstrap-server broker:9092 --property schema.registry.url=$sr_url_cli --topic $topic --property print.partition=true --property print.offset=true --property print.headers=true --property print.timestamp=true --property print.key=true --property key.separator="|" --property key.deserializer=org.apache.kafka.common.serialization.StringDeserializer --skip-message-on-error $security --from-beginning --max-messages $nb_messages > "$fifo_path" 2>&1 &
+              if [[ "$environment" == "environment" ]]
+              then
+                docker run --rm -e SCHEMA_REGISTRY_LOG4J_OPTS="-Dlog4j.configuration=file:/etc/kafka/tools-log4j.properties" -e value_type=$value_type -e BOOTSTRAP_SERVERS="$BOOTSTRAP_SERVERS" -e SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO="$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO" -e SCHEMA_REGISTRY_URL="$SCHEMA_REGISTRY_URL" ${CP_CONNECT_IMAGE}:${CONNECT_TAG} kafka-$value_type-console-consumer --bootstrap-server $BOOTSTRAP_SERVERS --topic $topic --consumer-property ssl.endpoint.identification.algorithm=https --consumer-property sasl.mechanism=PLAIN --consumer-property security.protocol=SASL_SSL --consumer-property sasl.jaas.config="$SASL_JAAS_CONFIG" --property basic.auth.credentials.source=USER_INFO --property schema.registry.basic.auth.user.info="$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO" --property schema.registry.url=$SCHEMA_REGISTRY_URL --property print.partition=true --property print.offset=true --property print.headers=true --property print.timestamp=true --property print.key=true --property key.separator="|"  --property key.deserializer=org.apache.kafka.common.serialization.StringDeserializer --skip-message-on-error $security --from-beginning --max-messages $nb_messages > "$fifo_path" 2>&1 &
+              else
+                docker exec -e SCHEMA_REGISTRY_LOG4J_OPTS="-Dlog4j.configuration=file:/etc/kafka/tools-log4j.properties" $container kafka-$value_type-console-consumer --bootstrap-server $bootstrap_server --property schema.registry.url=$sr_url_cli --topic $topic --property print.partition=true --property print.offset=true --property print.headers=true --property print.timestamp=true --property print.key=true --property key.separator="|" --property key.deserializer=org.apache.kafka.common.serialization.StringDeserializer --skip-message-on-error $security --from-beginning --max-messages $nb_messages > "$fifo_path" 2>&1 &
+              fi
           fi
           ;;
       *)
-          docker exec $container kafka-console-consumer --bootstrap-server broker:9092 --topic $topic --property print.partition=true --property print.offset=true --property print.headers=true --property print.timestamp=true --property print.key=true --property key.separator="|" $security --from-beginning --max-messages $nb_messages > "$fifo_path" 2>&1  &
+        if [[ "$environment" == "environment" ]]
+        then
+          docker run --rm -v /tmp/delta_configs/ak-tools-ccloud.delta:/tmp/configuration/ccloud.properties -e BOOTSTRAP_SERVERS="$BOOTSTRAP_SERVERS" ${CP_CONNECT_IMAGE}:${CONNECT_TAG} kafka-console-consumer --bootstrap-server $BOOTSTRAP_SERVERS --topic $topic --consumer.config  --property print.partition=true --property print.offset=true --property print.headers=true --property print.timestamp=true --property print.key=true --property key.separator="|" $security --from-beginning --max-messages $nb_messages > "$fifo_path" 2>&1 &
+        else
+          docker exec $container kafka-console-consumer --bootstrap-server $bootstrap_server --topic $topic --property print.partition=true --property print.offset=true --property print.headers=true --property print.timestamp=true --property print.key=true --property key.separator="|" $security --from-beginning --max-messages $nb_messages > "$fifo_path" 2>&1  &
+        fi
       ;;
     esac
 

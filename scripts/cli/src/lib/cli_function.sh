@@ -5,7 +5,7 @@ function get_environment_used() {
     return
   fi
 
-  patterns=("environment/2way-ssl" "environment/sasl-ssl" "environment/rbac-sasl-plain" "environment/kerberos" "environment/ssl_kerberos" "environment/ldap-authorizer-sasl-plain" "environment/sasl-plain" "environment/ldap-sasl-plain" "environment/sasl-scram" "environment/mdc-plaintext" "environment/mdc-sasl-plain" "environment/mdc-kerberos")
+  patterns=("environment/2way-ssl" "environment/sasl-ssl" "environment/rbac-sasl-plain" "environment/kerberos" "environment/ssl_kerberos" "environment/ldap-authorizer-sasl-plain" "environment/sasl-plain" "environment/ldap-sasl-plain" "environment/sasl-scram" "environment/mdc-plaintext" "environment/mdc-sasl-plain" "environment/mdc-kerberos" "ccloud/environment")
 
   for pattern in "${patterns[@]}"; do
     if grep -q "$pattern" /tmp/playground-command; then
@@ -66,6 +66,17 @@ function get_sr_url_and_security() {
       DIR_CLI="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 
       security="-u superUser:superUser"
+  elif [[ "$environment" == "environment" ]]
+  then
+    if [ -f /tmp/delta_configs/env.delta ]
+    then
+        source /tmp/delta_configs/env.delta
+    else
+        logerror "ERROR: /tmp/delta_configs/env.delta has not been generated"
+        exit 1
+    fi
+    sr_url=$SCHEMA_REGISTRY_URL
+    security="-u $SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO"
   fi
 
   echo "$sr_url@$security"
