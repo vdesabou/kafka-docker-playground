@@ -1,0 +1,1 @@
+../../connect/connect-jdbc-mysql-source/README.md
