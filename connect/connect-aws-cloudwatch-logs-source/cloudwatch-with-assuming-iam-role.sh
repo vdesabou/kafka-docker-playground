@@ -79,4 +79,4 @@ curl -X PUT \
 sleep 5
 
 log "Verify we have received the data in $LOG_GROUP.$LOG_STREAM topic"
-playground topic consume --topic $LOG_GROUP.$LOG_STREAM --expected-messages 10
+playground topic consume --topic $LOG_GROUP.$LOG_STREAM --expected-messages 11
