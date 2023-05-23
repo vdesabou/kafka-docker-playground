@@ -36,10 +36,10 @@ log "producing using --property schema.registry.proxy.host=nginx-proxy -property
 seq -f "{\"f1\": \"value%g\"}" 10 | docker exec -i connect kafka-avro-console-producer --broker-list broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic a-topic --property schema.registry.proxy.host=nginx-proxy -property schema.registry.proxy.port=8888 --property value.schema='{"type":"record","name":"myrecord","fields":[{"name":"f1","type":"string"}]}'
 
 log "Verify data was sent to broker using --property proxy.host=nginx-proxy -property proxy.port=8888"
-playground topic consume --topic a-topic --expected-messages 20
+playground topic consume --topic a-topic --min-expected-messages 20
 
 log "Verify data was sent to broker using --property schema.proxy.host=nginx-proxy -property schema.proxy.port=8888"
-playground topic consume --topic a-topic --expected-messages 20
+playground topic consume --topic a-topic --min-expected-messages 20
 
 
 log "Creating FileStream Sink connector"
@@ -69,7 +69,7 @@ log "Produce avro data using Java producer"
 docker exec producer bash -c "java -jar producer-1.0.0-jar-with-dependencies.jar"
 
 log "Verify data was sent to broker using --property proxy.host=nginx-proxy -property proxy.port=8888"
-playground topic consume --topic customer-avro --expected-messages 10
+playground topic consume --topic customer-avro --min-expected-messages 10
 
 # {"count":-5106534569952410475,"first_name":"eOMtThyhVNL","last_name":"WUZNRcBaQKxIye","address":"dUsF"}
 # {"count":-167885730524958550,"first_name":"wdkelQbxe","last_name":"TeQOvaScfqIO","address":"OmaaJxkyvRnLR"}

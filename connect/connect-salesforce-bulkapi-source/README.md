@@ -73,7 +73,7 @@ $ curl -X PUT \
 Verify we have received the data in `sfdc-bukapi-leads` topic
 
 ```bash
-playground topic consume --topic sfdc-bukapi-leads --expected-messages 1
+playground topic consume --topic sfdc-bukapi-leads --min-expected-messages 1
 ```
 
 Results:

@@ -123,7 +123,7 @@ curl -X PUT \
 sleep 5
 
 log "Verifying topic server1_mydb_team"
-playground topic consume --topic server1_mydb_team --expected-messages 2
+playground topic consume --topic server1_mydb_team --min-expected-messages 2
 
 log "Show content of customer table:"
 docker exec mysql bash -c "mysql --user=root --password=password --database=mydb -e 'select * from customers'"
@@ -178,7 +178,7 @@ EOF
 
 set +e
 log "Verifying topic server1_mydb_customers : there will be only the new record"
-playground topic consume --topic server1_mydb_customers --expected-messages 3
+playground topic consume --topic server1_mydb_customers --min-expected-messages 3
 set -e
 
 log "Send Signal to the topic to start incremental snapshot"
@@ -189,4 +189,4 @@ EOF
 sleep 20
 
 log "Verifying topic server1_mydb_customer again, the 3 records are there"
-playground topic consume --topic server1_mydb_customers --expected-messages 3
+playground topic consume --topic server1_mydb_customers --min-expected-messages 3

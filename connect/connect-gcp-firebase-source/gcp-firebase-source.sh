@@ -61,7 +61,7 @@ curl -X PUT \
 sleep 10
 
 log "Verify messages are in topic artists"
-playground topic consume --topic artists --expected-messages 3
+playground topic consume --topic artists --min-expected-messages 3
 
 log "Verify messages are in topic songs"
-playground topic consume --topic songs --expected-messages 3
+playground topic consume --topic songs --min-expected-messages 3

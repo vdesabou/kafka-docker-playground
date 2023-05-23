@@ -90,7 +90,7 @@ $ curl -X PUT \
 Verify messages are in topic `pubsub-topic`
 
 ```bash
-playground topic consume --topic pubsub-topic --expected-messages 3
+playground topic consume --topic pubsub-topic --min-expected-messages 3
 ```
 
 Results:

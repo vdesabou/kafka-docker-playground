@@ -167,6 +167,6 @@ fi
 # sleep 5
 
 # log "Verifying topic dbserver1_mydb_calls"
-playground topic consume --topic dbserver1_mydb_calls --expected-messages 2
+playground topic consume --topic dbserver1_mydb_calls --min-expected-messages 2
 
 

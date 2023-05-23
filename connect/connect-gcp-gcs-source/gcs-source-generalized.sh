@@ -88,7 +88,7 @@ curl -X PUT \
 sleep 10
 
 log "Verify messages are in topic quick-start-topic"
-playground topic consume --topic quick-start-topic --expected-messages 9
+playground topic consume --topic quick-start-topic --min-expected-messages 9
 
 # null    {"f1":"value1"}
 # null    {"f1":"value2"}

@@ -51,7 +51,7 @@ $ curl -X PUT \
 Verify we have received the data in `spooldir-csv-topic` topic
 
 ```bash
-playground topic consume --topic spooldir-csv-topic --expected-messages 10
+playground topic consume --topic spooldir-csv-topic --min-expected-messages 10
 ```
 
 Results:
@@ -102,7 +102,7 @@ $ curl -X PUT \
 Verify we have received the data in `spooldir-tsv-topic` topic
 
 ```bash
-playground topic consume --topic spooldir-tsv-topic --expected-messages 10
+playground topic consume --topic spooldir-tsv-topic --min-expected-messages 10
 ```
 
 Results:
@@ -153,7 +153,7 @@ $ curl -X PUT \
 Verify we have received the data in spooldir-json-topic topic
 
 ```bash
-playground topic consume --topic spooldir-json-topic --expected-messages 10
+playground topic consume --topic spooldir-json-topic --min-expected-messages 10
 ```
 
 Results:
@@ -201,7 +201,7 @@ $ curl -X PUT \
 Verify we have received the data in spooldir-schemaless-json-topic topic
 
 ```bash
-playground topic consume --topic spooldir-schemaless-json-topic --expected-messages 10
+playground topic consume --topic spooldir-schemaless-json-topic --min-expected-messages 10
 ```
 
 Results:
@@ -250,7 +250,7 @@ $ curl -X PUT \
 Verify we have received the data in fix-topic topic
 
 ```bash
-playground topic consume --topic fix-topic --expected-messages 100
+playground topic consume --topic fix-topic --min-expected-messages 100
 ```
 
 Results:

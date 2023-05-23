@@ -95,7 +95,7 @@ $ curl -X PUT \
 Verify the topic `oracle-CUSTOMERS`:
 
 ```bash
-playground topic consume --topic oracle-CUSTOMERS --expected-messages 2
+playground topic consume --topic oracle-CUSTOMERS --min-expected-messages 2
 ```
 
 Results:

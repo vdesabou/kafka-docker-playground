@@ -52,4 +52,4 @@ docker exec -i connect kafka-avro-console-producer \
 EOF
 
 log "Verify we have the record"
-playground topic consume --topic topic-validation --expected-messages 1
+playground topic consume --topic topic-validation --min-expected-messages 1

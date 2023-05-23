@@ -40,7 +40,7 @@ curl -X PUT \
 sleep 10
 
 log "Verify we have received the data in test-topic-duplicate topic"
-playground topic consume --topic test-topic-duplicate --expected-messages 10
+playground topic consume --topic test-topic-duplicate --min-expected-messages 10
 
 sleep 5
 

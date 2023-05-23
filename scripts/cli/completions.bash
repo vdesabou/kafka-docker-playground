@@ -421,7 +421,7 @@ _playground_completions() {
       ;;
 
     'topic consume'*)
-      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "--expected-messages --grep --help --max-messages --topic -h -t")" -- "$cur" )
+      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "--grep --help --max-messages --min-expected-messages --topic -h -t")" -- "$cur" )
       ;;
 
     'run-ccloud'*'-f')

@@ -57,4 +57,4 @@ sleep 5
 
 
 log "Verify we have received the data in AMPS_Orders topic"
-playground topic consume --topic AMPS_Orders --expected-messages 2
+playground topic consume --topic AMPS_Orders --min-expected-messages 2

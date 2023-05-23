@@ -1895,8 +1895,8 @@ playground_topic_consume_usage() {
     echo
 
     # :flag.usage
-    printf "  %s\n" "$(magenta "--expected-messages EXPECTED-MESSAGES")"
-    printf "    Expected number of messages to be present in topic, returns an error if this\n    is not the case\n    \n    Note: --topic should be specified in this case.\n"
+    printf "  %s\n" "$(magenta "--min-expected-messages MIN-EXPECTED-MESSAGES")"
+    printf "    Minimum expected number of messages to be present in topic, returns an error\n    if this is not the case\n    \n    Note: --topic should be specified in this case.\n"
     printf "    Default: \n"
     echo
 
@@ -8738,7 +8738,7 @@ playground_topic_consume_command() {
   topic="${args[--topic]}"
   max_messages="${args[--max-messages]}"
   grep_string="${args[--grep]}"
-  expected_messages="${args[--expected-messages]}"
+  min_expected_messages="${args[--min-expected-messages]}"
 
   environment=`get_environment_used`
 
@@ -8796,9 +8796,9 @@ playground_topic_consume_command() {
 
   if [[ ! -n "$topic" ]]
   then
-      if [[ -n "$expected_messages" ]]
+      if [[ -n "$min_expected_messages" ]]
       then
-        logerror "--expected-messages was provided without specifying --topic"
+        logerror "--min-expected-messages was provided without specifying --topic"
         exit 1
       fi
       log "✨ --topic flag was not provided, applying command to all topics"
@@ -8813,12 +8813,12 @@ playground_topic_consume_command() {
   items=($topic)
   for topic in ${items[@]}
   do
-    if [[ -n "$expected_messages" ]]
+    if [[ -n "$min_expected_messages" ]]
     then
       nb_messages=$(playground topic get-number-records -t $topic | tail -1)
-      if [ $nb_messages != $expected_messages ]
+      if [ $nb_messages -lt $min_expected_messages ]
       then
-        logerror "❌ --expected-messages is set with $expected_messages but topic $topic contains $nb_messages messages"
+        logerror "❌ --min-expected-messages is set with $min_expected_messages but topic $topic contains $nb_messages messages"
         exit 1
       fi
     else
@@ -9101,7 +9101,7 @@ playground_connector_status_command() {
   then
       log "💤 There are no connectors running !"
   else
-      printf "%-30s %-12s %-60s %-50s\n" "Name" "Status" "Tasks (Worker ID)" "Stack Trace"
+      printf "%-30s %-12s %-60s %-50s\n" "Name" "Status" "Tasks" "Stack Trace"
       echo "-----------------------------------------------------------------------------------------------------------------------------"
 
       for connector in $connectors
@@ -9327,7 +9327,7 @@ playground_connector_restart_command() {
   for connector in ${items[@]}
   do
       log "🔄 Restarting connector $connector"
-      if version_gt $TAG_BASE "6.9.9"
+      if ! version_gt $TAG_BASE "6.9.9"
       then
           task_ids=$(curl $security -s -X GET "$connect_url/connectors/$connector/tasks" | jq -r '.[].id.task')
 
@@ -13145,21 +13145,21 @@ playground_topic_consume_parse_requirements() {
         ;;
 
       # :flag.case
-      --expected-messages)
+      --min-expected-messages)
 
         # :flag.case_arg
         if [[ -n ${2+x} ]]; then
           # :flag.validations
           if [[ -n $(validate_integer "$2") ]]; then
-            printf "validation error in %s:\n%s\n" "--expected-messages EXPECTED-MESSAGES" "$(validate_integer "$2")" >&2
+            printf "validation error in %s:\n%s\n" "--min-expected-messages MIN-EXPECTED-MESSAGES" "$(validate_integer "$2")" >&2
             exit 1
           fi
 
-          args['--expected-messages']="$2"
+          args['--min-expected-messages']="$2"
           shift
           shift
         else
-          printf "%s\n" "--expected-messages requires an argument: --expected-messages EXPECTED-MESSAGES" >&2
+          printf "%s\n" "--min-expected-messages requires an argument: --min-expected-messages MIN-EXPECTED-MESSAGES" >&2
           exit 1
         fi
         ;;
@@ -13197,7 +13197,7 @@ playground_topic_consume_parse_requirements() {
 
   # :command.default_assignments
   [[ -n ${args['--max-messages']:-} ]] || args['--max-messages']=""
-  [[ -n ${args['--expected-messages']:-} ]] || args['--expected-messages']=""
+  [[ -n ${args['--min-expected-messages']:-} ]] || args['--min-expected-messages']=""
   [[ -n ${args['--grep']:-} ]] || args['--grep']=""
 
   # :command.user_filter

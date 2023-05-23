@@ -38,7 +38,7 @@ $ docker exec -d connect-us bash -c '/usr/bin/connect-mirror-maker /etc/kafka/co
 Verify we have received the data in topic `US.sales_US` in EUROPE
 
 ```bash
-playground topic consume --topic "US.sales_US" --expected-messages 10
+playground topic consume --topic "US.sales_US" --min-expected-messages 10
 ```
 
 ```
@@ -58,7 +58,7 @@ Processed a total of 10 messages
 Verify we have received the data in topic `EUROPE.sales_EUROPE` topics in the US
 
 ```bash
-playground topic consume --topic "EUROPE.sales_EUROPE" --expected-messages 10
+playground topic consume --topic "EUROPE.sales_EUROPE" --min-expected-messages 10
 ```
 
 ```

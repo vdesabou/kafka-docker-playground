@@ -65,7 +65,7 @@ $ curl -X PUT \
 Verify we have received the data in `zendesk-topic-organizations` topic:
 
 ```bash
-playground topic consume --topic zendesk-topic-organizations --expected-messages 1
+playground topic consume --topic zendesk-topic-organizations --min-expected-messages 1
 ```
 
 Results:

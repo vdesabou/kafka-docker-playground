@@ -127,7 +127,7 @@ $ curl -X PUT \
 Verifying topic `snowflake-FOO`
 
 ```bash
-playground topic consume --topic snowflake-FOO --expected-messages 3
+playground topic consume --topic snowflake-FOO --min-expected-messages 3
 ```
 
 

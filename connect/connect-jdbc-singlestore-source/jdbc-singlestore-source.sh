@@ -97,4 +97,4 @@ curl -X PUT \
 sleep 5
 
 log "Verifying topic singlestore-application"
-playground topic consume --topic singlestore-application --expected-messages 2
+playground topic consume --topic singlestore-application --min-expected-messages 2

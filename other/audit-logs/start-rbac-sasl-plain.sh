@@ -14,4 +14,4 @@ ${DIR}/../../environment/rbac-sasl-plain/start.sh "${PWD}/docker-compose.rbac-sa
 sleep 10
 
 log "Checking messages from topic confluent-audit-log-events"
-playground topic consume --topic confluent-audit-log-events --expected-messages 5
+playground topic consume --topic confluent-audit-log-events --min-expected-messages 5

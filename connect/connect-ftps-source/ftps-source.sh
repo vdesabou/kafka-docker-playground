@@ -72,4 +72,4 @@ curl -X PUT \
 sleep 5
 
 log "Verifying topic ftps-testing-topic"
-playground topic consume --topic ftps-testing-topic --expected-messages 2
+playground topic consume --topic ftps-testing-topic --min-expected-messages 2

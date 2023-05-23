@@ -130,4 +130,4 @@ curl -X PUT \
 
 
 log "Verifying topic copy_of_s3_topic"
-playground topic consume --topic copy_of_s3_topic --expected-messages 9
+playground topic consume --topic copy_of_s3_topic --min-expected-messages 9

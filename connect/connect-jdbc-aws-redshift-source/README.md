@@ -84,7 +84,7 @@ $ curl -X PUT \
 Verifying topic `redshift-customers`
 
 ```bash
-playground topic consume --topic redshift-customers --expected-messages 5
+playground topic consume --topic redshift-customers --min-expected-messages 5
 ```
 
 Result is:

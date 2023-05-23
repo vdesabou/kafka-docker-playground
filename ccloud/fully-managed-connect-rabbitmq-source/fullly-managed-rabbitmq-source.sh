@@ -86,7 +86,7 @@ wait_for_ccloud_connector_up connector.json 300
 sleep 5
 
 log "Verifying topic rabbitmq"
-playground topic consume --topic rabbitmq --expected-messages 5
+playground topic consume --topic rabbitmq --min-expected-messages 5
 
 
 #log "Consume messages in RabbitMQ"

@@ -82,5 +82,5 @@ EOF
 Check that data is there
 
 ```bash
-playground topic consume --topic all-types --expected-messages 2
+playground topic consume --topic all-types --min-expected-messages 2
 ```

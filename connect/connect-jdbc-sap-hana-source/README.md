@@ -50,7 +50,7 @@ sleep 5
 Verifying topic sap-hana-CUSTOMERS:
 
 ```bash
-playground topic consume --topic sap-hana-CUSTOMERS --expected-messages 1
+playground topic consume --topic sap-hana-CUSTOMERS --min-expected-messages 1
 ```
 
 Results:

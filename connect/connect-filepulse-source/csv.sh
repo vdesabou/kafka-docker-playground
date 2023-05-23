@@ -52,4 +52,4 @@ log "Creating CSV FilePulse Source connector"
 sleep 5
 
 log "Verify we have received the data in connect-file-pulse-quickstart-csv topic"
-playground topic consume --topic connect-file-pulse-quickstart-csv --expected-messages 10
+playground topic consume --topic connect-file-pulse-quickstart-csv --min-expected-messages 10

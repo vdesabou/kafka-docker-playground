@@ -182,7 +182,7 @@ Verifying topic `sqlserver-customers`
 
 
 ```bash
-playground topic consume --topic sqlserver-customers --expected-messages 5
+playground topic consume --topic sqlserver-customers --min-expected-messages 5
 ```
 
 Results:

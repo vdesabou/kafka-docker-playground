@@ -75,7 +75,7 @@ java tibjmsMsgProducer -user admin -queue connector-quickstart m1 m2 m3 m4 m5'
 Verify we have received the data in `from-tibco-messages` topic:
 
 ```bash
-playground topic consume --topic from-tibco-messages --expected-messages 2
+playground topic consume --topic from-tibco-messages --min-expected-messages 2
 ```
 
 Results:

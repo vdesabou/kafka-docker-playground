@@ -45,7 +45,7 @@ $ curl -k -X POST https://localhost:8889/services/collector/event -d '{"event":"
 Verifying topic `splunk-source`
 
 ```bash
-playground topic consume --topic splunk-source --expected-messages 1
+playground topic consume --topic splunk-source --min-expected-messages 1
 ```
 
 Results:

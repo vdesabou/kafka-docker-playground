@@ -29,10 +29,10 @@ log "Produce protobuf data using Java producer"
 docker exec producer bash -c "java -jar producer-1.0.0-jar-with-dependencies.jar"
 
 log "Verify we have received the protobuf data in customer-protobuf topic"
-playground topic consume --topic customer-protobuf --expected-messages 5
+playground topic consume --topic customer-protobuf --min-expected-messages 5
 
 log "Produce protobuf data using kafka-protobuf-console-producer"
 seq -f "{\"f1\": \"value%g\"}" 10 | docker exec -i connect kafka-protobuf-console-producer --broker-list broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic protobuf-topic --property value.schema='syntax = "proto3"; message MyRecord { string f1 = 1; }'
 
 log "Verify we have received the protobuf data in protobuf-topic topic"
-playground topic consume --topic protobuf-topic --expected-messages 5
+playground topic consume --topic protobuf-topic --min-expected-messages 5

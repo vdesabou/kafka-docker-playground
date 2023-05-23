@@ -29,10 +29,10 @@ log "Produce json-schema data using Java producer"
 docker exec producer bash -c "java -jar producer-1.0.0-jar-with-dependencies.jar"
 
 log "Verify we have received the json-schema data in customer-json-schema topic"
-playground topic consume --topic customer-json-schema --expected-messages 5
+playground topic consume --topic customer-json-schema --min-expected-messages 5
 
 log "Produce json-schema data using kafka-json-schema-console-producer"
 seq -f "{\"f1\": \"value%g\"}" 10 | docker exec -i connect kafka-json-schema-console-producer --broker-list broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic json-schema-topic --property value.schema='{"type":"object","properties":{"f1":{"type":"string"}}}'
 
 log "Verify we have received the json-schema data in json-schema-topic topic"
-playground topic consume --topic json-schema-topic --expected-messages 5
+playground topic consume --topic json-schema-topic --min-expected-messages 5

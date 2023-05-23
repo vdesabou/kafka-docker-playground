@@ -1,7 +1,7 @@
 topic="${args[--topic]}"
 max_messages="${args[--max-messages]}"
 grep_string="${args[--grep]}"
-expected_messages="${args[--expected-messages]}"
+min_expected_messages="${args[--min-expected-messages]}"
 
 environment=`get_environment_used`
 
@@ -58,9 +58,9 @@ fi
 
 if [[ ! -n "$topic" ]]
 then
-    if [[ -n "$expected_messages" ]]
+    if [[ -n "$min_expected_messages" ]]
     then
-      logerror "--expected-messages was provided without specifying --topic"
+      logerror "--min-expected-messages was provided without specifying --topic"
       exit 1
     fi
     log "✨ --topic flag was not provided, applying command to all topics"
@@ -75,12 +75,12 @@ fi
 items=($topic)
 for topic in ${items[@]}
 do
-  if [[ -n "$expected_messages" ]]
+  if [[ -n "$min_expected_messages" ]]
   then
     nb_messages=$(playground topic get-number-records -t $topic | tail -1)
-    if [ $nb_messages != $expected_messages ]
+    if [ $nb_messages -lt $min_expected_messages ]
     then
-      logerror "❌ --expected-messages is set with $expected_messages but topic $topic contains $nb_messages messages"
+      logerror "❌ --min-expected-messages is set with $min_expected_messages but topic $topic contains $nb_messages messages"
       exit 1
     fi
   else

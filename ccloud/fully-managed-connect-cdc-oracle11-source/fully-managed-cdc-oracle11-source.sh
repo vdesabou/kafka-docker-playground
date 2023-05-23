@@ -128,7 +128,7 @@ sleep 20
 
 log "Verifying topic XE.MYUSER.CUSTOMERS: there should be 13 records"
 set +e
-playground topic consume --topic XE.MYUSER.CUSTOMERS --expected-messages 13
+playground topic consume --topic XE.MYUSER.CUSTOMERS --min-expected-messages 13
 set -e
 cat /tmp/result.log
 log "Check there is 5 snapshots events"
@@ -157,7 +157,7 @@ then
 fi
 
 log "Verifying topic redo-log-topic: there should be 15 records"
-playground topic consume --topic redo-log-topic --expected-messages 15
+playground topic consume --topic redo-log-topic --min-expected-messages 15
 
 log "🚚 If you're planning to inject more data, have a look at https://github.com/vdesabou/kafka-docker-playground/blob/master/connect/connect-cdc-oracle19-source/README.md#note-on-redologrowfetchsize"
 

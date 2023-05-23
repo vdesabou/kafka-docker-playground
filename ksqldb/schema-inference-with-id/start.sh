@@ -50,7 +50,7 @@ log "Checking the orders_new topic has its own schema with the same schema ID as
 docker exec -i connect curl -s GET http://schema-registry:8081/subjects/orders_new-value/versions/1
 
 log "Verify we have received the data in orders_new topic"
-playground topic consume --topic orders_new --expected-messages 2
+playground topic consume --topic orders_new --min-expected-messages 2
 
 log "Updating the schema"
 docker exec -i connect curl -s -H "Content-Type: application/vnd.schemaregistry.v1+json" -X POST http://schema-registry:8081/subjects/orders-value/versions --data '{"schema":"{\"type\":\"record\",\"name\":\"myrecord\",\"fields\":[{\"name\":\"id\",\"type\":\"int\"},{\"name\":\"product\",\"type\":\"string\"},{\"name\":\"quantity\",\"type\":\"int\"},{\"name\":\"category\",\"type\":\"string\",\"default\":\"default_category\"}]}"}'
@@ -89,4 +89,4 @@ log "Checking the orders_new topic has an update schema(ie. ID=2)"
 docker exec -i connect curl -s GET http://schema-registry:8081/subjects/orders_new-value/versions/2
 
 log "Verify we have received the data in orders_new topic using both v1 and v2 schemas"
-playground topic consume --topic orders_new --expected-messages 4
+playground topic consume --topic orders_new --min-expected-messages 4

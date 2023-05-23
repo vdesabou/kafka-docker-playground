@@ -87,7 +87,7 @@ GO
 EOF
 
 log "Verifying topic server1.testDB.dbo.customers"
-playground topic consume --topic server1.testDB.dbo.customers --expected-messages 5
+playground topic consume --topic server1.testDB.dbo.customers --min-expected-messages 5
 
 
 log "Add another table customers2"
@@ -149,7 +149,7 @@ EOF
 
 set +e
 log "Verifying topic server1.testDB.dbo.customers2 : there will be only the new record"
-playground topic consume --topic server1.testDB.dbo.customers2 --expected-messages 5
+playground topic consume --topic server1.testDB.dbo.customers2 --min-expected-messages 5
 set -e
 
 log "Trigger Ad hoc snapshot"
@@ -163,4 +163,4 @@ EOF
 sleep 5
 
 log "Verifying topic server1.testDB.dbo.customers2: it should have all records"
-playground topic consume --topic server1.testDB.dbo.customers2 --expected-messages 5
+playground topic consume --topic server1.testDB.dbo.customers2 --min-expected-messages 5

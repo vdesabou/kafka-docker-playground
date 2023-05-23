@@ -99,25 +99,25 @@ curl -s -X PUT \
 Verify we have received the data in orders topic:
 
 ```bash
-playground topic consume --topic orders --expected-messages 1
+playground topic consume --topic orders --min-expected-messages 1
 ```
 
 Verify we have received the data in shipments topic:
 
 ```bash
-playground topic consume --topic shipments --expected-messages 1
+playground topic consume --topic shipments --min-expected-messages 1
 ```
 
 Verify we have received the data in customers topic:
 
 ```bash
-playground topic consume --topic customers --expected-messages 1
+playground topic consume --topic customers --min-expected-messages 1
 ```
 
 Verify we have received the data in products topic:
 
 ```bash
-playground topic consume --topic products --expected-messages 1
+playground topic consume --topic products --min-expected-messages 1
 ```
 
 Results:

@@ -200,7 +200,7 @@ kubectl -n cp-helm-charts -c cp-kafka-connect-server exec -i $CONNECT_POD_NAME -
 sleep 5
 
 log "Verify we have received the data in spooldir-json-topic topic"
-playground topic consume --topic spooldir-json-topic --expected-messages 2
+playground topic consume --topic spooldir-json-topic --min-expected-messages 2
 
 
 #######

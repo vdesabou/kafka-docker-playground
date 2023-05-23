@@ -104,4 +104,4 @@ curl -X PUT \
 
 
 log "Verifying topic quick-start-topic"
-playground topic consume --topic quick-start-topic --expected-messages 9
+playground topic consume --topic quick-start-topic --min-expected-messages 9

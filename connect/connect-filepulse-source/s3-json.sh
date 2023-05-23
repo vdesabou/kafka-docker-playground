@@ -145,4 +145,4 @@ curl -X PUT \
 sleep 5
 
 log "Verify we have received the data in tracks-filepulse-json-00 topic"
-playground topic consume --topic tracks-filepulse-json-00 --expected-messages 1
+playground topic consume --topic tracks-filepulse-json-00 --min-expected-messages 1

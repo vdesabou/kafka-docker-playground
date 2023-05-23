@@ -87,4 +87,4 @@ docker exec jms-sender bash -c 'java -cp "/tmp/weblogic.jar:/tmp/wlthint3client.
 sleep 5
 
 log "Verify we have received the data in from-weblogic-messages topic"
-playground topic consume --topic from-weblogic-messages --expected-messages 1
+playground topic consume --topic from-weblogic-messages --min-expected-messages 1

@@ -93,7 +93,7 @@ EOF
 
 
 log "Verify we have received the data in kinesis_topic topic"
-playground topic consume --topic kinesis_topic --expected-messages 1
+playground topic consume --topic kinesis_topic --min-expected-messages 1
 # 123     "µë-ë,j\u0007µ"
 # Processed a total of 1 messages
 

@@ -126,7 +126,7 @@ curl -X PUT \
      http://localhost:8083/connectors/kinesis-source/config | jq .
 
 log "Verify we have received the data in kinesis_topic topic"
-playground topic consume --topic kinesis_topic --expected-messages 1
+playground topic consume --topic kinesis_topic --min-expected-messages 1
 
 log "Delete the stream"
 aws kinesis delete-stream --stream-name $KINESIS_STREAM_NAME

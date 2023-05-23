@@ -130,7 +130,7 @@ curl -X PUT \
 sleep 5
 
 log "Verifying topic asgard.public.customers-raw"
-playground topic consume --topic asgard.public.customers-raw --expected-messages 5
+playground topic consume --topic asgard.public.customers-raw --min-expected-messages 5
 
 if [ ! -z "$SQL_DATAGEN" ]
 then

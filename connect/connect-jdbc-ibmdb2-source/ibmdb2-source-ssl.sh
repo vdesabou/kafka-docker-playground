@@ -146,6 +146,6 @@ curl -X PUT \
 sleep 15
 
 log "Verifying topic db2-PURCHASEORDER"
-playground topic consume --topic db2-PURCHASEORDER --expected-messages 2
+playground topic consume --topic db2-PURCHASEORDER --min-expected-messages 2
 
 

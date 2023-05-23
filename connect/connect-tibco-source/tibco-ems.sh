@@ -71,4 +71,4 @@ sleep 5
 
 
 log "Verify we have received the data in from-tibco-messages topic"
-playground topic consume --topic from-tibco-messages --expected-messages 2
+playground topic consume --topic from-tibco-messages --min-expected-messages 2

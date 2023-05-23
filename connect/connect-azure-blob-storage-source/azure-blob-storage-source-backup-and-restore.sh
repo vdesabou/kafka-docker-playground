@@ -124,7 +124,7 @@ curl -X PUT \
 sleep 5
 
 log "Verifying topic copy_of_blob_topic"
-playground topic consume --topic copy_of_blob_topic --expected-messages 3
+playground topic consume --topic copy_of_blob_topic --min-expected-messages 3
 
 log "Deleting resource group"
 az group delete --name $AZURE_RESOURCE_GROUP --yes --no-wait

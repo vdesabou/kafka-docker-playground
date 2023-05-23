@@ -66,4 +66,4 @@ curl -X PUT \
      http://localhost:8083/connectors/solace-source/config | jq .
 
 log "Verifying topic from-solace-messages"
-playground topic consume --topic from-solace-messages --expected-messages 2
+playground topic consume --topic from-solace-messages --min-expected-messages 2

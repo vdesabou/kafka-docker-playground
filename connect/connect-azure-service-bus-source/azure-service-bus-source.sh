@@ -105,7 +105,7 @@ docker exec -e SB_SAMPLES_CONNECTIONSTRING="$SB_SAMPLES_CONNECTIONSTRING" -e AZU
 sleep 180
 
 log "Verifying topic servicebus-topic"
-playground topic consume --topic servicebus-topic --expected-messages 5
+playground topic consume --topic servicebus-topic --min-expected-messages 5
 
 log "Deleting resource group"
 az group delete --name $AZURE_RESOURCE_GROUP --yes --no-wait

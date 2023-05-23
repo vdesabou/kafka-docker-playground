@@ -34,4 +34,4 @@ docker exec mosquitto sh -c 'mosquitto_pub -h localhost -p 1883 -u "myuser" -P "
 sleep 5
 
 log "Verify we have received the data in mqtt-source-1 topic"
-playground topic consume --topic mqtt-source-1 --expected-messages 1
+playground topic consume --topic mqtt-source-1 --min-expected-messages 1

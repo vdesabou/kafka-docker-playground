@@ -78,7 +78,7 @@ curl -X PUT \
 sleep 10
 
 log "Verify messages are in topic pubsub-topic"
-playground topic consume --topic pubsub-topic --expected-messages 3
+playground topic consume --topic pubsub-topic --min-expected-messages 3
 
 log "Delete topic and subscription"
 docker run -i --volumes-from gcloud-config google/cloud-sdk:latest gcloud pubsub --project ${GCP_PROJECT} topics delete topic-1

@@ -114,7 +114,7 @@ curl -X PUT \
 sleep 10
 
 log "Confirm that the messages were delivered to the result topic in Kafka"
-playground topic consume --topic test-result --expected-messages 3
+playground topic consume --topic test-result --min-expected-messages 3
 
 log "Deleting resource group"
 az group delete --name $AZURE_RESOURCE_GROUP --yes --no-wait

@@ -109,7 +109,7 @@ wait_for_ccloud_connector_up connector.json 300
 sleep 5
 
 log "Verify we have received the data in sftp-testing-topic topic"
-playground topic consume --topic sftp-testing-topic --expected-messages 2
+playground topic consume --topic sftp-testing-topic --min-expected-messages 2
 
 log "Do you want to delete the fully managed connector ?"
 check_if_continue

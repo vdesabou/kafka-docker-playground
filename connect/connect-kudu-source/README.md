@@ -67,7 +67,7 @@ $ curl -X PUT \
 Verify we have received the data in `test-kudu-accounts` topic:
 
 ```bash
-playground topic consume --topic test-kudu-accounts --expected-messages 2
+playground topic consume --topic test-kudu-accounts --min-expected-messages 2
 ```
 
 Results:

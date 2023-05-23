@@ -56,7 +56,7 @@ curl -X PUT \
 Verify we have received the data in `AMPS_Orders` topic
 
 ```bash
-playground topic consume --topic AMPS_Orders --expected-messages 2
+playground topic consume --topic AMPS_Orders --min-expected-messages 2
 ```
 
 Results:

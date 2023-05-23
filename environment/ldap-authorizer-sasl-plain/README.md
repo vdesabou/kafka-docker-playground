@@ -126,7 +126,7 @@ Run console consumer without access to consumer group: SHOULD FAIL
 Note: Consume should fail authorization since neither user alice nor the group KafkaDevelopers that alice belongs to has authorization to consume using the group test-consumer-group
 
 ```bash
-playground topic consume --topic testtopic --expected-messages 1
+playground topic consume --topic testtopic --min-expected-messages 1
 ```
 
 Results:
@@ -142,7 +142,7 @@ Authorize group and rerun consumer
 ```bash
 $ docker exec broker kafka-acls --bootstrap-server broker:9092 --add --topic=testtopic --group test-consumer-group --allow-principal="Group:KafkaDevelopers" --command-config /service/kafka/users/kafka.properties
 
-playground topic consume --topic testtopic --expected-messages 1
+playground topic consume --topic testtopic --min-expected-messages 1
 ```
 
 Run console producer with authorized user `barnie` (barnie is in group): SHOULD BE SUCCESS

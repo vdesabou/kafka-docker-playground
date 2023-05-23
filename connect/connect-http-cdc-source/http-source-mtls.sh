@@ -38,7 +38,7 @@ curl --cert ../../connect/connect-http-sink/security/http-service-mtls-auth.cert
 sleep 2
 
 log "Verify we have received the data in http-topic-messages topic"
-playground topic consume --topic http-topic-messages --expected-messages 1
+playground topic consume --topic http-topic-messages --min-expected-messages 1
 
 
 exit 0

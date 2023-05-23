@@ -68,5 +68,5 @@ sleep 70
 Consumer with group my-consumer-group reads 10 messages in B cluster (Confluent Cloud), it should start from previous offset (`sync.group.offsets.enabled = true`)
 
 ```bash
-playground topic consume --topic sales_A --expected-messages 10
+playground topic consume --topic sales_A --min-expected-messages 10
 ```

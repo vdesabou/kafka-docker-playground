@@ -68,7 +68,7 @@ set -e
 log "Make sure we can produce/consume"
 seq 10 | kafka-console-producer --topic example --broker-list  $USER.$domain:9092 --producer.config kafka.properties
 
-playground topic consume --topic example --expected-messages 10
+playground topic consume --topic example --min-expected-messages 10
 
 log "Login to MDS"
 #confluent login --url https://$USER.$domain:443 --ca-cert-path ./certs/ca.pem

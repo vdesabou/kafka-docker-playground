@@ -133,7 +133,7 @@ $ curl -X PUT \
 Verify the topic `ORCLCDB.C__MYUSER.CUSTOMERS`:
 
 ```bash
-playground topic consume --topic ORCLCDB.C__MYUSER.CUSTOMERS --expected-messages 2
+playground topic consume --topic ORCLCDB.C__MYUSER.CUSTOMERS --min-expected-messages 2
 ```
 
 Results:
@@ -191,7 +191,7 @@ $ curl -X PUT \
 Verify the topic `ORCLPDB1.C__MYUSER.CUSTOMERS`:
 
 ```bash
-playground topic consume --topic ORCLPDB1.C__MYUSER.CUSTOMERS --expected-messages 2
+playground topic consume --topic ORCLPDB1.C__MYUSER.CUSTOMERS --min-expected-messages 2
 ```
 
 Results:

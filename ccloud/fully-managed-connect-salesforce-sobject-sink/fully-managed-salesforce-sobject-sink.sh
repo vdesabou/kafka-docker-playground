@@ -164,7 +164,7 @@ docker exec sfdx-cli sh -c "sfdx data:create:record  --target-org \"$SALESFORCE_
 sleep 30
 
 log "Verify we have received the data in sfdc-pushtopic-leads topic"
-playground topic consume --topic sfdc-pushtopic-leads --expected-messages 1
+playground topic consume --topic sfdc-pushtopic-leads --min-expected-messages 1
 
 log "Creating Salesforce SObject Sink connector"
 cat << EOF > connector2.json
@@ -212,7 +212,7 @@ connectorName=$(cat connector2.json| jq -r .name)
 connectorId=$(get_ccloud_connector_lcc $connectorName)
 
 log "Verifying topic success-$connectorId"
-playground topic consume --topic success-$connectorId --expected-messages 1
+playground topic consume --topic success-$connectorId --min-expected-messages 1
 
 log "Login with sfdx CLI on the account #2"
 docker exec sfdx-cli sh -c "sfdx sfpowerkit:auth:login -u \"$SALESFORCE_USERNAME_ACCOUNT2\" -p \"$SALESFORCE_PASSWORD_ACCOUNT2\" -r \"$SALESFORCE_INSTANCE_ACCOUNT2\" -s \"$SALESFORCE_SECURITY_TOKEN_ACCOUNT2\""

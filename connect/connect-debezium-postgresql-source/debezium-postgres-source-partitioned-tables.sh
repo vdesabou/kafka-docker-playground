@@ -133,6 +133,6 @@ EOF
 
 
 log "Verifying topic asgard.public.customers-raw"
-playground topic consume --topic asgard.public.customers-raw --expected-messages 24
+playground topic consume --topic asgard.public.customers-raw --min-expected-messages 24
 
 

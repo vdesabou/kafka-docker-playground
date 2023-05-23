@@ -76,7 +76,7 @@ curl -X PUT \
 Verifying topic `cockroachdb-drivers`
 
 ```bash
-playground topic consume --topic cockroachdb-drivers --expected-messages 2
+playground topic consume --topic cockroachdb-drivers --min-expected-messages 2
 ```
 
 Results:

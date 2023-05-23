@@ -116,7 +116,7 @@ $ docker exec -d -e AZURE_EVENT_HUBS_NAME="$AZURE_EVENT_HUBS_NAME" -e AZURE_EVEN
 Verifying topic `event_hub_topic`
 
 ```bash
-playground topic consume --topic event_hub_topic --expected-messages 2
+playground topic consume --topic event_hub_topic --min-expected-messages 2
 ```
 
 Results:

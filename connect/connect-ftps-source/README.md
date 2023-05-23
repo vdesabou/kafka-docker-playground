@@ -61,7 +61,7 @@ $ curl -X PUT \
 Verifying topic `ftps-testing-topic`:
 
 ```bash
-playground topic consume --topic ftps-testing-topic --expected-messages 2
+playground topic consume --topic ftps-testing-topic --min-expected-messages 2
 ```
 
 Results:

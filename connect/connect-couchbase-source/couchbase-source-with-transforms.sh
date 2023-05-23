@@ -46,12 +46,12 @@ curl -X PUT \
 sleep 10
 
 log "Verifying topic airline"
-playground topic consume --topic airline --expected-messages 1
+playground topic consume --topic airline --min-expected-messages 1
 log "Verifying topic airport"
-playground topic consume --topic airport --expected-messages 1
+playground topic consume --topic airport --min-expected-messages 1
 log "Verifying topic hotel"
-playground topic consume --topic hotel --expected-messages 1
+playground topic consume --topic hotel --min-expected-messages 1
 log "Verifying topic landmark"
-playground topic consume --topic landmark --expected-messages 1
+playground topic consume --topic landmark --min-expected-messages 1
 log "Verifying topic route"
-playground topic consume --topic route --expected-messages 1
+playground topic consume --topic route --min-expected-messages 1

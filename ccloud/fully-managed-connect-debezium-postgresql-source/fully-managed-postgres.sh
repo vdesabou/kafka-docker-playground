@@ -178,7 +178,7 @@ wait_for_ccloud_connector_up connector.json 300
 sleep 60
 
 log "Verifying topic asgard.public.customers"
-playground topic consume --topic asgard.public.customers --expected-messages 5
+playground topic consume --topic asgard.public.customers --min-expected-messages 5
 
 
 if [ ! -z "$SQL_DATAGEN" ]

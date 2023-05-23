@@ -121,7 +121,7 @@ GO
 EOF
 
 log "Verifying topic server1.testDB.dbo.customers"
-playground topic consume --topic server1.testDB.dbo.customers --expected-messages 5
+playground topic consume --topic server1.testDB.dbo.customers --min-expected-messages 5
 
 
 if [ ! -z "$SQL_DATAGEN" ]

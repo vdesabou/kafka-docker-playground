@@ -62,6 +62,6 @@ EOF
 sleep 30
 
 log "Checking topic playground_ksql_processing_log"
-playground topic consume --topic playground_ksql_processing_log --expected-messages 1
+playground topic consume --topic playground_ksql_processing_log --min-expected-messages 1
 
 # {"level":"ERROR","logger":"processing.CSAS_SENSORS_3.ksql.logger.thread.exception.uncaught","time":1637600229215,"message":{"type":4,"deserializationError":null,"recordProcessingError":null,"productionError":null,"serializationError":null,"kafkaStreamsThreadError":{"errorMessage":"Unhandled exception caught in streams thread","threadName":"_confluent-ksql-playground_query_CSAS_SENSORS_3-cc09a551-5ef3-4a39-9673-38a35e3ede58-StreamThread-1","cause":["Error encountered sending record to topic SENSORS for task 0_0 due to:\norg.apache.kafka.common.errors.TopicAuthorizationException: Not authorized to access topics: [SENSORS]\nWritten offsets would not be recorded and no more records would be sent since this is a fatal error.","Not authorized to access topics: [SENSORS]"]}}}

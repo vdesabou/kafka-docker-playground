@@ -44,7 +44,7 @@ seq -f "us_sale_%g ${RANDOM}" 20 | docker container exec -i connect-us bash -c "
 Verify we have received the data in source cluster using consumer group id my-consumer-group, we read only 5 messages
 
 ```bash
-playground topic consume --topic demo --expected-messages 5
+playground topic consume --topic demo --min-expected-messages 5
 ```
 
 ```
@@ -114,7 +114,7 @@ my-consumer-group demo            0          5               20              15 
 Consume from the mirror topic on the destination cluster and verify consumer offset is working, it should start at 6
 ```bash
 
-playground topic consume --topic demo --expected-messages 5
+playground topic consume --topic demo --min-expected-messages 5
 ```
 
 ```
@@ -178,7 +178,7 @@ docker exec broker-europe kafka-configs --bootstrap-server broker-europe:9092 --
 Consume from the source cluster another 10 messages, up to 15
 
 ```bash
-playground topic consume --topic demo --expected-messages 10
+playground topic consume --topic demo --min-expected-messages 10
 ```
 
 ```
@@ -198,7 +198,7 @@ Processed a total of 10 messages
 Consume from the destination cluster, it will continue from it's last offset 10
 
 ```bash
-playground topic consume --topic demo --expected-messages 5
+playground topic consume --topic demo --min-expected-messages 5
 ```
 
 ```

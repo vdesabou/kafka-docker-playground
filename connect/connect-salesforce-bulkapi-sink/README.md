@@ -111,7 +111,7 @@ $ curl -X PUT \
 Verify we have received the data in `sfdc-bulkapi-leads` topic
 
 ```bash
-playground topic consume --topic sfdc-bulkapi-leads --expected-messages 1
+playground topic consume --topic sfdc-bulkapi-leads --min-expected-messages 1
 ```
 
 Creating Salesforce Bulk API Sink connector
@@ -152,7 +152,7 @@ $ curl -X PUT \
 Verify topic `success-responses`
 
 ```bash
-playground topic consume --topic success-responses --expected-messages 1
+playground topic consume --topic success-responses --min-expected-messages 1
 ```
 
 ```

@@ -100,7 +100,7 @@ sleep 5
 Verifying topic singlestore-application:
 
 ```bash
-playground topic consume --topic singlestore-application --expected-messages 2
+playground topic consume --topic singlestore-application --min-expected-messages 2
 ```
 
 Results:

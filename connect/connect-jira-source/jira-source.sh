@@ -65,4 +65,4 @@ curl -X PUT \
 sleep 10
 
 log "Verify we have received the data in jira-topic-issues topic"
-playground topic consume --topic jira-topic-issues --expected-messages 1
+playground topic consume --topic jira-topic-issues --min-expected-messages 1

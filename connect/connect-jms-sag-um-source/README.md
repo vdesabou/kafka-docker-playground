@@ -67,7 +67,7 @@ $ curl -X PUT \
 Verify topic
 
 ```
-playground topic consume --topic source-messages --expected-messages 3
+playground topic consume --topic source-messages --min-expected-messages 3
 Struct{messageID=ID:172.20.0.2:34661:98195837288448:1,messageType=text,timestamp=1659664813908,deliveryMode=2,destination=Struct{destinationType=queue,name=test.queue},redelivered=false,expiration=0,priority=4,properties={},text=hello1000}
 Struct{messageID=ID:172.20.0.2:37603:98204427223040:1,messageType=text,timestamp=1659664815508,deliveryMode=2,destination=Struct{destinationType=queue,name=test.queue},redelivered=false,expiration=0,priority=4,properties={},text=hello1001}
 Struct{messageID=ID:172.20.0.2:47379:98213017157632:1,messageType=text,timestamp=1659664817508,deliveryMode=2,destination=Struct{destinationType=queue,name=test.queue},redelivered=false,expiration=0,priority=4,properties={},text=hello1002}

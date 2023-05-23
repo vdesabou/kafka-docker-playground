@@ -80,7 +80,7 @@ if [ -z "$CLOUDFORMATION" ]
 then
      log "Verifying topic mysql-application"
      # this command works for both cases (with local schema registry and Confluent Cloud Schema Registry)
-playground topic consume --topic mysql-application --expected-messages 2
+playground topic consume --topic mysql-application --min-expected-messages 2
 fi
 
 

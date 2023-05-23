@@ -68,4 +68,4 @@ curl -X PUT \
 sleep 10
 
 log "Verify we have received the data in sfdc-bulkapi-leads topic"
-playground topic consume --topic sfdc-bulkapi-leads --expected-messages 1
+playground topic consume --topic sfdc-bulkapi-leads --min-expected-messages 1

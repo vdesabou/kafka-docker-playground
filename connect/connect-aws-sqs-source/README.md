@@ -138,7 +138,7 @@ curl -X PUT \
 Verify we have received the data in test-sqs-source topic:
 
 ```bash
-playground topic consume --topic test-sqs-source --expected-messages 2
+playground topic consume --topic test-sqs-source --min-expected-messages 2
 
 {
   "ApproximateFirstReceiveTimestamp": 1569859344138,
@@ -206,7 +206,7 @@ curl -X PUT \
 Verify we have received the data in test-sqs-source topic:
 
 ```bash
-playground topic consume --topic test-sqs-source-ssl --expected-messages 2
+playground topic consume --topic test-sqs-source-ssl --min-expected-messages 2
 ```
 
 ### With SASL_SSL authentication:
@@ -253,7 +253,7 @@ curl -X PUT \
 Verify we have received the data in test-sqs-source topic:
 
 ```bash
-playground topic consume --topic test-sqs-source-sasl-ssl --expected-messages 2
+playground topic consume --topic test-sqs-source-sasl-ssl --min-expected-messages 2
 ```
 
 N.B: Control Center is reachable at [http://127.0.0.1:9021](http://127.0.0.1:9021])

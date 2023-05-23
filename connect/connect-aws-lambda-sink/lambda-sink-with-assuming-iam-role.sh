@@ -91,10 +91,10 @@ curl -X PUT \
 sleep 10
 
 log "Verify topic success-responses"
-playground topic consume --topic success-responses --expected-messages 10
+playground topic consume --topic success-responses --min-expected-messages 10
 
 # log "Verify topic error-responses"
-playground topic consume --topic error-responses --expected-messages 0
+playground topic consume --topic error-responses --min-expected-messages 0
 
 log "Cleanup role and function"
 aws iam delete-role --role-name $LAMBDA_ROLE_NAME

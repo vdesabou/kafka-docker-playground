@@ -91,7 +91,7 @@ $ curl -X PUT \
 Verifying topic `sftp-testing-topic`
 
 ```bash
-playground topic consume --topic sftp-testing-topic --expected-messages 2
+playground topic consume --topic sftp-testing-topic --min-expected-messages 2
 ```
 
 Results:

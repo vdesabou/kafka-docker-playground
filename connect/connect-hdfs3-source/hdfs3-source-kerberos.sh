@@ -104,4 +104,4 @@ curl -X PUT \
 sleep 10
 
 log "Verifying topic copy_of_test_hdfs"
-playground topic consume --topic copy_of_test_hdfs --expected-messages 9
+playground topic consume --topic copy_of_test_hdfs --min-expected-messages 9

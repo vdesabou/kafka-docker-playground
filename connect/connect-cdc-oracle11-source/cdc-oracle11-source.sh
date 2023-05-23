@@ -138,7 +138,7 @@ sleep 20
 
 log "Verifying topic XE.MYUSER.CUSTOMERS: there should be 13 records"
 set +e
-playground topic consume --topic XE.MYUSER.CUSTOMERS --expected-messages 13
+playground topic consume --topic XE.MYUSER.CUSTOMERS --min-expected-messages 13
 set -e
 cat /tmp/result.log
 log "Check there is 5 snapshots events"
@@ -167,7 +167,7 @@ then
 fi
 
 log "Verifying topic redo-log-topic: there should be 15 records"
-playground topic consume --topic redo-log-topic --expected-messages 15
+playground topic consume --topic redo-log-topic --min-expected-messages 15
 
 if [ ! -z "$SQL_DATAGEN" ]
 then

@@ -122,4 +122,4 @@ curl -X PUT \
 sleep 10
 
 log "Verify messages are in topic copy_of_gcs_topic"
-playground topic consume --topic copy_of_gcs_topic --expected-messages 9
+playground topic consume --topic copy_of_gcs_topic --min-expected-messages 9

@@ -100,7 +100,7 @@ wait_for_ccloud_connector_up connector.json 300
 sleep 30
 
 log "Verifying topic quick-start-topic"
-playground topic consume --topic quick-start-topic --expected-messages 9
+playground topic consume --topic quick-start-topic --min-expected-messages 9
 
 log "Do you want to delete the fully managed connector ?"
 check_if_continue

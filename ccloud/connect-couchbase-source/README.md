@@ -108,7 +108,7 @@ $ curl -X PUT \
 Verifying topic `test-travel-sample`
 
 ```bash
-playground topic consume --topic test-travel-sample --expected-messages 2
+playground topic consume --topic test-travel-sample --min-expected-messages 2
 ```
 
 Results:
@@ -233,7 +233,7 @@ Results with `SMTs`:
 Verifying topic `airline`
 
 ```bash
-playground topic consume --topic airline --expected-messages 1
+playground topic consume --topic airline --min-expected-messages 1
 ```
 
 ```json
@@ -268,7 +268,7 @@ playground topic consume --topic airline --expected-messages 1
 Verifying topic `airport`
 
 ```bash
-playground topic consume --topic airport --expected-messages 1
+playground topic consume --topic airport --min-expected-messages 1
 ```
 
 ```json
@@ -303,7 +303,7 @@ playground topic consume --topic airport --expected-messages 1
 Verifying topic `hotel`
 
 ```bash
-playground topic consume --topic hotel --expected-messages 1
+playground topic consume --topic hotel --min-expected-messages 1
 ```
 
 ```json
@@ -313,7 +313,7 @@ playground topic consume --topic hotel --expected-messages 1
 Verifying topic `landmark`
 
 ```bash
-playground topic consume --topic landmark --expected-messages 1
+playground topic consume --topic landmark --min-expected-messages 1
 ```
 
 ```json
@@ -323,7 +323,7 @@ playground topic consume --topic landmark --expected-messages 1
 Verifying topic `route`
 
 ```bash
-playground topic consume --topic route --expected-messages 1
+playground topic consume --topic route --min-expected-messages 1
 ```
 
 ```

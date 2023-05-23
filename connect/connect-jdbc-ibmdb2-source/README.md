@@ -73,7 +73,7 @@ Verifying topic `db2-PURCHASEORDER`
 
 
 ```bash
-playground topic consume --topic db2-PURCHASEORDER --expected-messages 2
+playground topic consume --topic db2-PURCHASEORDER --min-expected-messages 2
 ```
 
 Results:

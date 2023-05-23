@@ -64,7 +64,7 @@ $ curl -X PUT \
 Verifying topic `influx_testdb`
 
 ```bash
-playground topic consume --topic influx_testdb --expected-messages 1
+playground topic consume --topic influx_testdb --min-expected-messages 1
 ```
 
 Results:

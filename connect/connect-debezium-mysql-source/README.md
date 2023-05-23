@@ -86,7 +86,7 @@ curl -X PUT \
 Verifying topic `dbserver1_mydb_team`
 
 ```bash
-playground topic consume --topic dbserver1_mydb_team --expected-messages 2
+playground topic consume --topic dbserver1_mydb_team --min-expected-messages 2
 ```
 
 Result:

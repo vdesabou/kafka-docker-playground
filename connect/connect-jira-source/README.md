@@ -62,7 +62,7 @@ $ curl -X PUT \
 Verify we have received the data in `jira-topic-project_categories` topic
 
 ```
-playground topic consume --topic jira-topic-project_categories --expected-messages 1
+playground topic consume --topic jira-topic-project_categories --min-expected-messages 1
 ```
 
 Results:

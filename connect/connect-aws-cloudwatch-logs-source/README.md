@@ -86,7 +86,7 @@ $ curl -X PUT \
 Verify we have received the data in `my-log-group.my-log-stream` topic
 
 ```bash
-playground topic consume --topic my-log-group.my-log-stream --expected-messages 10
+playground topic consume --topic my-log-group.my-log-stream --min-expected-messages 10
 ```
 
 N.B: Control Center is reachable at [http://127.0.0.1:9021](http://127.0.0.1:9021])

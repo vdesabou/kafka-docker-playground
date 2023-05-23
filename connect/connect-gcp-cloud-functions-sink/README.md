@@ -76,7 +76,7 @@ $ curl -X PUT \
 Confirm that the messages were delivered to the result topic in Kafka
 
 ```bash
-playground topic consume --topic test-result --expected-messages 3
+playground topic consume --topic test-result --min-expected-messages 3
 ```
 
 Result:

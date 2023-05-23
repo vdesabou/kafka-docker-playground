@@ -97,7 +97,7 @@ curl -X PUT \
 sleep 5
 
 log "Verifying topic mysql-team"
-playground topic consume --topic mysql-team --expected-messages 2
+playground topic consume --topic mysql-team --min-expected-messages 2
 
 if [ ! -z "$SQL_DATAGEN" ]
 then

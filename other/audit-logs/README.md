@@ -74,7 +74,7 @@ which is:
 Checking messages from topic `confluent-audit-log-events`
 
 ```bash
-playground topic consume --topic confluent-audit-log-events --expected-messages 5
+playground topic consume --topic confluent-audit-log-events --min-expected-messages 5
 ```
 
 Results:

@@ -122,7 +122,7 @@ $ curl -X PUT \
 Verify the topic `XE.MYUSER.CUSTOMERS`:
 
 ```bash
-playground topic consume --topic XE.MYUSER.CUSTOMERS --expected-messages 2
+playground topic consume --topic XE.MYUSER.CUSTOMERS --min-expected-messages 2
 ```
 
 Results:

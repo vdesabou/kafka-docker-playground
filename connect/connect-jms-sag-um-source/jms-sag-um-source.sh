@@ -84,4 +84,4 @@ curl -X PUT \
 sleep 10
 
 log "Verifying topic source-messages"
-playground topic consume --topic source-messages --expected-messages 3
+playground topic consume --topic source-messages --min-expected-messages 3

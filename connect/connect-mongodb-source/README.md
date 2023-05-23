@@ -81,7 +81,7 @@ EOF
 Verifying topic `mongo.inventory.customers`:
 
 ```bash
-playground topic consume --topic mongo.inventory.customers --expected-messages 1
+playground topic consume --topic mongo.inventory.customers --min-expected-messages 1
 ```
 
 Result is:

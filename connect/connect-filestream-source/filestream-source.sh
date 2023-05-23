@@ -29,4 +29,4 @@ curl -X PUT \
 sleep 5
 
 log "Verify we have received the data in filestream topic"
-playground topic consume --topic filestream --expected-messages 10
+playground topic consume --topic filestream --min-expected-messages 10

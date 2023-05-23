@@ -101,4 +101,4 @@ docker exec sfdx-cli sh -c "sfdx data:create:record  --target-org \"$SALESFORCE_
 sleep 30
 
 log "Verify we have received the data in sfdc-pushtopic-leads topic"
-playground topic consume --topic sfdc-pushtopic-leads --expected-messages 1
+playground topic consume --topic sfdc-pushtopic-leads --min-expected-messages 1

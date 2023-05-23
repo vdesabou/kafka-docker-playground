@@ -243,7 +243,7 @@ kubectl -n kafka-src exec -i kafka-0 -- bash -c 'seq 10 | kafka-console-producer
 sleep 5
 
 log "check data on topic example_replica on kafka-dest cluster"
-playground topic consume --topic example_replica --expected-messages 10
+playground topic consume --topic example_replica --min-expected-messages 10
 
 #######
 # MONITORING

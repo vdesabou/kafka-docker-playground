@@ -32,6 +32,6 @@ echo "{\"id\": \"$bigmessage\", \"timestamp\": \"2020-01-15 02:20:30\", \"enable
 sleep 60
 
 log "Checking topic ksql_processing_log"
-playground topic consume --topic ksql_processing_log --expected-messages 1
+playground topic consume --topic ksql_processing_log --min-expected-messages 1
 
 # {"level":"ERROR","logger":"processing.CSAS_SENSORS_3","time":1637601815511,"message":{"type":2,"deserializationError":null,"recordProcessingError":null,"productionError":{"errorMessage":"The message is 1048660 bytes when serialized which is larger than 1048576, which is the value of the max.request.size configuration."},"serializationError":null,"kafkaStreamsThreadError":null}}

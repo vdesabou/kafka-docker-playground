@@ -31,7 +31,7 @@ curl -X PUT \
 sleep 5
 
 log "Verify we have received the data in rabbitmq topic"
-playground topic consume --topic rabbitmq --expected-messages 5
+playground topic consume --topic rabbitmq --min-expected-messages 5
 
 #log "Consume messages in RabbitMQ"
 #docker exec -i rabbitmq_consumer bash -c "python /consumer.py myqueue"

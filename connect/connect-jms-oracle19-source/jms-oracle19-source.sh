@@ -159,7 +159,7 @@ curl -X PUT \
 sleep 10
 
 log "Verifying topic jms-oracle-topic"
-playground topic consume --topic jms-oracle-topic --expected-messages 1
+playground topic consume --topic jms-oracle-topic --min-expected-messages 1
 
 # {
 #     "bytes": null,

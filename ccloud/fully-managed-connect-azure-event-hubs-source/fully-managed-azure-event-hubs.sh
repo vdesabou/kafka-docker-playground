@@ -123,7 +123,7 @@ docker exec -d -e AZURE_EVENT_HUBS_NAME="$AZURE_EVENT_HUBS_NAME" -e AZURE_EVENT_
 sleep 5
 
 log "Verifying topic event_hub_topic"
-playground topic consume --topic event_hub_topic --expected-messages 2
+playground topic consume --topic event_hub_topic --min-expected-messages 2
 
 log "Do you want to delete the fully managed connector ?"
 check_if_continue

@@ -36,7 +36,7 @@ curl --request DELETE \
   --url http://localhost:8083/connectors/filestream-source
 
 log "Verify we have received the data in filestream topic"
-playground topic consume --topic filestream --expected-messages 10
+playground topic consume --topic filestream --min-expected-messages 10
 
 # [2022-01-11 11:42:15,286] INFO [filestream-source|task-0] WorkerSourceTask{id=filestream-source-0} Committing offsets (org.apache.kafka.connect.runtime.WorkerSourceTask:485)
 # [2022-01-11 11:42:15,286] INFO [filestream-source|task-0] WorkerSourceTask{id=filestream-source-0} flushing 1 outstanding messages for offset commit (org.apache.kafka.connect.runtime.WorkerSourceTask:502)

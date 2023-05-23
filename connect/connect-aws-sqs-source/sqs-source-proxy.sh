@@ -91,7 +91,7 @@ curl -X PUT \
      http://localhost:8083/connectors/sqs-source/config | jq .
 
 log "Verify we have received the data in test-sqs-source topic"
-playground topic consume --topic test-sqs-source --expected-messages 2
+playground topic consume --topic test-sqs-source --min-expected-messages 2
 
 log "Delete queue ${QUEUE_URL}"
 aws sqs delete-queue --queue-url ${QUEUE_URL}
