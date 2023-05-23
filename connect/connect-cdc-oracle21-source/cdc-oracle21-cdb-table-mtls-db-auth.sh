@@ -311,5 +311,5 @@ fi
 #      exit 1
 # fi
 
-# log "Verifying topic redo-log-topic: there should be 9 records"
-playground topic consume --topic redo-log-topic --expected-messages 9
+# log "Verifying topic redo-log-topic: there should be 15 records"
+playground topic consume --topic redo-log-topic --expected-messages 15

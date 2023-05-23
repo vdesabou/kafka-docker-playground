@@ -296,6 +296,6 @@ done
 log "Verifying topic ORCLPDB1.C__MYUSER.CUSTOMERS: there should be 13 records"
 playground topic consume --topic ORCLPDB1.C__MYUSER.CUSTOMERS --expected-messages 13
 
-log "Verifying topic redo-log-topic: there should be 9 records"
-playground topic consume --topic redo-log-topic --expected-messages 9
+log "Verifying topic redo-log-topic: there should be 15 records"
+playground topic consume --topic redo-log-topic --expected-messages 15
 
