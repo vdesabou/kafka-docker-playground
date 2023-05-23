@@ -1,6 +1,7 @@
 topic="${args[--topic]}"
 max_messages="${args[--max-messages]}"
 grep_string="${args[--grep]}"
+expected_messages="${args[--expected-messages]}"
 
 environment=`get_environment_used`
 
@@ -57,6 +58,11 @@ fi
 
 if [[ ! -n "$topic" ]]
 then
+    if [[ -n "$expected_messages" ]]
+    then
+      logerror "--expected-messages was provided without specifying --topic"
+      exit 1
+    fi
     log "✨ --topic flag was not provided, applying command to all topics"
     topic=$(playground get-topic-list --skip-connect-internal-topics)
     if [ "$topic" == "" ]
@@ -69,13 +75,23 @@ fi
 items=($topic)
 for topic in ${items[@]}
 do
-  if [[ -n "$max_messages" ]]
+  if [[ -n "$expected_messages" ]]
   then
     nb_messages=$(playground topic get-number-records -t $topic | tail -1)
+    if [ $nb_messages != $expected_messages ]
+    then
+      logerror "❌ --expected-messages is set with $expected_messages but topic $topic contains $nb_messages messages"
+      exit 1
+    fi
+  else
+    nb_messages=$(playground topic get-number-records -t $topic | tail -1)
+  fi
+
+  if [[ -n "$max_messages" ]]
+  then
     log "✨ Display content of topic $topic, it contains $nb_messages messages, but displaying only --max-messages=$max_messages"
     nb_messages=$max_messages
   else
-    nb_messages=$(playground topic get-number-records -t $topic | tail -1)
     log "✨ Display content of topic $topic, it contains $nb_messages messages"
   fi
 

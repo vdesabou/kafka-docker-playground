@@ -882,6 +882,15 @@ commands:
         default: ""
         help: |-
           Max number of messages to consume
+      - long: --expected-messages
+        arg: expected-messages
+        validate: integer
+        required: false
+        default: ""
+        help: |-
+          Expected number of messages to be present in topic, returns an error if this is not the case
+
+          Note: --topic should be specified in this case.
       - long: --grep
         arg: grep
         required: false

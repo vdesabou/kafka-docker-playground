@@ -1895,6 +1895,12 @@ playground_topic_consume_usage() {
     echo
 
     # :flag.usage
+    printf "  %s\n" "$(magenta "--expected-messages EXPECTED-MESSAGES")"
+    printf "    Expected number of messages to be present in topic, returns an error if this\n    is not the case\n    \n    Note: --topic should be specified in this case.\n"
+    printf "    Default: \n"
+    echo
+
+    # :flag.usage
     printf "  %s\n" "$(magenta "--grep GREP")"
     printf "    Verify that topic content contains record which contains specified string\n"
     printf "    Default: \n"
@@ -8732,6 +8738,7 @@ playground_topic_consume_command() {
   topic="${args[--topic]}"
   max_messages="${args[--max-messages]}"
   grep_string="${args[--grep]}"
+  expected_messages="${args[--expected-messages]}"
 
   environment=`get_environment_used`
 
@@ -8789,6 +8796,11 @@ playground_topic_consume_command() {
 
   if [[ ! -n "$topic" ]]
   then
+      if [[ -n "$expected_messages" ]]
+      then
+        logerror "--expected-messages was provided without specifying --topic"
+        exit 1
+      fi
       log "✨ --topic flag was not provided, applying command to all topics"
       topic=$(playground get-topic-list --skip-connect-internal-topics)
       if [ "$topic" == "" ]
@@ -8801,13 +8813,23 @@ playground_topic_consume_command() {
   items=($topic)
   for topic in ${items[@]}
   do
-    if [[ -n "$max_messages" ]]
+    if [[ -n "$expected_messages" ]]
     then
       nb_messages=$(playground topic get-number-records -t $topic | tail -1)
+      if [ $nb_messages != $expected_messages ]
+      then
+        logerror "❌ --expected-messages is set with $expected_messages but topic $topic contains $nb_messages messages"
+        exit 1
+      fi
+    else
+      nb_messages=$(playground topic get-number-records -t $topic | tail -1)
+    fi
+
+    if [[ -n "$max_messages" ]]
+    then
       log "✨ Display content of topic $topic, it contains $nb_messages messages, but displaying only --max-messages=$max_messages"
       nb_messages=$max_messages
     else
-      nb_messages=$(playground topic get-number-records -t $topic | tail -1)
       log "✨ Display content of topic $topic, it contains $nb_messages messages"
     fi
 
@@ -13043,6 +13065,26 @@ playground_topic_consume_parse_requirements() {
         ;;
 
       # :flag.case
+      --expected-messages)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+          # :flag.validations
+          if [[ -n $(validate_integer "$2") ]]; then
+            printf "validation error in %s:\n%s\n" "--expected-messages EXPECTED-MESSAGES" "$(validate_integer "$2")" >&2
+            exit 1
+          fi
+
+          args['--expected-messages']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--expected-messages requires an argument: --expected-messages EXPECTED-MESSAGES" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
       --grep)
 
         # :flag.case_arg
@@ -13075,6 +13117,7 @@ playground_topic_consume_parse_requirements() {
 
   # :command.default_assignments
   [[ -n ${args['--max-messages']:-} ]] || args['--max-messages']=""
+  [[ -n ${args['--expected-messages']:-} ]] || args['--expected-messages']=""
   [[ -n ${args['--grep']:-} ]] || args['--grep']=""
 
   # :command.user_filter
