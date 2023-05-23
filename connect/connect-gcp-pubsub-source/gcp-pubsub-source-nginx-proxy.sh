@@ -79,7 +79,7 @@ curl -X PUT \
 sleep 10
 
 log "Verify messages are in topic pubsub-topic"
-timeout 60 docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic pubsub-topic --from-beginning --max-messages 3
+playground topic consume --topic pubsub-topic --expected-messages 3
 
 log "Delete topic and subscription"
 docker run -i --volumes-from gcloud-config google/cloud-sdk:latest gcloud pubsub --project ${GCP_PROJECT} topics delete topic-1

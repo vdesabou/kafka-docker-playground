@@ -44,7 +44,7 @@ cat /tmp/result.log
 grep "10" /tmp/result.log
 
 log "Check the success-responses topic"
-timeout 60 docker exec broker kafka-console-consumer --bootstrap-server broker:9092 --topic success-responses --from-beginning --max-messages 10 --property print.headers=true
+playground topic consume --topic success-responses --expected-messages 10
 # input_record_offset:0,input_record_timestamp:1645173514858,input_record_partition:0,input_record_topic:http-messages    "{\"id\":1,\"message\":\"1,2,3,4,5,6,7,8,9,10\"}"
 # input_record_offset:1,input_record_timestamp:1645173514881,input_record_partition:0,input_record_topic:http-messages    "{\"id\":1,\"message\":\"1,2,3,4,5,6,7,8,9,10\"}"
 # input_record_offset:2,input_record_timestamp:1645173514882,input_record_partition:0,input_record_topic:http-messages    "{\"id\":1,\"message\":\"1,2,3,4,5,6,7,8,9,10\"}"

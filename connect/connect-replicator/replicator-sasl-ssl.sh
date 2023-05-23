@@ -52,4 +52,4 @@ curl -X PUT \
 sleep 10
 
 log "Verify we have received the data in test-topic-sasl-ssl-duplicate topic"
-timeout 60 docker exec broker kafka-console-consumer --bootstrap-server broker:9092 --topic test-topic-sasl-ssl-duplicate --from-beginning --max-messages 10 --consumer.config /etc/kafka/secrets/client_without_interceptors.config
+playground topic consume --topic test-topic-sasl-ssl-duplicate --expected-messages 10

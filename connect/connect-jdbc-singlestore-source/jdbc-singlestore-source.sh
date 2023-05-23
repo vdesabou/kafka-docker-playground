@@ -97,4 +97,4 @@ curl -X PUT \
 sleep 5
 
 log "Verifying topic singlestore-application"
-timeout 60 docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic singlestore-application --from-beginning --max-messages 2
+playground topic consume --topic singlestore-application --expected-messages 2

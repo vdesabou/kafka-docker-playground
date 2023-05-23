@@ -116,7 +116,7 @@ $ curl -X PUT \
 Verify we have received the data in `sfdc-cdc-contacts` topic
 
 ```bash
-$ timeout 60 docker exec broker kafka-console-consumer -bootstrap-server broker:9092 --topic sfdc-cdc-contacts --from-beginning --max-messages 1
+playground topic consume --topic sfdc-cdc-contacts --expected-messages 1
 ```
 
 Results:

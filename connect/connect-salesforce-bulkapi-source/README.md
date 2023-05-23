@@ -73,7 +73,7 @@ $ curl -X PUT \
 Verify we have received the data in `sfdc-bukapi-leads` topic
 
 ```bash
-$ docker exec broker kafka-console-consumer -bootstrap-server broker:9092 --topic sfdc-bukapi-leads --from-beginning --max-messages 1
+playground topic consume --topic sfdc-bukapi-leads --expected-messages 1
 ```
 
 Results:

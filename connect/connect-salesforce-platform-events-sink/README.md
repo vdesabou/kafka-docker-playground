@@ -164,7 +164,7 @@ $ curl -X PUT \
 Verify we have received the data in `sfdc-platform-events` topic
 
 ```bash
-$ timeout 60 docker exec broker kafka-console-consumer -bootstrap-server broker:9092 --topic sfdc-platform-events --from-beginning --max-messages 1
+playground topic consume --topic sfdc-platform-events --expected-messages 1
 ```
 
 Results:
@@ -212,7 +212,7 @@ $ curl -X PUT \
 Verify topic success-responses
 
 ```bash
-$ docker exec broker kafka-console-consumer -bootstrap-server broker:9092 --topic success-responses --from-beginning --max-messages 2
+playground topic consume --topic success-responses --expected-messages 2
 ```
 
 To check events on Salesforce side, you can use [workbench](https://workbench.developerforce.com/streaming.php) and subscribe to `/event/MyPlatformEvent__e`:

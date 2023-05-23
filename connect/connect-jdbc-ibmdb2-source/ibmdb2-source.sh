@@ -90,6 +90,6 @@ curl -X PUT \
 sleep 15
 
 log "Verifying topic db2-PURCHASEORDER"
-timeout 60 docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic db2-PURCHASEORDER --from-beginning --max-messages 2
+playground topic consume --topic db2-PURCHASEORDER --expected-messages 2
 
 

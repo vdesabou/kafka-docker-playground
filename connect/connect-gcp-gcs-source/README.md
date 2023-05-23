@@ -79,7 +79,7 @@ $ curl -X PUT \
 Verify messages are in topic `copy_of_gcs_topic`
 
 ```bash
-$ docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic copy_of_gcs_topic --from-beginning --max-messages 9
+playground topic consume --topic copy_of_gcs_topic --expected-messages 9
 ```
 
 Results:
@@ -128,7 +128,7 @@ curl -X PUT \
 Verifying topic `quick-start-topic`:
 
 ```bash
-$ docker exec broker kafka-console-consumer -bootstrap-server broker:9092 --topic quick-start-topic --from-beginning --max-messages 9
+playground topic consume --topic quick-start-topic --expected-messages 9
 ```
 
 Results:

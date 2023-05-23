@@ -67,7 +67,7 @@ $ curl -X PUT \
 Verify we have received the data in `test-kudu-accounts` topic:
 
 ```bash
-$ docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic test-kudu-accounts --from-beginning --max-messages 2
+playground topic consume --topic test-kudu-accounts --expected-messages 2
 ```
 
 Results:

@@ -93,7 +93,7 @@ kubectl exec -i connectors-0 -- curl -s -X PUT \
 wait_for_datagen_connector_to_inject_data "${topic}-${random_value}" "${datagen_tasks}" "kubectl exec -i connectors-0 --"
 
 log "Verify we have received data in topic ${topic}"
-kubectl exec -it connectors-0 -- kafka-console-consumer --topic ${topic} --bootstrap-server ${bootstrap_servers} --consumer.config /tmp/config --from-beginning --max-messages 1
+playground topic consume --topic ${topic} --expected-messages 1
 
 #######
 # shipments
@@ -120,7 +120,7 @@ kubectl exec -i connectors-0 -- curl -s -X PUT \
 wait_for_datagen_connector_to_inject_data "${topic}-${random_value}" "${datagen_tasks}" "kubectl exec -i connectors-0 --"
 
 log "Verify we have received data in topic ${topic}"
-kubectl exec -it connectors-0 -- kafka-console-consumer --topic ${topic} --bootstrap-server ${bootstrap_servers} --consumer.config /tmp/config --from-beginning --max-messages 1
+playground topic consume --topic ${topic} --expected-messages 1
 
 #######
 # products
@@ -147,7 +147,7 @@ kubectl exec -i connectors-0 -- curl -s -X PUT \
 
 wait_for_datagen_connector_to_inject_data "${topic}-${random_value}" "${datagen_tasks}" "kubectl exec -i connectors-0 --"
 log "Verify we have received data in topic ${topic}"
-kubectl exec -it connectors-0 -- kafka-console-consumer --topic ${topic} --bootstrap-server ${bootstrap_servers} --consumer.config /tmp/config --from-beginning --max-messages 1
+playground topic consume --topic ${topic} --expected-messages 1
 
 #######
 # customers
@@ -174,6 +174,6 @@ kubectl exec -i connectors-0 -- curl -s -X PUT \
 
 wait_for_datagen_connector_to_inject_data "${topic}-${random_value}" "${datagen_tasks}" "kubectl exec -i connectors-0 --"
 log "Verify we have received data in topic ${topic}"
-kubectl exec -it connectors-0 -- kafka-console-consumer --topic ${topic} --bootstrap-server ${bootstrap_servers} --consumer.config /tmp/config --from-beginning --max-messages 1
+playground topic consume --topic ${topic} --expected-messages 1
 
 rm ${CONFIG_FILE}

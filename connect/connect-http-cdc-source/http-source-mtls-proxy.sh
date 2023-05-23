@@ -37,7 +37,7 @@ curl --cert ../../connect/connect-http-sink/security/http-service-mtls-auth.cert
 sleep 2
 
 log "Verify we have received the data in http-topic-messages topic"
-timeout 60 docker exec connect kafka-console-consumer -bootstrap-server broker:9092 --topic http-topic-messages --from-beginning --property print.key=true --max-messages 1
+playground topic consume --topic http-topic-messages --expected-messages 1
 
 
 # [2023-01-09 10:27:55,251] WARN [http-cdc-sourc2e|task-0] WorkerSourceTask{id=http-cdc-sourc2e-0} failed to poll records from SourceTask. Will retry operation. (org.apache.kafka.connect.runtime.AbstractWorkerSourceTask:472)

@@ -138,7 +138,7 @@ curl -X PUT \
 Verify we have received the data in test-sqs-source topic:
 
 ```bash
-$ docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic test-sqs-source --from-beginning --max-messages 2 | tail -n 5 | head -n 2 | jq .
+playground topic consume --topic test-sqs-source --expected-messages 2
 
 {
   "ApproximateFirstReceiveTimestamp": 1569859344138,
@@ -206,7 +206,7 @@ curl -X PUT \
 Verify we have received the data in test-sqs-source topic:
 
 ```bash
-$ docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --topic test-sqs-source-ssl --from-beginning --max-messages 2 --property schema.registry.url=https://schema-registry:8081 --property schema.registry.ssl.truststore.location=/etc/kafka/secrets/kafka.client.truststore.jks --property schema.registry.ssl.truststore.password=confluent --property schema.registry.ssl.keystore.location=/etc/kafka/secrets/kafka.client.keystore.jks --property schema.registry.ssl.keystore.password=confluent --consumer.config /etc/kafka/secrets/client_without_interceptors.config  | tail -n 3 | head -n 2 | jq .
+playground topic consume --topic test-sqs-source-ssl --expected-messages 2
 ```
 
 ### With SASL_SSL authentication:
@@ -253,7 +253,7 @@ curl -X PUT \
 Verify we have received the data in test-sqs-source topic:
 
 ```bash
-$ docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic test-sqs-source-sasl-ssl --from-beginning --max-messages 2 --property schema.registry.url=https://schema-registry:8081 --consumer.config /etc/kafka/secrets/client_without_interceptors.config  | tail -n 3 | head -n 2 | jq .
+playground topic consume --topic test-sqs-source-sasl-ssl --expected-messages 2
 ```
 
 N.B: Control Center is reachable at [http://127.0.0.1:9021](http://127.0.0.1:9021])

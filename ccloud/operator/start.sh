@@ -243,7 +243,7 @@ kubectl exec -i connectors-0 -- curl -X PUT \
 sleep 5
 
 log "Verify we have received the data in spooldir-json-topic topic"
-kubectl exec -i connectors-0 -- kafka-avro-console-consumer --topic spooldir-json-topic --bootstrap-server $BOOTSTRAP_SERVERS --consumer-property ssl.endpoint.identification.algorithm=https --consumer-property sasl.mechanism=PLAIN --consumer-property security.protocol=SASL_SSL --consumer-property sasl.jaas.config="$SASL_JAAS_CONFIG" --property basic.auth.credentials.source=$BASIC_AUTH_CREDENTIALS_SOURCE --property schema.registry.basic.auth.user.info="$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO" --property schema.registry.url=$SCHEMA_REGISTRY_URL --from-beginning --max-messages 2
+playground topic consume --topic spooldir-json-topic --expected-messages 2
 
 #######
 # MONITORING

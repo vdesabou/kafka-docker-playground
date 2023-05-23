@@ -48,7 +48,7 @@ cat /tmp/result.log
 grep "10" /tmp/result.log
 
 log "Check the success-responses topic"
-timeout 60 docker exec broker kafka-console-consumer --bootstrap-server broker:9092 --topic success-responses --from-beginning --max-messages 10 --property print.headers=true
+playground topic consume --topic success-responses --expected-messages 10
 
 log "Show connect-configs"
 docker exec -i broker kafka-console-consumer --bootstrap-server localhost:9092 --topic connect-configs --from-beginning --property print.key=true --timeout-ms 10000 1> /tmp/connect-configs.backup
@@ -116,7 +116,7 @@ log "Sending messages to topic http-messages"
 seq 10 | docker exec -i broker kafka-console-producer --broker-list broker:9092 --topic http-messages
 
 log "Check the success-responses topic"
-timeout 60 docker exec broker kafka-console-consumer --bootstrap-server broker:9092 --topic success-responses --from-beginning --max-messages 20 --property print.headers=true
+playground topic consume --topic success-responses --expected-messages 20
 
 log "Show connect-configs"
 docker exec -i broker kafka-console-consumer --bootstrap-server localhost:9092 --topic connect-configs --from-beginning --property print.key=true --timeout-ms 10000 1> /tmp/connect-configs.backup

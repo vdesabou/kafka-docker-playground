@@ -44,4 +44,4 @@ curl -X PUT \
 sleep 30
 
 log "Verify we have received the data in topic products_EUROPE in US"
-timeout 60 docker container exec -i connect-us kafka-avro-console-consumer --bootstrap-server broker-us:9092 --topic products_EUROPE --from-beginning --max-messages 1 --property schema.registry.url=http://schema-registry-us:8081 --property basic.auth.credentials.source=USER_INFO --property schema.registry.basic.auth.user.info="admin:admin"
+playground topic consume --topic products_EUROPE --expected-messages 1

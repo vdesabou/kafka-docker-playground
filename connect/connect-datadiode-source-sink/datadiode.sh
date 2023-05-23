@@ -56,4 +56,4 @@ seq -f "This is a message %g" 10 | docker exec -i broker kafka-console-producer 
 sleep 5
 
 log "Verifying topic dest_diode"
-timeout 60 docker exec broker kafka-console-consumer -bootstrap-server broker:9092 --topic dest_diode --from-beginning --max-messages 10
+playground topic consume --topic dest_diode --expected-messages 10

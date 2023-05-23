@@ -74,7 +74,7 @@ curl -X PUT \
      http://localhost:8083/connectors/kinesis-source/config | jq .
 
 log "Verify we have received the data in kinesis_topic topic"
-timeout 60 docker exec broker kafka-console-consumer --bootstrap-server broker:9092 --topic kinesis_topic --from-beginning --max-messages 1
+playground topic consume --topic kinesis_topic --expected-messages 1
 
 log "Delete the stream"
 aws kinesis delete-stream --stream-name $KINESIS_STREAM_NAME

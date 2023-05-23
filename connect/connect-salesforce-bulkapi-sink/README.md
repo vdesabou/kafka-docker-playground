@@ -111,7 +111,7 @@ $ curl -X PUT \
 Verify we have received the data in `sfdc-bulkapi-leads` topic
 
 ```bash
-$ docker exec broker kafka-console-consumer -bootstrap-server broker:9092 --topic sfdc-bulkapi-leads --from-beginning --max-messages 1
+playground topic consume --topic sfdc-bulkapi-leads --expected-messages 1
 ```
 
 Creating Salesforce Bulk API Sink connector
@@ -152,7 +152,7 @@ $ curl -X PUT \
 Verify topic `success-responses`
 
 ```bash
-docker exec broker kafka-console-consumer -bootstrap-server broker:9092 --topic success-responses --from-beginning --max-messages 1
+playground topic consume --topic success-responses --expected-messages 1
 ```
 
 ```

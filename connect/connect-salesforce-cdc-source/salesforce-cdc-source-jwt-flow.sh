@@ -103,4 +103,4 @@ docker exec sfdx-cli sh -c "sfdx data:create:record  --target-org \"$SALESFORCE_
 sleep 10
 
 log "Verify we have received the data in sfdc-cdc-contacts topic"
-timeout 60 docker exec broker kafka-console-consumer -bootstrap-server broker:9092 --topic sfdc-cdc-contacts --from-beginning --max-messages 1
+playground topic consume --topic sfdc-cdc-contacts --expected-messages 1

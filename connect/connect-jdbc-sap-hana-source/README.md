@@ -50,7 +50,7 @@ sleep 5
 Verifying topic sap-hana-CUSTOMERS:
 
 ```bash
-docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic sap-hana-CUSTOMERS --from-beginning --max-messages 1
+playground topic consume --topic sap-hana-CUSTOMERS --expected-messages 1
 ```
 
 Results:

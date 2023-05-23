@@ -128,7 +128,7 @@ $ curl -X PUT \
 Verify we have received the data in `sfdc-pushtopic-leads` topic
 
 ```bash
-$ docker exec broker kafka-console-consumer -bootstrap-server broker:9092 --topic sfdc-pushtopic-leads --from-beginning --max-messages 1
+playground topic consume --topic sfdc-pushtopic-leads --expected-messages 1
 ```
 
 Creating Salesforce SObject Sink connector
@@ -171,7 +171,7 @@ $ curl -X PUT \
 Verify topic `success-responses`
 
 ```bash
-docker exec broker kafka-console-consumer -bootstrap-server broker:9092 --topic success-responses --from-beginning --max-messages 1
+playground topic consume --topic success-responses --expected-messages 1
 ```
 
 Results:

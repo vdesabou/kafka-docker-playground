@@ -176,4 +176,4 @@ docker exec sfdx-cli sh -c "sfdx data:create:record  --target-org \"$SALESFORCE_
 sleep 30
 
 log "Verify we have received the data in sfdc-pushtopic-leads topic"
-timeout 60 docker exec broker kafka-console-consumer -bootstrap-server broker:9092 --topic sfdc-pushtopic-leads --from-beginning --max-messages 1
+playground topic consume --topic sfdc-pushtopic-leads --expected-messages 1

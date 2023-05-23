@@ -63,7 +63,7 @@ $ seq 10 | docker exec -i broker kafka-console-producer --broker-list broker:909
 Verify we have received the data in test-topic-duplicate topic
 
 ```bash
-docker exec broker kafka-console-consumer --bootstrap-server broker:9092 --topic test-topic-duplicate --from-beginning --max-messages 10
+playground topic consume --topic test-topic-duplicate --expected-messages 10
 ```
 
 ### With SSL authentication:
@@ -120,7 +120,7 @@ $ curl -X PUT \
 Verify we have received the data in test-topic-ssl-duplicate topic
 
 ```bash
-$ docker exec broker kafka-console-consumer --bootstrap-server broker:9092 --topic test-topic-ssl-duplicate --from-beginning --max-messages 10 --consumer.config /etc/kafka/secrets/client_without_interceptors.config
+playground topic consume --topic test-topic-ssl-duplicate --expected-messages 10
 ```
 
 ### With SASL_SSL authentication:
@@ -176,7 +176,7 @@ $ curl -X PUT \
 Verify we have received the data in test-topic-sasl-ssl-duplicate topic
 
 ```bash
-$ docker exec broker kafka-console-consumer --bootstrap-server broker:9092 --topic test-topic-sasl-ssl-duplicate --from-beginning --max-messages 10 --consumer.config /etc/kafka/secrets/client_without_interceptors.config
+playground topic consume --topic test-topic-sasl-ssl-duplicate --expected-messages 10
 ```
 
 N.B: Control Center is reachable at [http://127.0.0.1:9021](http://127.0.0.1:9021])

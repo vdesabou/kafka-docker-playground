@@ -127,7 +127,7 @@ $ curl -X PUT \
 Verifying topic `snowflake-FOO`
 
 ```bash
-$ docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic snowflake-FOO --from-beginning --max-messages 3
+playground topic consume --topic snowflake-FOO --expected-messages 3
 ```
 
 

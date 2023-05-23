@@ -336,7 +336,7 @@ kafka-mirrors --create --mirror-topic topic-to-link --link my-link --bootstrap-s
 Read 2 messages from source cluster:
 
 ```bash
-kafka-console-consumer --topic topic-to-link --bootstrap-server $source_endpoint --consumer.config source.config --from-beginning --max-messages 2 --consumer-property group.id=my-consumer-group
+playground topic consume --topic topic-to-link --expected-messages 2
 1
 2
 Processed a total of 2 messages
@@ -352,7 +352,7 @@ confluent kafka acl create --allow --service-account $destination_service_accoun
 ```
 
 ```bash
-kafka-console-consumer --topic topic-to-link --bootstrap-server $destination_endpoint --consumer.config destination.config --max-messages 8 --consumer-property group.id=my-consumer-group
+playground topic consume --topic topic-to-link --expected-messages 8
 3
 4
 5

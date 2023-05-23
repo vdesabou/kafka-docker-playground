@@ -66,4 +66,4 @@ curl -X PUT \
      http://localhost:8083/connectors/solace-source/config | jq .
 
 log "Verifying topic from-solace-messages"
-timeout 60 docker exec broker kafka-console-consumer -bootstrap-server broker:9092 --topic from-solace-messages --from-beginning --max-messages 2
+playground topic consume --topic from-solace-messages --expected-messages 2

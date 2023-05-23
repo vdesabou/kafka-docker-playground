@@ -74,4 +74,4 @@ curl -X PUT \
 sleep 10
 
 log "Verify we have received the data in sfdc-bulkapi-leads topic"
-timeout 60 docker exec broker kafka-console-consumer -bootstrap-server broker:9092 --topic sfdc-bulkapi-leads --from-beginning --max-messages 1
+playground topic consume --topic sfdc-bulkapi-leads --expected-messages 1

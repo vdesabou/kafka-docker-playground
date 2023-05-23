@@ -81,7 +81,7 @@ EOF
 Verifying topic `mongo.inventory.customers`:
 
 ```bash
-$ docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic mongo.inventory.customers --from-beginning --max-messages 1
+playground topic consume --topic mongo.inventory.customers --expected-messages 1
 ```
 
 Result is:

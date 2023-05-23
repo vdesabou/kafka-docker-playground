@@ -82,4 +82,4 @@ docker exec sfdx-cli sh -c "sfdx apex run --target-org \"$SALESFORCE_USERNAME\" 
 sleep 10
 
 log "Verify we have received the data in sfdc-platform-events topic"
-timeout 60 docker exec broker kafka-console-consumer -bootstrap-server broker:9092 --topic sfdc-platform-events --from-beginning --max-messages 2
+playground topic consume --topic sfdc-platform-events --expected-messages 2

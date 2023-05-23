@@ -81,7 +81,7 @@ docker exec sfdx-cli sh -c "sfdx apex run --target-org \"$SALESFORCE_USERNAME\" 
 sleep 10
 
 log "Verify we have received the data in sfdc-platform-events topic"
-timeout 60 docker exec broker kafka-console-consumer -bootstrap-server broker:9092 --topic sfdc-platform-events --from-beginning --max-messages 2
+playground topic consume --topic sfdc-platform-events --expected-messages 2
 
 log "Creating Salesforce Platform Events Sink connector"
 curl -X PUT \
@@ -119,7 +119,7 @@ curl -X PUT \
 sleep 10
 
 log "Verify topic success-responses"
-timeout 60 docker exec broker kafka-console-consumer -bootstrap-server broker:9092 --topic success-responses --from-beginning --max-messages 2
+playground topic consume --topic success-responses --expected-messages 2
 
 # log "Verify topic error-responses"
-# timeout 20 docker exec broker kafka-console-consumer -bootstrap-server broker:9092 --topic error-responses --from-beginning --max-messages 1
+playground topic consume --topic error-responses --expected-messages 1

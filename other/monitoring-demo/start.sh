@@ -80,7 +80,7 @@ if [ -z "$CLOUDFORMATION" ]
 then
      log "Verifying topic mysql-application"
      # this command works for both cases (with local schema registry and Confluent Cloud Schema Registry)
-     docker exec connect-europe bash -c 'kafka-avro-console-consumer --topic mysql-application --bootstrap-server broker-europe:9092 --property schema.registry.url="http://schema-registry-europe:8081" --from-beginning --max-messages 2'
+playground topic consume --topic mysql-application --expected-messages 2
 fi
 
 

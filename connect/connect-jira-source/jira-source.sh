@@ -65,4 +65,4 @@ curl -X PUT \
 sleep 10
 
 log "Verify we have received the data in jira-topic-issues topic"
-timeout 60 docker exec connect kafka-console-consumer -bootstrap-server broker:9092 --topic jira-topic-issues --from-beginning --property print.key=true --max-messages 1
+playground topic consume --topic jira-topic-issues --expected-messages 1

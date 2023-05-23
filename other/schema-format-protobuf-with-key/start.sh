@@ -29,7 +29,7 @@ log "Produce protobuf data using Java producer"
 docker exec producer bash -c "java -jar producer-1.0.0-jar-with-dependencies.jar"
 
 log "Verify we have received the protobuf data in customer-protobuf topic"
-timeout 60 docker exec connect kafka-protobuf-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic customer-protobuf --from-beginning --property print.key=true --property key.separator=, --max-messages 5
+playground topic consume --topic customer-protobuf --expected-messages 5
 
 log "Produce protobuf data using kafka-protobuf-console-producer"
 docker exec -i connect kafka-protobuf-console-producer --broker-list broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic protobuf-topic --property key.schema='syntax = "proto3"; message Id { int64 Id = 1; }' --property value.schema='syntax = "proto3"; message MyRecord { string f1 = 1; }'  --property parse.key=true --property key.separator="|" << EOF
@@ -39,4 +39,4 @@ EOF
 
 
 log "Verify we have received the protobuf data in protobuf-topic topic"
-timeout 60 docker exec connect kafka-protobuf-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic protobuf-topic --from-beginning --property print.key=true --property key.separator=, --max-messages 2
+playground topic consume --topic protobuf-topic --expected-messages 2

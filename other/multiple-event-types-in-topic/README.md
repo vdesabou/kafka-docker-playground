@@ -82,5 +82,5 @@ EOF
 Check that data is there
 
 ```bash
-$ docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic all-types --from-beginning --max-messages 2
+playground topic consume --topic all-types --expected-messages 2
 ```

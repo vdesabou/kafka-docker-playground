@@ -64,6 +64,6 @@ docker exec -i connect kafka-avro-console-producer --broker-list broker:9092 --p
 EOF
 
 log "Check that data is there"
-timeout 60 docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic all-types --from-beginning --max-messages 2
+playground topic consume --topic all-types --expected-messages 2
 
 

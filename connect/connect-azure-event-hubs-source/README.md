@@ -89,7 +89,7 @@ $ docker exec -d -e AZURE_EVENT_HUBS_NAME="$AZURE_EVENT_HUBS_NAME" -e AZURE_EVEN
 Verifying topic `event_hub_topic`
 
 ```bash
-$ docker exec broker kafka-console-consumer -bootstrap-server broker:9092 --topic event_hub_topic --from-beginning --property print.key=true --max-messages 2
+playground topic consume --topic event_hub_topic --expected-messages 2
 ```
 
 Deleting resource group:

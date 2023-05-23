@@ -85,7 +85,7 @@ curl -X PUT \
 Verifying topic asgard.public.customers-raw
 
 ```bash
-$ docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic asgard.public.customers-raw --from-beginning --max-messages 5
+playground topic consume --topic asgard.public.customers-raw --expected-messages 5
 ```
 
 Result is:

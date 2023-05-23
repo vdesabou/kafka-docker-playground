@@ -164,11 +164,11 @@ curl -X PUT \
 sleep 5
 
 log "Verifying topic asgard.public.customers"
-timeout 60 docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic asgard.public.customers --from-beginning --property print.key=true --max-messages 5
+playground topic consume --topic asgard.public.customers --expected-messages 5
 
 log "Verifying topic asgard.public.customers2 has no data"
 set +e
-timeout 20 docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic asgard.public.customers2 --from-beginning --property print.key=true --max-messages 5
+playground topic consume --topic asgard.public.customers2 --expected-messages 5
 set -e
 
 log "Creating Debezium PostgreSQL source connector with customers and customers2 table"
@@ -206,7 +206,7 @@ EOF
 
 log "Verifying topic asgard.public.customers2 : there will be only the new record"
 set +e
-timeout 20 docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic asgard.public.customers2 --from-beginning --property print.key=true --max-messages 6
+playground topic consume --topic asgard.public.customers2 --expected-messages 6
 set -e
 
 sleep 10
@@ -219,4 +219,4 @@ EOF
 sleep 10
 
 log "Checking topic asgard.public.customers2 for data, the 6 records are there"
-timeout 20 docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic asgard.public.customers2 --from-beginning --property print.key=true --max-messages 6
+playground topic consume --topic asgard.public.customers2 --expected-messages 6

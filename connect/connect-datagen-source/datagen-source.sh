@@ -91,13 +91,13 @@ wait_for_datagen_connector_to_inject_data "customers" "10"
 sleep 10
 
 log "Verify we have received the data in orders topic"
-timeout 60 docker exec broker kafka-console-consumer --bootstrap-server broker:9092 --topic orders --from-beginning --max-messages 1
+playground topic consume --topic orders --expected-messages 1
 
 log "Verify we have received the data in shipments topic"
-timeout 60 docker exec broker kafka-console-consumer --bootstrap-server broker:9092 --topic shipments --from-beginning --max-messages 1
+playground topic consume --topic shipments --expected-messages 1
 
 log "Verify we have received the data in customers topic"
-timeout 60 docker exec broker kafka-console-consumer --bootstrap-server broker:9092 --topic customers --from-beginning --max-messages 1
+playground topic consume --topic customers --expected-messages 1
 
 log "Verify we have received the data in products topic"
-timeout 60 docker exec broker kafka-console-consumer --bootstrap-server broker:9092 --topic products --from-beginning --max-messages 1
+playground topic consume --topic products --expected-messages 1

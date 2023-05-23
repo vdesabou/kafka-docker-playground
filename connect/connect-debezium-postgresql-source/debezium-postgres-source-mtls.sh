@@ -178,6 +178,6 @@ curl -X PUT \
 sleep 5
 
 log "Verifying topic asgard.public.customers-raw"
-timeout 60 docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic asgard.public.customers-raw --from-beginning --property print.key=true --max-messages 5
+playground topic consume --topic asgard.public.customers-raw --expected-messages 5
 
 

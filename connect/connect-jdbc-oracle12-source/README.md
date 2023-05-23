@@ -95,7 +95,7 @@ $ curl -X PUT \
 Verify the topic `oracle-CUSTOMERS`:
 
 ```bash
-$ docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic oracle-CUSTOMERS --from-beginning --max-messages 2
+playground topic consume --topic oracle-CUSTOMERS --expected-messages 2
 ```
 
 Results:

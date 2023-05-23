@@ -43,4 +43,4 @@ curl -X PUT \
 sleep 5
 
 log "Verifying topic sftp-testing-topic"
-timeout 60 docker exec broker kafka-console-consumer -bootstrap-server broker:9092 --topic sftp-testing-topic --from-beginning --max-messages 2
+playground topic consume --topic sftp-testing-topic --expected-messages 2

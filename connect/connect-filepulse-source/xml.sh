@@ -105,4 +105,4 @@ fi
 sleep 5
 
 log "Verify we have received the data in playlists-filepulse-xml-00 topic"
-timeout 60 docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic playlists-filepulse-xml-00 --from-beginning --max-messages 1
+playground topic consume --topic playlists-filepulse-xml-00 --expected-messages 1

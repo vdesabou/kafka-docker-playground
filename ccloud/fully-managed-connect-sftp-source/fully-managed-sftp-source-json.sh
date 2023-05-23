@@ -109,7 +109,7 @@ wait_for_ccloud_connector_up connector.json 300
 sleep 5
 
 log "Verify we have received the data in sftp-testing-topic topic"
-timeout 60 docker run --rm -e BOOTSTRAP_SERVERS="$BOOTSTRAP_SERVERS" -e SASL_JAAS_CONFIG="$SASL_JAAS_CONFIG" ${CP_CONNECT_IMAGE}:${CONNECT_TAG} kafka-console-consumer --topic sftp-testing-topic --bootstrap-server $BOOTSTRAP_SERVERS --consumer-property ssl.endpoint.identification.algorithm=https --consumer-property sasl.mechanism=PLAIN --consumer-property security.protocol=SASL_SSL --consumer-property sasl.jaas.config="$SASL_JAAS_CONFIG" --from-beginning --max-messages 2
+playground topic consume --topic sftp-testing-topic --expected-messages 2
 
 log "Do you want to delete the fully managed connector ?"
 check_if_continue

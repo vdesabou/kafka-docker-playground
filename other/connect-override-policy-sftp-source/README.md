@@ -71,7 +71,7 @@ $ curl -X PUT \
 Verifying topic `sftp-testing-topic`
 
 ```bash
-$ docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic sftp-testing-topic --consumer.config /tmp/client.properties --from-beginning --max-messages 2
+playground topic consume --topic sftp-testing-topic --expected-messages 2
 ```
 
 Results:

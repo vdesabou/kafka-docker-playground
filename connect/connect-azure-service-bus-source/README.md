@@ -87,7 +87,7 @@ $ docker exec -e SB_SAMPLES_CONNECTIONSTRING="$SB_SAMPLES_CONNECTIONSTRING" -e A
 Verifying topic `servicebus-topic`
 
 ```bash
-$ timeout 60 docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic servicebus-topic --from-beginning --max-messages 10
+playground topic consume --topic servicebus-topic --expected-messages 10
 ```
 
 Results:

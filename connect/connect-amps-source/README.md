@@ -56,7 +56,7 @@ curl -X PUT \
 Verify we have received the data in `AMPS_Orders` topic
 
 ```bash
-timeout 60 docker exec connect kafka-console-consumer -bootstrap-server broker:9092 --topic AMPS_Orders --from-beginning --max-messages 2
+playground topic consume --topic AMPS_Orders --expected-messages 2
 ```
 
 Results:

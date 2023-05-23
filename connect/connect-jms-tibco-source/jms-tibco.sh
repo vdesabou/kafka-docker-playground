@@ -69,4 +69,4 @@ curl -X PUT \
 sleep 5
 
 log "Verify we have received the data in from-tibco-messages topic"
-timeout 60 docker exec connect kafka-console-consumer -bootstrap-server broker:9092 --topic from-tibco-messages --from-beginning --max-messages 2
+playground topic consume --topic from-tibco-messages --expected-messages 2

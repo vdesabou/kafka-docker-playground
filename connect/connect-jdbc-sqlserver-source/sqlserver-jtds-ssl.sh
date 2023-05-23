@@ -117,4 +117,4 @@ GO
 EOF
 
 log "Verifying topic sqlserver-customers"
-timeout 60 docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic sqlserver-customers --from-beginning --max-messages 5
+playground topic consume --topic sqlserver-customers --expected-messages 5

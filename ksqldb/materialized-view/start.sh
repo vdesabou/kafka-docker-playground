@@ -167,6 +167,6 @@ fi
 # sleep 5
 
 # log "Verifying topic dbserver1_mydb_calls"
-# timeout 60 docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic dbserver1_mydb_calls --from-beginning --max-messages 2
+playground topic consume --topic dbserver1_mydb_calls --expected-messages 2
 
 

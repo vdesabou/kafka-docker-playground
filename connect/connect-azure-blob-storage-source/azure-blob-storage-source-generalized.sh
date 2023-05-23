@@ -99,7 +99,7 @@ curl -X PUT \
 sleep 5
 
 log "Verifying topic quick-start-topic"
-timeout 60 docker exec broker kafka-console-consumer -bootstrap-server broker:9092 --topic quick-start-topic --from-beginning --max-messages 9
+playground topic consume --topic quick-start-topic --expected-messages 9
 
 log "Deleting resource group"
 az group delete --name $AZURE_RESOURCE_GROUP --yes --no-wait

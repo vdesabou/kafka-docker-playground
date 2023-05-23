@@ -122,7 +122,7 @@ curl -X PUT \
 sleep 10
 
 log "Verify we have received the data in sfdc-bulkapi-leads topic"
-timeout 60 docker exec broker kafka-console-consumer -bootstrap-server broker:9092 --topic sfdc-bulkapi-leads --from-beginning --max-messages 1
+playground topic consume --topic sfdc-bulkapi-leads --expected-messages 1
 
 log "Creating Salesforce Bulk API Sink connector"
 curl -X PUT \
@@ -163,10 +163,10 @@ curl -X PUT \
 sleep 10
 
 log "Verify topic success-responses"
-timeout 60 docker exec broker kafka-console-consumer -bootstrap-server broker:9092 --topic success-responses --from-beginning --max-messages 1
+playground topic consume --topic success-responses --expected-messages 1
 
 # log "Verify topic error-responses"
-# timeout 20 docker exec broker kafka-console-consumer -bootstrap-server broker:9092 --topic error-responses --from-beginning --max-messages 1
+playground topic consume --topic error-responses --expected-messages 1
 
 log "Login with sfdx CLI on the account #2"
 docker exec sfdx-cli sh -c "sfdx sfpowerkit:auth:login -u \"$SALESFORCE_USERNAME_ACCOUNT2\" -p \"$SALESFORCE_PASSWORD_ACCOUNT2\" -r \"$SALESFORCE_INSTANCE_ACCOUNT2\" -s \"$SALESFORCE_SECURITY_TOKEN_ACCOUNT2\""

@@ -86,7 +86,7 @@ $ curl -X PUT \
 Verify we have received the data in `my-log-group.my-log-stream` topic
 
 ```bash
-$ docker exec broker kafka-console-consumer -bootstrap-server broker:9092 --topic my-log-group.my-log-stream --from-beginning --max-messages 10
+playground topic consume --topic my-log-group.my-log-stream --expected-messages 10
 ```
 
 N.B: Control Center is reachable at [http://127.0.0.1:9021](http://127.0.0.1:9021])

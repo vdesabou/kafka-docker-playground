@@ -62,7 +62,7 @@ $ curl -X PUT \
 Verify the topic `oracle-MYTABLE`:
 
 ```bash
-$ docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic oracle-MYTABLE --from-beginning --max-messages 1
+playground topic consume --topic oracle-MYTABLE --expected-messages 1
 ```
 
 Results:

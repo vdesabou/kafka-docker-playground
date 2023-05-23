@@ -74,7 +74,7 @@ which is:
 Checking messages from topic `confluent-audit-log-events`
 
 ```bash
-$ docker exec -i connect kafka-console-consumer --bootstrap-server broker:9092 --topic confluent-audit-log-events --consumer.config /etc/kafka/secrets/client_without_interceptors.config --from-beginning --max-messages 5
+playground topic consume --topic confluent-audit-log-events --expected-messages 5
 ```
 
 Results:

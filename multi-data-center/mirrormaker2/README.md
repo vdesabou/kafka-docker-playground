@@ -38,7 +38,7 @@ $ docker exec -d connect-us bash -c '/usr/bin/connect-mirror-maker /etc/kafka/co
 Verify we have received the data in topic `US.sales_US` in EUROPE
 
 ```bash
-$ docker container exec broker-europe kafka-console-consumer --bootstrap-server localhost:9092 --topic "US.sales_US" --from-beginning --max-messages 10
+playground topic consume --topic "US.sales_US" --expected-messages 10
 ```
 
 ```
@@ -58,7 +58,7 @@ Processed a total of 10 messages
 Verify we have received the data in topic `EUROPE.sales_EUROPE` topics in the US
 
 ```bash
-$ docker container exec broker-us kafka-console-consumer --bootstrap-server localhost:9092 --topic "EUROPE.sales_EUROPE" --from-beginning --max-messages 10
+playground topic consume --topic "EUROPE.sales_EUROPE" --expected-messages 10
 ```
 
 ```

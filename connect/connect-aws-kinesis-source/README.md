@@ -79,7 +79,7 @@ curl -X PUT \
 Verify we have received the data in kinesis_topic topic:
 
 ```
-$ docker exec broker kafka-console-consumer --bootstrap-server broker:9092 --topic kinesis_topic --from-beginning --max-messages 1
+playground topic consume --topic kinesis_topic --expected-messages 1
 ```
 
 Delete your stream and clean up resources to avoid incurring any unintended charges:

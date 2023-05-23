@@ -152,7 +152,7 @@ $ curl -X PUT \
 Verify we have received the data in `sfdc-platform-events` topic
 
 ```bash
-$ timeout 60 docker exec broker kafka-console-consumer -bootstrap-server broker:9092 --topic sfdc-platform-events --from-beginning --max-messages 1
+playground topic consume --topic sfdc-platform-events --expected-messages 1
 ```
 
 Results:

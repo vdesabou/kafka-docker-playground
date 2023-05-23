@@ -201,7 +201,7 @@ sleep 20
 
 log "Verifying topic ORCLPDB1.C__MYUSER.CUSTOMERS_MV: there should be 18 records"
 set +e
-timeout 60 docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic ORCLPDB1.C__MYUSER.CUSTOMERS_MV --max-messages 18 --from-beginning  --property print.key=true > /tmp/result.log  2>&1
+playground topic consume --topic ORCLPDB1.C__MYUSER.CUSTOMERS_MV --expected-messages 18
 set -e
 cat /tmp/result.log
 log "Check there is 5 snapshots events"
@@ -230,7 +230,7 @@ then
 fi
 
 log "Verifying topic redo-log-topic: there should be 14 records"
-timeout 60 docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic redo-log-topic --from-beginning --max-messages 14 --property print.key=true
+playground topic consume --topic redo-log-topic --expected-messages 14
 
 log "🚚 If you're planning to inject more data, have a look at https://github.com/vdesabou/kafka-docker-playground/blob/master/connect/connect-cdc-oracle19-source/README.md#note-on-redologrowfetchsize"
 

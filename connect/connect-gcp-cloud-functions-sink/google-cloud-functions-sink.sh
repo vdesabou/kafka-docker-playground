@@ -68,4 +68,4 @@ curl -X PUT \
 sleep 10
 
 log "Confirm that the messages were delivered to the result topic in Kafka"
-timeout 60 docker exec broker kafka-console-consumer --bootstrap-server broker:9092 --topic test-result --from-beginning --max-messages 3
+playground topic consume --topic test-result --expected-messages 3

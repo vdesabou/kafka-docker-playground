@@ -18,7 +18,7 @@ log "Sending 20 messages in US cluster"
 seq -f "us_sale_%g ${RANDOM}" 20 | docker container exec -i connect-us bash -c "kafka-console-producer --broker-list broker-us:9092 --topic demo"
 
 log "Verify we have received the data in source cluster using consumer group id my-consumer-group, we read only 5 messages"
-docker container exec -i connect-us bash -c "kafka-console-consumer --bootstrap-server broker-us:9092 --topic demo --from-beginning --max-messages 5 --consumer-property group.id=my-consumer-group"
+playground topic consume --topic demo --expected-messages 5
 
 log "Create the cluster link on the destination cluster (with metadata.max.age.ms=5 seconds + consumer.offset.sync.enable=true + consumer.offset.sync.ms=3000 + consumer.offset.sync.json set to all consumer groups)"
 docker cp consumer.offset.sync.json broker-europe:/tmp/consumer.offset.sync.json
@@ -41,7 +41,7 @@ log "Describe consumer group my-consumer-group at Destination cluster"
 docker exec broker-europe kafka-consumer-groups --bootstrap-server broker-europe:9092 --describe --group my-consumer-group
 
 log "Consume from the mirror topic on the destination cluster and verify consumer offset is working, it should start at 6"
-docker container exec -i connect-us bash -c "kafka-console-consumer --bootstrap-server broker-europe:9092 --topic demo --max-messages 5 --consumer-property group.id=my-consumer-group"
+playground topic consume --topic demo --expected-messages 5
 
 log "Describe consumer group my-consumer-group at Destination cluster."
 docker exec broker-europe kafka-consumer-groups --bootstrap-server broker-europe:9092 --describe --group my-consumer-group
@@ -69,10 +69,10 @@ docker exec broker-europe kafka-configs --bootstrap-server broker-europe:9092 --
 sleep 6
 
 log "Consume from the source cluster another 10 messages, up to 15"
-docker container exec -i connect-us bash -c "kafka-console-consumer --bootstrap-server broker-us:9092 --topic demo --max-messages 10 --consumer-property group.id=my-consumer-group"
+playground topic consume --topic demo --expected-messages 10
 
 log "Consume from the destination cluster, it will continue from it's last offset 10"
-docker container exec -i connect-us bash -c "kafka-console-consumer --bootstrap-server broker-europe:9092 --topic demo --max-messages 5 --consumer-property group.id=my-consumer-group"
+playground topic consume --topic demo --expected-messages 5
 
 log "Verify that the topic mirror is read-only"
 seq -f "europe_sale_%g ${RANDOM}" 10 | docker container exec -i connect-us bash -c "kafka-console-producer --broker-list broker-europe:9092 --topic demo"

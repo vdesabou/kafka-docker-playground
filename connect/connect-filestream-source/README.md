@@ -35,7 +35,7 @@ $ curl -X PUT \
 Verifying topic `filestream`
 
 ```bash
-$ docker exec connect kafka-console-consumer -bootstrap-server broker:9092 --topic filestream --from-beginning --max-messages 10
+playground topic consume --topic filestream --expected-messages 10
 ```
 
 Results:

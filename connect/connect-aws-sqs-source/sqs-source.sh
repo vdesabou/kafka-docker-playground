@@ -90,7 +90,7 @@ curl -X PUT \
      http://localhost:8083/connectors/sqs-source/config | jq .
 
 log "Verify we have received the data in test-sqs-source topic"
-timeout 60 docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic test-sqs-source --from-beginning --max-messages 2
+playground topic consume --topic test-sqs-source --expected-messages 2
 
 log "Delete queue ${QUEUE_URL}"
 aws sqs delete-queue --queue-url ${QUEUE_URL}

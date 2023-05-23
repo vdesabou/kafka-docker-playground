@@ -72,4 +72,4 @@ fi
 sleep 10
 
 log "Verify we have received the data in github-topic-stargazers topic"
-timeout 60 docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic github-topic-stargazers --from-beginning --property print.key=true --max-messages 1
+playground topic consume --topic github-topic-stargazers --expected-messages 1

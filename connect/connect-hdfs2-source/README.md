@@ -46,7 +46,7 @@ $ curl -X PUT \
 Verifying topic `copy_of_test_hdfs`:
 
 ```bash
-$ docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic copy_of_test_hdfs --from-beginning --max-messages 9
+playground topic consume --topic copy_of_test_hdfs --expected-messages 9
 ```
 
 Results:

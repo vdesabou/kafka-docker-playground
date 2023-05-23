@@ -139,10 +139,10 @@ curl -X PUT \
 sleep 10
 
 log "Verify topic success-responses"
-timeout 60 docker exec broker kafka-console-consumer -bootstrap-server broker:9092 --topic success-responses --from-beginning --max-messages 10
+playground topic consume --topic success-responses --expected-messages 10
 
 # log "Verify topic error-responses"
-# timeout 20 docker exec broker kafka-console-consumer -bootstrap-server broker:9092 --topic error-responses --from-beginning --max-messages 1
+playground topic consume --topic error-responses --expected-messages 1
 
 log "Cleanup role and function"
 aws iam delete-role --role-name $LAMBDA_ROLE_NAME

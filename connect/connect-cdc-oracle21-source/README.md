@@ -133,7 +133,7 @@ $ curl -X PUT \
 Verify the topic `ORCLCDB.C__MYUSER.CUSTOMERS`:
 
 ```bash
-$ docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic ORCLCDB.C__MYUSER.CUSTOMERS --from-beginning --max-messages 2
+playground topic consume --topic ORCLCDB.C__MYUSER.CUSTOMERS --expected-messages 2
 ```
 
 Results:
@@ -191,7 +191,7 @@ $ curl -X PUT \
 Verify the topic `ORCLPDB1.C__MYUSER.CUSTOMERS`:
 
 ```bash
-$ docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic ORCLPDB1.C__MYUSER.CUSTOMERS --from-beginning --max-messages 2
+playground topic consume --topic ORCLPDB1.C__MYUSER.CUSTOMERS --expected-messages 2
 ```
 
 Results:

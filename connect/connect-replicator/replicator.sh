@@ -30,4 +30,4 @@ curl -X PUT \
 sleep 10
 
 log "Verify we have received the data in test-topic-duplicate topic"
-timeout 60 docker exec broker kafka-console-consumer --bootstrap-server broker:9092 --topic test-topic-duplicate --from-beginning --max-messages 10
+playground topic consume --topic test-topic-duplicate --expected-messages 10

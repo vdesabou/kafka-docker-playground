@@ -108,7 +108,7 @@ docker exec -d -e AZURE_EVENT_HUBS_NAME="$AZURE_EVENT_HUBS_NAME" -e AZURE_EVENT_
 sleep 5
 
 log "Verifying topic event_hub_topic"
-timeout 60 docker exec broker kafka-console-consumer -bootstrap-server broker:9092 --topic event_hub_topic --from-beginning --property print.key=true --max-messages 2
+playground topic consume --topic event_hub_topic --expected-messages 2
 
 log "Deleting resource group"
 az group delete --name $AZURE_RESOURCE_GROUP --yes --no-wait

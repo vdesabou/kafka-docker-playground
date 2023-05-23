@@ -106,7 +106,7 @@ curl -X PUT \
 sleep 10
 
 log "Verify we have received the data in test-sqs-source-sasl-ssl topic"
-timeout 60 docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --topic test-sqs-source-sasl-ssl --from-beginning --max-messages 2 --property schema.registry.url=https://schema-registry:8081 --consumer.config /etc/kafka/secrets/client_without_interceptors.config  | tail -n 3 | head -n 2
+playground topic consume --topic test-sqs-source-sasl-ssl --expected-messages 2
 
 log "Delete queue ${QUEUE_URL}"
 aws sqs delete-queue --queue-url ${QUEUE_URL}

@@ -159,7 +159,7 @@ curl -X PUT \
 sleep 10
 
 log "Verifying topic jms-oracle-topic"
-timeout 60 docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --topic jms-oracle-topic --property schema.registry.url=http://schema-registry:8081 --from-beginning --max-messages 1
+playground topic consume --topic jms-oracle-topic --expected-messages 1
 
 # {
 #     "bytes": null,

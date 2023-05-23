@@ -46,12 +46,12 @@ curl -X PUT \
 sleep 10
 
 log "Verifying topic airline"
-timeout 60 docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic airline --from-beginning --max-messages 1
+playground topic consume --topic airline --expected-messages 1
 log "Verifying topic airport"
-timeout 60 docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic airport --from-beginning --max-messages 1
+playground topic consume --topic airport --expected-messages 1
 log "Verifying topic hotel"
-timeout 60 docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic hotel --from-beginning --max-messages 1
+playground topic consume --topic hotel --expected-messages 1
 log "Verifying topic landmark"
-timeout 60 docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic landmark --from-beginning --max-messages 1
+playground topic consume --topic landmark --expected-messages 1
 log "Verifying topic route"
-timeout 60 docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic route --from-beginning --max-messages 1
+playground topic consume --topic route --expected-messages 1

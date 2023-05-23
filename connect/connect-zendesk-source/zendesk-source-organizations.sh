@@ -62,4 +62,4 @@ curl -X PUT \
 sleep 10
 
 log "Verify we have received the data in zendesk-topic-organizations topic"
-timeout 60 docker exec broker kafka-console-consumer -bootstrap-server broker:9092 --topic zendesk-topic-organizations --from-beginning --max-messages 1
+playground topic consume --topic zendesk-topic-organizations --expected-messages 1

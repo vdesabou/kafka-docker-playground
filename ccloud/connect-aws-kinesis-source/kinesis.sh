@@ -117,7 +117,7 @@ curl -X PUT \
 sleep 10
 
 log "Verify we have received the data in $KINESIS_TOPIC topic"
-timeout 60 docker exec -e BOOTSTRAP_SERVERS="$BOOTSTRAP_SERVERS" -e SASL_JAAS_CONFIG="$SASL_JAAS_CONFIG" -e SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO="$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO" -e SCHEMA_REGISTRY_URL="$SCHEMA_REGISTRY_URL" -e KINESIS_TOPIC="$KINESIS_TOPIC" connect bash -c 'kafka-avro-console-consumer --topic $KINESIS_TOPIC --bootstrap-server $BOOTSTRAP_SERVERS --consumer-property ssl.endpoint.identification.algorithm=https --consumer-property sasl.mechanism=PLAIN --consumer-property security.protocol=SASL_SSL --consumer-property sasl.jaas.config="$SASL_JAAS_CONFIG" --property basic.auth.credentials.source=USER_INFO --property schema.registry.basic.auth.user.info="$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO" --property schema.registry.url=$SCHEMA_REGISTRY_URL --from-beginning --max-messages 1'
+playground topic consume --topic $KINESIS_TOPIC --expected-messages 1
 
 log "Delete the stream"
 aws kinesis delete-stream --stream-name $KINESIS_STREAM_NAME

@@ -68,5 +68,5 @@ sleep 70
 Consumer with group my-consumer-group reads 10 messages in B cluster (Confluent Cloud), it should start from previous offset (`sync.group.offsets.enabled = true`)
 
 ```bash
-timeout 60 docker container exec -e BOOTSTRAP_SERVERS="$BOOTSTRAP_SERVERS" -e SASL_JAAS_CONFIG="$SASL_JAAS_CONFIG" connect bash -c 'kafka-console-consumer --topic sales_A --bootstrap-server $BOOTSTRAP_SERVERS --consumer-property sasl.mechanism=PLAIN --consumer-property security.protocol=SASL_SSL --consumer-property sasl.jaas.config="$SASL_JAAS_CONFIG" --max-messages 10 --consumer-property group.id=my-consumer-group'
+playground topic consume --topic sales_A --expected-messages 10
 ```

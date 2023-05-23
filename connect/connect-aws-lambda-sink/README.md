@@ -137,7 +137,7 @@ $ curl -X PUT \
 Verifying topic `add-topic-response`
 
 ```bash
-$ docker exec broker kafka-console-consumer -bootstrap-server broker:9092 --topic success-responses --from-beginning --max-messages 10
+playground topic consume --topic success-responses --expected-messages 10
 ```
 
 Results:

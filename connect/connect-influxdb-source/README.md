@@ -64,7 +64,7 @@ $ curl -X PUT \
 Verifying topic `influx_testdb`
 
 ```bash
-$ docker exec broker kafka-console-consumer --bootstrap-server localhost:9092 --topic influx_testdb --from-beginning --max-messages 1
+playground topic consume --topic influx_testdb --expected-messages 1
 ```
 
 Results:

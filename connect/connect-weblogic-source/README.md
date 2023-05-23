@@ -71,7 +71,7 @@ $ docker exec jms-sender bash -c 'java -cp "/tmp/weblogic.jar:/tmp/wlthint3clien
 Verify we have received the data in `from-weblogic-messages` topic
 
 ```bash
-$ docker exec connect kafka-console-consumer -bootstrap-server broker:9092 --topic from-weblogic-messages --from-beginning --max-messages 1
+playground topic consume --topic from-weblogic-messages --expected-messages 1
 ```
 
 Results:
@@ -118,7 +118,7 @@ $ docker exec jms-sender bash -c 'java -cp "/tmp/weblogic.jar:/tmp/wlthint3clien
 Verify we have received the data in `from-weblogic-messages` topic
 
 ```bash
-$ docker exec connect kafka-console-consumer -bootstrap-server broker:9092 --topic from-weblogic-messages --from-beginning --max-messages 1
+playground topic consume --topic from-weblogic-messages --expected-messages 1
 ```
 
 Results:

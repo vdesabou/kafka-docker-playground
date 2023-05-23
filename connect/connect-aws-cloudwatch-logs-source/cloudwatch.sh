@@ -93,4 +93,4 @@ curl -X PUT \
 sleep 5
 
 log "Verify we have received the data in $LOG_GROUP.$LOG_STREAM topic"
-timeout 60 docker exec broker kafka-console-consumer -bootstrap-server broker:9092 --topic $LOG_GROUP.$LOG_STREAM --from-beginning --max-messages 10
+playground topic consume --topic $LOG_GROUP.$LOG_STREAM --expected-messages 10

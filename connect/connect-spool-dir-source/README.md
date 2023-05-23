@@ -51,7 +51,7 @@ $ curl -X PUT \
 Verify we have received the data in `spooldir-csv-topic` topic
 
 ```bash
-$ docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic spooldir-csv-topic --from-beginning --max-messages 10
+playground topic consume --topic spooldir-csv-topic --expected-messages 10
 ```
 
 Results:
@@ -102,7 +102,7 @@ $ curl -X PUT \
 Verify we have received the data in `spooldir-tsv-topic` topic
 
 ```bash
-$ docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic spooldir-tsv-topic --from-beginning --max-messages 10
+playground topic consume --topic spooldir-tsv-topic --expected-messages 10
 ```
 
 Results:
@@ -153,7 +153,7 @@ $ curl -X PUT \
 Verify we have received the data in spooldir-json-topic topic
 
 ```bash
-$ docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic spooldir-json-topic --from-beginning --max-messages 10
+playground topic consume --topic spooldir-json-topic --expected-messages 10
 ```
 
 Results:
@@ -201,7 +201,7 @@ $ curl -X PUT \
 Verify we have received the data in spooldir-schemaless-json-topic topic
 
 ```bash
-$ docker exec broker kafka-console-consumer -bootstrap-server broker:9092 --topic spooldir-schemaless-json-topic --from-beginning --max-messages 10 --topic spooldir-schemaless-json-topic --from-beginning --max-messages 10
+playground topic consume --topic spooldir-schemaless-json-topic --expected-messages 10
 ```
 
 Results:
@@ -250,7 +250,7 @@ $ curl -X PUT \
 Verify we have received the data in fix-topic topic
 
 ```bash
-$ docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic fix-topic --from-beginning --max-messages 100
+playground topic consume --topic fix-topic --expected-messages 100
 ```
 
 Results:

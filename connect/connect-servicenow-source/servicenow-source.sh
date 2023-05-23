@@ -95,4 +95,4 @@ docker exec -e SERVICENOW_URL="$SERVICENOW_URL" -e SERVICENOW_PASSWORD="$SERVICE
 sleep 5
 
 log "Verify we have received the data in topic-servicenow topic"
-timeout 60 docker exec connect kafka-console-consumer -bootstrap-server broker:9092 --topic topic-servicenow --from-beginning --max-messages 1
+playground topic consume --topic topic-servicenow --expected-messages 1

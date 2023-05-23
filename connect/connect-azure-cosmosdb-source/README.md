@@ -124,7 +124,7 @@ for i in range(1, 10):
 Verifying topic apparels:
 
 ```bash
-$ docker exec broker kafka-console-consumer -bootstrap-server broker:9092 --topic apparels --from-beginning --max-messages 9
+playground topic consume --topic apparels --expected-messages 9
 ```
 
 Results:

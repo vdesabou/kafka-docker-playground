@@ -105,4 +105,4 @@ wait_for_ccloud_connector_up connector.json 300
 sleep 60
 
 log "Verify we have received the data in sfdc-cdc-contacts topic"
-timeout 60 docker run --rm -e BOOTSTRAP_SERVERS="$BOOTSTRAP_SERVERS" -e SASL_JAAS_CONFIG="$SASL_JAAS_CONFIG" ${CP_CONNECT_IMAGE}:${CONNECT_TAG} kafka-console-consumer --topic sfdc-cdc-contacts --bootstrap-server $BOOTSTRAP_SERVERS --consumer-property ssl.endpoint.identification.algorithm=https --consumer-property sasl.mechanism=PLAIN --consumer-property security.protocol=SASL_SSL --consumer-property sasl.jaas.config="$SASL_JAAS_CONFIG" --property basic.auth.credentials.source=USER_INFO --property print.key=true --from-beginning --max-messages 1
+playground topic consume --topic sfdc-cdc-contacts --expected-messages 1

@@ -58,7 +58,7 @@ log "Wait 5 seconds for some data to be generated"
 sleep 5
 
 log "Verify we have received the data in source cluster using consumer group id my-replicated-consumer-group, we read only 5 messages"
-docker container exec -i connect-us bash -c "kafka-console-consumer --bootstrap-server broker-us:9092 --topic purchases --from-beginning --max-messages 5 --consumer-property group.id=my-replicated-consumer-group"
+playground topic consume --topic purchases --expected-messages 5
 
 log "Create the cluster link on the destination cluster (with metadata.max.age.ms=5 seconds + consumer.offset.sync.enable=true + consumer.offset.sync.ms=3000 + consumer.offset.sync.json set to all consumer groups)"
 docker cp consumer.offset.sync.json broker-europe:/tmp/consumer.offset.sync.json

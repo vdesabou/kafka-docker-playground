@@ -74,7 +74,7 @@ $ curl -X PUT \
 Verifying topic `copy_of_s3_topic`
 
 ```bash
-$ docker exec broker kafka-console-consumer -bootstrap-server broker:9092 --topic copy_of_s3_topic --from-beginning --max-messages 9
+playground topic consume --topic copy_of_s3_topic --expected-messages 9
 ```
 
 Results:
@@ -134,7 +134,7 @@ $ curl -X PUT \
 Verifying topic `quick-start-topic`:
 
 ```bash
-$ docker exec broker kafka-console-consumer -bootstrap-server broker:9092 --topic quick-start-topic --from-beginning --max-messages 9
+playground topic consume --topic quick-start-topic --expected-messages 9
 ```
 
 Results:

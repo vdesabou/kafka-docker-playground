@@ -52,7 +52,7 @@ $ curl -X PUT \
 Sending messages to topic orders
 
 ```bash
-$ docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic mysql-application --from-beginning --max-messages 2
+playground topic consume --topic mysql-application --expected-messages 2
 ```
 
 Results:

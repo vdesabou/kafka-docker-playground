@@ -54,6 +54,6 @@ curl -X PUT \
 sleep 5
 
 log "Verifying topic cockroachdb-drivers"
-timeout 60 docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic cockroachdb-drivers --from-beginning --max-messages 2
+playground topic consume --topic cockroachdb-drivers --expected-messages 2
 
 

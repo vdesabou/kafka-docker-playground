@@ -138,7 +138,7 @@ sleep 20
 
 log "Verifying topic XE.MYUSER.CUSTOMERS: there should be 13 records"
 set +e
-timeout 60 docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic XE.MYUSER.CUSTOMERS --from-beginning --max-messages 13 --property print.key=true > /tmp/result.log  2>&1
+playground topic consume --topic XE.MYUSER.CUSTOMERS --expected-messages 13
 set -e
 cat /tmp/result.log
 log "Check there is 5 snapshots events"
@@ -167,7 +167,7 @@ then
 fi
 
 log "Verifying topic redo-log-topic: there should be 9 records"
-timeout 60 docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic redo-log-topic --from-beginning --max-messages 9 --property print.key=true
+playground topic consume --topic redo-log-topic --expected-messages 9
 
 if [ ! -z "$SQL_DATAGEN" ]
 then

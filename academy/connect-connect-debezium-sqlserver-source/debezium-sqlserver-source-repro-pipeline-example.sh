@@ -80,7 +80,7 @@ GO
 EOF
 
 log "Verifying topic mytable"
-timeout 60 docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic mytable --from-beginning --max-messages 5
+playground topic consume --topic mytable --expected-messages 5
 # {"id":1001,"first_name":"Sally","last_name":"Thomas","email":"sally.thomas@acme.com"}
 # {"id":1002,"first_name":"George","last_name":"Bailey","email":"gbailey@foobar.com"}
 # {"id":1003,"first_name":"Edward","last_name":"Walker","email":"ed@walker.com"}

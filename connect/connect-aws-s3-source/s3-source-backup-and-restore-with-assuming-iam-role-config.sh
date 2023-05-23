@@ -157,4 +157,4 @@ curl -X PUT \
 
 
 log "Verifying topic copy_of_s3_topic"
-timeout 60 docker exec broker kafka-console-consumer -bootstrap-server broker:9092 --topic copy_of_s3_topic --from-beginning --max-messages 9
+playground topic consume --topic copy_of_s3_topic --expected-messages 9

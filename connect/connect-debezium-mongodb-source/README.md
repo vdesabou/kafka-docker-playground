@@ -86,7 +86,7 @@ $ curl -X PUT \
 Verifying topic dbserver1.inventory.customers
 
 ```bash
-$ docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic dbserver1.inventory.customers --from-beginning --max-messages 1
+playground topic consume --topic dbserver1.inventory.customers --expected-messages 1
 ```
 
 Result is:

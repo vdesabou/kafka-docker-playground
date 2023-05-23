@@ -12,4 +12,4 @@ sleep 90
 docker container logs --tail=300 filebeat
 
 log "Verify we have received the data in syslog topic"
-timeout 30 docker exec broker kafka-console-consumer --bootstrap-server broker:9092 --topic topic-log --from-beginning --max-messages 100
+playground topic consume --topic topic-log --expected-messages 100

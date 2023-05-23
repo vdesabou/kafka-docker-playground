@@ -122,7 +122,7 @@ $ curl -X PUT \
 Verify the topic `XE.MYUSER.CUSTOMERS`:
 
 ```bash
-$ docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic XE.MYUSER.CUSTOMERS --from-beginning --max-messages 2
+playground topic consume --topic XE.MYUSER.CUSTOMERS --expected-messages 2
 ```
 
 Results:

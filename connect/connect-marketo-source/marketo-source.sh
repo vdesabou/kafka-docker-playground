@@ -87,4 +87,4 @@ log "Sleeping 10 minutes (leads are pulled with a delay of 5 minutes between con
 sleep 600
 
 log "Verify we have received the data in marketo_leads topic"
-timeout 60 docker exec connect kafka-console-consumer -bootstrap-server broker:9092 --topic marketo_leads --from-beginning --max-messages 1
+playground topic consume --topic marketo_leads --expected-messages 1

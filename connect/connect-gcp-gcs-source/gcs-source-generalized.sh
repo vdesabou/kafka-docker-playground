@@ -88,7 +88,7 @@ curl -X PUT \
 sleep 10
 
 log "Verify messages are in topic quick-start-topic"
-timeout 60 docker exec connect kafka-console-consumer -bootstrap-server broker:9092 --topic quick-start-topic --from-beginning --property print.key=true --max-messages 9
+playground topic consume --topic quick-start-topic --expected-messages 9
 
 # null    {"f1":"value1"}
 # null    {"f1":"value2"}

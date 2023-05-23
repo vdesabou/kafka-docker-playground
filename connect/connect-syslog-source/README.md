@@ -43,7 +43,7 @@ $ <34>1 2003-10-11T22:14:15.003Z mymachine.example.com su - ID47 - Your refriger
 Verify we have received the data in syslog topic
 
 ```bash
-docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic syslog --property schema.registry.url=http://schema-registry:8081 --from-beginning --max-messages 1
+playground topic consume --topic syslog --expected-messages 1
 ```
 
 Results:

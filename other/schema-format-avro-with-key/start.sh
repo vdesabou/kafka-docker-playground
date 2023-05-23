@@ -24,7 +24,7 @@ log "Produce avro data using Java producer"
 docker exec producer bash -c "java -jar producer-1.0.0-jar-with-dependencies.jar"
 
 log "Verify we have received the avro data in customer-avro topic"
-timeout 60 docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic customer-avro --from-beginning --property print.key=true --property key.separator=, --max-messages 5
+playground topic consume --topic customer-avro --expected-messages 5
 
 log "Produce avro data using kafka-avro-console-producer"
 docker exec -i connect kafka-avro-console-producer --broker-list broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic avro-topic --property key.schema='{"type":"record","namespace": "io.confluent.connect.avro","name":"myrecordkey","fields":[{"name":"ID","type":"long"}]}' --property value.schema='{"type":"record","name":"myrecordvalue","fields":[{"name":"ID","type":"long"},{"name":"product", "type": "string"}, {"name":"quantity", "type": "int"}, {"name":"price",
@@ -35,4 +35,4 @@ EOF
 
 
 log "Verify we have received the avro data in avro-topic topic"
-timeout 60 docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic avro-topic --from-beginning --property print.key=true --property key.separator=, --max-messages 5
+playground topic consume --topic avro-topic --expected-messages 5

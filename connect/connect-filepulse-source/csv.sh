@@ -52,4 +52,4 @@ log "Creating CSV FilePulse Source connector"
 sleep 5
 
 log "Verify we have received the data in connect-file-pulse-quickstart-csv topic"
-timeout 60 docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic connect-file-pulse-quickstart-csv --from-beginning --max-messages 10
+playground topic consume --topic connect-file-pulse-quickstart-csv --expected-messages 10

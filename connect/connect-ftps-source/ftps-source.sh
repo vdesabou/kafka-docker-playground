@@ -72,4 +72,4 @@ curl -X PUT \
 sleep 5
 
 log "Verifying topic ftps-testing-topic"
-timeout 60 docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic ftps-testing-topic --from-beginning --max-messages 2
+playground topic consume --topic ftps-testing-topic --expected-messages 2

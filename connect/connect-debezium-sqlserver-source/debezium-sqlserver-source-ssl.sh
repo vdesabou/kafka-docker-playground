@@ -126,4 +126,4 @@ GO
 EOF
 
 log "Verifying topic server1.testDB.dbo.customers"
-timeout 60 docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic server1.testDB.dbo.customers --from-beginning --max-messages 5
+playground topic consume --topic server1.testDB.dbo.customers --expected-messages 5

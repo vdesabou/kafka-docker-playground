@@ -53,7 +53,7 @@ connectorName=$(cat connector.json| jq -r .name)
 connectorId=$(get_ccloud_connector_lcc $connectorName)
 
 log "Verifying topic success-$connectorId"
-timeout 60 docker run --rm -e BOOTSTRAP_SERVERS="$BOOTSTRAP_SERVERS" -e SASL_JAAS_CONFIG="$SASL_JAAS_CONFIG" ${CP_CONNECT_IMAGE}:${CONNECT_TAG} kafka-console-consumer --topic success-$connectorId --bootstrap-server $BOOTSTRAP_SERVERS --consumer-property ssl.endpoint.identification.algorithm=https --consumer-property sasl.mechanism=PLAIN --consumer-property security.protocol=SASL_SSL --consumer-property sasl.jaas.config="$SASL_JAAS_CONFIG" --from-beginning --property print.key=true --max-messages 10
+playground topic consume --topic success-$connectorId --expected-messages 10
 
 log "Do you want to delete the fully managed connector ?"
 check_if_continue

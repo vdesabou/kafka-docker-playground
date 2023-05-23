@@ -123,7 +123,7 @@ curl -X PUT \
 sleep 5
 
 log "Verifying topic server1_mydb_team"
-timeout 60 docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic server1_mydb_team --from-beginning --max-messages 2
+playground topic consume --topic server1_mydb_team --expected-messages 2
 
 log "Show content of customer table:"
 docker exec mysql bash -c "mysql --user=root --password=password --database=mydb -e 'select * from customers'"
@@ -178,7 +178,7 @@ EOF
 
 set +e
 log "Verifying topic server1_mydb_customers : there will be only the new record"
-timeout 20 docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic server1_mydb_customers --from-beginning --max-messages 3
+playground topic consume --topic server1_mydb_customers --expected-messages 3
 set -e
 
 log "Send Signal to the topic to start incremental snapshot"
@@ -189,4 +189,4 @@ EOF
 sleep 20
 
 log "Verifying topic server1_mydb_customer again, the 3 records are there"
-timeout 60 docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic server1_mydb_customers --from-beginning --max-messages 3
+playground topic consume --topic server1_mydb_customers --expected-messages 3

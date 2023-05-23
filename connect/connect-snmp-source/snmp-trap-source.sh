@@ -35,4 +35,4 @@ docker exec snmptrap snmptrap -v 3 -c public -u mysecurityname -l authPriv -a MD
 sleep 5
 
 log "Verify we have received the data in snmp-kafka-topic topic"
-timeout 60 docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic snmp-kafka-topic --property schema.registry.url=http://schema-registry:8081 --from-beginning --max-messages 1
+playground topic consume --topic snmp-kafka-topic --expected-messages 1

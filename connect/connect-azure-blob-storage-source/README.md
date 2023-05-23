@@ -62,7 +62,7 @@ $ curl -X PUT \
 Verifying topic copy_of_blob_topic
 
 ```bash
-$ timeout 60 docker exec broker kafka-console-consumer -bootstrap-server broker:9092 --topic copy_of_blob_topic --from-beginning --max-messages 3
+playground topic consume --topic copy_of_blob_topic --expected-messages 3
 ```
 
 
@@ -103,7 +103,7 @@ curl -X PUT \
 Verifying topic `quick-start-topic`:
 
 ```bash
-$ docker exec broker kafka-console-consumer -bootstrap-server broker:9092 --topic quick-start-topic --from-beginning --max-messages 9
+playground topic consume --topic quick-start-topic --expected-messages 9
 ```
 
 Results:

@@ -31,7 +31,7 @@ curl -X PUT \
 sleep 5
 
 log "Verify we have received the data in rabbitmq topic"
-timeout 60 docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic rabbitmq --from-beginning --max-messages 5
+playground topic consume --topic rabbitmq --expected-messages 5
 
 #log "Consume messages in RabbitMQ"
 #docker exec -i rabbitmq_consumer bash -c "python /consumer.py myqueue"

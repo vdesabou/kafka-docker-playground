@@ -84,4 +84,4 @@ curl -X PUT \
 sleep 10
 
 log "Verifying topic source-messages"
-timeout 60 docker exec broker kafka-console-consumer -bootstrap-server broker:9092 --topic source-messages --from-beginning --max-messages 3
+playground topic consume --topic source-messages --expected-messages 3

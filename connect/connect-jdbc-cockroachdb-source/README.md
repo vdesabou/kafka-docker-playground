@@ -76,7 +76,7 @@ curl -X PUT \
 Verifying topic `cockroachdb-drivers`
 
 ```bash
-$ docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic cockroachdb-drivers --from-beginning --max-messages 2
+playground topic consume --topic cockroachdb-drivers --expected-messages 2
 ```
 
 Results:

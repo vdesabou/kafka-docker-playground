@@ -62,7 +62,7 @@ $ curl -X PUT \
 Verify we have received the data in `jira-topic-project_categories` topic
 
 ```
-$ docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic jira-topic-project_categories --from-beginning --property print.key=true --max-messages 1
+playground topic consume --topic jira-topic-project_categories --expected-messages 1
 ```
 
 Results:

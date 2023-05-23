@@ -93,7 +93,7 @@ EOF
 
 
 log "Verify we have received the data in kinesis_topic topic"
-timeout 60 docker exec connect kafka-avro-console-consumer --bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic kinesis_topic --from-beginning --property print.key=true --property key.deserializer=org.apache.kafka.common.serialization.StringDeserializer --max-messages 1
+playground topic consume --topic kinesis_topic --expected-messages 1
 # 123     "µë-ë,j\u0007µ"
 # Processed a total of 1 messages
 

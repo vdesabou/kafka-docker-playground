@@ -60,7 +60,7 @@ $ curl -X PUT \
 Verify we have received the data in `connect-file-pulse-quickstart-csv` topic
 
 ```bash
-$ docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic connect-file-pulse-quickstart-csv --from-beginning --max-messages 10
+playground topic consume --topic connect-file-pulse-quickstart-csv --expected-messages 10
 ```
 
 Results:
@@ -137,7 +137,7 @@ $ curl -X PUT \
 Verify we have received the data in `playlists-filepulse-xml-00` topic
 
 ```bash
-$ docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic playlists-filepulse-xml-00 --from-beginning --max-messages 2
+playground topic consume --topic playlists-filepulse-xml-00 --expected-messages 2
 ```
 
 Results:
@@ -201,7 +201,7 @@ $   curl -X PUT \
 Verify we have received the data in `tracks-filepulse-json-00` topic
 
 ```bash
-$ docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic tracks-filepulse-json-00 --from-beginning --max-messages 1
+playground topic consume --topic tracks-filepulse-json-00 --expected-messages 1
 ```
 
 Results:

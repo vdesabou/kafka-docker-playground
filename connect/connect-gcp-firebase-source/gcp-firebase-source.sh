@@ -61,7 +61,7 @@ curl -X PUT \
 sleep 10
 
 log "Verify messages are in topic artists"
-timeout 60 docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic artists --from-beginning --max-messages 3
+playground topic consume --topic artists --expected-messages 3
 
 log "Verify messages are in topic songs"
-timeout 60 docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic songs --from-beginning --max-messages 3
+playground topic consume --topic songs --expected-messages 3

@@ -106,7 +106,7 @@ curl -X PUT \
 sleep 5
 
 log "Verifying topic server1_mydb_team"
-timeout 60 docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic server1_mydb_team --from-beginning --max-messages 2
+playground topic consume --topic server1_mydb_team --expected-messages 2
 
 if [ ! -z "$SQL_DATAGEN" ]
 then

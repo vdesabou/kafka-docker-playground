@@ -97,7 +97,7 @@ curl -X PUT \
 sleep 5
 
 log "Verifying topic mysql-team"
-timeout 60 docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic mysql-team --from-beginning --max-messages 2
+playground topic consume --topic mysql-team --expected-messages 2
 
 if [ ! -z "$SQL_DATAGEN" ]
 then
