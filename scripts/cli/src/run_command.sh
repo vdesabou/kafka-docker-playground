@@ -166,7 +166,9 @@ then
 else
   log "🚀 Running example without any flags"
 fi
+set +e
 playground container kill-all
+set -e
 echo "playground run -f $test_file $flag_list ${other_args[*]}" > /tmp/playground-run
 log "####################################################"
 log "🚀 Executing $filename in dir $test_file_directory"

@@ -6753,7 +6753,9 @@ playground_run_command() {
   else
     log "🚀 Running example without any flags"
   fi
+  set +e
   playground container kill-all
+  set -e
   echo "playground run -f $test_file $flag_list ${other_args[*]}" > /tmp/playground-run
   log "####################################################"
   log "🚀 Executing $filename in dir $test_file_directory"
@@ -7082,7 +7084,9 @@ playground_run_ccloud_command() {
   else
     log "🚀⛅ Running ccloud example without any flags"
   fi
+  set +e
   playground container kill-all
+  set -e
   echo "playground run -f $test_file $flag_list ${other_args[*]}" > /tmp/playground-run
   log "####################################################"
   log "🚀 Executing $filename in dir $test_file_directory"
@@ -8463,7 +8467,6 @@ playground_container_get_ip_addresses_command() {
 playground_container_kill_all_command() {
   # src/container_kill_all_command.sh
   log "💀 Kill all docker containers"
-  set +e
   docker rm -f $(docker ps -qa) > /dev/null 2>&1
 }
 
