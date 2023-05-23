@@ -122,4 +122,4 @@ log "Verify topic success-responses"
 playground topic consume --topic success-responses --expected-messages 2
 
 # log "Verify topic error-responses"
-playground topic consume --topic error-responses --expected-messages 1
+playground topic consume --topic error-responses --expected-messages 0
