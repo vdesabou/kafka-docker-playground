@@ -19,7 +19,7 @@ Check out [kafka-docker-playground.io](https://kafka-docker-playground.io/) to l
 - 🎯 Run examples with any Confluent Platform or connector [versions](https://kafka-docker-playground.io/#/how-to-use?id=🪄-specify-versions)
 - 🧠 Easily run commands with playground [CLI](https://kafka-docker-playground.io/#/cli)
 - 🎓 Learn how the playground [works](https://kafka-docker-playground.io/#/how-it-works)
-- 👷‍♂️ Build your own examples or reproduction models with [how-to-build-your-own](https://kafka-docker-playground.io/#/how-to-build-your-own) section
+- 👷‍♂️ Build your own examples or reproduction models with [reusables](https://kafka-docker-playground.io/#/reusables) section
 - 📱 Work directly in your browser using [Gitpod.io](https://kafka-docker-playground.io/#/how-to-use?id=🪄-gitpodio)
 - 🎩 Work remotely with VS Code using [AWS EC2 Alfred workflow](https://kafka-docker-playground.io/#/how-to-use?id=%f0%9f%8e%a9-aws-ec2-alfred-workflow)
 - 🤖 Automated testing using Github Actions [CI](https://kafka-docker-playground.io/#/how-it-works?id=🤖-how-ci-works)
@@ -37,8 +37,12 @@ Check out the **[How to Use](https://kafka-docker-playground.io/#/how-to-use.md)
 
 Most of the examples in the playground are very basic, but it allows to quickly test components in an automated way (and with any [versions](https://kafka-docker-playground.io/#/how-to-use?id=🪄-specify-versions)) and most importantly to easily [build](https://kafka-docker-playground.io/#/reusables) your own reproduction models !
 
-## ⭐️ Support my work
+## 🙏 Support my work
 
 Love it? Give it a ⭐️ by clicking below:
 
 <a href="https://github.com/vdesabou/kafka-docker-playground/stargazers"><img src="https://img.shields.io/github/stars/vdesabou/kafka-docker-playground?style=social" style="margin-left:0;box-shadow:none;border-radius:0;height:24px"></a>
+
+## ⭐️ Star History
+
+[![Star History Chart](https://api.star-history.com/svg?repos=vdesabou/kafka-docker-playground&type=Date)](https://star-history.com/#vdesabou/kafka-docker-playground&Date)
