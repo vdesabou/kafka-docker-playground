@@ -962,9 +962,7 @@ commands:
         🎓 Tip: If not specified, the command will apply to all connectors
 
   - name: versions
-    help:  🧞 Get current version used in example
-    flags:
-    - *connector
+    help:  🧞 Get current and latest version available on Confluent Hub for connector(s) used in example
 
   - name: restart
     help: ♻️  Restart connector
