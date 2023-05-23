@@ -9,6 +9,7 @@ services:
     volumes:
         - ../../connect/connect-weblogic-source/jms-sender/lib/wlthint3client.jar:/tmp/wlthint3client.jar
         - ../../connect/connect-weblogic-source/jms-sender/lib/weblogic.jar:/tmp/weblogic.jar
+        - ../../connect/connect-weblogic-source/jms-sender/target/jms-sender-1.0.0.jar:/jms-sender-1.0.0.jar
 
   weblogic-jms:
     image: weblogic-jms:latest
