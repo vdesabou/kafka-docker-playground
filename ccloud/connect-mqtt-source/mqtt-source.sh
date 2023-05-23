@@ -71,4 +71,4 @@ done
 sleep 30
 
 log "Verify we have received the data in $MQTT_TOPIC topic"
-playground topic consume --topic $MQTT_TOPIC --expected-messages 1
+playground topic consume --topic $MQTT_TOPIC --expected-messages 2
