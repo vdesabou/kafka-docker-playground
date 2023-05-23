@@ -8462,8 +8462,9 @@ playground_container_get_ip_addresses_command() {
 # :command.function
 playground_container_kill_all_command() {
   # src/container_kill_all_command.sh
-  log "Kill all docker containers"
-  docker rm -f $(docker ps -qa)
+  log "💀 Kill all docker containers"
+  set +e
+  docker rm -f $(docker ps -qa) > /dev/null 2>&1
 }
 
 # :command.function
