@@ -10,7 +10,7 @@ if [ -z "$connectors" ]
 then
     log "💤 There are no connectors running !"
 else
-    printf "%-30s %-12s %-60s %-50s\n" "Name" "Status" "Tasks (Worker ID)" "Stack Trace"
+    printf "%-30s %-12s %-60s %-50s\n" "Name" "Status" "Tasks" "Stack Trace"
     echo "-----------------------------------------------------------------------------------------------------------------------------"
 
     for connector in $connectors
