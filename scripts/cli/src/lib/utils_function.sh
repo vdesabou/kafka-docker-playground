@@ -3328,15 +3328,17 @@ function check_arm64_support() {
         logerror "🖥️ This example is not working with ARM64 !"
         log "Do you want to start test anyway ?"
         check_if_continue
+        return
     fi
 
     grep "${test}" ${DIR}/../../scripts/arm64-support-with-emulation.txt > /dev/null
     if [ $? = 0 ]
     then
-        logwarn "🖥️ This example is working with ARM64 but requires emulation."
+        logwarn "🖥️ This example is working with ARM64 but requires emulation"
+        return
     fi
 
-    log "🖥️ This example should work natively with ARM64."
+    log "🖥️ This example should work natively with ARM64"
   fi
   set -e
 }
