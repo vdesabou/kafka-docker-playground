@@ -897,6 +897,15 @@ commands:
         default: ""
         help: |-
           Verify that topic content contains record which contains specified string
+      - long: --timeout
+        arg: timeout
+        validate: integer
+        required: false
+        default: "60"
+        help: |-
+          Max number of seconds to wait
+
+          Default is 60 seconds
 
     - name: set-schema-compatibility
       filters:
