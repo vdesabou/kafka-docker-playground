@@ -23,7 +23,6 @@ log "Creating JSON (with schema) SFTP Source connector"
 curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
-               "topics": "test_sftp_sink",
                "tasks.max": "1",
                "connector.class": "io.confluent.connect.sftp.SftpJsonSourceConnector",
                "cleanup.policy":"NONE",

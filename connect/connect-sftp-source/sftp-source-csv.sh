@@ -22,7 +22,6 @@ log "Creating CSV SFTP Source connector"
 curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
-        "topics": "test_sftp_sink",
                "tasks.max": "1",
                "connector.class": "io.confluent.connect.sftp.SftpCsvSourceConnector",
                "cleanup.policy":"NONE",
