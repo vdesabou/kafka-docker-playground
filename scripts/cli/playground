@@ -9208,9 +9208,9 @@ playground_connector_versions_command() {
   # src/connector_versions_command.sh
   if [ ! -f /tmp/playground-run ]
   then
-    logerror "File containing re-run command /tmp/playground-run does not exist!"
-    logerror "Make sure to use <playground run> command !"
-    exit 1
+      logerror "File containing re-run command /tmp/playground-run does not exist!"
+      logerror "Make sure to use <playground run> command !"
+      exit 1
   fi
 
   test_file=$(cat /tmp/playground-run | awk '{ print $4}')
@@ -9218,9 +9218,9 @@ playground_connector_versions_command() {
   if [ ! -f $test_file ]
   then
 
-  logerror "File $test_file retrieved from /tmp/playground-run does not exist!"
-  logerror "Make sure to use <playground run> command !"
-  exit 1
+      logerror "File $test_file retrieved from /tmp/playground-run does not exist!"
+      logerror "Make sure to use <playground run> command !"
+      exit 1
   fi
 
   # determining the docker-compose file from from test_file
@@ -9230,15 +9230,15 @@ playground_connector_versions_command() {
 
   if [ "${docker_compose_file}" != "" ] && [ ! -f "${docker_compose_file}" ]
   then
-    docker_compose_file=""
-    logwarn "📁 Could not determine docker-compose override file from $test_file !"
+      logwarn "Skipping as docker-compose override file could not be detemined"
+      exit 0
   fi
 
   connector_paths=$(grep "CONNECT_PLUGIN_PATH" "${docker_compose_file}" | grep -v "KSQL_CONNECT_PLUGIN_PATH" | cut -d ":" -f 2  | tr -s " " | head -1)
   if [ "$connector_paths" == "" ]
   then
-      logerror "not a connector test"
-      exit 1
+      logwarn "Skipping as it is not an example with connector"
+      exit 0
   else
       my_array_connector_tag=($(echo $CONNECTOR_TAG | tr "," "\n"))
       for connector_path in ${connector_paths//,/ }
