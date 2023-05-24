@@ -100,7 +100,7 @@ EOF
 
 log "Run console consumer without access to consumer group: SHOULD FAIL"
 # Consume should fail authorization since neither user alice nor the group KafkaDevelopers that alice belongs to has authorization to consume using the group test-consumer-group
-playground topic consume --topic testtopic --min-expected-messages 1
+playground topic consume --topic testtopic --min-expected-messages 0 --timeout 10
 
 log "Authorize group and rerun consumer"
 docker exec broker kafka-acls --bootstrap-server broker:9092 --add --topic=testtopic --group test-consumer-group --allow-principal="Group:KafkaDevelopers" --command-config /service/kafka/users/kafka.properties
