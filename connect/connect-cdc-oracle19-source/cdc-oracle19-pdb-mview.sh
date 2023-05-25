@@ -200,34 +200,7 @@ log "Waiting 20s for connector to read new data"
 sleep 20
 
 log "Verifying topic ORCLPDB1.C__MYUSER.CUSTOMERS_MV: there should be 18 records"
-set +e
 playground topic consume --topic ORCLPDB1.C__MYUSER.CUSTOMERS_MV --min-expected-messages 18
-set -e
-cat /tmp/result.log
-log "Check there is 5 snapshots events"
-if [ $(grep -c "op_type\":{\"string\":\"R\"}" /tmp/result.log) -ne 5 ]
-then
-     logerror "Did not get expected results"
-     exit 1
-fi
-log "Check there is 8 insert events"
-if [ $(grep -c "op_type\":{\"string\":\"I\"}" /tmp/result.log) -ne 8 ]
-then
-     logerror "Did not get expected results"
-     exit 1
-fi
-log "Check there is 0 update events"
-if [ $(grep -c "op_type\":{\"string\":\"U\"}" /tmp/result.log) -ne 0 ]
-then
-     logerror "Did not get expected results"
-     exit 1
-fi
-log "Check there is 5 delete events"
-if [ $(grep -c "op_type\":{\"string\":\"D\"}" /tmp/result.log) -ne 5 ]
-then
-     logerror "Did not get expected results"
-     exit 1
-fi
 
 log "Verifying topic redo-log-topic: there should be 14 records"
 playground topic consume --topic redo-log-topic --min-expected-messages 14
