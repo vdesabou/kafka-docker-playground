@@ -197,9 +197,10 @@ then
           then
               if [[ "$OSTYPE" == "darwin"* ]]
               then
-                  rm -rf ${DIR_UTILS}/../confluent-hub
+                rm -rf ${DIR_UTILS}/../confluent-hub
               else
-                  sudo rm -rf ${DIR_UTILS}/../confluent-hub
+                log "Using sudo to remove ${DIR_UTILS}/../confluent-hub"
+                sudo rm -rf ${DIR_UTILS}/../confluent-hub
               fi
           fi
           log "🎱 Installing connector $owner/$name:$CONNECTOR_VERSION"
