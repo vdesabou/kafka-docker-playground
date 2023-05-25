@@ -10,7 +10,7 @@ fi
 
 if [[ "$environment" == "environment" ]]
 then
-  confluent kafka topic list | grep -v "^_" | grep -v "Name" | grep -v "\-\-\-"
+  confluent kafka topic list | grep -v "^\s*_" | grep -v "Name" | grep -v "\-\-\-"
 else
   # trick to be faster
   docker exec broker ls /var/lib/kafka/data > /dev/null 2>&1
