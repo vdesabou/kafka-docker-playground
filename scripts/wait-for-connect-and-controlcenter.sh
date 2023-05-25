@@ -46,11 +46,11 @@ then
   docker logs connect2 > /tmp/out2.txt 2>&1
   docker logs connect3 > /tmp/out3.txt 2>&1
   while [[ ! $(cat /tmp/out.txt) =~ "Finished starting connectors and tasks" && ! $(cat /tmp/out2.txt) =~ "Finished starting connectors and tasks" && ! $(cat /tmp/out3.txt) =~ "Finished starting connectors and tasks" ]]; do
-    sleep 10
+    sleep 3
     docker logs connect > /tmp/out.txt 2>&1
     docker logs connect2 > /tmp/out2.txt 2>&1
     docker logs connect3 > /tmp/out3.txt 2>&1
-    CUR_WAIT=$(( CUR_WAIT+10 ))
+    CUR_WAIT=$(( CUR_WAIT+3 ))
     if [[ "$CUR_WAIT" -gt "$MAX_WAIT" ]]; then
       logerror "ERROR: The logs in connect || connect2 || connect3 container do not show <Finished starting connectors and tasks> after $MAX_WAIT seconds. Please troubleshoot with <docker container ps> and 'docker container logs"
       exit 1
@@ -64,9 +64,9 @@ then
   log "⌛ Waiting up to $MAX_WAIT seconds for ${CONNECT_CONTAINER} to start"
   docker container logs ${CONNECT_CONTAINER} > /tmp/out.txt 2>&1
   while [[ ! $(cat /tmp/out.txt) =~ "Finished starting connectors and tasks" ]]; do
-    sleep 10
+    sleep 3
     docker container logs ${CONNECT_CONTAINER} > /tmp/out.txt 2>&1
-    CUR_WAIT=$(( CUR_WAIT+10 ))
+    CUR_WAIT=$(( CUR_WAIT+3 ))
     if [[ "$CUR_WAIT" -gt "$MAX_WAIT" ]]; then
       logerror "ERROR: The logs in ${CONNECT_CONTAINER} container do not show <Finished starting connectors and tasks> after $MAX_WAIT seconds. Please troubleshoot with <docker container ps> and 'docker container logs"
       exit 1
@@ -83,9 +83,9 @@ then
   log "⌛ Waiting up to $MAX_WAIT seconds for ${CONTROL_CENTER_CONTAINER} to start"
   docker container logs ${CONTROL_CENTER_CONTAINER} > /tmp/out.txt 2>&1
   while [[ ! $(cat /tmp/out.txt) =~ "Started NetworkTrafficServerConnector" ]]; do
-    sleep 10
+    sleep 3
     docker container logs ${CONTROL_CENTER_CONTAINER} > /tmp/out.txt 2>&1
-    CUR_WAIT=$(( CUR_WAIT+10 ))
+    CUR_WAIT=$(( CUR_WAIT+3 ))
     if [[ "$CUR_WAIT" -gt "$MAX_WAIT" ]]; then
       logerror "ERROR: The logs in ${CONTROL_CENTER_CONTAINER} container do not show <Started NetworkTrafficServerConnector> after $MAX_WAIT seconds. Please troubleshoot with <docker container ps> and <docker container logs>"
       exit 1
