@@ -105,7 +105,7 @@ docker exec sfdx-cli sh -c "sfdx apex run --target-org \"$SALESFORCE_USERNAME\" 
 sleep 10
 
 log "Verifying topic sfdc-platform-events"
-playground topic consume --topic sfdc-platform-events --min-expected-messages 2
+playground topic consume --topic sfdc-platform-events --min-expected-messages 2 --timeout 60
 
 cat << EOF > connector2.json
 {
@@ -145,4 +145,4 @@ connectorName=$(cat connector2.json| jq -r .name)
 connectorId=$(get_ccloud_connector_lcc $connectorName)
 
 log "Verifying topic success-$connectorId"
-playground topic consume --topic success-$connectorId --min-expected-messages 2
+playground topic consume --topic success-$connectorId --min-expected-messages 2 --timeout 60

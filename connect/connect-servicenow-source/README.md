@@ -65,7 +65,7 @@ $ docker exec -e SERVICENOW_URL="$SERVICENOW_URL" -e SERVICENOW_PASSWORD="$SERVI
 Verify we have received the data in `topic-servicenow` topic
 
 ```
-playground topic consume --topic topic-servicenow --min-expected-messages 1
+playground topic consume --topic topic-servicenow --min-expected-messages 1 --timeout 60
 ```
 
 Results:

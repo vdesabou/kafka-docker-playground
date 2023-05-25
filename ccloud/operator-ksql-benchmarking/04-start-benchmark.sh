@@ -299,7 +299,7 @@ wait_for_stream_to_finish "FILTERED_STREAM"
 throughtput "FILTERED_STREAM" "$SECONDS"
 
 log "Verify we have received data in topic FILTERED_STREAM"
-playground topic consume --topic FILTERED_STREAM --min-expected-messages 1
+playground topic consume --topic FILTERED_STREAM --min-expected-messages 1 --timeout 60
 
 SECONDS=0
 log "START BENCHMARK for QUERY 1"
@@ -330,7 +330,7 @@ wait_for_stream_to_finish "ENRICHED_O_C"
 throughtput "ENRICHED_O_C" "$SECONDS"
 
 log "Verify we have received data in topic ENRICHED_O_C"
-playground topic consume --topic ENRICHED_O_C --min-expected-messages 1
+playground topic consume --topic ENRICHED_O_C --min-expected-messages 1 --timeout 60
 
 SECONDS=0
 log "START BENCHMARK for QUERY 2"
@@ -364,7 +364,7 @@ wait_for_stream_to_finish "ENRICHED_O_C_P"
 throughtput "ENRICHED_O_C_P" "$SECONDS"
 
 log "Verify we have received data in topic ENRICHED_O_C_P"
-playground topic consume --topic ENRICHED_O_C_P --min-expected-messages 1
+playground topic consume --topic ENRICHED_O_C_P --min-expected-messages 1 --timeout 60
 
 SECONDS=0
 log "START BENCHMARK for QUERY 3"
@@ -399,7 +399,7 @@ wait_for_stream_to_finish "ORDERS_SHIPPED"
 throughtput "ORDERS_SHIPPED" "$SECONDS"
 
 log "Verify we have received data in topic ORDERS_SHIPPED"
-playground topic consume --topic ORDERS_SHIPPED --min-expected-messages 1
+playground topic consume --topic ORDERS_SHIPPED --min-expected-messages 1 --timeout 60
 
 SECONDS=0
 log "START BENCHMARK for QUERY 4"
@@ -426,4 +426,4 @@ wait_for_stream_to_finish "ORDERPER_PROD_CUST_AGG"
 throughtput "ORDERPER_PROD_CUST_AGG" "$SECONDS"
 
 log "Verify we have received data in topic ORDERPER_PROD_CUST_AGG"
-playground topic consume --topic ORDERPER_PROD_CUST_AGG --min-expected-messages 1
+playground topic consume --topic ORDERPER_PROD_CUST_AGG --min-expected-messages 1 --timeout 60

@@ -106,7 +106,7 @@ curl -X PUT \
 sleep 5
 
 log "Verifying topic server1_mydb_team"
-playground topic consume --topic server1_mydb_team --min-expected-messages 2
+playground topic consume --topic server1_mydb_team --min-expected-messages 2 --timeout 60
 
 if [ ! -z "$SQL_DATAGEN" ]
 then

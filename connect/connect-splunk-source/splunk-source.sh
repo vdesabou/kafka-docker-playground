@@ -44,5 +44,5 @@ curl -k -X POST https://localhost:8889/services/collector/event -d '{"event":"fr
 sleep 5
 
 log "Verifying topic splunk-source"
-playground topic consume --topic splunk-source --min-expected-messages 1
+playground topic consume --topic splunk-source --min-expected-messages 1 --timeout 60
 

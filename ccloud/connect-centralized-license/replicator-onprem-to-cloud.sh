@@ -55,4 +55,4 @@ curl -X PUT \
 
 
 log "Verify we have received the data in products topic"
-playground topic consume --topic products --min-expected-messages 10
+playground topic consume --topic products --min-expected-messages 10 --timeout 60

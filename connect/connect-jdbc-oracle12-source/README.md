@@ -95,7 +95,7 @@ $ curl -X PUT \
 Verify the topic `oracle-CUSTOMERS`:
 
 ```bash
-playground topic consume --topic oracle-CUSTOMERS --min-expected-messages 2
+playground topic consume --topic oracle-CUSTOMERS --min-expected-messages 2 --timeout 60
 ```
 
 Results:

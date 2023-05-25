@@ -62,4 +62,4 @@ curl -X PUT \
 sleep 10
 
 log "Verify we have received the data in zendesk-topic-organizations topic"
-playground topic consume --topic zendesk-topic-organizations --min-expected-messages 1
+playground topic consume --topic zendesk-topic-organizations --min-expected-messages 1 --timeout 60

@@ -31,4 +31,4 @@ curl -X PUT \
 sleep 5
 
 log "Verify we have received the data in spooldir-tsv-topic topic"
-playground topic consume --topic spooldir-tsv-topic --min-expected-messages 10
+playground topic consume --topic spooldir-tsv-topic --min-expected-messages 10 --timeout 60

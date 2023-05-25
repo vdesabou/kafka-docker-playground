@@ -38,13 +38,13 @@ seq -f "{\"f1\": \"value%g\"}" 10 | docker exec -i connect kafka-avro-console-pr
 Verify data was sent to broker using `--property proxy.host=nginx-proxy -property proxy.port=8888`:
 
 ```bash
-playground topic consume --topic a-topic --min-expected-messages 20
+playground topic consume --topic a-topic --min-expected-messages 20 --timeout 60
 ```
 
 Verify data was sent to broker using `--property schema.proxy.host=nginx-proxy -property schema.proxy.port=8888`:
 
 ```bash
-playground topic consume --topic a-topic --min-expected-messages 20
+playground topic consume --topic a-topic --min-expected-messages 20 --timeout 60
 ```
 
 With connector:

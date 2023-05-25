@@ -84,4 +84,4 @@ docker exec sfdx-cli sh -c "sfdx data:create:record  --target-org \"$SALESFORCE_
 sleep 10
 
 log "Verify we have received the data in sfdc-cdc-contacts topic"
-playground topic consume --topic sfdc-cdc-contacts --min-expected-messages 1
+playground topic consume --topic sfdc-cdc-contacts --min-expected-messages 1 --timeout 60

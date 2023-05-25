@@ -86,7 +86,7 @@ $ curl -X PUT \
 Verify we have received the data in `from-tibco-messages` topic:
 
 ```bash
-playground topic consume --topic from-tibco-messages --min-expected-messages 2
+playground topic consume --topic from-tibco-messages --min-expected-messages 2 --timeout 60
 ```
 
 Results:

@@ -69,7 +69,7 @@ Verifying topic `server1.dbo.customers`
 
 
 ```bash
-playground topic consume --topic server1.dbo.customers --min-expected-messages 5
+playground topic consume --topic server1.dbo.customers --min-expected-messages 5 --timeout 60
 ```
 
 Results:

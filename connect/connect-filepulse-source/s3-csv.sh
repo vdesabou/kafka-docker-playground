@@ -138,4 +138,4 @@ curl -X PUT \
 sleep 5
 
 log "Verify we have received the data in connect-filepulse-csv-data-records topic"
-playground topic consume --topic connect-filepulse-csv-data-records --min-expected-messages 1
+playground topic consume --topic connect-filepulse-csv-data-records --min-expected-messages 1 --timeout 60

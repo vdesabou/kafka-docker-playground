@@ -62,4 +62,4 @@ sleep 10
 docker container logs --tail=600 connect
 
 log "Verify we have received the data in $MQTT_TOPIC topic"
-playground topic consume --topic $MQTT_TOPIC --min-expected-messages 1
+playground topic consume --topic $MQTT_TOPIC --min-expected-messages 1 --timeout 60

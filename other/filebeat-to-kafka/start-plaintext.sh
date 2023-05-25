@@ -12,4 +12,4 @@ sleep 90
 docker container logs --tail=300 filebeat
 
 log "Verify we have received the data in syslog topic"
-playground topic consume --topic topic-log --min-expected-messages 100
+playground topic consume --topic topic-log --min-expected-messages 100 --timeout 60

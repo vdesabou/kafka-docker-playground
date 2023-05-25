@@ -116,7 +116,7 @@ $ curl -X PUT \
 Verify we have received the data in `sfdc-cdc-contacts` topic
 
 ```bash
-playground topic consume --topic sfdc-cdc-contacts --min-expected-messages 1
+playground topic consume --topic sfdc-cdc-contacts --min-expected-messages 1 --timeout 60
 ```
 
 Results:

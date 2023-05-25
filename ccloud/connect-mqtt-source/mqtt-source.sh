@@ -71,4 +71,4 @@ done
 sleep 30
 
 log "Verify we have received the data in $MQTT_TOPIC topic"
-playground topic consume --topic $MQTT_TOPIC --min-expected-messages 2
+playground topic consume --topic $MQTT_TOPIC --min-expected-messages 2 --timeout 60

@@ -168,5 +168,5 @@ curl -X PUT \
 sleep 15
 
 log "Verifying topic snowflake-FOO"
-playground topic consume --topic snowflake-FOO --min-expected-messages 3
+playground topic consume --topic snowflake-FOO --min-expected-messages 3 --timeout 60
 

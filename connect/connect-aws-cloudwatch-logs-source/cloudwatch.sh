@@ -93,4 +93,4 @@ curl -X PUT \
 sleep 5
 
 log "Verify we have received the data in $LOG_GROUP.$LOG_STREAM topic"
-playground topic consume --topic $LOG_GROUP.$LOG_STREAM --min-expected-messages 11
+playground topic consume --topic $LOG_GROUP.$LOG_STREAM --min-expected-messages 11 --timeout 60

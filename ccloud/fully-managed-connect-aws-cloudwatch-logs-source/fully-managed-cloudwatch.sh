@@ -111,7 +111,7 @@ create_ccloud_connector connector.json
 wait_for_ccloud_connector_up connector.json 300
 
 log "Verify we have received the data in $TOPIC topic"
-playground topic consume --topic $TOPIC --min-expected-messages 10
+playground topic consume --topic $TOPIC --min-expected-messages 10 --timeout 60
 
 # Struct{logGroupName=myloggroup731,logStreamName=mylogstream731,timestamp=1675092839000} "This is a log #0"
 # Struct{logGroupName=myloggroup731,logStreamName=mylogstream731,timestamp=1675092841000} "This is a log #1"

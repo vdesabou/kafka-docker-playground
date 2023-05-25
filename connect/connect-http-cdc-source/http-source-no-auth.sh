@@ -34,4 +34,4 @@ curl -X PUT \
 sleep 2
 
 log "Verify we have received the data in http-topic-messages topic"
-playground topic consume --topic http-topic-messages --min-expected-messages 1
+playground topic consume --topic http-topic-messages --min-expected-messages 1 --timeout 60

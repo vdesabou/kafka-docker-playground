@@ -85,7 +85,7 @@ curl -X PUT \
 Verifying topic asgard.public.customers-raw
 
 ```bash
-playground topic consume --topic asgard.public.customers-raw --min-expected-messages 5
+playground topic consume --topic asgard.public.customers-raw --min-expected-messages 5 --timeout 60
 ```
 
 Result is:

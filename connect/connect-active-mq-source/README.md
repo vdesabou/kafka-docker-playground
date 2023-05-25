@@ -55,7 +55,7 @@ $ curl -XPOST -u admin:admin -d "body=message" http://localhost:8161/api/message
 Verify we have received the data in MyKafkaTopicName topic:
 
 ```bash
-playground topic consume --topic MyKafkaTopicName --min-expected-messages 1
+playground topic consume --topic MyKafkaTopicName --min-expected-messages 1 --timeout 60
 ```
 
 We get:

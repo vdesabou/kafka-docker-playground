@@ -111,7 +111,7 @@ curl -X PUT \
 Verifying topic jms-oracle-topic:
 
 ```bash
-playground topic consume --topic jms-oracle-topic --min-expected-messages 1
+playground topic consume --topic jms-oracle-topic --min-expected-messages 1 --timeout 60
 ```
 
 Results:

@@ -40,4 +40,4 @@ curl -X PUT \
 sleep 10
 
 log "Verifying topic test-travel-sample"
-playground topic consume --topic test-travel-sample --min-expected-messages 2
+playground topic consume --topic test-travel-sample --min-expected-messages 2 --timeout 60

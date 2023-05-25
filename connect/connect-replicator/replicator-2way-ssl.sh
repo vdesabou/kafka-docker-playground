@@ -59,4 +59,4 @@ curl -X PUT \
 sleep 10
 
 log "Verify we have received the data in test-topic-ssl-duplicate topic"
-playground topic consume --topic test-topic-ssl-duplicate --min-expected-messages 10
+playground topic consume --topic test-topic-ssl-duplicate --min-expected-messages 10 --timeout 60

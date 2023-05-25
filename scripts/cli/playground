@@ -1895,7 +1895,7 @@ playground_topic_consume_usage() {
     echo
 
     # :flag.usage
-    printf "  %s\n" "$(magenta "--min-expected-messages MIN-EXPECTED-MESSAGES")"
+    printf "  %s\n" "$(magenta "--min-expected-messages  --timeout 60MIN-EXPECTED-MESSAGES")"
     printf "    Minimum expected number of messages to be present in topic, returns an error\n    if this is not the case\n    \n    Note: --topic should be specified in this case.\n"
     printf "    Default: \n"
     echo
@@ -8807,7 +8807,7 @@ playground_topic_consume_command() {
   then
       if [[ -n "$min_expected_messages" ]]
       then
-        logerror "--min-expected-messages was provided without specifying --topic"
+        logerror "--min-expected-messages  --timeout 60was provided without specifying --topic"
         exit 1
       fi
       log "✨ --topic flag was not provided, applying command to all topics"
@@ -8827,7 +8827,7 @@ playground_topic_consume_command() {
       nb_messages=$(playground topic get-number-records -t $topic | tail -1)
       if [ $nb_messages -lt $min_expected_messages ]
       then
-        logerror "❌ --min-expected-messages is set with $min_expected_messages but topic $topic contains $nb_messages messages"
+        logerror "❌ --min-expected-messages  --timeout 60is set with $min_expected_messages but topic $topic contains $nb_messages messages"
         exit 1
       fi
     else
@@ -13160,7 +13160,7 @@ playground_topic_consume_parse_requirements() {
         if [[ -n ${2+x} ]]; then
           # :flag.validations
           if [[ -n $(validate_integer "$2") ]]; then
-            printf "validation error in %s:\n%s\n" "--min-expected-messages MIN-EXPECTED-MESSAGES" "$(validate_integer "$2")" >&2
+            printf "validation error in %s:\n%s\n" "--min-expected-messages  --timeout 60MIN-EXPECTED-MESSAGES" "$(validate_integer "$2")" >&2
             exit 1
           fi
 
@@ -13168,7 +13168,7 @@ playground_topic_consume_parse_requirements() {
           shift
           shift
         else
-          printf "%s\n" "--min-expected-messages requires an argument: --min-expected-messages MIN-EXPECTED-MESSAGES" >&2
+          printf "%s\n" "--min-expected-messages  --timeout 60requires an argument: --min-expected-messages  --timeout 60MIN-EXPECTED-MESSAGES" >&2
           exit 1
         fi
         ;;

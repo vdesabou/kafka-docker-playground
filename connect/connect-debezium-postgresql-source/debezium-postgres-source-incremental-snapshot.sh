@@ -164,11 +164,11 @@ curl -X PUT \
 sleep 5
 
 log "Verifying topic asgard.public.customers"
-playground topic consume --topic asgard.public.customers --min-expected-messages 5
+playground topic consume --topic asgard.public.customers --min-expected-messages 5 --timeout 60
 
 log "Verifying topic asgard.public.customers2 has no data"
 set +e
-playground topic consume --topic asgard.public.customers2 --min-expected-messages 5
+playground topic consume --topic asgard.public.customers2 --min-expected-messages 5 --timeout 60
 set -e
 
 log "Creating Debezium PostgreSQL source connector with customers and customers2 table"
@@ -206,7 +206,7 @@ EOF
 
 log "Verifying topic asgard.public.customers2 : there will be only the new record"
 set +e
-playground topic consume --topic asgard.public.customers2 --min-expected-messages 6
+playground topic consume --topic asgard.public.customers2 --min-expected-messages 6 --timeout 60
 set -e
 
 sleep 10
@@ -219,4 +219,4 @@ EOF
 sleep 10
 
 log "Checking topic asgard.public.customers2 for data, the 6 records are there"
-playground topic consume --topic asgard.public.customers2 --min-expected-messages 6
+playground topic consume --topic asgard.public.customers2 --min-expected-messages 6 --timeout 60

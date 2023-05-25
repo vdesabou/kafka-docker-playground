@@ -46,7 +46,7 @@ $ curl -X PUT \
 Verify we have received the data in `rabbitmq` topic
 
 ```bash
-playground topic consume --topic rabbitmq --min-expected-messages 5
+playground topic consume --topic rabbitmq --min-expected-messages 5 --timeout 60
 ```
 
 Results:

@@ -124,7 +124,7 @@ for i in range(1, 10):
 Verifying topic apparels:
 
 ```bash
-playground topic consume --topic apparels --min-expected-messages 9
+playground topic consume --topic apparels --min-expected-messages 9 --timeout 60
 ```
 
 Results:

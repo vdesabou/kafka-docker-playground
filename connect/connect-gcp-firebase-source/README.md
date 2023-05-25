@@ -93,7 +93,7 @@ $ curl -X PUT \
 Verify messages are in topic `artists`
 
 ```bash
-playground topic consume --topic artists --min-expected-messages 3
+playground topic consume --topic artists --min-expected-messages 3 --timeout 60
 ```
 
 Results:
@@ -107,7 +107,7 @@ Results:
 Verify messages are in topic `songs`
 
 ```bash
-playground topic consume --topic songs --min-expected-messages 3
+playground topic consume --topic songs --min-expected-messages 3 --timeout 60
 ```
 
 Results:

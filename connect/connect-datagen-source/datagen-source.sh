@@ -91,13 +91,13 @@ wait_for_datagen_connector_to_inject_data "customers" "10"
 sleep 10
 
 log "Verify we have received the data in orders topic"
-playground topic consume --topic orders --min-expected-messages 1
+playground topic consume --topic orders --min-expected-messages 1 --timeout 60
 
 log "Verify we have received the data in shipments topic"
-playground topic consume --topic shipments --min-expected-messages 1
+playground topic consume --topic shipments --min-expected-messages 1 --timeout 60
 
 log "Verify we have received the data in customers topic"
-playground topic consume --topic customers --min-expected-messages 1
+playground topic consume --topic customers --min-expected-messages 1 --timeout 60
 
 log "Verify we have received the data in products topic"
-playground topic consume --topic products --min-expected-messages 1
+playground topic consume --topic products --min-expected-messages 1 --timeout 60

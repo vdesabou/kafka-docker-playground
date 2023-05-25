@@ -61,4 +61,4 @@ seq -f "A_sale_%g ${RANDOM}" 20 | docker container exec -i broker1 kafka-console
 sleep 30
 
 log "Consumer with group my-consumer-group reads 10 messages in B cluster (Confluent Cloud), it should start from previous offset (sync.group.offsets.enabled = true)"
-playground topic consume --topic sales_A --min-expected-messages 10
+playground topic consume --topic sales_A --min-expected-messages 10 --timeout 60

@@ -57,4 +57,4 @@ curl -X PUT \
 sleep 5
 
 log "Verifying topic sftp-testing-topic"
-playground topic consume --topic sftp-testing-topic --min-expected-messages 2
+playground topic consume --topic sftp-testing-topic --min-expected-messages 2 --timeout 60

@@ -67,4 +67,4 @@ curl -X PUT \
 sleep 5
 
 log "Verifying topic dbserver1.inventory.customers"
-playground topic consume --topic dbserver1.inventory.customers --min-expected-messages 1
+playground topic consume --topic dbserver1.inventory.customers --min-expected-messages 1 --timeout 60

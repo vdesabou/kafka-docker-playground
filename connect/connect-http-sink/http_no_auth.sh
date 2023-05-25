@@ -44,7 +44,7 @@ cat /tmp/result.log
 grep "10" /tmp/result.log
 
 log "Check the success-responses topic"
-playground topic consume --topic success-responses --min-expected-messages 10
+playground topic consume --topic success-responses --min-expected-messages 10 --timeout 60
 # input_record_offset:0,input_record_timestamp:1645173514858,input_record_partition:0,input_record_topic:http-messages    "{\"id\":1,\"message\":\"1,2,3,4,5,6,7,8,9,10\"}"
 # input_record_offset:1,input_record_timestamp:1645173514881,input_record_partition:0,input_record_topic:http-messages    "{\"id\":1,\"message\":\"1,2,3,4,5,6,7,8,9,10\"}"
 # input_record_offset:2,input_record_timestamp:1645173514882,input_record_partition:0,input_record_topic:http-messages    "{\"id\":1,\"message\":\"1,2,3,4,5,6,7,8,9,10\"}"

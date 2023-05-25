@@ -66,7 +66,7 @@ $ curl -X PUT \
 Verify we have received the data in `github-topic-stargazers` topic
 
 ```
-playground topic consume --topic github-topic-stargazers --min-expected-messages 1
+playground topic consume --topic github-topic-stargazers --min-expected-messages 1 --timeout 60
 ```
 
 Results:

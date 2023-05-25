@@ -24,10 +24,10 @@ log "Produce avro data using Java producer"
 docker exec producer bash -c "java -jar producer-1.0.0-jar-with-dependencies.jar"
 
 log "Verify we have received the avro data in customer-avro topic"
-playground topic consume --topic customer-avro --min-expected-messages 5
+playground topic consume --topic customer-avro --min-expected-messages 5 --timeout 60
 
 log "Produce avro data using kafka-avro-console-producer"
 seq -f "{\"f1\": \"value%g\"}" 10 | docker exec -i connect kafka-avro-console-producer --broker-list broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic avro-topic --property value.schema='{"type":"record","name":"myrecord","fields":[{"name":"f1","type":"string"}]}'
 
 log "Verify we have received the avro data in avro-topic topic"
-playground topic consume --topic avro-topic --min-expected-messages 5
+playground topic consume --topic avro-topic --min-expected-messages 5 --timeout 60

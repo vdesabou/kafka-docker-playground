@@ -71,7 +71,7 @@ $ docker exec jms-sender bash -c 'java -cp "/tmp/weblogic.jar:/tmp/wlthint3clien
 Verify we have received the data in `from-weblogic-messages` topic
 
 ```bash
-playground topic consume --topic from-weblogic-messages --min-expected-messages 1
+playground topic consume --topic from-weblogic-messages --min-expected-messages 1 --timeout 60
 ```
 
 Results:
@@ -118,7 +118,7 @@ $ docker exec jms-sender bash -c 'java -cp "/tmp/weblogic.jar:/tmp/wlthint3clien
 Verify we have received the data in `from-weblogic-messages` topic
 
 ```bash
-playground topic consume --topic from-weblogic-messages --min-expected-messages 1
+playground topic consume --topic from-weblogic-messages --min-expected-messages 1 --timeout 60
 ```
 
 Results:

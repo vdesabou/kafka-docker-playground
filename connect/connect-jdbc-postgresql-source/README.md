@@ -73,7 +73,7 @@ $ curl -X PUT \
 Verifying topic `postgres-customers`
 
 ```bash
-playground topic consume --topic postgres-customers --min-expected-messages 5
+playground topic consume --topic postgres-customers --min-expected-messages 5 --timeout 60
 ```
 
 Result is:

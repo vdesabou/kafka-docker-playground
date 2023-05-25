@@ -336,7 +336,7 @@ kafka-mirrors --create --mirror-topic topic-to-link --link my-link --bootstrap-s
 Read 2 messages from source cluster:
 
 ```bash
-playground topic consume --topic topic-to-link --min-expected-messages 2
+playground topic consume --topic topic-to-link --min-expected-messages 2 --timeout 60
 1
 2
 Processed a total of 2 messages
@@ -352,7 +352,7 @@ confluent kafka acl create --allow --service-account $destination_service_accoun
 ```
 
 ```bash
-playground topic consume --topic topic-to-link --min-expected-messages 8
+playground topic consume --topic topic-to-link --min-expected-messages 8 --timeout 60
 3
 4
 5

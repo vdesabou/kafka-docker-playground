@@ -127,4 +127,4 @@ curl -X PUT \
 sleep 5
 
 log "Verifying topic redshift-customers"
-playground topic consume --topic redshift-customers --min-expected-messages 5
+playground topic consume --topic redshift-customers --min-expected-messages 5 --timeout 60

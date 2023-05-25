@@ -71,7 +71,7 @@ $ seq -f "This is a message %g" 10 | docker exec -i broker kafka-console-produce
 Verifying topic dest_diode
 
 ```bash
-playground topic consume --topic dest_diode --min-expected-messages 10
+playground topic consume --topic dest_diode --min-expected-messages 10 --timeout 60
 ```
 
 N.B: Control Center is reachable at [http://127.0.0.1:9021](http://127.0.0.1:9021])

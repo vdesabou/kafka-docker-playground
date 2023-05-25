@@ -164,7 +164,7 @@ $ curl -X PUT \
 Verify we have received the data in `sfdc-platform-events` topic
 
 ```bash
-playground topic consume --topic sfdc-platform-events --min-expected-messages 1
+playground topic consume --topic sfdc-platform-events --min-expected-messages 1 --timeout 60
 ```
 
 Results:
@@ -212,7 +212,7 @@ $ curl -X PUT \
 Verify topic success-responses
 
 ```bash
-playground topic consume --topic success-responses --min-expected-messages 2
+playground topic consume --topic success-responses --min-expected-messages 2 --timeout 60
 ```
 
 To check events on Salesforce side, you can use [workbench](https://workbench.developerforce.com/streaming.php) and subscribe to `/event/MyPlatformEvent__e`:

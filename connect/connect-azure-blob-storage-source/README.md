@@ -62,7 +62,7 @@ $ curl -X PUT \
 Verifying topic copy_of_blob_topic
 
 ```bash
-playground topic consume --topic copy_of_blob_topic --min-expected-messages 3
+playground topic consume --topic copy_of_blob_topic --min-expected-messages 3 --timeout 60
 ```
 
 
@@ -103,7 +103,7 @@ curl -X PUT \
 Verifying topic `quick-start-topic`:
 
 ```bash
-playground topic consume --topic quick-start-topic --min-expected-messages 9
+playground topic consume --topic quick-start-topic --min-expected-messages 9 --timeout 60
 ```
 
 Results:

@@ -83,7 +83,7 @@ $ curl -X PUT \
 Verify we have received the data in kinesis_topic topic:
 
 ```
-playground topic consume --topic kinesis_topic --min-expected-messages 1
+playground topic consume --topic kinesis_topic --min-expected-messages 1 --timeout 60
 ```
 
 Delete your stream and clean up resources to avoid incurring any unintended charges:

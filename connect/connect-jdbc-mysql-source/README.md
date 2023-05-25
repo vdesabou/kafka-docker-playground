@@ -52,7 +52,7 @@ $ curl -X PUT \
 Sending messages to topic orders
 
 ```bash
-playground topic consume --topic mysql-application --min-expected-messages 2
+playground topic consume --topic mysql-application --min-expected-messages 2 --timeout 60
 ```
 
 Results:

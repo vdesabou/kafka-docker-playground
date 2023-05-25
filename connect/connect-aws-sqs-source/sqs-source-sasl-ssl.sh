@@ -106,7 +106,7 @@ curl -X PUT \
 sleep 10
 
 log "Verify we have received the data in test-sqs-source-sasl-ssl topic"
-playground topic consume --topic test-sqs-source-sasl-ssl --min-expected-messages 2
+playground topic consume --topic test-sqs-source-sasl-ssl --min-expected-messages 2 --timeout 60
 
 log "Delete queue ${QUEUE_URL}"
 aws sqs delete-queue --queue-url ${QUEUE_URL}

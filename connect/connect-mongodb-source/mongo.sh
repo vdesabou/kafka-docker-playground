@@ -82,4 +82,4 @@ EOF
 sleep 5
 
 log "Verifying topic mongo.inventory.customers"
-playground topic consume --topic mongo.inventory.customers --min-expected-messages 1
+playground topic consume --topic mongo.inventory.customers --min-expected-messages 1 --timeout 60

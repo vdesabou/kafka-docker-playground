@@ -100,7 +100,7 @@ sleep 5
 Verifying topic singlestore-application:
 
 ```bash
-playground topic consume --topic singlestore-application --min-expected-messages 2
+playground topic consume --topic singlestore-application --min-expected-messages 2 --timeout 60
 ```
 
 Results:

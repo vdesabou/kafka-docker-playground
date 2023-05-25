@@ -46,7 +46,7 @@ $ curl -X PUT \
 Verifying topic `copy_of_test_hdfs`:
 
 ```bash
-playground topic consume --topic copy_of_test_hdfs --min-expected-messages 9
+playground topic consume --topic copy_of_test_hdfs --min-expected-messages 9 --timeout 60
 ```
 
 Results:

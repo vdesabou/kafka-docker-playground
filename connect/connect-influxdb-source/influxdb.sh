@@ -31,6 +31,6 @@ curl -X PUT \
 sleep 10
 
 log "Verifying topic influx_testdb"
-playground topic consume --topic influx_testdb --min-expected-messages 1
+playground topic consume --topic influx_testdb --min-expected-messages 1 --timeout 60
 
 

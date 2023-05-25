@@ -137,7 +137,7 @@ $ curl -X PUT \
 Verifying topic `add-topic-response`
 
 ```bash
-playground topic consume --topic success-responses --min-expected-messages 10
+playground topic consume --topic success-responses --min-expected-messages 10 --timeout 60
 ```
 
 Results:

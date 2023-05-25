@@ -99,7 +99,7 @@ curl -X PUT \
 sleep 5
 
 log "Verifying topic quick-start-topic"
-playground topic consume --topic quick-start-topic --min-expected-messages 9
+playground topic consume --topic quick-start-topic --min-expected-messages 9 --timeout 60
 
 log "Deleting resource group"
 az group delete --name $AZURE_RESOURCE_GROUP --yes --no-wait

@@ -16,7 +16,7 @@ log "Start producer"
 java -jar kafka-producer-application/target/kafka-producer-application-standalone-0.0.1-jar-with-dependencies.jar kafka-producer-application/configuration/dev.properties input.txt
 
 log "Consume topic output-topic"
-playground topic consume --topic output-topic --min-expected-messages 10
+playground topic consume --topic output-topic --min-expected-messages 10 --timeout 60
 
 # log "Create topic input-topic"
 # docker exec broker kafka-topics --create --topic input-topic --bootstrap-server broker:9092 --replication-factor 1 --partitions 1

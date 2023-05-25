@@ -75,7 +75,7 @@ EOF
 Verify we have received the data in MyKafkaTopicName topic:
 
 ```bash
-playground topic consume --topic MyKafkaTopicName --min-expected-messages 2
+playground topic consume --topic MyKafkaTopicName --min-expected-messages 2 --timeout 60
 ```
 
 Results:

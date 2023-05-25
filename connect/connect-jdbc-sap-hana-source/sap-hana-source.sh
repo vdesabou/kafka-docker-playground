@@ -57,5 +57,5 @@ curl -X PUT \
 sleep 5
 
 log "Verifying topic sap-hana-CUSTOMERS"
-playground topic consume --topic sap-hana-CUSTOMERS --min-expected-messages 1
+playground topic consume --topic sap-hana-CUSTOMERS --min-expected-messages 1 --timeout 60
 

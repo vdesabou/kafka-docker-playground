@@ -75,7 +75,7 @@ docker exec mosquitto sh -c 'mosquitto_pub -h localhost -p 1883 -u "myuser" -P "
 Verify we have received the data in `mqtt-source-1` topic:
 
 ```bash
-playground topic consume --topic mqtt-source-1 --min-expected-messages 1
+playground topic consume --topic mqtt-source-1 --min-expected-messages 1 --timeout 60
 ```
 
 N.B: Control Center is reachable at [http://127.0.0.1:9021](http://127.0.0.1:9021])

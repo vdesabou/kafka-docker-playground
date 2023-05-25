@@ -105,4 +105,4 @@ fi
 sleep 5
 
 log "Verify we have received the data in playlists-filepulse-xml-00 topic"
-playground topic consume --topic playlists-filepulse-xml-00 --min-expected-messages 1
+playground topic consume --topic playlists-filepulse-xml-00 --min-expected-messages 1 --timeout 60

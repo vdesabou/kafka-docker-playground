@@ -54,6 +54,6 @@ curl -X PUT \
 sleep 5
 
 log "Verifying topic cockroachdb-drivers"
-playground topic consume --topic cockroachdb-drivers --min-expected-messages 2
+playground topic consume --topic cockroachdb-drivers --min-expected-messages 2 --timeout 60
 
 

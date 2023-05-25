@@ -160,6 +160,6 @@ curl -X PUT \
 sleep 5
 
 log "Verifying topic postgres-customers"
-playground topic consume --topic postgres-customers --min-expected-messages 5
+playground topic consume --topic postgres-customers --min-expected-messages 5 --timeout 60
 
 

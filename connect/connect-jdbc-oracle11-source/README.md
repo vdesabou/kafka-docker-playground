@@ -62,7 +62,7 @@ $ curl -X PUT \
 Verify the topic `oracle-MYTABLE`:
 
 ```bash
-playground topic consume --topic oracle-MYTABLE --min-expected-messages 1
+playground topic consume --topic oracle-MYTABLE --min-expected-messages 1 --timeout 60
 ```
 
 Results:

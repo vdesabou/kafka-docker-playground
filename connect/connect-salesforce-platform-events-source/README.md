@@ -152,7 +152,7 @@ $ curl -X PUT \
 Verify we have received the data in `sfdc-platform-events` topic
 
 ```bash
-playground topic consume --topic sfdc-platform-events --min-expected-messages 1
+playground topic consume --topic sfdc-platform-events --min-expected-messages 1 --timeout 60
 ```
 
 Results:

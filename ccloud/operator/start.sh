@@ -243,7 +243,7 @@ kubectl exec -i connectors-0 -- curl -X PUT \
 sleep 5
 
 log "Verify we have received the data in spooldir-json-topic topic"
-playground topic consume --topic spooldir-json-topic --min-expected-messages 2
+playground topic consume --topic spooldir-json-topic --min-expected-messages 2 --timeout 60
 
 #######
 # MONITORING

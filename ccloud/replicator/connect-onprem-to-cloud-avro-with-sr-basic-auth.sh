@@ -79,4 +79,4 @@ curl -X PUT \
 # "value.converter.connect.meta.data": false
 
 log "Verify we have received the data in products-avro topic"
-playground topic consume --topic products-avro --min-expected-messages 3
+playground topic consume --topic products-avro --min-expected-messages 3 --timeout 60

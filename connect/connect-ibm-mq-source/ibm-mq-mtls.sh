@@ -94,4 +94,4 @@ EOF
 sleep 5
 
 log "Verify we have received the data in MyKafkaTopicName topic"
-playground topic consume --topic MyKafkaTopicName --min-expected-messages 2
+playground topic consume --topic MyKafkaTopicName --min-expected-messages 2 --timeout 60

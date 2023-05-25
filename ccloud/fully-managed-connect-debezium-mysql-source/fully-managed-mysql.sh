@@ -153,7 +153,7 @@ wait_for_ccloud_connector_up connector.json 300
 sleep 60
 
 log "Verifying topic dbserver1.mydb.team"
-playground topic consume --topic dbserver1.mydb.team --min-expected-messages 2
+playground topic consume --topic dbserver1.mydb.team --min-expected-messages 2 --timeout 60
 
 if [ ! -z "$SQL_DATAGEN" ]
 then

@@ -94,7 +94,7 @@ connectorName=$(cat connector.json| jq -r .name)
 connectorId=$(get_ccloud_connector_lcc $connectorName)
 
 log "Verifying topic success-$connectorId"
-playground topic consume --topic success-$connectorId --min-expected-messages 10
+playground topic consume --topic success-$connectorId --min-expected-messages 10 --timeout 60
 
 log "Do you want to delete the fully managed connector ?"
 check_if_continue

@@ -60,7 +60,7 @@ $ curl -X PUT \
 Verify we have received the data in `connect-file-pulse-quickstart-csv` topic
 
 ```bash
-playground topic consume --topic connect-file-pulse-quickstart-csv --min-expected-messages 10
+playground topic consume --topic connect-file-pulse-quickstart-csv --min-expected-messages 10 --timeout 60
 ```
 
 Results:
@@ -137,7 +137,7 @@ $ curl -X PUT \
 Verify we have received the data in `playlists-filepulse-xml-00` topic
 
 ```bash
-playground topic consume --topic playlists-filepulse-xml-00 --min-expected-messages 2
+playground topic consume --topic playlists-filepulse-xml-00 --min-expected-messages 2 --timeout 60
 ```
 
 Results:
@@ -201,7 +201,7 @@ $   curl -X PUT \
 Verify we have received the data in `tracks-filepulse-json-00` topic
 
 ```bash
-playground topic consume --topic tracks-filepulse-json-00 --min-expected-messages 1
+playground topic consume --topic tracks-filepulse-json-00 --min-expected-messages 1 --timeout 60
 ```
 
 Results:

@@ -127,11 +127,11 @@ log "Waiting 20s for connector to read new data"
 sleep 20
 
 log "Verifying topic XE.MYUSER.CUSTOMERS: there should be 13 records"
-playground topic consume --topic XE.MYUSER.CUSTOMERS --min-expected-messages 13
+playground topic consume --topic XE.MYUSER.CUSTOMERS --min-expected-messages 13 --timeout 60
 
 
 log "Verifying topic redo-log-topic: there should be 15 records"
-playground topic consume --topic redo-log-topic --min-expected-messages 15
+playground topic consume --topic redo-log-topic --min-expected-messages 15 --timeout 60
 
 log "🚚 If you're planning to inject more data, have a look at https://github.com/vdesabou/kafka-docker-playground/blob/master/connect/connect-cdc-oracle19-source/README.md#note-on-redologrowfetchsize"
 

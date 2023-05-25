@@ -205,6 +205,6 @@ curl -X PUT \
 sleep 5
 
 log "Verifying topic oracle-CUSTOMERS"
-playground topic consume --topic oracle-CUSTOMERS --min-expected-messages 2
+playground topic consume --topic oracle-CUSTOMERS --min-expected-messages 2 --timeout 60
 
 

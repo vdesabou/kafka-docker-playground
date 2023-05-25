@@ -87,7 +87,7 @@ $ docker exec -e SB_SAMPLES_CONNECTIONSTRING="$SB_SAMPLES_CONNECTIONSTRING" -e A
 Verifying topic `servicebus-topic`
 
 ```bash
-playground topic consume --topic servicebus-topic --min-expected-messages 10
+playground topic consume --topic servicebus-topic --min-expected-messages 10 --timeout 60
 ```
 
 Results:

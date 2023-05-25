@@ -65,5 +65,5 @@ docker-compose -f ../../ccloud/environment/docker-compose.yml -f ${PWD}/docker-c
 
 sleep 50
 log "Verify we have received the data in executable-products-avro topic"
-playground topic consume --topic executable-products-avro --min-expected-messages 3
+playground topic consume --topic executable-products-avro --min-expected-messages 3 --timeout 60
 

@@ -91,7 +91,7 @@ $ curl -X PUT \
 Verify we have received the data in `marketo_leads` topic
 
 ```
-playground topic consume --topic marketo_leads --min-expected-messages 1
+playground topic consume --topic marketo_leads --min-expected-messages 1 --timeout 60
 ```
 
 Results:

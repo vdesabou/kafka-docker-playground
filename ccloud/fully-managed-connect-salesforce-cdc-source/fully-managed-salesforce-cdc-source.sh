@@ -105,4 +105,4 @@ wait_for_ccloud_connector_up connector.json 300
 sleep 60
 
 log "Verify we have received the data in sfdc-cdc-contacts topic"
-playground topic consume --topic sfdc-cdc-contacts --min-expected-messages 1
+playground topic consume --topic sfdc-cdc-contacts --min-expected-messages 1 --timeout 60

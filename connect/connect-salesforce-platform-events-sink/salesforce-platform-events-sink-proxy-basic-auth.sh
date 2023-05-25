@@ -96,7 +96,7 @@ docker exec sfdx-cli sh -c "sfdx apex run --target-org \"$SALESFORCE_USERNAME\" 
 sleep 10
 
 log "Verify we have received the data in sfdc-platform-events topic"
-playground topic consume --topic sfdc-platform-events --min-expected-messages 2
+playground topic consume --topic sfdc-platform-events --min-expected-messages 2 --timeout 60
 
 log "Creating Salesforce Platform Events Sink connector"
 curl -X PUT \
@@ -138,7 +138,7 @@ curl -X PUT \
 sleep 10
 
 log "Verify topic success-responses"
-playground topic consume --topic success-responses --min-expected-messages 2
+playground topic consume --topic success-responses --min-expected-messages 2 --timeout 60
 
 # log "Verify topic error-responses"
-playground topic consume --topic error-responses --min-expected-messages 0
+playground topic consume --topic error-responses --min-expected-messages 0 --timeout 60

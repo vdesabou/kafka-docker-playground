@@ -62,4 +62,4 @@ curl -X PUT \
 sleep 5
 
 log "Verify we have received the data in test-kudu-accounts topic"
-playground topic consume --topic test-kudu-accounts --min-expected-messages 2
+playground topic consume --topic test-kudu-accounts --min-expected-messages 2 --timeout 60

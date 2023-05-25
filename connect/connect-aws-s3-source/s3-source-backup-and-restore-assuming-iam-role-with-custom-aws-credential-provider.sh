@@ -268,4 +268,4 @@ curl -X PUT \
 #         ... 1 more
 
 log "Verifying topic copy_of_s3_topic"
-playground topic consume --topic copy_of_s3_topic --min-expected-messages 9
+playground topic consume --topic copy_of_s3_topic --min-expected-messages 9 --timeout 60

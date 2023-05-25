@@ -86,7 +86,7 @@ $ curl -X PUT \
 Verifying topic dbserver1.inventory.customers
 
 ```bash
-playground topic consume --topic dbserver1.inventory.customers --min-expected-messages 1
+playground topic consume --topic dbserver1.inventory.customers --min-expected-messages 1 --timeout 60
 ```
 
 Result is:

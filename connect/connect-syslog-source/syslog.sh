@@ -29,4 +29,4 @@ echo "<34>1 2003-10-11T22:14:15.003Z mymachine.example.com su - ID47 - Your refr
 sleep 5
 
 log "Verify we have received the data in syslog topic"
-playground topic consume --topic syslog --min-expected-messages 1
+playground topic consume --topic syslog --min-expected-messages 1 --timeout 60

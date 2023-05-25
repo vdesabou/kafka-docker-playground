@@ -44,4 +44,4 @@ curl -X PUT \
 sleep 30
 
 log "Verify we have received the data in topic products_EUROPE in US"
-playground topic consume --topic products_EUROPE --min-expected-messages 1
+playground topic consume --topic products_EUROPE --min-expected-messages 1 --timeout 60

@@ -112,7 +112,7 @@ curl -X PUT \
 sleep 5
 
 log "Verifying topic oracle-CUSTOMERS"
-playground topic consume --topic oracle-CUSTOMERS --min-expected-messages 1
+playground topic consume --topic oracle-CUSTOMERS --min-expected-messages 1 --timeout 60
 
 if [ ! -z "$SQL_DATAGEN" ]
 then

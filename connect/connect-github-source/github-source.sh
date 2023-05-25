@@ -72,4 +72,4 @@ fi
 sleep 10
 
 log "Verify we have received the data in github-topic-stargazers topic"
-playground topic consume --topic github-topic-stargazers --min-expected-messages 1
+playground topic consume --topic github-topic-stargazers --min-expected-messages 1 --timeout 60

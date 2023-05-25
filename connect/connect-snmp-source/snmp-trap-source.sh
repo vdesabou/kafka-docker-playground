@@ -35,4 +35,4 @@ docker exec snmptrap snmptrap -v 3 -c public -u mysecurityname -l authPriv -a MD
 sleep 5
 
 log "Verify we have received the data in snmp-kafka-topic topic"
-playground topic consume --topic snmp-kafka-topic --min-expected-messages 1
+playground topic consume --topic snmp-kafka-topic --min-expected-messages 1 --timeout 60

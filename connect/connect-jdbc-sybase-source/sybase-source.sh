@@ -52,4 +52,4 @@ GO
 EOF
 
 log "Verifying topic sybase-customers"
-playground topic consume --topic sybase-customers --min-expected-messages 5
+playground topic consume --topic sybase-customers --min-expected-messages 5 --timeout 60

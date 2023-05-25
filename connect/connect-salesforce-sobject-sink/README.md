@@ -128,7 +128,7 @@ $ curl -X PUT \
 Verify we have received the data in `sfdc-pushtopic-leads` topic
 
 ```bash
-playground topic consume --topic sfdc-pushtopic-leads --min-expected-messages 1
+playground topic consume --topic sfdc-pushtopic-leads --min-expected-messages 1 --timeout 60
 ```
 
 Creating Salesforce SObject Sink connector
@@ -171,7 +171,7 @@ $ curl -X PUT \
 Verify topic `success-responses`
 
 ```bash
-playground topic consume --topic success-responses --min-expected-messages 1
+playground topic consume --topic success-responses --min-expected-messages 1 --timeout 60
 ```
 
 Results:
