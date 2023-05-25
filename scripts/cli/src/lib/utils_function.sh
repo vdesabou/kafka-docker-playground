@@ -328,7 +328,23 @@ function check_docker_compose_version() {
   DOCKER_COMPOSE_VER=$(get_docker_compose_version)
 
   if version_gt $REQUIRED_DOCKER_COMPOSE_VER $DOCKER_COMPOSE_VER; then
-    log "docker-compose version ${REQUIRED_DOCKER_COMPOSE_VER} or greater is required.  Current reported version: ${DOCKER_COMPOSE_VER}"
+    logerror "docker-compose version ${REQUIRED_DOCKER_COMPOSE_VER} or greater is required. Current reported version: ${DOCKER_COMPOSE_VER}"
+    exit 1
+  fi
+}
+
+function get_bash_version() {
+  bash_major_version=$(bash --version | head -n1 | awk '{print $4}')
+  major_version="${bash_major_version%%.*}"
+  echo "$major_version"
+}
+
+function check_bash_version() {
+  REQUIRED_BASH_VER=${1:-"4"}
+  BASH_VER=$(get_bash_version)
+
+  if version_gt $REQUIRED_BASH_VER $BASH_VER; then
+    logerror "bash version ${REQUIRED_BASH_VER} or greater is required. Current reported version: ${BASH_VER}"
     exit 1
   fi
 }

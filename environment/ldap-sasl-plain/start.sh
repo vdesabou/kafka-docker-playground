@@ -13,6 +13,7 @@ fi
 verify_docker_and_memory
 verify_installed "docker-compose"
 check_docker_compose_version
+check_bash_version
 
 # https://docs.docker.com/compose/profiles/
 profile_control_center_command=""
