@@ -35,8 +35,8 @@ do
             logerror "ERROR: /tmp/delta_configs/librdkafka.delta has not been generated"
             exit 1
         fi
-        docker run -i --network=host \
-            -v /tmp/delta_configs/librdkafka.delta:/tmp/configuration/ccloud.properties \
+        docker run -it --network=host \
+                -v /tmp/delta_configs/librdkafka.delta:/tmp/configuration/ccloud.properties \
             confluentinc/cp-kcat:latest kcat \
                 -F /tmp/configuration/ccloud.properties \
                 -C -t $topic \
