@@ -61,7 +61,7 @@ if [[ ! -n "$topic" ]]
 then
     if [[ -n "$min_expected_messages" ]]
     then
-      logerror "--min-expected-messages  --timeout 60was provided without specifying --topic"
+      logerror "--min-expected-messages was provided without specifying --topic"
       exit 1
     fi
     log "✨ --topic flag was not provided, applying command to all topics"
@@ -81,7 +81,7 @@ do
     nb_messages=$(playground topic get-number-records -t $topic | tail -1)
     if [ $nb_messages -lt $min_expected_messages ]
     then
-      logerror "❌ --min-expected-messages  --timeout 60is set with $min_expected_messages but topic $topic contains $nb_messages messages"
+      logerror "❌ --min-expected-messages is set with $min_expected_messages but topic $topic contains $nb_messages messages"
       exit 1
     fi
   else
