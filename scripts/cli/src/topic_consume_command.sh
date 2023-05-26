@@ -3,7 +3,7 @@ max_messages="${args[--max-messages]}"
 grep_string="${args[--grep]}"
 min_expected_messages="${args[--min-expected-messages]}"
 timeout="${args[--timeout]}"
-set -x
+
 environment=`get_environment_used`
 
 if [ "$environment" == "error" ]
