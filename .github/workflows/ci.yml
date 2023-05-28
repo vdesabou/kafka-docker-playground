@@ -107,7 +107,7 @@ jobs:
           df -h
           sudo apt-get -qq purge build-essential ghc*
           sudo apt-get clean
-          sudo apt-get install expect fzf timeout -y
+          sudo apt-get install expect fzf coreutils -y
           docker system prune -af
           rm -rf /usr/share/dotnet
           rm -rf /opt/ghc
@@ -232,7 +232,7 @@ jobs:
           df -h
           sudo apt-get -qq purge build-essential ghc*
           sudo apt-get clean
-          sudo apt-get install expect fzf timeout -y
+          sudo apt-get install expect fzf coreutils -y
           docker system prune -af
           rm -rf /usr/share/dotnet
           rm -rf /opt/ghc
