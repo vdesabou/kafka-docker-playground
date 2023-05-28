@@ -267,5 +267,7 @@ curl -X PUT \
 #         at java.base/java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:628)
 #         ... 1 more
 
+sleep 10
+
 log "Verifying topic copy_of_s3_topic"
 playground topic consume --topic copy_of_s3_topic --min-expected-messages 9 --timeout 60

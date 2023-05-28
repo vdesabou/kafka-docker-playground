@@ -130,6 +130,7 @@ curl -X PUT \
           }' \
      http://localhost:8083/connectors/s3-source/config | jq .
 
+sleep 10
 
 log "Verifying topic copy_of_s3_topic"
 playground topic consume --topic copy_of_s3_topic --min-expected-messages 9 --timeout 60
