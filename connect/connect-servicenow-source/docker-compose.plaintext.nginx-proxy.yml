@@ -16,5 +16,5 @@ services:
       - ../../connect/connect-servicenow-source/nginx-proxy/logging.properties:/tmp/logging.properties
     environment:
       CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-servicenow
-      KAFKA_OPTS: -Djava.util.logging.config.file=/tmp/logging.properties
+      #KAFKA_OPTS: -Djava.util.logging.config.file=/tmp/logging.properties
     dns: 0.0.0.0
