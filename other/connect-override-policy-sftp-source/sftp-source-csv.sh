@@ -57,4 +57,4 @@ curl -X PUT \
 sleep 5
 
 log "Verifying topic sftp-testing-topic"
-playground topic consume --topic sftp-testing-topic --min-expected-messages 2 --timeout 60
+timeout 60 docker exec connect kafka-avro-console-consumer -bootstrap-server broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic sftp-testing-topic --consumer.config /tmp/client.properties --from-beginning --max-messages 2
