@@ -903,7 +903,7 @@ commands:
         required: false
         default: "60"
         help: |-
-          Max number of seconds to wait
+          Max number of seconds to wait when --min-expected-messages is used.
 
           Default is 60 seconds
 
