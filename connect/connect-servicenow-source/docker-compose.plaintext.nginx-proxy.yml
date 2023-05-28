@@ -12,8 +12,8 @@ services:
       - ../../connect/connect-servicenow-source/nginx-proxy/nginx_whitelist.conf:/usr/local/nginx/conf/nginx.conf
 
   connect:
-    volumes:
-      - ../../connect/connect-servicenow-source/nginx-proxy/logging.properties:/tmp/logging.properties
+    #volumes:
+     # - ../../connect/connect-servicenow-source/nginx-proxy/logging.properties:/tmp/logging.properties
     environment:
       CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-servicenow
       #KAFKA_OPTS: -Djava.util.logging.config.file=/tmp/logging.properties
