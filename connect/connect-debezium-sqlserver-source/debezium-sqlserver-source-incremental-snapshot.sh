@@ -147,10 +147,8 @@ INSERT INTO customers2(first_name,last_name,email)
 GO
 EOF
 
-set +e
 log "Verifying topic server1.testDB.dbo.customers2 : there will be only the new record"
-playground topic consume --topic server1.testDB.dbo.customers2 --min-expected-messages 5 --timeout 60
-set -e
+playground topic consume --topic server1.testDB.dbo.customers2 --min-expected-messages 4 --timeout 60
 
 log "Trigger Ad hoc snapshot"
 docker exec -i sqlserver /opt/mssql-tools/bin/sqlcmd -U sa -P Password! << EOF
