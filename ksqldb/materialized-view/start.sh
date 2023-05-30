@@ -34,14 +34,23 @@ CREATE SOURCE CONNECTOR calls_reader WITH (
     'database.password' = 'dbz',
     'database.allowPublicKeyRetrieval' = 'true',
     'database.server.id' = '223344',
+    'table.whitelist' = 'mydb.calls',
+
+    'database.names'  = 'mydb',
+    '_comment' = 'old version before 2.x',
     'database.server.name' = 'dbserver1',
-    'database.whitelist' = 'mydb',
     'database.history.kafka.bootstrap.servers' = 'broker:9092',
     'database.history.kafka.topic' = 'call-center',
-    'table.whitelist' = 'mydb.calls',
+    '_comment 2' = 'new version since 2.x',
+    'topic.prefix' = 'dbserver1',
+    'schema.history.internal.kafka.bootstrap.servers' = 'broker:9092',
+    'schema.history.internal.kafka.topic' = 'call-center',
+
     'include.schema.changes' = 'false'
 );
 EOF
+
+
 
 sleep 5
 
