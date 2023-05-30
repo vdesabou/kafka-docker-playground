@@ -57,7 +57,7 @@ then
   source $root_folder/scripts/utils.sh
 fi
 
-if [[ -n "$timeout" ]]
+if [[ -n "$timeout" ]] && [ "$timeout" != "60" ]
 then
   if [[ ! -n "$min_expected_messages" ]]
   then
