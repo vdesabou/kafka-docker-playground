@@ -148,7 +148,7 @@ GO
 EOF
 
 log "Verifying topic server1.testDB.dbo.customers2 : there will be only the new record"
-playground topic consume --topic server1.testDB.dbo.customers2 --min-expected-messages 4 --timeout 60
+playground topic consume --topic server1.testDB.dbo.customers2 --min-expected-messages 1 --timeout 60
 
 log "Trigger Ad hoc snapshot"
 docker exec -i sqlserver /opt/mssql-tools/bin/sqlcmd -U sa -P Password! << EOF
