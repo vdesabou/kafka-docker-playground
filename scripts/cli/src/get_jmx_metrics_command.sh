@@ -2,6 +2,7 @@ IGNORE_CHECK_FOR_DOCKER_COMPOSE=true
 
 component="${args[--component]}"
 domain="${args[--domain]}"
+open="${args[--open]}"
 
 case "${component}" in
   zookeeper|broker|schema-registry|connect)
@@ -12,4 +13,4 @@ case "${component}" in
   ;;
 esac
 
-get_jmx_metrics "$component" "$domain"
+get_jmx_metrics "$component" "$domain" "$open"

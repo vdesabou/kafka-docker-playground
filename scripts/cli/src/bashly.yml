@@ -663,6 +663,10 @@ commands:
     allowed: [zookeeper, broker, connect, schema-registry]
     help: |-
       Component name
+  - long: --open
+    short: -o
+    help: |- 
+      🔖 Save output to a file and open with text editor set with config.ini (default is code)
 
   - long: --domain
     short: -d

@@ -767,6 +767,7 @@ function get_jmx_metrics() {
 
   component="$1"
   domains="$2"
+  open="$3"
   if [ "$domains" = "" ]
   then
     # non existing domain: all domains will be in output !
@@ -811,23 +812,32 @@ exit
 EOF
   while read line; do echo "get *"  -b $line; done < /tmp/beans.log >> /tmp/commands
 
-  echo "####### domain $domain ########" >> /tmp/jmx_metrics.log
-  docker exec -i $component java -jar $JMXTERM_UBER_JAR  -l localhost:$port -n < /tmp/commands >> /tmp/jmx_metrics.log 2>&1
+  if [[ -n "$open" ]]
+  then
+    echo "####### domain $domain ########" >> /tmp/jmx_metrics.log
+    docker exec -i $component java -jar $JMXTERM_UBER_JAR  -l localhost:$port -n < /tmp/commands >> /tmp/jmx_metrics.log 2>&1
+  else
+    echo "####### domain $domain ########"
+    docker exec -i $component java -jar $JMXTERM_UBER_JAR  -l localhost:$port -n < /tmp/commands 2>&1
+  fi
 done
 
-  if config_has_key "editor"
+  if [[ -n "$open" ]]
   then
-    editor=$(config_get "editor")
-    log "📖 Opening /tmp/jmx_metrics.log using configured editor $editor"
-    $editor /tmp/jmx_metrics.log
-  else
-    if [[ $(type code 2>&1) =~ "not found" ]]
+    if config_has_key "editor"
     then
-      logerror "Could not determine an editor to use as default code is not found - you can change editor by updating config.ini"
-      exit 1
+      editor=$(config_get "editor")
+      log "📖 Opening /tmp/jmx_metrics.log using configured editor $editor"
+      $editor /tmp/jmx_metrics.log
     else
-      log "📖 Opening /tmp/jmx_metrics.log with code (default) - you can change editor by updating config.ini"
-      code /tmp/jmx_metrics.log
+      if [[ $(type code 2>&1) =~ "not found" ]]
+      then
+        logerror "Could not determine an editor to use as default code is not found - you can change editor by updating config.ini"
+        exit 1
+      else
+        log "📖 Opening /tmp/jmx_metrics.log with code (default) - you can change editor by updating config.ini"
+        code /tmp/jmx_metrics.log
+      fi
     fi
   fi
 }

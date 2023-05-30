@@ -373,7 +373,7 @@ _playground_completions() {
       ;;
 
     'get-jmx-metrics'*)
-      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "--component --domain --help -c -d -h")" -- "$cur" )
+      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "--component --domain --help --open -c -d -h -o")" -- "$cur" )
       ;;
 
     'get-all-schemas'*)
