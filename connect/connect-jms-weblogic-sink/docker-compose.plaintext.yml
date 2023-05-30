@@ -10,6 +10,7 @@ services:
     volumes:
         - ../../connect/connect-jms-weblogic-sink/jms-receiver/lib/wlthint3client.jar:/tmp/wlthint3client.jar
         - ../../connect/connect-jms-weblogic-sink/jms-receiver/lib/weblogic.jar:/tmp/weblogic.jar
+        - ../../connect/connect-jms-weblogic-sink/jms-receiver/target/jms-receiver-1.0.0.jar:/jms-receiver-1.0.0.jar
         
   weblogic-jms:
     image: weblogic-jms:latest
