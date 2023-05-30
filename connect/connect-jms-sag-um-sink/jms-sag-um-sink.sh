@@ -80,7 +80,9 @@ curl -X PUT \
 
 sleep 10
 
-log "Confirm the messages were delivered to the test-queue queue "
+log "Confirm the messages were delivered to the test-queue queue"
+set +e
 docker exec -i umserver timeout 10 runUMTool.sh JMSSubscribe -rname=nsp://localhost:9000 -connectionfactory=QueueConnectionFactory -destination=test-queue > /tmp/result.log  2>&1
+set -e
 cat /tmp/result.log
 grep "JMS MSG ID" /tmp/result.log
