@@ -80,6 +80,10 @@ playground_usage() {
   printf "%s\n" "$(bold "Connector commands:")"
   printf "  %s   🔗☁️ Fully Managed Connector commands\n" "$(green "ccloud-connector")                  "
   [[ -n $long_usage ]] && printf "  %s   🧩 Show status of all connectors\n" "$(green "ccloud-connector status")           "
+  [[ -n $long_usage ]] && printf "  %s   🎨 Show all plugins installed\n" "$(green "ccloud-connector plugins")          "
+  [[ -n $long_usage ]] && printf "  %s   ⏸️  Pause connector\n" "$(green "ccloud-connector pause")            "
+  [[ -n $long_usage ]] && printf "  %s   ⏯️  Resume connector\n" "$(green "ccloud-connector resume")           "
+  [[ -n $long_usage ]] && printf "  %s   🗑️  Delete connector\n" "$(green "ccloud-connector delete")           "
   printf "  %s   🔗 Connector commands\n" "$(green "connector")                         "
   [[ -n $long_usage ]] && printf "  %s   🧩 Show status of all connectors\n" "$(green "connector status")                  "
   [[ -n $long_usage ]] && printf "  %s   🎨 Show all plugins installed\n" "$(green "connector plugins")                 "
@@ -122,6 +126,35 @@ playground_get_connector_list_usage() {
   printf "%s\n" "$(bold "== Usage ==")"
   printf "  playground get-connector-list\n"
   printf "  playground get-connector-list --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n $long_usage ]]; then
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_get_ccloud_connector_list_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground get-ccloud-connector-list - Return some completion for ccloud connector list\n"
+    echo
+
+  else
+    printf "playground get-ccloud-connector-list - Return some completion for ccloud connector list\n"
+    echo
+
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground get-ccloud-connector-list\n"
+  printf "  playground get-ccloud-connector-list --help | -h\n"
   echo
 
   # :command.long_usage
@@ -2024,7 +2057,11 @@ playground_ccloud_connector_usage() {
   echo
   # :command.usage_commands
   printf "%s\n" "$(bold "== Commands ==")"
-  printf "  %s   🧩 Show status of all connectors\n" "$(green "status")"
+  printf "  %s   🧩 Show status of all connectors\n" "$(green "status") "
+  printf "  %s   🎨 Show all plugins installed\n" "$(green "plugins")"
+  printf "  %s   ⏸️  Pause connector\n" "$(green "pause")  "
+  printf "  %s   ⏯️  Resume connector\n" "$(green "resume") "
+  printf "  %s   🗑️  Delete connector\n" "$(green "delete") "
   echo
 
   # :command.long_usage
@@ -2072,6 +2109,140 @@ playground_ccloud_connector_status_usage() {
   # :command.long_usage
   if [[ -n $long_usage ]]; then
     printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_ccloud_connector_plugins_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground ccloud-connector plugins - 🎨 Show all plugins installed\n"
+    echo
+
+  else
+    printf "playground ccloud-connector plugins - 🎨 Show all plugins installed\n"
+    echo
+
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground ccloud-connector plugins\n"
+  printf "  playground ccloud-connector plugins --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n $long_usage ]]; then
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_ccloud_connector_pause_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground ccloud-connector pause - ⏸️  Pause connector\n"
+    echo
+
+  else
+    printf "playground ccloud-connector pause - ⏸️  Pause connector\n"
+    echo
+
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground ccloud-connector pause [OPTIONS]\n"
+  printf "  playground ccloud-connector pause --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n $long_usage ]]; then
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_flags
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--connector, -c CONNECTOR")"
+    printf "    🔗 Connector name\n    \n    🎓 Tip: If not specified, the command will apply to all connectors\n"
+    echo
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_ccloud_connector_resume_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground ccloud-connector resume - ⏯️  Resume connector\n"
+    echo
+
+  else
+    printf "playground ccloud-connector resume - ⏯️  Resume connector\n"
+    echo
+
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground ccloud-connector resume [OPTIONS]\n"
+  printf "  playground ccloud-connector resume --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n $long_usage ]]; then
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_flags
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--connector, -c CONNECTOR")"
+    printf "    🔗 Connector name\n    \n    🎓 Tip: If not specified, the command will apply to all connectors\n"
+    echo
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_ccloud_connector_delete_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground ccloud-connector delete - 🗑️  Delete connector\n"
+    echo
+
+  else
+    printf "playground ccloud-connector delete - 🗑️  Delete connector\n"
+    echo
+
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground ccloud-connector delete [OPTIONS]\n"
+  printf "  playground ccloud-connector delete --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n $long_usage ]]; then
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_flags
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--connector, -c CONNECTOR")"
+    printf "    🔗 Connector name\n    \n    🎓 Tip: If not specified, the command will apply to all connectors\n"
+    echo
 
     # :command.usage_fixed_flags
     printf "  %s\n" "$(magenta "--help, -h")"
@@ -2538,6 +2709,31 @@ function get_connect_url_and_security() {
   fi
 
   echo "$connect_url@$security"
+}
+
+function get_ccloud_connect() {
+  if [ ! -f /tmp/delta_configs/ak-tools-ccloud.delta ]
+  then
+      logerror "ERROR: /tmp/delta_configs/ak-tools-ccloud.delta has not been generated"
+      exit 1
+  fi
+  DIR_CLI="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
+  dir1=$(echo ${DIR_CLI%/*})
+  root_folder=$(echo ${dir1%/*})
+  IGNORE_CHECK_FOR_DOCKER_COMPOSE=true
+  source $root_folder/scripts/utils.sh
+
+  environment=$(grep "ENVIRONMENT ID" /tmp/delta_configs/ak-tools-ccloud.delta | cut -d " " -f 4)
+  cluster=$(grep "KAFKA CLUSTER ID" /tmp/delta_configs/ak-tools-ccloud.delta | cut -d " " -f 5)
+
+  if [[ "$OSTYPE" == "darwin"* ]]
+  then
+      authorization=$(echo -n "$CLOUD_API_KEY:$CLOUD_API_SECRET" | base64)
+  else
+      authorization=$(echo -n "$CLOUD_API_KEY:$CLOUD_API_SECRET" | base64 -w 0)
+  fi
+
+  echo "$environment@$cluster@$authorization"
 }
 
 function get_sr_url_and_security() {
@@ -6610,6 +6806,19 @@ playground_get_connector_list_command() {
 }
 
 # :command.function
+playground_get_ccloud_connector_list_command() {
+  # src/get_ccloud_connector_list_command.sh
+  ret=$(get_ccloud_connect)
+
+  environment=$(echo "$ret" | cut -d "@" -f 1)
+  cluster=$(echo "$ret" | cut -d "@" -f 2)
+  authorization=$(echo "$ret" | cut -d "@" -f 3)
+
+  curl -s --request GET "https://api.confluent.cloud/connect/v1/environments/$environment/clusters/$cluster/connectors" \
+  --header "authorization: Basic $authorization" | jq -r '.[]' | tr '\n' ' ' | sed -e 's/[[:space:]]*$//'
+}
+
+# :command.function
 playground_get_kafka_region_list_command() {
   # src/get_kafka_region_list_command.sh
   confluent kafka region list
@@ -9247,29 +9456,126 @@ playground_topic_display_schema_id_statistics_command() {
 # :command.function
 playground_ccloud_connector_status_command() {
   # src/ccloud_connector_status_command.sh
-  if [ ! -f /tmp/delta_configs/ak-tools-ccloud.delta ]
+  ret=$(get_ccloud_connect)
+
+  environment=$(echo "$ret" | cut -d "@" -f 1)
+  cluster=$(echo "$ret" | cut -d "@" -f 2)
+  authorization=$(echo "$ret" | cut -d "@" -f 3)
+
+  curl -s --request GET "https://api.confluent.cloud/connect/v1/environments/$environment/clusters/$cluster/connectors?expand=status" \
+  --header "authorization: Basic $authorization" | jq .
+}
+
+# :command.function
+playground_ccloud_connector_plugins_command() {
+  # src/ccloud_connector_plugins_command.sh
+  ret=$(get_ccloud_connect)
+
+  environment=$(echo "$ret" | cut -d "@" -f 1)
+  cluster=$(echo "$ret" | cut -d "@" -f 2)
+  authorization=$(echo "$ret" | cut -d "@" -f 3)
+
+  log "🧩 Displaying all connector plugins installed"
+  curl -s --request GET "https://api.confluent.cloud/connect/v1/environments/$environment/clusters/$cluster/connector-plugins" \
+  --header "authorization: Basic $authorization" | jq -r '.[] | [.class , .version , .type] | @tsv' | column -t
+
+}
+
+# :command.function
+playground_ccloud_connector_pause_command() {
+  # src/ccloud_connector_pause_command.sh
+  ret=$(get_ccloud_connect)
+
+  environment=$(echo "$ret" | cut -d "@" -f 1)
+  cluster=$(echo "$ret" | cut -d "@" -f 2)
+  authorization=$(echo "$ret" | cut -d "@" -f 3)
+
+  connector="${args[--connector]}"
+
+  if [[ ! -n "$connector" ]]
   then
-      logerror "ERROR: /tmp/delta_configs/ak-tools-ccloud.delta has not been generated"
-      exit 1
+      log "✨ --connector flag was not provided, applying command to all ccloud connectors"
+      connector=$(playground get-ccloud-connector-list)
+      if [ "$connector" == "" ]
+      then
+          logerror "💤 No ccloud connector is running !"
+          exit 1
+      fi
   fi
-  DIR_CLI="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
-  dir1=$(echo ${DIR_CLI%/*})
-  root_folder=$(echo ${dir1%/*})
-  IGNORE_CHECK_FOR_DOCKER_COMPOSE=true
-  source $root_folder/scripts/utils.sh
 
-  environment=$(grep "ENVIRONMENT ID" /tmp/delta_configs/ak-tools-ccloud.delta | cut -d " " -f 4)
-  cluster=$(grep "KAFKA CLUSTER ID" /tmp/delta_configs/ak-tools-ccloud.delta | cut -d " " -f 5)
+  items=($connector)
+  for connector in ${items[@]}
+  do
+      log "⏸️ Pausing ccloud connector $connector"
+      curl -s --request PUT "https://api.confluent.cloud/connect/v1/environments/$environment/clusters/$cluster/connectors/$connector/pause" --header "authorization: Basic $authorization" | jq .
+  done
+  sleep 3
+  playground ccloud-connector status
+}
 
-  if [[ "$OSTYPE" == "darwin"* ]]
+# :command.function
+playground_ccloud_connector_resume_command() {
+  # src/ccloud_connector_resume_command.sh
+  ret=$(get_ccloud_connect)
+
+  environment=$(echo "$ret" | cut -d "@" -f 1)
+  cluster=$(echo "$ret" | cut -d "@" -f 2)
+  authorization=$(echo "$ret" | cut -d "@" -f 3)
+
+  connector="${args[--connector]}"
+
+  if [[ ! -n "$connector" ]]
   then
-      authorization=$(echo -n "$CLOUD_API_KEY:$CLOUD_API_SECRET" | base64)
-  else
-      authorization=$(echo -n "$CLOUD_API_KEY:$CLOUD_API_SECRET" | base64 -w 0)
+      log "✨ --connector flag was not provided, applying command to all ccloud connectors"
+      connector=$(playground get-ccloud-connector-list)
+      if [ "$connector" == "" ]
+      then
+          logerror "💤 No ccloud connector is running !"
+          exit 1
+      fi
   fi
 
-  curl -s --request GET "https://api.confluent.cloud/connect/v1/environments/$environment/clusters/$cluster/connectors?expand=info%2Cstatus%2Cid" \
-  --header "authorization: Basic $authorization" | jq
+  items=($connector)
+  for connector in ${items[@]}
+  do
+      log "⏯️ Resuming ccloud connector $connector"
+      curl -s --request PUT "https://api.confluent.cloud/connect/v1/environments/$environment/clusters/$cluster/connectors/$connector/resume" --header "authorization: Basic $authorization" | jq .
+  done
+  sleep 3
+  playground ccloud-connector status
+}
+
+# :command.function
+playground_ccloud_connector_delete_command() {
+  # src/ccloud_connector_delete_command.sh
+  ret=$(get_ccloud_connect)
+
+  environment=$(echo "$ret" | cut -d "@" -f 1)
+  cluster=$(echo "$ret" | cut -d "@" -f 2)
+  authorization=$(echo "$ret" | cut -d "@" -f 3)
+
+  connector="${args[--connector]}"
+
+  if [[ ! -n "$connector" ]]
+  then
+      logwarn "--connector flag was not provided, applying command to all ccloud connectors"
+      check_if_continue
+      connector=$(playground get-ccloud-connector-list)
+      if [ "$connector" == "" ]
+      then
+          logerror "💤 No ccloud connector is running !"
+          exit 1
+      fi
+  fi
+
+  items=($connector)
+  for connector in ${items[@]}
+  do
+      log "❌ Deleting ccloud connector $connector"
+      curl -s --request DELETE "https://api.confluent.cloud/connect/v1/environments/$environment/clusters/$cluster/connectors/$connector" --header "authorization: Basic $authorization" | jq .
+  done
+  sleep 3
+  playground ccloud-connector status
 }
 
 # :command.function
@@ -9710,6 +10016,13 @@ parse_requirements() {
       shift $#
       ;;
 
+    get-ccloud-connector-list)
+      action="get-ccloud-connector-list"
+      shift
+      playground_get_ccloud_connector_list_parse_requirements "$@"
+      shift $#
+      ;;
+
     get-kafka-region-list)
       action="get-kafka-region-list"
       shift
@@ -9920,6 +10233,50 @@ playground_get_connector_list_parse_requirements() {
 
   # :command.command_filter
   action="get-connector-list"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+}
+
+# :command.parse_requirements
+playground_get_ccloud_connector_list_parse_requirements() {
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    case "${1:-}" in
+      --help | -h)
+        long_usage=yes
+        playground_get_ccloud_connector_list_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action="get-ccloud-connector-list"
 
   # :command.parse_requirements_while
   while [[ $# -gt 0 ]]; do
@@ -13623,6 +13980,34 @@ playground_ccloud_connector_parse_requirements() {
       shift $#
       ;;
 
+    plugins)
+      action="plugins"
+      shift
+      playground_ccloud_connector_plugins_parse_requirements "$@"
+      shift $#
+      ;;
+
+    pause)
+      action="pause"
+      shift
+      playground_ccloud_connector_pause_parse_requirements "$@"
+      shift $#
+      ;;
+
+    resume)
+      action="resume"
+      shift
+      playground_ccloud_connector_resume_parse_requirements "$@"
+      shift $#
+      ;;
+
+    delete)
+      action="delete"
+      shift
+      playground_ccloud_connector_delete_parse_requirements "$@"
+      shift $#
+      ;;
+
     # :command.command_fallback
     "")
       playground_ccloud_connector_usage >&2
@@ -13691,6 +14076,224 @@ playground_ccloud_connector_status_parse_requirements() {
   while [[ $# -gt 0 ]]; do
     key="$1"
     case "$key" in
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+}
+
+# :command.parse_requirements
+playground_ccloud_connector_plugins_parse_requirements() {
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    case "${1:-}" in
+      --help | -h)
+        long_usage=yes
+        playground_ccloud_connector_plugins_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action="ccloud-connector plugins"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+}
+
+# :command.parse_requirements
+playground_ccloud_connector_pause_parse_requirements() {
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    case "${1:-}" in
+      --help | -h)
+        long_usage=yes
+        playground_ccloud_connector_pause_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action="ccloud-connector pause"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      # :flag.case
+      --connector | -c)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+
+          args['--connector']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--connector requires an argument: --connector, -c CONNECTOR" >&2
+          exit 1
+        fi
+        ;;
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+}
+
+# :command.parse_requirements
+playground_ccloud_connector_resume_parse_requirements() {
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    case "${1:-}" in
+      --help | -h)
+        long_usage=yes
+        playground_ccloud_connector_resume_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action="ccloud-connector resume"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      # :flag.case
+      --connector | -c)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+
+          args['--connector']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--connector requires an argument: --connector, -c CONNECTOR" >&2
+          exit 1
+        fi
+        ;;
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+}
+
+# :command.parse_requirements
+playground_ccloud_connector_delete_parse_requirements() {
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    case "${1:-}" in
+      --help | -h)
+        long_usage=yes
+        playground_ccloud_connector_delete_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action="ccloud-connector delete"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      # :flag.case
+      --connector | -c)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+
+          args['--connector']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--connector requires an argument: --connector, -c CONNECTOR" >&2
+          exit 1
+        fi
+        ;;
 
       -?*)
         printf "invalid option: %s\n" "$key" >&2
@@ -14374,6 +14977,7 @@ run() {
 
   case "$action" in
     "get-connector-list") playground_get_connector_list_command ;;
+    "get-ccloud-connector-list") playground_get_ccloud_connector_list_command ;;
     "get-kafka-region-list") playground_get_kafka_region_list_command ;;
     "get-topic-list") playground_get_topic_list_command ;;
     "get-examples-list-with-fzf") playground_get_examples_list_with_fzf_command ;;
@@ -14413,6 +15017,10 @@ run() {
     "topic display-schema-id-statistics") playground_topic_display_schema_id_statistics_command ;;
     "ccloud-connector") playground_ccloud_connector_command ;;
     "ccloud-connector status") playground_ccloud_connector_status_command ;;
+    "ccloud-connector plugins") playground_ccloud_connector_plugins_command ;;
+    "ccloud-connector pause") playground_ccloud_connector_pause_command ;;
+    "ccloud-connector resume") playground_ccloud_connector_resume_command ;;
+    "ccloud-connector delete") playground_ccloud_connector_delete_command ;;
     "connector") playground_connector_command ;;
     "connector status") playground_connector_status_command ;;
     "connector plugins") playground_connector_plugins_command ;;

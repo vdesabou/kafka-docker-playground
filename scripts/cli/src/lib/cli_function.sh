@@ -43,6 +43,31 @@ function get_connect_url_and_security() {
   echo "$connect_url@$security"
 }
 
+function get_ccloud_connect() {
+  if [ ! -f /tmp/delta_configs/ak-tools-ccloud.delta ]
+  then
+      logerror "ERROR: /tmp/delta_configs/ak-tools-ccloud.delta has not been generated"
+      exit 1
+  fi
+  DIR_CLI="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
+  dir1=$(echo ${DIR_CLI%/*})
+  root_folder=$(echo ${dir1%/*})
+  IGNORE_CHECK_FOR_DOCKER_COMPOSE=true
+  source $root_folder/scripts/utils.sh
+
+  environment=$(grep "ENVIRONMENT ID" /tmp/delta_configs/ak-tools-ccloud.delta | cut -d " " -f 4)
+  cluster=$(grep "KAFKA CLUSTER ID" /tmp/delta_configs/ak-tools-ccloud.delta | cut -d " " -f 5)
+
+  if [[ "$OSTYPE" == "darwin"* ]]
+  then
+      authorization=$(echo -n "$CLOUD_API_KEY:$CLOUD_API_SECRET" | base64)
+  else
+      authorization=$(echo -n "$CLOUD_API_KEY:$CLOUD_API_SECRET" | base64 -w 0)
+  fi
+
+  echo "$environment@$cluster@$authorization"
+}
+
 function get_sr_url_and_security() {
   environment=`get_environment_used`
 

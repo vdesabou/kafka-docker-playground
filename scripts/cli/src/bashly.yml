@@ -15,6 +15,10 @@ commands:
   help: Return some completion for connector list
   private: true
 
+- name: get-ccloud-connector-list
+  help: Return some completion for ccloud connector list
+  private: true
+
 - name: get-kafka-region-list
   help: Return some completion for confluent cloud kafka cluster region list
   private: true
@@ -962,6 +966,34 @@ commands:
   commands:
   - name: status
     help: 🧩 Show status of all connectors
+
+  - name: plugins
+    help: 🎨 Show all plugins installed
+
+  - name: pause
+    help: ⏸️  Pause connector
+    flags:
+    - &ccloudconnector
+      long: --connector
+      short: -c
+      required: false
+      arg: connector
+      completions:
+        - $(playground get-ccloud-connector-list)
+      help: |-
+        🔗 Connector name
+
+        🎓 Tip: If not specified, the command will apply to all connectors
+
+  - name: resume
+    help: ⏯️  Resume connector
+    flags:
+    - *ccloudconnector
+
+  - name: delete
+    help: 🗑️  Delete connector
+    flags:
+    - *ccloudconnector
 
 - name: connector
   expose: true
