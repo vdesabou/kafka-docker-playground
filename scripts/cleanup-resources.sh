@@ -180,7 +180,7 @@ then
         key=$(echo $(_jq '.key'))
         resource_type=$(echo $(_jq '.resource_type'))
 
-        if [[ $resource_type = cloud ]]
+        if [[ $resource_type = cloud ]] && [[ $key != "$CLOUD_API_KEY" ]]
         then
           log "deleting cloud api key $key"
           confluent api-key delete $key --force
