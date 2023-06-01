@@ -7,6 +7,6 @@ services:
       - ../../ccloud/connect-snowflake-sink/data_snow:/data_snow
       - ../../ccloud/environment/data:/data
     environment:
-      CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/snowflakeinc-snowflake-kafka-connector,/usr/share/confluent-hub-components/confluentinc-connect-transforms
+      CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/snowflakeinc-snowflake-kafka-connector
       # CONNECT_LOG4J_ROOT_LOGLEVEL: DEBUG
       # CONNECT_LOG4J_LOGGERS: org.reflections=ERROR,com.snowflake.kafka.connector=TRACE,net.snowflake.client.jdbc=TRACE
