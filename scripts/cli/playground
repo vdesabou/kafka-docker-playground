@@ -94,6 +94,7 @@ playground_usage() {
   [[ -n $long_usage ]] && printf "  %s   🗑️  Delete connector\n" "$(green "connector delete")                  "
   [[ -n $long_usage ]] && printf "  %s   🐢 Show lag of sink connector\n" "$(green "connector show-lag")                "
   [[ -n $long_usage ]] && printf "  %s   🧬 Set connect log level\n" "$(green "connector log-level")               "
+  [[ -n $long_usage ]] && printf "  %s   🧑‍🎨  Create or update connector\n" "$(green "connector create-or-update")        "
   echo
 
   # :command.long_usage
@@ -2270,15 +2271,16 @@ playground_connector_usage() {
   echo
   # :command.usage_commands
   printf "%s\n" "$(bold "== Commands ==")"
-  printf "  %s   🧩 Show status of all connectors\n" "$(green "status")   "
-  printf "  %s   🎨 Show all plugins installed\n" "$(green "plugins")  "
-  printf "  %s   ⏸️  Pause connector\n" "$(green "pause")    "
-  printf "  %s   🧞 Get current and latest version available on Confluent Hub for connector(s) used in example\n" "$(green "versions") "
-  printf "  %s   ♻️  Restart connector\n" "$(green "restart")  "
-  printf "  %s   ⏯️  Resume connector\n" "$(green "resume")   "
-  printf "  %s   🗑️  Delete connector\n" "$(green "delete")   "
-  printf "  %s   🐢 Show lag of sink connector\n" "$(green "show-lag") "
-  printf "  %s   🧬 Set connect log level\n" "$(green "log-level")"
+  printf "  %s   🧩 Show status of all connectors\n" "$(green "status")          "
+  printf "  %s   🎨 Show all plugins installed\n" "$(green "plugins")         "
+  printf "  %s   ⏸️  Pause connector\n" "$(green "pause")           "
+  printf "  %s   🧞 Get current and latest version available on Confluent Hub for connector(s) used in example\n" "$(green "versions")        "
+  printf "  %s   ♻️  Restart connector\n" "$(green "restart")         "
+  printf "  %s   ⏯️  Resume connector\n" "$(green "resume")          "
+  printf "  %s   🗑️  Delete connector\n" "$(green "delete")          "
+  printf "  %s   🐢 Show lag of sink connector\n" "$(green "show-lag")        "
+  printf "  %s   🧬 Set connect log level\n" "$(green "log-level")       "
+  printf "  %s   🧑‍🎨  Create or update connector\n" "$(green "create-or-update")"
   echo
 
   # :command.long_usage
@@ -2602,10 +2604,53 @@ playground_connector_log_level_usage() {
     printf "    Show this help\n"
     echo
 
+  fi
+}
+
+# :command.usage
+playground_connector_create_or_update_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground connector create-or-update - 🧑‍🎨  Create or update connector\n"
+    echo
+
+  else
+    printf "playground connector create-or-update - 🧑‍🎨  Create or update connector\n"
+    echo
+
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground connector create-or-update [JSON] [OPTIONS]\n"
+  printf "  playground connector create-or-update --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n $long_usage ]]; then
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_flags
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--connector, -c CONNECTOR (required)")"
+    printf "    🔗 Connector name\n"
+    echo
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+    # :command.usage_args
+    printf "%s\n" "$(bold "== Arguments ==")"
+
+    # :argument.usage
+    printf "  %s\n" "$(blue "JSON")"
+    printf "    json (reads from stdin if empty)\n"
+    printf "    Default: -\n"
+    echo
+
     # :command.usage_examples
     printf "%s\n" "$(bold "Examples")"
-    printf "  playground connector log-level --connector <connector-name> --level TRACE\n"
-    printf "  playground connector log-level --level DEBUG\n"
+    printf "  playground connector create-or-update -c filestream-sink << EOF\n  {\n      \"tasks.max\": \"1\",\n      \"connector.class\":\n  \"org.apache.kafka.connect.file.FileStreamSinkConnector\",\n      \"topics\": \"filestream\",\n      \"file\": \"/tmp/output.json\",\n      \"key.converter\": \"org.apache.kafka.connect.storage.StringConverter\",\n      \"value.converter\": \"org.apache.kafka.connect.json.JsonConverter\",\n      \"value.converter.schemas.enable\": \"false\"\n  }\n  EOF\n"
     echo
 
   fi
@@ -9971,6 +10016,100 @@ playground_connector_log_level_command() {
   done
 }
 
+# :command.function
+playground_connector_create_or_update_command() {
+  # src/connector_create_or_update_command.sh
+  json=${args[json]}
+
+  if [ "$json" = "-" ]
+  then
+      # stdin
+      json_content=$(cat "$json")
+  else
+      json_content=$json
+  fi
+
+  json_file=/tmp/json
+  echo "$json_content" > $json_file
+
+  # JSON is invalid
+  if ! echo "$json_content" | jq -e .
+
+  then
+      set +e
+      jq_output=$(jq . "$json_file" 2>&1)
+      error_line=$(echo "$jq_output" | grep -oE 'parse error.*at line [0-9]+' | grep -oE '[0-9]+')
+
+      if [[ -n "$error_line" ]]; then
+          logerror "Invalid JSON at line $error_line"
+      fi
+      set -e
+
+      if [[ $(type -f bat 2>&1) =~ "not found" ]]
+      then
+          cat $json_file
+      else
+          bat $json_file --highlight-line $error_line
+      fi
+
+      exit 1
+  fi
+
+  ret=$(get_connect_url_and_security)
+
+  connect_url=$(echo "$ret" | cut -d "@" -f 1)
+  security=$(echo "$ret" | cut -d "@" -f 2)
+
+  connector="${args[--connector]}"
+
+  is_create=1
+  connectors=$(playground get-connector-list)
+  items=($connectors)
+  for con in ${items[@]}
+  do
+      if [[ "$con" == "$connector" ]]
+      then
+          is_create=0
+      fi
+  done
+
+  if [ $is_create == 1 ]
+  then
+      log "Creating connector $connector"
+  else
+      log "Updating connector $connector"
+  fi
+
+  curl_output=$(curl $security -s -X PUT \
+       -H "Content-Type: application/json" \
+       --data @$json_file \
+       $connect_url/connectors/$connector/config)
+
+  if [ $? -eq 0 ]
+  then
+      error_code=$(echo "$curl_output" | jq -r .error_code)
+      if [ $error_code != "null" ]
+      then
+          message=$(echo "$curl_output" | jq -r .message)
+          logerror "Command failed with error code $error_code"
+          logerror "$message"
+      else
+          if [ $is_create == 1 ]
+          then
+              log "Connector $connector was successfully created"
+          else
+              log "Connector $connector was successfully updated"
+          fi
+          sleep 3
+          playground connector status
+      fi
+  else
+      logerror "curl request failed !"
+      echo "$curl_output"
+      exit 1
+  fi
+}
+
 # :command.parse_requirements
 parse_requirements() {
   # :command.fixed_flags_filter
@@ -14400,6 +14539,13 @@ playground_connector_parse_requirements() {
       shift $#
       ;;
 
+    create-or-update)
+      action="create-or-update"
+      shift
+      playground_connector_create_or_update_parse_requirements "$@"
+      shift $#
+      ;;
+
     # :command.command_fallback
     "")
       playground_connector_usage >&2
@@ -14956,6 +15102,79 @@ playground_connector_log_level_parse_requirements() {
 
 }
 
+# :command.parse_requirements
+playground_connector_create_or_update_parse_requirements() {
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    case "${1:-}" in
+      --help | -h)
+        long_usage=yes
+        playground_connector_create_or_update_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action="connector create-or-update"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+      # :flag.case
+      --connector | -c)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+
+          args['--connector']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--connector requires an argument: --connector, -c CONNECTOR" >&2
+          exit 1
+        fi
+        ;;
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        if [[ -z ${args['json']+x} ]]; then
+
+          args['json']=$1
+          shift
+        else
+          printf "invalid argument: %s\n" "$key" >&2
+          exit 1
+        fi
+
+        ;;
+
+    esac
+  done
+
+  # :command.required_flags_filter
+  if [[ -z ${args['--connector']+x} ]]; then
+    printf "missing required flag: --connector, -c CONNECTOR\n" >&2
+    exit 1
+  fi
+
+  # :command.default_assignments
+  [[ -n ${args['json']:-} ]] || args['json']="-"
+
+}
+
 # :command.initialize
 initialize() {
   version="1.0.0"
@@ -15031,6 +15250,7 @@ run() {
     "connector delete") playground_connector_delete_command ;;
     "connector show-lag") playground_connector_show_lag_command ;;
     "connector log-level") playground_connector_log_level_command ;;
+    "connector create-or-update") playground_connector_create_or_update_command ;;
   esac
 }
 

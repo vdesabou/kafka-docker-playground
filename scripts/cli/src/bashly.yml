@@ -1061,9 +1061,37 @@ commands:
       allowed: [INFO, WARN, DEBUG, TRACE]
       required: true
 
-    examples:
-    - playground connector log-level --connector <connector-name> --level TRACE
-    - playground connector log-level --level DEBUG
+  - name: create-or-update
+    help: 🧑‍🎨  Create or update connector
+    args:
+    - name: json
+      
+      # Set the default path value to -, which is the standard operator for stdin.
+      default: "-"
+      help: json (reads from stdin if empty)
+
+    flags:
+    - long: --connector
+      short: -c
+      required: true
+      arg: connector
+      completions:
+        - $(playground get-connector-list)
+      help: |-
+        🔗 Connector name
+
+    examples: |
+      playground connector create-or-update -c filestream-sink << EOF
+      {
+          "tasks.max": "1",
+          "connector.class": "org.apache.kafka.connect.file.FileStreamSinkConnector",
+          "topics": "filestream",
+          "file": "/tmp/output.json",
+          "key.converter": "org.apache.kafka.connect.storage.StringConverter",
+          "value.converter": "org.apache.kafka.connect.json.JsonConverter",
+          "value.converter.schemas.enable": "false"
+      }
+      EOF
 
   examples:
   - playground connector status
