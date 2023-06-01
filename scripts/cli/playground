@@ -78,6 +78,8 @@ playground_usage() {
   [[ -n $long_usage ]] && printf "  %s   🧞 Easily identify the usage of different schema versions within a topic.\n" "$(green "topic display-schema-id-statistics")"
   echo
   printf "%s\n" "$(bold "Connector commands:")"
+  printf "  %s   🔗☁️ Fully Managed Connector commands\n" "$(green "ccloud-connector")                  "
+  [[ -n $long_usage ]] && printf "  %s   🧩 Show status of all connectors\n" "$(green "ccloud-connector status")           "
   printf "  %s   🔗 Connector commands\n" "$(green "connector")                         "
   [[ -n $long_usage ]] && printf "  %s   🧩 Show status of all connectors\n" "$(green "connector status")                  "
   [[ -n $long_usage ]] && printf "  %s   🎨 Show all plugins installed\n" "$(green "connector plugins")                 "
@@ -2005,6 +2007,81 @@ playground_topic_display_schema_id_statistics_usage() {
 }
 
 # :command.usage
+playground_ccloud_connector_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground ccloud-connector - 🔗☁️ Fully Managed Connector commands\n"
+    echo
+
+  else
+    printf "playground ccloud-connector - 🔗☁️ Fully Managed Connector commands\n"
+    echo
+
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground ccloud-connector COMMAND\n"
+  printf "  playground ccloud-connector [COMMAND] --help | -h\n"
+  echo
+  # :command.usage_commands
+  printf "%s\n" "$(bold "== Commands ==")"
+  printf "  %s   🧩 Show status of all connectors\n" "$(green "status")"
+  echo
+
+  # :command.long_usage
+  if [[ -n $long_usage ]]; then
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+    # :command.usage_environment_variables
+    printf "%s\n" "$(bold "Environment Variables:")"
+
+    # :environment_variable.usage
+    printf "  %s\n" "$(cyan "CLOUD_API_KEY (required)")"
+    printf "    Cloud API key, see\n    https://docs.confluent.io/cloud/current/access-management/authenticate/api-keys/api-keys.html#cloud-cloud-api-keys\n"
+    echo
+
+    # :environment_variable.usage
+    printf "  %s\n" "$(cyan "CLOUD_API_SECRET (required)")"
+    printf "    Cloud API secret, see\n    https://docs.confluent.io/cloud/current/access-management/authenticate/api-keys/api-keys.html#cloud-cloud-api-keys\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_ccloud_connector_status_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground ccloud-connector status - 🧩 Show status of all connectors\n"
+    echo
+
+  else
+    printf "playground ccloud-connector status - 🧩 Show status of all connectors\n"
+    echo
+
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground ccloud-connector status\n"
+  printf "  playground ccloud-connector status --help | -h\n"
+  echo
+
+  # :command.long_usage
+  if [[ -n $long_usage ]]; then
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+  fi
+}
+
+# :command.usage
 playground_connector_usage() {
   if [[ -n $long_usage ]]; then
     printf "playground connector - 🔗 Connector commands\n"
@@ -2713,6 +2790,22 @@ function filter_not_mdc_environment() {
   if [[ "$environment" == "mdc"* ]]
   then
     echo "$environment is not supported with this command !"
+  fi
+}
+
+function filter_ccloud_environment() {
+  environment=`get_environment_used`
+
+  if [ "$environment" == "error" ]
+  then
+    logerror "File containing restart command /tmp/playground-command does not exist!"
+    exit 1
+
+  fi
+
+  if [[ "$environment" != "environment" ]]
+  then
+    echo "environment should be ccloud with this command (it is $environment)!"
   fi
 }
 
@@ -4561,6 +4654,9 @@ function bootstrap_ccloud_environment () {
     logerror "ERROR: $DELTA_CONFIGS_ENV has not been generated"
     exit 1
   fi
+
+  # trick
+  echo "ccloud/environment" > /tmp/playground-command
 }
 
 function create_ccloud_connector() {
@@ -9149,6 +9245,34 @@ playground_topic_display_schema_id_statistics_command() {
 }
 
 # :command.function
+playground_ccloud_connector_status_command() {
+  # src/ccloud_connector_status_command.sh
+  if [ ! -f /tmp/delta_configs/ak-tools-ccloud.delta ]
+  then
+      logerror "ERROR: /tmp/delta_configs/ak-tools-ccloud.delta has not been generated"
+      exit 1
+  fi
+  DIR_CLI="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
+  dir1=$(echo ${DIR_CLI%/*})
+  root_folder=$(echo ${dir1%/*})
+  IGNORE_CHECK_FOR_DOCKER_COMPOSE=true
+  source $root_folder/scripts/utils.sh
+
+  environment=$(grep "ENVIRONMENT ID" /tmp/delta_configs/ak-tools-ccloud.delta | cut -d " " -f 4)
+  cluster=$(grep "KAFKA CLUSTER ID" /tmp/delta_configs/ak-tools-ccloud.delta | cut -d " " -f 5)
+
+  if [[ "$OSTYPE" == "darwin"* ]]
+  then
+      authorization=$(echo -n "$CLOUD_API_KEY:$CLOUD_API_SECRET" | base64)
+  else
+      authorization=$(echo -n "$CLOUD_API_KEY:$CLOUD_API_SECRET" | base64 -w 0)
+  fi
+
+  curl -s --request GET "https://api.confluent.cloud/connect/v1/environments/$environment/clusters/$cluster/connectors?expand=info%2Cstatus%2Cid" \
+  --header "authorization: Basic $authorization" | jq
+}
+
+# :command.function
 playground_connector_status_command() {
   # src/connector_status_command.sh
   ret=$(get_connect_url_and_security)
@@ -9716,6 +9840,13 @@ parse_requirements() {
       action="topic"
       shift
       playground_topic_parse_requirements "$@"
+      shift $#
+      ;;
+
+    ccloud-connector)
+      action="ccloud-connector"
+      shift
+      playground_ccloud_connector_parse_requirements "$@"
       shift $#
       ;;
 
@@ -13451,6 +13582,135 @@ playground_topic_display_schema_id_statistics_parse_requirements() {
 }
 
 # :command.parse_requirements
+playground_ccloud_connector_parse_requirements() {
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    case "${1:-}" in
+      --help | -h)
+        long_usage=yes
+        playground_ccloud_connector_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.environment_variables_filter
+
+  if [[ -z "${CLOUD_API_KEY:-}" ]]; then
+    printf "missing required environment variable: CLOUD_API_KEY\n" >&2
+    exit 1
+  fi
+  if [[ -z "${CLOUD_API_SECRET:-}" ]]; then
+    printf "missing required environment variable: CLOUD_API_SECRET\n" >&2
+    exit 1
+  fi
+
+  # :command.command_filter
+  action=${1:-}
+
+  case $action in
+    -*) ;;
+
+    status)
+      action="status"
+      shift
+      playground_ccloud_connector_status_parse_requirements "$@"
+      shift $#
+      ;;
+
+    # :command.command_fallback
+    "")
+      playground_ccloud_connector_usage >&2
+      exit 1
+      ;;
+
+    *)
+      printf "invalid command: %s\n" "$action" >&2
+      exit 1
+      ;;
+
+  esac
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+  # :command.user_filter
+  filter_error=$(filter_ccloud_environment)
+  if [[ -n $filter_error ]]; then
+    echo "$filter_error" >&2
+    exit 1
+  fi
+
+}
+
+# :command.parse_requirements
+playground_ccloud_connector_status_parse_requirements() {
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    case "${1:-}" in
+      --help | -h)
+        long_usage=yes
+        playground_ccloud_connector_status_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action="ccloud-connector status"
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+}
+
+# :command.parse_requirements
 playground_connector_parse_requirements() {
   # :command.fixed_flags_filter
   while [[ $# -gt 0 ]]; do
@@ -14151,6 +14411,8 @@ run() {
     "topic consume") playground_topic_consume_command ;;
     "topic set-schema-compatibility") playground_topic_set_schema_compatibility_command ;;
     "topic display-schema-id-statistics") playground_topic_display_schema_id_statistics_command ;;
+    "ccloud-connector") playground_ccloud_connector_command ;;
+    "ccloud-connector status") playground_ccloud_connector_status_command ;;
     "connector") playground_connector_command ;;
     "connector status") playground_connector_status_command ;;
     "connector plugins") playground_connector_plugins_command ;;

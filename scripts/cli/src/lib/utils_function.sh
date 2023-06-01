@@ -1432,6 +1432,9 @@ function bootstrap_ccloud_environment () {
     logerror "ERROR: $DELTA_CONFIGS_ENV has not been generated"
     exit 1
   fi
+
+  # trick
+  echo "ccloud/environment" > /tmp/playground-command
 }
 
 function create_ccloud_connector() {

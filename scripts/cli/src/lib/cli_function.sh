@@ -293,6 +293,21 @@ function filter_not_mdc_environment() {
   fi
 }
 
+function filter_ccloud_environment() {
+  environment=`get_environment_used`
+
+  if [ "$environment" == "error" ]
+  then
+    logerror "File containing restart command /tmp/playground-command does not exist!"
+    exit 1 
+  fi
+
+  if [[ "$environment" != "environment" ]]
+  then
+    echo "environment should be ccloud with this command (it is $environment)!"
+  fi
+}
+
 function filter_schema_registry_running() {
   ret=$(get_sr_url_and_security)
 
