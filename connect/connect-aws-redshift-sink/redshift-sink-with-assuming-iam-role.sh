@@ -28,7 +28,7 @@ else
      export CONNECT_CONTAINER_HOME_DIR="/root"
 fi
 
-PASSWORD=$(date +%s | sha256sum | base64 | head -c 32 ; echo)
+PASSWORD=$(date +%s | cksum | base64 | head -c 32 ; echo)
 # generate data file for externalizing secrets
 sed -e "s|:PASSWORD:|$PASSWORD|g" \
     ../../connect/connect-aws-redshift-sink/data.template > ../../connect/connect-aws-redshift-sink/data

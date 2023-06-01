@@ -34,7 +34,7 @@ AZURE_FIREWALL_RULL_NAME=$AZURE_NAME
 AZURE_DATA_WAREHOUSE_NAME=$AZURE_NAME
 AZURE_REGION=westeurope
 AZURE_SQL_URL="jdbc:sqlserver://$AZURE_SQL_NAME.database.windows.net:1433"
-PASSWORD=$(date +%s | sha256sum | base64 | head -c 32 ; echo)
+PASSWORD=$(date +%s | cksum | base64 | head -c 32 ; echo)
 
 # Creating Azure Resource Group $AZURE_RESOURCE_GROUP
 az group create \
