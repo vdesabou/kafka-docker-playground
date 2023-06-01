@@ -4,6 +4,7 @@ set -e
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
+cd ../../connect/connect-jdbc-sqlserver-source
 if [ ! -f ${PWD}/sqljdbc_12.2/enu/mssql-jdbc-12.2.0.jre11.jar ]
 then
      log "Downloading Microsoft JDBC driver mssql-jdbc-12.2.0.jre11.jar"
@@ -11,6 +12,7 @@ then
      tar xvfz sqljdbc_12.2.0.0_enu.tar.gz
      rm -f sqljdbc_12.2.0.0_enu.tar.gz
 fi
+cd -
 
 cd ${DIR}/ssl
 if [[ "$OSTYPE" == "darwin"* ]]
