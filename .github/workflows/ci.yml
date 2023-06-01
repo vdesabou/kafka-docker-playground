@@ -76,7 +76,7 @@ jobs:
                       "🚀 connect/connect-gcp-bigquery-sink connect/connect-gcp-cloud-functions-sink connect/connect-vertica-sink connect/connect-prometheus-sink connect/connect-aws-sqs-source connect/connect-aws-s3-sink connect/connect-aws-s3-source connect/connect-databricks-delta-lake-sink",
                       "🚀 connect/connect-gcp-pubsub-source connect/connect-gcp-google-pubsub-source connect/connect-gcp-google-pubsub-sink connect/connect-gcp-gcs-sink connect/connect-gcp-gcs-source connect/connect-gcp-bigtable-sink connect/connect-kudu-source connect/connect-kudu-sink",
                       "🚀 connect/connect-azure-data-lake-storage-gen1-sink connect/connect-azure-data-lake-storage-gen2-sink connect/connect-azure-event-hubs-source connect/connect-azure-cognitive-search-sink connect/connect-azure-functions-sink connect/connect-azure-service-bus-source connect/connect-azure-blob-storage-source",
-                      "🚀 connect/connect-ftps-source connect/connect-ftps-sink connect/connect-rabbitmq-sink connect/connect-amps-source connect/connect-jira-source connect/connect-github-source connect/connect-pivotal-gemfire-sink connect/connect-azure-blob-storage-sink connect/connect-azure-sql-data-warehouse-sink",
+                      "🚀 connect/connect-ftps-source connect/connect-ftps-sink connect/connect-rabbitmq-sink connect/connect-amps-source connect/connect-jira-source connect/connect-github-source connect/connect-pivotal-gemfire-sink connect/connect-azure-blob-storage-sink connect/connect-azure-synapse-analytics-sink",
                       "🚀 connect/connect-http-sink",
                       "🚀 multi-data-center/replicator-connect",
                       "🚀 multi-data-center/replicator-executable",

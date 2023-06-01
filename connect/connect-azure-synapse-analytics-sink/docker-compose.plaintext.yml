@@ -3,6 +3,6 @@ version: '3.5'
 services:
   connect:
     volumes:
-      - ../../connect/connect-azure-sql-data-warehouse-sink/data:/data
+      - ../../connect/connect-azure-synapse-analytics-sink/data:/data
     environment:
       CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-azure-sql-dw

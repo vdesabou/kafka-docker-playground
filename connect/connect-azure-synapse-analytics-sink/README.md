@@ -1,10 +1,10 @@
-# Azure SQL Data Warehouse Sink connector
+# Azure Synapse Analytics Sink connector
 
 
 
 ## Objective
 
-Quickly test [Azure SQL Data Warehouse Sink](https://docs.confluent.io/current/connect/kafka-connect-azure-sql-dw/index.html#az-sql-data-warehouse-sink-connector-for-cp) connector.
+Quickly test [Azure Synapse Analytics Sink](https://docs.confluent.io/kafka-connectors/azure-sql-dw/current/overview.html) connector.
 
 
 ## How to run
@@ -12,7 +12,7 @@ Quickly test [Azure SQL Data Warehouse Sink](https://docs.confluent.io/current/c
 Simply run:
 
 ```
-$ playground run -f azure-sql-data-warehouse-sink<tab>
+$ playground run -f azure-synapse-analytics-sink<tab>
 ```
 
 ## Details of what the script is doing
@@ -96,7 +96,7 @@ $ docker exec -i connect kafka-avro-console-producer --broker-list broker:9092 -
 EOF
 ```
 
-Check Azure SQL Data Warehouse for Data
+Check Azure Synapse Analytics for Data
 
 ```bash
 $ docker run -i fabiang/sqlcmd -S "$AZURE_SQL_NAME.database.windows.net,1433" -I -U "myadmin" -P "$PASSWORD" -d "$AZURE_DATA_WAREHOUSE_NAME" -Q "select * from kafka_products;"

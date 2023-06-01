@@ -47,7 +47,7 @@ az sql server create \
 if [ ! -z "$CI" ]
 then
     # running with CI
-    # connect-azure-sql-data-warehouse-sink is failing #131
+    # connect-azure-synapse-analytics-sink is failing #131
     # allow applications from Azure IP addresses to connect to your Azure Database for MySQL server, provide the IP address 0.0.0.0 as the Start IP and End IP
     az sql server firewall-rule create \
     --name $AZURE_FIREWALL_RULL_NAME \
@@ -76,7 +76,7 @@ az sql dw create \
 sed -e "s|:AZURE_SQL_URL:|$AZURE_SQL_URL|g" \
     -e "s|:PASSWORD:|$PASSWORD|g" \
     -e "s|:AZURE_DATA_WAREHOUSE_NAME:|$AZURE_DATA_WAREHOUSE_NAME|g" \
-    ../../connect/connect-azure-sql-data-warehouse-sink/data.template > ../../connect/connect-azure-sql-data-warehouse-sink/data
+    ../../connect/connect-azure-synapse-analytics-sink/data.template > ../../connect/connect-azure-synapse-analytics-sink/data
 
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
 
@@ -88,7 +88,7 @@ docker exec -i connect kafka-avro-console-producer --broker-list broker:9092 --p
 {"name": "notebooks", "price": 1.99, "quantity": 5}
 EOF
 
-log "Creating Azure SQL Data Warehouse Sink connector"
+log "Creating Azure Synapse Analytics Sink connector"
 curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
@@ -113,7 +113,7 @@ curl -X PUT \
 
 sleep 60
 
-log "Check Azure SQL Data Warehouse for Data"
+log "Check Azure Synapse Analytics for Data"
 docker run -i fabiang/sqlcmd -S "$AZURE_SQL_NAME.database.windows.net,1433" -I -U "myadmin" -P "$PASSWORD" -d "$AZURE_DATA_WAREHOUSE_NAME" -Q "select * from kafka_products;" -s"|"  > /tmp/result.log  2>&1
 cat /tmp/result.log
 grep "notebooks" /tmp/result.log
