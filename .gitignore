@@ -27,8 +27,8 @@ connect/connect-jdbc-oracle12-source/docker-images
 connect/connect-jdbc-oracle11-source/instantclient/OracleSample.java
 connect/connect-jdbc-oracle11-source/instantclient/OracleSample.class
 *.class
-connect/connect-jdbc-sqlserver-source/sqljdbc_7.4
-connect/connect-jdbc-sqlserver-sink/sqljdbc_7.4
+connect/connect-jdbc-sqlserver-source/sqljdbc_*
+connect/connect-jdbc-sqlserver-sink/sqljdbc_*
 connect/connect-spool-dir-source/data
 mycommand.sh
 connect/connect-sftp-sink/upload/

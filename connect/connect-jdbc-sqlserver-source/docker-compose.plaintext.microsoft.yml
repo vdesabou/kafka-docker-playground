@@ -29,6 +29,6 @@ services:
       - schema-registry
       - sqlserver
     volumes:
-        - ../../connect/connect-jdbc-sqlserver-source/sqljdbc_7.4/enu/mssql-jdbc-7.4.1.jre8.jar:/usr/share/confluent-hub-components/confluentinc-kafka-connect-jdbc/lib/mssql-jdbc-7.4.1.jre8.jar
+        - ../../connect/connect-jdbc-sqlserver-source/sqljdbc_12.2/enu/mssql-jdbc-12.2.0.jre11.jar:/usr/share/confluent-hub-components/confluentinc-kafka-connect-jdbc/lib/mssql-jdbc-12.2.0.jre11.jar
     environment:
       CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-jdbc

@@ -5,12 +5,12 @@ DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 source ${DIR}/../../scripts/utils.sh
 
 cd ../../connect/connect-jdbc-sqlserver-sink
-if [ ! -f ${PWD}/sqljdbc_7.4/enu/mssql-jdbc-7.4.1.jre8.jar ]
+if [ ! -f ${PWD}/sqljdbc_12.2/enu/mssql-jdbc-12.2.0.jre11.jar ]
 then
-     log "Downloading Microsoft JDBC driver mssql-jdbc-7.4.1.jre8.jar"
-     wget https://download.microsoft.com/download/6/9/9/699205CA-F1F1-4DE9-9335-18546C5C8CBD/sqljdbc_7.4.1.0_enu.tar.gz
-     tar xvfz sqljdbc_7.4.1.0_enu.tar.gz
-     rm -f sqljdbc_7.4.1.0_enu.tar.gz
+     log "Downloading Microsoft JDBC driver mssql-jdbc-12.2.0.jre11.jar"
+     curl -L https://go.microsoft.com/fwlink/?linkid=2222954 -o sqljdbc_12.2.0.0_enu.tar.gz
+     tar xvfz sqljdbc_12.2.1.0_enu.tar.gz
+     rm -f sqljdbc_12.2.1.0_enu.tar.gz
 fi
 cd -
 
