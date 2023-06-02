@@ -12,14 +12,14 @@ json_file=/tmp/json
 echo "$json_content" > $json_file
 
 # JSON is invalid
-if ! echo "$json_content" | jq -e . 
+if ! echo "$json_content" | jq -e .  > /dev/null 2>&1
 then
     set +e
     jq_output=$(jq . "$json_file" 2>&1)
     error_line=$(echo "$jq_output" | grep -oE 'parse error.*at line [0-9]+' | grep -oE '[0-9]+')
 
     if [[ -n "$error_line" ]]; then
-        logerror "Invalid JSON at line $error_line"
+        logerror "❌ Invalid JSON at line $error_line"
     fi
     set -e
 
@@ -53,9 +53,9 @@ done
 
 if [ $is_create == 1 ]
 then
-    log "Creating connector $connector"
+    log "🛠️ Creating connector $connector"
 else
-    log "Updating connector $connector"
+    log "🔄 Updating connector $connector"
 fi
 
 curl_output=$(curl $security -s -X PUT \
@@ -74,15 +74,15 @@ then
     else
         if [ $is_create == 1 ]
         then
-            log "Connector $connector was successfully created"
+            log "✅ Connector $connector was successfully created"
         else
-            log "Connector $connector was successfully updated"
+            log "✅ Connector $connector was successfully updated"
         fi
         sleep 3
         playground connector status
     fi
 else
-    logerror "curl request failed !"
+    logerror "❌ curl request failed !"
     echo "$curl_output"
     exit 1
 fi

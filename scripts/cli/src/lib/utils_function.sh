@@ -1440,7 +1440,7 @@ function bootstrap_ccloud_environment () {
 function create_ccloud_connector() {
   file=$1
 
-  log "Creating connector from $file"
+  log "🛠️ Creating connector from $file"
   confluent connect cluster create --config-file $file
   if [[ $? != 0 ]]
   then
