@@ -299,6 +299,7 @@ else
       if [ "$connector_paths" == "" ]
       then
         # not a connector test
+        maybe_create_image
         if [ -z "$CONNECT_TAG" ]
         then
           export CONNECT_TAG="$TAG"
