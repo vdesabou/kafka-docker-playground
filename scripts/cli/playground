@@ -8771,7 +8771,6 @@ playground_get_all_schemas_command() {
   if [[ -n "$open" ]]
   then
     filename="/tmp/get-all-schemas-`date '+%Y-%m-%d-%H-%M-%S'`.log"
-    log "Opening $filename with editor $editor"
     get_all_schemas > "$filename" 2>&1
     if [ $? -eq 0 ]
     then
@@ -8964,7 +8963,6 @@ playground_container_logs_command() {
   if [[ -n "$open" ]]
   then
     filename="/tmp/${container}-`date '+%Y-%m-%d-%H-%M-%S'`.log"
-    log "Opening $filename with editor $editor"
     docker container logs "$container" > "$filename" 2>&1
     if [ $? -eq 0 ]
     then
@@ -15607,6 +15605,18 @@ initialize() {
 
   # src/initialize.sh
 
+  if [ -z $CONFIG_FILE ]
+  then
+      DIR_CLI="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
+      dir1=$(echo ${DIR_CLI%/*})
+      root_folder=$(echo ${dir1%/*})
+
+      CONFIG_FILE=$root_folder/scripts/cli/config.ini
+
+      log "📝 Loading default config.ini $CONFIG_FILE as CONFIG_FILE environment variable is not set"
+  else
+      log "📝 Loading config.ini $CONFIG_FILE from CONFIG_FILE environment variable"
+  fi
 }
 
 # :command.run

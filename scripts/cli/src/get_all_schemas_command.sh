@@ -44,7 +44,6 @@ function get_all_schemas() {
 if [[ -n "$open" ]]
 then
   filename="/tmp/get-all-schemas-`date '+%Y-%m-%d-%H-%M-%S'`.log"
-  log "Opening $filename with editor $editor"
   get_all_schemas > "$filename" 2>&1
   if [ $? -eq 0 ]
   then
