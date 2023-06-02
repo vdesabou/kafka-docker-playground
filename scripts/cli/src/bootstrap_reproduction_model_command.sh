@@ -172,7 +172,7 @@ do
     cd - > /dev/null
   fi
 done
-  
+
 if [ "$producer" != "none" ]
 then
   tmp_dir=$(mktemp -d -t ci-XXXXXXXXXX)
@@ -990,47 +990,47 @@ fi
 
 if [[ -n "$enable_ksqldb" ]]
 then
-  flag_list="$flag_list --enable-ksqldb"
+  force_enable --enable_ksqldb ENABLE_KSQLDB
 fi
 
 if [[ -n "$enable_c3" ]]
 then
-  flag_list="$flag_list --enable-control-center"
+  force_enable --enable-control-center ENABLE_CONTROL_CENTER
 fi
 
 if [[ -n "$enable_conduktor" ]]
 then
-  flag_list="$flag_list --enable-conduktor"
+  force_enable --enable-conduktor ENABLE_CONDUKTOR
 fi
 
 if [[ -n "$enable_multiple_brokers" ]]
 then
-  flag_list="$flag_list --enable-multiple-broker"
+  force_enable --enable-multiple-broker ENABLE_KAFKA_NODES
 fi
 
 if [[ -n "$enable_multiple_connect_workers" ]]
 then
-  flag_list="$flag_list --enable-multiple-connect-workers"
+  force_enable --enable-multiple-connect-workers ENABLE_CONNECT_NODES
 fi
 
 if [[ -n "$enable_jmx_grafana" ]]
 then
-  flag_list="$flag_list --enable-jmx-grafana"
+  force_enable --enable-jmx-grafana ENABLE_JMX_GRAFANA
 fi
 
 if [[ -n "$enable_kcat" ]]
 then
-  flag_list="$flag_list --enable-kcat"
+  force_enable --enable-kcat ENABLE_KCAT
 fi
 
 if [[ -n "$enable_sr_maven_plugin_app" ]]
 then
-  flag_list="$flag_list --enable-sr-maven-plugin-app"
+  force_enable --enable-sr-maven-plugin-app ENABLE_SR_MAVEN_PLUGIN_NODE
 fi
 
 if [[ -n "$enable_sql_datagen" ]]
 then
-  flag_list="$flag_list --enable-sql-datagen"
+  force_enable --enable-sql-datagen SQL_DATAGEN
 fi
 
 log "🕹️ Ready? Run it now?"
