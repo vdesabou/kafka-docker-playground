@@ -12,6 +12,7 @@ fi
 
 if [ ! -z "$SQL_DATAGEN" ]
 then
+     cd ../../connect/connect-cdc-oracle12-source
      log "🌪️ SQL_DATAGEN is set, make sure to increase redo.log.row.fetch.size, have a look at https://github.com/vdesabou/kafka-docker-playground/blob/master/connect/connect-cdc-oracle19-source/README.md#note-on-redologrowfetchsize"
      for component in oracle-datagen
      do
@@ -26,6 +27,7 @@ then
      fi
      set -e
      done
+     cd -
 else
      log "🛑 SQL_DATAGEN is not set"
 fi

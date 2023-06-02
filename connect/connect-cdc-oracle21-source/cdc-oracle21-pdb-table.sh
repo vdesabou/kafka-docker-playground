@@ -14,7 +14,8 @@ create_or_get_oracle_image "LINUX.X64_213000_db_home.zip" "../../connect/connect
 
 if [ ! -z "$SQL_DATAGEN" ]
 then
-     log "🌪️ SQL_DATAGEN is set, make sure to increase redo.log.row.fetch.size, have a look at https://github.com/vdesabou/kafka-docker-playground/blob/master/connect/connect-cdc-oracle21-source/README.md#note-on-redologrowfetchsize"
+     cd ../../connect/connect-cdc-oracle21-source
+     log "🌪️ SQL_DATAGEN is set, make sure to increase redo.log.row.fetch.size, have a look at https://github.com/vdesabou/kafka-docker-playground/blob/master/connect/connect-cdc-oracle19-source/README.md#note-on-redologrowfetchsize"
      for component in oracle-datagen
      do
      set +e
@@ -28,6 +29,7 @@ then
      fi
      set -e
      done
+     cd -
 else
      log "🛑 SQL_DATAGEN is not set"
 fi
