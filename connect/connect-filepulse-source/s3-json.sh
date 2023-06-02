@@ -112,8 +112,8 @@ log "Creating S3 JSON FilePulse Source connector"
 playground connector create-or-update --connector filepulse-source-s3-json << EOF
 {
           "connector.class":"io.streamthoughts.kafka.connect.filepulse.source.FilePulseSourceConnector",
-          "aws.access.key.id": "${file:/data:aws.access.key.id}",
-          "aws.secret.access.key": "${file:/data:aws.secret.access.key}",
+          "aws.access.key.id": "\${file:/data:aws.access.key.id}",
+          "aws.secret.access.key": "\${file:/data:aws.secret.access.key}",
           "aws.s3.bucket.name": "$AWS_BUCKET_NAME",
           "aws.s3.region": "$AWS_REGION",
           "fs.listing.class": "io.streamthoughts.kafka.connect.filepulse.fs.AmazonS3FileSystemListing",

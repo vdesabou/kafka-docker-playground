@@ -217,7 +217,7 @@ kubectl -n kafka-dest exec -i replicator-0 -- curl -k -X PUT \
             "connector.class": "io.confluent.connect.replicator.ReplicatorSourceConnector",
             "tasks.max": "1",
             "topic.whitelist": "example",
-            "topic.rename.format": "${topic}_replica",
+            "topic.rename.format": "\${topic}_replica",
             "key.converter": "io.confluent.connect.replicator.util.ByteArrayConverter",
             "value.converter": "io.confluent.connect.replicator.util.ByteArrayConverter",
             "src.kafka.bootstrap.servers": "kafka-0.kafka.kafka-src.svc.cluster.local:9092",

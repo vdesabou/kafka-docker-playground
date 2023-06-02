@@ -92,7 +92,7 @@ playground connector create-or-update --connector redshift-sink << EOF
                "aws.redshift.port": "5439",
                "aws.redshift.database": "dev",
                "aws.redshift.user": "masteruser",
-               "aws.redshift.password": "${file:/data:password}",
+               "aws.redshift.password": "\${file:/data:password}",
                "auto.create": "true",
                "pk.mode": "kafka",
                "confluent.license": "",

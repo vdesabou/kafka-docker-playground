@@ -129,7 +129,7 @@ playground connector create-or-update --connector snowflake-sink << EOF
                "snowflake.url.name": "$SNOWFLAKE_URL",
                "snowflake.user.name": "$PLAYGROUND_USER",
                "snowflake.user.role": "$PLAYGROUND_CONNECTOR_ROLE",
-               "snowflake.private.key":"${file:/data:private.key}",
+               "snowflake.private.key": "\${file:/data:private.key}",
                "snowflake.private.key.passphrase": "confluent",
                "snowflake.database.name": "$PLAYGROUND_DB",
                "snowflake.schema.name":"PUBLIC",

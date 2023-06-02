@@ -40,11 +40,11 @@ playground connector create-or-update --connector replicate-onprem-to-cloud << E
 
           "value.converter": "io.confluent.connect.avro.AvroConverter",
           "value.converter.schema.registry.url": "$SCHEMA_REGISTRY_URL",
-          "value.converter.basic.auth.user.info": "${file:/data:schema.registry.basic.auth.user.info}",
+          "value.converter.basic.auth.user.info": "\${file:/data:schema.registry.basic.auth.user.info}",
           "value.converter.basic.auth.credentials.source": "USER_INFO",
 
           "dest.kafka.ssl.endpoint.identification.algorithm":"https",
-          "dest.kafka.bootstrap.servers": "${file:/data:bootstrap.servers}",
+          "dest.kafka.bootstrap.servers": "\${file:/data:bootstrap.servers}",
           "dest.kafka.security.protocol" : "SASL_SSL",
           "dest.kafka.sasl.jaas.config": "org.apache.kafka.common.security.plain.PlainLoginModule required username=\"${file:/data:sasl.username}\" password=\"${file:/data:sasl.password}\";",
           "dest.kafka.sasl.mechanism":"PLAIN",
@@ -52,7 +52,7 @@ playground connector create-or-update --connector replicate-onprem-to-cloud << E
           "dest.kafka.retry.backoff.ms":"500",
           "confluent.topic.ssl.endpoint.identification.algorithm" : "https",
           "confluent.topic.sasl.mechanism" : "PLAIN",
-          "confluent.topic.bootstrap.servers": "${file:/data:bootstrap.servers}",
+          "confluent.topic.bootstrap.servers": "\${file:/data:bootstrap.servers}",
           "confluent.topic.sasl.jaas.config" : "org.apache.kafka.common.security.plain.PlainLoginModule required username=\"${file:/data:sasl.username}\" password=\"${file:/data:sasl.password}\";",
           "confluent.topic.security.protocol" : "SASL_SSL",
           "confluent.topic.replication.factor": "3",

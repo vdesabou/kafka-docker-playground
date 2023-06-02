@@ -45,7 +45,7 @@ playground connector create-or-update --connector jdbc-hive-sink << EOF
                "topics": "pokes",
                "pk.mode": "record_value",
                "pk.fields": "foo",
-               "table.name.format": "default.${topic}"
+               "table.name.format": "default.\${topic}"
           }
 EOF
 

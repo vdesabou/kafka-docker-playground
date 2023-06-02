@@ -104,7 +104,7 @@ playground connector create-or-update --connector redshift-sink << EOF
                "aws.redshift.port": "5439",
                "aws.redshift.database": "dev",
                "aws.redshift.user": "masteruser",
-               "aws.redshift.password": "${file:/data:password}",
+               "aws.redshift.password": "\${file:/data:password}",
                "aws.access.key.id" : "$AWS_ACCESS_KEY_ID",
                "aws.secret.key.id": "$AWS_SECRET_ACCESS_KEY",
                "auto.create": "true",

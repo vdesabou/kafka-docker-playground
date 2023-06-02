@@ -279,7 +279,7 @@ playground connector create-or-update --connector cdc-oracle-source-pdb << EOF
                "redo.log.topic.name": "redo-log-topic",
                "redo.log.consumer.bootstrap.servers":"broker:9092",
                "table.inclusion.regex": "ORCLPDB1[.].*[.]CUSTOMERS",
-               "table.topic.name.template": "${databaseName}.${schemaName}.${tableName}",
+               "table.topic.name.template": "\${databaseName}.\${schemaName}.\${tableName}",
                "numeric.mapping": "best_fit",
                "connection.pool.max.size": 20,
                "redo.log.row.fetch.size":1,

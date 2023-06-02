@@ -83,7 +83,7 @@ playground connector create-or-update --connector debezium-mysql-source << EOF
 
                "_comment": "old version before 2.x",
                "database.server.name": "server1",
-               "database.history.kafka.bootstrap.servers": "${file:/data:bootstrap.servers}",
+               "database.history.kafka.bootstrap.servers": "\${file:/data:bootstrap.servers}",
                "database.history.kafka.topic": "schema-changes.inventory",
                "database.history.producer.sasl.jaas.config": "org.apache.kafka.common.security.plain.PlainLoginModule required username=\"${file:/data:sasl.username}\" password=\"${file:/data:sasl.password}\";",
                "database.history.producer.sasl.mechanism": "PLAIN",
@@ -95,7 +95,7 @@ playground connector create-or-update --connector debezium-mysql-source << EOF
                "_comment": "new version since 2.x",
                "database.encrypt": "false",
                "topic.prefix": "server1",
-               "schema.history.internal.kafka.bootstrap.servers": "${file:/data:bootstrap.servers}",
+               "schema.history.internal.kafka.bootstrap.servers": "\${file:/data:bootstrap.servers}",
                "schema.history.internal.kafka.topic": "schema-changes.inventory",
                "schema.history.internal.producer.sasl.jaas.config": "org.apache.kafka.common.security.plain.PlainLoginModule required username=\"${file:/data:sasl.username}\" password=\"${file:/data:sasl.password}\";",
                "schema.history.internal.producer.sasl.mechanism": "PLAIN",

@@ -143,7 +143,7 @@ playground connector create-or-update --connector snowflake-sink << EOF
                "snowflake.url.name": "$SNOWFLAKE_URL",
                "snowflake.user.name": "$PLAYGROUND_USER",
                "snowflake.user.role": "$PLAYGROUND_CONNECTOR_ROLE",
-               "snowflake.private.key":"${file:/data_snow:private.key}",
+               "snowflake.private.key": "\${file:/data_snow:private.key}",
                "snowflake.private.key.passphrase": "confluent",
                "snowflake.database.name": "$PLAYGROUND_DB",
                "snowflake.schema.name":"PUBLIC",
@@ -152,7 +152,7 @@ playground connector create-or-update --connector snowflake-sink << EOF
                "key.converter":"org.apache.kafka.connect.storage.StringConverter",
                "value.converter" : "io.confluent.connect.avro.AvroConverter",
                "value.converter.schema.registry.url": "$SCHEMA_REGISTRY_URL",
-               "value.converter.basic.auth.user.info": "${file:/data:schema.registry.basic.auth.user.info}",
+               "value.converter.basic.auth.user.info": "\${file:/data:schema.registry.basic.auth.user.info}",
                "value.converter.basic.auth.credentials.source": "USER_INFO"
           }
 EOF

@@ -39,7 +39,7 @@ playground connector create-or-update --connector replicate-onprem-to-cloud << E
           "src.consumer.group.id": "replicate-onprem-to-cloud",
           "src.kafka.bootstrap.servers": "broker:9092",
           "dest.kafka.ssl.endpoint.identification.algorithm":"https",
-          "dest.kafka.bootstrap.servers": "${file:/data:bootstrap.servers}",
+          "dest.kafka.bootstrap.servers": "\${file:/data:bootstrap.servers}",
           "dest.kafka.security.protocol" : "SASL_SSL",
           "dest.kafka.sasl.jaas.config": "org.apache.kafka.common.security.plain.PlainLoginModule required username=\"${file:/data:sasl.username}\" password=\"${file:/data:sasl.password}\";",
           "dest.kafka.sasl.mechanism":"PLAIN",

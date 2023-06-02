@@ -78,7 +78,7 @@ kubectl exec -i connectors-0 -- curl -s -X PUT \
       -H "Content-Type: application/json" \
       --data '{
                 "connector.class": "io.confluent.kafka.connect.datagen.DatagenConnector",
-                "kafka.topic": "${topic}",
+                "kafka.topic": "\${topic}",
                 "key.converter": "org.apache.kafka.connect.storage.StringConverter",
                 "value.converter": "org.apache.kafka.connect.json.JsonConverter",
                 "value.converter.schemas.enable": "false",
@@ -106,7 +106,7 @@ kubectl exec -i connectors-0 -- curl -s -X PUT \
       -H "Content-Type: application/json" \
       --data '{
                 "connector.class": "io.confluent.kafka.connect.datagen.DatagenConnector",
-                "kafka.topic": "${topic}",
+                "kafka.topic": "\${topic}",
                 "key.converter": "org.apache.kafka.connect.storage.StringConverter",
                 "value.converter": "org.apache.kafka.connect.json.JsonConverter",
                 "value.converter.schemas.enable": "false",
