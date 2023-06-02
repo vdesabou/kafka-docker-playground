@@ -5,6 +5,7 @@ security=$(echo "$ret" | cut -d "@" -f 2)
 
 connectors=$(curl -s $security "$connect_url/connectors/" | jq -r '.[]')
 
+set +e
 log "🧩 Displaying connector status"
 if [ -z "$connectors" ]
 then

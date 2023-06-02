@@ -9856,7 +9856,7 @@ playground_ccloud_connector_create_or_update_command() {
           else
               log "✅ Connector $connector was successfully updated"
           fi
-          sleep 3
+          sleep 8
           playground ccloud-connector status
       fi
   else
@@ -9875,6 +9875,7 @@ playground_connector_status_command() {
 
   connectors=$(curl -s $security "$connect_url/connectors/" | jq -r '.[]')
 
+  set +e
   log "🧩 Displaying connector status"
   if [ -z "$connectors" ]
   then
@@ -10343,7 +10344,7 @@ playground_connector_create_or_update_command() {
           else
               log "✅ Connector $connector was successfully updated"
           fi
-          sleep 3
+          sleep 8
           playground connector status
       fi
   else
