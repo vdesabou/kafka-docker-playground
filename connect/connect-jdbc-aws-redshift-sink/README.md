@@ -51,7 +51,7 @@ $ curl -X PUT \
      --data '{
                "connector.class": "io.confluent.connect.jdbc.JdbcSinkConnector",
                "tasks.max": "1",
-               "connection.url": "jdbc:postgresql://'"$CLUSTER"':'"$PORT"'/dev?user=masteruser&password=myPassword1&ssl=false",
+               "connection.url": "jdbc:postgresql://$CLUSTER:$PORT/dev?user=masteruser&password=myPassword1&ssl=false",
                "connection.user": "sa",
                "connection.password": "Password!",
                "topics": "orders",

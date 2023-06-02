@@ -48,7 +48,7 @@ playground connector create-or-update --connector firebase-sink << EOF
                "tasks.max" : "1",
                "topics":"artists,songs",
                "gcp.firebase.credentials.path": "/tmp/keyfile.json",
-               "gcp.firebase.database.reference": "https://'"$GCP_PROJECT"'.firebaseio.com/musicBlog",
+               "gcp.firebase.database.reference": "https://$GCP_PROJECT.firebaseio.com/musicBlog",
                "insert.mode":"update",
                "key.converter" : "io.confluent.connect.avro.AvroConverter",
                "key.converter.schema.registry.url": "$SCHEMA_REGISTRY_URL",
