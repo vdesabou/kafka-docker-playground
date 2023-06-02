@@ -140,5 +140,6 @@ seq -f "us_sale_%g ${RANDOM}" 10 | docker container exec -i broker-europe bash -
 log "Sending data in EUROPE cluster"
 seq -f "europe_sale_%g ${RANDOM}" 10 | docker container exec -i broker-europe bash -c "kafka-console-producer --broker-list broker-europe:9092 --topic demo --producer.config /tmp/superuser-client.properties"
 
+set +e
 log "Delete the cluster link"
 docker container exec -i broker-europe kafka-cluster-links --bootstrap-server broker-europe:9092 --delete --link demo-link --command-config /tmp/superuser-client.properties
