@@ -1481,10 +1481,9 @@ function ccloud::retry() {
 }
 
 function wait_for_ccloud_connector_up() {
-  filename=$1
+  connectorName=$1
   maxWait=$2
 
-  connectorName=$(cat $filename | jq -r .name)
   connectorId=$(get_ccloud_connector_lcc $connectorName)
   log "Waiting up to $maxWait seconds for connector $connectorName ($connectorId) to be RUNNING"
   ccloud::retry $maxWait validate_ccloud_connector_up $connectorName || exit 1
@@ -1495,8 +1494,7 @@ function wait_for_ccloud_connector_up() {
 
 
 function delete_ccloud_connector() {
-  filename=$1
-  connectorName=$(cat $filename | jq -r .name)
+  connectorName=$1
   connectorId=$(get_ccloud_connector_lcc $connectorName)
 
   log "Deleting connector $connectorName ($connectorId)"
@@ -2129,10 +2127,9 @@ function ccloud::validate_connector_up() {
 }
 
 function ccloud::wait_for_connector_up() {
-  filename=$1
+  connectorName=$1
   maxWait=$2
 
-  connectorName=$(cat $filename | jq -r .name)
   echo "Waiting up to $maxWait seconds for connector $filename ($connectorName) to be RUNNING"
   ccloud::retry $maxWait ccloud::validate_connector_up $connectorName || exit 1
   echo "Connector $filename ($connectorName) is RUNNING"
