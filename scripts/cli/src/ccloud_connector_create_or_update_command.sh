@@ -59,13 +59,16 @@ else
     log "🔄 Updating connector $connector"
 fi
 
+set +e
 curl_output=$(curl $security -s -X PUT \
      -H "Content-Type: application/json" \
      -H "authorization: Basic $authorization" \
      --data @$json_file \
      https://api.confluent.cloud/connect/v1/environments/$environment/clusters/$cluster/connectors/$connector/config)
 
-if [ $? -eq 0 ]
+ret=$?
+set -e
+if [ $ret -eq 0 ]
 then
     error_code=$(echo "$curl_output" | jq -r .error_code)
     if [ $error_code != "null" ]
@@ -84,7 +87,6 @@ then
         playground ccloud-connector status
     fi
 else
-    logerror "❌ curl request failed !"
-    echo "$curl_output"
+    logerror "❌ curl request failed with error code $ret!"
     exit 1
 fi

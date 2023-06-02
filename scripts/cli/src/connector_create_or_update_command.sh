@@ -58,12 +58,14 @@ else
     log "🔄 Updating connector $connector"
 fi
 
+set +e
 curl_output=$(curl $security -s -X PUT \
      -H "Content-Type: application/json" \
      --data @$json_file \
      $connect_url/connectors/$connector/config)
-
-if [ $? -eq 0 ]
+ret=$?
+set -e
+if [ $ret -eq 0 ]
 then
     error_code=$(echo "$curl_output" | jq -r .error_code)
     if [ $error_code != "null" ]
@@ -82,7 +84,6 @@ then
         playground connector status
     fi
 else
-    logerror "❌ curl request failed !"
-    echo "$curl_output"
+    logerror "❌ curl request failed with error code $ret!"
     exit 1
 fi
