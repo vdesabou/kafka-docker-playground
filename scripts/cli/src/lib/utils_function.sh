@@ -1481,10 +1481,9 @@ function ccloud::retry() {
 }
 
 function wait_for_ccloud_connector_up() {
-  filename=$1
+  connectorName=$1
   maxWait=$2
 
-  connectorName=$(cat $filename | jq -r .name)
   connectorId=$(get_ccloud_connector_lcc $connectorName)
   log "Waiting up to $maxWait seconds for connector $connectorName ($connectorId) to be RUNNING"
   ccloud::retry $maxWait validate_ccloud_connector_up $connectorName || exit 1
@@ -1495,8 +1494,7 @@ function wait_for_ccloud_connector_up() {
 
 
 function delete_ccloud_connector() {
-  filename=$1
-  connectorName=$(cat $filename | jq -r .name)
+  connectorName=$1
   connectorId=$(get_ccloud_connector_lcc $connectorName)
 
   log "Deleting connector $connectorName ($connectorId)"
@@ -2129,10 +2127,9 @@ function ccloud::validate_connector_up() {
 }
 
 function ccloud::wait_for_connector_up() {
-  filename=$1
+  connectorName=$1
   maxWait=$2
 
-  connectorName=$(cat $filename | jq -r .name)
   echo "Waiting up to $maxWait seconds for connector $filename ($connectorName) to be RUNNING"
   ccloud::retry $maxWait ccloud::validate_connector_up $connectorName || exit 1
   echo "Connector $filename ($connectorName) is RUNNING"
@@ -2462,11 +2459,11 @@ function ccloud::create_ccloud_stack() {
     confluent ksql cluster configure-acls $KSQLDB
   fi
 
-  CLOUD_API_KEY=`echo $CLUSTER_CREDS | awk -F: '{print $1}'`
-  CLOUD_API_SECRET=`echo $CLUSTER_CREDS | awk -F: '{print $2}'`
+  KAFKA_API_KEY=`echo $CLUSTER_CREDS | awk -F: '{print $1}'`
+  KAFKA_API_SECRET=`echo $CLUSTER_CREDS | awk -F: '{print $2}'`
   # FIX THIS: added by me
-  confluent api-key store "$CLOUD_API_KEY" "$CLOUD_API_SECRET" --resource ${CLUSTER} --force
-  confluent api-key use $CLOUD_API_KEY --resource ${CLUSTER}
+  confluent api-key store "$KAFKA_API_KEY" "$KAFKA_API_SECRET" --resource ${CLUSTER} --force
+  confluent api-key use $KAFKA_API_KEY --resource ${CLUSTER}
 
   if [[ -z "$SKIP_CONFIG_FILE_WRITE" ]]; then
     if [[ -z "$CCLOUD_CONFIG_FILE" ]]; then
@@ -2492,7 +2489,7 @@ EOF
 sasl.mechanism=PLAIN
 security.protocol=SASL_SSL
 bootstrap.servers=${BOOTSTRAP_SERVERS}
-sasl.jaas.config=org.apache.kafka.common.security.plain.PlainLoginModule required username='${CLOUD_API_KEY}' password='${CLOUD_API_SECRET}';
+sasl.jaas.config=org.apache.kafka.common.security.plain.PlainLoginModule required username='${KAFKA_API_KEY}' password='${KAFKA_API_SECRET}';
 basic.auth.credentials.source=USER_INFO
 schema.registry.url=${SCHEMA_REGISTRY_ENDPOINT}
 basic.auth.user.info=`echo $SCHEMA_REGISTRY_CREDS | awk -F: '{print $1}'`:`echo $SCHEMA_REGISTRY_CREDS | awk -F: '{print $2}'`

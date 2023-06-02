@@ -81,7 +81,7 @@ then
             log "Connector $connector was successfully updated"
         fi
         sleep 3
-        playground connector status
+        playground ccloud-connector status
     fi
 else
     logerror "curl request failed !"
