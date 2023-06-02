@@ -80,7 +80,7 @@ then
         else
             log "✅ Connector $connector was successfully updated"
         fi
-        sleep 3
+        sleep 8
         playground connector status
     fi
 else
