@@ -54,8 +54,14 @@ NGROK_URL=$(curl --silent http://127.0.0.1:4551/api/tunnels | jq -r '.tunnels[0]
 NGROK_HOSTNAME=$(echo $NGROK_URL | cut -d "/" -f3 | cut -d ":" -f 1)
 NGROK_PORT=$(echo $NGROK_URL | cut -d "/" -f3 | cut -d ":" -f 2)
 
+connector_name="ElasticsearchSink"
+set +e
+log "Deleting fully managed connector $connector_name, it might fail..."
+playground ccloud-connector delete --connector $connector_name
+set -e
 
-cat << EOF > connector.json
+log "Creating fully managed connector"
+playground ccloud-connector create-or-update --connector $connector_name << EOF
 {
      "connector.class": "ElasticsearchSink",
      "name": "ElasticsearchSink",
@@ -69,18 +75,7 @@ cat << EOF > connector.json
      "tasks.max" : "1"
 }
 EOF
-
-log "Connector configuration is:"
-cat connector.json
-
-set +e
-log "Deleting fully managed connector, it might fail..."
-delete_ccloud_connector connector.json
-set -e
-
-log "Creating fully managed connector"
-create_ccloud_connector connector.json
-wait_for_ccloud_connector_up connector.json 1800
+wait_for_ccloud_connector_up $connector_name 300
 
 log "Sending messages to topic test-elasticsearch-sink"
 seq -f "{\"f1\": \"value%g\"}" 10 | docker run -i --rm -e BOOTSTRAP_SERVERS="$BOOTSTRAP_SERVERS" -e SASL_JAAS_CONFIG="$SASL_JAAS_CONFIG" -e SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO="$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO" -e SCHEMA_REGISTRY_URL="$SCHEMA_REGISTRY_URL" ${CP_CONNECT_IMAGE}:${CONNECT_TAG}  kafka-avro-console-producer --broker-list $BOOTSTRAP_SERVERS --producer-property ssl.endpoint.identification.algorithm=https --producer-property sasl.mechanism=PLAIN --producer-property security.protocol=SASL_SSL --producer-property sasl.jaas.config="$SASL_JAAS_CONFIG" --property basic.auth.credentials.source=USER_INFO --property schema.registry.basic.auth.user.info="$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO" --property schema.registry.url=$SCHEMA_REGISTRY_URL --topic test-elasticsearch-sink --property value.schema='{"type":"record","name":"myrecord","fields":[{"name":"f1","type":"string"}]}'

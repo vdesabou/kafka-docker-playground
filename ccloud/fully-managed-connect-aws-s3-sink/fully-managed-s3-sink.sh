@@ -72,13 +72,14 @@ seq -f "{\"f1\": \"value%g\"}" 1500 | docker run -i --rm -e BOOTSTRAP_SERVERS="$
 connector_name="S3_SINK"
 set +e
 log "Deleting fully managed connector $connector_name, it might fail..."
-delete_ccloud_connector $connector_name
+playground ccloud-connector delete --connector $connector_name
 set -e
 
 log "Creating fully managed connector"
-playground connector create-or-update --connector $connector_name << EOF
+playground ccloud-connector create-or-update --connector $connector_name << EOF
 {
      "connector.class": "S3_SINK",
+     "name": "$connector_name",
      "kafka.auth.mode": "KAFKA_API_KEY",
      "kafka.api.key": "$CLOUD_KEY",
      "kafka.api.secret": "$CLOUD_SECRET",
@@ -106,5 +107,4 @@ aws s3api list-objects --bucket "$AWS_BUCKET_NAME"
 log "Do you want to delete the fully managed connector $connector_name ?"
 check_if_continue
 
-log "Deleting fully managed connector $connector_name"
-delete_ccloud_connector $connector_name
+playground ccloud-connector delete --connector $connector_name

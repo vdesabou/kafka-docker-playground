@@ -159,9 +159,14 @@ NGROK_URL=$(curl --silent http://127.0.0.1:4551/api/tunnels | jq -r '.tunnels[0]
 NGROK_HOSTNAME=$(echo $NGROK_URL | cut -d "/" -f3 | cut -d ":" -f 1)
 NGROK_PORT=$(echo $NGROK_URL | cut -d "/" -f3 | cut -d ":" -f 2)
 
-#confluent connect plugin describe IbmMQSource
+connector_name="OracleCdcSource"
+set +e
+log "Deleting fully managed connector $connector_name, it might fail..."
+playground ccloud-connector delete --connector $connector_name
+set -e
 
-cat << EOF > connector.json
+log "Creating fully managed connector"
+playground ccloud-connector create-or-update --connector $connector_name << EOF
 {
      "connector.class": "OracleCdcSource",
      "name": "OracleCdcSource",
@@ -186,18 +191,7 @@ cat << EOF > connector.json
      "tasks.max" : "1"
 }
 EOF
-
-log "Connector configuration is:"
-cat connector.json
-
-set +e
-log "Deleting fully managed connector, it might fail..."
-delete_ccloud_connector connector.json
-set -e
-
-log "Creating fully managed connector"
-create_ccloud_connector connector.json
-wait_for_ccloud_connector_up connector.json 1800
+wait_for_ccloud_connector_up $connector_name 300
 
 
 log "Waiting 20s for connector to read existing data"
@@ -221,8 +215,7 @@ playground topic consume --topic redo-log-topic --min-expected-messages 15 --tim
 log "🚚 If you're planning to inject more data, have a look at https://github.com/vdesabou/kafka-docker-playground/blob/master/connect/connect-cdc-oracle19-source/README.md#note-on-redologrowfetchsize"
 
 
-log "Do you want to delete the fully managed connector ?"
+log "Do you want to delete the fully managed connector $connector_name ?"
 check_if_continue
 
-log "Deleting fully managed connector"
-delete_ccloud_connector connector.json
+playground ccloud-connector delete --connector $connector_name

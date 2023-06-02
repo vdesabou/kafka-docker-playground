@@ -71,8 +71,14 @@ set +e
 aws s3 rm s3://$DATABRICKS_AWS_BUCKET_NAME --recursive --region $DATABRICKS_AWS_BUCKET_REGION
 set -e
 
-log "Creating Datagen connector"
-cat << EOF > connector.json
+connector_name="DatagenSource"
+set +e
+log "Deleting fully managed connector $connector_name, it might fail..."
+playground ccloud-connector delete --connector $connector_name
+set -e
+
+log "Creating fully managed connector"
+playground ccloud-connector create-or-update --connector $connector_name << EOF
 {
      "connector.class": "DatagenSource",
      "name": "DatagenSource",
@@ -86,22 +92,16 @@ cat << EOF > connector.json
      "tasks.max" : "1"
 }
 EOF
+wait_for_ccloud_connector_up $connector_name 300
 
-log "Connector configuration is:"
-cat connector.json
-
+connector_name="DatabricksDeltaLakeSink"
 set +e
-log "Deleting fully managed connector, it might fail..."
-delete_ccloud_connector connector.json
+log "Deleting fully managed connector $connector_name, it might fail..."
+playground ccloud-connector delete --connector $connector_name
 set -e
 
 log "Creating fully managed connector"
-create_ccloud_connector connector.json
-wait_for_ccloud_connector_up connector.json 300
-
-
-log "Creating Deltabricks Delta Lake connector"
-cat << EOF > connector2.json
+playground ccloud-connector create-or-update --connector $connector_name << EOF
 {
      "topics": "pageviews",
      "input.data.format": "AVRO",
@@ -122,18 +122,7 @@ cat << EOF > connector2.json
      "tasks.max": "1"
 }
 EOF
-
-log "Connector configuration is:"
-cat connector2.json
-
-set +e
-log "Deleting fully managed connector, it might fail..."
-delete_ccloud_connector connector2.json
-set -e
-
-log "Creating fully managed connector"
-create_ccloud_connector connector2.json
-wait_for_ccloud_connector_up connector2.json 300
+wait_for_ccloud_connector_up $connector_name 300
 
 sleep 30
 
@@ -142,3 +131,8 @@ log "Listing staging Amazon S3 bucket"
 export AWS_ACCESS_KEY_ID="$DATABRICKS_AWS_STAGING_S3_ACCESS_KEY_ID"
 export AWS_SECRET_ACCESS_KEY="$DATABRICKS_AWS_STAGING_S3_SECRET_ACCESS_KEY"
 aws s3api list-objects --bucket "$DATABRICKS_AWS_BUCKET_NAME"
+
+log "Do you want to delete the fully managed connector $connector_name ?"
+check_if_continue
+
+playground ccloud-connector delete --connector $connector_name

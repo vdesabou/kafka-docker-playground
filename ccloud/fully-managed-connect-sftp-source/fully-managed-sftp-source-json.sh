@@ -67,7 +67,14 @@ NGROK_URL=$(curl --silent http://127.0.0.1:4551/api/tunnels | jq -r '.tunnels[0]
 NGROK_HOSTNAME=$(echo $NGROK_URL | cut -d "/" -f3 | cut -d ":" -f 1)
 NGROK_PORT=$(echo $NGROK_URL | cut -d "/" -f3 | cut -d ":" -f 2)
 
-cat << EOF > connector.json
+connector_name="SftpSource"
+set +e
+log "Deleting fully managed connector $connector_name, it might fail..."
+playground ccloud-connector delete --connector $connector_name
+set -e
+
+log "Creating fully managed connector"
+playground ccloud-connector create-or-update --connector $connector_name << EOF
 {
      "connector.class": "SftpSource",
      "name": "SftpSource",
@@ -93,26 +100,14 @@ cat << EOF > connector.json
      "tasks.max" : "1"
 }
 EOF
-
-log "Connector configuration is:"
-cat connector.json
-
-set +e
-log "Deleting fully managed connector, it might fail..."
-delete_ccloud_connector connector.json
-set -e
-
-log "Creating fully managed connector"
-create_ccloud_connector connector.json
-wait_for_ccloud_connector_up connector.json 300
+wait_for_ccloud_connector_up $connector_name 300
 
 sleep 5
 
 log "Verify we have received the data in sftp-testing-topic topic"
 playground topic consume --topic sftp-testing-topic --min-expected-messages 2 --timeout 60
 
-log "Do you want to delete the fully managed connector ?"
+log "Do you want to delete the fully managed connector $connector_name ?"
 check_if_continue
 
-log "Deleting fully managed connector"
-delete_ccloud_connector connector.json
+playground ccloud-connector delete --connector $connector_name

@@ -8,10 +8,9 @@ source ${DIR}/../../scripts/utils.sh
 
 docker-compose down -v --remove-orphans
 
-log "Do you want to delete the fully managed connector ?"
+log "Do you want to delete the fully managed connector $connector_name ?"
 check_if_continue
 
-log "Deleting fully managed connector"
-delete_ccloud_connector connector.json
+playground ccloud-connector delete --connector $connector_name
 
 maybe_delete_ccloud_environment

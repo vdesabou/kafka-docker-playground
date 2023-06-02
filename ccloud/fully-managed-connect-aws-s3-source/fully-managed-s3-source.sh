@@ -66,44 +66,41 @@ set -e
 log "Copy generalized.quickstart.json to bucket $AWS_BUCKET_NAME/quickstart"
 aws s3 cp generalized.quickstart.json s3://$AWS_BUCKET_NAME/quickstart/generalized.quickstart.json
 
-cat << EOF > connector.json
-{
-     "connector.class": "S3Source",
-     "name": "S3Source",
-     "kafka.auth.mode": "KAFKA_API_KEY",
-     "kafka.api.key": "$CLOUD_KEY",
-     "kafka.api.secret": "$CLOUD_SECRET",
-     "topics.dir": "quickstart",
-     "topic.regex.list": "quick-start-topic:.*",
-     "aws.access.key.id" : "$AWS_ACCESS_KEY_ID",
-     "aws.secret.access.key": "$AWS_SECRET_ACCESS_KEY",
-     "input.data.format": "JSON",
-     "output.data.format": "JSON",
-     "s3.bucket.name": "$AWS_BUCKET_NAME",
-     "s3.region": "$AWS_REGION",
-     "tasks.max" : "1"
-}
-EOF
-
-log "Connector configuration is:"
-cat connector.json
-
+connector_name="S3Source"
 set +e
-log "Deleting fully managed connector, it might fail..."
-delete_ccloud_connector connector.json
+log "Deleting fully managed connector $connector_name, it might fail..."
+playground ccloud-connector delete --connector $connector_name
 set -e
 
 log "Creating fully managed connector"
-create_ccloud_connector connector.json
-wait_for_ccloud_connector_up connector.json 300
+playground ccloud-connector create-or-update --connector $connector_name << EOF
+{
+     "connector.class": "S3_SINK",
+     "name": "$connector_name",
+     "kafka.auth.mode": "KAFKA_API_KEY",
+     "kafka.api.key": "$CLOUD_KEY",
+     "kafka.api.secret": "$CLOUD_SECRET",
+     "topics": "s3_topic",
+     "topics.dir": "$TAG",
+     "aws.access.key.id" : "$AWS_ACCESS_KEY_ID",
+     "aws.secret.access.key": "$AWS_SECRET_ACCESS_KEY",
+     "input.data.format": "AVRO",
+     "output.data.format": "AVRO",
+     "s3.bucket.name": "$AWS_BUCKET_NAME",
+     "time.interval" : "HOURLY",
+     "flush.size": "1000",
+     "schema.compatibility": "NONE",
+     "tasks.max" : "1"
+}
+EOF
+wait_for_ccloud_connector_up $connector_name 300
 
 sleep 30
 
 log "Verifying topic quick-start-topic"
 playground topic consume --topic quick-start-topic --min-expected-messages 9 --timeout 60
 
-log "Do you want to delete the fully managed connector ?"
+log "Do you want to delete the fully managed connector $connector_name ?"
 check_if_continue
 
-log "Deleting fully managed connector"
-delete_ccloud_connector connector.json
+playground ccloud-connector delete --connector $connector_name

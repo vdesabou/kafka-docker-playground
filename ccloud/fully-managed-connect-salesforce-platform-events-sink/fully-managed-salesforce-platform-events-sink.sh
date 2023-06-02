@@ -62,7 +62,14 @@ docker-compose up -d
 
 sleep 5
 
-cat << EOF > connector.json
+connector_name="SalesforcePlatformEventSource"
+set +e
+log "Deleting fully managed connector $connector_name, it might fail..."
+playground ccloud-connector delete --connector $connector_name
+set -e
+
+log "Creating fully managed connector"
+playground ccloud-connector create-or-update --connector $connector_name << EOF
 {
      "connector.class": "SalesforcePlatformEventSource",
      "name": "SalesforcePlatformEventSource",
@@ -82,18 +89,7 @@ cat << EOF > connector.json
      "tasks.max" : "1"
 }
 EOF
-
-log "Connector configuration is:"
-cat connector.json
-
-set +e
-log "Deleting fully managed connector, it might fail..."
-delete_ccloud_connector connector.json
-set -e
-
-log "Creating fully managed connector"
-create_ccloud_connector connector.json
-wait_for_ccloud_connector_up connector.json 300
+wait_for_ccloud_connector_up $connector_name 300
 
 
 log "Login with sfdx CLI"
@@ -142,7 +138,7 @@ wait_for_ccloud_connector_up connector2.json 300
 sleep 10
 
 connectorName=$(cat connector2.json| jq -r .name)
-connectorId=$(get_ccloud_connector_lcc $connectorName)
+connectorId=$(get_ccloud_connector_lcc $connector_name)
 
 log "Verifying topic success-$connectorId"
 playground topic consume --topic success-$connectorId --min-expected-messages 2 --timeout 60
