@@ -34,9 +34,8 @@ docker exec -i broker kafka-console-producer --broker-list broker:9092 --topic m
 EOF
 
 log "Creating FileStream Sink connector with topics set with secrets variable"
-curl -X PUT \
-     -H "Content-Type: application/json" \
-     --data '{
+playground connector create-or-update --connector filestream-sink << EOF
+{
                "tasks.max": "1",
                "connector.class": "org.apache.kafka.connect.file.FileStreamSinkConnector",
                "topics": "${securepass:/etc/kafka/secrets/secret.txt:my-config-file.properties/my-secret-property}",
@@ -44,8 +43,8 @@ curl -X PUT \
                "key.converter": "org.apache.kafka.connect.storage.StringConverter",
                "value.converter": "org.apache.kafka.connect.json.JsonConverter",
                "value.converter.schemas.enable": "false"
-          }' \
-     http://localhost:8083/connectors/filestream-sink/config | jq .
+          }
+EOF
 
 
 sleep 5

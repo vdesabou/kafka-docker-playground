@@ -10,9 +10,8 @@ log "Generate data"
 docker exec -i connect bash -c 'mkdir -p /tmp/data/input/ && mkdir -p /tmp/data/error/ && mkdir -p /tmp/data/finished/ && curl -k "https://api.mockaroo.com/api/b10f7e90?count=1000&key=25fd9c80" > /tmp/data/input/tsv-spooldir-source.tsv'
 
 log "Creating TSV Spool Dir Source connector"
-curl -X PUT \
-     -H "Content-Type: application/json" \
-     --data '{
+playground connector create-or-update --connector TsvSpoolDir << EOF
+{
                "tasks.max": "1",
                "connector.class": "com.github.jcustenborder.kafka.connect.spooldir.SpoolDirCsvSourceConnector",
                "input.file.pattern": "tsv-spooldir-source.tsv",
@@ -24,8 +23,8 @@ curl -X PUT \
                "schema.generation.enabled": "true",
                "csv.first.row.as.header": "true",
                "csv.separator.char": "9"
-          }' \
-     http://localhost:8083/connectors/TsvSpoolDir/config | jq .
+          }
+EOF
 
 
 sleep 5

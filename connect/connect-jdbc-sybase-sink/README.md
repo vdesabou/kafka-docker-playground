@@ -18,9 +18,8 @@ $ playground run -f sybase-sink<tab>
 Create JDBC Sybase sink connector
 
 ```bash
-curl -X PUT \
-     -H "Content-Type: application/json" \
-     --data '{
+playground connector create-or-update --connector sybase-sink << EOF
+{
                "connector.class": "io.confluent.connect.jdbc.JdbcSinkConnector",
                "tasks.max": "1",
                "connection.url": "jdbc:jtds:sybase://sybase:5000",
@@ -28,8 +27,8 @@ curl -X PUT \
                "connection.password": "password",
                "topics": "orders",
                "auto.create": "true"
-          }' \
-     http://localhost:8083/connectors/sybase-sink/config | jq .
+          }
+EOF
 ````
 
 Sending messages to topic orders

@@ -13,9 +13,8 @@ cd ${DIR}
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.mtls.yml"
 
 log "Creating MQTT Source connector"
-curl -X PUT \
-     -H "Content-Type: application/json" \
-     --data '{
+playground connector create-or-update --connector source-mqtt << EOF
+{
                "connector.class": "io.confluent.connect.mqtt.MqttSourceConnector",
                "tasks.max": "1",
                "mqtt.server.uri": "ssl://mosquitto:8883",
@@ -32,8 +31,8 @@ curl -X PUT \
                "mqtt.ssl.key.store.path": "/tmp/keystore.jks",
                "mqtt.ssl.key.store.password": "confluent",
                "mqtt.ssl.key.password": "confluent"
-          }' \
-     http://localhost:8083/connectors/source-mqtt/config | jq .
+          }
+EOF
 
 
 sleep 5

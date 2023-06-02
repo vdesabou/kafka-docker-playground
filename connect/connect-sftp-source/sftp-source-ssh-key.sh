@@ -32,9 +32,8 @@ docker cp csv-sftp-source.csv sftp-server:/chroot/home/foo/upload/input/
 rm -f csv-sftp-source.csv
 
 log "Creating CSV SFTP Source connector"
-curl -X PUT \
-     -H "Content-Type: application/json" \
-     --data '{
+playground connector create-or-update --connector sftp-source-ssh-key << EOF
+{
                "tasks.max": "1",
                "connector.class": "io.confluent.connect.sftp.SftpCsvSourceConnector",
                "cleanup.policy":"NONE",
@@ -45,16 +44,16 @@ curl -X PUT \
                "input.file.pattern": ".*\\.csv",
                "sftp.username":"foo",
                "sftp.password": "",
-               "tls.private.key": "'"$RSA_PRIVATE_KEY"'",
-               "tls.public.key": "'"$RSA_PUBLIC_KEY"'",
+               "tls.private.key": "$RSA_PRIVATE_KEY",
+               "tls.public.key": "$RSA_PUBLIC_KEY",
                "tls.passphrase": "mypassword",
                "sftp.host":"sftp-server",
                "sftp.port":"22",
                "kafka.topic": "sftp-testing-topic",
                "csv.first.row.as.header": "true",
                "schema.generation.enabled": "true"
-          }' \
-     http://localhost:8083/connectors/sftp-source-ssh-key/config | jq .
+          }
+EOF
 
 sleep 15
 

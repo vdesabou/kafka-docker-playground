@@ -43,9 +43,8 @@ timeout 60 docker exec connect kafka-avro-console-consumer -bootstrap-server bro
 
 
 log "Creating FileStream Sink connector"
-curl -X PUT \
-     -H "Content-Type: application/json" \
-     --data '{
+playground connector create-or-update --connector filestream-sink << EOF
+{
                "tasks.max": "1",
                "connector.class": "org.apache.kafka.connect.file.FileStreamSinkConnector",
                "topics": "a-topic",
@@ -55,8 +54,8 @@ curl -X PUT \
                "value.converter.schema.registry.url": "http://schema-registry:8081",
                "value.converter.proxy.host": "nginx-proxy",
                "value.converter.proxy.port": "8888"
-          }' \
-     http://localhost:8083/connectors/filestream-sink/config | jq .
+          }
+EOF
 
 
 sleep 5

@@ -66,9 +66,8 @@ sed -e "s|:AZURE_ACCOUNT_NAME:|$AZURE_ACCOUNT_NAME|g" \
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.backup-and-restore.yml"
 
 log "Creating Azure Blob Storage Sink connector"
-curl -X PUT \
-     -H "Content-Type: application/json" \
-     --data '{
+playground connector create-or-update --connector azure-blob-sink << EOF
+{
                 "connector.class": "io.confluent.connect.azure.blob.AzureBlobStorageSinkConnector",
                 "tasks.max": "1",
                 "topics": "blob_topic",
@@ -83,8 +82,8 @@ curl -X PUT \
                 "errors.tolerance": "all",
                 "errors.log.enable": "true",
                 "errors.log.include.messages": "true"
-          }' \
-     http://localhost:8083/connectors/azure-blob-sink/config | jq .
+          }
+EOF
 
 
 log "Sending messages to topic blob_topic"
@@ -102,9 +101,8 @@ docker run --rm -v /tmp:/tmp vdesabou/avro-tools tojson /tmp/blob_topic+0+000000
 
 
 log "Creating Azure Blob Storage Source connector"
-curl -X PUT \
-     -H "Content-Type: application/json" \
-     --data '{
+playground connector create-or-update --connector azure-blob-source << EOF
+{
                 "connector.class": "io.confluent.connect.azure.blob.storage.AzureBlobStorageSourceConnector",
                 "tasks.max": "1",
                 "azblob.account.name": "${file:/data:AZURE_ACCOUNT_NAME}",
@@ -118,8 +116,8 @@ curl -X PUT \
                 "transforms.AddPrefix.type" : "org.apache.kafka.connect.transforms.RegexRouter",
                 "transforms.AddPrefix.regex" : ".*",
                 "transforms.AddPrefix.replacement" : "copy_of_$0"
-          }' \
-     http://localhost:8083/connectors/azure-blob-source/config | jq .
+          }
+EOF
 
 sleep 5
 

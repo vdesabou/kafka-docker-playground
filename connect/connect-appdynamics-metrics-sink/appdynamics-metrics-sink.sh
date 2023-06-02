@@ -32,9 +32,8 @@ docker exec -i connect kafka-avro-console-producer --broker-list broker:9092 --p
 EOF
 
 log "Creating AppDynamics Metrics sink connector"
-curl -X PUT \
-     -H "Content-Type: application/json" \
-     --data '{
+playground connector create-or-update --connector appdynamics-metrics-sink << EOF
+{
                "connector.class": "io.confluent.connect.appdynamics.metrics.AppDynamicsMetricsSinkConnector",
                "tasks.max": "1",
                "topics": "appdynamics-metrics-topic",
@@ -50,8 +49,8 @@ curl -X PUT \
                "behavior.on.error": "fail",
                "confluent.topic.bootstrap.servers": "broker:9092",
                "confluent.topic.replication.factor": "1"
-          }' \
-     http://localhost:8083/connectors/appdynamics-metrics-sink/config | jq .
+          }
+EOF
 
 sleep 5
 

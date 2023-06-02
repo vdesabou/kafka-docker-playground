@@ -37,9 +37,8 @@ Replicate from Metrics to Europe and US
 
 ```bash
 $ docker container exec connect-europe \
-curl -X PUT \
-     -H "Content-Type: application/json" \
-     --data '{
+playground connector create-or-update --connector replicate-metrics-to-europe << EOF
+{
           "connector.class":"io.confluent.connect.replicator.ReplicatorSourceConnector",
           "key.converter": "io.confluent.connect.replicator.util.ByteArrayConverter",
           "value.converter": "io.confluent.connect.replicator.util.ByteArrayConverter",
@@ -52,13 +51,12 @@ curl -X PUT \
           "topic.whitelist": "sales",
           "offset.timestamps.commit": false,
           "offset.translator.batch.period.ms": 5000
-          }' \
-     http://localhost:8083/connectors/replicate-metrics-to-europe/config | jq .
+          }
+EOF
 
 $ docker container exec connect-us \
-curl -X PUT \
-     -H "Content-Type: application/json" \
-     --data '{
+playground connector create-or-update --connector replicate-metrics-to-us << EOF
+{
           "connector.class":"io.confluent.connect.replicator.ReplicatorSourceConnector",
           "key.converter": "io.confluent.connect.replicator.util.ByteArrayConverter",
           "value.converter": "io.confluent.connect.replicator.util.ByteArrayConverter",
@@ -71,8 +69,8 @@ curl -X PUT \
           "topic.whitelist": "sales",
           "offset.timestamps.commit": false,
           "offset.translator.batch.period.ms": 5000
-          }' \
-     http://localhost:8083/connectors/replicate-metrics-to-us/config | jq .
+          }
+EOF
 ```
 
 Wait for data to be replicated

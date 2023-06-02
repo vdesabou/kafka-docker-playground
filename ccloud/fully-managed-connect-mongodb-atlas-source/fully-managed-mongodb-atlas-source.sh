@@ -34,17 +34,16 @@ EOF
 sleep 2
 
 log "Creating MongoDB source connector"
-curl -X PUT \
-     -H "Content-Type: application/json" \
-     --data '{
+playground connector create-or-update --connector mongodb-source << EOF
+{
                "connector.class" : "com.mongodb.kafka.connect.MongoSourceConnector",
                     "tasks.max" : "1",
                     "connection.uri" : "mongodb://myuser:mypassword@mongodb:27017",
                     "database":"inventory",
                     "collection":"customers",
                     "topic.prefix":"mongo"
-          }' \
-     http://localhost:8083/connectors/mongodb-source/config | jq .
+          }
+EOF
 
 sleep 5
 

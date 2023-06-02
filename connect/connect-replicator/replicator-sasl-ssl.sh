@@ -14,10 +14,8 @@ log "Sending messages to topic test-topic-sasl-ssl"
 seq 10 | docker exec -i broker kafka-console-producer --broker-list broker:9092 --topic test-topic-sasl-ssl --producer.config /etc/kafka/secrets/client_without_interceptors.config
 
 log "Creating Confluent Replicator connector with SASL_SSL authentication"
-curl -X PUT \
-     --cert ../../environment/sasl-ssl/security/connect.certificate.pem --key ../../environment/sasl-ssl/security/connect.key --tlsv1.2 --cacert ../../environment/sasl-ssl/security/snakeoil-ca-1.crt \
-     -H "Content-Type: application/json" \
-     --data '{
+playground connector create-or-update --connector replicator-sasl-ssl << EOF
+{
                     "connector.class":"io.confluent.connect.replicator.ReplicatorSourceConnector",
                     "key.converter": "io.confluent.connect.replicator.util.ByteArrayConverter",
                     "value.converter": "io.confluent.connect.replicator.util.ByteArrayConverter",
@@ -45,8 +43,8 @@ curl -X PUT \
                     "src.kafka.security.protocol" : "SASL_SSL",
                     "src.kafka.sasl.jaas.config": "org.apache.kafka.common.security.plain.PlainLoginModule required  username=\"client\" password=\"client-secret\";",
                     "src.kafka.sasl.mechanism": "PLAIN"
-          }' \
-     https://localhost:8083/connectors/replicator-sasl-ssl/config | jq .
+          }
+EOF
 
 
 sleep 10

@@ -23,9 +23,8 @@ GO
 EOF
 
 log "Creating JDBC Sybase source connector"
-curl -X PUT \
-     -H "Content-Type: application/json" \
-     --data '{
+playground connector create-or-update --connector jdbc-sybase-source << EOF
+{
                 "connector.class" : "io.confluent.connect.jdbc.JdbcSourceConnector",
                 "tasks.max" : "1",
                 "connection.url": "jdbc:jtds:sybase://sybase:5000/testDB",
@@ -38,8 +37,8 @@ curl -X PUT \
                 "validate.non.null":"false",
                 "errors.log.enable": "true",
                 "errors.log.include.messages": "true"
-          }' \
-     http://localhost:8083/connectors/jdbc-sybase-source/config | jq .
+          }
+EOF
 
 sleep 5
 

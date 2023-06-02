@@ -87,13 +87,12 @@ seq -f "{\"f1\": \"value%g\"}" 10 | docker exec -i connect kafka-avro-console-pr
 The connector is created with:
 
 ```bash
-curl -X PUT \
-     -H "Content-Type: application/json" \
-     --data '{
+playground connector create-or-update --connector gcs-sink << EOF
+{
                "connector.class": "io.confluent.connect.gcs.GcsSinkConnector",
                     "tasks.max" : "1",
                     "topics" : "gcs_topic",
-                    "gcs.bucket.name" : "'"$GCS_BUCKET_NAME"'",
+                    "gcs.bucket.name" : "$GCS_BUCKET_NAME",
                     "gcs.part.size": "5242880",
                     "flush.size": "3",
                     "gcs.credentials.path": "/tmp/keyfile.json",
@@ -103,8 +102,8 @@ curl -X PUT \
                     "schema.compatibility": "NONE",
                     "confluent.topic.bootstrap.servers": "broker:9092",
                     "confluent.topic.replication.factor": "1"
-          }' \
-     http://localhost:8083/connectors/gcs-sink/config | jq .
+          }
+EOF
 ```
 
 After a few seconds, data should be in GCS:
@@ -147,7 +146,7 @@ $ curl -X PUT \
                "connector.class": "io.confluent.connect.gcs.GcsSinkConnector",
                "tasks.max" : "1",
                "topics" : "gcs_topic",
-               "gcs.bucket.name" : "'"$GCS_BUCKET_NAME"'",
+               "gcs.bucket.name" : "$GCS_BUCKET_NAME",
                "gcs.part.size": "5242880",
                "flush.size": "3",
                "gcs.credentials.path": "/tmp/keyfile.json",
@@ -230,7 +229,7 @@ $ curl -X PUT \
                "connector.class": "io.confluent.connect.gcs.GcsSinkConnector",
                "tasks.max" : "1",
                "topics" : "gcs_topic",
-               "gcs.bucket.name" : "'"$GCS_BUCKET_NAME"'",
+               "gcs.bucket.name" : "$GCS_BUCKET_NAME",
                "gcs.part.size": "5242880",
                "flush.size": "3",
                "gcs.credentials.path": "/tmp/keyfile.json",
@@ -286,7 +285,7 @@ $ curl -X PUT \
                "connector.class": "io.confluent.connect.gcs.GcsSinkConnector",
                     "tasks.max" : "1",
                     "topics" : "rbac_gcs_topic",
-                    "gcs.bucket.name" : "'"$GCS_BUCKET_NAME"'",
+                    "gcs.bucket.name" : "$GCS_BUCKET_NAME",
                     "gcs.part.size": "5242880",
                     "flush.size": "3",
                     "gcs.credentials.path": "/tmp/keyfile.json",
@@ -346,7 +345,7 @@ $ curl -X PUT \
                "connector.class": "io.confluent.connect.gcs.GcsSinkConnector",
                     "tasks.max" : "1",
                     "topics" : "gcs_topic-ldap-authorizer-sasl-plain",
-                    "gcs.bucket.name" : "'"$GCS_BUCKET_NAME"'",
+                    "gcs.bucket.name" : "$GCS_BUCKET_NAME",
                     "gcs.part.size": "5242880",
                     "flush.size": "3",
                     "gcs.credentials.path": "/tmp/keyfile.json",
@@ -398,7 +397,7 @@ $ curl -X PUT \
                "connector.class": "io.confluent.connect.gcs.GcsSinkConnector",
                     "tasks.max" : "1",
                     "topics" : "rbac_gcs_topic",
-                    "gcs.bucket.name" : "'"$GCS_BUCKET_NAME"'",
+                    "gcs.bucket.name" : "$GCS_BUCKET_NAME",
                     "gcs.part.size": "5242880",
                     "flush.size": "3",
                     "gcs.credentials.path": "/tmp/keyfile.json",

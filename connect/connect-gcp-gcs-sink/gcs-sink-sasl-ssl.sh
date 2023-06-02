@@ -57,14 +57,12 @@ log "Sending messages to topic gcs_topic"
 seq -f "{\"f1\": \"This is a message sent with SASL_SSL authentication %g\"}" 10 | docker exec -i connect kafka-avro-console-producer --broker-list broker:9092 --topic gcs_topic --property value.schema='{"type":"record","name":"myrecord","fields":[{"name":"f1","type":"string"}]}' --property schema.registry.url=https://schema-registry:8081 --property schema.registry.ssl.truststore.location=/etc/kafka/secrets/kafka.client.truststore.jks --property schema.registry.ssl.truststore.password=confluent --property schema.registry.ssl.keystore.location=/etc/kafka/secrets/kafka.client.keystore.jks --property schema.registry.ssl.keystore.password=confluent --producer.config /etc/kafka/secrets/client_without_interceptors.config
 
 log "Creating GCS Sink connector with SASL_SSL authentication"
-curl -X PUT \
-     --cert ../../environment/sasl-ssl/security/connect.certificate.pem --key ../../environment/sasl-ssl/security/connect.key --tlsv1.2 --cacert ../../environment/sasl-ssl/security/snakeoil-ca-1.crt \
-     -H "Content-Type: application/json" \
-     --data '{
+playground connector create-or-update --connector gcs-sink << EOF
+{
                "connector.class": "io.confluent.connect.gcs.GcsSinkConnector",
                "tasks.max" : "1",
                "topics" : "gcs_topic",
-               "gcs.bucket.name" : "'"$GCS_BUCKET_NAME"'",
+               "gcs.bucket.name" : "$GCS_BUCKET_NAME",
                "gcs.part.size": "5242880",
                "flush.size": "3",
                "gcs.credentials.path": "/tmp/keyfile.json",
@@ -79,8 +77,8 @@ curl -X PUT \
                "confluent.topic.security.protocol" : "SASL_SSL",
                "confluent.topic.sasl.mechanism": "PLAIN",
                "confluent.topic.sasl.jaas.config": "org.apache.kafka.common.security.plain.PlainLoginModule required  username=\"client\" password=\"client-secret\";"
-          }' \
-     https://localhost:8083/connectors/gcs-sink/config | jq .
+          }
+EOF
 
 sleep 10
 

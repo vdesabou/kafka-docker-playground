@@ -12,9 +12,8 @@ sleep 10
 docker exec namenode bash -c "/opt/hadoop-3.1.3/bin/hdfs dfs -chmod 777  /"
 
 log "Creating HDFS Sink connector with Hive integration"
-curl -X PUT \
-     -H "Content-Type: application/json" \
-     --data '{
+playground connector create-or-update --connector hdfs3-sink << EOF
+{
                "connector.class":"io.confluent.connect.hdfs3.Hdfs3SinkConnector",
                "tasks.max":"1",
                "topics":"test_hdfs",
@@ -35,8 +34,8 @@ curl -X PUT \
                "value.converter":"io.confluent.connect.avro.AvroConverter",
                "value.converter.schema.registry.url":"http://schema-registry:8081",
                "schema.compatibility":"BACKWARD"
-          }' \
-     http://localhost:8083/connectors/hdfs3-sink/config | jq .
+          }
+EOF
 
 log "Sending messages to topic test_hdfs"
 seq -f "{\"f1\": \"value%g\"}" 10 | docker exec -i connect kafka-avro-console-producer --broker-list broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic test_hdfs --property value.schema='{"type":"record","name":"myrecord","fields":[{"name":"f1","type":"string"}]}'

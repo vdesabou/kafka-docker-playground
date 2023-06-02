@@ -14,9 +14,8 @@ docker exec couchbase bash -c "/opt/couchbase/bin/cbdocloader -c localhost:8091 
 set -e
 
 log "Creating Couchbase Source connector"
-curl -X PUT \
-     -H "Content-Type: application/json" \
-     --data '{
+playground connector create-or-update --connector couchbase-source << EOF
+{
                "connector.class": "com.couchbase.connect.kafka.CouchbaseSourceConnector",
                "tasks.max": "2",
                "couchbase.topic": "test-travel-sample",
@@ -34,8 +33,8 @@ curl -X PUT \
                "errors.tolerance": "all",
                "errors.log.enable": "true",
                "errors.log.include.messages": "true"
-          }' \
-     http://localhost:8083/connectors/couchbase-source/config | jq .
+          }
+EOF
 
 sleep 10
 

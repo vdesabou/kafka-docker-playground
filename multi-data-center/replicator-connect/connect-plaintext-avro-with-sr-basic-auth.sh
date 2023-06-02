@@ -16,9 +16,8 @@ EOF
 
 log "Replicate topic products_EUROPE from Europe to US using AvroConverter"
 docker container exec connect-us \
-curl -X PUT \
-     -H "Content-Type: application/json" \
-     --data '{
+playground connector create-or-update --connector replicate-europe-to-us << EOF
+{
           "connector.class":"io.confluent.connect.replicator.ReplicatorSourceConnector",
           "value.converter": "io.confluent.connect.avro.AvroConverter",
           "value.converter.schema.registry.url": "http://schema-registry-us:8081",
@@ -37,8 +36,8 @@ curl -X PUT \
           "confluent.topic.replication.factor": 1,
           "provenance.header.enable": true,
           "topic.whitelist": "products_EUROPE"
-          }' \
-     http://localhost:8083/connectors/replicate-europe-to-us/config | jq .
+          }
+EOF
 
 
 sleep 30

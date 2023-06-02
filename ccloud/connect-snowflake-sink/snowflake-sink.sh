@@ -135,28 +135,27 @@ docker exec -i -e BOOTSTRAP_SERVERS="$BOOTSTRAP_SERVERS" -e SASL_JAAS_CONFIG="$S
 EOF
 
 log "Creating Snowflake Sink connector"
-curl -X PUT \
-     -H "Content-Type: application/json" \
-     --data '{
+playground connector create-or-update --connector snowflake-sink << EOF
+{
                "connector.class": "com.snowflake.kafka.connector.SnowflakeSinkConnector",
                "topics": "test_table",
                "tasks.max": "1",
-               "snowflake.url.name": "'"$SNOWFLAKE_URL"'",
-               "snowflake.user.name": "'"$PLAYGROUND_USER"'",
-               "snowflake.user.role": "'"$PLAYGROUND_CONNECTOR_ROLE"'",
+               "snowflake.url.name": "$SNOWFLAKE_URL",
+               "snowflake.user.name": "$PLAYGROUND_USER",
+               "snowflake.user.role": "$PLAYGROUND_CONNECTOR_ROLE",
                "snowflake.private.key":"${file:/data_snow:private.key}",
                "snowflake.private.key.passphrase": "confluent",
-               "snowflake.database.name": "'"$PLAYGROUND_DB"'",
+               "snowflake.database.name": "$PLAYGROUND_DB",
                "snowflake.schema.name":"PUBLIC",
                "buffer.count.records": "3",
                "buffer.flush.time" : "10",
                "key.converter":"org.apache.kafka.connect.storage.StringConverter",
                "value.converter" : "io.confluent.connect.avro.AvroConverter",
-               "value.converter.schema.registry.url": "'"$SCHEMA_REGISTRY_URL"'",
+               "value.converter.schema.registry.url": "$SCHEMA_REGISTRY_URL",
                "value.converter.basic.auth.user.info": "${file:/data:schema.registry.basic.auth.user.info}",
                "value.converter.basic.auth.credentials.source": "USER_INFO"
-          }' \
-     http://localhost:8083/connectors/snowflake-sink/config | jq .
+          }
+EOF
 
 
 sleep 120

@@ -77,7 +77,7 @@ $ curl -X PUT \
                "connector.class" : "com.google.pubsub.kafka.source.CloudPubSubSourceConnector",
                "tasks.max" : "1",
                "kafka.topic" : "pubsub-topic",
-               "cps.project" : "'"$GCP_PROJECT"'",
+               "cps.project" : "$GCP_PROJECT",
                "cps.topic" : "topic-1",
                "cps.subscription" : "subscription-1",
                "gcp.credentials.file.path" : "/tmp/keyfile.json",

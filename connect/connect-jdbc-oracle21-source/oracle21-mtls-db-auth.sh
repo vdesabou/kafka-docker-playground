@@ -221,9 +221,8 @@ fi
 sleep 10
 
 log "Creating Oracle source connector"
-curl -X PUT \
-     -H "Content-Type: application/json" \
-     --data '{
+playground connector create-or-update --connector oracle-source-mtls-db-auth << EOF
+{
                "connector.class":"io.confluent.connect.jdbc.JdbcSourceConnector",
                "tasks.max":"1",
                "connection.oracle.net.ssl_server_dn_match": "true",
@@ -239,8 +238,8 @@ curl -X PUT \
                "topic.prefix":"oracle-",
                "errors.log.enable": "true",
                "errors.log.include.messages": "true"
-          }' \
-     http://localhost:8083/connectors/oracle-source-mtls-db-auth/config | jq .
+          }
+EOF
 
 sleep 5
 

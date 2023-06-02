@@ -68,11 +68,11 @@ $ curl -X PUT \
      --data '{
                "connector.class": "io.confluent.connect.servicenow.ServiceNowSinkConnector",
                 "topics": "test_table",
-                "servicenow.url": "'"$SERVICENOW_URL"'",
+                "servicenow.url": "$SERVICENOW_URL",
                 "tasks.max": "1",
                 "servicenow.table": "u_test_table",
                 "servicenow.user": "admin",
-                "servicenow.password": "'"$SERVICENOW_PASSWORD"'",
+                "servicenow.password": "$SERVICENOW_PASSWORD",
                 "key.converter": "io.confluent.connect.avro.AvroConverter",
                 "key.converter.schema.registry.url": "http://schema-registry:8081",
                 "value.converter": "io.confluent.connect.avro.AvroConverter",

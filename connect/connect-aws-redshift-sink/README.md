@@ -77,7 +77,7 @@ $ curl -X PUT \
                "connector.class": "io.confluent.connect.aws.redshift.RedshiftSinkConnector",
                "tasks.max": "1",
                "topics": "orders",
-               "aws.redshift.domain": "'"$CLUSTER"'",
+               "aws.redshift.domain": "$CLUSTER",
                "aws.redshift.port": "5439",
                "aws.redshift.database": "dev",
                "aws.redshift.user": "masteruser",

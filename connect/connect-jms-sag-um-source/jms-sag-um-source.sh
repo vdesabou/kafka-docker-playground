@@ -61,9 +61,8 @@ do
 done
 
 log "Creating Solace source connector"
-curl -X PUT \
-     -H "Content-Type: application/json" \
-     --data '{
+playground connector create-or-update --connector jms-sag-um-source << EOF
+{
                "connector.class": "io.confluent.connect.jms.JmsSourceConnector",
                     "tasks.max": "1",
                     "kafka.topic": "source-messages",
@@ -78,8 +77,8 @@ curl -X PUT \
                     "value.converter": "org.apache.kafka.connect.storage.StringConverter",
                     "confluent.topic.bootstrap.servers": "broker:9092",
                     "confluent.topic.replication.factor": "1"
-          }' \
-     http://localhost:8083/connectors/jms-sag-um-source/config | jq .
+          }
+EOF
 
 sleep 10
 

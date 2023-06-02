@@ -57,16 +57,15 @@ log "Blocking bigtableadmin.googleapis.com IP $IP to make sure proxy is used"
 docker exec --privileged --user root connect bash -c "iptables -A INPUT -p tcp -s $IP -j DROP"
 
 log "Creating GCP BigTbale Sink connector"
-curl -X PUT \
-     -H "Content-Type: application/json" \
-     --data '{
+playground connector create-or-update --connector gcp-bigtable-sink << EOF
+{
                "connector.class": "io.confluent.connect.gcp.bigtable.BigtableSinkConnector",
                "tasks.max" : "1",
                "topics" : "stats",
                "auto.create" : "true",
                "gcp.bigtable.credentials.path": "/tmp/keyfile.json",
-               "gcp.bigtable.instance.id": "'"$INSTANCE"'",
-               "gcp.bigtable.project.id": "'"$GCP_PROJECT"'",
+               "gcp.bigtable.instance.id": "$INSTANCE",
+               "gcp.bigtable.project.id": "$GCP_PROJECT",
                "proxy.url": "https://nginx-proxy:8888",
                "auto.create.tables": "true",
                "auto.create.column.families": "true",
@@ -74,8 +73,8 @@ curl -X PUT \
                "confluent.license": "",
                "confluent.topic.bootstrap.servers": "broker:9092",
                "confluent.topic.replication.factor": "1"
-          }' \
-     http://localhost:8083/connectors/gcp-bigtable-sink/config | jq .
+          }
+EOF
 
 sleep 30
 

@@ -110,23 +110,22 @@ docker exec -i -e BOOTSTRAP_SERVERS="$BOOTSTRAP_SERVERS" -e SASL_JAAS_CONFIG="$S
 EOF
 
 log "Creating AWS Redshift Sink connector with cluster url $CLUSTER"
-curl -X PUT \
-     -H "Content-Type: application/json" \
-     --data '{
+playground connector create-or-update --connector redshift-sink << EOF
+{
                "connector.class": "io.confluent.connect.aws.redshift.RedshiftSinkConnector",
                "tasks.max": "1",
                "topics": "orders",
-               "aws.redshift.domain": "'"$CLUSTER"'",
+               "aws.redshift.domain": "$CLUSTER",
                "aws.redshift.port": "5439",
                "aws.redshift.database": "dev",
                "aws.redshift.user": "masteruser",
                "aws.redshift.password": "myPassword1",
-               "aws.access.key.id" : "'"$AWS_ACCESS_KEY_ID"'",
-               "aws.secret.key.id": "'"$AWS_SECRET_ACCESS_KEY"'",
+               "aws.access.key.id" : "$AWS_ACCESS_KEY_ID",
+               "aws.secret.key.id": "$AWS_SECRET_ACCESS_KEY",
                "auto.create": "true",
                "pk.mode": "kafka"
-          }' \
-     http://localhost:8083/connectors/redshift-sink/config | jq .
+          }
+EOF
 
 sleep 20
 

@@ -15,9 +15,8 @@ log "Running SSL + Basic Authentication Example"
 log "-------------------------------------"
 
 log "Creating http-sink connector"
-curl -X PUT \
-     -H "Content-Type: application/json" \
-     --data '{
+playground connector create-or-update --connector http-ssl-basic-auth-sink2 << EOF
+{
           "topics": "http-messages",
                "tasks.max": "1",
                "connector.class": "io.confluent.connect.http.HttpSinkConnector",
@@ -39,8 +38,8 @@ curl -X PUT \
                "https.ssl.truststore.type": "JKS",
                "https.ssl.truststore.password": "confluent",
                "https.ssl.protocol": "TLSv1.2"
-          }' \
-     http://localhost:8083/connectors/http-ssl-basic-auth-sink2/config | jq .
+          }
+EOF
 
 
 sleep 10

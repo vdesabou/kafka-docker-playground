@@ -57,13 +57,12 @@ docker run -i --volumes-from gcloud-config google/cloud-sdk:latest gcloud pubsub
 sleep 10
 
 log "Creating GCP PubSub Source connector"
-curl -X PUT \
-     -H "Content-Type: application/json" \
-     --data '{
+playground connector create-or-update --connector pubsub-source << EOF
+{
                "connector.class" : "io.confluent.connect.gcp.pubsub.PubSubSourceConnector",
                "tasks.max" : "1",
                "kafka.topic" : "pubsub-topic",
-               "gcp.pubsub.project.id" : "'"$GCP_PROJECT"'",
+               "gcp.pubsub.project.id" : "$GCP_PROJECT",
                "gcp.pubsub.topic.id" : "topic-1",
                "gcp.pubsub.subscription.id" : "subscription-1",
                "gcp.pubsub.credentials.path" : "/tmp/keyfile.json",
@@ -72,8 +71,8 @@ curl -X PUT \
                "errors.tolerance": "all",
                "errors.log.enable": "true",
                "errors.log.include.messages": "true"
-          }' \
-     http://localhost:8083/connectors/pubsub-source/config | jq .
+          }
+EOF
 
 sleep 10
 

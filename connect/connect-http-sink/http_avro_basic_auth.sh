@@ -15,9 +15,8 @@ log "Running AVRO Converter Example"
 log "-------------------------------------"
 
 log "Creating http-sink connector"
-curl -X PUT \
-     -H "Content-Type: application/json" \
-     --data '{
+playground connector create-or-update --connector http-sink << EOF
+{
           "topics": "avro-topic",
                "tasks.max": "1",
                "connector.class": "io.confluent.connect.http.HttpSinkConnector",
@@ -36,8 +35,8 @@ curl -X PUT \
                "auth.type": "BASIC",
                "connection.user": "admin",
                "connection.password": "password"
-          }' \
-     http://localhost:8083/connectors/http-sink/config | jq .
+          }
+EOF
 
 
 sleep 10

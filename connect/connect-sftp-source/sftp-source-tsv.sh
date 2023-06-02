@@ -20,9 +20,8 @@ docker cp tsv-sftp-source.tsv sftp-server:/chroot/home/foo/upload/input/
 rm -f tsv-sftp-source.tsv
 
 log "Creating TSV SFTP Source connector"
-curl -X PUT \
-     -H "Content-Type: application/json" \
-     --data '{
+playground connector create-or-update --connector sftp-source-tsv << EOF
+{
                "tasks.max": "1",
                "connector.class": "io.confluent.connect.sftp.SftpCsvSourceConnector",
                "cleanup.policy":"NONE",
@@ -39,8 +38,8 @@ curl -X PUT \
                "csv.first.row.as.header": "true",
                "schema.generation.enabled": "true",
                "csv.separator.char": "9"
-          }' \
-     http://localhost:8083/connectors/sftp-source-tsv/config | jq .
+          }
+EOF
 
 sleep 15
 

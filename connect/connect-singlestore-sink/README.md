@@ -31,9 +31,8 @@ seq -f "{\"f1\": \"value%g\"}" 10 | docker exec -i connect kafka-avro-console-pr
 Creating Singlestore sink connector
 
 ```bash
-curl -X PUT \
-     -H "Content-Type: application/json" \
-     --data '{
+playground connector create-or-update --connector singlestore-sink << EOF
+{
                "connector.class":"com.singlestore.kafka.SingleStoreSinkConnector",
                "tasks.max":"1",
                "topics":"mytable",
@@ -41,8 +40,8 @@ curl -X PUT \
                "connection.database" : "test",
                "connection.user" : "root",
                "connection.password" : "root"
-          }' \
-     http://localhost:8083/connectors/singlestore-sink/config | jq .
+          }
+EOF
 ```
 
 sleep 10

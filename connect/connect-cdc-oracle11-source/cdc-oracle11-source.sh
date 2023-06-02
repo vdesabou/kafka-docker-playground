@@ -88,9 +88,8 @@ insert into CUSTOMERS (id, first_name, last_name, email, gender, club_status, co
 EOF
 
 log "Creating Oracle source connector"
-curl -X PUT \
-     -H "Content-Type: application/json" \
-     --data '{
+playground connector create-or-update --connector cdc-oracle11-source << EOF
+{
                "connector.class": "io.confluent.connect.oracle.cdc.OracleCdcSourceConnector",
                "tasks.max": 2,
                "key.converter": "io.confluent.connect.avro.AvroConverter",
@@ -121,8 +120,8 @@ curl -X PUT \
                "topic.creation.default.replication.factor": 1,
                "topic.creation.default.partitions": 1,
                "topic.creation.default.cleanup.policy": "delete"
-          }' \
-     http://localhost:8083/connectors/cdc-oracle11-source/config | jq .
+          }
+EOF
 
 log "Waiting 10s for connector to read existing data"
 sleep 10

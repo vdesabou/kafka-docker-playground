@@ -42,9 +42,8 @@ docker exec -i connect kafka-avro-console-producer --broker-list broker:9092 --p
 EOF
 
 log "Creating Pivotal Gemfire sink connector"
-curl -X PUT \
-     -H "Content-Type: application/json" \
-     --data '{
+playground connector create-or-update --connector pivotal-gemfire-sink << EOF
+{
                "connector.class": "io.confluent.connect.pivotal.gemfire.PivotalGemfireSinkConnector",
                "tasks.max": "1",
                "topics": "input_topic",
@@ -55,8 +54,8 @@ curl -X PUT \
                "gemfire.region":"exampleRegion",
                "confluent.topic.bootstrap.servers": "broker:9092",
                "confluent.topic.replication.factor": "1"
-          }' \
-     http://localhost:8083/connectors/pivotal-gemfire-sink/config | jq .
+          }
+EOF
 
 sleep 5
 

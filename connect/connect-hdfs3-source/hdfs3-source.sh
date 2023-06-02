@@ -106,9 +106,8 @@ fi
 
 
 log "Creating HDFS Source connector"
-curl -X PUT \
-     -H "Content-Type: application/json" \
-     --data '{
+playground connector create-or-update --connector hdfs3-source << EOF
+{
           "connector.class":"io.confluent.connect.hdfs3.Hdfs3SourceConnector",
           "tasks.max":"1",
           "hdfs.url":"hdfs://namenode:9000",
@@ -121,8 +120,8 @@ curl -X PUT \
           "transforms.AddPrefix.type" : "org.apache.kafka.connect.transforms.RegexRouter",
           "transforms.AddPrefix.regex" : ".*",
           "transforms.AddPrefix.replacement" : "copy_of_$0"
-          }' \
-     http://localhost:8083/connectors/hdfs3-source/config | jq .
+          }
+EOF
 
 sleep 10
 

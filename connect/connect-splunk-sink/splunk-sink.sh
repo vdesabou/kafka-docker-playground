@@ -37,9 +37,8 @@ docker exec broker kafka-topics --create --topic splunk-qs --partitions 10 --rep
 
 
 log "Creating Splunk sink connector"
-curl -X PUT \
-     -H "Content-Type: application/json" \
-     --data '{
+playground connector create-or-update --connector splunk-sink << EOF
+{
                "connector.class": "com.splunk.kafka.connect.SplunkSinkConnector",
                "tasks.max": "1",
                "topics": "splunk-qs",
@@ -50,8 +49,8 @@ curl -X PUT \
                "value.converter": "org.apache.kafka.connect.storage.StringConverter",
                "confluent.topic.bootstrap.servers": "broker:9092",
                "confluent.topic.replication.factor": "1"
-          }' \
-     http://localhost:8083/connectors/splunk-sink/config | jq .
+          }
+EOF
 
 
 log "Sending messages to topic splunk-qs"

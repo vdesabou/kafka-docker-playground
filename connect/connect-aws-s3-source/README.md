@@ -57,8 +57,8 @@ $ curl -X PUT \
      --data '{
                "tasks.max": "1",
                "connector.class": "io.confluent.connect.s3.source.S3SourceConnector",
-               "s3.region": "'"$AWS_REGION"'",
-               "s3.bucket.name": "'"$AWS_BUCKET_NAME"'",
+               "s3.region": "$AWS_REGION",
+               "s3.bucket.name": "$AWS_BUCKET_NAME",
                "format.class": "io.confluent.connect.s3.format.avro.AvroFormat",
                "confluent.license": "",
                "confluent.topic.bootstrap.servers": "broker:9092",
@@ -116,8 +116,8 @@ $ curl -X PUT \
      --data '{
                "tasks.max": "1",
                "connector.class": "io.confluent.connect.s3.source.S3SourceConnector",
-               "s3.region": "'"$AWS_REGION"'",
-               "s3.bucket.name": "'"$AWS_BUCKET_NAME"'",
+               "s3.region": "$AWS_REGION",
+               "s3.bucket.name": "$AWS_BUCKET_NAME",
                "format.class": "io.confluent.connect.s3.format.json.JsonFormat",
                "value.converter": "org.apache.kafka.connect.json.JsonConverter",
                "value.converter.schemas.enable": "false",

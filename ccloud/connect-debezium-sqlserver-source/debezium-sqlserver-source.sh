@@ -74,9 +74,8 @@ GO
 EOF
 
 log "Creating Debezium SQL Server source connector"
-curl -X PUT \
-     -H "Content-Type: application/json" \
-     --data '{
+playground connector create-or-update --connector debezium-sqlserver-source << EOF
+{
               "connector.class": "io.debezium.connector.sqlserver.SqlServerConnector",
               "tasks.max": "1",
               "database.hostname": "sqlserver",
@@ -109,8 +108,8 @@ curl -X PUT \
               "schema.history.internal.consumer.sasl.jaas.config": "org.apache.kafka.common.security.plain.PlainLoginModule required username=\"${file:/data:sasl.username}\" password=\"${file:/data:sasl.password}\";",
               "schema.history.internal.consumer.sasl.mechanism": "PLAIN",
               "schema.history.internal.consumer.security.protocol": "SASL_SSL"
-          }' \
-     http://localhost:8083/connectors/debezium-sqlserver-source/config | jq .
+          }
+EOF
 
 sleep 5
 

@@ -40,9 +40,8 @@ fi
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
 
 log "Creating GCP Firebase Sink connector"
-curl -X PUT \
-     -H "Content-Type: application/json" \
-     --data '{
+playground connector create-or-update --connector firebase-sink << EOF
+{
                "connector.class" : "io.confluent.connect.firebase.FirebaseSinkConnector",
                "tasks.max" : "1",
                "topics":"artists,songs",
@@ -55,8 +54,8 @@ curl -X PUT \
                "value.converter.schema.registry.url":"http://schema-registry:8081",
                "confluent.topic.bootstrap.servers": "broker:9092",
                "confluent.topic.replication.factor": "1"
-          }' \
-     http://localhost:8083/connectors/firebase-sink/config | jq .
+          }
+EOF
 
 
 log "Produce Avro data to topic artists"

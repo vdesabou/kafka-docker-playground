@@ -81,23 +81,22 @@ fi
 TODAY=$(date -u '+%Y-%m-%d')
 
 log "Creating ServiceNow Source connector"
-curl -X PUT \
-     -H "Content-Type: application/json" \
-     --data '{
+playground connector create-or-update --connector servicenow-source << EOF
+{
                "connector.class": "io.confluent.connect.servicenow.ServiceNowSourceConnector",
                "kafka.topic": "topic-servicenow",
-               "servicenow.url": "'"$SERVICENOW_URL"'",
+               "servicenow.url": "$SERVICENOW_URL",
                "tasks.max": "1",
                "servicenow.table": "incident",
                "servicenow.user": "admin",
-               "servicenow.password": "'"$SERVICENOW_PASSWORD"'",
-               "servicenow.since": "'"$TODAY"'",
+               "servicenow.password": "$SERVICENOW_PASSWORD",
+               "servicenow.since": "$TODAY",
                "topic.creation.default.replication.factor": "-1",
                "topic.creation.default.partitions": "-1",
                "key.converter": "org.apache.kafka.connect.json.JsonConverter",
                "value.converter": "org.apache.kafka.connect.json.JsonConverter"
-          }' \
-     http://localhost:8083/connectors/servicenow-source/config | jq .
+          }
+EOF
 
 sleep 10
 

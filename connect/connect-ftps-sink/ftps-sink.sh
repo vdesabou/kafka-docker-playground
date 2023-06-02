@@ -20,9 +20,8 @@ ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml
 
 
 log "Creating JSON file with schema FTPS Sink connector"
-curl -X PUT \
-     -H "Content-Type: application/json" \
-     --data '{
+playground connector create-or-update --connector ftps-sink << EOF
+{
                "tasks.max": "1",
                "connector.class": "io.confluent.connect.ftps.FtpsSinkConnector",
                "ftps.working.dir": "/",
@@ -46,8 +45,8 @@ curl -X PUT \
                "value.converter.schema.registry.url": "http://schema-registry:8081",
                "format.class": "io.confluent.connect.ftps.sink.format.avro.AvroFormat",
                "flush.size": "1"
-          }' \
-     http://localhost:8083/connectors/ftps-sink/config | jq .
+          }
+EOF
 
 log "Sending messages to topic test_ftps_sink"
 seq -f "{\"f1\": \"value%g\"}" 10 | docker exec -i connect kafka-avro-console-producer --broker-list broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic test_ftps_sink --property value.schema='{"type":"record","name":"myrecord","fields":[{"name":"f1","type":"string"}]}'

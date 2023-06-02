@@ -16,9 +16,8 @@ ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml
 docker exec namenode bash -c "/opt/hadoop-2.7.4/bin/hdfs dfs -chmod 777  /"
 
 log "Creating HDFS Sink connector"
-curl -X PUT \
-     -H "Content-Type: application/json" \
-     --data '{
+playground connector create-or-update --connector hdfs-sink << EOF
+{
                "connector.class":"io.confluent.connect.hdfs.HdfsSinkConnector",
                "tasks.max":"1",
                "topics":"test_hdfs",
@@ -39,8 +38,8 @@ curl -X PUT \
                "value.converter":"io.confluent.connect.avro.AvroConverter",
                "value.converter.schema.registry.url":"http://schema-registry:8081",
                "schema.compatibility":"BACKWARD"
-          }' \
-     http://localhost:8083/connectors/hdfs-sink/config | jq .
+          }
+EOF
 
 
 log "Sending messages to topic test_hdfs"
@@ -69,9 +68,8 @@ cat /tmp/result.log
 grep "value1" /tmp/result.log
 
 log "Creating HDFS Source connector"
-curl -X PUT \
-     -H "Content-Type: application/json" \
-     --data '{
+playground connector create-or-update --connector hdfs2-source << EOF
+{
           "connector.class":"io.confluent.connect.hdfs2.Hdfs2SourceConnector",
           "tasks.max":"1",
           "store.url":"hdfs://namenode:8020",
@@ -83,8 +81,8 @@ curl -X PUT \
           "transforms.AddPrefix.type" : "org.apache.kafka.connect.transforms.RegexRouter",
           "transforms.AddPrefix.regex" : ".*",
           "transforms.AddPrefix.replacement" : "copy_of_$0"
-          }' \
-     http://localhost:8083/connectors/hdfs2-source/config | jq .
+          }
+EOF
 
 sleep 10
 

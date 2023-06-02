@@ -63,7 +63,7 @@ $ curl -X PUT \
      --data '{
                     "connector.class": "io.confluent.connect.pagerduty.PagerDutySinkConnector",
                     "topics": "incidents",
-                    "pagerduty.api.key": "'"$PAGERDUTY_API_KEY"'",
+                    "pagerduty.api.key": "$PAGERDUTY_API_KEY",
                     "tasks.max": "1",
                     "behavior.on.error":"fail",
                     "key.converter": "org.apache.kafka.connect.storage.StringConverter",

@@ -136,9 +136,8 @@ EOF
 
 
 log "Creating Debezium PostgreSQL source connector with customers table"
-curl -X PUT \
-     -H "Content-Type: application/json" \
-     --data '{
+playground connector create-or-update --connector debezium-postgres-source << EOF
+{
                "connector.class": "io.debezium.connector.postgresql.PostgresConnector",
                     "tasks.max": "1",
                     "database.hostname": "postgres",
@@ -158,8 +157,8 @@ curl -X PUT \
                     "value.converter.schema.registry.url": "http://schema-registry:8081",
                     "table.include.list" : "public.customers,public.debezium_signal",
                     "signal.data.collection": "public.debezium_signal"
-          }' \
-     http://localhost:8083/connectors/debezium-postgres-source/config | jq .
+          }
+EOF
 
 sleep 5
 
@@ -172,9 +171,8 @@ playground topic consume --topic asgard.public.customers2 --min-expected-message
 set -e
 
 log "Creating Debezium PostgreSQL source connector with customers and customers2 table"
-curl -X PUT \
-     -H "Content-Type: application/json" \
-     --data '{
+playground connector create-or-update --connector debezium-postgres-source << EOF
+{
               "connector.class": "io.debezium.connector.postgresql.PostgresConnector",
               "tasks.max": "1",
               "database.hostname": "postgres",
@@ -194,8 +192,8 @@ curl -X PUT \
               "value.converter.schema.registry.url": "http://schema-registry:8081",
               "table.include.list" : "public.customers,public.debezium_signal,public.customers2",
               "signal.data.collection": "public.debezium_signal"
-          }' \
-     http://localhost:8083/connectors/debezium-postgres-source/config | jq .
+          }
+EOF
 
 sleep 10
 

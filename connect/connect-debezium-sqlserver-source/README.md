@@ -87,9 +87,8 @@ Results:
 Connector is created with:
 
 ```yml
-curl -X PUT \
-     -H "Content-Type: application/json" \
-     --data '{
+playground connector create-or-update --connector debezium-sqlserver-source-ssl << EOF
+{
                "connector.class": "io.debezium.connector.sqlserver.SqlServerConnector",
                "tasks.max": "1",
                "database.hostname": "sqlserver",
@@ -102,8 +101,8 @@ curl -X PUT \
                "database.history.kafka.topic": "schema-changes.inventory",
                "database.trustStore": "/tmp/truststore.jks",
                "database.trustStorePassword": "confluent"
-          }' \
-     http://localhost:8083/connectors/debezium-sqlserver-source-ssl/config | jq .
+          }
+EOF
 ```
 
 N.B: Control Center is reachable at [http://127.0.0.1:9021](http://127.0.0.1:9021])

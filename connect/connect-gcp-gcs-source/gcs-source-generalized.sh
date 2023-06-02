@@ -64,11 +64,10 @@ log "Copy generalized.quickstart.json to bucket $GCS_BUCKET_NAME/quickstart"
 docker run -i -v ${PWD}:/tmp/ --volumes-from gcloud-config google/cloud-sdk:latest gsutil cp /tmp/generalized.quickstart.json gs://$GCS_BUCKET_NAME/quickstart/generalized.quickstart.json
 
 log "Creating Generalized GCS Source connector"
-curl -X PUT \
-     -H "Content-Type: application/json" \
-     --data '{
+playground connector create-or-update --connector gcs-source << EOF
+{
                "connector.class": "io.confluent.connect.gcs.GcsSourceConnector",
-               "gcs.bucket.name" : "'"$GCS_BUCKET_NAME"'",
+               "gcs.bucket.name" : "$GCS_BUCKET_NAME",
                "gcs.credentials.path" : "/tmp/keyfile.json",
                "format.class": "io.confluent.connect.gcs.format.json.JsonFormat",
                "value.converter": "org.apache.kafka.connect.json.JsonConverter",
@@ -82,8 +81,8 @@ curl -X PUT \
                "errors.tolerance": "all",
                "errors.log.enable": "true",
                "errors.log.include.messages": "true"
-          }' \
-     http://localhost:8083/connectors/gcs-source/config | jq .
+          }
+EOF
 
 sleep 10
 

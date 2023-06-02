@@ -70,10 +70,8 @@ curl -X POST \
 Creating FileStream Sink connector:
 
 ```bash
-curl -X PUT \
-     -u connectorSubmitter:connectorSubmitter \
-     -H "Content-Type: application/json" \
-     --data '{
+playground connector create-or-update --connector my-rbac-connector << EOF
+{
                "tasks.max": "1",
                "connector.class": "org.apache.kafka.connect.file.FileStreamSinkConnector",
                "topics": "rbac_topic",
@@ -83,8 +81,8 @@ curl -X PUT \
                "value.converter.basic.auth.credentials.source": "USER_INFO",
                "value.converter.basic.auth.user.info": "connectorSA:connectorSA",
                "consumer.override.sasl.jaas.config": "org.apache.kafka.common.security.oauthbearer.OAuthBearerLoginModule required username=\"${secret:my-rbac-connector:username}\" password=\"${secret:my-rbac-connector:password}\" metadataServerUrls=\"http://broker:8091\";"
-          }' \
-     http://localhost:8083/connectors/my-rbac-connector/config | jq .
+          }
+EOF
 ```
 
 Verify we have received the data in file:

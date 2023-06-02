@@ -93,9 +93,8 @@ docker exec -e AZURE_COSMOSDB_DB_ENDPOINT_URI="$AZURE_COSMOSDB_DB_ENDPOINT_URI" 
 
 # https://github.com/microsoft/kafka-connect-cosmosdb/blob/dev/doc/README_Source.md#source-configuration-properties
 log "Creating Azure Cosmos DB Source connector"
-curl -X PUT \
-     -H "Content-Type: application/json" \
-     --data '{
+playground connector create-or-update --connector azure-cosmosdb-source << EOF
+{
                 "connector.class": "com.azure.cosmos.kafka.connect.source.CosmosDBSourceConnector",
                 "tasks.max": "1",
                 "key.converter": "org.apache.kafka.connect.json.JsonConverter",
@@ -111,8 +110,8 @@ curl -X PUT \
                 "errors.tolerance": "all",
                 "errors.log.enable": "true",
                 "errors.log.include.messages": "true"
-          }' \
-     http://localhost:8083/connectors/azure-cosmosdb-source/config | jq .
+          }
+EOF
 
 sleep 30
 

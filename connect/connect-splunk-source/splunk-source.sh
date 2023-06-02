@@ -21,9 +21,8 @@ fi
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
 
 log "Creating Splunk source connector"
-curl -X PUT \
-     -H "Content-Type: application/json" \
-     --data '{
+playground connector create-or-update --connector splunk-source << EOF
+{
                "connector.class": "io.confluent.connect.SplunkHttpSourceConnector",
                     "tasks.max": "1",
                     "kafka.topic": "splunk-source",
@@ -33,8 +32,8 @@ curl -X PUT \
                     "splunk.ssl.key.store.password": "confluent",
                     "confluent.topic.bootstrap.servers": "broker:9092",
                     "confluent.topic.replication.factor": "1"
-          }' \
-     http://localhost:8083/connectors/splunk-source/config | jq .
+          }
+EOF
 
 sleep 5
 

@@ -78,27 +78,26 @@ set -e
 
 
 log "Creating S3 Sink connector with bucket name <$AWS_BUCKET_NAME>"
-curl -X PUT \
-     -H "Content-Type: application/json" \
-     --data '{
+playground connector create-or-update --connector s3-sink << EOF
+{
                "connector.class": "io.confluent.connect.s3.S3SinkConnector",
                "key.converter": "org.apache.kafka.connect.storage.StringConverter",
                "value.converter": "io.confluent.connect.avro.AvroConverter",
                "value.converter.schema.registry.url": "http://schema-registry:8081",
                "tasks.max": "1",
                "topics": "customer_avro",
-               "s3.region": "'"$AWS_REGION"'",
-               "s3.bucket.name": "'"$AWS_BUCKET_NAME"'",
-               "topics.dir": "'"$TAG"'",
+               "s3.region": "$AWS_REGION",
+               "s3.bucket.name": "$AWS_BUCKET_NAME",
+               "topics.dir": "$TAG",
                "s3.part.size": 52428801,
                "flush.size": "3",
-               "aws.access.key.id" : "'"$AWS_ACCESS_KEY_ID"'",
-               "aws.secret.access.key": "'"$AWS_SECRET_ACCESS_KEY"'",
+               "aws.access.key.id" : "$AWS_ACCESS_KEY_ID",
+               "aws.secret.access.key": "$AWS_SECRET_ACCESS_KEY",
                "storage.class": "io.confluent.connect.s3.storage.S3Storage",
                "format.class": "io.confluent.connect.s3.format.parquet.ParquetFormat",
                "schema.compatibility": "NONE"
-          }' \
-     http://localhost:8083/connectors/s3-sink/config | jq .
+          }
+EOF
 
 
 log "✨ Run the  java producer v1 which produces to topic customer_avro"

@@ -89,9 +89,8 @@ docker exec -i connect kafka-avro-console-producer --broker-list broker:9092 --p
 EOF
 
 log "Creating Azure Synapse Analytics Sink connector"
-curl -X PUT \
-     -H "Content-Type: application/json" \
-     --data '{
+playground connector create-or-update --connector azure-sql-dw-sink << EOF
+{
                 "connector.class": "io.confluent.connect.azuresqldw.AzureSqlDwSinkConnector",
                 "tasks.max": "1",
                 "topics": "products",
@@ -108,8 +107,8 @@ curl -X PUT \
                 "errors.tolerance": "all",
                 "errors.log.enable": "true",
                 "errors.log.include.messages": "true"
-          }' \
-     http://localhost:8083/connectors/azure-sql-dw-sink/config | jq .
+          }
+EOF
 
 sleep 60
 

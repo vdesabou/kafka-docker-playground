@@ -14,9 +14,8 @@ log "Verifying data in testdb"
 docker exec -i influxdb bash -c "influx -execute 'SELECT * from coin' -database testdb"
 
 log "Creating InfluxDB source connector"
-curl -X PUT \
-     -H "Content-Type: application/json" \
-     --data '{
+playground connector create-or-update --connector influxdb-source << EOF
+{
                "connector.class": "io.confluent.influxdb.source.InfluxdbSourceConnector",
                     "tasks.max": "1",
                     "influxdb.url": "http://influxdb:8086",
@@ -25,8 +24,8 @@ curl -X PUT \
                     "topic.prefix": "influx_",
                     "value.converter": "org.apache.kafka.connect.json.JsonConverter",
                     "value.converter.schemas.enable": "false"
-          }' \
-     http://localhost:8083/connectors/influxdb-source/config | jq .
+          }
+EOF
 
 sleep 10
 

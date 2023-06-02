@@ -59,9 +59,8 @@ db.customers.find().pretty();
 EOF
 
 log "Creating Debezium MongoDB source connector"
-curl -X PUT \
-     -H "Content-Type: application/json" \
-     --data '{
+playground connector create-or-update --connector debezium-mongodb-source << EOF
+{
                "connector.class" : "io.debezium.connector.mongodb.MongoDbConnector",
                "tasks.max" : "1",
                "mongodb.hosts" : "debezium/mongodb:27017",
@@ -75,8 +74,8 @@ curl -X PUT \
 
                "topic.creation.default.replication.factor": "-1",
                "topic.creation.default.partitions": "-1"
-          }' \
-     http://localhost:8083/connectors/debezium-mongodb-source/config | jq .
+          }
+EOF
 
 
 sleep 5

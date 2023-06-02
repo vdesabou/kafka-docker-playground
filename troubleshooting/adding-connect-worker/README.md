@@ -18,9 +18,8 @@ $ playground run -f start<tab>
 Creating SFTP Sink connector with 4 tasks
 
 ```
-curl -X PUT \
-     -H "Content-Type: application/json" \
-     --data '{
+playground connector create-or-update --connector sftp-sink << EOF
+{
         "topics": "test_sftp_sink",
                "tasks.max": "4",
                "connector.class": "io.confluent.connect.sftp.SftpSinkConnector",
@@ -38,8 +37,8 @@ curl -X PUT \
                "confluent.license": "",
                "confluent.topic.bootstrap.servers": "broker:9092",
                "confluent.topic.replication.factor": "1"
-          }' \
-     http://localhost:8083/connectors/sftp-sink/config | jq .
+          }
+EOF
 ```
 
 Getting tasks placement

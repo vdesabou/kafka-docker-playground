@@ -79,9 +79,8 @@ docker exec singlestore memsql -u root -proot -e "USE db;select * from applicati
 
 
 log "Creating JDBC Singlestore source connector"
-curl -X PUT \
-     -H "Content-Type: application/json" \
-     --data '{
+playground connector create-or-update --connector jdbc-singlestore-source << EOF
+{
                "connector.class":"io.confluent.connect.jdbc.JdbcSourceConnector",
                "tasks.max":"1",
                "connection.url":"jdbc:mysql://singlestore:3306/db?user=root&password=root&useSSL=false",
@@ -91,8 +90,8 @@ curl -X PUT \
                "incrementing.column.name":"id",
                "topic.prefix":"singlestore-"
 
-          }' \
-     http://localhost:8083/connectors/jdbc-singlestore-source/config | jq .
+          }
+EOF
 
 sleep 5
 

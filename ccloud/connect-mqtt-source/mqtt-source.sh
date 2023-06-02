@@ -39,14 +39,13 @@ docker exec mosquitto sh -c 'mosquitto_pub -h localhost -p 1883 -u "myuser" -P "
 sleep 5
 
 log "Creating MQTT Source connector"
-curl -X PUT \
-     -H "Content-Type: application/json" \
-     --data '{
+playground connector create-or-update --connector mqtt-source << EOF
+{
                "connector.class": "io.confluent.connect.mqtt.MqttSourceConnector",
                "tasks.max": "1",
                "mqtt.server.uri": "tcp://mosquitto:1883",
                "mqtt.topics":"my-mqtt-topic",
-               "kafka.topic": "'"$MQTT_TOPIC"'",
+               "kafka.topic": "$MQTT_TOPIC",
                "mqtt.qos": "2",
                "mqtt.username": "myuser",
                "mqtt.password": "mypassword",
@@ -58,8 +57,8 @@ curl -X PUT \
                "confluent.topic.sasl.jaas.config" : "org.apache.kafka.common.security.plain.PlainLoginModule required username=\"${file:/data:sasl.username}\" password=\"${file:/data:sasl.password}\";",
                "confluent.topic.security.protocol" : "SASL_SSL",
                "confluent.topic.replication.factor": "3"
-          }' \
-     http://localhost:8083/connectors/mqtt-source/config | jq .
+          }
+EOF
 
 sleep 5
 

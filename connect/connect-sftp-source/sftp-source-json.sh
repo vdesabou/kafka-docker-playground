@@ -20,9 +20,8 @@ docker cp json-sftp-source.json sftp-server:/chroot/home/foo/upload/input/
 rm -f json-sftp-source.json
 
 log "Creating JSON (no schema) SFTP Source connector"
-curl -X PUT \
-     -H "Content-Type: application/json" \
-     --data '{
+playground connector create-or-update --connector sftp-source-json << EOF
+{
                "tasks.max": "1",
                "connector.class": "io.confluent.connect.sftp.SftpSchemaLessJsonSourceConnector",
                "behavior.on.error":"IGNORE",
@@ -36,8 +35,8 @@ curl -X PUT \
                "sftp.port":"22",
                "kafka.topic": "sftp-testing-topic",
                "value.converter": "org.apache.kafka.connect.storage.StringConverter"
-          }' \
-     http://localhost:8083/connectors/sftp-source-json/config | jq .
+          }
+EOF
 
 sleep 15
 

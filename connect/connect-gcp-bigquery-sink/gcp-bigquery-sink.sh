@@ -52,19 +52,18 @@ ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml
 
 
 log "Creating GCP BigQuery Sink connector"
-curl -X PUT \
-     -H "Content-Type: application/json" \
-     --data '{
+playground connector create-or-update --connector gcp-bigquery-sink << EOF
+{
                "connector.class": "com.wepay.kafka.connect.bigquery.BigQuerySinkConnector",
                "tasks.max" : "1",
                "topics" : "kcbq-quickstart1",
                "sanitizeTopics" : "true",
                "autoCreateTables" : "true",
-               "defaultDataset" : "'"$DATASET"'",
-               "project" : "'"$GCP_PROJECT"'",
+               "defaultDataset" : "$DATASET",
+               "project" : "$GCP_PROJECT",
                "keyfile" : "/tmp/keyfile.json"
-          }' \
-     http://localhost:8083/connectors/gcp-bigquery-sink/config | jq .
+          }
+EOF
 
 
 log "Sending messages to topic kcbq-quickstart1"

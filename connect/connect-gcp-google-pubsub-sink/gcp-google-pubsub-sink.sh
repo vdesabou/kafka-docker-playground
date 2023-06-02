@@ -66,21 +66,20 @@ EOF
 sleep 10
 
 log "Creating Google Cloud Pub/Sub Group Kafka Sink connector"
-curl -X PUT \
-     -H "Content-Type: application/json" \
-     --data '{
+playground connector create-or-update --connector pubsub-sink << EOF
+{
                "connector.class" : "com.google.pubsub.kafka.sink.CloudPubSubSinkConnector",
                "tasks.max" : "1",
                "topics" : "pubsub-topic",
-               "cps.project" : "'"$GCP_PROJECT"'",
+               "cps.project" : "$GCP_PROJECT",
                "cps.topic" : "topic-1",
                "gcp.credentials.file.path" : "/tmp/keyfile.json",
                "key.converter": "org.apache.kafka.connect.storage.StringConverter",
                "value.converter": "org.apache.kafka.connect.converters.ByteArrayConverter",
                "metadata.publish": "true",
                "headers.publish": "true"
-          }' \
-     http://localhost:8083/connectors/pubsub-sink/config | jq .
+          }
+EOF
 
 sleep 120
 

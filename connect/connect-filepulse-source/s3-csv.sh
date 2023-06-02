@@ -101,14 +101,13 @@ aws s3 cp /tmp/quickstart-musics-dataset.csv s3://$AWS_BUCKET_NAME/
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.s3.yml"
 
 log "Creating S3 CSV FilePulse Source connector"
-curl -X PUT \
-     -H "Content-Type: application/json" \
-     --data '{
+playground connector create-or-update --connector filepulse-source-s3-csv << EOF
+{
           "connector.class":"io.streamthoughts.kafka.connect.filepulse.source.FilePulseSourceConnector",
           "aws.access.key.id": "${file:/data:aws.access.key.id}",
           "aws.secret.access.key": "${file:/data:aws.secret.access.key}",
-          "aws.s3.bucket.name": "'"$AWS_BUCKET_NAME"'",
-          "aws.s3.region": "'"$AWS_REGION"'",
+          "aws.s3.bucket.name": "$AWS_BUCKET_NAME",
+          "aws.s3.region": "$AWS_REGION",
           "fs.listing.class": "io.streamthoughts.kafka.connect.filepulse.fs.AmazonS3FileSystemListing",
           "fs.listing.filters":"io.streamthoughts.kafka.connect.filepulse.fs.filter.RegexFileListFilter",
           "fs.listing.interval.ms": "10000",
@@ -131,8 +130,8 @@ curl -X PUT \
           "tasks.file.status.storage.topic.partitions": 10,
           "tasks.file.status.storage.topic.replication.factor": 1,
           "tasks.max": 1
-          }' \
-     http://localhost:8083/connectors/filepulse-source-s3-csv/config | jq .
+          }
+EOF
 
 
 sleep 5

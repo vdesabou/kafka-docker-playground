@@ -15,9 +15,8 @@ log "Adding latency"
 add_latency broker connect 1000ms
 
 log "Creating FileStream Source connector"
-curl -X PUT \
-     -H "Content-Type: application/json" \
-     --data '{
+playground connector create-or-update --connector filestream-source << EOF
+{
                "tasks.max": "1",
                "connector.class": "org.apache.kafka.connect.file.FileStreamSourceConnector",
                "topic": "filestream",
@@ -25,8 +24,8 @@ curl -X PUT \
                "key.converter": "org.apache.kafka.connect.storage.StringConverter",
                "value.converter": "org.apache.kafka.connect.json.JsonConverter",
                "value.converter.schemas.enable": "false"
-          }' \
-     http://localhost:8083/connectors/filestream-source/config | jq .
+          }
+EOF
 
 
 sleep 5

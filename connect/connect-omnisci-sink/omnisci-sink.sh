@@ -15,9 +15,8 @@ EOF
 
 
 log "Creating OmniSci sink connector"
-curl -X PUT \
-     -H "Content-Type: application/json" \
-     --data '{
+playground connector create-or-update --connector omnisci-sink << EOF
+{
                "connector.class": "io.confluent.connect.omnisci.OmnisciSinkConnector",
                     "tasks.max" : "1",
                     "topics": "orders",
@@ -29,8 +28,8 @@ curl -X PUT \
                     "confluent.topic.bootstrap.servers": "broker:9092",
                     "confluent.topic.replication.factor": "1",
                     "auto.create": "true"
-          }' \
-     http://localhost:8083/connectors/omnisci-sink/config | jq .
+          }
+EOF
 
 sleep 10
 

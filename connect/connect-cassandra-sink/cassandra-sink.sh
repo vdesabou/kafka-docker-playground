@@ -14,24 +14,23 @@ log "Sending messages to topic topic1"
 seq -f "{\"f1\": \"value%g\"}" 10 | docker exec -i connect kafka-avro-console-producer --broker-list broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic topic1 --property value.schema='{"type":"record","name":"myrecord","fields":[{"name":"f1","type":"string"}]}'
 
 log "Creating Cassandra Sink connector"
-curl -X PUT \
-     -H "Content-Type: application/json" \
-     --data '{
+playground connector create-or-update --connector cassandra-sink << EOF
+{
                "connector.class": "io.confluent.connect.cassandra.CassandraSinkConnector",
                "tasks.max": "1",
                "topics" : "topic1",
                "cassandra.contact.points" : "cassandra",
                "cassandra.keyspace" : "test",
                "cassandra.consistency.level": "ONE",
-               "cassandra.local.datacenter":"'"$DATACENTER"'",
+               "cassandra.local.datacenter":"$DATACENTER",
                "confluent.license": "",
                "confluent.topic.bootstrap.servers": "broker:9092",
                "confluent.topic.replication.factor": "1",
                "transforms": "createKey",
                "transforms.createKey.fields": "f1",
                "transforms.createKey.type": "org.apache.kafka.connect.transforms.ValueToKey"
-          }' \
-     http://localhost:8083/connectors/cassandra-sink/config | jq .
+          }
+EOF
 
 sleep 15
 

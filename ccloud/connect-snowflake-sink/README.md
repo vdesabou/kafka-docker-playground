@@ -109,7 +109,7 @@ $ curl -X PUT \
                "connector.class": "com.snowflake.kafka.connector.SnowflakeSinkConnector",
                "topics": "test_table",
                "tasks.max": "1",
-               "snowflake.url.name":"'"$SNOWFLAKE_URL"'",
+               "snowflake.url.name":"$SNOWFLAKE_URL",
                "snowflake.user.name":"$PLAYGROUND_USER",
                "snowflake.user.role":"$PLAYGROUND_CONNECTOR_ROLE",
                "snowflake.private.key":"${file:/data:private.key}",

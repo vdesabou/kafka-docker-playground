@@ -41,16 +41,15 @@ SINCE="2021-01-01 00:00"
 #      http://localhost:8083/admin/loggers/org.apache.http.wire | jq .
 
 log "Creating Jira Source connector"
-curl -X PUT \
-     -H "Content-Type: application/json" \
-     --data '{
+playground connector create-or-update --connector jira-source << EOF
+{
                     "connector.class": "io.confluent.connect.jira.JiraSourceConnector",
                     "topic.name.pattern":"jira-topic-${resourceName}",
                     "tasks.max": "1",
-                    "jira.url": "'"$JIRA_URL"'",
-                    "jira.since": "'"$SINCE"'",
-                    "jira.username": "'"$JIRA_USERNAME"'",
-                    "jira.api.token": "'"$JIRA_API_TOKEN"'",
+                    "jira.url": "$JIRA_URL",
+                    "jira.since": "$SINCE",
+                    "jira.username": "$JIRA_USERNAME",
+                    "jira.api.token": "$JIRA_API_TOKEN",
                     "jira.tables": "issues",
                     "jira.resources": "issues",
                     "key.converter": "org.apache.kafka.connect.json.JsonConverter",
@@ -58,8 +57,8 @@ curl -X PUT \
                     "confluent.license": "",
                     "confluent.topic.bootstrap.servers": "broker:9092",
                     "confluent.topic.replication.factor": "1"
-          }' \
-     http://localhost:8083/connectors/jira-source/config | jq .
+          }
+EOF
 
 
 sleep 10

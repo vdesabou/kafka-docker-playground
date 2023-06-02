@@ -78,13 +78,13 @@ kubectl exec -i connectors-0 -- curl -s -X PUT \
       -H "Content-Type: application/json" \
       --data '{
                 "connector.class": "io.confluent.kafka.connect.datagen.DatagenConnector",
-                "kafka.topic": "'"${topic}"'",
+                "kafka.topic": "${topic}",
                 "key.converter": "org.apache.kafka.connect.storage.StringConverter",
                 "value.converter": "org.apache.kafka.connect.json.JsonConverter",
                 "value.converter.schemas.enable": "false",
                 "max.interval": 1,
-                "iterations": "'"$iterations_per_task"'",
-                "tasks.max": "'"$datagen_tasks"'",
+                "iterations": "$iterations_per_task",
+                "tasks.max": "$datagen_tasks",
                 "schema.filename" : "'"/tmp/schemas/${topic}.avro"'",
                 "schema.keyfield" : "orderid"
             }' \
@@ -106,13 +106,13 @@ kubectl exec -i connectors-0 -- curl -s -X PUT \
       -H "Content-Type: application/json" \
       --data '{
                 "connector.class": "io.confluent.kafka.connect.datagen.DatagenConnector",
-                "kafka.topic": "'"${topic}"'",
+                "kafka.topic": "${topic}",
                 "key.converter": "org.apache.kafka.connect.storage.StringConverter",
                 "value.converter": "org.apache.kafka.connect.json.JsonConverter",
                 "value.converter.schemas.enable": "false",
                 "max.interval": 1,
-                "iterations": "'"$iterations_per_task"'",
-                "tasks.max": "'"$datagen_tasks"'",
+                "iterations": "$iterations_per_task",
+                "tasks.max": "$datagen_tasks",
                 "schema.filename" : "'"/tmp/schemas/${topic}.avro"'"
             }' \
       http://localhost:8083/connectors/datagen-${topic}-${random_value}/config | jq
@@ -133,13 +133,13 @@ kubectl exec -i connectors-0 -- curl -s -X PUT \
       -H "Content-Type: application/json" \
       --data '{
                 "connector.class": "io.confluent.kafka.connect.datagen.DatagenConnector",
-                "kafka.topic": "'"$topic"'",
+                "kafka.topic": "$topic",
                 "key.converter": "org.apache.kafka.connect.storage.StringConverter",
                 "value.converter": "org.apache.kafka.connect.json.JsonConverter",
                 "value.converter.schemas.enable": "false",
                 "max.interval": 1,
-                "iterations": "'"$iterations_per_task"'",
-                "tasks.max": "'"$datagen_tasks"'",
+                "iterations": "$iterations_per_task",
+                "tasks.max": "$datagen_tasks",
                 "schema.filename" : "'"/tmp/schemas/${topic}.avro"'",
                 "schema.keyfield" : "productid"
             }' \
@@ -160,13 +160,13 @@ kubectl exec -i connectors-0 -- curl -s -X PUT \
       -H "Content-Type: application/json" \
       --data '{
                 "connector.class": "io.confluent.kafka.connect.datagen.DatagenConnector",
-                "kafka.topic": "'"$topic"'",
+                "kafka.topic": "$topic",
                 "key.converter": "org.apache.kafka.connect.storage.StringConverter",
                 "value.converter": "org.apache.kafka.connect.json.JsonConverter",
                 "value.converter.schemas.enable": "false",
                 "max.interval": 1,
-                "iterations": "'"$iterations_per_task"'",
-                "tasks.max": "'"$datagen_tasks"'",
+                "iterations": "$iterations_per_task",
+                "tasks.max": "$datagen_tasks",
                 "schema.filename" : "'"/tmp/schemas/${topic}.avro"'",
                 "schema.keyfield" : "customerid"
             }' \

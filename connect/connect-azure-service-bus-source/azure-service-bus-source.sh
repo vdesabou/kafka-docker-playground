@@ -74,9 +74,8 @@ sed -e "s|:AZURE_SAS_KEY:|$AZURE_SAS_KEY|g" \
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
 
 log "Creating Azure Service Bus Source connector"
-curl -X PUT \
-     -H "Content-Type: application/json" \
-     --data '{
+playground connector create-or-update --connector azure-service-bus-source << EOF
+{
                 "connector.class": "io.confluent.connect.azure.servicebus.ServiceBusSourceConnector",
                 "kafka.topic": "servicebus-topic",
                 "tasks.max": "1",
@@ -93,8 +92,8 @@ curl -X PUT \
                 "errors.tolerance": "all",
                 "errors.log.enable": "true",
                 "errors.log.include.messages": "true"
-          }' \
-     http://localhost:8083/connectors/azure-service-bus-source/config | jq .
+          }
+EOF
 
 sleep 5
 

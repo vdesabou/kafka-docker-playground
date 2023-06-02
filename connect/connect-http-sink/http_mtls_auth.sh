@@ -15,9 +15,8 @@ log "Running SSL with Mutual TLS Authentication Example"
 log "-------------------------------------"
 
 log "Creating http-sink connector"
-curl -X PUT \
-     -H "Content-Type: application/json" \
-     --data '{
+playground connector create-or-update --connector http-mtls-sink << EOF
+{
           "topics": "http-messages",
                "tasks.max": "1",
                "connector.class": "io.confluent.connect.http.HttpSinkConnector",
@@ -41,8 +40,8 @@ curl -X PUT \
                "https.ssl.keystore.password": "confluent",
                "https.ssl.key.password": "confluent",
                "https.ssl.protocol": "TLSv1.2"
-          }' \
-     http://localhost:8083/connectors/http-mtls-sink/config | jq .
+          }
+EOF
 
 
 sleep 10

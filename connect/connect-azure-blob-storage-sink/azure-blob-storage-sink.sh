@@ -60,9 +60,8 @@ sed -e "s|:AZURE_ACCOUNT_NAME:|$AZURE_ACCOUNT_NAME|g" \
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
 
 log "Creating Azure Blob Storage Sink connector"
-curl -X PUT \
-     -H "Content-Type: application/json" \
-     --data '{
+playground connector create-or-update --connector azure-blob-sink << EOF
+{
                 "connector.class": "io.confluent.connect.azure.blob.AzureBlobStorageSinkConnector",
                 "tasks.max": "1",
                 "topics": "blob_topic",
@@ -74,8 +73,8 @@ curl -X PUT \
                 "confluent.license": "",
                 "confluent.topic.bootstrap.servers": "broker:9092",
                 "confluent.topic.replication.factor": "1"
-          }' \
-     http://localhost:8083/connectors/azure-blob-sink/config | jq .
+          }
+EOF
 
 
 log "Sending messages to topic blob_topic"

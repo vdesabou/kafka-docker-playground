@@ -17,9 +17,8 @@ This is my message
 EOF
 
 log "Creating MQTT Sink connector"
-curl -X PUT \
-     -H "Content-Type: application/json" \
-     --data '{
+playground connector create-or-update --connector sink-mqtt-mtls << EOF
+{
                "connector.class": "io.confluent.connect.mqtt.MqttSinkConnector",
                "tasks.max": "1",
                "mqtt.server.uri": "ssl://mosquitto:8883",
@@ -37,8 +36,8 @@ curl -X PUT \
                "mqtt.ssl.key.store.path": "/tmp/keystore.jks",
                "mqtt.ssl.key.store.password": "confluent",
                "mqtt.ssl.key.password": "confluent"
-          }' \
-     http://localhost:8083/connectors/sink-mqtt-mtls/config | jq .
+          }
+EOF
 
 
 sleep 5

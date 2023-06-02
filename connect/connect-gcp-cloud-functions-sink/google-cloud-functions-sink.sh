@@ -39,9 +39,8 @@ key3,value3
 EOF
 
 log "Creating Google Cloud Functions Sink connector"
-curl -X PUT \
-     -H "Content-Type: application/json" \
-     --data '{
+playground connector create-or-update --connector gcp-functions << EOF
+{
                "connector.class": "io.confluent.connect.gcp.functions.GoogleCloudFunctionsSinkConnector",
                "tasks.max" : "1",
                "topics" : "functions-messages",
@@ -49,9 +48,9 @@ curl -X PUT \
                "value.converter":"org.apache.kafka.connect.storage.StringConverter",
                "confluent.topic.bootstrap.servers": "broker:9092",
                "confluent.topic.replication.factor":1,
-               "function.name": "'"$FUNCTION"'",
-               "project.id": "'"$GCP_PROJECT"'",
-               "region": "'"$REGION"'",
+               "function.name": "$FUNCTION",
+               "project.id": "$GCP_PROJECT",
+               "region": "$REGION",
                "gcf.credentials.path": "/tmp/keyfile.json",
                "reporter.bootstrap.servers": "broker:9092",
                "reporter.error.topic.name": "test-error",
@@ -62,8 +61,8 @@ curl -X PUT \
                "reporter.result.topic.key.format": "string",
                "reporter.result.topic.value.format": "string",
                "reporter.result.topic.replication.factor": 1
-          }' \
-     http://localhost:8083/connectors/gcp-functions/config | jq .
+          }
+EOF
 
 sleep 10
 

@@ -61,14 +61,12 @@ log "Checking messages from topic rbac_gcs_topic"
 playground topic consume --topic rbac_gcs_topic --min-expected-messages 1 --timeout 60
 
 log "Creating GCS Sink connector"
-curl -X PUT \
-     -H "Content-Type: application/json" \
-     -u connectorSubmitter:connectorSubmitter \
-     --data '{
+playground connector create-or-update --connector my-rbac-connector << EOF
+{
                "connector.class": "io.confluent.connect.gcs.GcsSinkConnector",
                     "tasks.max" : "1",
                     "topics" : "rbac_gcs_topic",
-                    "gcs.bucket.name" : "'"$GCS_BUCKET_NAME"'",
+                    "gcs.bucket.name" : "$GCS_BUCKET_NAME",
                     "gcs.part.size": "5242880",
                     "flush.size": "3",
                     "gcs.credentials.path": "/tmp/keyfile.json",
@@ -86,8 +84,8 @@ curl -X PUT \
                     "value.converter.basic.auth.credentials.source": "USER_INFO",
                     "value.converter.basic.auth.user.info": "connectorSA:connectorSA",
                     "consumer.override.sasl.jaas.config": "org.apache.kafka.common.security.oauthbearer.OAuthBearerLoginModule required username=\"connectorSA\" password=\"connectorSA\" metadataServerUrls=\"http://broker:8091\";"
-          }' \
-     http://localhost:8083/connectors/my-rbac-connector/config | jq .
+          }
+EOF
 
 sleep 10
 

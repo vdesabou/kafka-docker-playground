@@ -15,9 +15,8 @@ log "Running Basic Authentication Example"
 log "-------------------------------------"
 
 log "Creating HttpSinkBasicAuth connector"
-curl -X PUT \
-     -H "Content-Type: application/json" \
-     --data '{
+playground connector create-or-update --connector HttpSinkBasicAuth << EOF
+{
                "topics": "http-messages",
                "tasks.max": "1",
                "connector.class": "io.confluent.connect.http.HttpSinkConnector",
@@ -34,8 +33,8 @@ curl -X PUT \
                "auth.type": "BASIC",
                "connection.user": "admin",
                "connection.password": "password"
-          }' \
-     http://localhost:8083/connectors/HttpSinkBasicAuth/config | jq .
+          }
+EOF
 
 
 sleep 10

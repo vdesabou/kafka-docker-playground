@@ -146,19 +146,18 @@ seq -f "{\"F1\": \"value%g\"}" 10 | docker exec -i connect kafka-avro-console-pr
 # https://docs.snowflake.com/en/user-guide/jdbc-configure.html#jdbc-driver-connection-string
 CONNECTION_URL="jdbc:snowflake://$SNOWFLAKE_ACCOUNT_NAME.snowflakecomputing.com/?warehouse=$PLAYGROUND_WAREHOUSE&db=$PLAYGROUND_DB&role=$PLAYGROUND_CONNECTOR_ROLE&schema=PUBLIC&user=$PLAYGROUND_USER&private_key_file=/tmp/snowflake_key.p8&private_key_file_pwd=confluent&tracing=ALL"
 log "Creating JDBC Snowflake Sink connector"
-curl -X PUT \
-     -H "Content-Type: application/json" \
-     --data '{
+playground connector create-or-update --connector jdbc-snowflake-sink << EOF
+{
                "connector.class": "io.confluent.connect.jdbc.JdbcSinkConnector",
                "tasks.max": "1",
-               "connection.url": "'"$CONNECTION_URL"'",
+               "connection.url": "$CONNECTION_URL",
                "topics": "FOO",
                "auto.create": "false",
                "key.converter":"org.apache.kafka.connect.storage.StringConverter",
                "value.converter": "io.confluent.connect.avro.AvroConverter",
                "value.converter.schema.registry.url": "http://schema-registry:8081"
-          }' \
-     http://localhost:8083/connectors/jdbc-snowflake-sink/config | jq .
+          }
+EOF
 
 
 sleep 30

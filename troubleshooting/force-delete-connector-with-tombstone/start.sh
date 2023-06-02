@@ -19,9 +19,8 @@ log "Sending messages to topic http-messages"
 seq 10 | docker exec -i broker kafka-console-producer --broker-list broker:9092 --topic http-messages
 
 log "Creating http-sink connector"
-curl -X PUT \
-     -H "Content-Type: application/json" \
-     --data '{
+playground connector create-or-update --connector http-sink << EOF
+{
           "topics": "http-messages",
                "tasks.max": "1",
                "connector.class": "io.confluent.connect.http.HttpSinkConnector",
@@ -36,8 +35,8 @@ curl -X PUT \
                "reporter.result.topic.replication.factor": 1,
                "http.api.url": "http://http-service-no-auth:8080/api/messages",
                "batch.max.size": "10"
-          }' \
-     http://localhost:8083/connectors/http-sink/config | jq .
+          }
+EOF
 
 
 sleep 10
@@ -87,9 +86,8 @@ docker exec -i broker kafka-console-consumer --bootstrap-server localhost:9092 -
 cat /tmp/connect-configs.backup
 
 log "re-create connector"
-curl -X PUT \
-     -H "Content-Type: application/json" \
-     --data '{
+playground connector create-or-update --connector http-sink << EOF
+{
           "topics": "http-messages",
                "tasks.max": "1",
                "connector.class": "io.confluent.connect.http.HttpSinkConnector",
@@ -104,8 +102,8 @@ curl -X PUT \
                "reporter.result.topic.replication.factor": 1,
                "http.api.url": "http://http-service-no-auth:8080/api/messages",
                "batch.max.size": "10"
-          }' \
-     http://localhost:8083/connectors/http-sink/config | jq .
+          }
+EOF
 
 sleep 5
 

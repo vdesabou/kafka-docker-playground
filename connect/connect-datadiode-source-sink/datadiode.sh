@@ -7,9 +7,8 @@ source ${DIR}/../../scripts/utils.sh
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
 
 log "Creating DataDiode Source connector"
-curl -X PUT \
-     -H "Content-Type: application/json" \
-     --data '{
+playground connector create-or-update --connector datadiode-source << EOF
+{
                "tasks.max": "1",
                "connector.class": "io.confluent.connect.diode.source.DataDiodeSourceConnector",
                "kafka.topic.prefix": "dest_",
@@ -25,13 +24,12 @@ curl -X PUT \
                "errors.tolerance": "all",
                "errors.log.enable": "true",
                "errors.log.include.messages": "true"
-          }' \
-     http://localhost:8083/connectors/datadiode-source/config | jq .
+          }
+EOF
 
 log "Creating DataDiode Sink connector"
-curl -X PUT \
-     -H "Content-Type: application/json" \
-     --data '{
+playground connector create-or-update --connector datadiode-sink << EOF
+{
                "connector.class": "io.confluent.connect.diode.sink.DataDiodeSinkConnector",
                "tasks.max": "1",
                "topics": "diode",
@@ -45,8 +43,8 @@ curl -X PUT \
                "confluent.license": "",
                "confluent.topic.bootstrap.servers": "broker:9092",
                "confluent.topic.replication.factor": "1"
-          }' \
-     http://localhost:8083/connectors/datadiode-sink/config | jq .
+          }
+EOF
 
 sleep 10
 

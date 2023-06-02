@@ -81,9 +81,8 @@ sed -e "s|:AZURE_DATALAKE_CLIENT_ID:|$AZURE_DATALAKE_CLIENT_ID|g" \
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
 
 log "Creating Data Lake Storage Gen2 Sink connector"
-curl -X PUT \
-     -H "Content-Type: application/json" \
-     --data '{
+playground connector create-or-update --connector azure-datalake-gen2-sink << EOF
+{
                 "connector.class": "io.confluent.connect.azure.datalake.gen2.AzureDataLakeGen2SinkConnector",
                 "tasks.max": "1",
                 "topics": "datalake_topic",
@@ -96,8 +95,8 @@ curl -X PUT \
                 "confluent.license": "",
                 "confluent.topic.bootstrap.servers": "broker:9092",
                 "confluent.topic.replication.factor": "1"
-          }' \
-     http://localhost:8083/connectors/azure-datalake-gen2-sink/config | jq .
+          }
+EOF
 
 
 log "Sending messages to topic datalake_topic"

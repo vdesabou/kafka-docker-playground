@@ -34,9 +34,8 @@ SELECT * FROM drivers;
 EOF
 
 log "Creating JDBC CockroachDB source connector"
-curl -X PUT \
-     -H "Content-Type: application/json" \
-     --data '{
+playground connector create-or-update --connector cockroachdb-source << EOF
+{
                "connector.class": "io.confluent.connect.jdbc.JdbcSourceConnector",
                "tasks.max": "1",
                "connection.url": "jdbc:postgresql://cockroachdb:26257/defaultdb?user=root&sslmode=disable",
@@ -47,8 +46,8 @@ curl -X PUT \
                "validate.non.null":"false",
                "errors.log.enable": "true",
                "errors.log.include.messages": "true"
-          }' \
-     http://localhost:8083/connectors/cockroachdb-source/config | jq .
+          }
+EOF
 
 
 sleep 5

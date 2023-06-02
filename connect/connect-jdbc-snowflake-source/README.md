@@ -111,7 +111,7 @@ $ curl -X PUT \
      --data '{
                "connector.class": "io.confluent.connect.jdbc.JdbcSourceConnector",
                "tasks.max": "1",
-               "connection.url": "'"$CONNECTION_URL"'",
+               "connection.url": "$CONNECTION_URL",
                "table.whitelist": "FOO",
                "mode": "timestamp+incrementing",
                "timestamp.column.name": "UPDATE_TS",

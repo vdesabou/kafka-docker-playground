@@ -24,9 +24,8 @@ EOF
 sleep 5
 
 log "Creating Kudu sink connector"
-curl -X PUT \
-     -H "Content-Type: application/json" \
-     --data '{
+playground connector create-or-update --connector kudu-sink << EOF
+{
                     "connector.class": "io.confluent.connect.kudu.KuduSinkConnector",
                     "tasks.max": "1",
                     "topics": "orders",
@@ -46,8 +45,8 @@ curl -X PUT \
                     "confluent.license": "",
                     "confluent.topic.bootstrap.servers": "broker:9092",
                     "confluent.topic.replication.factor": "1"
-          }' \
-     http://localhost:8083/connectors/kudu-sink/config | jq .
+          }
+EOF
 
 
 log "Sending messages to topic orders"

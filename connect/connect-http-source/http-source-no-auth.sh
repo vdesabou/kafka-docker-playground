@@ -22,9 +22,8 @@ fi
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.no-auth.yml"
 
 log "Creating http-source connector"
-curl -X PUT \
-     -H "Content-Type: application/json" \
-     --data '{
+playground connector create-or-update --connector http-source << EOF
+{
                "tasks.max": "1",
                "connector.class": "io.confluent.connect.http.HttpSourceConnector",
                "key.converter": "org.apache.kafka.connect.storage.StringConverter",
@@ -36,8 +35,8 @@ curl -X PUT \
                "entity.names": "messages",
                "http.offset.mode": "SIMPLE_INCREMENTING",
                "http.initial.offset": "1"
-          }' \
-     http://localhost:8083/connectors/http-source/config | jq .
+          }
+EOF
 
 
 sleep 3

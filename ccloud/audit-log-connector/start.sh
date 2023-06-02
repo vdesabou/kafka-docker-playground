@@ -49,9 +49,8 @@ fi
 OUTPUT_FILE="${CONNECT_CONTAINER_HOME_DIR}/data/ouput/file.json"
 
 log "Creating FileStream Sink connector reading confluent-audit-log-events from the audit log cluster"
-curl -X PUT \
-     -H "Content-Type: application/json" \
-     --data '{
+playground connector create-or-update --connector filestream-sink << EOF
+{
                "tasks.max": "1",
                "connector.class": "org.apache.kafka.connect.file.FileStreamSinkConnector",
                "topics": "confluent-audit-log-events",
@@ -69,8 +68,8 @@ curl -X PUT \
                "consumer.override.confluent.monitoring.interceptor.sasl.jaas.config" : "org.apache.kafka.common.security.plain.PlainLoginModule required username=\"${file:/data:sasl.username}\" password=\"${file:/data:sasl.password}\";",
                "consumer.override.confluent.monitoring.interceptor.sasl.mechanism": "PLAIN",
                "consumer.override.confluent.monitoring.interceptor.security.protocol": "SASL_SSL"
-          }' \
-     http://localhost:8083/connectors/filestream-sink/config | jq .
+          }
+EOF
 
 sleep 10
 

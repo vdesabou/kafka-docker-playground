@@ -61,9 +61,8 @@ done
 log "SAP HANA has started!"
 
 log "Creating SAP HANA Sink connector"
-curl -X PUT \
-     -H "Content-Type: application/json" \
-     --data '{
+playground connector create-or-update --connector sap-hana-sink << EOF
+{
                "tasks.max": "1",
                "connector.class": "com.sap.kafka.connect.sink.hana.HANASinkConnector",
                "topics": "testtopic",
@@ -76,8 +75,8 @@ curl -X PUT \
                "value.converter.schema.registry.url": "http://schema-registry:8081",
                "auto.create": "true",
                "testtopic.table.name": "\"LOCALDEV\".\"TEST\""
-          }' \
-     http://localhost:8083/connectors/sap-hana-sink/config | jq .
+          }
+EOF
 
 sleep 5
 

@@ -30,9 +30,8 @@ docker exec -i connect kafka-avro-console-producer --broker-list broker:9092 --p
 EOF
 
 docker container exec -e BOOTSTRAP_SERVERS="$BOOTSTRAP_SERVERS" -e CLOUD_KEY="$CLOUD_KEY" -e CLOUD_SECRET="$CLOUD_SECRET" -e BOOTSTRAP_SERVERS_SRC="$BOOTSTRAP_SERVERS_SRC" -e CLOUD_KEY_SRC="$CLOUD_KEY_SRC" -e CLOUD_SECRET_SRC="$CLOUD_SECRET_SRC" -e SCHEMA_REGISTRY_URL="$SCHEMA_REGISTRY_URL" -e SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO="$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO" connect \
-curl -X PUT \
-     -H "Content-Type: application/json" \
-     --data '{
+playground connector create-or-update --connector replicate-onprem-to-cloud << EOF
+{
           "connector.class":"io.confluent.connect.replicator.ReplicatorSourceConnector",
           "src.consumer.group.id": "replicate-onprem-to-cloud",
           "src.value.converter": "io.confluent.connect.avro.AvroConverter",
@@ -40,7 +39,7 @@ curl -X PUT \
           "src.kafka.bootstrap.servers": "broker:9092",
 
           "value.converter": "io.confluent.connect.avro.AvroConverter",
-          "value.converter.schema.registry.url": "'"$SCHEMA_REGISTRY_URL"'",
+          "value.converter.schema.registry.url": "$SCHEMA_REGISTRY_URL",
           "value.converter.basic.auth.user.info": "${file:/data:schema.registry.basic.auth.user.info}",
           "value.converter.basic.auth.credentials.source": "USER_INFO",
 
@@ -61,8 +60,8 @@ curl -X PUT \
           "topic.whitelist": "products-avro",
           "topic.config.sync": false,
           "topic.auto.create": false
-          }' \
-     http://localhost:8083/connectors/replicate-onprem-to-cloud/config | jq .
+          }
+EOF
 
 # In order to remove avro converter metadata added in schema, we can set:
 # "value.converter.connect.meta.data": false

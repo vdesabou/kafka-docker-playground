@@ -94,9 +94,8 @@ INSERT INTO team (
 EOF
 
 log "Creating MySQL source connector"
-curl -X PUT \
-     -H "Content-Type: application/json" \
-     --data '{
+playground connector create-or-update --connector mysql-ssl-source << EOF
+{
                "connector.class":"io.confluent.connect.jdbc.JdbcSourceConnector",
                "tasks.max":"10",
                "connection.url": "jdbc:mysql://mysql:3306/mydb?user=userssl&password=password&verifyServerCertificate=true&useSSL=true&requireSSL=true&enabledTLSProtocols=TLSv1,TLSv1.1,TLSv1.2,TLSv1.3",
@@ -105,8 +104,8 @@ curl -X PUT \
                "timestamp.column.name":"last_modified",
                "incrementing.column.name":"id",
                "topic.prefix":"mysql-"
-          }' \
-     http://localhost:8083/connectors/mysql-ssl-source/config | jq .
+          }
+EOF
 
 sleep 5
 

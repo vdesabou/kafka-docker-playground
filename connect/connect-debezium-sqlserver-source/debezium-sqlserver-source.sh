@@ -61,9 +61,8 @@ GO
 EOF
 
 log "Creating Debezium SQL Server source connector"
-curl -X PUT \
-     -H "Content-Type: application/json" \
-     --data '{
+playground connector create-or-update --connector debezium-sqlserver-source << EOF
+{
               "connector.class": "io.debezium.connector.sqlserver.SqlServerConnector",
               "tasks.max": "1",
               "database.hostname": "sqlserver",
@@ -81,8 +80,8 @@ curl -X PUT \
               "topic.prefix": "server1",
               "schema.history.internal.kafka.bootstrap.servers": "broker:9092",
               "schema.history.internal.kafka.topic": "schema-changes.inventory"
-          }' \
-     http://localhost:8083/connectors/debezium-sqlserver-source/config | jq .
+          }
+EOF
 
 sleep 5
 

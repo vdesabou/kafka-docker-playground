@@ -66,16 +66,15 @@ docker exec -i connect kafka-avro-console-producer --broker-list broker:9092 --p
 EOF
 
 log "Creating ServiceNow Sink connector"
-curl -X PUT \
-     -H "Content-Type: application/json" \
-     --data '{
+playground connector create-or-update --connector servicenow-sink << EOF
+{
                     "connector.class": "io.confluent.connect.servicenow.ServiceNowSinkConnector",
                     "topics": "test_table",
-                    "servicenow.url": "'"$SERVICENOW_URL"'",
+                    "servicenow.url": "$SERVICENOW_URL",
                     "tasks.max": "1",
                     "servicenow.table": "u_test_table",
                     "servicenow.user": "admin",
-                    "servicenow.password": "'"$SERVICENOW_PASSWORD"'",
+                    "servicenow.password": "$SERVICENOW_PASSWORD",
                     "key.converter": "io.confluent.connect.avro.AvroConverter",
                     "key.converter.schema.registry.url": "http://schema-registry:8081",
                     "value.converter": "io.confluent.connect.avro.AvroConverter",
@@ -92,8 +91,8 @@ curl -X PUT \
                     "confluent.license": "",
                     "confluent.topic.bootstrap.servers": "broker:9092",
                     "confluent.topic.replication.factor": "1"
-          }' \
-     http://localhost:8083/connectors/servicenow-sink/config | jq .
+          }
+EOF
 
 
 sleep 15

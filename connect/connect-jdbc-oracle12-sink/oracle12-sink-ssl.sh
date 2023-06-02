@@ -155,9 +155,8 @@ sleep 10
 
 log "Creating Oracle sink connector"
 
-curl -X PUT \
-     -H "Content-Type: application/json" \
-     --data '{
+playground connector create-or-update --connector oracle-sink-ssl << EOF
+{
                "connector.class": "io.confluent.connect.jdbc.JdbcSinkConnector",
                "tasks.max": "1",
                "connection.user": "C##MYUSER",
@@ -168,8 +167,8 @@ curl -X PUT \
                "auto.create": "true",
                "insert.mode":"insert",
                "auto.evolve":"true"
-          }' \
-     http://localhost:8083/connectors/oracle-sink-ssl/config | jq .
+          }
+EOF
 
 
 log "Sending messages to topic ORDERS"

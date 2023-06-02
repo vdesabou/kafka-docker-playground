@@ -7,16 +7,15 @@ source ${DIR}/../../scripts/utils.sh
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
 
 log "Creating JDBC PostgreSQL sink connector"
-curl -X PUT \
-     -H "Content-Type: application/json" \
-     --data '{
+playground connector create-or-update --connector postgres-sink << EOF
+{
                "connector.class": "io.confluent.connect.jdbc.JdbcSinkConnector",
                "tasks.max": "1",
                "connection.url": "jdbc:postgresql://postgres/postgres?user=myuser&password=mypassword&ssl=false",
                "topics": "orders",
                "auto.create": "true"
-          }' \
-     http://localhost:8083/connectors/postgres-sink/config | jq .
+          }
+EOF
 
 
 log "Sending messages to topic orders"

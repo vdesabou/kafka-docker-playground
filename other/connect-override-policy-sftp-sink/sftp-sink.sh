@@ -23,9 +23,8 @@ docker exec broker kafka-acls --bootstrap-server broker:9092 --add --allow-princ
 docker exec broker kafka-acls --bootstrap-server broker:9092 --add --allow-principal User:sftp --operation CREATE --topic test_sftp_sink --command-config /tmp/client.properties
 
 log "Creating SFTP Sink connector"
-curl -X PUT \
-     -H "Content-Type: application/json" \
-     --data '{
+playground connector create-or-update --connector sftp-sink << EOF
+{
         "topics": "test_sftp_sink",
                "tasks.max": "1",
                "connector.class": "io.confluent.connect.sftp.SftpSinkConnector",
@@ -49,8 +48,8 @@ curl -X PUT \
                "errors.tolerance": "all",
                "errors.deadletterqueue.topic.name": "dlq",
                "errors.deadletterqueue.topic.replication.factor": "1"
-          }' \
-     http://localhost:8083/connectors/sftp-sink/config | jq .
+          }
+EOF
 
 
 log "Sending messages to topic test_sftp_sink"

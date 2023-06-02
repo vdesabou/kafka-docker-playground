@@ -36,9 +36,8 @@ then
 fi
 
 log "Creating HDFS Sink connector"
-curl -X PUT \
-     -H "Content-Type: application/json" \
-     --data '{
+playground connector create-or-update --connector hdfs-sink-kerberos << EOF
+{
                "connector.class":"io.confluent.connect.hdfs.HdfsSinkConnector",
                "tasks.max":"1",
                "topics":"test_hdfs",
@@ -60,8 +59,8 @@ curl -X PUT \
                "value.converter":"io.confluent.connect.avro.AvroConverter",
                "value.converter.schema.registry.url":"http://schema-registry:8081",
                "schema.compatibility":"BACKWARD"
-          }' \
-     http://localhost:8083/connectors/hdfs-sink-kerberos/config | jq .
+          }
+EOF
 
 log "Sending messages to topic test_hdfs"
 seq -f "{\"f1\": \"value%g\"}" 10 | docker exec -i connect kafka-avro-console-producer --broker-list broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic test_hdfs --property value.schema='{"type":"record","name":"myrecord","fields":[{"name":"f1","type":"string"}]}'
@@ -81,9 +80,8 @@ docker run --rm -v /tmp:/tmp vdesabou/avro-tools tojson /tmp/test_hdfs+0+0000000
 # docker exec connect kinit -kt /tmp/connect.keytab connect/connect.kerberos.local
 
 log "Creating HDFS Source connector"
-curl -X PUT \
-     -H "Content-Type: application/json" \
-     --data '{
+playground connector create-or-update --connector hdfs2-source-kerberos << EOF
+{
           "connector.class":"io.confluent.connect.hdfs2.Hdfs2SourceConnector",
           "tasks.max":"1",
           "store.url":"hdfs://hadoop.kerberos.local:9000",
@@ -99,8 +97,8 @@ curl -X PUT \
           "transforms.AddPrefix.type" : "org.apache.kafka.connect.transforms.RegexRouter",
           "transforms.AddPrefix.regex" : ".*",
           "transforms.AddPrefix.replacement" : "copy_of_$0"
-          }' \
-     http://localhost:8083/connectors/hdfs2-source-kerberos/config | jq .
+          }
+EOF
 
 sleep 10
 

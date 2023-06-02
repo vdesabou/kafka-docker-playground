@@ -36,9 +36,8 @@ EOF
 Creating AMPS source connector:
 
 ```bash
-curl -X PUT \
-     -H "Content-Type: application/json" \
-     --data '{
+playground connector create-or-update --connector amps-source << EOF
+{
                "connector.class": "io.confluent.connect.amps.AmpsSourceConnector",
                "tasks.max": "1",
                "kafka.topic": "AMPS_Orders",
@@ -48,8 +47,8 @@ curl -X PUT \
                "amps.command": "sow_and_subscribe",
                "confluent.topic.bootstrap.servers": "broker:9092",
                "confluent.topic.replication.factor": "1"
-          }' \
-     http://localhost:8083/connectors/amps-source/config | jq .
+          }
+EOF
 ```
 
 

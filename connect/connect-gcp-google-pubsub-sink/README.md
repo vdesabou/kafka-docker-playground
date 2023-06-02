@@ -70,7 +70,7 @@ $ curl -X PUT \
                "connector.class" : "com.google.pubsub.kafka.sink.CloudPubSubSinkConnector",
                "tasks.max" : "1",
                "topics" : "pubsub-topic",
-               "cps.project" : "'"$GCP_PROJECT"'",
+               "cps.project" : "$GCP_PROJECT",
                "cps.topic" : "topic-1",
                "gcp.credentials.file.path" : "/tmp/keyfile.json",
                "key.converter": "org.apache.kafka.connect.storage.StringConverter",

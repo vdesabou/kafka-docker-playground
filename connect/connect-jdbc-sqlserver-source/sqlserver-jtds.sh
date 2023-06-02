@@ -53,9 +53,8 @@ GO
 EOF
 
 log "Creating JDBC SQL Server (with JTDS driver) source connector"
-curl -X PUT \
-     -H "Content-Type: application/json" \
-     --data '{
+playground connector create-or-update --connector sqlserver-source << EOF
+{
               "connector.class": "io.confluent.connect.jdbc.JdbcSourceConnector",
               "tasks.max": "1",
               "connection.url": "jdbc:jtds:sqlserver://sqlserver:1433/testDB",
@@ -68,8 +67,8 @@ curl -X PUT \
               "validate.non.null":"false",
               "errors.log.enable": "true",
               "errors.log.include.messages": "true"
-          }' \
-     http://localhost:8083/connectors/sqlserver-source/config | jq .
+          }
+EOF
 
 sleep 5
 

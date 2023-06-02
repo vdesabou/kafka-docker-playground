@@ -86,22 +86,21 @@ log "Sending messages to topic mytable"
 seq -f "{\"f1\": \"value%g\"}" 10 | docker exec -i connect kafka-avro-console-producer --broker-list broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic mytable --property value.schema='{"type":"record","name":"myrecord","fields":[{"name":"f1","type":"string"}]}'
 
 log "Creating AWS DynamoDB Sink connector"
-curl -X PUT \
-     -H "Content-Type: application/json" \
-     --data '{
+playground connector create-or-update --connector dynamodb-sink << EOF
+{
                "connector.class": "io.confluent.connect.aws.dynamodb.DynamoDbSinkConnector",
                "tasks.max": "1",
                "topics": "mytable",
-               "aws.dynamodb.region": "'"$AWS_REGION"'",
-               "aws.dynamodb.endpoint": "'"$DYNAMODB_ENDPOINT"'",
+               "aws.dynamodb.region": "$AWS_REGION",
+               "aws.dynamodb.endpoint": "$DYNAMODB_ENDPOINT",
                "confluent.license": "",
                "confluent.topic.bootstrap.servers": "broker:9092",
                "confluent.topic.replication.factor": "1",
                "aws.dynamodb.credentials.provider.class": "com.github.vdesabou.BasicAwsCredentialsProvider",
-               "aws.dynamodb.credentials.provider.aws.access.key.id": "'"$AWS_ACCESS_KEY_ID"'",
-               "aws.dynamodb.credentials.provider.aws.secret.key.id": "'"$AWS_SECRET_ACCESS_KEY"'"
-          }' \
-     http://localhost:8083/connectors/dynamodb-sink/config | jq .
+               "aws.dynamodb.credentials.provider.aws.access.key.id": "$AWS_ACCESS_KEY_ID",
+               "aws.dynamodb.credentials.provider.aws.secret.key.id": "$AWS_SECRET_ACCESS_KEY"
+          }
+EOF
 
 log "Sleeping 120 seconds, waiting for table to be created"
 sleep 120

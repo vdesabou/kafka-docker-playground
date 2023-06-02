@@ -60,22 +60,21 @@ EOF
 
 
 log "Creating GCP Spanner Sink connector"
-curl -X PUT \
-     -H "Content-Type: application/json" \
-     --data '{
+playground connector create-or-update --connector gcp-spanner-sink << EOF
+{
                "connector.class": "io.confluent.connect.gcp.spanner.SpannerSinkConnector",
                "tasks.max" : "1",
                "topics" : "products",
                "auto.create" : "true",
                "table.name.format" : "kafka_${topic}",
-               "gcp.spanner.instance.id" : "'"$INSTANCE"'",
-               "gcp.spanner.database.id" : "'"$DATABASE"'",
+               "gcp.spanner.instance.id" : "$INSTANCE",
+               "gcp.spanner.database.id" : "$DATABASE",
                "gcp.spanner.credentials.path" : "/tmp/keyfile.json",
                "confluent.license": "",
                "confluent.topic.bootstrap.servers": "broker:9092",
                "confluent.topic.replication.factor": "1"
-          }' \
-     http://localhost:8083/connectors/gcp-spanner-sink/config | jq .
+          }
+EOF
 
 sleep 60
 

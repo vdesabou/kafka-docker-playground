@@ -20,9 +20,8 @@ else
 fi
 
 log "Creating JDBC Oracle sink connector"
-curl -X PUT \
-     -H "Content-Type: application/json" \
-     --data '{
+playground connector create-or-update --connector oracle-sink << EOF
+{
                "connector.class": "io.confluent.connect.jdbc.JdbcSinkConnector",
                     "tasks.max": "1",
                     "connection.user": "myuser",
@@ -32,8 +31,8 @@ curl -X PUT \
                     "auto.create": "true",
                     "insert.mode":"insert",
                     "auto.evolve":"true"
-          }' \
-     http://localhost:8083/connectors/oracle-sink/config | jq .
+          }
+EOF
 
 
 log "Sending messages to topic ORDERS"

@@ -57,14 +57,12 @@ log "Sending messages to topic gcs_topic"
 seq -f "{\"f1\": \"This is a message sent with SSL authentication %g\"}" 10 | docker exec -i connect kafka-avro-console-producer --broker-list broker:9092 --topic gcs_topic --property value.schema='{"type":"record","name":"myrecord","fields":[{"name":"f1","type":"string"}]}' --property schema.registry.url=https://schema-registry:8081 --property schema.registry.ssl.truststore.location=/etc/kafka/secrets/kafka.client.truststore.jks --property schema.registry.ssl.truststore.password=confluent --property schema.registry.ssl.keystore.location=/etc/kafka/secrets/kafka.client.keystore.jks --property schema.registry.ssl.keystore.password=confluent --producer.config /etc/kafka/secrets/client_without_interceptors.config
 
 log "Creating GCS Sink connector with SSL authentication"
-curl -X PUT \
-     --cert ../../environment/2way-ssl/security/connect.certificate.pem --key ../../environment/2way-ssl/security/connect.key --tlsv1.2 --cacert ../../environment/2way-ssl/security/snakeoil-ca-1.crt \
-     -H "Content-Type: application/json" \
-     --data '{
+playground connector create-or-update --connector gcs-sink << EOF
+{
                "connector.class": "io.confluent.connect.gcs.GcsSinkConnector",
                "tasks.max" : "1",
                "topics" : "gcs_topic",
-               "gcs.bucket.name" : "'"$GCS_BUCKET_NAME"'",
+               "gcs.bucket.name" : "$GCS_BUCKET_NAME",
                "gcs.part.size": "5242880",
                "flush.size": "3",
                "gcs.credentials.path": "/tmp/keyfile.json",
@@ -82,8 +80,8 @@ curl -X PUT \
                "confluent.topic.ssl.keystore.type" : "JKS",
                "confluent.topic.ssl.truststore.type" : "JKS",
                "confluent.topic.security.protocol" : "SSL"
-          }' \
-     https://localhost:8083/connectors/gcs-sink/config | jq .
+          }
+EOF
 
 
 sleep 10

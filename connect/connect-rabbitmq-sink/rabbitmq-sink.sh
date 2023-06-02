@@ -17,9 +17,8 @@ log "Sending messages to topic rabbitmq-messages"
 seq 10 | docker exec -i broker kafka-console-producer --broker-list broker:9092 --topic rabbitmq-messages
 
 log "Creating RabbitMQ Sink connector"
-curl -X PUT \
-     -H "Content-Type: application/json" \
-     --data '{
+playground connector create-or-update --connector rabbitmq-sink << EOF
+{
                "connector.class" : "io.confluent.connect.rabbitmq.sink.RabbitMQSinkConnector",
                "tasks.max" : "1",
                "topics": "rabbitmq-messages",
@@ -34,8 +33,8 @@ curl -X PUT \
                "rabbitmq.delivery.mode": "PERSISTENT",
                "confluent.topic.bootstrap.servers": "broker:9092",
                "confluent.topic.replication.factor": "1"
-          }' \
-     http://localhost:8083/connectors/rabbitmq-sink/config | jq .
+          }
+EOF
 
 
 sleep 5

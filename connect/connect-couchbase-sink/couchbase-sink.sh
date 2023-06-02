@@ -29,9 +29,8 @@ log "Sending messages to topic couchbase-sink-example"
 docker exec json-producer bash -c "java -jar json-producer-1.0.0-SNAPSHOT-jar-with-dependencies.jar"
 
 log "Creating Couchbase sink connector"
-curl -X PUT \
-     -H "Content-Type: application/json" \
-     --data '{
+playground connector create-or-update --connector couchbase-sink << EOF
+{
                "connector.class": "com.couchbase.connect.kafka.CouchbaseSinkConnector",
                "tasks.max": "2",
                "topics": "couchbase-sink-example",
@@ -46,8 +45,8 @@ curl -X PUT \
                "key.converter": "org.apache.kafka.connect.storage.StringConverter",
                "value.converter": "org.apache.kafka.connect.json.JsonConverter",
                "value.converter.schemas.enable": "false"
-          }' \
-     http://localhost:8083/connectors/couchbase-sink/config | jq .
+          }
+EOF
 
 sleep 10
 

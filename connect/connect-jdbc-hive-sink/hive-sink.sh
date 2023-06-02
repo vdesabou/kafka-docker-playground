@@ -35,9 +35,8 @@ log "Sending messages to topic pokes"
 seq -f "{\"foo\": %g,\"bar\": \"a string\"}" 10 | docker exec -i connect kafka-avro-console-producer --broker-list broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic pokes --property value.schema='{"type":"record","name":"myrecord","fields":[{"name":"foo","type":"int"},{"name":"bar","type":"string"}]}'
 
 log "Creating JDBC Hive sink connector"
-curl -X PUT \
-     -H "Content-Type: application/json" \
-     --data '{
+playground connector create-or-update --connector jdbc-hive-sink << EOF
+{
                "connector.class" : "io.confluent.connect.jdbc.JdbcSinkConnector",
                "tasks.max" : "1",
                "connection.url": "jdbc:hive2://hive-server:10000/default",
@@ -47,8 +46,8 @@ curl -X PUT \
                "pk.mode": "record_value",
                "pk.fields": "foo",
                "table.name.format": "default.${topic}"
-          }' \
-     http://localhost:8083/connectors/jdbc-hive-sink/config | jq .
+          }
+EOF
 
 #
 

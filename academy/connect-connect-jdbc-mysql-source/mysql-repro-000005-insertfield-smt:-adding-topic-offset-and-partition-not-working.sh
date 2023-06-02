@@ -83,9 +83,8 @@ docker exec mysql bash -c "mysql --user=root --password=password --database=mydb
 playground log-level set --package "org.apache.kafka.connect.runtime.TransformationChain" --level TRACE
 
 log "Creating MySQL source connector"
-curl -X PUT \
-     -H "Content-Type: application/json" \
-     --data '{
+playground connector create-or-update --connector mysql-source << EOF
+{
                "connector.class":"io.confluent.connect.jdbc.JdbcSourceConnector",
                "tasks.max":"1",
                "connection.url":"jdbc:mysql://mysql:3306/mydb?user=user&password=password&useSSL=false",
@@ -109,8 +108,8 @@ curl -X PUT \
                "transforms.TimestampConverter.format": "yyyy-MM-dd HH:mm:ss.SSS",
                "transforms.TimestampConverter.target.type": "string",
                "transforms.TimestampConverter.field": "__kafka_ts"
-          }' \
-     http://localhost:8083/connectors/mysql-source/config | jq .
+          }
+EOF
 
 sleep 5
 

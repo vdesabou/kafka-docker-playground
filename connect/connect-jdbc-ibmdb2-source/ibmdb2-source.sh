@@ -71,9 +71,8 @@ db2 LIST TABLES
 EOF
 
 log "Creating JDBC IBM DB2 source connector"
-curl -X PUT \
-     -H "Content-Type: application/json" \
-     --data '{
+playground connector create-or-update --connector ibmdb2-source << EOF
+{
                "connector.class": "io.confluent.connect.jdbc.JdbcSourceConnector",
                "tasks.max": "1",
                "connection.url":"jdbc:db2://ibmdb2:25010/sample",
@@ -83,8 +82,8 @@ curl -X PUT \
                "topic.prefix": "db2-",
                "errors.log.enable": "true",
                "errors.log.include.messages": "true"
-          }' \
-     http://localhost:8083/connectors/ibmdb2-source/config | jq .
+          }
+EOF
 
 
 sleep 15

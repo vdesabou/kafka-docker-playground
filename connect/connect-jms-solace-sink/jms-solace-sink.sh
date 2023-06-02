@@ -47,9 +47,8 @@ log "Create connector-quickstart queue in the default Message VPN using CLI"
 docker exec solace bash -c "/usr/sw/loads/currentload/bin/cli -A -s cliscripts/create_queue_cmd"
 
 log "Creating Solace sink connector"
-curl -X PUT \
-     -H "Content-Type: application/json" \
-     --data '{
+playground connector create-or-update --connector jms-solace-sink << EOF
+{
                "connector.class": "io.confluent.connect.jms.JmsSinkConnector",
                     "tasks.max": "1",
                     "topics": "sink-messages",
@@ -65,8 +64,8 @@ curl -X PUT \
                     "value.converter": "org.apache.kafka.connect.storage.StringConverter",
                     "confluent.topic.bootstrap.servers": "broker:9092",
                     "confluent.topic.replication.factor": "1"
-          }' \
-     http://localhost:8083/connectors/jms-solace-sink/config | jq .
+          }
+EOF
 
 sleep 10
 

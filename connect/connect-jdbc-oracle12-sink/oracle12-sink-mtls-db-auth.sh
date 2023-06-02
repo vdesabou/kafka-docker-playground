@@ -182,9 +182,8 @@ sleep 10
 
 log "Creating Oracle sink connector"
 
-curl -X PUT \
-     -H "Content-Type: application/json" \
-     --data '{
+playground connector create-or-update --connector oracle-sink-mtls-db-auth << EOF
+{
                "connector.class": "io.confluent.connect.jdbc.JdbcSinkConnector",
                "tasks.max": "1",
                "connection.oracle.net.ssl_server_dn_match": "true",
@@ -194,8 +193,8 @@ curl -X PUT \
                "auto.create": "true",
                "insert.mode":"insert",
                "auto.evolve":"true"
-          }' \
-     http://localhost:8083/connectors/oracle-sink-mtls-db-auth/config | jq .
+          }
+EOF
 
 
 log "Sending messages to topic ORDERS"

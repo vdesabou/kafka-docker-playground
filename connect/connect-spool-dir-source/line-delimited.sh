@@ -10,9 +10,8 @@ log "Generate data"
 docker exec -i connect bash -c 'mkdir -p /tmp/data/input/ && mkdir -p /tmp/data/error/ && mkdir -p /tmp/data/finished/ && curl "https://raw.githubusercontent.com/jcustenborder/kafka-connect-spooldir/master/src/test/resources/com/github/jcustenborder/kafka/connect/spooldir/SpoolDirLineDelimitedSourceConnector/fix.json" > /tmp/data/input/fix.json'
 
 log "Creating Line Delimited Spool Dir Source connector"
-curl -X PUT \
-     -H "Content-Type: application/json" \
-     --data '{
+playground connector create-or-update --connector spool-dir << EOF
+{
                "tasks.max": "1",
                "connector.class": "com.github.jcustenborder.kafka.connect.spooldir.SpoolDirLineDelimitedSourceConnector",
                "input.file.pattern": ".*\\.json",
@@ -22,8 +21,8 @@ curl -X PUT \
                "halt.on.error": "false",
                "topic": "fix-topic",
                "schema.generation.enabled": "true"
-          }' \
-     http://localhost:8083/connectors/spool-dir/config | jq .
+          }
+EOF
 
 
 sleep 5

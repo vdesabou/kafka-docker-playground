@@ -62,7 +62,7 @@ $ curl -X PUT \
      -H "Content-Type: application/json" \
      --data '{
                "connector.class": "io.confluent.connect.gcs.GcsSourceConnector",
-                    "gcs.bucket.name" : "'"$GCS_BUCKET_NAME"'",
+                    "gcs.bucket.name" : "$GCS_BUCKET_NAME",
                     "gcs.credentials.path" : "/tmp/keyfile.json",
                     "format.class": "io.confluent.connect.gcs.format.avro.AvroFormat",
                     "tasks.max" : "1",
@@ -107,11 +107,10 @@ $ docker run -i -v ${PWD}:/tmp/ --volumes-from gcloud-config google/cloud-sdk:la
 Creating Generalized GCS Source connector:
 
 ```bash
-curl -X PUT \
-     -H "Content-Type: application/json" \
-     --data '{
+playground connector create-or-update --connector gcs-source << EOF
+{
                "connector.class": "io.confluent.connect.gcs.GcsSourceConnector",
-               "gcs.bucket.name" : "'"$GCS_BUCKET_NAME"'",
+               "gcs.bucket.name" : "$GCS_BUCKET_NAME",
                "gcs.credentials.path" : "/tmp/keyfile.json",
                "format.class": "io.confluent.connect.gcs.format.json.JsonFormat",
                "value.converter": "org.apache.kafka.connect.json.JsonConverter",
@@ -121,8 +120,8 @@ curl -X PUT \
                "tasks.max" : "1",
                "confluent.topic.bootstrap.servers" : "broker:9092",
                "confluent.topic.replication.factor" : "1"
-          }' \
-     http://localhost:8083/connectors/gcs-source/config | jq .
+          }
+EOF
 ```
 
 Verifying topic `quick-start-topic`:

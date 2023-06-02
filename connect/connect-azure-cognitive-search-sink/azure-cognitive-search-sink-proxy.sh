@@ -75,9 +75,8 @@ EOF
 
 
 log "Creating Azure Search Sink connector"
-curl -X PUT \
-     -H "Content-Type: application/json" \
-     --data '{
+playground connector create-or-update --connector azure-cognitive-search << EOF
+{
                 "connector.class": "io.confluent.connect.azure.search.AzureSearchSinkConnector",
                 "tasks.max": "1",
                 "topics": "hotels-sample",
@@ -102,8 +101,8 @@ curl -X PUT \
                 "reporter.result.topic.key.format": "string",
                 "reporter.result.topic.value.format": "string",
                 "reporter.result.topic.replication.factor": 1
-          }' \
-     http://localhost:8083/connectors/azure-cognitive-search/config | jq .
+          }
+EOF
 
 
 sleep 30

@@ -81,23 +81,22 @@ log "Sending messages to topic mytable"
 seq -f "{\"f1\": \"value%g\"}" 10 | docker exec -i connect kafka-avro-console-producer --broker-list broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic mytable --property value.schema='{"type":"record","name":"myrecord","fields":[{"name":"f1","type":"string"}]}'
 
 log "Creating AWS DynamoDB Sink connector"
-curl -X PUT \
-     -H "Content-Type: application/json" \
-     --data '{
+playground connector create-or-update --connector dynamodb-sink << EOF
+{
                "connector.class": "io.confluent.connect.aws.dynamodb.DynamoDbSinkConnector",
                "tasks.max": "1",
                "topics": "mytable",
-               "aws.dynamodb.region": "'"$AWS_REGION"'",
-               "aws.dynamodb.endpoint": "'"$DYNAMODB_ENDPOINT"'",
+               "aws.dynamodb.region": "$AWS_REGION",
+               "aws.dynamodb.endpoint": "$DYNAMODB_ENDPOINT",
                "confluent.license": "",
                "confluent.topic.bootstrap.servers": "broker:9092",
                "confluent.topic.replication.factor": "1",
                "aws.dynamodb.credentials.provider.class": "io.confluent.connect.aws.dynamodb.auth.AwsAssumeRoleCredentialsProvider",
-               "aws.dynamodb.credentials.provider.sts.role.arn": "'"$AWS_STS_ROLE_ARN"'",
+               "aws.dynamodb.credentials.provider.sts.role.arn": "$AWS_STS_ROLE_ARN",
                "aws.dynamodb.credentials.provider.sts.role.session.name": "session-name",
                "aws.dynamodb.credentials.provider.sts.role.external.id": "123"
-          }' \
-     http://localhost:8083/connectors/dynamodb-sink/config | jq .
+          }
+EOF
 
 log "Sleeping 120 seconds, waiting for table to be created"
 sleep 120

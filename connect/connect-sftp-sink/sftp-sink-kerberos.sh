@@ -49,9 +49,8 @@ docker exec connect kinit sshuser -k -t /tmp/sshuser.keytab
 # docker exec -i --privileged --user root connect bash -c "yum update -y && yum install openssh-clients -y"
 
 log "Creating SFTP Sink connector"
-curl -X PUT \
-     -H "Content-Type: application/json" \
-     --data '{
+playground connector create-or-update --connector sftp-sink-kerberos << EOF
+{
                "topics": "test_sftp_sink",
                "tasks.max": "1",
                "connector.class": "io.confluent.connect.sftp.SftpSinkConnector",
@@ -70,8 +69,8 @@ curl -X PUT \
                "confluent.license": "",
                "confluent.topic.bootstrap.servers": "broker:9092",
                "confluent.topic.replication.factor": "1"
-          }' \
-     http://localhost:8083/connectors/sftp-sink-kerberos/config | jq .
+          }
+EOF
 
 
 log "Sending messages to topic test_sftp_sink"

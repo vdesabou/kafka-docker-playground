@@ -42,9 +42,9 @@ $ curl -X PUT \
           "tasks.max": "1",
           "topics": "test-elasticsearch-sink",
           "key.ignore": "true",
-          "connection.url": "'"$ELASTICSEARCH_CLOUD_ENDPOINT"'",
-          "connection.username": "'"$ELASTICSEARCH_CLOUD_USERNAME"'",
-          "connection.password": "'"$ELASTICSEARCH_CLOUD_PASSWORD"'"
+          "connection.url": "$ELASTICSEARCH_CLOUD_ENDPOINT",
+          "connection.username": "$ELASTICSEARCH_CLOUD_USERNAME",
+          "connection.password": "$ELASTICSEARCH_CLOUD_PASSWORD"
           }' \
     http://localhost:8083/connectors/elasticsearch-cloud-sink/config | jq .
 ```

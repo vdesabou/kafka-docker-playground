@@ -94,9 +94,8 @@ EOF
 
 # https://github.com/microsoft/kafka-connect-cosmosdb/blob/dev/doc/README_Sink.md
 log "Creating Azure Cosmos DB Sink connector"
-curl -X PUT \
-     -H "Content-Type: application/json" \
-     --data '{
+playground connector create-or-update --connector azure-cosmosdb-sink << EOF
+{
                 "connector.class": "com.azure.cosmos.kafka.connect.sink.CosmosDBSinkConnector",
                 "tasks.max": "1",
                 "topics": "hotels",
@@ -108,8 +107,8 @@ curl -X PUT \
                 "connect.cosmos.master.key": "${file:/data:AZURE_COSMOSDB_PRIMARY_CONNECTION_KEY}",
                 "connect.cosmos.databasename": "${file:/data:AZURE_COSMOSDB_DB_NAME}",
                 "connect.cosmos.containers.topicmap": "${file:/data:TOPIC_MAP}"
-          }' \
-     http://localhost:8083/connectors/azure-cosmosdb-sink/config | jq .
+          }
+EOF
 
 sleep 10
 

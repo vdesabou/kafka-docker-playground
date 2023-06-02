@@ -33,19 +33,18 @@ ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml
 SINCE="2020-09-05"
 
 log "Creating Zendesk Source connector"
-curl -X PUT \
-     -H "Content-Type: application/json" \
-     --data '{
+playground connector create-or-update --connector zendesk-source << EOF
+{
                     "connector.class": "io.confluent.connect.zendesk.ZendeskSourceConnector",
                     "topic.name.pattern":"zendesk-topic-${entityName}",
                     "tasks.max": "1",
                     "poll.interval.ms": 1000,
                     "zendesk.auth.type": "basic",
-                    "zendesk.url": "'"$ZENDESK_URL"'",
-                    "zendesk.user": "'"$ZENDESK_USERNAME"'",
-                    "zendesk.password": "'"$ZENDESK_PASSWORD"'",
+                    "zendesk.url": "$ZENDESK_URL",
+                    "zendesk.user": "$ZENDESK_USERNAME",
+                    "zendesk.password": "$ZENDESK_PASSWORD",
                     "zendesk.tables": "organizations",
-                    "zendesk.since": "'"$SINCE"'",
+                    "zendesk.since": "$SINCE",
                     "key.converter": "org.apache.kafka.connect.storage.StringConverter",
                     "value.converter": "org.apache.kafka.connect.json.JsonConverter",
                     "value.converter.schemas.enable": "false",
@@ -55,8 +54,8 @@ curl -X PUT \
                     "errors.tolerance": "all",
                     "errors.log.enable": true,
                     "errors.log.include.messages": true
-          }' \
-     http://localhost:8083/connectors/zendesk-source/config | jq .
+          }
+EOF
 
 
 sleep 10

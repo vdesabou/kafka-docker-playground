@@ -15,17 +15,16 @@ key3,value3
 EOF
 
 log "Creating Redis sink connector"
-curl -X PUT \
-     -H "Content-Type: application/json" \
-     --data '{
+playground connector create-or-update --connector redis-sink << EOF
+{
                "connector.class": "com.github.jcustenborder.kafka.connect.redis.RedisSinkConnector",
                     "redis.hosts": "redis:6379",
                     "tasks.max": "1",
                     "key.converter":"org.apache.kafka.connect.storage.StringConverter",
                     "value.converter":"org.apache.kafka.connect.storage.StringConverter",
                     "topics": "users"
-          }' \
-     http://localhost:8083/connectors/redis-sink/config | jq .
+          }
+EOF
 
 sleep 10
 

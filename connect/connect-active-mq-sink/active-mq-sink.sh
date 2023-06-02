@@ -13,9 +13,8 @@ This is my message
 EOF
 
 log "Creating ActiveMQ sink connector"
-curl -X PUT \
-     -H "Content-Type: application/json" \
-     --data '{
+playground connector create-or-update --connector active-mq-sink << EOF
+{
                "connector.class": "io.confluent.connect.jms.ActiveMqSinkConnector",
                "topics": "sink-messages",
                "activemq.url": "tcp://activemq:61616",
@@ -28,8 +27,8 @@ curl -X PUT \
                "confluent.license": "",
                "confluent.topic.bootstrap.servers": "broker:9092",
                "confluent.topic.replication.factor": "1"
-          }' \
-     http://localhost:8083/connectors/active-mq-sink/config | jq .
+          }
+EOF
 
 sleep 5
 

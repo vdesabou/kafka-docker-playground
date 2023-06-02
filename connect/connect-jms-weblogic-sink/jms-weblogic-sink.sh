@@ -62,9 +62,8 @@ This is my message
 EOF
 
 log "Creating JMS weblogic sink connector"
-curl -X PUT \
-     -H "Content-Type: application/json" \
-     --data '{
+playground connector create-or-update --connector weblogic-topic-sink << EOF
+{
                "connector.class": "io.confluent.connect.jms.JmsSinkConnector",
                "topics": "sink-messages",
                "java.naming.factory.initial": "weblogic.jndi.WLInitialContextFactory",
@@ -79,8 +78,8 @@ curl -X PUT \
                "confluent.license": "",
                "confluent.topic.bootstrap.servers": "broker:9092",
                "confluent.topic.replication.factor": "1"
-          }' \
-     http://localhost:8083/connectors/weblogic-topic-sink/config | jq .
+          }
+EOF
      
 sleep 5
 

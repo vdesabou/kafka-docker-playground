@@ -73,23 +73,22 @@ aws s3 rm s3://$AWS_BUCKET_NAME/$TAG --recursive --region $AWS_REGION
 set -e
 
 log "Creating S3 Sink connector with bucket name <$AWS_BUCKET_NAME>"
-curl -X PUT \
-     -H "Content-Type: application/json" \
-     --data '{
+playground connector create-or-update --connector s3-sink << EOF
+{
                "connector.class": "io.confluent.connect.s3.S3SinkConnector",
                "tasks.max": "1",
                "topics": "s3_topic",
-               "s3.region": "'"$AWS_REGION"'",
-               "s3.bucket.name": "'"$AWS_BUCKET_NAME"'",
+               "s3.region": "$AWS_REGION",
+               "s3.bucket.name": "$AWS_BUCKET_NAME",
                "s3.part.size": 52428801,
-               "topics.dir": "'"$TAG"'",
+               "topics.dir": "$TAG",
                "flush.size": "3",
                "s3.proxy.url": "https://nginx-proxy:8888",
                "storage.class": "io.confluent.connect.s3.storage.S3Storage",
                "format.class": "io.confluent.connect.s3.format.avro.AvroFormat",
                "schema.compatibility": "NONE"
-          }' \
-     http://localhost:8083/connectors/s3-sink/config | jq .
+          }
+EOF
 
 # [2022-12-19 16:58:00,112] ERROR [s3-sink|task-0] WorkerSinkTask{id=s3-sink-0} Task threw an uncaught and unrecoverable exception. Task is being killed and will not recover until manually restarted (org.apache.kafka.connect.runtime.WorkerTask:208)
 # org.apache.kafka.connect.errors.ConnectException: com.amazonaws.SdkClientException: Unable to load AWS credentials from any provider in the chain: [EnvironmentVariableCredentialsProvider: Unable to load AWS credentials from environment variables (AWS_ACCESS_KEY_ID (or AWS_ACCESS_KEY) and AWS_SECRET_KEY (or AWS_SECRET_ACCESS_KEY)), SystemPropertiesCredentialsProvider: Unable to load AWS credentials from Java system properties (aws.accessKeyId and aws.secretKey), WebIdentityTokenCredentialsProvider: You must specify a value for roleArn and roleSessionName, com.amazonaws.auth.profile.ProfileCredentialsProvider@6a597493: Unable to execute HTTP request: sts.amazonaws.com, com.amazonaws.auth.EC2ContainerCredentialsProviderWrapper@44eaefac: The requested metadata is not found at http://169.254.169.254/latest/meta-data/iam/security-credentials/]

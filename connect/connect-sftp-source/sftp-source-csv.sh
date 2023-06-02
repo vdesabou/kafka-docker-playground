@@ -19,9 +19,8 @@ docker cp csv-sftp-source.csv sftp-server:/chroot/home/foo/upload/input/
 rm -f csv-sftp-source.csv
 
 log "Creating CSV SFTP Source connector"
-curl -X PUT \
-     -H "Content-Type: application/json" \
-     --data '{
+playground connector create-or-update --connector sftp-source-csv << EOF
+{
                "tasks.max": "1",
                "connector.class": "io.confluent.connect.sftp.SftpCsvSourceConnector",
                "cleanup.policy":"NONE",
@@ -37,8 +36,8 @@ curl -X PUT \
                "kafka.topic": "sftp-testing-topic",
                "csv.first.row.as.header": "true",
                "schema.generation.enabled": "true"
-          }' \
-     http://localhost:8083/connectors/sftp-source-csv/config | jq .
+          }
+EOF
 
 sleep 15
 

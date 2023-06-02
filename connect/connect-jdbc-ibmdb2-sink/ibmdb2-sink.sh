@@ -63,9 +63,8 @@ docker exec -i connect kafka-avro-console-producer --broker-list broker:9092 --p
 EOF
 
 log "Creating JDBC IBM DB2 sink connector"
-curl -X PUT \
-     -H "Content-Type: application/json" \
-     --data '{
+playground connector create-or-update --connector ibmdb2-sink << EOF
+{
                "connector.class": "io.confluent.connect.jdbc.JdbcSinkConnector",
                "tasks.max": "1",
                "connection.url":"jdbc:db2://ibmdb2:25010/sample",
@@ -75,8 +74,8 @@ curl -X PUT \
                "errors.log.enable": "true",
                "errors.log.include.messages": "true",
                "auto.create": "true"
-          }' \
-     http://localhost:8083/connectors/ibmdb2-sink/config | jq .
+          }
+EOF
 
 
 sleep 15

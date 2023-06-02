@@ -55,22 +55,21 @@ seq -f "{\"f1\": \"value%g\"}" 10 | docker exec -i connect kafka-avro-console-pr
 DYNAMODB_ENDPOINT="https://dynamodb.$AWS_REGION.amazonaws.com"
 
 log "Creating AWS DynamoDB Sink connector"
-curl -X PUT \
-     -H "Content-Type: application/json" \
-     --data '{
+playground connector create-or-update --connector dynamodb-sink << EOF
+{
                "connector.class": "io.confluent.connect.aws.dynamodb.DynamoDbSinkConnector",
                "tasks.max": "1",
                "topics": "topic1",
-               "aws.dynamodb.region": "'"$AWS_REGION"'",
-               "aws.dynamodb.endpoint": "'"$DYNAMODB_ENDPOINT"'",
+               "aws.dynamodb.region": "$AWS_REGION",
+               "aws.dynamodb.endpoint": "$DYNAMODB_ENDPOINT",
                "aws.dynamodb.proxy.url": "https://nginx-proxy:8888",
-               "aws.access.key.id" : "'"$AWS_ACCESS_KEY_ID"'",
-               "aws.secret.key.id": "'"$AWS_SECRET_ACCESS_KEY"'",
+               "aws.access.key.id" : "$AWS_ACCESS_KEY_ID",
+               "aws.secret.key.id": "$AWS_SECRET_ACCESS_KEY",
                "confluent.license": "",
                "confluent.topic.bootstrap.servers": "broker:9092",
                "confluent.topic.replication.factor": "1"
-          }' \
-     http://localhost:8083/connectors/dynamodb-sink/config | jq .
+          }
+EOF
 
 log "Sleeping 120 seconds, waiting for table to be created"
 sleep 120

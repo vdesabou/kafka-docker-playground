@@ -145,9 +145,8 @@ SELECT * FROM CUSTOMERS;
 EOF
 
 log "Creating Debezium PostgreSQL source connector"
-curl -X PUT \
-     -H "Content-Type: application/json" \
-     --data '{
+playground connector create-or-update --connector debezium-postgres-source << EOF
+{
                 "connector.class": "io.debezium.connector.postgresql.PostgresConnector",
                 "tasks.max": "1",
                 "database.hostname": "postgres",
@@ -172,8 +171,8 @@ curl -X PUT \
                 "transforms.addTopicSuffix.type":"org.apache.kafka.connect.transforms.RegexRouter",
                 "transforms.addTopicSuffix.regex":"(.*)",
                 "transforms.addTopicSuffix.replacement":"$1-raw"
-          }' \
-     http://localhost:8083/connectors/debezium-postgres-source/config | jq .
+          }
+EOF
 
 sleep 5
 

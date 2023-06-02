@@ -77,17 +77,16 @@ docker exec -i broker kafka-console-producer --broker-list broker:9092 --topic m
 EOF
 
 log "Creating Mapr sink connector"
-curl -X PUT \
-     -H "Content-Type: application/json" \
-     --data '{
+playground connector create-or-update --connector mapr-sink << EOF
+{
                "connector.class": "io.confluent.connect.mapr.db.MapRDbSinkConnector",
                "tasks.max": "1",
                "mapr.table.map.maprtopic" : "/mapr/maprdemo.mapr.io/maprtopic",
                "key.converter": "org.apache.kafka.connect.storage.StringConverter",
                "value.converter": "org.apache.kafka.connect.json.JsonConverter",
                "topics": "maprtopic"
-          }' \
-     http://localhost:8083/connectors/mapr-sink/config | jq .
+          }
+EOF
 
 sleep 70
 

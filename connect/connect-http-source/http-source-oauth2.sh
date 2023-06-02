@@ -51,26 +51,25 @@ TOKEN_URL="http://$NGROK_HOSTNAME:$NGROK_PORT/oauth/token"
 
 log "Creating http-source connector"
 
-curl -X PUT \
-     -H "Content-Type: application/json" \
-     --data '{
+playground connector create-or-update --connector http-source << EOF
+{
                "tasks.max": "1",
                "connector.class": "io.confluent.connect.http.HttpSourceConnector",
                "key.converter": "org.apache.kafka.connect.storage.StringConverter",
                "value.converter": "org.apache.kafka.connect.storage.StringConverter",
                "confluent.topic.bootstrap.servers": "broker:9092",
                "confluent.topic.replication.factor": "1",
-               "url": "'"$URL"'",
+               "url": "$URL",
                "topic.name.pattern":"http-topic-${entityName}",
                "entity.names": "messages",
                "http.offset.mode": "SIMPLE_INCREMENTING",
                "http.initial.offset": "1",
                "auth.type": "oauth2",
-               "oauth2.token.url": "'"$TOKEN_URL"'",
+               "oauth2.token.url": "$TOKEN_URL",
                "oauth2.client.id": "kc-client",
                "oauth2.client.secret": "kc-secret"
-          }' \
-     http://localhost:8083/connectors/http-source/config | jq .
+          }
+EOF
 
 sleep 3
 

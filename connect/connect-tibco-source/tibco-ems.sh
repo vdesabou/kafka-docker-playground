@@ -49,9 +49,8 @@ java tibjmsMsgProducer -user admin -queue connector-quickstart m1 m2 m3 m4 m5'
 
 
 log "Creating TIBCO EMS source connector"
-curl -X PUT \
-     -H "Content-Type: application/json" \
-     --data '{
+playground connector create-or-update --connector tibco-ems-source << EOF
+{
                "connector.class": "io.confluent.connect.tibco.TibcoSourceConnector",
                     "tasks.max": "1",
                     "kafka.topic": "from-tibco-messages",
@@ -64,8 +63,8 @@ curl -X PUT \
                     "value.converter": "org.apache.kafka.connect.storage.StringConverter",
                     "confluent.topic.bootstrap.servers": "broker:9092",
                     "confluent.topic.replication.factor": "1"
-          }' \
-     http://localhost:8083/connectors/tibco-ems-source/config | jq .
+          }
+EOF
 
 sleep 5
 

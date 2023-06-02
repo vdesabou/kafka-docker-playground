@@ -129,9 +129,8 @@ select owner, table_name from dba_all_tables where table_name = 'FOOQUEUETABLE';
 EOF
 
 log "Creating JMS Oracle AQ source connector"
-curl -X PUT \
-     -H "Content-Type: application/json" \
-     --data '{
+playground connector create-or-update --connector jms-oracle-source << EOF
+{
                "connector.class": "io.confluent.connect.jms.JmsSourceConnector",
                "tasks.max": "1",
                "kafka.topic": "jms-oracle-topic",
@@ -152,8 +151,8 @@ curl -X PUT \
                "confluent.license": "",
                "confluent.topic.bootstrap.servers": "broker:9092",
                "confluent.topic.replication.factor": "1"
-          }' \
-     http://localhost:8083/connectors/jms-oracle-source/config | jq .
+          }
+EOF
 
 
 sleep 10

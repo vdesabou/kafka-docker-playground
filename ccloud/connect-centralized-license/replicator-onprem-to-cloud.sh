@@ -30,9 +30,8 @@ set -e
 log "Sending messages to topic products on source OnPREM cluster"
 seq 10 | docker exec -i broker kafka-console-producer --broker-list broker:9092 --topic products
 
-curl -X PUT \
-     -H "Content-Type: application/json" \
-     --data '{
+playground connector create-or-update --connector replicate-onprem-to-cloud << EOF
+{
           "connector.class":"io.confluent.connect.replicator.ReplicatorSourceConnector",
           "key.converter": "io.confluent.connect.replicator.util.ByteArrayConverter",
           "value.converter": "io.confluent.connect.replicator.util.ByteArrayConverter",
@@ -50,8 +49,8 @@ curl -X PUT \
           "topic.whitelist": "products",
           "topic.config.sync": false,
           "topic.auto.create": false
-          }' \
-     http://localhost:8083/connectors/replicate-onprem-to-cloud/config | jq .
+          }
+EOF
 
 
 log "Verify we have received the data in products topic"

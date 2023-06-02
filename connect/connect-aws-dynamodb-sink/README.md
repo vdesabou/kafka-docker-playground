@@ -58,8 +58,8 @@ $ curl -X PUT \
                "connector.class": "io.confluent.connect.aws.dynamodb.DynamoDbSinkConnector",
                     "tasks.max": "1",
                     "topics": "topic1",
-                    "aws.dynamodb.region": "'"$AWS_REGION"'",
-                    "aws.dynamodb.endpoint": "'"$DYNAMODB_ENDPOINT"'",
+                    "aws.dynamodb.region": "$AWS_REGION",
+                    "aws.dynamodb.endpoint": "$DYNAMODB_ENDPOINT",
                     "confluent.license": "",
                     "confluent.topic.bootstrap.servers": "broker:9092",
                     "confluent.topic.replication.factor": "1"

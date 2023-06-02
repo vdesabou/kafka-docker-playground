@@ -12,9 +12,8 @@ log "Send message to RabbitMQ in myqueue"
 docker exec rabbitmq_producer bash -c "python /producer.py myqueue 5"
 
 log "Creating RabbitMQ Source connector"
-curl -X PUT \
-     -H "Content-Type: application/json" \
-     --data '{
+playground connector create-or-update --connector rabbitmq-source << EOF
+{
                "connector.class" : "io.confluent.connect.rabbitmq.RabbitMQSourceConnector",
                "tasks.max" : "1",
                "kafka.topic" : "rabbitmq",
@@ -24,8 +23,8 @@ curl -X PUT \
                "rabbitmq.password" : "mypassword",
                "confluent.topic.bootstrap.servers": "broker:9092",
                "confluent.topic.replication.factor": "1"
-          }' \
-     http://localhost:8083/connectors/rabbitmq-source/config | jq .
+          }
+EOF
 
 
 sleep 5

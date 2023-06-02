@@ -19,9 +19,8 @@ log "Creating bucket in Minio"
 docker container restart create-buckets
 
 log "Creating S3 Sink connector with Minio"
-curl -X PUT \
-     -H "Content-Type: application/json" \
-     --data '{
+playground connector create-or-update --connector minio-sink << EOF
+{
                "connector.class": "io.confluent.connect.s3.S3SinkConnector",
                "tasks.max": "1",
                "topics": "minio_topic",
@@ -34,8 +33,8 @@ curl -X PUT \
                "schema.generator.class": "io.confluent.connect.storage.hive.schema.DefaultSchemaGenerator",
                "partitioner.class": "io.confluent.connect.storage.partitioner.DefaultPartitioner",
                "schema.compatibility": "NONE"
-          }' \
-     http://localhost:8083/connectors/minio-sink/config | jq .
+          }
+EOF
 
 
 log "Sending messages to topic minio_topic"

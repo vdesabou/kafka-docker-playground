@@ -80,9 +80,8 @@ log "Show content of team table:"
 docker exec mysql bash -c "mysql --user=root --password=password --database=mydb -e 'select * from team'"
 
 log "Creating MySQL source connector"
-curl -X PUT \
-     -H "Content-Type: application/json" \
-     --data '{
+playground connector create-or-update --connector mysql-source << EOF
+{
                "connector.class":"io.confluent.connect.jdbc.JdbcSourceConnector",
                "tasks.max":"10",
                "connection.url":"jdbc:mysql://mysql:3306/mydb?user=user&password=password&useSSL=false",
@@ -91,8 +90,8 @@ curl -X PUT \
                "timestamp.column.name":"last_modified",
                "incrementing.column.name":"id",
                "topic.prefix":"mysql-"
-          }' \
-     http://localhost:8083/connectors/mysql-source/config | jq .
+          }
+EOF
 
 sleep 5
 

@@ -9,9 +9,8 @@ source ${DIR}/../../scripts/utils.sh
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.mtls-proxy.yml"
 
 log "Creating http-source connector"
-curl -X PUT \
-     -H "Content-Type: application/json" \
-     --data '{
+playground connector create-or-update --connector http-cdc-sourc2e << EOF
+{
                "tasks.max": "1",
                "connector.class": "com.github.castorm.kafka.connect.http.HttpSourceConnector",
                "key.converter": "org.apache.kafka.connect.storage.StringConverter",
@@ -21,8 +20,8 @@ curl -X PUT \
 
                "http.client.keystore": "/tmp/keystore.http-service-mtls-auth.p12",
                "http.client.keystore.password": "confluent"
-          }' \
-     http://localhost:8083/connectors/http-cdc-sourc2e/config | jq .
+          }
+EOF
 
 
 sleep 3

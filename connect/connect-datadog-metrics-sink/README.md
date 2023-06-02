@@ -51,7 +51,7 @@ $ curl -X PUT \
                "value.converter.schema.registry.url":"http://schema-registry:8081",
                "confluent.topic.bootstrap.servers": "broker:9092",
                "confluent.topic.replication.factor":1,
-               "datadog.api.key": "'"$DD_API_KEY"'",
+               "datadog.api.key": "$DD_API_KEY",
                "datadog.domain": "COM",
                "reporter.bootstrap.servers": "broker:9092",
                "reporter.error.topic.name": "error-responses",

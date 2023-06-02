@@ -71,15 +71,14 @@ aws sqs send-message-batch --queue-url $QUEUE_URL --entries file://send-message-
 cd -
 
 log "Creating SQS Source connector"
-curl -X PUT \
-     -H "Content-Type: application/json" \
-     --data '{
+playground connector create-or-update --connector sqs-source << EOF
+{
                "connector.class": "io.confluent.connect.sqs.source.SqsSourceConnector",
                "tasks.max": "1",
                "kafka.topic": "test-sqs-source",
-               "sqs.url": "'"$QUEUE_URL"'",
-               "aws.access.key.id" : "'"$AWS_ACCESS_KEY_ID"'",
-               "aws.secret.key.id": "'"$AWS_SECRET_ACCESS_KEY"'",
+               "sqs.url": "$QUEUE_URL",
+               "aws.access.key.id" : "$AWS_ACCESS_KEY_ID",
+               "aws.secret.key.id": "$AWS_SECRET_ACCESS_KEY",
                "confluent.license": "",
                "sqs.proxy.url": "https://nginx-proxy:8888",
                "confluent.topic.bootstrap.servers": "broker:9092",
@@ -87,8 +86,8 @@ curl -X PUT \
                "errors.tolerance": "all",
                "errors.log.enable": "true",
                "errors.log.include.messages": "true"
-          }' \
-     http://localhost:8083/connectors/sqs-source/config | jq .
+          }
+EOF
 
 log "Verify we have received the data in test-sqs-source topic"
 playground topic consume --topic test-sqs-source --min-expected-messages 2 --timeout 60

@@ -57,9 +57,8 @@ DISPLAY CHANNEL(DEV.APP.SVRCONN)
 EOF
 
 log "Creating IBM MQ source connector"
-curl -X PUT \
-     -H "Content-Type: application/json" \
-     --data '{
+playground connector create-or-update --connector ibm-mq-source-mtls << EOF
+{
                "connector.class": "io.confluent.connect.ibm.mq.IbmMQSourceConnector",
                "kafka.topic": "MyKafkaTopicName",
                "mq.hostname": "ibmmq",
@@ -79,8 +78,8 @@ curl -X PUT \
                "confluent.license": "",
                "confluent.topic.bootstrap.servers": "broker:9092",
                "confluent.topic.replication.factor": "1"
-          }' \
-     http://localhost:8083/connectors/ibm-mq-source-mtls/config | jq .
+          }
+EOF
 
 sleep 5
 

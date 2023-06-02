@@ -13,9 +13,8 @@ ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.mtl
 
 
 log "Creating ActiveMQ source connector"
-curl -X PUT \
-     -H "Content-Type: application/json" \
-     --data '{
+playground connector create-or-update --connector active-mq-source-mtls << EOF
+{
                "connector.class": "io.confluent.connect.activemq.ActiveMQSourceConnector",
                "kafka.topic": "MyKafkaTopicName",
                "activemq.url": "ssl://activemq:61617",
@@ -24,8 +23,8 @@ curl -X PUT \
                "confluent.license": "",
                "confluent.topic.bootstrap.servers": "broker:9092",
                "confluent.topic.replication.factor": "1"
-          }' \
-     http://localhost:8083/connectors/active-mq-source-mtls/config | jq .
+          }
+EOF
 
 sleep 5
 

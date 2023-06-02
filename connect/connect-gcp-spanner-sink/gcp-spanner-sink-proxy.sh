@@ -66,23 +66,22 @@ log "Blocking spanner.googleapis.com IP $IP to make sure proxy is used"
 docker exec --privileged --user root connect bash -c "iptables -A INPUT -p tcp -s $IP -j DROP"
 
 log "Creating GCP Spanner Sink connector"
-curl -X PUT \
-     -H "Content-Type: application/json" \
-     --data '{
+playground connector create-or-update --connector gcp-spanner-sink << EOF
+{
                "connector.class": "io.confluent.connect.gcp.spanner.SpannerSinkConnector",
                "tasks.max" : "1",
                "topics" : "products",
                "auto.create" : "true",
                "table.name.format" : "kafka_${topic}",
-               "gcp.spanner.instance.id" : "'"$INSTANCE"'",
-               "gcp.spanner.database.id" : "'"$DATABASE"'",
+               "gcp.spanner.instance.id" : "$INSTANCE",
+               "gcp.spanner.database.id" : "$DATABASE",
                "gcp.spanner.credentials.path" : "/tmp/keyfile.json",
                "gcp.spanner.proxy.url": "https://nginx-proxy:8888",
                "confluent.license": "",
                "confluent.topic.bootstrap.servers": "broker:9092",
                "confluent.topic.replication.factor": "1"
-          }' \
-     http://localhost:8083/connectors/gcp-spanner-sink/config | jq .
+          }
+EOF
 
 sleep 60
 

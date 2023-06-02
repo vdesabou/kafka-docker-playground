@@ -8,9 +8,8 @@ source ${DIR}/../../scripts/utils.sh
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
 
 log "Creating MQTT Source connector"
-curl -X PUT \
-     -H "Content-Type: application/json" \
-     --data '{
+playground connector create-or-update --connector source-mqtt << EOF
+{
                "connector.class": "io.confluent.connect.mqtt.MqttSourceConnector",
                "tasks.max": "1",
                "mqtt.server.uri": "tcp://mosquitto:1883",
@@ -22,8 +21,8 @@ curl -X PUT \
                "confluent.license": "",
                "confluent.topic.bootstrap.servers": "broker:9092",
                "confluent.topic.replication.factor": "1"
-          }' \
-     http://localhost:8083/connectors/source-mqtt/config | jq .
+          }
+EOF
 
 
 sleep 5

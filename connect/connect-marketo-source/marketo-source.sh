@@ -62,26 +62,25 @@ else
 fi
 
 log "Creating Marketo Source connector"
-curl -X PUT \
-     -H "Content-Type: application/json" \
-     --data '{
+playground connector create-or-update --connector marketo-source << EOF
+{
                     "connector.class": "io.confluent.connect.marketo.MarketoSourceConnector",
                     "tasks.max": "1",
                     "poll.interval.ms": 1000,
                     "topic.name.pattern": "marketo_${entityName}",
-                    "marketo.url": "'"$MARKETO_ENDPOINT_URL"'",
-                    "marketo.since": "'"$SINCE"'",
+                    "marketo.url": "$MARKETO_ENDPOINT_URL",
+                    "marketo.since": "$SINCE",
                     "entity.names": "leads",
-                    "oauth2.client.id": "'"$MARKETO_CLIENT_ID"'",
-                    "oauth2.client.secret": "'"$MARKETO_CLIENT_SECRET"'",
+                    "oauth2.client.id": "$MARKETO_CLIENT_ID",
+                    "oauth2.client.secret": "$MARKETO_CLIENT_SECRET",
                     "key.converter": "org.apache.kafka.connect.storage.StringConverter",
                     "value.converter": "org.apache.kafka.connect.json.JsonConverter",
                     "value.converter.schemas.enable": "false",
                     "confluent.license": "",
                     "confluent.topic.bootstrap.servers": "broker:9092",
                     "confluent.topic.replication.factor": "1"
-          }' \
-     http://localhost:8083/connectors/marketo-source/config | jq .
+          }
+EOF
 
 log "Sleeping 10 minutes (leads are pulled with a delay of 5 minutes between consecutive pulls)"
 sleep 600

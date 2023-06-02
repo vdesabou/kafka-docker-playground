@@ -21,9 +21,8 @@ key3,value3
 EOF
 
 log "Creating HBase sink connector"
-curl -X PUT \
-     -H "Content-Type: application/json" \
-     --data '{
+playground connector create-or-update --connector hbase-sink << EOF
+{
                "connector.class": "io.confluent.connect.hbase.HBaseSinkConnector",
                "tasks.max": "1",
                "key.converter":"org.apache.kafka.connect.storage.StringConverter",
@@ -36,8 +35,8 @@ curl -X PUT \
                "auto.create.column.families": "true",
                "table.name.format": "example_table",
                "topics": "hbase-test"
-          }' \
-     http://localhost:8083/connectors/hbase-sink/config | jq .
+          }
+EOF
 
 sleep 10
 

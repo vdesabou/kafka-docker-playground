@@ -28,9 +28,8 @@ Replicate from Europe to US
 
 ```bash
 $ docker container exec connect-us \
-curl -X PUT \
-     -H "Content-Type: application/json" \
-     --data '{
+playground connector create-or-update --connector replicate-europe-to-us << EOF
+{
           "connector.class":"io.confluent.connect.replicator.ReplicatorSourceConnector",
           "key.converter": "io.confluent.connect.replicator.util.ByteArrayConverter",
           "value.converter": "io.confluent.connect.replicator.util.ByteArrayConverter",
@@ -43,8 +42,8 @@ curl -X PUT \
           "confluent.topic.replication.factor": 1,
           "provenance.header.enable": true,
           "topic.whitelist": "sales_EUROPE"
-          }' \
-     http://localhost:8083/connectors/replicate-europe-to-us/config | jq .
+          }
+EOF
 ```
 
 Wait for data to be replicated

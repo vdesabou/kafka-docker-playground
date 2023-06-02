@@ -32,9 +32,8 @@ done
 log "SAP HANA has started!"
 
 log "Creating SAP HANA JDBC Sink connector"
-curl -X PUT \
-     -H "Content-Type: application/json" \
-     --data '{
+playground connector create-or-update --connector jdbc-sap-hana-sink << EOF
+{
                "tasks.max": "1",
                "connector.class": "io.confluent.connect.jdbc.JdbcSinkConnector",
                "topics": "testtopic",
@@ -46,8 +45,8 @@ curl -X PUT \
                "value.converter": "io.confluent.connect.avro.AvroConverter",
                "value.converter.schema.registry.url": "http://schema-registry:8081",
                "auto.create": "true"
-          }' \
-     http://localhost:8083/connectors/jdbc-sap-hana-sink/config | jq .
+          }
+EOF
 
 sleep 5
 

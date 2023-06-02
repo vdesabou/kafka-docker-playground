@@ -78,7 +78,7 @@ $ curl -X PUT \
                 "topics": "functions-test",
                 "key.converter":"org.apache.kafka.connect.storage.StringConverter",
                 "value.converter":"org.apache.kafka.connect.storage.StringConverter",
-                "function.url": "'"$FUNCTIONS_URL"'",
+                "function.url": "$FUNCTIONS_URL",
                 "confluent.license": "",
                 "confluent.topic.bootstrap.servers": "broker:9092",
                 "confluent.topic.replication.factor": "1",

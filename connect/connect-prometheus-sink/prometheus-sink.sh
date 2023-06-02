@@ -7,9 +7,8 @@ source ${DIR}/../../scripts/utils.sh
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
 
 log "Creating Prometheus sink connector"
-curl -X PUT \
-     -H "Content-Type: application/json" \
-     --data '{
+playground connector create-or-update --connector prometheus-sink << EOF
+{
                "connector.class": "io.confluent.connect.prometheus.PrometheusMetricsSinkConnector",
                "tasks.max": "1",
                "confluent.topic.bootstrap.servers":"broker:9092",
@@ -24,8 +23,8 @@ curl -X PUT \
                "reporter.result.topic.replication.factor": 1,
                "behavior.on.error": "LOG",
                "topics": "test-topic"
-          }' \
-     http://localhost:8083/connectors/prometheus-sink/config | jq .
+          }
+EOF
 
 NOW=$(date +%s)
 log "Sending messages to topic test-topic"

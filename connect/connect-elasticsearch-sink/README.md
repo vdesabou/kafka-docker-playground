@@ -22,9 +22,8 @@ $ playground run -f elasticsearch-sink<tab>
 The connector is created with:
 
 ```
-curl -X PUT \
-     -H "Content-Type: application/json" \
-     --data '{
+playground connector create-or-update --connector elasticsearch-sink << EOF
+{
         "connector.class": "io.confluent.connect.elasticsearch.ElasticsearchSinkConnector",
           "tasks.max": "1",
           "topics": "test-elasticsearch-sink",
@@ -32,8 +31,8 @@ curl -X PUT \
           "connection.url": "http://elasticsearch:9200",
           "type.name": "kafka-connect",
           "name": "elasticsearch-sink"
-          }' \
-     http://localhost:8083/connectors/elasticsearch-sink/config | jq .
+          }
+EOF
 ```
 
 Messages are sent to `test-elasticsearch-sink` topic using:

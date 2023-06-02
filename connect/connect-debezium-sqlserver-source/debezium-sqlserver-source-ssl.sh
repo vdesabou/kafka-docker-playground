@@ -91,9 +91,8 @@ EOF
 
 
 log "Creating Debezium SQL Server source connector"
-curl -X PUT \
-     -H "Content-Type: application/json" \
-     --data '{
+playground connector create-or-update --connector debezium-sqlserver-source-ssl << EOF
+{
               "connector.class": "io.debezium.connector.sqlserver.SqlServerConnector",
               "tasks.max": "1",
               "database.hostname": "sqlserver",
@@ -114,8 +113,8 @@ curl -X PUT \
               "schema.history.internal.kafka.topic": "schema-changes.inventory",
               "database.ssl.truststore": "/tmp/truststore.jks",
               "database.ssl.truststore.password": "confluent"
-          }' \
-     http://localhost:8083/connectors/debezium-sqlserver-source-ssl/config | jq .
+          }
+EOF
 
 sleep 5
 

@@ -90,9 +90,8 @@ insert into CUSTOMERS (id, first_name, last_name, email, gender, club_status, co
 EOF
 
 log "Creating Oracle source connector"
-curl -X PUT \
-     -H "Content-Type: application/json" \
-     --data '{
+playground connector create-or-update --connector oracle-source << EOF
+{
                "connector.class":"io.confluent.connect.jdbc.JdbcSourceConnector",
                "tasks.max":"1",
                "connection.user": "myuser",
@@ -106,8 +105,8 @@ curl -X PUT \
                "timestamp.column.name":"UPDATE_TS",
                "topic.prefix":"oracle-",
                "schema.pattern":"MYUSER"
-          }' \
-     http://localhost:8083/connectors/oracle-source/config | jq .
+          }
+EOF
 
 sleep 5
 

@@ -128,9 +128,8 @@ EOF
 
 # https://www.ibm.com/docs/en/db2/11.5?topic=dsdjsss-configuring-connections-under-data-server-driver-jdbc-sqlj-use-ssl
 log "Creating JDBC IBM DB2 source connector"
-curl -X PUT \
-     -H "Content-Type: application/json" \
-     --data '{
+playground connector create-or-update --connector ibmdb2-source << EOF
+{
                "connector.class": "io.confluent.connect.jdbc.JdbcSourceConnector",
                "tasks.max": "1",
                "connection.url":"jdbc:db2://ibmdb2:50002/sample:retrieveMessagesFromServerOnGetMessage=true;sslConnection=true;sslTrustStoreLocation=/etc/kafka/secrets/truststore.jks;sslTrustStorePassword=confluent;sslTrustStoreType=JKS;",
@@ -140,8 +139,8 @@ curl -X PUT \
                "topic.prefix": "db2-",
                "errors.log.enable": "true",
                "errors.log.include.messages": "true"
-          }' \
-     http://localhost:8083/connectors/ibmdb2-source/config | jq .
+          }
+EOF
 
 sleep 15
 

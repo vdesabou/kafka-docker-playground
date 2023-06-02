@@ -52,16 +52,15 @@ docker-compose -f ../../environment/plaintext/docker-compose.yml -f "${PWD}/dock
 ../../scripts/wait-for-connect-and-controlcenter.sh
 
 log "Creating MySQL sink connector with server side Encrypted Connections (using <userssl> user which requires SSL)"
-curl -X PUT \
-     -H "Content-Type: application/json" \
-     --data '{
+playground connector create-or-update --connector mysql-ssl-sink << EOF
+{
                "connector.class": "io.confluent.connect.jdbc.JdbcSinkConnector",
                "tasks.max": "1",
                "connection.url": "jdbc:mysql://mysql:3306/db?user=userssl&password=password&verifyServerCertificate=true&useSSL=true&requireSSL=true&enabledTLSProtocols=TLSv1,TLSv1.1,TLSv1.2,TLSv1.3",
                "topics": "orders",
                "auto.create": "true"
-          }' \
-     http://localhost:8083/connectors/mysql-ssl-sink/config | jq .
+          }
+EOF
 
 
 log "Sending messages to topic orders"

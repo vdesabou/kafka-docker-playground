@@ -64,7 +64,7 @@ $ curl -X PUT \
                "connector.class": "io.confluent.connect.s3.S3SinkConnector",
                "tasks.max": "1",
                "topics": "s3_topic",
-               "s3.region": "'"$AWS_REGION"'",
+               "s3.region": "$AWS_REGION",
                "s3.bucket.name": "$AWS_BUCKET_NAME",
                "s3.part.size": 52428801,
                "flush.size": "3",

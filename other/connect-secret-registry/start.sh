@@ -45,10 +45,8 @@ curl -X POST \
      http://localhost:8083/secret/paths/my-rbac-connector/keys/my-smt-password/versions | jq .
 
 log "Creating FileStream Sink connector"
-curl -X PUT \
-     -u connectorSubmitter:connectorSubmitter \
-     -H "Content-Type: application/json" \
-     --data '{
+playground connector create-or-update --connector my-rbac-connector << EOF
+{
                "tasks.max": "1",
                "connector.class": "org.apache.kafka.connect.file.FileStreamSinkConnector",
                "topics": "rbac_topic",
@@ -62,8 +60,8 @@ curl -X PUT \
                "transforms.InsertField.type": "org.apache.kafka.connect.transforms.InsertField$Value",
                "transforms.InsertField.static.field": "AddedBySMT",
                "transforms.InsertField.static.value": "${secret:my-rbac-connector:my-smt-password}"
-          }' \
-     http://localhost:8083/connectors/my-rbac-connector/config | jq .
+          }
+EOF
 
 
 sleep 5

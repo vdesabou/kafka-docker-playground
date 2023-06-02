@@ -85,15 +85,14 @@ key3,value3
 EOF
 
 log "Creating Azure Functions Sink connector"
-curl -X PUT \
-     -H "Content-Type: application/json" \
-     --data '{
+playground connector create-or-update --connector azure-functions-sink << EOF
+{
                 "connector.class": "io.confluent.connect.azure.functions.AzureFunctionsSinkConnector",
                 "tasks.max": "1",
                 "topics": "functions-test",
                 "key.converter":"org.apache.kafka.connect.storage.StringConverter",
                 "value.converter":"org.apache.kafka.connect.storage.StringConverter",
-                "function.url": "'"$FUNCTIONS_URL"'",
+                "function.url": "$FUNCTIONS_URL",
                 "function.key": "",
                 "confluent.license": "",
                 "confluent.topic.bootstrap.servers": "broker:9092",
@@ -107,8 +106,8 @@ curl -X PUT \
                 "reporter.result.topic.key.format": "string",
                 "reporter.result.topic.value.format": "string",
                 "reporter.result.topic.replication.factor": 1
-          }' \
-     http://localhost:8083/connectors/azure-functions-sink/config | jq .
+          }
+EOF
 
 
 sleep 10

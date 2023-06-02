@@ -56,15 +56,14 @@ aws s3 rm s3://$AWS_BUCKET_NAME/$TAG --recursive --region $AWS_REGION
 set -e
 
 log "Creating S3 Sink connector with bucket name <$AWS_BUCKET_NAME>"
-curl -X PUT \
-     -H "Content-Type: application/json" \
-     --data '{
+playground connector create-or-update --connector s3-sink << EOF
+{
                "connector.class": "io.confluent.connect.s3.S3SinkConnector",
                "tasks.max": "1",
                "topics": "s3_topic",
-               "s3.region": "'"$AWS_REGION"'",
-               "s3.bucket.name": "'"$AWS_BUCKET_NAME"'",
-               "topics.dir": "'"$TAG"'",
+               "s3.region": "$AWS_REGION",
+               "s3.bucket.name": "$AWS_BUCKET_NAME",
+               "topics.dir": "$TAG",
                "s3.part.size": 5242880,
                "flush.size": "3",
                "storage.class": "io.confluent.connect.s3.storage.S3Storage",
@@ -74,8 +73,8 @@ curl -X PUT \
                "errors.tolerance": "all",
                "errors.log.enable": "true",
                "errors.log.include.messages": "true"
-          }' \
-     http://localhost:8083/connectors/s3-sink/config | jq .
+          }
+EOF
 
 
 log "Sending messages to topic s3_topic"
@@ -93,14 +92,13 @@ docker run --rm -v ${DIR}:/tmp vdesabou/avro-tools tojson /tmp/s3_topic+0+000000
 rm -f s3_topic+0+0000000000.avro
 
 log "Creating Backup and Restore S3 Source connector with bucket name <$AWS_BUCKET_NAME>"
-curl -X PUT \
-     -H "Content-Type: application/json" \
-     --data '{
+playground connector create-or-update --connector s3-source << EOF
+{
                "tasks.max": "1",
                "connector.class": "io.confluent.connect.s3.source.S3SourceConnector",
-               "s3.region": "'"$AWS_REGION"'",
-               "s3.bucket.name": "'"$AWS_BUCKET_NAME"'",
-               "topics.dir": "'"$TAG"'",
+               "s3.region": "$AWS_REGION",
+               "s3.bucket.name": "$AWS_BUCKET_NAME",
+               "topics.dir": "$TAG",
                "format.class": "io.confluent.connect.s3.format.avro.AvroFormat",
                "confluent.license": "",
                "confluent.topic.bootstrap.servers": "broker:9092",
@@ -109,8 +107,8 @@ curl -X PUT \
                "transforms.AddPrefix.type": "org.apache.kafka.connect.transforms.RegexRouter",
                "transforms.AddPrefix.regex": ".*",
                "transforms.AddPrefix.replacement": "copy_of_$0"
-          }' \
-     http://localhost:8083/connectors/s3-source/config | jq .
+          }
+EOF
 
 sleep 10
 

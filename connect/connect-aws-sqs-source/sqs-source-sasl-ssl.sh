@@ -76,16 +76,14 @@ cd -
 
 
 log "Creating SQS Source connector with SASL_SSL authentication"
-curl -X PUT \
-     --cert ../../environment/sasl-ssl/security/connect.certificate.pem --key ../../environment/sasl-ssl/security/connect.key --tlsv1.2 --cacert ../../environment/sasl-ssl/security/snakeoil-ca-1.crt \
-     -H "Content-Type: application/json" \
-     --data '{
+playground connector create-or-update --connector sqs-source-sasl-ssl << EOF
+{
                "connector.class": "io.confluent.connect.sqs.source.SqsSourceConnector",
                "tasks.max": "1",
                "kafka.topic": "test-sqs-source-sasl-ssl",
-               "sqs.url": "'"$QUEUE_URL"'",
-               "aws.access.key.id" : "'"$AWS_ACCESS_KEY_ID"'",
-               "aws.secret.key.id": "'"$AWS_SECRET_ACCESS_KEY"'",
+               "sqs.url": "$QUEUE_URL",
+               "aws.access.key.id" : "$AWS_ACCESS_KEY_ID",
+               "aws.secret.key.id": "$AWS_SECRET_ACCESS_KEY",
                "confluent.license": "",
                "confluent.topic.bootstrap.servers": "broker:9092",
                "confluent.topic.replication.factor": "1",
@@ -100,8 +98,8 @@ curl -X PUT \
                "errors.tolerance": "all",
                "errors.log.enable": "true",
                "errors.log.include.messages": "true"
-          }' \
-     https://localhost:8083/connectors/sqs-source-sasl-ssl/config | jq .
+          }
+EOF
 
 sleep 10
 

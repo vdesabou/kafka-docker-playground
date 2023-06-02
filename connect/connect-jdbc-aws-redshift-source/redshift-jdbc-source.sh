@@ -106,9 +106,8 @@ SELECT * from CUSTOMERS;
 EOF
 
 log "Creating JDBC AWS Redshift source connector"
-curl -X PUT \
-     -H "Content-Type: application/json" \
-     --data '{
+playground connector create-or-update --connector redshift-jdbc-source << EOF
+{
                "connector.class": "io.confluent.connect.jdbc.JdbcSourceConnector",
                "tasks.max": "1",
                "connection.url": "jdbc:postgresql://'"$CLUSTER"':'"$PORT"'/dev?user=masteruser&password=myPassword1&ssl=false",
@@ -120,8 +119,8 @@ curl -X PUT \
                "validate.non.null":"false",
                "errors.log.enable": "true",
                "errors.log.include.messages": "true"
-          }' \
-     http://localhost:8083/connectors/redshift-jdbc-source/config | jq .
+          }
+EOF
 
 
 sleep 5

@@ -57,9 +57,8 @@ ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml
 
 
 log "Creating JMS weblogic source connector"
-curl -X PUT \
-     -H "Content-Type: application/json" \
-     --data '{
+playground connector create-or-update --connector weblogic-source << EOF
+{
                "connector.class": "io.confluent.connect.jms.JmsSourceConnector",
                "kafka.topic": "from-weblogic-messages",
                "java.naming.factory.initial": "weblogic.jndi.WLInitialContextFactory",
@@ -75,8 +74,8 @@ curl -X PUT \
                "confluent.license": "",
                "confluent.topic.bootstrap.servers": "broker:9092",
                "confluent.topic.replication.factor": "1"
-          }' \
-     http://localhost:8083/connectors/weblogic-source/config | jq .
+          }
+EOF
 
 
 sleep 5

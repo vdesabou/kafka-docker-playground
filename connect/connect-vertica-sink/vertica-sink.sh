@@ -22,9 +22,8 @@ log "Sending messages to topic mytable"
 seq -f "{\"f1\": \"value%g\"}" 10 | docker exec -i connect kafka-avro-console-producer --broker-list broker:9092 --property schema.registry.url=http://schema-registry:8081 --topic mytable --property value.schema='{"type":"record","name":"myrecord","fields":[{"name":"f1","type":"string"}]}'
 
 log "Creating Vertica sink connector"
-curl -X PUT \
-     -H "Content-Type: application/json" \
-     --data '{
+playground connector create-or-update --connector vertica-sink << EOF
+{
                "connector.class" : "io.confluent.vertica.VerticaSinkConnector",
                     "tasks.max" : "1",
                     "vertica.database": "docker",
@@ -37,8 +36,8 @@ curl -X PUT \
                     "topics": "mytable",
                     "confluent.topic.bootstrap.servers": "broker:9092",
                     "confluent.topic.replication.factor": "1"
-          }' \
-     http://localhost:8083/connectors/vertica-sink/config | jq .
+          }
+EOF
 
 sleep 10
 

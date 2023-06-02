@@ -67,7 +67,7 @@ $ curl -X PUT \
         "connector.class":"io.confluent.connect.kinesis.KinesisSourceConnector",
                "tasks.max": "1",
                "kafka.topic": "kinesis_topic",
-               "kinesis.stream": "'"$KINESIS_STREAM_NAME"'",
+               "kinesis.stream": "$KINESIS_STREAM_NAME",
                "confluent.license": "",
                "name": "kinesis-source",
                "confluent.topic.ssl.endpoint.identification.algorithm" : "https",

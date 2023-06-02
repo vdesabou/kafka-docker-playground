@@ -114,7 +114,7 @@ $ curl -X PUT \
      --data '{
                "connector.class": "io.confluent.connect.jdbc.JdbcSinkConnector",
                "tasks.max": "1",
-               "connection.url": "'"$CONNECTION_URL"'",
+               "connection.url": "$CONNECTION_URL",
                "topics": "FOO",
                "auto.create": "false",
                "key.converter":"org.apache.kafka.connect.storage.StringConverter",

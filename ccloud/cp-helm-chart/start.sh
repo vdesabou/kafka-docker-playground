@@ -191,8 +191,8 @@ kubectl -n cp-helm-charts -c cp-kafka-connect-server exec -i $CONNECT_POD_NAME -
                 "topic": "spooldir-json-topic",
                 "schema.generation.enabled": "true",
                 "value.converter" : "io.confluent.connect.avro.AvroConverter",
-                "value.converter.schema.registry.url": "'"$SCHEMA_REGISTRY_URL"'",
-                "value.converter.basic.auth.user.info": "'"$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO"'",
+                "value.converter.schema.registry.url": "$SCHEMA_REGISTRY_URL",
+                "value.converter.basic.auth.user.info": "$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO",
                 "value.converter.basic.auth.credentials.source": "USER_INFO"
           }' \
      http://localhost:8083/connectors/spool-dir-source$RANDOM/config | jq

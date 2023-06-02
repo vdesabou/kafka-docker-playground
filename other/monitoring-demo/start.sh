@@ -43,9 +43,8 @@ log "-------------------------------------"
 
 
 log "Creating MySQL source connector"
-curl -X PUT \
-     -H "Content-Type: application/json" \
-     --data '{
+playground connector create-or-update --connector mysql-source << EOF
+{
                "connector.class":"io.confluent.connect.jdbc.JdbcSourceConnector",
                "tasks.max":"1",
                "connection.url":"jdbc:mysql://mysql:3306/db?user=user&password=password&useSSL=false",
@@ -54,8 +53,8 @@ curl -X PUT \
                "timestamp.column.name":"last_modified",
                "incrementing.column.name":"id",
                "topic.prefix":"mysql-"
-          }' \
-     http://localhost:8083/connectors/mysql-source/config | jq .
+          }
+EOF
 
 log "Adding an element to the table"
 docker exec mysql mysql --user=root --password=password --database=db -e "
@@ -85,9 +84,8 @@ fi
 
 
 log "Creating http-sink connector"
-curl -X PUT \
-     -H "Content-Type: application/json" \
-     --data '{
+playground connector create-or-update --connector http-sink << EOF
+{
                "topics": "mysql-application",
                "tasks.max": "1",
                "connector.class": "io.confluent.connect.http.HttpSinkConnector",
@@ -104,8 +102,8 @@ curl -X PUT \
                "auth.type": "BASIC",
                "connection.user": "admin",
                "connection.password": "password"
-          }' \
-     http://localhost:8083/connectors/http-sink/config | jq .
+          }
+EOF
 
 sleep 30
 
@@ -116,9 +114,8 @@ then
 fi
 
 log "Creating Elasticsearch Sink connector"
-curl -X PUT \
-     -H "Content-Type: application/json" \
-     --data '{
+playground connector create-or-update --connector elasticsearch-sink << EOF
+{
         "connector.class": "io.confluent.connect.elasticsearch.ElasticsearchSinkConnector",
           "tasks.max": "1",
           "topics": "mysql-application",
@@ -126,8 +123,8 @@ curl -X PUT \
           "connection.url": "http://elasticsearch:9200",
           "type.name": "kafka-connect",
           "name": "elasticsearch-sink"
-          }' \
-     http://localhost:8083/connectors/elasticsearch-sink/config | jq .
+          }
+EOF
 
 sleep 40
 
@@ -155,9 +152,8 @@ seq -f "us_sale_%g ${RANDOM}" 10 | docker container exec -i connect-us bash -c "
 log "Consolidating all sales in the US"
 
 docker container exec connect-us \
-curl -X PUT \
-     -H "Content-Type: application/json" \
-     --data '{
+playground connector create-or-update --connector replicate-europe-to-us << EOF
+{
           "connector.class":"io.confluent.connect.replicator.ReplicatorSourceConnector",
           "key.converter": "io.confluent.connect.replicator.util.ByteArrayConverter",
           "value.converter": "io.confluent.connect.replicator.util.ByteArrayConverter",
@@ -170,16 +166,15 @@ curl -X PUT \
           "confluent.topic.replication.factor": 1,
           "provenance.header.enable": true,
           "topic.whitelist": "sales_EUROPE"
-          }' \
-     http://localhost:8083/connectors/replicate-europe-to-us/config | jq .
+          }
+EOF
 
 
 log "Consolidating all sales in Europe"
 
 docker container exec connect-europe \
-curl -X PUT \
-     -H "Content-Type: application/json" \
-     --data '{
+playground connector create-or-update --connector replicate-us-to-europe << EOF
+{
           "connector.class":"io.confluent.connect.replicator.ReplicatorSourceConnector",
           "key.converter": "io.confluent.connect.replicator.util.ByteArrayConverter",
           "value.converter": "io.confluent.connect.replicator.util.ByteArrayConverter",
@@ -192,8 +187,8 @@ curl -X PUT \
           "confluent.topic.replication.factor": 1,
           "provenance.header.enable": true,
           "topic.whitelist": "sales_US"
-          }' \
-     http://localhost:8083/connectors/replicate-us-to-europe/config | jq .
+          }
+EOF
 
 sleep 120
 

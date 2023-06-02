@@ -122,18 +122,17 @@ docker exec -i connect kafka-avro-console-producer --broker-list broker:9092 --p
 EOF
 
 log "Creating Snowflake Sink connector"
-curl -X PUT \
-     -H "Content-Type: application/json" \
-     --data '{
+playground connector create-or-update --connector snowflake-sink << EOF
+{
                "connector.class": "com.snowflake.kafka.connector.SnowflakeSinkConnector",
                "topics": "test_table",
                "tasks.max": "1",
-               "snowflake.url.name": "'"$SNOWFLAKE_URL"'",
-               "snowflake.user.name": "'"$PLAYGROUND_USER"'",
-               "snowflake.user.role": "'"$PLAYGROUND_CONNECTOR_ROLE"'",
+               "snowflake.url.name": "$SNOWFLAKE_URL",
+               "snowflake.user.name": "$PLAYGROUND_USER",
+               "snowflake.user.role": "$PLAYGROUND_CONNECTOR_ROLE",
                "snowflake.private.key":"${file:/data:private.key}",
                "snowflake.private.key.passphrase": "confluent",
-               "snowflake.database.name": "'"$PLAYGROUND_DB"'",
+               "snowflake.database.name": "$PLAYGROUND_DB",
                "jvm.proxy.host": "squid",
                "jvm.proxy.port": "3128",
                "snowflake.schema.name":"PUBLIC",
@@ -142,8 +141,8 @@ curl -X PUT \
                "key.converter":"org.apache.kafka.connect.storage.StringConverter",
                "value.converter": "io.confluent.connect.avro.AvroConverter",
                "value.converter.schema.registry.url": "http://schema-registry:8081"
-          }' \
-     http://localhost:8083/connectors/snowflake-sink/config | jq .
+          }
+EOF
 
 
 sleep 120

@@ -29,9 +29,8 @@ docker exec broker kafka-acls --bootstrap-server broker:9092 --add --allow-princ
 #         User:sftp has Allow permission for operations: Write from hosts: *
 
 log "Creating CSV SFTP Source connector"
-curl -X PUT \
-     -H "Content-Type: application/json" \
-     --data '{
+playground connector create-or-update --connector sftp-source << EOF
+{
         "topics": "test_sftp_sink",
                "tasks.max": "1",
                "connector.class": "io.confluent.connect.sftp.SftpCsvSourceConnector",
@@ -51,8 +50,8 @@ curl -X PUT \
                "producer.override.sasl.mechanism": "PLAIN",
                "producer.override.security.protocol": "SASL_PLAINTEXT",
                "producer.override.sasl.jaas.config" : "org.apache.kafka.common.security.plain.PlainLoginModule required username=\"sftp\" password=\"sftp-secret\";"
-          }' \
-     http://localhost:8083/connectors/sftp-source/config | jq .
+          }
+EOF
 
 sleep 5
 

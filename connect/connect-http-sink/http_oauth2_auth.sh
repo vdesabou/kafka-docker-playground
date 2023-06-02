@@ -15,9 +15,8 @@ log "Running OAuth2 Authentication Example"
 log "-------------------------------------"
 
 log "Creating http-sink connector"
-curl -X PUT \
-     -H "Content-Type: application/json" \
-     --data '{
+playground connector create-or-update --connector http-sink << EOF
+{
           "topics": "http-messages",
                "tasks.max": "1",
                "connector.class": "io.confluent.connect.http.HttpSinkConnector",
@@ -35,8 +34,8 @@ curl -X PUT \
                "oauth2.token.url": "http://http-service-oauth2-auth:8080/oauth/token",
                "oauth2.client.id": "kc-client",
                "oauth2.client.secret": "kc-secret"
-          }' \
-     http://localhost:8083/connectors/http-sink/config | jq .
+          }
+EOF
 
 
 sleep 10

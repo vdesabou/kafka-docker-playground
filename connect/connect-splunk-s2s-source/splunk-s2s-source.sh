@@ -7,9 +7,8 @@ source ${DIR}/../../scripts/utils.sh
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
 
 log "Creating Splunk S2S source connector"
-curl -X PUT \
-     -H "Content-Type: application/json" \
-     --data '{
+playground connector create-or-update --connector splunk-s2s-source << EOF
+{
                "connector.class": "io.confluent.connect.splunk.s2s.SplunkS2SSourceConnector",
                "tasks.max": "1",
                "kafka.topic": "splunk-s2s-events",
@@ -20,8 +19,8 @@ curl -X PUT \
                "value.converter.schemas.enable": "false",
                "confluent.topic.bootstrap.servers": "broker:9092",
                "confluent.topic.replication.factor": "1"
-          }' \
-     http://localhost:8083/connectors/splunk-s2s-source/config | jq .
+          }
+EOF
 
 sleep 5
 

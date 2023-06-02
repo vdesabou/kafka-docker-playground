@@ -50,9 +50,8 @@ GO
 EOF
 
 log "Creating Debezium SQL Server source connector"
-curl -X PUT \
-     -H "Content-Type: application/json" \
-     --data '{
+playground connector create-or-update --connector debezium-sqlserver-source << EOF
+{
 
               "connector.class": "io.debezium.connector.sqlserver.SqlServerConnector",
               "tasks.max": "1",
@@ -74,8 +73,8 @@ curl -X PUT \
               "topic.prefix": "server1",
               "schema.history.internal.kafka.bootstrap.servers": "broker:9092",
               "schema.history.internal.kafka.topic": "schema-changes.inventory"
-          }' \
-     http://localhost:8083/connectors/debezium-sqlserver-source/config | jq .
+          }
+EOF
 
 sleep 5
 
@@ -113,9 +112,8 @@ EOF
 
 
 log "Updating Debezium SQL Server source connector with new table customers2"
-curl -X PUT \
-     -H "Content-Type: application/json" \
-     --data '{
+playground connector create-or-update --connector debezium-sqlserver-source << EOF
+{
               "connector.class": "io.debezium.connector.sqlserver.SqlServerConnector",
               "tasks.max": "1",
               "database.hostname": "sqlserver",
@@ -136,8 +134,8 @@ curl -X PUT \
               "topic.prefix": "server1",
               "schema.history.internal.kafka.bootstrap.servers": "broker:9092",
               "schema.history.internal.kafka.topic": "schema-changes.inventory"
-          }' \
-     http://localhost:8083/connectors/debezium-sqlserver-source/config | jq .
+          }
+EOF
 
 log "Add another table customers2"
 docker exec -i sqlserver /opt/mssql-tools/bin/sqlcmd -U sa -P Password! << EOF

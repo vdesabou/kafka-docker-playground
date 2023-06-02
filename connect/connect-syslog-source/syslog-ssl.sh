@@ -11,9 +11,8 @@ docker cp example.key.pem connect:/
 docker cp example.crt.pem connect:/
 
 log "Creating Syslog Source connector"
-curl -X PUT \
-     -H "Content-Type: application/json" \
-     --data '{
+playground connector create-or-update --connector syslog-source << EOF
+{
                "tasks.max": "1",
                     "connector.class": "io.confluent.connect.syslog.SyslogSourceConnector",
                     "syslog.port": "5454",
@@ -23,8 +22,8 @@ curl -X PUT \
                     "confluent.topic.replication.factor": "1",
                     "syslog.ssl.key.path": "/example.key.pem",
                     "syslog.ssl.cert.chain.path": "/example.crt.pem"
-          }' \
-     http://localhost:8083/connectors/syslog-source/config | jq .
+          }
+EOF
 
 
 sleep 10

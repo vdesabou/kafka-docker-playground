@@ -156,17 +156,16 @@ docker exec -i oracle sqlplus C\#\#MYUSER/mypassword@//localhost:1521/ORCLPDB1 <
 EOF
 
 log "Creating Oracle source connector"
-curl -X PUT \
-     -H "Content-Type: application/json" \
-     --data '{
+playground connector create-or-update --connector cdc-oracle-source-pdb-cloud << EOF
+{
                "connector.class": "io.confluent.connect.oracle.cdc.OracleCdcSourceConnector",
                "tasks.max":2,
                "key.converter" : "io.confluent.connect.avro.AvroConverter",
-               "key.converter.schema.registry.url": "'"$SCHEMA_REGISTRY_URL"'",
+               "key.converter.schema.registry.url": "$SCHEMA_REGISTRY_URL",
                "key.converter.basic.auth.user.info": "${file:/data:schema.registry.basic.auth.user.info}",
                "key.converter.basic.auth.credentials.source": "USER_INFO",
                "value.converter" : "io.confluent.connect.avro.AvroConverter",
-               "value.converter.schema.registry.url": "'"$SCHEMA_REGISTRY_URL"'",
+               "value.converter.schema.registry.url": "$SCHEMA_REGISTRY_URL",
                "value.converter.basic.auth.user.info": "${file:/data:schema.registry.basic.auth.user.info}",
                "value.converter.basic.auth.credentials.source": "USER_INFO",
 
@@ -207,8 +206,8 @@ curl -X PUT \
                "connection.pool.max.size": 20,
                "redo.log.row.fetch.size":1,
                "oracle.dictionary.mode": "auto"
-          }' \
-     http://localhost:8083/connectors/cdc-oracle-source-pdb-cloud/config | jq .
+          }
+EOF
 
 log "Waiting 20s for connector to read existing data"
 sleep 20

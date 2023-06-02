@@ -52,9 +52,8 @@ EOF
 CLOUDWATCH_METRICS_URL="https://monitoring.$AWS_REGION.amazonaws.com"
 
 log "Creating AWS CloudWatch metrics Sink connector"
-curl -X PUT \
-     -H "Content-Type: application/json" \
-     --data '{
+playground connector create-or-update --connector aws-cloudwatch-metrics-sink << EOF
+{
                "tasks.max": "1",
                "topics": "cloudwatch-metrics-topic",
                "connector.class": "io.confluent.connect.aws.cloudwatch.metrics.AwsCloudWatchMetricsSinkConnector",
@@ -62,16 +61,16 @@ curl -X PUT \
                "key.converter.schema.registry.url": "http://schema-registry:8081",
                "value.converter": "io.confluent.connect.avro.AvroConverter",
                "value.converter.schema.registry.url": "http://schema-registry:8081",
-               "aws.cloudwatch.metrics.url": "'"$CLOUDWATCH_METRICS_URL"'",
+               "aws.cloudwatch.metrics.url": "$CLOUDWATCH_METRICS_URL",
                "aws.cloudwatch.metrics.namespace": "service-namespace",
-               "aws.access.key.id" : "'"$AWS_ACCESS_KEY_ID"'",
-               "aws.secret.access.key": "'"$AWS_SECRET_ACCESS_KEY"'",
+               "aws.access.key.id" : "$AWS_ACCESS_KEY_ID",
+               "aws.secret.access.key": "$AWS_SECRET_ACCESS_KEY",
                "behavior.on.malformed.metric": "FAIL",
                "confluent.license": "",
                "confluent.topic.bootstrap.servers": "broker:9092",
                "confluent.topic.replication.factor": "1"
-          }' \
-     http://localhost:8083/connectors/aws-cloudwatch-metrics-sink/config | jq .
+          }
+EOF
 
 sleep 10
 

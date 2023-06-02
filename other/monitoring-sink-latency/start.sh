@@ -7,9 +7,8 @@ source ${DIR}/../../scripts/utils.sh
 ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.yml"
 
 log "Creating datagen-source-users connector"
-curl -X PUT \
-     -H "Content-Type: application/json" \
-     --data '{
+playground connector create-or-update --connector datagen-source-users << EOF
+{
                "topics": "users",
                "tasks.max": "1",
                "connector.class": "io.confluent.kafka.connect.datagen.DatagenConnector",
@@ -22,13 +21,12 @@ curl -X PUT \
                "value.converter.schemas.enable": "false",
                "max.interval": 100,
                "iterations": -1
-          }' \
-     http://localhost:8083/connectors/datagen-source-users/config | jq .
+          }
+EOF
 
 log "Creating http-sink connector"
-curl -X PUT \
-     -H "Content-Type: application/json" \
-     --data '{
+playground connector create-or-update --connector http-sink << EOF
+{
                "topics": "users",
                "tasks.max": "1",
                "connector.class": "io.confluent.connect.http.HttpSinkConnector",
@@ -47,13 +45,12 @@ curl -X PUT \
                "connection.user": "admin",
                "connection.password": "password",
                "retry.on.status.codes" : "400-500"
-          }' \
-     http://localhost:8083/connectors/http-sink/config | jq .
+          }
+EOF
 
 log "Creating http-sink-with-batching connector"
-curl -X PUT \
-     -H "Content-Type: application/json" \
-     --data '{
+playground connector create-or-update --connector http-sink-with-batching << EOF
+{
                "topics": "users",
                "tasks.max": "1",
                "connector.class": "io.confluent.connect.http.HttpSinkConnector",
@@ -73,13 +70,12 @@ curl -X PUT \
                "connection.password": "password",
                "retry.on.status.codes" : "400-500",
                "batch.max.size": "1000"
-          }' \
-     http://localhost:8083/connectors/http-sink-with-batching/config | jq .
+          }
+EOF
 
 log "Creating http-sink-with-consumer-quota connector"
-curl -X PUT \
-     -H "Content-Type: application/json" \
-     --data '{
+playground connector create-or-update --connector http-sink-with-consumer-quota << EOF
+{
                "topics": "users",
                "tasks.max": "1",
                "connector.class": "io.confluent.connect.http.HttpSinkConnector",
@@ -98,8 +94,8 @@ curl -X PUT \
                "connection.user": "admin",
                "connection.password": "password",
                "retry.on.status.codes" : "400-500"
-          }' \
-     http://localhost:8083/connectors/http-sink-with-consumer-quota/config | jq .
+          }
+EOF
 
 # log "Add a consumption 256B per broker quota to client.id connector-consumer-http-sink-with-consumer-quota-0" 
 docker exec broker env -i bash -l -c "kafka-configs  --bootstrap-server localhost:9092 --alter --add-config 'consumer_byte_rate=256' --entity-name connector-consumer-http-sink-with-consumer-quota-0 --entity-type clients"
@@ -109,9 +105,8 @@ log "Creating s3-sink bucket"
 docker exec s3 awslocal s3 mb s3://s3-sink-bucket
 
 log "Creating s3-sink connector"
-curl -X PUT \
-     -H "Content-Type: application/json" \
-     --data '{
+playground connector create-or-update --connector s3-sink << EOF
+{
                "topics": "users",
                "tasks.max": "1",
                "connector.class": "io.confluent.connect.s3.S3SinkConnector",
@@ -136,13 +131,12 @@ curl -X PUT \
                "format.class": "io.confluent.connect.s3.format.avro.AvroFormat",
                "schema.compatibility": "NONE"
                
-          }' \
-     http://localhost:8083/connectors/s3-sink/config | jq .
+          }
+EOF
 
 log "Creating http-sink-with-fetch-latency connector"
-curl -X PUT \
-     -H "Content-Type: application/json" \
-     --data '{
+playground connector create-or-update --connector http-sink-with-fetch-latency << EOF
+{
                "topics": "users",
                "tasks.max": "1",
                "connector.class": "io.confluent.connect.http.HttpSinkConnector",
@@ -162,13 +156,12 @@ curl -X PUT \
                "connection.password": "password",
                "retry.on.status.codes" : "400-500"
 
-          }' \
-     http://localhost:8084/connectors/http-sink-with-fetch-latency/config | jq .
+          }
+EOF
 
 log "Creating http-sink-with-put-latency connector"
-curl -X PUT \
-     -H "Content-Type: application/json" \
-     --data '{
+playground connector create-or-update --connector http-sink-with-put-latency << EOF
+{
                "topics": "users",
                "tasks.max": "1",
                "connector.class": "io.confluent.connect.http.HttpSinkConnector",
@@ -187,13 +180,12 @@ curl -X PUT \
                "connection.user": "admin",
                "connection.password": "password",
                "retry.on.status.codes" : "400-500"
-          }' \
-     http://localhost:8085/connectors/http-sink-with-put-latency/config | jq .
+          }
+EOF
 
 log "Creating http-sink-with-put-latency-and-batching connector"
-curl -X PUT \
-     -H "Content-Type: application/json" \
-     --data '{
+playground connector create-or-update --connector http-sink-with-put-latency-and-batching << EOF
+{
                "topics": "users",
                "tasks.max": "1",
                "connector.class": "io.confluent.connect.http.HttpSinkConnector",
@@ -213,16 +205,15 @@ curl -X PUT \
                "connection.password": "password",
                "retry.on.status.codes" : "400-500",
                "batch.max.size": "1000"
-          }' \
-     http://localhost:8085/connectors/http-sink-with-put-latency-and-batching/config | jq .
+          }
+EOF
 
 log "Creating s3-sink-with-put-latency bucket"
 docker exec s3 awslocal s3 mb s3://s3-sink-with-put-latency-bucket
 
 log "Creating s3-sink-with-put-latency connector"
-curl -X PUT \
-     -H "Content-Type: application/json" \
-     --data '{
+playground connector create-or-update --connector s3-sink-with-put-latency << EOF
+{
                "topics": "users",
                "tasks.max": "1",
                "connector.class": "io.confluent.connect.s3.S3SinkConnector",
@@ -247,8 +238,8 @@ curl -X PUT \
                "format.class": "io.confluent.connect.s3.format.avro.AvroFormat",
                "schema.compatibility": "NONE"
                
-          }' \
-     http://localhost:8085/connectors/s3-sink-with-put-latency/config | jq .
+          }
+EOF
 
 source ${DIR}/tc-utils.sh
 

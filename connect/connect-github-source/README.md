@@ -51,7 +51,7 @@ $ curl -X PUT \
                     "github.repositories":"apache/kafka",
                     "github.tables":"stargazers",
                     "github.since":"2019-01-01",
-                    "github.access.token": "'"$CONNECTOR_GITHUB_ACCESS_TOKEN"'",
+                    "github.access.token": "$CONNECTOR_GITHUB_ACCESS_TOKEN",
                     "key.converter": "io.confluent.connect.avro.AvroConverter",
                     "key.converter.schema.registry.url":"http://schema-registry:8081",
                     "value.converter": "io.confluent.connect.avro.AvroConverter",

@@ -18,9 +18,8 @@ sleep 10
 docker exec namenode bash -c "/opt/hadoop-2.7.4/bin/hdfs dfs -chmod 777  /"
 
 log "Creating HDFS Sink connector"
-curl -X PUT \
-     -H "Content-Type: application/json" \
-     --data '{
+playground connector create-or-update --connector hdfs-sink << EOF
+{
                "connector.class":"io.confluent.connect.hdfs.HdfsSinkConnector",
                "tasks.max":"1",
                "topics":"test_hdfs",
@@ -37,8 +36,8 @@ curl -X PUT \
                "value.converter":"io.confluent.connect.avro.AvroConverter",
                "value.converter.schema.registry.url":"http://schema-registry:8081",
                "schema.compatibility":"BACKWARD"
-          }' \
-     http://localhost:8083/connectors/hdfs-sink/config | jq .
+          }
+EOF
 
 
 log "Sending messages to topic test_hdfs"
