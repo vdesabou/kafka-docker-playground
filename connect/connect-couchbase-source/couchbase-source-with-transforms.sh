@@ -31,7 +31,7 @@ playground connector create-or-update --connector couchbase-source << EOF
                "couchbase.flow.control.buffer": "128m",
                "couchbase.persistence.polling.interval": "100ms",
                "transforms": "KeyExample,dropSufffix",
-               "transforms.KeyExample.type": "io.confluent.connect.transforms.ExtractTopic$Key",
+               "transforms.KeyExample.type": "io.confluent.connect.transforms.ExtractTopic\$Key",
                "transforms.KeyExample.skip.missing.or.null": "true",
                "transforms.dropSufffix.type": "org.apache.kafka.connect.transforms.RegexRouter",
                "transforms.dropSufffix.regex": "(.*)_.*",

@@ -105,7 +105,7 @@ playground connector create-or-update --connector salesforce-platform-events-sin
                     "reporter.result.topic.name": "success-responses",
                     "reporter.result.topic.replication.factor": 1,
                     "transforms": "MaskField",
-                    "transforms.MaskField.type": "org.apache.kafka.connect.transforms.MaskField$Value",
+                    "transforms.MaskField.type": "org.apache.kafka.connect.transforms.MaskField\$Value",
                     "transforms.MaskField.fields": "Message__c",
                     "confluent.license": "",
                     "confluent.topic.bootstrap.servers": "broker:9092",

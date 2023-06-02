@@ -49,7 +49,7 @@ curl -X PUT \
                 "value.converter": "org.apache.kafka.connect.json.JsonConverter",
                 "value.converter.schemas.enable": "false",
                 "transforms": "RenameField",
-               "transforms.RenameField.type": "org.apache.kafka.connect.transforms.ReplaceField$Value",
+               "transforms.RenameField.type": "org.apache.kafka.connect.transforms.ReplaceField\$Value",
                "transforms.RenameField.renames": "TIME:@timestamp"
           }' \
      http://localhost:8083/connectors/elastic-sink/config

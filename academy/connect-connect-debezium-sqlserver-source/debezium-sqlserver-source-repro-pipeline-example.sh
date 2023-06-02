@@ -95,7 +95,7 @@ playground connector create-or-update --connector postgres-sink << EOF
                "topics": "mytable",
                "auto.create": "true",
                "transforms": "flatten",
-               "transforms.flatten.type": "org.apache.kafka.connect.transforms.Flatten$Value",
+               "transforms.flatten.type": "org.apache.kafka.connect.transforms.Flatten\$Value",
                "transforms.flatten.delimiter": "."
           }
 EOF

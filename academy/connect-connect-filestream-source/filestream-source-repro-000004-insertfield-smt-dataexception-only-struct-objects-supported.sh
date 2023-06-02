@@ -22,7 +22,7 @@ playground connector create-or-update --connector filestream-source << EOF
                "errors.log.include.messages": "true",
 
                "transforms": "InsertField",
-               "transforms.InsertField.type": "org.apache.kafka.connect.transforms.InsertField$Value",
+               "transforms.InsertField.type": "org.apache.kafka.connect.transforms.InsertField\$Value",
                "transforms.InsertField.static.field": "MessageSource",
                "transforms.InsertField.static.value": "Kafka Connect framework"
           }

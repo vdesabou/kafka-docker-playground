@@ -135,7 +135,7 @@ playground connector create-or-update --connector salesforce-bulkapi-sink << EOF
                     "reporter.result.topic.name": "success-responses",
                     "reporter.result.topic.replication.factor": 1,
                     "transforms" : "InsertField",
-                    "transforms.InsertField.type" : "org.apache.kafka.connect.transforms.InsertField$Value",
+                    "transforms.InsertField.type" : "org.apache.kafka.connect.transforms.InsertField\$Value",
                     "transforms.InsertField.static.field" : "_EventType",
                     "transforms.InsertField.static.value" : "created",
                     "confluent.license": "",

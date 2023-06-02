@@ -57,7 +57,7 @@ playground connector create-or-update --connector my-rbac-connector << EOF
                "value.converter.basic.auth.user.info": "${secret:my-rbac-connector:username}:${secret:my-rbac-connector:username}",
                "consumer.override.sasl.jaas.config": "org.apache.kafka.common.security.oauthbearer.OAuthBearerLoginModule required username=\"${secret:my-rbac-connector:username}\" password=\"${secret:my-rbac-connector:password}\" metadataServerUrls=\"http://broker:8091\";",
                "transforms": "InsertField",
-               "transforms.InsertField.type": "org.apache.kafka.connect.transforms.InsertField$Value",
+               "transforms.InsertField.type": "org.apache.kafka.connect.transforms.InsertField\$Value",
                "transforms.InsertField.static.field": "AddedBySMT",
                "transforms.InsertField.static.value": "${secret:my-rbac-connector:my-smt-password}"
           }

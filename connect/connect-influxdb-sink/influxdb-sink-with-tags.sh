@@ -31,10 +31,10 @@ curl -s -X PUT \
                     "influxdb.url": "http://influxdb:8086",
                     "topics": "product",
                     "transforms": "InsertField,RenameField",
-                    "transforms.InsertField.type": "org.apache.kafka.connect.transforms.InsertField$Value",
+                    "transforms.InsertField.type": "org.apache.kafka.connect.transforms.InsertField\$Value",
                     "transforms.InsertField.static.field": "measurement",
                     "transforms.InsertField.static.value": "product",
-                    "transforms.RenameField.type": "org.apache.kafka.connect.transforms.ReplaceField$Value",
+                    "transforms.RenameField.type": "org.apache.kafka.connect.transforms.ReplaceField\$Value",
                     "transforms.RenameField.renames": "product:name"
                }
           }' \

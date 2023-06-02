@@ -21,7 +21,7 @@ playground connector create-or-update --connector filestream-sink << EOF
                "key.converter": "org.apache.kafka.connect.storage.StringConverter",
                "value.converter": "org.apache.kafka.connect.storage.StringConverter",
                "transforms": "InsertField",
-               "transforms.InsertField.type": "org.apache.kafka.connect.transforms.InsertField$Value",
+               "transforms.InsertField.type": "org.apache.kafka.connect.transforms.InsertField\$Value",
                "transforms.InsertField.static.field": "MessageSource",
                "transforms.InsertField.static.value": "Kafka Connect framework"
           }

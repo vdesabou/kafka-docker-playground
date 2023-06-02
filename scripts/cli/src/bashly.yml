@@ -1015,15 +1015,18 @@ commands:
         🔗 Connector name
 
     examples: |
-      playground ccloud-connector create-or-update -c filestream-sink << EOF
+      playground ccloud-connector create-or-update --connector HttpSink << EOF
       {
-          "tasks.max": "1",
-          "connector.class": "org.apache.kafka.connect.file.FileStreamSinkConnector",
-          "topics": "filestream",
-          "file": "/tmp/output.json",
-          "key.converter": "org.apache.kafka.connect.storage.StringConverter",
-          "value.converter": "org.apache.kafka.connect.json.JsonConverter",
-          "value.converter.schemas.enable": "false"
+          "connector.class": "HttpSink",
+          "name": "HttpSink",
+          "kafka.auth.mode": "KAFKA_API_KEY",
+          "kafka.api.key": "$CLOUD_KEY",
+          "kafka.api.secret": "$CLOUD_SECRET",
+          "topics": "http-topic",
+          "input.data.format": "AVRO",
+          "http.api.url": "http://httpstat.us/200/",
+          "behavior.on.error": "fail",
+          "tasks.max" : "1"
       }
       EOF
 
