@@ -18,6 +18,8 @@ commands:
 - name: get-ccloud-connector-list
   help: Return some completion for ccloud connector list
   private: true
+  dependencies:
+    confluent: visit $(blue_underlined https://docs.confluent.io/confluent-cli/current/overview.html) to install
 
 - name: get-kafka-region-list
   help: Return some completion for confluent cloud kafka cluster region list
@@ -953,6 +955,8 @@ commands:
   group: Connector
   filters:
   - ccloud_environment
+  dependencies:
+    confluent: visit $(blue_underlined https://docs.confluent.io/confluent-cli/current/overview.html) to install
   help: |-
     🔗☁️ Fully Managed Connector commands
   environment_variables:

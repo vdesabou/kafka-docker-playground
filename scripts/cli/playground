@@ -9875,7 +9875,7 @@ playground_connector_status_command() {
 
   connectors=$(curl -s $security "$connect_url/connectors/" | jq -r '.[]')
 
-  log "🧩 Displaying connector(s) status"
+  log "🧩 Displaying connector status"
   if [ -z "$connectors" ]
   then
       log "💤 There are no connectors running !"
@@ -10655,6 +10655,15 @@ playground_get_ccloud_connector_list_parse_requirements() {
 
     esac
   done
+
+  # :command.dependencies_filter
+  if command -v confluent >/dev/null 2>&1; then
+    deps['confluent']="$(command -v confluent | head -n1)"
+  else
+    printf "missing dependency: confluent\n" >&2
+    printf "%s\n" "visit $(blue_underlined https://docs.confluent.io/confluent-cli/current/overview.html) to install" >&2
+    exit 1
+  fi
 
   # :command.command_filter
   action="get-ccloud-connector-list"
@@ -14345,6 +14354,15 @@ playground_ccloud_connector_parse_requirements() {
   fi
   if [[ -z "${CLOUD_API_SECRET:-}" ]]; then
     printf "missing required environment variable: CLOUD_API_SECRET\n" >&2
+    exit 1
+  fi
+
+  # :command.dependencies_filter
+  if command -v confluent >/dev/null 2>&1; then
+    deps['confluent']="$(command -v confluent | head -n1)"
+  else
+    printf "missing dependency: confluent\n" >&2
+    printf "%s\n" "visit $(blue_underlined https://docs.confluent.io/confluent-cli/current/overview.html) to install" >&2
     exit 1
   fi
 
