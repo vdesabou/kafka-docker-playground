@@ -1451,11 +1451,11 @@ function create_ccloud_connector() {
 }
 
 function validate_ccloud_connector_up() {
-  confluent connect cluster list -o json | jq -e 'map(select(.name == "$1" and .status == "RUNNING")) | .[]' > /dev/null 2>&1
+  confluent connect cluster list -o json | jq -e 'map(select(.name == "'"$1"'" and .status == "RUNNING")) | .[]' > /dev/null 2>&1
 }
 
 function get_ccloud_connector_lcc() {
-  confluent connect cluster list -o json | jq -r -e 'map(select(.name == "$1")) | .[].id'
+  confluent connect cluster list -o json | jq -r -e 'map(select(.name == "'"$1"'")) | .[].id'
 }
 
 function ccloud::retry() {
@@ -1481,9 +1481,10 @@ function ccloud::retry() {
 }
 
 function wait_for_ccloud_connector_up() {
-  connectorName=$1
+  filename=$1
   maxWait=$2
 
+  connectorName=$(cat $filename | jq -r .name)
   connectorId=$(get_ccloud_connector_lcc $connectorName)
   log "Waiting up to $maxWait seconds for connector $connectorName ($connectorId) to be RUNNING"
   ccloud::retry $maxWait validate_ccloud_connector_up $connectorName || exit 1
@@ -1494,7 +1495,8 @@ function wait_for_ccloud_connector_up() {
 
 
 function delete_ccloud_connector() {
-  connectorName=$1
+  filename=$1
+  connectorName=$(cat $filename | jq -r .name)
   connectorId=$(get_ccloud_connector_lcc $connectorName)
 
   log "Deleting connector $connectorName ($connectorId)"
@@ -1778,7 +1780,7 @@ function ccloud::get_environment_id_from_service_id() {
   SERVICE_ACCOUNT_ID=$1
 
   ENVIRONMENT_NAME_PREFIX=${ENVIRONMENT_NAME_PREFIX:-"pg-$SERVICE_ACCOUNT_ID"}
-  local environment_id=$(confluent environment list -o json | jq -r 'map(select(.name | startswith("$ENVIRONMENT_NAME_PREFIX"))) | .[].id')
+  local environment_id=$(confluent environment list -o json | jq -r 'map(select(.name | startswith("'"$ENVIRONMENT_NAME_PREFIX"'"))) | .[].id')
 
   echo $environment_id
 
@@ -1804,7 +1806,7 @@ function ccloud::find_cluster() {
   CLUSTER_CLOUD=$2
   CLUSTER_REGION=$3
 
-  local FOUND_CLUSTER=$(confluent kafka cluster list -o json | jq -c -r '.[] | select((.name == "$CLUSTER_NAME"'") and (.provider == "'"$CLUSTER_CLOUD"'") and (.region == "'"$CLUSTER_REGION"))')
+  local FOUND_CLUSTER=$(confluent kafka cluster list -o json | jq -c -r '.[] | select((.name == "'"$CLUSTER_NAME"'") and (.provider == "'"$CLUSTER_CLOUD"'") and (.region == "'"$CLUSTER_REGION"'"))')
   [[ ! -z "$FOUND_CLUSTER" ]] && {
       echo "$FOUND_CLUSTER" | jq -r .id
       return 0 
@@ -1891,7 +1893,7 @@ function ccloud::enable_schema_registry() {
 function ccloud::find_credentials_resource() {
   SERVICE_ACCOUNT_ID=$1
   RESOURCE=$2
-  local FOUND_CRED=$(confluent api-key list -o json | jq -c -r 'map(select((.resource_id == "$RESOURCE"'") and (.owner_resource_id == "'"$SERVICE_ACCOUNT_ID")))')
+  local FOUND_CRED=$(confluent api-key list -o json | jq -c -r 'map(select((.resource_id == "'"$RESOURCE"'") and (.owner_resource_id == "'"$SERVICE_ACCOUNT_ID"'")))')
   local FOUND_COUNT=$(echo "$FOUND_CRED" | jq 'length')
   [[ $FOUND_COUNT -ne 0 ]] && {
       echo "$FOUND_CRED" | jq -r '.[0].api_key'
@@ -1936,7 +1938,7 @@ function ccloud::find_ksqldb_app() {
   KSQLDB_NAME=$1
   CLUSTER=$2
 
-  local FOUND_APP=$(confluent ksql cluster list -o json | jq -c -r 'map(select((.name == "$KSQLDB_NAME"'") and (.kafka == "'"$CLUSTER")))')
+  local FOUND_APP=$(confluent ksql cluster list -o json | jq -c -r 'map(select((.name == "'"$KSQLDB_NAME"'") and (.kafka == "'"$CLUSTER"'")))')
   local FOUND_COUNT=$(echo "$FOUND_APP" | jq 'length')
   [[ $FOUND_COUNT -ne 0 ]] && {
       echo "$FOUND_APP" | jq -r '.[].id'
@@ -2043,7 +2045,7 @@ function ccloud::validate_ksqldb_up() {
 
   ccloud::validate_logged_in_cli || exit 1
 
-  local ksqldb_meta=$(confluent ksql cluster list -o json | jq -r 'map(select(.endpoint == "$ksqldb_endpoint")) | .[]')
+  local ksqldb_meta=$(confluent ksql cluster list -o json | jq -r 'map(select(.endpoint == "'"$ksqldb_endpoint"'")) | .[]')
 
   local ksqldb_appid=$(echo "$ksqldb_meta" | jq -r '.id')
   if [[ "$ksqldb_appid" == "" ]]; then
@@ -2123,13 +2125,14 @@ EOF
 }
 
 function ccloud::validate_connector_up() {
-  confluent connect cluster list -o json | jq -e 'map(select(.name == "$1" and .status == "RUNNING")) | .[]' > /dev/null 2>&1
+  confluent connect cluster list -o json | jq -e 'map(select(.name == "'"$1"'" and .status == "RUNNING")) | .[]' > /dev/null 2>&1
 }
 
 function ccloud::wait_for_connector_up() {
-  connectorName=$1
+  filename=$1
   maxWait=$2
 
+  connectorName=$(cat $filename | jq -r .name)
   echo "Waiting up to $maxWait seconds for connector $filename ($connectorName) to be RUNNING"
   ccloud::retry $maxWait ccloud::validate_connector_up $connectorName || exit 1
   echo "Connector $filename ($connectorName) is RUNNING"
@@ -2141,7 +2144,7 @@ function ccloud::wait_for_connector_up() {
 function ccloud::validate_ccloud_ksqldb_endpoint_ready() {
   KSQLDB_ENDPOINT=$1
 
-  STATUS=$(confluent ksql cluster list -o json | jq -r 'map(select(.endpoint == "$KSQLDB_ENDPOINT")) | .[].status' | grep UP)
+  STATUS=$(confluent ksql cluster list -o json | jq -r 'map(select(.endpoint == "'"$KSQLDB_ENDPOINT"'")) | .[].status' | grep UP)
   if [[ "$STATUS" == "" ]]; then
     return 1
   fi
@@ -2209,7 +2212,7 @@ function ccloud::get_service_account() {
 
   local key="$1"
 
-  serviceAccount=$(confluent api-key list -o json | jq -r -c 'map(select((.api_key == "$key"))) | .[].owner_resource_id')
+  serviceAccount=$(confluent api-key list -o json | jq -r -c 'map(select((.api_key == "'"$key"'"))) | .[].owner_resource_id')
   if [[ "$serviceAccount" == "" ]]; then
     echo "ERROR: Could not associate key $key to a service account. Verify your credentials, ensure the API key has a set resource type, and try again."
     exit 1
@@ -2325,7 +2328,7 @@ function ccloud::set_kafka_cluster_use_from_api_key() {
 
   local key="$1"
 
-  local kafkaCluster=$(confluent api-key list -o json | jq -r -c 'map(select((.api_key == "$key" and .resource_type == "kafka"))) | .[].resource_id')
+  local kafkaCluster=$(confluent api-key list -o json | jq -r -c 'map(select((.api_key == "'"$key"'" and .resource_type == "kafka"))) | .[].resource_id')
   if [[ "$kafkaCluster" == "" ]]; then
     echo "ERROR: Could not associate key $key to a Confluent Cloud Kafka cluster. Verify your credentials, ensure the API key has a set resource type, and try again."
     exit 1
@@ -2538,14 +2541,14 @@ function ccloud::destroy_ccloud_stack() {
   # Delete associated ACLs
   ccloud::delete_acls_ccloud_stack $SERVICE_ACCOUNT_ID
 
-  ksqldb_id_found=$(confluent ksql cluster list -o json | jq -r 'map(select(.name == "$KSQLDB_NAME")) | .[].id')
+  ksqldb_id_found=$(confluent ksql cluster list -o json | jq -r 'map(select(.name == "'"$KSQLDB_NAME"'")) | .[].id')
   if [[ $ksqldb_id_found != "" ]]; then
     echo "Deleting KSQLDB: $KSQLDB_NAME : $ksqldb_id_found"
     confluent ksql cluster delete $ksqldb_id_found &> "$REDIRECT_TO"
   fi
 
   # Delete connectors associated to this Kafka cluster, otherwise cluster deletion fails
-  local cluster_id=$(confluent kafka cluster list -o json | jq -r 'map(select(.name == "$CLUSTER_NAME")) | .[].id')
+  local cluster_id=$(confluent kafka cluster list -o json | jq -r 'map(select(.name == "'"$CLUSTER_NAME"'")) | .[].id')
   confluent connect cluster list --cluster $cluster_id -o json | jq -r '.[].id' | xargs -I{} confluent connect cluster delete {} --force
 
   echo "Deleting CLUSTER: $CLUSTER_NAME : $cluster_id"
@@ -2558,7 +2561,7 @@ function ccloud::destroy_ccloud_stack() {
   confluent iam service-account delete $SERVICE_ACCOUNT_ID --force &>"$REDIRECT_TO" 
 
   if [[ $PRESERVE_ENVIRONMENT == "false" ]]; then
-    local environment_id=$(confluent environment list -o json | jq -r 'map(select(.name | startswith("$ENVIRONMENT_NAME_PREFIX"))) | .[].id')
+    local environment_id=$(confluent environment list -o json | jq -r 'map(select(.name | startswith("'"$ENVIRONMENT_NAME_PREFIX"'"))) | .[].id')
     if [[ "$environment_id" == "" ]]; then
       echo "WARNING: Could not find environment with name that starts with $ENVIRONMENT_NAME_PREFIX (did you create this ccloud-stack reusing an existing environment?)"
     else
