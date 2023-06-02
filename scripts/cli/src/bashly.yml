@@ -995,6 +995,11 @@ commands:
     flags:
     - *ccloudconnector
 
+  - name: show-lag
+    help: 🐢 Show lag of sink connector
+    flags:
+    - *ccloudconnector
+
   - name: create-or-update
     help: 🧑‍🎨  Create or update connector
     args:
