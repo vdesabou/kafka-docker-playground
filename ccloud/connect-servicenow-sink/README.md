@@ -80,11 +80,11 @@ $ curl -X PUT \
                 "reporter.bootstrap.servers": "${file:/data:bootstrap.servers}",
                 "reporter.admin.ssl.endpoint.identification.algorithm" : "https",
                 "reporter.admin.sasl.mechanism" : "PLAIN",
-                "reporter.admin.sasl.jaas.config" : "org.apache.kafka.common.security.plain.PlainLoginModule required username=\"${file:/data:sasl.username}\" password=\"${file:/data:sasl.password}\";",
+                "reporter.admin.sasl.jaas.config" : "org.apache.kafka.common.security.plain.PlainLoginModule required username=\"\${file:/data:sasl.username}\" password=\"\${file:/data:sasl.password}\";",
                 "reporter.admin.security.protocol" : "SASL_SSL",
                 "reporter.producer.ssl.endpoint.identification.algorithm" : "https",
                 "reporter.producer.sasl.mechanism" : "PLAIN",
-                "reporter.producer.sasl.jaas.config" : "org.apache.kafka.common.security.plain.PlainLoginModule required username=\"${file:/data:sasl.username}\" password=\"${file:/data:sasl.password}\";",
+                "reporter.producer.sasl.jaas.config" : "org.apache.kafka.common.security.plain.PlainLoginModule required username=\"\${file:/data:sasl.username}\" password=\"\${file:/data:sasl.password}\";",
                 "reporter.producer.security.protocol" : "SASL_SSL",
                 "reporter.error.topic.name": "test-error",
                 "reporter.error.topic.replication.factor": 3,
@@ -97,7 +97,7 @@ $ curl -X PUT \
                 "confluent.topic.ssl.endpoint.identification.algorithm" : "https",
                 "confluent.topic.sasl.mechanism" : "PLAIN",
                 "confluent.topic.bootstrap.servers": "${file:/data:bootstrap.servers}",
-                "confluent.topic.sasl.jaas.config" : "org.apache.kafka.common.security.plain.PlainLoginModule required username=\"${file:/data:sasl.username}\" password=\"${file:/data:sasl.password}\";",
+                "confluent.topic.sasl.jaas.config" : "org.apache.kafka.common.security.plain.PlainLoginModule required username=\"\${file:/data:sasl.username}\" password=\"\${file:/data:sasl.password}\";",
                 "confluent.topic.security.protocol" : "SASL_SSL",
                 "confluent.topic.replication.factor": "3"
           }' \

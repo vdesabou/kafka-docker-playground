@@ -172,7 +172,7 @@ playground connector create-or-update --connector cdc-oracle-source-pdb-cloud <<
                "confluent.topic.ssl.endpoint.identification.algorithm" : "https",
                "confluent.topic.sasl.mechanism" : "PLAIN",
                "confluent.topic.bootstrap.servers": "\${file:/data:bootstrap.servers}",
-               "confluent.topic.sasl.jaas.config" : "org.apache.kafka.common.security.plain.PlainLoginModule required username=\"${file:/data:sasl.username}\" password=\"${file:/data:sasl.password}\";",
+               "confluent.topic.sasl.jaas.config" : "org.apache.kafka.common.security.plain.PlainLoginModule required username=\"\${file:/data:sasl.username}\" password=\"\${file:/data:sasl.password}\";",
                "confluent.topic.security.protocol" : "SASL_SSL",
                "confluent.topic.replication.factor": "3",
 
@@ -196,7 +196,7 @@ playground connector create-or-update --connector cdc-oracle-source-pdb-cloud <<
 
                "redo.log.topic.name": "redo-log-topic",
                "redo.log.consumer.bootstrap.servers": "\${file:/data:bootstrap.servers}",
-               "redo.log.consumer.sasl.jaas.config": "org.apache.kafka.common.security.plain.PlainLoginModule required username=\"${file:/data:sasl.username}\" password=\"${file:/data:sasl.password}\";",
+               "redo.log.consumer.sasl.jaas.config": "org.apache.kafka.common.security.plain.PlainLoginModule required username=\"\${file:/data:sasl.username}\" password=\"\${file:/data:sasl.password}\";",
                "redo.log.consumer.security.protocol":"SASL_SSL",
                "redo.log.consumer.sasl.mechanism":"PLAIN",
 

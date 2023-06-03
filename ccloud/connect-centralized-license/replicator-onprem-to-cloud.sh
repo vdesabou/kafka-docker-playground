@@ -41,7 +41,7 @@ playground connector create-or-update --connector replicate-onprem-to-cloud << E
           "dest.kafka.ssl.endpoint.identification.algorithm":"https",
           "dest.kafka.bootstrap.servers": "\${file:/data:bootstrap.servers}",
           "dest.kafka.security.protocol" : "SASL_SSL",
-          "dest.kafka.sasl.jaas.config": "org.apache.kafka.common.security.plain.PlainLoginModule required username=\"${file:/data:sasl.username}\" password=\"${file:/data:sasl.password}\";",
+          "dest.kafka.sasl.jaas.config": "org.apache.kafka.common.security.plain.PlainLoginModule required username=\"\${file:/data:sasl.username}\" password=\"\${file:/data:sasl.password}\";",
           "dest.kafka.sasl.mechanism":"PLAIN",
           "dest.kafka.request.timeout.ms":"20000",
           "dest.kafka.retry.backoff.ms":"500",
