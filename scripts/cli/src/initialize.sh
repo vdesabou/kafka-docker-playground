@@ -13,7 +13,7 @@ then
 
     CONFIG_FILE=$root_folder/scripts/cli/config.ini
     
-    log "📝 Loading default config.ini $CONFIG_FILE as CONFIG_FILE environment variable is not set"
-else
-    log "📝 Loading config.ini $CONFIG_FILE from CONFIG_FILE environment variable"
+    # log "📝 Loading default config.ini $CONFIG_FILE as CONFIG_FILE environment variable is not set"
+# else
+    # log "📝 Loading config.ini $CONFIG_FILE from CONFIG_FILE environment variable"
 fi
