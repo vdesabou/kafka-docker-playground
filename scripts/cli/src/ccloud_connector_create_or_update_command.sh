@@ -25,7 +25,7 @@ then
 
     if [[ $(type -f bat 2>&1) =~ "not found" ]]
     then
-        cat $json_file
+        cat -n $json_file
     else
         bat $json_file --highlight-line $error_line
     fi

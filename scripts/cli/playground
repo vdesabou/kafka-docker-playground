@@ -9814,7 +9814,7 @@ playground_ccloud_connector_create_or_update_command() {
 
       if [[ $(type -f bat 2>&1) =~ "not found" ]]
       then
-          cat $json_file
+          cat -n $json_file
       else
           bat $json_file --highlight-line $error_line
       fi
@@ -10305,7 +10305,7 @@ playground_connector_create_or_update_command() {
 
       if [[ $(type -f bat 2>&1) =~ "not found" ]]
       then
-          cat $json_file
+          cat -n $json_file
       else
           bat $json_file --highlight-line $error_line
       fi
