@@ -43,6 +43,17 @@ do
                 -e -q \
                 | grep -v "Reading configuration from file" | wc -l | tr -d ' '
     else
-        docker exec $container kafka-run-class kafka.tools.GetOffsetShell --broker-list broker:9092 $security --topic $topic --time -1 | awk -F ":" '{sum += $3} END {print sum}'
+        if ! version_gt $TAG_BASE "6.9.9" && [ "$security" != "" ]
+        then
+            # GetOffsetShell does not support security before 7.x
+            ret=$(get_security_broker "--consumer.config")
+            container=$(echo "$ret" | cut -d "@" -f 1)
+            security=$(echo "$ret" | cut -d "@" -f 2)
+            set +e
+            docker exec $container kafka-console-consumer --bootstrap-server broker:9092 --topic $topic $security --from-beginning --timeout-ms 5000 | wc -l
+            set -e
+        else
+            docker exec $container kafka-run-class kafka.tools.GetOffsetShell --broker-list broker:9092 $security --topic $topic --time -1 | awk -F ":" '{sum += $3} END {print sum}'
+        fi
     fi
 done
