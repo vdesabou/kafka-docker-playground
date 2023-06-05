@@ -23,7 +23,7 @@ then
           -H "Content-Type: application/json" \
           --data '{
                     "connector.class": "io.confluent.connect.github.GithubSourceConnector",
-                    "topic.name.pattern":"github-topic-${resourceName}",
+                    "topic.name.pattern":"github-topic-\${resourceName}",
                     "tasks.max": "1",
                     "github.service.url":"https://api.github.com",
                     "github.repositories":"apache/kafka",
