@@ -36,7 +36,7 @@ log "Creating Zendesk Source connector"
 playground connector create-or-update --connector zendesk-source << EOF
 {
                     "connector.class": "io.confluent.connect.zendesk.ZendeskSourceConnector",
-                    "topic.name.pattern":"zendesk-topic-${entityName}",
+                    "topic.name.pattern":"zendesk-topic-\${entityName}",
                     "tasks.max": "1",
                     "poll.interval.ms": 1000,
                     "zendesk.auth.type": "basic",
