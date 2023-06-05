@@ -44,7 +44,7 @@ log "Creating Jira Source connector"
 playground connector create-or-update --connector jira-source << EOF
 {
                     "connector.class": "io.confluent.connect.jira.JiraSourceConnector",
-                    "topic.name.pattern":"jira-topic-${resourceName}",
+                    "topic.name.pattern":"jira-topic-\${resourceName}",
                     "tasks.max": "1",
                     "jira.url": "$JIRA_URL",
                     "jira.since": "$SINCE",
