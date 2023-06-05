@@ -61,7 +61,7 @@ fi
 set +e
 curl_output=$(curl $security -s -X PUT \
      -H "Content-Type: application/json" \
-     --data @$json_file \
+     --data "$json_content" \
      $connect_url/connectors/$connector/config)
 ret=$?
 set -e
