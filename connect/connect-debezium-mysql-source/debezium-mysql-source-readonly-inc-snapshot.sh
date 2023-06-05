@@ -114,7 +114,7 @@ playground connector create-or-update --connector debezium-mysql-source << EOF
                     "table.include.list": "mydb.team",
                     "transforms": "RemoveDots",
                     "transforms.RemoveDots.type": "org.apache.kafka.connect.transforms.RegexRouter",
-                    "transforms.RemoveDots.regex": "(.*)\\.(.*)\\.(.*)",
+                    "transforms.RemoveDots.regex": "(.*)\\\\.(.*)\\\\.(.*)",
                     "transforms.RemoveDots.replacement": "\$1_\$2_\$3"
           }
 EOF
@@ -156,7 +156,7 @@ playground connector create-or-update --connector debezium-mysql-source << EOF
                     "signal.kafka.bootstrap.servers": "broker:9092",
                     "transforms": "RemoveDots",
                     "transforms.RemoveDots.type": "org.apache.kafka.connect.transforms.RegexRouter",
-                    "transforms.RemoveDots.regex": "(.*)\\.(.*)\\.(.*)",
+                    "transforms.RemoveDots.regex": "(.*)\\\\.(.*)\\\\.(.*)",
                     "transforms.RemoveDots.replacement": "\$1_\$2_\$3"
           }
 EOF

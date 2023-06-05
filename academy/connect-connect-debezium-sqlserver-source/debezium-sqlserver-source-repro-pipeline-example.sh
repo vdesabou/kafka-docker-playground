@@ -64,7 +64,7 @@ playground connector create-or-update --connector debezium-sqlserver-source << E
 
               "transforms": "unwrap,RemoveDots",
               "transforms.RemoveDots.type": "org.apache.kafka.connect.transforms.RegexRouter",
-              "transforms.RemoveDots.regex": "(.*)\\.(.*)\\.(.*)",
+              "transforms.RemoveDots.regex": "(.*)\\\\.(.*)\\\\.(.*)",
               "transforms.RemoveDots.replacement": "mytable",
               "transforms.unwrap.type": "io.debezium.transforms.ExtractNewRecordState"
           }

@@ -106,7 +106,7 @@ playground connector create-or-update --connector debezium-mysql-source << EOF
 
                "transforms": "RemoveDots",
                "transforms.RemoveDots.type": "org.apache.kafka.connect.transforms.RegexRouter",
-               "transforms.RemoveDots.regex": "(.*)\\.(.*)\\.(.*)",
+               "transforms.RemoveDots.regex": "(.*)\\\\.(.*)\\\\.(.*)",
                "transforms.RemoveDots.replacement": "\$1_\$2_\$3",
                "topic.creation.default.replication.factor": "-1",
                "topic.creation.default.partitions": "-1"
