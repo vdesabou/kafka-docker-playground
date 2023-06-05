@@ -59,7 +59,7 @@ In case you want to use your own existing cluster, you need to setup these envir
 ## How to run
 
 ```
-$ playground run -f fully-managed-ibm-mq-source<tab> <NGROK_AUTH_TOKEN>
+$ playground run -f fully-managed-cdc-oracle19<tab> <NGROK_AUTH_TOKEN>
 ```
 
 ## Note on `redo.log.row.fetch.size`
