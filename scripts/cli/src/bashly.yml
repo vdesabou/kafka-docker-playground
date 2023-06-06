@@ -917,6 +917,61 @@ commands:
 
           Default is 60 seconds
 
+    - name: produce
+      filters:
+      - schema_registry_running
+      group: Topic
+      help: |-
+         Produce to a topic
+      flags:
+      - long: --topic
+        short: -t
+        required: true
+        arg: topic
+        completions:
+          - $(playground get-topic-list)
+        help: |-
+          🗳 Topic name
+      - long: --nb-messages
+        arg: nb-messages
+        validate: integer
+        required: false
+        default: "1"
+        help: |-
+          number of messages to produce
+      - long: --producer
+        short: -p
+        arg: producer-type
+        default: "none"
+        allowed: 
+          - none
+          - avro
+          - avro-with-key
+          - protobuf
+          - protobuf-with-key
+          - json-schema
+          - json-schema-with-key
+        help: |-
+          ♨️ Producer type to use
+          
+          One of avro, avro-with-key, protobuf, protobuf-with-key, json-schema, json-schema-with-key
+
+          🎓 Tip: 'with-key' will also produce key with selected converter, otherwise no key is set
+
+      - long: --producer-schema-key
+        required: false
+        help: |-
+          🔰 Schema to use for the key
+
+          ✨ Copy and paste the schema you want to use for the key, save and close the file to continue
+
+      - long: --producer-schema-value
+        required: false
+        help: |-
+          🔰 Schema to use for the value
+
+          ✨ Copy and paste the schema you want to use for the key, save and close the file to continue
+
     - name: set-schema-compatibility
       filters:
       - schema_registry_running
