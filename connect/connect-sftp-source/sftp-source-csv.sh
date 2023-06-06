@@ -28,7 +28,7 @@ playground connector create-or-update --connector sftp-source-csv << EOF
                "input.path": "/home/foo/upload/input",
                "error.path": "/home/foo/upload/error",
                "finished.path": "/home/foo/upload/finished",
-               "input.file.pattern": ".*\\.csv",
+               "input.file.pattern": ".*\\\\.csv",
                "sftp.username":"foo",
                "sftp.password":"pass",
                "sftp.host":"sftp-server",

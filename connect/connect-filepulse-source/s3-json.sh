@@ -119,7 +119,7 @@ playground connector create-or-update --connector filepulse-source-s3-json << EO
           "fs.listing.class": "io.streamthoughts.kafka.connect.filepulse.fs.AmazonS3FileSystemListing",
           "fs.listing.filters":"io.streamthoughts.kafka.connect.filepulse.fs.filter.RegexFileListFilter",
           "fs.listing.interval.ms": "10000",
-          "file.filter.regex.pattern":".*\\.json$",
+          "file.filter.regex.pattern":".*\\\\.json$",
           "offset.attributes.string": "uri",
           "tasks.reader.class": "io.streamthoughts.kafka.connect.filepulse.fs.reader.AmazonS3BytesArrayInputReader",
           "offset.strategy":"name",

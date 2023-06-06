@@ -14,7 +14,7 @@ playground connector create-or-update --connector spool-dir << EOF
 {
                "tasks.max": "1",
                "connector.class": "com.github.jcustenborder.kafka.connect.spooldir.SpoolDirJsonSourceConnector",
-               "input.file.pattern": ".*\\.json",
+               "input.file.pattern": ".*\\\\.json",
                "input.path": "/tmp/data/input",
                "error.path": "/tmp/data/error",
                "finished.path": "/tmp/data/finished",

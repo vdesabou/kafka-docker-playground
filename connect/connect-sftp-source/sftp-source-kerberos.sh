@@ -62,7 +62,7 @@ playground connector create-or-update --connector sftp-source-kerberos-csv << EO
                "input.path": "/home/sshuser/upload/input",
                "error.path": "/home/sshuser/upload/error",
                "finished.path": "/home/sshuser/upload/finished",
-               "input.file.pattern": ".*\\.csv",
+               "input.file.pattern": ".*\\\\.csv",
                "sftp.username":"sshuser",
                "kerberos.keytab.path": "/tmp/sshuser.keytab",
                "kerberos.user.principal": "sshuser",

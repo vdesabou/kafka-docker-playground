@@ -35,7 +35,7 @@ playground connector create-or-update --connector sftp-source-ssh-pem-file << EO
                "input.path": "/home/foo/upload/input",
                "error.path": "/home/foo/upload/error",
                "finished.path": "/home/foo/upload/finished",
-               "input.file.pattern": ".*\\.csv",
+               "input.file.pattern": ".*\\\\.csv",
                "sftp.username":"foo",
                "sftp.password": "",
                "tls.pemfile": "/tmp/ssh_host_rsa_key.pem",
