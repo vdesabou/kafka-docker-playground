@@ -16,17 +16,18 @@ then
     fi
 fi
 
-DIR_CLI="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
-dir1=$(echo ${DIR_CLI%/*})
-root_folder=$(echo ${dir1%/*})
-IGNORE_CHECK_FOR_DOCKER_COMPOSE=true
-source $root_folder/scripts/utils.sh
+tag=$(docker ps --format '{{.Image}}' | egrep 'confluentinc/cp-.*-connect-base:' | awk -F':' '{print $2}')
+if [ $? != 0 ] || [ "$tag" == "" ]
+then
+    logerror "Could not find current CP version from docker ps"
+    exit 1
+fi
 
 items=($connector)
 for connector in ${items[@]}
 do
     log "🔄 Restarting connector $connector"
-    if ! version_gt $TAG_BASE "6.9.9"
+    if ! version_gt $tag "6.9.9"
     then
         task_ids=$(curl $security -s -X GET "$connect_url/connectors/$connector/tasks" | jq -r '.[].id.task')
 
