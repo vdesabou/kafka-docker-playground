@@ -72,7 +72,7 @@ playground connector create-or-update --connector gcp-spanner-sink << EOF
                "tasks.max" : "1",
                "topics" : "products",
                "auto.create" : "true",
-               "table.name.format" : "kafka_${topic}",
+               "table.name.format" : "kafka_\${topic}",
                "gcp.spanner.instance.id" : "$INSTANCE",
                "gcp.spanner.database.id" : "$DATABASE",
                "gcp.spanner.credentials.path" : "/tmp/keyfile.json",

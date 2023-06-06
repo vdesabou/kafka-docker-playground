@@ -87,7 +87,7 @@ playground connector create-or-update --connector gcp-bigtable-sink << EOF
                "gcp.bigtable.project.id": "$GCP_PROJECT",
                "auto.create.tables": "true",
                "auto.create.column.families": "true",
-               "table.name.format" : "kafka_${topic}"
+               "table.name.format" : "kafka_\${topic}"
           }
 EOF
 

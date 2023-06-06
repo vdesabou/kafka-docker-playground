@@ -69,7 +69,7 @@ playground connector create-or-update --connector gcp-bigtable-sink << EOF
                "proxy.url": "https://nginx-proxy:8888",
                "auto.create.tables": "true",
                "auto.create.column.families": "true",
-               "table.name.format" : "kafka_${topic}",
+               "table.name.format" : "kafka_\${topic}",
                "confluent.license": "",
                "confluent.topic.bootstrap.servers": "broker:9092",
                "confluent.topic.replication.factor": "1"

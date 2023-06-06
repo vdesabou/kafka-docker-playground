@@ -73,7 +73,7 @@ $ curl -X PUT \
                 "topics": "products",
                 "auto.create": "true",
                 "auto.evolve": "true",
-                "table.name.format": "kafka_${topic}",
+                "table.name.format": "kafka_\${topic}",
                 "azure.sql.dw.url": "${file:/data:AZURE_SQL_URL}",
                 "azure.sql.dw.user": "myadmin",
                 "azure.sql.dw.password": "${file:/data:PASSWORD}",
