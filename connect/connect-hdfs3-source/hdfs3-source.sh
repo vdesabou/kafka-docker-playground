@@ -119,7 +119,7 @@ playground connector create-or-update --connector hdfs3-source << EOF
           "transforms" : "AddPrefix",
           "transforms.AddPrefix.type" : "org.apache.kafka.connect.transforms.RegexRouter",
           "transforms.AddPrefix.regex" : ".*",
-          "transforms.AddPrefix.replacement" : "copy_of_$0"
+          "transforms.AddPrefix.replacement" : "copy_of_\$0"
           }
 EOF
 

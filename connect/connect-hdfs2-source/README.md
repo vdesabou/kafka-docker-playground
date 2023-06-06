@@ -38,7 +38,7 @@ $ curl -X PUT \
           "transforms" : "AddPrefix",
           "transforms.AddPrefix.type" : "org.apache.kafka.connect.transforms.RegexRouter",
           "transforms.AddPrefix.regex" : ".*",
-          "transforms.AddPrefix.replacement" : "copy_of_$0"
+          "transforms.AddPrefix.replacement" : "copy_of_\$0"
           }' \
      http://localhost:8083/connectors/hdfs2-source/config | jq .
 ```
