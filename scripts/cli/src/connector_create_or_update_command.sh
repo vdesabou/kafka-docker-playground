@@ -77,8 +77,10 @@ then
         if [ $is_create == 1 ]
         then
             log "✅ Connector $connector was successfully created"
+            log "🥁 Waiting a few seconds to get new status"
         else
             log "✅ Connector $connector was successfully updated"
+            log "🥁 Waiting a few seconds to get new status"
         fi
         sleep 8
         playground connector status
