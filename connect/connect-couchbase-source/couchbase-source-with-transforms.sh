@@ -35,7 +35,7 @@ playground connector create-or-update --connector couchbase-source << EOF
                "transforms.KeyExample.skip.missing.or.null": "true",
                "transforms.dropSufffix.type": "org.apache.kafka.connect.transforms.RegexRouter",
                "transforms.dropSufffix.regex": "(.*)_.*",
-               "transforms.dropSufffix.replacement": "$1",
+               "transforms.dropSufffix.replacement": "\$1",
                "errors.tolerance": "all",
                "errors.log.enable": "true",
                "errors.log.include.messages": "true"

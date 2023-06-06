@@ -36,7 +36,7 @@ The transforms are defined with:
 "transforms.KeyExample.skip.missing.or.null": "true",
 "transforms.dropSufffix.type": "org.apache.kafka.connect.transforms.RegexRouter",
 "transforms.dropSufffix.regex": "(.*)_.*",
-"transforms.dropSufffix.replacement": "$1"
+"transforms.dropSufffix.replacement": "\$1"
 ```
 
 By using `ExtractTopic$Key`, the intermediate output topic will be the key, example `landmark_16320`or `airline_5268`
