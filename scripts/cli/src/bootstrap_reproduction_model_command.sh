@@ -487,7 +487,7 @@ then
   kafka_cli_producer_error=0
   kafka_cli_producer_eof=0
   line_kafka_cli_producer=$(egrep -n "kafka-console-producer|kafka-avro-console-producer|kafka-json-schema-console-producer|kafka-protobuf-console-producer" $repro_test_file | cut -d ":" -f 1 | tail -n1)
-  if [ $? != 0 ]
+  if [ $? != 0 ] || [ "$line_kafka_cli_producer" == "" ]
   then
       logwarn "Could not find kafka cli producer!"
       kafka_cli_producer_error=1
