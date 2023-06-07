@@ -945,6 +945,109 @@ commands:
         default: "1"
         help: |-
           Number of messages to produce
+      examples: |
+
+        playground topic produce -t topic-json --nb-messages 10 << 'EOF'
+        [
+            {
+                "_meta": {
+                    "topic": "users",
+                    "key": "id",
+                    "relationships": [
+                    ]
+                },
+                "nested": {
+                    "phone": "faker.phone.imei()",
+                    "website": "faker.internet.domainName()"
+                },
+                "id": "iteration.index",
+                "name": "faker.internet.userName()",
+                "email": "faker.internet.exampleEmail()",
+                "phone": "faker.phone.imei()",
+                "website": "faker.internet.domainName()",
+                "city": "faker.address.city()",
+                "company": "faker.company.name()"
+            }
+        ]
+        EOF
+
+        playground topic produce -t topic-avro << 'EOF'
+        {
+            "type": "record",
+            "namespace": "com.github.vdesabou",
+            "name": "Customer",
+            "version": "1",
+            "fields": [
+                {
+                    "name": "count",
+                    "type": "long",
+                    "doc": "count"
+                },
+                {
+                    "name": "first_name",
+                    "type": "string",
+                    "doc": "First Name of Customer"
+                },
+                {
+                    "name": "last_name",
+                    "type": "string",
+                    "doc": "Last Name of Customer"
+                },
+                {
+                    "name": "address",
+                    "type": "string",
+                    "doc": "Address of Customer"
+                }
+            ]
+        }
+        EOF
+
+        playground topic produce -t topic-json-schema --nb-messages 3 << 'EOF'
+        {
+          "$schema": "http://json-schema.org/draft-07/schema#",
+          "additionalProperties": false,
+          "$id": "http://lh.test/Customer.schema.json",
+          "title": "Customer",
+          "description": "Customer description",
+          "type": "object",
+          "properties": {
+            "name": {
+              "description": "Customer name",
+              "type": "string",
+              "maxLength": 25
+            },
+            "surname": {
+              "description": "Customer surname",
+              "type": "string",
+              "minLength": 2
+            },
+            "email": {
+              "description": "Email",
+              "type": "string",
+              "pattern": "^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\\.[a-zA-Z0-9-.]+$"
+            }
+          },
+          "required": [
+            "name",
+            "surname"
+          ]
+        }
+        EOF
+
+
+        playground topic produce -t topic-proto << 'EOF'
+        syntax = "proto3";
+
+        message Order {
+          float         total = 1;
+          repeated Item items = 2;
+
+          message Item {
+            string name  = 1;
+            float  price = 2;
+          }
+        }
+        EOF
 
     - name: set-schema-compatibility
       filters:
