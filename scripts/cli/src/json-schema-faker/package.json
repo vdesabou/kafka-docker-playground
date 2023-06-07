@@ -1,0 +1,11 @@
+{
+  "name": "json-schema-faker-example",
+  "version": "1.0.0",
+  "description": "Example project for generating random data using JSON Schema Faker",
+  "scripts": {
+    "start": "node generate.js"
+  },
+  "dependencies": {
+    "json-schema-faker": "^0.5.3"
+  }
+}

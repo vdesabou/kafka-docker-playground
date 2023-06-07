@@ -10,7 +10,6 @@ then
 else
     schema_content=$schema
 fi
-
 tmp_dir=$(mktemp -d -t ci-XXXXXXXXXX)
 schema_file=$tmp_dir/value_schema
 echo "$schema_content" > $schema_file
@@ -36,9 +35,6 @@ then
 
     exit 1
 fi
-
-# value_type
-value_type=avro
 
 environment=`get_environment_used`
 
@@ -93,6 +89,8 @@ then
   source $root_folder/scripts/utils.sh
 fi
 
+# value_type
+value_type=json-schema
 case "${value_type}" in
 avro)
     docker run --rm -v $tmp_dir:/tmp/ vdesabou/avro-tools random /tmp/out.avro --schema-file /tmp/value_schema --count $nb_messages
@@ -109,6 +107,7 @@ avro-with-key)
 ;;
 json-schema)
 
+    docker run --rm -v $tmp_dir:/tmp/ -e NB_MESSAGES=$nb_messages vdesabou/json-schema-faker
 ;;
 json-schema-with-key)
 

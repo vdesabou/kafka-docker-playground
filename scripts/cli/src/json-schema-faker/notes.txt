@@ -1,0 +1,2 @@
+docker build -t vdesabou/json-schema-faker . 
+docker push vdesabou/json-schema-faker:latest
