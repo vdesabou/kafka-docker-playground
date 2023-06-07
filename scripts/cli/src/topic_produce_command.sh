@@ -90,7 +90,7 @@ then
 fi
 
 # value_type
-value_type=json-schema
+value_type=protobuf
 case "${value_type}" in
 avro)
     docker run --rm -v $tmp_dir:/tmp/ vdesabou/avro-tools random /tmp/out.avro --schema-file /tmp/value_schema --count $nb_messages
@@ -119,6 +119,13 @@ json-schema-with-key)
 ;;
 protobuf)
 
+    # https://github.com/JasonkayZK/mock-protobuf.js
+    docker run --rm -v $tmp_dir:/tmp/ -v $schema_file:/app/schema.proto -e NB_MESSAGES=$nb_messages vdesabou/protobuf-faker node /usr/local/bin/mock-pb g -o /tmp/mock-pb-output
+
+    log "payload is"
+    cat $tmp_dir/mock-pb-output/*.json
+
+    # cat $tmp_dir/out.json | docker exec -e SCHEMA_REGISTRY_LOG4J_OPTS="-Dlog4j.configuration=file:/etc/kafka/tools-log4j.properties" -i $container kafka-$value_type-console-producer --broker-list $bootstrap_server --property schema.registry.url=$sr_url_cli --topic $topic $security --property value.schema="$(cat $schema_file)"
 ;;
 protobuf-with-key)
 

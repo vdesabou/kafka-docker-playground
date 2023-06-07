@@ -1,0 +1,2 @@
+docker build -t vdesabou/protobuf-faker . 
+docker push vdesabou/protobuf-faker:latest
