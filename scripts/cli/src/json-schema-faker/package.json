@@ -6,6 +6,7 @@
     "start": "node generate.js"
   },
   "dependencies": {
-    "json-schema-faker": "^0.5.3"
+    "json-schema-faker": "^0.5.3",
+    "jsonminify": "^0.4.2"
   }
 }
