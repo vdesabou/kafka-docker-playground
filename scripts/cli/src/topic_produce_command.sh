@@ -1,32 +1,44 @@
 topic="${args[--topic]}"
 nb_messages="${args[--nb-messages]}"
-producer="${args[--producer]}"
-schema_file_key="${args[--producer-schema-key]}"
-schema_file_value="${args[--producer-schema-value]}"
 
-if [[ -n "$schema_file_key" ]]
+schema=${args[schema]}
+
+if [ "$schema" = "-" ]
 then
-  if [ "$producer" == "none" ]
-  then
-    logerror "--producer-schema-key is set but not --producer"
-    exit 1
-  fi
-
-  if [[ "$producer" != *"with-key" ]]
-  then
-    logerror "--producer-schema-key is set but --producer is not set with <with-key>"
-    exit 1
-  fi
+    # stdin
+    schema_content=$(cat "$schema")
+else
+    schema_content=$schema
 fi
 
-if [[ -n "$schema_file_value" ]]
+tmp_dir=$(mktemp -d -t ci-XXXXXXXXXX)
+schema_file=$tmp_dir/value_schema
+echo "$schema_content" > $schema_file
+
+# JSON is invalid
+if ! echo "$json_content" | jq -e .  > /dev/null 2>&1
 then
-  if [ "$producer" == "none" ]
-  then
-    logerror "--producer-schema-value is set but not --producer"
+    set +e
+    jq_output=$(jq . "$json_file" 2>&1)
+    error_line=$(echo "$jq_output" | grep -oE 'parse error.*at line [0-9]+' | grep -oE '[0-9]+')
+
+    if [[ -n "$error_line" ]]; then
+        logerror "❌ Invalid JSON at line $error_line"
+    fi
+    set -e
+
+    if [[ $(type -f bat 2>&1) =~ "not found" ]]
+    then
+        cat -n $json_file
+    else
+        bat $json_file --highlight-line $error_line
+    fi
+
     exit 1
-  fi
 fi
+
+# value_type
+value_type=avro
 
 environment=`get_environment_used`
 
@@ -81,95 +93,36 @@ then
   source $root_folder/scripts/utils.sh
 fi
 
-tmp_dir=$(mktemp -d -t ci-XXXXXXXXXX)
+case "${value_type}" in
+avro)
+    docker run --rm -v $tmp_dir:/tmp/ vdesabou/avro-tools random /tmp/out.avro --schema-file /tmp/value_schema --count $nb_messages
+    docker run --rm -v $tmp_dir:/tmp/ vdesabou/avro-tools tojson /tmp/out.avro > $tmp_dir/out.json
 
-    ####
-    #### schema_file_key
-    if [[ -n "$schema_file_key" ]]
-    then
-      if config_has_key "editor"
-      then
-        editor=$(config_get "editor")
-        log "✨ Copy and paste the schema you want to use for the key, save and close the file to continue"
-        if [ "$editor" = "code" ]
-        then
-          code --wait $tmp_dir/key_schema
-        else
-          $editor $tmp_dir/key_schema
-        fi
-      else
-        if [[ $(type code 2>&1) =~ "not found" ]]
-        then
-          logerror "Could not determine an editor to use as default code is not found - you can change editor by updating config.ini"
-          exit 1
-        else
-          log "✨ Copy and paste the schema you want to use for the key, save and close the file to continue"
-          code --wait $tmp_dir/key_schema
-        fi
-      fi
-    fi
+    log "payload is"
+    #cat $tmp_dir/out.json
 
-    ####
-    #### schema_file_value
-    if [[ -n "$schema_file_value" ]]
-    then
-      if config_has_key "editor"
-      then
-        editor=$(config_get "editor")
-        log "✨ Copy and paste the schema you want to use for the value, save and close the file to continue"
-        if [ "$editor" = "code" ]
-        then
-          code --wait $tmp_dir/value_schema
-        else
-          $editor $tmp_dir/value_schema
-        fi
-      else
-        if [[ $(type code 2>&1) =~ "not found" ]]
-        then
-          logerror "Could not determine an editor to use as default code is not found - you can change editor by updating config.ini"
-          exit 1
-        else
-          log "✨ Copy and paste the schema you want to use for the value, save and close the file to continue"
-          code --wait $tmp_dir/value_schema
-        fi
-      fi
-    fi
+    cat $tmp_dir/out.json | docker exec -e SCHEMA_REGISTRY_LOG4J_OPTS="-Dlog4j.configuration=file:/etc/kafka/tools-log4j.properties" -i $container kafka-$value_type-console-producer --broker-list $bootstrap_server --property schema.registry.url=$sr_url_cli --topic $topic $security --property value.schema="$(cat $tmp_dir/value_schema)"
 
-# fixthis
-value_type=$producer
-if [ "$producer" != "none" ]
-then
-  case "${producer}" in
-    avro)
-        docker run --rm -v $tmp_dir:/tmp/ vdesabou/avro-tools random /tmp/out.avro --schema-file /tmp/value_schema --count $nb_messages
-        docker run --rm -v $tmp_dir:/tmp/ vdesabou/avro-tools tojson /tmp/out.avro > $tmp_dir/out.json
+;;
+avro-with-key)
 
-        log "payload is"
-        #cat $tmp_dir/out.json
+;;
+json-schema)
 
-        cat $tmp_dir/out.json | docker exec -e SCHEMA_REGISTRY_LOG4J_OPTS="-Dlog4j.configuration=file:/etc/kafka/tools-log4j.properties" -i $container kafka-$value_type-console-producer --broker-list $bootstrap_server --property schema.registry.url=$sr_url_cli --topic $topic $security --property value.schema="$(cat $tmp_dir/value_schema)"
+;;
+json-schema-with-key)
 
-    ;;
-    avro-with-key)
+;;
+protobuf)
 
-    ;;
-    json-schema)
+;;
+protobuf-with-key)
 
-    ;;
-    json-schema-with-key)
-
-    ;;
-    protobuf)
-
-    ;;
-    protobuf-with-key)
-
-    ;;
-    none)
-    ;;
-    *)
-      logerror "producer name not valid ! Should be one of avro, avro-with-key, json-schema, json-schema-with-key, protobuf or protobuf-with-key"
-      exit 1
-    ;;
-  esac
-fi
+;;
+none)
+;;
+*)
+    logerror "producer name not valid ! Should be one of avro, avro-with-key, json-schema, json-schema-with-key, protobuf or protobuf-with-key"
+    exit 1
+;;
+esac

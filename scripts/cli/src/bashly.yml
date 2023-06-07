@@ -923,6 +923,12 @@ commands:
       group: Topic
       help: |-
          Produce to a topic
+      args:
+        - name: schema
+          
+          # Set the default path value to -, which is the standard operator for stdin.
+          default: "-"
+          help: schema (reads from stdin if empty)
       flags:
       - long: --topic
         short: -t
@@ -938,39 +944,7 @@ commands:
         required: false
         default: "1"
         help: |-
-          number of messages to produce
-      - long: --producer
-        short: -p
-        arg: producer-type
-        default: "none"
-        allowed: 
-          - none
-          - avro
-          - avro-with-key
-          - protobuf
-          - protobuf-with-key
-          - json-schema
-          - json-schema-with-key
-        help: |-
-          ♨️ Producer type to use
-          
-          One of avro, avro-with-key, protobuf, protobuf-with-key, json-schema, json-schema-with-key
-
-          🎓 Tip: 'with-key' will also produce key with selected converter, otherwise no key is set
-
-      - long: --producer-schema-key
-        required: false
-        help: |-
-          🔰 Schema to use for the key
-
-          ✨ Copy and paste the schema you want to use for the key, save and close the file to continue
-
-      - long: --producer-schema-value
-        required: false
-        help: |-
-          🔰 Schema to use for the value
-
-          ✨ Copy and paste the schema you want to use for the key, save and close the file to continue
+          Number of messages to produce
 
     - name: set-schema-compatibility
       filters:
