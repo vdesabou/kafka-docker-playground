@@ -28,6 +28,15 @@ items=($topic)
 for topic in ${items[@]}
 do
     log "💯 Get number of records in a topic $topic"
+    set +e
+    playground topic describe --topic $topic > /tmp/result.log 2>/tmp/result.log
+    grep "does not exist" /tmp/result.log > /dev/null 2>&1
+    if [ $? == 0 ]
+    then
+        logwarn "topic $topic does not exist !"
+        continue
+    fi
+    set +e
     if [[ "$environment" == "environment" ]]
     then
         if [ ! -f /tmp/delta_configs/librdkafka.delta ]
