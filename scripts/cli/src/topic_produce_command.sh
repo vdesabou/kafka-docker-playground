@@ -164,6 +164,7 @@ else
     head -n 50 "$tmp_dir/out.json"
 fi
 
+playground topic get-number-records --topic $topic
 log "📤 producing $nb_generated_messages records to topic $topic"
 case "${value_type}" in
     json)
@@ -173,3 +174,5 @@ case "${value_type}" in
         cat $tmp_dir/out.json | docker exec -e SCHEMA_REGISTRY_LOG4J_OPTS="-Dlog4j.configuration=file:/etc/kafka/tools-log4j.properties" -i $container kafka-$value_type-console-producer --broker-list $bootstrap_server --property schema.registry.url=$sr_url_cli --topic $topic $security --property value.schema="$(cat $schema_file)"
     ;;
 esac
+
+playground topic get-number-records --topic $topic
