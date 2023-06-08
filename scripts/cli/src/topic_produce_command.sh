@@ -3,16 +3,28 @@ nb_messages="${args[--nb-messages]}"
 
 schema=${args[schema]}
 
+tmp_dir=$(mktemp -d -t ci-XXXXXXXXXX)
+schema_file=$tmp_dir/value_schema
+
 if [ "$schema" = "-" ]
 then
     # stdin
     schema_content=$(cat "$schema")
+    echo "$schema_content" > $schema_file
 else
-    schema_content=$schema
+    if [[ $schema == @* ]]
+    then
+        # this is a schema file
+        argument_schema_file=$(echo "$schema" | cut -d "@" -f 2)
+        cp $argument_schema_file $schema_file
+    elif [ -f $schema ]
+    then
+        cp $schema $schema_file
+    else
+        schema_content=$schema
+        echo "$schema_content" > $schema_file
+    fi
 fi
-tmp_dir=$(mktemp -d -t ci-XXXXXXXXXX)
-schema_file=$tmp_dir/value_schema
-echo "$schema_content" > $schema_file
 
 environment=`get_environment_used`
 
@@ -84,7 +96,7 @@ then
     log "🔮 schema was identified as avro"
     value_type=avro
 else
-    logerror "❌ Could not detect schema type for $schema_file"
+    logerror "❌ Could not recognize the type of schema in provided schema:"
     cat $schema_file
     exit 1
 fi
@@ -108,8 +120,8 @@ case "${value_type}" in
     ;;
 
     avro)
-        docker run --rm -v $tmp_dir:/tmp/ vdesabou/avro-tools random /tmp/out.avro --schema-file /tmp/value_schema --count $nb_messages
-        docker run --rm -v $tmp_dir:/tmp/ vdesabou/avro-tools tojson /tmp/out.avro > $tmp_dir/out.json
+        docker run --rm -v $tmp_dir:/tmp/ vdesabou/avro-tools random /tmp/out.avro --schema-file /tmp/value_schema --count $nb_messages > /dev/null 2>&1
+        docker run --rm -v $tmp_dir:/tmp/ vdesabou/avro-tools tojson /tmp/out.avro > $tmp_dir/out.json 2>/dev/null
     ;;
     avro-with-key)
 

@@ -70,6 +70,14 @@ commands:
     required: false
     help: correspond to completion $cur
 
+- name: get-predefined-schemas
+  help: Return some completion for predefined schemas
+  private: true
+  args:
+  - name: cur
+    required: false
+    help: correspond to completion $cur
+
 - name: bashly-reload
   private: true
   dependencies:
@@ -922,13 +930,23 @@ commands:
       - schema_registry_running
       group: Topic
       help: |-
-         Produce to a topic
+         📤 Produce to a topic
+      completions:
+        - $(playground get-predefined-schemas "$cur")
       args:
         - name: schema
           
           # Set the default path value to -, which is the standard operator for stdin.
           default: "-"
-          help: schema (reads from stdin if empty)
+          help: |- 
+            You can either:
+            
+            * Set your own schema with stdin (see example section)
+
+            * Or use completion to select predefined schemas
+
+            * Or select your own schema file (if file is present in current folder)
+
       flags:
       - long: --topic
         short: -t
@@ -942,9 +960,9 @@ commands:
         arg: nb-messages
         validate: integer
         required: false
-        default: "1"
+        default: "3"
         help: |-
-          Number of messages to produce
+          Number of messages to produce (default is 3)
       examples: |
 
         playground topic produce -t topic-json --nb-messages 10 << 'EOF'
