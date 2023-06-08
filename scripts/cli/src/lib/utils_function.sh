@@ -290,8 +290,8 @@ function check_if_continue()
 function create_topic()
 {
   local topic="$1"
-  log "Check if topic $topic exists"
-  confluent kafka topic create "$topic" --partitions 1 --dry-run 2>/dev/null
+  # log "Check if topic $topic exists"
+  confluent kafka topic create "$topic" --partitions 1 --dry-run > /dev/null 2>/dev/null
   if [[ $? == 0 ]]; then
     log "Create topic $topic"
     log "confluent kafka topic create $topic --partitions 1"
@@ -304,8 +304,8 @@ function create_topic()
 function delete_topic()
 {
   local topic="$1"
-  log "Check if topic $topic exists"
-  confluent kafka topic create "$topic" --partitions 1 --dry-run 2>/dev/null
+  # log "Check if topic $topic exists"
+  confluent kafka topic create "$topic" --partitions 1 --dry-run > /dev/null 2>/dev/null
   if [[ $? != 0 ]]; then
     log "Delete topic $topic"
     log "confluent kafka topic delete $topic --force"
