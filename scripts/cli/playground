@@ -3948,8 +3948,8 @@ function check_if_continue()
 function create_topic()
 {
   local topic="$1"
-  log "Check if topic $topic exists"
-  confluent kafka topic create "$topic" --partitions 1 --dry-run 2>/dev/null
+  # log "Check if topic $topic exists"
+  confluent kafka topic create "$topic" --partitions 1 --dry-run > /dev/null 2>/dev/null
   if [[ $? == 0 ]]; then
     log "Create topic $topic"
     log "confluent kafka topic create $topic --partitions 1"
@@ -3962,8 +3962,8 @@ function create_topic()
 function delete_topic()
 {
   local topic="$1"
-  log "Check if topic $topic exists"
-  confluent kafka topic create "$topic" --partitions 1 --dry-run 2>/dev/null
+  # log "Check if topic $topic exists"
+  confluent kafka topic create "$topic" --partitions 1 --dry-run > /dev/null 2>/dev/null
   if [[ $? != 0 ]]; then
     log "Delete topic $topic"
     log "confluent kafka topic delete $topic --force"
@@ -5061,6 +5061,8 @@ function bootstrap_ccloud_environment () {
     export EXAMPLE=$(basename $PWD)
     export WARMUP_TIME=15
     export QUIET=true
+
+    check_if_continue
   else
     #
 
@@ -5085,8 +5087,6 @@ function bootstrap_ccloud_environment () {
 
     export WARMUP_TIME=0
   fi
-
-  check_if_continue
 
   ccloud::create_ccloud_stack false  \
     && print_code_pass -c "ccloud::create_ccloud_stack false"
@@ -9220,7 +9220,7 @@ playground_topic_get_number_records_command() {
   items=($topic)
   for topic in ${items[@]}
   do
-      log "💯 Get number of records in a topic $topic"
+      log "💯 Get number of records in topic $topic"
       set +e
       playground topic describe --topic $topic > /tmp/result.log 2>/tmp/result.log
       grep "does not exist" /tmp/result.log > /dev/null 2>&1
@@ -9232,18 +9232,35 @@ playground_topic_get_number_records_command() {
       set +e
       if [[ "$environment" == "environment" ]]
       then
-          if [ ! -f /tmp/delta_configs/librdkafka.delta ]
+          if [ -f /tmp/delta_configs/env.delta ]
           then
-              logerror "ERROR: /tmp/delta_configs/librdkafka.delta has not been generated"
+              source /tmp/delta_configs/env.delta
+          else
+              logerror "ERROR: /tmp/delta_configs/env.delta has not been generated"
               exit 1
           fi
-          docker run -it --network=host \
-                  -v /tmp/delta_configs/librdkafka.delta:/tmp/configuration/ccloud.properties \
-              confluentinc/cp-kcat:latest kcat \
-                  -F /tmp/configuration/ccloud.properties \
-                  -C -t $topic \
-                  -e -q \
-                  | grep -v "Reading configuration from file" | wc -l | tr -d ' '
+          if [ ! -f /tmp/delta_configs/ak-tools-ccloud.delta ]
+          then
+              logerror "ERROR: /tmp/delta_configs/ak-tools-ccloud.delta has not been generated"
+              exit 1
+          fi
+          DIR_CLI="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
+          dir1=$(echo ${DIR_CLI%/*})
+          root_folder=$(echo ${dir1%/*})
+          IGNORE_CHECK_FOR_DOCKER_COMPOSE=true
+          source $root_folder/scripts/utils.sh
+
+          # docker run -it --network=host \
+          #         -v /tmp/delta_configs/librdkafka.delta:/tmp/configuration/ccloud.properties \
+          #     confluentinc/cp-kcat:latest kcat \
+          #         -F /tmp/configuration/ccloud.properties \
+          #         -C -t $topic \
+          #         -e -q \
+          #         | grep -v "Reading configuration from file" | wc -l | tr -d ' '
+
+          set +e
+          docker run -i --rm -v /tmp/delta_configs/ak-tools-ccloud.delta:/tmp/configuration/ccloud.properties -e BOOTSTRAP_SERVERS="$BOOTSTRAP_SERVERS" ${CP_CONNECT_IMAGE}:${CONNECT_TAG} kafka-console-consumer --bootstrap-server $BOOTSTRAP_SERVERS --topic $topic --consumer.config /tmp/configuration/ccloud.properties --from-beginning --timeout-ms 15000 2>/dev/null | wc -l | tr -d ' '
+          set -e
       else
           if ! version_gt $TAG_BASE "6.9.9" && [ "$security" != "" ]
           then
@@ -9252,7 +9269,7 @@ playground_topic_get_number_records_command() {
               container=$(echo "$ret" | cut -d "@" -f 1)
               security=$(echo "$ret" | cut -d "@" -f 2)
               set +e
-              docker exec $container kafka-console-consumer --bootstrap-server broker:9092 --topic $topic $security --from-beginning --timeout-ms 5000 | wc -l
+              docker exec $container kafka-console-consumer --bootstrap-server broker:9092 --topic $topic $security --from-beginning --timeout-ms 15000 2>/dev/null | wc -l | tr -d ' '
               set -e
           else
               docker exec $container kafka-run-class kafka.tools.GetOffsetShell --broker-list broker:9092 $security --topic $topic --time -1 | awk -F ":" '{sum += $3} END {print sum}'
@@ -9799,14 +9816,40 @@ playground_topic_produce_command() {
       head -n 50 "$tmp_dir/out.json"
   fi
 
-  playground topic get-number-records --topic $topic
+  log "💯 Get number of records in topic $topic"
+  playground topic get-number-records --topic $topic > $tmp_dir/result.log 2>$tmp_dir/result.log
+  set +e
+  grep "does not exist" $tmp_dir/result.log > /dev/null 2>&1
+  if [ $? == 0 ]
+  then
+      logwarn "topic $topic does not exist !"
+      if [[ "$environment" == "environment" ]]
+      then
+          log "⛅ creating topic in confluent cloud"
+          create_topic $topic
+      fi
+  else
+      tail -1 $tmp_dir/result.log
+  fi
+  set -e
   log "📤 producing $nb_generated_messages records to topic $topic"
   case "${value_type}" in
       json)
-          cat $tmp_dir/out.json | docker exec -i $container kafka-console-producer --broker-list $bootstrap_server --topic $topic $security
+          if [[ "$environment" == "environment" ]]
+          then
+              cat $tmp_dir/out.json | docker run -i --rm -v /tmp/delta_configs/ak-tools-ccloud.delta:/tmp/configuration/ccloud.properties -e BOOTSTRAP_SERVERS="$BOOTSTRAP_SERVERS" ${CP_CONNECT_IMAGE}:${CONNECT_TAG} kafka-console-producer --broker-list $BOOTSTRAP_SERVERS --topic $topic --producer.config /tmp/configuration/ccloud.properties $security
+          else
+              cat $tmp_dir/out.json | docker exec -i $container kafka-console-producer --broker-list $bootstrap_server --topic $topic $security
+          fi
       ;;
       *)
-          cat $tmp_dir/out.json | docker exec -e SCHEMA_REGISTRY_LOG4J_OPTS="-Dlog4j.configuration=file:/etc/kafka/tools-log4j.properties" -i $container kafka-$value_type-console-producer --broker-list $bootstrap_server --property schema.registry.url=$sr_url_cli --topic $topic $security --property value.schema="$(cat $schema_file)"
+          if [[ "$environment" == "environment" ]]
+          then
+              cat $tmp_dir/out.json | docker run -i --rm -e SCHEMA_REGISTRY_LOG4J_OPTS="-Dlog4j.configuration=file:/etc/kafka/tools-log4j.properties" -e value_type=$value_type -e BOOTSTRAP_SERVERS="$BOOTSTRAP_SERVERS" -e SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO="$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO" -e SCHEMA_REGISTRY_URL="$SCHEMA_REGISTRY_URL" ${CP_CONNECT_IMAGE}:${CONNECT_TAG} kafka-$value_type-console-producer --broker-list $BOOTSTRAP_SERVERS --producer-property ssl.endpoint.identification.algorithm=https --producer-property sasl.mechanism=PLAIN --producer-property security.protocol=SASL_SSL --producer-property sasl.jaas.config="$SASL_JAAS_CONFIG" --property basic.auth.credentials.source=USER_INFO --property schema.registry.basic.auth.user.info="$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO" --property schema.registry.url=$SCHEMA_REGISTRY_URL --topic $topic $security --property value.schema="$(cat $schema_file)"
+
+          else
+              cat $tmp_dir/out.json | docker exec -e SCHEMA_REGISTRY_LOG4J_OPTS="-Dlog4j.configuration=file:/etc/kafka/tools-log4j.properties" -i $container kafka-$value_type-console-producer --broker-list $bootstrap_server --property schema.registry.url=$sr_url_cli --topic $topic $security --property value.schema="$(cat $schema_file)"
+          fi
       ;;
   esac
 
