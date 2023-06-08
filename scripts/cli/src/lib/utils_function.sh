@@ -1389,6 +1389,8 @@ function bootstrap_ccloud_environment () {
     export EXAMPLE=$(basename $PWD)
     export WARMUP_TIME=15
     export QUIET=true
+
+    check_if_continue
   else
     # 
     # CLUSTER_NAME is set
@@ -1412,8 +1414,6 @@ function bootstrap_ccloud_environment () {
 
     export WARMUP_TIME=0
   fi
-
-  check_if_continue
 
   ccloud::create_ccloud_stack false  \
     && print_code_pass -c "ccloud::create_ccloud_stack false"
