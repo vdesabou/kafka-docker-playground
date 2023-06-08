@@ -948,30 +948,27 @@ commands:
       examples: |
 
         playground topic produce -t topic-json --nb-messages 10 << 'EOF'
-        [
-            {
-                "_meta": {
-                    "topic": "users",
-                    "key": "id",
-                    "relationships": [
-                    ]
-                },
-                "nested": {
-                    "phone": "faker.phone.imei()",
-                    "website": "faker.internet.domainName()"
-                },
-                "id": "iteration.index",
-                "name": "faker.internet.userName()",
-                "email": "faker.internet.exampleEmail()",
+        {
+            "_meta": {
+                "topic": "",
+                "key": "",
+                "relationships": []
+            },
+            "nested": {
                 "phone": "faker.phone.imei()",
-                "website": "faker.internet.domainName()",
-                "city": "faker.address.city()",
-                "company": "faker.company.name()"
-            }
-        ]
+                "website": "faker.internet.domainName()"
+            },
+            "id": "iteration.index",
+            "name": "faker.internet.userName()",
+            "email": "faker.internet.exampleEmail()",
+            "phone": "faker.phone.imei()",
+            "website": "faker.internet.domainName()",
+            "city": "faker.address.city()",
+            "company": "faker.company.name()"
+        }
         EOF
 
-        playground topic produce -t topic-avro << 'EOF'
+        playground topic produce -t topic-avro --nb-messages 10 << 'EOF'
         {
             "type": "record",
             "namespace": "com.github.vdesabou",
@@ -1035,7 +1032,7 @@ commands:
         EOF
 
 
-        playground topic produce -t topic-proto << 'EOF'
+        playground topic produce -t topic-proto --nb-messages 3 << 'EOF'
         syntax = "proto3";
 
         message Order {

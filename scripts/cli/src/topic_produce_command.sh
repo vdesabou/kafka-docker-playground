@@ -14,28 +14,6 @@ tmp_dir=$(mktemp -d -t ci-XXXXXXXXXX)
 schema_file=$tmp_dir/value_schema
 echo "$schema_content" > $schema_file
 
-# JSON is invalid
-if ! echo "$json_content" | jq -e .  > /dev/null 2>&1
-then
-    set +e
-    jq_output=$(jq . "$json_file" 2>&1)
-    error_line=$(echo "$jq_output" | grep -oE 'parse error.*at line [0-9]+' | grep -oE '[0-9]+')
-
-    if [[ -n "$error_line" ]]; then
-        logerror "❌ Invalid JSON at line $error_line"
-    fi
-    set -e
-
-    if [[ $(type -f bat 2>&1) =~ "not found" ]]
-    then
-        cat -n $json_file
-    else
-        bat $json_file --highlight-line $error_line
-    fi
-
-    exit 1
-fi
-
 environment=`get_environment_used`
 
 if [ "$environment" == "error" ]
@@ -112,38 +90,21 @@ else
 fi
 
 case "${value_type}" in
-
 json)
     # https://github.com/MaterializeInc/datagen
     docker run --rm -i -v $schema_file:/app/schema.json materialize/datagen -s schema.json -n $nb_messages --dry-run | grep "Payload: " | awk '{print $2}' > $tmp_dir/out.json
     #--record-size 104
-
-    log "payload is"
-    cat $tmp_dir/out.json
-
-    cat $tmp_dir/out.json | docker exec -i $container kafka-console-producer --broker-list $bootstrap_server --topic $topic $security
 ;;
 
 avro)
     docker run --rm -v $tmp_dir:/tmp/ vdesabou/avro-tools random /tmp/out.avro --schema-file /tmp/value_schema --count $nb_messages
     docker run --rm -v $tmp_dir:/tmp/ vdesabou/avro-tools tojson /tmp/out.avro > $tmp_dir/out.json
-
-    log "payload is"
-    cat $tmp_dir/out.json
-
-    cat $tmp_dir/out.json | docker exec -e SCHEMA_REGISTRY_LOG4J_OPTS="-Dlog4j.configuration=file:/etc/kafka/tools-log4j.properties" -i $container kafka-$value_type-console-producer --broker-list $bootstrap_server --property schema.registry.url=$sr_url_cli --topic $topic $security --property value.schema="$(cat $schema_file)"
-
 ;;
 avro-with-key)
 
 ;;
 json-schema)
     docker run --rm -v $tmp_dir:/tmp/ -e NB_MESSAGES=$nb_messages vdesabou/json-schema-faker > $tmp_dir/out.json
-
-    log "payload is"
-    cat $tmp_dir/out.json
-
-    cat $tmp_dir/out.json | docker exec -e SCHEMA_REGISTRY_LOG4J_OPTS="-Dlog4j.configuration=file:/etc/kafka/tools-log4j.properties" -i $container kafka-$value_type-console-producer --broker-list $bootstrap_server --property schema.registry.url=$sr_url_cli --topic $topic $security --property value.schema="$(cat $schema_file)"
 ;;
 json-schema-with-key)
 
@@ -151,11 +112,6 @@ json-schema-with-key)
 protobuf)
     # https://github.com/JasonkayZK/mock-protobuf.js
     docker run --rm -v $tmp_dir:/tmp/ -v $schema_file:/app/schema.proto -e NB_MESSAGES=$nb_messages vdesabou/protobuf-faker  > $tmp_dir/out.json
-
-    log "payload is"
-    cat $tmp_dir/out.json
-
-    cat $tmp_dir/out.json | docker exec -e SCHEMA_REGISTRY_LOG4J_OPTS="-Dlog4j.configuration=file:/etc/kafka/tools-log4j.properties" -i $container kafka-$value_type-console-producer --broker-list $bootstrap_server --property schema.registry.url=$sr_url_cli --topic $topic $security --property value.schema="$(cat $schema_file)"
 ;;
 protobuf-with-key)
 
@@ -163,7 +119,20 @@ protobuf-with-key)
 none)
 ;;
 *)
-    logerror "producer name not valid ! Should be one of json, avro, avro-with-key, json-schema, json-schema-with-key, protobuf or protobuf-with-key"
+    logerror "value_type name not valid ! Should be one of json, avro, avro-with-key, json-schema, json-schema-with-key, protobuf or protobuf-with-key"
     exit 1
+;;
+esac
+
+log "payload is"
+cat $tmp_dir/out.json
+
+log "Producing data"
+case "${value_type}" in
+json)
+    cat $tmp_dir/out.json | docker exec -i $container kafka-console-producer --broker-list $bootstrap_server --topic $topic $security
+;;
+*)
+    cat $tmp_dir/out.json | docker exec -e SCHEMA_REGISTRY_LOG4J_OPTS="-Dlog4j.configuration=file:/etc/kafka/tools-log4j.properties" -i $container kafka-$value_type-console-producer --broker-list $bootstrap_server --property schema.registry.url=$sr_url_cli --topic $topic $security --property value.schema="$(cat $schema_file)"
 ;;
 esac

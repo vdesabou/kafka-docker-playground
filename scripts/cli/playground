@@ -2014,7 +2014,7 @@ playground_topic_produce_usage() {
 
     # :command.usage_examples
     printf "%s\n" "$(bold "Examples")"
-    printf "  playground topic produce -t topic-json --nb-messages 10 << 'EOF'\n  [\n      {\n          \"_meta\": {\n              \"topic\": \"users\",\n              \"key\": \"id\",\n              \"relationships\": [\n              ]\n          },\n          \"nested\": {\n              \"phone\": \"faker.phone.imei()\",\n              \"website\": \"faker.internet.domainName()\"\n          },\n          \"id\": \"iteration.index\",\n          \"name\": \"faker.internet.userName()\",\n          \"email\": \"faker.internet.exampleEmail()\",\n          \"phone\": \"faker.phone.imei()\",\n          \"website\": \"faker.internet.domainName()\",\n          \"city\": \"faker.address.city()\",\n          \"company\": \"faker.company.name()\"\n      }\n  ]\n  EOF\n  \n  playground topic produce -t topic-avro << 'EOF'\n  {\n      \"type\": \"record\",\n      \"namespace\": \"com.github.vdesabou\",\n      \"name\": \"Customer\",\n      \"version\": \"1\",\n      \"fields\": [\n          {\n              \"name\": \"count\",\n              \"type\": \"long\",\n              \"doc\": \"count\"\n          },\n          {\n              \"name\": \"first_name\",\n              \"type\": \"string\",\n              \"doc\": \"First Name of Customer\"\n          },\n          {\n              \"name\": \"last_name\",\n              \"type\": \"string\",\n              \"doc\": \"Last Name of Customer\"\n          },\n          {\n              \"name\": \"address\",\n              \"type\": \"string\",\n              \"doc\": \"Address of Customer\"\n          }\n      ]\n  }\n  EOF\n  \n  playground topic produce -t topic-json-schema --nb-messages 3 << 'EOF'\n  {\n    \"$schema\": \"http://json-schema.org/draft-07/schema#\",\n    \"additionalProperties\": false,\n    \"$id\": \"http://lh.test/Customer.schema.json\",\n    \"title\": \"Customer\",\n    \"description\": \"Customer description\",\n    \"type\": \"object\",\n    \"properties\": {\n      \"name\": {\n        \"description\": \"Customer name\",\n        \"type\": \"string\",\n        \"maxLength\": 25\n      },\n      \"surname\": {\n        \"description\": \"Customer surname\",\n        \"type\": \"string\",\n        \"minLength\": 2\n      },\n      \"email\": {\n        \"description\": \"Email\",\n        \"type\": \"string\",\n        \"pattern\": \"^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\\.[a-zA-Z0-9-.]+$\"\n      }\n    },\n    \"required\": [\n      \"name\",\n      \"surname\"\n    ]\n  }\n  EOF\n  \n  \n  playground topic produce -t topic-proto << 'EOF'\n  syntax = \"proto3\";\n  \n  message Order {\n    float         total = 1;\n    repeated Item items = 2;\n  \n    message Item {\n      string name  = 1;\n      float  price = 2;\n    }\n  }\n  EOF\n"
+    printf "  playground topic produce -t topic-json --nb-messages 10 << 'EOF'\n  {\n      \"_meta\": {\n          \"topic\": \"\",\n          \"key\": \"\",\n          \"relationships\": []\n      },\n      \"nested\": {\n          \"phone\": \"faker.phone.imei()\",\n          \"website\": \"faker.internet.domainName()\"\n      },\n      \"id\": \"iteration.index\",\n      \"name\": \"faker.internet.userName()\",\n      \"email\": \"faker.internet.exampleEmail()\",\n      \"phone\": \"faker.phone.imei()\",\n      \"website\": \"faker.internet.domainName()\",\n      \"city\": \"faker.address.city()\",\n      \"company\": \"faker.company.name()\"\n  }\n  EOF\n  \n  playground topic produce -t topic-avro --nb-messages 10 << 'EOF'\n  {\n      \"type\": \"record\",\n      \"namespace\": \"com.github.vdesabou\",\n      \"name\": \"Customer\",\n      \"version\": \"1\",\n      \"fields\": [\n          {\n              \"name\": \"count\",\n              \"type\": \"long\",\n              \"doc\": \"count\"\n          },\n          {\n              \"name\": \"first_name\",\n              \"type\": \"string\",\n              \"doc\": \"First Name of Customer\"\n          },\n          {\n              \"name\": \"last_name\",\n              \"type\": \"string\",\n              \"doc\": \"Last Name of Customer\"\n          },\n          {\n              \"name\": \"address\",\n              \"type\": \"string\",\n              \"doc\": \"Address of Customer\"\n          }\n      ]\n  }\n  EOF\n  \n  playground topic produce -t topic-json-schema --nb-messages 3 << 'EOF'\n  {\n    \"$schema\": \"http://json-schema.org/draft-07/schema#\",\n    \"additionalProperties\": false,\n    \"$id\": \"http://lh.test/Customer.schema.json\",\n    \"title\": \"Customer\",\n    \"description\": \"Customer description\",\n    \"type\": \"object\",\n    \"properties\": {\n      \"name\": {\n        \"description\": \"Customer name\",\n        \"type\": \"string\",\n        \"maxLength\": 25\n      },\n      \"surname\": {\n        \"description\": \"Customer surname\",\n        \"type\": \"string\",\n        \"minLength\": 2\n      },\n      \"email\": {\n        \"description\": \"Email\",\n        \"type\": \"string\",\n        \"pattern\": \"^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\\.[a-zA-Z0-9-.]+$\"\n      }\n    },\n    \"required\": [\n      \"name\",\n      \"surname\"\n    ]\n  }\n  EOF\n  \n  \n  playground topic produce -t topic-proto --nb-messages 3 << 'EOF'\n  syntax = \"proto3\";\n  \n  message Order {\n    float         total = 1;\n    repeated Item items = 2;\n  \n    message Item {\n      string name  = 1;\n      float  price = 2;\n    }\n  }\n  EOF\n"
     echo
 
   fi
@@ -9566,28 +9566,6 @@ playground_topic_produce_command() {
   schema_file=$tmp_dir/value_schema
   echo "$schema_content" > $schema_file
 
-  # JSON is invalid
-  if ! echo "$json_content" | jq -e .  > /dev/null 2>&1
-  then
-      set +e
-      jq_output=$(jq . "$json_file" 2>&1)
-      error_line=$(echo "$jq_output" | grep -oE 'parse error.*at line [0-9]+' | grep -oE '[0-9]+')
-
-      if [[ -n "$error_line" ]]; then
-          logerror "❌ Invalid JSON at line $error_line"
-      fi
-      set -e
-
-      if [[ $(type -f bat 2>&1) =~ "not found" ]]
-      then
-          cat -n $json_file
-      else
-          bat $json_file --highlight-line $error_line
-      fi
-
-      exit 1
-  fi
-
   environment=`get_environment_used`
 
   if [ "$environment" == "error" ]
@@ -9665,38 +9643,21 @@ playground_topic_produce_command() {
   fi
 
   case "${value_type}" in
-
   json)
       # https://github.com/MaterializeInc/datagen
       docker run --rm -i -v $schema_file:/app/schema.json materialize/datagen -s schema.json -n $nb_messages --dry-run | grep "Payload: " | awk '{print $2}' > $tmp_dir/out.json
       #--record-size 104
-
-      log "payload is"
-      cat $tmp_dir/out.json
-
-      cat $tmp_dir/out.json | docker exec -i $container kafka-console-producer --broker-list $bootstrap_server --topic $topic $security
   ;;
 
   avro)
       docker run --rm -v $tmp_dir:/tmp/ vdesabou/avro-tools random /tmp/out.avro --schema-file /tmp/value_schema --count $nb_messages
       docker run --rm -v $tmp_dir:/tmp/ vdesabou/avro-tools tojson /tmp/out.avro > $tmp_dir/out.json
-
-      log "payload is"
-      cat $tmp_dir/out.json
-
-      cat $tmp_dir/out.json | docker exec -e SCHEMA_REGISTRY_LOG4J_OPTS="-Dlog4j.configuration=file:/etc/kafka/tools-log4j.properties" -i $container kafka-$value_type-console-producer --broker-list $bootstrap_server --property schema.registry.url=$sr_url_cli --topic $topic $security --property value.schema="$(cat $schema_file)"
-
   ;;
   avro-with-key)
 
   ;;
   json-schema)
       docker run --rm -v $tmp_dir:/tmp/ -e NB_MESSAGES=$nb_messages vdesabou/json-schema-faker > $tmp_dir/out.json
-
-      log "payload is"
-      cat $tmp_dir/out.json
-
-      cat $tmp_dir/out.json | docker exec -e SCHEMA_REGISTRY_LOG4J_OPTS="-Dlog4j.configuration=file:/etc/kafka/tools-log4j.properties" -i $container kafka-$value_type-console-producer --broker-list $bootstrap_server --property schema.registry.url=$sr_url_cli --topic $topic $security --property value.schema="$(cat $schema_file)"
   ;;
   json-schema-with-key)
 
@@ -9704,11 +9665,6 @@ playground_topic_produce_command() {
   protobuf)
       # https://github.com/JasonkayZK/mock-protobuf.js
       docker run --rm -v $tmp_dir:/tmp/ -v $schema_file:/app/schema.proto -e NB_MESSAGES=$nb_messages vdesabou/protobuf-faker  > $tmp_dir/out.json
-
-      log "payload is"
-      cat $tmp_dir/out.json
-
-      cat $tmp_dir/out.json | docker exec -e SCHEMA_REGISTRY_LOG4J_OPTS="-Dlog4j.configuration=file:/etc/kafka/tools-log4j.properties" -i $container kafka-$value_type-console-producer --broker-list $bootstrap_server --property schema.registry.url=$sr_url_cli --topic $topic $security --property value.schema="$(cat $schema_file)"
   ;;
   protobuf-with-key)
 
@@ -9716,8 +9672,21 @@ playground_topic_produce_command() {
   none)
   ;;
   *)
-      logerror "producer name not valid ! Should be one of json, avro, avro-with-key, json-schema, json-schema-with-key, protobuf or protobuf-with-key"
+      logerror "value_type name not valid ! Should be one of json, avro, avro-with-key, json-schema, json-schema-with-key, protobuf or protobuf-with-key"
       exit 1
+  ;;
+  esac
+
+  log "payload is"
+  cat $tmp_dir/out.json
+
+  log "Producing data"
+  case "${value_type}" in
+  json)
+      cat $tmp_dir/out.json | docker exec -i $container kafka-console-producer --broker-list $bootstrap_server --topic $topic $security
+  ;;
+  *)
+      cat $tmp_dir/out.json | docker exec -e SCHEMA_REGISTRY_LOG4J_OPTS="-Dlog4j.configuration=file:/etc/kafka/tools-log4j.properties" -i $container kafka-$value_type-console-producer --broker-list $bootstrap_server --property schema.registry.url=$sr_url_cli --topic $topic $security --property value.schema="$(cat $schema_file)"
   ;;
   esac
 }
