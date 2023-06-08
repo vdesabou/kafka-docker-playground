@@ -2,7 +2,6 @@
     "type": "record",
     "namespace": "com.github.vdesabou",
     "name": "Customer",
-    "version": "1",
     "fields": [
         {
             "name": "count",
