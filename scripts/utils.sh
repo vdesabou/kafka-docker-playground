@@ -309,7 +309,13 @@ else
         #  Loop on all connectors in CONNECT_PLUGIN_PATH and install latest version from Confluent Hub (except for JDBC and replicator)
         ###
         first_loop=true
-        rm -rf ${DIR_UTILS}/../confluent-hub
+        if [[ "$OSTYPE" == "darwin"* ]]
+        then
+          rm -rf ${DIR_UTILS}/../confluent-hub
+        else
+          log "Using sudo to remove ${DIR_UTILS}/../confluent-hub"
+          sudo rm -rf ${DIR_UTILS}/../confluent-hub
+        fi
 
         for connector_path in ${connector_paths//,/ }
         do
