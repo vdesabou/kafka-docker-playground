@@ -92,6 +92,18 @@ do
     while true; do
       nb_messages=$(playground topic get-number-records -t $topic | tail -1)
       
+      if [[ ! $nb_messages =~ ^[0-9]+$ ]]
+      then
+        echo $nb_messages | grep "does not exist" > /dev/null 2>&1
+        if [ $? == 0 ]
+        then
+          logwarn "topic $topic does not exist !"
+        else
+          logwarn "problem while getting number of messages: $nb_messages"
+        fi
+        break
+      fi
+
       if [ $nb_messages -ge $min_expected_messages ]
       then
         break
@@ -110,6 +122,18 @@ do
     done
   else
     nb_messages=$(playground topic get-number-records -t $topic | tail -1)
+
+    if [[ ! $nb_messages =~ ^[0-9]+$ ]]
+    then
+      echo $nb_messages | grep "does not exist" > /dev/null 2>&1
+      if [ $? == 0 ]
+      then
+        logwarn "topic $topic does not exist !"
+      else
+        logwarn "problem while getting number of messages: $nb_messages"
+      fi
+      continue
+    fi
   fi
 
   if [[ -n "$max_messages" ]]

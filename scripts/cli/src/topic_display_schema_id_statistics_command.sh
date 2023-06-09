@@ -49,6 +49,17 @@ items=($topic)
 for topic in ${items[@]}
 do
     nb_messages=$(playground topic get-number-records -t $topic | tail -1)
+    if [[ ! $nb_messages =~ ^[0-9]+$ ]]
+    then
+      echo $nb_messages | grep "does not exist" > /dev/null 2>&1
+      if [ $? == 0 ]
+      then
+        logwarn "topic $topic does not exist !"
+      else
+        logwarn "problem while getting number of messages: $nb_messages"
+      fi
+      continue
+    fi
     rm -f /tmp/results.json
     log "✨ Display statistics of topic $topic, it contains $nb_messages messages"
     output_file="/tmp/output.txt"
