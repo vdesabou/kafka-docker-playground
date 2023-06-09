@@ -137,10 +137,31 @@ case "${schema_type}" in
         if jq -e . >/dev/null 2>&1 <<< "$(cat "$schema_file")"
         then
             log "💫 payload is single json, it will be sent as one record"
-            jq -c . "$schema_file" > $tmp_dir/out.json
+            jq -c . "$schema_file" > $tmp_dir/minified.json
+            for((i=0;i<$nb_messages;i++))
+            do
+                cat $tmp_dir/minified.json >> $tmp_dir/out.json
+            done
         else
             log "💫 payload is not single json, one record per line will be sent"
-            cp $schema_file $tmp_dir/out.json
+            input_file=$schema_file
+            output_file=$tmp_dir/out.json
+
+            lines_count=0
+            stop=0
+            while [ $stop != 1 ]
+            do
+                while IFS= read -r line
+                do
+                    echo "$line" >> "$output_file"
+                    lines_count=$((lines_count+1))
+                    if [ $lines_count -ge $nb_messages ]
+                    then
+                        stop=1
+                        break
+                    fi
+                done < "$input_file"
+            done
         fi
     ;;
     *)
@@ -158,12 +179,13 @@ then
     exit 1
 fi
 
-log "✨ $nb_generated_messages records were generated"
-if (( nb_generated_messages < 20 ))
+if (( nb_generated_messages < 10 ))
 then
+    log "✨ $nb_generated_messages records were generated"
     cat $tmp_dir/out.json
 else
-    head -n 20 "$tmp_dir/out.json"
+    log "✨ $nb_generated_messages records were generated (only showing first 10)"
+    head -n 10 "$tmp_dir/out.json"
 fi
 
 log "💯 Get number of records in topic $topic"

@@ -2048,7 +2048,7 @@ playground_topic_produce_usage() {
 
     # :command.usage_examples
     printf "%s\n" "$(bold "Examples")"
-    printf "  playground topic produce -t topic-json --nb-messages 10 << 'EOF'\n  {\n      \"_meta\": {\n          \"topic\": \"\",\n          \"key\": \"\",\n          \"relationships\": []\n      },\n      \"nested\": {\n          \"phone\": \"faker.phone.imei()\",\n          \"website\": \"faker.internet.domainName()\"\n      },\n      \"id\": \"iteration.index\",\n      \"name\": \"faker.internet.userName()\",\n      \"email\": \"faker.internet.exampleEmail()\",\n      \"phone\": \"faker.phone.imei()\",\n      \"website\": \"faker.internet.domainName()\",\n      \"city\": \"faker.address.city()\",\n      \"company\": \"faker.company.name()\"\n  }\n  EOF\n  \n  playground topic produce -t topic-avro --nb-messages 10 << 'EOF'\n  {\n      \"type\": \"record\",\n      \"namespace\": \"com.github.vdesabou\",\n      \"name\": \"Customer\",\n      \"version\": \"1\",\n      \"fields\": [\n          {\n              \"name\": \"count\",\n              \"type\": \"long\",\n              \"doc\": \"count\"\n          },\n          {\n              \"name\": \"first_name\",\n              \"type\": \"string\",\n              \"doc\": \"First Name of Customer\"\n          },\n          {\n              \"name\": \"last_name\",\n              \"type\": \"string\",\n              \"doc\": \"Last Name of Customer\"\n          },\n          {\n              \"name\": \"address\",\n              \"type\": \"string\",\n              \"doc\": \"Address of Customer\"\n          }\n      ]\n  }\n  EOF\n  \n  playground topic produce -t topic-json-schema --nb-messages 3 << 'EOF'\n  {\n    \"$schema\": \"http://json-schema.org/draft-07/schema#\",\n    \"additionalProperties\": false,\n    \"$id\": \"http://lh.test/Customer.schema.json\",\n    \"title\": \"Customer\",\n    \"description\": \"Customer description\",\n    \"type\": \"object\",\n    \"properties\": {\n      \"name\": {\n        \"description\": \"Customer name\",\n        \"type\": \"string\",\n        \"maxLength\": 25\n      },\n      \"surname\": {\n        \"description\": \"Customer surname\",\n        \"type\": \"string\",\n        \"minLength\": 2\n      },\n      \"email\": {\n        \"description\": \"Email\",\n        \"type\": \"string\",\n        \"pattern\": \"^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\\.[a-zA-Z0-9-.]+$\"\n      }\n    },\n    \"required\": [\n      \"name\",\n      \"surname\"\n    ]\n  }\n  EOF\n  \n  \n  playground topic produce -t topic-proto --nb-messages 3 << 'EOF'\n  syntax = \"proto3\";\n  \n  message Order {\n    float         total = 1;\n    repeated Item items = 2;\n  \n    message Item {\n      string name  = 1;\n      float  price = 2;\n    }\n  }\n  EOF\n"
+    printf "  playground topic produce -t topic-json --nb-messages 10 << 'EOF'\n  {\n      \"_meta\": {\n          \"topic\": \"\",\n          \"key\": \"\",\n          \"relationships\": []\n      },\n      \"nested\": {\n          \"phone\": \"faker.phone.imei()\",\n          \"website\": \"faker.internet.domainName()\"\n      },\n      \"id\": \"iteration.index\",\n      \"name\": \"faker.internet.userName()\",\n      \"email\": \"faker.internet.exampleEmail()\",\n      \"phone\": \"faker.phone.imei()\",\n      \"website\": \"faker.internet.domainName()\",\n      \"city\": \"faker.address.city()\",\n      \"company\": \"faker.company.name()\"\n  }\n  EOF\n  \n  playground topic produce -t topic-avro --nb-messages 10 << 'EOF'\n  {\n      \"type\": \"record\",\n      \"namespace\": \"com.github.vdesabou\",\n      \"name\": \"Customer\",\n      \"version\": \"1\",\n      \"fields\": [\n          {\n              \"name\": \"count\",\n              \"type\": \"long\",\n              \"doc\": \"count\"\n          },\n          {\n              \"name\": \"first_name\",\n              \"type\": \"string\",\n              \"doc\": \"First Name of Customer\"\n          },\n          {\n              \"name\": \"last_name\",\n              \"type\": \"string\",\n              \"doc\": \"Last Name of Customer\"\n          },\n          {\n              \"name\": \"address\",\n              \"type\": \"string\",\n              \"doc\": \"Address of Customer\"\n          }\n      ]\n  }\n  EOF\n  \n  playground topic produce -t topic-json-schema --nb-messages 3 << 'EOF'\n  {\n    \"$schema\": \"http://json-schema.org/draft-07/schema#\",\n    \"additionalProperties\": false,\n    \"$id\": \"http://lh.test/Customer.schema.json\",\n    \"title\": \"Customer\",\n    \"description\": \"Customer description\",\n    \"type\": \"object\",\n    \"properties\": {\n      \"name\": {\n        \"description\": \"Customer name\",\n        \"type\": \"string\",\n        \"maxLength\": 25\n      },\n      \"surname\": {\n        \"description\": \"Customer surname\",\n        \"type\": \"string\",\n        \"minLength\": 2\n      },\n      \"email\": {\n        \"description\": \"Email\",\n        \"type\": \"string\",\n        \"pattern\": \"^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\\.[a-zA-Z0-9-.]+$\"\n      }\n    },\n    \"required\": [\n      \"name\",\n      \"surname\"\n    ]\n  }\n  EOF\n  \n  \n  playground topic produce -t topic-proto --nb-messages 3 << 'EOF'\n  syntax = \"proto3\";\n  \n  message Order {\n    float         total = 1;\n    repeated Item items = 2;\n  \n    message Item {\n      string name  = 1;\n      float  price = 2;\n    }\n  }\n  EOF\n  \n  playground topic produce -t vincent-jsql --nb-messages 10 << 'EOF'\n  CREATE TABLE \"notused\".\"notused\" (\n    \"id\" int PRIMARY KEY,\n    \"name\" varchar COMMENT 'faker.internet.userName()',\n    \"merchant_id\" int NOT NULL COMMENT 'faker.datatype.number()',\n    \"price\" int COMMENT 'faker.datatype.number()',\n    \"status\" int COMMENT 'faker.datatype.boolean()',\n    \"created_at\" datetime DEFAULT (now())\n  );\n  EOF\n"
     echo
 
   fi
@@ -9775,34 +9775,46 @@ playground_topic_produce_command() {
           docker run --rm -v $tmp_dir:/tmp/ vdesabou/avro-tools random /tmp/out.avro --schema-file /tmp/value_schema --count $nb_messages > /dev/null 2>&1
           docker run --rm -v $tmp_dir:/tmp/ vdesabou/avro-tools tojson /tmp/out.avro > $tmp_dir/out.json 2>/dev/null
       ;;
-      avro-with-key)
-
-      ;;
       json-schema)
           docker run --rm -v $tmp_dir:/tmp/ -e NB_MESSAGES=$nb_messages vdesabou/json-schema-faker > $tmp_dir/out.json
-      ;;
-      json-schema-with-key)
-
       ;;
       protobuf)
           # https://github.com/JasonkayZK/mock-protobuf.js
           docker run --rm -v $tmp_dir:/tmp/ -v $schema_file:/app/schema.proto -e NB_MESSAGES=$nb_messages vdesabou/protobuf-faker  > $tmp_dir/out.json
       ;;
-      protobuf-with-key)
-
-      ;;
       raw)
           if jq -e . >/dev/null 2>&1 <<< "$(cat "$schema_file")"
           then
               log "💫 payload is single json, it will be sent as one record"
-              jq -c . "$schema_file" > $tmp_dir/out.json
+              jq -c . "$schema_file" > $tmp_dir/minified.json
+              for((i=0;i<$nb_messages;i++))
+              do
+                  cat $tmp_dir/minified.json >> $tmp_dir/out.json
+              done
           else
               log "💫 payload is not single json, one record per line will be sent"
-              cp $schema_file $tmp_dir/out.json
+              input_file=$schema_file
+              output_file=$tmp_dir/out.json
+
+              lines_count=0
+              stop=0
+              while [ $stop != 1 ]
+              do
+                  while IFS= read -r line
+                  do
+                      echo "$line" >> "$output_file"
+                      lines_count=$((lines_count+1))
+                      if [ $lines_count -ge $nb_messages ]
+                      then
+                          stop=1
+                          break
+                      fi
+                  done < "$input_file"
+              done
           fi
       ;;
       *)
-          logerror "❌ schema_type name not valid ! Should be one of raw, json, avro, avro-with-key, json-schema, json-schema-with-key, protobuf or protobuf-with-key"
+          logerror "❌ schema_type name not valid ! Should be one of raw, json, avro, json-schema or protobuf"
           exit 1
       ;;
   esac
@@ -9816,12 +9828,13 @@ playground_topic_produce_command() {
       exit 1
   fi
 
-  log "✨ $nb_generated_messages records were generated"
-  if (( nb_generated_messages < 50 ))
+  if (( nb_generated_messages < 10 ))
   then
+      log "✨ $nb_generated_messages records were generated"
       cat $tmp_dir/out.json
   else
-      head -n 50 "$tmp_dir/out.json"
+      log "✨ $nb_generated_messages records were generated (only showing first 10)"
+      head -n 10 "$tmp_dir/out.json"
   fi
 
   log "💯 Get number of records in topic $topic"
