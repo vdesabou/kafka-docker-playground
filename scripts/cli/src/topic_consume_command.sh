@@ -61,7 +61,7 @@ if [[ -n "$timeout" ]] && [ "$timeout" != "60" ]
 then
   if [[ ! -n "$min_expected_messages" ]]
   then
-    logerror "--timeout was provided without specifying --min-expected-messages"
+    logerror "❌ --timeout was provided without specifying --min-expected-messages"
     exit 1
   fi
 fi
@@ -77,7 +77,7 @@ then
     topic=$(playground get-topic-list --skip-connect-internal-topics)
     if [ "$topic" == "" ]
     then
-        logerror "❌ No topic found !"
+        logerror "❌ no topic found !"
         exit 1
     fi
 fi
@@ -97,9 +97,9 @@ do
         echo $nb_messages | grep "does not exist" > /dev/null 2>&1
         if [ $? == 0 ]
         then
-          logwarn "topic $topic does not exist !"
+          logwarn "❌ topic $topic does not exist !"
         else
-          logwarn "problem while getting number of messages: $nb_messages"
+          logwarn "❌ problem while getting number of messages: $nb_messages"
         fi
         break
       fi
@@ -114,7 +114,7 @@ do
       
       if [ $elapsed_time -ge $timeout ]
       then
-        logerror "❌ Overall timeout of $timeout seconds exceeded. --min-expected-messages is set with $min_expected_messages but topic $topic contains $nb_messages messages"
+        logerror "❌ overall timeout of $timeout seconds exceeded. --min-expected-messages is set with $min_expected_messages but topic $topic contains $nb_messages messages"
         exit 1
       fi
       
@@ -128,9 +128,9 @@ do
       echo $nb_messages | grep "does not exist" > /dev/null 2>&1
       if [ $? == 0 ]
       then
-        logwarn "topic $topic does not exist !"
+        logwarn "❌ topic $topic does not exist !"
       else
-        logwarn "problem while getting number of messages: $nb_messages"
+        logwarn "❌ problem while getting number of messages: $nb_messages"
       fi
       continue
     fi
@@ -148,7 +148,7 @@ do
   version=$(curl $sr_security -s "${sr_url}/subjects/${topic}-key/versions/1" | jq -r .version)
   if [ "$version" != "null" ]
   then
-    schema_type=$(curl $sr_security -s "${sr_url}/subjects/${topic}-key/versions/1"  | jq -r .schemaType)
+    schema_type=$(curl $sr_security -s "${sr_url}/subjects/${topic}-key/versions/1" | jq -r .schemaType)
     case "${schema_type}" in
       JSON)
         key_type="json-schema"
