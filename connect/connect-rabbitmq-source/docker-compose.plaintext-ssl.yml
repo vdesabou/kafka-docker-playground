@@ -1,0 +1,49 @@
+---
+version: '3.5'
+services:
+
+  rabbitmq:
+    image: rabbitmq:3.8.19-alpine
+    hostname: rabbitmq
+    container_name: rabbitmq
+    ports:
+      - "5672:5672"
+      - "8080:8080"
+    volumes:
+     # - ../../connect/connect-rabbitmq-source/ssl/rabbitmq.conf:/etc/rabbitmq/rabbitmq.conf
+      - ../../connect/connect-rabbitmq-source/security/snakeoil-ca-1.crt:/tmp/ca.crt
+      - ../../connect/connect-rabbitmq-source/security/rabbitmq.certificate.pem:/tmp/server.pem
+      - ../../connect/connect-rabbitmq-source/security/rabbitmq.key:/tmp/server.key
+    environment:
+      RABBITMQ_DEFAULT_USER: "myuser"
+      RABBITMQ_DEFAULT_PASS: "mypassword"
+      RABBITMQ_SSL_CACERTFILE: /tmp/ca.crt
+      RABBITMQ_SSL_CERTFILE: /tmp/server.pem
+      RABBITMQ_SSL_FAIL_IF_NO_PEER_CERT: "true"
+      RABBITMQ_SSL_KEYFILE: /tmp/server.key
+      RABBITMQ_SSL_VERIFY: "verify_peer"
+
+  rabbitmq_producer:
+    build:
+      context: ../../connect/connect-rabbitmq-source/producer
+    hostname: rabbitmq_producer
+    container_name: rabbitmq_producer
+
+  rabbitmq_consumer:
+    build:
+      context: ../../connect/connect-rabbitmq-source/consumer
+    hostname: rabbitmq_consumer
+    container_name: rabbitmq_consumer
+
+  connect:
+    depends_on:
+      - zookeeper
+      - broker
+      - schema-registry
+      - rabbitmq
+    volumes:
+      - ../../connect/connect-rabbitmq-source/security/kafka.connect.truststore.jks:/tmp/truststore.jks
+      - ../../connect/connect-rabbitmq-source/security/kafka.connect.keystore.jks:/tmp/keystore.jks
+    environment:    
+      CONNECT_PLUGIN_PATH: /usr/share/confluent-hub-components/confluentinc-kafka-connect-rabbitmq
+      CONNECT_LOG4J_LOGGERS: org.apache.zookeeper=ERROR,org.I0Itec.zkclient=ERROR,org.reflections=ERROR,com.rabbitmq.client=TRACE
