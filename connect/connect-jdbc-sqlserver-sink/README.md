@@ -120,7 +120,7 @@ $ curl -X PUT \
      --data '{
                "connector.class": "io.confluent.connect.jdbc.JdbcSourceConnector",
                     "tasks.max": "1",
-                    "connection.url": "jdbc:sqlserver://sqlserver:1433;databaseName=testDB",
+                    "connection.url": "jdbc:sqlserver://sqlserver:1433;databaseName=testDB;encrypt=false",
                     "connection.user": "sa",
                     "connection.password": "Password!",
                     "table.whitelist": "customers",
