@@ -1,7 +1,7 @@
 topic="${args[--topic]}"
 nb_messages="${args[--nb-messages]}"
 
-schema=${args[schema]}
+schema="${args[--schema]}"
 
 tmp_dir=$(mktemp -d -t ci-XXXXXXXXXX)
 schema_file=$tmp_dir/value_schema

@@ -931,23 +931,22 @@ commands:
       group: Topic
       help: |-
          📤 Produce to a topic
-      completions:
-        - $(playground get-predefined-schemas "$cur")
-      args:
-        - name: schema
-          
-          # Set the default path value to -, which is the standard operator for stdin.
-          default: "-"
-          help: |- 
-            You can either:
-            
-            * Set your own schema with stdin (see example section)
-
-            * Or use completion to select predefined schemas
-
-            * Or select your own schema file (if file is present in current folder)
-
       flags:
+      - long: --schema
+        arg: schema
+        completions:
+          - $(playground get-predefined-schemas "$cur")
+        # Set the default path value to -, which is the standard operator for stdin.
+        default: "-"
+        required: false
+        help: |- 
+          You can either:
+          
+          * Set your own schema with stdin (see example section)
+
+          * Or use completion to select predefined schemas
+
+          * Or select your own schema file (if file is present in current folder)
       - long: --topic
         short: -t
         required: true

@@ -2015,7 +2015,7 @@ playground_topic_produce_usage() {
   fi
 
   printf "%s\n" "$(bold "== Usage ==")"
-  printf "  playground topic produce [SCHEMA] [OPTIONS]\n"
+  printf "  playground topic produce [OPTIONS]\n"
   printf "  playground topic produce --help | -h\n"
   echo
 
@@ -2024,6 +2024,12 @@ playground_topic_produce_usage() {
     printf "%s\n" "$(bold "== Options ==")"
 
     # :command.usage_flags
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--schema SCHEMA")"
+    printf "    You can either:\n    \n    * Set your own schema with stdin (see example section)\n    \n    * Or use completion to select predefined schemas\n    \n    * Or select your own schema file (if file is present in current folder)\n"
+    printf "    Default: -\n"
+    echo
+
     # :flag.usage
     printf "  %s\n" "$(magenta "--topic, -t TOPIC (required)")"
     printf "    🗳 Topic name\n"
@@ -2038,15 +2044,6 @@ playground_topic_produce_usage() {
     # :command.usage_fixed_flags
     printf "  %s\n" "$(magenta "--help, -h")"
     printf "    Show this help\n"
-    echo
-
-    # :command.usage_args
-    printf "%s\n" "$(bold "== Arguments ==")"
-
-    # :argument.usage
-    printf "  %s\n" "$(blue "SCHEMA")"
-    printf "    You can either:\n    \n    * Set your own schema with stdin (see example section)\n    \n    * Or use completion to select predefined schemas\n    \n    * Or select your own schema file (if file is present in current folder)\n"
-    printf "    Default: -\n"
     echo
 
     # :command.usage_examples
@@ -9652,7 +9649,7 @@ playground_topic_produce_command() {
   topic="${args[--topic]}"
   nb_messages="${args[--nb-messages]}"
 
-  schema=${args[schema]}
+  schema="${args[--schema]}"
 
   tmp_dir=$(mktemp -d -t ci-XXXXXXXXXX)
   schema_file=$tmp_dir/value_schema
@@ -14673,6 +14670,21 @@ playground_topic_produce_parse_requirements() {
     key="$1"
     case "$key" in
       # :flag.case
+      --schema)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+
+          args['--schema']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--schema requires an argument: --schema SCHEMA" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
       --topic | -t)
 
         # :flag.case_arg
@@ -14715,14 +14727,8 @@ playground_topic_produce_parse_requirements() {
       *)
         # :command.parse_requirements_case
         # :command.parse_requirements_case_simple
-        if [[ -z ${args['schema']+x} ]]; then
-
-          args['schema']=$1
-          shift
-        else
-          printf "invalid argument: %s\n" "$key" >&2
-          exit 1
-        fi
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
 
         ;;
 
@@ -14736,7 +14742,7 @@ playground_topic_produce_parse_requirements() {
   fi
 
   # :command.default_assignments
-  [[ -n ${args['schema']:-} ]] || args['schema']="-"
+  [[ -n ${args['--schema']:-} ]] || args['--schema']="-"
   [[ -n ${args['--nb-messages']:-} ]] || args['--nb-messages']="3"
 
   # :command.user_filter
