@@ -126,21 +126,12 @@ case "${schema_type}" in
         docker run --rm -v $tmp_dir:/tmp/ vdesabou/avro-tools random /tmp/out.avro --schema-file /tmp/value_schema --count $nb_messages > /dev/null 2>&1
         docker run --rm -v $tmp_dir:/tmp/ vdesabou/avro-tools tojson /tmp/out.avro > $tmp_dir/out.json 2>/dev/null
     ;;
-    avro-with-key)
-
-    ;;
     json-schema)
         docker run --rm -v $tmp_dir:/tmp/ -e NB_MESSAGES=$nb_messages vdesabou/json-schema-faker > $tmp_dir/out.json
-    ;;
-    json-schema-with-key)
-
     ;;
     protobuf)
         # https://github.com/JasonkayZK/mock-protobuf.js
         docker run --rm -v $tmp_dir:/tmp/ -v $schema_file:/app/schema.proto -e NB_MESSAGES=$nb_messages vdesabou/protobuf-faker  > $tmp_dir/out.json
-    ;;
-    protobuf-with-key)
-
     ;;
     raw)
         if jq -e . >/dev/null 2>&1 <<< "$(cat "$schema_file")"
@@ -153,7 +144,7 @@ case "${schema_type}" in
         fi
     ;;
     *)
-        logerror "❌ schema_type name not valid ! Should be one of raw, json, avro, avro-with-key, json-schema, json-schema-with-key, protobuf or protobuf-with-key"
+        logerror "❌ schema_type name not valid ! Should be one of raw, json, avro, json-schema or protobuf"
         exit 1
     ;;
 esac
