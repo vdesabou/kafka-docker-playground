@@ -1065,6 +1065,17 @@ commands:
         }
         EOF
 
+        playground topic produce -t vincent-jsql --nb-messages 10 << 'EOF'
+        CREATE TABLE "notused"."notused" (
+          "id" int PRIMARY KEY,
+          "name" varchar COMMENT 'faker.internet.userName()',
+          "merchant_id" int NOT NULL COMMENT 'faker.datatype.number()',
+          "price" int COMMENT 'faker.datatype.number()',
+          "status" int COMMENT 'faker.datatype.boolean()',
+          "created_at" datetime DEFAULT (now())
+        );
+        EOF
+
     - name: set-schema-compatibility
       filters:
       - schema_registry_running

@@ -91,6 +91,10 @@ elif grep -q "_meta" $schema_file
 then
     log "🔮 schema was identified as json"
     schema_type=json
+elif grep -q "CREATE TABLE" $schema_file
+then
+    log "🔮 schema was identified as sql"
+    schema_type=sql
 elif grep -q "\"type\"\s*:\s*\"record\"" $schema_file
 then
     log "🔮 schema was identified as avro"
@@ -101,15 +105,15 @@ else
 fi
 
 case "${schema_type}" in
-    json)
+    json|sql)
         # https://github.com/MaterializeInc/datagen
         set +e
-        docker run --rm -i -v $schema_file:/app/schema.json materialize/datagen -s schema.json -n $nb_messages --dry-run > $tmp_dir/result.log
+        docker run --rm -i -v $schema_file:/app/schema.$schema_type materialize/datagen -s schema.$schema_type -n $nb_messages --dry-run > $tmp_dir/result.log
         
         nb=$(grep -c "Payload: " $tmp_dir/result.log)
         if [ $nb -eq 0 ]
         then
-            logerror "❌ materialize/datagen failed to produce json "
+            logerror "❌ materialize/datagen failed to produce $schema_type "
             cat $tmp_dir/result.log
             exit 1
         fi
@@ -189,7 +193,7 @@ fi
 set -e
 log "📤 producing $nb_generated_messages records to topic $topic"
 case "${schema_type}" in
-    json|raw)
+    json|sql|raw)
         if [[ "$environment" == "environment" ]]
         then
             cat $tmp_dir/out.json | docker run -i --rm -v /tmp/delta_configs/ak-tools-ccloud.delta:/tmp/configuration/ccloud.properties -e BOOTSTRAP_SERVERS="$BOOTSTRAP_SERVERS" ${CP_CONNECT_IMAGE}:${CONNECT_TAG} kafka-console-producer --broker-list $BOOTSTRAP_SERVERS --topic $topic --producer.config /tmp/configuration/ccloud.properties $security 2>/dev/null
