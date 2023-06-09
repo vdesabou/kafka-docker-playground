@@ -168,11 +168,11 @@ then
 fi
 
 log "✨ $nb_generated_messages records were generated"
-if (( nb_generated_messages < 50 ))
+if (( nb_generated_messages < 20 ))
 then
     cat $tmp_dir/out.json
 else
-    head -n 50 "$tmp_dir/out.json"
+    head -n 20 "$tmp_dir/out.json"
 fi
 
 log "💯 Get number of records in topic $topic"
