@@ -1,0 +1,19 @@
+{
+    "_meta": {
+        "topic": "",
+        "key": "",
+        "relationships": [
+        ]
+    },
+    "nested": {
+        "phone": "faker.phone.imei()",
+        "website": "faker.internet.domainName()"
+    },
+    "id": "iteration.index",
+    "name": "faker.internet.userName()",
+    "email": "faker.internet.exampleEmail()",
+    "phone": "faker.phone.imei()",
+    "website": "faker.internet.domainName()",
+    "city": "faker.address.city()",
+    "company": "faker.company.name()"
+}

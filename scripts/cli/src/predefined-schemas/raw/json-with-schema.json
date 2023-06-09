@@ -1,0 +1,15 @@
+{
+  "schema": {
+    "type": "struct",
+    "fields": [
+      {
+        "type": "string",
+        "optional": false,
+        "field": "record"
+      }
+    ]
+  },
+  "payload": {
+    "record": "record1"
+  }
+}
