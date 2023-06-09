@@ -23,22 +23,20 @@ docker exec -i connect kafka-avro-console-consumer \
      --max-messages=1
 
 log "Creating product InfluxDB sink connector using SMT for fun"
-curl -s -X PUT \
-     -H "Content-Type: application/json" \
-     --data '{
-               "connector.class": "io.confluent.influxdb.InfluxDBSinkConnector",
-                    "tasks.max": "1",
-                    "influxdb.url": "http://influxdb:8086",
-                    "topics": "product",
-                    "transforms": "InsertField,RenameField",
-                    "transforms.InsertField.type": "org.apache.kafka.connect.transforms.InsertField\$Value",
-                    "transforms.InsertField.static.field": "measurement",
-                    "transforms.InsertField.static.value": "product",
-                    "transforms.RenameField.type": "org.apache.kafka.connect.transforms.ReplaceField\$Value",
-                    "transforms.RenameField.renames": "product:name"
-               }
-          }' \
-     http://localhost:8083/connectors/influxdb-sink/config | jq .
+playground connector create-or-update --connector influxdb-sink << EOF
+{
+     "connector.class": "io.confluent.influxdb.InfluxDBSinkConnector",
+     "tasks.max": "1",
+     "influxdb.url": "http://influxdb:8086",
+     "topics": "product",
+     "transforms": "InsertField,RenameField",
+     "transforms.InsertField.type": "org.apache.kafka.connect.transforms.InsertField\$Value",
+     "transforms.InsertField.static.field": "measurement",
+     "transforms.InsertField.static.value": "product",
+     "transforms.RenameField.type": "org.apache.kafka.connect.transforms.ReplaceField\$Value",
+     "transforms.RenameField.renames": "product:name"
+}
+EOF
 
 sleep 10
 
