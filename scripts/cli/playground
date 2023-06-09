@@ -2025,8 +2025,8 @@ playground_topic_produce_usage() {
 
     # :command.usage_flags
     # :flag.usage
-    printf "  %s\n" "$(magenta "--schema SCHEMA")"
-    printf "    You can either:\n    \n    * Set your own schema with stdin (see example section)\n    \n    * Or use completion to select predefined schemas\n    \n    * Or select your own schema file (if file is present in current folder)\n"
+    printf "  %s\n" "$(magenta "--input INPUT")"
+    printf "    🔥 You can either:\n    \n    * Set your own schema (avro, json-schema, protobuf) with stdin (see example\n    section). You can also use json or sql format as per\n    https://github.com/MaterializeInc/datagen\n    \n    * Use completion to select predefined schemas\n    \n    * Use your own schema file. 🎓 Tip: use <tab> completion to trigger fzf\n    completion\n    \n    * Directly set payload\n"
     printf "    Default: -\n"
     echo
 
@@ -9649,7 +9649,7 @@ playground_topic_produce_command() {
   topic="${args[--topic]}"
   nb_messages="${args[--nb-messages]}"
 
-  schema="${args[--schema]}"
+  schema="${args[--input]}"
 
   tmp_dir=$(mktemp -d -t ci-XXXXXXXXXX)
   schema_file=$tmp_dir/value_schema
@@ -14670,16 +14670,16 @@ playground_topic_produce_parse_requirements() {
     key="$1"
     case "$key" in
       # :flag.case
-      --schema)
+      --input)
 
         # :flag.case_arg
         if [[ -n ${2+x} ]]; then
 
-          args['--schema']="$2"
+          args['--input']="$2"
           shift
           shift
         else
-          printf "%s\n" "--schema requires an argument: --schema SCHEMA" >&2
+          printf "%s\n" "--input requires an argument: --input INPUT" >&2
           exit 1
         fi
         ;;
@@ -14742,7 +14742,7 @@ playground_topic_produce_parse_requirements() {
   fi
 
   # :command.default_assignments
-  [[ -n ${args['--schema']:-} ]] || args['--schema']="-"
+  [[ -n ${args['--input']:-} ]] || args['--input']="-"
   [[ -n ${args['--nb-messages']:-} ]] || args['--nb-messages']="3"
 
   # :command.user_filter
