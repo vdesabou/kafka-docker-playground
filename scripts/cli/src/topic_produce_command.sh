@@ -82,26 +82,25 @@ fi
 if grep -q "proto3" $schema_file
 then
     log "🔮 schema was identified as protobuf"
-    value_type=protobuf
+    schema_type=protobuf
 elif grep -q "\$schema" $schema_file
 then
     log "🔮 schema was identified as json schema"
-    value_type=json-schema
+    schema_type=json-schema
 elif grep -q "_meta" $schema_file
 then
     log "🔮 schema was identified as json"
-    value_type=json
+    schema_type=json
 elif grep -q "\"type\"\s*:\s*\"record\"" $schema_file
 then
     log "🔮 schema was identified as avro"
-    value_type=avro
+    schema_type=avro
 else
-    logerror "❌ Could not recognize the type of schema in provided schema:"
-    cat $schema_file
-    exit 1
+    log "📢 any known schema could be identified, payload will be sent as raw data"
+    schema_type=raw
 fi
 
-case "${value_type}" in
+case "${schema_type}" in
     json)
         # https://github.com/MaterializeInc/datagen
         set +e
@@ -139,10 +138,18 @@ case "${value_type}" in
     protobuf-with-key)
 
     ;;
-    none)
+    raw)
+        if jq -e . >/dev/null 2>&1 <<< "$(cat "$schema_file")"
+        then
+            log "💫 payload is single json, it will be sent as one record"
+            jq -c . "$schema_file" > $tmp_dir/out.json
+        else
+            log "💫 payload is not single json, one record per line will be sent"
+            cp $schema_file $tmp_dir/out.json
+        fi
     ;;
     *)
-        logerror "❌ value_type name not valid ! Should be one of json, avro, avro-with-key, json-schema, json-schema-with-key, protobuf or protobuf-with-key"
+        logerror "❌ schema_type name not valid ! Should be one of raw, json, avro, avro-with-key, json-schema, json-schema-with-key, protobuf or protobuf-with-key"
         exit 1
     ;;
 esac
@@ -181,8 +188,8 @@ else
 fi
 set -e
 log "📤 producing $nb_generated_messages records to topic $topic"
-case "${value_type}" in
-    json)
+case "${schema_type}" in
+    json|raw)
         if [[ "$environment" == "environment" ]]
         then
             cat $tmp_dir/out.json | docker run -i --rm -v /tmp/delta_configs/ak-tools-ccloud.delta:/tmp/configuration/ccloud.properties -e BOOTSTRAP_SERVERS="$BOOTSTRAP_SERVERS" ${CP_CONNECT_IMAGE}:${CONNECT_TAG} kafka-console-producer --broker-list $BOOTSTRAP_SERVERS --topic $topic --producer.config /tmp/configuration/ccloud.properties $security 2>/dev/null
@@ -193,9 +200,9 @@ case "${value_type}" in
     *)
         if [[ "$environment" == "environment" ]]
         then
-            cat $tmp_dir/out.json | docker run -i --rm -e SCHEMA_REGISTRY_LOG4J_OPTS="-Dlog4j.configuration=file:/etc/kafka/tools-log4j.properties" -e value_type=$value_type -e BOOTSTRAP_SERVERS="$BOOTSTRAP_SERVERS" -e SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO="$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO" -e SCHEMA_REGISTRY_URL="$SCHEMA_REGISTRY_URL" ${CP_CONNECT_IMAGE}:${CONNECT_TAG} kafka-$value_type-console-producer --broker-list $BOOTSTRAP_SERVERS --producer-property ssl.endpoint.identification.algorithm=https --producer-property sasl.mechanism=PLAIN --producer-property security.protocol=SASL_SSL --producer-property sasl.jaas.config="$SASL_JAAS_CONFIG" --property basic.auth.credentials.source=USER_INFO --property schema.registry.basic.auth.user.info="$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO" --property schema.registry.url=$SCHEMA_REGISTRY_URL --topic $topic $security --property value.schema="$(cat $schema_file)" 2>/dev/null
+            cat $tmp_dir/out.json | docker run -i --rm -e SCHEMA_REGISTRY_LOG4J_OPTS="-Dlog4j.configuration=file:/etc/kafka/tools-log4j.properties" -e schema_type=$schema_type -e BOOTSTRAP_SERVERS="$BOOTSTRAP_SERVERS" -e SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO="$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO" -e SCHEMA_REGISTRY_URL="$SCHEMA_REGISTRY_URL" ${CP_CONNECT_IMAGE}:${CONNECT_TAG} kafka-$schema_type-console-producer --broker-list $BOOTSTRAP_SERVERS --producer-property ssl.endpoint.identification.algorithm=https --producer-property sasl.mechanism=PLAIN --producer-property security.protocol=SASL_SSL --producer-property sasl.jaas.config="$SASL_JAAS_CONFIG" --property basic.auth.credentials.source=USER_INFO --property schema.registry.basic.auth.user.info="$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO" --property schema.registry.url=$SCHEMA_REGISTRY_URL --topic $topic $security --property value.schema="$(cat $schema_file)" 2>/dev/null
         else
-            cat $tmp_dir/out.json | docker exec -e SCHEMA_REGISTRY_LOG4J_OPTS="-Dlog4j.configuration=file:/etc/kafka/tools-log4j.properties" -i $container kafka-$value_type-console-producer --broker-list $bootstrap_server --property schema.registry.url=$sr_url_cli --topic $topic $security --property value.schema="$(cat $schema_file)" 2>/dev/null
+            cat $tmp_dir/out.json | docker exec -e SCHEMA_REGISTRY_LOG4J_OPTS="-Dlog4j.configuration=file:/etc/kafka/tools-log4j.properties" -i $container kafka-$schema_type-console-producer --broker-list $bootstrap_server --property schema.registry.url=$sr_url_cli --topic $topic $security --property value.schema="$(cat $schema_file)" 2>/dev/null
         fi
     ;;
 esac
