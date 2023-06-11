@@ -101,7 +101,7 @@ do
         else
           logwarn "❌ problem while getting number of messages: $nb_messages"
         fi
-        break
+        exit 1
       fi
 
       if [ $nb_messages -ge $min_expected_messages ]
@@ -132,7 +132,7 @@ do
       else
         logwarn "❌ problem while getting number of messages: $nb_messages"
       fi
-      continue
+      break
     fi
   fi
 
