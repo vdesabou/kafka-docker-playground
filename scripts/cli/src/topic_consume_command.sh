@@ -136,7 +136,7 @@ do
     fi
   fi
 
-  if [[ -n "$max_messages" ]]
+  if [[ -n "$max_messages" ]] && [ $nb_messages -ge $max_messages ]
   then
     log "✨ Display content of topic $topic, it contains $nb_messages messages, but displaying only --max-messages=$max_messages"
     nb_messages=$max_messages
