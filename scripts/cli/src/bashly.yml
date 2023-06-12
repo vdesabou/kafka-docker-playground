@@ -972,7 +972,12 @@ commands:
         help: |-
           Number of partitions for the topic. (default is 1)
           
-          Important: If topic is existing, it will be re-created before producing to topic.
+          ❌ Important: If topic is existing, it will be re-created before producing to topic.
+      - long: --key
+        arg: key
+        required: false
+        help: |-
+          Value to use for all key records. If not set, no key is used.
       examples: |
 
         playground topic produce -t topic-json --nb-messages 10 << 'EOF'

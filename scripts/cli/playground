@@ -2047,8 +2047,13 @@ playground_topic_produce_usage() {
 
     # :flag.usage
     printf "  %s\n" "$(magenta "--nb-partitions NB-PARTITIONS")"
-    printf "    Number of partitions for the topic. (default is 1)\n    \n    Important: If topic is existing, it will be re-created before producing to\n    topic.\n"
+    printf "    Number of partitions for the topic. (default is 1)\n    \n    ❌ Important: If topic is existing, it will be re-created before producing to\n    topic.\n"
     printf "    Default: \n"
+    echo
+
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--key KEY")"
+    printf "    Value to use for all key records. If not set, no key is used.\n"
     echo
 
     # :command.usage_fixed_flags
@@ -9757,6 +9762,7 @@ playground_topic_produce_command() {
   nb_messages="${args[--nb-messages]}"
   nb_partitions="${args[--nb-partitions]}"
   schema="${args[--input]}"
+  key="${args[--key]}"
 
   tmp_dir=$(mktemp -d -t ci-XXXXXXXXXX)
   schema_file=$tmp_dir/value_schema
@@ -9880,7 +9886,7 @@ playground_topic_produce_command() {
 
       avro)
           docker run --rm -v $tmp_dir:/tmp/ vdesabou/avro-tools random /tmp/out.avro --schema-file /tmp/value_schema --count $nb_messages > /dev/null 2>&1
-          docker run --rm -v $tmp_dir:/tmp/ vdesabou/avro-tools tojson /tmp/out.avro > $tmp_dir/out.json 2>/dev/null
+          docker run --rm -v $tmp_dir:/tmp/ vdesabou/avro-tools tojson /tmp/out.avro > $tmp_dir/out.json
       ;;
       json-schema)
           docker run --rm -v $tmp_dir:/tmp/ -e NB_MESSAGES=$nb_messages vdesabou/json-schema-faker > $tmp_dir/out.json
@@ -9954,10 +9960,10 @@ playground_topic_produce_command() {
       then
           if [ "$nb_partitions" != "" ]
           then
-              log "⛅ creating topic in confluent cloud"
+              log "⛅ creating topic in confluent cloud with $nb_partitions partitions"
               playground topic create --topic $topic --nb-partitions $nb_partitions
           else
-              log "⛅ creating topic in confluent cloud with $nb_partitions partitions"
+              log "⛅ creating topic in confluent cloud"
               playground topic create --topic $topic
           fi
       fi
@@ -9972,23 +9978,57 @@ playground_topic_produce_command() {
           tail -1 $tmp_dir/result.log
       fi
   fi
+
+  if [[ -n "$key" ]]
+  then
+      log "🗝️ key is set $key"
+      while read line
+      do
+          echo "$key|$line" >> $tmp_dir/tempfile
+      done < $tmp_dir/out.json
+
+      mv $tmp_dir/tempfile $tmp_dir/out.json
+
+      cat $tmp_dir/out.json
+  fi
+
   set -e
   log "📤 producing $nb_generated_messages records to topic $topic"
   case "${schema_type}" in
       json|sql|raw)
           if [[ "$environment" == "environment" ]]
           then
-              cat $tmp_dir/out.json | docker run -i --rm -v /tmp/delta_configs/ak-tools-ccloud.delta:/tmp/configuration/ccloud.properties -e BOOTSTRAP_SERVERS="$BOOTSTRAP_SERVERS" ${CP_CONNECT_IMAGE}:${CONNECT_TAG} kafka-console-producer --broker-list $BOOTSTRAP_SERVERS --topic $topic --producer.config /tmp/configuration/ccloud.properties $security 2>/dev/null
+              if [[ -n "$key" ]]
+              then
+                  cat $tmp_dir/out.json | docker run -i --rm -v /tmp/delta_configs/ak-tools-ccloud.delta:/tmp/configuration/ccloud.properties -e BOOTSTRAP_SERVERS="$BOOTSTRAP_SERVERS" ${CP_CONNECT_IMAGE}:${CONNECT_TAG} kafka-console-producer --broker-list $BOOTSTRAP_SERVERS --topic $topic --producer.config /tmp/configuration/ccloud.properties $security --property parse.key=true --property key.separator="|"
+              else
+                  cat $tmp_dir/out.json | docker run -i --rm -v /tmp/delta_configs/ak-tools-ccloud.delta:/tmp/configuration/ccloud.properties -e BOOTSTRAP_SERVERS="$BOOTSTRAP_SERVERS" ${CP_CONNECT_IMAGE}:${CONNECT_TAG} kafka-console-producer --broker-list $BOOTSTRAP_SERVERS --topic $topic --producer.config /tmp/configuration/ccloud.properties $security
+              fi
           else
-              cat $tmp_dir/out.json | docker exec -i $container kafka-console-producer --broker-list $bootstrap_server --topic $topic $security 2>/dev/null
+              if [[ -n "$key" ]]
+              then
+                  cat $tmp_dir/out.json | docker exec -i $container kafka-console-producer --broker-list $bootstrap_server --topic $topic $security --property parse.key=true --property key.separator="|"
+              else
+                  cat $tmp_dir/out.json | docker exec -i $container kafka-console-producer --broker-list $bootstrap_server --topic $topic $security
+              fi
           fi
       ;;
       *)
           if [[ "$environment" == "environment" ]]
           then
-              cat $tmp_dir/out.json | docker run -i --rm -e SCHEMA_REGISTRY_LOG4J_OPTS="-Dlog4j.configuration=file:/etc/kafka/tools-log4j.properties" -e schema_type=$schema_type -e BOOTSTRAP_SERVERS="$BOOTSTRAP_SERVERS" -e SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO="$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO" -e SCHEMA_REGISTRY_URL="$SCHEMA_REGISTRY_URL" ${CP_CONNECT_IMAGE}:${CONNECT_TAG} kafka-$schema_type-console-producer --broker-list $BOOTSTRAP_SERVERS --producer-property ssl.endpoint.identification.algorithm=https --producer-property sasl.mechanism=PLAIN --producer-property security.protocol=SASL_SSL --producer-property sasl.jaas.config="$SASL_JAAS_CONFIG" --property basic.auth.credentials.source=USER_INFO --property schema.registry.basic.auth.user.info="$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO" --property schema.registry.url=$SCHEMA_REGISTRY_URL --topic $topic $security --property value.schema="$(cat $schema_file)" 2>/dev/null
+              if [[ -n "$key" ]]
+              then
+                  cat $tmp_dir/out.json | docker run -i --rm -e SCHEMA_REGISTRY_LOG4J_OPTS="-Dlog4j.configuration=file:/etc/kafka/tools-log4j.properties" -e schema_type=$schema_type -e BOOTSTRAP_SERVERS="$BOOTSTRAP_SERVERS" -e SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO="$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO" -e SCHEMA_REGISTRY_URL="$SCHEMA_REGISTRY_URL" ${CP_CONNECT_IMAGE}:${CONNECT_TAG} kafka-$schema_type-console-producer --broker-list $BOOTSTRAP_SERVERS --producer-property ssl.endpoint.identification.algorithm=https --producer-property sasl.mechanism=PLAIN --producer-property security.protocol=SASL_SSL --producer-property sasl.jaas.config="$SASL_JAAS_CONFIG" --property basic.auth.credentials.source=USER_INFO --property schema.registry.basic.auth.user.info="$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO" --property schema.registry.url=$SCHEMA_REGISTRY_URL --topic $topic $security --property value.schema="$(cat $schema_file)" --property parse.key=true --property key.separator="|" --property key.serializer=org.apache.kafka.common.serialization.StringSerializer
+              else
+                  cat $tmp_dir/out.json | docker run -i --rm -e SCHEMA_REGISTRY_LOG4J_OPTS="-Dlog4j.configuration=file:/etc/kafka/tools-log4j.properties" -e schema_type=$schema_type -e BOOTSTRAP_SERVERS="$BOOTSTRAP_SERVERS" -e SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO="$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO" -e SCHEMA_REGISTRY_URL="$SCHEMA_REGISTRY_URL" ${CP_CONNECT_IMAGE}:${CONNECT_TAG} kafka-$schema_type-console-producer --broker-list $BOOTSTRAP_SERVERS --producer-property ssl.endpoint.identification.algorithm=https --producer-property sasl.mechanism=PLAIN --producer-property security.protocol=SASL_SSL --producer-property sasl.jaas.config="$SASL_JAAS_CONFIG" --property basic.auth.credentials.source=USER_INFO --property schema.registry.basic.auth.user.info="$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO" --property schema.registry.url=$SCHEMA_REGISTRY_URL --topic $topic $security --property value.schema="$(cat $schema_file)"
+              fi
           else
-              cat $tmp_dir/out.json | docker exec -e SCHEMA_REGISTRY_LOG4J_OPTS="-Dlog4j.configuration=file:/etc/kafka/tools-log4j.properties" -i $container kafka-$schema_type-console-producer --broker-list $bootstrap_server --property schema.registry.url=$sr_url_cli --topic $topic $security --property value.schema="$(cat $schema_file)" 2>/dev/null
+              if [[ -n "$key" ]]
+              then
+                  cat $tmp_dir/out.json | docker exec -e SCHEMA_REGISTRY_LOG4J_OPTS="-Dlog4j.configuration=file:/etc/kafka/tools-log4j.properties" -i $container kafka-$schema_type-console-producer --broker-list $bootstrap_server --property schema.registry.url=$sr_url_cli --topic $topic $security --property value.schema="$(cat $schema_file)" --property parse.key=true --property key.separator="|" --property key.serializer=org.apache.kafka.common.serialization.StringSerializer
+              else
+                  cat $tmp_dir/out.json | docker exec -e SCHEMA_REGISTRY_LOG4J_OPTS="-Dlog4j.configuration=file:/etc/kafka/tools-log4j.properties" -i $container kafka-$schema_type-console-producer --broker-list $bootstrap_server --property schema.registry.url=$sr_url_cli --topic $topic $security --property value.schema="$(cat $schema_file)"
+              fi
           fi
       ;;
   esac
@@ -15017,6 +15057,21 @@ playground_topic_produce_parse_requirements() {
           shift
         else
           printf "%s\n" "--nb-partitions requires an argument: --nb-partitions NB-PARTITIONS" >&2
+          exit 1
+        fi
+        ;;
+
+      # :flag.case
+      --key)
+
+        # :flag.case_arg
+        if [[ -n ${2+x} ]]; then
+
+          args['--key']="$2"
+          shift
+          shift
+        else
+          printf "%s\n" "--key requires an argument: --key KEY" >&2
           exit 1
         fi
         ;;
