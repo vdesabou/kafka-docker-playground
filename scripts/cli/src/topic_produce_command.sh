@@ -197,11 +197,24 @@ then
     logwarn "topic $topic does not exist !"
     if [[ "$environment" == "environment" ]]
     then
-        log "⛅ creating topic in confluent cloud"
-        playground topic create --topic $topic
+        if [ "$nb_partitions" != "" ]
+        then
+            log "⛅ creating topic in confluent cloud"
+            playground topic create --topic $topic --nb-partitions $nb_partitions
+        else
+            log "⛅ creating topic in confluent cloud with $nb_partitions partitions"
+            playground topic create --topic $topic
+        fi
     fi
 else
-    tail -1 $tmp_dir/result.log
+    if [ "$nb_partitions" != "" ]
+    then
+        log "--nb-partitions is set, re-creating topic with $nb_partitions partitions"
+        playground topic delete --topic $topic
+        playground topic create --topic $topic --nb-partitions $nb_partitions
+    else
+        tail -1 $tmp_dir/result.log
+    fi
 fi
 set -e
 log "📤 producing $nb_generated_messages records to topic $topic"

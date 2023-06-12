@@ -2047,8 +2047,8 @@ playground_topic_produce_usage() {
 
     # :flag.usage
     printf "  %s\n" "$(magenta "--nb-partitions NB-PARTITIONS")"
-    printf "    Number of partitions for the topic. \n    \n    Important: If topic is existing, it will be re-created before producing to\n    topic.\n"
-    printf "    Default: 1\n"
+    printf "    Number of partitions for the topic. (default is 1)\n    \n    Important: If topic is existing, it will be re-created before producing to\n    topic.\n"
+    printf "    Default: \n"
     echo
 
     # :command.usage_fixed_flags
@@ -2172,8 +2172,8 @@ playground_topic_create_usage() {
 
     # :flag.usage
     printf "  %s\n" "$(magenta "--nb-partitions NB-PARTITIONS")"
-    printf "    Number of partitions for the topic.\n"
-    printf "    Default: 1\n"
+    printf "    Number of partitions for the topic. (default is 1)\n"
+    printf "    Default: \n"
     echo
 
     # :command.usage_fixed_flags
@@ -9952,11 +9952,24 @@ playground_topic_produce_command() {
       logwarn "topic $topic does not exist !"
       if [[ "$environment" == "environment" ]]
       then
-          log "⛅ creating topic in confluent cloud"
-          playground topic create --topic $topic
+          if [ "$nb_partitions" != "" ]
+          then
+              log "⛅ creating topic in confluent cloud"
+              playground topic create --topic $topic --nb-partitions $nb_partitions
+          else
+              log "⛅ creating topic in confluent cloud with $nb_partitions partitions"
+              playground topic create --topic $topic
+          fi
       fi
   else
-      tail -1 $tmp_dir/result.log
+      if [ "$nb_partitions" != "" ]
+      then
+          log "--nb-partitions is set, re-creating topic with $nb_partitions partitions"
+          playground topic delete --topic $topic
+          playground topic create --topic $topic --nb-partitions $nb_partitions
+      else
+          tail -1 $tmp_dir/result.log
+      fi
   fi
   set -e
   log "📤 producing $nb_generated_messages records to topic $topic"
@@ -10125,6 +10138,11 @@ playground_topic_create_command() {
   security=$(echo "$ret" | cut -d "@" -f 2)
 
   environment=`get_environment_used`
+
+  if [ "$nb_partitions" == "" ]
+  then
+      nb_partitions=1
+  fi
 
   if [ "$environment" == "error" ]
   then
@@ -15027,7 +15045,7 @@ playground_topic_produce_parse_requirements() {
   # :command.default_assignments
   [[ -n ${args['--input']:-} ]] || args['--input']="-"
   [[ -n ${args['--nb-messages']:-} ]] || args['--nb-messages']="3"
-  [[ -n ${args['--nb-partitions']:-} ]] || args['--nb-partitions']="1"
+  [[ -n ${args['--nb-partitions']:-} ]] || args['--nb-partitions']=""
 
   # :command.user_filter
   filter_error=$(filter_schema_registry_running)
@@ -15277,7 +15295,7 @@ playground_topic_create_parse_requirements() {
   fi
 
   # :command.default_assignments
-  [[ -n ${args['--nb-partitions']:-} ]] || args['--nb-partitions']="1"
+  [[ -n ${args['--nb-partitions']:-} ]] || args['--nb-partitions']=""
 
 }
 

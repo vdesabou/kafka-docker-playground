@@ -8,6 +8,11 @@ security=$(echo "$ret" | cut -d "@" -f 2)
 
 environment=`get_environment_used`
 
+if [ "$nb_partitions" == "" ]
+then
+    nb_partitions=1
+fi
+
 if [ "$environment" == "error" ]
 then
   logerror "File containing restart command /tmp/playground-command does not exist!"

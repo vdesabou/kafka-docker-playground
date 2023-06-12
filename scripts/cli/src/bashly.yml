@@ -968,9 +968,9 @@ commands:
         arg: nb-partitions
         validate: integer
         required: false
-        default: "1"
+        default: ""
         help: |-
-          Number of partitions for the topic. 
+          Number of partitions for the topic. (default is 1)
           
           Important: If topic is existing, it will be re-created before producing to topic.
       examples: |
@@ -1133,9 +1133,9 @@ commands:
         arg: nb-partitions
         validate: integer
         required: false
-        default: "1"
+        default: ""
         help: |-
-          Number of partitions for the topic. 
+          Number of partitions for the topic. (default is 1)
       catch_all:
         label: arguments
         help: |-
