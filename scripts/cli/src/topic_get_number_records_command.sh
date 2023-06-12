@@ -44,7 +44,8 @@ do
             logerror "ERROR: /tmp/delta_configs/librdkafka.delta has not been generated"
             exit 1
         fi
-        tr -d '"' < /tmp/delta_configs/librdkafka.delta > /tmp/delta_configs/librdkafka_no_quotes.delta
+        tr -d '"' < /tmp/delta_configs/librdkafka.delta > /tmp/delta_configs/librdkafka_no_quotes_tmp.delta
+        grep -v "basic.auth.user.info" /tmp/delta_configs/librdkafka_no_quotes_tmp.delta > /tmp/delta_configs/librdkafka_no_quotes.delta
         docker run -i --network=host \
                 -v /tmp/delta_configs/librdkafka_no_quotes.delta:/tmp/configuration/ccloud.properties \
             confluentinc/cp-kcat:latest kcat \
