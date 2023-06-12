@@ -978,7 +978,17 @@ commands:
         required: false
         help: |-
           Value to use for all key records. If not set, no key is used.
+      - long: --tombstone
+        required: false
+        help: |-
+          Generate tombstone (record with null value). 
+          
+          --key must be set when this flag is used.
+
+          Note: CP 7.2+ is required.
       examples: |
+
+        playground topic produce --tombstone --topic a-topic --key mykey
 
         playground topic produce -t topic-json --nb-messages 10 << 'EOF'
         {
@@ -1006,7 +1016,6 @@ commands:
             "type": "record",
             "namespace": "com.github.vdesabou",
             "name": "Customer",
-            "version": "1",
             "fields": [
                 {
                     "name": "count",

@@ -3,15 +3,19 @@ nb_messages="${args[--nb-messages]}"
 nb_partitions="${args[--nb-partitions]}"
 schema="${args[--input]}"
 key="${args[--key]}"
+tombstone="${args[--tombstone]}"
 
 tmp_dir=$(mktemp -d -t ci-XXXXXXXXXX)
 schema_file=$tmp_dir/value_schema
 
 if [ "$schema" = "-" ]
 then
-    # stdin
-    schema_content=$(cat "$schema")
-    echo "$schema_content" > $schema_file
+    if [[ ! -n "$tombstone" ]]
+    then
+        # stdin
+        schema_content=$(cat "$schema")
+        echo "$schema_content" > $schema_file
+    fi
 else
     if [[ $schema == @* ]]
     then
@@ -73,11 +77,35 @@ then
       logerror "ERROR: /tmp/delta_configs/ak-tools-ccloud.delta has not been generated"
       exit 1
   fi
-  DIR_CLI="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
-  dir1=$(echo ${DIR_CLI%/*})
-  root_folder=$(echo ${dir1%/*})
-  IGNORE_CHECK_FOR_DOCKER_COMPOSE=true
-  source $root_folder/scripts/utils.sh
+fi
+
+DIR_CLI="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
+dir1=$(echo ${DIR_CLI%/*})
+root_folder=$(echo ${dir1%/*})
+IGNORE_CHECK_FOR_DOCKER_COMPOSE=true
+source $root_folder/scripts/utils.sh
+
+if [[ -n "$tombstone" ]]
+then
+    if [[ ! -n "$key" ]]
+    then
+        logerror "❌ --tombstone is set but not --key !"
+        exit 1
+    fi
+    if ! version_gt $CONNECT_TAG "7.1.99"
+    then
+        logerror "❌ --tombstone is set but it can be produce only with CP 7.2+"
+        exit 1
+    fi
+    log "🧟 Sending tombstone for key $key in topic $topic"
+    if [[ "$environment" == "environment" ]]
+    then
+        echo "$key|NULL" | docker run -i --rm -v /tmp/delta_configs/ak-tools-ccloud.delta:/tmp/configuration/ccloud.properties -e BOOTSTRAP_SERVERS="$BOOTSTRAP_SERVERS" ${CP_CONNECT_IMAGE}:${CONNECT_TAG} kafka-console-producer --broker-list $BOOTSTRAP_SERVERS --topic $topic --producer.config /tmp/configuration/ccloud.properties $security --property parse.key=true --property key.separator="|" --property null.marker=NULL
+    else
+        echo "$key|NULL" | docker exec -i $container kafka-console-producer --broker-list $bootstrap_server --topic $topic $security --property parse.key=true --property key.separator="|" --property null.marker=NULL
+    fi
+    # nothing else to do
+    exit 0
 fi
 
 if grep -q "proto3" $schema_file
@@ -227,8 +255,6 @@ then
     done < $tmp_dir/out.json
 
     mv $tmp_dir/tempfile $tmp_dir/out.json
-
-    cat $tmp_dir/out.json
 fi
 
 set -e

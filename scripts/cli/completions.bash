@@ -525,7 +525,7 @@ _playground_completions() {
       ;;
 
     'topic produce'*)
-      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "--help --input --key --nb-messages --nb-partitions --topic -h -t")" -- "$cur" )
+      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "--help --input --key --nb-messages --nb-partitions --tombstone --topic -h -t")" -- "$cur" )
       ;;
 
     'topic consume'*)
