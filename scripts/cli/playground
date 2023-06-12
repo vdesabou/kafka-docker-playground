@@ -9332,7 +9332,8 @@ playground_topic_get_number_records_command() {
               logerror "ERROR: /tmp/delta_configs/librdkafka.delta has not been generated"
               exit 1
           fi
-          tr -d '"' < /tmp/delta_configs/librdkafka.delta > /tmp/delta_configs/librdkafka_no_quotes.delta
+          tr -d '"' < /tmp/delta_configs/librdkafka.delta > /tmp/delta_configs/librdkafka_no_quotes_tmp.delta
+          grep -v "basic.auth.user.info" /tmp/delta_configs/librdkafka_no_quotes_tmp.delta > /tmp/delta_configs/librdkafka_no_quotes.delta
           docker run -i --network=host \
                   -v /tmp/delta_configs/librdkafka_no_quotes.delta:/tmp/configuration/ccloud.properties \
               confluentinc/cp-kcat:latest kcat \
@@ -9943,7 +9944,6 @@ playground_topic_produce_command() {
       head -n 10 "$tmp_dir/out.json"
   fi
 
-  log "💯 Get number of records in topic $topic"
   playground topic get-number-records --topic $topic > $tmp_dir/result.log 2>$tmp_dir/result.log
   set +e
   grep "does not exist" $tmp_dir/result.log > /dev/null 2>&1
@@ -9968,6 +9968,7 @@ playground_topic_produce_command() {
           playground topic delete --topic $topic
           playground topic create --topic $topic --nb-partitions $nb_partitions
       else
+          log "💯 Get number of records in topic $topic"
           tail -1 $tmp_dir/result.log
       fi
   fi

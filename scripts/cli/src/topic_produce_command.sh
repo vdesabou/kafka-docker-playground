@@ -188,7 +188,6 @@ else
     head -n 10 "$tmp_dir/out.json"
 fi
 
-log "💯 Get number of records in topic $topic"
 playground topic get-number-records --topic $topic > $tmp_dir/result.log 2>$tmp_dir/result.log
 set +e
 grep "does not exist" $tmp_dir/result.log > /dev/null 2>&1
@@ -213,6 +212,7 @@ else
         playground topic delete --topic $topic
         playground topic create --topic $topic --nb-partitions $nb_partitions
     else
+        log "💯 Get number of records in topic $topic"
         tail -1 $tmp_dir/result.log
     fi
 fi
