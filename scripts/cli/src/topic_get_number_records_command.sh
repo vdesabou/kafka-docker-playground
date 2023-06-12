@@ -39,35 +39,19 @@ do
     set +e
     if [[ "$environment" == "environment" ]]
     then
-        if [ -f /tmp/delta_configs/env.delta ]
+        if [ ! -f /tmp/delta_configs/librdkafka.delta ]
         then
-            source /tmp/delta_configs/env.delta
-        else
-            logerror "ERROR: /tmp/delta_configs/env.delta has not been generated"
+            logerror "ERROR: /tmp/delta_configs/librdkafka.delta has not been generated"
             exit 1
         fi
-        if [ ! -f /tmp/delta_configs/ak-tools-ccloud.delta ]
-        then
-            logerror "ERROR: /tmp/delta_configs/ak-tools-ccloud.delta has not been generated"
-            exit 1
-        fi
-        DIR_CLI="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
-        dir1=$(echo ${DIR_CLI%/*})
-        root_folder=$(echo ${dir1%/*})
-        IGNORE_CHECK_FOR_DOCKER_COMPOSE=true
-        source $root_folder/scripts/utils.sh
-
-        # docker run -it --network=host \
-        #         -v /tmp/delta_configs/librdkafka.delta:/tmp/configuration/ccloud.properties \
-        #     confluentinc/cp-kcat:latest kcat \
-        #         -F /tmp/configuration/ccloud.properties \
-        #         -C -t $topic \
-        #         -e -q \
-        #         | grep -v "Reading configuration from file" | wc -l | tr -d ' '
-
-        set +e
-        docker run -i --rm -v /tmp/delta_configs/ak-tools-ccloud.delta:/tmp/configuration/ccloud.properties -e BOOTSTRAP_SERVERS="$BOOTSTRAP_SERVERS" ${CP_CONNECT_IMAGE}:${CONNECT_TAG} kafka-console-consumer --bootstrap-server $BOOTSTRAP_SERVERS --topic $topic --consumer.config /tmp/configuration/ccloud.properties --from-beginning --timeout-ms 15000 2>/dev/null | wc -l | tr -d ' '
-        set -e
+        tr -d '"' < /tmp/delta_configs/librdkafka.delta > /tmp/delta_configs/librdkafka_no_quotes.delta
+        docker run -i --network=host \
+                -v /tmp/delta_configs/librdkafka_no_quotes.delta:/tmp/configuration/ccloud.properties \
+            confluentinc/cp-kcat:latest kcat \
+                -F /tmp/configuration/ccloud.properties \
+                -C -t $topic \
+                -e -q > /tmp/result.log 2>/dev/null
+        wc -l /tmp/result.log | awk '{print $1}'
     else
         if ! version_gt $TAG_BASE "6.9.9" && [ "$security" != "" ]
         then

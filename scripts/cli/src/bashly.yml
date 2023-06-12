@@ -897,9 +897,9 @@ commands:
         arg: max-messages
         validate: integer
         required: false
-        default: ""
+        default: "50"
         help: |-
-          Max number of messages to consume
+          Max number of messages to display (default is 50)
       - long: --min-expected-messages
         arg: min-expected-messages
         validate: integer

@@ -1972,8 +1972,8 @@ playground_topic_consume_usage() {
 
     # :flag.usage
     printf "  %s\n" "$(magenta "--max-messages MAX-MESSAGES")"
-    printf "    Max number of messages to consume\n"
-    printf "    Default: \n"
+    printf "    Max number of messages to display (default is 50)\n"
+    printf "    Default: 50\n"
     echo
 
     # :flag.usage
@@ -9229,35 +9229,19 @@ playground_topic_get_number_records_command() {
       set +e
       if [[ "$environment" == "environment" ]]
       then
-          if [ -f /tmp/delta_configs/env.delta ]
+          if [ ! -f /tmp/delta_configs/librdkafka.delta ]
           then
-              source /tmp/delta_configs/env.delta
-          else
-              logerror "ERROR: /tmp/delta_configs/env.delta has not been generated"
+              logerror "ERROR: /tmp/delta_configs/librdkafka.delta has not been generated"
               exit 1
           fi
-          if [ ! -f /tmp/delta_configs/ak-tools-ccloud.delta ]
-          then
-              logerror "ERROR: /tmp/delta_configs/ak-tools-ccloud.delta has not been generated"
-              exit 1
-          fi
-          DIR_CLI="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
-          dir1=$(echo ${DIR_CLI%/*})
-          root_folder=$(echo ${dir1%/*})
-          IGNORE_CHECK_FOR_DOCKER_COMPOSE=true
-          source $root_folder/scripts/utils.sh
-
-          # docker run -it --network=host \
-          #         -v /tmp/delta_configs/librdkafka.delta:/tmp/configuration/ccloud.properties \
-          #     confluentinc/cp-kcat:latest kcat \
-          #         -F /tmp/configuration/ccloud.properties \
-          #         -C -t $topic \
-          #         -e -q \
-          #         | grep -v "Reading configuration from file" | wc -l | tr -d ' '
-
-          set +e
-          docker run -i --rm -v /tmp/delta_configs/ak-tools-ccloud.delta:/tmp/configuration/ccloud.properties -e BOOTSTRAP_SERVERS="$BOOTSTRAP_SERVERS" ${CP_CONNECT_IMAGE}:${CONNECT_TAG} kafka-console-consumer --bootstrap-server $BOOTSTRAP_SERVERS --topic $topic --consumer.config /tmp/configuration/ccloud.properties --from-beginning --timeout-ms 15000 2>/dev/null | wc -l | tr -d ' '
-          set -e
+          tr -d '"' < /tmp/delta_configs/librdkafka.delta > /tmp/delta_configs/librdkafka_no_quotes.delta
+          docker run -i --network=host \
+                  -v /tmp/delta_configs/librdkafka_no_quotes.delta:/tmp/configuration/ccloud.properties \
+              confluentinc/cp-kcat:latest kcat \
+                  -F /tmp/configuration/ccloud.properties \
+                  -C -t $topic \
+                  -e -q > /tmp/result.log 2>/dev/null
+          wc -l /tmp/result.log | awk '{print $1}'
       else
           if ! version_gt $TAG_BASE "6.9.9" && [ "$security" != "" ]
           then
@@ -9450,7 +9434,7 @@ playground_topic_consume_command() {
   then
     if [[ ! -n "$min_expected_messages" ]]
     then
-      logerror "--timeout was provided without specifying --min-expected-messages"
+      logerror "❌ --timeout was provided without specifying --min-expected-messages"
       exit 1
     fi
   fi
@@ -9466,7 +9450,7 @@ playground_topic_consume_command() {
       topic=$(playground get-topic-list --skip-connect-internal-topics)
       if [ "$topic" == "" ]
       then
-          logerror "❌ No topic found !"
+          logerror "❌ no topic found !"
           exit 1
       fi
   fi
@@ -9482,6 +9466,18 @@ playground_topic_consume_command() {
       while true; do
         nb_messages=$(playground topic get-number-records -t $topic | tail -1)
 
+        if [[ ! $nb_messages =~ ^[0-9]+$ ]]
+        then
+          echo $nb_messages | grep "does not exist" > /dev/null 2>&1
+          if [ $? == 0 ]
+          then
+            logwarn "❌ topic $topic does not exist !"
+          else
+            logwarn "❌ problem while getting number of messages: $nb_messages"
+          fi
+          exit 1
+        fi
+
         if [ $nb_messages -ge $min_expected_messages ]
         then
           break
@@ -9492,7 +9488,7 @@ playground_topic_consume_command() {
 
         if [ $elapsed_time -ge $timeout ]
         then
-          logerror "❌ Overall timeout of $timeout seconds exceeded. --min-expected-messages is set with $min_expected_messages but topic $topic contains $nb_messages messages"
+          logerror "❌ overall timeout of $timeout seconds exceeded. --min-expected-messages is set with $min_expected_messages but topic $topic contains $nb_messages messages"
           exit 1
         fi
 
@@ -9500,9 +9496,21 @@ playground_topic_consume_command() {
       done
     else
       nb_messages=$(playground topic get-number-records -t $topic | tail -1)
+
+      if [[ ! $nb_messages =~ ^[0-9]+$ ]]
+      then
+        echo $nb_messages | grep "does not exist" > /dev/null 2>&1
+        if [ $? == 0 ]
+        then
+          logwarn "❌ topic $topic does not exist !"
+        else
+          logwarn "❌ problem while getting number of messages: $nb_messages"
+        fi
+        break
+      fi
     fi
 
-    if [[ -n "$max_messages" ]]
+    if [[ -n "$max_messages" ]] && [ $nb_messages -ge $max_messages ]
     then
       log "✨ Display content of topic $topic, it contains $nb_messages messages, but displaying only --max-messages=$max_messages"
       nb_messages=$max_messages
@@ -9514,7 +9522,7 @@ playground_topic_consume_command() {
     version=$(curl $sr_security -s "${sr_url}/subjects/${topic}-key/versions/1" | jq -r .version)
     if [ "$version" != "null" ]
     then
-      schema_type=$(curl $sr_security -s "${sr_url}/subjects/${topic}-key/versions/1"  | jq -r .schemaType)
+      schema_type=$(curl $sr_security -s "${sr_url}/subjects/${topic}-key/versions/1" | jq -r .schemaType)
       case "${schema_type}" in
         JSON)
           key_type="json-schema"
@@ -9970,6 +9978,17 @@ playground_topic_display_schema_id_statistics_command() {
   for topic in ${items[@]}
   do
       nb_messages=$(playground topic get-number-records -t $topic | tail -1)
+      if [[ ! $nb_messages =~ ^[0-9]+$ ]]
+      then
+        echo $nb_messages | grep "does not exist" > /dev/null 2>&1
+        if [ $? == 0 ]
+        then
+          logwarn "topic $topic does not exist !"
+        else
+          logwarn "problem while getting number of messages: $nb_messages"
+        fi
+        continue
+      fi
       rm -f /tmp/results.json
       log "✨ Display statistics of topic $topic, it contains $nb_messages messages"
       output_file="/tmp/output.txt"
@@ -14647,7 +14666,7 @@ playground_topic_consume_parse_requirements() {
   done
 
   # :command.default_assignments
-  [[ -n ${args['--max-messages']:-} ]] || args['--max-messages']=""
+  [[ -n ${args['--max-messages']:-} ]] || args['--max-messages']="50"
   [[ -n ${args['--min-expected-messages']:-} ]] || args['--min-expected-messages']=""
   [[ -n ${args['--grep']:-} ]] || args['--grep']=""
   [[ -n ${args['--timeout']:-} ]] || args['--timeout']="60"
