@@ -1118,6 +1118,47 @@ commands:
       flags:
       - *topic
 
+    - name: create
+      group: Topic
+      help: |-
+        🆕 Create topic
+      flags:
+      - long: --topic
+        short: -t
+        required: true
+        arg: topic
+        help: |-
+          🗳 Topic name
+      - long: --nb-partitions
+        arg: nb-partitions
+        validate: integer
+        required: false
+        default: "1"
+        help: |-
+          Number of partitions for the topic. 
+      catch_all:
+        label: arguments
+        help: |-
+          Any arguments to be used with kafka-topics --create
+        required: false
+      examples: |
+        playground topic create --topic atopic
+        playground topic create --topic atopic --nb-partitions 8 --config retention.ms=30000
+        
+    - name: delete
+      group: Topic
+      help: |-
+        ❌ Delete topic
+      flags:
+      - long: --topic
+        short: -t
+        required: true
+        arg: topic
+        completions:
+          - $(playground get-topic-list)
+        help: |-
+          🗳 Topic name
+
 - name: ccloud-connector
   expose: true
   group: Connector
