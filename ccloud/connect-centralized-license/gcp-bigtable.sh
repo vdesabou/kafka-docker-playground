@@ -33,12 +33,12 @@ else
 fi
 
 set +e
-delete_topic _confluent-command
+playground topic delete --topic _confluent-command
 set -e
 
 log "Creating topic in Confluent Cloud (auto.create.topics.enable=false)"
 set +e
-create_topic stats
+playground topic create --topic stats
 set -e
 
 ${DIR}/../../ccloud/environment/start.sh "${PWD}/docker-compose.gcp-bigtable.yml"

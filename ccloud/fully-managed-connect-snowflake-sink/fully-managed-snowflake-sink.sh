@@ -119,7 +119,7 @@ EOF
 
 log "Creating test_table topic in Confluent Cloud (auto.create.topics.enable=false)"
 set +e
-create_topic test_table
+playground topic create --topic test_table
 set -e
 
 log "Sending messages to topic test_table"

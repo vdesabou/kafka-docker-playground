@@ -63,7 +63,7 @@ set -e
 
 log "Creating s3_topic topic in Confluent Cloud (auto.create.topics.enable=false)"
 set +e
-create_topic s3_topic
+playground topic create --topic s3_topic
 set -e
 
 log "Sending messages to topic s3_topic"

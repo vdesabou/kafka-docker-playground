@@ -38,8 +38,8 @@ else
 fi
 
 set +e
-delete_topic XE.MYUSER.CUSTOMERS
-delete_topic redo-log-topic
+playground topic delete --topic XE.MYUSER.CUSTOMERS
+playground topic delete --topic redo-log-topic
 set -e
 
 docker-compose build

@@ -97,9 +97,9 @@ else
 fi
 
 set +e
-delete_topic sfdc-pushtopic-leads
+playground topic delete --topic sfdc-pushtopic-leads
 sleep 3
-create_topic sfdc-pushtopic-leads
+playground topic create --topic sfdc-pushtopic-leads
 set -e
 
 docker-compose build

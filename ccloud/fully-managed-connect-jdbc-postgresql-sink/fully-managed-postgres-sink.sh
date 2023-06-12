@@ -40,10 +40,10 @@ else
 fi
 
 set +e
-delete_topic orders
+playground topic delete --topic orders
 set -e
 
-create_topic orders
+playground topic create --topic orders
 
 docker-compose build
 docker-compose down -v --remove-orphans

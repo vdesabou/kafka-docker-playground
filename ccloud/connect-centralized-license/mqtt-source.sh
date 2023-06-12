@@ -13,14 +13,14 @@ else
 fi
 
 set +e
-delete_topic _confluent-command
+playground topic delete --topic _confluent-command
 set -e
 
 MQTT_TOPIC=kafka_docker_pg_mqtt$TAG
 MQTT_TOPIC=${MQTT_TOPIC//[-.]/}
 
 set +e
-delete_topic $MQTT_TOPIC
+playground topic delete --topic $MQTT_TOPIC
 set -e
 
 

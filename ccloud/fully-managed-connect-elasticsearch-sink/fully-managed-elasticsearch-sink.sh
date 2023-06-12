@@ -38,9 +38,9 @@ fi
 
 log "Creating test-elasticsearch-sink topic"
 set +e
-delete_topic test-elasticsearch-sink
+playground topic delete --topic test-elasticsearch-sink
 sleep 3
-create_topic test-elasticsearch-sink
+playground topic create --topic test-elasticsearch-sink
 set -e
 
 docker-compose build

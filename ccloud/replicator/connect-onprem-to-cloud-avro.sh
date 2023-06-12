@@ -18,7 +18,7 @@ fi
 
 log "Creating topic in Confluent Cloud (auto.create.topics.enable=false)"
 set +e
-create_topic products-avro
+playground topic create --topic products-avro
 set -e
 
 log "Sending messages to topic products-avro on source OnPREM cluster"

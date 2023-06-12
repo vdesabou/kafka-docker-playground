@@ -37,9 +37,9 @@ else
 fi
 
 set +e
-delete_topic functions-messages
+playground topic delete --topic functions-messages
 sleep 3
-create_topic functions-messages
+playground topic create --topic functions-messages
 set -e
 
 

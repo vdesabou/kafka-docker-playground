@@ -57,9 +57,9 @@ fi
 
 log "Creating topic in Confluent Cloud (auto.create.topics.enable=false)"
 set +e
-delete_topic orders
+playground topic delete --topic orders
 sleep 3
-create_topic orders
+playground topic create --topic orders
 set -e
 
 CLUSTER_NAME=pg${USER}redshift${TAG}

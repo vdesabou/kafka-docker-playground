@@ -30,13 +30,13 @@ sed -e "s|:BOOTSTRAP_SERVERS:|$BOOTSTRAP_SERVERS|g" \
 
 log "Creating topic sales_A in Confluent Cloud"
 set +e
-delete_topic sales_A
-delete_topic mm2-configs.A.internal
-delete_topic mm2-offsets.A.internal
-delete_topic mm2-status.A.internal
-delete_topic .checkpoints.internal
+playground topic delete --topic sales_A
+playground topic delete --topic mm2-configs.A.internal
+playground topic delete --topic mm2-offsets.A.internal
+playground topic delete --topic mm2-status.A.internal
+playground topic delete --topic .checkpoints.internal
 sleep 3
-create_topic sales_A
+playground topic create --topic sales_A
 set -e
 
 log "Start MirrorMaker2 (logs are in mirrormaker.log):"

@@ -32,9 +32,9 @@ sed -e "s|:BOOTSTRAP_SERVERS:|$BOOTSTRAP_SERVERS|g" \
 
 log "Creating topic in Confluent Cloud (auto.create.topics.enable=false)"
 set +e
-delete_topic client_kafkajs_$TAG
+playground topic delete --topic client_kafkajs_$TAG
 sleep 3
-create_topic client_kafkajs_$TAG
+playground topic create --topic client_kafkajs_$TAG
 set -e
 
 log "Building docker image"

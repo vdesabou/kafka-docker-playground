@@ -10,18 +10,18 @@ services:
       - "5672:5672"
       - "8080:8080"
     volumes:
-     # - ../../connect/connect-rabbitmq-source/ssl/rabbitmq.conf:/etc/rabbitmq/rabbitmq.conf
+      - ../../connect/connect-rabbitmq-source/ssl/rabbitmq.conf:/etc/rabbitmq/advanced.config
       - ../../connect/connect-rabbitmq-source/security/snakeoil-ca-1.crt:/tmp/ca.crt
       - ../../connect/connect-rabbitmq-source/security/rabbitmq.certificate.pem:/tmp/server.pem
       - ../../connect/connect-rabbitmq-source/security/rabbitmq.key:/tmp/server.key
     environment:
       RABBITMQ_DEFAULT_USER: "myuser"
       RABBITMQ_DEFAULT_PASS: "mypassword"
-      RABBITMQ_SSL_CACERTFILE: /tmp/ca.crt
-      RABBITMQ_SSL_CERTFILE: /tmp/server.pem
-      RABBITMQ_SSL_FAIL_IF_NO_PEER_CERT: "true"
-      RABBITMQ_SSL_KEYFILE: /tmp/server.key
-      RABBITMQ_SSL_VERIFY: "verify_peer"
+      # RABBITMQ_SSL_CACERTFILE: /tmp/ca.crt
+      # RABBITMQ_SSL_CERTFILE: /tmp/server.pem
+      # RABBITMQ_SSL_FAIL_IF_NO_PEER_CERT: "true"
+      # RABBITMQ_SSL_KEYFILE: /tmp/server.key
+      # RABBITMQ_SSL_VERIFY: "verify_peer"
 
   rabbitmq_producer:
     build:

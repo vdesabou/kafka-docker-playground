@@ -57,7 +57,7 @@ docker run -i --volumes-from gcloud-config google/cloud-sdk:latest bq --project_
 
 log "Creating bqtopic topic in Confluent Cloud"
 set +e
-create_topic bqtopic
+playground topic create --topic bqtopic
 set -e
 
 log "Sending messages to topic bqtopic"

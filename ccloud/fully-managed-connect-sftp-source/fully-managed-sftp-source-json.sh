@@ -38,7 +38,7 @@ else
 fi
 
 set +e
-delete_topic sftp-testing-topic
+playground topic delete --topic sftp-testing-topic
 set -e
 
 docker-compose build

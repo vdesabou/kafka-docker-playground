@@ -53,9 +53,9 @@ TOPIC="$LOG_GROUP.$LOG_STREAM"
 
 log "Creating $TOPIC topic"
 set +e
-delete_topic $TOPIC
+playground topic delete --topic $TOPIC
 sleep 3
-create_topic $TOPIC
+playground topic create --topic $TOPIC
 set -e
 
 # cleanup

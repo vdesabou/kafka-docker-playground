@@ -20,14 +20,14 @@ MQTT_TOPIC=kafka_docker_pg_mqtt$TAG
 MQTT_TOPIC=${MQTT_TOPIC//[-.]/}
 
 set +e
-delete_topic $MQTT_TOPIC
+playground topic delete --topic $MQTT_TOPIC
 set -e
 
 if ! version_gt $TAG_BASE "5.9.9"; then
      # note: for 6.x CONNECT_TOPIC_CREATION_ENABLE=true
      log "Creating topic in Confluent Cloud (auto.create.topics.enable=false)"
      set +e
-     create_topic $MQTT_TOPIC
+     playground topic create --topic $MQTT_TOPIC
      set -e
 
      sleep 30

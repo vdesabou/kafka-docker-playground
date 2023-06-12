@@ -43,7 +43,7 @@ fi
 #############
 
 set +e
-delete_topic server1.testDB.dbo.customers
+playground topic delete --topic server1.testDB.dbo.customers
 set -e
 
 log "Create table"

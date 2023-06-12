@@ -61,7 +61,7 @@ set +e
 # delete subject as required
 curl -X DELETE -u $SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO $SCHEMA_REGISTRY_URL/subjects/asgard.public.customers-key
 curl -X DELETE -u $SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO $SCHEMA_REGISTRY_URL/subjects/asgard.public.customers-value
-delete_topic asgard.public.customers
+playground topic delete --topic asgard.public.customers
 set -e
 
 docker-compose build

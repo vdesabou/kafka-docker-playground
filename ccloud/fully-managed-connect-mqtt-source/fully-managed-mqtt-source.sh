@@ -38,7 +38,7 @@ else
 fi
 
 set +e
-delete_topic mqtt-source-1
+playground topic delete --topic mqtt-source-1
 set -e
 
 docker-compose build

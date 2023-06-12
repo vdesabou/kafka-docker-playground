@@ -29,12 +29,12 @@ sed -e "s|:BOOTSTRAP_SERVERS:|$BOOTSTRAP_SERVERS|g" \
 
 log "Creating topic in Confluent Cloud (auto.create.topics.enable=false)"
 set +e
-delete_topic client_python_$TAG
+playground topic delete --topic client_python_$TAG
 sleep 3
-create_topic client_python_$TAG
-delete_topic client_python_avro_$TAG
+playground topic create --topic client_python_$TAG
+playground topic delete --topic client_python_avro_$TAG
 sleep 3
-create_topic client_python_avro_$TAG
+playground topic create --topic client_python_avro_$TAG
 set -e
 
 log "Building docker image"

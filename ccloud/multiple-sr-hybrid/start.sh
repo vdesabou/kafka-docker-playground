@@ -37,7 +37,7 @@ curl http://localhost:1500/v1/metadata/schemaRegistryUrls
 
 log "Creating topic my_avro_topic in Confluent Cloud (auto.create.topics.enable=false)"
 set +e
-create_topic my_avro_topic
+playground topic create --topic my_avro_topic
 set -e
 
 log "Sending messages to topic my_avro_topic"

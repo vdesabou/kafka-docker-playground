@@ -122,7 +122,7 @@ fi
 
 log "Creating topic in Confluent Cloud"
 set +e
-create_topic test_table
+playground topic create --topic test_table
 set -e
 
 sleep 2

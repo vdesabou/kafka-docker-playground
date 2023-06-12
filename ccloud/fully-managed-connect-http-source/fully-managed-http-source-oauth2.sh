@@ -50,7 +50,7 @@ NGROK_PORT=$(echo $NGROK_URL | cut -d "/" -f3 | cut -d ":" -f 2)
 
 log "Creating http-topic topic in Confluent Cloud"
 set +e
-create_topic http-topic
+playground topic create --topic http-topic
 set -e
 
 connector_name="HttpSource"

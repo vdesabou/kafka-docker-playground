@@ -37,8 +37,8 @@ fi
 
 log "Creating topic in Confluent Cloud (auto.create.topics.enable=false)"
 set +e
-create_topic artists
-create_topic songs
+playground topic create --topic artists
+playground topic create --topic songs
 set -e
 
 log "Creating GCP Firebase Sink connector"

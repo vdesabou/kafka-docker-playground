@@ -53,7 +53,7 @@ then
 fi
 
 set +e
-delete_topic sfdc-platform-events
+playground topic delete --topic sfdc-platform-events
 set -e
 
 docker-compose build

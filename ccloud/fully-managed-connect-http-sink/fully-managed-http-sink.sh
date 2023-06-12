@@ -16,7 +16,7 @@ fi
 
 log "Creating http-topic topic in Confluent Cloud"
 set +e
-create_topic http-topic
+playground topic create --topic http-topic
 set -e
 
 log "Sending messages to topic http-topic"

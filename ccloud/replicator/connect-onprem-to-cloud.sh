@@ -18,9 +18,9 @@ fi
 
 log "Creating topic in Confluent Cloud (auto.create.topics.enable=false)"
 set +e
-delete_topic products
+playground topic delete --topic products
 sleep 3
-create_topic products
+playground topic create --topic products
 set -e
 
 log "Sending messages to topic products on source OnPREM cluster"

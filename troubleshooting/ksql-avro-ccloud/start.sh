@@ -19,8 +19,8 @@ fi
 
 set +e
 
-#delete_topic ratings
-create_topic ratings
+#playground topic delete --topic ratings
+playground topic create --topic ratings
 set -e
 
 log "Invoke manual steps"

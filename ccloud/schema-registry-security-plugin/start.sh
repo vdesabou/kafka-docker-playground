@@ -22,7 +22,7 @@ fi
 
 set +e
 log "Cleanup schemas-security-plugin topic"
-delete_topic schemas-security-plugin
+playground topic delete --topic schemas-security-plugin
 set -e
 
 docker-compose -f "${PWD}/docker-compose.yml" down

@@ -32,12 +32,12 @@ mv ${DIR}/tmp ${DIR}/executable-onprem-to-cloud-producer.properties
 
 log "Creating topic in Confluent Cloud (auto.create.topics.enable=false)"
 set +e
-delete_topic executable-products
+playground topic delete --topic executable-products
 sleep 3
-create_topic executable-products
-delete_topic connect-onprem-to-cloud.offsets
-delete_topic connect-onprem-to-cloud.status
-delete_topic connect-onprem-to-cloud.config
+playground topic create --topic executable-products
+playground topic delete --topic connect-onprem-to-cloud.offsets
+playground topic delete --topic connect-onprem-to-cloud.status
+playground topic delete --topic connect-onprem-to-cloud.config
 set -e
 
 log "Sending messages to topic executable-products on source OnPREM cluster"

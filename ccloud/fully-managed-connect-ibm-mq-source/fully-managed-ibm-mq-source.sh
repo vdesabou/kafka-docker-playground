@@ -38,7 +38,7 @@ else
 fi
 
 set +e
-delete_topic MyKafkaTopicName
+playground topic delete --topic MyKafkaTopicName
 set -e
 
 docker-compose build

@@ -100,7 +100,7 @@ then
     log "🔮 schema was identified as avro"
     schema_type=avro
 else
-    log "📢 any known schema could be identified, payload will be sent as raw data"
+    log "📢 no known schema could be identified, payload will be sent as raw data"
     schema_type=raw
 fi
 
@@ -198,7 +198,7 @@ then
     if [[ "$environment" == "environment" ]]
     then
         log "⛅ creating topic in confluent cloud"
-        create_topic $topic
+        playground topic create --topic $topic
     fi
 else
     tail -1 $tmp_dir/result.log

@@ -47,7 +47,7 @@ docker-compose -f "${PWD}/docker-compose.yml" up -d
 
 log "Creating topic rest-proxy-security-plugin in Confluent Cloud (auto.create.topics.enable=false)"
 set +e
-create_topic rest-proxy-security-plugin
+playground topic create --topic rest-proxy-security-plugin
 set -e
 
 sleep 15

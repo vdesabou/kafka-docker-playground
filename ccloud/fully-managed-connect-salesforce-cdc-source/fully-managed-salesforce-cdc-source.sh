@@ -55,9 +55,9 @@ else
 fi
 
 set +e
-delete_topic sfdc-cdc-contacts
+playground topic delete --topic sfdc-cdc-contacts
 sleep 3
-create_topic sfdc-cdc-contacts
+playground topic create --topic sfdc-cdc-contacts
 set -e
 
 docker-compose build

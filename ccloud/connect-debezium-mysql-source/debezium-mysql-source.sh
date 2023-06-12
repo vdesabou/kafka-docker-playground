@@ -20,9 +20,9 @@ if ! version_gt $TAG_BASE "5.9.9"; then
      # note: for 6.x CONNECT_TOPIC_CREATION_ENABLE=true
      log "Creating topic in Confluent Cloud (auto.create.topics.enable=false)"
      set +e
-     create_topic server1_mydb_team
-     create_topic server1
-     create_topic schema-changes.inventory
+     playground topic create --topic server1_mydb_team
+     playground topic create --topic server1
+     playground topic create --topic schema-changes.inventory
      set -e
 fi
 

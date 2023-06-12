@@ -38,12 +38,12 @@ mv ${DIR}/tmp ${DIR}/executable-onprem-to-cloud-replicator-avro.properties
 
 log "Creating topic in Confluent Cloud (auto.create.topics.enable=false)"
 set +e
-delete_topic executable-products-avro
+playground topic delete --topic executable-products-avro
 sleep 3
-create_topic executable-products-avro
-delete_topic connect-onprem-to-cloud-avro.offsets
-delete_topic connect-onprem-to-cloud-avro.status
-delete_topic connect-onprem-to-cloud-avro.config
+playground topic create --topic executable-products-avro
+playground topic delete --topic connect-onprem-to-cloud-avro.offsets
+playground topic delete --topic connect-onprem-to-cloud-avro.status
+playground topic delete --topic connect-onprem-to-cloud-avro.config
 set -e
 
 log "Delete schema for topic"
