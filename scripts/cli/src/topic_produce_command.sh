@@ -1,6 +1,6 @@
 topic="${args[--topic]}"
 nb_messages="${args[--nb-messages]}"
-
+nb_partitions="${args[--nb-partitions]}"
 schema="${args[--input]}"
 
 tmp_dir=$(mktemp -d -t ci-XXXXXXXXXX)

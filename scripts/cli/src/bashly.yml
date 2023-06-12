@@ -964,6 +964,15 @@ commands:
         default: "3"
         help: |-
           Number of messages to produce (default is 3)
+      - long: --nb-partitions
+        arg: nb-partitions
+        validate: integer
+        required: false
+        default: "1"
+        help: |-
+          Number of partitions for the topic. 
+          
+          Important: If topic is existing, it will be re-created before producing to topic.
       examples: |
 
         playground topic produce -t topic-json --nb-messages 10 << 'EOF'
