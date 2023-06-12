@@ -13,6 +13,16 @@ then
   exit 1 
 fi
 
+playground topic get-number-records --topic $topic > /tmp/result.log 2>/tmp/result.log
+set +e
+grep "does not exist" /tmp/result.log > /dev/null 2>&1
+if [ $? == 0 ]
+then
+    logwarn "❌ topic $topic does not exist !"
+    exit 1
+fi
+set -e
+
 log "❌ Deleting topic $topic"
 if [[ "$environment" == "environment" ]]
 then
