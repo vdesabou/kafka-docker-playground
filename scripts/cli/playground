@@ -2030,7 +2030,7 @@ playground_topic_produce_usage() {
     # :command.usage_flags
     # :flag.usage
     printf "  %s\n" "$(magenta "--input INPUT")"
-    printf "    🔥 You can either:\n    \n    * Set your own schema (avro, json-schema, protobuf) with stdin (see example\n    section). You can also use json or sql format as per\n    https://github.com/MaterializeInc/datagen\n    \n    * Use completion to select predefined schemas\n    \n    * Use your own schema file. 🎓 Tip: use <tab> completion to trigger fzf\n    completion\n    \n    * Directly set payload\n"
+    printf "    🔥 You can either:\n    \n    * Set your own schema (avro, json-schema, protobuf) with stdin (see example\n    section).\n    \n    * You can also generate json data using json or sql format using syntax from\n    https://github.com/MaterializeInc/datagen\n    \n    * Use completion to select predefined schemas (or use your own schema file)\n    🎓 Tip: use <tab> completion to trigger fzf completion\n    \n    * Directly set payload\n"
     printf "    Default: -\n"
     echo
 
@@ -2058,7 +2058,7 @@ playground_topic_produce_usage() {
 
     # :flag.usage
     printf "  %s\n" "$(magenta "--tombstone")"
-    printf "    Generate tombstone (record with null value). --key must be set when this\n    flag is used.\n    \n    Note: CP 7.2+ is required.\n"
+    printf "    Generate tombstone (record with null value). \n    \n    --key must be set when this flag is used.\n    \n    Note: CP 7.2+ is required.\n"
     echo
 
     # :command.usage_fixed_flags
@@ -2068,7 +2068,7 @@ playground_topic_produce_usage() {
 
     # :command.usage_examples
     printf "%s\n" "$(bold "Examples")"
-    printf "  playground topic produce -t topic-json --nb-messages 10 << 'EOF'\n  {\n      \"_meta\": {\n          \"topic\": \"\",\n          \"key\": \"\",\n          \"relationships\": []\n      },\n      \"nested\": {\n          \"phone\": \"faker.phone.imei()\",\n          \"website\": \"faker.internet.domainName()\"\n      },\n      \"id\": \"iteration.index\",\n      \"name\": \"faker.internet.userName()\",\n      \"email\": \"faker.internet.exampleEmail()\",\n      \"phone\": \"faker.phone.imei()\",\n      \"website\": \"faker.internet.domainName()\",\n      \"city\": \"faker.address.city()\",\n      \"company\": \"faker.company.name()\"\n  }\n  EOF\n  \n  playground topic produce -t topic-avro --nb-messages 10 << 'EOF'\n  {\n      \"type\": \"record\",\n      \"namespace\": \"com.github.vdesabou\",\n      \"name\": \"Customer\",\n      \"fields\": [\n          {\n              \"name\": \"count\",\n              \"type\": \"long\",\n              \"doc\": \"count\"\n          },\n          {\n              \"name\": \"first_name\",\n              \"type\": \"string\",\n              \"doc\": \"First Name of Customer\"\n          },\n          {\n              \"name\": \"last_name\",\n              \"type\": \"string\",\n              \"doc\": \"Last Name of Customer\"\n          },\n          {\n              \"name\": \"address\",\n              \"type\": \"string\",\n              \"doc\": \"Address of Customer\"\n          }\n      ]\n  }\n  EOF\n  \n  playground topic produce -t topic-json-schema --nb-messages 3 << 'EOF'\n  {\n    \"$schema\": \"http://json-schema.org/draft-07/schema#\",\n    \"additionalProperties\": false,\n    \"$id\": \"http://lh.test/Customer.schema.json\",\n    \"title\": \"Customer\",\n    \"description\": \"Customer description\",\n    \"type\": \"object\",\n    \"properties\": {\n      \"name\": {\n        \"description\": \"Customer name\",\n        \"type\": \"string\",\n        \"maxLength\": 25\n      },\n      \"surname\": {\n        \"description\": \"Customer surname\",\n        \"type\": \"string\",\n        \"minLength\": 2\n      },\n      \"email\": {\n        \"description\": \"Email\",\n        \"type\": \"string\",\n        \"pattern\": \"^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\\.[a-zA-Z0-9-.]+$\"\n      }\n    },\n    \"required\": [\n      \"name\",\n      \"surname\"\n    ]\n  }\n  EOF\n  \n  \n  playground topic produce -t topic-proto --nb-messages 3 << 'EOF'\n  syntax = \"proto3\";\n  \n  message Order {\n    float         total = 1;\n    repeated Item items = 2;\n  \n    message Item {\n      string name  = 1;\n      float  price = 2;\n    }\n  }\n  EOF\n  \n  playground topic produce -t vincent-jsql --nb-messages 10 << 'EOF'\n  CREATE TABLE \"notused\".\"notused\" (\n    \"id\" int PRIMARY KEY,\n    \"name\" varchar COMMENT 'faker.internet.userName()',\n    \"merchant_id\" int NOT NULL COMMENT 'faker.datatype.number()',\n    \"price\" int COMMENT 'faker.datatype.number()',\n    \"status\" int COMMENT 'faker.datatype.boolean()',\n    \"created_at\" datetime DEFAULT (now())\n  );\n  EOF\n"
+    printf "  playground topic produce --tombstone --topic a-topic --key mykey\n  \n  playground topic produce -t topic-json --nb-messages 10 << 'EOF'\n  {\n      \"_meta\": {\n          \"topic\": \"\",\n          \"key\": \"\",\n          \"relationships\": []\n      },\n      \"nested\": {\n          \"phone\": \"faker.phone.imei()\",\n          \"website\": \"faker.internet.domainName()\"\n      },\n      \"id\": \"iteration.index\",\n      \"name\": \"faker.internet.userName()\",\n      \"email\": \"faker.internet.exampleEmail()\",\n      \"phone\": \"faker.phone.imei()\",\n      \"website\": \"faker.internet.domainName()\",\n      \"city\": \"faker.address.city()\",\n      \"company\": \"faker.company.name()\"\n  }\n  EOF\n  \n  playground topic produce -t topic-avro --nb-messages 10 << 'EOF'\n  {\n      \"type\": \"record\",\n      \"namespace\": \"com.github.vdesabou\",\n      \"name\": \"Customer\",\n      \"fields\": [\n          {\n              \"name\": \"count\",\n              \"type\": \"long\",\n              \"doc\": \"count\"\n          },\n          {\n              \"name\": \"first_name\",\n              \"type\": \"string\",\n              \"doc\": \"First Name of Customer\"\n          },\n          {\n              \"name\": \"last_name\",\n              \"type\": \"string\",\n              \"doc\": \"Last Name of Customer\"\n          },\n          {\n              \"name\": \"address\",\n              \"type\": \"string\",\n              \"doc\": \"Address of Customer\"\n          }\n      ]\n  }\n  EOF\n  \n  playground topic produce -t topic-json-schema --nb-messages 3 << 'EOF'\n  {\n    \"$schema\": \"http://json-schema.org/draft-07/schema#\",\n    \"additionalProperties\": false,\n    \"$id\": \"http://lh.test/Customer.schema.json\",\n    \"title\": \"Customer\",\n    \"description\": \"Customer description\",\n    \"type\": \"object\",\n    \"properties\": {\n      \"name\": {\n        \"description\": \"Customer name\",\n        \"type\": \"string\",\n        \"maxLength\": 25\n      },\n      \"surname\": {\n        \"description\": \"Customer surname\",\n        \"type\": \"string\",\n        \"minLength\": 2\n      },\n      \"email\": {\n        \"description\": \"Email\",\n        \"type\": \"string\",\n        \"pattern\": \"^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\\.[a-zA-Z0-9-.]+$\"\n      }\n    },\n    \"required\": [\n      \"name\",\n      \"surname\"\n    ]\n  }\n  EOF\n  \n  \n  playground topic produce -t topic-proto --nb-messages 3 << 'EOF'\n  syntax = \"proto3\";\n  \n  message Order {\n    float         total = 1;\n    repeated Item items = 2;\n  \n    message Item {\n      string name  = 1;\n      float  price = 2;\n    }\n  }\n  EOF\n  \n  playground topic produce -t vincent-jsql --nb-messages 10 << 'EOF'\n  CREATE TABLE \"notused\".\"notused\" (\n    \"id\" int PRIMARY KEY,\n    \"name\" varchar COMMENT 'faker.internet.userName()',\n    \"merchant_id\" int NOT NULL COMMENT 'faker.datatype.number()',\n    \"price\" int COMMENT 'faker.datatype.number()',\n    \"status\" int COMMENT 'faker.datatype.boolean()',\n    \"created_at\" datetime DEFAULT (now())\n  );\n  EOF\n"
     echo
 
   fi
@@ -8026,6 +8026,18 @@ playground_bootstrap_reproduction_model_command() {
       logerror "example <$base1> must be source connector example when building a pipeline !"
       exit 1
     fi
+
+    # if [[ "$dir2" == ccloud* ]]
+    # then
+    #   logerror "example <$dir2> must not be ccloud connector example when building a pipeline, this is not supported"
+    #   exit 1
+    # fi
+
+    if [[ "$dir2" != connect* ]]
+    then
+      logerror "example <$dir2> is not from connect folder, only connect in connect folder are supported"
+      exit 1
+    fi
   fi
 
   if [ "$producer" != "none" ]
@@ -9863,7 +9875,7 @@ playground_topic_produce_command() {
           logerror "❌ --tombstone is set but it can be produce only with CP 7.2+"
           exit 1
       fi
-      log "⚰️ Sending tombstone for key $key in topic $topic"
+      log "🧟 Sending tombstone for key $key in topic $topic"
       if [[ "$environment" == "environment" ]]
       then
           echo "$key|NULL" | docker run -i --rm -v /tmp/delta_configs/ak-tools-ccloud.delta:/tmp/configuration/ccloud.properties -e BOOTSTRAP_SERVERS="$BOOTSTRAP_SERVERS" ${CP_CONNECT_IMAGE}:${CONNECT_TAG} kafka-console-producer --broker-list $BOOTSTRAP_SERVERS --topic $topic --producer.config /tmp/configuration/ccloud.properties $security --property parse.key=true --property key.separator="|" --property null.marker=NULL

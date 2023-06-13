@@ -113,6 +113,12 @@ then
     logerror "example <$base1> must be source connector example when building a pipeline !"
     exit 1
   fi
+
+  if [[ "$dir2" != connect* ]]
+  then
+    logerror "example <$dir2> is not from connect folder, only connect in connect folder are supported"
+    exit 1
+  fi
 fi
 
 if [ "$producer" != "none" ]
