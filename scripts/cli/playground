@@ -1998,6 +1998,11 @@ playground_topic_consume_usage() {
     printf "    Default: 60\n"
     echo
 
+    # :flag.usage
+    printf "  %s\n" "$(magenta "--tail")"
+    printf "    Tail on logs.\n"
+    echo
+
     # :command.usage_fixed_flags
     printf "  %s\n" "$(magenta "--help, -h")"
     printf "    Show this help\n"
@@ -8027,12 +8032,6 @@ playground_bootstrap_reproduction_model_command() {
       exit 1
     fi
 
-    # if [[ "$dir2" == ccloud* ]]
-    # then
-    #   logerror "example <$dir2> must not be ccloud connector example when building a pipeline, this is not supported"
-    #   exit 1
-    # fi
-
     if [[ "$dir2" != connect* ]]
     then
       logerror "example <$dir2> is not from connect folder, only connect in connect folder are supported"
@@ -9496,6 +9495,7 @@ playground_topic_consume_command() {
   grep_string="${args[--grep]}"
   min_expected_messages="${args[--min-expected-messages]}"
   timeout="${args[--timeout]}"
+  tail="${args[--tail]}"
 
   environment=`get_environment_used`
 
@@ -9567,6 +9567,11 @@ playground_topic_consume_command() {
         logerror "--min-expected-messages was provided without specifying --topic"
         exit 1
       fi
+      if [[ -n "$tail" ]]
+      then
+        logerror "--tail was provided without specifying --topic"
+        exit 1
+      fi
       log "✨ --topic flag was not provided, applying command to all topics"
       topic=$(playground get-topic-list --skip-connect-internal-topics)
       if [ "$topic" == "" ]
@@ -9579,12 +9584,45 @@ playground_topic_consume_command() {
   items=($topic)
   for topic in ${items[@]}
   do
-    if [[ -n "$min_expected_messages" ]]
+    if [ ! -n "$tail" ]
     then
+      if [[ -n "$min_expected_messages" ]]
+      then
 
-      start_time=$(date +%s)
+        start_time=$(date +%s)
 
-      while true; do
+        while true; do
+          nb_messages=$(playground topic get-number-records -t $topic | tail -1)
+
+          if [[ ! $nb_messages =~ ^[0-9]+$ ]]
+          then
+            echo $nb_messages | grep "does not exist" > /dev/null 2>&1
+            if [ $? == 0 ]
+            then
+              logwarn "❌ topic $topic does not exist !"
+            else
+              logwarn "❌ problem while getting number of messages: $nb_messages"
+            fi
+            exit 1
+          fi
+
+          if [ $nb_messages -ge $min_expected_messages ]
+          then
+            break
+          fi
+
+          current_time=$(date +%s)
+          elapsed_time=$((current_time - start_time))
+
+          if [ $elapsed_time -ge $timeout ]
+          then
+            logerror "❌ overall timeout of $timeout seconds exceeded. --min-expected-messages is set with $min_expected_messages but topic $topic contains $nb_messages messages"
+            exit 1
+          fi
+
+          sleep 1
+        done
+      else
         nb_messages=$(playground topic get-number-records -t $topic | tail -1)
 
         if [[ ! $nb_messages =~ ^[0-9]+$ ]]
@@ -9596,42 +9634,15 @@ playground_topic_consume_command() {
           else
             logwarn "❌ problem while getting number of messages: $nb_messages"
           fi
-          exit 1
-        fi
-
-        if [ $nb_messages -ge $min_expected_messages ]
-        then
           break
         fi
-
-        current_time=$(date +%s)
-        elapsed_time=$((current_time - start_time))
-
-        if [ $elapsed_time -ge $timeout ]
-        then
-          logerror "❌ overall timeout of $timeout seconds exceeded. --min-expected-messages is set with $min_expected_messages but topic $topic contains $nb_messages messages"
-          exit 1
-        fi
-
-        sleep 1
-      done
-    else
-      nb_messages=$(playground topic get-number-records -t $topic | tail -1)
-
-      if [[ ! $nb_messages =~ ^[0-9]+$ ]]
-      then
-        echo $nb_messages | grep "does not exist" > /dev/null 2>&1
-        if [ $? == 0 ]
-        then
-          logwarn "❌ topic $topic does not exist !"
-        else
-          logwarn "❌ problem while getting number of messages: $nb_messages"
-        fi
-        break
       fi
     fi
 
-    if [[ -n "$max_messages" ]] && [ $nb_messages -ge $max_messages ]
+    if [ -n "$tail" ]
+    then
+      log "✨ Tailing content of topic $topic"
+    elif [[ -n "$max_messages" ]] && [ $nb_messages -ge $max_messages ]
     then
       log "✨ Display content of topic $topic, it contains $nb_messages messages, but displaying only --max-messages=$max_messages"
       nb_messages=$max_messages
@@ -9693,31 +9704,37 @@ playground_topic_consume_command() {
     tmp_dir=$(mktemp -d -t ci-XXXXXXXXXX)
     fifo_path="$tmp_dir/kafka_output_fifo"
     mkfifo "$fifo_path"
+
+    tailornot=""
+    if [ ! -n "$tail" ]
+    then
+      tailornot="--from-beginning --max-messages $nb_messages"
+    fi
     case "${value_type}" in
       avro|protobuf|json-schema)
           if [ "$key_type" == "avro" ] || [ "$key_type" == "protobuf" ] || [ "$key_type" == "json-schema" ]
           then
               if [[ "$environment" == "environment" ]]
               then
-                timeout $timeout docker run -i --rm -e SCHEMA_REGISTRY_LOG4J_OPTS="-Dlog4j.configuration=file:/etc/kafka/tools-log4j.properties" -e value_type=$value_type -e BOOTSTRAP_SERVERS="$BOOTSTRAP_SERVERS" -e SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO="$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO" -e SCHEMA_REGISTRY_URL="$SCHEMA_REGISTRY_URL" ${CP_CONNECT_IMAGE}:${CONNECT_TAG} kafka-$value_type-console-consumer --bootstrap-server $BOOTSTRAP_SERVERS --topic $topic --consumer-property ssl.endpoint.identification.algorithm=https --consumer-property sasl.mechanism=PLAIN --consumer-property security.protocol=SASL_SSL --consumer-property sasl.jaas.config="$SASL_JAAS_CONFIG" --property basic.auth.credentials.source=USER_INFO --property schema.registry.basic.auth.user.info="$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO" --property schema.registry.url=$SCHEMA_REGISTRY_URL --property print.partition=true --property print.offset=true --property print.headers=true --property print.timestamp=true --property print.key=true --property key.separator="|" --skip-message-on-error $security --from-beginning --max-messages $nb_messages > "$fifo_path" 2>&1 &
+                timeout $timeout docker run -i --rm -e SCHEMA_REGISTRY_LOG4J_OPTS="-Dlog4j.configuration=file:/etc/kafka/tools-log4j.properties" -e value_type=$value_type -e BOOTSTRAP_SERVERS="$BOOTSTRAP_SERVERS" -e SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO="$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO" -e SCHEMA_REGISTRY_URL="$SCHEMA_REGISTRY_URL" ${CP_CONNECT_IMAGE}:${CONNECT_TAG} kafka-$value_type-console-consumer --bootstrap-server $BOOTSTRAP_SERVERS --topic $topic --consumer-property ssl.endpoint.identification.algorithm=https --consumer-property sasl.mechanism=PLAIN --consumer-property security.protocol=SASL_SSL --consumer-property sasl.jaas.config="$SASL_JAAS_CONFIG" --property basic.auth.credentials.source=USER_INFO --property schema.registry.basic.auth.user.info="$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO" --property schema.registry.url=$SCHEMA_REGISTRY_URL --property print.partition=true --property print.offset=true --property print.headers=true --property print.timestamp=true --property print.key=true --property key.separator="|" --skip-message-on-error $security $tailornot > "$fifo_path" 2>&1 &
               else
-                timeout $timeout docker exec -e SCHEMA_REGISTRY_LOG4J_OPTS="-Dlog4j.configuration=file:/etc/kafka/tools-log4j.properties" $container kafka-$value_type-console-consumer -bootstrap-server $bootstrap_server --property schema.registry.url=$sr_url_cli --topic $topic --property print.partition=true --property print.offset=true --property print.headers=true --property print.timestamp=true --property print.key=true --property key.separator="|" --skip-message-on-error $security --from-beginning --max-messages $nb_messages > "$fifo_path" 2>&1 &
+                timeout $timeout docker exec -e SCHEMA_REGISTRY_LOG4J_OPTS="-Dlog4j.configuration=file:/etc/kafka/tools-log4j.properties" $container kafka-$value_type-console-consumer -bootstrap-server $bootstrap_server --property schema.registry.url=$sr_url_cli --topic $topic --property print.partition=true --property print.offset=true --property print.headers=true --property print.timestamp=true --property print.key=true --property key.separator="|" --skip-message-on-error $security $tailornot > "$fifo_path" 2>&1 &
               fi
           else
               if [[ "$environment" == "environment" ]]
               then
-                timeout $timeout docker run -i --rm -e SCHEMA_REGISTRY_LOG4J_OPTS="-Dlog4j.configuration=file:/etc/kafka/tools-log4j.properties" -e value_type=$value_type -e BOOTSTRAP_SERVERS="$BOOTSTRAP_SERVERS" -e SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO="$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO" -e SCHEMA_REGISTRY_URL="$SCHEMA_REGISTRY_URL" ${CP_CONNECT_IMAGE}:${CONNECT_TAG} kafka-$value_type-console-consumer --bootstrap-server $BOOTSTRAP_SERVERS --topic $topic --consumer-property ssl.endpoint.identification.algorithm=https --consumer-property sasl.mechanism=PLAIN --consumer-property security.protocol=SASL_SSL --consumer-property sasl.jaas.config="$SASL_JAAS_CONFIG" --property basic.auth.credentials.source=USER_INFO --property schema.registry.basic.auth.user.info="$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO" --property schema.registry.url=$SCHEMA_REGISTRY_URL --property print.partition=true --property print.offset=true --property print.headers=true --property print.timestamp=true --property print.key=true --property key.separator="|"  --property key.deserializer=org.apache.kafka.common.serialization.StringDeserializer --skip-message-on-error $security --from-beginning --max-messages $nb_messages > "$fifo_path" 2>&1 &
+                timeout $timeout docker run -i --rm -e SCHEMA_REGISTRY_LOG4J_OPTS="-Dlog4j.configuration=file:/etc/kafka/tools-log4j.properties" -e value_type=$value_type -e BOOTSTRAP_SERVERS="$BOOTSTRAP_SERVERS" -e SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO="$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO" -e SCHEMA_REGISTRY_URL="$SCHEMA_REGISTRY_URL" ${CP_CONNECT_IMAGE}:${CONNECT_TAG} kafka-$value_type-console-consumer --bootstrap-server $BOOTSTRAP_SERVERS --topic $topic --consumer-property ssl.endpoint.identification.algorithm=https --consumer-property sasl.mechanism=PLAIN --consumer-property security.protocol=SASL_SSL --consumer-property sasl.jaas.config="$SASL_JAAS_CONFIG" --property basic.auth.credentials.source=USER_INFO --property schema.registry.basic.auth.user.info="$SCHEMA_REGISTRY_BASIC_AUTH_USER_INFO" --property schema.registry.url=$SCHEMA_REGISTRY_URL --property print.partition=true --property print.offset=true --property print.headers=true --property print.timestamp=true --property print.key=true --property key.separator="|"  --property key.deserializer=org.apache.kafka.common.serialization.StringDeserializer --skip-message-on-error $security $tailornot > "$fifo_path" 2>&1 &
               else
-                timeout $timeout docker exec -e SCHEMA_REGISTRY_LOG4J_OPTS="-Dlog4j.configuration=file:/etc/kafka/tools-log4j.properties" $container kafka-$value_type-console-consumer --bootstrap-server $bootstrap_server --property schema.registry.url=$sr_url_cli --topic $topic --property print.partition=true --property print.offset=true --property print.headers=true --property print.timestamp=true --property print.key=true --property key.separator="|" --property key.deserializer=org.apache.kafka.common.serialization.StringDeserializer --skip-message-on-error $security --from-beginning --max-messages $nb_messages > "$fifo_path" 2>&1 &
+                timeout $timeout docker exec -e SCHEMA_REGISTRY_LOG4J_OPTS="-Dlog4j.configuration=file:/etc/kafka/tools-log4j.properties" $container kafka-$value_type-console-consumer --bootstrap-server $bootstrap_server --property schema.registry.url=$sr_url_cli --topic $topic --property print.partition=true --property print.offset=true --property print.headers=true --property print.timestamp=true --property print.key=true --property key.separator="|" --property key.deserializer=org.apache.kafka.common.serialization.StringDeserializer --skip-message-on-error $security $tailornot > "$fifo_path" 2>&1 &
               fi
           fi
           ;;
       *)
         if [[ "$environment" == "environment" ]]
         then
-          timeout $timeout docker run -i --rm -v /tmp/delta_configs/ak-tools-ccloud.delta:/tmp/configuration/ccloud.properties -e BOOTSTRAP_SERVERS="$BOOTSTRAP_SERVERS" ${CP_CONNECT_IMAGE}:${CONNECT_TAG} kafka-console-consumer --bootstrap-server $BOOTSTRAP_SERVERS --topic $topic --consumer.config /tmp/configuration/ccloud.properties --property print.partition=true --property print.offset=true --property print.headers=true --property print.timestamp=true --property print.key=true --property key.separator="|" $security --from-beginning --max-messages $nb_messages > "$fifo_path" 2>&1 &
+          timeout $timeout docker run -i --rm -v /tmp/delta_configs/ak-tools-ccloud.delta:/tmp/configuration/ccloud.properties -e BOOTSTRAP_SERVERS="$BOOTSTRAP_SERVERS" ${CP_CONNECT_IMAGE}:${CONNECT_TAG} kafka-console-consumer --bootstrap-server $BOOTSTRAP_SERVERS --topic $topic --consumer.config /tmp/configuration/ccloud.properties --property print.partition=true --property print.offset=true --property print.headers=true --property print.timestamp=true --property print.key=true --property key.separator="|" $security $tailornot > "$fifo_path" 2>&1 &
         else
-          timeout $timeout docker exec $container kafka-console-consumer --bootstrap-server $bootstrap_server --topic $topic --property print.partition=true --property print.offset=true --property print.headers=true --property print.timestamp=true --property print.key=true --property key.separator="|" $security --from-beginning --max-messages $nb_messages > "$fifo_path" 2>&1  &
+          timeout $timeout docker exec $container kafka-console-consumer --bootstrap-server $bootstrap_server --topic $topic --property print.partition=true --property print.offset=true --property print.headers=true --property print.timestamp=true --property print.key=true --property key.separator="|" $security $tailornot > "$fifo_path" 2>&1  &
         fi
       ;;
     esac
@@ -14976,6 +14993,21 @@ playground_topic_consume_parse_requirements() {
           printf "%s\n" "--timeout requires an argument: --timeout TIMEOUT" >&2
           exit 1
         fi
+        ;;
+
+      # :flag.case
+      --tail)
+        # :flag.conflicts
+        for conflict in --min-expected-messages --max-messages; do
+          if [[ -n "${args[$conflict]:-}" ]]; then
+            printf "conflicting options: %s cannot be used with %s\n" "$key" "$conflict" >&2
+            exit 1
+          fi
+        done
+
+        # :flag.case_no_arg
+        args['--tail']=1
+        shift
         ;;
 
       -?*)

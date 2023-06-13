@@ -529,7 +529,7 @@ _playground_completions() {
       ;;
 
     'topic consume'*)
-      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "--grep --help --max-messages --min-expected-messages --timeout --topic -h -t")" -- "$cur" )
+      while read -r; do COMPREPLY+=( "$REPLY" ); done < <( compgen -W "$(_playground_completions_filter "--grep --help --max-messages --min-expected-messages --tail --timeout --topic -h -t")" -- "$cur" )
       ;;
 
     'container ssh'*)
