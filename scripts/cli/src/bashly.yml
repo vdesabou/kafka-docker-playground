@@ -634,6 +634,27 @@ commands:
     - playground debug thread-dump
     - playground debug thread-dump --container broker
 
+  - name: tcp-dump
+    help: |-
+      🕵️‍♂️ Take a tcp dump (sniffing network)
+    flags:
+      - *container
+      - long: --port
+        arg: port
+        validate: integer
+        required: true
+        help: |-
+          Port on which tcp dump should be done
+      - long: --duration
+        arg: duration
+        validate: integer
+        required: false
+        default: "30"
+        help: |-
+          Duration of the dump (default is 30 seconds).
+    examples:
+    - playground debug tcp-dump --container control-center --port 9021 --duration 60
+
   - name: log-level
     help: |-
       🧬 Set log level for any package
