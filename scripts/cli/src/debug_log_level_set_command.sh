@@ -19,7 +19,7 @@ then
     \"level\": \"$level\"
     }" | jq .
 
-    playground log-level get -p "$package"
+    playground debug log-level get -p "$package"
 else
     log "🧬⏭️ Skipping as log level for package $package was already set to $level"
 fi

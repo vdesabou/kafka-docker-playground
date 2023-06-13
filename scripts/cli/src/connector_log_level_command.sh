@@ -23,5 +23,5 @@ do
     tmp=$(curl -s $security "$connect_url/connectors/$connector" | jq -r '.config."connector.class"')
     package="${tmp%.*}"
     # log "🧬 Set log level for connector $connector to $level"
-    playground log-level set -p "$package" -l $level
+    playground debug log-level set -p "$package" -l $level
 done

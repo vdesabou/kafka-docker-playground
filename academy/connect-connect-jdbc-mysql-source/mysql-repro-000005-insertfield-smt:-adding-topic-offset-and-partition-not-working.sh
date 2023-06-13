@@ -80,7 +80,7 @@ log "Show content of team table:"
 docker exec mysql bash -c "mysql --user=root --password=password --database=mydb -e 'select * from team'"
 
 
-playground log-level set --package "org.apache.kafka.connect.runtime.TransformationChain" --level TRACE
+playground debug log-level set --package "org.apache.kafka.connect.runtime.TransformationChain" --level TRACE
 
 log "Creating MySQL source connector"
 playground connector create-or-update --connector mysql-source << EOF

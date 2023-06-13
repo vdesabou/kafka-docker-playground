@@ -52,8 +52,9 @@ playground_usage() {
   printf "  %s   🔢 Get JMX metrics from a component\n" "$(green "get-jmx-metrics")                   "
   echo
   printf "%s\n" "$(bold "Debug commands:")"
-  printf "  %s   ✨ Enable java remote debugging for container\n" "$(green "enable-remote-debugging")           "
-  printf "  %s   🧬 Set log level for any package\n" "$(green "log-level")                         "
+  printf "  %s   🐞 Debug commands\n" "$(green "debug")                             "
+  [[ -n $long_usage ]] && printf "  %s   ✨ Enable java remote debugging for container\n" "$(green "debug enable-remote-debugging")     "
+  [[ -n $long_usage ]] && printf "  %s   🧬 Set log level for any package\n" "$(green "debug log-level")                   "
   echo
   printf "%s\n" "$(bold "Container commands:")"
   printf "  %s   🐳 Container commands\n" "$(green "container")                         "
@@ -1131,23 +1132,57 @@ playground_get_all_schemas_usage() {
 }
 
 # :command.usage
-playground_enable_remote_debugging_usage() {
+playground_debug_usage() {
   if [[ -n $long_usage ]]; then
-    printf "playground enable-remote-debugging\n"
+    printf "playground debug - 🐞 Debug commands\n"
+    echo
+
+  else
+    printf "playground debug - 🐞 Debug commands\n"
+    echo
+
+  fi
+
+  printf "%s\n" "$(bold "== Usage ==")"
+  printf "  playground debug COMMAND\n"
+  printf "  playground debug [COMMAND] --help | -h\n"
+  echo
+  # :command.usage_commands
+  printf "%s\n" "$(bold "== Commands ==")"
+  printf "  %s   ✨ Enable java remote debugging for container\n" "$(green "enable-remote-debugging")"
+  printf "  %s   🧬 Set log level for any package\n" "$(green "log-level")              "
+  echo
+
+  # :command.long_usage
+  if [[ -n $long_usage ]]; then
+    printf "%s\n" "$(bold "== Options ==")"
+
+    # :command.usage_fixed_flags
+    printf "  %s\n" "$(magenta "--help, -h")"
+    printf "    Show this help\n"
+    echo
+
+  fi
+}
+
+# :command.usage
+playground_debug_enable_remote_debugging_usage() {
+  if [[ -n $long_usage ]]; then
+    printf "playground debug enable-remote-debugging\n"
     echo
 
     printf "  ✨ Enable java remote debugging for container\n  \n  👉 Check documentation\n  https://kafka-docker-playground.io/#/reusables?id=%e2%9c%a8-remote-debugging\n"
     echo
 
   else
-    printf "playground enable-remote-debugging - ✨ Enable java remote debugging for container\n"
+    printf "playground debug enable-remote-debugging - ✨ Enable java remote debugging for container\n"
     echo
 
   fi
 
   printf "%s\n" "$(bold "== Usage ==")"
-  printf "  playground enable-remote-debugging [OPTIONS]\n"
-  printf "  playground enable-remote-debugging --help | -h\n"
+  printf "  playground debug enable-remote-debugging [OPTIONS]\n"
+  printf "  playground debug enable-remote-debugging --help | -h\n"
   echo
 
   # :command.long_usage
@@ -1177,20 +1212,20 @@ playground_enable_remote_debugging_usage() {
 }
 
 # :command.usage
-playground_log_level_usage() {
+playground_debug_log_level_usage() {
   if [[ -n $long_usage ]]; then
-    printf "playground log-level - 🧬 Set log level for any package\n"
+    printf "playground debug log-level - 🧬 Set log level for any package\n"
     echo
 
   else
-    printf "playground log-level - 🧬 Set log level for any package\n"
+    printf "playground debug log-level - 🧬 Set log level for any package\n"
     echo
 
   fi
 
   printf "%s\n" "$(bold "== Usage ==")"
-  printf "  playground log-level COMMAND\n"
-  printf "  playground log-level [COMMAND] --help | -h\n"
+  printf "  playground debug log-level COMMAND\n"
+  printf "  playground debug log-level [COMMAND] --help | -h\n"
   echo
   # :command.usage_commands
   printf "%s\n" "$(bold "== Commands ==")"
@@ -1219,20 +1254,20 @@ playground_log_level_usage() {
 }
 
 # :command.usage
-playground_log_level_get_usage() {
+playground_debug_log_level_get_usage() {
   if [[ -n $long_usage ]]; then
-    printf "playground log-level get - Get log levels\n"
+    printf "playground debug log-level get - Get log levels\n"
     echo
 
   else
-    printf "playground log-level get - Get log levels\n"
+    printf "playground debug log-level get - Get log levels\n"
     echo
 
   fi
 
   printf "%s\n" "$(bold "== Usage ==")"
-  printf "  playground log-level get [OPTIONS]\n"
-  printf "  playground log-level get --help | -h\n"
+  printf "  playground debug log-level get [OPTIONS]\n"
+  printf "  playground debug log-level get --help | -h\n"
   echo
 
   # :command.long_usage
@@ -1254,20 +1289,20 @@ playground_log_level_get_usage() {
 }
 
 # :command.usage
-playground_log_level_set_usage() {
+playground_debug_log_level_set_usage() {
   if [[ -n $long_usage ]]; then
-    printf "playground log-level set - Set log level for specific logger\n"
+    printf "playground debug log-level set - Set log level for specific logger\n"
     echo
 
   else
-    printf "playground log-level set - Set log level for specific logger\n"
+    printf "playground debug log-level set - Set log level for specific logger\n"
     echo
 
   fi
 
   printf "%s\n" "$(bold "== Usage ==")"
-  printf "  playground log-level set [OPTIONS]\n"
-  printf "  playground log-level set --help | -h\n"
+  printf "  playground debug log-level set [OPTIONS]\n"
+  printf "  playground debug log-level set --help | -h\n"
   echo
 
   # :command.long_usage
@@ -2046,8 +2081,8 @@ playground_topic_produce_usage() {
 
     # :flag.usage
     printf "  %s\n" "$(magenta "--nb-messages NB-MESSAGES")"
-    printf "    Number of messages to produce (default is 3)\n"
-    printf "    Default: 3\n"
+    printf "    Number of messages to produce (default is 1)\n"
+    printf "    Default: 1\n"
     echo
 
     # :flag.usage
@@ -9053,8 +9088,8 @@ playground_get_all_schemas_command() {
 }
 
 # :command.function
-playground_enable_remote_debugging_command() {
-  # src/enable_remote_debugging_command.sh
+playground_debug_enable_remote_debugging_command() {
+  # src/debug_enable_remote_debugging_command.sh
   IGNORE_CHECK_FOR_DOCKER_COMPOSE=true
 
   container="${args[--container]}"
@@ -9105,8 +9140,8 @@ playground_enable_remote_debugging_command() {
 }
 
 # :command.function
-playground_log_level_get_command() {
-  # src/log_level_get_command.sh
+playground_debug_log_level_get_command() {
+  # src/debug_log_level_get_command.sh
   ret=$(get_connect_url_and_security)
 
   connect_url=$(echo "$ret" | cut -d "@" -f 1)
@@ -9125,8 +9160,8 @@ playground_log_level_get_command() {
 }
 
 # :command.function
-playground_log_level_set_command() {
-  # src/log_level_set_command.sh
+playground_debug_log_level_set_command() {
+  # src/debug_log_level_set_command.sh
   ret=$(get_connect_url_and_security)
 
   connect_url=$(echo "$ret" | cut -d "@" -f 1)
@@ -11289,17 +11324,10 @@ parse_requirements() {
       shift $#
       ;;
 
-    enable-remote-debugging)
-      action="enable-remote-debugging"
+    debug)
+      action="debug"
       shift
-      playground_enable_remote_debugging_parse_requirements "$@"
-      shift $#
-      ;;
-
-    log-level)
-      action="log-level"
-      shift
-      playground_log_level_parse_requirements "$@"
+      playground_debug_parse_requirements "$@"
       shift $#
       ;;
 
@@ -13372,13 +13400,13 @@ playground_get_all_schemas_parse_requirements() {
 }
 
 # :command.parse_requirements
-playground_enable_remote_debugging_parse_requirements() {
+playground_debug_parse_requirements() {
   # :command.fixed_flags_filter
   while [[ $# -gt 0 ]]; do
     case "${1:-}" in
       --help | -h)
         long_usage=yes
-        playground_enable_remote_debugging_usage
+        playground_debug_usage
         exit
         ;;
 
@@ -13390,7 +13418,81 @@ playground_enable_remote_debugging_parse_requirements() {
   done
 
   # :command.command_filter
-  action="enable-remote-debugging"
+  action=${1:-}
+
+  case $action in
+    -*) ;;
+
+    enable-remote-debugging)
+      action="enable-remote-debugging"
+      shift
+      playground_debug_enable_remote_debugging_parse_requirements "$@"
+      shift $#
+      ;;
+
+    log-level)
+      action="log-level"
+      shift
+      playground_debug_log_level_parse_requirements "$@"
+      shift $#
+      ;;
+
+    # :command.command_fallback
+    "")
+      playground_debug_usage >&2
+      exit 1
+      ;;
+
+    *)
+      printf "invalid command: %s\n" "$action" >&2
+      exit 1
+      ;;
+
+  esac
+
+  # :command.parse_requirements_while
+  while [[ $# -gt 0 ]]; do
+    key="$1"
+    case "$key" in
+
+      -?*)
+        printf "invalid option: %s\n" "$key" >&2
+        exit 1
+        ;;
+
+      *)
+        # :command.parse_requirements_case
+        # :command.parse_requirements_case_simple
+        printf "invalid argument: %s\n" "$key" >&2
+        exit 1
+
+        ;;
+
+    esac
+  done
+
+}
+
+# :command.parse_requirements
+playground_debug_enable_remote_debugging_parse_requirements() {
+  # :command.fixed_flags_filter
+  while [[ $# -gt 0 ]]; do
+    case "${1:-}" in
+      --help | -h)
+        long_usage=yes
+        playground_debug_enable_remote_debugging_usage
+        exit
+        ;;
+
+      *)
+        break
+        ;;
+
+    esac
+  done
+
+  # :command.command_filter
+  action="debug enable-remote-debugging"
 
   # :command.parse_requirements_while
   while [[ $# -gt 0 ]]; do
@@ -13433,13 +13535,13 @@ playground_enable_remote_debugging_parse_requirements() {
 }
 
 # :command.parse_requirements
-playground_log_level_parse_requirements() {
+playground_debug_log_level_parse_requirements() {
   # :command.fixed_flags_filter
   while [[ $# -gt 0 ]]; do
     case "${1:-}" in
       --help | -h)
         long_usage=yes
-        playground_log_level_usage
+        playground_debug_log_level_usage
         exit
         ;;
 
@@ -13459,20 +13561,20 @@ playground_log_level_parse_requirements() {
     get)
       action="get"
       shift
-      playground_log_level_get_parse_requirements "$@"
+      playground_debug_log_level_get_parse_requirements "$@"
       shift $#
       ;;
 
     set)
       action="set"
       shift
-      playground_log_level_set_parse_requirements "$@"
+      playground_debug_log_level_set_parse_requirements "$@"
       shift $#
       ;;
 
     # :command.command_fallback
     "")
-      playground_log_level_usage >&2
+      playground_debug_log_level_usage >&2
       exit 1
       ;;
 
@@ -13514,13 +13616,13 @@ playground_log_level_parse_requirements() {
 }
 
 # :command.parse_requirements
-playground_log_level_get_parse_requirements() {
+playground_debug_log_level_get_parse_requirements() {
   # :command.fixed_flags_filter
   while [[ $# -gt 0 ]]; do
     case "${1:-}" in
       --help | -h)
         long_usage=yes
-        playground_log_level_get_usage
+        playground_debug_log_level_get_usage
         exit
         ;;
 
@@ -13532,7 +13634,7 @@ playground_log_level_get_parse_requirements() {
   done
 
   # :command.command_filter
-  action="log-level get"
+  action="debug log-level get"
 
   # :command.parse_requirements_while
   while [[ $# -gt 0 ]]; do
@@ -13577,13 +13679,13 @@ playground_log_level_get_parse_requirements() {
 }
 
 # :command.parse_requirements
-playground_log_level_set_parse_requirements() {
+playground_debug_log_level_set_parse_requirements() {
   # :command.fixed_flags_filter
   while [[ $# -gt 0 ]]; do
     case "${1:-}" in
       --help | -h)
         long_usage=yes
-        playground_log_level_set_usage
+        playground_debug_log_level_set_usage
         exit
         ;;
 
@@ -13595,7 +13697,7 @@ playground_log_level_set_parse_requirements() {
   done
 
   # :command.command_filter
-  action="log-level set"
+  action="debug log-level set"
 
   # :command.parse_requirements_while
   while [[ $# -gt 0 ]]; do
@@ -15193,7 +15295,7 @@ playground_topic_produce_parse_requirements() {
 
   # :command.default_assignments
   [[ -n ${args['--input']:-} ]] || args['--input']="-"
-  [[ -n ${args['--nb-messages']:-} ]] || args['--nb-messages']="3"
+  [[ -n ${args['--nb-messages']:-} ]] || args['--nb-messages']="1"
   [[ -n ${args['--nb-partitions']:-} ]] || args['--nb-partitions']=""
 
   # :command.user_filter
@@ -16813,10 +16915,11 @@ run() {
     "bootstrap-reproduction-model") playground_bootstrap_reproduction_model_command ;;
     "get-properties") playground_get_properties_command ;;
     "get-all-schemas") playground_get_all_schemas_command ;;
-    "enable-remote-debugging") playground_enable_remote_debugging_command ;;
-    "log-level") playground_log_level_command ;;
-    "log-level get") playground_log_level_get_command ;;
-    "log-level set") playground_log_level_set_command ;;
+    "debug") playground_debug_command ;;
+    "debug enable-remote-debugging") playground_debug_enable_remote_debugging_command ;;
+    "debug log-level") playground_debug_log_level_command ;;
+    "debug log-level get") playground_debug_log_level_get_command ;;
+    "debug log-level set") playground_debug_log_level_set_command ;;
     "get-jmx-metrics") playground_get_jmx_metrics_command ;;
     "container") playground_container_command ;;
     "container recreate") playground_container_recreate_command ;;
