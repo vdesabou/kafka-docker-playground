@@ -6219,10 +6219,17 @@ function ccloud::create_ccloud_stack() {
     SCHEMA_REGISTRY_CREDS=$(ccloud::maybe_create_credentials_resource $SERVICE_ACCOUNT_ID $SCHEMA_REGISTRY)
   fi
 
-  # VINC
-  set +e
-  #log "Adding ResourceOwner RBAC role for all subjects"
-  confluent iam rbac role-binding create --principal User:$SERVICE_ACCOUNT_ID --role ResourceOwner --environment $ENVIRONMENT --schema-registry-cluster $SCHEMA_REGISTRY --resource Subject:* 2>/dev/null
+  if [[ $NEED_ACLS -eq 1 ]]
+  then
+    # VINC
+    set +e
+    if [ "$SERVICE_ACCOUNT_ID" != "" ]
+    then
+      log "Adding ResourceOwner RBAC role for all subjects"
+      confluent iam rbac role-binding create --principal User:$SERVICE_ACCOUNT_ID --role ResourceOwner --environment $ENVIRONMENT --schema-registry-cluster $SCHEMA_REGISTRY --resource Subject:*
+    fi
+    set -e
+  fi
 
   if $enable_ksqldb ; then
     KSQLDB_NAME=${KSQLDB_NAME:-"demo-ksqldb-$SERVICE_ACCOUNT_ID"}
