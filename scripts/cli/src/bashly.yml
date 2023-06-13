@@ -966,9 +966,9 @@ commands:
         arg: nb-messages
         validate: integer
         required: false
-        default: "3"
+        default: "1"
         help: |-
-          Number of messages to produce (default is 3)
+          Number of messages to produce (default is 1)
       - long: --nb-partitions
         arg: nb-partitions
         validate: integer
