@@ -623,6 +623,17 @@ commands:
     - playground debug enable-remote-debugging --container broker
     - playground debug enable-remote-debugging -c broker
 
+  - name: thread-dump
+    help: |-
+      🎯 Take a java thread dump
+
+      🔖 It will save output to a file and open with text editor set with config.ini (default is code)
+    flags:
+      - *container
+    examples:
+    - playground debug thread-dump
+    - playground debug thread-dump --container broker
+
   - name: log-level
     help: |-
       🧬 Set log level for any package
