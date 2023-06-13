@@ -17,8 +17,9 @@ seq -f "us_sale_%g ${RANDOM}" 10 | docker container exec -i connect-us bash -c "
 log "Consolidating all sales in the US"
 
 docker container exec connect-us \
-playground connector create-or-update --connector replicate-europe-to-us << EOF
-{
+curl -X PUT \
+     -H "Content-Type: application/json" \
+     --data '{
           "connector.class":"io.confluent.connect.replicator.ReplicatorSourceConnector",
           "key.converter": "io.confluent.connect.replicator.util.ByteArrayConverter",
           "value.converter": "io.confluent.connect.replicator.util.ByteArrayConverter",
@@ -31,15 +32,16 @@ playground connector create-or-update --connector replicate-europe-to-us << EOF
           "confluent.topic.replication.factor": 1,
           "provenance.header.enable": true,
           "topic.whitelist": "sales_EUROPE"
-          }
-EOF
+          }' \
+     http://localhost:8083/connectors/replicate-europe-to-us/config | jq .
 
 
 log "Consolidating all sales in Europe"
 
 docker container exec connect-europe \
-playground connector create-or-update --connector replicate-us-to-europe << EOF
-{
+curl -X PUT \
+     -H "Content-Type: application/json" \
+     --data '{
           "connector.class":"io.confluent.connect.replicator.ReplicatorSourceConnector",
           "key.converter": "io.confluent.connect.replicator.util.ByteArrayConverter",
           "value.converter": "io.confluent.connect.replicator.util.ByteArrayConverter",
@@ -52,8 +54,8 @@ playground connector create-or-update --connector replicate-us-to-europe << EOF
           "confluent.topic.replication.factor": 1,
           "provenance.header.enable": true,
           "topic.whitelist": "sales_US"
-          }
-EOF
+          }' \
+     http://localhost:8083/connectors/replicate-us-to-europe/config | jq .
 
 sleep 120
 
