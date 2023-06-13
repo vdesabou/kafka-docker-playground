@@ -3348,7 +3348,8 @@ function check_arm64_support() {
   if [ `uname -m` = "arm64" ]
   then
     test=$(echo "$DOCKER_COMPOSE_FILE" | awk -F"/" '{ print $(NF-2)"/"$(NF-1) }')
-    grep "${test}" ${DIR}/../../scripts/arm64-support-none.txt > /dev/null
+    base_test=$(echo $test | cut -d "/" -f 2)
+    grep "${base_test}" ${DIR}/../../scripts/arm64-support-none.txt > /dev/null
     if [ $? = 0 ]
     then
         logerror "🖥️ This example is not working with ARM64 !"
@@ -3357,7 +3358,7 @@ function check_arm64_support() {
         return
     fi
 
-    grep "${test}" ${DIR}/../../scripts/arm64-support-with-emulation.txt > /dev/null
+    grep "${base_test}" ${DIR}/../../scripts/arm64-support-with-emulation.txt > /dev/null
     if [ $? = 0 ]
     then
         logwarn "🖥️ This example is working with ARM64 but requires emulation"
