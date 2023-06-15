@@ -967,6 +967,12 @@ commands:
           Tail on logs.
         conflicts: [--min-expected-messages, --max-messages]
 
+      - long: --plot-latencies-timestamp-field
+        required: false
+        arg: timestamp
+        help: |-
+          🗳 Timestamp field name that represents when record was created in source system
+
     - name: produce
       filters:
       - schema_registry_running

@@ -4,6 +4,7 @@ grep_string="${args[--grep]}"
 min_expected_messages="${args[--min-expected-messages]}"
 timeout="${args[--timeout]}"
 tail="${args[--tail]}"
+timestamp_field="${args[--plot-latencies-timestamp-field]}"
 
 environment=`get_environment_used`
 
@@ -79,6 +80,11 @@ then
       logerror "--tail was provided without specifying --topic"
       exit 1
     fi
+    if [[ -n "$timestamp_field" ]]
+    then
+      logerror "--plot-latencies-timestamp-field was provided without specifying --topic"
+      exit 1
+    fi
     log "✨ --topic flag was not provided, applying command to all topics"
     topic=$(playground get-topic-list --skip-connect-internal-topics)
     if [ "$topic" == "" ]
@@ -148,7 +154,7 @@ do
   if [ -n "$tail" ]
   then
     log "✨ Tailing content of topic $topic"
-  elif [[ -n "$max_messages" ]] && [ $nb_messages -ge $max_messages ]
+  elif [[ -n "$max_messages" ]] && [ $nb_messages -ge $max_messages ] && [[ ! -n "$timestamp_field" ]]
   then
     log "✨ Display content of topic $topic, it contains $nb_messages messages, but displaying only --max-messages=$max_messages"
     nb_messages=$max_messages
@@ -156,6 +162,10 @@ do
     log "✨ Display content of topic $topic, it contains $nb_messages messages"
   fi
 
+  if [[ -n "$timestamp_field" ]]
+  then
+    log "📈 plotting results.."
+  fi
   key_type=""
   version=$(curl $sr_security -s "${sr_url}/subjects/${topic}-key/versions/1" | jq -r .version)
   if [ "$version" != "null" ]
@@ -256,6 +266,11 @@ do
     date_command="date -d @"
   fi
 
+  if [[ -n "$timestamp_field" ]]
+  then
+     latency_csv="$tmp_dir/latency.csv"
+     latency_png="$tmp_dir/latency.png"
+  fi
   found=0
   # Loop through each line in the named pipe
   while read -r line
@@ -269,7 +284,25 @@ do
       milliseconds=$((timestamp_ms % 1000))
       readable_date="$(${date_command}${timestamp_sec} "+%Y-%m-%d %H:%M:%S.${milliseconds}")"
       line_with_date=$(echo "$line" | sed -E "s/CreateTime:[0-9]{13}/CreateTime: ${readable_date}/")
-      echo "$line_with_date"
+
+      if [[ ! -n "$timestamp_field" ]]
+      then
+        echo "$line_with_date"
+      fi
+
+      if [[ -n "$timestamp_field" ]]
+      then
+        payload=$(echo "$line" | cut -d "|" -f 6)
+        # JSON is invalid
+        if ! echo "$payload" | jq -e .  > /dev/null 2>&1
+        then
+            logerror "--plot-latencies-timestamp-field is set but value content is not in json representation"
+            exit 1
+        else
+          timestamp_source=$(echo "$payload" | jq -r .${timestamp_field})
+          echo "$readable_date,$timestamp_ms,$timestamp_source" >> $latency_csv
+        fi
+      fi
     elif [[ $line =~ "Processed a total of" ]]
     then
       continue
@@ -295,3 +328,24 @@ do
     fi
   fi
 done
+
+if [[ -n "$timestamp_field" ]]
+then
+  log "Plot data using gnuplot, see ${latency_png}"
+  docker run --rm -i -v $tmp_dir:/work remuslazar/gnuplot -e \
+  "
+  set grid;
+  set datafile separator ',';
+  set timefmt \"%Y-%m-%d %H:%M:%S.%s\";
+  set format x '%H:%M:%S';
+  set term png size 1200,600;
+  set output 'latency.png';
+  set xdata time;
+  set autoscale;
+  set xlabel 'Time';
+  set ylabel 'Latency in ms';
+  plot 'latency.csv' using 1:(\$2-\$3) with points;"
+
+  # open $latency_csv
+  open $latency_png
+fi
