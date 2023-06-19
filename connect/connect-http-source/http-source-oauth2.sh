@@ -3,7 +3,7 @@ set -e
 
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null && pwd )"
 
-HTTP_SOURCE_CONNECTOR_ZIP="confluentinc-kafka-connect-http-source-0.2.0-SNAPSHOT.zip"
+HTTP_SOURCE_CONNECTOR_ZIP="confluentinc-kafka-connect-http-source-0.2.0-rc-f1cd5ff.zip"
 export CONNECTOR_ZIP="$PWD/$HTTP_SOURCE_CONNECTOR_ZIP"
 
 source ${DIR}/../../scripts/utils.sh
