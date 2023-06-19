@@ -83,6 +83,28 @@ playground ccloud-connector create-or-update --connector $connector_name << EOF
 EOF
 wait_for_ccloud_connector_up $connector_name 300
 
+# create token, see https://github.com/confluentinc/kafka-connect-http-demo#oauth2
+token=$(curl -X POST \
+  http://localhost:18080/oauth/token \
+  -H 'Content-Type: application/x-www-form-urlencoded' \
+  -H 'Authorization: Basic a2MtY2xpZW50OmtjLXNlY3JldA==' \
+  -d 'grant_type=client_credentials&scope=any' | jq -r '.access_token')
+
+
+log "Send a message to HTTP server"
+curl -X PUT \
+     -H "Content-Type: application/json" \
+     -H "Authorization: Bearer ${token}" \
+     --data '{"test":"value"}' \
+     http://localhost:18080/api/messages | jq .
+
+
+sleep 2
+
+log "Verify we have received the data in http-topic topic"
+playground topic consume --topic http-topic --min-expected-messages 1 --timeout 60
+
+
 log "Do you want to delete the fully managed connector $connector_name ?"
 check_if_continue
 
