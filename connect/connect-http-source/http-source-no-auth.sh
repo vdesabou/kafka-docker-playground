@@ -31,7 +31,7 @@ playground connector create-or-update --connector http-source << EOF
                "confluent.topic.bootstrap.servers": "broker:9092",
                "confluent.topic.replication.factor": "1",
                "url": "http://httpserver:8080/api/messages",
-               "topic.name.pattern":"http-topic-${entityName}",
+               "topic.name.pattern":"http-topic-\${entityName}",
                "entity.names": "messages",
                "http.offset.mode": "SIMPLE_INCREMENTING",
                "http.initial.offset": "1"
