@@ -1131,8 +1131,15 @@ function create_or_get_oracle_image() {
           then
             log "📄 image $ORACLE_IMAGE has been installed locally"
           fi
-          log "🧹 Removing /tmp/$ORACLE_IMAGE.tar"
-          rm -f /tmp/$ORACLE_IMAGE.tar
+
+          if [[ "$OSTYPE" == "darwin"* ]]
+          then
+            log "🧹 Removing /tmp/$ORACLE_IMAGE.tar"
+            rm -f /tmp/$ORACLE_IMAGE.tar
+          else
+            log "🧹 Removing /tmp/$ORACLE_IMAGE.tar with sudo"
+            sudo rm -f /tmp/$ORACLE_IMAGE.tar
+          fi
         fi
     else
         logwarn "If you're a Confluent employee, please check this link https://confluent.slack.com/archives/C0116NM415F/p1636391410032900 and also here https://confluent.slack.com/archives/C0116NM415F/p1636389483030900."
@@ -1164,8 +1171,15 @@ function create_or_get_oracle_image() {
           then
             log "📄 image $BASE_ORACLE_IMAGE has been installed locally"
           fi
-          log "🧹 Removing /tmp/$ORACLE_IMAGE.tar"
-          rm -f /tmp/oracle_database_$ORACLE_VERSION.tar
+
+          if [[ "$OSTYPE" == "darwin"* ]]
+          then
+            log "🧹 Removing /tmp/$ORACLE_IMAGE.tar"
+            rm -f /tmp/oracle_database_$ORACLE_VERSION.tar
+          else
+            log "🧹 Removing /tmp/$ORACLE_IMAGE.tar with sudo"
+            sudo rm -f /tmp/oracle_database_$ORACLE_VERSION.tar
+          fi
         fi
     fi
     set -e
