@@ -1289,8 +1289,8 @@ playground_debug_tcp_dump_usage() {
     echo
 
     # :flag.usage
-    printf "  %s\n" "$(magenta "--port PORT (required)")"
-    printf "    Port on which tcp dump should be done\n"
+    printf "  %s\n" "$(magenta "--port PORT")"
+    printf "    Port on which tcp dump should be done, if not set sniffing is done on every\n    port\n"
     echo
 
     # :flag.usage
@@ -9341,8 +9341,15 @@ playground_debug_tcp_dump_command() {
   docker exec --privileged --user root ${container} bash -c "killall tcpdump" > /dev/null 2>&1
   set -e
 
-  log "🕵️‍♂️ Taking tcp dump on container ${container} and port ${port} for ${duration} seconds..."
-  docker exec -d --privileged --user root ${container} bash -c "tcpdump -w ${filename} port ${port}"
+  if [[ -n "$port" ]]
+  then
+    log "🕵️‍♂️ Taking tcp dump on container ${container} and port ${port} for ${duration} seconds..."
+    docker exec -d --privileged --user root ${container} bash -c "tcpdump -w ${filename} port ${port}"
+  else
+    log "🕵️‍♂️ Taking tcp dump on container ${container} and all ports for ${duration} seconds..."
+    docker exec -d --privileged --user root ${container} bash -c "tcpdump -w ${filename}"
+  fi
+
   if [ $? -eq 0 ]
   then
       playground container get-ip-addresses
@@ -13986,12 +13993,6 @@ playground_debug_tcp_dump_parse_requirements() {
 
     esac
   done
-
-  # :command.required_flags_filter
-  if [[ -z ${args['--port']+x} ]]; then
-    printf "missing required flag: --port PORT\n" >&2
-    exit 1
-  fi
 
   # :command.default_assignments
   [[ -n ${args['--container']:-} ]] || args['--container']="connect"

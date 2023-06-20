@@ -642,9 +642,9 @@ commands:
       - long: --port
         arg: port
         validate: integer
-        required: true
+        required: false
         help: |-
-          Port on which tcp dump should be done
+          Port on which tcp dump should be done, if not set sniffing is done on every port
       - long: --duration
         arg: duration
         validate: integer

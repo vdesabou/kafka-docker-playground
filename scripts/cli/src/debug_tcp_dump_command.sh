@@ -38,8 +38,15 @@ set +e
 docker exec --privileged --user root ${container} bash -c "killall tcpdump" > /dev/null 2>&1
 set -e
 
-log "🕵️‍♂️ Taking tcp dump on container ${container} and port ${port} for ${duration} seconds..."
-docker exec -d --privileged --user root ${container} bash -c "tcpdump -w ${filename} port ${port}"
+if [[ -n "$port" ]]
+then
+  log "🕵️‍♂️ Taking tcp dump on container ${container} and port ${port} for ${duration} seconds..."
+  docker exec -d --privileged --user root ${container} bash -c "tcpdump -w ${filename} port ${port}"
+else
+  log "🕵️‍♂️ Taking tcp dump on container ${container} and all ports for ${duration} seconds..."
+  docker exec -d --privileged --user root ${container} bash -c "tcpdump -w ${filename}"
+fi
+
 if [ $? -eq 0 ]
 then
     playground container get-ip-addresses
