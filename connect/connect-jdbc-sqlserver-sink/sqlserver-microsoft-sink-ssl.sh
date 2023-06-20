@@ -69,14 +69,14 @@ ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.mic
 log "Creating JDBC SQL Server (with Microsoft driver) sink connector"
 playground connector create-or-update --connector sqlserver-sink-ssl << EOF
 {
-                "connector.class": "io.confluent.connect.jdbc.JdbcSinkConnector",
-                "tasks.max": "1",
-                "connection.url": "jdbc:sqlserver://sqlserver:1433;encrypt=true;trustServerCertificate=false;trustStore=/tmp/truststore.jks;trustStorePassword=confluent;",
-                "connection.user": "sa",
-                "connection.password": "Password!",
-                "topics": "orders",
-                "auto.create": "true"
-          }
+    "connector.class": "io.confluent.connect.jdbc.JdbcSinkConnector",
+    "tasks.max": "1",
+    "connection.url": "jdbc:sqlserver://sqlserver:1433;encrypt=true;trustServerCertificate=false;trustStore=/tmp/truststore.jks;trustStorePassword=confluent;",
+    "connection.user": "sa",
+    "connection.password": "Password!",
+    "topics": "orders",
+    "auto.create": "true"
+}
 EOF
 
 log "Sending messages to topic orders"
