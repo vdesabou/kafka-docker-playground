@@ -634,6 +634,17 @@ commands:
     - playground debug thread-dump
     - playground debug thread-dump --container broker
 
+  - name: heap-dump
+    help: |-
+      👻 Take a heap dump
+
+      🔖 It will save output to a .hprof file. VisualVM (https://visualvm.github.io/) or MAT (https://www.eclipse.org/mat/) can be used to read the file.
+    flags:
+      - *container
+    examples:
+    - playground debug heap-dump
+    - playground debug heap-dump --container broker
+
   - name: tcp-dump
     help: |-
       🕵️‍♂️ Take a tcp dump (sniffing network)
