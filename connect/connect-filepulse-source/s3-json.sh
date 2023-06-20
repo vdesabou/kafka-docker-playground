@@ -69,11 +69,10 @@ then
      exit 1
 fi
 
-AWS_BUCKET_NAME=kafka-docker-playground-filepulse-bucket-${USER}${TAG}
+AWS_BUCKET_NAME=pg-bucket-${USER}
 AWS_BUCKET_NAME=${AWS_BUCKET_NAME//[-.]/}
 
-
-log "Empty bucket <$AWS_BUCKET_NAME/$TAG>, if required"
+log "Create bucket <$AWS_BUCKET_NAME>, if required"
 set +e
 if [ "$AWS_REGION" == "us-east-1" ]
 then
@@ -81,10 +80,6 @@ then
 else
     aws s3api create-bucket --bucket $AWS_BUCKET_NAME --region $AWS_REGION --create-bucket-configuration LocationConstraint=$AWS_REGION
 fi
-set -e
-log "Empty bucket <$AWS_BUCKET_NAME>, if required"
-set +e
-aws s3 rm s3://$AWS_BUCKET_NAME/$TAG --recursive --region $AWS_REGION
 set -e
 
 # generate data file for externalizing secrets
@@ -111,35 +106,34 @@ ${DIR}/../../environment/plaintext/start.sh "${PWD}/docker-compose.plaintext.s3.
 log "Creating S3 JSON FilePulse Source connector"
 playground connector create-or-update --connector filepulse-source-s3-json << EOF
 {
-          "connector.class":"io.streamthoughts.kafka.connect.filepulse.source.FilePulseSourceConnector",
-          "aws.access.key.id": "\${file:/data:aws.access.key.id}",
-          "aws.secret.access.key": "\${file:/data:aws.secret.access.key}",
-          "aws.s3.bucket.name": "$AWS_BUCKET_NAME",
-          "aws.s3.region": "$AWS_REGION",
-          "fs.listing.class": "io.streamthoughts.kafka.connect.filepulse.fs.AmazonS3FileSystemListing",
-          "fs.listing.filters":"io.streamthoughts.kafka.connect.filepulse.fs.filter.RegexFileListFilter",
-          "fs.listing.interval.ms": "10000",
-          "file.filter.regex.pattern":".*\\\\.json$",
-          "offset.attributes.string": "uri",
-          "tasks.reader.class": "io.streamthoughts.kafka.connect.filepulse.fs.reader.AmazonS3BytesArrayInputReader",
-          "offset.strategy":"name",
-          "topic":"tracks-filepulse-json-00",
-          "internal.kafka.reporter.bootstrap.servers": "broker:9092",
-          "internal.kafka.reporter.topic":"connect-file-pulse-status",
-          "fs.cleanup.policy.class": "io.streamthoughts.kafka.connect.filepulse.fs.clean.LogCleanupPolicy",
-          "filters": "ParseJSON",
-          "filters.ParseJSON.type":"io.streamthoughts.kafka.connect.filepulse.filter.JSONFilter",
-          "filters.ParseJSON.source":"message",
-          "filters.ParseJSON.merge":"true",
-          "tasks.file.status.storage.class": "io.streamthoughts.kafka.connect.filepulse.state.KafkaFileObjectStateBackingStore",
-          "tasks.file.status.storage.bootstrap.servers": "broker:9092",
-          "tasks.file.status.storage.topic": "connect-file-pulse-status",
-          "tasks.file.status.storage.topic.partitions": 10,
-          "tasks.file.status.storage.topic.replication.factor": 1,
-          "tasks.max": 1
-          }
+    "connector.class":"io.streamthoughts.kafka.connect.filepulse.source.FilePulseSourceConnector",
+    "aws.access.key.id": "\${file:/data:aws.access.key.id}",
+    "aws.secret.access.key": "\${file:/data:aws.secret.access.key}",
+    "aws.s3.bucket.name": "$AWS_BUCKET_NAME",
+    "aws.s3.region": "$AWS_REGION",
+    "fs.listing.class": "io.streamthoughts.kafka.connect.filepulse.fs.AmazonS3FileSystemListing",
+    "fs.listing.filters":"io.streamthoughts.kafka.connect.filepulse.fs.filter.RegexFileListFilter",
+    "fs.listing.interval.ms": "10000",
+    "file.filter.regex.pattern":".*\\\\.json$",
+    "offset.attributes.string": "uri",
+    "tasks.reader.class": "io.streamthoughts.kafka.connect.filepulse.fs.reader.AmazonS3BytesArrayInputReader",
+    "offset.strategy":"name",
+    "topic":"tracks-filepulse-json-00",
+    "internal.kafka.reporter.bootstrap.servers": "broker:9092",
+    "internal.kafka.reporter.topic":"connect-file-pulse-status",
+    "fs.cleanup.policy.class": "io.streamthoughts.kafka.connect.filepulse.fs.clean.LogCleanupPolicy",
+    "filters": "ParseJSON",
+    "filters.ParseJSON.type":"io.streamthoughts.kafka.connect.filepulse.filter.JSONFilter",
+    "filters.ParseJSON.source":"message",
+    "filters.ParseJSON.merge":"true",
+    "tasks.file.status.storage.class": "io.streamthoughts.kafka.connect.filepulse.state.KafkaFileObjectStateBackingStore",
+    "tasks.file.status.storage.bootstrap.servers": "broker:9092",
+    "tasks.file.status.storage.topic": "connect-file-pulse-status",
+    "tasks.file.status.storage.topic.partitions": 10,
+    "tasks.file.status.storage.topic.replication.factor": 1,
+    "tasks.max": 1
+}
 EOF
-
 
 sleep 5
 
