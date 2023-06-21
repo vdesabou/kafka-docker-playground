@@ -40,9 +40,7 @@ $ curl -X PUT \
                     "splunk.hec.uri": "http://splunk:8088",
                     "splunk.hec.token": "99582090-3ac3-4db1-9487-e17b17a05081",
                     "splunk.sourcetypes": "my_sourcetype",
-                    "value.converter": "org.apache.kafka.connect.storage.StringConverter",
-                    "confluent.topic.bootstrap.servers": "broker:9092",
-                    "confluent.topic.replication.factor": "1"
+                    "value.converter": "org.apache.kafka.connect.storage.StringConverter"
           }' \
      http://localhost:8083/connectors/splunk-sink/config | jq .
 ```

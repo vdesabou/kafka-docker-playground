@@ -39,17 +39,15 @@ docker exec broker kafka-topics --create --topic splunk-qs --partitions 10 --rep
 log "Creating Splunk sink connector"
 playground connector create-or-update --connector splunk-sink << EOF
 {
-               "connector.class": "com.splunk.kafka.connect.SplunkSinkConnector",
-               "tasks.max": "1",
-               "topics": "splunk-qs",
-               "splunk.indexes": "main",
-               "splunk.hec.uri": "http://splunk:8088",
-               "splunk.hec.token": "99582090-3ac3-4db1-9487-e17b17a05081",
-               "splunk.sourcetypes": "my_sourcetype",
-               "value.converter": "org.apache.kafka.connect.storage.StringConverter",
-               "confluent.topic.bootstrap.servers": "broker:9092",
-               "confluent.topic.replication.factor": "1"
-          }
+     "connector.class": "com.splunk.kafka.connect.SplunkSinkConnector",
+     "tasks.max": "1",
+     "topics": "splunk-qs",
+     "splunk.indexes": "main",
+     "splunk.hec.uri": "http://splunk:8088",
+     "splunk.hec.token": "99582090-3ac3-4db1-9487-e17b17a05081",
+     "splunk.sourcetypes": "my_sourcetype",
+     "value.converter": "org.apache.kafka.connect.storage.StringConverter"
+}
 EOF
 
 
