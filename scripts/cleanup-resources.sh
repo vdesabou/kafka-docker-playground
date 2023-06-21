@@ -172,20 +172,20 @@ if [ ! -z "$CI" ]
 then
     bootstrap_ccloud_environment
 
-    for row in $(confluent api-key list --output json | jq -r '.[] | @base64'); do
-        _jq() {
-        echo ${row} | base64 --decode | jq -r ${1}
-        }
+    # for row in $(confluent api-key list --output json | jq -r '.[] | @base64'); do
+    #     _jq() {
+    #     echo ${row} | base64 --decode | jq -r ${1}
+    #     }
         
-        key=$(echo $(_jq '.key'))
-        resource_type=$(echo $(_jq '.resource_type'))
+    #     key=$(echo $(_jq '.key'))
+    #     resource_type=$(echo $(_jq '.resource_type'))
 
-        if [[ $resource_type = cloud ]] && [[ "$key" != "$CLOUD_API_KEY" ]]
-        then
-          log "deleting cloud api key $key"
-          confluent api-key delete $key --force
-        fi
-    done
+    #     if [[ $resource_type = cloud ]] && [[ "$key" != "$CLOUD_API_KEY" ]]
+    #     then
+    #       log "deleting cloud api key $key"
+    #       confluent api-key delete $key --force
+    #     fi
+    # done
 
     for row in $(confluent environment list --output json | jq -r '.[] | @base64'); do
         _jq() {
