@@ -71,7 +71,7 @@ set -e
 if [ $ret -eq 0 ]
 then
     error_code=$(echo "$curl_output" | jq -r .error_code)
-    if [ $error_code != "null" ]
+    if [ "$error_code" != "null" ]
     then
         message=$(echo "$curl_output" | jq -r .message)
         logerror "Command failed with error code $error_code"
