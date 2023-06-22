@@ -77,7 +77,7 @@ docker run -i --volumes-from gcloud-config google/cloud-sdk:latest bq --project_
 cat /tmp/result.log
 grep "value1" /tmp/result.log
 
-log "Drop dataset $DATASET"
-docker run -i --volumes-from gcloud-config google/cloud-sdk:latest bq --project_id "$GCP_PROJECT" rm -r -f -d "$DATASET"
+# log "Drop dataset $DATASET"
+# docker run -i --volumes-from gcloud-config google/cloud-sdk:latest bq --project_id "$GCP_PROJECT" rm -r -f -d "$DATASET"
 
-docker rm -f gcloud-config
+# docker rm -f gcloud-config
