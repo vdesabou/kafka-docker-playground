@@ -228,6 +228,11 @@ do
     nottailing1="--from-beginning --max-messages $nb_messages"
     nottailing2="timeout $timeout"
   fi
+
+  if [[ -n "$max_messages" ]]
+  then
+    nottailing2=""
+  fi
   case "${value_type}" in
     avro|protobuf|json-schema)
         if [ "$key_type" == "avro" ] || [ "$key_type" == "protobuf" ] || [ "$key_type" == "json-schema" ]
