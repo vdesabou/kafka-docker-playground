@@ -7,7 +7,7 @@ name=$(echo $query | cut -d "|" -f 2)
 id=$(echo $query | cut -d "|" -f 3)
 state=$(echo $query | cut -d "|" -f 4)
 
-group=$($aws_cli ec2 describe-instances --instance-id $id --output=json | /usr/local/bin/jq '.Reservations[] | .Instances[] | {SecurityGroups: .SecurityGroups}' | /usr/local/bin/jq -r '.SecurityGroups[] | .GroupName')
+group=$($aws_cli ec2 describe-instances --instance-id $id --output=json | /usr/local/bin/jq '.Reservations[] | .Instances[] | {SecurityGroups: .SecurityGroups}' | /usr/local/bin/jq -r '.SecurityGroups[0] | .GroupName')
 
 # delete all rules
 $aws_cli ec2 revoke-security-group-ingress --group-name $group \
