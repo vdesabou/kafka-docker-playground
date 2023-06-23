@@ -124,24 +124,24 @@ EOF
 log "Creating Snowflake Sink connector"
 playground connector create-or-update --connector snowflake-sink << EOF
 {
-               "connector.class": "com.snowflake.kafka.connector.SnowflakeSinkConnector",
-               "topics": "test_table",
-               "tasks.max": "1",
-               "snowflake.url.name": "$SNOWFLAKE_URL",
-               "snowflake.user.name": "$PLAYGROUND_USER",
-               "snowflake.user.role": "$PLAYGROUND_CONNECTOR_ROLE",
-               "snowflake.private.key": "\${file:/data:private.key}",
-               "snowflake.private.key.passphrase": "confluent",
-               "snowflake.database.name": "$PLAYGROUND_DB",
-               "jvm.proxy.host": "squid",
-               "jvm.proxy.port": "3128",
-               "snowflake.schema.name":"PUBLIC",
-               "buffer.count.records": "3",
-               "buffer.flush.time" : "10",
-               "key.converter":"org.apache.kafka.connect.storage.StringConverter",
-               "value.converter": "io.confluent.connect.avro.AvroConverter",
-               "value.converter.schema.registry.url": "http://schema-registry:8081"
-          }
+     "connector.class": "com.snowflake.kafka.connector.SnowflakeSinkConnector",
+     "topics": "test_table",
+     "tasks.max": "1",
+     "snowflake.url.name": "$SNOWFLAKE_URL",
+     "snowflake.user.name": "$PLAYGROUND_USER",
+     "snowflake.user.role": "$PLAYGROUND_CONNECTOR_ROLE",
+     "snowflake.private.key": "\${file:/data:private.key}",
+     "snowflake.private.key.passphrase": "confluent",
+     "snowflake.database.name": "$PLAYGROUND_DB",
+     "jvm.proxy.host": "squid",
+     "jvm.proxy.port": "3128",
+     "snowflake.schema.name":"PUBLIC",
+     "buffer.count.records": "3",
+     "buffer.flush.time" : "10",
+     "key.converter":"org.apache.kafka.connect.storage.StringConverter",
+     "value.converter": "io.confluent.connect.avro.AvroConverter",
+     "value.converter.schema.registry.url": "http://schema-registry:8081"
+}
 EOF
 
 
