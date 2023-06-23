@@ -112,7 +112,7 @@ if grep -q "proto3" $schema_file
 then
     log "🔮 schema was identified as protobuf"
     schema_type=protobuf
-elif grep -q "\$schema" $schema_file
+elif grep -q "\"type\"\s*:\s*\"object\"" $schema_file
 then
     log "🔮 schema was identified as json schema"
     schema_type=json-schema
