@@ -5,8 +5,8 @@ on:
   #    branches:
   #      - master
 
-  schedule:
-      - cron: '0 18 * * *' # every day at 6 pm
+  # schedule:
+  #     - cron: '0 18 * * *' # every day at 6 pm
 
   workflow_dispatch:
     inputs:
