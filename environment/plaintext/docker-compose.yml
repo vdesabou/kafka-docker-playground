@@ -235,10 +235,10 @@ services:
       # KAFKA_OPTS: '-verbose:class'
       # Reduce Connect memory utilization
       EXTRA_ARGS: ${GRAFANA_AGENT_CONNECT}
-      KAFKA_JVM_PERFORMANCE_OPTS: -server -XX:+UseG1GC -XX:GCTimeRatio=1
-                  -XX:MinHeapFreeRatio=10 -XX:MaxHeapFreeRatio=20
-                  -XX:MaxGCPauseMillis=10000 -XX:InitiatingHeapOccupancyPercent=35 -XX:+ExplicitGCInvokesConcurrent
-                  -XX:MaxInlineLevel=15 -Djava.awt.headless=true
+      # KAFKA_JVM_PERFORMANCE_OPTS: -server -XX:+UseG1GC -XX:GCTimeRatio=1
+                  # -XX:MinHeapFreeRatio=10 -XX:MaxHeapFreeRatio=20
+                  # -XX:MaxGCPauseMillis=10000 -XX:InitiatingHeapOccupancyPercent=35 -XX:+ExplicitGCInvokesConcurrent
+                  # -XX:MaxInlineLevel=15 -Djava.awt.headless=true
       PYROSCOPE_APPLICATION_NAME: "connect"
       PYROSCOPE_SERVER_ADDRESS: "http://pyroscope:4040"
 
@@ -306,10 +306,10 @@ services:
       # KAFKA_OPTS: '-verbose:class'
       # Reduce Connect memory utilization
       EXTRA_ARGS: ${GRAFANA_AGENT_CONNECT}
-      KAFKA_JVM_PERFORMANCE_OPTS: -server -XX:+UseG1GC -XX:GCTimeRatio=1
-                  -XX:MinHeapFreeRatio=10 -XX:MaxHeapFreeRatio=20
-                  -XX:MaxGCPauseMillis=10000 -XX:InitiatingHeapOccupancyPercent=35 -XX:+ExplicitGCInvokesConcurrent
-                  -XX:MaxInlineLevel=15 -Djava.awt.headless=true
+      # KAFKA_JVM_PERFORMANCE_OPTS: -server -XX:+UseG1GC -XX:GCTimeRatio=1
+                  # -XX:MinHeapFreeRatio=10 -XX:MaxHeapFreeRatio=20
+                  # -XX:MaxGCPauseMillis=10000 -XX:InitiatingHeapOccupancyPercent=35 -XX:+ExplicitGCInvokesConcurrent
+                  # -XX:MaxInlineLevel=15 -Djava.awt.headless=true
       PYROSCOPE_APPLICATION_NAME: "connect2"
       PYROSCOPE_SERVER_ADDRESS: "http://pyroscope:4040"
 
@@ -377,10 +377,10 @@ services:
       # KAFKA_OPTS: '-verbose:class'
       # Reduce Connect memory utilization
       EXTRA_ARGS: ${GRAFANA_AGENT_CONNECT}
-      KAFKA_JVM_PERFORMANCE_OPTS: -server -XX:+UseG1GC -XX:GCTimeRatio=1
-                  -XX:MinHeapFreeRatio=10 -XX:MaxHeapFreeRatio=20
-                  -XX:MaxGCPauseMillis=10000 -XX:InitiatingHeapOccupancyPercent=35 -XX:+ExplicitGCInvokesConcurrent
-                  -XX:MaxInlineLevel=15 -Djava.awt.headless=true
+      # KAFKA_JVM_PERFORMANCE_OPTS: -server -XX:+UseG1GC -XX:GCTimeRatio=1
+                  # -XX:MinHeapFreeRatio=10 -XX:MaxHeapFreeRatio=20
+                  # -XX:MaxGCPauseMillis=10000 -XX:InitiatingHeapOccupancyPercent=35 -XX:+ExplicitGCInvokesConcurrent
+                  # -XX:MaxInlineLevel=15 -Djava.awt.headless=true
       PYROSCOPE_APPLICATION_NAME: "connect3"
       PYROSCOPE_SERVER_ADDRESS: "http://pyroscope:4040"
 
