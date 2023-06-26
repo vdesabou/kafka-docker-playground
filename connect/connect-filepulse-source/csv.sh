@@ -49,7 +49,7 @@ log "Creating CSV FilePulse Source connector"
           http://localhost:8083/connectors/filepulse-source-csv/config | jq .
 # fi
 
-sleep 5
+sleep 30
 
 log "Verify we have received the data in connect-file-pulse-quickstart-csv topic"
 playground topic consume --topic connect-file-pulse-quickstart-csv --min-expected-messages 10 --timeout 60
